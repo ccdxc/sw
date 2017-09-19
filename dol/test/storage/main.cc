@@ -17,6 +17,9 @@ struct {
   {&tests::test_run_nvme_pvm_write_cmd, "NVME->PVM Write Cmd", false},
   {&tests::test_run_nvme_pvm_hashing1, "NVME->PVM Hashing 1", false},
   {&tests::test_run_nvme_pvm_hashing2, "NVME->PVM Hashing 2", false},
+  {&tests::test_run_pvm_nvme_admin_status, "PVM->NVME Admin Status", false},
+  {&tests::test_run_pvm_nvme_read_status, "PVM->NVME Read Status", false},
+  {&tests::test_run_pvm_nvme_write_status, "PVM->NVME Write Status", false},
 
   // Always last entry
   {0}

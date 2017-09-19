@@ -16,14 +16,15 @@ const static uint32_t	kPvmNumSQs		 = 7;
 const static uint32_t	kPvmNumCQs		 = 5;
 const static uint32_t	kPvmNumHQs		 = 0; // 2^0 => 1 queue
 const static uint32_t	kPvmNumEQs		 = 1;
-const static uint32_t	kPvmNumNvmeSQs		 = 2;
+const static uint32_t	kPvmNumNvmeSQs		 = 1;
+const static uint32_t	kPvmNumNvmeCQs		 = 1;
 const static uint32_t	kDefaultEntrySize	 = 6; // Default is 64 bytes
 const static uint32_t	kPvmNvmeSQEntrySize	 = 7; // PVM SQ is 128 bytes (NVME command + PVM header)
 const static uint32_t	kNvmeCQEntrySize	 = 4; // NVME CQ is 16 bytes
 const static uint32_t	kNvmeNumEntries		 = 6;
 const static uint32_t	kPvmNumEntries		 = 6;
 const static char	*kNvmeSqHandler		 = "storage_tx_nvme_sq_handler.bin";
-//const static char	*kPvmCqHandler		 = "storage_tx_pvm_cq_handler.bin";
+const static char	*kPvmCqHandler		 = "storage_tx_pvm_cq_handler.bin";
 const static uint32_t	kDefaultTotalRings	 = 1;
 const static uint32_t	kDefaultHostRings	 = 1;
 const static uint32_t	kDefaultNoHostRings	 = 0;
@@ -125,7 +126,29 @@ int queues_setup() {
       printf("Failed to setup NVME SQ %d state \n", i);
       return -1;
     }
-    printf("Setup NVME SQ %d state \n", i);
+    printf("Setup NVME SQ %d state paddr %lx \n", i, nvme_sqs[i].paddr);
+  }
+
+  // Initialize NVME CQs
+  for (int i = 0; i < (int) NUM_TO_VAL(kNvmeNumCQs); i++) {
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&nvme_cqs[i], NUM_TO_VAL(kNvmeNumEntries),
+                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+      printf("Unable to allocate host memory for NVME CQ %d\n", i);
+      return -1;
+    }
+    printf("Initialized NVME CQ %d \n", i);
+
+    // Setup the queue state in Capri
+    if (qstate_if::setup_q_state(nvme_lif, CQ_TYPE, i, NULL, 
+                                 kDefaultTotalRings, kDefaultHostRings, 
+                                 kNvmeNumEntries, nvme_cqs[i].paddr,
+                                 kDefaultEntrySize, false, 0, 0, 
+                                 0, 0, 0, 0, 0, 0) < 0) {
+      printf("Failed to setup NVME CQ %d state \n", i);
+      return -1;
+    }
+    printf("Setup NVME CQ %d state paddr %lx \n", i, nvme_cqs[i].paddr);
   }
 
   // Initialize PVM SQs for processing commands from NVME VF only
@@ -138,16 +161,41 @@ int queues_setup() {
     }
     printf("Initialized PVM SQ %d \n", i);
 
-    // Setup the queue state in Capri (no dst queues for these)
+    // Setup the queue state in Capri:
+    // 1. no dst queues for these as these are in host
+    // 2. no program address for these as these are in host
     if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, i, NULL, 
                                  kDefaultTotalRings, kDefaultHostRings, 
                                  kPvmNumEntries, pvm_sqs[i].paddr,
-                                 kPvmNvmeSQEntrySize, false, 0, 0, 0, 
-                                 0, 0, 0, 0, 0) < 0) {
+                                 kPvmNvmeSQEntrySize, false, 0, 0,
+                                 0, 0, 0, 0, 0, 0) < 0) {
       printf("Failed to setup PVM SQ %d state \n", i);
       return -1;
     }
-    printf("Initialized PVM SQ %d \n", i);
+    printf("Setup PVM SQ %d state paddr %lx \n", i, pvm_sqs[i].paddr);
+  }
+
+  // Initialize PVM CQs for processing commands from NVME VF only
+  for (int i = 0; i < (int) NUM_TO_VAL(kPvmNumNvmeCQs); i++) {
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
+                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+      printf("Unable to allocate host memory for PVM CQ %d\n", i);
+      return -1;
+    }
+    printf("Initialized PVM CQ %d \n", i);
+
+    // Setup the queue state in Capri:
+    // 1. no dst queues for these as these are supplied in PVM status
+    if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, (char *) kPvmCqHandler, 
+                                 kDefaultTotalRings, kDefaultHostRings, 
+                                 kPvmNumEntries, pvm_cqs[i].paddr,
+                                 kDefaultEntrySize, false, 0, 0,
+                                 0, 0, 0, 0, 0, 0) < 0) {
+      printf("Failed to setup PVM CQ %d state \n", i);
+      return -1;
+    }
+    printf("Setup PVM CQ %d state paddr %lx \n", i, pvm_cqs[i].paddr);
   }
 
   return 0;
@@ -161,6 +209,16 @@ void *nvme_sq_consume_entry(uint16_t qid, uint16_t *index) {
 void *pvm_sq_consume_entry(uint16_t qid, uint16_t *index) {
   if (qid >= NUM_TO_VAL(kPvmNumSQs)) return nullptr;
   return queue_consume_entry(&pvm_sqs[qid], index);
+}
+
+void *nvme_cq_consume_entry(uint16_t qid, uint16_t *index) {
+  if (qid >= NUM_TO_VAL(kNvmeNumCQs)) return nullptr;
+  return queue_consume_entry(&nvme_cqs[qid], index);
+}
+
+void *pvm_cq_consume_entry(uint16_t qid, uint16_t *index) {
+  if (qid >= NUM_TO_VAL(kPvmNumCQs)) return nullptr;
+  return queue_consume_entry(&pvm_cqs[qid], index);
 }
 
 uint16_t get_nvme_lif() {

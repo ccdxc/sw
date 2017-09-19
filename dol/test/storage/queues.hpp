@@ -16,6 +16,10 @@ void *nvme_sq_consume_entry(uint16_t qid, uint16_t *index);
 
 void *pvm_sq_consume_entry(uint16_t qid, uint16_t *index);
 
+void *nvme_cq_consume_entry(uint16_t qid, uint16_t *index);
+
+void *pvm_cq_consume_entry(uint16_t qid, uint16_t *index);
+
 uint16_t get_nvme_lif();
 
 uint16_t get_pvm_lif();

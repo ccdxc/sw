@@ -17,6 +17,12 @@ int test_run_nvme_pvm_hashing1();
 
 int test_run_nvme_pvm_hashing2();
 
+int test_run_pvm_nvme_admin_status();
+
+int test_run_pvm_nvme_read_status();
+
+int test_run_pvm_nvme_write_status();
+
 }  // namespace tests
 
-#endif
+#endif   // _TESTS_HPP_

@@ -171,4 +171,10 @@ struct NvmeStatus {
 } __attribute__((packed));
 
 
+// Pvm status
+struct PvmStatus {
+    struct NvmeStatus nvme_status;
+    uint8_t pvm_trailer[48]; // 64 byte aligned
+} __attribute__((packed));
+
 #endif  // _NVME_HPP_

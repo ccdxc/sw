@@ -5,6 +5,7 @@
 
 namespace qstate_if {
 
+
 void __write_bit_(uint8_t *p, unsigned bit_off, bool val) {
   unsigned start_byte = bit_off >> 3;
   uint8_t mask = 1 << (7 - (bit_off & 7));
@@ -14,7 +15,7 @@ void __write_bit_(uint8_t *p, unsigned bit_off, bool val) {
     p[start_byte] &= ~mask;
 }
 
-void write_q_state_field(void *ptr, unsigned start_bit_offset,
+void write_bit_fields(void *ptr, unsigned start_bit_offset,
                       unsigned size_in_bits, uint64_t value) {
   uint8_t *p = (uint8_t *)ptr;
   int bit_no;
@@ -77,23 +78,23 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     return -1;
   }
 
-  write_q_state_field(q_state, 0, 8, pc_offset);
-  write_q_state_field(q_state, 40, 4, total_rings);
-  write_q_state_field(q_state, 44, 4, host_rings);
-  write_q_state_field(q_state, 112, 16, num_entries);
-  write_q_state_field(q_state, 128, 64, base_addr);
-  write_q_state_field(q_state, 192, 16, entry_size);
-  write_q_state_field(q_state, 208, 28, next_pc);
+  write_bit_fields(q_state, 0, 8, pc_offset);
+  write_bit_fields(q_state, 40, 4, total_rings);
+  write_bit_fields(q_state, 44, 4, host_rings);
+  write_bit_fields(q_state, 112, 16, num_entries);
+  write_bit_fields(q_state, 128, 64, base_addr);
+  write_bit_fields(q_state, 192, 16, entry_size);
+  write_bit_fields(q_state, 208, 28, next_pc);
   // Program only if destination is used in P4+
   if (dst_valid) {
-    write_q_state_field(q_state, 236, 34, dst_qaddr);
-    write_q_state_field(q_state, 270, 11, dst_lif);
-    write_q_state_field(q_state, 281, 3, dst_qtype);
-    write_q_state_field(q_state, 284, 24, dst_qid);
+    write_bit_fields(q_state, 236, 34, dst_qaddr);
+    write_bit_fields(q_state, 270, 11, dst_lif);
+    write_bit_fields(q_state, 281, 3, dst_qtype);
+    write_bit_fields(q_state, 284, 24, dst_qid);
   }
-  write_q_state_field(q_state, 340, 34, ssd_bm_addr);
-  write_q_state_field(q_state, 374, 16, ssd_q_num);
-  write_q_state_field(q_state, 390, 16, ssd_q_size);
+  write_bit_fields(q_state, 340, 34, ssd_bm_addr);
+  write_bit_fields(q_state, 374, 16, ssd_q_num);
+  write_bit_fields(q_state, 390, 16, ssd_q_size);
 
   dump(q_state);
 
@@ -102,7 +103,7 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     return -1;
   }
 
-  printf("Q state created\n");
+  printf("Q state created for lif %u type %u, qid %u next_pc %lx \n", src_lif, src_qtype, src_qid, next_pc);
   return 0;
 }
 
