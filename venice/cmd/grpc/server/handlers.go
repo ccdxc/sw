@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/apiclient"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/types"
@@ -30,6 +31,7 @@ import (
 const (
 	maxIters              = 50
 	sleepBetweenItersMsec = 100
+	apiClientWaitTimeMsec = 200
 
 	masterLeaderKey = "master"
 )
@@ -175,6 +177,10 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 
 		// create and register the RPC handler for service object.
 		types.RegisterServiceAPIServer(env.RPCServer.GrpcServer, service.NewRPCHandler(env.ResolverService))
+
+		// create and register the RPC handler for SmartNIC service
+		go registerSmartNICServer()
+
 	} else {
 		env.NtpService = services.NewNtpService(req.NTPServers)
 		env.NtpService.NtpConfigFile([]string{req.VirtualIp})
@@ -189,6 +195,18 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	}
 
 	return &grpc.ClusterJoinResp{}, nil
+}
+
+// Utility function to create and register smartNIC server with retries
+func registerSmartNICServer() {
+	for i := 0; i < maxIters; i++ {
+		if env.CfgWatcherService.APIClient() != nil {
+			grpc.RegisterSmartNICServer(env.RPCServer.GrpcServer, smartnic.NewRPCServer(env.CfgWatcherService.APIClient().Cluster(), env.CfgWatcherService.APIClient().SmartNIC()))
+			return
+		}
+		time.Sleep(apiClientWaitTimeMsec * time.Millisecond)
+	}
+	log.Fatalf("Failed to register smartNIC RPCserver, apiClient not up")
 }
 
 func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoinReq) (*grpc.ClusterDisjoinResp, error) {

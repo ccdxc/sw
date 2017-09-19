@@ -599,6 +599,12 @@ func writeKv(new, orig reflect.Value, kvString string, kvCtx *kvContext) reflect
 	}
 
 	switch orig.Kind() {
+	case reflect.Bool:
+		boolVal := false
+		if valueString == "true" {
+			boolVal = true
+		}
+		new.SetBool(boolVal)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		intVal, _ := strconv.ParseInt(valueString, 10, 64)
 		new.SetInt(intVal)

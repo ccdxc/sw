@@ -6,6 +6,7 @@ package grpc;
 import "google/api/annotations.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/protos/cmd.proto";
+import "github.com/pensando/sw/api/meta.proto";
 
 // --------------------------------- C L U S T E R -------------------------------------------------
 service Cluster {
@@ -65,7 +66,7 @@ message ClusterDisjoinResp {
 // --------------------------------- SmartNIC service API  -----------------------------------
 
 // SmartNIC service API
-// NMD/agent on Naples will be the client of this API
+// NMD on Naples will be the client of this API
 service SmartNIC {
 	// Register NIC
 	// - registers the NIC when the mode is switched from classic
@@ -75,16 +76,20 @@ service SmartNIC {
 	// Update NIC
 	// - updates the SmartNIC and associcated port attributes, status
 	rpc UpdateNIC (UpdateNICRequest) returns (UpdateNICResponse) {};
+
+	// Watcher for SmartNIC object updates
+	rpc WatchNICs (api.ObjectMeta) returns (stream SmartNICEvent) {};
+
 }
 
 // Register NIC request
 message RegisterNICRequest {
 
 	// SmartNIC object
-	cmd.SmartNIC Nic = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
+	cmd.SmartNIC Nic    = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
 
 	// Factory Certificate
-	bytes Cert       = 2 [(gogoproto.jsontag) = "cert,omitempty"];
+	bytes Cert          = 2 [(gogoproto.jsontag) = "cert,omitempty"];
 }
 
 // Register NIC response
@@ -104,4 +109,12 @@ message UpdateNICRequest {
 // Update NIC response
 message UpdateNICResponse {
 
+	// SmartNIC object
+	cmd.SmartNIC Nic = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "nic,omitempty"];
+}
+
+// SmartNIC watch event
+message SmartNICEvent {
+	api.EventType EventType = 1 [(gogoproto.jsontag) = "eventType,omitempty"];
+	cmd.SmartNIC  Nic       = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "nic,omitempty"];
 }

@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
 syntax = "proto3";
 // Service name
 package cmd;
@@ -62,13 +64,19 @@ message ClusterSpec {
 
     // DNSSubDomain is the DNS subdomain for the default tenant.
     string DNSSubDomain         = 4 [(gogoproto.jsontag) = "dnsSubdomain,omitempty"];
+
+    // AutoAdmitNICs when enabled auto-admits NICs that are validated
+    // into Venice Cluster. When it is disabled, NICs validated by CMD are
+    // set to Pending state and it requires Manual approval to be admitted
+    // into the cluster.
+    bool AutoAdmitNICs          = 5 [(gogoproto.jsontag) = "autoAdmitNics,omitempty"];
 }
 
 // ClusterStatus contains the current state of the Cluster.
 message ClusterStatus {
 
     // Leader contains the node name of the cluster leader.
-    string Leader = 1 [(gogoproto.jsontag) = "leader,omitempty"];
+    string Leader   = 1 [(gogoproto.jsontag) = "leader,omitempty"];
 }
 
 //---------------------------------- NODE -------------------------------------------
@@ -96,7 +104,7 @@ message ClusterStatus {
 //              - TBD
 //
 message Node {
-    
+
     option (venice.objectPrefix) = "nodes";
 
     api.TypeMeta T      = 1 [(gogoproto.embed) = true,
@@ -235,38 +243,20 @@ message SmartNIC {
 // SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)
 message SmartNICSpec {
 
+    // Current phase of the SmartNIC.
+    // When auto-admission is enabled, Phase will be set to NIC_ADMITTED
+    // by CMD for validated NICs.
+    // When auto-admission is not enabled, Phase will be set to NIC_PENDING
+    // by CMD for validated NICs since it requires manual approval.
+    // To admit the NIC as a part of manual admission, user is expected to
+    // set the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING
+    // state. Note : Whitelist mode is not supported yet.
+    SmartNICPhase Phase     = 1 [(gogoproto.nullable) = true,
+                                (gogoproto.jsontag) = "phase,omitempty"];
+
     // Ports holds a list of Port Specs
-    repeated PortSpec Ports = 1 [(gogoproto.nullable) = false,
+    repeated PortSpec Ports = 2 [(gogoproto.nullable) = false,
                                 (gogoproto.jsontag) = "ports,omitempty"];
-}
-
-// SmartNICStatus contains current status of a SmartNIC
-message SmartNICStatus {
-
-    // Current lifecycle phase of the SmartNIC.
-    SmartNICPhase Phase                     = 1 [(gogoproto.nullable) = true,
-                                                (gogoproto.jsontag) = "phase,omitempty"];
-
-    // List of current NIC conditions
-    repeated SmartNICCondition Conditions   = 2 [(gogoproto.nullable) = true,
-                                                (gogoproto.jsontag) = "conditions,omitempty"];
-
-    // Serial number
-    string SerialNum                        = 3 [(gogoproto.nullable) = true,
-                                                (gogoproto.jsontag) = "serialNumber,omitempty"];
-
-    // Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC
-    string PrimaryMacAddress                = 4 [(gogoproto.nullable) = true,
-                                                (gogoproto.jsontag) = "primaryMacAddress,omitempty"];
-
-    // Node name, will be populated by an entity in Venice (CMD)
-    // based on host & nic inventory discovered via Orchestration interface
-    string NodeName                         = 5 [(gogoproto.nullable) = true,
-                                                (gogoproto.jsontag) = "nodeName,omitempty"];
-
-    // Ports holds a list of PortStatus
-    repeated PortStatus Ports               = 6 [(gogoproto.nullable) = true,
-                                                (gogoproto.jsontag) = "ports,omitempty"];
 }
 
 // Various phases in lifecycle of a SmartNIC
@@ -275,6 +265,31 @@ enum SmartNICPhase {
     NIC_REJECTED     = 1; // NIC is rejected
     NIC_PENDING      = 2; // NIC is validated but waiting for manual approval
     NIC_ADMITTED     = 3; // NIC is validated and admitted
+}
+
+// SmartNICStatus contains current status of a SmartNIC
+message SmartNICStatus {
+
+    // List of current NIC conditions
+    repeated SmartNICCondition Conditions   = 1 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "conditions,omitempty"];
+
+    // Serial number
+    string SerialNum                        = 2 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "serialNumber,omitempty"];
+
+    // Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC
+    string PrimaryMacAddress                = 3 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "primaryMacAddress,omitempty"];
+
+    // Node name, will be populated by an entity in Venice (CMD)
+    // based on host & nic inventory discovered via Orchestration interface
+    string NodeName                         = 4 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "nodeName,omitempty"];
+
+    // Ports holds a list of PortStatus
+    repeated PortStatus Ports               = 5 [(gogoproto.nullable) = true,
+                                                (gogoproto.jsontag) = "ports,omitempty"];
 }
 
 // These are valid conditions of a SmartNIC
@@ -289,7 +304,7 @@ message SmartNICCondition {
 
     // Type indicates a certain NIC condition
     SmartNICConditionType Type      = 1 [(gogoproto.nullable) = true,
-                                       (gogoproto.jsontag) = "type,omitempty"];
+                                        (gogoproto.jsontag) = "type,omitempty"];
 
     // Condition Status
     ConditionStatus Status          = 2 [(gogoproto.nullable) = true,

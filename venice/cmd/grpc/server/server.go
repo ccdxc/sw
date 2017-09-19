@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
 package server
 
 import (
@@ -22,9 +24,6 @@ func RunServer(url, certFile, keyFile, caFile string, stopChannel chan bool) {
 
 	// create and register the RPC handler for cluster object.
 	grpc.RegisterClusterServer(rpcServer.GrpcServer, &clusterRPCHandler{})
-
-	// create and register the RPC handler for SmartNIC service
-	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, NewSmartNICServer())
 
 	if env.ResolverService != nil {
 		types.RegisterServiceAPIServer(env.RPCServer.GrpcServer, service.NewRPCHandler(env.ResolverService))

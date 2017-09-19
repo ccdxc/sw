@@ -88,6 +88,7 @@ type UserSpec struct {
 	FixedRules   [2]SGRule          `json:"fixedRule,omitempty" venice:"ins=fix"`
 	NodeRoles    []NodeSpecNodeRole `json:"nodeRoles,omitempty"`
 	Conditions   []*NodeCondition   `json:"conditions,omitempty"`
+	BoolFlag     bool               `json:"boolFlag, omitempty"`
 }
 
 type UserList struct {
@@ -173,6 +174,7 @@ func TestWalkStruct(t *testing.T) {
       Reason: string
       Message: string
     }
+    BoolFlag: bool
   }
 }
 `
@@ -424,6 +426,11 @@ func TestEmptyGet(t *testing.T) {
 		t.Fatalf("NodeRoles not found in kvs")
 	}
 	total++
+	if _, ok := kvs["BoolFlag"]; !ok {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("NodeRoles not found in kvs")
+	}
+	total++
 
 	if len(kvs) != total {
 		printKvs("kvs", kvs, true)
@@ -474,6 +481,7 @@ func TestGet(t *testing.T) {
 			},
 			NodeRoles:  []NodeSpecNodeRole{997, 799},
 			Conditions: []*NodeCondition{&cond1, &cond2},
+			BoolFlag:   true,
 		},
 	}
 	kvs := make(map[string]FInfo)
@@ -826,6 +834,15 @@ func TestGet(t *testing.T) {
 	} else {
 		t.Fatalf("Condition Reason not found")
 	}
+
+	if fi, ok := kvs["BoolFlag"]; ok {
+		if fi.Key || len(fi.ValueStr) != 1 || fi.ValueStr[0] != "true" {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! Condition Reason not found '%v'", fi.ValueStr)
+		}
+	} else {
+		t.Fatalf("BoolFlag not found")
+	}
 }
 
 func TestUpdate(t *testing.T) {
@@ -873,6 +890,7 @@ func TestUpdate(t *testing.T) {
 			},
 			NodeRoles:  []NodeSpecNodeRole{997, 799},
 			Conditions: []*NodeCondition{&cond1, &cond2},
+			BoolFlag:   false,
 		},
 	}
 	kvs := make(map[string]FInfo)
@@ -896,6 +914,7 @@ func TestUpdate(t *testing.T) {
 	kvs["Reason"] = NewFInfo([]string{"new reason", "another new reason"})
 	kvs["Message"] = NewFInfo([]string{"one", "two"})
 	kvs["LastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
+	kvs["BoolFlag"] = NewFInfo([]string{"true"})
 
 	refCtx := &RfCtx{GetSubObj: subObj}
 	newObj := WriteKvs(u, refCtx, kvs)
@@ -1012,6 +1031,10 @@ func TestUpdate(t *testing.T) {
 		t.Fatalf("unable to write NodeRoles array to indirect type")
 	}
 
+	if newUser.Spec.BoolFlag != true {
+		t.Fatalf("unable to write BoolFlag")
+	}
+
 	newCond1 := newUser.Spec.Conditions[0]
 	newCond2 := newUser.Spec.Conditions[1]
 	if newCond1.Status != 3 || newCond2.Status != 4 ||
@@ -1061,6 +1084,7 @@ func TestNewWrite(t *testing.T) {
 	kvs["Reason"] = NewFInfo([]string{"new reason", "another new reason"})
 	kvs["Message"] = NewFInfo([]string{"one", "two"})
 	kvs["LastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
+	kvs["BoolFlag"] = NewFInfo([]string{"true"})
 
 	refCtx := &RfCtx{GetSubObj: subObj}
 	newObj := WriteKvs(User{}, refCtx, kvs)
@@ -1197,6 +1221,10 @@ func TestNewWrite(t *testing.T) {
 		fmt.Printf("newUser: %+v\n\n", newUser)
 		t.Fatalf("unable to write NodeRoles array to indirect type")
 	}
+
+	if newUser.Spec.BoolFlag != true {
+		t.Fatalf("unable to write BoolFlag")
+	}
 }
 
 func TestFieldByName(t *testing.T) {
@@ -1243,6 +1271,7 @@ func TestFieldByName(t *testing.T) {
 			},
 			NodeRoles:  []NodeSpecNodeRole{997, 799},
 			Conditions: []*NodeCondition{&cond1, &cond2},
+			BoolFlag:   true,
 		},
 	}
 	user := reflect.ValueOf(u)
@@ -1321,6 +1350,11 @@ func TestFieldByName(t *testing.T) {
 	transitionTimes := FieldByName(user, "Spec.Conditions.LastTransitionTime")
 	if len(transitionTimes) != 2 || transitionTimes[0] != "90001" || transitionTimes[1] != "80001" {
 		t.Fatalf("Invalid transitionTimes %s \n", transitionTimes)
+	}
+
+	boolFlag := FieldByName(user, "Spec.BoolFlag")
+	if len(boolFlag) != 1 || boolFlag[0] != "true" {
+		t.Fatalf("Invalid boolFlag fetched %s \n", boolFlag)
 	}
 }
 

@@ -181,6 +181,13 @@
             "type": "string"
           },
           {
+            "name": "Spec.AutoAdmitNICs",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
             "name": "Status.Leader",
             "description": "Type indicates a certain node condition.",
             "in": "query",
@@ -630,7 +637,7 @@
             "type": "string"
           },
           {
-            "name": "Status.Phase",
+            "name": "Spec.Phase",
             "in": "query",
             "required": false,
             "type": "string",
@@ -898,6 +905,10 @@
         },
         "DNSSubDomain": {
           "type": "string"
+        },
+        "AutoAdmitNICs": {
+          "type": "boolean",
+          "format": "boolean"
         }
       },
       "description": "NodeStatus contains the current state of the node."
@@ -949,10 +960,11 @@
       "properties": {
         "Type": {
           "$ref": "#/definitions/cmdNodeConditionType",
-          "title": "Ports holds a list of Port Specs"
+          "description": "Current phase of the SmartNIC.\nWhen auto-admission is enabled, Phase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, Phase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet."
         },
         "Status": {
-          "$ref": "#/definitions/cmdConditionStatus"
+          "$ref": "#/definitions/cmdConditionStatus",
+          "title": "Ports holds a list of Port Specs"
         },
         "LastTransitionTime": {
           "type": "string",
@@ -980,18 +992,18 @@
       "properties": {
         "T": {
           "$ref": "#/definitions/apiTypeMeta",
-          "description": "Current lifecycle phase of the SmartNIC."
+          "title": "List of current NIC conditions"
         },
         "ListMeta": {
           "$ref": "#/definitions/apiListMeta",
-          "title": "List of current NIC conditions"
+          "title": "Serial number"
         },
         "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/cmdNode"
           },
-          "title": "Serial number"
+          "title": "Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC"
         }
       },
       "title": "SmartNICStatus contains current status of a SmartNIC"
@@ -1189,6 +1201,9 @@
     "cmdSmartNICSpec": {
       "type": "object",
       "properties": {
+        "Phase": {
+          "$ref": "#/definitions/cmdSmartNICPhase"
+        },
         "Ports": {
           "type": "array",
           "items": {
@@ -1200,9 +1215,6 @@
     "cmdSmartNICStatus": {
       "type": "object",
       "properties": {
-        "Phase": {
-          "$ref": "#/definitions/cmdSmartNICPhase"
-        },
         "Conditions": {
           "type": "array",
           "items": {
