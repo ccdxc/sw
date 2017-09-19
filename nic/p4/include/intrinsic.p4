@@ -259,7 +259,7 @@ header_type p4plus_to_p4_header_t {
         p4plus_app_id       : 4;
         pad                 : 4;
         flags               : 8;
-        ip_id               : 16;
+        ip_id_delta         : 16;
         ip_len              : 16;
         udp_len             : 16;
         tcp_seq_delta       : 32;

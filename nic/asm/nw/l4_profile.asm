@@ -57,7 +57,7 @@ validate_tunneled_packet2:
   seq         c1, k.inner_ipv4_srcAddr[31:24], 0x7f
   seq         c2, k.inner_ipv4_srcAddr[31:28], 0xe
   seq         c3, k.inner_ipv4_srcAddr, r6
-  or          r5, k.inner_ipv4_dstAddr_sbit16_ebit31, k.inner_ipv4_dstAddr_sbit0_ebit15, 16
+  or          r5, k.inner_ipv4_dstAddr_sbit24_ebit31, k.inner_ipv4_dstAddr_sbit0_ebit23, 8
   seq         c4, r5, 0
   seq         c5, r5[31:24], 0x7f
   seq         c6, k.inner_ipv4_srcAddr, r5[31:0]
@@ -75,9 +75,9 @@ validate_tunneled_packet2_ipv6:
   seq         c3, k.inner_ipv6_dstAddr[63:0], r1
   andcf       c1, [c2|c3]
   // inner_srcAddr => r2(hi) r3(lo)
-  or          r2, k.inner_ipv6_srcAddr_sbit48_ebit63, \
+  or          r2, k.inner_ipv6_srcAddr_sbit56_ebit63, \
                   k.{inner_ipv6_srcAddr_sbit0_ebit31, \
-                     inner_ipv6_srcAddr_sbit32_ebit47}, 16
+                     inner_ipv6_srcAddr_sbit32_ebit55}, 8
   or          r3, k.inner_ipv6_srcAddr_sbit64_ebit127, r0
   seq         c2, r2, r0
   seq         c3, r3, r1
@@ -144,17 +144,33 @@ lb_ip_norm_ttl:
   nop
 
 f_p4plus_to_p4_apps:
+  // update IP id
+  smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID, \
+                  P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID
+  add         r1, k.ipv4_identification, k.p4plus_to_p4_ip_id_delta
+  phvwr.c2    p.ipv4_identification, r1
+
+  // update IP length
+  seq         c2, k.vlan_tag_valid, TRUE
+  cmov        r1, c2, 18, 14
+  sub         r1, k.control_metadata_packet_len, r1
+  seq         c3, k.ipv4_valid, TRUE
+  sub.c3      r2, r1, k.ipv4_ihl, 2
+  seq         c4, k.ipv6_valid, TRUE
+  sub.c4      r2, r1, 40
   smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN, \
                   P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN
-  seq         c3, k.ipv4_valid, TRUE
-  seq         c4, k.ipv6_valid, TRUE
   andcf       c3, [c2]
   andcf       c4, [c2]
-  phvwr.c3    p.ipv4_totalLen, k.p4plus_to_p4_ip_len
-  phvwr.c4    p.ipv6_payloadLen, k.p4plus_to_p4_ip_len
+  phvwr.c3    p.ipv4_totalLen, r1
+  phvwr.c4    p.ipv6_payloadLen, r2
+
+  // update UDP length
   smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN, \
                   P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN
-  phvwr.c2    p.udp_len, k.p4plus_to_p4_udp_len
+  phvwr.c2    p.udp_len, r2
+
+  // update TCP sequence number
   smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO, \
                   P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO
   add         r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, \
@@ -162,6 +178,8 @@ f_p4plus_to_p4_apps:
   phvwr.c2    p.tcp_seqNo, r1
   smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG, \
                   P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG
+
+  // insert vlan tag
   phvwr.c2    p.vlan_tag_valid, TRUE
   phvwr.c2    p.{vlan_tag_pcp...vlan_tag_vid}, k.p4plus_to_p4_vlan_tag
   phvwr.c2    p.vlan_tag_etherType, k.ethernet_etherType

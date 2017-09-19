@@ -242,21 +242,40 @@ table p4plus_app {
 /* P4+ to P4 app processing                                                  */
 /*****************************************************************************/
 action f_p4plus_to_p4() {
+    // update IP id
+    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID) != 0) {
+        add(ipv4.identification, ipv4.identification, p4plus_to_p4.ip_id_delta);
+    }
+
+    // update IP length
+    if (vlan_tag.valid == TRUE) {
+        subtract(scratch_metadata.packet_len, control_metadata.packet_len, 18);
+    } else {
+        subtract(scratch_metadata.packet_len, control_metadata.packet_len, 14);
+    }
     if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN) != 0) {
         if (ipv4.valid == TRUE) {
-            modify_field(ipv4.totalLen, p4plus_to_p4.ip_len);
+            modify_field(ipv4.totalLen, scratch_metadata.packet_len);
+            subtract_from_field(scratch_metadata.packet_len, ipv4.ihl << 2);
         } else {
             if (ipv6.valid == TRUE) {
-                modify_field(ipv6.payloadLen, p4plus_to_p4.ip_len);
+                subtract_from_field(scratch_metadata.packet_len, 40);
+                modify_field(ipv6.payloadLen, scratch_metadata.packet_len);
             }
         }
     }
+
+    // update UDP length
     if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN) != 0) {
-        modify_field(udp.len, p4plus_to_p4.udp_len);
+        modify_field(udp.len, scratch_metadata.packet_len);
     }
+
+    // update TCP sequence number
     if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO) != 0) {
         add(tcp.seqNo, tcp.seqNo, p4plus_to_p4.tcp_seq_delta);
     }
+
+    // insert vlan tag
     if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG) != 0) {
         add_header(vlan_tag);
         modify_field(vlan_tag.pcp, p4plus_to_p4.vlan_tag >> 13);

@@ -457,6 +457,7 @@
 /*****************************************************************************/
 /* P4+ to P4 flags                                                           */
 /*****************************************************************************/
+#define P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID         0x01
 #define P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN        0x02
 #define P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO    0x04
 #define P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN       0x08
@@ -466,6 +467,7 @@
 /*****************************************************************************/
 /* P4+ to P4 flags (same as above, but specify bit positions)                */
 /*****************************************************************************/
+#define P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID_BIT_POS        0
 #define P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN_BIT_POS       1
 #define P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO_BIT_POS   2
 #define P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN_BIT_POS      3
