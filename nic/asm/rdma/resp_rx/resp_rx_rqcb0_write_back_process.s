@@ -43,7 +43,8 @@ resp_rx_rqcb0_write_back_process:
 incr_c_index_exit:
 
     //assumption is that write back is called with table 2
-    CAPRI_SET_TABLE_2_VALID(0)
+    seq         c3, k.args.do_not_invalidate_tbl, 1
+    CAPRI_SET_TABLE_2_VALID_C(!c3, 0)
 
     nop.e
     nop

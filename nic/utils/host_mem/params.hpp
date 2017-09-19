@@ -23,7 +23,7 @@ namespace utils {
 
 static const char *kEnvMemLabel = "HOST_MEM_KEY";
 static const key_t kShmKey = 0x4d504c53;  // MPLS
-static const size_t kShmSize = 16 * 1024 * 1024;
+static const size_t kShmSize = 64 * 1024 * 1024;
 const static uint32_t kAllocUnitShift = 12;
 const static uint32_t kAllocUnit = (1 << kAllocUnitShift); // 4096
 

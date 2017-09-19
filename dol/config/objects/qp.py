@@ -123,9 +123,10 @@ class QpObject(base.ConfigObjectBase):
         cfglogger.info('RRQ num_wqes: %d wqe_size: %d' %(self.num_rrq_wqes, self.rrqwqe_size)) 
         cfglogger.info('RSQ num_wqes: %d wqe_size: %d' %(self.num_rsq_wqes, self.rsqwqe_size)) 
 
+
     def PrepareHALRequestSpec(self, req_spec):
-        cfglogger.info("QP: %s PD: %s Remote: %s \n" %\
-                        (self.GID(), self.pd.GID(), self.remote))
+        cfglogger.info("QP: %s PD: %s Remote: %s HW_LIF: %d\n" %\
+                        (self.GID(), self.pd.GID(), self.remote, self.pd.ep.intf.lif.hw_lif_id))
         if (GlobalOptions.dryrun): return
         req_spec.qp_num = self.id
         req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id

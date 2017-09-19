@@ -31,23 +31,21 @@ class RdmaRingObject(ring.RingObject):
 
     def Configure(self):
         pass
-        '''
-        self.address = resmgr.HostMemoryAllocator.get(self.size * self.desc_size)
-        assert(self.address);
-        cfglogger.info("Creating Ring @0x%x = size: %d desc_size: %d" %
-                       (self.address, self.size, self.desc_size))
-        '''
 
     def Post(self, descriptor):
         #if not self.initialized:
         #    self.queue.qstate.set_ring_base(self.address)
         #    self.queue.qstate.set_ring_size(self.size)
         # Bind the descriptor to the ring
+        cfglogger.info('posting descriptor at pindex: %d..' %(self.queue.qstate.get_pindex(0)))
         descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_pindex(0)))
-        descriptor.mem_handle = self.mem_handle
+        descriptor.mem_handle = resmgr.MemHandle(descriptor.address,
+                                                 resmgr.HostMemoryAllocator.get_v2p(descriptor.address))
         descriptor.Write()
         # Increment posted index
-        #self.queue.qstate.incr_pindex(0)
+        if self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_RECV":
+            cfglogger.info('incrementing pindex..')
+            self.queue.qstate.incr_pindex(0)
         # for now, ring doorbell only for SQ.
         # Doorbell ring for RQ will be needed for Prefetch/Cache, will be done later
         #if self.queue.queue_type.purpose == "rdma_sq":
