@@ -30,7 +30,6 @@ tls_dec_tdesc_alloc_process:
         CAPRI_CLEAR_TABLE1_VALID
 
 	    phvwr		p.to_s5_odesc, d.odesc
-   	    phvwr		p.to_s4_odesc, d.odesc
         phvwri      p.to_s6_tnmdr_alloc, 1
         
 	    nop.e

@@ -36,7 +36,8 @@ SRC_FILES := \
     $(SRC_DIR)/tls-dec-bld-barco-req.s \
     $(SRC_DIR)/tls-dec-serq.s \
     $(SRC_DIR)/tls-dec-alloc-rnmdr-split.s \
-    $(SRC_DIR)/tls-dec-update-page-ctl.s 
+    $(SRC_DIR)/tls-dec-update-page-ctl.s \
+	$(SRC_DIR)/tls-dec-read-pkt-descr.s
 #    $(SRC_DIR)/tls-dec-pre-crypto-stats.s
 
 

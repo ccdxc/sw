@@ -40,6 +40,7 @@ class TlsCbObject(base.ConfigObjectBase):
             req_spec.explicit_iv               = self.explicit_iv
             req_spec.command                   = self.command
             req_spec.crypto_key_idx            = self.crypto_key_idx
+            req_spec.is_decrypt_flow           = self.is_decrypt_flow
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

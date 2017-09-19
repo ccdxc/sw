@@ -30,8 +30,6 @@ tls_dec_pre_crypto_process:
     add         r3, r0, r0
     add         r3, r3, d.u.read_tls_stg0_d.serq_base
 
-	phvwr		p.to_s2_idesc, r3
-   	phvwr		p.to_s5_idesc, r3
 	phvwri		p.tls_global_phv_pending_rx_serq, 1
 
     phvwr       p.tls_global_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}

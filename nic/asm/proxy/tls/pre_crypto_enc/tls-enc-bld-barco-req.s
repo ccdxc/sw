@@ -25,7 +25,7 @@ table_read_QUEUE_BRQ:
     CAPRI_SET_DEBUG_STAGE4_7(p.to_s6_debug_stage4_7_thread, CAPRI_MPU_STAGE_4, CAPRI_MPU_TABLE_0)
     /* Fill the barco request in the phv to be DMAed later into BRQ slot */
     phvwr       p.barco_desc_status_address, k.{to_s4_idesc}.dx
-    addi        r2, r0, 64
+    addi        r2, r0, PKT_DESC_AOL_OFFSET
     add         r1, r2, k.{to_s4_idesc}
     phvwr       p.barco_desc_input_list_address, r1.dx
     CAPRI_OPERAND_DEBUG(r1.dx)

@@ -118,6 +118,8 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
     tlscb->explicit_iv = spec.explicit_iv();
     tlscb->serq_pi = spec.serq_pi();
     tlscb->serq_ci = spec.serq_ci();
+    tlscb->is_decrypt_flow = spec.is_decrypt_flow();
+
     tlscb->hal_handle = hal_alloc_handle();
 
     // allocate all PD resources and finish programming
@@ -154,6 +156,7 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
     hal_ret_t              ret = HAL_RET_OK; 
     tlscb_t*               tlscb;
     pd::pd_tlscb_args_t    pd_tlscb_args;
+    bool                   is_decrypt_flow = false;
 
     auto kh = spec.key_or_handle();
 
@@ -170,6 +173,11 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
     tlscb->explicit_iv = spec.explicit_iv();
     tlscb->serq_pi = spec.serq_pi();
     tlscb->serq_ci = spec.serq_ci();
+    is_decrypt_flow = (uint8_t) spec.is_decrypt_flow();
+    if (is_decrypt_flow == true)
+        tlscb->is_decrypt_flow = 1;
+    else
+        tlscb->is_decrypt_flow = 0;
 
     pd::pd_tlscb_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
