@@ -61,12 +61,13 @@ packets:
             bth:
                 opcode  : 4 
                 destqp  : ref://testcase/config/rdmasession/lqp/id
+                psn     : callback://rdma/rdma/GetRqPreEpsn
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
 buffers:
     - buffer:
-        id      : RX_BUF1
+        id      : RQ_BUF1
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
@@ -76,7 +77,7 @@ buffers:
                  data    : None
 
     - buffer:
-        id      : RX_BUF2
+        id      : RQ_BUF2
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
@@ -87,7 +88,7 @@ buffers:
                  skip    : ref://testcase/packets/id=TRAILER/size
 
     - buffer:
-        id      : EXP_BUF
+        id      : EXP_RQ_BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
            slab    : None
@@ -99,41 +100,41 @@ buffers:
 
 descriptors:
     - descriptor:
-        id      : RX_DESC
+        id      : RQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_RQ
         fields:
             wrid: 5
             num_sges: 2
                
             sges:
-                - va  : ref://testcase/buffers/id=RX_BUF1/address
-                  len : ref://testcase/buffers/id=RX_BUF1/size
+                - va  : ref://testcase/buffers/id=RQ_BUF1/address
+                  len : ref://testcase/buffers/id=RQ_BUF1/size
                   l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
-                - va  : ref://testcase/buffers/id=RX_BUF2/address
-                  len : ref://testcase/buffers/id=RX_BUF2/size
+                - va  : ref://testcase/buffers/id=RQ_BUF2/address
+                  len : ref://testcase/buffers/id=RQ_BUF2/size
                   l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
 
     - descriptor:
         id      : EXP_DESC
         template: ref://factory/templates/id=DESC_RDMA_RQ
         fields:
-            buff: ref://testcase/buffers/id=EXP_BUF
+            buff: ref://testcase/buffers/id=EXP_RQ_BUF
             wrid: 5
             num_sges: 2
                
             sges:
-                - va  : ref://testcase/buffers/id=RX_BUF1/address
-                  len : ref://testcase/buffers/id=RX_BUF1/size
+                - va  : ref://testcase/buffers/id=RQ_BUF1/address
+                  len : ref://testcase/buffers/id=RQ_BUF1/size
                   l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
-                - va  : ref://testcase/buffers/id=RX_BUF2/address
-                  len : ref://testcase/buffers/id=RX_BUF2/size
+                - va  : ref://testcase/buffers/id=RQ_BUF2/address
+                  len : ref://testcase/buffers/id=RQ_BUF2/size
                   l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
 
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=RX_DESC
-            ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/queue_types/id=RDMA_RQ/queues/id=0/rings/id=RQ
+            object  : ref://testcase/descriptors/id=RQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
 
     packets:
         - packet:
@@ -144,6 +145,6 @@ expect:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_DESC
-            ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/queue_types/id=RDMA_RQ/queues/id=0/rings/id=RQ
+            ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
             # Expected Buffer on this descriptor
-            buffer  : ref://testcase/buffers/id=EXP_BUF
+            buffer  : ref://testcase/buffers/id=EXP_RQ_BUF
