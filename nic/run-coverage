@@ -1,6 +1,0 @@
-#! /bin/bash
-export DIR_NIC=`dirname $0`
-export COVERAGE_CONFIG_PATH=$DIR_NIC/conf/
-export COVERAGE_OUTPUT=$DIR_NIC/gen/coverage
-export OBJ_DIR=$DIR_NIC/obj
-tools/gcov/run.py 2>&1 | tee coverage.log
