@@ -695,39 +695,6 @@ p4pd_common_txdma_actions_entry_read(uint32_t   tableid,
                          void       *swkey_mask,
                          void       *actiondata);
 
-/* Create P4 table encoded hardware entry.
- *
- * Arguments:
- *
- *  IN  : uint32_t tableid       : Table Id that identifies
- *                                 P4 table. This id is obtained
- *                                 from p4pd_table_id_enum.
- *  IN  : void    *swkey         : Hardware key data read from hardware table is
- *                                 converted to software key. A software key
- *                                 structure is generated for every p4-table.
- *                                 Refer to p4pd.h for structure details.
- *                                 Can be NULL if table id identifies index
- *                                 based lookup table.
- *  IN  : void    *swkey_mask    : Key match mask used in ternary matching.
- *                                 Can be NULL if table id identifies
- *                                 exact match table (hash based lookup) or
- *                                 when table id identifies index based lookup
- *                                 table.
- *  IN  : void    *actiondata    : Action data associated with the key.
- *                                 Action data structure generated per p4 table.
- *                                 Refer to p4pd.h for structure details
- *  OUT : uint8_t *hwentry       : HW entry that would get installed .
- *
- * Return Value:
- *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
- */
-p4pd_error_t
-p4pd_common_txdma_actions_entry_create(uint32_t   tableid,
-                           void       *swkey,
-                           void       *swkey_mask,
-                           void       *actiondata,
-                           uint8_t    *hwentry);
-
 /* Return Log string of decoded P4 table structure (key, actiondata structures).
  *
  * Arguments:

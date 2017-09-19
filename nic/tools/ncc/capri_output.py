@@ -2597,7 +2597,7 @@ def capri_p4pd_create_swig_makefile(be):
     content_str += 'SWG = swig\n'
     content_str += 'SWGFLAGS = -python -c++\n'
     content_str += 'CPPFLAGS = -g -c -pthread -std=c++11 -fPIC\n'
-    content_str += 'LNKFLAGS = -Wl,-rpath,./obj -Wl,-rpath,./model_sim/build -Wl,-rpath,./model_sim/libs\n'
+    content_str += 'LNKFLAGS = -Wl,-rpath,./obj -Wl,-rpath,./model_sim/build -Wl,-rpath,./model_sim/libs -Wl,-rpath,./asic/capri/model/capsim-gen/lib\n'
     content_str += 'LNKFLAGS += -Wl,-rpath,$(TOP_DIR)/obj -Wl,-rpath,$(TOP_DIR)/model_sim/build -Wl,-rpath,$(TOP_DIR)/model_sim/libs -shared\n'
     content_str += 'BLDFLAGS = -Wl,-rpath,./obj -Wl,-rpath,./model_sim/build -Wl,-rpath,./model_sim/libs\n'
     content_str += 'BLDFLAGS += -Wl,-rpath,$(TOP_DIR)/obj -Wl,-rpath,$(TOP_DIR)/model_sim/build -Wl,-rpath,$(TOP_DIR)/model_sim/libs\n'
@@ -2609,7 +2609,7 @@ def capri_p4pd_create_swig_makefile(be):
     content_str += 'INC_DIRS += -I$(TOP_DIR)/hal/pd -I$(TOP_DIR)/model_sim/include\n'
     content_str += 'INC_DIRS += -I/usr/include/python2.7\n'
     content_str += 'LIB_DIRS = -L$(TOP_DIR)/obj -L$(TOP_DIR)/model_sim/build -L$(TOP_DIR)/model_sim/libs\n'
-    content_str += 'LIBS = -lpython2.7 -lmodelclient -lzmq -lcapri -lcapricsr -lp4pluspd_rxdma -lp4pd -ltrace\n'
+    content_str += 'LIBS = -lpython2.7 -lmodelclient -lzmq -lcapri -lcapricsr -lp4pluspd_rxdma -lp4pluspd_txdma -lp4pd -ltrace\n'
     content_str += '\n'
     content_str += 'all:\n'
     content_str += '\t$(SWG) $(SWGFLAGS) $(INC_DIRS) -o %s_wrap.c %s.i\n' % (name, name)
@@ -2617,11 +2617,12 @@ def capri_p4pd_create_swig_makefile(be):
     content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o %s_api.o $(TOP_DIR)/hal/pd/iris/p4pd/p4pd_api.cc\n' % (name)
     content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o global_api.o $(TOP_DIR)/hal/pd/iris/p4pd/p4pd_global_api.cc\n'
     content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o rxdma_api.o $(TOP_DIR)/hal/pd/iris/p4pd/p4pluspd_rxdma_api.cc\n'
-    content_str += '\t$(CXX) $(LNKFLAGS) -o _%s.so %s_wrap.o %s_api.o rxdma_api.o global_api.o $(LIB_DIRS) $(LIBS)\n' % (name, name, name)
+    content_str += '\t$(CXX) $(CPPFLAGS) $(INC_DIRS) -o txdma_api.o $(TOP_DIR)/hal/pd/iris/p4pd/p4pluspd_txdma_api.cc\n'
+    content_str += '\t$(CXX) $(LNKFLAGS) -o _%s.so %s_wrap.o %s_api.o rxdma_api.o txdma_api.o global_api.o $(LIB_DIRS) $(LIBS)\n' % (name, name, name)
     content_str += '\n'
     content_str += 'main:\n'
     content_str += '\t$(CXX) $(CPPFLAGS) -DP4PD_CLI $(INC_DIRS) -o main.o main.cc\n'
-    content_str += '\t$(CXX) $(BLDFLAGS) -o main main.o %s_api.o rxdma_api.o global_api.o $(LIB_DIRS) $(LIBS)\n' % (name)
+    content_str += '\t$(CXX) $(BLDFLAGS) -o main main.o %s_api.o rxdma_api.o txdma_api.o global_api.o $(LIB_DIRS) $(LIBS)\n' % (name)
     content_str += '\n'
     content_str += 'clean:\n'
     content_str += '\trm *.o *.so *.pyc main %s.py %s_wrap.c\n' % (name, name)
