@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/grpc-gateway/runtime"
-	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 var mux *runtime.ServeMux

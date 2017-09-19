@@ -9,11 +9,11 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
-	"github.com/pensando/sw/agent/netagent"
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/ctrler/npm"
+	"github.com/pensando/sw/nic/agent/netagent"
+	"github.com/pensando/sw/venice/ctrler/npm"
 
-	. "github.com/pensando/sw/utils/testutils"
+	. "github.com/pensando/sw/venice/utils/testutils"
 	. "gopkg.in/check.v1"
 )
 

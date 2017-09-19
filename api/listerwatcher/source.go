@@ -5,7 +5,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/pensando/sw/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
 // WatcherClientBridgeFn is used to bridge between the GRPC watch stream and WatcherClient.

@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	apiserver "github.com/pensando/sw/apiserver"
+	apiserver "github.com/pensando/sw/venice/apiserver"
 )
 
 func dummyBefore(ctx context.Context, md *metadata.MD) context.Context {

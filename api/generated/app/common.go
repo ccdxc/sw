@@ -18,7 +18,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/pensando/sw/api"
-	apiserver "github.com/pensando/sw/apiserver"
+	apiserver "github.com/pensando/sw/venice/apiserver"
 )
 
 var (

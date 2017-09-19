@@ -7,7 +7,7 @@ Input file: protos/example.proto
 package bookstoreApiServer
 
 import (
-	"github.com/pensando/sw/apiserver"
+	"github.com/pensando/sw/venice/apiserver"
 )
 
 var apisrv apiserver.Server

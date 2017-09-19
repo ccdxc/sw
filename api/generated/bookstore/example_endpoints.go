@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // Dummy definitions to suppress nonused warnings

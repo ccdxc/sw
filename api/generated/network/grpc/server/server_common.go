@@ -7,7 +7,7 @@ Input file: protos/network.proto
 package networkApiServer
 
 import (
-	"github.com/pensando/sw/apiserver"
+	"github.com/pensando/sw/venice/apiserver"
 )
 
 var apisrv apiserver.Server

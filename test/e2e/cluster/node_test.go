@@ -12,7 +12,7 @@ import (
 	api "github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cmd"
 	cmdclient "github.com/pensando/sw/api/generated/cmd/grpc/client"
-	"github.com/pensando/sw/globals"
+	"github.com/pensando/sw/venice/globals"
 )
 
 var _ = Describe("node tests", func() {

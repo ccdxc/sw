@@ -16,9 +16,9 @@ import (
 	api "github.com/pensando/sw/api"
 	network "github.com/pensando/sw/api/generated/network"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
-	apiserver "github.com/pensando/sw/apiserver"
-	"github.com/pensando/sw/utils/kvstore"
-	"github.com/pensando/sw/utils/log"
+	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // Dummy vars to suppress import errors

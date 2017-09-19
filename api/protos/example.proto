@@ -3,7 +3,7 @@ syntax = "proto3";
 package bookstore;
 
 // Mandatory imports.
-import public "github.com/pensando/sw/utils/apigen/annotations/includes.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
 message Publisher {

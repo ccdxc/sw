@@ -7,14 +7,14 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
-	"github.com/pensando/sw/apigw"
-	apigwpkg "github.com/pensando/sw/apigw/pkg"
-	"github.com/pensando/sw/apiserver"
-	apiserverpkg "github.com/pensando/sw/apiserver/pkg"
-	"github.com/pensando/sw/utils/kvstore/store"
-	"github.com/pensando/sw/utils/log"
-	"github.com/pensando/sw/utils/runtime"
-	"github.com/pensando/sw/utils/trace"
+	"github.com/pensando/sw/venice/apigw"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apiserver"
+	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/trace"
 
 	_ "github.com/pensando/sw/api/generated/exports/apigw"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"

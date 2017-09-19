@@ -6,10 +6,10 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/pborman/uuid"
 	cmd "github.com/pensando/sw/api/generated/cmd"
-	"github.com/pensando/sw/apiserver"
-	apisrvpkg "github.com/pensando/sw/apiserver/pkg"
-	"github.com/pensando/sw/utils/kvstore"
-	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/venice/apiserver"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 type cmdHooks struct {

@@ -13,8 +13,8 @@ import (
 	networkClient "github.com/pensando/sw/api/generated/network/grpc/client"
 	networkencryption "github.com/pensando/sw/api/generated/networkencryption"
 	networkencryptionClient "github.com/pensando/sw/api/generated/networkencryption/grpc/client"
-	"github.com/pensando/sw/utils/log"
-	"github.com/pensando/sw/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 // Services is list of all services exposed by the client ---

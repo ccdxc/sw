@@ -1,0 +1,2 @@
+{{$x := (createDir "./generated" .GoPkg.Name)}}{{$x := (createDir "./generated" .GoPkg.Name "swagger")}}{{$x := (createDir "./generated" "apiclient")}}{{$x := (genManifest "./generated/manifest" .GoPkg.Name .Name)}}{{range $key, $value := $x}}
+{{$key}} {{$value}}{{end}}

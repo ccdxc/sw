@@ -7,7 +7,7 @@ Input file: protos/networkencryption.proto
 package networkencryptionApiServer
 
 import (
-	"github.com/pensando/sw/apiserver"
+	"github.com/pensando/sw/venice/apiserver"
 )
 
 var apisrv apiserver.Server

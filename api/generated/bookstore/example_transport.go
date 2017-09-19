@@ -17,7 +17,7 @@ import (
 	oldcontext "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // Dummy definitions to suppress nonused warnings

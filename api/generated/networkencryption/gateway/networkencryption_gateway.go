@@ -18,11 +18,11 @@ import (
 	"github.com/pensando/sw/api"
 	networkencryption "github.com/pensando/sw/api/generated/networkencryption"
 	"github.com/pensando/sw/api/generated/networkencryption/grpc/client"
-	"github.com/pensando/sw/apigw/pkg"
-	"github.com/pensando/sw/utils/balancer"
-	"github.com/pensando/sw/utils/log"
-	"github.com/pensando/sw/utils/resolver"
-	"github.com/pensando/sw/utils/rpckit"
+	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 // Dummy vars to suppress import errors

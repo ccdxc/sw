@@ -37,7 +37,7 @@ do
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
-        --grpc-gateway_out=logtostderr=false,v=7,gengw=false,templates=github.com/pensando/sw/utils/apigen/manifest.yaml,log_dir=${curdir}/tmp:${curdir}/generated/ \
+        --grpc-gateway_out=logtostderr=false,v=7,gengw=false,templates=github.com/pensando/sw/venice/utils/apigen/manifest.yaml,log_dir=${curdir}/tmp:${curdir}/generated/ \
         ${protofile} || { echo "grpc-gateway generation failed" ; exit -1; }
 done
 
@@ -53,7 +53,7 @@ do
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
         -I${GOPATH}/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/third_party \
         -I${GOPATH}/src/github.com/pensando/sw/vendor \
-        --grpc-gateway_out=request_context=true,logtostderr=false,gengw=true,v=7,templates=github.com/pensando/sw/utils/apigen/config.yaml,log_dir=${curdir}/tmp:${curdir}/generated/${pkg} \
+        --grpc-gateway_out=request_context=true,logtostderr=false,gengw=true,v=7,templates=github.com/pensando/sw/venice/utils/apigen/config.yaml,log_dir=${curdir}/tmp:${curdir}/generated/${pkg} \
         ${protopath}/${protofile} || { echo "grpc-gateway generation failed" ; exit -1; }
 done < ${curdir}/generated/manifest
 

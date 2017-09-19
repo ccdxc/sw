@@ -2,7 +2,7 @@ package cache
 
 import (
 	apiclient "github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // NewGrpcUpstream creates a cache with a gRPC Upstream

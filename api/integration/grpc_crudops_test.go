@@ -10,9 +10,9 @@ import (
 	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
-	"github.com/pensando/sw/utils/kvstore"
-	"github.com/pensando/sw/utils/runtime"
-	. "github.com/pensando/sw/utils/testutils"
+	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/runtime"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 // validateObjectSpec Expects non-pointers in expected and result.

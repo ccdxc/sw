@@ -14,9 +14,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 
-	"github.com/pensando/sw/orch/simapi"
-	"github.com/pensando/sw/orch/vchub/sim"
-	n "github.com/pensando/sw/utils/netutils"
+	"github.com/pensando/sw/venice/orch/simapi"
+	"github.com/pensando/sw/venice/orch/vchub/sim"
+	n "github.com/pensando/sw/venice/utils/netutils"
 )
 
 const (

@@ -9,9 +9,9 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/orch"
-	"github.com/pensando/sw/orch/simapi"
-	n "github.com/pensando/sw/utils/netutils"
+	"github.com/pensando/sw/venice/orch"
+	"github.com/pensando/sw/venice/orch/simapi"
+	n "github.com/pensando/sw/venice/utils/netutils"
 )
 
 // createVM creates a VM using vcsim api

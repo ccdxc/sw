@@ -6,8 +6,8 @@ import (
 	"context"
 
 	api "github.com/pensando/sw/api"
-	apiserver "github.com/pensando/sw/apiserver"
-	"github.com/pensando/sw/utils/kvstore"
+	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
 // Dummy vars to suppress unused imports message

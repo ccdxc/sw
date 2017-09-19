@@ -9,7 +9,7 @@ import (
 
 	api "github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cmd"
-	"github.com/pensando/sw/globals"
+	"github.com/pensando/sw/venice/globals"
 
 	cmdclient "github.com/pensando/sw/api/generated/cmd/grpc/client"
 )

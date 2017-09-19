@@ -3,5 +3,5 @@
 package main
 
 import (
-	_ "github.com/pensando/sw/utils/apigen/swagger-plugins"
+	_ "github.com/pensando/sw/venice/utils/apigen/swagger-plugins"
 )

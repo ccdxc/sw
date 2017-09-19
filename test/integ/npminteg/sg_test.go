@@ -4,14 +4,14 @@ package npminteg
 
 import
 
-// . "github.com/pensando/sw/utils/testutils"
+// . "github.com/pensando/sw/venice/utils/testutils"
 (
 	"fmt"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pensando/sw/api/generated/network"
 
-	. "github.com/pensando/sw/utils/testutils"
+	. "github.com/pensando/sw/venice/utils/testutils"
 	. "gopkg.in/check.v1"
 )
 

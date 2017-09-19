@@ -7,7 +7,7 @@ Input file: protos/cmd.proto
 package cmdApiServer
 
 import (
-	"github.com/pensando/sw/apiserver"
+	"github.com/pensando/sw/venice/apiserver"
 )
 
 var apisrv apiserver.Server

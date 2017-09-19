@@ -9,11 +9,11 @@ import (
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/globals"
-	"github.com/pensando/sw/orch"
-	"github.com/pensando/sw/utils/log"
-	"github.com/pensando/sw/utils/rpckit"
-	. "github.com/pensando/sw/utils/testutils"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/orch"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 const (

@@ -8,10 +8,10 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api/generated/bookstore"
-	"github.com/pensando/sw/apiserver"
-	apisrvpkg "github.com/pensando/sw/apiserver/pkg"
-	"github.com/pensando/sw/utils/kvstore"
-	"github.com/pensando/sw/utils/log"
+	"github.com/pensando/sw/venice/apiserver"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 type bookstoreHooks struct {

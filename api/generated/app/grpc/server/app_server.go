@@ -16,12 +16,12 @@ import (
 	"github.com/pensando/sw/api"
 	app "github.com/pensando/sw/api/generated/app"
 	"github.com/pensando/sw/api/listerwatcher"
-	"github.com/pensando/sw/apiserver"
-	"github.com/pensando/sw/apiserver/pkg"
-	"github.com/pensando/sw/utils/kvstore"
-	"github.com/pensando/sw/utils/log"
-	"github.com/pensando/sw/utils/rpckit"
-	"github.com/pensando/sw/utils/runtime"
+	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // dummy vars to suppress unused errors

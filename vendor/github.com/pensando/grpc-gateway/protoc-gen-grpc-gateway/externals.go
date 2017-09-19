@@ -4,6 +4,6 @@
 package main
 
 import (
-	_ "github.com/pensando/sw/utils/apigen/annotations"
-	_ "github.com/pensando/sw/utils/apigen/plugins"
+	_ "github.com/pensando/sw/venice/utils/apigen/annotations"
+	_ "github.com/pensando/sw/venice/utils/apigen/plugins"
 )

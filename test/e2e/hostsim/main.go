@@ -9,8 +9,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 
-	"github.com/pensando/sw/orch/simapi"
-	n "github.com/pensando/sw/utils/netutils"
+	"github.com/pensando/sw/venice/orch/simapi"
+	n "github.com/pensando/sw/venice/utils/netutils"
 )
 
 type restAPIFunc func(r *http.Request) (interface{}, error)

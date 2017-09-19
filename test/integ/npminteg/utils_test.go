@@ -5,10 +5,10 @@ package npminteg
 import (
 	"fmt"
 
-	"github.com/pensando/sw/agent"
-	"github.com/pensando/sw/agent/netagent/datapath"
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/nic/agent"
+	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/prometheus/common/log"
 )
 
