@@ -212,7 +212,7 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
     HAL_TRACE_DEBUG("Starting packet poll for queue: {}", ctxt->rx.num_queues);
 
     while(true) {
-        sleep(1);
+        usleep(300);
         for(uint32_t i=0; i< ctxt->rx.num_queues; i++) {
             uint64_t value = 0;
             //HAL_TRACE_DEBUG("cpupkt rx: checking queue at address: {:#x}", ctxt->rx.queue[i].pc_index_addr);
@@ -385,7 +385,8 @@ cpupkt_program_send_ring_doorbell(cpupkt_ctxt_t* ctxt)
                     addr, data);
     step_doorbell(addr, data);
     ctxt->tx.queue.pc_index++;
-    HAL_TRACE_DEBUG("Ring doorbell done. Set pc_index: {}", ctxt->tx.queue.pc_index++);
+    cpupkt_update_slot_addr(&ctxt->tx.queue);
+    HAL_TRACE_DEBUG("Ring doorbell done. Set pc_index: {}", ctxt->tx.queue.pc_index);
     return HAL_RET_OK;
 }
 

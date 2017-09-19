@@ -25,7 +25,7 @@ table_read_asq_cindex:
     CAPRI_OPERAND_DEBUG(d.{asq_base}.wx)
 
     phvwr   p.to_s2_asq_cidx, d.{ci_0}.hx
-    add     r3, d.{asq_base}.wx, d.{ci_0}, NIC_ASQ_ENTRY_SIZE_SHIFT 
+    add     r3, d.{asq_base}.wx, d.{ci_0}.hx, NIC_ASQ_ENTRY_SIZE_SHIFT 
     phvwr   p.to_s1_asq_ci_addr, r3
 
 cpu_tx_initial_action_done:

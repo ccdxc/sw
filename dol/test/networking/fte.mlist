@@ -14,14 +14,14 @@ modules:
               segment : filter://native=False
             - flow    : filter://type=IPV4,proto=TCP,label=FTE
               segment : filter://native=False
-            - flow    : filter://type=IPV4,proto=ICMP,label=FTE
-              segment : filter://native=False
+#            - flow    : filter://type=IPV4,proto=ICMP,label=FTE
+#              segment : filter://native=False
             - flow    : filter://type=IPV6,proto=UDP,label=FTE
               segment : filter://native=False
             - flow    : filter://type=IPV6,proto=TCP,label=FTE
               segment : filter://native=False
-            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE
-              segment : filter://native=False
+#            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE
+#              segment : filter://native=False
 
     - module:
         name    : L2UC_IP_UTAG
@@ -37,14 +37,14 @@ modules:
               segment : filter://native=True
             - flow    : filter://type=IPV4,proto=TCP,label=FTE
               segment : filter://native=True
-            - flow    : filter://type=IPV4,proto=ICMP,label=FTE
-              segment : filter://native=True
+#           - flow    : filter://type=IPV4,proto=ICMP,label=FTE
+#              segment : filter://native=True
             - flow    : filter://type=IPV6,proto=UDP,label=FTE
               segment : filter://native=True
             - flow    : filter://type=IPV6,proto=TCP,label=FTE
               segment : filter://native=True
-            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE
-              segment : filter://native=True
+#            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE
+#              segment : filter://native=True
 
     - module:
         name    : L2UC_IP_PTAG
@@ -62,18 +62,18 @@ modules:
             - flow    : filter://type=IPV4,proto=TCP,label=FTE
               segment : filter://native=True
               priotag : True
-            - flow    : filter://type=IPV4,proto=ICMP,label=FTE
-              segment : filter://native=True
-              priotag : True
+#            - flow    : filter://type=IPV4,proto=ICMP,label=FTE
+#              segment : filter://native=True
+#              priotag : True
             - flow    : filter://type=IPV6,proto=UDP,label=FTE
               segment : filter://native=True
               priotag : True
             - flow    : filter://type=IPV6,proto=TCP,label=FTE
               segment : filter://native=True
               priotag : True
-            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE
-              segment : filter://native=True
-              priotag : True
+#            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE
+#              segment : filter://native=True
+#              priotag : True
 
     - module:
         name    : L2UC_NONIP_QTAG

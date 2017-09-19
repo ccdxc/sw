@@ -104,8 +104,8 @@ flowkey2str (const flow_key_t& key)
 
     switch (key.flow_type) {
     case FLOW_TYPE_L2:
-        out.write("l2seg={}, smac={}, dmac={}", key.l2seg_id, macaddr2str(key.smac),
-                  macaddr2str(key.dmac));
+        out.write("l2seg={}, smac={}, dmac={} etype={}", key.l2seg_id, macaddr2str(key.smac),
+                  macaddr2str(key.dmac), key.ether_type);
         break;
     case FLOW_TYPE_V4:
     case FLOW_TYPE_V6:
@@ -118,6 +118,7 @@ flowkey2str (const flow_key_t& key)
 
         switch (key.proto) {
         case types::IPPROTO_ICMP:
+        case types::IPPROTO_ICMPV6:
             out.write("proto=icmp, type={}, code={}, id={}",
                       key.icmp_type, key.icmp_code, key.icmp_id);
             break;

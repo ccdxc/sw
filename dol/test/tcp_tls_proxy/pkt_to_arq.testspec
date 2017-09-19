@@ -32,11 +32,11 @@ packets:
                 vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/sip
-                dst     : callback://tcpcb/tcpcb/GetDstIp
+                dst     : ref://testcase/config/flow/dip
                 ttl     : 64
             tcp:
                 sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
+                dport   : 7777
                 seq     : callback://tcpcb/tcpcb/GetSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckNum
             payload:
@@ -49,3 +49,8 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
+    delay: 1
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/dst/endpoint/intf/ports

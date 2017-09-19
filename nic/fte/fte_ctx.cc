@@ -272,29 +272,37 @@ ctx_t::create_session()
     } else {
         valid_rflow_ = true;
         rkey.flow_type = key_.flow_type;
-        rkey.tenant_id = key_.tenant_id; 
-        rkey.sip = key_.dip;
-        rkey.dip = key_.sip;
-        rkey.proto = key_.proto;
-        switch (key_.proto) {
-        case IP_PROTO_TCP:
-        case IP_PROTO_UDP:
-            rkey.sport = key_.dport;
-            rkey.dport = key_.sport;
-            break;
-        case IP_PROTO_ICMP:
-            rkey.icmp_type = key_.icmp_type ? 0 : 8; // flip echo to reply
-            rkey.icmp_code = key_.icmp_code;
-            rkey.icmp_id = key_.icmp_id;
-            break;
-        case IP_PROTO_ICMPV6:
-            rkey.icmp_type = key_.icmp_type == 128 ? 129 : 128; // flip echo to reply
-            rkey.icmp_code = key_.icmp_code;
-            rkey.icmp_id = key_.icmp_id;
-            break;
-        default:
-            valid_rflow_ = false;
-            break;
+        rkey.tenant_id = key_.tenant_id;
+
+        // TODO(goli) check valid ether types for rflow
+        if (key_.flow_type == hal::FLOW_TYPE_L2) {
+            memcpy(rkey.smac, key_.dmac, sizeof(rkey.smac));
+            memcpy(rkey.dmac, key_.smac, sizeof(rkey.dmac));
+            rkey.ether_type = key_.ether_type;
+        } else {
+            rkey.sip = key_.dip;
+            rkey.dip = key_.sip;
+            rkey.proto = key_.proto;
+            switch (key_.proto) {
+            case IP_PROTO_TCP:
+            case IP_PROTO_UDP:
+                rkey.sport = key_.dport;
+                rkey.dport = key_.sport;
+                break;
+            case IP_PROTO_ICMP:
+                rkey.icmp_type = key_.icmp_type ? 0 : 8; // flip echo to reply
+                rkey.icmp_code = key_.icmp_code;
+                rkey.icmp_id = key_.icmp_id;
+                break;
+            case IP_PROTO_ICMPV6:
+                rkey.icmp_type = key_.icmp_type == 128 ? 129 : 128; // flip echo to reply
+                rkey.icmp_code = key_.icmp_code;
+                rkey.icmp_id = key_.icmp_id;
+                break;
+            default:
+                valid_rflow_ = false;
+                break;
+            }
         }
     }
 

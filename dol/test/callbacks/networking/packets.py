@@ -181,5 +181,5 @@ def GetIngressPortIPSGDrop(testcase):
 
 def GetExpectDelay(testcase):
     if testcase.config.flow.IsFteEnabled():
-        return 3 # 3 seconds
+        return 1 # 1 second
     return 0

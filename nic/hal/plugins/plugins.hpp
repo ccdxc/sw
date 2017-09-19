@@ -17,7 +17,7 @@ inline hal_ret_t init_plugins() {
     //   - iflow pkts of local host intiated sessions and
     //   - rflow pkts of remote host initiated sessions
     fte::feature_id_t flow_miss_outbound[] = {
-        fte::FTE_FEATURE_DOL_TEST_ONLY,
+        //fte::FTE_FEATURE_DOL_TEST_ONLY,
         fte::FTE_FEATURE_DFW,
         fte::FTE_FEATURE_TCP_PROXY,
         fte::FTE_FEATURE_STAGE_MARKER,
