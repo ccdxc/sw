@@ -6,6 +6,8 @@
 #define CPU_CB_WRITE_ARQRX_OFFSET       64
 #define CPU_SCHED_RING_ASQ              0
 
+/* debug_dol encodings */
+#define CPU_DDOL_PKT_TO_ARQ             1
 
 #define CPUPR_ALLOC_IDX                0xa55b2000
 #define CPUPR_FREE_IDX                 0xba00ba28

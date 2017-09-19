@@ -88,6 +88,12 @@ add_cpucb_to_db (cpucb_t *cpucb)
     return HAL_RET_OK;
 }
 
+static inline void
+cpucb_spec_to_cb(CpuCbSpec& spec, cpucb_t& cpucb)
+{
+    cpucb.cb_id = spec.key_or_handle().cpucb_id();
+    cpucb.debug_dol = spec.debug_dol();
+}
 //------------------------------------------------------------------------------
 // process a CPU CB create request
 // TODO: if CPU CB exists, treat this as modify (tenant id in the meta must
@@ -109,7 +115,7 @@ cpucb_create (CpuCbSpec& spec, CpuCbResponse *rsp)
         return HAL_RET_OOM;
     }
 
-    cpucb->cb_id = spec.key_or_handle().cpucb_id();
+    cpucb_spec_to_cb(spec, *cpucb);
     
     cpucb->hal_handle = hal_alloc_handle();
 
@@ -159,6 +165,8 @@ cpucb_update (CpuCbSpec& spec, CpuCbResponse *rsp)
     pd::pd_cpucb_args_init(&pd_cpucb_args);
     pd_cpucb_args.cpucb = cpucb;
     
+    cpucb_spec_to_cb(spec, *cpucb);
+
     ret = pd::pd_cpucb_update(&pd_cpucb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD CPUCB: Update Failed, err: ", ret);

@@ -5,7 +5,7 @@ import copy
 
 from config.store               import Store
 from config.objects.proxycb_service    import ProxyCbServiceHelper
-from config.objects.tcp_proxy_cb        import TcpCbHelper
+from config.objects.cpucb        import CpuCbHelper
 
 rnmdr = 0
 rnmpr = 0
@@ -24,20 +24,13 @@ def TestCaseSetup(tc):
     global rnmpr
     global arq
 
-    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
-    TcpCbHelper.main(id)
-    tcbid = "TcpCb%04d" % id
-    # 1. Configure TCB in HBM before packet injection
-    tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
-    tcb.rcv_nxt = 0xBABABABA
-    tcb.snd_nxt = 0xEFEFEFF0
-    tcb.snd_una = 0xEFEFEFEF
-    tcb.rcv_tsval = 0xFAFAFAFA
-    tcb.ts_recent = 0xFAFAFAF0
-    tcb.debug_dol = 0
-    # set tcb state to ESTABLISHED(1)
-    tcb.state = 1
-    tcb.SetObjValPd()
+    id = 0 
+    CpuCbHelper.main(id)
+    cpucbid = "CpuCb%04d" % id
+    # 1. Configure CPUCB in HBM before packet injection
+    cpucb = tc.infra_data.ConfigStore.objects.db[cpucbid]
+    cpucb.debug_dol = 1
+    cpucb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
@@ -62,31 +55,37 @@ def TestCaseVerify(tc):
     arq_cur = tc.infra_data.ConfigStore.objects.db["ARQ"]
     arq_cur.Configure()
 
-    # 2. Verify PI for RNMDR got incremented by 2 
+    # 2. Verify PI for RNMDR got incremented by 1 
     if (rnmdr_cur.pi != rnmdr.pi+1):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         #return False
 
     # 3. Verify PI for ARQ got incremented by 1
-    if (arq_cur.pi != arq.pi+1):
-        print("ARQ pi check failed old %d new %d" % (arq.pi, arq_cur.pi))
-        #return False
+    #if (arq_cur.pi != arq.pi+1):
+    #    print("ARQ pi check failed old %d new %d" % (arq.pi, arq_cur.pi))
+    #    return False
 
-    # 2. Verify descriptor
+    # 4. Verify descriptor
     #if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:
     if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[0].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[0].handle))
-        #print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
-        #return False
+        return False
 
     print("Descriptor handle as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[0].handle))
-    # 3. Verify page
-    if rnmpr.ringentries[0].handle != arq_cur.swdre_list[0].Addr1:
-        print("Page handle not as expected in arq_cur.swdre_list")
-        #return False
+    # 5. Verify page
+    #if rnmpr.ringentries[0].handle != arq_cur.swdre_list[0].Addr1:
+    #    print("Page handle not as expected in arq_cur.swdre_list 0x%x 0x%x" %(rnmpr.ringentries[0].handle, arq_cur.swdre_list[0].Addr1))
+    #    return False
 
     return True
 
 def TestCaseTeardown(tc):
     print("TestCaseTeardown(): Sample Implementation.")
+    id = 0 
+    CpuCbHelper.main(id)
+    cpucbid = "CpuCb%04d" % id
+    # 1. Configure CPUCB in HBM before packet injection
+    cpucb = tc.infra_data.ConfigStore.objects.db[cpucbid]
+    cpucb.debug_dol = 0
+    cpucb.SetObjValPd()
     return

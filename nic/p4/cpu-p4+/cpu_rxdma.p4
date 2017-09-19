@@ -32,6 +32,7 @@
 
 #define GENERATE_GLOBAL_K \
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
+    modify_field(common_global_scratch.debug_dol, common_phv.debug_dol); \
 
 
 /******************************************************************************
@@ -43,8 +44,8 @@ header_type cpu_rxdma_initial_action_t {
     fields {
         // 8 Bytes intrinsic header
         CAPRI_QSTATE_HEADER_COMMON
-
-        pad                         : 440;
+        debug_dol                   : 8;
+        pad                         : 432;
     }
 }
 
@@ -97,6 +98,7 @@ header_type common_global_phv_t {
     fields {
         // global k (max 128)
         qstate_addr             : 32;
+        debug_dol               : 8;
     }
 }
 
@@ -203,7 +205,7 @@ metadata dma_cmd_phv2mem_t dma_cmd2;
 /*
  * Stage 0 table 0 action
  */
-action cpu_rxdma_initial_action(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pad) {
+action cpu_rxdma_initial_action(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, debug_dol, pad) {
     // k + i for stage 0
 
     // from intrinsic
@@ -233,6 +235,7 @@ action cpu_rxdma_initial_action(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, 
     modify_field(cpu_rxdma_initial_d.host, host);
     modify_field(cpu_rxdma_initial_d.total, total);
     modify_field(cpu_rxdma_initial_d.pid, pid);
+    modify_field(cpu_rxdma_initial_d.debug_dol, debug_dol);
     modify_field(cpu_rxdma_initial_d.pad, pad);
 }
 
@@ -303,7 +306,7 @@ action write_arqrx(nde_addr, nde_offset, nde_len, curr_ts) {
     modify_field(to_s3_scratch.payload_len, to_s3.payload_len);
 
     // from ki global
-    //GENERATE_GLOBAL_K
+    GENERATE_GLOBAL_K
 
     // from stage 2 to stage 3
 

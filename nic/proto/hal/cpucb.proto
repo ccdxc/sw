@@ -27,6 +27,7 @@ message CpuCbKeyHandle {
 // CpuCbSpec captures all the cpu_cb level configuration
 message CpuCbSpec {
   CpuCbKeyHandle        key_or_handle              = 1;    // cpu_cb being created/updated
+  uint32                debug_dol                  = 2;
 }
 
 // CpuCbRequestMsg is batched add or modify cpucb request

@@ -1,0 +1,18 @@
+# CPU CB Object Template File.
+meta:
+    id: CPUCB
+    grpc:
+        package                       : cpucb
+        service                       : CpuCb
+        apis:
+            create:
+                name                  : CpuCbCreate
+                message               : CpuCbRequestMsg
+            get:
+                name                  : CpuCbGet
+                message               : CpuCbGetRequestMsg
+
+id          : 0 # CPU CB Local ID
+spec        : None # (REF) CPU CB Spec from Base Config.
+debug_dol   : 0
+

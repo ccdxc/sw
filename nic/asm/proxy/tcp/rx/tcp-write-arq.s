@@ -70,7 +70,8 @@ dma_cmd_arq_slot:
                    ring_entry_descr_addr,
                    dma_cmd2_dma_cmd, 
                    1, 
-                   1)  
+                   1, 
+                   c1)  
 
     
 flow_write_arq_process_done:

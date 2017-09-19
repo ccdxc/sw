@@ -15,6 +15,8 @@
 #define CPU_ARQRX_QIDXR_OFFSET              64
 #define ARQRX_QIDXR_DIR_ENTRY_SIZE_SHIFT    3          
 
+#define CPU_VALID_BIT_SHIFT                 63
+
 #define CPU_PHV_RING_ENTRY_DESC_ADDR_START CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
 #define CPU_PHV_RING_ENTRY_DESC_ADDR_END CAPRI_PHV_END_OFFSET(ring_entry_descr_addr)
 
@@ -25,13 +27,18 @@
                        _phv_desc_field_name, \
                        _dma_cmd_prefix, \
                        _eop_, \
-                       _wr_fence_) \
+                       _wr_fence_, \
+                       _debug_dol_cr) \
  	add     _dest_r, r0, _arqrx_pindex; \
 	sll     _dest_r, _dest_r, NIC_ARQRX_ENTRY_SIZE_SHIFT; \
 	add     _dest_r, _dest_r, _arqrx_base; \
 	phvwri  p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM; \
 	phvwr   p.##_dma_cmd_prefix##_addr, _dest_r; \
-	phvwr   p._phv_desc_field_name, _descr_addr; \
+    add     _dest_r, r0, r0; \
+    add.!_debug_dol_cr  _dest_r, r0, 0x1; \
+    sll.!_debug_dol_cr  _dest_r, _dest_r, CPU_VALID_BIT_SHIFT; \
+    add     _dest_r, _dest_r, _descr_addr; \
+	phvwr   p._phv_desc_field_name, _dest_r; \
 	phvwri  p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_phv_desc_field_name); \
 	phvwri  p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_phv_desc_field_name); \
     phvwri  p.##_dma_cmd_prefix##_eop, _eop_; \
