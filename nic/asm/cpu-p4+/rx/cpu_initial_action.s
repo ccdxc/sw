@@ -29,13 +29,13 @@ table_read_DESC_SEMAPHORE:
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, 
                          cpu_rx_read_desc_pindex_start,
                          r3,
-                         TABLE_SIZE_16_BITS)
+                         TABLE_SIZE_64_BITS)
 table_read_PAGE_SEMAPHORE:
     addi    r3, r0, RNMPR_ALLOC_IDX
     CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, 
                          cpu_rx_read_page_pindex_start,
                          r3,
-                         TABLE_SIZE_16_BITS)
+                         TABLE_SIZE_64_BITS)
 table_read_ARQRX_PINDEX:
     phvwri  p.to_s3_arqrx_base, ARQRX_BASE
     CPU_ARQRX_QIDX_ADDR(0, r3, ARQRX_QIDXR_BASE)
