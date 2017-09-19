@@ -56,37 +56,28 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     nop
 
     phvwri p.app_header_table0_valid, 1
-    addi r2, r0, esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore
-    srl r2, r2, 6
-    phvwr p.common_te0_phv_table_pc, r2 
+    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore[33:6] 
     phvwri p.common_te0_phv_table_raw_table_size, 4
     phvwri p.common_te0_phv_table_lock_en, 0
     phvwri p.common_te0_phv_table_addr, INDESC_SEMAPHORE_ADDR
 
     phvwri p.app_header_table1_valid, 1
-    addi r2, r0, esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore 
-    srl r2, r2, 6
-    phvwr p.common_te1_phv_table_pc, r2 
+    phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore[33:6] 
     phvwri p.common_te1_phv_table_raw_table_size, 4
     phvwri p.common_te1_phv_table_lock_en, 0
     phvwri p.common_te1_phv_table_addr, OUTDESC_SEMAPHORE_ADDR
   
     phvwri p.app_header_table2_valid, 1
-    addi r2, r0, esp_ipv4_tunnel_n2h_allocate_input_page_semaphore 
-    srl r2, r2, 6
-    phvwr p.common_te2_phv_table_pc, r2 
+    phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_input_page_semaphore[33:6] 
     phvwri p.common_te2_phv_table_raw_table_size, 4
     phvwri p.common_te2_phv_table_lock_en, 0
     phvwri p.common_te2_phv_table_addr, INPAGE_SEMAPHORE_ADDR
 
     phvwri p.app_header_table3_valid, 1
-    addi r2, r0, esp_ipv4_tunnel_n2h_allocate_output_page_semaphore 
-    srl r2, r2, 6
-    phvwr p.common_te3_phv_table_pc, r2 
+    phvwri p.common_te3_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_output_page_semaphore[33:6] 
     phvwri p.common_te3_phv_table_raw_table_size, 4
     phvwri p.common_te3_phv_table_lock_en, 0
     phvwri p.common_te3_phv_table_addr, OUTPAGE_SEMAPHORE_ADDR
-    nop.e
  
 ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
     //ori r4, k.ipsec_int_drop_mask, IPSEC_BAD_SEQ_NO
@@ -117,5 +108,6 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
     //phvwr p.ipsec_int_drop_mask, r4
     nop
     tblwr d.expected_seq_no, k.p42p4plus_hdr_seq_no
+    nop.e
     nop
  

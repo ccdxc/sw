@@ -17,9 +17,7 @@ esp_ipv4_tunnel_n2h_load_barco_req:
     phvwri p.app_header_table0_valid, 1
     phvwri p.common_te0_phv_table_lock_en, 1
     phvwri p.common_te0_phv_table_raw_table_size, 6 
-    addi r2, r0, esp_ipv4_tunnel_n2h_txdma2_load_in_desc
-    srl r2, r2, 6
-    phvwr p.common_te0_phv_table_pc, r2 
+    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_n2h_txdma2_load_in_desc[33:6] 
     add r1, r0, d.brq_in_addr
     addi r1, r1, 64
     phvwr  p.common_te0_phv_table_addr, r1 
@@ -27,9 +25,7 @@ esp_ipv4_tunnel_n2h_load_barco_req:
     phvwri p.app_header_table1_valid, 1
     phvwri p.common_te1_phv_table_lock_en, 1
     phvwri p.common_te1_phv_table_raw_table_size, 6
-    addi r2, r0, esp_ipv4_tunnel_n2h_txdma2_load_out_desc
-    srl r2, r2, 6 
-    phvwr p.common_te1_phv_table_pc, r2 
+    phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_n2h_txdma2_load_out_desc[33:6] 
     add r1, r0, d.brq_in_addr
     addi r1, r1, 64
     phvwr  p.common_te1_phv_table_addr, d.brq_out_addr
@@ -37,9 +33,7 @@ esp_ipv4_tunnel_n2h_load_barco_req:
     phvwri p.app_header_table2_valid, 1
     phvwri p.common_te2_phv_table_lock_en, 1
     phvwri p.common_te2_phv_table_raw_table_size, 6 
-    addi r2, r0, esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int
-    srl r2, r2, 6
-    phvwr p.common_te2_phv_table_pc, r2 
+    phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int[33:6] 
     phvwr  p.common_te0_phv_table_addr, d.brq_in_addr 
     nop.e
-
+    nop

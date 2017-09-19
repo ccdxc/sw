@@ -15,12 +15,10 @@ esp_ipv4_tunnel_n2h_txdma2_load_in_desc:
     phvwri p.app_header_table0_valid, 1
     phvwri p.common_te0_phv_table_lock_en, 1
     phvwri p.common_te0_phv_table_raw_table_size, 6
-    addi r2, r0, esp_v4_tunnel_n2h_txdma2_build_decap_packet 
-    srl r2, r2, 6 
-    phvwr p.common_te0_phv_table_pc, r2
+    phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_txdma2_build_decap_packet[33:6] 
     add r3, r0, k.txdma2_global_ipsec_cb_index
     sll r3, r3, IPSEC_CB_SHIFT_SIZE
     addi r3, r3, IPSEC_CB_BASE 
     phvwr  p.common_te0_phv_table_addr, r3 
     nop.e
- 
+    nop 

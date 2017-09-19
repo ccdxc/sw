@@ -30,9 +30,7 @@ ipsec_encap_txdma_initial_table:
     
     phvwri p.app_header_table0_valid, 1 
     phvwri p.common_te0_phv_table_lock_en, 1 
-    addi r2, r0, esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex
-    srl r2, r2, 6
-    phvwr p.common_te0_phv_table_pc, r2 
+    phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex[33:6] 
     phvwri p.common_te0_phv_table_raw_table_size, 3
     add r3, r0, d.cb_cindex
     sll r3, r3, 3 
@@ -41,14 +39,9 @@ ipsec_encap_txdma_initial_table:
 
     phvwri p.app_header_table1_valid, 1 
     phvwri p.common_te1_phv_table_lock_en, 1 
-    addi r2, r0, esp_v4_tunnel_n2h_txdma1_allocate_barco_req_pindex
-    srl r2, r2, 6
-    phvwr p.common_te1_phv_table_pc, r2 
+    phvwri p.common_te1_phv_table_pc, esp_v4_tunnel_n2h_txdma1_allocate_barco_req_pindex[33:6] 
     phvwri p.common_te1_phv_table_raw_table_size, 2
     phvwri p.common_te1_phv_table_addr, BRQ_REQ_SEMAPHORE_ADDR 
     nop.e
-
+    nop
     
-
-
-
