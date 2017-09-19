@@ -62,7 +62,7 @@ func main() {
 	}
 
 	// create the new agent
-	ag, err := agent.NewAgent(dp, *dbPath, macAddr.String(), *npmURL, *resolverURLs)
+	ag, err := agent.NewAgent(dp, *dbPath, macAddr.String(), *npmURL, *resolverURLs, ":"+globals.AgentRESTPort)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}

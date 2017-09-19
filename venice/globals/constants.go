@@ -25,6 +25,9 @@ const (
 	// NPM
 	NpmRPCPort = "9005"
 
+	// Agent
+	AgentRESTPort = "9006"
+
 	// KVStore
 	KVStorePeerPort   = "5001"
 	KVStoreClientPort = "5002"

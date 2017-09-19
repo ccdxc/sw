@@ -229,6 +229,7 @@ try:
 
     for idx, snode in enumerate(simNodes):
         snode.runCmd("sudo ifconfig " + args.simif + " promisc up")
+        snode.runCmd("sudo docker pull alpine")
         # start hostsim
         snode.startHostsim(args.simif, args.simbin)
 
@@ -242,7 +243,7 @@ try:
     # start vcsim
     vcsim = Node("pen-master", args.user, args.password, args.simbin)
     vcsim.startVcsim(",".join(hsims), ",".join(snics))
-    time.sleep(10)
+    time.sleep(2)
 
     print "################### Started Simulation agents #####################"
 

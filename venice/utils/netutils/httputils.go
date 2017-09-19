@@ -97,3 +97,35 @@ func HTTPPost(url string, req interface{}, resp interface{}) error {
 
 	return nil
 }
+
+// HTTPGetRaw gets the raw data from an http request, i.e. it basically execute curl
+func HTTPGetRaw(url string) ([]byte, error) {
+	r, err := http.Get(url)
+	if err != nil {
+		return []byte{}, err
+	}
+	defer r.Body.Close()
+
+	log.Debugf("HTTP Get: %s", url)
+	if r.StatusCode != 200 {
+		return []byte{}, errors.New(r.Status)
+	}
+
+	response, err := ioutil.ReadAll(r.Body)
+
+	return response, err
+}
+
+// HTTPGet fetches json object from an http get request
+func HTTPGet(url string, jdata interface{}) error {
+	response, err := HTTPGetRaw(url)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(response, jdata); err != nil {
+		return err
+	}
+
+	return nil
+}

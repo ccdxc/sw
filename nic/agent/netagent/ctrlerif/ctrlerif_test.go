@@ -7,10 +7,11 @@ import (
 
 	context "golang.org/x/net/context"
 
-	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -64,6 +65,21 @@ func (ag *fakeAgent) DeleteNetwork(nt *netproto.Network) error {
 	return nil
 }
 
+func (ag *fakeAgent) ListNetwork() []*netproto.Network {
+	var netlist []*netproto.Network
+
+	// walk all networks
+	for _, nw := range ag.netAdded {
+		netlist = append(netlist, nw)
+	}
+
+	return netlist
+}
+
+func (ag *fakeAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
+	return nil, nil
+}
+
 func (ag *fakeAgent) CreateEndpoint(ep *netproto.Endpoint) (*netagent.IntfInfo, error) {
 	ag.epAdded[objectKey(ep.ObjectMeta)] = ep
 	return nil, nil
@@ -77,6 +93,17 @@ func (ag *fakeAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 func (ag *fakeAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
 	ag.epDeleted[objectKey(ep.ObjectMeta)] = ep
 	return nil
+}
+
+func (ag *fakeAgent) ListEndpoint() []*netproto.Endpoint {
+	var eplist []*netproto.Endpoint
+
+	// walk all endpoints
+	for _, ep := range ag.epAdded {
+		eplist = append(eplist, ep)
+	}
+
+	return eplist
 }
 
 func (ag *fakeAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
@@ -94,6 +121,17 @@ func (ag *fakeAgent) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	return nil
 }
 
+func (ag *fakeAgent) ListSecurityGroup() []*netproto.SecurityGroup {
+	var sglist []*netproto.SecurityGroup
+
+	// walk all sgs
+	for _, sg := range ag.sgAdded {
+		sglist = append(sglist, sg)
+	}
+
+	return sglist
+}
+
 type fakeRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	netdp      map[string]*netproto.Network
@@ -101,11 +139,9 @@ type fakeRPCServer struct {
 	sgdb       map[string]*netproto.SecurityGroup
 }
 
-const testSrvURL = "localhost:8585"
-
 func createRPCServer(t *testing.T) *fakeRPCServer {
 	// create an RPC server
-	grpcServer, err := rpckit.NewRPCServer("netctrler", testSrvURL)
+	grpcServer, err := rpckit.NewRPCServer("netctrler", ":0")
 	if err != nil {
 		t.Fatalf("Error creating rpc server. Err; %v", err)
 	}
@@ -275,7 +311,7 @@ func TestNpmclient(t *testing.T) {
 	ag := createFakeAgent()
 
 	// create npm client
-	cl, err := NewNpmClient(ag, testSrvURL, "")
+	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), "")
 	AssertOk(t, err, "Error creating npm client")
 
 	epinfo := netproto.Endpoint{
@@ -347,9 +383,13 @@ func TestNpmClientWatch(t *testing.T) {
 	ag := createFakeAgent()
 
 	// create npm client
-	cl, err := NewNpmClient(ag, testSrvURL, "")
+	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), "")
 	AssertOk(t, err, "Error creating npm client")
 	Assert(t, (cl != nil), "Error creating npm client")
+
+	// create http REST server
+	restSrv, err := NewRestServer(ag, ":0")
+	AssertOk(t, err, "Error creating the rest server")
 
 	// verify client got the network & ep
 	AssertEventually(t, func() bool {
@@ -377,9 +417,23 @@ func TestNpmClientWatch(t *testing.T) {
 		return (ok && ep.Name == epinfo.Name)
 	}, "Endpoint delete not found in agent")
 
+	// verify the network REST api
+	var netList []*netproto.Network
+	restSrvURL := restSrv.GetListenURL()
+	err = netutils.HTTPGet("http://"+restSrvURL+"/api/networks/", &netList)
+	AssertOk(t, err, "Error getting networks from REST server")
+	Assert(t, len(netList) == 1, "Incorrect number of networks")
+
+	// verify endpoint REST api
+	var epList []*netproto.Endpoint
+	err = netutils.HTTPGet("http://"+restSrvURL+"/api/endpoints/", &epList)
+	AssertOk(t, err, "Error getting endpoints from REST server")
+	Assert(t, len(epList) == 1, "Incorrect number of endpoints")
+
 	// stop the server and client
 	cl.Stop()
 	srv.grpcServer.Stop()
+	restSrv.Stop()
 }
 
 func TestSecurityGroupWatch(t *testing.T) {
@@ -405,7 +459,7 @@ func TestSecurityGroupWatch(t *testing.T) {
 	ag := createFakeAgent()
 
 	// create npm client
-	cl, err := NewNpmClient(ag, testSrvURL, "")
+	cl, err := NewNpmClient(ag, srv.grpcServer.GetListenURL(), "")
 	AssertOk(t, err, "Error creating npm client")
 	Assert(t, (cl != nil), "Error creating npm client")
 

@@ -72,6 +72,10 @@ sudo make install && sudo ldconfig
 sudo curl -o /usr/local/bin/swagger -L'#' https://github.com/go-swagger/go-swagger/releases/download/0.10.0/swagger_linux_amd64
 sudo chmod +x /usr/local/bin/swagger
 
+# Install OVS for hostsim
+wget http://cbs.centos.org/kojifiles/packages/openvswitch/2.5.0/2.el7/x86_64/openvswitch-2.5.0-2.el7.x86_64.rpm -O /tmp/openvswitch-2.5.0-2.el7.x86_64.rpm
+sudo yum install -y /tmp/openvswitch-2.5.0-2.el7.x86_64.rpm
+
 # install commonly used go tools
 tee -a /tmp/goinstall.bash <<ENDF
 export GOBIN=/usr/local/go/bin

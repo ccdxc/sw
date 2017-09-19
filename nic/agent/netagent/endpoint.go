@@ -209,3 +209,19 @@ func (ag *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
 	// done
 	return err
 }
+
+// ListEndpoint returns the list of endpoints
+func (ag *NetAgent) ListEndpoint() []*netproto.Endpoint {
+	var epList []*netproto.Endpoint
+
+	// lock the db
+	ag.Lock()
+	defer ag.Unlock()
+
+	// walk all endpoints
+	for _, ep := range ag.endpointDB {
+		epList = append(epList, ep)
+	}
+
+	return epList
+}

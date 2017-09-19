@@ -139,7 +139,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		it.datapaths = append(it.datapaths, dp)
 
 		// agent
-		agent, aerr := agent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL, "")
+		agent, aerr := agent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL, "", "")
 		c.Assert(aerr, IsNil)
 		it.agents = append(it.agents, agent)
 	}

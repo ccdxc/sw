@@ -71,9 +71,11 @@ deploy:
 	$(MAKE) c-start
 
 cluster:
+	$(MAKE) qbuild
 	$(MAKE) container-qcompile
 	$(MAKE) install
 	tools/scripts/startCluster.py -nodes ${PENS_NODES} -quorum ${PENS_QUORUM_NODENAMES}
+	tools/scripts/startSim.py
 
 cluster-stop:
 	tools/scripts/startCluster.py -nodes ${PENS_NODES} -stop

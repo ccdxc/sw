@@ -95,6 +95,24 @@ func (ag *NetAgent) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	return err
 }
 
+// ListSecurityGroup returns the list of sgs
+func (ag *NetAgent) ListSecurityGroup() []*netproto.SecurityGroup {
+	sgList := make([]*netproto.SecurityGroup, len(ag.secgroupDB))
+
+	// lock the db
+	ag.Lock()
+	defer ag.Unlock()
+
+	// walk all sgs
+	idx := 0
+	for _, sg := range ag.secgroupDB {
+		sgList[idx] = sg
+		idx++
+	}
+
+	return sgList
+}
+
 // FindSecurityGroup finds a security group
 func (ag *NetAgent) FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGroup, error) {
 	// lock the db

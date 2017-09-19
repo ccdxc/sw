@@ -47,6 +47,22 @@ func (ag *NetAgent) CreateNetwork(nt *netproto.Network) error {
 	return err
 }
 
+// ListNetwork returns the list of networks
+func (ag *NetAgent) ListNetwork() []*netproto.Network {
+	var netlist []*netproto.Network
+
+	// lock the db
+	ag.Lock()
+	defer ag.Unlock()
+
+	// walk all networks
+	for _, nw := range ag.networkDB {
+		netlist = append(netlist, nw)
+	}
+
+	return netlist
+}
+
 // FindNetwork dins a network in local db
 func (ag *NetAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
 	// lock the db

@@ -218,6 +218,10 @@ func TestNetworkCreateDelete(t *testing.T) {
 	err = agent.CreateNetwork(&nnt)
 	Assert(t, (err != nil), "conflicting network creation suceeded")
 
+	// verify list api works
+	netList := agent.ListNetwork()
+	Assert(t, (len(netList) == 1), "Incorrect number of networks")
+
 	// delete the network and verify its gone from db
 	err = agent.DeleteNetwork(&nt)
 	AssertOk(t, err, "Error deleting network")
@@ -301,6 +305,10 @@ func TestEndpointCreateDelete(t *testing.T) {
 	}
 	_, _, err = agent.EndpointCreateReq(&ep2)
 	Assert(t, (err != nil), "Endpoint create on non-existing network suceeded", ep2)
+
+	// verify list api works
+	epList := agent.ListEndpoint()
+	Assert(t, (len(epList) == 1), "Incorrect number of endpoints")
 
 	// endpoint message
 	depinfo := netproto.Endpoint{
@@ -453,6 +461,10 @@ func TestSecurituGroupCreateDelete(t *testing.T) {
 	// create a security group
 	err := agent.CreateSecurityGroup(&sg)
 	AssertOk(t, err, "Error creating security group")
+
+	// verify list api works
+	sgList := agent.ListSecurityGroup()
+	Assert(t, (len(sgList) == 1), "Incorrect number of sgs")
 
 	// verify datapath has the security group
 	_, ok := dp.sgdb[objectKey(sg.ObjectMeta)]

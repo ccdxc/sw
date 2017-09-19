@@ -50,7 +50,7 @@ func RemoveContainer(containerID string) error {
 // GetAllContainers gets all containers from docker
 func GetAllContainers() map[string]bool {
 	res := make(map[string]bool)
-	cmd := dockerPath + "ps -aq | grep alpine | awk '{print $1}'"
+	cmd := dockerPath + " ps -a | grep alpine | awk '{print $1}'"
 	out, err := exec.Command("bash", "-c", cmd).CombinedOutput()
 	if err == nil {
 		ids := strings.Split(string(out), "\n")

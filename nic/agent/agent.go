@@ -39,13 +39,14 @@ import (
 
 // Agent contains agent state
 type Agent struct {
-	datapath  netagent.NetDatapathAPI
-	Netagent  *netagent.NetAgent
-	npmClient *ctrlerif.NpmClient
+	datapath   netagent.NetDatapathAPI
+	Netagent   *netagent.NetAgent
+	npmClient  *ctrlerif.NpmClient
+	restServer *ctrlerif.RestServer
 }
 
 // NewAgent creates an agent instance
-func NewAgent(dp netagent.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverURLs string) (*Agent, error) {
+func NewAgent(dp netagent.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverURLs, restListenURL string) (*Agent, error) {
 
 	// create new network agent
 	nagent, err := netagent.NewNetAgent(dp, dbPath, nodeUUID)
@@ -72,11 +73,19 @@ func NewAgent(dp netagent.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverU
 
 	log.Infof("NPM client {%+v} is running", npmClient)
 
+	// create REST api server
+	restServer, err := ctrlerif.NewRestServer(nagent, restListenURL)
+	if err != nil {
+		log.Errorf("Error creating the rest API server. Err: %v", err)
+		return nil, err
+	}
+
 	// create the agent instance
 	ag := Agent{
-		Netagent:  nagent,
-		datapath:  dp,
-		npmClient: npmClient,
+		Netagent:   nagent,
+		datapath:   dp,
+		npmClient:  npmClient,
+		restServer: restServer,
 	}
 
 	return &ag, nil
@@ -86,4 +95,5 @@ func NewAgent(dp netagent.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverU
 func (ag *Agent) Stop() {
 	ag.npmClient.Stop()
 	ag.Netagent.Stop()
+	ag.restServer.Stop()
 }
