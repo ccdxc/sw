@@ -2,6 +2,7 @@
 
 import pdb
 import copy
+import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
 
 from config.store               import Store
 from config.objects.proxycb_service    import ProxyCbServiceHelper
@@ -28,43 +29,14 @@ def TestCaseSetup(tc):
     tcbid = "TcpCb%04d" % id
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
-    tcb.rcv_nxt = 0xBABABABA
-    tcb.snd_nxt = 0xEFEFEFF0
-    tcb.snd_una = 0xEFEFEFEF
-    tcb.rcv_tsval = 0xFAFAFAFA
-    tcb.ts_recent = 0xFAFAFAF0
-    tcb.snd_wnd = 1000
-    tcb.snd_cwnd = 1000
-    tcb.rcv_mss = 9216
-    tcb.debug_dol = 0
-    tcb.source_port = 47273
-    tcb.dest_port = 80
-    if tc.config.src.segment.vlan_id != 0:
-        vlan_etype_bytes = bytes([0x81, 0x00]) + \
-                tc.config.src.segment.vlan_id.to_bytes(2, 'big') + \
-                bytes([0x08, 0x00])
-    else:
-        vlan_etype_bytes = bytes([0x08, 0x00])
-    tcb.header_template = \
-             tc.config.dst.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
-             tc.config.src.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
-             vlan_etype_bytes + \
-             bytes([0x45, 0x08, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00]) + \
-             bytes([0x40, 0x06, 0xfa, 0x71]) + \
-             tc.config.flow.sip.getnum().to_bytes(4, 'big') + \
-             tc.config.flow.dip.getnum().to_bytes(4, 'big')
-    print("header_template = " + str(tcb.header_template))
-    #tcb.header_template = bytes([
-        #0x00, 0xee, 0xff, 0x00, 0x00, 0x03, # dmac
-        #0x00, 0xee, 0xff, 0x00, 0x00, 0x02, # smac
-        #0x81, 0x00, 0xe0, 0x02, 0x08, 0x00,
-        # ip header
-        #0x45, 0x08, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00,
-        #0x40, 0x06, 0xfa, 0x71, 0x40, 0x00, 0x00, 0x01,
-        #0x40, 0x00, 0x00, 0x02])
-    # set tcb state to ESTABLISHED(1)
-    tcb.state = 1
+    tcp_proxy.init_tcb_inorder(tc, tcb)
     tcb.SetObjValPd()
+
+    TcpCbHelper.main(id + 1)
+    tcbid2 = "TcpCb%04d" % (id + 1)
+    tcb2 = tc.infra_data.ConfigStore.objects.db[tcbid2]
+    tcp_proxy.init_tcb_inorder(tc, tcb2)
+    tcb2.SetObjValPd()
 
     # 2. Configure TLS CB in HBM before packet injection
     tlscbid = "TlsCb%04d" % id
@@ -72,16 +44,28 @@ def TestCaseSetup(tc):
     tlscb.debug_dol = 1
     tlscb.SetObjValPd()
 
+    tlscbid2 = "TlsCb%04d" % (id + 1)
+    tlscb2 = tc.infra_data.ConfigStore.objects.db[tlscbid2]
+    tlscb2.debug_dol = 1
+    tlscb2.SetObjValPd()
+
     # 3. Clone objects that are needed for verification
     tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tcbid])
     tcpcb.GetObjValPd()
     tc.pvtdata.Add(tcpcb)
+    tcpcb2 = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tcbid2])
+    tc.pvtdata.Add(tcpcb2)
     return
 
 def TestCaseVerify(tc):
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
-    tcbid = "TcpCb%04d" % id
+    if tc.config.flow.IsIflow():
+        print("This is iflow")
+        tcbid = "TcpCb%04d" % id
+    else:
+        print("This is rflow")
+        tcbid = "TcpCb%04d" % (id + 1)
     tcpcb = tc.pvtdata.db[tcbid]
     tcpcb_cur = tc.infra_data.ConfigStore.objects.db[tcbid]
     tcpcb_cur.GetObjValPd()

@@ -178,20 +178,16 @@ header_type tcp_rtt_d_t {
 // d for stage 2 table 1
 header_type read_rnmdr_d_t {
     fields {
-        rnmdr_pidx_hi           : 31;
-        rnmdr_pidx_full         : 1;
         rnmdr_pidx              : 32;
-        pad                     : 448;
+        rnmdr_pidx_full         : 1;
     }
 }
 
 // d for stage 2 table 2
 header_type read_rnmpr_d_t {
     fields {
-        rnmpr_pidx_hi           : 31;
-        rnmpr_pidx_full         : 1;
         rnmpr_pidx              : 32;
-        pad                     : 448;
+        rnmpr_pidx_full         : 1;
     }
 }
 
@@ -730,17 +726,19 @@ action tcp_rtt(srtt_us, rto, backoff, seq_rtt_us, ca_rtt_us,
 /*
  * Stage 2 table 1 action
  */
-action read_rnmdr(rnmdr_pidx) {
+action read_rnmdr(rnmdr_pidx, rnmdr_pidx_full) {
     // d for stage 2 table 1 read-rnmdr-idx
     modify_field(read_rnmdr_d.rnmdr_pidx, rnmdr_pidx);
+    modify_field(read_rnmdr_d.rnmdr_pidx_full, rnmdr_pidx_full);
 }
 
 /*
  * Stage 2 table 2 action
  */
-action read_rnmpr(rnmpr_pidx) {
+action read_rnmpr(rnmpr_pidx, rnmpr_pidx_full) {
     // d for stage 2 table 2 read-rnmpr-idx
     modify_field(read_rnmpr_d.rnmpr_pidx, rnmpr_pidx);
+    modify_field(read_rnmpr_d.rnmpr_pidx_full, rnmpr_pidx_full);
 }
 
 /*
