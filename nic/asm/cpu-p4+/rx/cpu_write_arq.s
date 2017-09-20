@@ -42,6 +42,7 @@ dma_cmd_descr:
     phvwri  p.dma_cmd1_dma_cmd_eop, 0
 
 dma_cmd_arqrx_slot:
+    smeqb   c1, k.common_phv_debug_dol, CPU_DDOL_PKT_TO_ARQ, CPU_DDOL_PKT_TO_ARQ
     CPU_RX_ENQUEUE(r5,
                    k.to_s3_descr,
                    k.to_s3_arqrx_pindex,
@@ -49,7 +50,9 @@ dma_cmd_arqrx_slot:
                    ring_entry_descr_addr,
                    dma_cmd2_dma_cmd, 
                    1, 
-                   1)  
+                   1,
+                   c1)  
+
 cpu_write_arqrx_done:
     nop.e
     nop

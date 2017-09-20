@@ -80,6 +80,8 @@ p4pd_add_or_del_cpu_rx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
         pc_offset = (pc_offset >> 6);
         HAL_TRACE_DEBUG("programming action-id: {:#x}", pc_offset);
         data.action_id = pc_offset;
+        data.u.cpu_rxdma_initial_action_d.debug_dol = (uint8_t)cpucb_pd->cpucb->debug_dol;
+        HAL_TRACE_DEBUG("CPUCB: debug_dol: {:#x}", data.u.cpu_rxdma_initial_action_d.debug_dol);
     }
     HAL_TRACE_DEBUG("Programming stage0 at hw-id: 0x{0:x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
@@ -263,7 +265,7 @@ p4pd_add_or_del_cpucb_rx_qidxr_entry(pd_cpucb_t* cpucb_pd, cpucb_hw_id_t addr)
 }
 
 hal_ret_t
-p4pd_add_or_del_cpucb_qidxr_entry(pd_cpucb_t* cpucb_pd, bool del)
+p4pd_add_or_del_cpucb_qidxr_entry(pd_cpucb_t* cpucb_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -310,11 +312,6 @@ p4pd_add_or_del_cpucb_entry(pd_cpucb_t* cpucb_pd, bool del)
     ret = p4pd_add_or_del_cpucb_txdma_entry(cpucb_pd, del);
     if(ret != HAL_RET_OK) {
         goto err;    
-    }
-
-    ret = p4pd_add_or_del_cpucb_qidxr_entry(cpucb_pd, del);
-    if(ret != HAL_RET_OK) {
-        goto err;
     }
 
 err:
@@ -372,6 +369,14 @@ pd_cpucb_create (pd_cpucb_args_t *args)
     if(ret != HAL_RET_OK) {
         goto cleanup;    
     }
+
+    // initialize qidxr region during create
+    ret = p4pd_add_or_del_cpucb_qidxr_entry(cpucb_pd);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+
+
     // add to db
     ret = add_cpucb_pd_to_db(cpucb_pd);
     if (ret != HAL_RET_OK) {

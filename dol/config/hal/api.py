@@ -29,6 +29,7 @@ import ipseccb_pb2          as ipseccb_pb2
 import l4lb_pb2             as l4lb_pb2
 import crypto_keys_pb2      as crypto_keys_pb2
 import rdma_pb2             as rdma_pb2
+import cpucb_pb2            as cpucb_pb2
 
 import endpoint_pb2_grpc        as endpoint_pb2_grpc
 import l2segment_pb2_grpc       as l2segment_pb2_grpc
@@ -48,6 +49,7 @@ import ipseccb_pb2_grpc         as ipseccb_pb2_grpc
 import l4lb_pb2_grpc            as l4lb_pb2_grpc
 import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
 import rdma_pb2_grpc            as rdma_pb2_grpc
+import cpucb_pb2_grpc           as cpucb_pb2_grpc
 
 HAL_MAX_BATCH_SIZE = 64
 
@@ -204,6 +206,27 @@ def UpdateIpsecCbs(objlist):
     stub = ipseccb_pb2_grpc.IpsecCbStub(HalChannel)
     __config(objlist, ipseccb_pb2.IpsecCbRequestMsg,
              stub.IpsecCbUpdate)
+    return
+
+def ConfigureCpuCbs(objlist):
+    if IsHalDisabled(): return
+    stub = cpucb_pb2_grpc.CpuCbStub(HalChannel)
+    __config(objlist, cpucb_pb2.CpuCbRequestMsg,
+             stub.CpuCbCreate)
+    return
+
+def UpdateCpuCbs(objlist):
+    if IsHalDisabled(): return
+    stub = cpucb_pb2_grpc.CpuCbStub(HalChannel)
+    __config(objlist, cpucb_pb2.CpuCbRequestMsg,
+             stub.CpuCbUpdate)
+    return
+
+def GetCpuCbs(objlist):
+    if IsHalDisabled(): return
+    stub = cpucb_pb2_grpc.CpuCbStub(HalChannel)
+    __config(objlist, cpucb_pb2.CpuCbGetRequestMsg,
+             stub.CpuCbGet)
     return
 
 def GetTcpCbs(objlist):

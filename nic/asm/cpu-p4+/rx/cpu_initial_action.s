@@ -23,6 +23,7 @@ cpu_rx_read_shared_stage0_start:
     phvwr   p.common_phv_qstate_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     add     r4, r0, k.cpu_app_header_packet_len
     phvwr   p.to_s3_payload_len, k.cpu_app_header_packet_len
+    phvwr   p.common_phv_debug_dol, d.u.cpu_rxdma_initial_action_d.debug_dol
 
 table_read_DESC_SEMAPHORE:
     addi    r3, r0, RNMDR_ALLOC_IDX 
@@ -42,6 +43,6 @@ table_read_ARQRX_PINDEX:
     CAPRI_NEXT_TABLE_READ(3, TABLE_LOCK_EN,
                           cpu_rx_read_arqrx_pindex_start,
                           r3,
-                          TABLE_SIZE_64_BITS)
+                          TABLE_SIZE_512_BITS)
     nop.e
     nop

@@ -43,9 +43,15 @@ cpupkt_update_slot_addr(cpupkt_queue_info_t* queue_info)
 }
 
 bool
-is_valid_slot_value(uint64_t slot_value) 
+is_valid_slot_value(uint64_t slot_value, uint64_t* descr_addr)
 {
-    return (slot_value > 0);
+    if((slot_value > 0) && (slot_value & CPU_PKT_VALID_BIT_MASK)) {
+        *descr_addr = (slot_value & ~(uint64_t)CPU_PKT_VALID_BIT_MASK);
+        HAL_TRACE_DEBUG("CPUPKT descr_addr: {:#x}", *descr_addr);
+        return true;
+    }
+    *descr_addr = 0;
+    return false;
 }
 
 hal_ret_t
@@ -84,7 +90,14 @@ cpupkt_descr_to_skbuff(pd_descr_aol_t& descr,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+static inline void
+cpupkt_inc_queue_index(cpupkt_queue_info_t& queue_info)
+{
+    queue_info.pc_index++;
+    cpupkt_update_slot_addr(&queue_info);
+}
+
+static inline hal_ret_t
 cpupkt_free_and_inc_queue_index(cpupkt_queue_info_t& queue_info)
 {
     // Set ASQ back to 0
@@ -95,9 +108,7 @@ cpupkt_free_and_inc_queue_index(cpupkt_queue_info_t& queue_info)
         HAL_TRACE_ERR("Failed to reset pc_index_addr");
         return HAL_RET_HW_FAIL;  
     }
-
-    queue_info.pc_index++;
-    cpupkt_update_slot_addr(&queue_info);
+    cpupkt_inc_queue_index(queue_info);
     return HAL_RET_OK;
 }
 
@@ -210,11 +221,11 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
         return HAL_RET_INVALID_ARG;    
     }
     HAL_TRACE_DEBUG("Starting packet poll for queue: {}", ctxt->rx.num_queues);
-
+    uint64_t value, descr_addr;
     while(true) {
         usleep(300);
         for(uint32_t i=0; i< ctxt->rx.num_queues; i++) {
-            uint64_t value = 0;
+            value = 0;
             //HAL_TRACE_DEBUG("cpupkt rx: checking queue at address: {:#x}", ctxt->rx.queue[i].pc_index_addr);
             if(!p4plus_hbm_read(ctxt->rx.queue[i].pc_index_addr,
                                 (uint8_t *)&value, 
@@ -223,17 +234,22 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
                 return HAL_RET_HW_FAIL;
             }
             value = ntohll(value);
-            if(!is_valid_slot_value(value)) {
+            if(!is_valid_slot_value(value, &descr_addr)) {
+                if(value > 0) {
+                    // With DEBUG DOL, P4+ writes the queue without setting VALID BIT.
+                    // Increase CI to keep it in sync with hw
+                    cpupkt_inc_queue_index(ctxt->rx.queue[i]);
+                }
                 continue;
             }
              // offset to take care of scratch
-            value = value + CPU_PKT_DESCR_OFFSET;
+            descr_addr = descr_addr + CPU_PKT_DESCR_OFFSET;
             
-            HAL_TRACE_DEBUG("Received valid data: queue: {}, pc_index: {}, addr: {:#x}, value: {:#x}", 
-                                ctxt->rx.queue[i].type, ctxt->rx.queue[i].pc_index, ctxt->rx.queue[i].pc_index_addr, value);
+            HAL_TRACE_DEBUG("Received valid data: queue: {}, pc_index: {}, addr: {:#x}, value: {:#x}, descr_addr: {:#x}",
+                                ctxt->rx.queue[i].type, ctxt->rx.queue[i].pc_index, ctxt->rx.queue[i].pc_index_addr, value, descr_addr);
             // get the descriptor
             pd_descr_aol_t  descr = {0};
-            if(!p4plus_hbm_read(value, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
+            if(!p4plus_hbm_read(descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
                 HAL_TRACE_ERR("Failed to read the descr from hw");
                 return HAL_RET_HW_FAIL;
             }
