@@ -69,6 +69,8 @@ class HostMem : public pen_mem_base {
 
 }  // namespace utils
 
+utils::HostMem g_host_mem;
+
 static void dumpHBM (void) {
       auto it = HBM::access()->begin();
       auto lst = HBM::access()->end();
@@ -258,7 +260,7 @@ static void wait_loop() {
 }
 
 static void
-model_sig_handler (int sig, siginfo_t *info, void *ptr)
+model_sig_handler (int sig)
 {
     printf("Rcvd signal %u\n", sig);
 
@@ -289,19 +291,15 @@ model_sig_handler (int sig, siginfo_t *info, void *ptr)
 static void
 model_sig_init (void)
 {
-    struct sigaction    act;
-
-    memset(&act, 0, sizeof(act));
-    act.sa_sigaction = model_sig_handler;
-    act.sa_flags = SA_SIGINFO;
-    sigaction(SIGKILL, &act, NULL);
-    sigaction(SIGINT, &act, NULL);
-    sigaction(SIGUSR1, &act, NULL);
-    sigaction(SIGUSR2, &act, NULL);
-    sigaction(SIGTERM, &act, NULL);
-    sigaction(SIGQUIT, &act, NULL);
-    sigaction(SIGHUP, &act, NULL);
-    return;
+    struct sigaction action;
+    action.sa_handler = model_sig_handler;
+    action.sa_flags = 0;
+    sigemptyset (&action.sa_mask);
+    sigaction (SIGINT, &action, NULL);
+    sigaction (SIGTERM, &action, NULL);
+    sigaction (SIGHUP, &action, NULL);
+    sigaction (SIGUSR1, &action, NULL);
+    sigaction (SIGUSR2, &action, NULL);
 }
 
 int main (int argc, char ** argv)
@@ -310,8 +308,7 @@ int main (int argc, char ** argv)
 
     model_sig_init();
 
-    utils::HostMem host_mem;
-    HOST_MEM::access(&host_mem);
+    HOST_MEM::access(&g_host_mem);
 
     sknobs_init(argc, argv);
     auto env = new cap_env_base(0);
