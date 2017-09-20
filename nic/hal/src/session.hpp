@@ -105,6 +105,9 @@ typedef struct flow_key_s {
                     uint16_t       sport;        // TCP/UDP source port
                     uint16_t       dport;        // TCP/UDP destination port
                 } __PACK__;
+                struct {
+                    uint32_t        spi;         // ESP header's SPI
+                } __PACK__;
             } __PACK__;
         } __PACK__;
 

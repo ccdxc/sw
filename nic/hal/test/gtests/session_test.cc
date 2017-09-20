@@ -1,6 +1,7 @@
 #include <interface.hpp>
 #include <endpoint.hpp>
 #include <session.hpp>
+#include <fte.hpp>
 #include <network.hpp>
 #include <nwsec.hpp>
 #include <l4lb.hpp>
@@ -267,7 +268,7 @@ TEST_F(session_test, test1)
     sess_spec.mutable_responder_flow()->mutable_flow_data()->
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::session_create(sess_spec, &sess_rsp);
+    ret = fte::session_create(sess_spec, &sess_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -482,7 +483,7 @@ TEST_F(session_test, test2)
     sess_spec.mutable_responder_flow()->mutable_flow_data()->
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::session_create(sess_spec, &sess_rsp);
+    ret = fte::session_create(sess_spec, &sess_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -511,7 +512,7 @@ TEST_F(session_test, test2)
     sess_spec2.mutable_responder_flow()->mutable_flow_data()->
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::session_create(sess_spec2, &sess_rsp2);
+    ret = fte::session_create(sess_spec2, &sess_rsp2);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
@@ -697,7 +698,7 @@ TEST_F(session_test, test3)
     sess_spec.mutable_responder_flow()->mutable_flow_data()->
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::session_create(sess_spec, &sess_rsp);
+    ret = fte::session_create(sess_spec, &sess_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -850,7 +851,7 @@ TEST_F(session_test, test4)
     sess_spec.mutable_responder_flow()->mutable_flow_data()->
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::session_create(sess_spec, &sess_rsp);
+    ret = fte::session_create(sess_spec, &sess_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -878,7 +879,7 @@ TEST_F(session_test, test4)
     sess_spec2.mutable_responder_flow()->mutable_flow_data()->
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::session_create(sess_spec2, &sess_rsp2);
+    ret = fte::session_create(sess_spec2, &sess_rsp2);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
@@ -1029,7 +1030,7 @@ TEST_F(session_test, test5)
     sess_spec.mutable_responder_flow()->mutable_flow_data()->
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::session_create(sess_spec, &sess_rsp);
+    ret = fte::session_create(sess_spec, &sess_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -1213,7 +1214,7 @@ TEST_F(session_test, test6)
     sess_spec.mutable_responder_flow()->mutable_flow_data()->
         mutable_flow_info()->mutable_nat_sip()->set_v4_addr(ip2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::session_create(sess_spec, &sess_rsp);
+    ret = fte::session_create(sess_spec, &sess_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -1366,7 +1367,7 @@ TEST_F(session_test, test7)
     sess_spec.mutable_responder_flow()->mutable_flow_data()->
         mutable_flow_info()->set_flow_action(session::FLOW_ACTION_DROP);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::session_create(sess_spec, &sess_rsp);
+    ret = fte::session_create(sess_spec, &sess_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -1571,12 +1572,342 @@ TEST_F(session_test, test8)
     sess_spec.mutable_responder_flow()->mutable_flow_data()->
         mutable_flow_info()->set_nat_sport(1000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::session_create(sess_spec, &sess_rsp);
+    ret = fte::session_create(sess_spec, &sess_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
 }
 
+// ----------------------------------------------------------------------------
+// Creating a session
+// ----------------------------------------------------------------------------
+TEST_F(session_test, test9) 
+{
+    hal_ret_t                   ret;
+    TenantSpec                  ten_spec;
+    TenantResponse              ten_rsp;
+    L2SegmentSpec               l2seg_spec;
+    L2SegmentResponse           l2seg_rsp;
+    InterfaceSpec               up_spec;
+    InterfaceResponse           up_rsp;
+    EndpointSpec                ep_spec, ep_spec1;
+    EndpointResponse            ep_rsp, ep_rsp1;
+    SessionSpec                 sess_spec;
+    SessionResponse             sess_rsp;
+    NetworkSpec                 nw_spec, nw_spec1;
+    NetworkResponse             nw_rsp, nw_rsp1;
+    ::google::protobuf::uint32  ip1 = 0x0a000003;
+    ::google::protobuf::uint32  ip2 = 0x0a000004;
+
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(9);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create network
+    nw_spec.mutable_meta()->set_tenant_id(9);
+    nw_spec.set_rmac(0x0000DEADBEEE);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+
+    nw_spec1.mutable_meta()->set_tenant_id(9);
+    nw_spec1.set_rmac(0x0000DEADBEEF);
+    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
+    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl1 = nw_rsp.mutable_status()->nw_handle();
+
+    // Create L2 Segment
+    l2seg_spec.mutable_meta()->set_tenant_id(9);
+    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(91);
+    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_fabric_encap()->set_encap_value(11);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+
+    l2seg_spec.mutable_meta()->set_tenant_id(9);
+    l2seg_spec.add_network_handle(nw_hdl1);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(92);
+    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_fabric_encap()->set_encap_value(12);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+
+    // Create an uplink
+    up_spec.mutable_meta()->set_tenant_id(9);
+    up_spec.set_type(intf::IF_TYPE_UPLINK);
+    up_spec.mutable_key_or_handle()->set_interface_id(1);
+    up_spec.mutable_if_uplink_info()->set_port_num(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(up_spec, &up_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
+
+    up_spec.mutable_meta()->set_tenant_id(9);
+    up_spec.set_type(intf::IF_TYPE_UPLINK);
+    up_spec.mutable_key_or_handle()->set_interface_id(2);
+    up_spec.mutable_if_uplink_info()->set_port_num(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(up_spec, &up_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
+
+    // Create 2 Endpoints
+    ep_spec.mutable_meta()->set_tenant_id(9);
+    ep_spec.set_l2_segment_handle(l2seg_hdl);
+    ep_spec.set_interface_handle(up_hdl2);
+    ep_spec.set_mac_address(0x00000000ABCD);
+    ep_spec.add_ip_address();
+    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_create(ep_spec, &ep_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    
+    ep_spec1.mutable_meta()->set_tenant_id(9);
+    ep_spec1.set_l2_segment_handle(l2seg_hdl);
+    ep_spec1.set_interface_handle(up_hdl2);
+    ep_spec1.set_mac_address(0x000000001234);
+    ep_spec1.add_ip_address();
+    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec1.mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+
+    // Create Session
+    sess_spec.mutable_meta()->set_tenant_id(9);
+    sess_spec.set_session_id(1);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_ESP);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->
+        mutable_v4_key()->mutable_esp()->set_spi(0xAAAABBBB);
+    sess_spec.mutable_initiator_flow()->mutable_flow_data()->
+        mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
+
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip2);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip1);
+    sess_spec.mutable_responder_flow()->mutable_flow_data()->
+        mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_ESP);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->
+        mutable_v4_key()->mutable_esp()->set_spi(0xBBBBAAAA);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = fte::session_create(sess_spec, &sess_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    uint64_t sess_hdl = sess_rsp.mutable_status()->session_handle();
+    HAL_TRACE_DEBUG("Session Handle: {}", sess_hdl);
+}
+
+TEST_F(session_test, test10) 
+{
+    hal_ret_t                   ret;
+    TenantSpec                  ten_spec;
+    TenantResponse              ten_rsp;
+    L2SegmentSpec               l2seg_spec;
+    L2SegmentResponse           l2seg_rsp;
+    InterfaceSpec               up_spec;
+    InterfaceResponse           up_rsp;
+    EndpointSpec                ep_spec, ep_spec1;
+    EndpointResponse            ep_rsp, ep_rsp1;
+    SessionSpec                 sess_spec;
+    SessionResponse             sess_rsp;
+    SecurityProfileSpec         sp_spec;
+    SecurityProfileResponse     sp_rsp;
+    LifSpec                     lif_spec;
+    LifResponse                 lif_rsp;
+    InterfaceSpec               enicif_spec1, enicif_spec2;
+    InterfaceResponse           enicif_rsp1, enicif_rsp2;
+    NetworkSpec                 nw_spec, nw_spec1;
+    NetworkResponse             nw_rsp, nw_rsp1;
+    ::std::string ipv6_ip1 = "00010001000100010001000100010001"; 
+    ::std::string ipv6_ip2 = "00010001000100010001000100010002"; 
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create network
+    nw_spec.mutable_meta()->set_tenant_id(10);
+    nw_spec.set_rmac(0x0000DEADBEEE);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr("00010001000000000000000000000000");
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+
+    nw_spec1.mutable_meta()->set_tenant_id(10);
+    nw_spec1.set_rmac(0x0000DEADBEEF);
+    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
+    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr("00010002000000000000000000000000");
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl1 = nw_rsp.mutable_status()->nw_handle();
+
+    // Create L2 Segment
+    l2seg_spec.mutable_meta()->set_tenant_id(10);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(101);
+    l2seg_spec.add_network_handle(nw_hdl1);
+    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_fabric_encap()->set_encap_value(301);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+
+    l2seg_spec.mutable_meta()->set_tenant_id(10);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(102);
+    l2seg_spec.add_network_handle(nw_hdl1);
+    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_fabric_encap()->set_encap_value(302);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+
+    // Create a lif
+    lif_spec.set_port_num(10);
+    lif_spec.mutable_key_or_handle()->set_lif_id(102);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create enicif
+    enicif_spec1.mutable_meta()->set_tenant_id(10);
+    enicif_spec1.set_type(intf::IF_TYPE_ENIC);
+    enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(102);
+    enicif_spec1.mutable_key_or_handle()->set_interface_id(101);
+    enicif_spec1.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    enicif_spec1.mutable_if_enic_info()->set_l2segment_id(101);
+    enicif_spec1.mutable_if_enic_info()->set_encap_vlan_id(13);
+    enicif_spec1.mutable_if_enic_info()->set_mac_address(0x000000000001);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec1, &enicif_rsp1);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ::google::protobuf::uint64 if_hdl1 = enicif_rsp1.mutable_status()->if_handle();
+
+    enicif_spec2.mutable_meta()->set_tenant_id(10);
+    enicif_spec2.set_type(intf::IF_TYPE_ENIC);
+    enicif_spec2.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(102);
+    enicif_spec2.mutable_key_or_handle()->set_interface_id(102);
+    enicif_spec2.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    enicif_spec2.mutable_if_enic_info()->set_l2segment_id(102);
+    enicif_spec2.mutable_if_enic_info()->set_encap_vlan_id(14);
+    enicif_spec2.mutable_if_enic_info()->set_mac_address(0x000000000002);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec2, &enicif_rsp2);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ::google::protobuf::uint64 if_hdl2 = enicif_rsp2.mutable_status()->if_handle();
+
+
+    // Create 2 Endpoints
+    ep_spec.mutable_meta()->set_tenant_id(10);
+    ep_spec.set_l2_segment_handle(l2seg_hdl);
+    ep_spec.set_interface_handle(if_hdl1);
+    ep_spec.set_mac_address(0x00000000ABCD);
+    ep_spec.add_ip_address();
+    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
+    ep_spec.mutable_ip_address(0)->set_v6_addr(ipv6_ip1);  
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_create(ep_spec, &ep_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    
+    ep_spec1.mutable_meta()->set_tenant_id(10);
+    ep_spec1.set_l2_segment_handle(l2seg_hdl);
+    ep_spec1.set_interface_handle(if_hdl2);
+    ep_spec1.set_mac_address(0x000000001234);
+    ep_spec1.add_ip_address();
+    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
+    ep_spec1.mutable_ip_address(0)->set_v6_addr(ipv6_ip2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+
+    // Create Session
+    sess_spec.mutable_meta()->set_tenant_id(10);
+    sess_spec.set_session_id(10);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_ip_af(types::IP_AF_INET6);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_v6_addr(ipv6_ip1);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_dip()->set_ip_af(types::IP_AF_INET6);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_dip()->set_v6_addr(ipv6_ip2);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->
+        mutable_v6_key()->set_ip_proto(types::IPPROTO_ESP);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->
+        mutable_v6_key()->mutable_esp()->set_spi(0xAAAABBBB);
+    sess_spec.mutable_initiator_flow()->mutable_flow_data()->
+        mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
+
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_ip_af(types::IP_AF_INET6);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_v6_addr(ipv6_ip2);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v6_key()->mutable_dip()->set_ip_af(types::IP_AF_INET6);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v6_key()->mutable_dip()->set_v6_addr(ipv6_ip1);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->
+        mutable_v6_key()->set_ip_proto(types::IPPROTO_ESP);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->
+        mutable_v6_key()->mutable_esp()->set_spi(0xBBBBAAAA);
+    sess_spec.mutable_responder_flow()->mutable_flow_data()->
+        mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = fte::session_create(sess_spec, &sess_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+}
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

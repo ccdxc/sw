@@ -42,7 +42,7 @@ ctx_t::extract_flow_key_from_spec(hal::flow_key_t *key, const FlowKey&  flow_spe
         if ((key->proto == IP_PROTO_TCP) ||
             (key->proto == IP_PROTO_UDP)) {
             key->sport = flow_spec_key.v4_key().tcp_udp().sport();
-            key->dport = flow_spec_key.v4_key().tcp_udp().dport();;
+            key->dport = flow_spec_key.v4_key().tcp_udp().dport();
         } else if (key->proto == IP_PROTO_ICMP) {
             key->icmp_type = flow_spec_key.v4_key().icmp().type();
             key->icmp_code = flow_spec_key.v4_key().icmp().code();
@@ -52,6 +52,8 @@ ctx_t::extract_flow_key_from_spec(hal::flow_key_t *key, const FlowKey&  flow_spe
             } else {
                 key->icmp_id = 0;
             }
+        } else if (key->proto == IPPROTO_ESP) {
+            key->spi = flow_spec_key.v4_key().esp().spi();
         } else {
             key->sport = key->dport = 0;
         }
@@ -78,6 +80,8 @@ ctx_t::extract_flow_key_from_spec(hal::flow_key_t *key, const FlowKey&  flow_spe
                 HAL_TRACE_DEBUG("fte: invalid icmp type {}", key->icmp_type);
                 return HAL_RET_INVALID_ARG;
             }
+        } else if (key->proto == IPPROTO_ESP) {
+            key->spi = flow_spec_key.v6_key().esp().spi();
         } else {
             key->sport = key->dport = 0;
         }
@@ -142,6 +146,8 @@ ctx_t::extract_flow_key_from_phv()
             key_.icmp_code = phv_->lkp_sport & 0x00FF;
             key_.icmp_id = phv_->lkp_dport;
             break;
+        case IPPROTO_ESP:
+            key_.spi = phv_->lkp_sport << 16 | phv_->lkp_dport;
         default:
             key_.sport = 0;
             key_.dport = 0;
@@ -294,6 +300,8 @@ ctx_t::create_session()
                 rkey.icmp_code = key_.icmp_code;
                 rkey.icmp_id = key_.icmp_id;
                 break;
+            case IPPROTO_ESP:
+                rkey.spi = key_.spi;
             default:
                 valid_rflow_ = false;
                 break;

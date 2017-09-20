@@ -1,0 +1,15 @@
+-I ../gen
+-I ../gen/iris/include
+-I ../hal/pd/iris
+-I ../gen/protobuf
+-I ../gen/common_rxdma_actions/include
+-I ../third-party/crc32
+-I ../third-party/spdlog/include
+-I ../hal/svc
+-I ../hal/src
+-I ../p4/nw/include
+-I ../utils
+-I ../hal/pd/common
+-I ../include
+-I .
+-std=c++11

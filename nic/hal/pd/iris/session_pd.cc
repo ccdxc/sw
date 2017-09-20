@@ -546,6 +546,9 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint8_t lkp_inst,
             key.flow_lkp_metadata_lkp_dport = flow_key->icmp_id;
             key.flow_lkp_metadata_lkp_sport =
                 ((flow_key->icmp_type << 8) | flow_key->icmp_code);
+        } else if (flow_key->proto == IPPROTO_ESP) {
+            key.flow_lkp_metadata_lkp_sport = flow_key->spi >> 16 & 0xFFFF;
+            key.flow_lkp_metadata_lkp_dport = flow_key->spi & 0xFFFF;
         }
     } else {
         // For FLOW_TYPE_L2

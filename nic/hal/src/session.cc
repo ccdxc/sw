@@ -122,6 +122,9 @@ flowkey2str (const flow_key_t& key)
             out.write("proto=icmp, type={}, code={}, id={}",
                       key.icmp_type, key.icmp_code, key.icmp_id);
             break;
+        case types::IPPROTO_ESP:
+            out.write("spi={}", key.spi);
+            break;
         case types::IPPROTO_TCP:
             out.write("proto=tcp, sport={}, dport={}", key.sport, key.dport);
             break;

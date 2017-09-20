@@ -36,15 +36,20 @@ message FlowKeyICMPInfo {
   uint32    id   = 3;          // ICMP id, if any
 }
 
+message FlowKeyESPInfo {
+  uint32   spi = 1;            // Security Parameters Index (SPI)
+}
+
 // Key for IPv4 flows
 message FlowKeyV4 {
   fixed32                  sip      = 1;    // source IP address
   fixed32                  dip      = 2;    // destination IP address
   types.IPProtocol         ip_proto = 3;    // IP protocol
-  // TODO: add ICMP, AH, ESP etc. here
+  // TODO: add AH etc. here
   oneof l4_fields {
       FlowKeyTcpUdpInfo    tcp_udp  = 4;    // TCP/UDP ports
       FlowKeyICMPInfo      icmp     = 5;    // ICMP type, code and id
+      FlowKeyESPInfo       esp      = 6;    // ESP type
   }
 }
 
@@ -53,10 +58,11 @@ message FlowKeyV6 {
   types.IPAddress     sip           = 1;    // source IP address
   types.IPAddress     dip           = 2;    // destination IP address
   types.IPProtocol    ip_proto      = 3;    // IP protocol
-  // TODO: add ICMPv6, AH, ESP etc. here
+  // TODO: add AH etc. here
   oneof l4_fields {
       FlowKeyTcpUdpInfo    tcp_udp  = 4;    // TCP/UDP ports
       FlowKeyICMPInfo      icmp     = 5;    // ICMP type, code and id
+      FlowKeyESPInfo       esp      = 6;    // ESP type
   }
 }
 
