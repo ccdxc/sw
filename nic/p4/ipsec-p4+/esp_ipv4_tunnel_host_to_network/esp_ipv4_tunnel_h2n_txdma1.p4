@@ -79,7 +79,7 @@ header_type ipsec_to_stage3_t {
 
 header_type doorbell_data_pad_t {
     fields {
-        db_data_pad : 64;
+        db_data_pad : 96;
     }
 }
 
