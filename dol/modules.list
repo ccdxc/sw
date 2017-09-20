@@ -1826,12 +1826,12 @@ modules:
         ignore  : False
         iterate:
             # Tagged Flows
-            - flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
-            - flow  : filter://type=IPV4,proto=TCP,label=NETWORKING
-            - flow  : filter://type=IPV4,proto=ICMP,label=NETWORKING
-            - flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
-            - flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
-            - flow  : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+            - flow: filter://type=IPV4,proto=TCP,label=NETWORKING
+            - flow: filter://type=IPV4,proto=ICMP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
 
     - module:
         name    : L2MC
@@ -1841,8 +1841,63 @@ modules:
         spec    : l2mc.testspec
         ignore  : False
         iterate :
+            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : ETH_TX_RX # Host to Host case
+        enable  : True
+        package : test.eth
+        module  : eth
+        spec    : tx_rx.testspec
+        ignore  : True
+        args    :
+            maxflows : 4
+        iterate:
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment : filter://native=False
+
+    - module:
+        name    : ETH_TX_RX_ARP_RARP
+        enable  : True
+        package : test.eth
+        module  : eth
+        spec    : tx_rx_arp.testspec
+        ignore  : True
+        args    :
+            maxflows: 4
+        iterate :
+            - type      : ARP_REQ_UC
+              segment   : filter://native=False
+            - type      : ARP_RESP
+              segment   : filter://native=False
+            - type      : RARP_REQ_UC
+              segment   : filter://native=False
+            - type      : RARP_RESP
+              segment   : filter://native=False
+
+    - module:
+        name    : ETH_TX_RX_L2UC_NONIP
+        enable  : True
+        package : test.eth
+        module  : eth
+        spec    : tx_rx_nonip.testspec
+        ignore  : True
+        args    :
+            maxflows : 4
+        iterate:
+            - segment: filter://native=False
+              flow   : filter://label=NETWORKING
+
 
     - module:
         name    : L2UC_VXLAN_GFT_DROP
