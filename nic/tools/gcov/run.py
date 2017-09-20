@@ -32,7 +32,6 @@ if not nic_dir:
 nic_dir = os.path.abspath(nic_dir)
 
 
-top_dir = os.getcwd()
 gcov_out_name = "gcov_out"
 FNULL = open(os.devnull, 'w')
 
@@ -123,7 +122,6 @@ def generate_coverage(data, name, cov_output_dir):
     output_file = cov_output_dir + "/" + name + ".info"
     merge_lcov_files(name, lcov_info_files, output_file)
     gen_html(output_file, cov_output_dir)
-    os.chdir(top_dir)
     return output_file
 
 
@@ -138,12 +136,10 @@ def merge_lcov_files(test_name, lcov_info_files, output_file):
 
 
 def run(cmd):
-    os.chdir(nic_dir)
     ret = subprocess.call(cmd, shell=True)
     if ret:
         print("Cmd failed.: ", cmd)
         sys.exit(1)
-    os.chdir(top_dir)
 
 
 if __name__ == '__main__':
@@ -156,6 +152,7 @@ if __name__ == '__main__':
         data = json.load(data_file)
 
     # build all modules.
+    os.chdir(nic_dir)
     for module_name in data["modules"]:
         print "Building module: ", module_name
         run(data["modules"][module_name]["clean_cmd"])
@@ -173,7 +170,7 @@ if __name__ == '__main__':
             if module.get("gcno_dir"):
                 os.chdir(module["gcno_dir"])
                 subprocess.call(["rm -f *.gcda"], shell=True)
-                os.chdir(top_dir)
+                os.chdir(nic_dir)
 
     # Finally generate lcov combined output as well.
     for module_name in module_infos:

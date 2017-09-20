@@ -139,8 +139,8 @@ def run_hal():
 #    log.close()
 
 def dump_coverage_data():
+    model_process.send_signal(signal.SIGINT)
     hal_process.send_signal(signal.SIGUSR1)
-    model_process.send_signal(signal.SIGUSR1)
     time.sleep(5)
 
 # DOL

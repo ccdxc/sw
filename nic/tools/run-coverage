@@ -1,7 +1,6 @@
 #! /bin/bash
 if [ -z "$NIC_DIR" ]; then
-    NIC_DIR=`dirname $PWD`
-    export NIC_DIR=`dirname $NIC_DIR`
+    export NIC_DIR=`dirname $PWD`
 fi
 export COVERAGE_CONFIG_PATH=$NIC_DIR/conf/
 export COVERAGE_OUTPUT=$NIC_DIR/gen/coverage
