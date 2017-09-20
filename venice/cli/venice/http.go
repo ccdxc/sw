@@ -37,11 +37,7 @@ func httpGet(url string, jdata interface{}) error {
 		return err
 	}
 
-	if err := json.Unmarshal(response, jdata); err != nil {
-		return err
-	}
-
-	return nil
+	return json.Unmarshal(response, jdata)
 }
 
 // httpDelete sssues http delete request at specified url

@@ -58,10 +58,7 @@ func createFromFileName(ctx *context, fileArg string) {
 // processOne process one file, url or a directory
 func processOne(ctx *context, filename, kind string) error {
 	if strings.HasPrefix(filename, "http") {
-		if err := processURL(ctx, filename, kind); err != nil {
-			return err
-		}
-		return nil
+		return processURL(ctx, filename, kind)
 	}
 	return processDir(ctx, filename, kind)
 }
