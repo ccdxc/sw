@@ -41,7 +41,7 @@ TEST_FILES := \
 TMP_FILES  := $(patsubst %.ctl, %.x, $(TEST_FILES))
 
 #this is to make capsim happy and avoid undefined symbols
-req_tx_sqcb_process_PARAMS := -P req_tx_sqpt_process=100 -P req_tx_sqwqe_process=200
+req_tx_sqcb_process_PARAMS := -P req_tx_sqpt_process=100 -P req_tx_sqwqe_process=200 -P req_tx_sqsge_process=300
 
 $(TMP_FILES): %.x: %.ctl
 	@echo Testing ...

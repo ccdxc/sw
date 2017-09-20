@@ -32,8 +32,6 @@ req_tx_add_headers_process:
     DMA_PHV2PKT_SETUP(r7, p4plus_to_p4, p4plus_to_p4);
     phvwr          P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA
     phvwr          P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
-    phvwri         P4PLUS_TO_P4_IP_LEN, 124
-    phvwri         P4PLUS_TO_P4_UDP_LEN, 104
     phvwr          P4PLUS_TO_P4_VLAN_ID, 0
 
     // dma_cmd[2]

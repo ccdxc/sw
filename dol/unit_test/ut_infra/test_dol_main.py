@@ -62,6 +62,7 @@ def _mock_module_common(modules):
         glopts.topology = "base/base.spec"
         glopts.cfgonly = False
         glopts.test = None
+        glopts.pkglist = None
         glopts.tcid = None
         glopts.level = 0
         return glopts

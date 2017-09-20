@@ -250,6 +250,8 @@ class ModuleDatabase:
             GlobalOptions.test = GlobalOptions.test.split(',')
         if GlobalOptions.module != None:
             GlobalOptions.module = GlobalOptions.module.split(',')
+        if GlobalOptions.pkglist != None:
+            GlobalOptions.pkglist = GlobalOptions.pkglist.split(',')
         self.__add_all()
         return
 
@@ -271,8 +273,20 @@ class ModuleDatabase:
 
         return False
 
+    def __is_pkg_match(self, pkg):
+        if GlobalOptions.pkglist == None:
+            return True
+
+        if pkg in GlobalOptions.pkglist:
+            return True
+
+        return False
+
     def __add(self, pmod):
         if GlobalOptions.test and pmod.name in GlobalOptions.test:
+            pmod.enable = True
+
+        if GlobalOptions.pkglist and pmod.package in GlobalOptions.pkglist:
             pmod.enable = True
 
         if pmod.enable == False:
@@ -288,6 +302,9 @@ class ModuleDatabase:
             return
 
         if not self.__is_module_match(pmod.module):
+            return
+
+        if not self.__is_pkg_match(pmod.package):
             return
 
         module = Module(pmod)

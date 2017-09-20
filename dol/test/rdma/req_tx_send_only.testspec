@@ -16,7 +16,7 @@ selectors:
         lqp         : filter://any
         rqp         : filter://any
 #    maxflows    : 1 
-    maxrdmasessions     : 1 
+    maxrdmasessions     : 4
 
 packets:
     - packet:
@@ -101,7 +101,7 @@ trigger:
             ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
 
     doorbell:
-        object: ref://testcase/config/rdmasession/session/initiator/ep/intf/lif/queue_types/id=RDMA_SQ/queues/id=0/rings/id=SQ/doorbell
+        object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
         fields:
             upd : 0xD # (DB Increment Pindex << 2 |  DB_SCHED_WR_EVAL_RING) (0x3 << 2 | 0x1)
 

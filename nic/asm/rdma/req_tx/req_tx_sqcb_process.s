@@ -10,10 +10,12 @@ struct rdma_stage0_table_k k;
 
 #define INFO_OUT1_T struct req_tx_sqcb_to_pt_info_t
 #define INFO_OUT2_T struct req_tx_sqcb_to_wqe_info_t
+#define INFO_OUT3_T struct req_tx_wqe_to_sge_info_t
 
 %%
     .param    req_tx_sqpt_process
     .param    req_tx_sqwqe_process
+    .param    req_tx_sqsge_process
 
 .align
 req_tx_sqcb_process:
@@ -70,6 +72,31 @@ req_tx_sqcb_process:
 
 in_progress:
     // load wqe using sqcb_p->wqe_addr
+
+    // sge_offset = TXWQE_SGE_OFFSET + sqcb0_p->current_sge_id * sizeof(sge_t);
+    add            r1, TXWQE_SGE_OFFSET, d.current_sge_id, LOG_SIZEOF_SGE_T
+    // sge_p = sqcb0_p->curr_wqe_ptr + sge_offset
+    add            r1, r1, d.curr_wqe_ptr
+
+    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, in_progress, d.in_progress)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, current_sge_id, d.current_sge_id)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, current_sge_offset, d.current_sge_offset)
+    // num_valid_sges = sqcb0_p->num_sges = sqcb0_p->current_sge_id
+    sub            r2, d.num_sges, d.current_sge_id 
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, num_valid_sges, r2)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, remaining_payload_bytes, r4)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, dma_cmd_start_index, REQ_TX_DMA_CMD_START_FLIT_ID)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, wqe_addr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, 0)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, d.curr_op_type)
+
+    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    
+    nop.e
+    nop
 
 in_progress_end:
     // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
