@@ -11,6 +11,7 @@ LIBDIRS = \
 		  model_sim/build \
 		  fte \
 		  hal/svc \
+		  hal/lkl \
 		  hal/src \
 		  hal/periodic \
 		  hal/pd/iris/p4pd \

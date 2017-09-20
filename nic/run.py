@@ -37,7 +37,7 @@ lock_file = nic_dir + "/.run.pid"
 
 # Environment
 
-os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib"
+os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib:third-party/lkl/export/bin"
 os.environ["PKG_CONFIG_PATH"] = "/usr/local/lib/pkgconfig"
 
 # build
@@ -106,7 +106,7 @@ def run_model(args):
 
 def run_hal():
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
-    os.environ["LD_LIBRARY_PATH"] = "./obj:/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib"
+    os.environ["LD_LIBRARY_PATH"] = "./obj:/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib:third-party/lkl/export/bin"
 
     hal_dir = nic_dir
     os.chdir(hal_dir)
