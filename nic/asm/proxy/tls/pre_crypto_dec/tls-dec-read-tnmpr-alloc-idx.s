@@ -10,9 +10,9 @@
 #include "INGRESS_p.h"
 
 
-struct tx_table_s2_t2_k k                  ;
-struct phv_ p	;
-struct tx_table_s2_t2_read_tnmpr_d d ;
+struct tx_table_s2_t2_k k;
+struct phv_             p;
+struct tx_table_s2_t2_d d;
 
         
 %%
@@ -25,12 +25,12 @@ tls_dec_alloc_tnmpr_process:
 
         CAPRI_CLEAR_TABLE2_VALID
 
-	    phvwr		p.s3_t2_s2s_tnmpr_pidx, d.{tnmpr_pidx}.wx
+	    phvwr		p.s3_t2_s2s_tnmpr_pidx, d.{u.read_tnmpr_pidx_d.tnmpr_pidx}.wx
 
 table_read_TNMDR_PAGE:
 	    addui		r3, r0, hiword(TNMPR_TABLE_BASE)
 	    addi		r3, r0, loword(TNMPR_TABLE_BASE)
-	    CAPRI_NEXT_TABLE_READ_INDEX(2, d.{tnmpr_pidx}.wx, TABLE_LOCK_EN,
+	    CAPRI_NEXT_TABLE_READ_INDEX(2, d.{u.read_tnmpr_pidx_d.tnmpr_pidx}.wx, TABLE_LOCK_EN,
                         tls_dec_tpage_alloc_process,
 	                    r3, TNMPR_TABLE_ENTRY_SIZE_SHFT,
 	                    TABLE_SIZE_512_BITS)

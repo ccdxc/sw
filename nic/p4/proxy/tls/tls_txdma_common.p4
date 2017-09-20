@@ -100,7 +100,7 @@ header_type tlscb_1_t {
 }
 
 #define TLSCB_1_PARAMS                                                                                  \
-cipher_type, ver_major, qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, ofid
+cipher_type, ver_major, qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len
 #
 
 #define GENERATE_TLSCB_1_D                                                                              \
@@ -218,6 +218,83 @@ rnmdr_free,rnmpr_free, enc_completions, dec_completions, debug_stage0_3_thread, 
     modify_field(tls_post_crypto_stats_d.debug_stage4_7_thread, debug_stage4_7_thread);                 \
     modify_field(tls_post_crypto_stats_d.pad, pad);
 
+
+header_type serq_entry_d_t {
+    fields {
+        idesc                           : 64;
+        pad                             : 448;
+    }
+}
+#define SERQ_ENTRY_ACTION_PARAMS idesc, pad
+#define SERQ_ENTRY_SCRATCH serq_entry_d
+#define GENERATE_SERQ_ENTRY_D                                                                           \
+    modify_field(SERQ_ENTRY_SCRATCH.idesc, idesc);                                                      \
+    modify_field(SERQ_ENTRY_SCRATCH.pad, pad);
+
+
+header_type tnmdr_pidx_t {
+    fields {
+        tnmdr_pidx                      : 32;
+        tnmdr_pidx_full                 : 1;
+        pad                             : 479;
+    }
+}
+#define TNMDR_PIDX_ACTION_PARAMS tnmdr_pidx, pad
+#define TNMDR_PIDX_SCRATCH tnmdr_pidx_d
+#define GENERATE_TNMDR_PIDX_D                                                                           \
+    modify_field(TNMDR_PIDX_SCRATCH.tnmdr_pidx, tnmdr_pidx);                                            \
+    modify_field(TNMDR_PIDX_SCRATCH.pad, pad);
+
+
+header_type tnmpr_pidx_t {
+    fields {
+        tnmpr_pidx                      : 32;
+        tnmpr_pidx_full                 : 1;
+        pad                             : 479;
+    }
+}
+#define TNMPR_PIDX_ACTION_PARAMS tnmpr_pidx, pad
+#define TNMPR_PIDX_SCRATCH tnmpr_pidx_d
+#define GENERATE_TNMPR_PIDX_D                                                                           \
+    modify_field(TNMPR_PIDX_SCRATCH.tnmpr_pidx, tnmpr_pidx);                                            \
+    modify_field(TNMPR_PIDX_SCRATCH.pad, pad);
+
+
+#define PKT_DESCR_AOL_ACTION_PARAMS                                                                     \
+A0, O0, L0, A1, O1, L1, A2, O2, L2, next_addr, next_pkt 
+#define PKT_DESCR_AOL_SCRATCH  pkt_descr_aol_d 
+#define GENERATE_PKT_DESCR_AOL_D                                                                        \
+    modify_field(PKT_DESCR_AOL_SCRATCH.A0, A0);                                                         \
+    modify_field(PKT_DESCR_AOL_SCRATCH.O0, O0);                                                         \
+    modify_field(PKT_DESCR_AOL_SCRATCH.L0, L0);                                                         \
+    modify_field(PKT_DESCR_AOL_SCRATCH.A1, A1);                                                         \
+    modify_field(PKT_DESCR_AOL_SCRATCH.O1, O1);                                                         \
+    modify_field(PKT_DESCR_AOL_SCRATCH.L1, L1);                                                         \
+    modify_field(PKT_DESCR_AOL_SCRATCH.A2, A2);                                                         \
+    modify_field(PKT_DESCR_AOL_SCRATCH.O2, O2);                                                         \
+    modify_field(PKT_DESCR_AOL_SCRATCH.L2, L2);                                                         \
+    modify_field(PKT_DESCR_AOL_SCRATCH.next_addr, next_addr);                                           \
+    modify_field(PKT_DESCR_AOL_SCRATCH.next_pkt, next_pkt);
+    
+
+header_type tls_header_t {
+    fields {
+        tls_hdr_type                        : 8;
+        tls_hdr_version_major               : 8;
+        tls_hdr_version_minor               : 8;
+        tls_hdr_len                         : 16;
+    }
+}
+
+#define TLS_HDR_ACTION_PARAMS   tls_hdr_type, tls_hdr_version_major, tls_hdr_version_minor, tls_hdr_len
+#define TLS_HDR_SCRATCH tls_header_d
+#define GENERATE_TLS_HDR_D                                                                              \
+    modify_field(TLS_HDR_SCRATCH.tls_hdr_type, tls_hdr_type);                                           \
+    modify_field(TLS_HDR_SCRATCH.tls_hdr_version_major, tls_hdr_version_major);                         \
+    modify_field(TLS_HDR_SCRATCH.tls_hdr_version_minor, tls_hdr_version_minor);                         \
+    modify_field(TLS_HDR_SCRATCH.tls_hdr_len, tls_hdr_len);
+
+
 header_type read_tnmdr_d_t {
     fields {
         tnmdr_pidx              : 32;
@@ -231,4 +308,3 @@ header_type read_tnmpr_d_t {
         tnmpr_pidx_full         : 1;
     }
 }
-

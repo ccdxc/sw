@@ -53,6 +53,7 @@ message TlsCbSpec {
   uint64                explicit_iv                = 25;
   uint32                pre_debug_stage0_7_thread  = 26;
   uint32                post_debug_stage0_7_thread = 27;
+  bool                  is_decrypt_flow            = 28;
 }
 
 // TlsCbRequestMsg is batched add or modify tlscb request

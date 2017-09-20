@@ -748,6 +748,16 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : PKT_TO_BSQ_DECRYPT
+        enable  : False
+        package : test.tcp_tls_proxy
+        module  : pkt_to_bsq_decrypt
+        spec    : one_pkt.testspec
+        ignore  : True
+        args    :
+            flow: filter://type=IPV4,proto=TCP
+
+    - module:
         name    : PROXY_UPLINK_TO_UPLINK_BYPASS_BARCO
         enable  : True
         package : test.tcp_tls_proxy

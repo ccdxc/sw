@@ -1,5 +1,6 @@
 /*
- * 	Implements the receipt of tls request from SESQ 
+ * 	Implements the processing of Packet Descriptor
+ *  Stage 3, Table 0
  */
 
 #include "tls-constants.h"
@@ -10,15 +11,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 	
-/* d is the data returned by lookup result */
-struct d_struct {
-	TLS_SHARED_STATE
-};
+struct tx_table_s3_t0_k k;
+struct phv_             p;
+struct tx_table_s3_t0_d d;
 
-struct tx_table_s4_t0_k k       ;
-
-struct phv_ p	;
-struct d_struct d	;
+#define D   d.u.tls_serq_process_d
 	
 %%
 	.param		tls_dec_bld_barco_req_process
@@ -28,7 +25,7 @@ tls_dec_rx_serq_process:
 
 	/* ENQ_DESC(*dtlsp, dec, md->seqe.desc); */
 	/* if (TAIL_DESC(cb,name) == NULL) { */
-	seq		c1, d.qtail, r0
+	seq		c1, D.qtail, r0
 	/*    TAIL_DESC(cb, name) = desc; */
 	bcf		[c1], no_dma_cmd
 	nop
@@ -40,10 +37,10 @@ dma_cmd_dec_desc_entry_last:
 	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r4
 
 	addi		r5, r0, NIC_DESC_ENTRY_L_OFFSET
-	add		    r5, r5, d.qtail
+	add		    r5, r5, D.qtail
 	phvwr		p.dma_cmd0_dma_cmd_addr, r5
 
-	phvwr		p.aol_next_addr, k.to_s4_idesc
+	phvwr		p.aol_next_addr, k.to_s3_idesc
 
     phvwri      p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(aol_next_addr)
 	phvwri		p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(aol_next_addr)
@@ -53,28 +50,28 @@ dma_cmd_dec_desc_entry_last:
     phvwri      p.dma_cmd0_dma_cmd_eop, 0
 
 no_dma_cmd:	
-	tblwr.c1	d.qtail, k.to_s4_idesc
-	tblwr.c1	d.qhead, k.to_s4_idesc
+	tblwr.c1	D.qtail, k.to_s3_idesc
+	tblwr.c1	D.qhead, k.to_s3_idesc
 	
 	/* dtlsp->dec_nxt.desc = TAIL_DESC(*dtlsp, dec); */
-	tblwr		d.nxt_desc, k.to_s4_idesc
+	tblwr		D.nxt_desc, k.to_s3_idesc
 
 	/* Check if the next tls header is starting in this descriptor
 	 * data, if so trigger a read to get that tls header and the 
 	 * offset for the next tls header in the data stream 
 	 */
 	/* if (dtlsp->next_tls_hdr_offset < md->desc.data_len) { */
-	slt		    c1, d.next_tls_hdr_offset, k.s2_s4_t0_phv_idesc_aol0_len
+	slt		    c1, D.next_tls_hdr_offset, k.s2_s3_t0_phv_idesc_aol0_len
 	bcf		    [!c1], tls_no_read_header
 	nop
-	phvwr		p.tls_global_phv_next_tls_hdr_offset, d.next_tls_hdr_offset
-	add		    r2, r0, k.s2_s4_t0_phv_idesc_aol0_addr
-	add		    r3, r0, k.s2_s4_t0_phv_idesc_aol0_offset
+	phvwr		p.tls_global_phv_next_tls_hdr_offset, D.next_tls_hdr_offset
+	add		    r2, r0, k.s2_s3_t0_phv_idesc_aol0_addr
+	add		    r3, r0, k.s2_s3_t0_phv_idesc_aol0_offset
 	add		    r3, r3, k.tls_global_phv_next_tls_hdr_offset
 	add		    r2, r2, r3
 
 table_read_tls_header:	
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_read_header_process, r2, TABLE_SIZE_8_BITS)
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_read_header_process, r2, TABLE_SIZE_64_BITS)
 	b		    tls_dec_rx_serq_process_done
 	nop
 	/* md->next_tls_hdr_offset = dtlsp->next_tls_hdr_offset; */
@@ -82,7 +79,7 @@ table_read_tls_header:
 
 tls_no_read_header:
 	/* if (dtlsp->next_tls_hdr_offset == md->desc.data_len) { */
-	seq		    c1, d.next_tls_hdr_offset, k.s2_s4_t0_phv_idesc_aol0_len
+	seq		    c1, D.next_tls_hdr_offset, k.s2_s3_t0_phv_idesc_aol0_len
 	
 	bcf 		[!c1], tls_dec_rx_serq_process_done
 	nop

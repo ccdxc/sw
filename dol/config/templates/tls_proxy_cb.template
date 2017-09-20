@@ -31,3 +31,4 @@ pre_debug_stage0_7_thread   : 0
 post_debug_stage0_7_thread  : 0
 command                     : 0
 crypto_key_idx              : 0
+is_decrypt_flow             : 0

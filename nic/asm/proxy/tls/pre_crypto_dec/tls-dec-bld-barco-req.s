@@ -1,5 +1,6 @@
 /*
  * 	Construct the barco request in this stage for decrypt
+ * Stage 5, Table 0
  */
 
 #include "tls-constants.h"
@@ -11,9 +12,9 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 	
-struct tx_table_s6_t0_k k                  ;
-struct phv_ p	;
-struct tx_table_s6_t0_tls_bld_brq6_d d	;
+struct tx_table_s5_t0_k     k;
+struct phv_                 p;
+struct tx_table_s5_t0_d     d;
 	
 %%
 	    .param      tls_dec_queue_brq_process
@@ -23,19 +24,38 @@ tls_dec_bld_barco_req_process:
 
 table_read_QUEUE_BRQ:
     /* Fill the barco request in the phv to be DMAed later into BRQ slot */
-    phvwr       p.barco_desc_input_list_address, k.to_s6_idesc
-    phvwr       p.barco_desc_output_list_address, k.to_s6_odesc
-    phvwr       p.barco_desc_key_desc_index, d.key_desc_index
-#if 0
-    /* FIXME: */
-    phvwr       p.barco_desc_command_core,  d.command_core
-    phvwr       p.barco_desc_command_mode, d.command_mode
-    phvwr       p.barco_desc_command_op, d.command_op
-    phvwr       p.barco_desc_command_param, d.command_param
-#endif
+    phvwr       p.barco_desc_status_address, k.{to_s5_idesc}.dx
+    addi        r2, r0, PKT_DESC_AOL_OFFSET
+    add         r1, r2, k.{to_s5_idesc}
+    phvwr       p.barco_desc_input_list_address, r1.dx
+    CAPRI_OPERAND_DEBUG(r1.dx)
 
-    addi        r3, r0, BRQ_QPCB_BASE
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_queue_brq_process,
-                           r3, TABLE_SIZE_512_BITS)
+    add         r1, r2, k.{to_s5_odesc}
+    phvwr       p.barco_desc_output_list_address, r1.dx
+    CAPRI_OPERAND_DEBUG(r1.dx)
+
+    phvwr       p.barco_desc_key_desc_index, d.{u.tls_bld_brq5_d.barco_key_desc_index}.wx
+    CAPRI_OPERAND_DEBUG(d.{u.tls_bld_brq5_d.barco_key_desc_index}.wx)
+
+    phvwr       p.barco_desc_command, d.u.tls_bld_brq5_d.barco_command
+    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.barco_command)
+
+	/* address will be in r4 */
+	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
+    phvwr       p.barco_desc_doorbell_address, r4.dx
+    CAPRI_OPERAND_DEBUG(r4.dx)
+
+    
+	/* data will be in r3 */
+	CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0)
+    phvwr       p.barco_desc_doorbell_data, r3.dx
+    CAPRI_OPERAND_DEBUG(r3.dx)
+        
+    addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX
+    /* FIXME: The Capri model currently does not support a read of 8 bytes from register space
+     * enable this once it is fixed
+     *  CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_queue_brq_process, r3, TABLE_SIZE_64_BITS);
+     */
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_queue_brq_process, r3, TABLE_SIZE_32_BITS);
 	nop.e
 	nop
