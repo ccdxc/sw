@@ -50,7 +50,7 @@ func NewNpmClient(agent netagent.CtrlerIntf, srvURL, resolverURLs string) (*NpmC
 	client := NpmClient{
 		srvURL:          srvURL,
 		resolverURLs:    resolverURLs,
-		resolverClient:  resolver.New(&resolver.Config{Servers: strings.Split(resolverURLs, ",")}),
+		resolverClient:  resolver.New(&resolver.Config{Name: "netagent", Servers: strings.Split(resolverURLs, ",")}),
 		agent:           agent,
 		watchCtx:        watchCtx,
 		watchCancel:     watchCancel,

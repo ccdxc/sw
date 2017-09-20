@@ -95,7 +95,7 @@ func WithDeferredStart(enabled bool) Option {
 
 func defaultOptions(mysvcName string) *options {
 	return &options{
-		stats:        newStatsMiddleware(),
+		stats:        newStatsMiddleware(mysvcName),
 		tracer:       newTracerMiddleware(mysvcName),
 		enableTracer: false,
 		enableLogger: true,
@@ -340,6 +340,11 @@ func (c *RPCClient) Reconnect() error {
 // GetRPCStats returns RPC stats for the client
 func (c *RPCClient) GetRPCStats() map[string]int64 {
 	return c.stats.rpcStats
+}
+
+// GetRPCStatsByClient returns RPC stats for the server by client
+func (srv *RPCServer) GetRPCStatsByClient() map[string]map[string]int64 {
+	return srv.stats.rpcClientStats
 }
 
 // Close closes client connection

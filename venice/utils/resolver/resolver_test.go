@@ -69,6 +69,7 @@ func (m *mockServiceInstanceObserver) OnNotifyResolver(e types.ServiceInstanceEv
 func TestResolverClient(t *testing.T) {
 	server, m := createFakeResolver(t)
 	config := &Config{
+		Name:    "test",
 		Servers: []string{server.GetListenURL()},
 	}
 	client := New(config)

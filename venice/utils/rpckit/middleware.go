@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/pensando/sw/venice/utils/log"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // middleware callback roles
@@ -40,9 +42,14 @@ func rpcServerUnaryInterceptor(rpcServer *RPCServer) grpc.UnaryServerInterceptor
 }
 
 // rpcServerStreamInterceptor  is the server intercept handler for stream RPCs
-// FIXME: to be implemented
 func rpcServerStreamInterceptor(rpcServer *RPCServer) grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		// call all the request middlewares
+		ctx := ss.Context()
+		for _, m := range rpcServer.middlewares {
+			ctx = m.ReqInterceptor(ctx, RoleServer, rpcServer.mysvcName, info.FullMethod, struct{}{})
+		}
+
 		return handler(srv, ss)
 	}
 }
@@ -111,14 +118,16 @@ func (l *logMiddleware) RespInterceptor(ctx context.Context, role, mysvcName, me
 
 // Stats middleware
 type statsMiddleware struct {
-	lock     sync.Mutex       // RW lock for stats object
-	rpcStats map[string]int64 // stats for each RPC call
+	lock           sync.Mutex                  // RW lock for stats object
+	rpcStats       map[string]int64            // stats for each RPC call
+	rpcClientStats map[string]map[string]int64 // stats for each RPC call, by client (valid only on server)
 }
 
 // newStatsMiddleware returns a new stats middleware
-func newStatsMiddleware() *statsMiddleware {
+func newStatsMiddleware(svcName string) *statsMiddleware {
 	return &statsMiddleware{
-		rpcStats: make(map[string]int64),
+		rpcStats:       make(map[string]int64),
+		rpcClientStats: make(map[string]map[string]int64),
 	}
 }
 
@@ -127,6 +136,35 @@ func (s *statsMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, m
 	// lock the object
 	s.lock.Lock()
 	defer s.lock.Unlock()
+
+	switch role {
+	case RoleClient:
+		// get existing metadata
+		md, ok := metadata.FromContext(ctx)
+		if !ok {
+			md = metadata.New(nil)
+		} else {
+			md = md.Copy()
+		}
+		newMd := metadata.Join(md, metadata.Pairs("cname", mysvcName))
+		ctx = metadata.NewContext(ctx, newMd)
+	case RoleServer:
+		// get grpc metadata
+		md, ok := metadata.FromContext(ctx)
+		if !ok {
+			break
+		}
+		clientNames, ok := md["cname"]
+		if !ok {
+			break
+		}
+		methodStats, ok := s.rpcClientStats[method]
+		if !ok {
+			methodStats = make(map[string]int64)
+			s.rpcClientStats[method] = methodStats
+		}
+		methodStats[clientNames[0]]++
+	}
 
 	// increment stats
 	s.rpcStats[fmt.Sprintf("%s-%s:Req", role, method)]++

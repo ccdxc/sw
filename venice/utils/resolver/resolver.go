@@ -7,6 +7,7 @@ import (
 
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
@@ -38,6 +39,9 @@ type Interface interface {
 
 // Config contains configuration to create a resolver client.
 type Config struct {
+	// Name contains the name of the client (used for stats).
+	Name string
+
 	// Servers could be "CMD on localhost" for controller processes,
 	// "list of virtual IPs" for NIC agent process. The string
 	// format is <IP/Hostname>:<Port>.
@@ -63,6 +67,10 @@ func New(c *Config) Interface {
 		return nil
 	}
 	ctx, cancel := context.WithCancel(context.Background())
+
+	md := metadata.Pairs("cname", c.Name)
+	ctx = metadata.NewContext(ctx, md)
+
 	r := &resolverClient{
 		config:    c,
 		ctx:       ctx,

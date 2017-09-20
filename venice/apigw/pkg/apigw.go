@@ -165,7 +165,7 @@ func (a *apiGw) Run(config apigw.Config) {
 	var rslvr resolver.Interface
 	{
 		if len(config.Resolvers) > 0 {
-			rslvr = resolver.New(&resolver.Config{Servers: config.Resolvers})
+			rslvr = resolver.New(&resolver.Config{Name: "apigw", Servers: config.Resolvers})
 		}
 	}
 	a.logger.Infof("Resolving via %v", config.Resolvers)

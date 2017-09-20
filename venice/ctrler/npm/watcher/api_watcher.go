@@ -151,7 +151,7 @@ func (w *Watcher) runApisrvWatcher(ctx context.Context, apisrvURL string, resolv
 	// loop forever
 	for {
 		// create a resolver
-		r := resolver.New(&resolver.Config{Servers: strings.Split(resolverURLs, ",")})
+		r := resolver.New(&resolver.Config{Name: "npm", Servers: strings.Split(resolverURLs, ",")})
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(apisrvURL, l, rpckit.WithBalancer(balancer.New(r)))
 		if err != nil {
@@ -257,7 +257,7 @@ func (w *Watcher) runVmmWatcher(ctx context.Context, vmmURL, resolverURLs string
 	// loop forever
 	for {
 		// create a resolver
-		r := resolver.New(&resolver.Config{Servers: strings.Split(resolverURLs, ",")})
+		r := resolver.New(&resolver.Config{Name: "npm", Servers: strings.Split(resolverURLs, ",")})
 		// create a grpc client
 		rpcClient, err := rpckit.NewRPCClient("NpmVmmWatcher", vmmURL, rpckit.WithBalancer(balancer.New(r)))
 		if err != nil {

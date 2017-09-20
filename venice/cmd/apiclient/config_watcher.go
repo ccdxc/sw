@@ -43,7 +43,7 @@ func apiClientConn() (*grpc.ClientConn, error) {
 	for ii := range env.QuorumNodes {
 		servers = append(servers, fmt.Sprintf("%s:%s", env.QuorumNodes[ii], globals.CMDGRPCPort))
 	}
-	r := resolver.New(&resolver.Config{Servers: servers})
+	r := resolver.New(&resolver.Config{Name: "cmd", Servers: servers})
 	rpcClient, err := rpckit.NewRPCClient("cmd", globals.APIServer, rpckit.WithBalancer(balancer.New(r)))
 	if err != nil {
 		log.Errorf("RPC client creation failed with error: %v", err)

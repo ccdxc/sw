@@ -50,7 +50,7 @@ func (wr *APISrvWriter) getAPIClient() (apiclient.Services, error) {
 	// create the api client
 	l := log.WithContext("Pkg", "NpmApiWriter")
 	// create a resolver
-	r := resolver.New(&resolver.Config{Servers: strings.Split(wr.resolverURLs, ",")})
+	r := resolver.New(&resolver.Config{Name: "npm", Servers: strings.Split(wr.resolverURLs, ",")})
 	apicl, err := apiclient.NewGrpcAPIClient(wr.apisrvURL, l, rpckit.WithBalancer(balancer.New(r)))
 	if err != nil {
 		log.Errorf("Failed to connect to gRPC server [%s]\n", wr.apisrvURL)
