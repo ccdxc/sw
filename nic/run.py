@@ -146,14 +146,12 @@ def dump_coverage_data():
 # DOL
 
 
-def run_dol():
+def run_dol(args):
     dol_dir = nic_dir + "/../dol"
     os.chdir(dol_dir)
 
     log = open(dol_log, "w")
-    p = Popen(["./main.py"])
-    #p = Popen(["./main.py", "-t", "fp/fp.spec"], stdout=log, stderr=log)
-    #p = Popen(["./main.py", "--config-only"], stdout=log, stderr=log)
+    p = Popen(["./main.py", "--topo", args.topology, "--modlist", args.modlist])
     print "* Starting DOL pid (" + str(p.pid) + ")"
     print "- Log file: " + dol_log + "\n"
 
@@ -253,6 +251,10 @@ def main():
                         help="run with model logs enabled")
     parser.add_argument("--coveragerun", action="store_true",
                         help="run with model logs enabled")
+    parser.add_argument('--topo', dest='topology', default='base',
+                        help='Run for a specific topology')
+    parser.add_argument('--modlist', dest='modlist',
+                        default='modules.list', help='Module List File')
     args = parser.parse_args()
 
     if args.cleanup:
@@ -275,7 +277,7 @@ def main():
 
         run_model(args)
         run_hal()
-        status = run_dol()
+        status = run_dol(args)
         if args.coveragerun:
             dump_coverage_data()
         cleanup(keep_logs=True)

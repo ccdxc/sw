@@ -140,6 +140,11 @@ def __get_expected_packet(testcase, args):
 def GetL2UcExpectedPacket(testcase, args = None):
     return __get_expected_packet(testcase, args)
 
+def GetCpuPacket(testcase, args = None):
+    if testcase.config.flow.IsFteEnabled():
+        return __get_expected_packet(testcase, args)
+    return None
+
 def GetL3UcExpectedPacket(testcase, args = None):
     return __get_expected_packet(testcase, args)
 

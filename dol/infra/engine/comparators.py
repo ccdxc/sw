@@ -279,7 +279,7 @@ class PacketComparator:
     def AddExpected(self, spkt, ports, pktid):
         self.eid += 1
         epgid = '%s::%d' % (pktid, self.eid)
-        self.lg.info("EXPECTED RX Packet: %s" % epgid)
+        self.lg.info("EXPECTED RX Packet: %s, Ports: " % epgid, ports)
         epobj = CrPacket(pktid, spkt, ports)
         epobj.Show(self.lg)
         assert(epgid not in self.expkts)
@@ -289,7 +289,7 @@ class PacketComparator:
     def AddReceived(self, spkt, ports):
         self.rid += 1
         rpgid = 'RXPKT%d' % self.rid
-        self.lg.info("ACTUAL RX Packet: %s" % rpgid)
+        self.lg.info("ACTUAL RX Packet: %s, Ports: " % rpgid, ports)
         rpobj = CrPacket(rpgid, spkt, ports)
         rpobj.Show(self.lg)
         self.rxpkts[rpobj.pktid] = rpobj

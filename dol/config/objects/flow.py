@@ -157,6 +157,10 @@ class FlowObject(base.ConfigObjectBase):
     def IsCollisionFlow(self):
         return self.label == FLOW_COLLISION_LABEL
 
+    def SetLabel(self, label):
+        self.label = label
+        return
+
     def GetIngressMirrorSession(self, idx = 0):
         if idx > len(self.ing_mirror_sessions):
             return None

@@ -52,3 +52,6 @@ expect:
         - packet:
             object  : callback://networking/packets/GetL2UcExpectedPacket
             port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=IN_PKT
+            port    : 128

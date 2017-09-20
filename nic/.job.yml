@@ -1,6 +1,7 @@
 ---
 targets:
   main: [ "sh", "-c", "make V=1 -j$(grep -c processor /proc/cpuinfo) && make gtest && ./run.py" ]
+  fte: [ "sh", "-c", "make V=1 -j$(grep -c processor /proc/cpuinfo) && ./run.py --topo fte --modlist test/networking/fte.mlist" ]
   gcov: [ "sh", "-c", "make V=1 GCOV=\"--coverage -DCOVERAGE\" -j8 all && make gtest" ]
 image:
   name: "pensando/nic"
