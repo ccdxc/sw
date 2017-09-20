@@ -45,6 +45,7 @@
 #include <ipseccb_svc.hpp>
 #include <cpucb_svc.hpp>
 #include <crypto_keys_svc.hpp>
+#include <lkl_api.hpp>
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -203,6 +204,11 @@ main (int argc, char **argv)
     // initialize HAL
     if (hal::hal_init(&hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL initialization failed, quitting ...\n");
+        exit(1);
+    }
+
+    if (hal::lkl_init() != HAL_RET_OK) {
+        fprintf(stderr, "LKL initialization failed, quitting ...\n");
         exit(1);
     }
 
