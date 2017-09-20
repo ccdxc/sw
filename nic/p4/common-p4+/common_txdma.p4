@@ -540,6 +540,7 @@ action tx_table_s0_t0_cfg_action(data0, data1,
     SCRATCH_METADATA_INIT_7(scratch_metadata1)
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
+    modify_field(p4_intr_scratch.recirc_count, p4_intr.recirc_count);
     modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
     modify_field(p4_txdma_intr_scratch.qtype, p4_txdma_intr.qtype);
     modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);

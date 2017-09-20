@@ -1047,6 +1047,7 @@ action common_p4plus_stage0_app_header_table_action(data0, data1,
                              data6) {
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
+    modify_field(p4_intr_scratch.recirc_count, p4_intr.recirc_count);
     modify_field(p4_rxdma_intr_scratch.qid, p4_rxdma_intr.qid);
     modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
     modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
