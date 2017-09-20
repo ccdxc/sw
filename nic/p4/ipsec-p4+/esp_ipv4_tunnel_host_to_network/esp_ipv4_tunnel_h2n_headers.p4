@@ -16,9 +16,18 @@ header_type ipsec_int_header_t {
         payload_size      : 16;
         pad_size          : 8;
         l4_protocol       : 8;
-        //ipsec_int_pad0    : 256;
     }
 }
+
+header_type esp_header_t {
+    fields {
+        spi : 32;
+        seqno : 32;
+        iv    : 64;
+    }
+}
+
+
 
 header_type ipsec_cb_metadata_t {
     fields {
@@ -62,6 +71,9 @@ header_type barco_descriptor_t {
         A0_addr : ADDRESS_WIDTH;
         O0      : AOL_OFFSET_WIDTH;
         L0      : AOL_LENGTH_WIDTH;
+        A1_addr : ADDRESS_WIDTH;
+        O1      : AOL_OFFSET_WIDTH;
+        L1      : AOL_LENGTH_WIDTH;
     }
 }
 

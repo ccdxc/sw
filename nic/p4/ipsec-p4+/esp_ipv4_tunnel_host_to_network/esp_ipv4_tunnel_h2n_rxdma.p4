@@ -45,7 +45,8 @@ header_type ipsec_table0_s2s {
     fields {
         in_desc_addr : ADDRESS_WIDTH;
         in_page_addr : ADDRESS_WIDTH;
-        s2s0_pad : 32;
+        payload_size : 16;
+        payload_start : 16;
     }
 }
 
@@ -139,6 +140,9 @@ metadata ipsec_to_stage4_t ipsec_to_stage4;
 @pragma dont_trim
 metadata ipsec_int_header_t ipsec_int_header;
 @pragma dont_trim
+metadata esp_header_t esp_header;
+
+@pragma dont_trim
 metadata barco_descriptor_t barco_desc_in;
 @pragma dont_trim
 metadata barco_descriptor_t barco_desc_out;
@@ -154,6 +158,9 @@ metadata doorbell_data_pad_t db_data_pad;
 metadata dma_cmd_pkt2mem_t dma_cmd_pkt2mem;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_phv2mem_ipsec_int;
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_fill_esp_hdr;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_in_desc_aol; 
 @pragma dont_trim
@@ -184,7 +191,8 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 #define IPSEC_SCRATCH_T0_S2S \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
     modify_field(scratch_t0_s2s.in_page_addr, t0_s2s.in_page_addr); \
-    modify_field(scratch_t0_s2s.s2s0_pad, t0_s2s.s2s0_pad);
+    modify_field(scratch_t0_s2s.payload_size, t0_s2s.payload_size); \
+    modify_field(scratch_t0_s2s.payload_start, t0_s2s.payload_start); 
 
 #define IPSEC_SCRATCH_T1_S2S \
     modify_field(scratch_t1_s2s.out_desc_addr, t1_s2s.out_desc_addr); \
@@ -225,6 +233,7 @@ action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
     // pass the in_desc value in s2s data or global data. 
     //modify_field(t0_s2s.in_desc_addr, ipsec_global.in_desc_addr);
 
+   
     // DMA Commands
 
     // 2. ipsec_int_header to input-descriptor scratch phv2mem
@@ -237,6 +246,8 @@ action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_out_desc_aol, ipsec_to_stage4.out_desc_addr+64, IPSEC_OUT_DESC_AOL_START, IPSEC_OUT_DESC_AOL_END, 0, 0, 0, 0)
 
     //DMA_COMMAND_PHV2MEM_FILL(dma_cmd_post_cb_ring, cb_ring_base_addr + (cb_pindex * 8), IPSEC_CB_RING_IN_DESC_START, IPSEC_CB_RING_IN_DESC_END, 0, 0, 0, 0)
+
+    //DMA_COMMAND_PHV2MEM_FILL(dma_cmd_fill_esp_hdr, t0_s2s.in_page_addr+IPSEC_SALT_HEADROOM+iv_size, IPSEC_ESP_HEADER_PAGE_START, IPSEC_ESP_HEADER_PAGE_END, 0, 0, 0 0);
     modify_field(p4_rxdma_intr.dma_cmd_ptr, RXDMA_IPSEC_DMA_COMMANDS_OFFSET);
     // Ring Doorbell for IPSec-CB (svc_lif, type, ipsec-cb-index(qid))
     IPSEC_SCRATCH_GLOBAL

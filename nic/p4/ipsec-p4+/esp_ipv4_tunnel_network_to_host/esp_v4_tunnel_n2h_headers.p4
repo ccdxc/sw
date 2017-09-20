@@ -56,6 +56,9 @@ header_type barco_descriptor_t {
         A0_addr : ADDRESS_WIDTH;
         O0      : AOL_OFFSET_WIDTH;
         L0      : AOL_LENGTH_WIDTH;
+        A1_addr : ADDRESS_WIDTH;
+        O1      : AOL_OFFSET_WIDTH;
+        L1      : AOL_LENGTH_WIDTH;
     }
 }
 
