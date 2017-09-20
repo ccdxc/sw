@@ -15,8 +15,16 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
     phvwr p.brq_req_write_dma_cmd_addr, r1
     phvwri p.brq_req_write_dma_cmd_phv_start_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START
     phvwri p.brq_req_write_dma_cmd_phv_end_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END 
-    phvwri p.brq_req_write_dma_cmd_eop, 1
 
+esp_ipv4_tunnel_h2n_txdma1_ipsec_ring_barco_doorbell:
+    phvwri p.dma_cmd_incr_pindex_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwri p.dma_cmd_incr_pindex_dma_cmd_addr, CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX
+    phvwri p.dma_cmd_incr_pindex_dma_cmd_phv_start_addr, IPSEC_BARCO_DOORBELL_OFFSET_START
+    phvwri p.dma_cmd_incr_pindex_dma_cmd_phv_end_addr, IPSEC_BARCO_DOORBELL_OFFSET_END
+    phvwri p.dma_cmd_incr_pindex_dma_cmd_eop, 1
+    phvwri p.dma_cmd_incr_pindex_dma_cmd_wr_fence, 1
+
+    
     phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA1_DMA_COMMANDS_OFFSET 
     phvwri p.app_header_table0_valid, 0
     phvwri p.app_header_table1_valid, 0

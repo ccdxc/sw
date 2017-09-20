@@ -23,10 +23,10 @@ ipsec_encap_txdma_initial_table:
     addi r1, r1, IPSEC_CB_BASE 
     phvwr p.txdma1_global_ipsec_cb_addr, r1 
     
-    phvwr p.barco_req_brq_barco_enc_cmd, d.barco_enc_cmd
+    phvwr p.barco_req_command, d.barco_enc_cmd
     addi r2, r1, IPSEC_CB_IV_OFFSET
-    phvwr p.barco_req_brq_iv_addr, r2
-    phvwr p.barco_req_brq_key_index, d.key_index
+    phvwr p.barco_req_iv_address, r2
+    phvwr p.barco_req_key_desc_index, d.key_index
     
     phvwri p.app_header_table0_valid, 1 
     phvwri p.common_te0_phv_table_lock_en, 1 

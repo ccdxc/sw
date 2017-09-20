@@ -79,7 +79,13 @@ header_type ipsec_to_stage3_t {
 
 header_type doorbell_data_pad_t {
     fields {
-        db_data_pad : 64;
+        db_data_pad : 96;
+    }
+}
+
+header_type barco_dbell_t {                                                                                                                                                     
+    fields {
+        pi                                  : 32;
     }
 }
 
@@ -117,6 +123,10 @@ metadata ipsec_int_header_t ipsec_int_header;
 metadata barco_descriptor_t barco_desc;
 @pragma dont_trim
 metadata barco_request_t barco_req;
+
+@pragma dont_trim
+metadata barco_dbell_t barco_dbell;  
+
 @pragma dont_trim
 metadata doorbell_data_t db_data;
 @pragma dont_trim
@@ -237,11 +247,11 @@ action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc, in_page, o
                                                    payload_size)
 {
     IPSEC_TXDMA1_S2S0_SCRATCH_INIT
-    modify_field(barco_req.brq_in_addr, in_desc);
-    modify_field(barco_req.brq_out_addr, out_desc);
-    modify_field(barco_req.brq_auth_tag_addr, out_page+tailroom_offset+pad_size+2);
-    modify_field(barco_req.brq_hdr_size, payload_start);
-    modify_field(barco_req.brq_iv_addr, in_page);
+    modify_field(barco_req.input_list_address, in_desc);
+    modify_field(barco_req.output_list_address, out_desc);
+    modify_field(barco_req.auth_tag_addr, out_page+tailroom_offset+pad_size+2);
+    modify_field(barco_req.header_size, payload_start);
+    modify_field(barco_req.iv_address, in_page);
 
     //modify_field(txdma1_global.out_desc_addr, out_desc);
     modify_field(p4plus2p4_hdr.table0_valid, 1);
@@ -303,9 +313,9 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
  
 
 
-    modify_field(barco_req.brq_barco_enc_cmd, barco_enc_cmd);
+    modify_field(barco_req.command, barco_enc_cmd);
     //modify_field(barco_req.brq_iv_addr, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index) + IPSEC_CB_IV_OFFSET);
-    modify_field(barco_req.brq_key_index, key_index);
+    modify_field(barco_req.key_desc_index, key_index);
     modify_field(t0_s2s.iv_size, iv_size);
  
     modify_field(p4plus2p4_hdr.table1_valid, 1);

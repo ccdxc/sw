@@ -345,6 +345,8 @@
 #define ARQRX_BASE                     hbm_arqrx_base
 #define ARQRX_QIDXR_BASE               hbm_arqrx_qidxr_base 
 
+#define CAPRI_BARCO_MD_HENS_REG_BASE                (0x1C20000)
+#define CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX        (CAPRI_BARCO_MD_HENS_REG_BASE + 0x20c)
 
 #define TABLE_TYPE_RAW                 0
 #define TABLE_LOCK_DIS                 0

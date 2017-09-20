@@ -16,9 +16,18 @@ header_type ipsec_int_header_t {
         payload_size      : 16;
         pad_size          : 8;
         l4_protocol       : 8;
-        //ipsec_int_pad0    : 256;
     }
 }
+
+header_type esp_header_t {
+    fields {
+        spi : 32;
+        seqno : 32;
+        iv    : 64;
+    }
+}
+
+
 
 header_type ipsec_cb_metadata_t {
     fields {
@@ -62,30 +71,30 @@ header_type barco_descriptor_t {
         A0_addr : ADDRESS_WIDTH;
         O0      : AOL_OFFSET_WIDTH;
         L0      : AOL_LENGTH_WIDTH;
+        A1_addr : ADDRESS_WIDTH;
+        O1      : AOL_OFFSET_WIDTH;
+        L1      : AOL_LENGTH_WIDTH;
     }
 }
 
 header_type barco_request_t {
     fields {
-        brq_in_addr                         : ADDRESS_WIDTH;
-        brq_out_addr                        : ADDRESS_WIDTH;
-        brq_barco_enc_cmd                   : 32;
-        brq_key_index                       : 32;
-        brq_iv_addr                         : ADDRESS_WIDTH;
-        brq_auth_tag_addr                   : ADDRESS_WIDTH;
-        brq_hdr_size                        : 32;
-        brq_status                          : 32;
-        brq_opq_tag_value                   : 32;
-        brq_db_en                           : 1;
-        brq_opq_tag_en                      : 1;
-        brq_rsvd                            : 30;
-        brq_sec_sz                          : 16;
-        brq_sec_num                         : 32;
-        brq_app_tag                         : 16;
-        brq_pad1                            : 128;
-        brq_pad2                            : 128;
-        brq_pad3                            : 128;
-        brq_pad4                            : 128;
+        input_list_address                  : 64;
+        output_list_address                 : 64;
+        command                             : 32;
+        key_desc_index                      : 32;
+        iv_address                          : 64;
+        auth_tag_addr                       : 64;
+        header_size                         : 32;
+        status_address                      : 64;
+        opaque_tag_value                    : 32;
+        opaque_tag_write_en                 : 1;
+        rsvd1                               : 31;
+        sector_size                         : 16;
+        application_tag                     : 16;
+        sector_num                          : 32;
+        doorbell_address                    : 64;
+        doorbell_data                       : 64;
     }
 }
 

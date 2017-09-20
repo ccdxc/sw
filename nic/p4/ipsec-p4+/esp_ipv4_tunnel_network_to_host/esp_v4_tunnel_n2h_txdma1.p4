@@ -275,10 +275,10 @@ action esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header(in_desc, out_desc,
                                                    payload_start, buf_size,
                                                    payload_size, l4_protocol, pad_size)
 {
-    modify_field(barco_req.brq_in_addr, in_desc);
-    modify_field(barco_req.brq_out_addr, out_desc);
-    modify_field(barco_req.brq_auth_tag_addr, out_desc+tailroom_offset+pad_size+2);
-    modify_field(barco_req.brq_hdr_size, payload_start);
+    modify_field(barco_req.input_list_address, in_desc);
+    modify_field(barco_req.output_list_address, out_desc);
+    modify_field(barco_req.auth_tag_addr, out_desc+tailroom_offset+pad_size+2);
+    modify_field(barco_req.header_size, payload_start);
     modify_field(t0_s2s.tailroom_offset, tailroom_offset);
 }
 
@@ -344,9 +344,9 @@ action esp_v4_tunnel_n2h_txdma1_initial_table(pc, rsvd, cosA, cosB,
 
     modify_field(txdma1_global.ipsec_cb_addr, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index));
 
-    modify_field(barco_req.brq_barco_enc_cmd, barco_enc_cmd);
-    modify_field(barco_req.brq_iv_addr, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index) + IPSEC_CB_IV_OFFSET);
-    modify_field(barco_req.brq_key_index, key_index);
+    modify_field(barco_req.command, barco_enc_cmd);
+    modify_field(barco_req.iv_address, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index) + IPSEC_CB_IV_OFFSET);
+    modify_field(barco_req.key_desc_index, key_index);
 
     modify_field(t0_s2s.icv_size, icv_size);
  
