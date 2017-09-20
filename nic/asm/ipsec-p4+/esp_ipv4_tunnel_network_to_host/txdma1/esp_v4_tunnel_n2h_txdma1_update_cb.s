@@ -17,3 +17,4 @@ esp_v4_tunnel_n2h_txdma1_update_cb:
     nop
     tblwr d.rxdma_ring_cindex, r1
     nop.e
+    nop

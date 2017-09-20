@@ -13,9 +13,7 @@ struct phv_ p;
 
 esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore:
     phvwri p.app_header_table1_valid, 1
-    addi r2, r0, esp_ipv4_tunnel_n2h_allocate_output_desc_index
-    srl r2, r2, 6
-    phvwr p.common_te1_phv_table_pc, r2 
+    phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_output_desc_index[33:6] 
     phvwri p.common_te1_phv_table_raw_table_size, 3
     phvwri p.common_te1_phv_table_lock_en, 0
     sll r1, d.out_desc_ring_index, 3 

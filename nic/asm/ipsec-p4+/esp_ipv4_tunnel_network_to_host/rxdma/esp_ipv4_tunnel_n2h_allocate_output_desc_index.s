@@ -12,14 +12,11 @@ struct phv_ p;
 
 esp_ipv4_tunnel_n2h_allocate_output_desc_index:
     phvwri p.app_header_table1_valid, 1
-    addi r2, r0, esp_ipv4_tunnel_n2h_update_output_desc_aol
-    srl r2, r2, 6
-    phvwr p.common_te1_phv_table_pc, r2 
+    phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_n2h_update_output_desc_aol[33:6] 
     phvwri p.common_te1_phv_table_raw_table_size, 4
     phvwri p.common_te1_phv_table_lock_en, 0
-    //sll r1, d.out_desc_index, DESC_SHIFT_WIDTH 
-    //addi r1, r1, OUT_DESC_ADDR_BASE
     phvwr p.common_te1_phv_table_addr, d.out_desc_index 
-    phvwr p.t1_s2s_out_desc_addr, r1
-    nop.e 
+    phvwr p.t1_s2s_out_desc_addr, d.out_desc_index
+    nop.e
+    nop 
 
