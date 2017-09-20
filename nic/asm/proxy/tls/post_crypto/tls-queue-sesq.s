@@ -40,6 +40,7 @@ dma_cmd_sesq_slot:
     add         r3, r0, k.to_s4_odesc
     phvwr       p.ring_entry_descr_addr, r3.dx
     CAPRI_OPERAND_DEBUG(k.to_s4_odesc)
+    CAPRI_OPERAND_DEBUG(k.to_s4_other_fid)
 
     phvwri		p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
 	phvwri		p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(ring_entry_descr_addr)
@@ -55,8 +56,11 @@ tls_sesq_produce:
 
 	/* address will be in r4 */
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TCP)
+    smeqb       c1, k.to_s4_debug_dol, TLS_DDOL_BYPASS_PROXY, TLS_DDOL_BYPASS_PROXY
+    add.c1      r7, k.tls_global_phv_fid, r0
+    add.!c1     r7, k.to_s4_other_fid, r0
 	/* data will be in r3 */
-	CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TCP_SCHED_RING_SESQ, d.u.read_tls_stg0_d.sw_sesq_pi)
+	CAPRI_RING_DOORBELL_DATA(0, r7, TCP_SCHED_RING_SESQ, d.u.read_tls_stg0_d.sw_sesq_pi)
 
 	phvwr		p.dma_cmd1_dma_cmd_addr, r4
 	phvwr		p.db_data_data, r3.dx

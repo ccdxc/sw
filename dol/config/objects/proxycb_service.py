@@ -38,6 +38,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
         if resp_spec.__class__.__name__ == 'ProxyGetFlowInfoResponse':
             cfglogger.info("Received response %s qid1 %d qid2 %d qtype %d lif_id %d" % (haldefs.common.ApiStatus.Name(resp_spec.api_status), resp_spec.qid1, resp_spec.qid2, resp_spec.qtype, resp_spec.lif_id))
             self.qid = resp_spec.qid1
+            self.other_qid = resp_spec.qid2
         else:
             cfglogger.info("Received response %s" % (haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         return
@@ -63,6 +64,13 @@ class ProxyCbServiceObjectHelper:
         lst.append(proxyFlowObj)
         halapi.GetQidProxycbGetFlowInfo(lst)
         return proxyFlowObj.qid 
+
+    def GetOtherFlowInfo(self, session):
+        lst = []
+        proxyFlowObj = ProxyCbServiceObject(session)
+        lst.append(proxyFlowObj)
+        halapi.GetQidProxycbGetFlowInfo(lst)
+        return proxyFlowObj.other_qid 
    
     def main(self, sessions):
         for session in sessions:

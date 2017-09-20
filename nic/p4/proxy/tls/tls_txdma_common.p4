@@ -84,23 +84,23 @@ header_type tlscb_1_t {
         qhead                           : ADDRESS_WIDTH;
         qtail                           : ADDRESS_WIDTH;
         una_desc                        : ADDRESS_WIDTH;
-        una_desc_idx                    : 2;
+        una_desc_idx                    : 8;
         una_data_offset                 : 16;
         una_data_len                    : 16;
         nxt_desc                        : ADDRESS_WIDTH;
-        nxt_desc_idx                    : 2;
+        nxt_desc_idx                    : 8;
         nxt_data_offset                 : 16;
         nxt_data_len                    : 16;
         next_tls_hdr_offset             : 16;
         cur_tls_data_len                : 16;
-
-        // Total used   : 356 bits, pending: 156
-        pad                             : 156;
+        other_fid                       : 16;
+        // Total used   : 384 bits, pending: 128
+        pad                             : 128;
     }
 }
 
 #define TLSCB_1_PARAMS                                                                                  \
-cipher_type, ver_major, qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len
+cipher_type, ver_major, qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, other_fid
 #
 
 #define GENERATE_TLSCB_1_D                                                                              \
@@ -115,7 +115,8 @@ cipher_type, ver_major, qhead, qtail, una_desc, una_desc_idx, una_data_offset, u
     modify_field(tlscb_1_d.nxt_data_offset, nxt_data_offset);                                           \
     modify_field(tlscb_1_d.nxt_data_len, nxt_data_len);                                                 \
     modify_field(tlscb_1_d.next_tls_hdr_offset, next_tls_hdr_offset);                                   \
-    modify_field(tlscb_1_d.cur_tls_data_len, cur_tls_data_len);
+    modify_field(tlscb_1_d.cur_tls_data_len, cur_tls_data_len);                                         \
+    modify_field(tlscb_1_d.other_fid, other_fid);
 
 
 /* BARCO Descriptor definition */
