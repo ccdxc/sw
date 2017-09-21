@@ -19,3 +19,4 @@ iv_salt          : 0
 esn_hi           : 0
 esn_lo           : 0
 spi              : 0
+crypto_key_idx   : 0

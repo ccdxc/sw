@@ -17,11 +17,16 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     phvwr p.p4_txdma_intr_qid, k.p4_txdma_intr_qid
     phvwr p.p4_txdma_intr_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
+    // Fill the barco command and key-index
     phvwr p.barco_req_command, d.barco_enc_cmd
     phvwr p.barco_req_key_desc_index, d.key_index
+
+    phvwr p.t0_s2s_iv_size, d.iv_size
+    //Increment PI
     add r1, r0, d.barco_ring_pindex
     addi r1, r1, 1
     phvwr p.barco_dbell_pi, r1
+
     phvwri p.app_header_table0_valid, 1 
     phvwri p.common_te0_phv_table_lock_en, 1 
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_ipsec_get_in_desc_from_cb_cindex[33:6] 

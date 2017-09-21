@@ -29,23 +29,28 @@ esp_ipv4_tunnel_h2n_update_input_desc_aol:
 
     add r4, r1, k.t0_s2s_in_page_addr 
  
-    phvwr p.barco_desc_in_A0_addr, r4
-    phvwr p.barco_desc_in_L0, r2
+    phvwr p.barco_desc_in_A0_addr, r4.dx
+    addi r2, r0, ESP_FIXED_HDR_SIZE
+    phvwr p.barco_desc_in_L0, r2.wx 
+    phvwri p.barco_desc_in_O0, 0 
 
     add r5, r4, r2
+    add r5, r5, r1
     add r5, r5, k.t0_s2s_payload_start 
-    phvwr p.barco_desc_in_A1_addr, r5
+    phvwr p.barco_desc_in_A1_addr, r5.dx
     add r6, r0, k.t0_s2s_payload_size
     add r6, r6, k.ipsec_to_stage3_pad_size
-    phvwr p.barco_desc_in_L1, r6
+   
+    phvwr p.barco_desc_in_L1, r6.wx
+    phvwri p.barco_desc_in_O1, 0 
 
 
-    add r4, r0, k.ipsec_to_stage3_packet_len
-    add r4, r4, k.ipsec_to_stage3_pad_size 
-    phvwr p.barco_desc_in_L0, r4
-    add r4, r0, k.ipsec_to_stage3_iv_size
-    addi r4, r4, IPSEC_SALT_HEADROOM  
-    phvwr p.barco_desc_in_O0, r4 
+    //add r4, r0, k.ipsec_to_stage3_packet_len
+    //add r4, r4, k.ipsec_to_stage3_pad_size 
+    //phvwr p.barco_desc_in_L0, r4
+    //add r4, r0, k.ipsec_to_stage3_iv_size
+    //addi r4, r4, IPSEC_SALT_HEADROOM  
+    //phvwr p.barco_desc_in_O0, r4 
 
 dma_cmd_to_move_input_pkt_to_mem:
     phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
