@@ -91,12 +91,12 @@ class Node:
         self.runCmd("""sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches" """)
         self.runCmd("""bash -c 'for i in /import/bin/tars/* ; do  docker load -i $i; sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches";  done;' """)
         self.runCmd("docker system prune -f")
-        self.runCmd("docker run --rm --name pen-base -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-base -c /initscript")
+        self.runCmd("docker run --rm --name pen-cmd -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-cmd -c /initscript")
         self.runCmd("sudo systemctl daemon-reload")
         self.runCmd("sudo systemctl enable pensando.target")
         self.runCmd("sudo systemctl start pensando.target")
         self.runCmd("sudo systemctl enable pen-cmd")
-        print "#### Starting pen-base container on " + self.addr
+        print "#### Starting pen-cmd container on " + self.addr
         self.runCmd("sudo systemctl start pen-cmd")
 
     # Stop Cluster (stop various services that we started and cleanup all config and data)
@@ -106,7 +106,7 @@ class Node:
         # stop all services
         self.runCmd("sudo systemctl stop pensando.target")
         self.runCmd("sudo systemctl disable pensando.target")
-        penSrvs = ["pen-base", "pen-apiserver", "pen-apigw", "pen-etcd", "pen-kube-controller-manager", "pen-kube-scheduler", "pen-kube-apiserver", "pen-elasticsearch", "pen-vchub", "pen-npm" ]
+        penSrvs = ["pen-cmd", "pen-apiserver", "pen-apigw", "pen-etcd", "pen-kube-controller-manager", "pen-kube-scheduler", "pen-kube-apiserver", "pen-elasticsearch", "pen-vchub", "pen-npm" ]
         for srv in penSrvs:
             self.runCmd("sudo systemctl stop " + srv)
             self.runCmd("sudo systemctl disable " + srv)
@@ -207,7 +207,7 @@ pool = ThreadPool(len(addrList))
 pool.map(lambda x: x.startCluster(), nodes)
 
 
-print "################### Waiting for pen-base container to come up ###################"
+print "################### Waiting for pen-cmd container to come up ###################"
 time.sleep(5)
 
 # init the cluster

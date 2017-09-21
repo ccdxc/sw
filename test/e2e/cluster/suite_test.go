@@ -85,6 +85,13 @@ func makeTestSuite() *e2eTestSuite {
 		ts.NumVeniceNodes, err = strconv.Atoi(s)
 		Expect(err).ShouldNot(HaveOccurred())
 	}
+
+	if s := os.Getenv("PENS_QUORUM_NODES"); s != "" {
+		var err error
+		ts.NumQuorumNodes, err = strconv.Atoi(s)
+		Expect(err).ShouldNot(HaveOccurred())
+	}
+
 	return &ts
 }
 

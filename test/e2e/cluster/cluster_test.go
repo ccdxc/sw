@@ -18,8 +18,8 @@ var _ = Describe("cluster tests", func() {
 	Context("Services should be running", func() {
 		It("pen-base should be running on all nodes", func() {
 			for _, ip := range e2eTest.veniceNodeIPs {
-				out := commandOutput(ip, "docker ps -q -f Name=pen-base")
-				Expect(out).ShouldNot(BeEmpty(), "pen-base container should be running on %s", ip)
+				out := commandOutput(ip, "docker ps -q -f Name=pen-cmd")
+				Expect(out).ShouldNot(BeEmpty(), "pen-cmd container should be running on %s", ip)
 			}
 		})
 		It("etcd should be running on all quorum nodes", func() {

@@ -1,3 +1,8 @@
 {
-    "ClusterVIP": "192.168.30.10"
+    "ClusterVIP": "192.168.30.10",
+    "NumVeniceNodes" : 3,
+    "NumQuorumNodes" : 3,
+    "SSHUser":        "vagrant",
+    "SSHPasswd":      "vagrant",
+    "SSHAuthMethod":  "password"
 }

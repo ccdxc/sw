@@ -5,7 +5,7 @@ PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */))
 TO_BUILD := ./venice/utils/... ./nic/agent/... ./venice/cmd/... ./venice/apigw/... ./venice/orch/... \
 ./venice/apiserver/... ./venice/globals/... ./venice/ctrler/... ./test/... ./api/ ./api/hooks/... \
 ./api/listerwatcher/... ./api/cache/... ./api/integration/... ./venice/cli/...
-TO_DOCKERIZE := apigw apiserver vchub npm vcsim
+TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd
 TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 
 GOFMT_CMD := gofmt -s -l
@@ -54,9 +54,7 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/cbin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 strip /import/bin/cmd ${TO_STRIP}
-	@cp -p ${PWD}/bin/cbin/cmd tools/docker-files/pencmd/target/usr/bin/pen-cmd
-	@tools/scripts/create-container.sh createBaseContainer
+	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/cbin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 strip ${TO_STRIP}
 	@for c in $(TO_DOCKERIZE); do cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
 	@tools/scripts/create-container.sh createBinContainerTarBall
 

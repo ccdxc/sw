@@ -5,19 +5,19 @@ After=network.target docker.service
 Requires=docker.service
 
 [Service]
-ExecStartPre=-/usr/bin/docker kill pen-base
-ExecStartPre=-/usr/bin/docker rm -f pen-base
+ExecStartPre=-/usr/bin/docker kill pen-cmd
+ExecStartPre=-/usr/bin/docker rm -f pen-cmd
 ExecStart=/usr/pensando/bin/systemd-docker \
-	 --cgroups name=systemd --cgroups=cpu  run --rm  --net=host --name pen-base \
+	 --cgroups name=systemd --cgroups=cpu  run --rm  --net=host --name pen-cmd \
     --privileged -v /usr/pensando/bin:/host/usr/pensando/bin \
     -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /var/run/dbus:/var/run/dbus \
     -v /run/systemd:/run/systemd  -v /etc/systemd/system:/etc/systemd/system \
     -v /etc/pensando:/etc/pensando -v /etc/kubernetes:/etc/kubernetes \
     -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /var/log/pensando:/var/log/pensando  \
-    pen-base
+    pen-cmd
 
-ExecStop=/usr/bin/docker stop -t 2 pen-base
-ExecStopPost=/usr/bin/docker rm -f pen-base
+ExecStop=/usr/bin/docker stop -t 2 pen-cmd
+ExecStopPost=/usr/bin/docker rm -f pen-cmd
 Restart=always
 RestartSec=10s
 Type=notify

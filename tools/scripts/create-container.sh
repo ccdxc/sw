@@ -1,7 +1,7 @@
 #!/bin/bash
 
-function createBaseContainer() {
-    docker build --rm --no-cache -t pen-base:latest -f tools/docker-files/pencmd/Dockerfile tools/docker-files/pencmd
+function createCmdContainer() {
+    docker build --rm --no-cache -t pen-cmd:latest -f tools/docker-files/cmd/Dockerfile tools/docker-files/cmd
 }
 
 function createApiSrvContainer() {
@@ -38,7 +38,7 @@ function createBinContainerTarBall() {
         fi
     done
     mkdir -p bin/tars
-    dynamicimages="pen-base:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest pen-npm:latest pen-vcsim:latest"
+    dynamicimages="pen-cmd:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest pen-npm:latest pen-vcsim:latest"
     for i in $staticimages $dynamicimages
     do
         # i is srv1.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
@@ -56,7 +56,7 @@ function stopCluster() {
 }
 
 case $1 in
-    createBaseContainer) createBaseContainer ;;
+    cmd) createCmdContainer ;;
     apigw) createApiGwContainer ;;
     apiserver) createApiSrvContainer;;
     vchub) createVCHubContainer;;
