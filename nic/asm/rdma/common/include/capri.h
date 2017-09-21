@@ -13,6 +13,8 @@
 #define CAPRI_RXDMA_RETH_DMA_LEN k.rdma_bth_reth_reth_dma_len
 #define CAPRI_RXDMA_RETH_R_KEY k.rdma_bth_reth_reth_r_key
 
+#define CAPRI_RXDMA_BTH_IMMETH_IMMDATA  k.{rdma_bth_immeth_immeth_data_sbit0_ebit7...rdma_bth_immeth_immeth_data_sbit8_ebit31}
+
 #define CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 #define CAPRI_TXDMA_INTRINSIC_LIF k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
 #define CAPRI_TXDMA_INTRINSIC_QTYPE k.p4_txdma_intr_qtype
