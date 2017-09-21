@@ -8,7 +8,7 @@ struct resp_rx_phv_t p;
 struct resp_rx_rqwqe_process_k_t k;
 struct rqwqe_base_t d;
 
-#define INFO_LKEY_T struct resp_rx_sge_to_lkey_info_t
+#define INFO_LKEY_T struct resp_rx_key_info_t
 #define INFO_WBCB0_T struct resp_rx_rqcb0_write_back_info_t
 #define INFO_WBCB1_T struct resp_rx_rqcb1_write_back_info_t    
 
@@ -102,17 +102,18 @@ loop:
     // transfer_va = sge_p->va + current_sge_offset;
     add         r2, r2, CURR_SGE_OFFSET
     // sge_to_lkey_info_p->sge_va = transfer_va;
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, sge_va, r2)
+    CAPRI_SET_FIELD(r7, INFO_LKEY_T, va, r2)
     // sge_to_lkey_info_p->sge_bytes = transfer_bytes;
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, sge_bytes, r6)
+    CAPRI_SET_FIELD(r7, INFO_LKEY_T, len, r6)
     // sge_to_lkey_info_p->dma_cmd_start_index = dma_cmd_index;
     add         r2, r0, RESP_RX_DMA_CMD_PYLD_BASE
     add.!F_FIRST_PASS   r2, r2, MAX_PYLD_DMA_CMDS_PER_SGE
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmd_start_index, r2)
     //sge_to_lkey_info_p->sge_index = index;
     cmov        r2, F_FIRST_PASS, 0, 1
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, sge_index, r2)
+    CAPRI_SET_FIELD(r7, INFO_LKEY_T, tbl_id, r2)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmdeop, 0)
+    CAPRI_SET_FIELD(r7, INFO_LKEY_T, acc_ctrl, ACC_CTRL_LOCAL_WRITE)
 
 
 
