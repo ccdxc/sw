@@ -2784,11 +2784,11 @@ def capri_p4pd_create_swig_makefile(be):
     content_str += 'CPPFLAGS = -g -c -pthread -std=c++11 -fPIC\n'
     content_str += 'LNKFLAGS = -Wl,-rpath,./obj -Wl,-rpath,./model_sim/build -Wl,-rpath,./model_sim/libs -Wl,-rpath,./asic/capri/model/capsim-gen/lib\n'
     content_str += 'LNKFLAGS += -Wl,-rpath,$(TOP_DIR)/obj -Wl,-rpath,$(TOP_DIR)/model_sim/build -Wl,-rpath,$(TOP_DIR)/model_sim/libs -shared\n'
-    content_str += 'BLDFLAGS = -Wl,-rpath,./obj -Wl,-rpath,./model_sim/build -Wl,-rpath,./model_sim/libs\n'
+    content_str += 'BLDFLAGS = -Wl,-rpath,./obj -Wl,-rpath,./model_sim/build -Wl,-rpath,./model_sim/libs -Wl,-rpath,./asic/capri/model/capsim-gen/lib\n'
     content_str += 'BLDFLAGS += -Wl,-rpath,$(TOP_DIR)/obj -Wl,-rpath,$(TOP_DIR)/model_sim/build -Wl,-rpath,$(TOP_DIR)/model_sim/libs\n'
-    content_str += 'INC_DIRS = -I./../include\n'
-    content_str += 'INC_DIRS += -I$(TOP_DIR)/include\n'
+    content_str += 'INC_DIRS = -I$(TOP_DIR)/include\n'
     content_str += 'INC_DIRS += -I$(TOP_DIR)/third-party/spdlog/include\n'
+    content_str += 'INC_DIRS += -I$(TOP_DIR)/gen/iris/include\n'
     content_str += 'INC_DIRS += -I$(TOP_DIR)/gen/common_rxdma_actions/include\n'
     content_str += 'INC_DIRS += -I$(TOP_DIR)/gen/common_txdma_actions/include\n'
     content_str += 'INC_DIRS += -I$(TOP_DIR)/hal/pd -I$(TOP_DIR)/model_sim/include\n'
@@ -2836,6 +2836,8 @@ def capri_p4pd_create_swig_interface(be):
 %{
     #include <thread>
     #include "p4pd.h"
+    #include "common_rxdma_actions_p4pd.h"
+    #include "common_txdma_actions_p4pd.h"
     #include "p4pd_api.hpp"
     #include "lib_model_client.h"
     extern int capri_init(void);
@@ -2868,6 +2870,8 @@ typedef unsigned long long uint64_t;
 %free(uint32_t);
 %free(uint64_t);
 %include "p4pd.h"
+%include "common_rxdma_actions_p4pd.h"
+%include "common_txdma_actions_p4pd.h"
 %include "p4pd_api.hpp"
 %include "lib_model_client.h"
 extern int capri_init(void);
@@ -2879,19 +2883,31 @@ extern int capri_init(void);
         setenv("HAL_CONFIG_PATH", "./conf", 1);
 
         lib_model_connect();
-
+        
         if (ret = p4pd_init())
         {
             printf("Error! p4pd_init() returned %d\\n", ret);
             return ret;
         }
         
+        if (ret = p4pluspd_rxdma_init())
+        {
+            printf("Error! p4pluspd_rxdma_init() returned %d\\n", ret);
+            return ret;
+        }
+
+        if (ret = p4pluspd_txdma_init())
+        {
+            printf("Error! p4pluspd_txdma_init() returned %d\\n", ret);
+            return ret;
+        }
+
         if (ret = capri_init())
         {
             printf("Error! capri_init() returned %d\\n", ret);
             return ret;
         }
-        
+
         return 0;
     }
 """ + """
@@ -2899,6 +2915,8 @@ extern int capri_init(void);
     {
         lib_model_conn_close();
         p4pd_cleanup();
+        p4pluspd_rxdma_cleanup();
+        p4pluspd_txdma_cleanup();
     }
 %}
 """
@@ -2926,6 +2944,8 @@ def capri_p4pd_create_swig_main(be):
 #include <iostream>
 #include <thread>
 #include "p4pd.h"
+#include "common_rxdma_actions_p4pd.h"
+#include "common_txdma_actions_p4pd.h"
 #include "p4pd_api.hpp"
 #include "lib_model_client.h"
 
@@ -2960,6 +2980,8 @@ int main()
     """
     lib_model_connect();
     p4pd_init();
+    p4pluspd_rxdma_init();
+    p4pluspd_txdma_init();
     capri_init();
     read_reg(0x3408010, hwactiondata_len);
 
@@ -3004,6 +3026,8 @@ int main()
     
     lib_model_conn_close();
     p4pd_cleanup();
+    p4pluspd_rxdma_cleanup();
+    p4pluspd_txdma_cleanup();
     free(hwkeymask_p);
     free(hwkey_p);
     return 0;

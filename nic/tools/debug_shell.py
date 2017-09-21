@@ -72,7 +72,6 @@ class debugCmd(Cmd):
     def do_init_modules(self, args):
         """Scan for new CLI modules"""
         all_initialized = True
-        '''
         if self.iris_inited == False:
             all_initialized = False
             iris_path = self.nic_dir + '/gen/iris/cli'
@@ -89,7 +88,6 @@ class debugCmd(Cmd):
                     print("Could not initialize Iris. Do 'make' in sw/nic/gen/iris/cli/ directory, and run 'init_modules' command here.")
             else:
                 print("Module Iris not found. Do 'make' in sw/nic directory, and run 'init_modules' command here to load missing modules.")
-        '''
         if self.model_inited == False:
             all_initialized = False
             model_path = self.nic_dir + '/model_sim/cli'
