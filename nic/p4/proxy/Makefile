@@ -15,9 +15,9 @@ TCP_TX_GEN_FILE = $(GEN_DIR)/$(TCP_TX_PROJ)/asm_out/ingress.h
 
 my_all: $(TCP_RX_GEN_FILE) $(TCP_TX_GEN_FILE)
 
-$(TCP_RX_GEN_FILE): $(TCP_RX_PROJ).p4
+$(TCP_RX_GEN_FILE): $(TCP_RX_PROJ).p4 tcp_proxy_common.p4 ../common-p4+/common_rxdma.p4 ../common-p4+/common_headers.p4
 	$(NCC) $(NCC_OPTIONS) $(TCP_RX_PROJ).p4 --gen-dir $(GEN_DIR)
 
-$(TCP_TX_GEN_FILE): $(TCP_TX_PROJ).p4
+$(TCP_TX_GEN_FILE): $(TCP_TX_PROJ).p4 tcp_proxy_common.p4 ../common-p4+/common_txdma.p4 ../common-p4+/common_headers.p4
 	$(NCC) $(NCC_OPTIONS) $(TCP_TX_PROJ).p4 --gen-dir $(GEN_DIR)
 

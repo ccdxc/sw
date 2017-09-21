@@ -19,7 +19,7 @@ struct tcp_tx_tso_tso_d d    ;
 %%
     .align
     .param          tcp_tx_stats_stage5_start
-    
+
 tcp_tso_process_start:
     /* check SESQ for pending data to be transmitted */
     or              r1, k.to_s4_pending_tso_data, k.to_s4_pending_tso_retx
@@ -37,7 +37,7 @@ tcp_write_xmit:
      * cursor to snd_una cursor which is the head of data that
          * can be sent
      */
-    
+
     tblwr.c1        d.retx_xmit_cursor, d.retx_snd_una_cursor
     nop
     /* Even after all this retx_xmit_cursor has no data, then
@@ -57,7 +57,7 @@ tcp_write_xmit:
 //    phvwr        p.h_source, d.h_source
 //    phvwri        p.h_proto, ETH_P_IP
     /* Write the ip header */
-//ip_start:    
+//ip_start:
 //    phvwri        p.ihl, 5
 //    phvwri        p.version, 4
 //    phvwri        p.ip_dsfield, 0
@@ -80,15 +80,14 @@ tcp_start:
     //phvwr        p.window, k.rcv_wnd
     //phvwri        p.urg_ptr, 0
 
-dma_cmd_intrinsic:    
+dma_cmd_intrinsic:
     phvwri          p.p4_intr_global_tm_iport, 9
     phvwri          p.p4_intr_global_tm_oport, 11
     phvwri          p.p4_intr_global_tm_oq, 0
-    // TODO: P4 pipeline is currently deriving vrf (input_properties.asm) with
-    // source_lif as one of the keys. Since for TCP proxy we change the source
-    // lif to SERVICE LIF, currently the input_properties table is not being
-    // hit. This hack to set LIF to 0 is temporary to derive the right VRF.
-    phvwri          p.p4_intr_global_lif, 0 // TODO: fix this hack
+    // We rang the doorbell with TCP proxy service lif, but the P4
+    // pipeline needs the original source_lif of the packet to derive
+    // the input properties, as well as for spoofing checks
+    phvwr           p.p4_intr_global_lif, d.source_lif
     phvwri          p.p4_txdma_intr_dma_cmd_ptr, TCP_PHV_TXDMA_COMMANDS_START
 
     phvwri          p.intrinsic_dma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
@@ -101,7 +100,7 @@ dma_cmd_p4plus_to_p4_app_header:
     phvwri          p.app_header_dma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwr           p.app_header_dma_dma_cmd_phv_start_addr, TCP_PHV_TX_APP_HDR_START
     phvwr           p.app_header_dma_dma_cmd_phv_end_addr, TCP_PHV_TX_APP_HDR_END
-dma_cmd_hdr:    
+dma_cmd_hdr:
     add             r5, k.common_phv_qstate_addr, TCP_TCB_HEADER_TEMPLATE_OFFSET
 
     phvwri          p.l2l3_header_dma_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
@@ -189,7 +188,7 @@ dma_cmd_write_tx2rx_shared:
     phvwr           p.tx2rx_dma_dma_cmd_addr, r5
     phvwri          p.tx2rx_dma_dma_cmd_phv_start_addr, TCP_PHV_TX2RX_SHARED_START
     phvwri          p.tx2rx_dma_dma_cmd_phv_end_addr, TCP_PHV_TX2RX_SHARED_END
-    
+
     bcf             [c1], update_xmit_cursor
     nop
 move_xmit_cursor:
@@ -206,18 +205,18 @@ update_xmit_cursor:
     /* Move offset of descriptor entry by xmit len */
     add             r4, k.to_s4_xmit_cursor_offset, r6
 
-    addi            r2, r0, NIC_DESC_ENTRY_OFF_OFFSET    
+    addi            r2, r0, NIC_DESC_ENTRY_OFF_OFFSET
     add             r1, d.retx_xmit_cursor, r2
     //memwr.h         r1, r4
 
     /* Decrement length of descriptor entry by xmit len */
     sub             r4, k.to_s4_xmit_cursor_len, r6
 
-    addi            r2, r0, NIC_DESC_ENTRY_LEN_OFFSET    
+    addi            r2, r0, NIC_DESC_ENTRY_LEN_OFFSET
     add             r1, d.retx_xmit_cursor, r2
     //memwr.h         r1, r4
-    
-    
+
+
 tcp_write_xmit_done:
     /* Set the tot_len in ip header */
     addi            r1, r0, TCPIP_HDR_SIZE
@@ -234,13 +233,13 @@ tcp_retx_done:
 tcp_read_xmit_cursor:
 #if 0
     /* Read the xmit cursor if we have zero xmit cursor addr */
-    add             r1, d.retx_xmit_cursor, r0    
+    add             r1, d.retx_xmit_cursor, r0
 
     phvwr           p.table_sel, TABLE_TYPE_RAW
     phvwr           p.table_mpu_entry_raw, flow_read_xmit_cursor
     phvwr           p.table_addr, r1
 #endif
-    
+
 flow_tso_process_done:
     CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_tx_stats_stage5_start)
     nop.e

@@ -169,6 +169,7 @@ proxy_program_lif(proxy_t* proxy)
     }
 
     // program qstate
+    qstate_params.dont_zero_memory = true;
     qstate_params.type[proxy->qtype].entries = proxy->qstate_entries;
     qstate_params.type[proxy->qtype].size = proxy->qstate_size;
     

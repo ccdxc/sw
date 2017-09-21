@@ -254,9 +254,6 @@ ctx_t::create_session()
 
     ikey = key_;
     for (int i = 0; i < MAX_STAGES; i++) {
-        if (i != 0) {
-            ikey.dir = 0;
-        }
         iflow_[i]->set_key(ikey);
     }
 
@@ -313,9 +310,6 @@ ctx_t::create_session()
         rkey.dir = (dep_ && (dep_->ep_flags & EP_FLAGS_LOCAL)) ?
             FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
         for (int i = 0; i < MAX_STAGES; i++) {
-            if (i != 0) {
-                rkey.dir = 0;
-            }
             rflow_[i]->set_key(rkey);
         }
     } 

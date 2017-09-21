@@ -19,9 +19,15 @@ def init_tcb_inorder(tc, tcb):
     tcb.debug_dol = 0
     tcb.source_port = tc.config.flow.sport
     tcb.dest_port = tc.config.flow.dport
-    if tc.config.src.segment.vlan_id != 0:
+    if tc.config.src.endpoint.intf.type == 'UPLINK':
+        vlan_id = tc.config.src.segment.vlan_id
+        tcb.source_lif = 0 # TODO set uplink lif here
+    else:
+        vlan_id = tc.config.src.endpoint.intf.encap_vlan_id
+        tcb.source_lif = tc.config.src.endpoint.intf.lif.hw_lif_id
+    if vlan_id != 0:
         vlan_etype_bytes = bytes([0x81, 0x00]) + \
-                tc.config.src.segment.vlan_id.to_bytes(2, 'big') + \
+                vlan_id.to_bytes(2, 'big') + \
                 bytes([0x08, 0x00])
     else:
         vlan_etype_bytes = bytes([0x08, 0x00])

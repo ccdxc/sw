@@ -125,6 +125,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     tcpcb->state = spec.state();
+    tcpcb->source_lif = spec.source_lif();
     
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -187,6 +188,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     tcpcb->state = spec.state();
+    tcpcb->source_lif = spec.source_lif();
     pd_tcpcb_args.tcpcb = tcpcb;
     
     ret = pd::pd_tcpcb_update(&pd_tcpcb_args);
