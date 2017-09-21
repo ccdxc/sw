@@ -10,10 +10,14 @@ struct rqcb0_t d;
 struct rdma_stage0_table_k k;
 
 #define INFO_OUT1_T struct resp_rx_rqcb_to_pt_info_t
+#define RQCB_TO_RQCB1_T struct resp_rx_rqcb_to_rqcb1_info_t
 #define RAW_TABLE_PC r2
+
+#define REM_PYLD_BYTES  r6
 
 %%
     .param    resp_rx_rqpt_process
+    .param    resp_rx_rqcb1_in_progress_process
 
 .align
 resp_rx_rqcb_process:
@@ -39,7 +43,7 @@ resp_rx_rqcb_process:
     // MPU GLOBAL
     // take a copy of raw_flags in r7 and keep it for further checks
     add     r7, r0, CAPRI_APP_DATA_RAW_FLAGS
-    add     r6, r0, CAPRI_APP_DATA_PAYLOAD_LEN
+    add     REM_PYLD_BYTES, r0, CAPRI_APP_DATA_PAYLOAD_LEN
 
     // get a tokenid
     phvwr   p.my_token_id, d.token_id
@@ -84,6 +88,21 @@ resp_rx_rqcb_process:
     bcf     [c2|c4], checkout
     nop     //BD Slot
 
+    bcf     [!c1], exit
+    nop     //BD Slot
+    // by the time we reach here, it is SEND & in_progress == TRUE
+
+    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, in_progress, d.in_progress)
+    CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, remaining_payload_bytes, REM_PYLD_BYTES)
+
+    CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_in_progress_process)
+    add     r3, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+
+
+exit:
     nop.e
     nop
 
@@ -117,7 +136,7 @@ checkout:
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, cache, d.cache)
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, page_seg_offset, r5)
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, page_offset, r1)
-    CAPRI_SET_FIELD(r4, INFO_OUT1_T, remaining_payload_bytes, r6)
+    CAPRI_SET_FIELD(r4, INFO_OUT1_T, remaining_payload_bytes, REM_PYLD_BYTES)
 
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqpt_process)

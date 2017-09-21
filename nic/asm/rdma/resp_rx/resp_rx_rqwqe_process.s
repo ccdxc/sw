@@ -66,7 +66,7 @@ resp_rx_rqwqe_process:
 
     //sge_p = (in_progress == TRUE) ? d_p : (d_p + RQWQE_SGE_OFFSET)
     //big-endian
-    cmov        SGE_P, c1, HBM_CACHE_LINE_SIZE_BITS, RQWQE_SGE_OFFSET
+    cmov        SGE_P, c1, HBM_CACHE_LINE_SIZE_BITS, RQWQE_SGE_OFFSET_BITS
     // we need to add SIZEOF_SGE_T_BITS because SGE is accessed from bottom to top in big-endian
     //big-endian
     sub         SGE_P, SGE_P, 1, LOG_SIZEOF_SGE_T_BITS

@@ -207,5 +207,17 @@ struct resp_rx_eqcb_process_k_t {
     struct phv_global_common_t global;
 };
 
+struct resp_rx_rqcb_to_rqcb1_info_t {
+    in_progress: 1;
+    rsvd: 7;
+    remaining_payload_bytes: 32;
+};
+
+struct resp_rx_rqcb1_in_progress_process_k_t {
+    struct capri_intrinsic_raw_k_t intrinsic;
+    struct resp_rx_rqcb_to_rqcb1_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
 
 #endif //__RESP_RX_H

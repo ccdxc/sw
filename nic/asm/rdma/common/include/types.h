@@ -18,6 +18,7 @@
 #define RDMA_PAYLOAD_DMA_CMDS_START 8
 
 #define LOG_SIZEOF_CQCB_T   6   // 2^6 = 64 Bytes
+#define LOG_CB_UNIT_SIZE_BYTES 6
 #define CB_UNIT_SIZE_BYTES  64
 
 #define LOG_SIZEOF_EQCB_T   6   // 2^6 = 64 Bytes
@@ -372,7 +373,11 @@ struct sqwqe_send_t {
     rsvd               : 64;    // for now
 };
 
-#define RQWQE_SGE_OFFSET    256
+#define RQWQE_SGE_OFFSET  32
+#define RQWQE_SGE_OFFSET_BITS 256 // 32 * 8
+#define LOG_RQWQE_SGE_OFFSET 5 // 2^5 = 32
+#define LOG_RQWQE_SGE_OFFSET_BITS 8 // 2^8 = 256
+
 struct rqwqe_base_t {
     wrid: 64;
     num_sges: 8;
