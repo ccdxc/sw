@@ -12,7 +12,7 @@ class HostMem {
  public:
   static HostMem *New();
   ~HostMem();
-  void *Alloc(size_t size);
+  void *Alloc(size_t size, uint32_t align=1);
   void Free(void *ptr);
   uint64_t VirtToPhys(void *ptr);
   void *PhysToVirt(uint64_t);

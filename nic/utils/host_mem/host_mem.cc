@@ -30,9 +30,11 @@ HostMem *HostMem::New() {
   return mem.release();
 }
 
-void *HostMem::Alloc(size_t size) {
+void *HostMem::Alloc(size_t size, uint32_t align) {
   uint32_t num_units = NumUnits(size);
-  int offset = allocator_->Alloc(num_units);
+  uint32_t units_per_align = (align / kAllocUnit) +
+                             ((align % kAllocUnit) ? 1 : 0);
+  int offset = allocator_->Alloc(num_units, units_per_align);
   if (offset < 0)
     return nullptr;
   allocations_[offset] = num_units;

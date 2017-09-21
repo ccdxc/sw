@@ -50,6 +50,16 @@ TEST(BMAllocatorTest, TestALL)
   ASSERT_TRUE(bma.Alloc(2048) == 0);
 }
 
+TEST(BMAllocatorTest, TestAlign)
+{
+  hal::BMAllocator bma(4096);
+
+  ASSERT_EQ(0, bma.Alloc(3, 3));
+  ASSERT_EQ(4, bma.Alloc(3, 4));
+  ASSERT_EQ(16, bma.Alloc(3, 16));
+  ASSERT_EQ(24, bma.Alloc(3, 8));
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

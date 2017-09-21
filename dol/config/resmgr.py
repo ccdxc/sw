@@ -99,7 +99,7 @@ class HostMemory(object):
         lib = clibs.libHostMem
         self.init_host_mem = lib.init_host_mem
         self.delete_host_mem = lib.delete_host_mem
-        self.alloc_host_mem = lib.alloc_host_mem
+        self.alloc_host_mem = lib.alloc_page_aligned_host_mem
         self.host_mem_v2p = lib.host_mem_v2p
         self.host_mem_p2v = lib.host_mem_p2v
         self.free_host_mem = lib.free_host_mem

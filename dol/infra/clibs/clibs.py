@@ -18,6 +18,8 @@ def InitHostMem():
     libHostMem = ctypes.CDLL(os.path.join(os.environ['WS_TOP'], OBJPATH + LIBHOSTMEM), mode=ctypes.RTLD_GLOBAL)
     libHostMem.alloc_host_mem.argtypes = [ctypes.c_uint64]
     libHostMem.alloc_host_mem.restype = ctypes.c_void_p
+    libHostMem.alloc_page_aligned_host_mem.argtypes = [ctypes.c_uint64]
+    libHostMem.alloc_page_aligned_host_mem.restype = ctypes.c_void_p
     libHostMem.host_mem_v2p.argtypes = [ctypes.c_void_p]
     libHostMem.host_mem_v2p.restype = ctypes.c_uint64
     libHostMem.host_mem_p2v.argtypes = [ctypes.c_uint64]

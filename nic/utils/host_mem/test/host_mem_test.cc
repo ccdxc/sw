@@ -61,6 +61,27 @@ TEST_F(HostMemTest, TestSharing) {
   waitpid(0, 0, 0);
   ASSERT_EQ(*ptr, 0xAA);
 }
+
+bool check_align(void *ptr, uint64_t align) {
+  uint64_t v = (uint64_t)(ptr);
+  if (!v)
+    return false;
+  if (v & (align - 1))
+    return false;
+  return true;
+}
+
+TEST_F(HostMemTest, TestAlign) {
+  std::unique_ptr<HostMem> mem(HostMem::New());
+  ASSERT_NE(nullptr, mem.get());
+  ASSERT_TRUE(check_align(mem->Alloc(1, 32), 32));
+  ASSERT_TRUE(check_align(mem->Alloc(1, 4096), 4096));
+  ASSERT_TRUE(check_align(mem->Alloc(1, 64), 64));
+  ASSERT_TRUE(check_align(mem->Alloc(1, 1024), 1024));
+  ASSERT_TRUE(check_align(mem->Alloc(kShmSize - 8192, 4096), 4096));
+  ASSERT_TRUE(check_align(mem->Alloc(1, 64), 64));
+  ASSERT_EQ(mem->Alloc(1, 4096), nullptr);
+}
   
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

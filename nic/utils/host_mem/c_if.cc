@@ -15,9 +15,9 @@ static int _init_host_mem() {
   return 0;
 }
 
-static void *_alloc_host_mem(size_t size) {
+static void *_alloc_host_mem(size_t size, uint32_t align=1) {
   if (g_host_mem.get() != nullptr)
-    return g_host_mem->Alloc(size);
+    return g_host_mem->Alloc(size, align);
   return nullptr;
 }
 
@@ -50,6 +50,10 @@ int init_host_mem() {
 
 void *alloc_host_mem(size_t size) {
   return _alloc_host_mem(size);
+}
+
+void *alloc_page_aligned_host_mem(size_t size) {
+  return _alloc_host_mem(size, 4096);
 }
 
 void free_host_mem(void *ptr) {
