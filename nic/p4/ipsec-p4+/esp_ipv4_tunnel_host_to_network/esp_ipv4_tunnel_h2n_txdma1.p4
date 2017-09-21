@@ -119,8 +119,8 @@ metadata ipsec_table3_s2s t3_s2s;
 //TXDMA - IPsec feature specific scratch
 @pragma dont_trim
 metadata ipsec_int_header_t ipsec_int_header;
-@pragma dont_trim
-metadata barco_descriptor_t barco_desc;
+//@pragma dont_trim
+//metadata barco_descriptor_t barco_desc;
 @pragma dont_trim
 metadata barco_request_t barco_req;
 
@@ -161,6 +161,9 @@ metadata ipsec_table3_s2s scratch_t3_s2s;
 
 @pragma scratch_metadata
 metadata ipsec_cb_metadata_t ipsec_cb_scratch;
+
+@pragma scratch_metadata
+metadata ipsec_int_header_t ipsec_int_hdr_scratch;
 
 
 #define IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT \
@@ -242,15 +245,15 @@ action ipsec_get_barco_req_index_ptr(barco_req_index_address)
 action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc, in_page, out_page,
                                                    ipsec_cb_index, headroom, 
                                                    tailroom, headroom_offset,
-                                                   tailroom_offset, pad_size,
-                                                   payload_start, buf_size,
-                                                   payload_size)
+                                                   tailroom_offset, payload_start,
+                                                   buf_size, payload_size, pad_size, l4_protocol)
 {
+    IPSEC_INT_HDR_SCRATCH
     IPSEC_TXDMA1_S2S0_SCRATCH_INIT
     modify_field(barco_req.input_list_address, in_desc);
     modify_field(barco_req.output_list_address, out_desc);
-    modify_field(barco_req.auth_tag_addr, out_page+tailroom_offset+pad_size+2);
-    modify_field(barco_req.header_size, payload_start);
+    //modify_field(barco_req.auth_tag_addr, out_page+tailroom_offset+pad_size+2);
+   // modify_field(barco_req.header_size, payload_start);
     modify_field(barco_req.iv_address, in_page);
 
     //modify_field(txdma1_global.out_desc_addr, out_desc);

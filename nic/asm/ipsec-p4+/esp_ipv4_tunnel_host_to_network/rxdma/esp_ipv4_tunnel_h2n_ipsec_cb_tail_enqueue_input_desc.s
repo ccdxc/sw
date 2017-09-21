@@ -53,16 +53,8 @@ esp_ipv4_tunnel_h2n_dma_cmd_to_write_output_desc_aol:
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_start_addr, IPSEC_OUT_DESC_AOL_START
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_OUT_DESC_AOL_END
 
-esp_ipv4_tunnel_h2n_dma_cmd_incr_pindex:
-    add r2, r0, d.cb_pindex
-    addi r2, r2, 1
-    andi r2, r2, 0x3F
-    tblwr d.cb_pindex, r2
-
 esp_ipv4_tunnel_h2n_post_to_cb_ring:
-    add r2, r0, k.ipsec_global_ipsec_cb_index 
-    sll r2, r2, IPSEC_CB_RING_BASE_SHIFT_SIZE 
-    addi r2, r2, IPSEC_CB_BASE
+    add r2, r0, d.cb_ring_base_addr 
     add r3, r0, d.cb_pindex
     sll r3, r3, IPSEC_CB_RING_ENTRY_SHIFT_SIZE
     andi r3, r3, IPSEC_CB_RING_INDEX_MASK
@@ -71,6 +63,12 @@ esp_ipv4_tunnel_h2n_post_to_cb_ring:
     phvwr p.dma_cmd_post_cb_ring_dma_cmd_addr, r3
     phvwri p.dma_cmd_post_cb_ring_dma_cmd_phv_start_addr, IPSEC_CB_RING_IN_DESC_START
     phvwri p.dma_cmd_post_cb_ring_dma_cmd_phv_end_addr, IPSEC_CB_RING_IN_DESC_END 
+
+esp_ipv4_tunnel_h2n_dma_cmd_incr_pindex:
+    add r2, r0, d.cb_pindex
+    addi r2, r2, 1
+    andi r2, r2, 0x3F
+    tblwr d.cb_pindex, r2
 
 esp_ipv4_tunnel_h2n_rxdma_dma_cmd_ring_doorbell:
     /* address will be in r4 */

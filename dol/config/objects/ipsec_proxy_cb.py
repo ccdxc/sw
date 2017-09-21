@@ -9,6 +9,7 @@ import config.resmgr            as resmgr
 from config.store               import Store
 from infra.common.logging       import cfglogger
 from config.objects.swdr        import SwDscrRingHelper
+from config.objects.crypto_keys        import CryptoKeyHelper
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -25,6 +26,7 @@ class IpsecCbObject(base.ConfigObjectBase):
         self.GID(gid)
         self.ipseccbq_base = SwDscrRingHelper.main("IPSECCBQ", gid, self.id)
         cfglogger.info("  - %s" % self)
+        self.crypto_key = CryptoKeyHelper.main() 
         return
 
 
@@ -36,13 +38,13 @@ class IpsecCbObject(base.ConfigObjectBase):
             req_spec.iv_size                   = self.iv_size
             req_spec.icv_size                  = self.icv_size
             req_spec.block_size                = self.block_size
-            req_spec.key_index                 = self.key_index
             req_spec.barco_enc_cmd             = self.barco_enc_cmd
             req_spec.iv                        = self.iv
             req_spec.iv_salt                   = self.iv_salt
             req_spec.esn_hi                    = self.esn_hi
             req_spec.esn_lo                    = self.esn_lo
             req_spec.spi                       = self.spi
+            req_spec.key_index                 = self.crypto_key_idx
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

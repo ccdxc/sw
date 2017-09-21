@@ -19,6 +19,22 @@ header_type ipsec_int_header_t {
     }
 }
 
+#define IPSEC_INT_HDR_SCRATCH \
+    modify_field(ipsec_int_hdr_scratch.in_desc, in_desc); \
+    modify_field(ipsec_int_hdr_scratch.out_desc, out_desc); \ 
+    modify_field(ipsec_int_hdr_scratch.in_page, in_page); \ 
+    modify_field(ipsec_int_hdr_scratch.out_page, out_page); \ 
+    modify_field(ipsec_int_hdr_scratch.ipsec_cb_index, ipsec_cb_index); \ 
+    modify_field(ipsec_int_hdr_scratch.headroom, headroom); \ 
+    modify_field(ipsec_int_hdr_scratch.tailroom, tailroom); \ 
+    modify_field(ipsec_int_hdr_scratch.headroom_offset, headroom_offset); \ 
+    modify_field(ipsec_int_hdr_scratch.tailroom_offset, tailroom_offset); \ 
+    modify_field(ipsec_int_hdr_scratch.payload_start, payload_start); \ 
+    modify_field(ipsec_int_hdr_scratch.buf_size, buf_size); \ 
+    modify_field(ipsec_int_hdr_scratch.payload_size, payload_size); \ 
+    modify_field(ipsec_int_hdr_scratch.pad_size, pad_size); \ 
+    modify_field(ipsec_int_hdr_scratch.l4_protocol, l4_protocol); \ 
+    
 header_type esp_header_t {
     fields {
         spi : 32;
@@ -74,6 +90,9 @@ header_type barco_descriptor_t {
         A1_addr : ADDRESS_WIDTH;
         O1      : AOL_OFFSET_WIDTH;
         L1      : AOL_LENGTH_WIDTH;
+        A2_addr : ADDRESS_WIDTH;
+        O2      : AOL_OFFSET_WIDTH;
+        L2      : AOL_LENGTH_WIDTH;
     }
 }
 
@@ -142,3 +161,4 @@ header_type p4plus_to_p4_ipsec_header_t {
 #define IPSEC_CB_SCRATCH_WITH_PC \
     modify_field(ipsec_cb_scratch.pc, pc); \
     IPSEC_CB_SCRATCH 
+
