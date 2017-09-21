@@ -4,7 +4,7 @@
 #include "common_phv.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_rqlkey_process_k_t k;
+struct resp_rx_key_process_k_t k;
 #struct key_entry_t d;
 
 #define KEY_P r7
@@ -41,7 +41,9 @@ resp_rx_rqlkey_process:
 
     // if (!(lkey_p->acc_ctrl & ACC_CTRL_LOCAL_WRITE)) {
     CAPRI_TABLE_GET_FIELD(r1, KEY_P, KEY_ENTRY_T, acc_ctrl)
-    ARE_ALL_FLAGS_SET_B(c1, r1, ACC_CTRL_LOCAL_WRITE)
+    //ARE_ALL_FLAGS_SET_B(c1, r1, ACC_CTRL_LOCAL_WRITE)
+    and         r1, r1, k.args.acc_ctrl
+    seq         c1, r1, k.args.acc_ctrl
     bcf         [!c1], error_completion
     nop         //BD slot
 
@@ -50,9 +52,9 @@ resp_rx_rqlkey_process:
     CAPRI_TABLE_GET_FIELD(BASE_VA, KEY_P, KEY_ENTRY_T, base_va)
     CAPRI_TABLE_GET_FIELD(LEN, KEY_P, KEY_ENTRY_T, len)
     CAPRI_TABLE_GET_FIELD(LOG_PAGE_SIZE, KEY_P, KEY_ENTRY_T, log_page_size)
-    slt         c1, k.args.sge_va, BASE_VA 
+    slt         c1, k.args.va, BASE_VA 
     add         r1, BASE_VA, LEN 
-    add         r2, k.args.sge_va, k.args.sge_bytes
+    add         r2, k.args.va, k.args.len
     slt         c2, r1, r2
     bcf         [c1 | c2], error_completion
     nop         //BD slot
@@ -77,7 +79,7 @@ resp_rx_rqlkey_process:
     // base_va % pt_seg_size
     mincr       r3, LOG_PT_SEG_SIZE, r0
     // add sge_va
-    add         r3, r3, k.args.sge_va
+    add         r3, r3, k.args.va
     // subtract base_va
     sub         r3, r3, BASE_VA
     // now r3 has transfer_offset
@@ -86,7 +88,7 @@ resp_rx_rqlkey_process:
     add         r7, r0, r3
     mincr       r7, LOG_PT_SEG_SIZE, r0
     // (transfer_offset % pt_seg_size) + transfer_bytes
-    add         r7, r7, k.args.sge_bytes
+    add         r7, r7, k.args.len
     // get absolute pt_seg_size
     sllv        r6, 1, LOG_PT_SEG_SIZE
     // pt_seg_size <= ((transfer_offset % pt_seg_size) + transfer_bytes)
@@ -117,15 +119,15 @@ aligned_pt:
     add         PT_SEG_P, MY_PT_BASE_ADDR, r5, CAPRI_LOG_SIZEOF_U64
 
 invoke_pt:
-    seq         c1, k.args.sge_index, 0
+    seq         c1, k.args.tbl_id, 0
     SEL_T0_OR_T1_K(r7, c1)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_ptseg_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, PT_SEG_P)
     SEL_T0_OR_T1_S2S_DATA(r7, c1)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_offset, PT_OFFSET)
-    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_bytes, k.args.sge_bytes)
+    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_bytes, k.args.len)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
-    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, sge_index, k.args.sge_index)
+    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, sge_index, k.args.tbl_id)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, log_page_size, LOG_PAGE_SIZE)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 0)
     

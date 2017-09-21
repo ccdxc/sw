@@ -38,7 +38,7 @@ TEST_FILES := \
 
 TMP_FILES  := $(patsubst %.ctl, %.x, $(TEST_FILES))
 
-resp_rx_rqcb_process_PARAMS := -P resp_rx_rqpt_process=100 -P resp_rx_rqcb1_in_progress_process=200
+resp_rx_rqcb_process_PARAMS := -P resp_rx_rqpt_process=100 -P resp_rx_rqcb1_in_progress_process=200 -P resp_rx_write_dummy_process=300
 
 $(TMP_FILES): %.x: %.ctl
 	@echo Testing ...

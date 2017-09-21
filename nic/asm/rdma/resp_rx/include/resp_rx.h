@@ -72,23 +72,24 @@ struct resp_rx_rqwqe_process_k_t {
     struct phv_global_common_t global;
 };
 
-struct resp_rx_sge_to_lkey_info_t {
-    sge_va: 64;
-    sge_bytes: 16;
-    page_size: 16;
+struct resp_rx_key_info_t {
+    va: 64;
+    len: 16;
+    acc_ctrl: 8;
+    rsvd1: 8;
     dma_cmd_start_index: 8;
     key_id: 8;
-    sge_index: 8;
+    tbl_id: 8;
     cq_dma_cmd_index: 8;
     cq_id:24;
     dma_cmdeop: 1;
-    rsvd: 7;
+    rsvd2: 7;
     //tightly packed for 160 bits
 };
 
-struct resp_rx_rqlkey_process_k_t {
+struct resp_rx_key_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
-    struct resp_rx_sge_to_lkey_info_t args;
+    struct resp_rx_key_info_t args;
     struct phv_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
@@ -216,6 +217,24 @@ struct resp_rx_rqcb_to_rqcb1_info_t {
 struct resp_rx_rqcb1_in_progress_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct resp_rx_rqcb_to_rqcb1_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
+
+struct resp_rx_rqcb_to_write_rkey_info_t {
+    va: 64;
+    len: 32;
+    r_key: 32;
+    remaining_payload_bytes: 16;
+    load_reth: 1;
+    incr_c_index: 1;
+    rsvd1: 6;
+    rsvd2: 8;
+};
+
+struct resp_rx_write_dummy_process_k_t {
+    struct capri_intrinsic_raw_k_t intrinsic;
+    struct resp_rx_rqcb_to_write_rkey_info_t args;
     struct phv_to_stage_t to_stage;
     struct phv_global_common_t global;
 };

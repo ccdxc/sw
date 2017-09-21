@@ -9,6 +9,7 @@ struct rqcb0_t d;
 //struct resp_rx_rqcb_process_k_t k;
 struct rdma_stage0_table_k k;
 
+#define RQCB_TO_WRITE_T struct resp_rx_rqcb_to_write_rkey_info_t
 #define INFO_OUT1_T struct resp_rx_rqcb_to_pt_info_t
 #define RQCB_TO_RQCB1_T struct resp_rx_rqcb_to_rqcb1_info_t
 #define RAW_TABLE_PC r2
@@ -18,6 +19,7 @@ struct rdma_stage0_table_k k;
 %%
     .param    resp_rx_rqpt_process
     .param    resp_rx_rqcb1_in_progress_process
+    .param    resp_rx_write_dummy_process
 
 .align
 resp_rx_rqcb_process:
@@ -73,8 +75,54 @@ resp_rx_rqcb_process:
     bcf     [c1], duplicate
     nop     //BD Slot
 
+    IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_FIRST|RESP_RX_FLAG_MIDDLE)
+    // remaining_payload_bytes - (1 << log_pmtu)
+    add     r1, r0, d.log_pmtu
+    sllv    r1, 1, r1
+    sub     r1, r6, r1
+    // first/middle packets should be of pmtu size
+    seq     c2, r1, r0
+    bcf.c1  [!c2], nak
+    add.c1  r2, r0, NAK_CODE_INV_REQ //BD Slot
+     
     // INCREMENT E_PSN HERE
     tbladd  d.e_psn, 1
+
+    ARE_ALL_FLAGS_SET(c1, r7, RESP_RX_FLAG_WRITE)
+    bcf     [!c1], need_checkout
+    nop     //BD Slot
+
+write:
+    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
+
+    // only first and only packets have reth header
+    IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_FIRST|RESP_RX_FLAG_ONLY)
+    IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_IMMDT)
+    
+    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 0, c1)
+    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 1, !c1)
+
+    CAPRI_RXDMA_RETH_VA(r5)
+    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, va, r5, c1)
+
+    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, len, CAPRI_RXDMA_RETH_DMA_LEN, c1)
+    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, r_key, CAPRI_RXDMA_RETH_R_KEY, c1)
+    // TODO: DANGER: do we need to set incr_c_index to 0 otherwise ? 
+    // If not, would it accidentally carry previous s2s data and increment c_index ?
+    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, incr_c_index, 1, c2)
+    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, remaining_payload_bytes, r6)
+
+    // NOTE: key_table_base_addr is NOT known yet at this time
+    // as this is still stage 0 and parallel SRAM lookup would
+    // be acquiring this information. Hence we need to create
+    // a bubble and wait till the next stage
+    CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_write_dummy_process)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+
+    //TODO: tbl_id management
+
+need_checkout:
 
     ARE_ALL_FLAGS_SET(c1, r7, RESP_RX_FLAG_SEND)
     ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
