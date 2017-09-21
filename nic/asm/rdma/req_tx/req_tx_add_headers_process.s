@@ -55,6 +55,8 @@ req_tx_add_headers_process:
     nop
     beqi           r2, OP_TYPE_SEND_IMM, op_type_send_imm
     nop
+    beqi           r2, OP_TYPE_WRITE, op_type_write
+    nop
     b              end
     nop
 
@@ -83,6 +85,30 @@ op_type_send_imm:
     b              end
     nop
 
+op_type_write:
+    seq            c1, k.args.first, 1
+    seq            c2, k.args.last, 1
+    setcf          c3, [c1 & c2]
+    setcf          c4, [c1 & !c2]
+    add.c3         r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    add.c4         r2, RDMA_PKT_OPC_RDMA_WRITE_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+
+    setcf          c3, [!c1 & c2]
+    setcf          c4, [!c1 & !c2]
+    add.c3         r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    add.c4         r2, RDMA_PKT_OPC_RDMA_WRITE_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    phvwr          BTH_OPCODE, r2
+
+    // dma_cmd[4]
+    //jump to next flit
+    //sub            r7, r7, 1, LOG_DMA_CMD_SIZE_BITS
+    addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
+    DMA_PHV2PKT_SETUP(r7, reth, reth)
+
+    b              end
+    setcf          c5, [c0] // Branch Delay Slot
+
+
 end:
     b.!c6          inc_psn
     // phv_p->bth.psn = sqcb1_p->tx_psn
@@ -107,6 +133,10 @@ inc_psn:
     //     sqcb1_p->ssn++;
     seq            c1, k.args.last, 1
     tblmincri.c1   d.ssn, 24, 1
+
+    seq            c2, k.global.flags.req_tx.incr_lsn, 1
+    setcf          c3, [c1 & c2]
+    tblmincri.c3   d.lsn, 24, 1
 
     // get tbl_id from s2s data
     add            r1, k.args.tbl_id, r0

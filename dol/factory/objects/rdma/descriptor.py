@@ -32,6 +32,15 @@ class RdmaSqDescriptorSend(Packet):
         IntField("rsvd2", 0),
     ]
 
+class RdmaSqDescriptorWrite(Packet):
+    fields_desc = [
+        IntField("imm_data", 0),
+        LongField("va", 0),
+        IntField("len", 0),
+        IntField("r_key", 0),
+    ]
+
+
 class RdmaRrqDescriptorBase(Packet):
     fields_desc = [
         BitField("read_resp_or_atomic", 0, 1),
@@ -164,10 +173,19 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
                                     num_sges=self.spec.fields.num_sges)
         if hasattr(self.spec.fields, 'send'):
            print("Reading Send")
-           imm_data = self.spec.fields.imm_data if hasattr(self.spec.fields, 'imm_data') else 0
-           inv_key = self.spec.fields.inv_key if hasattr(self.spec.fields, 'inv_key') else 0
+           imm_data = self.spec.fields.send.imm_data if hasattr(self.spec.fields.send, 'imm_data') else 0
+           inv_key = self.spec.fields.send.inv_key if hasattr(self.spec.fields.send, 'inv_key') else 0
            send = RdmaSqDescriptorSend(imm_data=imm_data, inv_key=inv_key)
            desc = desc/send
+
+        if hasattr(self.spec.fields, 'write'):
+           print("Reading Write")
+           imm_data = self.spec.fields.write.imm_data if hasattr(self.spec.fields.write, 'imm_data') else 0
+           va = self.spec.fields.write.va if hasattr(self.spec.fields.write, 'va') else 0
+           dma_len = self.spec.fields.write.len if hasattr(self.spec.fields.write, 'len') else 0
+           r_key = self.spec.fields.write.r_key if hasattr(self.spec.fields.write, 'r_key') else 0
+           write = RdmaSqDescriptorWrite(imm_data=imm_data, va=va, len=dma_len, r_key=r_key)
+           desc = desc/write
 
         for sge in self.spec.fields.sges:
             sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)

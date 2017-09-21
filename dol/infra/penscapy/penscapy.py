@@ -114,15 +114,15 @@ class DETH(Packet):
         BitField("srcqp",       0,      24),
     ]
 
-
 class RETH(Packet):
     name = "RETH"
     fields_desc = [
         BitField("va",          0,      64),
         BitField("r_key",       0,      32),
-        BitField("dmalen",      0,      32),
+        BitField("dma_len",     0,      32),
     ]
 
+bind_layers(BTH, RETH, opcode=10)
 
 class AtomicETH(Packet):
     name = "AtomicETH"

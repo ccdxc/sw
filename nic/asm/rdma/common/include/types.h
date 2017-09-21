@@ -284,6 +284,21 @@ struct resp_rx_flags_t {
 #define RESP_RX_FLAG_INV_RKEY           0x0800
 #define RESP_RX_FLAG_COMPLETION         0x1000
 
+struct req_tx_flags_t {
+    error_disable_qp: 1;
+    incr_lsn: 1;
+};
+
+#define REQ_TX_FLAG_ERR_DIS_QP          0x0001
+#define REQ_TX_FLAG_INCR_LSN            0x0002
+
+struct resp_tx_flags_t {
+    error_disable_qp: 1;
+};
+
+#define RESP_TX_FLAG_ERR_DIS_QP         0x0001
+
+
 #define ARE_ALL_FLAGS_SET(_c, _flags_r, _flags_test) \
     smeqh   _c, _flags_r, _flags_test, _flags_test
 #define IS_ANY_FLAG_SET(_c, _flags_r, _flags_test) \
@@ -325,6 +340,8 @@ union roce_opcode_flags_t {
     flags: 16;
     struct req_rx_flags_t req_rx;
     struct resp_rx_flags_t resp_rx;
+    struct req_tx_flags_t req_tx;
+    struct resp_tx_flags_t resp_tx;
 }; 
 
 struct ack_info_t {
@@ -362,7 +379,6 @@ struct sqwqe_base_t {
     rsvd1              : 1;
     num_sges           : 8;
     rsvd2              : 16;
-    pad                : 416;
 };
 
 // send
@@ -372,6 +388,24 @@ struct sqwqe_send_t {
     length             : 32;
     rsvd               : 64;    // for now
 };
+
+// write
+struct sqwqe_write_t {
+    imm_data           : 32;
+    va                 : 64;
+    length             : 32;
+    r_key              : 32;
+};
+
+struct sqwqe_t {
+    struct sqwqe_base_t base;
+    union {
+        struct sqwqe_send_t send;
+        struct sqwqe_write_t write;
+    };
+    pad : 256;
+};
+
 
 #define RQWQE_SGE_OFFSET  32
 #define RQWQE_SGE_OFFSET_BITS 256 // 32 * 8

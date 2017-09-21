@@ -1,9 +1,9 @@
 meta:
     id      : RETH
     scapy   : RETH
-    size    : None
+    size    : 16
 
 fields:
     va      : const/0x0
     r_key   : const/0x0
-    dmalen  : const/0x0
+    dma_len : const/0x0

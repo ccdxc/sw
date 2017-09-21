@@ -15,6 +15,10 @@
 #define BTH_ACK_REQ             p.bth.a
 #define BTH_OPCODE              p.bth.opcode
 
+#define RETH_VA                 p.reth.va
+#define RETH_RKEY               p.reth.r_key
+#define RETH_LEN                p.reth.dma_len
+
 #define P4PLUS_TO_P4_APP_ID     p.p4plus_to_p4.p4plus_app_id
 #define P4PLUS_TO_P4_FLAGS      p.p4plus_to_p4.flags
 #define P4PLUS_TO_P4_IP_LEN     p.p4plus_to_p4.ip_len
