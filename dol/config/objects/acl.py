@@ -30,36 +30,6 @@ class AclObject(base.ConfigObjectBase):
 
         self.GID(spec.id)
 
-        if self.MatchOnIPv4():
-            if self.fields.match.ip.alloc_src_ip:
-                self.fields.match.ip.src_ip = resmgr.AclIPv4Allocator.get()
-                self.fields.match.ip.src_prefix_len = objects.TemplateFieldObject("const/32")
-            elif self.fields.match.ip.alloc_src_prefix:
-                self.fields.match.ip.src_ip = resmgr.AclIPv4SubnetAllocator.get()
-
-            if self.fields.match.ip.alloc_dst_ip:
-                self.fields.match.ip.dst_ip = resmgr.AclIPv4Allocator.get()
-                self.fields.match.ip.dst_prefix_len = objects.TemplateFieldObject("const/32")
-            elif self.fields.match.ip.alloc_dst_prefix:
-                self.fields.match.ip.dst_ip = resmgr.AclIPv4SubnetAllocator.get()
-
-        elif self.MatchOnIPv6():
-            if self.fields.match.ip.alloc_src_ip:
-                self.fields.match.ip.src_ip = resmgr.AclIPv6Allocator.get()
-                self.fields.match.ip.src_prefix_len = objects.TemplateFieldObject("const/128")
-            elif self.fields.match.ip.alloc_src_prefix:
-                self.fields.match.ip.src_ip = resmgr.AclIPv6SubnetAllocator.get()
-            else:
-                self.fields.match.ip.src_ip = objects.TemplateFieldObject("ipv6addr/0::0")
-
-            if self.fields.match.ip.alloc_dst_ip:
-                self.fields.match.ip.dst_ip = resmgr.AclIPv6Allocator.get()
-                self.fields.match.ip.dst_prefix_len = objects.TemplateFieldObject("const/128")
-            elif self.fields.match.ip.alloc_dst_prefix:
-                self.fields.match.ip.dst_ip = resmgr.AclIPv6SubnetAllocator.get()
-            else:
-                self.fields.match.ip.dst_ip = objects.TemplateFieldObject("ipv6addr/0::0")
-
         if self.fields.action.ingress_mirror and self.fields.action.ingress_mirror.enable:
             session_ref = self.fields.action.ingress_mirror.session
             self.fields.action.ingress_mirror.session = session_ref.Get(Store)
@@ -67,12 +37,15 @@ class AclObject(base.ConfigObjectBase):
             session_ref = self.fields.action.egress_mirror.session
             self.fields.action.egress_mirror.session = session_ref.Get(Store)
             
-        self.Show()
+        #self.Show()
         return
 
     def Show(self):
         cfglogger.info("Acl  : %s (id: %d)" % (self.GID(), self.id))
         cfglogger.info("- Match  : %s" % self.GID())
+        if self.MatchOnFlowMiss():
+            cfglogger.info("  Flow Miss" )
+
         if self.MatchOnSIF():
             if self.fields.match.src_if:
                 cfglogger.info("  Src IF     : %s" % self.fields.match.src_if.GID())
@@ -140,10 +113,19 @@ class AclObject(base.ConfigObjectBase):
                             self.fields.match.l4.udp.dst_port_range.GetEnd()))
         elif self.MatchOnICMP():
             cfglogger.info("  ICMP:")
-            cfglogger.info("  - Code: %d" % self.fields.match.l4.icmp.code.get())
-            cfglogger.info("  - Type: %d" % self.fields.match.l4.icmp.type.get())
-         
+            cfglogger.info("  - Code/Mask: %02x/%02x" % \
+                    (self.fields.match.l4.icmp.code.get(), self.fields.match.l4.icmp.code_mask.get()))
+            cfglogger.info("  - Type/Mask: %02x/%02x" % \
+                    (self.fields.match.l4.icmp.type.get(), self.fields.match.l4.icmp.type_mask.get()))
+
         cfglogger.info("- Action    : %s" % self.fields.action.action)
+        if self.ActionUplinkRedirect():
+            cfglogger.info("  Uplink redirect : %s" % self.fields.action.redirect_if.GID())
+        elif self.ActionTunnelRedirect():
+            cfglogger.info("  Tunnel redirect : %s" % self.fields.action.redirect_if.GID())
+        elif self.ActionSupRedirect():
+            cfglogger.info("  Sup redirect" )
+
         if self.fields.action.ingress_mirror:
             cfglogger.info("  Ing. Mirror   : En=%s, Session=%s" %\
                            (self.fields.action.ingress_mirror.enable,
@@ -156,6 +138,7 @@ class AclObject(base.ConfigObjectBase):
 
     def Configure(self):
         cfglogger.info("Configuring Acl  : %s (id: %d)" % (self.GID(), self.id))
+        self.Show()
         halapi.ConfigureAcls([self])
         return
 
@@ -271,7 +254,21 @@ class AclObject(base.ConfigObjectBase):
             reqspec.match.ip_selector.icmp_selector.icmp_type_mask = \
                     self.fields.match.l4.icmp.type_mask.get()
     
+        if self.MatchOnFlowMiss():
+            reqspec.match.internal_key.flow_miss = True
+            reqspec.match.internal_mask.flow_miss = True
+
         reqspec.action.action = self.__getEnumValue(self.fields.action.action)
+        if self.ActionRedirect():
+            reqspec.action.redirect_if_key_handle.if_handle = \
+                    self.fields.action.redirect_if.hal_handle
+        if self.ActionTunnelRedirect() or self.ActionUplinkRedirect():
+            reqspec.action.internal_actions.mac_sa_rewrite_en = True
+            reqspec.action.internal_actions.mac_sa = self.fields.action.macsa.getnum()
+            reqspec.action.internal_actions.mac_da_rewrite_en = True
+            reqspec.action.internal_actions.mac_da = self.fields.action.macda.getnum()
+            reqspec.action.internal_actions.ttl_dec_en = True
+            reqspec.action.internal_actions.encap_info.encap_value = self.fields.action.encap_id
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -292,34 +289,20 @@ class AclObject(base.ConfigObjectBase):
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
+    def MatchOnFlowMiss(self):
+        return self.fields.match.flow_miss
+
     def MatchOnSIF(self):
         return self.fields.match.src_if_match
-
-    def UpdateSIF(self, sif):
-        if self.MatchOnSIF():
-            self.fields.match.src_if = sif
-
 
     def MatchOnDIF(self):
         return self.fields.match.dst_if_match
 
-    def UpdateDIF(self, dif):
-        if self.MatchOnDIF():
-            self.fields.match.dst_if = dif
-
     def MatchOnTenant(self):
         return self.fields.match.tenant_match
 
-    def UpdateTenant(self, tenant):
-        if self.MatchOnTenant():
-            self.fields.match.tenant = tenant
-
     def MatchOnSegment(self):
         return self.fields.match.segment_match
-
-    def UpdateSegment(self, segment):
-        if self.MatchOnSegment():
-            self.fields.match.segment = segment
 
     def MatchOnEth(self):
         return self.fields.match.type == 'eth'
@@ -392,6 +375,16 @@ class AclObject(base.ConfigObjectBase):
             return self.fields.match.eth.ethertype.get()
         return None
 
+    def MatchOnSIP(self):
+        if self.MatchOnIP() and self.fields.match.ip.src_prefix_len.get():
+            return True
+        return False
+
+    def MatchOnDIP(self):
+        if self.MatchOnIP() and self.fields.match.ip.dst_prefix_len.get():
+            return True
+        return False
+
     def MatchOnIPv4SIP(self):
         if self.MatchOnIPv4() and self.fields.match.ip.src_prefix_len.get():
             return True
@@ -435,14 +428,8 @@ class AclObject(base.ConfigObjectBase):
     def MatchOnProto(self):
         return self.MatchOnL4Proto()
 
-    def MatchProto(self):
-        if self.MatchOnL4Proto():
-            return self.fields.match.l4.proto.get()
-
-        return None
-
     def MatchOnUDPSport(self):
-        if self.MatchOnUDP():
+        if self.MatchOnUDP() and self.fields.match.l4.udp.src_port:
             return True
         return False
 
@@ -452,7 +439,7 @@ class AclObject(base.ConfigObjectBase):
         return None 
 
     def MatchOnUDPDport(self):
-        if self.MatchOnUDP():
+        if self.MatchOnUDP() and self.fields.match.l4.udp.dst_port:
             return True
         return False
 
@@ -462,7 +449,7 @@ class AclObject(base.ConfigObjectBase):
         return None 
 
     def MatchOnTCPSport(self):
-        if self.MatchOnTCP():
+        if self.MatchOnTCP() and self.fields.match.l4.tcp.src_port:
             return True
         return False
 
@@ -472,7 +459,7 @@ class AclObject(base.ConfigObjectBase):
         return None 
 
     def MatchOnTCPDport(self):
-        if self.MatchOnTCP():
+        if self.MatchOnTCP() and self.fields.match.l4.tcp.dst_port:
             return True
         return False
 
@@ -482,7 +469,7 @@ class AclObject(base.ConfigObjectBase):
         return None 
 
     def MatchOnICMPCode(self):
-        if self.MatchOnICMP():
+        if self.MatchOnICMP() and self.fields.match.l4.icmp.code_mask.get() != 0:
             return True
         return False
 
@@ -492,7 +479,7 @@ class AclObject(base.ConfigObjectBase):
         return None
 
     def MatchOnICMPType(self):
-        if self.MatchOnICMP():
+        if self.MatchOnICMP() and self.fields.match.l4.icmp.type_mask.get() != 0:
             return True
         return False
 
@@ -500,6 +487,115 @@ class AclObject(base.ConfigObjectBase):
         if self.MatchOnICMP():
             return self.fields.match.l4.icmp.type.get()
         return None
+
+    def ActionRedirect(self):
+        if self.fields.action.action == 'redirect':
+            return True
+        return False
+
+    def ActionUplinkRedirect(self):
+        if self.fields.action.action == 'redirect' and self.fields.action.intf == 'uplink':
+            return True
+        return False
+
+    def ActionTunnelRedirect(self):
+        if self.fields.action.action == 'redirect' and self.fields.action.intf == 'tunnel':
+            return True
+        return False
+
+    def ActionSupRedirect(self):
+        if self.fields.action.action == 'redirect' and self.fields.action.intf == 'cpu':
+            return True
+        return False
+
+    def UpdateFromTCConfig(self, flow, sep, dep, segment, tenant):
+
+        if self.MatchOnFlowMiss():
+            # Generate configs with locally generated values
+            smac = resmgr.AclMacAllocator.get()
+            dmac = resmgr.AclMacAllocator.get()
+            etype = resmgr.AclEtypeAllocator.get()
+            if flow.IsIPV4():
+                sip = resmgr.AclIPv4Allocator.get()
+                dip = resmgr.AclIPv4Allocator.get()
+            elif flow.IsIPV6():
+                sip = resmgr.AclIPv6Allocator.get()
+                dip = resmgr.AclIPv6Allocator.get()
+            sport = 1000
+            dport = 2000
+            icmpcode = 20
+            icmptype = 12
+        else:
+            # Update the config with values from the flow
+            if flow.IsMAC():
+                smac = sep.macaddr
+                dmac = dep.macaddr
+                etype = flow.ethertype
+            if flow.IsIP():
+                sip = flow.sip
+                dip = flow.dip
+            if flow.IsTCP() or flow.IsUDP():
+                sport = flow.sport
+                dport = flow.dport
+            if flow.IsICMP():
+                icmpcode = flow.icmpcode
+                icmptype = flow.icmptype
+
+        if self.MatchOnSIF():
+            self.fields.match.src_if = sep.intf
+
+        if self.MatchOnDIF():
+            self.fields.match.dst_if = dep.intf
+
+        if self.MatchOnTenant():
+            self.fields.match.tenant = tenant
+
+        if self.MatchOnSegment():
+            self.fields.match.segment = segment
+
+        if self.MatchOnEth():
+            self.fields.match.eth.ethertype = \
+                    objects.TemplateFieldObject("const/%d" % etype)
+            self.fields.match.eth.src = smac
+            self.fields.match.eth.dst = dmac
+
+        if self.MatchOnSIP():
+            self.fields.match.ip.src_ip = sip
+        if self.MatchOnDIP():
+            self.fields.match.ip.dst_ip = dip
+        if self.MatchOnTCPSport():
+            self.fields.match.l4.tcp.src_port_range = \
+                    objects.TemplateFieldObject("range/%d/%d" % (sport, sport))
+        if self.MatchOnTCPDport():
+            self.fields.match.l4.tcp.dst_port_range = \
+                    objects.TemplateFieldObject("range/%d/%d" % (dport, dport))
+        if self.MatchOnUDPSport():
+            self.fields.match.l4.udp.src_port_range = \
+                    objects.TemplateFieldObject("range/%d/%d" % (sport, sport))
+        if self.MatchOnUDPDport():
+            self.fields.match.l4.udp.dst_port_range = \
+                    objects.TemplateFieldObject("range/%d/%d" % (dport, dport))
+        if self.MatchOnICMPCode():
+            self.fields.match.l4.icmp.code = \
+                    objects.TemplateFieldObject("const/%d" % icmpcode)
+        if self.MatchOnICMPType():
+            self.fields.match.l4.icmp.type = \
+                    objects.TemplateFieldObject("const/%d" % icmptype)
+
+        if self.ActionSupRedirect():
+            self.fields.action.redirect_if = Store.objects.Get('Cpu1')
+        elif self.ActionTunnelRedirect():
+            self.fields.action.redirect_if = \
+                    (set(Store.GetTunnelsVxlan()) - set([dep.intf])).pop()
+            self.fields.action.encap_id = 30
+            self.fields.action.macsa = resmgr.AclMacAllocator.get()
+            self.fields.action.macda = resmgr.AclMacAllocator.get()
+        elif self.ActionUplinkRedirect():
+            self.fields.action.redirect_if = \
+                    (set(Store.GetTrunkingUplinks()) - set([dep.intf])).pop()
+            self.fields.action.encap_id = 20
+            self.fields.action.macsa = resmgr.AclMacAllocator.get()
+            self.fields.action.macda = resmgr.AclMacAllocator.get()
 
     def GetAction(self):
         return self.fields.action.action.upper()

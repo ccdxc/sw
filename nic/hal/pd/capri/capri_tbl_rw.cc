@@ -414,6 +414,7 @@ capri_table_mpu_base_init()
             capri_program_label_to_offset("iris", progname, action_name,
                                           &capri_action_asm_base[i][j]);
             /* Action base is in byte and 64B aligned... */
+            HAL_ASSERT((capri_action_asm_base[i][j] & 0x3f) == 0);
             capri_action_asm_base[i][j] >>= 6;
             HAL_TRACE_DEBUG("Program-Name {}, Action-Name {}, Action-Pc {:#x}",
                             progname, action_name, capri_action_asm_base[i][j]);

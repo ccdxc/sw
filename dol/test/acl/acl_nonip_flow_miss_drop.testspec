@@ -20,9 +20,9 @@ packets:
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
-                type    : ref://testcase/config/flow/ethertype
+                src     : callback://acl/packets/GetMacSA
+                dst     : callback://acl/packets/GetMacDA
+                type    : callback://acl/packets/GetEtherType
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id
             payload:

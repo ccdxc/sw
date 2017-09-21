@@ -31,12 +31,9 @@ def TestCaseSetup(tc):
     tc.pvtdata.acl = acl
 
     # Update the ACL parameters based on the testcase
-    acl.UpdateSIF(tc.config.src.endpoint.intf)
-    acl.UpdateDIF(tc.config.dst.endpoint.intf)
-    acl.UpdateSegment(tc.config.src.segment)
-    acl.UpdateTenant(tc.config.src.tenant)
+    acl.UpdateFromTCConfig(tc.config.flow, tc.config.src.endpoint, tc.config.dst.endpoint,\
+                           tc.config.src.segment, tc.config.src.tenant)
 
-    acl.Show()
     acl.Configure()
     return
 

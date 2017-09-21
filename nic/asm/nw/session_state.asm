@@ -609,16 +609,12 @@ f_tcp_session_normalization:
   // TBD: jrcf
   setcf        c2, [c2 & c3]
   jr.!c2       r3
-  seq          c2, k.{l4_metadata_tcp_data_len_gt_mss_action_sbit0_ebit0, \
-                      l4_metadata_tcp_data_len_gt_mss_action_sbit1_ebit1}, \
-                      NORMALIZATION_ACTION_ALLOW
+  seq          c2, k.l4_metadata_tcp_data_len_gt_mss_action, NORMALIZATION_ACTION_ALLOW
   b.c2         lb_tcp_data_len_gt_win_size
   seq          c2, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_ALLOW
   slt          c3, r4, k.l4_metadata_tcp_data_len
   b.!c3        lb_tcp_data_len_gt_win_size
-  seq          c3, k.{l4_metadata_tcp_data_len_gt_mss_action_sbit0_ebit0, \
-                      l4_metadata_tcp_data_len_gt_mss_action_sbit1_ebit1}, \
-                      NORMALIZATION_ACTION_DROP
+  seq          c3, k.l4_metadata_tcp_data_len_gt_mss_action, NORMALIZATION_ACTION_DROP
   phvwr.c3.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3     p.capri_intrinsic_drop, 1
   // Edit option

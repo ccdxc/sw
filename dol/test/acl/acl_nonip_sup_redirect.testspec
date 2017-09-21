@@ -1,18 +1,20 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VXLAN,type=TENANT
-        segment     : filter://fabencap=VXLAN
+        tenant      : filter://type=TENANT
+        segment     : filter://any
         endpoint    : filter://remote=True
+        interface   : filter://any
     dst:
-        tenant      : filter://overlay=VXLAN,type=TENANT
-        segment     : filter://fabencap=VXLAN
+        tenant      : filter://type=TENANT
+        segment     : filter://any
         endpoint    : filter://remote=True
-    flow            : filter://fwtype=L2,type=MAC,label=NETWORKING
+        interface   : filter://any
+    flow        : filter://fwtype=L2,type=MAC,label=NETWORKING
 
 packets:
     - packet:
-        id          : IN_PKT # Base packet
+        id          : IN_PKT # Input packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH
         encaps      : callback://networking/packets/GetPacketEncaps
@@ -22,15 +24,7 @@ packets:
                 dst     : ref://testcase/config/dst/endpoint/macaddr
                 type    : ref://testcase/config/flow/ethertype
             qtag:
-                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
-            outereth    :
-                src     : ref://testcase/config/src/endpoint/intf/rmacaddr
-                dst     : ref://testcase/config/src/endpoint/intf/macaddr
-            outeripv4   :
-                src     : ref://testcase/config/src/endpoint/intf/rtep
-                dst     : ref://testcase/config/src/endpoint/intf/ltep
-            vxlan       :
-                vni     : ref://testcase/config/src/segment/vxlan_id
+                vlan    : ref://testcase/config/src/segment/vlan_id
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -41,3 +35,7 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : 128

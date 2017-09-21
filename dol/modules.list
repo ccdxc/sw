@@ -1025,6 +1025,20 @@ modules:
             - SEC_PROF_TCP_TS_NOT_PRESENT_DROP_DISABLE
 
     - module:
+        name    : ACL_NONIP_SUP_REDIRECT
+        enable  : True
+        package : test.acl
+        module  : acl
+        spec    : acl_nonip_sup_redirect.testspec
+        args    :
+            maxflows: 1
+        iterate:
+            - id        : ACL_SMAC_ACTION_SUP_REDIRECT
+            - id        : ACL_SMAC_ETYPE_ACTION_SUP_REDIRECT
+            - id        : ACL_DMAC_ACTION_SUP_REDIRECT
+            - id        : ACL_ETYPE_ACTION_SUP_REDIRECT
+
+    - module:
         name    : ACL_NONIP_DROP
         enable  : True
         package : test.acl
@@ -1055,6 +1069,95 @@ modules:
             - id        : ACL_VNID_ACTION_DROP
             - id        : ACL_DIF_ACTION_DROP
             - id        : ACL_SIF_ACTION_DROP
+
+    - module:
+        name    : ACL_NONIP_FLOW_MISS_DROP
+        enable  : True
+        package : test.acl
+        module  : acl
+        spec    : acl_nonip_flow_miss_drop.testspec
+        args    :
+            maxflows: 1
+        iterate:
+            - id        : ACL_SMAC_DMAC_ETYPE_FLOW_MISS_ACTION_DROP
+
+    - module:
+        name    : ACL_IP_SUP_REDIRECT
+        enable  : True
+        package : test.acl
+        module  : acl
+        spec    : acl_ip_sup_redirect.testspec
+        args    :
+            maxflows: 1
+        iterate:
+            - id        : ACL_IPV4_DIP_ACTION_SUP_REDIRECT
+              flow      : filter://type=IPV4
+            - id        : ACL_TCP_DPORT_ACTION_SUP_REDIRECT
+              flow      : filter://type=IPV4,proto=TCP
+            - id        : ACL_UDP_DPORT_ACTION_SUP_REDIRECT
+              flow      : filter://type=IPV4,proto=UDP
+            - id        : ACL_IPV6_DIP_ACTION_SUP_REDIRECT
+              flow      : filter://type=IPV6
+            - id        : ACL_TCP_DPORT_ACTION_SUP_REDIRECT
+              flow      : filter://type=IPV6,proto=TCP
+            - id        : ACL_UDP_DPORT_ACTION_SUP_REDIRECT
+              flow      : filter://type=IPV6,proto=UDP
+
+    - module:
+        name    : ACL_IP_REDIRECT
+        enable  : True
+        package : test.acl
+        module  : acl
+        spec    : acl_ip_redirect.testspec
+        args    :
+            maxflows: 1
+        iterate:
+            - id        : ACL_DIF_ACTION_REDIRECT
+              flow      : filter://type=IPV4
+            - id        : ACL_DIF_ACTION_REDIRECT
+              flow      : filter://type=IPV6
+
+    - module:
+        name    : ACL_IP_TUNNEL_UPLINK_REDIRECT
+        enable  : True
+        package : test.acl
+        module  : acl
+        spec    : acl_ip_tunnel_uplink_redirect.testspec
+        args    :
+            maxflows: 1
+        iterate:
+            - id        : ACL_DIF_ACTION_REDIRECT
+              flow      : filter://type=IPV4
+            - id        : ACL_DIF_ACTION_REDIRECT
+              flow      : filter://type=IPV6
+
+    - module:
+        name    : ACL_IP_UPLINK_TUNNEL_REDIRECT
+        enable  : True
+        package : test.acl
+        module  : acl
+        spec    : acl_ip_uplink_tunnel_redirect.testspec
+        args    :
+            maxflows: 1
+        iterate:
+            - id        : ACL_DIF_ACTION_TUNNEL_REDIRECT
+              flow      : filter://type=IPV4
+            - id        : ACL_DIF_ACTION_TUNNEL_REDIRECT
+              flow      : filter://type=IPV6
+
+    - module:
+        name    : ACL_IP_TUNNEL_REDIRECT
+        enable  : True
+        package : test.acl
+        module  : acl
+        spec    : acl_ip_tunnel_redirect.testspec
+        args    :
+            maxflows: 1
+        iterate:
+            - id        : ACL_DIF_ACTION_TUNNEL_REDIRECT
+              flow      : filter://type=IPV4
+            - id        : ACL_DIF_ACTION_TUNNEL_REDIRECT
+              flow      : filter://type=IPV6
 
     - module:
         name    : ACL_IP_DROP
@@ -1169,6 +1272,20 @@ modules:
             - id        : ACL_DIF_ACTION_DROP
               flow      : filter://type=IPV6
             - id        : ACL_SIF_ACTION_DROP
+              flow      : filter://type=IPV6
+
+    - module:
+        name    : ACL_IP_FLOW_MISS_DROP
+        enable  : True
+        package : test.acl
+        module  : acl
+        spec    : acl_ip_flow_miss_drop.testspec
+        args    :
+            maxflows: 1
+        iterate:
+            - id        : ACL_IPV4_SIP_DIP_FLOW_MISS_ACTION_DROP
+              flow      : filter://type=IPV4
+            - id        : ACL_IPV6_SIP_DIP_FLOW_MISS_ACTION_DROP
               flow      : filter://type=IPV6
 
     - module:

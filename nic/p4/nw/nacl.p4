@@ -5,8 +5,9 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
                    ingress_mirror_en, egress_mirror_en, 
                    ingress_mirror_session_id, egress_mirror_session_id,
                    qid_en, qid, 
-                   rewrite_en, rewrite_index,
-                   tunnel_rewrite_en, tunnel_rewrite_index,
+                   rewrite_en, rewrite_index, rewrite_flags,
+                   tunnel_rewrite_en, tunnel_rewrite_index, tunnel_vnid,
+                   tunnel_originate,
                    dst_lport_en, dst_lport,
                    egress_policer_en, egress_policer_index) {
     // dummy ops to keep compiler happy
@@ -43,10 +44,13 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
 
     if (rewrite_en == TRUE) {
         modify_field(rewrite_metadata.rewrite_index, rewrite_index);
+        modify_field(rewrite_metadata.flags, rewrite_flags);
     }
 
     if (tunnel_rewrite_en == TRUE) {
+        modify_field(tunnel_metadata.tunnel_originate, tunnel_originate);
         modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
+        modify_field(rewrite_metadata.tunnel_vnid, tunnel_vnid);
     }
 
     if (dst_lport_en == TRUE) {
@@ -72,6 +76,8 @@ table nacl {
         // vlan_tag.valid                                     : ternary;
         // vlan_tag.vid                                       : ternary;
         entry_status.inactive                              : ternary;
+        flow_lkp_metadata.lkp_inst                         : ternary;
+        flow_lkp_metadata.lkp_dir                          : ternary;
         flow_lkp_metadata.lkp_type                         : ternary;
         flow_lkp_metadata.lkp_vrf                          : ternary;
         flow_lkp_metadata.lkp_src                          : ternary;
@@ -86,7 +92,6 @@ table nacl {
         control_metadata.flow_miss_ingress                 : ternary;
         control_metadata.drop_reason                       : ternary;
         l3_metadata.ip_option_seen                         : ternary;
-        l3_metadata.tcp_option_seen                        : ternary;
         l3_metadata.ip_frag                                : ternary;
         // Outer mac da for tunnel cases
         ethernet.dstAddr                                   : ternary;

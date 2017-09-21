@@ -59,3 +59,7 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : 128

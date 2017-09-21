@@ -2,34 +2,30 @@
 selectors:
     src:
         tenant      : filter://type=TENANT
-        segment     : filter://any
+        segment     : filter://fabencap=VLAN
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
         tenant      : filter://type=TENANT
-        segment     : filter://any
+        # Choose vxlan encap, but NACL should override
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
         interface   : filter://any
     flow        : filter://label=NETWORKING
 
 packets:
     - packet:
-        id          : IN_PKT # Input packet
+        id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://acl/packets/GetPacketTemplate
-        encaps      : callback://networking/packets/GetPacketEncaps
+        template    : callback://networking/packets/GetPacketTemplateByFlow
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
-            eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                ttl     : 64
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -52,6 +48,38 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
+    - packet:
+        id          : IN_PKT     # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                ttl     : 64
+            ipv6:
+                hlim    : 64
+
+    - packet:
+        id          : EXP_PKT     # Expected packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/pvtdata/acl/fields/action/macsa
+                dst     : ref://testcase/pvtdata/acl/fields/action/macda
+            qtag:
+                vlan    : ref://testcase/pvtdata/acl/fields/action/encap_id
+                prio    : ref://testcase/config/flow/eg_qos/cos
+            ipv4:
+                tos     : ref://testcase/config/flow/eg_qos/dscp
+                ttl     : 63
+            ipv6:
+                tc      : ref://testcase/config/flow/eg_qos/dscp
+                hlim    : 63
+
 trigger:
     packets:
         - packet:
@@ -59,3 +87,7 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT
+            port    : ref://testcase/pvtdata/acl/fields/action/redirect_if/ports

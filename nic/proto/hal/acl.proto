@@ -97,6 +97,33 @@ message IPSelector {
   }
 }
 
+// AclInternalSelector has match criteria which are for internal use only with 
+// DOL/testing infra
+// For production builds this needs to be removed
+// TODO: REMOVE
+message AclInternalSelector {
+    bool    flow_miss        = 1;    // Flow miss
+    uint64  outer_dst_mac    = 2;    // Outer MAC DA
+    bool    ip_options       = 3;    // Match on IP options
+    bool    ip_frag          = 4;    // IP fragmentation
+    fixed32 drop_reason      = 5;    // Drop reason
+    bool    tunnel_terminate = 6;    // Tunnel terminate
+    bool    direction        = 7;    // Flow direction
+}
+
+// AclInternalActionInfo has action parameters for internal use only with 
+// DOL/testing infra
+// For production builds this needs to be removed
+// TODO: REMOVE
+message AclInternalActionInfo {
+    bool            mac_sa_rewrite_en = 1;    // MAC SA rewrite
+    uint64          mac_sa            = 2;    // MAC SA to rewrite with
+    bool            mac_da_rewrite_en = 3;    // MAC DA rewrite
+    uint64          mac_da            = 4;    // MAC DA to rewrite with
+    bool            ttl_dec_en        = 5;    // Perform a ttl decrement
+    types.EncapInfo encap_info        = 6;    // encap info
+}
+
 // AclSelector has all the match criteria for an ACL entry
 message AclSelector {
   intf.InterfaceKeyHandle          src_if_key_handle    = 1;    // source interface
@@ -109,6 +136,10 @@ message AclSelector {
     EthSelector                    eth_selector         = 5;    // non-IP packet selector
     IPSelector                     ip_selector          = 6;    // IP packet selector
   }
+
+  // TODO: REMOVE
+  AclInternalSelector              internal_key         = 7;    // Internal fields
+  AclInternalSelector              internal_mask        = 8;    // Internal fields
 }
 
 // AclAction specifies all possible actions for ACL entries
@@ -128,6 +159,8 @@ message AclActionInfo {
   fixed64                 egr_mirror_session_handle = 5;    // egress mirror session
   fixed64                 copp_policer_handle       = 6;    // egress copp policer
   intf.InterfaceKeyHandle redirect_if_key_handle    = 7;    // redirect interface
+  // TODO: REMOVE
+  AclInternalActionInfo   internal_actions          = 8;    // Internal action fields
 }
 
 // ACL entry configuration

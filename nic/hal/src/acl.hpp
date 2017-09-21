@@ -7,6 +7,11 @@
 #include <ip.h>
 #include <acl.pb.h>
 
+// Include key of internal fields for use only with DOL/testing infra
+// For production builds this needs to be removed
+// TODO: REMOVE
+#define ACL_DOL_TEST_ONLY
+
 using hal::utils::ht_ctxt_t;
 
 namespace hal {
@@ -45,7 +50,7 @@ typedef struct acl_ip_match_spec_s {
         acl_icmp_match_spec_t   icmp;
         acl_udp_match_spec_t    udp;
         acl_tcp_match_spec_t    tcp;
-    } u;
+    } __PACK__ u;
 } __PACK__ acl_ip_match_spec_t;
 
 typedef enum {
@@ -56,6 +61,21 @@ typedef enum {
     ACL_TYPE_IPv6,      // IPv6 type - match on v6 only
     ACL_TYPE_INVALID
 } acl_type_e;
+
+#ifdef ACL_DOL_TEST_ONLY
+// Key of internal fields for use only with DOL/testing infra
+// For production builds this needs to be removed
+// TODO: REMOVE
+typedef struct acl_internal_match_spec_s {
+    bool       direction;
+    bool       flow_miss;
+    bool       ip_options;
+    bool       ip_frag;
+    bool       tunnel_terminate;
+    uint32_t   drop_reason;
+    mac_addr_t outer_mac_da;
+} __PACK__ acl_internal_match_spec_t;
+#endif
 
 // Specifications for the Acl
 typedef struct acl_match_spec_s {
@@ -71,12 +91,34 @@ typedef struct acl_match_spec_s {
     union {
         acl_eth_match_spec_t eth;
         acl_ip_match_spec_t  ip;
-    } key;
+    } __PACK__ key;
     union {
         acl_eth_match_spec_t eth;
         acl_ip_match_spec_t  ip;
-    } mask;
+    } __PACK__ mask;
+
+#ifdef ACL_DOL_TEST_ONLY
+    // Key of internal fields for use only with DOL/testing infra
+    // For production builds this needs to be removed
+    // TODO: REMOVE
+    acl_internal_match_spec_t int_key;
+    acl_internal_match_spec_t int_mask;
+#endif
+
 } __PACK__ acl_match_spec_t;
+
+#ifdef ACL_DOL_TEST_ONLY
+    // Internal fields for use only with DOL/testing infra
+    // For production builds this needs to be removed
+    // TODO: REMOVE
+typedef struct acl_internal_action_spec_s {
+    bool     mac_sa_rewrite;
+    bool     mac_da_rewrite;
+    bool     ttl_dec;
+    uint32_t rw_idx;              // rewrite index
+    uint32_t tnnl_vnid;           // tunnel vnid / encap vlan
+} __PACK__ acl_internal_action_spec_t;
+#endif
 
 // Action specifications for the Acl
 typedef struct acl_action_spec_s {
@@ -87,6 +129,13 @@ typedef struct acl_action_spec_s {
     hal_handle_t   egr_mirror_session_handle;
     hal_handle_t   copp_policer_handle;
     hal_handle_t   redirect_if_handle;
+#ifdef ACL_DOL_TEST_ONLY
+    // Internal fields for use only with DOL/testing infra
+    // For production builds this needs to be removed
+    // TODO: REMOVE
+    acl_internal_action_spec_t int_as;
+#endif
+
 } __PACK__ acl_action_spec_t;
 
 // Acl structure

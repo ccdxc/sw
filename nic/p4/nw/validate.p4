@@ -114,7 +114,7 @@ action validate_tunneled_packet2() {
          ((inner_ipv4.srcAddr & 0xf0000000) == 0xe0000000) or
          (inner_ipv4.srcAddr == 0xffffffff) or
          (inner_ipv4.dstAddr == 0) or
-         ((inner_ipv4.dstAddr & 0xf0000000) == 0x7f000000) or
+         ((inner_ipv4.dstAddr & 0xff000000) == 0x7f000000) or
          (inner_ipv4.srcAddr == inner_ipv4.dstAddr))) {
         malformed_packet();
     }

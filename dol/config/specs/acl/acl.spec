@@ -4,18 +4,39 @@ meta:
 
 entries:
     - entry:
+        id: ACL_SMAC_DMAC_ETYPE_FLOW_MISS_ACTION_DROP 
+        match:
+            flow_miss: True
+            type: eth
+            eth:
+                ethertype_mask : const/0xffff
+                src_mask       : macaddr/FFFF.FFFF.FFFF
+                dst_mask       : macaddr/FFFF.FFFF.FFFF
+        action:
+            action: deny 
+
+    - entry:
         id: ACL_SMAC_DMAC_ETYPE_ACTION_DROP 
         match:
             type: eth
             eth:
-                ethertype      : ethertype/0x1234
                 ethertype_mask : const/0xffff
-                src            : macaddr/0000.1111.2222
                 src_mask       : macaddr/FFFF.FFFF.FFFF
-                dst            : macaddr/0000.3333.4444
                 dst_mask       : macaddr/FFFF.FFFF.FFFF
         action:
             action: deny 
+
+    - entry:
+        id: ACL_IPV4_SIP_DIP_FLOW_MISS_ACTION_DROP
+        match:
+            flow_miss: True
+            type: ip
+            ip:
+                type           : v4
+                src_prefix_len : const/32
+                dst_prefix_len : const/32
+        action:
+            action: deny
 
     - entry:
         id: ACL_IPV4_SIP_DIP_ACTION_DROP
@@ -23,8 +44,8 @@ entries:
             type: ip
             ip:
                 type           : v4
-                alloc_src_ip   : True
-                alloc_dst_ip   : True
+                src_prefix_len : const/32
+                dst_prefix_len : const/32
         action:
             action: deny
 
@@ -34,11 +55,11 @@ entries:
             type: ip
             ip:
                 type            : v4
-                alloc_dst_ip    : True
+                dst_prefix_len  : const/32
             l4:
                 type            : tcp
                 tcp: 
-                    dst_port_range: range/1024/2047
+                    dst_port    : True
         action:
             action: deny 
 
@@ -48,11 +69,11 @@ entries:
             type: ip
             ip:
                 type            : v4
-                alloc_dst_ip    : True
+                dst_prefix_len  : const/32
             l4:
                 type            : udp
                 udp: 
-                    dst_port_range: range/2048/2559
+                    dst_port    : True
         action:
             action: deny 
 
@@ -62,7 +83,6 @@ entries:
             type: ip
             ip:
                 type                : v4
-                alloc_dst_prefix    : True
                 dst_prefix_len      : const/16
         action:
             action: deny 
@@ -90,13 +110,25 @@ entries:
 #            action: deny 
 
     - entry:
+        id: ACL_IPV6_SIP_DIP_FLOW_MISS_ACTION_DROP
+        match:
+            flow_miss: True
+            type: ip
+            ip:
+                type           : v6
+                src_prefix_len : const/128
+                dst_prefix_len : const/128
+        action:
+            action: deny
+
+    - entry:
         id: ACL_IPV6_SIP_DIP_ACTION_DROP
         match:
             type: ip
             ip:
                 type           : v6
-                alloc_src_ip   : True
-                alloc_dst_ip   : True
+                src_prefix_len : const/128
+                dst_prefix_len : const/128
         action:
             action: deny
 
@@ -106,11 +138,11 @@ entries:
             type: ip
             ip:
                 type            : v6
-                alloc_dst_ip    : True
+                dst_prefix_len  : const/128
             l4:
                 type            : tcp
                 tcp: 
-                    dst_port_range: range/3072/4095
+                    dst_port    : True
         action:
             action: deny 
 
@@ -120,11 +152,11 @@ entries:
             type: ip
             ip:
                 type            : v6
-                alloc_dst_ip    : True
+                dst_prefix_len  : const/128
             l4:
                 type            : udp
                 udp: 
-                    dst_port_range: range/4096/4352
+                    dst_port    : True
         action:
             action: deny 
 
@@ -134,7 +166,6 @@ entries:
             type: ip
             ip:
                 type             : v6
-                alloc_dst_prefix : True
                 dst_prefix_len   : const/64
         action:
             action: deny 
@@ -168,7 +199,7 @@ entries:
             l4:
                 type : tcp
                 tcp: 
-                    src_port_range: range/5000/5007
+                    src_port : True
         action:
             action: deny 
 
@@ -179,7 +210,7 @@ entries:
             l4:
                 type : tcp
                 tcp: 
-                    dst_port_range : range/6000/6015
+                    dst_port : True
         action:
             action: deny 
 
@@ -208,7 +239,7 @@ entries:
             l4:
                 type : udp
                 udp: 
-                    src_port_range : range/7000/7007
+                    src_port : True
         action:
             action: deny 
         
@@ -219,7 +250,7 @@ entries:
             l4:
                 type : udp
                 udp: 
-                    dst_port_range : range/8000/8063
+                    dst_port : True
         action:
             action: deny 
 
@@ -232,9 +263,7 @@ entries:
             l4:
                 type : icmp
                 icmp :
-                    code        : const/0
                     code_mask   : const/0xff
-                    type        : const/0x08
                     type_mask   : const/0xff
         action:
             action: deny
@@ -248,9 +277,7 @@ entries:
             l4:
                 type : icmp
                 icmp :
-                    code        : const/0
                     code_mask   : const/0xff
-                    type        : const/0x80
                     type_mask   : const/0xff
         action:
             action: deny
@@ -289,3 +316,110 @@ entries:
             src_if_match : True
         action:
             action: deny
+
+##############################################################################
+##############################################################################
+##############################################################################
+# SUP REDIRECT
+    - entry:
+        id: ACL_SMAC_ACTION_SUP_REDIRECT
+        match:
+            type: eth
+            eth:
+                src_mask       : macaddr/FFFF.FFFF.FFFF
+        action:
+            action: redirect 
+            intf: cpu
+
+    - entry:
+        id: ACL_SMAC_ETYPE_ACTION_SUP_REDIRECT 
+        match:
+            type: eth
+            eth:
+                ethertype_mask : const/0xffff
+                src_mask       : macaddr/FFFF.FFFF.FFFF
+        action:
+            action: redirect 
+            intf: cpu
+
+    - entry:
+        id: ACL_DMAC_ACTION_SUP_REDIRECT 
+        match:
+            type: eth
+            eth:
+                dst_mask       : macaddr/FFFF.FFFF.FFFF
+        action:
+            action: redirect 
+            intf: cpu
+
+    - entry:
+        id: ACL_ETYPE_ACTION_SUP_REDIRECT 
+        match:
+            type: eth
+            eth:
+                ethertype_mask : const/0xffff
+        action:
+            action: redirect 
+            intf: cpu
+
+    - entry:
+        id: ACL_IPV4_DIP_ACTION_SUP_REDIRECT
+        match:
+            type: ip
+            ip:
+                type           : v4
+                dst_prefix_len : const/32
+        action:
+            action: redirect
+            intf: cpu
+
+    - entry:
+        id: ACL_IPV6_DIP_ACTION_SUP_REDIRECT
+        match:
+            type: ip
+            ip:
+                type           : v6
+                dst_prefix_len : const/32
+        action:
+            action: redirect
+            intf: cpu
+
+    - entry:
+        id: ACL_TCP_DPORT_ACTION_SUP_REDIRECT
+        match:
+            type : ip
+            l4:
+                type : tcp
+                tcp: 
+                    dst_port : True
+        action:
+            action: redirect
+            intf: cpu
+
+    - entry:
+        id: ACL_UDP_DPORT_ACTION_SUP_REDIRECT
+        match:
+            type : ip
+            l4:
+                type : udp
+                udp: 
+                    dst_port : True
+        action:
+            action: redirect 
+            intf: cpu
+
+    - entry:
+        id: ACL_DIF_ACTION_REDIRECT
+        match:
+            dst_if_match : True
+        action:
+            action: redirect
+            intf: uplink
+
+    - entry:
+        id: ACL_DIF_ACTION_TUNNEL_REDIRECT
+        match:
+            dst_if_match : True
+        action:
+            action: redirect
+            intf: tunnel

@@ -781,7 +781,6 @@ parser parse_tcp_timestamp {
 
 @pragma header_ordering tcp_option_mss tcp_option_ws tcp_option_sack_perm tcp_option_one_sack tcp_option_two_sack tcp_option_three_sack tcp_option_four_sack tcp_option_timestamp tcp_option_nop tcp_option_eol
 parser parse_tcp_options {
-    set_metadata(l3_metadata.tcp_option_seen, 1);
     return select(parser_metadata.parse_tcp_counter, current(0, 8)) {
         0x0000 mask 0xff00 : ingress;
         0x0000 mask 0x00ff: parse_tcp_option_EOL;

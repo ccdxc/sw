@@ -9,6 +9,8 @@ namespace hal {
 namespace pd {
 
 // Interface APIs
+bool if_is_cpu_if(if_t *pi_if);
+bool if_is_tunnel_if(if_t *pi_if);
 uint32_t if_get_lport_id(if_t *pi_if);
 uint32_t if_get_hw_lif_id(if_t *pi_if);
 uint32_t if_get_uplink_ifpc_id(if_t *pi_if);

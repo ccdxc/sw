@@ -4,6 +4,7 @@
 #include "lif_pd.hpp"
 #include "enicif_pd.hpp"
 #include "uplinkif_pd.hpp"
+#include "cpuif_pd.hpp"
 #include "tunnelif_pd.hpp"
 #include "tenant_pd.hpp"
 #include "uplinkpc_pd.hpp"
@@ -14,6 +15,33 @@ using namespace hal;
 
 namespace hal {
 namespace pd {
+
+
+// ----------------------------------------------------------------------------
+// Given a PI If, return true if it is a CPU If 
+// ----------------------------------------------------------------------------
+bool
+if_is_cpu_if(if_t *pi_if)
+{
+    intf::IfType    if_type;
+    HAL_ASSERT(pi_if != NULL);
+
+    if_type = intf_get_if_type(pi_if);
+    return if_type == intf::IF_TYPE_CPU ? true : false;
+}
+
+// ----------------------------------------------------------------------------
+// Given a PI If, return true if it is a Tunnel If 
+// ----------------------------------------------------------------------------
+bool
+if_is_tunnel_if(if_t *pi_if)
+{
+    intf::IfType    if_type;
+    HAL_ASSERT(pi_if != NULL);
+
+    if_type = intf_get_if_type(pi_if);
+    return if_type == intf::IF_TYPE_TUNNEL ? true : false;
+}
 
 // ----------------------------------------------------------------------------
 // Given a PI LIf, get its lport id
@@ -43,6 +71,7 @@ if_get_lport_id(if_t *pi_if)
     pd_enicif_t     *pd_enicif = NULL;
     pd_uplinkif_t   *pd_upif = NULL;
     pd_uplinkpc_t   *pd_uppc = NULL;
+    pd_cpuif_t      *pd_cpuif = NULL;
     intf::IfType    if_type;
     uint32_t        lport_id = 0;
 
@@ -79,6 +108,12 @@ if_get_lport_id(if_t *pi_if)
             HAL_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);
             /* Recursive resolution to get the tunnel LIF */
             lport_id = if_get_lport_id(ep_if);
+            break;
+        case intf::IF_TYPE_CPU:
+            pd_cpuif = (pd_cpuif_t *)if_get_pd_if(pi_if);
+            HAL_ASSERT(pd_cpuif!= NULL);
+
+            lport_id = pd_cpuif->cpu_lport_id;
             break;
         default:
             HAL_ASSERT(0);

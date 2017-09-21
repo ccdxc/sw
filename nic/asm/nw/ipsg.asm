@@ -63,16 +63,12 @@ ipsg_drop:
 
 f_tcp_stateless_normalization:
 lb_tcp_rsvd_flags:
-  seq         c2, k.{l4_metadata_tcp_rsvd_flags_action_sbit0_ebit0,  \
-                     l4_metadata_tcp_rsvd_flags_action_sbit1_ebit1}, \
-                     NORMALIZATION_ACTION_ALLOW
+  seq         c2, k.l4_metadata_tcp_rsvd_flags_action, NORMALIZATION_ACTION_ALLOW
   b.c2        lb_tcp_unexpected_mss
   seq         c2, k.l4_metadata_tcp_unexpected_mss_action, NORMALIZATION_ACTION_ALLOW
   sne         c3, k.tcp_res, r0
   b.!c3       lb_tcp_unexpected_mss
-  seq         c4, k.{l4_metadata_tcp_rsvd_flags_action_sbit0_ebit0,  \
-                     l4_metadata_tcp_rsvd_flags_action_sbit1_ebit1}, \
-                     NORMALIZATION_ACTION_DROP
+  seq         c4, k.l4_metadata_tcp_rsvd_flags_action, NORMALIZATION_ACTION_DROP
   phvwr.c4.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT
@@ -95,9 +91,7 @@ lb_tcp_unexpected_mss:
 
 lb_tcp_unexpected_win_scale:
   b.c2        lb_tcp_urg_flag_not_set
-  seq         c2, k.{l4_metadata_tcp_urg_flag_not_set_action_sbit0_ebit0, \
-                     l4_metadata_tcp_urg_flag_not_set_action_sbit1_ebit1}, \
-                     NORMALIZATION_ACTION_ALLOW
+  seq         c2, k.l4_metadata_tcp_urg_flag_not_set_action, NORMALIZATION_ACTION_ALLOW
   smneb       c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq         c4, k.tcp_option_ws_valid, TRUE
   bcf         ![c3 & c4], lb_tcp_urg_flag_not_set
@@ -114,9 +108,7 @@ lb_tcp_urg_flag_not_set:
   smneb       c3, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
   sne         c4, k.tcp_urgentPtr, r0
   bcf         ![c3 & c4], lb_tcp_urg_payload_missing
-  seq         c3, k.{l4_metadata_tcp_urg_flag_not_set_action_sbit0_ebit0, \
-                     l4_metadata_tcp_urg_flag_not_set_action_sbit1_ebit1}, \
-                     NORMALIZATION_ACTION_DROP
+  seq         c3, k.l4_metadata_tcp_urg_flag_not_set_action, NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT

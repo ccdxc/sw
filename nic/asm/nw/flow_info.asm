@@ -109,6 +109,8 @@ flow_miss_tcp_non_syn_first_pkt_drop:
   phvwr.e     p.control_metadata_drop_reason[DROP_TCP_NON_SYN_FIRST_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
 
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
 flow_hit_drop:
   /* set drop bit */
   phvwr.e     p.control_metadata_drop_reason[DROP_FLOW_HIT], 1

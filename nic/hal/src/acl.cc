@@ -603,6 +603,37 @@ extract_match_spec (acl_match_spec_t *ms,
             break;
     }
 
+    if (ret != HAL_RET_OK) {
+        goto end;
+    }
+
+#ifdef ACL_DOL_TEST_ONLY
+    // Key of internal fields for use only with DOL/testing infra
+    // For production builds this needs to be removed
+    // TODO: REMOVE
+    if (sel.has_internal_key() != sel.has_internal_mask()) {
+        HAL_TRACE_ERR("PI-ACL:{}: ACL Internal selector key/mask not specified",
+                      __func__);
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    if (sel.has_internal_key()) {
+        ms->int_key.direction = sel.internal_key().direction();
+        ms->int_mask.direction = sel.internal_mask().direction();
+        ms->int_key.flow_miss = sel.internal_key().flow_miss();
+        ms->int_mask.flow_miss = sel.internal_mask().flow_miss();
+        ms->int_key.ip_options = sel.internal_key().ip_options();
+        ms->int_mask.ip_options = sel.internal_mask().ip_options();
+        ms->int_key.ip_frag = sel.internal_key().ip_frag();
+        ms->int_mask.ip_frag = sel.internal_mask().ip_frag();
+        ms->int_key.drop_reason = sel.internal_key().drop_reason();
+        ms->int_mask.drop_reason = sel.internal_mask().drop_reason();
+        MAC_UINT64_TO_ADDR(ms->int_key.outer_mac_da, sel.internal_key().outer_dst_mac());
+        MAC_UINT64_TO_ADDR(ms->int_mask.outer_mac_da, sel.internal_mask().outer_dst_mac());
+    }
+#endif
 end:
     return ret;
 }
@@ -616,6 +647,12 @@ extract_action_spec (acl_action_spec_t *as,
     if_t         *redirect_if = NULL;
     if_id_t      redirect_if_id;
     hal_handle_t redirect_if_handle = 0;
+#ifdef ACL_DOL_TEST_ONLY
+    // Internal fields for use only with DOL/testing infra
+    // For production builds this needs to be removed
+    // TODO: REMOVE
+    hal::pd::pd_rw_entry_args_t rw_key{};
+#endif
 
     as->action = ainfo.action();
     as->ing_mirror_en = ainfo.ing_mirror_en();
@@ -654,6 +691,45 @@ extract_action_spec (acl_action_spec_t *as,
         }
     }
 
+#ifdef ACL_DOL_TEST_ONLY
+    // Internal fields for use only with DOL/testing infra
+    // For production builds this needs to be removed
+    // TODO: REMOVE
+    if (ainfo.has_internal_actions()) {
+        if (as->action != acl::ACL_ACTION_REDIRECT) {
+            HAL_TRACE_ERR("PI-ACL:{}: Redirect action fields specified for "
+                          "non-redirect action {}",
+                          __func__, as->action);
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
+        as->int_as.mac_sa_rewrite = ainfo.internal_actions().mac_sa_rewrite_en();
+        as->int_as.mac_da_rewrite = ainfo.internal_actions().mac_da_rewrite_en();
+        as->int_as.ttl_dec = ainfo.internal_actions().ttl_dec_en();
+
+        if (ainfo.internal_actions().has_encap_info()) {
+            as->int_as.tnnl_vnid = ainfo.internal_actions().encap_info().encap_value();
+        }
+
+        if (as->int_as.mac_sa_rewrite) {
+            MAC_UINT64_TO_ADDR(rw_key.mac_sa, ainfo.internal_actions().mac_sa());
+        }
+
+        if (as->int_as.mac_da_rewrite) {
+            MAC_UINT64_TO_ADDR(rw_key.mac_da, ainfo.internal_actions().mac_da());
+        }
+
+        rw_key.rw_act = REWRITE_REWRITE_ID;
+        ret = hal::pd::pd_rw_entry_find_or_alloc(&rw_key, &as->int_as.rw_idx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("PI-ACL:{}: Unable to find/alloc rw entry",
+                          __func__);
+            rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
+            goto end;
+        }
+    }
+#endif
 end:
     return ret;
 }

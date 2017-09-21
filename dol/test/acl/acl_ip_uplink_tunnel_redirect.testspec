@@ -1,0 +1,104 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://type=TENANT
+        segment     : filter://fabencap=VLAN
+        endpoint    : filter://remote=True
+    dst:
+        tenant      : filter://type=TENANT
+        # Choose vlan encap, but NACL should override
+        segment     : filter://fabencap=VLAN
+        endpoint    : filter://remote=True
+    flow            : filter://label=NETWORKING
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://acl/packets/GetPacketTemplate
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                flags   : callback://acl/packets/GetTCPFlags
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : IN_PKT     # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                ttl     : 64
+            ipv6:
+                hlim    : 64
+
+    - packet:
+        id          : EXP_PKT     # Expected packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+            - ref://factory/packets/id=ENCAP_VXLAN
+        headers     :
+            eth:
+                src     : ref://testcase/pvtdata/acl/fields/action/macsa
+                dst     : ref://testcase/pvtdata/acl/fields/action/macda
+            outereth    :
+                src     : ref://testcase/pvtdata/acl/fields/action/redirect_if/macaddr
+                dst     : ref://testcase/pvtdata/acl/fields/action/redirect_if/rmacaddr
+            outeripv4   :
+                src     : ref://testcase/pvtdata/acl/fields/action/redirect_if/ltep
+                dst     : ref://testcase/pvtdata/acl/fields/action/redirect_if/rtep
+                tos     : 0
+                id      : 0
+            qtag:
+                vlan    : ref://testcase/pvtdata/acl/fields/action/redirect_if/vlan_id
+                prio    : ref://testcase/config/flow/eg_qos/cos
+            outerudp:
+                chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/pvtdata/acl/fields/action/encap_id
+            ipv4:
+                tos     : ref://testcase/config/flow/eg_qos/dscp
+                ttl     : 63
+            ipv6:
+                tc      : ref://testcase/config/flow/eg_qos/dscp
+                hlim    : 63
+
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT
+            port    : ref://testcase/pvtdata/acl/fields/action/redirect_if/ports
