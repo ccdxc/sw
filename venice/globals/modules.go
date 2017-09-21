@@ -8,4 +8,5 @@ const (
 	Ntp       = "pen-ntp"
 	VCHub     = "pen-vchub"
 	Npm       = "pen-npm"
+	Influx    = "pen-influx"
 )

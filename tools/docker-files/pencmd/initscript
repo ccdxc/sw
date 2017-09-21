@@ -8,3 +8,4 @@
 mv -f /target/usr/bin/systemd-docker /host/usr/pensando/bin/systemd-docker
 mv -f /target/usr/bin/kubelet /host/usr/pensando/bin/kubelet
 mv -f /target/usr/lib/systemd/system/* /host/usr/lib/systemd/system/
+mv -f /target/etc/pensando/influxdb.conf /host/etc/pensando/influxdb.conf

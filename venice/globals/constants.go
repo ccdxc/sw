@@ -45,6 +45,10 @@ const (
 	// Kibana
 	KibanaRESTPort = "5601"
 
+	// Influx
+	InfluxHTTPPort  = "8086"
+	InfluxAdminPort = "8083"
+
 	// KV Store keys
 	ClusterKey = "/venice/cmd/cluster"
 	NodesKey   = "/venice/cmd/nodes"

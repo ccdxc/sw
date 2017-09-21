@@ -235,6 +235,37 @@ var k8sModules = map[string]types.Module{
 			},
 		},
 	},
+	globals.Influx: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.Influx,
+		},
+		Spec: &types.ModuleSpec{
+			Type:      types.ModuleSpec_Deployment,
+			NumCopies: 1,
+			Submodules: []*types.ModuleSpec_Submodule{
+				{
+					Name:  globals.Influx,
+					Image: "srv1.pensando.io:5000/influxdb",
+					Services: []*types.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.Influx,
+							Port: runtime.MustUint32(globals.InfluxHTTPPort),
+						},
+					},
+					Args: []string{
+						"-config", "/etc/pensando/influxdb.conf",
+					},
+				},
+			},
+			Volumes: []*types.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+			},
+		},
+	},
 }
 
 // NewK8sService creates a new kubernetes service.
@@ -458,7 +489,7 @@ func makeContainers(module *types.Module, volumeMounts []v1.VolumeMount) []v1.Co
 		containers = append(containers, v1.Container{
 			Name:            sm.Name,
 			Image:           sm.Image,
-			ImagePullPolicy: v1.PullNever,
+			ImagePullPolicy: v1.PullIfNotPresent,
 			Ports:           ports,
 			VolumeMounts:    volumeMounts,
 			SecurityContext: &v1.SecurityContext{
