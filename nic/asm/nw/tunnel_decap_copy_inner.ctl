@@ -9,7 +9,8 @@ struct phv_                      p;
 k = {
   inner_ipv4_version = 4;
   inner_ipv4_srcAddr = 192.168.100.1;
-  inner_ipv4_dstAddr = 0x0c0d0a0b;
+  inner_ipv4_dstAddr_sbit0_ebit15 = 0x0c0d;
+  inner_ipv4_dstAddr_sbit16_ebit31 = 0x0a0b;
   inner_udp_srcPort = 0xbaba;
   inner_udp_checksum = 0xc0c0;
   inner_ipv6_valid = 1;
@@ -27,11 +28,10 @@ k = {
 
   inner_ipv6_srcAddr_sbit0_ebit7 = 0xa1;
   inner_ipv6_srcAddr_sbit8_ebit15 = 0xa2;
-  inner_ipv6_srcAddr_sbit16_ebit23 = 0xa3;
-  inner_ipv6_srcAddr_sbit24_ebit31 = 0xa4;
-  inner_ipv6_srcAddr_sbit32_ebit47 = 0xa5a6;
-  inner_ipv6_srcAddr_sbit48_ebit79 = 0xa7a8a9aa;
-  inner_ipv6_srcAddr_sbit80_ebit111 = 0xabacadae;
-  inner_ipv6_srcAddr_sbit112_ebit127 = 0xaf10;
+  inner_ipv6_srcAddr_sbit16_ebit31 = 0xa3a4;
+  inner_ipv6_srcAddr_sbit32_ebit63 = 0xa5a6a7a8;
+  inner_ipv6_srcAddr_sbit64_ebit79 = 0xa9aa;
+  inner_ipv6_srcAddr_sbit80_ebit95 = 0xabac;
+  inner_ipv6_srcAddr_sbit96_ebit127 = 0xadaeaf10;
   inner_ipv6_dstAddr = 0x0102030405060708090a0b0c0d0e0f10;
 };

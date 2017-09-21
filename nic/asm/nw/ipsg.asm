@@ -63,12 +63,14 @@ ipsg_drop:
 
 f_tcp_stateless_normalization:
 lb_tcp_rsvd_flags:
-  seq         c2, k.l4_metadata_tcp_rsvd_flags_action, NORMALIZATION_ACTION_ALLOW
+  seq         c2, k.l4_metadata_tcp_rsvd_flags_action,  \
+                     NORMALIZATION_ACTION_ALLOW
   b.c2        lb_tcp_unexpected_mss
   seq         c2, k.l4_metadata_tcp_unexpected_mss_action, NORMALIZATION_ACTION_ALLOW
   sne         c3, k.tcp_res, r0
   b.!c3       lb_tcp_unexpected_mss
-  seq         c4, k.l4_metadata_tcp_rsvd_flags_action, NORMALIZATION_ACTION_DROP
+  seq         c4, k.l4_metadata_tcp_rsvd_flags_action,  \
+                     NORMALIZATION_ACTION_DROP
   phvwr.c4.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c4    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT
@@ -78,7 +80,9 @@ lb_tcp_rsvd_flags:
 // C2 has lb_tcp_unexpected_mss_action == ALLOW
 lb_tcp_unexpected_mss:
   b.c2        lb_tcp_unexpected_win_scale
-  seq         c2, k.l4_metadata_tcp_unexpected_win_scale_action, NORMALIZATION_ACTION_ALLOW
+  seq         c2, k.{l4_metadata_tcp_unexpected_win_scale_action_sbit0_ebit0, \
+                     l4_metadata_tcp_unexpected_win_scale_action_sbit1_ebit1}, \
+                     NORMALIZATION_ACTION_ALLOW
   smneb       c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq         c4, k.tcp_option_mss_valid, TRUE
   bcf         ![c3 & c4], lb_tcp_unexpected_win_scale
@@ -91,11 +95,14 @@ lb_tcp_unexpected_mss:
 
 lb_tcp_unexpected_win_scale:
   b.c2        lb_tcp_urg_flag_not_set
-  seq         c2, k.l4_metadata_tcp_urg_flag_not_set_action, NORMALIZATION_ACTION_ALLOW
+  seq         c2, k.l4_metadata_tcp_urg_flag_not_set_action, \
+                     NORMALIZATION_ACTION_ALLOW
   smneb       c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq         c4, k.tcp_option_ws_valid, TRUE
   bcf         ![c3 & c4], lb_tcp_urg_flag_not_set
-  seq         c3, k.l4_metadata_tcp_unexpected_win_scale_action, NORMALIZATION_ACTION_DROP
+  seq         c3, k.{l4_metadata_tcp_unexpected_win_scale_action_sbit0_ebit0, \
+                     l4_metadata_tcp_unexpected_win_scale_action_sbit1_ebit1}, \
+                     NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT
@@ -108,7 +115,8 @@ lb_tcp_urg_flag_not_set:
   smneb       c3, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
   sne         c4, k.tcp_urgentPtr, r0
   bcf         ![c3 & c4], lb_tcp_urg_payload_missing
-  seq         c3, k.l4_metadata_tcp_urg_flag_not_set_action, NORMALIZATION_ACTION_DROP
+  seq         c3, k.l4_metadata_tcp_urg_flag_not_set_action, \
+                     NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT
@@ -116,7 +124,8 @@ lb_tcp_urg_flag_not_set:
 
 lb_tcp_urg_payload_missing:
   b.c2        lb_tcp_urg_ptr_not_set
-  seq         c2, k.l4_metadata_tcp_urg_ptr_not_set_action, NORMALIZATION_ACTION_ALLOW
+  seq         c2, k.l4_metadata_tcp_urg_ptr_not_set_action, \
+                     NORMALIZATION_ACTION_ALLOW
   smeqb       c3, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
   sne         c4, k.tcp_urgentPtr, r0
   seq         c5, k.l4_metadata_tcp_data_len, r0
@@ -131,11 +140,13 @@ lb_tcp_urg_payload_missing:
 
 lb_tcp_urg_ptr_not_set:
   b.c2        lb_tcp_rst_with_data
-  seq         c2, k.l4_metadata_tcp_rst_with_data_action, NORMALIZATION_ACTION_ALLOW
+  seq         c2, k.l4_metadata_tcp_rst_with_data_action, \
+                    NORMALIZATION_ACTION_ALLOW
   smeqb       c3, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
   seq         c4, k.tcp_urgentPtr, r0
   bcf         ![c3 & c4], lb_tcp_rst_with_data
-  seq         c3, k.l4_metadata_tcp_urg_ptr_not_set_action, NORMALIZATION_ACTION_DROP
+  seq         c3, k.l4_metadata_tcp_urg_ptr_not_set_action, \
+                     NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT
@@ -148,7 +159,8 @@ lb_tcp_rst_with_data:
   smeqb       c3, k.tcp_flags, TCP_FLAG_RST, TCP_FLAG_RST
   sne         c4, k.l4_metadata_tcp_data_len, r0
   bcf         ![c3 & c4], lb_tcp_invalid_flags
-  seq         c3, k.l4_metadata_tcp_rst_with_data_action, NORMALIZATION_ACTION_DROP
+  seq         c3, k.l4_metadata_tcp_rst_with_data_action, \
+                    NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
   // Edit option: TBD
@@ -173,7 +185,9 @@ lb_tcp_invalid_flags:
 
 lb_tcp_flags_nonsyn_noack:
   b.c2        lb_tcp_unexpected_echo_ts
-  seq         c2, k.l4_metadata_tcp_unexpected_echo_ts_action, NORMALIZATION_ACTION_ALLOW
+  seq         c2, k.{l4_metadata_tcp_unexpected_echo_ts_action_sbit0_ebit0, \
+                    l4_metadata_tcp_unexpected_echo_ts_action_sbit1_ebit1}, \
+                    NORMALIZATION_ACTION_ALLOW
   smeqb       c3, k.tcp_flags, TCP_FLAG_SYN, 0x0
   smeqb       c4, k.tcp_flags, TCP_FLAG_ACK, 0x0
   bcf         ![c3 & c4], lb_tcp_unexpected_echo_ts
@@ -192,7 +206,9 @@ lb_tcp_unexpected_echo_ts:
   sne         c5, k.tcp_option_timestamp_prev_echo_ts, r0
   setcf       c3, [c3 & c4 & c5]
   jr.!c3      r7
-  seq         c3, k.l4_metadata_tcp_unexpected_echo_ts_action, NORMALIZATION_ACTION_DROP
+  seq         c3, k.{l4_metadata_tcp_unexpected_echo_ts_action_sbit0_ebit0, \
+                    l4_metadata_tcp_unexpected_echo_ts_action_sbit1_ebit1}, \
+                    NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT

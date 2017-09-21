@@ -24,7 +24,7 @@ k = {
     icmp_typeCode                                   = 0x1001; // icmp_type = 8;
     l4_metadata_icmp_deprecated_msgs_drop           = 0x1;
     l4_metadata_icmp_redirect_msg_drop              = 0x1;
-    l4_metadata_icmp_invalid_code_action            = 0x3;
+    l4_metadata_icmp_invalid_code_action            = 0x1;
 };
 
 p = {

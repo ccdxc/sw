@@ -156,7 +156,7 @@ class capri_p4pd:
                         hdr_unions[h] = unionkeys
                     processedhdrunion.append(h)
 
-            elif cfield.is_union_storage:
+            elif cfield.is_union_storage():
                 # TBD ; Is something needed in this case ???
                 #pdb.set_trace()
                 pass
@@ -541,7 +541,7 @@ class capri_p4pd:
                     assert(0), "Invalid header field"
 
                 if not cfield.is_fld_union and not cfield.is_hdr_union \
-                    and not cfield.is_union_storage:
+                    and not cfield.is_union_storage():
                     if CHECK_INVALID_C_VARIABLE.search(p4fldname):
                         p4fldname = \
                             self.convert_p4fldname_to_valid_c_variable(p4fldname)
@@ -627,6 +627,7 @@ class capri_p4pd:
         
     def purge_duplicate_pad(self, ki_or_kd_to_cf_map):
         covered_bits = 0
+        skipped_fields_k = []
         for k, v  in ki_or_kd_to_cf_map.items():
             if len(v) > 1:
                 max_width = 0
@@ -635,13 +636,15 @@ class capri_p4pd:
                         (cf_, cf_startbit_ , width_, ftype_, hdr)  =  dict_cfs
                     else:
                         (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
+                    if cf_startbit_ != k + max_width:
+                        skipped_fields_k.append(k + max_width)
                     max_width += width_
                 if max_width > 8:
                     max_width = 8
                 covered_bits = k + max_width
             else:
                 # check if this field is already covered
-                if k < covered_bits:
+                if k < covered_bits and k not in skipped_fields_k:
                     for dict_cfs in v:
                         if dict_cfs[0] == None:
                             (cf_, cf_startbit_ , width_, ftype_, hdr)  =  dict_cfs
@@ -979,6 +982,7 @@ class capri_p4pd:
 
     def build_table_asm_fields_helper(self, cf_value_list, p4f_size, asm_field_info, ctable):
         flit_sz = self.be.hw_model['phv']['flit_size']
+
         if len(cf_value_list) == 1:
 
             if cf_value_list[0][0] == None:

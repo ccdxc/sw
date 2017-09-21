@@ -54,6 +54,9 @@ def get_parser():
     parser.add_argument('--i2e-user', dest='i2e_user', action='store_true',
                         help='Use i2e metadata specified by the user',
                         default=False, required=False)
+    parser.add_argument('--old-phv-allocation', dest='old_phv_allocation', action='store_true',
+                        help='Use old phv allocation logic (Will be removed)',
+                        default=False, required=False)
     parser.add_argument('--pd-gen', dest='pd_gen', action='store_true',
                         help='Generate P4-PD code',
                         default=False, required=False)

@@ -41,7 +41,6 @@
         ack_blocked                     : 1                     ;\
         ack_pending                     : 3                     ;\
         snd_wscale                      : 4                     ;\
-        rcv_mss_shft                    : 4                     ;\
         rcv_mss                         : 16                    ;\
         rto                             : 8                     ;\
         ca_state                        : 8                     ;\
@@ -56,10 +55,12 @@
         retrans_out                     : COUNTER8              ;\
         fackets_out                     : COUNTER16             ;\
         ooo_datalen                     : COUNTER16             ;\
+        rcv_mss_shft                    : 4                     ;\
         quick                           : 4                     ;\
         pingpong                        : 1                     ;\
         backoff                         : 4                     ;\
         dsack                           : 1                     ;\
+        pending                         : 2                     ;\
         num_sacks                       : 8                     ;\
         reordering                      : COUNTER32             ;\
         undo_marker                     : SEQ_NUMBER_WIDTH      ;\
@@ -80,7 +81,6 @@
         pending_ooo_se_recv             : 1                     ;\
         pending_tso_retx                : 1                     ;\
         pending_rexmit                  : 2                     ;\
-        pending                         : 2                     ;\
 
 #define TCB_TX_SHARED_STATE \
         source_port                     : 16                    ;\

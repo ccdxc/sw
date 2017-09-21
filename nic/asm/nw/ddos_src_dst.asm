@@ -96,7 +96,8 @@ lb_icmp_code_removal:
   sne         c5, k.icmp_typeCode[7:0], 0
   andcf       c5, [c3 | c4]
   jr.!c5      r7
-  seq         c3, k.l4_metadata_icmp_invalid_code_action, NORMALIZATION_ACTION_DROP
+  seq         c3, k.l4_metadata_icmp_invalid_code_action, \
+                     NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_ICMP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
   // Edit case is the default option, Make code as zero.

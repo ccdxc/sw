@@ -610,6 +610,7 @@ class capri_parser:
         self.hw_start_state = None  # special state that is used to boot-strap hw
         self.states = []
         self.headers = []
+        self.deparse_only_hdrs = []
         self.extracted_fields = []
         self.paths = []
         self.path_states = []
@@ -854,6 +855,7 @@ class capri_parser:
                         # add to parser.extracted_fields, not state
                         self.extracted_fields.append(cfield)
                         '''
+                        cfield.is_parser_extracted = True
                         if cfield not in self.extracted_fields:
                             self.extracted_fields.append(cfield)
                         if cfield not in s.meta_extracted_fields:
@@ -896,11 +898,15 @@ class capri_parser:
                 if cf not in self.extracted_fields:
                     self.extracted_fields.append(cf)
 
+        deparse_only_hdrs = []
         # change branch_on fields to capri_fields
         for cs in self.states:
             # checke deparser-only states
             if 'deparse_only' in cs.p4_state._parsed_pragmas:
                 cs.deparse_only = True
+                for hdr in cs.headers:
+                    if hdr not in deparse_only_hdrs:
+                        deparse_only_hdrs.append(hdr)
 
             # create header_ordering groups (to be placed together in a flit)
             if 'header_ordering' in cs.p4_state._parsed_pragmas:
@@ -945,6 +951,19 @@ class capri_parser:
                     cs.branch_on.append(cf)
                 else:
                     cs.branch_on.append(b_on)
+
+        # fix deparse-only header list - remove any header that is also extracted in
+        # non-deparse-only state
+        for hdr in deparse_only_hdrs:
+            # get_ext_cstates only report non-deparse-only states, so a non zero list
+            # indicates that hdr is extracted in non-deparse-only state
+            ext_css = self.get_ext_cstates(hdr)
+            if len(ext_css):
+                continue
+            if hdr not in self.deparse_only_hdrs:
+                self.deparse_only_hdrs.append(hdr)
+
+
         # TBD - build ohi later - not part of init
         self.logger.debug("%s: States %s" % (self.d.name, [s.name for s in self.states]))
         self.logger.info("%s: Total Headers : %d" % (self.d.name, len(self.headers)))
@@ -2159,6 +2178,11 @@ class capri_parser:
 
     def get_ext_cstates(self, hdr):
         return [cs for cs in self.hdr_ext_states[hdr] if not cs.deparse_only]
+
+    def get_meta_ext_cstates(self, mf):
+        if mf not in self.meta_ext_states:
+            return []
+        return copy.copy(self.meta_ext_states[mf])
 
     def generate_output(self):
         capri_parser_logical_output(self)

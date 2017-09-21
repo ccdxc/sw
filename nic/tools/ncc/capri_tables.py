@@ -2438,16 +2438,10 @@ class capri_key_maker:
                 else:
                     self.combined_profile._update_bit_loc_key_off()
             else:
-                k_bytes = set(self.combined_profile.k_byte_sel) & \
-                            set(idx_ct.combined_profile.k_byte_sel)
+                k_bytes = set(self.combined_profile.k_byte_sel)
+                            
                 if len(k_bytes):
-                    k_byte = -1
-                    for b in reversed(self.combined_profile.k_byte_sel):
-                        if b in idx_ct.combined_profile.k_byte_sel:
-                            k_byte = b
-                            break
-                    assert k_byte >= 0, pdb.set_trace()
-                    bit_loc = self.combined_profile.byte_sel.index(k_byte) + 1
+                    bit_loc = len(k_bytes)
                     num_bytes = (len(self.combined_profile.bit_sel)+7) / 8
                     for i in range(num_bytes):
                         self.combined_profile.byte_sel.insert(bit_loc+i, -1)
@@ -3261,7 +3255,7 @@ class capri_stage:
                     ct.ct_update_key_offsets()
 
         # re-run key_offset calculation as any table sharing km_profile with index table
-        # my have changes in offset
+        # may have changes in offset
         # skip idx tables since the common routine does not handle i and k bit switch
         for ct in ct_list:
             if not ct.is_index_table():

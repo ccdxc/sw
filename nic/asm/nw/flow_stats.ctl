@@ -8,8 +8,7 @@ struct phv_         p;
 
 k = {
   capri_intrinsic_drop = FALSE;
-  flow_info_metadata_flow_index_sbit0_ebit3 = 0;
-  flow_info_metadata_flow_index_sbit4_ebit19 = 1;
+  flow_info_metadata_flow_index = 0x1;
   control_metadata_packet_len = 0x100;
   control_metadata_drop_reason[DROP_FLOW_HIT] = 1;
 };

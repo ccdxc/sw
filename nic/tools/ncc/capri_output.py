@@ -271,6 +271,191 @@ def _get_phv_loc(flit_inst, loc, size):
     return "[" + str(start) + ":" + str(end) + "]"
 
 def capri_asm_output_pa(gress_pa):
+    if gress_pa.pa.be.args.old_phv_allocation:
+        return _capri_asm_output_pa(gress_pa)
+
+    class _phv_union:
+        def __init__(self, uname):
+            self.streams = OrderedDict()
+            self.name = uname
+            self.end_phv = -1
+            self.start_phv = -1
+
+        def add_cfld(self, strm_name, cf):
+            if strm_name in self.streams:
+                self.streams[strm_name].append(cf)
+            else:
+                self.streams[strm_name] = [cf]
+
+            if self.end_phv < cf.phv_bit + cf.storage_size():
+                self.end_phv = cf.phv_bit + cf.storage_size()
+
+            if self.start_phv < 0:
+                self.start_phv = cf.phv_bit
+
+        def print_union(self):
+            indent = '    '
+            indent2 = indent+indent
+            indent3 = indent+indent2
+            pstr = indent + 'union {\n'
+            for strm, cf_strm in self.streams.items():
+                phv_bit = self.start_phv
+                pstr += indent2 + 'struct {\n'
+                for cf in cf_strm:
+                    if phv_bit != cf.phv_bit:
+                        # print pad
+                        pstr += indent3 + '_%s_pad_%d_ : %d; // FLE[%d:%d]\n' % \
+                            (strm, phv_bit, cf.phv_bit - phv_bit,
+                            _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(cf.phv_bit-1))
+                    pstr += indent3 + '%s : %d; // BE[%d] FLE[%d:%d]\n' % \
+                        (_get_output_name(cf.hfname), cf.width, cf.phv_bit,
+                        _phv_bit_flit_le_bit(cf.phv_bit),
+                        _phv_bit_flit_le_bit(cf.phv_bit+cf.width-1))
+                    phv_bit += cf.storage_size()
+                # add pad to bottom-align unions as needed by capas
+                bottom_pad = self.end_phv - phv_bit
+                if bottom_pad > 0:
+                    pstr += indent3 + '%s_bottom_pad_ : %d; // FLE[%d:%d]\n' % \
+                        (_get_output_name(strm), bottom_pad, 
+                        _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(self.end_phv-1))
+
+                pstr += indent2 + '};\n'
+            pstr += indent + '};\n'
+            #pdb.set_trace()
+            return pstr
+            
+
+    gen_dir = gress_pa.pa.be.args.gen_dir
+    cur_path = gen_dir + '/%s/asm_out' % gress_pa.pa.be.prog_name
+    if not os.path.exists(cur_path):
+        os.makedirs(cur_path)
+    fname = cur_path + '/%s_p.h' % gress_pa.d.name
+    hfile = open(fname, 'w')
+    num_flits = gress_pa.pa.be.hw_model['phv']['num_flits']
+    pstr_flit = {}
+    for i in range (0, num_flits):
+        pstr_flit[i] = ''
+
+    indent='    '
+    indent2=indent+indent
+    indent3=indent2+indent
+    output_hdr_unions = {}
+
+    flit_sz = gress_pa.pa.be.hw_model['phv']['flit_size']
+    fid = 0
+    phv_bit = 0
+    pstr = indent + '//----- Flit %d -----\n' % fid
+    active_union = None
+    for cf in gress_pa.field_order:
+        if cf.width == 0 or cf.is_ohi:
+            continue
+
+        if (cf.phv_bit / flit_sz) != fid:
+            if active_union:
+                # print union...
+                pstr += active_union.print_union()
+                phv_bit = active_union.end_phv
+                active_union = None
+            flit_pad = cf.phv_bit - phv_bit
+            if flit_pad > 0:
+                pstr += indent + '_flit_%d_pad_%d_ : %d; // FLE[%d:%d]\n' % \
+                    (fid, phv_bit, flit_pad, 
+                    _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(cf.phv_bit-1))
+            phv_bit = cf.phv_bit
+            pstr_flit[fid] = copy.copy(pstr)
+            fid += 1 
+            #pdb.set_trace()
+            pstr = indent + '//----- Flit %d -----\n' % fid
+
+        if not cf.is_union_storage() and not cf.is_union():
+            if active_union:
+                # print union
+                pstr += active_union.print_union()
+                phv_bit = active_union.end_phv
+                active_union = None
+            # check for gaps
+            if phv_bit != cf.phv_bit:
+                pstr += indent + '_pad_%d_ : %d; // FLE[%d:%d]\n' % \
+                    (phv_bit, cf.phv_bit - phv_bit,
+                    _phv_bit_flit_le_bit(phv_bit),_phv_bit_flit_le_bit(cf.phv_bit-1))
+            pstr += indent + '%s : %d; // BE[%d] FLE[%d:%d]\n' % \
+                    (_get_output_name(cf.hfname), cf.width, cf.phv_bit,
+                    _phv_bit_flit_le_bit(cf.phv_bit), _phv_bit_flit_le_bit(cf.phv_bit+cf.width-1))
+            phv_bit = cf.phv_bit + cf.storage_size()
+            continue
+        
+        # union-ed fld or header
+        # skip union-ed synthetic header flds (they should be accessed using it src field
+        # (otherwise it can be a nested union)
+        if is_synthetic_header(cf.get_p4_hdr()) and cf.is_union():
+            continue
+
+        if cf.is_hdr_union_storage or cf.is_hdr_union:
+            #pdb.set_trace()
+            hdr_name = cf.get_p4_hdr().name
+            storage_hdr_name = gress_pa.hdr_unions[cf.get_p4_hdr()][2].name
+            if active_union and active_union.name != storage_hdr_name:
+                pstr += active_union.print_union()
+                phv_bit = active_union.end_phv
+                active_union = None
+
+            if active_union:
+                active_union.add_cfld(hdr_name, cf)
+            else:
+                active_union = _phv_union(storage_hdr_name)
+                active_union.add_cfld(hdr_name, cf)
+
+        elif cf.is_fld_union_storage or cf.is_fld_union:
+            #pdb.set_trace()
+            storage_fld_name = gress_pa.fld_unions[cf][1].hfname
+            if active_union and active_union.name != storage_fld_name:
+                pstr += active_union.print_union()
+                phv_bit = active_union.end_phv
+                active_union = None
+
+            if active_union:
+                active_union.add_cfld(cf.hfname, cf)
+            else:
+                active_union = _phv_union(storage_fld_name)
+                active_union.add_cfld(cf.hfname, cf)
+        else:
+            pass # covered first
+
+    if active_union:
+        pstr += active_union.print_union()
+        pstr_flit[fid] = copy.copy(pstr)
+
+    if fid < num_flits and pstr_flit[fid] == '':
+        pstr_flit[fid] = copy.copy(pstr)
+
+    pstr = 'struct phv_ {\n'
+    hfile.write(pstr)
+    for i in range (num_flits-1, -1, -1):
+        hfile.write(pstr_flit[i])
+    pstr = '};\n'
+    hfile.write(pstr)
+    hfile.close()
+
+    # create a test asm file with phvwr to all flds
+    # This can be used for a quick validation that phv_ struct generated can be used 
+    # by capas
+    fname = cur_path + '/%s_phv_test.asm' % gress_pa.d.name
+    hfile = open(fname, 'w')
+    pstr = "#include \"%s_p.h\"\n" % gress_pa.d.name
+    pstr += "struct phv_ p;"
+    pstr += "\n%%\ntest_start:\n"
+
+    indent = '    '
+    for cf in gress_pa.field_order:
+        if cf.width == 0 or cf.is_ohi:
+            continue
+        pstr += indent + "phvwr p.%s, 0\n" % _get_output_name(cf.hfname)
+    pstr += indent + 'nop.e\n'
+    pstr += indent + 'nop\n'
+    hfile.write(pstr)
+    hfile.close()
+    
+def _capri_asm_output_pa(gress_pa):
     gen_dir = gress_pa.pa.be.args.gen_dir
     cur_path = gen_dir + '/%s/asm_out' % gress_pa.pa.be.prog_name
     if not os.path.exists(cur_path):
@@ -302,7 +487,7 @@ def capri_asm_output_pa(gress_pa):
             if cf.is_union() or cf.is_union_pad or cf.width == 0:
             #if cf.is_union() or cf.width == 0:
                 continue
-            if cf.is_union_storage:
+            if cf.is_union_storage():
                 # union_strage is NOT marked as is_union
                 hdr = cf.get_p4_hdr()
                 if hdr in gress_pa.hdr_unions:

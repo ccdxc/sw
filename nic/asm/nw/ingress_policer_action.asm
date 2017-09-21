@@ -25,8 +25,7 @@ ingress_policer_permitted_stats_overflow:
   add         r7, d.ingress_policer_action_d.permitted_bytes, k.control_metadata_packet_len
   addi        r6, r0, 0x10000F
   or          r7, r7, r6, 32
-  add         r5, r5, k.{policer_metadata_ingress_policer_index_sbit0_ebit2, \
-                         policer_metadata_ingress_policer_index_sbit3_ebit10}, 5
+  add         r5, r5, k.policer_metadata_ingress_policer_index, 5
   memwr.d.e   r5, r7
   tblwr       d.ingress_policer_action_d.permitted_bytes, 0
 
@@ -41,8 +40,7 @@ ingress_policer_denied_stats_overflow:
   add         r7, d.ingress_policer_action_d.denied_bytes, k.control_metadata_packet_len
   addi        r6, r0, 0x10000F
   or          r7, r7, r6, 32
-  add         r5, r5, k.{policer_metadata_ingress_policer_index_sbit0_ebit2, \
-                         policer_metadata_ingress_policer_index_sbit3_ebit10}, 5
+  add         r5, r5, k.policer_metadata_ingress_policer_index, 5
   add         r5, r5, 16
   memwr.d.e   r5, r7
   tblwr       d.ingress_policer_action_d.denied_bytes, 0
