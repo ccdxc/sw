@@ -778,8 +778,6 @@ class capri_p4pd:
                                                 bit_extractors.append(kbit)
                                         phv_bit_found = True
                                         break
-                            if phv_bit_found:
-                                break
 
                         if phv_bit_found:
                             # There can be cases where cf bit is both key and input. For such cases
@@ -805,8 +803,6 @@ class capri_p4pd:
                                                 bit_extractors.append(kbit)
                                         phv_bit_found = True
                                         break
-                            if phv_bit_found:
-                                break
                         if not phv_bit_found and is_tcam:
                             ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P", "__NoHdr")]
                         elif not phv_bit_found and not kd:
