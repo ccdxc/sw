@@ -13,6 +13,8 @@ def TestCaseSetup(tc):
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.pre_qstate = rs.lqp.rq.qstate.data
+    tc.pvtdata.send_first_psn = tc.pvtdata.pre_qstate.e_psn
+    tc.pvtdata.send_last_psn = tc.pvtdata.pre_qstate.e_psn + 1
     return
 
 def TestCaseTrigger(tc):
