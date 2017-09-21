@@ -54,7 +54,7 @@ func createRPCServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 	tInfo.rpcServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer = NewRPCServer(tInfo.apiClient.CmdV1().Cluster(), tInfo.apiClient.CmdV1().SmartNIC())
+	tInfo.smartNICServer = NewRPCServer(tInfo.apiClient.CmdV1().Cluster(), tInfo.apiClient.CmdV1().Node(), tInfo.apiClient.CmdV1().SmartNIC())
 	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, tInfo.smartNICServer)
 
 	return rpcServer, nil
@@ -92,6 +92,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 		expected    cmd.SmartNICPhase
 		condition   cmd.SmartNICCondition
 		approvedNIC string
+		nodeName    string
 	}{
 		{
 			"TestAutoAdmitValidNIC",
@@ -104,6 +105,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 				Status: cmd.ConditionStatus_CONDITION_TRUE,
 			},
 			"",
+			"esx-001",
 		},
 		{
 			"TestAutoAdmitInvalidNIC",
@@ -113,6 +115,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 			cmd.SmartNICPhase_NIC_REJECTED,
 			cmd.SmartNICCondition{},
 			"",
+			"esx-002",
 		},
 		{
 			"TestManualValidNIC",
@@ -125,6 +128,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 				Status: cmd.ConditionStatus_CONDITION_FALSE,
 			},
 			"",
+			"esx-003",
 		},
 		{
 			"TestManualValidApprovedNIC",
@@ -137,6 +141,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 				Status: cmd.ConditionStatus_CONDITION_TRUE,
 			},
 			"4444.4444.0004",
+			"esx-004",
 		},
 		{
 			"TestManualInvalidNIC",
@@ -146,10 +151,26 @@ func TestRegisterSmartNIC(t *testing.T) {
 			cmd.SmartNICPhase_NIC_REJECTED,
 			cmd.SmartNICCondition{},
 			"",
+			"esx-005",
 		},
 	}
 
+	// Pre-create some Nodes to simulate the case of prior
+	// Node creation by Orchestrator (VC-hub)
+	nodes := []string{
+		"esx-003",
+	}
+	for _, nodeName := range nodes {
+		ometa := api.ObjectMeta{
+			Name: nodeName,
+		}
+		_, err := tInfo.smartNICServer.CreateNode(ometa)
+		AssertOk(t, err, "Error creating Node object")
+	}
+
+	// Execute the testcases
 	for _, tc := range testCases {
+
 		t.Run(tc.name, func(t *testing.T) {
 
 			// create API client
@@ -176,7 +197,9 @@ func TestRegisterSmartNIC(t *testing.T) {
 				TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
 				ObjectMeta: ometa,
 				Spec:       cmd.SmartNICSpec{},
-				Status:     cmd.SmartNICStatus{},
+				Status: cmd.SmartNICStatus{
+					NodeName: tc.nodeName,
+				},
 			}
 
 			req := &grpc.RegisterNICRequest{
@@ -233,46 +256,97 @@ func TestRegisterSmartNIC(t *testing.T) {
 				AssertEventually(t, f2, fmt.Sprintf("Failed to verify watch for smartNIC event"))
 
 				// Verify UpdateNIC RPC
-				var phase cmd.SmartNICPhase
-				if nic.ObjectMeta.Name == tc.approvedNIC {
-					phase = cmd.SmartNICPhase_NIC_ADMITTED
-				}
-				ometa = api.ObjectMeta{Name: tc.mac}
-				nic = cmd.SmartNIC{
-					TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
-					ObjectMeta: ometa,
-					Spec: cmd.SmartNICSpec{
-						Phase: phase,
-					},
-					Status: cmd.SmartNICStatus{
-						Conditions: []*cmd.SmartNICCondition{
-							&tc.condition,
+				f3 := func() bool {
+					var phase cmd.SmartNICPhase
+					if nic.ObjectMeta.Name == tc.approvedNIC {
+						phase = cmd.SmartNICPhase_NIC_ADMITTED
+					}
+					ometa = api.ObjectMeta{Name: tc.mac}
+					nic = cmd.SmartNIC{
+						TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
+						ObjectMeta: ometa,
+						Spec: cmd.SmartNICSpec{
+							Phase: phase,
 						},
-					},
+						Status: cmd.SmartNICStatus{
+							Conditions: []*cmd.SmartNICCondition{
+								&tc.condition,
+							},
+						},
+					}
+
+					req := &grpc.UpdateNICRequest{
+						Nic: nic,
+					}
+
+					resp, err := smartNICRPCClient.UpdateNIC(context.Background(), req)
+					if err != nil {
+						t.Logf("Testcase: %s Failed to update NIC, mac: %s req: %+v resp: %+v", tc.name, tc.mac, req.Nic, resp.Nic)
+						return false
+					}
+
+					if resp.Nic.Status.Conditions[0].Type != tc.condition.Type || resp.Nic.Status.Conditions[0].Status != tc.condition.Status {
+						t.Logf("Testcase: %s,  Condition expected:\n%+v\nobtained:%+v", tc.name, tc.condition, resp.Nic.Status.Conditions[0])
+						return false
+					}
+
+					if nic.ObjectMeta.Name == tc.approvedNIC {
+						if resp.Nic.Spec.Phase != cmd.SmartNICPhase_NIC_ADMITTED {
+							t.Logf("Testcase: %s \nPhase expected:\n%+v\nobtained:\n%+v", tc.name, cmd.SmartNICPhase_NIC_ADMITTED, resp.Nic.Spec.Phase)
+							return false
+						}
+					}
+
+					return true
 				}
+				AssertEventually(t, f3, fmt.Sprintf("Failed to verify update for smartNIC"))
 
-				req := &grpc.UpdateNICRequest{
-					Nic: nic,
+				// Verify Node object has its status updated with list of registered NICs
+				f4 := func() bool {
+					ometa = api.ObjectMeta{Name: tc.nodeName}
+					nodeObj, err := tInfo.smartNICServer.GetNode(ometa)
+					if err != nil {
+						t.Errorf("Error getting Node object for node:%s", tc.nodeName)
+						return false
+					}
+					nicList := nodeObj.Status.Nics
+					t.Logf("\n++++++ Node nic list, Node: %s \nnics: %s\n", nodeObj, nicList)
+
+					for _, nic := range nicList {
+						if nic == tc.mac {
+							return true
+						}
+
+					}
+					return false
 				}
-				resp, err := smartNICRPCClient.UpdateNIC(context.Background(), req)
-				AssertOk(t, err, "Error updating NIC")
-				t.Logf("Testcase: %s MAC: %s update nic req: %+v resp: %+v", tc.name, tc.mac, req.Nic, resp.Nic)
+				AssertEventually(t, f4, fmt.Sprintf("Failed to verify that Node object is updated with registered nic"))
 
-				Assert(t, resp.Nic.Status.Conditions[0].Type == tc.condition.Type &&
-					resp.Nic.Status.Conditions[0].Status == tc.condition.Status, "\nCondition expected:\n%+v\nobtained:\n%+v",
-					tc.condition, resp.Nic.Status.Conditions[0])
-
-				if nic.ObjectMeta.Name == tc.approvedNIC {
-					Assert(t, resp.Nic.Spec.Phase == cmd.SmartNICPhase_NIC_ADMITTED, "\nPhase expected:\n%+v\nobtained:\n%+v",
-						cmd.SmartNICPhase_NIC_ADMITTED, resp.Nic.Spec.Phase)
+				// Verify Deletion of SmartNIC object
+				f5 := func() bool {
+					ometa = api.ObjectMeta{Name: tc.mac}
+					err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
+					if err != nil {
+						return false
+					}
+					return true
 				}
+				AssertEventually(t, f5, fmt.Sprintf("Failed to verify deletion of smartNIC object"))
 
-				// Verify Delete SmartNIC object
-				ometa = api.ObjectMeta{Name: tc.mac}
-				err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
 				if err != nil {
 					t.Fatalf("Error deleteing SmartNIC object mac:%s err: %v", tc.mac, err)
 				}
+
+				// Verify Deletion of Node object
+				f6 := func() bool {
+					ometa = api.ObjectMeta{Name: tc.nodeName}
+					err = tInfo.smartNICServer.DeleteNode(ometa)
+					if err != nil {
+						return false
+					}
+					return true
+				}
+				AssertEventually(t, f6, fmt.Sprintf("Failed to verify deletion of Node object"))
 
 			} else {
 

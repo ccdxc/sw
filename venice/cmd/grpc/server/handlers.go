@@ -178,8 +178,8 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		// create and register the RPC handler for service object.
 		types.RegisterServiceAPIServer(env.RPCServer.GrpcServer, service.NewRPCHandler(env.ResolverService))
 
-		// create and register the RPC handler for SmartNIC service
-		go registerSmartNICServer()
+		// Create and register the RPC handler for SmartNIC service
+		go RegisterSmartNICServer()
 
 	} else {
 		env.NtpService = services.NewNtpService(req.NTPServers)
@@ -197,18 +197,6 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 	return &grpc.ClusterJoinResp{}, nil
 }
 
-// Utility function to create and register smartNIC server with retries
-func registerSmartNICServer() {
-	for i := 0; i < maxIters; i++ {
-		if env.CfgWatcherService.APIClient() != nil {
-			grpc.RegisterSmartNICServer(env.RPCServer.GrpcServer, smartnic.NewRPCServer(env.CfgWatcherService.APIClient().Cluster(), env.CfgWatcherService.APIClient().SmartNIC()))
-			return
-		}
-		time.Sleep(apiClientWaitTimeMsec * time.Millisecond)
-	}
-	log.Fatalf("Failed to register smartNIC RPCserver, apiClient not up")
-}
-
 func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoinReq) (*grpc.ClusterDisjoinResp, error) {
 	err := env.SystemdService.StopUnit("pen-kubelet.service")
 	if err != nil {
@@ -222,4 +210,17 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 		err = err2
 	}
 	return &grpc.ClusterDisjoinResp{}, err
+}
+
+// RegisterSmartNICServer creates and register smartNIC server with retries
+func RegisterSmartNICServer() {
+	for i := 0; i < maxIters; i++ {
+		if env.CfgWatcherService.APIClient() != nil {
+			grpc.RegisterSmartNICServer(env.RPCServer.GrpcServer, smartnic.NewRPCServer(env.CfgWatcherService.APIClient().Cluster(),
+				env.CfgWatcherService.APIClient().Node(), env.CfgWatcherService.APIClient().SmartNIC()))
+			return
+		}
+		time.Sleep(apiClientWaitTimeMsec * time.Millisecond)
+	}
+	log.Fatalf("Failed to register smartNIC RPCserver, apiClient not up")
 }

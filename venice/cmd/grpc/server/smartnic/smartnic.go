@@ -21,14 +21,18 @@ type RPCServer struct {
 	// ClusterAPI is CRUD interface for Cluster object
 	ClusterAPI cmd.ClusterInterface
 
+	// NodeAPI is CRUD interface for Node object
+	NodeAPI cmd.NodeInterface
+
 	// SmartNICAPI is CRUD interface for SmartNIC object
 	SmartNICAPI cmd.SmartNICInterface
 }
 
 // NewRPCServer returns a SmartNIC RPC server object
-func NewRPCServer(cIf cmd.ClusterInterface, sIf cmd.SmartNICInterface) *RPCServer {
+func NewRPCServer(cIf cmd.ClusterInterface, nIf cmd.NodeInterface, sIf cmd.SmartNICInterface) *RPCServer {
 	return &RPCServer{
 		ClusterAPI:  cIf,
+		NodeAPI:     nIf,
 		SmartNICAPI: sIf,
 	}
 }
@@ -63,11 +67,82 @@ func (s *RPCServer) GetCluster() (*cmd.Cluster, error) {
 	return clusterObjs[0], nil
 }
 
+// CreateNode creates the Node object based on object meta
+func (s *RPCServer) CreateNode(ometa api.ObjectMeta) (*cmd.Node, error) {
+
+	node := &cmd.Node{
+		TypeMeta:   api.TypeMeta{Kind: "Node"},
+		ObjectMeta: ometa,
+	}
+
+	nodeObj, err := s.NodeAPI.Create(context.Background(), node)
+	if err != nil || nodeObj == nil {
+		return nil, perror.NewNotFound("Node", ometa.Name)
+	}
+
+	return nodeObj, nil
+}
+
+// GetNode fetches the Node object based on object meta
+func (s *RPCServer) GetNode(om api.ObjectMeta) (*cmd.Node, error) {
+
+	nodeObj, err := s.NodeAPI.Get(context.Background(), &om)
+	if err != nil || nodeObj == nil {
+		return nil, perror.NewNotFound("Node", om.Name)
+	}
+
+	return nodeObj, nil
+}
+
+// UpdateNode updates the list of Nics in status of Node object
+// Node object is   created if it does not exist.
+func (s *RPCServer) UpdateNode(nic *cmd.SmartNIC) (*cmd.Node, error) {
+
+	// Check if object exists
+	var nodeObj *cmd.Node
+	ometa := api.ObjectMeta{
+		Name: nic.Status.NodeName,
+	}
+	refObj, err := s.GetNode(ometa)
+	if err != nil || refObj == nil {
+
+		// Create Node object
+		node := &cmd.Node{
+			ObjectMeta: api.ObjectMeta{
+				Name: nic.Status.NodeName,
+			},
+			Status: cmd.NodeStatus{
+				Nics: []string{nic.ObjectMeta.Name},
+			},
+		}
+		nodeObj, err = s.NodeAPI.Create(context.Background(), node)
+	} else {
+
+		// Update the Nics list in Node status
+		refObj.Status.Nics = append(refObj.Status.Nics, nic.ObjectMeta.Name)
+		nodeObj, err = s.NodeAPI.Update(context.Background(), refObj)
+	}
+
+	return nodeObj, err
+}
+
+// DeleteNode deletes the Node object based on object meta name
+func (s *RPCServer) DeleteNode(om api.ObjectMeta) error {
+
+	_, err := s.NodeAPI.Delete(context.Background(), &om)
+	if err != nil {
+		log.Errorf("Error deleting Node object name:%s err: %v", om.Name, err)
+		return err
+	}
+
+	return nil
+}
+
 // GetSmartNIC fetches the SmartNIC object based on object meta
 func (s *RPCServer) GetSmartNIC(om api.ObjectMeta) (*cmd.SmartNIC, error) {
 
 	nicObj, err := s.SmartNICAPI.Get(context.Background(), &om)
-	if err != nil {
+	if err != nil || nicObj == nil {
 		return nil, perror.NewNotFound("SmartNIC", om.Name)
 	}
 
@@ -89,11 +164,6 @@ func (s *RPCServer) UpdateSmartNIC(obj *cmd.SmartNIC) (*cmd.SmartNIC, error) {
 		// Update the object with CAS semantics
 		obj.ObjectMeta.ResourceVersion = refObj.ObjectMeta.ResourceVersion
 		nicObj, err = s.SmartNICAPI.Update(context.Background(), obj)
-	}
-
-	if err != nil {
-		log.Errorf("Retrying, failed to update smartNIC mac:%s err:%v",
-			obj.ObjectMeta.Name, err)
 	}
 
 	return nicObj, err
@@ -152,10 +222,19 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 		nic := req.GetNic()
 		nic.Spec.Phase = phase
 		_, err = s.UpdateSmartNIC(&nic)
-	}
+		if err != nil {
+			log.Errorf("Error updating smartNIC object, mac: %s err: %v", nic.ObjectMeta.Name, err)
+			return &grpc.RegisterNICResponse{Status: phase}, err
+		}
 
-	// TODO: Create or Update the Node object for Workload nodes
-	// to link the NICs to Nodes.
+		// Create or Update the Node object for Workload nodes
+		// to link the NICs to Nodes.
+		_, err = s.UpdateNode(&nic)
+		if err != nil {
+			log.Errorf("Error creating or updating Node object, node: %s mac: %s err: %v",
+				nic.Status.NodeName, nic.ObjectMeta.Name, err)
+		}
+	}
 
 	return &grpc.RegisterNICResponse{Status: phase}, err
 }
