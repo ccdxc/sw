@@ -12,6 +12,8 @@ using grpc::Status;
 using internal::Internal;
 using internal::GetProgramAddressRequestMsg;
 using internal::ProgramAddressResponseMsg;
+using internal::AllocHbmAddressRequestMsg;
+using internal::AllocHbmAddressResponseMsg;
 
 class InternalServiceImpl final : public Internal::Service {
 public:
@@ -20,6 +22,9 @@ public:
                              const GetProgramAddressRequestMsg *reqs,
                              ProgramAddressResponseMsg *resps) override;
                 
+    Status AllocHbmAddress(ServerContext *context,
+                           const AllocHbmAddressRequestMsg *reqs,
+                           AllocHbmAddressResponseMsg *resps) override;
 };
 
 #endif    // __INTERNAL_SVC_HPP__

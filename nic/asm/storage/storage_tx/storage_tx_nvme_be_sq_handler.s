@@ -14,7 +14,7 @@ struct phv_ p;
 %%
    .param storage_tx_nvme_be_cmd_handler_start
 
-storage_tx_r2n_sq_handler_start:
+storage_tx_nvme_be_sq_handler_start:
 
    // Update the priority queue doorbell to clear the scheduler bit
    PRI_QUEUE_POP_DOORBELL_UPDATE
@@ -23,7 +23,9 @@ storage_tx_r2n_sq_handler_start:
    R2N_WQE_FULL_COPY
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_PARAM(d.handle, STORAGE_DEFAULT_TBL_LOAD_SIZE,
+   addi		r7, r0, NVME_BE_NVME_CMD_OFFSET
+   add		r7, d.handle, r7
+   LOAD_TABLE_FOR_ADDR_PARAM(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE,
                              storage_tx_nvme_be_cmd_handler_start)
 
 exit:

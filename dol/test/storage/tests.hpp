@@ -23,6 +23,10 @@ int test_run_pvm_nvme_read_status();
 
 int test_run_pvm_nvme_write_status();
 
+int test_run_r2n_read_cmd();
+
+int test_run_r2n_write_cmd();
+
 }  // namespace tests
 
 #endif   // _TESTS_HPP_

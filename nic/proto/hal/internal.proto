@@ -11,6 +11,8 @@ package internal;
 service Internal {
   // Program resolution related APIs
   rpc GetProgramAddress(GetProgramAddressRequestMsg) returns (ProgramAddressResponseMsg) {}
+  // Program resolution related APIs
+  rpc AllocHbmAddress(AllocHbmAddressRequestMsg) returns (AllocHbmAddressResponseMsg) {}
 }
 
 message ProgramAddressReq {
@@ -38,5 +40,23 @@ message GetProgramAddressRequestMsg {
 
 message ProgramAddressResponseMsg {
   repeated ProgramAddressResp resps = 1;
+}
+
+message HbmAddressReq {
+  // handle that specifies region in config (json) file
+  string handle = 1;
+}
+
+message HbmAddressResp {
+  int64 addr = 1;    // -errno, in case of error
+  uint32 size = 2;
+}
+
+message AllocHbmAddressRequestMsg {
+  repeated HbmAddressReq reqs = 1;
+}
+
+message AllocHbmAddressResponseMsg {
+  repeated HbmAddressResp resps = 1;
 }
 

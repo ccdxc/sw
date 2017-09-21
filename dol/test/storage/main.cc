@@ -20,6 +20,8 @@ struct {
   {&tests::test_run_pvm_nvme_admin_status, "PVM->NVME Admin Status", false},
   {&tests::test_run_pvm_nvme_read_status, "PVM->NVME Read Status", false},
   {&tests::test_run_pvm_nvme_write_status, "PVM->NVME Write Status", false},
+  {&tests::test_run_r2n_read_cmd, "R2N -> SSD Read Cmd", false},
+  {&tests::test_run_r2n_write_cmd, "R2N -> SSD Write Cmd", false},
 
   // Always last entry
   {0}

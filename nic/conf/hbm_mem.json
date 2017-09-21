@@ -147,6 +147,10 @@
         {
             "name": "arqrx-qidxr",
             "size_kb": 1
+        },
+        {
+            "name": "storage",
+            "size_kb": 128
         }
     ]
 }

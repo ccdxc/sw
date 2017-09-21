@@ -260,12 +260,12 @@
 
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O
 // priority is used to select the ring. Set the fence bit for the doorbell.
-#define PRI_QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, _p_ndx)		\
+#define PRI_QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, _p_ndx, _sched)	\
    DOORBELL_DATA_SETUP(qpush_doorbell_data_data, _p_ndx,		\
                        STORAGE_KIVEC0_IO_PRIORITY,			\
                        STORAGE_KIVEC0_DST_QID, r0)			\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
-                       DOORBELL_SCHED_WR_NONE,				\
+                       _sched,				\
                        DOORBELL_UPDATE_P_NDX)				\
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
                      r7, _dma_cmd_ptr)					\
@@ -360,7 +360,8 @@
                        _entry_size)					\
    DMA_ADDR_UPDATE(r7, dma_p2m_1)					\
    QUEUE_PUSH(_p_ndx, _num_entries)					\
-   PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_2, _p_ndx)			\
+   PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_2, _p_ndx,			\
+                                  DOORBELL_SCHED_WR_SET)		\
 
 
 // Increment the priority running counter and the total running counter.

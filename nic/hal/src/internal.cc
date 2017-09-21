@@ -7,6 +7,8 @@
 #include <pd_api.hpp>
 #include <utils.hpp>
 #include <if_utils.hpp>
+#include <pd/capri/capri_hbm.hpp>
+
 
 int capri_program_to_base_addr(const char *handle,
                                char *prog_name, uint64_t *base_addr);
@@ -39,4 +41,16 @@ void GetProgramAddress(const internal::ProgramAddressReq &req,
     }
 }
 
+void AllocHbmAddress(const internal::HbmAddressReq &req,
+                       internal::HbmAddressResp *resp) {
+    uint64_t addr = get_start_offset(req.handle().c_str());
+    uint32_t size = get_size_kb(req.handle().c_str());
+    if (addr == 0) {
+        resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
+        resp->set_size(0);
+    } else {
+        resp->set_addr(addr);
+        resp->set_size(size);
+    }
+}
 }    // namespace hal

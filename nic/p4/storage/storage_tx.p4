@@ -712,7 +712,7 @@ action nvme_be_sq_handler(handle, data_size, opcode, status, src_queue_id,
   QUEUE_POP_DOORBELL_UPDATE
 
   // Load the PVM VF SQ context for the next stage to push the NVME command
-  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, handle,
+  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, handle + NVME_BE_NVME_CMD_OFFSET,
                         STORAGE_DEFAULT_TBL_LOAD_SIZE, nvme_be_cmd_handler_start)
 }
 

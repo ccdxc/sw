@@ -16,6 +16,9 @@ namespace hal {
 void GetProgramAddress(const internal::ProgramAddressReq& req,
                        internal::ProgramAddressResp *resp);
 
+void AllocHbmAddress(const internal::HbmAddressReq &req,
+                       internal::HbmAddressResp *resp);
+
 }    // namespace hal
 
 #endif    // __INTERNAL_HPP__

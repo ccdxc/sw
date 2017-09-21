@@ -25,6 +25,18 @@ cc_library(
 )
 
 cc_library(
+    name= "r2n",
+    srcs = [
+        "r2n.cc",
+        "r2n.hpp",
+        "nvme.hpp",
+    ],
+    deps = [
+        "//dol/test/storage/host_mem",
+    ]
+)
+
+cc_library(
     name= "tests",
     srcs = [
         "tests.cc",
@@ -36,6 +48,7 @@ cc_library(
     deps = [
         ":hal_if",
         ":qstate_if",
+        ":r2n",
         "//dol/test/storage/host_mem",
         "//dol/test/storage/model_client",
     ]

@@ -19,3 +19,13 @@ InternalServiceImpl::GetProgramAddress(
     return Status::OK;
 }
 
+Status
+InternalServiceImpl::AllocHbmAddress(
+    ServerContext *context, const AllocHbmAddressRequestMsg *reqs,
+    AllocHbmAddressResponseMsg *resps) {
+
+    for (int i = 0; i < reqs->reqs_size(); i++) {
+        hal::AllocHbmAddress(reqs->reqs(i), resps->add_resps());
+    }
+    return Status::OK;
+}

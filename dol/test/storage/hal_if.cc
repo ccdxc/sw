@@ -155,4 +155,20 @@ int set_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate) 
   return 0;
 }
 
+int alloc_hbm_address(uint64_t *addr, uint32_t *size) {
+  grpc::ClientContext context;
+  internal::AllocHbmAddressRequestMsg req_msg;
+  internal::AllocHbmAddressResponseMsg resp_msg;
+  auto req = req_msg.add_reqs();
+  req->set_handle("storage");
+
+  auto status = internal_stub->AllocHbmAddress(&context, req_msg, &resp_msg);
+  if (!status.ok())
+    return -1;
+
+  // TODO: Check number of responses ? 
+  *addr = resp_msg.resps(0).addr();
+  *size = resp_msg.resps(0).size();
+  return 0;
+}
 }  // namespace hal_if

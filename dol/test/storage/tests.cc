@@ -5,6 +5,7 @@
 #include "dol/test/storage/qstate_if.hpp"
 #include "dol/test/storage/nvme.hpp"
 #include "dol/test/storage/queues.hpp"
+#include "dol/test/storage/r2n.hpp"
 #include "dol/test/storage/host_mem/c_if.h"
 #include "dol/test/storage/model_client/lib_model_client.h"
 
@@ -216,11 +217,11 @@ int test_run_nvme_pvm_hashing1() {
   }
 
   void *data = (uint8_t *)alloc_host_mem(4*1024);
-  struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd;
-  read_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
-  read_cmd->prp.prp1 = (uint64_t) data;
-  read_cmd->slba = 0x7;
-  read_cmd->dw12.nlb = 0x1;
+  struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd;
+  write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
+  write_cmd->prp.prp1 = (uint64_t) data;
+  write_cmd->slba = 0x7;
+  write_cmd->dw12.nlb = 0x1;
 
   // Send the NVME admin command and check on PVM side
   rc = send_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
@@ -273,6 +274,7 @@ int pvm_status_trailer_update(struct PvmStatus *status, uint16_t lif,
   printf("PVM status: base addr %lx \n", dst_qaddr);
   return 0;
 }
+
 int test_run_pvm_nvme_admin_status() {
   int rc;
   uint16_t nvme_index, pvm_index;
@@ -355,6 +357,97 @@ int test_run_pvm_nvme_write_status() {
   // Send the PVM admin command status and check on NVME side
   rc = send_and_check(pvm_status, nvme_status, sizeof(struct NvmeStatus), 
                       queues::get_pvm_lif(), CQ_TYPE, pvm_q, 0, pvm_index);
+
+
+  // rc could be <, ==, > 0. We need to return -1 from this API on error.
+  return (rc ? -1 : 0);
+}
+
+int test_run_r2n_read_cmd() {
+  int rc;
+  void *r2n_buf = r2n::r2n_buf_alloc();
+  if (!r2n_buf) {
+    printf("can't alloc r2n buf\n");
+    return -1;
+  }
+  uint16_t r2n_index;
+  uint8_t *r2n_wqe_buf;
+  uint16_t r2n_q = 2;
+
+  r2n_wqe_buf = (uint8_t *) queues::pvm_sq_consume_entry(r2n_q, &r2n_index);
+  if (r2n_wqe_buf == nullptr) {
+    printf("can't consume r2n wqe entry \n");
+    return -1;
+  }
+
+  r2n::r2n_wqe_init(r2n_wqe_buf, r2n_buf);
+  r2n::r2n_nvme_be_cmd_init(r2n_buf, r2n_q, 0, 0, 0, 1);
+
+  uint16_t ssd_index;
+  uint16_t ssd_q = 19;
+  uint8_t *nvme_cmd = r2n::r2n_nvme_cmd_ptr(r2n_buf);
+  uint8_t *ssd_cmd = (uint8_t *) queues::pvm_sq_consume_entry(ssd_q, &ssd_index);
+  if (nvme_cmd == nullptr || ssd_cmd == nullptr) {
+    printf("can't consume r2n wqe entry \n");
+    return -1;
+  }
+  bzero(nvme_cmd, sizeof(struct NvmeCmd));
+  bzero(ssd_cmd, sizeof(struct NvmeCmd)); 
+
+  struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd;
+  read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
+  //read_cmd->prp.prp1 = (uint64_t) data;
+  read_cmd->slba = 0x9;
+  read_cmd->dw12.nlb = 0x1;
+
+  // Send the NVME write command to local target and check on SSD side
+  rc = send_and_check(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+                      queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
+
+  // rc could be <, ==, > 0. We need to return -1 from this API on error.
+  return (rc ? -1 : 0);
+}
+
+int test_run_r2n_write_cmd() {
+  int rc;
+  void *r2n_buf = r2n::r2n_buf_alloc();
+  if (!r2n_buf) {
+    printf("can't alloc r2n buf\n");
+    return -1;
+  }
+  uint16_t r2n_index;
+  uint8_t *r2n_wqe_buf;
+  uint16_t r2n_q = 2;
+
+  r2n_wqe_buf = (uint8_t *) queues::pvm_sq_consume_entry(r2n_q, &r2n_index);
+  if (r2n_wqe_buf == nullptr) {
+    printf("can't consume r2n wqe entry \n");
+    return -1;
+  }
+
+  r2n::r2n_wqe_init(r2n_wqe_buf, r2n_buf);
+  r2n::r2n_nvme_be_cmd_init(r2n_buf, r2n_q, 0, 0, 0, 1);
+
+  uint16_t ssd_index;
+  uint16_t ssd_q = 19;
+  uint8_t *nvme_cmd = r2n::r2n_nvme_cmd_ptr(r2n_buf);
+  uint8_t *ssd_cmd = (uint8_t *) queues::pvm_sq_consume_entry(ssd_q, &ssd_index);
+  if (nvme_cmd == nullptr || ssd_cmd == nullptr) {
+    printf("can't consume r2n wqe entry \n");
+    return -1;
+  }
+  bzero(nvme_cmd, sizeof(struct NvmeCmd));
+  bzero(ssd_cmd, sizeof(struct NvmeCmd)); 
+
+  struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd;
+  write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
+  //write_cmd->prp.prp1 = (uint64_t) data;
+  write_cmd->slba = 0x8;
+  write_cmd->dw12.nlb = 0x1;
+
+  // Send the NVME write command to local target and check on SSD side
+  rc = send_and_check(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+                      queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
   return (rc ? -1 : 0);

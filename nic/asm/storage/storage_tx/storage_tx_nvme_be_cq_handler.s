@@ -14,7 +14,7 @@ struct phv_ p;
 %%
    .param storage_tx_nvme_be_wqe_handler_start
 
-storage_tx_r2n_sq_handler_start:
+storage_tx_nvme_be_cq_handler_start:
 
    // Update the priority queue doorbell to clear the scheduler bit
    PRI_QUEUE_POP_DOORBELL_UPDATE

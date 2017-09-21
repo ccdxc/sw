@@ -7,6 +7,8 @@
 
 using internal::ProgramAddressReq;
 using internal::ProgramAddressResp;
+using internal::HbmAddressReq;
+using internal::HbmAddressResp;
 
 void
 hal_initialize()
@@ -103,6 +105,20 @@ TEST_F(internal_test, test2)
     req.set_label("storage_tx_stage0");
 
     hal::GetProgramAddress(req, &rsp);
+    ASSERT_TRUE(rsp.addr() != 0xFFFFFFFFFFFFFFFFULL);
+}
+
+// ----------------------------------------------------------------------------
+// Resolving handle into hbm address 
+// ----------------------------------------------------------------------------
+TEST_F(internal_test, test3) 
+{
+    HbmAddressReq req;
+    HbmAddressResp rsp;
+
+    req.set_handle("storage");
+
+    hal::AllocHbmAddress(req, &rsp);
     ASSERT_TRUE(rsp.addr() != 0xFFFFFFFFFFFFFFFFULL);
 }
 

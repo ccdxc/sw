@@ -18,6 +18,7 @@
 
     .param      req_tx_sqcb_process
     .param      storage_tx_q_state_pop_start
+    .param      storage_tx_pri_q_state_pop_start
     .param      tcp_tx_read_shared_stage0_start
     .param      tls_stage0
     .param      tcp_tx_read_rx2tx_shared_process
@@ -71,6 +72,11 @@ tls_tx_stage0:
 .align
 storage_tx_stage0:
    j    storage_tx_q_state_pop_start
+   nop
+
+.align
+storage_tx_pri_stage0:
+   j    storage_tx_pri_q_state_pop_start
    nop
 
 .align
