@@ -624,6 +624,45 @@ class capri_p4pd:
             if len(pad_list):
                 for kbit in pad_list:
                     ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P", "__NoHdr")]
+
+        #remove duplicate cfs that are sourced into KM byte without
+        #using bit extractors.
+        pad_dup_cf = OrderedDict()
+        for k, v  in ki_or_kd_to_cf_map.items():
+            if len(v) == 1:
+                continue
+            for dict_cfs in v:
+                if dict_cfs[0] == None:
+                    (cf, cf_startbit, width, ftype, hdr) = dict_cfs
+                else:
+                    (cf, cf_startbit, width, ftype) = dict_cfs
+                if cf == None:
+                    continue
+                for k1, v1  in ki_or_kd_to_cf_map.items():
+                    if len(v1) == 1:
+                        continue
+                    if k == k1:
+                        continue
+                    for cfs in v1:
+                        if cfs[0] == None:
+                            (cf_, cf_startbit_ , width_, ftype_, hdr)  =  cfs
+                        else:
+                            (cf_, cf_startbit_ , width_, ftype_)  =  cfs
+                        if cf == cf_ and cf_startbit_ == cf_startbit:
+                            if (cf_, width_) not in pad_dup_cf.values():
+                                pad_dup_cf[k1] = (cf_, width_)
+        if len(pad_dup_cf):
+            for k, dict_cf_ in pad_dup_cf.items():
+                (cf, width) = dict_cf_
+                cf_list = ki_or_kd_to_cf_map[k]
+                for idx, elem in enumerate(cf_list):
+                    if elem[0] == None:
+                        (cf_, cf_startbit_ , width_, ftype_, hdr)  =  elem
+                    else:
+                        (cf_, cf_startbit_ , width_, ftype_)  =  elem
+                    if cf == cf_:
+                        cf_list[idx] = (None, k+cf_startbit_, width_, "P", cf_get_hname(cf))
+
         
     def purge_duplicate_pad(self, ki_or_kd_to_cf_map):
         covered_bits = 0
