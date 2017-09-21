@@ -131,18 +131,12 @@ invoke_pt:
     
     seq         c3, k.args.dma_cmdeop, 1
     bcf         [!c3], exit
-    nop
-    //skipping completion for now.
-    //TODO
-    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 1)
-    nop.e
-    nop
     add         r6, r0, k.global.flags // BD Slot
 
     IS_ANY_FLAG_SET(c2, r6, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION)
 
     bcf         [!c2], exit
-    CAPRI_SET_FIELD_C(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 1, !c2)
+    CAPRI_SET_FIELD_C(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 1, !c2) //BD Slot
     
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, r6)
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, r7)

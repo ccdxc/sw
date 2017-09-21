@@ -150,3 +150,4 @@ class HostMemory(object):
 def init():
     global HostMemoryAllocator
     HostMemoryAllocator = HostMemory()
+    assert(HostMemoryAllocator != None)

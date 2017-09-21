@@ -61,11 +61,11 @@ queue_types:
         type        : 2
         purpose     : LIF_QUEUE_PURPOSE_TX
         size        : 64
-        count       : 1
+        count       : 16
         queues:
             - queue:
                 id          : Q0
-                count       : 1
+                count       : 16
                 template    : ref://store/templates/id=ETH_QUEUE_TX
                 rings:
                     - ring:
@@ -81,11 +81,11 @@ queue_types:
         type        : 3
         purpose     : LIF_QUEUE_PURPOSE_ADMIN
         size        : 64
-        count       : 1
+        count       : 32
         queues:
             - queue:
                 id          : Q0
-                count       : 1
+                count       : 32
                 #for now treat this queue same as rx
                 template    : ref://store/templates/id=ETH_QUEUE_RX
                 rings:
@@ -102,11 +102,11 @@ queue_types:
         type        : 4
         purpose     : LIF_QUEUE_PURPOSE_RX
         size        : 64
-        count       : 1
+        count       : 16
         queues:
             - queue:
                 id          : Q0
-                count       : 1
+                count       : 16
                 template    : ref://store/templates/id=ETH_QUEUE_RX
                 rings:
                     - ring:

@@ -190,6 +190,13 @@ class RdmaCQstate(Packet):
         BitField("arm", 0, 1),
         BitField("color", 0, 1),
         BitField("rsvd2", 0, 6),
+        ByteField("rsvd3", 0),
+        ByteField("rsvd4", 0),
+        ByteField("rsvd5", 0),
+        ByteField("rsvd6", 0),
+        ByteField("rsvd7", 0),
+        ByteField("rsvd8", 0),
+        ByteField("rsvd9", 0),
     ]
 
 class RdmaEQstate(Packet):
@@ -234,14 +241,14 @@ class RdmaQstateObject(object):
         self.Read()
 
     def Write(self):
-        cfglogger.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
+        cfglogger.info("Writing Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
         model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
         self.Read()
 
     def Read(self):
         self.data = qt_params[self.queue_type]['state'](model_wrap.read_mem(self.addr, self.size))
         self.data.show()
-        cfglogger.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
+        cfglogger.info("Read Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
 
     def incr_pindex(self, ring):
         assert(ring < 7)
@@ -268,6 +275,11 @@ class RdmaQstateObject(object):
     def get_cindex(self, ring):
         assert(ring < 7)
         return getattr(self.data, 'c_index%d' % ring)
+
+    def set_dst_qp(self, value):
+        self.Read()
+        setattr(self.data, 'dst_qp', value)
+        self.Write()
 
     def Show(self, lgh = cfglogger):
         lgh.ShowScapyObject(self.data) 
@@ -296,6 +308,9 @@ class RdmaQueueObject(QueueObject):
         if self._qstate is None:
             self._qstate = RdmaQstateObject(queue_type=self.queue_type.GID(), addr=self.GetQstateAddr(), size=self.queue_type.size)
         return self._qstate
+
+    def set_dst_qp(self, value):
+        self.qstate.set_dst_qp(value)
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.lif_handle = 0  # HW LIF ID is not known in DOL. Assume it is filled in by hal::LifCreate.

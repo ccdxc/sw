@@ -399,6 +399,7 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
 
         return self.desc == other.desc
 
+
     def GetBuffer(self):
         cfglogger.info("GetBuffer() operator invoked on cq descriptor")
         #CQ is not associated with any buffer and hence simply return

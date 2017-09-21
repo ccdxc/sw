@@ -15,6 +15,10 @@ using rdma::RdmaQpSpec;
 using rdma::RdmaQpRequestMsg;
 using rdma::RdmaQpResponse;
 using rdma::RdmaQpResponseMsg;
+using rdma::RdmaCqSpec;
+using rdma::RdmaCqRequestMsg;
+using rdma::RdmaCqResponse;
+using rdma::RdmaCqResponseMsg;
 using rdma::RdmaMemRegSpec;
 using rdma::RdmaMemRegRequestMsg;
 using rdma::RdmaMemRegResponse;
@@ -38,6 +42,10 @@ public:
                      const RdmaQpDeleteRequestMsg *req,
                      RdmaQpGetResponseMsg *rsp) override;
 #endif
+
+    Status RdmaCqCreate(ServerContext *context,
+                        const RdmaCqRequestMsg *req,
+                        RdmaCqResponseMsg *rsp) override;
 
     Status RdmaMemReg(ServerContext *context,
                       const RdmaMemRegRequestMsg *reqs,

@@ -199,7 +199,7 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     HAL_TRACE_DEBUG("({},{}): Lif {} cq_base_addr: {:#x}, max_cqs: {} log_num_cq_entries: {}",
            __FUNCTION__, __LINE__, lif, cq_base_addr,
            max_cqs, log2(roundup_to_pow_2(max_cqs)));
-    //HAL_ASSERT((cq_base_addr & ((1 << HBM_PAGE_SIZE_SHIFT) - 1)) == 0);
+    HAL_ASSERT((cq_base_addr & ((1 << HBM_PAGE_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.cqcb_base_addr_page_id = cq_base_addr >> HBM_PAGE_SIZE_SHIFT;
     sram_lif_entry.log_num_cq_entries = log2(roundup_to_pow_2(max_cqs));
 
@@ -670,7 +670,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     sqcb_p->sqcb0.log_wqe_size = log2(sqwqe_size);
     sqcb_p->sqcb0.log_num_wqes = log2(num_sq_wqes);
     sqcb_p->sqcb0.log_pmtu = log2(spec.pmtu());
-    //sqcb_p->sqcb1.cq_id = get_cqid(attr_p->sq_cq);
+    sqcb_p->sqcb1.cq_id = spec.sq_cq_num();
     sqcb_p->sqcb0.service = spec.svc();
     sqcb_p->sqcb1.service = spec.svc();
     sqcb_p->sqcb1.lsn = 32; // FOR now allowing 32 sq send/write_imm requests
@@ -717,7 +717,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.log_pmtu = log2(spec.pmtu());
     rqcb.rqcb0.cache = FALSE;
     rqcb.rqcb0.pd = spec.pd();
-    //rqcb.rqcb1.cq_id = get_cqid(attr_p->rq_cq);
+    rqcb.rqcb1.cq_id = spec.rq_cq_num();
     rqcb.rqcb1.header_template_addr = header_template_addr;
     rqcb.rqcb2.num_rqwqes_per_cpage = HBM_PAGE_SIZE / rqwqe_size;
 
@@ -731,7 +731,9 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
                     __FUNCTION__, lif, rqcb.rqcb0.pt_base_addr);
 
     // Convert data before writting to HBM
-    pd::memrev((uint8_t*)rqcb_p, sizeof(rqcb0_t));
+    pd::memrev((uint8_t*)&rqcb.rqcb0, sizeof(rqcb0_t));
+    pd::memrev((uint8_t*)&rqcb.rqcb1, sizeof(rqcb1_t));
+    //TODO: rqcb2
 
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial RQCB State", __FUNCTION__, lif);
@@ -754,7 +756,6 @@ rdma_qp_update (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 }
 
 
-#if 0
 hal_ret_t
 rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
 {
@@ -803,7 +804,6 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     return (HAL_RET_OK);
 }
 
-#endif
 
 hal_ret_t
 rdma_hal_init()

@@ -459,6 +459,7 @@ struct cqwqe_t {
     qp: 24;
     imm_data: 32;
     r_key: 32;
+    rsvd2: 80;
 };
 
 struct eqwqe_t {

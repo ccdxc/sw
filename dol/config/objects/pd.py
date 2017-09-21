@@ -15,6 +15,7 @@ import rdma_pb2                 as rdma_pb2
 
 import config.objects.qp        as qp
 import config.objects.mr        as mr
+import config.objects.cq        as cq
 
 from infra.common.glopts import GlobalOptions
 
@@ -34,6 +35,13 @@ class PdObject(base.ConfigObjectBase):
         if len(self.obj_helper_mr.mrs):
             self.mrs.SetAll(self.obj_helper_mr.mrs)
 
+        self.cqs = objects.ObjectDatabase(cfglogger)
+        self.obj_helper_cq = cq.CqObjectHelper()
+        cq_spec = spec.cq.Get(Store)
+        self.obj_helper_cq.Generate(self, cq_spec)
+        if len(self.obj_helper_cq.cqs):
+            self.cqs.SetAll(self.obj_helper_cq.cqs)
+
         self.qps = objects.ObjectDatabase(cfglogger)
         self.obj_helper_qp = qp.QpObjectHelper()
         qp_spec = spec.qp.Get(Store)
@@ -51,6 +59,8 @@ class PdObject(base.ConfigObjectBase):
     def Configure(self):
         if len(self.obj_helper_mr.mrs):
             self.obj_helper_mr.Configure()
+        if len(self.obj_helper_cq.cqs):
+            self.obj_helper_cq.Configure()
         if len(self.obj_helper_qp.qps):
             self.obj_helper_qp.Configure()
 

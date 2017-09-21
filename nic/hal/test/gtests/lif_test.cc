@@ -87,7 +87,6 @@ TEST_F(lif_test, test1)
     spec.set_port_num(10);
     spec.set_vlan_strip_en(1);
     //spec.set_allmulti(1);
-    spec.set_enable_rdma(1);
     spec.mutable_key_or_handle()->set_lif_id(1);
 
     ret = hal::lif_create(spec, &rsp, NULL);
@@ -110,7 +109,6 @@ TEST_F(lif_test, test2)
         spec.set_port_num(i);
         spec.set_vlan_strip_en(i & 1);
         //spec.set_allmulti(i & 1);
-        spec.set_enable_rdma(i & 1);
         spec.mutable_key_or_handle()->set_lif_id(i);
 
         lif_info.with_hw_lif_id = true;
@@ -134,7 +132,6 @@ TEST_F(lif_test, test3)
         spec.set_port_num(i);
         spec.set_vlan_strip_en(i & 1);
         //spec.set_allmulti(i & 1);
-        spec.set_enable_rdma(i & 1);
         spec.mutable_key_or_handle()->set_lif_id(i);
 
         ret = hal::lif_create(spec, &rsp, NULL);

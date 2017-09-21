@@ -75,14 +75,19 @@ resp_rx_rqcb_process:
 
     // INCREMENT E_PSN HERE
     tbladd  d.e_psn, 1
-    //
-
 
     ARE_ALL_FLAGS_SET(c1, r7, RESP_RX_FLAG_SEND)
     ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
+    ARE_ALL_FLAGS_SET(c5, r7, RESP_RX_FLAG_COMPLETION)
     seq     c3, d.in_progress, 1
     setcf   c4, [c1 & !c3]
 
+    // don't need to set status field explicitly to 0
+    //phvwr.c5    p.cqwqe.status, CQ_STATUS_SUCCESS
+    phvwr.c5    p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID
+    setcf       c6, [c1 & c5]
+    phvwr.c6    p.cqwqe.op_type, OP_TYPE_SEND_RCVD
+    
     // checkout a RQ descriptor if it is a send AND in_progress is FALSE
     // OR write_with_imm
     bcf     [c2|c4], checkout

@@ -69,10 +69,16 @@ class QpObject(base.ConfigObjectBase):
         if not self.remote:
             self.sq = pd.ep.intf.lif.GetQ('RDMA_SQ', self.id)
             self.rq = pd.ep.intf.lif.GetQ('RDMA_RQ', self.id)
-    
+            
             if (self.sq is None or self.rq is None):
                 assert(0)
 
+            # for now map both sq/rq cq to be same
+            self.sq_cq = pd.ep.intf.lif.GetQ('RDMA_CQ', self.id)
+            self.rq_cq = pd.ep.intf.lif.GetQ('RDMA_CQ', self.id)
+            if (self.sq_cq is None or self.rq_cq is None):
+                assert(0)
+    
             # create sq/rq slabs
             self.sq_slab = slab.SlabObject(self.pd.ep, self.sq_size)
             self.rq_slab = slab.SlabObject(self.pd.ep, self.rq_size)
@@ -122,6 +128,8 @@ class QpObject(base.ConfigObjectBase):
         cfglogger.info('RQ num_sges: %d num_wqes: %d wqe_size: %d' %(self.num_rq_sges, self.num_rq_wqes, self.rqwqe_size)) 
         cfglogger.info('RRQ num_wqes: %d wqe_size: %d' %(self.num_rrq_wqes, self.rrqwqe_size)) 
         cfglogger.info('RSQ num_wqes: %d wqe_size: %d' %(self.num_rsq_wqes, self.rsqwqe_size)) 
+        if not self.remote:
+            cfglogger.info('SQ_CQ: %s RQ_CQ: %s' %(self.sq_cq.GID(), self.rq_cq.GID()))
 
 
     def PrepareHALRequestSpec(self, req_spec):
@@ -143,6 +151,8 @@ class QpObject(base.ConfigObjectBase):
         req_spec.atomic_enabled = self.atomic_enabled
         req_spec.sq_lkey = self.sq_mr.lkey
         req_spec.rq_lkey = self.rq_mr.lkey
+        req_spec.sq_cq_num = self.sq_cq.id
+        req_spec.rq_cq_num = self.rq_cq.id
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.rsq_base_addr = resp_spec.rsq_base_addr
@@ -176,6 +186,8 @@ class QpObject(base.ConfigObjectBase):
                          self.sq_slab.address, self.rq_slab.address,
                          self.rsq_base_addr, self.rrq_base_addr,
                          self.header_temp_addr))
+
+        #self.sq_cq.qstate.data.show()
 
     def ShowTestcaseConfig(self, obj, logger):
         logger.info("Config Objects for %s" % (self.GID()))

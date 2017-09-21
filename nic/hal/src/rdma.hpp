@@ -14,6 +14,7 @@ namespace hal {
 extern hal_ret_t rdma_hal_init();
 extern hal_ret_t rdma_lif_init(intf::LifSpec& spec, uint32_t lif_id);
 extern  hal_ret_t rdma_qp_create(RdmaQpSpec& spec, RdmaQpResponse *rsp);
+extern hal_ret_t rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp);
 extern hal_ret_t rdma_memory_register(RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp);
 
 
@@ -663,7 +664,7 @@ typedef struct cqwqe_s {
 typedef struct eqwqe_s {
     uint32_t cq_id;
 	uint8_t  color:1;
-} eqwqe_t;
+} PACKED eqwqe_t;
 
 typedef struct rdma_bth_s {
     uint32_t opcode  : 8;
@@ -1013,26 +1014,26 @@ typedef struct rqcb0_s {
 
 //rqcb1_t is the 2nd 64B of rqcb
 typedef struct rqcb1_s {
-    //cached {va, len, r_key} from first packet of write req
-    uint64_t va; 
-    uint32_t len;
-    uint32_t r_key;   
-    uint64_t wrid;
-    uint32_t cq_id:24;
-    uint8_t read_rsp_in_progress:1;
-    uint8_t read_rsp_lock:1;
-    uint8_t dummy1:6;
-    uint32_t cur_read_rsp_psn:24;
-    uint32_t ack_nak_psn;
-    rdma_aeth_t aeth;
-    uint32_t last_ack_nak_psn:24;
-    uint32_t header_template_addr;
-    uint32_t dst_qp:24;
-    uint64_t curr_wqe_ptr;
-    uint8_t  current_sge_id;
-    uint8_t  num_sges;
+    uint8_t rsvd[2];
     uint32_t current_sge_offset;
-    uint8_t rsvd[1];
+    uint8_t  num_sges;
+    uint8_t  current_sge_id;
+    uint64_t curr_wqe_ptr;
+    uint32_t dst_qp:24;
+    uint32_t header_template_addr;
+    uint32_t last_ack_nak_psn:24;
+    rdma_aeth_t aeth;
+    uint32_t ack_nak_psn:24;
+    uint32_t cur_read_rsp_psn:24;
+    uint8_t dummy1:6;
+    uint8_t read_rsp_lock:1;
+    uint8_t read_rsp_in_progress:1;
+    uint32_t cq_id:24;
+    uint64_t wrid;
+    //cached {va, len, r_key} from first packet of write req
+    uint32_t r_key;   
+    uint32_t len;
+    uint64_t va; 
 } PACKED rqcb1_t;
 
 //rqcb2_t is the 3rd 64B of rqcb
@@ -1057,49 +1058,57 @@ typedef struct rqcb_s {
 #define MAX_SRQ_RINGS 6
 
 typedef struct srqcb_s {
-    // intrinsic
-    qpcb_intrinsic_base_t ring_header;
+    uint64_t base_addr;
+
     qpcb_ring_t           rings[MAX_SRQ_RINGS];
 
-    uint64_t base_addr;
-} srqcb_t;
-
-#define CQ_RING_ID  RING_ID_0
-#define MAX_CQ_RINGS 6
-
-typedef struct cqcb_s {
     // intrinsic
     qpcb_intrinsic_base_t ring_header;
-    qpcb_ring_t           rings[MAX_CQ_RINGS];
+} PACKED srqcb_t;
+
+#define CQ_RING_ID  RING_ID_0
+#define MAX_CQ_RINGS 1
+
+typedef struct cqcb_s {
+    uint8_t rsvd4[4];
+
+    uint32_t rsvd3:24;
+    uint32_t rsvd2:6;
+    uint32_t color:1;
+    uint32_t arm:1;
+
+    uint32_t eq_num:24;
+    uint32_t cq_num:24;
+
+    uint32_t rsvd1:1;
+    uint32_t log_num_wqes:5;
+    uint32_t log_wqe_size:5;
+    uint32_t log_cq_page_size:5;
 
     uint32_t pt_base_addr;
-    uint16_t cq_page_size;
-    uint8_t  wqe_size;
-    uint8_t  num_wqe_per_page;
-    uint16_t num_wqes;
 
-    uint16_t cq_id;
-    uint16_t eq_id;
+    qpcb_ring_t           rings[MAX_CQ_RINGS];
 
-    uint8_t  arm: 1;
-    uint8_t  color: 1;
-} cqcb_t;
+    // intrinsic
+    qpcb_intrinsic_base_t ring_header;
+} PACKED cqcb_t;
 
 #define EQ_RING_ID  RING_ID_0
 #define MAX_EQ_RINGS 6
 
 typedef struct eqcb_s {
+    uint8_t  color: 1;
+    uint8_t  int_enabled: 1;
+    uint16_t eq_id;
+
+    uint32_t int_num;
+    uint64_t base_addr;
+
+    qpcb_ring_t           rings[MAX_EQ_RINGS];
+
     // intrinsic
     qpcb_intrinsic_base_t ring_header;
-    qpcb_ring_t           rings[MAX_EQ_RINGS];
-    
-    uint64_t base_addr;
-    uint32_t int_num;
-
-    uint16_t eq_id;
-    uint8_t  int_enabled: 1;
-    uint8_t  color: 1;
-} eqcb_t;
+} PACKED eqcb_t;
 
 typedef struct mr_attr_s {
     uint32_t     pd;

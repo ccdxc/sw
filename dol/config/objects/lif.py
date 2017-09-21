@@ -63,6 +63,7 @@ class LifObject(objects.FrameworkObject):
         # RDMA per LIF allocators
         if self.enable_rdma:
             self.qpid_allocator = objects.TemplateFieldObject("range/0/16384")
+            self.cqid_allocator = objects.TemplateFieldObject("range/0/16384")
             self.pd_allocator = objects.TemplateFieldObject("range/0/128")
             self.mr_key_allocator = objects.TemplateFieldObject("range/0/1024")
 
@@ -71,6 +72,9 @@ class LifObject(objects.FrameworkObject):
 
     def GetQpid(self):
         return self.qpid_allocator.get()
+
+    def GetCqid(self):
+        return self.cqid_allocator.get()
 
     def GetPd(self):
         return self.pd_allocator.get()

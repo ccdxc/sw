@@ -393,6 +393,13 @@ def ConfigureQps(objlist):
              stub.RdmaQpCreate)
     return
 
+def ConfigureCqs(objlist):
+    if IsHalDisabled(): return
+    stub = rdma_pb2_grpc.RdmaStub(HalChannel)
+    __config(objlist, rdma_pb2.RdmaCqRequestMsg,
+             stub.RdmaCqCreate)
+    return
+
 def ConfigureMrs(objlist):
     if IsHalDisabled(): return
     stub = rdma_pb2_grpc.RdmaStub(HalChannel)

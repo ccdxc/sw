@@ -128,8 +128,11 @@ class EthQueueObject(QueueObject):
         super().__init__()
         self._qstate    = None
 
-    def Init(self, queue_type, spec):
+    def Init(self, queue_type, spec, qid):
         super().Init(queue_type, spec)
+        self.id = qid
+        #self.GID(str(self.id))
+        self.GID("Q%d" % self.id)
 
     @property
     def qstate(self):
@@ -183,9 +186,9 @@ class EthQueueObjectHelper:
         if not hasattr(spec, 'queues'):
             return
         for espec in spec.queues:
-            for qspec in range(espec.queue.count):
+            for qid in range(espec.queue.count):
                 queue = EthQueueObject()
-                queue.Init(queue_type, espec.queue)
+                queue.Init(queue_type, espec.queue, qid)
                 self.queues.append(queue)
 
     def Configure(self):

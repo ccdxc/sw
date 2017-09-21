@@ -25,6 +25,7 @@ struct cqcb_t {
     arm: 1;
     color: 1;
     rsvd2: 6;
+    rsvd3: 56;
 };
 
 #endif // __CQCB_H

@@ -277,6 +277,19 @@ exit:
 
 cb0_cb1_wb_exit:
     
+    // Current program is going to spawn 4 parallel lookups for next stage.
+    // They are: T0-Lkey0, T1-Lkey1, T2-WB0, T3-WB1. 
+    // T2 and T3 programs would reset their table valid bits upon completing
+    // their program. Where as, either T0 or T1 program could spawn completion
+    // queue related program on T2 for next to next stage. T2-WB0 invalidating
+    // T2 and T0/T1-Lkey program invoking T2 could conflict with each other 
+    // and there by completion queue lookup may not fire.
+    // Hence putting a hack here to pass a clue to T2-WB0 program NOT to 
+    // invalidate T2 in case completion is involved.
+
+    IS_ANY_FLAG_SET(c3, r7, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION)
+    CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, do_not_invalidate_tbl, 1, c3)
+
     RQCB0_ADDR_GET(r2)
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_K)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC2, resp_rx_rqcb0_write_back_process)

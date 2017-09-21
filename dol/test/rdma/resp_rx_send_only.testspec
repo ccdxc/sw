@@ -20,12 +20,6 @@ selectors:
 
 packets:
    - packet:
-        id          : TRAILER # Base packet
-        payloadsize : 0
-        template    : ref://factory/packets/id=TRAILER
-        headers     :
-
-   - packet:
         id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=PAYLOAD
@@ -75,7 +69,6 @@ buffers:
            segments:
                - size    : ref://testcase/packets/id=IN_PKT/size
                  data    : None
-                 skip    : ref://testcase/packets/id=TRAILER/size
 
     - buffer:
         id      : EXP_RQ_BUF
@@ -86,7 +79,6 @@ buffers:
            segments:
                - size    : ref://testcase/packets/id=BASE_PKT/size
                  data    : ref://testcase/packets/id=BASE_PKT/rawbytes
-                 skip    : ref://testcase/packets/id=TRAILER/size
 
 descriptors:
     - descriptor:

@@ -20,12 +20,6 @@ selectors:
 
 packets:
     - packet:
-        id          : TRAILER #PENDOL, CRC
-        payloadsize : 0
-        template    : ref://factory/packets/id=TRAILER
-        headers     :
-
-    - packet:
         id          : BASE_PKT1 # Base packet
         payloadsize : 1004 #1024
         template    : ref://factory/packets/id=PAYLOAD
@@ -115,8 +109,7 @@ buffers:
            segments:
                - size    : ref://testcase/packets/id=BASE_PKT1/size
                  data    : ref://testcase/packets/id=BASE_PKT1/rawbytes
-                 #skip    : ref://testcase/packets/id=TRAILER/size
-                 #
+
     - buffer:
         id      : BUF2
         template: ref://factory/templates/id=RDMA_BUFFER
@@ -126,7 +119,6 @@ buffers:
            segments:
                - size    : ref://testcase/packets/id=BASE_PKT2/size
                  data    : ref://testcase/packets/id=BASE_PKT2/rawbytes
-                 #skip    : ref://testcase/packets/id=TRAILER/size
 
 descriptors:
     - descriptor:

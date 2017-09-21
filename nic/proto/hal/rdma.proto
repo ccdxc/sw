@@ -13,8 +13,9 @@ service Rdma {
   // Queue Pair related APIs
   rpc RdmaQpCreate(RdmaQpRequestMsg) returns (RdmaQpResponseMsg) {}
   rpc RdmaQpUpdate(RdmaQpRequestMsg) returns (RdmaQpResponseMsg) {}
-  //rpc RdmaQpDelete(RdmaQpDeleteRequestMsg) returns (RdmaQpDeleteResponseMsg) {}
-  //rpc RdmaQpGet(RdmaQpGetRequestMsg) returns (RdmaQpGetResponseMsg) {}
+
+  // Completion Q related APIs
+  rpc RdmaCqCreate(RdmaCqRequestMsg) returns (RdmaCqResponseMsg) {}
 
   // Register Memory related APIs
   rpc RdmaMemReg(RdmaMemRegRequestMsg) returns (RdmaMemRegResponseMsg) {}
@@ -32,6 +33,7 @@ enum RdmaServiceType {
     RDMA_SERV_TYPE_VEND_2      = 7;  // Vendor-2
 }
 
+//**********************    Queue Pair  ********************************//
 // RdmaQp object
 message RdmaQpSpec {
   types.ObjectMeta         meta            = 1;    // object meta
@@ -73,6 +75,36 @@ message RdmaQpResponseMsg {
   repeated RdmaQpResponse    response = 1;    // batch of responses
 }
 
+//**********************   Completion Queue  *****************************//
+// RdmaCq object
+message RdmaCqSpec {
+  types.ObjectMeta         meta            = 1;    // object meta
+  uint32                   cq_num          = 2;    // CQ Number
+  uint32                   hw_lif_id       = 3;    // LIF id
+  uint32                   cq_wqe_size     = 4;    // CQWQE size
+  uint32                   num_cq_wqes     = 5;    // Num CQWQEs
+  uint32                   hostmem_pg_size = 7;    // Path MTU
+  uint32                   cq_lkey         = 8;    // CQ's lkey
+  uint32                   eq_num          = 9;    // EQ id
+}
+
+// RdmaCqRequestMsg is batched request used to create/update of Rdma QPs
+message RdmaCqRequestMsg {
+  repeated RdmaCqSpec    request = 1;    // batch of requests
+}
+
+// RdmaCqResponse response to one RdmaCqSpec
+message RdmaCqResponse {
+  types.ApiStatus     api_status       = 1;    // API status code
+  //RdmaCqStatus        status           = 2;    // operational status
+}
+
+// RdmaCqResponseMsg is response to RdmaCqRequestMsg
+message RdmaCqResponseMsg {
+  repeated RdmaCqResponse    response = 1;    // batch of responses
+}
+
+//**********************   Memory Registratin(MR)  *********************//
 // RdmaMemReg object
 message RdmaMemRegSpec {
   types.ObjectMeta         meta            = 1;    // object meta

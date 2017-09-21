@@ -1,7 +1,7 @@
 # RDMA Completion Queue Descriptor Format
 meta:
     id      : DESC_RDMA_CQ
-    size    : 64
+    size    : 32
     package : factory.objects.rdma
     module  : descriptor
     objname : RdmaCqDescriptorObject
