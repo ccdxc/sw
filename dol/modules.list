@@ -849,13 +849,21 @@ modules:
         spec    : req_tx_send_only_2sges.testspec
         ignore  : False
 
-    #- module:
-    #    name    : RDMA_TX_SEND_FIRST_LAST
-    #    enable  : False
-    #    package : test.rdma
-    #    module  : req_tx_send_first_last
-    #    spec    : req_tx_send_first_last.testspec
-    #    ignore  : True
+    - module:
+        name    : RDMA_TX_SEND_FIRST_LAST
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_last
+        spec    : req_tx_send_first_last.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_FIRST_LAST_2SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_last_2sges
+        spec    : req_tx_send_first_last_2sges.testspec
+        ignore  : False
 
     - module:
         name    : RDMA_RX_SEND_ONLY

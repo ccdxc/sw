@@ -33,15 +33,14 @@ struct req_tx_wqe_to_sge_info_t {
     first                          : 1;
     current_sge_id                 : 8;
     num_valid_sges                 : 8;
-    current_sge_offset             : 8;
+    current_sge_offset             : 32;
     remaining_payload_bytes        : 16;
     payload_offset                 : 16;
-    dma_cmd_start_index            : 8;
+    dma_cmd_start_index            : 6; // TODO Different from "C" code due to space scarcity
     op_type                        : 8;
     wqe_addr                       : 64;
     //imm_data                       : 32;
     //inv_key                        : 32;
-    pad                            : 22;
 };
 
 struct req_tx_sge_to_lkey_info_t {

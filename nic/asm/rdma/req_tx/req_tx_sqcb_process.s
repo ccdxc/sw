@@ -85,6 +85,9 @@ in_progress:
     // num_valid_sges = sqcb0_p->num_sges = sqcb0_p->current_sge_id
     sub            r2, d.num_sges, d.current_sge_id 
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, num_valid_sges, r2)
+    // remaining_payload_bytes = (1 >> sqcb0_p->log_pmtu)
+    add            r4, r0, d.log_pmtu
+    sllv           r4, 1, r4
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, remaining_payload_bytes, r4)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, dma_cmd_start_index, REQ_TX_DMA_CMD_START_FLIT_ID)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, wqe_addr, d.curr_wqe_ptr)
