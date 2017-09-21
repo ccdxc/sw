@@ -44,6 +44,10 @@ def Main():
     logger.info("Initializing Factory.")
     factory.init()
 
+    logger.info("Initializing Engine.")
+    engine.init()
+
+    logger.info("Initializing Topology.")
     topo = glopts.GlobalOptions.topology
     topofile = '%s/%s.topo' % (topo, topo)
     generator.main(topofile)
@@ -52,8 +56,6 @@ def Main():
         logger.info("CONFIG Only Run......Stopping.")
         return 0
 
-    logger.info("Initializing Engine.")
-    engine.init()
     return engine.main()
 
 

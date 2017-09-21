@@ -1,18 +1,378 @@
-# For Usage details: Refer <ws>/dol/examples/sample.mlist.example
+# Feature Test Modules List
 feature:
-    id      : None
-    enable  : None
-    package : None
-    module  : None
-    ignore  : None
+    id          : l2uc
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : False
 
 modules:
-    - module
-        name    : None
-        enable  : None
-        package : None
-        module  : None
-        spec    : None
-        args    : None
-        iterate : None
+    - module:
+        name    : IPV4_QTAG
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 8
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=False
+
+    - module:
+        name    : IPV6_QTAG
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 8
+        iterate :
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment : filter://native=False
+
+    - module:
+        name    : IPV4_UTAG
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 8
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=True
+
+    - module:
+        name    : IPV6_UTAG
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 8
+        iterate :
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment : filter://native=True
+
+    - module:
+        name    : IPV4_PTAG
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 1
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
+
+    - module:
+        name    : IPV6_PTAG
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 1
+        iterate :
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment : filter://native=True
+              priotag : True
+
+    - module:
+        name    : IPV4_QTAG_GFT_DROP
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 1
+        iterate :
+            # Tagged Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              segment : filter://native=False
+
+    - module:
+        name    : IPV6_QTAG_GFT_DROP
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 1
+        iterate :
+            # Tagged Cases
+            - flow    : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              segment : filter://native=False
+
+    - module:
+        name    : IPV4_UTAG_GFT_DROP
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 1
+        iterate :
+            # Untagged Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              segment : filter://native=True
+
+    - module:
+        name    : IPV6_UTAG_GFT_DROP
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 1
+        iterate :
+            # Untagged Cases
+            - flow    : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              segment : filter://native=True
+
+    - module:
+        name    : IPV4_PTAG_GFT_DROP
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 1
+        iterate :
+            # Priority Tagged Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              segment : filter://native=True
+              priotag : True
+
+    - module:
+        name    : IPV6_PTAG_GFT_DROP
+        spec    : l2uc.testspec
+        args    :
+            maxflows: 1
+        iterate :
+            # Priority Tagged Cases
+            - flow    : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              segment : filter://native=True
+              priotag : True
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              segment : filter://native=True
+              priotag : True
+
+    - module:
+        name    : NONIP_QTAG
+        spec    : l2uc_nonip.testspec
+        iterate :
+            # Tagged Cases
+            - segment: filter://native=False
+              flow   : filter://label=NETWORKING
+
+    - module:
+        name    : NONIP_UTAG
+        spec    : l2uc_nonip.testspec
+        iterate :
+            # Untagged Cases
+            - segment: filter://native=True
+              flow   : filter://label=NETWORKING
+
+    - module:
+        name    : NONIP_PTAG
+        spec    : l2uc_nonip.testspec
+        iterate :
+            # Priority Tagged Cases
+            - segment: filter://native=True
+              flow   : filter://label=NETWORKING
+              priotag : True
+
+    - module:
+        name    : NONIP_QTAG_GFT_DROP
+        spec    : l2uc_nonip.testspec
+        iterate :
+            # Tagged Cases
+            - segment: filter://native=False
+              flow   : filter://label=GFT_DROP
+
+    - module:
+        name    : NONIP_UTAG_GFT_DROP
+        spec    : l2uc_nonip.testspec
+        iterate :
+            # Untagged Cases
+            - segment: filter://native=True
+              flow   : filter://label=GFT_DROP
+
+    - module:
+        name    : NONIP_PTAG_GFT_DROP
+        spec    : l2uc_nonip.testspec
+        iterate :
+            # Priority Tagged Cases
+            - segment: filter://native=True
+              flow   : filter://label=GFT_DROP
+              priotag : True
+
+    - module:
+        name    : ARP_QTAG
+        spec    : arp.testspec
+        iterate :
+            - type      : ARP_REQ_UC
+              segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
+            - type      : ARP_RESP
+              segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
+
+    - module:
+        name    : RARP_QTAG
+        spec    : arp.testspec
+        iterate :
+            - type      : RARP_REQ_UC
+              segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
+            - type      : RARP_RESP
+              segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
+
+    - module:
+        name    : ARP_UTAG
+        spec    : arp.testspec
+        iterate :
+            - type      : ARP_REQ_UC
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
+            - type      : ARP_RESP
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
+
+    - module:
+        name    : RARP_UTAG
+        spec    : arp.testspec
+        iterate :
+            - type      : RARP_REQ_UC
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
+            - type      : RARP_RESP
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
+
+    - module:
+        name    : ARP_PTAG
+        spec    : arp.testspec
+        iterate :
+            # Priority Tag Cases
+            - type      : ARP_REQ_UC
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
+              priotag   : True
+            - type      : ARP_RESP
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
+              priotag   : True
+
+    - module:
+        name    : RARP_PTAG
+        spec    : arp.testspec
+        iterate :
+            # Priority Tag Cases
+            - type      : RARP_REQ_UC
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
+              priotag   : True
+            - type      : RARP_RESP
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=ARP
+              priotag   : True
+
+    - module:
+        name    : ARP_QTAG_GFT_DROP
+        spec    : arp.testspec
+        iterate :
+            - type      : ARP_REQ_UC
+              segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
+            - type      : ARP_RESP
+              segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
+
+    - module:
+        name    : RARP_QTAG_GFT_DROP
+        spec    : arp.testspec
+        iterate :
+            - type      : RARP_REQ_UC
+              segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
+            - type      : RARP_RESP
+              segment   : filter://native=False
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
+
+    - module:
+        name    : ARP_UTAG_GFT_DROP
+        spec    : arp.testspec
+        iterate :
+            # Untagged Cases
+            - type      : ARP_REQ_UC
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
+            - type      : ARP_RESP
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
+
+    - module:
+        name    : RARP_UTAG_GFT_DROP
+        spec    : arp.testspec
+        iterate :
+            - type      : RARP_REQ_UC
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
+            - type      : RARP_RESP
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
+
+    - module:
+        name    : ARP_PTAG_GFT_DROP
+        spec    : arp.testspec
+        iterate :
+            # Priority Tag Cases
+            - type      : ARP_REQ_UC
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
+              priotag   : True
+            - type      : ARP_RESP
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
+              priotag   : True
+
+    - module:
+        name    : RARP_PTAG_GFT_DROP
+        spec    : arp.testspec
+        iterate :
+            - type      : RARP_REQ_UC
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
+              priotag   : True
+            - type      : RARP_RESP
+              segment   : filter://native=True
+              flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
+              priotag   : True
+
 

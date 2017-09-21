@@ -1,0 +1,25 @@
+# Feature Test Modules List
+feature:
+    id          : l3uc_vxlan
+    package     : test.networking
+    module      : vxlan
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IPV4
+        spec    : l3uc_vxlan.testspec
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+            - flow: filter://type=IPV4,proto=TCP,label=NETWORKING
+            - flow: filter://type=IPV4,proto=ICMP,label=NETWORKING
+
+    - module:
+        name    : IPV6
+        spec    : l3uc_vxlan.testspec
+        iterate :
+            - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
+            - flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+

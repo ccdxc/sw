@@ -1,0 +1,79 @@
+# Feature Test Modules List
+feature:
+    id          : recirc
+    package     : test.networking
+    module      : recirc
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : L2UC
+        spec    : l2uc.testspec
+        args    :
+            maxflows : 1
+        iterate:
+            # Tagged Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
+              segment : filter://native=False
+            # Untagged Cases
+            - flow    : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
+              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
+              segment : filter://native=True
+            - flow    : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
+              segment : filter://native=True
+
+    - module:
+        name    : L2UC_NONIP
+        spec    : l2uc_nonip.testspec
+        args    :
+            maxflows : 1
+        iterate:
+            - segment  : filter://native=False
+              flow     : filter://label=FLOW-COLLISION
+            - segment  : filter://native=True
+              flow     : filter://label=FLOW-COLLISION
+
+    - module:
+        name    : L3UC
+        spec    : l3uc.testspec
+        args    :
+            maxflows : 1
+        iterate:
+            # Tagged Cases
+            - flow      : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
+              srcseg    : filter://native=False
+            # Untagged Cases
+            - flow      : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
+              srcseg    : filter://native=True
+
+

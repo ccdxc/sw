@@ -27,6 +27,7 @@ sessions:
         ipv6:
             - ref://store/specs/id=SESSION_UDP_UP2UP
             - ref://store/specs/id=SESSION_TCP_UP2UP
+            - ref://store/specs/id=SESSION_ICMPV6_UP2UP
         mac:
             - ref://store/specs/id=SESSION_MAC_UP2UP
 

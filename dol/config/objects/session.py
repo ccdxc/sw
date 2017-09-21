@@ -67,8 +67,10 @@ class SessionObject(base.ConfigObjectBase):
         cfglogger.info("- Label    : %s" % self.label)
         string = None
         if self.IsTCP():
-            if self.spec.tracking: string = 'Tracking'
-            if self.spec.timestamp: string += '/Timestamp'
+            tr = getattr(self.spec, 'tracking', False)
+            if tr: string = 'Tracking'
+            ts = getattr(self.spec, 'timestamp', False)
+            if ts: string += '/Timestamp'
         
         if string:
            cfglogger.info("- Info     : %s" % string)
@@ -116,8 +118,12 @@ class SessionObject(base.ConfigObjectBase):
         req_spec.meta.tenant_id = self.initiator.ep.tenant.id
 
         req_spec.session_id = self.id
-        req_spec.conn_track_en = self.spec.tracking if self.IsTCP() else False
-        req_spec.tcp_ts_option = self.spec.timestamp if self.IsTCP() else False
+        if self.IsTCP():
+            req_spec.conn_track_en = getattr(self.spec, 'tracking', False)
+            req_spec.tcp_ts_option = getattr(self.spec, 'timestamp', False)
+        else:
+            req_spec.conn_track_en = False
+            req_spec.tcp_ts_option = False
 
         self.iflow.PrepareHALRequestSpec(req_spec.initiator_flow)
         self.rflow.PrepareHALRequestSpec(req_spec.responder_flow)

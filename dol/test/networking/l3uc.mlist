@@ -1,18 +1,157 @@
-# For Usage details: Refer <ws>/dol/examples/sample.mlist.example
+# Feature Test Modules List
 feature:
-    id      : None
-    enable  : None
-    package : None
-    module  : None
-    ignore  : None
+    id          : l3uc
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : False
 
 modules:
-    - module
-        name    : None
-        enable  : None
-        package : None
-        module  : None
-        spec    : None
-        args    : None
-        iterate : None
+    - module:
+        name    : IPV4_QTAG
+        spec    : l3uc.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg    : filter://native=False
+
+    - module:
+        name    : IPV6_QTAG
+        spec    : l3uc.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=False
+
+    - module:
+        name    : IPV4_UTAG
+        spec    : l3uc.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg    : filter://native=True
+
+    - module:
+        name    : IPV6_UTAG
+        spec    : l3uc.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=True
+
+    - module:
+        name    : IPV4_PTAG
+        spec    : l3uc.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+
+    - module:
+        name    : IPV6_PTAG
+        spec    : l3uc.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg    : filter://native=True
+              priotag   : True
+
+    - module:
+        name    : IPV4_QTAG_GFT_DROP
+        spec    : l3uc.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              srcseg    : filter://native=False
+
+    - module:
+        name    : IPV6_QTAG_GFT_DROP
+        spec    : l3uc.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              srcseg    : filter://native=False
+
+              
+    - module:
+        name    : IPV4_UTAG_GFT_DROP
+        spec    : l3uc.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              srcseg    : filter://native=True
+
+              
+    - module:
+        name    : IPV6_UTAG_GFT_DROP
+        spec    : l3uc.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              srcseg    : filter://native=True
+
+    - module:
+        name    : IPV4_PTAG_GFT_DROP
+        spec    : l3uc.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=GFT_DROP
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=UDP,label=GFT_DROP
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=ICMP,label=GFT_DROP
+              srcseg    : filter://native=True
+              priotag   : True
+
+              
+    - module:
+        name    : IPV6_PTAG_GFT_DROP
+        spec    : l3uc.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=TCP,label=GFT_DROP
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=UDP,label=GFT_DROP
+              srcseg    : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+              srcseg    : filter://native=True
+              priotag   : True
+
 

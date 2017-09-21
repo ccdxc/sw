@@ -46,26 +46,37 @@ class ModuleIterator:
     def End(self):
         return self.idx == len(self.elems)
 
-class Module:
-    def __init__(self, parsedata):
-        self.parsedata = parsedata
-
-        self.name       = parsedata.name
-        self.package    = parsedata.package
-        self.module     = parsedata.module
-        self.spec       = parsedata.spec
+class Module(objects.FrameworkObject):
+    def __init__(self, spec):
+        super().__init__()
+        self.spec       = spec
+        self.name       = spec.name
+        self.feature    = getattr(spec, 'feature', '')
+        self.GID("%s_%s" % (self.feature, self.name))
+        self.package    = spec.package
+        self.module     = spec.module
+        self.spec       = spec.spec
         self.path       = self.package.replace(".", "/")
-        self.ignore     = parsedata.ignore
-        self.iterator   = ModuleIterator(parsedata.iterate)
+        self.ignore     = spec.ignore
+        self.iterator   = ModuleIterator(spec.iterate)
         self.args       = None 
-        if 'args' in parsedata.__dict__:
-            self.args = parsedata.args
+        if 'args' in spec.__dict__:
+            self.args = spec.args
         self.id         = ModuleIdAllocator.get()
         self.module_hdl = None
         self.infra_data = None
         self.CompletedTestCases = []
 
         self.stats = ModuleStats()
+        self.Show()
+        return
+
+    def Show(self):
+        logger.info("- Module Test  : %s" % self.name)
+        logger.info("  - Package    : %s" % self.package)
+        logger.info("  - Module     : %s" % self.module)
+        logger.info("  - TestSpec   : %s" % self.spec)
+        logger.info("  - Ignore     : %s" % self.ignore)
         return
 
     def __select_config(self):
@@ -244,7 +255,7 @@ class ModuleListParser:
 
 class ModuleDatabase:
     def __init__(self, module_list_file=defs.DEFAULT_MODULES_LIST_FILE):
-        self.db = []
+        self.db = {}
         self.parser = ModuleListParser(module_list_file)
         if GlobalOptions.test != None:
             GlobalOptions.test = GlobalOptions.test.split(',')
@@ -252,7 +263,6 @@ class ModuleDatabase:
             GlobalOptions.module = GlobalOptions.module.split(',')
         if GlobalOptions.pkglist != None:
             GlobalOptions.pkglist = GlobalOptions.pkglist.split(',')
-        self.__add_all()
         return
 
     def __is_test_match(self, name):
@@ -308,7 +318,10 @@ class ModuleDatabase:
             return
 
         module = Module(pmod)
-        self.db.append(module)
+        if module.GID() in self.db:
+            logger.error("Duplicate Test : %s" % module.GID())
+            assert(0)
+        self.db[module.GID()] = module
         return
 
     def __add_all(self):
@@ -316,13 +329,21 @@ class ModuleDatabase:
             self.__add(pmod)
         return
 
-    def getnext(self):
-        if self.iter == len(self.db):
-            return None
-        mod = self.db[self.iter]
-        self.iter += 1
-        return mod
+    def GetAll(self):
+        return self.db.values()
 
-    def getfirst(self):
-        self.iter = 0
-        return self.getnext()
+    def Process(self):
+        self.__add_all()
+        return
+
+    def Add(self, spec):
+        self.__add(spec)
+        return
+
+modlist = 'modules.list'
+if GlobalOptions.modlist is not None:
+    modlist = GlobalOptions.modlist
+
+ModuleStore = ModuleDatabase(modlist)
+def Init():
+    ModuleStore.Process()

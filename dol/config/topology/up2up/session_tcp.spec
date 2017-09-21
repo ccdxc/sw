@@ -9,35 +9,22 @@ entries:
     - entry:
         label: networking
         tracking: False
-        timestamp: False
         responder:
             port : const/42001
-            flow_info:
-                eg_qos:
-                    cos_rw  : const/1
-                    cos     : const/4
         initiator:
             port : const/42002
 
+
+
     - entry:
-        label: fte
-        fte: True
+        label: gft_drop
         tracking: False
-        timestamp: False
         responder: 
             port : const/22222
             flow_info:
-                eg_qos:    
-                    cos_rw  : const/1
-                    cos     : const/4
-                    dscp_rw : const/1
-                    dscp    : const/1
+                action: drop
         initiator: 
             port : const/33333
             flow_info:
-                eg_qos:    
-                    cos_rw  : const/1
-                    cos     : const/3
-                    dscp_rw : const/1
-                    dscp    : const/2
+                action: drop
 

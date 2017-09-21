@@ -2,23 +2,26 @@
 
 import pdb
 
-import infra.engine.modmgr as modmgr
-import infra.factory.factory as factory
-import infra.config.config as config
-import infra.common.objects as objects
-import infra.common.defs as defs
-from infra.common.glopts import GlobalOptions
+import infra.factory.factory    as factory
+import infra.config.config      as config
+import infra.common.objects     as objects
+import infra.common.defs        as defs
+import infra.engine.feature     as feature
+import infra.engine.modmgr      as modmgr
 
+from infra.common.glopts    import GlobalOptions
 from infra.common.logging   import logger
 from infra.engine.trigger2  import TriggerEngine
 from infra.engine.verif     import VerifEngine
 from config.store           import Store
-
-global modDB
+from infra.engine.modmgr    import ModuleStore
 
 def init():
-    global modDB
-    modDB = modmgr.ModuleDatabase(module_list_file=GlobalOptions.modlist)
+    if GlobalOptions.feature is None:
+        modmgr.Init()
+
+    if GlobalOptions.modlist is None:
+        feature.Init()
     return
 
 def CreateInfraData():
@@ -35,11 +38,9 @@ def CreateInfraData():
     return obj
 
 def ExecuteAllModules():
-    module = modDB.getfirst()
-    while module != None:
+    for module in ModuleStore.GetAll():
         infra_data = CreateInfraData()
         module.main(infra_data)
-        module = modDB.getnext()
  
 def GetSummaryAndResult():
     print("\nResult Summary:")
@@ -51,18 +52,15 @@ def GetSummaryAndResult():
     npass = 0
     nfail = 0
     ntotal = 0
-    gl_junk_recvd = False
 
-    module = modDB.getfirst()
     final_result = 0
-    while module != None:
+    for module in ModuleStore.GetAll():
         module.PrintResultSummary()
         module_result = module.GetFinalResult()
         final_result += module_result
         npass += module.stats.passed
         nfail += module.stats.failed
         ntotal += module.stats.total
-        module = modDB.getnext()
     
     print("-" * 78)
     print("%-16s %-32s %-6s %6d %6d %6d" %\
@@ -70,11 +68,6 @@ def GetSummaryAndResult():
     print("-" * 78)
 
     if final_result != 0:
-        print("Final Status = FAIL")
-        return 1
-    
-    if gl_junk_recvd:
-        print("Some junk packets where received")
         print("Final Status = FAIL")
         return 1
     

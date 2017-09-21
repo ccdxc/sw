@@ -1,19 +1,15 @@
 # For Usage details: Refer <ws>/dol/examples/sample.mlist.example
 feature:
-    id      : Normalization
-    enable  : True
+    id      : normalization
     package : test.normalization
     module  : normalization
+    enable  : True
     ignore  : False
 
 modules:
     - module:
-        name    : NORMALIZATION_IP
-        enable  : True
-        package : test.normalization
-        module  : normalization
+        name    : IPV4
         spec    : normalization.testspec
-        ignore  : False
         args    :
             flow: filter://type=IPV4
         iterate :
@@ -25,10 +21,7 @@ modules:
             - SEC_PROF_IP_DF_ACTION_EDIT
 
     - module:
-        name    : NORMALIZATION_IP_IGNORE
-        enable  : True
-        package : test.normalization
-        module  : normalization
+        name    : IPV4_IGNORE
         spec    : normalization.testspec
         ignore  : True
         args    :
@@ -42,10 +35,7 @@ modules:
             - SEC_PROF_IP_INVALID_LEN_ACTION_EDIT
 
     - module:
-        name    : NORMALIZATION_ICMP
-        enable  : True
-        package : test.normalization
-        module  : normalization
+        name    : ICMP
         spec    : normalization.testspec
         ignore  : True
         args    :
@@ -71,10 +61,7 @@ modules:
             - SEC_PROF_ICMP_REDIRECT_MSG_DROP_DISABLE
 
     - module:
-        name    : NORMALIZATION_TCP_STATELESS_IGNORE
-        enable  : True
-        package : test.normalization
-        module  : normalization
+        name    : TCP_STATELESS_IGNORE
         spec    : normalization.testspec
         ignore  : True
         args    :
@@ -87,12 +74,8 @@ modules:
             - SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_DROP
 
     - module:
-        name    : NORMALIZATION_TCP_STATELESS
-        enable  : True
-        package : test.normalization
-        module  : normalization
+        name    : TCP_STATELESS
         spec    : normalization.testspec
-        ignore  : False
         args    :
             flow: filter://type=IPV4,proto=TCP
         iterate :
@@ -121,10 +104,7 @@ modules:
             - SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT
 
     - module:
-        name    : NORMALIZATION_TCP_STATEFUL
-        enable  : True
-        package : test.normalization
-        module  : normalization
+        name    : TCP_STATEFUL
         spec    : normalization.testspec
         ignore  : True
         args    :

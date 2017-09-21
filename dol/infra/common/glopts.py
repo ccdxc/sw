@@ -10,7 +10,7 @@ parser.add_argument('--debug', dest='debug',
 parser.add_argument('--verbose', dest='verbose',
                     action='store_true', help='Enable Verbose Mode')
 parser.add_argument('--modlist', dest='modlist',
-                    default='modules.list', help='Module List File')
+                    default=None, help='Module List File')
 parser.add_argument('--pkglist', dest='pkglist', default=None, 
                     help='Run only the tests in package list')
 parser.add_argument('--config-only', dest='cfgonly',
@@ -25,7 +25,6 @@ parser.add_argument('--testcase', dest='tcid', default=None,
                     help='Run single Testcase by ID(E.g. For TC000001 use 1')
 parser.add_argument('--module', dest='module', default=None,
                     help='Run all TestSpecs of a module (from modules.list)')
-parser.add_argument('--rerun', dest='rerun', action='store_true',
-                    help='Re-run mode (Ignores ALREADY_EXIST error from HAL)')
-
+parser.add_argument('--feature', dest='feature', default=None,
+                    help='Run all Tests for a feature.')
 GlobalOptions = parser.parse_args()

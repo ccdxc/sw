@@ -1,6 +1,13 @@
-# This file contains the list of DOL test modules.
-modules:
+# Feature Test Modules List
+feature:
+    id          : ipsg
+    package     : None # Specified individually
+    module      : None # Specified individually
+    enable      : True
+    ignore      : False
 
+
+modules:
 # ------------------------------      IPSG Miss Drop    --------------------------------------
     - module:
         name    : L2UC_IP_IPSG_MISS_DROP
@@ -75,7 +82,6 @@ modules:
         spec    : l3uc_ipsg_miss_drop.testspec
         args    :
             maxflows: 1
-        ignore  : False
         iterate :
             # Tagged Cases
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -113,7 +119,6 @@ modules:
         spec    : l3uc_ipsg_miss_drop.testspec
         args    :
             maxflows: 1
-        ignore  : False
         iterate :
             # Priority Tag Cases
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -142,7 +147,6 @@ modules:
         package : test.ipsg.ipsg_miss_drop
         module  : ipsg
         spec    : rx_ipsg_miss_drop.testspec
-        ignore  : False
         args:
             maxflows: 1
         iterate:
@@ -198,7 +202,6 @@ modules:
         package : test.ipsg.ipsg_miss_drop
         module  : ipsg
         spec    : rx_l3_ipsg_miss_drop.testspec
-        ignore  : False
         args:
             maxflows: 1
         iterate:
@@ -254,7 +257,6 @@ modules:
         package : test.ipsg.ipsg_miss_drop
         module  : ipsg
         spec    : tx_ipsg_miss_drop.testspec
-        ignore  : False
         args    :
             maxflows : 1
         iterate:
@@ -291,7 +293,6 @@ modules:
         package : test.ipsg.ipsg_miss_drop
         module  : ipsg
         spec    : tx_l3_ipsg_miss_drop.testspec
-        ignore  : False
         args    :
             maxflows : 1
         iterate:
@@ -396,7 +397,6 @@ modules:
         spec    : l3uc_ipsg_inv_mac_drop.testspec
         args    :
             maxflows: 1
-        ignore  : False
         iterate :
             # Tagged Cases
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -434,7 +434,6 @@ modules:
         spec    : l3uc_ipsg_inv_mac_drop.testspec
         args    :
             maxflows: 1
-        ignore  : False
         iterate :
             # Priority Tag Cases
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -463,7 +462,6 @@ modules:
         package : test.ipsg.ipsg_inv_mac_drop
         module  : ipsg
         spec    : rx_ipsg_inv_mac_drop.testspec
-        ignore  : False
         args:
             maxflows: 1
         iterate:
@@ -519,7 +517,6 @@ modules:
         package : test.ipsg.ipsg_inv_mac_drop
         module  : ipsg
         spec    : rx_l3_ipsg_inv_mac_drop.testspec
-        ignore  : False
         args:
             maxflows: 1
         iterate:
@@ -575,7 +572,6 @@ modules:
         package : test.ipsg.ipsg_inv_mac_drop
         module  : ipsg
         spec    : tx_ipsg_inv_mac_drop.testspec
-        ignore  : False
         args    :
             maxflows : 1
         iterate:
@@ -612,7 +608,6 @@ modules:
         package : test.ipsg.ipsg_inv_mac_drop
         module  : ipsg
         spec    : tx_l3_ipsg_inv_mac_drop.testspec
-        ignore  : False
         args    :
             maxflows : 1
         iterate:
@@ -718,7 +713,6 @@ modules:
         spec    : l3uc_ipsg_inv_vlan_drop.testspec
         args    :
             maxflows: 1
-        ignore  : False
         iterate :
             # Tagged Cases
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -756,7 +750,6 @@ modules:
         spec    : l3uc_ipsg_inv_vlan_drop.testspec
         args    :
             maxflows: 1
-        ignore  : False
         iterate :
             # Priority Tag Cases
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -785,7 +778,6 @@ modules:
         package : test.ipsg.ipsg_inv_vlan_drop
         module  : ipsg
         spec    : rx_ipsg_inv_vlan_drop.testspec
-        ignore  : False
         args:
             maxflows: 1
         iterate:
@@ -841,7 +833,6 @@ modules:
         package : test.ipsg.ipsg_inv_vlan_drop
         module  : ipsg
         spec    : rx_l3_ipsg_inv_vlan_drop.testspec
-        ignore  : False
         args:
             maxflows: 1
         iterate:
@@ -897,7 +888,6 @@ modules:
         package : test.ipsg.ipsg_inv_vlan_drop
         module  : ipsg
         spec    : tx_ipsg_inv_vlan_drop.testspec
-        ignore  : False
         args    :
             maxflows : 1
         iterate:
@@ -934,7 +924,6 @@ modules:
         package : test.ipsg.ipsg_inv_vlan_drop
         module  : ipsg
         spec    : tx_l3_ipsg_inv_vlan_drop.testspec
-        ignore  : False
         args    :
             maxflows : 1
         iterate:

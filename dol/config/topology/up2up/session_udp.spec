@@ -13,3 +13,14 @@ entries:
         initiator: 
             port : const/47273
 
+    - entry:
+        label: gft_drop
+        responder:
+            port : const/128
+            flow_info:
+                action: drop
+        initiator: 
+            port : const/47274
+            flow_info:
+                action: drop
+

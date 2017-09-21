@@ -526,6 +526,7 @@ class PercentField(FrameworkFieldObject):
 class FilterField(FrameworkFieldObject):
     def __init__(self, valobj):
         super().__init__()
+        self.string = valobj.string
         self.filters = []
         key_value_pairs = valobj.params[0].split(',')
         for key_value_str in key_value_pairs:
@@ -536,10 +537,16 @@ class FilterField(FrameworkFieldObject):
             assert(len(params) == 2)
             self.filters.append((params[0], params[1]))
         return
-    def Extend(self, filter_str):
-        obj = TemplateFieldObject(filter_str)
+    def Extend(self, fobj):
+        if isinstance(fobj, FilterField):
+            obj = fobj
+        else:
+            obj = TemplateFieldObject(fobj)
         self.filters.extend(obj.filters)
         return
+
+    def __str__(self):
+        return self.string
 
 class TspecReferenceFied(FrameworkFieldObject):
     def __init__(self, valobj):
