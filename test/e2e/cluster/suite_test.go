@@ -81,9 +81,8 @@ func makeTestSuite() *e2eTestSuite {
 
 	// Environment variables override defaults, config file
 	if s := os.Getenv("PENS_NODES"); s != "" {
-		var err error
-		ts.NumVeniceNodes, err = strconv.Atoi(s)
-		Expect(err).ShouldNot(HaveOccurred())
+		s2 := strings.Split(s, ",")
+		ts.NumVeniceNodes = len(s2)
 	}
 
 	if s := os.Getenv("PENS_QUORUM_NODES"); s != "" {

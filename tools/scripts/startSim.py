@@ -203,8 +203,11 @@ try:
         snode.runCmd("sudo ovs-vsctl del-br SimBridge")
 
     # Stop vcsim
-    vcsim = Node("pen-master", args.user, args.password, args.simbin)
-    vcsim.runCmd("sudo pkill vcsim")
+    try:
+        vcsim = Node("pen-master", args.user, args.password, args.simbin)
+        vcsim.runCmd("sudo pkill vcsim")
+    except:
+        pass
 
     # When -stop was passed, we are done
     if args.stop:
