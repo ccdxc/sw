@@ -8,6 +8,7 @@ LCXXFLAGS = -I. \
 	-I$(TOPDIR)/gen/protobuf \
 	-I$(TOPDIR)/gen/iris/include \
 	-I$(TOPDIR)/p4/nw/include \
+	-I$(TOPDIR)/asm/cpu-p4+/include \
 	-I$(TOPDIR)/third-party/spdlog/include
 
 SOURCES = \

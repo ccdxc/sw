@@ -4,7 +4,6 @@
 #include <pd_api.hpp>
 #include <hal_state_pd.hpp>
 #include <capri_hbm.hpp>
-#include <proxy.hpp>
 
 namespace hal {
 namespace pd {
@@ -379,7 +378,11 @@ cpupkt_program_send_queue(cpupkt_ctxt_t* ctxt, cpupkt_hw_id_t descr_addr)
 }
 
 hal_ret_t
-cpupkt_program_send_ring_doorbell(cpupkt_ctxt_t* ctxt) 
+cpupkt_program_send_ring_doorbell(cpupkt_ctxt_t* ctxt,
+                                  uint16_t dest_lif,
+                                  uint8_t  qtype,
+                                  uint32_t qid,
+                                  uint8_t  ring_number)
 {
     uint64_t            addr = 0;
     uint64_t            data = 0;
@@ -390,12 +393,13 @@ cpupkt_program_send_ring_doorbell(cpupkt_ctxt_t* ctxt)
     
     addr = 0 | DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_SET;
     addr = addr << DB_UPD_SHFT;
-    addr += (SERVICE_LIF_CPU << DB_LIF_SHFT);
+    addr += (dest_lif << DB_LIF_SHFT);
+    addr += (qtype << DB_TYPE_SHFT);
     addr += DB_ADDR_BASE;
 
     data += ((uint64_t)CPU_ASQ_PID << DB_PID_SHFT);
-    data += (CPU_ASQ_QID << DB_QID_SHFT);
-    data += (CPU_SCHED_RING_ASQ << DB_RING_SHFT);
+    data += (qid << DB_QID_SHFT);
+    data += (ring_number << DB_RING_SHFT);
 
     HAL_TRACE_DEBUG("Ringing Doorbell with addr: {:#x} data: {:#x}",
                     addr, data);
@@ -408,18 +412,23 @@ cpupkt_program_send_ring_doorbell(cpupkt_ctxt_t* ctxt)
 
 hal_ret_t
 cpupkt_send(cpupkt_ctxt_t* ctxt,
-            p4plus_to_p4_header_t* header,
+            cpu_to_p4plus_header_t* cpu_header,
+            p4plus_to_p4_header_t* p4_header,
             uint8_t* data, 
-            size_t data_len) 
+            size_t data_len,
+            uint16_t dest_lif,
+            uint8_t  qtype,
+            uint32_t qid,
+            uint8_t ring_number)
 {
     hal_ret_t           ret = HAL_RET_OK;
     cpupkt_hw_id_t      page_addr = 0;
     cpupkt_hw_id_t      descr_addr = 0;
-    cpupkt_hw_id_t      data_addr = 0;
-    size_t              header_len = sizeof(p4plus_to_p4_header_t);
-    size_t              total_len = header_len + data_len;
+    cpupkt_hw_id_t      write_addr = 0;
+    size_t              write_len = 0;
+    size_t              total_len = 0;
 
-    if(!ctxt || !header || !data) {
+    if(!ctxt || !cpu_header || !p4_header || !data) {
         return HAL_RET_INVALID_ARG;    
     }
     
@@ -432,24 +441,47 @@ cpupkt_send(cpupkt_ctxt_t* ctxt,
 
     // copy the packet to hbm page. 
     // TODO: REMOVE once direct hbm access is available
-    HAL_TRACE_DEBUG("Copying header of len: {} to page at addr: {:#x}", 
-                          header_len, page_addr);
-    if(!p4plus_hbm_write(page_addr, (uint8_t *)header, header_len)) {
-        HAL_TRACE_ERR("Failed to copy packet to the page");
-        ret = HAL_RET_HW_FAIL;
-        goto cleanup;
-    }
-    
-    data_addr = page_addr + header_len; 
-    HAL_TRACE_DEBUG("Copying data of len: {} to page at addr: {:#x}", data_len, data_addr);
-    if(!p4plus_hbm_write(data_addr, data, data_len)) {
+
+    // CPU header
+    // update l2 header offset to include headers
+    cpu_header->l2_offset += (sizeof(cpu_to_p4plus_header_t) +
+                              sizeof(p4plus_to_p4_header_t) +
+                              L2HDR_DOT1Q_OFFSET);
+    write_addr = page_addr;
+    write_len = sizeof(cpu_to_p4plus_header_t);
+    total_len += write_len;
+    HAL_TRACE_DEBUG("Copying CPU header of len: {} to addr: {:#x}, l2offset: {:#x}",
+                          write_len, write_addr, cpu_header->l2_offset);
+    if(!p4plus_hbm_write(write_addr, (uint8_t *)cpu_header, write_len)) {
         HAL_TRACE_ERR("Failed to copy packet to the page");
         ret = HAL_RET_HW_FAIL;
         goto cleanup;
     }
 
-    total_len = header_len + data_len;
-    HAL_TRACE_DEBUG("Total pkt len: {} to page at addr: {:#x}", total_len, data_addr);
+    // P4plus_to_p4_header_t
+    write_addr += write_len; // shift address
+    write_len = sizeof(p4plus_to_p4_header_t);
+    total_len += write_len;
+    HAL_TRACE_DEBUG("Copying P4Plus to P4 header of len: {} to addr: {:#x}",
+                              write_len, write_addr);
+    if(!p4plus_hbm_write(write_addr, (uint8_t *)p4_header, write_len)) {
+        HAL_TRACE_ERR("Failed to copy packet to the page");
+        ret = HAL_RET_HW_FAIL;
+        goto cleanup;
+    }
+    
+    // Data
+    write_addr += write_len;
+    write_len = data_len;
+    total_len += write_len;
+    HAL_TRACE_DEBUG("Copying data of len: {} to page at addr: {:#x}", write_len, write_addr);
+    if(!p4plus_hbm_write(write_addr, data, write_len)) {
+        HAL_TRACE_ERR("Failed to copy packet to the page");
+        ret = HAL_RET_HW_FAIL;
+        goto cleanup;
+    }
+
+    HAL_TRACE_DEBUG("Total pkt len: {} to page at addr: {:#x}", total_len, page_addr);
 
     ret = cpupkt_program_descr(page_addr, total_len, &descr_addr);
     if(ret != HAL_RET_OK) {
@@ -463,7 +495,7 @@ cpupkt_send(cpupkt_ctxt_t* ctxt,
     }
 
     // Ring doorbell
-    ret = cpupkt_program_send_ring_doorbell(ctxt); 
+    ret = cpupkt_program_send_ring_doorbell(ctxt, dest_lif, qtype, qid, ring_number);
     if(ret != HAL_RET_OK) {
         goto cleanup;    
     }
@@ -473,37 +505,6 @@ cleanup:
     // FIXME
     return ret;
 }
-
-
-/*****************************************************
- * Dummy Test API TODO: REMOVE
- * ***************************************************/
-void* cpupkt_test_pkt_receive(void * thread_context) 
-{
-    p4_to_p4plus_cpu_pkt_t* flow_miss_hdr = NULL;
-    uint8_t* data = NULL;
-    size_t data_len = 0;
-    p4plus_to_p4_header_t hdr = {};
-
-    HAL_TRACE_DEBUG("CPU Thread {} initializing ... ");
-    cpupkt_ctxt_t* ctxt = cpupkt_ctxt_alloc_init();
-
-    cpupkt_register_rx_queue(ctxt, types::WRING_TYPE_ARQRX);
-    cpupkt_register_tx_queue(ctxt, types::WRING_TYPE_ASQ);
-    
-    while(true) {
-        cpupkt_poll_receive(ctxt, 
-                            &flow_miss_hdr,
-                            &data,
-                            &data_len);
-        HAL_TRACE_DEBUG("Received packet.....");
-        cpupkt_send(ctxt, &hdr, data, data_len); 
-        cpupkt_free(flow_miss_hdr, data);
-    }
-
-    return NULL;
-}
-
 
 } // namespace pd
 } // namespace hal

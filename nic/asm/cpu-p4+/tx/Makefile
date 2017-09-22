@@ -27,6 +27,8 @@ SRC_FILES := \
 	$(SRC_DIR)/cpu_tx_read_asq_ci.s \
 	$(SRC_DIR)/cpu_tx_asq_consume.s \
 	$(SRC_DIR)/cpu_tx_read_asq_descr.s \
+	$(SRC_DIR)/cpu_tx_read_cpu_hdr.s \
+	$(SRC_DIR)/cpu_tx_read_l2_vlan_hdr.s \
 	$(SRC_DIR)/cpu_tx_write_pkt.s \
 
 

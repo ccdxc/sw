@@ -27,7 +27,6 @@
 #define rx_table_s3_t0_action write_arqrx
 
 #include "../common-p4+/common_rxdma.p4"
-#include "cpu_defines.h"
 #include "cpu_rx_common.p4"
 
 #define GENERATE_GLOBAL_K \
@@ -205,7 +204,7 @@ metadata dma_cmd_phv2mem_t dma_cmd2;
 /*
  * Stage 0 table 0 action
  */
-action cpu_rxdma_initial_action(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, debug_dol, pad) {
+action cpu_rxdma_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, debug_dol, pad) {
     // k + i for stage 0
 
     // from intrinsic
@@ -225,8 +224,6 @@ action cpu_rxdma_initial_action(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, 
     modify_field(cpu_scratch_app.flow_hash, cpu_app_header.flow_hash);
 
     // d for stage 0
-    
-    modify_field(cpu_rxdma_initial_d.pc, pc);
     modify_field(cpu_rxdma_initial_d.rsvd, rsvd);
     modify_field(cpu_rxdma_initial_d.cosA, cosA);
     modify_field(cpu_rxdma_initial_d.cosB, cosB);

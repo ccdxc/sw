@@ -4,6 +4,8 @@
 #include <base.h>
 #include <pd.hpp>
 #include <cpupkt_headers.hpp>
+#include <proxy.hpp>
+#include <cpu-defines.h>
 
 namespace hal {
 namespace pd {
@@ -94,9 +96,14 @@ hal_ret_t cpupkt_free(p4_to_p4plus_cpu_pkt_t* flow_miss_hdr, uint8_t* data);
 
 // transmit
 hal_ret_t cpupkt_send(cpupkt_ctxt_t* ctxt,
-                      p4plus_to_p4_header_t* header,
+                      cpu_to_p4plus_header_t* cpu_header,
+                      p4plus_to_p4_header_t* p4_header,
                       uint8_t* data,
-                      size_t data_len);
+                      size_t data_len,
+                      uint16_t dest_lif = SERVICE_LIF_CPU,
+                      uint8_t  qtype = 0,
+                      uint32_t qid = CPU_ASQ_QID,
+                      uint8_t  ring_number = CPU_SCHED_RING_ASQ);
 hal_ret_t cpupkt_page_alloc(cpupkt_hw_id_t* page_addr);
 hal_ret_t cpupkt_descr_alloc(cpupkt_hw_id_t* descr_addr);
 
