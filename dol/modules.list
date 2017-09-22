@@ -262,7 +262,7 @@ modules:
         ignore  : True
         iterate :
             - flow: filter://type=IPV4,proto=TCP
-
+ 
     - module:
         name    : RDMA_TX_SEND_ONLY
         enable  : True
@@ -270,7 +270,7 @@ modules:
         module  : req_tx_send_only
         spec    : req_tx_send_only.testspec
         ignore  : False
-
+ 
     - module:
         name    : RDMA_TX_SEND_ONLY_2SGES
         enable  : True
@@ -278,7 +278,7 @@ modules:
         module  : req_tx_send_only_2sges
         spec    : req_tx_send_only_2sges.testspec
         ignore  : False
-
+ 
     - module:
         name    : RDMA_TX_SEND_FIRST_LAST
         enable  : True
@@ -286,7 +286,7 @@ modules:
         module  : req_tx_send_first_last
         spec    : req_tx_send_first_last.testspec
         ignore  : False
-
+ 
     - module:
         name    : RDMA_TX_SEND_FIRST_LAST_2SGES
         enable  : True
@@ -294,7 +294,15 @@ modules:
         module  : req_tx_send_first_last_2sges
         spec    : req_tx_send_first_last_2sges.testspec
         ignore  : False
-
+ 
+    - module:
+        name    : RDMA_TX_SEND_ONLY_IMM
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_imm
+        spec    : req_tx_send_only_imm.testspec
+        ignore  : False
+ 
     - module:
         name    : RDMA_TX_WRITE_ONLY
         enable  : True
@@ -302,14 +310,14 @@ modules:
         module  : req_tx_write_only
         spec    : req_tx_write_only.testspec
         ignore  : False
-
+ 
     - module:
         name    : RDMA_TX_WRITE_ONLY_IMM
         enable  : True
         package : test.rdma
         module  : req_tx_write_only_imm
         spec    : req_tx_write_only_imm.testspec
-
+ 
     - module:
         name    : RDMA_TX_SEND_FIRST_MID_LAST
         enable  : True
@@ -317,13 +325,21 @@ modules:
         module  : req_tx_send_first_mid_last
         spec    : req_tx_send_first_mid_last.testspec
         ignore  : False
-
+ 
     - module:
         name    : RDMA_TX_SEND_FIRST_MID_LAST_2SGES
         enable  : True
         package : test.rdma
         module  : req_tx_send_first_mid_last_2sges
         spec    : req_tx_send_first_mid_last_2sges.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_TX_SEND_FIRST_MID_LAST_IMM
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_mid_last_imm
+        spec    : req_tx_send_first_mid_last_imm.testspec
         ignore  : False
 
     - module:
@@ -333,7 +349,7 @@ modules:
         module  : resp_rx_send_only
         spec    : resp_rx_send_only.testspec
         ignore  : False
-
+ 
     - module:
         name    : RDMA_RX_SEND_ONLY_2SGES
         enable  : True
@@ -341,7 +357,7 @@ modules:
         module  : resp_rx_send_only_2sges
         spec    : resp_rx_send_only_2sges.testspec
         ignore  : False
-
+ 
     #- module:
     #    name    : RDMA_RX_SEND_FIRST_LAST
     #    enable  : False

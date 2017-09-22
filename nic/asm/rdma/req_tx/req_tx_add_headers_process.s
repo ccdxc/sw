@@ -65,6 +65,9 @@ req_tx_add_headers_process:
     b              end
     nop
 
+op_type_send_imm:
+    seq            c3, 1, 1
+    tblwr.c2       d.imm_data, k.args.op.send_wr.imm_data 
 op_type_send:
 
     //figure out the opcode
@@ -80,7 +83,9 @@ op_type_send:
     nop
 
     .brcase 1 //not-first, last
-    add            r2, RDMA_PKT_OPC_SEND_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    //seq            c3, k.global.flags.req_tx.immeth_vld, 1
+    bcf            [c3], send_imm_handle
+    add            r2, RDMA_PKT_OPC_SEND_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
     b              set_bth_opc
     nop
 
@@ -90,9 +95,23 @@ op_type_send:
     nop
 
     .brcase 3 //first, last (only)
-    add            r2, RDMA_PKT_OPC_SEND_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    seq            c3, k.global.flags.req_tx.immeth_vld, 1
+    bcf            [c3], send_imm_handle
+    add            r2, RDMA_PKT_OPC_SEND_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
     b              set_bth_opc
     nop
+
+send_imm_handle:
+    // add IMMETH hdr
+    // dma_cmd[4]
+    addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
+    DMA_PHV2PKT_SETUP(r7, immeth, immeth)
+    addi           r2, r2, 1 //increment packet opcode by 1 (immediate)
+    b              set_bth_opc
+    //phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data //branch delay slot
+    phvwr          IMMDT_DATA, d.imm_data //branch delay slot
+    //nop
+
 
     .csend
 
@@ -136,12 +155,12 @@ op_type_write:
 
     .brcase 3 //first, last (only)
     seq            c3, k.global.flags.req_tx.immeth_vld, 1
-    bcf            [c3], imm_handle
+    bcf            [c3], write_imm_handle
     add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
     b set_bth_opc
     nop
 
-imm_handle:
+write_imm_handle:
     // add IMMETH hdr
     // dma_cmd[5]
     sub            r7, r7, 1, LOG_DMA_CMD_SIZE_BITS
@@ -161,10 +180,6 @@ set_bth_opc:
     setcf          c5, [c0] // Branch Delay Slot
 
 op_type_send_inv:
-    b              end
-    nop
-
-op_type_send_imm:
     b              end
     nop
 

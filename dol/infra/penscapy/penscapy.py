@@ -78,31 +78,6 @@ class VXLAN(Packet):
     ]
 bind_layers(UDP, VXLAN, dport=4789)
 bind_layers(VXLAN, Ether, flag_i=1)
-
-class BTH(Packet):
-    name = "BTH"
-    fields_desc = [
-        BitField("opcode",      0,      8),
-        BitField("se",          0,      1),
-        BitField("m",           0,      1),
-        BitField("padcnt",      0,      2),
-        BitField("tver",        0,      4),
-        BitField("p_key",       0,      16),
-        BitField("f_r",         0,      1),
-        BitField("b_r",         0,      1),
-        BitField("rsvd",        0,      6),
-        BitField("destqp",      0,      24),
-        BitField("a",           0,      1),
-        BitField("rsvd2",       0,      7),
-        BitField("psn",         0,      24),
-    ]
-    def guess_payload_class(self, payload):
-        if self.opcode == 10 or self.opcode == 11:
-            return RETH
-        return super().guess_payload_class()
-
-bind_layers(UDP, BTH, dport=4791)
-
 class RDETH(Packet):
     name = "RDETH"
     fields_desc = [
@@ -119,6 +94,13 @@ class DETH(Packet):
         BitField("srcqp",       0,      24),
     ]
 
+class ImmDT(Packet):
+    name = "ImmDT"
+    fields_desc = [
+        BitField("imm_data",    0,      32),
+    ]
+
+
 class RETH(Packet):
     name = "RETH"
     fields_desc = [
@@ -126,10 +108,19 @@ class RETH(Packet):
         BitField("r_key",       0,      32),
         BitField("dma_len",     0,      32),
     ]
+
+    next_hdr = { 6: Raw, #write-first
+                 10: Raw, #write-only
+                 11: ImmDT, #write-only-with-imm
+                 12: Raw, #read-request
+    }
+
     def guess_payload_class(self, payload):
-        if self.underlayer.opcode == 11:
-            return ImmDT
-        return super().guess_payload_class()
+        if (self.next_hdr[self.underlayer.opcode]): 
+            return self.next_hdr[self.underlayer.opcode]
+        else:
+            assert(0);
+            return super().guess_payload_class()
 
 class AtomicETH(Packet):
     name = "AtomicETH"
@@ -148,6 +139,11 @@ class XRCETH(Packet):
         BitField("xrcsrq",      0,      24),
     ]
 
+class AtomicAckETH(Packet):
+    name = "AtomicAckETH"
+    fields_desc = [
+        BitField("orig_remdt",  0,      64),
+    ]
 
 class AETH(Packet):
     name = "AETH"
@@ -155,26 +151,79 @@ class AETH(Packet):
         BitField("syndrome",    0,      8),
         BitField("msn",         0,      24),
     ]
-
-
-class AtomicAckETH(Packet):
-    name = "AtomicAckETH"
-    fields_desc = [
-        BitField("orig_remdt",  0,      64),
-    ]
-
-
-class ImmDT(Packet):
-    name = "ImmDT"
-    fields_desc = [
-        BitField("imm_data",    0,      32),
-    ]
+    next_hdr = {
+                 13: Raw, #read-response-first
+                 15: Raw, #read-response-last
+                 16: Raw, #read-response-only
+                 17: Raw, #ack
+                 18: AtomicAckETH, #atomic-ack
+    }
+    def guess_payload_class(self, payload):
+        if (self.next_hdr[self.underlayer.opcode]): 
+            return self.next_hdr[self.underlayer.opcode]
+        else:
+            assert(0);
+            return super().guess_payload_class()
 
 class IETH(Packet):
     name = "IETH"
     fields_desc = [
         BitField("r_key",       0,      32),
     ]
+
+class BTH(Packet):
+    name = "BTH"
+    fields_desc = [
+        BitField("opcode",      0,      8),
+        BitField("se",          0,      1),
+        BitField("m",           0,      1),
+        BitField("padcnt",      0,      2),
+        BitField("tver",        0,      4),
+        BitField("p_key",       0,      16),
+        BitField("f_r",         0,      1),
+        BitField("b_r",         0,      1),
+        BitField("rsvd",        0,      6),
+        BitField("destqp",      0,      24),
+        BitField("a",           0,      1),
+        BitField("rsvd2",       0,      7),
+        BitField("psn",         0,      24),
+    ]
+
+    next_hdr = { 0: Raw, #send-first
+                 1: Raw, #send-middle
+                 2: Raw, #send-last
+                 3: ImmDT, #send-last-with-imm
+                 4: Raw, #send-only
+                 5: ImmDT, #send-only-with-imm
+                 6: RETH, #write-first
+                 7: Raw, #write-middle
+                 8: Raw, #write-last
+                 9: ImmDT, #write-last-with-imm
+                 10: RETH, #write-only
+                 11: RETH, #write-only-with-imm
+                 12: RETH, #read-request
+                 13: AETH, #read-response-first
+                 14: Raw, #read-response-middle
+                 15: AETH, #read-response-last
+                 16: AETH, #read-response-only
+                 17: AETH, #ack
+                 18: AETH, #atomic-ack
+                 19: AtomicETH, #compare-n-swap
+                 20: AtomicETH, #fetch-add
+                 21: Raw, #rsvd
+                 22: IETH, #send-last-with-inv
+                 23: IETH, #send-only-with-inv
+    }
+
+    def guess_payload_class(self, payload):
+        if (self.next_hdr[self.opcode]): 
+            return self.next_hdr[self.opcode]
+        else:
+            assert(0);
+            return super().guess_payload_class()
+
+bind_layers(UDP, BTH, dport=4791)
+
 
 
 def PrintPayload(data, prefix=""):
