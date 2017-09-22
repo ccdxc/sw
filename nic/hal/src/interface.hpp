@@ -7,7 +7,8 @@
 #include <list.hpp>
 #include <ht.hpp>
 #include <bitmap.hpp>
-#include <l2segment.hpp>
+// #include <l2segment.hpp>
+#include <tenant.hpp>
 #include <interface.pb.h>
 
 using hal::utils::ht_ctxt_t;

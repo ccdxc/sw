@@ -54,7 +54,8 @@ header_type ipsec_table1_s2s {
     fields {
         out_desc_addr : ADDRESS_WIDTH;
         out_page_addr : ADDRESS_WIDTH; 
-        s2s1_pad : 32;
+        payload_size : 16;
+        payload_start : 16;
     }
 }
 
@@ -197,7 +198,8 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 #define IPSEC_SCRATCH_T1_S2S \
     modify_field(scratch_t1_s2s.out_desc_addr, t1_s2s.out_desc_addr); \
     modify_field(scratch_t1_s2s.out_page_addr, t1_s2s.out_page_addr); \
-    modify_field(scratch_t1_s2s.s2s1_pad, t1_s2s.s2s1_pad);
+    modify_field(scratch_t1_s2s.payload_size, t1_s2s.payload_size); \
+    modify_field(scratch_t1_s2s.payload_start, t1_s2s.payload_start); 
 
 #define IPSEC_SCRATCH_T2_S2S \
     modify_field(scratch_t2_s2s.in_desc_addr, t2_s2s.in_desc_addr); \
@@ -264,6 +266,8 @@ action update_output_desc_aol(addr0, offset0, length0,
     modify_field(barco_desc_out.A0_addr, t1_s2s.out_page_addr);
     modify_field(barco_desc_out.O0, 0);
     modify_field(barco_desc_out.L0, 0); 
+
+    modify_field(ipsec_to_stage3_scratch.pad_size, ipsec_to_stage3.pad_size);
 
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T1_S2S

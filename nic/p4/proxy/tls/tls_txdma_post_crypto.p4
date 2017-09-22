@@ -66,6 +66,7 @@ header_type to_stage_4_phv_t {
     fields {
         odesc                           : ADDRESS_WIDTH;
         debug_dol                       : 8;
+        other_fid                       : 16;
     }
 }
 
@@ -231,6 +232,7 @@ action tls_queue_sesq(TLSCB_0_PARAMS) {
     /* To Stage 4 fields */
     modify_field(to_s4_scratch.odesc, to_s4.odesc);
     modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
+    modify_field(to_s4_scratch.other_fid, to_s4.other_fid);
 
 
     GENERATE_TLSCB_0_D

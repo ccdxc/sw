@@ -52,7 +52,7 @@ def TestCaseSetup(tc):
     sesq.Configure()
     tlscbid = "TlsCb%04d" % id
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
-    tlscb_cur.debug_dol = 1
+    tlscb_cur.debug_dol = 5
     tlscb_cur.SetObjValPd()
     tlscb = copy.deepcopy(tlscb_cur)
     tlscb.GetObjValPd()

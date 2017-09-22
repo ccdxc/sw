@@ -41,12 +41,12 @@ def TestCaseSetup(tc):
     # 2. Configure TLS CB in HBM before packet injection
     tlscbid = "TlsCb%04d" % id
     tlscb = tc.infra_data.ConfigStore.objects.db[tlscbid]
-    tlscb.debug_dol = 1
+    tlscb.debug_dol = 5
     tlscb.SetObjValPd()
 
     tlscbid2 = "TlsCb%04d" % (id + 1)
     tlscb2 = tc.infra_data.ConfigStore.objects.db[tlscbid2]
-    tlscb2.debug_dol = 1
+    tlscb2.debug_dol = 5
     tlscb2.SetObjValPd()
 
     # 3. Clone objects that are needed for verification

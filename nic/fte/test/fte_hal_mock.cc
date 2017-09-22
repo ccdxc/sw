@@ -66,7 +66,8 @@ hal::ep_get_mac_addr(hal::ep_s*)
 }
 
 void *
-hal::hal_handle::get_obj(void)
+hal::hal_handle_get_obj (hal_handle_t handle_id)
+// hal::hal_handle::get_obj(void)
 {
     return NULL;
 }

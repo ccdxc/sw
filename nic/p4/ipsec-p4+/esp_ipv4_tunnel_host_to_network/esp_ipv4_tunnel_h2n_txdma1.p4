@@ -119,25 +119,28 @@ metadata ipsec_table3_s2s t3_s2s;
 //TXDMA - IPsec feature specific scratch
 @pragma dont_trim
 metadata ipsec_int_header_t ipsec_int_header;
-//@pragma dont_trim
-//metadata barco_descriptor_t barco_desc;
+@pragma dont_trim
+metadata barco_zero_content_t barco_zero;
+@pragma dont_trim
+metadata barco_dbell_t barco_dbell;  
 @pragma dont_trim
 metadata barco_request_t barco_req;
 
 @pragma dont_trim
-metadata barco_dbell_t barco_dbell;  
+metadata doorbell_data_t db_data;
+//@pragma dont_trim
+//metadata doorbell_data_pad_t db_data_pad;
 
 @pragma dont_trim
-metadata doorbell_data_t db_data;
+metadata dma_cmd_phv2mem_t brq_in_desc_zero;
 @pragma dont_trim
-metadata doorbell_data_pad_t db_data_pad;
+metadata dma_cmd_phv2mem_t brq_out_desc_zero;
 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t brq_req_write;
+
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex;
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t doorbell_cmd;
 
 
 @pragma scratch_metadata

@@ -7,6 +7,7 @@
 #include <ip.h>
 #include <ht.hpp>
 #include <interface.hpp>
+#include <l2segment.hpp>
 #include <endpoint.pb.h>
 #include <pd.hpp>
 #include <netinet/ether.h>

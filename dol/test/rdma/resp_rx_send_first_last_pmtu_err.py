@@ -27,12 +27,12 @@ def TestCaseVerify(tc):
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.post_qstate = rs.lqp.rq.qstate.data
 
-    # verify that e_psn is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'e_psn', 2):
+    # verify that e_psn is NOT incremented by 1
+    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'e_psn', 0):
         return False
 
     # verify that c_index is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'c_index0', 1):
+    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'c_index0', 0):
         return False
 
     # verify that token_id is incremented by 1

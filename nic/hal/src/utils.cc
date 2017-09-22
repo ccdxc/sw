@@ -2,6 +2,8 @@
 #include <hal.hpp>
 #include <utils.hpp>
 
+using types::ApiStatus;
+
 namespace hal {
 
 //----------------------------------------------------------------------------
@@ -121,5 +123,55 @@ ip_addr_in_ip_pfx (ip_addr_t *ipaddr, ip_prefix_t *ip_pfx)
 
     return true;
 }
+
+//------------------------------------------------------------------------------
+// Converts hal_ret_t to API status
+//------------------------------------------------------------------------------
+ApiStatus
+hal_prepare_rsp (hal_ret_t ret)
+{
+    switch (ret) {
+        case HAL_RET_OK:
+            return types::API_STATUS_OK;
+            break;
+        case HAL_RET_HW_PROG_ERR:
+            return types::API_STATUS_HW_PROG_ERR;
+            break;
+        case HAL_RET_TABLE_FULL:
+        case HAL_RET_OTCAM_FULL:
+            return types::API_STATUS_OUT_OF_RESOURCE;
+            break;
+        case HAL_RET_OOM:
+            return types::API_STATUS_OUT_OF_MEM;
+            break;
+        case HAL_RET_INVALID_ARG:
+            return types::API_STATUS_INVALID_ARG;
+            break;
+        case HAL_RET_TENANT_NOT_FOUND:
+            return types::API_STATUS_TENANT_NOT_FOUND;
+            break;
+        case HAL_RET_L2SEG_NOT_FOUND:
+            return types::API_STATUS_L2_SEGMENT_NOT_FOUND;
+            break;
+        case HAL_RET_IF_NOT_FOUND:
+            return types::API_STATUS_INTERFACE_NOT_FOUND;
+            break;
+        case HAL_RET_SECURITY_PROFILE_NOT_FOUND:
+            return types::API_STATUS_NWSEC_PROFILE_NOT_FOUND;
+            break;
+        case HAL_RET_POLICER_NOT_FOUND:
+            return types::API_STATUS_POLICER_NOT_FOUND;
+            break;
+        case HAL_RET_HANDLE_INVALID:
+            return types::API_STATUS_HANDLE_INVALID;
+            break;
+        default:
+            return types::API_STATUS_ERR;
+            break;
+    }
+}
+
+
+
 
 }    // namespace hal

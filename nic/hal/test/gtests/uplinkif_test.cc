@@ -1,4 +1,5 @@
 #include <interface.hpp>
+#include <l2segment.hpp>
 #include <network.hpp>
 #include <interface.pb.h>
 #include <l2segment.pb.h>

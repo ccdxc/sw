@@ -7,6 +7,7 @@
 #include <tenant.hpp>
 #include <pd_api.hpp>
 #include <oif_list_api.hpp>
+#include <if_utils.hpp>
 
 namespace hal {
 
@@ -108,7 +109,8 @@ static inline hal_ret_t
 add_l2seg_to_db (tenant_t *tenant, l2seg_t *l2seg)
 {
     HAL_SPINLOCK_LOCK(&tenant->slock);
-    utils::dllist_add(&tenant->l2seg_list_head, &l2seg->tenant_l2seg_lentry);
+    // utils::dllist_add(&tenant->l2seg_list_head, &l2seg->tenant_l2seg_lentry);
+    tenant_add_l2seg(tenant, l2seg);
     HAL_SPINLOCK_UNLOCK(&tenant->slock);
 
     g_hal_state->l2seg_hal_handle_ht()->insert(l2seg,
@@ -308,6 +310,87 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// Adds If into l2seg list
+//-----------------------------------------------------------------------------
+hal_ret_t
+l2seg_add_if (l2seg_t *l2seg, if_t *hal_if)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    hal_handle_id_list_entry_t  *entry = NULL;
+
+    if (l2seg == NULL || hal_if == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    // Allocate the entry
+    entry = (hal_handle_id_list_entry_t *)g_hal_state->
+        hal_handle_id_list_entry_slab()->alloc();
+    if (entry == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+    entry->handle_id = hal_if->hal_handle;
+
+    // Insert into the list
+    utils::dllist_add(&l2seg->if_list_head, &entry->dllist_ctxt);
+
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Remove If from l2seg list
+//-----------------------------------------------------------------------------
+hal_ret_t
+l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    hal_handle_id_list_entry_t  *entry = NULL;
+    dllist_ctxt_t               *curr, *next;
+
+
+    dllist_for_each_safe(curr, next, &l2seg->if_list_head) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        if (entry->handle_id == hal_if->hal_handle) {
+            // Remove from list
+            utils::dllist_del(&entry->dllist_ctxt);
+            // Free the entry
+            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+
+            return ret;
+        }
+    }
+
+    return HAL_RET_IF_NOT_FOUND;
+}
+
+hal_ret_t
+l2seg_handle_nwsec_update (l2seg_t *l2seg, nwsec_profile_t *nwsec_prof)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    dllist_ctxt_t               *lnode = NULL;
+    hal_handle_id_list_entry_t  *entry = NULL;
+    if_t                        *hal_if = NULL;
+
+    if (l2seg == NULL) {
+        return ret;
+    }
+
+    HAL_TRACE_DEBUG("{}: seg_id: {}", __FUNCTION__, l2seg->seg_id);
+    // Walk through Ifs and call respective functions
+    dllist_for_each(lnode, &l2seg->if_list_head) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        // TODO: Uncomment this after if is migrated to new scheme
+        // hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
+        hal_if = find_if_by_handle(entry->handle_id);
+        if_handle_nwsec_update(l2seg, hal_if, nwsec_prof);
+    }
+
+    return ret;
 }
 
 }    // namespace hal

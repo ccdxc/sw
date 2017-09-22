@@ -12,6 +12,7 @@
 
 #include <interface.hpp>
 #include <interface.pb.h>
+#include <l2segment.hpp>
 
 namespace hal {
 

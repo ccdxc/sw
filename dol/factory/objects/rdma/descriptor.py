@@ -167,7 +167,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor at "self.address"
         :return:
         """
-        cfglogger.info("Writing Descriptor @0x%x = op_type: 0x%d wrid: 0x%x num_sges: %d" % 
+        cfglogger.info("Writing Descriptor @0x%x = op_type: %d wrid: 0x%x num_sges: %d" % 
                        (self.address, self.spec.fields.op_type, self.spec.fields.wrid, self.spec.fields.num_sges))
         desc = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.spec.fields.wrid,
                                     num_sges=self.spec.fields.num_sges)

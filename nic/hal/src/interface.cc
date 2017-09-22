@@ -674,6 +674,12 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         goto end;
     }
 
+    // If its enic, add to l2seg
+    if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+        ret = l2seg_add_if(l2seg, hal_if);
+        HAL_ABORT(ret == HAL_RET_OK);
+    }
+
     // add this interface to the db
     add_if_to_db(hal_if);
 
@@ -912,6 +918,11 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         hal_if->vlans->set(l2seg->fabric_encap.val);
     }
 
+    // Add Uplink in l2seg
+    ret = l2seg_add_if(l2seg, hal_if);
+    HAL_ABORT(ret == HAL_RET_OK);
+
+
     // Add the uplink to the broadcast list of the l2seg
     oif.if_id = hal_if->if_id;
     oif.l2_seg_id = l2seg->seg_id;
@@ -966,6 +977,7 @@ cpu_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     return ret;
 }
+
 
 
 //------------------------------------------------------------------------------
@@ -1343,5 +1355,33 @@ LifSetQState (const intf::QStateSetReq &req, intf::QStateSetResp *rsp)
                                          req.queue_state().size());
     rsp->set_error_code(0 - ret);
 }
+
+hal_ret_t
+if_handle_nwsec_update (l2seg_t *l2seg, if_t *hal_if, nwsec_profile_t *nwsec_prof)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    pd::pd_if_nwsec_upd_args_t  args;
+
+    HAL_TRACE_DEBUG("{}: if_id: {}", __FUNCTION__, hal_if->if_id);
+    pd::pd_if_nwsec_upd_args_init(&args);
+    args.l2seg = l2seg;
+    args.intf = hal_if;
+    args.nwsec_prof = nwsec_prof;
+
+    ret = pd::pd_if_nwsec_update(&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: PD call for nwsec update on if failed. ret: {}", 
+                __FUNCTION__, ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+
+
+
+
 
 }    // namespace hal

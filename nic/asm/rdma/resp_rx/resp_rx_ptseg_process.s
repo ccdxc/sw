@@ -49,11 +49,13 @@ transfer_loop:
     sub.F_FIRST_PASS    DMA_BYTES, DMA_BYTES, PAGE_OFFSET    
     slt                 c3, DMA_BYTES, TRANSFER_BYTES
     cmov                DMA_BYTES, c3, DMA_BYTES, TRANSFER_BYTES
-    // r3 has amount of bytes to be xfered
+    // r4 has amount of bytes to be xfered
 
     sll                 r2, PAGE_ID, CAPRI_LOG_SIZEOF_U64_BITS
     //big-endian
     tblrdp.dx           DMA_ADDR, r2, 0, CAPRI_SIZEOF_U64_BITS
+    // r2 has page ptr, add page offset for DMA addr
+    add                 DMA_ADDR, DMA_ADDR, PAGE_OFFSET
     
     DMA_PKT2MEM_SETUP(DMA_CMD_BASE, c1, DMA_BYTES, DMA_ADDR)
     

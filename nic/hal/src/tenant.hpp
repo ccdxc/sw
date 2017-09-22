@@ -9,9 +9,11 @@
 #include <hal.hpp>
 #include <tenant.pb.h>
 #include <pd.hpp>
+#include <nwsec.hpp>
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
+using tenant::TenantKeyHandle;
 
 namespace hal {
 
@@ -34,12 +36,23 @@ typedef struct tenant_s {
     void               *pd;                  // all PD specific state
 
     // meta data maintained for tenant
-    ht_ctxt_t          ht_ctxt;              // tenant id based hash table ctxt
-    ht_ctxt_t          hal_handle_ht_ctxt;   // hal handle based hash table ctxt
     dllist_ctxt_t      l2seg_list_head;      // L2 segment list
     dllist_ctxt_t      ep_list_head;         // endpoint list
     dllist_ctxt_t      session_list_head;    // session list
 } __PACK__ tenant_t;
+
+typedef struct tenant_create_app_ctxt_s {
+    nwsec_profile_t    *sec_prof;
+} tenant_create_app_ctxt_t;
+
+typedef struct tenant_update_app_ctxt_s {
+    bool                nwsec_prof_change;
+
+    // valid for nwsec_prof_change
+    hal_handle_t        nwsec_profile_handle;   // new profile handle
+    nwsec_profile_t    *nwsec_prof;             // new nwsec profile
+} tenant_update_app_ctxt_t;
+
 
 // max. number of VRFs supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_VRFS                                 256
@@ -75,8 +88,7 @@ tenant_init (tenant_t *tenant)
     tenant->pd = NULL;
 
     // initialize meta information
-    tenant->ht_ctxt.reset();
-    tenant->hal_handle_ht_ctxt.reset();
+    // tenant->ht_ctxt.reset();
     utils::dllist_reset(&tenant->l2seg_list_head);
     utils::dllist_reset(&tenant->ep_list_head);
     utils::dllist_reset(&tenant->session_list_head);
@@ -100,29 +112,18 @@ tenant_free (tenant_t *tenant)
     return HAL_RET_OK;
 }
 
-// insert this tenant in all meta data structures
-static inline hal_ret_t
-add_tenant_to_db (tenant_t *tenant)
-{
-    g_hal_state->tenant_hal_handle_ht()->insert(tenant,
-                                                &tenant->hal_handle_ht_ctxt);
-    g_hal_state->tenant_id_ht()->insert(tenant, &tenant->ht_ctxt);
-
-    return HAL_RET_OK;
-}
- 
 //------------------------------------------------------------------------------
 // find a tenant instance by its id
 //------------------------------------------------------------------------------
 static inline tenant_t *
 tenant_lookup_by_id (tenant_id_t tid)
 {
-    hal_handle_ht_entry_t    *entry;
-    tenant_t                 *tenant;
+    hal_handle_id_ht_entry_t    *entry;
+    tenant_t                    *tenant;
 
-    entry = (hal_handle_ht_entry_t *)g_hal_state->tenant_id_ht()->lookup(&tid);
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->tenant_id_ht()->lookup(&tid);
     if (entry) {
-        tenant = (tenant_t *)entry->handle->get_obj();
+        tenant = (tenant_t *)hal_handle_get_obj(entry->handle_id);
         return tenant;
     }
     return NULL;
@@ -134,10 +135,7 @@ tenant_lookup_by_id (tenant_id_t tid)
 static inline tenant_t *
 tenant_lookup_by_handle (hal_handle_t handle)
 {
-    hal_handle    *hndl;
-    
-    hndl = reinterpret_cast<hal_handle *>(handle);
-    return (tenant_t *)hndl->get_obj();
+   return (tenant_t *)hal_handle_get_obj(handle); 
 }
 
 #if 0
@@ -159,19 +157,7 @@ tenant_lookup_by_handle (hal_handle_t handle)
 extern void *tenant_id_get_key_func(void *entry);
 extern uint32_t tenant_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool tenant_id_compare_key_func(void *key1, void *key2);
-
-#if 0
-extern void *tenant_get_key_func(void *entry);
-extern uint32_t tenant_compute_hash_func(void *key, uint32_t ht_size);
-extern bool tenant_compare_key_func(void *key1, void *key2);
-#endif
-
-// TODO: these may not be needed as hal_handle is direct ptr unless
-//       we want to introduce one more indirection for HAL stateful restart
-//       cases without invalidating the handles given to agent(s)
-extern void *tenant_get_handle_key_func(void *entry);
-extern uint32_t tenant_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool tenant_compare_handle_key_func(void *key1, void *key2);
+tenant_t *tenant_lookup_key_or_handle (const TenantKeyHandle& kh);
 
 hal_ret_t tenant_create(tenant::TenantSpec& spec,
                         tenant::TenantResponse *rsp);

@@ -8,6 +8,7 @@
 #include <rdma_defines.h>
 #include <table_sizes.h>
 #include <rw_pd.hpp>
+#include <p4pd_defaults.hpp>
 
 using hal::pd::utils::Tcam;
 
@@ -488,7 +489,7 @@ p4pd_l4_profile_init (void)
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_L4_PROFILE);
     HAL_ASSERT(dm != NULL);
-    ret = dm->insert_withid(&data, 0);
+    ret = dm->insert_withid(&data, L4_PROF_DEFAULT_ENTRY);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("L4 profile table write failure, idx : 0, err : {}",
                       ret);
@@ -501,7 +502,7 @@ p4pd_l4_profile_init (void)
 static hal_ret_t
 p4pd_flow_info_init (void)
 {
-    uint32_t                idx = 0;
+    uint32_t                idx = FLOW_INFO_DROP_ENTRY;
     hal_ret_t               ret;
     DirectMap               *dm;
     flow_info_actiondata    data = { 0 };
@@ -536,7 +537,7 @@ p4pd_flow_info_init (void)
 static hal_ret_t
 p4pd_session_state_init (void)
 {
-    uint32_t                 idx = 0;
+    uint32_t                 idx = SESSION_STATE_NOP_ENTRY;
     hal_ret_t                ret;
     DirectMap                *dm;
     session_state_actiondata    data = { 0 };

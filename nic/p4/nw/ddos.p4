@@ -244,16 +244,12 @@ table ddos_service {
     size : DDOS_SERVICE_TABLE_SIZE;
 }
 
-meter ddos_src_vf_policer {
-    type           : packets;
-    static         : ddos_src_vf_policer;
-    result         : ddos_metadata.ddos_src_vf_policer_color;
-    instance_count : DDOS_SRC_VF_POLICER_TABLE_SIZE;
-}
-
-action execute_ddos_src_vf_policer() {
-    execute_meter(ddos_src_vf_policer, ddos_metadata.ddos_src_vf_policer_idx,
-                  ddos_metadata.ddos_src_vf_policer_color);
+action execute_ddos_src_vf_policer(entry_valid, pkt_rate, rlimit_en,
+                                   rlimit_prof, color_aware, rsvd,
+                                   axi_wr_pend, burst, rate, tbkt,
+                                   entry_valid2, pkt_rate2, rlimit_en2,
+                                   rlimit_prof2, color_aware2, rsvd2,
+                                   axi_wr_pend2, burst2, rate2, tbkt2) {
 #if 0
     // We will drop the packet in the policer action routine based on
     // our current state, not just based on policer output.
@@ -262,6 +258,27 @@ action execute_ddos_src_vf_policer() {
         drop_packet();
     }
 #endif /* 0 */
+
+    modify_field(scratch_metadata.policer_valid, entry_valid);
+    modify_field(scratch_metadata.policer_pkt_rate, pkt_rate);
+    modify_field(scratch_metadata.policer_rlimit_en, rlimit_en);
+    modify_field(scratch_metadata.policer_rlimit_prof, rlimit_prof);
+    modify_field(scratch_metadata.policer_color_aware, color_aware);
+    modify_field(scratch_metadata.policer_rsvd, rsvd);
+    modify_field(scratch_metadata.policer_axi_wr_pend, axi_wr_pend);
+    modify_field(scratch_metadata.policer_burst, burst);
+    modify_field(scratch_metadata.policer_rate, rate);
+    modify_field(scratch_metadata.policer_tbkt, tbkt);
+    modify_field(scratch_metadata.policer_valid, entry_valid2);
+    modify_field(scratch_metadata.policer_pkt_rate, pkt_rate2);
+    modify_field(scratch_metadata.policer_rlimit_en, rlimit_en2);
+    modify_field(scratch_metadata.policer_rlimit_prof, rlimit_prof2);
+    modify_field(scratch_metadata.policer_color_aware, color_aware2);
+    modify_field(scratch_metadata.policer_rsvd, rsvd2);
+    modify_field(scratch_metadata.policer_axi_wr_pend, axi_wr_pend2);
+    modify_field(scratch_metadata.policer_burst, burst2);
+    modify_field(scratch_metadata.policer_rate, rate2);
+    modify_field(scratch_metadata.policer_tbkt, tbkt2);
 }
 
 @pragma stage 2
@@ -327,16 +344,12 @@ table ddos_src_vf_policer_action {
     size : DDOS_SRC_VF_POLICER_TABLE_SIZE;
 }
 
-meter ddos_service_policer {
-    type           : packets;
-    static         : ddos_service_policer;
-    result         : ddos_metadata.ddos_service_policer_color;
-    instance_count : DDOS_SERVICE_POLICER_TABLE_SIZE;
-}
-
-action execute_ddos_service_policer() {
-    execute_meter(ddos_service_policer, ddos_metadata.ddos_service_policer_idx,
-                  ddos_metadata.ddos_service_policer_color);
+action execute_ddos_service_policer(entry_valid, pkt_rate, rlimit_en,
+                                    rlimit_prof, color_aware, rsvd,
+                                    axi_wr_pend, burst, rate, tbkt,
+                                    entry_valid2, pkt_rate2, rlimit_en2,
+                                    rlimit_prof2, color_aware2, rsvd2,
+                                    axi_wr_pend2, burst2, rate2, tbkt2) {
 #if 0
     // We will drop the packet in the policer action routine based on
     // our current state, not just based on policer output.
@@ -345,6 +358,27 @@ action execute_ddos_service_policer() {
         drop_packet();
     }
 #endif /* 0 */
+
+    modify_field(scratch_metadata.policer_valid, entry_valid);
+    modify_field(scratch_metadata.policer_pkt_rate, pkt_rate);
+    modify_field(scratch_metadata.policer_rlimit_en, rlimit_en);
+    modify_field(scratch_metadata.policer_rlimit_prof, rlimit_prof);
+    modify_field(scratch_metadata.policer_color_aware, color_aware);
+    modify_field(scratch_metadata.policer_rsvd, rsvd);
+    modify_field(scratch_metadata.policer_axi_wr_pend, axi_wr_pend);
+    modify_field(scratch_metadata.policer_burst, burst);
+    modify_field(scratch_metadata.policer_rate, rate);
+    modify_field(scratch_metadata.policer_tbkt, tbkt);
+    modify_field(scratch_metadata.policer_valid, entry_valid2);
+    modify_field(scratch_metadata.policer_pkt_rate, pkt_rate2);
+    modify_field(scratch_metadata.policer_rlimit_en, rlimit_en2);
+    modify_field(scratch_metadata.policer_rlimit_prof, rlimit_prof2);
+    modify_field(scratch_metadata.policer_color_aware, color_aware2);
+    modify_field(scratch_metadata.policer_rsvd, rsvd2);
+    modify_field(scratch_metadata.policer_axi_wr_pend, axi_wr_pend2);
+    modify_field(scratch_metadata.policer_burst, burst2);
+    modify_field(scratch_metadata.policer_rate, rate2);
+    modify_field(scratch_metadata.policer_tbkt, tbkt2);
 }
 
 @pragma stage 2
@@ -412,9 +446,12 @@ meter ddos_src_dst_policer {
     instance_count : DDOS_SRC_DST_POLICER_TABLE_SIZE;
 }
 
-action execute_ddos_src_dst_policer() {
-    execute_meter(ddos_src_dst_policer, ddos_metadata.ddos_src_dst_policer_idx,
-                  ddos_metadata.ddos_src_dst_policer_color);
+action execute_ddos_src_dst_policer(entry_valid, pkt_rate, rlimit_en,
+                                    rlimit_prof, color_aware, rsvd,
+                                    axi_wr_pend, burst, rate, tbkt,
+                                    entry_valid2, pkt_rate2, rlimit_en2,
+                                    rlimit_prof2, color_aware2, rsvd2,
+                                    axi_wr_pend2, burst2, rate2, tbkt2) {
 #if 0
     // We will drop the packet in the policer action routine based on
     // our current state, not just based on policer output.
@@ -423,6 +460,27 @@ action execute_ddos_src_dst_policer() {
         drop_packet();
     }
 #endif /* 0 */
+
+    modify_field(scratch_metadata.policer_valid, entry_valid);
+    modify_field(scratch_metadata.policer_pkt_rate, pkt_rate);
+    modify_field(scratch_metadata.policer_rlimit_en, rlimit_en);
+    modify_field(scratch_metadata.policer_rlimit_prof, rlimit_prof);
+    modify_field(scratch_metadata.policer_color_aware, color_aware);
+    modify_field(scratch_metadata.policer_rsvd, rsvd);
+    modify_field(scratch_metadata.policer_axi_wr_pend, axi_wr_pend);
+    modify_field(scratch_metadata.policer_burst, burst);
+    modify_field(scratch_metadata.policer_rate, rate);
+    modify_field(scratch_metadata.policer_tbkt, tbkt);
+    modify_field(scratch_metadata.policer_valid, entry_valid2);
+    modify_field(scratch_metadata.policer_pkt_rate, pkt_rate2);
+    modify_field(scratch_metadata.policer_rlimit_en, rlimit_en2);
+    modify_field(scratch_metadata.policer_rlimit_prof, rlimit_prof2);
+    modify_field(scratch_metadata.policer_color_aware, color_aware2);
+    modify_field(scratch_metadata.policer_rsvd, rsvd2);
+    modify_field(scratch_metadata.policer_axi_wr_pend, axi_wr_pend2);
+    modify_field(scratch_metadata.policer_burst, burst2);
+    modify_field(scratch_metadata.policer_rate, rate2);
+    modify_field(scratch_metadata.policer_tbkt, tbkt2);
 }
 
 @pragma stage 2

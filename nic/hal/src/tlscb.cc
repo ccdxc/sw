@@ -119,6 +119,7 @@ tlscb_create (TlsCbSpec& spec, TlsCbResponse *rsp)
     tlscb->serq_pi = spec.serq_pi();
     tlscb->serq_ci = spec.serq_ci();
     tlscb->is_decrypt_flow = spec.is_decrypt_flow();
+    tlscb->other_fid = spec.other_fid();
 
     tlscb->hal_handle = hal_alloc_handle();
 
@@ -178,6 +179,9 @@ tlscb_update (TlsCbSpec& spec, TlsCbResponse *rsp)
         tlscb->is_decrypt_flow = 1;
     else
         tlscb->is_decrypt_flow = 0;
+
+    tlscb->other_fid = spec.other_fid();
+
 
     pd::pd_tlscb_args_init(&pd_tlscb_args);
     pd_tlscb_args.tlscb = tlscb;
@@ -255,6 +259,7 @@ tlscb_get (TlsCbGetRequest& req, TlsCbGetResponse *rsp)
     rsp->mutable_spec()->set_debug_dol(rtlscb.debug_dol);
     rsp->mutable_spec()->set_salt(rtlscb.salt);
     rsp->mutable_spec()->set_explicit_iv(rtlscb.explicit_iv);
+    rsp->mutable_spec()->set_other_fid(rtlscb.other_fid);
 
     // fill operational state of this TLS CB
     rsp->mutable_status()->set_tlscb_handle(tlscb->hal_handle);

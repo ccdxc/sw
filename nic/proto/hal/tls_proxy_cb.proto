@@ -27,7 +27,7 @@ message TlsCbKeyHandle {
 // TlsCbSpec captures all the tlscb level configuration
 message TlsCbSpec {
   types.ObjectMeta      meta                       = 1;    // common object meta
-  TlsCbKeyHandle   key_or_handle              = 2;    // tlscb being created/updated
+  TlsCbKeyHandle   key_or_handle                   = 2;    // tlscb being created/updated
   uint32                nic_dec_head               = 3;
   uint32                nic_dec_tail               = 4;
   uint32                command                    = 5;
@@ -54,6 +54,7 @@ message TlsCbSpec {
   uint32                pre_debug_stage0_7_thread  = 26;
   uint32                post_debug_stage0_7_thread = 27;
   bool                  is_decrypt_flow            = 28;
+  uint32                other_fid                  = 29;
 }
 
 // TlsCbRequestMsg is batched add or modify tlscb request

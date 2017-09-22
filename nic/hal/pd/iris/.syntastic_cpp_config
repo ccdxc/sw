@@ -9,6 +9,7 @@
 -I ../../pd/common
 -I ../../src
 -I ../..
+-I p4pd
 -I ../capri
 -I ../../../include
 -I ../../../gen/iris/include

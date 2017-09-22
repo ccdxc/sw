@@ -54,12 +54,6 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((tenant_hwid_idxr_ != NULL), false);
     tenant_hwid_idxr_->alloc_withid(0);
 
-    tenant_hwid_ht_ = ht::factory(HAL_MAX_HW_VRFS,
-                                  hal::pd::tenant_pd_get_hw_key_func,
-                                  hal::pd::tenant_pd_compute_hw_hash_func,
-                                  hal::pd::tenant_pd_compare_hw_key_func);
-    HAL_ASSERT_RETURN((tenant_hwid_ht_ != NULL), false);
-
     // initialize security related data structures
     nwsec_profile_hwid_idxr_ =
         new hal::utils::indexer(HAL_MAX_HW_NWSEC_PROFILES);
@@ -312,7 +306,6 @@ hal_state_pd::hal_state_pd()
 
     tenant_slab_ = NULL;
     tenant_hwid_idxr_ = NULL;
-    tenant_hwid_ht_ = NULL;
 
     nwsec_profile_hwid_idxr_ = NULL;
 
@@ -394,7 +387,6 @@ hal_state_pd::~hal_state_pd()
 
     tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
     tenant_hwid_idxr_ ? delete tenant_hwid_idxr_ : HAL_NOP;
-    tenant_hwid_ht_ ? delete tenant_hwid_ht_ : HAL_NOP;
 
     nwsec_profile_hwid_idxr_ ? delete nwsec_profile_hwid_idxr_ : HAL_NOP;
 

@@ -69,7 +69,6 @@ public:
     // get APIs for tenant related state
     slab *tenant_slab(void) const { return tenant_slab_; }
     indexer *tenant_hwid_idxr(void) const { return tenant_hwid_idxr_; }
-    ht *tenant_hwid_ht(void) const { return tenant_hwid_ht_; }
 
     // get APIs for security related state
     indexer *nwsec_profile_hwid_idxr(void) const { return nwsec_profile_hwid_idxr_; }
@@ -231,7 +230,6 @@ private:
     struct {
         slab       *tenant_slab_;
         indexer    *tenant_hwid_idxr_;
-        ht         *tenant_hwid_ht_;
     } __PACK__;
 
     struct {
