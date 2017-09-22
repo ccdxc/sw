@@ -5,27 +5,30 @@ header_type policer_metadata_t {
     fields {
         ingress_policer_index : 11;
         egress_policer_index  : 11;
-        ingress_policer_color : 1;
         egress_policer_color  : 1;
     }
 }
 
 metadata policer_metadata_t policer_metadata;
 
-meter ingress_policer {
-    type           : bytes;
-    static         : ingress_policer;
-    result         : policer_metadata.ingress_policer_color;
-    instance_count : INGRESS_POLICER_TABLE_SIZE;
-}
-
-action execute_ingress_policer() {
-    execute_meter(ingress_policer, policer_metadata.ingress_policer_index,
-                  policer_metadata.ingress_policer_color);
-    if (policer_metadata.ingress_policer_color == POLICER_COLOR_RED) {
+action execute_ingress_policer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
+                               color_aware, rsvd, axi_wr_pend,
+                               burst, rate, tbkt) {
+    if ((entry_valid == TRUE) and ((tbkt >> 39) == 1)) {
         modify_field(control_metadata.drop_reason, DROP_INGRESS_POLICER);
         drop_packet();
     }
+
+    modify_field(scratch_metadata.policer_valid, entry_valid);
+    modify_field(scratch_metadata.policer_pkt_rate, pkt_rate);
+    modify_field(scratch_metadata.policer_rlimit_en, rlimit_en);
+    modify_field(scratch_metadata.policer_rlimit_prof, rlimit_prof);
+    modify_field(scratch_metadata.policer_color_aware, color_aware);
+    modify_field(scratch_metadata.policer_rsvd, rsvd);
+    modify_field(scratch_metadata.policer_axi_wr_pend, axi_wr_pend);
+    modify_field(scratch_metadata.policer_burst, burst);
+    modify_field(scratch_metadata.policer_rate, rate);
+    modify_field(scratch_metadata.policer_tbkt, tbkt);
 }
 
 @pragma stage 3
@@ -78,19 +81,24 @@ control process_ingress_policer {
 /*****************************************************************************/
 /* Egress policer                                                            */
 /*****************************************************************************/
-meter egress_policer {
-    type           : bytes;
-    static         : egress_policer;
-    result         : policer_metadata.egress_policer_color;
-    instance_count : EGRESS_POLICER_TABLE_SIZE;
-}
-
-action execute_egress_policer() {
-    execute_meter(egress_policer, policer_metadata.egress_policer_index,
-                  policer_metadata.egress_policer_color);
-    if (policer_metadata.egress_policer_color == POLICER_COLOR_RED) {
+action execute_egress_policer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
+                              color_aware, rsvd, axi_wr_pend,
+                              burst, rate, tbkt) {
+    if ((entry_valid == TRUE) and ((tbkt >> 39) == 1)) {
+        modify_field(policer_metadata.egress_policer_color, POLICER_COLOR_RED);
         drop_packet();
     }
+
+    modify_field(scratch_metadata.policer_valid, entry_valid);
+    modify_field(scratch_metadata.policer_pkt_rate, pkt_rate);
+    modify_field(scratch_metadata.policer_rlimit_en, rlimit_en);
+    modify_field(scratch_metadata.policer_rlimit_prof, rlimit_prof);
+    modify_field(scratch_metadata.policer_color_aware, color_aware);
+    modify_field(scratch_metadata.policer_rsvd, rsvd);
+    modify_field(scratch_metadata.policer_axi_wr_pend, axi_wr_pend);
+    modify_field(scratch_metadata.policer_burst, burst);
+    modify_field(scratch_metadata.policer_rate, rate);
+    modify_field(scratch_metadata.policer_tbkt, tbkt);
 }
 
 @pragma stage 4

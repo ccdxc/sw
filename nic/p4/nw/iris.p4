@@ -207,6 +207,18 @@ header_type scratch_metadata_t {
         classic_nic_flags             : 16;
         cpu_flags                     : 24;
         packet_len                    : 16;
+
+        // policer
+        policer_valid                 : 1;
+        policer_pkt_rate              : 1;
+        policer_rlimit_en             : 1;
+        policer_rlimit_prof           : 2;
+        policer_color_aware           : 1;
+        policer_rsvd                  : 1;
+        policer_axi_wr_pend           : 1;
+        policer_burst                 : 40;
+        policer_rate                  : 40;
+        policer_tbkt                  : 40;
     }
 }
 
