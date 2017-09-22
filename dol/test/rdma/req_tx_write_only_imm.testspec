@@ -30,7 +30,7 @@ packets:
     - packet:
         id          : EXP_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_RETH
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_RETH_IMMDT
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -53,14 +53,15 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 10 # RDMA Write Only
+                opcode  : 11 # RDMA Write Only with Imm
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : ref://testcase/pvtdata/pre_qstate/tx_psn
             reth: 
-                imm_data: ref://testcase/pvtdata/imm_data
                 va      : ref://testcase/pvtdata/va
                 dma_len : ref://testcase/packets/id=BASE_PKT/size
                 r_key   : ref://testcase/pvtdata/r_key
+            immdt:
+                imm_data: ref://testcase/pvtdata/imm_data
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -80,7 +81,7 @@ descriptors:
         id      : DESC
         template: ref://factory/templates/id=DESC_RDMA_SQ
         fields:
-            op_type : 4  # OP_TYPE_WRITE
+            op_type : 5  # OP_TYPE_WRITE_WITH_IMM
             wrid    : 20
             num_sges: 1
 

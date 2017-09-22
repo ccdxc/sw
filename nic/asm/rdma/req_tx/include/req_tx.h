@@ -15,6 +15,8 @@
 #define BTH_ACK_REQ             p.bth.a
 #define BTH_OPCODE              p.bth.opcode
 
+#define IMMDT_DATA              p.immeth.data
+
 #define RETH_VA                 p.reth.va
 #define RETH_RKEY               p.reth.r_key
 #define RETH_LEN                p.reth.dma_len
@@ -74,56 +76,56 @@ struct req_tx_s0_t {
 struct req_tx_s0_k_t {
     struct capri_intrinsic_s0_k_t intrinsic;
     struct req_tx_s0_t args;
-    struct phv_to_stage_t to_stage;
+    struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
 
 struct req_tx_sqpt_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct req_tx_sqcb_to_pt_info_t args;
-    struct phv_to_stage_t to_stage;
+    struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
 
 struct req_tx_sqwqe_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct req_tx_sqcb_to_wqe_info_t args;
-    struct phv_to_stage_t to_stage;
+    struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
 
 struct req_tx_sqsge_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct req_tx_wqe_to_sge_info_t args;
-    struct phv_to_stage_t to_stage;
+    struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
 
 struct req_tx_sqlkey_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct req_tx_sge_to_lkey_info_t args;
-    struct phv_to_stage_t to_stage;
+    struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
 
 struct req_tx_sqptseg_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct req_tx_lkey_to_ptseg_info_t args;
-    struct phv_to_stage_t to_stage;
+    struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
 
 struct req_tx_add_headers_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct req_tx_rrqwqe_to_hdr_info_t args;
-    struct phv_to_stage_t to_stage;
+    struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
 
 struct req_tx_write_back_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct req_tx_sqcb_write_back_info_t args;
-    struct phv_to_stage_t to_stage;
+    struct req_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
 

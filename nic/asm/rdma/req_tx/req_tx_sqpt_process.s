@@ -6,6 +6,7 @@ struct req_tx_phv_t p;
 struct req_tx_sqpt_process_k_t k;
 
 #define INFO_OUT_T struct req_tx_sqcb_to_wqe_info_t
+#define INFO_OUT1_T struct req_tx_to_stage_t
 
 %%
     .param    req_tx_sqwqe_process
@@ -33,9 +34,35 @@ req_tx_sqpt_process:
     CAPRI_SET_FIELD(r7, INFO_OUT_T, num_valid_sges, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, current_sge_offset, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, wqe_addr, r1)
+    //CAPRI_SET_FIELD(r7, INFO_OUT_T, wqe_addr, r1)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, rrq_p_index, k.args.rrq_p_index)
     //CAPRI_SET_FIELD(r7, INFO_OUT_T, pd, k.args.pd)
+
+    //for now, use to_stage_args to pass the wqe_addr
+    //until we organize better, copy to all stages
+    CAPRI_GET_STAGE_0_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT1_T, wqe_addr, r1)
+
+    CAPRI_GET_STAGE_1_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT1_T, wqe_addr, r1)
+
+    CAPRI_GET_STAGE_2_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT1_T, wqe_addr, r1)
+
+    CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT1_T, wqe_addr, r1)
+
+    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT1_T, wqe_addr, r1)
+
+    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT1_T, wqe_addr, r1)
+
+    CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT1_T, wqe_addr, r1)
+
+    CAPRI_GET_STAGE_7_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT1_T, wqe_addr, r1)
 
     // populate t0 PC and table address
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)

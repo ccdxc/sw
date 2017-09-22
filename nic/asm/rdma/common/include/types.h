@@ -287,6 +287,7 @@ struct resp_rx_flags_t {
 struct req_tx_flags_t {
     error_disable_qp: 1;
     incr_lsn: 1;
+    immeth_vld: 1;
 };
 
 #define REQ_TX_FLAG_ERR_DIS_QP          0x0001
@@ -355,7 +356,7 @@ struct ack_info_t {
 #define OP_TYPE_SEND_IMM            2
 #define OP_TYPE_READ                3
 #define OP_TYPE_WRITE               4
-#define OP_TYPE_WRITE_INV           5
+#define OP_TYPE_WRITE_IMM           5
 #define OP_TYPE_CMP_N_SWAP          6
 #define OP_TYPE_FETCH_N_ADD         7
 #define OP_TYPE_FRPNR               8
@@ -405,7 +406,6 @@ struct sqwqe_t {
     };
     pad : 256;
 };
-
 
 #define RQWQE_SGE_OFFSET  32
 #define RQWQE_SGE_OFFSET_BITS 256 // 32 * 8

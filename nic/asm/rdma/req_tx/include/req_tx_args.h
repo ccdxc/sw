@@ -22,10 +22,9 @@ struct req_tx_sqcb_to_wqe_info_t {
     num_valid_sges                 : 8;
     current_sge_offset             : 32;
     remaining_payload_bytes        : 16;
-    wqe_addr                       : 64;
     rrq_p_index                    : 8;
-    //pd                             : 32; Having PD will exceed S2S size limit of 160 bits
-    pad                            : 17;
+    pd                             : 32;
+    pad                            : 49;
 };
 
 struct req_tx_wqe_to_sge_info_t {
@@ -38,9 +37,8 @@ struct req_tx_wqe_to_sge_info_t {
     payload_offset                 : 16;
     dma_cmd_start_index            : 6; // TODO Different from "C" code due to space scarcity
     op_type                        : 8;
-    wqe_addr                       : 64;
-    //imm_data                       : 32;
-    //inv_key                        : 32;
+    imm_data                       : 32;
+    inv_key                        : 32;
 };
 
 struct req_tx_sge_to_lkey_info_t {
@@ -56,16 +54,15 @@ struct req_tx_sge_to_lkey_info_t {
 
 struct rd_t {
     read_len                      : 32;
-    //wqe_sge_list_addr             : 64;
-    //num_sges                      : 8;
+    pad                           : 64;
 };
 
 struct send_wr_t {
     current_sge_offset            : 32;
     current_sge_id                : 8;
     num_sges                      : 8;
-    //imm_data                      : 32;
-    //inv_key                       : 32;
+    imm_data                      : 32;
+    inv_key                       : 32;
 };
 
 union op_t {
@@ -82,7 +79,6 @@ struct req_tx_rrqwqe_to_hdr_info_t {
     tbl_id                        : 3;
     log_pmtu                      : 5;
     rrq_p_index                   : 8;
-    wqe_addr                      : 64;
     union op_t op;
     pad                           : 24; 
 };
@@ -114,8 +110,12 @@ struct req_tx_sqcb_write_back_info_t {
     op_type                      : 8;
     sq_c_index                   : 16;
     current_sge_offset           : 32;
-    wqe_addr                     : 64;
-    pad                          : 11;
+    pad                          : 75;
+};
+
+struct req_tx_to_stage_t {
+    wqe_addr : 64;
+    rsvd     : 64;
 };
 
 /*

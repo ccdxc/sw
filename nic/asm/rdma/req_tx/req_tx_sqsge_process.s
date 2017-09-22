@@ -164,13 +164,13 @@ sge_loop:
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.current_sge_id, r1)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.current_sge_offset, r2)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.num_sges, r5)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, wqe_addr, k.args.wqe_addr)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, wqe_addr, k.args.wqe_addr)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, last, r3)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, first, k.args.first)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op_type, k.args.op_type)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, tbl_id, 2) // Table 2
-    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.imm_data, k.args.imm_data)
-    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.inv_key, k.args.inv_key)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.imm_data, k.args.imm_data)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.inv_key, k.args.inv_key)
 
     SQCB1_ADDR_GET(r1)
     CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)

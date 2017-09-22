@@ -47,6 +47,9 @@ req_tx_add_headers_process:
     // phv_p->bth.dst_qp = sqcb1_p->dst_qp
     phvwr          BTH_DST_QP, d.dst_qp
 
+    seq            c2, k.args.first, 1
+    seq            c1, k.args.last, 1
+
     // r1 = k.args.op_type
     add            r2, k.args.op_type, r0
     beqi           r2, OP_TYPE_SEND, op_type_send
@@ -57,23 +60,103 @@ req_tx_add_headers_process:
     nop
     beqi           r2, OP_TYPE_WRITE, op_type_write
     nop
+    beqi           r2, OP_TYPE_WRITE_IMM, op_type_write_imm
+    nop
     b              end
     nop
 
 op_type_send:
-    seq            c1, k.args.first, 1
-    seq            c2, k.args.last, 1
-    setcf          c3, [c1 & c2]
-    setcf          c4, [c1 & !c2]
-    add.c3         r2, RDMA_PKT_OPC_SEND_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-    add.c4         r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
 
-    setcf          c3, [!c1 & c2]
-    setcf          c4, [!c1 & !c2]
-    add.c3         r2, RDMA_PKT_OPC_SEND_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-    add.c4         r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    //figure out the opcode
+
+    .csbegin
+
+    cswitch [c2, c1]
+    nop
+
+    .brcase 0 //not-first, not-last
+    add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    b              set_bth_opc
+    nop
+
+    .brcase 1 //not-first, last
+    add            r2, RDMA_PKT_OPC_SEND_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    b              set_bth_opc
+    nop
+
+    .brcase 2 //first, not-last
+    add            r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    b              set_bth_opc
+    nop
+
+    .brcase 3 //first, last (only)
+    add            r2, RDMA_PKT_OPC_SEND_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    b              set_bth_opc
+    nop
+
+    .csend
+
+op_type_write_imm:
+op_type_write:
+
+    // if first, add RETH hdr
+    // dma_cmd[4]
+    //jump to next flit
+    addi.c2        r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
+    DMA_PHV2PKT_SETUP_C(r7, reth, reth, c2)
+
+    //figure out the opcode
+
+    .csbegin
+
+    cswitch [c2, c1]
+    nop
+
+    .brcase 0 //not-first, not-last
+    add            r2, RDMA_PKT_OPC_RDMA_WRITE_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    b              set_bth_opc
+    nop
+
+    .brcase 1 //not-first, last
+    add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    seq            c3, k.global.flags.req_tx.immeth_vld, 1
+    // add IMMETH hdr
+    // dma_cmd[4]
+    //jump to next flit
+    addi.c3        r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
+    DMA_PHV2PKT_SETUP_C(r7, immeth, immeth, c3)
+    b              set_bth_opc
+    phvwr.c3       IMMDT_DATA, k.args.op.send_wr.imm_data //branch delay slot
+    //nop
+
+    .brcase 2 //first, not-last
+    add            r2, RDMA_PKT_OPC_RDMA_WRITE_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    b              set_bth_opc
+    nop
+
+    .brcase 3 //first, last (only)
+    seq            c3, k.global.flags.req_tx.immeth_vld, 1
+    bcf            [c3], imm_handle
+    add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+    b set_bth_opc
+    nop
+
+imm_handle:
+    // add IMMETH hdr
+    // dma_cmd[5]
+    sub            r7, r7, 1, LOG_DMA_CMD_SIZE_BITS
+    DMA_PHV2PKT_SETUP(r7, immeth, immeth)
+    add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    b              set_bth_opc
+    phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data //branch delay slot
+    //nop
+
+    .csend
+
+set_bth_opc:
     phvwr          BTH_OPCODE, r2
     b              end
+
     // check_credits = TRUE
     setcf          c5, [c0] // Branch Delay Slot
 
@@ -84,30 +167,6 @@ op_type_send_inv:
 op_type_send_imm:
     b              end
     nop
-
-op_type_write:
-    seq            c1, k.args.first, 1
-    seq            c2, k.args.last, 1
-    setcf          c3, [c1 & c2]
-    setcf          c4, [c1 & !c2]
-    add.c3         r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-    add.c4         r2, RDMA_PKT_OPC_RDMA_WRITE_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-
-    setcf          c3, [!c1 & c2]
-    setcf          c4, [!c1 & !c2]
-    add.c3         r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-    add.c4         r2, RDMA_PKT_OPC_RDMA_WRITE_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-    phvwr          BTH_OPCODE, r2
-
-    // dma_cmd[4]
-    //jump to next flit
-    //sub            r7, r7, 1, LOG_DMA_CMD_SIZE_BITS
-    addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
-    DMA_PHV2PKT_SETUP(r7, reth, reth)
-
-    b              end
-    setcf          c5, [c0] // Branch Delay Slot
-
 
 end:
     b.!c6          inc_psn
@@ -154,7 +213,7 @@ inc_psn:
     CAPRI_SET_FIELD(r7, INFO_OUT_T, current_sge_id, k.args.op.send_wr.current_sge_id)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, current_sge_offset, k.args.op.send_wr.current_sge_offset)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, num_sges, k.args.op.send_wr.num_sges)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, wqe_addr, k.args.wqe_addr)
+    //CAPRI_SET_FIELD(r7, INFO_OUT_T, wqe_addr, k.args.wqe_addr)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, last, k.args.last)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, first, k.args.first)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, op_type, k.args.op_type)

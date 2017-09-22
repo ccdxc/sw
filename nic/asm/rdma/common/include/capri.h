@@ -283,6 +283,30 @@ _I_ARG_next:;
     .brend; \
 _I_K_next:;
 
+#define CAPRI_GET_STAGE_0_ARG(_phv_name, _arg_base_r) \
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_0_to_stage_data);
+
+#define CAPRI_GET_STAGE_1_ARG(_phv_name, _arg_base_r) \
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_1_to_stage_data);
+
+#define CAPRI_GET_STAGE_2_ARG(_phv_name, _arg_base_r) \
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_2_to_stage_data);
+
+#define CAPRI_GET_STAGE_3_ARG(_phv_name, _arg_base_r) \
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_3_to_stage_data);
+
+#define CAPRI_GET_STAGE_4_ARG(_phv_name, _arg_base_r) \
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_4_to_stage_data);
+
+#define CAPRI_GET_STAGE_5_ARG(_phv_name, _arg_base_r) \
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_5_to_stage_data);
+
+#define CAPRI_GET_STAGE_6_ARG(_phv_name, _arg_base_r) \
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_6_to_stage_data);
+
+#define CAPRI_GET_STAGE_7_ARG(_phv_name, _arg_base_r) \
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_7_to_stage_data);
+
 // DMA related defines
 
 #define DMA_CMD_TYPE_NOP            0       //TX-RX
@@ -434,6 +458,11 @@ struct capri_dma_cmd_mem2mem_t {
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_start), sizeof(DMA_CMD_PHV2PKT_T.phv_start), PHV_FIELD_START_OFFSET(_start); \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_end), sizeof(DMA_CMD_PHV2PKT_T.phv_end), PHV_FIELD_END_OFFSET(_end) -1; \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), sizeof(DMA_CMD_PHV2PKT_T.cmdtype), DMA_CMD_TYPE_PHV2PKT;
+
+#define DMA_PHV2PKT_SETUP_C(_base_r, _start, _end, _cf)         \
+    phvwrp._cf   _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_start), sizeof(DMA_CMD_PHV2PKT_T.phv_start), PHV_FIELD_START_OFFSET(_start); \
+    phvwrp._cf   _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_end), sizeof(DMA_CMD_PHV2PKT_T.phv_end), PHV_FIELD_END_OFFSET(_end) -1; \
+    phvwrp._cf   _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), sizeof(DMA_CMD_PHV2PKT_T.cmdtype), DMA_CMD_TYPE_PHV2PKT;
 
 #if 0
 #define DMA_PHV2PKT_SETUP(_base_r, _start, _end)         \

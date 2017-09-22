@@ -15,7 +15,7 @@ req_tx_write_back_process:
      tblwr         d.in_progress, k.args.in_progress
      tblwr         d.current_sge_id, k.args.current_sge_id
      tblwr         d.current_sge_offset, k.args.current_sge_offset
-     tblwr         d.curr_wqe_ptr, k.args.wqe_addr
+     tblwr         d.curr_wqe_ptr, k.to_stage.wqe_addr
      tblwr         d.curr_op_type, k.args.op_type
 
      // if (write_back_info_p->last)

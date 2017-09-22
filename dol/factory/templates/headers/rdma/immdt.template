@@ -1,7 +1,7 @@
 meta:
     id      : ImmDT
     scapy   : ImmDT
-    size    : None
+    size    : 4
 
 fields:
-    immdt   : const/0x0
+    imm_data    : const/0x0

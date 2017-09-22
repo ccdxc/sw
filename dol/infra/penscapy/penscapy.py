@@ -96,6 +96,11 @@ class BTH(Packet):
         BitField("rsvd2",       0,      7),
         BitField("psn",         0,      24),
     ]
+    def guess_payload_class(self, payload):
+        if self.opcode == 10 or self.opcode == 11:
+            return RETH
+        return super().guess_payload_class()
+
 bind_layers(UDP, BTH, dport=4791)
 
 class RDETH(Packet):
@@ -121,8 +126,10 @@ class RETH(Packet):
         BitField("r_key",       0,      32),
         BitField("dma_len",     0,      32),
     ]
-
-bind_layers(BTH, RETH, opcode=10)
+    def guess_payload_class(self, payload):
+        if self.underlayer.opcode == 11:
+            return ImmDT
+        return super().guess_payload_class()
 
 class AtomicETH(Packet):
     name = "AtomicETH"
@@ -160,9 +167,8 @@ class AtomicAckETH(Packet):
 class ImmDT(Packet):
     name = "ImmDT"
     fields_desc = [
-        BitField("immdt",       0,      32),
+        BitField("imm_data",    0,      32),
     ]
-
 
 class IETH(Packet):
     name = "IETH"
