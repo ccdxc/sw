@@ -9,6 +9,7 @@ feature:
 modules:
     - module:
         name    : NORMALIZATION_TCP_STATEFUL
+        enable  : False
         spec    : normalization.testspec
         args    :
             flow: filter://type=IPV4,proto=TCP
@@ -58,10 +59,8 @@ modules:
 
     - module:
         name    : NORMALIZATION_TCP_STATEFUL_IGNORE
-        enable  : False
-        package : test.normalization
-        module  : normalization
         spec    : normalization.testspec
+        enable  : False
         ignore  : True
         args    :
             flow: filter://type=IPV4,proto=TCP
@@ -78,10 +77,8 @@ modules:
 
     - module:
         name    : NORMALIZATION_IP
-        enable  : False
-        package : test.normalization
-        module  : normalization
         spec    : normalization.testspec
+        enable  : True
         ignore  : False
         args    :
             flow: filter://type=IPV4
@@ -96,6 +93,7 @@ modules:
     - module:
         name    : NORMALIZATION_IP_IGNORE
         spec    : normalization.testspec
+        enable  : True
         ignore  : True
         args    :
             flow: filter://type=IPV4
@@ -110,7 +108,8 @@ modules:
     - module:
         name    : NORMALIZATION_ICMP
         spec    : normalization.testspec
-        ignore  : False
+        enable  : True
+        ignore  : True
         args    :
             flow: filter://type=IPV4,proto=ICMP
         iterate :
@@ -136,6 +135,7 @@ modules:
     - module:
         name    : NORMALIZATION_TCP_STATELESS_IGNORE
         spec    : normalization.testspec
+        enable  : True
         ignore  : True
         args    :
             flow: filter://type=IPV4,proto=TCP
@@ -149,6 +149,8 @@ modules:
     - module:
         name    : NORMALIZATION_TCP_STATELESS
         spec    : normalization.testspec
+        enable  : True
+        ignore  : False
         args    :
             flow: filter://type=IPV4,proto=TCP
         iterate :
