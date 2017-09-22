@@ -19,6 +19,12 @@ header_type ipsec_int_header_t {
     }
 }
 
+header_type ipsec_int_pad_t {
+    fields {
+        ipsec_int_pad : 128;
+    }
+}
+
 #define IPSEC_INT_HDR_SCRATCH \
     modify_field(ipsec_int_hdr_scratch.in_desc, in_desc); \
     modify_field(ipsec_int_hdr_scratch.out_desc, out_desc); \ 
@@ -132,7 +138,7 @@ header_type p4plus_to_p4_ipsec_header_t {
         table2_valid : 1;
         table3_valid : 1;
         ipsec_pad1 : 256;
-        ipsec_pad2 : 248;
+        ipsec_pad2 : 256;
     }
 }
 

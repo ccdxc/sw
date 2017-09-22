@@ -22,7 +22,7 @@
     .param      tls_stage0
     .param      tcp_tx_read_rx2tx_shared_process
     .param      eth_tx_fetch_desc
-    .param      esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table
+    .param      esp_ipv4_tunnel_h2n_txdma_stage0
     .param      cpu_tx_stage0_start
 
 //Keep offset 0 for none to avoid invoking unrelated program when
@@ -60,7 +60,7 @@ tcp_tx_stage0:
 
 .align
 ipsec_tx_stage0:
-    j esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table
+    j esp_ipv4_tunnel_h2n_txdma_stage0 
     nop
 
 .align

@@ -25,7 +25,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     //Increment PI
     add r1, r0, d.barco_ring_pindex
     addi r1, r1, 1
-    phvwr p.barco_dbell_pi, r1
+    phvwr p.barco_dbell_pi, r1.wx
 
     phvwri p.app_header_table0_valid, 1 
     phvwri p.common_te0_phv_table_lock_en, 1 
