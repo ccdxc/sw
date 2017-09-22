@@ -24,6 +24,8 @@ req_tx_sqwqe_process:
     nop
     beqi           r1, OP_TYPE_SEND, send
     nop
+    beqi           r1, OP_TYPE_SEND_IMM, send_imm
+    nop
 
     nop.e
     nop
@@ -43,6 +45,9 @@ write:
     b     common
     nop
 
+send_imm:
+    CAPRI_SET_FIELD(r7, INFO_OUT_T, imm_data, d.send.imm_data)
+    CAPRI_SET_FIELD(r2, PHV_GLOBAL_COMMON_T, flags.req_tx.immeth_vld, 1)
 send:
 
 common:
