@@ -12,4 +12,4 @@ endpoints   :
     useg    : 0
     pvlan   : 0
     direct  : 0
-    remote  : 4 # 1 EP per uplink
+    remote  : 8 # 1 EP per uplink

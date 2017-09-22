@@ -93,10 +93,10 @@ def run_model(args):
 
     # Wait until model is up and running
 
-    while loop == 1:
-        for line in log2.readlines():
-            if "initialized" in line:
-                loop = 0
+    #while loop == 1:
+    #    for line in log2.readlines():
+    #        if "initialized" in line:
+    #            loop = 0
     log2.close()
 
 #    log.close()
@@ -125,7 +125,7 @@ def run_hal():
     log2 = open(hal_log, "r")
     loop = 1
     time.sleep(10)
-    return
+    #return
 
     # Wait until gRPC is listening on port
 
@@ -134,6 +134,7 @@ def run_hal():
             if "listening on" in line:
                 loop = 0
     log2.close()
+    return
 
 
 #    log.close()
@@ -151,7 +152,11 @@ def run_dol(args):
     os.chdir(dol_dir)
 
     log = open(dol_log, "w")
-    p = Popen(["./main.py", "--topo", args.topology, "--modlist", args.modlist])
+    cmd = ['./main.py', '--topo', args.topology ]
+    if args.modlist is not None:
+        cmd.append('--modlist')
+        cmd.append(args.modlist)
+    p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
     print "- Log file: " + dol_log + "\n"
 
@@ -254,7 +259,7 @@ def main():
     parser.add_argument('--topo', dest='topology', default='base',
                         help='Run for a specific topology')
     parser.add_argument('--modlist', dest='modlist',
-                        default='modules.list', help='Module List File')
+                        default=None, help='Module List File')
     args = parser.parse_args()
 
     if args.cleanup:

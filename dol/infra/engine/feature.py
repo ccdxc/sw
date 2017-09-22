@@ -25,10 +25,11 @@ class FeatureObject:
     def __parse_modules(self):
         for m in self.spec.modules:
             mspec = m.module
-            mspec.feature = self.id
-            mspec.enable = getattr(mspec, 'enable', self.enable)
-            mspec.module = getattr(mspec, 'module', self.module)
-            mspec.package = getattr(mspec, 'package', self.package)
+            mspec.feature   = self.id
+            mspec.enable    = getattr(mspec, 'enable', self.enable)
+            mspec.ignore    = getattr(mspec, 'ignore', self.ignore)
+            mspec.module    = getattr(mspec, 'module', self.module)
+            mspec.package   = getattr(mspec, 'package', self.package)
             ModuleStore.Add(mspec)
         return
 

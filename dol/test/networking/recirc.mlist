@@ -38,7 +38,9 @@ modules:
 
     - module:
         name    : L2UC_NONIP
+        enable  : False
         spec    : l2uc_nonip.testspec
+        ignore  : True
         args    :
             maxflows : 1
         iterate:
