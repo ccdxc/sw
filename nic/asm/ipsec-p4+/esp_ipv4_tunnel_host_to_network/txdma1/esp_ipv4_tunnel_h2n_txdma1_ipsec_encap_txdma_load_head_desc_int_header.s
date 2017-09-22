@@ -12,8 +12,8 @@ struct phv_ p;
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     add r1, r0, d.in_desc
     addi r2, r1, 56
-    addi r1, r1, 64
-    phvwr p.barco_req_input_list_address, r1.dx
+    addi r3, r1, 64
+    phvwr p.barco_req_input_list_address, r3.dx
     phvwr p.barco_req_status_address, r2.dx
     add r1, r0, d.out_desc 
     addi r1, r1, 64
@@ -23,6 +23,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     add r1, r0, d.pad_size
     add r1, r1, d.tailroom_offset
     addi r1, r1, 2
+    addi r1, r1, ESP_FIXED_HDR_SIZE
     add r1, r1, d.out_page
     phvwr p.barco_req_auth_tag_addr, r1.dx
     //add r3, r0, k.t0_s2s_iv_size
@@ -34,6 +35,20 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     phvwri p.common_te0_phv_table_raw_table_size, 6
     phvwr  p.common_te0_phv_table_addr, k.ipsec_to_stage2_barco_req_addr 
     phvwri p.app_header_table1_valid, 0
+esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_fill_zero_in_out_desc:
+    addi r1, r0, 96 
+    add r2, r1, d.in_desc
+    add r3, r1, d.out_desc
+
+    phvwri p.brq_in_desc_zero_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwr p.brq_in_desc_zero_dma_cmd_addr, r2 
+    phvwri p.brq_in_desc_zero_dma_cmd_phv_start_addr, IPSEC_DESC_ZERO_CONTENT_START
+    phvwri p.brq_in_desc_zero_dma_cmd_phv_end_addr, IPSEC_DESC_ZERO_CONTENT_END
+     
+    phvwri p.brq_out_desc_zero_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwr p.brq_out_desc_zero_dma_cmd_addr, r3 
+    phvwri p.brq_out_desc_zero_dma_cmd_phv_start_addr, IPSEC_DESC_ZERO_CONTENT_START
+    phvwri p.brq_out_desc_zero_dma_cmd_phv_end_addr, IPSEC_DESC_ZERO_CONTENT_END
 
     nop.e
     nop 

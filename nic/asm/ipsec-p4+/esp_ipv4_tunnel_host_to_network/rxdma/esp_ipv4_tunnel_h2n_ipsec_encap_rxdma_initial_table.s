@@ -25,6 +25,7 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     sub r3, k.p42p4plus_hdr_ipsec_payload_end, k.p42p4plus_hdr_ipsec_payload_start
     phvwr p.ipsec_int_header_payload_size, r3
     phvwr p.t0_s2s_payload_size, r3
+    phvwr p.t1_s2s_payload_size, r3
     phvwr p.t0_s2s_payload_start, k.p42p4plus_hdr_ipsec_payload_start
     sub r6, d.block_size, 1
     and r4, r3, r6 

@@ -90,9 +90,16 @@ header_type barco_descriptor_t {
         A1_addr : ADDRESS_WIDTH;
         O1      : AOL_OFFSET_WIDTH;
         L1      : AOL_LENGTH_WIDTH;
+    }
+}
+
+header_type barco_zero_content_t {
+    fields {
         A2_addr : ADDRESS_WIDTH;
         O2      : AOL_OFFSET_WIDTH;
         L2      : AOL_LENGTH_WIDTH;
+        nextAddress : ADDRESS_WIDTH;
+        rsvd    : ADDRESS_WIDTH;
     }
 }
 
