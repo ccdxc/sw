@@ -309,6 +309,21 @@ modules:
         package : test.rdma
         module  : req_tx_write_only_imm
         spec    : req_tx_write_only_imm.testspec
+
+    - module:
+        name    : RDMA_TX_SEND_FIRST_MID_LAST
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_mid_last
+        spec    : req_tx_send_first_mid_last.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_FIRST_MID_LAST_2SGES
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_first_mid_last_2sges
+        spec    : req_tx_send_first_mid_last_2sges.testspec
         ignore  : False
 
     - module:

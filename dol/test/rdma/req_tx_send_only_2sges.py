@@ -42,8 +42,16 @@ def TestCaseVerify(tc):
     if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'ssn', 1):
         return False
 
+    # verify that lsn is not incremented for send
+    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'lsn', 0):
+        return False
+
     # verify that busy is 0
     if not VerifyFieldAbsolute(tc, tc.pvtdata.post_qstate, 'busy', 0):
+        return False
+
+    # verify that in_progress is 0
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.post_qstate, 'in_progress', 0):
         return False
 
     return True

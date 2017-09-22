@@ -63,7 +63,7 @@ packets:
             bth:
                 opcode  : 0 # RDMA SEND First
                 destqp  : ref://testcase/config/rdmasession/rqp/id
-                psn     : ref://testcase/pvtdata/send_first_psn
+                psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=0
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -95,7 +95,7 @@ packets:
             bth:
                 opcode  : 2 # RDMA SEND Last
                 destqp  : ref://testcase/config/rdmasession/rqp/id
-                psn     : ref://testcase/pvtdata/send_last_psn
+                psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

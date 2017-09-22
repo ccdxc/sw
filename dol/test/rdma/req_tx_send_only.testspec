@@ -11,11 +11,11 @@ selectors:
 #        endpoint    : filter://remote=True
 #        interface   : filter://any
 #    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
-    rdmasession     :   
+    rdmasession     :
         base        : filter://any
         lqp         : filter://any
         rqp         : filter://any
-#    maxflows    : 1 
+#    maxflows    : 1
     maxrdmasessions     : 4
 
 packets:
@@ -30,8 +30,8 @@ packets:
     - packet:
         id          : EXP_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
-        encaps      :   
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH
+        encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             # Add all possible headers, the final headers will be selected

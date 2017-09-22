@@ -27,7 +27,7 @@ def TestCaseVerify(tc):
     tc.pvtdata.post_qstate = rs.lqp.sq.qstate.data
 
     # verify that tx_psn is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'tx_psn', 1):
+    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'tx_psn', 3):
         return False
 
     # verify that p_index is incremented by 1
