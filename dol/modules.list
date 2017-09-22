@@ -326,13 +326,13 @@ modules:
         spec    : resp_rx_send_first_last.testspec
         ignore  : False
 
-    - module:
-        name    : RDMA_RX_SEND_FIRST_LAST_PMTU_ERR
-        enable  : False
-        package : test.rdma
-        module  : resp_rx_send_first_last_pmtu_err
-        spec    : resp_rx_send_first_last_pmtu_err.testspec
-        ignore  : True
+    #- module:
+    #    name    : RDMA_RX_SEND_FIRST_LAST_PMTU_ERR
+    #    enable  : True
+    #    package : test.rdma
+    #    module  : resp_rx_send_first_last_pmtu_err
+    #    spec    : resp_rx_send_first_last_pmtu_err.testspec
+    #    ignore  : False
 
     - module:
         name    : ACL_NONIP_SUP_REDIRECT
