@@ -6,8 +6,6 @@
 extern "C" {
 #include <lkl.h>
 #include <lkl_host.h>
-int lkl_start_kernel(struct lkl_host_operations *lkl_ops,
-                    const char *cmd_line, ...);
 }
 
 namespace hal {
@@ -21,6 +19,11 @@ int lkl_init(void) {
         return HAL_RET_ERR;
     }
     return HAL_RET_OK;
+}
+
+void* lkl_alloc_skbuff(void) {
+    HAL_TRACE_DEBUG("Allocating SKBUFF\n");
+    return lkl_get_skbuff();
 }
 
 }
