@@ -546,8 +546,10 @@ p4pd_add_or_del_tcp_tx_tcp_tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_TX);
     
     if(!del) {
+        data.u.tcp_tx_d.source_lif = htons(tcpcb_pd->tcpcb->source_lif);
         data.u.tcp_tx_d.source_port = htons(tcpcb_pd->tcpcb->source_port);
         data.u.tcp_tx_d.dest_port = htons(tcpcb_pd->tcpcb->dest_port);
+        HAL_TRACE_DEBUG("TCPCB source lif: 0x{0:x}", data.u.tcp_tx_d.source_lif);
         HAL_TRACE_DEBUG("TCPCB source port: 0x{0:x} dest port 0x{1:x}",
             data.u.tcp_tx_d.source_port, data.u.tcp_tx_d.dest_port);
     }

@@ -567,18 +567,7 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint8_t lkp_inst,
     key.flow_lkp_metadata_lkp_vrf = l2seg_pd->l2seg_ten_hw_id;
     key.flow_lkp_metadata_lkp_proto = flow_key->proto;
     key.flow_lkp_metadata_lkp_inst = lkp_inst;
-    if (lkp_inst > 0) {
-        /*
-         * HACK TODO FIXME This should actually be 0, but to get the
-         * uplink-uplink packet DOL case to pass we are setting LIF to 0
-         * instead of SERVICE_LIF in P4+ --> P4 after services are applied,
-         * which then makes dir=1 for the flow in P4. Once that hack is
-         * reverted, we need to set dir = 0 here.
-         */
-        key.flow_lkp_metadata_lkp_dir = 1;
-    } else {
-        key.flow_lkp_metadata_lkp_dir = flow_key->dir;
-    }
+    key.flow_lkp_metadata_lkp_dir = flow_key->dir;
 
     flow_data.flow_index = flow_pd->flow_stats_hw_id;
     flow_data.export_en = FALSE;    // TODO: when analytics APIs are ready,

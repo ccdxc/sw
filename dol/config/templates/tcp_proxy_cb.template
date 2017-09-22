@@ -29,6 +29,7 @@ snd_wnd     : 1000
 snd_cwnd    : 1000
 rcv_mss     : 9216
 source_port : 47273
+source_lif  : 0
 dest_port   : 80
 
 bytes_rcvd  : 0

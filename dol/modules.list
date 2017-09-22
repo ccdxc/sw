@@ -201,6 +201,15 @@ modules:
             flow: filter://type=IPV4,proto=TCP
 
     - module:
+        name    : PROXY_HOST_TO_UPLINK_BYPASS_BARCO
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : pkt_tcp_tx_to_p4_bypass_barco
+        spec    : host_to_uplink.testspec
+        ignore  : False
+        args    :
+            flow: filter://type=IPV4,proto=TCP
+    - module:
         name    : PKT_TO_SESQ
         enable  : True
         package : test.tcp_tls_proxy

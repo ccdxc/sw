@@ -19,6 +19,7 @@ struct LIFQStateParams {
     uint8_t entries:5,
             size:3;
   } type[kNumQTypes];
+  bool dont_zero_memory;
 };
 
 // Per LIF queue state managed by the LIF Manager.

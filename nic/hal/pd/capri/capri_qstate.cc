@@ -50,7 +50,9 @@ void push_qstate_to_capri(hal::LIFQState *qstate) {
 #ifndef HAL_GTEST
   cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-  clear_qstate_mem(qstate->hbm_address, qstate->allocation_size);
+  if (!qstate->params_in.dont_zero_memory) {
+      clear_qstate_mem(qstate->hbm_address, qstate->allocation_size);
+  }
   auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[qstate->lif_id];
   set_qstate_entry(qstate, wa_entry);
   auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
