@@ -366,6 +366,7 @@
                                               */
 #define TLS_DDOL_SESQ_STOP              2    /* Enqueue the request to SESQ, but donot ring the doorbell to TCP */
 
+#define TLS_DDOL_BYPASS_PROXY           4    /* Don't queue to other flow , keep in same flow */
 #define CAPRI_BARCO_MD_HENS_REG_BASE                (0x1C20000)
 #define CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX        (CAPRI_BARCO_MD_HENS_REG_BASE + 0x20c)
 

@@ -73,7 +73,7 @@ def TestCaseVerify(tc):
     print("rcv_nxt value pre-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
     tcb_cur.GetObjValPd()
     print("rcv_nxt value post-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
-    if tcb_cur.rcv_nxt != 0xebbbaba:
+    if tcb_cur.rcv_nxt != 0xbababb0e:
         print("rcv_nxt not as expected")
         return False
     print("rcv_nxt as expected")

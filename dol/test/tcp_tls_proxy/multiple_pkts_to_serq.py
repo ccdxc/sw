@@ -29,7 +29,7 @@ def TestCaseSetup(tc):
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
     tcb.rcv_nxt = 0xBABABABA
-    tcb.snd_nxt = 0xEFEFEFF0
+    tcb.snd_nxt = 0xEFEFFFF0
     tcb.snd_una = 0xEFEFEFEF
     tcb.rcv_tsval = 0xFAFAFAFA
     tcb.ts_recent = 0xFAFAFAF0
@@ -70,7 +70,7 @@ def TestCaseVerify(tc):
     print("rcv_nxt value pre-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
     tcb_cur.GetObjValPd()
     print("rcv_nxt value post-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
-    if tcb_cur.rcv_nxt != 0x62bbbaba:
+    if tcb_cur.rcv_nxt != 0xbababb62:
         print("rcv_nxt not as expected")
         return False
     print("rcv_nxt as expected")

@@ -159,8 +159,7 @@ dma_cmd_output_list_addr:
     phvwri		p.dma_cmd6_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwri      p.dma_cmd6_dma_cmd_eop, 0
 
-    addi        r1, r0, TLS_DDOL_BYPASS_BARCO
-    seq         c1, r1, k.to_s5_debug_dol
+    smeqb       c1, k.to_s5_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
     bcf         [!c1], dma_cmd_ring_bsq_doorbell_skip
     nop
 
