@@ -35,7 +35,7 @@ class RdmaBufferObject(base.FactoryObjectBase):
         if self.address:
             self.mem_handle = resmgr.MemHandle(self.address, 
                                     resmgr.HostMemoryAllocator.get_v2p(self.address))
-        cfglogger.info("Creating Rdma Buffer @0x%x = size: 0x%d offset: 0x%d " %
+        cfglogger.info("Creating Rdma Buffer @0x%x = size: %d offset: %d " %
                        (self.address, self.size, self.offset))
 
     def Write(self):
@@ -58,7 +58,7 @@ class RdmaBufferObject(base.FactoryObjectBase):
         """
         if self.address:
             self.data = resmgr.HostMemoryAllocator.read(self.mem_handle, self.size)
-            cfglogger.info("Read Buffer @0x%x = size: 0x%d offset: 0x%d crc(data): 0x%x" %
+            cfglogger.info("Read Buffer @0x%x = size: %d offset: %d crc(data): 0x%x" %
                        (self.address, self.size, self.offset, binascii.crc32(self.data)))
         else:
             cfglogger.info("Warning:!! buffer is not bound to an address, Read is ignored !!")
