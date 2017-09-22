@@ -1,12 +1,17 @@
 #! /usr/bin/python3
+
 import pdb
 def Setup(infra, module):
-    module.testspec.selectors.flow.Extend(module.args.flow)
     asp = infra.ConfigStore.objects.Get('SEC_PROF_ACTIVE')
-    profile = infra.ConfigStore.objects.Get(module.iterator.Get())
-    module.logger.info("Updating Active Security Profile --> %s" % module.iterator.Get())
+    iterelem = module.iterator.Get()
+    profile = infra.ConfigStore.objects.Get(iterelem.profile)
+    module.logger.info("Updating Active Security Profile --> %s" % profile)
     asp.CloneFields(profile)
     asp.Update()
+
+    flowsel = getattr(iterelem, 'flow', None)
+    if flowsel is not None:
+        module.testspec.selectors.flow.Extend(flowsel)
     return
 
 def Teardown(infra, module):

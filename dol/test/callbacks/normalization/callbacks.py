@@ -8,7 +8,8 @@ class TcpOptions:
         return
 
 def GetInputIpv4Flags(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'IP_RSVD_FLAGS_ACTION_ALLOW' in profile_name:
         return 0x4
     elif 'IP_RSVD_FLAGS_ACTION_DROP' in profile_name:
@@ -24,7 +25,8 @@ def GetInputIpv4Flags(testcase, packet):
     return 0x0
 
 def GetExpectedIpv4Flags(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'IP_RSVD_FLAGS_ACTION_ALLOW' in profile_name:
         return 0x4
     elif 'IP_RSVD_FLAGS_ACTION_EDIT' in profile_name:
@@ -36,13 +38,15 @@ def GetExpectedIpv4Flags(testcase, packet):
     return 0
 
 def GetInputIpv4Options(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'IP_OPTIONS_ACTION' in profile_name:
         return 0xDEADBEEF
     return None
 
 def GetExpectedIpv4Options(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'IP_OPTIONS_ACTION_ALLOW' in profile_name:
         return 0xDEADBEEF
     elif 'IP_OPTIONS_ACTION_DENY' in profile_name:
@@ -52,19 +56,25 @@ def GetExpectedIpv4Options(testcase, packet):
     return None
 
 def GetTriggerPacket(testcase):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     return testcase.packets.Get('PKT1')
 
 def GetExpectedPacket(testcase):
-    profile_name = testcase.module.iterator.Get()
-    if 'ACTION_DROP' in profile_name:
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_DROP' in profile_name:
+        # Only drop case where packet is actually allowed
+        return testcase.packets.Get('PKT2')
+    elif 'ACTION_DROP' in profile_name:
         return None
     elif '_DROP_ENABLE' in profile_name:
         return None
     return testcase.packets.Get('PKT2')
 
 def GetInputIcmpCode(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'ICMP_INVALID_CODE_ECHO_REQ_ACTION_ALLOW' in profile_name:
         return 0x1
     if 'ICMP_INVALID_CODE_ECHO_REQ_ACTION_DROP' in profile_name:
@@ -80,7 +90,8 @@ def GetInputIcmpCode(testcase, packet):
     return 0x0
 
 def GetExpectedIcmpCode(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'ICMP_INVALID_CODE_ECHO_REQ_ACTION_ALLOW' in profile_name:
         return 0x1
     if 'ICMP_INVALID_CODE_ECHO_REQ_ACTION_DROP' in profile_name:
@@ -96,7 +107,8 @@ def GetExpectedIcmpCode(testcase, packet):
     return 0x0
 
 def GetInputIcmpType(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'ECHO_REQ_ACTION' in profile_name:
         return 0x8
     elif 'ECHO_REP_ACTION' in profile_name:
@@ -128,7 +140,8 @@ def GetInputIcmpType(testcase, packet):
     return 0
 
 def GetExpectedIcmpType(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'ECHO_REQ_ACTION' in profile_name:
         return 0x8
     elif 'ECHO_REP_ACTION' in profile_name:
@@ -160,14 +173,16 @@ def GetExpectedIcmpType(testcase, packet):
     return 0
 
 def GetInputTcpReserved(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'TCP_RSVD_FLAGS_ACTION' in profile_name:
         return 0x1
     return 0x0
 
 def GetInputTcpFlags(testcase, packet):
     #TBD: TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
         return None
     elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
@@ -213,10 +228,15 @@ def GetInputTcpFlags(testcase, packet):
         return None
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT' in profile_name:
         return None
+    elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE' in profile_name:
+        return 'syn'
+    elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
+        return 'syn'
     return None
 
 def GetInputTcpOptions(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     echo_ts = []
     echo_ts.append(TcpOptions('Timestamp', '0x3 0x4'))
     echo_ts.append(TcpOptions('NOP', None))
@@ -238,10 +258,27 @@ def GetInputTcpOptions(testcase, packet):
         return echo_ts
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT' in profile_name:
         return echo_ts
+    elif 'TCP_UNEXPECTED_TS_OPTION_SET_ACTION_ALLOW' in profile_name:
+        return echo_ts
+    elif 'TCP_UNEXPECTED_TS_OPTION_SET_ACTION_DROP' in profile_name:
+        return echo_ts
+    elif 'TCP_UNEXPECTED_TS_OPTION_SET_ACTION_EDIT' in profile_name:
+        return echo_ts
+    elif 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_ALLOW' in profile_name:
+        return echo_ts
+    elif 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_DROP' in profile_name:
+        return echo_ts
+    elif 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_EDIT' in profile_name:
+        return echo_ts
+    elif 'TCP_TS_NOT_PRESENT_DROP_ENABLE' in profile_name:
+        return echo_ts
+    elif 'TCP_TS_NOT_PRESENT_DROP_DISABLE' in profile_name:
+        return echo_ts
     return []
 
 def GetInputTcpUrgPtr(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'TCP_URG_FLAG_NOT_SET_ACTION_ALLOW' in profile_name:
         return 0x1
     elif 'TCP_URG_FLAG_NOT_SET_ACTION_DROP' in profile_name:
@@ -251,7 +288,8 @@ def GetInputTcpUrgPtr(testcase, packet):
     return 0x0
 
 def GetExpectedTcpReserved(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'TCP_RSVD_FLAGS_ACTION_ALLOW' in profile_name:
         return 0x1
     elif 'TCP_RSVD_FLAGS_ACTION_DROP' in profile_name:
@@ -261,7 +299,8 @@ def GetExpectedTcpReserved(testcase, packet):
     return 0x0
 
 def GetExpectedTcpFlags(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
         return None
     elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
@@ -307,16 +346,31 @@ def GetExpectedTcpFlags(testcase, packet):
         return None
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT' in profile_name:
         return None
+    elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE' in profile_name:
+        return 'syn'
+    elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
+        return 'syn'
     return None
 
 def GetExpectedTcpOptions(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     echo_ts = []
     echo_ts_edit = []
+    echo_ts_nop_edit = []
+    
     echo_ts.append(TcpOptions('Timestamp', '0x3 0x4'))
     echo_ts.append(TcpOptions('NOP', None))
+    
     echo_ts_edit.append(TcpOptions('Timestamp', '0x3 0x0'))
     echo_ts_edit.append(TcpOptions('NOP', None))
+    
+    echo_ts_nop_edit.append(TcpOptions('NOP', None))
+    echo_ts_nop_edit.append(TcpOptions('NOP', None))
+    echo_ts_nop_edit.append(TcpOptions('NOP', None))
+    echo_ts_nop_edit.append(TcpOptions('NOP', None))
+    echo_ts_nop_edit.append(TcpOptions('NOP', None))
+
     if 'TCP_UNEXPECTED_MSS_ACTION_ALLOW' in profile_name:
         return [TcpOptions('MSS', '0x1')]
     elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
@@ -335,10 +389,27 @@ def GetExpectedTcpOptions(testcase, packet):
         return echo_ts
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT' in profile_name:
         return echo_ts_edit
+    elif 'TCP_UNEXPECTED_TS_OPTION_SET_ACTION_ALLOW' in profile_name:
+        return echo_ts
+    elif 'TCP_UNEXPECTED_TS_OPTION_SET_ACTION_DROP' in profile_name:
+        return echo_ts
+    elif 'TCP_UNEXPECTED_TS_OPTION_SET_ACTION_EDIT' in profile_name:
+        return echo_ts
+    elif 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_ALLOW' in profile_name:
+        return echo_ts
+    elif 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_DROP' in profile_name:
+        return echo_ts
+    elif 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_EDIT' in profile_name:
+        return echo_ts
+    elif 'TCP_TS_NOT_PRESENT_DROP_ENABLE' in profile_name:
+        return echo_ts
+    elif 'TCP_TS_NOT_PRESENT_DROP_DISABLE' in profile_name:
+        return echo_ts
     return []
 
 def GetExpectedTcpUrgPtr(testcase, packet):
-    profile_name = testcase.module.iterator.Get()
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
     if 'TCP_URG_FLAG_NOT_SET_ACTION_ALLOW' in profile_name:
         return 0x1
     elif 'TCP_URG_FLAG_NOT_SET_ACTION_DROP' in profile_name:
@@ -355,8 +426,70 @@ def GetExpectedTcpUrgPtr(testcase, packet):
 
 
 def GetInputPayloadSize(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'TCP_DATA_LEN_GT_MSS_ACTION_ALLOW' in profile_name:
+        return 1400
+    elif 'TCP_DATA_LEN_GT_MSS_ACTION_DROP' in profile_name:
+        return 1400
+    elif 'TCP_DATA_LEN_GT_MSS_ACTION_EDIT' in profile_name:
+        return 1400
+    elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_ALLOW' in profile_name:
+        return 1400
+    elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_DROP' in profile_name:
+        return 1400
+    elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_EDIT' in profile_name:
+        return 1400
+    elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE' in profile_name:
+        return 0
+    elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
+        return 0
     return 150
 
 def GetExpectedPayloadSize(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'TCP_DATA_LEN_GT_MSS_ACTION_ALLOW' in profile_name:
+        return 1400
+    elif 'TCP_DATA_LEN_GT_MSS_ACTION_DROP' in profile_name:
+        return 1400
+    elif 'TCP_DATA_LEN_GT_MSS_ACTION_EDIT' in profile_name:
+        return 1000
+    elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_ALLOW' in profile_name:
+        return 1400
+    elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_DROP' in profile_name:
+        return 1400
+    elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_EDIT' in profile_name:
+        return 1000
+    elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE' in profile_name:
+        return 0
+    elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
+        return 0
     return 150
 
+def GetInputTcpAck(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE' in profile_name:
+        return 0
+    elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
+        return 0
+    return 0
+
+def GetExpectedTcpAck(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE' in profile_name:
+        return 0
+    elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
+        return 0
+    return 0
+
+def GetExpectedCpuPacket(testcase):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'SEC_PROF_TCP_NON_SYN_FIRST_PKT_DROP_ENABLE' in profile_name:
+        return None
+    elif 'SEC_PROF_TCP_NON_SYN_FIRST_PKT_DROP_DISABLE' in profile_name:
+        return testcase.packets.Get('PKT2')
+    return None

@@ -79,7 +79,7 @@ dfw_exec(fte::ctx_t& ctx)
                                             ctx.sess_spec()->initiator_flow().flow_data());
             flowupd.flow_state.syn_ack_delta = ctx.sess_spec()->iflow_syn_ack_delta();
         } else {
-            flowupd.flow_state.state = session::FLOW_TCP_STATE_TCP_SYN_RCVD;
+            flowupd.flow_state.state = session::FLOW_TCP_STATE_SYN_RCVD;
         }
     } else {
         if (ctx.protobuf_request()) {

@@ -94,8 +94,8 @@ enum FlowAction {
 // TODO: Srini, please define all other states
 enum FlowTCPState {
     FLOW_TCP_STATE_INIT            = 0;
-    FLOW_TCP_STATE_TCP_SYN_RCVD    = 1;
-    FLOW_TCP_STATE_TCP_ACK_RCVD    = 2;
+    FLOW_TCP_STATE_SYN_RCVD        = 1;
+    FLOW_TCP_STATE_ACK_RCVD        = 2;
     FLOW_TCP_STATE_SYN_ACK_RCVD    = 3;
     FLOW_TCP_STATE_ESTABLISHED     = 4;
     FLOW_TCP_STATE_FIN_RCVD        = 5;

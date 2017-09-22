@@ -28,4 +28,7 @@ tenants:
         count   : 1
         lifns   : range/101/101
 
-cpu: None
+cpu:
+    - entry:
+        id      : Cpu1 
+        lif_id  : 1003

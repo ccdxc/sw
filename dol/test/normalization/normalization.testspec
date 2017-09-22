@@ -68,6 +68,8 @@ packets:
                 flags    : callback://normalization/callbacks/GetInputTcpFlags
                 urgptr   : callback://normalization/callbacks/GetInputTcpUrgPtr
                 options  : callback://normalization/callbacks/GetInputTcpOptions
+                ack      : callback://normalization/callbacks/GetInputTcpAck
+                window  : ref://testcase/config/flow/tracking/tcp_win_sz
 
     - packet:
         id          : PKT2     # Expected packet 2
@@ -88,6 +90,8 @@ packets:
                 flags    : callback://normalization/callbacks/GetExpectedTcpFlags
                 urgptr   : callback://normalization/callbacks/GetExpectedTcpUrgPtr
                 options  : callback://normalization/callbacks/GetExpectedTcpOptions
+                ack      : callback://normalization/callbacks/GetExpectedTcpAck
+                window  : ref://testcase/config/flow/tracking/tcp_win_sz
 
 session:
     - step:
@@ -102,3 +106,6 @@ session:
                 - packet:
                     object  : callback://normalization/callbacks/GetExpectedPacket
                     port    : ref://testcase/config/dst/endpoint/intf/ports
+                - packet:
+                    object  : callback://normalization/callbacks/GetExpectedCpuPacket
+                    port    : 128

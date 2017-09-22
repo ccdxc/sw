@@ -468,7 +468,7 @@ lb_tss_r_init_1:
   setcf        c1, [c1 & c2]
   b.!c1        lb_tss_r_init_2
   ori.c1       r2, r2, TCP_SPLIT_HANDSHAKE_DETECTED
-  seq          c1, k.l4_metadata_tcp_split_handshake_drop, NORMALIZATION_ACTION_DROP
+  seq          c1, k.l4_metadata_tcp_split_handshake_drop, ACT_DROP
   phvwr.c1     p.control_metadata_drop_reason[DROP_TCP_SPLIT_HANDSHAKE], 1
   phvwr.c1     p.capri_intrinsic_drop, 1
 
@@ -483,7 +483,7 @@ lb_tss_r_init_2:
   setcf        c1, [c1 & c2]
   b.!c1        lb_tss_r_init_3
   ori.c1       r2, r2, TCP_SPLIT_HANDSHAKE_DETECTED
-  seq          c1, k.l4_metadata_tcp_split_handshake_drop, NORMALIZATION_ACTION_DROP
+  seq          c1, k.l4_metadata_tcp_split_handshake_drop, ACT_DROP
   b.!c1        lb_tss_r_init_2_1
   phvwr.c1     p.control_metadata_drop_reason[DROP_TCP_SPLIT_HANDSHAKE], 1
   b            lb_tss_r_exit
