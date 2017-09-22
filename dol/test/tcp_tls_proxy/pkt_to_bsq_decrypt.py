@@ -10,6 +10,7 @@ import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
 from config.store               import Store
 from config.objects.proxycb_service    import ProxyCbServiceHelper
 from config.objects.tcp_proxy_cb        import TcpCbHelper
+import test.callbacks.networking.modcbs as modcbs
 
 rnmdr = 0
 rnmpr = 0
@@ -20,6 +21,7 @@ tlscb = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
+    modcbs.Setup(infra, module)
     return
 
 def Teardown(infra, module):
@@ -45,6 +47,8 @@ def TestCaseSetup(tc):
     tcb.rcv_tsval = 0xFAFAFAFA
     tcb.ts_recent = 0xFAFAFAF0
     tcb.debug_dol = 0
+    # set tcb state to ESTABLISHED(1)
+    tcb.state = 1
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
@@ -62,14 +66,20 @@ def TestCaseSetup(tc):
     # Key Setup
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
     key_size = 16
-    key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    #key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    key = b'\x92\xea\x09\x24\x15\x0b\x11\xbf\xe3\x85\x3a\xfd\xdd\x40\x96\xcc'
     tlscb.crypto_key.Update(key_type, key_size, key)
 
     # TLS-CB Setup
-    tlscb.command = 0x30000000
+    #tlscb.command = 0x30000000
+    tlscb.command = 0x30100000
     tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
-    tlscb.salt = 0x12345678
-    tlscb.explicit_iv = 0xfedcba9876543210
+    #tlscb.salt = 0x12345678
+    # Salt: 0xf5 0x07 0x99 0x88
+    tlscb.salt = 0x889907f5
+    #tlscb.explicit_iv = 0xfedcba9876543210
+    # IV: 0xea 0x56 0x94 0xc4 0xb7 0xd0 0x2b 0x63
+    tlscb.explicit_iv = 0x0200000000000000
     tlscb.is_decrypt_flow = True
     tlscb.SetObjValPd()
     print("IS Decrypt Flow: %s" % tlscb.is_decrypt_flow)

@@ -8,7 +8,7 @@
 #include <proxy.hpp>
 #include <hal.hpp>
 #include <lif_manager.hpp>
-#include <tls_txdma_post_crypto_p4plus_ingress.h>
+#include <tls_txdma_post_crypto_enc_p4plus_ingress.h>
 #include <wring_pd.hpp>
 #include <p4plus_pd_api.h>
 

@@ -17,7 +17,7 @@ struct tx_table_s5_t0_tls_post_crypto_stats5_d d	;
 	
 %%
     .align
-tls_post_crypto_stats_process:
+tls_enc_post_crypto_stats_process:
     CAPRI_CLEAR_TABLE0_VALID
     CAPRI_OPERAND_DEBUG(k.to_s5_rnmdr_free)
     CAPRI_OPERAND_DEBUG(k.to_s5_rnmpr_free)

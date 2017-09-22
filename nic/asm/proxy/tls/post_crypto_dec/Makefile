@@ -1,32 +1,38 @@
 
-TOPDIR = ../../..
+TOPDIR = ../../../..
 CUSTOM = all
 CUSTOM_CLEAN = clean
 
 include $(TOPDIR)/make/Makefile.inc
 
 
-PROJ = tls_txdma_pre_crypto_enc
+PROJ = tls_txdma_post_crypto_dec
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
 P4_DIR = $(TOPDIR)/p4/proxy
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I./include -I../include -I../../common-p4+/include -I../tcp/include -I$(TOPDIR)/include
+INC_DIRS = -I. -I$(ASM_HDR_DIR) -I./include -I../include -I../../../common-p4+/include -I../../include -I../../tcp/include -I$(TOPDIR)/include
 SRC_DIR = .
-CAPAS_BIN = ../../../asic/capri/model/capsim-gen/bin/capas
-CAPSIM_BIN = ../../../asic/capri/model/capsim-gen/bin/capsim
+CAPAS_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capas
+CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
 NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 
 all: deps asm
 
 deps:
-
 SRC_FILES := \
-    $(SRC_DIR)/tls-stage0.s \
-    $(SRC_DIR)/tls-pre-crypto-stage0.s \
-	$(SRC_DIR)/tls-post-crypto-stage0.s
+    $(SRC_DIR)/tls-dec-bsq.s \
+    $(SRC_DIR)/tls-dec-queue-sesq.s \
+    $(SRC_DIR)/tls-dec-read-desc.s \
+    $(SRC_DIR)/tls-dec-rx-bsq.s \
+    $(SRC_DIR)/tls-dec-bsq-consume.s \
+	$(SRC_DIR)/tls-dec-read-rnmdr-free-idx.s \
+	$(SRC_DIR)/tls-dec-read-rnmpr-free-idx.s \
+	$(SRC_DIR)/tls-dec-post-crypto-stats.s	\
+	$(SRC_DIR)/tls-dec-read-idesc.s \
+	$(SRC_DIR)/tls-dec-read-odesc.s
 
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

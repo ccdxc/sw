@@ -22,6 +22,8 @@ tls_dec_pre_crypto_process:
     phvwr       p.to_s5_debug_dol, d.u.read_tls_stg0_d.debug_dol
     CAPRI_OPERAND_DEBUG(d.u.read_tls_stg0_d.debug_dol)
 
+    /* HACK: Save the sequence number that will be used on S4_T0 */
+    phvwr       p.crypto_iv_explicit_iv, d.u.read_tls_stg0_d.explicit_iv
 	
 	phvwr		p.tls_global_phv_fid, k.p4_txdma_intr_qid
     add         r3, r0, d.u.read_tls_stg0_d.ci_0

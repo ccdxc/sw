@@ -230,6 +230,12 @@ header_type s3_t2_s2s_phv_t {
     }
 }
 
+header_type barco_desc_pad_t {
+    fields {
+        pad                     : 304;
+    }
+}
+
 
 @pragma scratch_metadata
 metadata tlscb_0_t tlscb_0_d;
@@ -281,6 +287,8 @@ metadata s3_t2_s2s_phv_t s3_t2_s2s;
 
 @pragma dont_trim
 metadata barco_desc_t barco_desc;
+@pragma dont_trim
+metadata barco_desc_pad_t   barco_desc_pad;
 @pragma dont_trim
 metadata pkt_descr_aol_t aol; 
 @pragma dont_trim

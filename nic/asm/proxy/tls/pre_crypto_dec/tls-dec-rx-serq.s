@@ -40,10 +40,10 @@ dma_cmd_dec_desc_entry_last:
 	add		    r5, r5, D.qtail
 	phvwr		p.dma_cmd0_dma_cmd_addr, r5
 
-	phvwr		p.aol_next_addr, k.to_s3_idesc
+	phvwr		p.odesc_next_addr, k.to_s3_idesc
 
-    phvwri      p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(aol_next_addr)
-	phvwri		p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(aol_next_addr)
+    phvwri      p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(odesc_next_addr)
+	phvwri		p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(odesc_next_addr)
 
 
 	phvwri		p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
@@ -61,7 +61,8 @@ no_dma_cmd:
 	 * offset for the next tls header in the data stream 
 	 */
 	/* if (dtlsp->next_tls_hdr_offset < md->desc.data_len) { */
-	slt		    c1, D.next_tls_hdr_offset, k.s2_s3_t0_phv_idesc_aol0_len
+    add         r5, r0, k.{s2_s3_t0_phv_idesc_aol0_len_sbit0_ebit7...s2_s3_t0_phv_idesc_aol0_len_sbit8_ebit31}
+	slt		    c1, D.next_tls_hdr_offset, r5
 	bcf		    [!c1], tls_no_read_header
 	nop
 	phvwr		p.tls_global_phv_next_tls_hdr_offset, D.next_tls_hdr_offset
@@ -69,9 +70,13 @@ no_dma_cmd:
 	add		    r3, r0, k.s2_s3_t0_phv_idesc_aol0_offset
 	add		    r3, r3, k.tls_global_phv_next_tls_hdr_offset
 	add		    r2, r2, r3
+#if 1
+    /* FIXME: Workaround to DoL packet injection issue */
+    addi        r2, r2, 4
+#endif
 
 table_read_tls_header:	
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_read_header_process, r2, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_read_header_process, r2, TABLE_SIZE_512_BITS)
 	b		    tls_dec_rx_serq_process_done
 	nop
 	/* md->next_tls_hdr_offset = dtlsp->next_tls_hdr_offset; */
@@ -79,7 +84,7 @@ table_read_tls_header:
 
 tls_no_read_header:
 	/* if (dtlsp->next_tls_hdr_offset == md->desc.data_len) { */
-	seq		    c1, D.next_tls_hdr_offset, k.s2_s3_t0_phv_idesc_aol0_len
+	seq		    c1, D.next_tls_hdr_offset, r5
 	
 	bcf 		[!c1], tls_dec_rx_serq_process_done
 	nop

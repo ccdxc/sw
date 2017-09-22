@@ -353,6 +353,8 @@
 #define NTLS_TLS_1_2_MAJOR              0x03
 #define NTLS_TLS_1_2_MINOR              0x03
 
+#define TLS_AES_GCM_AUTH_TAG_SIZE       16
+
 /* nonce explicit offset in a record */
 #define NTLS_TLS_NONCE_OFFSET           NTLS_TLS_HEADER_SIZE
 

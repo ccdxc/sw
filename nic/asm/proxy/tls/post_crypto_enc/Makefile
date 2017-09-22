@@ -6,7 +6,7 @@ CUSTOM_CLEAN = clean
 include $(TOPDIR)/make/Makefile.inc
 
 
-PROJ = tls_txdma_post_crypto
+PROJ = tls_txdma_post_crypto_enc
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 GEN_DIR = $(TOPDIR)/gen
 ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
@@ -23,15 +23,15 @@ all: deps asm
 
 deps:
 SRC_FILES := \
-    $(SRC_DIR)/tls-bsq.s \
-    $(SRC_DIR)/tls-queue-sesq.s \
-    $(SRC_DIR)/tls-read-desc.s \
-    $(SRC_DIR)/tls-rx-bsq-enc.s \
-    $(SRC_DIR)/tls-rx-bsq-dec.s \
-    $(SRC_DIR)/tls-bsq-consume.s \
-	$(SRC_DIR)/tls-read-rnmdr-free-idx.s \
-	$(SRC_DIR)/tls-read-rnmpr-free-idx.s \
-	$(SRC_DIR)/tls-post-crypto-stats.s
+    $(SRC_DIR)/tls-enc-bsq.s \
+    $(SRC_DIR)/tls-enc-queue-sesq.s \
+    $(SRC_DIR)/tls-enc-read-desc.s \
+    $(SRC_DIR)/tls-enc-rx-bsq-enc.s \
+    $(SRC_DIR)/tls-enc-rx-bsq-dec.s \
+    $(SRC_DIR)/tls-enc-bsq-consume.s \
+	$(SRC_DIR)/tls-enc-read-rnmdr-free-idx.s \
+	$(SRC_DIR)/tls-enc-read-rnmpr-free-idx.s \
+	$(SRC_DIR)/tls-enc-post-crypto-stats.s
 
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

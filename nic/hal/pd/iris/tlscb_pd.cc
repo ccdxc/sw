@@ -238,10 +238,10 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
         data.u.read_tls_stg0_d.barco_key_desc_index = tlscb_pd->tlscb->crypto_key_idx;
         HAL_TRACE_DEBUG("Barco Key Desc Index = 0x{0:x}", data.u.read_tls_stg0_d.barco_key_desc_index);
 
-        data.u.read_tls_stg0_d.salt = htonl(tlscb_pd->tlscb->salt);
+        data.u.read_tls_stg0_d.salt = (tlscb_pd->tlscb->salt);
         HAL_TRACE_DEBUG("Salt = 0x{0:x}", data.u.read_tls_stg0_d.salt);
 
-        data.u.read_tls_stg0_d.explicit_iv = tlscb_pd->tlscb->explicit_iv;
+        data.u.read_tls_stg0_d.explicit_iv = (tlscb_pd->tlscb->explicit_iv);
         HAL_TRACE_DEBUG("Explicit IV = 0x{0:x}", data.u.read_tls_stg0_d.explicit_iv);
 
         data.u.read_tls_stg0_d.pi_0 = htonl(tlscb_pd->tlscb->serq_pi);

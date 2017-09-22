@@ -34,8 +34,17 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_output_list_address, r1.dx
     CAPRI_OPERAND_DEBUG(r1.dx)
 
+    add         r1, r0, k.{to_s5_odesc}
+    phvwr       p.odesc_dma_src_odesc, r1.dx
+
     phvwr       p.barco_desc_key_desc_index, d.{u.tls_bld_brq5_d.barco_key_desc_index}.wx
     CAPRI_OPERAND_DEBUG(d.{u.tls_bld_brq5_d.barco_key_desc_index}.wx)
+
+    phvwr       p.crypto_iv_salt, d.u.tls_bld_brq5_d.salt
+    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.salt)
+
+	phvwr		p.s4_s6_t0_phv_aad_seq_num, d.u.tls_bld_brq5_d.explicit_iv
+    tbladd      d.u.tls_bld_brq5_d.explicit_iv, 1
 
     phvwr       p.barco_desc_command, d.u.tls_bld_brq5_d.barco_command
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.barco_command)
@@ -45,7 +54,6 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_doorbell_address, r4.dx
     CAPRI_OPERAND_DEBUG(r4.dx)
 
-    
 	/* data will be in r3 */
 	CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0)
     phvwr       p.barco_desc_doorbell_data, r3.dx

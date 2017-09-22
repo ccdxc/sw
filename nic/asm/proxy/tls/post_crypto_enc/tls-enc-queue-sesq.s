@@ -20,9 +20,9 @@ struct tx_table_s0_t0_d d;
 
 	
 %%
-    .param      tls_post_crypto_stats_process
+    .param      tls_enc_post_crypto_stats_process
 
-tls_queue_sesq_process:
+tls_enc_queue_sesq_process:
     CAPRI_SET_DEBUG_STAGE4_7(p.to_s5_debug_stage4_7_thread, CAPRI_MPU_STAGE_4, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
 	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
@@ -78,7 +78,7 @@ tls_sesq_produce_skip:
     phvwri      p.dma_cmd0_dma_cmd_wr_fence, 1
         
 tls_queue_sesq_process_done:
-	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_post_crypto_stats_process,
+	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_enc_post_crypto_stats_process,
 	                    k.tls_global_phv_qstate_addr,
 	                    TLS_TCB_POST_CRYPTO_STATS_OFFSET, TABLE_SIZE_512_BITS)
 	nop.e

@@ -5,7 +5,7 @@
 #include "capri_loader.h"
 #include "capri_tbl_rw.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 33
+#define CAPRI_P4PLUS_NUM_SYMBOLS 35
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
@@ -170,12 +170,12 @@ capri_p4p_asm_init()
     symbols[5].params[0].name = BRQ_BASE;
     symbols[5].params[0].val = get_start_offset(CAPRI_HBM_REG_BRQ);
 
-    symbols[6].name = "tls-read-rnmdr-free-idx.bin";
+    symbols[6].name = "tls-enc-read-rnmdr-free-idx.bin";
     symbols[6].num_params = 1;
     symbols[6].params[0].name = RNMDR_TABLE_BASE;
     symbols[6].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
     
-    symbols[7].name = "tls-read-rnmpr-free-idx.bin";
+    symbols[7].name = "tls-enc-read-rnmpr-free-idx.bin";
     symbols[7].num_params = 1;
     symbols[7].params[0].name = RNMPR_TABLE_BASE;
     symbols[7].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
@@ -302,7 +302,15 @@ capri_p4p_asm_init()
     symbols[32].params[1].name = ARQRX_QIDXR_BASE;
     symbols[32].params[1].val = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
 
+    symbols[33].name = "tls-dec-read-rnmdr-free-idx.bin";
+    symbols[33].num_params = 1;
+    symbols[33].params[0].name = RNMDR_TABLE_BASE;
+    symbols[33].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
 
+    symbols[34].name = "tls-dec-read-rnmpr-free-idx.bin";
+    symbols[34].num_params = 1;
+    symbols[34].params[0].name = RNMPR_TABLE_BASE;
+    symbols[34].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
     

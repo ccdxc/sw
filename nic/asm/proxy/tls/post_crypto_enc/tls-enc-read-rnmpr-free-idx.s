@@ -19,7 +19,7 @@ struct tx_table_s3_t2_read_rnmpr_free_pi_d d ;
 	
         .param          RNMPR_TABLE_BASE
 	    .align
-tls_free_rnmpr:
+tls_enc_free_rnmpr:
         CAPRI_SET_DEBUG_STAGE0_3(p.to_s5_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_2)
         CAPRI_CLEAR_TABLE2_VALID
 

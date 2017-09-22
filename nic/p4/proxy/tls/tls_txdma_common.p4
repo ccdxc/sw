@@ -100,7 +100,7 @@ header_type tlscb_1_t {
 }
 
 #define TLSCB_1_PARAMS                                                                                  \
-cipher_type, ver_major, qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, other_fid
+qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, other_fid
 #
 
 #define GENERATE_TLSCB_1_D                                                                              \
@@ -138,7 +138,6 @@ header_type barco_desc_t {
         sector_num                          : 32;
         doorbell_address                    : 64;
         doorbell_data                       : 64;
-        rsvd2                               : 304;
     }
 }
 
@@ -284,16 +283,18 @@ header_type tls_header_t {
         tls_hdr_version_major               : 8;
         tls_hdr_version_minor               : 8;
         tls_hdr_len                         : 16;
+        tls_iv                              : 64;   /* Not truly part of the TLS header */
     }
 }
 
-#define TLS_HDR_ACTION_PARAMS   tls_hdr_type, tls_hdr_version_major, tls_hdr_version_minor, tls_hdr_len
+#define TLS_HDR_ACTION_PARAMS   tls_hdr_type, tls_hdr_version_major, tls_hdr_version_minor, tls_hdr_len, tls_iv
 #define TLS_HDR_SCRATCH tls_header_d
 #define GENERATE_TLS_HDR_D                                                                              \
     modify_field(TLS_HDR_SCRATCH.tls_hdr_type, tls_hdr_type);                                           \
     modify_field(TLS_HDR_SCRATCH.tls_hdr_version_major, tls_hdr_version_major);                         \
     modify_field(TLS_HDR_SCRATCH.tls_hdr_version_minor, tls_hdr_version_minor);                         \
-    modify_field(TLS_HDR_SCRATCH.tls_hdr_len, tls_hdr_len);
+    modify_field(TLS_HDR_SCRATCH.tls_hdr_len, tls_hdr_len);                                             \
+    modify_field(TLS_HDR_SCRATCH.tls_iv, tls_iv);
 
 
 header_type read_tnmdr_d_t {
@@ -309,3 +310,24 @@ header_type read_tnmpr_d_t {
         tnmpr_pidx_full         : 1;
     }
 }
+
+
+
+/* AAD Definition for AES-GCM */
+header_type additional_data_t {
+    fields {
+        aad_seq_num                 : 64;
+        aad_type                    : 8;
+        aad_version_major           : 8;
+        aad_version_minor           : 8;
+        aad_length                  : 16;
+    }
+}
+
+#define GENERATE_AAD_FIELDS(TO, FROM)                                                               \
+    modify_field(TO.aad_seq_num, FROM.aad_seq_num);                                                 \
+    modify_field(TO.aad_type, FROM.aad_type);                                                       \
+    modify_field(TO.aad_version_major, FROM.aad_version_major);                                     \
+    modify_field(TO.aad_version_minor, FROM.aad_version_minor);                                     \
+    modify_field(TO.aad_length, FROM.aad_length);
+

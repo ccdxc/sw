@@ -25,6 +25,7 @@ struct tx_table_s1_t0_k k;
 tls_dec_read_serq_entry_process:
     phvwr   p.to_s3_idesc, d.u.read_serq_entry_d.idesc
     phvwr   p.to_s5_idesc, d.u.read_serq_entry_d.idesc
+    phvwr   p.to_s6_idesc, d.u.read_serq_entry_d.idesc
     add     r1, r0, d.u.read_serq_entry_d.idesc
 
     addi    r1, r1, PKT_DESC_AOL_OFFSET

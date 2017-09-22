@@ -64,16 +64,6 @@ dma_cmd_enc_desc_entry0:
     addi        r1, r0, 512
 	phvwr		p.aol_L0, r1.wx
 
-    /* For now clear the rest of the descriptor */
-    phvwr       p.aol_A1, r0
-    phvwr       p.aol_O1, r0
-    phvwr       p.aol_L1, r0
-    phvwr       p.aol_A2, r0
-    phvwr       p.aol_O2, r0
-    phvwr       p.aol_L2, r0
-    phvwr       p.aol_next_addr, r0
-    phvwr       p.aol_next_pkt, r0
-
     phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(aol_A0)
     phvwri		p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(aol_next_pkt)
         
