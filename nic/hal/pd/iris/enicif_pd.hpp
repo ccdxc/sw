@@ -27,11 +27,20 @@ hal_ret_t pd_enicif_program_hw(pd_enicif_t *pd_enicif);
 hal_ret_t pd_enicif_free (pd_enicif_t *enicif);
 void link_pi_pd(pd_enicif_t *pd_upif, if_t *pi_if);
 void unlink_pi_pd(pd_enicif_t *pd_upif, if_t *pi_if);
-hal_ret_t pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif);
+hal_ret_t pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, 
+        nwsec_profile_t *nwsec_prof);
 hal_ret_t pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif);
 
 uint32_t pd_enicif_get_l4_prof_idx(pd_enicif_t *pd_enicif);
 pd_lif_t *pd_enicif_get_pd_lif(pd_enicif_t *pd_enicif);
+hal_ret_t
+pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
+                              nwsec_profile_t *nwsec_prof,
+                              input_properties_mac_vlan_actiondata &data,
+                              bool host_entry);
+hal_ret_t
+pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif, 
+                                     nwsec_profile_t *nwsec_prof);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_PD_ENICIF_HPP__

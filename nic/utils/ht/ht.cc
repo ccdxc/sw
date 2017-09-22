@@ -31,6 +31,7 @@ ht::init(uint32_t ht_size, ht_get_key_func_t get_key_func,
     num_removal_err_ = 0;
     num_lookups_ = 0;
     num_collisions_ = 0;
+    // TODO: buckets should be a function of ht_size
     ht_buckets_ = (ht_bucket_t *)HAL_MALLOCZ(HAL_MEM_ALLOC_LIB_HT,
                                              ht_size * sizeof(ht_bucket_t));
     if (ht_buckets_ == NULL) {

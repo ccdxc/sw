@@ -361,6 +361,15 @@ end:
     return nwsec_hw_id;
 }
 
+uint32_t
+nwsec_get_nwsec_prof_hw_id(nwsec_profile_t *pi_nwsec)
+{
+    pd_nwsec_profile_t  *pd_nwsec = NULL;
+
+    pd_nwsec = (pd_nwsec_profile_t *)pi_nwsec->pd;
+    return pd_nwsec->nwsec_hw_id;
+}
+
 hal_ret_t
 pd_get_l2seg_ten_masks(uint16_t *l2seg_mask, uint16_t *ten_mask, 
                        uint8_t *ten_shift) 

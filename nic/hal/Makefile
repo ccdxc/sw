@@ -148,6 +148,6 @@ all: $(OBJ_FILES)
 	$(CXX) $(HAL_OBJS) $(LDFLAGS) -lpdutils -o $(OBJ_DIR)/hal_stub $(GCOV) -lgcov
 
 clean:
-	rm -rf $(OBJ_DIR)/hal.* $(OBJ_DIR)/hal_state.* $(OBJ_DIR)/hal_cfg.* $(OBJ_DIR)/main.* $(OBJ_DIR)/*.so $(OBJ_DIR)/hal
+	rm -rf $(OBJ_DIR)/hal.* $(OBJ_DIR)/hal_state.* $(OBJ_DIR)/hal_cfg.* $(OBJ_DIR)/main.* $(OBJ_DIR)/*.so $(OBJ_DIR)/hal $(OBJ_DIR)/hal_stub
 
 -include $(DEPENDS)

@@ -4,6 +4,9 @@
 #define __HAL_CFG_HPP__
 
 #include <base.h>
+#include <list.hpp>
+
+using hal::utils::dllist_ctxt_t;
 
 namespace hal {
 
@@ -31,12 +34,30 @@ typedef struct cfg_db_ctxt_s {
     cfg_op_t               cfg_op_;       // operation for which db is opened
     cfg_version_t          rversion_;     // read version to use for lookups
     cfg_version_t          wversion_;     // write version to commit db changes with
-    //cfg_db_dirty_objs_t    *dirty_objs; // dirty object list to be committed
-} cfg_db_ctxt_t;
+} __PACK__ cfg_db_ctxt_t;
 extern thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 
-// delete callback provided per object
+// dirty handle list entry
+typedef struct dhl_entry_s {
+    hal_handle_t    handle;         // handle of the object
+    void            *obj;           // original object
+    void            *cloned_obj;    // cloned object
+    dllist_ctxt_t   dllist_ctxt;    // list context
+} __PACK__ dhl_entry_t;
+
+// operation (add/del/mdfy etc.) specific context
+typedef struct cfg_op_ctxt_s {
+    void             *app_ctxt;       // app/module specific context
+    dllist_ctxt_t    dhl;             // dirty handle list
+} __PACK__ cfg_op_ctxt_t;
+
 typedef hal_ret_t (*hal_cfg_del_cb_t)(void *obj);
+
+// delete callback provided per object
+typedef hal_ret_t (*hal_cfg_op_cb_t)(cfg_op_ctxt_t *ctxt);
+typedef hal_ret_t (*hal_cfg_commit_cb_t)(cfg_op_ctxt_t *ctxt);
+typedef hal_ret_t (*hal_cfg_abort_cb_t)(cfg_op_ctxt_t *ctxt);
+typedef hal_ret_t (*hal_cfg_cleanup_cb_t)(cfg_op_ctxt_t *ctxt);
 
 //------------------------------------------------------------------------------
 // TODO - following should come from cfg file or should be derived from platform
@@ -54,7 +75,7 @@ enum {
 //------------------------------------------------------------------------------
 // HAL config object identifiers
 //------------------------------------------------------------------------------
-enum {
+typedef enum hal_obj_id_e {
     HAL_OBJ_ID_NONE,
     HAL_OBJ_ID_TENANT,
     HAL_OBJ_ID_SECURITY_PROFILE,
@@ -67,7 +88,7 @@ enum {
     HAL_OBJ_ID_ACL,
 
     HAL_OBJ_ID_MAX
-};
+} hal_obj_id_t;
 
 }    // namespace hal
 

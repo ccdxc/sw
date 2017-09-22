@@ -8,6 +8,8 @@
 namespace hal {
 namespace utils {
 
+#define INVALID_INDEXER_INDEX   0xFFFFFFFF
+
 class indexer {
 public:
     enum status {

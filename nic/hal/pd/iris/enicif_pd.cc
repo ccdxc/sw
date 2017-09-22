@@ -10,6 +10,7 @@
 #include "l2seg_pd.hpp"
 #include "if_pd_utils.hpp"
 #include <defines.h>
+#include <p4pd_defaults.hpp>
 
 
 namespace hal {
@@ -128,9 +129,15 @@ hal_ret_t
 pd_enicif_program_hw(pd_enicif_t *pd_enicif)
 {
     hal_ret_t            ret;
+    nwsec_profile_t      *pi_nwsec = NULL;
+
+    pi_nwsec = (nwsec_profile_t *)if_enicif_get_pi_nwsec((if_t *)pd_enicif->pi_if);
+    if (pi_nwsec == NULL) {
+        HAL_TRACE_DEBUG("{}: No nwsec. Programming default", __FUNCTION__);
+    }
 
     // Program Input Properties Mac Vlan
-    ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif);
+    ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, pi_nwsec);
 
     // Program Output Mapping 
     ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif);
@@ -215,7 +222,7 @@ unlink_pi_pd(pd_enicif_t *pd_enicif, if_t *pi_if)
 
 #define inp_prop_mac_vlan_data data.input_properties_mac_vlan_action_u.input_properties_mac_vlan_input_properties_mac_vlan
 hal_ret_t
-pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
+pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, nwsec_profile_t *nwsec_prof)
 {
     hal_ret_t                                   ret = HAL_RET_OK;
     input_properties_mac_vlan_swkey_t           key;
@@ -225,7 +232,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     mac_addr_t                                  *mac = NULL;
     // uint64_t                                    mac_int = 0;
     // intf::IfEnicType                            enicif_type = intf::IF_ENIC_TYPE_NONE;
-    pd_l2seg_t                                  *pd_l2seg = NULL;
+    // pd_l2seg_t                                  *pd_l2seg = NULL;
     void                                        *pi_l2seg = NULL;
     types::encapType                            enc_type;
 
@@ -235,7 +242,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
 
     inp_prop_mac_vlan_tbl = g_hal_state_pd->tcam_table(
                             P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    HAL_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
 
     // enicif_type = if_get_enicif_type((if_t*)pd_enicif->pi_if);
 
@@ -267,17 +274,21 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
     mask.vlan_tag_vid_mask = ~(mask.vlan_tag_vid_mask & 0);
     memset(mask.ethernet_srcAddr_mask, ~0, sizeof(mask.ethernet_srcAddr_mask));
 
+    pd_enicif_inp_prop_form_data(pd_enicif, nwsec_prof, data, true);
+#if 0
     pd_l2seg = (pd_l2seg_t *)if_enicif_get_pd_l2seg((if_t*)pd_enicif->pi_if);
     HAL_ASSERT_RETURN((pd_l2seg != NULL), HAL_RET_ERR);
-
     data.actionid = INPUT_PROPERTIES_MAC_VLAN_INPUT_PROPERTIES_MAC_VLAN_ID;
     inp_prop_mac_vlan_data.vrf = pd_l2seg->l2seg_ten_hw_id;
     inp_prop_mac_vlan_data.dir = FLOW_DIR_FROM_ENIC;
-    inp_prop_mac_vlan_data.ipsg_enable = if_enicif_get_ipsg_en((if_t *)pd_enicif->pi_if);
+    // inp_prop_mac_vlan_data.ipsg_enable = if_enicif_get_ipsg_en((if_t *)pd_enicif->pi_if);
+    inp_prop_mac_vlan_data.ipsg_enable = nwsec_prof ? nwsec_prof->ipsg_en : 0;
     inp_prop_mac_vlan_data.src_lif_check_en = 0; // Enabled only for Deja-vu entry
     inp_prop_mac_vlan_data.src_lif = 0;
-    inp_prop_mac_vlan_data.l4_profile_idx = pd_enicif_get_l4_prof_idx(pd_enicif);
+    // inp_prop_mac_vlan_data.l4_profile_idx = pd_enicif_get_l4_prof_idx(pd_enicif);
+    inp_prop_mac_vlan_data.l4_profile_idx = nwsec_get_nwsec_prof_hw_id(nwsec_prof);
     inp_prop_mac_vlan_data.src_lport = pd_enicif->enic_lport_id;
+#endif
 
     // TODO: Fill these fields eventually
 #if 0
@@ -322,9 +333,12 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
         return HAL_RET_OK;
     }
 
+    pd_enicif_inp_prop_form_data(pd_enicif, nwsec_prof, data, false);
+#if 0
     // Data. Only srclif as this will make the pkt drop
     inp_prop_mac_vlan_data.src_lif_check_en = 1;
     inp_prop_mac_vlan_data.src_lif = if_get_hw_lif_id((if_t*)pd_enicif->pi_if);
+#endif
 
     ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
                                         &(pd_enicif->inp_prop_mac_vlan_idx_upl));
@@ -341,6 +355,75 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
 end:
     return ret;
 }
+
+hal_ret_t
+pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
+                              nwsec_profile_t *nwsec_prof,
+                              input_properties_mac_vlan_actiondata &data,
+                              bool host_entry)
+{
+    pd_l2seg_t      *pd_l2seg = NULL;
+    hal_ret_t       ret = HAL_RET_OK;
+
+    memset(&data, 0, sizeof(data));
+
+    if (host_entry) {
+        pd_l2seg = (pd_l2seg_t *)if_enicif_get_pd_l2seg((if_t*)pd_enicif->pi_if);
+        HAL_ASSERT_RETURN((pd_l2seg != NULL), HAL_RET_ERR);
+
+        data.actionid = INPUT_PROPERTIES_MAC_VLAN_INPUT_PROPERTIES_MAC_VLAN_ID;
+        inp_prop_mac_vlan_data.vrf = pd_l2seg->l2seg_ten_hw_id;
+        inp_prop_mac_vlan_data.dir = FLOW_DIR_FROM_ENIC;
+        // inp_prop_mac_vlan_data.ipsg_enable = if_enicif_get_ipsg_en((if_t *)pd_enicif->pi_if);
+        inp_prop_mac_vlan_data.ipsg_enable = nwsec_prof ? nwsec_prof->ipsg_en : 0;
+        inp_prop_mac_vlan_data.src_lif_check_en = 0; // Enabled only for Deja-vu entry
+        inp_prop_mac_vlan_data.src_lif = 0;
+        // inp_prop_mac_vlan_data.l4_profile_idx = pd_enicif_get_l4_prof_idx(pd_enicif);
+        inp_prop_mac_vlan_data.l4_profile_idx = nwsec_prof ? nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
+        inp_prop_mac_vlan_data.src_lport = pd_enicif->enic_lport_id;
+    } else {
+        inp_prop_mac_vlan_data.src_lif_check_en = 1;
+        inp_prop_mac_vlan_data.src_lif = if_get_hw_lif_id((if_t*)pd_enicif->pi_if);
+    }
+
+    return ret;
+}
+
+hal_ret_t
+pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif, 
+                                     nwsec_profile_t *nwsec_prof)
+{
+    hal_ret_t                                   ret = HAL_RET_OK;
+    input_properties_mac_vlan_actiondata        data;
+    Tcam                                        *inp_prop_mac_vlan_tbl = NULL;
+
+    inp_prop_mac_vlan_tbl = g_hal_state_pd->tcam_table(
+                            P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
+    HAL_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
+
+    pd_enicif_inp_prop_form_data(pd_enicif, nwsec_prof, data, true);
+
+    ret = inp_prop_mac_vlan_tbl->update(pd_enicif->inp_prop_mac_vlan_idx_host, &data);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-ENICIF::{}: Unable to program for Host traffic (EnicIf): {}",
+                __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if));
+        goto end;
+    } else {
+        HAL_TRACE_DEBUG("PD-ENICIF::{}: Programmed for Host traffic (EnicIf): {} TcamIdx: {}",
+                __FUNCTION__, if_get_if_id((if_t*)pd_enicif->pi_if), 
+                pd_enicif->inp_prop_mac_vlan_idx_host);
+    }
+
+    // Generally there is nothing to update for network side entries. So skipping it
+
+end:
+    return ret;
+}
+
+
+
+
+
 
 uint32_t
 pd_enicif_get_l4_prof_idx(pd_enicif_t *pd_enicif)

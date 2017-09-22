@@ -4,6 +4,7 @@ SHAREDLIBRARY = libp4pdapi.so
 
 LCXXFLAGS = \
 			-fpic \
+			-I. \
 			-I.. \
 			-I../.. \
 			-I../../.. \

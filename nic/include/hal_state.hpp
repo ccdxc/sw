@@ -32,29 +32,32 @@ public:
     static hal_cfg_db *factory(void);
     ~hal_cfg_db();
 
+    void rlock(void) { rwlock_.rlock(); }
+    void runlock(void) { rwlock_.runlock(); }
+    void wlock(void) { rwlock_.wlock(); }
+    void wunlock(void) { rwlock_.wunlock(); }
+
     // API to call before processing any packet by FTE, any operation by config
     hal_ret_t db_open(cfg_op_t cfg_op);
     // API to call after processing any packet by FTE, any operation by config
     // thread or periodic thread etc.
     hal_ret_t db_close(void);
+
+    // API to register a config object with HAL infra
+    hal_ret_t register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz);
+    uint32_t object_size(hal_obj_id_t obj_id) const;
+
+#if 0
     bool is_cfg_ver_in_use(cfg_version_t ver);
+    // TODO: make this a private function and make hal_handle class friend of
+    // this
     hal_ret_t add_obj_to_del_cache(hal_handle *handle, void *obj,
                                    hal_cfg_del_cb_t del_cb);
 
-#if 0
-    void lock_version_unlock(void) { HAL_SPINLOCK_LOCK(&slock_); }
-    void unlock_version_db(void) { HAL_SPINLOCK_UNLOCK(&slock_); }
-    // try to make given version valid
-    hal_ret_t cfg_db_version_commit(cfg_version_t version);
-
-    // invalidate a specific version of the cfg db; this api is useful in case a
-    // modify operation failed and we need to mark all updated objects as
-    // invalid in one shot
-    uint32_t cfg_db_version_invalidate(cfg_version_t cfg_db_ver);
 #endif
 
     ht *tenant_id_ht(void) const { return tenant_id_ht_; }
-    ht *tenant_hal_handle_ht(void) const { return tenant_hal_handle_ht_; }
+    // ht *tenant_hal_handle_ht(void) const { return tenant_hal_handle_ht_; }
 
     ht *network_key_ht(void) const { return network_key_ht_; }
     ht *network_hal_handle_ht(void) const { return network_hal_handle_ht_; }
@@ -115,6 +118,7 @@ public:
     ht *cpucb_id_ht(void) const { return cpucb_id_ht_; }
     ht *cpucb_hal_handle_ht(void) const { return cpucb_hal_handle_ht_; }
 
+#if 0
 public:
     // TODO: move to hal_cfg.h and rename to cfg_del_cache_entry_t
     typedef struct del_cache_entry_s {
@@ -123,11 +127,13 @@ public:
         hal_cfg_del_cb_t    del_cb;
         dllist_ctxt_t       dllist_ctxt;
     } __PACK__ del_cache_entry_t;
+#endif
 
 private:
     bool init(void);
     hal_cfg_db();
 
+#if 0
     cfg_version_t db_get_current_version(void);
     cfg_version_t db_reserve_version(void);
     hal_ret_t db_release_reserved_version(cfg_version_t ver);
@@ -135,12 +141,13 @@ private:
     hal_ret_t db_release_version_in_use(cfg_version_t ver);
     hal_ret_t process_del_cache_entry(del_cache_entry_t *entry);
     void process_del_cache(void);
+#endif
 
 private:
     // tenant/vrf related config
     struct {
         ht         *tenant_id_ht_;
-        ht         *tenant_hal_handle_ht_;
+        // ht         *tenant_hal_handle_ht_;
     } __PACK__;
 
     // network related config
@@ -254,6 +261,7 @@ private:
         ht         *cpucb_hal_handle_ht_;
     } __PACK__;
 
+#if 0
     // meta information about the config db
     typedef struct cfg_ver_in_use_info_s {
         cfg_version_t    ver;          // version number
@@ -273,6 +281,13 @@ private:
     cfg_version_rsvd_info_t    cfg_ver_rsvd_[HAL_THREAD_ID_MAX];       // versions reserved for write
     dllist_ctxt_t              del_cache_list_head_;                   // delete obj cache
     hal_spinlock_t             del_cache_slock_;                       // lock to protect the delete cache
+#endif
+
+    wp_rwlock    rwlock_;
+    typedef struct obj_meta_s {
+        uint32_t        obj_sz;
+    } __PACK__ obj_meta_t;
+    obj_meta_t    obj_meta_[HAL_OBJ_ID_MAX];
 };
 
 // HAL operational database
@@ -281,6 +296,7 @@ public:
     static hal_oper_db *factory(void);
     ~hal_oper_db();
 
+    ht *hal_handle_id_ht(void) const { return hal_handle_id_ht_; };
     void *infra_l2seg(void) { return infra_l2seg_; }
     void set_infra_l2seg(void *infra_l2seg) { infra_l2seg_ = infra_l2seg; }
     ht *if_hwid_ht(void) const { return if_hwid_ht_; }
@@ -297,6 +313,7 @@ private:
 
 private:
     void      *infra_l2seg_;  // l2seg_t *
+    ht        *hal_handle_id_ht_;
     ht        *if_hwid_ht_;
     ht        *ep_l2_ht_;
     ht        *ep_l3_entry_ht_;
@@ -313,7 +330,10 @@ public:
 
     slab *hal_handle_slab(void) const { return hal_handle_slab_; }
     slab *hal_handle_ht_entry_slab(void) const { return hal_handle_ht_entry_slab_; }
-    slab *hal_del_cache_entry_slab(void) const { return hal_del_cache_entry_slab_; }
+    slab *hal_handle_list_entry_slab(void) const { return hal_handle_list_entry_slab_; }
+    slab *hal_handle_id_ht_entry_slab(void) const { return hal_handle_id_ht_entry_slab_; }
+    slab *hal_handle_id_list_entry_slab(void) const { return hal_handle_id_list_entry_slab_; }
+    //slab *hal_del_cache_entry_slab(void) const { return hal_del_cache_entry_slab_; }
     slab *tenant_slab(void) const { return tenant_slab_; }
     slab *network_slab(void) const { return network_slab_; }
     slab *nwsec_profile_slab(void) const { return nwsec_profile_slab_; }
@@ -343,7 +363,10 @@ private:
 private:
     slab    *hal_handle_slab_;
     slab    *hal_handle_ht_entry_slab_;
-    slab    *hal_del_cache_entry_slab_;
+    slab    *hal_handle_list_entry_slab_;
+    slab    *hal_handle_id_ht_entry_slab_;
+    slab    *hal_handle_id_list_entry_slab_;
+    //slab    *hal_del_cache_entry_slab_;
     slab    *tenant_slab_;
     slab    *network_slab_;
     slab    *nwsec_profile_slab_;
@@ -384,14 +407,23 @@ public:
     hal_mem_db *mem_db(void) const { return mem_db_; }
 
     // get APIs for HAL handle related state
-    slab *hal_del_cache_entry_slab(void) const { return mem_db_->hal_del_cache_entry_slab(); }
+    //slab *hal_del_cache_entry_slab(void) const { return mem_db_->hal_del_cache_entry_slab(); }
     slab *hal_handle_slab(void) const { return mem_db_->hal_handle_slab(); }
     slab *hal_handle_ht_entry_slab(void) const { return mem_db_->hal_handle_ht_entry_slab(); }
+    slab *hal_handle_list_entry_slab(void) const { return mem_db_->hal_handle_list_entry_slab(); }
+    slab *hal_handle_id_ht_entry_slab(void) const { return mem_db_->hal_handle_id_ht_entry_slab(); }
+    slab *hal_handle_id_list_entry_slab(void) const { return mem_db_->hal_handle_id_list_entry_slab(); }
+    ht *hal_handle_id_ht(void) const { return oper_db_->hal_handle_id_ht(); }
+
+     hal_ret_t register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz) {
+         return cfg_db_->register_cfg_object(obj_id, obj_sz);
+     }
+     uint32_t object_size(hal_obj_id_t obj_id) { return cfg_db_->object_size(obj_id); }
 
     // get APIs for tenant related state
     slab *tenant_slab(void) const { return mem_db_->tenant_slab(); }
     ht *tenant_id_ht(void) const { return cfg_db_->tenant_id_ht(); }
-    ht *tenant_hal_handle_ht(void) const { return cfg_db_->tenant_hal_handle_ht(); }
+    // ht *tenant_hal_handle_ht(void) const { return cfg_db_->tenant_hal_handle_ht(); }
 
     // get APIs for network related state
     slab *network_slab(void) const { return mem_db_->network_slab(); }

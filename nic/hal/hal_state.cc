@@ -39,8 +39,8 @@ struct cfg_db_dirty_objs_s {
 bool
 hal_cfg_db::init(void)
 {
-    HAL_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
-    HAL_SPINLOCK_INIT(&del_cache_slock_, PTHREAD_PROCESS_PRIVATE);
+    //HAL_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+    //HAL_SPINLOCK_INIT(&del_cache_slock_, PTHREAD_PROCESS_PRIVATE);
 
     // initialize tenant related data structures
     tenant_id_ht_ = ht::factory(HAL_MAX_VRFS,
@@ -49,11 +49,13 @@ hal_cfg_db::init(void)
                                 hal::tenant_id_compare_key_func);
     HAL_ASSERT_RETURN((tenant_id_ht_ != NULL), false);
 
+#if 0
     tenant_hal_handle_ht_ = ht::factory(HAL_MAX_VRFS,
                                         hal::tenant_get_handle_key_func,
                                         hal::tenant_compute_handle_hash_func,
                                         hal::tenant_compare_handle_key_func);
     HAL_ASSERT_RETURN((tenant_hal_handle_ht_ != NULL), false);
+#endif
 
     // initialize network related data structures
     network_key_ht_ = ht::factory(HAL_MAX_VRFS,
@@ -314,7 +316,7 @@ hal_cfg_db::init(void)
 hal_cfg_db::hal_cfg_db()
 {
     tenant_id_ht_ = NULL;
-    tenant_hal_handle_ht_ = NULL;
+    // tenant_hal_handle_ht_ = NULL;
 
     network_key_ht_ = NULL;
     network_hal_handle_ht_ = NULL;
@@ -404,11 +406,11 @@ hal_cfg_db::factory(void)
 //------------------------------------------------------------------------------
 hal_cfg_db::~hal_cfg_db()
 {
-    HAL_SPINLOCK_DESTROY(&slock_);
-    HAL_SPINLOCK_DESTROY(&del_cache_slock_);
+    //HAL_SPINLOCK_DESTROY(&slock_);
+    //HAL_SPINLOCK_DESTROY(&del_cache_slock_);
 
     tenant_id_ht_ ? delete tenant_id_ht_ : HAL_NOP;
-    tenant_hal_handle_ht_ ? delete tenant_hal_handle_ht_ : HAL_NOP;
+    // tenant_hal_handle_ht_ ? delete tenant_hal_handle_ht_ : HAL_NOP;
 
     network_key_ht_ ? delete network_key_ht_ : HAL_NOP;
     network_hal_handle_ht_ ? delete network_hal_handle_ht_ : HAL_NOP;
@@ -468,6 +470,7 @@ hal_cfg_db::~hal_cfg_db()
     cpucb_hal_handle_ht_ ? delete cpucb_hal_handle_ht_ : HAL_NOP;
 }
 
+#if 0
 //------------------------------------------------------------------------------
 // helper function to
 // 1. read the current config db version and
@@ -593,6 +596,7 @@ hal_cfg_db::db_update_version(cfg_version_t ver)
     db_release_reserved_version(ver);
     return HAL_RET_OK;
 }
+#endif
 
 //------------------------------------------------------------------------------
 // API to call before processing any packet by FTE, any operation by config
@@ -610,6 +614,17 @@ hal_cfg_db::db_open(cfg_op_t cfg_op)
         return HAL_RET_ERR;
     }
 
+    // take a read lock irrespective of whether the db is open in read/write
+    // mode, for write mode, we will eventually take a write lock when needed
+    g_hal_state->cfg_db()->rlock();
+
+    t_cfg_db_ctxt.cfg_op_ = cfg_op;
+    t_cfg_db_ctxt.cfg_db_open_ = true;
+    HAL_TRACE_DEBUG("{} acquired rlock, opened cfg db, cfg op : {}",
+                    hal_get_current_thread()->name(), cfg_op);
+    return HAL_RET_OK;
+
+#if 0
     // get the current version of the db and mark it as in-use
     t_cfg_db_ctxt.rversion_ = db_get_current_version();
     if (cfg_op == CFG_OP_READ) {
@@ -624,10 +639,11 @@ hal_cfg_db::db_open(cfg_op_t cfg_op)
     HAL_TRACE_DEBUG("{} opened cfg db, cfg op : {}, rsvd version : {}",
                     hal_get_current_thread()->name(), cfg_op,
                     t_cfg_db_ctxt.wversion_);
-
     return HAL_RET_OK;
+#endif
 }
 
+#if 0
 //------------------------------------------------------------------------------
 // check to see if given config version is in use or not, this API by itself is
 // mainly for debugging and is not intended to make any decisions. For proper
@@ -786,6 +802,7 @@ hal_cfg_db::process_del_cache(void)
     }
     HAL_SPINLOCK_UNLOCK(&del_cache_slock_);
 }
+#endif
 
 //------------------------------------------------------------------------------
 // API to call after processing any packet by FTE, any operation by config
@@ -800,6 +817,14 @@ hal_cfg_db::process_del_cache(void)
 hal_ret_t
 hal_cfg_db::db_close(void)
 {
+    if (t_cfg_db_ctxt.cfg_db_open_) {
+        t_cfg_db_ctxt.cfg_db_open_ = FALSE;
+        t_cfg_db_ctxt.cfg_op_ = CFG_OP_NONE;
+        g_hal_state->cfg_db()->runlock();
+    }
+    return HAL_RET_OK;
+
+#if 0
     if (t_cfg_db_ctxt.cfg_db_open_) {
         db_release_version_in_use(t_cfg_db_ctxt.rversion_);
         if (t_cfg_db_ctxt.cfg_op_ == CFG_OP_WRITE) {
@@ -823,6 +848,7 @@ hal_cfg_db::db_close(void)
     // self deadlock here ???)
     process_del_cache();
     return HAL_RET_OK;
+#endif
 
 #if 0
     if (t_cfg_db_ctxt.cfg_db_open_) {
@@ -855,11 +881,42 @@ hal_cfg_db::db_close(void)
 }
 
 //------------------------------------------------------------------------------
+// register a config object's meta information
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_cfg_db::register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz)
+{
+    if ((obj_id <= HAL_OBJ_ID_NONE) || (obj_id >= HAL_OBJ_ID_MAX)) {
+        return HAL_RET_INVALID_ARG;
+    }
+    obj_meta_[obj_id].obj_sz = obj_sz;
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// return a config object's size given its id
+//------------------------------------------------------------------------------
+uint32_t
+hal_cfg_db::object_size(hal_obj_id_t obj_id) const
+{
+    if ((obj_id <= HAL_OBJ_ID_NONE) || (obj_id >= HAL_OBJ_ID_MAX)) {
+        return 0;
+    }
+    return obj_meta_[obj_id].obj_sz;
+}
+
+//------------------------------------------------------------------------------
 // init() function to instantiate all the oper db init state
 //------------------------------------------------------------------------------
 bool
 hal_oper_db::init(void)
 {
+    hal_handle_id_ht_ = ht::factory(HAL_MAX_HANDLES,
+                                    hal::hal_handle_id_get_key_func,
+                                    hal::hal_handle_id_compute_hash_func,
+                                    hal::hal_handle_id_compare_key_func);
+    HAL_ASSERT_RETURN((hal_handle_id_ht_ != NULL), false);
+
     if_hwid_ht_ = ht::factory(HAL_MAX_INTERFACES,
                               hal::if_get_hw_key_func,
                               hal::if_compute_hw_hash_func,
@@ -900,6 +957,7 @@ hal_oper_db::hal_oper_db()
 {
     uint32_t    i;
 
+    hal_handle_id_ht_  = NULL;
     infra_l2seg_ = NULL;
     if_hwid_ht_ = NULL;
     ep_l2_ht_ = NULL;
@@ -939,6 +997,8 @@ hal_oper_db::~hal_oper_db()
 {
     uint32_t    i;
 
+    hal_handle_id_ht_ ? delete hal_handle_id_ht_ : HAL_NOP;
+
     infra_l2seg_ = NULL;
 
     if_hwid_ht_ ? delete if_hwid_ht_ : HAL_NOP;
@@ -961,12 +1021,6 @@ hal_oper_db::~hal_oper_db()
 bool
 hal_mem_db::init(void)
 {
-    hal_handle_ht_entry_slab_ = slab::factory("del-cache",
-                                              HAL_SLAB_DEL_CACHE_ENTRY,
-                                              sizeof(hal_cfg_db::del_cache_entry_t),
-                                              32, true, true, true, true);
-    HAL_ASSERT_RETURN(hal_handle_ht_entry_slab_ != NULL, false);
-
     // initialize slab for HAL handles
     hal_handle_slab_ = slab::factory("hal-handle",
                                      HAL_SLAB_HANDLE, sizeof(hal_handle),
@@ -979,14 +1033,33 @@ hal_mem_db::init(void)
                                               64, true, true, true, true);
     HAL_ASSERT_RETURN((hal_handle_ht_entry_slab_ != NULL), false);
 
-    hal_del_cache_entry_slab_ = slab::factory("hal-del-cache-entry",
-                                              HAL_SLAB_DEL_CACHE_ENTRY,
-                                              sizeof(hal_cfg_db::del_cache_entry_t),
-                                              64, true, true, true, true);
-    HAL_ASSERT_RETURN((hal_del_cache_entry_slab_ != NULL), false);
+    hal_handle_list_entry_slab_ = slab::factory("hal-handle-list-entry",
+                                                HAL_SLAB_HANDLE_LIST_ENTRY,
+                                                sizeof(hal_handle_list_entry_t),
+                                                64, true, true, true, true);
+    HAL_ASSERT_RETURN((hal_handle_list_entry_slab_ != NULL), false);
 
-    // initialize tenant related data structures
-    tenant_slab_ = slab::factory("tenant", HAL_SLAB_TENANT,
+	hal_handle_id_ht_entry_slab_ = slab::factory("hal-handle-id-ht-entry",
+                                                 HAL_SLAB_HANDLE_ID_HT_ENTRY,
+                                                 sizeof(hal_handle_id_ht_entry_t),
+                                                 64, true, true, true, true);
+    HAL_ASSERT_RETURN((hal_handle_id_ht_entry_slab_ != NULL), false);
+
+    hal_handle_id_list_entry_slab_ = slab::factory("hal-handle-id-list-entry",
+                                                   HAL_SLAB_HANDLE_ID_LIST_ENTRY,
+                                                   sizeof(hal_handle_id_list_entry_t),
+                                                   64, true, true, true, true);
+    HAL_ASSERT_RETURN((hal_handle_id_list_entry_slab_ != NULL), false);
+
+
+	//hal_del_cache_entry_slab_ = slab::factory("hal-del-cache-entry",
+	//HAL_SLAB_DEL_CACHE_ENTRY,
+	//sizeof(hal_cfg_db::del_cache_entry_t),
+	//64, true, true, true, true);
+	//HAL_ASSERT_RETURN((hal_del_cache_entry_slab_ != NULL), false);
+
+	// initialize tenant related data structures
+	tenant_slab_ = slab::factory("tenant", HAL_SLAB_TENANT,
                                  sizeof(hal::tenant_t), 16,
                                  false, true, true, true);
     HAL_ASSERT_RETURN((tenant_slab_ != NULL), false);
@@ -1115,10 +1188,12 @@ hal_mem_db::init(void)
 //------------------------------------------------------------------------------
 hal_mem_db::hal_mem_db()
 {
-    hal_handle_ht_entry_slab_ = NULL;
     hal_handle_slab_ = NULL;
-    hal_del_cache_entry_slab_ = NULL;
     hal_handle_ht_entry_slab_ = NULL;
+    hal_handle_list_entry_slab_ = NULL;
+    hal_handle_id_ht_entry_slab_ = NULL;
+    hal_handle_id_list_entry_slab_ = NULL;
+    //hal_del_cache_entry_slab_ = NULL;
     tenant_slab_ = NULL;
     network_slab_ = NULL;
     nwsec_profile_slab_ = NULL;
@@ -1169,10 +1244,12 @@ hal_mem_db::factory(void)
 //------------------------------------------------------------------------------
 hal_mem_db::~hal_mem_db()
 {
-    hal_handle_ht_entry_slab_ ? delete hal_handle_ht_entry_slab_ : HAL_NOP;
     hal_handle_slab_ ? delete hal_handle_slab_ : HAL_NOP;
-    hal_del_cache_entry_slab_ ? delete hal_del_cache_entry_slab_ : HAL_NOP;
     hal_handle_ht_entry_slab_ ? delete hal_handle_ht_entry_slab_ : HAL_NOP;
+    hal_handle_list_entry_slab_ ? delete hal_handle_list_entry_slab_ : HAL_NOP;
+    hal_handle_id_ht_entry_slab_ ? delete hal_handle_id_ht_entry_slab_ : HAL_NOP;
+    hal_handle_id_list_entry_slab_ ? delete hal_handle_id_list_entry_slab_ : HAL_NOP;
+    //hal_del_cache_entry_slab_ ? delete hal_del_cache_entry_slab_ : HAL_NOP;
     tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
     network_slab_ ? delete network_slab_ : HAL_NOP;
     nwsec_profile_slab_ ? delete nwsec_profile_slab_ : HAL_NOP;
@@ -1307,9 +1384,21 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->hal_handle_ht_entry_slab()->free_(elem);
         break;
 
-    case HAL_SLAB_DEL_CACHE_ENTRY:
-        g_hal_state->hal_del_cache_entry_slab()->free_(elem);
+    case HAL_SLAB_HANDLE_LIST_ENTRY:
+        g_hal_state->hal_handle_list_entry_slab()->free_(elem);
         break;
+
+    case HAL_SLAB_HANDLE_ID_HT_ENTRY:
+        g_hal_state->hal_handle_id_ht_entry_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_HANDLE_ID_LIST_ENTRY:
+        g_hal_state->hal_handle_id_list_entry_slab()->free_(elem);
+        break;
+
+    //case HAL_SLAB_DEL_CACHE_ENTRY:
+        //g_hal_state->hal_del_cache_entry_slab()->free_(elem);
+        //break;
 
     case HAL_SLAB_TENANT:
         g_hal_state->tenant_slab()->free_(elem);

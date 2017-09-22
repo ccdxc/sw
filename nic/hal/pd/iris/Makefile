@@ -6,6 +6,7 @@ SYSTEM_LIBRARIES = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib -lp4pdap
 LCXXFLAGS = \
 			-fpic \
 			-I. \
+			-Ip4pd \
 			-I.. \
 			-I../.. \
 			-I../../src \

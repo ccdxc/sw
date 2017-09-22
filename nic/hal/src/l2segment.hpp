@@ -5,7 +5,9 @@
 #include <encap.hpp>
 #include <list.hpp>
 #include <ht.hpp>
+#include <utils.hpp>
 #include <tenant.hpp>
+#include <interface.hpp>
 #include <l2segment.pb.h>
 #include <pd.hpp>
 
@@ -18,7 +20,6 @@ using hal::utils::dllist_ctxt_t;
 
 namespace hal {
 
-typedef uint32_t l2seg_id_t;
 
 typedef struct l2seg_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
@@ -43,6 +44,7 @@ typedef struct l2seg_s {
     // meta data maintained for tenant
     ht_ctxt_t             ht_ctxt;                 // segment id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
+    dllist_ctxt_t         if_list_head;            // interface list
     dllist_ctxt_t         nw_list_head;            // network list
     dllist_ctxt_t         ep_list_head;            // endpoint list
     dllist_ctxt_t         tenant_l2seg_lentry;     // tenant's L2 segment list link
@@ -81,6 +83,7 @@ l2seg_init (l2seg_t *l2seg)
     // initialize meta information
     l2seg->ht_ctxt.reset();
     l2seg->hal_handle_ht_ctxt.reset();
+    utils::dllist_reset(&l2seg->if_list_head);
     utils::dllist_reset(&l2seg->nw_list_head);
     utils::dllist_reset(&l2seg->ep_list_head);
     utils::dllist_reset(&l2seg->tenant_l2seg_lentry);
@@ -129,6 +132,9 @@ extern bool l2seg_compare_key_func(void *key1, void *key2);
 extern void *l2seg_get_handle_key_func(void *entry);
 extern uint32_t l2seg_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool l2seg_compare_handle_key_func(void *key1, void *key2);
+
+hal_ret_t l2seg_add_if(l2seg_t *l2seg, if_t *hal_if);
+hal_ret_t l2seg_del_if (l2seg_t *l2seg, if_t *hal_if);
 
 hal_ret_t l2segment_create(l2segment::L2SegmentSpec& spec,
                            l2segment::L2SegmentResponse *rsp);

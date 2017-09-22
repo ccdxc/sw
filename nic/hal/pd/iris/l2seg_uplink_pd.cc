@@ -11,6 +11,7 @@
 #include "if_pd_utils.hpp"
 #include <p4pd.h>
 #include "p4pd_api.hpp"
+#include <p4pd_defaults.hpp>
 #include "defines.h"
 
 namespace hal {
@@ -37,16 +38,19 @@ hal_ret_t
 l2seg_uplink_program_hw(pd_l2seg_uplink_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    nwsec_profile_t      *pi_nwsec = NULL;
+
+    pi_nwsec = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)args->l2seg);
 
     // Program Input Properties table
-    ret = l2set_uplink_pgm_input_properties_tbl(args);
+    ret = l2set_uplink_pgm_input_properties_tbl(args, pi_nwsec);
 
     return ret;
 }
 
 #define inp_prop data.input_properties_action_u.input_properties_input_properties
 hal_ret_t
-l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args)
+l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profile_t *nwsec_prof)
 {
     uint32_t                    uplink_ifpc_id = 0;
     bool                        is_native = FALSE;
@@ -76,8 +80,10 @@ l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args)
     // Data
     inp_prop.vrf = l2seg_pd->l2seg_ten_hw_id;
     inp_prop.dir = FLOW_DIR_FROM_UPLINK;
-    inp_prop.l4_profile_idx = pd_l2seg_get_l4_prof_idx(l2seg_pd);
-    inp_prop.ipsg_enable = l2seg_get_ipsg_en(args->l2seg);
+    // inp_prop.l4_profile_idx = pd_l2seg_get_l4_prof_idx(l2seg_pd);
+    // inp_prop.ipsg_enable = l2seg_get_ipsg_en(args->l2seg);
+    inp_prop.l4_profile_idx = nwsec_prof ? nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
+    inp_prop.ipsg_enable = nwsec_prof ? nwsec_prof->ipsg_en : 0;
     inp_prop.src_lport = if_get_uplink_lport_id(args->intf);
     inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(args->l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(args->l2seg);
@@ -169,6 +175,107 @@ l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args)
 end:
     return ret;
 }
+
+hal_ret_t
+l2set_uplink_inp_prop_form_data (pd_l2seg_uplink_args_t *args,
+                                 nwsec_profile_t *nwsec_prof,
+                                 input_properties_actiondata &data)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    pd_l2seg_t          *l2seg_pd;
+    bool                is_native = FALSE;
+    types::encapType    enc_type;
+
+    l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(args->l2seg);
+    is_native = is_l2seg_native(args->l2seg, args->intf);
+
+    memset(&data, 0, sizeof(data));
+
+    // Data
+    inp_prop.vrf = l2seg_pd->l2seg_ten_hw_id;
+    inp_prop.dir = FLOW_DIR_FROM_UPLINK;
+    inp_prop.l4_profile_idx = nwsec_prof ? nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
+    inp_prop.ipsg_enable = nwsec_prof ? nwsec_prof->ipsg_en : 0;
+    inp_prop.src_lport = if_get_uplink_lport_id(args->intf);
+    inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(args->l2seg);
+    inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(args->l2seg);
+
+    if (!is_native) {
+        enc_type = l2seg_get_fab_encap_type(args->l2seg);
+        if (enc_type == types::ENCAP_TYPE_VXLAN) {
+            /* No IPSG check for packets coming in on tunnel interfaces */
+            inp_prop.ipsg_enable = FALSE;
+        }
+    }
+
+    return ret;
+}
+
+hal_ret_t
+l2set_uplink_upd_input_properties_tbl (pd_l2seg_uplink_args_t *args,
+                                       nwsec_profile_t *nwsec_prof)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    pd_l2seg_t                  *l2seg_pd;
+    bool                        is_native = FALSE;
+    uint32_t                    uplink_ifpc_id = 0;
+    Hash                        *inp_prop_tbl = NULL;
+    input_properties_actiondata data;
+
+    l2set_uplink_inp_prop_form_data(args, nwsec_prof, data);
+
+    l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(args->l2seg);
+    is_native = is_l2seg_native(args->l2seg, args->intf);
+    uplink_ifpc_id = if_get_uplink_ifpc_id(args->intf);
+
+    inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
+    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+
+    if (!is_native) {
+        // Update one entry
+        ret = inp_prop_tbl->update(l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id], &data);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("PD-ADD-L2SEG-UPIF/PC::{}: Unable to program for (l2seg, upif): ({}, {})",
+                    __FUNCTION__, hal::l2seg_get_l2seg_id(args->l2seg), if_get_if_id(args->intf));
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("PD-ADD-L2SEG-UPIF/PC::{}: Programmed at {} ", __FUNCTION__,
+                    l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
+        }
+    } else {
+        // Update Priority tagged entry
+        ret = inp_prop_tbl->update(l2seg_pd->inp_prop_tbl_idx_pri[uplink_ifpc_id], &data);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("PD-ADD-L2SEG-UPIF/PC::{}: Unable to program for (l2seg, upif): ({}, {})",
+                    __FUNCTION__, hal::l2seg_get_l2seg_id(args->l2seg), if_get_if_id(args->intf));
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("PD-ADD-L2SEG-UPIF/PC::{}: Programmed Prio. at {} ", __FUNCTION__,
+                    l2seg_pd->inp_prop_tbl_idx_pri[uplink_ifpc_id]);
+        }
+
+        // Update Untagged entry
+        ret = inp_prop_tbl->update(l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id], &data);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("PD-ADD-L2SEG-UPIF/PC::{}: Unable to program for (l2seg, upif): ({}, {})",
+                    __FUNCTION__, hal::l2seg_get_l2seg_id(args->l2seg), if_get_if_id(args->intf));
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("PD-ADD-L2SEG-UPIF/PC::{}: Programmed NoVlan at {} ", __FUNCTION__,
+                    l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
+        }
+    }
+
+end:
+        return ret;
+}
+
+
+
+
+
+
+
 
 }    // namespace pd
 }    // namespace hal

@@ -52,6 +52,7 @@ typedef uint16_t        vlan_id_t;
 typedef uint16_t        lport_id_t;     // TBD - revisit
 typedef uint32_t        ifindex_t;
 typedef uint32_t        seg_id_t;
+typedef uint32_t        l2seg_id_t;
 typedef uint32_t        encap_id_t;
 typedef uint32_t        oif_list_id_t;
 
@@ -143,6 +144,9 @@ do {                                                       \
 #define HAL_ATOMIC_INC_UINT32(ptr, val)     __atomic_add_fetch(ptr, val, __ATOMIC_SEQ_CST)
 #define HAL_ATOMIC_DEC_UINT32(ptr, val)     __atomic_sub_fetch(ptr, val, __ATOMIC_SEQ_CST)
 #define HAL_ATOMIC_STORE_UINT32(ptr, vptr)  __atomic_store(ptr, vptr, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_LOAD_UINT32(ptr, vptr)   __atomic_load(ptr, vptr, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_INC_UINT64(ptr, val)     __atomic_add_fetch(ptr, val, __ATOMIC_SEQ_CST)
+#define HAL_ATOMIC_DEC_UINT64(ptr, val)     __atomic_sub_fetch(ptr, val, __ATOMIC_SEQ_CST)
 
 #define HAL_ARRAY_SIZE(arr)                (sizeof((arr))/sizeof((arr)[0]))
 

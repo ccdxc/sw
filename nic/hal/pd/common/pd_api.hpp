@@ -72,6 +72,12 @@ typedef struct pd_if_args_s {
     bool    native_l2_seg_upd;
 } __PACK__ pd_if_args_t;
 
+typedef struct pd_if_nwsec_upd_args_s {
+    l2seg_t         *l2seg;
+    if_t            *intf;
+    nwsec_profile_t *nwsec_prof;
+} __PACK__ pd_if_nwsec_upd_args_t;
+
 typedef struct pd_ep_args_s {
     tenant_t        *tenant;
     l2seg_t         *l2seg;
@@ -195,6 +201,15 @@ pd_if_args_init (pd_if_args_t *args)
 }
 
 static inline void
+pd_if_nwsec_upd_args_init (pd_if_nwsec_upd_args_t *args)
+{
+    args->intf = NULL;
+    args->nwsec_prof = NULL;
+    return;
+}
+
+
+static inline void
 pd_ep_args_init (pd_ep_args_t *args)
 {
     args->tenant = NULL;
@@ -280,6 +295,8 @@ pd_cpucb_args_init (pd_cpucb_args_t *args)
 hal_ret_t pd_tenant_create(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_update(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_delete(pd_tenant_args_t *tenant);
+hal_ret_t pd_tenant_mem_free(pd_tenant_args_t *tenant);
+hal_ret_t pd_tenant_make_clone(tenant_t *ten, tenant_t *clone);
 
 hal_ret_t pd_l2seg_create(pd_l2seg_args_t *l2seg);
 hal_ret_t pd_l2seg_update(pd_l2seg_args_t *l2seg);
@@ -296,6 +313,7 @@ hal_ret_t pd_lif_delete(pd_lif_args_t *lif);
 hal_ret_t pd_if_create(pd_if_args_t *hal_if);
 hal_ret_t pd_if_update(pd_if_args_t *hal_if);
 hal_ret_t pd_if_delete(pd_if_args_t *hal_if);
+hal_ret_t pd_if_nwsec_update(pd_if_nwsec_upd_args_t *args);
 
 uint32_t if_get_hw_lif_id(if_t *pi_if);
 uint32_t if_get_lport_id(if_t *pi_if);

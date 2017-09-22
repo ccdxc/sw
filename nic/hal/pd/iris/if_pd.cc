@@ -7,6 +7,7 @@
 #include <enicif_pd.hpp>
 #include <cpuif_pd.hpp>
 #include <tunnelif_pd.hpp>
+#include <l2seg_uplink_pd.hpp>
 
 namespace hal {
 namespace pd {
@@ -76,6 +77,43 @@ pd_if_update (pd_if_args_t *args)
 
     return ret;
 }
+
+//-----------------------------------------------------------------------------
+// Nwsec profile update 
+//      - Triggered from tenant update
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_if_nwsec_update(pd_if_nwsec_upd_args_t *args)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    intf::IfType                if_type;
+    void                        *pd_if = args->intf->pd_if;
+    pd_l2seg_uplink_args_t      uplink_args = { 0 };
+
+    HAL_TRACE_DEBUG("PD-If:{}:", __FUNCTION__);
+
+
+    if_type = hal::intf_get_if_type(args->intf);
+    switch(if_type) {
+        case intf::IF_TYPE_ENIC:
+            ret = pd_enicif_upd_inp_prop_mac_vlan_tbl((pd_enicif_t *)pd_if,
+                                                      args->nwsec_prof);
+            break;
+        case intf::IF_TYPE_UPLINK:
+        case intf::IF_TYPE_UPLINK_PC:
+            uplink_args.l2seg = args->l2seg;
+            uplink_args.intf = args->intf;
+            ret = l2set_uplink_upd_input_properties_tbl(&uplink_args, 
+                                                        args->nwsec_prof);
+            break;
+        default:
+            HAL_ASSERT(0);
+    }
+
+    return ret;
+}
+
+
 
 // ----------------------------------------------------------------------------
 // Returns the encap data and rewrite idx used for l2seg on an if. This is to be called from pd side
