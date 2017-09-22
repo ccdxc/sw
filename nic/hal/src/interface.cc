@@ -161,7 +161,7 @@ add_if_to_db (if_t *hal_if)
 // init lif specific queue state, if any
 //------------------------------------------------------------------------------
 hal_ret_t
-lif_qstate_init (LifSpec& spec, uint32_t hw_lif_id)
+lif_qstate_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
 {
     LIFQStateParams    qs_params = { 0 };
     int32_t            ec = 0;
@@ -179,6 +179,12 @@ lif_qstate_init (LifSpec& spec, uint32_t hw_lif_id)
         }
         qs_params.type[ent.type_num()].size = ent.size();
         qs_params.type[ent.type_num()].entries = ent.entries();
+
+        if (ent.purpose() > intf::LifQPurpose_MAX) {
+            HAL_TRACE_ERR("Invalid entry in LifSpec : purpose={}", ent.purpose());
+            return HAL_RET_INVALID_ARG;
+        }
+        lif->qtypes[ent.purpose()] = ent.type_num();
     }
 
     // make sure that when you are creating with hw_lif_id the lif is alloced
@@ -292,7 +298,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     }
 
     // init queues
-    ret = lif_qstate_init(spec, hw_lif_id);
+    ret = lif_qstate_init(spec, hw_lif_id, lif);
     if (ret != HAL_RET_OK) {
         goto end;
     }

@@ -23,6 +23,17 @@ lif_get_lif_id(lif_t *pi_lif)
     return pi_lif->lif_id;
 }
 
+//-----------------------------------------------------------------------------
+// LIF API: Get qtype from purpose
+//-----------------------------------------------------------------------------
+uint8_t
+lif_get_qtype(lif_t *pi_lif, intf::LifQPurpose purpose)
+{
+    HAL_ASSERT_RETURN(purpose <= intf::LifQPurpose_MAX, 0);
+
+    return pi_lif->qtypes[purpose];
+}
+
 // ----------------------------------------------------------------------------
 // LIF API: Set PD LIF in PI LIF
 // ----------------------------------------------------------------------------

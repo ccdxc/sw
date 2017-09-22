@@ -47,9 +47,13 @@ update_fwding_info(fte::ctx_t&ctx,  hal::if_t *dif)
     // update fwding info
     flowupd.fwding.lport = hal::pd::if_get_lport_id(dif);
 
-    // TODO(goli) Update qid for enic
     if (dif->if_type == intf::IF_TYPE_ENIC) {
-        flowupd.fwding.qtype = Q_TYPE_RXQ;
+        hal::lif_t *lif = if_get_lif(dif);
+        if (lif == NULL){
+            return HAL_RET_LIF_NOT_FOUND;
+        }
+
+        flowupd.fwding.qtype = lif_get_qtype(lif, intf::LIF_QUEUE_PURPOSE_RX);
         flowupd.fwding.qid_en = 1;
         flowupd.fwding.qid = 0;
     }
