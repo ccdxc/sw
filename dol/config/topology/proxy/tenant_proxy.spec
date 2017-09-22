@@ -27,4 +27,4 @@ sessions:
             - ref://store/specs/id=SESSION_TCP_PROXY
         mac: None
 
-lif: ref://store/specs/id=LIF_ETH_RDMA
+lif: ref://store/specs/id=LIF_PROXY

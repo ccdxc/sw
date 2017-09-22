@@ -124,11 +124,12 @@ modules:
         name    : PKT_TO_SERQ_ATOMIC_STATS
         enable  : False
         package : test.tcp_tls_proxy
-        module  : pkt_to_serq_atomic_stats
+        module  : pkt_to_serq
         spec    : one_pkt.testspec
         ignore  : False
         args    :
-            maxflows: 1
+            maxflows: 2
+            atomic_stats : 1
         iterate :
             - flow: filter://type=IPV4
 

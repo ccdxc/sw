@@ -46,7 +46,7 @@ class LifObject(objects.FrameworkObject):
         else:
             self.c_lib = None
 
-        if hasattr(spec, 'rdma'):
+        if hasattr(spec, 'rdma') and spec.rdma.enable:
             self.enable_rdma = spec.rdma.enable
             self.rdma_max_pt_entries = spec.rdma.max_pt_entries
             self.rdma_max_keys = spec.rdma.max_keys

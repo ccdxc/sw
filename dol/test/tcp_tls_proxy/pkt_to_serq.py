@@ -33,6 +33,9 @@ def TestCaseSetup(tc):
     tcb.rcv_tsval = 0xFAFAFAFA
     tcb.ts_recent = 0xFAFAFAF0
     tcb.debug_dol = tcp_proxy.tcp_debug_dol_pkt_to_serq
+    if hasattr(tc.module.args, 'atomic_stats') and tc.module.args.atomic_stats:
+        print("Testing atomic stats")
+        tcb.debug_dol |= tcp_proxy.tcp_debug_dol_test_atomic_stats
     tcb.bytes_rcvd = 0
     # set tcb state to ESTABLISHED(1)
     tcb.state = 1
@@ -124,7 +127,8 @@ def TestCaseVerify(tc):
 
     #7 Verify pkt stats
     if tcb_cur.pkts_rcvd != tcpcb.pkts_rcvd + 1:
-        print("pkt rx stats not as expected")
+        print("pkt rx stats not as expected, %d vs received %d" %
+                (tcpcb.pkts_rcvd + 1, tcb_cur.pkts_rcvd))
         return False
     print("%d %d" %(tcb_cur.bytes_rcvd, tcpcb.bytes_rcvd))
     if tcb_cur.bytes_rcvd != tcpcb.bytes_rcvd + 84:
@@ -133,17 +137,20 @@ def TestCaseVerify(tc):
 
     #8 Verify page stats
     if tcb_cur.pages_alloced != tcpcb.pages_alloced + 1:
-        print("pages alloced stats not as expected")
+        print("pages alloced stats not as expected, %d vs received %d" %
+                (tcpcb.pages_alloced + 1, tcb_cur.pages_alloced))
         return False
     
     #9 Verify descr stats
     if tcb_cur.desc_alloced != tcpcb.desc_alloced + 1:
-        print("desc alloced stats not as expected")
+        print("desc alloced stats not as expected, %d vs received %d" %
+                (tcpcb.desc_alloced + 1, tcb_cur.desc_alloced))
         return False
 
     # 10. Verify phv2mem counter
     if (tcb_cur.debug_num_phv_to_mem != tcpcb.debug_num_phv_to_mem+4):
-        print("pkt2mem counter verification failed")
+        print("phv2mem not as expected, %d vs received %d" %
+                (tcpcb.debug_num_phv_to_mem + 4, tcb_cur.debug_num_phv_to_mem))
         return False
 
     return True
