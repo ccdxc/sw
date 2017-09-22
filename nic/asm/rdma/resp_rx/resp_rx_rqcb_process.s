@@ -93,23 +93,43 @@ resp_rx_rqcb_process:
     nop     //BD Slot
 
 write:
+    // only first and only packets have reth header
+    IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_FIRST)
+    IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_LAST)
+    IS_ANY_FLAG_SET(c3, r7, RESP_RX_FLAG_ONLY)
+    setcf   c4, [c1 | c3]       // FIRST | ONLY
+    IS_ANY_FLAG_SET(c5, r7, RESP_RX_FLAG_IMMDT)
+    setcf   c6, [c5 & c2]       // IMM & LAST
+    setcf   c7, [c5 & c3]       // IMM & ONLY
+
+    // populate immediate data. 
+    // in case of WRITE_LAST_WITH_IMM, we will have immeth hdr right after bth
+    // in case of WRITE_ONLY_WITH_IMM, we will have immeth hdr after bth and reth
+    
+    // populate cq op_type
+    phvwr.c5    p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM
+    
+    // populate immediate data. 
+    phvwr.c5    p.cqwqe.imm_data_vld, 1
+    // IMM & LAST
+    phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
+    // TODO: waiting on NCC fix to enable this statement
+    // IMM & ONLY
+    //phvwr.c7    p.cqwqe.imm_data, CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA
+    
     CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
 
-    // only first and only packets have reth header
-    IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_FIRST|RESP_RX_FLAG_ONLY)
-    IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_IMMDT)
-    
-    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 0, c1)
-    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 1, !c1)
+    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 0, c4)
+    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 1, !c4)
 
     CAPRI_RXDMA_RETH_VA(r5)
-    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, va, r5, c1)
+    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, va, r5, c4)
 
-    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, len, CAPRI_RXDMA_RETH_DMA_LEN, c1)
-    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, r_key, CAPRI_RXDMA_RETH_R_KEY, c1)
+    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, len, CAPRI_RXDMA_RETH_DMA_LEN, c4)
+    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, r_key, CAPRI_RXDMA_RETH_R_KEY, c4)
     // TODO: DANGER: do we need to set incr_c_index to 0 otherwise ? 
     // If not, would it accidentally carry previous s2s data and increment c_index ?
-    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, incr_c_index, 1, c2)
+    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, incr_c_index, 1, c5)
     CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, remaining_payload_bytes, r6)
 
     // NOTE: key_table_base_addr is NOT known yet at this time
@@ -133,8 +153,15 @@ need_checkout:
     // don't need to set status field explicitly to 0
     //phvwr.c5    p.cqwqe.status, CQ_STATUS_SUCCESS
     phvwr.c5    p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID
+
+    // populate cq op_type
     setcf       c6, [c1 & c5]
     phvwr.c6    p.cqwqe.op_type, OP_TYPE_SEND_RCVD
+
+    // populate immediate data. 
+    ARE_ALL_FLAGS_SET(c6, r7, RESP_RX_FLAG_IMMDT)
+    phvwr.c6    p.cqwqe.imm_data_vld, 1
+    phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
     
     // checkout a RQ descriptor if it is a send AND in_progress is FALSE
     // OR write_with_imm
