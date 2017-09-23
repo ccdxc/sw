@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/pkg/errors"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -64,21 +64,12 @@ func (p *FileBasedProvider) GetServerOptions(serverName string) (grpc.ServerOpti
 	// serverName tells the TLS provider what to put in the certificate as a subject.
 	// FileBasedProvider does not mint its own certificates, it just reads them from disk,
 	// so it does not use it.
-
-	tlsConfig := &tls.Config{
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		Certificates: []tls.Certificate{p.certificate},
-		ClientCAs:    &p.trustRoots,
-	}
+	tlsConfig := getTLSServerConfig(serverName, &p.certificate, &p.trustRoots)
 	return grpc.Creds(credentials.NewTLS(tlsConfig)), nil
 }
 
 // GetDialOptions returns dial options to be passed to grpc.Dial()
 func (p *FileBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, error) {
-	tlsConfig := &tls.Config{
-		ServerName:   serverName,
-		Certificates: []tls.Certificate{p.certificate},
-		RootCAs:      &p.trustRoots,
-	}
+	tlsConfig := getTLSClientConfig(serverName, &p.certificate, &p.trustRoots)
 	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
 }

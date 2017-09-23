@@ -1,0 +1,45 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+package ckm
+
+import (
+	"github.com/pensando/sw/venice/ctrler/ckm/rpcserver"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certmgr"
+
+	"github.com/pkg/errors"
+)
+
+// CKM is the Venice component responsible for all aspects of Key Management
+
+// CKMctrler is an instance of CKM
+type CKMctrler struct {
+	// CertificateMgr deals with creating, storing and rotating certificates
+	CertMgr *certmgr.CertificateMgr
+
+	// RPCServer is the gRPC endpoint that exposes CKM APIs to cluster members
+	RPCServer *rpcserver.RPCServer
+}
+
+// NewCKMctrler returns a controller instance
+func NewCKMctrler(serverURL, keyStoreDir string) (*CKMctrler, error) {
+	// create certificate manager
+	cm, err := certmgr.NewCertificateMgr(keyStoreDir)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error instantiating certificate manager")
+	}
+
+	// create RPC server
+	rpcServer, err := rpcserver.NewRPCServer(globals.CKMEndpointName, serverURL, cm)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error instantiating RPC server")
+	}
+
+	// create the controller instance
+	ctrler := CKMctrler{
+		CertMgr:   cm,
+		RPCServer: rpcServer,
+	}
+
+	return &ctrler, err
+}

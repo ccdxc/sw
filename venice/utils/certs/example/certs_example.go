@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
 package main
 
 import (
@@ -43,7 +45,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		cert, err := certs.SelfSign(*days, privateKey)
+		cert, err := certs.SelfSign(*days, "", privateKey)
 		if err != nil {
 			log.Fatal(err)
 		}

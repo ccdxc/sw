@@ -3,15 +3,12 @@
 package rpckit_test
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"strconv"
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -23,45 +20,20 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/resolver"
 	. "github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
-
-// testRPCHandler is the grpc handler
-type testRPCHandler struct {
-	reqMsg  string
-	respMsg string
-}
-
-// test rpc call handler
-func (tst *testRPCHandler) TestRPC(ctx context.Context, req *TestReq) (*TestResp, error) {
-	log.Infof("Test rpc handler got request: %+v", req)
-
-	// save the request
-	tst.reqMsg = req.ReqMsg
-
-	// response message
-	testResp := &TestResp{
-		RespMsg: tst.respMsg,
-	}
-
-	return testResp, nil
-}
-
-// test err rpc call handler
-func (tst *testRPCHandler) TestRPCErr(ctx context.Context, req *TestReq) (*TestResp, error) {
-	return nil, errors.New("Test RPC Error response")
-}
 
 // newRPCServerClient create an RPC server and client
 func newRPCServerClient(t *testing.T) (*RPCServer, *RPCClient) {
 	// create an RPC server
-	rpcServer, err := NewRPCServer("grpc.local", "localhost:0", WithTracerEnabled(true))
+	rpcServer, err := NewRPCServer("testServer", "localhost:0", WithTracerEnabled(true))
 	if err != nil {
 		t.Fatalf("Failed to create listener, error: %v", err)
 	}
 
 	// create an RPC client
-	rpcClient, err := NewRPCClient("grpc.local", rpcServer.GetListenURL(), WithTracerEnabled(true))
+	rpcClient, err := NewRPCClient("testServer", rpcServer.GetListenURL(), WithTracerEnabled(true))
 	if err != nil {
 		t.Fatalf("Failed to create client with error: %v", err)
 	}
@@ -73,16 +45,13 @@ func newRPCServerClient(t *testing.T) (*RPCServer, *RPCClient) {
 func stopRPCServerClient(rpcServer *RPCServer, rpcClient *RPCClient) {
 	rpcClient.Close()
 	rpcServer.Stop()
-	time.Sleep(time.Millisecond)
+	time.Sleep(4 * time.Millisecond)
 }
 
 // test basic RPC
 func TestRPCBasic(t *testing.T) {
 	// create an rpc handler object
-	testHandler := &testRPCHandler{
-		reqMsg:  "dummy message",
-		respMsg: "test response",
-	}
+	testHandler := NewTestRPCHandler("dummy message", "test response")
 
 	// create an RPC server and client
 	rpcServer, rpcClient := newRPCServerClient(t)
@@ -95,17 +64,17 @@ func TestRPCBasic(t *testing.T) {
 	testClient := NewTestClient(rpcClient.ClientConn)
 
 	// make sure server with no URL or client with no URL fails
-	_, err := NewRPCServer("grpc.local", "")
+	_, err := NewRPCServer("testServer", "")
 	Assert(t, (err != nil), "server with no URL succeded while expecting it to fail")
-	_, err = NewRPCClient("grpc.local", "")
+	_, err = NewRPCClient("testServer", "")
 	Assert(t, (err != nil), "client with no URL succeded while expecting it to fail")
-	_, err = NewRPCServer("grpc.local", "google.com")
+	_, err = NewRPCServer("testServer", "google.com")
 	Assert(t, (err != nil), "server with no URL succeded while expecting it to fail")
 
 	// make an RPC call
 	resp, err := testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 	AssertOk(t, err, "RPC error")
-	Assert(t, (testHandler.reqMsg == "test request"), "Unexpected req msg", testHandler)
+	Assert(t, (testHandler.ReqMsg == "test request"), "Unexpected req msg", testHandler)
 	Assert(t, (resp.RespMsg == "test response"), "Unexpected resp msg", resp)
 
 	// make test err rpc and confirm we get an error
@@ -127,10 +96,7 @@ func TestRPCBasic(t *testing.T) {
 // test rpc client connection closing and reconnecting
 func TestRPCClientReconnect(t *testing.T) {
 	// create an rpc handler object
-	testHandler := &testRPCHandler{
-		reqMsg:  "dummy message",
-		respMsg: "test response",
-	}
+	testHandler := NewTestRPCHandler("dummy message", "test response")
 
 	// create an RPC server and
 	rpcServer, rpcClient := newRPCServerClient(t)
@@ -179,10 +145,7 @@ func TestRPCClientReconnect(t *testing.T) {
 // test RPC server restart
 func TestRPCServerRestart(t *testing.T) {
 	// create an rpc handler object
-	testHandler := &testRPCHandler{
-		reqMsg:  "dummy message",
-		respMsg: "test response",
-	}
+	testHandler := NewTestRPCHandler("dummy message", "test response")
 
 	// create an RPC server and
 	rpcServer, rpcClient := newRPCServerClient(t)
@@ -209,7 +172,7 @@ func TestRPCServerRestart(t *testing.T) {
 
 	// start a new server
 	t.Logf("Restarting RPC server")
-	rpcServer, err = NewRPCServer("grpc.local", rpcServer.GetListenURL())
+	rpcServer, err = NewRPCServer("testServer", rpcServer.GetListenURL())
 	AssertOk(t, err, "RPC server restart error")
 	RegisterTestServer(rpcServer.GrpcServer, testHandler)
 	defer func() {
@@ -236,16 +199,10 @@ func TestRPCServerRestart(t *testing.T) {
 // test multiple RPC handlers on same server
 func TestRPCMultipleHandlers(t *testing.T) {
 	// create an rpc handler object
-	testHandler := &testRPCHandler{
-		reqMsg:  "dummy message",
-		respMsg: "test response",
-	}
+	testHandler := NewTestRPCHandler("dummy message", "test response")
 
 	// create another rpc handler object
-	test2Handler := &testRPCHandler{
-		reqMsg:  "dummy message",
-		respMsg: "test2 response",
-	}
+	test2Handler := NewTestRPCHandler("dummy message", "test2 response")
 
 	// create an RPC server and
 	rpcServer, rpcClient := newRPCServerClient(t)
@@ -262,13 +219,13 @@ func TestRPCMultipleHandlers(t *testing.T) {
 	// make an RPC call
 	resp, err := testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
 	AssertOk(t, err, "RPC error")
-	Assert(t, (testHandler.reqMsg == "test request"), "Unexpected req msg", testHandler)
+	Assert(t, (testHandler.ReqMsg == "test request"), "Unexpected req msg", testHandler)
 	Assert(t, (resp.RespMsg == "test response"), "Unexpected resp msg", resp)
 
 	// make RPC call to second handler
 	resp, err = test2Client.TestRPC(context.Background(), &TestReq{ReqMsg: "test2 request"})
 	AssertOk(t, err, "RPC error")
-	Assert(t, (test2Handler.reqMsg == "test2 request"), "Unexpected req msg", testHandler)
+	Assert(t, (test2Handler.ReqMsg == "test2 request"), "Unexpected req msg", testHandler)
 	Assert(t, (resp.RespMsg == "test2 response"), "Unexpected resp msg", resp)
 }
 
@@ -294,21 +251,18 @@ func (s *testMiddleware) RespInterceptor(ctx context.Context, role, srvName, met
 // test RPC server restart
 func TestRPCMiddlewares(t *testing.T) {
 	// create an rpc handler object
-	testHandler := &testRPCHandler{
-		reqMsg:  "dummy message",
-		respMsg: "test response",
-	}
+	testHandler := NewTestRPCHandler("dummy message", "test response")
 
 	tstmdl := &testMiddleware{
 		rpcStats: make(map[string]int64),
 	}
 
 	// create an RPC server
-	rpcServer, err := NewRPCServer("grpc.local", ":9900", WithMiddleware(tstmdl))
+	rpcServer, err := NewRPCServer("testServer", ":0", WithMiddleware(tstmdl))
 	AssertOk(t, err, "Error creating RPC server")
 
 	// create an RPC client
-	rpcClient, err := NewRPCClient("grpc.local", "localhost:9900", WithMiddleware(tstmdl))
+	rpcClient, err := NewRPCClient("testServer", rpcServer.GetListenURL(), WithMiddleware(tstmdl))
 	AssertOk(t, err, "Error creating RPC client")
 
 	// close client connection and stop the server
@@ -331,18 +285,9 @@ func TestRPCMiddlewares(t *testing.T) {
 
 // Test TLS certs
 func TestRPCTlsConnections(t *testing.T) {
-	tlsURL := "localhost:9990"
-	nontlsURL := "localhost:9900"
-
 	// create tls and non-tls rpc handler object
-	testHandler := &testRPCHandler{
-		reqMsg:  "dummy message",
-		respMsg: "test response",
-	}
-	tlsTestHandler := &testRPCHandler{
-		reqMsg:  "dummy message",
-		respMsg: "test TLS response",
-	}
+	testHandler := NewTestRPCHandler("dummy message", "test response")
+	tlsTestHandler := NewTestRPCHandler("dummy message", "test TLS response")
 
 	tlsProvider, err := tlsproviders.NewFileBasedProvider(
 		"tlsproviders/testcerts/testServer.crt",
@@ -351,15 +296,18 @@ func TestRPCTlsConnections(t *testing.T) {
 	AssertOk(t, err, "Failed to instantiate TLS provider")
 
 	// create tls & non-tls RPC server
-	rpcServer, err := NewRPCServer("grpc.local", nontlsURL)
+	rpcServer, err := NewRPCServer("testServer", "localhost:0")
 	AssertOk(t, err, "Error creating non-TLS RPC server")
-	tlsRPCServer, err := NewRPCServer("grpc.local", tlsURL, WithTLSProvider(tlsProvider))
+	nontlsURL := rpcServer.GetListenURL()
+
+	tlsRPCServer, err := NewRPCServer("testServer", "localhost:0", WithTLSProvider(tlsProvider))
 	AssertOk(t, err, "Error creating TLS RPC server")
+	tlsURL := tlsRPCServer.GetListenURL()
 
 	// create tls & non-tls RPC client
-	rpcClient, err := NewRPCClient("grpc.local", nontlsURL)
+	rpcClient, err := NewRPCClient("testServer", nontlsURL)
 	AssertOk(t, err, "Error creating non-TLS RPC client")
-	tlsRPCClient, err := NewRPCClient("grpc.local", tlsURL, WithTLSProvider(tlsProvider))
+	tlsRPCClient, err := NewRPCClient("testServer", tlsURL, WithTLSProvider(tlsProvider))
 	AssertOk(t, err, "Error creating TLS RPC client")
 
 	// close client connection and stop the server
@@ -370,7 +318,7 @@ func TestRPCTlsConnections(t *testing.T) {
 	// Note: grpc non-tls clients dont block till certification validation is done.
 	//       So, we need to make a dummy rpc call and confirm we are not able to connect
 	t.Logf("non-TLS client trying to connect to TLS server")
-	nontlsRPCClient, err := NewRPCClient("grpc.local", tlsURL)
+	nontlsRPCClient, err := NewRPCClient("testServer", tlsURL)
 	AssertOk(t, err, "Error creating non-TLS RPC client")
 	nontlsTestClient := NewTestClient(nontlsRPCClient.ClientConn)
 	_, err = nontlsTestClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
@@ -384,7 +332,7 @@ func TestRPCTlsConnections(t *testing.T) {
 
 	// make sure tls client will not connect to non-tls server
 	t.Logf("TLS client trying to connect to non-TLS server")
-	_, err = NewRPCClient("grpc.local", nontlsURL, WithTLSProvider(tlsProvider))
+	_, err = NewRPCClient("testServer", nontlsURL, WithTLSProvider(tlsProvider))
 	Assert(t, (err != nil), "tls client was able to connect to non-tls server")
 
 	// verify client and servers with different certs will not connect
@@ -395,7 +343,7 @@ func TestRPCTlsConnections(t *testing.T) {
 	AssertOk(t, err, "Failed to instantiate TLS provider")
 
 	t.Logf("TLS client with incorrect certificate trying to connect to TLS server")
-	_, err = NewRPCClient("grpc.local", tlsURL, WithTLSProvider(tlsProvider2))
+	_, err = NewRPCClient("testServer", tlsURL, WithTLSProvider(tlsProvider2))
 	Assert(t, (err != nil), "tls client was able to connect to non-tls server")
 
 	// verify client and servers with different root CA will not connect
@@ -406,7 +354,7 @@ func TestRPCTlsConnections(t *testing.T) {
 	AssertOk(t, err, "Failed to instantiate TLS provider")
 
 	t.Logf("TLS client with incorrect certificate trying to connect to TLS server")
-	_, err = NewRPCClient("grpc.local", tlsURL, WithTLSProvider(tlsProvider3))
+	_, err = NewRPCClient("testServer", tlsURL, WithTLSProvider(tlsProvider3))
 	Assert(t, (err != nil), "tls client was able to connect to non-tls server")
 
 	// register the handlers
@@ -420,7 +368,7 @@ func TestRPCTlsConnections(t *testing.T) {
 	AssertOk(t, err, "RPC error")
 	resp, err := tlsTestClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test TLS request"})
 	AssertOk(t, err, "RPC error")
-	Assert(t, (tlsTestHandler.reqMsg == "test TLS request"), "Unexpected req msg", tlsTestHandler)
+	Assert(t, (tlsTestHandler.ReqMsg == "test TLS request"), "Unexpected req msg", tlsTestHandler)
 	Assert(t, (resp.RespMsg == "test TLS response"), "Unexpected resp msg", resp)
 
 	// verify reconnect with TLS succeeds
@@ -435,12 +383,8 @@ func TestRPCTlsConnections(t *testing.T) {
 // test load balancing of RPCs
 func TestRPCBalancing(t *testing.T) {
 	// create two handler objects
-	testHandler1 := &testRPCHandler{
-		respMsg: "t1",
-	}
-	testHandler2 := &testRPCHandler{
-		respMsg: "t2",
-	}
+	testHandler1 := NewTestRPCHandler("", "t1")
+	testHandler2 := NewTestRPCHandler("", "t2")
 
 	// create two rpc servers
 	rpcServer1, err := NewRPCServer("testService", "localhost:0", WithTracerEnabled(true))

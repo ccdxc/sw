@@ -1,0 +1,43 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+
+package ckmproto;
+
+// API to issue certificates to cluster members and retrieve trust roots
+service Certificates {
+  // Have the Cluster CA sign the Supplied CSR
+  rpc SignCertificateRequest (CertificateSignReq) returns (CertificateSignResp) {};
+
+  // Retrieve the trust chain of the Cluster CA
+  // The first certificate is the CA certificate, the last is the trust root of the CA
+  rpc GetCaTrustChain (Empty) returns (CaTrustChain) {};
+
+  // Retrieve trust roots that should be trusted by all cluster members
+  // Includes the trust root of the Cluster CA
+  rpc GetTrustRoots (Empty) returns (TrustRoots) {};
+}
+
+message Empty {
+}
+
+message Certificate {
+  bytes certificate = 1;
+}
+
+message CertificateSignReq {
+  bytes csr = 1;
+}
+
+message CertificateSignResp {
+  Certificate certificate = 1;
+  bool approved = 2;
+}
+
+message CaTrustChain {
+  repeated Certificate certificates = 1;
+}
+
+message TrustRoots {
+  repeated Certificate trustRoots = 1;
+}

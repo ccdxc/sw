@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
 package globals
 
 // global constants
@@ -27,6 +29,10 @@ const (
 
 	// Agent
 	AgentRESTPort = "9006"
+
+	// Cluster Key Managements Services
+	CKMAPILocalPort = "9007"
+	CKMEndpointName = "ckm"
 
 	// KVStore
 	KVStorePeerPort   = "5001"

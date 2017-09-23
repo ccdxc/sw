@@ -1,6 +1,9 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
 package certs
 
 import (
+	"bytes"
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/rand"
@@ -10,6 +13,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"encoding/pem"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -158,6 +162,19 @@ func ReadCertificates(certFile string) ([]*x509.Certificate, error) {
 	return cert, err
 }
 
+// ReadCertificate reads exactly 1 certificate from a file.
+// It fails if it finds no certificate or more than 1 certificate in the file
+func ReadCertificate(certFile string) (*x509.Certificate, error) {
+	readCerts, err := ReadCertificates(certFile)
+	if err != nil {
+		return nil, err
+	}
+	if len(readCerts) < 1 || len(readCerts) > 1 {
+		return nil, fmt.Errorf("Error reading certificate: expected 1, found: %v", len(readCerts))
+	}
+	return readCerts[0], nil
+}
+
 // SaveCSR to a file
 func SaveCSR(certFile string, cert *x509.CertificateRequest) error {
 	pemfile, _ := os.Create(certFile)
@@ -189,11 +206,15 @@ func ReadCSR(csrFile string) (*x509.CertificateRequest, error) {
 
 }
 
-// SelfSign CA privatekey for specified days
-func SelfSign(days int, privatekey crypto.PrivateKey) (*x509.Certificate, error) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		hostname = "*"
+// SelfSign generates a self-signed certificate valid for the specified number of days using the supplied private key.
+// If hostname is not provided, it populates it using os.Hostname()
+func SelfSign(days int, hostname string, privatekey crypto.PrivateKey) (*x509.Certificate, error) {
+	var err error
+	if hostname == "" {
+		hostname, err = os.Hostname()
+		if err != nil {
+			hostname = "*"
+		}
 	}
 
 	template := &x509.Certificate{
@@ -321,7 +342,7 @@ func SignCSRwithCA(days int, csr *x509.CertificateRequest, caCert *x509.Certific
 
 // IsSelfSigned returns whether the certificate is self-signed or not
 func IsSelfSigned(cert *x509.Certificate) bool {
-	return reflect.DeepEqual(cert.Issuer, cert.Subject)
+	return bytes.Equal(cert.RawIssuer, cert.RawSubject)
 }
 
 // ValidateKeyCertificatePair checks whether a private key matches the public key in a certificate
@@ -336,4 +357,13 @@ func ValidateKeyCertificatePair(privateKey crypto.PrivateKey, cert *x509.Certifi
 	default:
 		return false, errors.Errorf("Unknown key type: %T. Only RSA and ECDSA keys are supported", keyType)
 	}
+}
+
+// NewCertPool creates a new x509.CertPool and adds the supplied certificates to it
+func NewCertPool(certs []*x509.Certificate) *x509.CertPool {
+	cp := x509.NewCertPool()
+	for _, c := range certs {
+		cp.AddCert(c)
+	}
+	return cp
 }

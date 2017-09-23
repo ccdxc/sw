@@ -8,6 +8,8 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
+// TestFileBasedProviderInit tests only the initialization code of FileBasedProvider
+// Testing of the runtime functionality is performed by rpckit_test.go
 func TestFileBasedProviderInit(t *testing.T) {
 	// make sure initialization bad cert file names fail
 	_, err := NewFileBasedProvider("", "", "")
@@ -25,8 +27,8 @@ func TestFileBasedProviderInit(t *testing.T) {
 	// this one is expected to succeed
 	okProvider, err := NewFileBasedProvider("testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
 	AssertOk(t, err, "LocalFS TLS provider initialization failed")
-	_, err = okProvider.GetServerOptions("grpc.local")
+	_, err = okProvider.GetServerOptions("testServer")
 	AssertOk(t, err, "Error getting server options")
-	_, err = okProvider.GetDialOptions("grpc.local")
+	_, err = okProvider.GetDialOptions("testServer")
 	AssertOk(t, err, "Error getting dial options")
 }

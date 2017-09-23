@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
 package certs
 
 import (
@@ -9,6 +11,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/rpc"
@@ -16,6 +19,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 const (
@@ -32,66 +37,45 @@ func testSaveAndReadPrivateKey(privateKey crypto.PrivateKey, t *testing.T) {
 	defer os.Remove(tmpfileName)
 
 	err = SavePrivateKey(tmpfileName, privateKey)
-	if err != nil {
-		t.Fatalf("SavePrivateKey fail. err: %s", err.Error())
-	}
+	AssertOk(t, err, "SavePrivateKey fail")
 
 	readPrivateKey, err := ReadPrivateKey(tmpfileName)
-	if err != nil {
-		t.Fatalf("ReadPrivateKey fail. err: %s", err.Error())
-	}
-	if !reflect.DeepEqual(privateKey, readPrivateKey) {
-		t.Fatalf("ReadPrivateKey is not same as expected PrivateKey")
-	}
+	AssertOk(t, err, "ReadPrivateKey fail")
+	Assert(t, reflect.DeepEqual(privateKey, readPrivateKey), ("ReadPrivateKey is not same as expected PrivateKey"))
 }
 
 func TestSaveAndReadRsaPrivateKey(t *testing.T) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, numRsaBits)
-	if err != nil {
-		t.Fatalf("GenerateKey fail. err: %s", err.Error())
-	}
-
+	AssertOk(t, err, "GenerateKey fail")
 	testSaveAndReadPrivateKey(privateKey, t)
 }
 
 func TestSaveAndReadEcPrivateKey(t *testing.T) {
 	privateKey, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
-	if err != nil {
-		t.Fatalf("GenerateKey fail. err: %s", err.Error())
-	}
-
+	AssertOk(t, err, "GenerateKey fail. err: %s")
 	testSaveAndReadPrivateKey(privateKey, t)
 }
 
 func testSaveAndReadCertificate(privateKey crypto.PrivateKey, t *testing.T) {
 	tmpfile, err := ioutil.TempFile("", "cert_test")
-	if err != nil {
-		log.Fatal(err)
-	}
+	AssertOk(t, err, "Error generating temp file")
 	tmpfileName := tmpfile.Name()
 	defer os.Remove(tmpfileName)
 
-	cert, err := SelfSign(days, privateKey)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	cert, err := SelfSign(days, "", privateKey)
+	AssertOk(t, err, "Error creating self-signed certificate")
 	err = SaveCertificate(tmpfileName, cert)
-	if err != nil {
-		t.Fatalf("SaveCertificate fail. err: %s", err.Error())
-	}
+	AssertOk(t, err, "Error saving certificate")
 	err = SaveCertificate("/tmp", cert)
-	if err == nil {
-		t.Fatalf("SaveCertificate succeeded writing to invalid filename.")
-	}
+	Assert(t, err != nil, "SaveCertificate succeeded writing to invalid filename.")
 
-	readCert, err := ReadCertificates(tmpfileName)
-	if err != nil {
-		t.Fatalf("ReadCertificate fail. err: %s", err.Error())
-	}
-	if !cert.Equal(readCert[0]) {
-		t.Fatalf("read cert is not same as expected cert")
-	}
+	readCerts, err := ReadCertificates(tmpfileName)
+	AssertOk(t, err, "ReadCertificate fail")
+	Assert(t, cert.Equal(readCerts[0]), "read cert is not same as expected cert")
+	// Readcertificate should produce the same result as ReadCertificates when there is only 1 cert
+	readOneCert, err := ReadCertificate(tmpfileName)
+	AssertOk(t, err, "Error reading certificate using ReadCertificate")
+	Assert(t, cert.Equal(readOneCert), "read cert is not same as expected cert")
 }
 
 func TestSaveAndReadRsaCertificate(t *testing.T) {
@@ -105,52 +89,33 @@ func TestSaveAndReadRsaCertificate(t *testing.T) {
 
 func TestSaveAndReadEcCertificate(t *testing.T) {
 	privateKey, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
-	if err != nil {
-		t.Fatalf("GenerateKey fail. err: %s", err.Error())
-	}
-
+	AssertOk(t, err, "GenerateKey fail")
 	testSaveAndReadCertificate(privateKey, t)
 }
 
 func testSaveAndReadCSR(privateKey crypto.PrivateKey, t *testing.T) {
 	tmpfile, err := ioutil.TempFile("", "cert_test")
-	if err != nil {
-		log.Fatal(err)
-	}
+	AssertOk(t, err, "Error creating temporary file")
 	tmpfileName := tmpfile.Name()
 	defer os.Remove(tmpfileName)
 
 	certSignReq, err := CreateCSR(privateKey, nil, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+	AssertOk(t, err, "Error creating CSR")
 	SaveCSR(tmpfileName, certSignReq)
-
 	readcsr, err := ReadCSR(tmpfileName)
-	if err != nil {
-		t.Fatalf("ReadCSR fail. err: %s", err.Error())
-	}
-
-	if !reflect.DeepEqual(readcsr, certSignReq) {
-		t.Fatalf("read CSR is not same as expected cert")
-	}
+	AssertOk(t, err, "Error reading CSR")
+	Assert(t, reflect.DeepEqual(readcsr, certSignReq), "read CSR is not same as expected cert")
 }
 
 func TestSaveAndReadRsaCSR(t *testing.T) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, numRsaBits)
-	if err != nil {
-		t.Fatalf("GenerateKey fail. err: %s", err.Error())
-	}
-
+	AssertOk(t, err, "GenerateKey fail.")
 	testSaveAndReadCSR(privateKey, t)
 }
 
 func TestSaveAndReadEcCSR(t *testing.T) {
 	privateKey, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
-	if err != nil {
-		t.Fatalf("GenerateKey fail. err: %s", err.Error())
-	}
-
+	AssertOk(t, err, "GenerateKey fail.")
 	testSaveAndReadCSR(privateKey, t)
 }
 
@@ -158,9 +123,7 @@ func TestSaveAndReadEcCSR(t *testing.T) {
 // OpenSSL puts key parameters both in the key block itself and in a separate "EC PARAMETERS" block
 func TestReadOpenSSLGeneratedEcKey(t *testing.T) {
 	tmpFile, err := ioutil.TempFile("", "cert_test")
-	if err != nil {
-		log.Fatal(err)
-	}
+	AssertOk(t, err, "Error creating temporary file")
 	tmpFileName := tmpFile.Name()
 	defer os.Remove(tmpFileName)
 
@@ -177,25 +140,19 @@ Uqvhc8wvGrVwYLlrIcGNcnZxEglGXJXTFwxQWSMuQQ==
 -----END EC PRIVATE KEY-----
 `
 	_, err = tmpFile.WriteString(keyParamBlock)
-	if err != nil {
-		t.Fatalf("Error writing to temp file %v: %v", tmpFileName, err)
-	}
-
+	AssertOk(t, err, "Error writing to temp file")
 	tmpFile.Sync()
 
 	privateKey, err := ReadPrivateKey(tmpFileName)
-	if err != nil {
-		t.Fatalf("Error reading EC private key from file %v: %v", tmpFileName, err)
-	}
+	AssertOk(t, err, "Error reading private key from file")
 
 	// compare against the key that we can parse directly out of the
 	// "EC PRIVATE KEY" block
 	_, keyBlock := pem.Decode([]byte(keyParamBlock))
 	key, _ := pem.Decode(keyBlock)
 	privateKeyRef, err := x509.ParseECPrivateKey(key.Bytes)
-	if err != nil || !reflect.DeepEqual(privateKey, privateKeyRef) {
-		t.Fatalf("Private key does not match")
-	}
+	AssertOk(t, err, "Error parsing EC private key")
+	Assert(t, reflect.DeepEqual(privateKey, privateKeyRef), "Private key does not match")
 
 	// Try reverse as well, as it seems to be legal
 	revKeyParamBlock := `
@@ -213,40 +170,26 @@ BgUrgQQAIw==
 	// rewind to beginning of file
 	tmpFile.Seek(0, 0)
 	_, err = tmpFile.WriteString(revKeyParamBlock)
-	if err != nil {
-		t.Fatalf("Error writing to temp file %v: %v", tmpFileName, err)
-	}
+	AssertOk(t, err, "Error writing to temp file")
 	tmpFile.Sync()
 
 	privateKey, err = ReadPrivateKey(tmpFileName)
-	if err != nil {
-		t.Fatalf("Error reading EC private key from file %v: %v", tmpFileName, err)
-	}
-	if !reflect.DeepEqual(privateKey, privateKeyRef) {
-		t.Fatalf("Private key does not match")
-	}
+	AssertOk(t, err, "Error reading EC private key from file")
+	Assert(t, reflect.DeepEqual(privateKey, privateKeyRef), "Private key does not match")
 }
 
 func TestCertificateValidationRoutines(t *testing.T) {
 	// RSA keys
 	rsaPrivateKey, err := rsa.GenerateKey(rand.Reader, numRsaBits)
-	if err != nil {
-		t.Fatalf("GenerateKey fail. err: %s", err.Error())
-	}
+	AssertOk(t, err, "GenerateKey fail")
 	rsaPrivateKey2, err := rsa.GenerateKey(rand.Reader, numRsaBits)
-	if err != nil {
-		t.Fatalf("GenerateKey fail. err: %s", err.Error())
-	}
+	AssertOk(t, err, "GenerateKey fail")
 
 	// ECDSA keys
 	ecdsaPrivateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		t.Fatalf("GenerateKey fail. err: %s", err.Error())
-	}
+	AssertOk(t, err, "GenerateKey fail")
 	ecdsaPrivateKey2, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		t.Fatalf("GenerateKey fail. err: %s", err.Error())
-	}
+	AssertOk(t, err, "GenerateKey fail")
 
 	keys := [][]crypto.PrivateKey{
 		{rsaPrivateKey, rsaPrivateKey2},
@@ -256,22 +199,16 @@ func TestCertificateValidationRoutines(t *testing.T) {
 		privateKey := keys[i][0]
 		altPrivateKey := keys[i][1]
 
-		cert, err := SelfSign(days, privateKey)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if !IsSelfSigned(cert) {
-			t.Fatalf("Failed to detect self-signed certificate")
-		}
+		cert, err := SelfSign(days, "", privateKey)
+		AssertOk(t, err, "Error creating self-signed certificate")
+		Assert(t, IsSelfSigned(cert), "Failed to detect self-signed certificate")
 		valid, err := ValidateKeyCertificatePair(privateKey, cert)
-		if !valid || err != nil {
-			t.Fatalf("Certificate failed key validation, error: %v", err)
-		}
+		AssertOk(t, err, "Error validating certificate")
+		Assert(t, valid, "Certificate failed key validation")
+
 		// this is expected to fail
 		valid, err = ValidateKeyCertificatePair(altPrivateKey, cert)
-		if valid || err != nil {
-			t.Fatalf("Certificate did not fail key validation, error: %v", err)
-		}
+		Assert(t, (!valid || err != nil), "Certificate did not fail key validation as expected")
 	}
 }
 
@@ -293,21 +230,15 @@ func startServer(t *testing.T, serverCertFile, serverPrivKeyFile, caCertFile str
 	rpc.Register(new(Arith))
 
 	cert, err := tls.LoadX509KeyPair(serverCertFile, serverPrivKeyFile)
-	if err != nil {
-		log.Fatalf("server: loadkeys: %s", err)
-	}
+	AssertOk(t, err, "server: loadkeys")
 
 	bytes, err := ioutil.ReadFile(caCertFile)
-	if err != nil {
-		log.Fatal(err)
-	}
+	AssertOk(t, err, fmt.Sprintf("Error reading CA cert file %v", caCertFile))
 	block, _ := pem.Decode(bytes)
 	ca, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		log.Fatal(err)
-	}
-	certPool := x509.NewCertPool()
-	certPool.AddCert(ca)
+	AssertOk(t, err, "Error parsing certificate")
+
+	certPool := NewCertPool([]*x509.Certificate{ca})
 	config := tls.Config{
 		Certificates: []tls.Certificate{cert},
 		ClientAuth:   tls.RequireAndVerifyClientCert,
@@ -321,9 +252,7 @@ func startServer(t *testing.T, serverCertFile, serverPrivKeyFile, caCertFile str
 	service, _ := os.Hostname()
 	service = service + ":0" // any available address
 	listener, err := tls.Listen("tcp", service, &config)
-	if err != nil {
-		log.Fatalf("server: listen: %s", err)
-	}
+	AssertOk(t, err, "Error listening")
 	serverAddr := listener.Addr().String()
 	log.Println("Test RPC server listening on", serverAddr)
 	go rpc.Accept(listener)
@@ -334,75 +263,53 @@ func generateKeysAndCerts(t *testing.T, caCertFile, serverCertFile, serverPrivKe
 	days := 365
 	numRsaBits := 2048
 	caprivatekey, err := rsa.GenerateKey(rand.Reader, numRsaBits)
-	if err != nil {
-		t.Fatalf("GenerateKey fail. err: %s", err.Error())
-	}
-	cacert, err := SelfSign(days, caprivatekey)
-	if err != nil {
-		t.Fatal(err)
-	}
+	AssertOk(t, err, "GenerateKey fail")
+	cacert, err := SelfSign(days, "", caprivatekey)
+	AssertOk(t, err, "Error generating self-signed certificate")
 	SaveCertificate(caCertFile, cacert)
 
 	srvprivatekey, err := rsa.GenerateKey(rand.Reader, numRsaBits)
-	if err != nil {
-		t.Fatal(err)
-	}
+	AssertOk(t, err, "GenerateKey fail")
 	SavePrivateKey(serverPrivKeyFile, srvprivatekey)
 	csr, err := CreateCSR(srvprivatekey, nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	AssertOk(t, err, "Error generating CSR")
 	srvcert, err := SignCSRwithCA(days, csr, cacert, caprivatekey)
-	if err != nil {
-		t.Fatal(err)
-	}
+	AssertOk(t, err, "Error signing CSR")
 	SaveCertificate(serverCertFile, srvcert)
 
 	clientprivatekey, err := rsa.GenerateKey(rand.Reader, numRsaBits)
-	if err != nil {
-		t.Fatal(err)
-	}
+	AssertOk(t, err, "GenerateKey fail")
 	SavePrivateKey(clientPrivKeyFile, clientprivatekey)
 	csr, err = CreateCSR(clientprivatekey, nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	AssertOk(t, err, "Error generating CSR")
 	clientcert, err := SignCSRwithCA(days, csr, cacert, caprivatekey)
-	if err != nil {
-		t.Fatal(err)
-	}
+	AssertOk(t, err, "Error signing CSR")
 	SaveCertificate(clientCertFile, clientcert)
 }
 
 func TestRPC(t *testing.T) {
 	F, err := ioutil.TempFile("", "serverCertFile")
-	if err != nil {
-		t.Fatalf("client: loadkeys: %s", err)
-	}
+	AssertOk(t, err, "client: loadkeys")
 	serverCertFile := F.Name()
 	defer os.Remove(serverCertFile)
+
 	F, err = ioutil.TempFile("", "serverPrivKeyFile")
-	if err != nil {
-		t.Fatalf("client: loadkeys: %s", err)
-	}
+	AssertOk(t, err, "Error creating temporary file")
 	serverPrivKeyFile := F.Name()
 	defer os.Remove(serverPrivKeyFile)
+
 	F, err = ioutil.TempFile("", "caCertFile")
-	if err != nil {
-		t.Fatalf("client: loadkeys: %s", err)
-	}
+	AssertOk(t, err, "Error creating temporary file")
 	caCertFile := F.Name()
 	defer os.Remove(caCertFile)
+
 	F, err = ioutil.TempFile("", "clientCertFile")
-	if err != nil {
-		t.Fatalf("client: loadkeys: %s", err)
-	}
+	AssertOk(t, err, "Error creating temporary file")
 	clientCertFile := F.Name()
 	defer os.Remove(clientCertFile)
+
 	F, err = ioutil.TempFile("", "clientPrivKeyFile")
-	if err != nil {
-		t.Fatalf("client: loadkeys: %s", err)
-	}
+	AssertOk(t, err, "Error creating temporary file")
 	clientPrivKeyFile := F.Name()
 	defer os.Remove(clientPrivKeyFile)
 
@@ -421,21 +328,14 @@ func TestRPC(t *testing.T) {
 
 func startClientAndDoRPC(t *testing.T, addr string, clientCertFile, clientPrivKeyFile, caCertFile string) {
 	cert, err := tls.LoadX509KeyPair(clientCertFile, clientPrivKeyFile)
-	if err != nil {
-		t.Fatalf("client: loadkeys: %s", err)
-	}
+	AssertOk(t, err, "client: loadkeys")
 	bytes, err := ioutil.ReadFile(caCertFile)
-	if err != nil {
-		t.Fatal(err)
-	}
+	AssertOk(t, err, fmt.Sprintf("Error reading caCertFile: %v", caCertFile))
 	block, _ := pem.Decode(bytes)
 	ca, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		t.Fatal(err)
-	}
+	AssertOk(t, err, "Error parsing certificate")
 
-	certPool := x509.NewCertPool()
-	certPool.AddCert(ca)
+	certPool := NewCertPool([]*x509.Certificate{ca})
 	config := tls.Config{
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      certPool,
@@ -446,9 +346,7 @@ func startClientAndDoRPC(t *testing.T, addr string, clientCertFile, clientPrivKe
 	}
 
 	conn, err := tls.Dial("tcp", addr, &config)
-	if err != nil {
-		t.Fatalf("client: dial: %s while connecting to server: %s", err, addr)
-	}
+	AssertOk(t, err, fmt.Sprintf("client: dial error while connecting to server: %s", addr))
 	defer conn.Close()
 	log.Println("client: Dial: ", addr, " connected to: ", conn.RemoteAddr())
 	rpcClient := rpc.NewClient(conn)
