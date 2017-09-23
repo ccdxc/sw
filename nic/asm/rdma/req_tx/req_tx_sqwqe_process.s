@@ -26,28 +26,29 @@ req_tx_sqwqe_process:
     nop
     beqi           r1, OP_TYPE_SEND_IMM, send_imm
     nop
+    beqi           r1, OP_TYPE_SEND_INV, send_inv
+    nop
 
     nop.e
     nop
 
 write_imm:
     CAPRI_SET_FIELD(r7, INFO_OUT_T, imm_data, d.write.imm_data)
-    CAPRI_SET_FIELD(r2, PHV_GLOBAL_COMMON_T, flags.req_tx.immeth_vld, 1)
     //pass thru to write: logic
 
 write:
     phvwr RETH_VA, d.write.va
     phvwr RETH_RKEY, d.write.r_key
     phvwr RETH_LEN, d.write.length
-
-    //assumption: r2 loaded with PHV_GLOBAL_COMMMON_T base
-    CAPRI_SET_FIELD(r2, PHV_GLOBAL_COMMON_T, flags.req_tx.incr_lsn, 1)
     b     common
     nop
 
+send_inv:
+    b     common
+    CAPRI_SET_FIELD(r7, INFO_OUT_T, inv_key, d.send.inv_key) //branch delay slot
+
 send_imm:
     CAPRI_SET_FIELD(r7, INFO_OUT_T, imm_data, d.send.imm_data)
-    CAPRI_SET_FIELD(r2, PHV_GLOBAL_COMMON_T, flags.req_tx.immeth_vld, 1)
 send:
 
 common:

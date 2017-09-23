@@ -16,7 +16,6 @@ def TestCaseSetup(tc):
     tc.pvtdata.pre_qstate = rs.lqp.sq.qstate.data
     tc.pvtdata.va = 0x0102030405060708;
     tc.pvtdata.r_key = 0x0A0B0C0D;
-    tc.pvtdata.imm_data = 0x0F0E0D0C;
     return
 
 def TestCaseTrigger(tc):
@@ -29,8 +28,8 @@ def TestCaseVerify(tc):
     rs.lqp.sq.qstate.Read()
     tc.pvtdata.post_qstate = rs.lqp.sq.qstate.data
 
-    # verify that tx_psn is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'tx_psn', 1):
+    # verify that tx_psn is incremented by 2
+    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'tx_psn', 2):
         return False
 
     # verify that p_index is incremented by 1
@@ -45,8 +44,8 @@ def TestCaseVerify(tc):
     if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'ssn', 1):
         return False
 
-    # verify that lsn is not incremented
-    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'lsn', 0):
+    # verify that lsn is incremented by 1
+    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'lsn', 1):
         return False
 
     # verify that busy is 0

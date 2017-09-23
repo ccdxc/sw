@@ -1,7 +1,7 @@
 meta:
     id      : IETH
     scapy   : IETH
-    size    : None
+    size    : 4
 
 fields:
     r_key   : const/0x0

@@ -47,6 +47,14 @@ req_tx_add_headers_process:
     // phv_p->bth.dst_qp = sqcb1_p->dst_qp
     phvwr          BTH_DST_QP, d.dst_qp
 
+    #c1 - last
+    #c2 - first
+    #c3 - immediate
+    #c4 - incr_lsn
+    #c5 - check credits
+    #c6 - adjust_psn/incr_psn
+    #c7 - 
+
     seq            c2, k.args.first, 1
     seq            c1, k.args.last, 1
 
@@ -65,8 +73,47 @@ req_tx_add_headers_process:
     b              end
     nop
 
+
+op_type_send_inv:
+    tblwr.c2       d.inv_key, k.args.op.send_wr.inv_key
+
+    //figure out the opcode
+    .csbegin
+
+    cswitch [c2, c1]
+    nop
+
+    .brcase 0 //not-first, not-last
+        add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+        b              set_bth_opc
+        nop
+
+    .brcase 1 //not-first, last
+        // add IMMETH hdr
+        // dma_cmd[4]
+        addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
+        DMA_PHV2PKT_SETUP(r7, ieth, ieth)
+        add            r2, RDMA_PKT_OPC_SEND_LAST_WITH_INV, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        b              set_bth_opc
+        phvwr          IETH_R_KEY, d.inv_key //branch delay slot
+
+    .brcase 2 //first, not-last
+        add            r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+        b              set_bth_opc
+        nop
+
+    .brcase 3 //first, last (only)
+        // add IMMETH hdr
+        // dma_cmd[4]
+        addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
+        DMA_PHV2PKT_SETUP(r7, ieth, ieth)
+        add            r2, RDMA_PKT_OPC_SEND_ONLY_WITH_INV, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        b              set_bth_opc
+        phvwr          IETH_R_KEY, k.args.op.send_wr.inv_key //branch delay slot
+    .csend
+
 op_type_send_imm:
-    seq            c3, 1, 1
+    setcf          c3, [c1]
     tblwr.c2       d.imm_data, k.args.op.send_wr.imm_data 
 op_type_send:
 
@@ -78,45 +125,44 @@ op_type_send:
     nop
 
     .brcase 0 //not-first, not-last
-    add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-    b              set_bth_opc
-    nop
+        add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+        b              set_bth_opc
+        nop
 
     .brcase 1 //not-first, last
-    //seq            c3, k.global.flags.req_tx.immeth_vld, 1
-    bcf            [c3], send_imm_handle
-    add            r2, RDMA_PKT_OPC_SEND_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
-    b              set_bth_opc
-    nop
+        bcf            [!c3], set_bth_opc
+        add            r2, RDMA_PKT_OPC_SEND_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        // add IMMETH hdr
+        // dma_cmd[4]
+        addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
+        DMA_PHV2PKT_SETUP(r7, immeth, immeth)
+        add            r2, RDMA_PKT_OPC_SEND_LAST_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        b              set_bth_opc
+        phvwr          IMMDT_DATA, d.imm_data //branch delay slot
 
     .brcase 2 //first, not-last
-    add            r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-    b              set_bth_opc
-    nop
+        add            r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+        b              set_bth_opc
+        nop
 
     .brcase 3 //first, last (only)
-    seq            c3, k.global.flags.req_tx.immeth_vld, 1
-    bcf            [c3], send_imm_handle
-    add            r2, RDMA_PKT_OPC_SEND_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
-    b              set_bth_opc
-    nop
-
-send_imm_handle:
-    // add IMMETH hdr
-    // dma_cmd[4]
-    addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
-    DMA_PHV2PKT_SETUP(r7, immeth, immeth)
-    addi           r2, r2, 1 //increment packet opcode by 1 (immediate)
-    b              set_bth_opc
-    //phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data //branch delay slot
-    phvwr          IMMDT_DATA, d.imm_data //branch delay slot
-    //nop
-
-
+        bcf            [!c3], set_bth_opc
+        add            r2, RDMA_PKT_OPC_SEND_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        // add IMMETH hdr
+        // dma_cmd[4]
+        addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
+        DMA_PHV2PKT_SETUP(r7, immeth, immeth)
+        add            r2, RDMA_PKT_OPC_SEND_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        b              set_bth_opc
+        phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data //branch delay slot
     .csend
 
 op_type_write_imm:
+    setcf          c3, [c1]
+    tblwr.c2       d.imm_data, k.args.op.send_wr.imm_data 
 op_type_write:
+
+    setcf          c4, [c1 & !c3]
 
     // if first, add RETH hdr
     // dma_cmd[4]
@@ -132,44 +178,39 @@ op_type_write:
     nop
 
     .brcase 0 //not-first, not-last
-    add            r2, RDMA_PKT_OPC_RDMA_WRITE_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-    b              set_bth_opc
-    nop
+        add            r2, RDMA_PKT_OPC_RDMA_WRITE_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+        b              set_bth_opc
+        nop
 
     .brcase 1 //not-first, last
-    add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-    seq            c3, k.global.flags.req_tx.immeth_vld, 1
-    // add IMMETH hdr
-    // dma_cmd[4]
-    //jump to next flit
-    addi.c3        r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
-    DMA_PHV2PKT_SETUP_C(r7, immeth, immeth, c3)
-    b              set_bth_opc
-    phvwr.c3       IMMDT_DATA, k.args.op.send_wr.imm_data //branch delay slot
-    //nop
+        bcf            [!c3], set_bth_opc
+        add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        // add IMMETH hdr
+        // dma_cmd[4]
+        //jump to next flit
+        addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
+        DMA_PHV2PKT_SETUP(r7, immeth, immeth)
+        add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        b              set_bth_opc
+        phvwr          IMMDT_DATA, d.imm_data //branch delay slot
 
     .brcase 2 //first, not-last
-    add            r2, RDMA_PKT_OPC_RDMA_WRITE_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-    b              set_bth_opc
-    nop
+        add            r2, RDMA_PKT_OPC_RDMA_WRITE_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+        b              set_bth_opc
+        nop
 
     .brcase 3 //first, last (only)
-    seq            c3, k.global.flags.req_tx.immeth_vld, 1
-    bcf            [c3], write_imm_handle
-    add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
-    b set_bth_opc
-    nop
 
-write_imm_handle:
-    // add IMMETH hdr
-    // dma_cmd[5]
-    sub            r7, r7, 1, LOG_DMA_CMD_SIZE_BITS
-    DMA_PHV2PKT_SETUP(r7, immeth, immeth)
-    add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-    b              set_bth_opc
-    phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data //branch delay slot
-    //nop
-
+        bcf            [!c3], set_bth_opc
+        add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        // add IMMETH hdr
+        // dma_cmd[5]
+        sub            r7, r7, 1, LOG_DMA_CMD_SIZE_BITS
+        DMA_PHV2PKT_SETUP(r7, immeth, immeth)
+        add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        b              set_bth_opc
+        phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data //branch delay slot
+ 
     .csend
 
 set_bth_opc:
@@ -178,10 +219,6 @@ set_bth_opc:
 
     // check_credits = TRUE
     setcf          c5, [c0] // Branch Delay Slot
-
-op_type_send_inv:
-    b              end
-    nop
 
 end:
     b.!c6          inc_psn
@@ -205,12 +242,12 @@ inc_psn:
 
     // if (rrqwqe_to_hdr_info_p->last)
     //     sqcb1_p->ssn++;
-    seq            c1, k.args.last, 1
+    //seq            c1, k.args.last, 1
     tblmincri.c1   d.ssn, 24, 1
 
-    seq            c2, k.global.flags.req_tx.incr_lsn, 1
-    setcf          c3, [c1 & c2]
-    tblmincri.c3   d.lsn, 24, 1
+    tblmincri.c4   d.lsn, 24, 1
+
+    //c4 is free
 
     // get tbl_id from s2s data
     add            r1, k.args.tbl_id, r0

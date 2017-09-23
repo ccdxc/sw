@@ -17,6 +17,8 @@
 
 #define IMMDT_DATA              p.immeth.data
 
+#define IETH_R_KEY              p.ieth.rkey
+
 #define RETH_VA                 p.reth.va
 #define RETH_RKEY               p.reth.r_key
 #define RETH_LEN                p.reth.dma_len
