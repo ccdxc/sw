@@ -14,6 +14,7 @@ end
 
 copy "entrypoint.sh", "/entrypoint.sh"
 run "chmod +x /entrypoint.sh"
+workdir "/sw"
 
 entrypoint "/entrypoint.sh"
 

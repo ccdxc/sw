@@ -1,12 +1,13 @@
 #!/bin/sh
 
+set -euo pipefail
+
 dir=/usr/src/github.com/pensando/sw
 
-echo 1>&2 syncing and building asset tools...
+mkdir -p ${dir}
+mount -o bind /sw ${dir}
+echo 1>&2 building asset tools...
 
-mkdir -p $dir
-rsync -a /sw/build /sw/vendor ${dir}
+cd $dir && go install ./build/... && cd /sw/nic
 
-cd $dir && go install ./build/... && cd /sw
-
-exec $*
+exec "$@"
