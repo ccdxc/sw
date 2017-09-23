@@ -1,5 +1,5 @@
 # Test Spec
-# orig flow: uplink -- tunnel 
+# orig flow: uplink -- uplink
 # redirected flow: uplink -- uplink
 selectors:
     src:
@@ -9,45 +9,20 @@ selectors:
         interface   : filter://any
     dst:
         tenant      : filter://type=TENANT
-        # Choose vxlan encap, but NACL should override
-        segment     : filter://fabencap=VXLAN
+        segment     : filter://fabencap=VLAN
         endpoint    : filter://remote=True
         interface   : filter://any
-    flow        : filter://label=NETWORKING
+    flow        : filter://fwtype=L2,type=MAC,label=NETWORKING
     maxflows    : 1
 
 packets:
     - packet:
         id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateByFlow
+        template    : ref://factory/packets/id=ETH
         headers     :
-            # Add all possible headers, the final headers will be selected
-            # based on the Flow.
-            qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
-            ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : 64
-            udp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-            tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-                flags   : callback://acl/packets/GetTCPFlags
-            icmp:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
-            icmpv6:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
+            eth:
+                type    : ref://testcase/config/flow/ethertype
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -59,10 +34,8 @@ packets:
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
-            ipv4:
-                ttl     : 64
-            ipv6:
-                hlim    : 64
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
 
     - packet:
         id          : EXP_PKT     # Expected packet
@@ -76,12 +49,6 @@ packets:
             qtag:
                 vlan    : ref://testcase/pvtdata/acl/fields/action/encap_id
                 prio    : ref://testcase/config/flow/eg_qos/cos
-            ipv4:
-                tos     : ref://testcase/config/flow/eg_qos/dscp
-                ttl     : 63
-            ipv6:
-                tc      : ref://testcase/config/flow/eg_qos/dscp
-                hlim    : 63
 
 trigger:
     packets:

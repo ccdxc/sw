@@ -4,17 +4,19 @@ meta:
 fields: 
     id: None 
     priority: const/0
+    config_flow_miss: False
     match:
-        flow_miss: False
-        type: None
-        src_if_match    : False
-        src_if          : None
-        dst_if_match    : False
-        dst_if          : None
-        tenant_match    : False
-        tenant          : None
-        segment_match   : False
-        segment         : None
+        direction     : None
+        flow_miss     : False
+        type          : None
+        src_if_match  : False
+        src_if        : None
+        dst_if_match  : False
+        dst_if        : None
+        tenant_match  : False
+        tenant        : None
+        segment_match : False
+        segment       : None
         eth: 
             ethertype      : const/0
             ethertype_mask : const/0

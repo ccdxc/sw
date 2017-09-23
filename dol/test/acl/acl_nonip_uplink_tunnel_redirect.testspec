@@ -11,38 +11,21 @@ selectors:
         # Choose vlan encap, but NACL should override
         segment     : filter://fabencap=VLAN
         endpoint    : filter://remote=True
-    flow            : filter://label=NETWORKING
-    maxflows        : 1
+    flow        : filter://fwtype=L2,type=MAC,label=NETWORKING
+    maxflows    : 1
 
 packets:
     - packet:
         id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://acl/packets/GetPacketTemplate
+        template    : ref://factory/packets/id=ETH
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
-            ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-            udp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-            tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-                flags   : callback://acl/packets/GetTCPFlags
-            icmp:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
-            icmpv6:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
+            eth:
+                type    : ref://testcase/config/flow/ethertype
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -56,10 +39,6 @@ packets:
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id
-            ipv4:
-                ttl     : 64
-            ipv6:
-                hlim    : 64
 
     - packet:
         id          : EXP_PKT     # Expected packet
@@ -86,12 +65,6 @@ packets:
                 chksum  : 0
             vxlan       :
                 vni     : ref://testcase/pvtdata/acl/fields/action/encap_id
-            ipv4:
-                tos     : ref://testcase/config/flow/eg_qos/dscp
-                ttl     : 63
-            ipv6:
-                tc      : ref://testcase/config/flow/eg_qos/dscp
-                hlim    : 63
 
 
 trigger:

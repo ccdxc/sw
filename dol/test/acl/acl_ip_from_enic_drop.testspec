@@ -1,32 +1,30 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://type=TENANT
+        tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=True
+        endpoint    : filter://remote=False
         interface   : filter://any
     dst:
-        tenant      : filter://type=TENANT
+        tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
         endpoint    : filter://remote=True
         interface   : filter://any
-    flow        : filter://label=NETWORKING
-    maxflows    : 1
+    flow            : filter://fwtype=L2,label=NETWORKING
+    maxflows        : 1
 
 packets:
     - packet:
         id          : IN_PKT # Input packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://acl/packets/GetPacketTemplate
+        template    : callback://networking/packets/GetPacketTemplateByFlow
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
-            # Add all possible headers, the final headers will be selected
-            # based on the Flow.
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : ref://testcase/config/src/endpoint/intf/encap_vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -41,7 +39,7 @@ packets:
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
-                flags   : callback://acl/packets/GetTCPFlags
+                flags   : ack
             icmp:
                 code    : ref://testcase/config/flow/icmpcode
                 type    : ref://testcase/config/flow/icmptype
@@ -53,15 +51,33 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=IN_PKT/size
+           data : ref://testcase/packets/id=IN_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            buf   : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
 trigger:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=IN_PKT
-            port    : ref://testcase/config/src/endpoint/intf/ports
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+
+    doorbell:
+        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+        fields:
+            upd : 3
 
 expect:
-    delay   : 1
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=IN_PKT
-            port    : 128

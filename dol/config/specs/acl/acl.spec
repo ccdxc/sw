@@ -27,6 +27,26 @@ entries:
             action: deny 
 
     - entry:
+        id: ACL_FROM_ENIC_DMAC_ACTION_DROP 
+        match:
+            direction : from_enic
+            type: eth
+            eth:
+                dst_mask       : macaddr/FFFF.FFFF.FFFF
+        action:
+            action: deny 
+
+    - entry:
+        id: ACL_FROM_UPLINK_DMAC_ACTION_DROP 
+        match:
+            direction : from_uplink
+            type: eth
+            eth:
+                dst_mask       : macaddr/FFFF.FFFF.FFFF
+        action:
+            action: deny 
+
+    - entry:
         id: ACL_IPV4_SIP_DIP_FLOW_MISS_ACTION_DROP
         match:
             flow_miss: True
@@ -98,6 +118,28 @@ entries:
                 proto   : const/200
         action:
             action: deny 
+
+    - entry:
+        id: ACL_FROM_ENIC_IPV4_DIP_ACTION_DROP
+        match:
+            direction : from_enic
+            type: ip
+            ip:
+                type             : v4
+                dst_prefix_len   : const/16
+        action:
+            action: deny
+
+    - entry:
+        id: ACL_FROM_UPLINK_IPV4_DIP_ACTION_DROP
+        match:
+            direction : from_uplink
+            type: ip
+            ip:
+                type             : v4
+                dst_prefix_len   : const/16
+        action:
+            action: deny
 
 #    - entry:
 #        id: ACL_IPV4_OPTIONS_ACTION_DROP
@@ -181,6 +223,28 @@ entries:
                 proto   : const/190
         action:
             action: deny 
+
+    - entry:
+        id: ACL_FROM_ENIC_IPV6_DIP_ACTION_DROP
+        match:
+            direction : from_enic
+            type: ip
+            ip:
+                type             : v6
+                dst_prefix_len   : const/64
+        action:
+            action: deny
+
+    - entry:
+        id: ACL_FROM_UPLINK_IPV6_DIP_ACTION_DROP
+        match:
+            direction : from_uplink
+            type: ip
+            ip:
+                type             : v6
+                dst_prefix_len   : const/64
+        action:
+            action: deny
 
 #    - entry:
 #        id: ACL_IPV6_OPTIONS_ACTION_DROP
@@ -318,9 +382,8 @@ entries:
             action: deny
 
 ##############################################################################
-##############################################################################
-##############################################################################
 # SUP REDIRECT
+##############################################################################
     - entry:
         id: ACL_SMAC_ACTION_SUP_REDIRECT
         match:
@@ -409,6 +472,22 @@ entries:
             intf: cpu
 
     - entry:
+        id: ACL_UDP_DPORT_FLOW_MISS_ACTION_SUP_REDIRECT
+        config_flow_miss: True
+        match:
+            type : ip
+            l4:
+                type : udp 
+                udp: 
+                    dst_port : True
+        action:
+            action: redirect
+            intf: cpu
+
+##############################################################################
+# REDIRECT
+##############################################################################
+    - entry:
         id: ACL_DIF_ACTION_REDIRECT
         match:
             dst_if_match : True
@@ -423,3 +502,43 @@ entries:
         action:
             action: redirect
             intf: tunnel
+
+    - entry:
+        id: ACL_SIF_ACTION_REDIRECT
+        match:
+            src_if_match : True
+        action:
+            action: redirect
+            intf: uplink
+
+    - entry:
+        id: ACL_SIF_ACTION_TUNNEL_REDIRECT
+        match:
+            src_if_match : True
+        action:
+            action: redirect
+            intf: tunnel
+
+    - entry:
+        id: ACL_DMAC_FLOW_MISS_ACTION_REDIRECT
+        match:
+            flow_miss: True
+            type: eth
+            eth:
+                dst_mask       : macaddr/FFFF.FFFF.FFFF
+        action:
+            action: redirect
+            intf: uplink
+
+    - entry:
+        id: ACL_TCP_DPORT_FLOW_MISS_ACTION_REDIRECT
+        match:
+            flow_miss: True
+            type : ip
+            l4:
+                type : tcp
+                tcp: 
+                    dst_port : True
+        action:
+            action: redirect
+            intf: uplink

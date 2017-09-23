@@ -30,6 +30,9 @@ class AclObject(base.ConfigObjectBase):
 
         self.GID(spec.id)
 
+        if self.MatchOnFlowMiss():
+            self.fields.config_flow_miss = True
+
         if self.fields.action.ingress_mirror and self.fields.action.ingress_mirror.enable:
             session_ref = self.fields.action.ingress_mirror.session
             self.fields.action.ingress_mirror.session = session_ref.Get(Store)
@@ -45,6 +48,9 @@ class AclObject(base.ConfigObjectBase):
         cfglogger.info("- Match  : %s" % self.GID())
         if self.MatchOnFlowMiss():
             cfglogger.info("  Flow Miss" )
+
+        if self.MatchOnDirection():
+            cfglogger.info("  Direction     : %s" % self.fields.match.direction)
 
         if self.MatchOnSIF():
             if self.fields.match.src_if:
@@ -150,6 +156,10 @@ class AclObject(base.ConfigObjectBase):
     def __getEnumValue(self, val):
         valstr = "ACL_ACTION_" + val.upper()
         return haldefs.acl.AclAction.Value(valstr)
+
+    def __getDirection(self, val):
+        vals = {'from_enic':0, 'from_uplink':1}
+        return vals[val]
 
     def PrepareHALRequestSpec(self, reqspec):
         reqspec.key_or_handle.acl_id = self.id
@@ -258,6 +268,11 @@ class AclObject(base.ConfigObjectBase):
             reqspec.match.internal_key.flow_miss = True
             reqspec.match.internal_mask.flow_miss = True
 
+        if self.MatchOnDirection():
+            reqspec.match.internal_key.direction = \
+                    self.__getDirection(self.fields.match.direction)
+            reqspec.match.internal_mask.direction = True
+
         reqspec.action.action = self.__getEnumValue(self.fields.action.action)
         if self.ActionRedirect():
             reqspec.action.redirect_if_key_handle.if_handle = \
@@ -289,8 +304,18 @@ class AclObject(base.ConfigObjectBase):
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
+    def ConfigFlowMiss(self):
+        # Do we need to send pkt such that it hits flow miss
+        return self.fields.config_flow_miss
+
     def MatchOnFlowMiss(self):
+        # Is the ACL added matching on flow miss bit
         return self.fields.match.flow_miss
+
+    def MatchOnDirection(self):
+        if self.fields.match.direction is not None:
+            return True
+        return False
 
     def MatchOnSIF(self):
         return self.fields.match.src_if_match
@@ -510,7 +535,7 @@ class AclObject(base.ConfigObjectBase):
 
     def UpdateFromTCConfig(self, flow, sep, dep, segment, tenant):
 
-        if self.MatchOnFlowMiss():
+        if self.ConfigFlowMiss():
             # Generate configs with locally generated values
             smac = resmgr.AclMacAllocator.get()
             dmac = resmgr.AclMacAllocator.get()

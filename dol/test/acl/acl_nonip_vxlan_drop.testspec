@@ -9,6 +9,7 @@ selectors:
         segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
     flow            : filter://fwtype=L2,type=MAC,label=NETWORKING
+    maxflows        : 1
 
 packets:
     - packet:

@@ -11,6 +11,7 @@ selectors:
         endpoint    : filter://remote=True
         interface   : filter://any
     flow        : filter://label=NETWORKING
+    maxflows    : 1
 
 packets:
     - packet:

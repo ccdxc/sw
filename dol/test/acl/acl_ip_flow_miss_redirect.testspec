@@ -1,48 +1,45 @@
 # Test Spec
-# orig flow: uplink -- uplink
-# redirected flow: uplink -- tunnel
 selectors:
     src:
         tenant      : filter://type=TENANT
         segment     : filter://fabencap=VLAN,native=False
         endpoint    : filter://remote=True
+        interface   : filter://any
     dst:
         tenant      : filter://type=TENANT
-        # Choose vlan encap, but NACL should override
         segment     : filter://fabencap=VLAN
         endpoint    : filter://remote=True
-    flow            : filter://label=NETWORKING
-    maxflows        : 1
+        interface   : filter://any
+    flow        : filter://label=NETWORKING
+    maxflows    : 1
 
 packets:
     - packet:
         id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://acl/packets/GetPacketTemplate
+        template    : callback://networking/packets/GetPacketTemplateByFlow
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
             ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
+                src     : callback://acl/packets/GetIPv4SIP
+                dst     : callback://acl/packets/GetIPv4DIP
             ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
+                src     : callback://acl/packets/GetIPv6SIP
+                dst     : callback://acl/packets/GetIPv6DIP
             udp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
+                sport   : callback://acl/packets/GetUDPSport
+                dport   : callback://acl/packets/GetUDPDport
             tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
+                sport   : callback://acl/packets/GetTCPSport
+                dport   : callback://acl/packets/GetTCPDport
                 flags   : callback://acl/packets/GetTCPFlags
             icmp:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
+                code    : callback://acl/packets/GetICMPCode
+                type    : callback://acl/packets/GetICMPType
             icmpv6:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
+                code    : callback://acl/packets/GetICMPCode
+                type    : callback://acl/packets/GetICMPType
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -66,33 +63,16 @@ packets:
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
-            - ref://factory/packets/id=ENCAP_VXLAN
         headers     :
             eth:
                 src     : ref://testcase/pvtdata/acl/fields/action/macsa
                 dst     : ref://testcase/pvtdata/acl/fields/action/macda
-            outereth    :
-                src     : ref://testcase/pvtdata/acl/fields/action/redirect_if/macaddr
-                dst     : ref://testcase/pvtdata/acl/fields/action/redirect_if/rmacaddr
-            outeripv4   :
-                src     : ref://testcase/pvtdata/acl/fields/action/redirect_if/ltep
-                dst     : ref://testcase/pvtdata/acl/fields/action/redirect_if/rtep
-                tos     : 0
-                id      : 0
             qtag:
-                vlan    : ref://testcase/pvtdata/acl/fields/action/redirect_if/vlan_id
-                prio    : ref://testcase/config/flow/eg_qos/cos
-            outerudp:
-                chksum  : 0
-            vxlan       :
-                vni     : ref://testcase/pvtdata/acl/fields/action/encap_id
+                vlan    : ref://testcase/pvtdata/acl/fields/action/encap_id
             ipv4:
-                tos     : ref://testcase/config/flow/eg_qos/dscp
                 ttl     : 63
             ipv6:
-                tc      : ref://testcase/config/flow/eg_qos/dscp
                 hlim    : 63
-
 
 trigger:
     packets:

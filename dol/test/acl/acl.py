@@ -15,12 +15,6 @@ def Setup(infra, module):
     if 'srcseg' in iterelem.__dict__:
         module.testspec.selectors.src.segment.Extend(iterelem.srcseg)
 
-    if module.args == None:
-        return
-
-    if 'maxflows' in module.args.__dict__:
-        module.testspec.selectors.maxflows = module.args.maxflows
-
     return
 
 def Teardown(infra, module):

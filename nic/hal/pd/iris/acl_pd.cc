@@ -227,7 +227,7 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
             if (if_is_cpu_if(redirect_if)) {
                 // If going to CPU, do not do any rewrites on packet. So set
                 // the rewrite indexes to 0 (nop)
-                data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 0;
+                data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_index = 0;
                 data.nacl_action_u.nacl_nacl_permit.rewrite_flags = 0;

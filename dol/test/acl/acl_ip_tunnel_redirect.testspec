@@ -1,8 +1,10 @@
 # Test Spec
+# orig flow: tunnel -- uplink
+# redirected flow: tunnel -- tunnel
 selectors:
     src:
         tenant      : filter://type=TENANT
-        segment     : filter://fabencap=VXLAN
+        segment     : filter://fabencap=VXLAN,native=False
         endpoint    : filter://remote=True
     dst:
         tenant      : filter://type=TENANT
@@ -10,6 +12,7 @@ selectors:
         segment     : filter://fabencap=VLAN
         endpoint    : filter://remote=True
     flow            : filter://label=NETWORKING
+    maxflows        : 1
 
 packets:
     - packet:

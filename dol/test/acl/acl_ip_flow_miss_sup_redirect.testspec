@@ -10,15 +10,14 @@ selectors:
         segment     : filter://any
         endpoint    : filter://remote=True
         interface   : filter://any
-    flow        : filter://label=NETWORKING
+    flow        : filter://fwtype=L2,label=NETWORKING
     maxflows    : 1
 
 packets:
     - packet:
-        id          : IN_PKT # Input packet
+        id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://acl/packets/GetPacketTemplate
-        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -51,6 +50,23 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
+    - packet:
+        id          : IN_PKT     # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+
+    - packet:
+        id          : EXP_PKT     # Expected packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            qtag:
+                prio    : ref://testcase/config/flow/eg_qos/cos
+            ipv4:
+                tos     : ref://testcase/config/flow/eg_qos/dscp
+            ipv6:
+                tc      : ref://testcase/config/flow/eg_qos/dscp
+
 trigger:
     packets:
         - packet:
@@ -58,3 +74,13 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
+    delay   : 1
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : 128
+
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+

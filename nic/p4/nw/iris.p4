@@ -240,6 +240,10 @@ action drop_packet() {
     modify_field(capri_intrinsic.drop, TRUE);
 }
 
+action permit_packet() {
+    modify_field(capri_intrinsic.drop, FALSE);
+}
+
 /*****************************************************************************/
 /* Ingress pipeline                                                          */
 /*****************************************************************************/
