@@ -15,7 +15,8 @@ resp_rx_rqcb1_write_back_process:
 
     tblwr       d.current_sge_id, k.args.current_sge_id;
     tblwr       d.current_sge_offset, k.args.current_sge_offset;
-    tblwr       d.curr_wqe_ptr, k.args.curr_wqe_ptr;
+    seq         c1, k.args.update_wqe_ptr, 1
+    tblwr.c1    d.curr_wqe_ptr, k.args.curr_wqe_ptr;
     seq         c1, k.args.update_num_sges, 1
     tblwr.c1    d.num_sges, k.args.num_sges
 
