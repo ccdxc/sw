@@ -18,6 +18,14 @@ func main() {
 	app.Email = "erikh@pensando.io"
 	app.Usage = "asset uploader for pensando software team"
 	app.ArgsUsage = "[name] [version] [filename to upload]"
+
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "force, f",
+			Usage: "push over an existing version",
+		},
+	}
+
 	app.Action = action
 
 	if err := app.Run(os.Args); err != nil {
@@ -51,6 +59,17 @@ func action(ctx *cli.Context) error {
 	}
 
 	name, version, filename := ctx.Args()[0], ctx.Args()[1], ctx.Args()[2]
+	assetPath := path.Join(name, version, "asset.tgz")
+
+	if !ctx.Bool("force") {
+		doneCh := make(chan struct{})
+		list := mc.ListObjects(asset.RootBucket, assetPath, false, doneCh)
+		_, ok := <-list
+		if ok {
+			return errors.New("cowardly refusing to overwrite an existing asset. pass -f if you really want to")
+		}
+		close(doneCh)
+	}
 
 	fi, err := os.Stat(filename)
 	if err != nil {
@@ -65,7 +84,7 @@ func action(ctx *cli.Context) error {
 
 	logrus.Infof("Uploading %f MB, please be patient...", float64(fi.Size())/float64(1024*1024))
 
-	n, err := mc.PutObject(asset.RootBucket, path.Join(name, version, "asset.tgz"), f, -1, &minio.PutObjectOptions{NumThreads: uint(runtime.NumCPU() * 2)})
+	n, err := mc.PutObject(asset.RootBucket, assetPath, f, -1, &minio.PutObjectOptions{NumThreads: uint(runtime.NumCPU() * 2)})
 	if err != nil {
 		return err
 	}

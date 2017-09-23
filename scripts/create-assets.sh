@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 cat <<EOF
 This will upload assets to the server from
 your working copy at the current versions.
@@ -20,5 +18,8 @@ fi
 for name in $(find minio -name '*.txt' | xargs basename -s .txt)
 do
   version=$(grep "${name}" minio/VERSIONS | awk '{ print $2 }')
-  tar cvz $(cat minio/${name}.txt) | asset-upload ${name} ${version} /dev/stdin
+  if ! tar cvz $(cat minio/${name}.txt) | asset-upload ${name} ${version} /dev/stdin
+  then
+    echo +++ ${name}/${version} already uploaded or errored. Attempting to continue...
+  fi
 done
