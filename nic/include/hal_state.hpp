@@ -328,6 +328,8 @@ public:
     static hal_mem_db *factory(void);
     ~hal_mem_db();
 
+    slab *get_slab(hal_slab_t slab_id);
+
     slab *hal_handle_slab(void) const { return hal_handle_slab_; }
     slab *hal_handle_ht_entry_slab(void) const { return hal_handle_ht_entry_slab_; }
     slab *hal_handle_list_entry_slab(void) const { return hal_handle_list_entry_slab_; }
@@ -405,6 +407,8 @@ public:
     hal_cfg_db *cfg_db(void) const { return cfg_db_; }
     hal_oper_db *oper_db(void) const { return oper_db_; }
     hal_mem_db *mem_db(void) const { return mem_db_; }
+
+    slab *get_slab(hal_slab_t slab_id) const { return mem_db_->get_slab(slab_id); }
 
     // get APIs for HAL handle related state
     //slab *hal_del_cache_entry_slab(void) const { return mem_db_->hal_del_cache_entry_slab(); }

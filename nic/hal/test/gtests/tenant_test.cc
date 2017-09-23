@@ -11,6 +11,7 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <hal_test_utils.hpp>
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -94,6 +95,7 @@ protected:
   static void TearDownTestCase() {
   }
 };
+
 // ----------------------------------------------------------------------------
 // Tenant delete test
 // ----------------------------------------------------------------------------
@@ -106,7 +108,11 @@ TEST_F(tenant_test, test1)
     SecurityProfileResponse         sp_rsp;
     TenantDeleteRequest             del_req;
     TenantDeleteResponseMsg         del_rsp;
+    slab_stats_t                    *pre = NULL, *post = NULL;
+    bool                            is_leak = false;
 
+
+    hal_test_utils_slab_disable_delete();
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -116,6 +122,8 @@ TEST_F(tenant_test, test1)
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    pre = hal_test_utils_collect_slab_stats();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(1);
@@ -134,6 +142,12 @@ TEST_F(tenant_test, test1)
     hal::hal_cfg_db_close(false);
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
+
+    post = hal_test_utils_collect_slab_stats();
+
+    hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    ASSERT_TRUE(is_leak == false);
+
 }
 
 // Update tenant test with enicifs
@@ -574,6 +588,114 @@ TEST_F(tenant_test, test5)
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
+
+// ----------------------------------------------------------------------------
+// Tenant delete test with another create
+// ----------------------------------------------------------------------------
+TEST_F(tenant_test, test6) 
+{
+    hal_ret_t                       ret;
+    TenantSpec                      ten_spec, ten_spec1;
+    TenantResponse                  ten_rsp, ten_rsp1;
+    SecurityProfileSpec             sp_spec;
+    SecurityProfileResponse         sp_rsp;
+    TenantDeleteRequest             del_req;
+    TenantDeleteResponseMsg         del_rsp;
+
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(1);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close(false);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Delete tenant
+    del_req.mutable_meta()->set_tenant_id(1);
+    del_req.mutable_key_or_handle()->set_tenant_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close(false);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create tenant
+    ten_spec1.mutable_key_or_handle()->set_tenant_id(1);
+    ten_spec1.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec1, &ten_rsp1);
+    hal::hal_cfg_db_close(false);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+}
+
+// ----------------------------------------------------------------------------
+// Tenant update test without l2segments
+// ----------------------------------------------------------------------------
+TEST_F(tenant_test, test7) 
+{
+    hal_ret_t                       ret;
+    TenantSpec                      ten_spec, ten_spec1;
+    TenantResponse                  ten_rsp, ten_rsp1;
+    SecurityProfileSpec             sp_spec, sp_spec1;
+    SecurityProfileResponse         sp_rsp, sp_rsp1;
+    TenantDeleteRequest             del_req;
+    TenantDeleteResponseMsg         del_rsp;
+    slab_stats_t                    *pre = NULL, *post = NULL;
+    bool                            is_leak = false;
+
+
+    hal_test_utils_slab_disable_delete();
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Create nwsec
+    sp_spec1.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec1.set_ipsg_en(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(7);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close(false);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update tenant
+    ten_spec1.mutable_key_or_handle()->set_tenant_id(7);
+    ten_spec1.set_security_profile_handle(nwsec_hdl1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_update(ten_spec1, &ten_rsp1);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+}
+
+
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

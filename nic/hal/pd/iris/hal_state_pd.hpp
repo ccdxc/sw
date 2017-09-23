@@ -55,6 +55,8 @@ public:
     static hal_state_pd *factory(void);
     ~hal_state_pd();
 
+    slab *get_slab(hal_slab_t slab_id);
+
     // get APIs for global variables
     uint32_t rwr_tbl_decap_vlan_idx(void) const { 
         return rewr_tbl_decap_vlan_idx_; }

@@ -32,6 +32,7 @@ LIBDIRS = \
 		  hal/pd/utils/acl_tcam \
 		  hal/pd/utils \
 		  hal/pd/utils/p4pd_mock \
+		  hal/test/utils \
 		  $(NULL)
 
 PGMDIRS = \

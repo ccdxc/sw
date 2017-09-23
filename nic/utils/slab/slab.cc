@@ -7,6 +7,8 @@
 namespace hal {
 namespace utils {
 
+bool slab::g_delay_delete = true;
+
 //------------------------------------------------------------------------------
 // private function to allocate and initialize a new block
 //------------------------------------------------------------------------------
@@ -56,7 +58,7 @@ slab::init(const char *name, hal_slab_t slab_id, uint32_t elem_sz,
     this->raw_block_sz_ = (elem_sz_ * elems_per_block_) + sizeof(slab_block_t);
     this->grow_on_demand_ = grow_on_demand;
     this->delay_delete_ = delay_delete;
-    if (delay_delete && (slab_id == HAL_SLAB_RSVD)) {
+    if (delay_delete && slab::g_delay_delete && (slab_id == HAL_SLAB_RSVD)) {
         return -1;
     }
     this->zero_on_alloc_ = zero_on_alloc;
@@ -228,7 +230,7 @@ slab::free_(void *elem)
 void
 slab::free(void *elem)
 {
-    if (delay_delete_) {
+    if (delay_delete_ && g_delay_delete) {
         hal::periodic::delay_delete_to_slab(slab_id_, elem);
     } else {
         if (thread_safe_) {

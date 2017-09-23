@@ -527,6 +527,45 @@ hal_state_pd::factory(void)
     return state;
 }
 
+// ----------------------------------------------------------------------------
+// Gives slab for a slab id
+// ----------------------------------------------------------------------------
+#define GET_SLAB(slab_name) \
+    if (slab_name && slab_name->get_slab_id() == slab_id) { \
+        return slab_name; \
+    }
+
+slab *
+hal_state_pd::get_slab(hal_slab_t slab_id) 
+{
+    GET_SLAB(tenant_slab_);
+    GET_SLAB(l2seg_slab_);
+    GET_SLAB(lif_pd_slab_);
+    GET_SLAB(uplinkif_pd_slab_);
+    GET_SLAB(uplinkpc_pd_slab_);
+    GET_SLAB(enicif_pd_slab_);
+    GET_SLAB(cpuif_pd_slab_);
+    GET_SLAB(tunnelif_pd_slab_);
+    GET_SLAB(ep_pd_slab_);
+    GET_SLAB(ep_pd_ip_entry_slab_);
+    GET_SLAB(nwsec_pd_slab_);
+    GET_SLAB(session_slab_);
+    GET_SLAB(tlscb_slab_);
+    GET_SLAB(tcpcb_slab_);
+    GET_SLAB(buf_pool_pd_slab_);
+    GET_SLAB(queue_pd_slab_);
+    GET_SLAB(policer_pd_slab_);
+    GET_SLAB(acl_pd_slab_);
+    GET_SLAB(wring_slab_);
+    GET_SLAB(ipseccb_slab_);
+    GET_SLAB(l4lb_pd_slab_);
+    GET_SLAB(rw_entry_slab_);
+    GET_SLAB(cpucb_slab_);
+    GET_SLAB(cpupkt_slab_);
+
+    return NULL;
+}
+
 //------------------------------------------------------------------------------
 // convert P4 table type to corresponding string
 //------------------------------------------------------------------------------

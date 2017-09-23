@@ -24,6 +24,8 @@ struct slab_block_s {
 
 class slab {
 public:
+    static bool g_delay_delete;
+public:
     static slab *factory(const char *name, hal_slab_t slab_id, uint32_t elem_sz,
                          uint32_t elems_per_block, bool thread_safe=false,
                          bool grow_on_demand=true, bool delay_delete=false,
@@ -39,6 +41,8 @@ public:
 
     friend hal_ret_t hal::free_to_slab(hal_slab_t slab_id, void *elem);
     friend hal_ret_t hal::pd::free_to_slab(hal_slab_t slab_id, void *elem);
+
+    hal_slab_t get_slab_id(void) const { return slab_id_; }
 private:
     hal_spinlock_t    slock_;
     char              name_[SLAB_NAME_MAX_LEN];

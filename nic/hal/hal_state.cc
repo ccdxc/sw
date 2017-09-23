@@ -1273,6 +1273,46 @@ hal_mem_db::~hal_mem_db()
     cpucb_slab_ ? delete cpucb_slab_ : HAL_NOP;
 }
 
+// ----------------------------------------------------------------------------
+// Gives the slab of a slab id
+// ----------------------------------------------------------------------------
+#define GET_SLAB(slab_name) \
+    if (slab_name && slab_name->get_slab_id() == slab_id) { \
+        return slab_name; \
+    }
+slab *
+hal_mem_db::get_slab(hal_slab_t slab_id)
+{
+    GET_SLAB(hal_handle_slab_);
+    GET_SLAB(hal_handle_ht_entry_slab_);
+    GET_SLAB(hal_handle_list_entry_slab_);
+    GET_SLAB(hal_handle_id_ht_entry_slab_);
+    GET_SLAB(hal_handle_id_list_entry_slab_);
+    GET_SLAB(tenant_slab_);
+    GET_SLAB(network_slab_);
+    GET_SLAB(nwsec_profile_slab_);
+    GET_SLAB(l2seg_slab_);
+    GET_SLAB(lif_slab_);
+    GET_SLAB(if_slab_);
+    GET_SLAB(ep_slab_);
+    GET_SLAB(ep_ip_entry_slab_);
+    GET_SLAB(ep_l3_entry_slab_);
+    GET_SLAB(flow_slab_);
+    GET_SLAB(session_slab_);
+    GET_SLAB(l4lb_slab_);
+    GET_SLAB(tlscb_slab_);
+    GET_SLAB(tcpcb_slab_);
+    GET_SLAB(buf_pool_slab_);
+    GET_SLAB(queue_slab_);
+    GET_SLAB(policer_slab_);
+    GET_SLAB(wring_slab_);
+    GET_SLAB(acl_slab_);
+    GET_SLAB(ipseccb_slab_);
+    GET_SLAB(cpucb_slab_);
+
+    return NULL;
+}
+
 //------------------------------------------------------------------------------
 // init() function to instantiate all HAL init state
 //------------------------------------------------------------------------------
