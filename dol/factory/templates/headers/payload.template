@@ -5,4 +5,4 @@ meta:
     pattern : pattincr/1/255/1
 
 fields:
-    data: 0 
+    data: None

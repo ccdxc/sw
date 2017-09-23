@@ -66,7 +66,7 @@ class CrPacket:
         if rxport in self.ports:
             return True
 
-        return True
+        return False
 
     def __is_pkt_len_match(self, rxpkt):
         return self.pktlen == rxpkt.pktlen
