@@ -114,8 +114,7 @@ loop:
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, tbl_id, r2)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmdeop, 0)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, acc_ctrl, ACC_CTRL_LOCAL_WRITE)
-
-
+    CAPRI_SET_FIELD(r7, INFO_LKEY_T, inv_r_key, k.args.inv_r_key)
 
     //remaining_payload_bytes -= transfer_bytes;
     sub         REM_PYLD_BYTES, REM_PYLD_BYTES, r6
@@ -244,12 +243,17 @@ exit:
     CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, current_sge_id, r4)
     CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, current_sge_offset, CURR_SGE_OFFSET)
     CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
+    CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, update_wqe_ptr, 1)
+    // TODO: migrate to below register and decommision curr_wqe_ptr from s2s args
+    //mfspr r3, spr_tbladdr	
+    //CAPRI_SET_FIELD_C(T3_ARG, INFO_WBCB1_T, curr_wqe_ptr, r3, c2)
 
     b       cb0_cb1_wb_exit
     nop
 
     .cscase 1
     
+    IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_ONLY)
     //  rqcb_write_back_info_p->in_progress = FALSE;
     //  rqcb_write_back_info_p->incr_nxt_to_go_token_id = 1;
     //  rqcb_write_back_info_p->incr_c_index = 1;
@@ -269,6 +273,12 @@ exit:
     CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, current_sge_id, 0)
     CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, current_sge_offset, 0)
     CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
+    CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, update_wqe_ptr, 1)
+    // do we need to even set the curr_wqe_ptr for this case ?
+    // TODO: cross check with C code and think recirc path etc.
+    // TODO: migrate to below register and decommision curr_wqe_ptr from s2s args
+    //mfspr r3, spr_tbladdr	
+    //CAPRI_SET_FIELD_C(T3_ARG, INFO_WBCB1_T, curr_wqe_ptr, r3, c2)
     CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, num_sges, 0)
     CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, update_num_sges, 0)
 

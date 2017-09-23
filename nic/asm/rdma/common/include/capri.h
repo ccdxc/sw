@@ -15,6 +15,8 @@
 
 #define CAPRI_RXDMA_BTH_IMMETH_IMMDATA  k.{rdma_bth_immeth_immeth_data_sbit0_ebit7...rdma_bth_immeth_immeth_data_sbit8_ebit31}
 
+#define CAPRI_RXDMA_BTH_IETH_R_KEY k.{rdma_bth_ieth_ieth_r_key_sbit0_ebit7...rdma_bth_ieth_ieth_r_key_sbit8_ebit31}
+
 #define CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 #define CAPRI_TXDMA_INTRINSIC_LIF k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
 #define CAPRI_TXDMA_INTRINSIC_QTYPE k.p4_txdma_intr_qtype
@@ -105,6 +107,9 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_TABLE_GET_FIELD(_dst_r, _base_r, _struct_name, _field_name) \
     tblrdp  _dst_r, _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name);
 
+#define CAPRI_TABLE_SET_FIELD(_src_r, _base_r, _struct_name, _field_name) \
+    tblwrp  _src_r, _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name);
+
 //set field conditionally
 #define CAPRI_SET_FIELD_C(_base_r, _struct_name, _field_name, _src, _c_flag) \
     phvwrp._c_flag  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src; 
@@ -174,7 +179,7 @@ struct capri_intrinsic_ring_t {
         b _table_i_valid; \
         CAPRI_SET_TABLE_3_VALID(_vld); \
     .brend; \
-_table_i_valid:
+_table_i_valid:;
 
     
 #define CAPRI_GET_TABLE_I_K_AND_ARG(_phv_name, _tbl_id_r, _k_base_r, _arg_base_r) \
@@ -207,6 +212,37 @@ _table_i_valid:
         nop; \
     .brend; \
 _next:;
+    
+#define CAPRI_GET_TABLE_I2_K_AND_ARG(_phv_name, _tbl_id_r, _k_base_r, _arg_base_r) \
+    .brbegin; \
+    br      _tbl_id_r[1:0]; \
+    nop; \
+    .brcase 0; \
+        add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te0_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data); \
+        CAPRI_SET_TABLE_0_VALID(1);  \
+        b _next2; \
+        nop; \
+    .brcase 1; \
+        add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te1_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
+        CAPRI_SET_TABLE_1_VALID(1);  \
+        b _next2; \
+        nop; \
+    .brcase 2; \
+        add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te2_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data); \
+        CAPRI_SET_TABLE_2_VALID(1);  \
+        b _next2; \
+        nop; \
+    .brcase 3; \
+        add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te3_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data); \
+        CAPRI_SET_TABLE_3_VALID(1);  \
+        b _next2; \
+        nop; \
+    .brend; \
+_next2:;
     
 #define CAPRI_GET_TABLE_0_K(_phv_name, _k_base_r) \
     add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te0_phv_table_addr); \

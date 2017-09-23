@@ -48,6 +48,7 @@ resp_rx_rqcb1_in_progress_process:
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, current_sge_offset, d.current_sge_offset)
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, num_valid_sges, NUM_VALID_SGES)
     CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, curr_wqe_ptr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r4, RQCB_TO_WQE_T, inv_r_key, k.args.inv_r_key)
 
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqwqe_process)

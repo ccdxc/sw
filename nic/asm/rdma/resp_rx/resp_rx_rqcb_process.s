@@ -162,6 +162,10 @@ need_checkout:
     ARE_ALL_FLAGS_SET(c6, r7, RESP_RX_FLAG_IMMDT)
     phvwr.c6    p.cqwqe.imm_data_vld, 1
     phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
+
+    ARE_ALL_FLAGS_SET(c6, r7, RESP_RX_FLAG_INV_RKEY)
+    phvwr.c6    p.cqwqe.rkey_inv_vld, 1 
+    phvwr.c6    p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
     
     // checkout a RQ descriptor if it is a send AND in_progress is FALSE
     // OR write_with_imm
@@ -175,6 +179,7 @@ need_checkout:
     CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, in_progress, d.in_progress)
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, remaining_payload_bytes, REM_PYLD_BYTES)
+    CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_in_progress_process)
@@ -217,6 +222,7 @@ checkout:
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, page_seg_offset, r5)
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, page_offset, r1)
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, remaining_payload_bytes, REM_PYLD_BYTES)
+    CAPRI_SET_FIELD(r4, INFO_OUT1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqpt_process)

@@ -41,7 +41,8 @@ struct resp_rx_rqcb_to_pt_info_t {
     cache: 1;
     page_offset: 16;
     remaining_payload_bytes: 16;
-    pad: 120;
+    inv_r_key: 32;
+    pad: 88;
 };
 
 struct resp_rx_rqpt_process_k_t {
@@ -55,14 +56,14 @@ struct resp_rx_rqcb_to_wqe_info_t {
     //rqcb1
     in_progress:1;
     cache:1;
+    current_sge_id: 6;
     remaining_payload_bytes: 16;
     //rqcb2
     curr_wqe_ptr: 64;
-    current_sge_id: 8;
+    inv_r_key: 32;
     current_sge_offset: 32;
     //computed
     num_valid_sges: 8;
-    pad: 30;
 };
 
 struct resp_rx_rqwqe_process_k_t {
@@ -76,14 +77,13 @@ struct resp_rx_key_info_t {
     va: 64;
     len: 16;
     acc_ctrl: 8;
-    rsvd1: 8;
     dma_cmd_start_index: 8;
     key_id: 8;
     tbl_id: 8;
     cq_dma_cmd_index: 8;
-    cq_id:24;
+    inv_r_key: 32;
     dma_cmdeop: 1;
-    rsvd2: 7;
+    rsvd1: 7;
     //tightly packed for 160 bits
 };
 
@@ -116,8 +116,9 @@ struct resp_rx_rqcb1_write_back_info_t {
     current_sge_offset: 32;
     current_sge_id: 8;
     update_num_sges: 1;
+    update_wqe_ptr: 1;
     num_sges: 8;
-    pad: 47;
+    pad: 46;
 };
 
 struct resp_rx_rqcb1_write_back_process_k_t {
@@ -212,6 +213,8 @@ struct resp_rx_rqcb_to_rqcb1_info_t {
     in_progress: 1;
     rsvd: 7;
     remaining_payload_bytes: 32;
+    inv_r_key: 32;
+    pad: 88;
 };
 
 struct resp_rx_rqcb1_in_progress_process_k_t {
@@ -235,6 +238,19 @@ struct resp_rx_rqcb_to_write_rkey_info_t {
 struct resp_rx_write_dummy_process_k_t {
     struct capri_intrinsic_raw_k_t intrinsic;
     struct resp_rx_rqcb_to_write_rkey_info_t args;
+    struct phv_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
+
+struct resp_rx_inv_rkey_info_t {
+    tbl_id: 8;
+    key_id: 8;
+    pad: 144;
+};
+
+struct resp_rx_inv_rkey_process_k_t {
+    struct capri_intrinsic_raw_k_t intrinsic;
+    struct resp_rx_inv_rkey_info_t args;
     struct phv_to_stage_t to_stage;
     struct phv_global_common_t global;
 };

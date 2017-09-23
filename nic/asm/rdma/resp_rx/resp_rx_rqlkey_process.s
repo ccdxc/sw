@@ -144,7 +144,7 @@ invoke_pt:
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, r7)
 
     //TODO: r_key
-    //CAPRI_SET_FIELD(r6, COMPL_R_INV_RKEY_INFO_T, r_key, ,)
+    CAPRI_SET_FIELD(r6, COMPL_R_INV_RKEY_INFO_T, r_key, k.args.inv_r_key)
     CAPRI_SET_FIELD(r6, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
     CAPRI_SET_FIELD(r6, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
 
