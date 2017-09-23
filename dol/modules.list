@@ -122,7 +122,7 @@ modules:
 
     - module:
         name    : PKT_TO_SERQ_ATOMIC_STATS
-        enable  : False
+        enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_serq
         spec    : one_pkt.testspec
