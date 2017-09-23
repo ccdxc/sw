@@ -126,6 +126,8 @@ metadata ipsec_int_header_t ipsec_int_header;
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t intrinsic_app_hdr;
 @pragma dont_trim
+metadata dma_cmd_phv2pkt_t ipsec_app_hdr;
+@pragma dont_trim
 metadata dma_cmd_mem2pkt_t eth_hdr;
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t ip_hdr;
