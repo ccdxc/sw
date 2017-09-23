@@ -190,3 +190,9 @@ e2e-test:
 
 test-clean:
 	scripts/cleanup-dev.sh
+
+create-assets:
+	bash scripts/create-assets.sh
+
+pull-assets:
+	bash scripts/pull-assets.sh
