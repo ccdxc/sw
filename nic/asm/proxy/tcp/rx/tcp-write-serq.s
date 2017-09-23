@@ -148,7 +148,7 @@ debug_pkts_rcvd_stats_update_start:
     phvwr       p.to_s7_debug_num_phv_to_mem, r7
     phvwr       p.to_s7_debug_num_pkt_to_mem, 1
     // End debug stats increment, skip regular stats update
-    b           desc_alloced_stats_update_end
+    b           tcp_write_serq_stats_end
     nop
 
     // Non-debug stats increment
@@ -181,6 +181,7 @@ debug_num_pkt_to_mem_stats_update_start:
 debug_num_pkt_to_mem_stats_update:
     CAPRI_STATS_INC_UPDATE(1, d.debug_num_pkt_to_mem, p.to_s7_debug_num_pkt_to_mem)
 debug_num_pkt_to_mem_stats_update_end:
+tcp_write_serq_stats_end:
 
     CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_rx_stats_stage7_start)
     nop.e
