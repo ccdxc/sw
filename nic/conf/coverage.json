@@ -4,9 +4,36 @@
             "dirs": [
                 "hal",
                 "fte",
+                "gen",
                 "utils",
                 "proto",
                 "agents"
+            ],
+            "exclude_dirs" : [
+               "hal/test",
+               "fte/test",
+	       "gen/protobuf",
+               "hal/pd/iris/test/rw_tbl_lib",
+               "hal/pd/utils/acl_tcam/test",
+               "hal/pd/utils/direct_map/test",
+               "hal/pd/utils/hash/test",
+               "hal/pd/utils/met/test",
+               "hal/pd/utils/tcam/test",
+               "hal/pd/utils/p4pd_mock",
+               "hal/test/gtests",
+               "hal/test",
+               "model_sim/include",
+               "utils/shm/test",
+               "utils/slab/test",
+               "utils/twheel/test",
+               "utils/pt/test",
+               "utils/list/test",
+               "utils/indexer/test",
+               "utils/host_mem/test",
+               "gen/test_results",
+               "gen/iris",
+               "gen/protobuf",
+               "gen/coverage"
             ],
             "file_patterns": [
                 ".c",
@@ -15,9 +42,10 @@
             "build_cmd": "make V=1 GCOV=\"--coverage -DCOVERAGE\" -j8",
             "clean_cmd" : "make clean",
             "remove_files": [
-                "/usr/include/*",
+               "/usr/include/*",
                 "/usr/local/*",
-                "third-party/*"
+                "third-party/*",
+                "model_sim/include/*"
             ],
             "gcno_dir" : "obj"
         },

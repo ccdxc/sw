@@ -75,8 +75,10 @@ def generate_coverage(data, name, cov_output_dir):
     subprocess.call(["mkdir", "-p", gcov_out_dir])
     lcov_info_files = []
     os.chdir(nic_dir)
+    exclude_dirs = [nic_dir + "/" + d for d in data.get("exclude_dirs", [])]
     for dir in data.get("dirs", []):
-        for root, dirs, files in os.walk(dir):
+        for root, dirs, files in os.walk(dir, topdown=True):
+            dirs[:] = [d for d in dirs if nic_dir  + "/" + root + "/" + d not in exclude_dirs]
             output_dir = gcov_out_dir + "/" + root
             subprocess.call(["mkdir", "-p", output_dir])
             cur_dir = os.getcwd()
