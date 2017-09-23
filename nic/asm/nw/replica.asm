@@ -34,3 +34,4 @@ set_replica_rewrites:
   phvwr.e     p.rewrite_metadata_rewrite_index, \
                   k.{tm_replication_data_rewrite_index_sbit0_ebit3, \
                      tm_replication_data_rewrite_index_sbit4_ebit11}
+  nop
