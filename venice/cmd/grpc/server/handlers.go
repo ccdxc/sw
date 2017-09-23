@@ -66,7 +66,6 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		UUID:        req.Uuid,
 		VirtualIP:   req.VirtualIp,
 		QuorumNodes: req.QuorumNodes,
-		NTPServers:  req.NTPServers,
 	}
 
 	// Record cluster membership on local FS.
@@ -198,16 +197,19 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 }
 
 func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoinReq) (*grpc.ClusterDisjoinResp, error) {
-	err := env.SystemdService.StopUnit("pen-kubelet.service")
-	if err != nil {
-		env.Logger.Infof("Error %v while stopping pen-kubelet", err)
-	}
-	err2 := env.SystemdService.StartUnit("pen-nodecleanup.service")
-	if err2 != nil {
-		env.Logger.Infof("Error %v while cleaning up node", err2)
-	}
-	if err == nil {
-		err = err2
+	var err error
+	if env.SystemdService != nil {
+		err = env.SystemdService.StopUnit("pen-kubelet.service")
+		if err != nil {
+			env.Logger.Errorf("Error %v while stopping pen-kubelet", err)
+		}
+		err2 := env.SystemdService.StartUnit("pen-nodecleanup.service")
+		if err2 != nil {
+			env.Logger.Errorf("Error %v while cleaning up node", err2)
+		}
+		if err == nil {
+			err = err2
+		}
 	}
 	return &grpc.ClusterDisjoinResp{}, err
 }

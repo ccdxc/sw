@@ -1,6 +1,7 @@
 package startup
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -10,6 +11,7 @@ import (
 	k8sclient "k8s.io/client-go/kubernetes"
 	k8srest "k8s.io/client-go/rest"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/apiclient"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server"
@@ -27,7 +29,61 @@ const (
 	maxIters              = 50
 	sleepBetweenItersMsec = 100
 	masterLeaderKey       = "master"
+	apiServerWaitTime     = time.Second
 )
+
+func waitForAPIAndStartServices() {
+	ii := 0
+	for {
+		select {
+		case <-time.After(apiServerWaitTime):
+			ii++
+			// TODO: Needs more discussion. Would APIClient talk to this node if this node was down
+			//  for a very long time? Would the certificate have rotated by then?
+			apic := env.CfgWatcherService.APIClient()
+			if apic == nil {
+				if ii%10 == 0 {
+					log.Errorf("Waiting for Pensando apiserver to come up for %v seconds", ii)
+				}
+
+				continue
+			}
+
+			opts := api.ListWatchOptions{}
+			cl, err := apic.Cluster().List(context.TODO(), &opts)
+			if err != nil || len(cl) == 0 {
+				if ii%10 == 0 {
+					log.Errorf("Waiting for Pensando apiserver to give return good Cluster for %v seconds", ii)
+				}
+				continue
+			}
+
+			hostname, err := os.Hostname()
+			if err != nil {
+				if ii%10 == 0 {
+					log.Errorf("getting my Hostname fails with err %v for %v seconds", err, ii)
+				}
+				continue
+			}
+
+			found := false
+			for _, qn := range cl[0].Spec.QuorumNodes {
+				if qn == hostname {
+					found = true
+					break
+				}
+			}
+			if found == false {
+				log.Debugf("Not starting NTP service since this node is no longer part of Quorum Nodes")
+			} else {
+				log.Debugf("starting NTP service with %v servers", cl[0].Spec.NTPServers)
+				env.NtpService = services.NewNtpService(cl[0].Spec.NTPServers)
+				env.NtpService.NtpConfigFile(cl[0].Spec.NTPServers)
+			}
+			return
+		}
+	}
+}
 
 // StartQuorumServices starts services on quorum node
 func StartQuorumServices(c utils.Cluster) {
@@ -121,7 +177,6 @@ func StartQuorumServices(c utils.Cluster) {
 	env.ResolverService = services.NewResolverService(env.K8sService)
 	env.MasterService = services.NewMasterService(c.VirtualIP, services.WithK8sSvcMasterOption(env.K8sService),
 		services.WithResolverSvcMasterOption(env.ResolverService))
-	env.NtpService = services.NewNtpService(c.NTPServers)
 	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger)
 
 	env.SystemdService.Start() // must be called before dependent services
@@ -130,8 +185,7 @@ func StartQuorumServices(c utils.Cluster) {
 	env.LeaderService.Start()
 	env.CfgWatcherService.Start()
 
-	// We let the quorum nodes use the external NTP server and non-quorum nodes use the VIP for ntp server
-	env.NtpService.NtpConfigFile(c.NTPServers)
+	go waitForAPIAndStartServices()
 
 	env.NodeService = services.NewNodeService(c.VirtualIP)
 	if err := env.NodeService.Start(); err != nil {
