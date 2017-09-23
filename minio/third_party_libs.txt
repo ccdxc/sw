@@ -1,1 +1,2 @@
 nic/third-party/googletest-release-1.8.0/googletest/make/*.a
+nic/third-party/lkl/export/bin/liblkl.so
