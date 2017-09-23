@@ -141,6 +141,27 @@ header_type ipv4_t {
     }
 }
 
+// Enhancement to P4 to support variable len header whose len is specified
+// using another header field.
+// This is achieved using @pragma hdr_len on an instance of variable len header
+// The following rules MUST be followed -
+// 1. var_len header can only have 2 fields - hdr_len and data
+// 2. First field name must be 'hdr_len'
+// 3. length must be specified as an expression using hdr_len as variable
+// 4. hdr_len pragma should be used on the header instance to specify another
+//      another hdr field to replace 'hdr_len' in the length expression
+// 5. Header that specifies the the len and the var len header MUST be extracted
+//      in the SAME parse state (this req.t may be removed in future)
+
+header_type ipv4_options_blob_t {
+    fields {
+        hdr_len : 8;
+        data : *;
+    }
+    length : (hdr_len << 2) - 20;
+    max_length : 40;
+}
+
 header_type ipv6_t {
     fields {
         version : 4;

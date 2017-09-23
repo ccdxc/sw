@@ -401,6 +401,10 @@ calculated_field ipv4.hdrChecksum  {
 }
 
 parser parse_base_ipv4 {
+# if 1
+    // option-blob parsing - parse_ipv4 does not extract ipv4 header
+    extract(ipv4);
+#endif
     return select(ipv4.fragOffset, ipv4.protocol) {
         IP_PROTO_ICMP : parse_icmp;
         IP_PROTO_TCP : parse_tcp;
@@ -414,6 +418,7 @@ parser parse_base_ipv4 {
     }
 }
 
+#if 0
 parser parse_ipv4_option_EOL {
      extract(ipv4_option_EOL);
      set_metadata(parser_metadata.parse_ipv4_counter, parser_metadata.parse_ipv4_counter -1);
@@ -474,16 +479,49 @@ parser parse_ipv4_options {
         0x0044 mask 0x00ff : parse_ipv4_option_timestamp;
     }
 }
+#endif
 
+@pragma hdr_len ipv4.ihl
+header ipv4_options_blob_t ipv4_options_blob;
+
+parser parse_ipv4_options_blob {
+    // Separate state is created to set options_seen flag 
+    // Otherwise options can be extracted blindly.. if they happen to be 0 len
+    // hw (deparser) can handle it
+
+    // Must extract ipv4 header and ipv4_options_blob in the same state
+    extract(ipv4);
+    // All options are extracted as a single header
+    extract(ipv4_options_blob);
+
+    set_metadata(l3_metadata.ip_option_seen, 1);
+    return select(ipv4.fragOffset, ipv4.protocol) {
+        IP_PROTO_ICMP : parse_icmp;
+        IP_PROTO_TCP : parse_tcp;
+        IP_PROTO_UDP : parse_udp;
+        IP_PROTO_GRE : parse_gre;
+        IP_PROTO_IPV4 : parse_ipv4_in_ip;
+        IP_PROTO_IPV6 : parse_ipv6_in_ip;
+        IP_PROTO_IPSEC_AH : parse_ipsec_ah;
+        IP_PROTO_IPSEC_ESP : parse_ipsec_esp;
+        default: ingress;
+    }
+}
 
 parser parse_ipv4 {
+#if 1
+    return select(current(0,8)) {
+        0x45    : parse_base_ipv4;
+        default : parse_ipv4_options_blob;
+    }
+#else
     extract(ipv4);
     set_metadata(parser_metadata.parse_ipv4_counter, (ipv4.ihl << 2) - 20);
     return select(parser_metadata.parse_ipv4_counter) {
         0x0 : parse_base_ipv4;
         default : parse_ipv4_options;
     }
-
+#endif
 }
 
 parser parse_ipv4_in_ip {
@@ -954,19 +992,11 @@ calculated_field inner_ipv4.hdrChecksum {
     update inner_ipv4_checksum if (inner_ipv4.ihl == 5);
 }
 
-#if 0
-parser parse_inner_ipv4 {
-    extract(inner_ipv4);
-    return select(latest.fragOffset, latest.protocol) {
-        IP_PROTO_ICMP : parse_icmp;
-        IP_PROTO_TCP : parse_tcp;
-        IP_PROTO_UDP : parse_inner_udp;
-        default: ingress;
-    }
-}
-#endif
-
 parser parse_base_inner_ipv4 {
+#if 0
+    // option-blob parsing - extract inner_ipv4 here
+    extract(inner_ipv4);
+#endif
     return select(inner_ipv4.fragOffset, inner_ipv4.protocol) {
         IP_PROTO_ICMP : parse_icmp;
         IP_PROTO_TCP : parse_tcp;
@@ -975,6 +1005,7 @@ parser parse_base_inner_ipv4 {
     }
 }
 
+#if 1
 parser parse_inner_ipv4_option_EOL {
      extract(inner_ipv4_option_EOL);
      set_metadata(parser_metadata.parse_inner_ipv4_counter, parser_metadata.parse_inner_ipv4_counter -1);
@@ -1031,15 +1062,45 @@ parser parse_inner_ipv4_options {
         0x0044 mask 0x00ff : parse_inner_ipv4_option_timestamp;
     }
 }
+#endif
 
+
+@pragma hdr_len inner_ipv4.ihl
+header ipv4_options_blob_t inner_ipv4_options_blob;
+
+parser parse_inner_ipv4_options_blob {
+    // Separate state is created to set options_seen flag 
+    // Otherwise options can be extracted blindly.. if they happen to be 0 len
+    // hw (deparser) can handle it
+
+    // Must extract inner_ipv4 header and inner_ipv4_options_blob in the same state
+    extract(inner_ipv4);
+    // All options are extracted as a single header
+    extract(inner_ipv4_options_blob);
+    set_metadata(l3_metadata.inner_ip_option_seen, 1);
+
+    return select(inner_ipv4.fragOffset, inner_ipv4.protocol) {
+        IP_PROTO_ICMP : parse_icmp;
+        IP_PROTO_TCP : parse_tcp;
+        IP_PROTO_UDP : parse_inner_udp;
+        default: ingress;
+    }
+}
 
 parser parse_inner_ipv4 {
+#if 0
+    return select(current(0,8)) {
+        0x45    : parse_base_inner_ipv4;
+        default : parse_inner_ipv4_options_blob;
+    }
+#else
     extract(inner_ipv4);
     set_metadata(parser_metadata.parse_inner_ipv4_counter, (inner_ipv4.ihl << 2) - 20);
     return select(parser_metadata.parse_inner_ipv4_counter) {
         0x0 : parse_base_inner_ipv4;
         default : parse_inner_ipv4_options;
     }
+#endif
 }
 
 field_list inner_ipv4_tcp_checksum_list {

@@ -2214,7 +2214,7 @@ class capri_key_maker:
         # sharing profiles across tables
         self.flit_km_profiles = OrderedDict() # {fid: profile}                     
 
-    def _merge(self, rhs):
+    def _merge(self, rhs, is_overflow_key_merge=False):
         #pdb.set_trace()
         # merge two key_makers XXX can be __add__
         for ct in rhs.ctables:
@@ -2278,44 +2278,54 @@ class capri_key_maker:
                     if b in base_table.combined_profile.k_byte_sel:
                         k_byte_sel.append(b)
 
+                # it is possible that base table does not load k bytes in a 
+                # given flit... but it may have more k bytes in following flits
+                # so make sure that bytes from this flit do not get inserted between k-byte of the
+                # base table
                 if len(k_byte_sel):
                     fk_byte = k_byte_sel[0]
-                    for b in self.flit_km_profiles[fid].i1_byte_sel:
-                        if b < fk_byte:
-                            i1_byte_sel.append(b)
-                        else:
-                            i2_byte_sel.append(b)
 
-                    for b in self.flit_km_profiles[fid].k_byte_sel:
-                        # pick up k bytes of shared table (non hash/idx)
-                        if b in k_byte_sel:
-                            continue
-                        if b < fk_byte:
-                            i1_byte_sel.append(b)
-                        else:
-                            i2_byte_sel.append(b)
-                    i2_byte_sel += self.flit_km_profiles[fid].i2_byte_sel
-                    self.combined_profile.i1_byte_sel += sorted(i1_byte_sel)
-                    self.combined_profile.i2_byte_sel += sorted(i2_byte_sel)
-                    self.combined_profile.k_byte_sel += sorted(k_byte_sel)
-                    # Must keep k-bits of the base-table together (don't update k bits into profile)
-                    k_bit_sel += self.flit_km_profiles[fid].k_bit_sel
-                    self.combined_profile.i_bit_sel += self.flit_km_profiles[fid].i_bit_sel
-                    continue
-                else:
-                    pass # no special processing - follow common code
-                    
-            # common code
-            self.combined_profile.i1_byte_sel += self.flit_km_profiles[fid].i1_byte_sel
-            self.combined_profile.i2_byte_sel += self.flit_km_profiles[fid].i2_byte_sel
-            self.combined_profile.k_byte_sel += self.flit_km_profiles[fid].k_byte_sel
-            # Must keep k-bits of the base-table together (don't update k bits)
-            if base_table:
+                # fk_byte == -1 indicates on k bytes of base table.. it will make all 
+                # bytes of shared table as i2
+                for b in self.flit_km_profiles[fid].i1_byte_sel:
+                    if b < fk_byte:
+                        i1_byte_sel.append(b)
+                    else:
+                        i2_byte_sel.append(b)
+
+                for b in self.flit_km_profiles[fid].k_byte_sel:
+                    # pick up k bytes of shared table (non hash/idx)
+                    if b in k_byte_sel:
+                        continue
+                    if base_table.collision_ct and is_overflow_key_merge:
+                        # special case for hash_overflow table k-bytes
+                        # keep them as i1 bytes
+                        i1_byte_sel.append(b)
+                    elif b < fk_byte:
+                        i1_byte_sel.append(b)
+                    else:
+                        i2_byte_sel.append(b)
+
+                i2_byte_sel += self.flit_km_profiles[fid].i2_byte_sel
+                self.combined_profile.i1_byte_sel += sorted(i1_byte_sel)
+                self.combined_profile.i2_byte_sel += sorted(i2_byte_sel)
+                self.combined_profile.k_byte_sel += sorted(k_byte_sel)
+                # Must keep k-bits of the base-table together (don't update k bits into profile)
                 k_bit_sel += self.flit_km_profiles[fid].k_bit_sel
+                self.combined_profile.i_bit_sel += self.flit_km_profiles[fid].i_bit_sel
+                # continue
             else:
-                self.combined_profile.k_bit_sel += self.flit_km_profiles[fid].k_bit_sel
+                # no base table
+                self.combined_profile.i1_byte_sel += self.flit_km_profiles[fid].i1_byte_sel
+                self.combined_profile.i2_byte_sel += self.flit_km_profiles[fid].i2_byte_sel
+                self.combined_profile.k_byte_sel += self.flit_km_profiles[fid].k_byte_sel
+                # Must keep k-bits of the base-table together (don't update k bits)
+                if base_table:
+                    k_bit_sel += self.flit_km_profiles[fid].k_bit_sel
+                else:
+                    self.combined_profile.k_bit_sel += self.flit_km_profiles[fid].k_bit_sel
 
-            self.combined_profile.i_bit_sel += self.flit_km_profiles[fid].i_bit_sel
+                self.combined_profile.i_bit_sel += self.flit_km_profiles[fid].i_bit_sel
 
         # create byte and bit_sel from k and i
         self.combined_profile.byte_sel = self.combined_profile.i1_byte_sel + \
@@ -3136,7 +3146,7 @@ class capri_stage:
                         ct.key_makers.append(km)
                         continue
                     if k < ct.num_km:
-                        km._merge(ct.key_makers[k])
+                        km._merge(ct.key_makers[k], is_overflow_key_merge=True)
                         ct.key_makers[k] = km
                     else:
                         ct.key_makers.append(km)
@@ -3250,7 +3260,7 @@ class capri_stage:
                     ct.ct_update_key_offsets()
             if ct.is_tcam_table():
                 # Same fix is needed for otcam.. but since the key is shared with hash-table
-                # need to fix that too.. XXX will commit a a separate fix
+                # need to fix that too..
                 if ct._fix_tcam_table_key():
                     ct.ct_update_key_offsets()
 
@@ -4010,11 +4020,22 @@ class capri_gress_tm:
                     (collision_index_sz, ct.p4_table.name)
                 cf = ct.keys[0][0]
                 assert cf.width == collision_key_size, \
-                    "Invalide key width %d (allowed %d) for overflow hash table %s" % \
+                    "Invalid key width %d (allowed %d) for overflow hash table %s" % \
                     (cf.width, collision_index_sz, ct.p4_table.name)
-                # reomve all the input_fields from the collision table, these will come from the
+                # remove all the input_fields from the collision table, these will come from the
                 # hash table's action routine
                 ct.input_fields = []
+                # key of the overflow table is NOT added to its parent table
+                # This is done by adding kms of the two table later. If the keys are added
+                # here to parent table, parent tables key placement and bit extraction
+                # screwes-up the required alignement
+                '''
+                # Need to adjust the start_key_off before programming hw
+                if (cf,p4.p4_match_type.P4_MATCH_EXACT, -1) not in ct.hash_ct.keys:
+                    ct.hash_ct.keys.append((cf,p4.p4_match_type.P4_MATCH_EXACT, -1))
+                if cf in ct.hash_ct.input_fields:
+                    ct.hash_ct.input_fields.remove(cf)
+                '''
 
         self.print_tables()
 

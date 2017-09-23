@@ -1571,14 +1571,19 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
                 #pdb.set_trace()
                 # ohi.length is a capri expression, need to allocate mux_idx and inst
                 mux_inst_id = _mux_inst_alloc()
-                op_off = 0
                 assert ohi.length.src1, "No oprand for ohi.length expression %s" % ohi.length
-                op_off = ohi.length.src1.p4_fld.offset
+
+                # special case for option_blob where ohi len comes from another header field
+                if ohi.length.src1.get_p4_hdr() != hdr:
+                    ohi_len_fld_off = (cs.fld_off[ohi.length.src1]/8) + add_off
+                else:
+                    ohi_len_fld_off = hdr_off + (ohi.length.src1.p4_fld.offset / 8)
+                
                 # pkt_mux provides correct pkt field for calculation
-                mux_id = _mux_idx_alloc((op_off/8) + hdr_off)
+                mux_id = _mux_idx_alloc(ohi_len_fld_off)
                 sram['mux_idx'][mux_id]['sel']['value'] = str(0)
                 sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
-                sram['mux_idx'][mux_id]['idx']['value'] = str((op_off/8) + hdr_off)
+                sram['mux_idx'][mux_id]['idx']['value'] = str(ohi_len_fld_off)
                 _build_mux_inst(parser, cs, -1, 
                     sram['mux_inst'][mux_inst_id], mux_id, ohi.length)
                 # slot[1] : ohi_len

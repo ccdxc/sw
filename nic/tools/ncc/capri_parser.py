@@ -40,16 +40,22 @@ def _get_header_order_node_list(node, node_list):
     # TBD (see recent fix in hlir for this)
     return node_list
 
-def _resolve_len_expr(parser, hdr, l_exp):
+def _resolve_len_expr(parser, hdr, l_exp, hlen_fld_name, hlen_dummy):
     # change all variable names to corresponding p4_field objects
     if isinstance(l_exp.left, str):
-        l_exp.left = parser.be.h.p4_fields[hdr.name+'.'+l_exp.left]
+        if l_exp.left == hlen_dummy:
+            l_exp.left = parser.be.h.p4_fields[hlen_fld_name]
+        else:
+            l_exp.left = parser.be.h.p4_fields[hdr.name+'.'+l_exp.left]
     if isinstance(l_exp.right, str):
-        l_exp.right = parser.be.h.p4_fields[hdr.name+'.'+l_exp.right]
+        if l_exp.right == hlen_dummy:
+            l_exp.right = parser.be.h.p4_fields[hlen_fld_name]
+        else:
+            l_exp.right = parser.be.h.p4_fields[hdr.name+'.'+l_exp.right]
     if isinstance(l_exp.left, p4.p4_expression):
-        _resolve_len_expr(parser, hdr, l_exp.left)
+        _resolve_len_expr(parser, hdr, l_exp.left, hlen_fld_name, hlen_dummy)
     if isinstance(l_exp.right, p4.p4_expression):
-        _resolve_len_expr(parser, hdr, l_exp.right)
+        _resolve_len_expr(parser, hdr, l_exp.right, hlen_fld_name, hlen_dummy)
 
 # Only two types of loops are supported -
 # 1. loops with header stack (mpls) where only one header stack is supported per loop
@@ -625,6 +631,8 @@ class capri_parser:
         self.hdr_hv_bit = OrderedDict() # ordered so it is easy to debug when printed
         self.hv_bit_header = [ None for _ in range(self.be.hw_model['parser']['max_hv_bits']) ]     
 
+        self.var_len_headers = OrderedDict() # {hdr_name : var_len_exp|str}
+
         self.flit_hv_idx_start = [0 for _ in range(parser_flits)]
         hv_start_bit = 0
         for fl in range(parser_flits):
@@ -639,7 +647,7 @@ class capri_parser:
         self.saved_lkp_fld = OrderedDict() # {cf : saved_lkp_reg} XXX multiple regs per field
 
     def _get_pragma_param_list(self, parsed_pragmas):
-        # convert recursive dictionaries into a simle list
+        # convert recursive dictionaries into a simple list
         param_list = []
 
         nxt_pdict = parsed_pragmas
@@ -648,6 +656,14 @@ class capri_parser:
             param_list.append(nxt_param)
             nxt_pdict = nxt_pdict[nxt_param]
         return param_list
+
+    def get_header_size(self, hdr):
+        # return fixed len or P4field/expression that represents len
+        # Bytes
+        if hdr.name not in self.var_len_headers:
+            return hdr.header_type.length
+        else:
+            return self.var_len_headers[hdr.name]
 
     def initialize(self):
         # create the state dictionary using capri_parse_state class
@@ -963,6 +979,60 @@ class capri_parser:
             if hdr not in self.deparse_only_hdrs:
                 self.deparse_only_hdrs.append(hdr)
 
+        # fix the len expression in variable size headers
+        for hdr in self.headers:
+            if not header_is_variable_len(hdr):
+                continue
+            if hdr.name in self.var_len_headers:
+                continue
+            # The header len is specified on per instance and not per type.
+            # Ideally we now need capri_header... (may be add it later), for now create a
+            # different dictionary for it
+            v_size_exp = None
+            hlen_fld_name = None
+            hlen_dummy = None
+            if 'hdr_len'in hdr._parsed_pragmas:
+                # hdr_len pragma is used to substitute hdr_len fld with another
+                # field from any other header
+                hlen_fld_name = hdr._parsed_pragmas['hdr_len'].keys()[0]
+                hlen_fld = self.be.h.p4_fields[hlen_fld_name]
+                assert hlen_fld, "hdr_len specified %s does not exists" % hlen_fld_name
+                # find p4_fld 'hdr_len' in the header
+                p4f = None
+                for p4f in hdr.fields:
+                    if p4f.name == 'hdr_len':
+                        hlen_dummy = p4f.name
+                        break
+                assert hlen_dummy, "Header %s must have a field \'hdr_len\'" % hdr.name
+
+                # remove the dummy fields from various lists
+                p4cf = self.be.pa.get_field(hdr.name + '.' + hlen_dummy, self.d)
+                assert p4cf in self.extracted_fields, pdb.set_trace()
+                self.extracted_fields.remove(p4cf)
+                for cs in self.hdr_ext_states[hdr]:
+                    assert p4cf in cs.extracted_fields, pdb.set_trace()
+                    cs.extracted_fields.remove(p4cf)
+                # HACK - hlir seems to keep a single instance (copy) of a header for both
+                # ingress and egrss.. for now assume that we process ingress before egress
+                # and remove the hdr field only on egress (XXX this will be a problem in msft
+                # mode where each pipeline is used by itself.) Best to have capri_hdr
+                if self.d == xgress.EGRESS:
+                    hdr.fields.remove(p4f)
+                    assert len(hdr.fields) == 1, pdb.set_trace() # HACK only 2 flds allowed, 1 removed
+                    hdr.fields[0].offset = 0
+
+            if isinstance(hdr.header_type.length, p4.p4_expression):
+                v_size_exp = copy.deepcopy(hdr.header_type.length)
+                _resolve_len_expr(self, hdr, v_size_exp, hlen_fld_name, hlen_dummy)
+            elif isinstance(hdr.header_type.length, str):
+                if not hlen_fld_name:
+                    hlen_fld_name = hdr.name + '.' + hdr.header_type.length
+                v_size_exp = hlen_fld_name
+            else:
+                assert 0, "Invalid len spec %s for variable len header" % hlen_fld_name
+
+            self.logger.debug("%s:Variable hdr %s len %s" % (self.d.name, hdr.name, v_size_exp))
+            self.var_len_headers[hdr.name] = v_size_exp
 
         # TBD - build ohi later - not part of init
         self.logger.debug("%s: States %s" % (self.d.name, [s.name for s in self.states]))
@@ -1011,14 +1081,20 @@ class capri_parser:
         for fld in hdr.fields:
             hf_name = get_hfname(fld)
             cf = self.be.pa.get_field(hf_name, self.d)
-            if cf.is_ohi and cf.width:
-                ohi_start = ohi.start * 8 # byte->bit
-                ohi_length = ohi.length * 8
-                if fld.offset >= ohi_start and (fld.offset+cf.width) <= (ohi_start+ohi_length):
-                    cf.reset_ohi()
-                    result = True
-                if fld.offset >= (ohi_start+ohi_length):
-                    break
+            # Since headers are allowed to be extracted from multiple states (topo-sort???)
+            # flds could be already converted to phv
+            if cf.width == 0:
+                continue
+
+            ohi_start = ohi.start * 8 # byte->bit
+            ohi_length = ohi.length * 8
+            if fld.offset >= ohi_start and (fld.offset+cf.width) <= (ohi_start+ohi_length):
+                cf.reset_ohi()
+                result = True
+
+            if fld.offset >= (ohi_start+ohi_length):
+                break
+
         return result
 
     def update_ohi_per_state(self):
@@ -1076,19 +1152,17 @@ class capri_parser:
             if header_is_variable_len(hdr):
                 vcf = fld_ohi[hdr][-1] # last field has to be the only variable len fld
                 assert vcf.width == 0
-                v_size_exp = get_header_size(hdr)
+                v_size_exp = self.get_header_size(hdr)
                 if isinstance(v_size_exp, p4.p4_expression):
-                    # changes variable names to p4_fld objects
-                    _resolve_len_expr(self, hdr, v_size_exp)
                     vl = capri_parser_expr(self, v_size_exp)
                 else:
                     assert isinstance(v_size_exp, str)
                     # no real expression, convert str to p4_field
                     vl = capri_parser_expr(self, None)
                     # get the name of the len field and find capri_field obj
-                    hfname = hdr.name+'.'+v_size_exp
+                    hfname = v_size_exp
                     cf = self.be.pa.get_field(hfname, self.d)
-                    assert cf
+                    assert cf, pdb.set_trace()
                     vl.src1 = cf
                     vl.op1 = '<<'
                     vl.shft = 0
@@ -2122,7 +2196,7 @@ class capri_parser:
             # compute no. of bytes extracted in this state
             cs.max_extract_len = sum([get_header_max_size(h) for h in cs.headers])
             if not cs.variable_hdr:
-                cs.extract_len = sum([get_header_size(h) for h in cs.headers])
+                cs.extract_len = sum([self.get_header_size(h) for h in cs.headers])
             else:
                 # only last header can be variable len. More than 1 variable len headers
                 # cannot be extracted in a state -
@@ -2138,17 +2212,15 @@ class capri_parser:
                     fixed_size -= v_fixed_size # signed value
                 else:
                     fixed_size = 0
-                v_size_exp = get_header_size(cs.headers[-1])
+                v_size_exp = self.get_header_size(cs.headers[-1])
 
-                # need to change the variable names to p4_fields
                 if isinstance(v_size_exp, p4.p4_expression):
-                    _resolve_len_expr(self, cs.headers[-1], v_size_exp)
                     cs.extract_len = capri_parser_expr(cs.parser, v_size_exp)
                 else:
                     assert isinstance(v_size_exp, str)
                     # no real expression, convert str to p4_field
                     capri_expr = capri_parser_expr(cs.parser, None)
-                    hfname = cs.headers[-1].name+'.'+v_size_exp
+                    hfname = v_size_exp
                     cf = cs.parser.be.pa.get_field(hfname, cs.parser.d)
                     if not cf:
                         p4_fld = cs.parser.be.h.p4_fields[hfname]

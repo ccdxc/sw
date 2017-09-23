@@ -1741,7 +1741,7 @@ class capri_gress_pa:
             if hf in self.hdr_unions and hf != self.hdr_unions[hf][2]:
                 # union-ed header but not storage for union
                 return True
-            self.pa.logger.debug("%s:Flit %d Start allocation for %s" % \
+            self.pa.logger.debug("%s:Flit %d Start allocation for Hdr %s" % \
                 (self.d.name, flit.id, hf.name))
 
         if isinstance(hf, capri_field) and hf.allow_relocation:
