@@ -14,7 +14,7 @@ cpu_tx_read_asq_ci_start:
 
     CAPRI_OPERAND_DEBUG(d.{u.read_asq_ci_d.desc_addr}.dx);
 
-    phvwr   p.to_s3_asq_desc_addr, d.{u.read_asq_ci_d.desc_addr}.dx
+    phvwr   p.to_s5_asq_desc_addr, d.{u.read_asq_ci_d.desc_addr}.dx
 
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, cpu_tx_asq_consume_start)
 

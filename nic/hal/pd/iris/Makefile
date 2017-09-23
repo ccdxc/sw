@@ -34,6 +34,7 @@ LCXXFLAGS = \
 			-I../../../third-party/spdlog/include \
 			-I../../../asic/capri/model/capsim-master/lib/libcapisa/include \
 			-I../../../asic/capri/model/capsim-master/lib/libmpuobj/include \
+			-I../../../asm/cpu-p4+/include \
 			-g \
 			$(NULL)
 
