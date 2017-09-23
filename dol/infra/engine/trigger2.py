@@ -82,10 +82,12 @@ class TriggerEngineObject:
         cbstatus = tc.VerifyCallback()
         if vfstatus is defs.status.ERROR or cbstatus is defs.status.ERROR:
             step.status = defs.status.ERROR
-            tc.error("Step %d status = FAIL" % step.step_id)
+            tc.error("Step%d FINAL STATUS = FAIL(Verify:%s Callback:%s)" %\
+                     (step.step_id, defs.status.str(vfstatus),
+                      defs.status.str(cbstatus)))
             return step.status
         step.status = defs.status.SUCCESS
-        tc.info("Step %d status = PASS" % step.step_id)
+        tc.info("Step%d FINAL STATUS = PASS" % step.step_id)
         return
 
     def __trigger(self, tc):

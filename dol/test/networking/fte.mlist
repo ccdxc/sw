@@ -123,7 +123,7 @@ modules:
             # Priority Tagged Cases
             - segment: filter://native=True
               flow   : filter://label=FTE,direction=IFLOW
-              priotag : True
+              priotag: True
 
 
     - module:
@@ -273,3 +273,115 @@ modules:
             - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
               priotag   : True
+
+
+    - module:
+        name    : ETH_RX_IPV4_QTAG
+        enable  : True
+        package : test.eth
+        module  : eth
+        spec    : rx.testspec
+        ignore  : False
+        args:
+            maxflows: 4
+        iterate:
+            - flow      : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
+              segment   : filter://native=False
+
+    - module:
+        name    : ETH_RX_IPV6_QTAG
+        enable  : True
+        package : test.eth
+        module  : eth
+        spec    : rx.testspec
+        ignore  : False
+        args:
+            maxflows: 4
+        iterate:
+            - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
+              segment   : filter://native=False
+
+    - module:
+        name    : ETH_RX_IPV4_UTAG
+        enable  : True
+        package : test.eth
+        module  : eth
+        spec    : rx.testspec
+        ignore  : False
+        args:
+            maxflows: 4
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
+              segment   : filter://native=True
+
+    - module:
+        name    : ETH_RX_IPV6_UTAG
+        enable  : True
+        package : test.eth
+        module  : eth
+        spec    : rx.testspec
+        ignore  : False
+        args:
+            maxflows: 4
+        iterate:
+            - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
+              segment   : filter://native=True
+            - flow      : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
+              segment   : filter://native=True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
+              segment   : filter://native=True
+
+              
+    - module:
+        name    : ETH_RX_IPV4_PTAG
+        enable  : True
+        package : test.eth
+        module  : eth
+        spec    : rx.testspec
+        ignore  : False
+        args:
+            maxflows: 4
+        iterate:
+            - flow      : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
+              segment   : filter://native=True
+              priotag   : True
+
+              
+    - module:
+        name    : ETH_RX_IPV6_PTAG
+        enable  : True
+        package : test.eth
+        module  : eth
+        spec    : rx.testspec
+        ignore  : False
+        args:
+            maxflows: 4
+        iterate:
+            - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
+              segment   : filter://native=True
+              priotag   : True
+

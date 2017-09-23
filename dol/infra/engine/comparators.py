@@ -146,12 +146,16 @@ class CrPacketPair:
 
     def __expstr(self):
         if self.expkt is None: return None
-        idstring = "Exp:%s/Ports:%s" % (self.expkt.pktid, str(self.expkt.ports))
+        idstring = "Exp:%s" % self.expkt.pktid
+        if self.expkt.ports is not None:
+            idstring += "/Ports:%s" % str(self.expkt.ports)
         return idstring
 
     def __rxstr(self):
         if self.rxpkt is None: return None
-        idstring = "Rx:%s/Port:%s" % (self.rxpkt.pktid, str(self.rxpkt.ports))
+        idstring = "Rx:%s" % self.rxpkt.pktid
+        if self.rxpkt.ports is not None:
+            idstring += "/Port:%s" % str(self.rxpkt.ports)
         return idstring
 
     def __get_pair_id(self):

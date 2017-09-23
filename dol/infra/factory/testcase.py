@@ -324,10 +324,10 @@ class TestCase(objects.FrameworkObject):
     def VerifyCallback(self):
         ret = self.module.RunModuleCallback('TestCaseVerify', self)
         if ret is defs.status.SUCCESS or ret is True:
-            self.info("TestCaseVerify status Success")
+            self.info("TestCaseVerify Callback Status = Success")
             status =  defs.status.SUCCESS
         else:
-            self.info("TestCaseVerify status Failure")
+            self.info("TestCaseVerify Callback Status = Failure")
             status = defs.status.ERROR
         return status
 

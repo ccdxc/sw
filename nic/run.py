@@ -156,6 +156,12 @@ def run_dol(args):
     if args.modlist is not None:
         cmd.append('--modlist')
         cmd.append(args.modlist)
+    if args.feature is not None:
+        cmd.append('--feature')
+        cmd.append(args.feature)
+    if args.test is not None:
+        cmd.append('--test')
+        cmd.append(args.test)
     p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
     print "- Log file: " + dol_log + "\n"
@@ -259,6 +265,10 @@ def main():
     parser.add_argument('--topo', dest='topology', default='base',
                         help='Run for a specific topology')
     parser.add_argument('--modlist', dest='modlist',
+                        default=None, help='Module List File')
+    parser.add_argument('--feature', dest='feature',
+                        default=None, help='Module List File')
+    parser.add_argument('--test', dest='test',
                         default=None, help='Module List File')
     args = parser.parse_args()
 

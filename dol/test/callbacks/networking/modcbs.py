@@ -54,10 +54,18 @@ def Verify(infra, module):
     return True
 
 def TestCaseSetup(tc):
+    iterelem = tc.module.iterator.Get()
+    if iterelem is None:
+        return
+    tc.pvtdata.priotag = False
+    if 'priotag' in iterelem.__dict__:
+        tc.pvtdata.priotag = iterelem.priotag
     return
 
 def TestCaseVerify(tc):
     return True
 
 def TestCaseTeardown(tc):
+    if tc.config.flow.IsFteEnabled():
+        tc.config.flow.SetLabel("FTE_DONE")
     return

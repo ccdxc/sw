@@ -49,9 +49,9 @@ class VerifEngineObject:
     def __verify_pktbuffers(self, epktbuf, apktbuf, lgh):
         match = self.__compare_pktbuffers(epktbuf, apktbuf, lgh)
         if match is False:
-            lgh.error("Packet compare result = Mismatch")
+            lgh.error("PacketBuffer Compare Result = Mismatch")
             return defs.status.ERROR
-        lgh.info("Packet compare result = Match")
+        lgh.info("PacketBuffer Compare Result = Match")
         return defs.status.SUCCESS
 
     def __compare_buffers(self, ebuf, abuf, lgh):
