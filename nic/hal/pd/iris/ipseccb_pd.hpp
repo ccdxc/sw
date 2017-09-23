@@ -37,8 +37,7 @@ struct pd_ipseccb_s {
 } __PACK__;
 
 typedef struct pd_ipseccb_ip4_hdr_s {
-    uint8_t    version:4;
-    uint8_t    ihl:4;
+    uint8_t    version_ihl;
     uint8_t    tos;
     uint16_t   tot_len;
     uint16_t   id;

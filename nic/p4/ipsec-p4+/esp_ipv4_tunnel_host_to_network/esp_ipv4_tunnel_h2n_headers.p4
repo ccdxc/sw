@@ -19,6 +19,12 @@ header_type ipsec_int_header_t {
     }
 }
 
+header_type ipsec_int_pad_t {
+    fields {
+        ipsec_int_pad : 128;
+    }
+}
+
 #define IPSEC_INT_HDR_SCRATCH \
     modify_field(ipsec_int_hdr_scratch.in_desc, in_desc); \
     modify_field(ipsec_int_hdr_scratch.out_desc, out_desc); \ 
@@ -123,7 +129,25 @@ header_type barco_request_t {
         doorbell_data                       : 64;
     }
 }
+header_type p4plus_to_p4_ipsec_header_t {
+    fields {
+        p4plus_app_id       : 4;
+        table0_valid : 1;
+        table1_valid : 1;
+        table2_valid : 1;
+        table3_valid : 1;
+        flags               : 8;
+        ip_id_delta         : 16;
+        ip_len              : 16;
+        udp_len             : 16;
+        tcp_seq_delta       : 32;
+        vlan_tag            : 16;
+        ipsec_pad1 : 152;
+        ipsec_pad2 : 256;
+    }
+}
 
+#if 0
 header_type p4plus_to_p4_ipsec_header_t {
     fields {
         app_type : 4;
@@ -132,9 +156,10 @@ header_type p4plus_to_p4_ipsec_header_t {
         table2_valid : 1;
         table3_valid : 1;
         ipsec_pad1 : 256;
-        ipsec_pad2 : 248;
+        ipsec_pad2 : 256;
     }
 }
+#endif
 
 #define IPSEC_CB_SCRATCH \
     modify_field(ipsec_cb_scratch.rsvd, rsvd); \

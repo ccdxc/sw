@@ -214,8 +214,8 @@
 #define TIMER_START_RING_SHIFT         10
 
 #define TM_OPORT_DMA       9 
-#define TM_OPORT_P4INGRESS 10
-#define TM_OPORT_P4EGRESS  11
+#define TM_OPORT_P4EGRESS  10
+#define TM_OPORT_P4INGRESS 11
 
 
 // memwr timer_start[LIF], {type, qid, ring, delta_time}
