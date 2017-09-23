@@ -69,7 +69,8 @@ packets:
                 urgptr   : callback://normalization/callbacks/GetInputTcpUrgPtr
                 options  : callback://normalization/callbacks/GetInputTcpOptions
                 ack      : callback://normalization/callbacks/GetInputTcpAck
-                window  : ref://testcase/config/flow/tracking/tcp_win_sz
+                window   : ref://testcase/config/flow/tracking/tcp_win_sz
+                seq      : ref://testcase/config/flow/tracking/tcp_seq_num
 
     - packet:
         id          : PKT2     # Expected packet 2
@@ -91,7 +92,8 @@ packets:
                 urgptr   : callback://normalization/callbacks/GetExpectedTcpUrgPtr
                 options  : callback://normalization/callbacks/GetExpectedTcpOptions
                 ack      : callback://normalization/callbacks/GetExpectedTcpAck
-                window  : ref://testcase/config/flow/tracking/tcp_win_sz
+                window   : ref://testcase/config/flow/tracking/tcp_win_sz
+                seq      : ref://testcase/config/flow/tracking/tcp_seq_num
 
 session:
     - step:
@@ -102,6 +104,7 @@ session:
                     port    : ref://testcase/config/src/endpoint/intf/ports
 
         expect:
+            delay   : callback://networking/packets/GetExpectDelay
             packets:
                 - packet:
                     object  : callback://normalization/callbacks/GetExpectedPacket

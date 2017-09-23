@@ -63,7 +63,7 @@ def GetTriggerPacket(testcase):
 def GetExpectedPacket(testcase):
     iterelem = testcase.module.iterator.Get()
     profile_name = iterelem.profile
-    if 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_DROP' in profile_name:
+    if 'TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_DROP' in profile_name:
         # Only drop case where packet is actually allowed
         return testcase.packets.Get('PKT2')
     elif 'ACTION_DROP' in profile_name:
@@ -258,22 +258,22 @@ def GetInputTcpOptions(testcase, packet):
         return echo_ts
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT' in profile_name:
         return echo_ts
-    elif 'TCP_UNEXPECTED_TS_OPTION_SET_ACTION_ALLOW' in profile_name:
+    elif 'TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_ALLOW' in profile_name:
         return echo_ts
-    elif 'TCP_UNEXPECTED_TS_OPTION_SET_ACTION_DROP' in profile_name:
+    elif 'TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_DROP' in profile_name:
         return echo_ts
-    elif 'TCP_UNEXPECTED_TS_OPTION_SET_ACTION_EDIT' in profile_name:
+    elif 'TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_EDIT' in profile_name:
         return echo_ts
-    elif 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_ALLOW' in profile_name:
+    elif 'TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_ALLOW' in profile_name:
         return echo_ts
-    elif 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_DROP' in profile_name:
+    elif 'TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_DROP' in profile_name:
         return echo_ts
-    elif 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_EDIT' in profile_name:
+    elif 'TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_EDIT' in profile_name:
         return echo_ts
     elif 'TCP_TS_NOT_PRESENT_DROP_ENABLE' in profile_name:
-        return echo_ts
+        return []
     elif 'TCP_TS_NOT_PRESENT_DROP_DISABLE' in profile_name:
-        return echo_ts
+        return []
     return []
 
 def GetInputTcpUrgPtr(testcase, packet):
@@ -389,22 +389,22 @@ def GetExpectedTcpOptions(testcase, packet):
         return echo_ts
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT' in profile_name:
         return echo_ts_edit
-    elif 'TCP_UNEXPECTED_TS_OPTION_SET_ACTION_ALLOW' in profile_name:
+    elif 'TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_ALLOW' in profile_name:
         return echo_ts
-    elif 'TCP_UNEXPECTED_TS_OPTION_SET_ACTION_DROP' in profile_name:
+    elif 'TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_DROP' in profile_name:
         return echo_ts
-    elif 'TCP_UNEXPECTED_TS_OPTION_SET_ACTION_EDIT' in profile_name:
+    elif 'TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_EDIT' in profile_name:
         return echo_ts
-    elif 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_ALLOW' in profile_name:
+    elif 'TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_ALLOW' in profile_name:
         return echo_ts
-    elif 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_DROP' in profile_name:
+    elif 'TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_DROP' in profile_name:
         return echo_ts
-    elif 'TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_EDIT' in profile_name:
-        return echo_ts
+    elif 'TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_EDIT' in profile_name:
+        return []
     elif 'TCP_TS_NOT_PRESENT_DROP_ENABLE' in profile_name:
-        return echo_ts
+        return []
     elif 'TCP_TS_NOT_PRESENT_DROP_DISABLE' in profile_name:
-        return echo_ts
+        return []
     return []
 
 def GetExpectedTcpUrgPtr(testcase, packet):
@@ -435,11 +435,11 @@ def GetInputPayloadSize(testcase, packet):
     elif 'TCP_DATA_LEN_GT_MSS_ACTION_EDIT' in profile_name:
         return 1400
     elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_ALLOW' in profile_name:
-        return 1400
+        return 410
     elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_DROP' in profile_name:
-        return 1400
+        return 410
     elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_EDIT' in profile_name:
-        return 1400
+        return 410
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE' in profile_name:
         return 0
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
@@ -456,11 +456,11 @@ def GetExpectedPayloadSize(testcase, packet):
     elif 'TCP_DATA_LEN_GT_MSS_ACTION_EDIT' in profile_name:
         return 1000
     elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_ALLOW' in profile_name:
-        return 1400
+        return 410
     elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_DROP' in profile_name:
-        return 1400
+        return 410
     elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_EDIT' in profile_name:
-        return 1000
+        return 400
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE' in profile_name:
         return 0
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:

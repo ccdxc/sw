@@ -156,6 +156,10 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
     d.actionid = SESSION_STATE_TCP_SESSION_STATE_INFO_ID;
 
     if (session_state) {
+        // session specific information
+        d.session_state_action_u.session_state_tcp_session_state_info.tcp_ts_option_negotiated =
+            session_state->tcp_ts_option;
+
         // initiator flow specific information
         d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_state =
             session_state->iflow_state.state;

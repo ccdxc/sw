@@ -268,27 +268,27 @@ profiles:
       fields:
          tcp_data_len_gt_win_size_action: EDIT
 
-    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_SET_ACTION_ALLOW
+    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_ALLOW
       fields:
          tcp_unexpected_ts_option_action: ALLOW
 
-    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_SET_ACTION_DROP
+    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_DROP
       fields:
          tcp_unexpected_ts_option_action: DROP
 
-    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_SET_ACTION_EDIT
+    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_EDIT
       fields:
          tcp_unexpected_ts_option_action: EDIT
 
-    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_ALLOW
+    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_ALLOW
       fields:
          tcp_unexpected_ts_option_action: ALLOW
 
-    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_DROP
+    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_DROP
       fields:
          tcp_unexpected_ts_option_action: DROP
 
-    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_EDIT
+    - id: SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_EDIT
       fields:
          tcp_unexpected_ts_option_action: EDIT
 

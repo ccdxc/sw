@@ -9,8 +9,10 @@ feature:
 modules:
     - module:
         name    : NORMALIZATION_TCP_STATEFUL
-        enable  : False
+        enable  : True
         spec    : normalization.testspec
+        module  : normalization
+        package : test.normalization
         args    :
             flow: filter://type=IPV4,proto=TCP
         iterate :
@@ -20,37 +22,37 @@ modules:
             #- profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DETECT_EN_ENABLE
             #- profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DETECT_EN_DISABLE
             # program iflow in syn_rcvd and rflow in init state. Send packet with syn or ack set from responder
-            #- profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM_SPLIT_HANDSHAKE,direction=RFLOW
-            #- profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM_SPLIT_HANDSHAKE,direction=RFLOW
+            - profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_SPLIT_HANDSHAKE,direction=RFLOW
+            - profile    : SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_SPLIT_HANDSHAKE,direction=RFLOW
             # Flow in established state, program iflow mss, send pkt gt mss
-            #- profile    : SEC_PROF_TCP_DATA_LEN_GT_MSS_ACTION_ALLOW
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_MSS,direction=IFLOW
-            #- profile    : SEC_PROF_TCP_DATA_LEN_GT_MSS_ACTION_DROP
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_MSS,direction=IFLOW
+            - profile    : SEC_PROF_TCP_DATA_LEN_GT_MSS_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_MSS,direction=IFLOW
+            - profile    : SEC_PROF_TCP_DATA_LEN_GT_MSS_ACTION_DROP
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_MSS,direction=IFLOW
             # Flow in established state, program iflow wsize, send pkt gt wsize
-            #- profile    : SEC_PROF_TCP_DATA_LEN_GT_WIN_SIZE_ACTION_ALLOW
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_WSIZE,direction=IFLOW
-            #- profile    : SEC_PROF_TCP_DATA_LEN_GT_WIN_SIZE_ACTION_DROP
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_WSIZE,direction=IFLOW
-            # Flow config - set tcp_ts_option, send pkt without ts option
-            #- profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_SET_ACTION_ALLOW
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
-            #- profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_SET_ACTION_DROP
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
-            # Flow config - unset tcp_ts_option, send pkt with ts option, then it shud nop in edit case
-            #- profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_ALLOW
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM
-            #- profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_DROP
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM
-            #- profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_UNSET_ACTION_EDIT
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM
+            - profile    : SEC_PROF_TCP_DATA_LEN_GT_WIN_SIZE_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_WSIZE,direction=RFLOW
+            - profile    : SEC_PROF_TCP_DATA_LEN_GT_WIN_SIZE_ACTION_DROP
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_WSIZE,direction=RFLOW
+            # Flow config - set tcp_ts_option - timestamp negotiated, send pkt with ts option
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_DROP
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_EDIT
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
+            # Flow config - unset tcp_ts_option - timestamp not negotiated, send pkt with ts option
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_DROP
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
             # Flow config - set tcp_ts_option, send pkt without ts option. must drop/not-drop
-            #- profile    : SEC_PROF_TCP_TS_NOT_PRESENT_DROP_ENABLE
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM_TS,direction=IFLOW
-            #- profile    : SEC_PROF_TCP_TS_NOT_PRESENT_DROP_DISABLE
-            #  flow       : filter://type=IPV4,proto=TCP,label=NORM_TS,direction=IFLOW
+            - profile    : SEC_PROF_TCP_TS_NOT_PRESENT_DROP_ENABLE
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS,direction=IFLOW
+            - profile    : SEC_PROF_TCP_TS_NOT_PRESENT_DROP_DISABLE
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS,direction=IFLOW
             # Flow miss case - send new flow tcp pkt with syn unset. verify cpu-rx pkt
             - profile    : SEC_PROF_TCP_NON_SYN_FIRST_PKT_DROP_ENABLE
               flow       : filter://type=IPV4,proto=TCP,label=NORM_TCP_NON_SYN,direction=IFLOW
@@ -60,7 +62,9 @@ modules:
     - module:
         name    : NORMALIZATION_TCP_STATEFUL_IGNORE
         spec    : normalization.testspec
-        enable  : False
+        module  : normalization
+        package : test.normalization
+        enable  : True
         ignore  : True
         args    :
             flow: filter://type=IPV4,proto=TCP
@@ -71,110 +75,178 @@ modules:
             # Flow in established state, program iflow wsize, send pkt gt wsize
             - profile    : SEC_PROF_TCP_DATA_LEN_GT_WIN_SIZE_ACTION_EDIT
               flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_WSIZE,direction=IFLOW
-            # Flow config - set tcp_ts_option, send pkt without ts option
-            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_SET_ACTION_EDIT
-              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
+            # Flow config - unset tcp_ts_option - timestamp not negotiated, send pkt with ts option
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_EDIT
+              flow       : filter://type=IPV4,proto=TCP,label=NORM
 
     - module:
         name    : NORMALIZATION_IP
         spec    : normalization.testspec
+        module  : normalization
+        package : test.normalization
         enable  : True
         ignore  : False
         args    :
             flow: filter://type=IPV4
         iterate :
             - profile    : SEC_PROF_IP_RSVD_FLAGS_ACTION_ALLOW
+              flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_RSVD_FLAGS_ACTION_DROP
+              flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_RSVD_FLAGS_ACTION_EDIT
+              flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_DF_ACTION_ALLOW
+              flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_DF_ACTION_DROP
+              flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_DF_ACTION_EDIT
+              flow: filter://type=IPV4
 
     - module:
         name    : NORMALIZATION_IP_IGNORE
         spec    : normalization.testspec
+        module  : normalization
+        package : test.normalization
         enable  : True
         ignore  : True
         args    :
             flow: filter://type=IPV4
         iterate :
             - profile    : SEC_PROF_IP_OPTIONS_ACTION_ALLOW
+              flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_OPTIONS_ACTION_DROP
+              flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_OPTIONS_ACTION_EDIT
+              flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_INVALID_LEN_ACTION_ALLOW
+              flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_INVALID_LEN_ACTION_DROP
+              flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_INVALID_LEN_ACTION_EDIT
+              flow: filter://type=IPV4
 
     - module:
         name    : NORMALIZATION_ICMP
         spec    : normalization.testspec
+        module  : normalization
+        package : test.normalization
         enable  : True
-        ignore  : True
+        ignore  : False
         args    :
             flow: filter://type=IPV4,proto=ICMP
         iterate :
             - profile    : SEC_PROF_ICMP_INVALID_CODE_ECHO_REQ_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_INVALID_CODE_ECHO_REQ_ACTION_DROP
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_INVALID_CODE_ECHO_REQ_ACTION_EDIT
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_INVALID_CODE_ECHO_REP_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_INVALID_CODE_ECHO_REP_ACTION_DROP
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_INVALID_CODE_ECHO_REP_ACTION_EDIT
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE4_DROP_ENABLE
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE4_DROP_DISABLE
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE6_DROP_ENABLE
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE6_DROP_DISABLE
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE15_DROP_ENABLE
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE15_DROP_DISABLE
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE39_DROP_ENABLE
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE39_DROP_DISABLE
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE27_DROP_ENABLE
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_DEPRECATED_MSGS_TYPE27_DROP_DISABLE
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_REDIRECT_MSG_DROP_ENABLE
+              flow: filter://type=IPV4,proto=ICMP
             - profile    : SEC_PROF_ICMP_REDIRECT_MSG_DROP_DISABLE
+              flow: filter://type=IPV4,proto=ICMP
 
     - module:
         name    : NORMALIZATION_TCP_STATELESS_IGNORE
         spec    : normalization.testspec
+        module  : normalization
+        package : test.normalization
         enable  : True
         ignore  : True
         args    :
             flow: filter://type=IPV4,proto=TCP
         iterate :
             - profile    : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_RST_WITH_DATA_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
 
     - module:
         name    : NORMALIZATION_TCP_STATELESS
         spec    : normalization.testspec
+        module  : normalization
+        package : test.normalization
         enable  : True
         ignore  : False
         args    :
             flow: filter://type=IPV4,proto=TCP
         iterate :
             - profile    : SEC_PROF_TCP_RSVD_FLAGS_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_RSVD_FLAGS_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_RSVD_FLAGS_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_URG_FLAG_NOT_SET_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_URG_FLAG_NOT_SET_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_URG_FLAG_NOT_SET_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_URG_PTR_NOT_SET_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_URG_PTR_NOT_SET_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_URG_PTR_NOT_SET_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_RST_WITH_DATA_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_RST_WITH_DATA_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_INVALID_FLAGS_DROP_ENABLE
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_INVALID_FLAGS_DROP_DISABLE
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_FLAGS_NONSYN_NOACK_DROP_ENABLE
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_FLAGS_NONSYN_NOACK_DROP_DISABLE
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_DROP
+              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
 
