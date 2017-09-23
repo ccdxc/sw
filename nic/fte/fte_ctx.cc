@@ -3,6 +3,7 @@
 #include <session.hpp>
 #include <pd_api.hpp>
 #include <defines.h>
+#include <cpupkt_headers.hpp>
 
 std::ostream& operator<<(std::ostream& os, const ether_addr& val)
 {
@@ -90,69 +91,95 @@ ctx_t::extract_flow_key_from_spec(hal::flow_key_t *key, const FlowKey&  flow_spe
     return HAL_RET_OK;
 }
 
-// build flow key fron phv
+// extract flow key from packet
 hal_ret_t
-ctx_t::extract_flow_key_from_phv()
+ctx_t::extract_flow_key()
 {
-    HAL_ASSERT_RETURN(phv_ != NULL, HAL_RET_INVALID_ARG);
+    ether_header_t *ethhdr;
+    ipv4_header_t *iphdr;
+    ipv6_header_t *iphdr6;
+    tcp_header_t *tcphdr;
+    udp_header_t *udphdr;
+    icmp_header_t *icmphdr;
+    ipsec_esp_header_t *esphdr;
+    
+    HAL_ASSERT_RETURN(cpu_rxhdr_ != NULL && pkt_ != NULL, HAL_RET_INVALID_ARG);
 
-    switch (phv_->lkp_type) {
-    case FLOW_KEY_LOOKUP_TYPE_MAC:
-        key_.flow_type = hal::FLOW_TYPE_L2;
-        break;
-    case FLOW_KEY_LOOKUP_TYPE_IPV4:
-        key_.flow_type = hal::FLOW_TYPE_V4;
-        break;
-    case FLOW_KEY_LOOKUP_TYPE_IPV6:
-        key_.flow_type = hal::FLOW_TYPE_V6;
-        break;
-    default:
-        HAL_TRACE_ERR("fte: unknown flow lkp_type {}", phv_->lkp_type);
-        return HAL_RET_INVALID_ARG;
-    }
+    key_.dir = cpu_rxhdr_->lkp_dir;
 
-    key_.dir = phv_->lkp_dir; 
-
-    hal::l2seg_t *l2seg =  hal::pd::find_l2seg_by_hwid(phv_->lkp_vrf);
+    // Lookup l2seg using vrf id
+    hal::l2seg_t *l2seg =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
     if (l2seg == NULL) {
-        HAL_TRACE_ERR("fte: l2seg not found, hwid={}", phv_->lkp_vrf);
+        HAL_TRACE_ERR("fte: l2seg not found, hwid={}", cpu_rxhdr_->lkp_vrf);
         return HAL_RET_L2SEG_NOT_FOUND;
     }
 
-    switch (key_.flow_type) {
-    case hal::FLOW_TYPE_L2:
-        // L2 flow
+    // extract src/dst/proto
+    switch (cpu_rxhdr_->lkp_type) {
+    case FLOW_KEY_LOOKUP_TYPE_MAC:
+        ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
+        key_.flow_type = hal::FLOW_TYPE_L2;
         key_.l2seg_id = l2seg->seg_id;
-        memcpy(key_.smac, phv_->lkp_src, sizeof(key_.smac));
-        memcpy(key_.dmac, phv_->lkp_dst, sizeof(key_.dmac));
-        key_.ether_type = phv_->lkp_sport;
+        memcpy(key_.smac, ethhdr->smac, sizeof(key_.smac));
+        memcpy(key_.dmac, ethhdr->dmac, sizeof(key_.dmac));
+        key_.ether_type = (cpu_rxhdr_->flags&CPU_FLAGS_VLAN_VALID) ?
+            ntohs(((vlan_header_t*)ethhdr)->etype): ntohs(ethhdr->etype);
         break;
-    case  hal::FLOW_TYPE_V4:
-    case  hal::FLOW_TYPE_V6:
-        // v4 or v6 flow
+
+    case FLOW_KEY_LOOKUP_TYPE_IPV4: 
+        iphdr = (ipv4_header_t*)(pkt_ + cpu_rxhdr_->l3_offset);
+        key_.flow_type = hal::FLOW_TYPE_V4;
         key_.tenant_id = l2seg->tenant_id; 
-        memcpy(key_.sip.v6_addr.addr8, phv_->lkp_src, sizeof(key_.sip.v6_addr.addr8));
-        memcpy(key_.dip.v6_addr.addr8, phv_->lkp_dst, sizeof(key_.dip.v6_addr.addr8));
-        key_.proto = phv_->lkp_proto;
-        switch (key_.proto) {
-        case IP_PROTO_TCP:
-        case IP_PROTO_UDP:
-            key_.sport = phv_->lkp_sport;
-            key_.dport = phv_->lkp_dport;
-            break;
-        case IP_PROTO_ICMP:
-        case IP_PROTO_ICMPV6:
-            key_.icmp_type =  phv_->lkp_sport >> 8;
-            key_.icmp_code = phv_->lkp_sport & 0x00FF;
-            key_.icmp_id = phv_->lkp_dport;
-            break;
-        case IPPROTO_ESP:
-            key_.spi = phv_->lkp_sport << 16 | phv_->lkp_dport;
-        default:
-            key_.sport = 0;
-            key_.dport = 0;
-        }
+        key_.sip.v4_addr = ntohl(iphdr->saddr);
+        key_.dip.v4_addr = ntohl(iphdr->daddr);
+        key_.proto = iphdr->protocol;
         break;
+
+    case FLOW_KEY_LOOKUP_TYPE_IPV6: 
+        iphdr6 = (ipv6_header_t *)(pkt_ + cpu_rxhdr_->l3_offset);
+        key_.flow_type = hal::FLOW_TYPE_V6;
+        key_.tenant_id = l2seg->tenant_id; 
+        memcpy(key_.sip.v6_addr.addr8, iphdr6->saddr, sizeof(key_.sip.v6_addr.addr8));
+        memcpy(key_.dip.v6_addr.addr8, iphdr6->daddr, sizeof(key_.dip.v6_addr.addr8));
+        key_.proto = iphdr6->nexthdr;
+        break;
+
+    default:
+        HAL_TRACE_ERR("Unsupported lkp_type {}", cpu_rxhdr_->lkp_type);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // extract l4 info
+    if (cpu_rxhdr_->l4_offset > 0) {
+        switch (key_.proto) {
+        case IPPROTO_TCP: 
+            tcphdr = (tcp_header_t*)(pkt_ + cpu_rxhdr_->l4_offset);
+            key_.sport = ntohs(tcphdr->sport);
+            key_.dport = ntohs(tcphdr->dport);
+            break;
+            
+        case IPPROTO_UDP: 
+            udphdr = (udp_header_t*)(pkt_ + cpu_rxhdr_->l4_offset);
+            key_.sport = ntohs(udphdr->sport);
+            key_.dport = ntohs(udphdr->dport);
+            break;
+            
+        case IPPROTO_ICMP:
+        case IPPROTO_ICMPV6:
+            icmphdr = (icmp_header_t*)(pkt_ + cpu_rxhdr_->l4_offset);
+            key_.icmp_type =  icmphdr->type;
+            key_.icmp_code = icmphdr->code;
+            key_.icmp_id = ntohs(icmphdr->echo.id);
+            break;
+            
+        case IPPROTO_ESP:
+            esphdr = (ipsec_esp_header_t*)(pkt_ + cpu_rxhdr_->l4_offset);
+            key_.spi = ntohl(esphdr->spi);
+            break;
+            
+        default:
+            key_.sport = key_.dport = 0;
+        }
     }
 
     return HAL_RET_OK;
@@ -519,7 +546,7 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
         ret = extract_flow_key_from_spec(&key_, sess_spec_->initiator_flow().flow_key(),
                                          sess_spec_->meta().tenant_id());
     } else {
-        ret = extract_flow_key_from_phv();
+        ret = extract_flow_key();
     }
 
     if (ret != HAL_RET_OK) {
@@ -548,16 +575,16 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
 }
 
 hal_ret_t
-ctx_t::init(phv_t *phv, uint8_t *pkt, size_t pkt_len, flow_t iflow[], flow_t rflow[])
+ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, flow_t iflow[], flow_t rflow[])
 {
     hal_ret_t ret;
 
     *this = {};
 
-    phv_ = phv;
+    cpu_rxhdr_ = cpu_rxhdr;
     pkt_ = pkt;
     pkt_len_ = pkt_len;
-    arm_lifq_ = {phv->lif, phv->qtype, phv->qid};
+    arm_lifq_ = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
     ret = init_flows(iflow, rflow);
     if (ret != HAL_RET_OK) {

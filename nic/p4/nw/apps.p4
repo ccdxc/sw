@@ -2,11 +2,15 @@
 /* P4+ APP related processing                                                */
 /*****************************************************************************/
 action p4plus_app_tcp_proxy() {
-    remove_header(ethernet);
-    remove_header(vlan_tag);
-    remove_header(ipv4);
-    remove_header(ipv6);
-    remove_header(tcp);
+    if ((tcp.flags & TCP_FLAG_SYN) == TCP_FLAG_SYN) {
+        f_p4plus_cpu_pkt();
+    } else {
+        remove_header(ethernet);
+        remove_header(vlan_tag);
+        remove_header(ipv4);
+        remove_header(ipv6);
+        remove_header(tcp);
+    }
 
     add_header(p4_to_p4plus_tcp_proxy);
     add_header(p4_to_p4plus_tcp_proxy_sack);
@@ -142,76 +146,102 @@ action p4plus_app_rdma() {
     remove_header(udp);
 }
 
+action f_p4plus_cpu_pkt() {
+    add_header(p4_to_p4plus_cpu_pkt);
+
+    modify_field(p4_to_p4plus_cpu_pkt.src_lif, control_metadata.src_lif);
+    modify_field(p4_to_p4plus_cpu_pkt.lif, capri_intrinsic.lif);
+    modify_field(p4_to_p4plus_cpu_pkt.qid, control_metadata.qid);
+    modify_field(p4_to_p4plus_cpu_pkt.qtype, control_metadata.qtype);
+    modify_field(p4_to_p4plus_cpu_pkt.lkp_vrf, flow_lkp_metadata.lkp_vrf);
+    modify_field(p4_to_p4plus_cpu_pkt.lkp_dir,
+                 control_metadata.lkp_flags_egress);
+    modify_field(p4_to_p4plus_cpu_pkt.lkp_inst,
+                 control_metadata.lkp_flags_egress);
+    modify_field(p4_to_p4plus_cpu_pkt.lkp_type,
+                 control_metadata.lkp_flags_egress);
+
+    modify_field(p4_to_p4plus_cpu_pkt.l2_offset, 0xFFFF);
+    modify_field(p4_to_p4plus_cpu_pkt.l3_offset, 0xFFFF);
+    modify_field(p4_to_p4plus_cpu_pkt.l4_offset, 0xFFFF);
+    modify_field(p4_to_p4plus_cpu_pkt.payload_offset, 0xFFFF);
+
+    modify_field(scratch_metadata.offset, 0);
+    modify_field(scratch_metadata.cpu_flags, 0);
+
+    if (ethernet.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu_pkt.l2_offset, scratch_metadata.offset);
+        if (vlan_tag.valid == TRUE) {
+            add_to_field(scratch_metadata.offset, 18);
+        } else {
+            add_to_field(scratch_metadata.offset, 14);
+        }
+    }
+    if (ipv4.valid == TRUE) {
+        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+               CPU_FLAGS_IPV4_VALID);
+        modify_field(p4_to_p4plus_cpu_pkt.l3_offset, scratch_metadata.offset);
+        add_to_field(scratch_metadata.offset, ipv4.ihl << 2);
+    }
+    if (ipv6.valid == TRUE) {
+        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+               CPU_FLAGS_IPV6_VALID);
+        modify_field(p4_to_p4plus_cpu_pkt.l3_offset, scratch_metadata.offset);
+        add_to_field(scratch_metadata.offset, 40);
+    }
+    if ((udp.valid == TRUE) or (esp.valid == TRUE)) {
+        modify_field(p4_to_p4plus_cpu_pkt.l4_offset, scratch_metadata.offset);
+        add_to_field(scratch_metadata.offset, 8);
+    }
+    if (tcp.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu_pkt.l4_offset, scratch_metadata.offset);
+        add_to_field(scratch_metadata.offset, tcp.dataOffset << 2);
+    }
+    if ((icmp.valid == TRUE) or (icmpv6.valid == TRUE)) {
+        modify_field(p4_to_p4plus_cpu_pkt.l4_offset, scratch_metadata.offset);
+        add_to_field(scratch_metadata.offset, 4);
+    }
+    if ((ah.valid == TRUE) or (v6_ah_esp.valid == TRUE)) {
+        modify_field(p4_to_p4plus_cpu_pkt.l4_offset, scratch_metadata.offset);
+        add_to_field(scratch_metadata.offset, 12);
+    }
+
+    modify_field(p4_to_p4plus_cpu_pkt.payload_offset, scratch_metadata.offset);
+    modify_field(p4_to_p4plus_cpu_pkt.flags, scratch_metadata.cpu_flags);
+}
+
 action p4plus_app_cpu() {
     add_header(p4_to_p4plus_cpu);
-    add_header(p4_to_p4plus_cpu_pkt);
+    add_header(p4_to_p4plus_cpu_ip);
     modify_field(p4_to_p4plus_cpu.p4plus_app_id,
                  control_metadata.p4plus_app_id);
     modify_field(p4_to_p4plus_cpu.table0_valid, TRUE);
 
-    modify_field(scratch_metadata.cpu_flags, 0);
-    if ((inner_ethernet.valid == TRUE) or (inner_ipv4.valid == TRUE) or
-        (inner_ipv6.valid == TRUE)) {
-        add_header(p4_to_p4plus_cpu_inner_ip);
-    } else {
-        add_header(p4_to_p4plus_cpu_ip);
-    }
-
     if (ipv4.valid == TRUE) {
         modify_field(p4_to_p4plus_cpu.ip_proto, ipv4.protocol);
-        modify_field(p4_to_p4plus_cpu_pkt.ip_proto_outer, ipv4.protocol);
-        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
-               CPU_FLAGS_IPV4_VALID);
     }
     if (ipv6.valid == TRUE) {
         modify_field(p4_to_p4plus_cpu.ip_proto, ipv6.nextHdr);
-        modify_field(p4_to_p4plus_cpu_pkt.ip_proto_outer, ipv6.nextHdr);
-        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
-               CPU_FLAGS_IPV6_VALID);
+    }
+    if (udp.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu.l4_sport, udp.srcPort);
+        modify_field(p4_to_p4plus_cpu.l4_dport, udp.dstPort);
+    }
+    if (tcp.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu.l4_sport, tcp.srcPort);
+        modify_field(p4_to_p4plus_cpu.l4_dport, tcp.dstPort);
+    }
+    if (icmp.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu.l4_sport, icmp.typeCode);
+    }
+    if (icmpv6.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu.l4_sport, icmpv6.typeCode);
     }
 
-    if (inner_ipv4.valid == TRUE) {
-        modify_field(p4_to_p4plus_cpu.ip_proto, inner_ipv4.protocol);
-        modify_field(p4_to_p4plus_cpu_pkt.ip_proto_inner, inner_ipv4.protocol);
-        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
-               CPU_FLAGS_INNER_IPV4_VALID);
-    }
-    if (inner_ipv6.valid == TRUE) {
-        modify_field(p4_to_p4plus_cpu.ip_proto, inner_ipv6.nextHdr);
-        modify_field(p4_to_p4plus_cpu_pkt.ip_proto_inner, inner_ipv6.nextHdr);
-        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
-               CPU_FLAGS_INNER_IPV6_VALID);
-    }
-
-    if (inner_udp.valid == TRUE) {
-        modify_field(p4_to_p4plus_cpu.l4_sport, inner_udp.srcPort);
-        modify_field(p4_to_p4plus_cpu.l4_dport, inner_udp.dstPort);
-    } else {
-        if (udp.valid == TRUE) {
-            modify_field(p4_to_p4plus_cpu.l4_sport, udp.srcPort);
-            modify_field(p4_to_p4plus_cpu.l4_dport, udp.dstPort);
-        }
-        if (tcp.valid == TRUE) {
-            modify_field(p4_to_p4plus_cpu.l4_sport, tcp.srcPort);
-            modify_field(p4_to_p4plus_cpu.l4_dport, tcp.dstPort);
-        }
-        if (icmp.valid == TRUE) {
-            modify_field(p4_to_p4plus_cpu.l4_sport, icmp.typeCode);
-        }
-    }
+    f_p4plus_cpu_pkt();
 
     add(p4_to_p4plus_cpu.packet_len, control_metadata.packet_len,
         P4PLUS_CPU_PKT_SZ);
-#if 0
-    if (flow_lkp_metadata.lkp_dir == TRUE) {
-        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
-               CPU_FLAGS_LKP_DIR);
-    }
-#endif /* 0 */
-    modify_field(p4_to_p4plus_cpu_pkt.flags, scratch_metadata.cpu_flags);
-    modify_field(p4_to_p4plus_cpu_pkt.src_lif, control_metadata.src_lif);
-    modify_field(p4_to_p4plus_cpu_pkt.lkp_vrf, flow_lkp_metadata.lkp_vrf);
-    modify_field(p4_to_p4plus_cpu_pkt.lkp_type, flow_lkp_metadata.lkp_type);
 
     add_header(capri_rxdma_p4_intrinsic);
     add_header(capri_rxdma_intrinsic);

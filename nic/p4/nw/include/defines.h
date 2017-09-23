@@ -396,7 +396,7 @@
 #define P4PLUS_TCP_PROXY_HDR_SZ        71 /* 39 app hdr + 32 sack */
 #define P4PLUS_CLASSIC_NIC_HDR_SZ      46
 #define P4PLUS_CPU_HDR_SZ              44
-#define P4PLUS_CPU_PKT_SZ              130
+#define P4PLUS_CPU_PKT_SZ              36
 #define P4PLUS_IPSEC_HDR_SZ            14
 
 /*****************************************************************************/
@@ -424,16 +424,11 @@
 /*****************************************************************************/
 /* CPU flags                                                                 */
 /*****************************************************************************/
-#define CPU_FLAGS_TUNNEL_TERMINATE             0x000001
-#define CPU_FLAGS_VLAN_VALID                   0x000002
-#define CPU_FLAGS_IPV4_VALID                   0x000004
-#define CPU_FLAGS_IPV6_VALID                   0x000008
-#define CPU_FLAGS_IP_OPTIONS_PRESENT           0x000100
-#define CPU_FLAGS_TCP_OPTIONS_PRESENT          0x000200
-#define CPU_FLAGS_INNER_VLAN_VALID             0x000400
-#define CPU_FLAGS_INNER_IPV4_VALID             0x000800
-#define CPU_FLAGS_INNER_IPV6_VALID             0x001000
-#define CPU_FLAGS_LKP_DIR                      0x040000
+#define CPU_FLAGS_VLAN_VALID                   0x01
+#define CPU_FLAGS_IPV4_VALID                   0x02
+#define CPU_FLAGS_IPV6_VALID                   0x04
+#define CPU_FLAGS_IP_OPTIONS_PRESENT           0x08
+#define CPU_FLAGS_TCP_OPTIONS_PRESENT          0x10
 
 /*****************************************************************************/
 /* ROCE flags                                                                */

@@ -20,7 +20,6 @@
 #include <fte.hpp>
 #include <defines.h>
 #include <pd/iris/if_pd_utils.hpp>
-#include <cpupkt_api.hpp>
 #include <plugins/plugins.hpp>
 
 extern "C" void __gcov_flush(void);
@@ -47,20 +46,6 @@ thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 
 using boost::property_tree::ptree;
 
-std::string hex_str(uint8_t *buf, size_t sz)
-{
-    std::ostringstream result;
-
-    for(size_t i = 0; i < sz; i+=8) {
-        result << " 0x";
-        for (size_t j = i ; j < sz && j < i+8; j++) {
-            result << std::setw(2) << std::setfill('0') << std::hex << (int)buf[j];
-        }
-    }
-
-    return result.str();
-}
-
 //------------------------------------------------------------------------------
 // TODO - dummy for now !!
 //------------------------------------------------------------------------------
@@ -71,151 +56,7 @@ fte_pkt_loop (void *ctxt)
     HAL_TRACE_DEBUG("Thread {} initializing ...", t_curr_thread->name());
     HAL_THREAD_INIT();
 
-    uint8_t fte_id = HAL_THREAD_ID_FTE_MIN - t_curr_thread->thread_id();
-
-    // only one FTE for now
-    if (fte_id != 0) {
-        while(1) {
-            sleep(60);
-        }
-    }
-
-    hal::pd::cpupkt_ctxt_t* arm_ctx = hal::pd::cpupkt_ctxt_alloc_init();
-    cpupkt_register_rx_queue(arm_ctx, types::WRING_TYPE_ARQRX);
-    cpupkt_register_tx_queue(arm_ctx, types::WRING_TYPE_ASQ);
-
-    fte::phv_t rx_phv;
-    hal::pd::p4_to_p4plus_cpu_pkt_t *rx_hdr = NULL;
-    uint8_t *rx_pkt = NULL;
-
-    fte::arm_rx_t arm_rx = [&](fte::phv_t **phv, uint8_t **pkt, size_t *pkt_len) {
-        hal_ret_t ret;
-
-        if (rx_hdr != NULL) {
-            cpupkt_free(rx_hdr, rx_pkt);
-        }
-
-        rx_hdr = NULL;
-        rx_pkt = NULL;
-        rx_phv = {};
-
-        ret = cpupkt_poll_receive(arm_ctx, &rx_hdr, &rx_pkt, pkt_len);
-        if (ret == HAL_RET_OK) {
-#if 0
-            HAL_TRACE_DEBUG("p4_to_p4plus_cpu_pkt_t={}",
-                            hex_str((uint8_t*)rx_hdr, sizeof(*rx_hdr)));
-
-            HAL_TRACE_DEBUG("pkt={}",
-                            hex_str((uint8_t*)rx_pkt, *pkt_len));
-
-            mac_addr_t sa, da;
-            MAC_UINT64_TO_ADDR(sa, rx_hdr->mac_sa_outer);
-            MAC_UINT64_TO_ADDR(da, rx_hdr->mac_da_outer);
-            HAL_TRACE_DEBUG("pad={} slif={} reason={} lkp_type={} src_iport={} "
-                            "lkp_vrf={} flags={} sa={} da={}"
-                            "pcp={} die={} vid={}",
-                            rx_hdr->pad, rx_hdr->src_lif, rx_hdr->reason,
-                            rx_hdr->lkp_type, rx_hdr->src_iport, rx_hdr->lkp_vrf,
-                            rx_hdr->flags, macaddr2str(sa), macaddr2str(da),
-                            rx_hdr->vlan_pcp_outer, rx_hdr->vlan_dei_outer,
-                            rx_hdr->vlan_id_outer);
-#endif
-
-            bool inner_valid = false;
-            uint32_t flags =  ntohl(rx_hdr->flags);
-
-            rx_phv.src_lif = rx_hdr->src_lif;
-            rx_phv.lif = 1;  // TODO
-            rx_phv.qtype = 0;
-            rx_phv.qid = 0; 
-            rx_phv.lkp_type = rx_hdr->lkp_type;
-            if (flags & CPU_FLAGS_LKP_DIR) {
-                rx_phv.lkp_dir = 1;
-            }
-            rx_phv.lkp_vrf = ntohs(rx_hdr->lkp_vrf);
-
-            // extract src/dst
-            switch (rx_phv.lkp_type) {
-            case FLOW_KEY_LOOKUP_TYPE_MAC:
-                if (flags & CPU_FLAGS_TUNNEL_TERMINATE) {
-                    MAC_UINT64_TO_ADDR(rx_phv.lkp_src, rx_hdr->mac_sa_inner);
-                    MAC_UINT64_TO_ADDR(rx_phv.lkp_dst, rx_hdr->mac_da_inner);
-                } else {
-                    MAC_UINT64_TO_ADDR(rx_phv.lkp_src, rx_hdr->mac_sa_outer);
-                    MAC_UINT64_TO_ADDR(rx_phv.lkp_dst, rx_hdr->mac_da_outer);
-                }
-                pd::memrev(rx_phv.lkp_src, ETH_ADDR_LEN);
-                pd::memrev(rx_phv.lkp_dst, ETH_ADDR_LEN);
-
-                // TODO(goli) ether_type is not populated in the header
-                rx_phv.lkp_sport = ntohs(*(uint16_t*)(rx_pkt+12));
-                if (rx_phv.lkp_sport == 0x8100) {
-                    rx_phv.lkp_sport = ntohs(*(uint16_t*)(rx_pkt+16));
-                }
-                break;
-
-            case FLOW_KEY_LOOKUP_TYPE_IPV4:
-                inner_valid  = (flags & CPU_FLAGS_INNER_IPV4_VALID);
-                if (inner_valid) {
-                    memcpy(rx_phv.lkp_src, rx_hdr->ip_sa_inner+4, 4);
-                    memcpy(rx_phv.lkp_dst, rx_hdr->ip_sa_inner+8, 4);
-                } else {
-                    memcpy(rx_phv.lkp_src, rx_hdr->ip_sa_outer+4, 4);
-                    memcpy(rx_phv.lkp_dst, rx_hdr->ip_sa_outer+8, 4);
-                }
-                *(ipv4_addr_t*)rx_phv.lkp_src = ntohl(*(ipv4_addr_t*)rx_phv.lkp_src);
-                *(ipv4_addr_t*)rx_phv.lkp_dst = ntohl(*(ipv4_addr_t*)rx_phv.lkp_dst);
-
-                break;
-            case FLOW_KEY_LOOKUP_TYPE_IPV6:
-                inner_valid  = (flags & CPU_FLAGS_INNER_IPV6_VALID);
-                if (inner_valid) {
-                    memcpy(rx_phv.lkp_src, rx_hdr->ip_sa_inner, sizeof(rx_phv.lkp_src));
-                    memcpy(rx_phv.lkp_dst, rx_hdr->ip_da_inner, sizeof(rx_phv.lkp_dst));
-                } else {
-                    memcpy(rx_phv.lkp_src, rx_hdr->ip_sa_outer, sizeof(rx_phv.lkp_src));
-                    memcpy(rx_phv.lkp_dst, rx_hdr->ip_da_outer, sizeof(rx_phv.lkp_dst));
-                }
-                break;
-            }
-
-            if (rx_phv.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV4 ||
-                rx_phv.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV6) {
-                // extract proto
-                rx_phv.lkp_proto = inner_valid ? rx_hdr->ip_proto_inner : rx_hdr->ip_proto_outer;
-                
-                // extract l4
-                if (rx_phv.lkp_proto == IP_PROTO_UDP && !inner_valid) {
-                    rx_phv.lkp_sport = ntohs(rx_hdr->l4_sport_outer);
-                    rx_phv.lkp_dport = ntohs(rx_hdr->l4_dport_outer);
-                } else {
-                    rx_phv.lkp_sport = ntohs(rx_hdr->l4_sport_inner);
-                    rx_phv.lkp_dport = ntohs(rx_hdr->l4_dport_inner);
-                }
-                
-                HAL_TRACE_DEBUG("osport={} odport={} isport={} idport={}",
-                                rx_hdr->l4_sport_outer, rx_hdr->l4_dport_outer,
-                                rx_hdr->l4_sport_inner, rx_hdr->l4_dport_inner);
-                
-                // TODO(goli) icmp id is not set in the header
-                if (rx_phv.lkp_proto == IP_PROTO_ICMP || rx_phv.lkp_proto == IP_PROTO_ICMPV6) {
-                    rx_phv.lkp_dport = 1;
-                }
-            }
-
-            *phv = &rx_phv;
-            *pkt = rx_pkt;
-        }
-        return ret;
-    };
-
-    fte::arm_tx_t arm_tx = [&](const fte::phv_t *phv, const uint8_t *pkt, size_t pkt_len) {
-        hal::pd::p4plus_to_p4_header_t header = {};
-        HAL_TRACE_DEBUG("writing pkt to arq len={}", pkt_len);
-        return cpupkt_send(arm_ctx, &header, (uint8_t *)pkt, pkt_len);
-    };
-
-    fte::pkt_loop(arm_rx, arm_tx);
+    fte::pkt_loop(HAL_THREAD_ID_FTE_MIN - t_curr_thread->thread_id());
 
     return NULL;
 }
@@ -1103,6 +944,7 @@ hal_init (hal_cfg_t *hal_cfg)
         // start fte threads
         for (int tid = HAL_THREAD_ID_FTE_MIN; tid <= HAL_THREAD_ID_FTE_MAX; tid++) {
             g_hal_threads[tid]->start(g_hal_threads[tid]);
+            break; // TODO(goli) only one FTE thread until driver supports multiple ARQs
         }
     }
     

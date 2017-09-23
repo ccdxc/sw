@@ -181,56 +181,35 @@ header_type p4_to_p4plus_cpu_header_t {
 
 /*
  * flags bits:
- *  0       : tunnel terminate
- *  1       : outer vlan valid
- *  2       : outer ipv4 valid
- *  3       : outer ipv6 valid
- *  [4-7]   : outer ipv4 flags bits
- *  8       : ip options are present
- *  9       : tcp options are present
- *  10      : inner vlan valid
- *  11      : inner ipv4 valid
- *  12      : inner ipv6 valid
- *  [13-16] : inner ipv4 flags bits
- *  17      : vlan or vni
- *  18      : flow lkp direction
+ *  0       : vlan valid
+ *  1       : ipv4 valid
+ *  2       : ipv6 valid
+ *  3       : ip options present
+ *  4       : tcp options present
+ *  5-7     : unused
  */
 header_type p4_to_p4plus_cpu_pkt_t {
     fields {
-        pad                 : 5;
-        src_lif             : 11;
-        reason              : 8;
+        src_lif             : 16;
 
-        lkp_type            : 4;
-        src_iport           : 4;
+        lif                 : 16;
+        qtype               : 8;
+        qid                 : 32;
+
         lkp_vrf             : 16;
-        flags               : 24;
 
-        // outer
-        mac_sa_outer        : 48;
-        mac_da_outer        : 48;
-        vlan_pcp_outer      : 3;
-        vlan_dei_outer      : 1;
-        vlan_id_outer       : 12;
-        ip_sa_outer         : 128;
-        ip_da_outer         : 128;
-        ip_proto_outer      : 8;
-        ip_ttl_outer        : 8;
-        l4_sport_outer      : 16;
-        l4_dport_outer      : 16;
+        pad                 : 2;
+        lkp_dir             : 1;
+        lkp_inst            : 1;
+        lkp_type            : 4;
 
-        // inner
-        mac_sa_inner        : 48;
-        mac_da_inner        : 48;
-        vlan_pcp_inner      : 3;
-        vlan_dei_inner      : 1;
-        vlan_id_inner       : 28;
-        ip_sa_inner         : 128;
-        ip_da_inner         : 128;
-        ip_proto_inner      : 8;
-        ip_ttl_inner        : 8;
-        l4_sport_inner      : 16;
-        l4_dport_inner      : 16;
+        flags               : 8;
+
+        // offsets
+        l2_offset           : 16;
+        l3_offset           : 16;
+        l4_offset           : 16;
+        payload_offset      : 16;
 
         // tcp
         tcp_flags           : 8;

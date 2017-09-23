@@ -3,6 +3,7 @@
 #include <base.h>
 #include <session.hpp>
 #include <netinet/ether.h>
+#include <cpupkt_headers.hpp>
 
 namespace fte {
 
@@ -253,25 +254,6 @@ typedef struct header_update_s {
     };
 } __PACK__ header_update_t;
 
-// TODO (goli) temp struct until we define the header
-struct phv_t {
-    uint64_t lif : 11;
-    uint64_t qtype: 3;
-    uint64_t qid: 24;
-    uint64_t lkp_dir:1;
-    uint64_t src_lif:11;
-
-    uint8_t lkp_type;
-
-    uint16_t lkp_vrf;
-    uint8_t  lkp_proto;
-    uint8_t lkp_src[16];
-    uint8_t lkp_dst[16];
-    uint16_t lkp_sport;
-    uint16_t lkp_dport;
-};
-
-// FTE lif qid (TODO - uses std types)
 typedef struct lifqid_s lifqid_t;
 struct lifqid_s {
     uint64_t lif : 11;
@@ -279,9 +261,8 @@ struct lifqid_s {
     uint64_t qid : 24;
 } __PACK__;
 
-const uint16_t ARM_LIF = 1;
+const uint16_t ARM_LIF = 1003;
 const lifqid_t FLOW_MISS_LIFQ = {ARM_LIF, 0, 0};
-
 
 inline std::ostream& operator<<(std::ostream& os, const lifqid_t& lifq)
 {
@@ -289,7 +270,7 @@ inline std::ostream& operator<<(std::ostream& os, const lifqid_t& lifq)
                              lifq.lif, lifq.qtype, lifq.qid);
 }
 
-
+typedef hal::pd::p4_to_p4plus_cpu_pkt_t cpu_rxhdr_t;
 class flow_t;
 
 // FTE context passed between features in a pipeline
@@ -297,7 +278,7 @@ class ctx_t {
 public:
     static const uint8_t MAX_STAGES = hal::MAX_SESSION_FLOWS; // max no.of times a pkt enters p4 pipeline
 
-    hal_ret_t init(phv_t *phv, uint8_t *pkt, size_t pkt_len,
+    hal_ret_t init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
                    flow_t iflow[], flow_t rflow[]);
     hal_ret_t init(SessionSpec *spec, SessionResponse *rsp,
                    flow_t iflow[], flow_t rflow[]);
@@ -320,7 +301,7 @@ public:
     const hal::flow_key_t& key() const { return key_; }
 
     // Following are valid only for packets punted to ARM
-    const phv_t* phv() const { return phv_; }
+    const cpu_rxhdr_t* cpu_rxhdr() const { return cpu_rxhdr_; }
     const uint8_t* pkt() const { return pkt_; }
     size_t pkt_len() const { return pkt_len_; }
 
@@ -358,7 +339,7 @@ private:
     lifqid_t              arm_lifq_;
     hal::flow_key_t       key_;
 
-    phv_t                 *phv_;
+    cpu_rxhdr_t           *cpu_rxhdr_; // metadata from p4 to cpu
     uint8_t               *pkt_;
     size_t                pkt_len_;
 
@@ -390,7 +371,7 @@ private:
     hal_ret_t lookup_flow_objs();
     hal_ret_t lookup_session();
     hal_ret_t create_session();
-    hal_ret_t extract_flow_key_from_phv();
+    hal_ret_t extract_flow_key();
     hal_ret_t update_for_dnat(hal::flow_role_t role,
                               const header_rewrite_info_t& header);
     static hal_ret_t extract_flow_key_from_spec(hal::flow_key_t *key,

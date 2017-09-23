@@ -75,11 +75,14 @@ p4plus_app_classic_nic_common:
 
 .align
 p4plus_app_tcp_proxy:
-  phvwr       p.ethernet_valid, FALSE
-  phvwr       p.vlan_tag_valid, FALSE
-  phvwr       p.ipv4_valid, FALSE
-  phvwr       p.ipv6_valid, FALSE
-  phvwr       p.tcp_valid, FALSE
+  smeqb       c1, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
+  balcf       r7, [c1], f_p4plus_cpu_pkt
+
+  phvwr.!c1   p.ethernet_valid, FALSE
+  phvwr.!c1   p.vlan_tag_valid, FALSE
+  phvwr.!c1   p.ipv4_valid, FALSE
+  phvwr.!c1   p.ipv6_valid, FALSE
+  phvwr.!c1   p.tcp_valid, FALSE
 
   phvwr       p.p4_to_p4plus_tcp_proxy_valid, TRUE
   phvwr       p.p4_to_p4plus_tcp_proxy_sack_valid, TRUE
@@ -103,36 +106,14 @@ p4plus_app_tcp_proxy:
 
 .align
 p4plus_app_cpu:
+  phvwr       p.p4_to_p4plus_cpu_table0_valid, TRUE
+
   or          r1, r0, r0
   seq         c1, k.ipv4_valid, TRUE
   seq         c2, k.ipv6_valid, TRUE
-  seq         c3, k.inner_ipv4_valid, TRUE
-  seq         c4, k.inner_ipv6_valid, TRUE
-  seq         c5, k.inner_ethernet_valid, TRUE
-  or.c1       r1, r1, CPU_FLAGS_IPV4_VALID
-  or.c2       r1, r1, CPU_FLAGS_IPV6_VALID
-  or.c3       r1, r1, CPU_FLAGS_INNER_IPV4_VALID
-  or.c4       r1, r1, CPU_FLAGS_INNER_IPV6_VALID
-  phvwr.c1    p.p4_to_p4plus_cpu_pkt_ip_proto_outer, k.ipv4_protocol
-  phvwr.c2    p.p4_to_p4plus_cpu_pkt_ip_proto_outer, k.ipv6_nextHdr
-  phvwr.c3    p.p4_to_p4plus_cpu_pkt_ip_proto_inner, k.inner_ipv4_protocol
-  phvwr.c4    p.p4_to_p4plus_cpu_pkt_ip_proto_inner, k.inner_ipv6_nextHdr
-  phvwr       p.p4_to_p4plus_cpu_table0_valid, TRUE
-
-  setcf       c6, [c3|c4|c5]
-  bcf         [!c6], p4plus_app_cpu_native
-  phvwr.c6    p.p4_to_p4plus_cpu_inner_ip_valid, TRUE
-
-  phvwr.c3    p.p4_to_p4plus_cpu_ip_proto, k.inner_ipv4_protocol
-  b           p4plus_app_cpu_l4_tcp
-  phvwr.c4    p.p4_to_p4plus_cpu_ip_proto, k.inner_ipv6_nextHdr
-
-p4plus_app_cpu_native:
-  phvwr       p.p4_to_p4plus_cpu_ip_valid, TRUE
   phvwr.c1    p.p4_to_p4plus_cpu_ip_proto, k.ipv4_protocol
   phvwr.c2    p.p4_to_p4plus_cpu_ip_proto, k.ipv6_nextHdr
 
-p4plus_app_cpu_l4_tcp:
   seq         c1, k.tcp_valid, TRUE
   bcf         [!c1], p4plus_app_cpu_l4_icmp
   phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, k.tcp_srcPort
@@ -141,17 +122,10 @@ p4plus_app_cpu_l4_tcp:
 
 p4plus_app_cpu_l4_icmp:
   seq         c1, k.icmp_valid, TRUE
-  bcf         [!c1], p4plus_app_cpu_l4_inner_udp
+  bcf         [!c1], p4plus_app_cpu_l4_udp
   phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, k.icmp_typeCode
   b           p4plus_app_cpu_common
   nop
-
-p4plus_app_cpu_l4_inner_udp:
-  seq         c1, k.inner_udp_valid, TRUE
-  bcf         [!c1], p4plus_app_cpu_l4_udp
-  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, k.inner_udp_srcPort
-  b           p4plus_app_cpu_common
-  phvwr       p.p4_to_p4plus_cpu_l4_dport, k.inner_udp_dstPort
 
 p4plus_app_cpu_l4_udp:
   seq         c1, k.udp_valid, TRUE
@@ -162,13 +136,10 @@ p4plus_app_cpu_l4_udp:
 p4plus_app_cpu_common:
   add         r2, k.control_metadata_packet_len, P4PLUS_CPU_PKT_SZ
   phvwr       p.p4_to_p4plus_cpu_packet_len, r2
-  phvwr       p.p4_to_p4plus_cpu_pkt_flags, r1
-  phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, k.control_metadata_src_lif
-  phvwr       p.p4_to_p4plus_cpu_pkt_lkp_vrf, k.flow_lkp_metadata_lkp_vrf
-  phvwr       p.p4_to_p4plus_cpu_pkt_lkp_type, k.flow_lkp_metadata_lkp_type
 
+  bal         r7, f_p4plus_cpu_pkt
   phvwr       p.p4_to_p4plus_cpu_valid, TRUE
-  phvwr       p.p4_to_p4plus_cpu_pkt_valid, TRUE
+  phvwr       p.p4_to_p4plus_cpu_ip_valid, TRUE
   phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
@@ -184,11 +155,12 @@ p4plus_app_ipsec:
   phvwr       p.p4_to_p4plus_ipsec_seq_no, k.ipsec_metadata_seq_no
   phvwr       p.p4_to_p4plus_ipsec_l4_protocol, k.ipv4_protocol
   sll         r2, k.ipv4_ihl, 2
-  phvwr       p.p4_to_p4plus_ipsec_ip_hdr_size, r2 
+  phvwr       p.p4_to_p4plus_ipsec_ip_hdr_size, r2
   seq         c1, k.vlan_tag_valid, TRUE
   cmov        r6, c1, 18, 14
-  phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_start, r6 
-  add         r3, r6, k.ipv4_totalLen
+  phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_start, r6
+  or          r1, k.ipv4_totalLen, r0
+  add         r3, r6, r1
   phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_end, r3
   phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
@@ -207,3 +179,53 @@ p4plus_app_rdma:
   phvwr       p.ipv4_valid, FALSE
   phvwr.e     p.ipv6_valid, FALSE
   phvwr       p.udp_valid, FALSE
+
+f_p4plus_cpu_pkt:
+  phvwr       p.p4_to_p4plus_cpu_pkt_valid, TRUE
+  phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, k.{control_metadata_src_lif}.hx
+  phvwr       p.p4_to_p4plus_cpu_pkt_lif, k.{capri_intrinsic_lif_sbit0_ebit2,\
+                                             capri_intrinsic_lif_sbit3_ebit10}.hx
+  phvwr       p.p4_to_p4plus_cpu_pkt_qid, k.{control_metadata_qid}.wx
+  phvwr       p.p4_to_p4plus_cpu_pkt_qtype, k.control_metadata_qtype
+  phvwr       p.p4_to_p4plus_cpu_pkt_lkp_vrf, k.{flow_lkp_metadata_lkp_vrf}.hx
+  phvwr       p.{p4_to_p4plus_cpu_pkt_lkp_dir...p4_to_p4plus_cpu_pkt_lkp_type}, \
+                  k.control_metadata_lkp_flags_egress
+  sub         r1, r0, 1
+  phvwr       p.{p4_to_p4plus_cpu_pkt_l2_offset...p4_to_p4plus_cpu_pkt_payload_offset}, r1
+  add         r1, r0, r0
+  add         r2, r0, r0
+  seq         c1, k.ethernet_valid, TRUE
+  phvwr.c1    p.p4_to_p4plus_cpu_pkt_l2_offset, r1.hx
+  seq         c2, k.vlan_tag_valid, TRUE
+  or.c2       r2, r2, CPU_FLAGS_VLAN_VALID
+  cmov.c1     r1, c2, 18, 14
+  seq         c1, k.ipv4_valid, TRUE
+  seq         c2, k.ipv6_valid, TRUE
+  setcf       c3, [c1|c2]
+  phvwr.c3    p.p4_to_p4plus_cpu_pkt_l3_offset, r1.hx
+  add.c1      r1, r1, k.ipv4_ihl, 2
+  or.c1       r2, r2, CPU_FLAGS_IPV4_VALID
+  add.c2      r1, r1, 40
+  or.c2       r2, r2, CPU_FLAGS_IPV6_VALID
+  seq         c2, k.ipv4_ihl, 5
+  setcf       c1, [c1 & !c2]
+  or.c1       r2, r2, CPU_FLAGS_IP_OPTIONS_PRESENT
+  or          r6, k.udp_valid, k.esp_valid
+  seq         c1, r6, 1
+  seq         c2, k.tcp_valid, TRUE
+  or          r6, k.icmp_valid, k.icmpv6_valid
+  seq         c3, r6, 1
+  or          r6, k.ah_valid, k.v6_ah_esp_valid
+  seq         c4, r6, 1
+  setcf       c5, [c1|c2|c3|c4]
+  phvwr.c5    p.p4_to_p4plus_cpu_pkt_l4_offset, r1.hx
+  add.c1      r1, r1, 8
+  add.c2      r1, r1, k.tcp_dataOffset, 2
+  add.c3      r1, r1, 4
+  add.c4      r1, r1, 12
+  phvwr       p.p4_to_p4plus_cpu_pkt_payload_offset, r1.hx
+  seq         c3, k.tcp_dataOffset, 5
+  setcf       c1, [c2 & !c3]
+  or.c1       r2, r2, CPU_FLAGS_TCP_OPTIONS_PRESENT
+  jr          r7
+  phvwr       p.p4_to_p4plus_cpu_pkt_flags, r2

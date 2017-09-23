@@ -82,7 +82,9 @@ lb_icmp_deprecated_msgs:
 
 lb_icmp_redirect_msg:
   b.c2        lb_icmp_code_removal
-  seq         c2, k.l4_metadata_icmp_invalid_code_action, NORMALIZATION_ACTION_ALLOW
+  seq         c2, k.{l4_metadata_icmp_invalid_code_action_sbit0_ebit0, \
+                     l4_metadata_icmp_invalid_code_action_sbit1_ebit1}, \
+                     NORMALIZATION_ACTION_ALLOW
   seq         c3, r1, 5
   b.!c3       lb_icmp_code_removal
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_ICMP_NORMALIZATION], 1
@@ -96,7 +98,8 @@ lb_icmp_code_removal:
   sne         c5, k.icmp_typeCode[7:0], 0
   andcf       c5, [c3 | c4]
   jr.!c5      r7
-  seq         c3, k.l4_metadata_icmp_invalid_code_action, \
+  seq         c3, k.{l4_metadata_icmp_invalid_code_action_sbit0_ebit0, \
+                     l4_metadata_icmp_invalid_code_action_sbit1_ebit1}, \
                      NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_ICMP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1

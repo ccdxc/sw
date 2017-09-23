@@ -14,6 +14,8 @@ SOURCES = \
 	fte.cc \
 	fte_ctx.cc \
 	fte_flow.cc \
+	fte_session.cc \
+	fte_txrx.cc \
 	$(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

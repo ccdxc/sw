@@ -1,7 +1,11 @@
 TOPDIR = ../..
 PROGRAM = fte_test
+OBJ_DIR = $(TOPDIR)/obj
 GTEST_ROOT = $(TOPDIR)/third-party/googletest-release-1.8.0/googletest
-SYSTEM_LIBRARIES = -lpthread -lfte -lht -ltrace -lprint -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -lhalproto -lprotobuf $(GTEST_ROOT)/make/gtest.a
+
+OBJS = $(OBJ_DIR)/fte.o
+
+SYSTEM_LIBRARIES = -lpthread -lht -ltrace -lprint -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed  -lhalproto -lprotobuf $(OBJS) $(GTEST_ROOT)/make/gtest.a
 
 LCXXFLAGS = \
 	-I$(TOPDIR)/include \

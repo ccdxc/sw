@@ -58,6 +58,7 @@ header_type control_metadata_t {
         flow_miss                      : 1;
         flow_miss_ingress              : 1;  // NCC workaround for predication
         flow_miss_egress               : 1;  // NCC workaround for predication
+        lkp_flags_egress               : 8;
 
         egress_ddos_src_vf_policer_drop   : 1;
         egress_ddos_service_policer_drop  : 1;
@@ -205,8 +206,9 @@ header_type scratch_metadata_t {
         icmp_type                     : 8;
 
         classic_nic_flags             : 16;
-        cpu_flags                     : 24;
+        cpu_flags                     : 8;
         packet_len                    : 16;
+        offset                        : 16;
 
         // policer
         policer_valid                 : 1;

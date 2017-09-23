@@ -9,6 +9,9 @@ struct phv_        p;
 %%
 
 flow_hash_info:
+  or          r7, k.flow_lkp_metadata_lkp_type, k.flow_lkp_metadata_lkp_inst, 4
+  or          r7, r7, k.flow_lkp_metadata_lkp_dir, 5
+  phvwr       p.control_metadata_lkp_flags_egress, r7
   seq         c2, d.flow_hash_info_d.entry_valid, 1
   bcf         [c1&c2], flow_hash_hit
   or          r7,  d.flow_hash_info_d.hash1_sbit10_ebit10, d.flow_hash_info_d.hash1_sbit0_ebit9, 1

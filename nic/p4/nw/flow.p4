@@ -253,6 +253,14 @@ action flow_hash_info(entry_valid, export_en,
     modify_field(flow_info_metadata.flow_index, flow_index);
     modify_field(rewrite_metadata.entropy_hash, scratch_metadata.entropy_hash);
 
+    // pack fields into control_metadata.lkp_flags_egress to transfer to egress
+    modify_field(scratch_metadata.cpu_flags, flow_lkp_metadata.lkp_type);
+    bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+           flow_lkp_metadata.lkp_dir << 2);
+    bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+           flow_lkp_metadata.lkp_inst << 1);
+    modify_field(control_metadata.lkp_flags_egress, scratch_metadata.cpu_flags);
+
     // no further matches
     if ((hash1 == 0) and (hint1 == 0)) {
         modify_field(control_metadata.flow_miss, TRUE);
@@ -322,6 +330,16 @@ action flow_hash_overflow(lkp_inst, lkp_dir, lkp_type, lkp_vrf, lkp_src, lkp_dst
         modify_field(control_metadata.flow_miss_ingress, TRUE);
         modify_field(flow_info_metadata.flow_index, 0);
     }
+
+    // pack fields into control_metadata.lkp_flags_egress to transfer to egress
+    modify_field(scratch_metadata.cpu_flags, 0);
+    bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+           flow_lkp_metadata.lkp_dir << 7);
+    bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+           flow_lkp_metadata.lkp_inst << 6);
+    bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+           flow_lkp_metadata.lkp_type << 5);
+    modify_field(control_metadata.lkp_flags_egress, scratch_metadata.cpu_flags);
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.lkp_inst, lkp_inst);

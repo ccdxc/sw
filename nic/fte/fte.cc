@@ -2,7 +2,12 @@
 
 #include "fte.hpp"
 #include "fte_flow.hpp"
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
 #include <defines.h>
+#include <cpupkt_api.hpp>
 
 namespace fte {
 
@@ -257,146 +262,4 @@ void unregister_features_and_pipelines() {
     }
 }
 
-// Process grpc session_create
-hal_ret_t
-session_create (SessionSpec& spec, SessionResponse *rsp)
-{
-    hal_ret_t ret;
-    ctx_t ctx = {};
-    flow_t iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
-
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("fte::{}: Session id {} Create in Tenant id {}", __FUNCTION__, 
-                    spec.session_id(), spec.meta().tenant_id());
-
-    //Init context
-    ret = ctx.init(&spec, rsp,  iflow, rflow);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
-        goto end;
-    }
-
-    // execute the pipeline
-    ret = execute_pipeline(ctx);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: failied to execute pipeline, ret={}", ret);
-        goto end;
-    }
-
-    // update GFT
-    ret = ctx.update_gft();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: failied to updated gft, ret={}", ret);
-        goto end;
-    }
-
- end:
-    //update api status
-    switch (ret) {
-    case HAL_RET_OK:
-        rsp->set_api_status(types::API_STATUS_OK);
-        break;
-    case HAL_RET_HW_PROG_ERR:
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-        break;
-    case HAL_RET_TABLE_FULL:
-    case HAL_RET_OTCAM_FULL:
-        rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
-        break;
-    case HAL_RET_OOM:
-        rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-        break;
-    case HAL_RET_INVALID_ARG:
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        break;
-    case HAL_RET_TENANT_NOT_FOUND:
-        rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
-        break;
-    case HAL_RET_L2SEG_NOT_FOUND:
-        rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
-        break;
-    case HAL_RET_IF_NOT_FOUND:
-        rsp->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
-        break;
-    case HAL_RET_SECURITY_PROFILE_NOT_FOUND:
-        rsp->set_api_status(types::API_STATUS_NWSEC_PROFILE_NOT_FOUND);
-        break;
-    case HAL_RET_POLICER_NOT_FOUND:
-        rsp->set_api_status(types::API_STATUS_POLICER_NOT_FOUND);
-        break;
-    case HAL_RET_HANDLE_INVALID:
-        rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
-        break;
-    default:
-        rsp->set_api_status(types::API_STATUS_ERR);
-        break;
-    }
-
-
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
-    return ret;
-}
-
-// FTE main pkt loop
-void
-pkt_loop(arm_rx_t rx, arm_tx_t tx)
-{
-    hal_ret_t ret;
-    phv_t *phv;
-    uint8_t *pkt;
-    size_t pkt_len;
-    ctx_t ctx;
-    flow_t iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
-
-    while(true) {
-        // read the packet
-        ret = rx(&phv, &pkt, &pkt_len);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("fte: arm rx failed, ret={}", ret);
-            continue;
-        }
-
-        // Process pkt with db open
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-        do {
-            // Init ctx_t
-            ret = ctx.init(phv, pkt, pkt_len, iflow, rflow);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
-                break;;
-            }
-            
-            // execute the pipeline
-            ret = execute_pipeline(ctx);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("fte: failied to execute pipeline, ret={}", ret);
-                break;
-            }
-            
-            // update GFT
-            ret = ctx.update_gft();
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("fte: failied to updated gft, ret={}", ret);
-                break;
-            }
-        } while(false);
-
-        if (ret != HAL_RET_OK) {
-            hal::hal_cfg_db_close(true);
-            continue;
-        }
-
-        // Update and send the packet
-        hal::hal_cfg_db_close(false);
-
-        // write the packet
-        if (ctx.pkt()) {
-            ret = tx(ctx.phv(), ctx.pkt(), ctx.pkt_len());
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("fte: failied to transmit pkt, ret={}", ret);
-                continue;
-            }
-        }
-    }
-}
 } // namespace fte
