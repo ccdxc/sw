@@ -1,0 +1,15 @@
+# Feature Test Modules List
+feature:
+    id          : l2mc
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : L2MC
+        spec    : l2mc.testspec
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+

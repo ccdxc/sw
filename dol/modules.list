@@ -1314,16 +1314,6 @@ modules:
             - flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
 
     - module:
-        name    : L2MC
-        enable  : True
-        package : test.networking
-        module  : multicast
-        spec    : l2mc.testspec
-        ignore  : False
-        iterate :
-            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
-
-    - module:
         name    : ETH_TX_RX # Host to Host case
         enable  : True
         package : test.eth
