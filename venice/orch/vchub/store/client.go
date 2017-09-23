@@ -42,6 +42,11 @@ func Reinit() {
 	kvStore, _ = ks.New(config)
 }
 
+// Close closes the client session
+func Close() {
+	kvStore.Close()
+}
+
 // kvCreate is a wrapper that retries on transient kv errors
 func kvCreate(ctx context.Context, key string, obj runtime.Object) error {
 	log.Infof("kvCreate key: %s, obj: %+v", key, obj)

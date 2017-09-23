@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
@@ -23,6 +25,8 @@ import (
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/ctrler/npm"
+	"github.com/pensando/sw/venice/orch"
+	"github.com/pensando/sw/venice/orch/simapi"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -41,6 +45,7 @@ const (
 	integTestNpmURL    = "localhost:9495"
 	integTestApisrvURL = "localhost:8082"
 	integTestAPIGWURL  = "localhost:9092"
+	vchTestURL         = "localhost:19003"
 )
 
 // veniceIntegSuite is the state of integ test
@@ -53,6 +58,7 @@ type veniceIntegSuite struct {
 	numAgents    int
 	restClient   apiclient.Services
 	apisrvClient apiclient.Services
+	vcHub        vchSuite
 }
 
 // test args
@@ -159,6 +165,8 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	}
 	it.apisrvClient = apicl
 	time.Sleep(time.Millisecond * 100)
+
+	it.vcHub.SetUp(c, it.numAgents)
 }
 
 func (it *veniceIntegSuite) SetUpTest(c *C) {
@@ -182,6 +190,7 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	it.ctrler = nil
 	it.apiSrv.Stop()
 	it.apiGw.Stop()
+	it.vcHub.TearDown()
 }
 
 // basic test to make sure all components come up
@@ -211,4 +220,74 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 		_, cerr := it.agents[0].Netagent.FindNetwork(nw.ObjectMeta)
 		return (cerr != nil)
 	}, "Network still found in agent")
+}
+
+// Verify basic vchub functionality
+func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
+	// setup vchub client
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithInsecure())
+	conn, err := grpc.Dial(vchTestURL, opts...)
+	c.Assert(err, IsNil)
+
+	vcHubClient := orch.NewOrchApiClient(conn)
+	// verify number of smartnics
+	filter := &orch.Filter{}
+	AssertEventually(c, func() bool {
+		nicList, err := vcHubClient.ListSmartNICs(context.Background(), filter)
+		if err == nil && len(nicList.GetItems()) == it.numAgents {
+			return true
+		}
+
+		return false
+	}, "Unable to find expected snics")
+
+	// add a nwif and verify it is seen by client.
+	addReq := &simapi.NwIFSetReq{
+		WLName:    "Venice-TestVM",
+		IPAddr:    "22.2.2.3",
+		Vlan:      "301",
+		PortGroup: "userNet101",
+	}
+
+	snicMac := it.vcHub.snics[0]
+	addResp, err := it.vcHub.vcSim.CreateNwIF(snicMac, addReq)
+	c.Assert(err, IsNil)
+
+	AssertEventually(c, func() bool {
+		nwifList, err := vcHubClient.ListNwIFs(context.Background(), filter)
+		if err != nil {
+			return false
+		}
+
+		for _, nwif := range nwifList.GetItems() {
+			s := nwif.GetStatus()
+			if s.MacAddress != addResp.MacAddr || s.Network != "userNet101" || s.SmartNIC_ID != snicMac || s.WlName != "Venice-TestVM" {
+				continue
+			}
+
+			return true
+		}
+
+		return false
+	}, "Unable to find expected nwif")
+
+	// delete and verify
+	it.vcHub.vcSim.DeleteNwIF(snicMac, addResp.UUID)
+	AssertEventually(c, func() bool {
+		nwifList, err := vcHubClient.ListNwIFs(context.Background(), filter)
+		if err != nil {
+			return false
+		}
+
+		for _, nwif := range nwifList.GetItems() {
+			s := nwif.GetStatus()
+			if s.MacAddress == addResp.MacAddr {
+				return false
+			}
+		}
+
+		return true
+	}, "Deleted nwif still exists")
+
 }

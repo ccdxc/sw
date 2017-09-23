@@ -60,6 +60,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             systemctl enable docker && systemctl start docker
             # populate the master virtual ip
             echo '192.168.30.10 pen-master' >> /etc/hosts
+            # add a friendly alias
+            echo 'alias pensw="cd /import/src/github.com/pensando/sw/"' >> /home/vagrant/.bashrc
           EOF
           s.args = [node_name, node_addr, nodeprops[:cluster_ip_nodes], nodeprops[:quorum_nodenames] ]
       end

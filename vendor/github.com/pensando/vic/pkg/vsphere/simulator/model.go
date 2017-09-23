@@ -20,11 +20,11 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
+	"github.com/pensando/vic/pkg/vsphere/simulator/vc"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
-	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
-	"github.com/pensando/vic/pkg/vsphere/simulator/vc"
 )
 
 // Model is used to populate a Model with an initial set of managed entities.
@@ -76,7 +76,8 @@ type Model struct {
 	// total number of inventory objects, set by Count()
 	total int
 
-	dirs []string
+	dirs    []string
+	folders *object.DatacenterFolders
 }
 
 // ESX is the default Model for a standalone ESX instance
@@ -263,6 +264,7 @@ func (m *Model) Create() error {
 		if err != nil {
 			return err
 		}
+		m.folders = folders
 
 		if m.Pod > 0 {
 			for pod := 0; pod < m.Pod; pod++ {
@@ -460,4 +462,64 @@ func (m *Model) Remove() {
 
 	vmList = []*VirtualMachine{}
 	Map = NewRegistry()
+}
+
+func (m *Model) AddHost(name, mac string) (*HostSystem, error) {
+	spec := types.HostConnectSpec{
+		HostName: name,
+	}
+
+	task, err := m.folders.HostFolder.AddStandaloneHost(context.Background(), spec, true, nil, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := task.WaitForResult(context.Background(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	hostRef := info.Result.(types.ManagedObjectReference)
+	host := Map.Get(hostRef).(*HostSystem)
+	host.Config.Network.Pnic[0].Mac = mac
+	viewMgr := Map.ViewManager()
+	viewMgr.RefreshViews()
+	IncrGlobalVersion()
+	return host, nil
+}
+func (m *Model) AddVM(h *HostSystem, name string) (*VirtualMachine, error) {
+	ctx := context.Background()
+	//nic := esx.EthernetCard
+
+	config := types.VirtualMachineConfigSpec{
+		Name:    name,
+		GuestId: string(types.VirtualMachineGuestOsIdentifierOtherGuest),
+		Files: &types.VirtualMachineFileInfo{
+			VmPathName: "[LocalDS_0]",
+		},
+	}
+
+	host := object.NewHostSystem(nil, h.Reference())
+	pool := object.NewResourcePool(nil, NewResourcePool().Reference())
+
+	//devices := []types.BaseVirtualDevice{&nic}
+	devices := []types.BaseVirtualDevice{}
+
+	config.DeviceChange, _ = object.VirtualDeviceList(devices).ConfigSpec(types.VirtualDeviceConfigSpecOperationAdd)
+
+	task, err := m.folders.VmFolder.CreateVM(ctx, config, pool, host)
+	if err != nil {
+		return nil, err
+	}
+	info, err := task.WaitForResult(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	vmRef := info.Result.(types.ManagedObjectReference)
+	vm := Map.Get(vmRef).(*VirtualMachine)
+	viewMgr := Map.ViewManager()
+	viewMgr.RefreshViews()
+	IncrGlobalVersion()
+	return vm, nil
 }

@@ -866,6 +866,16 @@
 			"revisionTime": "2017-08-08T17:56:35Z"
 		},
 		{
+			"path": "github.com/google/protobuf/examples/tutorial",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "e/Kc2UOy1lKAy31xWlK37M1r2e8=",
+			"path": "github.com/google/shlex",
+			"revision": "6f45313302b9c56850fc17f99e40caebce98c716",
+			"revisionTime": "2015-01-27T13:39:51Z"
+		},
+		{
 			"checksumSHA1": "e/Kc2UOy1lKAy31xWlK37M1r2e8=",
 			"path": "github.com/google/shlex",
 			"revision": "6f45313302b9c56850fc17f99e40caebce98c716",
@@ -877,16 +887,6 @@
 			"path": "github.com/google/uuid",
 			"revision": "fbffc215d34cc7bf8b8d7e3a985effd5543606b1",
 			"revisionTime": "2017-07-06T21:30:02Z"
-		},
-		{
-			"path": "github.com/google/protobuf/examples/tutorial",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "e/Kc2UOy1lKAy31xWlK37M1r2e8=",
-			"path": "github.com/google/shlex",
-			"revision": "6f45313302b9c56850fc17f99e40caebce98c716",
-			"revisionTime": "2015-01-27T13:39:51Z"
 		},
 		{
 			"checksumSHA1": "6vi0BHESE7HjF6tp9bqwNlv7gHg=",
@@ -1495,16 +1495,16 @@
 			"tree": true
 		},
 		{
-			"checksumSHA1": "m4B/NP+D0S1YzRZi14oDyHhEImg=",
+			"checksumSHA1": "8zRVs/KKwdczUOue0DNnN4quxD4=",
 			"path": "github.com/pensando/vic/pkg/vsphere/simulator",
-			"revision": "ce769c2150752990dacdd017469bb3f01e4566da",
-			"revisionTime": "2017-08-23T21:50:57Z"
+			"revision": "39de47e3bb0c4e0d94062f2737f606104f254705",
+			"revisionTime": "2017-09-19T16:45:12Z"
 		},
 		{
 			"checksumSHA1": "h0ZnuRkQke+V5NsTBUa/M6ZuuG0=",
 			"path": "github.com/pensando/vic/pkg/vsphere/simulator/esx",
-			"revision": "ce769c2150752990dacdd017469bb3f01e4566da",
-			"revisionTime": "2017-08-23T21:50:57Z"
+			"revision": "39de47e3bb0c4e0d94062f2737f606104f254705",
+			"revisionTime": "2017-09-19T16:45:12Z"
 		},
 		{
 			"checksumSHA1": "+HELhEOoXHFoSDGXtd4d0lSD028=",

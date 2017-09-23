@@ -28,6 +28,8 @@ import (
 
 // Map is the default Registry instance.
 var Map = NewRegistry()
+var resourceVersion = 1
+var globalRV = "1"
 
 // RegisterObject interface supports callbacks when objects are added and removed from the Registry
 type RegisterObject interface {
@@ -301,6 +303,15 @@ func (r *Registry) FileManager() *FileManager {
 // ViewManager returns the ViewManager singleton
 func (r *Registry) ViewManager() *ViewManager {
 	return r.Get(r.content().ViewManager.Reference()).(*ViewManager)
+}
+
+func getGlobalVersion() string {
+	return globalRV
+}
+
+func IncrGlobalVersion() {
+	resourceVersion++
+	globalRV = fmt.Sprintf("%d", resourceVersion)
 }
 
 func (r *Registry) Dump() {

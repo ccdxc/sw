@@ -107,7 +107,7 @@ func launchVCHub(opts *cliOpts) {
 
 	storeCh := make(chan defs.StoreMsg, storeQSize)
 	vchStore := store.NewVCHStore(context.Background())
-	go vchStore.Run(storeCh)
+	vchStore.Run(storeCh)
 
 	// Start probes
 	retryMap := make(map[string]*vcprobe.VCProbe)

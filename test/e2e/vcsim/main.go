@@ -35,6 +35,7 @@ type cliOpts struct {
 	snicList  string
 	hostUrls  string
 	soapPort  string
+	printInv  bool
 }
 
 func main() {
@@ -57,6 +58,10 @@ func main() {
 		"soap-port",
 		vcSimSoapPort,
 		"Port where sim should listen for SOAP requests")
+	flagSet.BoolVar(&opts.printInv,
+		"print-inv",
+		false,
+		"Print inventory")
 
 	flagSet.Parse(os.Args[1:])
 
@@ -104,6 +109,10 @@ func main() {
 		hostSims[s] = hosts[ix]
 	}
 
+	if opts.printInv {
+		sim.PrintInventory()
+	}
+
 	nwIFs = make(map[string]string)
 	// start an http server
 	serveHTTP(opts.listenURL)
@@ -134,21 +143,21 @@ func createNwIF(r *http.Request) (interface{}, error) {
 	}
 
 	lock.Lock()
-	u1, ok := hostSims[req.SmartNIC]
+	_, ok := hostSims[req.SmartNIC]
 	lock.Unlock()
 	if !ok {
 		resp.ErrorMsg = "req.SmartNIC is unrecognized"
 		return resp, fmt.Errorf("snic not recognized")
 	}
 
-	rr, err := vcSim.CreateNwIF(u1, &req)
+	rr, err := vcSim.CreateNwIF(req.SmartNIC, &req)
 	if err != nil {
 		resp.ErrorMsg = err.Error()
 		return resp, err
 	}
 
 	lock.Lock()
-	nwIFs[rr.UUID] = u1
+	nwIFs[rr.UUID] = req.SmartNIC
 	lock.Unlock()
 
 	return rr, nil
@@ -159,13 +168,13 @@ func deleteNwIF(r *http.Request) (interface{}, error) {
 	kvs := mux.Vars(r)
 	nwif := kvs["id"]
 	lock.Lock()
-	u1, ok := nwIFs[nwif]
+	snic, ok := nwIFs[nwif]
 	lock.Unlock()
 	if !ok {
 		resp.ErrorMsg = "nwif-id is unrecognized"
 		return resp, fmt.Errorf("nwif-id not recognized")
 	}
-	del := vcSim.DeleteNwIF(u1, nwif)
+	del := vcSim.DeleteNwIF(snic, nwif)
 	if del == nil {
 		resp.ErrorMsg = "nwif-id is unrecognized"
 		return resp, fmt.Errorf("nwif-id not recognized")

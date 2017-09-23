@@ -529,9 +529,9 @@ func (vm *VirtualMachine) AddVeth(mac, pgKey, portKey string) (string, error) {
 				Backing: &types.VirtualEthernetCardDistributedVirtualPortBackingInfo{
 					VirtualDeviceBackingInfo: types.VirtualDeviceBackingInfo{},
 					Port: types.DistributedVirtualSwitchPortConnection{
-						SwitchUuid: esx.DvsUuid,
+						SwitchUuid:   esx.DvsUuid,
 						PortgroupKey: pgKey,
-						PortKey: portKey,
+						PortKey:      portKey,
 					},
 				},
 				Connectable: &types.VirtualDeviceConnectInfo{
@@ -561,6 +561,7 @@ func (vm *VirtualMachine) AddVeth(mac, pgKey, portKey string) (string, error) {
 	}
 	err := vm.configure(spec)
 	if err == nil {
+		IncrGlobalVersion()
 		return object.VirtualDeviceList(devices).Name(&veth), nil
 	}
 
@@ -607,8 +608,17 @@ func (vm *VirtualMachine) RemoveVeth(name string) error {
 	}
 	err := vm.configure(spec)
 	if err == nil {
+		IncrGlobalVersion()
 		return nil
 	}
 
 	return fmt.Errorf("Failed -- %+v", err)
+}
+
+func (vm *VirtualMachine) Destroy() {
+	req := &types.Destroy_Task{This: vm.Reference()}
+	vm.DestroyTask(req)
+	viewMgr := Map.ViewManager()
+	viewMgr.RefreshViews()
+	IncrGlobalVersion()
 }

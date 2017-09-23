@@ -33,4 +33,5 @@ type OrchSim interface {
 	SetHostURL(string, string) error
 	CreateNwIF(string, *NwIFSetReq) (*NwIFSetResp, error)
 	DeleteNwIF(string, string) *NwIFDelResp
+	AddHost(string, string, string)
 }

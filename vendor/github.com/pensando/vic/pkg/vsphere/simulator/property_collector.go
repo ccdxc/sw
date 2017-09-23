@@ -27,7 +27,7 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
-//	"github.com/davecgh/go-spew/spew"
+	//"github.com/davecgh/go-spew/spew"
 )
 
 type PropertyCollector struct {
@@ -466,12 +466,15 @@ func (pc *PropertyCollector) WaitForUpdatesEx(r *types.WaitForUpdatesEx) soap.Ha
 	// At the moment we need to support Task completion.  Handlers can simply set the Task
 	// state before returning and the non-incremental update is enough for the client.
 	// We can wait for incremental updates to simulate timeouts, etc.
-	if r.Version != "" {
-		time.Sleep(500*time.Millisecond)
+
+	currVersion := getGlobalVersion()
+	for r.Version == currVersion {
+		time.Sleep(250*time.Millisecond)
+		currVersion = getGlobalVersion()
 	}
 
 	update := &types.UpdateSet{
-		Version: "-",
+		Version: currVersion,
 	}
 
 	for _, ref := range pc.Filter {

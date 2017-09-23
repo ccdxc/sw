@@ -175,11 +175,13 @@ func (ts *TestSuite) setup(t *testing.T, fake bool) {
 
 func (ts *TestSuite) teardown(t *testing.T) {
 	ts.cc.Close()
+	ts.vch.StopServer()
+	store.Close()
 	if ts.cluster != nil {
 		time.Sleep(200 * time.Millisecond)
 		ts.cluster.Terminate(t)
 	}
-	ts.vch.StopServer()
+
 	sim.TearDown()
 	time.Sleep(500 * time.Millisecond)
 }
@@ -908,7 +910,7 @@ func TestVCPSnic(t *testing.T) {
 
 	storeCh := make(chan defs.StoreMsg, 96)
 	vchStore := store.NewVCHStore(context.Background())
-	go vchStore.Run(storeCh)
+	vchStore.Run(storeCh)
 	v1 := vcp.NewVCProbe(u1, storeCh)
 	time.Sleep(100 * time.Millisecond) // let simulator start
 	err = v1.Start()
@@ -921,11 +923,11 @@ func TestVCPSnic(t *testing.T) {
 	verifyVCPSnics(t, "50ms", "5s")
 
 	hosts := esx.GetHostList()
-	esx.AddPnicToHost(hosts[0], "vmnic2", "0c:c4:7a:70:68:68")
-	esx.AddPnicToHost(hosts[1], "vmnic3", "0c:c4:7a:70:86:86")
+	simulator.AddPnicToHost(hosts[0], "vmnic2", "0c:c4:7a:70:68:68")
+	simulator.AddPnicToHost(hosts[1], "vmnic3", "0c:c4:7a:70:86:86")
 	verifyVCPSnics(t, "50ms", "10s")
 
-	esx.DelPnicFromHost(hosts[1], "vmnic3")
+	simulator.DelPnicFromHost(hosts[1], "vmnic3")
 	verifyVCPSnics(t, "50ms", "10s")
 
 	// Start another vc simulator
@@ -954,6 +956,8 @@ func TestVCPSnic(t *testing.T) {
 	v1.Stop()
 	v2.Stop()
 	close(storeCh)
+	vchStore.WaitForExit()
+	simulator.DelPnicFromHost(hosts[0], "vmnic2")
 }
 
 func getPNICMac(href *types.ManagedObjectReference) string {
@@ -1073,7 +1077,7 @@ func TestVCPNwIF(t *testing.T) {
 
 	storeCh := make(chan defs.StoreMsg, 96)
 	vchStore := store.NewVCHStore(context.Background())
-	go vchStore.Run(storeCh)
+	vchStore.Run(storeCh)
 	v1 := vcp.NewVCProbe(u1, storeCh)
 	time.Sleep(100 * time.Millisecond)
 	err = v1.Start()
@@ -1118,6 +1122,6 @@ func TestVCPNwIF(t *testing.T) {
 	}
 
 	v1.Stop()
-	time.Sleep(100 * time.Millisecond)
 	close(storeCh)
+	vchStore.WaitForExit()
 }

@@ -26,6 +26,7 @@ import (
 
 // Inventory maintains inventory info for the simulator
 type Inventory struct {
+	model    *simulator.Model
 	vCenters map[string]*simInfo
 	servers  map[string]*serverInfo // indexed by snic mac
 }
@@ -65,6 +66,9 @@ func TearDown() {
 		return
 	}
 
+	simulator.IncrGlobalVersion()
+	time.Sleep(250 * time.Millisecond)
+	simulator.IncrGlobalVersion()
 	for _, i := range vCenters {
 		i.server.Close()
 		i.model.Remove()
@@ -116,7 +120,7 @@ func AddSmartNIC(hostIndex int, name, mac string) error {
 		return fmt.Errorf("Specified host not found, %d hosts available", len(hosts))
 	}
 
-	esx.AddPnicToHost(hosts[hostIndex], name, mac)
+	simulator.AddPnicToHost(hosts[hostIndex], name, mac)
 
 	return nil
 }
@@ -143,7 +147,7 @@ func DeleteNwIF(name string) error {
 func PrintInventory() {
 	hosts := make(map[string]*simulator.HostSystem)
 	vms := simulator.GetVMList()
-	log.Infof("==================================")
+	log.Infof("==================================\n")
 	for _, vm := range vms {
 		vmID := vm.Reference().Value
 		href := vm.Runtime.Host.Reference()
@@ -157,7 +161,7 @@ func PrintInventory() {
 			}
 		}
 	}
-	log.Infof("++++++++++++++++++++++++++++++++++")
+	log.Infof("++++++++++++++++++++++++++++++++++\n")
 	for k, e := range hosts {
 		log.Infof("HostKey=== %s", k)
 		for _, v := range e.Vm {
@@ -165,7 +169,7 @@ func PrintInventory() {
 		}
 	}
 
-	log.Infof("==================================")
+	log.Infof("==================================\n")
 }
 
 // New returns an instance of the simulator
@@ -206,7 +210,20 @@ func (s *Inventory) Run(addr string, snicMacs []string, vms int) (string, error)
 	srv := m.Service.NewServer()
 	i := &simInfo{model: m, server: srv}
 	s.vCenters[addr] = i
+	s.model = m
 	return fmt.Sprintf("%s", srv.URL), nil
+}
+
+// AddHost can be used to test adding hosts
+func (s *Inventory) AddHost(vcAddr, simURL, mac string) {
+	m := s.vCenters[vcAddr].model
+	h, _ := m.AddHost(simURL, mac)
+	s.servers[mac] = &serverInfo{
+		simURL:    simURL,
+		snicMac:   mac,
+		hSystem:   h,
+		workLoads: make(map[string]*wlInfo),
+	}
 }
 func getVeth(d types.BaseVirtualDevice) *types.VirtualEthernetCard {
 	dKind := reflect.TypeOf(d).Elem()
@@ -267,6 +284,9 @@ func (s *Inventory) updateInv(snicMacs []string) {
 
 // Destroy destroys the simulator
 func (s *Inventory) Destroy() {
+	simulator.IncrGlobalVersion()
+	time.Sleep(250 * time.Millisecond)
+	simulator.IncrGlobalVersion()
 	for _, i := range s.vCenters {
 		i.server.Close()
 		i.model.Remove()
@@ -290,73 +310,87 @@ func (s *Inventory) SetHostURL(snicMac, hostURL string) error {
 }
 
 // CreateNwIF creates a vnic in the simulator
-func (s *Inventory) CreateNwIF(hostURL string, r *simapi.NwIFSetReq) (*simapi.NwIFSetResp, error) {
+func (s *Inventory) CreateNwIF(snicMac string, r *simapi.NwIFSetReq) (*simapi.NwIFSetResp, error) {
 	// find a matching host
-	for _, srv := range s.servers {
-		if srv.simURL == hostURL {
-			if r.IPAddr == "" {
-				return nil, fmt.Errorf("IP address is required")
-			}
-
-			// if mac address is empty, generate from IP addr
-			if r.MacAddr == "" {
-				r.MacAddr = macFromIP(r.IPAddr)
-			}
-
-			vmRef := srv.hSystem.Vm[0].Reference()
-			vv := simulator.Map.Get(vmRef)
-			vm := vv.(*simulator.VirtualMachine)
-			name, err := vm.AddVeth(r.MacAddr, r.PortGroup, r.Vlan)
-			if err != nil {
-				return nil, err
-			}
-
-			resp := &simapi.NwIFSetResp{}
-			err = n.HTTPPost(hostURL+"/nwifs/create", r, resp)
-			if err != nil {
-				vm.RemoveVeth(name)
-			}
-			wl := &wlInfo{
-				wlUUID:   resp.WlUUID,
-				nwIFUUID: resp.UUID,
-				vm:       vm,
-				vethName: name,
-			}
-
-			srv.workLoads[resp.UUID] = wl
-
-			return resp, err
-		}
+	srv := s.servers[snicMac]
+	if srv == nil {
+		return nil, fmt.Errorf("snic not found")
 	}
-	return nil, fmt.Errorf("No server with %s url", hostURL)
+
+	if r.IPAddr == "" {
+		return nil, fmt.Errorf("IP address is required")
+	}
+
+	hostURL := srv.simURL
+	// if mac address is empty, generate from IP addr
+	if r.MacAddr == "" {
+		r.MacAddr = macFromIP(r.IPAddr)
+	}
+
+	vm, err := s.model.AddVM(srv.hSystem, r.WLName)
+	if err != nil {
+		return nil, err
+	}
+	name, err := vm.AddVeth(r.MacAddr, r.PortGroup, r.Vlan)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &simapi.NwIFSetResp{}
+	if hostURL != "" {
+		err = n.HTTPPost(hostURL+"/nwifs/create", r, resp)
+		if err != nil {
+			vm.RemoveVeth(name)
+			vm.Destroy()
+			return nil, err
+		}
+	} else {
+		resp.UUID = r.MacAddr + r.Vlan
+		resp.MacAddr = r.MacAddr
+	}
+	wl := &wlInfo{
+		wlUUID:   resp.WlUUID,
+		nwIFUUID: resp.UUID,
+		vm:       vm,
+		vethName: name,
+	}
+
+	srv.workLoads[resp.UUID] = wl
+
+	return resp, err
 }
 
-// DeleteNwIF not yet
-func (s *Inventory) DeleteNwIF(hostURL string, id string) *simapi.NwIFDelResp {
+// DeleteNwIF deletes a nwif
+func (s *Inventory) DeleteNwIF(snicMac string, id string) *simapi.NwIFDelResp {
 	// find a matching host
-	for _, srv := range s.servers {
-		if srv.simURL == hostURL {
-			wl := srv.workLoads[id]
-			if wl == nil {
-				log.Errorf("DeleteNwIF %s, %s not found", hostURL, id)
-				return nil
-			}
+	srv := s.servers[snicMac]
+	if srv == nil {
+		return nil
+	}
 
-			r := &simapi.NwIFSetReq{}
-			resp := &simapi.NwIFDelResp{}
-			u1 := fmt.Sprintf("%s/nwifs/%s/delete", hostURL, id)
-			err := n.HTTPPost(u1, r, resp)
-			if err != nil {
-				log.Errorf("DeleteNwIF %s, %s failed on host", hostURL, id)
-				return nil
-			}
+	wl := srv.workLoads[id]
+	if wl == nil {
+		log.Errorf("DeleteNwIF %s, %s not found", snicMac, id)
+		return nil
+	}
+	hostURL := srv.simURL
 
-			wl.vm.RemoveVeth(wl.vethName)
-			delete(srv.workLoads, id)
-			return resp
+	resp := &simapi.NwIFDelResp{}
+	if hostURL != "" {
+		r := &simapi.NwIFSetReq{}
+		u1 := fmt.Sprintf("%s/nwifs/%s/delete", hostURL, id)
+		err := n.HTTPPost(u1, r, resp)
+		if err != nil {
+			log.Errorf("DeleteNwIF %s, %s failed on host", hostURL, id)
+			return nil
 		}
 	}
-	return nil
+
+	wl.vm.RemoveVeth(wl.vethName)
+	time.Sleep(300 * time.Millisecond)
+	wl.vm.Destroy()
+	delete(srv.workLoads, id)
+	return resp
 }
 
 func macFromIP(IP string) string {

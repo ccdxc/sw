@@ -120,6 +120,16 @@ func CreateStandaloneHost(f *Folder, spec types.HostConnectSpec) (*HostSystem, t
 	return host, nil
 }
 
+func AddPnicToHost(h *mo.HostSystem, name, mac string) {
+	esx.AddPnicToHost(h, name, mac)
+	IncrGlobalVersion()
+}
+
+func DelPnicFromHost(h *mo.HostSystem, name string) {
+	esx.DelPnicFromHost(h, name)
+	IncrGlobalVersion()
+}
+
 func Dump() {
 	Map.Dump()
 }

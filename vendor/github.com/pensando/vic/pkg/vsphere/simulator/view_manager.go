@@ -97,6 +97,7 @@ func (m *ViewManager) CreateContainerView(req *types.CreateContainerView) soap.H
 			Type:      req.Type,
 		},
 		make(map[string]bool),
+		nil,
 	}
 
 	for _, ctype := range container.Type {
@@ -124,14 +125,25 @@ func (m *ViewManager) CreateContainerView(req *types.CreateContainerView) soap.H
 	}
 
 	container.add(root)
+	container.root = root
 
 	return body
+}
+func (m *ViewManager) RefreshViews() {
+	for _, r := range m.ViewList {
+		cv, ok := Map.Get(r).(*ContainerView)
+		if ok {
+			cv.View = []types.ManagedObjectReference{}
+			cv.add(cv.root)
+		}
+	}
 }
 
 type ContainerView struct {
 	mo.ContainerView
 
 	types map[string]bool
+	root mo.Reference
 }
 
 func (v *ContainerView) DestroyView(c *types.DestroyView) soap.HasFault {

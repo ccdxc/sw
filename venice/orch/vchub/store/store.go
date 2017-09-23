@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"sync"
 
 	"github.com/pensando/sw/venice/orch/vchub/defs"
 	"github.com/pensando/sw/venice/utils/log"
@@ -10,6 +11,7 @@ import (
 // VCHStore maintains information about a store instance
 type VCHStore struct {
 	ctx    context.Context
+	wg     sync.WaitGroup
 	snicDB *snicStore
 	nwifDB *nwifStore
 }
@@ -35,8 +37,21 @@ func NewVCHStore(ctx context.Context) *VCHStore {
 	}
 }
 
-// Run processes updates sent on the input channel
+// Run starts a go func that processes updates sent on the input channel
 func (v *VCHStore) Run(inbox <-chan defs.StoreMsg) {
+	go v.run(inbox)
+}
+
+// WaitForExit waits for the store thread to exit
+func (v *VCHStore) WaitForExit() {
+	v.wg.Wait()
+}
+
+// run processes updates sent on the input channel
+func (v *VCHStore) run(inbox <-chan defs.StoreMsg) {
+
+	v.wg.Add(1)
+	defer v.wg.Done()
 
 	for {
 		select {
