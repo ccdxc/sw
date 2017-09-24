@@ -43,7 +43,7 @@ typedef struct tenant_s {
 
 typedef struct tenant_create_app_ctxt_s {
     nwsec_profile_t    *sec_prof;
-} tenant_create_app_ctxt_t;
+} __PACK__ tenant_create_app_ctxt_t;
 
 typedef struct tenant_update_app_ctxt_s {
     bool                nwsec_prof_change;
@@ -51,7 +51,7 @@ typedef struct tenant_update_app_ctxt_s {
     // valid for nwsec_prof_change
     hal_handle_t        nwsec_profile_handle;   // new profile handle
     nwsec_profile_t    *nwsec_prof;             // new nwsec profile
-} tenant_update_app_ctxt_t;
+} __PACK__ tenant_update_app_ctxt_t;
 
 
 // max. number of VRFs supported  (TODO: we can take this from cfg file)

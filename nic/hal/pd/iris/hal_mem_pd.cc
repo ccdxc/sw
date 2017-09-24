@@ -65,11 +65,16 @@ hal_state_pd::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((l2seg_slab_ != NULL), false);
 
-    l2seg_hwid_ht_ = ht::factory(HAL_MAX_HW_L2SEGMENTS,
-                                 hal::pd::l2seg_pd_get_hw_key_func,
-                                 hal::pd::l2seg_pd_compute_hw_hash_func,
-                                 hal::pd::l2seg_pd_compare_hw_key_func);
-    HAL_ASSERT_RETURN((l2seg_hwid_ht_ != NULL), false);
+	l2seg_hwid_ht_ = ht::factory(HAL_MAX_HW_L2SEGMENTS,
+								 hal::pd::l2seg_pd_hwid_get_hw_key_func,
+								 hal::pd::l2seg_pd_hwid_compute_hw_hash_func,
+								 hal::pd::l2seg_pd_hwid_compare_hw_key_func);
+	HAL_ASSERT_RETURN((l2seg_hwid_ht_ != NULL), false);
+
+    l2seg_cpu_idxr_ = new hal::utils::indexer(HAL_MAX_HW_L2SEGMENTS, 
+                                              true, /* thread safe */
+                                              true);/* skip zero */
+    HAL_ASSERT_RETURN((l2seg_cpu_idxr_ != NULL), false);
 
     // initialize lport indexer
     lport_idxr_ = new hal::utils::indexer(HAL_MAX_LPORTS);
@@ -310,7 +315,8 @@ hal_state_pd::hal_state_pd()
     nwsec_profile_hwid_idxr_ = NULL;
 
     l2seg_slab_ = NULL;
-    l2seg_hwid_ht_ = NULL;
+    l2seg_hwid_ht_ = NULL; 
+    l2seg_cpu_idxr_ = NULL;
 
     lport_idxr_ = NULL;
 
@@ -392,6 +398,7 @@ hal_state_pd::~hal_state_pd()
 
     l2seg_slab_ ? delete l2seg_slab_ : HAL_NOP;
     l2seg_hwid_ht_ ? delete l2seg_hwid_ht_ : HAL_NOP;
+    l2seg_cpu_idxr_ ? delete l2seg_cpu_idxr_ : HAL_NOP;
 
     lport_idxr_ ? delete lport_idxr_ : HAL_NOP;
 
@@ -1062,8 +1069,24 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state_pd->uplinkpc_pd_slab()->free_(elem);
         break;
 
+    case HAL_SLAB_ENICIF_PD:
+        g_hal_state_pd->enicif_pd_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_CPUIF_PD:
+        g_hal_state_pd->cpuif_pd_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_SECURITY_PROFILE_PD:
+        g_hal_state_pd->nwsec_pd_slab()->free_(elem);
+        break;
+
     case HAL_SLAB_EP_PD:
         g_hal_state_pd->ep_pd_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_EP_IP_ENTRY_PD:
+        g_hal_state_pd->ep_pd_ip_entry_slab()->free_(elem);
         break;
 
     case HAL_SLAB_SESSION_PD:

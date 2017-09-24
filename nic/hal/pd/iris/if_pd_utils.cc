@@ -321,7 +321,7 @@ l2seg_get_pi_tenant(l2seg_t *pi_l2seg)
 {
     tenant_t    *pi_tenant = NULL;
 
-    pi_tenant = tenant_lookup_by_id(pi_l2seg->tenant_id);
+    pi_tenant = tenant_lookup_by_handle(pi_l2seg->tenant_handle);
     HAL_ASSERT_RETURN(pi_tenant != NULL, NULL);
 
     return pi_tenant;

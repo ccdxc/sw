@@ -15,8 +15,8 @@ pd_tenant_create (pd_tenant_args_t *args)
     pd_tenant_t             *tenant_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("Creating pd state for tenant {}",
-                    args->tenant->tenant_id);
+    HAL_TRACE_DEBUG("pd-tenant:{}:creating pd state for tenant {}",
+                    __FUNCTION__, args->tenant->tenant_id);
 
     // allocate PD tenant state
     tenant_pd = tenant_pd_alloc_init();
@@ -32,7 +32,6 @@ pd_tenant_create (pd_tenant_args_t *args)
     ret = tenant_pd_alloc_res(tenant_pd);
 
 end:
-
     if (ret != HAL_RET_OK) {
         tenant_pd_cleanup(tenant_pd);
     }
@@ -62,8 +61,8 @@ pd_tenant_delete (pd_tenant_args_t *args)
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->tenant != NULL), HAL_RET_INVALID_ARG);
     HAL_ASSERT_RETURN((args->tenant->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("Deleting pd state for tenant {}",
-                    args->tenant->tenant_id);
+    HAL_TRACE_DEBUG("pd-tenant:{}:Deleting pd state for tenant {}",
+                    __FUNCTION__, args->tenant->tenant_id);
     tenant_pd = (pd_tenant_t *)args->tenant->pd;
 
     ret = tenant_pd_cleanup(tenant_pd);
@@ -89,14 +88,15 @@ tenant_pd_alloc_res(pd_tenant_t *tenant_pd)
     rs = g_hal_state_pd->tenant_hwid_idxr()->
                          alloc((uint32_t *)&tenant_pd->ten_hw_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("Failed to alloc ten_hw_id err: {}", rs);
+        HAL_TRACE_ERR("pd-tenant:{}:failed to alloc ten_hw_id err: {}", 
+                      __FUNCTION__, rs);
         tenant_pd->ten_hw_id = INVALID_INDEXER_INDEX;
         ret = HAL_RET_NO_RESOURCE;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Allocated ten_hw_id: {}", 
-                    tenant_pd->ten_hw_id);
+    HAL_TRACE_DEBUG("pd-tenant:{}:allocated ten_hw_id: {}", 
+                    __FUNCTION__, tenant_pd->ten_hw_id);
 
 end:
     return ret;
@@ -114,13 +114,13 @@ tenant_pd_dealloc_res(pd_tenant_t *tenant_pd)
     if (tenant_pd->ten_hw_id != INVALID_INDEXER_INDEX) {
         rs = g_hal_state_pd->tenant_hwid_idxr()->free(tenant_pd->ten_hw_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("Failed to free ten_hw_id err: {}", 
-                          tenant_pd->ten_hw_id);
+            HAL_TRACE_ERR("pd-tenant:{}:failed to free ten_hw_id err: {}", 
+                          __FUNCTION__, tenant_pd->ten_hw_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("De-Allocated ten_hw_id: {}", 
+        HAL_TRACE_DEBUG("pd-tenant:{}:freed ten_hw_id: {}", 
                         __FUNCTION__, tenant_pd->ten_hw_id);
     }
 
@@ -150,7 +150,7 @@ tenant_pd_cleanup(pd_tenant_t *tenant_pd)
 
     // Check if l2segs have been removed before tenant cleanup
     if (!tenant_pd->l2seg_hw_id_idxr_->usage()) {
-        HAL_TRACE_ERR("Some L2Segs have not been deleted.");
+        HAL_TRACE_ERR("pd-tenant:{}:l2seg idxr still in use", __FUNCTION__);
         ret = HAL_RET_INVALID_OP;
         goto end;
     }
@@ -158,8 +158,9 @@ tenant_pd_cleanup(pd_tenant_t *tenant_pd)
     // Releasing resources
     ret = tenant_pd_dealloc_res(tenant_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to dealloc res for tenant: {}", 
-                ((tenant_t *)(tenant_pd->tenant))->tenant_id);
+        HAL_TRACE_ERR("pd-tenant:{}: unable to dealloc res for tenant: {}", 
+                      __FUNCTION__, 
+                      ((tenant_t *)(tenant_pd->tenant))->tenant_id);
         goto end;
     }
 
@@ -188,13 +189,14 @@ tenant_pd_alloc_l2seg_hw_id(pd_tenant_t *tenant_pd, uint32_t *l2seg_hw_id)
 
     rs = tenant_pd->l2seg_hw_id_idxr_->alloc(l2seg_hw_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("Failed to alloc l2seg_hw_id err: {}", rs);
+        HAL_TRACE_ERR("pd-tenant:{}:failed to alloc l2seg_hw_id err: {}", 
+                      __FUNCTION__, rs);
         *l2seg_hw_id = INVALID_INDEXER_INDEX;
         ret = HAL_RET_NO_RESOURCE;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Allocated l2seg_hw_id: {} for tenant: {}", 
+    HAL_TRACE_DEBUG("pd-tenant:{}:allocated l2seg_hw_id: {} for tenant: {}", 
                     __FUNCTION__, *l2seg_hw_id, 
                     ((tenant_t *)(tenant_pd->tenant))->tenant_id);
 
@@ -219,12 +221,13 @@ tenant_pd_free_l2seg_hw_id(pd_tenant_t *tenant_pd, uint32_t l2seg_hw_id)
     if (tenant_pd->ten_hw_id != INVALID_INDEXER_INDEX) { 
         rs = tenant_pd->l2seg_hw_id_idxr_->free(l2seg_hw_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("Failed to free l2seg_hw_id:{} err: {}",
+            HAL_TRACE_ERR("pd-tenant:{}:Failed to free l2seg_hw_id:{} "
+                    "err: {}", __FUNCTION__,
                     l2seg_hw_id, rs);
             ret = HAL_RET_NO_RESOURCE;
             goto end;
         }
-        HAL_TRACE_DEBUG("De-Allocated l2seg_hw_id: {} for tenant: {}", 
+        HAL_TRACE_DEBUG("pd-tenant:{}:freed l2seg_hw_id: {} for tenant: {}", 
                         __FUNCTION__, l2seg_hw_id, 
                         ((tenant_t *)(tenant_pd->tenant))->tenant_id);
     }

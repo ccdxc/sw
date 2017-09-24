@@ -5,7 +5,7 @@ GTEST_ROOT = $(TOPDIR)/third-party/googletest-release-1.8.0/googletest
 
 OBJS = $(OBJ_DIR)/fte.o
 
-SYSTEM_LIBRARIES = -lpthread -lht -ltrace -lprint -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed  -lhalproto -lprotobuf $(OBJS) $(GTEST_ROOT)/make/gtest.a
+SYSTEM_LIBRARIES = -lpthread -lht -ltrace -lprint -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed  -lhalproto -lprotobuf $(OBJS) -ltrace $(GTEST_ROOT)/make/gtest.a
 
 LCXXFLAGS = \
 	-I$(TOPDIR)/include \

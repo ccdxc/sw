@@ -938,7 +938,7 @@ TEST_F(session_test, test5)
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(5);
     l2seg_spec.add_network_handle(nw_hdl);
-    l2seg_spec.mutable_key_or_handle()->set_segment_id(41);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_fabric_encap()->set_encap_value(11);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -949,7 +949,7 @@ TEST_F(session_test, test5)
 
     l2seg_spec1.mutable_meta()->set_tenant_id(5);
     l2seg_spec1.add_network_handle(nw_hdl1);
-    l2seg_spec1.mutable_key_or_handle()->set_segment_id(42);
+    l2seg_spec1.mutable_key_or_handle()->set_segment_id(52);
     l2seg_spec1.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec1.mutable_fabric_encap()->set_encap_value(12);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

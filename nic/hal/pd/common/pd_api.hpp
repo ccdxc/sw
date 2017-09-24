@@ -301,6 +301,8 @@ hal_ret_t pd_tenant_make_clone(tenant_t *ten, tenant_t *clone);
 hal_ret_t pd_l2seg_create(pd_l2seg_args_t *l2seg);
 hal_ret_t pd_l2seg_update(pd_l2seg_args_t *l2seg);
 hal_ret_t pd_l2seg_delete(pd_l2seg_args_t *l2seg);
+hal_ret_t pd_l2seg_mem_free(pd_l2seg_args_t *l2seg);
+hal_ret_t pd_l2seg_make_clone(l2seg_t *l2seg, l2seg_t *clone);
 l2seg_t *find_l2seg_by_hwid (l2seg_hw_id_t hwid);
 
 hal_ret_t pd_nwsec_profile_create(pd_nwsec_profile_args_t *nwsec_profile);

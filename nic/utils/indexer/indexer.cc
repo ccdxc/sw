@@ -32,16 +32,17 @@ indexer::indexer(uint32_t size, bool thread_safe, bool skip_zero)
         bits_[num_words_ - 1] = ALL_ONES_64BIT << mod;
     }
 
+    thread_safe_ = thread_safe;
+    if (thread_safe_) {
+        HAL_ASSERT(!HAL_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE));
+    }
+
     // Skipping 0th entry. Note: Uses up one entry
     skip_zero_ = skip_zero;
     if (skip_zero_) {
         alloc_withid(0, 1);
     }
 
-    thread_safe_ = thread_safe;
-    if (thread_safe_) {
-        HAL_ASSERT(!HAL_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE));
-    }
 }
 
 // ---------------------------------------------------------------------------

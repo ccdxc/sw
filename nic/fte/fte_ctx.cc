@@ -1,6 +1,7 @@
 #include "fte_ctx.hpp"
 #include "fte_flow.hpp"
 #include <session.hpp>
+#include <tenant.hpp>
 #include <pd_api.hpp>
 #include <defines.h>
 #include <cpupkt_headers.hpp>
@@ -129,7 +130,7 @@ ctx_t::extract_flow_key()
     case FLOW_KEY_LOOKUP_TYPE_IPV4: 
         iphdr = (ipv4_header_t*)(pkt_ + cpu_rxhdr_->l3_offset);
         key_.flow_type = hal::FLOW_TYPE_V4;
-        key_.tenant_id = l2seg->tenant_id; 
+        key_.tenant_id = hal::tenant_lookup_by_handle(l2seg->tenant_handle)->tenant_id; 
         key_.sip.v4_addr = ntohl(iphdr->saddr);
         key_.dip.v4_addr = ntohl(iphdr->daddr);
         key_.proto = iphdr->protocol;
@@ -138,7 +139,7 @@ ctx_t::extract_flow_key()
     case FLOW_KEY_LOOKUP_TYPE_IPV6: 
         iphdr6 = (ipv6_header_t *)(pkt_ + cpu_rxhdr_->l3_offset);
         key_.flow_type = hal::FLOW_TYPE_V6;
-        key_.tenant_id = l2seg->tenant_id; 
+        key_.tenant_id = hal::tenant_lookup_by_handle(l2seg->tenant_handle)->tenant_id;
         memcpy(key_.sip.v6_addr.addr8, iphdr6->saddr, sizeof(key_.sip.v6_addr.addr8));
         memcpy(key_.dip.v6_addr.addr8, iphdr6->daddr, sizeof(key_.dip.v6_addr.addr8));
         key_.proto = iphdr6->nexthdr;
@@ -196,7 +197,7 @@ ctx_t::lookup_flow_objs()
             HAL_TRACE_ERR("fte: l2seg not found, key={}", key_);
             return HAL_RET_L2SEG_NOT_FOUND;
         }
-        tid = l2seg->tenant_id;
+        tid = hal::tenant_lookup_by_handle(l2seg->tenant_handle)->tenant_id;
     } else {
         tid = key_.tenant_id;
     }

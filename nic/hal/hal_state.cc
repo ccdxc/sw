@@ -49,14 +49,6 @@ hal_cfg_db::init(void)
                                 hal::tenant_id_compare_key_func);
     HAL_ASSERT_RETURN((tenant_id_ht_ != NULL), false);
 
-#if 0
-    tenant_hal_handle_ht_ = ht::factory(HAL_MAX_VRFS,
-                                        hal::tenant_get_handle_key_func,
-                                        hal::tenant_compute_handle_hash_func,
-                                        hal::tenant_compare_handle_key_func);
-    HAL_ASSERT_RETURN((tenant_hal_handle_ht_ != NULL), false);
-#endif
-
     // initialize network related data structures
     network_key_ht_ = ht::factory(HAL_MAX_VRFS,
                                   hal::network_get_key_func,
@@ -86,16 +78,18 @@ hal_cfg_db::init(void)
 
     // initialize L2 segment related data structures
     l2seg_id_ht_ = ht::factory(HAL_MAX_L2SEGMENTS,
-                               hal::l2seg_get_key_func,
-                               hal::l2seg_compute_hash_func,
-                               hal::l2seg_compare_key_func);
+                               hal::l2seg_id_get_key_func,
+                               hal::l2seg_id_compute_hash_func,
+                               hal::l2seg_id_compare_key_func);
     HAL_ASSERT_RETURN((l2seg_id_ht_ != NULL), false);
 
+#if 0
     l2seg_hal_handle_ht_ = ht::factory(HAL_MAX_L2SEGMENTS,
                                        hal::l2seg_get_handle_key_func,
                                        hal::l2seg_compute_handle_hash_func,
                                        hal::l2seg_compare_handle_key_func);
     HAL_ASSERT_RETURN((l2seg_hal_handle_ht_ != NULL), false);
+#endif
 
     // initialize LIF related data structures
     lif_id_ht_ = ht::factory(HAL_MAX_LIFS,

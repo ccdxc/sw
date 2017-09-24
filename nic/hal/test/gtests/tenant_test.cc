@@ -694,6 +694,244 @@ TEST_F(tenant_test, test7)
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
+// Update tenant test with scale of segs and enicifs
+TEST_F(tenant_test, test8) 
+{
+    hal_ret_t                       ret;
+    TenantSpec                      ten_spec, ten_spec1;
+    TenantResponse                  ten_rsp, ten_rsp1;
+    SecurityProfileSpec             sp_spec, sp_spec1;
+    SecurityProfileResponse         sp_rsp, sp_rsp1;
+    // TenantDeleteRequest             del_req;
+    // TenantDeleteResponseMsg         del_rsp;
+    LifSpec                         lif_spec;
+    LifResponse                     lif_rsp;
+    L2SegmentSpec                   l2seg_spec;
+    L2SegmentResponse               l2seg_rsp;
+    InterfaceSpec                   enicif_spec;
+    InterfaceResponse               enicif_rsp;
+    NetworkSpec                     nw_spec;
+    NetworkResponse                 nw_rsp;
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Create nwsec
+    sp_spec1.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec1.set_ipsg_en(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(8);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+#if 0
+    // Delete tenant
+    del_req.mutable_meta()->set_tenant_id(1);
+    del_req.mutable_key_or_handle()->set_tenant_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+#endif
+
+    // Create network
+    nw_spec.mutable_meta()->set_tenant_id(8);
+    nw_spec.set_rmac(0x0000DEADBEEF);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+
+    // Create a lif
+    lif_spec.set_port_num(10);
+    lif_spec.mutable_key_or_handle()->set_lif_id(81);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create L2 Segment
+    l2seg_spec.mutable_meta()->set_tenant_id(8);
+    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+
+    for (int i = 0; i < 10; i++) {
+        // Creating 10 l2segs
+        l2seg_spec.mutable_key_or_handle()->set_segment_id(80 + i);
+        l2seg_spec.mutable_fabric_encap()->set_encap_value(10 + i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+        hal::hal_cfg_db_close(false);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    // Create enicif
+    enicif_spec.mutable_meta()->set_tenant_id(8);
+    enicif_spec.set_type(intf::IF_TYPE_ENIC);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(81);
+
+
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 5; j++) {
+            enicif_spec.mutable_key_or_handle()->set_interface_id(80 + i*j + j);
+            enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+            enicif_spec.mutable_if_enic_info()->set_l2segment_id(80 + i);
+            enicif_spec.mutable_if_enic_info()->set_encap_vlan_id(20 + i*j + j);
+
+            hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+            ret = hal::interface_create(enicif_spec, &enicif_rsp);
+            hal::hal_cfg_db_close(false);
+            ASSERT_TRUE(ret == HAL_RET_OK);
+
+        }
+    }
+
+    // Update tenant
+    ten_spec1.mutable_key_or_handle()->set_tenant_id(8);
+    ten_spec1.set_security_profile_handle(nwsec_hdl1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_update(ten_spec1, &ten_rsp1);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+}
+
+// ----------------------------------------------------------------------------
+// Update tenant test with scale of uplink ifs
+// ----------------------------------------------------------------------------
+TEST_F(tenant_test, test9) 
+{
+    hal_ret_t                       ret;
+    TenantSpec                      ten_spec, ten_spec1;
+    TenantResponse                  ten_rsp, ten_rsp1;
+    SecurityProfileSpec             sp_spec, sp_spec1;
+    SecurityProfileResponse         sp_rsp, sp_rsp1;
+    // TenantDeleteRequest             del_req;
+    // TenantDeleteResponseMsg         del_rsp;
+    L2SegmentSpec                   l2seg_spec;
+    L2SegmentResponse               l2seg_rsp;
+    InterfaceSpec                   if_spec;
+    InterfaceResponse               if_rsp;
+    NetworkSpec                     nw_spec;
+    NetworkResponse                 nw_rsp;
+    InterfaceL2SegmentSpec          if_l2seg_spec;
+    InterfaceL2SegmentResponse      if_l2seg_rsp;
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Create nwsec
+    sp_spec1.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec1.set_ipsg_en(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(9);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+#if 0
+    // Delete tenant
+    del_req.mutable_meta()->set_tenant_id(1);
+    del_req.mutable_key_or_handle()->set_tenant_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+#endif
+
+    // Create network
+    nw_spec.mutable_meta()->set_tenant_id(9);
+    nw_spec.set_rmac(0x0000DEADBEEF);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+
+    // Create Uplink If
+    if_spec.set_type(intf::IF_TYPE_UPLINK);
+
+    for (int i = 0; i < 4; i++) {
+        if_spec.mutable_key_or_handle()->set_interface_id(900 + i);
+        if_spec.mutable_if_uplink_info()->set_port_num(1);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::interface_create(if_spec, &if_rsp);
+        hal::hal_cfg_db_close(false);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    // Create L2 Segment
+    l2seg_spec.mutable_meta()->set_tenant_id(9);
+    l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+
+    for (int i = 0; i < 10; i++) {
+        // Creating 10 l2segs
+        l2seg_spec.mutable_key_or_handle()->set_segment_id(90 + i);
+        l2seg_spec.mutable_fabric_encap()->set_encap_value(10 + i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+        hal::hal_cfg_db_close(false);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    // Adding L2segment on Uplink
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 4; j++) {
+            if_l2seg_spec.mutable_l2segment_key_or_handle()->set_segment_id(90 + i);
+            if_l2seg_spec.mutable_if_key_handle()->set_interface_id(900 + j);
+            hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+            ret = hal::add_l2seg_on_uplink(if_l2seg_spec, &if_l2seg_rsp);
+            printf("ret: %d api_status: %d\n", ret, if_l2seg_rsp.api_status());
+            ASSERT_TRUE(ret == HAL_RET_OK);
+            hal::hal_cfg_db_close(false);
+
+        }
+    }
+
+    // Update tenant
+    ten_spec1.mutable_key_or_handle()->set_tenant_id(9);
+    ten_spec1.set_security_profile_handle(nwsec_hdl1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_update(ten_spec1, &ten_rsp1);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+}
 
 
 int main(int argc, char **argv) {

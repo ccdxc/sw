@@ -91,7 +91,7 @@ message L2SegmentDeleteRequest {
 
 // L2SegmentDeleteRequestMsg is used to delete a batch of L2 segments
 message L2SegmentDeleteRequestMsg {
-  repeated L2SegmentDeleteRequest segment_id = 1;    // batched delete request
+  repeated L2SegmentDeleteRequest request = 1;    // batched delete request
 }
 
 // L2SegmentDeleteResponseMsg is batched response to L2SegmentDeleteRequestMsg
