@@ -11,7 +11,7 @@ selectors:
         endpoint    : filter://remote=False
         interface   : filter://any
     flow            : filter://any
-    maxflows        : 1
+    maxflows        : 4
 
 
 packets:
@@ -94,10 +94,3 @@ expect:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
             ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
-            # Expected Buffer on this descriptor
-            buffer  : ref://testcase/buffers/id=BUF2
-            # Expected packet from this descriptor/buffer.
-            # Infra calls BUF2.IsPacket() and then calls BUF2.Read()
-            # and compares with the below packet.
-            packet  : ref://testcase/packets/id=PKT2
-

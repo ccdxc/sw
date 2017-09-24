@@ -9,7 +9,7 @@ selectors:
         segment : filter://fabencap=VXLAN
         endpoint: filter://remote=True
     flow        : filter://fwtype=L2,type=MAC,label=ARP
-    maxflows    : 1
+    maxflows    : 4
 
 packets:
     - packet:

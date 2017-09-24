@@ -47,3 +47,25 @@ modules:
             - type      : RARP_REQ_UC
             - type      : RARP_RESP
 
+    - module:
+        name    : IPV4_GFT_DROP
+        spec    : l2uc_vxlan.testspec
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP,label=GFT_DROP
+            - flow: filter://type=IPV4,proto=TCP,label=GFT_DROP
+            - flow: filter://type=IPV4,proto=ICMP,label=GFT_DROP
+
+    - module:
+        name    : IPV6_GFT_DROP
+        spec    : l2uc_vxlan.testspec
+        iterate :
+            - flow: filter://type=IPV6,proto=UDP,label=GFT_DROP
+            - flow: filter://type=IPV6,proto=TCP,label=GFT_DROP
+            - flow: filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+
+    - module:
+        name    : NONIP_GFT_DROP
+        spec    : l2uc_nonip_vxlan.testspec
+        iterate :
+            - flow: filter://fwtype=L2,type=MAC,label=GFT_DROP
+

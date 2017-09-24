@@ -10,6 +10,6 @@ multicast   : drop
 l4lb        : False
 endpoints   :
     useg    : 0
-    pvlan   : 1
+    pvlan   : 4
     direct  : 0
     remote  : 4 # Remote TEPs

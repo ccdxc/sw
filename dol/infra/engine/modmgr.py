@@ -143,10 +143,10 @@ class Module(objects.FrameworkObject):
         else:
             status = 'Pass'
 
-        mod = self.module[:16]
+        feature = self.feature[:16]
         name = self.name[:32]
         print("%-16s %-32s %-6s %6d %6d %6d" %\
-              (mod, name, status,
+              (feature.upper(), name, status,
                self.stats.passed, self.stats.failed,
                self.stats.total))
         return
@@ -215,9 +215,9 @@ class Module(objects.FrameworkObject):
 
     def main(self, infra_data):
         self.infra_data = infra_data
+        prefix = "%s_%s" % (self.feature.upper(), self.name)
         self.logger = logging.Logger(level=logging.levels.INFO, stdout=True,
-                                     name="%s" % self.name)
-                                     #log_file='logs/' + self.name + ".log")
+                                     name=prefix)
         self.infra_data.Logger = self.logger
         self.__load()
         while self.iterator.End() == False:

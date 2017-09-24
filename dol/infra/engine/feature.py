@@ -8,6 +8,7 @@ from infra.common.glopts        import GlobalOptions
 from infra.engine.modmgr        import ModuleStore
 
 FeatureStore = objects.ObjectDatabase(logger)
+BaseTopoExcludeFeatureList = [ 'fte', 'normalization', 'eth' ]
 
 class FeatureObject:
     def __init__(self, spec):
@@ -40,10 +41,7 @@ class FeatureObjectHelper(parser.ParserBase):
 
     def __is_match(self, spec):
         if GlobalOptions.feature is None:
-            # For Global runs, dont run FTE tests.
-            # TEMP HACK: till all the features have their mlist files.
-            if spec.feature.id == 'fte' or \
-                    spec.feature.id == 'normalization':
+            if spec.feature.id in BaseTopoExcludeFeatureList:
                 return False
             return True
         return spec.feature.id in GlobalOptions.feature

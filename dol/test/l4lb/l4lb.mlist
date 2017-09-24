@@ -1,0 +1,17 @@
+# Feature Test Modules List
+feature:
+    id          : l4lb
+    package     : test.l4lb
+    module      : l4lb
+    enable      : True
+    ignore      : False
+
+modules:   
+    - module:
+        name    : BRIDGED
+        spec    : l4lb_l2.testspec
+
+    - module:
+        name    : ROUTED
+        spec    : l4lb_l3.testspec
+

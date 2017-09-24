@@ -1,17 +1,17 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://type=TENANT
         segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        tenant      : filter://type=TENANT
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=False
         interface   : filter://any
     flow            : filter://fwtype=L3
-    maxflows        : 1
+    maxflows        : 4
 
 packets:
     - packet:
@@ -52,11 +52,24 @@ packets:
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
+            outereth    :
+                src     : ref://testcase/config/src/endpoint/intf/rmacaddr
+                dst     : ref://testcase/config/src/endpoint/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/src/endpoint/intf/rtep
+                dst     : ref://testcase/config/src/endpoint/intf/ltep
+                tos     : 0
+                id      : 0
+            qtag:
+                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
+                prio    : callback://networking/packets/GetExpectedPacketCos
+            outerudp:
+                chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/src/segment/vxlan_id
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/src/segment/macaddr
-            qtag:
-                vlan    : callback://networking/packets/GetVlanId
             ipv4:
                 ttl     : callback://networking/packets/GetTtl
             ipv6:
@@ -134,10 +147,3 @@ expect:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
             ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
-            # Expected Buffer on this descriptor
-            buffer  : ref://testcase/buffers/id=BUF2
-            # Expected packet from this descriptor/buffer.
-            # Infra calls BUF2.IsPacket() and then calls BUF2.Read()
-            # and compares with the below packet.
-            packet  : ref://testcase/packets/id=PKT2
-
