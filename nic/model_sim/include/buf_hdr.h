@@ -15,7 +15,8 @@ typedef enum buff_type_e_ {
     BUFF_TYPE_STATUS = 7,
     BUFF_TYPE_HBM_DUMP = 8,
     BUFF_TYPE_STEP_CPU_PKT = 9,
-    BUFF_TYPE_GET_NEXT_CPU_PKT = 10
+    BUFF_TYPE_GET_NEXT_CPU_PKT = 10,
+    BUFF_TYPE_STEP_TIMER_WHEEL = 11
 } buff_type_e;
 
 typedef struct buffer_hdr_t_ {
@@ -24,6 +25,8 @@ typedef struct buffer_hdr_t_ {
     int         port;
     int         cos;
     int         status;
+    uint32_t    slowfast;
+    uint32_t    ctime;
     uint64_t    addr;
     uint8_t     data[0];
 } buffer_hdr_t;

@@ -91,6 +91,26 @@ int lib_model_conn_close ()
     return 0;
 }
 
+void step_tmr_wheel_update (uint32_t slowfast, uint32_t ctime)
+{
+    // thread safe
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
+    char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
+    int rc;
+    buffer_hdr_t *buff;
+    buff = (buffer_hdr_t *) buffer;
+    buff->type = BUFF_TYPE_STEP_TIMER_WHEEL;
+    buff->slowfast = slowfast;
+    buff->ctime = ctime;
+
+    if (__lmodel_env)
+        return;
+    rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    return;
+}
+
 void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
 {
     // thread safe
