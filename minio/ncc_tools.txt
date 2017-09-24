@@ -1,0 +1,1 @@
+nic/tools/ncc/csr_json/*

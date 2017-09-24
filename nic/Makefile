@@ -64,18 +64,18 @@ include $(TOPDIR)/make/Makefile.inc
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 shell: build-runtime-image
 	mkdir -p ${PWD}/../bazel-cache;
-	docker run -it --privileged -v ${PWD}/..:/sw -v ${PWD}/../bazel-cache:/root/.cache pensando/nic bash
+	docker run -it --privileged -v ${PWD}/..:/sw -v ${PWD}/../bazel-cache:/root/.cache -w /sw/nic pensando/nic bash
 
 # run `make gtest` with the dependencies image.
 test: build-runtime-image
-	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic bash -c 'make gtest'
+	docker run -it --privileged -v ${PWD}/..:/sw -v ${PWD}/../bazel-cache:/root/.cache -w /sw/nic pensando/nic bash -c 'make gtest'
 
 # run a build with the dependencies image.
 build: build-runtime-image
-	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic sh -c 'make -j$$(grep -c processor /proc/cpuinfo)'
+	docker run -it --privileged -v ${PWD}/..:/sw -v ${PWD}/../bazel-cache:/root/.cache -w /sw/nic pensando/nic bash -c 'make gtest'
 
 clean-docker: build-runtime-image
-	docker run -it -v ${PWD}/../dol:/hack/saratk/dol -v ${PWD}:/hack/saratk/nic pensando/nic make clean
+	docker run -it --privileged -v ${PWD}/..:/sw -v ${PWD}/../bazel-cache:/root/.cache -w /sw/nic pensando/nic bash -c 'make clean'
 
 build-runtime-image: install_box
 	if [ "x${NO_PULL}" = "x" ]; then docker pull srv1.pensando.io:5000/pensando/nic:1.1; fi
