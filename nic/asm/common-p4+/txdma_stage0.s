@@ -25,6 +25,7 @@
     .param      eth_tx_fetch_desc
     .param      esp_ipv4_tunnel_h2n_txdma_stage0
     .param      cpu_tx_stage0_start
+    .param      ipfix_start
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -82,4 +83,9 @@ storage_tx_pri_stage0:
 .align
 cpu_tx_stage0:
     j   cpu_tx_stage0_start
+    nop
+
+.align
+ipfix_tx_stage0:
+    j   ipfix_start
     nop

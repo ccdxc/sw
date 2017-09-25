@@ -22,7 +22,8 @@ void print_banner ()
     printf("3. Read Mem (0xaddr size)\n");
     printf("4. Write Mem uint32 (0xaddr 0xdata)\n");
     printf("5. Dump HBM\n");
-    printf("6. Exit\n");
+    printf("6. Step Doorbell (0xaddr 0xdata)\n");
+    printf("7. Exit\n");
     printf("*************************************\n");
     return;
 }
@@ -35,7 +36,7 @@ int main (void)
     uint32_t data;
     int nw;
     uint8_t dbuff[4096];
-    
+
     lib_model_connect();
     while (1) {
         print_banner();
@@ -69,10 +70,15 @@ int main (void)
             case 5:
                 dump_hbm();
                 break;
+            case 6:
+                scanf("%lx %x", &addr, &data);
+                step_doorbell(addr, data);
+                printf("step_doorbell complete\n");
+                break;
             default:
                 break;
         }
-        if (opt == 6) break;
+        if (opt == 7) break;
     }
     lib_model_conn_close();
 

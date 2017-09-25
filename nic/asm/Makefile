@@ -1,14 +1,13 @@
-
-
 LIBDIRS = \
           nw \
           common-p4+ \
-	  	  proxy \
+          proxy \
           rdma \
           ipsec-p4+ \
           storage \
-		  cpu-p4+ \
+          cpu-p4+ \
           eth \
+          ipfix \
           $(NULL)
 PGMDIRS = $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)

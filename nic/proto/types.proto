@@ -176,6 +176,7 @@ enum ProxyType {
   PROXY_TYPE_TLS           = 2;    
   PROXY_TYPE_IPSEC         = 3;    
   PROXY_TYPE_CPU           = 4;
+  PROXY_TYPE_IPFIX         = 5;
 }
 
 // Types of Cryptographic keys

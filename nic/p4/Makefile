@@ -1,5 +1,3 @@
-
-
 LIBDIRS = \
           nw \
           common-p4+ \
@@ -8,8 +6,9 @@ LIBDIRS = \
           ipsec-p4+ \
           storage \
           rdma \
-		  cpu-p4+ \
+          cpu-p4+ \
           eth \
+          ipfix \
           $(NULL)
 
 PGMDIRS = $(NULL)

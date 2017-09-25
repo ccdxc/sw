@@ -31,13 +31,13 @@
 
 #define LIF_TABLE_SIZE 2048
 
-#define DMA_CMD_TYPE_MEM2PKT     0
-#define DMA_CMD_TYPE_PHV2PKT     1
-#define DMA_CMD_TYPE_PHV2MEM     2
-#define DMA_CMD_TYPE_PKT2MEM     3
-#define DMA_CMD_TYPE_SKIP        4
-#define DMA_CMD_TYPE_MEM2MEM     5 
-#define DMA_CMD_TYPE_NOP         6 
+#define DMA_CMD_TYPE_MEM2PKT     1
+#define DMA_CMD_TYPE_PHV2PKT     2
+#define DMA_CMD_TYPE_PHV2MEM     3
+#define DMA_CMD_TYPE_PKT2MEM     4
+#define DMA_CMD_TYPE_SKIP        5
+#define DMA_CMD_TYPE_MEM2MEM     6
+#define DMA_CMD_TYPE_NOP         7
 
 #define DMA_CMD_TYPE_MEM2MEM_TYPE_SRC        0
 #define DMA_CMD_TYPE_MEM2MEM_TYPE_DST        1
