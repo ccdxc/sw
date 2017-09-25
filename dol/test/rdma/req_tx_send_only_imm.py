@@ -13,7 +13,7 @@ def TestCaseSetup(tc):
     tc.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
-    tc.pvtdata.pre_qstate = rs.lqp.sq.qstate.data
+    tc.pvtdata.sq_pre_qstate = rs.lqp.sq.qstate.data
     tc.pvtdata.imm_data = 0x0F0E0D0C;
     return
 
@@ -25,26 +25,26 @@ def TestCaseVerify(tc):
     tc.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
-    tc.pvtdata.post_qstate = rs.lqp.sq.qstate.data
+    tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
 
     # verify that tx_psn is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'tx_psn', 1):
+    if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 1):
         return False
 
     # verify that p_index is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'p_index0', 1):
+    if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index0', 1):
         return False
 
     # verify that c_index is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'c_index0', 1):
+    if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index0', 1):
         return False
 
     # verify that ssn is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.pre_qstate, tc.pvtdata.post_qstate, 'ssn', 1):
+    if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'ssn', 1):
         return False
 
     # verify that busy is 0
-    if not VerifyFieldAbsolute(tc, tc.pvtdata.post_qstate, 'busy', 0):
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
         return False
 
     return True

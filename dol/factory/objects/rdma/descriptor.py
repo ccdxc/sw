@@ -11,6 +11,8 @@ import model_sim.src.model_wrap as model_wrap
 
 from factory.objects.rdma import buffer as rdmabuffer
 
+from infra.factory.store    import FactoryStore
+
 class RdmaSqDescriptorBase(Packet):
     fields_desc = [
         LongField("wrid", 0),
@@ -242,6 +244,7 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
 
     def Init(self, spec):
         super().Init(spec)
+        self.wrid = self.spec.fields.wrid
 
     def Write(self):
         """
@@ -326,6 +329,7 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
 class RdmaCqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()
+        self.Clone(FactoryStore.templates.Get('DESC_RDMA_CQ'))
         self.logger = cfglogger
 
     def Init(self, spec):
@@ -402,7 +406,7 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
 
     def GetBuffer(self):
         cfglogger.info("GetBuffer() operator invoked on cq descriptor")
-        #CQ is not associated with any buffer and hence simply return
-        #empty bytes so that ebuf == abuf check passes
-        return bytes('')
+        # CQ is not associated with any buffer and hence simply create
+        # default RDMABuffer object so that ebuf == abuf check passes
+        return rdmabuffer.RdmaBufferObject()
 

@@ -6,13 +6,13 @@ meta:
     module  : descriptor
     objname : RdmaCqDescriptorObject
 
-wrid            : None
-msn             : None
-op_type         : None
-status          : None
-rkey_inv_vld    : False
-imm_data_vld    : False
-color           : False
-qp              : None
-imm_data        : None
-r_key           : None
+wrid            : 0
+msn             : 0
+op_type         : 0
+status          : 0
+rkey_inv_vld    : 0
+imm_data_vld    : 0
+color           : 0
+qp              : 0
+imm_data        : 0
+r_key           : 0

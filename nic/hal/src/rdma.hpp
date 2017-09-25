@@ -1079,7 +1079,6 @@ typedef struct cqcb_s {
 
     uint32_t eq_num:24;
     uint32_t cq_num:24;
-
     uint32_t rsvd1:1;
     uint32_t log_num_wqes:5;
     uint32_t log_wqe_size:5;

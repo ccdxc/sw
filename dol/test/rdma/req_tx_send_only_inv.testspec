@@ -55,7 +55,7 @@ packets:
             bth:
                 opcode  : 23 # RDMA SEND Only with Invalidate
                 destqp  : ref://testcase/config/rdmasession/rqp/id
-                psn     : ref://testcase/pvtdata/pre_qstate/tx_psn
+                psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
             ieth:
                 r_key   : ref://testcase/pvtdata/inv_r_key
             payload:

@@ -71,7 +71,7 @@ packets:
             bth:
                 opcode  : 0 # RDMA SEND First
                 destqp  : ref://testcase/config/rdmasession/rqp/id
-                psn     : ref://testcase/pvtdata/pre_qstate/tx_psn
+                psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
             payload:
                 data    : ref://testcase/packets/id=BASE_PKT1/rawbytes
 
