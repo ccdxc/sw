@@ -10,6 +10,7 @@
 // #include <l2segment.hpp>
 #include <tenant.hpp>
 #include <interface.pb.h>
+#include <lif.hpp>
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
@@ -19,35 +20,6 @@ namespace hal {
 
 typedef uint16_t if_hw_id_t;
 typedef uint64_t if_id_t;
-typedef uint32_t lif_id_t;
-
-// LIF structure
-// TODO: capture Q information etc.
-typedef struct lif_s {
-    hal_spinlock_t      slock;                       // lock to protect this structure
-    lif_id_t            lif_id;                      // lif id assigned
-    mac_addr_t          mac_addr;                    // LIF's MAC address, if any
-    uint32_t            port_num;                    // LIF's port number
-    intf::IfStatus      admin_status;                // admin status
-    bool                vlan_strip_en;               // vlan strip enable
-    //bool                allmulti;                    // All multicast enable
-    bool                enable_rdma;                 // enable rdma on this LIF
-    uint8_t             qtypes[intf::LifQPurpose_MAX+1]; // purpose to qtype mapping
-
-    // operational state of interface
-    hal_handle_t        hal_handle;                  // HAL allocated handle
-
-    ht_ctxt_t           ht_ctxt;                     // lif id based hash table ctxt
-    ht_ctxt_t           hal_handle_ht_ctxt;          // hal handle based hash table ctxt
-    dllist_ctxt_t       if_list_head;                // interfaces behind this lif
-
-    void                *pd_lif;
-} __PACK__ lif_t;
-
-typedef struct lif_hal_info_s {
-    bool        with_hw_lif_id;
-    uint32_t    hw_lif_id;
-} lif_hal_info_t;
 
 // Interface strucutre
 typedef struct if_s {
@@ -118,66 +90,6 @@ typedef struct if_s {
 
 // max. number of interfaces supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_INTERFACES                           2048
-#define HAL_MAX_LIFS                                 1024
-
-// allocate a LIF instance
-static inline lif_t *
-lif_alloc (void)
-{
-    lif_t    *lif;
-
-    lif = (lif_t *)g_hal_state->lif_slab()->alloc();
-    if (lif == NULL) {
-        return NULL;
-    }
-    return lif;
-}
-
-// initialize a LIF instance
-static inline lif_t *
-lif_init (lif_t *lif)
-{
-    if (!lif) {
-        return NULL;
-    }
-    HAL_SPINLOCK_INIT(&lif->slock, PTHREAD_PROCESS_PRIVATE);
-
-    // initialize the operational state
-
-    // initialize meta information
-    lif->ht_ctxt.reset();
-    lif->hal_handle_ht_ctxt.reset();
-    utils::dllist_reset(&lif->if_list_head);
-
-    return lif;
-}
-
-// allocate and initialize a interface instance
-static inline lif_t *
-lif_alloc_init (void)
-{
-    return lif_init(lif_alloc());
-}
-
-static inline hal_ret_t
-lif_free (lif_t *lif)
-{
-    HAL_SPINLOCK_DESTROY(&lif->slock);
-    g_hal_state->lif_slab()->free(lif);
-    return HAL_RET_OK;
-}
-
-static inline lif_t *
-find_lif_by_id (lif_id_t lif_id)
-{
-    return (lif_t *)g_hal_state->lif_id_ht()->lookup(&lif_id);
-}
-
-static inline lif_t *
-find_lif_by_handle (hal_handle_t handle)
-{
-    return (lif_t *)g_hal_state->lif_hal_handle_ht()->lookup(&handle);
-}
 
 // allocate a interface instance
 static inline if_t *
@@ -275,14 +187,6 @@ find_lif_by_if_handle (hal_handle_t if_handle)
     }
 
 }
-
-extern void *lif_get_key_func(void *entry);
-extern uint32_t lif_compute_hash_func(void *key, uint32_t ht_size);
-extern bool lif_compare_key_func(void *key1, void *key2);
-
-extern void *lif_get_handle_key_func(void *entry);
-extern uint32_t lif_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool lif_compare_handle_key_func(void *key1, void *key2);
 
 extern void *if_get_key_func(void *entry);
 extern uint32_t if_compute_hash_func(void *key, uint32_t ht_size);

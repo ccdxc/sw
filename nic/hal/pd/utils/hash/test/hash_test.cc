@@ -631,6 +631,142 @@ TEST_F(hash_test, test10) {
     ASSERT_TRUE(rs == HAL_RET_OK);
 }
 
+TEST_F(hash_test, test11) {
+
+    std::string table_name = "Input_Properties";
+    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
+            (uint32_t)100, 
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+            (uint32_t)sizeof(input_properties_actiondata), Hash::HASH_POLY1);
+
+    // std::set<SampleHashEntry> sent_set;
+    // std::set<SampleHashEntry> hash_set;
+
+    std::set<InputPropertiesHashEntry> sent_set;
+    std::set<InputPropertiesHashEntry> hash_set;
+
+    hal_ret_t rs = HAL_RET_OK;
+    // hash_key_t key;
+    // hash_data_t data;
+    input_properties_swkey_t key;
+    input_properties_actiondata data;
+    uint32_t hash_idx = 0;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    key.capri_intrinsic_lif = 10;
+    data.actionid = 1;
+
+    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    data.actionid = 2;
+    rs = test_hash.update(hash_idx, &data);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+    sent_set.insert(InputPropertiesHashEntry(key,data));
+
+    rs = test_hash.iterate(populate_ip_fn, &hash_set, Hash::BOTH);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    ASSERT_TRUE(sent_set == hash_set);
+
+    rs = test_hash.remove(hash_idx);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+}
+
+TEST_F(hash_test, test12) {
+
+    std::string table_name = "Input_Properties";
+    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
+            (uint32_t)100, 
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+            (uint32_t)sizeof(input_properties_actiondata), Hash::HASH_POLY2);
+
+    // std::set<SampleHashEntry> sent_set;
+    // std::set<SampleHashEntry> hash_set;
+
+    std::set<InputPropertiesHashEntry> sent_set;
+    std::set<InputPropertiesHashEntry> hash_set;
+
+    hal_ret_t rs = HAL_RET_OK;
+    // hash_key_t key;
+    // hash_data_t data;
+    input_properties_swkey_t key;
+    input_properties_actiondata data;
+    uint32_t hash_idx = 0;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    key.capri_intrinsic_lif = 10;
+    data.actionid = 1;
+
+    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    data.actionid = 2;
+    rs = test_hash.update(hash_idx, &data);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+    sent_set.insert(InputPropertiesHashEntry(key,data));
+
+    rs = test_hash.iterate(populate_ip_fn, &hash_set, Hash::BOTH);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    ASSERT_TRUE(sent_set == hash_set);
+
+    rs = test_hash.remove(hash_idx);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+}
+
+TEST_F(hash_test, test13) {
+
+    std::string table_name = "Input_Properties";
+    Hash test_hash = Hash(table_name, (uint32_t)P4TBL_ID_INPUT_PROPERTIES, 
+            (uint32_t)P4TBL_ID_INPUT_PROPERTIES_OTCAM, 
+            (uint32_t)100, 
+            (uint32_t)10, (uint32_t)sizeof(input_properties_swkey_t), 
+            (uint32_t)sizeof(input_properties_actiondata), Hash::HASH_POLY3);
+
+    // std::set<SampleHashEntry> sent_set;
+    // std::set<SampleHashEntry> hash_set;
+
+    std::set<InputPropertiesHashEntry> sent_set;
+    std::set<InputPropertiesHashEntry> hash_set;
+
+    hal_ret_t rs = HAL_RET_OK;
+    // hash_key_t key;
+    // hash_data_t data;
+    input_properties_swkey_t key;
+    input_properties_actiondata data;
+    uint32_t hash_idx = 0;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    key.capri_intrinsic_lif = 10;
+    data.actionid = 1;
+
+    rs = test_hash.insert((void *)&key, (void *)&data,  &hash_idx, FALSE);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    data.actionid = 2;
+    rs = test_hash.update(hash_idx, &data);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+    sent_set.insert(InputPropertiesHashEntry(key,data));
+
+    rs = test_hash.iterate(populate_ip_fn, &hash_set, Hash::BOTH);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+
+    ASSERT_TRUE(sent_set == hash_set);
+
+    rs = test_hash.remove(hash_idx);
+    ASSERT_TRUE(rs == HAL_RET_OK);
+}
+
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
     p4pd_init();

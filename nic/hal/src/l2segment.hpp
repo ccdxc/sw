@@ -128,7 +128,8 @@ find_l2seg_by_id (l2seg_id_t l2seg_id)
     hal_handle_id_ht_entry_t    *entry;
     l2seg_t                     *l2seg;
 
-    entry = (hal_handle_id_ht_entry_t *)g_hal_state->l2seg_id_ht()->lookup(&l2seg_id);
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        l2seg_id_ht()->lookup(&l2seg_id);
     if (entry) {
         l2seg = (l2seg_t *)hal_handle_get_obj(entry->handle_id);
         return l2seg;

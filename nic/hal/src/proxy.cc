@@ -165,10 +165,14 @@ proxy_program_lif(proxy_t* proxy)
     lif_hal_info.with_hw_lif_id = true;
     lif_hal_info.hw_lif_id = proxy->lif_id;
     HAL_TRACE_DEBUG("Calling lif create with id: {}", lif_hal_info.hw_lif_id);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = lif_create(lif_spec, &rsp, &lif_hal_info);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("lif creation failed for proxy service" );
+        hal::hal_cfg_db_close(true);
         return ret;
+    } else {
+        hal::hal_cfg_db_close(false);
     }
 
     // program qstate

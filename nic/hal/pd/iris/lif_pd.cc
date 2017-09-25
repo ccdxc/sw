@@ -18,7 +18,7 @@ pd_lif_create (pd_lif_args_t *args)
     hal_ret_t            ret;
     pd_lif_t             *pd_lif;
 
-    HAL_TRACE_DEBUG("PD-LIF::{}: lif_id:{} Creating pd state for Lif", 
+    HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{} Creating pd state for Lif", 
             __FUNCTION__, lif_get_lif_id(args->lif));
 
     // Create lif PD
@@ -35,7 +35,7 @@ pd_lif_create (pd_lif_args_t *args)
     ret = lif_pd_alloc_res(pd_lif, args);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-LIF::{}: lif_id:{} Unable to alloc. resources for Lif",
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{} Unable to alloc. resources",
                 __FUNCTION__, lif_get_lif_id(args->lif));
         goto end;
     }
@@ -45,10 +45,169 @@ pd_lif_create (pd_lif_args_t *args)
 
 end:
     if (ret != HAL_RET_OK) {
-        unlink_pi_pd(pd_lif, args->lif);
-        lif_pd_free(pd_lif);
+        lif_pd_cleanup(pd_lif);
     }
     return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// PD Lif Update
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_update (pd_lif_args_t *args)
+{
+    // Nothing to do for now
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// PD Lif Delete
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_delete (pd_lif_args_t *args)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+    pd_lif_t       *lif_pd;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->lif != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->lif->pd_lif != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{},deleting pd state",
+                    __FUNCTION__, args->lif->lif_id);
+    lif_pd = (pd_lif_t *)args->lif->pd_lif;
+
+    ret = lif_pd_cleanup(lif_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},failed pd lif delete",
+                      __FUNCTION__, args->lif->lif_id);
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Allocate resources for PD Lif
+// ----------------------------------------------------------------------------
+hal_ret_t 
+lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_args_t *args)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    indexer::status      rs = indexer::SUCCESS;
+
+    if(((lif_t *)pd_lif->pi_lif)->lif_id == 1004) {
+        pd_lif->hw_lif_id = 1004;
+        HAL_TRACE_DEBUG("pd-lif:{}:hack: setting hw_lif id to {}", 
+                        __FUNCTION__, pd_lif->hw_lif_id);
+        return ret;
+    }
+
+#if 0
+    if (args->with_hw_lif_id) {
+        pd_lif->hw_lif_id = args->hw_lif_id;
+    } else {
+        // Allocate lif hwid
+        rs = g_hal_state_pd->lif_hwid_idxr()->alloc((uint32_t *)&pd_lif->hw_lif_id);
+        if (rs != indexer::SUCCESS) {
+            return HAL_RET_NO_RESOURCE;
+        }
+    }
+#endif
+
+    if (args->with_hw_lif_id) {
+        pd_lif->hw_lif_id = args->hw_lif_id;
+    } else {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},hw_lif_id has to be allocated in PI",
+                      __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+        HAL_ASSERT(0);
+    }
+
+    HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{} Allocated hw_lif_id:{}", 
+                    __FUNCTION__, 
+                    lif_get_lif_id((lif_t *)pd_lif->pi_lif),
+                    pd_lif->hw_lif_id);
+
+    // Allocate lport
+    rs = g_hal_state_pd->lport_idxr()->alloc((uint32_t *)&pd_lif->
+            lif_lport_id);
+    if (rs != indexer::SUCCESS) {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},failed to alloc lport. err:{}",
+                      __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif),
+                      rs);
+        pd_lif->lif_lport_id = INVALID_INDEXER_INDEX;
+        ret = HAL_RET_NO_RESOURCE;
+        goto end;
+    }
+    HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{},allocated lport_id:{}", 
+                    __FUNCTION__, 
+                    lif_get_lif_id((lif_t *)pd_lif->pi_lif),
+                    pd_lif->lif_lport_id);
+
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// De-Allocate resources. 
+//-----------------------------------------------------------------------------
+hal_ret_t
+lif_pd_dealloc_res(pd_lif_t *lif_pd)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    indexer::status     rs;
+
+    if (lif_pd->lif_lport_id != INVALID_INDEXER_INDEX) {
+        rs = g_hal_state_pd->lport_idxr()->free(lif_pd->lif_lport_id);
+        if (rs != indexer::SUCCESS) {
+            HAL_TRACE_ERR("pd-lif:{}:failed to free lport err: {}", 
+                          __FUNCTION__, lif_pd->lif_lport_id);
+            ret = HAL_RET_INVALID_OP;
+            goto end;
+        }
+
+        HAL_TRACE_DEBUG("pd-lif:{}:freed lport: {}", 
+                        __FUNCTION__, lif_pd->lif_lport_id);
+    }
+
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// PD lif Cleanup
+//  - Release all resources
+//  - Delink PI <-> PD
+//  - Free PD lif
+//  Note:
+//      - Just free up whatever PD has. 
+//      - Dont use this inplace of delete. Delete may result in giving callbacks
+//        to others.
+//-----------------------------------------------------------------------------
+hal_ret_t
+lif_pd_cleanup(pd_lif_t *lif_pd)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    if (!lif_pd) {
+        // Nothing to do
+        goto end;
+    }
+
+    // Releasing resources
+    ret = lif_pd_dealloc_res(lif_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{}, unable to dealloc res", 
+                      __FUNCTION__, 
+                      lif_get_lif_id((lif_t *)lif_pd->pi_lif));
+        goto end;
+    }
+
+    // Delinking PI<->PD
+    delink_pi_pd(lif_pd, (lif_t *)lif_pd->pi_lif);
+
+    // Freeing PD
+    lif_pd_free(lif_pd);
+end:
+    return ret;
 }
 
 // ----------------------------------------------------------------------------
@@ -92,55 +251,35 @@ lif_pd_init (pd_lif_t *lif)
 }
 
 // ----------------------------------------------------------------------------
-// Allocate resources for PD Lif
+// Program HW
 // ----------------------------------------------------------------------------
-hal_ret_t 
-lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_args_t *args)
+hal_ret_t
+lif_pd_program_hw (pd_lif_t *pd_lif)
 {
-    hal_ret_t            ret = HAL_RET_OK;
-    indexer::status      rs = indexer::SUCCESS;
+    hal_ret_t            ret;
 
-    if(((lif_t *)pd_lif->pi_lif)->lif_id == 1004) {
-        pd_lif->hw_lif_id = 1004;
-        HAL_TRACE_DEBUG("HACK ALERT: SETTING HW LIF ID to {}", pd_lif->hw_lif_id);
-        return ret;
+    // Program output mapping table
+    ret = lif_pd_pgm_output_mapping_tbl(pd_lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:unable to program hw", __FUNCTION__);
     }
 
-    if (args->with_hw_lif_id) {
-        pd_lif->hw_lif_id = args->hw_lif_id;
-    } else {
-        // Allocate lif hwid
-        rs = g_hal_state_pd->lif_hwid_idxr()->alloc((uint32_t *)&pd_lif->hw_lif_id);
-        if (rs != indexer::SUCCESS) {
-            return HAL_RET_NO_RESOURCE;
-        }
-    }
-    HAL_TRACE_DEBUG("PD-LIF:{}: lif_id:{} Allocated hw_lif_id:{}", 
-                    __FUNCTION__, 
-                    lif_get_lif_id((lif_t *)pd_lif->pi_lif),
-                    pd_lif->hw_lif_id);
-
-    // Allocate lport
-    rs = g_hal_state_pd->lport_idxr()->alloc((uint32_t *)&pd_lif->
-            lif_lport_id);
-    if (rs != indexer::SUCCESS) {
-        return HAL_RET_NO_RESOURCE;
-    }
-    HAL_TRACE_DEBUG("PD-LIF:{}: lif_id:{} Allocated lport_id:{}", 
-                    __FUNCTION__, 
-                    lif_get_lif_id((lif_t *)pd_lif->pi_lif),
-                    pd_lif->lif_lport_id);
     return ret;
 }
 
 // ----------------------------------------------------------------------------
-// Program HW
+// DeProgram HW
 // ----------------------------------------------------------------------------
 hal_ret_t
-lif_pd_program_hw(pd_lif_t *pd_lif)
+l2seg_pd_deprogram_hw (pd_lif_t *pd_lif)
 {
-    hal_ret_t            ret;
-    ret = lif_pd_pgm_output_mapping_tbl(pd_lif);
+    hal_ret_t            ret = HAL_RET_OK;
+
+    // Program Input properties Table
+    ret = lif_pd_depgm_output_mapping_tbl(pd_lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:unable to deprogram hw", __FUNCTION__);
+    }
 
     return ret;
 }
@@ -167,13 +306,15 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif)
     } else if (((lif_t *)pd_lif->pi_lif)->lif_id == 1001) {
         tm_oport = 9;
         p4plus_app_id = 3;
-        HAL_TRACE_ERR("xxx: setting tm_port = 9");
+        HAL_TRACE_ERR("pd-lif:{}:setting tm_port = 9",
+                      __FUNCTION__);
     } else if (((lif_t *)pd_lif->pi_lif)->lif_id == 1004) {
         pd_lif->lif_lport_id = 1004;
         pd_lif->hw_lif_id = 1004;
         tm_oport = 9;
         p4plus_app_id = 4;
-        HAL_TRACE_ERR("xxx: setting tm_port = 9");
+        HAL_TRACE_ERR("pd-lif:{}:setting tm_port = 9",
+                      __FUNCTION__);
     }
 
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
@@ -194,20 +335,56 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif)
 
     ret = dm_omap->insert_withid(&data, pd_lif->lif_lport_id);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-LIF::{}: lif_id:{} Unable to program",
+        HAL_TRACE_ERR("pd-lif::{}:lif_id:{},unable to program",
                 __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
     } else {
-        HAL_TRACE_DEBUG("PD-LIF::{}: lif_id:{} Success",
+        HAL_TRACE_DEBUG("pd-lif::{}:lif_id:{},programmed output mapping",
                 __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
     }
     return ret;
 }
 
 // ----------------------------------------------------------------------------
-// Freeing LIF PD
+// DeProgram output mapping table
+// ----------------------------------------------------------------------------
+hal_ret_t
+lif_pd_depgm_output_mapping_tbl (pd_lif_t *pd_lif)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    DirectMap                   *dm_omap = NULL;
+
+    dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
+    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    
+    ret = dm_omap->remove(pd_lif->lif_lport_id);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},unable to deprogram output "
+                      "mapping table",
+                      __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+    } else {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},deprogrammed output "
+                      "mapping table",
+                      __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Freeing LIF PD. Frees PD memory and all other memories allocated for PD.
 // ----------------------------------------------------------------------------
 hal_ret_t
 lif_pd_free (pd_lif_t *lif)
+{
+    g_hal_state_pd->lif_pd_slab()->free(lif);
+    return HAL_RET_OK;
+}
+
+// ----------------------------------------------------------------------------
+// Freeing LIF PD memory. Just frees the memory of PD structure.
+// ----------------------------------------------------------------------------
+hal_ret_t
+lif_pd_mem_free (pd_lif_t *lif)
 {
     g_hal_state_pd->lif_pd_slab()->free(lif);
     return HAL_RET_OK;
@@ -227,10 +404,51 @@ link_pi_pd(pd_lif_t *pd_lif, lif_t *pi_lif)
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
 void 
-unlink_pi_pd(pd_lif_t *pd_lif, lif_t *pi_lif)
+delink_pi_pd(pd_lif_t *pd_lif, lif_t *pi_lif)
 {
     pd_lif->pi_lif = NULL;
     lif_set_pd_lif(pi_lif, NULL);
 }
+
+// ----------------------------------------------------------------------------
+// Makes a clone
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_make_clone(lif_t *ten, lif_t *clone)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    pd_lif_t         *pd_ten_clone = NULL;
+
+    pd_ten_clone = lif_pd_alloc_init();
+    if (pd_ten_clone == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    memcpy(pd_ten_clone, ten->pd_lif, sizeof(pd_lif_t));
+
+    link_pi_pd(pd_ten_clone, clone);
+
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Frees PD memory without indexer free.
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_mem_free(pd_lif_args_t *args)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+    pd_lif_t    *lif_pd;
+
+    lif_pd = (pd_lif_t *)args->lif->pd_lif;
+    lif_pd_mem_free(lif_pd);
+
+    return ret;
+}
+
+
+
 }    // namespace pd
 }    // namespace hal

@@ -30,6 +30,7 @@ SOURCES = \
 		  tenant.cc \
 		  network.cc \
 		  interface.cc \
+		  lif.cc \
 		  internal.cc \
 		  l2segment.cc \
 		  endpoint.cc \

@@ -16,6 +16,7 @@ using hal::pd::pd_if_args_t;
 
 namespace hal {
 
+#if 0
 void *
 lif_get_key_func (void *entry)
 {
@@ -61,6 +62,7 @@ lif_compare_handle_key_func (void *key1, void *key2)
     }
     return false;
 }
+#endif
 
 void *
 if_get_key_func (void *entry)
@@ -131,6 +133,7 @@ if_compare_handle_key_func (void *key1, void *key2)
     return false;
 }
 
+#if 0
 //------------------------------------------------------------------------------
 // insert this lif in all meta data structures
 //------------------------------------------------------------------------------
@@ -142,6 +145,7 @@ add_lif_to_db (lif_t *lif)
 
     return HAL_RET_OK;
 }
+#endif
 
 //------------------------------------------------------------------------------
 // insert this interface in all meta data structures
@@ -157,6 +161,7 @@ add_if_to_db (if_t *hal_if)
     return HAL_RET_OK;
 }
 
+#if 0
 //------------------------------------------------------------------------------
 // init lif specific queue state, if any
 //------------------------------------------------------------------------------
@@ -378,7 +383,7 @@ end:
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
-
+#endif
 //------------------------------------------------------------------------------
 // fetch if from InterfaceL2SegmentSpec
 //------------------------------------------------------------------------------
@@ -1298,6 +1303,7 @@ end:
     return ret;
 }
 
+#if 0
 // TODO: following APIs need to be cleaned up.. they dont use types.APIStatus
 //       and give out return codes that user has no way to interpret !!!
 void
@@ -1356,6 +1362,7 @@ LifSetQState (const intf::QStateSetReq &req, intf::QStateSetResp *rsp)
     rsp->set_error_code(0 - ret);
 }
 
+#endif
 hal_ret_t
 if_handle_nwsec_update (l2seg_t *l2seg, if_t *hal_if, nwsec_profile_t *nwsec_prof)
 {
@@ -1378,7 +1385,6 @@ if_handle_nwsec_update (l2seg_t *l2seg, if_t *hal_if, nwsec_profile_t *nwsec_pro
 end:
     return ret;
 }
-
 
 
 

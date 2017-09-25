@@ -93,16 +93,18 @@ hal_cfg_db::init(void)
 
     // initialize LIF related data structures
     lif_id_ht_ = ht::factory(HAL_MAX_LIFS,
-                             hal::lif_get_key_func,
-                             hal::lif_compute_hash_func,
-                             hal::lif_compare_key_func);
+                             hal::lif_id_get_key_func,
+                             hal::lif_id_compute_hash_func,
+                             hal::lif_id_compare_key_func);
     HAL_ASSERT_RETURN((lif_id_ht_ != NULL), false);
 
+#if 0
     lif_hal_handle_ht_ = ht::factory(HAL_MAX_INTERFACES,
                                      hal::lif_get_handle_key_func,
                                      hal::lif_compute_handle_hash_func,
                                      hal::lif_compare_handle_key_func);
     HAL_ASSERT_RETURN((lif_hal_handle_ht_ != NULL), false);
+#endif
 
     // initialize interface related data structures
     if_id_ht_ = ht::factory(HAL_MAX_INTERFACES,

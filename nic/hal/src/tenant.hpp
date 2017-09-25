@@ -138,22 +138,6 @@ tenant_lookup_by_handle (hal_handle_t handle)
    return (tenant_t *)hal_handle_get_obj(handle); 
 }
 
-#if 0
-// find a tenant instance by its id
-static inline tenant_t *
-tenant_lookup_by_id (tenant_id_t tid)
-{
-    return (tenant_t *)g_hal_state->tenant_id_ht()->lookup(&tid);
-}
-
-// find a tenant instance by its handle
-static inline tenant_t *
-tenant_lookup_by_handle (hal_handle_t handle)
-{
-    return (tenant_t *)g_hal_state->tenant_hal_handle_ht()->lookup(&handle);
-}
-#endif
-
 extern void *tenant_id_get_key_func(void *entry);
 extern uint32_t tenant_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool tenant_id_compare_key_func(void *key1, void *key2);

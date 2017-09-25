@@ -324,7 +324,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     tenant_t                    *tenant = NULL;
     nwsec_profile_t             *sec_prof;
     hal_handle_t                hal_handle = HAL_HANDLE_INVALID;
-    tenant_update_app_ctxt_t    app_ctxt = { 0 };
+    tenant_create_app_ctxt_t    app_ctxt = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
 
@@ -385,7 +385,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     }
 
     // form ctxt and call infra add
-    app_ctxt.nwsec_prof = sec_prof;
+    app_ctxt.sec_prof = sec_prof;
     dhl_entry.handle = hal_handle;
     dhl_entry.obj = tenant;
     cfg_ctxt.app_ctxt = &app_ctxt;

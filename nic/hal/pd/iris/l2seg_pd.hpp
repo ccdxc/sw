@@ -112,7 +112,8 @@ find_l2seg_pd_by_hwid (l2seg_hw_id_t hwid)
     l2seg_t                     *l2seg;
     pd_l2seg_t                  *l2seg_pd = NULL;
 
-    entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->l2seg_hwid_ht()->lookup(&hwid);
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->
+        l2seg_hwid_ht()->lookup(&hwid);
     if (entry) {
         l2seg = (l2seg_t *)hal_handle_get_obj(entry->handle_id);
         l2seg_pd = (pd_l2seg_t *)l2seg->pd;

@@ -67,13 +67,12 @@ pd_tenant_delete (pd_tenant_args_t *args)
 
     ret = tenant_pd_cleanup(tenant_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed pd tenant delete");
+        HAL_TRACE_ERR("pd-tenant:{}:failed pd tenant delete",
+                      __FUNCTION__);
     }
 
     return ret;
 }
-
-
 
 //-----------------------------------------------------------------------------
 // Allocate resources. 

@@ -311,6 +311,8 @@ hal_ret_t pd_nwsec_profile_update(pd_nwsec_profile_args_t *nwsec_profile);
 hal_ret_t pd_lif_create(pd_lif_args_t *lif);
 hal_ret_t pd_lif_update(pd_lif_args_t *lif);
 hal_ret_t pd_lif_delete(pd_lif_args_t *lif);
+hal_ret_t pd_lif_mem_free(pd_lif_args_t *lif);
+hal_ret_t pd_lif_make_clone(lif_t *ten, lif_t *clone);
 
 hal_ret_t pd_if_create(pd_if_args_t *hal_if);
 hal_ret_t pd_if_update(pd_if_args_t *hal_if);

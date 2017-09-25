@@ -81,6 +81,7 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/internal.pb.o \
 				$(OBJ_DIR)/rdma.pb.o \
 				$(OBJ_DIR)/interface.o \
+				$(OBJ_DIR)/lif.o \
 				$(OBJ_DIR)/internal.o \
 				$(OBJ_DIR)/network.o \
 				$(OBJ_DIR)/nw.pb.o \
