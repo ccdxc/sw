@@ -76,10 +76,10 @@ table nacl {
     reads {
         // lkp_vrf identifies a segment and the vni/vlan derive a lkp_vrf. 
         // So these fields are not needed
-        // vxlan.vni                                          : ternary;
-        // vlan_tag.valid                                     : ternary;
-        // vlan_tag.vid                                       : ternary;
-        entry_status.inactive                              : ternary;
+        // vxlan.vni                                       : ternary;
+        // vlan_tag.valid                                  : ternary;
+        // vlan_tag.vid                                    : ternary;
+        entry_inactive.nacl                                : ternary;
         flow_lkp_metadata.lkp_inst                         : ternary;
         flow_lkp_metadata.lkp_dir                          : ternary;
         flow_lkp_metadata.lkp_type                         : ternary;

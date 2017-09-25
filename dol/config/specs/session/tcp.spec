@@ -82,7 +82,7 @@ entries:
                     dscp_rw : const/1
                     dscp    : const/1
         initiator: 
-            port : const/4
+            port : const/3
             flow_info:
                 eg_qos:    
                     cos_rw  : const/1
@@ -95,7 +95,7 @@ entries:
         tracking: False
         timestamp: False
         responder: 
-            port : const/28750
+            port : const/36031
             flow_info:
                 eg_qos:    
                     cos_rw  : const/1

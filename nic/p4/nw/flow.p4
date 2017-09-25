@@ -11,8 +11,6 @@ header_type flow_lkp_metadata_t {
         lkp_dst          : 128;
         lkp_sport        : 16;
         lkp_dport        : 16;
-        opt_lkp_sport    : 16;
-        opt_lkp_dport    : 16;
 
         lkp_srcMacAddr   : 48;         // For NACL Key
         lkp_dstMacAddr   : 48;         // For NACL Key

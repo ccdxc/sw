@@ -54,14 +54,14 @@ p4pd_input_mapping_native_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 1;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0x1;
+    mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
@@ -86,14 +86,14 @@ p4pd_input_mapping_native_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 1;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0x1;
+    mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -118,14 +118,14 @@ p4pd_input_mapping_native_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0x1;
+    mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -150,14 +150,14 @@ p4pd_input_mapping_native_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 1;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0x1;
+    mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -182,14 +182,14 @@ p4pd_input_mapping_native_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 1;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set the appropriate mask for them
-    mask.entry_status_inactive_mask = 0x1;
+    mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
@@ -214,14 +214,14 @@ p4pd_input_mapping_native_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set the appropriate mask for them
-    mask.entry_status_inactive_mask = 0x1;
+    mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -281,14 +281,14 @@ p4pd_input_mapping_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 1;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0x1;
+    mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -311,14 +311,14 @@ p4pd_input_mapping_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 1;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0xFF;
+    mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -343,14 +343,14 @@ p4pd_input_mapping_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_mapping = 0;
     key.ipv4_valid = 0;
     key.ipv6_valid = 0;
     key.mpls_0_valid = 0;
     key.tunnel_metadata_tunnel_type = 0;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0xFF;
+    mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
     mask.ipv6_valid_mask = 0xFF;
     mask.mpls_0_valid_mask = 0xFF;
@@ -375,7 +375,7 @@ p4pd_input_mapping_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_mapping = 0;
     // TODO: Temp fix. Remove inner_ipv4_valid key
     key.inner_ipv4_valid = 1;
     key.inner_ipv6_valid = 0;
@@ -385,7 +385,7 @@ p4pd_input_mapping_tunneled_init (void)
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0xFF;
+    mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.inner_ipv4_valid_mask = 0xFF;
     mask.inner_ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
@@ -412,7 +412,7 @@ p4pd_input_mapping_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_mapping = 0;
     key.inner_ipv4_valid = 0;
     key.inner_ipv6_valid = 1;
     key.ipv4_valid = 1;
@@ -421,7 +421,7 @@ p4pd_input_mapping_tunneled_init (void)
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set appropriate mask for them
-    mask.entry_status_inactive_mask = 0xFF;
+    mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.inner_ipv4_valid_mask = 0xFF;
     mask.inner_ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
@@ -448,7 +448,7 @@ p4pd_input_mapping_tunneled_init (void)
     memset(&data, 0, sizeof(data));
 
     // set the key bits that we care
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_mapping = 0;
     key.inner_ipv4_valid = 0;
     key.inner_ipv6_valid = 0;
     key.ipv4_valid = 1;
@@ -457,7 +457,7 @@ p4pd_input_mapping_tunneled_init (void)
     key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
 
     // and set the appropriate mask for them
-    mask.entry_status_inactive_mask = 0xFF;
+    mask.entry_inactive_input_mapping_mask = 0xFF;
     mask.inner_ipv4_valid_mask = 0xFF;
     mask.inner_ipv6_valid_mask = 0xFF;
     mask.ipv4_valid_mask = 0xFF;
@@ -615,10 +615,10 @@ p4pd_drop_stats_init (void)
      *      return (1) + (2)
      */
     for (int i = DROP_MIN; i <= DROP_MAX; i++) {
-    
-        key.entry_status_inactive = 0;
+
+        key.entry_inactive_drop_stats = 0;
         key.control_metadata_drop_reason = 1 << i;
-        key_mask.entry_status_inactive_mask = 1;
+        key_mask.entry_inactive_drop_stats_mask = 0xFF;
         key_mask.control_metadata_drop_reason_mask = 1 << i;
 
         data.actionid = DROP_STATS_DROP_STATS_ID;

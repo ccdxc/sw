@@ -88,7 +88,7 @@ l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profil
     inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(args->l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(args->l2seg);
 
-    key.entry_status_inactive = 0;
+    key.entry_inactive_input_properties = 0;
     if (!is_native) {
         // Install one entry
         enc_type = l2seg_get_fab_encap_type(args->l2seg);

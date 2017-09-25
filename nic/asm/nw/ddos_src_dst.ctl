@@ -14,7 +14,7 @@ k = {
     flow_lkp_metadata_lkp_vrf                       = 0x1;
     flow_lkp_metadata_lkp_proto                     = 0x1;
     tcp_flags                                       = 0x2;
-    //flow_lkp_metadata_lkp_src                       = 0x1;
+    //flow_lkp_metadata_lkp_src                     = 0x1;
     flow_lkp_metadata_lkp_dport                     = 0x1;
 
     // ICMP Normalization Fields
@@ -24,7 +24,7 @@ k = {
     icmp_typeCode                                   = 0x1001; // icmp_type = 8;
     l4_metadata_icmp_deprecated_msgs_drop           = 0x1;
     l4_metadata_icmp_redirect_msg_drop              = 0x1;
-    l4_metadata_icmp_invalid_code_action_sbit1_ebit1= 0x1;
+    l4_metadata_icmp_invalid_code_action            = 0x1;
 };
 
 p = {

@@ -416,8 +416,9 @@ acl_tcam::deprogram_table_(uint32_t index)
     hwkeymask   = ::operator new(hwkeymask_len_);
     swdata      = ::operator new(swdata_len_);
 
+    // Set inactive bit to 1 by matching on all ones
     std::memset(hwkey, 0xFF, hwkey_len_);
-    std::memset(hwkeymask, 0xFF, hwkeymask_len_);
+    std::memset(hwkeymask, 0x00, hwkeymask_len_);
     std::memset(swdata, 0, swdata_len_);
 
     // P4-API: write

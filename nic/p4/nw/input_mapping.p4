@@ -147,15 +147,15 @@ action input_mapping_miss() {
 @pragma stage 0
 table input_mapping_tunneled {
     reads {
-        entry_status.inactive       : ternary;
-        tunnel_metadata.tunnel_type : ternary;
-        mpls[0].valid               : ternary;
-        ipv4.valid                  : ternary;
-        ipv6.valid                  : ternary;
-        inner_ipv4.valid            : ternary;
-        inner_ipv6.valid            : ternary;
-        ipv4.dstAddr                : ternary;
-        ipv6.dstAddr                : ternary;
+        entry_inactive.input_mapping : ternary;
+        tunnel_metadata.tunnel_type  : ternary;
+        mpls[0].valid                : ternary;
+        ipv4.valid                   : ternary;
+        ipv6.valid                   : ternary;
+        inner_ipv4.valid             : ternary;
+        inner_ipv6.valid             : ternary;
+        ipv4.dstAddr                 : ternary;
+        ipv6.dstAddr                 : ternary;
     }
     actions {
         tunneled_ipv4_packet;
@@ -171,15 +171,15 @@ table input_mapping_tunneled {
 @pragma stage 0
 table input_mapping_native {
     reads {
-        entry_status.inactive       : ternary;
-        tunnel_metadata.tunnel_type : ternary;
-        mpls[0].valid               : ternary;
-        ipv4.valid                  : ternary;
-        ipv6.valid                  : ternary;
-        inner_ipv4.valid            : ternary;
-        inner_ipv6.valid            : ternary;
-        ipv4.dstAddr                : ternary;
-        ipv6.dstAddr                : ternary;
+        entry_inactive.input_mapping : ternary;
+        tunnel_metadata.tunnel_type  : ternary;
+        mpls[0].valid                : ternary;
+        ipv4.valid                   : ternary;
+        ipv6.valid                   : ternary;
+        inner_ipv4.valid             : ternary;
+        inner_ipv6.valid             : ternary;
+        ipv4.dstAddr                 : ternary;
+        ipv6.dstAddr                 : ternary;
     }
     actions {
         native_ipv4_packet;
@@ -214,12 +214,12 @@ action input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
 @pragma overflow_table input_properties
 table input_properties_otcam {
     reads {
-        entry_status.inactive       : ternary;
-        capri_intrinsic.lif         : ternary;
-        vlan_tag.valid              : ternary;
-        vlan_tag.vid                : ternary;
-        tunnel_metadata.tunnel_type : ternary;
-        tunnel_metadata.tunnel_vni  : ternary;
+        entry_inactive.input_properties : ternary;
+        capri_intrinsic.lif             : ternary;
+        vlan_tag.valid                  : ternary;
+        vlan_tag.vid                    : ternary;
+        tunnel_metadata.tunnel_type     : ternary;
+        tunnel_metadata.tunnel_vni      : ternary;
     }
     actions {
         input_properties;
@@ -232,12 +232,12 @@ table input_properties_otcam {
 @pragma hash_type 0
 table input_properties {
     reads {
-        entry_status.inactive       : exact;
-        capri_intrinsic.lif         : exact;
-        vlan_tag.valid              : exact;
-        vlan_tag.vid                : exact;
-        tunnel_metadata.tunnel_type : exact;
-        tunnel_metadata.tunnel_vni  : exact;
+        entry_inactive.input_properties : exact;
+        capri_intrinsic.lif             : exact;
+        vlan_tag.valid                  : exact;
+        vlan_tag.vid                    : exact;
+        tunnel_metadata.tunnel_type     : exact;
+        tunnel_metadata.tunnel_vni      : exact;
     }
     actions {
         input_properties;
@@ -270,22 +270,6 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
     }
     modify_field(control_metadata.packet_len, scratch_metadata.packet_len);
     modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
-
-//  TBD: Currently commented out the lookup meta sport/dport setting in
-//  input_properties for ipsec pkts. Will be re-enabled once we get the
-//  axishift fix from Mahesh
-//    if (ah.valid == TRUE) {
-//        modify_field(flow_lkp_metadata.lkp_sport, flow_lkp_metadata.opt_lkp_sport);
-//        modify_field(flow_lkp_metadata.lkp_dport, flow_lkp_metadata.opt_lkp_dport);
-//    }
-//    if (esp.valid == TRUE) {
-//        modify_field(flow_lkp_metadata.lkp_sport, flow_lkp_metadata.opt_lkp_sport);
-//        modify_field(flow_lkp_metadata.lkp_dport, flow_lkp_metadata.opt_lkp_dport);
-//    }
-//    if (v6_ah_esp.valid == TRUE) {
-//        modify_field(flow_lkp_metadata.lkp_sport, flow_lkp_metadata.opt_lkp_sport);
-//        modify_field(flow_lkp_metadata.lkp_dport, flow_lkp_metadata.opt_lkp_dport);
-//    }
 
     // if table is a miss, return. do not perform rest of the actions.
 
@@ -323,10 +307,10 @@ action adjust_lkp_fields() {
 @pragma stage 0
 table input_properties_mac_vlan {
     reads {
-        entry_status.inactive  : ternary;
-        vlan_tag.valid         : ternary;
-        vlan_tag.vid           : ternary;
-        ethernet.srcAddr       : ternary;
+        entry_inactive.input_mac_vlan : ternary;
+        vlan_tag.valid                : ternary;
+        vlan_tag.vid                  : ternary;
+        ethernet.srcAddr              : ternary;
     }
     actions {
         input_properties_mac_vlan;

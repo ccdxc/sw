@@ -549,8 +549,8 @@ parser parse_v6_generic_ext_hdr {
 parser parse_v6_ipsec_hdr {
     extract(v6_ah_esp);
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
-    set_metadata(flow_lkp_metadata.opt_lkp_sport, latest.spi_hi);
-    set_metadata(flow_lkp_metadata.opt_lkp_dport, latest.spi_lo);
+    set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
+    set_metadata(flow_lkp_metadata.lkp_dport, latest.spi_lo);
     set_metadata(ipsec_metadata.seq_no, latest.seqNo);
     set_metadata(ipsec_metadata.ipsec_type, IPSEC_HEADER_AH);
     return ingress;
@@ -601,8 +601,8 @@ parser parse_ipv6 {
 
 parser parse_ipsec_ah {
     extract(ah);
-    set_metadata(flow_lkp_metadata.opt_lkp_sport, latest.spi_hi);
-    set_metadata(flow_lkp_metadata.opt_lkp_dport, latest.spi_lo);
+    set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
+    set_metadata(flow_lkp_metadata.lkp_dport, latest.spi_lo);
     set_metadata(ipsec_metadata.seq_no, latest.seqNo);
     set_metadata(ipsec_metadata.ipsec_type, IPSEC_HEADER_AH);
     return ingress;
@@ -610,8 +610,8 @@ parser parse_ipsec_ah {
 
 parser parse_ipsec_esp {
     extract(esp);
-    set_metadata(flow_lkp_metadata.opt_lkp_sport, latest.spi_hi);
-    set_metadata(flow_lkp_metadata.opt_lkp_dport, latest.spi_lo);
+    set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
+    set_metadata(flow_lkp_metadata.lkp_dport, latest.spi_lo);
     set_metadata(ipsec_metadata.seq_no, latest.seqNo);
     set_metadata(ipsec_metadata.ipsec_type, IPSEC_HEADER_ESP);
     return ingress;

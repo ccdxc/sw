@@ -67,10 +67,17 @@ header_type control_metadata_t {
     }
 }
 
-header_type entry_status_t {
+header_type entry_inactive_t {
     fields {
-        inactive   : 1;
-        inactive_e : 1;
+        input_mapping    : 1;
+        input_properties : 1;
+        input_mac_vlan   : 1;
+        ipsg             : 1;
+        nacl             : 1;
+        drop_stats       : 1;
+        ddos_src_vf      : 1;
+        ddos_src_dst     : 1;
+        ddos_service     : 1;
     }
 }
 
@@ -227,7 +234,7 @@ header_type scratch_metadata_t {
 metadata cap_phv_intr_p4_t capri_p4_intrinsic;
 metadata l3_metadata_t l3_metadata;
 metadata control_metadata_t control_metadata;
-metadata entry_status_t entry_status;
+metadata entry_inactive_t entry_inactive;
 // scratch_metadata : no phvs will be allocated for this. These fields
 // should  only be used in action routines as temporary/local variables
 @pragma scratch_metadata

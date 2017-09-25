@@ -287,8 +287,8 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     }
 
     // Populate the Key and Mask
-    key.entry_status_inactive = 0;
-    mask.entry_status_inactive_mask = 0x1;
+    key.entry_inactive_nacl = 0;
+    mask.entry_inactive_nacl_mask = 0x1;
 
     // Match only when lkp_inst is 0
     key.flow_lkp_metadata_lkp_inst = 0;

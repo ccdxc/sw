@@ -34,7 +34,7 @@ action drop_stats(stats_idx, drop_pkts, mirror_session_id) {
 @pragma table_write
 table drop_stats {
     reads {
-        entry_status.inactive        : ternary;
+        entry_inactive.drop_stats    : ternary;
         control_metadata.drop_reason : ternary;
     }
     actions {

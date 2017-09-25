@@ -598,7 +598,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
     ipsg_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_IPSG);
     HAL_ASSERT_RETURN((ipsg_tbl != NULL), HAL_RET_ERR);
 
-    key.entry_status_inactive = 0;
+    key.entry_inactive_ipsg = 0;
     l2seg = find_l2seg_by_handle(pi_ep->l2seg_handle);
     HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
     key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->l2seg_ten_hw_id;
@@ -612,7 +612,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
         (pi_ip_entry->ip_addr.af == IP_AF_IPV4) ? FLOW_KEY_LOOKUP_TYPE_IPV4 :
         FLOW_KEY_LOOKUP_TYPE_IPV6;
 
-    key_mask.entry_status_inactive_mask = 0x1;
+    key_mask.entry_inactive_ipsg_mask = 0x1;
     key_mask.flow_lkp_metadata_lkp_vrf_mask = 
         ~(key_mask.flow_lkp_metadata_lkp_vrf_mask & 0);
     key_mask.flow_lkp_metadata_lkp_type_mask = 

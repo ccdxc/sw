@@ -69,7 +69,7 @@ pd_system_populate_drop_stats(DropStatsEntry *stats_entry,
         goto end;
     }
 
-    if (key.entry_status_inactive) {
+    if (key.entry_inactive_drop_stats) {
         goto end;
     }
 
