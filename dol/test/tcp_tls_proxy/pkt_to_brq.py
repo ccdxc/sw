@@ -78,6 +78,7 @@ def TestCaseSetup(tc):
     tlscb.enc_completions = 0
     tlscb.serq_pi = 0
     tlscb.serq_ci = 0
+    tlscb.debug_dol = 5 
     tlscb.SetObjValPd()
 
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])

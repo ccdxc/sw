@@ -1,14 +1,17 @@
 # Testcase definition file.
-
 import pdb
 import copy
 
-from config.store               import Store
-from config.objects.proxycb_service    import ProxyCbServiceHelper
+import types_pb2                as types_pb2
+import crypto_keys_pb2          as crypto_keys_pb2
+import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
+
+from config.store                       import Store
+from config.objects.proxycb_service     import ProxyCbServiceHelper
 from config.objects.tcp_proxy_cb        import TcpCbHelper
-from infra.common.objects import ObjectDatabase as ObjectDatabase
 import test.callbacks.networking.modcbs as modcbs
-from infra.common.logging import logger
+from infra.common.objects               import ObjectDatabase as ObjectDatabase
+from infra.common.logging               import logger
 
 
 def Setup(infra, module):
@@ -47,17 +50,37 @@ def TestCaseSetup(tc):
     tnmdr.Configure()
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
     tnmpr.Configure()
-    sesqid = "TCPCB%04d_SESQ" % id
-    sesq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[sesqid])
-    sesq.Configure()
     tlscbid = "TlsCb%04d" % id
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
-    tlscb_cur.debug_dol = 5
+
+    tlscb_cur.debug_dol = 4
+    # Key Setup
+    key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
+    key_size = 16
+    key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    tlscb_cur.crypto_key.Update(key_type, key_size, key)
+
+    # TLS-CB Setup
+    tlscb_cur.command = 0x30000000
+    tlscb_cur.crypto_key_idx = tlscb_cur.crypto_key.keyindex
+    tlscb_cur.salt = 0x12345678
+    tlscb_cur.explicit_iv = 0xfedcba9876543210
     tlscb_cur.SetObjValPd()
+
     tlscb = copy.deepcopy(tlscb_cur)
     tlscb.GetObjValPd()
+    print("snapshot1: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests))
+    print("snapshot1: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions))
+
+
+    brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
+
+
+
     tcpcb = copy.deepcopy(tcb)
     tcpcb.GetObjValPd()
+
+
 
     tc.pvtdata.Add(tlscb)
     tc.pvtdata.Add(rnmdr)
@@ -65,7 +88,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.Add(tnmdr)
     tc.pvtdata.Add(tnmpr)
     tc.pvtdata.Add(tcpcb)
-    tc.pvtdata.Add(sesq)
+
     return
 
 def TestCaseVerify(tc):
@@ -82,18 +105,17 @@ def TestCaseVerify(tc):
     print("post-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
     print("post-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
 
-    print("snapshot: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests))
-    print("snapshot: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions))
-
+    print("snapshot3: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests))
+    print("snapshot3: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions))
 
     # 0. Verify the counters
     if ((tlscb_cur.tnmdr_alloc - tlscb.tnmdr_alloc) != (tlscb_cur.rnmdr_free - tlscb.rnmdr_free)):
         print("tnmdr alloc increment not same as rnmdr free increment")
-        return False
+        #return False
 
     if ((tlscb_cur.tnmpr_alloc - tlscb.tnmpr_alloc) != (tlscb_cur.rnmpr_free - tlscb.rnmpr_free)):
         print("tnmpr alloc increment not same as rnmpr free increment")
-        return False
+        #return False
 
 
     if ((tlscb_cur.enc_requests - tlscb.enc_requests) != (tlscb_cur.enc_completions - tlscb.enc_completions)):
@@ -135,6 +157,8 @@ def TestCaseVerify(tc):
     tnmdr_cur.Configure()
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
     tnmpr_cur.Configure()
+    brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
+    brq_cur.Configure()
     tnmdr = tc.pvtdata.db["TNMDR"]
     tnmpr = tc.pvtdata.db["TNMPR"]
 
@@ -149,16 +173,37 @@ def TestCaseVerify(tc):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
         return False
 
-    sesqid = "TCPCB%04d_SESQ" % id
-    sesq = tc.pvtdata.db[sesqid]
-    sesq_cur = tc.infra_data.ConfigStore.objects.db[sesqid]
-    sesq_cur.Configure()
 
-    # 6. Verify descriptor 
-    if (rnmdr.ringentries[rnmdr.pi].handle != (sesq_cur.ringentries[0].handle - 0x40)):
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, sesq_cur.ringentries[0].handle)) 
+
+
+    # 6. Verify descriptor on the BRQ
+    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[0].ilist_addr - 0x40)):
+        print("RNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr)) 
         return False
 
+
+    # 7. Verify descriptor on the BRQ
+    if (tnmdr.ringentries[tnmdr.pi].handle != (brq_cur.ring_entries[0].olist_addr - 0x40)):
+        print("TNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[0].olist_addr)) 
+        return False
+
+
+
+    # 8. Verify BRQ Descriptor Command field
+    if brq_cur.ring_entries[0].command != tlscb.command:
+        print("BRQ Command Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[0].command, tlscb.command))
+        return False
+
+
+    # 9. Verify BRQ Descriptor Key Index field
+    if brq_cur.ring_entries[0].key_desc_index != tlscb.crypto_key_idx:
+        print("BRQ Crypto Key Index Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[0].key_desc_index, tlscb.crypto_key_idx))
+        return False
+
+    # 11. Verify page
+    #if rnmpr.ringentries[0].handle != brq_cur.swdre_list[0].Addr1:
+    #    print("Page handle not as expected in brq_cur.swdre_list")
+        #return False
 
     return True
 
