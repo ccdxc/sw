@@ -111,6 +111,7 @@ descriptors:
         template: ref://factory/templates/id=DESC_RDMA_CQ
         fields:
             wrid: ref://testcase/descriptors/id=RQ_DESC/wrid
+            qp: ref://testcase/config/rdmasession/lqp/id
             op_type: 17 #OP_TYPE_SEND_RCVD
             status : 0  #CQ_STATUS_SUCCESS
 
