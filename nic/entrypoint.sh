@@ -8,6 +8,6 @@ mkdir -p ${dir}
 mount -o bind /sw ${dir}
 echo 1>&2 building asset tools...
 
-cd $dir && go install ./build/... && cd /sw/nic
+cd $dir && go install ./asset-build/... && cd /sw/nic
 
 exec "$@"

@@ -8,7 +8,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/minio/minio-go"
-	"github.com/pensando/sw/build/asset"
+	"github.com/pensando/sw/asset-build/asset"
 	"github.com/urfave/cli"
 )
 
