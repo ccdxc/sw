@@ -12,16 +12,15 @@
             "exclude_dirs" : [
                "hal/test",
                "fte/test",
-	       "gen/protobuf",
                "hal/pd/iris/test/rw_tbl_lib",
                "hal/pd/utils/acl_tcam/test",
-               "hal/pd/utils/direct_map/test",
+               "hal/pd/utils/directmap/test",
                "hal/pd/utils/hash/test",
                "hal/pd/utils/met/test",
                "hal/pd/utils/tcam/test",
                "hal/pd/utils/p4pd_mock",
-               "hal/test/gtests",
                "hal/test",
+               "hal/test/gtests",
                "model_sim/include",
                "utils/shm/test",
                "utils/slab/test",
@@ -31,7 +30,6 @@
                "utils/indexer/test",
                "utils/host_mem/test",
                "gen/test_results",
-               "gen/iris",
                "gen/protobuf",
                "gen/coverage"
             ],
@@ -45,7 +43,8 @@
                "/usr/include/*",
                 "/usr/local/*",
                 "third-party/*",
-                "model_sim/include/*"
+                "model_sim/include/*",
+                "gen/protobuf/*"
             ],
             "gcno_dir" : "obj"
         },

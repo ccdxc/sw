@@ -42,9 +42,10 @@ def is_valid_coverage_info_file(file):
             return True
     return False
 
-
-def gen_html(lcov_info_file, cov_output_dir):
+def gen_html(lcov_info_file, cov_output_dir, ignore_errors=True):
     cmd = ["genhtml", "-o", cov_output_dir, lcov_info_file]
+    if ignore_errors:
+        cmd.extend(["--ignore-errors", "source"])
     subprocess.call(cmd)
 
 
