@@ -3,7 +3,6 @@ targets:
   infra: [ "bash", "-c", "./sanity.sh" ]
 image:
   name: "pensando/dol"
-  bind_dir: "/sw/dol"
-  extra_binds:
-    /nic: /sw/nic
+  bind_dir: "/sw"
+  work_dir: "/sw/dol"
 rebase: true

@@ -7,8 +7,6 @@ targets:
   gcov: [ "sh", "-c", "cd /sw && make pull-assets && cd nic && make V=1 GCOV=\"--coverage -DCOVERAGE\" -j8 all && make gtest" ]
 image:
   name: "pensando/nic"
-  bind_dir: "/sw/nic"
-  extra_binds:
-    /dol: /sw/dol
-    /: /sw
+  bind_dir: "/sw"
+  work_dir: "/sw/nic"
 rebase: true
