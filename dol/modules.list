@@ -483,7 +483,15 @@ modules:
     #    module  : resp_rx_send_first_last_pmtu_err
     #    spec    : resp_rx_send_first_last_pmtu_err.testspec
     #    ignore  : False
-
+ 
+    - module:
+        name    : RDMA_RX_READ_ONLY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_only
+        spec    : resp_rx_read_only.testspec
+        ignore  : False
+ 
     - module:
         name    : SFW_IN_SEQUENCE
         enable  : True

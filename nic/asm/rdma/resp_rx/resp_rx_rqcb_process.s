@@ -15,6 +15,12 @@ struct rdma_stage0_table_k k;
 #define RAW_TABLE_PC r2
 
 #define REM_PYLD_BYTES  r6
+#define RSQWQE_P r2
+#define DMA_CMD_BASE r1
+#define TMP r3
+#define DB_ADDR r4
+#define DB_DATA r5
+#define NEW_RSQ_P_INDEX r6
 
 %%
     .param    resp_rx_rqpt_process
@@ -74,6 +80,48 @@ resp_rx_rqcb_process:
     slt     c1, CAPRI_APP_DATA_BTH_PSN, d.e_psn
     bcf     [c1], duplicate
     nop     //BD Slot
+
+    // check for read
+check_read:
+    ARE_ALL_FLAGS_SET(c1, r7, RESP_RX_FLAG_READ_REQ)
+    bcf     [!c1], check_write
+    nop     //BD Slot
+
+read:
+    // populate rsqwqe in phv and then DMA
+    phvwr   p.rsqwqe.psn, d.e_psn
+    CAPRI_RXDMA_RETH_VA(r5)
+    phvwr   p.rsqwqe.read.va, r5
+    phvwr   p.rsqwqe.read.r_key, CAPRI_RXDMA_RETH_R_KEY
+    phvwr   p.rsqwqe.read.len, CAPRI_RXDMA_RETH_DMA_LEN
+    // phv is already initialized to 0, don't need below instructions
+    //phvwr   p.rsqwqe.read_or_atomic, RSQ_OP_TYPE_READ
+    //phvwr   p.rsqwqe.read.offset, 0
+
+    // wqe_p = (void *)(hbm_addr_get(rqcb_p->rsq_base_addr) +    
+    //                      (sizeof(rsqwqe_t) * p_index));
+    add         RSQWQE_P, d.rsq_base_addr, RSQ_P_INDEX, LOG_SIZEOF_RSQWQE_T
+    // p_index/c_index are in little endian
+    add         NEW_RSQ_P_INDEX, r0, RSQ_P_INDEX
+    mincr       NEW_RSQ_P_INDEX, d.log_rsq_size, 1
+   
+    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQWQE)
+    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, rsqwqe, rsqwqe, RSQWQE_P)
+
+    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, CAPRI_RXDMA_INTRINSIC_LIF, CAPRI_RXDMA_INTRINSIC_QTYPE, DB_ADDR)
+    CAPRI_SETUP_DB_DATA(CAPRI_RXDMA_INTRINSIC_QID, RSQ_RING_ID, NEW_RSQ_P_INDEX, DB_DATA)
+    // store db_data in LE format
+    phvwr   p.db_data, DB_DATA.wx
+
+    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQ_DB)
+    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, db_data, db_data, DB_ADDR)
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+
+    nop.e
+    nop
+
+check_write:
 
     IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_FIRST|RESP_RX_FLAG_MIDDLE)
     // remaining_payload_bytes - (1 << log_pmtu)

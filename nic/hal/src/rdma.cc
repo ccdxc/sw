@@ -710,6 +710,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     // allocate rqcb
     memset(rqcb_p, 0, sizeof(rqcb_t));
     rqcb.rqcb0.ring_header.total_rings = MAX_RQ_RINGS;
+    rqcb.rqcb0.ring_header.host_rings = MAX_RQ_RINGS;
     rqcb.rqcb0.pt_base_addr =
         rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.rq_lkey()));
     HAL_ASSERT(rqcb.rqcb0.pt_base_addr);

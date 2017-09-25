@@ -26,6 +26,7 @@
     .param      esp_ipv4_tunnel_h2n_txdma_stage0
     .param      cpu_tx_stage0_start
     .param      ipfix_start
+    .param      resp_tx_rqcb_process
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -39,7 +40,7 @@ dummy:
 //This has to align with the txdma_stage0.s program
 .align
 rdma_resp_tx_stage0:
-    nop.e
+    j resp_tx_rqcb_process
     nop
 
 //Do not change the order of this entry. 

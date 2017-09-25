@@ -506,6 +506,35 @@ struct eqwqe_t {
     rsvd: 7;
 };
 
+struct rsqwqe_read_t {
+    r_key: 32;
+    va: 64;
+    len: 32;
+    offset: 32;
+};
+
+struct rsqwqe_atomic_t {
+    r_key: 32;
+    va: 64;
+    orig_data: 64;
+};
+
+#define RSQ_OP_TYPE_READ 0
+#define RSQ_OP_TYPE_ATOMIC 1
+
+#define LOG_SIZEOF_RSQWQE_T 5 // 2^5 = 32 bytes
+
+struct rsqwqe_t {
+    read_or_atomic: 1;
+    rsvd1: 7;
+    psn: 24;
+    rsvd2: 8;
+    union {
+        struct rsqwqe_read_t read;
+        struct rsqwqe_atomic_t atomic;
+    };
+};
+
 #define ACC_CTRL_LOCAL_WRITE        0x1
 #define ACC_CTRL_REMOTE_WRITE       0x2
 #define ACC_CTRL_REMOTE_READ        0x4

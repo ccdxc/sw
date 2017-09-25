@@ -516,13 +516,6 @@ struct capri_dma_cmd_mem2mem_t {
     phvwrp._cf   _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_end), sizeof(DMA_CMD_PHV2PKT_T.phv_end), PHV_FIELD_END_OFFSET(_end) -1; \
     phvwrp._cf   _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), sizeof(DMA_CMD_PHV2PKT_T.cmdtype), DMA_CMD_TYPE_PHV2PKT;
 
-#if 0
-#define DMA_PHV2PKT_SETUP(_base_r, _start, _end)         \
-    phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_start), sizeof(DMA_CMD_PHV2PKT_T.phv_start), (sizeof (p) >> 3) - ((offsetof(p, _start) + sizeof(p._start)) >> 3); \
-    phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_end), sizeof(DMA_CMD_PHV2PKT_T.phv_end), (sizeof(p) >> 3) - ((offsetof(p, _end) + sizeof(p._end)) >> 3) - 1; \
-    phvwrp       _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), sizeof(DMA_CMD_PHV2PKT_T.cmdtype), DMA_CMD_TYPE_PHV2PKT;
-#endif
-
 #define DMA_PKT2MEM_SETUP(_base_r, _cf, _size, _addr) \
     phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, size), sizeof(DMA_CMD_PKT2MEM_T.size), _size; \
     phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, addr), sizeof(DMA_CMD_PKT2MEM_T.addr), _addr; \
@@ -560,6 +553,9 @@ struct capri_dma_cmd_mem2mem_t {
 
 #define DMA_SET_END_OF_PKT_C(_cmd_t, _base_r, _cf)                                  \
     phvwrp._cf _base_r, offsetof(_cmd_t, pkteop), sizeof(_cmd_t.pkteop), 1
+
+#define DMA_SET_WR_FENCE(_cmd_t, _base_r) \
+    phvwrp     _base_r, offsetof(_cmd_t, wr_fence), sizeof(_cmd_t.wr_fence), 1
 
 #define DB_ADDR_BASE           0x68800000
 
