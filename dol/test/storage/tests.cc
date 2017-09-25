@@ -57,6 +57,7 @@ void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
   uint64_t db_addr = kDbAddrHost |  (kDbAddrUpdate << kDbUpdateShift) | 
                      (lif << kDbLifShift) | (qtype << kDbTypeShift);
 
+  printf("Ring Doorbell: Addr %lx Data %lx \n", db_addr, db_data);
   step_doorbell(db_addr, db_data);
 }
 
