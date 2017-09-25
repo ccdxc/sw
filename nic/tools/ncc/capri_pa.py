@@ -601,7 +601,7 @@ class capri_flit:
 
         floc = location - self.base_phv_bit
         if len(self.free_chunks) == 0 or \
-            cs > self.free_chunks[-1][0]:
+            floc > self.free_chunks[-1][0]:
             self.free_chunks.append((floc, csize))
             self.flit_avail += csize
             return
@@ -1404,13 +1404,17 @@ class capri_gress_pa:
             if isinstance(n_hf, capri_field):
                 n_hf.phv_bit = -1
             else:
-                self.hdr_free_phv(flit, n_hf)
+                self.hdr_free_phv(n_hf)
 
     def hdr_free_phv(self, hdr):
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
             assert cf
             cf.phv_bit = -1
+            # remove phv bits from fld union-ed flds, these are not added to new_allocated_hfs
+            if cf.is_fld_union_storage:
+                for uf in self.fld_unions[cf][0]:
+                    uf.phv_bit = -1
         
     def check_512b_fld_crossing(self, flit, hdr, start_phv):
         # return extra bits needed if any fld crosses 512b boundary, else 0
@@ -1900,9 +1904,9 @@ class capri_gress_pa:
                 new_allocated_hfs.append(n_hf)
 
         if overflow:
-            self.clear_new_flit_phv_assignment(flit, allocated_chunks, new_allocated_hfs)
             self.pa.logger.debug("%s:Close flit %d, Overflow: bits avail %d while allocating %s" % \
                 (self.d.name, flit.id, flit.flit_avail, new_hfs))
+            self.clear_new_flit_phv_assignment(flit, allocated_chunks, new_allocated_hfs)
             return False
 
         #pdb.set_trace()
@@ -1938,9 +1942,9 @@ class capri_gress_pa:
                 phv_bit += cf.storage_size()
 
         if overflow:
-            self.clear_new_flit_phv_assignment(flit, allocated_chunks, new_allocated_hfs)
             self.pa.logger.debug("%s:Close flit %d, Overflow: bits avail %d while allocating %s" % \
                 (self.d.name, flit.id, flit.flit_avail, new_hfs))
+            self.clear_new_flit_phv_assignment(flit, allocated_chunks, new_allocated_hfs)
             return False
             
         for n_hf in new_hfs:
@@ -2000,9 +2004,9 @@ class capri_gress_pa:
                     new_allocated_hfs.append(uf)
 
         if overflow:
-            self.clear_new_flit_phv_assignment(flit, allocated_chunks, new_allocated_hfs)
             self.pa.logger.debug("%s:Close flit %d, Overflow: bits avail %d while allocating %s" % \
                 (self.d.name, flit.id, flit.flit_avail, new_hfs))
+            self.clear_new_flit_phv_assignment(flit, allocated_chunks, new_allocated_hfs)
             return False
 
         return True

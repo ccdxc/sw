@@ -258,6 +258,12 @@ class capri_parser_set_op:
                 self.op_type = meta_op.LOAD_REG
             else:
                 # metaPhv <- (pkt_off, size) : ExtractCopy
+                if (dst.width % 8):
+                    assert dst.is_meta
+                    pad = 8-(dst.width % 8)
+                    dst.width += pad
+                    cstate.parser.logger.warning("%s:%s:Pad Metadata %s to %d" % \
+                            (cstate.parser.d.name, cstate.name, dst.hfname, dst.width))
                 self.op_type = meta_op.EXTRACT_FIELD
             self.src1 = src
         elif isinstance(src, p4.p4_expression):
@@ -277,6 +283,12 @@ class capri_parser_set_op:
                 # EXTRACT_REG uses meta_instruction to perform the operation
                 # Also any time an expression is involved, use EXTRACT_META
                 # to indicate that meta_inst must be used
+                if (dst.width % 8):
+                    assert dst.is_meta
+                    pad = 8-(dst.width % 8)
+                    dst.width += pad
+                    cstate.parser.logger.warning("%s:%s:Pad Metadata %s to %d" % \
+                            (cstate.parser.d.name, cstate.name, dst.hfname, dst.width))
                 if self.capri_expr.src_reg:
                     self.op_type = meta_op.EXTRACT_REG
                     self.src_reg = self.capri_expr.src_reg
