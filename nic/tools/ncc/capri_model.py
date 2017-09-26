@@ -26,7 +26,7 @@ capri_model = {
         'num_predicate_bits' : 8,   # max bit used for predicate tcam key
         'range_predicate_bit' : 512,  # predicate bits must be placed in first N (512) bits
         'action_id_size' : 8,       # XXX can become 8bits. Branch (relative) addr of action routine
-        'num_cycles' : 12,
+        'max_te_cycles' : 192,      # divide them among 16 profiles as needed
         'raw_pc_size' : 28, # size of mpu_pc provided to raw table
         'collision_index_sz' : 32,
         'te_consts' : {

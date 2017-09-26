@@ -72,6 +72,9 @@ def get_parser():
     parser.add_argument('--cfg-dir', dest='cfg_dir', action='store',
                         help='Directory for compiler generated configuration',
                         default=None, required=False)
+    parser.add_argument('--phv-flits', dest='phv_flits', action='store',
+                        help='specify number of phv_flits to be used (max 12)',
+                        default=None, required=False)
     return parser
 
 # Main back-end class that holds everything needed by the backend
@@ -117,13 +120,17 @@ class capri_backend:
         capri_model_dbg_output(self, dbg_info)
 
 def setup_p4_plus_hw_parameters(capri_model):
-    capri_model['phv']['num_flits'] = 12
-    max_phv_bits = 12*512
+    capri_model['match_action']['num_stages'] = 8
+    setup_num_phv_flits(capri_model, 12)
+
+def setup_num_phv_flits(capri_model, num_flits):
+    max_hw_flits = capri_model['phv']['max_hw_flits']
+    assert num_flits <= max_hw_flits, "Value must be less than %d" % max_hw_flits
+    capri_model['phv']['num_flits'] = num_flits
+    max_phv_bits = num_flits*512
     capri_model['phv']['max_size'] = max_phv_bits
     max_phv_bytes = max_phv_bits / 8
     capri_model['phv']['containers'] = {8: max_phv_bytes} # {size:num} all 8 bit containers
-    capri_model['match_action']['num_stages'] = 8
-    # set up parser params as well..code uses parser flits for phv allocation
     capri_model['parser']['parser_num_flits'] = capri_model['phv']['num_flits'] / 2
     
 
@@ -141,6 +148,9 @@ def main():
 
     if args.p4_plus:
         setup_p4_plus_hw_parameters(capri_model)
+
+    if args.phv_flits:
+        setup_num_phv_flits(capri_model, int(args.phv_flits))
 
     capri_be = capri_backend(h, capri_model, args)
 

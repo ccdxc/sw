@@ -1983,7 +1983,7 @@ def capri_te_cfg_output(stage):
     max_km_bits = stage.gtm.tm.be.hw_model['match_action']['num_bit_extractors']
 
     num_flits = stage.gtm.tm.be.hw_model['phv']['num_flits']
-    num_cycles = stage.gtm.tm.be.hw_model['match_action']['num_cycles']
+    max_cycles = stage.gtm.tm.be.hw_model['match_action']['max_te_cycles']
     te_consts = stage.gtm.tm.be.hw_model['match_action']['te_consts']
     no_load_byte = te_consts['no_load_byte']
     no_load_bit = te_consts['no_load_bit']
@@ -2131,6 +2131,7 @@ def capri_te_cfg_output(stage):
     prof_idx = 0
     profile_vals = sorted(stage.table_profiles.keys(), reverse=True)
     tcam_entries = OrderedDict()
+    sidx = 0
     for prof_val in profile_vals:
         ctg = stage.table_profiles[prof_val]
         if not run_all_tables:
@@ -2169,10 +2170,13 @@ def capri_te_cfg_output(stage):
                 (stage.gtm.d.name, stage.id, prof_idx, te['value']['value'], 
                 te['mask']['value'], prof_val, active_ctg, len(active_ctg)))
 
-        # h/w allows a flexible partitioning of the ctrl_sram entries per profile
-        # for now keep it fixed allocation of 12 cycles per profile
-        sidx_base = (prof_idx * num_cycles)
-        json_tbl_prof['seq_base']['value'] = str(sidx_base)
+        # h/w allows a flexible partitioning of the total (192) ctrl_sram entries per profile
+        json_tbl_prof['seq_base']['value'] = str(sidx)
+        assert sidx < max_cycles, pdb.set_trace()
+
+        stage.gtm.tm.logger.debug( \
+            "%s:Stage %d:Profile %d SRAM start_idx %d" % \
+            (stage.gtm.d.name, stage.id, prof_idx, sidx))
 
         flit_kms = [[] for _ in range(num_flits)]
         for ct in active_ctg:
@@ -2190,10 +2194,15 @@ def capri_te_cfg_output(stage):
         cyc_done = False
         num_km = stage.gtm.tm.be.hw_model['match_action']['num_key_makers']
         prev_km_prof = [(-1,-1) for _ in range(num_km)] # preserve the profile_id on unused flits
-        for cyc in range(num_cycles):
+        for cyc in range(len(stage.table_sequencer[prof_val])):
             # fill control_sram entry
-            sidx = sidx_base + cyc
             se = json_regs['cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
+
+            # For good measures, hw model checks that key-makers are cleared on very first
+            # cycle of the sequencer
+            if cyc == 0:
+                for kmid in range(num_km):
+                    se['km_new_key%d' % kmid]['value'] = str(1)
 
             # init km_prof with vales from previous cyc, these will be over-written
             # if kms are used/changed, if not just retain the old values
@@ -2206,8 +2215,8 @@ def capri_te_cfg_output(stage):
                 se['km_mode%d' % kmid]['value'] = str(prof_mode)
 
             if not stage.table_sequencer[prof_val][cyc].is_used:
-                # no need to do much, key-maker values can be modified as they are not used anymore
-                # XXX can set new_key = 1 for all key maker and keep resetting it if needed
+                # no need to do much, key-maker values can be modified only if they are not 
+                # used anymore
                 pass
             else:
                 assert fid <= num_flits, pdb.set_trace()    # error in advancing flits
@@ -2221,6 +2230,7 @@ def capri_te_cfg_output(stage):
                     # save the values for init of next cycle
                     prev_km_prof[kmid] = (km_prof.hw_id, km_prof.mode)
                     if fid == km.flits_used[0] and fid != prev_fid:
+                        # on first flit used by this km, set new_key = 1
                         # asic loads km only on accepting new flit, if flit is not
                         # advanced, km can get reset if new_key is set
                         se['km_new_key%d' % kmid]['value'] = str(1)
@@ -2270,6 +2280,8 @@ def capri_te_cfg_output(stage):
             if stage.table_sequencer[prof_val][cyc].is_last:
                 cyc_done = True
 
+            sidx += 1
+
         prof_idx += 1
 
     if len(stage.active_predicates) > 0 and \
@@ -2283,7 +2295,6 @@ def capri_te_cfg_output(stage):
         assert prof_idx < stage.gtm.tm.be.hw_model['match_action']['num_table_profiles'], \
             pdb.set_trace()
         '''
-        sidx = (prof_idx * num_cycles)
         te = json_regs['cap_te_csr_cfg_table_profile_cam[%d]' % prof_idx]
         _fill_te_tcam_catch_all(te)
 
@@ -2308,6 +2319,11 @@ def capri_te_cfg_output(stage):
                     te_ctrl_sram_print(se, json_sram_ext)))
         
     for ct in stage.ct_list:
+        # XXX Work-in-progress
+        if ct.is_wide_key:
+            stage.gtm.tm.logger.critical("Wide key table programming is not complete %s" % \
+                (ct.p4_table.name))
+            continue
         if ct.is_otcam:
             continue
         json_tbl_ = json_regs['cap_te_csr_cfg_table_property[%d]' % ct.tbl_id]
