@@ -14,7 +14,7 @@ struct resp_rx_rqpt_process_k_t k;
 #define RAW_TABLE_PC r1
 
 %%
-    //.param  resp_rx_rqwqe_wrid_process
+    .param  resp_rx_rqwqe_wrid_process
     .param  resp_rx_rqwqe_process
 
 .align
@@ -46,13 +46,12 @@ resp_rx_rqpt_process:
     CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, curr_wqe_ptr, r3)
     CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, cache, k.args.cache)
     CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
+    CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, tbl_id, k.args.tbl_id)
 
     // if write_with_imm, load resp_rx_rqwqe_wrid_process, 
     // else load resp_rx_rqwqe_process
     ARE_ALL_FLAGS_SET(c1, r7, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
-    //add.c1      RAW_TABLE_PC, r0, resp_rx_rqwqe_wrid_process
-    //add.!c1     RAW_TABLE_PC, r0, resp_rx_rqwqe_process
-    //CAPRI_SET_RAW_TABLE_PC_C(c1, RAW_TABLE_PC, resp_rx_rqwqe_wrid_process)
+    CAPRI_SET_RAW_TABLE_PC_C(c1, RAW_TABLE_PC, resp_rx_rqwqe_wrid_process)
     CAPRI_SET_RAW_TABLE_PC_C(!c1, RAW_TABLE_PC, resp_rx_rqwqe_process)
 
     CAPRI_NEXT_TABLE_I_READ(TBL_KEY_P, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)

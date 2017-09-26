@@ -67,7 +67,8 @@ struct resp_rx_rqcb_to_wqe_info_t {
     inv_r_key: 32;
     current_sge_offset: 32;
     //computed
-    num_valid_sges: 8;
+    num_valid_sges: 6;
+    tbl_id: 2;
 };
 
 struct resp_rx_rqwqe_process_k_t {
