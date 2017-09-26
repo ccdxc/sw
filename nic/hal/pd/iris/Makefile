@@ -1,7 +1,7 @@
 
 TOPDIR = ../../..
 SHAREDLIBRARY = libiris.so
-SYSTEM_LIBRARIES = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib -lp4pdapi -lp4pd -lcapri -lp4pdtcprx -lp4pdtcptx -lp4pluspd_rxdma -lp4pluspd_txdma
+SYSTEM_LIBRARIES = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib -lp4pdapi -lp4pd -lcapri -lp4pluspd_rxdma -lp4pluspd_txdma
 
 LCXXFLAGS = \
 			-fpic \

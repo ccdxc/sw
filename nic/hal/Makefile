@@ -33,8 +33,6 @@ LDFLAGS +=	-lhal \
 			-lperiodic \
 			-lp4pdapi \
 			-lp4pd \
-			-lp4pdtcprx \
-			-lp4pdtcptx \
 			-lp4pluspd_rxdma \
 			-lp4pluspd_txdma \
 			-lcapricsr \

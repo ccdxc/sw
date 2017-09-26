@@ -16,8 +16,6 @@ LIBDIRS = \
 		  hal/periodic \
 		  hal/pd/iris/p4pd \
 		  gen/iris/src \
-		  gen/tcp_proxy_rxdma/src \
-		  gen/tcp_proxy_txdma/src \
 		  gen/common_rxdma_actions/src \
 		  gen/common_txdma_actions/src \
 		  hal/plugins \

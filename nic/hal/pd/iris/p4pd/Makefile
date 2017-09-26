@@ -44,7 +44,5 @@ LCLEANFILES = $(TOPDIR)/obj/p4pd.*
 
 p4pdmake:
 	cp Makefile.p4pd ../../../../gen/iris/src/Makefile	
-	cp Makefile.tcp_rxdma ../../../../gen/tcp_proxy_rxdma/src/Makefile
-	cp Makefile.tcp_txdma ../../../../gen/tcp_proxy_txdma/src/Makefile
 	cp Makefile.p4plus_rxdma ../../../../gen/common_rxdma_actions/src/Makefile
 	cp Makefile.p4plus_txdma ../../../../gen/common_txdma_actions/src/Makefile
