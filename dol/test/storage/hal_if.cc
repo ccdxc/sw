@@ -42,6 +42,10 @@ void init_hal_if() {
   interface_stub = std::move(if_stub);
 }
 
+// Start with a base lif id and count up
+// TODO: Reconcile with other service lifs
+static uint32_t curr_lif_id = 1900;
+
 int create_lif(lif_params_t *params, uint64_t *lif_id) {
   grpc::ClientContext context;
   intf::LifRequestMsg req_msg;
@@ -51,7 +55,8 @@ int create_lif(lif_params_t *params, uint64_t *lif_id) {
     return -1;
 
   auto req = req_msg.add_request();
-  req->mutable_key_or_handle()->set_lif_id(0);
+  req->mutable_key_or_handle()->set_lif_id(curr_lif_id);
+  curr_lif_id++;
 
   for (int i = 0; i < LIF_MAX_TYPES; i++) {
     if (params->type[i].valid) {
