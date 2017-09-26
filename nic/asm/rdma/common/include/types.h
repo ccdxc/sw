@@ -533,6 +533,9 @@ struct rsqwqe_t {
         struct rsqwqe_read_t read;
         struct rsqwqe_atomic_t atomic;
     };
+    
+    // this pad added such that when it gets loaded in the d-vector, it is easy to parse the fields
+    pad: 256; 
 };
 
 #define ACC_CTRL_LOCAL_WRITE        0x1

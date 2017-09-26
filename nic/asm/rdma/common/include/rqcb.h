@@ -71,7 +71,7 @@ struct rqcb1_t {
     read_rsp_in_progress: 1;
     read_rsp_lock: 1;
     dummy1: 6;
-    cur_read_rsp_psn: 24;
+    curr_read_rsp_psn: 24;
     ack_nak_psn: 24;
     struct rdma_aeth_t aeth;
     last_ack_nak_psn: 24;
