@@ -473,11 +473,14 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
         mac = ep_get_rmac(remote_tep_ep, l2seg);
         memcpy(act.tunnel_rewrite_encap_vxlan.mac_sa, mac, ETH_ADDR_LEN);
         memrev(act.tunnel_rewrite_encap_vxlan.mac_sa, ETH_ADDR_LEN);
-        
+        /*
+         * Only v4 TEP addresses are supported currently. When v6-addr is added
+         * for phase-2 change the size also accordingly
+         * */
         memcpy(&act.tunnel_rewrite_encap_vxlan.ip_sa, &pi_if->vxlan_ltep.addr,
-               sizeof(ipvx_addr_t));
+               sizeof(uint32_t));
         memcpy(&act.tunnel_rewrite_encap_vxlan.ip_da, &pi_if->vxlan_rtep.addr,
-               sizeof(ipvx_addr_t));
+               sizeof(uint32_t));
         if (v4_valid) {
             act.tunnel_rewrite_encap_vxlan.ip_type = IP_HEADER_TYPE_IPV4;
         } else {
