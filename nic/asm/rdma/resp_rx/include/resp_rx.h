@@ -8,6 +8,8 @@
 
 #define RESP_RX_MAX_DMA_CMDS        16
 #define RESP_RX_DMA_CMD_PYLD_BASE   0
+#define RESP_RX_DMA_CMD_RSQWQE      0
+#define RESP_RX_DMA_CMD_RSQ_DB      1
 
 #define RESP_RX_DMA_CMD_CQ          (RESP_RX_MAX_DMA_CMDS - 3)
 
@@ -19,6 +21,8 @@ struct resp_rx_phv_t {
 
     // scratch (flit 6 - 7)
     eq_int_num: 16;
+    db_data: 32;
+    struct rsqwqe_t rsqwqe;
     struct eqwqe_t eqwqe;
     struct cqwqe_t cqwqe;
     struct ack_info_t ack_info;

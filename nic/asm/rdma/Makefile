@@ -1,5 +1,6 @@
 LIBDIRS = \
           common \
+          resp_tx \
           resp_rx \
           req_tx \
           $(NULL)

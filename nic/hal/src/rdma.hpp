@@ -1000,7 +1000,8 @@ typedef struct rqcb0_s {
     uint8_t  rsq_pindex_prime;
     uint8_t  nxt_to_go_token_id;
     uint8_t  token_id;
-    uint8_t  log_rsq_size;
+    uint8_t  log_rsq_size: 5;
+    uint8_t  rsvd0:3;
 
     uint32_t rsq_base_addr;
 

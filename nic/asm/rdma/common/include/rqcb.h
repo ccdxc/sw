@@ -11,8 +11,8 @@
 #define RQ_P_INDEX d.ring0.pindex
 #define RQ_C_INDEX d.ring0.cindex
 
-#define RSQ_P_INDEX d.ring1.pindex
-#define RSQ_C_INDEX d.ring1.cindex
+#define RSQ_P_INDEX d.{ring1.pindex}.hx
+#define RSQ_C_INDEX d.{ring1.cindex}.hx
 
 struct rqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
@@ -27,7 +27,9 @@ struct rqcb0_t {
 
     rsq_base_addr: 32;
 
-    log_rsq_size: 8;
+    rsvd0: 3;
+    log_rsq_size: 5;
+    
     token_id: 8;
     nxt_to_go_token_id: 8;
     rsq_pindex_prime: 8;
