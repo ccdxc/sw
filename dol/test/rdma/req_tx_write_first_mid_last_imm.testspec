@@ -192,7 +192,7 @@ trigger:
     doorbell:
         object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
         fields:
-            upd : 0xD # (DB Increment Pindex << 2 |  DB_SCHED_WR_EVAL_RING) (0x3 << 2 | 0x1)
+            upd : 0x3 # DB_SCHED_WR(1)
 
 expect:
     packets:

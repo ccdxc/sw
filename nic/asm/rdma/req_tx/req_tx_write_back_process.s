@@ -23,16 +23,17 @@ req_tx_write_back_process:
      seq           c1, k.args.last, 1
      //tblmincri.c1  SQ_C_INDEX, d.log_num_wqes, 1
      bcf           [!c1], skip_db_update
+     seq           c2, k.args.incr_rrq_pindex, 1 // Branch Delay Slot
 
-     add.c1        r1, SQ_C_INDEX, 1 // Delay slot
+     //add.c1        r1, SQ_C_INDEX, 1 // Delay slot
      //add           r1, SQ_C_INDEX, r0
      //mincr         r1, d.log_num_wqes, 1
-     DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, SQ_RING_ID, r1, r2, r3)
+     tblmincri     SQ_C_INDEX, d.log_num_wqes, 1
+     DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, SQ_RING_ID, SQ_C_INDEX, r2, r3)
 
 skip_db_update:
      // if (write_back_info_p->incr_rrq_pindex)
      //  RING_P_NDEX_INCREMENT(sqcb0_p, RRQ_RING_ID)
-     seq           c2, k.args.incr_rrq_pindex, 1
      tblmincri.c2  RRQ_P_INDEX, k.args.log_rrq_size, 1
 
      add           r1, k.args.tbl_id, r0
