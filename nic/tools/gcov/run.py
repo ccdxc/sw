@@ -144,6 +144,56 @@ def run(cmd):
         print("Cmd failed.: ", cmd)
         sys.exit(1)
 
+def build_modules(data):
+    # build all modules.
+    os.chdir(nic_dir)
+    for module_name in data["modules"]:
+        print "Building module: ", module_name
+        run(data["modules"][module_name]["clean_cmd"])
+        run(data["modules"][module_name]["build_cmd"])
+    
+def run_and_generate_coverage(data):
+
+    def generate_run_coverage(run_name, sub_run_name=None):
+        for module_name in data["run"][run_name]["modules"]:
+            module = data["modules"][module_name]
+            dir_name = "_".join([run_name, sub_run_name]) if sub_run_name else run_name
+            cov_output_dir = coverage_output_path + dir_name + "/" + module_name
+            module_infos[module_name].append(generate_coverage(
+                module, module_name, cov_output_dir))
+            if module.get("gcno_dir"):
+                os.chdir(module["gcno_dir"])
+                subprocess.call(["rm -f *.gcda"], shell=True)
+            elif module.get("obj_dir"):
+                os.chdir(module["obj_dir"])
+                subprocess.call(["find . -type f -name *.gcda -delete"], shell=True)
+                os.chdir(nic_dir)
+            else:
+                assert 0
+
+    module_infos = defaultdict(lambda: [])
+    for run_name in data["run"]:
+        if "cmd" in data["run"][run_name]:
+            run(data["run"][run_name]["cmd"])
+            generate_run_coverage(run_name)
+        elif "cmd_cfg" in data["run"][run_name]:
+            with open(data["run"][run_name]["cmd_cfg"]) as cmd_cfg_file:    
+    	        cmd_cfg_data = json.load(cmd_cfg_file)
+                for sub_run in cmd_cfg_data:
+                    run(cmd_cfg_data[sub_run])
+                    generate_run_coverage(run_name, sub_run)
+        else:
+            print "cmd or cmd_cfg not specified."
+            assert 0
+
+    # Finally generate lcov combined output as well.
+    for module_name in module_infos:
+        cov_output_dir = coverage_output_path + "/" + "total_cov" + "/" + module_name
+        subprocess.call(["mkdir", "-p", cov_output_dir])
+        output_file = cov_output_dir + "/total.info"
+        merge_lcov_files("Total " + module_name,
+                         module_infos[module_name], output_file)
+        gen_html(output_file, cov_output_dir)
 
 if __name__ == '__main__':
     config_file = coverage_path + args.conf_file
@@ -154,32 +204,6 @@ if __name__ == '__main__':
     with open(config_file) as data_file:
         data = json.load(data_file)
 
-    # build all modules.
-    os.chdir(nic_dir)
-    for module_name in data["modules"]:
-        print "Building module: ", module_name
-        run(data["modules"][module_name]["clean_cmd"])
-        run(data["modules"][module_name]["build_cmd"])
-        module = data["modules"][module_name]
 
-    lcov_info_files = []
-    module_infos = defaultdict(lambda: [])
-    for run_name in data["run"]:
-        run(data["run"][run_name]["cmd"])
-        for module_name in data["run"][run_name]["modules"]:
-            module = data["modules"][module_name]
-            module_infos[module_name].append(generate_coverage(
-                module, module_name, coverage_output_path + run_name + "/" + module_name))
-            if module.get("gcno_dir"):
-                os.chdir(module["gcno_dir"])
-                subprocess.call(["rm -f *.gcda"], shell=True)
-                os.chdir(nic_dir)
-
-    # Finally generate lcov combined output as well.
-    for module_name in module_infos:
-        cov_output_dir = coverage_output_path + "/" + "total_cov" + "/" + module_name
-        subprocess.call(["mkdir", "-p", cov_output_dir])
-        output_file = cov_output_dir + "/total.info"
-        merge_lcov_files("Total " + module_name,
-                         module_infos[module_name], output_file)
-        gen_html(output_file, cov_output_dir)
+    build_modules(data)
+    run_and_generate_coverage(data)

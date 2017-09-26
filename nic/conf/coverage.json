@@ -31,6 +31,8 @@
                "utils/host_mem/test",
                "gen/test_results",
                "gen/protobuf",
+               "gen/common_rxdma_actions",
+               "gen/common_txdma_actions",
                "gen/coverage"
             ],
             "file_patterns": [
@@ -44,7 +46,9 @@
                 "/usr/local/*",
                 "third-party/*",
                 "model_sim/include/*",
-                "gen/protobuf/*"
+                "gen/protobuf/*",
+                "asic/capri/model/capsim-master/lib/libmpuobj/include/*",
+                "asic/capri/model/utils/*"
             ],
             "gcno_dir" : "obj"
         },
@@ -73,7 +77,7 @@
             ]
         },
         "dol": {
-            "cmd": "./run.py --coveragerun",
+            "cmd_cfg": "./gen/coverage/dol_cov_runs.json",
             "modules": [
                 "hal", "model"
             ]
