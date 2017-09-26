@@ -4,8 +4,29 @@ meta:
 
 queue_types:
     - queue_type:
-        id          : TX
+        id          : ADMIN
         type        : 1
+        purpose     : LIF_QUEUE_PURPOSE_ADMIN
+        size        : 64
+        count       : 1
+        queues:
+          - queue:
+              id          : Q0
+              count       : 1
+              #for now treat this queue same as rx
+              template    : ref://store/templates/id=ETH_QUEUE_RX
+              rings:
+                - ring:
+                    id          : R0
+                    pi          : 0
+                    ci          : 0
+                    size        : 1024
+                    template    : ref://store/templates/id=ETH_RING_RX
+                    desc        : ref://factory/templates/id=DESCR_ETH_RX
+                    
+    - queue_type:
+        id          : TX
+        type        : 2
         purpose     : LIF_QUEUE_PURPOSE_TX
         size        : 64
         count       : 1
