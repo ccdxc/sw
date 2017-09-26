@@ -185,32 +185,61 @@ modules:
         name    : PROXY_UPLINK_TO_UPLINK_BYPASS_BARCO
         enable  : True
         package : test.tcp_tls_proxy
-        module  : pkt_tcp_tx_to_p4_bypass_barco
+        module  : pkt_to_p4
         spec    : uplink_to_uplink.testspec
         ignore  : False
         args    :
-            maxflows: 1
-        iterate :
-            - flow: filter://type=IPV4
+            bypass_barco : 1
+            maxflows : 1
+            same_flow : 1
+
+    - module:
+        name    : PKT_HFLOW_TO_NFLOW_PROXY_BYPASS_BARCO
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : pkt_to_p4
+        spec    : uplink_to_uplink.testspec
+        ignore  : False
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            same_flow : 0
+
+    - module:
+        name    : PKT_HFLOW_TO_NFLOW_PROXY_BYPASS_BARCO_SEND_ACK
+        enable  : False
+        package : test.tcp_tls_proxy
+        module  : pkt_to_p4
+        spec    : uplink_to_uplink.testspec
+        ignore  : False
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            same_flow : 0
+            send_ack : 1
 
     - module:
         name    : PROXY_UPLINK_TO_HOST_BYPASS_BARCO
         enable  : True
         package : test.tcp_tls_proxy
-        module  : pkt_tcp_tx_to_p4_bypass_barco
+        module  : pkt_to_p4
         spec    : uplink_to_host.testspec
         ignore  : False
         args    :
+            bypass_barco : 1
+            same_flow : 1
             flow: filter://type=IPV4,proto=TCP
 
     - module:
         name    : PROXY_HOST_TO_UPLINK_BYPASS_BARCO
         enable  : True
         package : test.tcp_tls_proxy
-        module  : pkt_tcp_tx_to_p4_bypass_barco
+        module  : pkt_to_p4
         spec    : host_to_uplink.testspec
         ignore  : False
         args    :
+            bypass_barco : 1
+            same_flow : 1
             flow: filter://type=IPV4,proto=TCP
 
     - module:
@@ -270,16 +299,14 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
-        name    : PKT_HFLOW_TO_NFLOW_PROXY_BYPASS_BARCO
-        enable  : True
-        package : test.tcp_tls_proxy
-        module  : pkt_hflow_to_nflow_proxy_bypass_barco
-        spec    : pkt_hflow_to_nflow_proxy_bypass_barco.testspec
-        ignore  : False
-        args    :
-            maxflows: 1
+        name    : PKT_TO_IPSECCBQ
+        enable  : False
+        package : test.ipsec-proxy
+        module  : pkt_to_ipseccbq
+        spec    : pkt_to_ipseccbq.testspec
+        ignore  : True
         iterate :
-            - flow: filter://type=IPV4
+            - flow: filter://type=IPV4,proto=TCP
 
     - module:
         name    : RDMA_TX_SEND_ONLY

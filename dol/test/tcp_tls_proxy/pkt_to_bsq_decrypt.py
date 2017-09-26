@@ -2,6 +2,7 @@
 
 import pdb
 import copy
+import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
 
 import types_pb2                as types_pb2
 import crypto_keys_pb2          as crypto_keys_pb2
@@ -41,12 +42,7 @@ def TestCaseSetup(tc):
     tcbid = "TcpCb%04d" % id
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
-    tcb.rcv_nxt = 0xBABABABA
-    tcb.snd_nxt = 0xEFEFEFF0
-    tcb.snd_una = 0xEFEFEFEF
-    tcb.rcv_tsval = 0xFAFAFAFA
-    tcb.ts_recent = 0xFAFAFAF0
-    tcb.debug_dol = 0
+    tcp_proxy.init_tcb_inorder(tc, tcb)
     # set tcb state to ESTABLISHED(1)
     tcb.state = 1
     tcb.SetObjValPd()

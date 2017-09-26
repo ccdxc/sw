@@ -12,7 +12,7 @@
 #define tx_table_s1_t0 tcp_tx_read_rx2tx_extra
 #define tx_table_s1_t1 tcp_tx_read_sesq_ci
 
-#define tx_table_s2_t0 tcp_tx_read_sesq_descr
+#define tx_table_s2_t0 tcp_tx_s2_t0
 #define tx_table_s2_t1 tcp_tx_sesq_consume
 
 #define tx_table_s3_t0 tcp_tx_tcp_tx
@@ -50,7 +50,11 @@
     modify_field(common_global_scratch.fid, common_phv.fid); \
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
     modify_field(common_global_scratch.snd_una, common_phv.snd_una); \
-    modify_field(common_global_scratch.rcv_nxt, common_phv.rcv_nxt);
+    modify_field(common_global_scratch.rcv_nxt, common_phv.rcv_nxt); \
+    modify_field(common_global_scratch.pending_rx2tx, common_phv.pending_rx2tx); \
+    modify_field(common_global_scratch.pending_sesq, common_phv.pending_sesq); \
+    modify_field(common_global_scratch.pending_ack_send, common_phv.pending_ack_send); \
+    modify_field(common_global_scratch.debug_dol_dont_send_ack, common_phv.debug_dol_dont_send_ack);
 
 /******************************************************************************
  * D-vectors
@@ -70,7 +74,7 @@ header_type rx2tx_d_t {
 
         CAPRI_QSTATE_HEADER_RING(4)
 
-        CAPRI_QSTATE_HEADER_RING(5) // Total 32 bytes
+        debug_dol_tx : 32;      // Total 32 bytes
 
         sesq_base : HBM_ADDRESS_WIDTH; // 4 bytes
 
@@ -117,16 +121,20 @@ header_type common_global_phv_t {
     fields {
         // global k (max 128)
         fid                     : 24;
-        ring_id                 : 8;
         qstate_addr             : HBM_ADDRESS_WIDTH;
         snd_una                 : SEQ_NUMBER_WIDTH;
         rcv_nxt                 : SEQ_NUMBER_WIDTH;
+        pending_rx2tx           : 1;
+        pending_sesq            : 1;
+        pending_ack_send        : 1;
+        debug_dol_dont_send_ack : 1;
     }
 }
 
 header_type to_stage_1_phv_t {
     fields {
         sesq_ci_addr            : HBM_ADDRESS_WIDTH;
+        pending_cidx            : 16;
     }
 }
 
@@ -160,7 +168,6 @@ header_type to_stage_4_phv_t {
         ca_state                : 8;
 
         pending_challenge_ack_send : 1;
-        pending_ack_send        : 1;
         pending_sync_mss        : 1;
         pending_tso_keep_alive  : 1;
         pending_tso_pmtu_probe  : 1;
@@ -312,7 +319,7 @@ metadata dma_cmd_phv2mem_t dma_cmd8_dma;     // dma cmd 7
 
 #define RX2TX_PARAMS                                                                                  \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1, pi_2, ci_2, pi_3, ci_3,\
-pi_4, ci_4, pi_5,ci_5, sesq_base, asesq_base,snd_una, rcv_nxt, snd_wnd, snd_up, snd_cwnd, rto_deadline, \
+pi_4, ci_4, debug_dol_tx, sesq_base, asesq_base,snd_una, rcv_nxt, snd_wnd, snd_up, snd_cwnd, rto_deadline, \
 pending_ft_clear, pending_ft_reset
 
 
@@ -335,8 +342,7 @@ pending_ft_clear, pending_ft_reset
     modify_field(rx2tx_d.ci_3, ci_3);                                                                  \
     modify_field(rx2tx_d.pi_4, pi_4);                                                                  \
     modify_field(rx2tx_d.ci_4, ci_4);                                                                  \
-    modify_field(rx2tx_d.pi_5, pi_5);                                                                  \
-    modify_field(rx2tx_d.ci_5, ci_5);                                                                  \
+    modify_field(rx2tx_d.debug_dol_tx, debug_dol_tx);                                                  \
     modify_field(rx2tx_d.sesq_base, sesq_base);                                                        \
     modify_field(rx2tx_d.asesq_base,asesq_base);                                                       \
     modify_field(rx2tx_d.snd_una, snd_una);                                                            \
@@ -368,12 +374,12 @@ action read_rx2tx(RX2TX_PARAMS) {
  */
 action read_rx2tx_extra(rcv_mss, rto,
        ca_state, ato_deadline, retx_head_ts, srtt_us, rcv_wnd, prior_ssthresh, high_seq,
-       sacked_out, lost_out, retrans_out, fackets_out, ooo_datalen,  
+       sacked_out, lost_out, retrans_out, fackets_out, ooo_datalen,
        num_sacks, reordering, undo_marker,
        undo_retrans, snd_ssthresh, loss_cwnd, write_seq, tso_seq, ecn_flags,
        pending_challenge_ack_send, pending_ack_send, pending_sync_mss, pending_tso_keepalive,
        pending_tso_pmtu_probe, pending_tso_data, pending_tso_probe_data, pending_tso_probe,
-       pending_ooo_se_recv, pending_tso_retx, pending_rexmit, pending, 
+       pending_ooo_se_recv, pending_tso_retx, pending_rexmit, pending,
        ack_blocked, ack_pending, snd_wscale, rcv_mss_shft, quick,
        pingpong, backoff, dsack) {
 
@@ -382,6 +388,7 @@ action read_rx2tx_extra(rcv_mss, rto,
 
     // from to_stage 1
     modify_field(to_s1_scratch.sesq_ci_addr, to_s1.sesq_ci_addr);
+    modify_field(to_s1_scratch.pending_cidx, to_s1.pending_cidx);
 
     // d for stage 1
     modify_field(rx2tx_extra_d.rcv_mss, rcv_mss);
@@ -439,6 +446,7 @@ action read_sesq_ci(desc_addr) {
 
     // from to_stage 1
     modify_field(to_s1_scratch.sesq_ci_addr, to_s1.sesq_ci_addr);
+    modify_field(to_s1_scratch.pending_cidx, to_s1.pending_cidx);
 
     // d for stage 1
     modify_field(read_sesq_ci_d.desc_addr, desc_addr);
@@ -531,7 +539,6 @@ action tso(TX_SHARED_PARAMS) {
     modify_field(to_s4_scratch.rcv_mss, to_s4.rcv_mss);
     modify_field(to_s4_scratch.ca_state, to_s4.ca_state);
     modify_field(to_s4_scratch.pending_challenge_ack_send, to_s4.pending_challenge_ack_send);
-    modify_field(to_s4_scratch.pending_ack_send, to_s4.pending_ack_send);
     modify_field(to_s4_scratch.pending_sync_mss, to_s4.pending_sync_mss);
     modify_field(to_s4_scratch.pending_tso_keep_alive, to_s4.pending_tso_keep_alive);
     modify_field(to_s4_scratch.pending_tso_pmtu_probe, to_s4.pending_tso_pmtu_probe);

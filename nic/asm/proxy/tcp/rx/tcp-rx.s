@@ -16,11 +16,11 @@ struct tcp_rx_tcp_rx_k k;
 struct tcp_rx_tcp_rx_d d;
 
 %%
-        .param          tcp_rx_rtt_stage2_start
-        .param          tcp_rx_read_rnmdr_stage2_start
-        .param          tcp_rx_read_rnmpr_stage2_start
-        .param          tcp_rx_sack_stage2_start
-        .align
+    .param          tcp_rx_rtt_stage2_start
+    .param          tcp_rx_read_rnmdr_stage2_start
+    .param          tcp_rx_read_rnmpr_stage2_start
+    .param          tcp_rx_sack_stage2_start
+    .align
 tcp_rx_process_stage1_start:
     CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
     add         r7,r0, r0
@@ -97,14 +97,12 @@ tcp_event_data_recv:
      * commands to update rx2tx shared state and ring the doorbell
      * to schedule the txdma processing for TCP
      */
-    phvwr       p.common_phv_pending_txdma,1
-#if MODEL_BUG_FIX
+    phvwr       p.common_phv_pending_txdma, 1
     /* The bit for actual specific pending processing needed in txdma
      * is set in the rx2tx shared state. In this case we need an
      * ack to be sent
      */
-    phvwr       p.rx2tx_extra_pending_ack_send,1
-#endif
+    phvwr       p.rx2tx_extra_pending_ack_send, 1
     /* Initialized the delayed ack engine if first ack */
     /*
       if (!tp->fto.ato) {

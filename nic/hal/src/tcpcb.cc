@@ -117,6 +117,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_tsval = spec.rcv_tsval();
     tcpcb->ts_recent = spec.ts_recent();
     tcpcb->debug_dol = spec.debug_dol();
+    tcpcb->debug_dol_tx = spec.debug_dol_tx();
     tcpcb->snd_wnd = spec.snd_wnd();
     tcpcb->snd_cwnd = spec.snd_cwnd();
     tcpcb->rcv_mss = spec.rcv_mss();
@@ -180,6 +181,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_tsval = spec.rcv_tsval();
     tcpcb->ts_recent = spec.ts_recent();
     tcpcb->debug_dol = spec.debug_dol();
+    tcpcb->debug_dol_tx = spec.debug_dol_tx();
     tcpcb->snd_wnd = spec.snd_wnd();
     tcpcb->snd_cwnd = spec.snd_cwnd();
     tcpcb->rcv_mss = spec.rcv_mss();
@@ -242,6 +244,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     rsp->mutable_spec()->set_rcv_nxt(rtcpcb.rcv_nxt);
     rsp->mutable_spec()->set_snd_nxt(rtcpcb.snd_nxt);
     rsp->mutable_spec()->set_debug_dol(rtcpcb.debug_dol);
+    rsp->mutable_spec()->set_debug_dol_tx(rtcpcb.debug_dol_tx);
     rsp->mutable_spec()->set_serq_base(rtcpcb.serq_base);
     rsp->mutable_spec()->set_sesq_base(rtcpcb.sesq_base);
     rsp->mutable_spec()->set_sesq_pi(rtcpcb.sesq_pi);

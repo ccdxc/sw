@@ -19,7 +19,7 @@ class TcpCbObject(base.ConfigObjectBase):
         super().__init__()
         self.Clone(Store.templates.Get('TCPCB'))
         return
-        
+
     #def Init(self, spec_obj):
     def Init(self, qid):
         if halapi.IsHalDisabled(): qid = resmgr.TcpCbIdAllocator.get()
@@ -38,7 +38,7 @@ class TcpCbObject(base.ConfigObjectBase):
         cfglogger.info("  - %s" % self)
         self.tlscb = TlsCbHelper.main(self)
         self.sesq = SwDscrRingHelper.main("SESQ", gid, self.id)
-        self.sesq = SwDscrRingHelper.main("ASESQ", gid, self.id)
+        self.asesq = SwDscrRingHelper.main("ASESQ", gid, self.id)
 
         return
 
@@ -53,6 +53,7 @@ class TcpCbObject(base.ConfigObjectBase):
            req_spec.rcv_tsval                 = self.rcv_tsval
            req_spec.ts_recent                 = self.ts_recent
            req_spec.debug_dol                 = self.debug_dol
+           req_spec.debug_dol_tx              = self.debug_dol_tx
            req_spec.sesq_pi                   = self.sesq_pi
            req_spec.sesq_ci                   = self.sesq_ci
            req_spec.asesq_pi                  = self.asesq_pi
@@ -79,6 +80,7 @@ class TcpCbObject(base.ConfigObjectBase):
             self.rcv_tsval = resp_spec.spec.rcv_tsval
             self.ts_recent = resp_spec.spec.ts_recent
             self.debug_dol = resp_spec.spec.debug_dol
+            self.debug_dol_tx = resp_spec.spec.debug_dol_tx
             self.sesq_pi = resp_spec.spec.sesq_pi
             self.sesq_ci = resp_spec.spec.sesq_ci
             self.asesq_pi = resp_spec.spec.asesq_pi
@@ -138,10 +140,10 @@ class TcpCbObjectHelper:
     def Configure(self, objlist = None):
         if objlist == None:
             objlist = Store.objects.GetAllByClass(TcpCbObject)
-        cfglogger.info("Configuring %d TcpCbs." % len(objlist)) 
+        cfglogger.info("Configuring %d TcpCbs." % len(objlist))
         halapi.ConfigureTcpCbs(objlist)
         return
-        
+
     def __gen_one(self, qid):
         cfglogger.info("Creating TcpCb")
         tcpcb_obj = TcpCbObject()

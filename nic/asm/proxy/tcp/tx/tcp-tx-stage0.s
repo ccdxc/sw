@@ -45,7 +45,7 @@ tcp_tx_stage0_process:
 
 tcp_sesq_process:
     addi            r7, r0, TCP_SCHED_RING_SESQ
-    phvwri          p.common_phv_ring_id, TCP_SCHED_RING_SESQ
+    phvwri          p.common_phv_pending_sesq, 1
     j               tcp_tx_read_rx2tx_shared_process
     nop
     nop.e
@@ -54,25 +54,27 @@ tcp_sesq_process:
 
 tcp_pending_process:
     addi            r7, r0, TCP_SCHED_RING_PENDING
-    phvwri          p.common_phv_ring_id, TCP_SCHED_RING_PENDING
+    phvwri          p.common_phv_pending_rx2tx, 1
+    j               tcp_tx_read_rx2tx_shared_process
+    nop
     nop.e
     nop
 
 tcp_fast_timer_process:
     addi            r7, r0, TCP_SCHED_RING_FT
-    phvwri          p.common_phv_ring_id, TCP_SCHED_RING_FT
+    //phvwri          p.common_phv_ring_id, TCP_SCHED_RING_FT
     nop.e
     nop
 
 tcp_slow_timer_process:
     addi            r7, r0, TCP_SCHED_RING_ST
-    phvwri          p.common_phv_ring_id, TCP_SCHED_RING_ST
+    //phvwri          p.common_phv_ring_id, TCP_SCHED_RING_ST
     nop.e
     nop
 
 tcp_asesq_process:
     addi            r7, r0, TCP_SCHED_RING_ASESQ
-    phvwri          p.common_phv_ring_id, TCP_SCHED_RING_ASESQ
+    //phvwri          p.common_phv_ring_id, TCP_SCHED_RING_ASESQ
     j               tcp_tx_read_rx2tx_shared_process
     nop
     nop.e

@@ -10,7 +10,6 @@ paths = [
     '/bazel-genfiles/',
     '/bazel-genfiles/nic/proto/',
     '/bazel-genfiles/nic/proto/hal/',
-    '/nic/gen/protobuf/',
     '/nic',
     '/dol/third_party/'
 ]

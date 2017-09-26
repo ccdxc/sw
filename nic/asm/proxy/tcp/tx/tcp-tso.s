@@ -23,7 +23,7 @@ struct tcp_tx_tso_tso_d d    ;
 tcp_tso_process_start:
     /* check SESQ for pending data to be transmitted */
     or              r1, k.to_s4_pending_tso_data, k.to_s4_pending_tso_retx
-    or              r1, r1, k.to_s4_pending_ack_send
+    or              r1, r1, k.common_phv_pending_ack_send
     sne             c1, r1, r0
     bal.c1          r7, tcp_write_xmit
     nop
@@ -35,11 +35,13 @@ tcp_write_xmit:
     seq             c1, d.retx_xmit_cursor, r0
     /* If the retx was all cleaned up , then reinit the xmit
      * cursor to snd_una cursor which is the head of data that
-         * can be sent
+     * can be sent
      */
 
     tblwr.c1        d.retx_xmit_cursor, d.retx_snd_una_cursor
     nop
+    seq             c1, k.common_phv_pending_ack_send, 1
+    bcf             [c1], dma_cmd_intrinsic
     /* Even after all this retx_xmit_cursor has no data, then
      * there is no data to send
      */
@@ -115,6 +117,7 @@ dma_cmd_tcp_header:
     phvwri          p.tx2rx_snd_nxt, 0xefeff044 // TODO: fix this hack
     phvwr           p.tcp_header_ack_no, k.common_phv_rcv_nxt // TODO : is this right?
     phvwr           p.tcp_header_data_ofs, 5
+    //phvwr           p.tcp_header_flags, TCPHDR_ACK
     phvwr           p.tcp_header_window, k.t0_s2s_snd_wnd
 
     phvwri          p.tcp_header_dma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
@@ -130,6 +133,8 @@ dma_cmd_data:
      * to send
      */
     bcf             [c2], tcp_write_xmit_done
+    phvwri.c2       p.tcp_header_dma_dma_pkt_eop, 1
+    phvwri.c2       p.tcp_header_dma_dma_cmd_eop, 1
     nop
 
     /* Write A = xmit_cursor_addr + xmit_cursor_offset */

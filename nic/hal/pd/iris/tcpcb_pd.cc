@@ -494,11 +494,13 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         }
         HAL_TRACE_DEBUG("Received pc address 0x{0:x}", pc_offset);
         data.action_id = pc_offset;
-        data.u.read_rx2tx_d.total = 1;
+        data.u.read_rx2tx_d.total = 4;
         data.u.read_rx2tx_d.snd_wnd = htonl(tcpcb_pd->tcpcb->snd_wnd);
         data.u.read_rx2tx_d.snd_cwnd = htons((uint16_t)tcpcb_pd->tcpcb->snd_cwnd);
+        data.u.read_rx2tx_d.debug_dol_tx = htonl(tcpcb_pd->tcpcb->debug_dol_tx);
         HAL_TRACE_DEBUG("TCPCB rx2tx snd_wnd: 0x{0:x}", data.u.read_rx2tx_d.snd_wnd);
         HAL_TRACE_DEBUG("TCPCB rx2tx snd_cwnd: 0x{0:x}", data.u.read_rx2tx_d.snd_cwnd);
+        HAL_TRACE_DEBUG("TCPCB rx2tx debug_dol_tx: 0x{0:x}", data.u.read_rx2tx_d.debug_dol_tx);
 
         // get sesq address
         wring_hw_id_t   sesq_base;

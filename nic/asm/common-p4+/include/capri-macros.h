@@ -152,6 +152,11 @@
 #define BRQ_QID                        4
 #define BSQ_QID                        5
 
+#define CAPRI_DOORBELL_ADDR(_pid_chk, _idx_upd, _sched_upd, _type, _lif) \
+    ((((_pid_chk) | (_idx_upd) | (_sched_upd)) << DB_UPD_SHFT) + \
+     ((_lif) << DB_LIF_SHFT) + \
+     ((_type) << DB_TYPE_SHFT) + \
+     DB_ADDR_BASE)
 
 #define CAPRI_RING_DOORBELL_ADDR(_pid_chk, _idx_upd, _sched_upd, _type, _lif) \
        addi            r5, r0, _pid_chk | _idx_upd | _sched_upd;\
@@ -179,17 +184,10 @@
 #define DB_RING_SHFT                   16
 
 #define CAPRI_RING_DOORBELL_DATA(_pid, _qid, _ring, _idx) \
-        addi            r5, r0, _pid;\
-        sll             r5, r5, DB_PID_SHFT;\
-        add             r6, r0, _qid;\
-        sll             r6, r6, DB_QID_SHFT;\
-        or              r5, r5, r6;\
-        addi            r6, r0, _ring;\
-        sll             r6, r6, DB_RING_SHFT;\
-        or              r5, r5, r6;\
-        add             r6, r0, _idx;\
-        or              r5, r5, r6;\
-        add             r3, r5, r0
+        add             r3, r0, _pid, DB_PID_SHFT;\
+        or              r3, r3, _qid, DB_QID_SHFT;\
+        or              r3, r3, _ring, DB_RING_SHFT;\
+        add             r3, r3, _idx;\
 
 #define CAPRI_DMA_COMMAND_SIZE            128
 

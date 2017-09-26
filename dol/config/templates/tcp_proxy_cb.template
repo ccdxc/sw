@@ -22,6 +22,7 @@ ts_recent   : 0
 serq_base   : 0
 tlscb       : None
 debug_dol   : 0
+debug_dol_tx: 0
 sesq        : 0
 sesq_pi     : 0
 sesq_ci     : 0
@@ -47,4 +48,3 @@ state       : 0
 asesq       : 0
 asesq_pi    : 0
 asesq_ci    : 0
-

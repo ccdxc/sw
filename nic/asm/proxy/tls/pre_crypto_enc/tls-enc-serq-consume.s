@@ -30,8 +30,8 @@ tls_enc_serq_consume_process:
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
 	add		r1, k.tls_global_phv_fid, r0
 	/* data will be in r3 */
-    add     r3, d.{u.tls_serq_consume_d.pi_0}.hx, r0
-	CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_SERQ, r3)
+    add     r5, d.{u.tls_serq_consume_d.pi_0}.hx, r0
+	CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_SERQ, r5)
 
 	memwr.dx  	 r4, r3
 table_read_BLD_BARCO_ENC_REQ:

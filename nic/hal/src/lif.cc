@@ -521,10 +521,11 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 
     // Return LifQstate addresses
     intf::LifQState *entry;
-    for (int type_num = 0; type_num < spec.lif_qstate_map_size(); type_num++) {
+    for (int i = 0; i < spec.lif_qstate_map_size(); i++) {
+        const auto &ent = spec.lif_qstate_map(i);
         entry = rsp->add_qstate();
-        entry->set_type_num(type_num);
-        entry->set_addr(g_lif_manager->GetLIFQStateAddr(hw_lif_id, type_num, 0));
+        entry->set_type_num(ent.type_num());
+        entry->set_addr(g_lif_manager->GetLIFQStateAddr(hw_lif_id, ent.type_num(), 0));
     }
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");

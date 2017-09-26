@@ -27,12 +27,8 @@ def TestCaseSetup(tc):
     tcbid = "TcpCb%04d" % id
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
-    tcb.rcv_nxt = 0xBABABABA
-    tcb.snd_nxt = 0xEFEFEFF0
-    tcb.snd_una = 0xEFEFEFEF
-    tcb.rcv_tsval = 0xFAFAFAFA
-    tcb.ts_recent = 0xFAFAFAF0
-    tcb.debug_dol = tcp_proxy.tcp_debug_dol_pkt_to_serq
+    tcp_proxy.init_tcb_inorder(tc, tcb)
+    tcb.debug_dol |= tcp_proxy.tcp_debug_dol_pkt_to_serq
     if hasattr(tc.module.args, 'atomic_stats') and tc.module.args.atomic_stats:
         print("Testing atomic stats")
         tcb.debug_dol |= tcp_proxy.tcp_debug_dol_test_atomic_stats
@@ -72,7 +68,7 @@ def TestCaseVerify(tc):
     print("rcv_nxt value pre-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
     tcb_cur.GetObjValPd()
     print("rcv_nxt value post-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
-    if tcb_cur.rcv_nxt != 0xbababb0e:
+    if tcb_cur.rcv_nxt != 0x1ababb0e:
         print("rcv_nxt not as expected")
         return False
     print("rcv_nxt as expected")

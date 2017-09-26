@@ -540,13 +540,11 @@ metadata rx2tx_t rx2tx;
 @pragma dont_trim
 metadata rx2tx_extra_t rx2tx_extra;
 @pragma dont_trim
-metadata rx2tx_pad_t rx2tx_pad;
-@pragma dont_trim
 metadata ring_entry_t ring_entry; 
 @pragma dont_trim
 metadata doorbell_data_t db_data;
 @pragma dont_trim
-metadata doorbell_data_pad_t db_data_pad;
+metadata doorbell_data_t db_data2;
 @pragma dont_trim
 metadata pkt_descr_t aol; 
 @pragma dont_trim

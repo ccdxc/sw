@@ -282,9 +282,12 @@
 #define ACK_RATIO_SHIFT 4
 
 /* debug_dol encodings - need to match defines in tcp_proxy.py */
-#define TCP_DDOL_PKT_TO_SERQ            1
-#define TCP_DDOL_TEST_ATOMIC_STATS      2
-#define TCP_DDOL_DONT_QUEUE_TO_SERQ     4
-#define TCP_DDOL_LEAVE_IN_ARQ           8
+#define TCP_DDOL_PKT_TO_SERQ            0x1
+#define TCP_DDOL_TEST_ATOMIC_STATS      0x2
+#define TCP_DDOL_DONT_QUEUE_TO_SERQ     0x4
+#define TCP_DDOL_LEAVE_IN_ARQ           0x8
+#define TCP_DDOL_DONT_RING_TX_DOORBELL  0x10
+// Tx encodings
+#define TCP_TX_DDOL_DONT_SEND_ACK       1
 
 #endif /* #ifndef CONSTANTS_H */

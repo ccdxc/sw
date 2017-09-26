@@ -48,6 +48,7 @@ message TcpCbSpec {
   fixed64               asesq_base                 = 20;
   uint32                asesq_pi                   = 21;
   uint32                asesq_ci                   = 22;
+  uint32                debug_dol_tx               = 23;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request
