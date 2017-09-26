@@ -138,9 +138,9 @@ def merge_lcov_files(test_name, lcov_info_files, output_file):
     subprocess.call(cmd)
 
 
-def run(cmd):
+def run(cmd, exit_on_error=True):
     ret = subprocess.call(cmd, shell=True)
-    if ret:
+    if ret and exit_on_error:
         print("Cmd failed.: ", cmd)
         sys.exit(1)
 
@@ -161,26 +161,21 @@ def run_and_generate_coverage(data):
             cov_output_dir = coverage_output_path + dir_name + "/" + module_name
             module_infos[module_name].append(generate_coverage(
                 module, module_name, cov_output_dir))
-            if module.get("gcno_dir"):
-                os.chdir(module["gcno_dir"])
-                subprocess.call(["rm -f *.gcda"], shell=True)
-            elif module.get("obj_dir"):
-                os.chdir(module["obj_dir"])
-                subprocess.call(["find . -type f -name *.gcda -delete"], shell=True)
-                os.chdir(nic_dir)
-            else:
-                assert 0
+            gcda_dir = module.get("gcno_dir") or module.get("obj_dir")
+            os.chdir(gcda_dir)
+            subprocess.call(["find . -type f -name *.gcda -delete"], shell=True)
+            os.chdir(nic_dir)
 
     module_infos = defaultdict(lambda: [])
     for run_name in data["run"]:
         if "cmd" in data["run"][run_name]:
-            run(data["run"][run_name]["cmd"])
+            run(data["run"][run_name]["cmd"], exit_on_error=False)
             generate_run_coverage(run_name)
         elif "cmd_cfg" in data["run"][run_name]:
             with open(data["run"][run_name]["cmd_cfg"]) as cmd_cfg_file:    
     	        cmd_cfg_data = json.load(cmd_cfg_file)
                 for sub_run in cmd_cfg_data:
-                    run(cmd_cfg_data[sub_run])
+                    run(cmd_cfg_data[sub_run], exit_on_error=False)
                     generate_run_coverage(run_name, sub_run)
         else:
             print "cmd or cmd_cfg not specified."

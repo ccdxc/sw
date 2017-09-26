@@ -3,8 +3,9 @@ if [ -z "$NIC_DIR" ]; then
     export NIC_DIR=`dirname $PWD`
 fi
 export COVERAGE_CONFIG_PATH=$NIC_DIR/conf/
-export COVERAGE_OUTPUT=$NIC_DIR/gen/coverage
-export OBJ_DIR=$NIC_DIR/obj
+export COVERAGE_OUTPUT=$NIC_DIR/coverage
+
+rm -f $COVERAGE_OUTPUT
 $NIC_DIR/tools/gen_dol_cov_run.py
 OUT=$?
 if [ $OUT -ne 0 ];then

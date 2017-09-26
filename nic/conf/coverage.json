@@ -31,6 +31,7 @@
                "utils/host_mem/test",
                "gen/test_results",
                "gen/protobuf",
+               "gen/svc",
                "gen/common_rxdma_actions",
                "gen/common_txdma_actions",
                "gen/coverage"
@@ -48,7 +49,9 @@
                 "model_sim/include/*",
                 "gen/protobuf/*",
                 "asic/capri/model/capsim-master/lib/libmpuobj/include/*",
-                "asic/capri/model/utils/*"
+                "asic/capri/model/utils/*",
+                "gen/common_rxdma_actions/include/*",
+                "gen/common_txdma_actions/include/*"
             ],
             "gcno_dir" : "obj"
         },
@@ -77,7 +80,7 @@
             ]
         },
         "dol": {
-            "cmd_cfg": "./gen/coverage/dol_cov_runs.json",
+            "cmd_cfg": "./coverage/dol_cov_runs.json",
             "modules": [
                 "hal", "model"
             ]
