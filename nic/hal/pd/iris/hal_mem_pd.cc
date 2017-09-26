@@ -234,7 +234,7 @@ hal_state_pd::init(void)
     
     // initialize IPSECCB related data structures
     ipseccb_slab_ = slab::factory("IPSECCB PD", HAL_SLAB_IPSECCB_PD,
-                                 sizeof(hal::pd::pd_ipseccb_t), 128,
+                                 sizeof(hal::pd::pd_ipseccb_encrypt_t), 128,
                                  true, true, true, true);
     HAL_ASSERT_RETURN((ipseccb_slab_ != NULL), false);
 

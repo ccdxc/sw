@@ -11,7 +11,7 @@ struct phv_ p;
         .param esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex
         .param IPSEC_CB_BASE
         .align
-ipsec_encap_txdma_initial_table:
+esp_ipv4_tunnel_n2h_txdma1_initial_table:
     phvwr p.p4_intr_global_lif, k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
     phvwr p.p4_intr_global_tm_iq, k.p4_intr_global_tm_iq
     phvwr p.p4_txdma_intr_qtype, k.p4_txdma_intr_qtype

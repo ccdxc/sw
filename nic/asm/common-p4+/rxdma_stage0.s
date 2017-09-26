@@ -20,6 +20,7 @@
     .param      cpu_rx_read_shared_stage0_start
     .param      eth_rx_fetch_desc
     .param      esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table
+    .param      esp_ipv4_tunnel_n2h_rxdma_initial_table
 
 
 //Keep offset 0 for none to avoid invoking unrelated program when
@@ -65,3 +66,7 @@ cpu_rx_stage0:
     j cpu_rx_read_shared_stage0_start
     nop
 
+.align
+ipsec_rx_n2h_stage0:
+    j esp_ipv4_tunnel_n2h_rxdma_initial_table
+    nop

@@ -26,7 +26,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_int_header_tailroom_offset, r2
 
     add r3, r0, k.p42p4plus_hdr_ip_hdr_size
-    addi r3, r3, 8
+    addi r3, r3, ESP_FIXED_HDR_SIZE 
     sub r4, k.p42p4plus_hdr_ipsec_payload_start, r3 
     phvwr p.ipsec_int_header_headroom, r4 
     phvwr p.ipsec_int_header_headroom_offset, r4 
