@@ -14,6 +14,7 @@ struct cqcb_t {
     struct capri_intrinsic_qstate_t intrinsic;
     struct capri_intrinsic_ring_t ring0;
     pt_base_addr: 32;
+
     log_cq_page_size: 5;
     log_wqe_size: 5;
     log_num_wqes: 5;
@@ -25,7 +26,10 @@ struct cqcb_t {
     arm: 1;
     color: 1;
     rsvd2: 6;
-    rsvd3: 56;
+    rsvd3: 24;
+
+    rsvd4: 32;
+    pad: 256;  // as d-vector is loaded only 256 bits, need this to interpret it correctly
 };
 
 #endif // __CQCB_H

@@ -7,7 +7,8 @@ from infra.common.logging       import logger
 import infra.common.defs as defs
 
 def GetRqPreEpsn (tc, pkt):
-    return tc.pvtdata.pre_qstate.e_psn
+    return tc.pvtdata.rq_pre_qstate.e_psn
+
 
 def GetPktTxPsn (tc, pkt, args):
-    return (tc.pvtdata.pre_qstate.tx_psn + args.pkt_num)
+    return (tc.pvtdata.sq_pre_qstate.tx_psn + args.pkt_num)

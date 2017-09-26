@@ -17,7 +17,7 @@
 #define RQCB_ADDR_SHIFT    9
 #define RDMA_PAYLOAD_DMA_CMDS_START 8
 
-#define LOG_SIZEOF_CQCB_T   6   // 2^6 = 64 Bytes
+#define LOG_SIZEOF_CQCB_T   5   // 2^5 = 32 Bytes
 #define LOG_CB_UNIT_SIZE_BYTES 6
 #define CB_UNIT_SIZE_BYTES  64
 

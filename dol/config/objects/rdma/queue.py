@@ -181,7 +181,7 @@ class RdmaCQstate(Packet):
         ShortField("c_index0", 0),
 
         IntField("pt_base_addr", 0),
-        BitField("log_sq_page_size", 0xc, 5),
+        BitField("log_cq_page_size", 0xc, 5),
         BitField("log_wqe_size", 6, 5),
         BitField("log_num_wqes", 0, 5),
         BitField("rsvd1", 0, 1),

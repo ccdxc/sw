@@ -55,7 +55,7 @@ packets:
             bth:
                 opcode  : 4 # RDMA SEND Only
                 destqp  : ref://testcase/config/rdmasession/rqp/id
-                psn     : ref://testcase/pvtdata/pre_qstate/tx_psn
+                psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

@@ -21,7 +21,7 @@ const static char *kHBMLabel = "rdma";
 const static uint32_t kHBMSizeKB = 128 * 1024;  // 128 MB
 const static uint32_t kAllocUnit = 4096;
 
-uint32_t g_pt_base[MAX_LIFS];
+uint32_t g_pt_base[MAX_LIFS] = {0};
 
 RDMAManager *g_rdma_manager = nullptr;
 extern LIFManager *g_lif_manager;
@@ -186,13 +186,16 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
 
 
     HAL_TRACE_DEBUG("({},{}): LIF {}: {}, max_CQ: {}, max_EQ: {}, "
-           "max_keys: {}, max_pt: {}",
+           "max_keys: {}, max_pt: {} g_pt_base: {}",
            __FUNCTION__, __LINE__, lif, spec.key_or_handle().lif_id(),
            max_cqs, max_eqs,
-           max_keys, max_pt_entries);
+           max_keys, max_pt_entries, g_pt_base[lif]);
 
     memset(&sram_lif_entry, 0, sizeof(sram_lif_entry_t));
     
+    // Some one in HAL is corruptimg and causing writting junk value to this address
+    // so rest the address to zero.
+    g_pt_base[lif] = 0;
 
     // Fill the CQ info in sram_lif_entry
     cq_base_addr = g_lif_manager->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_CQ);

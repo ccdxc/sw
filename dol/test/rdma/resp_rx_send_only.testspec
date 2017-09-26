@@ -106,12 +106,14 @@ descriptors:
                   len : ref://testcase/buffers/id=RQ_BUF/size
                   l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
 
-    #- descriptor:
-    #    id      : EXP_CQ_DESC
-    #    template: ref://factory/templates/id=DESC_RDMA_CQ
-    #    fields:
-    #        wrid: ref://testcase/descriptors/id=RQ_DESC/wrid
-    #        op_type: 
+    - descriptor:
+        id      : EXP_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ
+        fields:
+            wrid: ref://testcase/descriptors/id=RQ_DESC/wrid
+            qp: ref://testcase/config/rdmasession/lqp/id
+            op_type: 17 #OP_TYPE_SEND_RCVD
+            status : 0  #CQ_STATUS_SUCCESS
 
 trigger:
     descriptors:
@@ -129,5 +131,6 @@ expect:
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_RQ_DESC
             ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
-            # Expected Buffer on this descriptor
-            buffer  : ref://testcase/buffers/id=EXP_RQ_BUF
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_CQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
