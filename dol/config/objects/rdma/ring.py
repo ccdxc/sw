@@ -42,10 +42,13 @@ class RdmaRingObject(ring.RingObject):
         descriptor.mem_handle = resmgr.MemHandle(descriptor.address,
                                                  resmgr.HostMemoryAllocator.get_v2p(descriptor.address))
         descriptor.Write()
+        cfglogger.info('incrementing pindex..')
+        self.queue.qstate.incr_pindex(0, self.size)
+
         # Increment posted index
-        if self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_RECV":
-            cfglogger.info('incrementing pindex..')
-            self.queue.qstate.incr_pindex(0)
+        #if self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_RECV":
+        #    cfglogger.info('incrementing pindex..')
+        #    self.queue.qstate.incr_pindex(0)
         # for now, ring doorbell only for SQ.
         # Doorbell ring for RQ will be needed for Prefetch/Cache, will be done later
         #if self.queue.queue_type.purpose == "rdma_sq":

@@ -250,9 +250,9 @@ class RdmaQstateObject(object):
         self.data.show()
         cfglogger.info("Read Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
 
-    def incr_pindex(self, ring):
+    def incr_pindex(self, ring, ring_size):
         assert(ring < 7)
-        self.set_pindex(ring, self.get_pindex(ring) + 1)
+        self.set_pindex(ring, ((self.get_pindex(ring) + 1) & (ring_size - 1)))
         self.Write()
 
     def set_pindex(self, ring, value):
