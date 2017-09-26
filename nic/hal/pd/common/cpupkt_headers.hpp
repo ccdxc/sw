@@ -50,21 +50,27 @@ typedef struct p4_to_p4plus_cpu_pkt_s {
 } __attribute__ ((__packed__)) p4_to_p4plus_cpu_pkt_t;
 
 typedef struct p4plus_to_p4_header_s {
-    uint64_t    p4plus_app_id   : 4;
-    uint64_t    pad             : 4;
-    uint64_t    flags           : 8;
-    uint64_t    ip_id           : 16;
-    uint64_t    ip_len          : 16;
-    uint64_t    udp_len         : 16;
-    uint64_t    tcp_seq_delta   : 32;
-    uint64_t    vlan_tag        : 16;
+#if __BYTE_ORDER == __BIG_ENDIAN
+    uint8_t     p4plus_app_id   : 4;
+    uint8_t     pad             : 4;
+#else
+    uint8_t     pad             : 4;
+    uint8_t     p4plus_app_id   : 4;
+#endif
+
+    uint8_t     flags;
+    uint16_t    ip_id;
+    uint16_t    ip_len;
+    uint16_t    udp_len;
+    uint32_t    tcp_seq_delta;
+    uint16_t    vlan_tag;
 } __attribute__ ((__packed__)) p4plus_to_p4_header_t;
     
 typedef struct cpu_to_p4plus_header_s {
-    uint64_t    flags           : 16;
-    uint64_t    src_lif         : 16;
-    uint64_t    hw_vlan_id      : 16;
-    uint64_t    l2_offset       : 16;
+    uint16_t    flags;
+    uint16_t    src_lif;
+    uint16_t    hw_vlan_id;
+    uint16_t    l2_offset;
 } __attribute__ ((__packed__)) cpu_to_p4plus_header_t;
 
 } // namespace pd       

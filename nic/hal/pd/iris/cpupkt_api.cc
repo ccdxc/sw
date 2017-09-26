@@ -222,7 +222,7 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
     HAL_TRACE_DEBUG("Starting packet poll for queue: {}", ctxt->rx.num_queues);
     uint64_t value, descr_addr;
     while(true) {
-        usleep(300);
+        usleep(1000000/3);
         for(uint32_t i=0; i< ctxt->rx.num_queues; i++) {
             value = 0;
             //HAL_TRACE_DEBUG("cpupkt rx: checking queue at address: {:#x}", ctxt->rx.queue[i].pc_index_addr);

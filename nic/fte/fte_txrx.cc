@@ -110,10 +110,15 @@ pkt_loop(uint8_t fte_id)
         // write the packet
         if (ctx.pkt()) {
             hal::pd::p4plus_to_p4_header_t p4plus_header = {};
-            hal::pd::cpu_to_p4plus_header_t cpu_header = {0};
-            HAL_TRACE_DEBUG("fte:: txpkt len={} pkt={}", ctx.pkt_len(),
-                            hex_str(ctx.pkt(), ctx.pkt_len()));
-            ret = hal::pd::cpupkt_send(arm_ctx, &cpu_header, &p4plus_header, (uint8_t *)ctx.pkt(), ctx.pkt_len());
+            hal::pd::cpu_to_p4plus_header_t cpu_header = {};
+
+            cpu_header.src_lif = ctx.cpu_rxhdr()->src_lif;
+
+            HAL_TRACE_DEBUG("fte:: txpkt slif={} len={} pkt={}", cpu_header.src_lif,
+                            ctx.pkt_len(), hex_str(ctx.pkt(), ctx.pkt_len()));
+
+            ret = hal::pd::cpupkt_send(arm_ctx, &cpu_header, &p4plus_header,
+                                       (uint8_t *)ctx.pkt(), ctx.pkt_len());
 
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("fte: failied to transmit pkt, ret={}", ret);
