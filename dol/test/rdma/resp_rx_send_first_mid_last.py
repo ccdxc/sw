@@ -14,7 +14,8 @@ def TestCaseSetup(tc):
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
     tc.pvtdata.send_first_psn = tc.pvtdata.rq_pre_qstate.e_psn
-    tc.pvtdata.send_last_psn = tc.pvtdata.rq_pre_qstate.e_psn + 1
+    tc.pvtdata.send_mid_psn = tc.pvtdata.rq_pre_qstate.e_psn + 1
+    tc.pvtdata.send_last_psn = tc.pvtdata.rq_pre_qstate.e_psn + 2
     return
 
 def TestCaseTrigger(tc):
@@ -27,20 +28,20 @@ def TestCaseVerify(tc):
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
-    # verify that e_psn is incremented by 2
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 2):
+    # verify that e_psn is incremented by 3
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 3):
         return False
 
     # verify that c_index is incremented by 1
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index0', 1):
         return False
 
-    # verify that token_id is incremented by 2
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 2):
+    # verify that token_id is incremented by 3
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 3):
         return False
 
-    # verify that nxt_to_go_token_id is incremented by 2
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 2):
+    # verify that nxt_to_go_token_id is incremented by 3
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 3):
         return False
 
     # verify that busy is 0
