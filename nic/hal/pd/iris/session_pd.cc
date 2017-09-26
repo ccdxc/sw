@@ -360,14 +360,11 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     }
 #endif
 
-    d.flow_info_action_u.flow_info_flow_info.cos_en = 
-        qos_marking_action_pcp_rewrite_en(&flow_cfg->eg_qos_action.marking_action);
-    d.flow_info_action_u.flow_info_flow_info.cos = 
-        qos_marking_action_pcp(&flow_cfg->eg_qos_action.marking_action);
-    d.flow_info_action_u.flow_info_flow_info.dscp_en = 
-        qos_marking_action_dscp_rewrite_en(&flow_cfg->eg_qos_action.marking_action);
-    d.flow_info_action_u.flow_info_flow_info.dscp = 
-        qos_marking_action_dscp(&flow_cfg->eg_qos_action.marking_action);
+    d.flow_info_action_u.flow_info_flow_info.cos_en = flow_attrs->dot1p_en;
+    d.flow_info_action_u.flow_info_flow_info.cos = flow_attrs->dot1p;
+    d.flow_info_action_u.flow_info_flow_info.dscp_en = flow_attrs->dscp_en;
+    d.flow_info_action_u.flow_info_flow_info.dscp = flow_attrs->dscp;
+
 
     // TBD: check class NIC mode and set this
     d.flow_info_action_u.flow_info_flow_info.qid_en = flow_attrs->qid_en;

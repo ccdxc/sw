@@ -22,6 +22,7 @@ inline hal_ret_t init_plugins() {
         fte::FTE_FEATURE_TCP_PROXY,
         fte::FTE_FEATURE_STAGE_MARKER,
         fte::FTE_FEATURE_LB,
+        fte::FTE_FEATURE_QOS,
         fte::FTE_FEATURE_FWDING,
         fte::FTE_FEATURE_TUNNEL,
     };
@@ -34,6 +35,7 @@ inline hal_ret_t init_plugins() {
         fte::FTE_FEATURE_TCP_PROXY,
         fte::FTE_FEATURE_STAGE_MARKER,
         fte::FTE_FEATURE_DFW,
+        fte::FTE_FEATURE_QOS,
         fte::FTE_FEATURE_FWDING,
         fte::FTE_FEATURE_TUNNEL,
     };

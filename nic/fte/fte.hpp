@@ -15,7 +15,8 @@ const feature_id_t FTE_FEATURE_TUNNEL        = 3;
 const feature_id_t FTE_FEATURE_DFW           = 4;
 const feature_id_t FTE_FEATURE_LB            = 5;
 const feature_id_t FTE_FEATURE_TCP_PROXY     = 6;
-const feature_id_t FTE_FEATURE_DOL_TEST_ONLY = 7;
+const feature_id_t FTE_FEATURE_QOS           = 7;
+const feature_id_t FTE_FEATURE_DOL_TEST_ONLY = 8;
 
 // FTE pipeline progress action codes
 //  continue - continue the pipeline

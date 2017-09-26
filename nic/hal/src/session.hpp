@@ -151,6 +151,8 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  qid:24;              // Qid
     uint64_t                  nat_type:3;          // type of NAT
     uint64_t                  lkp_inst:1;          // Flow instance
+    uint64_t                  dot1p_en:1;          //enable dot1p rewrite
+    uint64_t                  dscp_en:1;           //enable dscp rewrite
 
     rewrite_actions_en        rw_act;              // rewrite action
     uint32_t                  rw_idx;              // rewrite index
@@ -162,6 +164,8 @@ typedef struct flow_pgm_attrs_s {
     uint16_t                  nat_sport;           // NAT source port
     uint16_t                  nat_dport;           // NAT destination port
     uint16_t                  nat_l4_port;         // NAT L4 port
+    uint8_t                   dot1p;               // Cos value
+    uint8_t                   dscp;                // dscp value
     ep_t                      *dep;                // only to get rw idx in PD
 } __PACK__ flow_pgm_attrs_t;
 

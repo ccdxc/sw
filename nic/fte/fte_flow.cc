@@ -238,6 +238,10 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
         attrs.tnnl_vnid = rewrite.ether.vlan_id;
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
     }
+    if (rewrite.valid_flds.dot1p) {
+        attrs.dot1p = rewrite.ether.dot1p;
+        attrs.dot1p_en = true;
+    }
 
     // L3 rewrite
     switch(rewrite.valid_hdrs&FTE_L3_HEADERS) {
@@ -249,6 +253,10 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
         if (rewrite.valid_flds.dip) {
             nat_dip.af = IP_AF_IPV4;
             nat_dip.addr.v4_addr = rewrite.ipv4.dip;
+        }
+        if (rewrite.valid_flds.dscp) {
+            attrs.dscp_en = true;
+            attrs.dscp = rewrite.ipv4.dscp;
         }
         break;
     case FTE_HEADER_ipv6:
@@ -418,7 +426,10 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
     config.nat_dip = attrs.nat_dip;
     config.nat_sport = attrs.nat_sport;
     config.nat_dport = attrs.nat_dport;
-  
+    config.eg_qos_action.marking_action.pcp_rewrite_en = attrs.dot1p_en;
+    config.eg_qos_action.marking_action.pcp = attrs.dot1p;
+    config.eg_qos_action.marking_action.dscp_rewrite_en = attrs.dscp_en;
+    config.eg_qos_action.marking_action.dscp = attrs.dscp;
     return ret;
 }
 
