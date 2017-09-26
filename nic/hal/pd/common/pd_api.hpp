@@ -433,6 +433,7 @@ hal_ret_t pd_wring_get_meta (pd_wring_args_t *wring);
 
 
 typedef struct pd_descr_aol_s {
+	uint64_t	scratch[8];
     uint64_t    a0;
     uint32_t    o0;
     uint32_t    l0;

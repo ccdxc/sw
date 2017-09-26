@@ -42,10 +42,10 @@ class SwDscrAolObject(base.ConfigObjectBase):
         self.Addr3      = resp_spec.Address3
         self.Offset3    = resp_spec.Offset3
         self.Len3       = resp_spec.Length3
-        cfglogger.info("[%s]Received response for handle: %016d" % (self.ID(), self.DescAddr))
-        cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr1, self.Offset1, self.Len1))
-        cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr2, self.Offset2, self.Len2))
-        cfglogger.info("A:%016d O:%08d L:%08d" % (self.Addr3, self.Offset3, self.Len3))
+        cfglogger.info("[%s]Received response for handle: %016x" % (self.ID(), self.DescAddr))
+        cfglogger.info("A:%016x O:%08d L:%08d" % (self.Addr1, self.Offset1, self.Len1))
+        cfglogger.info("A:%016x O:%08d L:%08d" % (self.Addr2, self.Offset2, self.Len2))
+        cfglogger.info("A:%016x O:%08d L:%08d" % (self.Addr3, self.Offset3, self.Len3))
         return
     def SetHandle(self, handle):
         self.DescAddr = handle

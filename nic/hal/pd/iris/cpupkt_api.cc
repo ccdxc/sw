@@ -241,9 +241,7 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
                 }
                 continue;
             }
-             // offset to take care of scratch
-            descr_addr = descr_addr + CPU_PKT_DESCR_OFFSET;
-            
+
             HAL_TRACE_DEBUG("Received valid data: queue: {}, pc_index: {}, addr: {:#x}, value: {:#x}, descr_addr: {:#x}",
                                 ctxt->rx.queue[i].type, ctxt->rx.queue[i].pc_index, ctxt->rx.queue[i].pc_index_addr, value, descr_addr);
             // get the descriptor
@@ -330,10 +328,9 @@ hal_ret_t
 cpupkt_program_descr(cpupkt_hw_id_t page_addr, size_t len, cpupkt_hw_id_t* descr_addr)
 {
     hal_ret_t       ret = HAL_RET_OK;
-    cpupkt_hw_id_t     addr = 0;
     pd_descr_aol_t  descr = {0};
 
-    ret = cpupkt_descr_alloc(&addr);
+    ret = cpupkt_descr_alloc(descr_addr);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to allocate descr for the packet, err: {}", ret);
         goto cleanup;
@@ -343,11 +340,8 @@ cpupkt_program_descr(cpupkt_hw_id_t page_addr, size_t len, cpupkt_hw_id_t* descr
     descr.o0 = 0;
     descr.l0 = len;
 
-    *descr_addr = addr;
-    // shift addr to take care of the scratch
-    addr = addr + CPU_PKT_DESCR_OFFSET;
-    HAL_TRACE_DEBUG("Programming descr: descr_addr: {:#x} addr: {:#x}", *descr_addr, addr);
-    if(!p4plus_hbm_write(addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
+    HAL_TRACE_DEBUG("Programming descr: descr_addr: {:#x}}", *descr_addr);
+    if(!p4plus_hbm_write(*descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
         HAL_TRACE_ERR("Failed to program descr");
         ret = HAL_RET_HW_FAIL;
         goto cleanup;

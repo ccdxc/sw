@@ -14,7 +14,6 @@ namespace pd {
 
 #define HAL_MAX_CPU_PKT_DESCR_ENTRIES   1024
 #define CPU_PKT_DESCR_SIZE              128
-#define CPU_PKT_DESCR_OFFSET            64 // offset to take care of descr scratch
 
 #define CPU_PKT_VALID_BIT_MASK          ((uint64_t)1 << 63)
 

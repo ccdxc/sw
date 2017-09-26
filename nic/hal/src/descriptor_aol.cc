@@ -23,12 +23,12 @@ descriptor_aol_get(DescrAolRequest& request, DescrAolSpec *response)
     response->set_address1(pd_descr.a0);
     response->set_offset1(pd_descr.o0);
     response->set_length1(pd_descr.l0);
-    response->set_address1(pd_descr.a1);
-    response->set_offset1(pd_descr.o1);
-    response->set_length1(pd_descr.l1);
-    response->set_address1(pd_descr.a2);
-    response->set_offset1(pd_descr.o2);
-    response->set_length1(pd_descr.l2);
+    response->set_address2(pd_descr.a1);
+    response->set_offset2(pd_descr.o1);
+    response->set_length2(pd_descr.l1);
+    response->set_address3(pd_descr.a2);
+    response->set_offset3(pd_descr.o2);
+    response->set_length3(pd_descr.l2);
 
     return ret;
 }

@@ -28,6 +28,8 @@ struct pd_wring_s {
 } __PACK__;
 
 typedef hal_ret_t (*wring_slot_parser)(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
+typedef hal_ret_t (*wring_get_hw_meta)(pd_wring_t* wring_pd);
+
 struct pd_wring_meta_s {
     bool        is_global;
     char        hbm_reg_name[64];
@@ -38,6 +40,7 @@ struct pd_wring_meta_s {
     uint64_t    alloc_semaphore_addr;
     uint64_t    free_semaphore_addr;
     wring_slot_parser   slot_parser;
+    wring_get_hw_meta   get_hw_meta_fn;   
 } __PACK__;
 
 // initialize a wring pd instance
