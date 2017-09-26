@@ -37,6 +37,44 @@ cc_library(
 )
 
 cc_library(
+    name = "ssd_core",
+    srcs = [
+        "ssd_core.cc",
+        "ssd_core.hpp",
+        "nvme.hpp",
+    ],
+    hdrs = [
+        "ssd_core.hpp",
+    ],
+)
+
+cc_test(
+    name = "ssd_core_test",
+    srcs = [
+        "ssd_core_test.cc",
+    ],
+    deps = [
+        ":ssd_core",
+        "//:gtest",
+    ],
+)
+
+cc_library(
+    name = "ssd",
+    srcs = [
+        "ssd.hpp",
+    ],
+    hdrs = [
+        "ssd.hpp",
+    ],
+    deps = [
+        ":ssd_core",
+        "//dol/test/storage/host_mem",
+        "//dol/test/storage/model_client",
+    ]
+)
+
+cc_library(
     name= "tests",
     srcs = [
         "tests.cc",

@@ -20,6 +20,8 @@ using grpc::Status;
 using internal::Internal;
 using intf::Interface;
 
+std::unique_ptr<utils::HostMem> g_hostmem;
+
 namespace {
 
 std::unique_ptr<Internal::Stub> internal_stub;
@@ -255,16 +257,16 @@ int main(int argc, char *argv[]) {
   }
   
   // Allocate host memory.
-  std::unique_ptr<utils::HostMem> hostmem(utils::HostMem::New());
-  uint8_t *nvme_queue = (uint8_t *)hostmem->Alloc(64 * 64);
-  uint8_t *pvm_queue = (uint8_t *)hostmem->Alloc(64 * 64);
+  g_hostmem.reset(utils::HostMem::New());
+  uint8_t *nvme_queue = (uint8_t *)g_hostmem->Alloc(64 * 64);
+  uint8_t *pvm_queue = (uint8_t *)g_hostmem->Alloc(64 * 64);
   if ((nvme_queue == nullptr) || (pvm_queue == nullptr)) {
     printf("Unable to allocate host memory.\n");
     return -1;
   }
   printf("Host memory allocated\n");
-  uint64_t nvme_paddr = hostmem->VirtToPhys(nvme_queue);
-  uint64_t pvm_paddr = hostmem->VirtToPhys(pvm_queue);
+  uint64_t nvme_paddr = g_hostmem->VirtToPhys(nvme_queue);
+  uint64_t pvm_paddr = g_hostmem->VirtToPhys(pvm_queue);
   pvm_paddr = pvm_paddr;
 
   if (setup_q_state(nvme_lif, 0, 0, (char *) "storage_tx_nvme_sq_handler.bin", 1, 1, 6,
