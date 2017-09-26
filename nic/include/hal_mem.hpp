@@ -61,6 +61,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_ACL_PD,
     HAL_SLAB_WRING_PD,
     HAL_SLAB_IPSECCB_PD,
+    HAL_SLAB_IPSECCB_DECRYPT_PD,
     HAL_SLAB_L4LB_PD,
     HAL_SLAB_RW_PD,
     HAL_SLAB_CPUCB_PD,

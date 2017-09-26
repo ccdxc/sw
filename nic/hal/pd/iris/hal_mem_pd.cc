@@ -244,6 +244,16 @@ hal_state_pd::init(void)
                                  hal::pd::ipseccb_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((ipseccb_hwid_ht_ != NULL), false);
 
+    ipseccb_decrypt_slab_ = slab::factory("IPSECCB PD", HAL_SLAB_IPSECCB_DECRYPT_PD,
+                                 sizeof(hal::pd::pd_ipseccb_decrypt_t), 128,
+                                 true, true, true, true);
+    HAL_ASSERT_RETURN((ipseccb_decrypt_slab_ != NULL), false);
+
+    ipseccb_decrypt_hwid_ht_ = ht::factory(HAL_MAX_HW_IPSECCBS,
+                                 hal::pd::ipseccb_pd_decrypt_get_hw_key_func,
+                                 hal::pd::ipseccb_pd_decrypt_compute_hw_hash_func,
+                                 hal::pd::ipseccb_pd_decrypt_compare_hw_key_func);
+    HAL_ASSERT_RETURN((ipseccb_decrypt_hwid_ht_ != NULL), false);
 
     // initialize L4LB PD related data structures
     l4lb_pd_slab_ = slab::factory("L4LB_PD", HAL_SLAB_L4LB_PD,
@@ -371,6 +381,9 @@ hal_state_pd::hal_state_pd()
     ipseccb_slab_ = NULL;
     ipseccb_hwid_ht_ = NULL;
 
+    ipseccb_decrypt_slab_ = NULL;
+    ipseccb_decrypt_hwid_ht_ = NULL;
+
     rw_entry_slab_ = NULL;
     rw_table_ht_ = NULL;
     rw_tbl_idxr_ = NULL;
@@ -444,6 +457,9 @@ hal_state_pd::~hal_state_pd()
 
     ipseccb_slab_ ? delete ipseccb_slab_ : HAL_NOP;
     ipseccb_hwid_ht_ ? delete ipseccb_hwid_ht_ : HAL_NOP;
+    
+    ipseccb_decrypt_slab_ ? delete ipseccb_decrypt_slab_ : HAL_NOP;
+    ipseccb_decrypt_hwid_ht_ ? delete ipseccb_decrypt_hwid_ht_ : HAL_NOP;
     
     cpucb_slab_ ? delete cpucb_slab_ : HAL_NOP;
     cpucb_hwid_ht_ ? delete cpucb_hwid_ht_ : HAL_NOP;
@@ -565,6 +581,7 @@ hal_state_pd::get_slab(hal_slab_t slab_id)
     GET_SLAB(acl_pd_slab_);
     GET_SLAB(wring_slab_);
     GET_SLAB(ipseccb_slab_);
+    GET_SLAB(ipseccb_decrypt_slab_);
     GET_SLAB(l4lb_pd_slab_);
     GET_SLAB(rw_entry_slab_);
     GET_SLAB(cpucb_slab_);
@@ -1123,6 +1140,9 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_IPSECCB_PD:
         g_hal_state_pd->ipseccb_slab()->free_(elem);
+    
+    case HAL_SLAB_IPSECCB_DECRYPT_PD:
+        g_hal_state_pd->ipseccb_decrypt_slab()->free_(elem);
     
     case HAL_SLAB_CPUCB_PD:
         g_hal_state_pd->cpucb_slab()->free_(elem);

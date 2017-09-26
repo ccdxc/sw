@@ -149,6 +149,9 @@ public:
     slab *ipseccb_slab(void) const { return ipseccb_slab_; }
     ht *ipseccb_hwid_ht(void) const { return ipseccb_hwid_ht_; }
 
+    slab *ipseccb_decrypt_slab(void) const { return ipseccb_decrypt_slab_; }
+    ht *ipseccb_decrypt_hwid_ht(void) const { return ipseccb_decrypt_hwid_ht_; }
+
     // get APIs for L4LB related state
     slab *l4lb_pd_slab(void) const { return l4lb_pd_slab_; }
     
@@ -347,6 +350,8 @@ private:
     struct {
         slab       *ipseccb_slab_;
         ht         *ipseccb_hwid_ht_;
+        slab       *ipseccb_decrypt_slab_;
+        ht         *ipseccb_decrypt_hwid_ht_;
     } __PACK__;
 
     // l4lb related state

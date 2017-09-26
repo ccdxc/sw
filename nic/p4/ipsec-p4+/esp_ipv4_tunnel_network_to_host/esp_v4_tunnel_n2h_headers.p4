@@ -38,6 +38,8 @@ header_type ipsec_int_header_t {
     fields {
         in_desc           : ADDRESS_WIDTH;
         out_desc          : ADDRESS_WIDTH;
+        in_page           : ADDRESS_WIDTH;
+        out_page          : ADDRESS_WIDTH;
         ipsec_cb_index    : 16;
         headroom          : 8;
         tailroom          : 8;
@@ -59,9 +61,11 @@ header_type barco_descriptor_t {
         A1_addr : ADDRESS_WIDTH;
         O1      : AOL_OFFSET_WIDTH;
         L1      : AOL_LENGTH_WIDTH;
+#if 0
         A2_addr : ADDRESS_WIDTH;
         O2      : AOL_OFFSET_WIDTH;
         L2      : AOL_LENGTH_WIDTH;
+#endif
     }
 }
 
@@ -83,7 +87,6 @@ header_type barco_request_t {
         sector_num                          : 32;
         doorbell_address                    : 64;
         doorbell_data                       : 64;
-        rsvd2                               : 304;
     }
 }
 
@@ -96,7 +99,6 @@ header_type barco_request_t {
     modify_field(ipsec_cb_scratch.cosB, cosB); \
     modify_field(ipsec_cb_scratch.cosA, cosA); \
     modify_field(ipsec_cb_scratch.rsvd, rsvd); \
-    modify_field(ipsec_cb_scratch.pc, pc); \
     modify_field(ipsec_cb_scratch.rxdma_ring_pindex, rxdma_ring_pindex); \
     modify_field(ipsec_cb_scratch.rxdma_ring_cindex, rxdma_ring_cindex); \
     modify_field(ipsec_cb_scratch.barco_ring_pindex, barco_ring_pindex); \
@@ -116,8 +118,15 @@ header_type barco_request_t {
     modify_field(ipsec_cb_scratch.iv_salt, iv_salt); \
     modify_field(ipsec_cb_scratch.ipsec_cb_pad, ipsec_cb_pad);               
 
+#define IPSEC_CB_SCRATCH_WITH_PC \
+    modify_field(ipsec_cb_scratch.pc, pc); \
+    IPSEC_CB_SCRATCH 
+
 
 #define IPSEC_BARCO_DESC_SCRATH \
     modify_field(barco_desc_scratch.A0_addr,A0_addr); \
     modify_field(barco_desc_scratch.O0,O0); \
     modify_field(barco_desc_scratch.L0,L0); \
+    modify_field(barco_desc_scratch.A1_addr,A1_addr); \
+    modify_field(barco_desc_scratch.O1,O0); \
+    modify_field(barco_desc_scratch.L1,L0); \

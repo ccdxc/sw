@@ -353,6 +353,11 @@ hal_ret_t pd_ipseccb_update(pd_ipseccb_args_t *ipseccb);
 hal_ret_t pd_ipseccb_delete(pd_ipseccb_args_t *ipseccb);
 hal_ret_t pd_ipseccb_get(pd_ipseccb_args_t *ipseccb);
 
+hal_ret_t pd_ipseccb_decrypt_create(pd_ipseccb_args_t *ipseccb);
+hal_ret_t pd_ipseccb_decrypt_update(pd_ipseccb_args_t *ipseccb);
+hal_ret_t pd_ipseccb_decrypt_delete(pd_ipseccb_args_t *ipseccb);
+hal_ret_t pd_ipseccb_decrypt_get(pd_ipseccb_args_t *ipseccb);
+
 hal_ret_t pd_l4lb_create(pd_l4lb_args_t *pd_l4lb_args);
 
 hal_ret_t pd_cpucb_create(pd_cpucb_args_t *cpucb);

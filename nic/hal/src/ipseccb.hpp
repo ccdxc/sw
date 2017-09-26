@@ -37,6 +37,7 @@ typedef struct ipseccb_s {
 
     // PD state
     void                  *pd;                     // all PD specific state
+    void                  *pd_decrypt;                     // all PD specific state
 
     ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
     ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt

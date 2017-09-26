@@ -136,6 +136,12 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
         rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
         goto cleanup;
     }
+    ret = pd::pd_ipseccb_decrypt_create(&pd_ipseccb_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD IPSEC CB decrypt create failure, err : {}", ret);
+        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+        goto cleanup;
+    }
 
     // add this L2 segment to our db
     ret = add_ipseccb_to_db(ipseccb);
@@ -186,13 +192,20 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 
     ipseccb->tunnel_sip4 = spec.tunnel_sip4();
     ipseccb->tunnel_dip4 = spec.tunnel_dip4();
-
+    
     ret = pd::pd_ipseccb_update(&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: ", ret);
         rsp->set_api_status(types::API_STATUS_IPSEC_CB_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
+    ret = pd::pd_ipseccb_decrypt_update(&pd_ipseccb_args);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: ", ret);
+        rsp->set_api_status(types::API_STATUS_IPSEC_CB_NOT_FOUND);
+        return HAL_RET_HW_FAIL;
+    }
+    
     
     rsp->set_api_status(types::API_STATUS_OK);
  
@@ -286,6 +299,13 @@ ipseccb_delete (ipseccb::IpsecCbDeleteRequest& req, ipseccb::IpsecCbDeleteRespon
         rsp->add_api_status(types::API_STATUS_IPSEC_CB_NOT_FOUND);
         return HAL_RET_HW_FAIL;
     }
+    ret = pd::pd_ipseccb_decrypt_delete(&pd_ipseccb_args);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD IPSECCB: delete Failed, err: {}", ret);
+        rsp->add_api_status(types::API_STATUS_IPSEC_CB_NOT_FOUND);
+        return HAL_RET_HW_FAIL;
+    }
+    
     
     // fill stats of this IPSEC CB
     rsp->add_api_status(types::API_STATUS_OK);

@@ -25,6 +25,7 @@ LCXXFLAGS = \
 			-I../../../gen/tls_txdma_pre_crypto_enc/include \
 			-I../../../gen/tls_txdma_post_crypto_enc/include \
 			-I../../../gen/esp_ipv4_tunnel_h2n_rxdma/include \
+			-I../../../gen/esp_v4_tunnel_n2h_rxdma/include \
 			-I../../../gen/cpu_rxdma/include \
 			-I../../../gen/cpu_txdma/include \
             -I../../../gen/common_rxdma_actions/include \
@@ -71,6 +72,7 @@ SOURCES = \
 		  telemetry_pd.cc \
 		  crypto_keys_pd.cc \
 		  ipseccb_pd.cc \
+		  ipseccb_decrypt_pd.cc \
 		  l4lb_pd.cc \
 		  rw_pd.cc \
 		  cpucb_pd.cc \

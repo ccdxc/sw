@@ -33,6 +33,9 @@ proxy_meta_init() {
     g_meta[types::PROXY_TYPE_IPSEC] = 
         (proxy_meta_t) {true, SERVICE_LIF_IPSEC_ESP, 0, 2, 0};
     
+    g_meta[types::PROXY_TYPE_IPSEC] = 
+        (proxy_meta_t) {true, SERVICE_LIF_IPSEC_ESP, 1, 2, 0};
+    
     g_meta[types::PROXY_TYPE_CPU] = 
         (proxy_meta_t) {true, SERVICE_LIF_CPU, 0, 1, 1};
 

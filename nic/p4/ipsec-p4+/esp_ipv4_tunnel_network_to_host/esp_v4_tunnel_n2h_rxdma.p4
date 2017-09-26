@@ -405,7 +405,7 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
 {
 
     //Set all variables to scratch so that they are not removed
-    //IPSEC_CB_SCRATCH
+    IPSEC_CB_SCRATCH
 
     modify_field(ipsec_cb_scratch.expected_seq_no, expected_seq_no);
     modify_field(ipsec_cb_scratch.replay_seq_no_bmp, replay_seq_no_bmp);
@@ -422,11 +422,10 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
     modify_field(ipsec_int_header.ipsec_cb_index, ipsec_cb_index);
  
 
-    modify_field(ipsec_int_header.payload_start, p42p4plus_hdr.ipsec_payload_start+iv_size);
-    modify_field(ipsec_int_header.tailroom_offset,  p42p4plus_hdr.ipsec_payload_end-icv_size-2);
-    modify_field(ipsec_int_header.headroom, p42p4plus_hdr.ipsec_payload_start - p42p4plus_hdr.ip_hdr_size - 8 );
-    modify_field(ipsec_int_header.headroom_offset, (p42p4plus_hdr.ipsec_payload_start - p42p4plus_hdr.ip_hdr_size - 8));
-    modify_field(ipsec_int_header.payload_size, (p42p4plus_hdr.ipsec_payload_end-icv_size-2) - (p42p4plus_hdr.ipsec_payload_start+iv_size));
+    //Below code is only to generate the K correctly - there are some operations made on top of the assignements
+    modify_field(ipsec_int_header.payload_start, p42p4plus_hdr.ipsec_payload_start);
+    modify_field(ipsec_int_header.tailroom_offset,  p42p4plus_hdr.ipsec_payload_end);
+    modify_field(ipsec_int_header.headroom, p42p4plus_hdr.ip_hdr_size);
    
     modify_field(p42p4plus_hdr_scratch.seq_no,  p42p4plus_hdr.seq_no);
 
