@@ -443,6 +443,31 @@ modules:
         spec    : resp_rx_send_first_last.testspec
         ignore  : False
 
+    - module:
+        name    : RDMA_RX_SEND_FIRST_LAST_2SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_last_2sges
+        spec    : resp_rx_send_first_last_2sges.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_MID_LAST
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_mid_last
+        spec    : resp_rx_send_first_mid_last.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_MID_LAST_2SGES
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_mid_last_2sges
+        spec    : resp_rx_send_first_mid_last_2sges.testspec
+        ignore  : False
+
+    # TODO: Enable this test after Model bug is fixed for handling instrinsic drop
     #- module:
     #    name    : RDMA_RX_SEND_FIRST_LAST_PMTU_ERR
     #    enable  : True

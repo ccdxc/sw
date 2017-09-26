@@ -126,7 +126,7 @@ class RdmaSessionObjectHelper:
         for ssn in self.rdma_sessions:
             if ssn.IsFilterMatch(selectors):
                 ssns.append(ssn)
-        if selectors.maxrdmasessions == None:
+        if selectors.maxrdmasessions == 0:
             return ssns
         if selectors.maxrdmasessions >= len(ssns):
             return ssns
