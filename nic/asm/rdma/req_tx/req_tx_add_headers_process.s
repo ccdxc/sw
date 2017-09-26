@@ -13,39 +13,43 @@ struct sqcb1_t d;
 
 .align
 req_tx_add_headers_process:
-    // check_credits = FALSE
-    setcf          c5, [!c0]
-
-    // adjust_psn = FALSE
-    setcf          c6, [!c0]
-
     // get DMA cmd entry based on dma_cmd_index - dma_cmd[0]
-    DMA_CMD_I_BASE_GET(r7, r2, REQ_TX_DMA_CMD_START_FLIT_ID, r0)
-
-    DMA_PHV2PKT_SETUP(r7, common.p4_intr_global_tm_iport, common.p4_intr_global_glb_rsv)
+    DMA_CMD_I_BASE_GET(r6, r2, REQ_TX_DMA_CMD_START_FLIT_ID, r0)
+    DMA_PHV2PKT_SETUP(r6, common.p4_intr_global_tm_iport, common.p4_intr_global_glb_rsv)
     phvwri          p.common.p4_intr_global_tm_iport, TM_PORT_DMA
     phvwri          p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
     phvwri          p.common.p4_intr_global_tm_oq, 0
 
     // dma_cmd[1]
-    sub            r7, r7, 1, LOG_DMA_CMD_SIZE_BITS
-    DMA_PHV2PKT_SETUP(r7, p4plus_to_p4, p4plus_to_p4);
+    //sub            r6, r6, 1, LOG_DMA_CMD_SIZE_BITS
+    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+    DMA_PHV2PKT_SETUP(r6, p4plus_to_p4, p4plus_to_p4);
     phvwr          P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA
     phvwr          P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
     phvwr          P4PLUS_TO_P4_VLAN_ID, 0
 
     // dma_cmd[2]
-    sub            r7, r7, 1, LOG_DMA_CMD_SIZE_BITS
+    //sub            r6, r6, 1, LOG_DMA_CMD_SIZE_BITS
+    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
     // PHV_Q_DMA_CMD(phv_p, dma_cmd_index, DMA_CMD_TYPE_MEM_TO_PKT, hbm_addr_get(sqcb1_p->header_template_addr),
     //                 sizeof(header_template_t))
-    DMA_HBM_MEM2PKT_SETUP(r7, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr)
+    DMA_HBM_MEM2PKT_SETUP(r6, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr)
 
     // dma_cmd[3]
-    sub            r7, r7, 1, LOG_DMA_CMD_SIZE_BITS
-    DMA_PHV2PKT_SETUP(r7, bth, bth)
+    //sub            r6, r6, 1, LOG_DMA_CMD_SIZE_BITS
+    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+    DMA_PHV2PKT_SETUP(r6, bth, bth)
+
+    // dma_cmd[4]
+    addi           r6, r6, DMA_SWITCH_TO_NEXT_FLIT_BITS
 
     // phv_p->bth.dst_qp = sqcb1_p->dst_qp
     phvwr          BTH_DST_QP, d.dst_qp
+
+    // get tbl_id from s2s data
+    add            r1, k.args.tbl_id, r0
+    CAPRI_GET_TABLE_I_ARG(req_tx_phv_t, r1, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 0) // set for READ or atomic
 
     #c1 - last
     #c2 - first
@@ -53,12 +57,11 @@ req_tx_add_headers_process:
     #c4 - incr_lsn
     #c5 - check credits
     #c6 - adjust_psn/incr_psn
-    #c7 - 
 
     seq            c2, k.args.first, 1
     seq            c1, k.args.last, 1
 
-    // r1 = k.args.op_type
+    // r2 = k.args.op_type
     add            r2, k.args.op_type, r0
     beqi           r2, OP_TYPE_SEND, op_type_send
     nop
@@ -70,9 +73,40 @@ req_tx_add_headers_process:
     nop
     beqi           r2, OP_TYPE_WRITE_IMM, op_type_write_imm
     nop
+    beqi           r2, OP_TYPE_READ, op_type_read
+    nop
     b              end
     nop
 
+op_type_read:
+    //opc = read_req
+    add            r2, RDMA_PKT_OPC_RDMA_READ_REQ, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+     // add READ Req reth hdr
+    DMA_PHV2PKT_SETUP(r6, reth, reth) 
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
+
+    // rrqwqe_p = (rrqwqe_t *)(sqcb1_p->rrq_base_addr) + (rrqwqe_to_hdr_info_p->rrq_p_index * sizeof(rrqwqe_t))
+    add            r3, d.rrq_base_addr, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
+
+    phvwr          RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_READ
+    phvwr          RRQWQE_NUM_SGES, k.args.op.rd.num_sges
+    phvwr          RRQWQE_PSN, d.tx_psn           
+    phvwr          RRQWQE_MSN, d.msn
+    phvwr          RRQWQE_READ_LEN, k.args.op.rd.read_len
+    phvwr          RRQWQE_READ_WQE_SGE_LIST_ADDR, k.to_stage.wqe_addr
+
+    // dma_cmd[5]
+    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+    DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3) 
+
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
+
+    CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 1) // set for READ or atomic
+    
+    setcf          c4, [c0]
+    b              set_bth_opc
+    // adjust_psn = TRUE
+    setcf          c6, [c0] // Branch Delay Slot
 
 op_type_send_inv:
     tblwr.c2       d.inv_key, k.args.op.send_wr.inv_key
@@ -91,8 +125,7 @@ op_type_send_inv:
     .brcase 1 //not-first, last
         // add IMMETH hdr
         // dma_cmd[4]
-        addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
-        DMA_PHV2PKT_SETUP(r7, ieth, ieth)
+        DMA_PHV2PKT_SETUP(r6, ieth, ieth)
         add            r2, RDMA_PKT_OPC_SEND_LAST_WITH_INV, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         b              set_bth_opc
         phvwr          IETH_R_KEY, d.inv_key //branch delay slot
@@ -105,8 +138,7 @@ op_type_send_inv:
     .brcase 3 //first, last (only)
         // add IMMETH hdr
         // dma_cmd[4]
-        addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
-        DMA_PHV2PKT_SETUP(r7, ieth, ieth)
+        DMA_PHV2PKT_SETUP(r6, ieth, ieth)
         add            r2, RDMA_PKT_OPC_SEND_ONLY_WITH_INV, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         b              set_bth_opc
         phvwr          IETH_R_KEY, k.args.op.send_wr.inv_key //branch delay slot
@@ -115,6 +147,7 @@ op_type_send_inv:
 op_type_send_imm:
     setcf          c3, [c1]
     tblwr.c2       d.imm_data, k.args.op.send_wr.imm_data 
+
 op_type_send:
 
     //figure out the opcode
@@ -134,8 +167,7 @@ op_type_send:
         add            r2, RDMA_PKT_OPC_SEND_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         // add IMMETH hdr
         // dma_cmd[4]
-        addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
-        DMA_PHV2PKT_SETUP(r7, immeth, immeth)
+        DMA_PHV2PKT_SETUP(r6, immeth, immeth)
         add            r2, RDMA_PKT_OPC_SEND_LAST_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         b              set_bth_opc
         phvwr          IMMDT_DATA, d.imm_data //branch delay slot
@@ -150,8 +182,7 @@ op_type_send:
         add            r2, RDMA_PKT_OPC_SEND_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         // add IMMETH hdr
         // dma_cmd[4]
-        addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
-        DMA_PHV2PKT_SETUP(r7, immeth, immeth)
+        DMA_PHV2PKT_SETUP(r6, immeth, immeth)
         add            r2, RDMA_PKT_OPC_SEND_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         b              set_bth_opc
         phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data //branch delay slot
@@ -160,18 +191,15 @@ op_type_send:
 op_type_write_imm:
     setcf          c3, [c1]
     tblwr.c2       d.imm_data, k.args.op.send_wr.imm_data 
+
 op_type_write:
-
     setcf          c4, [c1 & !c3]
-
     // if first, add RETH hdr
     // dma_cmd[4]
     //jump to next flit
-    addi.c2        r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
-    DMA_PHV2PKT_SETUP_C(r7, reth, reth, c2)
+    DMA_PHV2PKT_SETUP_C(r6, reth, reth, c2)
 
     //figure out the opcode
-
     .csbegin
 
     cswitch [c2, c1]
@@ -184,13 +212,11 @@ op_type_write:
 
     .brcase 1 //not-first, last
         bcf            [!c3], set_bth_opc
-        add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
-        // add IMMETH hdr
-        // dma_cmd[4]
+        add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
+        // dma_cmd[4] - add IMMETH hdr
         //jump to next flit
-        addi           r7, r7, DMA_SWITCH_TO_NEXT_FLIT_BITS
-        DMA_PHV2PKT_SETUP(r7, immeth, immeth)
-        add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        DMA_PHV2PKT_SETUP(r6, immeth, immeth)
+        add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         b              set_bth_opc
         phvwr          IMMDT_DATA, d.imm_data //branch delay slot
 
@@ -205,8 +231,8 @@ op_type_write:
         add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         // add IMMETH hdr
         // dma_cmd[5]
-        sub            r7, r7, 1, LOG_DMA_CMD_SIZE_BITS
-        DMA_PHV2PKT_SETUP(r7, immeth, immeth)
+        DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+        DMA_PHV2PKT_SETUP(r6, immeth, immeth)
         add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         b              set_bth_opc
         phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data //branch delay slot
@@ -216,7 +242,6 @@ op_type_write:
 set_bth_opc:
     phvwr          BTH_OPCODE, r2
     b              end
-
     // check_credits = TRUE
     setcf          c5, [c0] // Branch Delay Slot
 
@@ -227,14 +252,14 @@ end:
 
     // if (adjust_psn)
     // sqcb1_p->tx_psn += rrqwqe_to_hdr_info_p->op.rd.read_len >> rrqwqe_to_hdr_info_p->log_pmtu
-    add.c6         r3, k.args.log_pmtu, r0
-    srlv.c6        r3, k.args.op.rd.read_len, r3
-    tblmincr.c6    d.tx_psn, 24, r3
+    add            r3, k.args.log_pmtu, r0
+    srlv           r3, k.args.op.rd.read_len, r3
+    tblmincr       d.tx_psn, 24, r3
 
     // sqcb1_p->tx_psn += (rrqwqe_to_hdr_info_p->op.rd.read_len & ((1 << rrqwqe_to_hdr_info_p->log_pmtu) -1)) ? 1 : 0
-    add.c6         r3, k.args.op.rd.read_len, r0
-    mincr.c6       r3, k.args.log_pmtu, r0
-    sle.c6         c6, r3, r0
+    add            r3, k.args.op.rd.read_len, r0
+    mincr          r3, k.args.log_pmtu, r0
+    sle            c6, r3, r0
 
 inc_psn:
     // sqcb1_p->tx_psn++
@@ -242,16 +267,10 @@ inc_psn:
 
     // if (rrqwqe_to_hdr_info_p->last)
     //     sqcb1_p->ssn++;
-    //seq            c1, k.args.last, 1
     tblmincri.c1   d.ssn, 24, 1
 
+    // inc lsn for read, atomic, write (without imm)
     tblmincri.c4   d.lsn, 24, 1
-
-    //c4 is free
-
-    // get tbl_id from s2s data
-    add            r1, k.args.tbl_id, r0
-    CAPRI_GET_TABLE_I_ARG(req_tx_phv_t, r1, r7)
 
     // if (check_credits && (sqcb1_p->ssn > sqcb1_p->lsn))
     //     phv_p->bth.a = 1
@@ -265,11 +284,11 @@ inc_psn:
     CAPRI_SET_FIELD(r7, INFO_OUT_T, current_sge_id, k.args.op.send_wr.current_sge_id)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, current_sge_offset, k.args.op.send_wr.current_sge_offset)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, num_sges, k.args.op.send_wr.num_sges)
+    CAPRI_SET_FIELD(r7, INFO_OUT_T, log_rrq_size, d.log_rrq_size)
     //CAPRI_SET_FIELD(r7, INFO_OUT_T, wqe_addr, k.args.wqe_addr)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, last, k.args.last)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, first, k.args.first)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, op_type, k.args.op_type)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 0) // TODO set this only for READ or atomic
     CAPRI_SET_FIELD(r7, INFO_OUT_T, tbl_id, k.args.tbl_id)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, set_li_fence, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, set_fence, 0)

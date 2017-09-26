@@ -614,6 +614,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 {
     uint32_t     lif = spec.hw_lif_id();
     uint8_t      num_sq_wqes, num_rq_wqes;
+    uint8_t      num_rrq_wqes, num_rsq_wqes;
     uint32_t     sqwqe_size, rqwqe_size;
     sqcb_t       sqcb;
     sqcb_t       *sqcb_p = &sqcb;
@@ -631,7 +632,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
                      __FUNCTION__, spec.qp_num(), spec.pd(), spec.svc(), spec.pmtu());
     HAL_TRACE_DEBUG("{}: Inputs: sq_wqe_size: {} num_sq_wqes: {} rq_wqe_size: {} "
                     "num_rq_wqes: {} hostmem_pg_size: {} num_rrq_wqes: {} "
-                    "num_rrq_wqes: {} num_rrq_wqes: {} ", __FUNCTION__,
+                    "num_rsq_wqes: {} ", __FUNCTION__,
                     spec.sq_wqe_size(), spec.num_sq_wqes(), spec.rq_wqe_size(),
                     spec.num_rq_wqes( ), spec.hostmem_pg_size(), spec.num_rrq_wqes(),
                     spec.num_rsq_wqes());
@@ -647,6 +648,10 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqwqe_size = roundup_to_pow_2(spec.rq_wqe_size());
     num_rq_wqes = roundup_to_pow_2(spec.num_rq_wqes());
 
+    num_rrq_wqes = roundup_to_pow_2(spec.num_rrq_wqes());
+
+    num_rsq_wqes = roundup_to_pow_2(spec.num_rsq_wqes());
+
     HAL_TRACE_DEBUG("sqwqe_size: {} rqwqe_size: {}",
                     sqwqe_size, rqwqe_size);
     
@@ -658,14 +663,14 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     // RRQ is defined as last ring in the SQCB ring array
     // We should skip scheduling for the RRQ, so set total
     //  rings as one less than max/total
-    sqcb_p->sqcb0.ring_header.total_rings = MAX_SQ_RINGS;
-    sqcb_p->sqcb0.ring_header.host_rings = MAX_SQ_RINGS;
+    sqcb_p->sqcb0.ring_header.total_rings = MAX_SQ_RINGS - 1;
+    sqcb_p->sqcb0.ring_header.host_rings = MAX_SQ_RINGS - 1;
     sqcb_p->sqcb0.pt_base_addr =
         rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.sq_lkey()));
     sqcb_p->sqcb1.header_template_addr = header_template_addr;
-    sqcb_p->sqcb1.rrq_size = spec.num_rrq_wqes();
+    sqcb_p->sqcb1.log_rrq_size = log2(num_rrq_wqes);
     sqcb_p->sqcb1.rrq_base_addr =
-        g_rdma_manager->HbmAlloc(sizeof(rrqwqe_t) * sqcb_p->sqcb1.rrq_size);
+        g_rdma_manager->HbmAlloc(sizeof(rrqwqe_t) << sqcb_p->sqcb1.log_rrq_size);
     rrq_base_addr = sqcb_p->sqcb1.rrq_base_addr;
     HAL_ASSERT(rrq_base_addr);
     HAL_ASSERT(rrq_base_addr != (uint32_t)-ENOMEM);
@@ -708,8 +713,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.pt_base_addr =
         rdma_pt_addr_get(lif, rdma_mr_pt_base_get(lif, spec.rq_lkey()));
     HAL_ASSERT(rqcb.rqcb0.pt_base_addr);
-    rqcb.rqcb0.rsq_size = spec.num_rsq_wqes();
-    rqcb.rqcb0.rsq_base_addr = g_rdma_manager->HbmAlloc(sizeof(rsqwqe_t) * rqcb.rqcb0.rsq_size);
+    rqcb.rqcb0.log_rsq_size = log2(num_rsq_wqes);
+    rqcb.rqcb0.rsq_base_addr = g_rdma_manager->HbmAlloc(sizeof(rsqwqe_t) << rqcb.rqcb0.log_rsq_size);
     rsq_base_addr = rqcb.rqcb0.rsq_base_addr;
     HAL_ASSERT(rsq_base_addr);
     HAL_ASSERT(rsq_base_addr  != (uint32_t)-ENOMEM);

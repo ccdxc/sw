@@ -30,6 +30,16 @@
 #define P4PLUS_TO_P4_FLAGS      p.p4plus_to_p4.flags
 #define P4PLUS_TO_P4_VLAN_ID    p.p4plus_to_p4.vlan_id
 
+#define RRQWQE_READ_RSP_OR_ATOMIC         p.rrqwqe.read_rsp_or_atomic
+#define RRQWQE_NUM_SGES                   p.rrqwqe.num_sges
+#define RRQWQE_PSN                        p.rrqwqe.psn
+#define RRQWQE_MSN                        p.rrqwqe.msn
+#define RRQWQE_READ_LEN                   p.rrqwqe.read.len
+#define RRQWQE_READ_WQE_SGE_LIST_ADDR     p.rrqwqe.read.wqe_sge_list_addr
+#define RRQWQE_ATOMIC_SGE_VA              p.rrqwqe.atomic.sge.va
+#define RRQWQE_ATOMIC_SGE_LEN             p.rrqwqe.atomic.sge.len
+#define RRQWQE_ATOMIC_SGE_LKEY            p.rrqwqe.atomic.sge.lkey
+
 struct p4plus_to_p4_header_t {
     p4plus_app_id      : 4;
     pad                : 4;
@@ -45,13 +55,43 @@ struct p4plus_to_p4_header_t {
 // phv 
 struct req_tx_phv_t {
     // dma commands
-    dma_cmds : TOTAL_DMA_CMD_BITS;
+
+    /* flit 11 */
+    union {
+        struct rrqwqe_t rrqwqe;
+        struct {
+            dma_cmd12 : 128;
+            dma_cmd13 : 128;
+            dma_cmd14 : 128;
+            dma_cmd15 : 128;
+        };
+    };
+
+    /* flit 10 */
+    dma_cmd8 : 128;
+    dma_cmd9 : 128;
+    dma_cmd10 : 128;
+    dma_cmd11 : 128;
+
+    /* flit 9 */
+    dma_cmd4 : 128;
+    dma_cmd5 : 128;
+    dma_cmd6 : 128;
+    dma_cmd7 : 128;
+ 
+    /* flit 8 */
+    dma_cmd0 : 128;
+    dma_cmd1 : 128;
+    dma_cmd2 : 128;
+    dma_cmd3 : 128;
+
     /* flit 7 */
     rsvd_flit_7 : 392;
     struct p4plus_to_p4_header_t p4plus_to_p4;
     rsvd       : 6;
     in_progress: 1;
     rrq_empty: 1;
+
     /* flit 6 */
     struct rdma_ieth_t ieth;
     struct rdma_atomiceth_t atomiceth;

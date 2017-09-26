@@ -27,7 +27,7 @@ struct rqcb0_t {
 
     rsq_base_addr: 32;
 
-    rsq_size: 8;
+    log_rsq_size: 8;
     token_id: 8;
     nxt_to_go_token_id: 8;
     rsq_pindex_prime: 8;

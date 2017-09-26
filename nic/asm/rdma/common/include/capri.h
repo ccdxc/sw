@@ -467,6 +467,9 @@ struct capri_dma_cmd_mem2mem_t {
     sll         _tmp_r, _tmp_r, LOG_DMA_CMD_SIZE_BITS; \
     sub         _base_r, _base_r, _tmp_r;
     
+#define DMA_NEXT_CMD_I_BASE_GET(_base_r, _cmd_idx) \
+    sub         _base_r, _base_r, 1, LOG_DMA_CMD_SIZE_BITS
+
 // x = offsetof(_field)
 // flit = x / 512
 // base = flit * 512
@@ -488,6 +491,19 @@ struct capri_dma_cmd_mem2mem_t {
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, addr), sizeof(DMA_CMD_PHV2MEM_T.addr), _addr; \
     seq          _cf, _addr[63], 1;                      \
     phvwrp._cf   _base_r, offsetof(DMA_CMD_PHV2MEM_T, host_addr), sizeof(DMA_CMD_PHV2MEM_T.host_addr), 1; \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, cmdtype), sizeof(DMA_CMD_PHV2MEM_T.cmdtype), DMA_CMD_TYPE_PHV2MEM;
+
+#define DMA_HBM_PHV2MEM_SETUP(_base_r, _start, _end, _addr)        \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_start), sizeof(DMA_CMD_PHV2MEM_T.phv_start), PHV_FIELD_START_OFFSET(_start); \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_end), sizeof(DMA_CMD_PHV2MEM_T.phv_end), PHV_FIELD_END_OFFSET(_end) - 1; \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, addr), sizeof(DMA_CMD_PHV2MEM_T.addr), _addr; \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, cmdtype), sizeof(DMA_CMD_PHV2MEM_T.cmdtype), DMA_CMD_TYPE_PHV2MEM;
+
+#define DMA_HOST_PHV2MEM_SETUP(_base_r, _start, _end, _addr)        \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_start), sizeof(DMA_CMD_PHV2MEM_T.phv_start), PHV_FIELD_START_OFFSET(_start); \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_end), sizeof(DMA_CMD_PHV2MEM_T.phv_end), PHV_FIELD_END_OFFSET(_end) - 1; \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, addr), sizeof(DMA_CMD_PHV2MEM_T.addr), _addr; \
+    phvwrp        _base_r, offsetof(DMA_CMD_PHV2MEM_T, host_addr), sizeof(DMA_CMD_PHV2MEM_T.host_addr), 1; \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, cmdtype), sizeof(DMA_CMD_PHV2MEM_T.cmdtype), DMA_CMD_TYPE_PHV2MEM;
 
 #define DMA_PHV2PKT_SETUP(_base_r, _start, _end)         \

@@ -54,7 +54,8 @@ struct req_tx_sge_to_lkey_info_t {
 
 struct rd_t {
     read_len                      : 32;
-    pad                           : 64;
+    num_sges                      : 8;
+    pad                           : 56;
 };
 
 struct send_wr_t {
@@ -99,6 +100,7 @@ struct req_tx_sqcb_write_back_info_t {
     first                        : 1;
     last                         : 1;
     incr_rrq_pindex              : 1;
+    log_rrq_size                 : 5;
     tbl_id                       : 3;
     set_fence                    : 1;
     set_li_fence                 : 1;
@@ -110,7 +112,7 @@ struct req_tx_sqcb_write_back_info_t {
     op_type                      : 8;
     sq_c_index                   : 16;
     current_sge_offset           : 32;
-    pad                          : 75;
+    pad                          : 70;
 };
 
 struct req_tx_to_stage_t {

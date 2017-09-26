@@ -350,6 +350,16 @@ struct ack_info_t {
     psn: 24;
 };
 
+#define SGE_T struct sge_t
+#define SIZEOF_SGE_T 16 //Bytes
+#define SIZEOF_SGE_T_BITS (SIGEOF_SGE_T * BITS_PER_BYTE)
+#define LOG_SIZEOF_SGE_T   4   // 2^4 = 16 Bytes
+#define LOG_SIZEOF_SGE_T_BITS   (LOG_SIZEOF_SGE_T + LOG_BITS_PER_BYTE)
+struct sge_t {
+    va: 64;
+    len: 32;
+    l_key: 32;
+};
 
 #define OP_TYPE_SEND                0
 #define OP_TYPE_SEND_INV            1
@@ -398,13 +408,52 @@ struct sqwqe_write_t {
     r_key              : 32;
 };
 
+// Read
+
+struct sqwqe_read_t {
+    rsvd               : 32;
+    va                 : 64;
+    length             : 32;
+    r_key              : 32;
+};
+
 struct sqwqe_t {
     struct sqwqe_base_t base;
     union {
         struct sqwqe_send_t send;
         struct sqwqe_write_t write;
+        struct sqwqe_read_t read;
     };
     pad : 256;
+};
+
+#define LOG_RRQ_WQE_SIZE 6
+struct rrqwqe_read_t {
+    len                : 32;
+    wqe_sge_list_addr  : 64;
+    pad                : 352; 
+};
+
+struct rrqwqe_atomic_t {
+    struct sge_t sge;
+    op_type            : 8;
+    pad                : 312;
+
+};
+
+#define RRQ_OP_TYPE_READ 0
+#define RRQ_OP_TYPE_ATOMIC 1
+
+struct rrqwqe_t {
+    read_rsp_or_atomic : 1;
+    num_sges           : 7;
+    psn                : 24;
+    msn                : 24;
+    rsvd               : 8;
+    union {
+        struct rrqwqe_read_t   read;
+        struct rrqwqe_atomic_t atomic;
+    };
 };
 
 #define RQWQE_SGE_OFFSET  32
@@ -417,17 +466,6 @@ struct rqwqe_base_t {
     num_sges: 8;
     rsvd: 184;
     rsvd2:256;
-};
-
-#define SGE_T struct sge_t
-#define SIZEOF_SGE_T 16 //Bytes
-#define SIZEOF_SGE_T_BITS (SIGEOF_SGE_T * BITS_PER_BYTE)
-#define LOG_SIZEOF_SGE_T   4   // 2^4 = 16 Bytes
-#define LOG_SIZEOF_SGE_T_BITS   (LOG_SIZEOF_SGE_T + LOG_BITS_PER_BYTE)
-struct sge_t {
-    va: 64;
-    len: 32;
-    l_key: 32;
 };
 
 #define     CQ_STATUS_SUCCESS               0

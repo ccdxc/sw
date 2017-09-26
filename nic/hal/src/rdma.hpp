@@ -948,7 +948,7 @@ typedef struct sqcb1_s {
     uint32_t tx_psn:24;      //tx
     uint32_t dst_qp:24;      //tx
     uint32_t cq_id:24;       //rx
-    uint8_t  rrq_size;
+    uint8_t  log_rrq_size;
     uint32_t inv_key;
     uint32_t imm_data;
     uint32_t rrq_base_addr;  //common
@@ -1000,7 +1000,7 @@ typedef struct rqcb0_s {
     uint8_t  rsq_pindex_prime;
     uint8_t  nxt_to_go_token_id;
     uint8_t  token_id;
-    uint8_t  rsq_size;
+    uint8_t  log_rsq_size;
 
     uint32_t rsq_base_addr;
 

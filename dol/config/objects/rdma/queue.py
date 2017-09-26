@@ -48,7 +48,7 @@ class RdmaRQstate(Packet):
 
         IntField("rsq_base_addr", 0),
 
-        ByteField("rsq_size", 0),
+        ByteField("log_rsq_size", 0),
         ByteField("token_id", 0),
         ByteField("nxt_to_go_token_id", 0),
         ByteField("rsq_pindex_prime", 0),                                            
@@ -136,7 +136,7 @@ class RdmaSQstate(Packet):
         IntField("rrq_base_addr", 0),
         IntField("imm_data", 0),
         IntField("inv_key", 0),
-        ByteField("rrq_size", 0),
+        ByteField("log_rrq_size", 0),
         X3BytesField("cq_id", 0),
         X3BytesField("dst_qp", 0),
         X3BytesField("tx_psn", 0),

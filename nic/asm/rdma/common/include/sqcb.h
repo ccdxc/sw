@@ -9,8 +9,8 @@
 
 #define SQ_P_INDEX  d.{ring0.pindex}.hx
 #define SQ_C_INDEX  d.{ring0.cindex}.hx
-#define RRQ_P_INDEX d.ring5.pindex
-#define RRQ_C_INDEX d.ring5.cindex
+#define RRQ_P_INDEX d.{ring5.pindex}.hx
+#define RRQ_C_INDEX d.{ring5.cindex}.hx
 
 #define SQCB_T struct sqcb_t
 #define SQCB0_T struct sqcb0_t
@@ -53,7 +53,7 @@ struct sqcb1_t {
     rrq_base_addr                  : 32;
     imm_data                       : 32;
     inv_key                        : 32;
-    rrq_size                       : 8;
+    log_rrq_size                   : 8;
     cq_id                          : 24;
     dst_qp                         : 24;
     tx_psn                         : 24;

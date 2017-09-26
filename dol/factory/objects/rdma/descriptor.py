@@ -42,6 +42,13 @@ class RdmaSqDescriptorWrite(Packet):
         IntField("r_key", 0),
     ]
 
+class RdmaSqDescriptorRead(Packet):
+    fields_desc = [
+        IntField("rsvd", 0),
+        LongField("va", 0),
+        IntField("len", 0),
+        IntField("r_key", 0),
+    ]
 
 class RdmaRrqDescriptorBase(Packet):
     fields_desc = [
@@ -188,6 +195,15 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            r_key = self.spec.fields.write.r_key if hasattr(self.spec.fields.write, 'r_key') else 0
            write = RdmaSqDescriptorWrite(imm_data=imm_data, va=va, len=dma_len, r_key=r_key)
            desc = desc/write
+
+        if hasattr(self.spec.fields, 'read'):
+           print("Reading Read")
+           rsvd = self.spec.fields.read.rsvd if hasattr(self.spec.fields.read, 'rsvd') else 0
+           va = self.spec.fields.read.va if hasattr(self.spec.fields.read, 'va') else 0
+           dma_len = self.spec.fields.read.len if hasattr(self.spec.fields.read, 'len') else 0
+           r_key = self.spec.fields.read.r_key if hasattr(self.spec.fields.read, 'r_key') else 0
+           read = RdmaSqDescriptorRead(rsvd=rsvd, va=va, len=dma_len, r_key=r_key)
+           desc = desc/read
 
         for sge in self.spec.fields.sges:
             sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
