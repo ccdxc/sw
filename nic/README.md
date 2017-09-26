@@ -53,7 +53,9 @@ development tasks below, please contact <erikh@pensando.io>.
 
 ```json
 {
-      "insecure-registries" : ["srv1.pensando.io:5000"]
+    "insecure-registries" : ["srv1.pensando.io:5000", "registry.test.pensando.io:5000"],
+    "ipv6": true,
+    "fixed-cidr-v6": "2001:db8:1::/64"
 }
 ```
 
