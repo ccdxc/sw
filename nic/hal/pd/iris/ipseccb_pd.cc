@@ -21,7 +21,7 @@ void *
 ipseccb_pd_get_hw_key_func (void *entry)
 {
     HAL_ASSERT(entry != NULL);
-    return (void *)&(((pd_ipseccb_t *)entry)->hw_id);
+    return (void *)&(((pd_ipseccb_encrypt_t *)entry)->hw_id);
 }
 
 uint32_t
@@ -62,7 +62,7 @@ p4pd_get_ipsec_rx_stage0_prog_addr(uint64_t* offset)
 }
 
 static hal_ret_t 
-p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_t* ipseccb_pd, bool del)
+p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del)
 {
     common_p4plus_stage0_app_header_table_d     data = {0};
     hal_ret_t                                   ret = HAL_RET_OK;
@@ -118,7 +118,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_t* ipseccb_pd, bool del)
 }
 
 hal_ret_t
-p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_t* ipseccb_pd, bool del)
+p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del)
 {
     pd_ipseccb_ip4_hdr_t ip_hdr = {0};
     hal_ret_t                                   ret = HAL_RET_OK;
@@ -149,7 +149,7 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_t* ipseccb_pd, bool del)
 }
 
 hal_ret_t 
-p4pd_add_or_del_ipseccb_rxdma_entry(pd_ipseccb_t* ipseccb_pd, bool del)
+p4pd_add_or_del_ipseccb_rxdma_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -169,7 +169,7 @@ cleanup:
 }
 
 hal_ret_t 
-p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_t* ipseccb_pd)
+p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
 {
     common_p4plus_stage0_app_header_table_d data = {0};
 
@@ -188,7 +188,7 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_t* ipseccb_pd)
 }
 
 hal_ret_t 
-p4pd_get_ipseccb_rxdma_entry(pd_ipseccb_t* ipseccb_pd)
+p4pd_get_ipseccb_rxdma_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
     
@@ -224,13 +224,13 @@ p4pd_get_ipsec_tx_stage0_prog_addr(uint64_t* offset)
 }
 
 hal_ret_t 
-p4pd_add_or_del_ipseccb_txdma_entry(pd_ipseccb_t* ipseccb_pd, bool del)
+p4pd_add_or_del_ipseccb_txdma_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del)
 {
     return HAL_RET_OK;
 }
 
 hal_ret_t 
-p4pd_get_ipseccb_txdma_entry(pd_ipseccb_t* ipseccb_pd)
+p4pd_get_ipseccb_txdma_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
 {
     /* TODO */
     return HAL_RET_OK;
@@ -239,7 +239,7 @@ p4pd_get_ipseccb_txdma_entry(pd_ipseccb_t* ipseccb_pd)
 /**************************/
 
 ipseccb_hw_id_t
-pd_ipseccb_get_base_hw_index(pd_ipseccb_t* ipseccb_pd)
+pd_ipseccb_get_base_hw_index(pd_ipseccb_encrypt_t* ipseccb_pd)
 {
     HAL_ASSERT(NULL != ipseccb_pd);
     HAL_ASSERT(NULL != ipseccb_pd->ipseccb);
@@ -253,7 +253,7 @@ pd_ipseccb_get_base_hw_index(pd_ipseccb_t* ipseccb_pd)
 }
 
 hal_ret_t
-p4pd_add_or_del_ipseccb_entry(pd_ipseccb_t* ipseccb_pd, bool del) 
+p4pd_add_or_del_ipseccb_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del) 
 {
     hal_ret_t                   ret = HAL_RET_OK;
  
@@ -273,7 +273,7 @@ err:
 
 static
 hal_ret_t
-p4pd_get_ipseccb_entry(pd_ipseccb_t* ipseccb_pd) 
+p4pd_get_ipseccb_entry(pd_ipseccb_encrypt_t* ipseccb_pd) 
 {
     hal_ret_t                   ret = HAL_RET_OK;
     
@@ -302,7 +302,7 @@ hal_ret_t
 pd_ipseccb_create (pd_ipseccb_args_t *args)
 {
     hal_ret_t               ret;
-    pd_ipseccb_s              *ipseccb_pd;
+    pd_ipseccb_encrypt_s              *ipseccb_pd;
 
     HAL_TRACE_DEBUG("Creating pd state for IPSEC CB.");
 
@@ -349,7 +349,7 @@ pd_ipseccb_update (pd_ipseccb_args_t *args)
     }
 
     ipseccb_t*                ipseccb = args->ipseccb;
-    pd_ipseccb_t*             ipseccb_pd = (pd_ipseccb_t*)ipseccb->pd;
+    pd_ipseccb_encrypt_t*             ipseccb_pd = (pd_ipseccb_encrypt_t*)ipseccb->pd;
 
     HAL_TRACE_DEBUG("IPSECCB pd update");
     
@@ -371,7 +371,7 @@ pd_ipseccb_delete (pd_ipseccb_args_t *args)
     }
 
     ipseccb_t*                ipseccb = args->ipseccb;
-    pd_ipseccb_t*             ipseccb_pd = (pd_ipseccb_t*)ipseccb->pd;
+    pd_ipseccb_encrypt_t*             ipseccb_pd = (pd_ipseccb_encrypt_t*)ipseccb->pd;
 
     HAL_TRACE_DEBUG("IPSECCB pd delete");
     
@@ -392,7 +392,7 @@ hal_ret_t
 pd_ipseccb_get (pd_ipseccb_args_t *args)
 {
     hal_ret_t               ret;
-    pd_ipseccb_t              ipseccb_pd;
+    pd_ipseccb_encrypt_t              ipseccb_pd;
 
     HAL_TRACE_DEBUG("IPSECCB pd get for id: {}", args->ipseccb->cb_id);
 

@@ -27,6 +27,7 @@
     .param      cpu_tx_stage0_start
     .param      ipfix_start
     .param      resp_tx_rqcb_process
+    .param      esp_ipv4_tunnel_n2h_txdma_stage0
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -63,12 +64,17 @@ tcp_tx_stage0:
 
 .align
 ipsec_tx_stage0:
-    j esp_ipv4_tunnel_h2n_txdma_stage0 
+    j esp_ipv4_tunnel_h2n_txdma_stage0
     nop
 
 .align
 tls_tx_stage0:
     j   tls_stage0
+    nop
+
+.align 
+ipsec_tx_n2h_stage0:
+    j esp_ipv4_tunnel_n2h_txdma_stage0
     nop
 
 .align

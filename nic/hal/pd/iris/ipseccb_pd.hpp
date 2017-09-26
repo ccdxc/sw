@@ -26,7 +26,7 @@ typedef uint64_t    ipseccb_hw_id_t;
 
 // ipseccb pd state
 
-struct pd_ipseccb_s {
+struct pd_ipseccb_encrypt_s {
     ipseccb_t           *ipseccb;              // PI IPSEC CB
 
     // operational state of ipseccb pd
@@ -50,12 +50,12 @@ typedef struct pd_ipseccb_ip4_hdr_s {
 } pd_ipseccb_ip4_hdr_t;
 
 // allocate a ipseccb pd instance
-static inline pd_ipseccb_t *
+static inline pd_ipseccb_encrypt_t *
 ipseccb_pd_alloc (void)
 {
-    pd_ipseccb_t    *ipseccb_pd;
+    pd_ipseccb_encrypt_t    *ipseccb_pd;
 
-    ipseccb_pd = (pd_ipseccb_t *)g_hal_state_pd->ipseccb_slab()->alloc();
+    ipseccb_pd = (pd_ipseccb_encrypt_t *)g_hal_state_pd->ipseccb_slab()->alloc();
     if (ipseccb_pd == NULL) {
         return NULL;
     }
@@ -64,8 +64,8 @@ ipseccb_pd_alloc (void)
 }
 
 // initialize a ipseccb pd instance
-static inline pd_ipseccb_t *
-ipseccb_pd_init (pd_ipseccb_t *ipseccb_pd)
+static inline pd_ipseccb_encrypt_t *
+ipseccb_pd_init (pd_ipseccb_encrypt_t *ipseccb_pd)
 {
     if (!ipseccb_pd) {
         return NULL;
@@ -79,7 +79,7 @@ ipseccb_pd_init (pd_ipseccb_t *ipseccb_pd)
 }
 
 // allocate and initialize a ipseccb pd instance
-static inline pd_ipseccb_t *
+static inline pd_ipseccb_encrypt_t *
 ipseccb_pd_alloc_init (void)
 {
     return ipseccb_pd_init(ipseccb_pd_alloc());
@@ -87,7 +87,7 @@ ipseccb_pd_alloc_init (void)
 
 // free ipseccb pd instance
 static inline hal_ret_t
-ipseccb_pd_free (pd_ipseccb_t *ipseccb_pd)
+ipseccb_pd_free (pd_ipseccb_encrypt_t *ipseccb_pd)
 {
     g_hal_state_pd->ipseccb_slab()->free(ipseccb_pd);
     return HAL_RET_OK;
@@ -95,24 +95,24 @@ ipseccb_pd_free (pd_ipseccb_t *ipseccb_pd)
 
 // insert ipseccb pd state in all meta data structures
 static inline hal_ret_t
-add_ipseccb_pd_to_db (pd_ipseccb_t *ipseccb_pd)
+add_ipseccb_pd_to_db (pd_ipseccb_encrypt_t *ipseccb_pd)
 {
     g_hal_state_pd->ipseccb_hwid_ht()->insert(ipseccb_pd, &ipseccb_pd->hw_ht_ctxt);
     return HAL_RET_OK;
 }
 
 static inline hal_ret_t
-del_ipseccb_pd_from_db(pd_ipseccb_t *ipseccb_pd)
+del_ipseccb_pd_from_db(pd_ipseccb_encrypt_t *ipseccb_pd)
 {
     g_hal_state_pd->ipseccb_hwid_ht()->remove(&ipseccb_pd->hw_ht_ctxt);
     return HAL_RET_OK;
 }
 
 // find a ipseccb pd instance given its hw id
-static inline pd_ipseccb_t *
+static inline pd_ipseccb_encrypt_t *
 find_ipseccb_by_hwid (ipseccb_hw_id_t hwid)
 {
-    return (pd_ipseccb_t *)g_hal_state_pd->ipseccb_hwid_ht()->lookup(&hwid);
+    return (pd_ipseccb_encrypt_t *)g_hal_state_pd->ipseccb_hwid_ht()->lookup(&hwid);
 }
 
 extern void *ipseccb_pd_get_hw_key_func(void *entry);
