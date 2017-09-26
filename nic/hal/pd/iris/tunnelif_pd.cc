@@ -474,18 +474,22 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
         memcpy(act.tunnel_rewrite_encap_vxlan.mac_sa, mac, ETH_ADDR_LEN);
         memrev(act.tunnel_rewrite_encap_vxlan.mac_sa, ETH_ADDR_LEN);
         
-        memcpy(act.tunnel_rewrite_encap_vxlan.ip_sa, &pi_if->vxlan_ltep.addr,
+        memcpy(&act.tunnel_rewrite_encap_vxlan.ip_sa, &pi_if->vxlan_ltep.addr,
                sizeof(ipvx_addr_t));
-        memcpy(act.tunnel_rewrite_encap_vxlan.ip_da, &pi_if->vxlan_rtep.addr,
+        memcpy(&act.tunnel_rewrite_encap_vxlan.ip_da, &pi_if->vxlan_rtep.addr,
                sizeof(ipvx_addr_t));
         if (v4_valid) {
             act.tunnel_rewrite_encap_vxlan.ip_type = IP_HEADER_TYPE_IPV4;
         } else {
+            HAL_TRACE_ERR("PD-TUNNELIF::{}: Invalid outer encap header",
+                          __FUNCTION__);
+            ret = HAL_RET_ERR;
+            goto fail_flag;
+#ifdef PHASE2
             act.tunnel_rewrite_encap_vxlan.ip_type = IP_HEADER_TYPE_IPV6;
-        }
-        if (!v4_valid) {
-            memrev(act.tunnel_rewrite_encap_vxlan.ip_sa, IP6_ADDR8_LEN); 
+            memrev(act.tunnel_rewrite_encap_vxlan.ip_sa, IP6_ADDR8_LEN);
             memrev(act.tunnel_rewrite_encap_vxlan.ip_da, IP6_ADDR8_LEN);
+#endif /* PHASE2 */
         }
         act.tunnel_rewrite_encap_vxlan.vlan_valid = vlan_v;
         act.tunnel_rewrite_encap_vxlan.vlan_id = vlan_id;

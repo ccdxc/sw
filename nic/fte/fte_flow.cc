@@ -334,6 +334,13 @@ hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_ID;
         attrs.tnnl_vnid = header.vxlan.tenant_id;
         break;
+    case FTE_HEADER_erspan:
+        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_ERSPAN_ID;
+        break;
+    case FTE_HEADER_ipsec_esp:
+        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_IPSEC_ID;
+        break;
+#ifdef PHASE2
     case FTE_HEADER_vxlan_gpe:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_GPE_ID;
         attrs.tnnl_vnid = header.vxlan_gpe.tenant_id;
@@ -349,30 +356,16 @@ hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
     case FTE_HEADER_gre:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_GRE_ID;
         break;
-    case FTE_HEADER_erspan:
-        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_ERSPAN_ID;
+    case FTE_HEADER_mpls:
+        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_MPLS_ID;
         break;
     case FTE_HEADER_ip_in_ip:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_IP_ID;
         break;
-    case FTE_HEADER_ipsec_esp:
-        if (header.valid_hdrs&FTE_HEADER_ipv6) {
-            if (header.valid_flds.vlan_id) {
-                attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_IPV6_IPSEC_TUNNEL_ESP_ID;
-            } else {
-                attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_IPV6_IPSEC_TUNNEL_ESP_ID;
-            }
-        } else {
-            if (header.valid_flds.vlan_id) {
-                attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_IPV4_IPSEC_TUNNEL_ESP_ID;
-            } else {
-                attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_IPV4_IPSEC_TUNNEL_ESP_ID;
-            }
-        }
-        break;
-    case FTE_HEADER_mpls:
-        attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_MPLS_ID;
-        break;
+#endif /* PHASE2 */
+    default:
+        HAL_TRACE_ERR("fte: invalid encap");
+        return HAL_RET_ERR;
     }
 
     return HAL_RET_OK;

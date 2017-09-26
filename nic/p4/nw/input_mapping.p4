@@ -20,7 +20,6 @@ action tunneled_ipv4_packet() {
     modify_field(flow_lkp_metadata.ipv4_frag_offset, inner_ipv4.fragOffset);
     modify_field(flow_lkp_metadata.ipv4_hlen, inner_ipv4.ihl);
     modify_field(flow_lkp_metadata.ip_ttl, inner_ipv4.ttl);
-    modify_field(flow_lkp_metadata.ip_version, inner_ipv4.version);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
     modify_field(l3_metadata.ip_option_seen, l3_metadata.inner_ip_option_seen);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, inner_ethernet.srcAddr);
@@ -38,7 +37,6 @@ action tunneled_ipv6_packet() {
     modify_field(flow_lkp_metadata.lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6);
     modify_field(flow_lkp_metadata.lkp_proto, inner_ipv6.nextHdr);
     modify_field(flow_lkp_metadata.ip_ttl, inner_ipv6.hopLimit);
-    modify_field(flow_lkp_metadata.ip_version, inner_ipv6.version);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, inner_ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
@@ -58,7 +56,6 @@ action tunneled_non_ip_packet() {
     modify_field(flow_lkp_metadata.lkp_sport, inner_ethernet.etherType);
     modify_field(flow_lkp_metadata.lkp_dport, 0);
     modify_field(flow_lkp_metadata.ip_ttl, 0);
-    modify_field(flow_lkp_metadata.ip_version, 0);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
     set_packet_type(inner_ethernet.dstAddr);
     validate_tunneled_packet();
@@ -85,7 +82,6 @@ action native_ipv4_packet() {
     modify_field(flow_lkp_metadata.ipv4_frag_offset, ipv4.fragOffset);
     modify_field(flow_lkp_metadata.ipv4_hlen, ipv4.ihl);
     modify_field(flow_lkp_metadata.ip_ttl, ipv4.ttl);
-    modify_field(flow_lkp_metadata.ip_version, ipv4.version);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, ethernet.dstAddr);
     if (ipv4.protocol == IP_PROTO_TCP) {
@@ -106,7 +102,6 @@ action native_ipv6_packet() {
     modify_field(flow_lkp_metadata.lkp_dst, ipv6.dstAddr);
     modify_field(flow_lkp_metadata.lkp_proto, ipv6.nextHdr);
     modify_field(flow_lkp_metadata.ip_ttl, ipv6.hopLimit);
-    modify_field(flow_lkp_metadata.ip_version, ipv6.version);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, ethernet.dstAddr);
     if (ipv6.nextHdr == IP_PROTO_TCP) {
@@ -134,7 +129,6 @@ action native_non_ip_packet() {
     modify_field(flow_lkp_metadata.lkp_sport, ethernet.etherType);
     modify_field(flow_lkp_metadata.lkp_dport, 0);
     modify_field(flow_lkp_metadata.ip_ttl, 0);
-    modify_field(flow_lkp_metadata.ip_version, 0);
     set_packet_type(ethernet.dstAddr);
     validate_native_packet();
 }

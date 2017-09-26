@@ -8,8 +8,7 @@ struct phv_             p;
 
 k = {
   ethernet_srcAddr = 0x001122334455;
-  ethernet_dstAddr_sbit0_ebit23 = 0x00aabb;
-  ethernet_dstAddr_sbit24_ebit47 = 0xccddee;
+  ethernet_dstAddr = 0x00aabbccddee;
   ethernet_etherType = 0x0800;
   rewrite_metadata_entropy_hash = 0xbaba;
   rewrite_metadata_tunnel_vnid = 0x164;

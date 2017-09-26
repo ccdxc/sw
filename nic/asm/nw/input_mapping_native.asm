@@ -56,7 +56,6 @@ native_ipv4_packet:
   phvwr       p.flow_lkp_metadata_ipv4_frag_offset, k.{ipv4_fragOffset_sbit0_ebit4,ipv4_fragOffset_sbit5_ebit12}
   phvwr       p.flow_lkp_metadata_ipv4_hlen, r5
   phvwr       p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
-  phvwr       p.flow_lkp_metadata_ip_version, k.ipv4_version
 
   phvwr.e     p.flow_lkp_metadata_lkp_srcMacAddr, r1
   phvwr       p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
@@ -114,7 +113,6 @@ native_ipv6_packet:
   phvwr       p.flow_lkp_metadata_lkp_dst[63:0], r5
   phvwr       p.flow_lkp_metadata_lkp_proto, k.ipv6_nextHdr
   phvwr       p.flow_lkp_metadata_ip_ttl, k.ipv6_hopLimit
-  phvwr       p.flow_lkp_metadata_ip_version, k.ipv6_version
 
   phvwr.e     p.flow_lkp_metadata_lkp_srcMacAddr, r1
   phvwr       p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr

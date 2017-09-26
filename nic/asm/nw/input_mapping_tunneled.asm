@@ -44,7 +44,6 @@ tunneled_ipv4_packet:
   phvwr       p.flow_lkp_metadata_ipv4_frag_offset, k.{inner_ipv4_fragOffset_sbit0_ebit4,inner_ipv4_fragOffset_sbit5_ebit12}
   phvwr       p.flow_lkp_metadata_ipv4_hlen, k.inner_ipv4_ihl
   phvwr       p.flow_lkp_metadata_ip_ttl, k.inner_ipv4_ttl
-  phvwr       p.flow_lkp_metadata_ip_version, k.inner_ipv4_version
   phvwr       p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen
 
   phvwr.e     p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
@@ -76,7 +75,6 @@ tunneled_ipv6_packet:
   phvwr       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
   phvwr       p.flow_lkp_metadata_lkp_proto, k.inner_ipv6_nextHdr
   phvwr       p.flow_lkp_metadata_ip_ttl, k.inner_ipv6_hopLimit
-  phvwr       p.flow_lkp_metadata_ip_version, k.inner_ipv6_version
   add         r1, r7, 40
   phvwr       p.l4_metadata_tcp_data_len, r1
 

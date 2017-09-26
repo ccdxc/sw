@@ -19,7 +19,6 @@ header_type flow_lkp_metadata_t {
         ipv4_frag_offset : 13;         // To catch ping of death.
         lkp_proto        : 8;
         ip_ttl           : 8;          // used to check if TTL == 0
-        ip_version       : 4;          // used to check if ver matches hdr type
         pkt_type         : 2;
         lkp_dir          : 1;          // To Prevent uplink spoofing workload packets.
     }

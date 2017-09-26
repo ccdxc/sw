@@ -207,11 +207,11 @@ action encap_vxlan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         add(ipv4.totalLen, control_metadata.packet_len, 36);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
-        if (ip_type == IP_HEADER_TYPE_IPV6) {
-            f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_UDP);
-            add(ipv6.payloadLen, control_metadata.packet_len, 16);
-            modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
-        }
+#ifdef PHASE2
+        f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_UDP);
+        add(ipv6.payloadLen, control_metadata.packet_len, 16);
+        modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
+#endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
@@ -254,9 +254,11 @@ action encap_vxlan_gpe(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_i
         add(ipv4.totalLen, control_metadata.packet_len, 36);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
+#ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_UDP);
         add(ipv6.payloadLen, control_metadata.packet_len, 16);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
+#endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
@@ -303,9 +305,11 @@ action encap_genv(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         add(ipv4.totalLen, control_metadata.packet_len, 36);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
+#ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_UDP);
         add(ipv6.payloadLen, control_metadata.packet_len, 16);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
+#endif /* PHASE2 */
     }
 
     if (vlan_valid == TRUE) {
@@ -352,9 +356,11 @@ action encap_nvgre(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         add(ipv4.totalLen, control_metadata.packet_len, 28);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
+#ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_GRE);
         add(ipv6.payloadLen, control_metadata.packet_len, 8);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
+#endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
@@ -386,9 +392,11 @@ action encap_gre(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         add(ipv4.totalLen, control_metadata.packet_len, 24);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
+#ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_GRE);
         add(ipv6.payloadLen, control_metadata.packet_len, 4);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
+#endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
@@ -433,9 +441,11 @@ action encap_erspan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) 
         add(ipv4.totalLen, control_metadata.packet_len, 36);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
+#ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_GRE);
         add(ipv6.payloadLen, control_metadata.packet_len, 16);
-        modify_field(ethernet.etherType, ETHERTYPE_IPV4);
+        modify_field(ethernet.etherType, ETHERTYPE_IPV6);
+#endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
@@ -458,9 +468,11 @@ action encap_ip(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         add(ipv4.totalLen, control_metadata.packet_len, 20);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
+#ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, tunnel_metadata.inner_ip_proto);
         modify_field(ipv6.payloadLen, control_metadata.packet_len);
-        modify_field(ethernet.etherType, ETHERTYPE_IPV4);
+        modify_field(ethernet.etherType, ETHERTYPE_IPV6);
+#endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
@@ -548,64 +560,30 @@ action encap_mpls(mac_sa, mac_da, eompls, num_labels, label0, exp0, bos0, ttl0,
     modify_field(scratch_metadata.num_labels, num_labels);
 }
 
-action encap_ipv4_ipsec_tunnel_esp(mac_sa, mac_da, ip_sa, ip_da)
-{
-    f_insert_ipv4_header(ip_sa,ip_da,IP_PROTO_IPSEC_ESP);
-    add(ipv4.totalLen, control_metadata.packet_len, 20);
-    // 42 = Eth(14)+ip(20)
-    modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 34);
-    // add outer-mac header length
-    add_header(p4_to_p4plus_ipsec);
-    modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv4.totalLen+14);
-
-    modify_field(ethernet.srcAddr, mac_sa);
-    modify_field(ethernet.dstAddr, mac_da);
-   //update-splitter-offset here
-
-}
-
-action encap_vlan_ipv4_ipsec_tunnel_esp(mac_sa, mac_da, ip_sa, ip_da, vlan_id)
-{
-    f_insert_ipv4_header(ip_sa,ip_da,IP_PROTO_IPSEC_ESP);
-    add(ipv4.totalLen, control_metadata.packet_len, 20);
-    f_encap_vlan(vlan_id, ETHERTYPE_IPV4);
+action encap_ipsec(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
+    if (ip_type == 0) {
+        f_insert_ipv4_header(ip_sa, ip_da, IP_PROTO_IPSEC_ESP);
+        add(ipv4.totalLen, control_metadata.packet_len, 20);
+        modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
+    } else {
+#ifdef PHASE2
+        f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_IPSEC_ESP);
+        modify_field(ipv6.payloadLen, control_metadata.packet_len);
+        modify_field(ethernet.etherType, ETHERTYPE_IPV6);
+#endif /* PHASE2 */
+    }
+    if (vlan_valid == TRUE) {
+        f_encap_vlan(vlan_id, scratch_metadata.ethtype);
+    } else {
+        modify_field(ethernet.etherType, scratch_metadata.ethtype);
+    }
     modify_field(ethernet.srcAddr, mac_sa);
     modify_field(ethernet.dstAddr, mac_da);
 
-    // 46 = Eth(14)+vlan(4)+ip(20)
-    add_header(p4_to_p4plus_ipsec);
-    modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 38);
-    modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv4.totalLen+18);
-   //update-splitter-offset here
-}
-
-action encap_ipv6_ipsec_tunnel_esp(mac_sa, mac_da, ip_sa, ip_da)
-{
-    f_insert_ipv6_header(ip_sa,ip_da,IP_PROTO_IPSEC_ESP);
-    add(ipv6.payloadLen, control_metadata.packet_len, 40);
-    modify_field(ethernet.srcAddr, mac_sa);
-    modify_field(ethernet.dstAddr, mac_da);
-    add_header(p4_to_p4plus_ipsec);
-    // 42 = Eth(14)+ipv6(40)
-    modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 54);
-    // add outer-mac header length
-    modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv6.payloadLen+14);
-   //update-splitter-offset here
-
-}
-
-action encap_vlan_ipv6_ipsec_tunnel_esp(mac_sa, mac_da, ip_sa, ip_da, vlan_id)
-{
-    f_insert_ipv6_header(ip_sa,ip_da,IP_PROTO_IPSEC_ESP);
-    add(ipv6.payloadLen, control_metadata.packet_len, 40);
-    f_encap_vlan(vlan_id, ETHERTYPE_IPV6);
-    modify_field(ethernet.srcAddr, mac_sa);
-    modify_field(ethernet.dstAddr, mac_da);
-    add_header(p4_to_p4plus_ipsec);
-    // 66 = Eth(14)+vlan(4)+ipv6(40)
-    modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 58);
-    modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv6.payloadLen+18);
-   //update-splitter-offset here
+    // dummy ops to keep compiler happy
+    modify_field(scratch_metadata.vlan_valid, vlan_valid);
+    modify_field(scratch_metadata.vlan_id, vlan_id);
+    modify_field(scratch_metadata.flag, ip_type);
 }
 
 @pragma stage 4
@@ -616,18 +594,17 @@ table tunnel_rewrite {
     actions {
         nop;
         encap_vxlan;
-        encap_genv;
-        encap_nvgre;
-        encap_gre;
-        encap_ip;
         encap_erspan;
-        encap_mpls;
         encap_vlan;
+        encap_ipsec;
+#ifdef PHASE2
+        encap_nvgre;
+        encap_genv;
+        encap_ip;
+        encap_gre;
         encap_vxlan_gpe;
-        encap_ipv4_ipsec_tunnel_esp;
-        encap_vlan_ipv4_ipsec_tunnel_esp;
-        encap_ipv6_ipsec_tunnel_esp;
-        encap_vlan_ipv6_ipsec_tunnel_esp;
+        encap_mpls;
+#endif /* PHASE2 */
     }
     size : TUNNEL_REWRITE_TABLE_SIZE;
 }
