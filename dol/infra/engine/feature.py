@@ -9,7 +9,15 @@ from infra.engine.modmgr        import ModuleStore
 
 FeatureStore = objects.ObjectDatabase(logger)
 BaseTopoExcludeFeatureList = [ 
-    'fte', 'normalization', 'eth' , 'acl', 'networking', 'vxlan' 
+    'fte',
+    'normalization',
+    'eth' ,
+    'acl',
+    'networking',
+    'vxlan',
+    'ipsg',
+    'firewall',
+
 ]
 
 class FeatureObject:
