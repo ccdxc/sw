@@ -17,7 +17,7 @@ class EthBufferObject(base.FactoryObjectBase):
 
     def Init(self, spec):
         super().Init(spec)
-        self.size = spec.fields.size
+        self.size = getattr(spec.fields, 'size', None)
         self.data = getattr(spec.fields, 'data', None)
         bind = getattr(spec.fields, 'bind', False)
 

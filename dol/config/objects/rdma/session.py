@@ -15,6 +15,7 @@ import rdma_pb2                 as rdma_pb2
 
 import config.objects.qp        as qp
 import config.objects.mr        as mr
+from infra.common.glopts        import GlobalOptions
 
 from config.objects.session     import SessionHelper
 

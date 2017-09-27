@@ -14,6 +14,7 @@ import config.hal.defs          as haldefs
 from config.store               import Store
 from infra.common.logging       import cfglogger
 from config.objects.queue       import QueueObject
+from infra.common.glopts        import GlobalOptions
 
 import model_sim.src.model_wrap as model_wrap
 
@@ -23,7 +24,7 @@ class EthQstate(Packet):
     name = "EthQstate"
     fields_desc = [
         ByteField("pc_offset", 0),
-        ByteField("rsvd0", 0),
+        ByteField("rsvd", 0),
         BitField("cosA", 0, 4),
         BitField("cosB", 0, 4),
         ByteField("cos_sel", 0),
@@ -65,9 +66,9 @@ class EthQstateObject(object):
         self.data = EthQstate(model_wrap.read_mem(self.addr, self.size))
 
     def Write(self, lgh = cfglogger):
-       lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
-       model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
-       self.Read(lgh)
+        lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
+        model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
+        self.Read(lgh)
 
     def Read(self, lgh = cfglogger):
         data = EthQstate(model_wrap.read_mem(self.addr, self.size))
@@ -76,32 +77,23 @@ class EthQstateObject(object):
 
     def incr_pindex(self, ring):
         assert(ring < 7)
-        value = (self.get_pindex(0) + 1) & (self.get_ring_size() - 1)
+        value = (self.get_pindex(ring) + 1) & (self.get_ring_size() - 1)
         setattr(self.data[EthQstate], 'p_index%d' % ring, value)
-        model_wrap.write_mem(self.addr + 8, bytes(ctypes.c_uint16(value)), 2)
+        model_wrap.write_mem(self.addr + 8 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
 
     def incr_cindex(self, ring):
         assert(ring < 7)
-        idx = self.get_cindex(0)
-        setattr(self.data[EthQstate], 'c_index%d' % ring, (idx + 1) & (self.get_ring_size() - 1))
+        value = (self.get_cindex(ring) + 1) & (self.get_ring_size() - 1)
+        setattr(self.data[EthQstate], 'c_index%d' % ring, value)
+        model_wrap.write_mem(self.addr + 10 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
 
     def get_pindex(self, ring):
         assert(ring < 7)
         return getattr(self.data[EthQstate], 'p_index%d' % ring)
 
-    def set_pindex(self, ring, value):
-        assert(ring < 7)
-        assert(value < self.get_ring_size())
-        setattr(self.data[EthQstate], 'p_index%d' % ring, value)
-
     def get_cindex(self, ring):
         assert(ring < 7)
         return getattr(self.data[EthQstate], 'c_index%d' % ring)
-
-    def set_cindex(self, ring, value):
-        assert(ring < 7)
-        assert(value < self.get_ring_size())
-        setattr(self.data[EthQstate], 'c_index%d' % ring, value)
 
     def set_enable(self, value):
         self.data[EthQstate].enable = value
@@ -116,6 +108,10 @@ class EthQstateObject(object):
         self.data[EthQstate].ring_size = value
         model_wrap.write_mem(self.addr + 49, bytes(ctypes.c_uint16(value)), 2)
 
+    def set_cq_base(self, value):
+        self.data[EthQstate].cq_base = value
+        model_wrap.write_mem(self.addr + 51, bytes(ctypes.c_uint64(value)), 8)
+
     def get_ring_size(self):
         return int(math.pow(2, self.data[EthQstate].ring_size))
 
@@ -126,7 +122,7 @@ class EthQstateObject(object):
 class EthQueueObject(QueueObject):
     def __init__(self):
         super().__init__()
-        self._qstate    = None
+        self._qstate = None
 
     def Init(self, queue_type, spec, qid):
         super().Init(queue_type, spec)
@@ -158,10 +154,9 @@ class EthQueueObject(QueueObject):
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
             req_spec.label.prog_name = "rxdma_stage0.bin"
             req_spec.label.label = "eth_rx_stage0"
-        #treat admin same as rx for now
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
-            req_spec.label.prog_name = "rxdma_stage0.bin"
-            req_spec.label.label = "eth_rx_stage0"
+            req_spec.label.prog_name = "txdma_stage0.bin"
+            req_spec.label.label = "eth_tx_stage0"
         else:
             cfglogger.critical("Unable to set program information for Queue Type %s" % self.queue_type.purpose)
             raise NotImplementedError
@@ -171,6 +166,16 @@ class EthQueueObject(QueueObject):
 
     def ConfigureRings(self):
         self.obj_helper_ring.Configure()
+        self.qstate.set_enable(1)
+        for ring in self.obj_helper_ring.rings:
+            if ring.id == 'R0':
+                self.qstate.set_ring_base(ring._mem.pa)
+                self.qstate.set_ring_size(ring.size)
+            elif ring.id == 'R1':
+                self.qstate.set_cq_base(ring._mem.pa)
+            else:
+                raise NotImplementedError
+        self.qstate.Read()
 
     def Show(self):
         cfglogger.info('Queue: %s' % self.GID())

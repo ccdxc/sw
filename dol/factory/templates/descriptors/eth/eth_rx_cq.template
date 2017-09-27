@@ -1,4 +1,3 @@
-# Ethernet TX Descriptor Object Template
 meta:
     id      : DESCR_ETH_RX_CQ
     size    : 16
@@ -6,20 +5,18 @@ meta:
     module  : descriptor
     objname : EthRxCqDescriptorObject
 
-queue_id        : None
-rss_type        : None
-cindex          : None
-rss_hash        : None
-vlan_tag        : None
-bit_v           : None
-bit_k           : None
-bytes_written   : None
-bit_c           : None
-rsvd0           : const/0x0
-type            : None
-rsvd1           : None
-bit_d           : None
-bit_b           : None
-flags           : None
-bit_t           : None
-
+completion_index : None
+queue_id : None
+rss_type : None
+rss_hash : None
+bytes_written : None
+checksum : None
+vlan_valid : None
+vlan_tci : None
+flags : None
+encap : None
+pkt_error : None
+dma_error : None
+color : None
+completion_type : None
+rsvd0 : const/0x0

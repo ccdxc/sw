@@ -1,4 +1,3 @@
-# Ethernet RX Descriptor Object Template
 meta:
     id      : DESCR_ETH_RX
     size    : 16

@@ -33,16 +33,88 @@ class EthRxDescriptor(Packet):
     ]
 
 
-class EthRxDescriptorObject(base.FactoryObjectBase):
+class EthRxCqDescriptor(Packet):
+    fields_desc = [
+        LEShortField("completion_index", 0),
+        ByteField("queue_id", 0),
+        ByteField("rss_type", 0),
+        LEIntField("rss_hash", 0),
+        LEIntField("checksum", 0),
+        LEShortField("bytes_written", 0),
+        LEShortField("vlan_tci", 0),
+        LEShortField("flags", 0),
+        BitField("rsvd0", 0, 96),
+        BitField("rsvd1", 0, 10),
+        BitField("checksum_valid", 0, 1),
+        BitField("vlan_valid", 0, 1),
+        BitField("encap", 0, 1),
+        BitField("pkt_error", 0, 1),
+        BitField("dma_error", 0, 1),
+        BitField("color", 0, 1),
+    ]
+
+
+class EthTxCqDescriptor(Packet):
+    fields_desc = [
+        LEShortField("completion_index", 0),
+        ByteField("rsvd0", 0),
+        ByteField("queue_id", 0),
+        BitField("rsvd1", 0, 80),
+        ByteField("err_code", 0),
+        BitField("rsvd2", 0, 7),
+        BitField("color", 0, 1),
+    ]
+
+
+class AdminDesciptor(Packet):
+    fields_desc = [
+        LEShortField("opcode", 0),
+        LEShortField("rsvd", 0),
+        LEIntField("cmd_data0", 0),
+        LEIntField("cmd_data1", 0),
+        LEIntField("cmd_data2", 0),
+        LEIntField("cmd_data3", 0),
+        LEIntField("cmd_data4", 0),
+        LEIntField("cmd_data5", 0),
+        LEIntField("cmd_data6", 0),
+        LEIntField("cmd_data7", 0),
+        LEIntField("cmd_data8", 0),
+        LEIntField("cmd_data9", 0),
+        LEIntField("cmd_data10", 0),
+        LEIntField("cmd_data11", 0),
+        LEIntField("cmd_data12", 0),
+        LEIntField("cmd_data13", 0),
+        LEIntField("cmd_data14", 0),
+        LEIntField("cmd_data15", 0),
+    ]
+
+
+class AdminCqDescriptor(Packet):
+    fields_desc = [
+        ByteField("cmd_status", 0),
+        LEShortField("cpl_id", 0),
+        LEIntField("cmd_data0", 0),
+        LEIntField("cmd_data1", 0),
+        LEIntField("cmd_data2", 0),
+        BitField("rsvd", 7, 0),
+        BitField("color", 1, 0),
+    ]
+
+
+class EthDescriptorObject(base.FactoryObjectBase):
+
+    __descriptor_class__ = None
+
     def __init__(self):
         super().__init__()
         self.logger = cfglogger
+        self.desc = None
 
     def Init(self, spec):
         super().Init(spec)
-        self.buf = spec.fields.buf
+        self.buf = getattr(spec.fields, 'buf', None)       # Buffer Object
         self.buf_addr = getattr(spec.fields, 'addr', 0)    # Buffer Address
-        self.buf_len = spec.fields.len      # Buffer Length
+        self.buf_len = getattr(spec.fields, 'len', 0)     # Buffer Length
         self._mem = None
         self.logger.info("Init %s" % self)
 
@@ -54,8 +126,8 @@ class EthRxDescriptorObject(base.FactoryObjectBase):
         if self._mem is None: return
 
         self.logger.info("Writing %s" % self)
-        desc = EthRxDescriptor(addr=self.buf_addr, len=self.buf_len)
-        resmgr.HostMemoryAllocator.write(self._mem, bytes(desc))
+        self.desc = self.__descriptor_class__(addr=self.buf_addr, len=self.buf_len)
+        resmgr.HostMemoryAllocator.write(self._mem, bytes(self.desc))
 
     def Read(self):
         """
@@ -64,34 +136,29 @@ class EthRxDescriptorObject(base.FactoryObjectBase):
         """
         if self._mem is None: return
 
-        desc = EthRxDescriptor(resmgr.HostMemoryAllocator.read(self._mem, 16))
-        self.logger.ShowScapyObject(desc)
-        self.buf_addr = desc.addr
-        self.buf_len = desc.packet_len
-        self.buf.Bind(resmgr.HostMemoryAllocator.p2v(self.buf_addr))
-        self.logger.info("Read %s" % self)
+        self.desc = self.__descriptor_class__(resmgr.HostMemoryAllocator.read(self._mem, 16))
+        self.logger.ShowScapyObject(self.desc)
 
     def __str__(self):
-        return "%s GID:%s/Id:0x%x/Memory:%s/Buf:%s/Buf.Id:0x%x/Buf_Addr:0x%x/Buf_Len:%d" % (
-                self.__class__.__name__, self.GID(), id(self), self._mem,
-                self.buf.GID(), id(self.buf), self.buf_addr, self.buf_len)
+        if self.buf:
+            return "%s GID:%s/Id:0x%x/Memory:%s/Buf:%s/Buf.Id:0x%x/Buf_Addr:0x%x/Buf_Len:%d" % (
+                    self.__class__.__name__, self.GID(), id(self), self._mem,
+                    self.buf.GID(), id(self.buf), self.buf_addr, self.buf_len)
+        else:
+            return "%s GID:%s/Id:0x%x/Memory:%s/Buf:None" % (
+                    self.__class__.__name__, self.GID(), id(self), self._mem)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-
-        result = True
-        if self.buf_len != other.buf_len:
-            self.logger.info("  Buf Len Mismatch: Expected %s Actual %s" %\
-                             (str(self.buf_len), str(other.buf_len)))
-            other.buf_len = other.buf.size
-        return result
+        # Todo: Need to compare non-None fields
+        return True
 
     def __copy__(self):
         obj = super().__copy__()
         obj.GID('ACTUAL_' + obj.GID())
         # [obj._mem] must point to the original descriptor's memory handle
-        obj.buf = copy.copy(self.buf)
+        obj.buf = copy.copy(self.buf) if self.buf else None
         # The following fields are filled in by Read()
         obj.buf_addr = 0
         obj.buf_len = 0
@@ -101,74 +168,63 @@ class EthRxDescriptorObject(base.FactoryObjectBase):
         return self.buf
 
 
-class EthTxDescriptorObject(base.FactoryObjectBase):
-    def __init__(self):
-        super().__init__()
-        self.logger = cfglogger
+class EthRxDescriptorObject(EthDescriptorObject):
+    __descriptor_class__ = EthRxDescriptor
 
-    def Init(self, spec):
-        super().Init(spec)
-        self.buf = spec.fields.buf
-        self.buf_addr = getattr(spec.fields, 'addr', 0)    # Buffer Address
-        self.buf_len = spec.fields.len      # Buffer Length
-        self._mem = None
-        self.logger.info("Init %s" % self)
+    def Read(self):
+        # This is a write-only descriptor type
+        return
+
+
+class EthRxCqDescriptorObject(EthDescriptorObject):
+    __descriptor_class__ = EthRxCqDescriptor
 
     def Write(self):
-        """
-        Writes a Descriptor to Memory
-        :return:
-        """
-        if self._mem is None: return
-
-        self.logger.info("Writing %s" % self)
-        desc = EthTxDescriptor(addr=self.buf_addr, len=self.buf_len)
-        resmgr.HostMemoryAllocator.write(self._mem, bytes(desc))
-        # self.Read()
+        # This is a read-only descriptor type
+        return
 
     def Read(self):
-        """
-        Reads a Descriptor from Memory
-        :return:
-        """
-        if self._mem is None: return
+        super().Read()
+        if self.buf is not None and self.buf._mem is not None:
+            self.buf_addr = self.buf._mem.pa
+            self.buf_len = self.desc[EthRxCqDescriptor].bytes_written
+            self.logger.info("Read %s" % self)
 
-        desc = EthTxDescriptor(resmgr.HostMemoryAllocator.read(self._mem, 16))
-        self.logger.ShowScapyObject(desc)
-        self.buf_addr = desc.addr
-        self.buf_len = desc.len
-        self.buf.Bind(resmgr.HostMemoryAllocator.p2v(self.buf_addr))
-        self.logger.info("Read %s" % self)
 
-    def Bind(self, _mem):
-        assert '_mem' not in self.__dict__ or self._mem is None
-        super().Bind(_mem)
+class EthTxDescriptorObject(EthDescriptorObject):
+    __descriptor_class__ = EthTxDescriptor
 
-    def __str__(self):
-        return "%s GID:%s/Id:0x%x/Memory:%s/Buf:%s/Buf.Id:0x%x/Buf_Addr:0x%x/Buf_Len:%d" % (
-                self.__class__.__name__, self.GID(), id(self), self._mem,
-                self.buf.GID(), id(self.buf), self.buf_addr, self.buf_len)
+    def Read(self):
+        # This is a write-only descriptor type
+        return
 
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
 
-        result = True
-        if self.buf_len != other.buf_len:
-            self.logger.info("  Buf Len Mismatch: Expected %s Actual %s" %\
-                             (str(self.buf_len), str(other.buf_len)))
-            result = False
-        return result
+class EthTxCqDescriptorObject(EthDescriptorObject):
+    __descriptor_class__ = EthTxCqDescriptor
 
-    def __copy__(self):
-        obj = super().__copy__()
-        obj.GID('ACTUAL_' + obj.GID())
-        # [obj._mem] must point to the original descriptor's memory handle
-        obj.buf = copy.copy(self.buf)
-        # The following fields are filled in by Read()
-        obj.buf_addr = 0
-        obj.buf_len = 0
-        return obj
+    def Write(self):
+        # This is a read-only descriptor type
+        return
 
-    def GetBuffer(self):
-        return self.buf
+    def Read(self):
+        super().Read()
+        if self.buf is not None and self.buf._mem is not None:
+            self.buf_addr = self.buf._mem.pa
+            self.buf_len = None
+            self.logger.info("Read %s" % self)
+
+
+class AdminDescriptorObject(EthDescriptorObject):
+    __descriptor_class__ = AdminDesciptor
+
+    def Read(self):
+        # This is a write-only descriptor type
+        return
+
+
+class AdminCqDescriptorObject(EthDescriptorObject):
+    __descriptor_class__ = AdminCqDescriptor
+
+    def Write(self):
+        # This is a read-only descriptor type
+        return

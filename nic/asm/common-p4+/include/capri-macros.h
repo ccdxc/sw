@@ -169,7 +169,7 @@
        sll             r5, r5, DB_UPD_SHFT;\
        sll             r6, _lif, DB_LIF_SHFT;\
        or              r5, r5, r6;\
-       addi            r6, r0, _type;\
+       add             r6, r0, _type;\
        sll             r6, r6, DB_TYPE_SHFT;\
        or              r5, r5, r6;\
        addi            r4, r5, DB_ADDR_BASE_HOST
@@ -178,7 +178,7 @@
 #define DB_QID_SHFT                    24
 #define DB_RING_SHFT                   16
 
-#define CAPRI_RING_DOORBELL_DATA(_pid, _qid, _ring, _pidx) \
+#define CAPRI_RING_DOORBELL_DATA(_pid, _qid, _ring, _idx) \
         addi            r5, r0, _pid;\
         sll             r5, r5, DB_PID_SHFT;\
         add             r6, r0, _qid;\
@@ -187,7 +187,7 @@
         addi            r6, r0, _ring;\
         sll             r6, r6, DB_RING_SHFT;\
         or              r5, r5, r6;\
-        add             r6, r0, _pidx;\
+        add             r6, r0, _idx;\
         or              r5, r5, r6;\
         add             r3, r5, r0
 

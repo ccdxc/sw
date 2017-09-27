@@ -20,8 +20,6 @@ deps:
 SRC_FILES := \
 	eth_tx_fetch_desc.s \
 	eth_tx_packet.s \
-	eth_tx_cq_create_desc.s \
-	eth_tx_cq_post_desc.s \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

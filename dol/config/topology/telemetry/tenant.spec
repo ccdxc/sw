@@ -25,4 +25,4 @@ sessions:
         ipv6:
         mac:
 
-lif: ref://store/specs/id=LIF_DEFAULT
+lif: ref://store/specs/id=LIF_ETH

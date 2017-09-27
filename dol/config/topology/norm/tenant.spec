@@ -28,4 +28,4 @@ sessions:
             - ref://store/specs/id=SESSION_ICMPV6_NORM
         mac:
 
-lif: ref://store/specs/id=LIF_ETH_RDMA
+lif: ref://store/specs/id=LIF_ETH

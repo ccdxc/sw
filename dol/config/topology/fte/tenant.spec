@@ -31,4 +31,4 @@ sessions:
         mac:
             - ref://store/specs/id=SESSION_MAC_FTE
 
-lif: ref://store/specs/id=LIF_DEFAULT
+lif: ref://store/specs/id=LIF_ETH

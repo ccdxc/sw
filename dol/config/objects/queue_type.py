@@ -25,6 +25,7 @@ class QueueTypeObject(objects.FrameworkObject):
 
     def Init(self, lif, spec):
         self.GID(spec.id)
+        self.id         = spec.id
         self.lif        = lif
         self.type       = spec.type
         self.purpose    = spec.purpose.upper()

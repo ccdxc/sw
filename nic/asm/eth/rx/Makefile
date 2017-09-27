@@ -8,7 +8,7 @@ include $(TOPDIR)/make/Makefile.inc
 PROJ = eth_rxdma_actions
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 ASM_HDR_DIR = $(TOPDIR)/gen/$(PROJ)/asm_out/
-INC_DIRS = -I. -I$(ASM_HDR_DIR) -I..
+INC_DIRS = -I. -I.. -I$(ASM_HDR_DIR) -I$(TOPDIR)/asm/common-p4+/include/ -I$(TOPDIR)/include
 SRC_DIR = .
 CAPAS_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capas
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
@@ -20,8 +20,6 @@ deps:
 SRC_FILES := \
 	eth_rx_fetch_desc.s \
 	eth_rx_packet.s \
-	eth_rx_cq_create_desc.s \
-	eth_rx_cq_post_desc.s \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

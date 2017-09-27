@@ -33,4 +33,4 @@ sessions:
         mac:
             - ref://store/specs/id=VXLANTOPO_SESSION_MAC
 
-lif: ref://store/specs/id=LIF_DEFAULT
+lif: ref://store/specs/id=LIF_ETH

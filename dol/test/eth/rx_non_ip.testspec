@@ -29,7 +29,7 @@ packets:
 
 
     - packet:
-        id          : PKT1    # Input packet 
+        id          : PKT1 # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
@@ -37,7 +37,7 @@ packets:
                 vlan    : ref://testcase/config/src/segment/vlan_id
 
     - packet:
-        id          : PKT2    # Expected packet 
+        id          : PKT2 # Expected packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
@@ -47,7 +47,7 @@ packets:
 
 buffers:
     - buffer:
-        id      : BUF1
+        id      : BUF1 # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
            bind: True
@@ -55,7 +55,7 @@ buffers:
            data: None
 
     - buffer:
-        id      : BUF2
+        id      : BUF2 # Expected Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: False
@@ -64,7 +64,7 @@ buffers:
 
 descriptors:
     - descriptor:
-        id      : DESC1
+        id      : DESC1 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
             buf   : ref://testcase/buffers/id=BUF1
@@ -72,8 +72,8 @@ descriptors:
             len   : ref://testcase/buffers/id=BUF1/size
 
     - descriptor:
-        id      : DESC2
-        template: ref://factory/templates/id=DESCR_ETH_RX
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             buf   : ref://testcase/buffers/id=BUF2
             len   : ref://testcase/buffers/id=BUF2/size
@@ -93,4 +93,4 @@ expect:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1

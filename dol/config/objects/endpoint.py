@@ -324,7 +324,7 @@ class EndpointObjectHelper:
         if len(self.backend_eps):
             Store.objects.SetAll(self.backend_eps)
 
-        self.rdma = True if hasattr(spec, 'rdma') else False
+        self.rdma = getattr(spec, 'rdma', False)
 
         if self.rdma:
             if spec.rdma.slab:

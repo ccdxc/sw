@@ -23,4 +23,4 @@ sessions:
         ipv6:
         mac:
 
-lif: ref://store/specs/id=LIF_ETH_RDMA
+lif: ref://store/specs/id=LIF_ETH

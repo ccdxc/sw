@@ -1,4 +1,3 @@
-# Ethernet TX Descriptor Object Template
 meta:
     id      : DESCR_ETH_TX_CQ
     size    : 16
@@ -6,11 +5,10 @@ meta:
     module  : descriptor
     objname : EthTxCqDescriptorObject
 
-cindex  : None
-rsvd0   : const/0x0
-rsvd1   : const/0x0 # 64 Bit
-rsvd2   : const/0x0 # 16 bit
-err_code: None
-queue_id: None
-type    : None
-color   : None
+completion_index : None
+rsvd0 : const/0x0
+queue_id : None
+rsvd1 : const/0x0
+err_code : None
+completion_type : None
+color : None

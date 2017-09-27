@@ -117,8 +117,15 @@ descriptors:
             len   : ref://testcase/buffers/id=RXBUF/size
 
     - descriptor:
-        id      : EXDESCR
-        template: ref://factory/templates/id=DESCR_ETH_RX
+        id      : EX_TXDESCR
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+        fields:
+            err_code : 0x0
+
+    - descriptor:
+        id      : EX_RXDESCR
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             buf   : ref://testcase/buffers/id=EXBUF
             len   : ref://testcase/buffers/id=EXBUF/size
@@ -136,11 +143,14 @@ trigger:
 
     doorbell:
         object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
-        fields:
-            upd : 3
+
 
 expect:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=EXDESCR
-            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+            object  : ref://testcase/descriptors/id=EX_TXDESCR
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EX_RXDESCR
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1

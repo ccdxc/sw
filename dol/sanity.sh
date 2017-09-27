@@ -22,8 +22,11 @@ bazel build //nic/proto:all
 bazel build //nic/proto/hal:all
 bazel build //nic/proto/agents:all
 
-#./main.py --dryrun --topo eth --module eth
-#ErrorCheckNExit $? "eth topo"
+#./main.py --dryrun
+#ErrorCheckNExit $? "default topo"
+
+./main.py --dryrun --topo eth --module eth
+ErrorCheckNExit $? "eth topo"
 
 ./main.py --dryrun --topo vxlan --module vxlan
 ErrorCheckNExit $? "vxlan topo"

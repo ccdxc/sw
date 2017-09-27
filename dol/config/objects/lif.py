@@ -91,6 +91,8 @@ class LifObject(objects.FrameworkObject):
         return self.qstate_base[type]
 
     def ConfigureQueueTypes(self):
+        if GlobalOptions.dryrun:
+            return 0
         self.obj_helper_q.Configure()
 
     def Show(self):

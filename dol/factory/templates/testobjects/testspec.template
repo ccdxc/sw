@@ -76,9 +76,6 @@ session:
             doorbell:
                 object: None # Instance of Doorbell object.
                 fields:
-                    upd     : None
-                    incr    : None
-                    pid     : 0
 
         expect:
             delay   : 0

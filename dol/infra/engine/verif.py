@@ -119,6 +119,8 @@ class VerifEngineObject:
         lgh.info("Descriptor compare result = Match")
         ebuf = self.__get_buffer(edescr, lgh)
         abuf = self.__get_buffer(adescr, lgh)
+        if ebuf is None:
+            return defs.status.SUCCESS
         return self.__verify_buffers(ebuf, abuf, lgh)
 
     def __consume_descriptor(self, edescr, ring):

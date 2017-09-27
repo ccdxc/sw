@@ -15,7 +15,7 @@ header_type eth_tx_cq_desc_p {
         queue_id : 8;
         rsvd1 : 80;
         err_code : 8;
-        completion_type : 4;
+        rsvd2 : 7;
         color : 1;
     }
 }
@@ -56,7 +56,7 @@ header_type eth_tx_qstate_d {
         enable : 8;
         ring_base : 64;
         ring_size : 16;
-        cq_qstate_addr : 64;    // 59 B
+        cq_ring_base : 64;    // 59 B
     }
 }
 
@@ -89,6 +89,13 @@ header_type eth_tx_global_k {
     }
 }
 
+header_type eth_tx_to_stage_1_k {
+    // to_stage k (max 128 bits)
+    fields {
+        cq_desc_addr : 64;
+    }
+}
+
 /*****************************************************************************
  *  D-vector
  *****************************************************************************/
@@ -110,12 +117,12 @@ metadata eth_tx_global_k eth_tx_global;
 metadata eth_tx_global_k eth_tx_global_scratch;
 
 // To Stage N PHV headers (Available in STAGE=N, MPUS=ALL)
-/*
 @pragma pa_header_union ingress to_stage_1
-metadata eth_tx_to_stage_1_p eth_tx_to_s1;
+metadata eth_tx_to_stage_1_k eth_tx_to_s1;
 @pragma scratch_metadata
-metadata eth_tx_to_stage_1_p eth_tx_to_s1_scratch;
+metadata eth_tx_to_stage_1_k eth_tx_to_s1_scratch;
 
+/*
 @pragma pa_header_union ingress to_stage_2
 metadata eth_tx_to_stage_2_p eth_tx_to_s2;
 @pragma scratch_metadata
@@ -151,6 +158,9 @@ metadata eth_tx_to_stage_7_p eth_tx_to_s7_scratch;
 
 
 // Part of the PHV after Common Area
+@pragma dont_trim
+metadata eth_tx_cq_desc_p eth_tx_cq_desc;
+
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t dma_cmd0;
 @pragma dont_trim
