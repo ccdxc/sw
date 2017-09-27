@@ -1,0 +1,12 @@
+# Feature Test Modules List
+feature:
+    id          : firewall
+    package     : test.firewall
+    module      : sfw_in_sequence
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : SFW_IN_SEQUENCE
+        spec    : sfw_in_sequence.testspec

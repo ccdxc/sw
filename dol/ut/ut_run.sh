@@ -1,7 +1,6 @@
 #! /bin/bash
 cd `dirname $0`
-
-
+cd ../
 DOL=$PWD
 NIC=$PWD/../nic/
 MOCKMODEL=${DOL}/mockmodel

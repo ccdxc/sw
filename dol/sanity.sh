@@ -11,7 +11,7 @@ function ErrorCheckNExit() {
     exit 1
 }
 
-./ut_run.sh; err=$?; cat ut_run.log;
+./ut/ut_run.sh; err=$?; cat ut_run.log;
 ErrorCheckNExit $err "utrun"
 
 # Build the minimum targets required for dryrun.

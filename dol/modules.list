@@ -495,34 +495,6 @@ modules:
         ignore  : False
  
     - module:
-        name    : SFW_IN_SEQUENCE
-        enable  : True
-        package : test.firewall
-        module  : sfw_in_sequence
-        spec    : sfw_in_sequence.testspec
-        ignore  : false
-
-    - module:
-        name    : TELEMETRY_FP
-        enable  : True
-        package : test.telemetry
-        module  : telemetry
-        spec    : firstpacket.testspec
-        ignore  : false
-        iterate:
-            - SPAN_LOCAL_INGRESS_UPLINK
-            - SPAN_LOCAL_IGRESS_PC
-            - SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
-            - SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
-            - RSPAN_LOCAL_INGRESS_UPLINK
-            - RSPAN_LOCAL_IGRESS_PC
-            - RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
-            - RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
-            - SPAN_RSPAN_LOCAL_INGRESS_UPLINK
-            - SPAN_RSPAN_LOCAL_IGRESS_PC
-            - RSPAN_SPAN_LOCAL_IGRESS_PC
-
-    - module:
         name    : NVME
         enable  : True
         package : test.storage

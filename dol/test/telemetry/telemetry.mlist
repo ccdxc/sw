@@ -1,0 +1,26 @@
+# Feature Test Modules List
+feature:
+    id      : telemetry
+    package : test.telemetry
+    module  : telemetry
+    enable  : True
+    ignore  : False
+
+modules:
+    - module:
+        name    : TELEMETRY_FP
+        spec    : firstpacket.testspec
+        iterate:
+            - SPAN_LOCAL_INGRESS_UPLINK
+            - SPAN_LOCAL_IGRESS_PC
+            - SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
+            - SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
+            - RSPAN_LOCAL_INGRESS_UPLINK
+            - RSPAN_LOCAL_IGRESS_PC
+            - RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
+            - RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
+            - SPAN_RSPAN_LOCAL_INGRESS_UPLINK
+            - SPAN_RSPAN_LOCAL_IGRESS_PC
+            - RSPAN_SPAN_LOCAL_IGRESS_PC
+
+
