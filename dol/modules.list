@@ -282,16 +282,6 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
-        name    : PKT_TO_IPSECCBQ
-        enable  : False
-        package : test.ipsec-proxy
-        module  : pkt_to_ipseccbq
-        spec    : pkt_to_ipseccbq.testspec
-        ignore  : True
-        iterate :
-            - flow: filter://type=IPV4,proto=TCP
-
-    - module:
         name    : RDMA_TX_SEND_ONLY
         enable  : True
         package : test.rdma
@@ -499,14 +489,33 @@ modules:
     #    spec    : resp_rx_send_first_last_pmtu_err.testspec
     #    ignore  : False
  
+#   - module:
+#       name    : RDMA_RX_READ_ONLY
+#       enable  : True
+#       package : test.rdma
+#       module  : resp_rx_read_only
+#       spec    : resp_rx_read_only.testspec
+#       ignore  : False
+#
     - module:
-        name    : RDMA_RX_READ_ONLY
+        name    : RDMA_RX_WRITE_ONLY
         enable  : True
         package : test.rdma
-        module  : resp_rx_read_only
-        spec    : resp_rx_read_only.testspec
+        module  : resp_rx_write_only
+        spec    : resp_rx_write_only.testspec
         ignore  : False
  
+
+    - module:
+        name    : PKT_TO_IPSECCBQ
+        enable  : False
+        package : test.ipsec-proxy
+        module  : pkt_to_ipseccbq
+        spec    : pkt_to_ipseccbq.testspec
+        ignore  : True
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
+
     - module:
         name    : NVME
         enable  : True

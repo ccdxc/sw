@@ -40,7 +40,8 @@ header_type p4_to_p4plus_roce_bth_reth_header_t {
         bth_header_bits     : 96;
         reth_va             : 64;
         reth_r_key          : 32;
-        reth_dma_len        : 32;
+        reth_dma_len1       : 16;
+        reth_dma_len2       : 16;
     }
 }
 

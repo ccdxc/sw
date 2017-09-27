@@ -458,7 +458,7 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
         rdma_key_entry_read(lif, rkey, rkey_entry_p);
         memcpy(rkey_entry_p, lkey_entry_p, sizeof(key_entry_t));
         rkey_entry_p->acc_ctrl &= ~ACC_CTRL_LOCAL_WRITE;
-        if (spec.ac_local_wr())
+        if (spec.ac_remote_wr())
             rkey_entry_p->acc_ctrl |= ACC_CTRL_REMOTE_WRITE;
         if (spec.ac_remote_rd())
             rkey_entry_p->acc_ctrl |= ACC_CTRL_REMOTE_READ;
@@ -469,6 +469,8 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
         rkey = INVALID_KEY;
     }
     
+    HAL_TRACE_DEBUG("{}: lif_id: {}  g_pt_base: {:#x}, lkey_entry_p->pt_base: {:#x}\n", 
+                    __FUNCTION__, lif, g_pt_base[lif], lkey_entry_p->pt_base);
     HAL_ASSERT(lkey_entry_p->pt_base % HBM_NUM_PT_ENTRIES_PER_CACHE_LINE == 0);
 
     pt_seg_offset = lkey_entry_p->base_va % pt_seg_size;

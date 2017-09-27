@@ -10,7 +10,8 @@
 #define CAPRI_RXDMA_RETH_VA(_r) \
     add _r, k.{rdma_bth_reth_reth_va_sbit56_ebit63}, k.{rdma_bth_reth_reth_va_sbit0_ebit7...rdma_bth_reth_reth_va_sbit40_ebit55}, 8
 
-#define CAPRI_RXDMA_RETH_DMA_LEN k.rdma_bth_reth_reth_dma_len
+//#define CAPRI_RXDMA_RETH_DMA_LEN k.rdma_bth_reth_reth_dma_len
+#define CAPRI_RXDMA_RETH_DMA_LEN k.{rdma_bth_reth_reth_dma_len1...rdma_bth_reth_reth_dma_len2}
 #define CAPRI_RXDMA_RETH_R_KEY k.rdma_bth_reth_reth_r_key
 
 #define CAPRI_RXDMA_BTH_IMMETH_IMMDATA  k.{rdma_bth_immeth_immeth_data_sbit0_ebit7...rdma_bth_immeth_immeth_data_sbit8_ebit31}
@@ -183,7 +184,26 @@ struct capri_intrinsic_ring_t {
     .brend; \
 _table_i_valid:;
 
-    
+#define CAPRI_SET_TABLE_I_VALID_C(_c, _tbl_id_r, _vld) \
+    .brbegin; \
+    br          _tbl_id_r[1:0]; \
+    nop; \
+    .brcase 0; \
+        b _table_i_valid_c; \
+        CAPRI_SET_TABLE_0_VALID_C(_c, _vld); \
+    .brcase 1; \
+        b _table_i_valid_c; \
+        CAPRI_SET_TABLE_1_VALID_C(_c, _vld); \
+    .brcase 2; \
+        b _table_i_valid_c; \
+        CAPRI_SET_TABLE_2_VALID_C(_c, _vld); \
+    .brcase 3; \
+        b _table_i_valid_c; \
+        CAPRI_SET_TABLE_3_VALID_C(_c, _vld); \
+    .brend; \
+_table_i_valid_c:;
+
+   
 #define CAPRI_GET_TABLE_I_K_AND_ARG(_phv_name, _tbl_id_r, _k_base_r, _arg_base_r) \
     .brbegin; \
     br      _tbl_id_r[1:0]; \
