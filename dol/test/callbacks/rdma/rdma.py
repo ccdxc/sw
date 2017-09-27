@@ -18,3 +18,9 @@ def GetPktExpPsn (tc, pkt, args):
 
 def GetVAfromSLAB (tc, pkt, args):
     return (tc.config.rdmasession.lqp.pd.ep.slabs.Get(args.slab_id).address + args.offset)
+
+def GetCQExpColor (tc, desc, args = None):
+    if tc.pvtdata.rq_cq_pre_qstate.p_index0 == 0:
+       return (not tc.pvtdata.rq_cq_pre_qstate.color)
+    else:
+       return (tc.pvtdata.rq_cq_pre_qstate.color)

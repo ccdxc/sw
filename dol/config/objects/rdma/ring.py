@@ -59,6 +59,11 @@ class RdmaRingObject(ring.RingObject):
         descriptor.Read()
         self.queue.qstate.Read()
 
+        # Increment consumer index for CQs
+        if self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_CQ":
+            cfglogger.info('incrementing cindex..')
+            self.queue.qstate.incr_cindex(0)
+
     def Read(self):
         raise NotImplementedError
 

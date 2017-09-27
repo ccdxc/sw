@@ -30,6 +30,8 @@ def __resolve_refs_obj(obj, tc):
             val = v.Get(tc)
             tc.info("Resolving spec.fields.%s = " % a, val)
             obj.__dict__[a] = val
+        elif objects.IsCallback(v):
+            obj.__dict__[a] = v.call(tc, obj)
         elif isinstance(v, list):
             __resolve_refs_list(v, tc)
         elif objects.IsFrameworkTemplateObject(v):
