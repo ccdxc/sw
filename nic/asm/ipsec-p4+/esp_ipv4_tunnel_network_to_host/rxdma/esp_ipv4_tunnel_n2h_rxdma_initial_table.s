@@ -25,6 +25,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     subi r2, r2, 2
     phvwr p.ipsec_int_header_tailroom_offset, r2
 
+   //Ethernet header excluding IP, ESP, IV
     add r3, r0, k.p42p4plus_hdr_ip_hdr_size
     addi r3, r3, ESP_FIXED_HDR_SIZE 
     sub r4, k.p42p4plus_hdr_ipsec_payload_start, r3 
@@ -38,7 +39,11 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_global_lif, k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
     phvwr p.ipsec_global_qtype, k.p4_rxdma_intr_qtype
     phvwr p.ipsec_global_qid, k.p4_rxdma_intr_qid
-    //phvwr p.ipsec_global_frame_size, k.{p4_intr_frame_size_sbit0_ebit5...p4_intr_frame_size_sbit6_ebit13}
+   
+    add r6, r0, k.p42p4plus_hdr_ipsec_payload_start
+    subi r6, r6, 4
+    phvwr p.ipsec_to_stage3_iv_salt_off, r6 
+    phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 
     // seq-no logic
     slt c1, k.p42p4plus_hdr_seq_no, d.expected_seq_no

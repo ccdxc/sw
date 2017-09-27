@@ -30,7 +30,7 @@ header_type ipsec_to_stage3_t {
         iv_salt       : 32;
         iv_size       : 8;
         iv_salt_off   : 8;
-        stage3_pad1   : ADDRESS_WIDTH;
+        ipsec_cb_addr : ADDRESS_WIDTH;
     }
 }
 
@@ -173,6 +173,9 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 @pragma scratch_metadata
 metadata p4_to_p4plus_ipsec_header_t p42p4plus_hdr_scratch;
 
+@pragma scratch_metadata
+metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
+ 
 
 #define IPSEC_SCRATCH_T0_S2S \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
@@ -273,6 +276,7 @@ action esp_v4_tunnel_n2h_update_input_desc_aol (addr0, offset0, length0,
     modify_field(barco_desc_in.O0, 0);
     modify_field(barco_desc_in.L0, ipsec_global.packet_length); 
 
+    modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr);
     // Load tail-descriptor
     modify_field(p42p4plus_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0); 
@@ -417,8 +421,8 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
     modify_field(p4_rxdma_intr_scratch.qid, p4_rxdma_intr.qid);
     modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
     modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
-
-
+    
+    
     modify_field(ipsec_int_header.ipsec_cb_index, ipsec_cb_index);
  
 
