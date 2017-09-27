@@ -10,12 +10,6 @@ def Setup(infra, module):
     if 'flow' in iterelem.__dict__:
         module.testspec.selectors.flow.Extend(iterelem.flow)
 
-    if module.args == None:
-        return
-
-    if 'maxflows' in module.args.__dict__:
-        module.testspec.selectors.maxflows = module.args.maxflows
-
     return
 
 def Teardown(infra, module):

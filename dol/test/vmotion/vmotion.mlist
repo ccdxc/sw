@@ -1,0 +1,50 @@
+# Feature Test Modules List
+feature:
+    id          : vmotion
+    package     : test.vmotion
+    module      : vmotion
+    # Disabling till step callback support is available
+    enable      : False
+    ignore      : False
+
+modules:
+    - module:
+        name    : VMOTION
+        spec    : vmotion.testspec
+        iterate :
+            - step    : FLOW_NORMAL
+              flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+            - step    : FLOW_DROP
+              flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+            - step    : FLOW_VM_TUNNEL
+              flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+            - step    : FLOW_NORMAL
+              flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+            - step    : FLOW_DROP
+              flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+            - step    : FLOW_VM_TUNNEL
+              flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+            - step    : FLOW_NORMAL
+              flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+            - step    : FLOW_DROP
+              flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+            - step    : FLOW_VM_TUNNEL
+              flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+            - step    : FLOW_NORMAL
+              flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+            - step    : FLOW_DROP
+              flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+            - step    : FLOW_VM_TUNNEL
+              flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+            - step    : FLOW_NORMAL
+              flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+            - step    : FLOW_DROP
+              flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+            - step    : FLOW_VM_TUNNEL
+              flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+            - step    : FLOW_NORMAL
+              flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - step    : FLOW_DROP
+              flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - step    : FLOW_VM_TUNNEL
+              flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
