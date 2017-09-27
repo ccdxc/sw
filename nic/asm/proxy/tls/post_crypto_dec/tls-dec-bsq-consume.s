@@ -30,15 +30,22 @@ tls_dec_bsq_consume_process:
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TLS)
 	add		r1, k.tls_global_phv_fid, r0
 	/* data will be in r3 */
-    add     r3, d.{pi_1}, r0
+    add     r3, d.{pi_1}.hx, r0
 	CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_BSQ, r3)
 
 	memwr.dx  	 r4, r3
+    /* For now, if we have a Barco Op error, bail out right here */
+    sne     c1, r0, k.tls_global_phv_barco_op_failed
+    bcf     [c1], tls_dec_bsq_consume_process_done
+    nop
+
 table_read_QUEUE_SESQ:
     add     r1, r0, k.to_s3_odesc
     addi    r1, r1, PKT_DESC_AOL_OFFSET
 
 	CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_post_read_odesc,
 	                    r1, TABLE_SIZE_512_BITS)
+
+tls_dec_bsq_consume_process_done:
 	nop.e
 	nop

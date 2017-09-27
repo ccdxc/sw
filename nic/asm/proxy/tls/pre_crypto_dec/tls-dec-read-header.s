@@ -36,6 +36,19 @@ tls_dec_read_header_process:
     seq         c1, D.tls_hdr_type, r1
     phvwri.c1   p.tls_global_phv_write_arq, 1
 
+    /* Setup AAD using the incoming TLS record information */
+	phvwr		p.s4_s6_t0_phv_aad_type, d.u.tls_read_tls_header_d.tls_hdr_type
+	phvwr		p.s4_s6_t0_phv_aad_version_major, d.u.tls_read_tls_header_d.tls_hdr_version_major
+	phvwr		p.s4_s6_t0_phv_aad_version_minor, d.u.tls_read_tls_header_d.tls_hdr_version_minor
+    /* Adjust length to TLSCompressed.length */
+    add         r1, r0, d.u.tls_read_tls_header_d.tls_hdr_len
+    subi        r1, r1, (NTLS_NONCE_SIZE + TLS_AES_GCM_AUTH_TAG_SIZE)
+	phvwr		p.s4_s6_t0_phv_aad_length, r1
+
+    phvwr       p.crypto_iv_explicit_iv, d.u.tls_read_tls_header_d.tls_iv
+
+    phvwr       p.to_s6_cur_tls_data_len, d.u.tls_read_tls_header_d.tls_hdr_len
+
 	
 #if 0
 	seq		    c1, k.tls_global_phv_pending_rx_serq, r0

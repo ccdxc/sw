@@ -65,19 +65,17 @@ def TestCaseSetup(tc):
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
     key_size = 16
     #key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-    key = b'\x92\xea\x09\x24\x15\x0b\x11\xbf\xe3\x85\x3a\xfd\xdd\x40\x96\xcc'
+    key = b'\x19\xe4\xa3\x26\xa5\x0a\xf1\x29\x06\x3c\x11\x0c\x7f\x03\xf9\x5e'
     tlscb.crypto_key.Update(key_type, key_size, key)
 
     # TLS-CB Setup
     #tlscb.command = 0x30000000
     tlscb.command = 0x30100000
     tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
-    #tlscb.salt = 0x12345678
-    # Salt: 0xf5 0x07 0x99 0x88
-    tlscb.salt = 0x889907f5
-    #tlscb.explicit_iv = 0xfedcba9876543210
-    # IV: 0xea 0x56 0x94 0xc4 0xb7 0xd0 0x2b 0x63
-    tlscb.explicit_iv = 0x0200000000000000
+    # Salt: 0xaf 0x98 0xc5 0xe2
+    tlscb.salt = 0xe2c598af
+    # IV: 
+    tlscb.explicit_iv = 0x0100000000000000
     tlscb.is_decrypt_flow = True
     tlscb.SetObjValPd()
     print("IS Decrypt Flow: %s" % tlscb.is_decrypt_flow)

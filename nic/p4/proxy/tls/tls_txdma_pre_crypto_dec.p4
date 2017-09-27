@@ -153,6 +153,8 @@ header_type to_stage_5_phv_t {
     }
 }
 
+#define s4_s6_t0_phv_t  additional_data_t
+#define GENERATE_S4_S6_T0  GENERATE_AAD_FIELDS(s4_s6_t0_scratch, s4_s6_t0_phv)
 
 
 header_type to_stage_6_phv_t {
@@ -194,19 +196,6 @@ header_type s2_s3_t0_phv_t {
         idesc_aol0_len                  : 32;
     }
 }
-
-#define GENERATE_S4_S6_T0                                                               \
-        modify_field(s4_s6_t0_scratch.idesc_aol0_addr, s4_s6_t0_phv.idesc_aol0_addr);   \
-        modify_field(s4_s6_t0_scratch.idesc_aol0_offset, s4_s6_t0_phv.idesc_aol0_offset);   \
-        modify_field(s4_s6_t0_scratch.idesc_aol0_len, s4_s6_t0_phv.idesc_aol0_len);
-header_type s4_s6_t0_phv_t {
-    fields {
-        idesc_aol0_addr                 : ADDRESS_WIDTH;
-        idesc_aol0_offset               : 32;
-        idesc_aol0_len                  : 32;
-    }
-}
-
 
 #define GENERATE_S5_S6_T1                                                               \
         modify_field(s5_s6_t1_s2s_scratch.arq_base, s5_s6_t1_s2s.arq_base);             \
@@ -262,6 +251,12 @@ header_type s3_t2_s2s_phv_t {
 header_type barco_desc_pad_t {
     fields {
         pad                     : 96;
+    }
+}
+
+header_type ring_entry_pad_t {
+    fields {
+        pad                     : 192;
     }
 }
 
@@ -364,7 +359,12 @@ metadata dma_cmd_phv2mem_t dma_cmd6;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd7;
 
+@pragma dont_trim
+metadata ring_entry_t ring_entry; 
 
+/* FIXME: Remove when the pad generation is fixed in the NCC */
+@pragma dont_trim
+metadata ring_entry_pad_t ring_entry_pad;
 
 @pragma scratch_metadata
 metadata tls_global_phv_t tls_global_phv_scratch;
@@ -401,8 +401,6 @@ metadata tpage_alloc_d_t tpage_alloc_d;
 @pragma scratch_metadata
 metadata arq_tx_pi_d_t arq_tx_pi_d;
 
-@pragma dont_trim
-metadata ring_entry_t ring_entry; 
 
 
 

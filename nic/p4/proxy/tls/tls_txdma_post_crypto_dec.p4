@@ -43,6 +43,8 @@ header_type read_rnmpr_free_pi_d_t {
 #define GENERATE_GLOBAL_K                                                                               \
         modify_field(tls_global_phv_scratch.fid, tls_global_phv.fid);                                   \
         modify_field(tls_global_phv_scratch.dec_flow, tls_global_phv.dec_flow);                         \
+        modify_field(tls_global_phv_scratch.barco_op_failed, tls_global_phv.barco_op_failed);           \
+        modify_field(tls_global_phv_scratch.pad, tls_global_phv.pad);                                   \
         modify_field(tls_global_phv_scratch.qstate_addr, tls_global_phv.qstate_addr);
 
 
@@ -51,6 +53,8 @@ header_type tls_global_phv_t {
     fields {
         fid                             : 16;
         dec_flow                        : 8;
+        barco_op_failed                 : 1;
+        pad                             : 7;
         qstate_addr                     : HBM_ADDRESS_WIDTH;
     }
 }

@@ -45,9 +45,18 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_key_desc_index, d.{u.tls_bld_brq5_d.barco_key_desc_index}.wx
     CAPRI_OPERAND_DEBUG(d.{u.tls_bld_brq5_d.barco_key_desc_index}.wx)
 
+    phvwr       p.crypto_iv_salt, d.u.tls_bld_brq5_d.salt
+    CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.salt)
+
+    /* FIXME: Misnomer, this is actually the sequence number */
+	phvwr		p.s4_s6_t0_phv_aad_seq_num, d.u.tls_bld_brq5_d.explicit_iv
+    tbladd      d.u.tls_bld_brq5_d.explicit_iv, 1
 
     phvwr       p.barco_desc_command, d.u.tls_bld_brq5_d.barco_command
     CAPRI_OPERAND_DEBUG(d.u.tls_bld_brq5_d.barco_command)
+
+    addi        r1, r0, NTLS_AAD_SIZE
+    phvwr       p.barco_desc_header_size, r1.wx
 
 	/* address will be in r4 */
 	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
