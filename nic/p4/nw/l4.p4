@@ -103,8 +103,9 @@ action l4_profile(ip_normalization_en,
                   ip_df_action,
                   ip_options_action,
                   ip_invalid_len_action,
-                  ip_normalize_ttl,
                   ip_fragment_drop,
+                  ip_ttl_change_detect_en,
+                  ip_normalize_ttl,
                   icmp_deprecated_msgs_drop,
                   icmp_redirect_msg_drop,
                   icmp_invalid_code_action,
@@ -124,8 +125,7 @@ action l4_profile(ip_normalization_en,
                   tcp_invalid_flags_drop,
                   tcp_non_syn_first_pkt_drop,
                   tcp_split_handshake_detect_en,
-                  tcp_split_handshake_drop,
-                  ip_ttl_change_detect_en) {
+                  tcp_split_handshake_drop) {
 
     modify_field(l4_metadata.ip_normalization_en, ip_normalization_en);
     modify_field(l4_metadata.icmp_normalization_en, icmp_normalization_en);

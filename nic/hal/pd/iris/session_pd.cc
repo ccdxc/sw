@@ -282,7 +282,6 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     d.flow_info_action_u.flow_info_flow_info.multicast_en = flow_attrs->mcast_en;
 
     // TBD: where do these come from ?
-    d.flow_info_action_u.flow_info_flow_info.flow_steering_only = 0;
     // TBD: the following come when QoS model is defined
     d.flow_info_action_u.flow_info_flow_info.ingress_policer_index = 0;
     d.flow_info_action_u.flow_info_flow_info.egress_policer_index = 0;

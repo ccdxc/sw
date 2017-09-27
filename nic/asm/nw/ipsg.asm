@@ -14,11 +14,10 @@ ipsg_miss:
   balcf       r7, [c1 & c2], f_tcp_stateless_normalization
   seq         c1, k.control_metadata_ipsg_enable, FALSE
   nop.c1.e
-  seq         c2, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
-  seq         c3, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
-  bcf         [c2|c3], ipsg_drop
-  nop
-  nop.e
+  smeqb       c2, k.flow_lkp_metadata_lkp_type, \
+                FLOW_KEY_LOOKUP_TYPE_IP_MASK, FLOW_KEY_LOOKUP_TYPE_IP_MASK
+  bcf         [c2], ipsg_drop
+  nop.!c2.e
   nop
 
 .align
@@ -37,7 +36,6 @@ ipsg_hit:
   nop
   nop.e
   nop
-
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX

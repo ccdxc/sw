@@ -20,6 +20,5 @@ input_properties:
   phvwr       p.control_metadata_flow_miss_tm_oqueue, d.input_properties_d.flow_miss_tm_oqueue
   phvwr       p.control_metadata_flow_miss_idx, d.input_properties_d.flow_miss_idx
   phvwr       p.control_metadata_ipsg_enable, d.input_properties_d.ipsg_enable
-  phvwr       p.control_metadata_lif_filter, d.input_properties_d.filter
   phvwr.e     p.qos_metadata_dscp, d.input_properties_d.dscp
   phvwr       p.l4_metadata_profile_idx, d.input_properties_d.l4_profile_idx

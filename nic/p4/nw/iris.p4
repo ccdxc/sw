@@ -50,7 +50,6 @@ header_type control_metadata_t {
         src_lif                        : 11;
         flow_miss_action               : 2;
         flow_miss_tm_oqueue            : 5;
-        lif_filter                     : 6;
         p4plus_app_id                  : 8;
         rdma_enabled                   : 1;
         src_lport                      : 11;
@@ -228,6 +227,9 @@ header_type scratch_metadata_t {
         policer_burst                 : 40;
         policer_rate                  : 40;
         policer_tbkt                  : 40;
+
+        size16                        : 16;
+        size8                         : 8;
     }
 }
 

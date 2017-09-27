@@ -97,7 +97,7 @@ action flow_hit_drop(flow_index, start_timestamp) {
 // Is p4+ expecting a flow_index per flow or per session ?
 // We should have a flag here which enables/disables connection tracking.
 // Change all timestamps to be 48 bit.
-action flow_info(dst_lport, multicast_en, qtype, flow_steering_only,
+action flow_info(dst_lport, multicast_en, qtype,
                  ingress_policer_index, egress_policer_index,
                  ingress_mirror_session_id, egress_mirror_session_id,
                  rewrite_index, tunnel_rewrite_index, tunnel_vnid,
@@ -109,14 +109,11 @@ action flow_info(dst_lport, multicast_en, qtype, flow_steering_only,
 
     /* egress port/vf */
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
-
-    if (flow_steering_only == FALSE) {
-        if (multicast_en == TRUE) {
-            modify_field(capri_intrinsic.tm_replicate_en, multicast_en);
-            modify_field(capri_intrinsic.tm_replicate_ptr, dst_lport);
-        } else {
-            modify_field(control_metadata.dst_lport, dst_lport);
-        }
+    if (multicast_en == TRUE) {
+        modify_field(capri_intrinsic.tm_replicate_en, multicast_en);
+        modify_field(capri_intrinsic.tm_replicate_ptr, dst_lport);
+    } else {
+        modify_field(control_metadata.dst_lport, dst_lport);
     }
 
     /* Output queue selection */
@@ -178,9 +175,14 @@ action flow_info(dst_lport, multicast_en, qtype, flow_steering_only,
 
     /* dummy ops to keep compiler happy */
     modify_field(scratch_metadata.flow_start_timestamp, start_timestamp);
-    modify_field(scratch_metadata.flag, flow_steering_only);
     modify_field(scratch_metadata.qid_en, qid_en);
     modify_field(scratch_metadata.log_en, log_en);
+
+    /* promote size of data fields to multiple of bytes */
+    modify_field(scratch_metadata.size16, twice_nat_idx);
+    modify_field(scratch_metadata.size8, cos_en);
+    modify_field(scratch_metadata.size8, cos);
+    modify_field(scratch_metadata.size8, dscp_en);
 }
 
 action flow_hit_from_vm_bounce(src_lif) {

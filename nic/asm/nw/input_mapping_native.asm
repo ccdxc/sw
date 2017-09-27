@@ -31,7 +31,7 @@ native_ipv4_packet:
   seq         c4, k.ipv4_srcAddr[31:28], 0xe
   xor         r6, -1, r0
   seq         c5, k.ipv4_srcAddr, r6
-  seq         c6, k.ipv4_dstAddr, 0
+  seq         c6, k.ipv4_dstAddr, r0
   setcf       c7, [c1|c2|c3|c4|c5|c6]
   seq         c1, k.ipv4_dstAddr[31:24], 0x7f
   seq         c2, k.ipv4_srcAddr, k.ipv4_dstAddr
@@ -50,15 +50,16 @@ native_ipv4_packet:
   phvwr.c1    p.l4_metadata_tcp_data_len, r7
 
   seq         c1, k.ipv4_protocol, IP_PROTO_UDP
-  phvwr.c1    p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
-  phvwr.c1    p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
+  phvwr.c1    p.{flow_lkp_metadata_lkp_sport,flow_lkp_metadata_lkp_dport}, \
+                  k.{udp_srcPort,udp_dstPort}
 
   phvwr       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   phvwr       p.flow_lkp_metadata_lkp_src, k.ipv4_srcAddr
   phvwr       p.flow_lkp_metadata_lkp_dst, k.ipv4_dstAddr
   phvwr       p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol
   phvwr       p.flow_lkp_metadata_ipv4_flags, k.ipv4_flags
-  phvwr       p.flow_lkp_metadata_ipv4_frag_offset, k.{ipv4_fragOffset_sbit0_ebit4,ipv4_fragOffset_sbit5_ebit12}
+  phvwr       p.flow_lkp_metadata_ipv4_frag_offset, \
+                  k.{ipv4_fragOffset_sbit0_ebit4,ipv4_fragOffset_sbit5_ebit12}
   phvwr       p.flow_lkp_metadata_ipv4_hlen, r5
   phvwr       p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
 
@@ -108,8 +109,8 @@ native_ipv6_packet:
   phvwr.c1    p.l4_metadata_tcp_data_len, r7
 
   seq         c1, k.ipv6_nextHdr, IP_PROTO_UDP
-  phvwr.c1    p.flow_lkp_metadata_lkp_sport, k.udp_srcPort
-  phvwr.c1    p.flow_lkp_metadata_lkp_dport, k.udp_dstPort
+  phvwr.c1    p.{flow_lkp_metadata_lkp_sport,flow_lkp_metadata_lkp_dport}, \
+                  k.{udp_srcPort,udp_dstPort}
 
   phvwr       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
   phvwr       p.flow_lkp_metadata_lkp_src[127:64], r2

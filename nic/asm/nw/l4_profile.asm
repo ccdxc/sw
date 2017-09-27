@@ -1,3 +1,4 @@
+#include "nw.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
@@ -9,45 +10,76 @@ struct phv_         p;
 %%
 
 l4_profile:
-  phvwr       p.l4_metadata_ip_normalization_en, d.u.l4_profile_d.ip_normalization_en
-  phvwr       p.l4_metadata_icmp_normalization_en, d.u.l4_profile_d.icmp_normalization_en
-  phvwr       p.l4_metadata_tcp_normalization_en, d.u.l4_profile_d.tcp_normalization_en
-  phvwr       p.l4_metadata_ip_rsvd_flags_action, d.u.l4_profile_d.ip_rsvd_flags_action
-  phvwr       p.l4_metadata_ip_df_action, d.u.l4_profile_d.ip_df_action
-  phvwr       p.l4_metadata_ip_options_action, d.u.l4_profile_d.ip_options_action
-  phvwr       p.l4_metadata_ip_invalid_len_action, d.u.l4_profile_d.ip_invalid_len_action
+  ASSERT_PHVWR(p, l4_metadata_ip_normalization_en, l4_metadata_ip_rsvd_flags_action,
+               d, u.l4_profile_d.ip_normalization_en, u.l4_profile_d.ip_rsvd_flags_action)
+  phvwr       p.{l4_metadata_ip_normalization_en, \
+                 l4_metadata_icmp_normalization_en, \
+                 l4_metadata_tcp_normalization_en, \
+                 l4_metadata_ip_rsvd_flags_action}, \
+              d.{u.l4_profile_d.ip_normalization_en, \
+                 u.l4_profile_d.icmp_normalization_en, \
+                 u.l4_profile_d.tcp_normalization_en, \
+                 u.l4_profile_d.ip_rsvd_flags_action}
+  ASSERT_PHVWR(p, l4_metadata_ip_df_action, l4_metadata_ip_invalid_len_action,
+               d, u.l4_profile_d.ip_df_action, u.l4_profile_d.ip_invalid_len_action)
+  phvwr       p.{l4_metadata_ip_df_action, \
+                 l4_metadata_ip_options_action, \
+                 l4_metadata_ip_invalid_len_action}, \
+              d.{u.l4_profile_d.ip_df_action, \
+                 u.l4_profile_d.ip_options_action, \
+                 u.l4_profile_d.ip_invalid_len_action}
+
   phvwr       p.l4_metadata_ip_normalize_ttl, d.u.l4_profile_d.ip_normalize_ttl
   phvwr       p.l4_metadata_ip_fragment_drop, d.u.l4_profile_d.ip_fragment_drop
-  phvwr       p.l4_metadata_icmp_deprecated_msgs_drop, d.u.l4_profile_d.icmp_deprecated_msgs_drop
-  phvwr       p.l4_metadata_icmp_redirect_msg_drop, d.u.l4_profile_d.icmp_redirect_msg_drop
-  phvwr       p.l4_metadata_icmp_invalid_code_action, d.u.l4_profile_d.icmp_invalid_code_action
-  phvwr       p.l4_metadata_tcp_rsvd_flags_action, d.u.l4_profile_d.tcp_rsvd_flags_action
-  phvwr       p.l4_metadata_tcp_unexpected_mss_action, d.u.l4_profile_d.tcp_unexpected_mss_action
-  phvwr       p.l4_metadata_tcp_unexpected_win_scale_action, d.u.l4_profile_d.tcp_unexpected_win_scale_action
-  phvwr       p.l4_metadata_tcp_urg_ptr_not_set_action, d.u.l4_profile_d.tcp_urg_ptr_not_set_action
-  phvwr       p.l4_metadata_tcp_urg_flag_not_set_action, d.u.l4_profile_d.tcp_urg_flag_not_set_action
-  phvwr       p.l4_metadata_tcp_urg_payload_missing_action, d.u.l4_profile_d.tcp_urg_payload_missing_action
-  phvwr       p.l4_metadata_tcp_unexpected_echo_ts_action, d.u.l4_profile_d.tcp_unexpected_echo_ts_action
-  phvwr       p.l4_metadata_tcp_rst_with_data_action, d.u.l4_profile_d.tcp_rst_with_data_action
-  phvwr       p.l4_metadata_tcp_data_len_gt_mss_action, d.u.l4_profile_d.tcp_data_len_gt_mss_action
-  phvwr       p.l4_metadata_tcp_data_len_gt_win_size_action, d.u.l4_profile_d.tcp_data_len_gt_win_size_action
-  phvwr       p.l4_metadata_tcp_unexpected_ts_option_action, d.u.l4_profile_d.tcp_unexpected_ts_option_action
-  phvwr       p.l4_metadata_tcp_ts_not_present_drop, d.u.l4_profile_d.tcp_ts_not_present_drop
-  phvwr       p.l4_metadata_tcp_flags_nonsyn_noack_drop, d.u.l4_profile_d.tcp_flags_nonsyn_noack_drop
+
+  ASSERT_PHVWR(p, l4_metadata_icmp_deprecated_msgs_drop, l4_metadata_icmp_invalid_code_action,
+               d, u.l4_profile_d.icmp_deprecated_msgs_drop, u.l4_profile_d.icmp_invalid_code_action)
+  phvwr       p.{l4_metadata_icmp_deprecated_msgs_drop, \
+                 l4_metadata_icmp_redirect_msg_drop, \
+                 l4_metadata_icmp_invalid_code_action}, \
+              d.{u.l4_profile_d.icmp_deprecated_msgs_drop, \
+                 u.l4_profile_d.icmp_redirect_msg_drop, \
+                 u.l4_profile_d.icmp_invalid_code_action}
+
+  ASSERT_PHVWR(p, l4_metadata_tcp_rsvd_flags_action, l4_metadata_tcp_flags_nonsyn_noack_drop,
+               d, u.l4_profile_d.tcp_rsvd_flags_action, u.l4_profile_d.tcp_flags_nonsyn_noack_drop)
+  phvwr       p.{l4_metadata_tcp_rsvd_flags_action, \
+                 l4_metadata_tcp_unexpected_mss_action, \
+                 l4_metadata_tcp_unexpected_win_scale_action, \
+                 l4_metadata_tcp_urg_ptr_not_set_action, \
+                 l4_metadata_tcp_urg_flag_not_set_action, \
+                 l4_metadata_tcp_urg_payload_missing_action, \
+                 l4_metadata_tcp_unexpected_echo_ts_action, \
+                 l4_metadata_tcp_rst_with_data_action, \
+                 l4_metadata_tcp_data_len_gt_mss_action, \
+                 l4_metadata_tcp_data_len_gt_win_size_action, \
+                 l4_metadata_tcp_unexpected_ts_option_action, \
+                 l4_metadata_tcp_ts_not_present_drop, \
+                 l4_metadata_tcp_flags_nonsyn_noack_drop}, \
+              d.{u.l4_profile_d.tcp_rsvd_flags_action, \
+                 u.l4_profile_d.tcp_unexpected_mss_action, \
+                 u.l4_profile_d.tcp_unexpected_win_scale_action, \
+                 u.l4_profile_d.tcp_urg_ptr_not_set_action, \
+                 u.l4_profile_d.tcp_urg_flag_not_set_action, \
+                 u.l4_profile_d.tcp_urg_payload_missing_action, \
+                 u.l4_profile_d.tcp_unexpected_echo_ts_action, \
+                 u.l4_profile_d.tcp_rst_with_data_action, \
+                 u.l4_profile_d.tcp_data_len_gt_mss_action, \
+                 u.l4_profile_d.tcp_data_len_gt_win_size_action, \
+                 u.l4_profile_d.tcp_unexpected_ts_option_action, \
+                 u.l4_profile_d.tcp_ts_not_present_drop, \
+                 u.l4_profile_d.tcp_flags_nonsyn_noack_drop}
+
   phvwr       p.l4_metadata_tcp_invalid_flags_drop, d.u.l4_profile_d.tcp_invalid_flags_drop
-  phvwr       p.l4_metadata_tcp_non_syn_first_pkt_drop, d.u.l4_profile_d.tcp_non_syn_first_pkt_drop
-  phvwr       p.l4_metadata_tcp_split_handshake_detect_en, d.u.l4_profile_d.tcp_split_handshake_detect_en
-  phvwr       p.l4_metadata_tcp_split_handshake_drop, d.u.l4_profile_d.tcp_split_handshake_drop
-  phvwr       p.l4_metadata_ip_ttl_change_detect_en, d.u.l4_profile_d.ip_ttl_change_detect_en
   bal         r7, validate_tunneled_packet2
   xor         r6, -1, r0
   bal         r7, f_ip_normalization
-  nop
+  phvwr       p.l4_metadata_tcp_split_handshake_detect_en, d.u.l4_profile_d.tcp_split_handshake_detect_en
   seq         c2, k.p4plus_to_p4_valid, TRUE
   bal.c2      r7, f_p4plus_to_p4_apps
-  nop
-  nop.e
-  nop
+  phvwr       p.l4_metadata_tcp_non_syn_first_pkt_drop, d.u.l4_profile_d.tcp_non_syn_first_pkt_drop
+  phvwr.e     p.l4_metadata_tcp_split_handshake_drop, d.u.l4_profile_d.tcp_split_handshake_drop
+  phvwr       p.l4_metadata_ip_ttl_change_detect_en, d.u.l4_profile_d.ip_ttl_change_detect_en
 
 validate_tunneled_packet2:
   seq         c1, k.tunnel_metadata_tunnel_terminate, 1

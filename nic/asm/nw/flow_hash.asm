@@ -31,9 +31,8 @@ flow_hash_info:
   bcf         [c1&c2], flow_hash_more_hashs
   phvwr       p.recirc_header_valid, 0
   phvwr       p.control_metadata_flow_miss, 1
-  phvwr       p.control_metadata_flow_miss_ingress, 1
-  phvwr.e     p.flow_info_metadata_flow_index, 0
-  nop
+  phvwr.e     p.control_metadata_flow_miss_ingress, 1
+  phvwr       p.flow_info_metadata_flow_index, 0
 
 flow_hash_hit:
   phvwr       p.recirc_header_valid, 0

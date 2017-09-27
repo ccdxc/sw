@@ -1,3 +1,4 @@
+#include "nw.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
@@ -11,12 +12,10 @@ struct phv_        p;
 flow_info:
   /* egress port/vf */
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
-  seq         c1, d.u.flow_info_d.flow_steering_only, TRUE
-  nop.c1.e
   seq         c1, d.u.flow_info_d.multicast_en, 1
   phvwr.c1    p.capri_intrinsic_tm_replicate_en, 1
   phvwr.c1    p.capri_intrinsic_tm_replicate_ptr, d.u.flow_info_d.dst_lport
-  phvwr.!c6   p.control_metadata_dst_lport, d.u.flow_info_d.dst_lport
+  phvwr.!c1   p.control_metadata_dst_lport, d.u.flow_info_d.dst_lport
 
   /* output queue selection */
   phvwr       p.capri_intrinsic_tm_oq, d.u.flow_info_d.ingress_tm_oqueue
@@ -32,8 +31,7 @@ flow_info:
   phvwr       p.control_metadata_egress_mirror_session_id, d.u.flow_info_d.egress_mirror_session_id
 
   /* logging */
-  seq         c1, d.u.flow_info_d.log_en, 1
-  phvwr.c1    p.capri_intrinsic_tm_cpu, 1
+  phvwr       p.capri_intrinsic_tm_cpu, d.u.flow_info_d.log_en
 
   /* policer indicies */
   phvwr       p.policer_metadata_ingress_policer_index, d.u.flow_info_d.ingress_policer_index
@@ -55,20 +53,36 @@ flow_info:
   /* rewrite info */
   phvwr       p.rewrite_metadata_rewrite_index, d.u.flow_info_d.rewrite_index
   phvwr       p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
-  phvwr       p.nat_metadata_nat_ip, d.u.flow_info_d.nat_ip
-  phvwr       p.nat_metadata_nat_l4_port, d.u.flow_info_d.nat_l4_port
-  phvwr       p.nat_metadata_twice_nat_idx, d.u.flow_info_d.twice_nat_idx
+
+  ASSERT_PHVWR(p, nat_metadata_nat_ip, nat_metadata_twice_nat_idx,
+               d, u.flow_info_d.nat_ip, u.flow_info_d.twice_nat_idx)
+  phvwr       p.{nat_metadata_nat_ip, \
+                 nat_metadata_nat_l4_port, \
+                 nat_metadata_twice_nat_idx}, \
+              d.{u.flow_info_d.nat_ip, \
+                 u.flow_info_d.nat_l4_port, \
+                 u.flow_info_d.twice_nat_idx}
 
   /* tunnel info */
   phvwr       p.tunnel_metadata_tunnel_originate, d.u.flow_info_d.tunnel_originate
-  phvwr       p.rewrite_metadata_tunnel_rewrite_index, d.u.flow_info_d.tunnel_rewrite_index
-  phvwr       p.rewrite_metadata_tunnel_vnid, d.u.flow_info_d.tunnel_vnid
+  ASSERT_PHVWR(p, rewrite_metadata_tunnel_rewrite_index, rewrite_metadata_tunnel_vnid,
+               d, u.flow_info_d.tunnel_rewrite_index, u.flow_info_d.tunnel_vnid)
+  phvwr.e     p.{rewrite_metadata_tunnel_rewrite_index, \
+                 rewrite_metadata_tunnel_vnid}, \
+              d.{u.flow_info_d.tunnel_rewrite_index, \
+                 u.flow_info_d.tunnel_vnid}
 
   /* qos info */
-  phvwr       p.qos_metadata_cos_en, d.u.flow_info_d.cos_en
-  phvwr       p.qos_metadata_cos, d.u.flow_info_d.cos
-  phvwr.e     p.qos_metadata_dscp_en, d.u.flow_info_d.dscp_en
-  phvwr       p.qos_metadata_dscp, d.u.flow_info_d.dscp
+  ASSERT_PHVWR(p, qos_metadata_cos_en, qos_metadata_dscp,
+               d, u.flow_info_d.cos_en, u.flow_info_d.dscp)
+  phvwr       p.{qos_metadata_cos_en, \
+                 qos_metadata_cos, \
+                 qos_metadata_dscp_en, \
+                 qos_metadata_dscp}, \
+              d.{u.flow_info_d.cos_en, \
+                 u.flow_info_d.cos, \
+                 u.flow_info_d.dscp_en, \
+                 u.flow_info_d.dscp}
 
 .align
 flow_miss:

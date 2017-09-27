@@ -188,7 +188,7 @@ table input_mapping_native {
 
 action input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
                         ipsg_enable, dscp, l4_profile_idx, src_lport,
-                        filter, flow_miss_tm_oqueue) {
+                        flow_miss_tm_oqueue) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
     modify_field(control_metadata.flow_miss_action, flow_miss_action);
@@ -197,7 +197,6 @@ action input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
     modify_field(control_metadata.ipsg_enable, ipsg_enable);
     modify_field(qos_metadata.dscp, dscp);
     modify_field(l4_metadata.profile_idx, l4_profile_idx);
-    modify_field(control_metadata.lif_filter, filter);
 
     modify_field(control_metadata.src_lif, capri_intrinsic.lif);
     modify_field(control_metadata.src_lport, src_lport);
@@ -247,7 +246,7 @@ table input_properties {
 action input_properties_mac_vlan(src_lif, src_lif_check_en,
                                  vrf, dir, flow_miss_action,flow_miss_idx,
                                  ipsg_enable, dscp, l4_profile_idx, src_lport,
-                                 filter, flow_miss_tm_oqueue) {
+                                 flow_miss_tm_oqueue) {
     adjust_lkp_fields();
 
     // update packet length based on tm_iport
@@ -275,7 +274,7 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
 
     modify_field(control_metadata.src_lif, src_lif);
     input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
-                     ipsg_enable, dscp, l4_profile_idx, src_lport, filter,
+                     ipsg_enable, dscp, l4_profile_idx, src_lport,
                      flow_miss_tm_oqueue);
 
     // dummy ops to keep compiler happy
