@@ -1,10 +1,11 @@
 # Feature Test Modules List
 feature:
-    id          : l3uc_vxlan
-    package     : test.networking
-    module      : vxlan
-    enable      : True
-    ignore      : False
+    id      : vxlan
+    sub     : l3uc_vxlan
+    package : test.networking
+    module  : vxlan
+    enable  : True
+    ignore  : False
 
 modules:
     - module:

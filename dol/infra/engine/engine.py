@@ -2,12 +2,13 @@
 
 import pdb
 
-import infra.factory.factory    as factory
-import infra.config.config      as config
-import infra.common.objects     as objects
-import infra.common.defs        as defs
-import infra.engine.feature     as feature
-import infra.engine.modmgr      as modmgr
+import infra.factory.factory        as factory
+import infra.config.config          as config
+import infra.common.objects         as objects
+import infra.common.defs            as defs
+import infra.common.timeprofiler    as timeprofiler
+import infra.engine.feature         as feature
+import infra.engine.modmgr          as modmgr
 
 from infra.common.glopts    import GlobalOptions
 from infra.common.logging   import logger
@@ -75,5 +76,8 @@ def GetSummaryAndResult():
     return 0
 
 def main():
+    timeprofiler.TestTimeProfiler.Start()
     ExecuteAllModules()
-    return GetSummaryAndResult()
+    status = GetSummaryAndResult()
+    timeprofiler.TestTimeProfiler.Stop()
+    return status

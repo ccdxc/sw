@@ -8,7 +8,9 @@ from infra.common.glopts        import GlobalOptions
 from infra.engine.modmgr        import ModuleStore
 
 FeatureStore = objects.ObjectDatabase(logger)
-BaseTopoExcludeFeatureList = [ 'fte', 'normalization', 'eth' , 'acl' ]
+BaseTopoExcludeFeatureList = [ 
+    'fte', 'normalization', 'eth' , 'acl', 'networking', 'vxlan' 
+]
 
 class FeatureObject:
     def __init__(self, spec):
@@ -18,6 +20,7 @@ class FeatureObject:
         self.module     = spec.feature.module
         self.enable     = spec.feature.enable
         self.ignore     = spec.feature.ignore
+        self.sub        = getattr(spec.feature, 'sub', self.id)
 
         self.tms        = []
         self.__parse_modules()
@@ -26,7 +29,7 @@ class FeatureObject:
     def __parse_modules(self):
         for m in self.spec.modules:
             mspec = m.module
-            mspec.feature   = self.id
+            mspec.feature   = self.sub
             mspec.enable    = getattr(mspec, 'enable', self.enable)
             mspec.ignore    = getattr(mspec, 'ignore', self.ignore)
             mspec.module    = getattr(mspec, 'module', self.module)

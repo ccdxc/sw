@@ -2,8 +2,10 @@
 import sys
 import os
 import pdb
-import infra.common.defs as defs
-
+import infra.common.defs            as defs
+import infra.common.timeprofiler    as timeprofiler
+timeprofiler.TotalTimeProfiler.Start()
+timeprofiler.InitTimeProfiler.Start()
 paths = [
     '/bazel-genfiles/',
     '/bazel-genfiles/nic/proto/',
@@ -22,7 +24,7 @@ for path in paths:
     print("Adding Path: %s" % fullpath)
     sys.path.insert(0, fullpath)
 
-import infra.clibs.clibs	as clibs
+import infra.clibs.clibs	    as clibs
 import infra.factory.factory    as factory
 import infra.engine.engine      as engine
 import infra.config.config      as config
@@ -53,6 +55,7 @@ def Main():
     logger.info("Initializing Topology.")
     topo = glopts.GlobalOptions.topology
     topofile = '%s/%s.topo' % (topo, topo)
+    timeprofiler.InitTimeProfiler.Stop()
     generator.main(topofile)
 
     if glopts.GlobalOptions.cfgonly:
@@ -64,5 +67,8 @@ def Main():
 
 if __name__ == '__main__':
     status = Main()
+    print("Runtime:")
+    timeprofiler.TotalTimeProfiler.Stop()
+    timeprofiler.Show()
     sys.exit(status)
 

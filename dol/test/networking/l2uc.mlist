@@ -1,6 +1,7 @@
 # Feature Test Modules List
 feature:
-    id          : l2uc
+    id          : networking
+    sub         : l2uc
     package     : test.networking
     module      : networking
     enable      : True
@@ -10,8 +11,6 @@ modules:
     - module:
         name    : IPV4_QTAG
         spec    : l2uc.testspec
-        args    :
-            maxflows: 8
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=False
@@ -23,8 +22,6 @@ modules:
     - module:
         name    : IPV6_QTAG
         spec    : l2uc.testspec
-        args    :
-            maxflows: 8
         iterate :
             - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
               segment : filter://native=False
@@ -36,8 +33,6 @@ modules:
     - module:
         name    : IPV4_UTAG
         spec    : l2uc.testspec
-        args    :
-            maxflows: 8
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=True
@@ -49,8 +44,6 @@ modules:
     - module:
         name    : IPV6_UTAG
         spec    : l2uc.testspec
-        args    :
-            maxflows: 8
         iterate :
             - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
               segment : filter://native=True
@@ -62,8 +55,6 @@ modules:
     - module:
         name    : IPV4_PTAG
         spec    : l2uc.testspec
-        args    :
-            maxflows: 1
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment : filter://native=True
@@ -78,8 +69,6 @@ modules:
     - module:
         name    : IPV6_PTAG
         spec    : l2uc.testspec
-        args    :
-            maxflows: 1
         iterate :
             - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
               segment : filter://native=True
@@ -94,8 +83,6 @@ modules:
     - module:
         name    : IPV4_QTAG_GFT_DROP
         spec    : l2uc.testspec
-        args    :
-            maxflows: 1
         iterate :
             # Tagged Cases
             - flow    : filter://type=IPV4,proto=UDP,label=GFT_DROP
@@ -108,8 +95,6 @@ modules:
     - module:
         name    : IPV6_QTAG_GFT_DROP
         spec    : l2uc.testspec
-        args    :
-            maxflows: 1
         iterate :
             # Tagged Cases
             - flow    : filter://type=IPV6,proto=UDP,label=GFT_DROP
@@ -122,8 +107,6 @@ modules:
     - module:
         name    : IPV4_UTAG_GFT_DROP
         spec    : l2uc.testspec
-        args    :
-            maxflows: 1
         iterate :
             # Untagged Cases
             - flow    : filter://type=IPV4,proto=UDP,label=GFT_DROP
@@ -136,8 +119,6 @@ modules:
     - module:
         name    : IPV6_UTAG_GFT_DROP
         spec    : l2uc.testspec
-        args    :
-            maxflows: 1
         iterate :
             # Untagged Cases
             - flow    : filter://type=IPV6,proto=UDP,label=GFT_DROP
@@ -150,8 +131,6 @@ modules:
     - module:
         name    : IPV4_PTAG_GFT_DROP
         spec    : l2uc.testspec
-        args    :
-            maxflows: 1
         iterate :
             # Priority Tagged Cases
             - flow    : filter://type=IPV4,proto=UDP,label=GFT_DROP
@@ -167,8 +146,6 @@ modules:
     - module:
         name    : IPV6_PTAG_GFT_DROP
         spec    : l2uc.testspec
-        args    :
-            maxflows: 1
         iterate :
             # Priority Tagged Cases
             - flow    : filter://type=IPV6,proto=UDP,label=GFT_DROP
@@ -374,5 +351,3 @@ modules:
               segment   : filter://native=True
               flow      : filter://fwtype=L2,type=MAC,label=GFT_DROP
               priotag   : True
-
-

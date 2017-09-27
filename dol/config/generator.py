@@ -1,9 +1,10 @@
 #! /usr/bin/python3
 import pdb
 
-import infra.common.defs        as defs
-import infra.common.parser      as parser
-import config.hal.api           as halapi
+import infra.common.defs            as defs
+import infra.common.parser          as parser
+import infra.common.timeprofiler    as timeprofiler
+import config.hal.api               as halapi
 
 from config.objects.uplink              import UplinkHelper
 from config.objects.uplinkpc            import UplinkPcHelper
@@ -61,9 +62,11 @@ def process(topospec):
     return
 
 def main(topofile):
+    timeprofiler.ConfigTimeProfiler.Start()
     halapi.init()
     cfglogger.info("Generating Config Objects for Topology = %s" % topofile)
     topospec = parser.ParseFile('config/topology/', topofile)
     process(topospec)
+    timeprofiler.ConfigTimeProfiler.Stop()
     return
 

@@ -1,10 +1,11 @@
 # Feature Test Modules List
 feature:
-    id          : l3uc
-    package     : test.networking
-    module      : networking
-    enable      : True
-    ignore      : False
+    id      : networking
+    sub     : l3uc
+    package : test.networking
+    module  : networking
+    enable  : True
+    ignore  : False
 
 modules:
     - module:
