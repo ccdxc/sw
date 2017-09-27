@@ -29,10 +29,11 @@ thread *hal_get_current_thread(void);
 
 #define HAL_MAX_NAME_STR         16
 typedef struct hal_cfg_s {
-    bool             sim;
-    char             asic_name[HAL_MAX_NAME_STR];
-    std::string      grpc_port;
-    char             feature_set[HAL_MAX_NAME_STR];
+    bool                    sim;
+    char                    asic_name[HAL_MAX_NAME_STR];
+    std::string             grpc_port;
+    char                    feature_set[HAL_MAX_NAME_STR];
+    std::string             forwarding_mode;
 } hal_cfg_t;
 
 //------------------------------------------------------------------------------
@@ -60,6 +61,11 @@ extern hal_ret_t hal_wait(void);
 // one time memory related initializatino for HAL
 //------------------------------------------------------------------------------
 extern hal_ret_t hal_mem_init(void);
+
+//------------------------------------------------------------------------------
+// one time config related initializatino for HAL
+//------------------------------------------------------------------------------
+extern hal_ret_t hal_cfg_init(hal_cfg_t *hal_cfg);
 
 class hal_handle {
     //friend class hal_cfg_db;

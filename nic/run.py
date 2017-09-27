@@ -105,7 +105,7 @@ def run_model(args):
 # HAL
 
 
-def run_hal():
+def run_hal(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     #os.environ["LD_LIBRARY_PATH"] = "./obj:/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib:third-party/lkl/export/bin"
 
@@ -113,7 +113,7 @@ def run_hal():
     os.chdir(hal_dir)
 
     log = open(hal_log, "w")
-    p = Popen(["./hal", "--config", "hal.json"], stdout=log, stderr=log)
+    p = Popen(["./hal", "--config", args.haljson], stdout=log, stderr=log)
     global hal_process
     hal_process = p
     print "* Starting HAL pid (" + str(p.pid) + ")"
@@ -271,6 +271,8 @@ def main():
                         default=None, help='Module List File')
     parser.add_argument('--test', dest='test',
                         default=None, help='Module List File')
+    parser.add_argument('--haljson', dest='haljson',
+                        default='hal.json', help='HAL Config JSON File.')
     args = parser.parse_args()
 
     if args.cleanup:
@@ -292,7 +294,7 @@ def main():
         os.environ["HAL_GRPC_PORT"] = str(port)
 
         run_model(args)
-        run_hal()
+        run_hal(args)
         status = run_dol(args)
         if args.coveragerun:
             dump_coverage_data()

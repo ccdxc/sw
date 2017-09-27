@@ -157,7 +157,6 @@ add_if_to_db (if_t *hal_if)
     g_hal_state->if_hwid_ht()->insert(hal_if, &hal_if->hw_ht_ctxt);
     g_hal_state->if_hal_handle_ht()->insert(hal_if,
                                             &hal_if->hal_handle_ht_ctxt);
-
     return HAL_RET_OK;
 }
 

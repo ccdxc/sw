@@ -73,6 +73,7 @@ typedef struct ep_s {
     hal_handle_t         nw_handle;            // network this EP belongs to
     hal_handle_t         l2seg_handle;         // L2 segment this endpoint belongs to
     hal_handle_t         if_handle;            // interface endpoint is attached to
+    hal_handle_t         pinned_if_handle;     // interface endpoint is attached to
     tenant_id_t          tenant_id;            // VRF this endpoint belongs to
     vlan_id_t            useg_vlan;            // micro-seg vlan allocated for this endpoint
     uint64_t             ep_flags;             // endpoint flags

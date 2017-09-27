@@ -898,6 +898,14 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
         }
         sparam = pt.get<std::string>("sw.feature_set");
         strncpy(hal_cfg->feature_set, sparam.c_str(), HAL_MAX_NAME_STR);
+
+        hal_cfg->forwarding_mode = pt.get<std::string>("sw.forwarding_mode");
+        HAL_TRACE_INFO("HAL Forwarding Mode: {}", hal_cfg->forwarding_mode);
+        if (hal_cfg->forwarding_mode != "default" &&
+            hal_cfg->forwarding_mode != "host-pinned") {
+            HAL_TRACE_ERR("Invalid Forwarding Mode: aborting...");
+            HAL_ABORT(0);
+        }
     } catch (std::exception const& e) {
         std::cerr << e.what() << std::endl;
         return HAL_RET_INVALID_ARG;
@@ -926,6 +934,9 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // do memory related initialization
     HAL_ABORT(hal_mem_init() == HAL_RET_OK);
+    
+    // Initialize config parameters from the JSON file.
+    HAL_ABORT(hal_cfg_init(hal_cfg) == HAL_RET_OK);
 
     // init fte and hal plugins
     hal::init_plugins();

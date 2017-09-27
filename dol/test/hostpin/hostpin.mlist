@@ -1,0 +1,16 @@
+# Feature Test Modules List
+feature:
+    id          : hostpin
+    package     : test.hostpin
+    module      : hostpin
+    enable      : False
+    ignore      : True
+
+modules:
+    - module:
+        name    : TX
+        spec    : tx.testspec
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=False
+

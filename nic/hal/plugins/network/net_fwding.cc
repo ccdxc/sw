@@ -44,9 +44,6 @@ update_fwding_info(fte::ctx_t&ctx,  hal::if_t *dif)
 {
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
 
-    // update fwding info
-    flowupd.fwding.lport = hal::pd::if_get_lport_id(dif);
-
     if (dif->if_type == intf::IF_TYPE_ENIC) {
         hal::lif_t *lif = if_get_lif(dif);
         if (lif == NULL){
@@ -56,8 +53,17 @@ update_fwding_info(fte::ctx_t&ctx,  hal::if_t *dif)
         flowupd.fwding.qtype = lif_get_qtype(lif, intf::LIF_QUEUE_PURPOSE_RX);
         flowupd.fwding.qid_en = 1;
         flowupd.fwding.qid = 0;
+    } else {
+        // Remote Destination: Check if SrcEP is pinned.
+        hal::ep_t *sep = ctx.sep();
+        if (sep->pinned_if_handle != HAL_HANDLE_INVALID) {
+            dif = hal::find_if_by_handle(sep->pinned_if_handle);
+            HAL_ASSERT_RETURN(dif, HAL_RET_IF_NOT_FOUND);
+        }
     }
-
+    
+    // update fwding info
+    flowupd.fwding.lport = hal::pd::if_get_lport_id(dif);
     return ctx.update_flow(flowupd);
 }
 

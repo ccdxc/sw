@@ -162,6 +162,43 @@ validate_endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
 end:
     return ret;
 }
+
+//------------------------------------------------------------------------------
+// Host Pinning Mode:
+// If this mode is enabled, then this routine will pin the endpoint to an
+// uplink port/port-channel.
+// - Applies only to Local endpoints. NOP for Remote EPs.
+//------------------------------------------------------------------------------
+static hal_ret_t
+pin_endpoint (ep_t *ep)
+{
+    if_t               *hal_if = NULL;
+    
+    ep->pinned_if_handle = HAL_HANDLE_INVALID;
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_DEFAULT) {
+        HAL_TRACE_DEBUG("{}: NOP for forwarding_mode:default.", __FUNCTION__);
+        return HAL_RET_OK;
+    }
+
+    if (ep->ep_flags & EP_FLAGS_REMOTE) {
+        HAL_TRACE_DEBUG("{}: NOP for remote ep.", __FUNCTION__);
+        return HAL_RET_OK;
+    }
+
+    // TEMP: Initial Commit only.
+    // To be replaced by a proper pin selection algorithm.
+    hal_if = find_if_by_id(1);
+    if (hal_if == NULL) {
+        HAL_TRACE_ERR("{}: Interface not found for Id:1.", __FUNCTION__);
+        return HAL_RET_IF_NOT_FOUND;
+    }
+
+    ep->pinned_if_handle = hal_if->hal_handle;
+    HAL_TRACE_DEBUG("{}: Pinning EP to IF Id:1", __FUNCTION__);
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // process a endpoint create request
 // TODO: check if EP or any of its IPs exists already
@@ -271,6 +308,13 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     } else {
         ep->ep_flags |= EP_FLAGS_REMOTE;
         HAL_TRACE_DEBUG("Setting remote flag in ep: {}", ep->ep_flags);
+    }
+
+    // Process Host pinning mode, if enabled.
+    ret = pin_endpoint(ep);
+    if (ret != HAL_RET_OK) {
+        rsp->set_api_status(hal_prepare_rsp(ret));
+        goto end;
     }
 
     // handle IP address information, if any

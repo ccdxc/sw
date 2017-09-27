@@ -19,6 +19,12 @@ using hal::utils::ht;
 using hal::utils::bitmap;
 using hal::utils::dllist_ctxt_t;
 
+typedef enum hal_forwarding_mode_s {
+    HAL_FORWARDING_MODE_NONE        = 0,
+    HAL_FORWARDING_MODE_DEFAULT     = 1,
+    HAL_FORWARDING_MODE_HOST_PINNED = 2,
+} hal_forwarding_mode_t;
+
 #define HAL_HANDLE_HT_SZ                             (16 << 10)
 
 // TODO: this should be coming from catalogue or platform API
@@ -118,6 +124,9 @@ public:
 
     ht *cpucb_id_ht(void) const { return cpucb_id_ht_; }
     ht *cpucb_hal_handle_ht(void) const { return cpucb_hal_handle_ht_; }
+
+    void set_forwarding_mode(std::string modestr);
+    hal_forwarding_mode_t forwarding_mode() { return forwarding_mode_; }
 
 #if 0
 public:
@@ -260,6 +269,11 @@ private:
     struct {
         ht         *cpucb_id_ht_;
         ht         *cpucb_hal_handle_ht_;
+    } __PACK__;
+
+    // CFG parameters from JSON file.
+    struct {
+        hal_forwarding_mode_t   forwarding_mode_;
     } __PACK__;
 
 #if 0
@@ -534,6 +548,12 @@ public:
     slab *cpucb_slab(void) const { return mem_db_->cpucb_slab(); }
     ht *cpucb_id_ht(void) const { return cfg_db_->cpucb_id_ht(); }
     ht *cpucb_hal_handle_ht(void) const { return cfg_db_->cpucb_hal_handle_ht(); }
+
+    //Forwarding mode APIs
+    void set_forwarding_mode(std::string modestr) { 
+        cfg_db_->set_forwarding_mode(modestr);
+    }
+    hal_forwarding_mode_t forwarding_mode() { return cfg_db_->forwarding_mode(); }
 
 private:
     bool init(void);

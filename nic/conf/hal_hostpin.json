@@ -6,6 +6,6 @@
   "sw" : {
     "grpc_port": "50054",
     "feature_set": "iris",
-    "forwarding_mode": "default"
+    "forwarding_mode": "host-pinned"
   }
 }
