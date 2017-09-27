@@ -142,6 +142,7 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start, uint8_t e
         }
     }
 
+    ctx.set_feature_name("");
     return rc;
 }
 

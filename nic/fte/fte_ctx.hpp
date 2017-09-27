@@ -2,8 +2,10 @@
 
 #include "nic/include/base.h"
 #include "nic/hal/src/session.hpp"
-#include <netinet/ether.h>
+#include "nic/hal/src/proxy.hpp"
 #include "nic/include/cpupkt_headers.hpp"
+#include "nic/include/cpupkt_api.hpp"
+#include <netinet/ether.h>
 
 namespace fte {
 
@@ -261,14 +263,24 @@ struct lifqid_s {
     uint64_t qid : 24;
 } __PACK__;
 
-const uint16_t ARM_LIF = 1003;
-const lifqid_t FLOW_MISS_LIFQ = {ARM_LIF, 0, 0};
+const lifqid_t FLOW_MISS_LIFQ = {hal::SERVICE_LIF_CPU, 0, 0};
 
 inline std::ostream& operator<<(std::ostream& os, const lifqid_t& lifq)
 {
     return os << fmt::format("{{lif={}, qtype={}, qid={}}}",
                              lifq.lif, lifq.qtype, lifq.qid);
 }
+
+// pkt info for queued tx packets
+typedef struct txpkt_info_s txpkt_info_t;
+struct txpkt_info_s {
+    hal::pd::cpu_to_p4plus_header_t cpu_header;
+    hal::pd::p4plus_to_p4_header_t  p4plus_header;
+    uint8_t                        *pkt;
+    size_t                          pkt_len;
+    lifqid_t                        lifq;   // Dest lif/qtype/qid
+    uint8_t                         ring_number; // arm ring
+};
 
 typedef hal::pd::p4_to_p4plus_cpu_pkt_t cpu_rxhdr_t;
 class flow_t;
@@ -277,6 +289,7 @@ class flow_t;
 class ctx_t {
 public:
     static const uint8_t MAX_STAGES = hal::MAX_SESSION_FLOWS; // max no.of times a pkt enters p4 pipeline
+    static const uint8_t MAX_QUEUED_PKTS = 2;  // max queued pkts for tx
 
     hal_ret_t init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
                    flow_t iflow[], flow_t rflow[]);
@@ -304,6 +317,17 @@ public:
     const cpu_rxhdr_t* cpu_rxhdr() const { return cpu_rxhdr_; }
     const uint8_t* pkt() const { return pkt_; }
     size_t pkt_len() const { return pkt_len_; }
+
+    // Queue pkt for tx (in case of flow_miss rx pkt is 
+    // transmitted if no pkts are queued for tx)
+    hal_ret_t queue_txpkt(uint8_t *pkt, size_t pkt_len,
+                          hal::pd::cpu_to_p4plus_header_t *cpu_header = NULL,
+                          hal::pd::p4plus_to_p4_header_t  *p4plus_header = NULL,
+                          uint16_t dest_lif = hal::SERVICE_LIF_CPU, 
+                          uint8_t  qtype = CPU_ASQ_QTYPE,
+                          uint32_t qid = CPU_ASQ_QID,
+                          uint8_t  ring_number = CPU_SCHED_RING_ASQ);
+    hal_ret_t send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx);
 
     //proto spec is valid when flow update triggered via hal proto api
     bool protobuf_request() { return sess_spec_ != NULL; }
@@ -342,6 +366,10 @@ private:
     cpu_rxhdr_t           *cpu_rxhdr_; // metadata from p4 to cpu
     uint8_t               *pkt_;
     size_t                pkt_len_;
+
+    // pkts queued for tx
+    uint8_t               txpkt_cnt_;
+    txpkt_info_t          txpkts_[MAX_QUEUED_PKTS];
 
     session::SessionSpec           *sess_spec_;
     session::SessionResponse       *sess_resp_;

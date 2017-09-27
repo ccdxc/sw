@@ -4,6 +4,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
 namespace hal {
 namespace pd {
@@ -340,7 +341,7 @@ cpupkt_program_descr(cpupkt_hw_id_t page_addr, size_t len, cpupkt_hw_id_t* descr
     descr.o0 = 0;
     descr.l0 = len;
 
-    HAL_TRACE_DEBUG("Programming descr: descr_addr: {:#x}}", *descr_addr);
+    HAL_TRACE_DEBUG("Programming descr: descr_addr: {:#x}", *descr_addr);
     if(!p4plus_hbm_write(*descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
         HAL_TRACE_ERR("Failed to program descr");
         ret = HAL_RET_HW_FAIL;

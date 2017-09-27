@@ -5,6 +5,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/pd/common/cpupkt_headers.hpp"
+#include "nic/hal/pd/common/cpupkt_api.hpp"
 
 std::ostream& operator<<(std::ostream& os, const ether_addr& val)
 {
@@ -366,8 +367,6 @@ ctx_t::update_gft()
         session_state.tcp_ts_option = sess_spec_->tcp_ts_option();
     }
 
-    // TODO(goli) handle other stages
-
     // by this time dep should be known
     if (dep_ == NULL) {
         HAL_TRACE_ERR("fte::{} dep not found", __func__);
@@ -400,7 +399,7 @@ ctx_t::update_gft()
             session_state.iflow_state = iflow->flow_state();
         }
 
-        HAL_TRACE_DEBUG("fte::update_gft: iflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
+        HAL_TRACE_DEBUG("fte::update_flow_table: iflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
                         "nat_dip={} nat_sport={} nat_dport={} nat_type={}",
@@ -439,7 +438,7 @@ ctx_t::update_gft()
             session_state.rflow_state = rflow->flow_state();
         }
             
-        HAL_TRACE_DEBUG("fte::update_gft: rflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
+        HAL_TRACE_DEBUG("fte::update_flow_table: rflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
                         "nat_dip={} nat_sport={} nat_dport={} nat_type={}",
@@ -693,6 +692,90 @@ ctx_t::advance_to_next_stage() {
         rstage_++;
         HAL_TRACE_DEBUG("fte: advancing to next iflow stage {}", rstage_);
     }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
+                   hal::pd::cpu_to_p4plus_header_t *cpu_header,
+                   hal::pd::p4plus_to_p4_header_t  *p4plus_header,
+                   uint16_t dest_lif, uint8_t  qtype, uint32_t qid,
+                   uint8_t  ring_number)
+{
+    txpkt_info_t *pkt_info;
+    
+    if (txpkt_cnt_ >= MAX_QUEUED_PKTS) {
+        HAL_TRACE_ERR("fte: queued tx pkts exceeded {}", txpkt_cnt_);
+        return HAL_RET_ERR;
+    }
+    
+    pkt_info = &txpkts_[txpkt_cnt_++];
+    
+    if (cpu_header) {
+        pkt_info->cpu_header = *cpu_header;
+    } else {
+        pkt_info->cpu_header.src_lif = cpu_rxhdr_->src_lif;
+        // TODO(goli)change lif for uplink pkts
+        // pkt_info->hw_vlan_id = internal_uplink_vid;
+    }
+    
+    if (p4plus_header) {
+        pkt_info->p4plus_header = *p4plus_header;
+    }
+
+    pkt_info->pkt = pkt;
+    pkt_info->pkt_len = pkt_len;
+    pkt_info->lifq.lif = dest_lif;
+    pkt_info->lifq.qtype = qtype;
+    pkt_info->lifq.qid = qid;
+    pkt_info->ring_number = ring_number;
+
+    HAL_TRACE_DEBUG("fte: feature={} queued txpkt lkp_inst={} src_lif={} vlan={} "
+                    "dest_lifq={} ring={} pkt={:p} len={}",
+                    feature_name_,
+                    pkt_info->p4plus_header.flags & P4PLUS_TO_P4_FLAGS_LKP_INST,
+                    pkt_info->cpu_header.src_lif,
+                    pkt_info->cpu_header.hw_vlan_id,
+                    pkt_info->lifq, pkt_info->ring_number,
+                    pkt_info->pkt, pkt_info->pkt_len);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
+{
+    hal_ret_t ret;
+
+    // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
+    if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop()) {
+        queue_txpkt(pkt_, pkt_len_);
+    }
+
+    for (int i = 0; i < txpkt_cnt_; i++) {
+        txpkt_info_t *pkt_info = &txpkts_[i];
+        HAL_TRACE_DEBUG("fte:: txpkt slif={} pkt={:p} len={}",
+                        pkt_info->cpu_header.src_lif,
+                        pkt_info->pkt, pkt_info->pkt_len);
+
+        if ( istage_ > 0 ){
+            pkt_info->p4plus_header.flags |=  P4PLUS_TO_P4_FLAGS_LKP_INST;
+        }
+
+
+        ret = hal::pd::cpupkt_send(arm_ctx, &pkt_info->cpu_header,
+                                   &pkt_info->p4plus_header,
+                                   pkt_info->pkt, pkt_info->pkt_len,
+                                   pkt_info->lifq.lif, pkt_info->lifq.qtype,
+                                   pkt_info->lifq.qid,  pkt_info->ring_number);
+
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte: failied to transmit pkt, ret={}", ret);
+        }
+    }
+
+    txpkt_cnt_ = 0;
+
     return HAL_RET_OK;
 }
 

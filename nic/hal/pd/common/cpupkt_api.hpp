@@ -5,7 +5,6 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/common/cpupkt_headers.hpp"
 #include "nic/hal/src/proxy.hpp"
-#include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
 namespace hal {
 namespace pd {
@@ -21,6 +20,7 @@ namespace pd {
 #define CPU_PKT_PAGE_SIZE               9216
 
 #define CPU_ASQ_PID                     0
+#define CPU_ASQ_QTYPE                   0
 #define CPU_ASQ_QID                     0
 #define CPU_SCHED_RING_ASQ              0
 
@@ -100,7 +100,7 @@ hal_ret_t cpupkt_send(cpupkt_ctxt_t* ctxt,
                       uint8_t* data,
                       size_t data_len,
                       uint16_t dest_lif = SERVICE_LIF_CPU,
-                      uint8_t  qtype = 0,
+                      uint8_t  qtype = CPU_ASQ_QTYPE,
                       uint32_t qid = CPU_ASQ_QID,
                       uint8_t  ring_number = CPU_SCHED_RING_ASQ);
 hal_ret_t cpupkt_page_alloc(cpupkt_hw_id_t* page_addr);
