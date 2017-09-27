@@ -65,7 +65,8 @@ header_type p4_2_p4plus_app_header_t {
         gft_flow_id : 24;
         app_data0 : 224;
         app_data1 : 88;
-        app_data_pad : 168;
+        app_data2 : 72;
+        app_data_pad : 96;
     }
 }
 

@@ -436,7 +436,7 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
     modify_field(ipsec_global.qtype, p4_rxdma_intr.qtype);
     modify_field(ipsec_global.qid, p4_rxdma_intr.qid);
 
-    modify_field(ipsec_global.packet_length, p4_intr.packet_len);  
+    //modify_field(ipsec_global.packet_length, p4_intr.packet_len);  
     modify_field(p42p4plus_scratch_hdr.p4plus_app_id, p42p4plus_hdr.p4plus_app_id);
     modify_field(p42p4plus_scratch_hdr.table0_valid, p42p4plus_hdr.table0_valid);
     modify_field(p42p4plus_scratch_hdr.table1_valid, p42p4plus_hdr.table1_valid);

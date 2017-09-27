@@ -1059,6 +1059,7 @@ action common_p4plus_stage0_app_header_table_action(data0, data1,
     modify_field(scratch_app.gft_flow_id, app_header.gft_flow_id);
     modify_field(scratch_app.app_data0, app_header.app_data0);
     modify_field(scratch_app.app_data1, app_header.app_data1);
+    modify_field(scratch_app.app_data2, app_header.app_data2);
     SCRATCH_METADATA_INIT_7(scratch_metadata0)
 }
 

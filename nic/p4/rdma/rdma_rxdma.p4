@@ -186,7 +186,8 @@ action rdma_stage0_bth_reth_action () {
     // reth params
     modify_field(rdma_bth_reth_scr.reth_va, rdma_bth_reth.reth_va);
     modify_field(rdma_bth_reth_scr.reth_r_key, rdma_bth_reth.reth_r_key);
-    modify_field(rdma_bth_reth_scr.reth_dma_len, rdma_bth_reth.reth_dma_len);
+    modify_field(rdma_bth_reth_scr.reth_dma_len1, rdma_bth_reth.reth_dma_len1);
+    modify_field(rdma_bth_reth_scr.reth_dma_len2, rdma_bth_reth.reth_dma_len2);
 }
 
 

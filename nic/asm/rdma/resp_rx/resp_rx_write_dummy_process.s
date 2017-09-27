@@ -66,7 +66,7 @@ resp_rx_write_dummy_process:
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, key_id, KEY_ID)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, dma_cmd_start_index, RESP_RX_DMA_CMD_PYLD_BASE)
 
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, tbl_id, 0)
+    CAPRI_SET_FIELD(r4, RKEY_INFO_T, tbl_id, TABLE_0)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, dma_cmdeop, 1)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, acc_ctrl, ACC_CTRL_REMOTE_WRITE)
 
@@ -80,6 +80,7 @@ resp_rx_write_dummy_process:
     tblwr.c1    d.len, 0
 
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RQCB0_WB_T, tbl_id, TABLE_1)
     CAPRI_SET_FIELD(r4, RQCB0_WB_T, in_progress, 0)
     CAPRI_SET_FIELD(r4, RQCB0_WB_T, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD(r4, RQCB0_WB_T, incr_c_index, k.args.incr_c_index)

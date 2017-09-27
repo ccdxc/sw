@@ -7,6 +7,7 @@ struct resp_rx_phv_t p;
 struct resp_rx_rqcb0_write_back_process_k_t k;
 struct rqcb0_t d;
 
+#define TBL_ID  r1
 
 %%
 
@@ -44,7 +45,8 @@ incr_c_index_exit:
 
     //assumption is that write back is called with table 2
     seq         c3, k.args.do_not_invalidate_tbl, 1
-    CAPRI_SET_TABLE_2_VALID_C(!c3, 0)
+    add         TBL_ID, r0, k.args.tbl_id
+    CAPRI_SET_TABLE_I_VALID_C(!c3, TBL_ID, 0)
 
     nop.e
     nop
