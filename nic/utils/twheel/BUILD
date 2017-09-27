@@ -4,11 +4,8 @@ licenses(["notice"])  # MIT license
 
 cc_library(
     name = "twheel",
-    srcs = [
-        "twheel.cc",
-        "twheel.hpp",
-    ],
-    hdrs = ["twheel.hpp"],
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hpp"]),
     deps = [
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
@@ -23,7 +20,7 @@ cc_test(
         # Utils
         ":twheel",
         "//nic/utils/trace",
-        "//nic/hal/periodic:periodic",
+        "//nic/hal/periodic",
         "//nic/hal/test:hal_mock",
         # External
         "//:gtest",

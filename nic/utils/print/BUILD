@@ -4,7 +4,7 @@ licenses(["notice"])  # MIT license
 
 cc_library(
     name = "print",
-    srcs = ["print.cc"],
+    srcs = glob(["*.cc"]),
     deps = [
         "//nic/hal:hal_includes",
         "//nic/include:base_includes",

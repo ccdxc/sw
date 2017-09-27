@@ -4,11 +4,8 @@ licenses(["notice"])  # MIT license
 
 cc_library(
     name = "trace",
-    srcs = [
-        "trace.cc",
-        "trace.hpp",
-    ],
-    hdrs = ["trace.hpp"],
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hpp"]),
     deps = [
         "//nic/third-party/spdlog",
     ],
