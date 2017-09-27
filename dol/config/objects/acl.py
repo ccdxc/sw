@@ -144,12 +144,18 @@ class AclObject(base.ConfigObjectBase):
 
     def Configure(self):
         cfglogger.info("Configuring Acl  : %s (id: %d)" % (self.GID(), self.id))
+        if self.GID() == 'ACL_TEP_MISS_ACTION_DROP':
+            # TEP miss is handled in input_mapping table. Skip adding ACL
+            return
         self.Show()
         halapi.ConfigureAcls([self])
         return
 
     def Delete(self):
         cfglogger.info("Deleting Acl  : %s (id: %d)" % (self.GID(), self.id))
+        if self.GID() == 'ACL_TEP_MISS_ACTION_DROP':
+            # TEP miss is handled in input_mapping table. Skip deleting ACL
+            return
         halapi.DeleteAcls([self])
         return
 
@@ -308,6 +314,12 @@ class AclObject(base.ConfigObjectBase):
         # Do we need to send pkt such that it hits flow miss
         return self.fields.config_flow_miss
 
+    def MatchOnTEPMiss(self):
+        return self.fields.match.tep_miss
+
+    def MatchTEPMissDIP(self):
+        return resmgr.AclIPv4Allocator.get()
+
     def MatchOnFlowMiss(self):
         # Is the ACL added matching on flow miss bit
         return self.fields.match.flow_miss
@@ -391,7 +403,7 @@ class AclObject(base.ConfigObjectBase):
         return None 
 
     def MatchOnEtherType(self):
-        if self.MatchOnEth():
+        if self.MatchOnEth() and self.fields.match.eth.ethertype_mask.get():
             return True
         return False
 
@@ -578,10 +590,12 @@ class AclObject(base.ConfigObjectBase):
         if self.MatchOnSegment():
             self.fields.match.segment = segment
 
-        if self.MatchOnEth():
+        if self.MatchOnEtherType():
             self.fields.match.eth.ethertype = \
                     objects.TemplateFieldObject("const/%d" % etype)
+        if self.MatchOnMacSA():
             self.fields.match.eth.src = smac
+        if self.MatchOnMacDA():
             self.fields.match.eth.dst = dmac
 
         if self.MatchOnSIP():

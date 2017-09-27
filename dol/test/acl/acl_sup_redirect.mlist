@@ -1,6 +1,6 @@
 # Feature Test Modules List
 feature:
-    id          : acl_sup_redirect
+    id          : acl
     package     : test.acl
     module      : acl
     enable      : True
@@ -32,6 +32,14 @@ modules:
               flow      : filter://type=IPV6,proto=TCP
             - id        : ACL_UDP_DPORT_ACTION_SUP_REDIRECT
               flow      : filter://type=IPV6,proto=UDP
+
+    - module:
+        name    : ACL_NONIP_FLOW_MISS_SUP_REDIRECT
+        spec    : acl_nonip_flow_miss_sup_redirect.testspec
+        # Ignoring till lkp_inst is set by fte
+        ignore  : True
+        iterate:
+            - id        : ACL_ETYPE_FLOW_MISS_ACTION_SUP_REDIRECT
 
     - module:
         name    : ACL_IP_FLOW_MISS_SUP_REDIRECT

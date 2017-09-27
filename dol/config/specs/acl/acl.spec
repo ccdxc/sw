@@ -381,6 +381,13 @@ entries:
         action:
             action: deny
 
+    - entry:
+        id: ACL_TEP_MISS_ACTION_DROP
+        match:
+            tep_miss : True
+        action:
+            action : deny
+
 ##############################################################################
 # SUP REDIRECT
 ##############################################################################
@@ -472,6 +479,17 @@ entries:
             intf: cpu
 
     - entry:
+        id: ACL_ETYPE_FLOW_MISS_ACTION_SUP_REDIRECT 
+        config_flow_miss: True
+        match:
+            type: eth
+            eth:
+                ethertype_mask : const/0xffff
+        action:
+            action: redirect 
+            intf: cpu
+
+    - entry:
         id: ACL_UDP_DPORT_FLOW_MISS_ACTION_SUP_REDIRECT
         config_flow_miss: True
         match:
@@ -542,3 +560,57 @@ entries:
         action:
             action: redirect
             intf: uplink
+
+##############################################################################
+# LOG 
+##############################################################################
+    - entry:
+        id: ACL_ETYPE_ACTION_LOG 
+        match:
+            type: eth
+            eth:
+                ethertype_mask : const/0xffff
+        action:
+            action: log 
+
+    - entry:
+        id: ACL_IPV4_DIP_ACTION_LOG
+        match:
+            type: ip
+            ip:
+                type           : v4
+                dst_prefix_len : const/32
+        action:
+            action: log
+
+    - entry:
+        id: ACL_IPV6_DIP_ACTION_LOG
+        match:
+            type: ip
+            ip:
+                type           : v6
+                dst_prefix_len : const/32
+        action:
+            action: log
+
+    - entry:
+        id: ACL_ETYPE_FLOW_MISS_ACTION_LOG 
+        config_flow_miss: True
+        match:
+            type: eth
+            eth:
+                ethertype_mask : const/0xffff
+        action:
+            action: log 
+
+    - entry:
+        id: ACL_UDP_DPORT_FLOW_MISS_ACTION_LOG
+        config_flow_miss: True
+        match:
+            type : ip
+            l4:
+                type : udp 
+                udp: 
+                    dst_port : True
+        action:
+            action: log

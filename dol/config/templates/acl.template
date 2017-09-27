@@ -8,6 +8,7 @@ fields:
     match:
         direction     : None
         flow_miss     : False
+        tep_miss      : False
         type          : None
         src_if_match  : False
         src_if        : None
@@ -20,9 +21,9 @@ fields:
         eth: 
             ethertype      : const/0
             ethertype_mask : const/0
-            src            : const/0
+            src            : macaddr/0:0:0:0:0:0
             src_mask       : macaddr/0:0:0:0:0:0
-            dst            : const/0
+            dst            : macaddr/0:0:0:0:0:0
             dst_mask       : macaddr/0:0:0:0:0:0
         ip: 
             type             : None

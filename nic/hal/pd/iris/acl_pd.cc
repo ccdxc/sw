@@ -412,8 +412,6 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     mask.l3_metadata_ip_frag_mask = 0;
     key.control_metadata_drop_reason = 0;
     mask.control_metadata_drop_reason_mask = 0;
-    key.tunnel_metadata_tunnel_terminate = 0;
-    mask.tunnel_metadata_tunnel_terminate_mask = 0;
     key.flow_lkp_metadata_lkp_dir = 0;
     mask.flow_lkp_metadata_lkp_dir_mask = 0;
 
@@ -433,8 +431,6 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     mask.l3_metadata_ip_frag_mask = ms->int_mask.ip_frag;
     key.control_metadata_drop_reason = ms->int_key.drop_reason;
     mask.control_metadata_drop_reason_mask = ms->int_mask.drop_reason;
-    key.tunnel_metadata_tunnel_terminate = ms->int_key.tunnel_terminate;
-    mask.tunnel_metadata_tunnel_terminate_mask = ms->int_mask.tunnel_terminate;
     key.flow_lkp_metadata_lkp_dir = ms->int_key.direction;
     mask.flow_lkp_metadata_lkp_dir_mask = ms->int_mask.direction;
 #endif

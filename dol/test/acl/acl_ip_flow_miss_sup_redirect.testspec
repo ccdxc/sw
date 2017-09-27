@@ -2,7 +2,8 @@
 selectors:
     src:
         tenant      : filter://type=TENANT
-        segment     : filter://any
+        # Select segments with broadcast policy set to drop
+        segment     : filter://broadcast_policy=1
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
@@ -15,9 +16,10 @@ selectors:
 
 packets:
     - packet:
-        id          : BASE_PKT # Base packet
+        id          : IN_PKT     # Input packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://acl/packets/GetPacketTemplate
+        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -50,23 +52,6 @@ packets:
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
-    - packet:
-        id          : IN_PKT     # Input packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetPacketEncaps
-
-    - packet:
-        id          : EXP_PKT     # Expected packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetExpectedPacketEncaps
-        headers     :
-            qtag:
-                prio    : ref://testcase/config/flow/eg_qos/cos
-            ipv4:
-                tos     : ref://testcase/config/flow/eg_qos/dscp
-            ipv6:
-                tc      : ref://testcase/config/flow/eg_qos/dscp
-
 trigger:
     packets:
         - packet:
@@ -79,8 +64,3 @@ expect:
         - packet:
             object  : ref://testcase/packets/id=IN_PKT
             port    : 128
-
-        - packet:
-            object  : ref://testcase/packets/id=EXP_PKT
-            port    : ref://testcase/config/dst/endpoint/intf/ports
-

@@ -76,7 +76,8 @@ validate_tunneled_packet2_ipv6:
   andcf       c1, [c2|c3]
   // inner_srcAddr => r2(hi) r3(lo)
   or          r2, k.{inner_ipv6_srcAddr_sbit0_ebit31, inner_ipv6_srcAddr_sbit32_ebit63}, r0
-  or          r3, k.inner_ipv6_srcAddr_sbit64_ebit127, r0
+  or          r3, k.inner_ipv6_srcAddr_sbit72_ebit127, \
+                    k.inner_ipv6_srcAddr_sbit64_ebit71, 56 
   seq         c2, r2, r0
   seq         c3, r3, r1
   andcf       c2, [c3]

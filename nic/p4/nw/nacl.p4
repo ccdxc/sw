@@ -79,6 +79,8 @@ table nacl {
         // vxlan.vni                                       : ternary;
         // vlan_tag.valid                                  : ternary;
         // vlan_tag.vid                                    : ternary;
+        // Removing tunnel_terminate as transit is not supported
+        // tunnel_metadata.tunnel_terminate                   : ternary;
         entry_inactive.nacl                                : ternary;
         flow_lkp_metadata.lkp_inst                         : ternary;
         flow_lkp_metadata.lkp_dir                          : ternary;
@@ -90,7 +92,6 @@ table nacl {
         flow_lkp_metadata.lkp_sport                        : ternary;
         flow_lkp_metadata.lkp_dport                        : ternary;
         tcp.flags                                          : ternary;
-        tunnel_metadata.tunnel_terminate                   : ternary;
         control_metadata.src_lport                         : ternary;
         control_metadata.dst_lport                         : ternary;
         control_metadata.flow_miss_ingress                 : ternary;

@@ -7,6 +7,11 @@ struct phv_                   p;
 
 %%
 
+input_mapping_miss:
+  phvwr.e     p.control_metadata_drop_reason[DROP_INPUT_MAPPING], 1
+  phvwr       p.capri_intrinsic_drop, 1
+
+.align
 nop:
   nop.e
   nop
@@ -118,6 +123,7 @@ native_ipv6_packet:
   phvwr       p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
 
 .align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
 native_non_ip_packet:
   or          r1, k.ethernet_srcAddr, r0
   seq         c1, r1, r0
@@ -138,12 +144,6 @@ native_non_ip_packet:
   phvwr.!c1   p.flow_lkp_metadata_lkp_sport, k.ethernet_etherType
   phvwr.e     p.flow_lkp_metadata_lkp_dst, k.ethernet_dstAddr
   phvwr       p.flow_lkp_metadata_lkp_src, r1
-
-.align
-.assert $ < ASM_INSTRUCTION_OFFSET_MAX
-input_mapping_miss:
-  phvwr.e     p.control_metadata_drop_reason[DROP_INPUT_MAPPING], 1
-  phvwr       p.capri_intrinsic_drop, 1
 
 malformed_native_packet:
   phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1

@@ -8,7 +8,7 @@ from infra.common.glopts        import GlobalOptions
 from infra.engine.modmgr        import ModuleStore
 
 FeatureStore = objects.ObjectDatabase(logger)
-BaseTopoExcludeFeatureList = [ 'fte', 'normalization', 'eth' ]
+BaseTopoExcludeFeatureList = [ 'fte', 'normalization', 'eth' , 'acl' ]
 
 class FeatureObject:
     def __init__(self, spec):

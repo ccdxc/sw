@@ -2,7 +2,8 @@
 selectors:
     src:
         tenant      : filter://type=TENANT
-        segment     : filter://any
+        # Select segments with broadcast policy set to flood
+        segment     : filter://broadcast_policy=2
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:

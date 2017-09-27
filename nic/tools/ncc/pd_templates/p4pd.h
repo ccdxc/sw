@@ -137,19 +137,26 @@
 //::            for fldunion in pddict['tables'][table]['fldunion_keys']:
 //::                (container_field, un_fields) = fldunion
 //::                if len(un_fields) > 1:
+//::                    _max_un_field_width = max([p4fldwidth for (_, p4fldwidth, _, _, _) in un_fields])
 typedef union __${table}_union${i}_t { /* Sourced from field union */
 //::                    for fields in un_fields:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                        _fld_un_pad = (_max_un_field_width - p4fldwidth + 7) >> 3
+    struct {
+//::                        if _fld_un_pad:
+        uint8_t __fld_${p4fldname}_un_pad[${_fld_un_pad}];
+//::                        #endif
 //::                        if (p4fldwidth <= 8):
-    uint8_t ${p4fldname};
+        uint8_t ${p4fldname};
 //::                        elif (p4fldwidth <= 16):
-    uint16_t ${p4fldname};
+        uint16_t ${p4fldname};
 //::                        elif (p4fldwidth <= 32):
-    uint32_t ${p4fldname};
+        uint32_t ${p4fldname};
 //::                        else:
 //::                            p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
-    uint8_t ${p4fldname}[${p4fldwidth_byte}];
+        uint8_t ${p4fldname}[${p4fldwidth_byte}];
 //::                        #endif
+    };
 //::                    #endfor
 } ${table}_union${i}_t;
 //::                    i+=1
@@ -243,19 +250,26 @@ typedef struct __attribute__((__packed__)) ${table}_swkey {
 //::                for fldunion in pddict['tables'][table]['fldunion_keys']:
 //::                    (container_field, un_fields) = fldunion
 //::                    if len(un_fields) > 1:
+//::                        _max_un_field_width = max([p4fldwidth for (_, p4fldwidth, _, _, _) in un_fields])
 typedef union __${table}_mask_union${i}_t { /* Sourced from field union */
 //::                        for fields in un_fields:
 //::                            (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
+//::                            _fld_un_pad = (_max_un_field_width - p4fldwidth + 7) >> 3
+    struct {
+//::                            if _fld_un_pad:
+        uint8_t __fld_${p4fldname}_un_pad_mask[${_fld_un_pad}];
+//::                            #endif
 //::                            if (p4fldwidth <= 8):
-    uint8_t ${p4fldname}_mask;
+        uint8_t ${p4fldname}_mask;
 //::                            elif (p4fldwidth <= 16):
-    uint16_t ${p4fldname}_mask;
+        uint16_t ${p4fldname}_mask;
 //::                            elif (p4fldwidth <= 32):
-    uint32_t ${p4fldname}_mask;
+        uint32_t ${p4fldname}_mask;
 //::                            else:
 //::                                p4fldwidth_byte = (p4fldwidth / 8) + (1 if p4fldwidth % 8 else 0)
-    uint8_t ${p4fldname}_mask[${p4fldwidth_byte}];
+        uint8_t ${p4fldname}_mask[${p4fldwidth_byte}];
 //::                            #endif
+    };
 //::                        #endfor
 } ${table}_mask_union${i}_t;
 //::                        i += 1

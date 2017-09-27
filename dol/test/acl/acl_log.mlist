@@ -1,0 +1,43 @@
+# Feature Test Modules List
+feature:
+    id          : acl
+    package     : test.acl
+    module      : acl
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : ACL_NONIP_LOG
+        spec    : acl_nonip_log.testspec
+        enable  : False
+        iterate:
+            - id        : ACL_ETYPE_ACTION_LOG
+
+    - module:
+        name    : ACL_IP_LOG
+        spec    : acl_ip_log.testspec
+        enable  : False
+        iterate:
+            - id        : ACL_IPV4_DIP_ACTION_LOG
+              flow      : filter://type=IPV4
+            - id        : ACL_IPV6_DIP_ACTION_LOG
+              flow      : filter://type=IPV6
+
+    - module:
+        name    : ACL_NONIP_FLOW_MISS_LOG
+        spec    : acl_nonip_flow_miss_sup_redirect.testspec
+        ignore  : True
+        iterate:
+            - id        : ACL_ETYPE_FLOW_MISS_ACTION_LOG
+
+    - module:
+        name    : ACL_IP_FLOW_MISS_LOG
+        spec    : acl_ip_flow_miss_sup_redirect.testspec
+        ignore  : True
+        iterate:
+            - id        : ACL_UDP_DPORT_FLOW_MISS_ACTION_LOG
+              flow      : filter://type=IPV4,proto=UDP
+            - id        : ACL_UDP_DPORT_FLOW_MISS_ACTION_LOG
+              flow      : filter://type=IPV6,proto=UDP
+

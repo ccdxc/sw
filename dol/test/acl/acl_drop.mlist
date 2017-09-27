@@ -1,6 +1,6 @@
 # Feature Test Modules List
 feature:
-    id          : acl_drop
+    id          : acl
     package     : test.acl
     module      : acl
     enable      : True
@@ -30,6 +30,7 @@ modules:
             - id        : ACL_VNID_ACTION_DROP
             - id        : ACL_DIF_ACTION_DROP
             - id        : ACL_SIF_ACTION_DROP
+            - id        : ACL_TEP_MISS_ACTION_DROP
 
     - module:
         name    : ACL_NONIP_FLOW_MISS_DROP
@@ -151,6 +152,10 @@ modules:
             - id        : ACL_DIF_ACTION_DROP
               flow      : filter://type=IPV6
             - id        : ACL_SIF_ACTION_DROP
+              flow      : filter://type=IPV6
+            - id        : ACL_TEP_MISS_ACTION_DROP
+              flow      : filter://type=IPV4
+            - id        : ACL_TEP_MISS_ACTION_DROP
               flow      : filter://type=IPV6
 
     - module:

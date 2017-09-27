@@ -22,6 +22,12 @@ packets:
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
+            outereth    :
+                src     : ref://testcase/config/dst/endpoint/intf/macaddr
+                dst     : ref://testcase/config/dst/endpoint/intf/rmacaddr
+            outeripv4   :
+                src     : ref://testcase/config/src/endpoint/intf/rtep
+                dst     : ref://testcase/config/src/endpoint/intf/ltep
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr

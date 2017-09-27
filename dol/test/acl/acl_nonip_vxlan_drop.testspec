@@ -29,7 +29,7 @@ packets:
                 dst     : ref://testcase/config/src/endpoint/intf/macaddr
             outeripv4   :
                 src     : ref://testcase/config/src/endpoint/intf/rtep
-                dst     : ref://testcase/config/src/endpoint/intf/ltep
+                dst     : callback://acl/packets/GetOuterDIP
             vxlan       :
                 vni     : ref://testcase/config/src/segment/vxlan_id
             payload:

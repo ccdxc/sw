@@ -128,3 +128,11 @@ def GetICMPType(tc, packet):
         return acl.MatchICMPType()
 
     return tc.config.flow.icmptype
+
+def GetOuterDIP(tc,packet):
+    acl = __get_acl_from_tc(tc)
+    
+    if acl.MatchOnTEPMiss():
+        return acl.MatchTEPMissDIP()
+
+    return tc.config.src.endpoint.intf.ltep

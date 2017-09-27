@@ -2,7 +2,8 @@
 selectors:
     src:
         tenant      : filter://type=TENANT
-        segment     : filter://fabencap=VLAN,native=False
+        # Select segments with broadcast policy set to drop
+        segment     : filter://fabencap=VLAN,native=False,broadcast_policy=1
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
