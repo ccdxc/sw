@@ -1,0 +1,27 @@
+meta:
+    id      : PAYLOAD_TLS_SERVER_NEW_SESSION_TICKET
+
+size: 175
+
+data: 16 03 03 00 aa 04 00 00
+      a6 00 00 01 2c 00 a0 7d
+      2a c9 da 87 e7 e1 ad e2
+      05 d1 5a 96 b8 5a 95 09
+      43 7b 96 63 31 b1 d3 9e
+      0b ac 25 30 b9 36 ab 3c
+      82 97 9b a7 cf f7 23 9a
+      5d 6c 02 c9 ad b2 55 26
+      5b 22 df 47 d7 a3 93 5c
+      4c cf 59 38 a1 cb 0c 23
+      90 f3 37 2e 5f f7 f0 0a
+      84 2d 91 8c c7 1b ef 6d
+      3f e3 64 47 ca 46 35 dc
+      6b 51 c0 b4 5d ba 3f e5
+      aa 10 ba f7 9e 5a 63 0a
+      db 16 f9 cf 5f 43 4d e8
+      7c f3 06 f2 3d 6a a8 29
+      2a 4e 3a db e3 e7 21 ac
+      d4 40 de 40 a1 29 19 4c
+      58 51 84 60 a1 7f 35 ff
+      01 5c 85 fb 4c 23 75 1e
+      5d 6a f4 40 7e f1 35

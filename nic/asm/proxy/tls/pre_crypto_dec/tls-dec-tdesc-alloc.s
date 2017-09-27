@@ -31,7 +31,7 @@ tls_dec_tdesc_alloc_process:
 
 	    phvwr		p.to_s5_odesc, d.odesc
 	    phvwr		p.to_s6_odesc, d.odesc
-//        phvwri      p.to_s6_tnmdr_alloc, 1
+        phvwri      p.to_s7_tnmdr_alloc, 1
         
 	    nop.e
 	    nop

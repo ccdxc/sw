@@ -29,12 +29,12 @@
         snd_una                         : SEQ_NUMBER_WIDTH      ;\
         rcv_nxt                         : SEQ_NUMBER_WIDTH      ;\
         snd_wnd                         : SEQ_NUMBER_WIDTH      ;\
-        snd_wl1                         : SEQ_NUMBER_WIDTH      ;\
         snd_up                          : SEQ_NUMBER_WIDTH      ;\
         snd_cwnd                        : WINDOW_WIDTH          ;\
         rto_deadline                    : TS_WIDTH              ;\
         pending_ft_clear                : 1                     ;\
-        pending_ft_reset                : 1                     ;
+        pending_ft_reset                : 1                     ;\
+        pad1_rx2tx                      : 14                     ;
 
 
 #define RX2TX_SHARED_EXTRA_STATE \

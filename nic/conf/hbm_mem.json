@@ -151,6 +151,10 @@
         {
             "name": "storage",
             "size_kb": 128
+        },
+        {
+            "name": "asesq",
+            "size_kb": 16384
         }
     ]
 }

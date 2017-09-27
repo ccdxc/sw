@@ -74,7 +74,9 @@ header_type rx2tx_d_t {
 
         sesq_base : HBM_ADDRESS_WIDTH; // 4 bytes
 
-        RX2TX_SHARED_STATE      // 27
+        asesq_base : HBM_ADDRESS_WIDTH; // 4 bytes
+
+        RX2TX_SHARED_STATE      // 24
     }
 }
 
@@ -115,6 +117,7 @@ header_type common_global_phv_t {
     fields {
         // global k (max 128)
         fid                     : 24;
+        ring_id                 : 8;
         qstate_addr             : HBM_ADDRESS_WIDTH;
         snd_una                 : SEQ_NUMBER_WIDTH;
         rcv_nxt                 : SEQ_NUMBER_WIDTH;
@@ -309,7 +312,7 @@ metadata dma_cmd_phv2mem_t dma_cmd8_dma;     // dma cmd 7
 
 #define RX2TX_PARAMS                                                                                  \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1, pi_2, ci_2, pi_3, ci_3,\
-pi_4, ci_4, pi_5,ci_5, sesq_base, snd_una, rcv_nxt, snd_wnd, snd_wl1, snd_up, snd_cwnd, rto_deadline, \
+pi_4, ci_4, pi_5,ci_5, sesq_base, asesq_base,snd_una, rcv_nxt, snd_wnd, snd_up, snd_cwnd, rto_deadline, \
 pending_ft_clear, pending_ft_reset
 
 
@@ -335,10 +338,10 @@ pending_ft_clear, pending_ft_reset
     modify_field(rx2tx_d.pi_5, pi_5);                                                                  \
     modify_field(rx2tx_d.ci_5, ci_5);                                                                  \
     modify_field(rx2tx_d.sesq_base, sesq_base);                                                        \
+    modify_field(rx2tx_d.asesq_base,asesq_base);                                                       \
     modify_field(rx2tx_d.snd_una, snd_una);                                                            \
     modify_field(rx2tx_d.rcv_nxt, rcv_nxt);                                                            \
     modify_field(rx2tx_d.snd_wnd, snd_wnd);                                                            \
-    modify_field(rx2tx_d.snd_wl1, snd_wl1);                                                            \
     modify_field(rx2tx_d.snd_up, snd_up);                                                              \
     modify_field(rx2tx_d.snd_cwnd, snd_cwnd);                                                          \
     modify_field(rx2tx_d.rto_deadline, rto_deadline);                                                  \

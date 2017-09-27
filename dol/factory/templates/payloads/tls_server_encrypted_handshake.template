@@ -1,0 +1,13 @@
+meta:
+    id      : PAYLOAD_TLS_SERVER_ENCRYPTED_HANDSHAKE
+
+size: 45
+
+data: 16 03 03 00 28 cd bf 16
+      4e 38 01 d1 99 20 e8 88
+      6a ca 66 a3 48 2a fe 0c
+      fe 30 e4 a0 c0 3a ca 78
+      61 d7 0b e4 fb f5 ef 61
+      74 24 f1 25 78
+
+

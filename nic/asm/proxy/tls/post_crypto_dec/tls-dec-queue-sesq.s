@@ -53,8 +53,7 @@ dma_cmd_sesq_slot:
 	phvwri		p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwri      p.dma_cmd0_dma_cmd_eop, 0
 
-    addi        r1, r0, TLS_DDOL_SESQ_STOP
-    seq         c1, r1, k.to_s5_debug_dol
+    smeqb       c1, k.to_s5_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
     bcf         [c1], tls_sesq_produce_skip
     nop
 

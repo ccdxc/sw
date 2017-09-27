@@ -585,7 +585,6 @@ invalid_ack:
 no_queue:
 flow_rx_process_done:
 table_read_setup_next:
-    phvwr       p.rx2tx_snd_wl1, d.u.tcp_rx_d.snd_wl1
     phvwr       p.rx2tx_snd_wnd, d.u.tcp_rx_d.snd_wnd
     phvwr       p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
     bcf         [c7], table_read_SACK

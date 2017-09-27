@@ -43,6 +43,9 @@ typedef struct tcpcb_s {
     uint32_t              sesq_pi;
     uint32_t              sesq_ci;
     uint64_t              sesq_base;
+    uint32_t              asesq_pi;
+    uint32_t              asesq_ci;
+    uint64_t              asesq_base;
     uint32_t              snd_wnd;
     uint32_t              snd_cwnd;
     uint32_t              rcv_mss;

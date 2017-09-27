@@ -1,0 +1,6 @@
+meta:
+    id      : PAYLOAD_TLS_CLIENT_CHANGE_CIPHER_SPEC
+
+size: 6
+
+data: 14 03 03 00 01 01

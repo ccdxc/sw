@@ -75,6 +75,8 @@ wring_pd_meta_init() {
     g_meta[types::WRING_TYPE_ASQ] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_ASQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};
 
+    g_meta[types::WRING_TYPE_ASESQ] = 
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASESQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL};
     return HAL_RET_OK;
 }
 
@@ -326,6 +328,8 @@ arqrx_get_hw_meta(pd_wring_t* wring_pd)
 		HAL_TRACE_ERR("Failed to read pindex value");
 		return HAL_RET_HW_FAIL;
 	}
+    HAL_TRACE_DEBUG("ARQRX PI ADDR 0x{0:x}", addr);
+    HAL_TRACE_DEBUG("ARQRX PI VALUE 0x{0:x}", ntohs(pindex));
 	wring_pd->wring->pi = ntohs(pindex);
 	return HAL_RET_OK;
 }

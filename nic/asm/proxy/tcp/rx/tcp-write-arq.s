@@ -58,9 +58,7 @@ dma_cmd_descr:
     addi        r7, r0, 1
     
 
-    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_ARQ, TCP_DDOL_DONT_QUEUE_TO_ARQ
-    bcf         [c1], flow_write_arq_process_done
-    nop
+    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_LEAVE_IN_ARQ, TCP_DDOL_LEAVE_IN_ARQ
 dma_cmd_arq_slot:
     CPU_ARQ_PIDX_READ_INC(r6, 0, struct tcp_rx_write_arq_write_arq_d, pi_0)
     CPU_RX_ENQUEUE(r5,

@@ -9,6 +9,7 @@ from config.objects.tcp_proxy_cb        import TcpCbHelper
 from infra.common.objects import ObjectDatabase as ObjectDatabase
 import test.callbacks.networking.modcbs as modcbs
 from infra.common.logging import logger
+import test.tcp_tls_proxy.tcp_tls_proxy as tcp_tls_proxy
 
 
 def Setup(infra, module):
@@ -52,7 +53,7 @@ def TestCaseSetup(tc):
     sesq.Configure()
     tlscbid = "TlsCb%04d" % id
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
-    tlscb_cur.debug_dol = 5
+    tlscb_cur.debug_dol = (tcp_tls_proxy.tls_debug_dol_bypass_proxy | tcp_tls_proxy.tls_debug_dol_sesq_stop | tcp_tls_proxy.tls_debug_dol_bypass_barco)
     tlscb_cur.SetObjValPd()
     tlscb = copy.deepcopy(tlscb_cur)
     tlscb.GetObjValPd()

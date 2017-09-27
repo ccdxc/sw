@@ -58,6 +58,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_BSQ                "bsq"
 #define CAPRI_HBM_REG_SERQ               "serq"
 #define CAPRI_HBM_REG_SESQ               "sesq"
+#define CAPRI_HBM_REG_ASESQ              "asesq"
 #define CAPRI_HBM_REG_IPSECCB            "ipsec-cb"
 #define CAPRI_HBM_REG_ARQRX              "arq-rx"
 #define CAPRI_HBM_REG_ASQ                "asq"

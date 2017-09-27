@@ -43,7 +43,7 @@ tcp_cpu_rx:
                                  TABLE_LOCK_EN,
                                  tcp_rx_write_arq_stage6_start,
                                  r3,
-                                 CPU_ARQRX_QIDXR_OFFSET,
+                                 0,
                                  TABLE_SIZE_512_BITS)
 
     b           flow_fc_process_done

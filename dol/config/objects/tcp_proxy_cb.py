@@ -38,6 +38,7 @@ class TcpCbObject(base.ConfigObjectBase):
         cfglogger.info("  - %s" % self)
         self.tlscb = TlsCbHelper.main(self)
         self.sesq = SwDscrRingHelper.main("SESQ", gid, self.id)
+        self.sesq = SwDscrRingHelper.main("ASESQ", gid, self.id)
 
         return
 
@@ -54,6 +55,8 @@ class TcpCbObject(base.ConfigObjectBase):
            req_spec.debug_dol                 = self.debug_dol
            req_spec.sesq_pi                   = self.sesq_pi
            req_spec.sesq_ci                   = self.sesq_ci
+           req_spec.asesq_pi                  = self.asesq_pi
+           req_spec.asesq_ci                  = self.asesq_ci
            req_spec.snd_wnd                   = self.snd_wnd
            req_spec.snd_cwnd                  = self.snd_cwnd
            req_spec.rcv_mss                   = self.rcv_mss
@@ -78,6 +81,8 @@ class TcpCbObject(base.ConfigObjectBase):
             self.debug_dol = resp_spec.spec.debug_dol
             self.sesq_pi = resp_spec.spec.sesq_pi
             self.sesq_ci = resp_spec.spec.sesq_ci
+            self.asesq_pi = resp_spec.spec.asesq_pi
+            self.asesq_ci = resp_spec.spec.asesq_ci
             self.snd_wnd = resp_spec.spec.snd_wnd
             self.snd_cwnd = resp_spec.spec.snd_cwnd
             self.rcv_mss = resp_spec.spec.rcv_mss

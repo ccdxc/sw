@@ -212,12 +212,25 @@ modules:
         ignore  : False
         args    :
             flow: filter://type=IPV4,proto=TCP
+
     - module:
         name    : PKT_TO_SESQ
         enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_sesq
         spec    : one_pkt.testspec
+        ignore  : False
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : TLS_HANDSHAKE_RX
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : tls_handshake_rx
+        spec    : tls_handshake.testspec
         ignore  : False
         args    :
             maxflows: 1

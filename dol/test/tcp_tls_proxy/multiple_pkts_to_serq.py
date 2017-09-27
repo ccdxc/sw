@@ -8,6 +8,7 @@ from config.objects.tcp_proxy_cb        import TcpCbHelper
 import test.callbacks.networking.modcbs as modcbs
 from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
+import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
 
 
 def Setup(infra, module):
@@ -34,7 +35,7 @@ def TestCaseSetup(tc):
     tcb.rcv_tsval = 0xFAFAFAFA
     tcb.ts_recent = 0xFAFAFAF0
     tcb.bytes_rcvd = 0
-    tcb.debug_dol = 1
+    tcb.debug_dol = tcp_proxy.tcp_debug_dol_pkt_to_serq
     # set tcb state to ESTABLISHED(1)
     tcb.state = 1
     tcb.SetObjValPd()

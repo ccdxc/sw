@@ -6,6 +6,21 @@ import pdb
 tcp_debug_dol_pkt_to_serq = 0x1
 tcp_debug_dol_test_atomic_stats = 0x2
 tcp_debug_dol_dont_queue_to_serq = 0x4
+tcp_debug_dol_leave_in_arq = 0x8
+
+tcp_state_ESTABLISHED = 1
+tcp_state_SYN_SENT = 2
+tcp_state_SYN_RECV = 3
+tcp_state_FIN_WAIT1 = 4
+tcp_state_FIN_WAIT2 = 5
+tcp_state_TIME_WAIT = 6
+tcp_state_CLOSE = 7
+tcp_state_CLOSE_WAIT = 8
+tcp_state_LAST_ACK = 9
+tcp_state_LISTEN = 10
+tcp_state_CLOSING = 11
+tcp_state_NEW_SYN_RECV = 12
+
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0xBABABABA

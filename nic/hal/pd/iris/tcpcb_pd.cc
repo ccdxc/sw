@@ -513,6 +513,19 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
             HAL_TRACE_DEBUG("Sesq base: 0x{0:x}", sesq_base);
             data.u.read_rx2tx_d.sesq_base = sesq_base;
         }
+        // get asesq address
+        wring_hw_id_t   asesq_base;
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_ASESQ,
+                                     tcpcb_pd->tcpcb->cb_id,
+                                     &asesq_base);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to receive asesq base for tcp cb: {}", 
+                        tcpcb_pd->tcpcb->cb_id);
+        } else {
+            HAL_TRACE_DEBUG("ASesq id: 0x{0:x}", tcpcb_pd->tcpcb->cb_id);
+            HAL_TRACE_DEBUG("ASesq base: 0x{0:x}", asesq_base);
+            data.u.read_rx2tx_d.asesq_base = asesq_base;
+        }
 
     }
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
@@ -642,9 +655,16 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->sesq_pi = data.u.read_rx2tx_d.pi_0;
     tcpcb_pd->tcpcb->sesq_ci = data.u.read_rx2tx_d.ci_0;
 
+    tcpcb_pd->tcpcb->asesq_base = data.u.read_rx2tx_d.asesq_base;
+    tcpcb_pd->tcpcb->asesq_pi = data.u.read_rx2tx_d.pi_4;
+    tcpcb_pd->tcpcb->asesq_ci = data.u.read_rx2tx_d.ci_4;
+
     HAL_TRACE_DEBUG("Received sesq_base: 0x{0:x}", tcpcb_pd->tcpcb->sesq_base);
     HAL_TRACE_DEBUG("Received sesq_pi: 0x{0:x}", tcpcb_pd->tcpcb->sesq_pi);
     HAL_TRACE_DEBUG("Received sesq_ci: 0x{0:x}", tcpcb_pd->tcpcb->sesq_ci);
+    HAL_TRACE_DEBUG("Received asesq_base: 0x{0:x}", tcpcb_pd->tcpcb->asesq_base);
+    HAL_TRACE_DEBUG("Received asesq_pi: 0x{0:x}", tcpcb_pd->tcpcb->asesq_pi);
+    HAL_TRACE_DEBUG("Received asesq_ci: 0x{0:x}", tcpcb_pd->tcpcb->asesq_ci);
 
     return HAL_RET_OK;
 }

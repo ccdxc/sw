@@ -45,6 +45,9 @@ message TcpCbSpec {
   bytes                 header_template            = 17;
   uint32                state                      = 18;
   uint32                source_lif                 = 19;
+  fixed64               asesq_base                 = 20;
+  uint32                asesq_pi                   = 21;
+  uint32                asesq_ci                   = 22;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

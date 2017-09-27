@@ -13,5 +13,6 @@
 #define TCP_SCHED_RING_PENDING        0x1
 #define TCP_SCHED_RING_FT             0x2
 #define TCP_SCHED_RING_ST             0x3
+#define TCP_SCHED_RING_ASESQ          0x4
 
 #endif /* #ifndef __TCP_SCHED_H__ */

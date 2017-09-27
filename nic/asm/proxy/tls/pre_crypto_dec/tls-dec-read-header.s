@@ -15,29 +15,27 @@
 struct tx_table_s4_t0_k k;
 struct phv_             p;
 struct tx_table_s4_t0_d d;
+
+#define D d.u.tls_read_tls_header_d
 	
 %%
 	.param		tls_dec_alloc_tnmdr_process
     .param      tls_dec_bld_barco_req_process
 	
 tls_dec_read_header_process:
-    /* Setup AAD using the incoming TLS record information */
-    /* FIXME: Not being used, we use inplace AAD, hence remove this */
-	phvwr		p.s4_s6_t0_phv_aad_type, d.u.tls_read_tls_header_d.tls_hdr_type
-	phvwr		p.s4_s6_t0_phv_aad_version_major, d.u.tls_read_tls_header_d.tls_hdr_version_major
-	phvwr		p.s4_s6_t0_phv_aad_version_minor, d.u.tls_read_tls_header_d.tls_hdr_version_minor
-	phvwr		p.s4_s6_t0_phv_aad_length, d.u.tls_read_tls_header_d.tls_hdr_len
+	phvwr		p.tls_global_phv_tls_hdr_type, d.u.tls_read_tls_header_d.tls_hdr_type
+	phvwr		p.tls_global_phv_tls_hdr_version_major, d.u.tls_read_tls_header_d.tls_hdr_version_major
+	phvwr		p.tls_global_phv_tls_hdr_version_minor, d.u.tls_read_tls_header_d.tls_hdr_version_minor
+	phvwr		p.tls_global_phv_tls_hdr_len, d.u.tls_read_tls_header_d.tls_hdr_len
+	/* Check if this is a TLS handshake packet */
+#if 0
+    addi        r1, r0, NTLS_RECORD_HANDSHAKE
+#else
+    addi        r1, r0, 0x01
+#endif
+    seq         c1, D.tls_hdr_type, r1
+    phvwri.c1   p.tls_global_phv_write_arq, 1
 
-    add         r1, r0, d.u.tls_read_tls_header_d.tls_iv
-
-    tblwr.f     d.u.tls_read_tls_header_d.tls_iv, k.crypto_iv_explicit_iv
-
-    phvwr       p.crypto_iv_explicit_iv, r1
-
-
-    phvwr       p.to_s6_cur_tls_data_len, d.u.tls_read_tls_header_d.tls_hdr_len
-
-    CAPRI_OPERAND_DEBUG(d.u.tls_read_tls_header_d.tls_iv)
 	
 #if 0
 	seq		    c1, k.tls_global_phv_pending_rx_serq, r0
@@ -58,4 +56,4 @@ table_read_alloc_tnmdr:
 tls_read_desc_process_done:
 	nop.e
 	nop.e
-	
+

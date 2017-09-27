@@ -246,6 +246,9 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     rsp->mutable_spec()->set_sesq_base(rtcpcb.sesq_base);
     rsp->mutable_spec()->set_sesq_pi(rtcpcb.sesq_pi);
     rsp->mutable_spec()->set_sesq_ci(rtcpcb.sesq_ci);
+    rsp->mutable_spec()->set_asesq_base(rtcpcb.asesq_base);
+    rsp->mutable_spec()->set_asesq_pi(rtcpcb.asesq_pi);
+    rsp->mutable_spec()->set_asesq_ci(rtcpcb.asesq_ci);
     rsp->mutable_spec()->set_state(rtcpcb.state);
 
     // fill operational state of this TCP CB

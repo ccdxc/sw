@@ -23,6 +23,10 @@ tls_dec_queue_brq_process:
 	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
 	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r5
 
+    seq         c1, k.tls_global_phv_write_arq, r0
+    bcf         [!c1], tls_queue_brq_dec_process_done
+    nop
+        
 	/*   tlsp->next_tls_hdr_offset = md->next_tls_hdr_offset; */
 //	phvwr	    p.tls_global_phv_next_tls_hdr_offset, k.to_s6_next_tls_hdr_offset
 

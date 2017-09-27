@@ -1,0 +1,18 @@
+meta:
+    id      : PAYLOAD_TLS_CLIENT_KEY_EXCHANGE
+
+size: 75
+
+
+data: 16 03 03 00 46 10 00 00
+      42 41 04 2a 2b f6 9b 91
+      83 cc 04 e3 94 05 e1 0d
+      43 e9 12 82 52 83 27 87
+      91 4b be eb d9 31 66 b5
+      4f 95 5e 3c 80 25 9d d5
+      15 56 cc 19 84 97 fa ca
+      51 fc 59 a2 a8 0d 83 6c
+      5f ab 1e 80 f0 7d af 3c
+      64 18 8d
+
+

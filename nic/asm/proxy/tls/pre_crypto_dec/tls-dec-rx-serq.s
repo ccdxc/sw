@@ -61,9 +61,9 @@ no_dma_cmd:
 	 * offset for the next tls header in the data stream 
 	 */
 	/* if (dtlsp->next_tls_hdr_offset < md->desc.data_len) { */
-    add         r5, r0, k.{s2_s3_t0_phv_idesc_aol0_len_sbit0_ebit7...s2_s3_t0_phv_idesc_aol0_len_sbit8_ebit31}
-	slt		    c1, D.next_tls_hdr_offset, r5
-	bcf		    [!c1], tls_no_read_header
+	slt		    c1, D.next_tls_hdr_offset, k.s2_s3_t0_phv_idesc_aol0_len
+    seq         c2, D.next_tls_hdr_offset, r0
+	bcf		    [!c2 & !c1], tls_no_read_header
 	nop
 	phvwr		p.tls_global_phv_next_tls_hdr_offset, D.next_tls_hdr_offset
 	add		    r2, r0, k.s2_s3_t0_phv_idesc_aol0_addr

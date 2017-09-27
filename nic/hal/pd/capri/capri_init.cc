@@ -5,7 +5,7 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 35
+#define CAPRI_P4PLUS_NUM_SYMBOLS 36
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
@@ -311,6 +311,13 @@ capri_p4p_asm_init()
     symbols[34].num_params = 1;
     symbols[34].params[0].name = RNMPR_TABLE_BASE;
     symbols[34].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
+
+    symbols[35].name = "tls-dec-bld-barco-req.bin";
+    symbols[35].num_params = 2;
+    symbols[35].params[0].name = ARQRX_BASE;
+    symbols[35].params[0].val = get_start_offset(CAPRI_HBM_REG_ARQRX);
+    symbols[35].params[1].name = ARQRX_QIDXR_BASE;
+    symbols[35].params[1].val = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
     

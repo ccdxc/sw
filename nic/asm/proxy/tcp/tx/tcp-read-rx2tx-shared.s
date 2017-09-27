@@ -41,15 +41,21 @@ write_phv:
         phvwr           p.{rx2tx_snd_una...rx2tx_snd_cwnd}, d.{snd_una...snd_cwnd}
 
         CAPRI_OPERAND_DEBUG(d.snd_wnd)
-        CAPRI_OPERAND_DEBUG(d.snd_wl1)
         CAPRI_OPERAND_DEBUG(d.snd_cwnd)
         phvwr           p.t0_s2s_snd_cwnd, d.snd_cwnd
         phvwr           p.t0_s2s_snd_wnd, d.snd_wnd
 
         // TODO check pi != ci
-        phvwr           p.to_s2_sesq_cidx, d.{ci_0}.hx
-        add             r3, d.{sesq_base}.wx, d.{ci_0}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
-        phvwr           p.to_s1_sesq_ci_addr, r3
+        smeqb           c1, r7, TCP_SCHED_RING_SESQ, TCP_SCHED_RING_SESQ
+        smeqb           c2, r7, TCP_SCHED_RING_ASESQ, TCP_SCHED_RING_ASESQ
+
+        phvwr.c1        p.to_s2_sesq_cidx, d.{ci_0}.hx
+        add.c1          r3, d.{sesq_base}.wx, d.{ci_0}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
+        phvwr.c1        p.to_s1_sesq_ci_addr, r3
+
+        phvwr.c2        p.to_s2_sesq_cidx, d.{ci_4}.hx
+        add.c2          r3, d.{asesq_base}.wx, d.{ci_4}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
+        phvwr.c2        p.to_s1_sesq_ci_addr, r3
 
         CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                             tcp_tx_read_rx2tx_shared_extra_stage1_start,

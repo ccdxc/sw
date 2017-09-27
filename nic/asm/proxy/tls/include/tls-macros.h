@@ -2,6 +2,7 @@
 #define _TLS_MACROS_H_
 
 #include "capri-macros.h"
+#include "cpu-macros.h"
 
 #define TLS_NEXT_TABLE_READ            CAPRI_NEXT_TABLE_READ
 
