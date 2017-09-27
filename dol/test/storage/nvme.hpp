@@ -1,6 +1,7 @@
 #ifndef _NVME_HPP_
 #define _NVME_HPP_
 
+#include <asm/byteorder.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -23,9 +24,7 @@
 struct NvmeSgl{
   uint64_t  addr;
   uint32_t  size;
-  uint8_t   rsvd[3];
-  uint8_t   sub_type:4,
-            type:4;
+  uint32_t  rsvd_type;
 } __attribute__((packed));
 
 // NVMe PRP struct
@@ -38,19 +37,9 @@ struct NvmePrp{
 struct NvmeCmd {
   // Dword 0
   struct {
-#ifdef LITTLE_ENDIAN
-    uint32_t opc:8;    // Opcode
-    uint32_t fuse:2;   // Fusing 2 simple commands
-    uint32_t rsvd:4; 
-    uint32_t psdt:2;   // PRP or SGL
-    uint32_t cid:16;   // Command identifier
-#else
-    uint32_t cid:16;   // Command identifier
-    uint32_t psdt:2;   // PRP or SGL
-    uint32_t rsvd:4; 
-    uint32_t fuse:2;   // Fusing 2 simple commands
-    uint32_t opc:8;    // Opcode
-#endif
+    uint8_t opc;
+    uint8_t flags;
+    uint16_t cid;
   } __attribute__((packed)) dw0;
   
   // Dword 1
@@ -75,46 +64,23 @@ struct NvmeCmd {
   union {
     uint64_t slba;       // Starting LBA (for Read/Write) commands
     struct {
-#ifdef LITTLE_ENDIAN
       uint16_t qid;
       uint16_t qsize;
       uint16_t rsvd;
       uint16_t ivec;
-#else
-      uint16_t qsize;
-      uint16_t qid;
-      uint16_t ivec;
-      uint16_t rsvd;
-#endif
     } __attribute__((packed)) dw10_11;
   };
 
   // Dword 12
   struct {
-#ifdef LITTLE_ENDIAN
-    uint32_t nlb:16;    // Number of logical blocks
-    uint32_t rsvd:10;  
-    uint32_t prinfo:4;  // Protection information field
-    uint32_t fua:1;     // Force unit access
-    uint32_t lr:1;      // Limited retry
-#else
-    uint32_t lr:1;      // Limited retry
-    uint32_t fua:1;     // Force unit access
-    uint32_t prinfo:4;  // Protection information field
-    uint32_t rsvd:10;  
-    uint32_t nlb:16;    // Number of logical blocks
-#endif
+    uint16_t nlb;    // Number of logical blocks
+    uint16_t flags;
   } __attribute__((packed)) dw12;
 
   // Dword 13
   struct {
-#ifdef LITTLE_ENDIAN
-    uint32_t dsm:8;     // Dataset management
-    uint32_t rsvd:24;
-#else
-    uint32_t rsvd:24;
-    uint32_t dsm:8;     // Dataset management
-#endif
+    uint8_t dsm;     // Dataset management
+    uint8_t rsvd[3];
   } __attribute__((packed)) dw13;
 
   // Dword 14 - TODO: add to this

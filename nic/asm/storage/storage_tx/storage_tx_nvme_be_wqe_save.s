@@ -31,7 +31,7 @@ storage_tx_nvme_be_wqe_save_start:
 
    // Store the command index (in GPR r6) in the NVME command as well
    // TODO: Enable this after fixing command definitions
-   //phvwr	p.nvme_be_cmd_nvme_cmd_cid, r6
+   phvwr	p.nvme_be_cmd_nvme_cmd_cid, r6.wx
 
    // Calculate the address to save R2N WQE based on the command index offset into
    // the SSD's list of outstanding commands. Output is stored in GPR r7.

@@ -27,6 +27,14 @@ int test_run_r2n_read_cmd();
 
 int test_run_r2n_write_cmd();
 
+int test_run_r2n_ssd_pri1();
+
+int test_run_r2n_ssd_pri2();
+
+int test_run_r2n_ssd_pri3();
+
+int test_run_r2n_ssd_pri4();
+
 }  // namespace tests
 
 #endif   // _TESTS_HPP_

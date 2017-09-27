@@ -677,6 +677,9 @@ action nvme_be_wqe_prep(src_queue_id, ssd_handle, io_priority, is_read,
   NVME_BE_CMD_HDR_COPY(r2n_wqe)
   modify_field(r2n_wqe.pri_qaddr, storage_kivec0.dst_qaddr);
 
+  // Store fields needed in the K+I vector
+  modify_field(storage_kivec0.ssd_handle, ssd_handle);
+
   // Setup the DMA command to push the modified R2N WQE to NVME backend
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_1, 
                            0,
@@ -1056,7 +1059,7 @@ action seq_barco_entry_handler(xts_desc_addr, xts_desc_size, xts_db_addr,
 
   // Update the K+I vector with the barco descriptor size to be used 
   // when calculating the offset for the push operation 
-  modify_field(storage_kivec0.xts_desc_size, xts_desc_size);
+  modify_field(storage_kivec1.xts_desc_size, xts_desc_size);
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
@@ -1126,7 +1129,7 @@ action seq_barco_ring_push(base_addr, num_entries, p_ndx, opa_tag, c_ndx,
     DMA_COMMAND_PHV2MEM_FILL(dma_m2m_2, 
                              barco_xts_ring_scratch.base_addr +
                              (barco_xts_ring_scratch.p_ndx * 
-                              storage_kivec0.xts_desc_size),
+                              storage_kivec1.xts_desc_size),
                              0, 0,
                              0, 0, 0, 0)
 

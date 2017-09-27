@@ -333,7 +333,7 @@ header_type storage_kivec0_t {
     io_priority		: 8;	// I/O priority to select ring with the queue
     ssd_bm_addr		: 34;	// Pointer to bitmap used to save SSD commands
     cmd_index		: 8;	// Index into bitmap of saved SSD commands
-    xts_desc_size	: 16;	// Barco XTS descriptor size
+    ssd_handle		: 16;	// SSD handle to select NVME backend
   }
 }
 
@@ -344,6 +344,7 @@ header_type storage_kivec1_t {
     src_qtype	: 3;	// Source LIF type (within the LIF)
     src_qid	: 24;	// Source queue number (within the LIF)
     src_qaddr	: 34;	// Source queue state address
+    xts_desc_size	: 16;	// Barco XTS descriptor size
   }
 }
 
@@ -366,13 +367,14 @@ header_type storage_kivec2_t {
   modify_field(scratch.io_priority, kivec.io_priority);			\
   modify_field(scratch.ssd_bm_addr, kivec.ssd_bm_addr);			\
   modify_field(scratch.cmd_index, kivec.cmd_index);			\
-  modify_field(scratch.xts_desc_size, kivec.xts_desc_size);		\
+  modify_field(scratch.ssd_handle, kivec.ssd_handle);			\
 
 #define STORAGE_KIVEC1_USE(scratch, kivec)				\
   modify_field(scratch.src_lif, kivec.src_lif);				\
   modify_field(scratch.src_qtype, kivec.src_qtype);			\
   modify_field(scratch.src_qid, kivec.src_qid);				\
   modify_field(scratch.src_qaddr, kivec.src_qaddr);			\
+  modify_field(scratch.xts_desc_size, kivec.xts_desc_size);		\
 
 #define STORAGE_KIVEC2_USE(scratch, kivec)				\
   modify_field(scratch.ssd_q_num, kivec.ssd_q_num);			\

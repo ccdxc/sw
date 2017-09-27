@@ -23,6 +23,9 @@ storage_tx_nvme_be_wqe_prep_start:
    // Save the dst_qaddr in the K+I vector into the R2N WQE in the PHV
    phvwr	p.r2n_wqe_pri_qaddr, STORAGE_KIVEC0_DST_QADDR
 
+   // Save the SSD handle into the K+I vector
+   phvwr	p.storage_kivec0_ssd_handle, d.ssd_handle
+
    // Setup the DMA command to push the NVME backend status entry. For now keep 
    // the destination address to be 0 (in GPR r0). Set this correctly in the
    // next stage.

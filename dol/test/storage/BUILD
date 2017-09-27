@@ -2,6 +2,17 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
+    name= "log",
+    srcs = [
+        "log.cc",
+        "log.hpp",
+    ],
+    deps = [
+        "//external:gflags",
+    ]
+)
+
+cc_library(
     name= "hal_if",
     srcs = [
         "hal_if.cc",
@@ -21,6 +32,7 @@ cc_library(
     ],
     deps = [
         ":hal_if",
+        ":log",
     ]
 )
 
@@ -87,6 +99,7 @@ cc_library(
         ":hal_if",
         ":qstate_if",
         ":r2n",
+        ":log",
         "//dol/test/storage/host_mem",
         "//dol/test/storage/model_client",
     ]

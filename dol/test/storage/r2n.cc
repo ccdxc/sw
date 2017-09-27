@@ -23,7 +23,7 @@ void r2n_nvme_be_cmd_init(void *r2n_buf, uint32_t src_queue_id, uint16_t ssd_han
                                 sizeof(nvme_be_sta_t) + sizeof(r2n_sta_req_t));
 
   nvme_be_cmd->s.src_queue_id = bswap_32(src_queue_id);
-  nvme_be_cmd->s.ssd_handle = bswap_32(ssd_handle);
+  nvme_be_cmd->s.ssd_handle = bswap_16(ssd_handle);
   nvme_be_cmd->s.r2n_buf_handle = bswap_64(host_mem_v2p(r2n_buf));
   nvme_be_cmd->s.io_priority = io_priority;
   nvme_be_cmd->s.is_read = is_read;

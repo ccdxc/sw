@@ -1,3 +1,4 @@
+#include <asm/byteorder.h>
 #include <stdio.h>
 #include <strings.h>
 #include <string>
@@ -22,6 +23,10 @@ struct {
   {&tests::test_run_pvm_nvme_write_status, "PVM->NVME Write Status", false},
   {&tests::test_run_r2n_read_cmd, "R2N -> SSD Read Cmd", false},
   {&tests::test_run_r2n_write_cmd, "R2N -> SSD Write Cmd", false},
+  {&tests::test_run_r2n_ssd_pri1, "R2N -> SSD Pri Cmd 1", false},
+  {&tests::test_run_r2n_ssd_pri2, "R2N -> SSD Pri Cmd 2", false},
+  {&tests::test_run_r2n_ssd_pri3, "R2N -> SSD Pri Cmd 3", false},
+  {&tests::test_run_r2n_ssd_pri4, "R2N -> SSD Pri Cmd 4", false},
 
   // Always last entry
   {0}

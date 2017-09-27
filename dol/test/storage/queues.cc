@@ -195,6 +195,8 @@ int queues_setup() {
   }
 
   // Initialize PVM SQs for processing R2N commands 
+  // Note: Not incrementing nvme_be_q in for loop as the SSD handle is added to this
+  //       by R2N module in datapath.
   uint32_t nvme_be_q = i + NUM_TO_VAL(kPvmNumR2nSQs);
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumR2nSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
@@ -218,8 +220,10 @@ int queues_setup() {
   }
 
   // Initialize PVM SQs for processing NVME backend commands 
+  // Note: Incrementing ssd_q in the for loop as the NVME backend corresponds 1:1 
+  //       with the SSD
   uint32_t ssd_q = i + NUM_TO_VAL(kPvmNumNvmeBeSQs);
-  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeBeSQs); j++, i++) {
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeBeSQs); j++, i++, ssd_q++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
                    NUM_TO_VAL(kDefaultEntrySize)) < 0) {

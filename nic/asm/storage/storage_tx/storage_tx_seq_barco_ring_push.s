@@ -22,7 +22,7 @@ storage_tx_seq_barco_ring_push_start:
 
    // Calculate the address to which the entry to be pushed has to be 
    // written to in the destination queue. Output will be stored in GPR r7.
-   QUEUE_PUSH_ADDR(d.base_addr, d.p_ndx, STORAGE_KIVEC0_XTS_DESC_SIZE)
+   QUEUE_PUSH_ADDR(d.base_addr, d.p_ndx, STORAGE_KIVEC1_XTS_DESC_SIZE)
 
    // DMA command address update
    DMA_ADDR_UPDATE(r7, dma_m2m_2)

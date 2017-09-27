@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <strings.h>
 #include <stdio.h>
+#include "dol/test/storage/log.hpp"
 #include "dol/test/storage/hal_if.hpp"
 
 namespace qstate_if {
@@ -25,21 +26,6 @@ void write_bit_fields(void *ptr, unsigned start_bit_offset,
     __write_bit_(p, start_bit_offset + off, value & (1ull << bit_no));
   }
 }
-
-void dump(uint8_t *buf) {
-  int i;
-
-  for (i = 0; i < 64; i++) {
-    printf("%2.2x ", buf[i]);
-    if ((i & 7) == 7) {
-      printf(" ");
-    }
-    if ((i & 0xf) == 0xf) {
-      printf("\n");
-    }
-  }
-}
-
 
 int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                   uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
@@ -96,7 +82,7 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   write_bit_fields(q_state, 374, 16, ssd_q_num);
   write_bit_fields(q_state, 390, 16, ssd_q_size);
 
-  dump(q_state);
+  log::dump(q_state);
 
   if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
     printf("Failed to set lif_qstate addr \n");
@@ -162,7 +148,7 @@ int setup_pri_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   }
   write_bit_fields(q_state, 468, 34, ssd_bm_addr);
 
-  dump(q_state);
+  log::dump(q_state);
 
   if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
     printf("Failed to set lif_qstate addr \n");

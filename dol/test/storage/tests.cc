@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <strings.h>
 
+#include "dol/test/storage/log.hpp"
 #include "dol/test/storage/hal_if.hpp"
 #include "dol/test/storage/qstate_if.hpp"
 #include "dol/test/storage/nvme.hpp"
@@ -18,6 +19,7 @@ const static uint32_t	kDbLifShift		 = 6;
 const static uint32_t	kDbTypeShift		 = 3;
 
 namespace tests {
+
 
 int test_setup() {
   // Initialize hal interface
@@ -80,6 +82,27 @@ int send_and_check(uint8_t *send_cmd, uint8_t *recv_cmd, uint32_t size,
   return rc;
 }
 
+int send_and_check_ignore_cid(uint8_t *send_cmd, uint8_t *recv_cmd,
+                              uint32_t size, uint16_t lif, uint8_t qtype, 
+                              uint32_t qid, uint8_t ring, uint16_t index) {
+  int rc;
+
+  printf("Sending data size %u, lif %u, type %u, queue %u, ring %u, index %u"
+         "\n", size, lif, qtype, qid, ring, index);
+
+  rc = memcmp(send_cmd, recv_cmd, size);
+  printf("PRE doorbell cmd comparison %d \n", rc);
+
+  test_ring_doorbell(lif, qtype, qid, ring, index);
+
+  struct NvmeCmd *send_nvme_cmd = (struct NvmeCmd *) send_cmd;
+  struct NvmeCmd *recv_nvme_cmd = (struct NvmeCmd *) recv_cmd;
+  recv_nvme_cmd->dw0.cid = send_nvme_cmd->dw0.cid;
+  rc = memcmp(send_cmd, recv_cmd, size);
+  printf("POST doorbell cmd comparison (ignoring cid) %d \n", rc);
+
+  return rc;
+}
 int consume_nvme_pvm_sq_entries(uint16_t nvme_q, uint16_t pvm_q, 
                                 uint8_t **nvme_cmd, uint8_t **pvm_cmd, 
                                 uint16_t *nvme_index, uint16_t *pvm_index) {
@@ -120,6 +143,42 @@ int consume_nvme_pvm_cq_entries(uint16_t nvme_q, uint16_t pvm_q,
   return 0;
 }
 
+int consume_r2n_entries(uint16_t r2n_q, uint16_t ssd_q, uint16_t ssd_handle,
+                         uint8_t io_priority, uint8_t is_read, 
+                         void **r2n_buf,  uint8_t **r2n_wqe_buf,
+                         uint8_t **nvme_cmd, uint8_t **ssd_cmd, 
+                         uint16_t *r2n_index, uint16_t *ssd_index) {
+
+  if (!r2n_buf || !r2n_wqe_buf || !nvme_cmd || !ssd_cmd || 
+      !r2n_index || !ssd_index) {
+    return -1;
+  }
+  *r2n_buf = r2n::r2n_buf_alloc();
+  if (*r2n_buf == nullptr) {
+    printf("can't alloc r2n buf\n");
+    return -1;
+  }
+
+  *r2n_wqe_buf = (uint8_t *) queues::pvm_sq_consume_entry(r2n_q, r2n_index);
+  if (*r2n_wqe_buf == nullptr) {
+    printf("can't consume r2n wqe entry \n");
+    return -1;
+  }
+
+  r2n::r2n_wqe_init(*r2n_wqe_buf, *r2n_buf);
+  r2n::r2n_nvme_be_cmd_init(*r2n_buf, r2n_q, ssd_handle, io_priority, is_read, 1);
+
+  *nvme_cmd = r2n::r2n_nvme_cmd_ptr(*r2n_buf);
+  *ssd_cmd = (uint8_t *) queues::pvm_sq_consume_entry(ssd_q, ssd_index);
+  if (*nvme_cmd == nullptr || *ssd_cmd == nullptr) {
+    printf("can't consume nvme/ssd command \n");
+    return -1;
+  }
+  bzero(*nvme_cmd, sizeof(struct NvmeCmd));
+  bzero(*ssd_cmd, sizeof(struct NvmeCmd)); 
+  return 0;
+}
+
 int test_run_nvme_pvm_admin_cmd() {
   int rc;
   uint16_t nvme_index, pvm_index;
@@ -135,6 +194,7 @@ int test_run_nvme_pvm_admin_cmd() {
 
   struct NvmeCmd *admin_cmd = (struct NvmeCmd *) nvme_cmd;
   admin_cmd->dw0.opc = NVME_ADMIN_CMD_CREATE_SQ;
+  admin_cmd->dw0.cid = 0x1;
   // These values are not interpretted in DOL testing
   admin_cmd->dw10_11.qid = 1;
   admin_cmd->dw10_11.qsize = 64;
@@ -364,46 +424,33 @@ int test_run_pvm_nvme_write_status() {
   return (rc ? -1 : 0);
 }
 
+
 int test_run_r2n_read_cmd() {
   int rc;
-  void *r2n_buf = r2n::r2n_buf_alloc();
-  if (!r2n_buf) {
-    printf("can't alloc r2n buf\n");
-    return -1;
-  }
-  uint16_t r2n_index;
+  void *r2n_buf;
   uint8_t *r2n_wqe_buf;
-  uint16_t r2n_q = 2;
+  uint16_t r2n_index, ssd_index;
+  uint16_t r2n_q = 2, ssd_q = 19;
+  uint16_t ssd_handle = 0; uint8_t io_priority = 0; uint8_t is_read = 1;
+  uint8_t *nvme_cmd, *ssd_cmd;
 
-  r2n_wqe_buf = (uint8_t *) queues::pvm_sq_consume_entry(r2n_q, &r2n_index);
-  if (r2n_wqe_buf == nullptr) {
-    printf("can't consume r2n wqe entry \n");
+  if (consume_r2n_entries(r2n_q, ssd_q, ssd_handle, io_priority, is_read, 
+                          &r2n_buf, &r2n_wqe_buf, &nvme_cmd, &ssd_cmd, 
+                          &r2n_index, &ssd_index) < 0) {
+    printf("can't init and consume r2n/ssd entries \n");
     return -1;
   }
-
-  r2n::r2n_wqe_init(r2n_wqe_buf, r2n_buf);
-  r2n::r2n_nvme_be_cmd_init(r2n_buf, r2n_q, 0, 0, 0, 1);
-
-  uint16_t ssd_index;
-  uint16_t ssd_q = 19;
-  uint8_t *nvme_cmd = r2n::r2n_nvme_cmd_ptr(r2n_buf);
-  uint8_t *ssd_cmd = (uint8_t *) queues::pvm_sq_consume_entry(ssd_q, &ssd_index);
-  if (nvme_cmd == nullptr || ssd_cmd == nullptr) {
-    printf("can't consume r2n wqe entry \n");
-    return -1;
-  }
-  bzero(nvme_cmd, sizeof(struct NvmeCmd));
-  bzero(ssd_cmd, sizeof(struct NvmeCmd)); 
 
   struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd;
   read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
+  read_cmd->dw0.cid = 0x12AB;
   //read_cmd->prp.prp1 = (uint64_t) data;
   read_cmd->slba = 0x9;
   read_cmd->dw12.nlb = 0x1;
 
   // Send the NVME write command to local target and check on SSD side
-  rc = send_and_check(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
-                      queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
+  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+                                 queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
   return (rc ? -1 : 0);
@@ -411,44 +458,157 @@ int test_run_r2n_read_cmd() {
 
 int test_run_r2n_write_cmd() {
   int rc;
-  void *r2n_buf = r2n::r2n_buf_alloc();
-  if (!r2n_buf) {
-    printf("can't alloc r2n buf\n");
-    return -1;
-  }
-  uint16_t r2n_index;
+  void *r2n_buf;
   uint8_t *r2n_wqe_buf;
-  uint16_t r2n_q = 2;
+  uint16_t r2n_index, ssd_index;
+  uint16_t r2n_q = 2, ssd_q = 19;
+  uint16_t ssd_handle = 0; uint8_t io_priority = 0; uint8_t is_read = 0;
+  uint8_t *nvme_cmd, *ssd_cmd;
 
-  r2n_wqe_buf = (uint8_t *) queues::pvm_sq_consume_entry(r2n_q, &r2n_index);
-  if (r2n_wqe_buf == nullptr) {
-    printf("can't consume r2n wqe entry \n");
+  if (consume_r2n_entries(r2n_q, ssd_q, ssd_handle, io_priority, is_read, 
+                          &r2n_buf, &r2n_wqe_buf, &nvme_cmd, &ssd_cmd, 
+                          &r2n_index, &ssd_index) < 0) {
+    printf("can't init and consume r2n/ssd entries \n");
     return -1;
   }
 
-  r2n::r2n_wqe_init(r2n_wqe_buf, r2n_buf);
-  r2n::r2n_nvme_be_cmd_init(r2n_buf, r2n_q, 0, 0, 0, 1);
-
-  uint16_t ssd_index;
-  uint16_t ssd_q = 19;
-  uint8_t *nvme_cmd = r2n::r2n_nvme_cmd_ptr(r2n_buf);
-  uint8_t *ssd_cmd = (uint8_t *) queues::pvm_sq_consume_entry(ssd_q, &ssd_index);
-  if (nvme_cmd == nullptr || ssd_cmd == nullptr) {
-    printf("can't consume r2n wqe entry \n");
-    return -1;
-  }
-  bzero(nvme_cmd, sizeof(struct NvmeCmd));
-  bzero(ssd_cmd, sizeof(struct NvmeCmd)); 
 
   struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd;
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
+  write_cmd->dw0.cid = 0x1234;
   //write_cmd->prp.prp1 = (uint64_t) data;
   write_cmd->slba = 0x8;
   write_cmd->dw12.nlb = 0x1;
 
   // Send the NVME write command to local target and check on SSD side
-  rc = send_and_check(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
-                      queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
+  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+                                 queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
+
+  // rc could be <, ==, > 0. We need to return -1 from this API on error.
+  return (rc ? -1 : 0);
+}
+
+int test_run_r2n_ssd_pri1() {
+  int rc;
+  void *r2n_buf;
+  uint8_t *r2n_wqe_buf;
+  uint16_t r2n_index, ssd_index;
+  uint16_t r2n_q = 2, ssd_q = 20;
+  uint16_t ssd_handle = 1; uint8_t io_priority = 0; uint8_t is_read = 1;
+  uint8_t *nvme_cmd, *ssd_cmd;
+
+  if (consume_r2n_entries(r2n_q, ssd_q, ssd_handle, io_priority, is_read, 
+                          &r2n_buf, &r2n_wqe_buf, &nvme_cmd, &ssd_cmd, 
+                          &r2n_index, &ssd_index) < 0) {
+    printf("can't init and consume r2n/ssd entries \n");
+    return -1;
+  }
+
+  struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd;
+  read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
+  read_cmd->dw0.cid = 0x34AB;
+  //read_cmd->prp.prp1 = (uint64_t) data;
+  read_cmd->slba = 0x9A;
+  read_cmd->dw12.nlb = 0x1;
+
+  // Send the NVME write command to local target and check on SSD side
+  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+                                 queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
+
+  // rc could be <, ==, > 0. We need to return -1 from this API on error.
+  return (rc ? -1 : 0);
+}
+
+int test_run_r2n_ssd_pri2() {
+  int rc;
+  void *r2n_buf;
+  uint8_t *r2n_wqe_buf;
+  uint16_t r2n_index, ssd_index;
+  uint16_t r2n_q = 2, ssd_q = 34;
+  uint16_t ssd_handle = 15; uint8_t io_priority = 0; uint8_t is_read = 0;
+  uint8_t *nvme_cmd, *ssd_cmd;
+
+  if (consume_r2n_entries(r2n_q, ssd_q, ssd_handle, io_priority, is_read, 
+                          &r2n_buf, &r2n_wqe_buf, &nvme_cmd, &ssd_cmd, 
+                          &r2n_index, &ssd_index) < 0) {
+    printf("can't init and consume r2n/ssd entries \n");
+    return -1;
+  }
+
+
+  struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd;
+  write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
+  write_cmd->dw0.cid = 0xABCD;
+  //write_cmd->prp.prp1 = (uint64_t) data;
+  write_cmd->slba = 0xC;
+  write_cmd->dw12.nlb = 0x1;
+
+  // Send the NVME write command to local target and check on SSD side
+  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+                                 queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
+
+  // rc could be <, ==, > 0. We need to return -1 from this API on error.
+  return (rc ? -1 : 0);
+}
+
+int test_run_r2n_ssd_pri3() {
+  int rc;
+  void *r2n_buf;
+  uint8_t *r2n_wqe_buf;
+  uint16_t r2n_index, ssd_index;
+  uint16_t r2n_q = 2, ssd_q = 27;
+  uint16_t ssd_handle = 8; uint8_t io_priority = 1; uint8_t is_read = 1;
+  uint8_t *nvme_cmd, *ssd_cmd;
+
+  if (consume_r2n_entries(r2n_q, ssd_q, ssd_handle, io_priority, is_read, 
+                          &r2n_buf, &r2n_wqe_buf, &nvme_cmd, &ssd_cmd, 
+                          &r2n_index, &ssd_index) < 0) {
+    printf("can't init and consume r2n/ssd entries \n");
+    return -1;
+  }
+
+  struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd;
+  read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
+  read_cmd->dw0.cid = 0x2020;
+  //read_cmd->prp.prp1 = (uint64_t) data;
+  read_cmd->slba = 0x33;
+  read_cmd->dw12.nlb = 0x1;
+
+  // Send the NVME write command to local target and check on SSD side
+  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+                                 queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
+
+  // rc could be <, ==, > 0. We need to return -1 from this API on error.
+  return (rc ? -1 : 0);
+}
+
+int test_run_r2n_ssd_pri4() {
+  int rc;
+  void *r2n_buf;
+  uint8_t *r2n_wqe_buf;
+  uint16_t r2n_index, ssd_index;
+  uint16_t r2n_q = 2, ssd_q = 19;
+  uint16_t ssd_handle = 0; uint8_t io_priority = 2; uint8_t is_read = 0;
+  uint8_t *nvme_cmd, *ssd_cmd;
+
+  if (consume_r2n_entries(r2n_q, ssd_q, ssd_handle, io_priority, is_read, 
+                          &r2n_buf, &r2n_wqe_buf, &nvme_cmd, &ssd_cmd, 
+                          &r2n_index, &ssd_index) < 0) {
+    printf("can't init and consume r2n/ssd entries \n");
+    return -1;
+  }
+
+
+  struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd;
+  write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
+  write_cmd->dw0.cid = 0x3030;
+  //write_cmd->prp.prp1 = (uint64_t) data;
+  write_cmd->slba = 0xA1;
+  write_cmd->dw12.nlb = 0x1;
+
+  // Send the NVME write command to local target and check on SSD side
+  rc = send_and_check_ignore_cid(nvme_cmd, ssd_cmd, sizeof(struct NvmeCmd), 
+                                 queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
   return (rc ? -1 : 0);
