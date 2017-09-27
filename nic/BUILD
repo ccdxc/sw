@@ -148,26 +148,6 @@ cc_library(
 )
 
 cc_library(
-    name = "p4pdtcprx",
-    srcs = ["gen/tcp_proxy_rxdma/src/tcp_proxy_rxdma_p4pd.cc"],
-    hdrs = ["gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4pd.h",
-            ],
-    deps = ["//nic/include:base_includes",
-            "//nic:gen_includes",
-            ],
-)
-
-cc_library(
-    name = "p4pdtcptx",
-    srcs = ["gen/tcp_proxy_txdma/src/tcp_proxy_txdma_p4pd.cc"],
-    hdrs = ["gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4pd.h",
-            ],
-    deps = ["//nic/include:base_includes",
-            "//nic:gen_includes",
-            ],
-)
-
-cc_library(
     name = "p4pluspd_txdma",
     srcs = ["gen/common_txdma_actions/src/common_txdma_actions_p4pd.cc"],
     hdrs = ["gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
