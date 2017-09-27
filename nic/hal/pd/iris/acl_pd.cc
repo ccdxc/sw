@@ -1,17 +1,17 @@
-#include <hal_lock.hpp>
-#include <hal_state_pd.hpp>
-#include <acl_pd.hpp>
-#include <pd_api.hpp>
-#include <acl_api.hpp>
-#include <p4pd.h>
-#include <defines.h>
-#include <if_pd_utils.hpp>
-#include <eth.h>
-#include <tenant.hpp>
-#include <tenant_pd.hpp>
-#include <l2segment.hpp>
-#include <l2seg_pd.hpp>
-#include <l2segment_api.hpp>
+#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/pd/iris/tenant_pd.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/acl_pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/include/acl_api.hpp"
+#include "nic/gen/iris/include/p4pd.h"
+#include "nic/p4/nw/include/defines.h"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
+#include "nic/hal/src/l2segment.hpp"
+#include "nic/hal/pd/iris/l2seg_pd.hpp"
+#include "nic/include/l2segment_api.hpp"
+#include "nic/include/eth.h"
 
 namespace hal {
 namespace pd {
@@ -516,7 +516,7 @@ pd_acl_delete (pd_acl_args_t *args)
     HAL_TRACE_DEBUG("PD-ACL::{}: Deleting pd state for acl: {}", 
             __func__, acl_get_acl_id(args->acl));
 
-    pd_acl = (pd_acl_t *)acl_get_pd_acl(args->acl);
+    pd_acl = (pd_acl_t *)hal::acl_get_pd_acl(args->acl);
 
     // Program HW
     ret = acl_pd_deprogram_hw(pd_acl);

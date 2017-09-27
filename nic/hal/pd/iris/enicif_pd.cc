@@ -1,16 +1,16 @@
-#include <hal_lock.hpp>
-#include <hal_state_pd.hpp>
-#include <pd_api.hpp>
-#include <interface_api.hpp>
-#include <l2segment_api.hpp>
-#include <interface.pb.h>
-#include <if_pd.hpp>
-#include <lif_pd.hpp>
-#include <enicif_pd.hpp>
+#include "nic/include/hal_lock.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/include/interface_api.hpp"
+#include "nic/include/l2segment_api.hpp"
+#include "nic/proto/hal/interface.pb.h"
+#include "nic/hal/pd/iris/if_pd.hpp"
+#include "nic/hal/pd/iris/lif_pd.hpp"
+#include "nic/hal/pd/iris/enicif_pd.hpp"
 #include "l2seg_pd.hpp"
 #include "if_pd_utils.hpp"
-#include <defines.h>
-#include <p4pd_defaults.hpp>
+#include "nic/p4/nw/include/defines.h"
+#include "nic/hal/pd/iris/p4pd/p4pd_defaults.hpp"
 
 
 namespace hal {

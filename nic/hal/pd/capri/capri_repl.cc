@@ -1,12 +1,12 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <base.h>
-#include <p4pd.h>
-#include <capri_hbm.hpp>
-#include <hal_pd_error.hpp>
-#include <capri_repl.hpp>
-#include <capri_tm_rw.hpp>
-#include <lib_model_client.h>
+#include "nic/include/base.h"
+#include "nic/gen/iris/include/p4pd.h"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/include/hal_pd_error.hpp"
+#include "nic/hal/pd/capri/capri_repl.hpp"
+#include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "nic/model_sim/include/lib_model_client.h"
 
 /* HBM base address in System memory map; Cached once at the init time */
 static uint64_t repl_table_base_addr;

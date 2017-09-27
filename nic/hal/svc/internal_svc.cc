@@ -2,10 +2,10 @@
 // internal service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <internal_svc.hpp>
-#include <internal.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/internal_svc.hpp"
+#include "nic/hal/src/internal.hpp"
 
 
 Status

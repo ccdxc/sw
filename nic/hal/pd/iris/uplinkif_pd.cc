@@ -1,11 +1,11 @@
-#include <hal_lock.hpp>
-#include <hal_state_pd.hpp>
-#include <pd_api.hpp>
-#include <interface_api.hpp>
-#include <if_pd.hpp>
-#include <uplinkif_pd.hpp>
-#include "capri_tm_rw.hpp"
-#include "p4pd_api.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/include/interface_api.hpp"
+#include "nic/hal/pd/iris/if_pd.hpp"
+#include "nic/hal/pd/iris/uplinkif_pd.hpp"
+#include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "nic/hal/pd/p4pd_api.hpp"
 
 namespace hal {
 namespace pd {

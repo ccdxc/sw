@@ -1,6 +1,6 @@
 #pragma once
 
-#include <fte.hpp>
+#include "nic/include/fte.hpp"
 
 namespace hal {
 namespace proxy {

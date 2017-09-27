@@ -2,10 +2,10 @@
 // CPU Cb service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <cpucb_svc.hpp>
-#include <cpucb.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/cpucb_svc.hpp"
+#include "nic/hal/src/cpucb.hpp"
 
 Status
 CpuCbServiceImpl::CpuCbCreate(ServerContext *context,

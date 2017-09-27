@@ -1,9 +1,9 @@
-#include <base.h>
-#include <hal.hpp>
-#include <hal_state.hpp>
-#include <crypto_keys_svc.hpp>
-#include <pd_api.hpp>
-#include <crypto_keys.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_state.hpp"
+// #include "nic/hal/svc/crypto_keys_svc.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/src/crypto_keys.hpp"
 
 using std::string;
 

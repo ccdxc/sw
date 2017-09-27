@@ -5,7 +5,7 @@ import copy
 
 import types_pb2                as types_pb2
 import crypto_keys_pb2          as crypto_keys_pb2
-import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
+#import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
 
 from config.store               import Store
 
@@ -25,24 +25,24 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     global rnmdr
-    global ipseccbq 
+    global ipseccbq
     global ipseccb
 
     print("TestCaseSetup(): Sample Implementation.")
     # 1. Configure IPSECCB in HBM before packet injection
     ipseccb = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
-    key_type = types_pb2.CRYPTO_KEY_TYPE_AES128                                                                                                                                                     
+    key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
     key_size = 16
     key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
     ipseccb.crypto_key.Update(key_type, key_size, key)
- 
+
     ipseccb.tunnel_sip4               = 0x40000004
     ipseccb.tunnel_dip4               = 0x40000005
     ipseccb.iv_size                   = 8
     ipseccb.icv_size                  = 16
     ipseccb.block_size                = 16
     ipseccb.key_index                 = 0
-    ipseccb.barco_enc_cmd             = 0x30000000 
+    ipseccb.barco_enc_cmd             = 0x30000000
     ipseccb.iv                        = 0xaaaaaaaaaaaaaaaa
     ipseccb.iv_salt                   = 0xbbbbbbbb
     ipseccb.esn_hi                    = 0
@@ -55,7 +55,7 @@ def TestCaseSetup(tc):
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"])
     ipseccb = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
-    
+
     return
 
 def TestCaseVerify(tc):
@@ -83,7 +83,7 @@ def TestCaseVerify(tc):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         #return False
 
-    # 5. Verify descriptor 
+    # 5. Verify descriptor
     if rnmdr.ringentries[rnmdr.pi].handle != ipseccbqq_cur.ringentries[ipseccb.pi].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[ipseccb.pi].handle))
         #return False

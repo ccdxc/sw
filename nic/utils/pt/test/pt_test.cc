@@ -1,7 +1,7 @@
 #include <arpa/inet.h>
-#include <base.h>
-#include <ip.h>
-#include <pt.hpp>
+#include "nic/include/base.h"
+#include "nic/include/ip.h"
+#include "nic/utils/pt/pt.hpp"
 #include <gtest/gtest.h>
 
 using hal::utils::pt;

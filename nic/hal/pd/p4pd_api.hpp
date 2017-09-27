@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #ifndef P4PD_CLI
-#include <hal_pd_error.hpp>
+#include "nic/hal/pd/hal_pd_error.hpp"
 #else
 typedef int p4pd_error_t;
 #endif
@@ -47,7 +47,7 @@ typedef int p4pd_error_t;
  *      <table_name>_entry_read()
  */
 
-//#include <base.h>
+//#include "nic/include/base.h"
 
 #define P4PD_TCAM_DC_BIT                             0
 #define P4PD_TCAM_DC_UINT8                           0xFF

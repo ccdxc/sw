@@ -1,8 +1,8 @@
 #ifndef __HAL_PD_L2SEG_UPLINK_HPP__
 #define __HAL_PD_L2SEG_UPLINK_HPP__
 
-#include <base.h>
-#include <pd.hpp>
+#include "nic/include/base.h"
+#include "nic/include/pd.hpp"
 
 namespace hal {
 namespace pd {

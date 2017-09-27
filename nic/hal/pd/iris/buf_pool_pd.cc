@@ -1,9 +1,9 @@
-#include <hal_lock.hpp>
-#include <hal_state_pd.hpp>
-#include <buf_pool_pd.hpp>
-#include <pd_api.hpp>
-#include <qos_api.hpp>
-#include <capri_tm_rw.hpp>
+#include "nic/include/hal_lock.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/buf_pool_pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/include/qos_api.hpp"
+#include "nic/hal/pd/capri/capri_tm_rw.hpp"
 
 namespace hal {
 namespace pd {

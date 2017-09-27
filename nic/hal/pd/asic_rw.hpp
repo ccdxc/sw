@@ -1,7 +1,7 @@
 #ifndef __HAL_PD_ASIC_RW_HPP__
 #define __HAL_PD_ASIC_RW_HPP__
 
-#include <base.h>
+#include "nic/include/base.h"
 
 namespace hal {
 namespace pd {

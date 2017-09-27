@@ -1,11 +1,11 @@
-#include "fte.hpp"
-#include "fte_flow.hpp"
+#include "nic/fte/fte.hpp"
+#include "nic/fte/fte_flow.hpp"
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-#include <defines.h>
-#include <cpupkt_api.hpp>
+#include "nic/p4/nw/include/defines.h"
+#include "nic/include/cpupkt_api.hpp"
 
 namespace fte {
 

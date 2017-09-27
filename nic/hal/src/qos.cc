@@ -1,11 +1,11 @@
-#include <base.h>
-#include <hal.hpp>
-#include <hal_state.hpp>
-#include <qos_svc.hpp>
-#include <qos.hpp>
-#include <pd.hpp>
-#include <pd_api.hpp>
-#include <qos.pb.h>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_state.hpp"
+// #include "nic/hal/svc/qos_svc.hpp"
+#include "nic/hal/src/qos.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/proto/hal/qos.pb.h"
 
 namespace hal {
 

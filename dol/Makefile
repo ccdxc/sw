@@ -1,5 +1,5 @@
 shell: build-image
-	docker run -it -v ${PWD}:/sw/dol -v ${PWD}/../nic:/sw/nic pensando/dol bash
+	docker run -it --privileged -v ${PWD}/..:/sw -v ${PWD}/../bazel-cache:/root/.cache -w /sw/dol -v ${PWD}/../nic:/sw/nic pensando/dol bash
 
 test: build-image
 	docker run -it -v ${PWD}:/sw/dol -v ${PWD}/../nic:/sw/nic pensando/dol bash -c './ut_run.sh'

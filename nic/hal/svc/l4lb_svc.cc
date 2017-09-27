@@ -2,11 +2,11 @@
 // L4 LB service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <l4lb_svc.hpp>
-#include <l4lb.pb.h>
-#include <l4lb.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/l4lb_svc.hpp"
+#include "nic/proto/hal/l4lb.pb.h"
+#include "nic/hal/src/l4lb.hpp"
 
 Status
 L4LbServiceImpl::L4LbServiceCreate(ServerContext *context,

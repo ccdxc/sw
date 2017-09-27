@@ -1,14 +1,13 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <base.h>
-#include <hal.hpp>
-#include <hal_lock.hpp>
-#include <hal_state.hpp>
-#include <tenant_svc.hpp>
-#include <tenant.hpp>
-#include <pd_api.hpp>
-#include <utils.hpp>
-#include <if_utils.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/hal/src/tenant.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/src/utils.hpp"
+#include "nic/hal/src/if_utils.hpp"
 
 namespace hal {
 

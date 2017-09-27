@@ -1,9 +1,6 @@
-#include <base.h>
-#include <hal.hpp>
-//#include <hal_mem.hpp>
-//#include <string.h>
-//#include <stdlib.h>
-#include <thread.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/utils/thread/thread.hpp"
 
 namespace hal {
 extern bool gl_super_user;

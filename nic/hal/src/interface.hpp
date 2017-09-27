@@ -1,20 +1,51 @@
 #ifndef __INTERFACE_HPP__
 #define __INTERFACE_HPP__
 
-#include <base.h>
-#include <eth.h>
-#include <ip.h>
-#include <list.hpp>
-#include <ht.hpp>
-#include <bitmap.hpp>
-// #include <l2segment.hpp>
-#include <tenant.hpp>
-#include <interface.pb.h>
-#include <lif.hpp>
+#include "nic/include/base.h"
+#include "nic/include/eth.h"
+#include "nic/include/ip.h"
+#include "nic/include/list.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/include/bitmap.hpp"
+// #include "nic/hal/src/l2segment.hpp"
+#include "nic/proto/hal/interface.pb.h"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/lif.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
 using hal::utils::bitmap;
+
+using intf::LifSpec;
+using intf::LifKeyHandle;
+using intf::LifRequestMsg;
+using intf::LifResponse;
+using intf::LifResponseMsg;
+using intf::LifDeleteRequestMsg;
+using intf::LifDeleteResponseMsg;
+using intf::LifGetRequestMsg;
+using intf::LifGetResponseMsg;
+using intf::InterfaceSpec;
+using intf::InterfaceStatus;
+using intf::InterfaceResponse;
+using intf::InterfaceKeyHandle;
+using intf::InterfaceRequestMsg;
+using intf::InterfaceResponseMsg;
+using intf::InterfaceDeleteRequestMsg;
+using intf::InterfaceDeleteResponseMsg;
+using intf::InterfaceGetRequest;
+using intf::InterfaceGetRequestMsg;
+using intf::InterfaceGetResponse;
+using intf::InterfaceGetResponseMsg;
+using intf::InterfaceL2SegmentRequestMsg;
+using intf::InterfaceL2SegmentSpec;
+using intf::InterfaceL2SegmentResponseMsg;
+using intf::InterfaceL2SegmentResponse;
+using intf::GetQStateRequestMsg;
+using intf::GetQStateResponseMsg;
+using intf::SetQStateRequestMsg;
+using intf::SetQStateResponseMsg;
 
 namespace hal {
 

@@ -1,6 +1,6 @@
-#include <tlscb.hpp>
-#include <tls_proxy_cb.pb.h>
-#include <hal.hpp>
+#include "nic/hal/src/tlscb.hpp"
+#include "nic/proto/hal/tls_proxy_cb.pb.h"
+#include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,8 +1,8 @@
 #ifndef __HAL_PD_SYSTEM_HPP__
 #define __HAL_PD_SYSTEM_HPP__
 
-#include <base.h>
-#include <pd_api.hpp>
+#include "nic/include/base.h"
+#include "nic/include/pd_api.hpp"
 
 using sys::DropStatsEntry;
 namespace hal {

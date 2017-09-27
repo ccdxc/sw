@@ -1,7 +1,7 @@
-#include "met.hpp"
-#include "repl_list.hpp"
-#include "repl_entry.hpp"
-#include "repl_table_entry.hpp"
+#include "nic/hal/pd/utils/met/met.hpp"
+#include "nic/hal/pd/utils/met/repl_list.hpp"
+#include "nic/hal/pd/utils/met/repl_entry.hpp"
+#include "nic/hal/pd/utils/met/repl_table_entry.hpp"
 
 using hal::pd::utils::ReplList;
 using hal::pd::utils::ReplTableEntry;

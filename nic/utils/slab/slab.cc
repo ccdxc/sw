@@ -1,10 +1,14 @@
 #include <string.h>
 #include <stdlib.h>
-#include <slab.hpp>
-#include <hal_mem.hpp>
-#include <periodic.hpp>
+#include "nic/utils/slab/slab.hpp"
+#include "nic/include/hal_mem.hpp"
 
 namespace hal {
+
+namespace periodic {
+hal_ret_t delay_delete_to_slab(hal_slab_t slab_id_, void *elem);
+}  // namespace periodic
+
 namespace utils {
 
 bool slab::g_delay_delete = true;

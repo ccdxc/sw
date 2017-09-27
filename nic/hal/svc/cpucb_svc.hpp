@@ -1,10 +1,10 @@
 #ifndef __CPUCB_SVC_HPP__
 #define __CPUCB_SVC_HPP__
 
-#include <base.h>
+#include "nic/include/base.h"
 #include <grpc++/grpc++.h>
-#include <types.pb.h>
-#include <cpucb.grpc.pb.h>
+#include "nic/proto/types.pb.h"
+#include "nic/proto/hal/cpucb.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

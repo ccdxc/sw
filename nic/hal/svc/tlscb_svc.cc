@@ -2,10 +2,10 @@
 // TLSCB service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <tlscb_svc.hpp>
-#include <tlscb.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/tlscb_svc.hpp"
+#include "nic/hal/src/tlscb.hpp"
 
 Status
 TlsCbServiceImpl::TlsCbCreate(ServerContext *context,

@@ -3,10 +3,10 @@
 #ifndef __SLAB_HPP__
 #define __SLAB_HPP__
 
-#include <base.h>
-#include <hal_lock.hpp>
-#include <hal_mem.hpp>
-#include <list.hpp>
+#include "nic/include/base.h"
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/hal_mem.hpp"
+#include "nic/utils/list/list.hpp"
 
 namespace hal {
 namespace utils {

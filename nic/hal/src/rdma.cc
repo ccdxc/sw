@@ -1,19 +1,19 @@
-#include <base.h>
-#include <hal.hpp>
-#include <hal_state.hpp>
-#include <interface_svc.hpp>
-#include <interface.hpp>
-#include <lif_manager.hpp>
-#include <pd.hpp>
-#include <pd_api.hpp>
-#include <rdma.hpp>
-#include <rdma_pd.hpp>
-#include <host_mem.hpp>
-#include <pd/capri/capri_hbm.hpp>
-#include <pd/iris/if_pd_utils.hpp>
-#include <hal_state_pd.hpp>
-#include <capri_loader.h>
-#include <common_defines.h>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_state.hpp"
+// #include "nic/hal/svc/interface_svc.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/lif_manager.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/src/rdma.hpp"
+#include "nic/hal/pd/iris/rdma_pd.hpp"
+#include "nic/utils/host_mem/host_mem.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/capri/capri_loader.h"
+#include "nic/p4/include/common_defines.h"
 
 namespace hal {
 

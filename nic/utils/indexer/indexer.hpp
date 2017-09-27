@@ -1,9 +1,9 @@
 #ifndef __INDEXER_HPP__
 #define __INDEXER_HPP__
 
-#include <base.h>
-#include <hal_lock.hpp>
 #include <stdint.h>
+#include "nic/include/base.h"
+#include "nic/include/hal_lock.hpp"
 
 namespace hal {
 namespace utils {

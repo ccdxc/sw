@@ -1,17 +1,17 @@
 #include <netinet/ether.h>
-#include <hal_lock.hpp>
-#include <hal_state_pd.hpp>
-#include <pd_api.hpp>
-#include <l4lb_pd.hpp>
-// #include <endpoint_api.hpp>
-// #include <interface_api.hpp>
-// #include <endpoint_pd.hpp>
-// #include <lif_pd.hpp>
-// #include <l2segment.hpp>
-// #include <network.hpp>
-// #include <defines.h>
-#include <if_pd_utils.hpp>
-// #include <utils.hpp>
+#include "nic/include/hal_lock.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/iris/l4lb_pd.hpp"
+// #include "nic/include/endpoint_api.hpp"
+// #include "nic/include/interface_api.hpp"
+// #include "nic/hal/pd/iris/endpoint_pd.hpp"
+// #include "nic/hal/pd/iris/lif_pd.hpp"
+// #include "nic/hal/src/l2segment.hpp"
+// #include "nic/hal/src/network.hpp"
+// #include "nic/p4/nw/include/defines.h"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
+// #include "nic/hal/src/utils.hpp"
 
 using namespace hal;
 

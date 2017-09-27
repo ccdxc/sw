@@ -1,7 +1,7 @@
 #ifndef _LIF_MANAGER_BASE_HPP_
 #define _LIF_MANAGER_BASE_HPP_
 
-#include "bm_allocator.hpp"
+#include "nic/utils/bm_allocator/bm_allocator.hpp"
 
 #include <set>
 #include <map>

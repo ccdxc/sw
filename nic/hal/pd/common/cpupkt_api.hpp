@@ -1,11 +1,11 @@
 #ifndef ___HAL_PD_CPU_PKT_API_HPP__
 #define ___HAL_PD_CPU_PKT_API_HPP__
 
-#include <base.h>
-#include <pd.hpp>
-#include <cpupkt_headers.hpp>
-#include <proxy.hpp>
-#include <cpu-defines.h>
+#include "nic/include/base.h"
+#include "nic/include/pd.hpp"
+#include "nic/hal/pd/common/cpupkt_headers.hpp"
+#include "nic/hal/src/proxy.hpp"
+#include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
 namespace hal {
 namespace pd {

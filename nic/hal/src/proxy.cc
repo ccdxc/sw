@@ -1,15 +1,17 @@
-#include <base.h>
-#include <hal.hpp>
-#include <hal_lock.hpp>
-#include <hal_state.hpp>
-#include <proxy.hpp>
-#include <proxy_svc.hpp>
-#include <pd_api.hpp>
-#include <lif_manager.hpp>
-#include <interface.hpp>
-#include <cpucb.hpp>
-#include <session.hpp>
-#include <if_pd_utils.hpp>
+// #include "nic/hal/svc/proxy_svc.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/cpucb.hpp"
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/hal/src/proxy.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/src/lif_manager.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/cpucb.hpp"
+#include "nic/hal/src/session.hpp"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
 
 namespace hal {
 

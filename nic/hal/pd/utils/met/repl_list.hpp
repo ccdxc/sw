@@ -1,7 +1,7 @@
 #ifndef __REPL_LIST_HPP__
 #define __REPL_LIST_HPP__
 
-#include "base.h"
+#include "nic/include/base.h"
 
 
 namespace hal {

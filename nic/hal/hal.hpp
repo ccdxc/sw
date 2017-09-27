@@ -4,12 +4,12 @@
 #define __HAL_HPP__
 
 #include <string>
-#include <base.h>
-#include <list.hpp>
-#include <thread.hpp>
-#include <ht.hpp>
-#include <hal_lock.hpp>
-#include <hal_cfg.hpp>
+#include "nic/include/base.h"
+#include "nic/utils/list/list.hpp"
+#include "nic/utils/thread/thread.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/hal_cfg.hpp"
 
 namespace hal {
 

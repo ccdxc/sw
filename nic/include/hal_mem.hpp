@@ -3,7 +3,7 @@
 #ifndef __HAL_MEM_HPP__
 #define __HAL_MEM_HPP__
 
-#include <base.h>
+#include "nic/include/base.h"
 
 namespace hal {
 

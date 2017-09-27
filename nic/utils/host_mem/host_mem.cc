@@ -1,5 +1,5 @@
-#include <host_mem.hpp>
 #include <assert.h>
+#include "nic/utils/host_mem/host_mem.hpp"
 
 namespace utils {
 

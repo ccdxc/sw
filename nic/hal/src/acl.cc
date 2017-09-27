@@ -1,12 +1,11 @@
-#include <base.h>
-#include <eth.h>
-#include <hal.hpp>
-#include <hal_state.hpp>
-#include <acl_svc.hpp>
-#include <acl.hpp>
-#include <pd.hpp>
-#include <pd_api.hpp>
-#include <acl.pb.h>
+#include "nic/include/base.h"
+#include "nic/include/eth.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/hal/src/acl.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/proto/hal/acl.pb.h"
 
 namespace hal {
 

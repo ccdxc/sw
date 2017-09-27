@@ -37,8 +37,8 @@
 #ifndef __HT__
 #define __HT__
 
-#include <base.h>
-#include <hal_lock.hpp>
+#include "nic/include/base.h"
+#include "nic/include/hal_lock.hpp"
 
 namespace hal {
 namespace utils {

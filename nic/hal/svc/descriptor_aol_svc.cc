@@ -1,8 +1,8 @@
-#include <base.h>
-#include <trace.hpp>
-#include <descriptor_aol_svc.hpp>
-#include <descriptor_aol.hpp>
-#include <tcpcb.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/descriptor_aol_svc.hpp"
+#include "nic/hal/src/descriptor_aol.hpp"
+#include "nic/hal/src/tcpcb.hpp"
 
 Status 
 DescrAolServiceImpl::DescrAolGet(ServerContext* context,

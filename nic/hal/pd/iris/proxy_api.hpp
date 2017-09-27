@@ -47,7 +47,7 @@ typedef int p4pd_error_t;
  *      <table_name>_entry_read()
  */
 
-//#include <base.h>
+//#include "nic/include/base.h"
 
 #define P4PD_TCAM_DC_BIT                             1
 #define P4PD_TCAM_DC_UINT8                           0xFF

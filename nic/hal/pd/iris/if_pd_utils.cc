@@ -9,7 +9,7 @@
 #include "tenant_pd.hpp"
 #include "uplinkpc_pd.hpp"
 #include "nwsec_pd.hpp"
-#include <interface_api.hpp>
+#include "nic/include/interface_api.hpp"
 
 using namespace hal;
 

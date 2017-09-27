@@ -1,16 +1,29 @@
 #ifndef __IPSECCB_HPP__
 #define __IPSECCB_HPP__
 
-#include <base.h>
-#include <encap.hpp>
-#include <list.hpp>
-#include <ht.hpp>
-#include <ipseccb.pb.h>
-#include <pd.hpp>
-#include <hal_state.hpp>
+#include "nic/include/base.h"
+#include "nic/include/encap.hpp"
+#include "nic/include/list.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/proto/hal/ipseccb.pb.h"
+#include "nic/include/pd.hpp"
+#include "nic/include/hal_state.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
+
+using ipseccb::IpsecCbSpec;
+using ipseccb::IpsecCbStatus;
+using ipseccb::IpsecCbResponse;
+using ipseccb::IpsecCbKeyHandle;
+using ipseccb::IpsecCbRequestMsg;
+using ipseccb::IpsecCbResponseMsg;
+using ipseccb::IpsecCbDeleteRequestMsg;
+using ipseccb::IpsecCbDeleteResponseMsg;
+using ipseccb::IpsecCbGetRequest;
+using ipseccb::IpsecCbGetRequestMsg;
+using ipseccb::IpsecCbGetResponse;
+using ipseccb::IpsecCbGetResponseMsg;
 
 namespace hal {
 

@@ -1,6 +1,6 @@
 #include <assert.h>
-#include <hal_mem.hpp>
-#include <ht.hpp>
+#include "nic/include/hal_mem.hpp"
+#include "nic/utils/ht/ht.hpp"
 
 namespace hal {
 namespace utils {

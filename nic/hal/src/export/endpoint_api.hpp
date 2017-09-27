@@ -10,8 +10,8 @@
 #ifndef __ENDPOINT_API_HPP__
 #define __ENDPOINT_API_HPP__
 
-#include <l2segment.hpp>
-#include <network.hpp>
+#include "nic/hal/src/l2segment.hpp"
+#include "nic/hal/src/network.hpp"
 
 namespace hal {
 

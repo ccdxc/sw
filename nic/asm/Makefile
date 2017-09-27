@@ -5,7 +5,7 @@ LIBDIRS = \
           rdma \
           ipsec-p4+ \
           storage \
-          cpu-p4+ \
+		  cpu-p4plus \
           eth \
           ipfix \
           $(NULL)

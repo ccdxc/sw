@@ -1,6 +1,6 @@
-#include <acl.hpp>
-#include <pd.hpp>
-#include <acl_api.hpp>
+#include "nic/hal/src/acl.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/include/acl_api.hpp"
 
 namespace hal {
 

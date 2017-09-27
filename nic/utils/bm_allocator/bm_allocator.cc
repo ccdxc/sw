@@ -1,4 +1,4 @@
-#include "bm_allocator.hpp"
+#include "nic/utils/bm_allocator/bm_allocator.hpp"
 
 #include <assert.h>
 #include <strings.h>

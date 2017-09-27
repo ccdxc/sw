@@ -1,4 +1,4 @@
-#include "lif_manager_base.hpp"
+#include "nic/hal/src/lif_manager_base.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <errno.h>

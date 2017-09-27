@@ -1,12 +1,12 @@
-#include <base.h>
-#include <hal_lock.hpp>
-#include <pd_api.hpp>
-#include <wring_pd.hpp>
-#include <hal_state_pd.hpp>
-#include <capri_loader.h>
-#include <capri_hbm.hpp>
-#include <capri_common.h>
-#include <p4plus_pd_api.h>
+#include "nic/include/base.h"
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/wring_pd.hpp"
+#include "nic/hal/pd/capri/capri_loader.h"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/include/capri_common.h"
+#include "nic/hal/pd/iris/p4plus_pd_api.h"
 
 namespace hal {
 namespace pd {

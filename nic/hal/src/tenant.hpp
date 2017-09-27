@@ -1,19 +1,33 @@
 #ifndef __TENANT_HPP__
 #define __TENANT_HPP__
 
-#include <base.h>
-#include <list.hpp>
-#include <ht.hpp>
-#include <hal_lock.hpp>
-#include <hal_state.hpp>
-#include <hal.hpp>
-#include <tenant.pb.h>
-#include <pd.hpp>
-#include <nwsec.hpp>
+#include "nic/include/base.h"
+#include "nic/include/list.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/proto/hal/tenant.pb.h"
+#include "nic/include/pd.hpp"
+#include "nic/include/hal.hpp"
+#include "nic/hal/src/nwsec.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
 using tenant::TenantKeyHandle;
+
+using tenant::TenantSpec;
+using tenant::TenantStatus;
+using tenant::TenantResponse;
+using tenant::TenantKeyHandle;
+using tenant::TenantRequestMsg;
+using tenant::TenantResponseMsg;
+using tenant::TenantDeleteRequest;
+using tenant::TenantDeleteRequestMsg;
+using tenant::TenantDeleteResponseMsg;
+using tenant::TenantGetRequest;
+using tenant::TenantGetRequestMsg;
+using tenant::TenantGetResponse;
+using tenant::TenantGetResponseMsg;
 
 namespace hal {
 

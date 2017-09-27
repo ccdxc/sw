@@ -1,9 +1,9 @@
 #ifndef __HAL_PD_SESSION_HPP__
 #define __HAL_PD_SESSION_HPP__
 
-#include <base.h>
-#include <pd.hpp>
-#include <hal_state_pd.hpp>
+#include "nic/include/base.h"
+#include "nic/include/pd.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
 
 namespace hal {
 namespace pd {

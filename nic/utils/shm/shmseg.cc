@@ -1,7 +1,7 @@
 #include <assert.h>
-#include <base.h>
-#include <shmseg.hpp>
 #include <iostream>
+#include "nic/include/base.h"
+#include "nic/utils/shm/shmseg.hpp"
 
 namespace utils {
 namespace shm {

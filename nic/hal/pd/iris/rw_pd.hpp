@@ -1,9 +1,9 @@
 #ifndef __HAL_RW_PD_HPP__
 #define __HAL_RW_PD_HPP__
 
-#include <base.h>
-#include <ht.hpp>
-#include <hal_state_pd.hpp>
+#include "nic/include/base.h"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
 
 using hal::utils::ht_ctxt_t;
 

@@ -2,10 +2,10 @@
 // endpoint service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <endpoint_svc.hpp>
-#include <endpoint.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/endpoint_svc.hpp"
+#include "nic/hal/src/endpoint.hpp"
 
 Status
 EndpointServiceImpl::EndpointCreate(ServerContext *context,

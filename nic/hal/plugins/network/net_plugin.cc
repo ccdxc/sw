@@ -1,4 +1,4 @@
-#include "net_plugin.hpp"
+#include "nic/hal/plugins/network/net_plugin.hpp"
 
 namespace hal {
 namespace net {

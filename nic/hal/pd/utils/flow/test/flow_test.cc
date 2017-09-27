@@ -1,8 +1,8 @@
-#include "flow.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
-#include <p4pd_api.hpp>
-#include <p4pd.h>
+#include "nic/hal/pd/utils/flow/flow.hpp"
+#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/gen/iris/include/p4pd.h"
 #include <boost/multiprecision/cpp_int.hpp>
 
 using hal::pd::utils::Flow;

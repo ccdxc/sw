@@ -3,9 +3,9 @@
 #ifndef __OIF_LIST_API_HPP__
 #define __OIF_LIST_API_HPP__
 
-#include <base.h>
-#include <interface_api.hpp>
-#include <l2segment_api.hpp>
+#include "nic/include/base.h"
+#include "nic/include/interface_api.hpp"
+#include "nic/include/l2segment_api.hpp"
 
 namespace hal {
 

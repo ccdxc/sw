@@ -1,8 +1,8 @@
 #include <cmath>
-#include "p4pd_api.hpp"
-#include "flow.hpp"
-#include "flow_entry.hpp"
-#include "flow_table_entry.hpp"
+#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/utils/flow/flow.hpp"
+#include "nic/hal/pd/utils/flow/flow_entry.hpp"
+#include "nic/hal/pd/utils/flow/flow_table_entry.hpp"
 
 using hal::pd::utils::Flow;
 

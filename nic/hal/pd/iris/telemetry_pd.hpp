@@ -1,10 +1,10 @@
 #ifndef __HAL_TELEMETRY_PD_HPP__
 #define __HAL_TELEMETRY_PD_HPP__
 
-#include <base.h>
-#include <pd.hpp>
-#include <pd_api.hpp>
-#include <telemetry.hpp>
+#include "nic/include/base.h"
+#include "nic/include/pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/src/telemetry.hpp"
 
 namespace hal {
 namespace pd {

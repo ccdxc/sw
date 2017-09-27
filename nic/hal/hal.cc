@@ -6,21 +6,22 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <hal.hpp>
-#include <hal_pd.hpp>
-#include <periodic/periodic.hpp>
-#include <lif_manager.hpp>
-#include <rdma.hpp>
-#include <oif_list_mgr.hpp>
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_pd.hpp"
+#include "nic/hal/periodic/periodic.hpp"
+#include "nic/hal/src/lif_manager.hpp"
+#include "nic/hal/src/rdma.hpp"
+#include "nic/hal/src/oif_list_mgr.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include <interface.hpp>
-#include <tcpcb.hpp>
-#include <proxy.hpp>
-#include <fte.hpp>
-#include <defines.h>
-#include <pd/iris/if_pd_utils.hpp>
-#include <plugins/plugins.hpp>
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/tcpcb.hpp"
+#include "nic/hal/src/proxy.hpp"
+#include "nic/include/fte.hpp"
+#include "nic/p4/nw/include/defines.h"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
+#include "nic/hal/pd/common/cpupkt_api.hpp"
+#include "nic/hal/plugins/plugins.hpp"
 
 
 extern "C" void __gcov_flush(void);
@@ -30,6 +31,9 @@ extern "C" void __gcov_flush(void);
 #else
 #define HAL_GCOV_FLUSH()     { }
 #endif
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/tcpcb.hpp"
+#include "nic/hal/src/proxy.hpp"
 
 namespace hal {
 

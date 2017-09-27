@@ -1,11 +1,11 @@
 #ifndef __IF_UTILS_HPP__
 #define __IF_UTILS_HPP__
 
-#include <types.pb.h>
-#include <ip.h>
-#include <tenant.hpp>
-#include <l2segment.hpp>
-#include <interface.hpp>
+#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/l2segment.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/proto/types.pb.h"
+#include "nic/include/ip.h"
 
 namespace hal {
 

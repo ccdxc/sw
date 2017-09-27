@@ -1,6 +1,6 @@
 #include "net_plugin.hpp"
 #include <stdint.h>
-#include <../../../model_sim/include/lib_model_client.h>
+#include "nic/model_sim/include/lib_model_client.h"
 
 namespace hal {
 namespace net {

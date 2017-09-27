@@ -2,10 +2,10 @@
 // RDMA service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <rdma_svc.hpp>
-#include <rdma.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/rdma_svc.hpp"
+#include "nic/hal/src/rdma.hpp"
 
 Status
 RdmaServiceImpl::RdmaQpCreate(ServerContext *context,

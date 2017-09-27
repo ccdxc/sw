@@ -1,5 +1,5 @@
 #! /usr/bin/python3
- 
+
 import ctypes
 import os
 from infra.common.logging       import logger
@@ -9,13 +9,13 @@ libHostMem = None
 
 # A dict to map a library name to its handle.
 testLibs = {}
- 
+
 OBJPATH = "nic/obj/lib"
 LIBHOSTMEM = "hostmem.so"
- 
+
 def InitHostMem():
     global libHostMem
-    libHostMem = ctypes.CDLL(os.path.join(os.environ['WS_TOP'], OBJPATH + LIBHOSTMEM), mode=ctypes.RTLD_GLOBAL)
+    libHostMem = ctypes.CDLL(os.path.join(os.environ['WS_TOP'], "bazel-bin/nic/utils/host_mem/libhost_mem.so"), mode=ctypes.RTLD_GLOBAL)
     libHostMem.alloc_host_mem.argtypes = [ctypes.c_uint64]
     libHostMem.alloc_host_mem.restype = ctypes.c_void_p
     libHostMem.alloc_page_aligned_host_mem.argtypes = [ctypes.c_uint64]
@@ -50,7 +50,7 @@ def LoadCLib(name, is_global=False):
     if handle:
         testLibs[name] = handle
     return handle
- 
+
 def init():
      InitHostMem()
      return

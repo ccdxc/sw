@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
-#include "acl_tcam.hpp"
-#include "p4pd_api.hpp"
-#include "p4pd.h"
+#include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
+#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/gen/iris/include/p4pd.h"
 
 #define NUM_ENTRIES 512
 

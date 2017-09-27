@@ -16,10 +16,10 @@
 #ifndef __TCAM_HPP__
 #define __TCAM_HPP__
 
-#include <base.h>
+#include "nic/include/base.h"
 #include <string>
 #include <map>
-#include "indexer.hpp"
+#include "nic/utils/indexer/indexer.hpp"
 
 using hal::utils::indexer;
 

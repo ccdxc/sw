@@ -1,6 +1,6 @@
 #include <cstring>
 
-#include "hash_entry.hpp"
+#include "nic/hal/pd/utils/hash/hash_entry.hpp"
 
 using hal::pd::utils::HashEntry;
 

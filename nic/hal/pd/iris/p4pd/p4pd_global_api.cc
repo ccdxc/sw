@@ -5,13 +5,13 @@
 #include <stdio.h>
 #include <string>
 #include <errno.h>
-#include <common_rxdma_actions_p4pd.h>
-#include <common_txdma_actions_p4pd.h>
+#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
+#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include <stdlib.h>
 
-#include "base.h"
-#include "p4pd.h"
-#include "p4pd_api.hpp"
+#include "nic/include/base.h"
+#include "nic/gen/iris/include/p4pd.h"
+#include "nic/hal/pd/p4pd_api.hpp"
 
 
 /*

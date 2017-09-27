@@ -1,17 +1,17 @@
-#include <base.h>
-#include <hal.hpp>
-#include <hal_state.hpp>
-#include <interface_svc.hpp>
-#include <interface.hpp>
-#include <pd.hpp>
-#include <pd_api.hpp>
-#include <l2segment.pb.h>
-#include <lif_manager.hpp>
-#include <utils.hpp>
-#include <oif_list_api.hpp>
-#include <if_utils.hpp>
-#include <rdma.hpp>
 
+// #include "nic/hal/svc/interface_svc.hpp"
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/proto/hal/l2segment.pb.h"
+#include "nic/hal/src/lif_manager.hpp"
+#include "nic/hal/src/utils.hpp"
+#include "nic/hal/src/if_utils.hpp"
+#include "nic/hal/src/rdma.hpp"
+#include "nic/include/oif_list_api.hpp"
 using hal::pd::pd_if_args_t;
 
 namespace hal {

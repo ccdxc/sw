@@ -1,5 +1,5 @@
-#include "net_plugin.hpp"
-#include <l4lb.hpp>
+#include "nic/hal/plugins/network/net_plugin.hpp"
+#include "nic/hal/src/l4lb.hpp"
 
 namespace hal {
 namespace net {

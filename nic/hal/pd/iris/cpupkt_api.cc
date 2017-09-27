@@ -1,9 +1,9 @@
-#include <wring_pd.hpp>
-#include <cpupkt_api.hpp>
-#include <p4plus_pd_api.h>
-#include <pd_api.hpp>
-#include <hal_state_pd.hpp>
-#include <capri_hbm.hpp>
+#include "nic/hal/pd/iris/wring_pd.hpp"
+#include "nic/hal/pd/common/cpupkt_api.hpp"
+#include "nic/hal/pd/iris/p4plus_pd_api.h"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
 
 namespace hal {
 namespace pd {

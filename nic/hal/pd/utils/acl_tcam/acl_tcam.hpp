@@ -13,10 +13,10 @@
 #ifndef __ACL_TCAM_HPP__
 #define __ACL_TCAM_HPP__
 
-#include <base.h>
+#include "nic/include/base.h"
 #include <string>
 #include <map>
-#include "bitmap.hpp"
+#include "nic/utils/bitmap/bitmap.hpp"
 
 using hal::utils::bitmap;
 

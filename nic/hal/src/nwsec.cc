@@ -1,12 +1,12 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <base.h>
-#include <hal.hpp>
-#include <hal_lock.hpp>
-#include <hal_state.hpp>
-#include <nwsec.hpp>
-#include <nwsec_svc.hpp>
-#include <pd_api.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/hal/src/nwsec.hpp"
+// #include "nic/hal/svc/nwsec_svc.hpp"
+#include "nic/include/pd_api.hpp"
 
 namespace hal {
 

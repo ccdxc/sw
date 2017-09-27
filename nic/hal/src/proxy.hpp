@@ -1,16 +1,29 @@
 #ifndef __PROXY_HPP__
 #define __PROXY_HPP__
 
-#include <indexer.hpp>
-#include <base.h>
-#include <ht.hpp>
-#include <proxy.pb.h>
-#include <pd.hpp>
-#include <hal_state.hpp>
-#include <session.hpp>
+#include "nic/utils/indexer/indexer.hpp"
+#include "nic/include/base.h"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/proto/hal/proxy.pb.h"
+#include "nic/include/pd.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/hal/src/session.hpp"
 
 using hal::utils::indexer;
 using hal::utils::ht_ctxt_t;
+
+using proxy::ProxySpec;
+using proxy::ProxyStatus;
+using proxy::ProxyResponse;
+using proxy::ProxyKeyHandle;
+using proxy::ProxyRequestMsg;
+using proxy::ProxyResponseMsg;
+using proxy::ProxyDisableRequestMsg;
+using proxy::ProxyDisableResponseMsg;
+using proxy::ProxyGetRequest;
+using proxy::ProxyGetRequestMsg;
+using proxy::ProxyGetResponse;
+using proxy::ProxyGetResponseMsg;
 
 namespace hal {
 

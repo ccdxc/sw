@@ -5,7 +5,7 @@ import copy
 
 import types_pb2                as types_pb2
 import crypto_keys_pb2          as crypto_keys_pb2
-import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
+#import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
 
 from config.store               import Store
 from config.objects.proxycb_service    import ProxyCbServiceHelper
@@ -125,25 +125,25 @@ def TestCaseVerify(tc):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
         #return False
         # Enable once the semaphore support is added
-    #else: 
+    #else:
     #    print("TNMDR pi check succeeded old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
 
 
     # 3. Verify descriptor on the BRQ
     if rnmdr.ringentries[rnmdr.pi].handle != brq_cur.ring_entries[0].ilist_addr:
-        print("RNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr)) 
+        print("RNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
         return False
     #else:
-    #    print("RNMDR Check: Descriptor handle as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr)) 
+    #    print("RNMDR Check: Descriptor handle as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
 
 
 
     # 4. Verify descriptor on the BRQ
     if tnmdr.ringentries[tnmdr.pi].handle != brq_cur.ring_entries[0].olist_addr:
-        print("TNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[0].olist_addr)) 
+        print("TNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[0].olist_addr))
         return False
     #else:
-    #    print("TNMDR Check: Descriptor handle as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[0].olist_addr)) 
+    #    print("TNMDR Check: Descriptor handle as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[0].olist_addr))
 
 
 

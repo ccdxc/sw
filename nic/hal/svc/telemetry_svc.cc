@@ -1,7 +1,7 @@
-#include <base.h>
-#include <trace.hpp>
-#include <telemetry_svc.hpp>
-#include <telemetry.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/telemetry_svc.hpp"
+#include "nic/hal/src/telemetry.hpp"
 
 
 Status

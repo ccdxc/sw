@@ -10,25 +10,25 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <map>
-//#include <base.h>
+//#include "nic/include/base.h"
 
-#include <p4pd.h>
-#include <common_rxdma_actions_p4pd.h>
-#include <common_txdma_actions_p4pd.h>
-#include <p4pd_api.hpp>
-#include <capri_tbl_rw.hpp>
+#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
+#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
+#include "nic/gen/iris/include/p4pd.h"
+#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 
 #ifndef P4PD_CLI
-#include <capri_loader.h>
-#include <lib_model_client.h>
-#include <cap_blk_reg_model.h>
-#include <cap_top_csr.h>
-#include <cap_pict_csr.h>
-#include <cap_pics_csr.h>
-#include <cap_te_csr.h>
-#include <cpp_int_helper.h>
-#include <capri_hbm.hpp>
-#include "cpu_hal_if.h"
+#include "nic/hal/pd/capri/capri_loader.h"
+#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
+#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "nic/asic/capri/model/cap_pic/cap_pict_csr.h"
+#include "nic/asic/capri/model/cap_pic/cap_pics_csr.h"
+#include "nic/asic/capri/model/cap_te/cap_te_csr.h"
+#include "nic/asic/capri/model/utils/cpp_int_helper.h"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/capri/csr/cpu_hal_if.h"
 #endif
 
 /* When ready to use unified memory mgmt library, change CALLOC and FREE then */

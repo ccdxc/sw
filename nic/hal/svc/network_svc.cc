@@ -2,10 +2,10 @@
 // network service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <network_svc.hpp>
-#include <network.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/network_svc.hpp"
+#include "nic/hal/src/network.hpp"
 
 Status
 NetworkServiceImpl::NetworkCreate(ServerContext *context,

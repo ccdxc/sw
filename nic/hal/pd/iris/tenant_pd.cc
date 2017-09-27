@@ -1,6 +1,6 @@
-#include <hal_lock.hpp>
-#include <pd_api.hpp>
-#include <tenant_pd.hpp>
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/iris/tenant_pd.hpp"
 
 namespace hal {
 namespace pd {

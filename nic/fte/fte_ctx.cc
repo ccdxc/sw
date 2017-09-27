@@ -1,10 +1,10 @@
 #include "fte_ctx.hpp"
 #include "fte_flow.hpp"
-#include <session.hpp>
-#include <tenant.hpp>
-#include <pd_api.hpp>
-#include <defines.h>
-#include <cpupkt_headers.hpp>
+#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/tenant.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/p4/nw/include/defines.h"
+#include "nic/hal/pd/common/cpupkt_headers.hpp"
 
 std::ostream& operator<<(std::ostream& os, const ether_addr& val)
 {

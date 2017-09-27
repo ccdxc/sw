@@ -1,14 +1,42 @@
 #ifndef __QOS_HPP__
 #define __QOS_HPP__
 
-#include <base.h>
-#include <hal_state.hpp>
-#include <ht.hpp>
-#include <bitmap.hpp>
-#include <qos.pb.h>
+#include "nic/include/base.h"
+#include "nic/include/hal_state.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/include/bitmap.hpp"
+#include "nic/proto/hal/qos.pb.h"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::bitmap;
+
+using qos::BufPoolSpec;
+using qos::BufPoolKeyHandle;
+using qos::BufPoolRequestMsg;
+using qos::BufPoolResponse;
+using qos::BufPoolResponseMsg;
+using qos::BufPoolDeleteRequestMsg;
+using qos::BufPoolDeleteResponseMsg;
+using qos::BufPoolGetRequestMsg;
+using qos::BufPoolGetResponseMsg;
+using qos::QueueSpec;
+using qos::QueueKeyHandle;
+using qos::QueueRequestMsg;
+using qos::QueueResponse;
+using qos::QueueResponseMsg;
+using qos::QueueDeleteRequestMsg;
+using qos::QueueDeleteResponseMsg;
+using qos::QueueGetRequestMsg;
+using qos::QueueGetResponseMsg;
+using qos::PolicerSpec;
+using qos::PolicerKeyHandle;
+using qos::PolicerRequestMsg;
+using qos::PolicerResponse;
+using qos::PolicerResponseMsg;
+using qos::PolicerDeleteRequestMsg;
+using qos::PolicerDeleteResponseMsg;
+using qos::PolicerGetRequestMsg;
+using qos::PolicerGetResponseMsg;
 
 namespace hal {
 

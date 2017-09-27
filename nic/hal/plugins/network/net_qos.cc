@@ -1,5 +1,5 @@
-#include "net_plugin.hpp"
-#include <session.hpp>
+#include "nic/hal/plugins/network/net_plugin.hpp"
+#include "nic/hal/src/session.hpp"
 
 namespace hal {
 namespace net {

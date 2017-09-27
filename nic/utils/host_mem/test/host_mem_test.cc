@@ -1,4 +1,4 @@
-#include "host_mem.hpp"
+#include "nic/utils/host_mem/host_mem.hpp"
 #include "gtest/gtest.h"
 
 #include <sys/ipc.h>

@@ -3,6 +3,7 @@
 //:: pddict = _context['pddict']
 //:: if pddict['p4plus']:
 //::    p4prog = pddict['p4program'] + '_'
+//::    hdrdir = pddict['p4program']
 //::    caps_p4prog = '_' + pddict['p4program'].upper() + '_'
 //::    prefix = 'p4pd_' + pddict['p4program']
 //::    if pddict['p4program'] == 'common_rxdma_actions':
@@ -14,6 +15,7 @@
 //::    #endif
 //:: else:
 //::    p4prog = ''
+//::    hdrdir = 'iris'
 //::    caps_p4prog = ''
 //::    prefix = 'p4pd'
 //::	start_table_base = 1
@@ -59,7 +61,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <assert.h>
-#include "${p4prog}p4pd.h"
+#include "nic/gen/${hdrdir}/include/${p4prog}p4pd.h"
 
 #define P4PD_MAX_ACTION_DATA_LEN (512)
 #define P4PD_MAX_MATCHKEY_LEN    (512) /* When multiple flits can be

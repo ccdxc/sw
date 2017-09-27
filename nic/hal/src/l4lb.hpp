@@ -1,14 +1,14 @@
 #ifndef __L4LB_HPP__
 #define __L4LB_HPP__
 
-#include <base.h>
-#include <list.hpp>
-#include <hal_state.hpp>
-#include <ip.h>
-#include <ht.hpp>
-#include <l4lb.pb.h>
+#include "nic/include/base.h"
+#include "nic/include/list.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/include/ip.h"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/proto/hal/l4lb.pb.h"
 #include <netinet/ether.h>
-#include <tenant.hpp>
+#include "nic/hal/src/tenant.hpp"
 
 using l4lb::L4LbServiceKeyHandle;
 using l4lb::L4LbServiceGetResponse;

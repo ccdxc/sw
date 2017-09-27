@@ -1,9 +1,9 @@
 /* Barco Crypto initialization support */
-#include <hal.hpp>
-#include <cap_top_csr.h>
-#include <capri_hbm.hpp>
-#include <capri_barco_crypto.hpp>
-#include <capri_hbm.hpp>
+#include "nic/hal/hal.hpp"
+#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
 
 namespace hal {
 

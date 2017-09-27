@@ -1,20 +1,35 @@
 #ifndef __ENDPOINT_HPP__
 #define __ENDPOINT_HPP__
 
-#include <base.h>
-#include <list.hpp>
-#include <hal_state.hpp>
-#include <ip.h>
-#include <ht.hpp>
-#include <interface.hpp>
-#include <l2segment.hpp>
-#include <endpoint.pb.h>
-#include <pd.hpp>
+#include "nic/include/base.h"
+#include "nic/include/list.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/include/ip.h"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/l2segment.hpp"
+#include "nic/proto/hal/endpoint.pb.h"
+#include "nic/include/pd.hpp"
 #include <netinet/ether.h>
 
 using endpoint::EndpointKeyHandle;
 using endpoint::EndpointGetResponse;
 using types::ApiStatus;
+using endpoint::EndpointSpec;
+using endpoint::EndpointStatus;
+using endpoint::EndpointResponse;
+using endpoint::EndpointRequestMsg;
+using endpoint::EndpointResponseMsg;
+using endpoint::EndpointDeleteRequestMsg;
+using endpoint::EndpointDeleteResponseMsg;
+using endpoint::EndpointGetRequest;
+using endpoint::EndpointGetRequestMsg;
+using endpoint::EndpointGetResponse;
+using endpoint::EndpointGetResponseMsg;
+using endpoint::EndpointUpdateRequestMsg;
+using endpoint::EndpointUpdateResponseMsg;
+using endpoint::EndpointUpdateRequest;
+using endpoint::EndpointKeyHandle;
 
 using hal::utils::ht_ctxt_t;
 

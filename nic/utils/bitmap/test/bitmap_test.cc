@@ -1,4 +1,4 @@
-#include <bitmap.hpp>
+#include "nic/include/bitmap.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 

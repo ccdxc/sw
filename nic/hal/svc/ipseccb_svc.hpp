@@ -1,10 +1,10 @@
 #ifndef __IPSECCB_SVC_HPP__
 #define __IPSECCB_SVC_HPP__
 
-#include <base.h>
-#include <grpc++/grpc++.h>
-#include <types.pb.h>
-#include <ipseccb.grpc.pb.h>
+#include "nic/include/base.h"
+#include "grpc++/grpc++.h"
+#include "nic/proto/types.pb.h"
+#include "nic/proto/hal/ipseccb.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

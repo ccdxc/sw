@@ -1,9 +1,9 @@
-#include <hal_lock.hpp>
-#include <table_sizes.h>
-#include <tcam.hpp>
-#include <hal_state_pd.hpp>
-#include <system_pd.hpp>
-#include <defines.h>
+#include "nic/include/hal_lock.hpp"
+#include "nic/p4/nw/include/table_sizes.h"
+#include "nic/hal/pd/utils/tcam/tcam.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/system_pd.hpp"
+#include "nic/p4/nw/include/defines.h"
 
 
 namespace hal {

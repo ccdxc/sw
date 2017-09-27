@@ -1,8 +1,8 @@
 #ifndef __ENCAP_HPP__
 #define __ENCAP_HPP__
 
-#include <base.h>
-#include <types.pb.h>
+#include "nic/include/base.h"
+#include "nic/proto/types.pb.h"
 
 // possible encap types
 typedef enum encap_type_e {

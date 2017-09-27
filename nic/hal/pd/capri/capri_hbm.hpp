@@ -15,7 +15,7 @@
 #define JP4PLUS_PRGM             "p4plus_program"
 #define JLIF_QSTATE              "qstate"
 
-#include <base.h>
+#include "nic/include/base.h"
 
 typedef struct capri_hbm_region_s {
     char        mem_reg_name[CAPRI_HBM_MEM_REG_NAME_MAX_LEN];

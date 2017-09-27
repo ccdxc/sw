@@ -1,18 +1,18 @@
 #ifndef __HAL_STATE_PD_HPP__
 #define __HAL_STATE_PD_HPP__
 
-#include <indexer.hpp>
-#include <slab.hpp>
-#include <ht.hpp>
-#include <directmap.hpp>
-#include <hash.hpp>
-#include <tcam.hpp>
-#include <flow.hpp>
-#include <met.hpp>
-#include <acl_tcam.hpp>
-#include <p4pd.h>
-#include <common_rxdma_actions_p4pd.h>
-#include <common_txdma_actions_p4pd.h>
+#include "nic/utils/indexer/indexer.hpp"
+#include "nic/utils/slab/slab.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/hal/pd/utils/directmap/directmap.hpp"
+#include "nic/hal/pd/utils/hash/hash.hpp"
+#include "nic/hal/pd/utils/tcam/tcam.hpp"
+#include "nic/hal/pd/utils/flow/flow.hpp"
+#include "nic/hal/pd/utils/met/met.hpp"
+#include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
+#include "nic/gen/iris/include/p4pd.h"
+#include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
+#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 
 
 using hal::utils::indexer;

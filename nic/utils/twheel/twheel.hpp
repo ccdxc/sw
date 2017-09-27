@@ -2,9 +2,9 @@
 #define __TWHEEL_HPP__
 
 #include <time.h>
-#include <base.h>
-#include <timestamp.h>
-#include <slab.hpp>
+#include "nic/include/base.h"
+#include "nic/include/timestamp.h"
+#include "nic/utils/slab/slab.hpp"
 
 using hal::utils::slab;
 

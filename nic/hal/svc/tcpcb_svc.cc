@@ -2,10 +2,10 @@
 // TCP Cb service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <tcpcb_svc.hpp>
-#include <tcpcb.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/tcpcb_svc.hpp"
+#include "nic/hal/src/tcpcb.hpp"
 
 Status
 TcpCbServiceImpl::TcpCbCreate(ServerContext *context,

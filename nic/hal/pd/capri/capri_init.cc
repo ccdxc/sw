@@ -1,9 +1,9 @@
-#include <base.h>
-#include "capri.hpp"
-#include "capri_hbm.hpp"
-#include "capri_config.hpp"
-#include "capri_loader.h"
-#include "capri_tbl_rw.hpp"
+#include "nic/include/base.h"
+#include "nic/hal/pd/capri/capri.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_config.hpp"
+#include "nic/hal/pd/capri/capri_loader.h"
+#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 
 #define CAPRI_P4PLUS_NUM_SYMBOLS 35
 

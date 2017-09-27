@@ -6,9 +6,9 @@
 #include <stdio.h>
 #include <string>
 #include <errno.h>
-#include <p4pd_api.hpp>
-#include <p4pd.h>
-#include <common_rxdma_actions_p4pd.h>
+#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/gen/iris/include/p4pd.h"
+#include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include <stdlib.h>
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"

@@ -3,10 +3,10 @@
 // Vasanth Kumar (Pensando Systems)
 //------------------------------------------------------------------------------
 //
-#include <base.h>
-#include <trace.hpp>
-#include <qos_svc.hpp>
-#include <qos.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/qos_svc.hpp"
+#include "nic/hal/src/qos.hpp"
 
 Status
 QOSServiceImpl::BufPoolCreate(ServerContext *context,

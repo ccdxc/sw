@@ -1,7 +1,7 @@
 #pragma once
 
-#include <base.h>
-#include <fte_ctx.hpp>
+#include "nic/include/base.h"
+#include "nic/include/fte_ctx.hpp"
 
 namespace fte {
 

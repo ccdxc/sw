@@ -1,25 +1,25 @@
 #ifndef __HAL_PD_API_HPP__
 #define __HAL_PD_API_HPP__
 
-#include <tenant.hpp>
-#include <l2segment.hpp>
-#include <nwsec.hpp>
-#include <interface.hpp>
-#include <network.hpp>
-#include <endpoint.hpp>
-#include <session.hpp>
-#include <tlscb.hpp>
-#include <tcpcb.hpp>
-#include <qos.hpp>
-#include <acl.hpp>
-#include <wring.hpp>
-#include <telemetry.hpp>
-#include <crypto_keys.hpp>
-#include <ipseccb.hpp>
-#include <l4lb.hpp>
-#include <cpucb.hpp>
-#include <system.hpp>
-#include <oif_list_api.hpp>
+#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/l2segment.hpp"
+#include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/network.hpp"
+#include "nic/hal/src/endpoint.hpp"
+#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/tlscb.hpp"
+#include "nic/hal/src/tcpcb.hpp"
+#include "nic/hal/src/qos.hpp"
+#include "nic/hal/src/acl.hpp"
+#include "nic/hal/src/wring.hpp"
+#include "nic/hal/src/telemetry.hpp"
+#include "nic/hal/src/crypto_keys.hpp"
+#include "nic/hal/src/ipseccb.hpp"
+#include "nic/hal/src/l4lb.hpp"
+#include "nic/hal/src/cpucb.hpp"
+#include "nic/hal/src/system.hpp"
+#include "nic/include/oif_list_api.hpp"
 
 namespace hal {
 namespace pd {

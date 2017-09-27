@@ -1,10 +1,10 @@
-#include <hal_lock.hpp>
-#include <pd_api.hpp>
-#include <rdma_pd.hpp>
-#include <pd.hpp>
-#include <base.h>
-#include "directmap.hpp"
-#include <hal_state_pd.hpp>
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/iris/rdma_pd.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/include/base.h"
+#include "nic/hal/pd/utils/directmap/directmap.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
 //#include "if_pd_utils.hpp"
 
 namespace hal {

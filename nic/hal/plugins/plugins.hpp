@@ -1,9 +1,9 @@
 #pragma once
 
-#include <base.h>
-#include <fte.hpp>
-#include "network/net_plugin.hpp"
-#include "proxy/proxy_plugin.hpp"
+#include "nic/include/base.h"
+#include "nic/include/fte.hpp"
+#include "nic/hal/plugins/network/net_plugin.hpp"
+#include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 
 namespace hal {
 

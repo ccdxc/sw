@@ -1,12 +1,12 @@
-#include <base.h>
+#include "nic/include/base.h"
 #include <unistd.h>
 #include <iostream>
-#include "capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
-#include <lib_model_client.h>
+#include "nic/model_sim/include/lib_model_client.h"
 #include <arpa/inet.h>
 
 namespace pt = boost::property_tree;

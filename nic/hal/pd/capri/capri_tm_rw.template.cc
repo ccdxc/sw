@@ -15,9 +15,9 @@
 #include <map>
 #include <cmath>
 
-#include <base.h>
-#include <defines.h>
-#include <capri_tm_rw.hpp>
+#include "nic/include/base.h"
+#include "nic/p4/nw/include/defines.h"
+#include "nic/hal/pd/capri/capri_tm_rw.hpp"
 
 #ifndef HAL_GTEST
 #include <cap_blk_reg_model.h>

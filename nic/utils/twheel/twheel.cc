@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <unistd.h>
-#include <twheel.hpp>
+#include "nic/utils/twheel/twheel.hpp"
 
 namespace hal {
 namespace utils {

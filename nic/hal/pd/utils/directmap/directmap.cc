@@ -1,13 +1,13 @@
-#include "directmap.hpp"
-#include "p4pd_api.hpp"
-#include <hal_lock.hpp>
-#include "thread.hpp"
+#include "nic/hal/pd/utils/directmap/directmap.hpp"
+#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/utils/thread/thread.hpp"
 
 using hal::pd::utils::DirectMap;
 
 namespace hal {
-    thread_local utils::thread *t_curr_thread;
-    bool      gl_super_user = false;
+    // thread_local utils::thread *t_curr_thread;
+    // bool      gl_super_user = false;
 }
 // ----------------------------------------------------------------------------
 // Constructor - DirectMap

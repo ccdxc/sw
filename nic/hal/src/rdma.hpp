@@ -1,13 +1,27 @@
 #ifndef _RDMA_HPP_
 #define _RDMA_HPP_
 
-#include <base.h>
+#include "nic/include/base.h"
 #include <memory>
 #include <map>
-#include "bm_allocator.hpp"
-#include <interface.hpp>
-#include <rdma.pb.h>
-#include <rdma_svc.hpp>
+#include "nic/hal/src/interface.hpp"
+#include "nic/proto/hal/rdma.pb.h"
+// #include "rdma_svc.hpp"
+#include "nic/utils/bm_allocator/bm_allocator.hpp"
+
+using rdma::RdmaServiceType;
+using rdma::RdmaQpSpec;
+using rdma::RdmaQpRequestMsg;
+using rdma::RdmaQpResponse;
+using rdma::RdmaQpResponseMsg;
+using rdma::RdmaMemRegSpec;
+using rdma::RdmaMemRegRequestMsg;
+using rdma::RdmaMemRegResponse;
+using rdma::RdmaMemRegResponseMsg;
+using rdma::RdmaCqSpec;
+using rdma::RdmaCqRequestMsg;
+using rdma::RdmaCqResponse;
+using rdma::RdmaCqResponseMsg;
 
 namespace hal {
 

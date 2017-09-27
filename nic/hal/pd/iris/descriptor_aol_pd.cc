@@ -1,8 +1,8 @@
-#include <base.h>
-#include <pd_api.hpp>
-#include <capri_loader.h>
-#include <capri_hbm.hpp>
-#include <p4plus_pd_api.h>
+#include "nic/include/base.h"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/capri/capri_loader.h"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/iris/p4plus_pd_api.h"
 
 
 namespace hal {

@@ -1,10 +1,10 @@
 #include <cstring>
 
-#include "hash_entry.hpp"
-#include "hash.hpp"
-#include "tcam.hpp"
-#include "p4pd_api.hpp"
-#include "trace.hpp"
+#include "nic/hal/pd/utils/hash/hash_entry.hpp"
+#include "nic/hal/pd/utils/hash/hash.hpp"
+#include "nic/hal/pd/utils/tcam/tcam.hpp"
+#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/include/trace.hpp"
 
 using hal::pd::utils::HashEntry;
 using hal::pd::utils::Hash;

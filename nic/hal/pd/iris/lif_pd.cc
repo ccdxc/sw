@@ -1,10 +1,10 @@
-#include <hal_lock.hpp>
-#include <hal_state_pd.hpp>
-#include <lif_pd.hpp>
-#include <pd_api.hpp>
-#include <interface_api.hpp>
-#include <p4pd.h>
-#include <defines.h>
+#include "nic/include/hal_lock.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/lif_pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/include/interface_api.hpp"
+#include "nic/gen/iris/include/p4pd.h"
+#include "nic/p4/nw/include/defines.h"
 
 namespace hal {
 namespace pd {

@@ -1,0 +1,151 @@
+#!/bin/bash
+
+
+
+find ./ -type f -exec sed -i -e 's/<base.h>/"nic\/include\/base.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<eth.h>/"nic\/include\/eth.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<list.hpp>/"nic\/include\/list.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<bitmap.hpp>/"nic\/include\/bitmap.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<trace.hpp>/"nic\/include\/trace.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<pt.hpp>/"nic\/utils\/pt\/pt.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<thread.hpp>/"nic\/utils\/thread\/thread.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<shmseg.hpp>/"nic\/utils\/shmseg\/shm.hpp"/g' {} \;
+
+find ./ -type f -exec sed -i -e 's/<ht.hpp>/"nic\/utils\/ht\/ht.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<slab.hpp>/"nic\/utils\/slab\/slab.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<indexer.hpp>/"nic\/utils\/indexer\/indexer.hpp"/g' {} \;
+
+find ./ -type f -exec sed -i -e 's/<hal.hpp>/"nic\/hal\/hal.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<hal_state.hpp>/"nic\/include\/hal_state.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<acl_svc.hpp>/"nic\/hal\/svc\/acl_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<acl.hpp>/"nic\/hal\/src\/acl.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<pd.hpp>/"nic\/include\/pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<pd_api.hpp>/"nic\/include\/pd_api.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<acl.pb.h>/"nic\/proto\/hal\/acl.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<ip.h>/"nic\/include\/ip.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<acl_api.hpp>/"nic\/include\/acl_api.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<bm_allocator.hpp>/"nic\/utils\/bm_allocator\/bm_allocator.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<l2segment.hpp>/"nic\/hal\/src\/l2segment.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<crypto_keys_svc.hpp>/"nic\/hal\/svc\/crypto_keys_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<crypto_keys.hpp>/"nic\/hal\/src\/crypto_keys.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<types.pb.h>/"nic\/proto\/types.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<crypto_keys.pb.h>/"nic\/proto\/hal\/crypto_keys.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<interface.pb.h>/"nic\/proto\/hal\/interface.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tenant.hpp>/"nic\/hal\/src\/tenant.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<descriptor_aol_svc.hpp>/"nic\/hal\/svc\/descriptor_aol_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<descriptor_aol.hpp>/"nic\/hal\/src\/descriptor_aol.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<descriptor_aol.pb.h>/"nic\/proto\/hal\/descriptor_aol.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<endpoint.hpp>/"nic\/hal\/src\/endpoint.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<endpoint_api.hpp>/"nic\/include\/endpoint_api.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<if_utils.hpp>/"nic\/hal\/src\/if_utils.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<interface.hpp>/"nic\/hal\/src\/interface.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<nwsec.hpp>/"nic\/hal\/src\/nwsec.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<interface_api.hpp>/"nic\/include\/interface_api.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<hal_lock.hpp>/"nic\/include\/hal_lock.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<interface_svc.hpp>/"nic\/hal\/svc\/interface_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<l2segment.pb.h>/"nic\/proto\/hal\/l2segment.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<lif_manager.hpp>/"nic\/hal\/src\/lif_manager.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<ipseccb.hpp>/"nic\/hal\/src\/ipseccb.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<utils.hpp>/"nic\/hal\/src\/utils.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<ipseccb_svc.hpp>/"nic\/hal\/svc\/ipseccb_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<encap.hpp>/"nic\/include\/encap.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<ipseccb.pb.h>/"nic\/proto\/hal\/ipseccb.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<l2segment_api.hpp>/"nic\/include\/l2segment_api.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<l2segment_svc.hpp>/"nic\/hal\/svc\/l2segment_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<lif_manager_base.hpp>/"nic\/hal\/src\/lif_manager_base.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<network_svc.hpp>/"nic\/hal\/svc\/network_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<network.hpp>/"nic\/hal\/src\/network.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<nw.pb.h>/"nic\/proto\/hal\/nw.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<nwsec_api.hpp>/"nic\/include\/nwsec_api.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<nwsec_svc.hpp>/"nic\/hal\/svc\/nwsec_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<nwsec.pb.h>/"nic\/proto\/hal\/nwsec.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<proxy.hpp>/"nic\/hal\/src\/proxy.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<proxy_svc.hpp>/"nic\/hal\/svc\/proxy_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<proxy.pb.h>/"nic\/proto\/hal\/proxy.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<qos.hpp>/"nic\/hal\/src\/qos.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<qos_api.hpp>/"nic\/include\/qos_api.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<qos_svc.hpp>/"nic\/hal\/svc\/qos_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<qos.pb.h>/"nic\/proto\/hal\/qos.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<rdma.hpp>/"nic\/hal\/src\/rdma.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<host_mem.hpp>/"nic\/utils\/host_mem\/host_mem.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<session_svc.hpp>/"nic\/hal\/svc\/session_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<session.hpp>/"nic\/hal\/src\/session.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<session.pb.h>/"nic\/proto\/hal\/session.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<p4pd.h>/"nic\/gen\/iris\/include\/p4pd.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tcpcb_svc.hpp>/"nic\/hal\/svc\/tcpcb_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tcpcb.hpp>/"nic\/hal\/src\/tcpcb.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tcp_proxy_cb.pb.h>/"nic\/proto\/hal\/tcp_proxy_cb.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<telemetry_svc.hpp>/"nic\/hal\/svc\/telemetry_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<telemetry.pb.h>/"nic\/proto\/hal\/telemetry.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<telemetry.hpp>/"nic\/hal\/src\/telemetry.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<telemetry.grpc.pb.h>/"nic\/proto\/hal\/telemetry.grpc.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tenant_svc.hpp>/"nic\/hal\/svc\/tenant_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tenant.pb.h>/"nic\/proto\/hal\/tenant.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tlscb_svc.hpp>/"nic\/hal\/svc\/tlscb_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tlscb.hpp>/"nic\/hal\/src\/tlscb.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tls_proxy_cb.pb.h>/"nic\/proto\/hal\/tls_proxy_cb.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<wring_svc.hpp>/"nic\/hal\/svc\/wring_svc.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<wring.hpp>/"nic\/hal\/src\/wring.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<wring.pb.h>/"nic\/proto\/hal\/wring.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<directmap.hpp>/"nic\/hal\/pd\/utils\/directmap\/directmap.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<hash.hpp>/"nic\/hal\/pd\/utils\/hash\/hash.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tcam.hpp>/"nic\/hal\/pd\/utils\/tcam\/tcam.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<flow.hpp>/"nic\/hal\/pd\/utils\/flow\/flow.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<met.hpp>/"nic\/hal\/pd\/utils\/met\/met.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<acl_tcam.hpp>/"nic\/hal\/pd\/utils\/acl_tcam\/acl_tcam.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<acl.grpc.pb.h>/"nic\/proto\/hal\/acl.grpc.pb.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<defines.h>/"nic\/p4\/nw\/include\/defines.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<p4pd_api.hpp>/"nic\/hal\/pd\/p4pd_api.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<common_txdma_actions_p4pd.h>/"nic\/gen\/common_txdma_actions\/include\/common_txdma_actions_p4pd.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<common_rxdma_actions_p4pd.h>/"nic\/gen\/common_rxdma_actions\/include\/common_rxdma_actions_p4pd.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<net_plugin.hpp>/"nic\/hal\/plugins\/network\/net_plugin.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<qos_api.hpp>/"nic\/include\/qos_api.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<hal_pd.hpp>/"nic\/include\/hal_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tlscb_pd.hpp>/"nic\/hal\/pd\/iris\/tlscb_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<capri_hbm.hpp>/"nic\/hal\/pd\/capri\/capri_hbm.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<wring_pd.hpp>/"nic\/hal\/pd\/iris\/wring_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<endpoint_pd.hpp>/"nic\/hal\/pd\/iris\/endpoint_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<nwsec_pd.hpp>/"nic\/hal\/pd\/iris\/nwsec_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<if_pd.hpp>/"nic\/hal\/pd\/iris\/if_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<acl_pd.hpp>/"nic\/hal\/pd\/iris\/acl_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<buf_pool_pd.hpp>/"nic\/hal\/pd\/iris\/buf_pool_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<cpuif_pd.hpp>/"nic\/hal\/pd\/iris\/cpuif_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<crypto_keys_pd.hpp>/"nic\/hal\/pd\/iris\/crypto_keys_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<enicif_pd.hpp>/"nic\/hal\/pd\/iris\/enicif_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<if_pd_utils.hpp>/"nic\/hal\/pd\/iris\/if_pd_utils.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<ipseccb_pd.hpp>/"nic\/hal\/pd\/iris\/ipseccb_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<l2seg_pd.hpp>/"nic\/hal\/pd\/iris\/l2seg_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<l2seg_uplink_pd.hpp>/"nic\/hal\/pd\/iris\/l2seg_uplink_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<lif_pd.hpp>/"nic\/hal\/pd\/iris\/lif_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<nwsec_pd.hpp>/"nic\/hal\/pd\/iris\/nwsec_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<policer_pd.hpp>/"nic\/hal\/pd\/iris\/policer_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<proxy_api.hpp>/"nic\/hal\/pd\/iris\/proxy_api.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<queue_pd.hpp>/"nic\/hal\/pd\/iris\/queue_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<rdma_pd.hpp>/"nic\/hal\/pd\/iris\/rdma_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<session_pd.hpp>/"nic\/hal\/pd\/iris\/session_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tcpcb_pd.hpp>/"nic\/hal\/pd\/iris\/tcpcb_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<telemetry_pd.hpp>/"nic\/hal\/pd\/iris\/telemetry_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tenant_pd.hpp>/"nic\/hal\/pd\/iris\/tenant_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tlscb_pd.hpp>/"nic\/hal\/pd\/iris\/tlscb_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<tunnelif_pd.hpp>/"nic\/hal\/pd\/iris\/tunnelif_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<uplinkif_pd.hpp>/"nic\/hal\/pd\/iris\/uplinkif_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<uplinkpc_pd.hpp>/"nic\/hal\/pd\/iris\/uplinkpc_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<wring_pd.hpp>/"nic\/hal\/pd\/iris\/wring_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<capri_tm_rw.hpp>/"nic\/hal\/pd\/capri\/capri_tm_rw.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<p4plus_pd_api.h>/"nic\/hal\/pd\/iris\/p4plus_pd_api.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<hal_pd_error.hpph>/"nic\/include\/hal_pd_error.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<directmap.hpp>/"nic\/hal\/pd\/utils\/directmap\/directmap.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<asic_rw.hpp>/"nic\/include\/asic_rw.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<p4pd_tcp_proxy_api.h>/"nic\/hal\/pd\/iris\/p4pd_tcp_proxy_api.h"/g' {} \;
+
+
+find ./ -type f -exec sed -i -e 's/<rdma_pd.hpp>/"nic\/hal\/pd\/iris\/rdma_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<hal_state_pd.hpp>/"nic\/hal\/pd\/iris\/hal_state_pd.hpp"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<capri_loader.h>/"nic\/hal\/pd\/capri\/capri_loader.h"/g' {} \;
+find ./ -type f -exec sed -i -e 's/<common_defines.h>/"nic\/p4\/include\/common_defines.h"/g' {} \;
+
+
+
+
+
+# quotes

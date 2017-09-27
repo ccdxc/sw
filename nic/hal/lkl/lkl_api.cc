@@ -1,11 +1,11 @@
 #include <string>
 #include <unistd.h>
 #include <getopt.h>
-#include <hal.hpp>
+#include "nic/hal/hal.hpp"
 
 extern "C" {
-#include <lkl.h>
-#include <lkl_host.h>
+#include "nic/third-party/lkl/export/include/lkl.h"
+#include "nic/third-party/lkl/export/include/lkl_host.h"
 }
 
 namespace hal {

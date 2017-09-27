@@ -44,11 +44,11 @@
 #ifndef __FLOW_HPP__
 #define __FLOW_HPP__
 
-#include <base.h>
+#include "nic/include/base.h"
 #include <string>
 #include <map>
 #include <queue>
-#include "indexer.hpp"
+#include "nic/utils/indexer/indexer.hpp"
 #include <boost/crc.hpp>
 
 using namespace std;

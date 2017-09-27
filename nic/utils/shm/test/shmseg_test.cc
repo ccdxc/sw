@@ -1,4 +1,4 @@
-#include "shmseg.hpp"
+#include "nic/utils/shm/shmseg.hpp"
 #include "gtest/gtest.h"
 
 using namespace utils::shm;

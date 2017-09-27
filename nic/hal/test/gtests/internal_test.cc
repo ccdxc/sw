@@ -1,6 +1,6 @@
-#include <internal.hpp>
-#include <internal.pb.h>
-#include <hal.hpp>
+#include "nic/hal/src/internal.hpp"
+#include "nic/proto/hal/internal.pb.h"
+#include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>

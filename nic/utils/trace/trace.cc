@@ -1,5 +1,5 @@
 #include <chrono>
-#include "trace.hpp"
+#include "nic/utils/trace/trace.hpp"
 
 namespace hal {
 namespace utils {

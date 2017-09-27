@@ -1,10 +1,13 @@
 ---
 targets:
-  main: [ "sh", "-c", "cd /sw && make pull-assets && cd nic && make V=1 -j$(grep -c processor /proc/cpuinfo) && make gtest && ./run.py" ]
-  fte:  [ "sh", "-c", "cd /sw && make pull-assets && cd nic && make V=1 -j$(grep -c processor /proc/cpuinfo) && ./run.py --topo fte --modlist test/networking/fte.mlist" ]
-  norm: [ "sh", "-c", "cd /sw && make pull-assets && cd nic && make V=1 -j$(grep -c processor /proc/cpuinfo) && ./run.py --topo norm --modlist test/normalization/norm.mlist" ]
-  eth:  [ "sh", "-c", "cd /sw && make pull-assets && cd nic && make V=1 -j$(grep -c processor /proc/cpuinfo) && ./run.py --topo eth --feature eth" ]
-  gcov: [ "sh", "-c", "cd /sw && make pull-assets && cd nic && make V=1 GCOV=\"--coverage -DCOVERAGE\" -j8 all && make gtest" ]
+  main: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && make bazel-gtests && make run-gtests" ]
+  def:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py" ]
+  fte:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo fte --modlist test/networking/fte.mlist" ]
+  norm: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo norm --modlist test/normalization/norm.mlist" ]
+  eth:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo eth --feature eth" ]
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
 image:
   name: "pensando/nic"
   bind_dir: "/sw"

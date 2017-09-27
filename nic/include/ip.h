@@ -1,7 +1,7 @@
 #ifndef __IP_H__
 #define __IP_H__
 
-#include <base.h>
+#include "nic/include/base.h"
 
 //------------------------------------------------------------------------------
 // IP address family

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <rw_pd.hpp>
-#include <hal_pd.hpp>
-#include <eth.h>
+#include "nic/include/hal_pd.hpp"
+#include "nic/include/eth.h"
 
 using hal::pd::pd_rw_entry_key_t;
 using hal::pd::pd_rw_entry_t;

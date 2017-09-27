@@ -4,8 +4,8 @@
 
 syntax = "proto3";
 
-import "types.proto";
-import "qos.proto";
+import "nic/proto/types.proto";
+import "nic/proto/hal/qos.proto";
 
 package l4lb;
 

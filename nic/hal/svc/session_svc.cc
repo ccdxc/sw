@@ -2,11 +2,11 @@
 // session service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <session_svc.hpp>
-#include <session.hpp>
-#include <fte.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/session_svc.hpp"
+#include "nic/hal/src/session.hpp"
+#include "nic/include/fte.hpp"
 
 Status
 SessionServiceImpl::SessionCreate(ServerContext *context,

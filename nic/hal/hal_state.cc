@@ -1,23 +1,23 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <hal.hpp>
-#include <hal_state.hpp>
-#include <tenant.hpp>
-#include <network.hpp>
-#include <l2segment.hpp>
-#include <interface.hpp>
-#include <endpoint.hpp>
-#include <l4lb.hpp>
-#include <session.hpp>
-#include <nwsec.hpp>
-#include <tlscb.hpp>
-#include <tcpcb.hpp>
-#include <qos.hpp>
-#include <acl.hpp>
-#include <wring.hpp>
-#include <proxy.hpp>
-#include <ipseccb.hpp>
-#include <cpucb.hpp>
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/network.hpp"
+#include "nic/hal/src/l2segment.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/endpoint.hpp"
+#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/src/tlscb.hpp"
+#include "nic/hal/src/tcpcb.hpp"
+#include "nic/hal/src/qos.hpp"
+#include "nic/hal/src/acl.hpp"
+#include "nic/hal/src/wring.hpp"
+#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/ipseccb.hpp"
+#include "nic/hal/src/l4lb.hpp"
+#include "nic/hal/src/cpucb.hpp"
  
 namespace hal {
 

@@ -1,14 +1,14 @@
 #ifndef __LIF_HPP__
 #define __LIF_HPP__
 
-#include <base.h>
-#include <eth.h>
-#include <ip.h>
-#include <list.hpp>
-#include <ht.hpp>
-#include <bitmap.hpp>
-#include <tenant.hpp>
-#include <interface.pb.h>
+#include "nic/include/base.h"
+#include "nic/include/eth.h"
+#include "nic/include/ip.h"
+#include "nic/include/list.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/include/bitmap.hpp"
+#include "nic/hal/src/tenant.hpp"
+#include "nic/proto/hal/interface.pb.h"
 
 using intf::LifSpec;
 using intf::LifResponse;

@@ -2,10 +2,15 @@
 #define __DESCRIPTOR_AOL_HPP__
 
 
-#include <base.h>
-#include <pd.hpp>
-#include <hal_state.hpp>
-#include <descriptor_aol.pb.h>
+#include "nic/include/base.h"
+#include "nic/include/pd.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/proto/hal/descriptor_aol.pb.h"
+
+using descraol::DescrAolSpec;
+using descraol::DescrAolRequest;
+using descraol::DescrAolRequestMsg;
+using descraol::DescrAolResponseMsg;
 
 namespace hal {
 hal_ret_t descriptor_aol_get(descraol::DescrAolRequest& request, 

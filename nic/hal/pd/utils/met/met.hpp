@@ -12,8 +12,8 @@
 
 #include <string>
 #include <map>
-#include "base.h"
-#include "indexer.hpp"
+#include "nic/include/base.h"
+#include "nic/utils/indexer/indexer.hpp"
 
 
 using hal::utils::indexer;

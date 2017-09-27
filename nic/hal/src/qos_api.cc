@@ -1,6 +1,6 @@
-#include <qos.hpp>
-#include <pd.hpp>
-#include <qos_api.hpp>
+#include "nic/hal/src/qos.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/include/qos_api.hpp"
 
 namespace hal {
 

@@ -8,10 +8,10 @@
 #ifndef __HAL_PERIODIC_HPP__
 #define __HAL_PERIODIC_HPP__
 
-#include <base.h>
-#include <thread.hpp>
-#include <twheel.hpp>
-#include <hal_mem.hpp>
+#include "nic/include/base.h"
+#include "nic/utils/thread/thread.hpp"
+#include "nic/utils/twheel/twheel.hpp"
+#include "nic/include/hal_mem.hpp"
 
 namespace hal {
 

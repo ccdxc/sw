@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <hal_cfg.hpp>
-#include <hal_state.hpp>
+#include "nic/include/hal_cfg.hpp"
+#include "nic/include/hal_state.hpp"
 
 namespace hal {
 

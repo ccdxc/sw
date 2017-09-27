@@ -7,8 +7,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <trace.hpp>
 #include <arpa/inet.h>
+#include "nic/include/trace.hpp"
 
 #define __IN__
 #define __OUT__

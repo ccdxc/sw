@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <base.h>
+#include "nic/include/base.h"
 
 // 320 bytes in one TM cell
 #define HAL_TM_CELL_SIZE        320

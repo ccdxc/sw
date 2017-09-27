@@ -1,9 +1,23 @@
 #ifndef __NETWORK_HPP__
 #define __NETWORK_HPP__
 
-#include "tenant.hpp"
-#include <nw.pb.h>
-#include "ip.h"
+#include "nic/hal/src/tenant.hpp"
+#include "nic/proto/hal/nw.pb.h"
+#include "nic/include/ip.h"
+
+using nw::NetworkSpec;
+using nw::NetworkStatus;
+using nw::NetworkResponse;
+using nw::NetworkKeyHandle;
+using nw::NetworkRequestMsg;
+using nw::NetworkResponseMsg;
+using nw::NetworkDeleteRequest;
+using nw::NetworkDeleteRequestMsg;
+using nw::NetworkDeleteResponseMsg;
+using nw::NetworkGetRequest;
+using nw::NetworkGetRequestMsg;
+using nw::NetworkGetResponse;
+using nw::NetworkGetResponseMsg;
 
 namespace hal {
 

@@ -1,7 +1,7 @@
 #ifndef __HASH_ENTRY_HPP__
 #define __HASH_ENTRY_HPP__
 
-#include <base.h>
+#include "nic/include/base.h"
 
 namespace hal {
 namespace pd {

@@ -1,10 +1,34 @@
 #ifndef __CRYPTO_SESSION_KEYS_HPP__
 #define __CRYPTO_SESSION_KEYS_HPP__
-#include <base.h>
-#include <pd.hpp>
-#include <hal_state.hpp>
-#include <crypto_keys.pb.h>
-#include <types.pb.h>
+#include "nic/include/base.h"
+#include "nic/include/pd.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/proto/hal/crypto_keys.pb.h"
+#include "nic/proto/types.pb.h"
+
+
+using cryptokey::CryptoKeySpec;
+
+using cryptokey::CryptoKeyCreateRequest;
+using cryptokey::CryptoKeyCreateRequestMsg;
+using cryptokey::CryptoKeyCreateResponse;
+using cryptokey::CryptoKeyCreateResponseMsg;
+
+using cryptokey::CryptoKeyReadRequest;
+using cryptokey::CryptoKeyReadRequestMsg;
+using cryptokey::CryptoKeyReadResponse;
+using cryptokey::CryptoKeyReadResponseMsg;
+
+using cryptokey::CryptoKeyUpdateRequest;
+using cryptokey::CryptoKeyUpdateRequestMsg;
+using cryptokey::CryptoKeyUpdateResponse;
+using cryptokey::CryptoKeyUpdateResponseMsg;
+
+
+using cryptokey::CryptoKeyDeleteRequest;
+using cryptokey::CryptoKeyDeleteRequestMsg;
+using cryptokey::CryptoKeyDeleteResponse;
+using cryptokey::CryptoKeyDeleteResponseMsg;
 
 namespace hal {
 

@@ -1,5 +1,5 @@
-#include "nwsec.hpp"
-#include "nwsec_api.hpp"
+#include "nic/hal/src/nwsec.hpp"
+#include "nic/include/nwsec_api.hpp"
 
 namespace hal {
 void

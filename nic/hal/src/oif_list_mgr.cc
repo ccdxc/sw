@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <oif_list_mgr.hpp>
-#include <pd_api.hpp>
+#include "nic/hal/src/oif_list_mgr.hpp"
+#include "nic/include/pd_api.hpp"
 
 namespace hal {
 

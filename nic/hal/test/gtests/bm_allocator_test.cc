@@ -1,4 +1,4 @@
-#include <bm_allocator.hpp>
+#include "nic/utils/bm_allocator/bm_allocator.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 

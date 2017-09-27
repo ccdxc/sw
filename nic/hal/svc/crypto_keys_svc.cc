@@ -1,7 +1,7 @@
-#include <base.h>
-#include <trace.hpp>
-#include <crypto_keys_svc.hpp>
-#include <crypto_keys.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/crypto_keys_svc.hpp"
+#include "nic/hal/src/crypto_keys.hpp"
 
 Status CryptoKeyServiceImpl::CryptoKeyCreate(ServerContext* context,
                 const CryptoKeyCreateRequestMsg* request,

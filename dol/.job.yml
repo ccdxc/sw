@@ -1,6 +1,9 @@
 ---
 targets:
   infra: [ "bash", "-c", "./sanity.sh" ]
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
 image:
   name: "pensando/dol"
   bind_dir: "/sw"

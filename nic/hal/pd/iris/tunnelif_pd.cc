@@ -1,12 +1,12 @@
-#include <hal_lock.hpp>
-#include <hal_state_pd.hpp>
-#include <pd_api.hpp>
-#include <interface_api.hpp>
-#include <l2segment_api.hpp>
-#include <interface.pb.h>
-#include <if_pd.hpp>
-#include <tunnelif_pd.hpp>
-#include <defines.h>
+#include "nic/include/hal_lock.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/include/interface_api.hpp"
+#include "nic/include/l2segment_api.hpp"
+#include "nic/proto/hal/interface.pb.h"
+#include "nic/hal/pd/iris/if_pd.hpp"
+#include "nic/hal/pd/iris/tunnelif_pd.hpp"
+#include "nic/p4/nw/include/defines.h"
 #include "l2seg_pd.hpp"
 #include "if_pd_utils.hpp"
 

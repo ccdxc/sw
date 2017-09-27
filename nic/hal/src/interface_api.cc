@@ -1,7 +1,7 @@
-#include <interface.hpp>
-#include <pd.hpp>
-#include <nwsec.hpp>
-#include <interface_api.hpp>
+#include "nic/hal/src/interface.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/hal/src/nwsec.hpp"
+#include "nic/include/interface_api.hpp"
 
 namespace hal {
 

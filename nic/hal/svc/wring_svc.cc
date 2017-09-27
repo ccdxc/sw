@@ -2,10 +2,10 @@
 // WRing service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <wring_svc.hpp>
-#include <wring.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/wring_svc.hpp"
+#include "nic/hal/src/wring.hpp"
 
 Status
 WRingServiceImpl::WRingCreate(ServerContext *context,

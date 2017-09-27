@@ -1,10 +1,10 @@
 #ifndef __RDMA_SVC_HPP__
 #define __RDMA_SVC_HPP__
 
-#include <base.h>
+#include "nic/include/base.h"
 #include <grpc++/grpc++.h>
-#include <types.pb.h>
-#include <rdma.grpc.pb.h>
+#include "nic/proto/types.pb.h"
+#include "nic/proto/hal/rdma.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

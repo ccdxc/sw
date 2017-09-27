@@ -5,7 +5,7 @@
 
 syntax = "proto3";
 
-import "types.proto";
+import "nic/proto/types.proto";
 
 package net;
 

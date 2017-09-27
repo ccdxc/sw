@@ -9,8 +9,8 @@
 #ifndef __TCAM_ENTRY_HPP__
 #define __TCAM_ENTRY_HPP__
 
-#include <base.h>
-#include <acl_tcam.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 
 using hal::pd::utils::priority_t;
 

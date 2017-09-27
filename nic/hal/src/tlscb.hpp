@@ -1,16 +1,29 @@
 #ifndef __TLSCB_HPP__
 #define __TLSCB_HPP__
 
-#include <base.h>
-#include <encap.hpp>
-#include <list.hpp>
-#include <ht.hpp>
-#include <tls_proxy_cb.pb.h>
-#include <pd.hpp>
-#include <hal_state.hpp>
+#include "nic/include/base.h"
+#include "nic/include/encap.hpp"
+#include "nic/include/list.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/proto/hal/tls_proxy_cb.pb.h"
+#include "nic/include/pd.hpp"
+#include "nic/include/hal_state.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
+
+using tlscb::TlsCbSpec;
+using tlscb::TlsCbStatus;
+using tlscb::TlsCbResponse;
+using tlscb::TlsCbKeyHandle;
+using tlscb::TlsCbRequestMsg;
+using tlscb::TlsCbResponseMsg;
+using tlscb::TlsCbDeleteRequestMsg;
+using tlscb::TlsCbDeleteResponseMsg;
+using tlscb::TlsCbGetRequest;
+using tlscb::TlsCbGetRequestMsg;
+using tlscb::TlsCbGetResponse;
+using tlscb::TlsCbGetResponseMsg;
 
 namespace hal {
 

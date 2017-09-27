@@ -1,9 +1,9 @@
 #ifndef __HAL_PD_CPUPKT_HEADERS_HPP__
 #define __HAL_PD_CPUPKT_HEADERS_HPP__
 
-#include <base.h>
+#include "nic/include/base.h"
 #include <sys/param.h>
-#include <ip.h>
+#include "nic/include/ip.h"
 
 namespace hal {
 namespace pd {

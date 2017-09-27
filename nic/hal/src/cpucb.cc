@@ -1,11 +1,11 @@
-#include <base.h>
-#include <hal.hpp>
-#include <hal_lock.hpp>
-#include <hal_state.hpp>
-#include <cpucb.hpp>
-#include <cpucb_svc.hpp>
-#include <tenant.hpp>
-#include <pd_api.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/hal/src/cpucb.hpp"
+// #include <cpucb_svc.hpp>
+#include "nic/hal/src/tenant.hpp"
+#include "nic/include/pd_api.hpp"
 
 namespace hal {
 void *

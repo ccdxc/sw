@@ -1,16 +1,16 @@
-#include <base.h>
+#include "nic/include/base.h"
 #include <arpa/inet.h>
-#include <hal_lock.hpp>
-#include <pd_api.hpp>
-#include <ipseccb_pd.hpp>
-#include <capri_loader.h>
-#include <capri_hbm.hpp>
-#include <wring_pd.hpp>
-#include <proxy.hpp>
-#include <hal.hpp>
-#include <lif_manager.hpp>
-#include <esp_v4_tunnel_n2h_rxdma_p4plus_ingress.h>
-#include <p4plus_pd_api.h>
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/iris/ipseccb_pd.hpp"
+#include "nic/hal/pd/capri/capri_loader.h"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/iris/wring_pd.hpp"
+#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/hal.hpp"
+#include "nic/hal/src/lif_manager.hpp"
+#include "nic/gen/esp_v4_tunnel_n2h_rxdma/include/esp_v4_tunnel_n2h_rxdma_p4plus_ingress.h"
+#include "nic/hal/pd/iris/p4plus_pd_api.h"
 
 namespace hal {
 namespace pd {

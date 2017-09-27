@@ -7,9 +7,9 @@
  */
 #include <cstring>
 
-#include "tcam_entry.hpp"
-#include "acl_tcam.hpp"
-#include "p4pd_api.hpp"
+#include "nic/hal/pd/utils/tcam/tcam_entry.hpp"
+#include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
+#include "nic/hal/pd/p4pd_api.hpp"
 
 using hal::pd::utils::TcamEntry;
 using hal::pd::utils::acl_tcam;

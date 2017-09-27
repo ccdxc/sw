@@ -1,9 +1,9 @@
-#include "trace.hpp"
-#include "flow_table_entry.hpp"
-#include "flow_spine_entry.hpp"
-#include "flow_hint_group.hpp"
-#include "flow_entry.hpp"
-#include "flow.hpp"
+#include "nic/include/trace.hpp"
+#include "nic/hal/pd/utils/flow/flow_table_entry.hpp"
+#include "nic/hal/pd/utils/flow/flow_spine_entry.hpp"
+#include "nic/hal/pd/utils/flow/flow_hint_group.hpp"
+#include "nic/hal/pd/utils/flow/flow_entry.hpp"
+#include "nic/hal/pd/utils/flow/flow.hpp"
 
 using hal::pd::utils::FlowTableEntry;
 using hal::pd::utils::FlowSpineEntry;

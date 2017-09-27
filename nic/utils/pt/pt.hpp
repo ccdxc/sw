@@ -4,10 +4,10 @@
 #ifndef __PT_HPP__
 #define __PT_HPP__
 
-#include <base.h>
-#include <hal.hpp>
-#include <slab.hpp>
-#include <hal_lock.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/utils/slab/slab.hpp"
+#include "nic/include/hal_lock.hpp"
 
 namespace hal {
 namespace utils {

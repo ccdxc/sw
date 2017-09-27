@@ -3,12 +3,13 @@
 #ifndef __HAL_STATE_HPP__
 #define __HAL_STATE_HPP__
 
-#include <slab.hpp>
-#include <indexer.hpp>
-#include <list.hpp>
-#include <ht.hpp>
-#include <bitmap.hpp>
-#include <hal_cfg.hpp>
+#include "nic/utils/list/list.hpp"
+#include "nic/utils/slab/slab.hpp"
+#include "nic/utils/indexer/indexer.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/include/bitmap.hpp"
+#include "nic/include/hal.hpp"
+#include "nic/include/hal_cfg.hpp"
 
 namespace hal {
 

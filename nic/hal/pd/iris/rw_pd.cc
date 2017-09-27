@@ -1,8 +1,8 @@
-#include <base.h>
+#include "nic/include/base.h"
 #include <arpa/inet.h>
-#include <hal_lock.hpp>
-#include <rw_pd.hpp>
-#include <if_pd_utils.hpp>
+#include "nic/include/hal_lock.hpp"
+#include "nic/hal/pd/iris/rw_pd.hpp"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include <netinet/ether.h>
 
 namespace hal {

@@ -2,10 +2,10 @@
 // Proxy service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <proxy_svc.hpp>
-#include <proxy.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/proxy_svc.hpp"
+#include "nic/hal/src/proxy.hpp"
 
 Status
 ProxyServiceImpl::ProxyEnable(ServerContext *context,

@@ -10,9 +10,9 @@
 #ifndef __INTERFACE_API_HPP__
 #define __INTERFACE_API_HPP__
 
-#include <interface.hpp>
-#include <interface.pb.h>
-#include <l2segment.hpp>
+#include "nic/hal/src/interface.hpp"
+#include "nic/proto/hal/interface.pb.h"
+#include "nic/hal/src/l2segment.hpp"
 
 namespace hal {
 

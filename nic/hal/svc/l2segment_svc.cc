@@ -2,10 +2,10 @@
 // L2 segment service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <l2segment_svc.hpp>
-#include <l2segment.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/l2segment_svc.hpp"
+#include "nic/hal/src/l2segment.hpp"
 
 Status
 L2SegmentServiceImpl::L2SegmentCreate(ServerContext *context,

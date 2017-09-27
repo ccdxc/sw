@@ -1,10 +1,10 @@
-#include <qos.hpp>
-#include <qos.pb.h>
-#include <hal.hpp>
+#include "nic/hal/src/qos.hpp"
+#include "nic/proto/hal/qos.pb.h"
+#include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <defines.h>
+#include "nic/p4/nw/include/defines.h"
 
 using qos::QueueSpec;
 using qos::QueueResponse;

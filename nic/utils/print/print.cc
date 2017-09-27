@@ -1,6 +1,6 @@
-#include <base.h>
-#include <eth.h>
-#include <ip.h>
+#include "nic/include/base.h"
+#include "nic/include/eth.h"
+#include "nic/include/ip.h"
 
 //------------------------------------------------------------------------------
 // thread safe helper to stringify MAC address

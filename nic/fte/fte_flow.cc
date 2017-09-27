@@ -1,8 +1,8 @@
-#include "fte_flow.hpp"
-#include "fte_ctx.hpp"
-#include <session.hpp>
-#include <defines.h>
-#include <pd_api.hpp>
+#include "nic/include/pd_api.hpp"
+#include "nic/fte/fte_flow.hpp"
+#include "nic/fte/fte_ctx.hpp"
+#include "nic/hal/src/session.hpp"
+#include "nic/p4/nw/include/defines.h"
 
 namespace fte {
 

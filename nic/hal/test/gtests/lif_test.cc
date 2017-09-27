@@ -1,10 +1,10 @@
-#include <interface.hpp>
-#include <interface.pb.h>
-#include <hal.hpp>
+#include "nic/hal/src/interface.hpp"
+#include "nic/proto/hal/interface.pb.h"
+#include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <hal_test_utils.hpp>
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 
 using intf::LifSpec;
 using intf::LifResponse;

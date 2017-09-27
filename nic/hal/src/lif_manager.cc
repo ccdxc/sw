@@ -1,5 +1,5 @@
-#include <lif_manager.hpp>
-#include <pd/capri/capri_hbm.hpp>
+#include "nic/hal/src/lif_manager.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
 
 void push_qstate_to_capri(hal::LIFQState *qstate);
 int32_t read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size);

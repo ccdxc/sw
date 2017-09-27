@@ -1,10 +1,10 @@
 #ifndef __TLSCB_SVC_HPP__
 #define __TLSCB_SVC_HPP__
 
-#include <base.h>
-#include <grpc++/grpc++.h>
-#include <types.pb.h>
-#include <tls_proxy_cb.grpc.pb.h>
+#include "nic/include/base.h"
+#include "grpc++/grpc++.h"
+#include "nic/proto/types.pb.h"
+#include "nic/proto/hal/tls_proxy_cb.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

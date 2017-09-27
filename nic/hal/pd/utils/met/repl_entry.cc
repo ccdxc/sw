@@ -1,4 +1,4 @@
-#include "repl_entry.hpp"
+#include "nic/hal/pd/utils/met/repl_entry.hpp"
 
 using hal::pd::utils::ReplEntry;
 

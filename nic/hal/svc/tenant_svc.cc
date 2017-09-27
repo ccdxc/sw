@@ -4,11 +4,11 @@
 // tenant service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <hal_cfg.hpp>
-#include <tenant_svc.hpp>
-#include <tenant.hpp>
+#include "nic/include/hal_cfg.hpp"
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/tenant_svc.hpp"
+#include "nic/hal/src/tenant.hpp"
 
 Status
 TenantServiceImpl::TenantCreate(ServerContext *context,

@@ -1,10 +1,12 @@
 #ifndef __HAL_PD_WRING_HPP__
 #define __HAL_PD_WRING_HPP__
 
-#include <base.h>
-#include <ht.hpp>
-#include <wring.pb.h>
-#include <wring.hpp>
+#include "nic/include/pd.hpp"
+#include "nic/proto/hal/wring.pb.h"
+#include "nic/hal/src/wring.hpp"
+#include "nic/include/base.h"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
 
 using hal::utils::ht_ctxt_t;
 

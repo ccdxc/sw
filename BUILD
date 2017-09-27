@@ -3,5 +3,7 @@
 cc_library(
     name = "gtest",
     visibility = ["//visibility:public"],
-    deps = ["@gtest//:gtest"],
+    deps = [
+            "@gtest//:gtest",
+            ],
 )

@@ -1,8 +1,8 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <l2segment.hpp>
-#include <l2segment_api.hpp>
-#include <nwsec.hpp>
+#include "nic/hal/src/l2segment.hpp"
+#include "nic/include/l2segment_api.hpp"
+#include "nic/hal/src/nwsec.hpp"
 
 namespace hal {
 

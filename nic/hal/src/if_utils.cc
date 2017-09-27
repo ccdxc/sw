@@ -1,7 +1,6 @@
-#include <base.h>
-#include <hal.hpp>
-#include <if_utils.hpp>
-
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/hal/src/if_utils.hpp"
 namespace hal {
 
 // ----------------------------------------------------------------------------

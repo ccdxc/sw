@@ -1,11 +1,11 @@
-#include <base.h>
-#include <hal_lock.hpp>
-#include <p4pd.h>
-#include <pd_api.hpp>
-#include <nwsec_pd.hpp>
-#include <pd.hpp>
-#include <hal_state_pd.hpp>
-#include <nwsec_api.hpp>
+#include "nic/include/base.h"
+#include "nic/include/hal_lock.hpp"
+#include "nic/gen/iris/include/p4pd.h"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/iris/nwsec_pd.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/include/nwsec_api.hpp"
 
 namespace hal {
 namespace pd {

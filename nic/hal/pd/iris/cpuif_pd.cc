@@ -1,13 +1,13 @@
-#include <hal_lock.hpp>
-#include <hal_state_pd.hpp>
-#include <pd_api.hpp>
-#include <interface_api.hpp>
-#include <interface.pb.h>
-#include <lif_pd.hpp>
-#include <cpuif_pd.hpp>
+#include "nic/include/hal_lock.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/include/interface_api.hpp"
+#include "nic/proto/hal/interface.pb.h"
+#include "nic/hal/pd/iris/lif_pd.hpp"
+#include "nic/hal/pd/iris/cpuif_pd.hpp"
 #include "l2seg_pd.hpp"
 #include "if_pd_utils.hpp"
-#include <defines.h>
+#include "nic/p4/nw/include/defines.h"
 
 namespace hal {
 namespace pd {

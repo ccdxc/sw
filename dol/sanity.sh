@@ -15,8 +15,12 @@ function ErrorCheckNExit() {
 ErrorCheckNExit $err "utrun"
 
 # Build the minimum targets required for dryrun.
-cd ../nic/utils/host_mem && make && cd -
-cd ../nic/proto/ && make && cd -
+#cd ../nic/utils/host_mem && make && cd -
+#cd ../nic/proto/ && make && cd -
+bazel build //nic/utils/host_mem:host_mem
+bazel build //nic/proto:all
+bazel build //nic/proto/hal:all
+bazel build //nic/proto/agents:all
 
 #./main.py --dryrun --topo eth --module eth
 #ErrorCheckNExit $? "eth topo"

@@ -1,5 +1,5 @@
-#include <hal_mem.hpp>
-#include <bitmap.hpp>
+#include "nic/include/hal_mem.hpp"
+#include "nic/utils/bitmap/bitmap.hpp"
 
 namespace hal {
 namespace utils {

@@ -1,11 +1,11 @@
 #ifndef __ACL_HPP__
 #define __ACL_HPP__
 
-#include <base.h>
-#include <hal_state.hpp>
-#include <ht.hpp>
-#include <ip.h>
-#include <acl.pb.h>
+#include "nic/include/base.h"
+#include "nic/include/hal_state.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/include/ip.h"
+#include "nic/proto/hal/acl.pb.h"
 
 // Include key of internal fields for use only with DOL/testing infra
 // For production builds this needs to be removed
@@ -13,6 +13,8 @@
 #define ACL_DOL_TEST_ONLY
 
 using hal::utils::ht_ctxt_t;
+using acl::AclSpec;
+using acl::AclResponse;
 
 namespace hal {
 

@@ -1,4 +1,4 @@
-from "srv1.pensando.io:5000/pensando/nic:dependencies"
+from "srv1.pensando.io:5000/pensando/nic:1.1"
 
 run "pip3 install mock zmq grpcio"
 

@@ -3,7 +3,7 @@
 #ifndef __OIF_LIST_MGR_HPP__
 #define __OIF_LIST_MGR_HPP__
 
-#include <oif_list_api.hpp>
+#include "nic/include/oif_list_api.hpp"
 
 namespace hal {
 

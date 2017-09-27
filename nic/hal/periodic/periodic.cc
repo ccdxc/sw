@@ -5,9 +5,9 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/timerfd.h>
-#include <thread.hpp>
-#include <twheel.hpp>
-#include "periodic.hpp"
+#include "nic/utils/thread/thread.hpp"
+#include "nic/utils/twheel/twheel.hpp"
+#include "nic/hal/periodic/periodic.hpp"
 
 //------------------------------------------------------------------------------
 //          ALTERNATE DESIGN TO CONSIDER LATER

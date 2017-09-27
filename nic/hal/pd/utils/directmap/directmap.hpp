@@ -12,10 +12,10 @@
 #define __DIRECT_MAP_HPP__
 
 
-#include <base.h>
 #include <string>
-#include "indexer.hpp"
-#include <hal_lock.hpp>
+#include "nic/include/base.h"
+#include "nic/utils/indexer/indexer.hpp"
+#include "nic/include/hal_lock.hpp"
 
 using hal::utils::indexer;
 

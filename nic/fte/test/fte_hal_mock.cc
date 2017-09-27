@@ -1,6 +1,6 @@
-#include <base.h>
-#include <session.hpp>
-#include <pd_api.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/src/session.hpp"
+#include "nic/include/pd_api.hpp"
 
 hal::hal_state *hal::g_hal_state = hal::hal_state::factory();
 

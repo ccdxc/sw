@@ -6,10 +6,10 @@
 //       (multiple .cc files are including this whole thing now)
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <grpc++/grpc++.h>
-#include <types.pb.h>
-#include <l4lb.grpc.pb.h>
+#include "nic/include/base.h"
+#include "grpc++/grpc++.h"
+#include "nic/proto/types.pb.h"
+#include "nic/proto/hal/l4lb.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

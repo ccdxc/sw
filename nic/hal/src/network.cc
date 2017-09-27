@@ -1,11 +1,11 @@
-#include <base.h>
-#include <hal.hpp>
-#include <hal_lock.hpp>
-#include <hal_state.hpp>
-#include <utils.hpp>
-#include <network_svc.hpp>
-#include <network.hpp>
-#include <pd_api.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/hal/src/utils.hpp"
+// #include "nic/hal/svc/network_svc.hpp"
+#include "nic/hal/src/network.hpp"
+#include "nic/include/pd_api.hpp"
 
 namespace hal {
 

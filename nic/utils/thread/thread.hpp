@@ -2,7 +2,7 @@
 #define __THREAD_HPP__
 
 #include <pthread.h>
-#include <base.h>
+#include "nic/include/base.h"
 
 namespace hal {
 namespace utils {

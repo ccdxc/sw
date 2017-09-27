@@ -1,7 +1,7 @@
 #include <string>
-#include <hal.hpp>
-#include "hal_pd.hpp"
-#include "asic_rw.hpp"
+#include "nic/include/hal.hpp"
+#include "nic/include/hal_pd.hpp"
+#include "nic/include/asic_rw.hpp"
 
 namespace hal {
 namespace pd {

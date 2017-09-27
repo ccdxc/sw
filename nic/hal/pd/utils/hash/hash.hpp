@@ -14,7 +14,7 @@
 #ifndef __HASH_HPP__
 #define __HASH_HPP__
 
-#include <base.h>
+#include "nic/include/base.h"
 #include <string>
 #include <map>
 #include <boost/crc.hpp>

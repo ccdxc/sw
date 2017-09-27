@@ -1,10 +1,10 @@
 #ifndef __SYSTEM_SVC_HPP__
 #define __SYSTEM_SVC_HPP__
 
-#include <base.h>
+#include "nic/include/base.h"
 #include <grpc++/grpc++.h>
-#include <types.pb.h>
-#include <system.grpc.pb.h>
+#include "nic/proto/types.pb.h"
+#include "nic/proto/hal/system.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

@@ -16,7 +16,7 @@ from config.store               import Store
 from infra.common.logging       import cfglogger
 
 import wring_pb2            as wring_pb2
-import wring_pb2_grpc           as wring_pb2_grpc
+#import wring_pb2_grpc           as wring_pb2_grpc
 
 class BRQEntryObject(base.ConfigObjectBase):
     def __init__(self, brq_ring_name, brq_ring_type, brq_entry_defn, entry_idx):
@@ -28,7 +28,7 @@ class BRQEntryObject(base.ConfigObjectBase):
         return
     def Sync(self):
         ring_entries = []
-        ring_entries.append(self) 
+        ring_entries.append(self)
         halapi.GetRingEntries(ring_entries)
         return
     def Configure(self):
@@ -46,7 +46,7 @@ class BRQEntryObject(base.ConfigObjectBase):
         if (resp_spec.index != req_spec.index):
             assert(0)
         #cfglogger.info("Field set %s" % resp_spec.WhichOneof("WRingSlotInfo"))
-            
+
         if (resp_spec.HasField("barco_gcm_desc")):
             self.ilist_addr = resp_spec.barco_gcm_desc.ilist_addr
             self.olist_addr = resp_spec.barco_gcm_desc.olist_addr
@@ -104,7 +104,7 @@ class BRQObject(base.ConfigObjectBase):
         self.ci = resp_spec.ci
         #cfglogger.info("Entry : %s : pi %s ci %s" % (self.ID(), self.pi, self.ci))
         return
-        
+
 
 
 

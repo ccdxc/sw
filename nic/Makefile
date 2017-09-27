@@ -98,3 +98,73 @@ deps-test-shell:
 # do a test build with a local build of the dependencies image.
 deps-test-build:
 	NO_PULL=1 make build
+
+bazel-build:
+	make -j4 -C p4
+	make -j4 -C asm
+	bazel build hal:hal
+	bazel build model_sim:cap_model
+	bazel build //nic/proto:all
+	bazel build //nic/proto/hal:all
+	bazel build //nic/proto/agents:all
+	bazel build utils/host_mem:all
+
+bazel-gtests:
+	# PI gtests
+	bazel build hal/test/gtests:all
+	# PI Utils
+	bazel build utils/bitmap:bitmap_test
+	bazel build utils/host_mem:host_mem_test
+	bazel build utils/indexer:indexer_test
+	bazel build utils/list:list_test
+	bazel build utils/pt:pt_test
+	bazel build utils/shm:shmseg_test
+	bazel build utils/slab:slab_test
+	bazel build utils/twheel:twheel_test
+	# PD Utils
+	bazel build hal/pd/utils/acl_tcam:acl_tcam_test
+	bazel build hal/pd/utils/directmap:directmap_test
+	bazel build hal/pd/utils/flow:flow_test
+	bazel build hal/pd/utils/hash:hash_test
+	bazel build hal/pd/utils/met:met_test
+	bazel build hal/pd/utils/tcam:tcam_test
+
+run-gtests:
+	# PI gtests
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/acl_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/bm_allocator_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/buf_pool_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/cpuif_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/enicif_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/lif_manager_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/lif_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/policer_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/queue_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/session_test
+	#CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/tcpcb_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/tlscb_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/uplinkif_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/uplinkpc_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/internal_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/endpoint_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/tenant_test
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/l2seg_test
+	# PI Utils gtests
+	$(TOPDIR)/../bazel-bin/nic/utils/bitmap/bitmap_test
+	$(TOPDIR)/../bazel-bin/nic/utils/host_mem/host_mem_test
+	$(TOPDIR)/../bazel-bin/nic/utils/indexer/indexer_test
+	$(TOPDIR)/../bazel-bin/nic/utils/list/list_test
+	$(TOPDIR)/../bazel-bin/nic/utils/pt/pt_test
+	$(TOPDIR)/../bazel-bin/nic/utils/shm/shmseg_test
+	$(TOPDIR)/../bazel-bin/nic/utils/slab/slab_test
+	$(TOPDIR)/../bazel-bin/nic/utils/twheel/twheel_test
+	# PD Utils gtests
+	LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/../bazel-bin/nic/hal/pd/utils/acl_tcam/acl_tcam_test
+	LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/../bazel-bin/nic/hal/pd/utils/tcam/tcam_test
+	LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/../bazel-bin/nic/hal/pd/utils/directmap/directmap_test
+	# Removed because of randomization
+	#LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/../bazel-bin/nic/hal/pd/utils/flow/flow_test
+	LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/../bazel-bin/nic/hal/pd/utils/hash/hash_test
+	LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/../bazel-bin/nic/hal/pd/utils/met/met_test
+
+	

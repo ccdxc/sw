@@ -1,14 +1,14 @@
-#include <base.h>
-#include <p4pd.h>
-#include <p4pd_api.hpp>
-#include <tcam.hpp>
-#include <hal_state_pd.hpp>
-#include <defines.h>
-#include <common_defines.h>
-#include <rdma_defines.h>
-#include <table_sizes.h>
-#include <rw_pd.hpp>
-#include <p4pd_defaults.hpp>
+#include "nic/include/base.h"
+#include "nic/gen/iris/include/p4pd.h"
+#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/hal/pd/utils/tcam/tcam.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/p4/nw/include/defines.h"
+#include "nic/p4/include/common_defines.h"
+#include "nic/p4/rdma/include/rdma_defines.h"
+#include "nic/p4/nw/include/table_sizes.h"
+#include "nic/hal/pd/iris/rw_pd.hpp"
+#include "nic/hal/pd/iris/p4pd/p4pd_defaults.hpp"
 
 using hal::pd::utils::Tcam;
 

@@ -1,16 +1,31 @@
 #ifndef __WRING_HPP__
 #define __WRING_HPP__
 
-#include <base.h>
-#include <encap.hpp>
-#include <list.hpp>
-#include <ht.hpp>
-#include <wring.pb.h>
-#include <pd.hpp>
-#include <hal_state.hpp>
+#include "nic/include/base.h"
+#include "nic/include/encap.hpp"
+#include "nic/include/list.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/proto/hal/wring.pb.h"
+#include "nic/include/pd.hpp"
+#include "nic/include/hal_state.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
+
+using wring::WRingSpec;
+using wring::WRingStatus;
+using wring::WRingResponse;
+using wring::WRingKeyHandle;
+using wring::WRingRequestMsg;
+using wring::WRingResponseMsg;
+using wring::WRingDeleteRequestMsg;
+using wring::WRingDeleteResponseMsg;
+using wring::WRingGetEntriesRequest;
+using wring::WRingGetEntriesRequestMsg;
+using wring::WRingGetEntriesResponse;
+using wring::WRingGetEntriesResponseMsg;
+using wring::WRingGetMetaResponseMsg;
+using wring::WRingGetMetaResponse;
 
 namespace hal {
 

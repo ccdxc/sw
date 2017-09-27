@@ -40,8 +40,8 @@ def make_common_header(obj, f):
     f.write("extern \"C\" {\n")
     f.write("#endif\n")
     f.write("\n")
-    f.write("#include <base.h>\n")
-    f.write("#include <eth.h>\n")
+    f.write("#include "nic/include/base.h"\n")
+    f.write("#include "nic/include/eth.h"\n")
     f.write("\n")
 
 

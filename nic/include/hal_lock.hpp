@@ -10,7 +10,7 @@
 #define __HAL_LOCK_HPP__
 
 #include <pthread.h>
-#include <base.h>
+#include "nic/include/base.h"
 
 typedef pthread_spinlock_t    hal_spinlock_t;
 

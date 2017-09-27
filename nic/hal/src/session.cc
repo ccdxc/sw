@@ -1,17 +1,17 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <base.h>
-#include <hal.hpp>
-#include <hal_state.hpp>
-#include <session_svc.hpp>
-#include <interface.hpp>
-#include <endpoint.hpp>
-#include <endpoint_api.hpp>
-#include <session.hpp>
-#include <utils.hpp>
-#include <pd_api.hpp>
-#include <interface_api.hpp>
-#include <qos.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_state.hpp"
+// #include "nic/hal/svc/session_svc.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/endpoint.hpp"
+#include "nic/include/endpoint_api.hpp"
+#include "nic/hal/src/session.hpp"
+#include "nic/hal/src/utils.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/include/interface_api.hpp"
+#include "nic/hal/src/qos.hpp"
 
 using telemetry::MirrorSessionId;
 using session::FlowInfo;

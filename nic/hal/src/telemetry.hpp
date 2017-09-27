@@ -1,9 +1,9 @@
 #ifndef __TELEMETRY_HPP__
 #define __TELEMETRY_HPP__
-#include <pd.hpp>
-#include <interface.hpp>
-#include <interface_api.hpp>
-#include <telemetry.grpc.pb.h>
+#include "nic/include/pd.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/include/interface_api.hpp"
+#include "nic/proto/hal/telemetry.grpc.pb.h"
 
 using telemetry::Telemetry;
 using telemetry::MirrorSessionSpec;

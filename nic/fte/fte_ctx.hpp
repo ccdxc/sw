@@ -1,9 +1,9 @@
 #pragma once
 
-#include <base.h>
-#include <session.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/src/session.hpp"
 #include <netinet/ether.h>
-#include <cpupkt_headers.hpp>
+#include "nic/include/cpupkt_headers.hpp"
 
 namespace fte {
 

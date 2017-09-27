@@ -3,13 +3,34 @@
 #ifndef __NWSEC_HPP__
 #define __NWSEC_HPP__
 
-#include <base.h>
-#include <hal_state.hpp>
-#include <ht.hpp>
-#include <nwsec.pb.h>
-#include <pd.hpp>
+#include "nic/include/base.h"
+#include "nic/include/hal_state.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/proto/hal/nwsec.pb.h"
+#include "nic/include/pd.hpp"
 
 using hal::utils::ht_ctxt_t;
+
+using nwsec::SecurityProfileKeyHandle;
+using nwsec::SecurityProfileSpec;
+using nwsec::SecurityProfileRequestMsg;
+using nwsec::SecurityProfileStatus;
+using nwsec::SecurityProfileResponse;
+using nwsec::SecurityProfileResponseMsg;
+using nwsec::SecurityProfileDeleteRequest;
+using nwsec::SecurityProfileDeleteRequestMsg;
+using nwsec::SecurityProfileDeleteResponseMsg;
+using nwsec::SecurityProfileGetRequest;
+using nwsec::SecurityProfileGetRequestMsg;
+using nwsec::SecurityProfileStats;
+using nwsec::SecurityProfileGetResponse;
+using nwsec::SecurityProfileGetResponseMsg;
+using nwsec::SecurityGroupSpec;
+using nwsec::SecurityGroupRequestMsg;
+using nwsec::SecurityGroupStatus;
+using nwsec::SecurityGroupResponse;
+using nwsec::SecurityGroupResponseMsg;
+using nwsec::Service;
 
 namespace hal {
 

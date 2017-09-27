@@ -1,9 +1,9 @@
-#include "repl_table_entry.hpp"
-#include "repl_list.hpp"
-#include "repl_entry.hpp"
-#include "met.hpp"
-#include "trace.hpp"
-#include <capri_repl.hpp>
+#include "nic/hal/pd/utils/met/repl_table_entry.hpp"
+#include "nic/hal/pd/utils/met/repl_list.hpp"
+#include "nic/hal/pd/utils/met/repl_entry.hpp"
+#include "nic/hal/pd/utils/met/met.hpp"
+#include "nic/include/trace.hpp"
+#include "nic/hal/pd/capri/capri_repl.hpp"
 
 using hal::pd::utils::ReplTableEntry;
 

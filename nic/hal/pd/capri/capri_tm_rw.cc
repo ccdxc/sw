@@ -15,14 +15,14 @@
 #include <map>
 #include <cmath>
 
-#include <base.h>
-#include <defines.h>
-#include <capri_tm_rw.hpp>
+#include "nic/include/base.h"
+#include "nic/p4/nw/include/defines.h"
+#include "nic/hal/pd/capri/capri_tm_rw.hpp"
 
 #ifndef HAL_GTEST
-#include <cap_blk_reg_model.h>
-#include <cap_top_csr.h>
-#include <cap_pbc_csr.h>
+#include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
+#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "nic/asic/capri/model/cap_pb/cap_pbc_csr.h"
 #endif
 
 

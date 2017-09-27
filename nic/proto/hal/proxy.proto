@@ -4,8 +4,8 @@
 
 syntax = "proto3";
 
-import "types.proto";
-import "session.proto";
+import "nic/proto/types.proto";
+import "nic/proto/hal/session.proto";
 
 package proxy;
 

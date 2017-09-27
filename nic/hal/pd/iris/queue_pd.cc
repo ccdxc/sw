@@ -1,8 +1,8 @@
-#include <hal_lock.hpp>
-#include <hal_state_pd.hpp>
-#include <queue_pd.hpp>
-#include <pd_api.hpp>
-#include <qos_api.hpp>
+#include "nic/include/hal_lock.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/queue_pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/include/qos_api.hpp"
 
 namespace hal {
 namespace pd {

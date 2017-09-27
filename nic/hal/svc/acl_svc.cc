@@ -3,10 +3,10 @@
 // Vasanth Kumar (Pensando Systems)
 //------------------------------------------------------------------------------
 //
-#include <base.h>
-#include <trace.hpp>
-#include <acl_svc.hpp>
-#include <acl.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/acl_svc.hpp"
+#include "nic/hal/src/acl.hpp"
 
 Status
 AclServiceImpl::AclCreate(ServerContext *context,

@@ -1,11 +1,11 @@
 #ifndef __HAL_QUEUE_PD_HPP__
 #define __HAL_QUEUE_PD_HPP__
 
-#include <base.h>
-#include <qos.hpp>
-#include <pd.hpp>
-#include <pd_api.hpp>
-#include <capri_tm_rw.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/src/qos.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/capri/capri_tm_rw.hpp"
 
 
 namespace hal {

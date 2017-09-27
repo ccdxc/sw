@@ -1,13 +1,13 @@
-#include <hal_lock.hpp>
-#include <pd_api.hpp>
-#include <interface_api.hpp>
-#include <if_pd.hpp>
-#include <uplinkif_pd.hpp>
-#include <uplinkpc_pd.hpp>
-#include <enicif_pd.hpp>
-#include <cpuif_pd.hpp>
-#include <tunnelif_pd.hpp>
-#include <l2seg_uplink_pd.hpp>
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/include/interface_api.hpp"
+#include "nic/hal/pd/iris/if_pd.hpp"
+#include "nic/hal/pd/iris/uplinkif_pd.hpp"
+#include "nic/hal/pd/iris/uplinkpc_pd.hpp"
+#include "nic/hal/pd/iris/enicif_pd.hpp"
+#include "nic/hal/pd/iris/cpuif_pd.hpp"
+#include "nic/hal/pd/iris/tunnelif_pd.hpp"
+#include "nic/hal/pd/iris/l2seg_uplink_pd.hpp"
 
 namespace hal {
 namespace pd {

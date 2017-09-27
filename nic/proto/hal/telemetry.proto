@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-import "types.proto";
-import "interface.proto";
+import "nic/proto/types.proto";
+import "nic/proto/hal/interface.proto";
 
 package telemetry;
 

@@ -4,7 +4,7 @@ import copy
 
 import types_pb2                as types_pb2
 import crypto_keys_pb2          as crypto_keys_pb2
-import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
+# import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
 
 from config.store                       import Store
 from config.objects.proxycb_service     import ProxyCbServiceHelper
@@ -131,7 +131,7 @@ def TestCaseVerify(tc):
         print("post crypto pipeline threading was not ok")
         return False
 
-        
+
     tcbid = "TcpCb%04d" % id
     tcb = tc.pvtdata.db[tcbid]
     # 2. Verify pi/ci got update got updated for SESQ
@@ -167,7 +167,7 @@ def TestCaseVerify(tc):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
-    
+
     # 5. Verify PI for TNMDR got incremented by 1
     if (tnmdr_cur.pi != tnmdr.pi+1):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
@@ -178,13 +178,13 @@ def TestCaseVerify(tc):
 
     # 6. Verify descriptor on the BRQ
     if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[0].ilist_addr - 0x40)):
-        print("RNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr)) 
+        print("RNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
         return False
 
 
     # 7. Verify descriptor on the BRQ
     if (tnmdr.ringentries[tnmdr.pi].handle != (brq_cur.ring_entries[0].olist_addr - 0x40)):
-        print("TNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[0].olist_addr)) 
+        print("TNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[0].olist_addr))
         return False
 
 

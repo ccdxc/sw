@@ -1,8 +1,8 @@
 #ifndef __SYSTEM_HPP__
 #define __SYSTEM_HPP__
 
-#include <base.h>
-#include <system.pb.h>
+#include "nic/include/base.h"
+#include "nic/proto/hal/system.pb.h"
 
 using sys::SystemResponse;
 

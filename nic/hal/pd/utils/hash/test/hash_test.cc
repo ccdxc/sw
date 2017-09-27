@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 
-#include "hash.hpp"
-#include <p4pd_api.hpp>
-#include "p4pd.h"
+#include "nic/hal/pd/utils/hash/hash.hpp"
+#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/gen/iris/include/p4pd.h"
 
 using hal::pd::utils::Hash;
 

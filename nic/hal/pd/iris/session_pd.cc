@@ -1,20 +1,20 @@
 #include <time.h>
-#include <base.h>
-#include <eth.h>
-#include <timestamp.h>
-#include <hal_lock.hpp>
-#include <p4pd.h>
-#include <pd_api.hpp>
-#include <if_pd_utils.hpp>
-#include <l2seg_pd.hpp>
-#include <session_pd.hpp>
-#include <interface.hpp>
-#include <endpoint.hpp>
-#include <endpoint_api.hpp>
-#include <endpoint_pd.hpp>
-#include <hal_state_pd.hpp>
-#include <qos_api.hpp>
-#include <defines.h>
+#include "nic/include/base.h"
+#include "nic/include/eth.h"
+#include "nic/include/timestamp.h"
+#include "nic/include/hal_lock.hpp"
+#include "nic/gen/iris/include/p4pd.h"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
+#include "nic/hal/pd/iris/l2seg_pd.hpp"
+#include "nic/hal/pd/iris/session_pd.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/endpoint.hpp"
+#include "nic/include/endpoint_api.hpp"
+#include "nic/hal/pd/iris/endpoint_pd.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/include/qos_api.hpp"
+#include "nic/p4/nw/include/defines.h"
 #include <string.h>
 
 

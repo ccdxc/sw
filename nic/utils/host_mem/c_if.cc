@@ -2,7 +2,7 @@
 // Since there can only be one host mem, the object is made global.
 #include <stdint.h>
 #include <errno.h>
-#include <host_mem.hpp>
+#include "nic/utils/host_mem/host_mem.hpp"
 
 static std::unique_ptr<utils::HostMem> g_host_mem;
 

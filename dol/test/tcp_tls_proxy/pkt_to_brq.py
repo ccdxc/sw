@@ -5,7 +5,7 @@ import copy
 
 import types_pb2                as types_pb2
 import crypto_keys_pb2          as crypto_keys_pb2
-import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
+#import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
 
 from config.store                   import Store
 from config.objects.proxycb_service    import ProxyCbServiceHelper
@@ -14,7 +14,7 @@ import test.callbacks.networking.modcbs as modcbs
 from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 
-#temporary hack until we implement pi/ci for BRQ 
+#temporary hack until we implement pi/ci for BRQ
 maxflows = 0
 def Setup(infra, module):
     global maxflows
@@ -142,25 +142,25 @@ def TestCaseVerify(tc):
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
     tnmpr_cur.Configure()
 
-    # 5. Verify PI for RNMDR got incremented by 1 
+    # 5. Verify PI for RNMDR got incremented by 1
     if (rnmdr_cur.pi != rnmdr.pi+1):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
     print("Old RNMDR PI: %d, New RNMDR PI: %d" % (rnmdr.pi, rnmdr_cur.pi))
 
-    # 6. Verify PI for TNMDR got incremented by 1 
+    # 6. Verify PI for TNMDR got incremented by 1
     if (tnmdr_cur.pi != tnmdr.pi+1):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
         return False
     print("Old TNMDR PI: %d, New TNMDR PI: %d" % (tnmdr.pi, tnmdr_cur.pi))
 
-    # 7. Verify PI for TNMPR got incremented by 1 
+    # 7. Verify PI for TNMPR got incremented by 1
     if (tnmpr_cur.pi != tnmpr.pi+1):
         print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
 
-    # 8. Verify descriptor 
+    # 8. Verify descriptor
     print("BRQ:")
     print("ilist_addr 0x%x" % brq_cur.ring_entries[0].ilist_addr)
     print("olist_addr 0x%x" % brq_cur.ring_entries[0].olist_addr)
@@ -172,7 +172,7 @@ def TestCaseVerify(tc):
     # this when this offset is removed.
     #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
     if ((rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[0].ilist_addr - 0x40)) and (maxflows != 2)):
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr)) 
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
         return False
     print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
 

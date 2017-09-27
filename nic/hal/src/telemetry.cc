@@ -1,13 +1,13 @@
-#include <base.h>
-#include <hal.hpp>
-#include <hal_state.hpp>
-#include <interface.hpp>
-#include <pd.hpp>
-#include <pd_api.hpp>
-#include <telemetry.hpp>
-#include <telemetry.pb.h>
-#include <telemetry_svc.hpp>
-#include <types.pb.h>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_state.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/src/telemetry.hpp"
+#include "nic/proto/hal/telemetry.pb.h"
+// #include "nic/hal/svc/telemetry_svc.hpp"
+#include "nic/proto/types.pb.h"
 
 using telemetry::MirrorSession;
 using telemetry::MirrorSessionStatus;

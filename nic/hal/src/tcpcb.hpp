@@ -1,16 +1,30 @@
 #ifndef __TCPCB_HPP__
 #define __TCPCB_HPP__
 
-#include <base.h>
-#include <encap.hpp>
-#include <list.hpp>
-#include <ht.hpp>
-#include <tcp_proxy_cb.pb.h>
-#include <pd.hpp>
-#include <hal_state.hpp>
+#include "nic/include/base.h"
+#include "nic/include/encap.hpp"
+#include "nic/include/list.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/proto/hal/tcp_proxy_cb.pb.h"
+#include "nic/include/pd.hpp"
+#include "nic/include/hal_state.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
+
+
+using tcpcb::TcpCbSpec;
+using tcpcb::TcpCbStatus;
+using tcpcb::TcpCbResponse;
+using tcpcb::TcpCbKeyHandle;
+using tcpcb::TcpCbRequestMsg;
+using tcpcb::TcpCbResponseMsg;
+using tcpcb::TcpCbDeleteRequestMsg;
+using tcpcb::TcpCbDeleteResponseMsg;
+using tcpcb::TcpCbGetRequest;
+using tcpcb::TcpCbGetRequestMsg;
+using tcpcb::TcpCbGetResponse;
+using tcpcb::TcpCbGetResponseMsg;
 
 namespace hal {
 

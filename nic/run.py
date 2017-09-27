@@ -69,7 +69,8 @@ def build():
 def run_model(args):
     os.environ["LD_LIBRARY_PATH"] = ".:../libs:/home/asic/tools/src/0.25/x86_64/lib64:/usr/local/lib:/usr/local/lib64"
 
-    model_dir = nic_dir + "/model_sim/build"
+    #model_dir = nic_dir + "/model_sim/build"
+    model_dir = nic_dir + "/../bazel-bin/nic/model_sim"
     os.chdir(model_dir)
 
     log = open(model_log, "w")
@@ -106,13 +107,13 @@ def run_model(args):
 
 def run_hal():
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
-    os.environ["LD_LIBRARY_PATH"] = "./obj:/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib:third-party/lkl/export/bin"
+    #os.environ["LD_LIBRARY_PATH"] = "./obj:/usr/local/lib:/usr/local/lib64:asic/capri/model/capsim-gen/lib:third-party/lkl/export/bin"
 
-    hal_dir = nic_dir
+    hal_dir = nic_dir + "/../bazel-bin/nic/hal"
     os.chdir(hal_dir)
 
     log = open(hal_log, "w")
-    p = Popen(["./obj/hal", "--config", "hal.json"], stdout=log, stderr=log)
+    p = Popen(["./hal", "--config", "hal.json"], stdout=log, stderr=log)
     global hal_process
     hal_process = p
     print "* Starting HAL pid (" + str(p.pid) + ")"
@@ -196,7 +197,7 @@ def run_sample_client():
     log.close()
 
     print "* Sample Client exit code " + str(p.returncode)
-    return p.returncode 
+    return p.returncode
 
 #    log.close()
 '''

@@ -1,9 +1,9 @@
 #ifndef __HAL_TEST_UTILS_HPP__
 #define __HAL_TEST_UTILS_HPP__
-#include <trace.hpp>
-#include <hal_mem.hpp>
-#include <base.h>
-#include <slab.hpp>
+#include "nic/include/trace.hpp"
+#include "nic/include/hal_mem.hpp"
+#include "nic/include/base.h"
+#include "nic/utils/slab/slab.hpp"
 
 using hal::hal_slab_t;
 using hal::utils::slab;

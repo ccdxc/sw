@@ -1,8 +1,8 @@
 #ifndef __UTILS_HPP__
 #define __UTILS_HPP__
 
-#include <types.pb.h>
-#include <ip.h>
+#include "nic/proto/types.pb.h"
+#include "nic/include/ip.h"
 
 using types::ApiStatus;
 

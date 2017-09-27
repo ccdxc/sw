@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <time.h>
 
-#include <base.h>
+#include "nic/include/base.h"
 
 // define our typedef on top of struct timespec
 typedef struct timespec timespec_t;

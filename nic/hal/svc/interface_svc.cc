@@ -2,11 +2,11 @@
 // interface service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <interface_svc.hpp>
-#include <interface.hpp>
-#include <lif.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/interface_svc.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/lif.hpp"
 
 Status
 InterfaceServiceImpl::LifCreate(ServerContext *context,

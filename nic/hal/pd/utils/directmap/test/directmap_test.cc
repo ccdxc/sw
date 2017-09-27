@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "directmap.hpp"
-#include "p4pd_api.hpp"
-#include "p4pd.h"
+#include "nic/hal/pd/utils/directmap/directmap.hpp"
+#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/gen/iris/include/p4pd.h"
 
 using hal::pd::utils::DirectMap;
 

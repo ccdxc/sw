@@ -1,11 +1,11 @@
-#include <hal_lock.hpp>
-#include <pd_api.hpp>
-#include <l2seg_pd.hpp>
-#include <tenant_pd.hpp>
-#include <pd.hpp>
-#include <hal_state_pd.hpp>
-#include "if_pd_utils.hpp"
-#include <proxy.hpp>
+#include "nic/include/hal_lock.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/iris/l2seg_pd.hpp"
+#include "nic/hal/pd/iris/tenant_pd.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
+#include "nic/hal/src/proxy.hpp"
 
 namespace hal {
 namespace pd {

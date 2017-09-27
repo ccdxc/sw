@@ -3,10 +3,10 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <atomic>
-#include <hal.hpp>
-#include "capri.hpp"
-#include "asic_rw.hpp"
-#include "lib_model_client.h"
+#include "nic/hal/hal.hpp"
+#include "nic/hal/pd/capri/capri.hpp"
+#include "nic/include/asic_rw.hpp"
+#include "nic/model_sim/include/lib_model_client.h"
 
 namespace hal {
 

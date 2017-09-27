@@ -1,10 +1,10 @@
 #ifndef __PROXY_SVC_HPP__
 #define __PROXY_SVC_HPP__
 
-#include <base.h>
-#include <grpc++/grpc++.h>
-#include <types.pb.h>
-#include <proxy.grpc.pb.h>
+#include "nic/include/base.h"
+#include "grpc++/grpc++.h"
+#include "nic/proto/types.pb.h"
+#include "nic/proto/hal/proxy.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

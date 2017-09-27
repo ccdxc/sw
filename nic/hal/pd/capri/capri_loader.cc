@@ -6,10 +6,10 @@
  * capri_loader.cc: Implementation of APIs for MPU program loader
  */
 
-#include "capri_loader.h"
-#include "capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_loader.h"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
 #include <assert.h>
-#include <lib_model_client.h>
+#include "nic/model_sim/include/lib_model_client.h"
 #include <boost/unordered_map.hpp>
 
 /* TODO: Declaring these as globals for now. Figure out usage and define

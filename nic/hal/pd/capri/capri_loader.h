@@ -20,8 +20,8 @@
 #include <fstream>
 #include <dirent.h>
 #ifndef P4PD_CLI
-#include <libcapisa.h>
-#include "libmpuobj.h"
+#include "nic/asic/capri/model/capsim-master/lib/libcapisa/include/libcapisa.h"
+#include "nic/asic/capri/model/capsim-master/lib/libmpuobj/include/libmpuobj.h"
 #endif
 
 /* Definition of maximum number of programs and parameters. 

@@ -2,9 +2,9 @@
 #define __FLOW_SPINE_ENTRY_HPP__
 
 #include <list>
-#include <base.h>
-#include <p4pd_api.hpp>
-#include <p4pd.h>
+#include "nic/include/base.h"
+#include "nic/hal/pd/p4pd_api.hpp"
+#include "nic/gen/iris/include/p4pd.h"
 
 namespace hal {
 namespace pd {

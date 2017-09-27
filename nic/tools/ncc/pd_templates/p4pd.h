@@ -70,7 +70,7 @@
 #define __P4PD${caps_p4prog}_H__
 
 #include <string.h>
-#include <hal_pd_error.hpp>
+#include "nic/include/hal_pd_error.hpp"
 
 //::     tabledict = {}
 //::     tableid = start_table_base

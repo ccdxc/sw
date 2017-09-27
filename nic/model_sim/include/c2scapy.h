@@ -5,7 +5,7 @@
 #ifndef C2SCAPY
 #define C2SCAPY
 
-#include <Python.h>
+#include <python2.7/Python.h>
 #include "LogMsg.h"
 
 using namespace std;

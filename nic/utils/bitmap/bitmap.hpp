@@ -1,8 +1,8 @@
 #ifndef __BITMAP_HPP__
 #define __BITMAP_HPP__
 
-#include <base.h>
-#include <hal_lock.hpp>
+#include "nic/include/base.h"
+#include "nic/include/hal_lock.hpp"
 
 namespace hal {
 namespace utils {

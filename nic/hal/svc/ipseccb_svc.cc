@@ -2,10 +2,10 @@
 // IPSEC Cb service implementation
 //------------------------------------------------------------------------------
 
-#include <base.h>
-#include <trace.hpp>
-#include <ipseccb_svc.hpp>
-#include <ipseccb.hpp>
+#include "nic/include/base.h"
+#include "nic/include/trace.hpp"
+#include "nic/hal/svc/ipseccb_svc.hpp"
+#include "nic/hal/src/ipseccb.hpp"
 
 Status
 IpsecCbServiceImpl::IpsecCbCreate(ServerContext *context,

@@ -1,11 +1,11 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include <base.h>
-#include <p4pd.h>
-#include <oif_list_pd_mgr.hpp>
-#include <hal_state_pd.hpp>
-#include <if_pd.hpp>
-#include <if_pd_utils.hpp>
+#include "nic/include/base.h"
+#include "nic/gen/iris/include/p4pd.h"
+#include "nic/hal/pd/iris/oif_list_pd_mgr.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/if_pd.hpp"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
 
 using namespace hal;
 

@@ -1,12 +1,12 @@
-#include <Python.h>
-#include "scapy_pkt_gen.h"
-#include "cap_env_base.h"
-#include "cpu.h"
+#include <python2.7/Python.h>
+#include "nic/model_sim/include/scapy_pkt_gen.h"
+#include "nic/model_sim/include/cap_env_base.h"
+#include "nic/model_sim/include/cpu.h"
 #include <iomanip>
 #include <zmq.h>
-#include "HBM.h"
-#include "HOST_MEM.h"
-#include "buf_hdr.h"
+#include "nic/model_sim/include/HBM.h"
+#include "nic/model_sim/include/HOST_MEM.h"
+#include "nic/model_sim/include/buf_hdr.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -16,7 +16,7 @@
 #include <vector>
 #include <queue>
 #include <signal.h>
-#include "../../utils/host_mem/params.hpp"
+#include "nic/utils/host_mem/params.hpp"
 
 #define MODEL_ZMQ_BUFF_SIZE             12288
 #ifdef COVERAGE

@@ -1,6 +1,6 @@
-#include <base.h>
-#include "capri_config.hpp"
-#include "lib_model_client.h"
+#include "nic/include/base.h"
+#include "nic/hal/pd/capri/capri_config.hpp"
+#include "nic/model_sim/include/lib_model_client.h"
 
 #include <stdint.h>
 #include <sys/types.h>

@@ -1,6 +1,6 @@
-#include <base.h>
-#include <hal.hpp>
-#include <utils.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/hal/src/utils.hpp"
 
 using types::ApiStatus;
 

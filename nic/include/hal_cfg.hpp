@@ -3,11 +3,11 @@
 #ifndef __HAL_CFG_HPP__
 #define __HAL_CFG_HPP__
 
-#include <base.h>
-#include <list.hpp>
+
+#include "nic/include/base.h"
+#include "nic/utils/list/list.hpp"
 
 using hal::utils::dllist_ctxt_t;
-
 namespace hal {
 
 //------------------------------------------------------------------------------

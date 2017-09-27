@@ -1,15 +1,15 @@
 #ifndef __L2SEGMENT_HPP__
 #define __L2SEGMENT_HPP__
 
-#include <base.h>
-#include <encap.hpp>
-#include <list.hpp>
-#include <ht.hpp>
-#include <utils.hpp>
-#include <tenant.hpp>
-#include <interface.hpp>
-#include <l2segment.pb.h>
-#include <pd.hpp>
+#include "nic/include/base.h"
+#include "nic/include/encap.hpp"
+#include "nic/include/list.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/hal/src/tenant.hpp"
+#include "nic/proto/hal/l2segment.pb.h"
+#include "nic/include/pd.hpp"
+#include "nic/hal/src/utils.hpp"
+#include "nic/hal/src/interface.hpp"
 
 using l2segment::L2SegmentDeleteRequest;
 using l2segment::L2SegmentDeleteResponseMsg;
@@ -20,6 +20,19 @@ using types::L2SegmentType;
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
 using l2segment::L2SegmentKeyHandle;
+
+using l2segment::L2SegmentSpec;
+using l2segment::L2SegmentStatus;
+using l2segment::L2SegmentResponse;
+using l2segment::L2SegmentKeyHandle;
+using l2segment::L2SegmentRequestMsg;
+using l2segment::L2SegmentResponseMsg;
+using l2segment::L2SegmentDeleteRequestMsg;
+using l2segment::L2SegmentDeleteResponseMsg;
+using l2segment::L2SegmentGetRequest;
+using l2segment::L2SegmentGetRequestMsg;
+using l2segment::L2SegmentGetResponse;
+using l2segment::L2SegmentGetResponseMsg;
 
 namespace hal {
 

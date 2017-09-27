@@ -1,8 +1,8 @@
-#include <hal_state_pd.hpp>
-#include <capri_hbm.hpp>
-#include <pd_api.hpp>
-#include <capri_barco_crypto.hpp>
-#include <p4plus_pd_api.h>
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/iris/p4plus_pd_api.h"
+#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
 #define MAX_IPSEC_PAD_SIZE 256
 

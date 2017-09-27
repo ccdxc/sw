@@ -1,17 +1,29 @@
 #ifndef __CPUCB_HPP__
 #define __CPUCB_HPP__
 
-#include <base.h>
-#include <encap.hpp>
-#include <list.hpp>
-#include <ht.hpp>
-#include <cpucb.pb.h>
-#include <pd.hpp>
-#include <hal_state.hpp>
+#include "nic/include/base.h"
+#include "nic/include/encap.hpp"
+#include "nic/include/list.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/proto/hal/cpucb.pb.h"
+#include "nic/include/pd.hpp"
+#include "nic/include/hal_state.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
 
+using cpucb::CpuCbSpec;
+using cpucb::CpuCbStatus;
+using cpucb::CpuCbResponse;
+using cpucb::CpuCbKeyHandle;
+using cpucb::CpuCbRequestMsg;
+using cpucb::CpuCbResponseMsg;
+using cpucb::CpuCbDeleteRequestMsg;
+using cpucb::CpuCbDeleteResponseMsg;
+using cpucb::CpuCbGetRequest;
+using cpucb::CpuCbGetRequestMsg;
+using cpucb::CpuCbGetResponse;
+using cpucb::CpuCbGetResponseMsg;
 namespace hal {
 
 typedef uint32_t cpucb_id_t;

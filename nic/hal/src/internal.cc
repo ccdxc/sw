@@ -1,15 +1,45 @@
-#include <base.h>
-#include <hal.hpp>
-#include <hal_state.hpp>
-#include <internal_svc.hpp>
-#include <internal.hpp>
-#include <pd.hpp>
-#include <pd_api.hpp>
-#include <utils.hpp>
-#include <if_utils.hpp>
-#include <pd/capri/capri_hbm.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_state.hpp"
+//#include <internal_svc.hpp>
+#include "nic/proto/hal/interface.grpc.pb.h"
+#include "nic/hal/src/internal.hpp"
+#include "nic/include/pd.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/src/utils.hpp"
+#include "nic/hal/src/if_utils.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
 
-
+using intf::Interface;
+using intf::LifSpec;
+using intf::LifKeyHandle;
+using intf::LifRequestMsg;
+using intf::LifResponse;
+using intf::LifResponseMsg;
+using intf::LifDeleteRequestMsg;
+using intf::LifDeleteResponseMsg;
+using intf::LifGetRequestMsg;
+using intf::LifGetResponseMsg;
+using intf::InterfaceSpec;
+using intf::InterfaceStatus;
+using intf::InterfaceResponse;
+using intf::InterfaceKeyHandle;
+using intf::InterfaceRequestMsg;
+using intf::InterfaceResponseMsg;
+using intf::InterfaceDeleteRequestMsg;
+using intf::InterfaceDeleteResponseMsg;
+using intf::InterfaceGetRequest;
+using intf::InterfaceGetRequestMsg;
+using intf::InterfaceGetResponse;
+using intf::InterfaceGetResponseMsg;
+using intf::InterfaceL2SegmentRequestMsg;
+using intf::InterfaceL2SegmentSpec;
+using intf::InterfaceL2SegmentResponseMsg;
+using intf::InterfaceL2SegmentResponse;
+using intf::GetQStateRequestMsg;
+using intf::GetQStateResponseMsg;
+using intf::SetQStateRequestMsg;
+using intf::SetQStateResponseMsg;
 int capri_program_to_base_addr(const char *handle,
                                char *prog_name, uint64_t *base_addr);
 int capri_program_label_to_offset(const char *handle,

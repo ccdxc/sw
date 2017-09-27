@@ -1,10 +1,10 @@
-#include <base.h>
-#include <hal.hpp>
-#include <hal_state.hpp>
-#include <descriptor_aol_svc.hpp>
-#include <tenant.hpp>
-#include <pd_api.hpp>
-#include <descriptor_aol.hpp>
+#include "nic/include/base.h"
+#include "nic/hal/hal.hpp"
+#include "nic/include/hal_state.hpp"
+// #include "nic/hal/svc/descriptor_aol_svc.hpp"
+#include "nic/hal/src/tenant.hpp"
+#include "nic/include/pd_api.hpp"
+#include "nic/hal/src/descriptor_aol.hpp"
 
 
 

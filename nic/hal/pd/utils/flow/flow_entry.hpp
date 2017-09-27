@@ -1,7 +1,7 @@
 #ifndef __FLOW_ENTRY_HPP__
 #define __FLOW_ENTRY_HPP__
 
-#include <base.h>
+#include "nic/include/base.h"
 
 namespace hal {
 namespace pd {

@@ -1,8 +1,8 @@
 #include <cstring>
 
-#include "tcam_entry.hpp"
-#include "tcam.hpp"
-#include "p4pd_api.hpp"
+#include "nic/hal/pd/utils/tcam/tcam_entry.hpp"
+#include "nic/hal/pd/utils/tcam/tcam.hpp"
+#include "nic/hal/pd/p4pd_api.hpp"
 
 using hal::pd::utils::TcamEntry;
 using hal::pd::utils::Tcam;

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <assert.h>
-#include "buf_hdr.h"
+#include "nic/model_sim/include/buf_hdr.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -12,7 +12,7 @@
 #include <string.h>
 #include <iostream>
 #include <errno.h>
-#include "lib_model_client.h"
+#include "nic/model_sim/include/lib_model_client.h"
 #include <stdint.h>
 #include <mutex>
 

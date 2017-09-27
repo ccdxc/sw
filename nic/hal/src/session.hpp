@@ -1,21 +1,40 @@
 #ifndef __SESSION_HPP__
 #define __SESSION_HPP__
 
-#include <base.h>
-#include <list.hpp>
-#include <ht.hpp>
-#include <ip.h>
-#include <session_svc.hpp>
-#include <interface.hpp>
-#include <l2segment.hpp>
-#include <endpoint.hpp>
-#include <session.pb.h>
-#include <pd.hpp>
-#include <p4pd.h>
-#include <qos.hpp>
+#include "nic/include/base.h"
+#include "nic/include/list.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/include/ip.h"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/l2segment.hpp"
+#include "nic/hal/src/endpoint.hpp"
+#include "nic/proto/hal/session.pb.h"
+#include "nic/include/pd.hpp"
+#include "nic/gen/iris/include/p4pd.h"
+#include "nic/hal/src/qos.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
+
+using session::FlowKeyL2;
+using session::FlowKeyV4;
+using session::FlowKeyV6;
+using session::FlowKey;
+using session::FlowData;
+using session::FlowInfo;
+using session::FlowSpec;
+using session::ConnTrackInfo;
+using session::SessionSpec;
+using session::SessionStatus;
+using session::SessionResponse;
+using session::SessionRequestMsg;
+using session::SessionResponseMsg;
+using session::SessionDeleteRequestMsg;
+using session::SessionDeleteResponseMsg;
+using session::SessionGetRequest;
+using session::SessionGetRequestMsg;
+using session::SessionGetResponse;
+using session::SessionGetResponseMsg;
 
 namespace hal {
 

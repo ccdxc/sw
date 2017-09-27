@@ -1,5 +1,5 @@
-#include <proxy.hpp>
-#include "proxy_plugin.hpp"
+#include "nic/hal/src/proxy.hpp"
+#include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 
 namespace hal {
 namespace proxy {
