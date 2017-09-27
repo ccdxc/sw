@@ -161,9 +161,8 @@ write:
     phvwr.c5    p.cqwqe.imm_data_vld, 1
     // IMM & LAST
     phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
-    // TODO: waiting on NCC fix to enable this statement
-    // IMM & ONLY
-    //phvwr.c7    p.cqwqe.imm_data, CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA
+    CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA(r4)
+    phvwr.c7    p.cqwqe.imm_data, r4
     
     CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
 
