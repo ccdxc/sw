@@ -60,6 +60,9 @@ def TestCaseSetup(tc):
 
 def TestCaseVerify(tc):
 
+    num_pkts = 1
+    if hasattr(tc.module.args, 'num_pkts'):
+        num_pkts = int(tc.module.args.num_pkts)
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     tcbid = "TcpCb%04d" % id
     # 1. Verify rcv_nxt got updated
@@ -68,7 +71,7 @@ def TestCaseVerify(tc):
     print("rcv_nxt value pre-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
     tcb_cur.GetObjValPd()
     print("rcv_nxt value post-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
-    if tcb_cur.rcv_nxt != 0x1ababb0e:
+    if tcb_cur.rcv_nxt != 0x1abababa + num_pkts * 84: # fix this hack later
         print("rcv_nxt not as expected")
         return False
     print("rcv_nxt as expected")
@@ -97,7 +100,7 @@ def TestCaseVerify(tc):
     serq_cur.Configure()
 
     # 4. Verify PI for RNMDR got incremented by 1 
-    if (rnmdr_cur.pi != rnmdr.pi+1):
+    if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
@@ -122,31 +125,31 @@ def TestCaseVerify(tc):
     print("desc_alloced = %d:" % tcb_cur.desc_alloced)
 
     #7 Verify pkt stats
-    if tcb_cur.pkts_rcvd != tcpcb.pkts_rcvd + 1:
+    if tcb_cur.pkts_rcvd != tcpcb.pkts_rcvd + num_pkts:
         print("pkt rx stats not as expected, %d vs received %d" %
-                (tcpcb.pkts_rcvd + 1, tcb_cur.pkts_rcvd))
+                (tcpcb.pkts_rcvd + num_pkts, tcb_cur.pkts_rcvd))
         return False
     print("%d %d" %(tcb_cur.bytes_rcvd, tcpcb.bytes_rcvd))
-    if tcb_cur.bytes_rcvd != tcpcb.bytes_rcvd + 84:
+    if tcb_cur.bytes_rcvd != tcpcb.bytes_rcvd + num_pkts * 84:
         print("Warning! pkt rx byte stats not as expected")
         return False
 
     #8 Verify page stats
-    if tcb_cur.pages_alloced != tcpcb.pages_alloced + 1:
+    if tcb_cur.pages_alloced != tcpcb.pages_alloced + num_pkts:
         print("pages alloced stats not as expected, %d vs received %d" %
-                (tcpcb.pages_alloced + 1, tcb_cur.pages_alloced))
+                (tcpcb.pages_alloced + num_pkts, tcb_cur.pages_alloced))
         return False
     
     #9 Verify descr stats
-    if tcb_cur.desc_alloced != tcpcb.desc_alloced + 1:
+    if tcb_cur.desc_alloced != tcpcb.desc_alloced + num_pkts:
         print("desc alloced stats not as expected, %d vs received %d" %
-                (tcpcb.desc_alloced + 1, tcb_cur.desc_alloced))
+                (tcpcb.desc_alloced + num_pkts, tcb_cur.desc_alloced))
         return False
 
     # 10. Verify phv2mem counter
-    if (tcb_cur.debug_num_phv_to_mem != tcpcb.debug_num_phv_to_mem+4):
+    if (tcb_cur.debug_num_phv_to_mem != tcpcb.debug_num_phv_to_mem+4*num_pkts):
         print("phv2mem not as expected, %d vs received %d" %
-                (tcpcb.debug_num_phv_to_mem + 4, tcb_cur.debug_num_phv_to_mem))
+                (tcpcb.debug_num_phv_to_mem + 4*num_pkts, tcb_cur.debug_num_phv_to_mem))
         return False
 
     return True
