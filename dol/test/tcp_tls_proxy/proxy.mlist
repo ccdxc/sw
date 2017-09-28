@@ -1,0 +1,261 @@
+# Feature Test Modules List
+#
+feature:
+    id          : proxy
+    sub         : proxy
+    package     : test.tcp_tls_proxy
+    module      : None
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IN_ORDER_PKT_NOT_TO_SERQ_V4
+        spec    : one_pkt.testspec
+        module  : in_order
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : IN_ORDER_FLOWS_NOT_TO_SERQ_V4
+        spec    : one_pkt.testspec
+        module  : in_order
+        args    :
+            maxflows: 2
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : IN_ORDER_PKT_NOT_TO_SERQ_V6
+        spec    : one_pkt.testspec
+        module  : in_order
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV6
+
+    - module:
+        name    : IN_ORDER_FLOWS_NOT_TO_SERQ_V6
+        spec    : one_pkt.testspec
+        module  : in_order
+        args    :
+            maxflows: 2
+        iterate :
+            - flow: filter://type=IPV6
+
+    - module:
+        name    : IN_ORDER_PKT_NOT_TO_SERQ_VXLAN
+        spec    : one_pkt_vxlan.testspec
+        module  : in_order
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : IN_ORDER_FLOWS_NOT_TO_SERQ_VXLAN
+        spec    : one_pkt_vxlan.testspec
+        module  : in_order
+        args    :
+            maxflows: 2
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_SERQ_V4
+        spec    : one_pkt.testspec 
+        module  : pkt_to_serq
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : FLOWS_TO_SERQ_V4
+        spec    : one_pkt.testspec
+        module  : pkt_to_serq
+        args    :
+            maxflows: 2
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_SERQ_V6
+        spec    : one_pkt.testspec
+        module  : pkt_to_serq
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV6
+
+    - module:
+        name    : MULTIPLE_PKTS_TO_SERQ
+        spec    : multiple_pkts_to_serq.testspec
+        module  : pkt_to_serq
+        args    :
+            maxflows : 1
+            num_pkts : 2
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_SERQ_ATOMIC_STATS
+        spec    : one_pkt.testspec
+        module  : pkt_to_serq
+        args    :
+            maxflows: 2
+            atomic_stats : 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_BRQ
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : pkt_to_brq
+        spec    : one_pkt.testspec
+        ignore  : False
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : FLOWS_TO_BRQ
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : pkt_to_brq
+        spec    : one_pkt.testspec
+        ignore  : False
+        args    :
+            maxflows: 2
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_BSQ_ENCRYPT
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : pkt_to_bsq_encrypt
+        spec    : one_pkt.testspec
+        ignore  : False
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_BSQ_DECRYPT
+        enable  : False
+        module  : pkt_to_bsq_decrypt
+        spec    : one_tls_aes128_gcm_record_pkt.testspec
+        ignore  : True
+        args    :
+            maxflows: 1
+        iterate  :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PROXY_UPLINK_TO_UPLINK_BYPASS_BARCO
+        spec    : uplink_to_uplink.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            same_flow : 1
+
+    - module:
+        name    : PKT_HFLOW_TO_NFLOW_PROXY_BYPASS_BARCO
+        spec    : uplink_to_uplink.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            same_flow : 0
+
+    - module:
+        name    : PKT_HFLOW_TO_NFLOW_PROXY_BYPASS_BARCO_SEND_ACK
+        spec    : uplink_to_uplink.testspec
+        module  : pkt_to_p4
+        enable  : False
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            same_flow : 0
+            send_ack : 1
+
+    - module:
+        name    : PROXY_UPLINK_TO_HOST_BYPASS_BARCO
+        spec    : uplink_to_host.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            same_flow : 1
+            flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : PROXY_HOST_TO_UPLINK_BYPASS_BARCO
+        spec    : host_to_uplink.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            same_flow : 1
+            flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : PKT_TO_SESQ
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : pkt_to_sesq
+        spec    : one_pkt.testspec
+        ignore  : False
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+    - module:
+        name    : TLS_HANDSHAKE_RX
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : tls_handshake_rx
+        spec    : tls_handshake.testspec
+        ignore  : False
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_ARQ
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : pkt_to_arq
+        spec    : pkt_to_arq.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : PKT_TO_ARQ_TO_UPLINK
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : pkt_to_arq_to_uplink
+        spec    : pkt_to_arq_to_uplink.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : SYN_ACK_TO_ARQ
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : syn_ack_to_arq
+        spec    : one_pkt.testspec
+        ignore  : False
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+

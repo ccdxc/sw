@@ -6,7 +6,7 @@ targets:
   norm: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo norm --feature normalization" ]
   eth:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo eth --feature eth" ]
   acl:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo acl --feature acl" ]
-  proxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo proxy --feature tcp_proxy" ]
+  proxy:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo proxy --feature proxy" ]
   networking:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo up2up --feature networking" ]
   vxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo vxlan --feature vxlan" ]
   ipsg:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo eth --feature ipsg" ]
