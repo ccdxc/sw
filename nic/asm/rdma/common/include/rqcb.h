@@ -14,6 +14,9 @@
 #define RSQ_P_INDEX d.{ring1.pindex}.hx
 #define RSQ_C_INDEX d.{ring1.cindex}.hx
 
+#define ACK_NAK_P_INDEX d.{ring2.pindex}.hx
+#define ACK_NAK_C_INDEX d.{ring2.cindex}.hx
+
 struct rqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
     struct capri_intrinsic_ring_t ring0;

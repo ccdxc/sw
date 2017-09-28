@@ -113,5 +113,17 @@ struct resp_tx_rsqptseg_process_k_t {
     struct phv_global_common_t global;
 };
 
+struct resp_tx_rqcb_to_ack_info_t {
+    //dst_qp: 24;
+    serv_type: 8;
+    new_c_index: 16;
+};
+
+struct resp_tx_ack_process_k_t {
+    struct capri_intrinsic_raw_k_t intrinsic;
+    struct resp_tx_rqcb_to_ack_info_t args;
+    struct resp_tx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
 
 #endif //__RESP_TX_H
