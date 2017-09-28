@@ -201,6 +201,7 @@ uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
 
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 1;
+    om_tmoport.egress_mirror_en = 1;
     om_tmoport.egress_port1 = tm_oport;
     om_tmoport.dst_lif = pd_upif->hw_lif_id;
 

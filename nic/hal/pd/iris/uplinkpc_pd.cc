@@ -246,6 +246,7 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif)
 
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 0;
+    om_tmoport.egress_mirror_en = 1;
     // Walk the member ports and set the lif for each uplink
     dllist_for_each(lnode, &(pi_if->mbr_if_list_head)) {
         pi_up_if = dllist_entry(lnode, if_t, pc_lentry); 

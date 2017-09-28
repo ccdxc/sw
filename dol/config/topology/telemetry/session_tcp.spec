@@ -17,6 +17,10 @@ entries:
                     - ref://store/objects/id=SpanSession0001
                     - ref://store/objects/id=SpanSession0002
                     - ref://store/objects/id=SpanSession0003
+                egress:
+                    - ref://store/objects/id=SpanSession0004
+                    - ref://store/objects/id=SpanSession0005
+                    - ref://store/objects/id=SpanSession0006
         initiator: 
             port : const/41000
             span :
@@ -24,4 +28,8 @@ entries:
                     - ref://store/objects/id=SpanSession0001
                     - ref://store/objects/id=SpanSession0002
                     - ref://store/objects/id=SpanSession0003
+                egress:
+                    - ref://store/objects/id=SpanSession0004
+                    - ref://store/objects/id=SpanSession0005
+                    - ref://store/objects/id=SpanSession0006
 

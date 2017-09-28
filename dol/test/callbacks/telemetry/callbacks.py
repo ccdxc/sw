@@ -6,7 +6,7 @@ class spanCbData:
         "SPAN_LOCAL_INGRESS_UPLINK": [
             ("SPAN_PKT1", "ingress", "session1")
             ],
-        "SPAN_LOCAL_IGRESS_PC": [
+        "SPAN_LOCAL_INGRESS_PC": [
             ("SPAN_PKT1", "ingress", "session3")
             ],
         "SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK": [
@@ -20,7 +20,7 @@ class spanCbData:
         "RSPAN_LOCAL_INGRESS_UPLINK": [
             ("RSPAN_PKT1", "ingress", "session1")
             ],
-        "RSPAN_LOCAL_IGRESS_PC": [
+        "RSPAN_LOCAL_INGRESS_PC": [
             ("RSPAN_PKT1", "ingress", "session3")
             ],
         "RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK": [
@@ -35,13 +35,61 @@ class spanCbData:
             ("SPAN_PKT1", "ingress", "session1"),
             ("RSPAN_PKT1", "ingress", "session2")
             ],
-        "SPAN_RSPAN_LOCAL_IGRESS_PC": [
+        "SPAN_RSPAN_LOCAL_INGRESS_PC": [
             ("SPAN_PKT1", "ingress", "session1"),
             ("RSPAN_PKT1", "ingress", "session3")
             ],
-        "RSPAN_SPAN_LOCAL_IGRESS_PC": [
+        "RSPAN_SPAN_LOCAL_INGRESS_PC": [
             ("RSPAN_PKT1", "ingress", "session1"),
             ("SPAN_PKT1", "ingress", "session3")
+            ],
+        "SPAN_LOCAL_EGRESS_UPLINK": [
+            ("SPAN_PKT1", "egress", "session1"),
+            ],
+        "SPAN_LOCAL_EGRESS_PC": [
+            ("SPAN_PKT1", "egress", "session3"),
+            ],
+        "SPAN_LOCAL_EGRESS_MULTIPLE_UPLINK": [
+            ("SPAN_PKT1", "egress", "session1"),
+            ("SPAN_PKT1", "egress", "session2")
+            ],
+        "SPAN_LOCAL_EGRESS_MULTIPLE_UPLINK_PC": [
+            ("SPAN_PKT1", "egress", "session1"),
+            ("SPAN_PKT1", "egress", "session3")
+            ],
+        "RSPAN_LOCAL_EGRESS_UPLINK": [
+            ("RSPAN_PKT1", "egress", "session1")
+            ],
+        "RSPAN_LOCAL_EGRESS_PC": [
+            ("RSPAN_PKT1", "egress", "session3")
+            ],
+        "RSPAN_LOCAL_EGRESS_MULTIPLE_UPLINK": [
+            ("RSPAN_PKT1", "egress", "session1"),
+            ("RSPAN_PKT1", "egress", "session2")
+            ],
+        "RSPAN_LOCAL_EGRESS_MULTIPLE_UPLINK_PC": [
+            ("RSPAN_PKT1", "egress", "session1"),
+            ("RSPAN_PKT1", "egress", "session3")
+            ],
+        "SPAN_RSPAN_LOCAL_EGRESS_UPLINK": [
+            ("SPAN_PKT1", "egress", "session1"),
+            ("RSPAN_PKT1", "egress", "session2")
+            ],
+        "SPAN_RSPAN_LOCAL_EGRESS_PC": [
+            ("SPAN_PKT1", "egress", "session1"),
+            ("RSPAN_PKT1", "egress", "session3")
+            ],
+        "RSPAN_SPAN_LOCAL_EGRESS_PC": [
+            ("RSPAN_PKT1", "egress", "session1"),
+            ("SPAN_PKT1", "egress", "session3")
+            ],
+        "RSPAN_SPAN_LOCAL_INGRESS_EGRESS_UPLINK_PC": [
+            ("RSPAN_PKT1", "ingress", "session1"),
+            ("SPAN_PKT1", "egress", "session3")
+            ],
+        "SPAN_RSPAN_LOCAL_INGRESS_EGRESS_UPLINK_PC": [
+            ("SPAN_PKT1", "ingress", "session1"),
+            ("RSPAN_PKT1", "egress", "session3")
             ]
         }
     rspanExpPackets = {}
@@ -75,3 +123,4 @@ def GetExpectedPort(testcase, args):
 
 def GetRspanVlan(testcase, packet):
     return testcase.config.ingress_mirror.__dict__["session2"].segment.vlan_id
+

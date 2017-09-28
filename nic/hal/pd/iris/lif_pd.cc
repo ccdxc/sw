@@ -319,6 +319,7 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif)
 
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 1;
+    om_tmoport.egress_mirror_en = 1;
     om_tmoport.egress_port1 = tm_oport;
     om_tmoport.p4plus_app_id = p4plus_app_id;
     om_tmoport.rdma_enabled = lif_get_enable_rdma((lif_t *)pd_lif->pi_lif);

@@ -36,6 +36,10 @@ entries:
                     - ref://store/objects/id=SpanSession0001
                     - ref://store/objects/id=SpanSession0002
                     - ref://store/objects/id=SpanSession0003
+                egress:
+                    - ref://store/objects/id=SpanSession0004
+                    - ref://store/objects/id=SpanSession0005
+                    - ref://store/objects/id=SpanSession0006
         responder:
             type: const/129   # Echo Reply
             code: const/0
@@ -45,6 +49,10 @@ entries:
                     - ref://store/objects/id=SpanSession0001
                     - ref://store/objects/id=SpanSession0002
                     - ref://store/objects/id=SpanSession0003
+                egress:
+                    - ref://store/objects/id=SpanSession0004
+                    - ref://store/objects/id=SpanSession0005
+                    - ref://store/objects/id=SpanSession0006
 
     - entry:
         label: gft_drop

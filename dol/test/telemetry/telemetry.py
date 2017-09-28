@@ -11,7 +11,7 @@ class spanSessionData:
             "SPAN_LOCAL_INGRESS_UPLINK": [
                 (1, "LOCAL", "Uplink1")
                 ],
-            "SPAN_LOCAL_IGRESS_PC": [
+            "SPAN_LOCAL_INGRESS_PC": [
                 (3, "LOCAL", "UplinkPc1")
                 ],
             "SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK": [
@@ -25,7 +25,7 @@ class spanSessionData:
             "RSPAN_LOCAL_INGRESS_UPLINK": [
                 (1, "RSPAN", "Uplink1")
                 ],
-            "RSPAN_LOCAL_IGRESS_PC": [
+            "RSPAN_LOCAL_INGRESS_PC": [
                 (3, "RSPAN", "UplinkPc1")
                 ],
             "RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK": [
@@ -40,14 +40,63 @@ class spanSessionData:
                 (1, "LOCAL", "Uplink1"),
                 (2, "RSPAN", "Uplink2")
                 ],
-            "SPAN_RSPAN_LOCAL_IGRESS_PC": [
+            "SPAN_RSPAN_LOCAL_INGRESS_PC": [
                 (1, "LOCAL", "Uplink1"),
                 (3, "RSPAN", "UplinkPc1")
                 ],
-            "RSPAN_SPAN_LOCAL_IGRESS_PC": [
+            "RSPAN_SPAN_LOCAL_INGRESS_PC": [
                 (1, "RSPAN", "Uplink1"),
                 (3, "LOCAL", "UplinkPc1")
+                ],
+            "SPAN_LOCAL_EGRESS_UPLINK": [
+                (1, "LOCAL", "Uplink1")
+                ],
+            "SPAN_LOCAL_EGRESS_PC": [
+                (3, "LOCAL", "UplinkPc1")
+                ],
+            "SPAN_LOCAL_EGRESS_MULTIPLE_UPLINK": [
+                (1, "LOCAL", "Uplink1"),
+                (2, "LOCAL", "Uplink2")
+                ],
+            "SPAN_LOCAL_EGRESS_MULTIPLE_UPLINK_PC": [
+                (1, "LOCAL", "Uplink1"),
+                (3, "LOCAL", "UplinkPc1")
+                ],
+            "RSPAN_LOCAL_EGRESS_UPLINK": [
+                (1, "RSPAN", "Uplink1")
+                ],
+            "RSPAN_LOCAL_EGRESS_PC": [
+                (3, "RSPAN", "UplinkPc1")
+                ],
+            "RSPAN_LOCAL_EGRESS_MULTIPLE_UPLINK": [
+                (1, "RSPAN", "Uplink1"),
+                (2, "RSPAN", "Uplink2")
+                ],
+            "RSPAN_LOCAL_EGRESS_MULTIPLE_UPLINK_PC": [
+                (1, "RSPAN", "Uplink1"),
+                (3, "RSPAN", "UplinkPc1")
+                ],
+            "SPAN_RSPAN_LOCAL_EGRESS_UPLINK": [
+                (1, "LOCAL", "Uplink1"),
+                (2, "RSPAN", "Uplink2")
+                ],
+            "SPAN_RSPAN_LOCAL_EGRESS_PC": [
+                (1, "LOCAL", "Uplink1"),
+                (3, "RSPAN", "UplinkPc1")
+                ],
+            "RSPAN_SPAN_LOCAL_EGRESS_PC": [
+                (1, "RSPAN", "Uplink1"),
+                (3, "LOCAL", "UplinkPc1")
+                ],
+            "RSPAN_SPAN_LOCAL_INGRESS_EGRESS_UPLINK_PC": [
+                (1, "RSPAN", "Uplink1"),
+                (3, "LOCAL", "UplinkPc1")
+                ],
+            "SPAN_RSPAN_LOCAL_INGRESS_EGRESS_UPLINK_PC": [
+                (1, "LOCAL", "Uplink1"),
+                (3, "RSPAN", "UplinkPc1")
                 ]
+
     }
 
     @staticmethod
@@ -63,7 +112,7 @@ def clearAllSessions():
 
 def Setup(infra, module):
     iterelem = module.iterator.Get()
-   #pdb.set_trace()
+    #pdb.set_trace()
     clearAllSessions()
     ssns = spanSessionData.getSessions(module)
     for (id, spantype, intf) in ssns:
