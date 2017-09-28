@@ -1,0 +1,68 @@
+# Feature Test Modules List
+feature:
+    id      : fte
+    sub     : eth_tx_vxlan
+    package : test.eth
+    module  : eth
+    enable  : True
+    ignore  : False
+    spec    : tx.testspec
+    args    :
+        maxflows: 4
+
+modules:
+    - module:
+        name    : IPV4
+        spec    : tx_vxlan.testspec
+        iterate:
+            - flow: filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
+            - flow: filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
+            - flow: filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
+
+    - module:
+        name    : IPV6
+        spec    : tx_vxlan.testspec
+        iterate:
+            - flow: filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
+            - flow: filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
+            - flow: filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
+
+    - module:
+        name    : ARP
+        spec    : tx_vxlan_arp.testspec
+        iterate :
+            - type: ARP_REQ_UC
+              flow: filter://direction=IFLOW
+            - type: ARP_RESP
+              flow: filter://direction=IFLOW
+
+    - module:
+        name    : RARP
+        spec    : tx_vxlan_arp.testspec
+        iterate :
+            - type: RARP_REQ_UC
+              flow: filter://direction=IFLOW
+            - type: RARP_RESP
+              flow: filter://direction=IFLOW
+
+    - module:
+        name    : NONIP
+        spec    : tx_vxlan_nonip.testspec
+        iterate :
+            - flow: filter://label=FTE,direction=IFLOW
+
+    - module:
+        name    : L3UC_IPV4
+        spec    : tx_vxlan_l3.testspec
+        iterate:
+            - flow: filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
+            - flow: filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
+            - flow: filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
+
+    - module:
+        name    : L3UC_IPV6
+        spec    : tx_vxlan_l3.testspec
+        iterate:
+            - flow: filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
+            - flow: filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
+            - flow: filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
