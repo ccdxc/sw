@@ -13,6 +13,7 @@ LCXXFLAGS = \
 SOURCES = \
 	proxy_plugin.cc \
 	proxy_tcp.cc \
+	proxy_tls.cc \
 	$(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

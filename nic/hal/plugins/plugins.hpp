@@ -43,6 +43,23 @@ inline hal_ret_t init_plugins() {
     register_pipeline("flow-miss", fte::FLOW_MISS_LIFQ,
                       flow_miss_outbound, sizeof(flow_miss_outbound)/sizeof(fte::feature_id_t),
                       flow_miss_inbound, sizeof(flow_miss_inbound)/sizeof(fte::feature_id_t));
+    // TCP Proxy Pipeline
+    fte::feature_id_t tcp_proxy_outbound[] = {
+    	fte::FTE_FEATURE_TCP_PROXY,
+    };
+
+    register_pipeline("tcp-proxy", fte::TCP_PROXY_LIFQ,
+    				  tcp_proxy_outbound, sizeof(tcp_proxy_outbound)/sizeof(fte::feature_id_t),
+					  {}, 0, {0x7FF, 0, 0});
+
+    // TLS Proxy Pipeline
+    fte::feature_id_t tls_proxy_outbound[] = {
+    	fte::FTE_FEATURE_TLS_PROXY,
+    };
+
+    register_pipeline("tls-proxy", fte::TLS_PROXY_LIFQ,
+        				  tls_proxy_outbound, sizeof(tls_proxy_outbound)/sizeof(fte::feature_id_t),
+						  {}, 0, {0x7FF, 0, 0});
 
     return HAL_RET_OK;
 }

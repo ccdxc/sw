@@ -83,8 +83,8 @@ cpupkt_ctxt_init(cpupkt_ctxt_t* ctxt)
 }
 
 cpupkt_ctxt_t* cpupkt_ctxt_alloc_init(void);
-hal_ret_t cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type);
-hal_ret_t cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type);
+hal_ret_t cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queueid=0);
+hal_ret_t cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queueid=0);
 
 // receive
 hal_ret_t cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,

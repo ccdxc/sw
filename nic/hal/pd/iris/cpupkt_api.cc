@@ -22,7 +22,7 @@ bool is_cpu_rx_queue(types::WRingType type)
 
 bool is_cpu_tx_queue(types::WRingType type)
 {
-    return (type == types::WRING_TYPE_ASQ);
+    return ((type == types::WRING_TYPE_ASQ) || (type == types::WRING_TYPE_ASESQ));
 }
 
 
@@ -123,7 +123,7 @@ cpupkt_ctxt_alloc_init(void)
 }
 
 hal_ret_t 
-cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type)
+cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queueid)
 {
     hal_ret_t   ret = HAL_RET_OK;
     
@@ -144,7 +144,7 @@ cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type)
     }
     
     wring_hw_id_t base_addr = 0;
-    ret = wring_pd_get_base_addr(type, 0, &base_addr);
+    ret = wring_pd_get_base_addr(type, queueid, &base_addr);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get base addr for queue: {}: ret: {}", type, ret); 
         return ret;
@@ -163,7 +163,7 @@ cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type)
 
 
 hal_ret_t 
-cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type)
+cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queueid)
 {
     hal_ret_t   ret = HAL_RET_OK;
     
@@ -191,7 +191,7 @@ cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type)
     }
  
     wring_hw_id_t base_addr = 0;
-    ret = wring_pd_get_base_addr(type, 0, &base_addr);
+    ret = wring_pd_get_base_addr(type, queueid, &base_addr);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get base addr for queue: {}: ret: {}", type, ret); 
         return ret;
