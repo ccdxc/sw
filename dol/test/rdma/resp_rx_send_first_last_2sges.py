@@ -11,10 +11,17 @@ def Teardown(infra, module):
 def TestCaseSetup(tc):
     tc.info("RDMA TestCaseSetup() Implementation.")
     rs = tc.config.rdmasession
+
+    # Read RQ pre state
     rs.lqp.rq.qstate.Read()
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
     tc.pvtdata.send_first_psn = tc.pvtdata.rq_pre_qstate.e_psn
     tc.pvtdata.send_last_psn = tc.pvtdata.rq_pre_qstate.e_psn + 1
+
+    # Read CQ pre state
+    rs.lqp.rq_cq.qstate.Read()
+    tc.pvtdata.rq_cq_pre_qstate = rs.lqp.rq_cq.qstate.data
+
     return
 
 def TestCaseTrigger(tc):
@@ -28,6 +35,7 @@ def TestCaseVerify(tc):
     ring0_mask = (rs.lqp.num_rq_wqes - 1)
     tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
+    ############     RQ VALIDATIONS #################
     # verify that e_psn is incremented by 2
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 2):
         return False
@@ -46,6 +54,10 @@ def TestCaseVerify(tc):
 
     # verify that busy is 0
     if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'busy', 0):
+        return False
+
+    ############     CQ VALIDATIONS #################
+    if not ValidateRespRxCQChecks(tc):
         return False
 
     return True

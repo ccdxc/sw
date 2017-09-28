@@ -23,3 +23,21 @@ def VerifyFieldAbsolute(tc, state, field_name, exp_val):
     cmp = (val == exp_val)
     tc.info('    Match: %s ' %cmp)
     return cmp
+
+############     CQ VALIDATIONS #################
+def ValidateRespRxCQChecks(tc):
+    rs = tc.config.rdmasession
+    rs.lqp.rq_cq.qstate.Read()
+    tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
+    # verify that p_index is incremented by 1, as cqwqe is posted
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'p_index0', 1):
+        return False
+
+    # verify that color bit in CQWQE and CQCB are same
+    #tc.info('MURTY: Color from Exp CQ Descriptor: %d' % tc.descriptors.Get('EXP_CQ_DESC').color)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_cq_post_qstate, 'color', tc.descriptors.Get('EXP_CQ_DESC').color):
+        return False
+
+    return True
+
+

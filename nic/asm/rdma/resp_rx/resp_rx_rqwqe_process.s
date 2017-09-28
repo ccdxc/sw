@@ -76,7 +76,11 @@ resp_rx_rqwqe_process:
     
     // rqcb1_p->wrid = wqe_p->wrid
     //TODO: make sure wrid is at byte boundary so that below divison works
-    add         r6, r7, BYTE_OFFSETOF(rqcb1_t, wrid)
+    // wrid address needs some work as offset does not directly gives. 
+    // Subtract offset and size of variable(8) from 64 to get to its address
+    // which is equivalent to subtracting offset from 56 (64-8)
+    add         r7, r7, 56
+    sub         r6, r7, BYTE_OFFSETOF(rqcb1_t, wrid)
     //TODO: change to DMA
     memwr.d.!c1 r6, d.wrid
 

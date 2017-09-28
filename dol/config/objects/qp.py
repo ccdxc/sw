@@ -74,8 +74,10 @@ class QpObject(base.ConfigObjectBase):
                 assert(0)
 
             # for now map both sq/rq cq to be same
-            self.sq_cq = pd.ep.intf.lif.GetQ('RDMA_CQ', self.id)
-            self.rq_cq = pd.ep.intf.lif.GetQ('RDMA_CQ', self.id)
+            #TODO: Until Yogesh's fix comes in for Unaligned write back, just allocate CQIDs as even number
+            #revert '* 2' 
+            self.sq_cq = pd.ep.intf.lif.GetQ('RDMA_CQ', self.id * 2)
+            self.rq_cq = pd.ep.intf.lif.GetQ('RDMA_CQ', self.id * 2)
             if (self.sq_cq is None or self.rq_cq is None):
                 assert(0)
     

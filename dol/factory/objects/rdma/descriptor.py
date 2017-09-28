@@ -412,9 +412,9 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
     def __eq__(self, other):
         cfglogger.info("__eq__ operator invoked on cq descriptor..")
 
-        cfglogger.info('self:\n')
+        cfglogger.info('self(expected):\n')
         self.Show()
-        cfglogger.info('other:\n')
+        cfglogger.info('other(actual):\n')
         other.Show()
 
         return self.desc == other.desc

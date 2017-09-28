@@ -73,8 +73,11 @@ class LifObject(objects.FrameworkObject):
     def GetQpid(self):
         return self.qpid_allocator.get()
 
+    #TODO: Until Yogesh's fix comes in for Unaligned write back, just allocate CQIDs as even number
     def GetCqid(self):
-        return self.cqid_allocator.get()
+        cqid = self.cqid_allocator.get()
+        self.cqid_allocator.get()
+        return cqid
 
     def GetPd(self):
         return self.pd_allocator.get()

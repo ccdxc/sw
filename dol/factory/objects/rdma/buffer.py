@@ -74,6 +74,11 @@ class RdmaBufferObject(base.FactoryObjectBase):
         print('Actual: other_data: [size: %d] %s' % (self.size, bytes(other.data[:self.size])))
         cmp = bytes(self.data) == bytes(other.data[:self.size])
         cfglogger.info("comparison: %s" %cmp) 
+        #cfglogger.info("Compare data byte by byte:") 
+        #for i in range(self.size):
+        #    print ('[%d] %d %d %d : 0x%x 0x%x' % (i, (self.data[i] == other.data[i]),
+        #                                              self.data[i], other.data[i],
+        #                                              self.data[i], other.data[i])) 
         return cmp
 
     def IsPacket(self):

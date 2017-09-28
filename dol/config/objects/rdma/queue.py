@@ -255,9 +255,19 @@ class RdmaQstateObject(object):
         self.set_pindex(ring, ((self.get_pindex(ring) + 1) & (ring_size - 1)))
         self.Write()
 
+    def incr_cindex(self, ring):
+        assert(ring < 7)
+        self.set_cindex(ring, self.get_cindex(ring) + 1)
+        self.Write()
+
     def set_pindex(self, ring, value):
         assert(ring < 7)
         setattr(self.data, 'p_index%d' % ring, value)
+        self.Write()
+
+    def set_cindex(self, ring, value):
+        assert(ring < 7)
+        setattr(self.data, 'c_index%d' % ring, value)
         self.Write()
 
     def set_ring_base(self, value):
