@@ -17,6 +17,7 @@ BaseTopoExcludeFeatureList = [
     'vxlan',
     'ipsg',
     'firewall',
+    'proxy',
 
 ]
 

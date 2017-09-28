@@ -20,15 +20,21 @@ uplink:
 uplinkpc: None
 acls: None
 tenants:
+    -   spec    : ref://store/specs/id=TENANT_INFRA_PROXY
+        count   : 1
+        lifns   : range/101/110
     -   spec    : ref://store/specs/id=TENANT_PROXY
         count   : 1
-        lifns   : range/101/128
+        lifns   : range/111/120
+    -   spec    : ref://store/specs/id=TENANT_VXLAN_PROXY
+        count   : 1
+        lifns   : range/121/130
 
 cpu:
     - entry:
         id      : Cpu1
         lif_id  : 1003
 
-security_profiles: ref://store/specs/id=SECURITY_PROFILES_DEFAULT
+security_profiles: ref://store/specs/id=SECURITY_PROFILES_PROXY
 proxy: True
 ipsec: True

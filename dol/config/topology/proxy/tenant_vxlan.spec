@@ -1,22 +1,20 @@
 # Configuration Template.
 meta:
-    id: TENANT_PROXY
+    id: TENANT_VXLAN_PROXY
 
 type    : tenant
-overlay : vlan
+overlay : vxlan
 
 segments:
-    - spec  : ref://store/specs/id=SEGMENT_NATIVE_PROXY
-      count : 1
-    - spec  : ref://store/specs/id=SEGMENT_PROXY
-      count : 1
+    - spec  : ref://store/specs/id=SEGMENT_VXLAN_PROXY
+      count : 2
 
 # NFV Endpoints:
 # - They will attach to a 'TRUNK' Enic.
 # - All the segments will be enabled on these Enics              
 nfveps: 0
 
-security_profile: ref://store/objects/id=SEC_PROF_ACTIVE
+security_profile: None
 
 sessions:
     unidest:

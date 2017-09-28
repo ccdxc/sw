@@ -1,0 +1,52 @@
+# Feature Test Modules List
+feature:
+    id          : tcp_proxy
+    sub         : pkt_to_p4
+    package     : test.tcp_tls_proxy
+    module      : pkt_to_p4
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : PROXY_UPLINK_TO_UPLINK_BYPASS_BARCO
+        spec    : uplink_to_uplink.testspec
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            same_flow : 1
+
+    - module:
+        name    : PKT_HFLOW_TO_NFLOW_PROXY_BYPASS_BARCO
+        spec    : uplink_to_uplink.testspec
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            same_flow : 0
+
+    - module:
+        name    : PKT_HFLOW_TO_NFLOW_PROXY_BYPASS_BARCO_SEND_ACK
+        spec    : uplink_to_uplink.testspec
+        enable  : False
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            same_flow : 0
+            send_ack : 1
+
+    - module:
+        name    : PROXY_UPLINK_TO_HOST_BYPASS_BARCO
+        spec    : uplink_to_host.testspec
+        args    :
+            bypass_barco : 1
+            same_flow : 1
+            flow: filter://type=IPV4,proto=TCP
+
+    - module:
+        name    : PROXY_HOST_TO_UPLINK_BYPASS_BARCO
+        spec    : host_to_uplink.testspec
+        args    :
+            bypass_barco : 1
+            same_flow : 1
+            flow: filter://type=IPV4,proto=TCP
+
