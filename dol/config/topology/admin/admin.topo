@@ -1,0 +1,24 @@
+# Topology Specification
+meta:
+    id: TOPO_ADMIN
+
+uplink:
+    - entry:
+        id      : Uplink1
+        port    : 1
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+uplinkpc:
+
+acls: None
+
+security_profiles: ref://store/specs/id=SECURITY_PROFILES_ADMIN
+
+tenants:
+    -   spec    : ref://store/specs/id=TENANT_ADMIN
+        count   : 1
+        lifns   : range/121/121
+
+cpu: None

@@ -9,10 +9,13 @@ LIBDIRS = \
           cpu-p4+ \
           eth \
           ipfix \
+          adminq \
           $(NULL)
 
 PGMDIRS = $(NULL)
-SUBDIRS = $(LIBDIRS) $(PGMDIRS)
-TOPDIR = ..
-include $(TOPDIR)/make/Makefile.inc
 
+SUBDIRS = $(LIBDIRS) $(PGMDIRS)
+
+TOPDIR = ..
+
+include $(TOPDIR)/make/Makefile.inc

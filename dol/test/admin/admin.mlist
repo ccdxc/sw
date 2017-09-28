@@ -1,0 +1,22 @@
+# Feature Test Modules List
+feature:
+    id          : admin
+    package     : test.admin
+    module      : admin
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : CMD
+        enable  : True
+        package : test.admin
+        module  : admin
+        spec    : admin_cmd.testspec
+        ignore  : False
+        args    :
+            maxflows : 1
+        iterate:
+            # Untagged Flows
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=False

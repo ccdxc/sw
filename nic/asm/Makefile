@@ -5,12 +5,16 @@ LIBDIRS = \
           rdma \
           ipsec-p4+ \
           storage \
-		  cpu-p4plus \
+          cpu-p4plus \
           eth \
           ipfix \
+          adminq \
           $(NULL)
-PGMDIRS = $(NULL)
-SUBDIRS = $(LIBDIRS) $(PGMDIRS)
-TOPDIR = ..
-include $(TOPDIR)/make/Makefile.inc
 
+PGMDIRS = $(NULL)
+
+SUBDIRS = $(LIBDIRS) $(PGMDIRS)
+
+TOPDIR = ..
+
+include $(TOPDIR)/make/Makefile.inc

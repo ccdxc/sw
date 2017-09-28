@@ -27,6 +27,7 @@
     .param      ipfix_start
     .param      resp_tx_rqcb_process
     .param      esp_ipv4_tunnel_n2h_txdma_stage0
+    .param      adminq_fetch_desc
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -94,4 +95,9 @@ cpu_tx_stage0:
 .align
 ipfix_tx_stage0:
     j   ipfix_start
+    nop
+
+.align
+adminq_stage0:
+    j   adminq_fetch_desc
     nop

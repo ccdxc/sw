@@ -1,6 +1,6 @@
 meta:
-    id      : DESCR_ETH_ADMIN
-    size    : 16
+    id      : DESCR_ADMIN
+    size    : 64
     package : factory.objects.eth
     module  : descriptor
-    objname : EthAdminDescriptorObject
+    objname : AdminDescriptorObject

@@ -13,7 +13,6 @@ queue_types:
             - queue:
                 id          : Q0
                 count       : 1
-                template    : ref://store/templates/id=ETH_QUEUE_TX
                 rings:
                     - ring:
                         id          : R0
@@ -37,7 +36,6 @@ queue_types:
             - queue:
                 id          : Q0
                 count       : 1
-                template    : ref://store/templates/id=ETH_QUEUE_RX
                 rings:
                     - ring:
                         id          : R0
@@ -61,16 +59,15 @@ queue_types:
             - queue:
                 id          : Q0
                 count       : 1
-                template    : ref://store/templates/id=ETH_QUEUE_ADMIN
                 rings:
                     - ring:
                         id          : R0
                         num         : 0
                         size        : 1024
-                        desc        : ref://factory/templates/id=DESCR_ETH_ADMIN
+                        desc        : ref://factory/templates/id=DESCR_ADMIN
 
                     - ring:
                         id          : R1
                         num         : 1
                         size        : 1024
-                        desc        : ref://factory/templates/id=DESCR_ETH_ADMIN_CQ
+                        desc        : ref://factory/templates/id=DESCR_ADMIN_CQ

@@ -85,19 +85,18 @@ class AdminDesciptor(Packet):
         LEIntField("cmd_data12", 0),
         LEIntField("cmd_data13", 0),
         LEIntField("cmd_data14", 0),
-        LEIntField("cmd_data15", 0),
     ]
 
 
 class AdminCqDescriptor(Packet):
     fields_desc = [
-        ByteField("cmd_status", 0),
+        LEShortField("cmd_status", 0),
         LEShortField("cpl_id", 0),
+        BitField("rsvd", 0, 7),
+        BitField("color", 0, 1),
         LEIntField("cmd_data0", 0),
         LEIntField("cmd_data1", 0),
         LEIntField("cmd_data2", 0),
-        BitField("rsvd", 7, 0),
-        BitField("color", 1, 0),
     ]
 
 
@@ -128,6 +127,7 @@ class EthDescriptorObject(base.FactoryObjectBase):
         self.logger.info("Writing %s" % self)
         self.desc = self.__descriptor_class__(addr=self.buf_addr, len=self.buf_len)
         resmgr.HostMemoryAllocator.write(self._mem, bytes(self.desc))
+        self.logger.ShowScapyObject(self.desc)
 
     def Read(self):
         """
@@ -136,7 +136,7 @@ class EthDescriptorObject(base.FactoryObjectBase):
         """
         if self._mem is None: return
 
-        self.desc = self.__descriptor_class__(resmgr.HostMemoryAllocator.read(self._mem, 16))
+        self.desc = self.__descriptor_class__(resmgr.HostMemoryAllocator.read(self._mem, self.desc_size))
         self.logger.ShowScapyObject(self.desc)
 
     def __str__(self):
@@ -171,6 +171,10 @@ class EthDescriptorObject(base.FactoryObjectBase):
 class EthRxDescriptorObject(EthDescriptorObject):
     __descriptor_class__ = EthRxDescriptor
 
+    def Init(self, spec):
+        super().Init(spec)
+        self.desc_size = 16
+
     def Read(self):
         # This is a write-only descriptor type
         return
@@ -178,6 +182,10 @@ class EthRxDescriptorObject(EthDescriptorObject):
 
 class EthRxCqDescriptorObject(EthDescriptorObject):
     __descriptor_class__ = EthRxCqDescriptor
+
+    def Init(self, spec):
+        super().Init(spec)
+        self.desc_size = 32
 
     def Write(self):
         # This is a read-only descriptor type
@@ -194,6 +202,10 @@ class EthRxCqDescriptorObject(EthDescriptorObject):
 class EthTxDescriptorObject(EthDescriptorObject):
     __descriptor_class__ = EthTxDescriptor
 
+    def Init(self, spec):
+        super().Init(spec)
+        self.desc_size = 16
+
     def Read(self):
         # This is a write-only descriptor type
         return
@@ -201,6 +213,10 @@ class EthTxDescriptorObject(EthDescriptorObject):
 
 class EthTxCqDescriptorObject(EthDescriptorObject):
     __descriptor_class__ = EthTxCqDescriptor
+
+    def Init(self, spec):
+        super().Init(spec)
+        self.desc_size = 16
 
     def Write(self):
         # This is a read-only descriptor type
@@ -217,14 +233,36 @@ class EthTxCqDescriptorObject(EthDescriptorObject):
 class AdminDescriptorObject(EthDescriptorObject):
     __descriptor_class__ = AdminDesciptor
 
+    def Init(self, spec):
+        super().Init(spec)
+        self.opcode = getattr(spec.fields, 'opcode', 0xffff)
+        self.desc = self.__descriptor_class__(opcode=self.opcode)
+        self.desc_size = 64
+
     def Read(self):
         # This is a write-only descriptor type
         return
+
+    def Write(self):
+        if self._mem is None: return
+
+        self.logger.info("Writing %s" % self)
+        resmgr.HostMemoryAllocator.write(self._mem, bytes(self.desc))
+        self.logger.ShowScapyObject(self.desc)
 
 
 class AdminCqDescriptorObject(EthDescriptorObject):
     __descriptor_class__ = AdminCqDescriptor
 
+    def Init(self, spec):
+        super().Init(spec)
+        self.cmd_status = getattr(spec.fields, 'cmd_status', 0xffff)
+        self.desc = self.__descriptor_class__(cmd_status=self.cmd_status)
+        self.desc_size = 32
+
     def Write(self):
         # This is a read-only descriptor type
         return
+
+    def __eq__(self, other):
+        return self.desc[AdminCqDescriptor].cmd_status == other.desc[AdminCqDescriptor].cmd_status

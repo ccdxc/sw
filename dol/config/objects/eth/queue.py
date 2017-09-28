@@ -21,7 +21,6 @@ import model_sim.src.model_wrap as model_wrap
 from scapy.all import *
 
 class EthQstate(Packet):
-    name = "EthQstate"
     fields_desc = [
         ByteField("pc_offset", 0),
         ByteField("rsvd", 0),
@@ -56,6 +55,30 @@ class EthQstate(Packet):
         LELongField("cq_base", 0),
         X3BytesField("__pad0", 0),
         LEShortField("__pad1", 0),
+    ]
+
+
+class AdminQstate(Packet):
+    fields_desc = [
+        ByteField("pc_offset", 0),
+        ByteField("rsvd", 0),
+        BitField("cosA", 0, 4),
+        BitField("cosB", 0, 4),
+        ByteField("cos_sel", 0),
+        ByteField("eval_last", 0),
+        BitField("host", 0, 4),
+        BitField("total", 0, 4),
+        LEShortField("pid", 0),
+
+        LEShortField("p_index0", 0),
+        LEShortField("c_index0", 0),
+        LEShortField("p_index1", 0),
+        LEShortField("c_index1", 0),
+
+        ByteField("enable", 0),
+        LELongField("ring_base", 0),
+        LEShortField("ring_size", 0),
+        BitField("__pad0", 296, 0),
     ]
 
 
@@ -119,6 +142,65 @@ class EthQstateObject(object):
         lgh.ShowScapyObject(self.data)
 
 
+class AdminQstateObject(object):
+    def __init__(self, addr, size):
+        self.addr = addr
+        self.size = size
+        self.data = AdminQstate(model_wrap.read_mem(self.addr, self.size))
+
+    def Write(self, lgh = cfglogger):
+        lgh.info("Writing Qstate @0x%x size: %d" % (self.addr, self.size))
+        model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
+        self.Read(lgh)
+
+    def Read(self, lgh = cfglogger):
+        data = AdminQstate(model_wrap.read_mem(self.addr, self.size))
+        lgh.ShowScapyObject(data)
+        lgh.info("Read Qstate @0x%x size: %d" % (self.addr, self.size))
+
+    def incr_pindex(self, ring):
+        assert(ring < 7)
+        value = (self.get_pindex(ring) + 1) & (self.get_ring_size() - 1)
+        setattr(self.data[AdminQstate], 'p_index%d' % ring, value)
+        model_wrap.write_mem(self.addr + 8 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
+
+    def incr_cindex(self, ring):
+        assert(ring < 7)
+        value = (self.get_cindex(ring) + 1) & (self.get_ring_size() - 1)
+        setattr(self.data[AdminQstate], 'c_index%d' % ring, value)
+        model_wrap.write_mem(self.addr + 10 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
+
+    def get_pindex(self, ring):
+        assert(ring < 7)
+        return getattr(self.data[AdminQstate], 'p_index%d' % ring)
+
+    def get_cindex(self, ring):
+        assert(ring < 7)
+        return getattr(self.data[AdminQstate], 'c_index%d' % ring)
+
+    def set_enable(self, value):
+        self.data[AdminQstate].enable = value
+        model_wrap.write_mem(self.addr + 16, bytes(ctypes.c_uint8(value)), 1)
+
+    def set_ring_base(self, value):
+        self.data[AdminQstate].ring_base = value
+        model_wrap.write_mem(self.addr + 17, bytes(ctypes.c_uint64(value)), 8)
+
+    def set_ring_size(self, value):
+        value = int(math.log(value, 2))
+        self.data[AdminQstate].ring_size = value
+        model_wrap.write_mem(self.addr + 25, bytes(ctypes.c_uint16(value)), 2)
+
+    def set_cq_base(self, value):
+        pass
+
+    def get_ring_size(self):
+        return int(math.pow(2, self.data[AdminQstate].ring_size))
+
+    def Show(self, lgh = cfglogger):
+        lgh.ShowScapyObject(self.data)
+
+
 class EthQueueObject(QueueObject):
     def __init__(self):
         super().__init__()
@@ -133,7 +215,10 @@ class EthQueueObject(QueueObject):
     @property
     def qstate(self):
         if self._qstate is None:
-            self._qstate = EthQstateObject(addr=self.GetQstateAddr(), size=self.queue_type.size)
+            if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
+                self._qstate = AdminQstateObject(addr=self.GetQstateAddr(), size=self.queue_type.size)
+            else:
+                self._qstate = EthQstateObject(addr=self.GetQstateAddr(), size=self.queue_type.size)
             cfglogger.info("Loading Qstate: Lif=%s QType=%s QID=%s Addr=0x%x Size=%s" %
                            (self.queue_type.lif.id,
                             self.queue_type.type,
@@ -146,17 +231,19 @@ class EthQueueObject(QueueObject):
         req_spec.lif_handle = 0  # HW LIF ID is not known in DOL. Assume it is filled in by hal::LifCreate.
         req_spec.type_num = self.queue_type.type
         req_spec.qid = 0    # HACK
-        req_spec.queue_state = bytes(EthQstate(host=1, total=1))
         req_spec.label.handle = "p4plus"
         if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
+            req_spec.queue_state = bytes(EthQstate(host=1, total=1))
             req_spec.label.prog_name = "txdma_stage0.bin"
             req_spec.label.label = "eth_tx_stage0"
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
+            req_spec.queue_state = bytes(EthQstate(host=1, total=1))
             req_spec.label.prog_name = "rxdma_stage0.bin"
             req_spec.label.label = "eth_rx_stage0"
         elif self.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
+            req_spec.queue_state = bytes(AdminQstate(host=1, total=1))
             req_spec.label.prog_name = "txdma_stage0.bin"
-            req_spec.label.label = "eth_tx_stage0"
+            req_spec.label.label = "adminq_stage0"
         else:
             cfglogger.critical("Unable to set program information for Queue Type %s" % self.queue_type.purpose)
             raise NotImplementedError

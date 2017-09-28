@@ -65,16 +65,19 @@ queue_types:
         queues:
             - queue:
                 id          : Q0
-                count       : 16
-                template    : ref://store/templates/id=ETH_QUEUE_TX
+                count       : 1
                 rings:
                     - ring:
                         id          : R0
-                        pi          : 0
-                        ci          : 0
+                        num         : 0
                         size        : 1024
-                        template    : ref://store/templates/id=ETH_RING_TX
                         desc        : ref://factory/templates/id=DESCR_ETH_TX
+
+                    - ring:
+                        id          : R1
+                        num         : 1
+                        size        : 1024
+                        desc        : ref://factory/templates/id=DESCR_ETH_TX_CQ
 
     - queue_type:
         id          : ADMIN
@@ -85,17 +88,19 @@ queue_types:
         queues:
             - queue:
                 id          : Q0
-                count       : 32
-                #for now treat this queue same as rx
-                template    : ref://store/templates/id=ETH_QUEUE_RX
+                count       : 1
                 rings:
                     - ring:
                         id          : R0
-                        pi          : 0
-                        ci          : 0
+                        num         : 0
                         size        : 1024
-                        template    : ref://store/templates/id=ETH_RING_RX
-                        desc        : ref://factory/templates/id=DESCR_ETH_RX
+                        desc        : ref://factory/templates/id=DESCR_ADMIN
+
+                    - ring:
+                        id          : R1
+                        num         : 1
+                        size        : 1024
+                        desc        : ref://factory/templates/id=DESCR_ADMIN_CQ
 
     - queue_type:
         id          : RX
@@ -106,16 +111,19 @@ queue_types:
         queues:
             - queue:
                 id          : Q0
-                count       : 16
-                template    : ref://store/templates/id=ETH_QUEUE_RX
+                count       : 1
                 rings:
                     - ring:
                         id          : R0
-                        pi          : 0
-                        ci          : 0
+                        num         : 0
                         size        : 1024
-                        template    : ref://store/templates/id=ETH_RING_RX
                         desc        : ref://factory/templates/id=DESCR_ETH_RX
+
+                    - ring:
+                        id          : R1
+                        num         : 1
+                        size        : 1024
+                        desc        : ref://factory/templates/id=DESCR_ETH_RX_CQ
 
     - queue_type:
         id          : RDMA_CQ

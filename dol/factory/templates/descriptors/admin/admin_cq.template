@@ -1,6 +1,6 @@
 meta:
-    id      : DESCR_ETH_ADMIN_CQ
-    size    : 16
+    id      : DESCR_ADMIN_CQ
+    size    : 32
     package : factory.objects.eth
     module  : descriptor
-    objname : EthAdminCqDescriptorObject
+    objname : AdminCqDescriptorObject
