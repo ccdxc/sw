@@ -2,15 +2,13 @@
 
 #define tx_table_s0_t0_action esp_v4_tunnel_n2h_txdma2_initial_table 
 
-#define tx_table_s1_t0_action esp_v4_tunnel_n2h_txdma2_load_barco_req_ptr
+#define tx_table_s1_t0_action esp_v4_tunnel_n2h_txdma2_load_barco_req 
 
-#define tx_table_s2_t0_action esp_v4_tunnel_n2h_txdma2_load_barco_req 
+#define tx_table_s2_t0_action esp_v4_tunnel_n2h_txdma2_load_in_desc 
+#define tx_table_s2_t1_action esp_v4_tunnel_n2h_txdma2_load_out_desc 
+#define tx_table_s2_t2_action esp_v4_tunnel_n2h_txdma2_load_ipsec_int
 
-#define tx_table_s3_t0_action esp_v4_tunnel_n2h_txdma2_load_in_desc 
-#define tx_table_s3_t1_action esp_v4_tunnel_n2h_txdma2_load_out_desc 
-#define tx_table_s3_t2_action esp_v4_tunnel_n2h_txdma2_load_ipsec_int
-
-#define tx_table_s4_t0_action esp_v4_tunnel_n2h_txdma2_build_decap_packet
+#define tx_table_s3_t0_action esp_v4_tunnel_n2h_txdma2_build_decap_packet
 
 #include "../../common-p4+/common_txdma.p4"
 
@@ -84,7 +82,7 @@ header_type ipsec_to_stage1_t {
 header_type ipsec_to_stage2_t {
     fields {
         barco_req_addr   : ADDRESS_WIDTH;
-        stage2_pad     : ADDRESS_WIDTH;
+        ipsec_cb_addr : ADDRESS_WIDTH;
     }
 }
 
@@ -135,6 +133,37 @@ metadata dma_cmd_mem2pkt_t dec_pay_load;
 
 @pragma scratch_metadata
 metadata ipsec_cb_metadata_t ipsec_cb_scratch;
+@pragma scratch_metadata
+metadata ipsec_txdma2_global_t txdma2_global_scratch;
+
+@pragma scratch_metadata
+metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
+
+@pragma scratch_metadata
+metadata ipsec_table0_s2s t0_s2s_scratch;
+
+@pragma scratch_metadata
+metadata barco_request_t barco_req_scratch;
+
+@pragma scratch_metadata
+metadata ipsec_int_header_t ipsec_int_hdr_scratch;
+@pragma scratch_metadata
+metadata ipsec_int_pad_t ipsec_int_pad_scratch;
+
+#define BARCO_REQ_SCRTATCH_SET \
+    modify_field(barco_req_scratch.input_list_address,input_list_address); \
+    modify_field(barco_req_scratch.output_list_address,output_list_address); \
+    modify_field(barco_req_scratch.command,command); \
+    modify_field(barco_req_scratch.key_desc_index,key_desc_index); \
+    modify_field(barco_req_scratch.iv_address,iv_address); \
+    modify_field(barco_req_scratch.auth_tag_addr,auth_tag_addr); \
+    modify_field(barco_req_scratch.header_size,header_size); \
+    modify_field(barco_req_scratch.status_address,status_address); \
+    modify_field(barco_req_scratch.opaque_tag_value,opaque_tag_value); \
+    modify_field(barco_req_scratch.opaque_tag_write_en,opaque_tag_write_en); \
+    modify_field(barco_req_scratch.rsvd1,rsvd1); \
+    modify_field(barco_req_scratch.sector_size,sector_size); \
+    modify_field(barco_req_scratch.application_tag,application_tag); \
 
 
 //stage 4
@@ -166,12 +195,14 @@ action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
 
 //stage 3 table 2 
 action esp_v4_tunnel_n2h_txdma2_load_ipsec_int(in_desc, out_desc,
+                                               in_page, out_page,
                                                ipsec_cb_index, headroom,
                                                tailroom, headroom_offset,
                                                tailroom_offset,
                                                payload_start, buf_size,
                                                payload_size, l4_protocol, pad_size)
 {
+    IPSEC_INT_HDR_SCRATCH
     modify_field(txdma2_global.pad_size, pad_size);
     modify_field(txdma2_global.l4_protocol, l4_protocol);
     modify_field(txdma2_global.payload_size, payload_size);
@@ -204,40 +235,42 @@ action esp_v4_tunnel_n2h_txdma2_load_in_desc(addr0, offset0, length0,
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 0);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, (txdma2_global.ipsec_cb_index * IPSEC_CB_SIZE) + IPSEC_CB_BASE);
+    modify_field(common_te0_phv.table_addr, ipsec_to_stage2.ipsec_cb_addr);
 }
 
 
 
 
 //stage 2 table0
-action esp_v4_tunnel_n2h_txdma2_load_barco_req(brq_in_addr, brq_out_addr,
-                                         brq_barco_enc_cmd, brq_key_index,
-                                         brq_iv_addr, brq_auth_tag_addr,
-                                         brq_hdr_size, brq_status,
-                                         brq_opq_tag_value, brq_db_en,
-                                         brq_opq_tag_en, brq_rsvd,
-                                         brq_sec_sz, brq_sec_num, brq_app_tag)
+action esp_v4_tunnel_n2h_txdma2_load_barco_req(input_list_address, output_list_address,
+                                         command, key_desc_index,
+                                         iv_address, auth_tag_addr,
+                                         header_size, status_address,
+                                         opaque_tag_value, opaque_tag_write_en,
+                                         rsvd1, sector_size, application_tag)
+
 {
-    modify_field(txdma2_global.in_desc_addr, brq_in_addr);
+    BARCO_REQ_SCRTATCH_SET
+
+    modify_field(txdma2_global.in_desc_addr, input_list_address);
 
     modify_field(p4plus2p4_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 7);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, brq_in_addr+64);
+    modify_field(common_te0_phv.table_addr, input_list_address+64);
 
     modify_field(p4plus2p4_hdr.table1_valid, 1);
     modify_field(common_te1_phv.table_pc, 0);
     modify_field(common_te1_phv.table_raw_table_size, 7);
     modify_field(common_te1_phv.table_lock_en, 0);
-    modify_field(common_te1_phv.table_addr, brq_out_addr+64);
+    modify_field(common_te1_phv.table_addr, output_list_address+64);
 
     modify_field(p4plus2p4_hdr.table2_valid, 1);
     modify_field(common_te2_phv.table_pc, 0);
     modify_field(common_te2_phv.table_raw_table_size, 7);
     modify_field(common_te2_phv.table_lock_en, 0);
-    modify_field(common_te2_phv.table_addr, brq_in_addr);
+    modify_field(common_te2_phv.table_addr, input_list_address);
  
 }
 

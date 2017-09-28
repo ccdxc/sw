@@ -3,8 +3,8 @@
 #include "ipsec_asm_defines.h"
 #include "capri-macros.h"
 
-struct tx_table_s4_t0_k k;
-struct tx_table_s4_t0_tx_table_s4_t0_cfg_action_d d;
+struct tx_table_s3_t0_k k;
+struct tx_table_s3_t0_tx_table_s3_t0_cfg_action_d d;
 struct phv_ p;
 
 %%

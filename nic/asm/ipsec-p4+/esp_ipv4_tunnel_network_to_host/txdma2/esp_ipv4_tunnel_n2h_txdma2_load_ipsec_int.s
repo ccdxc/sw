@@ -2,8 +2,8 @@
 #include "ingress.h"
 #include "ipsec_asm_defines.h"
 
-struct tx_table_s3_t2_k k;
-struct tx_table_s3_t2_esp_v4_tunnel_n2h_txdma2_load_ipsec_int_d d;
+struct tx_table_s2_t2_k k;
+struct tx_table_s2_t2_esp_v4_tunnel_n2h_txdma2_load_ipsec_int_d d;
 struct phv_ p;
 
 %%
@@ -16,4 +16,5 @@ esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int:
     phvwr p.t0_s2s_headroom_offset, d.headroom_offset
     phvwr p.t0_s2s_tailroom_offset, d.tailroom_offset
     nop.e
+    nop
  
