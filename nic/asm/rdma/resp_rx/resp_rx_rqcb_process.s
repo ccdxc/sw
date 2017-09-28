@@ -118,6 +118,21 @@ read:
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
 
+    // increment nxt_to_go_token_id to give control to next pkt
+    tbladd  d.nxt_to_go_token_id, 1  
+
+    // if (adjust_psn)
+    // sqcb1_p->tx_psn += rrqwqe_to_hdr_info_p->op.rd.read_len >> rrqwqe_to_hdr_info_p->log_pmtu
+    add            r3, d.log_pmtu, r0
+    srlv           r3, CAPRI_RXDMA_RETH_DMA_LEN, r3
+    tblmincr       d.e_psn, 24, r3
+
+    // sqcb1_p->tx_psn += (rrqwqe_to_hdr_info_p->op.rd.read_len & ((1 << rrqwqe_to_hdr_info_p->log_pmtu) -1)) ? 1 : 0
+    add            r3, CAPRI_RXDMA_RETH_DMA_LEN, r0
+    mincr          r3, d.log_pmtu, r0
+    sle            c6, r3, r0
+    tblmincri.!c6  d.e_psn, 24, 1
+
     nop.e
     nop
 
@@ -134,7 +149,7 @@ check_write:
     add.c1  r2, r0, NAK_CODE_INV_REQ //BD Slot
      
     // INCREMENT E_PSN HERE
-    tbladd  d.e_psn, 1
+    tblmincri   d.e_psn, 24, 1
 
     ARE_ALL_FLAGS_SET(c1, r7, RESP_RX_FLAG_WRITE)
     bcf     [!c1], need_checkout

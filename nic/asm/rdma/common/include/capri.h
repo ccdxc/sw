@@ -561,7 +561,6 @@ struct capri_dma_cmd_mem2mem_t {
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, size), sizeof(DMA_CMD_MEM2PKT_T.size), _size;                      \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, addr), sizeof(DMA_CMD_MEM2PKT_T.addr), _addr;                      \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, host_addr), sizeof(DMA_CMD_MEM2PKT_T.host_addr), 1;                \
-    phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, cmdtype), sizeof(DMA_CMD_MEM2PKT_T.cmdtype), DMA_CMD_TYPE_MEM2PKT; \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, cmdtype), sizeof(DMA_CMD_MEM2PKT_T.cmdtype), DMA_CMD_TYPE_MEM2PKT;
 
 #define DMA_SET_END_OF_CMDS(_cmd_t, _base_r)                                  \
