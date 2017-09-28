@@ -1029,7 +1029,8 @@ typedef struct rqcb0_s {
 
 //rqcb1_t is the 2nd 64B of rqcb
 typedef struct rqcb1_s {
-    uint8_t rsvd[2];
+    uint8_t rsvd[1];
+    uint8_t p4plus_to_p4_flags;
     uint32_t current_sge_offset;
     uint8_t  num_sges;
     uint8_t  current_sge_id;

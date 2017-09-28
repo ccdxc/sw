@@ -78,6 +78,29 @@ class RdmaRQstate(Packet):
         ByteField("rsvd4", 0),
         ByteField("rsvd5", 0),
         ByteField("rsvd6", 0),
+
+        # RQCB1 
+        LongField("va", 0),
+        IntField("len", 0),
+        IntField("r_key", 0),
+        LongField("wrid", 0),
+        X3BytesField("cq_id", 0),
+        BitField("read_rsp_in_progress", 0, 1),
+        BitField("read_rsp_lock", 0, 1),
+        BitField("dummy1", 0, 6),
+        X3BytesField("curr_read_rsp_psn", 0),
+        X3BytesField("ack_nak_psn", 0),
+        ByteField("aeth_syndrome", 0),
+        X3BytesField("aeth_msn", 0),
+        X3BytesField("last_ack_nak_psn", 0),
+        IntField("header_template_addr", 0),
+        X3BytesField("dst_qp", 0),
+        LongField("curr_wqe_ptr", 0),
+        ByteField("current_sge_id", 0),
+        ByteField("num_sges", 0),
+        IntField("current_sge_offset", 0),
+        ByteField("p4plus_to_p4_flags", 0),
+        ByteField("rsvd", 0),
     ]
 
 class RdmaSQstate(Packet):

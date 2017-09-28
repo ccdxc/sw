@@ -730,6 +730,11 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.pd = spec.pd();
     rqcb.rqcb1.cq_id = spec.rq_cq_num();
     rqcb.rqcb1.header_template_addr = header_template_addr;
+    rqcb.rqcb1.p4plus_to_p4_flags = 0x6A;
+    //rqcb.rqcb1.p4plus_to_p4_flags = (P4PLUS_TO_P4_INNER_CKSUM |
+    //                                 P4PLUS_TO_P4_INSERT_VLAN_HDR |
+    //                                 P4PLUS_TO_P4_UPDATE_UDP_LEN |
+    //                                 P4PLUS_TO_P4_UPDATE_IP_LEN);
     rqcb.rqcb2.num_rqwqes_per_cpage = HBM_PAGE_SIZE / rqwqe_size;
 
     stage0_resp_rx_prog_addr(&offset);

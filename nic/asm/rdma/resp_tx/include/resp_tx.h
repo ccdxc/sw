@@ -5,12 +5,15 @@
 #include "resp_tx_args.h"
 #include "INGRESS_p.h"
 #include "common_phv.h"
+#include "defines.h"
 
 #define RESP_TX_MAX_DMA_CMDS            16
-#define RESP_TX_DMA_CMD_HDR_TEMPLATE    0
-#define RESP_TX_DMA_CMD_BTH             1
-#define RESP_TX_DMA_CMD_AETH            2
-#define RESP_TX_DMA_CMD_PYLD_BASE       3
+#define RESP_TX_DMA_CMD_INTRINSIC       0
+#define RESP_TX_DMA_CMD_COMMON_P4PLUS   1
+#define RESP_TX_DMA_CMD_HDR_TEMPLATE    2
+#define RESP_TX_DMA_CMD_BTH             3
+#define RESP_TX_DMA_CMD_AETH            4
+#define RESP_TX_DMA_CMD_PYLD_BASE       5
 
 #define RESP_TX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
 
@@ -22,6 +25,7 @@ struct resp_tx_phv_t {
     db_data: 32;
     struct rdma_aeth_t aeth;
     struct rdma_bth_t bth;
+    struct p4plus_to_p4_header_t p4plus_to_p4;
 
     // common tx (flit 0 - 5)
     struct phv_ common;
