@@ -1,9 +1,8 @@
-
 #include <stdint.h>
 #include <strings.h>
 #include <stdio.h>
 #include <byteswap.h>
-#include "dol/test/storage/host_mem/c_if.h"
+#include "nic/utils/host_mem/c_if.h"
 #include "dol/test/storage/r2n.hpp"
 
 namespace r2n {

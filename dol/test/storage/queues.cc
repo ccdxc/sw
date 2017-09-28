@@ -5,8 +5,8 @@
 #include "dol/test/storage/qstate_if.hpp"
 #include "dol/test/storage/nvme.hpp"
 #include "dol/test/storage/queues.hpp"
-#include "dol/test/storage/host_mem/c_if.h"
-#include "dol/test/storage/model_client/lib_model_client.h"
+#include "nic/utils/host_mem/c_if.h"
+#include "nic/model_sim/include/lib_model_client.h"
 
 #define	NUM_TO_VAL(num)		(1 << (num))
 

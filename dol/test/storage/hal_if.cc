@@ -2,11 +2,11 @@
 #include <grpc++/grpc++.h>
 #include <gflags/gflags.h>
 #include <memory>
-#include "dol/test/storage/proto/internal.pb.h"
-#include "dol/test/storage/proto/internal.grpc.pb.h"
-#include "dol/test/storage/proto/interface.pb.h"
-#include "dol/test/storage/proto/interface.grpc.pb.h"
-#include "hal_if.hpp"
+#include "nic/proto/hal/internal.pb.h"
+#include "nic/proto/hal/internal.grpc.pb.h"
+#include "nic/proto/hal/interface.pb.h"
+#include "nic/proto/hal/interface.grpc.pb.h"
+#include "dol/test/storage/hal_if.hpp"
 
 DECLARE_uint64(hal_port);
 
