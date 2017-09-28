@@ -23,13 +23,6 @@
 #define RETH_RKEY               p.reth.r_key
 #define RETH_LEN                p.reth.dma_len
 
-#define P4PLUS_TO_P4_APP_ID     p.p4plus_to_p4.p4plus_app_id
-#define P4PLUS_TO_P4_FLAGS      p.p4plus_to_p4.flags
-#define P4PLUS_TO_P4_IP_LEN     p.p4plus_to_p4.ip_len
-#define P4PLUS_TO_P4_UDP_LEN    p.p4plus_to_p4.udp_len
-#define P4PLUS_TO_P4_FLAGS      p.p4plus_to_p4.flags
-#define P4PLUS_TO_P4_VLAN_ID    p.p4plus_to_p4.vlan_id
-
 #define RRQWQE_READ_RSP_OR_ATOMIC         p.rrqwqe.read_rsp_or_atomic
 #define RRQWQE_NUM_SGES                   p.rrqwqe.num_sges
 #define RRQWQE_PSN                        p.rrqwqe.psn
@@ -40,18 +33,6 @@
 #define RRQWQE_ATOMIC_SGE_LEN             p.rrqwqe.atomic.sge.len
 #define RRQWQE_ATOMIC_SGE_LKEY            p.rrqwqe.atomic.sge.lkey
 
-struct p4plus_to_p4_header_t {
-    p4plus_app_id      : 4;
-    pad                : 4;
-    flags              : 8;
-    ip_id              : 16;
-    ip_len             : 16;
-    udp_len            : 16;
-    tcp_seq_no         : 32;
-    vlan_pcp           : 3;
-    vlan_dei           : 1;
-    vlan_id            : 12;
-};
 // phv 
 struct req_tx_phv_t {
     // dma commands

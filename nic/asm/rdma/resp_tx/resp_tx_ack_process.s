@@ -32,12 +32,29 @@ resp_tx_ack_process:
     phvwr       p.aeth.syndrome, d.aeth.syndrome
 
 add_headers:
+    // intrinsic
+    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, r3, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_INTRINSIC)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, common.p4_intr_global_tm_iport, common.p4_intr_global_glb_rsv)
+    phvwri          p.common.p4_intr_global_tm_iport, TM_PORT_DMA
+    phvwri          p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
+    phvwri          p.common.p4_intr_global_tm_oq, 0
+
+    // common-p4+
+    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, r3, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_COMMON_P4PLUS)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, p4plus_to_p4, p4plus_to_p4);
+    phvwr          P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA
+    phvwr          P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
+    phvwr          P4PLUS_TO_P4_VLAN_ID, 0
+
+    // header_template
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, r3, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_HDR_TEMPLATE)
     DMA_HBM_MEM2PKT_SETUP(DMA_CMD_BASE, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr)
 
+    // BTH
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, r3, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_BTH)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, bth, bth)
 
+    // AETH
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, r3, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_AETH)
     DMA_PHV2PKT_SETUP(DMA_CMD_BASE, aeth, aeth)
 

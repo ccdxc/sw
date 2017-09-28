@@ -7,6 +7,26 @@
 #define GLOBAL_DATA_WIDTH 128
 #define TO_STAGE_DATA_WIDTH 128
 
+struct p4plus_to_p4_header_t {
+    p4plus_app_id      : 4;
+    pad                : 4;
+    flags              : 8;
+    ip_id              : 16;
+    ip_len             : 16;
+    udp_len            : 16;
+    tcp_seq_no         : 32;
+    vlan_pcp           : 3;
+    vlan_dei           : 1;
+    vlan_id            : 12;
+};
+
+#define P4PLUS_TO_P4_APP_ID     p.p4plus_to_p4.p4plus_app_id
+#define P4PLUS_TO_P4_FLAGS      p.p4plus_to_p4.flags
+#define P4PLUS_TO_P4_IP_LEN     p.p4plus_to_p4.ip_len
+#define P4PLUS_TO_P4_UDP_LEN    p.p4plus_to_p4.udp_len
+#define P4PLUS_TO_P4_FLAGS      p.p4plus_to_p4.flags
+#define P4PLUS_TO_P4_VLAN_ID    p.p4plus_to_p4.vlan_id
+
 struct phv_to_stage_t {
     pad: TO_STAGE_DATA_WIDTH;
 };

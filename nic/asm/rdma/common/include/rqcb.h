@@ -84,7 +84,8 @@ struct rqcb1_t {
     current_sge_id: 8;
     num_sges: 8;
     current_sge_offset: 32;
-    rsvd: 16;
+    p4plus_to_p4_flags: 8;
+    rsvd: 8;
 };
 
 struct rqcb_t {
