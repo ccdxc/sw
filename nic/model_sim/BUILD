@@ -6,7 +6,9 @@ cc_library(
     srcs = [
             "src/lib_model_client.cc"
             ],
-    hdrs = [],
+    linkopts = [
+            "-lzmq",
+            ],
     deps = [
             "//nic/model_sim/include:modelsim_includes"
             ],

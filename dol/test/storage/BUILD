@@ -19,7 +19,7 @@ cc_library(
         "hal_if.hpp",
     ],
     deps = [
-        "//dol/test/storage/proto:hal_proto",
+        "//nic/proto/hal:hal_proto",
         "//external:gflags",
     ]
 )
@@ -44,7 +44,7 @@ cc_library(
         "nvme.hpp",
     ],
     deps = [
-        "//dol/test/storage/host_mem",
+        "//nic/utils/host_mem",
     ]
 )
 
@@ -81,8 +81,8 @@ cc_library(
     ],
     deps = [
         ":ssd_core",
-        "//dol/test/storage/host_mem",
-        "//dol/test/storage/model_client",
+        "//nic/utils/host_mem",
+        "//nic/model_sim:model_client",
     ]
 )
 
@@ -100,8 +100,8 @@ cc_library(
         ":qstate_if",
         ":r2n",
         ":log",
-        "//dol/test/storage/host_mem",
-        "//dol/test/storage/model_client",
+        "//nic/utils/host_mem",
+        "//nic/model_sim:model_client",
     ]
 )
 

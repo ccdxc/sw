@@ -3,8 +3,8 @@
 #define DOL_TEST_STORAGE_SSD_HPP
 
 #include "dol/test/storage/ssd_core.hpp"
-#include "dol/test/storage/host_mem/host_mem.hpp"
-#include "dol/test/storage/model_client/lib_model_client.h"
+#include "nic/utils/host_mem/host_mem.hpp"
+#include "nic/model_sim/include/lib_model_client.h"
 
 extern std::unique_ptr<utils::HostMem> g_hostmem;
 
@@ -19,7 +19,7 @@ class NvmeSsd : public NvmeSsdCore {
   virtual uint64_t DMAMemV2P(void *ptr) { return g_hostmem->VirtToPhys(ptr); }
   virtual void *DMAMemP2V(uint64_t addr) { return g_hostmem->PhysToVirt(addr); }
   virtual void RaiseInterrupt() { 
-    write_mem(db_addr_, (uint8_t *)&db_data_, 8);
+    step_doorbell(db_addr_, db_data_);
   }
 
   void EnableInterrupt(uint64_t addr, uint64_t data) {

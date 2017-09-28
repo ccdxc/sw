@@ -7,8 +7,8 @@
 #include "dol/test/storage/nvme.hpp"
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/r2n.hpp"
-#include "dol/test/storage/host_mem/c_if.h"
-#include "dol/test/storage/model_client/lib_model_client.h"
+#include "nic/utils/host_mem/c_if.h"
+#include "nic/model_sim/include/lib_model_client.h"
 
 const static uint32_t	kDbAddrHost		 = 0x400000;
 const static uint32_t	kDbAddrUpdate		 = 0xB;
