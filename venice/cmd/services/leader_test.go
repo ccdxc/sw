@@ -64,9 +64,10 @@ func TestLeaderService(t *testing.T) {
 	l.Register(m)
 
 	go l.Start()
+	defer l.Stop()
 
-	AssertEventually(t, func() bool {
-		return l.Leader() == id
+	AssertEventually(t, func() (bool, []interface{}) {
+		return l.Leader() == id, []interface{}{"Unexpected leader: ", l.Leader()}
 	}, "Failed to become leader", "10ms", "2s")
 
 	if m.LeaderStartCount != 1 {
@@ -80,8 +81,8 @@ func TestLeaderService(t *testing.T) {
 	}
 
 	l.Stop()
-	AssertEventually(t, func() bool {
-		return l.Leader() == ""
+	AssertEventually(t, func() (bool, []interface{}) {
+		return l.Leader() == "", []interface{}{l.Leader()}
 	}, "Failed to give up leadership", "10ms", "1s")
 
 	if m.LeaderStartCount != 1 {
@@ -109,14 +110,14 @@ func TestLeaderServiceWithObserverError(t *testing.T) {
 	go l.Start()
 	defer l.Stop()
 
-	AssertConsistently(t, func() bool {
-		return l.Leader() != id
+	AssertConsistently(t, func() (bool, []interface{}) {
+		return l.Leader() != id, nil
 	}, "Became leader when it shouldn't", "10ms", "100ms")
 
 	m1.ForceError = false
 
-	AssertEventually(t, func() bool {
-		return l.Leader() == id
+	AssertEventually(t, func() (bool, []interface{}) {
+		return l.Leader() == id, nil
 	}, "Failed to become leader", "10ms", "2s")
 }
 
@@ -131,9 +132,10 @@ func TestLeaderRegisterService(t *testing.T) {
 	l.Register(m)
 
 	go l.Start()
+	defer l.Stop()
 
-	AssertEventually(t, func() bool {
-		return l.Leader() == id
+	AssertEventually(t, func() (bool, []interface{}) {
+		return l.Leader() == id, nil
 	}, "Failed to become leader", "10ms", "2s")
 
 	if m.LeaderStartCount != 1 {
@@ -149,8 +151,8 @@ func TestLeaderRegisterService(t *testing.T) {
 
 	l.Stop()
 
-	AssertEventually(t, func() bool {
-		return l.Leader() == ""
+	AssertEventually(t, func() (bool, []interface{}) {
+		return l.Leader() == "", nil
 	}, "Failed to give up leadership", "10ms", "2s")
 
 	if m.LeaderStartCount != 1 || m.LeaderStopCount != 0 || m.LeaderChangeCount != 0 {

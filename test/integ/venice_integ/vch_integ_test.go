@@ -58,13 +58,13 @@ func (vt *vchSuite) SetUp(c *C, numAgents int) {
 
 	vt.vcp = vcprobe.NewVCProbe(u, vt.storeCh)
 
-	AssertEventually(c, func() bool {
+	AssertEventually(c, func() (bool, []interface{}) {
 		if vt.vcp.Start() == nil {
 			vt.vcp.Run()
-			return true
+			return true, nil
 		}
 		vt.vcp.Stop()
-		return false
+		return false, nil
 	}, "Failed to connect to vcSim")
 }
 

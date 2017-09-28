@@ -3,6 +3,7 @@
 package testutils
 
 import (
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -12,7 +13,7 @@ import (
 )
 
 // Evaluator prototype for eveluator function
-type Evaluator func() bool
+type Evaluator func() (bool, []interface{})
 
 // TBApi is common T,B interface
 type TBApi interface {
@@ -92,14 +93,21 @@ func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string)
 		select {
 		case <-timeout:
 			// evaluate one last time
-			if eval() {
+			c, strs := eval()
+			if c {
 				return
 			}
 			logrus.Errorf("Evaluator timed out after %v", time.Since(timer))
 			_, file, line, _ := runtime.Caller(1)
-			tb.Fatalf("\033[31m%s:%d: "+msg+"\033[39m\n\n", append([]interface{}{filepath.Base(file), line})...)
+			msg2 := ""
+			if len(strs) > 0 {
+				msg2 = ": " + fmt.Sprint(strs...)
+			}
+			tb.Fatalf("\033[31m%s:%d: "+msg+msg2+"\033[39m\n\n",
+				append([]interface{}{filepath.Base(file), line})...)
 		case <-time.After(pollInterval):
-			if eval() {
+			c, _ := eval()
+			if c {
 				return
 			}
 		}
@@ -137,19 +145,30 @@ func AssertConsistently(tb TBApi, eval Evaluator, msg string, intervals ...strin
 		select {
 		case <-timeout:
 			// evaluate one last time
-			if eval() {
+			c, strs := eval()
+			if c {
 				return
 			}
 			logrus.Errorf("Evaluator failed after %v", time.Since(timer))
-			tb.Fatalf("\033[31m%s:%d: "+msg+"\033[39m\n\n", append([]interface{}{filepath.Base(file), line})...)
-		case <-time.After(pollInterval):
-			if !eval() {
-				logrus.Errorf("Evaluator failed after %v", time.Since(timer))
-				tb.Fatalf("\033[31m%s:%d: "+msg+"\033[39m\n\n", append([]interface{}{filepath.Base(file), line})...)
-				return
+			msg2 := ""
+			if len(strs) > 0 {
+				msg2 = ": " + fmt.Sprint(strs...)
 			}
+			tb.Fatalf("\033[31m%s:%d: "+msg+msg2+"\033[39m\n\n",
+				append([]interface{}{filepath.Base(file), line})...)
+		case <-time.After(pollInterval):
+			c, strs := eval()
+			if !c {
+				logrus.Errorf("Evaluator failed after %v", time.Since(timer))
+				msg2 := ""
+				if len(strs) > 0 {
+					msg2 = ": " + fmt.Sprint(strs...)
+				}
+				tb.Fatalf("\033[31m%s:%d: "+msg+msg2+"\033[39m\n\n",
+					append([]interface{}{filepath.Base(file), line})...)
+			}
+			return
 		}
-
 	}
 }
 
@@ -182,14 +201,23 @@ func CheckEventually(eval Evaluator, intervals ...string) bool {
 	for {
 		select {
 		case <-time.After(pollInterval):
-			if eval() {
+			c, _ := eval()
+			if c {
 				return true
 			}
 		case <-timeout:
 			// eveluate one last time
-			if !eval() {
+			c, strs := eval()
+			if !c {
 				_, file, line, _ := runtime.Caller(1)
+
+				msg2 := ""
+				if len(strs) > 0 {
+					msg2 = ": " + fmt.Sprint(strs...)
+				}
+
 				logrus.Errorf("%s:%d: Evaluator timed out after %v", filepath.Base(file), line, time.Since(timer))
+				logrus.Errorf("%s:%d: "+msg2+"\n\n", append([]interface{}{filepath.Base(file), line})...)
 				return false
 			}
 

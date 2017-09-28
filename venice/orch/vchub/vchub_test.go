@@ -62,17 +62,17 @@ func TestVCHub(t *testing.T) {
 	vcHubClient := orch.NewOrchApiClient(conn)
 	filter := &orch.Filter{}
 
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		nicList, err := vcHubClient.ListSmartNICs(context.Background(), filter)
 		if err != nil {
-			return false
+			return false, nil
 		}
 		nics := nicList.GetItems()
 		if len(nics) == 0 {
-			return false
+			return false, nil
 		}
 
-		return true
+		return true, nil
 	}, "Default SmartNICs", "100ms", "20s")
 
 	os.Args = []string{"vchub", "-vcenter-list", vc1 + ",user:pass@127.0.0.1:8880/sdk"}

@@ -392,29 +392,29 @@ func TestNpmClientWatch(t *testing.T) {
 	AssertOk(t, err, "Error creating the rest server")
 
 	// verify client got the network & ep
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		nw := ag.netAdded[objectKey(nt.ObjectMeta)]
-		return (nw != nil && nw.Name == nt.Name)
+		return (nw != nil && nw.Name == nt.Name), nil
 	}, "Network add not found in agent")
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		nw := ag.netUpdated[objectKey(nt.ObjectMeta)]
-		return (nw != nil && nw.Name == nt.Name)
+		return (nw != nil && nw.Name == nt.Name), nil
 	}, "Network update not found in agent")
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		nw := ag.netDeleted[objectKey(nt.ObjectMeta)]
-		return (nw != nil && nw.Name == nt.Name)
+		return (nw != nil && nw.Name == nt.Name), nil
 	}, "Network delete not found in agent")
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		ep, ok := ag.epAdded[objectKey(epinfo.ObjectMeta)]
-		return (ok && ep.Name == epinfo.Name)
+		return (ok && ep.Name == epinfo.Name), nil
 	}, "Endpoint add not found in agent")
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		ep, ok := ag.epUpdated[objectKey(epinfo.ObjectMeta)]
-		return (ok && ep.Name == epinfo.Name)
+		return (ok && ep.Name == epinfo.Name), nil
 	}, "Endpoint update not found in agent")
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		ep, ok := ag.epDeleted[objectKey(epinfo.ObjectMeta)]
-		return (ok && ep.Name == epinfo.Name)
+		return (ok && ep.Name == epinfo.Name), nil
 	}, "Endpoint delete not found in agent")
 
 	// verify the network REST api
@@ -464,17 +464,17 @@ func TestSecurityGroupWatch(t *testing.T) {
 	Assert(t, (cl != nil), "Error creating npm client")
 
 	// verify client got the security group
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		sgs, ok := ag.sgAdded[objectKey(sg.ObjectMeta)]
-		return (ok && sgs.Name == sg.Name)
+		return (ok && sgs.Name == sg.Name), nil
 	}, "Security group add not found in agent")
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		sgs, ok := ag.sgUpdated[objectKey(sg.ObjectMeta)]
-		return (ok && sgs.Name == sg.Name)
+		return (ok && sgs.Name == sg.Name), nil
 	}, "Security group update not found in agent")
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		sgs, ok := ag.sgDeleted[objectKey(sg.ObjectMeta)]
-		return (ok && sgs.Name == sg.Name)
+		return (ok && sgs.Name == sg.Name), nil
 	}, "Security group delete not found in agent")
 
 	// stop the server and client

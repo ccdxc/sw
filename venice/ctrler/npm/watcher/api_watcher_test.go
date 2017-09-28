@@ -104,9 +104,9 @@ func TestApiWatcher(t *testing.T) {
 	Assert(t, (ns.Spec.IPv4Subnet == "10.1.1.0/24"), "Got invalid network", ns)
 
 	// verify network got created
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, nerr := stateMgr.FindNetwork("default", "test")
-		return (nerr == nil)
+		return (nerr == nil), nil
 	}, "Network not found in statemgr")
 	nw, err := stateMgr.FindNetwork("default", "test")
 	AssertOk(t, err, "Could not find the network")
@@ -135,9 +135,9 @@ func TestApiWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating nw if")
 
 	// verify endpoint got created
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, perr := stateMgr.FindEndpoint("default", "test-nwif")
-		return (perr == nil)
+		return (perr == nil), nil
 	}, "Endpoint not found in statemgr")
 	ep, err := stateMgr.FindEndpoint("default", "test-nwif")
 	AssertOk(t, err, "Could not find the endpoint")
@@ -148,9 +148,9 @@ func TestApiWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting nw if")
 
 	// verify endpoint is gone
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, perr := stateMgr.FindEndpoint("default", "test-nwif")
-		return (perr != nil)
+		return (perr != nil), nil
 	}, "Endpoint still found in statemgr")
 
 	// delete the network
@@ -158,9 +158,9 @@ func TestApiWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting network")
 
 	// verify network is gone
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, nerr := stateMgr.FindNetwork("default", "test")
-		return (nerr != nil)
+		return (nerr != nil), nil
 	}, "Endpoint still found in statemgr")
 
 	// stop the api server

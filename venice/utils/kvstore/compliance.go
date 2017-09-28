@@ -793,8 +793,8 @@ func TestElectionRestartContender(t *testing.T, cSetup ClusterSetupFunc, sSetup 
 
 	contender := newContest(context.Background(), t, store, contenders[0].Leader(), minTTL)
 
-	tutils.AssertEventually(t, func() bool {
-		return contenders[0].Leader() == contender.Leader()
+	tutils.AssertEventually(t, func() (bool, []interface{}) {
+		return contenders[0].Leader() == contender.Leader(), []interface{}{contender.Leader(), contenders[0].Leader()}
 	}, "Leader changed when not expected to", "10ms", "1s")
 
 	// Clean up
@@ -823,13 +823,13 @@ func TestCancelElection(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetup
 
 	cancel()
 
-	tutils.AssertEventually(t, func() bool {
+	tutils.AssertEventually(t, func() (bool, []interface{}) {
 		for _, contender := range newContenders {
 			if contender.IsLeader() {
-				return true
+				return true, nil
 			}
 		}
-		return false
+		return false, nil
 	}, "One of the other contenders failed to become leader", "10ms", "1s")
 
 	// Clean up

@@ -30,8 +30,8 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 
 	// verify all agents have the security group
 	for _, ag := range it.agents {
-		AssertEventually(c, func() bool {
-			return (len(ag.datapath.SgDB) == 1)
+		AssertEventually(c, func() (bool, []interface{}) {
+			return (len(ag.datapath.SgDB) == 1), nil
 		}, "Sg not found on agent", "10ms", it.pollTimeout())
 		c.Assert(len(ag.datapath.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")].Request), Equals, 1)
 	}
@@ -56,13 +56,13 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 
 	// verify datapath has the rules
 	for _, ag := range it.agents {
-		AssertEventually(c, func() bool {
+		AssertEventually(c, func() (bool, []interface{}) {
 			sg, ok := ag.datapath.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")]
 			if !ok {
-				return false
+				return false, nil
 			}
 
-			return ((len(sg.Request[0].IngressPolicy.FwRules) == 1) && (len(sg.Request[0].EgressPolicy.FwRules) == 1))
+			return ((len(sg.Request[0].IngressPolicy.FwRules) == 1) && (len(sg.Request[0].EgressPolicy.FwRules) == 1)), nil
 		}, "Sg rules not found on agent", "10ms", it.pollTimeout())
 	}
 
@@ -72,13 +72,13 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 
 	// verify rules are gone from datapath
 	for _, ag := range it.agents {
-		AssertEventually(c, func() bool {
+		AssertEventually(c, func() (bool, []interface{}) {
 			sg, ok := ag.datapath.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")]
 			if !ok {
-				return false
+				return false, nil
 			}
 
-			return ((len(sg.Request[0].IngressPolicy.FwRules) == 0) && (len(sg.Request[0].EgressPolicy.FwRules) == 0))
+			return ((len(sg.Request[0].IngressPolicy.FwRules) == 0) && (len(sg.Request[0].EgressPolicy.FwRules) == 0)), nil
 		}, "Sg rules still found on agent", "10ms", it.pollTimeout())
 	}
 
@@ -88,8 +88,8 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 
 	// verify sg is removed from datapath
 	for _, ag := range it.agents {
-		AssertEventually(c, func() bool {
-			return (len(ag.datapath.SgDB) == 0)
+		AssertEventually(c, func() (bool, []interface{}) {
+			return (len(ag.datapath.SgDB) == 0), nil
 		}, "Sg still found on agent", "10ms", it.pollTimeout())
 	}
 }
@@ -111,17 +111,17 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// create a network in controller
 	err := it.ctrler.Watchr.CreateNetwork("default", "testNetwork", "10.1.0.0/16", "10.1.1.254")
 	c.Assert(err, IsNil)
-	AssertEventually(c, func() bool {
+	AssertEventually(c, func() (bool, []interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
-		return (nerr == nil)
+		return (nerr == nil), nil
 	}, "Network not found in statemgr")
 
 	// create sg in watcher
 	err = it.ctrler.Watchr.CreateSecurityGroup("default", "testsg", []string{"env:production", "app:procurement"})
 	c.Assert(err, IsNil)
-	AssertEventually(c, func() bool {
+	AssertEventually(c, func() (bool, []interface{}) {
 		_, serr := it.ctrler.StateMgr.FindSecurityGroup("default", "testsg")
-		return (serr == nil)
+		return (serr == nil), nil
 	}, "Sg not found in statemgr")
 
 	// create endpoint
@@ -130,8 +130,8 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 
 	// verify endpoint is present in all agents
 	for _, ag := range it.agents {
-		AssertEventually(c, func() bool {
-			return (len(ag.datapath.EndpointDB) == 1)
+		AssertEventually(c, func() (bool, []interface{}) {
+			return (len(ag.datapath.EndpointDB) == 1), nil
 		}, "endpoint not found on agent", "10ms", it.pollTimeout())
 		ep, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
 		c.Assert(ok, Equals, true)
@@ -146,8 +146,8 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 
 	// verify new endpoint is present in all agents
 	for _, ag := range it.agents {
-		AssertEventually(c, func() bool {
-			return (len(ag.datapath.EndpointDB) == 2)
+		AssertEventually(c, func() (bool, []interface{}) {
+			return (len(ag.datapath.EndpointDB) == 2), nil
 		}, "endpoint not found on agent", "10ms", it.pollTimeout())
 		ep, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint2")]
 		c.Assert(ok, Equals, true)
@@ -160,8 +160,8 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	err = it.ctrler.Watchr.DeleteEndpoint("default", "testNetwork", "testEndpoint2", "testVm2", "02:02:02:02:02:02", "host2", "20.2.2.2")
 	c.Assert(err, IsNil)
 	for _, ag := range it.agents {
-		AssertEventually(c, func() bool {
-			return (len(ag.datapath.EndpointDB) == 1)
+		AssertEventually(c, func() (bool, []interface{}) {
+			return (len(ag.datapath.EndpointDB) == 1), nil
 		}, "endpoint still found on agent", "10ms", it.pollTimeout())
 	}
 
@@ -171,11 +171,11 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 
 	// verify sg is removed from the endpoint
 	for _, ag := range it.agents {
-		AssertEventually(c, func() bool {
+		AssertEventually(c, func() (bool, []interface{}) {
 			ep, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
 			c.Assert(ok, Equals, true)
 			c.Assert(len(ep.Request), Equals, 1)
-			return (len(ep.Request[0].SecurityGroup) == 0)
+			return (len(ep.Request[0].SecurityGroup) == 0), nil
 		}, "endpoint still found on agent", "10ms", it.pollTimeout())
 	}
 
@@ -183,16 +183,16 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	err = it.ctrler.Watchr.DeleteEndpoint("default", "testNetwork", "testEndpoint1", "testVm1", "01:01:01:01:01:01", "host1", "20.1.1.1")
 	c.Assert(err, IsNil)
 	for _, ag := range it.agents {
-		AssertEventually(c, func() bool {
-			return (len(ag.datapath.EndpointDB) == 0)
+		AssertEventually(c, func() (bool, []interface{}) {
+			return (len(ag.datapath.EndpointDB) == 0), nil
 		}, "endpoint still found on agent", "10ms", it.pollTimeout())
 	}
 
 	// delete the network
 	err = it.ctrler.Watchr.DeleteNetwork("default", "testNetwork")
 	c.Assert(err, IsNil)
-	AssertEventually(c, func() bool {
+	AssertEventually(c, func() (bool, []interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
-		return (nerr != nil)
+		return (nerr != nil), nil
 	}, "endpoint still found on agent", "10ms", it.pollTimeout())
 }

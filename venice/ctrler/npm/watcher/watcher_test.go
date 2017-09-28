@@ -52,9 +52,9 @@ func TestNetworkWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating network")
 
 	// verify network got created
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, nerr := stateMgr.FindNetwork("default", "default")
-		return (nerr == nil)
+		return (nerr == nil), nil
 	}, "Network not found in statemgr")
 	nw, err := stateMgr.FindNetwork("default", "default")
 	AssertOk(t, err, "Could not find the network")
@@ -67,9 +67,9 @@ func TestNetworkWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting network")
 
 	// verify network is removed
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, nerr := stateMgr.FindNetwork("default", "default")
-		return (nerr != nil)
+		return (nerr != nil), nil
 	}, "Network still found after deleting")
 
 	// close the channels
@@ -94,9 +94,9 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	// create a network
 	err = watcher.CreateNetwork("default", "default", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(t, err, "Error creating network")
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, nerr := stateMgr.FindNetwork("default", "default")
-		return (nerr == nil)
+		return (nerr == nil), nil
 	}, "Network not found in statemgr")
 
 	// create a endpoint
@@ -105,9 +105,9 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating endpoint")
 
 	// verify endpoint got created
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, perr := stateMgr.FindObject("Endpoint", "default", "testEndpoint")
-		return (perr == nil)
+		return (perr == nil), nil
 	}, "Endpoint not found in statemgr")
 	ep, err := stateMgr.FindObject("Endpoint", "default", "testEndpoint")
 	AssertOk(t, err, "endpoint not found")
@@ -123,9 +123,9 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting endpoint")
 
 	// verify endpoint got deleted
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, perr := stateMgr.FindObject("Endpoint", "default", "testEndpoint")
-		return (perr != nil)
+		return (perr != nil), nil
 	}, "Endpoint still found in statemgr")
 
 	// tets duplicate delete
@@ -156,9 +156,9 @@ func TestSecurityGroupWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating sg")
 
 	// verify sg got created
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, serr := stateMgr.FindSecurityGroup("default", "testsg")
-		return (serr == nil)
+		return (serr == nil), nil
 	}, "Sg not found in statemgr")
 	sg, err := stateMgr.FindSecurityGroup("default", "testsg")
 	AssertOk(t, err, "Could not find the sg")
@@ -171,9 +171,9 @@ func TestSecurityGroupWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting sg")
 
 	// verify network is removed
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, serr := stateMgr.FindSecurityGroup("default", "testsg")
-		return (serr != nil)
+		return (serr != nil), nil
 	}, "Sg still found in statemgr")
 
 	// close the channels
@@ -200,9 +200,9 @@ func TestSgPolicyWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating sg")
 
 	// wait a little for watch even to propagate
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, serr := stateMgr.FindSecurityGroup("default", "testsg")
-		return (serr == nil)
+		return (serr == nil), nil
 	}, "Sg not found in statemgr")
 
 	// rules
@@ -224,9 +224,9 @@ func TestSgPolicyWatcher(t *testing.T) {
 	AssertOk(t, err, "Error creating sg policy")
 
 	// verify the sg policy exists
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, serr := stateMgr.FindSgpolicy("default", "pol1")
-		return (serr == nil)
+		return (serr == nil), nil
 	}, "Sg policy not found in statemgr")
 	sgp, err := stateMgr.FindSgpolicy("default", "pol1")
 	AssertOk(t, err, "Could not find the sg policy")
@@ -240,9 +240,9 @@ func TestSgPolicyWatcher(t *testing.T) {
 	AssertOk(t, err, "Error deleting sg policy")
 
 	// verify sgpolicy is gone
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		_, serr := stateMgr.FindSgpolicy("default", "pol1")
-		return (serr != nil)
+		return (serr != nil), nil
 	}, "Sg policy still found in statemgr")
 
 	// close the channels

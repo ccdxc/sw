@@ -206,9 +206,9 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 	AssertOk(c, err, "Error creating network")
 
 	// verify network gets created in agent
-	AssertEventually(c, func() bool {
+	AssertEventually(c, func() (bool, []interface{}) {
 		_, cerr := it.agents[0].Netagent.FindNetwork(nw.ObjectMeta)
-		return (cerr == nil)
+		return (cerr == nil), nil
 	}, "Network not found in agent")
 
 	// delete the network
@@ -216,9 +216,9 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 	AssertOk(c, err, "Error deleting network")
 
 	// verify network is removed from agent
-	AssertEventually(c, func() bool {
+	AssertEventually(c, func() (bool, []interface{}) {
 		_, cerr := it.agents[0].Netagent.FindNetwork(nw.ObjectMeta)
-		return (cerr != nil)
+		return (cerr != nil), nil
 	}, "Network still found in agent")
 }
 
@@ -233,13 +233,13 @@ func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
 	vcHubClient := orch.NewOrchApiClient(conn)
 	// verify number of smartnics
 	filter := &orch.Filter{}
-	AssertEventually(c, func() bool {
+	AssertEventually(c, func() (bool, []interface{}) {
 		nicList, err := vcHubClient.ListSmartNICs(context.Background(), filter)
 		if err == nil && len(nicList.GetItems()) == it.numAgents {
-			return true
+			return true, nil
 		}
 
-		return false
+		return false, nil
 	}, "Unable to find expected snics")
 
 	// add a nwif and verify it is seen by client.
@@ -254,10 +254,10 @@ func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
 	addResp, err := it.vcHub.vcSim.CreateNwIF(snicMac, addReq)
 	c.Assert(err, IsNil)
 
-	AssertEventually(c, func() bool {
+	AssertEventually(c, func() (bool, []interface{}) {
 		nwifList, err := vcHubClient.ListNwIFs(context.Background(), filter)
 		if err != nil {
-			return false
+			return false, nil
 		}
 
 		for _, nwif := range nwifList.GetItems() {
@@ -266,28 +266,28 @@ func (it *veniceIntegSuite) TestVeniceIntegVCH(c *C) {
 				continue
 			}
 
-			return true
+			return true, nil
 		}
 
-		return false
+		return false, nil
 	}, "Unable to find expected nwif")
 
 	// delete and verify
 	it.vcHub.vcSim.DeleteNwIF(snicMac, addResp.UUID)
-	AssertEventually(c, func() bool {
+	AssertEventually(c, func() (bool, []interface{}) {
 		nwifList, err := vcHubClient.ListNwIFs(context.Background(), filter)
 		if err != nil {
-			return false
+			return false, nil
 		}
 
 		for _, nwif := range nwifList.GetItems() {
 			s := nwif.GetStatus()
 			if s.MacAddress == addResp.MacAddr {
-				return false
+				return false, nil
 			}
 		}
 
-		return true
+		return true, nil
 	}, "Deleted nwif still exists")
 
 }

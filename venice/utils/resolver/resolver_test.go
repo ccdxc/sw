@@ -75,18 +75,18 @@ func TestResolverClient(t *testing.T) {
 	client := New(config)
 	mo := &mockServiceInstanceObserver{}
 	client.Register(mo)
-	c2 := func() bool {
+	c2 := func() (bool, []interface{}) {
 		instances := client.Lookup("svc1")
 		if len(instances.Items) != 2 {
-			return false
+			return false, nil
 		}
 		for ii := range instances.Items {
 			name := instances.Items[ii].Name
 			if name != "inst1" && name != "inst2" {
-				return false
+				return false, nil
 			}
 		}
-		return true
+		return true, nil
 	}
 	AssertEventually(t, c2, "Failed to resolve svc1")
 	urls := client.GetURLs("svc1")
@@ -104,18 +104,18 @@ func TestResolverClient(t *testing.T) {
 		Service: "svc1",
 	}
 	m.AddServiceInstance(&si3)
-	c3 := func() bool {
+	c3 := func() (bool, []interface{}) {
 		instances := client.Lookup("svc1")
 		if len(instances.Items) != 3 {
-			return false
+			return false, nil
 		}
 		for ii := range instances.Items {
 			name := instances.Items[ii].Name
 			if name != "inst1" && name != "inst2" && name != "inst3" {
-				return false
+				return false, nil
 			}
 		}
-		return true
+		return true, nil
 	}
 	AssertEventually(t, c3, "Failed to resolve svc1 after adding an instance")
 
@@ -127,11 +127,11 @@ func TestResolverClient(t *testing.T) {
 		t.Fatalf("Found non-zero instances for non-existant service")
 	}
 
-	AssertEventually(t, func() bool {
+	AssertEventually(t, func() (bool, []interface{}) {
 		if mo.addedCount == 3 && mo.deletedCount == 1 {
-			return true
+			return true, nil
 		}
-		return false
+		return false, nil
 	}, "Failed to find added and deleted instances")
 
 	client.Stop()
