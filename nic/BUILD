@@ -112,6 +112,7 @@ cc_library(
         "asic/capri/design/common/gen",
     ],
     deps = ["//nic/hal/pd/capri/csr:sknobs_hdrs"],
+    copts = ["-DEXCLUDE_PER_FIELD_CNTRL"],
 )
 
 cc_library(
