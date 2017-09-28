@@ -16,6 +16,10 @@ function createVCHubContainer() {
     docker build --rm --no-cache -t pen-vchub:latest -f tools/docker-files/vchub/Dockerfile tools/docker-files/vchub
 }
 
+function createN4sContainer() {
+    docker build --rm --no-cache -t pen-n4sagent:latest -f tools/docker-files/n4sagent/Dockerfile tools/docker-files/n4sagent
+}
+
 function createNPMContainer() {
     docker build --rm --no-cache -t pen-npm:latest -f tools/docker-files/npm/Dockerfile tools/docker-files/npm
 }
@@ -38,7 +42,8 @@ function createBinContainerTarBall() {
         fi
     done
     mkdir -p bin/tars
-    dynamicimages="pen-cmd:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest pen-npm:latest pen-vcsim:latest"
+    dynamicimages="pen-cmd:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest pen-npm:latest \
+        pen-vcsim:latest pen-n4sagent:latest"
     for i in $staticimages $dynamicimages
     do
         # i is srv1.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
@@ -62,6 +67,7 @@ case $1 in
     vchub) createVCHubContainer;;
     npm) createNPMContainer;;
     vcsim) createVCSimContainer;;
+    n4sagent) createN4sContainer;;
     createBinContainerTarBall) createBinContainerTarBall;;
     startCluster) startCluster;;
     stopCluster) stopCluster ;;

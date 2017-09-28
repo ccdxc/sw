@@ -5,13 +5,14 @@ PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */))
 TO_BUILD := ./venice/utils/... ./nic/agent/... ./venice/cmd/... ./venice/apigw/... ./venice/orch/... \
 ./venice/apiserver/... ./venice/globals/... ./venice/ctrler/... ./test/... ./api/ ./api/hooks/... \
 ./api/listerwatcher/... ./api/cache/... ./api/integration/... ./venice/cli/...
-TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd
+TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent
 TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 
 GOFMT_CMD := gofmt -s -l
 GOVET_CMD := go tool vet
 SHELL := /bin/bash
 GOCMD = /usr/local/go/bin/go
+PENS_AGENTS ?= 50
 
 default: build unit-test cover
 
@@ -187,6 +188,11 @@ restart-test-cluster:
 
 e2e-test:
 	vagrant ssh node1 -- 'cd /import/src/github.com/pensando/sw/test/e2e; sudo -E E2E_TEST=1 GOPATH=/import /usr/local/go/bin/go test -v .'
+
+start-agents:
+	vagrant ssh node2 -- " /import/src/github.com/pensando/sw/tools/scripts/agentScale.py -num-agents $(PENS_AGENTS)  |  sudo bash "
+stop-agents:
+	vagrant ssh node2 -- " /import/src/github.com/pensando/sw/tools/scripts/agentScale.py -num-agents $(PENS_AGENTS) -stop |  sudo bash "
 
 test-clean:
 	scripts/cleanup-dev.sh
