@@ -14,44 +14,54 @@ from infra.common.logging import logger
 
 
 def Setup(infra, module):
-    print("Setup(): Sample Implementation")
     modcbs.Setup(infra, module)
     return
 
 def Teardown(infra, module):
-    print("Teardown(): Sample Implementation.")
     return
 
 def TestCaseSetup(tc):
 
     tc.pvtdata = ObjectDatabase(logger)
-    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+
+    tcp_proxy.SetupProxyArgs(tc)
+
+    id1, id2 = ProxyCbServiceHelper.GetSessionQids(tc.config.flow._FlowObject__session)
+    if tc.config.flow.IsIflow():
+        id = id1
+        other_fid = id2
+    else:
+        id = id2
+        other_fid = id1
+
     TcpCbHelper.main(id)
     tcbid = "TcpCb%04d" % id
+    tc.module.logger.info("Configuring %s" % tcbid)
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
     tcp_proxy.init_tcb_inorder(tc, tcb)
     tcb.SetObjValPd()
 
-    TcpCbHelper.main(id + 1)
-    tcbid2 = "TcpCb%04d" % (id + 1)
+    TcpCbHelper.main(other_fid)
+    tcbid2 = "TcpCb%04d" % (other_fid)
+    tc.module.logger.info("Configuring %s" % tcbid2)
     tcb2 = tc.infra_data.ConfigStore.objects.db[tcbid2]
     tcp_proxy.init_tcb_inorder2(tc, tcb2)
     tcb2.SetObjValPd()
 
     # 2. Configure TLS CB in HBM before packet injection
     tlscbid = "TlsCb%04d" % id
-    tlscbid2 = "TlsCb%04d" % (id + 1)
+    tlscbid2 = "TlsCb%04d" % (other_fid)
     tlscb = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb2 = tc.infra_data.ConfigStore.objects.db[tlscbid2]
 
     tlscb.debug_dol = 0
     tlscb2.debug_dol = 0
-    if hasattr(tc.module.args, 'bypass_barco') and tc.module.args.bypass_barco:
+    if tc.pvtdata.bypass_barco:
         print("Bypassing Barco")
         tlscb.debug_dol |= tcp_tls_proxy.tls_debug_dol_bypass_barco
         tlscb2.debug_dol |= tcp_tls_proxy.tls_debug_dol_bypass_barco
-    if hasattr(tc.module.args, 'same_flow') and tc.module.args.same_flow:
+    if tc.pvtdata.same_flow:
         print("Same flow")
         tlscb.debug_dol |= tcp_tls_proxy.tls_debug_dol_bypass_proxy
         tlscb2.debug_dol |= tcp_tls_proxy.tls_debug_dol_bypass_proxy
@@ -59,7 +69,7 @@ def TestCaseSetup(tc):
         tlscb2.other_fid = 0xffff
     else:
         print("Other flow")
-        tlscb.other_fid = id + 1
+        tlscb.other_fid = other_fid
         tlscb2.other_fid = id
 
     tlscb.SetObjValPd()
@@ -101,7 +111,7 @@ def TestCaseVerify(tc):
         other_tlscbid = "TlsCb%04d" % id
 
     same_flow = False
-    if hasattr(tc.module.args, 'same_flow') and tc.module.args.same_flow:
+    if tc.pvtdata.same_flow:
         other_tcbid = tcbid
         other_tlscbid = tlscbid
         same_flow = True

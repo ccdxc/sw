@@ -161,19 +161,13 @@ modules:
         name    : PROXY_UPLINK_TO_UPLINK_BYPASS_BARCO
         spec    : uplink_to_uplink.testspec
         module  : pkt_to_p4
-        args    :
-            bypass_barco : 1
-            maxflows : 1
-            same_flow : 1
-
-    - module:
-        name    : PKT_HFLOW_TO_NFLOW_PROXY_BYPASS_BARCO
-        spec    : uplink_to_uplink.testspec
-        module  : pkt_to_p4
-        args    :
-            bypass_barco : 1
-            maxflows : 1
-            same_flow : 0
+        iterate :
+            - bypass_barco : 1
+              maxflows : 1
+              same_flow : 1
+            - bypass_barco : 1
+              maxflows : 1
+              same_flow : 0
 
     - module:
         name    : PKT_HFLOW_TO_NFLOW_PROXY_BYPASS_BARCO_SEND_ACK
@@ -190,19 +184,25 @@ modules:
         name    : PROXY_UPLINK_TO_HOST_BYPASS_BARCO
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4
-        args    :
-            bypass_barco : 1
-            same_flow : 1
-            flow: filter://type=IPV4,proto=TCP
+        iterate :
+            - bypass_barco : 1
+              maxflows : 1
+              same_flow : 1
+            - bypass_barco : 1
+              maxflows : 1
+              same_flow : 0
 
     - module:
         name    : PROXY_HOST_TO_UPLINK_BYPASS_BARCO
         spec    : host_to_uplink.testspec
         module  : pkt_to_p4
-        args    :
-            bypass_barco : 1
-            same_flow : 1
-            flow: filter://type=IPV4,proto=TCP
+        iterate :
+            - bypass_barco : 1
+              maxflows : 1
+              same_flow : 1
+            - bypass_barco : 1
+              maxflows : 1
+              same_flow : 0
 
     - module:
         name    : PKT_TO_SESQ

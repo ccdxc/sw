@@ -58,6 +58,13 @@ class ProxyCbServiceObjectHelper:
                 #TcpCbHelper.main(proxycb.qid)
         return
 
+    def GetSessionQids(self, session):
+        lst = []
+        proxyFlowObj = ProxyCbServiceObject(session)
+        lst.append(proxyFlowObj)
+        halapi.GetQidProxycbGetFlowInfo(lst)
+        return proxyFlowObj.qid, proxyFlowObj.other_qid
+
     def GetFlowInfo(self, session):
         lst = []
         proxyFlowObj = ProxyCbServiceObject(session)

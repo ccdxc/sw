@@ -37,6 +37,8 @@ def TestCaseSetup(tc):
     global brq
     global tlscb
 
+    tc.pvtdata = ObjectDatabase(logger)
+    tcp_proxy.SetupProxyArgs(tc)
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     TcpCbHelper.main(id)
     tcbid = "TcpCb%04d" % id
