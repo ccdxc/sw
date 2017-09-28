@@ -10,8 +10,7 @@ struct phv_ p;
         .align
 esp_v4_tunnel_n2h_allocate_output_page_index:
     phvwri p.app_header_table3_valid, 0
-    //sll r1, d.out_page_index, DESC_SHIFT_WIDTH 
-    //addi r1, r1, OUT_PAGE_ADDR_BASE
     phvwr p.t1_s2s_out_page_addr, d.out_page_index
+    phvwr p.ipsec_int_header_out_page, d.out_page_index
     nop.e 
 

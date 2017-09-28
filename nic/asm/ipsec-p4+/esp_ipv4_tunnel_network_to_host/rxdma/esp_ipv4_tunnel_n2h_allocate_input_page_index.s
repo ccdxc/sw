@@ -12,6 +12,7 @@ struct phv_ p;
 esp_ipv4_tunnel_n2h_allocate_input_page_index:
     phvwri p.app_header_table2_valid, 0
     phvwr p.t0_s2s_in_page_addr, d.in_page_index 
+    phvwr p.ipsec_int_header_in_page, d.in_page_index
     nop.e 
     nop
 

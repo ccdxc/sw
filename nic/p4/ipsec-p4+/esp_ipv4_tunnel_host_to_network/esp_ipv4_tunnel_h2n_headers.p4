@@ -147,20 +147,6 @@ header_type p4plus_to_p4_ipsec_header_t {
     }
 }
 
-#if 0
-header_type p4plus_to_p4_ipsec_header_t {
-    fields {
-        app_type : 4;
-        table0_valid : 1;
-        table1_valid : 1;
-        table2_valid : 1;
-        table3_valid : 1;
-        ipsec_pad1 : 256;
-        ipsec_pad2 : 256;
-    }
-}
-#endif
-
 #define IPSEC_CB_SCRATCH \
     modify_field(ipsec_cb_scratch.rsvd, rsvd); \
     modify_field(ipsec_cb_scratch.cosA, cosA); \

@@ -6,7 +6,6 @@
 #define tx_table_s1_t1_action allocate_barco_req_pindex 
 
 #define tx_table_s2_t0_action ipsec_encap_txdma_load_head_desc_int_header 
-//#define tx_table_s2_t1_action ipsec_get_barco_req_index_ptr 
 
 #define tx_table_s3_t0_action ipsec_write_barco_req
 

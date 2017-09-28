@@ -19,8 +19,6 @@ deps:
 
 SRC_FILES := \
     esp_ipv4_tunnel_n2h_allocate_barco_req_pindex.s \
-    esp_ipv4_tunnel_n2h_deque_head_desc.s \
-    esp_ipv4_tunnel_n2h_get_barco_req_index_ptr.s \
     esp_ipv4_tunnel_n2h_load_head_desc_int_header.s \
     esp_ipv4_tunnel_n2h_txdma_initial_table.s \
     esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex.s \

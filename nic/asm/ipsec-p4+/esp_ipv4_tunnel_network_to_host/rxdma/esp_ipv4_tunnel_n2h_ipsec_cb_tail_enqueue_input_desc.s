@@ -36,6 +36,13 @@ dma_cmd_to_write_output_desc_aol:
     phvwr p.dma_cmd_out_desc_aol_dma_cmd_addr, k.ipsec_to_stage4_out_desc_addr
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_start_addr, IPSEC_IN_DESC_AOL_START
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_IN_DESC_AOL_END
+
+esp_ipv4_tunnel_n2h_dma_cmd_incr_pindex:
+    add r2, r0, d.cb_pindex
+    addi r2, r2, 1
+    andi r2, r2, 0x3F
+    tblwr d.cb_pindex, r2
+
 dma_cmd_ring_doorbell:
     /* address will be in r4 */
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_IPSEC_ESP)
@@ -51,4 +58,5 @@ dma_cmd_ring_doorbell:
 
         phvwri          p.doorbell_cmd_dma_cmd_eop, 1
         phvwri          p.doorbell_cmd_dma_cmd_wr_fence, 1
-        nop.e 
+        nop.e
+        nop 
