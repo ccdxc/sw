@@ -1,6 +1,6 @@
 # Makefile for building packages
 
-EXCLUDE_DIRS := bin docs Godeps vendor scripts grpc-gateway nic
+EXCLUDE_DIRS := bin docs Godeps vendor scripts grpc-gateway nic bazel-cache
 PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */)))))
 TO_BUILD := ./venice/utils/... ./nic/agent/... ./venice/cmd/... ./venice/apigw/... ./venice/orch/... \
 ./venice/apiserver/... ./venice/globals/... ./venice/ctrler/... ./test/... ./api/ ./api/hooks/... \
