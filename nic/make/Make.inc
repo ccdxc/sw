@@ -14,6 +14,7 @@ ifeq ($(g),1)
   DEBUG = --strip=never -c dbg
 else
   DEBUG = --strip=never -c dbg
+  #DEBUG = --strip=never --copt -g
   #DEBUG = 
 endif
 

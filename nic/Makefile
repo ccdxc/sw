@@ -1,60 +1,61 @@
-
+.PHONY: hal hal-clean
+default: hal
 
 TOPDIR = .
-LIBDIRS = \
-		  utils \
-		  hal/pd/capri/csr \
-		  proto gen/protobuf \
-		  p4 \
-		  capsim \
-		  asm \
-		  model_sim/build \
-		  fte \
-		  hal/svc \
-		  hal/lkl \
-		  hal/src \
-		  hal/periodic \
-		  hal/pd/iris/p4pd \
-		  gen/iris/src \
-		  gen/common_rxdma_actions/src \
-		  gen/common_txdma_actions/src \
-		  hal/plugins \
-		  hal/pd/common \
-		  hal/pd/iris \
-		  hal/pd/capri \
-		  hal/pd/utils/directmap\
-		  hal/pd/utils/flow \
-		  hal/pd/utils/hash \
-		  hal/pd/utils/met \
-		  hal/pd/utils/tcam \
-		  hal/pd/utils/acl_tcam \
-		  hal/pd/utils \
-		  hal/pd/utils/p4pd_mock \
-		  hal/test/utils \
-		  $(NULL)
-
-PGMDIRS = \
-		  hal \
-		  hal/test \
-		  fte/test \
-		  hal/test/gtests \
-		  utils/indexer/test \
-		  utils/shm/test \
-		  utils/list/test \
-		  utils/pt/test \
-		  utils/slab/test \
-		  utils/twheel/test \
-		  utils/host_mem/test \
-		  hal/pd/utils/directmap/test \
-		  hal/pd/utils/flow/test \
-		  hal/pd/utils/hash/test \
-		  hal/pd/utils/met/test \
-		  hal/pd/utils/tcam/test \
-		  hal/pd/utils/acl_tcam/test \
-		  hal/pd/iris/test/rw_tbl_lib \
-		  hal/test \
-		  agents \
-		  $(NULL)
+#LIBDIRS = \
+#		  utils \
+#		  hal/pd/capri/csr \
+#		  proto gen/protobuf \
+#		  p4 \
+#		  capsim \
+#		  asm \
+#		  model_sim/build \
+#		  fte \
+#		  hal/svc \
+#		  hal/lkl \
+#		  hal/src \
+#		  hal/periodic \
+#		  hal/pd/iris/p4pd \
+#		  gen/iris/src \
+#		  gen/common_rxdma_actions/src \
+#		  gen/common_txdma_actions/src \
+#		  hal/plugins \
+#		  hal/pd/common \
+#		  hal/pd/iris \
+#		  hal/pd/capri \
+#		  hal/pd/utils/directmap\
+#		  hal/pd/utils/flow \
+#		  hal/pd/utils/hash \
+#		  hal/pd/utils/met \
+#		  hal/pd/utils/tcam \
+#		  hal/pd/utils/acl_tcam \
+#		  hal/pd/utils \
+#		  hal/pd/utils/p4pd_mock \
+#		  hal/test/utils \
+#		  $(NULL)
+#
+#PGMDIRS = \
+#		  hal \
+#		  hal/test \
+#		  fte/test \
+#		  hal/test/gtests \
+#		  utils/indexer/test \
+#		  utils/shm/test \
+#		  utils/list/test \
+#		  utils/pt/test \
+#		  utils/slab/test \
+#		  utils/twheel/test \
+#		  utils/host_mem/test \
+#		  hal/pd/utils/directmap/test \
+#		  hal/pd/utils/flow/test \
+#		  hal/pd/utils/hash/test \
+#		  hal/pd/utils/met/test \
+#		  hal/pd/utils/tcam/test \
+#		  hal/pd/utils/acl_tcam/test \
+#		  hal/pd/iris/test/rw_tbl_lib \
+#		  hal/test \
+#		  agents \
+#		  $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 
 include $(TOPDIR)/make/Makefile.inc
@@ -102,6 +103,11 @@ deps-test-shell:
 deps-test-build:
 	NO_PULL=1 make build
 
+
+hal:
+	make bazel-build
+	make bazel-gtests
+
 bazel-build:
 	make -C p4
 	make -C asm
@@ -113,9 +119,6 @@ bazel-build:
 	bazel build $(BAZEL_OPTIONS) utils/host_mem:all
 
 bazel-gtests:
-	echo $(MAKEFLAGS)
-	#echo $(ARGS)
-	#echo $(JOBS)
 	# PI gtests
 	bazel build $(BAZEL_OPTIONS) hal/test/gtests:all
 	# PI Utils
@@ -173,4 +176,6 @@ run-gtests:
 	LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/../bazel-bin/nic/hal/pd/utils/hash/hash_test
 	LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/../bazel-bin/nic/hal/pd/utils/met/met_test
 
-	
+hal-clean:
+	$(MAKE) clean -C p4
+	$(MAKE) clean -C asm
