@@ -16,20 +16,6 @@
 
 #include "../ipsec_defines.h"
 
-
-
-header_type p4plus_to_p4_ipsec_header_t {
-    fields {
-        app_type : 4;
-        table0_valid : 1;
-        table1_valid : 1;
-        table2_valid : 1;
-        table3_valid : 1;
-        ipsec_pad1 : 256;
-        ipsec_pad : 248;
-    }
-}
-
 header_type ipsec_txdma2_global_t {
     fields {
         in_desc_addr   : ADDRESS_WIDTH;
@@ -126,6 +112,8 @@ metadata ipsec_int_header_t ipsec_int_header;
 
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t intrinsic_app_hdr;
+@pragma dont_trim
+metadata dma_cmd_phv2pkt_t ipsec_app_hdr;
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t eth_hdr;
 @pragma dont_trim

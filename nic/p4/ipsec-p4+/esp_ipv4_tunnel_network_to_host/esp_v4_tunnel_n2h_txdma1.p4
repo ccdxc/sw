@@ -22,7 +22,7 @@
 #include "esp_v4_tunnel_n2h_headers.p4"
 
 
-
+#if 0
 header_type p4plus_to_p4_ipsec_header_t {
     fields {
         app_type : 4;
@@ -31,9 +31,10 @@ header_type p4plus_to_p4_ipsec_header_t {
         table2_valid : 1;
         table3_valid : 1;
         ipsec_pad : 256;
-        ipsec_pad1 : 248;
+        ipsec_pad1 : 256;
     }
 }
+#endif
 
 
 header_type ipsec_txdma1_global_t {
@@ -98,9 +99,9 @@ header_type ipsec_to_stage3_t {
     }
 }
 
-header_type doorbell_data_pad_t {                                                                                                                                                                                
+header_type doorbell_data_pad_t {
     fields {
-        db_data_pad : 64;
+        db_data_pad : 48;
     }
 }
 header_type barco_dbell_t {                                                                                                                                                                                                     
@@ -141,17 +142,15 @@ metadata ipsec_table3_s2s t3_s2s;
 metadata ipsec_int_header_t ipsec_int_header;
 @pragma dont_trim
 metadata barco_zero_content_t barco_zero;
-@pragma dont_trim
-metadata barco_dbell_t barco_dbell;
 
-@pragma dont_trim
-metadata barco_descriptor_t barco_desc;
-@pragma dont_trim
-metadata barco_request_t barco_req;
 @pragma dont_trim
 metadata doorbell_data_t db_data;
 @pragma dont_trim
-metadata doorbell_data_pad_t db_data_pad;
+metadata barco_request_t barco_req;
+@pragma dont_trim
+metadata barco_dbell_t barco_dbell;
+//@pragma dont_trim
+//metadata doorbell_data_pad_t db_data_pad;
 
 
 @pragma dont_trim

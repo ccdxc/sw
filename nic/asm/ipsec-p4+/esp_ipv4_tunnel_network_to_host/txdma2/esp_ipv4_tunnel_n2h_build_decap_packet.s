@@ -12,7 +12,11 @@ struct phv_ p;
 esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     phvwri p.intrinsic_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwri p.intrinsic_app_hdr_dma_cmd_phv_start_addr, 0
-    phvwri p.intrinsic_app_hdr_dma_cmd_phv_end_addr, 32
+    phvwri p.intrinsic_app_hdr_dma_cmd_phv_end_addr, 16
+ 
+    phvwri p.ipsec_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+    phvwri p.ipsec_app_hdr_dma_cmd_phv_start_addr, IPSEC_TXDMA2_APP_HEADER_START
+    phvwri p.ipsec_app_hdr_dma_cmd_phv_end_addr, IPSEC_TXDMA2_APP_HEADER_END 
     
     phvwri p.eth_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     phvwr  p.eth_hdr_dma_cmd_addr, k.t0_s2s_in_page_addr
@@ -25,3 +29,4 @@ esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     sub r3, r3, k.txdma2_global_pad_size
     phvwr p.dec_pay_load_dma_cmd_size, r3
     nop.e 
+    nop
