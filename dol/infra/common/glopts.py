@@ -27,4 +27,6 @@ parser.add_argument('--module', dest='module', default=None,
                     help='Run all TestSpecs of a module (from modules.list)')
 parser.add_argument('--feature', dest='feature', default=None,
                     help='Run all Tests for a feature.')
+parser.add_argument('--subfeature', dest='subfeature',
+                    default=None, help='Run tests for a subfeature')
 GlobalOptions = parser.parse_args()

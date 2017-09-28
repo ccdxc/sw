@@ -76,10 +76,14 @@ trigger:
         object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
 
 expect:
+    delay   : callback://networking/packets/GetExpectDelay
     packets:
         - packet:
             object  : callback://networking/packets/GetL2UcExpectedPacket
             port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=IN_PKT
+            port    : 128
 
     descriptors:
         - descriptor:

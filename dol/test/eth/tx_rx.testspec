@@ -146,6 +146,7 @@ trigger:
 
 
 expect:
+    delay   : callback://networking/packets/GetExpectDelay
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=EX_TXDESCR
@@ -154,3 +155,9 @@ expect:
         - descriptor:
             object  : ref://testcase/descriptors/id=EX_RXDESCR
             ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+
+    packets:
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=PKT1
+            port    : 128
+

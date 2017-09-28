@@ -14,7 +14,7 @@ entries:
             ethertype: 0xCCC0
 
     - entry:
-        label: fte_arp
+        label: arp
         fte: True
         initiator:
             ethertype: 0x806

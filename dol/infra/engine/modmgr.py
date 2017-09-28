@@ -215,7 +215,7 @@ class Module(objects.FrameworkObject):
 
     def main(self, infra_data):
         self.infra_data = infra_data
-        prefix = "%s_%s" % (self.feature.upper(), self.name)
+        prefix = "%s/%s" % (self.feature.upper(), self.name)
         self.logger = logging.Logger(level=logging.levels.INFO, stdout=True,
                                      name=prefix)
         self.infra_data.Logger = self.logger

@@ -47,7 +47,7 @@ def GetSummaryAndResult():
     print("\nResult Summary:")
     print("=" * 78)
     print("%-16s %-32s %-6s %-6s %-6s %-6s" %\
-          ('Module', 'Name', '', 'Passed', 'Failed', ' Total'))
+          ('Feature/Sub', 'Name', 'Result', 'Passed', 'Failed', ' Total'))
     print("=" * 78)
 
     npass = 0

@@ -28,20 +28,24 @@ class FeatureObject:
         self.module     = spec.feature.module
         self.enable     = spec.feature.enable
         self.ignore     = spec.feature.ignore
-        self.sub        = getattr(spec.feature, 'sub', self.id)
-
-        self.tms        = []
-        self.__parse_modules()
+        self.sub        = getattr(spec.feature, 'sub', None)
+        self.testspec   = getattr(spec.feature, 'spec', None)
+        self.args       = getattr(spec.feature, 'args', None)
         return
 
-    def __parse_modules(self):
+    def LoadModules(self):
         for m in self.spec.modules:
             mspec = m.module
-            mspec.feature   = self.sub
+            if self.sub is None:
+                mspec.feature = self.id
+            else:
+                mspec.feature = "%s/%s" %(self.id, self.sub)
             mspec.enable    = getattr(mspec, 'enable', self.enable)
             mspec.ignore    = getattr(mspec, 'ignore', self.ignore)
             mspec.module    = getattr(mspec, 'module', self.module)
             mspec.package   = getattr(mspec, 'package', self.package)
+            mspec.spec      = getattr(mspec, 'spec', self.testspec)
+            mspec.args      = getattr(mspec, 'args', self.args)
             ModuleStore.Add(mspec)
         return
 
@@ -50,28 +54,38 @@ class FeatureObjectHelper(parser.ParserBase):
         self.features = []
         return
 
-    def __is_match(self, spec):
+    def __is_match(self, feature):
         if GlobalOptions.feature is None:
-            if spec.feature.id in BaseTopoExcludeFeatureList:
+            if feature.id in BaseTopoExcludeFeatureList:
                 return False
             return True
-        return spec.feature.id in GlobalOptions.feature
+        return feature.id in GlobalOptions.feature
 
-    def __is_enabled(self, spec):
-        if spec.feature.enable is False:
+    def __is_subfeature_match(self, feature):
+        if GlobalOptions.subfeature is None:
+            return True
+        return GlobalOptions.subfeature == feature.sub
+
+    def __is_enabled(self, feature):
+        if feature.enable is False:
             return False
 
-        return self.__is_match(spec)
+        if self.__is_subfeature_match(feature) is False:
+            logger.info("  - Subfeature Mismatch....Skipping")
+            return False
+
+        return self.__is_match(feature)
 
     def Parse(self):
         ftlist = super().Parse('test/', '*.mlist')
         for fspec in ftlist:
             logger.info("Loading Feature Test Module List: %s" % fspec.feature.id)
-            if self.__is_enabled(fspec) is False:
+            feature = FeatureObject(fspec)
+            if self.__is_enabled(feature) is False:
                 logger.info("  - Disabled....Skipping")
                 continue
-            obj = FeatureObject(fspec)
-            self.features.append(obj)
+            feature.LoadModules()
+            self.features.append(feature)
         return
 
 def Init():

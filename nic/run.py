@@ -160,6 +160,9 @@ def run_dol(args):
     if args.feature is not None:
         cmd.append('--feature')
         cmd.append(args.feature)
+    if args.subfeature is not None:
+        cmd.append('--subfeature')
+        cmd.append(args.subfeature)
     if args.test is not None:
         cmd.append('--test')
         cmd.append(args.test)
@@ -268,7 +271,9 @@ def main():
     parser.add_argument('--modlist', dest='modlist',
                         default=None, help='Module List File')
     parser.add_argument('--feature', dest='feature',
-                        default=None, help='Module List File')
+                        default=None, help='Run all tests of a feature.')
+    parser.add_argument('--subfeature', dest='subfeature',
+                        default=None, help='Run all tests of a sub-feature.')
     parser.add_argument('--test', dest='test',
                         default=None, help='Module List File')
     parser.add_argument('--haljson', dest='haljson',

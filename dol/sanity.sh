@@ -40,4 +40,6 @@ ErrorCheckNExit $? "up2up topo."
 ./main.py --module telemetry --topo telemetry --dryrun
 ErrorCheckNExit $? "telemetry topo."
 
+./main.py --module fte --topo fte --dryrun
+ErrorCheckNExit $? "fte topo."
 exit 0
