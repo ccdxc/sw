@@ -12,13 +12,14 @@ RDMA_RXPROJ = rdma_rxdma
 RDMA_TXPROJ = rdma_txdma
 RDMA_RXGEN_FILE = $(GEN_DIR)/$(RDMA_RXPROJ)/asm_out/ingress.h
 RDMA_TXGEN_FILE = $(GEN_DIR)/$(RDMA_TXPROJ)/asm_out/ingress.h
+ncc_deps = $(shell find $(TOPDIR)/tools/ncc -path $(TOPDIR)/tools/ncc/utest -prune -o -name '*.c' -print -o -name '*.h' -print -o -name '*.py' -print)
 
 my_all: $(RDMA_RXGEN_FILE) $(RDMA_TXGEN_FILE)
 
-$(RDMA_RXGEN_FILE): $(RDMA_RXPROJ).p4 rdma_rxdma_headers.p4
+$(RDMA_RXGEN_FILE): $(RDMA_RXPROJ).p4 rdma_rxdma_headers.p4 $(ncc_deps)
 	$(NCC) $(NCC_OPTIONS) $(RDMA_RXPROJ).p4 --gen-dir $(GEN_DIR)
 
-$(RDMA_TXGEN_FILE): $(RDMA_TXPROJ).p4
+$(RDMA_TXGEN_FILE): $(RDMA_TXPROJ).p4 $(ncc_deps)
 	$(NCC) $(NCC_OPTIONS) $(RDMA_TXPROJ).p4 --gen-dir $(GEN_DIR)
 
 my_clean:

@@ -2,6 +2,7 @@
 default: hal
 
 TOPDIR = .
+CUSTOM = hal
 #LIBDIRS = \
 #		  utils \
 #		  hal/pd/capri/csr \
@@ -56,7 +57,7 @@ TOPDIR = .
 #		  hal/test \
 #		  agents \
 #		  $(NULL)
-SUBDIRS = $(LIBDIRS) $(PGMDIRS)
+#SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 
 include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
@@ -176,6 +177,6 @@ run-gtests:
 	LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/../bazel-bin/nic/hal/pd/utils/hash/hash_test
 	LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/../bazel-bin/nic/hal/pd/utils/met/met_test
 
-hal-clean:
-	$(MAKE) clean -C p4
-	$(MAKE) clean -C asm
+clean:
+	$(MAKE) -C p4 clean
+	$(MAKE) -C asm clean

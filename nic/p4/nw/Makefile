@@ -11,10 +11,11 @@ NCC_OPTIONS = --asm-out --pd-gen --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_b
 PROJ = iris
 
 #p4_src = $(wildcard ./*.p4)
-p4_src = $(shell find . -name '*.p4')
-hdr_src = $(shell find . -name '*.h')
-inc_src = $(shell find ../include -name '*')
-$(GEN_DIR)/.nw_p4: $(p4_src) $(hdr_src) $(inc_src)
+#hdr_src = $(shell find . -name '*.h')
+local_deps = $(shell find . -name '*.p4' -o -name '*.h')
+inc_deps = $(shell find ../include -name '*')
+ncc_deps = $(shell find $(TOPDIR)/tools/ncc -path $(TOPDIR)/tools/ncc/utest -prune -o -name '*.c' -print -o -name '*.h' -print -o -name '*.py' -print)
+$(GEN_DIR)/.nw_p4: $(local_deps) $(inc_deps) $(ncc_deps)
 	$(NCC) $(NCC_OPTIONS) $(PROJ).p4
 	touch $@
 
