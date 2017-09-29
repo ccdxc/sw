@@ -278,6 +278,8 @@ class capri_table:
 
         self.keys = []  # (hdr/capri_field, match_type, mask) => k{}
         self.input_fields = [] # combined list of input fields used by all actions => i{}
+        self.toeplitz_key_cfs = []
+        self.toeplitz_seed_cfs = []
         # action data => d{} is union of all action data
         self.action_data = OrderedDict()  # {action_name : [(name, size)]}
         self.action_output = [] # not kept per action.. so for no use for this - TBD
@@ -309,6 +311,8 @@ class capri_table:
         self.start_key_off_delta = 0    # bit offset within 1st K byte
         self.end_key_off = -1           # computed based on last K bit location in KM
         self.end_key_off_delta = 0
+        self.last_flit_start_key_off = -1   # for wide key and toeplitz has tables
+        self.last_flit_end_key_off = -1     # for wide key and toeplitz has tables
 
     def is_hash_table(self):
         return True if (self.match_type == match_type.EXACT_HASH_OTCAM or \
@@ -321,6 +325,9 @@ class capri_table:
     
     def is_mpu_only(self):
         return True if self.match_type == match_type.MPU_ONLY else False
+
+    def is_toeplitz_hash(self):
+        return self.hash_type == 4
 
     def num_actions(self):
         return len(self.action_data)
@@ -1092,6 +1099,128 @@ class capri_table:
             (self.gtm.d.name, self.p4_table.name, self.combined_profile))
         #pdb.set_trace()
 
+    def create_toeplitz_key_makers(self):
+        # Toeplitz table has special requirements for the constucting the key-makers
+        # Each cycle uses two key-makers as -
+        # cycle0: km0 = secret[319:64] upper 256 bits left justified in km
+        #         km1 = key[] upper 256 bits
+        # cycle1+:km0 = '32b0 + secret[63:0] left justified in km
+        #         km1 = '32b0 + key[] rest of the bits
+        # On clycle1+, need to leave 32 msbits in key and seed keymaker as hw puts
+        # 32bits from previous cyc in there
+
+        # allocate 2 kms for each flit used.. key1 and seed1 can be loaded across
+        # multiple flits.. but rest of the key/seed must come from each subsequent
+        # flit.. once the calculation is started each subsequent flit must feed the
+        # key-maker until the last flit
+        # first 2 flits
+        assert len(self.flits_used) == 2, "Must use two consecutive flits for Toeplitz Hash"
+        self.num_km = len(self.flits_used) * 2
+        max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
+        max_kmB = max_km_width/8
+        flit_szB = self.gtm.tm.be.hw_model['phv']['flit_size'] / 8
+
+        k_phv_chunks = self.gtm.tm.be.pa.get_phv_chunks(self.toeplitz_key_cfs, self.gtm.d)
+        key_phv_bytes = sorted(_phv_chunks_to_bytes(k_phv_chunks))
+        k_len = len(key_phv_bytes)
+        s_phv_chunks = self.gtm.tm.be.pa.get_phv_chunks(self.toeplitz_seed_cfs, self.gtm.d)
+        seed_phv_bytes = sorted(_phv_chunks_to_bytes(s_phv_chunks))
+        s_len = len(seed_phv_bytes)
+
+        b=0
+        km_id=0
+        for fid in range(self.flits_used[0], self.flits_used[-1]+1):
+        #{
+            # allocate 2 key makers (512bits total) per flit which has bytes to load
+            # it is possible to collect 512b worth key from multiple flits, it is not
+            # currently supported by hw - not done. For now there is a km and km_profile
+            # per flit
+            km0 = capri_key_maker(self, [self])
+            km0.km_id = km_id
+            km0.flits_used.append(fid)
+            self.key_makers.append(km0)
+            flit_profile0 = capri_km_profile(self.gtm)
+            km0.combined_profile = capri_km_profile(self.gtm)
+            km1= capri_key_maker(self, [self])
+            km1.km_id = km_id+1
+            km1.flits_used.append(fid)
+            km_id += 2
+            self.key_makers.append(km1)
+            flit_profile1 = capri_km_profile(self.gtm)
+            km1.combined_profile = capri_km_profile(self.gtm)
+
+
+            if fid == self.flits_used[0]:
+                bytes_avail = max_kmB
+            else:
+                bytes_avail = max_kmB - 4
+
+            for i in range(bytes_avail):
+                if b < s_len:
+                    assert (seed_phv_bytes[b] / flit_szB) == fid
+                    flit_profile0.k_byte_sel.append(seed_phv_bytes[b])
+                if b < k_len:
+                    assert (key_phv_bytes[b] / flit_szB) == fid
+                    flit_profile1.k_byte_sel.append(key_phv_bytes[b])
+                b += 1
+
+            flit_profile0.byte_sel += flit_profile0.k_byte_sel
+            flit_profile1.byte_sel += flit_profile1.k_byte_sel
+
+            km0.flit_km_profiles[fid] = flit_profile0
+            km1.flit_km_profiles[fid] = flit_profile1
+            # update km0 and km1 combined_profiles
+            km0.combined_profile += flit_profile0
+            km1.combined_profile += flit_profile1
+
+            if fid != self.flits_used[0]:
+                for i in range(4):
+                    km0.combined_profile.k_byte_sel.insert(0,-1)
+                    km0.combined_profile.byte_sel.insert(0,-1)
+                    flit_profile0.k_byte_sel.insert(0,-1)
+                    flit_profile0.byte_sel.insert(0,-1)
+
+                    km1.combined_profile.k_byte_sel.insert(0,-1)
+                    km1.combined_profile.byte_sel.insert(0,-1)
+                    flit_profile1.k_byte_sel.insert(0,-1)
+                    flit_profile1.byte_sel.insert(0,-1)
+
+        #}
+
+        # XXX we can allow some i-bytes in the last flit km1 (key) if there is space
+        last_fid = self.flits_used[-1]
+        last_key_profile = self.key_makers[-1].combined_profile
+        last_key_flit_profile = self.key_makers[-1].flit_km_profiles[last_fid]
+
+        bytes_avail = max_kmB - len(self.key_makers[-1].combined_profile.byte_sel)
+        kf = self.km_flits[last_fid]
+        i1_bytes = len(kf.km_profile.i1_byte_sel)
+        i2_bytes = len(kf.km_profile.i2_byte_sel)
+        i_bytes = i1_bytes + i2_bytes
+
+        if i_bytes > bytes_avail:
+            assert 0, "Only %d bytes are available for I for Toeplitz table %s, need %d" % \
+                (bytes_avail, self.p4_table.name, i_bytes)
+        
+        # last key maker contains last chunk of the key
+        last_key_flit_profile.i1_byte_sel += kf.km_profile.i1_byte_sel
+        last_key_flit_profile.byte_sel = kf.km_profile.i1_byte_sel + \
+                                        last_key_flit_profile.byte_sel
+        last_key_profile.i1_byte_sel += kf.km_profile.i1_byte_sel
+        last_key_profile.byte_sel = kf.km_profile.i1_byte_sel + \
+                                        last_key_profile.byte_sel
+        last_key_flit_profile.i2_byte_sel += kf.km_profile.i2_byte_sel
+        last_key_flit_profile.byte_sel += kf.km_profile.i2_byte_sel
+        last_key_profile.i2_byte_sel += kf.km_profile.i2_byte_sel
+        last_key_profile.byte_sel += kf.km_profile.i2_byte_sel
+
+        # setup the key_offsets and last_flit_key_offsets
+        # XXX not action_pc for toeplitz - program it as MPU-only
+        self.start_key_off = 0; self.end_key_off = self.key_size
+        self.last_flit_start_key_off = i1_bytes * 8
+        self.last_flit_end_key_off = \
+            len(last_key_profile.byte_sel) * 8
+
     def create_key_makers(self):
         # Allocate key-maker(s) for the table
         # If >1 kms are needed, split the profiles into each key-maker
@@ -1116,6 +1245,10 @@ class capri_table:
         # 
         # when KM profiles are shared between hash/idx and TCAM, K bytes/bits are considered
         # only from hash/idx table, as they need to be contiguous
+
+        if self.is_toeplitz_hash():
+            self.create_toeplitz_key_makers()
+            return
 
         if self.num_km == 0:
             # always use KM0 for this, it does not matter if km is used for another table
@@ -1190,6 +1323,7 @@ class capri_table:
                 self.key_makers.append(km0)
                 flit_profile0 = capri_km_profile(self.gtm)
                 km0.combined_profile = capri_km_profile(self.gtm)
+
                 km1= capri_key_maker(self, [self])
                 km1.km_id = km_id+1
                 km1.flits_used.append(fid)
@@ -1684,6 +1818,9 @@ class capri_table:
         
         if self.is_overflow and not self.is_otcam:
             # for overflow hash table, fix the key_offset with the parent hash table
+            return
+
+        if self.is_toeplitz_hash():
             return
 
         # Re-init the offsets since this function can be called multiple times
@@ -2890,7 +3027,7 @@ class capri_km_profile:
         if use_low:
             assert len(self.byte_sel) == 0, pdb.set_trace() # low portion is already used
         else:
-            assert len(self.byte_sel) == km_size2B, pdb.set_trace() # low portion is already used
+            assert len(self.byte_sel) == km_size2B, pdb.set_trace() # low portion is not yet used
             b = -2
         # append to exsting byte_sel.. if lo half is already added, it is also padded upto half size
         for b in range(0, len(km_prof.byte_sel), 2):
@@ -3243,9 +3380,6 @@ class capri_stage:
         km_used = [_km.get_hw_id() for _km in ct.key_makers]
 
         for c_km in ct.key_makers:
-            if fid not in c_km.flits_used:
-                total_km_allocated += 1
-                continue
             if c_km.shared_km:
                 new_km = c_km.shared_km
             else:
@@ -3255,6 +3389,20 @@ class capri_stage:
                 # already allocated (earlier flit)
                 total_km_allocated += 1
                 continue
+
+            if fid not in c_km.flits_used:
+                if ct.is_wide_key and fid == ct.flits_used[0]:
+                    # This is first flit of toeplitz/wide table but this km is not for this flit
+                    # First two kms must be already allocated, reuse them
+                    assert len(c_km.flits_used) == 1, pdb.set_trace() # BUG
+                    for _f in c_km.flits_used:
+                        assert km_used[c_km.km_id % 2] != -1, pdb.set_trace() # BUG
+                        c_km.hw_id = km_used[c_km.km_id % 2]
+                        self.km_allocator[_f][c_km.hw_id] = c_km
+
+                total_km_allocated += 1
+                continue
+
             self.gtm.tm.logger.debug("Start _allocate_km[%d] for %s flit %d" % \
                 (c_km.km_id, ct.p4_table.name, fid))
             km_allocated = 0
@@ -3321,7 +3469,7 @@ class capri_stage:
             # XXX checking with asic team on constraints, not allowed till then
             return 0
 
-        if not ct.is_raw:
+        if not ct.is_raw and not ct.is_toeplitz_hash():
             # TBD - support other table types
             return 0
 
@@ -3334,6 +3482,10 @@ class capri_stage:
         _2B_ok = True
         for i in range(len(km_prof.byte_sel)/2):
             b = i*2
+            # for Toeplitz hash first 4 bytes are un-used for second flit onwards
+            # just ignore them
+            if km_prof.byte_sel[b] == -1 and km_prof.byte_sel[b+1] == -1:
+                continue
             if km_prof.byte_sel[b+1] != km_prof.byte_sel[b]+1:
                 _2B_ok = False
                 break
@@ -3343,6 +3495,9 @@ class capri_stage:
         if len(km_prof.byte_sel) > (max_kmB - 2):
             return 0    # will need extra bytes in key_maker for two ends
 
+        # XXX not sure if combining odd-bytes will work... what happens to the solitary
+        # byte0 ?
+        '''
         pdb.set_trace() # un-tested code
         _2B_ok = True
         for i in range(0, (len(km_prof.byte_sel)/2) - 1):
@@ -3352,6 +3507,7 @@ class capri_stage:
                 break
         if _2B_ok:
             return 1    # combine odd bytes: 1, 3, 5, ...
+        '''
 
         return 0
 
@@ -3446,7 +3602,7 @@ class capri_stage:
 
 
         for fid, ctg in enumerate(per_flit_tables):
-            self.gtm.tm.logger.debug("Per Flit Tables[%d] = %s" % (fid, ctg))
+            self.gtm.tm.logger.debug("Stg %d:Per Flit Tables[%d] = %s" % (self.id, fid, ctg))
 
         for fid, ctg in enumerate(per_flit_tables):
             num_km = sum(ct.num_km for ct in ctg if ct not in fid_excl_tables[fid])
@@ -3471,8 +3627,12 @@ class capri_stage:
                     self.gtm.tm.logger.warning( \
                         "%s:%s is NOT programmed as it does not have key - TBD" % \
                         (self.gtm.d.name, ct.p4_table.name))
-                # following logic is added to get a simple programs to compile w/o sharing
-                need_sharing = True if fid in km_violation_fid else False
+                if ct.is_wide_key:
+                    # don't share key-makers of the wide-key tables (includes toeplitz)
+                    need_sharing = False
+                else:
+                    need_sharing = True if fid in km_violation_fid else False
+
                 if not self._allocate_km(fid, ct, p_excl_tbls, need_sharing):
                     self.gtm.tm.logger.critical( \
                         "%s:%d:Not enough key-makers for %s Revise P4 program and try" % \
@@ -3685,6 +3845,11 @@ class capri_stage:
             # km cannot be removed evenif byts from in between flit is not loaded
             for fid in range(ct.flits_used[0], ct.flits_used[-1]+1):
                 flits_used[fid] = True
+                if ct.is_wide_key:
+                    # launch_tble is set on each flit for the toeplitz hash and wide key table
+                    if ct not in flit_launch_tbls[fid]:
+                        flit_launch_tbls[fid].append(ct)
+                    
                 if fid > last_flit_used:
                     last_flit_used = fid
 
@@ -4111,6 +4276,27 @@ class capri_gress_tm:
                             self.tm.be.hw_model['match_action']['te_consts']['num_hash_types'], \
                             "%s:Unsupported hash type %d, must be 0-3:CRC hash, 4:Toeplitz" % \
                             (ctable.p4_table.name, ctable.hash_type)
+
+                        if ctable.hash_type == 4:
+                            # for toeplitz hash - key and seed are also specified via pragmas
+                            # from P4 perspetive, both key and seed are part of the table key
+                            assert 'toeplitz_key' in t._parsed_pragmas, \
+                                "Specify toeplitz keys using pragma toeplitz_key"
+                            key_flds = get_pragma_param_list(t._parsed_pragmas['toeplitz_key'])
+                            assert len(key_flds), "Error in toeplitz_key pragma"
+                            for hfname in key_flds:
+                                cf = self.tm.be.pa.get_field(hfname, self.d)
+                                assert cf, "Invalid field specified as toeplitz key"
+                                ctable.toeplitz_key_cfs.append(cf)
+
+                            assert 'toeplitz_seed' in t._parsed_pragmas, \
+                                "Specify toeplitz seed fields using pragma toeplitz_seed"
+                            seed_flds = get_pragma_param_list(t._parsed_pragmas['toeplitz_seed'])
+                            assert len(seed_flds), "Error in toeplitz_seed pragma"
+                            for hfname in seed_flds:
+                                cf = self.tm.be.pa.get_field(hfname, self.d)
+                                assert cf, "Invalid field specified as toeplitz seed"
+                                ctable.toeplitz_seed_cfs.append(cf)
 
                     # Check if table is marked as HBM table.
                     if t._parsed_pragmas and 'table_write' in t._parsed_pragmas:

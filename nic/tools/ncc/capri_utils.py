@@ -116,6 +116,17 @@ def is_synthetic_header(h):
         return True
     return False
 
+def get_pragma_param_list(parsed_pragmas):
+    # convert recursive dictionaries into a simple list
+    param_list = []
+
+    nxt_pdict = parsed_pragmas
+    while len(nxt_pdict) != 0:
+        nxt_param = nxt_pdict.keys()[0]
+        param_list.append(nxt_param)
+        nxt_pdict = nxt_pdict[nxt_param]
+    return param_list
+
 def is_scratch_header(h):
     return True if 'scratch_metadata' in h._parsed_pragmas else False
 

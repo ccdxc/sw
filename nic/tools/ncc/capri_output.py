@@ -2254,8 +2254,26 @@ def capri_te_cfg_output(stage):
                     se['lkup']['value'] = te_consts['mpu_only']
                 else:
                     assert 0, pdb.set_trace()
+                # over-ride hash type to mpu-only if there is no table in mem
+                if ct.is_hash_table() and ct.num_entries == 0:
+                    # this also covers toeplitz hash
+                    stage.gtm.tm.logger.warning('%s: Stage %d: Table %s changed to MPU-ONLY' % \
+                        (stage.gtm.d.name, stage.id, ct.p4_table.name))
+                    se['lkup']['value'] = te_consts['mpu_only']
+                if ct.is_wide_key:
+                    if fid == ct.flits_used[0]:
+                        se['hash_chain']['value'] = str(0)
+                        se['hash_store']['value'] = str(1)
+                    elif fid == ct.flits_used[-1]:
+                        se['hash_chain']['value'] = str(1)
+                        se['hash_store']['value'] = str(0)
+                    else:
+                        se['hash_chain']['value'] = str(1)
+                        se['hash_store']['value'] = str(1)
             else:
                 se['lkup']['value'] = te_consts['no_op']
+                se['hash_chain']['value'] = str(0)
+                se['hash_store']['value'] = str(0)
 
             # fill sram_extention
             json_sram_ext = json_regs['cap_te_csr_cfg_table_profile_ctrl_sram_ext[%d]' % sidx]
@@ -2319,11 +2337,6 @@ def capri_te_cfg_output(stage):
                     te_ctrl_sram_print(se, json_sram_ext)))
         
     for ct in stage.ct_list:
-        # XXX Work-in-progress
-        if ct.is_wide_key:
-            stage.gtm.tm.logger.critical("Wide key table programming is not complete %s" % \
-                (ct.p4_table.name))
-            continue
         if ct.is_otcam:
             continue
         json_tbl_ = json_regs['cap_te_csr_cfg_table_property[%d]' % ct.tbl_id]
@@ -2347,8 +2360,12 @@ def capri_te_cfg_output(stage):
         # hardware expects hi, lo mask as -
         # (hi, lo] => hi=512 means we need bit 511, lo=496 means we need bit 496
         # XXX hw does not have enough bits to store 512 - will be fixed soon
-        key_mask_hi = 512 - ct.start_key_off
-        key_mask_lo = 512 - ct.end_key_off
+        if ct.is_wide_key:
+            key_mask_hi = 512 - ct.last_flit_start_key_off
+            key_mask_lo = 512 - ct.last_flit_end_key_off
+        else:
+            key_mask_hi = 512 - ct.start_key_off
+            key_mask_lo = 512 - ct.end_key_off
 
         # for index table the key_mask_lo must be specified in terms of 16bit chunks
         if ct.is_index_table():
@@ -2379,6 +2396,8 @@ def capri_te_cfg_output(stage):
         # ncc uses km0 as high key and km1 as lo key bytes, so flip it
         k = 1
         for _km in ct.key_makers:
+            if k < 0:
+                break;  # handles wide-key tables
             if _km.shared_km:
                 km = _km.shared_km
             else:
@@ -2552,6 +2571,8 @@ def te_ctrl_sram_print(se, sram_ext):
 
     pstr += '\ttableid = %s, ' % se['tableid']['value']
     pstr += '\thash_sel = %s, ' % se['hash_sel']['value']
+    pstr += '\thash_chain = %s, ' % se['hash_chain']['value']
+    pstr += '\thash_store = %s, ' % se['hash_store']['value']
     pstr += '\tlkup = %s, ' % se['lkup']['value']
 
     pstr += '\tadv_phv_flit = %s, ' % sram_ext['adv_phv_flit']['value']

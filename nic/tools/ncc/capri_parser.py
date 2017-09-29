@@ -658,17 +658,6 @@ class capri_parser:
         self.saved_lkp_reg_allocation = [None for _ in self.be.hw_model['parser']['lkp_regs']]
         self.saved_lkp_fld = OrderedDict() # {cf : saved_lkp_reg} XXX multiple regs per field
 
-    def _get_pragma_param_list(self, parsed_pragmas):
-        # convert recursive dictionaries into a simple list
-        param_list = []
-
-        nxt_pdict = parsed_pragmas
-        while len(nxt_pdict) != 0:
-            nxt_param = nxt_pdict.keys()[0]
-            param_list.append(nxt_param)
-            nxt_pdict = nxt_pdict[nxt_param]
-        return param_list
-
     def get_header_size(self, hdr):
         # return fixed len or P4field/expression that represents len
         # Bytes
@@ -939,7 +928,7 @@ class capri_parser:
             # create header_ordering groups (to be placed together in a flit)
             if 'header_ordering' in cs.p4_state._parsed_pragmas:
                 hdr_group = \
-                    self._get_pragma_param_list(cs.p4_state._parsed_pragmas['header_ordering'])
+                    get_pragma_param_list(cs.p4_state._parsed_pragmas['header_ordering'])
                 p4_hdr_group = []
                 for h in hdr_group:
                     if h not in self.be.h.p4_header_instances:
