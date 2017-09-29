@@ -25,7 +25,7 @@ int set_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid,
 int create_lif(lif_params_t *params, uint64_t *lif_id);
 int get_lif_qstate_addr(uint32_t lif, uint32_t qtype, uint32_t qid,
                         uint64_t *qaddr);
-
+int get_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate);
 int alloc_hbm_address(uint64_t *addr, uint32_t *size);
 
 }  // namespace hal_if

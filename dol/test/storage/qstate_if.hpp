@@ -21,6 +21,11 @@ int setup_pri_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                       uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid, 
                       uint16_t vf_id, uint16_t sq_id, uint64_t ssd_bm_addr);
 
+int update_pri_q_state(int src_lif, int src_qtype, int src_qid,
+                       uint8_t lo_weight, uint8_t med_weight, uint8_t hi_weight,
+                       uint8_t lo_running, uint8_t med_running, uint8_t hi_running,
+                       uint8_t max_cmds, uint8_t num_running);
+
 }  // namespace qstate_if
 
 #endif

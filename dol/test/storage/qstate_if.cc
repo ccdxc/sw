@@ -135,9 +135,10 @@ int setup_pri_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   write_bit_fields(q_state, 208, 16, num_entries);
   write_bit_fields(q_state, 224, 64, base_addr);
   write_bit_fields(q_state, 288, 16, entry_size);
-  write_bit_fields(q_state, 304, 8, 2); // lo weight
+  write_bit_fields(q_state, 304, 8, 6); // hi weight
   write_bit_fields(q_state, 312, 8, 4); // med weight
-  write_bit_fields(q_state, 320, 8, 6); // hi weight
+  write_bit_fields(q_state, 320, 8, 2); // lo weight
+  write_bit_fields(q_state, 360, 8, 63); // max cmds
   write_bit_fields(q_state, 368, 28, next_pc);
   // Program only if destination is used in P4+
   if (dst_valid) {
@@ -154,8 +155,41 @@ int setup_pri_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
     printf("Failed to set lif_qstate addr \n");
     return -1;
   }
+  return 0;
+}
 
-  printf("Pri Q state created for lif %u type %u, qid %u next_pc %lx \n", src_lif, src_qtype, src_qid, next_pc);
+int update_pri_q_state(int src_lif, int src_qtype, int src_qid,
+                       uint8_t hi_weight, uint8_t med_weight, uint8_t lo_weight,
+                       uint8_t hi_running, uint8_t med_running, uint8_t lo_running,
+                       uint8_t num_running, uint8_t max_cmds) {
+  uint8_t q_state[64];
+
+  // Get the qstate
+  if (hal_if::get_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
+    printf("Pri Q state GET FAILED for lif %u type %u, qid %u \n", 
+           src_lif, src_qtype, src_qid);
+    return -1;
+  } else {
+    printf("Pri Q state GET SUCCEEDED for lif %u type %u, qid %u \n", 
+           src_lif, src_qtype, src_qid);
+    log::dump(q_state);
+  }
+
+  // Update the weights and counters
+  write_bit_fields(q_state, 304, 8, hi_weight); // hi weight
+  write_bit_fields(q_state, 312, 8, med_weight); // med weight
+  write_bit_fields(q_state, 320, 8, lo_weight); // lo weight
+  write_bit_fields(q_state, 328, 8, hi_running); // hi running
+  write_bit_fields(q_state, 336, 8, med_running); // med running
+  write_bit_fields(q_state, 344, 8, lo_running); // lo running
+  write_bit_fields(q_state, 352, 8, num_running); // num running
+  write_bit_fields(q_state, 360, 8, max_cmds); // max cmds
+
+  // Write the qstate back
+  if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
+    printf("Failed to set lif_qstate addr \n");
+    return -1;
+  }
   return 0;
 }
 

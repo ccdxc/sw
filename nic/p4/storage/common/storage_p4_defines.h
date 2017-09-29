@@ -109,24 +109,24 @@ header_type pri_q_state_t {
     host_rings	: 4;	// Number of host facing rings used by this qstate
     total_rings	: 4;	// Total number of rings used by this qstate
     pid		: 16;	// PID value to be compared with that from host
-    p_ndx_lo	: 16;	// Producer Index (low priority)
-    c_ndx_lo	: 16;	// Consumer Index (low priority)
-    p_ndx_med	: 16;	// Producer Index (medium priority)
-    c_ndx_med	: 16;	// Consumer Index (medium priority)
     p_ndx_hi	: 16;	// Producer Index (high priority)
     c_ndx_hi	: 16;	// Consumer Index (high priority)
-    w_ndx_lo	: 16;	// Working consumer index (low priority)
-    w_ndx_med	: 16;	// Working consumer index (medium priority)
+    p_ndx_med	: 16;	// Producer Index (medium priority)
+    c_ndx_med	: 16;	// Consumer Index (medium priority)
+    p_ndx_lo	: 16;	// Producer Index (low priority)
+    c_ndx_lo	: 16;	// Consumer Index (low priority)
     w_ndx_hi	: 16;	// Working consumer index (high priority)
+    w_ndx_med	: 16;	// Working consumer index (medium priority)
+    w_ndx_lo	: 16;	// Working consumer index (low priority)
     num_entries	: 16;	// Number of queue entries (power of 2 of this value)
     base_addr	: 64;	// Base address of queue entries
     entry_size	: 16;	// Size of each queue entry
-    lo_weight	: 8;	// Weight of low pri queue
-    med_weight	: 8;	// Weight of medium pri queue
     hi_weight	: 8;	// Weight of high pri queue
-    lo_running	: 8;	// Number of commands running from low pri queue
-    med_running	: 8;	// Number of commands running from medium pri queue
+    med_weight	: 8;	// Weight of medium pri queue
+    lo_weight	: 8;	// Weight of low pri queue
     hi_running	: 8;	// Number of commands running from high pri queue
+    med_running	: 8;	// Number of commands running from medium pri queue
+    lo_running	: 8;	// Number of commands running from low pri queue
     num_running	: 8;	// Total number of commands running
     max_cmds	: 8;	// Maximum number of commands than can be running
     next_pc	: 28;	// Next program's PC
@@ -192,24 +192,24 @@ header_type barco_xts_ring_t {
   modify_field(q_state.total_rings, total_rings);	\
   modify_field(q_state.host_rings, host_rings);		\
   modify_field(q_state.pid, pid);			\
-  modify_field(q_state.p_ndx_lo, p_ndx_lo);		\
-  modify_field(q_state.c_ndx_lo, c_ndx_lo);		\
-  modify_field(q_state.p_ndx_med, p_ndx_med);		\
-  modify_field(q_state.c_ndx_med, c_ndx_med);		\
   modify_field(q_state.p_ndx_hi, p_ndx_hi);		\
   modify_field(q_state.c_ndx_hi, c_ndx_hi);		\
-  modify_field(q_state.w_ndx_lo, w_ndx_lo);		\
-  modify_field(q_state.w_ndx_med, w_ndx_med);		\
+  modify_field(q_state.p_ndx_med, p_ndx_med);		\
+  modify_field(q_state.c_ndx_med, c_ndx_med);		\
+  modify_field(q_state.p_ndx_lo, p_ndx_lo);		\
+  modify_field(q_state.c_ndx_lo, c_ndx_lo);		\
   modify_field(q_state.w_ndx_hi, w_ndx_hi);		\
+  modify_field(q_state.w_ndx_med, w_ndx_med);		\
+  modify_field(q_state.w_ndx_lo, w_ndx_lo);		\
   modify_field(q_state.num_entries, num_entries);	\
   modify_field(q_state.base_addr, base_addr);		\
   modify_field(q_state.entry_size, entry_size);		\
-  modify_field(q_state.lo_weight, lo_weight);		\
-  modify_field(q_state.med_weight, med_weight);		\
   modify_field(q_state.hi_weight, hi_weight);		\
-  modify_field(q_state.lo_running, lo_running);		\
-  modify_field(q_state.med_running, med_running);	\
+  modify_field(q_state.med_weight, med_weight);		\
+  modify_field(q_state.lo_weight, lo_weight);		\
   modify_field(q_state.hi_running, hi_running);		\
+  modify_field(q_state.med_running, med_running);	\
+  modify_field(q_state.lo_running, lo_running);		\
   modify_field(q_state.num_running, num_running);	\
   modify_field(q_state.max_cmds, max_cmds);		\
   modify_field(q_state.next_pc, next_pc);		\

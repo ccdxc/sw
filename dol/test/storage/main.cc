@@ -27,6 +27,12 @@ struct {
   {&tests::test_run_r2n_ssd_pri2, "R2N -> SSD Pri Cmd 2", false},
   {&tests::test_run_r2n_ssd_pri3, "R2N -> SSD Pri Cmd 3", false},
   {&tests::test_run_r2n_ssd_pri4, "R2N -> SSD Pri Cmd 4", false},
+  {&tests::test_run_nvme_be_wrr1, "NVME Backend WRR 1", false},
+  {&tests::test_run_nvme_be_wrr2, "NVME Backend WRR 2", false},
+  {&tests::test_run_nvme_be_wrr3, "NVME Backend WRR 3", false},
+  {&tests::test_run_nvme_be_wrr4, "NVME Backend WRR 4", false},
+  {&tests::test_run_nvme_be_wrr5, "NVME Backend WRR 5", false},
+  {&tests::test_run_nvme_be_wrr6, "NVME Backend WRR 6", false},
 
   // Always last entry
   {0}

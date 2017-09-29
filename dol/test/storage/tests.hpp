@@ -35,6 +35,18 @@ int test_run_r2n_ssd_pri3();
 
 int test_run_r2n_ssd_pri4();
 
+int test_run_nvme_be_wrr1();
+
+int test_run_nvme_be_wrr2();
+
+int test_run_nvme_be_wrr3();
+
+int test_run_nvme_be_wrr4();
+
+int test_run_nvme_be_wrr5();
+
+int test_run_nvme_be_wrr6();
+
 }  // namespace tests
 
 #endif   // _TESTS_HPP_

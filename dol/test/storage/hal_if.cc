@@ -10,6 +10,8 @@
 
 DECLARE_uint64(hal_port);
 
+const static uint32_t	kDefaultQStateSize	 = 64;
+
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
@@ -83,6 +85,10 @@ int get_pgm_base_addr(const char *prog_name, uint64_t *base_addr) {
   grpc::ClientContext context;
   internal::GetProgramAddressRequestMsg req_msg;
   internal::ProgramAddressResponseMsg resp_msg;
+
+  if (!prog_name || !base_addr)
+    return -1;
+
   auto req = req_msg.add_reqs();
   req->set_handle("p4plus");
   req->set_prog_name(prog_name);
@@ -101,6 +107,10 @@ int get_pgm_label_offset(const char *prog_name, const char *label, uint8_t *off)
   grpc::ClientContext context;
   internal::GetProgramAddressRequestMsg req_msg;
   internal::ProgramAddressResponseMsg resp_msg;
+
+  if (!prog_name || !label || !off)
+    return -1;
+
   auto req = req_msg.add_reqs();
   req->set_handle("p4plus");
   req->set_prog_name(prog_name);
@@ -120,8 +130,11 @@ int get_lif_qstate_addr(uint32_t lif, uint32_t qtype, uint32_t qid, uint64_t *qa
   grpc::ClientContext context;
   intf::GetQStateRequestMsg req_msg;
   intf::GetQStateResponseMsg resp_msg;
+
+  if (!qaddr) 
+    return -1;
+
   auto req = req_msg.add_reqs();
-  printf("getting q state for lif %u type %u qid %u \n", lif, qtype, qid);
   req->set_lif_handle(lif);
   req->set_type_num(qtype);
   req->set_qid(qid);
@@ -131,7 +144,6 @@ int get_lif_qstate_addr(uint32_t lif, uint32_t qtype, uint32_t qid, uint64_t *qa
     return -1;
 
   // TODO: Check number of responses ?
-  printf("Response %d \n", resp_msg.resps(0).error_code());
   if (resp_msg.resps(0).error_code())
     return -1;
 
@@ -139,15 +151,46 @@ int get_lif_qstate_addr(uint32_t lif, uint32_t qtype, uint32_t qid, uint64_t *qa
   return 0;
 }
 
+int get_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate) {
+  grpc::ClientContext context;
+  intf::GetQStateRequestMsg req_msg;
+  intf::GetQStateResponseMsg resp_msg;
+
+  if (!qstate) 
+    return -1;
+
+  auto req = req_msg.add_reqs();
+  printf("getting q state for lif %u type %u qid %u \n", lif, qtype, qid);
+  req->set_lif_handle(lif);
+  req->set_type_num(qtype);
+  req->set_qid(qid);
+  req->set_ret_data_size(kDefaultQStateSize);
+
+  auto status = interface_stub->LifGetQState(&context, req_msg, &resp_msg);
+  if (!status.ok())
+    return -1;
+
+  // TODO: Check number of responses ?
+  if (resp_msg.resps(0).error_code())
+    return -1;
+
+  memcpy(qstate, resp_msg.resps(0).queue_state().c_str(), kDefaultQStateSize);
+  return 0;
+}
+
 int set_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate) {
   grpc::ClientContext context;
   intf::SetQStateRequestMsg req_msg;
   intf::SetQStateResponseMsg resp_msg;
+
+  if (!qstate) 
+    return -1;
+
   auto req = req_msg.add_reqs();
   req->set_lif_handle(lif);
   req->set_type_num(qtype);
   req->set_qid(qid);
-  req->set_queue_state((const char *) qstate, 64);
+  req->set_queue_state((const char *) qstate, kDefaultQStateSize);
 
   auto status = interface_stub->LifSetQState(&context, req_msg, &resp_msg);
   if (!status.ok())
@@ -164,6 +207,10 @@ int alloc_hbm_address(uint64_t *addr, uint32_t *size) {
   grpc::ClientContext context;
   internal::AllocHbmAddressRequestMsg req_msg;
   internal::AllocHbmAddressResponseMsg resp_msg;
+
+  if (!addr || !size) 
+    return -1;
+
   auto req = req_msg.add_reqs();
   req->set_handle("storage");
 

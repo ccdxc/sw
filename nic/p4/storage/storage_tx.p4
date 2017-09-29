@@ -436,11 +436,11 @@ action q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *****************************************************************************/
 
 action pri_q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
-                       total_rings, host_rings, pid, p_ndx_lo, c_ndx_lo, 
-                       p_ndx_med, c_ndx_med, p_ndx_hi, c_ndx_hi, w_ndx_lo,
-                       w_ndx_med, w_ndx_hi, num_entries, base_addr, entry_size,
-                       lo_weight, med_weight, hi_weight, lo_running, 
-                       med_running, hi_running, num_running, max_cmds,
+                       total_rings, host_rings, pid, p_ndx_hi, c_ndx_hi, 
+                       p_ndx_med, c_ndx_med, p_ndx_lo, c_ndx_lo, w_ndx_hi,
+                       w_ndx_med, w_ndx_lo, num_entries, base_addr, entry_size,
+                       hi_weight, med_weight, lo_weight, hi_running, 
+                       med_running, lo_running, num_running, max_cmds,
                        next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, 
                        ssd_bm_addr, pad) {
 
@@ -495,11 +495,11 @@ action pri_q_state_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *****************************************************************************/
 
 action pri_q_state_incr(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
-                        total_rings, host_rings, pid, p_ndx_lo, c_ndx_lo, 
-                        p_ndx_med, c_ndx_med, p_ndx_hi, c_ndx_hi, w_ndx_lo,
-                        w_ndx_med, w_ndx_hi, num_entries, base_addr, entry_size,
-                        lo_weight, med_weight, hi_weight, lo_running, 
-                        med_running, hi_running, num_running, max_cmds,
+                        total_rings, host_rings, pid, p_ndx_hi, c_ndx_hi, 
+                        p_ndx_med, c_ndx_med, p_ndx_lo, c_ndx_lo, w_ndx_hi,
+                        w_ndx_med, w_ndx_lo, num_entries, base_addr, entry_size,
+                        hi_weight, med_weight, lo_weight, hi_running, 
+                        med_running, lo_running, num_running, max_cmds,
                         next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, 
                         ssd_bm_addr, pad) {
 
@@ -541,11 +541,11 @@ action pri_q_state_incr(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *****************************************************************************/
 
 action pri_q_state_decr(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
-                        total_rings, host_rings, pid, p_ndx_lo, c_ndx_lo, 
-                        p_ndx_med, c_ndx_med, p_ndx_hi, c_ndx_hi, w_ndx_lo,
-                        w_ndx_med, w_ndx_hi, num_entries, base_addr, entry_size,
-                        lo_weight, med_weight, hi_weight, lo_running, 
-                        med_running, hi_running, num_running, max_cmds,
+                        total_rings, host_rings, pid, p_ndx_hi, c_ndx_hi, 
+                        p_ndx_med, c_ndx_med, p_ndx_lo, c_ndx_lo, w_ndx_hi,
+                        w_ndx_med, w_ndx_lo, num_entries, base_addr, entry_size,
+                        hi_weight, med_weight, lo_weight, hi_running, 
+                        med_running, lo_running, num_running, max_cmds,
                         next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, 
                         ssd_bm_addr, pad) {
 
@@ -588,11 +588,11 @@ action pri_q_state_decr(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *****************************************************************************/
 
 action pri_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
-                        total_rings, host_rings, pid, p_ndx_lo, c_ndx_lo, 
-                        p_ndx_med, c_ndx_med, p_ndx_hi, c_ndx_hi, w_ndx_lo,
-                        w_ndx_med, w_ndx_hi, num_entries, base_addr, entry_size,
-                        lo_weight, med_weight, hi_weight, lo_running, 
-                        med_running, hi_running, num_running, max_cmds,
+                        total_rings, host_rings, pid, p_ndx_hi, c_ndx_hi, 
+                        p_ndx_med, c_ndx_med, p_ndx_lo, c_ndx_lo, w_ndx_hi,
+                        w_ndx_med, w_ndx_lo, num_entries, base_addr, entry_size,
+                        hi_weight, med_weight, lo_weight, hi_running, 
+                        med_running, lo_running, num_running, max_cmds,
                         next_pc, dst_qaddr, dst_lif, dst_qtype, dst_qid, 
                         ssd_bm_addr, pad) {
 
@@ -679,6 +679,7 @@ action nvme_be_wqe_prep(src_queue_id, ssd_handle, io_priority, is_read,
 
   // Store fields needed in the K+I vector
   modify_field(storage_kivec0.ssd_handle, ssd_handle);
+  modify_field(storage_kivec0.io_priority, io_priority);
 
   // Setup the DMA command to push the modified R2N WQE to NVME backend
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_1, 

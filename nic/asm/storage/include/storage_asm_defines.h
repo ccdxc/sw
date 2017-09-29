@@ -154,15 +154,12 @@
 //              and the destination address. Can specify 0 destination
 //              address via GPR r0, which be update later.
 #define DMA_PHV2MEM_SETUP(_start, _end, _addr, _dma_cmd_X)		\
-   add		r1, r0, offsetof(p, _start);				\
-   add		r1, r0, sizeof(p._start);				\
-   add		r1, r0, offsetof(p, _end);				\
+   phvwri	p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_PHV2MEM;		\
    phvwri	p._dma_cmd_X##_dma_cmd_phv_start_addr,			\
                 CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _start) + 		\
                                       sizeof(p._start) - 1);		\
    phvwri	p._dma_cmd_X##_dma_cmd_phv_end_addr,			\
                 CAPRI_PHV_BIT_TO_BYTE(offsetof(p, _end));		\
-   phvwri	p._dma_cmd_X##_dma_cmd_type, CAPRI_DMA_PHV2MEM;		\
    phvwr	p._dma_cmd_X##_dma_cmd_addr, _addr;			\
    srl		r1, _addr, 63;						\
    seq		c1, r1, 1;						\
@@ -204,6 +201,7 @@
 // Setup the doorbell data. Write back the data in little endian format
 #define DOORBELL_DATA_SETUP(_db_data, _index, _ring, _qid, _pid)	\
    add		r1, r0, _index;						\
+   add		r1, r0, r1.hx;						\
    sll		r2, _ring, DOORBELL_DATA_RING_SHIFT;			\
    or		r1, r1, r2;						\
    sll		r2, _qid, DOORBELL_DATA_QID_SHIFT;			\
@@ -243,10 +241,19 @@
                        STORAGE_KIVEC0_IO_PRIORITY,			\
                        STORAGE_KIVEC1_SRC_QID, r0)			\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC1_SRC_LIF, STORAGE_KIVEC1_SRC_QTYPE,\
-                       DOORBELL_SCHED_WR_RESET, DOORBELL_UPDATE_C_NDX)	\
+                       DOORBELL_SCHED_WR_NONE, DOORBELL_UPDATE_C_NDX)	\
    DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
                      r7, dma_p2m_0)					\
 
+// Clear the doorbell as there was no work to be done
+// TODO: Fix the ring
+#define PRI_QUEUE_POP_DOORBELL_CLEAR					\
+   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, r0, r0,			\
+                       STAGE0_KIVEC_QID, r0)				\
+   DOORBELL_ADDR_SETUP(STAGE0_KIVEC_LIF, STAGE0_KIVEC_QTYPE,		\
+                       DOORBELL_SCHED_WR_RESET, DOORBELL_UPDATE_NONE)	\
+   DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
+                     r7, dma_p2m_0)					\
 
 // Setup the lif, type, qid, pindex for the doorbell push.  Set the fence 
 // bit for the doorbell 
@@ -263,9 +270,9 @@
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O
 // priority is used to select the ring. Set the fence bit for the doorbell.
 #define PRI_QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, _p_ndx, _sched,	\
-                                       _qid)				\
+                                       _qid, _pri)			\
    DOORBELL_DATA_SETUP(qpush_doorbell_data_data, _p_ndx,		\
-                       STORAGE_KIVEC0_IO_PRIORITY, _qid, r0)		\
+                       _pri, _qid, r0)					\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
                        _sched, DOORBELL_UPDATE_P_NDX)			\
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
@@ -351,7 +358,7 @@
 // 3. Update DMA command 1 with the address stored in GPR r7.
 // 4. Push the entry to the queue (this increments p_ndx and writes to table).
 // 5. Form and ring the doorbell for the recipient of the push. 
-#define PRI_QUEUE_PUSH(_pri_vec, _pri_val, _c_ndx, _p_ndx, _base_addr,	\
+#define PRI_QUEUE_PUSH(_pri_vec, _pri_val, _p_ndx, _c_ndx, _base_addr,	\
                        _num_entries, _entry_size, _branch_instr1, 	\
                        _branch_instr2)					\
    sne		c1, _pri_vec, _pri_val;					\
@@ -363,7 +370,7 @@
    QUEUE_PUSH(_p_ndx, _num_entries)					\
    add		r6, STORAGE_KIVEC0_DST_QID, STORAGE_KIVEC0_SSD_HANDLE;	\
    PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_2, _p_ndx,			\
-                                  DOORBELL_SCHED_WR_SET, r6)		\
+                                  DOORBELL_SCHED_WR_SET, r6, _pri_vec)	\
 
 
 // Increment the priority running counter and the total running counter.

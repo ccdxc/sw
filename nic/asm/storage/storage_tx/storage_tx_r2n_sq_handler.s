@@ -19,8 +19,8 @@ struct phv_ p;
 
 storage_tx_r2n_sq_handler_start:
 
-   // Update the priority queue doorbell to clear the scheduler bit
-   PRI_QUEUE_POP_DOORBELL_UPDATE
+   // Update the queue doorbell to clear the scheduler bit
+   QUEUE_POP_DOORBELL_UPDATE
 
    // Save the R2N WQE to PHV
    R2N_WQE_BASE_COPY
