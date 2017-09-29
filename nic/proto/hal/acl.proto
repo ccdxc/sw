@@ -5,7 +5,6 @@
 syntax = "proto3";
 
 import "nic/proto/hal/tenant.proto";
-import "nic/proto/hal/telemetry.proto";
 import "nic/proto/types.proto";
 import "nic/proto/hal/interface.proto";
 import "nic/proto/hal/l2segment.proto";

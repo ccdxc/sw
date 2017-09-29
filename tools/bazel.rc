@@ -11,8 +11,11 @@ build --output_filter="^//"
 # colored output
 build --color=yes
 build --cxxopt="-fdiagnostics-color=always"
+build --cxxopt="--std=c++11"
+build --cxxopt="-Wuninitialized"
+build --cxxopt="-g"
+build --copt="-g"
 
 # show timestamps
 #build --show_timestamps --keep_going
 #build --show_timestamps --keep_going --jobs 600
-
