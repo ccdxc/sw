@@ -88,6 +88,8 @@ func TestCrudOps(t *testing.T) {
 	var rcvWatchEvents, expectWatchEvents []kvstore.WatchEvent
 	var wg sync.WaitGroup
 	wctx, cancel := context.WithCancel(ctx)
+	waitWatch := make(chan bool)
+	wg.Add(1)
 	go func() {
 		opts := api.ListWatchOptions{}
 		watcher, err := apicl.BookstoreV1().Publisher().Watch(wctx, &opts)
@@ -98,6 +100,7 @@ func TestCrudOps(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to start watch (%s)\n", err)
 		}
+		close(waitWatch)
 		ow := true
 		pw := true
 		for ow && pw {
@@ -124,7 +127,9 @@ func TestCrudOps(t *testing.T) {
 		}
 		wg.Done()
 	}()
-	wg.Add(1)
+
+	// Wait for watches to be established
+	<-waitWatch
 
 	// ========= TEST gRPC CRUD Operations ========= //
 	t.Logf("test GRPC crud operations")
