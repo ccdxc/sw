@@ -477,12 +477,20 @@ metadata p4_to_p4plus_tcp_proxy_base_header_t tcp_app_header;
 @pragma scratch_metadata
 metadata p4_to_p4plus_tcp_proxy_base_header_t tcp_scratch_app;
 
-@pragma pa_header_union ingress to_stage_1
+@pragma pa_header_union ingress to_stage_1 cpu_hdr1
 metadata to_stage_1_phv_t to_s1;
-@pragma pa_header_union ingress to_stage_2
+@pragma dont_trim
+metadata p4_to_p4plus_cpu_pkt_1_t cpu_hdr1;
+
+@pragma pa_header_union ingress to_stage_2 cpu_hdr2
 metadata to_stage_2_phv_t to_s2;
+@pragma dont_trim
+metadata p4_to_p4plus_cpu_pkt_2_t cpu_hdr2;
+
 @pragma pa_header_union ingress to_stage_3
 metadata to_stage_3_phv_t to_s3;
+
+
 @pragma pa_header_union ingress to_stage_4
 metadata to_stage_4_phv_t to_s4;
 @pragma pa_header_union ingress to_stage_5

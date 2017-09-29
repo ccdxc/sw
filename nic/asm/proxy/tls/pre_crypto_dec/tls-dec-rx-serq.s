@@ -61,8 +61,7 @@ no_dma_cmd:
 	 * offset for the next tls header in the data stream 
 	 */
 	/* if (dtlsp->next_tls_hdr_offset < md->desc.data_len) { */
-	slt		    c1, D.next_tls_hdr_offset, \
-            k.{s2_s3_t0_phv_idesc_aol0_len_sbit0_ebit7...s2_s3_t0_phv_idesc_aol0_len_sbit8_ebit31}
+	slt		    c1, D.next_tls_hdr_offset, k.s2_s3_t0_phv_idesc_aol0_len
     seq         c2, D.next_tls_hdr_offset, r0
 	bcf		    [!c2 & !c1], tls_no_read_header
 	nop
@@ -71,6 +70,9 @@ no_dma_cmd:
 	add		    r3, r0, k.s2_s3_t0_phv_idesc_aol0_offset
 	add		    r3, r3, k.tls_global_phv_next_tls_hdr_offset
 	add		    r2, r2, r3
+    phvwr       p.s3_s4_t0_phv_idesc_aol0_addr, k.s2_s3_t0_phv_idesc_aol0_addr
+    phvwr       p.s3_s4_t0_phv_idesc_aol0_offset, k.s2_s3_t0_phv_idesc_aol0_offset
+    phvwr       p.s3_s4_t0_phv_idesc_aol0_len, k.s2_s3_t0_phv_idesc_aol0_len      
 #if 1
     /* FIXME: Workaround to DoL packet injection issue */
     addi        r2, r2, 4

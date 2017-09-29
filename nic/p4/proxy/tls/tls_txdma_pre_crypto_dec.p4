@@ -193,6 +193,19 @@ header_type s2_s3_t0_phv_t {
     fields {
         idesc_aol0_addr                 : ADDRESS_WIDTH;
         idesc_aol0_offset               : 32;
+        pad1                            : 24;
+        idesc_aol0_len                  : 32;
+    }
+}
+#define GENERATE_S3_S4_T0                                                               \
+        modify_field(s3_s4_t0_scratch.idesc_aol0_addr, s3_s4_t0_phv.idesc_aol0_addr);   \
+        modify_field(s3_s4_t0_scratch.idesc_aol0_offset, s3_s4_t0_phv.idesc_aol0_offset);   \
+        modify_field(s3_s4_t0_scratch.idesc_aol0_len, s3_s4_t0_phv.idesc_aol0_len);
+header_type s3_s4_t0_phv_t {
+    fields {
+        idesc_aol0_addr                 : ADDRESS_WIDTH;
+        idesc_aol0_offset               : 32;
+        pad1                            : 24;
         idesc_aol0_len                  : 32;
     }
 }
@@ -293,14 +306,24 @@ metadata tls_header_t TLS_HDR_SCRATCH;
 @pragma scratch_metadata
 metadata barco_channel_pi_ci_t tls_enc_queue_brq_d;
 
-@pragma pa_header_union ingress to_stage_2
+@pragma pa_header_union ingress to_stage_1 cpu_hdr1
+@pragma dont_trim
+metadata p4_to_p4plus_cpu_pkt_1_t cpu_hdr1;
+
+
+@pragma pa_header_union ingress to_stage_2 cpu_hdr2
 @pragma dont_trim
 metadata barco_dbell_t barco_dbell;
+@pragma dont_trim
+metadata p4_to_p4plus_cpu_pkt_2_t cpu_hdr2;
+
+
 
 @pragma pa_header_union ingress to_stage_3 odesc_dma_src
 metadata to_stage_3_phv_t to_s3;
 @pragma dont_trim
 metadata odesc_dma_src_t odesc_dma_src;
+
 
 @pragma pa_header_union ingress to_stage_4 crypto_iv
 @pragma dont_trim
@@ -319,8 +342,9 @@ metadata to_stage_7_phv_t to_s7;
 @pragma pa_header_union ingress common_global
 metadata tls_global_phv_t tls_global_phv;
 
-@pragma pa_header_union ingress  common_t0_s2s s4_s6_t0_phv
+@pragma pa_header_union ingress  common_t0_s2s s3_s4_t0_phv s4_s6_t0_phv
 metadata s2_s3_t0_phv_t s2_s3_t0_phv;
+metadata s3_s4_t0_phv_t s3_s4_t0_phv;
 metadata s4_s6_t0_phv_t s4_s6_t0_phv;
 
 
@@ -384,6 +408,8 @@ metadata to_stage_7_phv_t to_s7_scratch;
 @pragma scratch_metadata
 metadata s2_s3_t0_phv_t s2_s3_t0_scratch;
 @pragma scratch_metadata
+metadata s3_s4_t0_phv_t s3_s4_t0_scratch;
+@pragma scratch_metadata
 metadata s4_s6_t0_phv_t s4_s6_t0_scratch;
 
 @pragma scratch_metadata
@@ -400,7 +426,6 @@ metadata tdesc_alloc_d_t tdesc_alloc_d;
 metadata tpage_alloc_d_t tpage_alloc_d;
 @pragma scratch_metadata
 metadata arq_tx_pi_d_t arq_tx_pi_d;
-
 
 
 
@@ -521,6 +546,8 @@ action tls_stage3(TLSCB_1_PARAMS) {
 action tls_read_tls_header(TLS_HDR_ACTION_PARAMS) {
     GENERATE_GLOBAL_K
 
+    GENERATE_S3_S4_T0
+
     GENERATE_TO_S4_T0
 
     GENERATE_TLS_HDR_D
@@ -568,6 +595,10 @@ action tls_write_arq(ARQ_TX_PI_PARAMS) {
 
     // from to_stage 6
     modify_field(to_s6_scratch.idesc, to_s6.idesc);
+    modify_field(to_s6_scratch.odesc, to_s6.odesc);
+    modify_field(to_s6_scratch.opage, to_s6.opage);
+    modify_field(to_s6_scratch.cur_tls_data_len, to_s6.cur_tls_data_len);
+    modify_field(to_s6_scratch.next_tls_hdr_offset, to_s6.next_tls_hdr_offset);
 
 
     // from stage to stage

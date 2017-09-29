@@ -522,3 +522,59 @@ header_type tcp_sack_option_t {
         len : 8;        // variable (8*n + 2)
     }
 }
+
+/*
+ * flags bits:
+ *  0       : vlan valid
+ *  1       : ipv4 valid
+ *  2       : ipv6 valid
+ *  3       : ip options present
+ *  4       : tcp options present
+ *  5-7     : unused
+ */
+header_type p4_to_p4plus_cpu_pkt_1_t {
+    fields {
+        src_lif             : 16;
+
+        lif                 : 16;
+        qtype               : 8;
+        qid                 : 32;
+
+        lkp_vrf             : 16;
+
+        pad                 : 2;
+        lkp_dir             : 1;
+        lkp_inst            : 1;
+        lkp_type            : 4;
+
+        flags               : 8;
+
+        // offsets
+        l2_offset           : 16;
+        l3_offset_1         : 8;
+
+    }
+}
+
+header_type p4_to_p4plus_cpu_pkt_2_t {
+    fields {
+
+        l3_offset_2         : 8;
+        l4_offset           : 16;
+        payload_offset      : 16;
+
+        // tcp
+        tcp_flags           : 8;
+        tcp_seqNo           : 32;
+        tcp_AckNo           : 32;
+        tcp_window          : 16;
+    }
+}
+
+header_type p4_to_p4plus_cpu_pkt_3_t {
+    fields {
+        tcp_options         : 8;
+        tcp_mss             : 16;
+        tcp_ws              : 8;
+    }
+}
