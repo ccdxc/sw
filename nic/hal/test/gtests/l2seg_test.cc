@@ -137,7 +137,7 @@ TEST_F(l2seg_test, test1)
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
+    // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(2);
@@ -299,7 +299,7 @@ TEST_F(l2seg_test, test2)
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
+    // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(1);
@@ -384,8 +384,8 @@ TEST_F(l2seg_test, test3)
     InterfaceResponse               enicif_rsp;
     NetworkSpec                     nw_spec;
     NetworkResponse                 nw_rsp;
-    slab_stats_t                    *pre = NULL, *post = NULL;
-    bool                            is_leak = false;
+    // slab_stats_t                    *pre = NULL, *post = NULL;
+    // bool                            is_leak = false;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -403,7 +403,7 @@ TEST_F(l2seg_test, test3)
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
+    // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(3);
@@ -443,7 +443,7 @@ TEST_F(l2seg_test, test3)
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    pre = hal_test_utils_collect_slab_stats();
+    // pre = hal_test_utils_collect_slab_stats();
 
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(3);

@@ -88,7 +88,7 @@ TEST_F(internal_test, test1)
     req.set_resolve_label(false);
 
     hal::GetProgramAddress(req, &rsp);
-    ASSERT_TRUE(rsp.addr() != 0xFFFFFFFFFFFFFFFFULL);
+    ASSERT_TRUE((uint64_t)rsp.addr() != 0xFFFFFFFFFFFFFFFFULL);
 }
 
 // ----------------------------------------------------------------------------
@@ -105,7 +105,7 @@ TEST_F(internal_test, test2)
     req.set_label("storage_tx_stage0");
 
     hal::GetProgramAddress(req, &rsp);
-    ASSERT_TRUE(rsp.addr() != 0xFFFFFFFFFFFFFFFFULL);
+    ASSERT_TRUE((uint64_t)rsp.addr() != 0xFFFFFFFFFFFFFFFFULL);
 }
 
 // ----------------------------------------------------------------------------
@@ -119,7 +119,7 @@ TEST_F(internal_test, test3)
     req.set_handle("storage");
 
     hal::AllocHbmAddress(req, &rsp);
-    ASSERT_TRUE(rsp.addr() != 0xFFFFFFFFFFFFFFFFULL);
+    ASSERT_TRUE((uint64_t)rsp.addr() != 0xFFFFFFFFFFFFFFFFULL);
 }
 
 int main(int argc, char **argv) {

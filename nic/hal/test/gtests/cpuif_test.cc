@@ -138,7 +138,7 @@ TEST_F(cpuif_test, test1)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    // uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     // Create a lif
     lif_spec.set_port_num(10);

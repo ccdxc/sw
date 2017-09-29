@@ -404,7 +404,7 @@ TEST_F(tenant_test, test4)
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
+    // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(4);
@@ -515,7 +515,7 @@ TEST_F(tenant_test, test5)
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
+    // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(5);
@@ -652,8 +652,8 @@ TEST_F(tenant_test, test7)
     SecurityProfileResponse         sp_rsp, sp_rsp1;
     TenantDeleteRequest             del_req;
     TenantDeleteResponseMsg         del_rsp;
-    slab_stats_t                    *pre = NULL, *post = NULL;
-    bool                            is_leak = false;
+    // slab_stats_t                    *pre = NULL, *post = NULL;
+    // bool                            is_leak = false;
 
 
     hal_test_utils_slab_disable_delete();

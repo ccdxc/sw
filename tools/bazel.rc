@@ -16,6 +16,9 @@ build --cxxopt="-Wuninitialized"
 build --cxxopt="-g"
 build --copt="-g"
 
+# Make warnings as errors
+#build --cxxopt="-Werror"
+
 # show timestamps
-#build --show_timestamps --keep_going
+build --show_timestamps --keep_going
 #build --show_timestamps --keep_going --jobs 600

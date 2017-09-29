@@ -91,14 +91,14 @@ TEST_F(queue_test, test1)
 
     cnt_l0_nodes = 32;
     cnt_l1_nodes = 16;
-    for (int i = 0; i < cnt_l0_nodes; i++) {
+    for (uint i = 0; i < cnt_l0_nodes; i++) {
         QueueInfo *qinfo = spec.add_queues();
         qinfo->mutable_key_or_handle()->set_queue_id(i);
         qinfo->mutable_queue_info()->set_priority(i);
         qinfo->mutable_queue_info()->mutable_dwrr()->set_weight(1+i*100);
     }
 
-    for (int i = 0; i < cnt_l1_nodes; i++) {
+    for (uint i = 0; i < cnt_l1_nodes; i++) {
         QueueSchedulerNode *queue_info = spec.add_l1_nodes();
 
         queue_info->set_priority(i);
@@ -124,14 +124,14 @@ TEST_F(queue_test, test2)
 
     cnt_l0_nodes = 26;
     cnt_l1_nodes = 6;
-    for (int i = 0; i < cnt_l0_nodes; i++) {
+    for (uint i = 0; i < cnt_l0_nodes; i++) {
         QueueInfo *qinfo = spec.add_queues();
         qinfo->mutable_key_or_handle()->set_queue_id(i);
         qinfo->mutable_queue_info()->set_priority(i);
         qinfo->mutable_queue_info()->mutable_dwrr()->set_weight(1+i*100);
     }
 
-    for (int i = 0; i < cnt_l1_nodes; i++) {
+    for (uint i = 0; i < cnt_l1_nodes; i++) {
         QueueSchedulerNode *queue_info = spec.add_l1_nodes();
 
         queue_info->set_priority(i);
@@ -158,14 +158,14 @@ TEST_F(queue_test, test3)
 
     cnt_l0_nodes = 36;
     cnt_l1_nodes = 18;
-    for (int i = 0; i < cnt_l0_nodes; i++) {
+    for (uint i = 0; i < cnt_l0_nodes; i++) {
         QueueInfo *qinfo = spec.add_queues();
         qinfo->mutable_key_or_handle()->set_queue_id(i);
         qinfo->mutable_queue_info()->set_priority(i);
         qinfo->mutable_queue_info()->mutable_dwrr()->set_weight(1+i*100);
     }
 
-    for (int i = 0; i < cnt_l1_nodes; i++) {
+    for (uint i = 0; i < cnt_l1_nodes; i++) {
         QueueSchedulerNode *queue_info = spec.add_l1_nodes();
 
         queue_info->set_priority(i);

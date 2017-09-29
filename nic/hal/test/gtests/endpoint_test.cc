@@ -195,7 +195,7 @@ TEST_F(endpoint_test, test1)
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+    // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
     up_spec.mutable_meta()->set_tenant_id(1);
@@ -206,7 +206,7 @@ TEST_F(endpoint_test, test1)
     ret = hal::interface_create(up_spec, &up_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
+    // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
     up_spec.mutable_meta()->set_tenant_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);

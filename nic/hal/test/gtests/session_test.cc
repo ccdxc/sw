@@ -194,7 +194,7 @@ TEST_F(session_test, test1)
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+    // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
     up_spec.mutable_meta()->set_tenant_id(1);
@@ -205,7 +205,7 @@ TEST_F(session_test, test1)
     ret = hal::interface_create(up_spec, &up_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
+    // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
     up_spec.mutable_meta()->set_tenant_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -312,7 +312,7 @@ TEST_F(session_test, test2)
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+    // uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
 
     // Create tenant
@@ -353,7 +353,7 @@ TEST_F(session_test, test2)
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+    // uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     l2seg_spec.mutable_meta()->set_tenant_id(2);
     l2seg_spec.add_network_handle(nw_hdl1);
@@ -550,7 +550,7 @@ TEST_F(session_test, test3)
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+    // uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(3);
@@ -569,7 +569,7 @@ TEST_F(session_test, test3)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    // uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     nw_spec1.mutable_meta()->set_tenant_id(3);
     nw_spec1.set_rmac(0x0000DEADBEEF);
@@ -603,7 +603,7 @@ TEST_F(session_test, test3)
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+    // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create a lif
     lif_spec.set_port_num(10);
@@ -788,7 +788,7 @@ TEST_F(session_test, test4)
     ret = hal::interface_create(up_spec, &up_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
+    // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
     up_spec.mutable_meta()->set_tenant_id(4);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -967,7 +967,7 @@ TEST_F(session_test, test5)
     ret = hal::interface_create(up_spec, &up_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
+    // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
     up_spec.mutable_meta()->set_tenant_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -1121,7 +1121,7 @@ TEST_F(session_test, test6)
     ret = hal::interface_create(up_spec, &up_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
+    // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
     up_spec.mutable_meta()->set_tenant_id(6);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -1293,7 +1293,7 @@ TEST_F(session_test, test7)
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+    // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
     up_spec.mutable_meta()->set_tenant_id(7);
@@ -1304,7 +1304,7 @@ TEST_F(session_test, test7)
     ret = hal::interface_create(up_spec, &up_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
+    // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
     up_spec.mutable_meta()->set_tenant_id(7);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -1371,7 +1371,7 @@ TEST_F(session_test, test7)
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    uint64_t sess_hdl = sess_rsp.mutable_status()->session_handle();
+    // uint64_t sess_hdl = sess_rsp.mutable_status()->session_handle();
     // HAL_TRACE_DEBUG("Session Handle: {}", sess_hdl);
 }
 
@@ -1451,7 +1451,7 @@ TEST_F(session_test, test8)
     ret = hal::l2segment_create(l2seg_spec1, &l2seg_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+    // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
     up_spec.mutable_meta()->set_tenant_id(8);
@@ -1462,7 +1462,7 @@ TEST_F(session_test, test8)
     ret = hal::interface_create(up_spec, &up_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
+    // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
     up_spec.mutable_meta()->set_tenant_id(8);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -1651,7 +1651,7 @@ TEST_F(session_test, test9)
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+    // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
     up_spec.mutable_meta()->set_tenant_id(9);
@@ -1662,7 +1662,7 @@ TEST_F(session_test, test9)
     ret = hal::interface_create(up_spec, &up_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
+    // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
     up_spec.mutable_meta()->set_tenant_id(9);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
@@ -1759,7 +1759,7 @@ TEST_F(session_test, test10)
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+    // uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(10);
@@ -1778,7 +1778,7 @@ TEST_F(session_test, test10)
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+    // uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     nw_spec1.mutable_meta()->set_tenant_id(10);
     nw_spec1.set_rmac(0x0000DEADBEEF);
@@ -1812,7 +1812,7 @@ TEST_F(session_test, test10)
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
+    // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create a lif
     lif_spec.set_port_num(10);
