@@ -2052,7 +2052,8 @@ class capri_table:
 
         if len(fix_km_prof.byte_sel) < max_kmB:
             if is_shared_km:
-                pdb.set_trace() # need test case
+                # since km is shared, don't insert bytes as it can un-align the shared table
+                # increase the key size by 8 bits (hopefully we have space in TCAM) 
                 self.start_key_off -= 8
                 return False
             # add a byte just before the key
@@ -2076,20 +2077,19 @@ class capri_table:
             # table, moving/inserting byte after km_kstart can cause problems for the 
             # index table if an unused byte
             # just increase tcam key width by 1 byte by moving start_key off back by 1 byte
-            pdb.set_trace() # need test case
-            self.start_key_off -= 8
-            return False
-
-            '''
+            if is_shared_km:
+                # since km is shared, don't insert bytes as it can un-align the shared table
+                # increase the key size by 8 bits (hopefully we have space in TCAM) 
+                self.start_key_off -= 8
+                return False
             i = km_kstart
             for i in range(km_kstart):
                 if i == fix_km_prof.bit_loc or i == fix_km_prof.bit_loc1:
                     continue
                 if fix_km_prof.byte_sel[i] < 0:
-                    pdb.set_trace() # need a test case
-                    # if the kstart bytes of tcam are shared with another index
-                    # table, if can cause problems for the index table if an unused byte
-                    # got inserted after km_kstart
+                    # unused bytes are inserted in tcam's km to reduce the key size by 
+                    # right justifying key in km0 so that it stays close to k-bytes in km1
+                    # move an unused byte before key to after key
                     fix_km_prof.byte_sel.insert(km_kstart+1, -1)
                     fix_km_prof.byte_sel.pop(i)
                     break
@@ -2106,6 +2106,7 @@ class capri_table:
                     fix_km_prof.bit_loc1 -= 1
                 return False
 
+            pdb.set_trace() # need a test case
             for i in range(km_kstart, max_kmB):
                 if i == fix_km_prof.bit_loc or i == fix_km_prof.bit_loc1:
                     continue
@@ -2120,7 +2121,6 @@ class capri_table:
                 fix_km_prof.bit_loc1 += 1
             # complicated start/end offset manipulation.. let it be done by caller
             return True
-            '''
             
     def _fix_tcam_table_km_profile(self):
         def _fix_bit_loc(fix_km_prof, max_kmB, right_justify):

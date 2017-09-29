@@ -301,6 +301,7 @@ action adjust_lkp_fields() {
 table input_properties_mac_vlan {
     reads {
         entry_inactive.input_mac_vlan : ternary;
+        control_metadata.uplink       : ternary;
         vlan_tag.valid                : ternary;
         vlan_tag.vid                  : ternary;
         ethernet.srcAddr              : ternary;

@@ -43,8 +43,12 @@ flow_info:
   phvwr       p.flow_info_metadata_flow_role, d.u.flow_info_d.flow_role
 
   /* ttl change detected */
+#if 0
   seq         c1, d.u.flow_info_d.flow_ttl, k.{flow_lkp_metadata_ip_ttl_sbit0_ebit2, \
                                                 flow_lkp_metadata_ip_ttl_sbit3_ebit7}
+#endif /* OLD CODE */
+  seq         c1, d.u.flow_info_d.flow_ttl, k.{flow_lkp_metadata_ip_ttl_sbit0_ebit0, \
+                                                flow_lkp_metadata_ip_ttl_sbit1_ebit7}
   phvwr.c1    p.flow_info_metadata_flow_ttl_change_detected, k.l4_metadata_ip_ttl_change_detect_en
 
   /* Flow Connection Tracking enable */

@@ -18,8 +18,8 @@ nop:
 
 .align
 native_ipv4_packet:
-  or          r1, k.ethernet_srcAddr, r0
-  or          r5, k.ipv4_ihl, r0
+  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
+  or          r5, k.ipv4_ihl_sbit1_ebit3, k.ipv4_ihl_sbit0_ebit0, 3
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1
@@ -68,15 +68,19 @@ native_ipv4_packet:
 
 .align
 native_ipv6_packet:
-  or          r1, k.ethernet_srcAddr, r0
+  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1
   bcf         [c1|c2|c3], malformed_native_packet
 
   // srcAddr => r2(hi) r3(lo)
+#if 0
   or          r2, k.ipv6_srcAddr_sbit32_ebit111[79:48], k.ipv6_srcAddr_sbit0_ebit31, 32
   add         r3, k.ipv6_srcAddr_sbit112_ebit127[15:0], k.ipv6_srcAddr_sbit32_ebit111[47:0], 16
+#endif /* 0 */
+  or          r2, k.ipv6_srcAddr_sbit32_ebit127[95:64], k.ipv6_srcAddr_sbit0_ebit31, 32
+  add         r3, k.ipv6_srcAddr_sbit32_ebit127[63:0], r0
   // dstAddr ==> r4(hi), r5(lo)
   or          r4, k.ipv6_dstAddr_sbit32_ebit127[95:64], k.ipv6_dstAddr_sbit0_ebit31, 32
   add         r5, r0, k.ipv6_dstAddr_sbit32_ebit127[63:0]
@@ -126,7 +130,7 @@ native_ipv6_packet:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 native_non_ip_packet:
-  or          r1, k.ethernet_srcAddr, r0
+  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
   seq         c1, r1, r0
   seq         c2, k.ethernet_dstAddr, r0
   seq         c3, r1[40], 1

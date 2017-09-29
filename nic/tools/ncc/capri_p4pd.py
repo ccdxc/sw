@@ -593,7 +593,7 @@ class capri_p4pd:
 
         return kdict
 
-    def remove_duplicate_cfs(self, ki_or_kd_to_cf_map, bit_extractors, is_tcam):
+    def remove_duplicate_cfs(self, ctable, ki_or_kd_to_cf_map, bit_extractors, is_tcam):
         if len(bit_extractors):
             pad_list = []
             for kbit in bit_extractors:
@@ -620,7 +620,14 @@ class capri_p4pd:
                                     # should appear only in tcam case.
                                     #assert(is_tcam), pdb.set_trace()
                                     # Convert to Pad
-                                    pad_list.append(kbit) 
+                                    if ftype == 'K':
+                                        #In case of duplicate key, remove one that
+                                        #is outside the key-range.
+                                        if k < ctable.start_key_off or \
+                                            k > ctable.end_key_off:
+                                            pad_list.append(kbit) 
+                                    else:
+                                        pad_list.append(kbit) 
             if len(pad_list):
                 for kbit in pad_list:
                     ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P", "__NoHdr")]
@@ -979,7 +986,7 @@ class capri_p4pd:
 
         # remove any duplicate cf that are extracted as bit as well as
         # byte or multibit in a byte
-        self.remove_duplicate_cfs(ki_or_kd_to_cf_map, bit_extractors, is_tcam)
+        self.remove_duplicate_cfs(ctable, ki_or_kd_to_cf_map, bit_extractors, is_tcam)
         # purge pad bits that appeared with in a union and outside union
         self.purge_duplicate_pad(ki_or_kd_to_cf_map)
         return ki_or_kd_to_cf_map
@@ -1015,9 +1022,9 @@ class capri_p4pd:
 
         return p4f_size, (i + 1 - index)
 
-    def build_table_asm_fields_helper(self, cf_value_list, p4f_size, asm_field_info, ctable):
+    def build_table_asm_fields_helper(self, cf_value_list, p4f_size, asm_field_info, key_position, ctable):
         flit_sz = self.be.hw_model['phv']['flit_size']
-
+        pad = ''
         if len(cf_value_list) == 1:
 
             if cf_value_list[0][0] == None:
@@ -1059,8 +1066,14 @@ class capri_p4pd:
                                  p4f_size, cf.phv_bit, \
                                  cf.phv_bit / flit_sz, cf.phv_bit % flit_sz,\
                                  "K", cf_get_hname(cf)) in asm_field_info:
-                return 
-            asm_field_info.append((p4fldname, _get_output_name(cf.hfname), \
+                if key_position < ctable.start_key_off or \
+                            	key_position > ctable.end_key_off or self.be.args.p4_plus:
+                    return 
+		else:
+		    #pad
+                    pad = '__pad_'
+
+            asm_field_info.append((pad + p4fldname, pad + _get_output_name(cf.hfname), \
                                  p4f_size, cf.phv_bit, \
                                  cf.phv_bit / flit_sz, cf.phv_bit % flit_sz,\
                                  ftype, cf_get_hname(cf)))
@@ -1077,7 +1090,7 @@ class capri_p4pd:
             k, cf_value_list = kidict.items()[i]
             if len(cf_value_list) == 1:
                 k_p4f_size, cb = self.asm_contiguous_field_chunk_get(kidict, i, field_elem=0, fields=1)
-                self.build_table_asm_fields_helper(cf_value_list, k_p4f_size, ki_field_info, ctable)
+                self.build_table_asm_fields_helper(cf_value_list, k_p4f_size, ki_field_info, k, ctable)
                 i += cb
             else:
                 #handle union
@@ -1097,7 +1110,7 @@ class capri_p4pd:
                     else:
                         _cf, _cf_start, _width, _t = cf_value_list[u]
                         cflist.append((_cf, _cf_start, _width, _t))
-                    self.build_table_asm_fields_helper(cflist, k_p4f_size[u], un_ki_field_info, ctable)
+                    self.build_table_asm_fields_helper(cflist, k_p4f_size[u], un_ki_field_info, k, ctable)
                     dict_lines[f] = -1
                 ki_field_info.append(("unionized", un_ki_field_info))
                 i += dict_lines[0]
@@ -1116,7 +1129,7 @@ class capri_p4pd:
             # from same p4 input field.
             k_p4f_size, cb = self.asm_contiguous_field_chunk_get(kddict, i)
             k, cf_value_list = kddict.items()[i]
-            self.build_table_asm_fields_helper(cf_value_list, k_p4f_size, kd_field_info, ctable)
+            self.build_table_asm_fields_helper(cf_value_list, k_p4f_size, kd_field_info, k, ctable)
             i += cb
         return kd_field_info
 

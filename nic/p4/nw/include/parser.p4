@@ -290,6 +290,7 @@ parser parse_txdma {
 
 parser parse_nic {
     extract(capri_intrinsic);
+    set_metadata(control_metadata.uplink, capri_intrinsic.tm_replicate_ptr >> 15); 
     return parse_ethernet;
 }
 
@@ -1089,17 +1090,15 @@ parser parse_inner_ipv4_options_blob {
 
 parser parse_inner_ipv4 {
 #if 0
+    // this code is kept disabled.. until NCC has a fix for handling 
+    // hdr unions and same set_metadata from multiple states while computing topo-graph
     return select(current(0,8)) {
         0x45    : parse_base_inner_ipv4;
         default : parse_inner_ipv4_options_blob;
     }
 #else
     extract(inner_ipv4);
-    set_metadata(parser_metadata.parse_inner_ipv4_counter, (inner_ipv4.ihl << 2) - 20);
-    return select(parser_metadata.parse_inner_ipv4_counter) {
-        0x0 : parse_base_inner_ipv4;
-        default : parse_inner_ipv4_options;
-    }
+    return parse_base_inner_ipv4;
 #endif
 }
 
@@ -1206,7 +1205,21 @@ parser parse_inner_udp {
     extract(inner_udp);
     set_metadata(flow_lkp_metadata.lkp_sport, latest.srcPort);
     set_metadata(flow_lkp_metadata.lkp_dport, latest.dstPort);
-    return ingress;
+    return parse_dummy;
+    //return ingress;
+}
+
+parser parse_dummy {
+    // This state is added as a work-around until NCC has a fix for handling 
+    // hdr unions and same set_metadata from multiple states while computing topo-graph
+    return select (inner_udp.srcPort) {
+        default: ingress;
+        0x1 mask 0x0000 : parse_v6_ipsec_hdr;
+        0x2 mask 0x0000 : parse_ipsec_ah;
+        0x3 mask 0x0000 : parse_ipsec_esp;
+        0x4 mask 0x0000 : parse_icmp;
+        0x5 mask 0x0000 : parse_tcp;
+    }
 }
 
 /* This state extracts 72 bytes (40 bytes of header + 32 bytes to lkp)

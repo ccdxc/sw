@@ -294,6 +294,7 @@ class PacketComparator:
         self.rid += 1
         rpgid = 'RXPKT%d' % self.rid
         self.lg.info("ACTUAL RX Packet: %s, Ports: " % rpgid, ports)
+        penscapy.ShowRawPacket(spkt, self.lg)
         rpobj = CrPacket(rpgid, spkt, ports)
         rpobj.Show(self.lg)
         self.rxpkts[rpobj.pktid] = rpobj

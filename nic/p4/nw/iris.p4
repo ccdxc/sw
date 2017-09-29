@@ -46,6 +46,7 @@ header_type control_metadata_t {
         egress_bypass                  : 1;
         ipsg_enable                    : 1;
         recirc_reason                  : 2;
+        uplink                         : 1;
         cpu_copy                       : 1;
         src_lif                        : 11;
         flow_miss_action               : 2;
