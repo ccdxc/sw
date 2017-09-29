@@ -24,4 +24,4 @@ else
   JOBS = --jobs=$(j)
 endif
 
-BAZEL_OPTIONS = $(JOBS) $(VERBOSE) $(DEBUG) 
+BAZEL_OPTIONS = $(JOBS) $(VERBOSE) $(DEBUG)

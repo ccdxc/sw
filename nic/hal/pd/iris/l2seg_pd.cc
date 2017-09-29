@@ -280,8 +280,13 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     key.capri_intrinsic_lif = SERVICE_LIF_CPU;
-    key.vlan_tag_valid = 1;
-    key.vlan_tag_vid = l2seg_pd->l2seg_fromcpu_id;
+    if (((l2seg_t *)(l2seg_pd->l2seg))->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
+        key.vlan_tag_valid = 0;
+        key.vlan_tag_vid = 0;
+    } else {
+        key.vlan_tag_valid = 1;
+        key.vlan_tag_vid = l2seg_pd->l2seg_fromcpu_id;
+    }
 
     inp_prop.vrf = l2seg_pd->l2seg_ten_hw_id;
     inp_prop.dir = FLOW_DIR_FROM_ENIC;
