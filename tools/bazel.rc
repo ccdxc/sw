@@ -1,0 +1,18 @@
+# startup options
+# Enabling batching seems to be very slow. So disabling it for now
+#startup --batch --host_jvm_args=-XX:-UseParallelGC
+
+# Do not show warnings from 
+#   - external dependencies 
+#   - nic/asic/capri
+#build --output_filter="^//" --output_filter="^nic/asic/capri"
+build --output_filter="^//"
+
+# colored output
+build --color=yes
+build --cxxopt="-fdiagnostics-color=always"
+
+# show timestamps
+#build --show_timestamps --keep_going
+#build --show_timestamps --keep_going --jobs 600
+
