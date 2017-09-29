@@ -427,7 +427,7 @@ func writeKvsOne(fieldName, currValue string, new, orig reflect.Value, kvCtx *kv
 		} else {
 			delete(kvs, fieldName)
 		}
-		if fi.ValueStr[0] != "" {
+		if len(fi.ValueStr) > 0 && fi.ValueStr[0] != "" {
 			return writeKv(new, orig, fi.ValueStr[0], kvCtx)
 		}
 	} else {

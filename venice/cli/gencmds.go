@@ -884,6 +884,10 @@ var definitionCommands = []cli.Command{
 // CreateClusterFlags specifies flagsfor cluster create operation
 var CreateClusterFlags = []cli.Flag{
 
+	cli.BoolFlag{
+		Name: "autoAdmitNICs",
+	},
+
 	cli.StringFlag{
 		Name: "dNSSubDomain",
 	},
@@ -1045,6 +1049,18 @@ var CreateSgpolicyFlags = []cli.Flag{
 
 	cli.StringSliceFlag{
 		Name: "action",
+	},
+
+	cli.StringSliceFlag{
+		Name: "appUser",
+	},
+
+	cli.StringSliceFlag{
+		Name: "appUserGrp",
+	},
+
+	cli.StringSliceFlag{
+		Name: "apps",
 	},
 
 	cli.StringSliceFlag{

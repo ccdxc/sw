@@ -19,7 +19,7 @@ import (
 	"github.com/ghodss/yaml"
 	swapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cli/api"
-	"github.com/pensando/sw/venice/cli/venice/gen/pregen"
+	"github.com/pensando/sw/venice/cli/gen/pregen"
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/urfave/cli"
 	"golang.org/x/crypto/ssh/terminal"

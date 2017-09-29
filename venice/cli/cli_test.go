@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/cli/api"
-	"github.com/pensando/sw/venice/cli/venice/testserver/tserver"
+	"github.com/pensando/sw/venice/cli/testserver/tserver"
 )
 
 const (
@@ -21,6 +21,7 @@ const (
 	testServerPort = "30748"
 	testServerOpt  = "--server http://localhost:" + testServerPort + " "
 	fmtOutput      = false
+	snapshotDir    = "snap3443"
 )
 
 func veniceCLI(cmdStr string) string {
@@ -58,6 +59,7 @@ func TestStartServer(t *testing.T) {
 			time.Sleep(10 * time.Millisecond)
 		}
 	}
+	os.RemoveAll(snapshotDir)
 	t.Fatalf("error creating default cluster: %s", err)
 }
 
@@ -624,7 +626,7 @@ func TestCommandCompletion(t *testing.T) {
 		t.Fatalf("command completion for string-value map: invalid output '%s'", out)
 	}
 	out = veniceCLI("create cluster --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --dNSSubDomain --nTPServers --quorumNodes --virtualIP {cluster}") {
+	if !strings.Contains(out, "--label --dry-run --file --autoAdmitNICs --dNSSubDomain --nTPServers --quorumNodes --virtualIP {cluster}") {
 		t.Fatalf("cluster command completion: invalid output '%s'", out)
 	}
 
@@ -730,11 +732,11 @@ func TestCommandCompletion(t *testing.T) {
 	}
 
 	out = veniceCLI("create sgpolicy --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --action --attachGroups --peerGroup --ports {sgpolicy}") {
+	if !strings.Contains(out, "--label --dry-run --file --action --appUser --appUserGrp --apps --attachGroups --peerGroup --ports {sgpolicy}") {
 		t.Fatalf("lbPolicy command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("update sgpolicy --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --action --attachGroups --peerGroup --ports") {
+	if !strings.Contains(out, "--label --dry-run --file --action --appUser --appUserGrp --apps --attachGroups --peerGroup --ports") {
 		t.Fatalf("lbPolicy command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("delete sgpolicy --gbc")
@@ -1236,14 +1238,14 @@ func TestSnapshot(t *testing.T) {
 	veniceCLI("create node --label vCenter:vc2 --roles 1 snap-node")
 
 	// take a snapshot
-	out := veniceCLI("snapshot -f snap3443")
-	defer os.RemoveAll("snap3443")
+	out := veniceCLI("snapshot -f " + snapshotDir)
+	defer os.RemoveAll(snapshotDir)
 	if !strings.Contains(out, "Successful - stored snapshot") {
 		t.Fatalf("unable to store snapshot: %s", out)
 	}
 
 	// read the snapshot objects to confirm they look as per configuration
-	b, err := ioutil.ReadFile("./snap3443/tenants/snap-tenant.json")
+	b, err := ioutil.ReadFile(snapshotDir + "/tenants/snap-tenant.json")
 	if err != nil {
 		t.Fatalf("Error reading file contents: %s", err)
 	}
@@ -1255,7 +1257,7 @@ func TestSnapshot(t *testing.T) {
 		t.Fatalf("Unable to decode object: %+v", tenant)
 	}
 
-	b, err = ioutil.ReadFile("./snap3443/lbPolicys/snap-lbpolicy.json")
+	b, err = ioutil.ReadFile(snapshotDir + "/lbPolicys/snap-lbpolicy.json")
 	if err != nil {
 		t.Fatalf("Error reading file contents: %s", err)
 	}
@@ -1268,7 +1270,7 @@ func TestSnapshot(t *testing.T) {
 		t.Fatalf("Unable to decode object: %+v", tenant)
 	}
 
-	b, err = ioutil.ReadFile("./snap3443/nodes/snap-node.json")
+	b, err = ioutil.ReadFile(snapshotDir + "/nodes/snap-node.json")
 	if err != nil {
 		t.Fatalf("Error reading file contents: %s", err)
 	}
@@ -1286,10 +1288,10 @@ func TestSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to marshal node object %+v", node)
 	}
-	ioutil.WriteFile("./snap3443/nodes/snap-node.json", b, 0644)
+	ioutil.WriteFile(snapshotDir+"/nodes/snap-node.json", b, 0644)
 
 	// restore from snapshot
-	out = veniceCLI("snapshot --restore --id snap3443")
+	out = veniceCLI("snapshot --restore --id " + snapshotDir)
 	if strings.TrimSpace(out) != "" {
 		t.Fatalf("snapshot restore returned some junk: %s", out)
 	}

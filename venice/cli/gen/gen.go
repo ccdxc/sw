@@ -9,7 +9,7 @@ import (
 	"text/template"
 
 	"github.com/pensando/sw/venice/cli/api"
-	"github.com/pensando/sw/venice/cli/venice/gen/pregen"
+	"github.com/pensando/sw/venice/cli/gen/pregen"
 	"github.com/pensando/sw/venice/utils/ref"
 )
 
@@ -371,7 +371,7 @@ import (
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/cli/api"
-	"github.com/pensando/sw/venice/cli/venice/gen/pregen"
+	"github.com/pensando/sw/venice/cli/gen/pregen"
 	"github.com/pensando/sw/venice/utils/ref"
 )
 

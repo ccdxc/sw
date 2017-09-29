@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/pensando/sw/venice/cli/venice/testserver/tserver"
+	"github.com/pensando/sw/venice/cli/testserver/tserver"
 )
 
 func main() {

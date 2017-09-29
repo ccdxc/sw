@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VENICE_DIR=$GOPATH/src/github.com/pensando/sw/cli/venice
+VENICE_DIR=$GOPATH/src/github.com/pensando/sw/venice/cli
 cd $VENICE_DIR/gen
 
 # generate objects that templates need to work on first

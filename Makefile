@@ -36,7 +36,7 @@ checks: gofmt-src golint-src govet-src
 
 # pregen target generates code that is needed by other binaries
 pregen:
-	@$(PWD)/cli/venice/scripts/gen.sh
+	@$(PWD)/venice/cli/scripts/gen.sh
 
 qbuild:
 	$(info +++ go install $(TO_BUILD))
