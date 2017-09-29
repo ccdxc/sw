@@ -1,7 +1,7 @@
 meta:
     id      : AETH
     scapy   : AETH
-    size    : None
+    size    : 4
 
 fields:
     syndrome: const/0x0

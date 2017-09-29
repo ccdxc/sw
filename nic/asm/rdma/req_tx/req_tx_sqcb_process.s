@@ -90,7 +90,7 @@ in_progress:
     add            r4, r0, d.log_pmtu
     sllv           r4, 1, r4
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, remaining_payload_bytes, r4)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, dma_cmd_start_index, REQ_TX_DMA_CMD_START_FLIT_ID)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, dma_cmd_start_index, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
     //CAPRI_SET_FIELD(r7, INFO_OUT3_T, wqe_addr, d.curr_wqe_ptr)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, d.curr_op_type)

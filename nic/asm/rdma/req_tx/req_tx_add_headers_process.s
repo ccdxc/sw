@@ -93,7 +93,8 @@ op_type_read:
     phvwr          RRQWQE_PSN, d.tx_psn           
     phvwr          RRQWQE_MSN, d.msn
     phvwr          RRQWQE_READ_LEN, k.args.op.rd.read_len
-    phvwr          RRQWQE_READ_WQE_SGE_LIST_ADDR, k.to_stage.wqe_addr
+    add            r1, k.to_stage.wqe_addr, TXWQE_SGE_OFFSET
+    phvwr          RRQWQE_READ_WQE_SGE_LIST_ADDR, r1
 
     // dma_cmd[5]
     DMA_NEXT_CMD_I_BASE_GET(r6, 1)

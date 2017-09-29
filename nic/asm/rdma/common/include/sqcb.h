@@ -7,6 +7,11 @@
 #define FC_RING_ID 	1
 #define RRQ_RING_ID	(MAX_SQ_RINGS - 1)	
 
+#define SQ_RING_ID_BITMAP       0x0
+#define FC_RING_ID_BITMAP       0x01
+
+#define RRQ_RING_ID_BITMAP      0x20
+
 #define SQ_P_INDEX  d.{ring0.pindex}.hx
 #define SQ_C_INDEX  d.{ring0.cindex}.hx
 #define RRQ_P_INDEX d.{ring5.pindex}.hx
@@ -15,6 +20,8 @@
 #define SQCB_T struct sqcb_t
 #define SQCB0_T struct sqcb0_t
 #define SQCB1_T struct sqcb1_t
+
+#define SIZEOF_TOKEN_ID_BITS  8
 
 struct sqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
