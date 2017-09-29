@@ -30,6 +30,8 @@ extern hal_ret_t rdma_lif_init(intf::LifSpec& spec, uint32_t lif_id);
 extern  hal_ret_t rdma_qp_create(RdmaQpSpec& spec, RdmaQpResponse *rsp);
 extern hal_ret_t rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp);
 extern hal_ret_t rdma_memory_register(RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp);
+extern uint64_t rdma_lif_pt_base_addr(uint32_t lif_id);
+extern uint64_t rdma_lif_kt_base_addr(uint32_t lif_id);
 
 
 
@@ -150,11 +152,6 @@ typedef struct qpcb_ring_s {
     uint16_t  p_index;
 } qpcb_ring_t;
 
-typedef struct qpcb_ring_old_s {
-    uint16_t  p_index;
-    uint16_t  c_index;
-} qpcb_ring_old_t;
-
 typedef struct qpcb_intrinsic_s {
     uint16_t  pid;
     uint8_t   total_rings:4;
@@ -167,18 +164,6 @@ typedef struct qpcb_intrinsic_s {
     uint8_t   pc;
 } PACKED qpcb_intrinsic_base_t;
 
-typedef struct qpcb_intrinsic_old_s {
-    uint8_t   pc;
-    uint8_t   rsvd;
-    uint8_t   cosA:4;
-    uint8_t   cosB:4;
-    uint8_t   cos_selector;
-    uint8_t   eval_last;
-    uint8_t   host_rings:4;
-    uint8_t   total_rings:4;
-    uint16_t  pid;
-} PACKED qpcb_intrinsic_old_t;
-
 typedef struct p4_to_p4plus_rdma_hdr_s {
     uint16_t         flags; //roce_opcode_flags_t
     uint8_t          v4:1;
@@ -188,24 +173,6 @@ typedef struct p4_to_p4plus_rdma_hdr_s {
     }dip;
     uint16_t         payload_size;
 } p4_to_p4plus_rdma_hdr_t;
-
-typedef struct key_entry_old_s {
-    uint8_t          user_key;
-    uint8_t          state : 4;
-    uint8_t          type  : 4; //mr_type_t
-    uint8_t          acc_ctrl;
-    uint8_t          log_page_size;
-    uint32_t         len;
-    uint64_t         base_va;
-    uint32_t         pt_base;
-    uint32_t         pd;
-    uint32_t         pt_size; // looks like we are not using this field ?
-    uint8_t          flags;
-    uint32_t         qp: 24; //qp which bound the MW ?
-#if 0
-    uint32_t         peer_key: 24; //index of peer l_key or r_key
-#endif
-} PACKED key_entry_old_t;
 
 typedef struct key_entry_s {
     uint32_t         qp: 24; //qp which bound the MW ?

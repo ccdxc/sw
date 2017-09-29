@@ -585,9 +585,6 @@ struct key_entry_t {
     pt_size: 32; // looks like we are not using this field ?
     flags: 8;
     qp: 24; //qp which bound the MW ?
-#if 0
-    u32         peer_key: 24; //index of peer l_key or r_key
-#endif
 };
 
 #define GET_NUM_PAGES(_va_r, _bytes_r, _page_size_imm, _num_pages_r, _scratch_r)  \

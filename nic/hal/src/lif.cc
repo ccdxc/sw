@@ -528,6 +528,13 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         entry->set_addr(g_lif_manager->GetLIFQStateAddr(hw_lif_id, ent.type_num(), 0));
     }
 
+    // Return LIF RDMA data for RDMA enabled lifs
+    if (lif->enable_rdma) {
+        rsp->mutable_rdma_data()->set_pt_base_addr(rdma_lif_pt_base_addr(hw_lif_id));
+        rsp->mutable_rdma_data()->set_kt_base_addr(rdma_lif_kt_base_addr(hw_lif_id));
+    }
+
+
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }

@@ -160,7 +160,47 @@ rdma_tx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
     return HAL_RET_OK;
 }
 
+uint64_t rdma_lif_pt_base_addr(uint32_t lif)
+{
+    sram_lif_entry_t    sram_lif_entry = {0};
+    uint64_t            pt_table_base_addr;
+    hal_ret_t           rc;  
 
+    rc = rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
+    HAL_ASSERT(rc == HAL_RET_OK);
+    HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
+                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n", 
+                    __FUNCTION__, __LINE__, lif,
+                    sram_lif_entry.pt_base_addr_page_id, 
+                    sram_lif_entry.log_num_pt_entries,
+                    sram_lif_entry.rdma_en_qtype_mask);
+
+    pt_table_base_addr = sram_lif_entry.pt_base_addr_page_id;
+    pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
+    return(pt_table_base_addr);
+}
+
+uint64_t rdma_lif_kt_base_addr(uint32_t lif)
+{
+    sram_lif_entry_t    sram_lif_entry = {0};
+    uint64_t            pt_table_base_addr;
+    uint64_t            key_table_base_addr;
+    hal_ret_t           rc;  
+
+    rc = rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
+    HAL_ASSERT(rc == HAL_RET_OK);
+    HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
+                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n", 
+                    __FUNCTION__, __LINE__, lif,
+                    sram_lif_entry.pt_base_addr_page_id, 
+                    sram_lif_entry.log_num_pt_entries,
+                    sram_lif_entry.rdma_en_qtype_mask);
+
+    pt_table_base_addr = sram_lif_entry.pt_base_addr_page_id;
+    pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
+    key_table_base_addr = pt_table_base_addr + (sizeof(uint64_t) << sram_lif_entry.log_num_pt_entries);
+    return(key_table_base_addr);
+}
 
 hal_ret_t
 rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
@@ -520,7 +560,7 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     //g_pt_base[lif] += num_pages;
     num_pt_entries = ((pt_end_page_id / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)+1) * HBM_NUM_PT_ENTRIES_PER_CACHE_LINE;
     g_pt_base[lif] += num_pt_entries;
-    HAL_TRACE_DEBUG("{}: Enf of MR PT index: {}", g_pt_base[lif]);
+    HAL_TRACE_DEBUG("{}: Enf of MR PT index: {}", __FUNCTION__, g_pt_base[lif]);
 
     lkey_entry_p->pt_size = num_pt_entries;
     if (rkey != INVALID_KEY) {

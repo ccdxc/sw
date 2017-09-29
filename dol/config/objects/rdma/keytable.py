@@ -1,0 +1,46 @@
+#! /usr/bin/python3
+import pdb
+
+import infra.common.objects     as objects
+import model_sim.src.model_wrap as model_wrap
+from infra.common.logging       import cfglogger
+from scapy.all import *
+
+
+class RdmaKeyTableEntry(Packet):
+    name = "RdmaKeyTableEntry"
+    fields_desc = [
+        ByteField("user_key", 0),
+        BitField("state", 0, 4),
+        BitField("type", 0, 4),
+        ByteField("acc_ctrl", 0),
+        ByteField("log_page_size", 0),
+        IntField("len", 0),
+        LongField("base_va", 0),
+        IntField("pt_base", 0),
+        IntField("pd", 0),
+        IntField("pt_size", 0),
+        ByteField("flags", 0),
+        X3BytesField("qp", 0),
+    ]
+
+class RdmaKeyTableEntryObject(object):
+    def __init__(self, lif, key):
+        self.size = len(RdmaKeyTableEntry())
+        self.addr = lif.rdma_kt_base_addr + key * self.size
+        self.Read()
+
+    def Write(self):
+        cfglogger.info("Writing KeyTableEntry @0x%x size: %d" % (self.addr, self.size))
+        model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
+        self.Read()
+
+    def Read(self):
+        self.data = RdmaKeyTableEntry(model_wrap.read_mem(self.addr, self.size))
+        cfglogger.info("Read KeyTableEntry @ 0x%x size: %d: " % (self.addr, self.size))
+        self.data.show()
+
+    def Show(self, lgh = cfglogger):
+        lgh.ShowScapyObject(self.data) 
+
+
