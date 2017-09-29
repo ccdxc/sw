@@ -68,3 +68,65 @@ func (m *AutoMsgAppWatchHelper) MakeKey(prefix string) string {
 	obj := App{}
 	return obj.MakeKey(prefix)
 }
+
+// Validators
+
+func (m *App) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AppList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AppSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AppStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AppUser) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AppUserGrp) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AppUserGrpList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AppUserGrpSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AppUserGrpStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AppUserList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AppUserSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AppUserStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgAppUserGrpWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgAppUserWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgAppWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}

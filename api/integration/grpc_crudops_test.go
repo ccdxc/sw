@@ -66,6 +66,7 @@ func TestCrudOps(t *testing.T) {
 			Spec: bookstore.PublisherSpec{
 				Id:      "111",
 				Address: "#1 hilane, timbuktoo",
+				WebAddr: "http://sahara-books.org",
 			},
 		}
 		pub2 = bookstore.Publisher{
@@ -78,6 +79,7 @@ func TestCrudOps(t *testing.T) {
 			Spec: bookstore.PublisherSpec{
 				Id:      "112",
 				Address: "#2 lowside, timbuktoo",
+				WebAddr: "http://rengtertopian.con:8080/",
 			},
 		}
 	}
@@ -262,6 +264,7 @@ func TestCrudOps(t *testing.T) {
 				},
 			},
 		}
+
 	}
 
 	t.Logf("test REST crud operations")
@@ -333,6 +336,81 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("updated object [Delete] does not match \n\t[%+v]\n\t[%+v]", retorder, order1)
 		}
 		expectWatchEvents = addToWatchList(&expectWatchEvents, &order1, kvstore.Deleted)
+	}
+
+	// ========= Test Validation and Status update Operations ========= //
+	var book1, book1mod bookstore.Book
+	{
+		book1 = bookstore.Book{
+			ObjectMeta: api.ObjectMeta{
+				Name: "book1",
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "book",
+			},
+			Spec: bookstore.BookSpec{
+				ISBNId:   "111-2-31-123456-0",
+				Author:   "foo",
+				Category: "JunkValue",
+			},
+		}
+		book1mod = bookstore.Book{
+			ObjectMeta: api.ObjectMeta{
+				Name: "book1",
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "book",
+			},
+			Spec: bookstore.BookSpec{
+				ISBNId:   "111-2-31-123456-0",
+				Author:   "bar",
+				Category: "JunkValue2",
+			},
+			Status: bookstore.BookStatus{
+				Inventory: 10,
+			},
+		}
+	}
+	{ // Create a new Book entry
+		_, err := apicl.BookstoreV1().Book().Create(ctx, &book1)
+		if err == nil {
+			t.Fatalf("Book create expected to fail due to validation")
+		}
+		book1.Spec.Category = "ChildrensLit"
+		retbook, err := apicl.BookstoreV1().Book().Create(ctx, &book1)
+		if err != nil {
+			t.Fatalf("Book create failed [%s]", err)
+		}
+		if !reflect.DeepEqual(retbook.Spec, book1.Spec) {
+			t.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", book1.Spec, retbook.Spec)
+		}
+	}
+	{ // Update the Book with status via gRPC with Validation
+		_, err := apicl.BookstoreV1().Book().Update(ctx, &book1mod)
+		if err == nil {
+			t.Fatalf("Validation expected to fail")
+		}
+		book1mod.Spec.Category = "ChildrensLit"
+		_, err = apicl.BookstoreV1().Book().Update(ctx, &book1mod)
+		if err != nil {
+			t.Fatalf("Expected to succeed")
+		}
+	}
+	{ //Update the Book with Status via REST
+		book1mod.Status.Inventory = 100
+		_, err = restcl.BookstoreV1().Book().Update(ctx, &book1mod)
+		if err != nil {
+			t.Fatalf("Failed to update book via REST (%s)", err)
+		}
+		objectMeta := api.ObjectMeta{Name: "book1"}
+		t.Logf("requesting Get for object %+v", objectMeta)
+		retbook, err := restcl.BookstoreV1().Book().Get(ctx, &objectMeta)
+		if err != nil {
+			t.Fatalf("Failed to retrieve book via REST (%s)", err)
+		}
+		if retbook.Status.Inventory != 10 {
+			t.Fatalf("REST update was able to update status fields")
+		}
 	}
 
 	// ===== Validate Watch Events received === //

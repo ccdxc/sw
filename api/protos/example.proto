@@ -20,6 +20,7 @@ message Publisher {
 message PublisherSpec {
     string Id  = 2;
     string Address = 3;
+    string WebAddr = 4 [(venice.check) = "URI()", (venice.check) = "StrLen(6,256)"];
 }
 
 message Book {
@@ -33,10 +34,17 @@ message Book {
 }
 
 message BookSpec {
-    string ISBNId = 2;
-    string Author = 3;
-    // Added in  version 2 of the API.
-    string IdProvider = 4;
+  enum  BookCategories{
+    ChildrensLit = 0;
+    YoungAdult = 1;
+    Fiction = 2;
+    NonFiction = 3;
+  }
+  string ISBNId = 2;
+  string Author = 3;
+  // Added in  version 2 of the API.
+  string IdProvider = 4;
+  string Category = 5 [(venice.check) = "StrEnum(BookSpec.BookCategories)"];
 }
 
 message BookStatus {
@@ -60,8 +68,8 @@ message OrderSpec {
 }
 
 message OrderItem {
-  string ISBNId = 1;
-  uint32 Quantity = 2;
+  string ISBNId = 1 [(venice.check) = "StrLen(3,10)"];
+  uint32 Quantity = 2 [(venice.check) = "IntRange(2,30)"];
 }
 
 message OrderStatus {
@@ -72,7 +80,7 @@ message OrderStatus {
     SHIPPED = 3;
     COMPLETED = 4;
   }
-  OrderStatus Status = 3;
+  string Status = 3 [(venice.check) = "StrEnum(OrderStatus.OrderStatus)"];
   repeated OrderSpec Filled = 4;
 }
 
@@ -94,7 +102,12 @@ service BookstoreV1 {
   option (venice.apiRestService) = {
         Object: "Book"
         Method: [ "get" ]
-        Pattern: "/books/{Spec.ISBNId}"
+        Pattern: "/books/{O.Name}"
+     };
+  option (venice.apiRestService) = {
+      Object: "Book"
+      Method: [ "put" ]
+      Pattern: "/books/{O.Name}"
      };
 
   option (venice.apiRestService) = {

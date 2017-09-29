@@ -77,7 +77,7 @@ func request_BookstoreV1_AutoDeleteOrder_0(ctx context.Context, marshaler runtim
 }
 
 var (
-	filter_BookstoreV1_AutoGetBook_0 = &utilities.DoubleArray{Encoding: map[string]int{"Spec": 0, "ISBNId": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+	filter_BookstoreV1_AutoGetBook_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
 func request_BookstoreV1_AutoGetBook_0(ctx context.Context, marshaler runtime.Marshaler, client BookstoreV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -91,12 +91,12 @@ func request_BookstoreV1_AutoGetBook_0(ctx context.Context, marshaler runtime.Ma
 		_   = err
 	)
 
-	val, ok = pathParams["Spec.ISBNId"]
+	val, ok = pathParams["O.Name"]
 	if !ok {
-		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "Spec.ISBNId")
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
 	}
 
-	err = runtime.PopulateFieldFromPath(&protoReq, "Spec.ISBNId", val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
 
 	if err != nil {
 		return nil, metadata, err
@@ -159,6 +159,37 @@ func request_BookstoreV1_AutoListOrder_0(ctx context.Context, marshaler runtime.
 	}
 
 	msg, err := client.AutoListOrder(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_BookstoreV1_AutoUpdateBook_0(ctx context.Context, marshaler runtime.Marshaler, client BookstoreV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Book
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, metadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(&protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, metadata, err
+	}
+
+	msg, err := client.AutoUpdateBook(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -370,6 +401,34 @@ func RegisterBookstoreV1HandlerWithClient(ctx context.Context, mux *runtime.Serv
 
 	})
 
+	mux.Handle("PUT", pattern_BookstoreV1_AutoUpdateBook_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_BookstoreV1_AutoUpdateBook_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BookstoreV1_AutoUpdateBook_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_BookstoreV1_AutoUpdateOrder_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -406,11 +465,13 @@ var (
 
 	pattern_BookstoreV1_AutoDeleteOrder_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"orders", "O.Name"}, ""))
 
-	pattern_BookstoreV1_AutoGetBook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"books", "Spec.ISBNId"}, ""))
+	pattern_BookstoreV1_AutoGetBook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"books", "O.Name"}, ""))
 
 	pattern_BookstoreV1_AutoGetOrder_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"orders", "O.Name"}, ""))
 
 	pattern_BookstoreV1_AutoListOrder_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"orders"}, ""))
+
+	pattern_BookstoreV1_AutoUpdateBook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"books", "O.Name"}, ""))
 
 	pattern_BookstoreV1_AutoUpdateOrder_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"orders", "O.Name"}, ""))
 )
@@ -425,6 +486,8 @@ var (
 	forward_BookstoreV1_AutoGetOrder_0 = runtime.ForwardResponseMessage
 
 	forward_BookstoreV1_AutoListOrder_0 = runtime.ForwardResponseMessage
+
+	forward_BookstoreV1_AutoUpdateBook_0 = runtime.ForwardResponseMessage
 
 	forward_BookstoreV1_AutoUpdateOrder_0 = runtime.ForwardResponseMessage
 )

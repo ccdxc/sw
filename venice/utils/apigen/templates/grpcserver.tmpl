@@ -4,7 +4,7 @@
 Package {{.GoPkg.Name}}ApiServer is a auto generated package.
 Input file: {{.Name}}
 */
-package {{.GoPkg.Name}}ApiServer
+package {{.GoPkg.Name}}ApiServer{{$validators := getValidatorManifest .}}
 
 import (
 	"context"
@@ -60,7 +60,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 			r := i.({{$pkgname}}.{{.Name}})
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.({{$pkgname}}.{{.Name}})
 			key := r.MakeKey(prefix)
 			r.Kind = "{{.Name}}"
@@ -68,14 +68,27 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 			if create {
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
-			} else {
+			} else { {{if isSpecStatusMessage .}}
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*{{$pkgname}}.{{.Name}})
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &{{$pkgname}}.{{.Name}}{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
+				} else { {{end}}
 				if r.ResourceVersion != "" {
 					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
 					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
 				} else {
 					err = kvs.Update(ctx, key, &r)
 				}
-				err = errors.Wrap(err, "KV update failed")
+				err = errors.Wrap(err, "KV update failed"){{if isSpecStatusMessage .}}
+				} {{end}}
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -101,7 +114,13 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
-		}),{{else}}{{if isListHelper .}}.WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+		}){{$msgname := .Name}}{{with (index $validators.Map (derefStr .Name))}}.WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.({{$pkgname}}.{{$msgname}})
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
+		}){{end}},{{else}}{{if isListHelper .}}.WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 			{{$objname := getListType . true}}
 			into := {{$pkgname}}.{{.Name}}{}
 			r := {{$objname}}{}

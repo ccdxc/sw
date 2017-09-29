@@ -66,7 +66,7 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 			r := i.(networkencryption.TrafficEncryptionPolicy)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(networkencryption.TrafficEncryptionPolicy)
 			key := r.MakeKey(prefix)
 			r.Kind = "TrafficEncryptionPolicy"
@@ -75,13 +75,26 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*networkencryption.TrafficEncryptionPolicy)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &networkencryption.TrafficEncryptionPolicy{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -107,6 +120,12 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(networkencryption.TrafficEncryptionPolicy)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"networkencryption.TrafficEncryptionPolicyList": apisrvpkg.NewMessage("networkencryption.TrafficEncryptionPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 

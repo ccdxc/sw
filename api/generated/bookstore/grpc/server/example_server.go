@@ -78,7 +78,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			r := i.(bookstore.Book)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(bookstore.Book)
 			key := r.MakeKey(prefix)
 			r.Kind = "Book"
@@ -87,13 +87,26 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*bookstore.Book)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &bookstore.Book{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -119,6 +132,12 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(bookstore.Book)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"bookstore.BookList": apisrvpkg.NewMessage("bookstore.BookList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -144,7 +163,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			r := i.(bookstore.Order)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(bookstore.Order)
 			key := r.MakeKey(prefix)
 			r.Kind = "Order"
@@ -153,13 +172,26 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*bookstore.Order)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &bookstore.Order{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -185,6 +217,12 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(bookstore.Order)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"bookstore.OrderItem": apisrvpkg.NewMessage("bookstore.OrderItem"),
 		"bookstore.OrderList": apisrvpkg.NewMessage("bookstore.OrderList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -211,7 +249,7 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			r := i.(bookstore.Publisher)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(bookstore.Publisher)
 			key := r.MakeKey(prefix)
 			r.Kind = "Publisher"
@@ -252,6 +290,12 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(bookstore.Publisher)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"bookstore.PublisherList": apisrvpkg.NewMessage("bookstore.PublisherList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 

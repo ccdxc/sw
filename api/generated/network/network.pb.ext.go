@@ -136,3 +136,153 @@ func (m *AutoMsgTenantWatchHelper) MakeKey(prefix string) string {
 	obj := Tenant{}
 	return obj.MakeKey(prefix)
 }
+
+// Validators
+
+func (m *AutoMsgEndpointWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgLbPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgNetworkWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgSecurityGroupWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgServiceWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgSgpolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgTenantWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *Endpoint) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *EndpointList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *EndpointSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *EndpointStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *HealthCheckSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *LbPolicy) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *LbPolicyList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *LbPolicySpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *LbPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *Network) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *NetworkList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *NetworkSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *NetworkStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SGRule) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SecurityGroup) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SecurityGroupList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SecurityGroupSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SecurityGroupStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *Service) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *ServiceList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *ServiceSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *ServiceStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *Sgpolicy) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SgpolicyList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SgpolicySpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SgpolicyStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *Tenant) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *TenantList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *TenantSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *TenantStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}

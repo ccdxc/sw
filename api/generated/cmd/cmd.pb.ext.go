@@ -68,3 +68,85 @@ func (m *AutoMsgSmartNICWatchHelper) MakeKey(prefix string) string {
 	obj := SmartNIC{}
 	return obj.MakeKey(prefix)
 }
+
+// Validators
+
+func (m *AutoMsgClusterWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgNodeWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgSmartNICWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *Cluster) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *ClusterList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *ClusterSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *ClusterStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *Node) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *NodeCondition) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *NodeList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *NodeSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *NodeStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *PortCondition) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *PortSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *PortStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SmartNIC) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SmartNICCondition) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SmartNICList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SmartNICSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *SmartNICStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}

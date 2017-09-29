@@ -581,7 +581,7 @@ func (a *restObjBookstoreV1Book) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.CreateOper:
 		return false
 	case apiserver.UpdateOper:
-		return false
+		return true
 	case apiserver.GetOper:
 		return true
 	case apiserver.DeleteOper:

@@ -2,22 +2,27 @@
 
 /*
 Package {{.GoPkg.Name}} is a auto generated package.
-Input file: {{.Name}}
+Input file: {{.Name}} {{$file := .}}
 */
-package {{.GoPkg.Name}}
+package {{.GoPkg.Name}}{{$validators := getValidatorManifest .}}
 
 import (
 	fmt "fmt"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
+	{{if $validators.Fmap}}
+	validators "github.com/pensando/sw/venice/utils/apigen/validators" {{end}}
 )
 
 // Dummy definitions to suppress nonused warnings
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
-
+{{if $validators.Fmap}}
+var _ validators.DummyVar
+var funcMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{})bool)
+{{end}}
 {{range .Messages}}{{if (len (getDbKey .)) ne 0}}{{$sep := ", "}}
 // MakeKey generates a KV store key for the object
 func (m *{{.Name}}) MakeKey(prefix string) string {
@@ -35,3 +40,69 @@ func (m *{{.Name}})  MakeKey(prefix string) string {
 	obj := {{$type}}{}
 	return obj.MakeKey(prefix)
 } {{end}} {{end}}
+
+// Validators
+{{range .Messages}}{{$msg := .}}{{$msgname := .Name}}
+func (m *{{.Name}}) Validate(ver string, ignoreStatus bool) bool { {{with (index $validators.Map (derefStr .Name))}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{if $fldv.Repeated}}
+	for _, v := range m.{{$fldk}} {
+		 if !v.Validate(ver, ignoreStatus) {
+			 return false
+		 }
+	} {{else}}{{if isSpecStatusMessage $msg}}{{if strEq $fldk "Status"}}
+	if !ignoreStatus {
+		if {{if $fldv.Pointer}} m.{{$fldk}} != nil && {{end}}!m.{{$fldk}}.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}{{else}}
+	if {{if $fldv.Pointer}} m.{{$fldk}} != nil && {{end}}!m.{{$fldk}}.Validate(ver, ignoreStatus) {
+		return false
+	}{{end}}{{else}}
+	if {{if $fldv.Pointer}} m.{{$fldk}} != nil && {{end}}!m.{{$fldk}}.Validate(ver, ignoreStatus) {
+		return false
+	}{{end}}{{end}}{{else}}{{$_:= (saveBool true 0)}}{{end}}{{end}}{{if getBool 0}}
+	if vs, ok := funcMap{{getFileName $file.Name}}["{{$msgname}}"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMap{{getFileName $file.Name}}["{{$msgname}}"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} {{end}}{{end}}
+	return true
+}
+{{end}}
+
+{{if $validators.Fmap}}
+func init() {
+	funcMap{{getFileName .Name}} = make(map[string]map[string][]func(interface{})bool){{range .Messages}}{{$msgName := .Name}}{{with (index $validators.Map (derefStr .Name))}}
+	{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{else}}
+	funcMap{{getFileName $file.Name}}["{{$msgName}}"] = make(map[string][]func(interface{})bool)
+	{{range $fldv.Validators}}{{if eq 0 (len .Args)}}
+	funcMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(funcMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(i interface{}) bool {
+		m := i.(*{{$msgName}})
+		if !validators.{{.Fn}}(m.{{$fldk}}) {
+			return false
+		}
+		return true
+	})
+		{{else}} funcMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(funcMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(i interface{}) bool {
+		m := i.(*{{$msgName}})
+		{{if (strEq .Fn "StrEnum")}}{{$enummap := (getEnumStrMap $file .Args)}}
+		if _, ok := {{$enummap}}[m.{{$fldk}}]; !ok {
+			return false
+		}{{else}}args := make([]string, 0) {{$fnname := .Fn}}
+		{{range .Args}}args = append(args, "{{.}}")
+		{{end}}if !validators.{{$fnname}}(m.{{$fldk}}, args) {
+			return false
+		}{{end}}
+		return true
+	})
+	{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}
+	
+}{{end}}
+

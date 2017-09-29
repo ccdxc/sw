@@ -32,6 +32,9 @@ const (
 	RequestParamVersion = "req-version"
 	// RequestParamMethod is passed in request metadata for version
 	RequestParamMethod = "req-method"
+	// RequestParamReplaceStatusField is passed in requests from APIGateway indicating only spec
+	//  in the request is to be honored.
+	RequestParamReplaceStatusField = "replace-status-field"
 )
 
 // ServiceBackend is the interface  satisfied by the module that is responsible for registering
@@ -96,7 +99,7 @@ type DefaulterFunc func(i interface{}) interface{}
 
 // ValidateFunc is a function the validates the message. returns nil on success and error
 //  when validation fails.
-type ValidateFunc func(i interface{}) error
+type ValidateFunc func(i interface{}, ver string, ignoreStatus bool) error
 
 // PreCommitFunc is the registered function that is desired to be invoked before commit
 // (the KV store operation). Multiple precommitFuncs could be registered. All registered funcs
@@ -121,7 +124,7 @@ type KeyGenFunc func(i interface{}, prefix string) string
 type SetObjectVersionFunc func(i interface{}, version string) interface{}
 
 // UpdateKvFunc is the function to Update the KV store. Usually registered by generated code.
-type UpdateKvFunc func(ctx context.Context, kvstore kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error)
+type UpdateKvFunc func(ctx context.Context, kvstore kvstore.Interface, i interface{}, prefix string, create, replaceStatus bool) (interface{}, error)
 
 // UpdateKvTxnFunc is the function to Update the object in a transaction. The transaction itself is applied via a txn.Commit()
 // by the API server. Usually registered by generated code.
@@ -195,7 +198,7 @@ type MessageAction interface {
 	WriteObjVersion(i interface{}, version string) interface{}
 	// WriteToKv writes the object to KV store. If create flag is set then the object
 	// must not exist for success.
-	WriteToKv(ctx context.Context, i interface{}, prerfix string, create bool) (interface{}, error)
+	WriteToKv(ctx context.Context, i interface{}, prerfix string, create, replaceStatus bool) (interface{}, error)
 	// WriteToKvTxn writes the object to the KV store Transaction. Actual applying of the transaction via
 	// a Commit() happens elsewhere.
 	WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i interface{}, prerfix string, create bool) error
@@ -214,7 +217,7 @@ type MessageAction interface {
 	// Default applies the custom defaulter if registered.
 	Default(i interface{}) interface{}
 	// Validate validates the message by invoking the custom validation function registered.
-	Validate(i interface{}) error
+	Validate(i interface{}, ver string, ignoreStatus bool) error
 }
 
 // Method is the interface satisfied by the representaion of the RPC Method in the API Server infra.

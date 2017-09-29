@@ -60,4 +60,5 @@ extend google.protobuf.MessageOptions {
 extend google.protobuf.FieldOptions {
   // Relation definition between a field and an object.
   ObjectRln objRelation = 51300;
+  repeated string check = 51301;
 };

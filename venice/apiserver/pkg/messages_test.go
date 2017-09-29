@@ -80,7 +80,7 @@ func (m *fakeMessage) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i inter
 func (m *fakeMessage) GetKVKey(i interface{}, prefix string) (string, error) {
 	return m.kvpath, nil
 }
-func (m *fakeMessage) WriteToKv(ctx context.Context, i interface{}, prerfix string, create bool) (interface{}, error) {
+func (m *fakeMessage) WriteToKv(ctx context.Context, i interface{}, prerfix string, create, ignStatus bool) (interface{}, error) {
 	m.kvwrites++
 	return i, nil
 }
@@ -95,7 +95,7 @@ func (m *fakeMessage) PrepareMsg(from, to string, i interface{}) (interface{}, e
 func (m *fakeMessage) Default(i interface{}) interface{} {
 	return i
 }
-func (m *fakeMessage) Validate(i interface{}) error {
+func (m *fakeMessage) Validate(i interface{}, ver string, ignoreStatus bool) error {
 	if m.validateRslt {
 		return nil
 	}
@@ -112,7 +112,7 @@ func (m *fakeMessage) transformCb(from, to string, i interface{}) interface{} {
 	return r
 }
 
-func (m *fakeMessage) validateFunc(i interface{}) error {
+func (m *fakeMessage) validateFunc(i interface{}, ver string, ignstatus bool) error {
 	m.validateCalled++
 	return nil
 }
@@ -122,7 +122,7 @@ func (m *fakeMessage) defaultFunc(i interface{}) interface{} {
 	return i
 }
 
-func (m *fakeMessage) kvUpdateFunc(ctx context.Context, kv kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+func (m *fakeMessage) kvUpdateFunc(ctx context.Context, kv kvstore.Interface, i interface{}, prefix string, create bool, ignstatus bool) (interface{}, error) {
 	m.kvwrites++
 	return i, nil
 }
@@ -216,7 +216,7 @@ func TestMessageWith(t *testing.T) {
 	m = m.WithKvUpdater(f.kvUpdateFunc).WithKvGetter(f.kvGetFunc).WithKvDelFunc(f.kvDelFunc).WithObjectVersionWriter(f.objVerWrite)
 	m = m.WithKvTxnUpdater(f.txnUpdateFunc).WithKvTxnDelFunc(f.delFromKvTxnFunc)
 	m = m.WithKvWatchFunc(f.kvWatchFunc).WithKvListFunc(f.kvListFunc)
-	m.Validate(nil)
+	m.Validate(nil, "", true)
 	if f.validateCalled != 1 {
 		t.Errorf("Expecting validation count of %v found", f.validateCalled)
 	}
@@ -230,7 +230,7 @@ func TestMessageWith(t *testing.T) {
 		t.Errorf("Expecting 1 call to KV read found %d", f.kvreads)
 	}
 
-	m.WriteToKv(context.TODO(), nil, "testprefix", true)
+	m.WriteToKv(context.TODO(), nil, "testprefix", true, true)
 	if f.kvwrites != 1 {
 		t.Errorf("Expecting 1 call to KV Write found %d", f.kvwrites)
 	}

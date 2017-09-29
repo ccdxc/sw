@@ -38,7 +38,7 @@ func (s *bookstoreHooks) createNeworderID(ctx context.Context, kv kvstore.Interf
 		r.Spec.Id = fmt.Sprintf("order-%x", s.orderID)
 		r.Name = r.Spec.Id
 		s.logger.InfoLog("msg", "Created new order ID", "order", r.Spec.Id)
-		r.Status.Status = bookstore.OrderStatus_PROCESSING
+		r.Status.Status = "PROCESSING"
 		return r, true, nil
 	} else if oper == apiserver.UpdateOper {
 		// Verify that the current order is actually editable.
@@ -47,7 +47,7 @@ func (s *bookstoreHooks) createNeworderID(ctx context.Context, kv kvstore.Interf
 			return bookstore.Order{}, false, errors.Wrap(err, "precommit hook get key failed")
 		}
 		cur := obj.(bookstore.Order)
-		if cur.Status.Status > bookstore.OrderStatus_FILLED {
+		if bookstore.OrderStatus_OrderStatus_value[cur.Status.Status] > int32(bookstore.OrderStatus_FILLED) {
 			return bookstore.Order{}, false, errors.New("order status already shipped")
 		}
 		// Add a comparator for CAS
@@ -72,7 +72,7 @@ func (s *bookstoreHooks) processDelBook(ctx context.Context, oper apiserver.APIO
 }
 
 // This hook is to validate that all the items in the order are valid books.
-func (s *bookstoreHooks) validateOrder(i interface{}) error {
+func (s *bookstoreHooks) validateOrder(i interface{}, ver string, ignStatus bool) error {
 	r := i.(bookstore.Order)
 	for _, oi := range r.Spec.Order {
 		s.logger.InfoLog("msg", "Validating Book in order", "book", oi.ISBNId)

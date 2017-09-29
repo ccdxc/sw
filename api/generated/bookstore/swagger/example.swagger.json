@@ -15,7 +15,7 @@
     "application/json"
   ],
   "paths": {
-    "/books/{Spec.ISBNId}": {
+    "/books/{O.Name}": {
       "get": {
         "operationId": "AutoGetBook",
         "responses": {
@@ -28,7 +28,7 @@
         },
         "parameters": [
           {
-            "name": "Spec.ISBNId",
+            "name": "O.Name",
             "in": "path",
             "required": true,
             "type": "string"
@@ -43,13 +43,6 @@
           {
             "name": "T.APIVersion",
             "description": "APIVersion defines the version of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -83,6 +76,12 @@
             "type": "string"
           },
           {
+            "name": "Spec.ISBNId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "Spec.Author",
             "in": "query",
             "required": false,
@@ -96,11 +95,47 @@
             "type": "string"
           },
           {
+            "name": "Spec.Category",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "Status.Inventory",
             "in": "query",
             "required": false,
             "type": "integer",
             "format": "int32"
+          }
+        ],
+        "tags": [
+          "BookstoreV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateBook",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreBook"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bookstoreBook"
+            }
           }
         ],
         "tags": [
@@ -274,15 +309,7 @@
             "name": "Status.Status",
             "in": "query",
             "required": false,
-            "type": "string",
-            "enum": [
-              "CREATED",
-              "PROCESSING",
-              "FILLED",
-              "SHIPPED",
-              "COMPLETED"
-            ],
-            "default": "CREATED"
+            "type": "string"
           }
         ],
         "tags": [
@@ -499,6 +526,9 @@
         "IdProvider": {
           "type": "string",
           "description": "Spec is not allowed to be Null hence disabling nullable."
+        },
+        "Category": {
+          "type": "string"
         }
       }
     },
@@ -575,7 +605,7 @@
       "type": "object",
       "properties": {
         "Status": {
-          "$ref": "#/definitions/bookstoreOrderStatusOrderStatus"
+          "type": "string"
         },
         "Filled": {
           "type": "array",
@@ -584,17 +614,6 @@
           }
         }
       }
-    },
-    "bookstoreOrderStatusOrderStatus": {
-      "type": "string",
-      "enum": [
-        "CREATED",
-        "PROCESSING",
-        "FILLED",
-        "SHIPPED",
-        "COMPLETED"
-      ],
-      "default": "CREATED"
     },
     "bookstorePublisher": {
       "type": "object",
@@ -634,6 +653,9 @@
           "type": "string"
         },
         "Address": {
+          "type": "string"
+        },
+        "WebAddr": {
           "type": "string"
         }
       }

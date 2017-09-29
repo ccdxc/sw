@@ -89,6 +89,8 @@ func (a *apiGw) extractHdrInfo(next http.Handler) http.Handler {
 			r.Header.Set(apigw.GrpcMDRequestURI, "/"+p[2])
 		}
 		r.Header.Set(apigw.GrpcMDRequestMethod, r.Method)
+		// Set the Ignore Status field flag since the request is from external REST.
+		r.Header.Set(apigw.GrpcMDReplaceStatusField, "true")
 		next.ServeHTTP(w, r)
 	})
 }

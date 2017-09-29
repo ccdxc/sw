@@ -130,7 +130,7 @@ func (m *MethodHdlr) getMethDbKey(in interface{}, oper apiserver.APIOperType) (s
 }
 
 // updateKvStore handles updating the KV store either via a transaction or without as needed.
-func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apiserver.APIOperType, txn kvstore.Txn) (interface{}, error) {
+func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apiserver.APIOperType, txn kvstore.Txn, replaceStatus bool) (interface{}, error) {
 	l := singletonAPISrv.Logger
 	key, err := m.getMethDbKey(i, oper)
 	if err != nil {
@@ -146,7 +146,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 	switch oper {
 	case apiserver.CreateOper:
 		if nonTxn {
-			resp, err = m.requestType.WriteToKv(ctx, i, m.svcPrefix, true)
+			resp, err = m.requestType.WriteToKv(ctx, i, m.svcPrefix, true, replaceStatus)
 			err = errors.Wrap(err, "oper: POST")
 		} else {
 			err = m.requestType.WriteToKvTxn(ctx, txn, i, m.svcPrefix, true)
@@ -156,7 +156,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 		kvOp = kvstore.OperUpdate
 	case apiserver.UpdateOper:
 		if nonTxn {
-			resp, err = m.requestType.WriteToKv(ctx, i, m.svcPrefix, false)
+			resp, err = m.requestType.WriteToKv(ctx, i, m.svcPrefix, false, replaceStatus)
 			err = errors.Wrap(err, "oper: PUT")
 		} else {
 			err = m.requestType.WriteToKvTxn(ctx, txn, i, m.svcPrefix, false)
@@ -236,10 +236,11 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 //    to the request version if needed.
 func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (interface{}, error) {
 	var (
-		old, resp interface{}
-		err       error
-		ver       string
-		key       string
+		old, resp     interface{}
+		err           error
+		ver           string
+		key           string
+		replaceStatus bool
 	)
 	l := singletonAPISrv.Logger
 
@@ -255,6 +256,10 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		return nil, errRequestInfo
 	}
 
+	if _, ok := md[apiserver.RequestParamReplaceStatusField]; ok {
+		replaceStatus = true
+	}
+
 	if v, ok := md[apiserver.RequestParamVersion]; ok {
 		ver = v[0]
 	} else {
@@ -263,7 +268,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 
 	// mapOper handles HTTP and gRPC oper types.
 	oper := m.mapOper(md)
-	l.DebugLog("version", ver, "operation", oper, "methodOper", m.oper)
+	l.DebugLog("version", ver, "operation", oper, "methodOper", m.oper, "replaceStatus", replaceStatus)
 
 	// Version transform if needed.
 	if singletonAPISrv.version != ver {
@@ -291,10 +296,12 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	i = m.requestType.Default(i)
 
 	// Validate the request.
-	err = m.requestType.Validate(i)
-	if err != nil {
-		l.ErrorLog("msg", "request validation failed", "error", err)
-		return nil, errRequestValidation
+	if oper == apiserver.CreateOper || oper == apiserver.UpdateOper {
+		err = m.requestType.Validate(i, singletonAPISrv.version, replaceStatus)
+		if err != nil {
+			l.ErrorLog("msg", "request validation failed", "error", err, "replacestatus", replaceStatus)
+			return nil, errRequestValidation
+		}
 	}
 	if span != nil {
 		span.LogFields(log.String("event", "calling precommit hooks"))
@@ -322,7 +329,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	}
 
 	if kvwrite {
-		resp, err = m.updateKvStore(ctx, i, oper, txn)
+		resp, err = m.updateKvStore(ctx, i, oper, txn, replaceStatus)
 		if err != nil {
 			return nil, err
 		}

@@ -85,7 +85,14 @@ A Service is a collection of a group of API endpoints of the same version. Multi
     }
 
     message OrderStatus {
-        string Status = 1;
+  	enum OrderStatus {
+   	  CREATED = 0;
+   	  PROCESSING = 1;
+    	  FILLED = 2;
+    	  SHIPPED = 3;
+    	  COMPLETED = 4;
+  	}
+        string Status = 1 [(venice.check) = "StrEnum(OrderStatus.OrderStatus)"];
         repeated OrderSpec Filled = 2;
     }
 
@@ -124,6 +131,13 @@ Using the "venice.apiGrpcCrudService" option with a message name as a parameter 
 The "venice.apiRestService" options specifies that the API Gateway expose the resource via REST. The option specifies the Object, the methods allowed and the pattern for the URI where the object is to be exposed. Any parameters in URL that map to the request object are specified inside "{..}" like the {O.Name} specified in the example above "put, get, delete" operation for example. This means that anything specified in the URI overwrites the Name filed in the object meta field in the OrderSpec.
 
 All pensando specific options can be found in utils/apigen/annotations/penext.proto
+
+Static validators can be applied to scalar fields by applying one or more "venice.check" annotations to a field. The annotation is a string of the format "[version:]function(args...)". Version specifies what version to apply the validation to. Not specifying a version or specifying a "all" or * makes the validation the default validation. Available validator functions are defined in sw/venice/utils/apigen/validators/validators.go
+Examples:
+	v1:StrLen(10,32)
+	IPAddr()
+	*:UUID()
+
 
 ## Code Generation
 Three code generation plugins are invoked by the Makefile. 

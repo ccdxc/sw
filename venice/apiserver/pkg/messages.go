@@ -27,8 +27,8 @@ type MessageHdlr struct {
 	transforms map[string]map[string]apisrv.TransformFunc
 	// defaulter is the registered defaulting function for the message
 	defualter apisrv.DefaulterFunc
-	// validater is the registered validating function
-	validater apisrv.ValidateFunc
+	// validater is a list of registered validating functions
+	validater []apisrv.ValidateFunc
 	// keyFunc is the function that generates the key for this object
 	keyFunc apisrv.KeyGenFunc
 	// objVersionerFunc writes the version in the object.
@@ -72,7 +72,7 @@ func (m *MessageHdlr) WithTransform(from, to string, fn apisrv.TransformFunc) ap
 
 // WithValidate registers a function for the Validing the contents of the message.
 func (m *MessageHdlr) WithValidate(fn apisrv.ValidateFunc) apisrv.Message {
-	m.validater = fn
+	m.validater = append(m.validater, fn)
 	return m
 }
 
@@ -152,9 +152,9 @@ func (m *MessageHdlr) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i inter
 }
 
 // WriteToKv is a wrapper around kvUpdateFunc to update the object in the KV store.
-func (m *MessageHdlr) WriteToKv(ctx context.Context, i interface{}, prefix string, create bool) (interface{}, error) {
+func (m *MessageHdlr) WriteToKv(ctx context.Context, i interface{}, prefix string, create, replaceStatus bool) (interface{}, error) {
 	if m.kvUpdateFunc != nil {
-		return m.kvUpdateFunc(ctx, singletonAPISrv.kv, i, prefix, create)
+		return m.kvUpdateFunc(ctx, singletonAPISrv.kv, i, prefix, create, replaceStatus)
 	}
 	return nil, errNotImplemented
 }
@@ -224,9 +224,11 @@ func (m *MessageHdlr) Default(i interface{}) interface{} {
 }
 
 // Validate is a wrapper around the validater function registered.
-func (m *MessageHdlr) Validate(i interface{}) error {
-	if m.validater != nil {
-		return m.validater(i)
+func (m *MessageHdlr) Validate(i interface{}, ver string, ignoreStatus bool) error {
+	for _, fn := range m.validater {
+		if err := fn(i, ver, ignoreStatus); err != nil {
+			return err
+		}
 	}
 	return nil
 }

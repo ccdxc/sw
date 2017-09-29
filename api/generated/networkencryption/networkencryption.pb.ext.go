@@ -34,3 +34,33 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) MakeKey(prefix string) strin
 	obj := TrafficEncryptionPolicy{}
 	return obj.MakeKey(prefix)
 }
+
+// Validators
+
+func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *IPsecProtocolSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *TLSProtocolSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *TrafficEncryptionPolicy) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *TrafficEncryptionPolicyList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *TrafficEncryptionPolicySpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *TrafficEncryptionPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}

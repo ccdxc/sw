@@ -75,7 +75,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			r := i.(app.App)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(app.App)
 			key := r.MakeKey(prefix)
 			r.Kind = "App"
@@ -84,13 +84,26 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*app.App)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &app.App{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -116,6 +129,12 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(app.App)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"app.AppList": apisrvpkg.NewMessage("app.AppList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -141,7 +160,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			r := i.(app.AppUser)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(app.AppUser)
 			key := r.MakeKey(prefix)
 			r.Kind = "AppUser"
@@ -150,13 +169,26 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*app.AppUser)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &app.AppUser{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -182,6 +214,12 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(app.AppUser)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"app.AppUserGrp": apisrvpkg.NewMessage("app.AppUserGrp").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
@@ -194,7 +232,7 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			r := i.(app.AppUserGrp)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(app.AppUserGrp)
 			key := r.MakeKey(prefix)
 			r.Kind = "AppUserGrp"
@@ -203,13 +241,26 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*app.AppUserGrp)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &app.AppUserGrp{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -235,6 +286,12 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(app.AppUserGrp)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"app.AppUserGrpList": apisrvpkg.NewMessage("app.AppUserGrpList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 

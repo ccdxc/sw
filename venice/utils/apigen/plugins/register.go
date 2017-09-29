@@ -8,11 +8,14 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/golang/glog"
 
+	govldtr "github.com/asaskevich/govalidator"
+	gogoproto "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	descriptor "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
@@ -26,6 +29,32 @@ var (
 	errInvalidField   = errors.New("invalid field specification")
 	errInvalidOption  = errors.New("invalid option specification")
 )
+
+type scratchVars struct {
+	B   [3]bool
+	Int [3]int
+}
+
+var scratch scratchVars
+
+func (s *scratchVars) setBool(val bool, id int) bool {
+	s.B[id] = val
+	// Dummy return to satisfy templates
+	return val
+}
+
+func (s *scratchVars) getBool(id int) bool {
+	return s.B[id]
+}
+
+func (s *scratchVars) setInt(val int, id int) int {
+	s.Int[id] = val
+	return val
+}
+
+func (s *scratchVars) getInt(id int) int {
+	return s.Int[id]
+}
 
 func parseStringOptions(val interface{}) (interface{}, error) {
 	v, ok := val.(*string)
@@ -433,6 +462,213 @@ func genServiceManifest(filenm string, file *descriptor.File) (string, error) {
 	return string(ret), nil
 }
 
+type checkArgs func(string) bool
+
+var validatorArgMap = map[string][]checkArgs{
+	"StrEnum":  {isString},
+	"StrLen":   {govldtr.IsInt, govldtr.IsInt},
+	"IntRange": {govldtr.IsInt, govldtr.IsInt},
+	"IPAddr":   {},
+	"IPv4":     {},
+	"HostAddr": {},
+	"MacAddr":  {},
+	"URI":      {},
+	"UUID":     {},
+}
+
+type validateArg struct {
+	Tpe  string
+	Str  string
+	Intg uint64
+}
+
+type validateField struct {
+	Fn   string
+	Ver  string
+	Args []string
+}
+
+type validateFields struct {
+	Repeated   bool
+	Pointer    bool
+	Validators []validateField
+}
+type validateMsg struct {
+	Fields map[string]validateFields
+}
+
+type validators struct {
+	Fmap bool
+	Map  map[string]validateMsg
+}
+
+func isString(in string) bool {
+	if len(in) != 0 {
+		return true
+	}
+	return false
+}
+func checkValidators(file *descriptor.File, msgmap map[string]bool, name string) bool {
+	if _, ok := msgmap[name]; ok {
+		return msgmap[name]
+	}
+	m, err := file.Reg.LookupMsg("", name)
+	if err != nil {
+		glog.Fatalf("Failed to retrieve message %s", name)
+	}
+	glog.Infof(" checkValidators on %s", name)
+	found := false
+	for _, fld := range m.Fields {
+		_, err := reg.GetExtension("venice.check", fld)
+		if err == nil {
+			found = true
+		}
+		if *fld.Type == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+			found = checkValidators(file, msgmap, *fld.TypeName)
+		}
+	}
+	msgmap[name] = found
+	if found {
+		glog.Infof(" checkValidators found true %s", name)
+	}
+	return found
+}
+
+func parseValidator(in string) (validateField, error) {
+	ret := validateField{}
+	re := regexp.MustCompile("(?P<ver>[a-zA-Z0-9_\\-\\*]*\\:)?(?P<func>[a-zA-Z0-9_\\-]+)\\((?P<args>[a-zA-Z0-9_\\-\\, \\.\\:]*)*\\)")
+	params := re.FindStringSubmatch(in)
+	if params == nil {
+		return ret, fmt.Errorf("Failed to parse validator [%s]", in)
+	}
+
+	if params[1] != "" && string(params[1][len(params[1])-1]) == ":" {
+		ret.Ver = params[1][:len(params[1])-1]
+		if ret.Ver == "*" {
+			ret.Ver = "all"
+		}
+	} else {
+		ret.Ver = "all"
+	}
+	ret.Fn = params[2]
+	ret.Args = strings.Split(strings.Replace(params[3], " ", "", -1), ",")
+	if len(ret.Args) == 1 && ret.Args[0] == params[3] && params[3] == "" {
+		ret.Args = []string{}
+	}
+	if vargs, ok := validatorArgMap[ret.Fn]; ok {
+		if len(vargs) != len(ret.Args) {
+			return validateField{}, fmt.Errorf("Incorrect number of args (%d) for %s", len(ret.Args), ret.Fn)
+		}
+		for i := range vargs {
+			if !vargs[i](ret.Args[i]) {
+				return validateField{}, fmt.Errorf("validation for arg(%s) failed for %s", ret.Args[i], ret.Fn)
+			}
+		}
+	} else {
+		return validateField{}, fmt.Errorf("unknown validator %s", ret.Fn)
+	}
+	return ret, nil
+}
+
+func getValidatorManifest(file *descriptor.File) (validators, error) {
+	ret := validators{Map: make(map[string]validateMsg)}
+	msgmap := make(map[string]bool)
+	// freg := file.Reg
+	for _, msg := range file.Messages {
+		for _, fld := range msg.Fields {
+			r, err := reg.GetExtension("venice.check", fld)
+			glog.Infof(" Check validator for message %s.%s", *msg.Name, *fld.Name)
+
+			if err == nil {
+				glog.Infof(" Found validator for message %s.%s,[ %v ]", *msg.Name, *fld.Name, r)
+				if *fld.Type == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+					return ret, fmt.Errorf("Validators allowed on scalar types only [%s]", *fld.Name)
+				}
+				if _, ok := ret.Map[*msg.Name]; !ok {
+					ret.Map[*msg.Name] = validateMsg{Fields: make(map[string]validateFields)}
+				}
+				repeated := false
+				if *fld.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {
+					repeated = true
+				}
+				ret.Map[*msg.Name].Fields[*fld.Name] = validateFields{Repeated: repeated}
+
+				for _, v := range r.([]string) {
+					fldv, err := parseValidator(v)
+					if err != nil {
+						return ret, err
+					}
+					vfld := ret.Map[*msg.Name].Fields[*fld.Name]
+					vfld.Validators = append(vfld.Validators, fldv)
+					ret.Map[*msg.Name].Fields[*fld.Name] = vfld
+				}
+
+				ret.Fmap = true
+			} else {
+				glog.Infof("Failed %s", err)
+			}
+			if *fld.Type == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+				if _, ok := msgmap[*fld.TypeName]; !ok {
+					msgmap[*fld.TypeName] = checkValidators(file, msgmap, *fld.TypeName)
+				}
+				if msgmap[*fld.TypeName] == true {
+					if _, ok := ret.Map[*msg.Name]; !ok {
+						ret.Map[*msg.Name] = validateMsg{Fields: make(map[string]validateFields)}
+					}
+					if _, ok := ret.Map[*fld.Name]; !ok {
+						repeated := false
+						pointer := true
+						if *fld.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {
+							repeated = true
+						}
+						if r, err := reg.GetExtension("gogoproto.nullable", fld); err == nil {
+							glog.Infof("setting pointer found nullable [%v] for %s]", r, *msg.Name+"/"+*fld.Name)
+							pointer = r.(bool)
+						} else {
+						}
+						glog.Infof("setting pointer to [%v] for {%s]", pointer, *msg.Name+"/"+*fld.Name)
+						ret.Map[*msg.Name].Fields[*fld.Name] = validateFields{Validators: make([]validateField, 0), Repeated: repeated, Pointer: pointer}
+					}
+				}
+			}
+		}
+	}
+	glog.Infof("Validator Manifest is %+v", ret)
+	return ret, nil
+}
+
+func derefStr(in *string) string {
+	return *in
+}
+
+func getEnumStrMap(file *descriptor.File, in []string) (string, error) {
+	if len(in) != 1 {
+		return "", fmt.Errorf("incorrect number of arguments")
+	}
+	enum := in[0]
+	glog.V(1).Infof("Working on enum string %s", enum)
+	pkg := ""
+	if !strings.HasPrefix(enum, ".") {
+		enum = "." + *file.Package + "." + enum
+		pkg = file.GoPkg.Name
+	}
+	parts := strings.Split(enum, ".")
+	if pkg == "" {
+		pkg = parts[1]
+	}
+	parts = parts[2:]
+
+	ret := "value"
+	for i := len(parts) - 1; i >= 0; i-- {
+		ret = parts[i] + "_" + ret
+	}
+	if pkg != file.GoPkg.Name {
+		ret = pkg + "." + ret
+	}
+	glog.V(1).Infof("Ret:Working on enum string %s", ret)
+	return ret, nil
+}
+
 // relationRef is reference to relations
 type relationRef struct {
 	Type  string
@@ -653,6 +889,22 @@ func isNestedMessage(msg *descriptor.Message) bool {
 	return false
 }
 
+func isSpecStatusMessage(msg *descriptor.Message) bool {
+	glog.V(1).Infof("Check if SpecStatus message for %s", msg.Name)
+	spec := false
+	status := false
+	for _, v := range msg.Fields {
+		if *v.Name == "Spec" {
+			spec = true
+		}
+		if *v.Name == "Status" {
+			status = true
+		}
+	}
+
+	return spec && status
+}
+
 func getAutoRestOper(meth *descriptor.Method) (string, error) {
 	if v, err := reg.GetExtension("venice.methodAutoGen", meth); err == nil {
 		if v.(bool) == false {
@@ -711,6 +963,8 @@ func init() {
 	reg.RegisterOptionParser("venice.objectPrefix", parseStringOptions)
 	reg.RegisterOptionParser("venice.objRelation", parseObjRelation)
 	reg.RegisterOptionParser("google.api.http", parseGoogleAPIHTTP)
+	reg.RegisterOptionParser("venice.check", parseStringSliceOptions)
+	reg.RegisterOptionParser("gogoproto.nullable", parseBoolOptions)
 
 	// Register Functions
 	reg.RegisterFunc("getDbKey", getDbKey)
@@ -743,6 +997,14 @@ func init() {
 	reg.RegisterFunc("isNestedMessage", isNestedMessage)
 	reg.RegisterFunc("getFileName", getFileName)
 	reg.RegisterFunc("getGrpcDestination", getGrpcDestination)
+	reg.RegisterFunc("getValidatorManifest", getValidatorManifest)
+	reg.RegisterFunc("derefStr", derefStr)
+	reg.RegisterFunc("getEnumStrMap", getEnumStrMap)
+	reg.RegisterFunc("isSpecStatusMessage", isSpecStatusMessage)
+	reg.RegisterFunc("saveBool", scratch.setBool)
+	reg.RegisterFunc("getBool", scratch.getBool)
+	reg.RegisterFunc("saveInt", scratch.setInt)
+	reg.RegisterFunc("getInt", scratch.getInt)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

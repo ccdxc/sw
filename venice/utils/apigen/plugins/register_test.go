@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"testing"
 
+	govldtr "github.com/asaskevich/govalidator"
 	"github.com/gogo/protobuf/proto"
 	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	gogoplugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
@@ -1277,5 +1278,268 @@ func TestGetGrpcDestination(t *testing.T) {
 		if test.expected != getGrpcDestination(file) {
 			t.Errorf("expecting [%s] found [%s]", test.expected, getGrpcDestination(file))
 		}
+	}
+}
+
+func TestParseValidator(t *testing.T) {
+	scratchMap := validatorArgMap
+	validatorArgMap = map[string][]checkArgs{
+		"OneStr": {isString},
+		"MulStr": {isString, isString, isString},
+		"OneInt": {govldtr.IsInt},
+		"MulInt": {govldtr.IsInt, govldtr.IsInt},
+		"StrInt": {isString, govldtr.IsInt},
+		"NoArgs": {},
+	}
+
+	cases := []struct {
+		str string
+		res bool
+		ret validateField
+	}{
+		{str: "v1:OneStr(arg1)", res: true, ret: validateField{Fn: "OneStr", Ver: "v1", Args: []string{"arg1"}}},
+		{str: "MulStr(arg1, arg2, arg3)", res: true, ret: validateField{Fn: "MulStr", Ver: "all", Args: []string{"arg1", "arg2", "arg3"}}},
+		{str: "MulStr(arg1, arg2, arg3)", res: true, ret: validateField{Fn: "MulStr", Ver: "all", Args: []string{"arg1", "arg2", "arg3"}}},
+		{str: "MulStr(arg1, arg2)", res: false, ret: validateField{}},
+		{str: "all:OneInt(arg1)", res: false, ret: validateField{}},
+		{str: "all:OneInt(1)", res: true, ret: validateField{Fn: "OneInt", Ver: "all", Args: []string{"1"}}},
+		{str: "*:MulInt(1,3)", res: true, ret: validateField{Fn: "MulInt", Ver: "all", Args: []string{"1", "3"}}},
+		{str: "all:Unknown(arg1)", res: false, ret: validateField{}},
+		{str: "NoArgs()", res: true, ret: validateField{Fn: "NoArgs", Ver: "all", Args: []string{}}},
+		{str: "v1:NoArgs()", res: true, ret: validateField{Fn: "NoArgs", Ver: "v1", Args: []string{}}},
+		{str: "Unknown(arg1)", res: false, ret: validateField{}},
+	}
+	for _, c := range cases {
+		v, err := parseValidator(c.str)
+		if c.res && !(err == nil) {
+			t.Errorf("[%s] - Expecing result [%v] got [%v], (%v)", c.str, c.res, (err == nil), err)
+		}
+		if !reflect.DeepEqual(c.ret, v) {
+			t.Errorf("[%s] - returned validate does not match [%+v]/[%+v]", c.str, c.ret, v)
+		}
+	}
+	validatorArgMap = scratchMap
+}
+
+func TestGetValidatorManifest(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		message_type <
+			name: 'msg1'
+			field <
+				name: 'nest1_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+				options:<[venice.check]: "v1:OneStr(str)">
+			>
+			field <
+				name: 'repeated_field'
+				label: LABEL_REPEATED
+				type: TYPE_STRING
+				options:<[venice.check]: "MulInt(1,3)" [venice.check]: "v2:OneInt(11)">
+				number: 2
+			>
+		>
+		message_type <
+			name: 'parentmsg'
+			field <
+				name: 'nestedfield'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.msg1'
+				number: 2
+			>
+		>
+		message_type <
+			name: 'parentmsgtoanotherfile'
+			field <
+				name: 'nestedfield'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.anothermsg1'
+				number: 2
+			>
+		>
+		`, `
+		name: 'another.proto'
+		package: 'example'
+		message_type <
+			name: 'anothermsg1'
+			field <
+				name: 'field1'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+				options:<[venice.check]: "v1:OneStr(str)">
+			>
+		>
+		syntax: "proto3"
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto", "another.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	scratchMap := validatorArgMap
+	validatorArgMap = map[string][]checkArgs{
+		"OneStr": {isString},
+		"MulStr": {isString, isString, isString},
+		"OneInt": {govldtr.IsInt},
+		"MulInt": {govldtr.IsInt, govldtr.IsInt},
+		"StrInt": {isString, govldtr.IsInt},
+	}
+	exp := validators{
+		Fmap: true,
+		Map: map[string]validateMsg{
+			"msg1": {
+				Fields: map[string]validateFields{
+					"nest1_field": {
+						Repeated: false,
+						Pointer:  false,
+						Validators: []validateField{
+							{
+								Fn:   "OneStr",
+								Ver:  "v1",
+								Args: []string{"str"},
+							},
+						},
+					},
+					"repeated_field": {
+						Repeated: true,
+						Pointer:  false,
+						Validators: []validateField{
+							{
+								Fn:   "MulInt",
+								Ver:  "all",
+								Args: []string{"1", "3"},
+							},
+							{
+								Fn:   "OneInt",
+								Ver:  "v2",
+								Args: []string{"11"},
+							},
+						},
+					},
+				},
+			},
+			"parentmsg": {
+				Fields: map[string]validateFields{
+					"nestedfield": {
+						Repeated:   false,
+						Pointer:    true,
+						Validators: []validateField{},
+					},
+				},
+			},
+			"parentmsgtoanotherfile": {
+				Fields: map[string]validateFields{
+					"nestedfield": {
+						Repeated:   false,
+						Pointer:    true,
+						Validators: []validateField{},
+					},
+				},
+			},
+		},
+	}
+
+	v, err := getValidatorManifest(file)
+	if err != nil {
+		t.Fatalf("Could not generate validator manifest (%s)", err)
+	}
+
+	if !reflect.DeepEqual(v, exp) {
+		t.Fatalf("generated manifest does not match")
+	}
+
+	validatorArgMap = scratchMap
+}
+
+func TestGEnumStrMap(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	cases := []struct {
+		in  string
+		ok  bool
+		exp string
+	}{
+		{
+			in:  "TestMsg.TestEnum",
+			ok:  true,
+			exp: "TestMsg_TestEnum_value",
+		},
+		{
+			in:  "TestEnum",
+			ok:  true,
+			exp: "TestEnum_value",
+		},
+		{
+			in:  ".anotherproto.TestEnum",
+			ok:  true,
+			exp: "anotherproto.TestEnum_value",
+		},
+	}
+	for _, c := range cases {
+		input := []string{c.in}
+		ret, err := getEnumStrMap(file, input)
+		if (err == nil) != c.ok {
+			t.Errorf("expecting success [%v] got [%v]", c.ok, (err == nil))
+		}
+		if ret != c.exp {
+			t.Errorf("expecting result [%v] got [%v]", c.exp, ret)
+		}
+	}
+
+}
+
+func TestScratchVars(t *testing.T) {
+	scratch.setInt(100, 0)
+	scratch.setInt(201, 1)
+	scratch.setInt(302, 2)
+	scratch.setBool(true, 0)
+	scratch.setBool(false, 1)
+
+	if scratch.getInt(0) != 100 || scratch.getInt(1) != 201 || scratch.getInt(2) != 302 {
+		t.Errorf("Scratch integer get failed")
+	}
+	if scratch.getBool(0) != true || scratch.getBool(1) != false {
+		t.Errorf("Scratch bool get failed")
 	}
 }

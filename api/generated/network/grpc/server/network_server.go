@@ -142,7 +142,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := i.(network.Endpoint)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(network.Endpoint)
 			key := r.MakeKey(prefix)
 			r.Kind = "Endpoint"
@@ -151,13 +151,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*network.Endpoint)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &network.Endpoint{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -183,6 +196,12 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(network.Endpoint)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"network.EndpointList": apisrvpkg.NewMessage("network.EndpointList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -209,7 +228,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := i.(network.LbPolicy)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(network.LbPolicy)
 			key := r.MakeKey(prefix)
 			r.Kind = "LbPolicy"
@@ -218,13 +237,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*network.LbPolicy)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &network.LbPolicy{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -250,6 +282,12 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(network.LbPolicy)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"network.LbPolicyList": apisrvpkg.NewMessage("network.LbPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -275,7 +313,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := i.(network.Network)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(network.Network)
 			key := r.MakeKey(prefix)
 			r.Kind = "Network"
@@ -284,13 +322,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*network.Network)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &network.Network{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -316,6 +367,12 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(network.Network)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"network.NetworkList": apisrvpkg.NewMessage("network.NetworkList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -342,7 +399,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := i.(network.SecurityGroup)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(network.SecurityGroup)
 			key := r.MakeKey(prefix)
 			r.Kind = "SecurityGroup"
@@ -351,13 +408,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*network.SecurityGroup)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &network.SecurityGroup{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -383,6 +453,12 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(network.SecurityGroup)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"network.SecurityGroupList": apisrvpkg.NewMessage("network.SecurityGroupList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -408,7 +484,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := i.(network.Service)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(network.Service)
 			key := r.MakeKey(prefix)
 			r.Kind = "Service"
@@ -417,13 +493,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*network.Service)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &network.Service{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -449,6 +538,12 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(network.Service)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"network.ServiceList": apisrvpkg.NewMessage("network.ServiceList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -474,7 +569,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := i.(network.Sgpolicy)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(network.Sgpolicy)
 			key := r.MakeKey(prefix)
 			r.Kind = "Sgpolicy"
@@ -483,13 +578,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*network.Sgpolicy)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &network.Sgpolicy{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -515,6 +623,12 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(network.Sgpolicy)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"network.SgpolicyList": apisrvpkg.NewMessage("network.SgpolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
@@ -540,7 +654,7 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			r := i.(network.Tenant)
 			r.APIVersion = version
 			return r
-		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool) (interface{}, error) {
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, ignoreStatus bool) (interface{}, error) {
 			r := i.(network.Tenant)
 			key := r.MakeKey(prefix)
 			r.Kind = "Tenant"
@@ -549,13 +663,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = kvs.Create(ctx, key, &r)
 				err = errors.Wrap(err, "KV create failed")
 			} else {
-				if r.ResourceVersion != "" {
-					logger.Infof("resource version is specified %s\n", r.ResourceVersion)
-					err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				if ignoreStatus {
+					updateFunc := func(obj runtime.Object) (runtime.Object, error) {
+						saved := obj.(*network.Tenant)
+						if r.ResourceVersion != "" && r.ResourceVersion != saved.ResourceVersion {
+							return nil, fmt.Errorf("Resource Version specified does not match Object version")
+						}
+						r.Status = saved.Status
+						return &r, nil
+					}
+					into := &network.Tenant{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFunc)
 				} else {
-					err = kvs.Update(ctx, key, &r)
+					if r.ResourceVersion != "" {
+						logger.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					err = errors.Wrap(err, "KV update failed")
 				}
-				err = errors.Wrap(err, "KV update failed")
 			}
 			return r, err
 		}).WithKvTxnUpdater(func(ctx context.Context, txn kvstore.Txn, i interface{}, prefix string, create bool) error {
@@ -581,6 +708,12 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			return r, err
 		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
 			return txn.Delete(key)
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) error {
+			r := i.(network.Tenant)
+			if !r.Validate(ver, ignoreStatus) {
+				return fmt.Errorf("Default Validation failed")
+			}
+			return nil
 		}),
 		"network.TenantList": apisrvpkg.NewMessage("network.TenantList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 

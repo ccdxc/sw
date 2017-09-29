@@ -11,12 +11,17 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 )
 
 // Dummy definitions to suppress nonused warnings
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+var _ validators.DummyVar
+var funcMapExample = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
 func (m *Book) MakeKey(prefix string) string {
@@ -67,4 +72,222 @@ func (m *AutoMsgOrderWatchHelper) MakeKey(prefix string) string {
 func (m *AutoMsgPublisherWatchHelper) MakeKey(prefix string) string {
 	obj := Publisher{}
 	return obj.MakeKey(prefix)
+}
+
+// Validators
+
+func (m *AutoMsgBookWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *AutoMsgOrderWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
+	return true
+}
+
+func (m *AutoMsgPublisherWatchHelper) Validate(ver string, ignoreStatus bool) bool {
+	if m.Object != nil && !m.Object.Validate(ver, ignoreStatus) {
+		return false
+	}
+	return true
+}
+
+func (m *Book) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
+	return true
+}
+
+func (m *BookList) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *BookSpec) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := funcMapExample["BookSpec"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapExample["BookSpec"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (m *BookStatus) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *Order) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
+	if !ignoreStatus {
+		if !m.Status.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *OrderItem) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := funcMapExample["OrderItem"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapExample["OrderItem"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (m *OrderList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *OrderSpec) Validate(ver string, ignoreStatus bool) bool {
+	return true
+}
+
+func (m *OrderStatus) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Filled {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	if vs, ok := funcMapExample["OrderStatus"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapExample["OrderStatus"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (m *Publisher) Validate(ver string, ignoreStatus bool) bool {
+	if !m.Spec.Validate(ver, ignoreStatus) {
+		return false
+	}
+	return true
+}
+
+func (m *PublisherList) Validate(ver string, ignoreStatus bool) bool {
+	for _, v := range m.Items {
+		if !v.Validate(ver, ignoreStatus) {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *PublisherSpec) Validate(ver string, ignoreStatus bool) bool {
+	if vs, ok := funcMapExample["PublisherSpec"][ver]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	} else if vs, ok := funcMapExample["PublisherSpec"]["all"]; ok {
+		for _, v := range vs {
+			if !v(m) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func init() {
+	funcMapExample = make(map[string]map[string][]func(interface{}) bool)
+
+	funcMapExample["BookSpec"] = make(map[string][]func(interface{}) bool)
+	funcMapExample["BookSpec"]["all"] = append(funcMapExample["BookSpec"]["all"], func(i interface{}) bool {
+		m := i.(*BookSpec)
+
+		if _, ok := BookSpec_BookCategories_value[m.Category]; !ok {
+			return false
+		}
+		return true
+	})
+
+	funcMapExample["OrderItem"] = make(map[string][]func(interface{}) bool)
+	funcMapExample["OrderItem"]["all"] = append(funcMapExample["OrderItem"]["all"], func(i interface{}) bool {
+		m := i.(*OrderItem)
+		args := make([]string, 0)
+		args = append(args, "3")
+		args = append(args, "10")
+		if !validators.StrLen(m.ISBNId, args) {
+			return false
+		}
+		return true
+	})
+
+	funcMapExample["OrderItem"] = make(map[string][]func(interface{}) bool)
+	funcMapExample["OrderItem"]["all"] = append(funcMapExample["OrderItem"]["all"], func(i interface{}) bool {
+		m := i.(*OrderItem)
+		args := make([]string, 0)
+		args = append(args, "2")
+		args = append(args, "30")
+		if !validators.IntRange(m.Quantity, args) {
+			return false
+		}
+		return true
+	})
+
+	funcMapExample["OrderStatus"] = make(map[string][]func(interface{}) bool)
+	funcMapExample["OrderStatus"]["all"] = append(funcMapExample["OrderStatus"]["all"], func(i interface{}) bool {
+		m := i.(*OrderStatus)
+
+		if _, ok := OrderStatus_OrderStatus_value[m.Status]; !ok {
+			return false
+		}
+		return true
+	})
+
+	funcMapExample["PublisherSpec"] = make(map[string][]func(interface{}) bool)
+
+	funcMapExample["PublisherSpec"]["all"] = append(funcMapExample["PublisherSpec"]["all"], func(i interface{}) bool {
+		m := i.(*PublisherSpec)
+		if !validators.URI(m.WebAddr) {
+			return false
+		}
+		return true
+	})
+	funcMapExample["PublisherSpec"]["all"] = append(funcMapExample["PublisherSpec"]["all"], func(i interface{}) bool {
+		m := i.(*PublisherSpec)
+		args := make([]string, 0)
+		args = append(args, "6")
+		args = append(args, "256")
+		if !validators.StrLen(m.WebAddr, args) {
+			return false
+		}
+		return true
+	})
+
 }

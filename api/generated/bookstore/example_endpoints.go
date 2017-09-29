@@ -1254,7 +1254,7 @@ func makeURIBookstoreV1AutoDeleteOrderDeleteOper(in *Order) string {
 
 //
 func makeURIBookstoreV1AutoGetBookGetOper(in *Book) string {
-	return fmt.Sprint("/v1/bookstore", "/books/", in.Spec.ISBNId)
+	return fmt.Sprint("/v1/bookstore", "/books/", in.Name)
 }
 
 //
@@ -1265,6 +1265,11 @@ func makeURIBookstoreV1AutoGetOrderGetOper(in *Order) string {
 //
 func makeURIBookstoreV1AutoListOrderListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/v1/bookstore", "/orders")
+}
+
+//
+func makeURIBookstoreV1AutoUpdateBookUpdateOper(in *Book) string {
+	return fmt.Sprint("/v1/bookstore", "/books/", in.Name)
 }
 
 //
@@ -1374,7 +1379,20 @@ func (r *EndpointsBookstoreV1RestClient) AutoAddBook(ctx context.Context, in *Bo
 
 // AutoUpdateBook CRUD method for Book
 func (r *EndpointsBookstoreV1RestClient) AutoUpdateBook(ctx context.Context, in *Book) (*Book, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIBookstoreV1AutoUpdateBookUpdateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespBookstoreV1AutoUpdateBook(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Book), err
 }
 
 // AutoGetBook CRUD method for Book
