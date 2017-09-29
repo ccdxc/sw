@@ -32,6 +32,7 @@
 //BTH header fields
 #define CAPRI_APP_DATA_BTH_OPCODE k.rdma_bth_bth_opcode
 #define CAPRI_APP_DATA_BTH_PSN k.rdma_bth_bth_psn
+#define CAPRI_APP_DATA_AETH_MSN k.rdma_bth_aeth_aeth_msn
 
 #define CAPRI_RAW_TABLE_PC_SHIFT 6
 #define CAPRI_INTR_BASE 0x1234
@@ -545,6 +546,17 @@ struct capri_dma_cmd_mem2mem_t {
     phvwrp._cf  _base_r, offsetof(DMA_CMD_PKT2MEM_T, host_addr), sizeof(DMA_CMD_PKT2MEM_T.host_addr), 1; \
     phvwrp       _base_r, offsetof(DMA_CMD_PKT2MEM_T, cmdtype), sizeof(DMA_CMD_PKT2MEM_T.cmdtype), DMA_CMD_TYPE_PKT2MEM;
 
+#define DMA_HBM_PKT2MEM_SETUP(_base_r, _size, _addr) \
+    phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, size), sizeof(DMA_CMD_PKT2MEM_T.size), _size; \
+    phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, addr), sizeof(DMA_CMD_PKT2MEM_T.addr), _addr; \
+    phvwrp       _base_r, offsetof(DMA_CMD_PKT2MEM_T, cmdtype), sizeof(DMA_CMD_PKT2MEM_T.cmdtype), DMA_CMD_TYPE_PKT2MEM;
+
+#define DMA_HOST_PKT2MEM_SETUP(_base_r, _size, _addr) \
+    phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, size), sizeof(DMA_CMD_PKT2MEM_T.size), _size; \
+    phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, addr), sizeof(DMA_CMD_PKT2MEM_T.addr), _addr; \
+    phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, host_addr), sizeof(DMA_CMD_PKT2MEM_T.host_addr), 1; \
+    phvwrp      _base_r, offsetof(DMA_CMD_PKT2MEM_T, cmdtype), sizeof(DMA_CMD_PKT2MEM_T.cmdtype), DMA_CMD_TYPE_PKT2MEM;
+
 #define DMA_MEM2PKT_SETUP(_base_r, _cf, _size, _addr)                                                    \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, size), sizeof(DMA_CMD_MEM2PKT_T.size), _size;       \
     phvwrp      _base_r, offsetof(DMA_CMD_MEM2PKT_T, addr), sizeof(DMA_CMD_MEM2PKT_T.addr), _addr;       \
@@ -623,4 +635,8 @@ struct capri_dma_cmd_mem2mem_t {
     CAPRI_SETUP_DB_DATA(_qid, _ring_id, r0, _data);                                                 \
     memwr.dx   _adddr, _data;
 
+#define IS_RING_EMPTY(_c, _flags_r, _ring_id_bmap) \
+    smneb   _c, _flags_r, _ring_id_bmap, _ring_id_bmap;
+
+#define PENDING_RECIR_PKTS_MAX  4
 #endif //__CAPRI_H
