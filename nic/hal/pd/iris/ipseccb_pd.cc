@@ -174,6 +174,8 @@ hal_ret_t
 p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
 {
     common_p4plus_stage0_app_header_table_d data = {0};
+    uint64_t                                    ipsec_cb_ring_addr;
+    uint8_t cb_cindex, cb_pindex;
 
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
@@ -183,8 +185,23 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
-    ipseccb_pd->ipseccb->pi = 99;
-    ipseccb_pd->ipseccb->ci = 88;
+    ipseccb_pd->ipseccb->iv = data.u.ipsec_encap_rxdma_initial_table_d.iv;
+    ipseccb_pd->ipseccb->iv_salt = data.u.ipsec_encap_rxdma_initial_table_d.iv_salt;
+    HAL_TRACE_DEBUG("Got salt {}", ipseccb_pd->ipseccb->iv_salt);
+    ipseccb_pd->ipseccb->iv_size = data.u.ipsec_encap_rxdma_initial_table_d.iv_size;
+    HAL_TRACE_DEBUG("Got iv_size {}", ipseccb_pd->ipseccb->iv_size);
+    ipseccb_pd->ipseccb->block_size = data.u.ipsec_encap_rxdma_initial_table_d.block_size;
+    ipseccb_pd->ipseccb->icv_size = data.u.ipsec_encap_rxdma_initial_table_d.icv_size;
+    ipseccb_pd->ipseccb->barco_enc_cmd = data.u.ipsec_encap_rxdma_initial_table_d.barco_enc_cmd;
+    ipseccb_pd->ipseccb->esn_hi = data.u.ipsec_encap_rxdma_initial_table_d.esn_hi; 
+    ipseccb_pd->ipseccb->esn_lo = data.u.ipsec_encap_rxdma_initial_table_d.esn_lo;
+    ipseccb_pd->ipseccb->spi = data.u.ipsec_encap_rxdma_initial_table_d.spi;
+    ipseccb_pd->ipseccb->key_index = data.u.ipsec_encap_rxdma_initial_table_d.key_index;
+   
+    ipsec_cb_ring_addr = ntohll(data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr);
+    cb_cindex = data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex;
+    cb_pindex = data.u.ipsec_encap_rxdma_initial_table_d.cb_pindex;
+    HAL_TRACE_DEBUG("CB Ring Addr 0x{0:x} Pindex {} CIndex {}", ipsec_cb_ring_addr, cb_pindex, cb_cindex);
      
     return HAL_RET_OK;
 }

@@ -91,10 +91,13 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_size = ipseccb_pd->ipseccb->iv_size;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size = ipseccb_pd->ipseccb->block_size;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size = ipseccb_pd->ipseccb->icv_size;
-        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd = ipseccb_pd->ipseccb->barco_enc_cmd;
+        //data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd = ipseccb_pd->ipseccb->barco_enc_cmd;
+        // for now aes-decrypt-encoding hard-coded.
+        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd = htonl(0x30100000);
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.expected_seq_no = ipseccb_pd->ipseccb->esn_lo;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index = ipseccb_pd->ipseccb->key_index;
-   
+  
+        // the below may have to use a different range for the reverse direction 
         ipsec_cb_ring_base = get_start_offset(CAPRI_HBM_REG_IPSECCB);
         ipsec_cb_ring_addr = ipsec_cb_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_CB_RING_ENTRY_SIZE);
         HAL_TRACE_DEBUG("Ring base in Decrypt 0x{0:x} CB Ring Addr 0x{0:x}", ipsec_cb_ring_base, ipsec_cb_ring_addr);
@@ -132,6 +135,10 @@ hal_ret_t
 p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
 {
     common_p4plus_stage0_app_header_table_d data = {0};
+    uint64_t ipsec_cb_ring_addr;
+    uint8_t cb_cindex, cb_pindex;
+    uint64_t replay_seq_no_bmp = 0;
+    uint32_t expected_seq_no, last_replay_seq_no;
 
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
@@ -141,7 +148,26 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
-     
+    
+    ipseccb_pd->ipseccb->iv_salt = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_salt;
+    HAL_TRACE_DEBUG("Got salt {}", ipseccb_pd->ipseccb->iv_salt);
+    ipseccb_pd->ipseccb->iv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_size;
+    HAL_TRACE_DEBUG("Got iv_size {}", ipseccb_pd->ipseccb->iv_size);
+    ipseccb_pd->ipseccb->block_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size;
+    ipseccb_pd->ipseccb->icv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size;
+    ipseccb_pd->ipseccb->barco_enc_cmd = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd;
+    ipseccb_pd->ipseccb->key_index = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index;
+   
+    ipsec_cb_ring_addr = ntohll(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_ring_base_addr);
+    cb_cindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_cindex;
+    cb_pindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_pindex;
+    HAL_TRACE_DEBUG("CB Ring Addr 0x{0:x} Pindex {} CIndex {}", ipsec_cb_ring_addr, cb_pindex, cb_cindex);
+
+    expected_seq_no = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.expected_seq_no;
+    last_replay_seq_no = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.last_replay_seq_no;
+    replay_seq_no_bmp = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.replay_seq_no_bmp;
+    HAL_TRACE_DEBUG("expected_seq_no: 0x{0:x} last_replay_seq_no: 0x{0:x} replay_seq_no_bmp: 0x{0:x}", 
+                    expected_seq_no, last_replay_seq_no, replay_seq_no_bmp); 
     return HAL_RET_OK;
 }
 

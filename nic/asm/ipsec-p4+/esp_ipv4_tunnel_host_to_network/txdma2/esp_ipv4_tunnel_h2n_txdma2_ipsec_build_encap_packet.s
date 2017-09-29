@@ -8,7 +8,6 @@ struct tx_table_s3_t0_tx_table_s3_t0_cfg_action_d d;
 struct phv_ p;
 
 %%
-        .param IPSEC_CB_BASE
         .param IPSEC_IP_HDR_BASE
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:

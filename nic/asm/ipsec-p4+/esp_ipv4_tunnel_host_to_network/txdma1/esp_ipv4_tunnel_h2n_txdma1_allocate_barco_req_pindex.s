@@ -7,7 +7,6 @@ struct tx_table_s1_t1_allocate_barco_req_pindex_d d;
 struct phv_ p;
 
 %%
-       .param esp_ipv4_tunnel_h2n_txdma1_ipsec_get_barco_req_index_ptr
        .param BRQ_BASE 
         .align
 esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex:
