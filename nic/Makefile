@@ -131,6 +131,7 @@ bazel-gtests:
 	bazel build $(BAZEL_OPTIONS) utils/shm:shmseg_test
 	bazel build $(BAZEL_OPTIONS) utils/slab:slab_test
 	bazel build $(BAZEL_OPTIONS) utils/twheel:twheel_test
+	bazel build $(BAZEL_OPTIONS) fte:fte_test
 	# PD Utils
 	bazel build $(BAZEL_OPTIONS) hal/pd/utils/acl_tcam:acl_tcam_test
 	bazel build $(BAZEL_OPTIONS) hal/pd/utils/directmap:directmap_test
@@ -169,6 +170,7 @@ run-gtests:
 	$(TOPDIR)/../bazel-bin/nic/utils/shm/shmseg_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/shmseg_test.xml"
 	$(TOPDIR)/../bazel-bin/nic/utils/slab/slab_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/slab_test.xml"
 	$(TOPDIR)/../bazel-bin/nic/utils/twheel/twheel_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/twheel_test.xml"
+	$(TOPDIR)/../bazel-bin/nic/fte/fte_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fte_test.xml"
 	# PD Utils gtests
 	LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/../bazel-bin/nic/hal/pd/utils/acl_tcam/acl_tcam_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_tcam_test.xml"
 	LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/../bazel-bin/nic/hal/pd/utils/tcam/tcam_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tcam_test.xml"

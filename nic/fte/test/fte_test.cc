@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "../fte.hpp"
+#include "nic/fte/fte.hpp"
 
 using namespace fte;
 using namespace std;
