@@ -16,9 +16,10 @@
 #include <stdint.h>
 #include <mutex>
 
-#define MODEL_ZMQ_SOCK_TIMEOUT_SEC      30
+#define MODEL_ZMQ_SOCK_TIMEOUT_SEC      300
 
-void *__zmq_sock;
+void *rsock;
+void *esock;
 void *__zmq_context;
 const char* __lmodel_env = getenv("CAPRI_MOCK_MODE");
 const char* __write_verify_enable = getenv("CAPRI_WRITE_VERIFY_ENABLE");
@@ -26,7 +27,7 @@ std::mutex g_zmq_mutex;
 
 int lib_model_connect ()
 {
-    char zmqsockstr[100];
+    char zmqsockstr[200];
     int rc;
     uint16_t event;
     int timeout_ms = MODEL_ZMQ_SOCK_TIMEOUT_SEC * 1000;
@@ -34,24 +35,51 @@ int lib_model_connect ()
     if (__lmodel_env)
         return 0;
     
-    printf ("Connecting to ASIC model....\n");
-    const char* user_str = std::getenv("PWD");
-    snprintf(zmqsockstr, 100, "ipc:///%s/zmqsock", user_str);
     __zmq_context = zmq_ctx_new ();
-    __zmq_sock = zmq_socket (__zmq_context, ZMQ_REQ);
-    rc = zmq_setsockopt (__zmq_sock, ZMQ_RCVTIMEO, &timeout_ms, sizeof(timeout_ms));
-    rc = zmq_setsockopt (__zmq_sock, ZMQ_SNDTIMEO, &timeout_ms, sizeof(timeout_ms));
-    rc = zmq_connect ((__zmq_sock), zmqsockstr);
+    printf ("Connecting to non-blocking ASIC model....\n");
+
+
+    /* generate random identity */
+    unsigned int seed;
+    char identity[10] = {};
+    /* Set watermark - 10mil messages */
+    int wmark = 10000000;
+
+    FILE* urandom = fopen("/dev/urandom", "r");
+    fread(&seed, sizeof(int), 1, urandom);
+    fclose(urandom);
+    srand(seed); 
+    snprintf(identity, 10, "%04X-%04X", (rand() % 0x10000), (rand() % 0x10000));
+    /* Open the dealer socket */
+    const char* user_str = std::getenv("PWD");
+    snprintf(zmqsockstr, 200, "ipc:///%s/zmqsock1", user_str);
+    rsock = zmq_socket (__zmq_context, ZMQ_DEALER);
+    rc = zmq_setsockopt (esock, ZMQ_RCVHWM, &wmark, sizeof(int));
+    rc = zmq_setsockopt (esock, ZMQ_SNDHWM, &wmark, sizeof(int));
+    rc = zmq_setsockopt (rsock, ZMQ_IDENTITY, identity, strlen(identity));
+    rc = zmq_setsockopt (rsock, ZMQ_RCVTIMEO, &timeout_ms, sizeof(timeout_ms));
+    rc = zmq_setsockopt (rsock, ZMQ_SNDTIMEO, &timeout_ms, sizeof(timeout_ms));
+    rc = zmq_connect ((rsock), zmqsockstr);
     assert(rc == 0);
     
-    /* Monitor the socket for the model to connect */
-    rc = zmq_socket_monitor (__zmq_sock, "inproc://monitor.sock", ZMQ_EVENT_ALL);
+    /* Open the subscriber socket */
+    snprintf(zmqsockstr, 200, "ipc:///%s/zmqsock2", user_str);
+    esock = zmq_socket (__zmq_context, ZMQ_SUB);
+    rc = zmq_setsockopt (esock, ZMQ_RCVTIMEO, &timeout_ms, sizeof(timeout_ms));
+    rc = zmq_setsockopt (esock, ZMQ_SNDTIMEO, &timeout_ms, sizeof(timeout_ms));
+    rc = zmq_setsockopt (esock, ZMQ_RCVHWM, &wmark, sizeof(int));
+    rc = zmq_setsockopt(esock, ZMQ_SUBSCRIBE, "", 0);
+    rc = zmq_connect ((esock), zmqsockstr);
+    assert(rc == 0);
+
+    /* Monitor the sub socket for the model to connect */
+    rc = zmq_socket_monitor (esock, "inproc://monitor.sock", ZMQ_EVENT_ALL);
     assert (rc == 0);
     void *s = zmq_socket(__zmq_context, ZMQ_PAIR);
     assert(s);
     rc = zmq_connect(s, "inproc://monitor.sock");
     assert(rc == 0);
-    printf ("Waiting for ASIC model to come up...\n");
+    printf ("Waiting for non-blocking ASIC model server to come up...\n");
     while (true) {
         bool connected = false;
         zmq_msg_t msg;
@@ -69,8 +97,9 @@ int lib_model_connect ()
         if (connected)
             break;
     }
-    printf ("ASIC model connected!\n");
+    printf ("ASIC model server connected!\n");
     zmq_close (s);
+    
     return (rc);
 }
 
@@ -82,7 +111,8 @@ int lib_model_conn_close ()
     if (__lmodel_env)
         return 0;
     
-    zmq_close(__zmq_sock);
+    zmq_close(rsock);
+    zmq_close(esock);
     zmq_ctx_destroy(__zmq_context);
     return 0;
 }
@@ -93,6 +123,7 @@ void step_tmr_wheel_update (uint32_t slowfast, uint32_t ctime)
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
+    int rc;
     buffer_hdr_t *buff;
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_STEP_TIMER_WHEEL;
@@ -101,8 +132,8 @@ void step_tmr_wheel_update (uint32_t slowfast, uint32_t ctime)
 
     if (__lmodel_env)
         return;
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(rsock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     return;
 }
 
@@ -112,6 +143,7 @@ void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
+    int rc;
     buffer_hdr_t *buff;
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_STEP_PKT;
@@ -123,8 +155,8 @@ void step_network_pkt (const std::vector<uint8_t> & pkt, uint32_t port)
     if (pkt.size() > 4000)
         assert(0);
     memcpy(buff->data, pkt.data(), buff->size);
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(rsock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     return;
 }
 
@@ -134,6 +166,7 @@ void step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
+    int rc;
     buffer_hdr_t *buff;
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_STEP_CPU_PKT;
@@ -144,8 +177,8 @@ void step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
     if (buff->size > 4000)
         assert(0);
     memcpy(buff->data, pkt, buff->size);
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(rsock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     return;
 }
 
@@ -156,13 +189,14 @@ bool get_next_pkt (std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos)
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
+    int rc;
 
     if (__lmodel_env)
         return true;
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_GET_NEXT_PKT;
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_recv(esock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
     port = buff->port;
     cos = buff->cos;
     pkt.resize(buff->size);
@@ -176,17 +210,24 @@ bool read_reg (uint64_t addr, uint32_t& data)
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
-    char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
+    char sbuffer[MODEL_ZMQ_BUFF_SIZE] = {0};
+    char rbuffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
+    zmq_msg_t msg;
+    zmq_msg_init(&msg);
+    int rc;
 
     if (__lmodel_env)
         return true;
-    buff = (buffer_hdr_t *) buffer;
+    buff = (buffer_hdr_t *) sbuffer;
     buff->type = BUFF_TYPE_REG_READ;
     buff->addr = addr;
     buff->size = sizeof(uint32_t);
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(rsock, sbuffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(rsock, rbuffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    buff = (buffer_hdr_t *) rbuffer;
     memcpy(&data, buff->data, sizeof(uint32_t));
     return true;
 }
@@ -199,6 +240,7 @@ bool write_reg (uint64_t addr, uint32_t data)
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
+    int rc;
 
     if (__lmodel_env)
         return true;
@@ -207,8 +249,8 @@ bool write_reg (uint64_t addr, uint32_t data)
     buff->addr = addr;
     buff->size = sizeof(uint32_t);
     memcpy(buff->data, &data, sizeof(uint32_t));
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(rsock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
 
     return true;
 }
@@ -219,20 +261,27 @@ bool read_mem (uint64_t addr, uint8_t * data, uint32_t size)
      // thread safe
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
 
-    char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
+    char sbuffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
+    char rbuffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
+    zmq_msg_t msg;
+    zmq_msg_init(&msg);
+    int rc;
 
     if (__lmodel_env)
         return true;
     if (size > MODEL_ZMQ_MEM_BUFF_SIZE)
         assert(0);
-    buff = (buffer_hdr_t *) buffer;
+    buff = (buffer_hdr_t *) sbuffer;
     buff->type = BUFF_TYPE_MEM_READ;
     buff->addr = addr;
     buff->size = size;
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
-    memcpy(data, buff->data, size);
+    rc = zmq_send(rsock, sbuffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+    assert(rc != -1);
+    rc = zmq_recv(rsock, rbuffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+    assert(rc != -1);
+    buff = (buffer_hdr_t *) rbuffer;
+    memcpy(data, buff->data, buff->size);
     return true;
 }
 
@@ -244,6 +293,7 @@ bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
 
     char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
+    int rc;
 
     if (__lmodel_env)
         return true;
@@ -252,8 +302,8 @@ bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
     buff->addr = addr;
     buff->size = size;
     memcpy(buff->data, data, size);
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+    rc = zmq_send(rsock, buffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+    assert(rc != -1);
 
     if (!__write_verify_enable)
         return true;
@@ -273,6 +323,7 @@ void step_doorbell (uint64_t addr, uint64_t data)
 
     char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
+    int rc;
 
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_DOORBELL;
@@ -282,8 +333,10 @@ void step_doorbell (uint64_t addr, uint64_t data)
         return;
     buff->addr = addr;
     memcpy(buff->data, &data, buff->size);
-    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
-    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    rc = zmq_send(rsock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    assert(rc != -1);
+    //rc = zmq_recv(rsock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    //assert(rc != -1);
     return;
 }
 
@@ -295,11 +348,13 @@ bool dump_hbm ()
 
     char buffer[1024] = {0};
     buffer_hdr_t *buff;
+    int rc;
 
     if (__lmodel_env)
         return true;
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_HBM_DUMP;
-    zmq_send(__zmq_sock, buffer, 1024, 0);
+    rc = zmq_send(rsock, buffer, 1024, 0);
+    assert(rc != -1);
     return true;
 }

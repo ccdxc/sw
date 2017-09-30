@@ -109,11 +109,16 @@ hal:
 	make bazel-build
 	make bazel-gtests
 
+capmodel:
+	bazel build $(BAZEL_OPTIONS) model_sim:cap_model
+	bazel build $(BAZEL_OPTIONS) model_sim:model_client
+
 bazel-build:
 	make -C p4
 	make -C asm
-	bazel build $(BAZEL_OPTIONS) hal:hal
 	bazel build $(BAZEL_OPTIONS) model_sim:cap_model
+	bazel build $(BAZEL_OPTIONS) model_sim:model_client
+	bazel build $(BAZEL_OPTIONS) hal:hal
 	bazel build $(BAZEL_OPTIONS) //nic/proto:all
 	bazel build $(BAZEL_OPTIONS) //nic/proto/hal:all
 	bazel build $(BAZEL_OPTIONS) //nic/proto/agents:all

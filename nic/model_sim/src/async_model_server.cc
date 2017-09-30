@@ -27,6 +27,12 @@
 cap_env_base *g_env;
 std::queue<std::vector<uint8_t>> g_cpu_pkts;
 extern "C" void __gcov_flush();
+
+void *context;
+void *rsock;    /* All Receives: input packets, reads and writes. Blocking
+                 * responses like read_mem/reg are also sent back on socket */
+void *esock;    /* Send events: output packets, interrupt vector */
+
 namespace utils {
 
 class HostMem : public pen_mem_base {
@@ -83,7 +89,8 @@ static void dumpHBM (void) {
       return;
 }
 
-void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
+void process_buff (buffer_hdr_t *buff, cap_env_base *env, zmq_msg_t *id) {
+    int rc;
     switch (buff->type) {
         case BUFF_TYPE_STEP_TIMER_WHEEL:
         {
@@ -97,33 +104,45 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
         case BUFF_TYPE_STEP_PKT:
         {
             std::vector<unsigned char> pkt_vector(buff->data, buff->data + buff->size);
+            std::vector<uint8_t> out_pkt;
             uint32_t port;
             uint32_t cos;
             /* Send packet through the model */
             env->step_network_pkt(pkt_vector, buff->port);
-            buff->type = BUFF_TYPE_STATUS;
-            buff->status = 0;
     	    std::cout << "step_network_pkt port: " << port << " size: " << buff->size << std::endl;
+            /* Since the packets are sent to the model server by the client
+             * asynchronosly in a non blocking way, we need to check for the
+             * returned packets by the model and send it back to the client */
+            while (env->get_next_pkt(out_pkt, port, cos)) {
+                char sbuff[MODEL_ZMQ_BUFF_SIZE];
+                buffer_hdr_t *send_buff = (buffer_hdr_t *) sbuff;
+                
+                send_buff->size = out_pkt.size();
+                send_buff->port = port;
+                send_buff->cos = cos;
+                send_buff->type = BUFF_TYPE_GET_NEXT_PKT;
+                
+                memcpy(send_buff->data, out_pkt.data(), out_pkt.size());
+    	        std::cout << "Got packet: get_next_pkt port: " << port << " cos: " << cos << " size: " << out_pkt.size() << std::endl;
+                /* Send the buffer back to the client, on a different socket */
+                rc = zmq_send (esock, send_buff, MODEL_ZMQ_BUFF_SIZE, 0);
+                assert(rc != -1);
+            }
+    	    std::cout << "No more packets: Sending status back" << std::endl;
+            char sbuff[MODEL_ZMQ_BUFF_SIZE];
+            buffer_hdr_t *send_buff = (buffer_hdr_t *) sbuff;
+            /* All packets are done. Send a completion event to client */
+            send_buff->type = BUFF_TYPE_STATUS;
+            send_buff->status = 0;
+            send_buff->size = 0;
+            send_buff->port = -1;
+            rc = zmq_send (esock, send_buff, MODEL_ZMQ_BUFF_SIZE, 0);
+            assert(rc != -1);
         }
             break;
         case BUFF_TYPE_GET_NEXT_PKT:
-        {
-            std::vector<uint8_t> out_pkt;
-            uint32_t port;
-            uint32_t cos;
-            /* Get output packet from the model */
-            if (!env->get_next_pkt(out_pkt, port, cos)) {
-    	        std::cout << "ERROR: no packet" << std::endl;
-                buff->type = BUFF_TYPE_STATUS;
-                buff->status = -1;
-            } else {
-                buff->size = out_pkt.size();
-                buff->port = port;
-                buff->cos = cos;
-                memcpy(buff->data, out_pkt.data(), out_pkt.size());
-    	        std::cout << "get_next_pkt port: " << port << " cos: " << cos << " size: " << buff->size << std::endl;
-            }
-        }
+            /* This should not be called in non-blocking mode */
+            assert(0);
             break;
         case BUFF_TYPE_REG_READ:
         {
@@ -137,9 +156,21 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
-                buff->size = sizeof(uint32_t);
-                memcpy(buff->data, &data, buff->size);
-                printf("read_reg addr: 0x%lx data: 0x%x\n", addr, data);
+                char sbuff[MODEL_ZMQ_BUFF_SIZE];
+                buffer_hdr_t *send_buff = (buffer_hdr_t *) sbuff;
+                zmq_msg_t send_id;
+                zmq_msg_init(&send_id);
+
+                send_buff->status = buff->status;
+                send_buff->size = sizeof(uint32_t);
+                memcpy(send_buff->data, &data, send_buff->size);
+
+                /* For read requests, client will be blocking on the call */
+                zmq_msg_copy(&send_id, id);
+                rc = zmq_msg_send (&send_id, rsock, ZMQ_SNDMORE);
+                assert(rc != -1);
+                rc = zmq_send (rsock, send_buff, MODEL_ZMQ_BUFF_SIZE, 0);
+                assert(rc != -1);
             }
         }
             break;
@@ -157,7 +188,6 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             } else {
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = 0;
-                printf("write_reg addr: 0x%lx  data: 0x%x\n", addr, data);
             }
         }
             break;
@@ -166,12 +196,26 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             uint64_t addr = buff->addr;
             bool ret = env->read_mem(addr, buff->data, buff->size);
             ret = true;
-            if ((buff->size > MODEL_ZMQ_BUFF_SIZE) || !ret) {
+            if ((buff->size > MODEL_ZMQ_MEM_BUFF_SIZE) || !ret) {
     	        std::cout << "ERROR: Reading memory" << std::endl;
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = -1;
             } else {
-                printf("read_mem addr: 0x%lx size: %d\n", addr, buff->size);
+                char sbuff[MODEL_ZMQ_MEM_BUFF_SIZE];
+                buffer_hdr_t *send_buff = (buffer_hdr_t *) sbuff;
+                zmq_msg_t send_id;
+                zmq_msg_init(&send_id);
+
+                send_buff->status = buff->status;
+                send_buff->size = buff->size;
+                memcpy(send_buff->data, buff->data, buff->size);
+
+                /* For read requests, client will be blocking on the call */
+                zmq_msg_copy(&send_id, id);
+                rc = zmq_msg_send (&send_id, rsock, ZMQ_SNDMORE);
+                assert(rc != -1);
+                rc = zmq_send (rsock, send_buff, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+                assert(rc != -1);
             }
         }
             break;
@@ -187,7 +231,6 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             } else {
                 buff->type = BUFF_TYPE_STATUS;
                 buff->status = 0;
-                printf("write_mem addr: 0x%lx size: %d\n", addr, buff->size);
             }
         }
             break;
@@ -212,29 +255,30 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             break;
         case BUFF_TYPE_STEP_CPU_PKT:
         {
-            std::vector<uint8_t> pkt_vector(buff->data, buff->data + buff->size);
-
-            g_cpu_pkts.push(pkt_vector);
-            buff->type = BUFF_TYPE_STATUS;
-            buff->status = 0;
+            char sbuff1[MODEL_ZMQ_BUFF_SIZE];
+            char sbuff2[MODEL_ZMQ_BUFF_SIZE];
+            buffer_hdr_t *send_buff1 = (buffer_hdr_t *) sbuff1;
+            buffer_hdr_t *send_buff2 = (buffer_hdr_t *) sbuff2;
+            /* Cpu packet can be sent back to the client immediately on
+             * the event sock */
     	    std::cout << "step_cpu_pkt size: " << buff->size << std::endl;
+            send_buff1->type = BUFF_TYPE_GET_NEXT_CPU_PKT;
+            send_buff1->size = buff->size;
+            send_buff1->port = 128;
+            memcpy(send_buff1->data, buff->data, buff->size);
+            rc = zmq_send (esock, send_buff1, MODEL_ZMQ_BUFF_SIZE, 0);
+            assert(rc != -1);
+            /* Send a completion event to client */
+            send_buff2->type = BUFF_TYPE_STATUS;
+            send_buff2->status = 0;
+            send_buff2->size = 0;
+            send_buff2->port = -1;
+            rc = zmq_send (esock, send_buff2, MODEL_ZMQ_BUFF_SIZE, 0);
+            assert(rc != -1);
         }
             break;
         case BUFF_TYPE_GET_NEXT_CPU_PKT:
-        {
-            std::vector<uint8_t> out_pkt;
-            if (g_cpu_pkts.empty()) {
-    	        std::cout << "CPU: ERROR: no packet" << std::endl;
-                buff->type = BUFF_TYPE_STATUS;
-                buff->status = -1;
-            } else {
-                out_pkt = g_cpu_pkts.front();
-                g_cpu_pkts.pop();
-                buff->size = out_pkt.size();
-                memcpy(buff->data, out_pkt.data(), out_pkt.size());
-    	        std::cout << "get_next_cpu_pkt size: " << buff->size << std::endl;
-            }
-        }
+            assert(0);
             break;
         case BUFF_TYPE_STATUS:
         default:
@@ -247,22 +291,21 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
 static void wait_loop() {
     int rc;
     buffer_hdr_t *buff;
-    char zmqsockstr[200];
-    char recv_buff[MODEL_ZMQ_BUFF_SIZE];
+    zmq_msg_t id;
+    char rbuffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     
-    const char* user_str = std::getenv("PWD");
-    snprintf(zmqsockstr, 200, "ipc:///%s/zmqsock", user_str);
-    //  ZMQ Socket to talk to clients
-    void *context = zmq_ctx_new ();
-    void *responder = zmq_socket (context, ZMQ_REP);
-    rc = zmq_bind(responder, zmqsockstr);
-    assert (rc == 0);
-    std::cout << "Model initialized! Waiting for pkts/command...." << std::endl;
+    std::cout << "Non-blocking Model initialized! Waiting for pkts/command...." << std::endl;
     while (1) {
-        rc = zmq_recv (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
-        buff = (buffer_hdr_t *) recv_buff;
-        process_buff(buff, g_env);
-        rc = zmq_send (responder, recv_buff, MODEL_ZMQ_BUFF_SIZE, 0);
+        /* Router socket: Get both the message parts */
+        zmq_msg_init(&id);
+        rc = zmq_msg_recv (&id, rsock, 0);
+        assert(rc != -1);
+        rc = zmq_recv (rsock, rbuffer, MODEL_ZMQ_MEM_BUFF_SIZE, 0);
+        assert(rc != -1);
+        
+        buff = (buffer_hdr_t *) rbuffer;
+        process_buff(buff, g_env, &id);
+        zmq_msg_close(&id);
     }
     return;
 }
@@ -323,7 +366,29 @@ int main (int argc, char ** argv)
     env->init();
     env->load_debug();
     g_env = env;
-    wait_loop();
 
+    char zmqsockstr[200];
+    const char* user_str = std::getenv("PWD");
+    
+    //  ZMQ sockets to talk to clients
+    context = zmq_ctx_new ();
+    rsock = zmq_socket (context, ZMQ_ROUTER);
+    esock = zmq_socket (context, ZMQ_PUB);
+    
+    /* Set watermark - 10mil messages */
+    int wmark = 10000000;
+    zmq_setsockopt (esock, ZMQ_SNDHWM, &wmark, sizeof(int));
+    zmq_setsockopt (rsock, ZMQ_RCVHWM, &wmark, sizeof(int));
+    zmq_setsockopt (rsock, ZMQ_SNDHWM, &wmark, sizeof(int));
+
+    snprintf(zmqsockstr, 200, "ipc:///%s/zmqsock1", user_str);
+    rc = zmq_bind(rsock, zmqsockstr);
+    assert (rc == 0);
+
+    snprintf(zmqsockstr, 200, "ipc:///%s/zmqsock2", user_str);
+    rc = zmq_bind(esock, zmqsockstr);
+    assert (rc == 0);
+
+    wait_loop();
     return 0;
 }

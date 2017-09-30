@@ -14,7 +14,6 @@ cc_library(
             ],
 )
 
-
 cc_binary(
     name = "cap_model",
     srcs = [
@@ -31,7 +30,6 @@ cc_binary(
     deps = [
             "//nic/model_sim/include:modelsim_includes",
             "//nic/utils/host_mem:host_mem_includes",
-            "//nic:capricsr_int",
             ],
     linkopts = [
             "-lJudy",
