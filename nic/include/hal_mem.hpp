@@ -66,6 +66,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_RW_PD,
     HAL_SLAB_CPUCB_PD,
     HAL_SLAB_CPUPKT_PD,
+    HAL_SLAB_CPUPKT_QINST_INFO_PD,
     HAL_SLAB_PD_MAX,                 // NOTE: MUST be last PD slab id
 
     HAL_SLAB_RSVD,    // all non-delay delete slabs can use this

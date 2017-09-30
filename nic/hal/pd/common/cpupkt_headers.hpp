@@ -1,5 +1,4 @@
-#ifndef __HAL_PD_CPUPKT_HEADERS_HPP__
-#define __HAL_PD_CPUPKT_HEADERS_HPP__
+#pragma once
 
 #include "nic/include/base.h"
 #include <sys/param.h>
@@ -192,5 +191,3 @@ struct ipsec_esp_header_t {
     uint32_t spi;
     uint32_t seqno;
 }__attribute__ ((__packed__));
-
-#endif

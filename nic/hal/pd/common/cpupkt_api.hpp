@@ -1,5 +1,4 @@
-#ifndef ___HAL_PD_CPU_PKT_API_HPP__
-#define ___HAL_PD_CPU_PKT_API_HPP__
+#pragma once
 
 #include "nic/include/base.h"
 #include "nic/include/pd.hpp"
@@ -9,7 +8,8 @@
 namespace hal {
 namespace pd {
 
-#define MAX_CPU_PKT_QUEUES   3
+#define MAX_CPU_PKT_QUEUES              (types::WRingType_ARRAYSIZE)
+#define MAX_CPU_PKT_QUEUE_INST_INFO     (HAL_MAX_PROXY_FLOWS)
 
 #define HAL_MAX_CPU_PKT_DESCR_ENTRIES   1024
 #define CPU_PKT_DESCR_SIZE              128
@@ -48,13 +48,21 @@ namespace pd {
 
 
 typedef uint64_t  cpupkt_hw_id_t;
+struct cpupkt_queue_info_s;
+typedef struct cpupkt_queue_info_s cpupkt_queue_info_t;
+
+typedef struct cpupkt_qinst_info_s {
+    uint32_t                queue_id;
+    cpupkt_hw_id_t          base_addr;
+    uint32_t                pc_index;
+    cpupkt_hw_id_t          pc_index_addr;
+    cpupkt_queue_info_t*    queue_info;
+} cpupkt_qinst_info_t;
 
 typedef struct cpupkt_queue_info_s {
-    types::WRingType    type;
-    cpupkt_hw_id_t      base_addr;
-    uint32_t            pc_index;
-    cpupkt_hw_id_t      pc_index_addr;
-    pd_wring_meta_t*    wring_meta; 
+    types::WRingType        type;
+    pd_wring_meta_t*        wring_meta;
+    cpupkt_qinst_info_t*    qinst_info[HAL_MAX_PROXY_FLOWS];
 } cpupkt_queue_info_t;
 
 typedef struct cpupkt_rx_ctxt_s {
@@ -63,7 +71,7 @@ typedef struct cpupkt_rx_ctxt_s {
 } __PACK__ cpupkt_rx_ctxt_t;
 
 typedef struct cpupkt_tx_ctxt_s {
-    cpupkt_queue_info_t     queue;
+    cpupkt_queue_info_t     queue[MAX_CPU_PKT_QUEUES];
 } __PACK__ cpupkt_tx_ctxt_t;
 
 typedef struct cpupkt_ctxt_s {
@@ -83,8 +91,9 @@ cpupkt_ctxt_init(cpupkt_ctxt_t* ctxt)
 }
 
 cpupkt_ctxt_t* cpupkt_ctxt_alloc_init(void);
-hal_ret_t cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queueid=0);
-hal_ret_t cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queueid=0);
+hal_ret_t cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id=0);
+hal_ret_t cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id=0);
+hal_ret_t cpupkt_unregister_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id=0);
 
 // receive
 hal_ret_t cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
@@ -95,6 +104,8 @@ hal_ret_t cpupkt_free(p4_to_p4plus_cpu_pkt_t* flow_miss_hdr, uint8_t* data);
 
 // transmit
 hal_ret_t cpupkt_send(cpupkt_ctxt_t* ctxt,
+                      types::WRingType type,
+                      uint32_t queue_id,
                       cpu_to_p4plus_header_t* cpu_header,
                       p4plus_to_p4_header_t* p4_header,
                       uint8_t* data,
@@ -108,5 +119,3 @@ hal_ret_t cpupkt_descr_alloc(cpupkt_hw_id_t* descr_addr);
 
 } // namespace pd
 } // namespace hal
-
-#endif

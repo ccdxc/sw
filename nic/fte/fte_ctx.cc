@@ -763,7 +763,10 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         }
 
 
-        ret = hal::pd::cpupkt_send(arm_ctx, &pkt_info->cpu_header,
+        ret = hal::pd::cpupkt_send(arm_ctx,
+                                   types::WRING_TYPE_ASQ,
+                                   0,
+                                   &pkt_info->cpu_header,
                                    &pkt_info->p4plus_header,
                                    pkt_info->pkt, pkt_info->pkt_len,
                                    pkt_info->lifq.lif, pkt_info->lifq.qtype,

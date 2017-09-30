@@ -166,6 +166,7 @@ public:
 
     // get APIs for CPU PKT related state
     slab *cpupkt_slab(void) const { return cpupkt_slab_; }
+    slab *cpupkt_qinst_info_slab(void) const {return cpupkt_qinst_info_slab_; }
     indexer *cpupkt_descr_hw_id_idxr(void) {return cpupkt_descr_hwid_idxr_; }
     indexer *cpupkt_page_hw_id_idxr(void) {return cpupkt_page_hwid_idxr_; }
     
@@ -375,6 +376,7 @@ private:
     // cpupkt related state
     struct {
         slab       *cpupkt_slab_;
+        slab       *cpupkt_qinst_info_slab_;
         indexer    *cpupkt_descr_hwid_idxr_;
         indexer    *cpupkt_page_hwid_idxr_;
     } __PACK__;

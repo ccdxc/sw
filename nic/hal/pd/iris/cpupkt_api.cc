@@ -9,10 +9,21 @@
 namespace hal {
 namespace pd {
 
-static inline cpupkt_ctxt_t *
+static inline cpupkt_ctxt_t*
 cpupkt_ctxt_alloc(void) 
 {
     return (cpupkt_ctxt_t *)g_hal_state_pd->cpupkt_slab()->alloc();    
+}
+
+static inline cpupkt_qinst_info_t*
+cpupkt_ctxt_qinst_info_alloc(void)
+{
+    return (cpupkt_qinst_info_t*) g_hal_state_pd->cpupkt_qinst_info_slab()->alloc();
+}
+
+static inline void
+cpupkt_ctxt_qinst_info_free(cpupkt_qinst_info_t* qinst_info) {
+    g_hal_state_pd->cpupkt_qinst_info_slab()->free(qinst_info);
 }
 
 bool is_cpu_rx_queue(types::WRingType type)
@@ -27,19 +38,41 @@ bool is_cpu_tx_queue(types::WRingType type)
 
 
 void
-cpupkt_update_slot_addr(cpupkt_queue_info_t* queue_info)
+cpupkt_update_slot_addr(cpupkt_qinst_info_t* qinst_info)
 {
-    if(!queue_info || !queue_info->wring_meta) {
-        HAL_TRACE_ERR("Invalid queue info");
+    if(!qinst_info || !qinst_info->queue_info || !qinst_info->queue_info->wring_meta) {
+        HAL_TRACE_ERR("cpupkt: Invalid queue info");
         return;
     }
 
-    uint32_t slot_index = queue_info->pc_index % queue_info->wring_meta->num_slots;
-    cpupkt_hw_id_t hw_id = queue_info->base_addr + 
-            (slot_index * queue_info->wring_meta->slot_size_in_bytes);
-    queue_info->pc_index_addr = hw_id;
+    uint32_t slot_index = qinst_info->pc_index % qinst_info->queue_info->wring_meta->num_slots;
+    cpupkt_hw_id_t hw_id = qinst_info->base_addr +
+            (slot_index * qinst_info->queue_info->wring_meta->slot_size_in_bytes);
+    qinst_info->pc_index_addr = hw_id;
     HAL_TRACE_DEBUG("Updated pc_index addr: {:#x}", hw_id);
     return;
+}
+
+static inline void
+cpupkt_inc_queue_index(cpupkt_qinst_info_t& qinst_info)
+{
+    qinst_info.pc_index++;
+    cpupkt_update_slot_addr(&qinst_info);
+}
+
+static inline hal_ret_t
+cpupkt_free_and_inc_queue_index(cpupkt_qinst_info_t& qinst_info)
+{
+    // Set the slot back to 0
+    uint64_t value = 0;
+    if(!p4plus_hbm_write(qinst_info.pc_index_addr,
+                         (uint8_t *)&value,
+                         sizeof(uint64_t))) {
+        HAL_TRACE_ERR("Failed to reset pc_index_addr");
+        return HAL_RET_HW_FAIL;
+    }
+    cpupkt_inc_queue_index(qinst_info);
+    return HAL_RET_OK;
 }
 
 bool
@@ -55,10 +88,10 @@ is_valid_slot_value(uint64_t slot_value, uint64_t* descr_addr)
 }
 
 hal_ret_t
-cpupkt_descr_to_skbuff(pd_descr_aol_t& descr,
-                       p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
-                       uint8_t** data, 
-                       size_t* data_len)
+cpupkt_descr_to_headers(pd_descr_aol_t& descr,
+                        p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
+                        uint8_t** data,
+                        size_t* data_len)
 {
     if(!flow_miss_hdr || !data || !data_len) {
         return HAL_RET_INVALID_ARG;    
@@ -90,27 +123,6 @@ cpupkt_descr_to_skbuff(pd_descr_aol_t& descr,
     return HAL_RET_OK;
 }
 
-static inline void
-cpupkt_inc_queue_index(cpupkt_queue_info_t& queue_info)
-{
-    queue_info.pc_index++;
-    cpupkt_update_slot_addr(&queue_info);
-}
-
-static inline hal_ret_t
-cpupkt_free_and_inc_queue_index(cpupkt_queue_info_t& queue_info)
-{
-    // Set ASQ back to 0
-    uint64_t value = 0;
-    if(!p4plus_hbm_write(queue_info.pc_index_addr,
-                         (uint8_t *)&value,
-                         sizeof(uint64_t))) {
-        HAL_TRACE_ERR("Failed to reset pc_index_addr");
-        return HAL_RET_HW_FAIL;  
-    }
-    cpupkt_inc_queue_index(queue_info);
-    return HAL_RET_OK;
-}
 
 /****************************************************************
  * Packet send/receive APIs
@@ -122,11 +134,48 @@ cpupkt_ctxt_alloc_init(void)
     return cpupkt_ctxt_init(cpupkt_ctxt_alloc());    
 }
 
-hal_ret_t 
-cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queueid)
+hal_ret_t
+cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, types::WRingType type, uint32_t queue_id)
 {
-    hal_ret_t   ret = HAL_RET_OK;
-    
+    hal_ret_t           ret = HAL_RET_OK;
+    if(!ctxt_qinfo || !ctxt_qinfo->wring_meta) {
+        HAL_TRACE_ERR("cpupkt: Invalid ARGs to register_qinst");
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // Verify that the queue inst is not already registered
+    if(ctxt_qinfo->qinst_info[queue_id] != NULL) {
+        HAL_TRACE_ERR("cpupkt: queue inst is already registered: type: {}, inst: {}", type, queue_id);
+        return HAL_RET_OK;
+    }
+
+    cpupkt_qinst_info_t* qinst_info = cpupkt_ctxt_qinst_info_alloc();
+    if(!qinst_info) {
+        HAL_TRACE_ERR("Failed to allocate qinst_info");
+        return HAL_RET_NO_RESOURCE;
+    }
+
+    // Get queue base
+    wring_hw_id_t base_addr = 0;
+    ret = wring_pd_get_base_addr(type, queue_id, &base_addr);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get base addr for queue: {}: ret: {}", type, ret);
+        return ret;
+    }
+
+    qinst_info->base_addr = base_addr;
+    qinst_info->queue_id = queue_id;
+    qinst_info->pc_index = 0;
+    qinst_info->queue_info = ctxt_qinfo;
+    cpupkt_update_slot_addr(qinst_info);
+    ctxt_qinfo->qinst_info[queue_id] = qinst_info;
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
+{
     if(!ctxt) {
         HAL_TRACE_ERR("Ctxt is null");
         return HAL_RET_INVALID_ARG;    
@@ -137,36 +186,24 @@ cpupkt_register_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t qu
         return HAL_RET_INVALID_ARG;    
     }
 
-    // Verify if the queeue is already registered
-    if(ctxt->tx.queue.type == type) {
-        HAL_TRACE_DEBUG("Queue is already added: {}", type);
-        return HAL_RET_OK;
-    }
-    
-    wring_hw_id_t base_addr = 0;
-    ret = wring_pd_get_base_addr(type, queueid, &base_addr);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get base addr for queue: {}: ret: {}", type, ret); 
-        return ret;
-    }
-  
     pd_wring_meta_t* meta = wring_pd_get_meta(type);
+    if(!meta) {
+        HAL_TRACE_ERR("cpupkt: Failed to find meta for the queue: {}", type);
+        return HAL_RET_WRING_NOT_FOUND;
+    }
 
-    ctxt->tx.queue.type = type;
-    ctxt->tx.queue.pc_index = 0;
-    ctxt->tx.queue.base_addr = base_addr;
-    ctxt->tx.queue.wring_meta = meta;
-    cpupkt_update_slot_addr(&ctxt->tx.queue);
-    HAL_TRACE_DEBUG("pindex addr: {:#x}", ctxt->tx.queue.pc_index_addr);
+    // in Tx case, queue info is indexed based on type for faster lookup.
+    int index = type;
+    ctxt->tx.queue[index].type = type;
+    ctxt->tx.queue[index].wring_meta = meta;
+    cpupkt_register_qinst(&(ctxt->tx.queue[index]), type, queue_id);
     return HAL_RET_OK;
 }
 
 
 hal_ret_t 
-cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queueid)
+cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
 {
-    hal_ret_t   ret = HAL_RET_OK;
-    
     if(!ctxt) {
         HAL_TRACE_ERR("Ctxt is null");
         return HAL_RET_INVALID_ARG;    
@@ -189,28 +226,49 @@ cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t qu
         HAL_TRACE_ERR("Max queues registered");
         return HAL_RET_NO_RESOURCE;
     }
- 
-    wring_hw_id_t base_addr = 0;
-    ret = wring_pd_get_base_addr(type, queueid, &base_addr);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get base addr for queue: {}: ret: {}", type, ret); 
-        return ret;
-    }
-  
+
     pd_wring_meta_t* meta = wring_pd_get_meta(type);
+    if(!meta) {
+        HAL_TRACE_ERR("cpupkt: Failed to find meta for the queue: {}", type);
+        return HAL_RET_WRING_NOT_FOUND;
+    }
+
+    if(!meta->is_global) {
+        HAL_TRACE_ERR("cpupkt: Rx from non-global queues is not supported");
+        HAL_ASSERT(1);
+        return HAL_RET_INVALID_OP;
+    }
 
     int index = ctxt->rx.num_queues;
     ctxt->rx.queue[index].type = type;
-    ctxt->rx.queue[index].pc_index = 0;
-    ctxt->rx.queue[index].base_addr = base_addr;
     ctxt->rx.queue[index].wring_meta = meta;
-    cpupkt_update_slot_addr(&ctxt->rx.queue[index]);
-    HAL_TRACE_DEBUG("pc_index addr: {:#x}", ctxt->rx.queue[index].pc_index_addr);
-    ctxt->rx.num_queues = index + 1;
+    cpupkt_register_qinst(&(ctxt->rx.queue[index]), type, queue_id);
+    ctxt->rx.num_queues++;
     return HAL_RET_OK;
 }
 
 hal_ret_t 
+cpupkt_unregister_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id)
+{
+    if(!ctxt) {
+        HAL_TRACE_ERR("Ctxt is null");
+        return HAL_RET_INVALID_ARG;
+    }
+
+    HAL_TRACE_DEBUG("cpupkt: Unregister TX queue type: {} inst: {}", type, queue_id);
+    // in Tx case, queue info is indexed based on type for faster lookup.
+    int index = type;
+    ctxt->tx.queue[index].type = types::WRING_TYPE_NONE;
+    ctxt->tx.queue[index].wring_meta = NULL;
+    if(ctxt->tx.queue[index].qinst_info[queue_id]) {
+        cpupkt_ctxt_qinst_info_free(ctxt->tx.queue[index].qinst_info[queue_id]);
+        ctxt->tx.queue[index].qinst_info[queue_id] = NULL;
+    }
+    return HAL_RET_OK;
+}
+
+
+hal_ret_t
 cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
                     p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
                     uint8_t** data, 
@@ -222,12 +280,14 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
     }
     HAL_TRACE_DEBUG("Starting packet poll for queue: {}", ctxt->rx.num_queues);
     uint64_t value, descr_addr;
+    cpupkt_qinst_info_t* qinst_info = NULL;
     while(true) {
         usleep(1000000/3);
         for(uint32_t i=0; i< ctxt->rx.num_queues; i++) {
             value = 0;
+            qinst_info = ctxt->rx.queue[i].qinst_info[0];
             //HAL_TRACE_DEBUG("cpupkt rx: checking queue at address: {:#x}", ctxt->rx.queue[i].pc_index_addr);
-            if(!p4plus_hbm_read(ctxt->rx.queue[i].pc_index_addr,
+            if(!p4plus_hbm_read(qinst_info->pc_index_addr,
                                 (uint8_t *)&value, 
                                 sizeof(uint64_t))) {
                 HAL_TRACE_ERR("Failed to read the data from the hw");
@@ -238,13 +298,13 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
                 if(value > 0) {
                     // With DEBUG DOL, P4+ writes the queue without setting VALID BIT.
                     // Increase CI to keep it in sync with hw
-                    cpupkt_inc_queue_index(ctxt->rx.queue[i]);
+                    cpupkt_inc_queue_index(*qinst_info);
                 }
                 continue;
             }
 
-            HAL_TRACE_DEBUG("Received valid data: queue: {}, pc_index: {}, addr: {:#x}, value: {:#x}, descr_addr: {:#x}",
-                                ctxt->rx.queue[i].type, ctxt->rx.queue[i].pc_index, ctxt->rx.queue[i].pc_index_addr, value, descr_addr);
+            HAL_TRACE_DEBUG("cpupkt: Received valid data: queue: {}, pc_index: {}, addr: {:#x}, value: {:#x}, descr_addr: {:#x}",
+                             ctxt->rx.queue[i].type, qinst_info->pc_index, qinst_info->pc_index_addr, value, descr_addr);
             // get the descriptor
             pd_descr_aol_t  descr = {0};
             if(!p4plus_hbm_read(descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
@@ -252,12 +312,12 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
                 return HAL_RET_HW_FAIL;
             }
             
-            ret = cpupkt_descr_to_skbuff(descr, flow_miss_hdr, data, data_len);
+            ret = cpupkt_descr_to_headers(descr, flow_miss_hdr, data, data_len);
             if(ret != HAL_RET_OK) 
             {
                 HAL_TRACE_ERR("Failed to create skbuff");
             }
-            cpupkt_free_and_inc_queue_index(ctxt->rx.queue[i]);
+            cpupkt_free_and_inc_queue_index(*qinst_info);
             return ret;
         }
     }
@@ -356,15 +416,19 @@ cleanup:
 }
 
 hal_ret_t
-cpupkt_program_send_queue(cpupkt_ctxt_t* ctxt, cpupkt_hw_id_t descr_addr) 
+cpupkt_program_send_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t queue_id, cpupkt_hw_id_t descr_addr)
 {
     if(!ctxt) {
         return HAL_RET_INVALID_ARG;    
     }
-    
+    cpupkt_qinst_info_t* qinst_info = ctxt->tx.queue[type].qinst_info[queue_id];
+    if(!qinst_info) {
+        HAL_TRACE_ERR("cpupkt: qinst is not registered");
+        return HAL_RET_QUEUE_NOT_FOUND;
+    }
     HAL_TRACE_DEBUG("Programming send queue: addr: {:#x} value: {:#x}",
-                            ctxt->tx.queue.pc_index_addr, descr_addr);
-    if(!p4plus_hbm_write(ctxt->tx.queue.pc_index_addr, (uint8_t*) &descr_addr, sizeof(cpupkt_hw_id_t))) {
+                        qinst_info->pc_index_addr, descr_addr);
+    if(!p4plus_hbm_write(qinst_info->pc_index_addr, (uint8_t*) &descr_addr, sizeof(cpupkt_hw_id_t))) {
         HAL_TRACE_ERR("Failed to program send queue");
         return HAL_RET_HW_FAIL;
     }
@@ -399,14 +463,13 @@ cpupkt_program_send_ring_doorbell(cpupkt_ctxt_t* ctxt,
     HAL_TRACE_DEBUG("Ringing Doorbell with addr: {:#x} data: {:#x}",
                     addr, data);
     step_doorbell(addr, data);
-    ctxt->tx.queue.pc_index++;
-    cpupkt_update_slot_addr(&ctxt->tx.queue);
-    HAL_TRACE_DEBUG("Ring doorbell done. Set pc_index: {}", ctxt->tx.queue.pc_index);
     return HAL_RET_OK;
 }
 
 hal_ret_t
 cpupkt_send(cpupkt_ctxt_t* ctxt,
+            types::WRingType type,
+            uint32_t queue_id,
             cpu_to_p4plus_header_t* cpu_header,
             p4plus_to_p4_header_t* p4_header,
             uint8_t* data, 
@@ -484,7 +547,7 @@ cpupkt_send(cpupkt_ctxt_t* ctxt,
     }
     
     // Program Queue
-    ret = cpupkt_program_send_queue(ctxt, descr_addr); 
+    ret = cpupkt_program_send_queue(ctxt, type, queue_id, descr_addr);
     if(ret != HAL_RET_OK) {
         goto cleanup;    
     }
@@ -494,7 +557,7 @@ cpupkt_send(cpupkt_ctxt_t* ctxt,
     if(ret != HAL_RET_OK) {
         goto cleanup;    
     }
-    
+    cpupkt_inc_queue_index(*(ctxt->tx.queue[type].qinst_info[queue_id]));
     return HAL_RET_OK;
 cleanup:
     // FIXME

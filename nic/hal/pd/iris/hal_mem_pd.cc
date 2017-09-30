@@ -293,6 +293,11 @@ hal_state_pd::init(void)
                                  sizeof(hal::pd::cpupkt_ctxt_t), MAX_CPU_PKT_QUEUES,
                                  true, true, true, true);
     HAL_ASSERT_RETURN((cpupkt_slab_ != NULL), false);
+    cpupkt_qinst_info_slab_ = slab::factory("CPUPKT QINFO PD", HAL_SLAB_CPUPKT_QINST_INFO_PD,
+                                            sizeof(hal::pd::cpupkt_queue_info_t), MAX_CPU_PKT_QUEUE_INST_INFO,
+                                            true, true, true, true);
+    HAL_ASSERT_RETURN((cpupkt_qinst_info_slab_ != NULL), false);
+
     cpupkt_descr_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_CPU_PKT_DESCR_ENTRIES);
     HAL_ASSERT_RETURN((cpupkt_descr_hwid_idxr_ != NULL), false);
     cpupkt_page_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_CPU_PKT_PAGE_ENTRIES);
@@ -392,6 +397,7 @@ hal_state_pd::hal_state_pd()
     cpucb_hwid_ht_ = NULL;
 
     cpupkt_slab_ = NULL;
+    cpupkt_qinst_info_slab_ = NULL;
     cpupkt_descr_hwid_idxr_ = NULL;
     cpupkt_page_hwid_idxr_ = NULL;
 }
@@ -469,6 +475,7 @@ hal_state_pd::~hal_state_pd()
     rw_tbl_idxr_ ? delete rw_tbl_idxr_ : HAL_NOP;
     
     cpupkt_slab_ ? delete cpupkt_slab_ : HAL_NOP;
+    cpupkt_qinst_info_slab_ ? delete cpupkt_qinst_info_slab_ : HAL_NOP;
     cpupkt_descr_hwid_idxr_ ? delete  cpupkt_descr_hwid_idxr_ : HAL_NOP;
     cpupkt_page_hwid_idxr_ ? delete  cpupkt_page_hwid_idxr_ : HAL_NOP;
 
@@ -586,6 +593,7 @@ hal_state_pd::get_slab(hal_slab_t slab_id)
     GET_SLAB(rw_entry_slab_);
     GET_SLAB(cpucb_slab_);
     GET_SLAB(cpupkt_slab_);
+    GET_SLAB(cpupkt_qinst_info_slab_);
 
     return NULL;
 }
@@ -1160,6 +1168,9 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state_pd->cpupkt_slab()->free_(elem);
         break;
 
+    case HAL_SLAB_CPUPKT_QINST_INFO_PD:
+        g_hal_state_pd->cpupkt_qinst_info_slab()->free_(elem);
+        break;
     default:
         HAL_TRACE_ERR("Unknown slab id {}", slab_id);
         HAL_ASSERT(FALSE);
