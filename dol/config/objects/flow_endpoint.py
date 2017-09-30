@@ -28,6 +28,7 @@ class FlowEndpointObject(base.ConfigObjectBase):
         self.icmp_type  = None
         self.icmp_code  = None
         self.icmp_id    = None
+        self.esp_spi    = None
         self.l4lb_service = l4lbsvc
         self.l4lb_backend = None
         if srcobj:
@@ -50,6 +51,7 @@ class FlowEndpointObject(base.ConfigObjectBase):
         self.icmp_type  = src.icmp_type
         self.icmp_code  = src.icmp_code
         self.icmp_id    = src.icmp_id
+        self.esp_spi    = src.esp_spi
         self.l4lb_service = src.l4lb_service
         self.l4lb_backend = src.l4lb_backend
         return
@@ -70,6 +72,10 @@ class FlowEndpointObject(base.ConfigObjectBase):
         self.icmp_id = entry.id.get()
         return
 
+    def __set_esp_info(self, entry):
+        self.esp_spi = entry.spi.get()
+        return
+
     def __set_mac_info(self, entry):
         self.ethertype = entry.ethertype
         return
@@ -80,6 +86,8 @@ class FlowEndpointObject(base.ConfigObjectBase):
                 self.__set_tcpudp_info(entry)
             elif self.IsICMP() or self.IsICMPV6():
                 self.__set_icmp_info(entry)
+            elif self.IsESP():
+                self.__set_esp_info(entry)
         elif self.IsMAC():
             self.__set_mac_info(entry)
         else:
@@ -117,6 +125,8 @@ class FlowEndpointObject(base.ConfigObjectBase):
         return self.type == 'MAC'
     def IsL4LbServiceFlowEp(self):
         return self.l4lb_service != None
+    def IsESP(self):
+        return self.proto == 'ESP'
 
     def GetFlowSip(self):
         if self.IsL4LbServiceFlowEp():
@@ -194,6 +204,9 @@ class FlowEndpointObject(base.ConfigObjectBase):
             elif self.IsICMP() or self.IsICMPV6():
                 string += "%s/" % self.proto
                 string += "%d/%d/%d" % (self.icmp_type, self.icmp_code, self.icmp_id)
+            elif self.IsESP():
+                string += "%s/" % self.proto
+                string += "%s" % self.esp_spi
         elif self.IsMAC():
             string += "%04x" % self.ethertype
         cfglogger.info("- %s: %s" % (prefix, string))

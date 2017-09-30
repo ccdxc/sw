@@ -36,8 +36,8 @@ def TestCaseSetup(tc):
     key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
     ipseccb.crypto_key.Update(key_type, key_size, key)
 
-    ipseccb.tunnel_sip4               = 0x40000004
-    ipseccb.tunnel_dip4               = 0x40000005
+    ipseccb.tunnel_sip4               = 0x0A010003
+    ipseccb.tunnel_dip4               = 0x0A010002
     ipseccb.iv_size                   = 8
     ipseccb.icv_size                  = 16
     ipseccb.block_size                = 16

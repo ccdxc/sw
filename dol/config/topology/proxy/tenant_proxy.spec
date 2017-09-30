@@ -24,6 +24,7 @@ sessions:
             - ref://store/specs/id=SESSION_TCP_PROXY
         ipv4:
             - ref://store/specs/id=SESSION_TCP_PROXY
+            - ref://store/specs/id=SESSION_ESP
         mac: None
 
 lif: ref://store/specs/id=LIF_ETH

@@ -42,3 +42,4 @@ dport   : None # (ATTR) L4 Port
 icmpid  : None
 icmpcode: None
 icmptype: None
+espspi  : None

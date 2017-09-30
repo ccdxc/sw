@@ -1,0 +1,14 @@
+meta:
+    id      : ESP
+    scapy   : ESP
+    size    : 0
+
+fields:
+    spi     : 0
+    seq     : 0
+    iv      : 0
+    data    : None
+    padding : None
+    padlen  : 0
+    nh      : 0.0.0.0
+    icv     : 0

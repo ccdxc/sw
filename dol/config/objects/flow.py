@@ -62,6 +62,7 @@ class FlowObject(base.ConfigObjectBase):
         self.icmpcode   = None
         self.smac       = None
         self.dmac       = None
+        self.espspi     = None
         self.state      = self.__sfep.flow_info.state.upper()
         self.action     = self.__sfep.flow_info.action.upper()
         self.in_qos     = self.__sfep.flow_info.in_qos
@@ -99,6 +100,8 @@ class FlowObject(base.ConfigObjectBase):
             self.icmpid     = self.__sfep.icmp_id
             self.icmptype   = self.__sfep.icmp_type
             self.icmpcode   = self.__sfep.icmp_code
+        elif self.IsESP():
+            self.espspi     = self.__sfep.esp_spi
         return
 
     def __init_mac_flow_key(self):
@@ -151,6 +154,9 @@ class FlowObject(base.ConfigObjectBase):
     def IsDrop(self):
         return self.action == 'DROP'
 
+    def IsESP(self):
+        return self.proto == 'ESP'
+
     def HasL4Ports(self):
         return self.IsTCP() or self.IsUDP()
 
@@ -191,6 +197,8 @@ class FlowObject(base.ConfigObjectBase):
             l4_info.icmp.type = self.icmptype
             l4_info.icmp.code = self.icmpcode
             l4_info.icmp.id = self.icmpid
+        elif self.IsESP():
+            l4_info.esp.spi = self.espspi
         else:
             assert(0)
         return
@@ -278,6 +286,8 @@ class FlowObject(base.ConfigObjectBase):
                 string += "%d/%d" % (self.sport, self.dport)
             elif self.IsICMP():
                 string += "%d/%d/%d" % (self.icmptype, self.icmpcode, self.icmpid)
+            elif self.IsESP():
+                string += "%d" % self.espspi
         elif self.IsMAC():
             string += "%04x" % (self.ethertype)
         else:

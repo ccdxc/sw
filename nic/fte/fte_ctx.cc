@@ -223,8 +223,10 @@ ctx_t::lookup_flow_objs()
         // TODO(goli) handle VIP
     }
 
-    key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL)? FLOW_DIR_FROM_DMA :
-        FLOW_DIR_FROM_UPLINK;
+    if (protobuf_request()) {
+        key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL)? FLOW_DIR_FROM_DMA :
+           FLOW_DIR_FROM_UPLINK;
+    }
 
     sl2seg_ = hal::find_l2seg_by_handle(sep_->l2seg_handle);
     HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);

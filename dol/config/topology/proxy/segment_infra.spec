@@ -5,7 +5,7 @@ meta:
 type        : infra
 native      : False
 fabencap    : vlan
-broadcast   : drop
+broadcast   : flood 
 multicast   : drop
 l4lb        : False
 endpoints   :
