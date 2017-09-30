@@ -2,6 +2,7 @@
 #define __CAPRI_MACROS_H__
 
 #include <capri_common.h>
+#include <capri_barco.h>
 
 #define CAPRI_READ_IDX(_idx, _table_type, _stage_entry) \
         addi        r1, r0, _idx                                    ;\
@@ -342,9 +343,6 @@
 
 #define ARQRX_BASE                     hbm_arqrx_base
 #define ARQRX_QIDXR_BASE               hbm_arqrx_qidxr_base 
-
-#define CAPRI_BARCO_MD_HENS_REG_BASE                (0x1C20000)
-#define CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX        (CAPRI_BARCO_MD_HENS_REG_BASE + 0x20c)
 
 #define TABLE_TYPE_RAW                 0
 #define TABLE_LOCK_DIS                 0

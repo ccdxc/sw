@@ -377,8 +377,8 @@
 #define TLS_DDOL_BYPASS_PROXY           4    /* Don't queue to other flow , keep in same flow */
 #define TLS_DDOL_LEAVE_IN_ARQ           8    /* Don't queue to ARQ (arm) */
 
-#define CAPRI_BARCO_MD_HENS_REG_BASE                (0x1C20000)
-#define CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX        (CAPRI_BARCO_MD_HENS_REG_BASE + 0x20c)
+/* HACK used until the issue with payload generation is fixed in DoL framework */
+#define TLS_DDOL_FAKE_HANDSHAKE_MSG     0x80
 
 /*
 

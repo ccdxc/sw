@@ -28,11 +28,12 @@ tls_dec_read_header_process:
 	phvwr		p.tls_global_phv_tls_hdr_version_minor, d.u.tls_read_tls_header_d.tls_hdr_version_minor
 	phvwr		p.tls_global_phv_tls_hdr_len, d.u.tls_read_tls_header_d.tls_hdr_len
 	/* Check if this is a TLS handshake packet */
-#if 0
+
     addi        r1, r0, NTLS_RECORD_HANDSHAKE
-#else
-    addi        r1, r0, 0x01
-#endif
+    /* FIXME: To be removed once the payload is generated right at DoL */
+    smeqb       c1, k.to_s4_debug_dol, TLS_DDOL_FAKE_HANDSHAKE_MSG, TLS_DDOL_FAKE_HANDSHAKE_MSG
+    addi.c1     r1, r0, 0x01
+
     seq         c1, D.tls_hdr_type, r1
     phvwri.c1   p.tls_global_phv_write_arq, 1
 

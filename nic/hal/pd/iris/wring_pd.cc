@@ -6,6 +6,7 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/include/capri_common.h"
+#include "nic/include/capri_barco.h"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
 
 namespace hal {
@@ -15,6 +16,7 @@ static pd_wring_meta_t g_meta[types::WRingType_MAX];
 
 hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
 hal_ret_t arqrx_get_hw_meta(pd_wring_t* wring_pd);
+hal_ret_t barco_gcm0_get_hw_meta(pd_wring_t* wring_pd);
 
 hal_ret_t  
 wring_pd_meta_init() {
@@ -61,7 +63,7 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_BSQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};
 
     g_meta[types::WRING_TYPE_BRQ] =
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_BRQ, 1024, 128, "", 0, 0, 0, brq_gcm_slot_parser, NULL};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_BRQ, 1024, 128, "", 0, 0, 0, brq_gcm_slot_parser, barco_gcm0_get_hw_meta};
 
     g_meta[types::WRING_TYPE_SESQ] = 
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_SESQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};
@@ -250,6 +252,13 @@ typedef struct barco_desc_s {
     uint32_t            header_size;
     uint64_t            status_address;
     uint32_t            opaque_tag_value;
+    uint32_t            opaque_tag_write_en:1;
+    uint32_t            rsvd1:31;
+    uint16_t            sector_size;
+    uint16_t            application_tag;
+    uint32_t            sector_num;
+    uint64_t            doorbell_addr;
+    uint64_t            doorbell_data;
 } __PACK__ barco_desc_t;
 
 hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot)
@@ -265,9 +274,27 @@ hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *sl
     wring->slot_info.gcm_desc.key_desc_index = gcm_desc->key_desc_index;
     wring->slot_info.gcm_desc.iv_addr = gcm_desc->iv_address;
     wring->slot_info.gcm_desc.status_addr = gcm_desc->status_address;
-    // FIXME: Enable the following once we have the descriptor fixed
-    wring->slot_info.gcm_desc.doorbell_addr = 0;
-    wring->slot_info.gcm_desc.doorbell_data = 0;
+    wring->slot_info.gcm_desc.doorbell_addr = gcm_desc->doorbell_addr;
+    wring->slot_info.gcm_desc.doorbell_data = gcm_desc->doorbell_data;
+    wring->slot_info.gcm_desc.header_size = gcm_desc->header_size;
+
+    /* IV is not directly located in the ring, hence dereference it */
+    
+    if(!p4plus_hbm_read(gcm_desc->iv_address, 
+                        (uint8_t*)&wring->slot_info.gcm_desc.salt,
+                        sizeof(wring->slot_info.gcm_desc.salt))) {
+        HAL_TRACE_ERR("Failed to read the Salt information from HBM");    
+    }
+    if(!p4plus_hbm_read(gcm_desc->iv_address + 4, 
+                        (uint8_t*)&wring->slot_info.gcm_desc.explicit_iv, 
+                        sizeof(wring->slot_info.gcm_desc.explicit_iv))) {
+        HAL_TRACE_ERR("Failed to read the explicit IV information from HBM");    
+    }
+    if(!p4plus_hbm_read(gcm_desc->status_address, 
+                        (uint8_t*)&wring->slot_info.gcm_desc.barco_status, 
+                        sizeof(wring->slot_info.gcm_desc.barco_status))) {
+        HAL_TRACE_ERR("Failed to read the Barco Status information from HBM");    
+    }
 
     return HAL_RET_OK;
 }
@@ -309,6 +336,32 @@ p4pd_wring_get_entry(pd_wring_t* wring_pd)
             /* All non basic types need to be supported with a parser */
             assert(0);
         }
+    }
+    return ret;
+}
+
+hal_ret_t
+barco_gcm0_get_hw_meta(pd_wring_t* wring_pd)
+{
+    uint32_t            value;
+    hal_ret_t           ret = HAL_RET_OK;
+
+    if(!p4plus_reg_read(CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX,
+                        value)) {
+        HAL_TRACE_ERR("Failed to read the Barco PIDX value from hw)");
+    }
+    else {
+        HAL_TRACE_DEBUG("Barco GCM0 PIDX 0x{0:x}", value);
+        wring_pd->wring->pi = value;
+    }
+
+    if(!p4plus_reg_read(CAPRI_BARCO_MD_HENS_REG_GCM0_CONSUMER_IDX,
+                        value)) {
+        HAL_TRACE_ERR("Failed to read the Barco CIDX value from hw)");
+    }
+    else {
+        HAL_TRACE_DEBUG("Barco GCM0 CIDX 0x{0:x}", value);
+        wring_pd->wring->ci = value;
     }
     return ret;
 }

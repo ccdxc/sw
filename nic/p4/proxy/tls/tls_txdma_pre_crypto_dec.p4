@@ -141,6 +141,14 @@ header_type to_stage_3_phv_t {
     }
 }
 
+header_type to_stage_4_phv_t {
+    fields {
+        debug_dol                       : 8;
+    }
+}
+#define GENERATE_TO_S4_K                                                                \
+    modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
+
 header_type to_stage_5_phv_t {
     fields {
         idesc                           : HBM_ADDRESS_WIDTH;
@@ -238,10 +246,6 @@ header_type crypto_iv_t {
     }
 }
 
-#define GENERATE_TO_S4_T0                                                               \
-    modify_field(to_s4_scratch.explicit_iv, crypto_iv.explicit_iv);                     \
-    modify_field(to_s4_scratch.salt, crypto_iv.salt);
-
 header_type odesc_dma_src_t {
     fields {
         odesc                               : 64;
@@ -325,9 +329,10 @@ metadata to_stage_3_phv_t to_s3;
 metadata odesc_dma_src_t odesc_dma_src;
 
 
-@pragma pa_header_union ingress to_stage_4 crypto_iv
+@pragma pa_header_union ingress to_stage_4 crypto_iv to_s4
 @pragma dont_trim
 metadata crypto_iv_t crypto_iv;
+metadata to_stage_4_phv_t to_s4;
 
 
 @pragma pa_header_union ingress to_stage_5
@@ -397,7 +402,7 @@ metadata to_stage_3_phv_t to_s3_scratch;
 @pragma scratch_metadata
 metadata barco_dbell_t barco_db_scratch;
 @pragma scratch_metadata
-metadata crypto_iv_t to_s4_scratch;
+metadata to_stage_4_phv_t to_s4_scratch;
 @pragma scratch_metadata
 metadata to_stage_5_phv_t to_s5_scratch;
 @pragma scratch_metadata
@@ -548,7 +553,7 @@ action tls_read_tls_header(TLS_HDR_ACTION_PARAMS) {
 
     GENERATE_S3_S4_T0
 
-    GENERATE_TO_S4_T0
+    GENERATE_TO_S4_K
 
     GENERATE_TLS_HDR_D
 }

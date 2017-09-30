@@ -9,3 +9,7 @@ iv_addr         : 0
 status_addr     : 0
 doorbell_addr   : 0
 doorbell_data   : 0
+salt            : 0
+explicit_iv     : 0
+barco_status    : 0
+header_size     : 0

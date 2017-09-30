@@ -20,6 +20,7 @@ struct tx_table_s0_t0_d d;
 	
 tls_dec_pre_crypto_process:
     phvwr       p.to_s5_debug_dol, d.u.read_tls_stg0_d.debug_dol
+    phvwr       p.to_s4_debug_dol, d.u.read_tls_stg0_d.debug_dol
     CAPRI_OPERAND_DEBUG(d.u.read_tls_stg0_d.debug_dol)
 
 	phvwr		p.tls_global_phv_fid, k.p4_txdma_intr_qid

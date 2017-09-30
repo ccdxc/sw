@@ -68,7 +68,7 @@ table_read_QUEUE_BRQ:
     phvwr       p.barco_desc_doorbell_data, r3.dx
     CAPRI_OPERAND_DEBUG(r3.dx)
         
-    addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX
+    addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX
 
 tls_dec_bld_barco_req_process_done:
     /* FIXME: The Capri model currently does not support a read of 8 bytes from register space

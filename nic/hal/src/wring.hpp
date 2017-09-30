@@ -40,6 +40,10 @@ typedef struct barco_gcm_desc_s {
     uint64_t                status_addr;
     uint64_t                doorbell_addr;
     uint64_t                doorbell_data;
+    uint32_t                salt;
+    uint64_t                explicit_iv;
+    uint32_t                barco_status;
+    uint32_t                header_size;
 } barco_gcm_desc_t;
 
 typedef union wring_slot_info_u {

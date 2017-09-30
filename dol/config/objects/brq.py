@@ -56,6 +56,10 @@ class BRQEntryObject(base.ConfigObjectBase):
             self.status_addr = resp_spec.barco_gcm_desc.status_addr
             self.doorbell_addr = resp_spec.barco_gcm_desc.doorbell_addr
             self.doorbell_data = resp_spec.barco_gcm_desc.doorbell_data
+            self.salt = resp_spec.barco_gcm_desc.salt
+            self.explicit_iv = resp_spec.barco_gcm_desc.explicit_iv
+            self.barco_status = resp_spec.barco_gcm_desc.barco_status
+            self.header_size = resp_spec.barco_gcm_desc.header_size
             #cfglogger.info("Entry(%s): ila: %x. ola: %x, cmd: %x, kdi: %x, ia: %x, sa: %x, da: %x, dd: %x" %
             #                (self.ID(), self.ilist_addr, self.olist_addr, self.command, self.key_desc_index,
             #                self.iv_addr, self.status_addr, self.doorbell_addr, self.doorbell_data))
@@ -102,7 +106,7 @@ class BRQObject(base.ConfigObjectBase):
         #cfglogger.info("Entry : %s : RI: %d T: %d I:%d" % (self.ID(), resp_spec.spec.key_or_handle.wring_id, resp_spec.spec.type, resp_spec.index))
         self.pi = resp_spec.pi
         self.ci = resp_spec.ci
-        #cfglogger.info("Entry : %s : pi %s ci %s" % (self.ID(), self.pi, self.ci))
+        cfglogger.info("Entry : %s : pi %s ci %s" % (self.ID(), self.pi, self.ci))
         return
 
 

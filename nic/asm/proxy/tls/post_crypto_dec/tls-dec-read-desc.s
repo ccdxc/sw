@@ -30,11 +30,9 @@ tls_dec_read_desc_process:
     phvwr       p.to_s5_odesc, d.{output_list_address}.dx
     CAPRI_OPERAND_DEBUG(d.output_list_address)
 
-    seq         c1, r0, d.{status}.wx
-    bcf         [c1], table_read_bsq_consume
-    nop
+    sne         c1, r0, d.{status}.wx
     /* Barco Error */
-    phvwri      p.tls_global_phv_barco_op_failed, 1
+    phvwri.c1    p.tls_global_phv_barco_op_failed, 1
 
 table_read_bsq_consume:
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_dec_bsq_consume_process,

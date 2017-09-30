@@ -92,7 +92,7 @@ dma_cmd_iv:
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd3_dma_cmd, r5, crypto_iv_explicit_iv, crypto_iv_salt)    
 
 dma_cmd_enc_brq_slot1:
-    add         r7, r0, d.u.tls_queue_brq5_d.pi
+    add         r7, r0, d.{u.tls_queue_brq5_d.pi}.wx
 
     sll		    r5, r7, NIC_BRQ_ENTRY_SIZE_SHIFT
 	/* Set the DMA_WRITE CMD for BRQ slot */
@@ -144,7 +144,7 @@ dma_cmd_brq_doorbell:
     phvwr       p.barco_dbell_pi, r7.wx
 
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd7_dma_cmd, CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd7_dma_cmd, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX,
                                   barco_dbell_pi, barco_dbell_pi)
 
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd7_dma_cmd)

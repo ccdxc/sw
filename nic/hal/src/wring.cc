@@ -7,6 +7,7 @@
 #include "nic/hal/src/tenant.hpp"
 #include "nic/include/pd_api.hpp"
 
+using std::string;
 namespace hal {
 
 void *
@@ -200,6 +201,10 @@ wring_get_entries (WRingGetEntriesRequest& req, WRingGetEntriesResponse *rsp)
             rsp->mutable_barco_gcm_desc()->set_status_addr(wring.slot_info.gcm_desc.status_addr);
             rsp->mutable_barco_gcm_desc()->set_doorbell_addr(wring.slot_info.gcm_desc.doorbell_addr);
             rsp->mutable_barco_gcm_desc()->set_doorbell_data(wring.slot_info.gcm_desc.doorbell_data);
+            rsp->mutable_barco_gcm_desc()->set_salt(wring.slot_info.gcm_desc.salt);
+            rsp->mutable_barco_gcm_desc()->set_explicit_iv(wring.slot_info.gcm_desc.explicit_iv);
+            rsp->mutable_barco_gcm_desc()->set_header_size(wring.slot_info.gcm_desc.header_size);
+            rsp->mutable_barco_gcm_desc()->set_barco_status(wring.slot_info.gcm_desc.barco_status);
             break;
         default:
             rsp->set_value(wring.slot_value);
