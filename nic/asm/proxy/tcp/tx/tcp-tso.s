@@ -92,9 +92,7 @@ dma_cmd_intrinsic:
     phvwr           p.p4_intr_global_lif, d.source_lif
     phvwri          p.p4_txdma_intr_dma_cmd_ptr, TCP_PHV_TXDMA_COMMANDS_START
 
-    phvwri          p.intrinsic_dma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    phvwr           p.intrinsic_dma_dma_cmd_phv_start_addr, TCP_PHV_INTRINSIC_START
-    phvwr           p.intrinsic_dma_dma_cmd_phv_end_addr, TCP_PHV_INTRINSIC_END
+    CAPRI_DMA_CMD_PHV2PKT_SETUP(intrinsic_dma_dma_cmd, p4_intr_global_tm_iport, p4_intr_global_glb_rsv)
 dma_cmd_p4plus_to_p4_app_header:
     phvwr           p.tcp_app_header_p4plus_app_id, 1 // TODO: P4PLUS_APP_P4PLUS_APP_TCP_PROXY_ID
     phvwrmi         p.tcp_app_header_flags, P4PLUS_TO_P4_FLAGS_LKP_INST, P4PLUS_TO_P4_FLAGS_LKP_INST
@@ -102,12 +100,11 @@ dma_cmd_p4plus_to_p4_app_header:
     phvwri          p.app_header_dma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwr           p.app_header_dma_dma_cmd_phv_start_addr, TCP_PHV_TX_APP_HDR_START
     phvwr           p.app_header_dma_dma_cmd_phv_end_addr, TCP_PHV_TX_APP_HDR_END
+
 dma_cmd_hdr:
     add             r5, k.common_phv_qstate_addr, TCP_TCB_HEADER_TEMPLATE_OFFSET
 
-    phvwri          p.l2l3_header_dma_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    phvwr           p.l2l3_header_dma_dma_cmd_addr, r5
-    phvwri          p.l2l3_header_dma_dma_cmd_size, ETH_IP_VLAN_HDR_SIZE
+    CAPRI_DMA_CMD_MEM2PKT_SETUP(l2l3_header_dma_dma_cmd, r5, ETH_IP_VLAN_HDR_SIZE)
 dma_cmd_tcp_header:
     phvwr           p.tcp_header_source_port, d.source_port
     phvwr           p.tcp_header_dest_port, d.dest_port
@@ -120,9 +117,7 @@ dma_cmd_tcp_header:
     //phvwr           p.tcp_header_flags, TCPHDR_ACK
     phvwr           p.tcp_header_window, k.t0_s2s_snd_wnd
 
-    phvwri          p.tcp_header_dma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    phvwr           p.tcp_header_dma_dma_cmd_phv_start_addr, TCP_PHV_TX_TCP_HDR_START
-    phvwr           p.tcp_header_dma_dma_cmd_phv_end_addr, TCP_PHV_TX_TCP_HDR_END
+    CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_header_urg)
 
 dma_cmd_data:
     seq             c2, k.to_s4_xmit_cursor_addr, r0
@@ -146,10 +141,9 @@ dma_cmd_data:
     add.c1          r6, k.to_s4_rcv_mss, r0
     add.!c1         r6, k.to_s4_xmit_cursor_len, r0
 
-    phvwri          p.data_dma_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    phvwr           p.data_dma_dma_cmd_addr, r2
-    phvwr           p.data_dma_dma_cmd_size, r6
-    phvwri          p.data_dma_dma_pkt_eop, 1
+    CAPRI_DMA_CMD_MEM2PKT_SETUP(data_dma_dma_cmd, r2, r6)
+    CAPRI_DMA_CMD_PKT_STOP(data_dma_dma)
+        
 bytes_sent_stats_update_start:
     addi            r6, r0, ETH_IP_TCP_HDR_SIZE
     CAPRI_STATS_INC(bytes_sent, 16, r6, d.bytes_sent)
@@ -188,12 +182,11 @@ dma_cmd_write_tx2rx_shared:
     /* Set the DMA_WRITE CMD for copying tx2rx shared data from phv to mem */
     add             r5, k.common_phv_qstate_addr, TCP_TCB_TX2RX_SHARED_WRITE_OFFSET
 
-    phvwri          p.tx2rx_dma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri          p.tx2rx_dma_dma_cmd_eop, 1
-    phvwr           p.tx2rx_dma_dma_cmd_addr, r5
-    phvwri          p.tx2rx_dma_dma_cmd_phv_start_addr, TCP_PHV_TX2RX_SHARED_START
-    phvwri          p.tx2rx_dma_dma_cmd_phv_end_addr, TCP_PHV_TX2RX_SHARED_END
 
+
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(tx2rx_dma_dma_cmd, r5, tx2rx_prr_out, tx2rx_pad2_tx2rx)
+    CAPRI_DMA_CMD_STOP(tx2rx_dma_dma_cmd)
+     
     bcf             [c1], update_xmit_cursor
     nop
 move_xmit_cursor:

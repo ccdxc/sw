@@ -54,18 +54,14 @@ dma_cmd_cpu_hdr:
         
     add         r4, k.to_s6_opage, k.to_s6_next_tls_hdr_offset
     subi        r3, r4, NIC_CPU_HDR_SIZE_BYTES
-    phvwr       p.dma_cmd0_dma_cmd_addr, r3
 
-    phvwri      p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(cpu_hdr1_src_lif)
-    phvwri      p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(cpu_hdr2_tcp_window)
-
-    phvwri      p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr2_tcp_window)
 
 dma_cmd_descr:    
     /* Set the DMA_WRITE CMD for descr */
     add         r5, k.to_s6_idesc, r0
     addi        r1, r5, PKT_DESC_AOL_OFFSET
-    phvwr       p.dma_cmd1_dma_cmd_addr, r1
+
 
     phvwr       p.idesc_A0, k.{to_s6_opage}.dx
     add         r4, k.to_s6_next_tls_hdr_offset, r0
@@ -80,10 +76,7 @@ dma_cmd_descr:
     phvwri      p.idesc_O2, 0
     phvwri      p.idesc_L2, 0
 
-    phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(idesc_A0)
-    phvwri      p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_START_OFFSET(idesc_next_pkt)
-
-    phvwri      p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r1, idesc_A0, idesc_next_pkt)    
 
 dma_cmd_arq_slot:
     CPU_ARQ_PIDX_READ_INC(r6, 0, struct tx_table_s6_t1_tls_write_arq_d, pi_0)

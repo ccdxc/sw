@@ -48,10 +48,7 @@ dma_cmd_sesq_slot:
     CAPRI_OPERAND_DEBUG(k.to_s5_odesc)
     CAPRI_OPERAND_DEBUG(k.to_s5_other_fid)
 
-    phvwri		p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(ring_entry_descr_addr)
-	phvwri		p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(ring_entry_descr_addr)
-	phvwri		p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri      p.dma_cmd0_dma_cmd_eop, 0
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r1, ring_entry_descr_addr,ring_entry_descr_addr)
 
     smeqb       c1, k.to_s5_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
     bcf         [c1], tls_sesq_produce_skip
@@ -59,23 +56,14 @@ dma_cmd_sesq_slot:
 
 tls_sesq_produce:
 
-	/* address will be in r4 */
-	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TCP)
     smeqb       c1, k.to_s5_debug_dol, TLS_DDOL_BYPASS_PROXY, TLS_DDOL_BYPASS_PROXY
     add.c1      r7, k.tls_global_phv_fid, r0
     add.!c1     r7, k.to_s5_other_fid, r0
-	/* data will be in r3 */
-	CAPRI_RING_DOORBELL_DATA(0, r7, TCP_SCHED_RING_SESQ, d.u.tls_queue_sesq_d.sw_sesq_pi)
 
-	phvwr		p.dma_cmd1_dma_cmd_addr, r4
-	phvwr		p.db_data_data, r3.dx
-
-	phvwri		p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(db_data_data)
-	phvwri		p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(db_data_data)
-	phvwri		p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-
-    phvwri      p.dma_cmd1_dma_cmd_eop, 1
-    phvwri      p.dma_cmd1_dma_cmd_wr_fence, 1
+    CAPRI_DMA_CMD_RING_DOORBELL(dma_cmd1_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
+                                d.u.tls_queue_sesq_d.sw_sesq_pi, db_data_data)
+                              
+    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd1_dma_cmd)
     b           tls_queue_sesq_process_done
     nop
 tls_sesq_produce_skip:

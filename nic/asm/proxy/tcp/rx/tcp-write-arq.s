@@ -31,11 +31,8 @@ dma_cmd_data:
     /* Set the DMA_WRITE CMD for data */
     add         r1, r0, k.to_s6_page
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
-    phvwr       p.dma_cmd0_dma_cmd_addr, r3
-    phvwr       p.dma_cmd0_dma_cmd_size, k.to_s6_payload_len
-    
-    phvwri      p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
-    phvwri      p.dma_cmd0_dma_cmd_eop, 0
+
+    CAPRI_DMA_CMD_PKT2MEM_SETUP(dma_cmd0_dma_cmd, r3, k.to_s6_payload_len)
 
 dma_cmd_cpu_hdr:
     phvwri      p.cpu_hdr1_src_lif,0
@@ -60,19 +57,14 @@ dma_cmd_cpu_hdr:
     phvwri      p.cpu_hdr2_payload_offset, 0
         
     subi        r3, r3, NIC_CPU_HDR_SIZE_BYTES
-    phvwr       p.dma_cmd1_dma_cmd_addr, r3
 
-        
-    phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(cpu_hdr1_src_lif)
-    phvwri      p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(cpu_hdr2_tcp_window)
-
-    phvwri      p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr2_tcp_window)
 
 dma_cmd_descr:    
     /* Set the DMA_WRITE CMD for descr */
     add         r5, k.to_s6_descr, r0
     addi        r1, r5, PKT_DESC_AOL_OFFSET
-    phvwr       p.dma_cmd2_dma_cmd_addr, r1
+
 
     phvwr       p.aol_A0, k.{to_s6_page}.dx
 
@@ -82,10 +74,7 @@ dma_cmd_descr:
     add         r4, k.to_s6_payload_len, NIC_CPU_HDR_SIZE_BYTES
     phvwr       p.aol_L0, r4.wx
 
-    phvwri      p.dma_cmd2_dma_cmd_phv_start_addr, TCP_PHV_AOL_DESC_START
-    phvwri      p.dma_cmd2_dma_cmd_phv_end_addr, TCP_PHV_AOL_DESC_END
-
-    phvwri      p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r1, aol_A0, aol_next_pkt)    
     
 
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_LEAVE_IN_ARQ, TCP_DDOL_LEAVE_IN_ARQ

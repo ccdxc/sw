@@ -32,16 +32,12 @@ dma_cmd_enc_data_len:
 	/*   brq.odesc->data_len = tlsp->cur_tls_data_len; */
 	add		    r5, r0, k.to_s5_odesc
 	addi		r5, r5, NIC_DESC_DATA_LEN_OFFSET
-	phvwr		p.dma_cmd0_dma_cmd_addr, r5
+
 	/* Fill the data len */
 	add		    r1, k.to_s5_cur_tls_data_len, TLS_HDR_SIZE
 	phvwr		p.to_s5_cur_tls_data_len, k.to_s5_cur_tls_data_len
 
-    phvwri      p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(to_s5_cur_tls_data_len)
-	phvwri		p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(to_s5_cur_tls_data_len)
-
-	phvwri		p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri      p.dma_cmd0_dma_cmd_eop, 0
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r5, to_s5_cur_tls_data_len, to_s5_cur_tls_data_len)
 
 	/*
 	    SET_DESC_ENTRY(brq.odesc, 0, 
@@ -56,26 +52,22 @@ dma_cmd_enc_desc_entry0:
 
 	phvwr		p.aol_A0, k.{to_s5_opage}.dx
 
-	addi		r5, r0, NIC_PAGE_HEADROOM
-	addi		r5, r5, TLS_HDR_SIZE
-	phvwr		p.aol_O0, r5.wx
+	addi		r4, r0, NIC_PAGE_HEADROOM
+	addi		r4, r4, TLS_HDR_SIZE
+	phvwr		p.aol_O0, r4.wx
 
 	/* r1 = d.cur_tls_data_len + TLS_HDR_SIZE */
     addi        r1, r0, 512
 	phvwr		p.aol_L0, r1.wx
 
-    phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(aol_A0)
-    phvwri		p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(aol_next_pkt)
-        
-    phvwri		p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri      p.dma_cmd1_dma_cmd_eop, 0
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r5, aol_A0, aol_next_pkt)
 
 
 dma_cmd_enc_tls_hdr:
 	/* tlsh = (tls_hdr_t *)(u64)(md->opage + NIC_PAGE_HEADROOM); */
 	add		    r5, r0, k.to_s5_opage
 	addi		r5, r5, NIC_PAGE_HEADROOM
-	phvwr		p.dma_cmd2_dma_cmd_addr, r5
+
 
 	/*
 	  tlsh->type = NTLS_RECORD_DATA;
@@ -88,24 +80,16 @@ dma_cmd_enc_tls_hdr:
 
 	phvwr		p.tls_global_phv_tls_hdr_len, k.to_s5_cur_tls_data_len
 
-    phvwri      p.dma_cmd2_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(tls_global_phv_tls_hdr_type)
-	phvwri		p.dma_cmd2_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(tls_global_phv_tls_hdr_len)
-
-    phvwri		p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri      p.dma_cmd2_dma_cmd_eop, 0
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r5,
+                                tls_global_phv_tls_hdr_type, tls_global_phv_tls_hdr_len)    
 
 
 dma_cmd_iv:
     add         r5, r0, k.to_s5_opage
-    phvwr       p.dma_cmd3_dma_cmd_addr, r5
 
     phvwr       p.barco_desc_iv_address, r5.dx
 
-    phvwri      p.dma_cmd3_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(crypto_iv_explicit_iv)
-    phvwri      p.dma_cmd3_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(crypto_iv_salt)
-
-    phvwri      p.dma_cmd3_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri      p.dma_cmd3_dma_cmd_eop, 0
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd3_dma_cmd, r5, crypto_iv_explicit_iv, crypto_iv_salt)    
 
 dma_cmd_enc_brq_slot1:
     add         r7, r0, d.u.tls_queue_brq5_d.pi
@@ -115,70 +99,39 @@ dma_cmd_enc_brq_slot1:
 	addi		r1, r0, BRQ_BASE
 	add		    r1, r1, r5
 
-	phvwr		p.dma_cmd4_dma_cmd_addr,r1
-	/* Fill the barco request */
-
-    phvwri      p.dma_cmd4_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_desc_input_list_address)
-    phvwri		p.dma_cmd4_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_application_tag)
-
-    phvwri		p.dma_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri      p.dma_cmd4_dma_cmd_eop, 0
+	/* Fill the barco request */        
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd4_dma_cmd, r1, barco_desc_input_list_address,
+                                barco_desc_application_tag)
         
 
 dma_cmd_enc_brq_slot2:
     /* The remaining BRQ descriptor at offset 64 bytes (512 bits) */
     addi        r1, r1, 64
-	phvwr		p.dma_cmd5_dma_cmd_addr,r1
 
-    phvwri      p.dma_cmd5_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_desc_sector_num)
-    phvwri		p.dma_cmd5_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_doorbell_data)
-
-    phvwri		p.dma_cmd5_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri      p.dma_cmd5_dma_cmd_eop, 0
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd5_dma_cmd, r1, barco_desc_sector_num,
+                                barco_desc_doorbell_data)
 
 dma_cmd_output_list_addr:
 	add		    r5, r0, k.to_s5_idesc
 	addi		r5, r5, 4
-	phvwr		p.dma_cmd6_dma_cmd_addr, r5
 
-    
     /* For Barco use output descriptor */
-    phvwri      p.dma_cmd6_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_desc_output_list_address)
-	phvwri		p.dma_cmd6_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_output_list_address)
-
-    phvwri		p.dma_cmd6_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri      p.dma_cmd6_dma_cmd_eop, 0
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd6_dma_cmd, r5, barco_desc_output_list_address,
+                                barco_desc_output_list_address)
 
     smeqb       c1, k.to_s5_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
     bcf         [!c1], dma_cmd_ring_bsq_doorbell_skip
     nop
 
     /* for Barco bypass - use input descriptor */
-    phvwri      p.dma_cmd6_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_desc_input_list_address)
-	phvwri		p.dma_cmd6_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_desc_input_list_address)
-
-    phvwri		p.dma_cmd6_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri      p.dma_cmd6_dma_cmd_eop, 0
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd6_dma_cmd, r5, barco_desc_input_list_address,
+                                barco_desc_input_list_address)
         
 dma_cmd_ring_bsq_doorbell:
-	/* address will be in r4 */
-	CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_TLS)
-	phvwr		p.dma_cmd7_dma_cmd_addr, r4
-    CAPRI_OPERAND_DEBUG(r4)
 
-	CAPRI_RING_DOORBELL_DATA(0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0)
-    /* HACK Alert: Using crypto_iv_explicit_iv field as the source of the DMA req
-     * since we need a byte aligned field and barco_desc_doorbell_data is not
-     */
-    phvwr       p.crypto_iv_explicit_iv, r3.dx
-    CAPRI_OPERAND_DEBUG(r3.dx)
-	    
-
-	phvwri		p.dma_cmd7_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(crypto_iv_explicit_iv)
-    phvwri		p.dma_cmd7_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri		p.dma_cmd7_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(crypto_iv_explicit_iv)
-    phvwri      p.dma_cmd7_dma_cmd_eop, 1
-    phvwri      p.dma_cmd7_dma_cmd_wr_fence, 1
+    CAPRI_DMA_CMD_RING_DOORBELL(dma_cmd7_dma_cmd, LIF_TLS, 0, k.tls_global_phv_fid, TLS_SCHED_RING_BSQ, 0,
+                                crypto_iv_explicit_iv)
+    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd7_dma_cmd)
     b           tls_queue_brq_process_done
     nop
 
@@ -189,13 +142,12 @@ dma_cmd_brq_doorbell:
     /* Barco DMA Channel PI in r7 */
     addi        r7, r7, 1
     phvwr       p.barco_dbell_pi, r7.wx
-    phvwri      p.dma_cmd7_dma_cmd_addr, CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX
-    phvwri      p.dma_cmd7_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(barco_dbell_pi)
-    phvwri		p.dma_cmd7_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(barco_dbell_pi)
 
-    phvwri		p.dma_cmd7_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri      p.dma_cmd7_dma_cmd_eop, 1
-    phvwri      p.dma_cmd7_dma_cmd_wr_fence, 1
+
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd7_dma_cmd, CAPRI_BARCO_MD_HENS_REG_PRODUCER_IDX,
+                                  barco_dbell_pi, barco_dbell_pi)
+
+    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd7_dma_cmd)
 
 
 tls_queue_brq_process_done:

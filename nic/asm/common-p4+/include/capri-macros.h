@@ -381,4 +381,67 @@
         phvwrmi         _p, ((1 << _table) << (4 * (_stage - 4))), \
                             ((1 << _table) << (4 * (_stage - 4)))
 
+#define CAPRI_DMA_CMD_PHV2MEM_SETUP(_dma_cmd_prefix, __addr, _sfield, _efield)                   \
+        phvwr       p.##_dma_cmd_prefix##_addr, __addr;                                          \
+        phvwri      p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_sfield);      \
+        phvwri      p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_efield);          \
+        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+
+#define CAPRI_DMA_CMD_PKT2MEM_SETUP(_dma_cmd_prefix, __addr, _len)                               \
+        phvwr       p.##_dma_cmd_prefix##_addr, __addr;                                          \
+        phvwr       p.##_dma_cmd_prefix##_size, _len;                                           \
+        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
+
+#define CAPRI_DMA_CMD_PHV2MEM_SETUP_I(_dma_cmd_prefix, __addr, _sfield, _efield)                 \
+        phvwri      p.##_dma_cmd_prefix##_addr, __addr;                                          \
+        phvwri      p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_sfield);      \
+        phvwri      p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_efield);          \
+        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+
+#define CAPRI_DMA_CMD_PKT2MEM_SETUP_I(_dma_cmd_prefix, __addr, _len)                            \
+o        phvwri      p.##_dma_cmd_prefix##_addr, __addr;                                         \
+        phvwr       p.##_dma_cmd_prefix##_size, _len;                                           \
+        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PPKT_TO_MEM
+
+#define CAPRI_DMA_CMD_RING_DOORBELL2(_dma_cmd_prefix, _lif, __type, _qid, _ring, _pidx, _sfield, _efield) \
+        phvwri      p.##_dma_cmd_prefix##_addr,                                                 \
+                    CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET,__type, _lif); \
+        CAPRI_RING_DOORBELL_DATA(0, _qid, _ring, _pidx);                                        \
+        phvwr       p.{_sfield..._efield}, r3.dx;                                               \
+        phvwri      p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_sfield);      \
+        phvwri      p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_efield);          \
+        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;
+
+
+#define CAPRI_DMA_CMD_RING_DOORBELL(_dma_cmd_prefix, _lif, __type, _qid, _ring, _pidx, _field)  \
+        phvwri      p.##_dma_cmd_prefix##_addr,                                                 \
+                    CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET,__type, _lif); \
+        CAPRI_RING_DOORBELL_DATA(0, _qid, _ring, _pidx);                                        \
+        phvwr       p.{_field}, r3.dx;                                                          \
+        phvwri      p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_field);       \
+        phvwri      p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_field);           \
+        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;
+
+
+#define CAPRI_DMA_CMD_PHV2PKT_SETUP(_dma_cmd_prefix, _sfield, _efield)                          \
+        phvwri      p.##_dma_cmd_prefix##_phv_start_addr, CAPRI_PHV_START_OFFSET(_sfield);      \
+        phvwri      p.##_dma_cmd_prefix##_phv_end_addr, CAPRI_PHV_END_OFFSET(_efield);          \
+        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+
+#define CAPRI_DMA_CMD_MEM2PKT_SETUP(_dma_cmd_prefix, __addr, _len)                              \
+        phvwr       p.##_dma_cmd_prefix##_addr, __addr;                                         \
+        phvwr       p.##_dma_cmd_prefix##_size, _len;                                           \
+        phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
+
+#define CAPRI_DMA_CMD_STOP_FENCE(_dma_cmd_prefix)                                               \
+        phvwri      p.##_dma_cmd_prefix##_eop, 1;                                               \
+        phvwri      p.##_dma_cmd_prefix##_wr_fence, 1
+
+#define CAPRI_DMA_CMD_PKT_STOP(_dma_cmd_prefix)                                                 \
+        phvwri      p.##_dma_cmd_prefix##_pkt_eop, 1;                                           \
+
+#define CAPRI_DMA_CMD_STOP(_dma_cmd_prefix)                                                     \
+        phvwri      p.##_dma_cmd_prefix##_eop, 1;                                               \
+
+
 #endif /* #ifndef __CAPRI_MACROS_H__ */

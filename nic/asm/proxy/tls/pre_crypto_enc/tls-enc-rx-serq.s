@@ -41,15 +41,10 @@ dma_cmd_enc_desc_entry_last:
 
 	addi		r5, r0, NIC_DESC_ENTRY_L_OFFSET
 	add		    r5, r5, d.qtail
-	phvwr		p.dma_cmd0_dma_cmd_addr, r5
 
 	phvwr		p.aol_next_addr, k.to_s2_idesc
 
-    phvwri      p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(aol_next_addr)
-	phvwri		p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(aol_next_addr)
-        
-	phvwri		p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri      p.dma_cmd0_dma_cmd_eop, 0
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r5, aol_next_addr, aol_next_addr)
 
 no_dma_cmd_enc:        
 	/* etlsp->enc_nxt.desc = TAIL_DESC(*etlsp, enc); */

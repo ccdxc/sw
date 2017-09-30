@@ -45,10 +45,9 @@ tls_dec_pkt_descriptor_process:
 
     /* Setup DMA command to write the AAD */
     add     r3, r2, r1
-    phvwr   p.dma_cmd0_dma_cmd_addr, r3
-    phvwr   p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(s4_s6_t0_phv_aad_seq_num)
-    phvwr   p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(s4_s6_t0_phv_aad_length)
-    phvwri  p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, s4_s6_t0_phv_aad_seq_num,
+                                s4_s6_t0_phv_aad_length)
 
     /* Setup barco command authentication tag address */
     add     r1, d.{u.tls_read_pkt_descr_aol_d.A0}.dx, d.{u.tls_read_pkt_descr_aol_d.O0}.wx
