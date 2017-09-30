@@ -12,12 +12,12 @@ all:
 
 coverage:
 	g++ -O3 --coverage -o ./model_server.o -DCOVERAGE -c -g -I/home/asic/tools/src/0.25/include -I/usr/include/python2.7 -std=c++11 -I/home/asic/tools/src/0.25/include -I/usr/include/python2.7 -I../include ../src/model_server.cc
-	g++ -O3 -o cap_model --coverage -DCOVERAGE -Wl,-rpath,/usr/local/lib64 -Wl,-rpath,/usr/local/lib64 /home/asic/tools/src/0.25/x86_64/lib64/libsknobs.so model_server.o -L/home/asic/tools/src/0.25/x86_64/lib64 -L../libs -lpthread -ldl -lutil -lgmp -lgmpxx -lpython2.7 -lmodel_cc -lcommon_cc -lJudy -lsknobs -ltop_csr_compile -lcapsim -lisa -lasmsym -lzmq -lcapisa -lcrypto -lgcov
+	g++ -O3 -o cap_model --coverage -DCOVERAGE -Wl,-rpath,/usr/local/lib64 -Wl,-rpath,/usr/local/lib64 /home/asic/tools/src/0.25/x86_64/lib64/libsknobs.so model_server.o -L/home/asic/tools/src/0.25/x86_64/lib64 -L../libs -lpthread -ldl -lutil -lgmp -lgmpxx -lpython2.7 -lmodel_cc -lcommon_cc -lJudy -lsknobs -ltop_csr_compile -lcapsim -lisa -lasmsym -lzmq -lcapisa -lmpuobj -lcrypto -lgcov
 	g++ -O3 --coverage -o ./libmodelclient.so -DCOVERAGE -c -g -I/home/asic/tools/src/0.25/include -I/usr/include/python2.7 -std=c++11 -I/home/asic/tools/src/0.25/include -I/usr/include/python2.7 -I../include ../src/lib_model_client.cc -lzmq -fPIC
 
 model:
 	g++ -O3 -o ./model_server.o -c -g -I/home/asic/tools/src/0.25/include -I/usr/include/python2.7 -std=c++11 -I/home/asic/tools/src/0.25/include -I/usr/include/python2.7 -I../include ../src/model_server.cc
-	g++ -O3 -o cap_model -Wl,-rpath,/usr/local/lib64 -Wl,-rpath,/usr/local/lib64 /home/asic/tools/src/0.25/x86_64/lib64/libsknobs.so model_server.o -L/home/asic/tools/src/0.25/x86_64/lib64 -L../libs -lpthread -ldl -lutil -lgmp -lgmpxx -lpython2.7 -lmodel_cc -lcommon_cc -lJudy -lsknobs -ltop_csr_compile -lcapsim -lisa -lasmsym -lzmq -lcapisa -lcrypto
+	g++ -O3 -o cap_model -Wl,-rpath,/usr/local/lib64 -Wl,-rpath,/usr/local/lib64 /home/asic/tools/src/0.25/x86_64/lib64/libsknobs.so model_server.o -L/home/asic/tools/src/0.25/x86_64/lib64 -L../libs -lpthread -ldl -lutil -lgmp -lgmpxx -lpython2.7 -lmodel_cc -lcommon_cc -lJudy -lsknobs -ltop_csr_compile -lcapsim -lisa -lasmsym -lzmq -lcapisa -lcrypto -lmpuobj
 	g++ -O3 -o ./libmodelclient.so -c -g -I/home/asic/tools/src/0.25/include -I/usr/include/python2.7 -std=c++11 -I/home/asic/tools/src/0.25/include -I/usr/include/python2.7 -I../include ../src/lib_model_client.cc -lzmq -fPIC
 
 sample:

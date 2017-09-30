@@ -24,6 +24,7 @@ cc_binary(
             "libs/libtop_csr_compile.so",
             "libs/libsknobs.so",
             "libs/libasmsym.a",
+            "libs/libmpuobj.a",
             "libs/libcapisa.a",
             "libs/libisa.a",
             ],

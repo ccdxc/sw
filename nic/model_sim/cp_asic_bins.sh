@@ -25,6 +25,7 @@ cp -v $ASIC_SRC/capri/model/capsim-gen/lib/libasmsym.a libs/libasmsym.a
 cp -v $ASIC_SRC/capri/model/capsim-gen/lib/libcapsim.a libs/libcapsim.a
 cp -v $ASIC_SRC/capri/model/capsim-gen/lib/libisa.a libs/libisa.a
 cp -v $ASIC_SRC/capri/model/capsim-gen/lib/libcapisa.a libs/libcapisa.a
+cp -v $ASIC_SRC/capri/model/capsim-gen/lib/libmpuobj.a libs/libmpuobj.a
 
 cp -v $ASIC_SRC/capri/model/cap_te/cap_te_csr.json ../tools/ncc/csr_json/
 cp -v $ASIC_SRC/capri/model/cap_ppa/cap_ppa_decoders.json ../tools/ncc/csr_json/
