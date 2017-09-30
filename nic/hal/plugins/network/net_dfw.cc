@@ -42,6 +42,7 @@ extract_session_state_from_spec (fte::flow_state_t *flow_state,
 static inline bool
 conn_tracking_configured(fte::ctx_t &ctx)
 {
+
     if (ctx.protobuf_request()) {
         return ctx.sess_spec()->conn_track_en();
     }
@@ -50,7 +51,14 @@ conn_tracking_configured(fte::ctx_t &ctx)
         return false;
     }
 
-    // TODO(goli) check Security profile
+    // lookup Security profile
+    if (ctx.tenant()->nwsec_profile_handle  != HAL_HANDLE_INVALID) {
+        hal::nwsec_profile_t  *nwsec_prof =
+            nwsec_profile_lookup_by_handle(ctx.tenant()->nwsec_profile_handle);
+        if (nwsec_prof != NULL) {
+            return nwsec_prof->cnxn_tracking_en;
+        }
+    }
     return false;
 }
 
@@ -79,7 +87,14 @@ dfw_exec(fte::ctx_t& ctx)
                                             ctx.sess_spec()->initiator_flow().flow_data());
             flowupd.flow_state.syn_ack_delta = ctx.sess_spec()->iflow_syn_ack_delta();
         } else {
+            const fte::cpu_rxhdr_t *rxhdr = ctx.cpu_rxhdr();
             flowupd.flow_state.state = session::FLOW_TCP_STATE_SYN_RCVD;
+            flowupd.flow_state.tcp_seq_num = rxhdr->tcp_seq_num;
+            flowupd.flow_state.tcp_ack_num = rxhdr->tcp_ack_num;
+            flowupd.flow_state.tcp_win_sz = rxhdr->tcp_window;
+            flowupd.flow_state.tcp_win_scale = rxhdr->tcp_ws;
+            flowupd.flow_state.tcp_mss = rxhdr->tcp_mss;
+            
         }
     } else {
         if (ctx.protobuf_request()) {

@@ -41,8 +41,8 @@ typedef struct p4_to_p4plus_cpu_pkt_s {
 
     // tcp
     uint8_t   tcp_flags;
-    uint32_t  tcp_seqNo;
-    uint32_t  tcp_AckNo;
+    uint32_t  tcp_seq_num;
+    uint32_t  tcp_ack_num;
     uint16_t  tcp_window;
     uint8_t   tcp_options;
     uint16_t  tcp_mss;
