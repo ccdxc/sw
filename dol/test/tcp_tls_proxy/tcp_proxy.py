@@ -57,18 +57,14 @@ def SetupProxyArgs(tc):
     tc.pvtdata.send_ack = send_ack
 
 def init_tcb_inorder(tc, tcb):
-    if tc.config.flow.IsIflow():
-        tcb.rcv_nxt = 0x1ABABABA
-        tcb.snd_nxt = 0x1FEFEFF0
-        tcb.snd_una = 0x1FEFEFEF
-        tcb.rcv_tsval = 0x1AFAFAFA
-        tcb.ts_recent = 0x1AFAFAF0
-    else:
-        tcb.rcv_nxt = 0x2ABABABA
-        tcb.snd_nxt = 0x2FEFEFF0
-        tcb.snd_una = 0x2FEFEFEF
-        tcb.rcv_tsval = 0x2AFAFAFA
-        tcb.ts_recent = 0x2AFAFAF0
+    tcb.rcv_nxt = 0x1ABABABA
+    tcb.snd_nxt = 0x1FEFEFF0
+    tcb.snd_una = 0x1FEFEFEF
+    tc.pvtdata.flow1_rcv_nxt = tcb.rcv_nxt
+    tc.pvtdata.flow1_snd_nxt = tcb.snd_nxt
+    tc.pvtdata.flow1_snd_una = tcb.snd_una
+    tcb.rcv_tsval = 0x1AFAFAFA
+    tcb.ts_recent = 0x1AFAFAF0
     tcb.snd_wnd = 1000
     tcb.snd_cwnd = 1000
     tcb.rcv_mss = 9216
@@ -85,12 +81,23 @@ def init_tcb_inorder(tc, tcb):
         tcb.source_port = tc.config.flow.dport
         tcb.dest_port = tc.config.flow.sport
     vlan_id = 0
-    if tc.config.src.endpoint.intf.type == 'UPLINK':
-        vlan_id = tc.config.src.segment.vlan_id
-        tcb.source_lif = 0 # TODO set uplink lif here
-    elif hasattr(tc.config.src.endpoint.intf, 'encap_vlan_id'):
-        vlan_id = tc.config.src.endpoint.intf.encap_vlan_id
-        tcb.source_lif = tc.config.src.endpoint.intf.lif.hw_lif_id
+
+    if tc.pvtdata.same_flow:
+        if tc.config.src.endpoint.intf.type == 'UPLINK':
+            vlan_id = tc.config.src.segment.vlan_id
+            # is there a better way to find the lif?
+            tcb.source_lif = tc.config.src.endpoint.intf.port - 1
+        elif hasattr(tc.config.src.endpoint.intf, 'encap_vlan_id'):
+            vlan_id = tc.config.src.endpoint.intf.encap_vlan_id
+            tcb.source_lif = tc.config.src.endpoint.intf.lif.hw_lif_id
+    else:
+        if tc.config.dst.endpoint.intf.type == 'UPLINK':
+            vlan_id = tc.config.dst.segment.vlan_id
+            # is there a better way to find the lif?
+            tcb.source_lif = tc.config.dst.endpoint.intf.port - 1
+        elif hasattr(tc.config.dst.endpoint.intf, 'encap_vlan_id'):
+            vlan_id = tc.config.dst.endpoint.intf.encap_vlan_id
+            tcb.source_lif = tc.config.dst.endpoint.intf.lif.hw_lif_id
     if vlan_id != 0:
         vlan_etype_bytes = bytes([0x81, 0x00]) + \
                 vlan_id.to_bytes(2, 'big') + \
@@ -122,18 +129,14 @@ def init_tcb_inorder(tc, tcb):
     tcb.state = 1
 
 def init_tcb_inorder2(tc, tcb):
-    if tc.config.flow.IsIflow():
-        tcb.rcv_nxt = 0x2ABABABA
-        tcb.snd_nxt = 0x2FEFEFF0
-        tcb.snd_una = 0x2FEFEFEF
-        tcb.rcv_tsval = 0x2AFAFAFA
-        tcb.ts_recent = 0x2AFAFAF0
-    else:
-        tcb.rcv_nxt = 0x1ABABABA
-        tcb.snd_nxt = 0x1FEFEFF0
-        tcb.snd_una = 0x1FEFEFEF
-        tcb.rcv_tsval = 0x1AFAFAFA
-        tcb.ts_recent = 0x1AFAFAF0
+    tcb.rcv_nxt = 0x2ABABABA
+    tcb.snd_nxt = 0x2FEFEFF0
+    tcb.snd_una = 0x2FEFEFEF
+    tc.pvtdata.flow2_rcv_nxt = tcb.rcv_nxt
+    tc.pvtdata.flow2_snd_nxt = tcb.snd_nxt
+    tc.pvtdata.flow2_snd_una = tcb.snd_una
+    tcb.rcv_tsval = 0x2AFAFAFA
+    tcb.ts_recent = 0x2AFAFAF0
     tcb.snd_wnd = 1000
     tcb.snd_cwnd = 1000
     tcb.rcv_mss = 9216

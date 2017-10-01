@@ -498,6 +498,8 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_rx2tx_d.snd_wnd = htonl(tcpcb_pd->tcpcb->snd_wnd);
         data.u.read_rx2tx_d.snd_cwnd = htons((uint16_t)tcpcb_pd->tcpcb->snd_cwnd);
         data.u.read_rx2tx_d.debug_dol_tx = htonl(tcpcb_pd->tcpcb->debug_dol_tx);
+        data.u.read_rx2tx_d.rcv_nxt = htonl(tcpcb_pd->tcpcb->rcv_nxt);
+        data.u.read_rx2tx_d.snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
         HAL_TRACE_DEBUG("TCPCB rx2tx snd_wnd: 0x{0:x}", data.u.read_rx2tx_d.snd_wnd);
         HAL_TRACE_DEBUG("TCPCB rx2tx snd_cwnd: 0x{0:x}", data.u.read_rx2tx_d.snd_cwnd);
         HAL_TRACE_DEBUG("TCPCB rx2tx debug_dol_tx: 0x{0:x}", data.u.read_rx2tx_d.debug_dol_tx);
@@ -575,7 +577,9 @@ p4pd_add_or_del_tcp_tx_tcp_tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_tx_d.source_lif = htons(tcpcb_pd->tcpcb->source_lif);
         data.u.tcp_tx_d.source_port = htons(tcpcb_pd->tcpcb->source_port);
         data.u.tcp_tx_d.dest_port = htons(tcpcb_pd->tcpcb->dest_port);
-        HAL_TRACE_DEBUG("TCPCB source lif: 0x{0:x}", data.u.tcp_tx_d.source_lif);
+        data.u.tcp_tx_d.snd_nxt = htonl(tcpcb_pd->tcpcb->snd_nxt);
+        HAL_TRACE_DEBUG("TCPCB source lif: 0x{0:x} snd_nxt: 0x{1:x}",
+            data.u.tcp_tx_d.source_lif, data.u.tcp_tx_d.snd_nxt);
         HAL_TRACE_DEBUG("TCPCB source port: 0x{0:x} dest port 0x{1:x}",
             data.u.tcp_tx_d.source_port, data.u.tcp_tx_d.dest_port);
     }

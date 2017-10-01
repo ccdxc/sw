@@ -95,7 +95,7 @@ dma_cmd_intrinsic:
     CAPRI_DMA_CMD_PHV2PKT_SETUP(intrinsic_dma_dma_cmd, p4_intr_global_tm_iport, p4_intr_global_glb_rsv)
 dma_cmd_p4plus_to_p4_app_header:
     phvwr           p.tcp_app_header_p4plus_app_id, 1 // TODO: P4PLUS_APP_P4PLUS_APP_TCP_PROXY_ID
-    phvwrmi         p.tcp_app_header_flags, P4PLUS_TO_P4_FLAGS_LKP_INST, P4PLUS_TO_P4_FLAGS_LKP_INST
+    phvwri          p.tcp_app_header_flags, P4PLUS_TO_P4_FLAGS_LKP_INST | P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN
 
     phvwri          p.app_header_dma_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwr           p.app_header_dma_dma_cmd_phv_start_addr, TCP_PHV_TX_APP_HDR_START
@@ -108,13 +108,10 @@ dma_cmd_hdr:
 dma_cmd_tcp_header:
     phvwr           p.tcp_header_source_port, d.source_port
     phvwr           p.tcp_header_dest_port, d.dest_port
-    phvwr           p.tcp_header_seq_no, d.retx_snd_nxt // TODO : where is this updated
-    // TODO: snd_nxt is hardcoded here so we can verify phv2mem. Derive it
-    // correctly and check the appopriate value in the dol test case.
-    phvwri          p.tx2rx_snd_nxt, 0xefeff044 // TODO: fix this hack
-    phvwr           p.tcp_header_ack_no, k.common_phv_rcv_nxt // TODO : is this right?
+    phvwr           p.tcp_header_seq_no, k.t0_s2s_snd_nxt
+    phvwr           p.tcp_header_ack_no, k.common_phv_rcv_nxt
     phvwr           p.tcp_header_data_ofs, 5
-    //phvwr           p.tcp_header_flags, TCPHDR_ACK
+    phvwr           p.tcp_header_flags, TCPHDR_ACK
     phvwr           p.tcp_header_window, k.t0_s2s_snd_wnd
 
     CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_header_urg)
@@ -127,9 +124,9 @@ dma_cmd_data:
      * to send pure ack and there is really no data in retx queue
      * to send
      */
-    bcf             [c2], tcp_write_xmit_done
     phvwri.c2       p.tcp_header_dma_dma_pkt_eop, 1
     phvwri.c2       p.tcp_header_dma_dma_cmd_eop, 1
+    bcf             [c2], tcp_write_xmit_done
     nop
 
     /* Write A = xmit_cursor_addr + xmit_cursor_offset */
@@ -140,12 +137,13 @@ dma_cmd_data:
     slt             c1, k.to_s4_rcv_mss, k.to_s4_xmit_cursor_len
     add.c1          r6, k.to_s4_rcv_mss, r0
     add.!c1         r6, k.to_s4_xmit_cursor_len, r0
+    add             r5, r6, k.t0_s2s_snd_nxt
+    phvwr           p.tx2rx_snd_nxt, r5
 
     CAPRI_DMA_CMD_MEM2PKT_SETUP(data_dma_dma_cmd, r2, r6)
     CAPRI_DMA_CMD_PKT_STOP(data_dma_dma)
         
 bytes_sent_stats_update_start:
-    addi            r6, r0, ETH_IP_TCP_HDR_SIZE
     CAPRI_STATS_INC(bytes_sent, 16, r6, d.bytes_sent)
 bytes_sent_stats_update:
     CAPRI_STATS_INC_UPDATE(r1, d.bytes_sent, p.to_s5_bytes_sent)

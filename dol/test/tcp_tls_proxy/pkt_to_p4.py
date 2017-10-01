@@ -180,7 +180,7 @@ def TestCaseVerify(tc):
         print("pkt rx stats not as expected")
         return False
 
-    if ((other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent) != 54):
+    if ((other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent) != 0x54):
         print("Warning! pkt tx byte stats not as expected %d %d" % (tcpcb_cur.bytes_sent, tcpcb.bytes_sent))
         return False
     
@@ -189,7 +189,7 @@ def TestCaseVerify(tc):
         print("pkt tx stats (%d) not as expected (%d)" % (other_tcpcb_cur.pkts_sent, other_tcpcb.pkts_sent))
         return False
 
-    if ((other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent) != 54):
+    if ((other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent) != 0x54):
         print("Warning! pkt tx byte stats not as expected %d %d" % (other_tcpcb_cur.bytes_sent, other_tcpcb.bytes_sent))
         return False
 
@@ -204,9 +204,11 @@ def TestCaseVerify(tc):
         return False
 
     # 9  Verify phv2mem
-    if other_tcpcb_cur.snd_nxt != 0xefeff044:
-        print("mem2pkt failed snd_nxt = 0x%x" % tcpcb_cur.snd_nxt)
+    if same_flow and other_tcpcb_cur.snd_nxt != tc.pvtdata.flow1_snd_nxt + 0x54: # TODO: get pkt len
+        print("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)
         return False
+    elif not same_flow and other_tcpcb_cur.snd_nxt != tc.pvtdata.flow2_snd_nxt + 0x54: # TODO: get pkt len
+        print("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)
 
     # 10. Verify pkt tx (in testspec)
 

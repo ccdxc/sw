@@ -37,8 +37,8 @@ packets:
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : 7777
-                seq     : callback://tcpcb/tcpcb/GetSeqNum
-                ack     : callback://tcpcb/tcpcb/GetAckNum
+                seq     : 0x1abababa
+                ack     : 0x1fefefef
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 

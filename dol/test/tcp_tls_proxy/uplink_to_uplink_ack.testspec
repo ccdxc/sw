@@ -77,6 +77,35 @@ packets:
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
+    - packet:
+        id          : PKT1_ACK_OUT
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                prio    : 0
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+                tos     : 8
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                seq     : callback://tcpcb/tcpcb/GetAckPktOutSeqNum
+                ack     : callback://tcpcb/tcpcb/GetAckPktOutAckNum
+                window  : 1000
+                flags   : ack
+
 trigger:
     packets:
         - packet:
@@ -88,3 +117,6 @@ expect:
         - packet:
             object  : ref://testcase/packets/id=PKT1_OUT
             port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=PKT1_ACK_OUT
+            port    : ref://testcase/config/src/endpoint/intf/ports

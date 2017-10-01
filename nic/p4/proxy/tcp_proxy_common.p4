@@ -38,9 +38,6 @@
 
 
 #define RX2TX_SHARED_EXTRA_STATE \
-        rcv_mss                         : 16                    ;\
-        rto                             : 8                     ;\
-        ca_state                        : 8                     ;\
         ato_deadline                    : TS_WIDTH              ;\
         retx_head_ts                    : TS_WIDTH              ;\
         srtt_us                         : TS_WIDTH              ;\
@@ -52,7 +49,6 @@
         retrans_out                     : COUNTER8              ;\
         fackets_out                     : COUNTER16             ;\
         ooo_datalen                     : COUNTER16             ;\
-        num_sacks                       : 8                     ;\
         reordering                      : COUNTER32             ;\
         undo_marker                     : SEQ_NUMBER_WIDTH      ;\
         undo_retrans                    : SEQ_NUMBER_WIDTH      ;\
@@ -60,7 +56,11 @@
         loss_cwnd                       : WINDOW_WIDTH          ;\
         write_seq                       : SEQ_NUMBER_WIDTH      ;\
         tso_seq                         : SEQ_NUMBER_WIDTH      ;\
+        rcv_mss                         : 16                    ;\
+        rto                             : 8                     ;\
+        ca_state                        : 8                     ;\
         ecn_flags                       : 8                     ;\
+        num_sacks                       : 8                     ;\
         pending_challenge_ack_send      : 1                     ;\
         pending_ack_send                : 1                     ;\
         pending_sync_mss                : 1                     ;\
@@ -89,8 +89,8 @@
         retx_ci                         : 16                    ;\
         retx_pi                         : 16                    ;\
         sched_flag                      : 8                     ;\
+        snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
-        retx_snd_nxt                    : SEQ_NUMBER_WIDTH      ;\
         retx_head_desc                  : HBM_ADDRESS_WIDTH     ;\
         retx_snd_una_cursor             : HBM_ADDRESS_WIDTH     ;\
         retx_tail_desc                  : HBM_ADDRESS_WIDTH     ;\
@@ -110,7 +110,7 @@
 
 #define TX_SHARED_PARAMS                                                        \
 source_lif, source_port, dest_port, retx_ci, retx_pi, sched_flag,\
-retx_snd_una, retx_snd_nxt,\
+snd_nxt, retx_snd_una,\
 retx_head_desc, retx_snd_una_cursor, retx_tail_desc, retx_snd_nxt_cursor,\
 retx_xmit_cursor, xmit_cursor_addr, rcv_wup, prr_out, pending_ack_tx,\
 pending_delayed_ack_tx, pending_tso_data, pending_pad, bytes_sent,\
@@ -124,8 +124,8 @@ pkts_sent,debug_num_phv_to_pkt, debug_num_mem_to_pkt
     modify_field(tcp_tx_d.retx_ci, retx_ci); \
     modify_field(tcp_tx_d.retx_pi, retx_pi); \
     modify_field(tcp_tx_d.sched_flag, sched_flag); \
+    modify_field(tcp_tx_d.snd_nxt, snd_nxt); \
     modify_field(tcp_tx_d.retx_snd_una, retx_snd_una); \
-    modify_field(tcp_tx_d.retx_snd_nxt, retx_snd_nxt); \
     modify_field(tcp_tx_d.retx_head_desc, retx_head_desc); \
     modify_field(tcp_tx_d.retx_snd_una_cursor, retx_snd_una_cursor); \
     modify_field(tcp_tx_d.retx_tail_desc, retx_tail_desc); \

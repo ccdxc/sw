@@ -14,7 +14,18 @@ modules:
         spec    : one_pkt.testspec
         module  : in_order
         args    :
-            maxflows: 1
+            maxflows : 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : IN_ORDER_PKT_NOT_TO_SERQ_V4_ACK
+        spec    : one_pkt_ack.testspec
+        enable  : False
+        module  : in_order
+        args    :
+            maxflows : 1
+            send_ack : 1
         iterate :
             - flow: filter://type=IPV4
 
@@ -112,7 +123,6 @@ modules:
 
     - module:
         name    : PKT_TO_BRQ
-        enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_brq
         spec    : one_pkt.testspec
@@ -124,7 +134,6 @@ modules:
 
     - module:
         name    : FLOWS_TO_BRQ
-        enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_brq
         spec    : one_pkt.testspec
@@ -136,7 +145,6 @@ modules:
 
     - module:
         name    : PKT_TO_BSQ_ENCRYPT
-        enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt
         spec    : one_pkt.testspec
@@ -171,8 +179,8 @@ modules:
               same_flow : 0
 
     - module:
-        name    : PKT_HFLOW_TO_NFLOW_PROXY_BYPASS_BARCO_SEND_ACK
-        spec    : uplink_to_uplink.testspec
+        name    : PROXY_UPLINK_TO_UPLINK_BYPASS_BARCO_SEND_ACK
+        spec    : uplink_to_uplink_ack.testspec
         module  : pkt_to_p4
         enable  : False
         args    :
@@ -194,6 +202,17 @@ modules:
               same_flow : 0
 
     - module:
+        name    : PROXY_UPLINK_TO_HOST_BYPASS_BARCO_SEND_ACK
+        spec    : uplink_to_host_ack.testspec
+        module  : pkt_to_p4
+        enable  : False
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            same_flow : 0
+            send_ack : 1
+
+    - module:
         name    : PROXY_HOST_TO_UPLINK_BYPASS_BARCO
         spec    : host_to_uplink.testspec
         module  : pkt_to_p4
@@ -206,8 +225,18 @@ modules:
               same_flow : 0
 
     - module:
+        name    : PROXY_HOST_TO_UPLINK_BYPASS_BARCO_SEND_ACK
+        spec    : host_to_uplink_ack.testspec
+        module  : pkt_to_p4
+        enable  : False
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            same_flow : 0
+            send_ack : 1
+
+    - module:
         name    : PKT_TO_SESQ
-        enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_sesq
         spec    : one_pkt.testspec
@@ -218,7 +247,6 @@ modules:
             - flow: filter://type=IPV4
     - module:
         name    : TLS_HANDSHAKE_RX
-        enable  : True
         package : test.tcp_tls_proxy
         module  : tls_handshake_rx
         spec    : tls_handshake.testspec
@@ -230,7 +258,6 @@ modules:
 
     - module:
         name    : PKT_TO_ARQ
-        enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_arq
         spec    : pkt_to_arq.testspec
@@ -240,7 +267,6 @@ modules:
 
     - module:
         name    : PKT_TO_ARQ_TO_UPLINK
-        enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_arq_to_uplink
         spec    : pkt_to_arq_to_uplink.testspec
@@ -250,7 +276,6 @@ modules:
 
     - module:
         name    : SYN_ACK_TO_ARQ
-        enable  : True
         package : test.tcp_tls_proxy
         module  : syn_ack_to_arq
         spec    : one_pkt.testspec

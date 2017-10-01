@@ -19,10 +19,6 @@ struct tcp_tx_read_rx2tx_extra_read_rx2tx_extra_d d;
     .param      tcp_tx_process_pending_stage2_start
 
 tcp_tx_read_rx2tx_shared_extra_stage1_start:
-    /* Write the entire d-vector to p-vector for tx2rx shared state */
-    phvwr           p.{rx2tx_extra_rcv_mss...rx2tx_extra_reordering}, d.{rcv_mss...reordering}
-    phvwr           p.{rx2tx_extra_undo_marker...rx2tx_extra_dsack}, d.{undo_marker...dsack}
-
     CAPRI_OPERAND_DEBUG(d.rcv_mss)
     CAPRI_OPERAND_DEBUG(k.common_phv_pending_rx2tx)
     phvwr           p.to_s4_rcv_mss, d.rcv_mss

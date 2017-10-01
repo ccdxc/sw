@@ -84,6 +84,7 @@ tcp_queue_rcv:
 tcp_rcv_nxt_update:
     sub         r1, k.s1_s2s_end_seq, d.u.tcp_rx_d.rcv_nxt
     tblwr       d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_end_seq
+    phvwr       p.rx2tx_rcv_nxt, k.s1_s2s_end_seq
 
 bytes_rcvd_stats_update_start:
         CAPRI_STATS_INC(bytes_rcvd, 16, r1, d.u.tcp_rx_d.bytes_rcvd)
@@ -314,6 +315,7 @@ tcp_snd_una_update:
     tbladd.c2   d.u.tcp_rx_d.bytes_acked, r1
     /* Update snd_una */
     tblwr.c2    d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
+    phvwr.c2    p.rx2tx_snd_una, k.to_s1_ack_seq
 
     add.c2      r5, k.common_phv_process_ack_flag, r0
     ori.c2      r5, r5, FLAG_WIN_UPDATE
@@ -428,6 +430,7 @@ tcp_update_window_bypass:
     tbladd      d.u.tcp_rx_d.bytes_acked, r3
     /* Update snd_una */
     tblwr       d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
+    phvwr.c2    p.rx2tx_snd_una, k.to_s1_ack_seq
 
 tcp_ecn_rcv_ecn_echo:
     /* ecn_flags & TCP_ECN_OK */

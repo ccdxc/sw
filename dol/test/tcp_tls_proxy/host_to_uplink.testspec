@@ -61,10 +61,10 @@ packets:
             ipv4:
                 tos     : 8
             tcp:
-                seq     : 0
-                ack     : 0
+                seq     : callback://tcpcb/tcpcb/GetPktOutSeqNum
+                ack     : callback://tcpcb/tcpcb/GetPktOutAckNum
                 window  : 1000
-                flags   : None
+                flags   : ack
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 

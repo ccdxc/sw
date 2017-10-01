@@ -12,9 +12,9 @@ from config.store                       import Store
 from config.objects.proxycb_service     import ProxyCbServiceHelper
 from config.objects.tcp_proxy_cb        import TcpCbHelper
 import test.callbacks.networking.modcbs as modcbs
-from infra.common.objects               import ObjectDatabase as ObjectDatabase
-from infra.common.logging               import logger
 import test.tcp_tls_proxy.tcp_tls_proxy as tcp_tls_proxy
+from infra.common.objects import ObjectDatabase as ObjectDatabase
+from infra.common.logging import logger
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
