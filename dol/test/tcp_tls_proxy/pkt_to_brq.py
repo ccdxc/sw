@@ -3,6 +3,7 @@
 import pdb
 import copy
 import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
+import test.tcp_tls_proxy.tcp_tls_proxy as tcp_tls_proxy
 
 import types_pb2                as types_pb2
 import crypto_keys_pb2          as crypto_keys_pb2
@@ -76,7 +77,11 @@ def TestCaseSetup(tc):
     tlscb.enc_completions = 0
     tlscb.serq_pi = 0
     tlscb.serq_ci = 0
-    tlscb.debug_dol = 5 
+    tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_barco | \
+                        tcp_tls_proxy.tls_debug_dol_bypass_proxy | \
+                        tcp_tls_proxy.tls_debug_dol_sesq_stop
+    tlscb.other_fid = 0xffff
+    tlscb.is_decrypt_flow = False
     tlscb.SetObjValPd()
 
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])

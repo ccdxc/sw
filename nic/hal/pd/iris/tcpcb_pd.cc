@@ -578,10 +578,12 @@ p4pd_add_or_del_tcp_tx_tcp_tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_tx_d.source_port = htons(tcpcb_pd->tcpcb->source_port);
         data.u.tcp_tx_d.dest_port = htons(tcpcb_pd->tcpcb->dest_port);
         data.u.tcp_tx_d.snd_nxt = htonl(tcpcb_pd->tcpcb->snd_nxt);
+        data.u.tcp_tx_d.header_len = (uint8_t)tcpcb_pd->tcpcb->header_len;
         HAL_TRACE_DEBUG("TCPCB source lif: 0x{0:x} snd_nxt: 0x{1:x}",
             data.u.tcp_tx_d.source_lif, data.u.tcp_tx_d.snd_nxt);
         HAL_TRACE_DEBUG("TCPCB source port: 0x{0:x} dest port 0x{1:x}",
             data.u.tcp_tx_d.source_port, data.u.tcp_tx_d.dest_port);
+        HAL_TRACE_DEBUG("TCPCB header len: {}", data.u.tcp_tx_d.header_len);
     }
     
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){

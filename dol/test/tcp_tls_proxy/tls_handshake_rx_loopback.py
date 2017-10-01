@@ -56,6 +56,7 @@ def TestCaseSetup(tc):
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     #tlscb_cur.debug_dol = (tcp_tls_proxy.tls_debug_dol_leave_in_arq | tcp_tls_proxy.tls_debug_dol_bypass_proxy | tcp_tls_proxy.tls_debug_dol_bypass_barco | tcp_tls_proxy.tls_debug_dol_fake_handshake_msg)
     tlscb_cur.debug_dol = (tcp_tls_proxy.tls_debug_dol_bypass_proxy | tcp_tls_proxy.tls_debug_dol_bypass_barco | tcp_tls_proxy.tls_debug_dol_fake_handshake_msg)
+    tlscb_cur.other_fid = 0xffff
     tlscb_cur.is_decrypt_flow = 1
     tlscb_cur.SetObjValPd()
     tlscb = copy.deepcopy(tlscb_cur)
@@ -148,7 +149,7 @@ def TestCaseVerify(tc):
         print("pkt rx stats not as expected")
         return False
 
-    if ((tcb_cur.bytes_rcvd - tcb.bytes_rcvd) != 91):
+    if ((tcb_cur.bytes_rcvd - tcb.bytes_rcvd) != tc.packets.Get('PKT1').payloadsize):
         print("Warning! pkt rx byte stats not as expected %d %d" % (tcb_cur.bytes_rcvd, tcb.bytes_rcvd))
         return False
     
@@ -157,7 +158,7 @@ def TestCaseVerify(tc):
         print("pkt tx stats (%d) not as expected (%d)" % (tcb_cur.pkts_sent, tcb.pkts_sent))
         return False
 
-    if ((tcb_cur.bytes_sent - tcb.bytes_sent) != 257):
+    if ((tcb_cur.bytes_sent - tcb.bytes_sent) != 257): # TODO: remove hardcoding
         print("Warning! pkt tx byte stats not as expected %d %d" % (tcb_cur.bytes_sent, tcb.bytes_sent))
         return False
 

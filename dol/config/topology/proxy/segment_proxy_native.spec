@@ -9,6 +9,6 @@ multicast   : flood
 l4lb        : True
 endpoints   :
     useg    : 0
-    pvlan   : 0
+    pvlan   : 1
     direct  : 0
-    remote  : 2 # Remote TEPs
+    remote  : 2 # 1 EP per uplink

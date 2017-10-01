@@ -49,6 +49,7 @@ message TcpCbSpec {
   uint32                asesq_pi                   = 21;
   uint32                asesq_ci                   = 22;
   uint32                debug_dol_tx               = 23;
+  uint32                header_len                 = 24;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

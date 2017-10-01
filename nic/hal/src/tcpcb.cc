@@ -123,6 +123,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_mss = spec.rcv_mss();
     tcpcb->source_port = spec.source_port();
     tcpcb->dest_port = spec.dest_port();
+    tcpcb->header_len = spec.header_len();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     tcpcb->state = spec.state();
@@ -187,6 +188,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_mss = spec.rcv_mss();
     tcpcb->source_port = spec.source_port();
     tcpcb->dest_port = spec.dest_port();
+    tcpcb->header_len = spec.header_len();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     tcpcb->state = spec.state();

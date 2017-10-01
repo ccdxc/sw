@@ -55,6 +55,7 @@ def TestCaseSetup(tc):
     tlscbid = "TlsCb%04d" % id
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     tlscb_cur.debug_dol = (tcp_tls_proxy.tls_debug_dol_leave_in_arq | tcp_tls_proxy.tls_debug_dol_bypass_proxy | tcp_tls_proxy.tls_debug_dol_bypass_barco | tcp_tls_proxy.tls_debug_dol_fake_handshake_msg)
+    tlscb_cur.other_fid = 0xffff
     tlscb_cur.is_decrypt_flow = 1
     tlscb_cur.SetObjValPd()
     tlscb = copy.deepcopy(tlscb_cur)

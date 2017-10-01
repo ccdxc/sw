@@ -99,6 +99,7 @@
         xmit_cursor_addr                : HBM_ADDRESS_WIDTH     ;\
         rcv_wup                         : WINDOW_WIDTH          ;\
         prr_out                         : 32                    ;\
+        header_len                      : 8                     ;\
         pending_ack_tx                  : 1                     ;\
         pending_delayed_ack_tx          : 1                     ;\
         pending_tso_data                : 1                     ;\
@@ -112,9 +113,9 @@
 source_lif, source_port, dest_port, retx_ci, retx_pi, sched_flag,\
 snd_nxt, retx_snd_una,\
 retx_head_desc, retx_snd_una_cursor, retx_tail_desc, retx_snd_nxt_cursor,\
-retx_xmit_cursor, xmit_cursor_addr, rcv_wup, prr_out, pending_ack_tx,\
-pending_delayed_ack_tx, pending_tso_data, pending_pad, bytes_sent,\
-pkts_sent,debug_num_phv_to_pkt, debug_num_mem_to_pkt
+retx_xmit_cursor, xmit_cursor_addr, rcv_wup, prr_out, header_len,\
+pending_ack_tx,pending_delayed_ack_tx, pending_tso_data, pending_pad,\
+bytes_sent,pkts_sent,debug_num_phv_to_pkt, debug_num_mem_to_pkt
 
 
 #define GENERATE_TX_SHARED_D                                                                               \
@@ -134,6 +135,7 @@ pkts_sent,debug_num_phv_to_pkt, debug_num_mem_to_pkt
     modify_field(tcp_tx_d.xmit_cursor_addr, xmit_cursor_addr); \
     modify_field(tcp_tx_d.rcv_wup, rcv_wup); \
     modify_field(tcp_tx_d.prr_out, prr_out); \
+    modify_field(tcp_tx_d.header_len, header_len); \
     modify_field(tcp_tx_d.pending_ack_tx, pending_ack_tx); \
     modify_field(tcp_tx_d.pending_delayed_ack_tx, pending_delayed_ack_tx); \
     modify_field(tcp_tx_d.pending_tso_data, pending_tso_data);\

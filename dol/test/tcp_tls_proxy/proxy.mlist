@@ -105,7 +105,6 @@ modules:
         name    : MULTIPLE_PKTS_TO_SERQ
         spec    : multiple_pkts_to_serq.testspec
         module  : pkt_to_serq
-        ignore  : True
         args    :
             maxflows : 1
             num_pkts : 2
@@ -127,7 +126,6 @@ modules:
         package : test.tcp_tls_proxy
         module  : pkt_to_brq
         spec    : one_pkt.testspec
-        ignore  : False
         args    :
             maxflows: 1
         iterate :
@@ -138,7 +136,6 @@ modules:
         package : test.tcp_tls_proxy
         module  : pkt_to_brq
         spec    : one_pkt.testspec
-        ignore  : False
         args    :
             maxflows: 2
         iterate :
@@ -149,39 +146,56 @@ modules:
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_encrypt
         spec    : one_pkt.testspec
-        ignore  : False
         args    :
             maxflows: 1
+            same_flow : 1
         iterate :
             - flow: filter://type=IPV4
 
     - module:
         name    : PKT_TO_BSQ_DECRYPT
-        enable  : True
         package : test.tcp_tls_proxy
         module  : pkt_to_bsq_decrypt
         spec    : one_tls_aes128_gcm_record_pkt.testspec
-        ignore  : False
         args    :
             maxflows: 1
         iterate  :
             - flow: filter://type=IPV4
 
     - module:
-        name    : PROXY_UPLINK_TO_UPLINK_BYPASS_BARCO
+        name    : UPLINK_TO_UPLINK_BYPASS_BARCO_SAME_FLOW
         spec    : uplink_to_uplink.testspec
         module  : pkt_to_p4
-        ignore  : True
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            same_flow : 1
         iterate :
-            - bypass_barco : 1
-              maxflows : 1
-              same_flow : 1
-            - bypass_barco : 1
-              maxflows : 1
-              same_flow : 0
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False
 
     - module:
-        name    : PROXY_UPLINK_TO_UPLINK_BYPASS_BARCO_SEND_ACK
+        name    : UPLINK_TO_UPLINK_BYPASS_BARCO
+        spec    : uplink_to_uplink.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2,direction=IFLOW
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2,direction=RFLOW
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2,direction=IFLOW
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2,direction=RFLOW
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              srcseg    : filter://fabencap=VXLAN
+              dstseg    : filter://fabencap=VXLAN
+
+    - module:
+        name    : UPLINK_TO_UPLINK_BYPASS_BARCO_SEND_ACK
         spec    : uplink_to_uplink_ack.testspec
         module  : pkt_to_p4
         enable  : False
@@ -192,20 +206,36 @@ modules:
             send_ack : 1
 
     - module:
-        name    : PROXY_UPLINK_TO_HOST_BYPASS_BARCO
+        name    : UPLINK_TO_HOST_BYPASS_BARCO_SAME_FLOW
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4
-        ignore  : True
-        iterate :
-            - bypass_barco : 1
+        args :
+              bypass_barco : 1
               maxflows : 1
               same_flow : 1
-            - bypass_barco : 1
-              maxflows : 1
-              same_flow : 0
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False
 
     - module:
-        name    : PROXY_UPLINK_TO_HOST_BYPASS_BARCO_SEND_ACK
+        name    : UPLINK_TO_HOST_BYPASS_BARCO
+        spec    : uplink_to_host.testspec
+        module  : pkt_to_p4
+        args :
+              bypass_barco : 1
+              maxflows : 1
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2,direction=IFLOW
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2,direction=RFLOW
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2,direction=IFLOW
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2,direction=RFLOW
+              segment   : filter://native=True
+
+    - module:
+        name    : UPLINK_TO_HOST_BYPASS_BARCO_SEND_ACK
         spec    : uplink_to_host_ack.testspec
         module  : pkt_to_p4
         enable  : False
@@ -216,20 +246,36 @@ modules:
             send_ack : 1
 
     - module:
-        name    : PROXY_HOST_TO_UPLINK_BYPASS_BARCO
+        name    : HOST_TO_UPLINK_BYPASS_BARCO_SAME_FLOW
         spec    : host_to_uplink.testspec
         module  : pkt_to_p4
-        ignore  : True
-        iterate :
-            - bypass_barco : 1
+        args :
+              bypass_barco : 1
               maxflows : 1
               same_flow : 1
-            - bypass_barco : 1
-              maxflows : 1
-              same_flow : 0
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False
 
     - module:
-        name    : PROXY_HOST_TO_UPLINK_BYPASS_BARCO_SEND_ACK
+        name    : HOST_TO_UPLINK_BYPASS_BARCO
+        spec    : host_to_uplink.testspec
+        module  : pkt_to_p4
+        args :
+              bypass_barco : 1
+              maxflows : 1
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2,direction=IFLOW
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2,direction=RFLOW
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2,direction=IFLOW
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2,direction=RFLOW
+              segment   : filter://native=True
+
+    - module:
+        name    : HOST_TO_UPLINK_BYPASS_BARCO_SEND_ACK
         spec    : host_to_uplink_ack.testspec
         module  : pkt_to_p4
         enable  : False
@@ -244,7 +290,6 @@ modules:
         package : test.tcp_tls_proxy
         module  : pkt_to_sesq
         spec    : one_pkt.testspec
-        ignore  : False
         args    :
             maxflows: 1
         iterate :
@@ -254,7 +299,6 @@ modules:
         package : test.tcp_tls_proxy
         module  : tls_handshake_rx
         spec    : tls_handshake.testspec
-        ignore  : True
         args    :
             maxflows: 1
         iterate :
@@ -266,7 +310,6 @@ modules:
         package : test.tcp_tls_proxy
         module  : pkt_to_arq
         spec    : pkt_to_arq.testspec
-        ignore  : False
         iterate :
             - flow: filter://type=IPV4
 
@@ -275,7 +318,6 @@ modules:
         package : test.tcp_tls_proxy
         module  : pkt_to_arq_to_uplink
         spec    : pkt_to_arq_to_uplink.testspec
-        ignore  : False
         iterate :
             - flow: filter://type=IPV4
 
@@ -284,7 +326,6 @@ modules:
         package : test.tcp_tls_proxy
         module  : syn_ack_to_arq
         spec    : one_pkt.testspec
-        ignore  : False
         args    :
             maxflows: 1
         iterate :
@@ -293,11 +334,9 @@ modules:
 
     - module:
         name    : TLS_HANDSHAKE_RX_LOOPBACK
-        enable  : True
         package : test.tcp_tls_proxy
         module  : tls_handshake_rx_loopback
         spec    : tls_handshake.testspec
-        ignore  : True
         args    :
             maxflows: 1
         iterate :
@@ -309,7 +348,6 @@ modules:
         package : test.tcp_tls_proxy
         module  : syn_ack_to_arq_loopback
         spec    : one_pkt.testspec
-        ignore  : True
         args    :
             maxflows: 1
         iterate :

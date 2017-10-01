@@ -59,6 +59,8 @@ def TestCaseSetup(tc):
     tlscb2.debug_dol = 0
     if tc.pvtdata.bypass_barco:
         print("Bypassing Barco")
+        tlscb.is_decrypt_flow = False
+        tlscb2.is_decrypt_flow = False
         tlscb.debug_dol |= tcp_tls_proxy.tls_debug_dol_bypass_barco
         tlscb2.debug_dol |= tcp_tls_proxy.tls_debug_dol_bypass_barco
     if tc.pvtdata.same_flow:
@@ -180,7 +182,7 @@ def TestCaseVerify(tc):
         print("pkt rx stats not as expected")
         return False
 
-    if ((other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent) != 0x54):
+    if ((other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent) != tc.packets.Get('PKT1').payloadsize):
         print("Warning! pkt tx byte stats not as expected %d %d" % (tcpcb_cur.bytes_sent, tcpcb.bytes_sent))
         return False
     
@@ -189,7 +191,7 @@ def TestCaseVerify(tc):
         print("pkt tx stats (%d) not as expected (%d)" % (other_tcpcb_cur.pkts_sent, other_tcpcb.pkts_sent))
         return False
 
-    if ((other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent) != 0x54):
+    if ((other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent) != tc.packets.Get('PKT1').payloadsize):
         print("Warning! pkt tx byte stats not as expected %d %d" % (other_tcpcb_cur.bytes_sent, other_tcpcb.bytes_sent))
         return False
 
@@ -204,10 +206,12 @@ def TestCaseVerify(tc):
         return False
 
     # 9  Verify phv2mem
-    if same_flow and other_tcpcb_cur.snd_nxt != tc.pvtdata.flow1_snd_nxt + 0x54: # TODO: get pkt len
+    if same_flow and other_tcpcb_cur.snd_nxt != tc.pvtdata.flow1_snd_nxt + \
+            tc.packets.Get('PKT1').payloadsize:
         print("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)
         return False
-    elif not same_flow and other_tcpcb_cur.snd_nxt != tc.pvtdata.flow2_snd_nxt + 0x54: # TODO: get pkt len
+    elif not same_flow and other_tcpcb_cur.snd_nxt != \
+            tc.pvtdata.flow2_snd_nxt + tc.packets.Get('PKT1').payloadsize:
         print("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)
 
     # 10. Verify pkt tx (in testspec)

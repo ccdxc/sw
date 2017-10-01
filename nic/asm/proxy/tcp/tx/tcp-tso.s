@@ -104,7 +104,8 @@ dma_cmd_p4plus_to_p4_app_header:
 dma_cmd_hdr:
     add             r5, k.common_phv_qstate_addr, TCP_TCB_HEADER_TEMPLATE_OFFSET
 
-    CAPRI_DMA_CMD_MEM2PKT_SETUP(l2l3_header_dma_dma_cmd, r5, ETH_IP_VLAN_HDR_SIZE)
+    CAPRI_OPERAND_DEBUG(d.header_len)
+    CAPRI_DMA_CMD_MEM2PKT_SETUP(l2l3_header_dma_dma_cmd, r5, d.header_len)
 dma_cmd_tcp_header:
     phvwr           p.tcp_header_source_port, d.source_port
     phvwr           p.tcp_header_dest_port, d.dest_port

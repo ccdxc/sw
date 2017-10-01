@@ -4,7 +4,7 @@ selectors:
     # templates.
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://native=False
+        segment     : filter://any
         endpoint    : filter://remote=False
         qpair       : filter://any # Local QPair
     dst:

@@ -2,6 +2,7 @@
 import pdb
 import copy
 import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
+import test.tcp_tls_proxy.tcp_tls_proxy as tcp_tls_proxy
 
 import types_pb2                as types_pb2
 import crypto_keys_pb2          as crypto_keys_pb2
@@ -50,7 +51,9 @@ def TestCaseSetup(tc):
     tlscbid = "TlsCb%04d" % id
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
 
-    tlscb_cur.debug_dol = 4
+    tlscb_cur.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy | \
+                            tcp_tls_proxy.tls_debug_dol_sesq_stop
+    tlscb_cur.other_fid = 0xffff
     # Key Setup
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
     key_size = 16
@@ -62,6 +65,7 @@ def TestCaseSetup(tc):
     tlscb_cur.crypto_key_idx = tlscb_cur.crypto_key.keyindex
     tlscb_cur.salt = 0x12345678
     tlscb_cur.explicit_iv = 0xfedcba9876543210
+    tlscb_cur.is_decrypt_flow = False
     tlscb_cur.SetObjValPd()
 
     tlscb = copy.deepcopy(tlscb_cur)

@@ -13,7 +13,7 @@ def GetAckNum (tc, pkt):
     return tc.pvtdata.flow1_snd_una
 
 def GetNxtPktSeqNum (tc, pkt):
-    return tc.pvtdata.flow1_rcv_nxt + 0x54 # where can I get len?
+    return tc.pvtdata.flow1_rcv_nxt + pkt.payloadsize
 
 def GetNxtPktAckNum (tc, pkt):
     return tc.pvtdata.flow1_snd_una
@@ -26,7 +26,7 @@ def GetPktOutSeqNum (tc, pkt):
 
 def GetPktOutAckNum (tc, pkt):
     if tc.pvtdata.same_flow:
-        return tc.pvtdata.flow1_rcv_nxt + 0x54 # where can I get len?
+        return tc.pvtdata.flow1_rcv_nxt + pkt.payloadsize
     else:
         return tc.pvtdata.flow2_rcv_nxt
 

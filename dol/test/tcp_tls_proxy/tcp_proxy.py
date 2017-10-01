@@ -25,6 +25,9 @@ tcp_state_LISTEN = 10
 tcp_state_CLOSING = 11
 tcp_state_NEW_SYN_RECV = 12
 
+ETH_IP_HDR_SZE = 34
+ETH_IP_VLAN_HDR_SZE = 38
+
 def SetupProxyArgs(tc):
     tc.module.logger.info("Testcase Args:")
     same_flow = 0
@@ -80,21 +83,23 @@ def init_tcb_inorder(tc, tcb):
     else:
         tcb.source_port = tc.config.flow.dport
         tcb.dest_port = tc.config.flow.sport
-    vlan_id = 0
 
+    vlan_id = 0
     if tc.pvtdata.same_flow:
         if tc.config.src.endpoint.intf.type == 'UPLINK':
-            vlan_id = tc.config.src.segment.vlan_id
             # is there a better way to find the lif?
             tcb.source_lif = tc.config.src.endpoint.intf.port - 1
+            if tc.config.src.segment.native == False:
+                vlan_id = tc.config.src.segment.vlan_id
         elif hasattr(tc.config.src.endpoint.intf, 'encap_vlan_id'):
             vlan_id = tc.config.src.endpoint.intf.encap_vlan_id
             tcb.source_lif = tc.config.src.endpoint.intf.lif.hw_lif_id
     else:
         if tc.config.dst.endpoint.intf.type == 'UPLINK':
-            vlan_id = tc.config.dst.segment.vlan_id
             # is there a better way to find the lif?
             tcb.source_lif = tc.config.dst.endpoint.intf.port - 1
+            if tc.config.src.segment.native == False:
+                vlan_id = tc.config.dst.segment.vlan_id
         elif hasattr(tc.config.dst.endpoint.intf, 'encap_vlan_id'):
             vlan_id = tc.config.dst.endpoint.intf.encap_vlan_id
             tcb.source_lif = tc.config.dst.endpoint.intf.lif.hw_lif_id
@@ -105,6 +110,8 @@ def init_tcb_inorder(tc, tcb):
     else:
         vlan_etype_bytes = bytes([0x08, 0x00])
 
+    # TODO: ipv6
+    tcb.header_len = ETH_IP_HDR_SZE + len(vlan_etype_bytes) - 2
     if tc.pvtdata.same_flow and tc.config.flow.IsIPV4():
         tcb.header_template = \
              tc.config.dst.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
@@ -148,9 +155,12 @@ def init_tcb_inorder2(tc, tcb):
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack 
     tcb.source_port = tc.config.flow.sport
     tcb.dest_port = tc.config.flow.dport
+    vlan_id = 0
     if tc.config.src.endpoint.intf.type == 'UPLINK':
-        vlan_id = tc.config.src.segment.vlan_id
-        tcb.source_lif = 0 # TODO set uplink lif here
+        # is there a better way to find the lif?
+        tcb.source_lif = tc.config.src.endpoint.intf.port - 1
+        if tc.config.src.segment.native == False:
+            vlan_id = tc.config.src.segment.vlan_id
     elif hasattr(tc.config.src.endpoint.intf, 'encap_vlan_id'):
         vlan_id = tc.config.src.endpoint.intf.encap_vlan_id
         tcb.source_lif = tc.config.src.endpoint.intf.lif.hw_lif_id
@@ -161,6 +171,7 @@ def init_tcb_inorder2(tc, tcb):
     else:
         vlan_etype_bytes = bytes([0x08, 0x00])
     if tc.config.flow.IsIPV4():
+        tcb.header_len = ETH_IP_HDR_SZE + len(vlan_etype_bytes) - 2
         tcb.header_template = \
              tc.config.dst.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
              tc.config.src.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
