@@ -98,6 +98,10 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     hal_ret_t              ret = HAL_RET_OK;
     ipseccb_t                *ipseccb;
     pd::pd_ipseccb_args_t    pd_ipseccb_args;
+    ep_t *sep, *dep;
+    mac_addr_t *smac = NULL, *dmac = NULL;
+    l2seg_t *infra_seg;
+    hal::tenant_id_t tid;
 
     // validate the request message
     ret = validate_ipseccb_create(spec, rsp);
@@ -123,7 +127,35 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 
     ipseccb->tunnel_sip4 = spec.tunnel_sip4();
     ipseccb->tunnel_dip4 = spec.tunnel_dip4();
- 
+
+    infra_seg = l2seg_get_infra_l2seg();
+    if (infra_seg) {
+        tid = hal::tenant_lookup_by_handle(infra_seg->tenant_handle)->tenant_id;
+        HAL_TRACE_DEBUG("infra_seg success tid = {}", tid);
+    } else {
+        tid = 0;
+    }
+    sep = find_ep_by_v4_key(tid, htonl(spec.tunnel_sip4()));
+    if (sep) {
+        smac = ep_get_mac_addr(sep);
+        if (smac) {
+            memcpy(ipseccb->smac, smac, ETH_ADDR_LEN);
+        } 
+    } else {
+        HAL_TRACE_DEBUG("Src EP Lookup failed \n");
+    }
+    dep = find_ep_by_v4_key(tid, htonl(spec.tunnel_dip4()));
+    if (dep) {
+        dmac = ep_get_mac_addr(dep);
+        if (dmac) {
+            memcpy(ipseccb->dmac, dmac, ETH_ADDR_LEN);
+        } 
+    } else {
+        HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
+    }
+    
+
+     
     ipseccb->hal_handle = hal_alloc_handle();
 
     // allocate all PD resources and finish programming
@@ -166,6 +198,10 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     hal_ret_t              ret = HAL_RET_OK; 
     ipseccb_t*               ipseccb;
     pd::pd_ipseccb_args_t    pd_ipseccb_args;
+    ep_t *sep, *dep;
+    mac_addr_t *smac = NULL, *dmac = NULL;
+    l2seg_t *infra_seg;
+    hal::tenant_id_t tid;
 
     auto kh = spec.key_or_handle();
 
@@ -192,6 +228,31 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     ipseccb->tunnel_sip4 = spec.tunnel_sip4();
     ipseccb->tunnel_dip4 = spec.tunnel_dip4();
     
+    infra_seg = l2seg_get_infra_l2seg();
+    if (infra_seg) {
+        tid = hal::tenant_lookup_by_handle(infra_seg->tenant_handle)->tenant_id;
+        HAL_TRACE_DEBUG("infra_seg success tid = {}", tid);
+    } else {
+        tid = 0;
+    }
+    sep = find_ep_by_v4_key(tid, (spec.tunnel_sip4()));
+    if (sep) {
+        smac = ep_get_mac_addr(sep);
+        if (smac) {
+            memcpy(ipseccb->smac, smac, ETH_ADDR_LEN);
+        } 
+    } else {
+        HAL_TRACE_DEBUG("Src EP Lookup failed \n");
+    }
+    dep = find_ep_by_v4_key(tid, (spec.tunnel_dip4()));
+    if (dep) {
+        dmac = ep_get_mac_addr(dep);
+        if (dmac) {
+            memcpy(ipseccb->dmac, dmac, ETH_ADDR_LEN);
+        } 
+    } else {
+        HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
+    }
     ret = pd::pd_ipseccb_update(&pd_ipseccb_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD IPSECCB: Update Failed, err: ", ret);

@@ -30,16 +30,22 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
 
     // Ethernet Header 
     phvwri p.eth_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
+#if 0
     addi r7, r0, ESP_FIXED_HDR_SIZE 
     add r7, r7, k.txdma2_global_iv_size
     add r1, r7, k.t0_s2s_in_page_addr
+#endif
+    add r1, r0, k.ipsec_to_stage3_ipsec_cb_addr
+    addi r1, r1, IPSEC_IP_HDR_OFFSET
     phvwr  p.eth_hdr_dma_cmd_addr, r1
-    phvwr  p.eth_hdr_dma_cmd_size, k.t0_s2s_headroom_offset
+    //phvwr  p.eth_hdr_dma_cmd_size, k.t0_s2s_headroom_offset
+    phvwri  p.eth_hdr_dma_cmd_size, 14 
 
     // Outer-IP  
     phvwri p.ip_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     add r1, r0, k.ipsec_to_stage3_ipsec_cb_addr
     addi r1, r1, IPSEC_IP_HDR_OFFSET
+    addi r1, r1, 14
     phvwr  p.ip_hdr_dma_cmd_addr, r1 
     phvwri  p.ip_hdr_dma_cmd_size, IPV4_HDR_SIZE 
 

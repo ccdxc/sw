@@ -47,7 +47,8 @@ typedef struct ipseccb_s {
     uint32_t              esn_lo;
     uint32_t              spi;
     hal_handle_t          hal_handle;              // HAL allocated handle
-
+    mac_addr_t            smac;
+    mac_addr_t            dmac; 
     // PD state
     void                  *pd;                     // all PD specific state
     void                  *pd_decrypt;                     // all PD specific state

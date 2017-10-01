@@ -122,7 +122,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
 hal_ret_t
 p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del)
 {
-    pd_ipseccb_ip4_hdr_t ip_hdr = {0};
+    pd_ipseccb_eth_ip4_hdr_t eth_ip_hdr = {0};
     hal_ret_t                                   ret = HAL_RET_OK;
 
     // hardware index for this entry
@@ -130,20 +130,23 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_IP_HDR);
 
     if (!del) {
-        ip_hdr.version_ihl = 0x45;
-        ip_hdr.tos = 0;
+        memcpy(eth_ip_hdr.smac, ipseccb_pd->ipseccb->smac, ETH_ADDR_LEN);
+        memcpy(eth_ip_hdr.dmac, ipseccb_pd->ipseccb->dmac, ETH_ADDR_LEN);
+        eth_ip_hdr.ethertype = htons(0x800);
+        eth_ip_hdr.version_ihl = 0x45;
+        eth_ip_hdr.tos = 0;
         //p4 will update/correct this part - fixed for now.
-        ip_hdr.tot_len = htons(64); 
-        ip_hdr.id = 0;
-        ip_hdr.frag_off = 0;
-        ip_hdr.ttl = 255;
-        ip_hdr.protocol = 50; // ESP - will hash define it.
-        ip_hdr.check = 0; // P4 to fill the right checksum
-        ip_hdr.saddr = htonl(ipseccb_pd->ipseccb->tunnel_sip4);
-        ip_hdr.daddr = htonl(ipseccb_pd->ipseccb->tunnel_dip4);
+        eth_ip_hdr.tot_len = htons(64); 
+        eth_ip_hdr.id = 0;
+        eth_ip_hdr.frag_off = 0;
+        eth_ip_hdr.ttl = 255;
+        eth_ip_hdr.protocol = 50; // ESP - will hash define it.
+        eth_ip_hdr.check = 0; // P4 to fill the right checksum
+        eth_ip_hdr.saddr = htonl(ipseccb_pd->ipseccb->tunnel_sip4);
+        eth_ip_hdr.daddr = htonl(ipseccb_pd->ipseccb->tunnel_dip4);
     }
     HAL_TRACE_DEBUG("Programming stage0 at hw-id: 0x{0:x}", hwid); 
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&ip_hdr, sizeof(ip_hdr))){
+    if(!p4plus_hbm_write(hwid,  (uint8_t *)&eth_ip_hdr, sizeof(eth_ip_hdr))){
         HAL_TRACE_ERR("Failed to create ip_hdr entry for IPSECCB");
         ret = HAL_RET_HW_FAIL;
     }

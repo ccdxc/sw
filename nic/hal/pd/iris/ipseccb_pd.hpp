@@ -46,7 +46,10 @@ struct pd_ipseccb_decrypt_s {
     ht_ctxt_t          hw_ht_ctxt;           // h/w id based hash table ctxt
 } __PACK__;
 
-typedef struct pd_ipseccb_ip4_hdr_s {
+typedef struct pd_ipseccb_eth_ip4_hdr_s {
+    mac_addr_t dmac;
+    mac_addr_t smac;
+    uint16_t   ethertype; 
     uint8_t    version_ihl;
     uint8_t    tos;
     uint16_t   tot_len;
@@ -57,7 +60,7 @@ typedef struct pd_ipseccb_ip4_hdr_s {
     uint16_t   check;
     uint32_t   saddr;
     uint32_t   daddr;
-} pd_ipseccb_ip4_hdr_t;
+} __PACK__ pd_ipseccb_eth_ip4_hdr_t;
 
 // allocate a ipseccb pd instance
 static inline pd_ipseccb_encrypt_t *
