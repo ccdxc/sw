@@ -54,7 +54,8 @@
     modify_field(common_global_scratch.pending_rx2tx, common_phv.pending_rx2tx); \
     modify_field(common_global_scratch.pending_sesq, common_phv.pending_sesq); \
     modify_field(common_global_scratch.pending_ack_send, common_phv.pending_ack_send); \
-    modify_field(common_global_scratch.debug_dol_dont_send_ack, common_phv.debug_dol_dont_send_ack);
+    modify_field(common_global_scratch.debug_dol_dont_send_ack, common_phv.debug_dol_dont_send_ack);\
+    modify_field(common_global_scratch.pending_asesq, common_phv.pending_asesq);
 
 /******************************************************************************
  * D-vectors
@@ -128,6 +129,7 @@ header_type common_global_phv_t {
         pending_sesq            : 1;
         pending_ack_send        : 1;
         debug_dol_dont_send_ack : 1;
+        pending_asesq           : 1;
     }
 }
 

@@ -75,6 +75,7 @@ tcp_slow_timer_process:
 tcp_asesq_process:
     //addi            r7, r0, TCP_SCHED_RING_ASESQ
     //phvwri          p.common_phv_ring_id, TCP_SCHED_RING_ASESQ
+    phvwri          p.common_phv_pending_asesq, 1
     j               tcp_tx_read_rx2tx_shared_process
     nop
     nop.e

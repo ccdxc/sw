@@ -20,9 +20,20 @@ tcp_tx_sesq_consume_stage2_start:
     CAPRI_CLEAR_TABLE_VALID(1)
     /* address will be in r4 */
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    sne             c1, k.common_phv_pending_asesq, r0
+    bcf             [c1], asesq_consume
+    nop
     /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid, TCP_SCHED_RING_SESQ, k.to_s2_sesq_cidx)
     add             r3, r3, 1
     memwr.dx        r4, r3
     nop.e
     nop
+asesq_consume:  
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid, TCP_SCHED_RING_ASESQ, k.to_s2_sesq_cidx)
+    add             r3, r3, 1
+    memwr.dx        r4, r3
+    nop.e
+    nop
+

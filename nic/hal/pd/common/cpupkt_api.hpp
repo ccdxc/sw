@@ -23,6 +23,7 @@ namespace pd {
 #define CPU_ASQ_QTYPE                   0
 #define CPU_ASQ_QID                     0
 #define CPU_SCHED_RING_ASQ              0
+#define TCP_SCHED_RING_ASESQ            4
 
 #define DB_ADDR_BASE                   0x800000 
 #define DB_ADDR_BASE_HOST              0x68400000
@@ -102,7 +103,7 @@ hal_ret_t cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
                               size_t* data_len);
 hal_ret_t cpupkt_free(p4_to_p4plus_cpu_pkt_t* flow_miss_hdr, uint8_t* data);
 
-// transmit
+// transmit pkt
 hal_ret_t cpupkt_send(cpupkt_ctxt_t* ctxt,
                       types::WRingType type,
                       uint32_t queue_id,
@@ -114,6 +115,7 @@ hal_ret_t cpupkt_send(cpupkt_ctxt_t* ctxt,
                       uint8_t  qtype = CPU_ASQ_QTYPE,
                       uint32_t qid = CPU_ASQ_QID,
                       uint8_t  ring_number = CPU_SCHED_RING_ASQ);
+
 hal_ret_t cpupkt_page_alloc(cpupkt_hw_id_t* page_addr);
 hal_ret_t cpupkt_descr_alloc(cpupkt_hw_id_t* descr_addr);
 

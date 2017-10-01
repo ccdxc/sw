@@ -256,6 +256,7 @@ modules:
         iterate :
             - flow: filter://type=IPV4
 
+
     - module:
         name    : PKT_TO_ARQ
         package : test.tcp_tls_proxy
@@ -284,4 +285,30 @@ modules:
             maxflows: 1
         iterate :
             - flow: filter://type=IPV4
+
+
+    - module:
+        name    : TLS_HANDSHAKE_RX_LOOPBACK
+        enable  : True
+        package : test.tcp_tls_proxy
+        module  : tls_handshake_rx_loopback
+        spec    : tls_handshake.testspec
+        ignore  : False
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : SYN_ACK_TO_ARQ_LOOPBACK
+        enable  : False
+        package : test.tcp_tls_proxy
+        module  : syn_ack_to_arq_loopback
+        spec    : one_pkt.testspec
+        ignore  : True
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
 

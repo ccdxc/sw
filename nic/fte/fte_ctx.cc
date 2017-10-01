@@ -369,6 +369,9 @@ ctx_t::update_gft()
         session_state.tcp_ts_option = sess_spec_->tcp_ts_option();
     }
 
+    if (!flow_miss()) {
+      return HAL_RET_OK;
+    }
     // by this time dep should be known
     if (dep_ == NULL) {
         HAL_TRACE_ERR("fte::{} dep not found", __func__);
@@ -588,10 +591,12 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, flow_t iflow[]
     pkt_len_ = pkt_len;
     arm_lifq_ = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
-    ret = init_flows(iflow, rflow);
-    if (ret != HAL_RET_OK) {
+    if (cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) {
+      ret = init_flows(iflow, rflow);
+      if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("fte: failed to init flows, err={}", ret);
         return ret;
+      }
     }
 
     return HAL_RET_OK;

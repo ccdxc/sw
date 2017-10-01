@@ -317,7 +317,7 @@ public:
 
     // Following are valid only for packets punted to ARM
     const cpu_rxhdr_t* cpu_rxhdr() const { return cpu_rxhdr_; }
-    const uint8_t* pkt() const { return pkt_; }
+    uint8_t* pkt() const { return pkt_; }
     size_t pkt_len() const { return pkt_len_; }
 
     // Queue pkt for tx (in case of flow_miss rx pkt is 
@@ -350,7 +350,7 @@ public:
     hal_ret_t feature_status() const { return feature_status_; } 
     void set_feature_status(hal_ret_t ret) { feature_status_ = ret; }
 
-    bool flow_miss() const { return session_ == NULL; }
+    bool flow_miss() const { return ((session_ == NULL) && (arm_lifq_.lif == hal::SERVICE_LIF_CPU)); }
     bool valid_rflow() const { return valid_rflow_; }
 
     hal::tenant_t *tenant() const { return tenant_; }

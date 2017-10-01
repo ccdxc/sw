@@ -466,6 +466,7 @@ cpupkt_program_send_ring_doorbell(cpupkt_ctxt_t* ctxt,
     return HAL_RET_OK;
 }
 
+
 hal_ret_t
 cpupkt_send(cpupkt_ctxt_t* ctxt,
             types::WRingType type,
@@ -486,7 +487,7 @@ cpupkt_send(cpupkt_ctxt_t* ctxt,
     size_t              write_len = 0;
     size_t              total_len = 0;
 
-    if(!ctxt || !cpu_header || !p4_header || !data) {
+    if(!ctxt || !data) {
         return HAL_RET_INVALID_ARG;    
     }
     
@@ -500,36 +501,39 @@ cpupkt_send(cpupkt_ctxt_t* ctxt,
     // copy the packet to hbm page. 
     // TODO: REMOVE once direct hbm access is available
 
-    // CPU header
-    // update l2 header offset to include headers
-    cpu_header->l2_offset += (sizeof(cpu_to_p4plus_header_t) +
-                              sizeof(p4plus_to_p4_header_t) +
-                              L2HDR_DOT1Q_OFFSET);
     write_addr = page_addr;
-    write_len = sizeof(cpu_to_p4plus_header_t);
-    total_len += write_len;
-    HAL_TRACE_DEBUG("Copying CPU header of len: {} to addr: {:#x}, l2offset: {:#x}",
-                          write_len, write_addr, cpu_header->l2_offset);
-    if(!p4plus_hbm_write(write_addr, (uint8_t *)cpu_header, write_len)) {
-        HAL_TRACE_ERR("Failed to copy packet to the page");
-        ret = HAL_RET_HW_FAIL;
-        goto cleanup;
-    }
+    if (cpu_header != NULL) {
+        // CPU header
+        // update l2 header offset to include headers
+        cpu_header->l2_offset += (sizeof(cpu_to_p4plus_header_t) +
+                                  sizeof(p4plus_to_p4_header_t) +
+                                  L2HDR_DOT1Q_OFFSET);
 
-    // P4plus_to_p4_header_t
-    write_addr += write_len; // shift address
-    write_len = sizeof(p4plus_to_p4_header_t);
-    total_len += write_len;
-    HAL_TRACE_DEBUG("Copying P4Plus to P4 header of len: {} to addr: {:#x}",
-                              write_len, write_addr);
-    if(!p4plus_hbm_write(write_addr, (uint8_t *)p4_header, write_len)) {
-        HAL_TRACE_ERR("Failed to copy packet to the page");
-        ret = HAL_RET_HW_FAIL;
-        goto cleanup;
-    }
+        write_len = sizeof(cpu_to_p4plus_header_t);
+        total_len += write_len;
+        HAL_TRACE_DEBUG("Copying CPU header of len: {} to addr: {:#x}, l2offset: {:#x}",
+                        write_len, write_addr, cpu_header->l2_offset);
+        if(!p4plus_hbm_write(write_addr, (uint8_t *)cpu_header, write_len)) {
+            HAL_TRACE_ERR("Failed to copy packet to the page");
+            ret = HAL_RET_HW_FAIL;
+            goto cleanup;
+        }
+
+        // P4plus_to_p4_header_t
+        write_addr += write_len; // shift address
+        write_len = sizeof(p4plus_to_p4_header_t);
+        total_len += write_len;
+        HAL_TRACE_DEBUG("Copying P4Plus to P4 header of len: {} to addr: {:#x}",
+                        write_len, write_addr);
+        if(!p4plus_hbm_write(write_addr, (uint8_t *)p4_header, write_len)) {
+            HAL_TRACE_ERR("Failed to copy packet to the page");
+            ret = HAL_RET_HW_FAIL;
+            goto cleanup;
+        }
     
+        write_addr += write_len;
+    }
     // Data
-    write_addr += write_len;
     write_len = data_len;
     total_len += write_len;
     HAL_TRACE_DEBUG("Copying data of len: {} to page at addr: {:#x}", write_len, write_addr);
@@ -563,6 +567,7 @@ cleanup:
     // FIXME
     return ret;
 }
+
 
 } // namespace pd
 } // namespace hal

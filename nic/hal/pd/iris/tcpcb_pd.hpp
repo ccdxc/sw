@@ -11,6 +11,7 @@ namespace hal {
 namespace pd {
 
 #define HAL_MAX_HW_TCPCBS                        2048
+#define TCP_PROXY_TX_TOTAL_RINGS                 5
 
 typedef uint64_t    tcpcb_hw_id_t;
 

@@ -23,10 +23,14 @@ tcp_tx_process_stage3_start:
     phvwr           p.t0_s2s_snd_nxt, d.snd_nxt
     /* check SESQ for pending data to be transmitted */
     seq             c1, k.common_phv_pending_sesq, 1
+    seq             c2, k.common_phv_pending_asesq, 1
 
     //bal.c1        r7, tcp_retxq_consume
     //nop
     bal.c1          r7, tcp_retx_enqueue
+    nop
+
+    bal.c2          r7, tcp_retx_enqueue
     nop
 
     seq             c1, k.common_phv_pending_ack_send, 1

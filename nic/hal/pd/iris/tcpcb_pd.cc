@@ -494,7 +494,7 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         }
         HAL_TRACE_DEBUG("Received pc address 0x{0:x}", pc_offset);
         data.action_id = pc_offset;
-        data.u.read_rx2tx_d.total = 4;
+        data.u.read_rx2tx_d.total = TCP_PROXY_TX_TOTAL_RINGS;
         data.u.read_rx2tx_d.snd_wnd = htonl(tcpcb_pd->tcpcb->snd_wnd);
         data.u.read_rx2tx_d.snd_cwnd = htons((uint16_t)tcpcb_pd->tcpcb->snd_cwnd);
         data.u.read_rx2tx_d.debug_dol_tx = htonl(tcpcb_pd->tcpcb->debug_dol_tx);
