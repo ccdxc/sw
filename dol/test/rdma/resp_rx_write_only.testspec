@@ -64,6 +64,24 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
 buffers:
+    - buffer:
+        id      : XFER_BUF
+        template: ref://factory/templates/id=RDMA_XFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           offset  : 1024
+           size    : ref://testcase/packets/id=BASE_PKT/size
+
+    - buffer:
+        id      : EXP_BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : None
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=BASE_PKT/size
+                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+
 
 descriptors:
 
@@ -74,3 +92,7 @@ trigger:
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
 expect:
+    descriptors:
+        - descriptor:
+            object : ref://testcase/buffers/id=EXP_BUF
+            ring   : ref://testcase/buffers/id=XFER_BUF

@@ -1,0 +1,10 @@
+# Rdma Xfer Template
+meta:
+    id      : RDMA_XFER
+    package : factory.objects.rdma
+    module  : xfer
+    objname : RdmaXferObject
+
+address : None
+size    : None
+offset  : None

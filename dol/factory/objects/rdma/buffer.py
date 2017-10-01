@@ -20,6 +20,7 @@ class RdmaBufferObject(base.FactoryObjectBase):
 
     def Init(self, spec):
         #self.LockAttributes()
+        super().Init(spec)
        
         for segment in spec.fields.segments:
             skip_bytes = segment.skip if hasattr(segment, 'skip') else 0
@@ -32,6 +33,7 @@ class RdmaBufferObject(base.FactoryObjectBase):
         # Offset of the data
         self.offset = spec.fields.offset if hasattr(spec.fields, 'offset') else 0 
         self.address = spec.fields.slab.address if spec.fields.slab else 0
+        self.address += self.offset
         if self.address:
             self.mem_handle = resmgr.MemHandle(self.address, 
                                     resmgr.HostMemoryAllocator.get_v2p(self.address))
@@ -80,6 +82,18 @@ class RdmaBufferObject(base.FactoryObjectBase):
         #                                              self.data[i], other.data[i],
         #                                              self.data[i], other.data[i])) 
         return cmp
+
+    def __copy__(self):
+        obj = super().__copy__()
+        obj.GID('ACTUAL_' + obj.GID())
+        # obj._mem must point to the original buffer's memory handle
+        # obj.size must be same as original buffer's size
+        # The following fields are filled in by Read()
+        obj.data = None
+        return obj
+
+    def GetBuffer(self):
+        return None
 
     def IsPacket(self):
         return False

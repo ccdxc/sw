@@ -75,7 +75,7 @@ buffers:
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
-           offset  : 32
+           offset  : 0
            segments:
                - size    : 52  # 32 plus 20 bytes of pendol + crc headers
                  data    : None

@@ -289,16 +289,22 @@ _next2:;
     CAPRI_SET_TABLE_1_VALID_C(!_cf, 1);
 
 #define CAPRI_GET_TABLE_0_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data); \
+    phvwr   p.common.common_t0_s2s_s2s_data, r0
 #define CAPRI_GET_TABLE_1_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
+    phvwr   p.common.common_t1_s2s_s2s_data, r0
 #define CAPRI_GET_TABLE_2_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data); \
+    phvwr   p.common.common_t2_s2s_s2s_data, r0
 #define CAPRI_GET_TABLE_3_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data); \
+    phvwr   p.common.common_t3_s2s_s2s_data, r0
 
 #define CAPRI_GET_TABLE_0_OR_1_ARG(_phv_name, _arg_base_r, _cf) \
-    cmov    _arg_base_r, _cf, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data), offsetof(struct _phv_name, common.common_t1_s2s_s2s_data);
+    cmov    _arg_base_r, _cf, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data), offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
+    phvwr._cf   p.common.common_t0_s2s_s2s_data, r0; \
+    phvwr.!_cf   p.common.common_t1_s2s_s2s_data, r0
 
 #define CAPRI_GET_TABLE_I_ARG(_phv_name, _tbl_id_r, _arg_base_r) \
     .brbegin; \
@@ -307,15 +313,19 @@ _next2:;
     .brcase 0; \
         b _I_ARG_next; \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data); \
+        phvwr    p.common.common_t0_s2s_s2s_data, r0; \
     .brcase 1; \
         b _I_ARG_next; \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
+        phvwr    p.common.common_t1_s2s_s2s_data, r0; \
     .brcase 2; \
         b _I_ARG_next; \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data); \
+        phvwr    p.common.common_t2_s2s_s2s_data, r0; \
     .brcase 3; \
         b _I_ARG_next; \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data); \
+        phvwr    p.common.common_t3_s2s_s2s_data, r0; \
     .brend; \
 _I_ARG_next:;
 
