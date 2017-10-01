@@ -7,7 +7,7 @@ namespace hal {
 
 namespace periodic {
 hal_ret_t delay_delete_to_slab(hal_slab_t slab_id_, void *elem);
-}  // namespace periodic
+}    // namespace periodic
 
 namespace utils {
 
@@ -32,10 +32,10 @@ slab::alloc_block_(void)
 
     ptr = block->elems_;
     for (uint32_t i = 0; i < elems_per_block_ - 1; i++) {
-        *(uint32_t **)ptr = (uint32_t *)(ptr + elem_sz_);
+        *(void **)ptr = (ptr + elem_sz_);
         ptr += elem_sz_;
     }
-    *(uint32_t **)ptr = NULL;
+    *(void **)ptr = NULL;
     this->num_blocks_++;
 
     return block;
@@ -57,7 +57,7 @@ slab::init(const char *name, hal_slab_t slab_id, uint32_t elem_sz,
     memset(this->name_, 0, sizeof(this->name_));
     strncpy(this->name_, name, SLAB_NAME_MAX_LEN);
     this->slab_id_ = slab_id;
-    this->elem_sz_ = (elem_sz + 3) & ~0x03;
+    this->elem_sz_ = (elem_sz + 7) & ~0x07;
     this->elems_per_block_ = elems_per_block;
     this->raw_block_sz_ = (elem_sz_ * elems_per_block_) + sizeof(slab_block_t);
     this->grow_on_demand_ = grow_on_demand;
@@ -141,6 +141,7 @@ slab::alloc(void)
 {
     void            *elem = NULL;
     slab_block_t    *block;
+
     if (thread_safe_) {
         HAL_SPINLOCK_LOCK(&slock_);
     }
@@ -167,7 +168,7 @@ slab::alloc(void)
     }
 
     elem = block->free_head_;
-    block->free_head_ = *(uint32_t **)elem;
+    block->free_head_ = *(void **)elem;
     this->num_allocs_++;
     this->num_in_use_++;
     block->num_in_use_++;
