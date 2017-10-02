@@ -29,6 +29,11 @@ func NewFInfo(strs []string) FInfo {
 // The function is called by Get/Write/Walk routines to fetch empty embeded structs
 type GetSubObjFn func(string) interface{}
 
+// NilSubObj doesn't recognize any sub object name
+func NilSubObj(string) interface{} {
+	return nil
+}
+
 // RfCtx is context used by the package to pass on intermediate context or user context
 type RfCtx struct {
 	GetSubObj GetSubObjFn
@@ -359,7 +364,7 @@ func getKv(kvCtx *kvContext, v reflect.Value) (string, string, bool) {
 	case reflect.Ptr, reflect.Struct, reflect.Slice, reflect.Array, reflect.Map:
 		return typeStr, valueStr, false
 	case reflect.Bool, reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint8,
-		reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.String:
+		reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.String:
 		valueStr += fmt.Sprintf("%v", v)
 		isLeaf = true
 	default:
@@ -616,6 +621,9 @@ func writeKv(new, orig reflect.Value, kvString string, kvCtx *kvContext) reflect
 			uintVal, _ = strconv.ParseUint(valueString, 10, 64)
 		}
 		new.SetUint(uintVal)
+	case reflect.Float32, reflect.Float64:
+		floatVal, _ := strconv.ParseFloat(valueString, 64)
+		new.SetFloat(floatVal)
 	case reflect.String:
 		new.SetString(valueString)
 	default:

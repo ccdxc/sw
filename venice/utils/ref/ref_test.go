@@ -89,6 +89,7 @@ type UserSpec struct {
 	NodeRoles    []NodeSpecNodeRole `json:"nodeRoles,omitempty"`
 	Conditions   []*NodeCondition   `json:"conditions,omitempty"`
 	BoolFlag     bool               `json:"boolFlag, omitempty"`
+	FloatVal     float64            `json:"floatVal,omitempty"`
 }
 
 type UserList struct {
@@ -175,6 +176,7 @@ func TestWalkStruct(t *testing.T) {
       Message: string
     }
     BoolFlag: bool
+    FloatVal: float64
   }
 }
 `
@@ -431,6 +433,11 @@ func TestEmptyGet(t *testing.T) {
 		t.Fatalf("NodeRoles not found in kvs")
 	}
 	total++
+	if _, ok := kvs["FloatVal"]; !ok {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("FloatVal not found in kvs")
+	}
+	total++
 
 	if len(kvs) != total {
 		printKvs("kvs", kvs, true)
@@ -482,6 +489,7 @@ func TestGet(t *testing.T) {
 			NodeRoles:  []NodeSpecNodeRole{997, 799},
 			Conditions: []*NodeCondition{&cond1, &cond2},
 			BoolFlag:   true,
+			FloatVal:   77.983,
 		},
 	}
 	kvs := make(map[string]FInfo)
@@ -843,6 +851,15 @@ func TestGet(t *testing.T) {
 	} else {
 		t.Fatalf("BoolFlag not found")
 	}
+
+	if fi, ok := kvs["FloatVal"]; ok {
+		if fi.Key || len(fi.ValueStr) != 1 || fi.ValueStr[0] != "77.983" {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! FloatVal not found '%v'", fi.ValueStr)
+		}
+	} else {
+		t.Fatalf("Condition Reason not found")
+	}
 }
 
 func TestUpdate(t *testing.T) {
@@ -891,6 +908,7 @@ func TestUpdate(t *testing.T) {
 			NodeRoles:  []NodeSpecNodeRole{997, 799},
 			Conditions: []*NodeCondition{&cond1, &cond2},
 			BoolFlag:   false,
+			FloatVal:   11.322,
 		},
 	}
 	kvs := make(map[string]FInfo)
@@ -915,6 +933,7 @@ func TestUpdate(t *testing.T) {
 	kvs["Message"] = NewFInfo([]string{"one", "two"})
 	kvs["LastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
 	kvs["BoolFlag"] = NewFInfo([]string{"true"})
+	kvs["FloatVal"] = NewFInfo([]string{"901.019"})
 
 	refCtx := &RfCtx{GetSubObj: subObj}
 	newObj := WriteKvs(u, refCtx, kvs)
@@ -1045,6 +1064,12 @@ func TestUpdate(t *testing.T) {
 		fmt.Printf("newUser: %+v\n\n", newUser)
 		t.Fatalf("unable to write NodeRoles array to indirect type")
 	}
+
+	if newUser.Spec.FloatVal != 901.019 {
+		fmt.Printf("newUser: %+v\n\n", newUser)
+		t.Fatalf("unable to write FloatVal")
+	}
+
 }
 
 func TestNewWrite(t *testing.T) {
@@ -1085,6 +1110,7 @@ func TestNewWrite(t *testing.T) {
 	kvs["Message"] = NewFInfo([]string{"one", "two"})
 	kvs["LastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
 	kvs["BoolFlag"] = NewFInfo([]string{"true"})
+	kvs["FloatVal"] = NewFInfo([]string{"901.109"})
 
 	refCtx := &RfCtx{GetSubObj: subObj}
 	newObj := WriteKvs(User{}, refCtx, kvs)
@@ -1225,6 +1251,11 @@ func TestNewWrite(t *testing.T) {
 	if newUser.Spec.BoolFlag != true {
 		t.Fatalf("unable to write BoolFlag")
 	}
+
+	if newUser.Spec.FloatVal != 901.109 {
+		fmt.Printf("newUser: %+v\n\n", newUser)
+		t.Fatalf("unable to write FloatVal")
+	}
 }
 
 func TestFieldByName(t *testing.T) {
@@ -1272,6 +1303,7 @@ func TestFieldByName(t *testing.T) {
 			NodeRoles:  []NodeSpecNodeRole{997, 799},
 			Conditions: []*NodeCondition{&cond1, &cond2},
 			BoolFlag:   true,
+			FloatVal:   782.1,
 		},
 	}
 	user := reflect.ValueOf(u)
@@ -1355,6 +1387,11 @@ func TestFieldByName(t *testing.T) {
 	boolFlag := FieldByName(user, "Spec.BoolFlag")
 	if len(boolFlag) != 1 || boolFlag[0] != "true" {
 		t.Fatalf("Invalid boolFlag fetched %s \n", boolFlag)
+	}
+
+	floatVal := FieldByName(user, "Spec.FloatVal")
+	if len(floatVal) != 1 || floatVal[0] != "782.1" {
+		t.Fatalf("Invalid transitionTimes %s \n", transitionTimes)
 	}
 }
 
