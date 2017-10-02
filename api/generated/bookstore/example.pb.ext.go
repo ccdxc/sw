@@ -242,6 +242,7 @@ func init() {
 		args := make([]string, 0)
 		args = append(args, "3")
 		args = append(args, "10")
+
 		if !validators.StrLen(m.ISBNId, args) {
 			return false
 		}
@@ -254,6 +255,7 @@ func init() {
 		args := make([]string, 0)
 		args = append(args, "2")
 		args = append(args, "30")
+
 		if !validators.IntRange(m.Quantity, args) {
 			return false
 		}
@@ -284,6 +286,7 @@ func init() {
 		args := make([]string, 0)
 		args = append(args, "6")
 		args = append(args, "256")
+
 		if !validators.StrLen(m.WebAddr, args) {
 			return false
 		}

@@ -85,7 +85,10 @@ func TestCrudOps(t *testing.T) {
 	}
 
 	// Setup Watcher and slices for validation.
-	var rcvWatchEvents, expectWatchEvents []kvstore.WatchEvent
+	// For publisher
+	var pRcvWatchEvents, pExpectWatchEvents []kvstore.WatchEvent
+	// For orders
+	var oRcvWatchEvents, oExpectWatchEvents []kvstore.WatchEvent
 	var wg sync.WaitGroup
 	wctx, cancel := context.WithCancel(ctx)
 	waitWatch := make(chan bool)
@@ -109,7 +112,7 @@ func TestCrudOps(t *testing.T) {
 				t.Logf("received event [%v]", ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
-					rcvWatchEvents = append(rcvWatchEvents, *ev)
+					pRcvWatchEvents = append(pRcvWatchEvents, *ev)
 				} else {
 					t.Logf("publisher watcher closed")
 					pw = false
@@ -118,7 +121,7 @@ func TestCrudOps(t *testing.T) {
 				t.Logf("received event [%v]", ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
-					rcvWatchEvents = append(rcvWatchEvents, *ev)
+					oRcvWatchEvents = append(oRcvWatchEvents, *ev)
 				} else {
 					t.Logf("order watcher closed")
 					ow = false
@@ -141,7 +144,7 @@ func TestCrudOps(t *testing.T) {
 				t.Fatalf("updated object [Add] does not match \n\t[%+v]\n\t[%+v]", pub, ret)
 			}
 			evp := pub
-			expectWatchEvents = addToWatchList(&expectWatchEvents, &evp, kvstore.Created)
+			pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Created)
 		}
 	}
 
@@ -153,7 +156,7 @@ func TestCrudOps(t *testing.T) {
 				t.Fatalf("updated object [Add] does not match \n\t[%+v]\n\t[%+v]", pub2, ret)
 			}
 			evp := pub2
-			expectWatchEvents = addToWatchList(&expectWatchEvents, &evp, kvstore.Created)
+			pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Created)
 		}
 	}
 
@@ -196,7 +199,7 @@ func TestCrudOps(t *testing.T) {
 				t.Fatalf("updated object [Add] does not match \n\t[%+v]\n\t[%+v]", pub, ret)
 			}
 			evp := pub
-			expectWatchEvents = addToWatchList(&expectWatchEvents, &evp, kvstore.Updated)
+			pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Updated)
 		}
 	}
 
@@ -210,7 +213,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("Deleted object does not match \n\t[%+v]\n\t[%+v]", pub.Spec, ret.Spec)
 		}
 		evp := pub
-		expectWatchEvents = addToWatchList(&expectWatchEvents, &evp, kvstore.Deleted)
+		pExpectWatchEvents = addToWatchList(&pExpectWatchEvents, &evp, kvstore.Deleted)
 
 	}
 
@@ -282,7 +285,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", order1.Spec, retorder.Spec)
 		}
 		evp := order1
-		expectWatchEvents = addToWatchList(&expectWatchEvents, &evp, kvstore.Created)
+		oExpectWatchEvents = addToWatchList(&oExpectWatchEvents, &evp, kvstore.Created)
 	}
 
 	{ // ---  POST second  object via REST --- //
@@ -294,7 +297,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("Added Order object does not match \n\t[%+v]\n\t[%+v]", order1.Spec, retorder.Spec)
 		}
 		evp := order2
-		expectWatchEvents = addToWatchList(&expectWatchEvents, &evp, kvstore.Created)
+		oExpectWatchEvents = addToWatchList(&oExpectWatchEvents, &evp, kvstore.Created)
 	}
 
 	{ // ---  Get  object via REST --- //
@@ -328,7 +331,7 @@ func TestCrudOps(t *testing.T) {
 			t.Fatalf("updated object [Update] does not match \n\t[%+v]\n\t[%+v]", retorder, order2)
 		}
 		evp := order2mod
-		expectWatchEvents = addToWatchList(&expectWatchEvents, &evp, kvstore.Updated)
+		oExpectWatchEvents = addToWatchList(&oExpectWatchEvents, &evp, kvstore.Updated)
 	}
 
 	{ // ---  DELETE objects via REST --- //
@@ -340,7 +343,7 @@ func TestCrudOps(t *testing.T) {
 		if !validateObjectSpec(retorder, order1) {
 			t.Fatalf("updated object [Delete] does not match \n\t[%+v]\n\t[%+v]", retorder, order1)
 		}
-		expectWatchEvents = addToWatchList(&expectWatchEvents, &order1, kvstore.Deleted)
+		oExpectWatchEvents = addToWatchList(&oExpectWatchEvents, &order1, kvstore.Deleted)
 	}
 
 	// ========= Test Validation and Status update Operations ========= //
@@ -420,19 +423,32 @@ func TestCrudOps(t *testing.T) {
 
 	// ===== Validate Watch Events received === //
 	AssertEventually(t,
-		func() (bool, []interface{}) { return len(expectWatchEvents) == len(rcvWatchEvents), nil },
+		func() (bool, []interface{}) { return len(pExpectWatchEvents) == len(pRcvWatchEvents), nil },
+		"failed to receive all watch events",
+		"10ms",
+		"9s")
+	AssertEventually(t,
+		func() (bool, []interface{}) { return len(oExpectWatchEvents) == len(oRcvWatchEvents), nil },
 		"failed to receive all watch events",
 		"10ms",
 		"9s")
 	cancel()
 	wg.Wait()
 
-	for k := range expectWatchEvents {
-		if expectWatchEvents[k].Type != rcvWatchEvents[k].Type {
-			t.Fatalf("mismatched event type expected (%s) got (%s)", expectWatchEvents[k].Type, rcvWatchEvents[k].Type)
+	for k := range pExpectWatchEvents {
+		if pExpectWatchEvents[k].Type != pRcvWatchEvents[k].Type {
+			t.Fatalf("mismatched event type expected (%s) got (%s)", pExpectWatchEvents[k].Type, pRcvWatchEvents[k].Type)
 		}
-		if !validateObjectSpec(expectWatchEvents[k].Object, rcvWatchEvents[k].Object) {
-			t.Fatalf("watch event object [%s] does not match \n\t[%+v]\n\t[%+v]", expectWatchEvents[k].Type, expectWatchEvents[k].Object, rcvWatchEvents[k].Object)
+		if !validateObjectSpec(pExpectWatchEvents[k].Object, pRcvWatchEvents[k].Object) {
+			t.Fatalf("watch event object [%s] does not match \n\t[%+v]\n\t[%+v]", pExpectWatchEvents[k].Type, pExpectWatchEvents[k].Object, pRcvWatchEvents[k].Object)
+		}
+	}
+	for k := range oExpectWatchEvents {
+		if oExpectWatchEvents[k].Type != oRcvWatchEvents[k].Type {
+			t.Fatalf("mismatched event type expected (%s) got (%s)", oExpectWatchEvents[k].Type, oRcvWatchEvents[k].Type)
+		}
+		if !validateObjectSpec(oExpectWatchEvents[k].Object, oRcvWatchEvents[k].Object) {
+			t.Fatalf("watch event object [%s] does not match \n\t[%+v]\n\t[%+v]", oExpectWatchEvents[k].Type, oExpectWatchEvents[k].Object, oRcvWatchEvents[k].Object)
 		}
 	}
 }

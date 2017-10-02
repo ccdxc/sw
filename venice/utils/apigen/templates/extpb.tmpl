@@ -42,7 +42,7 @@ func (m *{{.Name}})  MakeKey(prefix string) string {
 } {{end}} {{end}}
 
 // Validators
-{{range .Messages}}{{$msg := .}}{{$msgname := .Name}}
+{{range .Messages}}{{if isNestedMessage .}}{{else}}{{$msg := .}}{{$msgname := .Name}}
 func (m *{{.Name}}) Validate(ver string, ignoreStatus bool) bool { {{with (index $validators.Map (derefStr .Name))}}{{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Validators)}}{{if $fldv.Repeated}}
 	for _, v := range m.{{$fldk}} {
 		 if !v.Validate(ver, ignoreStatus) {
@@ -75,7 +75,7 @@ func (m *{{.Name}}) Validate(ver string, ignoreStatus bool) bool { {{with (index
 	} {{end}}{{end}}
 	return true
 }
-{{end}}
+{{end}}{{end}}
 
 {{if $validators.Fmap}}
 func init() {
@@ -92,14 +92,25 @@ func init() {
 	})
 		{{else}} funcMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(funcMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(i interface{}) bool {
 		m := i.(*{{$msgName}})
-		{{if (strEq .Fn "StrEnum")}}{{$enummap := (getEnumStrMap $file .Args)}}
+		{{if (strEq .Fn "StrEnum")}}{{$enummap := (getEnumStrMap $file .Args)}}{{if $fldv.Repeated}}
+		for _, v := range m.{{$fldk}} {
+			if _, ok := {{$enummap}}[v]; !ok {
+				return false
+			}
+		}{{else}}
 		if _, ok := {{$enummap}}[m.{{$fldk}}]; !ok {
 			return false
-		}{{else}}args := make([]string, 0) {{$fnname := .Fn}}
+		}{{end}}{{else}}args := make([]string, 0) {{$fnname := .Fn}}
 		{{range .Args}}args = append(args, "{{.}}")
-		{{end}}if !validators.{{$fnname}}(m.{{$fldk}}, args) {
+		{{end}}{{if $fldv.Repeated}}
+		for _, v := range m.{{$fldk}} {
+			if !validators.{{$fnname}}(v, args) {
+				return false
+			}
+		}{{else}}
+		if !validators.{{$fnname}}(m.{{$fldk}}, args) {
 			return false
-		}{{end}}
+		}{{end}}{{end}}
 		return true
 	})
 	{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}
