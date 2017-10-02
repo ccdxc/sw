@@ -2331,6 +2331,9 @@ def capri_te_cfg_output(stage):
         # setup sram entry to launch no lookup
         se = json_regs['cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
         se['lkup']['value'] = te_consts['no_op']
+	for kmid in range(num_km):
+	    se['km_new_key%d' % kmid]['value'] = str(1)
+
         stage.gtm.tm.logger.debug( \
             "%s:Stage %d:Table profile (catch-all)TCAM[%d]:(val %s, mask %s): prof_val %d, %s, mpu_res %d" % \
                 (stage.gtm.d.name, stage.id, prof_idx, te['value']['value'], 
@@ -2341,6 +2344,11 @@ def capri_te_cfg_output(stage):
                     te_ctrl_sram_print(se, json_sram_ext)))
         
     for ct in stage.ct_list:
+        # XXX Work-in-progress
+        if ct.is_wide_key:
+            stage.gtm.tm.logger.critical("Wide key table programming is not complete %s" % \
+                (ct.p4_table.name))
+            continue
         if ct.is_otcam:
             continue
         json_tbl_ = json_regs['cap_te_csr_cfg_table_property[%d]' % ct.tbl_id]
@@ -2515,6 +2523,8 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
         if 'decoder' in conf:
             skip = False
             m = re.search('(\w+)_entry\[(\d+)\]', name)
+            if m == None:
+              continue 
             decoder = m.group(1)
             idx = int(m.group(2))
             if idx > (len(mems[decoder]['entries']) - 1):

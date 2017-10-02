@@ -70,6 +70,7 @@ cc_library(
         "asic/capri/model/cap_intr/cap_intr_csr.h",
         "asic/capri/model/utils/LogMsg.cc",
         "asic/capri/model/utils/LogMsg.h",
+        "asic/capri/model/utils/common_dpi.h",
         #"asic/capri/model/utils/cap_blk_env_top.cc",
         #"asic/capri/model/utils/cap_test_factory.h",
         #"asic/capri/model/utils/cap_blk_env_top.h",

@@ -21,14 +21,18 @@ protected:
 
     virtual void load_cfg();
     virtual void load_prog();
+    virtual char* disasm_opcode(uint64_t pc, uint64_t opcode);
     virtual void load_debug();
-    virtual void load_hbm_pkt(uint64_t addr, std::vector<uint8_t> & pkt);
+    virtual void load_hbm_pkt(uint64_t addr, const std::vector<uint8_t> & pkt);
 
     // Push the network packet to capri
     virtual void step_network_pkt(const std::vector<uint8_t> & pkt, uint32_t port);
     // Get next packet from one of the ethernet ports. It returns the
     // port number and COS.
     virtual bool get_next_pkt(std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos);
+
+    // returns true if there are no more packets in the system
+    virtual bool is_env_idle();
 
     // Read capri register
     virtual bool read_reg (uint64_t addr, uint32_t& data);

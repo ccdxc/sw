@@ -365,8 +365,6 @@ namespace pknobs{
 	curr_burst_cnt[i]        = curr_burst_cnt[swap_idx];
 	curr_burst_cnt[swap_idx] = tmp_cnt;
 
-	int   tmp_size           = curr_burst_size[i];
-	curr_burst_size[i]       = curr_burst_size[swap_idx];
 	curr_burst_size[swap_idx]= tmp_cnt;
       }
     }
@@ -426,7 +424,7 @@ namespace pknobs{
       if (curr_burst_cnt[curr_idx] == curr_burst_size[curr_idx]){
         curr_burst_cnt[curr_idx] = 0;
         curr_idx = (curr_idx + 1);
-	if (curr_idx >= curr_burst_cnt.size()) {
+	if (unsigned(curr_idx) >= curr_burst_cnt.size()) {
 	  if (permute)
 	    shuffle();
 	  curr_idx -= curr_burst_cnt.size();
@@ -507,6 +505,7 @@ namespace pknobs{
 
           int64 lower;
           int64 upper;
+          int64 itrNo;
       public:
           void copy(const UniqKnob & k){
               WLKnob::copy(k);
@@ -517,8 +516,10 @@ namespace pknobs{
           void init(int64 _lower, int64 _upper) {
               lower = _lower;
               upper = _upper;
+              itrNo =0;
+              string knobStr = getName() + "_RRKnob_" + to_string(itrNo) + "_" + to_string(lower) + "_" + to_string(upper);
 
-              knob_vec.push_back( new pknobs::RRKnob(lower,upper));
+              knob_vec.push_back( new pknobs::RRKnob( knobStr, lower,upper));
               int u = upper - lower + 1;
               wgt_vec.push_back(u);
               total_wgt = u;
@@ -571,11 +572,13 @@ namespace pknobs{
 
 
                       if(old_min < ret_value) {
-                          new_min_rrknob = new pknobs::RRKnob(old_min, ret_value - 1);
+                          string knobStr = getName() + "_RRKnob_" + to_string(itrNo) + "_"+ to_string(old_min) + "_" + to_string(ret_value-1);
+                          new_min_rrknob = new pknobs::RRKnob(knobStr, old_min, ret_value - 1);
                       }
 
                       if(ret_value < old_max) {
-                          new_max_rrknob = new pknobs::RRKnob(ret_value + 1, old_max);
+                          string knobStr = getName() + "_RRKnob_" + to_string(itrNo) + "_"+ to_string(ret_value+1) + "_" + to_string(old_max);
+                          new_max_rrknob = new pknobs::RRKnob(knobStr, ret_value + 1, old_max);
                       }
 
                       //cout << "idx: " << idx << endl;
@@ -607,7 +610,9 @@ namespace pknobs{
                   }
 
                   if((knob_vec.size() == 0) && !new_max_rrknob && !new_min_rrknob) {
-                      knob_vec.push_back( new pknobs::RRKnob(lower,upper));
+                      itrNo++;
+                      string knobStr = getName() + "_RRKnob_" + to_string(itrNo) + "_" + to_string(lower) + "_" + to_string(upper);
+                      knob_vec.push_back( new pknobs::RRKnob(knobStr, lower,upper));
                       int u = upper - lower + 1;
                       wgt_vec.push_back(u);
                       total_wgt = u;
@@ -631,7 +636,7 @@ namespace pknobs{
                       }
 
                       // update upper index weights
-                      for(int ii = idx; ii < wgt_vec.size(); ii++) {
+                      for(unsigned ii = idx; ii < wgt_vec.size(); ii++) {
                           wgt_vec[ii]--;
                       }
 

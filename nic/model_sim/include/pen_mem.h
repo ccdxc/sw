@@ -238,15 +238,15 @@ public:
                 retVal = false;
                 auto stride = sizeof(decltype(data_knob.eval()));
                 for (int i = curr_len; i > 0; i-=stride) {
-                    auto wlen = stride > i ? i : stride;
-                    auto tmp = data_knob.eval();
+		    auto wlen = (int) stride > i ? i : stride;
+                    auto tmp = 0;
                     memcpy(p,&tmp, wlen);
                     p+= wlen;
                 }
             } else {
 	      memcpy(p, ptr+offset, curr_len);
+	      p += curr_len;
 	    }
-            p += curr_len;
 	    addr += curr_len;
             len -= curr_len;
             // smaller of remaining len or page_size

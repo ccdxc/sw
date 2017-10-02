@@ -53,7 +53,7 @@ public:
     agt_idx = 0; // by default
   }
 
-  ~cpu_bus_base() {
+  virtual ~cpu_bus_base() {
   }
 
   void set_agt_idx(uint32_t idx) { agt_idx = idx; }

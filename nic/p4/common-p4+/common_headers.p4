@@ -188,15 +188,15 @@ header_type scratch_metadata_t {
 #define TABLE2_PARAMS_INIT(scratch, te)					\
    modify_field(scratch.table0_pc, te.table2_pc);			\
    modify_field(scratch.table0_raw_table_size,te.table2_raw_table_size);\
-   modify_field(scratch.table0_lock_en, te.table2_lock_en);		\
-   modify_field(scratch.table0_ki_global, te.table0_ki_global);		\
-   modify_field(scratch.table0_ki_s2s, te.table2_ki_s2s);		\
+   modify_field(scratch.table0_lock_en, te.table2_lock_en);             \
+   modify_field(scratch.table0_ki_global, te.table0_ki_global);         \
+   modify_field(scratch.table0_ki_s2s, te.table2_ki_s2s);               \
 
-#define TABLE3_PARAMS_INIT(scratch, te)					\
-   modify_field(scratch.table0_pc, te.table3_pc);			\
+#define TABLE3_PARAMS_INIT(scratch, te)                                 \
+   modify_field(scratch.table0_pc, te.table3_pc);                       \
    modify_field(scratch.table0_raw_table_size,te.table3_raw_table_size);\
-   modify_field(scratch.table0_lock_en, te.table3_lock_en);		\
-   modify_field(scratch.table0_ki_global, te.table0_ki_global);		\
+   modify_field(scratch.table0_lock_en, te.table3_lock_en);             \
+   modify_field(scratch.table0_ki_global, te.table0_ki_global);         \
    modify_field(scratch.table0_ki_s2s, te.table3_ki_s2s);
 #endif
 
@@ -204,16 +204,17 @@ header_type scratch_metadata_t {
 header_type dma_cmd_pkt2mem_t {
     fields {
         // pkt2mem - used for copying input packet to memory.
-        dma_cmd_pad : 43;
-        dma_cmd_round : 1;
-        dma_cmd_override_lif : 11;
+        dma_cmd_pad              : 42;
+        dma_cmd_size             : 14;
+        dma_cmd_pad1             : 1;
+        dma_cmd_override_lif     : 11;
+        dma_cmd_addr             : 52;
         dma_cmd_use_override_lif : 1;
-        dma_cmd_size : 14;
-        dma_cmd_addr : 52;
-        dma_cmd_cache : 1;
-        dma_cmd_host_addr : 1;
-        dma_cmd_eop : 1;
-        dma_cmd_type : 3;
+        dma_cmd_cache            : 1;
+        dma_cmd_host_addr        : 1;
+        dma_cmd_round            : 1;
+        dma_cmd_eop              : 1;
+        dma_cmd_type             : 3;
 
     }
 }
@@ -227,20 +228,21 @@ header_type dma_cmd_pkt2mem_t {
 
 header_type dma_cmd_phv2mem_t {
     fields {
-        dma_cmd_pad : 34;
-        dma_cmd_round : 1;
-        dma_cmd_pcie_msg : 1;
-        dma_cmd_barrier : 1;
-        dma_cmd_override_lif : 11;
+        dma_cmd_pad              : 33;   
+        dma_cmd_override_lif     : 11;
+        dma_cmd_addr             : 52;
+        dma_cmd_barrier          : 1;
+        dma_cmd_round            : 1;
+        dma_cmd_pcie_msg         : 1;
         dma_cmd_use_override_lif : 1;
-        dma_cmd_phv_end_addr : 10;
-        dma_cmd_phv_start_addr : 10;
-        dma_cmd_wr_fence : 1;
-        dma_cmd_addr : 52;
-        dma_cmd_cache : 1;
-        dma_cmd_host_addr : 1;
-        dma_cmd_eop : 1;
-        dma_cmd_type : 3;
+        dma_cmd_phv_end_addr     : 10;
+        dma_cmd_phv_start_addr   : 10;
+        dma_cmd_fence_fence      : 1;
+        dma_cmd_wr_fence         : 1;
+        dma_cmd_cache            : 1;
+        dma_cmd_host_addr        : 1;
+        dma_cmd_eop              : 1;
+        dma_cmd_type             : 3;
     }
 }
 
@@ -256,22 +258,24 @@ header_type dma_cmd_phv2mem_t {
 
 header_type dma_cmd_mem2mem_t {
     fields {
-        dma_cmd_pad      : 18;
-        dma_cmd_round : 1;
-        dma_cmd_pcie_msg : 1;
-        dma_cmd_barrier : 1;
-        dma_cmd_override_lif : 11;
+        dma_cmd_pad              : 16;
+        dma_cmd_size             : 14;
+        dma_cmd_pad1             : 1;
+        dma_cmd_override_lif     : 11;
+        dma_cmd_addr             : 52;
+        dma_cmd_barrier          : 1;
+        dma_cmd_round            : 1;
+        dma_cmd_pcie_msg         : 1;
         dma_cmd_use_override_lif : 1;
-        dma_cmd_phv_end_addr : 10;
-        dma_cmd_phv_start_addr : 10;
-        dma_cmd_wr_fence : 1;
-        dma_cmd_size : 14;
-        dma_cmd_addr : 52;
-        dma_cmd_cache : 1;
-        dma_cmd_host_addr : 1;
-        dma_cmd_mem2mem_type : 2;
-        dma_cmd_eop : 1;
-        dma_cmd_type : 3;
+        dma_cmd_phv_end_addr     : 10;
+        dma_cmd_phv_start_addr   : 10;
+        dma_cmd_fence_fence      : 1;
+        dma_cmd_wr_fence         : 1;
+        dma_cmd_cache            : 1;
+        dma_cmd_host_addr        : 1;
+        dma_cmd_mem2mem_type     : 2;
+        dma_cmd_eop              : 1;
+        dma_cmd_type             : 3;
     }
 }
 
@@ -302,12 +306,19 @@ header_type dma_cmd_generic_t {
 
 header_type dma_cmd_phv2pkt_t {
     fields {
-        dma_cmd_phv2pkt_pad : 103;
-        dma_cmd_phv_end_addr : 10;
-        dma_cmd_phv_start_addr : 10;
-        dma_pkt_eop : 1;
-        dma_cmd_eop : 1;
-        dma_cmd_type : 3;
+        dma_cmd_phv2pkt_pad     : 41;  
+        dma_cmd_phv_end_addr3   : 10;
+        dma_cmd_phv_start_addr3 : 10;
+        dma_cmd_phv_end_addr2   : 10;
+        dma_cmd_phv_start_addr2 : 10;
+        dma_cmd_phv_end_addr1   : 10;
+        dma_cmd_phv_start_addr1 : 10;
+        dma_cmd_phv_end_addr    : 10;
+        dma_cmd_phv_start_addr  : 10;
+        dma_cmd_cmdsize         : 2 ;
+        dma_pkt_eop             : 1 ;
+        dma_cmd_eop             : 1 ;
+        dma_cmd_type            : 3 ;
     }
 }
 
@@ -319,16 +330,17 @@ header_type dma_cmd_phv2pkt_t {
 
 header_type dma_cmd_mem2pkt_t {
     fields {
-        dma_cmd_mem2pkt_pad : 43;
-        dma_cmd_override_lif : 11;
+        dma_cmd_mem2pkt_pad      : 42;
+        dma_cmd_size             : 14;
+        dma_cmd_mem2pkt_pad1     : 1;
+        dma_cmd_override_lif     : 11;
+        dma_cmd_addr             : 52;
         dma_cmd_use_override_lif : 1;
-        dma_cmd_size : 14;
-        dma_cmd_addr : 52;
-        dma_cmd_cache : 1;
-        dma_cmd_host_addr : 1;
-        dma_pkt_eop : 1;
-        dma_cmd_eop : 1;
-        dma_cmd_type : 3;
+        dma_cmd_cache            : 1;
+        dma_cmd_host_addr        : 1;
+        dma_pkt_eop              : 1;
+        dma_cmd_eop              : 1;
+        dma_cmd_type             : 3;
     }
 }
 
@@ -436,7 +448,7 @@ header_type ring_entry_t {
 }
 
 #define CAPRI_QSTATE_HEADER_COMMON \
-        rsvd		        : 8;\
+        rsvd                : 8;\
         cosA                : 4;\
         cosB                : 4;\
         cos_sel             : 8;\

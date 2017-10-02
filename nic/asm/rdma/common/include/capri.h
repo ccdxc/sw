@@ -394,11 +394,12 @@ _I_K_next:;
 #define DMA_CMD_MEM2PKT_T struct capri_dma_cmd_mem2pkt_t
 //TX - axi read, then write to packet
 struct capri_dma_cmd_mem2pkt_t {
-    rsvd: 43;
-    override_lif: 11;
-    use_override_lif: 1;
+    rsvd: 42;
     size: 14;
+    rsvd1: 1;
+    override_lif: 11;
     addr: 52;
+    use_override_lif: 1;
     cache: 1;
     host_addr: 1;
     pkteop: 1;
@@ -409,9 +410,16 @@ struct capri_dma_cmd_mem2pkt_t {
 #define DMA_CMD_PHV2PKT_T struct capri_dma_cmd_phv2pkt_t
 //TX - write to packet      
 struct capri_dma_cmd_phv2pkt_t {
-    rsvd: 103;
+    rsvd: 41;
+    phv_end3: 10;
+    phv_start3: 10;
+    phv_end2: 10;
+    phv_start2: 10;
+    phv_end1: 10;
+    phv_start1: 10;
     phv_end: 10;
     phv_start: 10;
+    cmd_size: 2;
     pkteop: 1;
     cmdeop: 1;
     cmdtype: 3;
@@ -420,13 +428,17 @@ struct capri_dma_cmd_phv2pkt_t {
 //TX/RX - axi write to mem
 #define DMA_CMD_PHV2MEM_T struct capri_dma_cmd_phv2mem_t
 struct capri_dma_cmd_phv2mem_t {
-    rsvd: 37;
+    rsvd: 33;
     override_lif: 11;
+    addr: 52;
+    barrier: 1;
+    round: 1;
+    pcie_msg: 1;
     use_override_lif: 1;
     phv_end: 10;
     phv_start: 10;
+    wr_fence_fence: 1;
     wr_fence: 1;
-    addr: 52;
     cache: 1;
     host_addr: 1;
     cmdeop: 1;
@@ -436,13 +448,15 @@ struct capri_dma_cmd_phv2mem_t {
 //RX       
 #define DMA_CMD_PKT2MEM_T struct capri_dma_cmd_pkt2mem_t
 struct capri_dma_cmd_pkt2mem_t {
-    rsvd: 44;
-    override_lif: 11;
-    use_override_lif: 1;
+    rsvd: 42;
     size: 14;
+    rsvd1: 1;
+    override_lif: 11;
     addr: 52;
+    use_override_lif: 1;
     cache: 1;
     host_addr: 1;
+    round: 1;
     cmdeop: 1;
     cmdtype: 3;
 };
@@ -460,14 +474,19 @@ struct capri_dma_cmd_skip_t {
 //TX - axi read, then write to mem
 #define DMA_CMD_MEM2MEM_T struct capri_dma_cmd_mem2mem_t
 struct capri_dma_cmd_mem2mem_t {
-    rsvd: 21;
+    rsvd: 16;
+    size: 14;
+    rsvd1: 1;
     override_lif: 11;
+    addr: 52;
+    barrier: 1;
+    round: 1;
+    pcie_msg: 1;
     use_override_lif: 1;
     phv_end: 10;
     phv_start: 10;
+    wr_fence_fence: 1;
     wr_fence: 1;
-    size: 14;
-    addr: 52;
     cache: 1;
     host_addr: 1;
     mem2mem_type: 2;

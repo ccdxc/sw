@@ -37,6 +37,7 @@ public:
 
     virtual void load_cfg(void) = 0;
     virtual void load_prog(void) = 0;
+    virtual char* disasm_opcode(uint64_t pc, uint64_t opcode) = 0;
     virtual void load_debug(void) = 0;
     virtual void step_tmr_wheel_update(unsigned slowfas, unsigned ctime) = 0;
 

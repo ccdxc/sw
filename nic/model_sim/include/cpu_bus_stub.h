@@ -12,7 +12,7 @@ public:
   cpu_bus_stub_if(string cpu_if_name, string cpu_if_hier_path) : cpu_bus_base(cpu_if_name, cpu_if_hier_path) {
   }
 
-  ~cpu_bus_stub_if() {
+  virtual ~cpu_bus_stub_if() {
   }
 
   virtual uint32_t read(uint32_t chip, uint64_t addr, cpu_access_type_e do_backdoor=front_door_e) {return 0;} ; 
