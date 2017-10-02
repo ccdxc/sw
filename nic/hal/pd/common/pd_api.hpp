@@ -69,7 +69,19 @@ typedef struct pd_lif_args_s {
 
 typedef struct pd_if_args_s {
     if_t    *intf;
-    bool    native_l2_seg_upd;
+    union {
+        // uplink interface/pc info
+        struct {
+            bool            native_l2seg_change;
+            l2seg_t         *native_l2seg;
+            // uplink if specific info
+            struct {
+            } __PACK__;
+            // uplink pc specific info
+            struct {
+            } __PACK__;
+        } __PACK__;
+    } __PACK__;
 } __PACK__ pd_if_args_t;
 
 typedef struct pd_if_nwsec_upd_args_s {
@@ -312,12 +324,14 @@ hal_ret_t pd_lif_create(pd_lif_args_t *lif);
 hal_ret_t pd_lif_update(pd_lif_args_t *lif);
 hal_ret_t pd_lif_delete(pd_lif_args_t *lif);
 hal_ret_t pd_lif_mem_free(pd_lif_args_t *lif);
-hal_ret_t pd_lif_make_clone(lif_t *ten, lif_t *clone);
+hal_ret_t pd_lif_make_clone(lif_t *lif, lif_t *clone);
 
 hal_ret_t pd_if_create(pd_if_args_t *hal_if);
 hal_ret_t pd_if_update(pd_if_args_t *hal_if);
 hal_ret_t pd_if_delete(pd_if_args_t *hal_if);
 hal_ret_t pd_if_nwsec_update(pd_if_nwsec_upd_args_t *args);
+hal_ret_t pd_if_mem_free(pd_if_args_t *intf);
+hal_ret_t pd_if_make_clone(if_t *hal_if, if_t *clone);
 
 uint32_t if_get_hw_lif_id(if_t *pi_if);
 uint32_t if_get_lport_id(if_t *pi_if);

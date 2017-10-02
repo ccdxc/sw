@@ -7,7 +7,6 @@
 #include "nic/include/list.hpp"
 #include "nic/utils/ht/ht.hpp"
 #include "nic/include/bitmap.hpp"
-// #include "nic/hal/src/l2segment.hpp"
 #include "nic/proto/hal/interface.pb.h"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/tenant.hpp"
@@ -33,6 +32,7 @@ using intf::InterfaceKeyHandle;
 using intf::InterfaceRequestMsg;
 using intf::InterfaceResponseMsg;
 using intf::InterfaceDeleteRequestMsg;
+using intf::InterfaceDeleteRequest;
 using intf::InterfaceDeleteResponseMsg;
 using intf::InterfaceGetRequest;
 using intf::InterfaceGetRequestMsg;
@@ -49,8 +49,8 @@ using intf::SetQStateResponseMsg;
 
 namespace hal {
 
-typedef uint16_t if_hw_id_t;
 typedef uint64_t if_id_t;
+typedef struct l2seg_s l2seg_t;
 
 // Interface strucutre
 typedef struct if_s {
@@ -65,7 +65,8 @@ typedef struct if_s {
         struct {
             intf::IfEnicType    enic_type;           // type of ENIC
             hal_handle_t        lif_handle;          // handle to corresponding LIF
-            l2seg_id_t          l2seg_id;            // user VLAN or L2 segment
+            hal_handle_t        l2seg_handle;        // handle to l2seg
+            // l2seg_id_t          l2seg_id;            // user VLAN or L2 segment
             mac_addr_t          mac_addr;            // EP's MAC addr
             vlan_id_t           encap_vlan;          // vlan enabled on this if
         } __PACK__;
@@ -73,7 +74,7 @@ typedef struct if_s {
         // uplink interface info
         struct {
             l2seg_id_t    native_l2seg;              // native (vlan) on uplink (pc)
-            bitmap        *vlans;                    // vlans up on this interface
+            // bitmap        *vlans;                    // vlans up on this interface
             // uplink if
             struct {
                 uint32_t      uplink_port_num;       // uplink port number
@@ -103,21 +104,39 @@ typedef struct if_s {
     intf::IfStatus      if_op_status;                // operational status
 
     // PD state
-    if_hw_id_t          hw_id;                       // h/w id used in data plane lookups
-    pd::pd_if_t         *pd;                         // all PD specific state
+    // pd::pd_if_t         *pd;                         // all PD specific state
 
     // meta data maintained for interface
-    ht_ctxt_t           ht_ctxt;                     // interface id based hash table ctxt
-    ht_ctxt_t           hw_ht_ctxt;                  // h/w id based hash table ctxt
-    ht_ctxt_t           hal_handle_ht_ctxt;          // hal handle based hash table ctxt
     dllist_ctxt_t       ep_list_head;                // endpoints behind this interface
     dllist_ctxt_t       session_list_head;           // session from this
     dllist_ctxt_t       mbr_if_list_head;            // list of member ports
-    dllist_ctxt_t       pc_lentry;                   // pc list entry 
+    // dllist_ctxt_t       pc_lentry;                   // pc list entry 
 
     // PD Uplink/Enic ... Interpret based on type ... Careful!!
     void                *pd_if;                      
 } __PACK__ if_t;
+
+typedef struct if_create_app_ctxt_s {
+    l2seg_t    *l2seg;                                 // valid only for enic if
+} __PACK__ if_create_app_ctxt_t;
+
+typedef struct if_update_app_ctxt_s {
+    union {
+        // uplink interface/pc info
+        struct {
+            bool            native_l2seg_change;
+            l2seg_t         *native_l2seg;             // native (vlan) on uplink (pc)
+        } __PACK__;
+    } __PACK__;
+
+#if 0
+    bool                mcast_fwd_policy_change;
+    bool                bcast_fwd_policy_change;
+
+    MulticastFwdPolicy  new_mcast_fwd_policy;
+    BroadcastFwdPolicy  new_bcast_fwd_policy;
+#endif
+} __PACK__ if_update_app_ctxt_t;
 
 // max. number of interfaces supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_INTERFACES                           2048
@@ -128,10 +147,13 @@ if_alloc (void)
 {
     if_t    *hal_if;
 
+    HAL_TRACE_DEBUG("pi-if:{}:trying to allocate", __FUNCTION__);
     hal_if = (if_t *)g_hal_state->if_slab()->alloc();
     if (hal_if == NULL) {
         return NULL;
     }
+    HAL_TRACE_DEBUG("pi-if:{}:allocated ptr:{#x}", __FUNCTION__,
+                    (uint64_t)hal_if);
     return hal_if;
 }
 
@@ -143,17 +165,17 @@ if_init (if_t *hal_if)
         return NULL;
     }
     HAL_SPINLOCK_INIT(&hal_if->slock, PTHREAD_PROCESS_PRIVATE);
-    hal_if->vlans = NULL;
+    // hal_if->vlans = NULL;
     // hal_if->vlan_bmap = NULL;
 
     // initialize the operational state
     hal_if->num_ep = 0;
-    hal_if->pd = NULL;
+    hal_if->pd_if = NULL;
 
     // initialize meta information
-    hal_if->ht_ctxt.reset();
-    hal_if->hal_handle_ht_ctxt.reset();
-    hal_if->hw_ht_ctxt.reset();
+    // hal_if->ht_ctxt.reset();
+    // hal_if->hal_handle_ht_ctxt.reset();
+    // hal_if->hw_ht_ctxt.reset();
     utils::dllist_reset(&hal_if->ep_list_head);
     utils::dllist_reset(&hal_if->session_list_head);
 
@@ -171,28 +193,48 @@ static inline hal_ret_t
 if_free (if_t *hal_if)
 {
     HAL_SPINLOCK_DESTROY(&hal_if->slock);
+#if 0
     if (hal_if->vlans) {
         delete hal_if->vlans;
     }
-#if 0
-    if (hal_if->vlan_bmap) {
-        delete hal_if->vlan_bmap;
-    }
 #endif
+    HAL_TRACE_DEBUG("pi-if:{}:trying to free", __FUNCTION__);
     g_hal_state->if_slab()->free(hal_if);
     return HAL_RET_OK;
+}
+
+static inline hal_handle_id_ht_entry_t *
+find_handle_obj_by_if_id (if_id_t if_id)
+{
+    hal_handle_id_ht_entry_t    *entry = NULL;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        if_id_ht()->lookup(&if_id);
+
+    return entry;
 }
 
 static inline if_t *
 find_if_by_id (if_id_t if_id)
 {
-    return (if_t *)g_hal_state->if_id_ht()->lookup(&if_id);
+    // return (if_t *)g_hal_state->if_id_ht()->lookup(&if_id);
+    hal_handle_id_ht_entry_t    *entry;
+    if_t                        *hal_if;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        if_id_ht()->lookup(&if_id);
+    if (entry) {
+        hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
+        return hal_if;
+    }
+    return NULL;
 }
 
 static inline if_t *
 find_if_by_handle (hal_handle_t handle)
 {
-    return (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&handle);
+    // return (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&handle);
+    return (if_t *)hal_handle_get_obj(handle);
 }
 
 static inline bool
@@ -219,17 +261,9 @@ find_lif_by_if_handle (hal_handle_t if_handle)
 
 }
 
-extern void *if_get_key_func(void *entry);
-extern uint32_t if_compute_hash_func(void *key, uint32_t ht_size);
-extern bool if_compare_key_func(void *key1, void *key2);
-
-extern void *if_get_hw_key_func(void *entry);
-extern uint32_t if_compute_hw_hash_func(void *key, uint32_t ht_size);
-extern bool if_compare_hw_key_func(void *key1, void *key2);
-
-extern void *if_get_handle_key_func(void *entry);
-extern uint32_t if_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool if_compare_handle_key_func(void *key1, void *key2);
+extern void *if_id_get_key_func(void *entry);
+extern uint32_t if_id_compute_hash_func(void *key, uint32_t ht_size);
+extern bool if_id_compare_key_func(void *key1, void *key2);
 
 hal_ret_t enic_if_create(intf::InterfaceSpec& spec, 
                          intf::InterfaceResponse *rsp,
@@ -271,6 +305,8 @@ hal_ret_t interface_create(intf::InterfaceSpec& spec,
                            intf::InterfaceResponse *rsp);
 hal_ret_t interface_update(intf::InterfaceSpec& spec,
                            intf::InterfaceResponse *rsp);
+hal_ret_t interface_delete(intf::InterfaceDeleteRequest& req,
+                           intf::InterfaceDeleteResponseMsg *rsp);
 hal_ret_t interface_get(intf::InterfaceGetRequest& spec,
                         intf::InterfaceGetResponse *rsp);
 

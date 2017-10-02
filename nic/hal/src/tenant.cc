@@ -549,8 +549,8 @@ tenant_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_tenant_args_t        pd_tenant_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    tenant_t                    *tenant = NULL;
-    // tenant_update_app_ctxt_t    *app_ctxt = NULL;
+    tenant_t                    *tenant = NULL, *tenant_clone = NULL;
+    tenant_update_app_ctxt_t    *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-tenant{}:invalid cfg_ctxt", __FUNCTION__);
@@ -560,12 +560,18 @@ tenant_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    // app_ctxt = (tenant_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt = (tenant_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     tenant = (tenant_t *)dhl_entry->obj;
+    tenant_clone = (tenant_t *)dhl_entry->cloned_obj;
 
     HAL_TRACE_DEBUG("pi-tenant:{}:update commit CB {}",
                     __FUNCTION__, tenant->tenant_id);
+
+    // update clone with new attrs
+    if (app_ctxt->nwsec_prof_change) {
+        tenant_clone->nwsec_profile_handle = app_ctxt->nwsec_profile_handle;
+    }
 
     // Free PD
     pd::pd_tenant_args_init(&pd_tenant_args);
@@ -686,7 +692,7 @@ tenant_update (TenantSpec& spec, TenantResponse *rsp)
     if (app_ctxt.nwsec_prof == NULL) {
         HAL_TRACE_ERR("pi-tenant:{}:security profile with handle {} not found", 
                       __FUNCTION__, 
-                      tenant->nwsec_profile_handle);
+                      app_ctxt.nwsec_profile_handle);
         // ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
         // goto end;
     } else {

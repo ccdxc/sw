@@ -186,7 +186,7 @@ if_enicif_get_pi_l2seg(if_t *pi_if)
 
     // Check if if is enicif
     if (pi_if->if_type == intf::IF_TYPE_ENIC) {
-        pi_seg = find_l2seg_by_id(pi_if->l2seg_id);
+        pi_seg = find_l2seg_by_handle(pi_if->l2seg_handle);
 #if 0
         if (pi_if->enic_type == intf::IF_ENIC_TYPE_USEG) {
             pi_seg = find_l2seg_by_id(pi_if->l2seg_id);

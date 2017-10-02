@@ -60,7 +60,6 @@ typedef struct l2seg_s {
     dllist_ctxt_t         if_list_head;            // interface list
     dllist_ctxt_t         nw_list_head;            // network list
     dllist_ctxt_t         ep_list_head;            // endpoint list
-    // dllist_ctxt_t         tenant_l2seg_lentry;     // tenant's L2 segment list link
     dllist_ctxt_t         session_list_head;       // tenant's L2 segment list link
 } __PACK__ l2seg_t;
 

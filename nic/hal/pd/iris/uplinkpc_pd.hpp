@@ -3,6 +3,7 @@
 
 #include "nic/include/base.h"
 #include "nic/include/pd.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -16,11 +17,87 @@ struct pd_uplinkpc_s {
     void        *pi_if;
 } __PACK__;
 
-hal_ret_t pd_uplinkpc_create(pd_if_args_t *args);
-pd_uplinkpc_t *uplinkpc_pd_alloc();
-pd_uplinkpc_t *uplinkpc_pd_init(pd_uplinkpc_t *up_if);
-pd_uplinkpc_t *uplinkpc_pd_alloc_init();
-hal_ret_t uplinkpc_pd_free(pd_uplinkpc_t *up_if);
+
+// ----------------------------------------------------------------------------
+// Allocate Uplink IF Instance
+// ----------------------------------------------------------------------------
+static pd_uplinkpc_t *
+uplinkpc_pd_alloc (void)
+{
+    pd_uplinkpc_t    *upif;
+
+    upif = (pd_uplinkpc_t *)g_hal_state_pd->uplinkpc_pd_slab()->alloc();
+    if (upif == NULL) {
+        return NULL;
+    }
+    return upif;
+}
+
+// ----------------------------------------------------------------------------
+// Initialize Uplink IF PD instance
+// ----------------------------------------------------------------------------
+static pd_uplinkpc_t *
+uplinkpc_pd_init (pd_uplinkpc_t *upif)
+{
+    // Nothing to do currently
+    if (!upif) {
+        return NULL;
+    }
+
+    // Set here if you want to initialize any fields
+
+    return upif;
+}
+
+// ----------------------------------------------------------------------------
+// Allocate and Initialize uplinkpc PD Instance
+// ----------------------------------------------------------------------------
+static pd_uplinkpc_t *
+uplinkpc_pd_alloc_init(void)
+{
+    return uplinkpc_pd_init(uplinkpc_pd_alloc());
+}
+
+// ----------------------------------------------------------------------------
+// Freeing uplinkpc PD
+// ----------------------------------------------------------------------------
+static hal_ret_t
+uplinkpc_pd_free (pd_uplinkpc_t *upif)
+{
+    g_hal_state_pd->uplinkpc_pd_slab()->free(upif);
+    return HAL_RET_OK;
+}
+
+// ----------------------------------------------------------------------------
+// Freeing uplinkpc PD memory
+// ----------------------------------------------------------------------------
+static hal_ret_t
+uplinkpc_pd_mem_free (pd_uplinkpc_t *upif)
+{
+    g_hal_state_pd->uplinkpc_pd_slab()->free(upif);
+    return HAL_RET_OK;
+}
+
+// ----------------------------------------------------------------------------
+// Linking PI <-> PD
+// ----------------------------------------------------------------------------
+static void 
+uplinkpc_link_pi_pd(pd_uplinkpc_t *pd_upif, if_t *pi_if)
+{
+    pd_upif->pi_if = pi_if;
+    if_set_pd_if(pi_if, pd_upif);
+}
+
+// ----------------------------------------------------------------------------
+// Un-Linking PI <-> PD
+// ----------------------------------------------------------------------------
+static void 
+uplinkpc_delink_pi_pd(pd_uplinkpc_t *pd_upif, if_t *pi_if)
+{
+    pd_upif->pi_if = NULL;
+    if_set_pd_if(pi_if, NULL);
+}
+
 hal_ret_t uplinkpc_pd_alloc_res(pd_uplinkpc_t *up_if);
 hal_ret_t uplinkpc_pd_program_hw(pd_uplinkpc_t *up_if);
 hal_ret_t uplinkpc_pd_pgm_tm_register(pd_uplinkpc_t *up_if, bool add);
@@ -28,8 +105,15 @@ hal_ret_t uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppcif,
                                                  pd_uplinkif_t *pd_upif, 
                                                  bool add);
 hal_ret_t uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *up_if);
-void link_pi_pd(pd_uplinkpc_t *pd_upif, if_t *pi_if);
-void unlink_pi_pd(pd_uplinkpc_t *pd_up_if, if_t *pi_up_if);
+hal_ret_t uplinkpc_pd_cleanup(pd_uplinkpc_t *upif_pd);
+hal_ret_t uplinkpc_pd_deprogram_hw (pd_uplinkpc_t *pd_upif);
+hal_ret_t uplinkpc_pd_depgm_output_mapping_tbl (pd_uplinkpc_t *pd_upif);
+
+hal_ret_t pd_uplinkpc_create(pd_if_args_t *args);
+hal_ret_t pd_uplinkpc_update(pd_if_args_t *args);
+hal_ret_t pd_uplinkpc_delete(pd_if_args_t *args);
+hal_ret_t pd_uplinkpc_make_clone(if_t *hal_if, if_t *clone);
+hal_ret_t pd_uplinkpc_mem_free(pd_if_args_t *args);
 
 }   // namespace pd
 }   // namespace hal

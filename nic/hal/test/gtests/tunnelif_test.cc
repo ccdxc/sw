@@ -1,11 +1,13 @@
-#include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/network.hpp"
+#include "nic/hal/src/endpoint.hpp"
 #include "nic/hal/src/nwsec.hpp"
 #include "nic/proto/hal/interface.pb.h"
 #include "nic/proto/hal/l2segment.pb.h"
 #include "nic/proto/hal/tenant.pb.h"
+#include "nic/proto/hal/endpoint.pb.h"
 #include "nic/proto/hal/nwsec.pb.h"
+#include "nic/proto/hal/nw.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>
@@ -26,6 +28,8 @@ using intf::LifResponse;
 using intf::LifKeyHandle;
 using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileResponse;
+using endpoint::EndpointSpec;
+using endpoint::EndpointResponse;
 using nw::NetworkSpec;
 using nw::NetworkResponse;
 
@@ -69,12 +73,12 @@ hal_initialize()
 }
 
 
-class enicif_test : public ::testing::Test {
+class tunnelif_test : public ::testing::Test {
 protected:
-  enicif_test() {
+  tunnelif_test() {
   }
 
-  virtual ~enicif_test() {
+  virtual ~tunnelif_test() {
   }
 
   // will be called immediately after the constructor before each test
@@ -96,40 +100,26 @@ protected:
 };
 
 // ----------------------------------------------------------------------------
-// Creating a useg enicif
+// Creating a useg tunnelif
 // ----------------------------------------------------------------------------
-TEST_F(enicif_test, test1) 
+TEST_F(tunnelif_test, test1) 
 {
     hal_ret_t                   ret;
     TenantSpec                  ten_spec;
     TenantResponse              ten_rsp;
-    LifSpec                     lif_spec;
-    LifResponse                 lif_rsp;
     L2SegmentSpec               l2seg_spec;
     L2SegmentResponse           l2seg_rsp;
-    InterfaceSpec               enicif_spec;
-    InterfaceResponse           enicif_rsp;
-    SecurityProfileSpec         sp_spec;
-    SecurityProfileResponse     sp_rsp;
-    NetworkSpec                 nw_spec;
-    NetworkResponse             nw_rsp;
-    InterfaceDeleteRequest      del_req;
-    InterfaceDeleteResponseMsg  del_rsp;
-    slab_stats_t                *pre = NULL, *post = NULL;
-    bool                        is_leak = false;
-
-    // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
-    sp_spec.set_ipsg_en(true);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::security_profile_create(sp_spec, &sp_rsp);
-    hal::hal_cfg_db_close(false);
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+    InterfaceSpec               up_spec, tnnl_spec, tnnl_spec1;
+    InterfaceResponse           up_rsp, tnnl_rsp, tnnl_rsp1;
+    EndpointSpec                ep_spec, ep_spec1;
+    EndpointResponse            ep_rsp, ep_rsp1;
+    NetworkSpec                 nw_spec, nw_spec1;
+    NetworkResponse             nw_rsp, nw_rsp1;
+    ::google::protobuf::uint32  ip1 = 0x0a000003;
+    ::google::protobuf::uint32  ip2 = 0x0a000004;
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(1);
-    ten_spec.set_security_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close(false);
@@ -137,84 +127,102 @@ TEST_F(enicif_test, test1)
 
     // Create network
     nw_spec.mutable_meta()->set_tenant_id(1);
-    nw_spec.set_rmac(0x0000DEADBEEF);
-    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec.set_rmac(0x0000DEADBEEE);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
-    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    // Create a lif
-    lif_spec.set_port_num(10);
-    lif_spec.mutable_key_or_handle()->set_lif_id(1);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
-    hal::hal_cfg_db_close(false);
-    ASSERT_TRUE(ret == HAL_RET_OK);
-
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(1);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
-    l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
+    l2seg_spec.mutable_fabric_encap()->set_encap_value(11);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-
-    pre = hal_test_utils_collect_slab_stats();
-    // Create enicif
-    enicif_spec.mutable_meta()->set_tenant_id(1);
-    enicif_spec.set_type(intf::IF_TYPE_ENIC);
-    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
-    enicif_spec.mutable_key_or_handle()->set_interface_id(1);
-    enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
-    enicif_spec.mutable_if_enic_info()->set_l2segment_id(1);
-    enicif_spec.mutable_if_enic_info()->set_encap_vlan_id(20);
+    // Create an uplink
+    up_spec.mutable_meta()->set_tenant_id(1);
+    up_spec.set_type(intf::IF_TYPE_UPLINK);
+    up_spec.mutable_key_or_handle()->set_interface_id(1);
+    up_spec.mutable_if_uplink_info()->set_port_num(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::interface_create(enicif_spec, &enicif_rsp);
+    ret = hal::interface_create(up_spec, &up_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
+
+    // Create 2 Endpoints
+    ep_spec.mutable_meta()->set_tenant_id(1);
+    ep_spec.set_l2_segment_handle(l2seg_hdl);
+    ep_spec.set_interface_handle(up_hdl);
+    ep_spec.set_mac_address(0x00000000ABCD);
+    ep_spec.add_ip_address();
+    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    // delete enicif
-    del_req.mutable_key_or_handle()->set_interface_id(1);
+    ep_spec1.mutable_meta()->set_tenant_id(1);
+    ep_spec1.set_l2_segment_handle(l2seg_hdl);
+    ep_spec1.set_interface_handle(up_hdl);
+    ep_spec1.set_mac_address(0x000000001234);
+    ep_spec1.add_ip_address();
+    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec1.mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::interface_delete(del_req, &del_rsp);
+    ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close(false);
-    HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding 
+    
+    // tunnel create
+    tnnl_spec.mutable_meta()->set_tenant_id(1);
+    tnnl_spec.mutable_key_or_handle()->set_interface_id(2);
+    tnnl_spec.set_type(intf::IF_TYPE_TUNNEL);
+    tnnl_spec.mutable_if_tunnel_info()->set_encap_type(intf::IF_TUNNEL_ENCAP_TYPE_VXLAN);
+    tnnl_spec.mutable_if_tunnel_info()->mutable_vxlan_info()->mutable_local_tep()->set_ip_af(types::IP_AF_INET);
+    tnnl_spec.mutable_if_tunnel_info()->mutable_vxlan_info()->mutable_local_tep()->set_v4_addr(0x0a000000);
+    tnnl_spec.mutable_if_tunnel_info()->mutable_vxlan_info()->mutable_remote_tep()->set_ip_af(types::IP_AF_INET);
+    tnnl_spec.mutable_if_tunnel_info()->mutable_vxlan_info()->mutable_remote_tep()->set_v4_addr(0x0a000003);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(tnnl_spec, &tnnl_rsp);
+    HAL_TRACE_DEBUG("ret:{}", ret);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // tunnel create
+    tnnl_spec1.mutable_meta()->set_tenant_id(1);
+    tnnl_spec1.mutable_key_or_handle()->set_interface_id(12);
+    tnnl_spec1.set_type(intf::IF_TYPE_TUNNEL);
+    tnnl_spec1.mutable_if_tunnel_info()->set_encap_type(intf::IF_TUNNEL_ENCAP_TYPE_VXLAN);
+    tnnl_spec1.mutable_if_tunnel_info()->mutable_vxlan_info()->mutable_local_tep()->set_ip_af(types::IP_AF_INET);
+    tnnl_spec1.mutable_if_tunnel_info()->mutable_vxlan_info()->mutable_local_tep()->set_v4_addr(0x0a000000);
+    tnnl_spec1.mutable_if_tunnel_info()->mutable_vxlan_info()->mutable_remote_tep()->set_ip_af(types::IP_AF_INET);
+    tnnl_spec1.mutable_if_tunnel_info()->mutable_vxlan_info()->mutable_remote_tep()->set_v4_addr(0x0a000004);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(tnnl_spec1, &tnnl_rsp1);
+    HAL_TRACE_DEBUG("ret:{}", ret);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+#if 0
     post = hal_test_utils_collect_slab_stats();
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
-}
-
-#if 0
-// ----------------------------------------------------------------------------
-// Creating muliple enicifs
-// ----------------------------------------------------------------------------
-TEST_F(enicif_test, test2) 
-{
-    hal_ret_t            ret;
-    enicifSpec spec;
-    enicifResponse rsp;
-
-    for (int i = 0; i < 10; i++) {
-        spec.set_port_num(i);
-        spec.mutable_key_or_handle()->set_enicif_id(i);
-
-        ret = hal::enicif_create(spec, &rsp);
-        ASSERT_TRUE(ret == HAL_RET_OK);
-    }
-
-}
 #endif
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

@@ -165,6 +165,15 @@ hal_prepare_rsp (hal_ret_t ret)
         case HAL_RET_HANDLE_INVALID:
             return types::API_STATUS_HANDLE_INVALID;
             break;
+        case HAL_RET_IF_ENIC_TYPE_INVALID:
+            return types::API_STATUS_IF_ENIC_TYPE_INVALID;
+            break;
+        case HAL_RET_IF_ENIC_INFO_INVALID:
+            return types::API_STATUS_IF_ENIC_INFO_INVALID;
+            break;
+        case HAL_RET_IF_INFO_INVALID:
+            return types::API_STATUS_IF_INFO_INVALID;
+            break;
         default:
             return types::API_STATUS_ERR;
             break;

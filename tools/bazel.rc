@@ -2,6 +2,10 @@
 # Enabling batching seems to be very slow. So disabling it for now
 #startup --batch --host_jvm_args=-XX:-UseParallelGC
 
+
+#startup --output_user_root=%workspace%/bazel-cache
+
+
 # Do not show warnings from 
 #   - external dependencies 
 #   - nic/asic/capri

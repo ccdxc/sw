@@ -38,7 +38,33 @@ slab::alloc_block_(void)
     *(void **)ptr = NULL;
     this->num_blocks_++;
 
+#if 0
+    HAL_TRACE_DEBUG("{}:slab_id:{} free elems:", __FUNCTION__, slab_id_);
+    print_free_elem_ptrs_(block);
+#endif
+
     return block;
+}
+
+void
+slab::print_free_elem_ptrs_(slab_block_t *block)
+{
+    uint64_t                *ptr = NULL;
+    // uint64_t            tmp = (uint64_t)NULL;
+
+    if (slab_id_ != 10) {
+        return;
+    }
+
+    ptr = (uint64_t *)block->free_head_;
+    // memcpy(&tmp, ptr, sizeof(uint32_t *));
+    HAL_TRACE_DEBUG("{:#x} => ", (uint64_t)ptr);
+    // while(tmp != (uint64_t)NULL) {
+    while(ptr != NULL) {
+        ptr = (uint64_t *)*ptr;
+        HAL_TRACE_DEBUG("{:#x} => ", (uint64_t)ptr);
+    }
+    HAL_TRACE_DEBUG("NULL");
 }
 
 //------------------------------------------------------------------------------
@@ -172,13 +198,20 @@ slab::alloc(void)
     this->num_allocs_++;
     this->num_in_use_++;
     block->num_in_use_++;
+
+
     if (thread_safe_) {
         HAL_SPINLOCK_UNLOCK(&slock_);
     }
 
+#if 0
+    HAL_TRACE_DEBUG("{}:slab_id:{} free elems:", __FUNCTION__, slab_id_);
+    print_free_elem_ptrs_(block);
+#endif
     if (this->zero_on_alloc_) {
         memset(elem, 0, this->elem_sz_);
     }
+
     return elem;
 
 cleanup:
@@ -214,6 +247,12 @@ slab::free_(void *elem)
         this->num_frees_++;
         this->num_in_use_--;
         block->num_in_use_--;
+
+#if 0
+        HAL_TRACE_DEBUG("{}:slab_id:{} free elems:", __FUNCTION__, slab_id_);
+        print_free_elem_ptrs_(block);
+#endif
+
         if ((block->num_in_use_ == 0) && grow_on_demand_ && block->prev_) {
             // except 1st block, we can release all other blocks while shrinking
             block->prev_->next_ = block->next_;

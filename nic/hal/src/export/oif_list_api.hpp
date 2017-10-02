@@ -12,8 +12,10 @@ namespace hal {
     // Place for all public definitions of the OIF List manager.
 
     typedef struct oif_s {
-        if_id_t  if_id;
-        l2seg_id_t  l2_seg_id;
+        // if_id_t  if_id;
+        // l2seg_id_t  l2_seg_id;
+        if_t     *intf;
+        l2seg_t  *l2seg;
     } oif_t;
 
     hal_ret_t oif_list_create(oif_list_id_t *list); // Creates a new oif_list and returns handle

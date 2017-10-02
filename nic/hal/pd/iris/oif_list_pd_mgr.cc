@@ -32,8 +32,10 @@ hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif)
     uint32_t rewrite_idx;
     uint32_t tnnl_rewrite_idx;
     p4_replication_data_t data = { 0 };
-    if_t *pi_if = find_if_by_id(oif->if_id);
-    l2seg_t *pi_l2seg = find_l2seg_by_id(oif->l2_seg_id);
+    // if_t *pi_if = find_if_by_id(oif->if_id);
+    // l2seg_t *pi_l2seg = find_l2seg_by_id(oif->l2_seg_id);
+    if_t *pi_if = oif->intf;
+    l2seg_t *pi_l2seg = oif->l2seg;
 
     HAL_ASSERT_RETURN(pi_if && pi_l2seg, HAL_RET_INVALID_ARG);
 
@@ -55,6 +57,9 @@ hal_ret_t oif_list_remove_oif(oif_list_id_t list, oif_t *oif)
 {
     p4_replication_data_t data = { 0 };
 
+    // TODO: MET library expects the same data to be passed during
+    //       removal as that passed during add. Otherwise it wont be
+    //       able to find the replication.
     return g_hal_state_pd->met_table()->del_replication(list, (void*)&data);
 }
 

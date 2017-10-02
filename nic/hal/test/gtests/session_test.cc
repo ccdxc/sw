@@ -782,7 +782,7 @@ TEST_F(session_test, test4)
     // Create an uplink
     up_spec.mutable_meta()->set_tenant_id(4);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
-    up_spec.mutable_key_or_handle()->set_interface_id(1);
+    up_spec.mutable_key_or_handle()->set_interface_id(41);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);
@@ -792,7 +792,7 @@ TEST_F(session_test, test4)
 
     up_spec.mutable_meta()->set_tenant_id(4);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
-    up_spec.mutable_key_or_handle()->set_interface_id(2);
+    up_spec.mutable_key_or_handle()->set_interface_id(42);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);
@@ -961,7 +961,7 @@ TEST_F(session_test, test5)
     // Create an uplink
     up_spec.mutable_meta()->set_tenant_id(5);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
-    up_spec.mutable_key_or_handle()->set_interface_id(1);
+    up_spec.mutable_key_or_handle()->set_interface_id(51);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);
@@ -971,7 +971,7 @@ TEST_F(session_test, test5)
 
     up_spec.mutable_meta()->set_tenant_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
-    up_spec.mutable_key_or_handle()->set_interface_id(2);
+    up_spec.mutable_key_or_handle()->set_interface_id(52);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);
@@ -1656,7 +1656,7 @@ TEST_F(session_test, test9)
     // Create an uplink
     up_spec.mutable_meta()->set_tenant_id(9);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
-    up_spec.mutable_key_or_handle()->set_interface_id(1);
+    up_spec.mutable_key_or_handle()->set_interface_id(91);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);
@@ -1666,7 +1666,7 @@ TEST_F(session_test, test9)
 
     up_spec.mutable_meta()->set_tenant_id(9);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
-    up_spec.mutable_key_or_handle()->set_interface_id(2);
+    up_spec.mutable_key_or_handle()->set_interface_id(92);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);

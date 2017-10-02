@@ -792,7 +792,7 @@ TEST_F(tenant_test, test8)
 
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j < 5; j++) {
-            enicif_spec.mutable_key_or_handle()->set_interface_id(80 + i*j + j);
+            enicif_spec.mutable_key_or_handle()->set_interface_id(80 + i*5 + j);
             enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
             enicif_spec.mutable_if_enic_info()->set_l2segment_id(80 + i);
             enicif_spec.mutable_if_enic_info()->set_encap_vlan_id(20 + i*j + j);

@@ -1046,7 +1046,7 @@ TEST_F(flow_test, test17) {
     // std::srand ( unsigned ( std::time(0) ) );
     std::vector<int> myvector;
 
-    for (int i=0; i < max; ++i) myvector.push_back(i);
+    for (uint i=0; i < max; ++i) myvector.push_back(i);
 
 	std::random_shuffle ( myvector.begin(), myvector.end() );
 	// print out content:
@@ -1320,7 +1320,7 @@ TEST_F(flow_test, test18) {
     uint32_t ft_bits = 0;
     std::vector<int> myvector;
 
-    for (int i=0; i < max; ++i) myvector.push_back(i);
+    for (uint i=0; i < max; ++i) myvector.push_back(i);
 
 	std::random_shuffle ( myvector.begin(), myvector.end() );
 	// print out content:

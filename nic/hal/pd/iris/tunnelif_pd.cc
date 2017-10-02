@@ -22,7 +22,7 @@ pd_tunnelif_create(pd_if_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;; 
     pd_tunnelif_t        *pd_tunnelif;
 
-    HAL_TRACE_DEBUG("PD-TUNNELIF::{}: Creating pd state for Tunnelif: {}", 
+    HAL_TRACE_DEBUG("pd-tunnelif::{}: Creating pd state for Tunnelif: {}", 
                     __FUNCTION__, if_get_if_id(args->intf));
 
     // Create Tunnel If PD
@@ -33,13 +33,13 @@ pd_tunnelif_create(pd_if_args_t *args)
     }
 
     // Link PI & PD
-    link_pi_pd(pd_tunnelif, args->intf);
+    pd_tunnelif_link_pi_pd(pd_tunnelif, args->intf);
 
     // Allocate Resources
     ret = pd_tunnelif_alloc_res(pd_tunnelif);
     if (ret != HAL_RET_OK) {
         // No Resources, dont allocate PD
-        HAL_TRACE_ERR("PD-TUNNELIF::{}: Unable to alloc. resources for TunnelIf: {}",
+        HAL_TRACE_ERR("pd-tunnelif::{}: unable to alloc. resources for TunnelIf: {}",
                       __FUNCTION__, if_get_if_id(args->intf));
         goto end;
     }
@@ -49,52 +49,51 @@ pd_tunnelif_create(pd_if_args_t *args)
 
 end:
     if (ret != HAL_RET_OK) {
-        unlink_pi_pd(pd_tunnelif, args->intf);
-        pd_tunnelif_free(pd_tunnelif);
+        pd_tunnelif_cleanup(pd_tunnelif);
     }
 
     return ret;
 }
 
-// ----------------------------------------------------------------------------
-// Allocate and Initialize Tunnel IF PD Instance
-// ----------------------------------------------------------------------------
-pd_tunnelif_t *
-pd_tunnelif_alloc_init(void)
+//-----------------------------------------------------------------------------
+// PD TunnelIf Update
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_tunnelif_update (pd_if_args_t *args)
 {
-    return pd_tunnelif_init(pd_tunnelif_alloc());
+    // Nothing to do for now
+    return HAL_RET_OK;
 }
 
-// ----------------------------------------------------------------------------
-// Allocate Tunnel IF Instance
-// ----------------------------------------------------------------------------
-pd_tunnelif_t *
-pd_tunnelif_alloc (void)
+//-----------------------------------------------------------------------------
+// PD Tunnelif Delete
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_tunnelif_delete (pd_if_args_t *args)
 {
-    pd_tunnelif_t    *tunnelif;
+    hal_ret_t        ret = HAL_RET_OK;
+    pd_tunnelif_t    *tunnelif_pd;
 
-    tunnelif = (pd_tunnelif_t *)g_hal_state_pd->tunnelif_pd_slab()->alloc();
-    if (tunnelif == NULL) {
-        return NULL;
-    }
-    return tunnelif;
-}
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("pd-tunnelif:{}:deleting pd state for tunnelif: {}",
+                    __FUNCTION__, args->intf->if_id);
+    tunnelif_pd = (pd_tunnelif_t *)args->intf->pd_if;
 
-// ----------------------------------------------------------------------------
-// Initialize Tunnel IF PD instance
-// ----------------------------------------------------------------------------
-pd_tunnelif_t *
-pd_tunnelif_init (pd_tunnelif_t *tunnelif)
-{
-    if (!tunnelif) {
-        return NULL;
+    // deprogram HW
+    ret = pd_tunnelif_deprogram_hw(tunnelif_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-tunnelif:{}:unable to deprogram hw", __FUNCTION__);
     }
-    for (int i = 0; i < 3; i++) {
-        tunnelif->imn_idx[i] = -1;
-        tunnelif->imt_idx[i] = -1;
+
+    ret = pd_tunnelif_cleanup(tunnelif_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-tunnelif:{}:failed pd tunnelif delete",
+                      __FUNCTION__);
     }
-    tunnelif->tunnel_rw_idx = -1;
-    return tunnelif;
+
+    return ret;
 }
 
 // ----------------------------------------------------------------------------
@@ -108,6 +107,57 @@ pd_tunnelif_alloc_res(pd_tunnelif_t *pd_tunnelif)
      * the state if hw programming fails due to any reason
      */
     return HAL_RET_OK;
+}
+
+// ----------------------------------------------------------------------------
+// De-Allocate resources for PD Tunnel IF
+// ----------------------------------------------------------------------------
+hal_ret_t 
+pd_tunnelif_dealloc_res(pd_tunnelif_t *pd_tunnelif)
+{
+    /*
+     * Nothing to do here since we try to program the HW directly and rollback
+     * the state if hw programming fails due to any reason
+     */
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// PD TunnelIf Cleanup
+//  - Release all resources
+//  - Delink PI <-> PD
+//  - Free PD If 
+//  Note:
+//      - Just free up whatever PD has. 
+//      - Dont use this inplace of delete. Delete may result in giving callbacks
+//        to others.
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_tunnelif_cleanup(pd_tunnelif_t *pd_tunnelif)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    if (!pd_tunnelif) {
+        // Nothing to do
+        goto end;
+    }
+
+    // Releasing resources
+    ret = pd_tunnelif_dealloc_res(pd_tunnelif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-enicif:{}: unable to dealloc res for enicif: {}", 
+                      __FUNCTION__, 
+                      ((if_t *)(pd_tunnelif->pi_if))->if_id);
+        goto end;
+    }
+
+    // Delinking PI<->PD
+    pd_tunnelif_delink_pi_pd(pd_tunnelif, (if_t *)pd_tunnelif->pi_if);
+
+    // Freeing PD
+    pd_tunnelif_free(pd_tunnelif);
+end:
+    return ret;
 }
 
 // ----------------------------------------------------------------------------
@@ -132,8 +182,9 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif)
     return HAL_RET_OK;
 
 fail_flag:
-    HAL_TRACE_DEBUG("ERROR: pd_tunnelif_program_hw");
-    return (pd_tunnelif_deprogram_hw(pd_tunnelif));
+    HAL_TRACE_ERR("pd-tunnelif:{}:unable to program hw");
+    return ret;
+    // return (pd_tunnelif_deprogram_hw(pd_tunnelif));
 }
 
 // ----------------------------------------------------------------------------
@@ -152,36 +203,6 @@ pd_tunnelif_deprogram_hw(pd_tunnelif_t *pd_tunnelif)
     /* Deprogram tunnel rewrite table */
     ret = pd_tunnelif_del_tunnel_rw_table_entry(pd_tunnelif);
     return ret;
-}
-
-// ----------------------------------------------------------------------------
-// Freeing TUNNELIF PD
-// ----------------------------------------------------------------------------
-hal_ret_t
-pd_tunnelif_free (pd_tunnelif_t *tunnelif)
-{
-    g_hal_state_pd->tunnelif_pd_slab()->free(tunnelif);
-    return HAL_RET_OK;
-}
-
-// ----------------------------------------------------------------------------
-// Linking PI <-> PD
-// ----------------------------------------------------------------------------
-void 
-link_pi_pd(pd_tunnelif_t *pd_tunnelif, if_t *pi_if)
-{
-    pd_tunnelif->pi_if = pi_if;
-    if_set_pd_if(pi_if, pd_tunnelif);
-}
-
-// ----------------------------------------------------------------------------
-// Un-Linking PI <-> PD
-// ----------------------------------------------------------------------------
-void 
-unlink_pi_pd(pd_tunnelif_t *pd_tunnelif, if_t *pi_if)
-{
-    pd_tunnelif->pi_if = NULL;
-    if_set_pd_if(pi_if, NULL);
 }
 
 hal_ret_t
@@ -484,7 +505,7 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
         if (v4_valid) {
             act.tunnel_rewrite_encap_vxlan.ip_type = IP_HEADER_TYPE_IPV4;
         } else {
-            HAL_TRACE_ERR("PD-TUNNELIF::{}: Invalid outer encap header",
+            HAL_TRACE_ERR("pd-tunnelif::{}: Invalid outer encap header",
                           __FUNCTION__);
             ret = HAL_RET_ERR;
             goto fail_flag;
@@ -507,6 +528,42 @@ fail_flag:
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// Makes a clone
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_tunnelif_make_clone(if_t *hal_if, if_t *clone)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    pd_tunnelif_t       *pd_tunnelif_clone = NULL;
 
+    pd_tunnelif_clone = pd_tunnelif_alloc_init();
+    if (pd_tunnelif_clone == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    memcpy(pd_tunnelif_clone, hal_if->pd_if, sizeof(pd_tunnelif_t));
+
+    pd_tunnelif_link_pi_pd(pd_tunnelif_clone, clone);
+
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Frees PD memory without indexer free.
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_tunnelif_mem_free(pd_if_args_t *args)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+    pd_tunnelif_t  *pd_tunnif;
+
+    pd_tunnif = (pd_tunnelif_t *)args->intf->pd_if;
+    pd_tunnelif_free(pd_tunnif);
+
+    return ret;
+}
 }    // namespace pd
 }    // namespace hal

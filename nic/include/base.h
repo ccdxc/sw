@@ -195,6 +195,9 @@ do {                                                       \
     ENTRY(HAL_RET_IPSEC_CB_NOT_FOUND,         37, "IPSEC CB not found")        \
     ENTRY(HAL_RET_CPU_CB_NOT_FOUND,           38, "CPU CB not found")          \
     ENTRY(HAL_RET_RETRY,                      39, "retry the operation")       \
+    ENTRY(HAL_RET_IF_ENIC_TYPE_INVALID,       40, "enic type invalid")         \
+    ENTRY(HAL_RET_IF_ENIC_INFO_INVALID,       41, "enic info invalid")         \
+    ENTRY(HAL_RET_IF_INFO_INVALID,            42, "if info invalid")           \
                                                                                \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

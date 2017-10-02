@@ -3,21 +3,20 @@
 
 #include "nic/include/base.h"
 #include "nic/include/pd.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
 
 namespace hal {
 namespace pd {
 
 struct pd_tunnelif_s {
+
     // Hw Indices
-    // Input mapping native table idx
-    int imn_idx[3];
-    // Input mapping tunneled table idx
-    int imt_idx[3];
-    // Tunnel rewrite table idx
-    int tunnel_rw_idx;
+    int imn_idx[3];                 // Input mapping native table idx
+    int imt_idx[3];                 // Input mapping tunneled table idx
+    int tunnel_rw_idx;              // Tunnel rewrite table idx
     tenant_id_t tid;
-    // PI ptr
-    void        *pi_if;
+
+    void        *pi_if;             // PI ptr
 } __PACK__;
 
 typedef enum pd_tunnelif_inp_map_tbl_type_e_ {
@@ -26,15 +25,79 @@ typedef enum pd_tunnelif_inp_map_tbl_type_e_ {
     PD_TUNNEL_IF_INP_MAP_NONE,
 } pd_tunnelif_inp_map_tbl_type_e;
 
-hal_ret_t pd_tunnelif_create(pd_if_args_t *args);
-pd_tunnelif_t *pd_tunnelif_alloc_init(void);
-pd_tunnelif_t *pd_tunnelif_alloc (void);
-pd_tunnelif_t *pd_tunnelif_init (pd_tunnelif_t *tunnelif);
+// ----------------------------------------------------------------------------
+// Allocate Tunnel IF Instance
+// ----------------------------------------------------------------------------
+static pd_tunnelif_t *
+pd_tunnelif_alloc (void)
+{
+    pd_tunnelif_t    *tunnelif;
+
+    tunnelif = (pd_tunnelif_t *)g_hal_state_pd->tunnelif_pd_slab()->alloc();
+    if (tunnelif == NULL) {
+        return NULL;
+    }
+    return tunnelif;
+}
+
+// ----------------------------------------------------------------------------
+// Initialize Tunnel IF PD instance
+// ----------------------------------------------------------------------------
+static pd_tunnelif_t *
+pd_tunnelif_init (pd_tunnelif_t *tunnelif)
+{
+    if (!tunnelif) {
+        return NULL;
+    }
+    for (int i = 0; i < 3; i++) {
+        tunnelif->imn_idx[i] = -1;
+        tunnelif->imt_idx[i] = -1;
+    }
+    tunnelif->tunnel_rw_idx = -1;
+    return tunnelif;
+}
+
+// ----------------------------------------------------------------------------
+// Allocate and Initialize Tunnel IF PD Instance
+// ----------------------------------------------------------------------------
+static pd_tunnelif_t *
+pd_tunnelif_alloc_init(void)
+{
+    return pd_tunnelif_init(pd_tunnelif_alloc());
+}
+
+// ----------------------------------------------------------------------------
+// Freeing tunnelif PD
+// ----------------------------------------------------------------------------
+static hal_ret_t
+pd_tunnelif_free (pd_tunnelif_t *tunnelif)
+{
+    g_hal_state_pd->tunnelif_pd_slab()->free(tunnelif);
+    return HAL_RET_OK;
+}
+
+// ----------------------------------------------------------------------------
+// Linking PI <-> PD
+// ----------------------------------------------------------------------------
+static void 
+pd_tunnelif_link_pi_pd(pd_tunnelif_t *pd_tunnelif, if_t *pi_if)
+{
+    pd_tunnelif->pi_if = pi_if;
+    if_set_pd_if(pi_if, pd_tunnelif);
+}
+
+// ----------------------------------------------------------------------------
+// De-Linking PI <-> PD
+// ----------------------------------------------------------------------------
+static void 
+pd_tunnelif_delink_pi_pd(pd_tunnelif_t *pd_tunnelif, if_t *pi_if)
+{
+    pd_tunnelif->pi_if = NULL;
+    if_set_pd_if(pi_if, NULL);
+}
+
 hal_ret_t pd_tunnelif_alloc_res(pd_tunnelif_t *pd_tunnelif);
 hal_ret_t pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif);
-hal_ret_t pd_tunnelif_free (pd_tunnelif_t *tunnelif);
-void link_pi_pd(pd_tunnelif_t *pd_upif, if_t *pi_if);
-void unlink_pi_pd(pd_tunnelif_t *pd_upif, if_t *pi_if);
 hal_ret_t pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif);
 hal_ret_t pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif);
 hal_ret_t pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif);
@@ -42,6 +105,14 @@ hal_ret_t pd_tunnelif_deprogram_hw(pd_tunnelif_t *pd_tunnelif);
 hal_ret_t pd_tunnelif_del_inp_mapp_entries(pd_tunnelif_t *pd_tunnelif,
                                            p4pd_table_id tbl_id);
 hal_ret_t pd_tunnelif_del_tunnel_rw_table_entry(pd_tunnelif_t *pd_tif);
+hal_ret_t pd_tunnelif_cleanup(pd_tunnelif_t *pd_tunnelif);
+
+hal_ret_t pd_tunnelif_create(pd_if_args_t *args);
+hal_ret_t pd_tunnelif_update(pd_if_args_t *args);
+hal_ret_t pd_tunnelif_delete(pd_if_args_t *args);
+hal_ret_t pd_tunnelif_make_clone(if_t *hal_if, if_t *clone);
+hal_ret_t pd_tunnelif_mem_free(pd_if_args_t *args);
+
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_PD_TUNNELIF_HPP__

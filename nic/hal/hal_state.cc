@@ -108,16 +108,18 @@ hal_cfg_db::init(void)
 
     // initialize interface related data structures
     if_id_ht_ = ht::factory(HAL_MAX_INTERFACES,
-                            hal::if_get_key_func,
-                            hal::if_compute_hash_func,
-                            hal::if_compare_key_func);
+                            hal::if_id_get_key_func,
+                            hal::if_id_compute_hash_func,
+                            hal::if_id_compare_key_func);
     HAL_ASSERT_RETURN((if_id_ht_ != NULL), false);
 
+#if 0
     if_hal_handle_ht_ = ht::factory(HAL_MAX_INTERFACES,
                                     hal::if_get_handle_key_func,
                                     hal::if_compute_handle_hash_func,
                                     hal::if_compare_handle_key_func);
     HAL_ASSERT_RETURN((if_hal_handle_ht_ != NULL), false);
+#endif
 
     // initialize endpoint related data structures
     ep_hal_handle_ht_ = ht::factory(HAL_MAX_ENDPOINTS,
@@ -137,7 +139,7 @@ hal_cfg_db::init(void)
                                          hal::session_get_handle_key_func,
                                          hal::session_compute_handle_hash_func,
                                          hal::session_compare_handle_key_func);
-    HAL_ASSERT_RETURN((if_hal_handle_ht_ != NULL), false);
+    HAL_ASSERT_RETURN((session_hal_handle_ht_ != NULL), false);
 
     // initialize l4lb related data structures
     l4lb_ht_ = ht::factory(HAL_MAX_L4LB_SERVICES,
@@ -321,13 +323,13 @@ hal_cfg_db::hal_cfg_db()
     nwsec_profile_hal_handle_ht_ = NULL;
 
     l2seg_id_ht_ = NULL;
-    l2seg_hal_handle_ht_ = NULL;
+    // l2seg_hal_handle_ht_ = NULL;
 
     lif_id_ht_ = NULL;
-    lif_hal_handle_ht_ = NULL;
+    // lif_hal_handle_ht_ = NULL;
 
     if_id_ht_ = NULL;
-    if_hal_handle_ht_ = NULL;
+    // if_hal_handle_ht_ = NULL;
 
     ep_hal_handle_ht_ = NULL;
 
@@ -417,13 +419,13 @@ hal_cfg_db::~hal_cfg_db()
     nwsec_profile_hal_handle_ht_ ? delete nwsec_profile_hal_handle_ht_ : HAL_NOP;
 
     l2seg_id_ht_ ? delete l2seg_id_ht_ : HAL_NOP;
-    l2seg_hal_handle_ht_ ? delete l2seg_hal_handle_ht_ : HAL_NOP;
+    // l2seg_hal_handle_ht_ ? delete l2seg_hal_handle_ht_ : HAL_NOP;
 
     lif_id_ht_ ? delete lif_id_ht_ : HAL_NOP;
-    lif_hal_handle_ht_ ? delete lif_hal_handle_ht_ : HAL_NOP;
+    // lif_hal_handle_ht_ ? delete lif_hal_handle_ht_ : HAL_NOP;
 
     if_id_ht_ ? delete if_id_ht_ : HAL_NOP;
-    if_hal_handle_ht_ ? delete if_hal_handle_ht_ : HAL_NOP;
+    // if_hal_handle_ht_ ? delete if_hal_handle_ht_ : HAL_NOP;
 
     ep_hal_handle_ht_ ? delete ep_hal_handle_ht_ : HAL_NOP;
 
@@ -928,11 +930,13 @@ hal_oper_db::init(void)
                                     hal::hal_handle_id_compare_key_func);
     HAL_ASSERT_RETURN((hal_handle_id_ht_ != NULL), false);
 
+#if 0
     if_hwid_ht_ = ht::factory(HAL_MAX_INTERFACES,
                               hal::if_get_hw_key_func,
                               hal::if_compute_hw_hash_func,
                               hal::if_compare_hw_key_func);
     HAL_ASSERT_RETURN((if_hwid_ht_ != NULL), false);
+#endif
 
     ep_l2_ht_ = ht::factory(HAL_MAX_ENDPOINTS,
                             hal::ep_get_l2_key_func,
@@ -970,7 +974,7 @@ hal_oper_db::hal_oper_db()
 
     hal_handle_id_ht_  = NULL;
     infra_l2seg_ = NULL;
-    if_hwid_ht_ = NULL;
+    // if_hwid_ht_ = NULL;
     ep_l2_ht_ = NULL;
     ep_l3_entry_ht_ = NULL;
     flow_ht_ = NULL;
@@ -1012,7 +1016,7 @@ hal_oper_db::~hal_oper_db()
 
     infra_l2seg_ = NULL;
 
-    if_hwid_ht_ ? delete if_hwid_ht_ : HAL_NOP;
+    // if_hwid_ht_ ? delete if_hwid_ht_ : HAL_NOP;
 
     ep_l2_ht_ ? delete ep_l2_ht_ : HAL_NOP;
     ep_l3_entry_ht_ ? delete ep_l3_entry_ht_ : HAL_NOP;

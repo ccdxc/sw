@@ -206,8 +206,8 @@ pin_endpoint (ep_t *ep)
 hal_ret_t
 endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 {
-    hal_ret_t          ret;
-    int                i, num_ips;
+    hal_ret_t          ret = HAL_RET_OK;
+    int                i, num_ips = 0;
     tenant_id_t        tid;
     hal_handle_t       if_handle, l2seg_handle;
     ep_t               *ep = NULL;
@@ -221,6 +221,14 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-EP:{}: EP Create for id {}", __FUNCTION__, 
                     spec.meta().tenant_id());
+
+#if 0
+    // prepare the response
+    rsp->set_api_status(types::API_STATUS_OK);
+    // rsp->mutable_endpoint_status()->set_endpoint_handle(ep->hal_handle);
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    return HAL_RET_OK;
+#endif
 
     ret = validate_endpoint_create(spec, rsp);
     if (ret != HAL_RET_OK) {
@@ -376,14 +384,32 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     utils::dllist_add(&l2seg->ep_list_head, &ep->l2seg_ep_lentry);
     HAL_SPINLOCK_UNLOCK(&l2seg->slock);
 
+
+    // didnt happen
+
     // insert this EP in the interface' EP list
     utils::dllist_reset(&ep->if_ep_lentry);
     HAL_SPINLOCK_LOCK(&hal_if->slock);
     utils::dllist_add(&hal_if->ep_list_head, &ep->if_ep_lentry);
     HAL_SPINLOCK_UNLOCK(&hal_if->slock);
 
+    // happened
+#if 0
+    // prepare the response
+    rsp->set_api_status(types::API_STATUS_OK);
+    rsp->mutable_endpoint_status()->set_endpoint_handle(ep->hal_handle);
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    return HAL_RET_OK;
+#endif
+
+
+
+
     // initialize session list
     utils::dllist_reset(&hal_if->session_list_head);
+
+    // happened
+
 
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);

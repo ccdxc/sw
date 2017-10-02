@@ -116,8 +116,9 @@ hal_state_pd::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((cpuif_pd_slab_ != NULL), false);
 
+
     // initialize TUNNEL If PD related data structures
-    tunnelif_pd_slab_ = slab::factory("ENICIF_PD", HAL_SLAB_ENICIF_PD,
+    tunnelif_pd_slab_ = slab::factory("TUNNELIF_PD", HAL_SLAB_TUNNELIF_PD,
                                  sizeof(hal::pd::pd_tunnelif_t), 8,
                                  false, true, true, true);
     HAL_ASSERT_RETURN((tunnelif_pd_slab_ != NULL), false);

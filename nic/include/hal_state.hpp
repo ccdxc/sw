@@ -73,13 +73,13 @@ public:
     ht *nwsec_profile_hal_handle_ht(void) const { return nwsec_profile_hal_handle_ht_ ; }
 
     ht *l2seg_id_ht(void) const { return l2seg_id_ht_; }
-    ht *l2seg_hal_handle_ht(void) const { return l2seg_hal_handle_ht_; }
+    // ht *l2seg_hal_handle_ht(void) const { return l2seg_hal_handle_ht_; }
 
     ht *lif_id_ht(void) const { return lif_id_ht_; }
-    ht *lif_hal_handle_ht(void) const { return lif_hal_handle_ht_; }
+    // ht *lif_hal_handle_ht(void) const { return lif_hal_handle_ht_; }
 
     ht *if_id_ht(void) const { return if_id_ht_; }
-    ht *if_hal_handle_ht(void) const { return if_hal_handle_ht_; }
+    // ht *if_hal_handle_ht(void) const { return if_hal_handle_ht_; }
 
     // TODO: may have to create L2 and L3 HTs here !!
     ht *ep_hal_handle_ht(void) const { return ep_hal_handle_ht_; }
@@ -175,19 +175,19 @@ private:
     // l2segment related config
     struct {
         ht         *l2seg_id_ht_;
-        ht         *l2seg_hal_handle_ht_;
+        // ht         *l2seg_hal_handle_ht_;
     } __PACK__;
 
     // LIF related config
     struct {
         ht         *lif_id_ht_;
-        ht         *lif_hal_handle_ht_;
+        // ht         *lif_hal_handle_ht_;
     } __PACK__;
 
     // interface related config
     struct {
         ht         *if_id_ht_;
-        ht         *if_hal_handle_ht_;
+        // ht         *if_hal_handle_ht_;
     } __PACK__;
 
     // endpoint related config
@@ -314,7 +314,7 @@ public:
     ht *hal_handle_id_ht(void) const { return hal_handle_id_ht_; };
     void *infra_l2seg(void) { return infra_l2seg_; }
     void set_infra_l2seg(void *infra_l2seg) { infra_l2seg_ = infra_l2seg; }
-    ht *if_hwid_ht(void) const { return if_hwid_ht_; }
+    // ht *if_hwid_ht(void) const { return if_hwid_ht_; }
     ht *ep_l2_ht(void) const { return ep_l2_ht_; }
     ht *ep_l3_entry_ht(void) const { return ep_l3_entry_ht_; }
     ht *flow_ht(void) const { return flow_ht_; }
@@ -329,7 +329,7 @@ private:
 private:
     void      *infra_l2seg_;  // l2seg_t *
     ht        *hal_handle_id_ht_;
-    ht        *if_hwid_ht_;
+    // ht        *if_hwid_ht_;
     ht        *ep_l2_ht_;
     ht        *ep_l3_entry_ht_;
     ht        *flow_ht_;
@@ -457,18 +457,18 @@ public:
     // get APIs for L2 segment state
     slab *l2seg_slab(void) const { return mem_db_->l2seg_slab(); }
     ht *l2seg_id_ht(void) const { return cfg_db_->l2seg_id_ht(); }
-    ht *l2seg_hal_handle_ht(void) const { return cfg_db_->l2seg_hal_handle_ht(); }
+    // ht *l2seg_hal_handle_ht(void) const { return cfg_db_->l2seg_hal_handle_ht(); }
 
     // get APIs for LIF state
     slab *lif_slab(void) const { return mem_db_->lif_slab(); }
     ht *lif_id_ht(void) const { return cfg_db_->lif_id_ht(); }
-    ht *lif_hal_handle_ht(void) const { return cfg_db_->lif_hal_handle_ht(); }
+    // ht *lif_hal_handle_ht(void) const { return cfg_db_->lif_hal_handle_ht(); }
 
     // get APIs for interface state
     slab *if_slab(void) const { return mem_db_->if_slab(); }
     ht *if_id_ht(void) const { return cfg_db_->if_id_ht(); }
-    ht *if_hal_handle_ht(void) const { return cfg_db_->if_hal_handle_ht(); }
-    ht *if_hwid_ht(void) const { return oper_db_->if_hwid_ht(); }
+    // ht *if_hal_handle_ht(void) const { return cfg_db_->if_hal_handle_ht(); }
+    // ht *if_hwid_ht(void) const { return oper_db_->if_hwid_ht(); }
 
     // get APIs for endpoint state
     slab *ep_slab(void) const { return mem_db_->ep_slab(); }

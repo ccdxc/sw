@@ -1,13 +1,5 @@
--I ../gen
--I ../gen/iris/include
--I ../gen/protobuf
--I ../third-party/crc32
+-I ../..
+-I ../../bazel-genfiles
 -I ../third-party/spdlog/include
--I svc
--I src
--I ../utils
--I pd/common
--I pd/iris
--I pd
--I ../include
+-I ../bazel-sw/external/com_github_google_protobuf
 -std=c++11

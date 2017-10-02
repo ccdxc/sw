@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -86,6 +87,7 @@ protected:
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
     hal_initialize();
+    hal_test_utils_slab_disable_delete();
   }
   // Will be called at the end of all test cases in this class
   static void TearDownTestCase() {
@@ -110,6 +112,10 @@ TEST_F(cpuif_test, test1)
     SecurityProfileResponse     sp_rsp;
     NetworkSpec                 nw_spec;
     NetworkResponse             nw_rsp;
+    InterfaceDeleteRequest      del_req;
+    InterfaceDeleteResponseMsg  del_rsp;
+    slab_stats_t                *pre = NULL, *post = NULL;
+    bool                        is_leak = false;
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -161,11 +167,23 @@ TEST_F(cpuif_test, test1)
     cpuif_spec.set_type(intf::IF_TYPE_CPU);
     cpuif_spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(2);
     cpuif_spec.mutable_key_or_handle()->set_interface_id(1);
-
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(cpuif_spec, &cpuif_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
+    
+    // delete enicif
+    del_req.mutable_key_or_handle()->set_interface_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close(false);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding 
+    post = hal_test_utils_collect_slab_stats();
+    hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    ASSERT_TRUE(is_leak == false);
 }
 
 int main(int argc, char **argv) {

@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -83,6 +84,7 @@ protected:
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
     hal_initialize();
+    hal_test_utils_slab_disable_delete();
   }
   // Will be called at the end of all test cases in this class
   static void TearDownTestCase() {
@@ -104,12 +106,17 @@ TEST_F(uplinkif_test, test1)
     spec.mutable_if_uplink_info()->set_port_num(1);
     spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(spec, &rsp);
+    hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     spec.mutable_if_uplink_info()->set_native_l2segment_id(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_update(spec, &rsp);
-    ASSERT_TRUE(ret == HAL_RET_OK);
+    hal::hal_cfg_db_close(false);
+    HAL_TRACE_DEBUG("ret:{}", ret);
+    ASSERT_TRUE(ret == HAL_RET_L2SEG_NOT_FOUND);
 
     // Release if_uplink_info
     // free spec.release_if_uplink_info();
@@ -127,11 +134,13 @@ TEST_F(uplinkif_test, test2)
     for (int i = 1; i <= 8; i++) {
         spec.set_type(intf::IF_TYPE_UPLINK);
 
-        spec.mutable_key_or_handle()->set_interface_id(i);
+        spec.mutable_key_or_handle()->set_interface_id(100 + i);
         spec.mutable_if_uplink_info()->set_port_num(i);
         spec.mutable_if_uplink_info()->set_native_l2segment_id(i);
 
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::interface_create(spec, &rsp);
+        hal::hal_cfg_db_close(false);
         ASSERT_TRUE(ret == HAL_RET_OK);
     }
 
@@ -187,7 +196,7 @@ TEST_F(uplinkif_test, test3)
 
     // Create Uplink If
     if_spec.set_type(intf::IF_TYPE_UPLINK);
-    if_spec.mutable_key_or_handle()->set_interface_id(1);
+    if_spec.mutable_key_or_handle()->set_interface_id(31);
     if_spec.mutable_if_uplink_info()->set_port_num(1);
     // if_spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -208,15 +217,53 @@ TEST_F(uplinkif_test, test3)
 
     // Adding L2segment on Uplink
     if_l2seg_spec.mutable_l2segment_key_or_handle()->set_segment_id(1);
-    if_l2seg_spec.mutable_if_key_handle()->set_interface_id(1);
+    if_l2seg_spec.mutable_if_key_handle()->set_interface_id(31);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::add_l2seg_on_uplink(if_l2seg_spec, &if_l2seg_rsp);
-    printf("ret: %d api_status: %d\n", ret, if_l2seg_rsp.api_status());
+    HAL_TRACE_DEBUG("ret:{}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
     hal::hal_cfg_db_close(false);
 
     // Release if_uplink_info
     // free spec.release_if_uplink_info();
+}
+
+// ----------------------------------------------------------------------------
+// Creating a uplinkif
+// ----------------------------------------------------------------------------
+TEST_F(uplinkif_test, test4) 
+{
+    hal_ret_t                        ret;
+    InterfaceSpec                   spec;
+    InterfaceResponse               rsp;
+    InterfaceDeleteRequest          del_req;
+    InterfaceDeleteResponseMsg      del_rsp;
+    slab_stats_t                    *pre = NULL, *post = NULL;
+    bool                            is_leak = false;
+
+    pre = hal_test_utils_collect_slab_stats();
+
+    // create uplink if
+    spec.set_type(intf::IF_TYPE_UPLINK);
+    spec.mutable_key_or_handle()->set_interface_id(41);
+    spec.mutable_if_uplink_info()->set_port_num(1);
+    spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(spec, &rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // delete uplink if
+    del_req.mutable_key_or_handle()->set_interface_id(41);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close(false);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    post = hal_test_utils_collect_slab_stats();
+    hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    ASSERT_TRUE(is_leak == false);
 }
 
 int main(int argc, char **argv) {

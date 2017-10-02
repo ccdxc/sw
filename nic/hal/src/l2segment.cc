@@ -3,62 +3,12 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/l2segment.hpp"
-// #include "nic/hal/svc/l2segment_svc.hpp"
 #include "nic/hal/src/tenant.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/oif_list_api.hpp"
 #include "nic/hal/src/if_utils.hpp"
 
 namespace hal {
-
-#if 0
-void *
-l2seg_get_key_func (void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((l2seg_t *)entry)->seg_id);
-}
-
-uint32_t
-l2seg_compute_hash_func (void *key, uint32_t ht_size)
-{
-    return utils::hash_algo::fnv_hash(key, sizeof(l2seg_id_t)) % ht_size;
-}
-
-bool
-l2seg_compare_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(l2seg_id_t *)key1 == *(l2seg_id_t *)key2) {
-        return true;
-    }
-    return false;
-}
-
-void *
-l2seg_get_handle_key_func (void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((l2seg_t *)entry)->hal_handle);
-}
-
-uint32_t
-l2seg_compute_handle_hash_func (void *key, uint32_t ht_size)
-{
-    return utils::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
-}
-
-bool
-l2seg_compare_handle_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
-        return true;
-    }
-    return false;
-}
-
-#endif
 
 // ----------------------------------------------------------------------------
 // hash table seg_id => entry
@@ -321,7 +271,7 @@ l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-tenant:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("pi-l2seg:{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -482,7 +432,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     }
 
     if (l2seg->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
-        HAL_TRACE_DEBUG("PI-L2Seg:{} id:{} is Infra ", __FUNCTION__, 
+        HAL_TRACE_DEBUG("pi-l2seg:{} id:{} is infra ", __FUNCTION__, 
                         l2seg->seg_id);
         g_hal_state->set_infra_l2seg(l2seg);
     }
@@ -625,7 +575,7 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     l2seg = (l2seg_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}: Update upd CB {}",
+    HAL_TRACE_DEBUG("pi-l2seg:{}: update upd cb {}",
                     __FUNCTION__, l2seg->seg_id);
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -633,7 +583,7 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_l2seg_args.l2seg = l2seg;
     ret = pd::pd_l2seg_update(&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to delete l2seg pd, err : {}",
+        HAL_TRACE_ERR("pi-l2seg:{}:failed to update l2seg pd, err : {}",
                       __FUNCTION__, ret);
     }
 
@@ -652,12 +602,12 @@ end:
 // - Both PI and PD objects cloned. 
 //------------------------------------------------------------------------------
 hal_ret_t
-l2seg_make_clone (l2seg_t *ten, l2seg_t **ten_clone)
+l2seg_make_clone (l2seg_t *l2seg, l2seg_t **l2seg_clone)
 {
-    *ten_clone = l2seg_alloc_init();
-    memcpy(*ten_clone, ten, sizeof(l2seg_t));
+    *l2seg_clone = l2seg_alloc_init();
+    memcpy(*l2seg_clone, l2seg, sizeof(l2seg_t));
 
-    pd::pd_l2seg_make_clone(ten, *ten_clone);
+    pd::pd_l2seg_make_clone(l2seg, *l2seg_clone);
 
     return HAL_RET_OK;
 }
@@ -773,7 +723,7 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     // validate the request message
     ret = validate_l2seg_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:l2seg delete validation failed, ret : {}", 
+        HAL_TRACE_ERR("pi-l2seg:{}:l2seg update validation failed, ret : {}", 
                       __FUNCTION__, ret);
         goto end;
     }
@@ -1119,7 +1069,7 @@ end:
 hal_ret_t
 l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
+    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
     hal_handle_id_list_entry_t  *entry = NULL;
     dllist_ctxt_t               *curr, *next;
 
@@ -1132,7 +1082,7 @@ l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
 
-            ret = HAL_RET_IF_NOT_FOUND;
+            ret = HAL_RET_OK;
         }
     }
 

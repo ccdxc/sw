@@ -1277,9 +1277,11 @@ process_iflow_base_spec(const session_args_t *args, session_t *session)
     HAL_TRACE_DEBUG("iflow direction: {} sep_ep_flags: {}", iflow->config.key.dir, sep->ep_flags);
 
     // lookup ingress & egress interfaces
-    iflow->sif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&sep->if_handle);
+    // iflow->sif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&sep->if_handle);
+    iflow->sif = find_if_by_handle(sep->if_handle);
     if (dep) {
-        iflow->dif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&dep->if_handle);
+        // iflow->dif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&dep->if_handle);
+        iflow->dif = find_if_by_handle(dep->if_handle);
     }
     if ((iflow->sif == NULL) || (dep && iflow->dif == NULL)) {
         HAL_TRACE_ERR("Src/Dst interface not found");
@@ -1289,10 +1291,12 @@ process_iflow_base_spec(const session_args_t *args, session_t *session)
 
     // lookup ingress & egress L2 segments
     iflow->sl2seg =
-        (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&sep->l2seg_handle);
+        find_l2seg_by_handle(sep->l2seg_handle);
+        // (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&sep->l2seg_handle);
     if (dep) {
         iflow->dl2seg =
-            (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&dep->l2seg_handle);
+            find_l2seg_by_handle(dep->l2seg_handle);
+            // (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&dep->l2seg_handle);
     }
     if ((iflow->sl2seg == NULL) || (dep && iflow->dl2seg == NULL)) {
         args->rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
@@ -1351,9 +1355,11 @@ process_rflow_base_spec(const session_args_t *args, session_t *session)
         FLOW_DIR_FROM_UPLINK; 
 
     // lookup ingress & egress interfaces
-    rflow->sif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&sep->if_handle);
+    // rflow->sif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&sep->if_handle);
+    rflow->sif = find_if_by_handle(sep->if_handle);
     if (dep) { 
-        rflow->dif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&dep->if_handle);
+        // rflow->dif = (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&dep->if_handle);
+        rflow->dif = find_if_by_handle(dep->if_handle);
     }
     if ((rflow->sif == NULL) || (dep && rflow->dif == NULL)) {
         HAL_TRACE_ERR("Src/Dst interface not found");
@@ -1363,10 +1369,12 @@ process_rflow_base_spec(const session_args_t *args, session_t *session)
 
     // lookup ingress & egress L2 segments
     rflow->sl2seg =
-        (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&sep->l2seg_handle);
+        find_l2seg_by_handle(sep->l2seg_handle);
+        // (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&sep->l2seg_handle);
     if (dep) {
         rflow->dl2seg =
-            (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&dep->l2seg_handle);
+            find_l2seg_by_handle(dep->l2seg_handle);
+            // (l2seg_t *)g_hal_state->l2seg_hal_handle_ht()->lookup(&dep->l2seg_handle);
     }
     if ((rflow->sl2seg == NULL) || (dep && rflow->dl2seg == NULL)) {
         args->rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);

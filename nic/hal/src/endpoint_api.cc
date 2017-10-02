@@ -69,7 +69,8 @@ ep_set_pd_ep(ep_t *pi_ep, pd::pd_ep_t *pd_ep)
 if_t *
 ep_find_if_by_handle(ep_t *pi_ep)
 {
-    return (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&(pi_ep->if_handle));
+    // return (if_t *)g_hal_state->if_hal_handle_ht()->lookup(&(pi_ep->if_handle));
+    return find_if_by_handle(pi_ep->if_handle);
 }
 
 void *
