@@ -63,7 +63,9 @@ def TestCaseVerify(tc):
     print("rcv_nxt value pre-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
     tcb_cur.GetObjValPd()
     print("rcv_nxt value post-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
-    if tcb_cur.rcv_nxt != 0x1ababb0e:
+    # Expected rcv_nxt = 0x1abababa + 64(payload)
+    # Note: PENDOL and CRC are not considered as payload. 
+    if tcb_cur.rcv_nxt != 0x1ababafa:
         print("rcv_nxt not as expected")
         return False
     print("rcv_nxt as expected")

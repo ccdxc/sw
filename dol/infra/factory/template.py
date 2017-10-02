@@ -73,12 +73,12 @@ class PacketTemplate(FactoryTemplate):
         header.fields = objects.MergeObjects(header_spec.fields,
                                              header_template.fields)
         self.headers.__dict__[header_spec.id] = header
-        self.headers_order.append(header_spec.id)
+        self.hdrsorder.append(header_spec.id)
         return
         
 
     def __process_headers(self, yobj):
-        self.headers_order = []
+        self.hdrsorder = []
         self.headers = PacketHeadersTemplate()
         for hentry in yobj.headers:
             self.__process_one_header(hentry.header)

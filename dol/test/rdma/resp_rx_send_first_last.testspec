@@ -21,7 +21,7 @@ selectors:
 packets:
    - packet:
         id          : BASE_FIRST_PKT # Base packet
-        payloadsize : 1004 #1024
+        payloadsize : 1024
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -37,7 +37,7 @@ packets:
 
    - packet:
         id          : IN_FIRST_PKT    # Input packet 
-        payloadsize : 1004 #1024
+        payloadsize : 1024
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG

@@ -72,7 +72,7 @@ def TestCaseVerify(tc):
     print("rcv_nxt value pre-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
     tcb_cur.GetObjValPd()
     print("rcv_nxt value post-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
-    if tcb_cur.rcv_nxt != 0x1abababa + num_pkts * 84: # fix this hack later
+    if tcb_cur.rcv_nxt != 0x1abababa + num_pkts * 64: # fix this hack later
         print("rcv_nxt not as expected")
         return False
     print("rcv_nxt as expected")
@@ -131,7 +131,7 @@ def TestCaseVerify(tc):
                 (tcpcb.pkts_rcvd + num_pkts, tcb_cur.pkts_rcvd))
         return False
     print("%d %d" %(tcb_cur.bytes_rcvd, tcpcb.bytes_rcvd))
-    if tcb_cur.bytes_rcvd != tcpcb.bytes_rcvd + num_pkts * 84:
+    if tcb_cur.bytes_rcvd != tcpcb.bytes_rcvd + num_pkts * 64:
         print("Warning! pkt rx byte stats not as expected")
         return False
 

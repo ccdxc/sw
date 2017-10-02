@@ -21,7 +21,7 @@ selectors:
 packets:
    - packet:
         id          : BASE_FIRST_PKT # Base packet
-        payloadsize : 1004 #1024
+        payloadsize : 1024
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -29,7 +29,7 @@ packets:
 
    - packet:
         id          : BASE_MIDDLE_PKT # Base packet
-        payloadsize : 1004 #1024
+        payloadsize : 1024
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -45,7 +45,7 @@ packets:
 
    - packet:
         id          : IN_FIRST_PKT    # Input packet 
-        payloadsize : 1004 #1024
+        payloadsize : 1024
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -74,7 +74,7 @@ packets:
 
    - packet:
         id          : IN_MIDDLE_PKT    # Input packet 
-        payloadsize : 1004 #1024
+        payloadsize : 1024
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -147,8 +147,8 @@ buffers:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
            offset  : 0
            segments:
-               # 768B from mid pkt + 64B from last pkt + 20 pendol/crc hdr
-               - size    : 852
+               # 768B from mid pkt + 64B from last pkt
+               - size    : 832
                  data    : None
 
     - buffer:

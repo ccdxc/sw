@@ -288,6 +288,7 @@ class Packet(BasePacket, metaclass = Packet_metaclass):
     def __bytes__(self):
         return self.build()
     def __div__(self, other):
+        if other is None: return self
         if isinstance(other, Packet):
             cloneA = self.copy()
             cloneB = other.copy()

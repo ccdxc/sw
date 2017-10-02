@@ -5,25 +5,30 @@ from third_party.scapy import *
 from third_party.scapy.all import *
 from third_party.scapy.layers.inet6 import _ICMPv6
 
-PAYLOAD_SIGNATURE = 0xDA1A
 class PAYLOAD(Packet):
     name = "PAYLOAD"
     fields_desc = [
-        XShortField("sig", PAYLOAD_SIGNATURE),
-        FieldLenField("len", None, length_of="data"),
         FieldListField("data", [], ByteField("", 0))
     ]
-
     def show(self, indent=3, lvl="", label_lvl=""):
         print("%s###[ PAYLOAD ]###" % label_lvl)
-        print("%s  sig  = %X" % (label_lvl, self.sig))
-        if self.len:
-            print("%s  len  = %d" % (label_lvl, self.len))
-        else:
-            print("%s  len  = None" % label_lvl)
-        print("%s  data = " % label_lvl, end='')
-        PrintPayload(self.data, prefix=label_lvl + "         ")
+        #print("%s  data      = " % label_lvl, end='')
+        self.__print_payload(prefix=label_lvl + " ")
         self.payload.show(indent, lvl, label_lvl)
+        return
+
+    def __print_payload(self, prefix):
+        size = len(self.data)
+        i = 0
+        print("%s" % prefix, end='')
+        while i < size:
+            if i != 0 and i % 16 == 0:
+                print("\n%s" % prefix, end='')
+            #if i and i % 16 and not i % 8:
+            #    print(" ", end='')
+            print("%02X " % self.data[i], end='')
+            i += 1
+        print("", flush=True)
         return
 
 
@@ -37,13 +42,21 @@ class PADDING(Packet):
 class CRC(Packet):
     name = "CRC"
     fields_desc = [
-        XIntField("crc", 0)
+        IntField("crc", 0)
     ]
+    def show(self, indent=3, lvl="", label_lvl=""):
+        print("%s###[ CRC ]###" % label_lvl)
+        print("%s  crc      = 0x%x" % (label_lvl, self.crc))
+        self.payload.show(indent, lvl, label_lvl)
+        return
 
+CRC_LENGTH = len(CRC())
 
+PENDOL_SIGNATURE = 0x900D900D
 class PENDOL(Packet):
     name = "PENDOL"
     fields_desc = [
+        BitField("sig",         PENDOL_SIGNATURE,      32),
         BitField("ts",          0,      32),
         BitField("id",          0,      32),
         BitField("opcode",      0,      8),
@@ -52,6 +65,20 @@ class PENDOL(Packet):
         BitField("logdrop",     0,      1),
         BitField("rsvd",        0,      14),
     ]
+    def show(self, indent=3, lvl="", label_lvl=""):
+        print("%s###[ PENDOL ]###" % label_lvl)
+        print("%s  sig      = 0x%X" % (label_lvl, self.sig))
+        print("%s  ts       = %d" % (label_lvl, self.ts))
+        print("%s  id       = %d" % (label_lvl, self.id))
+        print("%s  opcode   = %d" % (label_lvl, self.opcode))
+        print("%s  step_id  = %d" % (label_lvl, self.step_id))
+        print("%s  log      = %d" % (label_lvl, self.log))
+        print("%s  logdrop  = %d" % (label_lvl, self.logdrop))
+        print("%s  rsvd     = %d" % (label_lvl, self.rsvd))
+        self.payload.show(indent, lvl, label_lvl)
+        return
+
+PENDOL_LENGTH = len(PENDOL())
 
 class GRH(Packet):
     name = "GRH"
@@ -226,136 +253,4 @@ bind_layers(UDP, BTH, dport=4791)
 
 
 
-def PrintPayload(data, prefix=""):
-    size = len(data)
-    i = 0
-    while i < size:
-        if i != 0 and i % 16 == 0:
-            print("\n%s" % prefix, end='')
-        print("%02X " % data[i], end='')
-        i += 1
-    print("", flush=True)
-    return
-
-
-def PrintPacket(pkt):
-    raw = bytes(pkt)
-    size = len(raw)
-    i = 0
-    while i < size:
-        if i % 16 == 0:
-            if i != 0:
-                print("")
-            print("%04X " % i, end='')
-        if i % 8 == 0:
-            print(" ", end='')
-
-        print("%02X " % raw[i], end='')
-        i += 1
-    print("", flush=True)
-
-def PrintRawPacket(pkt):
-    hexdump(pkt)
-    return
-
-def PrintHeaders(pkt):
-    pkt.show(indent=0)
-    return
-
-
-class RawPacketParserObject:
-    def __init__(self):
-        return
-
-    def __parse_ether(self, rawpkt):
-        pkt = Ether(rawpkt)
-        return pkt
-
-    def __get_raw_hdr(self, pkt):
-        if Raw in pkt:
-            return pkt[Raw]
-        if Padding in pkt:
-            return pkt[Padding]
-        return None
-
-    def __process_pendol(self, pyld):
-        data = pyld.data
-        penbytes = bytes(data[pyld.len:])
-        del data[pyld.len:]
-        pyld.data = data
-            
-        pen = PENDOL(penbytes)
-        nxthdrs = pen
-        if Raw in pen:
-            crcbytes = bytes(pen[Raw])
-            pen[PENDOL].remove_payload()
-            crc = CRC(crcbytes)
-            nxthdrs = pen/crc
-        return nxthdrs
-
-    def __process_payload(self, rawhdr):
-        pyld = PAYLOAD(bytes(rawhdr))
-        if pyld.sig != PAYLOAD_SIGNATURE:
-            return rawhdr
-        nxthdrs = self.__process_pendol(pyld)
-        return pyld / nxthdrs
-
-    def __process_raw_bytes(self, pkt):
-        rawhdr = self.__get_raw_hdr(pkt)
-        if rawhdr is None:
-            return pkt
-        rawhdr.underlayer.remove_payload()
-
-        nxthdrs = self.__process_payload(rawhdr)
-        pkt = pkt / nxthdrs
-        return pkt
-
-    def __process_vxlan(self, pkt):
-        if VXLAN in pkt:
-            pkt[VXLAN].underlayer.sport = 0
-        return
-
-    def Parse(self, rawpkt):
-        pkt = self.__parse_ether(rawpkt)
-        pkt = self.__process_raw_bytes(pkt)
-        self.__process_vxlan(pkt) 
-        return pkt
-
-
-def Parse(rawpkt):
-    prs = RawPacketParserObject()
-    return prs.Parse(rawpkt)
-
-def ShowRawPacket(spkt, logger):
-    logger.info("--------------------- RAW PACKET ---------------------")
-    raw = bytes(spkt)
-    size = len(raw)
-    i = 0
-    line = ''
-    while i < size:
-        if i % 16 == 0:
-            if i != 0:
-                logger.info(line)
-                line = ''
-            line += "%04X " % i
-        if i % 8 == 0:
-            line += ' '
-        line += "%02X " % raw[i]
-        i += 1
-    if line != '':
-        logger.info(line)
-    return
-
-
-def ShowScapyPacket(spkt, logger):
-    logger.info("------------------- SCAPY PACKET ---------------------")
-    spkt.show(indent = 0,
-              label_lvl = logger.GetLogPrefix())
-    return
-
-
-def ShowPacket(spkt, logger):
-    ShowScapyPacket(spkt, logger)
-    ShowRawPacket(spkt, logger)
-    return
 

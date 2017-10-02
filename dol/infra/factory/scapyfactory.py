@@ -1,13 +1,15 @@
 #! /usr/bin/python3
 import pdb
 import sys
+import binascii
 
-import infra.penscapy.penscapy          as penscapy
-import infra.common.objects             as objects
-import infra.common.defs                as defs
-import infra.common.utils               as utils
+import infra.penscapy.penscapy  as penscapy
+import infra.common.objects     as objects
+import infra.common.defs        as defs
+import infra.common.utils       as utils
 
-from infra.common.logging import logger as logger
+from infra.factory.store        import FactoryStore as FactoryStore
+from infra.common.logging       import logger as logger
 
 class ScapyHeaderBuilder_BASE:
     def build(self, hdr):
@@ -129,11 +131,14 @@ class ScapyHeaderBuilder_IPV4(ScapyHeaderBuilder_BASE):
         return super().build(hdr)
 IPV4_builder = ScapyHeaderBuilder_IPV4()
 
-class ScapyPacket:
-    def __init__(self, packet):
-        self.spkt = None
-        self.packet = packet
-        self.__process()
+class ScapyPacketObject:
+    def __init__(self):
+        self.spkt       = None
+        self.rawbytes   = None
+
+        self.__dolhdr   = None
+        self.__crchdr   = None
+        self.padbytes   = None
         return
 
     def __build_header(self, hdr):
@@ -152,19 +157,172 @@ class ScapyPacket:
             self.spkt = shdr
         return
 
-    def __process(self):
-        for hdrid in self.packet.headers_order:
-            hdrdata = self.packet.headers.__dict__[hdrid]
-            if objects.IsFrameworkObject(hdrdata):
-                self.__add_header(hdrdata)
+    def __add_dol_header(self):
+        hdr = FactoryStore.headers.Get('PENDOL')
+        self.__add_header(hdr)
+        #self.__dolhdr = self.__build_header(hdr)
+        #self.rawbytes += bytes(self.__dolhdr)
         return
 
-def main(packet):
-    logger.debug("Generating SCAPY Packet.")
-    scapy_packet = ScapyPacket(packet)
-    #scapy_packet.spkt.build()
-    #scapy_packet.spkt.show(label_lvl = "SCAPY :")
-    #penscapy.PrintPacket(scapy_packet.spkt)
-    #penscapy.hexdump(scapy_packet.spkt)
-    #penscapy.linehexdump(scapy_packet.spkt, onlyhex = 1)
-    return scapy_packet.spkt
+    def __add_crc_header(self):
+        #hdr = FactoryStore.headers.Get('CRC')
+        #self.__add_header(hdr)
+        crc = binascii.crc32(self.rawbytes)
+        self.rawbytes += penscapy.struct.pack("I", crc)
+        return
+
+    def __build_from_packet_meta(self, packet):
+        logger.debug("Generating SCAPY Packet.")
+        for hdrid in packet.hdrsorder:
+            hdrdata = packet.headers.__dict__[hdrid]
+            if objects.IsFrameworkObject(hdrdata):
+                self.__add_header(hdrdata)
+        
+        if packet.IsDolHeaderRequired():
+            self.__add_dol_header()
+
+        self.pktbytes = bytes(self.spkt)
+        self.rawbytes = bytes(self.spkt)
+        #self.__add_crc_header()
+        return
+
+    def __build_from_scapypacket(self, spkt):
+        self.spkt       = spkt
+        self.rawbytes   = bytes(spkt)
+        return
+
+    def Build(self, packet = None, scapypacket = None):
+        if packet is not None:
+            self.__build_from_packet_meta(packet)
+        elif scapypacket is not None:
+            self.__build_from_scapypacket(scapypacket)
+        else:
+            assert(0)
+        return
+
+    def GetSize(self):
+        return len(self.rawbytes)
+
+    def GetRawBytes(self):
+        return self.rawbytes
+
+    @staticmethod
+    def ShowRawPacket(rawbytes, logger):
+        logger.info("--------------------- RAW PACKET ---------------------")
+        i = 0
+        line = ''
+        size = len(rawbytes)
+        while i < size:
+            if i % 16 == 0:
+                if i != 0:
+                    logger.info(line)
+                    line = ''
+                line += "%04X " % i
+            if i % 8 == 0:
+                line += ' '
+            line += "%02X " % rawbytes[i]
+            i += 1
+        if line != '':
+            logger.info(line)
+        return
+
+    @staticmethod
+    def ShowScapyPacket(rawbytes, logger):
+        spktobj = Parse(rawbytes)
+        spkt = spktobj.spkt
+        logger.info("------------------- SCAPY PACKET ---------------------")
+        spkt.show(indent = 0, label_lvl = logger.GetLogPrefix())
+        return
+
+    def Show(self, logger):
+        ScapyPacketObject.ShowScapyPacket(self.rawbytes, logger)
+        ScapyPacketObject.ShowRawPacket(self.rawbytes, logger)
+        return
+
+class RawPacketParser:
+    def __init__(self):
+        return
+
+    def __parse_ether(self, rawpkt):
+        pkt = penscapy.Ether(rawpkt)
+        return pkt
+
+    def __get_raw_hdr(self, pkt):
+        if penscapy.Raw in pkt:
+            return pkt[penscapy.Raw]
+        if penscapy.Padding in pkt:
+            return pkt[penscapy.Padding]
+        return None
+
+    def __process_pendol(self, rawbytes):
+        if len(rawbytes) < penscapy.PENDOL_LENGTH:
+            return None
+
+        pdoffset = len(rawbytes) - penscapy.PENDOL_LENGTH
+        pdbytes = rawbytes[pdoffset:]
+        pen = penscapy.PENDOL(pdbytes)
+        if pen.sig != penscapy.PENDOL_SIGNATURE:
+            return None
+        return pen
+
+    def __process_nxthdrs(self, rawbytes):
+        nxthdrs = None
+        '''
+        length = len(rawbytes)
+        if length < penscapy.CRC_LENGTH:
+            return penscapy.Raw(rawbytes)
+
+        # CRC is always present, process it first.
+        crcoffset = length - penscapy.CRC_LENGTH
+        crcbytes = rawbytes[crcoffset:]
+        nxthdrs = penscapy.CRC(crcbytes)
+        
+        rawbytes = rawbytes[:crcoffset]
+        if len(rawbytes) == 0:
+            # Only CRC is present in payload.
+            return nxthdrs
+        '''
+        # Lets check if PENDOL header is present.
+        pen = self.__process_pendol(rawbytes)
+        if pen is not None:
+            pyldbytes = rawbytes[:len(rawbytes) - penscapy.PENDOL_LENGTH]
+            nxthdrs = pen / nxthdrs
+        else:
+            pyldbytes = rawbytes
+
+        # If any bytes are remaining, treat them as payload.
+        if len(pyldbytes) > 0:
+            nxthdrs = penscapy.PAYLOAD(pyldbytes) / nxthdrs
+
+        return nxthdrs
+
+    def __process_raw_bytes(self, pkt):
+        rawhdr = self.__get_raw_hdr(pkt)
+        if rawhdr is None:
+            return pkt
+        rawhdr.underlayer.remove_payload()
+
+        nxthdrs = self.__process_nxthdrs(bytes(rawhdr))
+        pkt = pkt / nxthdrs
+        return pkt
+
+    def __process_vxlan(self, pkt):
+        if penscapy.VXLAN in pkt:
+            pkt[penscapy.VXLAN].underlayer.sport = 0
+        return
+
+    def Parse(self, rawpkt):
+        pkt = self.__parse_ether(rawpkt)
+        pkt = self.__process_raw_bytes(pkt)
+        self.__process_vxlan(pkt) 
+        return pkt
+
+
+def Parse(rawpkt):
+    prs = RawPacketParser()
+    spkt = prs.Parse(rawpkt)
+    #return spkt
+
+    obj = ScapyPacketObject()
+    obj.Build(scapypacket = spkt)
+    return obj

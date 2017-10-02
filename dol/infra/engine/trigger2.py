@@ -41,7 +41,7 @@ class TriggerEngineObject:
 
         for p in step.trigger.packets:
             if p.packet == None: break
-            rawpkt = bytes(p.packet.spkt)
+            rawpkt = p.packet.rawbytes
             port = p.ports[0]
             lgh.info("Sending Input Packet:%s of Length:%d on Port:%d" %\
                      (p.packet.GID(), len(rawpkt), port))

@@ -21,7 +21,7 @@ selectors:
 packets:
     - packet:
         id          : BASE_PKT1 # Base packet
-        payloadsize : 1004 #1024
+        payloadsize : 1024
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -37,7 +37,7 @@ packets:
 
     - packet:
         id          : EXP_PKT1 # Base packet
-        payloadsize : 1004 #1024
+        payloadsize : 1024
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_RETH
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -67,7 +67,7 @@ packets:
             reth: 
                 va      : ref://testcase/pvtdata/va
                 #dma_len : ref://testcase/packets/id=BASE_PKT1/size
-                dma_len : 1108 #1024 + 84
+                dma_len : 1088 #1024 + 64
                 r_key   : ref://testcase/pvtdata/r_key
             payload:
                 data    : ref://testcase/packets/id=BASE_PKT1/rawbytes

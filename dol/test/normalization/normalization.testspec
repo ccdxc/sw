@@ -16,6 +16,7 @@ packets:
         id          : BASE_PKT  # Input packet 1
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
+        #pendol      : True
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -54,6 +55,7 @@ packets:
     - packet:
         id          : PKT1     # Input packet 1
         payloadsize : callback://normalization/callbacks/GetInputPayloadSize
+        pendol      : True
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             ipv4    :
@@ -75,6 +77,7 @@ packets:
     - packet:
         id          : PKT2     # Expected packet 2
         payloadsize : callback://normalization/callbacks/GetExpectedPayloadSize
+        pendol      : True
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             qtag    :

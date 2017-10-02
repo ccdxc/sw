@@ -1,12 +1,12 @@
 #! /usr/bin/python3
 
 import binascii
-import config.resmgr            as resmgr
-import infra.penscapy.penscapy  as penscapy
-import infra.factory.base       as base
+import config.resmgr                as resmgr
+import infra.factory.scapyfactory   as scapyfactory
+import infra.factory.base           as base
+
 from infra.common.logging import cfglogger
 
-import infra.factory.base as base
 
 
 class EthBufferObject(base.FactoryObjectBase):
@@ -45,7 +45,7 @@ class EthBufferObject(base.FactoryObjectBase):
         resmgr.HostMemoryAllocator.write(self._mem, bytes(self.data))
 
         self.logger.info("=" * 30, "WRITING BUFFER", "=" * 30)
-        penscapy.ShowRawPacket(self.data, self.logger)
+        scapyfactory.ScapyPacketObject.ShowRawPacket(self.data, self.logger)
         self.logger.info("=" * 30, "END WRITING BUFFER", "=" * 30)
 
     def Read(self):
@@ -59,7 +59,7 @@ class EthBufferObject(base.FactoryObjectBase):
         self.data = resmgr.HostMemoryAllocator.read(self._mem, self.size)
 
         self.logger.info("=" * 30, "READ BUFFER", "=" * 30)
-        penscapy.ShowRawPacket(self.data, self.logger)
+        scapyfactory.ScapyPacketObject.ShowRawPacket(self.data, self.logger)
         self.logger.info("=" * 30, "END READ BUFFER", "=" * 30)
 
         return self.data

@@ -105,6 +105,7 @@ modules:
         name    : MULTIPLE_PKTS_TO_SERQ
         spec    : multiple_pkts_to_serq.testspec
         module  : pkt_to_serq
+        ignore  : True
         args    :
             maxflows : 1
             num_pkts : 2
@@ -170,6 +171,7 @@ modules:
         name    : PROXY_UPLINK_TO_UPLINK_BYPASS_BARCO
         spec    : uplink_to_uplink.testspec
         module  : pkt_to_p4
+        ignore  : True
         iterate :
             - bypass_barco : 1
               maxflows : 1
@@ -193,6 +195,7 @@ modules:
         name    : PROXY_UPLINK_TO_HOST_BYPASS_BARCO
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4
+        ignore  : True
         iterate :
             - bypass_barco : 1
               maxflows : 1
@@ -216,6 +219,7 @@ modules:
         name    : PROXY_HOST_TO_UPLINK_BYPASS_BARCO
         spec    : host_to_uplink.testspec
         module  : pkt_to_p4
+        ignore  : True
         iterate :
             - bypass_barco : 1
               maxflows : 1
@@ -250,7 +254,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : tls_handshake_rx
         spec    : tls_handshake.testspec
-        ignore  : False
+        ignore  : True
         args    :
             maxflows: 1
         iterate :
@@ -293,7 +297,7 @@ modules:
         package : test.tcp_tls_proxy
         module  : tls_handshake_rx_loopback
         spec    : tls_handshake.testspec
-        ignore  : False
+        ignore  : True
         args    :
             maxflows: 1
         iterate :

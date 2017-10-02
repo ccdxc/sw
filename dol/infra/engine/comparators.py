@@ -6,6 +6,7 @@ import infra.penscapy.penscapy as penscapy
 import infra.common.defs as defs
 import infra.common.objects as objects
 import infra.common.utils as utils
+import infra.factory.scapyfactory as scapyfactory
 
 from infra.factory.store    import FactoryStore
 from infra.common.glopts    import GlobalOptions
@@ -16,6 +17,7 @@ gl_ignore_fields = {
     'TCP'   : [ 'chksum' ],
     'UDP'   : [ 'chksum' ],
     'ICMP'  : [ 'chksum' ],
+    'CRC'   : [ 'crc' ],
 }
 
 class CrPacket:
@@ -25,7 +27,8 @@ class CrPacket:
         self.pktlen     = len(rawpkt)
         self.hdrs       = []
         self.hdrnames   = []
-        self.spkt       = penscapy.Parse(rawpkt)
+        self.spktobj    = scapyfactory.Parse(rawpkt)
+        self.spkt       = self.spktobj.spkt
         self.pktid      = pktid
 
         self.__build_hdr_stack()
@@ -117,7 +120,7 @@ class CrPacket:
 
 
     def Show(self, lgh):
-        penscapy.ShowPacket(self.spkt, lgh)
+        self.spktobj.Show(lgh)
         lgh.info("Packet Length = %d" % self.pktlen)
         return
 
@@ -294,7 +297,7 @@ class PacketComparator:
         self.rid += 1
         rpgid = 'RXPKT%d' % self.rid
         self.lg.info("ACTUAL RX Packet: %s, Ports: " % rpgid, ports)
-        penscapy.ShowRawPacket(spkt, self.lg)
+        scapyfactory.ScapyPacketObject.ShowRawPacket(spkt, self.lg)
         rpobj = CrPacket(rpgid, spkt, ports)
         rpobj.Show(self.lg)
         self.rxpkts[rpobj.pktid] = rpobj

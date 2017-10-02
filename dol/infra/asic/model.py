@@ -1,7 +1,9 @@
 #! /usr/bin/python3
 import pdb
+import binascii
 
 import model_sim.src.model_wrap as model_wrap
+import infra.penscapy.penscapy as penscapy
 
 from infra.common.glopts import GlobalOptions
 
@@ -10,6 +12,12 @@ class ModelRxPacket:
         self.rawpkt = rawpkt
         self.port   = port
         self.cos    = cos
+        #self.__add_crc()
+        return
+
+    def __add_crc(self):
+        crc = binascii.crc32(self.rawpkt)
+        self.rawpkt += penscapy.struct.pack("I", crc)
         return
 
 class ModelConnectorObject:
@@ -27,6 +35,7 @@ class ModelConnectorObject:
 
     def Transmit(self, rawpkt, port):
         if GlobalOptions.dryrun: return
+        #rawpkt = rawpkt[:-4]
         model_wrap.step_network_pkt(rawpkt, port)
         return
 

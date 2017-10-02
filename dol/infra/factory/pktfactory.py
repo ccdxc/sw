@@ -138,8 +138,8 @@ class PacketSpec(objects.FrameworkObject):
         self.encaps         = spec.encaps
         self.id             = spec.id
         self.clone          = spec.clone
-
         self.headers        = PacketHeaders(None)
+        self.pendol         = getattr(spec, 'pendol', False)
         self.ConvertHeaders(spec)
         return
 
@@ -164,7 +164,7 @@ class Packet(objects.FrameworkObject):
         self.Clone(FactoryStore.testobjects.Get('PACKET'))
         #self.tc = tc
         self.rawbytes = None
-        self.size = None
+        self.pendol = None
         self.LockAttributes()
 
         pktspec = PacketSpec(testspec_packet)
@@ -179,9 +179,17 @@ class Packet(objects.FrameworkObject):
         self.GID(self.spec.id)
         self.__process(tc)
         
-        self.spkt           = None
-        self.pktsize        = None
+        self.spktobj    = None
+        self.rawbytes   = None
+        self.size       = None
+        self.pendol     = pktspec.pendol
         return
+
+    def IsDolHeaderRequired(self):
+        return self.pendol
+
+    def IsCrcHeaderRequired(self):
+        return True
 
     def __get_packet_base(self, tc, pktspec):
         if pktspec.clone:
@@ -219,7 +227,7 @@ class Packet(objects.FrameworkObject):
         return
 
     def SetStepId(self, step_id):
-        self.headers.pendol.step_id = step_id
+        #self.headers.pendol.step_id = step_id
         return
 
     def __get_payload_size(self, tc):
@@ -246,7 +254,7 @@ class Packet(objects.FrameworkObject):
 
     def __len__(self):
         size = 0
-        for h in self.headers_order:
+        for h in self.hdrsorder:
             hdr = self.headers.__dict__[h]
             if IsPacketHeader(hdr):
                 pktlogger.verbose("Size of HEADER: %s = " %\
@@ -277,30 +285,15 @@ class Packet(objects.FrameworkObject):
         else:
             self.headers = spec_hdrs
         self.headers = objects.MergeObjects(self.headers, template_hdrs)
-        self.headers_order = copy.deepcopy(self.template.headers_order)
+        self.hdrsorder = copy.deepcopy(self.template.hdrsorder)
         self.headers.show()
         return
 
     def __add_payload(self, tc):
         pktlogger.debug("Payload size = %d" % self.payloadsize)
         self.headers.payload.meta.size = self.payloadsize
-        #if self.headers.payload.fields.data is None:
         self.headers.payload.fields.data =\
                          self.headers.payload.meta.pattern.get(self.payloadsize)
-        # pkt.show()
-        return
-
-    def __add_padding(self, padsize):
-        pktlogger.debug("Adding padding of size = %d" % padsize)
-        template = PktTemplateStore.header('PADD')
-        assert(template != None)
-
-        hdr = PacketHeader(self)
-        hdr.__instantiate(template)
-        hdr.meta.size = padsize
-        hdr.data = [0] * padsize
-        
-        self.headers.pad = hdr
         return
 
     def __process(self, tc):
@@ -311,58 +304,24 @@ class Packet(objects.FrameworkObject):
         return
 
     def __resolve(self, tc):
-        for h in self.headers_order:
+        for h in self.hdrsorder:
             hdr = self.headers.__dict__[h]
             if not IsPacketHeader(hdr): continue
             hdr.Build(tc, self)
         return
 
-    def __add_crc(self):
-        #rawbytes = bytes(self.spkt)
-        #self.spkt = self.spkt / bytes(binascii.crc32(rawbytes))
-        return
-
     def Build(self, tc):
-        if not self.spkt:
-            self.__resolve(tc)
-            self.spkt = scapyfactory.main(self)
-            self.spkt[penscapy.PENDOL].id = tc.GID()
-            
-            self.__add_crc()
-            self.rawbytes = bytes(self.spkt)
-            self.size = len(self.rawbytes)
-            self.spkt = penscapy.Parse(self.rawbytes)
-        return
-
-    def __show_raw_pkt(self, logger):
-        logger.info("--------------------- RAW PACKET ---------------------")
-        raw = bytes(self.spkt)
-        size = len(raw)
-        i = 0
-        line = ''
-        while i < size:
-            if i % 16 == 0:
-                if i != 0:
-                    logger.info(line)
-                    line = ''
-                line += "%04X " % i
-            if i % 8 == 0:
-                line += ' '
-            line += "%02X " % raw[i]
-            i += 1
-        if line != '':
-            logger.info(line)
-        return
-
-    def __show_scapy_pkt(self, logger):
-        logger.info("------------------- SCAPY PACKET ---------------------")
-        self.spkt.show(indent = 0,
-                       label_lvl = logger.GetLogPrefix())
+        if self.spktobj is not None:
+            return
+        self.__resolve(tc)
+        self.spktobj = scapyfactory.ScapyPacketObject()
+        self.spktobj.Build(packet = self)
+        self.rawbytes = self.spktobj.GetRawBytes()
+        self.size = self.spktobj.GetSize()
         return
 
     def Show(self, logger):
         logger.info("################## %-16s ##################" %
                     self.GID())
-        self.__show_raw_pkt(logger)
-        self.__show_scapy_pkt(logger)
+        self.spktobj.Show(logger)
         return

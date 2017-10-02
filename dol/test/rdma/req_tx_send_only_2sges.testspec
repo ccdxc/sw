@@ -77,7 +77,7 @@ buffers:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
            offset  : 40
            segments:
-               - size    : 44 #(24 payload + 20 pendol + crc)
+               - size    : 24
                  data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
 descriptors:

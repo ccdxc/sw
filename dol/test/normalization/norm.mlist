@@ -1,20 +1,16 @@
 # For Usage details: Refer <ws>/dol/examples/sample.mlist.example
 feature:
-    id      : normalization
+    id      : norm
+    sub     : norm
     package : test.normalization
     module  : normalization
+    spec    : normalization.testspec
     enable  : True
     ignore  : False
 
 modules:
     - module:
-        name    : NORMALIZATION_TCP_STATEFUL
-        enable  : True
-        spec    : normalization.testspec
-        module  : normalization
-        package : test.normalization
-        args    :
-            flow: filter://type=IPV4,proto=TCP
+        name    : TCP_STATEFUL
         iterate :
             # Not applicable for P4
             #- profile    : SEC_PROF_TCP_SYNCOOKIE_EN_ENABLE
@@ -36,16 +32,7 @@ modules:
               flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_WSIZE,direction=RFLOW
             - profile    : SEC_PROF_TCP_DATA_LEN_GT_WIN_SIZE_ACTION_DROP
               flow       : filter://type=IPV4,proto=TCP,label=NORM_DATA_LEN_GT_WSIZE,direction=RFLOW
-            # Flow config - set tcp_ts_option - timestamp negotiated, send pkt with ts option
-            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_ALLOW
-              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
-            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_DROP
-              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
-            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_EDIT
-              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
             # Flow config - unset tcp_ts_option - timestamp not negotiated, send pkt with ts option
-            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_ALLOW
-              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
             - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_DROP
               flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
             # Flow config - set tcp_ts_option, send pkt without ts option. must drop/not-drop
@@ -60,14 +47,8 @@ modules:
               flow       : filter://type=IPV4,proto=TCP,label=NORM_TCP_NON_SYN,direction=IFLOW
 
     - module:
-        name    : NORMALIZATION_TCP_STATEFUL_IGNORE
-        spec    : normalization.testspec
-        module  : normalization
-        package : test.normalization
-        enable  : True
+        name    : TCP_STATEFUL_IGNORE
         ignore  : True
-        args    :
-            flow: filter://type=IPV4,proto=TCP
         iterate :
             # Flow in established state, program iflow mss, send pkt gt mss
             - profile    : SEC_PROF_TCP_DATA_LEN_GT_MSS_ACTION_EDIT
@@ -78,16 +59,18 @@ modules:
             # Flow config - unset tcp_ts_option - timestamp not negotiated, send pkt with ts option
             - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_EDIT
               flow       : filter://type=IPV4,proto=TCP,label=NORM
+            # Flow config - set tcp_ts_option - timestamp negotiated, send pkt with ts option
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_DROP
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_EDIT
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
 
     - module:
-        name    : NORMALIZATION_IP
-        spec    : normalization.testspec
-        module  : normalization
-        package : test.normalization
-        enable  : True
-        ignore  : False
-        args    :
-            flow: filter://type=IPV4
+        name    : IP
         iterate :
             - profile    : SEC_PROF_IP_RSVD_FLAGS_ACTION_ALLOW
               flow: filter://type=IPV4
@@ -103,14 +86,8 @@ modules:
               flow: filter://type=IPV4
 
     - module:
-        name    : NORMALIZATION_IP_IGNORE
-        spec    : normalization.testspec
-        module  : normalization
-        package : test.normalization
-        enable  : True
+        name    : IP_IGNORE
         ignore  : True
-        args    :
-            flow: filter://type=IPV4
         iterate :
             - profile    : SEC_PROF_IP_OPTIONS_ACTION_ALLOW
               flow: filter://type=IPV4
@@ -126,14 +103,7 @@ modules:
               flow: filter://type=IPV4
 
     - module:
-        name    : NORMALIZATION_ICMP
-        spec    : normalization.testspec
-        module  : normalization
-        package : test.normalization
-        enable  : True
-        ignore  : False
-        args    :
-            flow: filter://type=IPV4,proto=ICMP
+        name    : ICMP
         iterate :
             - profile    : SEC_PROF_ICMP_INVALID_CODE_ECHO_REQ_ACTION_ALLOW
               flow: filter://type=IPV4,proto=ICMP
@@ -173,14 +143,8 @@ modules:
               flow: filter://type=IPV4,proto=ICMP
 
     - module:
-        name    : NORMALIZATION_TCP_STATELESS_IGNORE
-        spec    : normalization.testspec
-        module  : normalization
-        package : test.normalization
-        enable  : True
+        name    : TCP_STATELESS_IGNORE
         ignore  : True
-        args    :
-            flow: filter://type=IPV4,proto=TCP
         iterate :
             - profile    : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_EDIT
               flow: filter://type=IPV4,proto=TCP
@@ -192,16 +156,15 @@ modules:
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_URG_PAYLOAD_MISSING_ACTION_DROP
               flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW
+              flow: filter://type=IPV4,proto=TCP
+            - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT
+              flow: filter://type=IPV4,proto=TCP
 
     - module:
-        name    : NORMALIZATION_TCP_STATELESS
-        spec    : normalization.testspec
-        module  : normalization
-        package : test.normalization
-        enable  : True
-        ignore  : False
-        args    :
-            flow: filter://type=IPV4,proto=TCP
+        name    : TCP_STATELESS
         iterate :
             - profile    : SEC_PROF_TCP_RSVD_FLAGS_ACTION_ALLOW
               flow: filter://type=IPV4,proto=TCP
@@ -212,8 +175,6 @@ modules:
             - profile    : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_ALLOW
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_MSS_ACTION_DROP
-              flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP
               flow: filter://type=IPV4,proto=TCP
@@ -243,10 +204,6 @@ modules:
               flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_FLAGS_NONSYN_NOACK_DROP_DISABLE
               flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW
-              flow: filter://type=IPV4,proto=TCP
             - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_DROP
-              flow: filter://type=IPV4,proto=TCP
-            - profile    : SEC_PROF_TCP_UNEXPECTED_ECHO_TS_ACTION_EDIT
               flow: filter://type=IPV4,proto=TCP
 

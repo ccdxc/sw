@@ -18,12 +18,3 @@ headers:
         template: ref://store/headers/id=PAYLOAD
         fields:
 
-    - header:
-        id      : pendol
-        template: ref://store/headers/id=PENDOL
-        fields:
-
-    - header:
-        id      : crc
-        template: ref://store/headers/id=CRC
-        fields:
