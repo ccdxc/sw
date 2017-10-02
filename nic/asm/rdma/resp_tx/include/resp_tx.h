@@ -9,11 +9,12 @@
 
 #define RESP_TX_MAX_DMA_CMDS            16
 #define RESP_TX_DMA_CMD_INTRINSIC       0
-#define RESP_TX_DMA_CMD_COMMON_P4PLUS   1
-#define RESP_TX_DMA_CMD_HDR_TEMPLATE    2
-#define RESP_TX_DMA_CMD_BTH             3
-#define RESP_TX_DMA_CMD_AETH            4
-#define RESP_TX_DMA_CMD_PYLD_BASE       5
+#define RESP_TX_DMA_CMD_TXDMA_INTRINSIC 1
+#define RESP_TX_DMA_CMD_COMMON_P4PLUS   2
+#define RESP_TX_DMA_CMD_HDR_TEMPLATE    3
+#define RESP_TX_DMA_CMD_BTH             4
+#define RESP_TX_DMA_CMD_AETH            5
+#define RESP_TX_DMA_CMD_PYLD_BASE       6
 
 #define RESP_TX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
 

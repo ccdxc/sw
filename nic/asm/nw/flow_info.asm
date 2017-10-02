@@ -43,12 +43,9 @@ flow_info:
   phvwr       p.flow_info_metadata_flow_role, d.u.flow_info_d.flow_role
 
   /* ttl change detected */
-#if 0
-  seq         c1, d.u.flow_info_d.flow_ttl, k.{flow_lkp_metadata_ip_ttl_sbit0_ebit2, \
-                                                flow_lkp_metadata_ip_ttl_sbit3_ebit7}
-#endif /* OLD CODE */
-  seq         c1, d.u.flow_info_d.flow_ttl, k.{flow_lkp_metadata_ip_ttl_sbit0_ebit0, \
-                                                flow_lkp_metadata_ip_ttl_sbit1_ebit7}
+  seq         c1, d.u.flow_info_d.flow_ttl, \
+                  k.{flow_lkp_metadata_ip_ttl_sbit0_ebit0, \
+                     flow_lkp_metadata_ip_ttl_sbit1_ebit7}
   phvwr.c1    p.flow_info_metadata_flow_ttl_change_detected, k.l4_metadata_ip_ttl_change_detect_en
 
   /* Flow Connection Tracking enable */
@@ -58,13 +55,12 @@ flow_info:
   phvwr       p.rewrite_metadata_rewrite_index, d.u.flow_info_d.rewrite_index
   phvwr       p.rewrite_metadata_flags, d.u.flow_info_d.rewrite_flags
 
-  ASSERT_PHVWR(p, nat_metadata_nat_ip, nat_metadata_twice_nat_idx,
-               d, u.flow_info_d.nat_ip, u.flow_info_d.twice_nat_idx)
-  phvwr       p.{nat_metadata_nat_ip, \
-                 nat_metadata_nat_l4_port, \
+  phvwr       p.nat_metadata_nat_ip, d.u.flow_info_d.nat_ip
+  ASSERT_PHVWR(p, nat_metadata_nat_l4_port, nat_metadata_twice_nat_idx,
+               d, u.flow_info_d.nat_l4_port, u.flow_info_d.twice_nat_idx)
+  phvwr       p.{nat_metadata_nat_l4_port, \
                  nat_metadata_twice_nat_idx}, \
-              d.{u.flow_info_d.nat_ip, \
-                 u.flow_info_d.nat_l4_port, \
+              d.{u.flow_info_d.nat_l4_port, \
                  u.flow_info_d.twice_nat_idx}
 
   /* tunnel info */

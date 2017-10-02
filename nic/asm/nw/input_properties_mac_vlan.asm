@@ -18,7 +18,8 @@ input_properties_mac_vlan:
 
   seq         c2, k.capri_intrinsic_tm_iport, TM_PORT_DMA
   cmov        r1, c2, (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
-                       P4PLUS_TO_P4_HDR_SZ), CAPRI_GLOBAL_INTRINSIC_HDR_SZ
+                       CAPRI_TXDMA_INTRINSIC_HDR_SZ + P4PLUS_TO_P4_HDR_SZ), \
+                      CAPRI_GLOBAL_INTRINSIC_HDR_SZ
   sub         r1, k.{capri_p4_intrinsic_frame_size_sbit0_ebit5, \
                      capri_p4_intrinsic_frame_size_sbit6_ebit13}, r1
   sub.c3      r1, r1, P4_RECIRC_HDR_SZ

@@ -229,8 +229,8 @@ header_type p4_to_p4plus_cpu_pkt_t {
  *  2 : update tcp seq number
  *  3 : update udp len
  *  4 : insert vlan header
- *  5 : computer outer checksums
- *  6 : computer inner checksums
+ *  5 : compute outer checksums
+ *  6 : compute inner checksums
  *  7 : lkp_inst
  */
 header_type p4plus_to_p4_header_t {
@@ -239,8 +239,6 @@ header_type p4plus_to_p4_header_t {
         pad                 : 4;
         flags               : 8;
         ip_id_delta         : 16;
-        ip_len              : 16;
-        udp_len             : 16;
         tcp_seq_delta       : 32;
         vlan_tag            : 16;
     }

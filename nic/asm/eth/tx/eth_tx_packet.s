@@ -30,15 +30,22 @@ eth_tx_packet:
 
     // DMA cap_phv_intr_global_t (18B)
     phvwri      p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    phvwri      p.dma_cmd0_dma_cmd_phv_start_addr, 0
-    phvwri      p.dma_cmd0_dma_cmd_phv_end_addr, 16
+    phvwri      p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
+    phvwri      p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(p4_intr_global_glb_rsv)
     phvwri      p.dma_cmd0_dma_pkt_eop, 0
     phvwri      p.dma_cmd0_dma_cmd_eop, 0
 
+    // DMA TxDMA intrinsic
+    phvwri      p.txdma_intr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+    phvwri      p.txdma_intr_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(p4_txdma_intr_qid)
+    phvwri      p.txdma_intr_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(p4_txdma_intr_txdma_rsv)
+    phvwri      p.txdma_intr_dma_pkt_eop, 0
+    phvwri      p.txdma_intr_dma_cmd_eop, 0
+
     // DMA p4plus_to_p4_header_t (14B)
     phvwri      p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, 32
-    phvwri      p.dma_cmd1_dma_cmd_phv_end_addr, 45
+    phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_tx_app_header_p4plus_app_id)
+    phvwri      p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_tx_app_header_vlan_tag)
     phvwri      p.dma_cmd1_dma_pkt_eop, 0
     phvwri      p.dma_cmd1_dma_cmd_eop, 0
 

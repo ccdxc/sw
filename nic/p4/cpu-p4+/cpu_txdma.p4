@@ -193,13 +193,16 @@ metadata dma_phv_pad_t  dma_pad;
 metadata dma_cmd_phv2pkt_t dma_cmd0;
 
 @pragma dont_trim
-metadata dma_cmd_mem2pkt_t dma_cmd1;
+metadata dma_cmd_phv2pkt_t dma_cmd1;
 
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t dma_cmd2;
+metadata dma_cmd_mem2pkt_t dma_cmd2;
 
 @pragma dont_trim
-metadata dma_cmd_mem2pkt_t dma_cmd3;
+metadata dma_cmd_phv2pkt_t dma_cmd3;
+
+@pragma dont_trim
+metadata dma_cmd_mem2pkt_t dma_cmd4;
 
 /******************************************************************************
  * Action functions to generate k_struct and d_struct

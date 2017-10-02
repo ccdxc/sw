@@ -315,6 +315,7 @@ action f_p4plus_to_p4() {
         modify_field(ethernet.etherType, ETHERTYPE_VLAN);
     }
     remove_header(p4plus_to_p4);
+    remove_header(capri_txdma_intrinsic);
 }
 
 action p4plus_to_p4_apps() {

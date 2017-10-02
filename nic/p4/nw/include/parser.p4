@@ -49,6 +49,7 @@ metadata parser_metadata_t parser_metadata;
 
 header cap_phv_intr_global_t capri_intrinsic;
 header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
+header cap_phv_intr_txdma_t capri_txdma_intrinsic;
 
 @pragma synthetic_header
 @pragma pa_field_union egress capri_rxdma_p4_intrisic.no_data       capri_p4_intrinsic.no_data
@@ -284,6 +285,7 @@ parser parse_vm_bounce {
 @pragma xgress ingress
 parser parse_txdma {
     extract(capri_intrinsic);
+    extract(capri_txdma_intrinsic);
     extract(p4plus_to_p4);
     return parse_ethernet;
 }

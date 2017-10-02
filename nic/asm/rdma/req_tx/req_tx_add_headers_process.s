@@ -13,35 +13,42 @@ struct sqcb1_t d;
 
 .align
 req_tx_add_headers_process:
-    // get DMA cmd entry based on dma_cmd_index - dma_cmd[0]
+    // get DMA cmd entry based on dma_cmd_index
     DMA_CMD_I_BASE_GET(r6, r2, REQ_TX_DMA_CMD_START_FLIT_ID, r0)
+
+    // dma_cmd[0] - p4_intr
     DMA_PHV2PKT_SETUP(r6, common.p4_intr_global_tm_iport, common.p4_intr_global_glb_rsv)
     phvwri          p.common.p4_intr_global_tm_iport, TM_PORT_DMA
     phvwri          p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
     phvwri          p.common.p4_intr_global_tm_oq, 0
 
-    // dma_cmd[1]
-    //sub            r6, r6, 1, LOG_DMA_CMD_SIZE_BITS
+    // dma_cmd[1] - p4_txdma_intr
+    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+    DMA_PHV2PKT_SETUP(r6, common.p4_txdma_intr_qid, common.p4_txdma_intr_txdma_rsv)
+    phvwr           p.common.p4_txdma_intr_qid, k.global.qid
+    SQCB0_ADDR_GET(r1)
+    phvwr           p.common.p4_txdma_intr_qstate_addr, r1
+    phvwr           p.common.p4_txdma_intr_qtype, k.global.qtype
+
+    // dma_cmd[2] - p4plus_to_p4_header
     DMA_NEXT_CMD_I_BASE_GET(r6, 1)
     DMA_PHV2PKT_SETUP(r6, p4plus_to_p4, p4plus_to_p4);
     phvwr          P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA
     phvwr          P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
-    phvwr          P4PLUS_TO_P4_VLAN_ID, 0
+    phvwr          P4PLUS_TO_P4_VLAN_TAG, 0
 
-    // dma_cmd[2]
-    //sub            r6, r6, 1, LOG_DMA_CMD_SIZE_BITS
+    // dma_cmd[3] - header_template
     DMA_NEXT_CMD_I_BASE_GET(r6, 1)
     // PHV_Q_DMA_CMD(phv_p, dma_cmd_index, DMA_CMD_TYPE_MEM_TO_PKT, hbm_addr_get(sqcb1_p->header_template_addr),
     //                 sizeof(header_template_t))
     DMA_HBM_MEM2PKT_SETUP(r6, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr)
 
-    // dma_cmd[3]
-    //sub            r6, r6, 1, LOG_DMA_CMD_SIZE_BITS
-    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+    // dma_cmd[4] - BTH
+    addi           r6, r6, DMA_SWITCH_TO_NEXT_FLIT_BITS
     DMA_PHV2PKT_SETUP(r6, bth, bth)
 
-    // dma_cmd[4]
-    addi           r6, r6, DMA_SWITCH_TO_NEXT_FLIT_BITS
+    // setup for dma_cmd[5]
+    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
 
     // phv_p->bth.dst_qp = sqcb1_p->dst_qp
     phvwr          BTH_DST_QP, d.dst_qp
@@ -96,7 +103,7 @@ op_type_read:
     add            r1, k.to_stage.wqe_addr, TXWQE_SGE_OFFSET
     phvwr          RRQWQE_READ_WQE_SGE_LIST_ADDR, r1
 
-    // dma_cmd[5]
+    // dma_cmd[6]
     DMA_NEXT_CMD_I_BASE_GET(r6, 1)
     DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3) 
 
@@ -125,7 +132,7 @@ op_type_send_inv:
 
     .brcase 1 //not-first, last
         // add IMMETH hdr
-        // dma_cmd[4]
+        // dma_cmd[5]
         DMA_PHV2PKT_SETUP(r6, ieth, ieth)
         add            r2, RDMA_PKT_OPC_SEND_LAST_WITH_INV, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         b              set_bth_opc
@@ -138,7 +145,7 @@ op_type_send_inv:
 
     .brcase 3 //first, last (only)
         // add IMMETH hdr
-        // dma_cmd[4]
+        // dma_cmd[5]
         DMA_PHV2PKT_SETUP(r6, ieth, ieth)
         add            r2, RDMA_PKT_OPC_SEND_ONLY_WITH_INV, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         b              set_bth_opc
@@ -196,7 +203,7 @@ op_type_write_imm:
 op_type_write:
     setcf          c4, [c1 & !c3]
     // if first, add RETH hdr
-    // dma_cmd[4]
+    // dma_cmd[5]
     //jump to next flit
     DMA_PHV2PKT_SETUP_C(r6, reth, reth, c2)
 
@@ -214,7 +221,7 @@ op_type_write:
     .brcase 1 //not-first, last
         bcf            [!c3], set_bth_opc
         add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
-        // dma_cmd[4] - add IMMETH hdr
+        // dma_cmd[5] - add IMMETH hdr
         //jump to next flit
         DMA_PHV2PKT_SETUP(r6, immeth, immeth)
         add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
@@ -231,7 +238,7 @@ op_type_write:
         bcf            [!c3], set_bth_opc
         add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         // add IMMETH hdr
-        // dma_cmd[5]
+        // dma_cmd[6]
         DMA_NEXT_CMD_I_BASE_GET(r6, 1)
         DMA_PHV2PKT_SETUP(r6, immeth, immeth)
         add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot

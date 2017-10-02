@@ -215,6 +215,7 @@ f_p4plus_to_p4_apps:
   phvwr.c2    p.{vlan_tag_pcp...vlan_tag_vid}, k.p4plus_to_p4_vlan_tag
   phvwr.c2    p.vlan_tag_etherType, k.ethernet_etherType
   phvwr.c2    p.ethernet_etherType, ETHERTYPE_VLAN
+  phvwr       p.capri_txdma_intrinsic_valid, FALSE
   jr          r7
   phvwr       p.p4plus_to_p4_valid, FALSE
 

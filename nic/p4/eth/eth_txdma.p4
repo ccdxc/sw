@@ -110,6 +110,11 @@ metadata eth_tx_desc_d eth_tx_desc;
  *****************************************************************************/
 // Union with Common-TXDMA PHV headers
 
+// App Header
+@pragma dont_trim
+@pragma pa_header_union ingress app_header
+metadata p4plus_to_p4_header_t eth_tx_app_header;
+
 // Global PHV headers (Available in STAGES=ALL, MPUS=ALL)
 @pragma pa_header_union ingress common_global
 metadata eth_tx_global_k eth_tx_global;
@@ -164,9 +169,10 @@ metadata eth_tx_cq_desc_p eth_tx_cq_desc;
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t dma_cmd0;
 @pragma dont_trim
+metadata dma_cmd_phv2pkt_t txdma_intr;
+@pragma dont_trim
 metadata dma_cmd_phv2pkt_t dma_cmd1;
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t dma_cmd2;
-@pragma dont_trim       // HACK: Workaround for dma command padding issue
+@pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd3;
-

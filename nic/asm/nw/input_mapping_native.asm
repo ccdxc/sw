@@ -75,12 +75,8 @@ native_ipv6_packet:
   bcf         [c1|c2|c3], malformed_native_packet
 
   // srcAddr => r2(hi) r3(lo)
-#if 0
-  or          r2, k.ipv6_srcAddr_sbit32_ebit111[79:48], k.ipv6_srcAddr_sbit0_ebit31, 32
-  add         r3, k.ipv6_srcAddr_sbit112_ebit127[15:0], k.ipv6_srcAddr_sbit32_ebit111[47:0], 16
-#endif /* 0 */
   or          r2, k.ipv6_srcAddr_sbit32_ebit127[95:64], k.ipv6_srcAddr_sbit0_ebit31, 32
-  add         r3, k.ipv6_srcAddr_sbit32_ebit127[63:0], r0
+  add         r3, r0, k.ipv6_srcAddr_sbit32_ebit127[63:0]
   // dstAddr ==> r4(hi), r5(lo)
   or          r4, k.ipv6_dstAddr_sbit32_ebit127[95:64], k.ipv6_dstAddr_sbit0_ebit31, 32
   add         r5, r0, k.ipv6_dstAddr_sbit32_ebit127[63:0]

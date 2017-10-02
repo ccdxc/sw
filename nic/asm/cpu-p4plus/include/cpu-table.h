@@ -19,7 +19,7 @@
 #define NIC_ASQ_ENTRY_SIZE_SHIFT        3          /* for 8B */
 
 #define CPU_TO_P4PLUS_HDR_SIZE          8
-#define P4PLUS_TO_P4_HDR_SIZE           14
+#define P4PLUS_TO_P4_HDR_SIZE           10
 #define VLAN_TAG_HDR_SIZE               4
 
 #define CPU_PHV_AOL_DESC_START          CAPRI_PHV_START_OFFSET(aol_A0)
@@ -27,6 +27,9 @@
 
 #define CPU_PHV_INTRINSIC_START         CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
 #define CPU_PHV_INTRINSIC_END           CAPRI_PHV_END_OFFSET(p4_intr_global_glb_rsv)
+
+#define CPU_PHV_TXDMA_INTRINSIC_START   CAPRI_PHV_START_OFFSET(p4_txdma_intr_qid)
+#define CPU_PHV_TXDMA_INTRINSIC_END     CAPRI_PHV_END_OFFSET(p4_txdma_intr_txdma_rsv)
 
 #define CPU_PHV_VLAN_TAG_START          CAPRI_PHV_START_OFFSET(vlan_hdr_entry_etherType)
 #define CPU_PHV_VLAN_TAG_END            CAPRI_PHV_END_OFFSET(vlan_hdr_entry_vid)

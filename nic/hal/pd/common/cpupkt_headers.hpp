@@ -58,9 +58,7 @@ typedef struct p4plus_to_p4_header_s {
 #endif
 
     uint8_t     flags;
-    uint16_t    ip_id;
-    uint16_t    ip_len;
-    uint16_t    udp_len;
+    uint16_t    ip_id_delta;
     uint32_t    tcp_seq_delta;
     uint16_t    vlan_tag;
 } __attribute__ ((__packed__)) p4plus_to_p4_header_t;
