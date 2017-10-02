@@ -1,16 +1,33 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package netagent
+package state
 
 import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/venice/utils/emstore"
+	"sync"
 )
 
 // IntfInfo has the interface names to be plumbed into container
 type IntfInfo struct {
 	ContainerIntfName string //  Name of container side of the interface
 	SwitchIntfName    string // Name of switch side of the interface
+}
+
+
+// NetAgent is the network agent instance
+type NetAgent struct {
+	sync.Mutex                                          // global lock for the agent
+	store            emstore.Emstore                    // embedded db
+	nodeUUID         string                             // Node's UUID
+	datapath         NetDatapathAPI                     // network datapath
+	ctrlerif         CtrlerAPI                          // controller object
+	networkDB        map[string]*netproto.Network       // Network object db
+	endpointDB       map[string]*netproto.Endpoint      // Endpoint object db
+	secgroupDB       map[string]*netproto.SecurityGroup // security group object db
+	currentNetworkID uint32                             // poor man's id allocation FIXME:
+	currentSgID      uint32                             // poor man's id allocation FIXME:
 }
 
 // CtrlerAPI is the API provided by controller modules to netagent

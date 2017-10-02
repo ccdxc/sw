@@ -8,7 +8,7 @@ import (
 	context "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -43,7 +43,7 @@ func createFakeAgent() *fakeAgent {
 		sgDeleted:  make(map[string]*netproto.SecurityGroup),
 	}
 }
-func (ag *fakeAgent) RegisterCtrlerIf(ctrlerif netagent.CtrlerAPI) error {
+func (ag *fakeAgent) RegisterCtrlerIf(ctrlerif state.CtrlerAPI) error {
 	return nil
 }
 
@@ -80,7 +80,7 @@ func (ag *fakeAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error)
 	return nil, nil
 }
 
-func (ag *fakeAgent) CreateEndpoint(ep *netproto.Endpoint) (*netagent.IntfInfo, error) {
+func (ag *fakeAgent) CreateEndpoint(ep *netproto.Endpoint) (*state.IntfInfo, error) {
 	ag.epAdded[objectKey(ep.ObjectMeta)] = ep
 	return nil, nil
 }

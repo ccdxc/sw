@@ -5,8 +5,8 @@ package main
 import (
 	"flag"
 
-	"github.com/pensando/sw/nic/agent"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -62,7 +62,7 @@ func main() {
 	}
 
 	// create the new agent
-	ag, err := agent.NewAgent(dp, *dbPath, macAddr.String(), *npmURL, *resolverURLs, ":"+globals.AgentRESTPort)
+	ag, err := netagent.NewAgent(dp, *dbPath, macAddr.String(), *npmURL, *resolverURLs, ":"+globals.AgentRESTPort)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}

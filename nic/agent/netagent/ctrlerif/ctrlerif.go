@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -25,7 +25,7 @@ type NpmClient struct {
 	resolverURLs    string                        // Resolver URLs
 	resolverClient  resolver.Interface            // Resolver client
 	waitGrp         sync.WaitGroup                // wait group to wait on all go routines to exit
-	agent           netagent.CtrlerIntf           // net Agent API
+	agent           state.CtrlerIntf           // net Agent API
 	netGrpcClient   *rpckit.RPCClient             // grpc client
 	sgGrpcClient    *rpckit.RPCClient             // grpc client
 	epGrpcClient    *rpckit.RPCClient             // grpc client
@@ -42,7 +42,7 @@ func objectKey(meta api.ObjectMeta) string {
 }
 
 // NewNpmClient creates an NPM client object
-func NewNpmClient(agent netagent.CtrlerIntf, srvURL, resolverURLs string) (*NpmClient, error) {
+func NewNpmClient(agent state.CtrlerIntf, srvURL, resolverURLs string) (*NpmClient, error) {
 	// watch contexts
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 

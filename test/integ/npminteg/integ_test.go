@@ -10,7 +10,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm"
 
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -100,10 +100,10 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 	// verify agent receives the network
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			_, nerr := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
+			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
 			return (nerr == nil), nil
 		}, "Network not found on agent", "10ms", it.pollTimeout())
-		nt, nerr := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
+		nt, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
 		AssertOk(c, nerr, "error finding network")
 		Assert(c, (nt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network params didnt match", nt)
 	}
@@ -115,7 +115,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 	// verify network is removed from all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			_, nerr := ag.nagent.Netagent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
+			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Name: "testNetwork"})
 			return (nerr != nil), nil
 		}, "Network still found on agent", "100ms", it.pollTimeout())
 	}
@@ -143,7 +143,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
 			ometa := api.ObjectMeta{Tenant: "default", Name: "testNetwork"}
-			_, nerr := ag.nagent.Netagent.FindNetwork(ometa)
+			_, nerr := ag.nagent.NetworkAgent.FindNetwork(ometa)
 			return (nerr == nil), nil
 		}, "Network not found in agent")
 	}
@@ -223,7 +223,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 
 			// make the call
 			ep, cerr := ag.deleteEndpointReq("default", "testNetwork", epname, hostName)
-			if cerr != nil && cerr != netagent.ErrEndpointNotFound {
+			if cerr != nil && cerr != state.ErrEndpointNotFound {
 				waitCh <- fmt.Errorf("Endpoint delete failed: %v", err)
 				return
 			}

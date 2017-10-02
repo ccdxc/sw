@@ -15,7 +15,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/nic/agent"
+	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
@@ -53,7 +53,7 @@ type veniceIntegSuite struct {
 	apiSrv       apiserver.Server
 	apiGw        apigw.APIGateway
 	ctrler       *npm.Netctrler
-	agents       []*agent.Agent
+	agents       []*netagent.Agent
 	datapaths    []*datapath.MockHalDatapath
 	numAgents    int
 	restClient   apiclient.Services
@@ -145,7 +145,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 		it.datapaths = append(it.datapaths, dp)
 
 		// agent
-		agent, aerr := agent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL, "", "")
+		agent, aerr := netagent.NewAgent(dp, fmt.Sprintf("/tmp/agent_%d.db", i), fmt.Sprintf("dummy-uuid-%d", i), integTestNpmURL, "", "")
 		c.Assert(aerr, IsNil)
 		it.agents = append(it.agents, agent)
 	}
@@ -182,7 +182,7 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 	for _, ag := range it.agents {
 		ag.Stop()
 	}
-	it.agents = []*agent.Agent{}
+	it.agents = []*netagent.Agent{}
 	it.datapaths = []*datapath.MockHalDatapath{}
 
 	// stop server and client
@@ -207,7 +207,7 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 
 	// verify network gets created in agent
 	AssertEventually(c, func() (bool, []interface{}) {
-		_, cerr := it.agents[0].Netagent.FindNetwork(nw.ObjectMeta)
+		_, cerr := it.agents[0].NetworkAgent.FindNetwork(nw.ObjectMeta)
 		return (cerr == nil), nil
 	}, "Network not found in agent")
 
@@ -217,7 +217,7 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 
 	// verify network is removed from agent
 	AssertEventually(c, func() (bool, []interface{}) {
-		_, cerr := it.agents[0].Netagent.FindNetwork(nw.ObjectMeta)
+		_, cerr := it.agents[0].NetworkAgent.FindNetwork(nw.ObjectMeta)
 		return (cerr != nil), nil
 	}, "Network still found in agent")
 }

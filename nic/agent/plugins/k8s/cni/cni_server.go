@@ -13,16 +13,15 @@ import (
 	"strings"
 
 	cniapi "github.com/containernetworking/cni/pkg/skel"
-	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/httputils"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
-
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/gorilla/mux"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 )
 
 // CniServerListenURL URL to listen on
@@ -52,7 +51,7 @@ type Server struct {
 	listenURL  string              // URL where this server is listening
 	listener   net.Listener        // listener socket
 	kubeclient *KubeClient         // k8s api server client
-	agent      netagent.PluginIntf // network agent
+	agent      state.PluginIntf // network agent
 }
 
 // Catchall for additional driver functions.
@@ -146,7 +145,7 @@ func parsePodArgs(r *http.Request, args *cniapi.CmdArgs, netconf *types.NetConf,
 }
 
 // NewCniServer starts the CNI http server and returns the instance
-func NewCniServer(listenURL string, nagent netagent.PluginIntf) (*Server, error) {
+func NewCniServer(listenURL string, nagent state.PluginIntf) (*Server, error) {
 	var err error
 
 	// Create an instance of CNI server

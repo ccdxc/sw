@@ -13,7 +13,7 @@ import (
 	"sync"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pensando/sw/nic/agent/netagent"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
@@ -118,12 +118,12 @@ func (hd *MockHalDatapath) GetEndpointCount() int {
 }
 
 // SetAgent sets the agent for this datapath
-func (hd *MockHalDatapath) SetAgent(ag netagent.DatapathIntf) error {
+func (hd *MockHalDatapath) SetAgent(ag state.DatapathIntf) error {
 	return nil
 }
 
 // CreateLocalEndpoint creates an endpoint
-func (hd *MockHalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*netagent.IntfInfo, error) {
+func (hd *MockHalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*state.IntfInfo, error) {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")

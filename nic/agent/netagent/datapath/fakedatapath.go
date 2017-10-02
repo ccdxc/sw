@@ -5,11 +5,11 @@ package datapath
 import (
 	"fmt"
 
-	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/fswitch"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 )
 
 // FakeDatapath has the fake datapath for testing purposes
@@ -34,7 +34,7 @@ func NewFakeDatapath(uplinkIntf string) (*FakeDatapath, error) {
 }
 
 // SetAgent sets the agent for this datapath
-func (fdp *FakeDatapath) SetAgent(ag netagent.DatapathIntf) error {
+func (fdp *FakeDatapath) SetAgent(ag state.DatapathIntf) error {
 	return nil
 }
 
@@ -44,7 +44,7 @@ func (fdp *FakeDatapath) EndpointLearnNotif(ep *netproto.Endpoint) error {
 }
 
 // CreateLocalEndpoint creates an endpoint
-func (fdp *FakeDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*netagent.IntfInfo, error) {
+func (fdp *FakeDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*state.IntfInfo, error) {
 	// container and switch interface names
 	cintf := fmt.Sprintf("cvport-%s", ep.Spec.EndpointUUID[:8])
 	sintf := fmt.Sprintf("svport-%s", ep.Spec.EndpointUUID[:8])
@@ -79,7 +79,7 @@ func (fdp *FakeDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto
 	}
 
 	// create an interface info
-	intfInfo := netagent.IntfInfo{
+	intfInfo := state.IntfInfo{
 		ContainerIntfName: cintf,
 		SwitchIntfName:    sintf,
 	}

@@ -1,55 +1,54 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package netagent
+package state
 
 import (
 	"errors"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/pensando/sw/venice/utils/log"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // ErrEndpointNotFound is returned when endpoint is not found
 var ErrEndpointNotFound = errors.New("Endpoint not found")
 
 // EndpointCreateReq creates an endpoint
-func (ag *NetAgent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *IntfInfo, error) {
+func (na *NetAgent) EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *IntfInfo, error) {
 	// make an RPC call to controller
-	epinfo.Status.NodeUUID = ag.NodeUUID
-	ep, err := ag.ctrlerif.EndpointCreateReq(epinfo)
+	epinfo.Status.NodeUUID = na.nodeUUID
+	ep, err := na.ctrlerif.EndpointCreateReq(epinfo)
 	if err != nil {
 		log.Errorf("Error resp from netctrler for ep create {%+v}. Err: %v", epinfo, err)
 		return nil, nil, err
 	}
 
 	// call the datapath
-	intfInfo, err := ag.CreateEndpoint(ep)
+	intfInfo, err := na.CreateEndpoint(ep)
 	return ep, intfInfo, err
 }
 
 // EndpointDeleteReq deletes an endpoint
-func (ag *NetAgent) EndpointDeleteReq(epinfo *netproto.Endpoint) error {
+func (na *NetAgent) EndpointDeleteReq(epinfo *netproto.Endpoint) error {
 	// make an RPC call to controller
-	ep, err := ag.ctrlerif.EndpointDeleteReq(epinfo)
+	ep, err := na.ctrlerif.EndpointDeleteReq(epinfo)
 	if err != nil {
 		log.Errorf("Error resp from netctrler for ep delete {%+v}. Err: %v", epinfo, err)
 		return err
 	}
 
 	// call the datapath
-	return ag.DeleteEndpoint(ep)
+	return na.DeleteEndpoint(ep)
 }
 
 // CreateEndpoint creates an endpoint
-func (ag *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
+func (na *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 	// check if the endpoint already exists and convert it to an update
 	key := objectKey(ep.ObjectMeta)
-	ag.Lock()
-	oldEp, ok := ag.endpointDB[key]
-	ag.Unlock()
+	na.Lock()
+	oldEp, ok := na.endpointDB[key]
+	na.Unlock()
 
 	if ok {
 		// check if endpoint contents are same
@@ -64,7 +63,7 @@ func (ag *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 
 	// check if we have the network endpoint is refering to
 	// FIXME: if network gets deleted after endpoint is created, how do we handle it?
-	nw, err := ag.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Name: ep.Spec.NetworkName})
+	nw, err := na.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Name: ep.Spec.NetworkName})
 	if err != nil {
 		log.Errorf("Error finding the network %v. Err: %v", ep.Spec.NetworkName, err)
 		return nil, err
@@ -74,7 +73,7 @@ func (ag *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 	// FIXME: how do we handle security group getting deleted after ep is created.
 	var sgs []*netproto.SecurityGroup
 	for _, sgname := range ep.Spec.SecurityGroups {
-		sg, serr := ag.FindSecurityGroup(api.ObjectMeta{Tenant: ep.Tenant, Name: sgname})
+		sg, serr := na.FindSecurityGroup(api.ObjectMeta{Tenant: ep.Tenant, Name: sgname})
 		if serr != nil {
 			log.Errorf("Error finding security group %v. Err: %v", sgname, serr)
 			return nil, serr
@@ -85,15 +84,15 @@ func (ag *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 
 	// call the datapath
 	var intfInfo *IntfInfo
-	if ep.Status.NodeUUID == ag.NodeUUID {
-		intfInfo, err = ag.datapath.CreateLocalEndpoint(ep, nw, sgs)
+	if ep.Status.NodeUUID == na.nodeUUID {
+		intfInfo, err = na.datapath.CreateLocalEndpoint(ep, nw, sgs)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return nil, err
 		}
 
 	} else {
-		err = ag.datapath.CreateRemoteEndpoint(ep, nw, sgs)
+		err = na.datapath.CreateRemoteEndpoint(ep, nw, sgs)
 		if err != nil {
 			log.Errorf("Error creating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return nil, err
@@ -101,22 +100,22 @@ func (ag *NetAgent) CreateEndpoint(ep *netproto.Endpoint) (*IntfInfo, error) {
 	}
 
 	// add the ep to database
-	ag.Lock()
-	ag.endpointDB[key] = ep
-	ag.Unlock()
-	err = ag.store.Write(ep)
+	na.Lock()
+	na.endpointDB[key] = ep
+	na.Unlock()
+	err = na.store.Write(ep)
 
 	// done
 	return intfInfo, err
 }
 
 // UpdateEndpoint updates an endpoint
-func (ag *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
+func (na *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	// check if the endpoint already exists and convert it to an update
 	key := objectKey(ep.ObjectMeta)
-	ag.Lock()
-	oldEp, ok := ag.endpointDB[key]
-	ag.Unlock()
+	na.Lock()
+	oldEp, ok := na.endpointDB[key]
+	na.Unlock()
 	if ok {
 		// check if endpoint contents are same
 		if proto.Equal(oldEp, ep) {
@@ -132,7 +131,7 @@ func (ag *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// find the network
-	nw, err := ag.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Name: ep.Spec.NetworkName})
+	nw, err := na.FindNetwork(api.ObjectMeta{Tenant: ep.Tenant, Name: ep.Spec.NetworkName})
 	if err != nil {
 		log.Errorf("Error finding the network %v. Err: %v", ep.Spec.NetworkName, err)
 		return err
@@ -141,7 +140,7 @@ func (ag *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	// check if security groups its refering to exists
 	var sgs []*netproto.SecurityGroup
 	for _, sgname := range ep.Spec.SecurityGroups {
-		sg, serr := ag.FindSecurityGroup(api.ObjectMeta{Tenant: ep.Tenant, Name: sgname})
+		sg, serr := na.FindSecurityGroup(api.ObjectMeta{Tenant: ep.Tenant, Name: sgname})
 		if serr != nil {
 			log.Errorf("Error finding security group %v. Err: %v", sgname, serr)
 			return serr
@@ -151,14 +150,14 @@ func (ag *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// call the datapath
-	if ep.Status.NodeUUID == ag.NodeUUID {
-		err = ag.datapath.UpdateLocalEndpoint(ep, nw, sgs)
+	if ep.Status.NodeUUID == na.nodeUUID {
+		err = na.datapath.UpdateLocalEndpoint(ep, nw, sgs)
 		if err != nil {
 			log.Errorf("Error updating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return err
 		}
 	} else {
-		err = ag.datapath.UpdateRemoteEndpoint(ep, nw, sgs)
+		err = na.datapath.UpdateRemoteEndpoint(ep, nw, sgs)
 		if err != nil {
 			log.Errorf("Error updating the endpoint {%+v} in datapath. Err: %v", ep, err)
 			return err
@@ -166,21 +165,21 @@ func (ag *NetAgent) UpdateEndpoint(ep *netproto.Endpoint) error {
 	}
 
 	// add the ep to database
-	ag.Lock()
-	ag.endpointDB[key] = ep
-	ag.Unlock()
-	err = ag.store.Write(ep)
+	na.Lock()
+	na.endpointDB[key] = ep
+	na.Unlock()
+	err = na.store.Write(ep)
 
 	return err
 }
 
 // DeleteEndpoint deletes an endpoint
-func (ag *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
+func (na *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
 	// check if we have the endpoint
 	key := objectKey(ep.ObjectMeta)
-	ag.Lock()
-	_, ok := ag.endpointDB[key]
-	ag.Unlock()
+	na.Lock()
+	_, ok := na.endpointDB[key]
+	na.Unlock()
 	if !ok {
 		log.Errorf("Endpoint %v was not found", ep.ObjectMeta)
 		return ErrEndpointNotFound
@@ -188,38 +187,38 @@ func (ag *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
 
 	// call the datapath
 	var err error
-	if ep.Status.NodeUUID == ag.NodeUUID {
-		err = ag.datapath.DeleteLocalEndpoint(ep)
+	if ep.Status.NodeUUID == na.nodeUUID {
+		err = na.datapath.DeleteLocalEndpoint(ep)
 		if err != nil {
 			log.Errorf("Error deleting the endpoint {%+v} in datapath. Err: %v", ep, err)
 		}
 	} else {
-		err = ag.datapath.DeleteRemoteEndpoint(ep)
+		err = na.datapath.DeleteRemoteEndpoint(ep)
 		if err != nil {
 			log.Errorf("Error deleting the endpoint {%+v} in datapath. Err: %v", ep, err)
 		}
 	}
 
 	// remove from the database
-	ag.Lock()
-	delete(ag.endpointDB, key)
-	ag.Unlock()
-	err = ag.store.Delete(ep)
+	na.Lock()
+	delete(na.endpointDB, key)
+	na.Unlock()
+	err = na.store.Delete(ep)
 
 	// done
 	return err
 }
 
 // ListEndpoint returns the list of endpoints
-func (ag *NetAgent) ListEndpoint() []*netproto.Endpoint {
+func (na *NetAgent) ListEndpoint() []*netproto.Endpoint {
 	var epList []*netproto.Endpoint
 
 	// lock the db
-	ag.Lock()
-	defer ag.Unlock()
+	na.Lock()
+	defer na.Unlock()
 
 	// walk all endpoints
-	for _, ep := range ag.endpointDB {
+	for _, ep := range na.endpointDB {
 		epList = append(epList, ep)
 	}
 

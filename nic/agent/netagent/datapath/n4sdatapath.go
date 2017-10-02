@@ -3,7 +3,7 @@
 package datapath
 
 import (
-	"github.com/pensando/sw/nic/agent/netagent"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/fswitch"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -11,7 +11,7 @@ import (
 
 // NaplesDatapath has the fake datapath for testing purposes
 type NaplesDatapath struct {
-	ag         netagent.DatapathIntf // agent
+	ag         state.DatapathIntf // agent
 	fSwitch    *fswitch.Fswitch      // fswitch instance
 	hostIntf   string                // host facing interface
 	uplinkIntf string                // uplink interface
@@ -44,7 +44,7 @@ func NewNaplesDatapath(hostIf, uplinkIf string) (*NaplesDatapath, error) {
 }
 
 // SetAgent sets the agent for this datapath
-func (ndp *NaplesDatapath) SetAgent(ag netagent.DatapathIntf) error {
+func (ndp *NaplesDatapath) SetAgent(ag state.DatapathIntf) error {
 	// store the agent
 	ndp.ag = ag
 	return nil
@@ -57,7 +57,7 @@ func (ndp *NaplesDatapath) EndpointLearnNotif(ep *netproto.Endpoint) error {
 }
 
 // CreateLocalEndpoint creates an endpoint
-func (ndp *NaplesDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*netagent.IntfInfo, error) {
+func (ndp *NaplesDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*state.IntfInfo, error) {
 
 	// add the local endpoint
 	err := ndp.fSwitch.AddLocalEndpoint(ndp.hostIntf, ep)

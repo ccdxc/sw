@@ -6,10 +6,6 @@ import (
 	"context"
 	"fmt"
 
-	. "gopkg.in/check.v1"
-
-	"github.com/vmware/govmomi/vim25/soap"
-
 	"github.com/pensando/sw/venice/orch/simapi"
 	"github.com/pensando/sw/venice/orch/vchub/defs"
 	vchsrv "github.com/pensando/sw/venice/orch/vchub/server"
@@ -18,8 +14,9 @@ import (
 	"github.com/pensando/sw/venice/orch/vchub/vcprobe"
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
-
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/vmware/govmomi/vim25/soap"
+	. "gopkg.in/check.v1"
 )
 
 type vchSuite struct {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent"
+	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/prometheus/common/log"
@@ -15,7 +15,7 @@ import (
 // Dpagent is an agent instance
 type Dpagent struct {
 	datapath *datapath.MockHalDatapath
-	nagent   *agent.Agent
+	nagent   *netagent.Agent
 }
 
 // objKey returns endpoint key
@@ -38,7 +38,7 @@ func CreateAgent(nodeUUID, srvURL string) (*Dpagent, error) {
 	}
 
 	// create new network agent
-	nagent, err := agent.NewAgent(dp, "", nodeUUID, srvURL, "", "")
+	nagent, err := netagent.NewAgent(dp, "", nodeUUID, srvURL, "", "")
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
 		return nil, err
@@ -73,7 +73,7 @@ func (ag *Dpagent) createEndpointReq(tenant, net, epname, host string) (*netprot
 	}
 
 	// make a create request
-	ep, _, err := ag.nagent.Netagent.EndpointCreateReq(&epinfo)
+	ep, _, err := ag.nagent.NetworkAgent.EndpointCreateReq(&epinfo)
 
 	return ep, err
 }
@@ -98,6 +98,6 @@ func (ag *Dpagent) deleteEndpointReq(tenant, net, epname, host string) (*netprot
 	}
 
 	// make a create request
-	err := ag.nagent.Netagent.EndpointDeleteReq(&epinfo)
+	err := ag.nagent.NetworkAgent.EndpointDeleteReq(&epinfo)
 	return &epinfo, err
 }

@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package netagent
+package state
 
 import (
 	"errors"
@@ -12,9 +12,9 @@ import (
 )
 
 // CreateNetwork creates a network
-func (ag *NetAgent) CreateNetwork(nt *netproto.Network) error {
+func (na *NetAgent) CreateNetwork(nt *netproto.Network) error {
 	// check if network already exists
-	oldNt, err := ag.FindNetwork(nt.ObjectMeta)
+	oldNt, err := na.FindNetwork(nt.ObjectMeta)
 	if err == nil {
 		// check if network contents are same
 		if !proto.Equal(oldNt, nt) {
@@ -27,11 +27,11 @@ func (ag *NetAgent) CreateNetwork(nt *netproto.Network) error {
 	}
 
 	// allocate network id
-	nt.Status.NetworkID = ag.currentNetworkID
-	ag.currentNetworkID++
+	nt.Status.NetworkID = na.currentNetworkID
+	na.currentNetworkID++
 
 	// create it in datapath
-	err = ag.datapath.CreateNetwork(nt)
+	err = na.datapath.CreateNetwork(nt)
 	if err != nil {
 		log.Errorf("Error creating network in datapath. Nw {%+v}. Err: %v", nt, err)
 		return err
@@ -39,24 +39,24 @@ func (ag *NetAgent) CreateNetwork(nt *netproto.Network) error {
 
 	// save it in db
 	key := objectKey(nt.ObjectMeta)
-	ag.Lock()
-	ag.networkDB[key] = nt
-	ag.Unlock()
-	err = ag.store.Write(nt)
+	na.Lock()
+	na.networkDB[key] = nt
+	na.Unlock()
+	err = na.store.Write(nt)
 
 	return err
 }
 
 // ListNetwork returns the list of networks
-func (ag *NetAgent) ListNetwork() []*netproto.Network {
+func (na *NetAgent) ListNetwork() []*netproto.Network {
 	var netlist []*netproto.Network
 
 	// lock the db
-	ag.Lock()
-	defer ag.Unlock()
+	na.Lock()
+	defer na.Unlock()
 
 	// walk all networks
-	for _, nw := range ag.networkDB {
+	for _, nw := range na.networkDB {
 		netlist = append(netlist, nw)
 	}
 
@@ -64,14 +64,14 @@ func (ag *NetAgent) ListNetwork() []*netproto.Network {
 }
 
 // FindNetwork dins a network in local db
-func (ag *NetAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
+func (na *NetAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
 	// lock the db
-	ag.Lock()
-	defer ag.Unlock()
+	na.Lock()
+	defer na.Unlock()
 
 	// lookup the database
 	key := objectKey(meta)
-	nt, ok := ag.networkDB[key]
+	nt, ok := na.networkDB[key]
 	if !ok {
 		return nil, errors.New("Network not found")
 	}
@@ -80,32 +80,32 @@ func (ag *NetAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) 
 }
 
 // UpdateNetwork updates a network
-func (ag *NetAgent) UpdateNetwork(nt *netproto.Network) error {
+func (na *NetAgent) UpdateNetwork(nt *netproto.Network) error {
 	// FIXME:
 	return nil
 }
 
 // DeleteNetwork deletes a network
-func (ag *NetAgent) DeleteNetwork(nt *netproto.Network) error {
+func (na *NetAgent) DeleteNetwork(nt *netproto.Network) error {
 	// check if network already exists
-	nw, err := ag.FindNetwork(nt.ObjectMeta)
+	nw, err := na.FindNetwork(nt.ObjectMeta)
 	if err != nil {
 		log.Errorf("Network %+v not found", nt.ObjectMeta)
 		return errors.New("Network not found")
 	}
 
 	// delete the network in datapath
-	err = ag.datapath.DeleteNetwork(nw)
+	err = na.datapath.DeleteNetwork(nw)
 	if err != nil {
 		log.Errorf("Error deleting network {%+v}. Err: %v", nt, err)
 	}
 
 	// delete from db
 	key := objectKey(nt.ObjectMeta)
-	ag.Lock()
-	delete(ag.networkDB, key)
-	ag.Unlock()
-	err = ag.store.Delete(nt)
+	na.Lock()
+	delete(na.networkDB, key)
+	na.Unlock()
+	err = na.store.Delete(nt)
 
 	return err
 }

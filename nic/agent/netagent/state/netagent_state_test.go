@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package netagent
+package state
 
 import (
 	"fmt"
@@ -161,11 +161,13 @@ func createNetAgent(t *testing.T) (*NetAgent, *mockDatapath, *mockCtrler) {
 	}
 
 	// create new network agent
-	nagent, err := NewNetAgent(dp, "", "some-unique-id")
+	nagent, err := NewNetAgentCreater(dp, "", "some-unique-id")
+
 	if err != nil {
 		t.Fatalf("Error creating network agent. Err: %v", err)
 		return nil, nil, nil
 	}
+
 
 	// fake controller intf
 	nagent.RegisterCtrlerIf(ct)
@@ -175,9 +177,9 @@ func createNetAgent(t *testing.T) (*NetAgent, *mockDatapath, *mockCtrler) {
 
 func TestNetworkCreateDelete(t *testing.T) {
 	// create netagent
-	agent, _, _ := createNetAgent(t)
-	Assert(t, (agent != nil), "Failed to create agent", agent)
-	defer agent.Stop()
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
 
 	// network message
 	nt := netproto.Network{
@@ -193,14 +195,14 @@ func TestNetworkCreateDelete(t *testing.T) {
 	}
 
 	// make create network call
-	err := agent.CreateNetwork(&nt)
+	err := ag.CreateNetwork(&nt)
 	AssertOk(t, err, "Error creating network")
-	tnt, err := agent.FindNetwork(nt.ObjectMeta)
+	tnt, err := ag.FindNetwork(nt.ObjectMeta)
 	AssertOk(t, err, "Network was not found in DB")
 	Assert(t, (tnt.Spec.IPv4Subnet == "10.1.1.0/24"), "Network subnet did not match", tnt)
 
 	// verify duplicate network creations suceed
-	err = agent.CreateNetwork(&nt)
+	err = ag.CreateNetwork(&nt)
 	AssertOk(t, err, "Error creating duplicate network")
 
 	// verify duplicate network name with different content does not suceed
@@ -215,29 +217,29 @@ func TestNetworkCreateDelete(t *testing.T) {
 			IPv4Gateway: "20.2.2.254",
 		},
 	}
-	err = agent.CreateNetwork(&nnt)
+	err = ag.CreateNetwork(&nnt)
 	Assert(t, (err != nil), "conflicting network creation suceeded")
 
 	// verify list api works
-	netList := agent.ListNetwork()
+	netList := ag.ListNetwork()
 	Assert(t, (len(netList) == 1), "Incorrect number of networks")
 
 	// delete the network and verify its gone from db
-	err = agent.DeleteNetwork(&nt)
+	err = ag.DeleteNetwork(&nt)
 	AssertOk(t, err, "Error deleting network")
-	_, err = agent.FindNetwork(nt.ObjectMeta)
-	Assert(t, (err != nil), "Network was still found in database after deleting", agent)
+	_, err = ag.FindNetwork(nt.ObjectMeta)
+	Assert(t, (err != nil), "Network was still found in database after deleting", ag)
 
 	// verify you can not delete non-existing network
-	err = agent.DeleteNetwork(&nt)
-	Assert(t, (err != nil), "deleting non-existing network suceeded", agent)
+	err = ag.DeleteNetwork(&nt)
+	Assert(t, (err != nil), "deleting non-existing network suceeded", ag)
 }
 
 func TestEndpointCreateDelete(t *testing.T) {
 	// create netagent
-	agent, dp, ct := createNetAgent(t)
-	Assert(t, (agent != nil), "Failed to create agent", agent)
-	defer agent.Stop()
+	ag, dp, ct := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
 
 	// network message
 	nt := netproto.Network{
@@ -253,7 +255,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 	}
 
 	// make create network call
-	err := agent.CreateNetwork(&nt)
+	err := ag.CreateNetwork(&nt)
 	AssertOk(t, err, "Error creating network")
 
 	// endpoint message
@@ -271,12 +273,12 @@ func TestEndpointCreateDelete(t *testing.T) {
 	}
 
 	// create the endpoint
-	ep, _, err := agent.EndpointCreateReq(&epinfo)
+	ep, _, err := ag.EndpointCreateReq(&epinfo)
 	AssertOk(t, err, "Error creating endpoint")
 
 	// verify both controller and datapath got called
 	key := objectKey(epinfo.ObjectMeta)
-	nep, ok := agent.endpointDB[key]
+	nep, ok := ag.endpointDB[key]
 	Assert(t, ok, "Endpoint was not found in datapath", dp)
 	Assert(t, proto.Equal(nep, ep), "Datapath endpoint did not match", nep)
 	dep, ok := dp.epdb[key]
@@ -287,7 +289,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 	Assert(t, proto.Equal(cep, ep), "Datapath endpoint did not match", cep)
 
 	// verify duplicate endpoint creations succeed
-	_, _, err = agent.EndpointCreateReq(&epinfo)
+	_, _, err = ag.EndpointCreateReq(&epinfo)
 	AssertOk(t, err, "Endpoint creation is not idempotent")
 
 	// verify endpoint create on non-existing network fails
@@ -303,11 +305,11 @@ func TestEndpointCreateDelete(t *testing.T) {
 			NetworkName:  "invalid",
 		},
 	}
-	_, _, err = agent.EndpointCreateReq(&ep2)
-	Assert(t, (err != nil), "Endpoint create on non-existing network suceeded", ep2)
+	_, _, err = ag.EndpointCreateReq(&ep2)
+	Assert(t, (err != nil), "Endpoint create on non-existing network succeeded", ag)
 
 	// verify list api works
-	epList := agent.ListEndpoint()
+	epList := ag.ListEndpoint()
 	Assert(t, (len(epList) == 1), "Incorrect number of endpoints")
 
 	// endpoint message
@@ -323,15 +325,15 @@ func TestEndpointCreateDelete(t *testing.T) {
 			NetworkName:  "default",
 		},
 	}
-	_, _, err = agent.EndpointCreateReq(&depinfo)
-	Assert(t, (err != nil), "Conflicting endpoint creatin suceeded", agent)
+	_, _, err = ag.EndpointCreateReq(&depinfo)
+	Assert(t, (err != nil), "Conflicting endpoint creating succeeded", ag)
 
 	// delete the endpoint
-	err = agent.EndpointDeleteReq(&epinfo)
+	err = ag.EndpointDeleteReq(&epinfo)
 	AssertOk(t, err, "Endpoint delete failed")
 
 	// verify endpoint is gone everywhere
-	_, ok = agent.endpointDB[key]
+	_, ok = ag.endpointDB[key]
 	Assert(t, !ok, "Endpoint was still found in datapath", dp)
 	_, ok = dp.epdb[key]
 	Assert(t, !ok, "Endpoint was still found in datapath", dp)
@@ -339,15 +341,15 @@ func TestEndpointCreateDelete(t *testing.T) {
 	Assert(t, !ok, "Endpoint was still found in ctrler", dp)
 
 	// verify non-existing endpoint can not be deleted
-	err = agent.EndpointDeleteReq(&epinfo)
-	Assert(t, (err != nil), "Deleting non-existing endpoint suceeded", agent)
+	err = ag.EndpointDeleteReq(&epinfo)
+	Assert(t, (err != nil), "Deleting non-existing endpoint succeeded", ag)
 }
 
 func TestCtrlerEndpointCreateDelete(t *testing.T) {
 	// create netagent
-	agent, dp, _ := createNetAgent(t)
-	Assert(t, (agent != nil), "Failed to create agent", agent)
-	defer agent.Stop()
+	ag, dp, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
 
 	// network message
 	nt := netproto.Network{
@@ -363,7 +365,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 	}
 
 	// make create network call
-	err := agent.CreateNetwork(&nt)
+	err := ag.CreateNetwork(&nt)
 	AssertOk(t, err, "Error creating network")
 
 	// endpoint message
@@ -381,12 +383,12 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = agent.CreateEndpoint(&epinfo)
+	_, err = ag.CreateEndpoint(&epinfo)
 	AssertOk(t, err, "Error creating endpoint")
 
 	// verify datapath got called
 	key := objectKey(epinfo.ObjectMeta)
-	nep, ok := agent.endpointDB[key]
+	nep, ok := ag.endpointDB[key]
 	Assert(t, ok, "Endpoint was not found in datapath", dp)
 	Assert(t, proto.Equal(nep, &epinfo), "Datapath endpoint did not match", nep)
 	dep, ok := dp.epdb[key]
@@ -394,7 +396,7 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 	Assert(t, proto.Equal(dep, &epinfo), "Datapath endpoint did not match", dep)
 
 	// verify duplicate endpoint creations succeed
-	_, err = agent.CreateEndpoint(&epinfo)
+	_, err = ag.CreateEndpoint(&epinfo)
 	AssertOk(t, err, "Endpoint creation is not idempotent")
 
 	// endpoint message
@@ -410,29 +412,29 @@ func TestCtrlerEndpointCreateDelete(t *testing.T) {
 			NetworkName:  "default",
 		},
 	}
-	_, err = agent.CreateEndpoint(&depinfo)
-	Assert(t, (err != nil), "Conflicting endpoint creatin suceeded", agent)
+	_, err = ag.CreateEndpoint(&depinfo)
+	Assert(t, (err != nil), "Conflicting endpoint creating succeeded", ag)
 
 	// delete the endpoint
-	err = agent.DeleteEndpoint(&epinfo)
+	err = ag.DeleteEndpoint(&epinfo)
 	AssertOk(t, err, "Endpoint delete failed")
 
 	// verify endpoint is gone everywhere
-	_, ok = agent.endpointDB[key]
+	_, ok = ag.endpointDB[key]
 	Assert(t, !ok, "Endpoint was still found in datapath", dp)
 	_, ok = dp.epdb[key]
 	Assert(t, !ok, "Endpoint was still found in datapath", dp)
 
 	// verify non-existing endpoint can not be deleted
-	err = agent.DeleteEndpoint(&epinfo)
-	Assert(t, (err != nil), "Deleting non-existing endpoint suceeded", agent)
+	err = ag.DeleteEndpoint(&epinfo)
+	Assert(t, (err != nil), "Deleting non-existing endpoint succeeded", ag)
 }
 
-func TestSecurituGroupCreateDelete(t *testing.T) {
+func TestSecurityGroupCreateDelete(t *testing.T) {
 	// create netagent
-	agent, dp, _ := createNetAgent(t)
-	Assert(t, (agent != nil), "Failed to create agent", agent)
-	defer agent.Stop()
+	ag, dp, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
 
 	// security group
 	sg := netproto.SecurityGroup{
@@ -459,11 +461,11 @@ func TestSecurituGroupCreateDelete(t *testing.T) {
 	}
 
 	// create a security group
-	err := agent.CreateSecurityGroup(&sg)
+	err := ag.CreateSecurityGroup(&sg)
 	AssertOk(t, err, "Error creating security group")
 
 	// verify list api works
-	sgList := agent.ListSecurityGroup()
+	sgList := ag.ListSecurityGroup()
 	Assert(t, (len(sgList) == 1), "Incorrect number of sgs")
 
 	// verify datapath has the security group
@@ -484,7 +486,7 @@ func TestSecurituGroupCreateDelete(t *testing.T) {
 	}
 
 	// make create network call
-	err = agent.CreateNetwork(&nt)
+	err = ag.CreateNetwork(&nt)
 	AssertOk(t, err, "Error creating network")
 
 	// endpoint message
@@ -503,7 +505,7 @@ func TestSecurituGroupCreateDelete(t *testing.T) {
 	}
 
 	// create endpoint refering to security group
-	_, err = agent.CreateEndpoint(&epinfo)
+	_, err = ag.CreateEndpoint(&epinfo)
 	AssertOk(t, err, "Endpoint creation with security group failed")
 
 	// try creating an endpoint with non-existing security group
@@ -520,19 +522,19 @@ func TestSecurituGroupCreateDelete(t *testing.T) {
 			SecurityGroups: []string{"test-sg", "unknown-sg"},
 		},
 	}
-	_, err = agent.CreateEndpoint(&ep2)
+	_, err = ag.CreateEndpoint(&ep2)
 	Assert(t, (err != nil), "Endpoint create with unknown sg suceeded", ep2)
 
 	// delete sg
-	err = agent.DeleteSecurityGroup(&sg)
+	err = ag.DeleteSecurityGroup(&sg)
 	AssertOk(t, err, "Error deleting security group")
 }
 
 func TestEndpointUpdate(t *testing.T) {
 	// create netagent
-	agent, dp, _ := createNetAgent(t)
-	Assert(t, (agent != nil), "Failed to create agent", agent)
-	defer agent.Stop()
+	ag, dp, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
 
 	// network message
 	nt := netproto.Network{
@@ -548,7 +550,7 @@ func TestEndpointUpdate(t *testing.T) {
 	}
 
 	// make create network call
-	err := agent.CreateNetwork(&nt)
+	err := ag.CreateNetwork(&nt)
 	AssertOk(t, err, "Error creating network")
 
 	// endpoint message
@@ -566,7 +568,7 @@ func TestEndpointUpdate(t *testing.T) {
 	}
 
 	// create the endpoint
-	_, err = agent.CreateEndpoint(&epinfo)
+	_, err = ag.CreateEndpoint(&epinfo)
 	AssertOk(t, err, "Error creating endpoint")
 
 	// security group
@@ -594,18 +596,18 @@ func TestEndpointUpdate(t *testing.T) {
 	}
 
 	// create a security group
-	err = agent.CreateSecurityGroup(&sg)
+	err = ag.CreateSecurityGroup(&sg)
 	AssertOk(t, err, "Error creating security group")
 
 	// update the endpoint
 	epupd := epinfo
 	epupd.Spec.SecurityGroups = []string{"test-sg"}
-	err = agent.UpdateEndpoint(&epupd)
+	err = ag.UpdateEndpoint(&epupd)
 	AssertOk(t, err, "Error updating endpoint")
 
 	// verify endpoint got updated
 	key := objectKey(epinfo.ObjectMeta)
-	nep, ok := agent.endpointDB[key]
+	nep, ok := ag.endpointDB[key]
 	Assert(t, ok, "Endpoint was not found in datapath", dp)
 	Assert(t, proto.Equal(nep, &epupd), "Datapath endpoint did not match", nep)
 	dep, ok := dp.epdb[key]
@@ -615,21 +617,21 @@ func TestEndpointUpdate(t *testing.T) {
 	// try changing the network of endpoint
 	epupd2 := epupd
 	epupd2.Spec.NetworkName = "unknown"
-	err = agent.UpdateEndpoint(&epupd2)
+	err = ag.UpdateEndpoint(&epupd2)
 	Assert(t, (err != nil), "Changing network name suceeded")
 
 	// try updating security group to an unknown
 	epupd2 = epupd
 	epupd2.Spec.SecurityGroups = []string{"unknown"}
-	err = agent.UpdateEndpoint(&epupd2)
+	err = ag.UpdateEndpoint(&epupd2)
 	Assert(t, (err != nil), "Changing to non-existing security group suceeded")
 }
 
-func TestSecurituGroupUpdate(t *testing.T) {
+func TestSecurityGroupUpdate(t *testing.T) {
 	// create netagent
-	agent, dp, _ := createNetAgent(t)
-	Assert(t, (agent != nil), "Failed to create agent", agent)
-	defer agent.Stop()
+	ag, dp, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
 
 	// security group
 	sg := netproto.SecurityGroup{
@@ -650,7 +652,7 @@ func TestSecurituGroupUpdate(t *testing.T) {
 	}
 
 	// create a security group
-	err := agent.CreateSecurityGroup(&sg)
+	err := ag.CreateSecurityGroup(&sg)
 	AssertOk(t, err, "Error creating security group")
 
 	// create second security group that refers to first one
@@ -662,7 +664,7 @@ func TestSecurituGroupUpdate(t *testing.T) {
 			PeerGroup: "test-sg",
 		},
 	}
-	err = agent.CreateSecurityGroup(&sg2)
+	err = ag.CreateSecurityGroup(&sg2)
 	AssertOk(t, err, "Error creating security group")
 
 	// verify datapath has the security group
@@ -676,7 +678,7 @@ func TestSecurituGroupUpdate(t *testing.T) {
 			PeerGroup: "test-sg2",
 		},
 	}
-	err = agent.UpdateSecurityGroup(&sg)
+	err = ag.UpdateSecurityGroup(&sg)
 	AssertOk(t, err, "Error updating security group")
 
 	// try to refer to a non-existing sg
@@ -687,19 +689,19 @@ func TestSecurituGroupUpdate(t *testing.T) {
 			PeerGroup: "unknown",
 		},
 	}
-	err = agent.UpdateSecurityGroup(&sg3)
+	err = ag.UpdateSecurityGroup(&sg3)
 	Assert(t, (err != nil), "Referring to unknown sg suceeded", sg3)
 
 	// clear the peer group
 	sg2.Spec.Rules = []netproto.SecurityRule{}
-	err = agent.UpdateSecurityGroup(&sg2)
+	err = ag.UpdateSecurityGroup(&sg2)
 	AssertOk(t, err, "Error updating security group")
 
 	// delete sg
-	err = agent.DeleteSecurityGroup(&sg)
+	err = ag.DeleteSecurityGroup(&sg)
 	AssertOk(t, err, "Error deleting security group")
 	// delete sg
-	err = agent.DeleteSecurityGroup(&sg2)
+	err = ag.DeleteSecurityGroup(&sg2)
 	AssertOk(t, err, "Error deleting security group")
 }
 
@@ -707,9 +709,9 @@ func TestEndpointConcurrency(t *testing.T) {
 	var concurrency = 100
 
 	// create netagent
-	agent, _, _ := createNetAgent(t)
-	Assert(t, (agent != nil), "Failed to create agent", agent)
-	defer agent.Stop()
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
 
 	// network message
 	nt := netproto.Network{
@@ -725,7 +727,7 @@ func TestEndpointConcurrency(t *testing.T) {
 	}
 
 	// make create network call
-	err := agent.CreateNetwork(&nt)
+	err := ag.CreateNetwork(&nt)
 	AssertOk(t, err, "Error creating network")
 
 	waitCh := make(chan error, concurrency*2)
@@ -748,7 +750,7 @@ func TestEndpointConcurrency(t *testing.T) {
 			}
 
 			// create the endpoint
-			_, eperr := agent.CreateEndpoint(&epinfo)
+			_, eperr := ag.CreateEndpoint(&epinfo)
 			waitCh <- eperr
 		}(i)
 	}
@@ -766,7 +768,7 @@ func TestEndpointConcurrency(t *testing.T) {
 					Name:   fmt.Sprintf("testEndpoint-%d", idx),
 				},
 			}
-			eperr := agent.DeleteEndpoint(&epinfo)
+			eperr := ag.DeleteEndpoint(&epinfo)
 			waitCh <- eperr
 		}(i)
 	}

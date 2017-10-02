@@ -2,10 +2,7 @@
 
 package npminteg
 
-import
-
-// . "github.com/pensando/sw/venice/utils/testutils"
-(
+import (
 	"fmt"
 
 	"github.com/golang/mock/gomock"
