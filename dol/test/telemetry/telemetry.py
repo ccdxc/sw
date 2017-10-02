@@ -100,8 +100,7 @@ class spanSessionData:
     }
 
     @staticmethod
-    def getSessions(module):
-        case = module.iterator.Get()
+    def getSessions(case):
         return spanSessionData.localSpanSsns[case]
 
 def clearAllSessions():
@@ -110,11 +109,9 @@ def clearAllSessions():
         ssn.Clear()
     return
 
-def Setup(infra, module):
-    iterelem = module.iterator.Get()
-    #pdb.set_trace()
+def setup_span(infra, module, case):
     clearAllSessions()
-    ssns = spanSessionData.getSessions(module)
+    ssns = spanSessionData.getSessions(case)
     for (id, spantype, intf) in ssns:
         sessname = "SpanSession000" + str(id)
         sess = infra.ConfigStore.objects.Get(sessname)
@@ -122,11 +119,18 @@ def Setup(infra, module):
         module.logger.info("Updating Span Session %s on interface %s with type %s", sessname, intf, spantype)
         sess.Update(0, spantype, dintf)
     return
-    
+
+def Setup(infra, module):
+    #pdb.set_trace()
+    setup_span(infra, module, module.iterator.Get())
+    return
+
 def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
+    span_case = tc.module.iterator.Get()
+    tc.pvtdata.span_case = span_case
     return
 
 def TestCaseVerify(tc):

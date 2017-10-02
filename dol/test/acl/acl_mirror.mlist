@@ -1,0 +1,31 @@
+# Feature Test Modules List
+feature:
+    id          : acl
+    package     : test.acl
+    module      : acl
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : ACL_MIRROR
+        spec    : acl_ip_mirror.testspec
+        iterate:
+            - id        : ACL_TCP_FLAGS_ACTION_MIRROR
+              flow      : filter://type=IPV4,proto=TCP
+              mirror    : SPAN_LOCAL_INGRESS_UPLINK
+            - id        : ACL_TCP_FLAGS_ACTION_MIRROR
+              flow      : filter://type=IPV4,proto=TCP
+              mirror    : SPAN_LOCAL_EGRESS_UPLINK
+
+    - module:
+        name    : ACL_DROPMASK_MIRROR
+        spec    : acl_ip_flow_miss_mirror.testspec
+        enable  : False
+        iterate:
+            - id        : ACL_DROPMASK_ACTION_MIRROR
+              flow      : filter://type=IPV4
+              mirror    : SPAN_LOCAL_EGRESS_MULTIPLE_UPLINK_PC
+            - id        : ACL_DROPMASK_ACTION_MIRROR
+              flow      : filter://type=IPV6
+              mirror    : SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK

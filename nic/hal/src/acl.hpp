@@ -129,6 +129,8 @@ typedef struct acl_action_spec_s {
     hal_handle_t   ing_mirror_session_handle;
     bool           egr_mirror_en;
     hal_handle_t   egr_mirror_session_handle;
+    uint8_t        egr_mirror_session;   // Mirror sessions in egress direction
+    uint8_t        ing_mirror_session;   // Mirror sessions in ingress direction
     hal_handle_t   copp_policer_handle;
     hal_handle_t   redirect_if_handle;
 #ifdef ACL_DOL_TEST_ONLY

@@ -8,6 +8,7 @@ import "nic/proto/hal/tenant.proto";
 import "nic/proto/types.proto";
 import "nic/proto/hal/interface.proto";
 import "nic/proto/hal/l2segment.proto";
+import "nic/proto/hal/telemetry.proto";
 
 package acl;
 
@@ -96,18 +97,54 @@ message IPSelector {
   }
 }
 
+// DropReason enums
+enum DropReason {
+
+  INPUT_MAPPING__DROP                   = 0;
+  INPUT_MAPPING_DEJAVU__DROP            = 1;
+  FLOW_HIT__DROP                        = 2;
+  FLOW_MISS__DROP                       = 3;
+  IPSG__DROP                            = 4;
+  INGRESS_POLICER__DROP                 = 5;
+  EGRESS_POLICER__DROP                  = 6;
+  NACL__DROP                            = 7;
+  MALFORMED_PKT__DROP                   = 8;
+  PING_OF_DEATH__DROP                   = 9;
+  FRAGMENT_TOO_SMALL__DROP              = 10;
+  IP_NORMALIZATION__DROP                = 11;
+  TCP_NORMALIZATION__DROP               = 12;
+  TCP_XMAS_TREE_PKT__DROP               = 13;
+  TCP_NON_SYN_FIRST_PKT__DROP           = 14;
+  ICMP_NORMALIZATION__DROP              = 15;
+  ICMP_SRC_QUENCH_MSG__DROP             = 16;
+  ICMP_REDIRECT_MSG__DROP               = 17;
+  ICMP_INFO_REQ_MSG__DROP               = 18;
+  ICMP_ADDR_REQ_MSG__DROP               = 19;
+  ICMP_TRACEROUTE_MSG__DROP             = 20;
+  ICMP_RSVD_TYPE_MSG__DROP              = 21;
+  INPUT_PROPERTIES_MISS__DROP           = 22;
+  TCP_OUT_OF_WINDOW__DROP               = 23;
+  TCP_SPLIT_HANDSHAKE__DROP             = 24;
+  TCP_WIN_ZERO_DROP__DROP               = 25;
+  TCP_ACK_ERR__DROP                     = 26;
+  TCP_DATA_AFTER_FIN__DROP              = 27;
+  TCP_NON_RST_PKT_AFTER_RST__DROP       = 28;
+  TCP_INVALID_RESPONDER_FIRST_PKT__DROP = 29;
+  TCP_UNEXPECTED_SYN__DROP              = 30;
+}
+
 // AclInternalSelector has match criteria which are for internal use only with 
 // DOL/testing infra
 // For production builds this needs to be removed
 // TODO: REMOVE
 message AclInternalSelector {
-    bool    flow_miss        = 1;    // Flow miss
-    uint64  outer_dst_mac    = 2;    // Outer MAC DA
-    bool    ip_options       = 3;    // Match on IP options
-    bool    ip_frag          = 4;    // IP fragmentation
-    fixed32 drop_reason      = 5;    // Drop reason
-    bool    tunnel_terminate = 6;    // Tunnel terminate
-    bool    direction        = 7;    // Flow direction
+  bool                flow_miss        = 1;    // Flow miss
+  uint64              outer_dst_mac    = 2;    // Outer MAC DA
+  bool                ip_options       = 3;    // Match on IP options
+  bool                ip_frag          = 4;    // IP fragmentation
+  repeated DropReason drop_reason      = 5;    // Drop reason
+  bool                tunnel_terminate = 6;    // Tunnel terminate
+  bool                direction        = 7;    // Flow direction
 }
 
 // AclInternalActionInfo has action parameters for internal use only with 
@@ -115,12 +152,12 @@ message AclInternalSelector {
 // For production builds this needs to be removed
 // TODO: REMOVE
 message AclInternalActionInfo {
-    bool            mac_sa_rewrite_en = 1;    // MAC SA rewrite
-    uint64          mac_sa            = 2;    // MAC SA to rewrite with
-    bool            mac_da_rewrite_en = 3;    // MAC DA rewrite
-    uint64          mac_da            = 4;    // MAC DA to rewrite with
-    bool            ttl_dec_en        = 5;    // Perform a ttl decrement
-    types.EncapInfo encap_info        = 6;    // encap info
+  bool            mac_sa_rewrite_en = 1;    // MAC SA rewrite
+  uint64          mac_sa            = 2;    // MAC SA to rewrite with
+  bool            mac_da_rewrite_en = 3;    // MAC DA rewrite
+  uint64          mac_da            = 4;    // MAC DA to rewrite with
+  bool            ttl_dec_en        = 5;    // Perform a ttl decrement
+  types.EncapInfo encap_info        = 6;    // encap info
 }
 
 // AclSelector has all the match criteria for an ACL entry
@@ -151,15 +188,13 @@ enum AclAction {
 }
 
 message AclActionInfo {
-  AclAction               action                    = 1;    // forwarding action
-  bool                    ing_mirror_en             = 2;    // enable ingress mirror
-  fixed64                 ing_mirror_session_handle = 3;    // ingress mirror session
-  bool                    egr_mirror_en             = 4;    // enable egress mirror
-  fixed64                 egr_mirror_session_handle = 5;    // egress mirror session
-  fixed64                 copp_policer_handle       = 6;    // egress copp policer
-  intf.InterfaceKeyHandle redirect_if_key_handle    = 7;    // redirect interface
-  // TODO: REMOVE
-  AclInternalActionInfo   internal_actions          = 8;    // Internal action fields
+  AclAction                          action                 = 1;    // forwarding action
+  repeated telemetry.MirrorSessionId ing_mirror_sessions    = 2;    // ingress mirror sessions
+  repeated telemetry.MirrorSessionId egr_mirror_sessions    = 3;    // egress mirror sessions 
+  fixed64                            copp_policer_handle    = 4;    // egress copp policer
+  intf.InterfaceKeyHandle            redirect_if_key_handle = 5;    // redirect interface
+                                                                    // TODO: REMOVE
+  AclInternalActionInfo              internal_actions       = 6;    // Internal action fields
 }
 
 // ACL entry configuration

@@ -60,9 +60,11 @@ def _parser_sram_print(parser, se):
                 (i, lkp_val_inst['muxsel']['value'],
                 lkp_val_inst['store_en']['value'])
         elif lkp_val_inst['sel']['value'] == '2':
-            pstr += 'lkp_val_inst[%s] = retain_old_val\n' % (i)
+            pstr += 'lkp_val_inst[%s] = retain_old_val, store_en = %s\n' % \
+                (i, lkp_val_inst['store_en']['value'])
         elif lkp_val_inst['sel']['value'] == '3':
-            pstr += 'lkp_val_inst[%s] = stored_lkp_val\n' % (i)
+            pstr += 'lkp_val_inst[%s] = stored_lkp_val, store_en = %s\n' % \
+                (i, lkp_val_inst['store_en']['value'])
         else:
             pass
     if used:
@@ -1483,6 +1485,8 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
             
         if lkp_reg.store_en:
             sram['lkp_val_inst'][r]['store_en']['value'] = str(1)
+        elif add_cs != None and add_cs.lkp_regs[r].store_en:                                   
+            sram['lkp_val_inst'][r]['store_en']['value'] = str(1)        
         else:
             sram['lkp_val_inst'][r]['store_en']['value'] = str(0)
 

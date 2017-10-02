@@ -22,12 +22,15 @@ table ingress_tx_stats {
 /*****************************************************************************/
 /* Drop accounting per reason code                                           */
 /*****************************************************************************/
-action drop_stats(stats_idx, drop_pkts, mirror_session_id) {
-    modify_field(capri_intrinsic.tm_span_session, mirror_session_id);
+action drop_stats(stats_idx, drop_pkts, mirror_en, mirror_session_id) {
+    if (mirror_en == TRUE) {
+        modify_field(capri_intrinsic.tm_span_session, mirror_session_id);
+    }
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.stats_packets, drop_pkts);
     modify_field(scratch_metadata.stats_idx, stats_idx);
+    modify_field(scratch_metadata.ingress_mirror_en, mirror_en);
 }
 
 @pragma stage 5

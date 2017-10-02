@@ -614,3 +614,51 @@ entries:
                     dst_port : True
         action:
             action: log
+
+##############################################################################
+# Mirror
+##############################################################################
+    - entry:
+        id: ACL_TCP_FLAGS_ACTION_MIRROR
+        match:
+            type: ip
+            l4:
+                type: tcp
+                tcp:
+                    syn: True
+                    ack: True
+                    fin: True
+        action:
+            action: permit
+            mirror:
+                ingress:
+                    - ref://store/objects/id=SpanSession0001
+                    - ref://store/objects/id=SpanSession0002
+                    - ref://store/objects/id=SpanSession0003
+                egress:
+                    - ref://store/objects/id=SpanSession0004
+                    - ref://store/objects/id=SpanSession0005
+                    - ref://store/objects/id=SpanSession0006
+
+    - entry:
+        id: ACL_DROPMASK_ACTION_MIRROR
+        config_flow_miss: True
+        match:
+            dropmask : 
+                - FLOW_MISS
+            type : ip
+            l4:
+                type : udp 
+                udp: 
+                    dst_port : True
+        action:
+            action: permit
+            mirror:
+                ingress:
+                    - ref://store/objects/id=SpanSession0001
+                    - ref://store/objects/id=SpanSession0002
+                    - ref://store/objects/id=SpanSession0003
+                egress:
+                    - ref://store/objects/id=SpanSession0004
+                    - ref://store/objects/id=SpanSession0005
+                    - ref://store/objects/id=SpanSession0006

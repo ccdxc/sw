@@ -33,12 +33,14 @@ class AclObject(base.ConfigObjectBase):
         if self.MatchOnFlowMiss():
             self.fields.config_flow_miss = True
 
-        if self.fields.action.ingress_mirror and self.fields.action.ingress_mirror.enable:
-            session_ref = self.fields.action.ingress_mirror.session
-            self.fields.action.ingress_mirror.session = session_ref.Get(Store)
-        if self.fields.action.egress_mirror and self.fields.action.egress_mirror.enable:
-            session_ref = self.fields.action.egress_mirror.session
-            self.fields.action.egress_mirror.session = session_ref.Get(Store)
+        self.ing_mirror_sessions = []
+        self.egr_mirror_sessions = []
+        for s in self.fields.action.mirror.ingress:
+            ispan   = s.Get(Store)
+            self.ing_mirror_sessions.append(ispan)
+        for s in self.fields.action.mirror.egress:
+            espan   = s.Get(Store)
+            self.egr_mirror_sessions.append(espan)
             
         #self.Show()
         return
@@ -75,6 +77,11 @@ class AclObject(base.ConfigObjectBase):
                 cfglogger.info("  Tenant     : %s" % self.fields.match.tenant.GID())
             else:
                 cfglogger.info("  Tenant Not set")
+
+        if len(self.fields.match.dropmask):
+            cfglogger.info("  DropMask: " )
+        for dm in self.fields.match.dropmask:
+            cfglogger.info("    - %s" % dm)
 
         if self.MatchOnEth():
             cfglogger.info("  Eth:")
@@ -132,14 +139,10 @@ class AclObject(base.ConfigObjectBase):
         elif self.ActionSupRedirect():
             cfglogger.info("  Sup redirect" )
 
-        if self.fields.action.ingress_mirror:
-            cfglogger.info("  Ing. Mirror   : En=%s, Session=%s" %\
-                           (self.fields.action.ingress_mirror.enable,
-                            self.fields.action.ingress_mirror.session.GID()))
-        if self.fields.action.egress_mirror:
-            cfglogger.info("  Egr. Mirror   : En=%s, Session=%s" %\
-                           (self.fields.action.egress_mirror.enable,
-                            self.fields.action.egress_mirror.session.GID()))
+        for ssn in self.ing_mirror_sessions:
+            cfglogger.info("  Ing. Mirror   : Session=%s" % ssn.GID())
+        for ssn in self.egr_mirror_sessions:
+            cfglogger.info("  Egr. Mirror   : Session=%s" % ssn.GID())
         return
 
     def Configure(self):
@@ -185,6 +188,11 @@ class AclObject(base.ConfigObjectBase):
         if self.MatchOnTenant():
             reqspec.match.tenant_key_handle.tenant_id =\
                     self.fields.match.tenant.id
+
+        for dm in self.fields.match.dropmask:
+            en = haldefs.acl.DropReason.Value(dm.upper() + "__DROP")
+            reqspec.match.internal_key.drop_reason.append(en)
+            reqspec.match.internal_mask.drop_reason.append(en)
 
         if self.MatchOnEth():
             reqspec.match.eth_selector.eth_type = self.fields.match.eth.ethertype.get()
@@ -290,6 +298,13 @@ class AclObject(base.ConfigObjectBase):
             reqspec.action.internal_actions.mac_da = self.fields.action.macda.getnum()
             reqspec.action.internal_actions.ttl_dec_en = True
             reqspec.action.internal_actions.encap_info.encap_value = self.fields.action.encap_id
+
+        for ssn in self.ing_mirror_sessions:
+            ssn_spec = reqspec.action.ing_mirror_sessions.add()
+            ssn_spec.session_id = ssn.id
+        for ssn in self.egr_mirror_sessions:
+            ssn_spec = reqspec.action.egr_mirror_sessions.add()
+            ssn_spec.session_id = ssn.id
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -545,6 +560,21 @@ class AclObject(base.ConfigObjectBase):
             return True
         return False
 
+    def ActionMirror(self):
+        if len(self.ing_mirror_sessions) or len(self.egr_mirror_sessions):
+            return True
+        return False
+
+    def GetIngressMirrorSession(self, idx = 0):
+        if idx > len(self.ing_mirror_sessions):
+            return None
+        return self.ing_mirror_sessions[idx - 1]
+
+    def GetEgressMirrorSession(self, idx = 0):
+        if idx > len(self.egr_mirror_sessions):
+            return None
+        return self.egr_mirror_sessions[idx - 1]
+
     def UpdateFromTCConfig(self, flow, sep, dep, segment, tenant):
 
         if self.ConfigFlowMiss():
@@ -558,10 +588,10 @@ class AclObject(base.ConfigObjectBase):
             elif flow.IsIPV6():
                 sip = resmgr.AclIPv6Allocator.get()
                 dip = resmgr.AclIPv6Allocator.get()
-            sport = 1000
-            dport = 2000
-            icmpcode = 20
-            icmptype = 12
+            sport = resmgr.AclL4PortAllocator.get()
+            dport = resmgr.AclL4PortAllocator.get()
+            icmpcode = resmgr.AclICMPTypeCodeAllocator.get()
+            icmptype = resmgr.AclICMPTypeCodeAllocator.get()
         else:
             # Update the config with values from the flow
             if flow.IsMAC():

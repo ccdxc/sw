@@ -1,0 +1,99 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://type=TENANT
+        # Select segments with broadcast policy set to drop
+        segment     : filter://fabencap=VLAN,broadcast_policy=1
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://type=TENANT
+        segment     : filter://fabencap=VLAN
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow        : filter://label=NETWORKING
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : PKT1     # Input packet 1
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://acl/packets/GetPacketTemplate
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : callback://acl/packets/GetIPv4SIP
+                dst     : callback://acl/packets/GetIPv4DIP
+                ttl     : 64
+            ipv6:
+                src     : callback://acl/packets/GetIPv6SIP
+                dst     : callback://acl/packets/GetIPv6DIP
+                hlim    : 64
+            udp:
+                sport   : callback://acl/packets/GetUDPSport
+                dport   : callback://acl/packets/GetUDPDport
+            tcp:
+                sport   : callback://acl/packets/GetTCPSport
+                dport   : callback://acl/packets/GetTCPDport
+                flags   : callback://acl/packets/GetTCPFlags
+            icmp:
+                code    : callback://acl/packets/GetICMPCode
+                type    : callback://acl/packets/GetICMPType
+            icmpv6:
+                code    : callback://acl/packets/GetICMPCode
+                type    : callback://acl/packets/GetICMPType
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : SPAN_PKT1     # Span packet 1
+        clone       : ref://testcase/packets/id=PKT1
+
+    - packet:
+        id          : RSPAN_PKT1     # RSpan packet 1
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            qtag:
+                vlan: callback://telemetry/callbacks/GetRspanVlan 
+
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:
+    packets:
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=1
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=1
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=2
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=2
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=3
+            port    : callback://telemetry/callbacks/GetExpectedPort3/sessionid=3
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=4
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=4
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=5
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=5
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=6
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=6

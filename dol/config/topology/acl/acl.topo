@@ -53,12 +53,15 @@ acls: ref://store/specs/id=ACL
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_DEFAULT
 
 tenants:
+    -   spec    : ref://store/specs/id=TENANT_SPAN_VLAN
+        count   : 1
+        lifns   : range/101/101
     -   spec    : ref://store/specs/id=ACL_TENANT_INFRA
         count   : 1
         lifns   : range/121/121
     -   spec    : ref://store/specs/id=TENANT_ACL
         count   : 1
-        lifns   : range/101/104
+        lifns   : range/201/204
     -   spec    : ref://store/specs/id=ACL_TENANT_OVERLAY_VXLAN
         count   : 1
         lifns   : range/301/324

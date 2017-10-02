@@ -44,10 +44,12 @@ EnicMacAllocator        = objects.TemplateFieldObject("macstep/00EE.0000.0001/00
 RemoteEpMacAllocator    = objects.TemplateFieldObject("macstep/00EE.FF00.0001/0000.0000.0001")
 L4LbVMacAllocator       = objects.TemplateFieldObject("macstep/0000.9999.0001/0000.0000.0001")
 
-AclIPv4Allocator       = objects.TemplateFieldObject("ipstep/150.0.0.0/0.0.0.1")
-AclIPv6Allocator       = objects.TemplateFieldObject("ipv6step/a000::1/0::1")
-AclMacAllocator        = objects.TemplateFieldObject("macstep/00AA.0000.0001/0000.0000.0001")
-AclEtypeAllocator      = objects.TemplateFieldObject("range/0x1000/0x2000")
+AclIPv4Allocator         = objects.TemplateFieldObject("ipstep/150.0.0.0/0.0.0.1")
+AclIPv6Allocator         = objects.TemplateFieldObject("ipv6step/a000::1/0::1")
+AclMacAllocator          = objects.TemplateFieldObject("macstep/00AA.0000.0001/0000.0000.0001")
+AclEtypeAllocator        = objects.TemplateFieldObject("range/0x1000/0x2000")
+AclL4PortAllocator       = objects.TemplateFieldObject("range/1000/2000")
+AclICMPTypeCodeAllocator = objects.TemplateFieldObject("range/10/100")
 
 IpSubnetAllocator               = objects.TemplateFieldObject("ipstep/64.0.0.0/0.1.0.0")
 Ipv6SubnetAllocator             = objects.TemplateFieldObject("ipv6step/2000::0:0/0::1:0:0")

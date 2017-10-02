@@ -96,16 +96,14 @@ class spanCbData:
     erspanExpPackets = {}
 
     @staticmethod
-    def getPacket(testcase, id):
-        case = testcase.module.iterator.Get()
+    def getPacket(testcase, case, id):
         if id > len(spanCbData.localExpPackets[case]):
             return None
         (pkt, dir, ssn) = spanCbData.localExpPackets[case][id - 1]
         return testcase.packets.Get(pkt)
 
     @staticmethod
-    def getPort(testcase, id):
-        case = testcase.module.iterator.Get()
+    def getPort(testcase, case, id):
         if id > len(spanCbData.localExpPackets[case]):
             return None
         (pkt, dir, ssn) = spanCbData.localExpPackets[case][id - 1]
@@ -116,10 +114,12 @@ class spanCbData:
         return None
 
 def GetExpectedPacket(testcase, args):
-    return spanCbData.getPacket(testcase, args.sessionid)
+    case = testcase.pvtdata.span_case
+    return spanCbData.getPacket(testcase, case, args.sessionid)
 
 def GetExpectedPort(testcase, args):
-    return spanCbData.getPort(testcase, args.sessionid)
+    case = testcase.pvtdata.span_case
+    return spanCbData.getPort(testcase, case, args.sessionid)
 
 def GetRspanVlan(testcase, packet):
     return testcase.config.ingress_mirror.__dict__["session2"].segment.vlan_id

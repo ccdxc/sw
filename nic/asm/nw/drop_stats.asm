@@ -17,7 +17,8 @@ nop:
 drop_stats:
   add         r6, d.u.drop_stats_d.drop_pkts, 1
   beqi        r6, 0xFFFF, drop_stats_overflow
-  phvwr       p.capri_intrinsic_tm_span_session, d.u.drop_stats_d.mirror_session_id
+  seq         c1, d.u.drop_stats_d.mirror_en, 1
+  phvwr.c1    p.capri_intrinsic_tm_span_session, d.u.drop_stats_d.mirror_session_id
   tblwr.e     d.u.drop_stats_d.drop_pkts, r6
   nop
 

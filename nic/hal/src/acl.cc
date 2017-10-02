@@ -415,6 +415,84 @@ get_acl_type (const acl::AclSelector &sel)
     return acl_type;
 }
 
+#ifdef ACL_DOL_TEST_ONLY
+// Added for internal dol test use only to get the drop reason defines
+// TODO: REMOVE
+#include "nic/p4/nw/include/defines.h"
+static uint32_t
+drop_reason_to_define (const acl::DropReason drop_reason)
+{
+    switch(drop_reason) {
+        case acl::INPUT_MAPPING__DROP:
+            return DROP_INPUT_MAPPING;
+        case acl::INPUT_MAPPING_DEJAVU__DROP:
+            return DROP_INPUT_MAPPING_DEJAVU;
+        case acl::FLOW_HIT__DROP:
+            return DROP_FLOW_HIT;
+        case acl::FLOW_MISS__DROP:
+            return DROP_FLOW_MISS;
+        case acl::IPSG__DROP:
+            return DROP_IPSG;
+        case acl::INGRESS_POLICER__DROP:
+            return DROP_INGRESS_POLICER;
+        case acl::EGRESS_POLICER__DROP:
+            return DROP_EGRESS_POLICER;
+        case acl::NACL__DROP:
+            return DROP_NACL;
+        case acl::MALFORMED_PKT__DROP:
+            return DROP_MALFORMED_PKT;
+        case acl::PING_OF_DEATH__DROP:
+            return DROP_PING_OF_DEATH;
+        case acl::FRAGMENT_TOO_SMALL__DROP:
+            return DROP_FRAGMENT_TOO_SMALL;
+        case acl::IP_NORMALIZATION__DROP:
+            return DROP_IP_NORMALIZATION;
+        case acl::TCP_NORMALIZATION__DROP:
+            return DROP_TCP_NORMALIZATION;
+        case acl::TCP_XMAS_TREE_PKT__DROP:
+            return DROP_TCP_XMAS_TREE_PKT;
+        case acl::TCP_NON_SYN_FIRST_PKT__DROP:
+            return DROP_TCP_NON_SYN_FIRST_PKT;
+        case acl::ICMP_NORMALIZATION__DROP:
+            return DROP_ICMP_NORMALIZATION;
+        case acl::ICMP_SRC_QUENCH_MSG__DROP:
+            return DROP_ICMP_SRC_QUENCH_MSG;
+        case acl::ICMP_REDIRECT_MSG__DROP:
+            return DROP_ICMP_REDIRECT_MSG;
+        case acl::ICMP_INFO_REQ_MSG__DROP:
+            return DROP_ICMP_INFO_REQ_MSG;
+        case acl::ICMP_ADDR_REQ_MSG__DROP:
+            return DROP_ICMP_ADDR_REQ_MSG;
+        case acl::ICMP_TRACEROUTE_MSG__DROP:
+            return DROP_ICMP_TRACEROUTE_MSG;
+        case acl::ICMP_RSVD_TYPE_MSG__DROP:
+            return DROP_ICMP_RSVD_TYPE_MSG;
+        case acl::INPUT_PROPERTIES_MISS__DROP:
+            return DROP_INPUT_PROPERTIES_MISS;
+        case acl::TCP_OUT_OF_WINDOW__DROP:
+            return DROP_TCP_OUT_OF_WINDOW;
+        case acl::TCP_SPLIT_HANDSHAKE__DROP:
+            return DROP_TCP_SPLIT_HANDSHAKE;
+        case acl::TCP_WIN_ZERO_DROP__DROP:
+            return DROP_TCP_WIN_ZERO_DROP;
+        case acl::TCP_ACK_ERR__DROP:
+            return DROP_TCP_ACK_ERR;
+        case acl::TCP_DATA_AFTER_FIN__DROP:
+            return DROP_TCP_DATA_AFTER_FIN;
+        case acl::TCP_NON_RST_PKT_AFTER_RST__DROP:
+            return DROP_TCP_NON_RST_PKT_AFTER_RST;
+        case acl::TCP_INVALID_RESPONDER_FIRST_PKT__DROP:
+            return DROP_TCP_INVALID_RESPONDER_FIRST_PKT;
+        case acl::TCP_UNEXPECTED_SYN__DROP:
+            return DROP_TCP_UNEXPECTED_SYN;
+        default:
+            return 0;
+    }
+    return 0;
+}
+
+#endif
+
 static hal_ret_t
 extract_match_spec (acl_match_spec_t *ms,
                     const acl::AclSelector &sel,
@@ -437,6 +515,9 @@ extract_match_spec (acl_match_spec_t *ms,
     acl_eth_match_spec_t *eth_mask;
     acl_ip_match_spec_t  *ip_key;
     acl_ip_match_spec_t  *ip_mask;
+#ifdef ACL_DOL_TEST_ONLY
+    int                  i;
+#endif
 
     eth_key = &ms->key.eth;
     eth_mask = &ms->mask.eth;
@@ -627,14 +708,47 @@ extract_match_spec (acl_match_spec_t *ms,
         ms->int_mask.ip_options = sel.internal_mask().ip_options();
         ms->int_key.ip_frag = sel.internal_key().ip_frag();
         ms->int_mask.ip_frag = sel.internal_mask().ip_frag();
-        ms->int_key.drop_reason = sel.internal_key().drop_reason();
-        ms->int_mask.drop_reason = sel.internal_mask().drop_reason();
+        for (i = 0; i < sel.internal_key().drop_reason_size(); i++) {
+            ms->int_key.drop_reason |= 
+                1 << drop_reason_to_define(sel.internal_key().drop_reason(i));
+        }
+        for (i = 0; i < sel.internal_mask().drop_reason_size(); i++) {
+            ms->int_mask.drop_reason |= 
+                1 << drop_reason_to_define(sel.internal_mask().drop_reason(i));
+        }
         MAC_UINT64_TO_ADDR(ms->int_key.outer_mac_da, sel.internal_key().outer_dst_mac());
         MAC_UINT64_TO_ADDR(ms->int_mask.outer_mac_da, sel.internal_mask().outer_dst_mac());
     }
 #endif
 end:
     return ret;
+}
+
+// extract mirror sessions specified in spec into ingress and egress bitmaps
+//------------------------------------------------------------------------------
+static hal_ret_t
+extract_mirror_sessions (const acl::AclActionInfo &ainfo, uint8_t *ingress, uint8_t *egress)
+{
+    int i;
+    *ingress = 0;
+    *egress = 0;
+    for (i = 0; i < ainfo.ing_mirror_sessions_size(); ++i) {
+        uint32_t id = ainfo.ing_mirror_sessions(i).session_id();
+        if (id > 7) {
+            return HAL_RET_INVALID_ARG;
+        }
+        *ingress = *ingress | (1 << id);
+        HAL_TRACE_DEBUG("  Adding ingress session {}", id);
+    }
+    for (i = 0; i < ainfo.egr_mirror_sessions_size(); ++i) {
+        uint32_t id = ainfo.egr_mirror_sessions(i).session_id();
+        if (id > 7) {
+            return HAL_RET_INVALID_ARG;
+        }
+        *egress = *egress | (1 << id);
+        HAL_TRACE_DEBUG("  Adding egress session {}", id);
+    }
+    return HAL_RET_OK;
 }
 
 static hal_ret_t
@@ -646,6 +760,7 @@ extract_action_spec (acl_action_spec_t *as,
     if_t         *redirect_if = NULL;
     if_id_t      redirect_if_id;
     hal_handle_t redirect_if_handle = 0;
+    uint8_t      ingress, egress;
 #ifdef ACL_DOL_TEST_ONLY
     // Internal fields for use only with DOL/testing infra
     // For production builds this needs to be removed
@@ -654,10 +769,17 @@ extract_action_spec (acl_action_spec_t *as,
 #endif
 
     as->action = ainfo.action();
-    as->ing_mirror_en = ainfo.ing_mirror_en();
-    as->ing_mirror_session_handle = ainfo.ing_mirror_session_handle();
-    as->egr_mirror_en = ainfo.egr_mirror_en();;
-    as->egr_mirror_session_handle = ainfo.egr_mirror_session_handle();
+    ret = extract_mirror_sessions(ainfo, &ingress, &egress);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-ACL:{}: Error extracting mirror sessions",
+                      __func__);
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        goto end;
+    }
+    as->ing_mirror_en = ingress ? true : false; 
+    as->ing_mirror_session = ingress;
+    as->egr_mirror_en = egress ? true : false;
+    as->egr_mirror_session = egress;
     as->copp_policer_handle = ainfo.copp_policer_handle();
 
     if (ainfo.has_redirect_if_key_handle()) {

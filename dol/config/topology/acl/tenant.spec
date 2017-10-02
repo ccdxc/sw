@@ -27,6 +27,7 @@ sessions:
         ipv6:
             - ref://store/specs/id=SESSION_UDP_ACL
             - ref://store/specs/id=SESSION_TCP_ACL
+            - ref://store/specs/id=SESSION_ICMPV6_ACL
         mac:
             - ref://store/specs/id=SESSION_MAC_ACL
 

@@ -18,6 +18,7 @@ fields:
         tenant        : None
         segment_match : False
         segment       : None
+        dropmask      : []
         eth: 
             ethertype      : const/0
             ethertype_mask : const/0
@@ -62,5 +63,6 @@ fields:
         intf: None
         redirect_if: None
         encap_id : 0
-        ingress_mirror: None
-        egress_mirror: None
+        mirror: 
+            ingress: []
+            egress: [] 

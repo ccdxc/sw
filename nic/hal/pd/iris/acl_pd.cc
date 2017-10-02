@@ -169,6 +169,11 @@ populate_permit_actions (nacl_actiondata *data, acl_action_spec_t *as)
         as->ing_mirror_session_handle;
     data->nacl_action_u.nacl_nacl_permit.egress_mirror_session_id = 
         as->egr_mirror_session_handle;
+
+    data->nacl_action_u.nacl_nacl_permit.ingress_mirror_session_id = 
+        as->ing_mirror_session;
+    data->nacl_action_u.nacl_nacl_permit.egress_mirror_session_id = 
+        as->egr_mirror_session;
     // TODO Populate these values
     data->nacl_action_u.nacl_nacl_permit.qid_en = 0;
     data->nacl_action_u.nacl_nacl_permit.qid = 0;

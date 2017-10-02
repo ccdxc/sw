@@ -3,6 +3,7 @@
 
 import pdb
 import infra.api.api as InfraApi
+import test.telemetry.telemetry as telemetry
 
 def Setup(infra, module):
 
@@ -15,14 +16,27 @@ def Setup(infra, module):
     if 'srcseg' in iterelem.__dict__:
         module.testspec.selectors.src.segment.Extend(iterelem.srcseg)
 
+    if 'mirror' in iterelem.__dict__:
+        telemetry.setup_span(infra, module, iterelem.mirror)
     return
 
 def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    acl = tc.infra_data.ConfigStore.objects.Get(tc.module.iterator.Get().id)
+    iterelem = tc.module.iterator.Get()
+
+    acl = tc.infra_data.ConfigStore.objects.Get(iterelem.id)
     tc.pvtdata.acl = acl
+
+    if 'mirror' in iterelem.__dict__:
+        tc.pvtdata.span_case = iterelem.mirror
+        tc.config.ingress_mirror.session1 = acl.GetIngressMirrorSession(idx = 1)
+        tc.config.ingress_mirror.session2 = acl.GetIngressMirrorSession(idx = 2)
+        tc.config.ingress_mirror.session3 = acl.GetIngressMirrorSession(idx = 3)
+        tc.config.egress_mirror.session1 = acl.GetEgressMirrorSession(idx = 1)
+        tc.config.egress_mirror.session2 = acl.GetEgressMirrorSession(idx = 2)
+        tc.config.egress_mirror.session3 = acl.GetEgressMirrorSession(idx = 3)
 
     # Update the ACL parameters based on the testcase
     acl.UpdateFromTCConfig(tc.config.flow, tc.config.src.endpoint, tc.config.dst.endpoint,\

@@ -102,6 +102,8 @@ action mirror_truncate(truncate_len) {
 action local_span(dst_lport, truncate_len) {
     modify_field(capri_intrinsic.tm_span_session, 0);
     modify_field(control_metadata.dst_lport, dst_lport);
+    modify_field(rewrite_metadata.tunnel_rewrite_index, 0);
+    modify_field(tunnel_metadata.tunnel_originate, FALSE);
     mirror_truncate(truncate_len);
 }
 

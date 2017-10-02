@@ -1777,6 +1777,7 @@ class capri_parser:
         for r,lkp_reg in enumerate(cs.lkp_regs):
             # XXX Need a test case for saved lkp_regs and reg loading on split state
             if lkp_reg.pkt_off == -1:   # covers cases of NONE, RETAIN, STORED regs
+                new_cs.lkp_regs[r] = copy.copy(lkp_reg)
                 continue
             if not split_reg_found:
                 if (lkp_reg.pkt_off/8) < split_off and ((lkp_reg.pkt_off + 16)/8) <= split_off:
