@@ -89,11 +89,11 @@ dfw_exec(fte::ctx_t& ctx)
         } else {
             const fte::cpu_rxhdr_t *rxhdr = ctx.cpu_rxhdr();
             flowupd.flow_state.state = session::FLOW_TCP_STATE_SYN_RCVD;
-            flowupd.flow_state.tcp_seq_num = rxhdr->tcp_seq_num;
-            flowupd.flow_state.tcp_ack_num = rxhdr->tcp_ack_num;
-            flowupd.flow_state.tcp_win_sz = rxhdr->tcp_window;
+            flowupd.flow_state.tcp_seq_num = ntohl(rxhdr->tcp_seq_num);
+            flowupd.flow_state.tcp_ack_num = ntohl(rxhdr->tcp_ack_num);
+            flowupd.flow_state.tcp_win_sz = ntohl(rxhdr->tcp_window);
             flowupd.flow_state.tcp_win_scale = rxhdr->tcp_ws;
-            flowupd.flow_state.tcp_mss = rxhdr->tcp_mss;
+            flowupd.flow_state.tcp_mss = ntohs(rxhdr->tcp_mss);
             
         }
     } else {
@@ -102,6 +102,7 @@ dfw_exec(fte::ctx_t& ctx)
                                             ctx.sess_spec()->responder_flow().flow_data());
         } else {
             flowupd.flow_state.state = session::FLOW_TCP_STATE_INIT;
+            flowupd.flow_state.tcp_win_sz = 512; //This is to allow the SYN Packet to go through.
         }
     }
 
