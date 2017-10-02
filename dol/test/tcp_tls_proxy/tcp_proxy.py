@@ -98,7 +98,7 @@ def init_tcb_inorder(tc, tcb):
         if tc.config.dst.endpoint.intf.type == 'UPLINK':
             # is there a better way to find the lif?
             tcb.source_lif = tc.config.dst.endpoint.intf.port - 1
-            if tc.config.src.segment.native == False:
+            if tc.config.dst.segment.native == False:
                 vlan_id = tc.config.dst.segment.vlan_id
         elif hasattr(tc.config.dst.endpoint.intf, 'encap_vlan_id'):
             vlan_id = tc.config.dst.endpoint.intf.encap_vlan_id

@@ -1,6 +1,5 @@
 # TCP Proxy RX Inorder Sample TestSpec file.
 selectors:
-    # Update: Vikasd
     # Choose the config, that only selects flows matching below packet
     # templates.
     src:
@@ -11,7 +10,7 @@ selectors:
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=True
+        endpoint    : filter://remote=False
         qpair       : filter://any 
     flow        : filter://proto=TCP,label=TCP-PROXY,fwtype=L2
     maxflows    : 1
@@ -20,16 +19,13 @@ selectors:
 # will be used in triggers and output packets will be used in expect
 packets:
     - packet:
-        id          : PKT1
+        id          : BASE_PKT
         template    : callback://networking/packets/GetPacketTemplateByFlow
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -47,29 +43,25 @@ packets:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
     - packet:
-        id          : PKT1_OUT
-        template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        id          : PKT1
+        clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
-            eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+
+    - packet:
+        id          : PKT2 # Expected Packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
             qtag:
                 prio    : 0
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : ref://testcase/config/dst/endpoint/intf/encap_vlan_id
             ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
                 ttl     : 64
                 tos     : 8
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : 64
             tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
                 seq     : callback://tcpcb/tcpcb/GetPktOutSeqNum
                 ack     : callback://tcpcb/tcpcb/GetPktOutAckNum
                 window  : 1000
@@ -78,10 +70,10 @@ packets:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
     - packet:
-        id          : PKT1_ACK_OUT
-        template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : 0
+        id          : PKT2_ACK_OUT # ACK
+        clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
+        payloadsize : 0
         headers     :
             eth:
                 src     : ref://testcase/config/dst/endpoint/macaddr
@@ -106,17 +98,63 @@ packets:
                 window  : 1000
                 flags   : ack
 
+
+buffers:
+    - buffer:
+        id      : BUF1  # Input Descriptor
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+
+    - buffer:
+        id      : BUF2
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: False
+            size: ref://testcase/packets/id=PKT2/size
+            data: ref://testcase/packets/id=PKT2/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1 # Input Buffer
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            buf   : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : DESC2
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            buf   : ref://testcase/buffers/id=BUF2
+            len   : ref://testcase/buffers/id=BUF2/size
+
 trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT1
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC2
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+            # Expected Buffer on this descriptor
+            buffer  : ref://testcase/buffers/id=BUF2
+            # Expected packet from this descriptor/buffer.
+            # Infra calls BUF2.IsPacket() and then calls BUF2.Read()
+            # and compares with the below packet.
+            packet  : ref://testcase/packets/id=PKT2
     packets:
         - packet:
-            object  : ref://testcase/packets/id=PKT1_OUT
-            port    : ref://testcase/config/dst/endpoint/intf/ports
-        - packet:
-            object  : ref://testcase/packets/id=PKT1_ACK_OUT
+            object  : ref://testcase/packets/id=PKT2_ACK_OUT
             port    : ref://testcase/config/src/endpoint/intf/ports

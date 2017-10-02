@@ -30,5 +30,11 @@ def GetPktOutAckNum (tc, pkt):
     else:
         return tc.pvtdata.flow2_rcv_nxt
 
+def GetAckPktSeqNum (tc, pkt):
+    return tc.pvtdata.flow1_snd_nxt
+
+def GetAckPktAckNum (tc, pkt):
+    return tc.pvtdata.flow1_rcv_nxt + tc.packets.Get('PKT1').payloadsize
+
 def GetDstIp (tc, pkt):
     return "54.0.0.2"

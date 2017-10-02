@@ -87,7 +87,7 @@ dma_cmd_write_rx2tx_shared:
 dma_cmd_write_rx2tx_extra_shared:
     /* Set the DMA_WRITE CMD for copying rx2tx extra shared data from phv to mem */
     add         r5, TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, k.common_phv_qstate_addr
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd4_dma_cmd, r5, rx2tx_extra_rcv_mss, rx2tx_extra__padding)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd4_dma_cmd, r5, rx2tx_extra_ato_deadline, rx2tx_extra__padding)
     addi        r7, r7, 1
 
 dma_cmd_ring_tcp_tx_doorbell:
