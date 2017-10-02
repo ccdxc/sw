@@ -116,13 +116,12 @@ capmodel:
 bazel-build:
 	make -C p4
 	make -C asm
-	bazel build $(BAZEL_OPTIONS) model_sim:cap_model
-	bazel build $(BAZEL_OPTIONS) model_sim:model_client
 	bazel build $(BAZEL_OPTIONS) hal:hal
 	bazel build $(BAZEL_OPTIONS) //nic/proto:all
 	bazel build $(BAZEL_OPTIONS) //nic/proto/hal:all
 	bazel build $(BAZEL_OPTIONS) //nic/proto/agents:all
 	bazel build $(BAZEL_OPTIONS) utils/host_mem:all
+	make capmodel
 
 bazel-gtests:
 	# PI gtests
@@ -166,6 +165,7 @@ run-gtests:
 	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/endpoint_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/endpoint_test.xml"
 	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/tenant_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tenant_test.xml"
 	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/l2seg_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/l2seg_test.xml"
+	CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf ../bazel-bin/nic/hal/test/gtests/tunnelif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tunnelif_test.xml"
 	# PI Utils gtests
 	$(TOPDIR)/../bazel-bin/nic/utils/bitmap/bitmap_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bitmap_test.xml"
 	$(TOPDIR)/../bazel-bin/nic/utils/host_mem/host_mem_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/host_mem_test.xml"

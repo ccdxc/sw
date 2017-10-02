@@ -363,8 +363,6 @@ uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
     uint8_t                     tm_oport = 0;
     output_mapping_actiondata   data;
     DirectMap                   *dm_omap = NULL;
-    char                        buff[4096] = {0};
-    p4pd_error_t                p4_err;
 
     memset(&data, 0, sizeof(data));
 

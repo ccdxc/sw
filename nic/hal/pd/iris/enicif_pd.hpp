@@ -22,7 +22,7 @@ struct pd_enicif_s {
 // ----------------------------------------------------------------------------
 // Allocate EnicIf Instance
 // ----------------------------------------------------------------------------
-static pd_enicif_t *
+static inline pd_enicif_t *
 pd_enicif_alloc (void)
 {
     pd_enicif_t    *enicif;
@@ -37,7 +37,7 @@ pd_enicif_alloc (void)
 // ----------------------------------------------------------------------------
 // Initialize EnicIF PD instance
 // ----------------------------------------------------------------------------
-static pd_enicif_t *
+static inline pd_enicif_t *
 pd_enicif_init (pd_enicif_t *enicif)
 {
     // Nothing to do currently
@@ -53,7 +53,7 @@ pd_enicif_init (pd_enicif_t *enicif)
 // ----------------------------------------------------------------------------
 // Allocate and Initialize EnicIf PD Instance
 // ----------------------------------------------------------------------------
-static pd_enicif_t *
+static inline pd_enicif_t *
 pd_enicif_alloc_init(void)
 {
     return pd_enicif_init(pd_enicif_alloc());
@@ -62,7 +62,7 @@ pd_enicif_alloc_init(void)
 // ----------------------------------------------------------------------------
 // Freeing EnicIF PD
 // ----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 pd_enicif_free (pd_enicif_t *enicif)
 {
     g_hal_state_pd->enicif_pd_slab()->free(enicif);
@@ -72,7 +72,7 @@ pd_enicif_free (pd_enicif_t *enicif)
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static void 
+static inline void 
 pd_enicif_link_pi_pd(pd_enicif_t *pd_enicif, if_t *pi_if)
 {
     pd_enicif->pi_if = pi_if;
@@ -82,7 +82,7 @@ pd_enicif_link_pi_pd(pd_enicif_t *pd_enicif, if_t *pi_if)
 // ----------------------------------------------------------------------------
 // De-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static void 
+static inline void 
 pd_enicif_delink_pi_pd(pd_enicif_t *pd_enicif, if_t *pi_if)
 {
     pd_enicif->pi_if = NULL;

@@ -201,13 +201,16 @@ pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif)
     ret = pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram hw", __FUNCTION__);
+        goto end;
     }
 
     // De-Program Output Mapping Table
     ret = pd_enicif_pd_depgm_output_mapping_tbl(pd_enicif);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-uplinkif:{}:unable to deprogram hw", __FUNCTION__);
+        HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram hw", __FUNCTION__);
     }
+
+end:
     return ret;
 }
 
@@ -229,6 +232,7 @@ pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
         HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram inp mac vlan table "
                       "for host traffic",
                       __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_host);
+        goto end;
     } else {
         HAL_TRACE_ERR("pd-enicif:{}:deprogrammed inp mac vlan table for "
                       "host traffic",
@@ -240,11 +244,14 @@ pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif)
         HAL_TRACE_ERR("pd-enicif:{}:unable to deprogram inp mac vlan table "
                       "for uplink traffic",
                       __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_upl);
+        goto end;
     } else {
         HAL_TRACE_ERR("pd-enicif:{}:deprogrammed inp mac vlan table for "
                       "uplink traffic",
                       __FUNCTION__, pd_enicif->inp_prop_mac_vlan_idx_upl);
     }
+
+end:
     return ret;
 }
 

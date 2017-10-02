@@ -394,10 +394,6 @@ hal_handle::add_obj(cfg_op_ctxt_t *ctxt, hal_cfg_op_cb_t add_cb,
         // if commit was successful, populate the handle (HACK ??)
         entry = dllist_entry(ctxt->dhl.next,
                              dhl_entry_t, dllist_ctxt);
-        HAL_TRACE_DEBUG("Added hal_handle:{:#x}, obj:{:#x}", 
-                (uint64_t)this, (uint64_t)entry->obj);
-        printf("Added hal_handle:%p, obj:%p\n",
-                this, entry->obj);
         this->obj_ = entry->obj;
     }
 
@@ -422,7 +418,6 @@ void
 hal_handle::replace_(void *obj, void *cloned_obj)
 {
     if (cloned_obj) {
-        printf("Replacing (original)%p => (clone)%p\n", obj, cloned_obj);
         this->obj_ = cloned_obj;
     }
 }
@@ -451,10 +446,8 @@ hal_handle::upd_obj(cfg_op_ctxt_t *ctxt, hal_cfg_op_cb_t upd_cb,
     // if commit was successful, copy over old object with cloned object's
     // contents
     if (ret == HAL_RET_OK) {
-        printf("Trying to replace original with clone\n");
         dllist_for_each_safe(curr, next, &ctxt->dhl) {
             entry = dllist_entry(curr, dhl_entry_t, dllist_ctxt);
-            printf("Replacing with cloned object %p\n", entry->cloned_obj);
             this->replace_(entry->obj, entry->cloned_obj);
         }
     }
@@ -535,10 +528,6 @@ hal_handle_alloc (hal_obj_id_t obj_id)
     // prepare the entry to be inserted
     entry->handle = handle;
     entry->ht_ctxt.reset();
-    HAL_TRACE_DEBUG("Added handle id {}, ht_entry:{:#x}, hal_handle:{#x]", 
-                    handle_id, (uint64_t)entry, (uint64_t)handle);
-    printf("Added handle_id:%lu, ht_entry:%p, hal_handle:%p\n",
-            handle_id, entry, handle);
     ret = g_hal_state->hal_handle_id_ht()->insert_with_key(&handle_id,
                                                            entry, &entry->ht_ctxt);
     if (ret != HAL_RET_OK) {
@@ -604,12 +593,6 @@ hal_handle_get_obj (hal_handle_t handle_id)
     entry =
         (hal_handle_ht_entry_t *)g_hal_state->hal_handle_id_ht()->lookup(&handle_id);
     if (entry && entry->handle) {
-        HAL_TRACE_DEBUG("Looking up handle id {},ht_entry:{:#x],hal_handle:{:#x} "
-                "obg:{:#x}", 
-                handle_id, (uint64_t)entry, (uint64_t)entry->handle,
-                (uint64_t)entry->handle->get_obj());
-        printf("Looking up handle_id:%lu, ht_entry:%p, hal_handle:%p, obj:%p\n",
-                handle_id, entry, entry->handle, entry->handle->get_obj());
         return entry->handle->get_obj();
     }
     return NULL;

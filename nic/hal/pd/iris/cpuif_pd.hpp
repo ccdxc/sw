@@ -16,7 +16,7 @@ struct pd_cpuif_s {
 // ----------------------------------------------------------------------------
 // Allocate CPU IF Instance
 // ----------------------------------------------------------------------------
-static pd_cpuif_t *
+static inline pd_cpuif_t *
 pd_cpuif_alloc (void)
 {
     pd_cpuif_t    *cpuif;
@@ -31,7 +31,7 @@ pd_cpuif_alloc (void)
 // ----------------------------------------------------------------------------
 // Initialize CPU IF PD instance
 // ----------------------------------------------------------------------------
-static pd_cpuif_t *
+static inline pd_cpuif_t *
 pd_cpuif_init (pd_cpuif_t *cpuif)
 {
     // Nothing to do currently
@@ -47,7 +47,7 @@ pd_cpuif_init (pd_cpuif_t *cpuif)
 // ----------------------------------------------------------------------------
 // Allocate and Initialize CPU If PD Instance
 // ----------------------------------------------------------------------------
-static pd_cpuif_t *
+static inline pd_cpuif_t *
 pd_cpuif_alloc_init(void)
 {
     return pd_cpuif_init(pd_cpuif_alloc());
@@ -56,7 +56,7 @@ pd_cpuif_alloc_init(void)
 // ----------------------------------------------------------------------------
 // Freeing CPU IF PD
 // ----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 pd_cpuif_free (pd_cpuif_t *cpuif)
 {
     g_hal_state_pd->cpuif_pd_slab()->free(cpuif);
@@ -66,7 +66,7 @@ pd_cpuif_free (pd_cpuif_t *cpuif)
 // ----------------------------------------------------------------------------
 // Freeing CPU IF PD memory
 // ----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 pd_cpuif_pd_mem_free (pd_cpuif_t *cpuif)
 {
     g_hal_state_pd->cpuif_pd_slab()->free(cpuif);
@@ -76,7 +76,7 @@ pd_cpuif_pd_mem_free (pd_cpuif_t *cpuif)
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static void 
+static inline void 
 cpuif_link_pi_pd(pd_cpuif_t *pd_cpuif, if_t *pi_if)
 {
     pd_cpuif->pi_if = pi_if;
@@ -86,7 +86,7 @@ cpuif_link_pi_pd(pd_cpuif_t *pd_cpuif, if_t *pi_if)
 // ----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static void 
+static inline void 
 cpuif_delink_pi_pd(pd_cpuif_t *pd_cpuif, if_t *pi_if)
 {
     pd_cpuif->pi_if = NULL;

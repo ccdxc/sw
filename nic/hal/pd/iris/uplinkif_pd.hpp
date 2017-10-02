@@ -19,7 +19,7 @@ struct pd_uplinkif_s {
 // ----------------------------------------------------------------------------
 // Allocate Uplink IF Instance
 // ----------------------------------------------------------------------------
-static pd_uplinkif_t *
+static inline pd_uplinkif_t *
 uplinkif_pd_alloc (void)
 {
     pd_uplinkif_t    *upif;
@@ -34,7 +34,7 @@ uplinkif_pd_alloc (void)
 // ----------------------------------------------------------------------------
 // Initialize Uplink IF PD instance
 // ----------------------------------------------------------------------------
-static pd_uplinkif_t *
+static inline pd_uplinkif_t *
 uplinkif_pd_init (pd_uplinkif_t *upif)
 {
     // Nothing to do currently
@@ -50,7 +50,7 @@ uplinkif_pd_init (pd_uplinkif_t *upif)
 // ----------------------------------------------------------------------------
 // Allocate and Initialize Uplinkif PD Instance
 // ----------------------------------------------------------------------------
-static pd_uplinkif_t *
+static inline pd_uplinkif_t *
 uplinkif_pd_alloc_init(void)
 {
     return uplinkif_pd_init(uplinkif_pd_alloc());
@@ -59,7 +59,7 @@ uplinkif_pd_alloc_init(void)
 // ----------------------------------------------------------------------------
 // Freeing UPLINKIF PD
 // ----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 uplinkif_pd_free (pd_uplinkif_t *upif)
 {
     g_hal_state_pd->uplinkif_pd_slab()->free(upif);
@@ -69,7 +69,7 @@ uplinkif_pd_free (pd_uplinkif_t *upif)
 // ----------------------------------------------------------------------------
 // Freeing UPLINKIF PD memory
 // ----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 uplinkif_pd_mem_free (pd_uplinkif_t *upif)
 {
     g_hal_state_pd->uplinkif_pd_slab()->free(upif);
@@ -79,7 +79,7 @@ uplinkif_pd_mem_free (pd_uplinkif_t *upif)
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static void 
+static inline void 
 uplinkif_link_pi_pd(pd_uplinkif_t *pd_upif, if_t *pi_if)
 {
     pd_upif->pi_if = pi_if;
@@ -89,7 +89,7 @@ uplinkif_link_pi_pd(pd_uplinkif_t *pd_upif, if_t *pi_if)
 // ----------------------------------------------------------------------------
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static void 
+static inline void 
 uplinkif_delink_pi_pd(pd_uplinkif_t *pd_upif, if_t *pi_if)
 {
     pd_upif->pi_if = NULL;

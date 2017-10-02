@@ -112,7 +112,15 @@ cc_library(
         "asic/capri/design/common/gen",
     ],
     deps = ["//nic/hal/pd/capri/csr:sknobs_hdrs"],
-    copts = ["-DEXCLUDE_PER_FIELD_CNTRL"],
+    copts = [
+            "-DEXCLUDE_PER_FIELD_CNTRL",
+            # Disabling warnings
+            "-Wno-unused-function",
+            "-Wno-unused-variable",
+            "-Wno-sign-compare",
+            "-Wno-maybe-uninitialized",
+            "-Wno-unused-but-set-variable",
+            ],
 )
 
 cc_library(

@@ -43,4 +43,10 @@ cc_binary(
             "-lutil",
             "-lcrypto",
             ],
+    copts = [
+            # Disabling warnings
+            "-Wno-sign-compare",
+            "-Wno-unused-variable",
+            "-Wno-maybe-uninitialized",
+            ],
     )

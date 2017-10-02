@@ -21,7 +21,7 @@ build --cxxopt="-g"
 build --copt="-g"
 
 # Make warnings as errors
-#build --cxxopt="-Werror"
+build --cxxopt="-Werror"
 
 # show timestamps
 build --show_timestamps --keep_going

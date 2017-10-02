@@ -1206,17 +1206,9 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         goto cleanup;
     }
 
-#if 0
-    // Update PI structures - Add vlan to Uplink and vice-versa
-    if (l2seg->fabric_encap.type == types::ENCAP_TYPE_DOT1Q) {
-        hal_if->vlans->set(l2seg->fabric_encap.val);
-    }
-#endif
-
     // Add Uplink in l2seg
     ret = l2seg_add_if(l2seg, hal_if);
     HAL_ABORT(ret == HAL_RET_OK);
-
 
     // Add the uplink to the broadcast list of the l2seg
     // oif.if_id = hal_if->if_id;
@@ -1326,44 +1318,6 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
                         hal_if->encap_vlan, macaddr2str(hal_if->mac_addr),
                         lif->lif_id);
 
-#if 0
-        if (l2seg) {
-            // TODO: Clean this as l2seg should not have list of oifs.
-            //       It should be handles.
-            // Add the new interface to the broadcast list of the associated l2seg. This applies to enicifs only.
-            // Its here because the multicast oif call requires the pi_if to have been created fully.
-            oif_t  oif;
-            oif.if_id = hal_if->if_id;
-            oif.l2_seg_id = l2seg->seg_id;
-            ret = oif_list_add_oif(l2seg->bcast_oif_list, &oif);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Add oif to oif_list failed, err : {}", ret);
-                rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-                goto end;
-            }
-        }
-
-        // Bharat: Revisit if we need to support bitmap in create
-        // populate VLANs that are up on this interface, if any
-        hal_if->vlan_bmap = bitmap::factory(4096);
-        if (hal_if->vlan_bmap == NULL) {
-            ret = HAL_RET_OOM;
-            rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-            goto end;
-        }
-        for (int i = 0; i < if_enic_info.direct_info().l2segment_id_size(); i++) {
-            l2seg_id = if_enic_info.direct_info().l2segment_id(i);
-            l2seg = find_l2seg_by_id(l2seg_id);
-            if (l2seg == NULL) {
-                ret = HAL_RET_L2SEG_NOT_FOUND;
-                rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);
-                goto end;
-            }
-            if (l2seg->access_encap.type == types::ENCAP_TYPE_DOT1Q) {
-                hal_if->vlan_bmap->set(l2seg->access_encap.val);
-            }
-        }
-#endif
     } else {
         HAL_TRACE_ERR("pi-enicif:{}:invalid enic type: {}", __FUNCTION__, 
                         hal_if->enic_type);
@@ -1397,15 +1351,6 @@ uplink_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
 
     hal_if->uplink_pc_num = HAL_PC_INVALID;
     hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
-#if 0
-    hal_if->vlans = bitmap::factory(4096);
-    if (hal_if->vlans == NULL) {
-        ret = HAL_RET_OOM;
-        rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-        HAL_TRACE_ERR("PI-Uplinkif:{}: Out of Memory Err: {}", ret);
-        goto end;
-    }
-#endif
 
     return ret;
 }
@@ -1828,66 +1773,6 @@ end:
     return ret;
 }
 
-#if 0
-// TODO: following APIs need to be cleaned up.. they dont use types.APIStatus
-//       and give out return codes that user has no way to interpret !!!
-void
-LifGetQState (const intf::QStateGetReq &req, intf::QStateGetResp *rsp)
-{
-    std::unique_ptr<char[]> buf(new char[kMaxQStateSize]);
-    uint32_t size_to_copy = std::min(kMaxQStateSize, req.ret_data_size());
-    int64_t ret = g_lif_manager->GetLIFQStateAddr(
-        req.lif_handle(), req.type_num(), req.qid());
-
-    if (ret < 0) {
-        rsp->set_error_code(0 - (int)ret);
-        return;
-    }
-    rsp->set_q_addr((uint64_t)ret);
-    int ret2 = g_lif_manager->ReadQState(req.lif_handle(), req.type_num(),
-                                         req.qid(), (uint8_t *)buf.get(),
-                                         kMaxQStateSize);
-    if (ret2 < 0) {
-        rsp->set_error_code(0 - ret2);
-        return;
-    }
-    rsp->set_error_code(0);
-    if (size_to_copy == 0)
-        return;
-    rsp->set_queue_state(std::string(buf.get(), size_to_copy));
-}
-
-void
-LifSetQState (const intf::QStateSetReq &req, intf::QStateSetResp *rsp)
-{
-    if (req.queue_state().size() == 0) {
-        rsp->set_error_code(EINVAL);
-        return;
-    }
-    std::unique_ptr<uint8_t[]> buf;
-    const uint8_t *state = (const uint8_t *)req.queue_state().c_str();
-    if (req.has_label()) {
-        uint8_t off;
-        int ret = g_lif_manager->GetPCOffset(req.label().handle().c_str(),
-            req.label().prog_name().c_str(),
-            req.label().label().c_str(), &off);
-        if (ret < 0) {
-            rsp->set_error_code(0 - ret);
-            return;
-        }
-        buf.reset(new uint8_t[req.queue_state().size()]);
-        bcopy(req.queue_state().c_str(), buf.get(), req.queue_state().size());
-        buf.get()[0] = off;
-        state = buf.get();
-    }
-
-    int ret = g_lif_manager->WriteQState(req.lif_handle(), req.type_num(),
-                                         req.qid(), state,
-                                         req.queue_state().size());
-    rsp->set_error_code(0 - ret);
-}
-
-#endif
 hal_ret_t
 if_handle_nwsec_update (l2seg_t *l2seg, if_t *hal_if, nwsec_profile_t *nwsec_prof)
 {

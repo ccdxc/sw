@@ -398,8 +398,6 @@ uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppc,
     return ret;
 }
 
-
-
 // ----------------------------------------------------------------------------
 // Program Output Mapping Table
 // ----------------------------------------------------------------------------
@@ -412,9 +410,6 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif)
     if_t                        *pi_if = NULL, *pi_up_if = NULL;
     output_mapping_actiondata   data;
     DirectMap                   *dm_omap = NULL;
-    dllist_ctxt_t               *lnode = NULL;
-    char                        buff[4096] = {0};
-    p4pd_error_t                p4_err;
     dllist_ctxt_t               *curr, *next;
     hal_handle_id_list_entry_t  *entry = NULL;
 
@@ -454,10 +449,6 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif)
         HAL_TRACE_DEBUG("PD-UplinkPC::{}: Programmed for if_id: {} at {}",
                 __FUNCTION__, if_get_if_id((if_t *)pd_uppcif->pi_if),
                 pd_uppcif->uppc_lport_id);
-        p4_err = p4pd_table_ds_decoded_string_get(P4TBL_ID_OUTPUT_MAPPING, 
-                                                NULL, NULL, &data, buff, 
-                                                sizeof(buff));
-        HAL_ASSERT(p4_err == P4PD_SUCCESS);
     }
     return ret;
 }

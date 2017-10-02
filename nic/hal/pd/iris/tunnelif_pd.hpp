@@ -28,7 +28,7 @@ typedef enum pd_tunnelif_inp_map_tbl_type_e_ {
 // ----------------------------------------------------------------------------
 // Allocate Tunnel IF Instance
 // ----------------------------------------------------------------------------
-static pd_tunnelif_t *
+static inline pd_tunnelif_t *
 pd_tunnelif_alloc (void)
 {
     pd_tunnelif_t    *tunnelif;
@@ -43,7 +43,7 @@ pd_tunnelif_alloc (void)
 // ----------------------------------------------------------------------------
 // Initialize Tunnel IF PD instance
 // ----------------------------------------------------------------------------
-static pd_tunnelif_t *
+static inline pd_tunnelif_t *
 pd_tunnelif_init (pd_tunnelif_t *tunnelif)
 {
     if (!tunnelif) {
@@ -60,7 +60,7 @@ pd_tunnelif_init (pd_tunnelif_t *tunnelif)
 // ----------------------------------------------------------------------------
 // Allocate and Initialize Tunnel IF PD Instance
 // ----------------------------------------------------------------------------
-static pd_tunnelif_t *
+static inline pd_tunnelif_t *
 pd_tunnelif_alloc_init(void)
 {
     return pd_tunnelif_init(pd_tunnelif_alloc());
@@ -69,7 +69,7 @@ pd_tunnelif_alloc_init(void)
 // ----------------------------------------------------------------------------
 // Freeing tunnelif PD
 // ----------------------------------------------------------------------------
-static hal_ret_t
+static inline hal_ret_t
 pd_tunnelif_free (pd_tunnelif_t *tunnelif)
 {
     g_hal_state_pd->tunnelif_pd_slab()->free(tunnelif);
@@ -79,7 +79,7 @@ pd_tunnelif_free (pd_tunnelif_t *tunnelif)
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static void 
+static inline void 
 pd_tunnelif_link_pi_pd(pd_tunnelif_t *pd_tunnelif, if_t *pi_if)
 {
     pd_tunnelif->pi_if = pi_if;
@@ -89,7 +89,7 @@ pd_tunnelif_link_pi_pd(pd_tunnelif_t *pd_tunnelif, if_t *pi_if)
 // ----------------------------------------------------------------------------
 // De-Linking PI <-> PD
 // ----------------------------------------------------------------------------
-static void 
+static inline void 
 pd_tunnelif_delink_pi_pd(pd_tunnelif_t *pd_tunnelif, if_t *pi_if)
 {
     pd_tunnelif->pi_if = NULL;

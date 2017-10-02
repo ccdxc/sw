@@ -83,14 +83,6 @@ hal_cfg_db::init(void)
                                hal::l2seg_id_compare_key_func);
     HAL_ASSERT_RETURN((l2seg_id_ht_ != NULL), false);
 
-#if 0
-    l2seg_hal_handle_ht_ = ht::factory(HAL_MAX_L2SEGMENTS,
-                                       hal::l2seg_get_handle_key_func,
-                                       hal::l2seg_compute_handle_hash_func,
-                                       hal::l2seg_compare_handle_key_func);
-    HAL_ASSERT_RETURN((l2seg_hal_handle_ht_ != NULL), false);
-#endif
-
     // initialize LIF related data structures
     lif_id_ht_ = ht::factory(HAL_MAX_LIFS,
                              hal::lif_id_get_key_func,
@@ -98,28 +90,12 @@ hal_cfg_db::init(void)
                              hal::lif_id_compare_key_func);
     HAL_ASSERT_RETURN((lif_id_ht_ != NULL), false);
 
-#if 0
-    lif_hal_handle_ht_ = ht::factory(HAL_MAX_INTERFACES,
-                                     hal::lif_get_handle_key_func,
-                                     hal::lif_compute_handle_hash_func,
-                                     hal::lif_compare_handle_key_func);
-    HAL_ASSERT_RETURN((lif_hal_handle_ht_ != NULL), false);
-#endif
-
     // initialize interface related data structures
     if_id_ht_ = ht::factory(HAL_MAX_INTERFACES,
                             hal::if_id_get_key_func,
                             hal::if_id_compute_hash_func,
                             hal::if_id_compare_key_func);
     HAL_ASSERT_RETURN((if_id_ht_ != NULL), false);
-
-#if 0
-    if_hal_handle_ht_ = ht::factory(HAL_MAX_INTERFACES,
-                                    hal::if_get_handle_key_func,
-                                    hal::if_compute_handle_hash_func,
-                                    hal::if_compare_handle_key_func);
-    HAL_ASSERT_RETURN((if_hal_handle_ht_ != NULL), false);
-#endif
 
     // initialize endpoint related data structures
     ep_hal_handle_ht_ = ht::factory(HAL_MAX_ENDPOINTS,
@@ -929,14 +905,6 @@ hal_oper_db::init(void)
                                     hal::hal_handle_id_compute_hash_func,
                                     hal::hal_handle_id_compare_key_func);
     HAL_ASSERT_RETURN((hal_handle_id_ht_ != NULL), false);
-
-#if 0
-    if_hwid_ht_ = ht::factory(HAL_MAX_INTERFACES,
-                              hal::if_get_hw_key_func,
-                              hal::if_compute_hw_hash_func,
-                              hal::if_compare_hw_key_func);
-    HAL_ASSERT_RETURN((if_hwid_ht_ != NULL), false);
-#endif
 
     ep_l2_ht_ = ht::factory(HAL_MAX_ENDPOINTS,
                             hal::ep_get_l2_key_func,
