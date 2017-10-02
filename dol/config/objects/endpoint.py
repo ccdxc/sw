@@ -95,10 +95,11 @@ class EndpointObject(base.ConfigObjectBase):
         return self.intf
 
     def AttachInterface(self, intf):
-        self.intf       = intf
+        self.intf = intf
         if self.remote:
             self.SetMacAddress(resmgr.RemoteEpMacAllocator.get())
         else:
+            self.pinintf = intf.pinnedif
             self.SetMacAddress(intf.macaddr)
         self.Show()
         return

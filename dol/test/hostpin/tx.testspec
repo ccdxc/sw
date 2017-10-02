@@ -11,7 +11,7 @@ selectors:
         endpoint    : filter://remote=True
         interface   : filter://any
     flow            : filter://fwtype=L2
-    maxflows        : None
+    maxflows        : 64
 
 packets:
     - packet:
@@ -75,7 +75,7 @@ packets:
 
 buffers:
     - buffer:
-        id      : BUF1
+        id      : BUF1 # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
            bind : True
@@ -84,12 +84,18 @@ buffers:
 
 descriptors:
     - descriptor:
-        id      : DESC1
+        id      : DESC1 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX
         fields:
             buf   : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            err_code : 0x0
 
 trigger:
     descriptors:
@@ -99,11 +105,18 @@ trigger:
 
     doorbell:
         object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
-        fields:
-            upd : 3
 
 expect:
+    delay   : callback://networking/packets/GetExpectDelay
     packets:
         - packet:
             object  : callback://networking/packets/GetL2UcExpectedPacket
-            port    : ref://testcase/config/dst/endpoint/intf/ports
+            port    : ref://testcase/config/src/endpoint/pinintf/ports
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=PKT1
+            port    : 128
+
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC2
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1

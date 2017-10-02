@@ -81,6 +81,8 @@ uplinkpc:
             - ref://store/objects/id=Uplink7
             - ref://store/objects/id=Uplink8
 
+hostpinned: True
+
 acls: None
 
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
@@ -88,6 +90,6 @@ security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 tenants:
     -   spec    : ref://store/specs/id=TENANT_HOSTPIN
         count   : 1
-        lifns   : range/121/124
+        lifns   : range/121/136
 
 cpu: None

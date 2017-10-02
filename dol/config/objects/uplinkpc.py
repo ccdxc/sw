@@ -43,8 +43,8 @@ class UplinkPcObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Creating UplinkPC = %s Port=%d" %\
-                       (self.GID(), self.port))
+        cfglogger.info("Creating UplinkPC = %s(IFID:%d) Port=%d" %\
+                       (self.GID(), self.id, self.port))
         for mbr in self.members:
             cfglogger.info("- Member: %s" % mbr.GID())
         return

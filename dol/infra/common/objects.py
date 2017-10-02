@@ -193,6 +193,10 @@ class MacAddressBase(FrameworkFieldObject):
     def getnum(self):
         return self.num
 
+    def update(self, macincr):
+        self.num += macincr
+        return
+
 
 class MacAddress(FrameworkFieldObject):
     def __init__(self, valobj):
@@ -205,6 +209,10 @@ class MacAddress(FrameworkFieldObject):
 
     def getnum(self):
         return self.value.getnum()
+
+    def update(self, macincr):
+        self.value.update(macincr)
+        
 
 
 class MacAddressStep(FrameworkFieldObject):

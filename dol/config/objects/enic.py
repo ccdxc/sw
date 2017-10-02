@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import pdb
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
@@ -15,6 +16,9 @@ ENIC_TYPE_DIRECT= 'DIRECT'
 ENIC_TYPE_USEG  = 'USEG'
 ENIC_TYPE_PVLAN = 'PVLAN'
 
+global gl_pinif_iter
+gl_pinif_iter = 0
+
 class EnicObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
@@ -23,17 +27,33 @@ class EnicObject(base.ConfigObjectBase):
         return
 
     def Init(self, segment, type, l4lb_backend = False):
-        self.segment = segment
-        self.tenant  = segment.tenant
-        self.type    = type
-        self.l4lb_backend = l4lb_backend
+        self.segment        = segment
+        self.tenant         = segment.tenant
+        self.type           = type
+        self.l4lb_backend   = l4lb_backend
+        
+        self.pinnedif       = None
         self.macaddr = resmgr.EnicMacAllocator.get()
+        self.__pin_interface()
+
         if self.IsUseg() or self.IsPvlan():
             self.encap_vlan_id = resmgr.EncapVlanAllocator.get()
         else:
             self.encap_vlan_id = segment.vlan_id
         self.ep = None
         self.label = None
+        return
+
+    def __pin_interface(self):
+        if self.tenant.IsHostPinned() is False:
+            return
+        trunks = Store.GetTrunkingUplinks()
+        global gl_pinif_iter
+        gl_pinif_iter += 1
+        gl_pinif_iter %= len(trunks)
+        self.pinnedif = trunks[gl_pinif_iter]
+        self.macaddr.update(self.pinnedif.id << 16)
+        cfglogger.info("- Pinning to Interface: %s" % self.pinnedif)
         return
 
     def AttachEndpoint(self, ep):
@@ -50,6 +70,8 @@ class EnicObject(base.ConfigObjectBase):
         cfglogger.info("  - EnicType   = %s" % self.type)
         cfglogger.info("  - EncapVlan  = %d" % self.encap_vlan_id)
         cfglogger.info("  - Lif        = %s" % self.lif.GID())
+        if self.pinnedif:
+            cfglogger.info("  - PinnedIF   = %s" % self.pinnedif.GID())
         return
 
     def Summary(self):

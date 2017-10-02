@@ -3,7 +3,7 @@ feature:
     id          : hostpin
     package     : test.hostpin
     module      : hostpin
-    enable      : False
+    enable      : True
     ignore      : True
 
 modules:
