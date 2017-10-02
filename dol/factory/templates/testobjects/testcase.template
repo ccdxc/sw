@@ -76,6 +76,7 @@ config:
         rqp  : None # Remote QPair
         #session : None 
 
+tracker      : None
 packets      : None # Database packet objects for this testcase.
 descriptors  : None # Database
 buffers      : None # Database

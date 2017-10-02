@@ -238,6 +238,8 @@ class Packet(objects.FrameworkObject):
         if objects.IsReference(spec_size):
             if spec_size.GetRootID() == defs.ref_roots.FACTORY:
                 size = spec_size.Get(FactoryStore)
+            elif spec_size.GetRootID() == defs.ref_roots.TESTCASE:
+                size = spec_size.Get(tc)
             else:
                 assert(0)
         elif objects.IsCallback(spec_size):

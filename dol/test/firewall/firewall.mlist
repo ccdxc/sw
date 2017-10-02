@@ -1,12 +1,43 @@
 # Feature Test Modules List
 feature:
-    id          : firewall
-    package     : test.firewall
-    module      : sfw_in_sequence
-    enable      : True
-    ignore      : False
+    id      : firewall
+    package : test.firewall
+    module  : firewall
+    enable  : True
+    ignore  : False
+    spec    : firewall.testspec
+    serial  : True
 
 modules:
     - module:
-        name    : SFW_IN_SEQUENCE
-        spec    : sfw_in_sequence.testspec
+        name    : SFW_3WAY_HANDSHAKE
+        enable  : False
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+
+    - module:
+        name    : SFW_TCP_FULL
+        tracker : True
+        ignore  : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Close from the Initiator Side
+            - step  : ref://trackerstore/steps/id=IFLOW_FIN
+            - step  : ref://trackerstore/steps/id=RFLOW_ACK
+            # Close from the Responder Side
+            - step  : ref://trackerstore/steps/id=RFLOW_FIN
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK

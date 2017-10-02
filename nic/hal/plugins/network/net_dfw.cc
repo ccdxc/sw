@@ -89,9 +89,10 @@ dfw_exec(fte::ctx_t& ctx)
         } else {
             const fte::cpu_rxhdr_t *rxhdr = ctx.cpu_rxhdr();
             flowupd.flow_state.state = session::FLOW_TCP_STATE_SYN_RCVD;
-            flowupd.flow_state.tcp_seq_num = ntohl(rxhdr->tcp_seq_num);
+            // Expectation is to program the next expected seq num.
+            flowupd.flow_state.tcp_seq_num = ntohl(rxhdr->tcp_seq_num) + 1;
             flowupd.flow_state.tcp_ack_num = ntohl(rxhdr->tcp_ack_num);
-            flowupd.flow_state.tcp_win_sz = ntohl(rxhdr->tcp_window);
+            flowupd.flow_state.tcp_win_sz = ntohs(rxhdr->tcp_window);
             flowupd.flow_state.tcp_win_scale = rxhdr->tcp_ws;
             flowupd.flow_state.tcp_mss = ntohs(rxhdr->tcp_mss);
             

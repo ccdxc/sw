@@ -1,10 +1,14 @@
 #! /usr/bin/python3
 
-def GetTcpSeqNum(testcase, packet):
-    return 100
+def GetForwardingCopy(tc, args = None):
+    return tc.packets.Get(args.pktid)
 
-def GetTcpAckNum(testcase, packet):
-    return 100
+def GetCpuCopy(tc, args = None):
+    if tc.tracker.IsCpuCopyValid():
+        return tc.packets.Get(args.pktid)
+    return None
 
-def GetTcpWinSize(testcase, packet):
-    return 4096
+def GetExpectDelay(tc, args = None):
+    if tc.tracker.IsCpuCopyValid():
+        return 1
+    return None

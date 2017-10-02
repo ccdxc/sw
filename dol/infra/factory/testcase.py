@@ -111,6 +111,7 @@ class TestCase(objects.FrameworkObject):
         self.objects        = objects.ObjectDatabase(logger = self)
 
         self.module         = module
+        self.tracker        = module.GetTracker()
         self.infra_data     = module.infra_data
         self.testspec       = module.testspec
         self.logger         = self.infra_data.Logger
@@ -265,6 +266,8 @@ class TestCase(objects.FrameworkObject):
         spdelay = getattr(spsn, 'delay', 0)
         if objects.IsCallback(spdelay):
             tcsn.delay = spdelay.call(self)
+        elif objects.IsReference(spdelay):
+            tcsn.delay = spdelay.Get(self)
         else:
             tcsn.delay = spdelay
         if tcsn.delay:

@@ -155,5 +155,7 @@ __ref_roots = [
     'TESTCASE',
     'FACTORY',
     'STORE',
+    'TRACKERSTORE',
+    'TRACKER',
 ]
 ref_roots = List2Enum(__ref_roots)

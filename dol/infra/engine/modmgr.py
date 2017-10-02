@@ -20,8 +20,9 @@ from infra.common.glopts    import GlobalOptions
 ModuleIdAllocator = objects.TemplateFieldObject("range/1/8192")
 TestCaseIdAllocator = objects.TemplateFieldObject("range/1/65535")
 
-MODULE_CB_SETUP     = 'Setup'
-MODULE_CB_TEARDOWN  = 'Teardown'
+MODULE_CB_INIT_TRACKER  = 'InitTracker'
+MODULE_CB_SETUP         = 'Setup'
+MODULE_CB_TEARDOWN      = 'Teardown'
 
 class ModuleStats:
     def __init__(self):
@@ -59,13 +60,13 @@ class Module(objects.FrameworkObject):
         self.path       = self.package.replace(".", "/")
         self.ignore     = spec.ignore
         self.iterator   = ModuleIterator(spec.iterate)
-        self.args       = None 
-        if 'args' in spec.__dict__:
-            self.args = spec.args
+        self.args       = getattr(spec, 'args', None)
+        self.tracker    = getattr(spec, 'tracker', False)
         self.id         = ModuleIdAllocator.get()
         self.module_hdl = None
         self.infra_data = None
         self.CompletedTestCases = []
+        self.abort = False
 
         self.stats = ModuleStats()
         self.Show()
@@ -103,6 +104,18 @@ class Module(objects.FrameworkObject):
             self.module_hdl = loader.ImportModule(self.package, self.module)
             assert(self.module_hdl)
         utils.LogFunctionEnd(self.logger)
+
+    def GetTracker(self):
+        return self.__trackerobj
+
+    def __init_tracker(self):
+        self.__trackerobj = None
+        if self.tracker is False:
+            return
+        utils.LogFunctionBegin(self.logger)
+        self.__trackerobj = self.RunModuleCallback(MODULE_CB_INIT_TRACKER, self.infra_data, self)
+        utils.LogFunctionEnd(self.logger)
+        return
 
     def __unload(self):
         #TODO: Don't unload the modules as verification will
@@ -200,6 +213,9 @@ class Module(objects.FrameworkObject):
             tc = testcase.TestCase(tcid, root, self)
             self.__execute_testcase(tc)
             self.CompletedTestCases.append(tc)
+            if self.tracker and tc.status == defs.status.ERROR:
+                self.abort = True
+                break
         return
 
     def __teardown_callback(self):
@@ -220,7 +236,8 @@ class Module(objects.FrameworkObject):
                                      name=prefix)
         self.infra_data.Logger = self.logger
         self.__load()
-        while self.iterator.End() == False:
+        self.__init_tracker()
+        while self.iterator.End() is False and self.abort is False:
             self.logger.info("========== Starting Test Module =============")
             self.logger.info("Starting new Iteration")
             self.__load_spec()

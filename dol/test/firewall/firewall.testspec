@@ -1,0 +1,68 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    session         :
+        base        : filter://proto=TCP,label=FIREWALL
+        iflow       : filter://any
+        rflow       : filter://any
+    flow            : None
+    maxsessions     : 1
+
+tracker: True
+
+packets:
+    - packet:
+        id          : PKT     # IFLOW Packet Base
+        payloadsize : ref://testcase/tracker/step/payloadsize
+        template    : callback://networking/packets/GetPacketTemplateBySessionIflow
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/tracker/config/src/endpoint/macaddr
+                dst     : ref://testcase/tracker/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/tracker/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/tracker/config/flow/sip
+                dst     : ref://testcase/tracker/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/tracker/config/flow/sip
+                dst     : ref://testcase/tracker/config/flow/dip
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/tracker/config/flow/sport
+                dport   : ref://testcase/tracker/config/flow/dport
+                seq     : ref://testcase/tracker/step/fields/seq
+                ack     : ref://testcase/tracker/step/fields/ack
+                window  : ref://testcase/tracker/step/fields/win
+                flags   : ref://testcase/tracker/step/fields/flags
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT
+            port    : ref://testcase/tracker/config/src/endpoint/intf/ports
+
+expect:
+    delay: callback://firewall/callbacks/GetExpectDelay
+    packets:
+        - packet:
+            object  : callback://firewall/callbacks/GetForwardingCopy/pktid=PKT
+            port    : ref://testcase/tracker/config/dst/endpoint/intf/ports
+        - packet:
+            object  : callback://firewall/callbacks/GetCpuCopy/pktid=PKT
+            port    : 128
