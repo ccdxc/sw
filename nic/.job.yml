@@ -13,6 +13,7 @@ targets:
   firewall:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo up2up --feature firewall" ]
   admin:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo admin --feature admin" ]
   hostpin:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo hostpin --feature hostpin --haljson hal_hostpin.json" ]
+  agent: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && go test ./test/integ/..."]
 cache:
   name: "sw"
   mount_dir: "/root/.cache"

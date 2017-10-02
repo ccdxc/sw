@@ -169,7 +169,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// verify sg is removed from the endpoint
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			ep, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
+			ep, ok := ag.datapath.EndpointUpdateDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
 			c.Assert(ok, Equals, true)
 			c.Assert(len(ep.Request), Equals, 1)
 			return (len(ep.Request[0].SecurityGroup) == 0), nil

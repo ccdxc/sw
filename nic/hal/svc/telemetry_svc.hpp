@@ -23,7 +23,7 @@ using telemetry::MirrorSessionDeleteMsg;
 using telemetry::MirrorSessionResponseMsg;
 using telemetry::MirrorSessionId;
 using telemetry::MirrorSession;
-using telemetry::Empty;
+using types::Empty;
 
 class TelemetryServiceImpl final : public Telemetry::Service {
     public:

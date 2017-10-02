@@ -6,6 +6,7 @@ syntax = "proto3";
 
 
 package internal;
+option go_package="halproto";
 
 // Internal service definition
 service Internal {

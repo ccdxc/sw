@@ -9,16 +9,16 @@
 syntax = "proto3";
 
 import "nic/proto/types.proto";
+option go_package="halproto";
 
 package sys;
 
 // System service definition
 service System {
   // System related APIs
-  rpc SystemGet(Empty) returns (SystemResponse) {}
+  rpc SystemGet(types.Empty) returns (SystemResponse) {}
 }
 
-message Empty {}
 
 // Global system object
 message SystemResponse {

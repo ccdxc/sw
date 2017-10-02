@@ -7,7 +7,7 @@ syntax = "proto3";
 import "nic/proto/types.proto";
 
 package cryptokey;
-
+option go_package="halproto";
 
 service CryptoKey {
     rpc CryptoKeyCreate (CryptoKeyCreateRequestMsg) returns (CryptoKeyCreateResponseMsg) {}

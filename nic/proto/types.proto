@@ -6,6 +6,7 @@
 syntax = "proto3";
 
 package types;
+option go_package="halproto";
 
 // IP protocol numbers
 enum IPProtocol {
@@ -150,6 +151,8 @@ message L4PortRange {
   uint32    port_low  = 1;    // source port
   uint32    port_high = 2;    // destination port
 }
+
+message Empty {}
 
 // Types of Work Ring
 enum WRingType {

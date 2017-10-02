@@ -9,6 +9,7 @@ syntax = "proto3";
 import "nic/proto/types.proto";
 
 package nw;
+option go_package="halproto";
 
 service Network {
   rpc NetworkCreate (NetworkRequestMsg) returns (NetworkResponseMsg) {}

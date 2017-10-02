@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "nic/proto/types.proto";
+option go_package="halproto";
 
 package rdma;
 

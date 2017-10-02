@@ -1,8 +1,12 @@
+GEN_DIR = ${CURDIR}
+HAL_PROTO_FILES = $(wildcard ../../../../proto/hal/*.proto)
 default:
-	# Compile proto definitions
-	# protoc --go_out=Mtypes/types.proto=github.com/pensando/sw/agent/netagent/datapath/halproto/types,plugins=grpc:. *.proto
-	# protoc --go_out=plugins=grpc:. ./types/types.proto
-	protoc --go_out=plugins=grpc:. *.proto
+	$(MAKE) hal-proto
+	#FIXME We need a flat structure *.pb.go for imports to work
+	mv nic/proto/*.pb.go .
+	mv nic/proto/hal/*.pb.go .
+	rm -rf nic
+
 	# Install gomock tool
 	go get github.com/golang/mock/gomock
 	go get github.com/golang/mock/mockgen
@@ -14,3 +18,9 @@ default:
 	mockgen -source=nwsec.pb.go -destination=nwsec_mock.go -package=halproto
 	mockgen -source=session.pb.go -destination=session_mock.go -package=halproto
 	mockgen -source=tenant.pb.go -destination=tenant_mock.go -package=halproto
+
+hal-proto:
+	# Compile proto definitions
+	protoc --proto_path=../../../../../ --go_out=plugins=grpc:$(GEN_DIR) ../../../../../nic/proto/hal/*.proto ../../../../../nic/proto/types.proto
+
+

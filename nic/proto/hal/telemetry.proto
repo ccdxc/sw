@@ -4,6 +4,7 @@ import "nic/proto/types.proto";
 import "nic/proto/hal/interface.proto";
 
 package telemetry;
+option go_package="halproto";
 
 // L4Port is a representation of the L4 port defined as a nested type for nullability
 message L4Port {
@@ -247,8 +248,6 @@ message MirrorSessionResponseMsg {
   repeated MirrorSession    	response  = 2; // Operational status of the mirror session
 }
 
-message Empty {
-}
 
 service Telemetry {
   // Collector operations CRUD operations
@@ -274,6 +273,6 @@ service Telemetry {
   rpc MirrorSessionCreate(MirrorSessionConfigMsg) returns (MirrorSessionResponseMsg) {}
   rpc MirrorSessionUpdate(MirrorSessionConfigMsg) returns (MirrorSessionResponseMsg) {}
   rpc MirrorSessionGet(MirrorSessionId) returns (MirrorSessionResponseMsg) {}
-  rpc MirrorSessionList(Empty) returns (MirrorSessionResponseMsg) {}
+  rpc MirrorSessionList(types.Empty) returns (MirrorSessionResponseMsg) {}
   rpc MirrorSessionDelete(MirrorSessionDeleteMsg) returns (MirrorSessionResponseMsg) {}
 }

@@ -11,7 +11,7 @@ using grpc::Status;
 
 using sys::System;
 using sys::SystemResponse;
-using sys::Empty;
+using types::Empty;
 
 class SystemServiceImpl final : public System::Service {
 public:

@@ -11,6 +11,7 @@ import "nic/proto/hal/l2segment.proto";
 import "nic/proto/hal/telemetry.proto";
 
 package acl;
+option go_package="halproto";
 
 // ACL service definition
 service Acl {

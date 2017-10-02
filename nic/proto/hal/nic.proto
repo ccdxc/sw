@@ -9,6 +9,7 @@
 syntax = "proto3";
 
 package nic;
+option go_package="halproto";
 
 // NIC boots in classic mode first and may later transition to flow mode
 enum OperatingMode {

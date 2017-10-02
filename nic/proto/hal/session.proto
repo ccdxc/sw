@@ -9,6 +9,7 @@ import "nic/proto/hal/qos.proto";
 import "nic/proto/hal/telemetry.proto";
 
 package session;
+option go_package="halproto";
 
 // The session service definition
 service Session {

@@ -12,6 +12,7 @@ syntax = "proto3";
 import "nic/proto/types.proto";
 
 package qos;
+option go_package="halproto";
 
 // QOS service definition
 service QOS {

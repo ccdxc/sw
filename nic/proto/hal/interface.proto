@@ -9,6 +9,7 @@ import "nic/proto/hal/l2segment.proto";
 import "nic/proto/hal/qos.proto";
 
 package intf;
+option go_package="halproto";
 
 // Interface service definition
 service Interface {

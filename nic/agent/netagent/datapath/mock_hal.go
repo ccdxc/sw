@@ -32,6 +32,7 @@ type MockHalDatapath struct {
 	Sessclient    *halproto.MockSessionClient
 	Tnclient      *halproto.MockTenantClient
 	EndpointDB    map[string]*halproto.EndpointRequestMsg
+	EndpointUpdateDB    map[string]*halproto.EndpointUpdateRequestMsg
 	EndpointDelDB map[string]*halproto.EndpointDeleteRequestMsg
 	SgDB          map[string]*halproto.SecurityGroupRequestMsg
 }
@@ -54,6 +55,7 @@ func NewMockHalDatapath() (*MockHalDatapath, error) {
 
 	// init message databases
 	haldp.EndpointDB = make(map[string]*halproto.EndpointRequestMsg)
+	haldp.EndpointUpdateDB = make(map[string]*halproto.EndpointUpdateRequestMsg)
 	haldp.EndpointDelDB = make(map[string]*halproto.EndpointDeleteRequestMsg)
 	haldp.SgDB = make(map[string]*halproto.SecurityGroupRequestMsg)
 
@@ -273,7 +275,7 @@ func (hd *MockHalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 	}
 
 	// build endpoint message
-	epinfo := halproto.EndpointSpec{
+	epUpdateReq := halproto.EndpointUpdateRequest{
 		Meta:            &halproto.ObjectMeta{},
 		L2SegmentHandle: nw.Status.NetworkHandle,
 		MacAddress:      macaddr,
@@ -282,13 +284,16 @@ func (hd *MockHalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
 		SecurityGroup:   sgids,
 	}
-	epReq := halproto.EndpointRequestMsg{
-		Request: []*halproto.EndpointSpec{&epinfo},
+
+
+	epUpdateReqMsg := halproto.EndpointUpdateRequestMsg{
+		Request: []*halproto.EndpointUpdateRequest{&epUpdateReq},
 	}
+
 
 	// call hal to update the endpoint
 	// FIXME: handle response
-	_, err := hd.Epclient.EndpointUpdate(context.Background(), &epReq)
+	_, err := hd.Epclient.EndpointUpdate(context.Background(), &epUpdateReqMsg)
 	if err != nil {
 		log.Errorf("Error creating endpoint. Err: %v", err)
 		return err
@@ -296,7 +301,7 @@ func (hd *MockHalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 
 	// save the endpoint message
 	hd.Lock()
-	hd.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
+	hd.EndpointUpdateDB[objectKey(&ep.ObjectMeta)] = &epUpdateReqMsg
 	hd.Unlock()
 
 	return nil
@@ -333,7 +338,7 @@ func (hd *MockHalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 	}
 
 	// build endpoint message
-	epinfo := halproto.EndpointSpec{
+	epUpdateReq := halproto.EndpointUpdateRequest{
 		Meta:            &halproto.ObjectMeta{},
 		L2SegmentHandle: nw.Status.NetworkHandle,
 		MacAddress:      macaddr,
@@ -342,13 +347,14 @@ func (hd *MockHalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 		IpAddress:       []*halproto.IPAddress{&v4Addr, &v6Addr},
 		SecurityGroup:   sgids,
 	}
-	epReq := halproto.EndpointRequestMsg{
-		Request: []*halproto.EndpointSpec{&epinfo},
+
+	epUpdateReqMsg := halproto.EndpointUpdateRequestMsg{
+		Request: []*halproto.EndpointUpdateRequest{&epUpdateReq},
 	}
 
 	// call hal to update the endpoint
 	// FIXME: handle response
-	_, err := hd.Epclient.EndpointUpdate(context.Background(), &epReq)
+	_, err := hd.Epclient.EndpointUpdate(context.Background(), &epUpdateReqMsg)
 	if err != nil {
 		log.Errorf("Error creating endpoint. Err: %v", err)
 		return err
@@ -356,7 +362,7 @@ func (hd *MockHalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 
 	// save the endpoint message
 	hd.Lock()
-	hd.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
+	hd.EndpointUpdateDB[objectKey(&ep.ObjectMeta)] = &epUpdateReqMsg
 	hd.Unlock()
 
 	return nil
@@ -541,12 +547,13 @@ func (hd *MockHalDatapath) DeleteNetwork(nw *netproto.Network) error {
 			},
 		},
 	}
-	segReq := halproto.L2SegmentDeleteRequestMsg{
-		SegmentId: []*halproto.L2SegmentDeleteRequest{&seg},
+
+	segDelReqMsg := halproto.L2SegmentDeleteRequestMsg{
+		Request: []*halproto.L2SegmentDeleteRequest{&seg},
 	}
 
 	// delete the l2 segment
-	_, err := hd.Netclient.L2SegmentDelete(context.Background(), &segReq)
+	_, err := hd.Netclient.L2SegmentDelete(context.Background(), &segDelReqMsg)
 	if err != nil {
 		log.Errorf("Error creating network. Err: %v", err)
 		return err
@@ -711,14 +718,14 @@ func (hd *MockHalDatapath) convertRule(sg *netproto.SecurityGroup, rule *netprot
 	// build service list
 	srvs := []*halproto.Service{}
 	for _, svc := range rule.Services {
-		proto := halproto.IPProtocol_IP_PROTO_NONE
+		proto := halproto.IPProtocol_IPPROTO_NONE
 		switch svc.Protocol {
 		case "tcp":
-			proto = halproto.IPProtocol_IP_PROTO_TCP
+			proto = halproto.IPProtocol_IPPROTO_TCP
 		case "udp":
-			proto = halproto.IPProtocol_IP_PROTO_UDP
+			proto = halproto.IPProtocol_IPPROTO_UDP
 		case "icmp":
-			proto = halproto.IPProtocol_IP_PROTO_ICMP
+			proto = halproto.IPProtocol_IPPROTO_ICMP
 		default:
 			log.Errorf("Unknown protocol %s in rule {%+v}", svc.Protocol, rule)
 			return nil, errors.New("Unknown protocol")

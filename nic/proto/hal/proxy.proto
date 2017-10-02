@@ -8,7 +8,7 @@ import "nic/proto/types.proto";
 import "nic/proto/hal/session.proto";
 
 package proxy;
-
+option go_package="halproto";
 // The proxy service definition
 service Proxy {
   rpc ProxyEnable (ProxyRequestMsg) returns (ProxyResponseMsg) {}

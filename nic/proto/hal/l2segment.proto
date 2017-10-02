@@ -11,7 +11,7 @@ syntax = "proto3";
 import "nic/proto/types.proto";
 
 package l2segment;
-
+option go_package="halproto";
 // The L2 Segment service definition
 service L2Segment {
   rpc L2SegmentCreate (L2SegmentRequestMsg) returns (L2SegmentResponseMsg) {}

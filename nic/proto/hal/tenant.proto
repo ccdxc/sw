@@ -9,6 +9,7 @@ syntax = "proto3";
 import "nic/proto/types.proto";
 
 package tenant;
+option go_package="halproto";
 
 // The tenant service definition
 service Tenant {

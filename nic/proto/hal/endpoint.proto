@@ -12,6 +12,7 @@ syntax = "proto3";
 import "nic/proto/types.proto";
 
 package endpoint;
+option go_package="halproto";
 
 // The Endpoint service definition
 service Endpoint {

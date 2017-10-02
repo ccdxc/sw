@@ -759,8 +759,10 @@
 			"revisionTime": "2017-06-02T23:41:31Z"
 		},
 		{
+			"checksumSHA1": "L1EnSrVt8iXe1VtEfYopRet5+N8=",
 			"path": "github.com/golang/mock/gomock",
-			"revision": "bd3c8e81be01eef76d4b503f5e687d2d1354d2d9"
+			"revision": "c7d0ee73a597d1349404607d9f692cacd09cdc06",
+			"revisionTime": "2017-09-16T22:02:29Z"
 		},
 		{
 			"path": "github.com/golang/protobuf/jsonpb",
