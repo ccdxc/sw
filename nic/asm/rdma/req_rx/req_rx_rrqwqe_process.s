@@ -6,6 +6,7 @@ struct rrqwqe_t d;
 struct req_rx_rrqwqe_process_k_t k;
 
 #define RRQWQE_TO_SGE_T struct req_rx_rrqwqe_to_sge_info_t
+#define RRQWQE_TO_CQ_T struct req_rx_rrqwqe_to_cq_info_t
 
 %%
 
@@ -16,31 +17,31 @@ req_rx_rrqwqe_process:
 
     // TODO ack processing
 
-   // if (in_progress) 
-   //     pkt->psn == sqcb1_p->e_rsp_psn
-   //  else
-   //     pkt->psn == rrqwqe_p->psn 
-   seq             c1, k.args.in_progress, 1 
-   sne.c1          c2, k.to_stage.bth_psn, k.args.e_rsp_psn
-   sne.!c1         c2, k.to_stage.bth_psn, d.psn
-   bcf             [c2], out_of_order_rsp
-
-   sle             c2, d.msn, k.to_stage.msn
-   sub.c2          r1, d.msn, 1           
-
-   add             r5, r0, k.global.flags
-   ARE_ALL_FLAGS_SET(c3, r5, REQ_RX_FLAG_FIRST)
-
-   // if (first)
-   //     min((rrqwqe_p->msn -1), sqcb1_to_rrqwqe_info_p->psn)
-   // else
-   //     min(rrqwqe_p->msn, sqcb1_to_rrqwqe_info_p->psn)
-   cmov.c3         r1, c2, r1, k.to_stage.msn
-   cmov.!c3        r1, c2, d.msn, k.to_stage.msn   
-   phvwr           p.cqwqe.id.msn, r1
-
-   seq             c2, d.read_rsp_or_atomic, RSQ_OP_TYPE_READ
-   bcf             [!c2], atomic
+    // if (in_progress) 
+    //     pkt->psn == sqcb1_p->e_rsp_psn
+    //  else
+    //     pkt->psn == rrqwqe_p->psn 
+    seq             c1, k.args.in_progress, 1 
+    sne.c1          c2, k.to_stage.bth_psn, k.args.e_rsp_psn
+    sne.!c1         c2, k.to_stage.bth_psn, d.psn
+    bcf             [c2], out_of_order_rsp
+    
+    sle             c2, d.msn, k.to_stage.msn
+    sub.c2          r1, d.msn, 1           
+    
+    add             r5, r0, k.global.flags
+    ARE_ALL_FLAGS_SET(c3, r5, REQ_RX_FLAG_FIRST)
+    
+    // if (first)
+    //     min((rrqwqe_p->msn -1), sqcb1_to_rrqwqe_info_p->psn)
+    // else
+    //     min(rrqwqe_p->msn, sqcb1_to_rrqwqe_info_p->psn)
+    cmov.c3         r1, c2, r1, k.to_stage.msn
+    cmov.!c3        r1, c2, d.msn, k.to_stage.msn   
+    phvwr           p.cqwqe.id.msn, r1
+    
+    seq             c2, d.read_rsp_or_atomic, RSQ_OP_TYPE_READ
+    bcf             [!c2], atomic
 
 read:
     CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, r7)
@@ -66,8 +67,20 @@ atomic:
    
 
 set_cqcb_arg:
+    ARE_ALL_FLAGS_SET(c1, r5, REQ_RX_FLAG_COMPLETION)
+    bcf            [!c1], end
+
+    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, RRQWQE_TO_CQ_T, tbl_id, 2)
+    CAPRI_SET_FIELD(r7, RRQWQE_TO_CQ_T, dma_cmd_index, REQ_RX_DMA_CMD_CQ)
+
+    CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_rrqsge_process)
+    CQCB_ADDR_GET(r1, k.args.cq_id)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 
 out_of_order_rsp:
 
+end:
     nop.e
     nop

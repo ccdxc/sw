@@ -17,7 +17,8 @@ struct req_rx_phv_t {
     // dma commands
 
     // scratch
-
+    eq_int_num: 16;
+    struct eqwqe_t eqwqe;
     struct cqwqe_t cqwqe;
     my_token_id             : 8;
     // common rx
@@ -82,6 +83,27 @@ struct req_rx_rrqptseg_process_k_t {
 struct req_rx_sqcb1_write_back_process_k_t {
     struct capri_intrinsic_s0_k_t intrinsic;
     struct req_rx_sqcb1_write_back_info_t args;
+    struct req_rx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
+
+struct req_rx_cqcb_process_k_t {
+    struct capri_intrinsic_s0_k_t intrinsic;
+    struct req_rx_rrqwqe_to_cq_info_t args;
+    struct req_rx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
+
+struct req_rx_cqpt_process_k_t {
+    struct capri_intrinsic_s0_k_t intrinsic;
+    struct req_rx_cqcb_to_pt_info_t args;
+    struct req_rx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
+
+struct req_rx_eqcb_process_k_t {
+    struct capri_intrinsic_s0_k_t intrinsic;
+    struct req_rx_cqcb_to_eq_info_t args;
     struct req_rx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };

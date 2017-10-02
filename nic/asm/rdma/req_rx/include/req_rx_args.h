@@ -43,7 +43,7 @@ struct req_rx_rrqwqe_to_sge_info_t {
     in_progress             : 1;
     is_atomic               : 1;
     dma_cmd_start_index     : 4;
-    pad                     : 30;
+    pad                     : 26;
 };
 
 struct req_rx_rrqsge_to_lkey_info_t {
@@ -81,6 +81,32 @@ struct req_rx_rrqlkey_to_ptseg_info_t {
     dma_cmd_eop             : 1;
     sge_index               : 8;
     pad                     : 97;
+};
+
+struct req_rx_rrqwqe_to_cq_info_t {
+    tbl_id                  : 4;
+    dma_cmd_index           : 8;
+    pad                     : 148;
+};
+
+struct req_rx_cqcb_to_pt_info_t {
+    page_offset             : 16;
+    page_seg_offset         : 8;
+    dma_cmd_index           : 8;
+    eq_id                   : 24;
+    cq_id                   : 24;
+    arm                     : 1;
+    tbl_id                  : 3;
+    rsvd                    : 4;
+    pad                     : 72;
+};
+
+struct req_rx_cqcb_to_eq_info_t {
+    tbl_id                  : 3;
+    rsvd                    : 5;
+    dma_cmd_index           : 8;
+    cq_id                   : 24;
+    pad                     : 120;
 };
 
 #endif //__REQ_RX_ARGS_H
