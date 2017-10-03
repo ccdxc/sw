@@ -15,7 +15,7 @@ rm -f $MPU_COV_DUMP_FILE
 mkdir -p $MPU_PC_COV_DUMP_DIR
 
 export CAPCOV=$NIC_DIR/asic/capri/model/capsim-gen/bin/capcov
-export CAPRI_LOADER_CONF=$NIC_DIR/gen/capri_loader.conf
+export CAPRI_LOADER_CONF=$NIC_DIR/../bazel-bin/nic/hal/capri_loader.conf
 export GCOVR=$NIC_DIR/third-party/gcovr-3.3/scripts/gcovr
 
 $NIC_DIR/tools/gen_dol_cov_run.py
