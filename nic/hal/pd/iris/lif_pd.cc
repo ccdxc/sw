@@ -94,13 +94,6 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_args_t *args)
     hal_ret_t            ret = HAL_RET_OK;
     indexer::status      rs = indexer::SUCCESS;
 
-    if(((lif_t *)pd_lif->pi_lif)->lif_id == 1004) {
-        pd_lif->hw_lif_id = 1004;
-        HAL_TRACE_DEBUG("pd-lif:{}:hack: setting hw_lif id to {}", 
-                        __FUNCTION__, pd_lif->hw_lif_id);
-        return ret;
-    }
-
 #if 0
     if (args->with_hw_lif_id) {
         pd_lif->hw_lif_id = args->hw_lif_id;

@@ -7,14 +7,18 @@ namespace proxy {
 static inline hal_ret_t
 update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
 {
+    HAL_TRACE_DEBUG("IPSec Host flow forwarding role: {} direction: {}", ctx.role(), ctx.direction());
     if ( 
           ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) && 
            (ctx.direction() == FLOW_DIR_FROM_ENIC)) ||
+          ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) && 
+           (ctx.direction() == FLOW_DIR_FROM_UPLINK)) ||   //temporary - only
           ((ctx.role() ==  hal::FLOW_ROLE_RESPONDER) && 
            (ctx.direction() == FLOW_DIR_FROM_UPLINK))
         ) {
         
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
+        HAL_TRACE_DEBUG("IPSec updating lport = {}", pfi->proxy->lport_id);
 
         // update fwding info
         flowupd.fwding.lport = pfi->proxy->lport_id;
@@ -31,6 +35,7 @@ update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
 static inline hal_ret_t
 update_esp_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
 {
+    HAL_TRACE_DEBUG("IPSec ESP flow forwarding role: {}  direction: {}", ctx.role(), ctx.direction());
     if ( 
           ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) && 
            (ctx.direction() == FLOW_DIR_FROM_UPLINK)) ||
@@ -39,7 +44,7 @@ update_esp_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
         ) {
         
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
-
+        HAL_TRACE_DEBUG("IPSec updating lport = {}", pfi->proxy->lport_id);
         // update fwding info
         flowupd.fwding.lport = pfi->proxy->lport_id;
         flowupd.fwding.qid_en = true;

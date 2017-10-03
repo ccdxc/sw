@@ -33,10 +33,10 @@ proxy_meta_init() {
         (proxy_meta_t) {false, SERVICE_LIF_TLS_PROXY, 0, 4, 12};
 
     g_meta[types::PROXY_TYPE_IPSEC] = 
-        (proxy_meta_t) {true, SERVICE_LIF_IPSEC_ESP, 0, 2, 0};
+        (proxy_meta_t) {true, SERVICE_LIF_IPSEC_ESP, 0, 2, 4};
     
     g_meta[types::PROXY_TYPE_IPSEC] = 
-        (proxy_meta_t) {true, SERVICE_LIF_IPSEC_ESP, 1, 2, 0};
+        (proxy_meta_t) {true, SERVICE_LIF_IPSEC_ESP, 1, 2, 4};
     
     g_meta[types::PROXY_TYPE_CPU] = 
         (proxy_meta_t) {true, SERVICE_LIF_CPU, 0, 1, 1};
