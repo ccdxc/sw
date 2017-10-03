@@ -4,7 +4,7 @@ feature:
     package     : test.hostpin
     module      : hostpin
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
     - module:

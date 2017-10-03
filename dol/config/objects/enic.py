@@ -53,7 +53,8 @@ class EnicObject(base.ConfigObjectBase):
         gl_pinif_iter %= len(trunks)
         self.pinnedif = trunks[gl_pinif_iter]
         self.macaddr.update(self.pinnedif.id << 16)
-        cfglogger.info("- Pinning to Interface: %s" % self.pinnedif)
+        cfglogger.info("- %s: Pinning to Interface: %s" %\
+                       (self.GID(), self.pinnedif))
         return
 
     def AttachEndpoint(self, ep):

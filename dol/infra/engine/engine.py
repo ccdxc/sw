@@ -68,6 +68,10 @@ def GetSummaryAndResult():
           ('Total', '', '', npass, nfail, ntotal))
     print("-" * 78)
 
+    #if ntotal == 0:
+    #    print("ERROR: No Testcases run !!!")
+    #    return 1
+
     if final_result != 0:
         print("Final Status = FAIL")
         return 1

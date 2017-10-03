@@ -19,7 +19,7 @@ set_tm_oport:
   add         r7, r0, r0
   seq         c1, d.u.set_tm_oport_d.nports, 0
   mod.!c1     r7, k.rewrite_metadata_entropy_hash, d.u.set_tm_oport_d.nports
-  sub         r7, 28, r7, 4
+  sub         r7, 28, r7, 2
   srlv        r6, d.{u.set_tm_oport_d.egress_port1...u.set_tm_oport_d.egress_port8}, r7
   phvwr       p.capri_intrinsic_tm_oport, r6
   phvwr       p.capri_intrinsic_tm_oq, k.control_metadata_egress_tm_oqueue
