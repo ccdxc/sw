@@ -1,6 +1,8 @@
 #! /usr/bin/python3
 
 def GetForwardingCopy(tc, args = None):
+    if tc.tracker.step.IsDrop():
+        return None
     return tc.packets.Get(args.pktid)
 
 def GetCpuCopy(tc, args = None):
