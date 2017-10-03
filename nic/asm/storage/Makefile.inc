@@ -30,7 +30,7 @@ SRC_FILES := \
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 
 $(BIN_FILES): %.bin: %.s
-	@echo $@
+	@#echo $@
 	@mkdir -p $(OBJ_DIR)
 	$(CAPAS_BIN) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
 

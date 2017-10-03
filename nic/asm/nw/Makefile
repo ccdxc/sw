@@ -1,6 +1,7 @@
 TOPDIR = ../..
-CUSTOM = asm_all
-CUSTOM_CLEAN = asm_clean
+GEN_DIR = ../../gen
+CUSTOM = $(GEN_DIR)/.nw_asm
+CUSTOM_CLEAN = clean
 
 include $(TOPDIR)/make/Makefile.inc
 
@@ -11,10 +12,6 @@ INC_DIRS = -I. -I$(ASM_HDR_DIR)
 SRC_DIR = .
 CAPAS_BIN = ../../asic/capri/model/capsim-gen/bin/capas
 CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
-
-asm_all: deps asm
-
-deps:
 
 SRC_FILES := \
     $(SRC_DIR)/copp_action.asm \
@@ -61,12 +58,34 @@ SRC_FILES := \
 
 BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))
 
-$(BIN_FILES): %.bin: %.asm
-	@echo $@
-	@mkdir -p $(OBJ_DIR)
-	$(CAPAS_BIN) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
-
 asm: $(BIN_FILES)
+
+#local_deps = $(shell find . -name '*.asm' -o -name '*.s')
+DEPS_DIRS = $(subst -I,, $(INC_DIRS))
+DEPS = $(shell find $(DEPS_DIRS) -name '*.h')
+
+#asm_all: $(GEN_DIR)/.nw_asm asm
+#asm_all: $(GEN_DIR)/.nw_asm $(BIN_FILES)
+FILES = $(basename $(notdir $(BIN_FILES)))
+COMP_BIN_FILES = $(FILES:%=$(OBJ_DIR)/%.bin)
+
+#$(GEN_DIR)/.nw_asm: $(OBJ_DIR)/.dir $(local_deps) $(COMP_BIN_FILES)
+$(GEN_DIR)/.nw_asm: $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
+	touch $@
+
+$(OBJ_DIR)/%.bin: %.asm $(DEPS) $(CAPAS_BIN)
+	$(CAPAS_BIN) $(INC_DIRS) $< -o $@
+	@#$(CAPAS_BIN) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
+
+
+
+#$(BIN_FILES): %.bin: %.asm
+#	@echo $@
+#	@mkdir -p $(OBJ_DIR)
+#	$(CAPAS_BIN) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
+
+
+
 
 TEST_FILES := $(patsubst %.asm, %.ctl, $(SRC_FILES))
 TMP_FILES  := $(patsubst %.ctl, %.x, $(TEST_FILES))
@@ -102,5 +121,13 @@ $(TMP_FILES): %.x: %.ctl
 
 gtest: $(TMP_FILES)
 
-asm_clean:
+clean:
 	@rm -fR $(OBJ_DIR)/*.bin
+	@rm -fR $(GEN_DIR)/.nw_asm
+
+.asm_test:
+	@echo DEPS_DIRS = $(DEPS_DIRS)
+	@echo DEPS = $(DEPS)
+	@echo FILES = $(FILES)
+	@echo BIN_FILES = $(BIN_FILES)
+	@echo COMP_BIN_FILES = $(COMP_BIN_FILES)

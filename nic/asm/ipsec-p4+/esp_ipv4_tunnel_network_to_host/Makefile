@@ -3,8 +3,8 @@ LIBDIRS = $(NULL)
 
 PGMDIRS = \
 	rxdma\
-        txdma1\
-        txdma2\
+	txdma1\
+	txdma2\
 	$(NULL)
 
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)

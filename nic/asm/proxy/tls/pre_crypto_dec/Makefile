@@ -1,6 +1,7 @@
 
 TOPDIR = ../../../..
-CUSTOM = all
+GEN_DIR = $(TOPDIR)/gen
+CUSTOM = $(GEN_DIR)/.tls_pre_cd_asm
 CUSTOM_CLEAN = clean
 
 include $(TOPDIR)/make/Makefile.inc
@@ -19,9 +20,9 @@ CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
 NCC_OPTIONS = --p4-plus --asm-out --no-ohi
 
-all: deps asm
+#all: deps asm
 
-deps:
+#deps:
 
 SRC_FILES := \
     $(SRC_DIR)/tls-dec-read-tnmdr-alloc-idx.s \
@@ -41,18 +42,31 @@ SRC_FILES := \
 	$(SRC_DIR)/tls-dec-write-arq.s
 #    $(SRC_DIR)/tls-dec-pre-crypto-stats.s
 
-
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 
-$(BIN_FILES): %.bin: %.s
-	@echo $@
-	@mkdir -p $(OBJ_DIR)
-	$(CAPAS_BIN) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
+FILES = $(basename $(notdir $(BIN_FILES)))
+COMP_BIN_FILES = $(FILES:%=$(OBJ_DIR)/%.bin)
 
-%.h: $(P4_DIR)/$(PROJ).p4 $(COMMON_P4_DIR)/common_headers.p4
-	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/$(PROJ).p4 --gen-dir $(GEN_DIR)
+$(GEN_DIR)/.tls_pre_cd_asm: $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
+	touch $@
 
-asm: $(BIN_FILES)
+DEPS_DIRS = $(subst -I,, $(INC_DIRS))
+DEPS = $(shell find $(DEPS_DIRS) -name '*.h')
+$(OBJ_DIR)/%.bin: %.s $(DEPS) $(CAPAS_BIN)
+	$(CAPAS_BIN) $(INC_DIRS) $< -o $@
+
+
+#BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
+#
+#$(BIN_FILES): %.bin: %.s
+#	@echo $@
+#	@mkdir -p $(OBJ_DIR)
+#	$(CAPAS_BIN) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
+#
+#%.h: $(P4_DIR)/$(PROJ).p4 $(COMMON_P4_DIR)/common_headers.p4
+#	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/$(PROJ).p4 --gen-dir $(GEN_DIR)
+#
+#asm: $(BIN_FILES)
 
 #TEST_FILES := $(patsubst %.s, %.ctl, $(SRC_FILES))
 TEST_FILES := \
@@ -91,4 +105,5 @@ run: $(BIN_FILES)
 
 clean:
 	@rm -fR $(OBJ_DIR)/*.bin
+	@rm -fR $(GEN_DIR)/.tls_pre_cd_asm
 
