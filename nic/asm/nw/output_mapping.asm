@@ -14,20 +14,23 @@ nop:
 
 .align
 set_tm_oport:
-  seq         c1, d.u.set_tm_oport_d.egress_mirror_en, TRUE
-  phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
   add         r7, r0, r0
   seq         c1, d.u.set_tm_oport_d.nports, 0
   mod.!c1     r7, k.rewrite_metadata_entropy_hash, d.u.set_tm_oport_d.nports
+
+  // mod instruction stalls; instructions below execute till r7 is ready
+  seq         c1, d.u.set_tm_oport_d.egress_mirror_en, TRUE
+  phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
+  phvwr       p.capri_intrinsic_tm_oq, k.control_metadata_egress_tm_oqueue
+  phvwr       p.capri_intrinsic_lif, d.u.set_tm_oport_d.dst_lif
+  phvwr       p.control_metadata_rdma_enabled, d.u.set_tm_oport_d.rdma_enabled
+  phvwr       p.control_metadata_p4plus_app_id, d.u.set_tm_oport_d.p4plus_app_id
+
   sub         r7, 28, r7, 2
   srlv        r6, d.{u.set_tm_oport_d.egress_port1...u.set_tm_oport_d.egress_port8}, r7
   phvwr       p.capri_intrinsic_tm_oport, r6
-  phvwr       p.capri_intrinsic_tm_oq, k.control_metadata_egress_tm_oqueue
-  phvwr       p.capri_intrinsic_lif, d.u.set_tm_oport_d.dst_lif
   seq         c1, d.u.set_tm_oport_d.encap_vlan_id_valid, TRUE
   phvwr.c1    p.rewrite_metadata_tunnel_vnid, d.u.set_tm_oport_d.encap_vlan_id
-  phvwr       p.control_metadata_rdma_enabled, d.u.set_tm_oport_d.rdma_enabled
-  phvwr       p.control_metadata_p4plus_app_id, d.u.set_tm_oport_d.p4plus_app_id
   seq         c1, d.u.set_tm_oport_d.vlan_strip, TRUE
   nop.!c1.e
   seq         c1, k.vlan_tag_valid, TRUE

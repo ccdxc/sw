@@ -62,6 +62,7 @@ encap_vlan:
   phvwr       p.ethernet_etherType, ETHERTYPE_VLAN
 
 .align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
 encap_erspan:
   phvwr       p.{inner_ethernet_dstAddr...inner_ethernet_etherType}, \
                   k.{ethernet_dstAddr...ethernet_etherType}
@@ -96,12 +97,6 @@ encap_erspan:
   nop
 #endif /* PHASE2 */
 
-.align
-.assert $ < ASM_INSTRUCTION_OFFSET_MAX
-encap_ipsec:
-  nop.e
-  nop
-
 f_encap_vlan:
   phvwr       p.vlan_tag_etherType, r6
   phvwr       p.vlan_tag_vid, d.u.encap_vxlan_d.vlan_id
@@ -122,6 +117,7 @@ f_insert_ipv4_header:
   phvwr.e     p.ipv4_totalLen, r7
   phvwr       p.ipv4_valid, 1
 
+#ifdef PHASE2
 f_insert_ipv6_header:
   phvwri      p.{ipv6_version...ipv6_trafficClass}, 0x60000000
   phvwr       p.{ipv6_nextHdr,ipv6_hopLimit}, r6
@@ -129,7 +125,6 @@ f_insert_ipv6_header:
   phvwr.e     p.ipv6_payloadLen, r7
   phvwr       p.ipv6_valid, 1
 
-#ifdef PHASE2
 .align
 encap_vxlan_gpe:
   phvwr       p.{inner_ethernet_dstAddr...inner_ethernet_etherType}, \

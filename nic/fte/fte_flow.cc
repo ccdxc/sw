@@ -345,10 +345,10 @@ hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
     case FTE_HEADER_erspan:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_ERSPAN_ID;
         break;
+#ifdef PHASE2
     case FTE_HEADER_ipsec_esp:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_IPSEC_ID;
         break;
-#ifdef PHASE2
     case FTE_HEADER_vxlan_gpe:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_GPE_ID;
         attrs.tnnl_vnid = header.vxlan_gpe.tenant_id;

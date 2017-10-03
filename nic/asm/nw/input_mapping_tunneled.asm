@@ -13,8 +13,6 @@ nop:
 
 .align
 tunneled_ipv4_packet:
-  xor         r6, -1, r0
-
   seq         c1, k.inner_ethernet_srcAddr, r0
   seq         c2, k.inner_ethernet_dstAddr, r0
   seq         c3, k.inner_ethernet_srcAddr[40], 1
@@ -26,6 +24,7 @@ tunneled_ipv4_packet:
 
   seq         c1, k.inner_ethernet_dstAddr[40], 0
   add.c1      r7, r0, PACKET_TYPE_UNICAST
+  xor         r6, -1, r0
   seq         c2, k.inner_ethernet_dstAddr, r6[47:0]
   cmov.!c1    r7, c2, PACKET_TYPE_BROADCAST, PACKET_TYPE_MULTICAST
   phvwr       p.flow_lkp_metadata_pkt_type, r7
@@ -61,6 +60,7 @@ tunneled_ipv6_packet:
 
   seq         c1, k.inner_ethernet_dstAddr[40], 0
   add.c1      r7, r0, PACKET_TYPE_UNICAST
+  xor         r6, -1, r0
   seq         c2, k.inner_ethernet_dstAddr, r6[47:0]
   cmov.!c1    r7, c2, PACKET_TYPE_BROADCAST, PACKET_TYPE_MULTICAST
   phvwr       p.flow_lkp_metadata_pkt_type, r7
@@ -89,6 +89,7 @@ tunneled_non_ip_packet:
 
   seq         c1, k.inner_ethernet_dstAddr[40], 0
   add.c1      r7, r0, PACKET_TYPE_UNICAST
+  xor         r6, -1, r0
   seq         c2, k.inner_ethernet_dstAddr, r6[47:0]
   cmov.!c1    r7, c2, PACKET_TYPE_BROADCAST, PACKET_TYPE_MULTICAST
   phvwr       p.flow_lkp_metadata_pkt_type, r7

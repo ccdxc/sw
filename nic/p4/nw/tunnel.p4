@@ -566,11 +566,9 @@ action encap_ipsec(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         add(ipv4.totalLen, control_metadata.packet_len, 20);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
     } else {
-#ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_IPSEC_ESP);
         modify_field(ipv6.payloadLen, control_metadata.packet_len);
         modify_field(ethernet.etherType, ETHERTYPE_IPV6);
-#endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
@@ -596,8 +594,8 @@ table tunnel_rewrite {
         encap_vxlan;
         encap_erspan;
         encap_vlan;
-        encap_ipsec;
 #ifdef PHASE2
+        encap_ipsec;
         encap_nvgre;
         encap_genv;
         encap_ip;
