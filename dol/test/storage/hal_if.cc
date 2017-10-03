@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <grpc++/grpc++.h>
-#include <gflags/gflags.h>
 #include <memory>
 #include "nic/proto/hal/internal.pb.h"
 #include "nic/proto/hal/internal.grpc.pb.h"
@@ -8,7 +7,7 @@
 #include "nic/proto/hal/interface.grpc.pb.h"
 #include "dol/test/storage/hal_if.hpp"
 
-DECLARE_uint64(hal_port);
+extern uint64_t hal_port;
 
 const static uint32_t	kDefaultQStateSize	 = 64;
 
@@ -32,7 +31,7 @@ void init_hal_if() {
     return;
 
   char host_addr[32];
-  sprintf(host_addr, "localhost:%lu", FLAGS_hal_port);
+  sprintf(host_addr, "localhost:%lu", hal_port);
   std::unique_ptr<Internal::Stub> int_stub(
       Internal::NewStub(grpc::CreateChannel(
       host_addr, grpc::InsecureChannelCredentials())));

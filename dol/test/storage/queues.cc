@@ -60,7 +60,7 @@ namespace queues {
 
 // Special SSD marked for running E2e traffic with queues from 
 // NvmeSsd class
-storage_test::NvmeSsd *nvme_e2e_ssd;
+std::unique_ptr<storage_test::NvmeSsd> nvme_e2e_ssd;
 
 uint64_t ssd_cndx_addr[NUM_TO_VAL(kPvmNumNvmeBeSQs)];
 
@@ -150,10 +150,8 @@ void *queue_consume_entry(queues_t *queue, uint16_t *index) {
 
 int queues_setup() {
   // Allocatge HBM address for storage
-  if ((nvme_e2e_ssd = new(storage_test::NvmeSsd)) == nullptr) {
-    printf("can't allocate NVME E2E SSD \n");
-    return -1;
-  }
+  nvme_e2e_ssd.reset(new storage_test::NvmeSsd());
+
   // Allocatge HBM address for storage
   if (hal_if::alloc_hbm_address(&storage_hbm_addr, &storage_hbm_size) < 0) {
     printf("can't allocate HBM address for storage \n");
@@ -514,6 +512,10 @@ void get_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
   *db_data = (qid << kDbQidShift) | (ring << kDbRingShift) | bswap_16(index);
   *db_addr = kDbAddrHost |  (kDbAddrUpdate << kDbUpdateShift) | 
              (lif << kDbLifShift) | (qtype << kDbTypeShift);
+}
+
+void queues_shutdown() {
+  nvme_e2e_ssd.reset();
 }
 
 }  // namespace queues
