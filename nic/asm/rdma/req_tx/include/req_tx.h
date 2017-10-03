@@ -67,7 +67,8 @@ struct req_tx_phv_t {
     dma_cmd3 : 128;
 
     /* flit 7 */
-    rsvd_flit_7 : 392;
+    rsvd_flit_7 : 136;
+    inline_data: 256;
     struct p4plus_to_p4_header_t p4plus_to_p4;
     rsvd       : 6;
     in_progress: 1;

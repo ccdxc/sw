@@ -401,7 +401,7 @@ struct sqwqe_base_t {
     complete_notify    : 1;
     fence              : 1;
     solicited_event    : 1;
-    rsvd1              : 1;
+    inline_data_vld    : 1;
     num_sges           : 8;
     rsvd2              : 16;
 };
@@ -438,7 +438,10 @@ struct sqwqe_t {
         struct sqwqe_write_t write;
         struct sqwqe_read_t read;
     };
-    pad : 256;
+    union {
+        pad : 256;
+        inline_data: 256;
+    };
 };
 
 #define LOG_RRQ_WQE_SIZE 6

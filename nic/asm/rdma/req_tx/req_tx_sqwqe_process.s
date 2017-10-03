@@ -19,6 +19,7 @@ req_tx_sqwqe_process:
 
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
     add   r2, r0, offsetof(struct phv_, common_global_global_data)
+    seq   c1, d.base.inline_data_vld, 1 
 
     add            r1, r0, d.base.op_type
     beqi           r1, OP_TYPE_WRITE, write
@@ -42,7 +43,7 @@ read:
     phvwr RETH_RKEY, d.read.r_key
     phvwr RETH_LEN, d.read.length
 
-    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
+invoke_add_headers:
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, busy, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, in_progress, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, first, 1)
@@ -82,6 +83,8 @@ send_imm:
 send:
 
 common:
+    bcf         [c1], inline_data
+    phvwr.c1    p.inline_data, d.inline_data    //BD Slot
     // populate stage-2-stage data req_tx_wqe_to_sge_info_t for next stage
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, in_progress, k.args.in_progress)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, first, 1)
@@ -104,3 +107,16 @@ common:
 
     nop.e
     nop
+
+inline_data:
+    DMA_CMD_I_BASE_GET(r4, r5, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
+    DMA_PHV2PKT_SETUP(r4, inline_data, inline_data)
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r4)
+    b   invoke_add_headers
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r4)  //BD Slot
+    // NOTE: it should be noted that invoke_add_headers will directly invoke
+    // add_headers phase without any sge process as the data is inline.
+    // The length of data is copulated in length argument. All the 'length'
+    // parameter values for various union cases such as read/write/send are located
+    // at same offset. So, though argument passing code is passing read.length, 
+    // it should work for inline data as well.
