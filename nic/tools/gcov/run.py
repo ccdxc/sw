@@ -436,13 +436,13 @@ def run_and_generate_coverage(data):
     module_infos = defaultdict(lambda: [])
     for run_name in data["run"]:
         if "cmd" in data["run"][run_name]:
-            run(data["run"][run_name]["cmd"], exit_on_error=False)
+            run(data["run"][run_name]["cmd"])
             generate_run_coverage(run_name)
         elif "cmd_cfg" in data["run"][run_name]:
             with open(data["run"][run_name]["cmd_cfg"]) as cmd_cfg_file:    
     	        cmd_cfg_data = json.load(cmd_cfg_file)
                 for sub_run in cmd_cfg_data:
-                    run(cmd_cfg_data[sub_run], exit_on_error=False)
+                    run(cmd_cfg_data[sub_run])
                     generate_run_coverage(run_name, sub_run)
                     pass
         else:
@@ -486,7 +486,7 @@ def generate_coverage_summary_page(cov_output_dir, page_name="coverage_summary.h
     op_file.write(total_cov_info)
     asm_cov_str = "<br><strong>ASM Coverage Information</strong></br>"
     op_file.write(asm_cov_str)
-    for root, dirs, files in os.walk(cov_output_dir + "/total_cov/asm", topdown=True):
+    for root, dirs, files in os.walk("total_cov/asm", topdown=True):
         for file in files:
             if ".html" in file:
                 line = "<br><a href=%s>%s</a></br>" % (root + "/" + file, file.split(".html")[0])

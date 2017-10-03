@@ -91,6 +91,12 @@
         }
     },
     "run": {
+        "gtests": {
+            "cmd": "make gtest",
+            "modules": [
+                "hal"
+            ]
+        },
         "dol": {
             "cmd_cfg": "./coverage/dol_cov_runs.json",
             "modules": [

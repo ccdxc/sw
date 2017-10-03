@@ -145,7 +145,7 @@ bazel-gtests:
 	bazel build $(BAZEL_OPTIONS) hal/pd/utils/met:met_test
 	bazel build $(BAZEL_OPTIONS) hal/pd/utils/tcam:tcam_test
 
-GEN_TEST_RESULTS_DIR = $(TOPDIR)/gen/test_results
+GEN_TEST_RESULTS_DIR = $(TOPDIR_ABS)/gen/test_results
 run-gtests:
 	# PI gtests
 	cd ../bazel-bin && CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/test/gtests/acl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/acl_test.xml"
