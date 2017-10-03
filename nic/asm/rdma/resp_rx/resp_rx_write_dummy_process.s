@@ -28,7 +28,7 @@ resp_rx_write_dummy_process:
 
     add         GLOBAL_FLAGS, r0, k.global.flags
 
-    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
+    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
 
     seq     c1, k.args.load_reth, 1
 
@@ -66,12 +66,12 @@ resp_rx_write_dummy_process:
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, key_id, KEY_ID)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, dma_cmd_start_index, RESP_RX_DMA_CMD_PYLD_BASE)
 
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, tbl_id, TABLE_0)
+    CAPRI_SET_FIELD(r4, RKEY_INFO_T, tbl_id, TABLE_1)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, dma_cmdeop, 1)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, acc_ctrl, ACC_CTRL_REMOTE_WRITE)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, nak_code, NAK_CODE_REM_ACC_ERR)
 
-    CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
+    CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqlkey_process)
     CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, ALIGNED_KEY_ADDR)
 
@@ -80,13 +80,16 @@ resp_rx_write_dummy_process:
     tblwr.c1    d.r_key, 0
     tblwr.c1    d.len, 0
 
-    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, RQCB0_WB_T, tbl_id, TABLE_1)
+    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RQCB0_WB_T, tbl_id, TABLE_2)
     CAPRI_SET_FIELD(r4, RQCB0_WB_T, in_progress, 0)
     CAPRI_SET_FIELD(r4, RQCB0_WB_T, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD(r4, RQCB0_WB_T, incr_c_index, k.args.incr_c_index)
 
-    CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
+    IS_ANY_FLAG_SET(c3, r7, RESP_RX_FLAG_COMPLETION)
+    CAPRI_SET_FIELD_C(r4, RQCB0_WB_T, do_not_invalidate_tbl, 1, c3)
+
+    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb0_write_back_process)   
     RQCB0_ADDR_GET(RQCB0_ADDR)
     CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB0_ADDR)

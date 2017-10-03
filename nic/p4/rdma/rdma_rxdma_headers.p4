@@ -49,7 +49,8 @@ header_type p4_to_p4plus_roce_bth_reth_immeth_header_t {
     fields {
         common_header_bits  : 48;
         bth_header_bits     : 96;
-        reth_header_bits    : 128;
+        reth_header_bits_1  : 112;
+        reth_header_bits_2  : 16;
         immeth_data         : 32;
     }
 }

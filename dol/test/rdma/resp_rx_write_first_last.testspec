@@ -20,16 +20,24 @@ selectors:
 
 packets:
    - packet:
-        id          : BASE_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        id          : BASE_FIRST_PKT # Base packet
+        payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=1600,pkt_num=0
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
    - packet:
-        id          : IN_PKT    # Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        id          : BASE_LAST_PKT # Base packet
+        payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=1600,pkt_num=1
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+   - packet:
+        id          : IN_FIRST_PKT    # Input packet - first
+        payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=1600,pkt_num=0
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_RETH 
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -53,13 +61,41 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 10
+                opcode  : 6
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
             reth: 
-                va      : callback://rdma/rdma/GetVAfromSLAB/slab_id=SLAB0000,offset=1024
-                dma_len : ref://testcase/packets/id=BASE_PKT/size
+                va      : callback://rdma/rdma/GetVAfromSLAB/slab_id=SLAB0000,offset=512
+                dma_len : 1600
                 r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+   - packet:
+        id          : IN_LAST_PKT    # Input packet - last
+        payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=1600,pkt_num=1
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 8
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -69,8 +105,8 @@ buffers:
         template: ref://factory/templates/id=RDMA_XFER
         fields:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
-           offset  : 1024
-           size    : ref://testcase/packets/id=BASE_PKT/size
+           offset  : 512
+           size    : 1600
 
     - buffer:
         id      : EXP_BUF
@@ -79,8 +115,10 @@ buffers:
            slab    : None
            offset  : 0
            segments:
-               - size    : ref://testcase/packets/id=BASE_PKT/size
-                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+               - size    : ref://testcase/packets/id=BASE_FIRST_PKT/size
+                 data    : ref://testcase/packets/id=BASE_FIRST_PKT/rawbytes
+               - size    : ref://testcase/packets/id=BASE_LAST_PKT/size
+                 data    : ref://testcase/packets/id=BASE_LAST_PKT/rawbytes
 
 
 descriptors:
@@ -88,7 +126,10 @@ descriptors:
 trigger:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=IN_PKT
+            object  : ref://testcase/packets/id=IN_FIRST_PKT
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=IN_LAST_PKT
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
 expect:

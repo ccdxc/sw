@@ -211,7 +211,8 @@ action rdma_stage0_bth_reth_immeth_action () {
     modify_field(rdma_bth_reth_immeth_scr.bth_header_bits, rdma_bth_reth_immeth.bth_header_bits);
 
     // reth bits
-    modify_field(rdma_bth_reth_immeth_scr.reth_header_bits, rdma_bth_reth_immeth.reth_header_bits);
+    modify_field(rdma_bth_reth_immeth_scr.reth_header_bits_1, rdma_bth_reth_immeth.reth_header_bits_1);
+    modify_field(rdma_bth_reth_immeth_scr.reth_header_bits_2, rdma_bth_reth_immeth.reth_header_bits_2);
 
     // reth_immeth params
     modify_field(rdma_bth_reth_immeth_scr.immeth_data, rdma_bth_reth_immeth.immeth_data);

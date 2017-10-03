@@ -30,7 +30,7 @@ packets:
    - packet:
         id          : IN_PKT    # Input packet 
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_RETH 
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_RETH_IMMDT
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
@@ -53,13 +53,15 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 10
+                opcode  : 11
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
             reth: 
                 va      : callback://rdma/rdma/GetVAfromSLAB/slab_id=SLAB0000,offset=1024
                 dma_len : ref://testcase/packets/id=BASE_PKT/size
                 r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
+            immdt:
+                imm_data: ref://testcase/pvtdata/imm_data
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -81,11 +83,70 @@ buffers:
            segments:
                - size    : ref://testcase/packets/id=BASE_PKT/size
                  data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+    - buffer:
+        id      : RQ_BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           offset  : 0
+           segments:
+               - size    : 64 #not really used for data transfer
+                 data    : None
+#   - buffer:
+#       id      : EXP_RQ_BUF
+#       template: ref://factory/templates/id=RDMA_BUFFER
+#       fields:
+#          slab    : None
+#          offset  : 0
+#          segments:
+#              - size    : 64
+#                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
 
 descriptors:
+    - descriptor:
+        id      : RQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_RQ
+        fields:
+            wrid: 15
+            num_sges: 1
+               
+            sges:
+                - va  : ref://testcase/buffers/id=RQ_BUF/address
+                  len : ref://testcase/buffers/id=RQ_BUF/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+#
+#   - descriptor:
+#       id      : EXP_RQ_DESC
+#       template: ref://factory/templates/id=DESC_RDMA_RQ
+#       fields:
+#           buff: ref://testcase/buffers/id=EXP_RQ_BUF
+#           wrid: 15
+#           num_sges: 1
+#              
+#           sges:
+#               - va  : ref://testcase/buffers/id=RQ_BUF/address
+#                 len : ref://testcase/buffers/id=RQ_BUF/size
+#                 l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+
+    - descriptor:
+        id      : EXP_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ
+        fields:
+            wrid: ref://testcase/descriptors/id=RQ_DESC/wrid
+            qp: ref://testcase/config/rdmasession/lqp/id
+            op_type: 16 #OP_TYPE_RDMA_OPER_WITH_IMM
+            status : 0  #CQ_STATUS_SUCCESS
+            color  : callback://rdma/rdma/GetCQExpColor
+            imm_data: ref://testcase/pvtdata/imm_data
+            imm_data_vld: 1
 
 trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=RQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
+
     packets:
         - packet:
             object  : ref://testcase/packets/id=IN_PKT
@@ -93,6 +154,12 @@ trigger:
 
 expect:
     descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_CQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
+#       - descriptor:
+#           object  : ref://testcase/descriptors/id=EXP_RQ_DESC
+#           ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
         - descriptor:
             object : ref://testcase/buffers/id=EXP_BUF
             ring   : ref://testcase/buffers/id=XFER_BUF

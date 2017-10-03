@@ -16,7 +16,7 @@
 
 #define CAPRI_RXDMA_BTH_IMMETH_IMMDATA  k.{rdma_bth_immeth_immeth_data_sbit0_ebit7...rdma_bth_immeth_immeth_data_sbit8_ebit31}
 #define CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA(_r) \
-    add _r,  k.{rdma_bth_reth_immeth_immeth_data_sbit24_ebit31}, k.{rdma_bth_reth_immeth_immeth_data_sbit0_ebit23}, 8
+    add _r,  k.{rdma_bth_reth_immeth_immeth_data_sbit16_ebit31}, k.{rdma_bth_reth_immeth_immeth_data_sbit0_ebit15}, 16
 
 #define CAPRI_RXDMA_BTH_IETH_R_KEY k.{rdma_bth_ieth_ieth_r_key_sbit0_ebit7...rdma_bth_ieth_ieth_r_key_sbit8_ebit31}
 

@@ -167,7 +167,7 @@ check_write:
     // remaining_payload_bytes - (1 << log_pmtu)
     add     r1, r0, d.log_pmtu
     sllv    r1, 1, r1
-    sub     r1, r6, r1
+    sub     r1, REM_PYLD_BYTES, r1
     // first/middle packets should be of pmtu size
     seq     c2, r1, r0
     bcf.c1  [!c2], nak
@@ -204,9 +204,9 @@ write:
     CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA(r4)
     phvwr.c7    p.cqwqe.imm_data, r4
     
-    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
+    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
 
-    CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 0, c4)
+    //CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 0, c4)
     CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 1, !c4)
 
     CAPRI_RXDMA_RETH_VA(r5)
@@ -223,7 +223,7 @@ write:
     // as this is still stage 0 and parallel SRAM lookup would
     // be acquiring this information. Hence we need to create
     // a bubble and wait till the next stage
-    CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
+    CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_write_dummy_process)
     add     r3, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
     CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
@@ -247,7 +247,7 @@ need_checkout:
     phvwr.c6    p.cqwqe.op_type, OP_TYPE_SEND_RCVD
 
     // populate immediate data. 
-    ARE_ALL_FLAGS_SET(c6, r7, RESP_RX_FLAG_IMMDT)
+    ARE_ALL_FLAGS_SET(c6, r7, RESP_RX_FLAG_IMMDT|RESP_RX_FLAG_SEND)
     phvwr.c6    p.cqwqe.imm_data_vld, 1
     phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
 

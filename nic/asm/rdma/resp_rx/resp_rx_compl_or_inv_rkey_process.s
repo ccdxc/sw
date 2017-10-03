@@ -7,10 +7,11 @@ struct resp_rx_phv_t p;
 struct resp_rx_compl_or_inv_rkey_process_k_t k;
 struct rqcb1_t d;
 
-#define F_COMPL_AND_LAST    c7
-#define F_COMPL             c6
-#define F_INV_RKEY          c5
-#define F_ERR               c4
+#define F_SEND_COMPL_AND_MID_OR_LAST  c7
+#define F_COMPL_AND_SEND         c6
+#define F_INV_RKEY               c5
+#define F_MID_OR_LAST            c4
+#define F_ERR                    c3
 
 #define GBL_FLAGS           r7
 #define TBL_ID              r6
@@ -35,14 +36,17 @@ resp_rx_compl_or_inv_rkey_process:
     add                     r7, r0, k.global.flags
     add                     TBL_ID, r0, k.args.tbl_id
 
-    // if both last & completion is set, wrid present in CB1 should be stored into phv.cqwqe
-    ARE_ALL_FLAGS_SET(F_COMPL_AND_LAST, r7, RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_LAST)
-    ARE_ALL_FLAGS_SET(F_COMPL, r7, RESP_RX_FLAG_COMPLETION)
+    // if both non-first/only & completion for a send packet is set, 
+    // wrid present in CB1 should be stored into phv.cqwqe
+    IS_ANY_FLAG_SET(F_MID_OR_LAST, r7, RESP_RX_FLAG_MIDDLE | RESP_RX_FLAG_LAST)
+    ARE_ALL_FLAGS_SET(F_COMPL_AND_SEND, r7, RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION)
+    setcf        F_SEND_COMPL_AND_MID_OR_LAST, [F_MID_OR_LAST & F_COMPL_AND_SEND]
+    
     ARE_ALL_FLAGS_SET(F_INV_RKEY, r7, RESP_RX_FLAG_INV_RKEY)
     ARE_ALL_FLAGS_SET(F_ERR, r7, RESP_RX_FLAG_ERR_DIS_QP)
 
     bcf                     [!F_INV_RKEY | F_ERR], completion
-    phvwr.F_COMPL_AND_LAST  p.cqwqe.id.wrid, d.wrid // BD Slot
+    phvwr.F_SEND_COMPL_AND_MID_OR_LAST  p.cqwqe.id.wrid, d.wrid // BD Slot
 
 inv_rkey:
 
