@@ -8,8 +8,8 @@
 
 #define RESP_RX_MAX_DMA_CMDS        16
 #define RESP_RX_DMA_CMD_PYLD_BASE   3
-#define RESP_RX_DMA_CMD_RSQWQE      0
-#define RESP_RX_DMA_CMD_RSQ_DB      1
+#define RESP_RX_DMA_CMD_RSQWQE      4
+#define RESP_RX_DMA_CMD_RSQ_DB      5
 
 #define RESP_RX_DMA_CMD_ACK         0
 #define RESP_RX_DMA_CMD_CQ          (RESP_RX_MAX_DMA_CMDS - 3)
@@ -33,14 +33,21 @@
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, db_data, db_data, _db_addr_r); \
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
     
+#define RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(_dma_base_r, _rqcb1_addr_r, _tmp_r) \
+    add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, aeth); \
+    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.aeth, ack_info.aeth, _tmp_r); \
+    DMA_NEXT_CMD_I_BASE_GET(_dma_base_r, 1); \
+    add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, ack_nak_psn); \
+    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.psn, ack_info.psn, _tmp_r); \
+    
 // phv 
 struct resp_rx_phv_t {
     // dma commands (flit 8 - 11)
 
     // scratch (flit 7):
-    // size: 16 =  2 + 4 + 5 + 4 + 1
+    // size: 20 =  2 + 8 + 5 + 4 + 1
     eq_int_num: 16;
-    db_data: 32;
+    db_data: 64;
     struct ack_info_t ack_info;
     struct eqwqe_t eqwqe;
     my_token_id: 8;

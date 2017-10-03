@@ -16,7 +16,7 @@ selectors:
         lqp         : filter://any
         rqp         : filter://any
 #    maxflows    : 1 
-    maxrdmasessions     : 1 
+#    maxrdmasessions     : 1 
 
 packets:
    - packet:
@@ -64,7 +64,7 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
    - packet:
-        id          : EXP_PKT    # Input packet 
+        id          : EXP_PKT    # Output packet, Reverse all fields from the IN_PKT
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_AETH
         encaps      :   
@@ -73,13 +73,13 @@ packets:
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
             eth:
-                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
-                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
             qtag:
-                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
             ipv4:
-                src     : ref://testcase/config/rdmasession/session/responder/addr
-                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
                 ttl     : 64
             #ipv6:
             #    src     : ref://testcase/config/flow/sip
@@ -91,9 +91,9 @@ packets:
             bth:
                 opcode  : 16 # RDMA READ Response Only
                 destqp  : ref://testcase/config/rdmasession/rqp/id
-                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0  #Resp should carry PSN from Req
             aeth:
-                syndrome: 0 # should contain lsn, not yet implemented
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
@@ -107,61 +107,9 @@ buffers:
            offset  : 1024
            segments:
                - size    : 64
-                 #data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
                  data    : ref://testcase/packets/id=BASE_PKT/rawbytes
-#
-#    - buffer:
-#        id      : EXP_RQ_BUF
-#        template: ref://factory/templates/id=RDMA_BUFFER
-#        fields:
-#           slab    : None
-#           offset  : 0
-#           segments:
-#               - size    : ref://testcase/packets/id=BASE_PKT/size
-#                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
-#
-#descriptors:
-#    - descriptor:
-#        id      : RQ_DESC
-#        template: ref://factory/templates/id=DESC_RDMA_RQ
-#        fields:
-#            wrid: 5
-#            num_sges: 1
-#               
-#            sges:
-#                - va  : ref://testcase/buffers/id=RQ_BUF/address
-#                  len : ref://testcase/buffers/id=RQ_BUF/size
-#                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
-#
-#    - descriptor:
-#        id      : EXP_RQ_DESC
-#        template: ref://factory/templates/id=DESC_RDMA_RQ
-#        fields:
-#            buff: ref://testcase/buffers/id=EXP_RQ_BUF
-#            wrid: 5
-#            num_sges: 1
-#               
-#            sges:
-#                - va  : ref://testcase/buffers/id=RQ_BUF/address
-#                  len : ref://testcase/buffers/id=RQ_BUF/size
-#                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
-#
-#    - descriptor:
-#        id      : EXP_CQ_DESC
-#        template: ref://factory/templates/id=DESC_RDMA_CQ
-#        fields:
-#            wrid: ref://testcase/descriptors/id=RQ_DESC/wrid
-#            qp: ref://testcase/config/rdmasession/lqp/id
-#            op_type: 17 #OP_TYPE_SEND_RCVD
-#            status : 0  #CQ_STATUS_SUCCESS
-#            color  : callback://rdma/rdma/GetCQExpColor
 
 trigger:
-#    descriptors:
-#        - descriptor:
-#            object  : ref://testcase/descriptors/id=RQ_DESC
-#            ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ
-
     packets:
         - packet:
             object  : ref://testcase/packets/id=IN_PKT
@@ -172,8 +120,3 @@ expect:
         - packet:
             object  : ref://testcase/packets/id=EXP_PKT
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
-
-#   descriptors:
-#       - descriptor:
-#           object  : ref://testcase/descriptors/id=EXP_RQ_DESC
-#           ring    : ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ

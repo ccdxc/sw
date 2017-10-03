@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 import pdb
+import math
 from infra.api.objects import PacketHeader
 import infra.api.api as infra_api
 from infra.common.logging       import logger
@@ -35,3 +36,17 @@ def GetPacketPayloadSize(tc, pkt, args):
     else: 
         pkt_payload_size = args.msg_size % pmtu
     return (pkt_payload_size)
+
+def GetAckSyndrome(tc, pkt, args):
+    # AETH_CODE_ACK << AETH_SYNDROME_CODE_SHIFT | CCCCC (credit count)
+    # 8 bits: 3 ack/nack code + 5 bits
+    # 3 bits for ACK: 000
+    # 5 bits for lsn(ciredits) = log2(rqwqes) * 2 . If no RQWQEs posted, set credits to zero: 00000
+    credits = 0
+    if (args.rqwqes == 0):
+        credits = 0
+    else:
+        credits = math.log(rqwqes, 2) * 2
+
+    syndrome = ((0 << 5) | credits)
+    return syndrome

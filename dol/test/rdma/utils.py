@@ -34,8 +34,19 @@ def ValidateRespRxCQChecks(tc):
         return False
 
     # verify that color bit in CQWQE and CQCB are same
-    #tc.info('MURTY: Color from Exp CQ Descriptor: %d' % tc.descriptors.Get('EXP_CQ_DESC').color)
+    #tc.info('Color from Exp CQ Descriptor: %d' % tc.descriptors.Get('EXP_CQ_DESC').color)
     if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_cq_post_qstate, 'color', tc.descriptors.Get('EXP_CQ_DESC').color):
+        return False
+
+    return True
+
+
+def ValidateNoCQChanges(tc):
+    rs = tc.config.rdmasession
+    rs.lqp.rq_cq.qstate.Read()
+    tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
+    # verify that no change to p_index
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'p_index0', 0):
         return False
 
     return True

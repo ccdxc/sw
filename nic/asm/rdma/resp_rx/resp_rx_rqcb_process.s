@@ -123,6 +123,11 @@ read:
     //phvwr   p.rsqwqe.read_or_atomic, RSQ_OP_TYPE_READ
     //phvwr   p.rsqwqe.read.offset, 0
 
+    // DMA for copying phv.ack_info to RQCB1 
+    add     RQCB1_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
+    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
+    RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(DMA_CMD_BASE, RQCB1_ADDR, TMP)
+
     // wqe_p = (void *)(hbm_addr_get(rqcb_p->rsq_base_addr) +    
     //                      (sizeof(rsqwqe_t) * p_index));
     add         RSQWQE_P, d.rsq_base_addr, RSQ_P_INDEX, LOG_SIZEOF_RSQWQE_T
@@ -130,14 +135,16 @@ read:
     add         NEW_RSQ_P_INDEX, r0, RSQ_P_INDEX
     mincr       NEW_RSQ_P_INDEX, d.log_rsq_size, 1
    
+    // DMA for RSQWQE
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQWQE)
     DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, rsqwqe, rsqwqe, RSQWQE_P)
 
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, CAPRI_RXDMA_INTRINSIC_LIF, CAPRI_RXDMA_INTRINSIC_QTYPE, DB_ADDR)
     CAPRI_SETUP_DB_DATA(CAPRI_RXDMA_INTRINSIC_QID, RSQ_RING_ID, NEW_RSQ_P_INDEX, DB_DATA)
     // store db_data in LE format
-    phvwr   p.db_data, DB_DATA.wx
+    phvwr   p.db_data, DB_DATA.dx
 
+    // DMA for RSQ DoorBell
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQ_DB)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, db_data, db_data, DB_ADDR)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)

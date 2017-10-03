@@ -49,7 +49,7 @@ class RdmaBufferObject(base.FactoryObjectBase):
             cfglogger.info("Writing Buffer @0x%x = size: %d offset: %d " %
                        (self.address, self.size, self.offset))
             resmgr.HostMemoryAllocator.write(self.mem_handle,
-                                bytes(self.data[self.offset:(self.offset + self.size)]))
+                                bytes(self.data[:self.size]))
         else:
             cfglogger.info("Warning:!! buffer is not bound to an address, Write is ignored !!")
 

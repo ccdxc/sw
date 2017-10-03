@@ -33,8 +33,8 @@ class RdmaRQstate(Packet):
 
         ShortField("p_index0", 0),
         ShortField("c_index0", 0),
-        ShortField("p_index1", 0),
-        ShortField("c_index1", 0),
+        LEShortField("p_index1", 0),
+        LEShortField("c_index1", 0),
         ShortField("p_index2", 0),
         ShortField("c_index2", 0),
         ShortField("p_index3", 0),

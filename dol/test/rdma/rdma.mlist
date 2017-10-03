@@ -240,14 +240,14 @@ modules:
     #    spec    : resp_rx_send_first_last_pmtu_err.testspec
     #    ignore  : False
  
-#   - module:
-#       name    : RDMA_RX_READ_ONLY
-#       enable  : True
-#       package : test.rdma
-#       module  : resp_rx_read_only
-#       spec    : resp_rx_read_only.testspec
-#       ignore  : False
-#
+    - module:
+        name    : RDMA_RESP_RX_READ_ONLY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_only
+        spec    : resp_rx_read_only.testspec
+        ignore  : False
+
     - module:
         name    : RDMA_RX_WRITE_ONLY
         enable  : True
