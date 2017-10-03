@@ -25,13 +25,36 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
+        print("Configuring proxy for the flow with label: " + self.session.iflow.label)
         if self.session.iflow.label == 'TCP-PROXY':
             req_spec.meta.tenant_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 0
             req_spec.spec.proxy_type = 1
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
                 req_spec.proxy_en = True
+                req_spec.alloc_qid = True
             self.session.iflow.PrepareHALRequestSpec(req_spec)
+        elif self.session.iflow.label == 'ESP':
+            print("Configuring esp ipsec proxy for the flow with label: " + self.session.iflow.label)
+            req_spec.meta.tenant_id = self.session.initiator.ep.tenant.id
+            req_spec.spec.key_or_handle.proxy_id = 0
+            req_spec.spec.proxy_type = 3
+            if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
+                req_spec.proxy_en = True
+                req_spec.alloc_qid = True
+                req_spec.ipsec_config.encrypt = False
+            self.session.iflow.PrepareHALRequestSpec(req_spec)
+        elif self.session.iflow.label == 'IPSEC-PROXY':
+            print("Configuring host ipsec proxy for the flow with label: " + self.session.iflow.label)
+            req_spec.meta.tenant_id = self.session.initiator.ep.tenant.id
+            req_spec.spec.key_or_handle.proxy_id = 0
+            req_spec.spec.proxy_type = 3
+            if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
+                req_spec.proxy_en = True
+                req_spec.alloc_qid = False
+                req_spec.ipsec_config.encrypt = True
+            self.session.iflow.PrepareHALRequestSpec(req_spec)
+ 
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -50,7 +73,7 @@ class ProxyCbServiceObjectHelper:
 
     def Configure(self):
         for proxycb in self.proxy_service_list:
-            if proxycb.session.iflow.label == 'TCP-PROXY':
+            if proxycb.session.iflow.label == 'TCP-PROXY' or proxycb.session.iflow.label == 'ESP' or proxycb.session.iflow.label == 'IPSEC-PROXY':
                 lst = []
                 lst.append(proxycb)
                 halapi.ConfigureProxyCbService(lst)

@@ -101,12 +101,19 @@ message ProxyGetResponseMsg {
   repeated ProxyGetResponse    response = 1;    // batch get response
 }
 
+message IpsecFlowConfig {
+    bool                encrypt         = 1;
+    session.FlowKey     esp_flow_key    = 2;    
+}
+
 message ProxyFlowConfigRequest {
-    types.ObjectMeta    meta        = 1;    // object meta
-    ProxySpec           spec        = 2;    // Specify the type of proxy service 
-    session.FlowKey     flow_key    = 3;    // Flow key to identify a flow 
-    bool                proxy_en    = 4;    // Enable or disable proxy service for a flow
-    session.FlowData    flow_data   = 5;
+    types.ObjectMeta    meta            = 1; // object meta
+    ProxySpec           spec            = 2; // Specify the type of proxy service 
+    session.FlowKey     flow_key        = 3; // Flow key to identify a flow 
+    bool                proxy_en        = 4; // Enable/disable proxy service for a flow
+    session.FlowData    flow_data       = 5; // flow data
+    bool                alloc_qid       = 6; // false: disable Qid allocation
+    IpsecFlowConfig     ipsec_config    = 7; // IPSEC specific configuration
 }
 
 message ProxyFlowConfigRequestMsg {

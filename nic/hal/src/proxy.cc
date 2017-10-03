@@ -506,7 +506,7 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
     flow_key.dir = 0;
 
     if(req.proxy_en()) {
-        HAL_TRACE_DEBUG("proxy: enable proxy for the flow");
+        HAL_TRACE_DEBUG("proxy: enable proxy for the flow: {}", proxy->type);
         pfi = find_proxy_flow_info(proxy, &flow_key);
         if(pfi) {
             HAL_TRACE_DEBUG("Proxy already enabled for the flow");
@@ -524,20 +524,33 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
         pfi->proxy = proxy;
 
         // Allocate QID for this flow
-        rs = proxy->qid_idxr_->alloc(&(pfi->qid1));
-        if(rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("Error in qid1 allocation, err: {}", rs);
-            rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
-            return HAL_RET_NO_RESOURCE;
-        }
-        rs = proxy->qid_idxr_->alloc(&(pfi->qid2));
-        if(rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("Error in qid2 allocation, err: {}", rs);
-            rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
-            return HAL_RET_NO_RESOURCE;
-        }
+        if(req.alloc_qid()) {
+            rs = proxy->qid_idxr_->alloc(&(pfi->qid1));
+            if(rs != indexer::SUCCESS) {
+                HAL_TRACE_ERR("Error in qid1 allocation, err: {}", rs);
+                rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
+                return HAL_RET_NO_RESOURCE;
+            }
+            
+            rs = proxy->qid_idxr_->alloc(&(pfi->qid2));
+            if(rs != indexer::SUCCESS) {
+                HAL_TRACE_ERR("Error in qid2 allocation, err: {}", rs);
+                rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
+                return HAL_RET_NO_RESOURCE;
+            }
 
-        HAL_TRACE_DEBUG("Received qid1: {}, qid2: {}", pfi->qid1, pfi->qid2);
+            HAL_TRACE_DEBUG("Received qid1: {}, qid2: {}", pfi->qid1, pfi->qid2);
+        }
+        
+        if(proxy->type == types::PROXY_TYPE_IPSEC) {
+            HAL_TRACE_DEBUG("ipsec proxy flow configured");
+            if(req.ipsec_config().encrypt()) {
+                HAL_TRACE_DEBUG("ipsec proxy host flow configured");
+                extract_flow_key_from_spec(tid, 
+                                           &pfi->u.ipsec.u.host_flow.esp_flow_key,
+                                           req.ipsec_config().esp_flow_key());
+            }
+        }
         add_proxy_flow_info_to_db(pfi);
 
     } else {
