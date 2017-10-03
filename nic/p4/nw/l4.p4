@@ -158,7 +158,6 @@ action l4_profile(ip_normalization_en,
     modify_field(l4_metadata.tcp_split_handshake_drop, tcp_split_handshake_drop);
     modify_field(l4_metadata.ip_ttl_change_detect_en, ip_ttl_change_detect_en);
 
-    validate_tunneled_packet2();
     ip_normalization_checks();
     p4plus_to_p4_apps();
 }

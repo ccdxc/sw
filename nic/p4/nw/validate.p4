@@ -54,6 +54,38 @@ action malformed_packet() {
     drop_packet();
 }
 
+action validate_ipv4_flow_key() {
+    if (((flow_lkp_metadata.lkp_src & 0xff000000) == 0x7f000000) or
+        ((flow_lkp_metadata.lkp_src & 0xf0000000) == 0xe0000000) or
+        (flow_lkp_metadata.lkp_src == 0xffffffff) or
+        (flow_lkp_metadata.lkp_dst == 0) or
+        ((flow_lkp_metadata.lkp_dst & 0xf0000000) == 0x7f000000) or
+        (flow_lkp_metadata.lkp_src == flow_lkp_metadata.lkp_dst)) {
+        malformed_packet();
+    }
+}
+
+action validate_ipv6_flow_key() {
+    if ((flow_lkp_metadata.lkp_src == 0x00000000000000000000000000000001) or
+        ((flow_lkp_metadata.lkp_src & 0xff000000000000000000000000000000) ==
+         0xff000000000000000000000000000000) or
+        (flow_lkp_metadata.lkp_dst == 0x00000000000000000000000000000000) or
+        (flow_lkp_metadata.lkp_dst == 0x00000000000000000000000000000001) or
+        (flow_lkp_metadata.lkp_src == flow_lkp_metadata.lkp_dst)) {
+        malformed_packet();
+    }
+}
+
+action validate_flow_key() {
+    if (flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV4) {
+        validate_ipv4_flow_key();
+    } else {
+        if (flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV6) {
+            validate_ipv6_flow_key();
+        }
+    }
+}
+
 action validate_native_packet() {
     if ((ethernet.srcAddr == 0) or
         (ethernet.dstAddr == 0) or
@@ -64,24 +96,13 @@ action validate_native_packet() {
 
     if ((ipv4.valid == TRUE) and
         ((ipv4.version != 4) or
-         (ipv4.ttl == 0) or
-         ((ipv4.srcAddr & 0xff000000) == 0x7f000000) or
-         ((ipv4.srcAddr & 0xf0000000) == 0xe0000000) or
-         (ipv4.srcAddr == 0xffffffff) or
-         (ipv4.dstAddr == 0) or
-         ((ipv4.dstAddr & 0xf0000000) == 0x7f000000) or
-         (ipv4.srcAddr == ipv4.dstAddr))) {
+         (ipv4.ttl == 0))) {
         malformed_packet();
     }
 
     if ((ipv6.valid == TRUE) and
         ((ipv6.version != 6) or
-         (ipv6.hopLimit == 0) or
-         (ipv6.srcAddr == 0x00000000000000000000000000000001) or
-         ((ipv6.srcAddr & 0xff000000000000000000000000000000) == 0xff000000000000000000000000000000) or
-         (ipv6.dstAddr == 0x00000000000000000000000000000000) or
-         (ipv6.dstAddr == 0x00000000000000000000000000000001) or
-         (ipv6.srcAddr == ipv6.dstAddr))) {
+         (ipv6.hopLimit == 0))) {
         malformed_packet();
     }
 }
@@ -103,29 +124,6 @@ action validate_tunneled_packet() {
     if ((inner_ipv6.valid == TRUE) and
         ((inner_ipv6.version != 6) or
          (inner_ipv6.hopLimit == 0))) {
-        malformed_packet();
-    }
-}
-
-action validate_tunneled_packet2() {
-    if (((tunnel_metadata.tunnel_terminate == TRUE) and
-         (inner_ipv4.valid == TRUE)) and
-        (((inner_ipv4.srcAddr & 0xff000000) == 0x7f000000) or
-         ((inner_ipv4.srcAddr & 0xf0000000) == 0xe0000000) or
-         (inner_ipv4.srcAddr == 0xffffffff) or
-         (inner_ipv4.dstAddr == 0) or
-         ((inner_ipv4.dstAddr & 0xff000000) == 0x7f000000) or
-         (inner_ipv4.srcAddr == inner_ipv4.dstAddr))) {
-        malformed_packet();
-    }
-
-    if (((tunnel_metadata.tunnel_terminate == TRUE) and
-         (inner_ipv6.valid == TRUE)) and
-        ((inner_ipv6.srcAddr == 0x00000000000000000000000000000001) or
-         ((inner_ipv6.srcAddr & 0xff000000000000000000000000000000) == 0xff000000000000000000000000000000) or
-         (inner_ipv6.dstAddr == 0x00000000000000000000000000000000) or
-         (inner_ipv6.dstAddr == 0x00000000000000000000000000000001) or
-         (inner_ipv6.srcAddr == inner_ipv6.dstAddr))) {
         malformed_packet();
     }
 }

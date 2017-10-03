@@ -1632,20 +1632,36 @@ class capri_gress_pa:
 
         # print the un-used flit bits
         total_unused_bits = 0
+        phv_flit_sz = self.pa.be.hw_model['phv']['flit_size']
         for flit in self.flits:
             if flit.flit_avail:
                 self.pa.logger.debug("%s:Flit %d unused bits %d chunks %s" % \
                     (self.d.name, flit.id, flit.flit_avail, flit.free_chunks))
                 total_unused_bits += flit.flit_avail
             for chunk in flit.free_chunks:
-                if chunk[1] == 1024:
+                if chunk[1] == flit.fsize:
                     # assume no flit is used after this
                     break
-                cf = capri_field(None, self.d, chunk[1], '_flit_pad__%d' % \
+                # do not cross 512bit boundary when creating flit pads
+                if chunk[0] < phv_flit_sz and chunk[0]+chunk[1] > phv_flit_sz:
+                    clen0 = phv_flit_sz - chunk[0]
+                    clen1 = chunk[0]+chunk[1]-phv_flit_sz
+                else:
+                    clen0 = chunk[1]
+                    clen1 = 0
+                cf = capri_field(None, self.d, clen0, '_flit_pad__%d' % \
                     (flit.base_phv_bit + chunk[0]))
                 cf.is_flit_pad = True
                 cf.phv_bit = flit.base_phv_bit + chunk[0]
                 self.field_order.append(cf)
+                
+                if clen1 > 0:
+                    cf = capri_field(None, self.d, clen1, '_flit_pad__%d' % \
+                        (flit.base_phv_bit + phv_flit_sz))
+                    cf.is_flit_pad = True
+                    cf.phv_bit = flit.base_phv_bit + phv_flit_sz
+                    self.field_order.append(cf)
+                    
 
         self.pa.logger.debug("%s: total unused bits %d" % (self.d.name, total_unused_bits))
         # sort the fld order based on phv#

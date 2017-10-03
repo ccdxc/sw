@@ -30,10 +30,9 @@ tunneled_ipv4_packet:
   cmov.!c1    r7, c2, PACKET_TYPE_BROADCAST, PACKET_TYPE_MULTICAST
   phvwr       p.flow_lkp_metadata_pkt_type, r7
 
-  seq         c1, k.inner_ipv4_protocol, IP_PROTO_TCP
   add         r6, k.inner_ipv4_ihl, k.tcp_dataOffset
   sub         r7, k.inner_ipv4_totalLen, r6, 2
-  phvwr.c1    p.l4_metadata_tcp_data_len, r7
+  phvwr       p.l4_metadata_tcp_data_len, r7
 
   phvwr       p.tunnel_metadata_tunnel_terminate, 1
   phvwr       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
@@ -66,10 +65,10 @@ tunneled_ipv6_packet:
   cmov.!c1    r7, c2, PACKET_TYPE_BROADCAST, PACKET_TYPE_MULTICAST
   phvwr       p.flow_lkp_metadata_pkt_type, r7
 
-  seq         c1, k.inner_ipv6_nextHdr, IP_PROTO_TCP
-  or          r7, k.inner_ipv6_payloadLen_sbit0_ebit7, k.inner_ipv6_payloadLen_sbit8_ebit15, 8
+  or          r7, k.inner_ipv6_payloadLen_sbit0_ebit7, \
+                  k.inner_ipv6_payloadLen_sbit8_ebit15, 8
   sub         r6, r7, k.tcp_dataOffset, 2
-  phvwr.c1    p.l4_metadata_tcp_data_len, r6
+  phvwr       p.l4_metadata_tcp_data_len, r6
 
   phvwr       p.tunnel_metadata_tunnel_terminate, 1
   phvwr       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
@@ -109,4 +108,3 @@ tunneled_vm_bounce_packet:
 malformed_tunneled_packet:
   phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
-

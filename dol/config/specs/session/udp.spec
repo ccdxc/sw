@@ -17,7 +17,7 @@ entries:
                     dscp_rw : const/1
                     dscp    : const/3
         initiator: 
-            port : const/32
+            port : const/4
             flow_info:
                 eg_qos:    
                     dscp_rw : const/1
@@ -51,13 +51,13 @@ entries:
     - entry:
         label: recirc
         responder:
-            port : const/3618
+            port : const/0x704e
             flow_info:
                 eg_qos:    
                     cos_rw  : const/1
                     cos     : const/5
         initiator: 
-            port : const/7
+            port : const/2
 
     - entry:
         label: gft_drop

@@ -71,8 +71,6 @@ l4_profile:
                  u.l4_profile_d.tcp_flags_nonsyn_noack_drop}
 
   phvwr       p.l4_metadata_tcp_invalid_flags_drop, d.u.l4_profile_d.tcp_invalid_flags_drop
-  bal         r7, validate_tunneled_packet2
-  xor         r6, -1, r0
   bal         r7, f_ip_normalization
   phvwr       p.l4_metadata_tcp_split_handshake_detect_en, d.u.l4_profile_d.tcp_split_handshake_detect_en
   seq         c2, k.p4plus_to_p4_valid, TRUE
@@ -81,51 +79,6 @@ l4_profile:
   phvwr.e     p.l4_metadata_tcp_split_handshake_drop, d.u.l4_profile_d.tcp_split_handshake_drop
   phvwr       p.l4_metadata_ip_ttl_change_detect_en, d.u.l4_profile_d.ip_ttl_change_detect_en
 
-validate_tunneled_packet2:
-  seq         c1, k.tunnel_metadata_tunnel_terminate, 1
-  jr.!c1      r7
-  seq         c1, k.inner_ipv4_valid, 1
-  bcf         [!c1], validate_tunneled_packet2_ipv6
-  seq         c1, k.inner_ipv4_srcAddr[31:24], 0x7f
-  seq         c2, k.inner_ipv4_srcAddr[31:28], 0xe
-  seq         c3, k.inner_ipv4_srcAddr, r6
-  or          r5, k.inner_ipv4_dstAddr, r0
-  seq         c4, r5, r0
-  seq         c5, r5[31:24], 0x7f
-  seq         c6, k.inner_ipv4_srcAddr, r5
-  bcf         [c1|c2|c3|c4|c5|c6], malformed_tunneled_packet
-  nop
-  jr          r7
-  nop
-
-validate_tunneled_packet2_ipv6:
-  seq         c1, k.inner_ipv6_valid, 1
-  jr.!c1      r7
-  add         r1, r0, 1
-  seq         c1, k.inner_ipv6_dstAddr[127:64], r0
-  seq         c2, k.inner_ipv6_dstAddr[63:0], r0
-  seq         c3, k.inner_ipv6_dstAddr[63:0], r1
-  andcf       c1, [c2|c3]
-  // inner_srcAddr => r2(hi) r3(lo)
-  or          r2, k.{inner_ipv6_srcAddr_sbit0_ebit31, inner_ipv6_srcAddr_sbit32_ebit63}, r0
-  or          r3, k.inner_ipv6_srcAddr_sbit72_ebit127, \
-                    k.inner_ipv6_srcAddr_sbit64_ebit71, 56
-  seq         c2, r2, r0
-  seq         c3, r3, r1
-  andcf       c2, [c3]
-  seq         c3, r2[63:56], 0xff
-  seq         c4, r2, k.inner_ipv6_dstAddr[127:64]
-  seq         c5, r3, k.inner_ipv6_dstAddr[63:0]
-  // check if ipv6_sa == ipv6_da
-  andcf       c4, [c5]
-  bcf         [c1|c2|c3|c4], malformed_tunneled_packet
-  nop
-  jr          r7
-  nop
-
-malformed_tunneled_packet:
-  phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
-  phvwr       p.capri_intrinsic_drop, 1
 
 // c7 will retain the tunnel_terminate state throughout this function
 // c6 - IPv6

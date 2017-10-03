@@ -249,22 +249,6 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
                                  flow_miss_tm_oqueue) {
     adjust_lkp_fields();
 
-    // update packet length based on tm_iport
-    if (capri_intrinsic.tm_iport == TM_PORT_DMA) {
-        subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_TXDMA_INTRINSIC_HDR_SZ +
-                  P4PLUS_TO_P4_HDR_SZ));
-    } else {
-        subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
-                 CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
-    }
-    if (recirc_header.valid == TRUE) {
-        subtract(scratch_metadata.packet_len, scratch_metadata.packet_len,
-                 P4_RECIRC_HDR_SZ);
-    }
-    modify_field(control_metadata.packet_len, scratch_metadata.packet_len);
-    modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
-
     // if table is a miss, return. do not perform rest of the actions.
 
     // dejavu check
@@ -283,13 +267,24 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
 }
 
 action adjust_lkp_fields() {
+    if (capri_intrinsic.tm_iport == TM_PORT_DMA) {
+        modify_field(flow_lkp_metadata.lkp_inst,
+                     (p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_LKP_INST));
+        subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
+                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_TXDMA_INTRINSIC_HDR_SZ +
+                  P4PLUS_TO_P4_HDR_SZ));
+    } else {
+        subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
+                 CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
+    }
     if (recirc_header.valid == TRUE) {
         modify_field(control_metadata.recirc_reason, recirc_header.reason);
+        subtract(scratch_metadata.packet_len, scratch_metadata.packet_len,
+                 P4_RECIRC_HDR_SZ);
     }
-    if ((p4plus_to_p4.valid == TRUE) and
-        ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_LKP_INST) != 0)) {
-        modify_field(flow_lkp_metadata.lkp_inst, 1);
-    }
+
+    modify_field(control_metadata.packet_len, scratch_metadata.packet_len);
+    modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
 }
 
 // this table will be programmed during enic-if create time frame only

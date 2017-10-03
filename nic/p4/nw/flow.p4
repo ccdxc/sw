@@ -39,6 +39,8 @@ metadata flow_info_metadata_t flow_info_metadata;
 
 // entry 0 of flow_info table will be programmed as the miss entry
 action flow_miss() {
+    validate_flow_key();
+
     if (flow_lkp_metadata.lkp_vrf == 0) {
         modify_field(control_metadata.drop_reason, DROP_INPUT_PROPERTIES_MISS);
         drop_packet();

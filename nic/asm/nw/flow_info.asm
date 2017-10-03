@@ -86,6 +86,13 @@ flow_info:
 
 .align
 flow_miss:
+  seq         c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
+  bcf         [c1], validate_ipv4_flow_key
+  seq         c1, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
+  bcf         [c1], validate_ipv6_flow_key
+  phvwr       p.control_metadata_flow_miss, 1
+
+flow_miss_common:
   seq         c1, k.flow_lkp_metadata_lkp_vrf, r0
   bcf         [c1], flow_miss_input_properites_miss_drop
   seq         c1, k.flow_lkp_metadata_lkp_proto, IP_PROTO_TCP
@@ -93,7 +100,6 @@ flow_miss:
   seq         c3, k.l4_metadata_tcp_non_syn_first_pkt_drop, ACT_DROP
   bcf         [c1&c2&c3], flow_miss_tcp_non_syn_first_pkt_drop
   add         r1, r0, k.control_metadata_flow_miss_action
-  phvwr       p.control_metadata_flow_miss, 1
   phvwr       p.capri_intrinsic_tm_oq, k.control_metadata_flow_miss_tm_oqueue
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   .brbegin
@@ -147,3 +153,47 @@ flow_hit_to_vm_bounce:
 nop:
   nop.e
   nop
+
+validate_ipv4_flow_key:
+  sub         r7, r0, -1
+  seq         c1, k.flow_lkp_metadata_lkp_src[31:24], 0x7f
+  seq         c2, k.flow_lkp_metadata_lkp_src[31:28], 0xe
+  seq         c3, k.flow_lkp_metadata_lkp_src[31:0], r7
+  seq         c4, k.flow_lkp_metadata_lkp_dst_sbit32_ebit127[31:0], r0
+  seq         c5, k.flow_lkp_metadata_lkp_dst_sbit32_ebit127[31:24], 0x7f
+  seq         c6, k.flow_lkp_metadata_lkp_src[31:0], \
+                  k.flow_lkp_metadata_lkp_dst_sbit32_ebit127[31:0]
+  bcf         [c1|c2|c3|c4|c5|c6], malformed_flow_key
+  nop
+  b           flow_miss_common
+  nop
+
+validate_ipv6_flow_key:
+  // srcAddr => r2(hi) r3(lo)
+  add         r2, r0, k.flow_lkp_metadata_lkp_src[127:64]
+  add         r3, r0, k.flow_lkp_metadata_lkp_src[63:0]
+  // dstAddr ==> r4(hi), r5(lo)
+  or          r4, k.flow_lkp_metadata_lkp_dst_sbit32_ebit127[95:64], \
+                  k.flow_lkp_metadata_lkp_dst_sbit0_ebit31, 32
+  add         r5, r0, k.flow_lkp_metadata_lkp_dst_sbit32_ebit127[63:0]
+
+  add         r6, r0, 1
+  seq         c1, r4, r0
+  seq         c2, r5, r0
+  seq         c3, r5, r6
+  andcf       c1, [c2|c3]
+  seq         c2, r2, r0
+  seq         c3, r3, r6
+  andcf       c2, [c3]
+  seq         c3, r2[63:56], 0xff
+  seq         c4, r2, r4
+  seq         c5, r3, r5
+  andcf       c4, [c5]
+  bcf         [c1|c2|c3|c4], malformed_flow_key
+  nop
+  b           flow_miss_common
+  nop
+
+malformed_flow_key:
+  phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
+  phvwr       p.capri_intrinsic_drop, 1
