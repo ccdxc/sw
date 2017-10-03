@@ -77,10 +77,7 @@ resp_rx_rqwqe_process:
     // rqcb1_p->wrid = wqe_p->wrid
     //TODO: make sure wrid is at byte boundary so that below divison works
     // wrid address needs some work as offset does not directly gives. 
-    // Subtract offset and size of variable(8) from 64 to get to its address
-    // which is equivalent to subtracting offset from 56 (64-8)
-    add         r7, r7, 56
-    sub         r6, r7, BYTE_OFFSETOF(rqcb1_t, wrid)
+    add         r6, r7, FIELD_OFFSET(rqcb1_t, wrid)
     //TODO: change to DMA
     memwr.d.!c1 r6, d.wrid
 
@@ -118,6 +115,7 @@ loop:
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, tbl_id, r2)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmdeop, 0)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, acc_ctrl, ACC_CTRL_LOCAL_WRITE)
+    CAPRI_SET_FIELD(r7, INFO_LKEY_T, nak_code, NAK_CODE_REM_OP_ERR)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, inv_r_key, k.args.inv_r_key)
 
     //remaining_payload_bytes -= transfer_bytes;
@@ -314,11 +312,6 @@ cb0_cb1_wb_exit:
     CAPRI_GET_TABLE_3_K(resp_rx_phv_t, T3_K)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC2, resp_rx_rqcb1_write_back_process)
     CAPRI_NEXT_TABLE_I_READ(T3_K, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC2, r2)
-
-    //TODO:
-    //if ((RESP_RX_FLAGS_IS_SET(last)) || (RESP_RX_FLAGS_IS_SET(only))) {
-    //  rx_post_ack_info_to_txdma(phv_p, dma_cmd_index, RESP_RX_GET_RQCB1_ADDR());
-    //
 
     nop.e
     nop

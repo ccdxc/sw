@@ -10,6 +10,7 @@ struct rqcb1_t d;
 #define F_COMPL_AND_LAST    c7
 #define F_COMPL             c6
 #define F_INV_RKEY          c5
+#define F_ERR               c4
 
 #define GBL_FLAGS           r7
 #define TBL_ID              r6
@@ -38,8 +39,9 @@ resp_rx_compl_or_inv_rkey_process:
     ARE_ALL_FLAGS_SET(F_COMPL_AND_LAST, r7, RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_LAST)
     ARE_ALL_FLAGS_SET(F_COMPL, r7, RESP_RX_FLAG_COMPLETION)
     ARE_ALL_FLAGS_SET(F_INV_RKEY, r7, RESP_RX_FLAG_INV_RKEY)
+    ARE_ALL_FLAGS_SET(F_ERR, r7, RESP_RX_FLAG_ERR_DIS_QP)
 
-    bcf                     [!F_INV_RKEY], completion
+    bcf                     [!F_INV_RKEY | F_ERR], completion
     phvwr.F_COMPL_AND_LAST  p.cqwqe.id.wrid, d.wrid // BD Slot
 
 inv_rkey:

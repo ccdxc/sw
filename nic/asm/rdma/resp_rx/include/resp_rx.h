@@ -7,14 +7,32 @@
 #include "common_phv.h"
 
 #define RESP_RX_MAX_DMA_CMDS        16
-#define RESP_RX_DMA_CMD_PYLD_BASE   0
+#define RESP_RX_DMA_CMD_PYLD_BASE   3
 #define RESP_RX_DMA_CMD_RSQWQE      0
 #define RESP_RX_DMA_CMD_RSQ_DB      1
 
+#define RESP_RX_DMA_CMD_ACK         0
 #define RESP_RX_DMA_CMD_CQ          (RESP_RX_MAX_DMA_CMDS - 3)
 
 #define RESP_RX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
 
+//TODO: put ack_info.aeth, ack_info.psn adjacent to each other in PHV and also
+//      adjacent to each other in rqcb1, in right order. This will eliminate
+//      one DMA instruction
+#define RESP_RX_POST_ACK_INFO_TO_TXDMA(_dma_base_r, _rqcb1_addr_r, _tmp_r, \
+                                       _lif, _qtype, _qid, \
+                                       _db_addr_r, _db_data_r) \
+    add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, aeth); \
+    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.aeth, ack_info.aeth, _tmp_r); \
+    DMA_NEXT_CMD_I_BASE_GET(_dma_base_r, 1); \
+    add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, ack_nak_psn); \
+    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.psn, ack_info.psn, _tmp_r); \
+    DMA_NEXT_CMD_I_BASE_GET(_dma_base_r, 1); \
+    DOORBELL_INC_PINDEX(_lif, _qtype, _qid, ACK_NAK_RING_ID, _db_addr_r, _db_data_r);\
+    phvwr       p.db_data, _db_data_r.wx; \
+    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, db_data, db_data, _db_addr_r); \
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
+    
 // phv 
 struct resp_rx_phv_t {
     // dma commands (flit 8 - 11)
@@ -88,7 +106,8 @@ struct resp_rx_key_info_t {
     cq_dma_cmd_index: 8;
     inv_r_key: 32;
     dma_cmdeop: 1;
-    rsvd1: 7;
+    nak_code: 3;
+    rsvd1: 4;
     //tightly packed for 160 bits
 };
 

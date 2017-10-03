@@ -33,6 +33,7 @@
 #define CAPRI_APP_DATA_BTH_OPCODE k.rdma_bth_bth_opcode
 #define CAPRI_APP_DATA_BTH_PSN k.rdma_bth_bth_psn
 #define CAPRI_APP_DATA_AETH_MSN k.rdma_bth_aeth_aeth_msn
+#define CAPRI_APP_DATA_BTH_ACK_REQ  k.rdma_bth_bth_a
 
 #define CAPRI_RAW_TABLE_PC_SHIFT 6
 #define CAPRI_INTR_BASE 0x1234
@@ -520,7 +521,7 @@ struct capri_dma_cmd_mem2mem_t {
     sub         _base_r, _base_r, _tmp_r;
     
 #define DMA_NEXT_CMD_I_BASE_GET(_base_r, _cmd_idx) \
-    sub         _base_r, _base_r, 1, LOG_DMA_CMD_SIZE_BITS
+    sub         _base_r, _base_r, _cmd_idx, LOG_DMA_CMD_SIZE_BITS
 
 // x = offsetof(_field)
 // flit = x / 512
@@ -530,6 +531,17 @@ struct capri_dma_cmd_mem2mem_t {
 #define PHV_FIELD_START_OFFSET(_field) \
         (((offsetof(p, _field) / 512 + 1) * 512 - offsetof(p, _field) \
                                          - sizeof(p._field) + (offsetof(p, _field) / 512) * 512) >> 3)
+
+//TODO: This macro seems fine if the sizeof(__struct) is 64B (512b).
+//      Need to see if it holds good for any generic struct size.
+//      This macro is needed because structures used by asm are defined in 
+//      big-endian format for the easier access to asm routines. But when
+//      doing DMA or memwr to any of these struct fields, it need to be
+//      converted to little-endian accordingly ?
+
+#define FIELD_OFFSET(__struct, __field) \
+        ((sizeof(struct __struct) - offsetof(struct __struct, __field) - sizeof(struct __struct.__field)) >> 3)
+    
 
 #define PHV_FIELD_END_OFFSET(_field) \
         (((offsetof(p, _field) / 512 + 1) * 512 - offsetof(p, _field) \
@@ -654,15 +666,15 @@ struct capri_dma_cmd_mem2mem_t {
     CAPRI_SETUP_DB_DATA(_qid, _ring_id, _cindex, _data);                                            \
     memwr.dx   _addr, _data;
 
-#define DOORBELL_WRITE_PINDEX(_lif, _qtype, _qid, ring_id, _pindex, _addr, _data)                   \
+#define DOORBELL_WRITE_PINDEX(_lif, _qtype, _qid, _ring_id, _pindex, _addr, _data)                   \
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, _lif, _qtype, _addr);   \
     CAPRI_SETUP_DB_DATA(_qid, _ring_id, _pindex, _data);                                            \
-    memwr.dx   _adddr, _data;
+    memwr.dx   _addr, _data;
 
-#define DOORBELL_INC_PINDEX(_lif, _qtype, _qid, ring_id, _addr, _data)                              \
+#define DOORBELL_INC_PINDEX(_lif, _qtype, _qid, _ring_id, _addr, _data)                              \
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_INC_PINDEX, DB_SCHED_WR_EVAL_RING, _lif, _qtype, _addr);   \
     CAPRI_SETUP_DB_DATA(_qid, _ring_id, r0, _data);                                                 \
-    memwr.dx   _adddr, _data;
+    memwr.dx   _addr, _data;
 
 #define IS_RING_EMPTY(_c, _flags_r, _ring_id_bmap) \
     smneb   _c, _flags_r, _ring_id_bmap, _ring_id_bmap;

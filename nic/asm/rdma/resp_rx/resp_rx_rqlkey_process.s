@@ -17,6 +17,15 @@ struct resp_rx_key_process_k_t k;
 #define PT_OFFSET r6
 #define RAW_TABLE_PC r3
 
+#define DMA_CMD_BASE r1
+#define TMP r3
+#define DB_ADDR r4
+#define DB_DATA r5
+#define GLOBAL_FLAGS r6
+#define RQCB1_ADDR r7
+#define T2_ARG r5
+#define T2_KEY r6
+
 #define SEL_T0_OR_T1_S2S_DATA(_dst_r, _cf) \
     cmov        _dst_r, _cf, offsetof(struct resp_rx_phv_t, common.common_t0_s2s_s2s_data), offsetof(struct resp_rx_phv_t, common.common_t1_s2s_s2s_data);
 #define SEL_T0_OR_T1_K(_dst_r, _cf) \
@@ -45,7 +54,7 @@ resp_rx_rqlkey_process:
     and         r1, r1, k.args.acc_ctrl
     seq         c1, r1, k.args.acc_ctrl
     bcf         [!c1], error_completion
-    nop         //BD slot
+    add         r2, r0, k.args.nak_code     //BD Slot
 
     //  if ((lkey_info_p->sge_va < lkey_p->base_va) ||
     //  ((lkey_info_p->sge_va + lkey_info_p->sge_bytes) > (lkey_p->base_va + lkey_p->len))) {
@@ -57,7 +66,7 @@ resp_rx_rqlkey_process:
     add         r2, k.args.va, k.args.len
     slt         c2, r1, r2
     bcf         [c1 | c2], error_completion
-    nop         //BD slot
+    add         r2, r0, k.args.nak_code     //BD Slot
     
     // my_pt_base_addr = (void *)
     //     (hbm_addr_get(PHV_GLOBAL_PT_BASE_ADDR_GET()) +
@@ -133,31 +142,72 @@ invoke_pt:
     
     seq         c3, k.args.dma_cmdeop, 1
     bcf         [!c3], exit
-    add         r6, r0, k.global.flags // BD Slot
+    add         GLOBAL_FLAGS, r0, k.global.flags // BD Slot
 
-    IS_ANY_FLAG_SET(c2, r6, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION)
+    IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION)
 
     bcf         [!c2], exit
     CAPRI_SET_FIELD_C(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 1, !c2) //BD Slot
     
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, r6)
-    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, r7)
+    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
+    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
 
-    //TODO: r_key
-    CAPRI_SET_FIELD(r6, COMPL_R_INV_RKEY_INFO_T, r_key, k.args.inv_r_key)
-    CAPRI_SET_FIELD(r6, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
-    CAPRI_SET_FIELD(r6, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
+    CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, r_key, k.args.inv_r_key)
+    CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
+    CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
 
-    RQCB1_ADDR_GET(r5)
+    RQCB1_ADDR_GET(RQCB1_ADDR)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_compl_or_inv_rkey_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5)
+    CAPRI_NEXT_TABLE_I_READ(T2_KEY, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
 
 exit:
     nop.e
     nop
 
 error_completion:
-    //TODO
+    add         GLOBAL_FLAGS, r0, k.global.flags
+    IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION)
 
+    AETH_NAK_SYNDROME_GET(r3, r2)
+    phvwr       p.ack_info.aeth.syndrome, r3
+    phvwr       p.cqwqe.status, CQ_STATUS_LOCAL_ACC_ERR
+
+    // set error disable flag such that ptseg code wouldn't enqueue
+    // DMA commands
+    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP
+    // if it is send and error is encourntered, even first/middle packets
+    // should generate completion queue error.
+    // for write, only last/only packet will checkout a descriptor and only 
+    // in that case COMPLETION flag is set. In case of first/middle, we don't 
+    // need to generate completion queue entry.
+    or.c1       GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_COMPLETION
+    
+    add r3, r0, offsetof(struct phv_, common_global_global_data)
+    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, GLOBAL_FLAGS)
+
+    RQCB1_ADDR_GET(RQCB1_ADDR)
+    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
+
+    // prepare for NAK
+    RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB1_ADDR, TMP, \
+                                   k.global.lif,
+                                   k.global.qtype,
+                                   k.global.qid,
+                                   DB_ADDR, DB_DATA)
+    
+    bcf     [!c1],  exit
+    DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, !c1) //BD Slot
+
+    
+    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
+    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
+
+    CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
+    CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
+
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_compl_or_inv_rkey_process)
+    CAPRI_NEXT_TABLE_I_READ(T2_KEY, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
+
+    
     nop.e
     nop

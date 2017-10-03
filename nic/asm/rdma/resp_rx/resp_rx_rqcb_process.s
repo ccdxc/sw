@@ -21,6 +21,7 @@ struct rdma_stage0_table_k k;
 #define DB_ADDR r4
 #define DB_DATA r5
 #define NEW_RSQ_P_INDEX r6
+#define RQCB1_ADDR r6
 
 %%
     .param    resp_rx_rqpt_process
@@ -43,7 +44,12 @@ resp_rx_rqcb_process:
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, qtype, CAPRI_RXDMA_INTRINSIC_QTYPE)
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, qid, CAPRI_RXDMA_INTRINSIC_QID)
-    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, CAPRI_APP_DATA_RAW_FLAGS)
+
+    // TODO: Migrate ACK_REQ flag to P4 table
+    add     r1, r0, CAPRI_APP_DATA_RAW_FLAGS
+    seq     c1, CAPRI_APP_DATA_BTH_ACK_REQ, 1
+    or.c1   r1, r1, RESP_RX_FLAG_ACK_REQ
+    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, r1)
 
     //set DMA cmd ptr
     RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID)
@@ -63,6 +69,11 @@ resp_rx_rqcb_process:
 
     //got my turn, do sanity checks
 
+    // populate some fields on ack_info so that in case we need to 
+    // send NAK from anywhere, this info is already populated.
+    phvwr   p.ack_info.psn, d.e_psn
+    phvwr   p.ack_info.aeth.msn, d.msn
+
     // is service type correct ?
     srl     r1, CAPRI_APP_DATA_BTH_OPCODE, BTH_OPC_SVC_SHIFT
     seq     c1, r1, d.serv_type
@@ -80,6 +91,20 @@ resp_rx_rqcb_process:
     slt     c1, CAPRI_APP_DATA_BTH_PSN, d.e_psn
     bcf     [c1], duplicate
     nop     //BD Slot
+
+    IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_READ_REQ)
+    bcf     [!c1], check_read
+    nop     //BD Slot
+    
+    add         r1, r0, d.msn
+    mincr       r1, 24, 1
+    tblwr       d.msn, r1
+    phvwr       p.ack_info.aeth.msn, r1
+    // Don't need to do below instruction as it is already done above
+    //phvwr       p.ack_info.psn, d.e_psn
+    RQ_CREDITS_GET(r1, r2, c1)
+    AETH_ACK_SYNDROME_GET(r2, r1)
+    phvwr       p.ack_info.aeth.syndrome, r2
 
     // check for read
 check_read:
@@ -114,7 +139,7 @@ read:
     phvwr   p.db_data, DB_DATA.wx
 
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQ_DB)
-    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, db_data, db_data, DB_ADDR)
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, db_data, db_data, DB_ADDR)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
 
@@ -307,13 +332,18 @@ nak:
     // assumption: r2 has the nak code
 
     // copy nak info
-    phvwr   p.ack_info.psn, d.e_psn
-    phvwr   p.ack_info.aeth.msn, d.msn
     AETH_NAK_SYNDROME_GET(r3, r2)
     phvwr   p.ack_info.aeth.syndrome, r3
     
-    //TODO: DMA Commands to xfer p.ack_info to rqcb1
-    //TODO: ring ack_nak_ring doorbell
+    add     RQCB1_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
+    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
+
+    RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB1_ADDR, TMP, \
+                                   CAPRI_RXDMA_INTRINSIC_LIF, \
+                                   CAPRI_RXDMA_INTRINSIC_QTYPE, \
+                                   CAPRI_RXDMA_INTRINSIC_QID, \
+                                   DB_ADDR, DB_DATA)
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE);
 
     // release chance to next packet
     tbladd  d.nxt_to_go_token_id, 1  

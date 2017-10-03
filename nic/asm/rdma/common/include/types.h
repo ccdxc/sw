@@ -109,6 +109,19 @@ struct rdma_atomiceth_t {
 #define AETH_RNR_SYNDROME_GET(_dst, _t) \
     AETH_SYNDROME_GET(_dst, AETH_CODE_NAK, _t)
 
+//TODO perform log(credits) * 2 
+#define RQ_CREDITS_GET(_credits, _tmp, _tmp_c) \
+    add             _tmp, r0, d.log_num_wqes; \
+    sllv            _tmp, 1, _tmp; \
+    add             _credits, RQ_P_INDEX, _tmp; \
+    sub             _credits, _credits, RQ_C_INDEX; \
+    mincr           _credits, d.log_num_wqes, 0; \
+    seq             _tmp_c, _credits, r0; \
+    clz.!_tmp_c     _credits, _credits; \
+    sub.!_tmp_c     _credits, 63, _credits; \
+    sll.!_tmp_c     _credits, _credits, 1;
+
+
 struct rdma_aeth_t {
     syndrome    : 8;
     msn         : 24;
@@ -283,6 +296,7 @@ struct resp_rx_flags_t {
 #define RESP_RX_FLAG_IMMDT              0x0400
 #define RESP_RX_FLAG_INV_RKEY           0x0800
 #define RESP_RX_FLAG_COMPLETION         0x1000
+#define RESP_RX_FLAG_ACK_REQ            0x2000
 
 struct req_tx_flags_t {
     error_disable_qp: 1;

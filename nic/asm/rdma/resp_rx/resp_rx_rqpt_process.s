@@ -24,10 +24,14 @@ resp_rx_rqpt_process:
     // take a copy of raw_flags in r7 and keep it for further checks
     add     r7, r0, k.global.flags.flags
 
+    // do not perform any payload xfers if qp was err disabled
+    IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_ERR_DIS_QP)
+    bcf     [c1], exit
+
     //page_addr_p = (u64 *) (d_p + sizeof(u64) * rqcb_to_pt_info_p->page_seg_offset);
 
     //big-endian
-    sub     r3, (HBM_NUM_PT_ENTRIES_PER_CACHE_LINE-1), k.args.page_seg_offset
+    sub     r3, (HBM_NUM_PT_ENTRIES_PER_CACHE_LINE-1), k.args.page_seg_offset //BD Slot
     sll     r3, r3, CAPRI_LOG_SIZEOF_U64_BITS
     //big-endian
     tblrdp.dx  r3, r3, 0, CAPRI_SIZEOF_U64_BITS
@@ -56,5 +60,6 @@ resp_rx_rqpt_process:
 
     CAPRI_NEXT_TABLE_I_READ(TBL_KEY_P, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
 
+exit:
     nop.e
     nop
