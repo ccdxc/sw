@@ -5,7 +5,7 @@ meta:
 
 fields:
     version : const/4
-    ihl     : const/5
+    ihl     : None
     tos     : const/7
     len     : None      # Scapy will fill this
     id      : const/1
@@ -16,3 +16,4 @@ fields:
     chksum  : None      # Scapy will fill this
     src     : ipaddr/10.0.0.1
     dst     : ipaddr/10.0.0.2
+    options : None

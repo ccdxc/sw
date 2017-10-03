@@ -41,16 +41,16 @@ def GetInputIpv4Options(testcase, packet):
     iterelem = testcase.module.iterator.Get()
     profile_name = iterelem.profile
     if 'IP_OPTIONS_ACTION' in profile_name:
-        return 0xDEADBEEF
+        return [0x83, 0x03, 0x10]
     return None
 
 def GetExpectedIpv4Options(testcase, packet):
     iterelem = testcase.module.iterator.Get()
     profile_name = iterelem.profile
     if 'IP_OPTIONS_ACTION_ALLOW' in profile_name:
-        return 0xDEADBEEF
+        return [0x83, 0x03, 0x10]
     elif 'IP_OPTIONS_ACTION_DENY' in profile_name:
-        return 0xDEADBEEF
+        return [0x83, 0x03, 0x10]
     elif 'IP_OPTIONS_ACTION_EDIT' in profile_name:
         return None
     return None

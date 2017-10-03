@@ -127,7 +127,11 @@ PADDING_builder = ScapyHeaderBuilder_PADDING()
 
 class ScapyHeaderBuilder_IPV4(ScapyHeaderBuilder_BASE):
     def build(self, hdr):
-        hdr.fields.options = []
+        if hdr.fields.options is not None:
+            if len(hdr.fields.options):
+                hdr.fields.options = penscapy.IPOption(bytes(hdr.fields.options))
+        else:
+            hdr.fields.options = []
         return super().build(hdr)
 IPV4_builder = ScapyHeaderBuilder_IPV4()
 

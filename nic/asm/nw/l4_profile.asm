@@ -185,7 +185,7 @@ lb_ip_norm_options:
   add         r1, r0, k.flow_lkp_metadata_ipv4_hlen, 2
   sub         r1, r1, 20 // Option length
   sub         r2, k.ipv4_totalLen, r1
-  phvwr       p.ipv4_totalLen, r1
+  phvwr       p.ipv4_totalLen, r2
   sub         r2, k.control_metadata_packet_len, r1
   phvwr       p.control_metadata_packet_len, r2
 
