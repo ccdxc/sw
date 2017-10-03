@@ -131,4 +131,13 @@ int capri_program_offset_to_label(const char *handle,
 int capri_program_to_base_addr(const char *handle,
                                char *prog_name, uint64_t *base_addr);
 
+/**
+ * capri_list_program_addr: List each program's name, start address and end address
+ *
+ * @filename: The filename where the output is to be stored
+ *
+ * Return: 0 on success, < 0 on failure
+ */
+int capri_list_program_addr(const char *filename);
+
 #endif   // _CAPRI_LOADER_H_

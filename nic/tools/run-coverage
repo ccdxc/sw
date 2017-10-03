@@ -5,7 +5,19 @@ fi
 export COVERAGE_CONFIG_PATH=$NIC_DIR/conf/
 export COVERAGE_OUTPUT=$NIC_DIR/coverage
 
-rm -f $COVERAGE_OUTPUT
+rm -rf $COVERAGE_OUTPUT
+
+export MPU_COV_DUMP_FILE=$NIC_DIR/coverage/asm_cov.dump
+export MPU_PC_COV_DUMP_DIR=$NIC_DIR/coverage/asm_out_all
+
+#Remove mpu coverage dump file as its incremental.
+rm -f $MPU_COV_DUMP_FILE
+mkdir -p $MPU_PC_COV_DUMP_DIR
+
+export CAPCOV=$NIC_DIR/asic/capri/model/capsim-gen/bin/capcov
+export CAPRI_LOADER_CONF=$NIC_DIR/gen/capri_loader.conf
+export GCOVR=$NIC_DIR/third-party/gcovr-3.3/scripts/gcovr
+
 $NIC_DIR/tools/gen_dol_cov_run.py
 OUT=$?
 if [ $OUT -ne 0 ];then

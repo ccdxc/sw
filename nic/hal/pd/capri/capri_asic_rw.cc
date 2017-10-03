@@ -294,6 +294,7 @@ asic_rw_start (void *ctxt)
 {
     hal_ret_t    ret;
     hal_cfg_t    *hal_cfg = (hal_cfg_t *)ctxt;
+    capri_cfg_t capri_cfg;
 
     HAL_TRACE_DEBUG("ASIC-RW thread started ...");
     if (hal_cfg == NULL) {
@@ -314,7 +315,8 @@ asic_rw_start (void *ctxt)
     }
 
     // do capri initialization
-    HAL_ABORT(capri_init() == HAL_RET_OK);
+    capri_cfg.loader_info_file = hal_cfg->loader_info_file;
+    HAL_ABORT(capri_init(&capri_cfg) == HAL_RET_OK);
 
     // announce asic-rw thread as ready
     g_asic_rw_ready_ = true;

@@ -890,6 +890,9 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
 
         sparam = pt.get<std::string>("asic.name");
         strncpy(hal_cfg->asic_name, sparam.c_str(), HAL_MAX_NAME_STR);
+        hal_cfg->loader_info_file =
+                pt.get<std::string>("asic.loader_info_file");
+
         hal_cfg->grpc_port = pt.get<std::string>("sw.grpc_port");
         if (getenv("HAL_GRPC_PORT")) {
             hal_cfg->grpc_port = getenv("HAL_GRPC_PORT");

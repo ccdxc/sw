@@ -4,7 +4,9 @@ GEN_DIR = $(TOPDIR)/gen
 CUSTOM = $(GEN_DIR)/.tls_post_cd_asm
 CUSTOM_CLEAN = clean
 
+
 include $(TOPDIR)/make/Makefile.inc
+include $(TOPDIR)/make/Make.inc
 
 
 PROJ = tls_txdma_post_crypto_dec
@@ -46,7 +48,7 @@ $(GEN_DIR)/.tls_post_cd_asm: $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
 DEPS_DIRS = $(subst -I,, $(INC_DIRS))
 DEPS = $(shell find $(DEPS_DIRS) -name '*.h')
 $(OBJ_DIR)/%.bin: %.s $(DEPS) $(CAPAS_BIN)
-	$(CAPAS_BIN) $(INC_DIRS) $< -o $@
+	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $@
 
 
 #BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
@@ -54,7 +56,7 @@ $(OBJ_DIR)/%.bin: %.s $(DEPS) $(CAPAS_BIN)
 #$(BIN_FILES): %.bin: %.s
 #	@echo $@
 #	@mkdir -p $(OBJ_DIR)
-#	$(CAPAS_BIN) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
+#	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
 #
 #%.h: $(P4_DIR)/$(PROJ).p4 $(COMMON_P4_DIR)/common_headers.p4
 #	$(NCC_BIN) $(NCC_OPTIONS) $(P4_DIR)/$(PROJ).p4 --gen-dir $(GEN_DIR)

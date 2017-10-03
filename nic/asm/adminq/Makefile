@@ -3,7 +3,9 @@ GEN_DIR = ../../gen
 CUSTOM = $(GEN_DIR)/.adminq_asm
 CUSTOM_CLEAN = clean
 
+
 include $(TOPDIR)/make/Makefile.inc
+include $(TOPDIR)/make/Make.inc
 
 PROJ = adminq_txdma_actions
 OBJ_DIR = ../../obj/p4plus_bin
@@ -30,7 +32,7 @@ DEPS_DIRS = $(subst -I,, $(INC_DIRS))
 DEPS = $(shell find $(DEPS_DIRS) -name '*.h')
 
 $(OBJ_DIR)/%.bin: %.s $(DEPS) $(CAPAS_BIN)
-	$(CAPAS_BIN) $(INC_DIRS) $< -o $@
+	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $@
 
 clean:
 	@rm -fR $(OBJ_DIR)/*.bin

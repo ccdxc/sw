@@ -3,14 +3,17 @@ GEN_DIR = ../../gen
 CUSTOM = $(GEN_DIR)/.nw_asm
 CUSTOM_CLEAN = clean
 
+
 include $(TOPDIR)/make/Makefile.inc
+include $(TOPDIR)/make/Make.inc
 
 PROJ = iris
 OBJ_DIR = ../../obj/asm_bin
 ASM_HDR_DIR = ../../gen/$(PROJ)/asm_out/
 INC_DIRS = -I. -I$(ASM_HDR_DIR)
 SRC_DIR = .
-CAPAS_BIN = ../../asic/capri/model/capsim-gen/bin/capas
+
+
 CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
@@ -74,15 +77,15 @@ $(GEN_DIR)/.nw_asm: $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
 	touch $@
 
 $(OBJ_DIR)/%.bin: %.asm $(DEPS) $(CAPAS_BIN)
-	$(CAPAS_BIN) $(INC_DIRS) $< -o $@
-	@#$(CAPAS_BIN) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
+	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $@
+	@#$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
 
 
 
 #$(BIN_FILES): %.bin: %.asm
 #	@echo $@
 #	@mkdir -p $(OBJ_DIR)
-#	$(CAPAS_BIN) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
+#	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
 
 
 

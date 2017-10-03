@@ -3,14 +3,17 @@ GEN_DIR = ../../gen
 CUSTOM = $(GEN_DIR)/.com_p4plus_asm
 CUSTOM_CLEAN = clean
 
+
 include $(TOPDIR)/make/Makefile.inc
+include $(TOPDIR)/make/Make.inc
 
 PROJ = common-p4+
 OBJ_DIR = ../../obj/p4plus_bin
 ASM_HDR_DIR = ../../gen/$(PROJ)/asm_out/
 INC_DIRS = -I. -I$(ASM_HDR_DIR)
 SRC_DIR = .
-CAPAS_BIN = ../../asic/capri/model/capsim-gen/bin/capas
+
+
 CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
@@ -30,7 +33,7 @@ $(GEN_DIR)/.com_p4plus_asm: $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
 DEPS_DIRS = $(subst -I,, $(INC_DIRS))
 DEPS = $(shell find $(DEPS_DIRS) -name '*.h')
 $(OBJ_DIR)/%.bin: %.s $(DEPS) $(CAPAS_BIN)
-	$(CAPAS_BIN) $(INC_DIRS) $< -o $@
+	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $@
 
 clean:
 	@rm -fR $(OBJ_DIR)/*.bin

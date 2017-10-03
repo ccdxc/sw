@@ -15,7 +15,7 @@
 // - do all the table configuration related register programming
 //------------------------------------------------------------------------------
 hal_ret_t
-capri_init (void)
+capri_init (capri_cfg_t *cfg = NULL)
 {
     hal_ret_t ret = HAL_RET_OK;
     
@@ -32,6 +32,11 @@ capri_init (void)
     if (ret == HAL_RET_OK) {
         ret = capri_repl_init();
     }
+
+   if (cfg && !cfg->loader_info_file.empty()) {
+        capri_list_program_addr(cfg->loader_info_file.c_str());
+    }
+
 
     return ret;
 }

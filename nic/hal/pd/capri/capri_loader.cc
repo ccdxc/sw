@@ -511,3 +511,43 @@ capri_program_to_base_addr(const char *handle,
     HAL_TRACE_ERR("Could not resolve program name {}", prog_name);
     return -1;
 }
+
+/**
+ * capri_list_program_addr: List each program's name, start address and end address
+ *
+ * @filename: The filename where the output is to be stored
+ *
+ * Return: 0 on success, < 0 on failure
+ */
+int
+capri_list_program_addr(const char *filename) 
+{
+    capri_loader_ctx_t *ctx;
+    capri_program_info_t *program_info;
+    FILE *fp = NULL;
+
+    /* Input check  */
+    if ((!filename) || (!(fp = fopen(filename, "w+")))) {
+        HAL_TRACE_ERR("Cannot open input file for listing program addresses");
+        return -1;
+    }
+
+    /* Iterate through the loader instances, programs and list the valid ones */
+    for (auto it = loader_instances.begin(); it != loader_instances.end(); it++) {
+        if ((ctx = loader_instances[it->first]) != NULL) {
+            HAL_TRACE_DEBUG("Listing programs for handle name {}", it->first);
+            program_info = ctx->program_info;
+            for (int i = 0; i < ctx->num_programs; i++) {
+                fprintf(fp, "%s,%lx,%lx\n", program_info[i].name.c_str(),
+                        program_info[i].base_addr,
+                        ((program_info[i].base_addr + 
+                          program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1);
+                fflush(fp);
+            }
+        } else {
+            HAL_TRACE_DEBUG("Cannot listing programs for handle name {}", 
+                            it->first);
+        }
+    }
+  return 0;
+}

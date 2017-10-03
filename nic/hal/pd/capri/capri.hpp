@@ -1,7 +1,12 @@
 #ifndef __CAPRI_HPP__
 #define __CAPRI_HPP__
 
-hal_ret_t capri_init(void);
+typedef struct capri_cfg_s {
+    std::string      loader_info_file;
+} capri_cfg_t;
+
+
+hal_ret_t capri_init(capri_cfg_t *hal_cfg);
 hal_ret_t capri_p4_asm_init();
 hal_ret_t capri_p4p_asm_init();
 hal_ret_t capri_p4_pgm_init();

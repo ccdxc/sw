@@ -75,11 +75,17 @@ def run_model(args):
 
     log = open(model_log, "w")
 #    p = Popen(["sh", "run_model"], stdout=log, stderr=log)
+    model_cmd = ["./cap_model"]
     if args.modellogs:
-        p = Popen(["./cap_model", "+plog=info",
-                   "+model_debug=../../gen/iris/dbg_out/model_debug.json"], stdout=log, stderr=log)
-    else:
-        p = Popen(["./cap_model"], stdout=log, stderr=log)
+        model_cmd.extend(["+plog=info",
+                   "+model_debug=../../gen/iris/dbg_out/model_debug.json"])
+    if args.coveragerun:
+        dump_file= nic_dir + "/coverage/asm_cov.dump"
+        model_cmd.append("+mpu_cov_dump_file=" + dump_file)
+        dump_dir= nic_dir + "/coverage/asm_out_all"
+        model_cmd.append("+mpu_pc_cov_dump_dir=" + dump_dir)
+    
+    p = Popen(model_cmd, stdout=log, stderr=log)
     print "* Starting ASIC model pid (" + str(p.pid) + ")"
     print "- Log file: " + model_log + "\n"
 

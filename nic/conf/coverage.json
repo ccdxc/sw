@@ -40,8 +40,8 @@
                 ".c",
                 ".cc"
             ],
-            "build_cmd": "make V=1 GCOV=\"--coverage -DCOVERAGE\" -j8",
-            "clean_cmd" : "make clean",
+            "build_cmd": "make c=1  && mkdir -p obj/cano &&  mv obj/asm_bin/*.cano obj/cano && mv obj/p4plus_bin/*.cano obj/cano",
+            "clean_cmd": "make clean",
             "remove_files": [
                "/usr/include/*",
                 "/usr/local/*",
@@ -51,9 +51,25 @@
                 "asic/capri/model/capsim-master/lib/libmpuobj/include/*",
                 "asic/capri/model/utils/*",
                 "gen/common_rxdma_actions/include/*",
-                "gen/common_txdma_actions/include/*"
+                "gen/common_txdma_actions/include/*",
+                "/external/*",
+                "/bazel-out/*"
             ],
-            "gcno_dir" : "obj"
+            "obj_dir" : "../bazel-out/local-dbg/bin/",
+            "obj_dir_type" : "bazel",
+            "cov_type" : "lcov"
+        },
+        "asm": {
+            "dirs": [
+                "asm"
+            ],
+            "file_patterns": [
+                ".asm",
+                ".s"
+            ],
+            "obj_dir" : "obj/cano",
+            "obj_dir_type" : "flat",
+            "cov_type" : "capcov"
         },
         "model": {
             "dirs": [
@@ -63,26 +79,22 @@
                 ".c",
                 ".cc"
             ],
-            "build_cmd": "./build_model.sh --coverage && cd model_sim/build && make coverage",
-            "clean_cmd": "./build_model.sh --clean && cd model_sim/build  && make clean",
+            "build_cmd": "./build_model.sh --coverage",
+            "clean_cmd": "./build_model.sh --clean",
             "remove_files": [
                 "/usr/include/*",
                 "/usr/local/*"
             ],
-            "obj_dir" : "asic_gen"
+            "obj_dir" : "asic_gen",
+            "obj_dir_type" : "hierarchical",
+            "cov_type" : "lcov"
         }
     },
     "run": {
-        "gtests": {
-            "cmd": "make gtest",
-            "modules": [
-                "hal"
-            ]
-        },
         "dol": {
             "cmd_cfg": "./coverage/dol_cov_runs.json",
             "modules": [
-                "hal", "model"
+                "hal", "model", "asm"
             ]
         }
     }

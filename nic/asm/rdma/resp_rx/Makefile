@@ -4,7 +4,9 @@ P4_DIR = $(TOPDIR)/p4/rdma
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
 OBJ_DIR = $(TOPDIR)/obj/p4plus_bin
 GEN_DIR = $(TOPDIR)/gen
-CAPAS_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capas
+
+include $(TOPDIR)/make/Make.inc
+
 CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 NCC_BIN = $(TOPDIR)/tools/ncc/capri-ncc.py
 NCC_OPTIONS = --p4-plus --asm-out --no-ohi
@@ -31,7 +33,7 @@ clean:
 	@rm -fR $(OBJ_DIR)/*.bin
 
 %.bin: %.s
-	$(CAPAS_BIN) $(INC_DIR) $< -o $(OBJ_DIR)/$@
+	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIR) $< -o $(OBJ_DIR)/$@
 
 TEST_FILES := \
     $(SRC_DIR)/ctl/resp_rx_rqcb_process.ctl
