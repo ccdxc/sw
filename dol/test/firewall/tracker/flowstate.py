@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import copy
+import pdb
 
 class FlowStateData:
     def __init__(self):
@@ -13,6 +14,7 @@ class FlowStateData:
         return
 
     def Init(self, spec, lg):
+        self.port   = spec.port.get()
         self.seq    = getattr(spec, 'seq', self.seq)
         self.ack    = getattr(spec, 'ack', self.ack)
         self.flags  = getattr(spec, 'flags', self.flags)
@@ -44,36 +46,48 @@ class FlowStateData:
 class FlowState:
     def __init__(self):
         self.initial    = FlowStateData()
-        self.current    = None
-        self.previous   = None
+        self.curr    = None
+        self.prev   = None
         self.slist      = [ self.initial ]
         return
 
     def Init(self, spec, lg):
         self.lg = lg
         self.initial.Init(spec, lg)
-        self.current = copy.copy(self.initial)
+        self.curr = copy.copy(self.initial)
         return
 
     def Get(self):
-        return self.current
+        return self.curr
+
+    def GetPort(self):
+        return self.curr.port
 
     def Advance(self):
-        self.previous = self.current
-        self.slist.append(self.previous)
-        self.current = copy.copy(self.current)
+        self.prev = self.curr
+        self.slist.append(self.prev)
+        self.curr = copy.copy(self.curr)
         return
 
     def IncrementSeqNum(self, size):
-        self.current.seq += size
+        self.curr.seq += size
         return
 
     def IncrementAckNum(self, size):
-        self.current.ack += size
+        self.curr.ack += size
         return
 
-    def Show(self, lg):
-        self.current.Show(lg)
+    def ShowDiff(self, lg):
+        if self.prev.seq != self.curr.seq:
+            lg.info("- Seq  : prev=", self.prev.seq, " curr=", self.curr.seq)
+        if self.prev.ack != self.curr.ack:
+            lg.info("- Ack  : prev=", self.prev.ack, " curr=", self.curr.ack)
+        if self.prev.win != self.curr.win:
+            lg.info("- Win  : prev=", self.prev.win, " curr=", self.curr.win)
+        if self.prev.scale != self.curr.scale:
+            lg.info("- Scale: prev=", self.prev.scale, " curr=", self.curr.scale)
+        if self.prev.mss != self.curr.mss:
+            lg.info("- MSS  : prev=", self.prev.mss, " curr=", self.prev.mss)
         return
 
 class FlowStateTracker:
@@ -90,15 +104,17 @@ class FlowStateTracker:
         return
 
     def __advance_iflow(self, seqincr, ackincr):
+        self.lg.info("IFLOW: Advancing IFLOW by SeqIncr:%d" % seqincr)
         self.iflowstate.IncrementSeqNum(seqincr)
+        self.lg.info("IFLOW: Advancing RFLOW by AckIncr:%d" % ackincr)
         self.rflowstate.IncrementAckNum(ackincr)
-        self.lg.info("Advancing IFLOW by SeqIncr:%d AckIncr:%d" % (seqincr, ackincr))
         return
 
     def __advance_rflow(self, seqincr, ackincr):
+        self.lg.info("RFLOW: Advancing RFLOW by SeqIncr:%d" % seqincr)
         self.rflowstate.IncrementSeqNum(seqincr)
+        self.lg.info("RFLOW: Advancing IFLOW by AckIncr:%d" % ackincr)
         self.iflowstate.IncrementAckNum(ackincr)
-        self.lg.info("Advancing RFLOW by SeqIncr:%d AckIncr:%d" % (seqincr, ackincr))
         return
 
     def Advance(self, step):
@@ -113,15 +129,17 @@ class FlowStateTracker:
 
         self.lg.info("Advancing Tracker after Step:%s Flags:%s" %\
                      (step.GID(), step.fields.flags))
+        self.rflowstate.Advance()
+        self.iflowstate.Advance()
         if step.IsIflow():
             self.__advance_iflow(seqincr, ackincr)
         else:
             self.__advance_rflow(seqincr, ackincr)
 
-        self.lg.info("IFLOW FlowState Data:")
-        self.iflowstate.Show(self.lg)
-        self.lg.info("RFLOW FlowState Data:")
-        self.rflowstate.Show(self.lg)
+        self.lg.info("IFLOW FlowState Diff:")
+        self.iflowstate.ShowDiff(self.lg)
+        self.lg.info("RFLOW FlowState Diff:")
+        self.rflowstate.ShowDiff(self.lg)
 
         return
 
@@ -129,3 +147,9 @@ class FlowStateTracker:
         if iflow:
             return self.iflowstate.Get()
         return self.rflowstate.Get()
+
+    def GetInitiatorPort(self):
+        return self.iflowstate.GetPort()
+
+    def GetResponderPort(self):
+        return self.iflowstate.GetPort()

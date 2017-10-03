@@ -14,10 +14,10 @@ class StepObject(objects.FrameworkTemplateObject):
             return
         self.Clone(spec)
         self.GID(spec.id)
-        self.__resolve()
+        self.__init_step()
         return
 
-    def __resolve(self):
+    def __init_step(self):
         base = getattr(self, 'base', None)
         if base is None:
             return
@@ -32,6 +32,7 @@ class StepObject(objects.FrameworkTemplateObject):
 
     def __copy__(self):
         obj = type(self)()
+        obj.GID(self.GID())
         obj.fields = copy.copy(self.fields)
         obj.payloadsize = self.payloadsize
         obj.direction = self.direction
@@ -42,23 +43,42 @@ class StepObject(objects.FrameworkTemplateObject):
         
     def IsIflow(self):
         return self.direction == 'iflow'
-
     def IsSyn(self):
         return 'syn' in self.fields.flags
-
     def IsFin(self):
         return 'fin' in self.fields.flags
-
     def IsDrop(self):
         return self.permit == False
+    def NeedsAdvance(self):
+        return self.advance
+
+    def __resolve(self, attr, orig):
+        curr = getattr(self.fields, attr, None)
+        value = curr
+        if curr is None:
+            value = orig
+        elif objects.IsCallback(curr):
+            value = curr.call(orig)
+        assert(value is not None)
+        setattr(self.fields, attr, value)
+        return
 
     def CopyFlowState(self, fs):
-        self.fields.seq    = getattr(self.fields, 'seq', fs.seq)
-        self.fields.ack    = getattr(self.fields, 'ack', fs.ack)
-        self.fields.flags  = getattr(self.fields, 'flags', fs.flags)
-        self.fields.win    = getattr(self.fields, 'win', fs.win)
-        self.fields.scale  = getattr(self.fields, 'scale', fs.scale)
-        self.fields.mss    = getattr(self.fields, 'mss', fs.mss)
+        self.__resolve('seq', fs.seq)
+        self.__resolve('ack', fs.ack)
+        self.__resolve('flags', fs.flags)
+        self.__resolve('win', fs.win)
+        self.__resolve('scale', fs.scale)
+        self.__resolve('mss', fs.mss)
+        return
+
+    def SetPorts(self, iport, rport):
+        if self.IsIflow():
+            self.fields.sport = iport
+            self.fields.dport = rport
+        else:
+            self.fields.sport = rport
+            self.fields.dport = iport
         return
 
     def Show(self, lg):

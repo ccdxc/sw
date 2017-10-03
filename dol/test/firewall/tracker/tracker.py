@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import copy
+import pdb
 
 import test.firewall.tracker.step as step
 import test.firewall.tracker.connection as connection
@@ -21,12 +22,17 @@ class TrackerObject:
         lg.info("- Loading Connection Params from Spec: %s" % self.conn.GID())
         self.flowstate.Init(self.conn, lg)
         self.cpu_copy_valid = True
+        self.iport = self.flowstate.GetInitiatorPort()
+        self.rport = self.flowstate.GetResponderPort()
         return
 
     def Advance(self):
         self.cpu_copy_valid = False
         if self.step.IsDrop():
-            lg.info("- Step Action is NOT PERMIT. Not advancing the step...")
+            self.lg.info("- Step Action is NOT PERMIT. Not advancing the step...")
+            return
+        if self.step.NeedsAdvance() is False:
+            self.lg.info("- Step Advance is False. Not advancing the step...")
             return
         self.flowstate.Advance(self.step)
         return
@@ -40,6 +46,7 @@ class TrackerObject:
         self.step = copy.copy(step)
         state = self.flowstate.GetState(self.step.IsIflow())
         self.step.CopyFlowState(state)
+        self.step.SetPorts(self.iport, self.rport)
         self.step.Show(self.lg)
         return
 

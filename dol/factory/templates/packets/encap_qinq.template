@@ -10,12 +10,12 @@ headers:
             type: ethertype/0x8100
    
     - header:
-        id      : qtag
+        id      : outerqtag
         template: ref://store/headers/id=QTAG
         fields:
             type: ethertype/0x8100
 
     - header:
-        id      : innerqtag
+        id      : qtag
         template: ref://store/headers/id=QTAG
         fields  : 

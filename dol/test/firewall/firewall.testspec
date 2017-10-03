@@ -41,8 +41,8 @@ packets:
                 dst     : ref://testcase/tracker/config/flow/dip
                 hlim    : 64
             tcp:
-                sport   : ref://testcase/tracker/config/flow/sport
-                dport   : ref://testcase/tracker/config/flow/dport
+                sport   : ref://testcase/tracker/step/fields/sport
+                dport   : ref://testcase/tracker/step/fields/dport
                 seq     : ref://testcase/tracker/step/fields/seq
                 ack     : ref://testcase/tracker/step/fields/ack
                 window  : ref://testcase/tracker/step/fields/win

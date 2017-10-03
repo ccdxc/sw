@@ -10,8 +10,7 @@ feature:
 
 modules:
     - module:
-        name    : SFW_3WAY_HANDSHAKE
-        enable  : False
+        name    : CONN_SETUP
         tracker : True
         args    :
             connspec: ref://trackerstore/connections/id=DEFAULT
@@ -22,9 +21,8 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
 
     - module:
-        name    : SFW_TCP_FULL
+        name    : FULL
         tracker : True
-        ignore  : True
         args    :
             connspec: ref://trackerstore/connections/id=DEFAULT
         iterate :
@@ -41,3 +39,43 @@ modules:
             # Close from the Responder Side
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
+
+    - module:
+        name    : RETRANSMIT
+        tracker : True
+        ignore  : False
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # IFLOW Retransmit
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_RETRANSMIT
+            # RFLOW Retransmit
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_RETRANSMIT
+            # Send some more data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+
+    - module:
+        name    : LEFT_OVERLAP
+        tracker : True
+        ignore  : False
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # IFLOW Retransmit
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_OVERLAP_LEFT
+
