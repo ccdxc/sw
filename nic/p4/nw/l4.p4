@@ -1081,24 +1081,23 @@ action ip_normalization_checks() {
     // According to the SNORT IP4 specification:
     // trim - truncate packets with excess payload to the datagram length specified in the IP
     // header + the layer 2 header (e.g. ethernet), but don’t truncate below minimum frame length.
-    //
-    // But, according to the logic below it looks like we are modifying the ipv4.totalLen directly
-    // what is the correct behavior ? According to SNORT, the ipv4.totalLen field is the source of
-    // truth. Do we need to stick with the snort spec ?
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
         (((vlan_tag.valid == TRUE) and (control_metadata.packet_len > (ipv4.totalLen + 18))) or
          ((vlan_tag.valid == FALSE) and (control_metadata.packet_len > (ipv4.totalLen + 14))))) {
         modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
     }
+    // Vlan tagged packet
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
-        ((vlan_tag.valid == TRUE) and (control_metadata.packet_len > (ipv4.totalLen + 18)))) {
-        modify_field(ipv4.totalLen, (control_metadata.packet_len - 18));
+        ((vlan_tag.valid == TRUE) and (control_metadata.packet_len > (ipv4.totalLen + 18)) and 
+        ((ipv4.totalLen + 18) >= MIN_ETHER_FRAME_LEN))) {
+        modify_field(control_metadata.packet_len, (ipv4.totalLen + 18));
     }
+    // Untagged packet
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
-        ((vlan_tag.valid == TRUE) and (control_metadata.packet_len > (ipv4.totalLen + 14)))) {
-        modify_field(ipv4.totalLen, (control_metadata.packet_len - 14));
+        ((vlan_tag.valid == FALSE) and (control_metadata.packet_len > (ipv4.totalLen + 14)) and 
+        ((ipv4.totalLen + 14) >= MIN_ETHER_FRAME_LEN))) {
+        modify_field(control_metadata.packet_len, (ipv4.totalLen + 14));
     }
-
     // IP Normalize TTL: If the configured value is non-zero then every
     // IPv4 packet hitting this L4 Profile will be updated with a ttl which is
     // ip_normalize_ttl

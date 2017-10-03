@@ -319,6 +319,9 @@
 #define IPSEC_HEADER_AH                1
 #define IPSEC_HEADER_ESP               2
 
+// Minimum ethernet frame length - excludes CRC (4 bytes)
+#define MIN_ETHER_FRAME_LEN            60
+
 //Normalization
 #define NORMALIZATION_ACTION_ALLOW     1
 #define NORMALIZATION_ACTION_DROP      2
