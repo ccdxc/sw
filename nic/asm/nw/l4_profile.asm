@@ -109,7 +109,7 @@ validate_tunneled_packet2_ipv6:
   // inner_srcAddr => r2(hi) r3(lo)
   or          r2, k.{inner_ipv6_srcAddr_sbit0_ebit31, inner_ipv6_srcAddr_sbit32_ebit63}, r0
   or          r3, k.inner_ipv6_srcAddr_sbit72_ebit127, \
-                    k.inner_ipv6_srcAddr_sbit64_ebit71, 56 
+                    k.inner_ipv6_srcAddr_sbit64_ebit71, 56
   seq         c2, r2, r0
   seq         c3, r3, r1
   andcf       c2, [c3]
@@ -138,8 +138,9 @@ f_ip_normalization:
   b.c6        lb_ip_norm_header_length
   setcf       c1, [c5 | c6]
   jr.!c1      r7
-  seq         c1, d.u.l4_profile_d.ip_rsvd_flags_action, NORMALIZATION_ACTION_ALLOW
-  b.c1        lb_ip_norm_df_bit
+  seq         c4, d.u.l4_profile_d.ip_rsvd_flags_action, NORMALIZATION_ACTION_ALLOW
+  b.c4        lb_ip_norm_df_bit
+  seq         c4, d.u.l4_profile_d.ip_df_action, NORMALIZATION_ACTION_ALLOW
   smeqb       c1, k.flow_lkp_metadata_ipv4_flags, IP_FLAGS_RSVD_MASK, IP_FLAGS_RSVD_MASK
   b.!c1       lb_ip_norm_df_bit
   seq         c1, d.u.l4_profile_d.ip_rsvd_flags_action, NORMALIZATION_ACTION_DROP
@@ -151,20 +152,48 @@ f_ip_normalization:
   phvwrmi.!c7 p.ipv4_flags, 0, IP_FLAGS_RSVD_MASK
 
 lb_ip_norm_df_bit:
-  seq         c1, d.u.l4_profile_d.ip_df_action, NORMALIZATION_ACTION_ALLOW
-  b.c1        lb_ip_norm_options
+  b.c4        lb_ip_norm_options
+  seq         c4, d.u.l4_profile_d.ip_options_action, NORMALIZATION_ACTION_ALLOW
   smeqb       c1, k.flow_lkp_metadata_ipv4_flags, IP_FLAGS_DF_MASK, IP_FLAGS_DF_MASK
   b.!c1       lb_ip_norm_options
   seq         c1, d.u.l4_profile_d.ip_df_action, NORMALIZATION_ACTION_DROP
   phvwr.c1.e  p.control_metadata_drop_reason[DROP_IP_NORMALIZATION], 1
   phvwr.c1    p.capri_intrinsic_drop, 1
   // Edit Case. Need to check whether to update inner or outer
-  phvwrmi.c7  p.inner_ipv4_flags, 0, IP_FLAGS_DF_MASK
   phvwrmi.!c7 p.ipv4_flags, 0, IP_FLAGS_DF_MASK
+  phvwrmi.c7  p.inner_ipv4_flags, 0, IP_FLAGS_DF_MASK
 
 lb_ip_norm_options:
-  jr r7
-  nop
+  b.c4        lb_ip_norm_header_length
+  nop         // since the branch to above label comes from multiple places we will
+              // have to compute the check for option is allow or not after we branch.
+  slt         c1, 5, k.flow_lkp_metadata_ipv4_hlen
+  b.!c1       lb_ip_norm_header_length
+  seq         c1, d.u.l4_profile_d.ip_options_action, NORMALIZATION_ACTION_DROP
+  phvwr.c1.e  p.control_metadata_drop_reason[DROP_IP_NORMALIZATION], 1
+  phvwr.c1    p.capri_intrinsic_drop, 1
+  // Edit Case. Need to check whether to update inner or outer
+  // We also need to update
+  // 1. IPv4 hlen in packet
+  // 2. IPv4 Total Len in packet
+  // 3. IP header checksum update, meaning change the header valid bit
+  //    to the one which will trigger checksum update
+  // 4. control_metadata.packet_len needs to be reduced.
+  b.c7        lb_ip_norm_df_bit_tunnel_terminate
+  phvwr.!c7   p.ipv4_options_blob_valid, 0
+  phvwr       p.ipv4_ihl, 5
+  add         r1, r0, k.flow_lkp_metadata_ipv4_hlen, 2
+  sub         r1, r1, 20 // Option length
+  sub         r2, k.ipv4_totalLen, r1
+  phvwr       p.ipv4_totalLen, r1
+  sub         r2, k.control_metadata_packet_len, r1
+  phvwr       p.control_metadata_packet_len, r2
+
+
+lb_ip_norm_df_bit_tunnel_terminate:
+  // We can enable it once Parag makes changes for inner_ipv4_options
+  // phvwr.c7  p.inner_ipv4_option_blob_valid, 0
+
 
 lb_ip_norm_header_length:
   jr r7

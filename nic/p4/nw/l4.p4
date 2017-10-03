@@ -525,7 +525,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
 
 // INITIATOR_TCP_SESSION_UPDATE:
         // Making sure that some random ack number is not updated as this
-        // can completely throw us off 
+        // can completely throw us off
         if (tcp.ackNo > scratch_metadata.iflow_tcp_ack_num and
             tcp.ackNo <= scratch_metadata.rflow_tcp_seq_num) {
             modify_field(scratch_metadata.iflow_tcp_ack_num, tcp.ackNo);
@@ -912,7 +912,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
 
 // RESPONDER_TCP_SESSION_UPDATE:
         // Making sure that some random ack number is not updated as this
-        // can completely throw us off 
+        // can completely throw us off
         if (tcp.ackNo > scratch_metadata.rflow_tcp_ack_num and
             tcp.ackNo <= scratch_metadata.iflow_tcp_seq_num) {
             modify_field(scratch_metadata.rflow_tcp_ack_num, tcp.ackNo);
@@ -1049,8 +1049,29 @@ action ip_normalization_checks() {
         modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
     }
     if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_EDIT) and
+        (tunnel_metadata.tunnel_terminate == FALSE) and
         (flow_lkp_metadata.ipv4_hlen > 5)) {
-        // NOP all the options.
+        // mark the IP option header valid to zero
+        // remove_header(ipv4_options_blob);
+        modify_field(ipv4_options_blob.valid, 0);
+        // We also need to update
+        // 1. IPv4 hlen in packet
+        // 2. IPv4 Total Len in packet
+        // 3. IP header checksum update, meaning change the header valid bit
+        //    to the one which will trigger checksum update
+        // 4. control_metadata.packet_len needs to be reduced.
+        modify_field(ipv4.ihl, 5);
+        subtract_from_field(ipv4.totalLen, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
+        // IP header checksum update.
+        subtract_from_field(control_metadata.packet_len, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
+
+
+    }
+    if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_EDIT) and
+        (tunnel_metadata.tunnel_terminate == TRUE) and
+        (flow_lkp_metadata.ipv4_hlen > 5)) {
+        // mark the IP option header valid to zero
+        modify_field(inner_ipv4_options_blob.valid, 0);
     }
 
     }
@@ -1248,7 +1269,7 @@ action tcp_session_normalization() {
 
    // For now we will do session normalization checks only if both sides
    // are in established state. The reason being most of the negotiated
-   // values like window_scale, mss and timestamp negotiated are only 
+   // values like window_scale, mss and timestamp negotiated are only
    // valid in these states
    if (scratch_metadata.iflow_tcp_state != FLOW_STATE_ESTABLISHED or
        scratch_metadata.rflow_tcp_state != FLOW_STATE_ESTABLISHED) {
