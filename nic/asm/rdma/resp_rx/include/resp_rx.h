@@ -37,14 +37,18 @@
 struct resp_rx_phv_t {
     // dma commands (flit 8 - 11)
 
-    // scratch (flit 6 - 7)
+    // scratch (flit 7):
+    // size: 16 =  2 + 4 + 5 + 4 + 1
     eq_int_num: 16;
     db_data: 32;
-    struct rsqwqe_t rsqwqe;
-    struct eqwqe_t eqwqe;
-    struct cqwqe_t cqwqe;
     struct ack_info_t ack_info;
+    struct eqwqe_t eqwqe;
     my_token_id: 8;
+
+    // scratch (flit 6)
+    // size: 64  = 32 + 32
+    struct rsqwqe_t rsqwqe;
+    struct cqwqe_t cqwqe;
 
     // common rx (flit 0 - 5)
     struct phv_ common;

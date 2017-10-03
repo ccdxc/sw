@@ -490,8 +490,10 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     lkey_entry_p->flags = (MR_FLAG_INV_EN | MR_FLAG_UKEY_EN);
     lkey_entry_p->type = MR_TYPE_MR;
     rdma_key_entry_write(lif, lkey, lkey_entry_p);
+    HAL_TRACE_DEBUG("{}: lif_id: {} lkey: {}  acc_ctrl: {:#x}", 
+                    __FUNCTION__, lif, lkey, lkey_entry_p->acc_ctrl);
 
-    if (spec.ac_remote_rd() | spec.ac_remote_wr() | spec.ac_remote_atomic()) {
+    if (spec.ac_remote_rd() || spec.ac_remote_wr() || spec.ac_remote_atomic()) {
         // rkey requested
         rkey = spec.rkey();
 
@@ -505,6 +507,8 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
         if (spec.ac_remote_atomic())
             rkey_entry_p->acc_ctrl |= ACC_CTRL_REMOTE_ATOMIC;
         rdma_key_entry_write(lif, rkey, rkey_entry_p);
+        HAL_TRACE_DEBUG("{}: lif_id: {} rkey: {}  acc_ctrl: {:#x}", 
+                    __FUNCTION__, lif, rkey, rkey_entry_p->acc_ctrl);
     } else {
         rkey = INVALID_KEY;
     }

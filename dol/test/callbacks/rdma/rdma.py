@@ -16,6 +16,9 @@ def GetPktTxPsn (tc, pkt, args):
 def GetPktExpPsn (tc, pkt, args):
     return (tc.pvtdata.rq_pre_qstate.e_psn + args.pkt_num)
 
+def GetLastSuccessMsn (tc, pkt, args):
+    return (tc.pvtdata.rq_pre_qstate.msn + args.num_msgs)   # increment by number of msgs received
+
 def GetVAfromSLAB (tc, pkt, args):
     return (tc.config.rdmasession.lqp.pd.ep.slabs.Get(args.slab_id).address + args.offset)
 

@@ -538,11 +538,11 @@ struct rsqwqe_atomic_t {
 
 #define LOG_SIZEOF_RSQWQE_T 5 // 2^5 = 32 bytes
 
-struct rsqwqe_t {
+struct rsqwqe_d_t {
     read_or_atomic: 1;
     rsvd1: 7;
     psn: 24;
-    rsvd2: 8;
+    rsvd2: 64;
     union {
         struct rsqwqe_read_t read;
         struct rsqwqe_atomic_t atomic;
@@ -550,6 +550,17 @@ struct rsqwqe_t {
     
     // this pad added such that when it gets loaded in the d-vector, it is easy to parse the fields
     pad: 256; 
+};
+
+struct rsqwqe_t {
+    read_or_atomic: 1;
+    rsvd1: 7;
+    psn: 24;
+    rsvd2: 64;
+    union {
+        struct rsqwqe_read_t read;
+        struct rsqwqe_atomic_t atomic;
+    };
 };
 
 #define ACC_CTRL_LOCAL_WRITE        0x1

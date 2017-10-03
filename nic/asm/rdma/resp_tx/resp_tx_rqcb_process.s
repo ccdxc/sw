@@ -45,7 +45,7 @@ resp_tx_rqcb_process:
 
     seq         c1, RSQ_C_INDEX, RSQ_P_INDEX
     bcf         [c1], check_ack_nak
-    add         RQCB1_P, r2, CB_UNIT_SIZE_BYTES //BD Slot
+    add         RQCB1_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES //BD Slot
 
 rsq:
     add         RSQWQE_P, d.rsq_base_addr, RSQ_C_INDEX, LOG_SIZEOF_RSQWQE_T

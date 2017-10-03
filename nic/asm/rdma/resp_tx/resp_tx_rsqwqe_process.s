@@ -6,7 +6,7 @@
 #include "ingress.h"
 
 struct resp_tx_phv_t p;
-struct rsqwqe_t d;
+struct rsqwqe_d_t d;
 struct resp_tx_rsqwqe_process_k_t k;
 
 #define RKEY_INFO_T struct resp_tx_rsqwqe_to_rkey_info_t
@@ -143,7 +143,7 @@ next:
 
     CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rsqrkey_process)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, KEY_ADDR)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, ALIGNED_KEY_ADDR)
 
 exit:
     nop.e
