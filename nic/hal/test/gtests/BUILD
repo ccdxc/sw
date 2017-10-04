@@ -48,6 +48,15 @@ cc_test(
 )
 
 cc_test(
+    name = "nwsec_test",
+    srcs = ["nwsec_test.cc"],
+    deps = gl_deps,
+    linkopts = [
+            "-lzmq",
+            ],
+)
+
+cc_test(
     name = "tunnelif_test",
     srcs = ["tunnelif_test.cc"],
     deps = gl_deps,

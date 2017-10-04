@@ -236,7 +236,7 @@ if_enicif_get_pi_nwsec(if_t *pi_if)
         pi_tenant = tenant_lookup_by_id(pi_if->tid);
         HAL_ASSERT_RETURN(pi_tenant != NULL, NULL);
         pi_nwsec =
-            nwsec_profile_lookup_by_handle(pi_tenant->nwsec_profile_handle);
+            find_nwsec_profile_by_handle(pi_tenant->nwsec_profile_handle);
         if (!pi_nwsec) {
             return NULL;
         }

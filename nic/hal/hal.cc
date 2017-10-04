@@ -538,6 +538,8 @@ hal_handle_alloc (hal_obj_id_t obj_id)
         return HAL_HANDLE_INVALID;
     }
 
+    HAL_TRACE_DEBUG("Assigned hal_handle:{} for an object of obj_id:{}", 
+                    handle_id, obj_id);
     return handle_id;
 }
 

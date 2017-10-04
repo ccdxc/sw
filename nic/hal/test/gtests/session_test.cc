@@ -307,16 +307,17 @@ TEST_F(session_test, test2)
     ::google::protobuf::uint32  ip4 = 0x40020002;
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.mutable_key_or_handle()->set_profile_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    // uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(2);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close(false);
@@ -545,15 +546,16 @@ TEST_F(session_test, test3)
     ::std::string ipv6_ip2 = "00010001000100010001000100010002"; 
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec.mutable_key_or_handle()->set_profile_id(3);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    // uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(3);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close(false);
@@ -1754,15 +1756,16 @@ TEST_F(session_test, test10)
     ::std::string ipv6_ip2 = "00010001000100010001000100010002"; 
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec.mutable_key_or_handle()->set_profile_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
-    // uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(10);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close(false);

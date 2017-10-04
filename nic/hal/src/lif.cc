@@ -489,7 +489,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->enable_rdma = spec.enable_rdma();
 
     // allocate hal handle id
-    hal_handle = hal_handle_alloc(HAL_OBJ_ID_TENANT);
+    hal_handle = hal_handle_alloc(HAL_OBJ_ID_LIF);
     if (hal_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("pi-lif:{}:failed to alloc handle {}", 
                       __FUNCTION__, lif->lif_id);

@@ -198,6 +198,8 @@ do {                                                       \
     ENTRY(HAL_RET_IF_ENIC_TYPE_INVALID,       40, "enic type invalid")         \
     ENTRY(HAL_RET_IF_ENIC_INFO_INVALID,       41, "enic info invalid")         \
     ENTRY(HAL_RET_IF_INFO_INVALID,            42, "if info invalid")           \
+    ENTRY(HAL_RET_TENANT_ID_INVALID,          43, "tenant id invalid")         \
+    ENTRY(HAL_RET_NWSEC_ID_INVALID,           44, "nwsec id invalid")         \
                                                                                \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

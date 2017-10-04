@@ -198,6 +198,11 @@ find_if_by_id (if_id_t if_id)
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->
         if_id_ht()->lookup(&if_id);
     if (entry) {
+
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_INTERFACE);
+
         hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
         return hal_if;
     }
@@ -207,6 +212,9 @@ find_if_by_id (if_id_t if_id)
 static inline if_t *
 find_if_by_handle (hal_handle_t handle)
 {
+    // check for object type
+    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
+               HAL_OBJ_ID_INTERFACE);
     return (if_t *)hal_handle_get_obj(handle);
 }
 

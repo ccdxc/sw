@@ -143,6 +143,9 @@ find_l2seg_by_id (l2seg_id_t l2seg_id)
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->
         l2seg_id_ht()->lookup(&l2seg_id);
     if (entry) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_L2SEG);
         l2seg = (l2seg_t *)hal_handle_get_obj(entry->handle_id);
         return l2seg;
     }
@@ -152,6 +155,9 @@ find_l2seg_by_id (l2seg_id_t l2seg_id)
 static inline l2seg_t *
 find_l2seg_by_handle (hal_handle_t handle)
 {
+    // check for object type
+    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
+               HAL_OBJ_ID_L2SEG);
     return (l2seg_t *)hal_handle_get_obj(handle);
 }
 

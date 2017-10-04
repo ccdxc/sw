@@ -69,7 +69,24 @@ NwSecurityServiceImpl::SecurityProfileDelete(ServerContext *context,
                                              const SecurityProfileDeleteRequestMsg *req,
                                              SecurityProfileDeleteResponseMsg *rsp)
 {
+    uint32_t     i, nreqs = req->request_size();
+    hal_ret_t    ret;
+
     HAL_TRACE_DEBUG("Rcvd SecurityProfile Delete Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        auto spec = req->request(i);
+        ret = hal::security_profile_delete(spec, rsp);
+        if (ret == HAL_RET_OK) {
+            hal::hal_cfg_db_close(false);
+        } else {
+            hal::hal_cfg_db_close(true);
+        }
+    }
     return Status::OK;
 }
 

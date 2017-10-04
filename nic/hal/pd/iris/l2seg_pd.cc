@@ -85,24 +85,24 @@ l2seg_pd_add_to_db (pd_l2seg_t *pd_l2seg, hal_handle_t handle)
     return ret;
 }
 
- //------------------------------------------------------------------------------
- // delete a l2seg from hwid database
- //------------------------------------------------------------------------------
- static inline hal_ret_t
- l2seg_pd_del_from_db (pd_l2seg_t *pd_l2seg)
- {
-     hal_handle_id_ht_entry_t    *entry;
+//------------------------------------------------------------------------------
+// delete a l2seg from hwid database
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+l2seg_pd_del_from_db (pd_l2seg_t *pd_l2seg)
+{
+    hal_handle_id_ht_entry_t    *entry;
 
-     HAL_TRACE_DEBUG("pd-l2seg:{}:removing from hwid hash table", __FUNCTION__);
-     // remove from hash table
-     entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->l2seg_hwid_ht()->
-         remove(&pd_l2seg->l2seg_ten_hw_id);
+    HAL_TRACE_DEBUG("pd-l2seg:{}:removing from hwid hash table", __FUNCTION__);
+    // remove from hash table
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state_pd->l2seg_hwid_ht()->
+        remove(&pd_l2seg->l2seg_ten_hw_id);
 
-     // free up
-     g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+    // free up
+    g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
 
-     return HAL_RET_OK;
- }
+    return HAL_RET_OK;
+}
 
 
 //------------------------------------------------------------------------------
@@ -124,7 +124,7 @@ pd_l2seg_create (pd_l2seg_args_t *args)
     }
 
     // link PI<->PD
-    link_pi_pd(l2seg_pd, args->l2seg);
+    l2seg_link_pi_pd(l2seg_pd, args->l2seg);
 
     // allocate resources
     ret = l2seg_pd_alloc_res(l2seg_pd);
@@ -423,7 +423,7 @@ l2seg_pd_cleanup(pd_l2seg_t *l2seg_pd)
     }
 
     // Delinking PI<->PD
-    delink_pi_pd(l2seg_pd, (l2seg_t *)l2seg_pd->l2seg);
+    l2seg_delink_pi_pd(l2seg_pd, (l2seg_t *)l2seg_pd->l2seg);
 
     // Freeing PD
     l2seg_pd_free(l2seg_pd);
@@ -570,7 +570,7 @@ pd_l2seg_get_pd_tenant(pd_l2seg_t *pd_l2seg)
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
 void
-link_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg)
+l2seg_link_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg)
 {
     pd_l2seg->l2seg = pi_l2seg;
     pi_l2seg->pd = pd_l2seg;
@@ -580,7 +580,7 @@ link_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg)
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
 void 
-delink_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg)
+l2seg_delink_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg)
 {
     if (pd_l2seg) {
         pd_l2seg->l2seg = NULL;
@@ -607,7 +607,7 @@ pd_l2seg_make_clone(l2seg_t *l2seg, l2seg_t *clone)
 
     memcpy(pd_l2seg_clone, l2seg->pd, sizeof(pd_l2seg_t));
 
-    link_pi_pd(pd_l2seg_clone, clone);
+    l2seg_link_pi_pd(pd_l2seg_clone, clone);
 
 end:
     return ret;

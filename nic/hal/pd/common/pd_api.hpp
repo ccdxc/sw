@@ -59,6 +59,7 @@ typedef struct pd_l2seg_args_s {
 
 typedef struct pd_nwsec_profile_args_s {
     nwsec_profile_t    *nwsec_profile;
+    nwsec_profile_t    *clone_profile;
 } __PACK__ pd_nwsec_profile_args_t;
 
 typedef struct pd_lif_args_s {
@@ -319,6 +320,10 @@ l2seg_t *find_l2seg_by_hwid (l2seg_hw_id_t hwid);
 
 hal_ret_t pd_nwsec_profile_create(pd_nwsec_profile_args_t *nwsec_profile);
 hal_ret_t pd_nwsec_profile_update(pd_nwsec_profile_args_t *nwsec_profile);
+hal_ret_t pd_nwsec_profile_delete(pd_nwsec_profile_args_t *nwsec_profile);
+hal_ret_t pd_nwsec_profile_mem_free(pd_nwsec_profile_args_t *args);
+hal_ret_t pd_nwsec_profile_make_clone(nwsec_profile_t *nwsec, 
+                                      nwsec_profile_t *clone);
 
 hal_ret_t pd_lif_create(pd_lif_args_t *lif);
 hal_ret_t pd_lif_update(pd_lif_args_t *lif);

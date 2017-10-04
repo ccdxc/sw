@@ -13,13 +13,15 @@ namespace hal {
 // Constructor - DirectMap
 // ----------------------------------------------------------------------------
 DirectMap::DirectMap(std::string table_name, uint32_t table_id, 
-                     uint32_t num_entries, bool thread_safe)
+                     uint32_t num_entries, uint32_t swdata_len, 
+                     bool thread_safe)
 {
     uint32_t hwkey_len, hwkeymask_len;
 
     table_name_     = table_name;
     table_id_       = table_id;
     num_entries_    = num_entries;
+    swdata_len_     = swdata_len;
     thread_safe_    = thread_safe;
 
     hwdata_len_ = 0;
@@ -34,8 +36,8 @@ DirectMap::DirectMap(std::string table_name, uint32_t table_id,
     hwkeymask_len = (hwkeymask_len >> 3) + ((hwkeymask_len & 0x7) ? 1 : 0);
     hwdata_len_ = (hwdata_len_ >> 3) + ((hwdata_len_ & 0x7) ? 1 : 0);
         
-    HAL_TRACE_DEBUG("DirectMap::{:<30}: tableid: {:<4} hwdata_len_: {:<4}",
-            table_name.c_str(), table_id, hwdata_len_);
+    HAL_TRACE_DEBUG("DirectMap::{:<30}: tableid: {:<4} swdata_len: {:<4} hwdata_len_: {:<4}",
+            table_name.c_str(), table_id, swdata_len_, hwdata_len_);
 
     // Initialize the indexer
     dm_indexer_ = new indexer(num_entries, thread_safe = thread_safe_);
@@ -68,7 +70,7 @@ DirectMap::insert(void *data, uint32_t *index)
     }
 
     // Print entry
-    entry_trace_(data, *index);
+    // entry_trace_(data, *index);
 
 
     // P4-API: Write API
@@ -98,7 +100,7 @@ DirectMap::insert_withid(void *data, uint32_t index)
     }
 
     // Print entry
-    entry_trace_(data, index);
+    // entry_trace_(data, index);
 
     // P4-API: Write API
     pd_err = p4pd_global_entry_write(table_id_, index, NULL, NULL, data); 
@@ -131,7 +133,7 @@ DirectMap::update(uint32_t index, void *data)
     }
 
     // Print entry
-    entry_trace_(data, index);
+    // entry_trace_(data, index);
 
     // P4-API: Write API
     pd_err = p4pd_global_entry_write(table_id_, index, NULL, NULL, data); 
@@ -164,12 +166,12 @@ DirectMap::remove(uint32_t index)
         goto end;
     }
 
-    tmp_data = ::operator new(hwdata_len_);
-    memset(tmp_data, 0, hwdata_len_);
-    HAL_TRACE_DEBUG("DirectMap::{}:hwdata_len_: {}", __FUNCTION__, hwdata_len_); 
+    tmp_data = ::operator new(swdata_len_);
+    memset(tmp_data, 0, swdata_len_);
+    HAL_TRACE_DEBUG("DirectMap::{}:index: {}", __FUNCTION__, index); 
 
     // Print entry
-    entry_trace_(tmp_data, index);
+    // entry_trace_(tmp_data, index);
 
     // P4-API: Write API
     pd_err = p4pd_global_entry_write(table_id_, index, NULL, NULL, tmp_data); 

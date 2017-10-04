@@ -64,17 +64,10 @@ hal_cfg_db::init(void)
 
     // initialize security profile related data structures
     nwsec_profile_id_ht_ = ht::factory(HAL_MAX_NWSEC_PROFILES,
-                                       hal::nwsec_profile_get_key_func,
-                                       hal::nwsec_profile_compute_hash_func,
-                                       hal::nwsec_profile_compare_key_func);
+                                       hal::nwsec_profile_id_get_key_func,
+                                       hal::nwsec_profile_id_compute_hash_func,
+                                       hal::nwsec_profile_id_compare_key_func);
     HAL_ASSERT_RETURN((nwsec_profile_id_ht_ != NULL), false);
-
-    nwsec_profile_hal_handle_ht_ =
-        ht::factory(HAL_MAX_NWSEC_PROFILES,
-                    hal::nwsec_profile_get_handle_key_func,
-                    hal::nwsec_profile_compute_handle_hash_func,
-                    hal::nwsec_profile_compare_handle_key_func);
-    HAL_ASSERT_RETURN((nwsec_profile_hal_handle_ht_ != NULL), false);
 
     // initialize L2 segment related data structures
     l2seg_id_ht_ = ht::factory(HAL_MAX_L2SEGMENTS,

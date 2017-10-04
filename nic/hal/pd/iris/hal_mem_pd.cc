@@ -770,7 +770,8 @@ hal_state_pd::init_tables(void)
 
         case P4_TBL_TYPE_INDEX:
             dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
-                new DirectMap(tinfo.tablename, tid, tinfo.tabledepth);
+                new DirectMap(tinfo.tablename, tid, tinfo.tabledepth, 
+                              tinfo.actiondata_struct_size);
             HAL_ASSERT(dm_tables_[tid - P4TBL_ID_INDEX_MIN] != NULL);
             break;
 
@@ -884,7 +885,7 @@ hal_state_pd::p4plus_rxdma_init_tables(void)
 
         case P4_TBL_TYPE_INDEX:
             p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
-                new DirectMap(tinfo.tablename, tid, tinfo.tabledepth);
+                new DirectMap(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size);
             HAL_ASSERT(p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
             break;
 
@@ -981,7 +982,7 @@ hal_state_pd::p4plus_txdma_init_tables(void)
 
         case P4_TBL_TYPE_INDEX:
             p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] =
-                new DirectMap(tinfo.tablename, tid, tinfo.tabledepth);
+                new DirectMap(tinfo.tablename, tid, tinfo.tabledepth, tinfo.actiondata_struct_size);
             HAL_ASSERT(p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN] != NULL);
             break;
 

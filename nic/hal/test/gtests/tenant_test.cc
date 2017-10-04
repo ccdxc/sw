@@ -170,7 +170,7 @@ TEST_F(tenant_test, test2)
     NetworkResponse                 nw_rsp;
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.mutable_key_or_handle()->set_profile_id(2);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
@@ -179,7 +179,7 @@ TEST_F(tenant_test, test2)
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create nwsec
-    sp_spec1.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec1.mutable_key_or_handle()->set_profile_id(21);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
@@ -281,7 +281,7 @@ TEST_F(tenant_test, test3)
     InterfaceL2SegmentResponse      if_l2seg_rsp;
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.mutable_key_or_handle()->set_profile_id(31);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
@@ -290,7 +290,7 @@ TEST_F(tenant_test, test3)
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create nwsec
-    sp_spec1.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec1.mutable_key_or_handle()->set_profile_id(32);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
@@ -389,7 +389,7 @@ TEST_F(tenant_test, test4)
     NetworkResponse                 nw_rsp;
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.mutable_key_or_handle()->set_profile_id(41);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
@@ -398,7 +398,7 @@ TEST_F(tenant_test, test4)
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create nwsec
-    sp_spec1.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec1.mutable_key_or_handle()->set_profile_id(42);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
@@ -500,7 +500,7 @@ TEST_F(tenant_test, test5)
     NetworkResponse                 nw_rsp;
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.mutable_key_or_handle()->set_profile_id(51);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
@@ -509,7 +509,7 @@ TEST_F(tenant_test, test5)
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create nwsec
-    sp_spec1.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec1.mutable_key_or_handle()->set_profile_id(52);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
@@ -604,7 +604,7 @@ TEST_F(tenant_test, test6)
 
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.mutable_key_or_handle()->set_profile_id(61);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
@@ -613,7 +613,7 @@ TEST_F(tenant_test, test6)
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(1);
+    ten_spec.mutable_key_or_handle()->set_tenant_id(6);
     ten_spec.set_security_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
@@ -622,8 +622,8 @@ TEST_F(tenant_test, test6)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete tenant
-    del_req.mutable_meta()->set_tenant_id(1);
-    del_req.mutable_key_or_handle()->set_tenant_id(1);
+    del_req.mutable_meta()->set_tenant_id(6);
+    del_req.mutable_key_or_handle()->set_tenant_id(6);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close(false);
@@ -631,7 +631,7 @@ TEST_F(tenant_test, test6)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create tenant
-    ten_spec1.mutable_key_or_handle()->set_tenant_id(1);
+    ten_spec1.mutable_key_or_handle()->set_tenant_id(6);
     ten_spec1.set_security_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec1, &ten_rsp1);
@@ -659,7 +659,7 @@ TEST_F(tenant_test, test7)
     hal_test_utils_slab_disable_delete();
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.mutable_key_or_handle()->set_profile_id(71);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
@@ -668,7 +668,7 @@ TEST_F(tenant_test, test7)
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create nwsec
-    sp_spec1.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec1.mutable_key_or_handle()->set_profile_id(72);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
@@ -714,7 +714,7 @@ TEST_F(tenant_test, test8)
     NetworkResponse                 nw_rsp;
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.mutable_key_or_handle()->set_profile_id(81);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
@@ -723,7 +723,7 @@ TEST_F(tenant_test, test8)
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create nwsec
-    sp_spec1.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec1.mutable_key_or_handle()->set_profile_id(82);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
@@ -836,7 +836,7 @@ TEST_F(tenant_test, test9)
     InterfaceL2SegmentResponse      if_l2seg_rsp;
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.mutable_key_or_handle()->set_profile_id(91);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
@@ -845,7 +845,7 @@ TEST_F(tenant_test, test9)
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
     // Create nwsec
-    sp_spec1.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec1.mutable_key_or_handle()->set_profile_id(92);
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);

@@ -69,7 +69,8 @@ private:
     uint32_t        num_entries_;   // Num. of entries in table
 
     indexer         *dm_indexer_;   // Indexer Management
-    uint32_t        hwdata_len_;    // Entry Len
+    uint32_t        swdata_len_;    // SW Entry Len
+    uint32_t        hwdata_len_;    // HW Entry Len
 
     uint64_t        *stats_;         // Statistics
 
@@ -93,7 +94,8 @@ private:
     hal_ret_t entry_trace_(void *data, uint32_t index);
 
 public:
-    DirectMap(std::string table_name, uint32_t table_id, uint32_t num_entries, bool thread_safe = true);
+    DirectMap(std::string table_name, uint32_t table_id, uint32_t num_entries, uint32_t swdata_len,
+              bool thread_safe = true);
     ~DirectMap();
 
     // Methods

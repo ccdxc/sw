@@ -40,7 +40,8 @@ typedef struct dm_data_s {
 TEST_F(dm_test, test1) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100);
+    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+            sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
     uint32_t index;
@@ -63,7 +64,8 @@ TEST_F(dm_test, test1) {
 TEST_F(dm_test, test2) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100);
+    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+            sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
     uint32_t index;
@@ -98,7 +100,8 @@ TEST_F(dm_test, test2) {
 TEST_F(dm_test, test3) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100);
+    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+            sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
     uint32_t index;
@@ -146,7 +149,8 @@ TEST_F(dm_test, test3) {
 TEST_F(dm_test, test4) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100);
+    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+            sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
     uint32_t index;
@@ -184,7 +188,8 @@ TEST_F(dm_test, test4) {
 TEST_F(dm_test, test5) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100);
+    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+            sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm, retr_dm;
     uint32_t index;
@@ -222,7 +227,8 @@ bool print_fn(uint32_t index, void *data, const void *cb_data)
 TEST_F(dm_test, test6) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100);
+    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+            sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
     uint32_t index;
@@ -249,7 +255,8 @@ TEST_F(dm_test, test6) {
 TEST_F(dm_test, test7) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 25);
+    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 25,
+            sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
     uint32_t index[25];
@@ -287,7 +294,8 @@ TEST_F(dm_test, test7) {
 TEST_F(dm_test, test8) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100);
+    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+            sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
     uint32_t index;
@@ -322,7 +330,8 @@ TEST_F(dm_test, test8) {
 TEST_F(dm_test, test9) {
 
     std::string table_name = "Output_Mapping";
-    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100);
+    DirectMap test_dm = DirectMap(table_name, P4TBL_ID_OUTPUT_MAPPING, 100,
+            sizeof(output_mapping_actiondata));
 
     output_mapping_actiondata dm;
     uint32_t index;

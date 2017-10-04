@@ -1,5 +1,4 @@
--I ../../../../include
--I ../../../../gen
+-I ../../../../..
 -I ../../../../gen/iris/include
 -I ../../../../third-party/googletest-release-1.8.0/googletest/include
 -I ../../../../hal/pd

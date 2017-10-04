@@ -241,6 +241,8 @@ extern hal_handle_t hal_alloc_handle(void);
 //------------------------------------------------------------------------------
 extern void hal_free_handle(hal_handle_t handle);
 
+extern hal_handle *hal_handle_get_from_handle_id(hal_handle_t handle_id);
+
 }    // namespace hal
 
 #endif    // __HAL_HPP__

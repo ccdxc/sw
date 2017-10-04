@@ -111,39 +111,39 @@ hal:
 	make bazel-gtests
 
 capmodel:
-	bazel build $(BAZEL_OPTIONS) model_sim:cap_model
-	bazel build $(BAZEL_OPTIONS) model_sim:model_client
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:cap_model
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_client
 
 bazel-build:
 	make -C p4
 	make -C asm
-	bazel build $(BAZEL_OPTIONS) hal:hal
-	bazel build $(BAZEL_OPTIONS) //nic/proto:all
-	bazel build $(BAZEL_OPTIONS) //nic/proto/hal:all
-	bazel build $(BAZEL_OPTIONS) //nic/proto/agents:all
-	bazel build $(BAZEL_OPTIONS) utils/host_mem:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto/hal:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto/agents:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
 	make capmodel
 
 bazel-gtests:
 	# PI gtests
-	bazel build $(BAZEL_OPTIONS) hal/test/gtests:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/test/gtests:all
 	# PI Utils
-	bazel build $(BAZEL_OPTIONS) utils/bitmap:bitmap_test
-	bazel build $(BAZEL_OPTIONS) utils/host_mem:host_mem_test
-	bazel build $(BAZEL_OPTIONS) utils/indexer:indexer_test
-	bazel build $(BAZEL_OPTIONS) utils/list:list_test
-	bazel build $(BAZEL_OPTIONS) utils/pt:pt_test
-	bazel build $(BAZEL_OPTIONS) utils/shm:shmseg_test
-	bazel build $(BAZEL_OPTIONS) utils/slab:slab_test
-	bazel build $(BAZEL_OPTIONS) utils/twheel:twheel_test
-	bazel build $(BAZEL_OPTIONS) fte:fte_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/bitmap:bitmap_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:host_mem_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/indexer:indexer_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/list:list_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/pt:pt_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/shm:shmseg_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/slab:slab_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/twheel:twheel_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) fte:fte_test
 	# PD Utils
-	bazel build $(BAZEL_OPTIONS) hal/pd/utils/acl_tcam:acl_tcam_test
-	bazel build $(BAZEL_OPTIONS) hal/pd/utils/directmap:directmap_test
-	bazel build $(BAZEL_OPTIONS) hal/pd/utils/flow:flow_test
-	bazel build $(BAZEL_OPTIONS) hal/pd/utils/hash:hash_test
-	bazel build $(BAZEL_OPTIONS) hal/pd/utils/met:met_test
-	bazel build $(BAZEL_OPTIONS) hal/pd/utils/tcam:tcam_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/acl_tcam:acl_tcam_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/directmap:directmap_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/flow:flow_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/hash:hash_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/met:met_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/tcam:tcam_test
 
 GEN_TEST_RESULTS_DIR = $(TOPDIR_ABS)/gen/test_results
 run-gtests:
@@ -167,6 +167,7 @@ run-gtests:
 	cd ../bazel-bin && CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/test/gtests/tenant_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tenant_test.xml"
 	cd ../bazel-bin && CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/test/gtests/l2seg_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/l2seg_test.xml"
 	cd ../bazel-bin && CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/test/gtests/tunnelif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tunnelif_test.xml"
+	cd ../bazel-bin && CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/test/gtests/nwsec_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/nwsec_test.xml"
 	# PI Utils gtests
 	cd ../bazel-bin && ./nic/utils/bitmap/bitmap_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bitmap_test.xml"
 	cd ../bazel-bin && ./nic/utils/host_mem/host_mem_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/host_mem_test.xml"

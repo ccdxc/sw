@@ -174,6 +174,15 @@ hal_prepare_rsp (hal_ret_t ret)
         case HAL_RET_IF_INFO_INVALID:
             return types::API_STATUS_IF_INFO_INVALID;
             break;
+        case HAL_RET_TENANT_ID_INVALID:
+            return types::API_STATUS_TENANT_ID_INVALID;
+            break;
+        case HAL_RET_NWSEC_ID_INVALID:
+            return types::API_STATUS_NWSEC_PROFILE_ID_INVALID;
+            break;
+        case HAL_RET_ENTRY_EXISTS:
+            return types::API_STATUS_EXISTS_ALREADY;
+            break;
         default:
             return types::API_STATUS_ERR;
             break;

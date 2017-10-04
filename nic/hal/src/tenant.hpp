@@ -137,6 +137,11 @@ tenant_lookup_by_id (tenant_id_t tid)
 
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->tenant_id_ht()->lookup(&tid);
     if (entry) {
+
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                HAL_OBJ_ID_TENANT);
+
         tenant = (tenant_t *)hal_handle_get_obj(entry->handle_id);
         return tenant;
     }
@@ -149,6 +154,8 @@ tenant_lookup_by_id (tenant_id_t tid)
 static inline tenant_t *
 tenant_lookup_by_handle (hal_handle_t handle)
 {
+    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
+               HAL_OBJ_ID_TENANT);
    return (tenant_t *)hal_handle_get_obj(handle); 
 }
 

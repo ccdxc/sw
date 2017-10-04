@@ -466,40 +466,6 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 
-#if 0
-    l2seg->hal_handle = hal_alloc_handle();
-    // allocate all PD resources and finish programming, if any
-    pd::pd_l2seg_args_init(&pd_l2seg_args);
-    pd_l2seg_args.tenant = tenant;
-    pd_l2seg_args.l2seg = l2seg;
-    ret = pd::pd_l2seg_create(&pd_l2seg_args);
-    if (ret != HAL_RET_OK) {
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-        HAL_TRACE_ERR("PI-L2Seg:{}: PD programming fail.  ret: {}",
-                      __FUNCTION__, ret);
-        goto end;
-    }
-
-    // create the broadcast/flood list for this l2seg
-    ret = oif_list_create(&l2seg->bcast_oif_list);
-    HAL_ASSERT(ret == HAL_RET_OK);
-
-    // add this L2 segment to our db
-    ret = add_l2seg_to_db(tenant, l2seg);
-    HAL_ASSERT(ret == HAL_RET_OK);
-
-    // prepare the response
-    rsp->set_api_status(types::API_STATUS_OK);
-    rsp->mutable_l2segment_status()->set_l2segment_handle(l2seg->hal_handle);
-
-end:
-
-    if (ret != HAL_RET_OK && l2seg != NULL) {
-        l2seg_free(l2seg);
-    }
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
-    return ret;
-#endif
 }
 
 //------------------------------------------------------------------------------

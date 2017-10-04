@@ -132,8 +132,8 @@ hal_ret_t l2seg_pd_alloc_hwid(pd_l2seg_t *pd_l2seg);
 hal_ret_t l2seg_pd_dealloc_res(pd_l2seg_t *pd_l2seg);
 hal_ret_t l2seg_pd_dealloc_cpuid(pd_l2seg_t *pd_l2seg);
 hal_ret_t l2seg_pd_dealloc_hwid(pd_l2seg_t *pd_l2seg);
-void link_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg);
-void delink_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg);
+void l2seg_link_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg);
+void l2seg_delink_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg);
 
 hal_ret_t l2seg_pd_cleanup(pd_l2seg_t *l2seg_pd);
 uint32_t l2seg_pd_l2seguplink_count(pd_l2seg_t *l2seg_pd);

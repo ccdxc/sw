@@ -362,7 +362,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
                         "using default security profile", __FUNCTION__);
         sec_prof = NULL;
     } else {
-        sec_prof = nwsec_profile_lookup_by_handle(tenant->nwsec_profile_handle);
+        sec_prof = find_nwsec_profile_by_handle(tenant->nwsec_profile_handle);
         if (sec_prof == NULL) {
             HAL_TRACE_ERR("pi-tenant:{}:Failed to create tenant, "
                           "security profile with handle {} not found", 
@@ -688,7 +688,7 @@ tenant_update (TenantSpec& spec, TenantResponse *rsp)
         goto end;
     }
 
-    app_ctxt.nwsec_prof = nwsec_profile_lookup_by_handle(app_ctxt.nwsec_profile_handle);
+    app_ctxt.nwsec_prof = find_nwsec_profile_by_handle(app_ctxt.nwsec_profile_handle);
     if (app_ctxt.nwsec_prof == NULL) {
         HAL_TRACE_ERR("pi-tenant:{}:security profile with handle {} not found", 
                       __FUNCTION__, 

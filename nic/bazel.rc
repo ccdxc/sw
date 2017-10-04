@@ -5,7 +5,6 @@
 
 #startup --output_user_root=%workspace%/bazel-cache
 
-
 # Do not show warnings from 
 #   - external dependencies 
 #   - nic/asic/capri
@@ -22,7 +21,7 @@ build --copt="-g"
 build --strip=never
 
 # Make warnings as errors
-#build --cxxopt="-Werror"
+build --cxxopt="-Werror"
 
 # show timestamps
 build --show_timestamps --keep_going

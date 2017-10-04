@@ -56,12 +56,12 @@ message SecurityProfileSpec {
   uint32                       tcp_close_timeout               = 8;
   uint32                       tcp_close_wait_timeout          = 9;
 
-  bool                         ip_normalization_en             = 10;
-  bool                         tcp_normalization_en            = 11;
-  bool                         icmp_normalization_en           = 12;
+  bool                              ip_normalization_en             = 10;
+  bool                              tcp_normalization_en            = 11;
+  bool                              icmp_normalization_en           = 12;
 
   // IP normalization knobs
-  bool                         ip_ttl_change_detect_en         = 20;
+  bool                              ip_ttl_change_detect_en         = 20;
   NormalizationAction          ip_rsvd_flags_action            = 21;
   NormalizationAction          ip_df_action                    = 22;
   NormalizationAction          ip_options_action               = 23;
@@ -74,10 +74,10 @@ message SecurityProfileSpec {
   bool                         icmp_redirect_msg_drop          = 32;
 
   // TCP normalization knobs
-  bool                         tcp_non_syn_first_pkt_drop      = 40;
+  bool                              tcp_non_syn_first_pkt_drop      = 40;
   bool                         tcp_syncookie_en                = 41;
-  bool                         tcp_split_handshake_detect_en   = 42;
-  bool                         tcp_split_handshake_drop        = 43;
+  bool                              tcp_split_handshake_detect_en   = 42;
+  bool                              tcp_split_handshake_drop        = 43;
   NormalizationAction          tcp_rsvd_flags_action           = 44;
   NormalizationAction          tcp_unexpected_mss_action       = 45;
   NormalizationAction          tcp_unexpected_win_scale_action = 46;

@@ -81,16 +81,25 @@ typedef struct nwsec_profile_s {
     uint32_t              tcp_invalid_flags_drop:1;
     uint32_t              tcp_nonsyn_noack_drop:1;
 
-    // operational state of L2 segment
     hal_handle_t          hal_handle;             // HAL allocated handle
 
     // PD state
     void                  *pd;                    // all PD specific state
 
+    // TODO: maintian list of tenants who are using this nwsec prof.
+    //       change should trigger all tenants.
     // meta data maintained for tenant
-    ht_ctxt_t             ht_ctxt;                // profile id based hash table ctxt
-    ht_ctxt_t             hal_handle_ht_ctxt;     // hal handle based hash table ctxt
+    // ht_ctxt_t             ht_ctxt;                // profile id based hash table ctxt
+    // ht_ctxt_t             hal_handle_ht_ctxt;     // hal handle based hash table ctxt
 } __PACK__ nwsec_profile_t;
+
+typedef struct nwsec_create_app_ctxt_s {
+} __PACK__ nwsec_create_app_ctxt_t;
+
+typedef struct nwsec_update_app_ctxt_s {
+    bool        ipsg_changed;                       // ipsg changed
+    bool        nwsec_changed;                      // Any field changed
+} __PACK__ nwsec_update_app_ctxt_t;
 
 // max. number of security profiles supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_NWSEC_PROFILES                       256
@@ -120,8 +129,8 @@ nwsec_profile_init (nwsec_profile_t *sec_prof)
     // initialize the operational state
 
     // initialize meta information
-    sec_prof->ht_ctxt.reset();
-    sec_prof->hal_handle_ht_ctxt.reset();
+    // sec_prof->ht_ctxt.reset();
+    // sec_prof->hal_handle_ht_ctxt.reset();
 
     return sec_prof;
 }
@@ -142,6 +151,7 @@ nwsec_profile_free (nwsec_profile_t *sec_prof)
     return HAL_RET_OK;
 }
 
+#if 0
 // insert a security profile in all meta data structures
 // NOTE: nwsec profile is single write object, only config thread can update
 //       the spec of this object, not FTE threads
@@ -153,34 +163,59 @@ add_nwsec_profile_to_db (nwsec_profile_t *sec_prof)
                                                        &sec_prof->hal_handle_ht_ctxt);
     return HAL_RET_OK;
 }
+#endif
 
 // find a security profile instance by its id
 static inline nwsec_profile_t *
-nwsec_profile_lookup_by_id (nwsec_profile_id_t profile_id)
+find_nwsec_profile_by_id (nwsec_profile_id_t profile_id)
 {
-    return (nwsec_profile_t *)g_hal_state->nwsec_profile_id_ht()->lookup(&profile_id);
+    // return (nwsec_profile_t *)g_hal_state->nwsec_profile_id_ht()->lookup(&profile_id);
+    hal_handle_id_ht_entry_t    *entry;
+    nwsec_profile_t             *sec_prof;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->nwsec_profile_id_ht()->lookup(&profile_id);
+    if (entry) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_SECURITY_PROFILE);
+
+        sec_prof = (nwsec_profile_t *)hal_handle_get_obj(entry->handle_id);
+        return sec_prof;
+    }
+    return NULL;
 }
 
 // find a security profile instance by its handle
 static inline nwsec_profile_t *
-nwsec_profile_lookup_by_handle (hal_handle_t handle)
+find_nwsec_profile_by_handle (hal_handle_t handle)
 {
-    return (nwsec_profile_t *)g_hal_state->nwsec_profile_hal_handle_ht()->lookup(&handle);
+    if (handle == 0) {
+        return NULL;
+    }
+    // return (nwsec_profile_t *)g_hal_state->nwsec_profile_hal_handle_ht()->lookup(&handle);
+    // check for object type
+    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
+               HAL_OBJ_ID_SECURITY_PROFILE);
+    return (nwsec_profile_t *)hal_handle_get_obj(handle); 
 }
 
-extern void *nwsec_profile_get_key_func(void *entry);
-extern uint32_t nwsec_profile_compute_hash_func(void *key, uint32_t ht_size);
-extern bool nwsec_profile_compare_key_func(void *key1, void *key2);
+extern void *nwsec_profile_id_get_key_func(void *entry);
+extern uint32_t nwsec_profile_id_compute_hash_func(void *key, uint32_t ht_size);
+extern bool nwsec_profile_id_compare_key_func(void *key1, void *key2);
+nwsec_profile_t *nwsec_lookup_key_or_handle (const SecurityProfileKeyHandle& kh);
 
-extern void *nwsec_profile_get_handle_key_func(void *entry);
-extern uint32_t nwsec_profile_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool nwsec_profile_compare_handle_key_func(void *key1, void *key2);
+// extern void *nwsec_profile_get_handle_key_func(void *entry);
+// extern uint32_t nwsec_profile_compute_handle_hash_func(void *key, uint32_t ht_size);
+// extern bool nwsec_profile_compare_handle_key_func(void *key1, void *key2);
 
 hal_ret_t security_profile_create(nwsec::SecurityProfileSpec& spec,
                                   nwsec::SecurityProfileResponse *rsp);
 
 hal_ret_t security_profile_update(nwsec::SecurityProfileSpec& spec,
                                   nwsec::SecurityProfileResponse *rsp);
+
+hal_ret_t security_profile_delete(nwsec::SecurityProfileDeleteRequest& req,
+                                  nwsec::SecurityProfileDeleteResponseMsg *rsp);
 
 hal_ret_t security_profile_get(nwsec::SecurityProfileGetRequest& req,
                                nwsec::SecurityProfileGetResponse *rsp);
