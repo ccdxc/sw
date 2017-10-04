@@ -46,7 +46,7 @@ func (o *NodeJoinOp) Validate() error {
 
 // Run executes the cluster creation steps.
 func (o *NodeJoinOp) Run() (interface{}, error) {
-	if o.node.Status.Phase == cmd.NodePhase_NODE_JOINED {
+	if o.node.Status.Phase == cmd.NodeStatus_JOINED.String() {
 		// Node is already part of cluster
 		return o.node, nil
 	}
@@ -74,7 +74,7 @@ func (o *NodeJoinOp) Run() (interface{}, error) {
 	if err != nil {
 		return nil, errors.NewInternalError(err)
 	}
-	o.node.Status.Phase = cmd.NodePhase_NODE_JOINED
+	o.node.Status.Phase = cmd.NodeStatus_JOINED.String()
 	n, err := env.CfgWatcherService.APIClient().Node().Update(context.Background(), o.node)
 	log.Infof("Wrote node %v to kvstore. err %v", *n, err)
 	return n, err

@@ -69,32 +69,8 @@ func GetSubObj(kind string) interface{} {
 		var v cmd.PortCondition
 		return &v
 
-	case "NodeRole":
-		var v cmd.NodeRole
-		return &v
-
-	case "NodeConditionType":
-		var v cmd.NodeConditionType
-		return &v
-
 	case "ConditionStatus":
 		var v cmd.ConditionStatus
-		return &v
-
-	case "SmartNICPhase":
-		var v cmd.SmartNICPhase
-		return &v
-
-	case "SmartNICConditionType":
-		var v cmd.SmartNICConditionType
-		return &v
-
-	case "PortConditionType":
-		var v cmd.PortConditionType
-		return &v
-
-	case "NodePhase":
-		var v cmd.NodePhase
 		return &v
 
 	case "SGRule":

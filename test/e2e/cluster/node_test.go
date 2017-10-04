@@ -42,11 +42,10 @@ var _ = Describe("node tests", func() {
 					Namespace: "tenant1",
 				},
 				Spec: cmd.NodeSpec{
-					Roles: []cmd.NodeRole{
-						cmd.NodeRole_CONTROLLER_NODE,
-					},
+					Roles: []string{cmd.NodeSpec_CONTROLLER.String()},
 				},
 			}
+
 			node, err = nodeIf.Create(context.Background(), node)
 			Expect(err).ShouldNot(HaveOccurred())
 			By(fmt.Sprintf("Added %+v to cluster", node.Name))

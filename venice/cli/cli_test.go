@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/cli/api"
@@ -106,7 +107,8 @@ func TestClusterUpdate(t *testing.T) {
 }
 
 func TestNodeCreate(t *testing.T) {
-	out := veniceCLI("create node --label vCenter:vc2 --roles 2 --roles 1 vm233")
+	out := veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s --roles %s vm233", cmd.NodeSpec_QUORUM.String(), cmd.NodeSpec_WORKLOAD))
+
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("update: garbled output '%s'", out)
 	}
@@ -116,7 +118,7 @@ func TestNodeCreate(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != 2 || node.Spec.Roles[1] != 1 {
+	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cmd.NodeSpec_QUORUM.String() || node.Spec.Roles[1] != cmd.NodeSpec_WORKLOAD.String() {
 		t.Fatalf("Create operation failed: %+v \n", node)
 	}
 
@@ -125,7 +127,7 @@ func TestNodeCreate(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != 2 || node.Spec.Roles[1] != 1 {
+	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cmd.NodeSpec_QUORUM.String() || node.Spec.Roles[1] != cmd.NodeSpec_WORKLOAD.String() {
 		t.Fatalf("Single read read failed: %+v \n", node)
 	}
 
@@ -137,7 +139,8 @@ func TestNodeCreate(t *testing.T) {
 }
 
 func TestNodeUpdate(t *testing.T) {
-	out := veniceCLI("update node --roles 3 vm233")
+	out := veniceCLI(fmt.Sprintf("update node --roles %s vm233", cmd.NodeSpec_CONTROLLER.String()))
+
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("Update: garbled output '%s'", out)
 	}
@@ -146,7 +149,7 @@ func TestNodeUpdate(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || len(node.Spec.Roles) != 1 || node.Spec.Roles[0] != 3 {
+	if node.Labels["vCenter"] != "vc2" || len(node.Spec.Roles) != 1 || node.Spec.Roles[0] != cmd.NodeSpec_CONTROLLER.String() {
 		t.Fatalf("Update operation failed: %+v \n", node)
 	}
 }
@@ -1098,10 +1101,11 @@ func matchLineFields(out string, fields []string) bool {
 }
 
 func TestList(t *testing.T) {
-	veniceCLI("create node --label vCenter:vc2 --roles 2 test1")
-	veniceCLI("create node --label vCenter:vc2 --roles 1 test2")
+	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s test1", cmd.NodeSpec_QUORUM.String()))
+	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s test2", cmd.NodeSpec_WORKLOAD.String()))
+
 	out := veniceCLI("read node")
-	if !matchLineFields(out, []string{"test1", "vCenter:vc2", "test1", "QUORUM_NODE"}) {
+	if !matchLineFields(out, []string{"test1", "vCenter:vc2", "test1", "QUORUM"}) {
 		t.Fatalf("Invalid list:\n%s", out)
 	}
 
@@ -1235,7 +1239,8 @@ func TestSnapshot(t *testing.T) {
 	// create some objects
 	veniceCLI("create tenant snap-tenant --adminUser snap-admin")
 	veniceCLI("create lbPolicy --algorithm llatency --probePortOrUrl /healthStatus --sessionAffinity yes --type l4 --interval 5 --maxTimeouts 25 snap-lbpolicy")
-	veniceCLI("create node --label vCenter:vc2 --roles 1 snap-node")
+	//veniceCLI("create node --label vCenter:vc2 --roles 1 snap-node")
+	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s snap-node", cmd.NodeSpec_WORKLOAD.String()))
 
 	// take a snapshot
 	out := veniceCLI("snapshot -f " + snapshotDir)
@@ -1278,7 +1283,7 @@ func TestSnapshot(t *testing.T) {
 	if err := json.Unmarshal([]byte(b), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != 1 {
+	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cmd.NodeSpec_WORKLOAD.String() {
 		t.Fatalf("Unable to decode object: %+v \n", node)
 	}
 
@@ -1302,7 +1307,7 @@ func TestSnapshot(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "modified-vc1" || node.Spec.Roles[0] != 1 {
+	if node.Labels["vCenter"] != "modified-vc1" || node.Spec.Roles[0] != cmd.NodeSpec_WORKLOAD.String() {
 		t.Fatalf("Restore object different from expectation: %+v \n", node)
 	}
 }
@@ -1481,7 +1486,7 @@ func TestNodeDelete(t *testing.T) {
 	if err := json.Unmarshal([]byte(out), node); err != nil {
 		t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
 	}
-	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != 3 {
+	if node.Labels["vCenter"] != "vc2" || node.Spec.Roles[0] != cmd.NodeSpec_CONTROLLER.String() {
 		t.Fatalf("Update operation failed: %+v \n", node)
 	}
 

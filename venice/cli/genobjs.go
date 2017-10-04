@@ -77,32 +77,8 @@ func getSubObj(kind string) interface{} {
 		var v cmd.PortCondition
 		return v
 
-	case "NodeRole":
-		var v cmd.NodeRole
-		return v
-
-	case "NodeConditionType":
-		var v cmd.NodeConditionType
-		return v
-
 	case "ConditionStatus":
 		var v cmd.ConditionStatus
-		return v
-
-	case "SmartNICPhase":
-		var v cmd.SmartNICPhase
-		return v
-
-	case "SmartNICConditionType":
-		var v cmd.SmartNICConditionType
-		return v
-
-	case "PortConditionType":
-		var v cmd.PortConditionType
-		return v
-
-	case "NodePhase":
-		var v cmd.NodePhase
 		return v
 
 	case "SGRule":
@@ -605,24 +581,6 @@ func writePortConditionObj(obj cmd.PortCondition, specKvs map[string]ref.FInfo) 
 	return &newPortCondition
 }
 
-func writeNodeRoleObj(obj cmd.NodeRole, specKvs map[string]ref.FInfo) *cmd.NodeRole {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
-	new := ref.WriteKvs(obj, refCtx, specKvs)
-
-	newNodeRole := new.(cmd.NodeRole)
-
-	return &newNodeRole
-}
-
-func writeNodeConditionTypeObj(obj cmd.NodeConditionType, specKvs map[string]ref.FInfo) *cmd.NodeConditionType {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
-	new := ref.WriteKvs(obj, refCtx, specKvs)
-
-	newNodeConditionType := new.(cmd.NodeConditionType)
-
-	return &newNodeConditionType
-}
-
 func writeConditionStatusObj(obj cmd.ConditionStatus, specKvs map[string]ref.FInfo) *cmd.ConditionStatus {
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
@@ -630,42 +588,6 @@ func writeConditionStatusObj(obj cmd.ConditionStatus, specKvs map[string]ref.FIn
 	newConditionStatus := new.(cmd.ConditionStatus)
 
 	return &newConditionStatus
-}
-
-func writeSmartNICPhaseObj(obj cmd.SmartNICPhase, specKvs map[string]ref.FInfo) *cmd.SmartNICPhase {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
-	new := ref.WriteKvs(obj, refCtx, specKvs)
-
-	newSmartNICPhase := new.(cmd.SmartNICPhase)
-
-	return &newSmartNICPhase
-}
-
-func writeSmartNICConditionTypeObj(obj cmd.SmartNICConditionType, specKvs map[string]ref.FInfo) *cmd.SmartNICConditionType {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
-	new := ref.WriteKvs(obj, refCtx, specKvs)
-
-	newSmartNICConditionType := new.(cmd.SmartNICConditionType)
-
-	return &newSmartNICConditionType
-}
-
-func writePortConditionTypeObj(obj cmd.PortConditionType, specKvs map[string]ref.FInfo) *cmd.PortConditionType {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
-	new := ref.WriteKvs(obj, refCtx, specKvs)
-
-	newPortConditionType := new.(cmd.PortConditionType)
-
-	return &newPortConditionType
-}
-
-func writeNodePhaseObj(obj cmd.NodePhase, specKvs map[string]ref.FInfo) *cmd.NodePhase {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
-	new := ref.WriteKvs(obj, refCtx, specKvs)
-
-	newNodePhase := new.(cmd.NodePhase)
-
-	return &newNodePhase
 }
 
 func writeSGRuleObj(obj network.SGRule, specKvs map[string]ref.FInfo) *network.SGRule {

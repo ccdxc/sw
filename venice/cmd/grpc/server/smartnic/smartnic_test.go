@@ -89,7 +89,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 		mac         string
 		autoAdmit   bool
 		cert        []byte
-		expected    cmd.SmartNICPhase
+		expected    string
 		condition   cmd.SmartNICCondition
 		approvedNIC string
 		nodeName    string
@@ -99,10 +99,10 @@ func TestRegisterSmartNIC(t *testing.T) {
 			"4444.4444.0001",
 			true,
 			[]byte(validCertSignature),
-			cmd.SmartNICPhase_NIC_ADMITTED,
+			cmd.SmartNICSpec_ADMITTED.String(),
 			cmd.SmartNICCondition{
-				Type:   cmd.SmartNICConditionType_NIC_HEALTHY,
-				Status: cmd.ConditionStatus_CONDITION_TRUE,
+				Type:   cmd.SmartNICCondition_HEALTHY.String(),
+				Status: cmd.ConditionStatus_TRUE.String(),
 			},
 			"",
 			"esx-001",
@@ -112,7 +112,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 			"4444.4444.0002",
 			true,
 			[]byte(invalidCertSignature),
-			cmd.SmartNICPhase_NIC_REJECTED,
+			cmd.SmartNICSpec_REJECTED.String(),
 			cmd.SmartNICCondition{},
 			"",
 			"esx-002",
@@ -122,10 +122,10 @@ func TestRegisterSmartNIC(t *testing.T) {
 			"4444.4444.0003",
 			false,
 			[]byte(validCertSignature),
-			cmd.SmartNICPhase_NIC_PENDING,
+			cmd.SmartNICSpec_PENDING.String(),
 			cmd.SmartNICCondition{
-				Type:   cmd.SmartNICConditionType_NIC_HEALTHY,
-				Status: cmd.ConditionStatus_CONDITION_FALSE,
+				Type:   cmd.SmartNICCondition_HEALTHY.String(),
+				Status: cmd.ConditionStatus_FALSE.String(),
 			},
 			"",
 			"esx-003",
@@ -135,10 +135,10 @@ func TestRegisterSmartNIC(t *testing.T) {
 			"4444.4444.0004",
 			false,
 			[]byte(validCertSignature),
-			cmd.SmartNICPhase_NIC_PENDING,
+			cmd.SmartNICSpec_PENDING.String(),
 			cmd.SmartNICCondition{
-				Type:   cmd.SmartNICConditionType_NIC_HEALTHY,
-				Status: cmd.ConditionStatus_CONDITION_TRUE,
+				Type:   cmd.SmartNICCondition_HEALTHY.String(),
+				Status: cmd.ConditionStatus_TRUE.String(),
 			},
 			"4444.4444.0004",
 			"esx-004",
@@ -148,7 +148,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 			"4444.4444.0005",
 			false,
 			[]byte(invalidCertSignature),
-			cmd.SmartNICPhase_NIC_REJECTED,
+			cmd.SmartNICSpec_REJECTED.String(),
 			cmd.SmartNICCondition{},
 			"",
 			"esx-005",
@@ -196,7 +196,9 @@ func TestRegisterSmartNIC(t *testing.T) {
 			nic := cmd.SmartNIC{
 				TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
 				ObjectMeta: ometa,
-				Spec:       cmd.SmartNICSpec{},
+				Spec: cmd.SmartNICSpec{
+					Phase: cmd.SmartNICSpec_UNKNOWN.String(),
+				},
 				Status: cmd.SmartNICStatus{
 					NodeName: tc.nodeName,
 				},
@@ -209,13 +211,13 @@ func TestRegisterSmartNIC(t *testing.T) {
 
 			// register NIC call
 			resp, err := smartNICRPCClient.RegisterNIC(context.Background(), req)
-			t.Logf("Testcase: %s MAC: %s expected: %v obtained: %v", tc.name, tc.mac, tc.expected, resp.Status)
+			t.Logf("Testcase: %s MAC: %s expected: %v obtained: %v err: %v", tc.name, tc.mac, tc.expected, resp, err)
 
 			AssertOk(t, err, "Error registering NIC")
 			Assert(t, resp.Status == tc.expected, "\nexpected:\n%v\nobtained:\n%v",
 				tc.expected, resp.Status)
 
-			if tc.expected == cmd.SmartNICPhase_NIC_ADMITTED || tc.expected == cmd.SmartNICPhase_NIC_PENDING {
+			if tc.expected == cmd.SmartNICSpec_ADMITTED.String() || tc.expected == cmd.SmartNICSpec_PENDING.String() {
 
 				// verify smartNIC is created
 				f1 := func() (bool, []interface{}) {
@@ -257,9 +259,9 @@ func TestRegisterSmartNIC(t *testing.T) {
 
 				// Verify UpdateNIC RPC
 				f3 := func() (bool, []interface{}) {
-					var phase cmd.SmartNICPhase
+					var phase string
 					if nic.ObjectMeta.Name == tc.approvedNIC {
-						phase = cmd.SmartNICPhase_NIC_ADMITTED
+						phase = cmd.SmartNICSpec_ADMITTED.String()
 					}
 					ometa = api.ObjectMeta{Name: tc.mac}
 					nic = cmd.SmartNIC{
@@ -291,8 +293,8 @@ func TestRegisterSmartNIC(t *testing.T) {
 					}
 
 					if nic.ObjectMeta.Name == tc.approvedNIC {
-						if resp.Nic.Spec.Phase != cmd.SmartNICPhase_NIC_ADMITTED {
-							t.Logf("Testcase: %s \nPhase expected:\n%+v\nobtained:\n%+v", tc.name, cmd.SmartNICPhase_NIC_ADMITTED, resp.Nic.Spec.Phase)
+						if resp.Nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+							t.Logf("Testcase: %s \nPhase expected:\n%+v\nobtained:\n%+v", tc.name, cmd.SmartNICSpec_ADMITTED.String(), resp.Nic.Spec.Phase)
 							return false, nil
 						}
 					}
@@ -383,8 +385,8 @@ func TestUpdateSmartNIC(t *testing.T) {
 		Status: cmd.SmartNICStatus{
 			Conditions: []*cmd.SmartNICCondition{
 				{
-					Type:   cmd.SmartNICConditionType_NIC_HEALTHY,
-					Status: cmd.ConditionStatus_CONDITION_FALSE,
+					Type:   cmd.SmartNICCondition_HEALTHY.String(),
+					Status: cmd.ConditionStatus_FALSE.String(),
 				},
 			},
 		},

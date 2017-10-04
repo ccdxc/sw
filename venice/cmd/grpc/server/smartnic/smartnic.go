@@ -73,6 +73,12 @@ func (s *RPCServer) CreateNode(ometa api.ObjectMeta) (*cmd.Node, error) {
 	node := &cmd.Node{
 		TypeMeta:   api.TypeMeta{Kind: "Node"},
 		ObjectMeta: ometa,
+		Spec: cmd.NodeSpec{
+			Roles: []string{cmd.NodeSpec_WORKLOAD.String()},
+		},
+		Status: cmd.NodeStatus{
+			Phase: cmd.NodeStatus_JOINED.String(),
+		},
 	}
 
 	nodeObj, err := s.NodeAPI.Create(context.Background(), node)
@@ -108,13 +114,19 @@ func (s *RPCServer) UpdateNode(nic *cmd.SmartNIC) (*cmd.Node, error) {
 
 		// Create Node object
 		node := &cmd.Node{
+			TypeMeta: api.TypeMeta{Kind: "Node"},
 			ObjectMeta: api.ObjectMeta{
 				Name: nic.Status.NodeName,
 			},
+			Spec: cmd.NodeSpec{
+				Roles: []string{cmd.NodeSpec_WORKLOAD.String()},
+			},
 			Status: cmd.NodeStatus{
-				Nics: []string{nic.ObjectMeta.Name},
+				Nics:  []string{nic.ObjectMeta.Name},
+				Phase: cmd.NodeStatus_JOINED.String(),
 			},
 		}
+
 		nodeObj, err = s.NodeAPI.Create(context.Background(), node)
 	} else {
 
@@ -195,30 +207,30 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 	if s.IsValidFactoryCert(cert) == false {
 
 		// Reject NIC is the certificate is not valid
-		return &grpc.RegisterNICResponse{Status: cmd.SmartNICPhase_NIC_REJECTED}, nil
+		return &grpc.RegisterNICResponse{Status: cmd.SmartNICSpec_REJECTED.String()}, nil
 	}
 
 	// Get the Cluster object
 	clusterObj, err := s.GetCluster()
 	if err != nil {
 		log.Errorf("Error getting Cluster object, err: %v", err)
-		return &grpc.RegisterNICResponse{Status: cmd.SmartNICPhase_NIC_REJECTED}, err
+		return &grpc.RegisterNICResponse{Status: cmd.SmartNICSpec_REJECTED.String()}, err
 	}
 
 	// Process the request based on the configured admission mode
-	phase := cmd.SmartNICPhase_NIC_REJECTED
+	phase := cmd.SmartNICSpec_REJECTED.String()
 	if clusterObj.Spec.AutoAdmitNICs == true {
 
 		// Admit NIC if autoAdmission is enabled
-		phase = cmd.SmartNICPhase_NIC_ADMITTED
+		phase = cmd.SmartNICSpec_ADMITTED.String()
 	} else {
 
 		// Set the NIC to pendingState for Manual Approval
-		phase = cmd.SmartNICPhase_NIC_PENDING
+		phase = cmd.SmartNICSpec_PENDING.String()
 	}
 
 	// Create SmartNIC object, if the status is either admitted or pending.
-	if phase == cmd.SmartNICPhase_NIC_ADMITTED || phase == cmd.SmartNICPhase_NIC_PENDING {
+	if phase == cmd.SmartNICSpec_ADMITTED.String() || phase == cmd.SmartNICSpec_PENDING.String() {
 		nic := req.GetNic()
 		nic.Spec.Phase = phase
 		_, err = s.UpdateSmartNIC(&nic)

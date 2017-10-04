@@ -95,8 +95,8 @@ message RegisterNICRequest {
 // Register NIC response
 message RegisterNICResponse {
 
-	// Admission Status of NIC
-	cmd.SmartNICPhase Status = 1 [(gogoproto.jsontag) = "status,omitempty"];
+	// Admission Status of NIC - string enum of cmd.SmartNICSpec.SmartNICPhase
+	string Status = 1 [(gogoproto.jsontag) = "status,omitempty"];
 }
 
 // Update NIC request

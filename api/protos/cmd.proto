@@ -11,7 +11,7 @@ import "github.com/pensando/sw/api/meta.proto";
 
 // --------------------------------- CLUSTER ---------------------------------------------
 //
-// Cluster represents a full cluster
+// Cluster represents a full cluster venice and workload nodes
 //
 // Entity responsible & scenarios involved in managing this object:
 //
@@ -127,15 +127,33 @@ message Node {
 // NodeSpec contains the configuration of the node.
 message NodeSpec {
 
+    // NodeRole Type
+    enum NodeRole {
+        CONTROLLER  = 0x0;  // Node which is part of Venice cluster
+        WORKLOAD    = 0x1;  // Node which runs workloads
+        QUORUM      = 0x2;  // Node which is part of quorum in Venice cluster
+    }
+
     // Roles is of list of roles a node can be configured with.
-    repeated NodeRole Roles = 1 [(gogoproto.jsontag) = "roles,omitempty"];
+    repeated string Roles = 1 [(gogoproto.nullable) = true,
+                              (venice.check) = "StrEnum(NodeSpec.NodeRole)",
+                              (gogoproto.jsontag) = "roles,omitempty"];
 }
 
 // NodeStatus contains the current state of the node.
 message NodeStatus {
 
+    // Various phases in lifecycle of a Node
+    enum NodePhase {
+        UNKNOWN    = 0; // Unknown status
+        PENDING    = 1; // Node is waiting to join the venice cluster
+        JOINED     = 2; // Node is part of the venice cluster
+        FAILED     = 3; // Node failed to join the venice cluster
+    }
+
     // Current lifecycle phase of the node.
-    NodePhase Phase                     = 1 [(gogoproto.nullable) = true,
+    string Phase                        = 1 [(gogoproto.nullable) = true,
+                                            (venice.check) = "StrEnum(NodeStatus.NodePhase)",
                                             (gogoproto.jsontag) = "phase,omitempty"];
 
     // List of current node conditions
@@ -148,55 +166,44 @@ message NodeStatus {
                                             (gogoproto.jsontag) = "nics,omitempty"];
 }
 
-// NodeRole Type
-enum NodeRole {
-    CONTROLLER_NODE = 0x0;  // Node which is part of Venice cluster
-    WORKLOAD_NODE   = 0x1;  // Node which runs workloads
-    QUORUM_NODE     = 0x2;  // Node which is part of quorum in Venice cluster
-}
 
-// Various phases in lifecycle of a Node
-enum NodePhase {
-    NODE_UNKNOWN    = 0; // Unknown status
-    NODE_PENDING    = 1; // Node is waiting to join the venice cluster
-    NODE_JOINED     = 2; // Node is part of the venice cluster
-    NODE_FAILED     = 3; // Node failed to join the venice cluster
-}
-
-// These are valid conditions of a Node
-enum NodeConditionType {
-    NODE_LEADER     = 0; // Node is the elected leader in Venice cluster
-}
 
 // NodeCondition describes the state of a Node at a certain point.
 message NodeCondition {
 
+    // These are valid conditions of a Node
+    enum ConditionType {
+        LEADER  = 0; // Node is the elected leader in Venice cluster
+    }
+
     // Type indicates a certain node condition
-    NodeConditionType Type          = 1 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "type,omitempty"];
+    string Type                 = 1 [(gogoproto.nullable) = true,
+                                    (venice.check) = "StrEnum(NodeCondition.ConditionType)",
+                                    (gogoproto.jsontag) = "type,omitempty"];
 
     // Condition Status
-    ConditionStatus Status          = 2 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "status,omitempty"];
+    string Status               = 2 [(gogoproto.nullable) = true,
+                                    (venice.check) = "StrEnum(ConditionStatus)",
+                                    (gogoproto.jsontag) = "status,omitempty"];
 
     // The last time the condition transitioned
-    int64 LastTransitionTime        = 3 [(gogoproto.nullable) = true,
+    int64 LastTransitionTime    = 3 [(gogoproto.nullable) = true,
                                         (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
 
     // The reason for the condition's last transition
-    string Reason                   = 4 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "reason,omitempty"];
+    string Reason               = 4 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "reason,omitempty"];
 
     // A detailed message indicating details about the transition.
-    string Message                  = 5 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "message,omitempty"];
+    string Message              = 5 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "message,omitempty"];
 }
 
 // These are valid condition statuses.
 enum ConditionStatus {
-    CONDITION_UNKNOWN   = 0; // Condition is unknown
-    CONDITION_TRUE      = 1; // Condition is met
-    CONDITION_FALSE     = 2; // Condition is not met
+    UNKNOWN   = 0; // Condition is unknown
+    TRUE      = 1; // Condition is met
+    FALSE     = 2; // Condition is not met
 }
 
 //------------------------------------ SMART NIC  -------------------------------------------
@@ -243,6 +250,14 @@ message SmartNIC {
 // SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)
 message SmartNICSpec {
 
+    // Various phases in lifecycle of a SmartNIC
+    enum SmartNICPhase {
+        UNKNOWN      = 0; // Unknown status
+        REJECTED     = 1; // NIC is rejected
+        PENDING      = 2; // NIC is validated but waiting for manual approval
+        ADMITTED     = 3; // NIC is validated and admitted
+    }
+
     // Current phase of the SmartNIC.
     // When auto-admission is enabled, Phase will be set to NIC_ADMITTED
     // by CMD for validated NICs.
@@ -251,7 +266,8 @@ message SmartNICSpec {
     // To admit the NIC as a part of manual admission, user is expected to
     // set the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING
     // state. Note : Whitelist mode is not supported yet.
-    SmartNICPhase Phase     = 1 [(gogoproto.nullable) = true,
+    string Phase            = 1 [(gogoproto.nullable) = true,
+                                (venice.check) = "StrEnum(SmartNICSpec.SmartNICPhase)",
                                 (gogoproto.jsontag) = "phase,omitempty"];
 
     // Ports holds a list of Port Specs
@@ -259,13 +275,7 @@ message SmartNICSpec {
                                 (gogoproto.jsontag) = "ports,omitempty"];
 }
 
-// Various phases in lifecycle of a SmartNIC
-enum SmartNICPhase {
-    NIC_UNKNOWN      = 0; // Unknown status
-    NIC_REJECTED     = 1; // NIC is rejected
-    NIC_PENDING      = 2; // NIC is validated but waiting for manual approval
-    NIC_ADMITTED     = 3; // NIC is validated and admitted
-}
+
 
 // SmartNICStatus contains current status of a SmartNIC
 message SmartNICStatus {
@@ -292,22 +302,23 @@ message SmartNICStatus {
                                                 (gogoproto.jsontag) = "ports,omitempty"];
 }
 
-// These are valid conditions of a SmartNIC
-enum SmartNICConditionType {
-    NIC_HEALTHY = 0; // NIC is healthy
-
-    // more conditions to be added ...
-}
-
 // SmartNICCondition describes the state of a SmartNIC at a certain point.
 message SmartNICCondition {
 
+    // These are valid conditions of a SmartNIC
+    enum ConditionType {
+        HEALTHY = 0; // NIC is healthy
+
+    }
+
     // Type indicates a certain NIC condition
-    SmartNICConditionType Type      = 1 [(gogoproto.nullable) = true,
+    string Type                     = 1 [(gogoproto.nullable) = true,
+                                        (venice.check) = "StrEnum(SmartNICCondition.ConditionType)",
                                         (gogoproto.jsontag) = "type,omitempty"];
 
     // Condition Status
-    ConditionStatus Status          = 2 [(gogoproto.nullable) = true,
+    string Status                   = 2 [(gogoproto.nullable) = true,
+                                        (venice.check) = "StrEnum(ConditionStatus)",
                                         (gogoproto.jsontag) = "status,omitempty"];
 
     // The last time the condition transitioned
@@ -330,7 +341,6 @@ message PortSpec {
     string MacAddress   = 1 [(gogoproto.nullable) = true,
                             (gogoproto.jsontag) = "macAddress,omitempty"];
 
-    // More fields to follow ...
 }
 
 // PortStatus contains current status of a Port
@@ -349,33 +359,35 @@ message PortStatus {
                                             (gogoproto.jsontag) = "conditions,omitempty"];
 }
 
-// These are valid conditions of a Port
-enum PortConditionType {
-    PORT_UP     = 0; // Port is Up
-}
-
 // PortCondition describes the state of a Port at a certain point.
 message PortCondition {
 
+    // These are valid conditions of a Port
+    enum ConditionType {
+        PORT_UP     = 0; // Port is Up
+    }
+
     // Type indicates a certain Port condition
-    PortConditionType Type          = 1 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "type,omitempty"];
+    string Type                 = 1 [(gogoproto.nullable) = true,
+                                    (venice.check) = "StrEnum(PortCondition.ConditionType)",
+                                    (gogoproto.jsontag) = "type,omitempty"];
 
     // Condition Status
-    ConditionStatus Status          = 2 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "status,omitempty"];
+    string Status				= 2 [(gogoproto.nullable) = true,
+                                    (venice.check) = "StrEnum(ConditionStatus)",
+                                    (gogoproto.jsontag) = "status,omitempty"];
 
     // The last time the condition transitioned
-    int64 LastTransitionTime        = 3 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
+    int64 LastTransitionTime    = 3 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
 
     // The reason for the condition's last transition
-    string Reason                   = 4 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "reason,omitempty"];
+    string Reason               = 4 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "reason,omitempty"];
 
     // A detailed message indicating details about the transition.
-    string Message                  = 5 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "message,omitempty"];
+    string Message              = 5 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "message,omitempty"];
 }
 
 //-------------------------------- R E S T  A P I ----------------------------------------------------

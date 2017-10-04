@@ -415,12 +415,7 @@
             "required": false,
             "type": "array",
             "items": {
-              "type": "string",
-              "enum": [
-                "CONTROLLER_NODE",
-                "WORKLOAD_NODE",
-                "QUORUM_NODE"
-              ]
+              "type": "string"
             }
           },
           {
@@ -428,14 +423,7 @@
             "description": "Mac address of the Port, which is key identifier of the port.",
             "in": "query",
             "required": false,
-            "type": "string",
-            "enum": [
-              "NODE_UNKNOWN",
-              "NODE_PENDING",
-              "NODE_JOINED",
-              "NODE_FAILED"
-            ],
-            "default": "NODE_UNKNOWN"
+            "type": "string"
           },
           {
             "name": "Status.Nics",
@@ -640,14 +628,7 @@
             "name": "Spec.Phase",
             "in": "query",
             "required": false,
-            "type": "string",
-            "enum": [
-              "NIC_UNKNOWN",
-              "NIC_REJECTED",
-              "NIC_PENDING",
-              "NIC_ADMITTED"
-            ],
-            "default": "NIC_UNKNOWN"
+            "type": "string"
           },
           {
             "name": "Status.SerialNum",
@@ -812,7 +793,7 @@
           "$ref": "#/definitions/cmdCluster"
         }
       },
-      "description": "Cluster represents a full cluster\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o NetOps-admin\n             - initial cluster creation\n     Modify:\n         o NetOps-admin\n             - update spec attributes\n         o CMD\n             - update status attributes\n     Delete:\n         o NetOps-admin\n             - TBD",
+      "description": "Cluster represents a full cluster venice and workload nodes\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o NetOps-admin\n             - initial cluster creation\n     Modify:\n         o NetOps-admin\n             - update spec attributes\n         o CMD\n             - update status attributes\n     Delete:\n         o NetOps-admin\n             - TBD",
       "title": "--------------------------------- CLUSTER ---------------------------------------------"
     },
     "cmdAutoMsgNodeWatchHelper": {
@@ -923,16 +904,6 @@
       },
       "description": "NodeCondition describes the state of a Node at a certain point."
     },
-    "cmdConditionStatus": {
-      "type": "string",
-      "enum": [
-        "CONDITION_UNKNOWN",
-        "CONDITION_TRUE",
-        "CONDITION_FALSE"
-      ],
-      "default": "CONDITION_UNKNOWN",
-      "description": "These are valid condition statuses."
-    },
     "cmdNode": {
       "type": "object",
       "properties": {
@@ -959,11 +930,11 @@
       "type": "object",
       "properties": {
         "Type": {
-          "$ref": "#/definitions/cmdNodeConditionType",
+          "type": "string",
           "description": "Current phase of the SmartNIC.\nWhen auto-admission is enabled, Phase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, Phase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset the Phase to NIC_ADMITTED for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet."
         },
         "Status": {
-          "$ref": "#/definitions/cmdConditionStatus",
+          "type": "string",
           "title": "Ports holds a list of Port Specs"
         },
         "LastTransitionTime": {
@@ -978,14 +949,6 @@
         }
       },
       "title": "SmartNICSpec contains configuration of the SmartNIC (Naples I/O subsystem)"
-    },
-    "cmdNodeConditionType": {
-      "type": "string",
-      "enum": [
-        "NODE_LEADER"
-      ],
-      "default": "NODE_LEADER",
-      "title": "These are valid conditions of a Node"
     },
     "cmdNodeList": {
       "type": "object",
@@ -1008,34 +971,13 @@
       },
       "title": "SmartNICStatus contains current status of a SmartNIC"
     },
-    "cmdNodePhase": {
-      "type": "string",
-      "enum": [
-        "NODE_UNKNOWN",
-        "NODE_PENDING",
-        "NODE_JOINED",
-        "NODE_FAILED"
-      ],
-      "default": "NODE_UNKNOWN",
-      "title": "Various phases in lifecycle of a Node"
-    },
-    "cmdNodeRole": {
-      "type": "string",
-      "enum": [
-        "CONTROLLER_NODE",
-        "WORKLOAD_NODE",
-        "QUORUM_NODE"
-      ],
-      "default": "CONTROLLER_NODE",
-      "title": "NodeRole Type"
-    },
     "cmdNodeSpec": {
       "type": "object",
       "properties": {
         "Roles": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/cmdNodeRole"
+            "type": "string"
           },
           "title": "Type indicates a certain NIC condition"
         }
@@ -1046,7 +988,7 @@
       "type": "object",
       "properties": {
         "Phase": {
-          "$ref": "#/definitions/cmdNodePhase",
+          "type": "string",
           "title": "Mac address of the Port, which is key identifier of the port"
         },
         "Conditions": {
@@ -1068,11 +1010,11 @@
       "type": "object",
       "properties": {
         "Type": {
-          "$ref": "#/definitions/cmdPortConditionType",
+          "type": "string",
           "title": "Mac address of the Port, which is key identifier of the port"
         },
         "Status": {
-          "$ref": "#/definitions/cmdConditionStatus",
+          "type": "string",
           "title": "LinkSpeed of the Port"
         },
         "LastTransitionTime": {
@@ -1088,14 +1030,6 @@
         }
       },
       "title": "PortStatus contains current status of a Port"
-    },
-    "cmdPortConditionType": {
-      "type": "string",
-      "enum": [
-        "PORT_UP"
-      ],
-      "default": "PORT_UP",
-      "title": "These are valid conditions of a Port"
     },
     "cmdPortSpec": {
       "type": "object",
@@ -1145,10 +1079,10 @@
       "type": "object",
       "properties": {
         "Type": {
-          "$ref": "#/definitions/cmdSmartNICConditionType"
+          "type": "string"
         },
         "Status": {
-          "$ref": "#/definitions/cmdConditionStatus"
+          "type": "string"
         },
         "LastTransitionTime": {
           "type": "string",
@@ -1161,14 +1095,6 @@
           "type": "string"
         }
       }
-    },
-    "cmdSmartNICConditionType": {
-      "type": "string",
-      "enum": [
-        "NIC_HEALTHY"
-      ],
-      "default": "NIC_HEALTHY",
-      "title": "These are valid conditions of a SmartNIC"
     },
     "cmdSmartNICList": {
       "type": "object",
@@ -1187,22 +1113,11 @@
         }
       }
     },
-    "cmdSmartNICPhase": {
-      "type": "string",
-      "enum": [
-        "NIC_UNKNOWN",
-        "NIC_REJECTED",
-        "NIC_PENDING",
-        "NIC_ADMITTED"
-      ],
-      "default": "NIC_UNKNOWN",
-      "title": "Various phases in lifecycle of a SmartNIC"
-    },
     "cmdSmartNICSpec": {
       "type": "object",
       "properties": {
         "Phase": {
-          "$ref": "#/definitions/cmdSmartNICPhase"
+          "type": "string"
         },
         "Ports": {
           "type": "array",
