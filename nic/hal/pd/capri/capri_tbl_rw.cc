@@ -139,19 +139,20 @@ typedef struct capri_tcam_shadow_mem_ {
 } capri_tcam_shadow_mem_t;
 
 
-static capri_sram_shadow_mem_t *g_shadow_sram_p4;
+static capri_sram_shadow_mem_t *g_shadow_sram_p4[2];
+static capri_tcam_shadow_mem_t *g_shadow_tcam_p4[2];
 static capri_sram_shadow_mem_t *g_shadow_sram_rxdma;
 static capri_sram_shadow_mem_t *g_shadow_sram_txdma;
-static capri_tcam_shadow_mem_t *g_shadow_tcam;
 
-static capri_sram_shadow_mem_t* 
-get_sram_shadow_for_table (uint32_t tableid) {
-
+static capri_sram_shadow_mem_t*
+get_sram_shadow_for_table(uint32_t tableid) {
     if ((tableid >= P4TBL_ID_TBLMIN) &&
         (tableid <= P4TBL_ID_TBLMAX)) {
         HAL_TRACE_DEBUG("{} Working with p4 sram shadow for tableid {}\n",
                         __FUNCTION__, tableid);
-        return (g_shadow_sram_p4);
+        p4pd_table_properties_t tbl_ctx;
+        p4pd_global_table_properties_get(tableid, &tbl_ctx);
+        return (g_shadow_sram_p4[tbl_ctx.gress]);
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         HAL_TRACE_DEBUG("{} Working with rxdma shadow for tableid {}\n",
@@ -497,15 +498,23 @@ int capri_table_rw_init()
     // in HAL init sequence, p4pd_init() is already called..
     // !!!!!!
     /* 1. Create shadow memory and init to zero */
-    g_shadow_sram_p4 = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
-                                sizeof(capri_sram_shadow_mem_t));
-    g_shadow_tcam = (capri_tcam_shadow_mem_t*)CAPRI_CALLOC(1,
-                                sizeof(capri_tcam_shadow_mem_t));
+    g_shadow_sram_p4[P4_GRESS_INGRESS] = (capri_sram_shadow_mem_t*)
+        CAPRI_CALLOC(1, sizeof(capri_sram_shadow_mem_t));
+    g_shadow_sram_p4[P4_GRESS_EGRESS] = (capri_sram_shadow_mem_t*)
+        CAPRI_CALLOC(1, sizeof(capri_sram_shadow_mem_t));
+    g_shadow_tcam_p4[P4_GRESS_INGRESS] = (capri_tcam_shadow_mem_t*)
+        CAPRI_CALLOC(1, sizeof(capri_tcam_shadow_mem_t));
+    g_shadow_tcam_p4[P4_GRESS_EGRESS] = (capri_tcam_shadow_mem_t*)
+        CAPRI_CALLOC(1, sizeof(capri_tcam_shadow_mem_t));
     g_shadow_sram_rxdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
                                 sizeof(capri_sram_shadow_mem_t));
     g_shadow_sram_txdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
                                 sizeof(capri_sram_shadow_mem_t));
-    if (!g_shadow_sram_p4 || !g_shadow_tcam || !g_shadow_sram_rxdma || !g_shadow_sram_txdma) {
+    if (!g_shadow_sram_p4[P4_GRESS_INGRESS] ||
+        !g_shadow_sram_p4[P4_GRESS_EGRESS] ||
+        !g_shadow_tcam_p4[P4_GRESS_INGRESS] ||
+        !g_shadow_tcam_p4[P4_GRESS_EGRESS] ||
+        !g_shadow_sram_rxdma || !g_shadow_sram_txdma) {
         // TODO: Log erorr/trace
         capri_table_rw_cleanup();
         return CAPRI_FAIL;
@@ -513,7 +522,10 @@ int capri_table_rw_init()
 
     // Initialize shadow tcam to match all ones. This makes all entries
     // to be treated as inactive.
-    memset(g_shadow_tcam->mem_x, 0xFF, sizeof(g_shadow_tcam->mem_x));
+    memset(g_shadow_tcam_p4[P4_GRESS_INGRESS]->mem_x, 0xFF,
+           sizeof(g_shadow_tcam_p4[P4_GRESS_INGRESS]->mem_x));
+    memset(g_shadow_tcam_p4[P4_GRESS_EGRESS]->mem_x, 0xFF,
+           sizeof(g_shadow_tcam_p4[P4_GRESS_EGRESS]->mem_x));
 
 #ifndef P4PD_CLI
     // register hal cpu interface
@@ -548,8 +560,17 @@ int capri_table_rw_init()
 
 void capri_table_rw_cleanup()
 {
-    if (g_shadow_sram_p4) {
-        CAPRI_FREE(g_shadow_sram_p4);
+    if (g_shadow_sram_p4[P4_GRESS_INGRESS]) {
+        CAPRI_FREE(g_shadow_sram_p4[P4_GRESS_INGRESS]);
+    }
+    if (g_shadow_sram_p4[P4_GRESS_EGRESS]) {
+        CAPRI_FREE(g_shadow_sram_p4[P4_GRESS_EGRESS]);
+    }
+    if (g_shadow_tcam_p4[P4_GRESS_INGRESS]) {
+        CAPRI_FREE(g_shadow_tcam_p4[P4_GRESS_INGRESS]);
+    }
+    if (g_shadow_tcam_p4[P4_GRESS_EGRESS]) {
+        CAPRI_FREE(g_shadow_tcam_p4[P4_GRESS_EGRESS]);
     }
     if (g_shadow_sram_rxdma) {
         CAPRI_FREE(g_shadow_sram_rxdma);
@@ -557,13 +578,12 @@ void capri_table_rw_cleanup()
     if (g_shadow_sram_txdma) {
         CAPRI_FREE(g_shadow_sram_txdma);
     }
-    if (g_shadow_tcam) {
-        CAPRI_FREE(g_shadow_tcam);
-    }
-    g_shadow_sram_p4 = NULL;
+    g_shadow_sram_p4[P4_GRESS_INGRESS] = NULL;
+    g_shadow_sram_p4[P4_GRESS_EGRESS] = NULL;
+    g_shadow_tcam_p4[P4_GRESS_INGRESS] = NULL;
+    g_shadow_tcam_p4[P4_GRESS_EGRESS] = NULL;
     g_shadow_sram_rxdma = NULL;
     g_shadow_sram_txdma = NULL;
-    g_shadow_tcam = NULL;
 
 }
 
@@ -965,8 +985,10 @@ int capri_tcam_table_entry_write(uint32_t tableid,
     uint16_t *_trit_y = (uint16_t*)trit_y;
     for (int j = 0; j < tbl_ctx.tcam_layout.entry_width; j++) {
         if (copy_bits >= 16) {
-            g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = *_trit_x;
-            g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = *_trit_y;
+            g_shadow_tcam_p4[dir]->mem_x[tcam_row]
+                [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = *_trit_x;
+            g_shadow_tcam_p4[dir]->mem_y[tcam_row]
+                [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = *_trit_y;
             _trit_x++;
             _trit_y++;
             copy_bits -= 16;
@@ -975,13 +997,14 @@ int capri_tcam_table_entry_write(uint32_t tableid,
         } else {
             // do not match remaining bits from end of entry bits to next 16b
             // aligned word
-            g_shadow_tcam->mem_x[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = 0;
-            g_shadow_tcam->mem_y[tcam_row][block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = 0;
+            g_shadow_tcam_p4[tbl_ctx.gress]->mem_x[tcam_row]
+                [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = 0;
+            g_shadow_tcam_p4[tbl_ctx.gress]->mem_y[tcam_row]
+                [block % CAPRI_TCAM_BLOCK_COUNT][entry_start_word] = 0;
         }
         entry_start_word++;
         if (entry_start_word % CAPRI_TCAM_WORDS_PER_BLOCK == 0) {
             // crossed over to next block
-            //block += CAPRI_TCAM_ROWS;
             block++;
             entry_start_word = 0;
         }
@@ -995,11 +1018,11 @@ int capri_tcam_table_entry_write(uint32_t tableid,
     uint8_t temp_x[16];
     uint8_t temp_y[16];
     for (int i = entry_start_block; i <= entry_end_block; i += CAPRI_TCAM_ROWS, blk++) {
-        uint8_t *s = (uint8_t*)(g_shadow_tcam->mem_x[tcam_row][blk]);
+        uint8_t *s = (uint8_t*)(g_shadow_tcam_p4[dir]->mem_x[tcam_row][blk]);
         for (int p = 15; p >= 0; p--) {
             temp_x[p] = *s; s++;
         }
-        s = (uint8_t*)(g_shadow_tcam->mem_y[tcam_row][blk]);
+        s = (uint8_t*)(g_shadow_tcam_p4[dir]->mem_y[tcam_row][blk]);
         for (int p = 15; p >= 0; p--) {
             temp_y[p] = *s; s++;
         }
@@ -1008,9 +1031,7 @@ int capri_tcam_table_entry_write(uint32_t tableid,
             tcam_block_data_x = 0;
             tcam_block_data_y = 0;
             pict_csr.hlp.s_cpp_int_from_array(tcam_block_data_x, 0, 15, temp_x);
-                                    //(uint8_t*)(g_shadow_tcam->mem_x[tcam_row][i % CAPRI_TCAM_BLOCK_COUNT]));
             pict_csr.hlp.s_cpp_int_from_array(tcam_block_data_y, 0, 15, temp_y);
-                                    //(uint8_t*)(g_shadow_tcam->mem_y[tcam_row][i % CAPRI_TCAM_BLOCK_COUNT]));
             pict_csr.dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)tcam_block_data_x);
             pict_csr.dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)tcam_block_data_y);
             pict_csr.dhs_tcam_xy.entry[i].valid(1);
@@ -1020,9 +1041,7 @@ int capri_tcam_table_entry_write(uint32_t tableid,
             tcam_block_data_x = 0;
             tcam_block_data_y = 0;
             pict_csr.hlp.s_cpp_int_from_array(tcam_block_data_x, 0, 15, temp_x);
-                                    //(uint8_t*)(g_shadow_tcam->mem_x[tcam_row][i % CAPRI_TCAM_BLOCK_COUNT]));
             pict_csr.hlp.s_cpp_int_from_array(tcam_block_data_y, 0, 15, temp_y);
-                                    //(uint8_t*)(g_shadow_tcam->mem_y[tcam_row][i % CAPRI_TCAM_BLOCK_COUNT]));
             pict_csr.dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)tcam_block_data_x);
             pict_csr.dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)tcam_block_data_y);
             pict_csr.dhs_tcam_xy.entry[i].valid(1);
@@ -1079,6 +1098,7 @@ int capri_tcam_table_entry_read(uint32_t tableid,
 
     p4pd_table_properties_t tbl_ctx;
     p4pd_table_properties_get(tableid, &tbl_ctx);
+    p4pd_table_dir_en dir = tbl_ctx.gress;
     assert(tbl_ctx.table_location != P4_TBL_LOCATION_HBM);
     capri_tcam_entry_details_get(tableid, index,
                                 &tcam_row, &entry_start_block,
@@ -1094,18 +1114,24 @@ int capri_tcam_table_entry_read(uint32_t tableid,
     uint16_t *_trit_y = (uint16_t*)trit_y;
     while(copy_bits) {
         if (copy_bits >= 16) {
-            *_trit_x = g_shadow_tcam->mem_x[tcam_row][block%CAPRI_TCAM_BLOCK_COUNT][start_word];
-            *_trit_y = g_shadow_tcam->mem_y[tcam_row][block%CAPRI_TCAM_BLOCK_COUNT][start_word];
+            *_trit_x = g_shadow_tcam_p4[dir]->mem_x[tcam_row]
+                [block%CAPRI_TCAM_BLOCK_COUNT][start_word];
+            *_trit_y = g_shadow_tcam_p4[dir]->mem_y[tcam_row]
+                [block%CAPRI_TCAM_BLOCK_COUNT][start_word];
             _trit_x++;
             _trit_y++;
             copy_bits -= 16;
         } else if (copy_bits) {
             if (copy_bits > 8) {
-                *_trit_x = g_shadow_tcam->mem_x[tcam_row][block%CAPRI_TCAM_BLOCK_COUNT][start_word];
-                *_trit_y = g_shadow_tcam->mem_y[tcam_row][block%CAPRI_TCAM_BLOCK_COUNT][start_word];
+                *_trit_x = g_shadow_tcam_p4[dir]->mem_x[tcam_row]
+                    [block%CAPRI_TCAM_BLOCK_COUNT][start_word];
+                *_trit_y = g_shadow_tcam_p4[dir]->mem_y[tcam_row]
+                    [block%CAPRI_TCAM_BLOCK_COUNT][start_word];
             } else {
-                *(uint8_t*)_trit_x = g_shadow_tcam->mem_x[tcam_row][block%CAPRI_TCAM_BLOCK_COUNT][start_word] >> 8;
-                *(uint8_t*)_trit_y = g_shadow_tcam->mem_y[tcam_row][block%CAPRI_TCAM_BLOCK_COUNT][start_word] >> 8;
+                *(uint8_t*)_trit_x = g_shadow_tcam_p4[dir]->mem_x[tcam_row]
+                    [block%CAPRI_TCAM_BLOCK_COUNT][start_word] >> 8;
+                *(uint8_t*)_trit_y = g_shadow_tcam_p4[dir]->mem_y[tcam_row]
+                    [block%CAPRI_TCAM_BLOCK_COUNT][start_word] >> 8;
             }
             copy_bits = 0;
         }
@@ -1113,7 +1139,6 @@ int capri_tcam_table_entry_read(uint32_t tableid,
         if (start_word % CAPRI_TCAM_WORDS_PER_BLOCK == 0) {
             // crossed over to next block
             block++;
-            //block += CAPRI_TCAM_ROWS;
             start_word = 0;
         }
     }
