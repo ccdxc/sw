@@ -14,3 +14,10 @@ modules:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=False
 
+    - module:
+        name    : UP2UP_DROP
+        spec    : up2up.testspec
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=False
+

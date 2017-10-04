@@ -119,7 +119,10 @@ def run_hal(args):
     os.chdir(hal_dir)
 
     log = open(hal_log, "w")
-    p = Popen(["./hal", "--config", args.haljson], stdout=log, stderr=log)
+    jsonfile = 'hal.json'
+    if args.hostpin:
+        jsonfile = 'hal_hostpin.json'
+    p = Popen(["./hal", "--config", jsonfile], stdout=log, stderr=log)
     global hal_process
     hal_process = p
     print "* Starting HAL pid (" + str(p.pid) + ")"
@@ -166,12 +169,17 @@ def run_dol(args):
     if args.feature is not None:
         cmd.append('--feature')
         cmd.append(args.feature)
-    if args.subfeature is not None:
-        cmd.append('--subfeature')
-        cmd.append(args.subfeature)
+    if args.sub is not None:
+        cmd.append('--sub')
+        cmd.append(args.sub)
     if args.test is not None:
         cmd.append('--test')
         cmd.append(args.test)
+    if args.testcase is not None:
+        cmd.append('--testcase')
+        cmd.append(args.testcase)
+    if args.hostpin is True:
+        cmd.append('--hostpin')
     p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
     print "- Log file: " + dol_log + "\n"
@@ -278,12 +286,14 @@ def main():
                         default=None, help='Module List File')
     parser.add_argument('--feature', dest='feature',
                         default=None, help='Run all tests of a feature.')
-    parser.add_argument('--subfeature', dest='subfeature',
+    parser.add_argument('--sub', dest='sub',
                         default=None, help='Run all tests of a sub-feature.')
     parser.add_argument('--test', dest='test',
                         default=None, help='Module List File')
-    parser.add_argument('--haljson', dest='haljson',
-                        default='hal.json', help='HAL Config JSON File.')
+    parser.add_argument('--testcase', dest='testcase',
+                        default=None, help='Module List File')
+    parser.add_argument('--hostpin', dest='hostpin', action="store_true",
+                        help='Run tests in Hostpinned mode.')
     args = parser.parse_args()
 
     if args.cleanup:

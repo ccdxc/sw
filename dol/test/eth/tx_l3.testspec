@@ -109,4 +109,4 @@ expect:
     packets:
         - packet:
             object  : callback://networking/packets/GetL3UcExpectedPacket
-            port    : ref://testcase/config/dst/endpoint/intf/ports
+            port    : callback://networking/fwmode/GetTxExpectedPorts

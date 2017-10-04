@@ -1,7 +1,7 @@
 # Feature Test Modules List
 feature:
     id      : fte
-    sub     : eth_tx_vxlan
+    sub     : txvxlan
     package : test.eth
     module  : eth
     enable  : True

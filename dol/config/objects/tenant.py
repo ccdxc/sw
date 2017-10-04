@@ -14,6 +14,7 @@ import config.objects.l4lb      as l4lb
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
+from infra.common.glopts        import GlobalOptions
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -24,12 +25,12 @@ class TenantObject(base.ConfigObjectBase):
         self.Clone(Store.templates.Get('TENANT'))
         return
         
-    def Init(self, spec, lifns = None, topospec = None):
+    def Init(self, spec, lifns = None):
         self.id = resmgr.TenIdAllocator.get()
         gid = "Ten%04d" % self.id
         self.GID(gid)
 
-        self.hostpinned = getattr(topospec, 'hostpinned', False)
+        self.hostpinned = GlobalOptions.hostpin
         self.spec = spec
         self.type = spec.type.upper()
         self.qos_enable = getattr(spec, 'qos_enable', True) 
@@ -220,7 +221,7 @@ class TenantObjectHelper:
             cfglogger.info("Creating %d Tenants" % entry.count)
             for c in range(entry.count):
                 ten = TenantObject()
-                ten.Init(spec, entry.lifns, topospec)
+                ten.Init(spec, entry.lifns)
                 self.tens.append(ten)
         Store.objects.SetAll(self.tens)
         return

@@ -10,6 +10,7 @@ import infra.config.base        as base
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
+from infra.common.glopts        import GlobalOptions
 
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
@@ -25,6 +26,9 @@ class SecurityProfileObject(base.ConfigObjectBase):
         if spec.fields:
             self.fields.Clone(spec.fields) 
         self.GID(spec.id)
+        if GlobalOptions.hostpin:
+            self.fields.ipsg_en = False
+            cfglogger.info("%s Disabling IPSG for Hostpin mode." % self.GID())
         self.Show()
         return
 

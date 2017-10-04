@@ -11,6 +11,12 @@ pol_check_sg_policy(fte::ctx_t &ctx)
         return ctx.sess_spec()->initiator_flow().flow_data().flow_info().flow_action();
     }
 
+    if (hal::is_forwarding_mode_host_pinned() &&
+        ctx.sep()->ep_flags & EP_FLAGS_REMOTE &&
+        ctx.dep()->ep_flags & EP_FLAGS_REMOTE) {
+        return session::FLOW_ACTION_DROP;
+    }
+
     // TODO(goli) check Security policy
     return session::FLOW_ACTION_ALLOW;
 }

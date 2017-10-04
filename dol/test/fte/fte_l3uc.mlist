@@ -4,13 +4,13 @@ feature:
     sub     : l3uc
     package : test.networking
     module  : networking
+    spec    : l3uc.testspec
     enable  : True
     ignore  : False
 
 modules:
     - module:
-        name    : QTAG
-        spec    : l3uc.testspec
+        name    : IPV4_QTAG
         iterate :
             # Tagged Cases
             - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
@@ -19,6 +19,10 @@ modules:
               srcseg    : filter://native=False
             - flow      : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
               srcseg    : filter://native=False
+
+    - module:
+        name    : IPV6_QTAG
+        iterate :
             - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               srcseg    : filter://native=False
             - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
@@ -27,8 +31,7 @@ modules:
               srcseg    : filter://native=False
 
     - module:
-        name    : UTAG
-        spec    : l3uc.testspec
+        name    : IPV4_UTAG
         iterate :
             # Untagged Cases
             - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
@@ -37,6 +40,10 @@ modules:
               srcseg    : filter://native=True
             - flow      : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
+
+    - module:
+        name    : IPV6_UTAG
+        iterate :
             - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
             - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
@@ -45,8 +52,7 @@ modules:
               srcseg    : filter://native=True
 
     - module:
-        name    : PTAG
-        spec    : l3uc.testspec
+        name    : IPV4_PTAG
         iterate :
             # Priority Tag Cases
             - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
@@ -58,6 +64,10 @@ modules:
             - flow      : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
               priotag   : True
+
+    - module:
+        name    : IPV6_PTAG
+        iterate :
             - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
               priotag   : True

@@ -198,7 +198,8 @@ class TestCase(objects.FrameworkObject):
         tpkt = TestCaseTrigExpPacketObject()
         if objects.IsCallback(spkt.packet.object):
             tpkt.packet = spkt.packet.object.call(self)
-            if tpkt.packet == None:
+            if tpkt.packet is None:
+                self.info("- Packet Callback return None")
                 return None
         else: # Its a reference
             tpkt.packet = spkt.packet.object.Get(self)
@@ -223,7 +224,7 @@ class TestCase(objects.FrameworkObject):
         for spkt in spsn.packets:
             tpkt = self.__setup_packet(step_id, spkt)            
             if tpkt is None:
-                return
+                continue
 
             self.__setup_packet_ports(tpkt, spkt)
             self.info("- Adding Packet: %s, Ports :" %\

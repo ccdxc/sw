@@ -1,7 +1,7 @@
 # Feature Test Modules List
 feature:
     id      : fte
-    sub     : eth_tx
+    sub     : tx
     package : test.eth
     module  : eth
     enable  : True

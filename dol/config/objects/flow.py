@@ -152,7 +152,14 @@ class FlowObject(base.ConfigObjectBase):
         return self.fwtype == 'L2'
 
     def IsDrop(self):
-        return self.action == 'DROP'
+        if self.action == 'DROP':
+            return True
+        if self.__sten.IsHostPinned() is False:
+            return False
+        # Host Pinned mode
+        if self.__sep.remote and self.__dep.remote:
+            return True
+        return False
 
     def IsESP(self):
         return self.proto == 'ESP'

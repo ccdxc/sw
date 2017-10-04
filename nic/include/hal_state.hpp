@@ -567,6 +567,12 @@ private:
 
 extern class hal_state    *g_hal_state;
 
+static inline bool
+is_forwarding_mode_host_pinned()
+{
+    return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_HOST_PINNED;
+}
+
 }    // namespace hal
 
 #endif    // __HAL_STATE_HPP__

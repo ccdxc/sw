@@ -29,4 +29,6 @@ parser.add_argument('--feature', dest='feature', default=None,
                     help='Run all Tests for a feature.')
 parser.add_argument('--subfeature', dest='subfeature',
                     default=None, help='Run tests for a subfeature')
+parser.add_argument('--hostpin', dest='hostpin',
+                    action='store_true', help='Run tests in host pinned mode.')
 GlobalOptions = parser.parse_args()

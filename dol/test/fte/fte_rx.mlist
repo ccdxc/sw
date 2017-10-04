@@ -1,6 +1,6 @@
 feature:
     id      : fte
-    sub     : eth_rx
+    sub     : rx
     package : test.eth
     module  : eth
     enable  : True
