@@ -47,6 +47,12 @@ int test_run_nvme_be_wrr5();
 
 int test_run_nvme_be_wrr6();
 
+int test_run_nvme_read_comp();
+
+int test_run_nvme_write_comp();
+
+int test_run_nvme_e2e();
+
 }  // namespace tests
 
 #endif   // _TESTS_HPP_

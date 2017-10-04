@@ -33,6 +33,9 @@ struct {
   {&tests::test_run_nvme_be_wrr4, "NVME Backend WRR 4", false},
   {&tests::test_run_nvme_be_wrr5, "NVME Backend WRR 5", false},
   {&tests::test_run_nvme_be_wrr6, "NVME Backend WRR 6", false},
+  {&tests::test_run_nvme_read_comp, "NVME Read comp case", false},
+  {&tests::test_run_nvme_write_comp, "NVME Write comp case", false},
+  {&tests::test_run_nvme_e2e, "NVME End2End case 1", false},
 
   // Always last entry
   {0}
@@ -64,6 +67,7 @@ int main(int argc, char**argv) {
     printf("%s\t", test_suite[i].test_name.c_str());
     printf("%s\n", test_suite[i].test_succeded ? "Success" : "Failure");
   }
+  fflush(stdout);
   // TODO: Figreout success/failure return
   return 0;
 }

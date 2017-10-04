@@ -1,4 +1,5 @@
 #include "dol/test/storage/ssd_core.hpp"
+#include "dol/test/storage/log.hpp"
 #include <assert.h>
 #include <unistd.h>
 
@@ -10,8 +11,8 @@ namespace storage_test {
 
 void NvmeSsdCore::PollForIO() {
   while (!terminate_poll_) {
-    if (!HandleIO())
-      usleep(1000);
+    HandleIO();
+    usleep(1000);
   }
 }
 
@@ -59,21 +60,25 @@ void NvmeSsdCore::Dtor() {
 uint64_t NvmeSsdCore::MoveData(NvmeCmd *cmd, uint64_t prp, uint64_t offset,
                            uint64_t size_left) {
   uint64_t copy_size = std::min(PRP_SIZE(prp), size_left);
+ 
   if (cmd->dw0.opc == NVME_READ_CMD_OPCODE) {
-    bcopy(&data_[offset], DMAMemP2V(prp), copy_size);
+    memcpy(DMAMemP2V(prp), &data_[offset], copy_size);
   } else {
-    bcopy(DMAMemP2V(prp), &data_[offset], copy_size);
-  }
+    memcpy(&data_[offset], DMAMemP2V(prp), copy_size);
+  } 
   return copy_size;
 }
 
 bool NvmeSsdCore::ExecuteRW(NvmeCmd *cmd) {
+  //printf("NVME command received by SSD\n");
+  //log::dump((uint8_t *) cmd);
+
   if ((cmd->dw0.opc != NVME_READ_CMD_OPCODE) &&
       (cmd->dw0.opc != NVME_WRITE_CMD_OPCODE)) {
     fprintf(stderr, "Invalid nvme cmd = 0x%x\n", cmd->dw0.opc);
     return false;
   }
-  if (cmd->dw0.psdt != 0) {
+  if (NVME_CMD_PSDT(*cmd) != 0) {
     fprintf(stderr, "Only PRPs expected\n");
     return false;
   }
@@ -140,7 +145,7 @@ bool NvmeSsdCore::HandleIO() {
     std::lock_guard<std::mutex> l(req_lock_);
     if (ctrl_->subq_pi == ctrl_->subq_ci)
       return false;
-    bcopy(&subq_[ctrl_->subq_ci], &cmd, sizeof(cmd));
+    memcpy(&cmd, &subq_[ctrl_->subq_ci], sizeof(cmd));
     ctrl_->subq_ci++;
     if (ctrl_->subq_ci == kNumSubqEntries)
       ctrl_->subq_ci = 0;
@@ -157,7 +162,7 @@ void NvmeSsdCore::SendResp(NvmeCmd *cmd, uint32_t code) {
   NvmeStatus st;
 
   bzero(&st, sizeof(st));
-  st.dw3.status = code;
+  NVME_STATUS_SET_STATUS(st, code);
   st.dw3.cid = cmd->dw0.cid;
 
   bool err = false;
@@ -173,15 +178,15 @@ void NvmeSsdCore::SendResp(NvmeCmd *cmd, uint32_t code) {
     if (ctrl_->compq_pi == ctrl_->compq_ci) {
       err = true;
     } else {
-      st.dw3.phase = ph & 1;
+      NVME_STATUS_SET_PHASE(st, ph);
       st.dw2.sq_head = ctrl_->subq_ci;
-      bcopy(&st, &compq_[n], sizeof(st));
+      memcpy(&compq_[n], &st, sizeof(st));
     }
   }
   if (err) {
     fprintf(stderr, "Internal error: response queue full\n");
   } else {
-    RaiseInterrupt();
+    RaiseInterrupt(ctrl_->compq_pi);
   }
 }
 

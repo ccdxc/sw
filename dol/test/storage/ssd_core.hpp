@@ -53,7 +53,7 @@ class NvmeSsdCore {
   virtual void DMAMemFree(void *ptr) = 0;
   virtual uint64_t DMAMemV2P(void *ptr) = 0;
   virtual void *DMAMemP2V(uint64_t addr) = 0;
-  virtual void RaiseInterrupt() = 0;
+  virtual void RaiseInterrupt(uint16_t index) = 0;
 
   // The actual contructor and destructor.
   // Since they call pure virtual functions, they need to be

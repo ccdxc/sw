@@ -64,6 +64,7 @@ TEST_F(SsdCoreTest, BasicTest) {
   cmd.nsid = params_.namespace_id;
   cmd.prp.prp1 = ssd_->DMAMemV2P((void *)buf_.get());
   cmd.prp.prp2 = (cmd.prp.prp1 + 4096ul) & ~0xFFFul;
+  cmd.slba = 1;
 
   uint32_t old_intr_counter = ssd_->intr_counter_;
   // Push the command and ring doorbell.

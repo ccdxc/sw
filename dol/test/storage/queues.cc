@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <strings.h>
+#include <byteswap.h>
 
 #include "dol/test/storage/hal_if.hpp"
 #include "dol/test/storage/qstate_if.hpp"
 #include "dol/test/storage/nvme.hpp"
 #include "dol/test/storage/queues.hpp"
+#include "dol/test/storage/ssd.hpp"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 
@@ -21,6 +23,8 @@ const static uint32_t	kPvmNumR2nSQs		 = 0; // 2^0 => 1 queue
 const static uint32_t	kPvmNumNvmeBeSQs	 = 4;
 const static uint32_t	kPvmNumSsdSQs	 	 = 4;
 const static uint32_t	kPvmNumNvmeCQs		 = 1;
+const static uint32_t	kPvmNumR2nCQs		 = 0; // 2^0 => 1 queue
+const static uint32_t	kPvmNumNvmeBeCQs	 = 4;
 const static uint32_t	kDefaultEntrySize	 = 6; // Default is 64 bytes
 const static uint32_t	kPvmNvmeSQEntrySize	 = 7; // PVM SQ is 128 bytes (NVME command + PVM header)
 const static uint32_t	kNvmeCQEntrySize	 = 4; // NVME CQ is 16 bytes
@@ -30,13 +34,30 @@ const static char	*kNvmeSqHandler		 = "storage_tx_nvme_sq_handler.bin";
 const static char	*kPvmCqHandler		 = "storage_tx_pvm_cq_handler.bin";
 const static char	*kR2nSqHandler		 = "storage_tx_r2n_sq_handler.bin";
 const static char	*kNvmeBeSqHandler	 = "storage_tx_nvme_be_sq_handler.bin";
+const static char	*kNvmeBeCqHandler	 = "storage_tx_nvme_be_cq_handler.bin";
 const static uint32_t	kDefaultTotalRings	 = 1;
 const static uint32_t	kDefaultHostRings	 = 1;
 const static uint32_t	kDefaultNoHostRings	 = 0;
 const static uint32_t	kNvmeBeTotalRings	 = 3;
-const static uint32_t	kNvmeBeHostRings	 = 0;
+
+const static uint32_t	kDbAddrHost		 = 0x400000;
+const static uint32_t	kDbAddrUpdate		 = 0xB;
+const static uint32_t	kDbQidShift		 = 24;
+const static uint32_t	kDbRingShift		 = 16;
+const static uint32_t	kDbUpdateShift		 = 17;
+const static uint32_t	kDbLifShift		 = 6;
+const static uint32_t	kDbTypeShift		 = 3;
+
+// Special SSD marked for running E2e traffic with queues from 
+// NvmeSsd class
+const static int	kE2eSsdhandle		 = 2;
+
 
 namespace queues {
+
+// Special SSD marked for running E2e traffic with queues from 
+// NvmeSsd class
+storage_test::NvmeSsd *nvme_e2e_ssd;
 
 typedef struct queues_ {
   void *vaddr;
@@ -68,6 +89,36 @@ void lif_params_init(hal_if::lif_params_t *params, uint16_t type,
   params->type[type].num_queues = num_queues;  // you get 2^num_queues 
 }
 
+int nvme_e2e_ssd_sq_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size) {
+  // NOTE: Assumes that nvme_e2e SSD SQ is initated with 64 entries x 64 bytes size
+  // TODO: Fix to make this consistent or assert on the values
+  storage_test::SsdWorkingParams params;
+  nvme_e2e_ssd->GetWorkingParams(&params);
+  queue->vaddr = params.subq_va;
+  queue->paddr = params.subq_pa;
+  queue->index = 0;
+  queue->entry_size = entry_size;
+  queue->num_entries = num_entries;
+  return 0;
+}
+
+int nvme_e2e_ssd_cq_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size) {
+  // NOTE: Assumes that nvme_e2e SSD SQ is initated with 64 entries x 16 bytes size
+  // TODO: Fix to make this consistent or assert on the values
+  storage_test::SsdWorkingParams params;
+  nvme_e2e_ssd->GetWorkingParams(&params);
+  queue->vaddr = params.compq_va;
+  queue->paddr = params.compq_pa;
+  queue->index = 0;
+  queue->entry_size = entry_size;
+  queue->num_entries = num_entries;
+  return 0;
+}
+
+void nvme_e2e_ssd_db_init(uint64_t db_addr, uint64_t db_data) {
+  nvme_e2e_ssd->EnableInterrupt(db_addr, db_data);
+}
+
 int queue_init(queues_t *queue, uint16_t num_entries, uint16_t entry_size) {
   queue->vaddr = (uint8_t *)alloc_host_mem(num_entries * entry_size);
   if (queue->vaddr == nullptr) {
@@ -90,6 +141,11 @@ void *queue_consume_entry(queues_t *queue, uint16_t *index) {
 }
 
 int queues_setup() {
+  // Allocatge HBM address for storage
+  if ((nvme_e2e_ssd = new(storage_test::NvmeSsd)) == nullptr) {
+    printf("can't allocate NVME E2E SSD \n");
+    return -1;
+  }
   // Allocatge HBM address for storage
   if (hal_if::alloc_hbm_address(&storage_hbm_addr, &storage_hbm_size) < 0) {
     printf("can't allocate HBM address for storage \n");
@@ -139,11 +195,10 @@ int queues_setup() {
                                  kDefaultTotalRings, kDefaultHostRings, 
                                  kNvmeNumEntries, nvme_sqs[i].paddr,
                                  kDefaultEntrySize, true, pvm_lif, SQ_TYPE, 
-                                 (i%2), 0, 0, 0, 0, 0) < 0) {
+                                 (i%2), 0, 0, storage_hbm_addr, 0, 0) < 0) {
       printf("Failed to setup NVME SQ %d state \n", i);
       return -1;
     }
-    printf("Setup NVME SQ %d state paddr %lx \n", i, nvme_sqs[i].paddr);
   }
 
 
@@ -162,11 +217,10 @@ int queues_setup() {
                                  kDefaultTotalRings, kDefaultHostRings, 
                                  kNvmeNumEntries, nvme_cqs[i].paddr,
                                  kDefaultEntrySize, false, 0, 0, 
-                                 0, 0, 0, 0, 0, 0) < 0) {
+                                 0, 0, 0, storage_hbm_addr, 0, 0) < 0) {
       printf("Failed to setup NVME CQ %d state \n", i);
       return -1;
     }
-    printf("Setup NVME CQ %d state paddr %lx \n", i, nvme_cqs[i].paddr);
   }
 
   // Initialize PVM SQs for processing commands from NVME VF only
@@ -187,11 +241,10 @@ int queues_setup() {
                                  kDefaultTotalRings, kDefaultHostRings, 
                                  kPvmNumEntries, pvm_sqs[i].paddr,
                                  kPvmNvmeSQEntrySize, false, 0, 0,
-                                 0, 0, 0, 0, 0, 0) < 0) {
+                                 0, 0, 0, storage_hbm_addr, 0, 0) < 0) {
       printf("Failed to setup PVM NVME SQ %d state \n", i);
       return -1;
     }
-    printf("Setup PVM NVME SQ %d state paddr %lx \n", i, pvm_sqs[i].paddr);
   }
 
   // Initialize PVM SQs for processing R2N commands 
@@ -212,11 +265,11 @@ int queues_setup() {
                                  kDefaultTotalRings, kDefaultHostRings, 
                                  kPvmNumEntries, pvm_sqs[i].paddr,
                                  kDefaultEntrySize, true, pvm_lif, SQ_TYPE,
-                                 nvme_be_q, 0, 0, 0, kPvmNumNvmeBeSQs, kDefaultEntrySize) < 0) {
+                                 nvme_be_q, 0, 0, storage_hbm_addr, 
+                                 kPvmNumNvmeBeSQs, kDefaultEntrySize) < 0) {
       printf("Failed to setup PVM R2N SQ %d state \n", i);
       return -1;
     }
-    printf("Setup PVM R2N SQ %d state paddr %lx \n", i, pvm_sqs[i].paddr);
   }
 
   // Initialize PVM SQs for processing NVME backend commands 
@@ -241,35 +294,54 @@ int queues_setup() {
       printf("Failed to setup PVM NVME backend SQ %d state \n", i);
       return -1;
     }
-    printf("Setup PVM NVME backend SQ %d state paddr %lx \n", i, pvm_sqs[i].paddr);
   }
 
   // Initialize PVM SQs for processing SSD commands 
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSsdSQs); j++, i++) {
-    // Initialize the queue in the DOL enviroment
-    if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
-                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
-      printf("Unable to allocate host memory for PVM SSD SQ %d\n", i);
-      return -1;
+    // For the special E2E SSD, use NvmeSsd class to initialize the queue
+    if  (j == kE2eSsdhandle) {
+      // Initialize the queue in the DOL enviroment
+      if (nvme_e2e_ssd_sq_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
+                               NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+        printf("Unable to allocate host memory for PVM E2E SSD SQ %d\n", i);
+        return -1;
+      }
+      printf("Initialized PVM SSD E2E SQ %d \n", i);
+
+      // Initialize the doorbell of the CQ
+      uint64_t db_addr;
+      uint64_t db_data;
+      uint32_t qid = (int) NUM_TO_VAL(kPvmNumNvmeCQs) + (int) NUM_TO_VAL(kPvmNumR2nCQs) + kE2eSsdhandle;
+      queues::get_doorbell(pvm_lif, CQ_TYPE, qid, 0, 0, &db_addr, &db_data);
+      nvme_e2e_ssd_db_init(db_addr, db_data);
+      printf("Initialized backend doorbell for SSD %d \n", i);
+
+    } else {
+      // Initialize the queue in the DOL enviroment
+      if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
+                     NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+        printf("Unable to allocate host memory for PVM SSD SQ %d\n", i);
+        return -1;
+      }
+      printf("Initialized PVM SSD SQ %d \n", i);
     }
-    printf("Initialized PVM SSD SQ %d \n", i);
 
     // Setup the queue state in Capri:
     // 1. no dst queues for these as these are in host
     // 2. no program address for these as these are in host
     if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, i, NULL, 
-                                 kNvmeBeTotalRings, kDefaultNoHostRings, 
+                                 kDefaultTotalRings, kDefaultNoHostRings, 
                                  kPvmNumEntries, pvm_sqs[i].paddr,
                                  kDefaultEntrySize, false, 0, 0,
-                                 0, 0, 0, 0, 0, 0) < 0) {
+                                 0, 0, 0, storage_hbm_addr, 0, 0) < 0) {
       printf("Failed to setup PVM SSD SQ %d state \n", i);
       return -1;
     }
-    printf("Setup PVM SSD SQ %d state paddr %lx \n", i, pvm_sqs[i].paddr);
   }
 
   // Initialize PVM CQs for processing commands from NVME VF only
-  for (i = 0; i < (int) NUM_TO_VAL(kPvmNumNvmeCQs); i++) {
+  // Note: i is overall index across PVM CQs, j iterates the loop
+  for (j = 0, i = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeCQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
     if (queue_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
                    NUM_TO_VAL(kDefaultEntrySize)) < 0) {
@@ -279,16 +351,72 @@ int queues_setup() {
     printf("Initialized PVM NVME CQ %d \n", i);
 
     // Setup the queue state in Capri:
-    // 1. no dst queues for these as these are supplied in PVM status
-    if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, (char *) kPvmCqHandler, 
+    // 1. no dst queues for these as these are in host
+    // 2. no program address for these as these are in host
+    if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, (char *) kPvmCqHandler,
                                  kDefaultTotalRings, kDefaultHostRings, 
                                  kPvmNumEntries, pvm_cqs[i].paddr,
                                  kDefaultEntrySize, false, 0, 0,
-                                 0, 0, 0, 0, 0, 0) < 0) {
+                                 0, 0, 0, storage_hbm_addr, 0, 0) < 0) {
       printf("Failed to setup PVM NVME CQ %d state \n", i);
       return -1;
     }
-    printf("Setup PVM NVME CQ %d state paddr %lx \n", i, pvm_cqs[i].paddr);
+  }
+
+  // Initialize PVM CQs for processing R2N commands 
+  uint32_t pvm_r2n_cq = i;
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumR2nCQs); j++, i++) {
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
+                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+      printf("Unable to allocate host memory for PVM R2N CQ %d\n", i);
+      return -1;
+    }
+    printf("Initialized PVM R2N CQ %d \n", i);
+
+    // Setup the queue state in Capri:
+    if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, NULL, 
+                                 kDefaultTotalRings, kDefaultNoHostRings, 
+                                 kPvmNumEntries, pvm_cqs[i].paddr,
+                                 kDefaultEntrySize, false, 0, 0,
+                                 0, 0, 0, storage_hbm_addr, 0, 0) < 0) {
+      printf("Failed to setup PVM R2N CQ %d state \n", i);
+      return -1;
+    }
+  }
+
+  // Initialize PVM CQs for processing NVME backend commands 
+  // Note: Incrementing ssd_q in the for loop as the NVME backend corresponds 1:1 
+  //       with the SSD
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeBeCQs); j++, i++) {
+    // For the special E2E SSD, use NvmeSsd class to initialize the queue
+    if  (j == kE2eSsdhandle) {
+      // Initialize the queue in the DOL enviroment
+      if (nvme_e2e_ssd_cq_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
+                               NUM_TO_VAL(kNvmeCQEntrySize)) < 0) {
+        printf("Unable to allocate host memory for PVM E2E SSD CQ %d\n", i);
+        return -1;
+      }
+      printf("Initialized PVM NVME backend E2E CQ %d \n", i);
+    } else {
+      // Initialize the queue in the DOL enviroment
+      if (queue_init(&pvm_cqs[i], NUM_TO_VAL(kPvmNumEntries),
+                     NUM_TO_VAL(kNvmeCQEntrySize)) < 0) {
+        printf("Unable to allocate host memory for PVM NVME backend CQ %d\n", i);
+        return -1;
+      }
+      printf("Initialized PVM NVME backend CQ %d \n", i);
+    }
+
+    // Setup the queue state in Capri: 
+    if (qstate_if::setup_q_state(pvm_lif, CQ_TYPE, i, (char *) kNvmeBeCqHandler, 
+                                 kDefaultTotalRings, kDefaultHostRings, 
+                                 kPvmNumEntries, pvm_cqs[i].paddr,
+                                 kNvmeCQEntrySize, true, pvm_lif, CQ_TYPE,
+                                 pvm_r2n_cq, 0, 0, storage_hbm_addr, 0, 0) < 0) {
+      printf("Failed to setup PVM NVME backend CQ %d state \n", i);
+      return -1;
+    }
   }
 
   return 0;
@@ -320,6 +448,23 @@ uint16_t get_nvme_lif() {
 
 uint16_t get_pvm_lif() {
   return (uint16_t) pvm_lif;
+}
+
+void ring_nvme_e2e_ssd() {
+  storage_test::SsdWorkingParams params;
+  nvme_e2e_ssd->GetWorkingParams(&params);
+  *((uint16_t *) params.subq_pi_va) =   (*((uint16_t *) params.subq_pi_va)) + 1;
+}
+
+void get_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
+                  uint8_t ring, uint16_t index, 
+                  uint64_t *db_addr, uint64_t *db_data) {
+
+  if (!db_addr || !db_data) return;
+
+  *db_data = (qid << kDbQidShift) | (ring << kDbRingShift) | bswap_16(index);
+  *db_addr = kDbAddrHost |  (kDbAddrUpdate << kDbUpdateShift) | 
+             (lif << kDbLifShift) | (qtype << kDbTypeShift);
 }
 
 }  // namespace queues

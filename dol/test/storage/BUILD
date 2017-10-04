@@ -58,6 +58,9 @@ cc_library(
     hdrs = [
         "ssd_core.hpp",
     ],
+    deps = [
+        ":log",
+    ]
 )
 
 cc_test(
@@ -99,6 +102,7 @@ cc_library(
         ":hal_if",
         ":qstate_if",
         ":r2n",
+        ":ssd",
         ":log",
         "//nic/utils/host_mem",
         "//nic/model_sim:model_client",

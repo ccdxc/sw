@@ -20,6 +20,9 @@
 // NVME Success in the completion status (from NVME spec)
 #define NVME_STATUS_SUCCESS		0
 
+// PSDT bits are stored 14:15 in flags of dw0
+#define NVME_CMD_PSDT(cmd)		((cmd).dw0.flags >> 6)
+
 // NVMe SGL struct
 struct NvmeSgl{
   uint64_t  addr;
@@ -113,29 +116,28 @@ struct NvmeStatus {
 
   // Dword 2
   struct {
-#ifdef LITTLE_ENDIAN
-    uint32_t sq_head:16;   // Submission queue head pointer
-    uint32_t sq_id:16;     // Submission queue identifier
-#else
-    uint32_t sq_id:16;     // Submission queue identifier
-    uint32_t sq_head:16;   // Submission queue head pointer
-#endif
+    uint16_t sq_head;      // Submission queue head pointer
+    uint16_t sq_id;        // Submission queue identifier
   } __attribute__((packed)) dw2;
 
   // Dword 3
   struct {
-#ifdef LITTLE_ENDIAN
-    uint32_t cid:16;       // Command identifier
-    uint32_t phase:1;      // Phase bit
-    uint32_t status:15;    // Status
-#else
-    uint32_t status:15;    // Status
-    uint32_t phase:1;      // Phase bit
-    uint32_t cid:16;       // Command identifier
-#endif
+    uint16_t cid;          // Command identifier
+    uint16_t status_phase; // Status
   } __attribute__((packed)) dw3;
 } __attribute__((packed));
 
+#define NVME_STATUS_GET_STATUS(sta)	((sta).dw3.status_phase >> 1)		
+
+#define NVME_STATUS_SET_STATUS(sta, status)		\
+  do {							\
+    (sta).dw3.status_phase |= ((status) & 0x7FFF) << 1;	\
+  } while(0);						\
+
+#define NVME_STATUS_SET_PHASE(sta, phase)		\
+  do {							\
+    (sta).dw3.status_phase |= (phase) & 0x1;		\
+  } while(0);						\
 
 // Pvm status
 struct PvmStatus {

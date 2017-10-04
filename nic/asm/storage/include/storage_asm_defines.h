@@ -369,7 +369,7 @@
    DMA_ADDR_UPDATE(r7, dma_p2m_1)					\
    QUEUE_PUSH(_p_ndx, _num_entries)					\
    add		r6, STORAGE_KIVEC0_DST_QID, STORAGE_KIVEC0_SSD_HANDLE;	\
-   PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_2, _p_ndx,			\
+   PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_3, _p_ndx,			\
                                   DOORBELL_SCHED_WR_SET, r6, _pri_vec)	\
 
 

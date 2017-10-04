@@ -34,8 +34,10 @@ storage_tx_nvme_be_cq_handler_start:
    // and save it in the PHV. Store the result in GPR r6 to pass as input
    // to SSD_CMD_ENTRY_ADDR_CALC
    add		r6, d.nvme_sta_cid, r0
+   add		r6, r0, r6.hx
    andi		r6, r6, 0xFF
    phvwr	p.r2n_wqe_nvme_cmd_cid, r6
+   phvwr	p.storage_kivec0_cmd_index, r6
 
    // Calculate the table address based on the command index offset into
    // the SSD's list of outstanding commands. Output is stored in GPR r7.

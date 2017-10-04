@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <strings.h>
-#include <byteswap.h>
+#include <unistd.h>
 
 #include "dol/test/storage/log.hpp"
 #include "dol/test/storage/hal_if.hpp"
@@ -11,16 +11,11 @@
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 
-const static uint32_t	kDbAddrHost		 = 0x400000;
-const static uint32_t	kDbAddrUpdate		 = 0xB;
-const static uint32_t	kDbQidShift		 = 24;
-const static uint32_t	kDbRingShift		 = 16;
-const static uint32_t	kDbUpdateShift		 = 17;
-const static uint32_t	kDbLifShift		 = 6;
-const static uint32_t	kDbTypeShift		 = 3;
-
 const static uint32_t	kDefaultBufSize		 = 4096;
-const static uint32_t	kDefaultNlb		 = 1;
+const static uint32_t	kDefaultNlb		 = 0;
+const static uint32_t	kDefaultNsid		 = 1;
+const static uint32_t	kR2nStatusSize		 = 64;
+const static uint32_t	kR2nStatusNvmeOffset	 = 16;
 
 namespace tests {
 
@@ -28,7 +23,7 @@ void *read_buf;
 void *write_buf;
 
 static uint16_t global_cid = 0x1;
-static uint64_t global_slba = 0xA000;
+static uint64_t global_slba = 0x0000;
 
 
 int test_setup() {
@@ -60,9 +55,10 @@ int test_setup() {
 
   // Allocate the read and write buffer
   // TODO: Have a fancy allocator with various pages
-  read_buf = alloc_host_mem(kDefaultBufSize);
-  write_buf = alloc_host_mem(kDefaultBufSize);
+  read_buf = alloc_page_aligned_host_mem(kDefaultBufSize);
+  write_buf = alloc_page_aligned_host_mem(kDefaultBufSize);
   if (read_buf == nullptr || write_buf == nullptr) return -1;
+  printf("read_buf address %p write_buf address %p\n", read_buf, write_buf);
 
   return 0;
 }
@@ -70,10 +66,10 @@ int test_setup() {
 
 void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
                         uint8_t ring, uint16_t index) {
+  uint64_t db_data;
+  uint64_t db_addr;
 
-  uint64_t db_data = (qid << kDbQidShift) | (ring << kDbRingShift) | bswap_16(index);
-  uint64_t db_addr = kDbAddrHost |  (kDbAddrUpdate << kDbUpdateShift) | 
-                     (lif << kDbLifShift) | (qtype << kDbTypeShift);
+  queues::get_doorbell(lif, qtype, qid, ring, index, &db_addr, &db_data);
 
   printf("Ring Doorbell: Addr %lx Data %lx \n", db_addr, db_data);
   step_doorbell(db_addr, db_data);
@@ -123,16 +119,11 @@ int send_and_check_ignore_cid(uint8_t *send_cmd, uint8_t *recv_cmd,
 int check_ignore_cid(uint8_t *send_cmd, uint8_t *recv_cmd, uint32_t size) {
   int rc;
 
-  printf("Send command \n");
-  log::dump(send_cmd);
-  printf("Recv command \n");
-  log::dump(recv_cmd);
-
   struct NvmeCmd *send_nvme_cmd = (struct NvmeCmd *) send_cmd;
   struct NvmeCmd *recv_nvme_cmd = (struct NvmeCmd *) recv_cmd;
   recv_nvme_cmd->dw0.cid = send_nvme_cmd->dw0.cid;
   rc = memcmp(send_cmd, recv_cmd, size);
-  printf("POST doorbell cmd comparison (ignoring cid) %d \n", rc);
+  printf("Colletive cmd comparison (ignoring cid) %d \n", rc);
 
   return rc;
 }
@@ -229,8 +220,9 @@ int form_read_cmd_with_buf(uint8_t *nvme_cmd, uint32_t size, uint16_t cid,
   struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd;
   read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
   // TODO: PRP list based on size
-  read_cmd->prp.prp1 = (uint64_t) read_buf;
+  read_cmd->prp.prp1 = host_mem_v2p(read_buf);
   read_cmd->dw0.cid = cid; 
+  read_cmd->nsid = kDefaultNsid; 
   read_cmd->slba = slba;
   read_cmd->dw12.nlb = nlb;
 
@@ -244,8 +236,9 @@ int form_write_cmd_with_buf(uint8_t *nvme_cmd, uint32_t size, uint16_t cid,
   struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd;
   write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
   // TODO: PRP list based on size
-  write_cmd->prp.prp1 = (uint64_t) write_buf;
+  write_cmd->prp.prp1 = host_mem_v2p(write_buf);
   write_cmd->dw0.cid = cid; 
+  write_cmd->nsid = kDefaultNsid; 
   write_cmd->slba = slba;
   write_cmd->dw12.nlb = nlb;
 
@@ -257,8 +250,12 @@ uint16_t get_next_cid() {
    return global_cid;
 }
 
+void reset_slba() {
+   global_slba = 0;
+}
+
 uint64_t get_next_slba() {
-   global_slba += 8;
+   global_slba += 1;
    return global_slba;
 }
 
@@ -430,7 +427,7 @@ int test_run_pvm_nvme_admin_status() {
 
   struct PvmStatus *admin_status = (struct PvmStatus *) pvm_status;
   admin_status->nvme_status.dw3.cid = get_next_cid();
-  admin_status->nvme_status.dw3.status = 0;
+  admin_status->nvme_status.dw3.status_phase = 0;
   if (pvm_status_trailer_update(admin_status, queues::get_nvme_lif(), 
                                 CQ_TYPE, nvme_q) < 0) {
     return -1;
@@ -459,7 +456,7 @@ int test_run_pvm_nvme_read_status() {
 
   struct PvmStatus *read_status = (struct PvmStatus *) pvm_status;
   read_status->nvme_status.dw3.cid = get_next_cid();
-  read_status->nvme_status.dw3.status = 0;
+  read_status->nvme_status.dw3.status_phase = 0;
   if (pvm_status_trailer_update(read_status, queues::get_nvme_lif(), 
                                 CQ_TYPE, nvme_q) < 0) {
     return -1;
@@ -488,7 +485,7 @@ int test_run_pvm_nvme_write_status() {
 
   struct PvmStatus *write_status = (struct PvmStatus *) pvm_status;
   write_status->nvme_status.dw3.cid = get_next_cid();
-  write_status->nvme_status.dw3.status = 0;
+  write_status->nvme_status.dw3.status_phase = 0;
   if (pvm_status_trailer_update(write_status, queues::get_nvme_lif(), 
                                 CQ_TYPE, nvme_q) < 0) {
     return -1;
@@ -838,6 +835,92 @@ int test_run_nvme_be_wrr6() {
                          6, 4, 2,   // hi_weight,  med_weight,  lo_weight
                          6, 4, 0,   // hi_running, med_running, lo_running
                          10, 63);   // num_running, max_cmds
+}
+
+int test_run_nvme_e2e_test(uint16_t io_priority, uint16_t is_read) {
+  int rc;
+  uint8_t *cmd_buf;
+  uint16_t ssd_q = 21, ssd_handle = 2;
+  uint16_t pvm_index;
+  uint8_t *status_buf;
+  uint16_t pvm_q = 2;
+
+  // Reset the SLBA for this test
+  reset_slba();
+
+  // Consume status entry from PVM CQ
+  status_buf = (uint8_t *) queues::pvm_cq_consume_entry(pvm_q, &pvm_index);
+  if (status_buf == nullptr) {
+    printf("can't consume entries \n");
+    return -1;
+  }
+  bzero(status_buf, kR2nStatusSize);
+
+  // Send the R2N Command
+  if (send_r2n_pri_cmd(ssd_q, ssd_handle, io_priority, is_read, &cmd_buf) < 0) {
+    printf("cant send pri cmd %d \n", io_priority);
+    return -1;
+  }
+  struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
+
+  // Ring the SSD doorbell.
+  // TODO: Move this to P4
+  queues::ring_nvme_e2e_ssd();
+
+  // Wait for a bit as SSD backend runs in a different thread
+  sleep(1);
+
+  //printf("Recv status \n");
+  //log::dump(status_buf);
+  
+  // Process the status
+  struct NvmeStatus *nvme_status = 
+              (struct NvmeStatus *) (status_buf + kR2nStatusNvmeOffset);
+  printf("nvme status: cid %x, sq head %x, status_phase %x \n", 
+         nvme_status->dw3.cid, nvme_status->dw2.sq_head, 
+         nvme_status->dw3.status_phase);
+  if (nvme_status->dw3.cid != nvme_cmd->dw0.cid || 
+      NVME_STATUS_GET_STATUS(*nvme_status)) {
+    rc = -1;
+    printf("nvme status: cid %x, status_phase %x nvme_cmd: cid %x\n", 
+           nvme_status->dw3.cid, nvme_status->dw3.status_phase,
+           nvme_cmd->dw0.cid);
+  } else {
+    rc = 0;
+  }
+  return rc;
+}
+
+int test_run_nvme_read_comp() {
+  return test_run_nvme_e2e_test(0, 1); // io_priority, is_read
+}
+
+int test_run_nvme_write_comp() {
+  return test_run_nvme_e2e_test(0, 0); // io_priority, is_read
+}
+
+int test_run_nvme_e2e() {
+  int rc;
+
+  // First write data
+  rc = test_run_nvme_e2e_test(0, 0); // io_priority, is_read
+  if (rc < 0) {
+    printf("e2e test write part failed \n");
+    return rc;
+  } 
+
+  // Then read back the data
+  rc = test_run_nvme_e2e_test(0, 1); // io_priority, is_read
+  if (rc < 0) {
+    printf("e2e test write part failed \n");
+    return rc;
+  } 
+
+  rc = memcmp(read_buf, write_buf, kDefaultBufSize);
+  printf("\nE2E: post memcmp %d \n", rc);
+
+  // rc could be <, ==, > 0. We need to return -1 from this API on error.
+  return (rc ? -1 : 0);
 }
 
 }  // namespace tests

@@ -31,7 +31,7 @@ storage_tx_nvme_be_wqe_save_start:
 
    // Store the command index (in GPR r6) in the NVME command as well
    // TODO: Enable this after fixing command definitions
-   phvwr	p.nvme_be_cmd_nvme_cmd_cid, r6.wx
+   phvwr	p.nvme_be_cmd_nvme_cmd_cid, r6.hx
 
    // Calculate the address to save R2N WQE based on the command index offset into
    // the SSD's list of outstanding commands. Output is stored in GPR r7.
@@ -39,8 +39,9 @@ storage_tx_nvme_be_wqe_save_start:
 
    // Setup the DMA command to save the R2N WQE entry. Use the address 
    // calculated by SSD_CMD_ENTRY_ADDR_CALC and stored in GRP r7.
-   // TODO: Need to include dma_p2m_3 in pri_q_state_push when setting pointers.
-   DMA_PHV2MEM_SETUP(r2n_wqe_handle, r2n_wqe_pri_qaddr, r7, dma_p2m_3)
+   // Note: pri_q_push uses dma_p2m_3 for push because dma_p2m_2 is needed here
+   //       to save the SSD bitmap
+   DMA_PHV2MEM_SETUP(r2n_wqe_handle, r2n_wqe_pri_qaddr, r7, dma_p2m_2)
 
    // Setup the DMA command to push the NVME command entry. For now keep the 
    // destination address to be 0 (in GPR r0). Set this correctly in the

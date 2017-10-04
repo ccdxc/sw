@@ -82,14 +82,15 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   write_bit_fields(q_state, 374, 16, ssd_q_num);
   write_bit_fields(q_state, 390, 16, ssd_q_size);
 
-  log::dump(q_state);
+  //log::dump(q_state);
 
   if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
     printf("Failed to set lif_qstate addr \n");
     return -1;
   }
 
-  printf("Q state created for lif %u type %u, qid %u next_pc %lx \n", src_lif, src_qtype, src_qid, next_pc);
+  printf("Q state created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n", 
+         src_lif, src_qtype, src_qid, next_pc, base_addr);
   return 0;
 }
 
@@ -149,7 +150,7 @@ int setup_pri_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   }
   write_bit_fields(q_state, 468, 34, ssd_bm_addr);
 
-  log::dump(q_state);
+  //log::dump(q_state);
 
   if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
     printf("Failed to set lif_qstate addr \n");
@@ -172,7 +173,7 @@ int update_pri_q_state(int src_lif, int src_qtype, int src_qid,
   } else {
     printf("Pri Q state GET SUCCEEDED for lif %u type %u, qid %u \n", 
            src_lif, src_qtype, src_qid);
-    log::dump(q_state);
+    //log::dump(q_state);
   }
 
   // Update the weights and counters
