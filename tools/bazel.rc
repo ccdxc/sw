@@ -3,7 +3,7 @@
 #startup --batch --host_jvm_args=-XX:-UseParallelGC
 
 
-#startup --output_user_root=%workspace%/bazel-cache
+#startup --output_user_root=bazel-cache
 
 
 # Do not show warnings from 
@@ -22,7 +22,7 @@ build --copt="-g"
 build --strip=never
 
 # Make warnings as errors
-#build --cxxopt="-Werror"
+build --cxxopt="-Werror"
 
 # show timestamps
 build --show_timestamps --keep_going

@@ -29,7 +29,7 @@ else
   JOBS = --jobs=$(j)
 endif
 
-BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE) $(DEBUG)
+BZL_BLD_OPT = $(JOBS) $(GCOV) $(VERBOSE)
 
-BZL_OPT = --bazelrc=bazel.rc
+#BZL_OPT = --bazelrc=bazel.rc
 
