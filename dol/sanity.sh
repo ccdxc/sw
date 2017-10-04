@@ -22,27 +22,20 @@ bazel build //nic/proto:all
 bazel build //nic/proto/hal:all
 bazel build //nic/proto/agents:all
 
-#./main.py --dryrun
-#ErrorCheckNExit $? "default topo"
+function DryRunSanity()
+{
+    topo=$1
+    feature=$2
+    ./main.py --dryrun --topo $topo --feature $feature
+    ErrorCheckNExit $? "$topo topo"
+}
 
-./main.py --dryrun --topo eth --module eth
-ErrorCheckNExit $? "eth topo"
+DryRunSanity eth eth
+DryRunSanity vxlan vxlan
+DryRunSanity up2up networking
+DryRunSanity telemetry telemetry
+DryRunSanity fte fte
+DryRunSanity admin admin
+DryRunSanity proxy proxy
 
-./main.py --dryrun --topo admin --module admin
-ErrorCheckNExit $? "admin topo"
-
-./main.py --dryrun --topo vxlan --module vxlan
-ErrorCheckNExit $? "vxlan topo"
-
-./main.py --dryrun --topo proxy --module tcp_proxy
-ErrorCheckNExit $? "tcpproxy topo."
-
-./main.py --dryrun --topo up2up --feature l2uc,l3uc
-ErrorCheckNExit $? "up2up topo."
-
-./main.py --module telemetry --topo telemetry --dryrun
-ErrorCheckNExit $? "telemetry topo."
-
-./main.py --module fte --topo fte --dryrun
-ErrorCheckNExit $? "fte topo."
 exit 0

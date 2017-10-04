@@ -10,6 +10,7 @@ from infra.common.logging import logger
 from config.store               import Store
 from config.objects.tcp_proxy_cb        import TcpCbHelper
 from config.objects.proxycb_service    import ProxyCbServiceHelper
+from infra.common.glopts import GlobalOptions
 
 
 def Setup(infra, module):
@@ -53,6 +54,8 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseVerify(tc):
+    if GlobalOptions.dryrun:
+        return True
 
     #0. Get the qid
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)

@@ -12,6 +12,7 @@ from infra.common.logging import logger
 from config.objects.cpucb        import CpuCbHelper
 import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
 import test.tcp_tls_proxy.tcp_tls_proxy as tcp_tls_proxy
+from infra.common.glopts import GlobalOptions
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -69,6 +70,9 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseVerify(tc):
+    if GlobalOptions.dryrun:
+        return True
+
     rnmdr = tc.pvtdata.db["RNMDR"]
     rnmpr = tc.pvtdata.db["RNMPR"]
     arq = tc.pvtdata.db["ARQ"]
@@ -90,7 +94,8 @@ def TestCaseVerify(tc):
         #print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
         return False
 
-    print("Descriptor handle as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
+    if ((rnmdr.ringentries[rnmdr.pi].handle is not None) and (arq_cur.ringentries[arq.pi].handle is not None)):
+        print("Descriptor handle as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
     # 3. Verify page
     if rnmpr.ringentries[0].handle != arq_cur.swdre_list[0].Addr1:
         print("Page handle not as expected in arq_cur.swdre_list")

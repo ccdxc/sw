@@ -6,6 +6,7 @@ import copy
 from config.store               import Store
 from config.objects.proxycb_service    import ProxyCbServiceHelper
 from config.objects.cpucb        import CpuCbHelper
+from infra.common.glopts import GlobalOptions
 
 rnmdr = 0
 rnmpr = 0
@@ -46,6 +47,9 @@ def TestCaseVerify(tc):
     global rnmdr
     global rnmpr
     global arq
+
+    if GlobalOptions.dryrun:
+        return True
 
     # 1. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]

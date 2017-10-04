@@ -1,5 +1,7 @@
 #! /usr/bin/python3
 
+from infra.common.glopts import GlobalOptions
+
 import infra.common.objects as objects
 import infra.clibs.clibs as clibs
 from ctypes import *
@@ -117,6 +119,7 @@ class HostMemory(object):
         return MemHandle(self.host_mem_p2v(pa), pa)
 
     def write(self, memhandle, data):
+        if GlobalOptions.dryrun: return
         assert isinstance(memhandle, MemHandle)
         assert isinstance(data, bytes)
         va = memhandle.va
@@ -127,9 +130,11 @@ class HostMemory(object):
         memmove(va, arr, sizeof(arr))
 
     def read(self, memhandle, size):
+        ba = bytearray([0x0]*size)
+        if GlobalOptions.dryrun:
+            return bytes(ba)
         assert isinstance(memhandle, MemHandle)
         va = memhandle.va
-        ba = bytearray([0x0]*size)
         arr = c_char * size
         arr = arr.from_buffer(ba)
         memmove(arr, va, sizeof(arr))

@@ -12,6 +12,7 @@ from infra.common.logging import logger
 from config.objects.cpucb        import CpuCbHelper
 import test.tcp_tls_proxy.tcp_tls_proxy as tcp_tls_proxy
 import test.tcp_tls_proxy.tcp_proxy as tcp_proxy
+from infra.common.glopts import GlobalOptions
 
 
 def Setup(infra, module):
@@ -74,6 +75,8 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseVerify(tc):
+    if GlobalOptions.dryrun:
+        return True
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     tlscbid = "TlsCb%04d" % id

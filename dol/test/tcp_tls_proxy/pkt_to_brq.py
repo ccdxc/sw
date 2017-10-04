@@ -15,6 +15,7 @@ from config.objects.tcp_proxy_cb        import TcpCbHelper
 import test.callbacks.networking.modcbs as modcbs
 from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
+from infra.common.glopts import GlobalOptions
 
 #temporary hack until we implement pi/ci for BRQ
 maxflows = 0
@@ -98,6 +99,9 @@ def TestCaseSetup(tc):
 
 def TestCaseVerify(tc):
     global maxflows
+
+    if GlobalOptions.dryrun:
+        return True
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     # 1. Verify pi/ci got update got updated for SERQ

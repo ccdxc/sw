@@ -76,26 +76,38 @@ class TriggerEngineObject:
         self.__trigger_packets(step, tc)
         tc.TriggerCallback()
         return
+
+    def __resolve_status(self, status1, status2):
+        if status1 is defs.status.ERROR or status2 is defs.status.ERROR:
+            return defs.status.ERROR
+        return defs.status.SUCCESS
         
     def __verify_step(self, tc, step):
         vfstatus = tc.infra_data.VerifEngine.Verify(step, tc)
-        cbstatus = tc.VerifyCallback()
-        if vfstatus is defs.status.ERROR or cbstatus is defs.status.ERROR:
-            step.status = defs.status.ERROR
+        cbstatus = tc.StepVerifyCallback()
+        step.status = self.__resolve_status(vfstatus, cbstatus)
+        if step.status is defs.status.ERROR:
             tc.error("Step%d FINAL STATUS = FAIL(Verify:%s Callback:%s)" %\
                      (step.step_id, defs.status.str(vfstatus),
                       defs.status.str(cbstatus)))
             return step.status
-        step.status = defs.status.SUCCESS
         tc.info("Step%d FINAL STATUS = PASS" % step.step_id)
         return
 
     def __trigger(self, tc):
         status = defs.status.SUCCESS
         for step in tc.session.steps:
+            tc.StepTriggerCallback()
             self.__trigger_step(tc, step)
-            status = self.__verify_step(tc, step)
-            if status is defs.status.ERROR: break
+            vfstatus = self.__verify_step(tc, step)
+            tc.StepTeardownCallback()
+            if vfstatus is defs.status.ERROR:
+                break
+        cbstatus = tc.VerifyCallback()
+        status = self.__resolve_status(vfstatus, cbstatus)
+        if status is defs.status.ERROR:
+            tc.error("TESTCASE FINAL STATUS = FAIL(Verify:%s Callback:%s)" %\
+                     (defs.status.str(vfstatus), defs.status.str(cbstatus)))
         tc.TeardownCallback()
         return status
 

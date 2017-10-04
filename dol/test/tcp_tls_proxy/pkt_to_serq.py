@@ -8,6 +8,7 @@ from config.objects.tcp_proxy_cb        import TcpCbHelper
 import test.callbacks.networking.modcbs as modcbs
 from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
+from infra.common.glopts import GlobalOptions
 
 
 def Setup(infra, module):
@@ -60,6 +61,8 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseVerify(tc):
+    if GlobalOptions.dryrun:
+        return True
 
     num_pkts = 1
     if hasattr(tc.module.args, 'num_pkts'):

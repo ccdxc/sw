@@ -69,3 +69,15 @@ def TestCaseTeardown(tc):
     if tc.config.flow.IsFteEnabled():
         tc.config.flow.SetLabel("FTE_DONE")
     return
+
+def TestCaseStepSetup(tc, step):
+    return
+
+def TestCaseStepTrigger(tc, step):
+    return
+
+def TestCaseStepVerify(tc, step):
+    return True
+
+def TestCaseStepTeardown(tc, step):
+    return
