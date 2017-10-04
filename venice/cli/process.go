@@ -1,4 +1,4 @@
-package main
+package vcli
 
 import (
 	"bufio"
@@ -598,35 +598,35 @@ func snapshotCmd(c *cli.Context) {
 }
 
 func bashCreateCompleter(c *cli.Context) {
-	bashCompleter(c, createCommands, []cli.Flag{})
+	BashCompleter(c, createCommands, []cli.Flag{})
 }
 func bashEditCompleter(c *cli.Context) {
-	bashCompleter(c, editCommands, []cli.Flag{})
+	BashCompleter(c, editCommands, []cli.Flag{})
 }
 func bashPatchCompleter(c *cli.Context) {
-	bashCompleter(c, updateCommands, []cli.Flag{})
+	BashCompleter(c, updateCommands, []cli.Flag{})
 }
 func bashDeleteCompleter(c *cli.Context) {
-	bashCompleter(c, deleteCommands, []cli.Flag{})
+	BashCompleter(c, deleteCommands, []cli.Flag{})
 }
 func bashReadCompleter(c *cli.Context) {
-	bashCompleter(c, readCommands, []cli.Flag{})
+	BashCompleter(c, readCommands, []cli.Flag{})
 }
 func bashLabelCompleter(c *cli.Context) {
-	bashCompleter(c, labelCommands, []cli.Flag{})
+	BashCompleter(c, labelCommands, []cli.Flag{})
 }
 func bashExampleCompleter(c *cli.Context) {
-	bashCompleter(c, exampleCommands, []cli.Flag{})
+	BashCompleter(c, exampleCommands, []cli.Flag{})
 }
 func bashDefinitionCompleter(c *cli.Context) {
-	bashCompleter(c, definitionCommands, []cli.Flag{})
+	BashCompleter(c, definitionCommands, []cli.Flag{})
 }
 func bashTreeCompleter(c *cli.Context) {
-	bashCompleter(c, readCommands, []cli.Flag{})
+	BashCompleter(c, readCommands, []cli.Flag{})
 }
 func bashSnapshotCompleter(c *cli.Context) {
-	bashCompleter(c, readCommands, snapshotFlags)
-	bashCompleter(c, readCommands, []cli.Flag{})
+	BashCompleter(c, readCommands, snapshotFlags)
+	BashCompleter(c, readCommands, []cli.Flag{})
 }
 
 // Generic utils used by command handlers
@@ -722,12 +722,14 @@ func dumpStruct(ctx *context, obj interface{}) []byte {
 
 // showVersion shows the venice version
 // TODO: obtain the server version from the backend
+const DefaultVersion = "v0.1-alpha"
+
 func showVersion(c *cli.Context) {
 	if len(c.Args()) != 0 {
 		log.Warnf("More arguments than required")
 	}
-	fmt.Printf("Client Version: %s\n", defaultVersion)
-	fmt.Printf("Server Version: %s\n", defaultVersion)
+	fmt.Printf("Client Version: %s\n", DefaultVersion)
+	fmt.Printf("Server Version: %s\n", DefaultVersion)
 }
 
 // sliceToMap convers a colon separted command line option strings to a go map
@@ -875,7 +877,7 @@ func skipAny(ctx *context, meta *swapi.ObjectMeta) bool {
 
 // getFilteredNames, fetches all names and filter out the ones
 // that do not meet the specified match criteria; this is used by
-// bashCompleter functions
+// BashCompleter functions
 func getFilteredNames(ctx *context) []string {
 	names := []string{}
 	objs := &api.ListHeader{}

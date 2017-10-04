@@ -1,7 +1,7 @@
 // (c) Pensando Systems, Inc.
 // This is a generated file, please do not hand edit !!
 
-package main
+package vcli
 
 import (
 	contxt "context"

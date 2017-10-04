@@ -1,7 +1,7 @@
 // (c) Pensando Systems, Inc.
 // This is a generated file, edit at risk of loosing it !!
 
-package main
+package vcli
 
 import (
 	"fmt"
@@ -1093,25 +1093,25 @@ var CreateUserFlags = []cli.Flag{
 }
 
 func bashExampleClusterCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinitionClusterCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabelClusterCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObjectClusterCompleter(c)
 }
 
 func bashReadClusterCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObjectClusterCompleter(c)
 }
 
 func bashDeleteClusterCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObjectClusterCompleter(c)
 }
 
@@ -1139,12 +1139,12 @@ func bashObjectClusterCompleter(c *cli.Context) {
 }
 
 func bashEditClusterCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObjectClusterCompleter(c)
 }
 
 func bashCreateClusterCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateClusterFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateClusterFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateClusterFlags); found {
 		return
@@ -1157,7 +1157,7 @@ func bashCreateClusterCompleter(c *cli.Context) {
 }
 
 func bashUpdateClusterCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateClusterFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateClusterFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateClusterFlags); found {
 		return
@@ -1170,25 +1170,25 @@ func bashUpdateClusterCompleter(c *cli.Context) {
 }
 
 func bashExampleEndpointCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinitionEndpointCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabelEndpointCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObjectEndpointCompleter(c)
 }
 
 func bashReadEndpointCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObjectEndpointCompleter(c)
 }
 
 func bashDeleteEndpointCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObjectEndpointCompleter(c)
 }
 
@@ -1216,12 +1216,12 @@ func bashObjectEndpointCompleter(c *cli.Context) {
 }
 
 func bashEditEndpointCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObjectEndpointCompleter(c)
 }
 
 func bashCreateEndpointCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateEndpointFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateEndpointFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateEndpointFlags); found {
 		return
@@ -1234,7 +1234,7 @@ func bashCreateEndpointCompleter(c *cli.Context) {
 }
 
 func bashUpdateEndpointCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateEndpointFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateEndpointFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateEndpointFlags); found {
 		return
@@ -1247,25 +1247,25 @@ func bashUpdateEndpointCompleter(c *cli.Context) {
 }
 
 func bashExampleLbPolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinitionLbPolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabelLbPolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObjectLbPolicyCompleter(c)
 }
 
 func bashReadLbPolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObjectLbPolicyCompleter(c)
 }
 
 func bashDeleteLbPolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObjectLbPolicyCompleter(c)
 }
 
@@ -1293,12 +1293,12 @@ func bashObjectLbPolicyCompleter(c *cli.Context) {
 }
 
 func bashEditLbPolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObjectLbPolicyCompleter(c)
 }
 
 func bashCreateLbPolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateLbPolicyFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateLbPolicyFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateLbPolicyFlags); found {
 		return
@@ -1311,7 +1311,7 @@ func bashCreateLbPolicyCompleter(c *cli.Context) {
 }
 
 func bashUpdateLbPolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateLbPolicyFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateLbPolicyFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateLbPolicyFlags); found {
 		return
@@ -1324,25 +1324,25 @@ func bashUpdateLbPolicyCompleter(c *cli.Context) {
 }
 
 func bashExampleNetworkCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinitionNetworkCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabelNetworkCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObjectNetworkCompleter(c)
 }
 
 func bashReadNetworkCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObjectNetworkCompleter(c)
 }
 
 func bashDeleteNetworkCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObjectNetworkCompleter(c)
 }
 
@@ -1370,12 +1370,12 @@ func bashObjectNetworkCompleter(c *cli.Context) {
 }
 
 func bashEditNetworkCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObjectNetworkCompleter(c)
 }
 
 func bashCreateNetworkCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateNetworkFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateNetworkFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateNetworkFlags); found {
 		return
@@ -1388,7 +1388,7 @@ func bashCreateNetworkCompleter(c *cli.Context) {
 }
 
 func bashUpdateNetworkCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateNetworkFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateNetworkFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateNetworkFlags); found {
 		return
@@ -1401,25 +1401,25 @@ func bashUpdateNetworkCompleter(c *cli.Context) {
 }
 
 func bashExampleNodeCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinitionNodeCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabelNodeCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObjectNodeCompleter(c)
 }
 
 func bashReadNodeCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObjectNodeCompleter(c)
 }
 
 func bashDeleteNodeCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObjectNodeCompleter(c)
 }
 
@@ -1447,12 +1447,12 @@ func bashObjectNodeCompleter(c *cli.Context) {
 }
 
 func bashEditNodeCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObjectNodeCompleter(c)
 }
 
 func bashCreateNodeCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateNodeFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateNodeFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateNodeFlags); found {
 		return
@@ -1465,7 +1465,7 @@ func bashCreateNodeCompleter(c *cli.Context) {
 }
 
 func bashUpdateNodeCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateNodeFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateNodeFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateNodeFlags); found {
 		return
@@ -1478,25 +1478,25 @@ func bashUpdateNodeCompleter(c *cli.Context) {
 }
 
 func bashExamplePermissionCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinitionPermissionCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabelPermissionCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObjectPermissionCompleter(c)
 }
 
 func bashReadPermissionCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObjectPermissionCompleter(c)
 }
 
 func bashDeletePermissionCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObjectPermissionCompleter(c)
 }
 
@@ -1524,12 +1524,12 @@ func bashObjectPermissionCompleter(c *cli.Context) {
 }
 
 func bashEditPermissionCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObjectPermissionCompleter(c)
 }
 
 func bashCreatePermissionCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreatePermissionFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreatePermissionFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreatePermissionFlags); found {
 		return
@@ -1542,7 +1542,7 @@ func bashCreatePermissionCompleter(c *cli.Context) {
 }
 
 func bashUpdatePermissionCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreatePermissionFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreatePermissionFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreatePermissionFlags); found {
 		return
@@ -1555,25 +1555,25 @@ func bashUpdatePermissionCompleter(c *cli.Context) {
 }
 
 func bashExampleRoleCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinitionRoleCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabelRoleCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObjectRoleCompleter(c)
 }
 
 func bashReadRoleCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObjectRoleCompleter(c)
 }
 
 func bashDeleteRoleCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObjectRoleCompleter(c)
 }
 
@@ -1601,12 +1601,12 @@ func bashObjectRoleCompleter(c *cli.Context) {
 }
 
 func bashEditRoleCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObjectRoleCompleter(c)
 }
 
 func bashCreateRoleCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateRoleFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateRoleFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateRoleFlags); found {
 		return
@@ -1619,7 +1619,7 @@ func bashCreateRoleCompleter(c *cli.Context) {
 }
 
 func bashUpdateRoleCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateRoleFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateRoleFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateRoleFlags); found {
 		return
@@ -1632,25 +1632,25 @@ func bashUpdateRoleCompleter(c *cli.Context) {
 }
 
 func bashExampleSecurityGroupCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinitionSecurityGroupCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabelSecurityGroupCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObjectSecurityGroupCompleter(c)
 }
 
 func bashReadSecurityGroupCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObjectSecurityGroupCompleter(c)
 }
 
 func bashDeleteSecurityGroupCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObjectSecurityGroupCompleter(c)
 }
 
@@ -1678,12 +1678,12 @@ func bashObjectSecurityGroupCompleter(c *cli.Context) {
 }
 
 func bashEditSecurityGroupCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObjectSecurityGroupCompleter(c)
 }
 
 func bashCreateSecurityGroupCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateSecurityGroupFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateSecurityGroupFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateSecurityGroupFlags); found {
 		return
@@ -1696,7 +1696,7 @@ func bashCreateSecurityGroupCompleter(c *cli.Context) {
 }
 
 func bashUpdateSecurityGroupCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateSecurityGroupFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateSecurityGroupFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateSecurityGroupFlags); found {
 		return
@@ -1709,25 +1709,25 @@ func bashUpdateSecurityGroupCompleter(c *cli.Context) {
 }
 
 func bashExampleServiceCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinitionServiceCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabelServiceCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObjectServiceCompleter(c)
 }
 
 func bashReadServiceCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObjectServiceCompleter(c)
 }
 
 func bashDeleteServiceCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObjectServiceCompleter(c)
 }
 
@@ -1755,12 +1755,12 @@ func bashObjectServiceCompleter(c *cli.Context) {
 }
 
 func bashEditServiceCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObjectServiceCompleter(c)
 }
 
 func bashCreateServiceCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateServiceFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateServiceFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateServiceFlags); found {
 		return
@@ -1773,7 +1773,7 @@ func bashCreateServiceCompleter(c *cli.Context) {
 }
 
 func bashUpdateServiceCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateServiceFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateServiceFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateServiceFlags); found {
 		return
@@ -1786,25 +1786,25 @@ func bashUpdateServiceCompleter(c *cli.Context) {
 }
 
 func bashExampleSgpolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinitionSgpolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabelSgpolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObjectSgpolicyCompleter(c)
 }
 
 func bashReadSgpolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObjectSgpolicyCompleter(c)
 }
 
 func bashDeleteSgpolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObjectSgpolicyCompleter(c)
 }
 
@@ -1832,12 +1832,12 @@ func bashObjectSgpolicyCompleter(c *cli.Context) {
 }
 
 func bashEditSgpolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObjectSgpolicyCompleter(c)
 }
 
 func bashCreateSgpolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateSgpolicyFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateSgpolicyFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateSgpolicyFlags); found {
 		return
@@ -1850,7 +1850,7 @@ func bashCreateSgpolicyCompleter(c *cli.Context) {
 }
 
 func bashUpdateSgpolicyCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateSgpolicyFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateSgpolicyFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateSgpolicyFlags); found {
 		return
@@ -1863,25 +1863,25 @@ func bashUpdateSgpolicyCompleter(c *cli.Context) {
 }
 
 func bashExampleTenantCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinitionTenantCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabelTenantCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObjectTenantCompleter(c)
 }
 
 func bashReadTenantCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObjectTenantCompleter(c)
 }
 
 func bashDeleteTenantCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObjectTenantCompleter(c)
 }
 
@@ -1909,12 +1909,12 @@ func bashObjectTenantCompleter(c *cli.Context) {
 }
 
 func bashEditTenantCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObjectTenantCompleter(c)
 }
 
 func bashCreateTenantCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateTenantFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateTenantFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateTenantFlags); found {
 		return
@@ -1927,7 +1927,7 @@ func bashCreateTenantCompleter(c *cli.Context) {
 }
 
 func bashUpdateTenantCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateTenantFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateTenantFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateTenantFlags); found {
 		return
@@ -1940,25 +1940,25 @@ func bashUpdateTenantCompleter(c *cli.Context) {
 }
 
 func bashExampleUserCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinitionUserCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabelUserCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObjectUserCompleter(c)
 }
 
 func bashReadUserCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObjectUserCompleter(c)
 }
 
 func bashDeleteUserCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObjectUserCompleter(c)
 }
 
@@ -1986,12 +1986,12 @@ func bashObjectUserCompleter(c *cli.Context) {
 }
 
 func bashEditUserCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObjectUserCompleter(c)
 }
 
 func bashCreateUserCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateUserFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateUserFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateUserFlags); found {
 		return
@@ -2004,7 +2004,7 @@ func bashCreateUserCompleter(c *cli.Context) {
 }
 
 func bashUpdateUserCompleter(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, CreateUserFlags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateUserFlags...))
 
 	if _, found := getLastFlagSuggestion(c, CreateUserFlags); found {
 		return

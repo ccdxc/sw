@@ -1,4 +1,4 @@
-package main
+package vcli
 
 import (
 	"fmt"
@@ -8,6 +8,38 @@ import (
 
 	"github.com/urfave/cli"
 )
+
+// BashCompleter provides bash completion for the commands
+func BashCompleter(c *cli.Context, cmds []cli.Command, flags []cli.Flag) {
+	if retStr, found := getLastFlagSuggestion(c, flags); found {
+		fmt.Printf("%s ", retStr)
+		return
+	}
+
+	for _, cmd := range cmds {
+		fmt.Printf("%s ", cmd.Name)
+	}
+
+	// exit on any terminating flag
+	for _, f := range flags {
+		for _, t := range terminatingFlags {
+			if f == t {
+				_, present := flagPresent(c, f)
+				if present {
+					return
+				}
+			}
+		}
+	}
+
+	for _, f := range flags {
+		m, present := flagPresent(c, f)
+		if present && m.kind != "slice" && m.value != "" {
+			continue
+		}
+		fmt.Printf("--%s ", m.name)
+	}
+}
 
 // flagMeta keeps meatdata associated with each CLI flag useful to keep misc information about various flags
 type flagMeta struct {
@@ -42,38 +74,6 @@ func getLastFlagSuggestion(c *cli.Context, flags []cli.Flag) (string, bool) {
 		}
 	}
 	return "", false
-}
-
-// bashCompleter provides bash completion for the commands
-func bashCompleter(c *cli.Context, cmds []cli.Command, flags []cli.Flag) {
-	if retStr, found := getLastFlagSuggestion(c, flags); found {
-		fmt.Printf("%s ", retStr)
-		return
-	}
-
-	for _, cmd := range cmds {
-		fmt.Printf("%s ", cmd.Name)
-	}
-
-	// exit on any terminating flag
-	for _, f := range flags {
-		for _, t := range terminatingFlags {
-			if f == t {
-				_, present := flagPresent(c, f)
-				if present {
-					return
-				}
-			}
-		}
-	}
-
-	for _, f := range flags {
-		m, present := flagPresent(c, f)
-		if present && m.kind != "slice" && m.value != "" {
-			continue
-		}
-		fmt.Printf("--%s ", m.name)
-	}
 }
 
 // flagPresent finds out whether a flag was specified in the actual command line

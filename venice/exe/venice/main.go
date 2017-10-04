@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"regexp"
 	"sort"
 
+	vcli "github.com/pensando/sw/venice/cli"
 	"github.com/urfave/cli"
 )
 
@@ -49,23 +49,6 @@ func (a byName) Len() int           { return len(a) }
 func (a byName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byName) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
-// context structure is internal to CLI module that is passed along various functions
-// to keep the context about a specific CLI command; it stores digested information
-type context struct {
-	cli        *cli.Context
-	tenant     string
-	cmd        string
-	subcmd     string
-	labels     map[string]string
-	labelStrs  []string
-	dumpStruct bool
-	dumpYml    bool
-	names      []string
-	quiet      bool
-	debug      bool
-	re         *regexp.Regexp
-}
-
 // global flags for venice cli command
 var penServerFlags = []cli.Flag{
 	cli.BoolFlag{
@@ -80,7 +63,6 @@ var penServerFlags = []cli.Flag{
 	},
 }
 
-const defaultVersion = "v0.1-alpha"
 const helpTmpl = `NAME:
 {{.Name}} - {{.Usage}}
 USAGE:
@@ -120,7 +102,7 @@ func InvokeCLI(osArgs []string, bot bool) string {
 
 	app := cli.NewApp()
 	app.Flags = penServerFlags
-	app.Version = defaultVersion
+	app.Version = vcli.DefaultVersion
 	app.Copyright = "Copyright (c) Pensando Systems, Inc."
 	app.Usage = "Pensando Venice CLI"
 
@@ -132,8 +114,8 @@ func InvokeCLI(osArgs []string, bot bool) string {
 	app.BashComplete = bashMainCompleter
 
 	cli.AppHelpTemplate = helpTmpl
-	sort.Sort(byName(commands))
-	app.Commands = commands
+	sort.Sort(byName(vcli.Commands))
+	app.Commands = vcli.Commands
 	app.Metadata = make(map[string]interface{})
 	app.Metadata["osArgs"] = osArgs
 	app.Run(osArgs)
@@ -157,5 +139,5 @@ func InvokeCLI(osArgs []string, bot bool) string {
 
 // bash command line completer for top level commands
 func bashMainCompleter(c *cli.Context) {
-	bashCompleter(c, commands, penServerFlags)
+	vcli.BashCompleter(c, vcli.Commands, penServerFlags)
 }

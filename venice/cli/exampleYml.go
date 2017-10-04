@@ -1,4 +1,4 @@
-package main
+package vcli
 
 var exampleYmls = map[string]string{
 	`cluster`: `kind: cluster                         # kind of this object

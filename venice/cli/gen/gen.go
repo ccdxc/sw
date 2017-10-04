@@ -257,7 +257,7 @@ func genYmlExamples() {
 	}
 	defer wf.Close()
 
-	const initialBlob = `package main
+	const initialBlob = `package vcli
 
 var exampleYmls = map[string]string{
 `
@@ -357,7 +357,7 @@ const objTmpl = `
 // (c) Pensando Systems, Inc.
 // This is a generated file, please do not hand edit !!
 
-package main
+package vcli
 
 import (
 	contxt "context"
@@ -667,7 +667,7 @@ var objOrder = []string{
 const cmdsTmpl = `// (c) Pensando Systems, Inc.
 // This is a generated file, edit at risk of loosing it !!
 
-package main
+package vcli
 
 import (
 	"fmt"
@@ -857,25 +857,25 @@ var Create{{title $obj.Name}}Flags = []cli.Flag {
 const cmdBashCompleterTmpl = `
 {{ range $obj := . }}
 func bashExample{{title $obj.Name}}Completer(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, exampleFlags)
+	BashCompleter(c, []cli.Command{}, exampleFlags)
 }
 
 func bashDefinition{{title $obj.Name}}Completer(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, definitionFlags)
+	BashCompleter(c, []cli.Command{}, definitionFlags)
 }
 
 func bashLabel{{title $obj.Name}}Completer(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, labelFlags)
+	BashCompleter(c, []cli.Command{}, labelFlags)
 	bashObject{{title $obj.Name}}Completer(c)
 }
 
 func bashRead{{title $obj.Name}}Completer(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, readFlags)
+	BashCompleter(c, []cli.Command{}, readFlags)
 	bashObject{{title $obj.Name}}Completer(c)
 }
 
 func bashDelete{{title $obj.Name}}Completer(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, deleteFlags)
+	BashCompleter(c, []cli.Command{}, deleteFlags)
 	bashObject{{title $obj.Name}}Completer(c)
 }
 
@@ -903,12 +903,12 @@ func bashObject{{title $obj.Name}}Completer(c *cli.Context) {
 }
 
 func bashEdit{{title $obj.Name}}Completer(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, editFlags)
+	BashCompleter(c, []cli.Command{}, editFlags)
 	bashObject{{title $obj.Name}}Completer(c)
 }
 
 func bashCreate{{title $obj.Name}}Completer(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, Create{{title $obj.Name}}Flags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, Create{{title $obj.Name}}Flags...))
 
 	if _, found := getLastFlagSuggestion(c, Create{{title $obj.Name}}Flags); found {
 		return
@@ -921,7 +921,7 @@ func bashCreate{{title $obj.Name}}Completer(c *cli.Context) {
 }
 
 func bashUpdate{{title $obj.Name}}Completer(c *cli.Context) {
-	bashCompleter(c, []cli.Command{}, append(createFlags, Create{{title $obj.Name}}Flags...))
+	BashCompleter(c, []cli.Command{}, append(createFlags, Create{{title $obj.Name}}Flags...))
 
 	if _, found := getLastFlagSuggestion(c, Create{{title $obj.Name}}Flags); found {
 		return

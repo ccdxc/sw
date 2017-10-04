@@ -1,4 +1,4 @@
-# Build: MUST be executed from top level source as "docker build -t venice -f cli/venice/Dockerfile ."
+# Build: MUST be executed from top level source as "docker build -t venice -f venice/cli/Dockerfile ."
 # Run: "docker run -it --rm --hostname venice --name venice venice"
 FROM centos/systemd
 
@@ -9,8 +9,8 @@ RUN wget -q https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 &
 # copy pensando binaries
 COPY ./bin/testserver /usr/local/bin/testserver
 COPY ./bin/venice /usr/local/bin/venice
-COPY ./cli/venice/samples ~/samples
-COPY ./cli/venice/bash_autocomplete /etc/bash_completion.d/venice
+COPY ./venice/cli/samples ~/samples
+COPY ./venice/cli/bash_autocomplete /etc/bash_completion.d/venice
 
 # run pensando server and give a bash shell
 RUN echo "#!/bin/bash" > /tmp/pen.sh

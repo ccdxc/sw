@@ -1,4 +1,4 @@
-package main
+package vcli
 
 import (
 	"github.com/urfave/cli"
@@ -88,7 +88,7 @@ var definitionFlags = []cli.Flag{}
 var terminatingFlags = []cli.Flag{showDefinitionFlag, showExampleFlag, fileFlag}
 
 // The top level command hierarchy
-var commands = []cli.Command{
+var Commands = []cli.Command{
 	{
 		Name:   "version",
 		Usage:  "Version Information",
