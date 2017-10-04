@@ -9,6 +9,7 @@ tcp_debug_dol_test_atomic_stats = 0x2
 tcp_debug_dol_dont_queue_to_serq = 0x4
 tcp_debug_dol_leave_in_arq = 0x8
 tcp_debug_dol_dont_ring_tx_doorbell = 0x10
+tcp_debug_dol_del_ack_timer = 0x20
 
 tcp_tx_debug_dol_dont_send_ack = 0x1
 tcp_tx_debug_dol_dont_tx = 0x2
@@ -34,6 +35,7 @@ def SetupProxyArgs(tc):
     same_flow = 0
     bypass_barco = 0
     send_ack = 0
+    test_timer = 0
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         tc.module.logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -43,6 +45,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'send_ack'):
         send_ack = tc.module.args.send_ack
         tc.module.logger.info("- send_ack %s" % tc.module.args.send_ack)
+    if hasattr(tc.module.args, 'test_timer'):
+        test_timer = tc.module.args.test_timer
+        tc.module.logger.info("- test_timer %s" % tc.module.args.test_timer)
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -56,9 +61,13 @@ def SetupProxyArgs(tc):
         if 'send_ack' in iterelem.__dict__:
             send_ack = iterelem.send_ack
             tc.module.logger.info("- send_ack %s" % iterelem.send_ack)
+        if 'test_timer' in iterelem.__dict__:
+            test_timer = iterelem.test_timer
+            tc.module.logger.info("- test_timer %s" % iterelem.test_timer)
     tc.pvtdata.same_flow = same_flow
     tc.pvtdata.bypass_barco = bypass_barco
     tc.pvtdata.send_ack = send_ack
+    tc.pvtdata.test_timer = test_timer
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA
@@ -78,6 +87,8 @@ def init_tcb_inorder(tc, tcb):
     else:
         tcb.debug_dol = tcp_debug_dol_dont_ring_tx_doorbell
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack 
+    if tc.pvtdata.test_timer:
+        tcb.debug_dol |= tcp_debug_dol_del_ack_timer
     if tc.pvtdata.same_flow:
         tcb.source_port = tc.config.flow.sport
         tcb.dest_port = tc.config.flow.dport

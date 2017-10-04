@@ -38,3 +38,13 @@ cpu:
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_PROXY
 proxy: True
 ipsec: True
+
+timers:
+    - entry:
+        id          : SLOW_TIMER
+        slowfast    : 0
+        ctime       : 0
+    - entry:
+        id          : FAST_TIMER
+        slowfast    : 1
+        ctime       : 0

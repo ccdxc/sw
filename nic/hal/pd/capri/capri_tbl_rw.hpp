@@ -15,6 +15,24 @@
 #include "nic/include/base.h"
 #endif
 
+#define CAPRI_TIMER_WHEEL_DEPTH         4096
+
+#define CAPRI_MAX_TIMERS                (128 * 1024)
+#define CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE    16
+#define CAPRI_TIMER_NUM_DATA_PER_CACHE_LINE   12
+
+// This needs to be a power of 2
+#define CAPRI_TIMER_NUM_KEY_CACHE_LINES \
+                (CAPRI_MAX_TIMERS / CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE)
+
+#define CAPRI_TIMER_HBM_KEY_SPACE \
+                ((CAPRI_MAX_TIMERS / CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE) * 8)
+#define CAPRI_TIMER_HBM_DATA_SPACE \
+                (((CAPRI_MAX_TIMERS / CAPRI_TIMER_NUM_DATA_PER_CACHE_LINE) * 8 \
+                + 64) \ & 0xffffffc0)
+#define CAPRI_TIMER_HBM_SPACE \
+                (CAPRI_TIMER_HBM_KEY_SPACE + CAPRI_TIMER_HBM_DATA_SPACE)
+
 int capri_table_rw_init();
 
 void capri_table_rw_cleanup();

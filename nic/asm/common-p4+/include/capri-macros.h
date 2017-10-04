@@ -185,10 +185,9 @@
 #define DB_RING_SHFT                   16
 
 #define CAPRI_RING_DOORBELL_DATA(_pid, _qid, _ring, _idx) \
-        add             r3, r0, _pid, DB_PID_SHFT;\
+        add             r3, _idx, _pid, DB_PID_SHFT;\
         or              r3, r3, _qid, DB_QID_SHFT;\
-        or              r3, r3, _ring, DB_RING_SHFT;\
-        add             r3, r3, _idx;\
+        or              r3, r3, _ring, DB_RING_SHFT;
 
 #define CAPRI_DMA_COMMAND_SIZE            128
 
@@ -441,5 +440,22 @@ o        phvwri      p.##_dma_cmd_prefix##_addr, __addr;                        
 #define CAPRI_DMA_CMD_STOP(_dma_cmd_prefix)                                                     \
         phvwri      p.##_dma_cmd_prefix##_eop, 1;                                               \
 
+
+// Timers
+#define CAPRI_FAST_TIMER_ADDR(_lif) \
+        (CAPRI_MEM_FAST_TIMER_START + (_lif << 3))
+
+#define CAPRI_SLOW_TIMER_ADDR(_lif) \
+        (CAPRI_MEM_SLOW_TIMER_START + (_lif << 3))
+
+#define TIMER_QID_SHFT              3
+#define TIMER_RING_SHFT             27
+#define TIMER_DELTA_TIME_SHFT       30
+
+// Result in r3
+#define CAPRI_TIMER_DATA(_type, _qid, _ring, _delta_time) \
+        add             r3, _type, _qid, TIMER_QID_SHFT;\
+        or              r3, r3, _ring, TIMER_RING_SHFT;\
+        or              r3, r3, _delta_time, TIMER_DELTA_TIME_SHFT;
 
 #endif /* #ifndef __CAPRI_MACROS_H__ */

@@ -41,6 +41,26 @@ capri_init (capri_cfg_t *cfg = NULL)
     return ret;
 }
 
+static hal_ret_t
+capri_timer_hbm_init(void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    uint64_t timer_key_hbm_base_addr;
+    uint64_t timer_key_hbm_addr;
+    uint64_t zero_data[8] = { 0 };
+
+    timer_key_hbm_base_addr = (uint64_t)get_start_offset((char *)JTIMERS);
+    HAL_TRACE_DEBUG("HBM timer key base addr {:#x}", timer_key_hbm_base_addr);
+    timer_key_hbm_addr = timer_key_hbm_base_addr;
+    while (timer_key_hbm_addr < timer_key_hbm_base_addr + 
+                                CAPRI_TIMER_HBM_KEY_SPACE) {
+        capri_hbm_write_mem(timer_key_hbm_addr, (uint8_t *)zero_data, sizeof(zero_data));
+        timer_key_hbm_addr += sizeof(zero_data);
+    }
+
+    return ret;
+}
+
 hal_ret_t
 capri_hbm_regions_init()
 {
@@ -57,6 +77,11 @@ capri_hbm_regions_init()
     }
 
     ret = capri_p4_pgm_init();
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    ret = capri_timer_hbm_init();
     if (ret != HAL_RET_OK) {
         return ret;
     }

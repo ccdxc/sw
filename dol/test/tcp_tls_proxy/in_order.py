@@ -53,6 +53,13 @@ def TestCaseSetup(tc):
     tc.pvtdata.Add(tcpcb)
     return
 
+def TestCaseTrigger(tc):
+    if tc.pvtdata.test_timer:
+        timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
+        timer.Step(101)
+        
+    return
+
 def TestCaseVerify(tc):
     if GlobalOptions.dryrun:
         return True

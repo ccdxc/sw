@@ -14,6 +14,7 @@
 #define JP4_PRGM                 "p4_program"
 #define JP4PLUS_PRGM             "p4plus_program"
 #define JLIF_QSTATE              "qstate"
+#define JTIMERS                  "timers"
 
 #include "nic/include/base.h"
 

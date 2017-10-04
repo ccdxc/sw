@@ -126,4 +126,17 @@
                             (CAPRI_SEM_IPSECCB_ADDR + CAPRI_SEM_RAW_OFFSET)
 #define CAPRI_SEM_IPSECCB_INF_ADDR \
                             (CAPRI_SEM_IPSECCB_ADDR + CAPRI_SEM_INF_OFFSET)
+
+// Timers
+#define CAPRI_MEM_TIMER_START           0x20000000
+#define CAPRI_MEM_FAST_TIMER_START      (CAPRI_MEM_TIMER_START + 0x4000)
+#define CAPRI_MEM_SLOW_TIMER_START      (CAPRI_MEM_TIMER_START + 0x10000)
+
+#define CAPRI_FAST_TIMER_RESOLUTION     1
+#define CAPRI_SLOW_TIMER_RESOLUTION     100
+
+#define CAPRI_FAST_TIMER_TICKS(_millisecs) \
+                            (_millisecs / CAPRI_FAST_TIMER_RESOLUTION)
+#define CAPRI_SLOW_TIMER_TICKS(_millisecs) \
+                            (_millisecs / CAPRI_SLOW_TIMER_RESOLUTION)
 #endif

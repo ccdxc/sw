@@ -491,6 +491,46 @@ capri_program_p4plus_table_mpu_pc(void)
     }
 }
 
+static void
+capri_timer_init(void)
+{
+    uint64_t timer_key_hbm_base_addr;
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_txs_csr_t *txs_csr = &cap0.txs.txs;
+
+    timer_key_hbm_base_addr = (uint64_t)get_start_offset((char *)JTIMERS);
+
+    txs_csr->cfg_timer_static.read();
+    HAL_TRACE_DEBUG("hbm_base 0x{0:x}", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
+    HAL_TRACE_DEBUG("timer hash depth {}", txs_csr->cfg_timer_static.tmr_hsh_depth());
+    HAL_TRACE_DEBUG("timer wheel depth {}", txs_csr->cfg_timer_static.tmr_wheel_depth());
+    txs_csr->cfg_timer_static.hbm_base(timer_key_hbm_base_addr);
+    txs_csr->cfg_timer_static.tmr_hsh_depth(CAPRI_TIMER_NUM_KEY_CACHE_LINES - 1);
+    txs_csr->cfg_timer_static.tmr_wheel_depth(CAPRI_TIMER_WHEEL_DEPTH - 1);
+    txs_csr->cfg_timer_static.write();
+
+    // TODO:remove
+    txs_csr->cfg_timer_static.read();
+    HAL_TRACE_DEBUG("hbm_base 0x{0:x}", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
+    HAL_TRACE_DEBUG("timer hash depth {}", txs_csr->cfg_timer_static.tmr_hsh_depth());
+    HAL_TRACE_DEBUG("timer wheel depth {}", txs_csr->cfg_timer_static.tmr_wheel_depth());
+
+    // initialize timer wheel to 0
+#if 0
+    HAL_TRACE_DEBUG("Initializing timer wheel...");
+    for (int i = 0; i <= CAPRI_TIMER_WHEEL_DEPTH; i++) {
+        HAL_TRACE_DEBUG("timer wheel index {}", i);
+        txs_csr->dhs_tmr_cnt_sram.entry[i].read();
+        txs_csr->dhs_tmr_cnt_sram.entry[i].slow_bcnt(0);
+        txs_csr->dhs_tmr_cnt_sram.entry[i].slow_lcnt(0);
+        txs_csr->dhs_tmr_cnt_sram.entry[i].fast_bcnt(0);
+        txs_csr->dhs_tmr_cnt_sram.entry[i].fast_lcnt(0);
+        txs_csr->dhs_tmr_cnt_sram.entry[i].write();
+    }
+#endif
+    HAL_TRACE_DEBUG("Done initializing timer wheel");
+}
+
 int capri_table_rw_init()
 {
     // !!!!!!
@@ -550,6 +590,9 @@ int capri_table_rw_init()
     /* Program all P4 table base MPU address in all stages. */
     capri_program_table_mpu_pc();
     capri_program_p4plus_table_mpu_pc();
+
+    /* Timers */
+    capri_timer_init();
 
     capri_stats_region_init();
     hbm_mem_base_addr = (uint64_t)get_start_offset((char*)JP4_PRGM);

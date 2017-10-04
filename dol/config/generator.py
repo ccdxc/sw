@@ -20,6 +20,7 @@ from config.objects.cpu                 import CpuHelper
 from infra.common.logging import cfglogger as cfglogger
 from config.objects.swdr                import SwDscrRingHelper
 from config.objects.brq                 import BRQHelper
+from config.objects.timer               import TimerHelper
 
 def process(topospec):
     # Security Profiles
@@ -59,6 +60,7 @@ def process(topospec):
         IpsecCbHelper.main()    
 
     CpuHelper.main(topospec)
+    TimerHelper.main(topospec)
     return
 
 def main(topofile):

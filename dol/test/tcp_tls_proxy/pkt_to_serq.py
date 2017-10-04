@@ -39,6 +39,13 @@ def TestCaseSetup(tc):
     tcb.state = 1
     tcb.SetObjValPd()
 
+    tlscbid = "TlsCb%04d" % id
+    tlscb = tc.infra_data.ConfigStore.objects.db[tlscbid]
+    tlscb.debug_dol = 0
+    tlscb.is_decrypt_flow = False
+    tlscb.other_fid = 0xffff
+    tlscb.SetObjValPd()
+
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     rnmdr.Configure()
@@ -47,7 +54,6 @@ def TestCaseSetup(tc):
     serqid = "TLSCB%04d_SERQ" % id
     serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[serqid])
     serq.Configure()
-    tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
     tlscb.GetObjValPd()
     tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tcbid])

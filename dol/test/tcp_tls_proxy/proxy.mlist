@@ -29,6 +29,18 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
+        name    : IN_ORDER_PKT_NOT_TO_SERQ_V4_DEL_ACK_TIMER
+        spec    : one_pkt_ack.testspec
+        module  : in_order
+        enable  : False
+        args    :
+            maxflows : 1
+            send_ack : 1
+            test_timer : 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
         name    : IN_ORDER_FLOWS_NOT_TO_SERQ_V4
         spec    : one_pkt.testspec
         module  : in_order

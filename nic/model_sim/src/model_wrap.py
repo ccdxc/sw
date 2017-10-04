@@ -134,3 +134,15 @@ def step_doorbell(addr, data):
             error_exit()
     zmq_close(socket)
     pass
+
+def step_tmr_wheel_update(slowfast, ctime):
+    socket = zmq_connect()
+    buff = pack('iiiiiiiQQ', 11, 0, 0, 0, 0, slowfast, ctime, 0, 0)
+    try:
+        socket.send(buff)
+        msg = socket.recv()
+    except zmq.ZMQError as e:
+        if e.errno == zmq.EAGAIN:
+            error_exit()
+    zmq_close(socket)
+    pass

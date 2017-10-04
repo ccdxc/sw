@@ -519,7 +519,7 @@ tcp_ecn_check_ce_done:
  */
 tcp_rearm_rto:
 
-        CAPRI_CLEAR_TABLE0_VALID
+    CAPRI_CLEAR_TABLE0_VALID
 
     sne         c4, r7, r0
     /* If the retrans timer is currently being used by Fast Open
