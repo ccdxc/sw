@@ -324,6 +324,8 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
     rsp->mutable_spec()->set_tunnel_sip4(ripseccb.tunnel_sip4);
     rsp->mutable_spec()->set_tunnel_dip4(ripseccb.tunnel_dip4);
 
+    rsp->mutable_spec()->set_pi(ripseccb.pi);
+    rsp->mutable_spec()->set_ci(ripseccb.ci);
 
     // fill operational state of this IPSEC CB
     rsp->mutable_status()->set_ipseccb_handle(ipseccb->hal_handle);

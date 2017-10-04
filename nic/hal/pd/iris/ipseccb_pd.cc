@@ -178,7 +178,6 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
 {
     common_p4plus_stage0_app_header_table_d data = {0};
     uint64_t                                    ipsec_cb_ring_addr;
-    uint8_t cb_cindex, cb_pindex;
 
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
@@ -202,9 +201,9 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
     ipseccb_pd->ipseccb->key_index = data.u.ipsec_encap_rxdma_initial_table_d.key_index;
    
     ipsec_cb_ring_addr = ntohll(data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr);
-    cb_cindex = data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex;
-    cb_pindex = data.u.ipsec_encap_rxdma_initial_table_d.cb_pindex;
-    HAL_TRACE_DEBUG("CB Ring Addr 0x{0:x} Pindex {} CIndex {}", ipsec_cb_ring_addr, cb_pindex, cb_cindex);
+    ipseccb_pd->ipseccb->pi = data.u.ipsec_encap_rxdma_initial_table_d.cb_pindex;
+    ipseccb_pd->ipseccb->ci = data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex;
+    HAL_TRACE_DEBUG("CB Ring Addr {:#x} Pindex {} CIndex {}", ipsec_cb_ring_addr, ipseccb_pd->ipseccb->pi, ipseccb_pd->ipseccb->ci);
      
     return HAL_RET_OK;
 }

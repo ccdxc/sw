@@ -51,6 +51,21 @@ class IpsecCbObject(base.ConfigObjectBase):
         cfglogger.info("  - IPSECCB %s = %s" %\
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
+        if resp_spec.__class__.__name__ == 'IpsecCbGetResponse':
+            self.tunnel_sip4       = resp_spec.spec.tunnel_sip4
+            self.tunnel_dip4       = resp_spec.spec.tunnel_dip4
+            self.iv_size           = resp_spec.spec.iv_size
+            self.icv_size          = resp_spec.spec.icv_size 
+            self.block_size        = resp_spec.spec.block_size 
+            self.barco_enc_cmd     = resp_spec.spec.barco_enc_cmd 
+            self.iv                = resp_spec.spec.iv 
+            self.iv_salt           = resp_spec.spec.iv_salt 
+            self.esn_hi            = resp_spec.spec.esn_hi 
+            self.esn_lo            = resp_spec.spec.esn_lo 
+            self.spi               = resp_spec.spec.spi 
+            self.pi                = resp_spec.spec.pi
+            self.ci                = resp_spec.spec.ci
+
         return
 
     def GetObjValPd(self):
