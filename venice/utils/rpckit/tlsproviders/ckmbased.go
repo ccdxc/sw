@@ -4,9 +4,6 @@ package tlsproviders
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -19,21 +16,21 @@ import (
 
 	"github.com/pensando/sw/venice/ctrler/ckm/rpcserver/ckmproto"
 	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // CKMBasedProvider is a TLS Provider which retrieves keys and certificates from the Cluster Key Manager (CKM)
 // using the certificates API
 type CKMBasedProvider struct {
+	// the KeyMgr instance used to generate and store keys and certificates
+	keyMgr *keymgr.KeyMgr
+
 	// the remote URL of the CKM endpoint
 	ckmEndpointURL string
 
 	// the CKM gRPC client
 	ckmClient ckmproto.CertificatesClient
-
-	//  The connection to the CKM backend
-	// Struct tls.Certificate contains everything that a client or server needs to complete
-	// a TLS handshake. This includes the private key and the certificate bundle.
 
 	// When providing credentials for a client, use the same certificate for all connections
 	clientCertificate *tls.Certificate
@@ -112,8 +109,8 @@ func (p *CKMBasedProvider) fetchCaCertificates() error {
 }
 
 func (p *CKMBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certificate, error) {
-	// Generate private key and CSR
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+
+	privateKey, err := p.keyMgr.CreateKeyPair(subjAltName, keymgr.ECDSA256)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error generating private key")
 	}
@@ -148,13 +145,17 @@ func (p *CKMBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certifica
 }
 
 // NewCKMBasedProvider instantiates a new CKM-based TLS provider
-func NewCKMBasedProvider(ckmEpURL string, opts ...CKMProviderOption) (*CKMBasedProvider, error) {
-	if ckmEpURL == "" {
-		return nil, fmt.Errorf("Requires CKM endpoint in form hostname:port")
+func NewCKMBasedProvider(ckmEpNameOrURL string, km *keymgr.KeyMgr, opts ...CKMProviderOption) (*CKMBasedProvider, error) {
+	if ckmEpNameOrURL == "" {
+		return nil, fmt.Errorf("Requires CKM endpoint name or URL in form hostname:port")
+	}
+	if km == nil {
+		return nil, fmt.Errorf("Requires valid instance of KeyMgr")
 	}
 
 	provider := &CKMBasedProvider{
-		ckmEndpointURL:     ckmEpURL,
+		keyMgr:             km,
+		ckmEndpointURL:     ckmEpNameOrURL,
 		serverCertificates: make(map[string](*tls.Certificate)),
 		trustRoots:         x509.NewCertPool(),
 	}
@@ -165,9 +166,9 @@ func NewCKMBasedProvider(ckmEpURL string, opts ...CKMProviderOption) (*CKMBasedP
 			o(&provider.ckmProviderOptions)
 		}
 	}
-	_, _, err := net.SplitHostPort(ckmEpURL)
+	_, _, err := net.SplitHostPort(ckmEpNameOrURL)
 	if err != nil && provider.balancer == nil {
-		return nil, fmt.Errorf("Require a balancer to resolve %v", ckmEpURL)
+		return nil, fmt.Errorf("Require a balancer to resolve %v", ckmEpNameOrURL)
 	}
 
 	// Connect to CKM Endpoint and create RPC client
@@ -180,7 +181,7 @@ func NewCKMBasedProvider(ckmEpURL string, opts ...CKMProviderOption) (*CKMBasedP
 
 	err = provider.fetchCaCertificates()
 	if err != nil {
-		log.Fatalf("Error fetching trust roots from %s: %v", ckmEpURL, err)
+		log.Fatalf("Error fetching trust roots from %s: %v", ckmEpNameOrURL, err)
 	}
 
 	return provider, nil

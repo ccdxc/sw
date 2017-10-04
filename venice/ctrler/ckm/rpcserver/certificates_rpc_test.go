@@ -9,25 +9,25 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/x509"
-	"fmt"
-	"io/ioutil"
-	"os"
 	"reflect"
 	"testing"
 
 	ckmgrpc "github.com/pensando/sw/venice/ctrler/ckm/rpcserver/ckmproto"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 func TestCertificatesRPC(t *testing.T) {
-	// create a temporary directory and instantiate Certificate Manager
-	keyStoreDir, err := ioutil.TempDir("", "ckmrpcservertest")
-	defer os.RemoveAll(keyStoreDir)
-	AssertOk(t, err, fmt.Sprintf("Error creating temporary directory %s", keyStoreDir))
-	cm, err := certmgr.NewCertificateMgr(keyStoreDir)
+	// Instantiate Key Manager and Certificate Manager
+	be, err := keymgr.NewDefaultBackend()
+	AssertOk(t, err, "Error instantiating KeyMgr default backend")
+	defer be.Close()
+	km, err := keymgr.NewKeyMgr(be)
+	AssertOk(t, err, "Error instantiating KeyMgr")
+	cm, err := certmgr.NewCertificateMgr(km)
 	AssertOk(t, err, "Error instantiating certificates manager")
 
 	serverName := "ckm"
@@ -113,5 +113,4 @@ func TestCertificatesRPC(t *testing.T) {
 	invalidSigCsr[len(invalidSigCsr)-1]++
 	_, err = client.SignCertificateRequest(context.Background(), &ckmgrpc.CertificateSignReq{Csr: invalidSigCsr})
 	Assert(t, (err != nil), "SignCertificateRequest with tampered CSR succeeded while expected to fail")
-
 }

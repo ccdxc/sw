@@ -3,37 +3,28 @@
 package certmgr
 
 import (
-	"fmt"
-	"os"
-	"path"
-
 	"github.com/pkg/errors"
+
+	"github.com/pensando/sw/venice/utils/keymgr"
 )
 
 // CertificateMgr is the service for storing, issuing and rotating certificates
 type CertificateMgr struct {
-	workDir string                // The working directory for the instance
-	ca      *CertificateAuthority // Internal certificate authority
-	ready   bool
+	ca    *CertificateAuthority // Internal certificate authority
+	ready bool
 }
 
 // NewCertificateMgr provides a new instance of Certificate Manager
-func NewCertificateMgr(dir string) (*CertificateMgr, error) {
-	if dir == "" {
-		return nil, errors.New("CertificateMgr root directory is required")
-	}
-
-	err := os.MkdirAll(dir, 0700)
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("Could not open root directory, path: %v", dir))
+func NewCertificateMgr(km *keymgr.KeyMgr) (*CertificateMgr, error) {
+	if km == nil {
+		return nil, errors.New("KeyMgr instance is required")
 	}
 
 	svc := &CertificateMgr{
-		workDir: dir,
-		ready:   false,
+		ready: false,
 	}
 
-	ca, err := NewCertificateAuthority(path.Join(dir, "CA"))
+	ca, err := NewCertificateAuthority(km)
 	if err != nil || !ca.IsReady() {
 		return nil, err
 	}

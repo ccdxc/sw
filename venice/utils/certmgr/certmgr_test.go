@@ -3,10 +3,9 @@
 package certmgr
 
 import (
-	"io/ioutil"
-	"os"
 	"testing"
 
+	"github.com/pensando/sw/venice/utils/keymgr"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -14,20 +13,16 @@ func TestCertMgrInit(t *testing.T) {
 	// NEGATIVE TEST-CASES
 
 	// empty dir
-	_, err := NewCertificateMgr("")
-	Assert(t, err != nil, "NewCertificateAuthority succeeded with empty dir")
+	_, err := NewCertificateMgr(nil)
+	Assert(t, err != nil, "NewCertificateAuthority succeeded with nil KeyMgr instance")
 
-	// path exists but is a file
-	tmpfile, err := ioutil.TempFile("", "certmgr")
-	AssertOk(t, err, "Error creating temporary file")
-	defer os.RemoveAll(tmpfile.Name())
-	_, err = NewCertificateMgr(tmpfile.Name())
-	Assert(t, err != nil, "NewCertificateMgr succeeded with invalid dir")
-
-	// POSITIVE TES-CASE
-	dir, err := ioutil.TempDir("", "certmgrtest")
-	AssertOk(t, err, "Error creating temporary directory")
-	cm, err := NewCertificateMgr(dir)
+	// POSITIVE TEST-CASE
+	be, err := keymgr.NewDefaultBackend()
+	AssertOk(t, err, "Error instantiating KeyMgr backend")
+	defer be.Close()
+	km, err := keymgr.NewKeyMgr(be)
+	AssertOk(t, err, "Error instantiating KeyMgr")
+	cm, err := NewCertificateMgr(km)
 	AssertOk(t, err, "Error instantiating CertificateMgr")
 	Assert(t, cm.IsReady(), "CertificateMgr not ready")
 	Assert(t, nil != cm.Ca(), "CertificateMgr returned a nil CA")

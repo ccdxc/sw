@@ -42,11 +42,21 @@ func (c *CKMctrler) incrementRPCError() {
 // SignCertificateRequest is the handler for the RPC method with the same name
 // It receives a CSR and returns a signed certificate
 func (c *CKMctrler) SignCertificateRequest(ctx context.Context, req *ckmproto.CertificateSignReq) (*ckmproto.CertificateSignResp, error) {
+	var err error
+
+	// make sure counters are updated on return
+	defer func() {
+		if err != nil {
+			c.incrementRPCError()
+		} else {
+			c.incrementRPCSuccess()
+		}
+	}()
+
 	// Only check that CSR is syntactically valid
 	csr, err := x509.ParseCertificateRequest(req.GetCsr())
 	if err != nil {
 		log.Errorf("Received invalid certificate request, error: %v", err)
-		c.incrementRPCError()
 		return &ckmproto.CertificateSignResp{Approved: false}, err
 	}
 
@@ -59,11 +69,9 @@ func (c *CKMctrler) SignCertificateRequest(ctx context.Context, req *ckmproto.Ce
 	cert, err := certs.SignCSRwithCA(7 /* days */, csr, c.certificate, c.privateKey)
 	if err != nil {
 		log.Errorf("Error signing CSR: %v", err)
-		c.incrementRPCError()
 		return &ckmproto.CertificateSignResp{Approved: false}, err
 	}
 
-	c.incrementRPCSuccess()
 	return &ckmproto.CertificateSignResp{
 		Certificate: &ckmproto.Certificate{Certificate: cert.Raw},
 		Approved:    true}, nil

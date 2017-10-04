@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/types"
 	ckm "github.com/pensando/sw/venice/ctrler/ckm/mock"
 	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -23,17 +24,32 @@ import (
 func TestCKMBasedProviderInit(t *testing.T) {
 	// NEGATIVE TEST-CASES
 
+	// create a real KeyMgr
+	be, err := keymgr.NewDefaultBackend()
+	AssertOk(t, err, "Error instantiating KeyMgr backend")
+	defer be.Close()
+	km, err := keymgr.NewKeyMgr(be)
+	AssertOk(t, err, "Error instantiating KeyMgr")
+
 	// null CKM Endpoint URL
-	_, err := NewCKMBasedProvider("")
+	_, err = NewCKMBasedProvider("", km)
 	Assert(t, err != nil, "CKMBasedProvider instantiation succceeded while expected to fail")
 
 	// invalid CKM Endpoint
-	_, err = NewCKMBasedProvider("foo")
+	_, err = NewCKMBasedProvider("foo", km)
 	Assert(t, err != nil, "CKMBasedProvider instantiation succceeded while expected to fail")
 
 	// unavailable CKM Endpoint
-	_, err = NewCKMBasedProvider("localhost:123")
+	_, err = NewCKMBasedProvider("localhost:123", km)
 	Assert(t, err != nil, "CKMBasedProvider instantiation succceeded while expected to fail")
+
+	// good CKM but nil KeyMgr
+	srv, err := ckm.NewCKMctrler("localhost:0", "testcerts/testServer.crt", "testcerts/testServer.key", "testcerts/testCA.crt")
+	defer srv.Stop()
+	AssertOk(t, err, "Error creating CKM controller at localhost:0")
+	_, err = NewCKMBasedProvider(srv.GetListenURL(), nil)
+	Assert(t, err != nil, "CKMBasedProvider instantiation succceeded while expected to fail")
+
 }
 
 func TestCKMBasedProviderRPC(t *testing.T) {
@@ -42,8 +58,15 @@ func TestCKMBasedProviderRPC(t *testing.T) {
 	defer srv.Stop()
 	AssertOk(t, err, "Error creating CKM controller at localhost:0")
 
+	// create KeyMgr
+	be, err := keymgr.NewDefaultBackend()
+	AssertOk(t, err, "Error instantiating KeyMgr backend")
+	defer be.Close()
+	km, err := keymgr.NewKeyMgr(be)
+	AssertOk(t, err, "Error instantiating KeyMgr")
+
 	// create TLS provider
-	tlsProvider, err := NewCKMBasedProvider(srv.GetListenURL())
+	tlsProvider, err := NewCKMBasedProvider(srv.GetListenURL(), km)
 	AssertOk(t, err, "TLS provider initialization failed")
 
 	// create server
@@ -113,7 +136,15 @@ func TestRPCBalancing(t *testing.T) {
 	r := resolver.New(&resolver.Config{Servers: []string{resolverServer.GetListenURL()}})
 	b := balancer.New(r)
 
-	tlsProvider, err := NewCKMBasedProvider("ckm", WithBalancer(b))
+	// create KeyMgr
+	be, err := keymgr.NewDefaultBackend()
+	AssertOk(t, err, "Error instantiating KeyMgr backend")
+	defer be.Close()
+	km, err := keymgr.NewKeyMgr(be)
+	AssertOk(t, err, "Error instantiating KeyMgr")
+
+	// create TLS provider
+	tlsProvider, err := NewCKMBasedProvider("ckm", km, WithBalancer(b))
 	AssertOk(t, err, "Error instantiating CKMBasedProvider")
 
 	// getServerCertificate() is the callback that is invoked by the server to get a certificate

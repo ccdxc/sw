@@ -242,6 +242,8 @@ func SelfSign(days int, hostname string, privatekey crypto.PrivateKey) (*x509.Ce
 		publickey = privatekey.(*rsa.PrivateKey).Public()
 	case *ecdsa.PrivateKey:
 		publickey = privatekey.(*ecdsa.PrivateKey).Public()
+	case crypto.Signer:
+		publickey = privatekey.(crypto.Signer).Public()
 	default:
 		return nil, errors.Wrapf(err, "Unknown private key type: %T", keyType)
 	}
@@ -354,6 +356,9 @@ func ValidateKeyCertificatePair(privateKey crypto.PrivateKey, cert *x509.Certifi
 	case *ecdsa.PrivateKey:
 		expectedPubKey := privateKey.(*ecdsa.PrivateKey).PublicKey
 		return reflect.DeepEqual(cert.PublicKey, &expectedPubKey), nil
+	case crypto.Signer:
+		expectedPubKey := privateKey.(crypto.Signer).Public()
+		return reflect.DeepEqual(cert.PublicKey, expectedPubKey), nil
 	default:
 		return false, errors.Errorf("Unknown key type: %T. Only RSA and ECDSA keys are supported", keyType)
 	}
