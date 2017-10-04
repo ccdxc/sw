@@ -68,11 +68,9 @@ header_type p4plus_to_p4_ipsec_header_t {
         table3_valid : 1;
         flags               : 8;
         ip_id_delta         : 16;
-        ip_len              : 16;
-        udp_len             : 16;
         tcp_seq_delta       : 32;
         vlan_tag            : 16;
-        ipsec_pad1 : 152;
+        ipsec_pad1 : 184;
         ipsec_pad2 : 256;
     }
 }
