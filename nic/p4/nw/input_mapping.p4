@@ -300,6 +300,8 @@ table input_properties_mac_vlan {
         control_metadata.uplink       : ternary;
         vlan_tag.valid                : ternary;
         vlan_tag.vid                  : ternary;
+        p4plus_to_p4.valid            : ternary;
+        p4plus_to_p4.vlan_tag         : ternary;
         ethernet.srcAddr              : ternary;
     }
     actions {

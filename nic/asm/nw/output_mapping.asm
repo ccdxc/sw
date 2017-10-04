@@ -41,6 +41,8 @@ set_tm_oport:
   phvwr       p.p4_to_p4plus_classic_nic_vlan_dei, k.vlan_tag_dei
   phvwr       p.p4_to_p4plus_classic_nic_vlan_vid, \
                   k.{vlan_tag_vid_sbit0_ebit3, vlan_tag_vid_sbit4_ebit11}
+  sub         r7, k.control_metadata_packet_len, 4
+  phvwr       p.control_metadata_packet_len, r7
   phvwr.e     p.vlan_tag_valid, FALSE
   phvwr       p.p4_to_p4plus_classic_nic_flags, r1
 

@@ -221,8 +221,9 @@
 #define DROP_TCP_NON_RST_PKT_AFTER_RST 28
 #define DROP_TCP_INVALID_RESPONDER_FIRST_PKT 29
 #define DROP_TCP_UNEXPECTED_SYN        30
+#define DROP_SRC_LIF_MISMATCH          31
 #define DROP_MIN                       DROP_INPUT_MAPPING
-#define DROP_MAX                       DROP_TCP_UNEXPECTED_SYN 
+#define DROP_MAX                       DROP_SRC_LIF_MISMATCH
 
 /*****************************************************************************/
 /* Rewrite flags                                                             */

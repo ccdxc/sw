@@ -56,6 +56,8 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
                    p4_to_p4plus_classic_nic.flags,
                    CLASSIC_NIC_FLAGS_VLAN_VALID);
             remove_header(vlan_tag);
+            subtract(control_metadata.packet_len,
+                     control_metadata.packet_len, 4);
         }
     }
 

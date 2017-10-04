@@ -313,6 +313,9 @@ action f_p4plus_to_p4() {
         modify_field(vlan_tag.vid, p4plus_to_p4.vlan_tag);
         modify_field(vlan_tag.etherType, ethernet.etherType);
         modify_field(ethernet.etherType, ETHERTYPE_VLAN);
+        add_to_field(control_metadata.packet_len, 4);
+        modify_field(capri_p4_intrinsic.packet_len,
+                     control_metadata.packet_len);
     }
     remove_header(p4plus_to_p4);
     remove_header(capri_txdma_intrinsic);

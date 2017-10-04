@@ -182,7 +182,7 @@ header_type scratch_metadata_t {
         burst_exceed_count    : 32;
 
         // ipsg
-        ipsg_src_lif          : 11;
+        src_lif               : 11;
         mac                   : 48;
         vlan_valid            : 1;
         vlan_id               : 12;

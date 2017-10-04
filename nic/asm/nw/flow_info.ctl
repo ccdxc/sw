@@ -15,6 +15,13 @@ d = {
   u.flow_info_d.egress_policer_index = 0x65;
   u.flow_info_d.session_state_index = 0xface;
   u.flow_info_d.rewrite_index = 0x100;
+  u.flow_info_d.expected_src_lif_check_en = 0;
+  u.flow_info_d.expected_src_lif = 0x1ba;
+};
+
+k = {
+  control_metadata_src_lif = 0x1bb;
+  p4plus_to_p4_p4plus_app_id = 0;
 };
 
 r6 = 0x01100110;

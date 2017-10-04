@@ -10,6 +10,14 @@ struct phv_        p;
 %%
 
 flow_info:
+  /* expected src lif check */
+  seq         c1, d.u.flow_info_d.expected_src_lif_check_en, TRUE
+  sne         c2, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CPU
+  sne         c3, k.control_metadata_src_lif, d.u.flow_info_d.expected_src_lif
+  andcf       c1, [c2&c3]
+  phvwr.c1.e  p.control_metadata_drop_reason[DROP_SRC_LIF_MISMATCH], 1
+  phvwr.c1    p.capri_intrinsic_drop, 1
+
   /* egress port/vf */
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   seq         c1, d.u.flow_info_d.multicast_en, 1

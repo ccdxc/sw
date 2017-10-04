@@ -64,7 +64,7 @@ action ipsg_hit(src_lif, mac, vlan_valid, vlan_id) {
     }
 
     // dummy ops to keep compiler happy
-    modify_field(scratch_metadata.ipsg_src_lif, src_lif);
+    modify_field(scratch_metadata.src_lif, src_lif);
     modify_field(scratch_metadata.mac, mac);
     modify_field(scratch_metadata.vlan_valid, vlan_valid);
     modify_field(scratch_metadata.vlan_id, vlan_id);

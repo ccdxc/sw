@@ -107,7 +107,15 @@ action flow_info(dst_lport, multicast_en, qtype,
                  cos_en, cos, dscp_en, dscp, qid_en, log_en, rewrite_flags,
                  flow_conn_track, flow_ttl, flow_role,
                  session_state_index, start_timestamp,
-                 ingress_tm_oqueue, egress_tm_oqueue) {
+                 ingress_tm_oqueue, egress_tm_oqueue,
+                 expected_src_lif_check_en, expected_src_lif) {
+    /* expected src lif check */
+    if ((expected_src_lif_check_en == TRUE) and
+        (p4plus_to_p4.p4plus_app_id != P4PLUS_APPTYPE_CPU) and
+        (expected_src_lif != control_metadata.src_lif)) {
+        modify_field(control_metadata.drop_reason, DROP_SRC_LIF_MISMATCH);
+        drop_packet();
+    }
 
     /* egress port/vf */
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
@@ -179,6 +187,8 @@ action flow_info(dst_lport, multicast_en, qtype,
     modify_field(scratch_metadata.flow_start_timestamp, start_timestamp);
     modify_field(scratch_metadata.qid_en, qid_en);
     modify_field(scratch_metadata.log_en, log_en);
+    modify_field(scratch_metadata.flag, expected_src_lif_check_en);
+    modify_field(scratch_metadata.src_lif, expected_src_lif);
 
     /* promote size of data fields to multiple of bytes */
     modify_field(scratch_metadata.size16, twice_nat_idx);
