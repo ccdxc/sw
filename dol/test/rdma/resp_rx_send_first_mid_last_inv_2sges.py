@@ -42,6 +42,7 @@ def TestCaseVerify(tc):
     tc.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()
+    ring0_mask = (rs.lqp.num_rq_wqes - 1)
     tc.pvtdata.rq_post_qstate = rs.lqp.rq.qstate.data
 
     ############     RQ VALIDATIONS #################
@@ -49,8 +50,8 @@ def TestCaseVerify(tc):
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 3):
         return False
 
-    # verify that c_index is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index0', 1):
+    # verify that proxy_cindex is incremented by 1
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'proxy_cindex', ring0_mask,  1):
         return False
 
     # verify that token_id is incremented by 3

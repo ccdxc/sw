@@ -20,6 +20,9 @@ struct rdma_stage0_table_k k;
 //r7 is pre-loaded with Qstate-ring-not-empty 8-bit flags, one for each ring
 #define RING_NOT_EMPTY r7 
 
+#define DB_ADDR             r2
+#define DB_DATA             r3
+
 %%
     .param      resp_tx_rqcb1_process
     .param      resp_tx_ack_process
@@ -40,6 +43,19 @@ resp_tx_rqcb_process:
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qtype, CAPRI_TXDMA_INTRINSIC_QTYPE)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
 
+check_rq:
+    seq         c1, RQ_C_INDEX, RQ_P_INDEX
+    bcf         [c1], check_rsq
+    nop         //BD Slot
+    
+rq:
+    //TODO: to stop scheduler ringing for ever, artificially move c_index to p_index. 
+    //      proxy_c_index would track the real c_index
+    DOORBELL_WRITE_CINDEX(CAPRI_TXDMA_INTRINSIC_LIF, CAPRI_TXDMA_INTRINSIC_QTYPE, CAPRI_TXDMA_INTRINSIC_QID, RQ_RING_ID, RQ_P_INDEX, DB_ADDR, DB_DATA) 
+    nop.e
+    nop
+
+check_rsq:
     // set DMA cmd ptr
     TXDMA_DMA_CMD_PTR_SET(RESP_TX_DMA_CMD_START_FLIT_ID)
 

@@ -39,7 +39,7 @@ resp_rx_rqcb0_write_back_process:
     // cache disabled
     //TODO: Migrate to Doorbell 
     //TODO: wraparound
-    tblmincri   RQ_C_INDEX, d.log_num_wqes, 1
+    tblmincri   PROXY_RQ_C_INDEX, d.log_num_wqes, 1
     
     b           incr_c_index_exit
     nop

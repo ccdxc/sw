@@ -288,7 +288,7 @@ exit:
 
 checkout:
     // checkout a descriptor
-    add     r1, r0, RQ_C_INDEX
+    add     r1, r0, PROXY_RQ_C_INDEX
     sub     r2, d.log_rq_page_size, d.log_wqe_size
     // page_index = c_index >> (log_rq_page_size - log_wqe_size)
     srlv    r3, r1, r2

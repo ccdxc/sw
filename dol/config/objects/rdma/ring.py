@@ -55,7 +55,11 @@ class RdmaRingObject(ring.RingObject):
         #    self.doorbell.Ring({})  # HACK
 
     def Consume(self, descriptor):
-        descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_cindex(0)))
+        if self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_RECV":
+            descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_proxy_cindex()))
+        else:
+            descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_cindex(0)))
+    
         descriptor.Read()
         self.queue.qstate.Read()
 

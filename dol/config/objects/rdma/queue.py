@@ -31,18 +31,18 @@ class RdmaRQstate(Packet):
         BitField("total", 0, 4),
         ShortField("pid", 0),
 
-        ShortField("p_index0", 0),
-        ShortField("c_index0", 0),
+        LEShortField("p_index0", 0),
+        LEShortField("c_index0", 0),
         LEShortField("p_index1", 0),
         LEShortField("c_index1", 0),
-        ShortField("p_index2", 0),
-        ShortField("c_index2", 0),
-        ShortField("p_index3", 0),
-        ShortField("c_index3", 0),
-        ShortField("p_index4", 0),
-        ShortField("c_index4", 0),
-        ShortField("p_index5", 0),
-        ShortField("c_index5", 0),
+        LEShortField("p_index2", 0),
+        LEShortField("c_index2", 0),
+        LEShortField("p_index3", 0),
+        LEShortField("c_index3", 0),
+        LEShortField("p_index4", 0),
+        LEShortField("c_index4", 0),
+        LEShortField("p_index5", 0),
+        LEShortField("c_index5", 0),
     
         IntField("pt_base_addr", 0),
 
@@ -74,10 +74,9 @@ class RdmaRQstate(Packet):
 
         IntField("pd", 0),
 
+        LEShortField("proxy_cindex", 0),
         ByteField("rsvd3", 0),
         ByteField("rsvd4", 0),
-        ByteField("rsvd5", 0),
-        ByteField("rsvd6", 0),
 
         # RQCB1 
         LongField("va", 0),
@@ -308,6 +307,9 @@ class RdmaQstateObject(object):
     def get_cindex(self, ring):
         assert(ring < 7)
         return getattr(self.data, 'c_index%d' % ring)
+
+    def get_proxy_cindex(self):
+        return getattr(self.data, 'proxy_cindex')
 
     def set_dst_qp(self, value):
         self.Read()

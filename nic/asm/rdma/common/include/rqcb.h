@@ -8,14 +8,16 @@
 #define ACK_NAK_RING_ID 2
 #define RSQ_BT_RING_ID 	3
 
-#define RQ_P_INDEX d.ring0.pindex
-#define RQ_C_INDEX d.ring0.cindex
+#define RQ_P_INDEX d.{ring0.pindex}.hx
+#define RQ_C_INDEX d.{ring0.cindex}.hx
 
 #define RSQ_P_INDEX d.{ring1.pindex}.hx
 #define RSQ_C_INDEX d.{ring1.cindex}.hx
 
 #define ACK_NAK_P_INDEX d.{ring2.pindex}.hx
 #define ACK_NAK_C_INDEX d.{ring2.cindex}.hx
+
+#define PROXY_RQ_C_INDEX   d.{proxy_cindex}.hx
 
 struct rqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
@@ -60,7 +62,7 @@ struct rqcb0_t {
 
     pd: 32; 
 
-    proxy_c_index: 16; // place holder for a copy of c_index to avoid
+    proxy_cindex: 16; // place holder for a copy of c_index to avoid
                        // scheduler ringing RQ all the time.
     rsvd3: 16;
 };
