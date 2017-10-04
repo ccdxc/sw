@@ -7,6 +7,28 @@ class TcpOptions:
         self.data = data
         return
 
+def GetInputIpv4Len(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'IP_INVALID_LEN_ACTION_ALLOW' in profile_name:
+        return 100
+    elif 'IP_INVALID_LEN_ACTION_DROP' in profile_name:
+        return 100
+    elif 'IP_INVALID_LEN_ACTION_EDIT' in profile_name:
+        return 100
+    return None
+
+def GetExpectedIpv4Len(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'IP_INVALID_LEN_ACTION_ALLOW' in profile_name:
+        return 100
+    elif 'IP_INVALID_LEN_ACTION_DROP' in profile_name:
+        return 100
+    elif 'IP_INVALID_LEN_ACTION_EDIT' in profile_name:
+        return 100
+    return None
+
 def GetInputIpv4Flags(testcase, packet):
     iterelem = testcase.module.iterator.Get()
     profile_name = iterelem.profile
@@ -444,6 +466,12 @@ def GetInputPayloadSize(testcase, packet):
         return 0
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
         return 0
+    elif 'IP_INVALID_LEN_ACTION_ALLOW' in profile_name:
+        return 200
+    elif 'IP_INVALID_LEN_ACTION_DROP' in profile_name:
+        return 200
+    elif 'IP_INVALID_LEN_ACTION_EDIT' in profile_name:
+        return 200
     return 150
 
 def GetExpectedPayloadSize(testcase, packet):
@@ -465,6 +493,12 @@ def GetExpectedPayloadSize(testcase, packet):
         return 0
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
         return 0
+    elif 'IP_INVALID_LEN_ACTION_ALLOW' in profile_name:
+        return 200
+    elif 'IP_INVALID_LEN_ACTION_DROP' in profile_name:
+        return 200
+    elif 'IP_INVALID_LEN_ACTION_EDIT' in profile_name:
+        return 92
     return 150
 
 def GetInputTcpAck(testcase, packet):

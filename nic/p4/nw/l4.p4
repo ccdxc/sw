@@ -1088,14 +1088,24 @@ action ip_normalization_checks() {
     // Vlan tagged packet
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
         ((vlan_tag.valid == TRUE) and (control_metadata.packet_len > (ipv4.totalLen + 18)) and 
-        ((ipv4.totalLen + 18) >= MIN_ETHER_FRAME_LEN))) {
-        modify_field(control_metadata.packet_len, (ipv4.totalLen + 18));
+        (((ipv4.totalLen + 18) >= MIN_ETHER_FRAME_LEN) or (control_metadata.packet_len > MIN_ETHER_FRAME_LEN)))) {
+        if ((ipv4.totalLen + 18) > MIN_ETHER_FRAME_LEN) {
+            modify_field(control_metadata.packet_len, (ipv4.totalLen + 18));
+        }
+        if ((ipv4.totalLen + 18) < MIN_ETHER_FRAME_LEN) {
+            modify_field(control_metadata.packet_len, MIN_ETHER_FRAME_LEN);
+        }
     }
-    // Untagged packet
+    // Vlan untagged packet
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
         ((vlan_tag.valid == FALSE) and (control_metadata.packet_len > (ipv4.totalLen + 14)) and 
-        ((ipv4.totalLen + 14) >= MIN_ETHER_FRAME_LEN))) {
-        modify_field(control_metadata.packet_len, (ipv4.totalLen + 14));
+        (((ipv4.totalLen + 14) >= MIN_ETHER_FRAME_LEN) or (control_metadata.packet_len > MIN_ETHER_FRAME_LEN)))) {
+        if ((ipv4.totalLen + 14) > MIN_ETHER_FRAME_LEN) {
+            modify_field(control_metadata.packet_len, (ipv4.totalLen + 14));
+        }
+        if ((ipv4.totalLen + 14) < MIN_ETHER_FRAME_LEN) {
+            modify_field(control_metadata.packet_len, MIN_ETHER_FRAME_LEN);
+        }
     }
     // IP Normalize TTL: If the configured value is non-zero then every
     // IPv4 packet hitting this L4 Profile will be updated with a ttl which is
@@ -1283,9 +1293,16 @@ action tcp_session_normalization() {
     }
     if ((l4_metadata.tcp_data_len > l4_metadata.tcp_mss) and
         (l4_metadata.tcp_data_len_gt_mss_action == NORMALIZATION_ACTION_EDIT)) {
-        // Update the tcp_data_len and reduce the frame size.
+        // Update the tcp_data_len and reduce the frame size
         modify_field(l4_metadata.tcp_data_len, l4_metadata.tcp_mss);
-        // Handle in P4+
+        subtract_from_field(control_metadata.packet_len,
+                           (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
+        subtract_from_field(ipv4.totalLen,
+                           (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
+        if (tunnel_metadata.tunnel_terminate == TRUE) {
+            subtract_from_field(inner_ipv4.totalLen,
+                               (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
+        }
     }
 
     //tcp segment length more than WS
@@ -1299,6 +1316,14 @@ action tcp_session_normalization() {
         (l4_metadata.tcp_data_len_gt_win_size_action == NORMALIZATION_ACTION_EDIT)) {
         // Update the tcp_data_len and reduce the frame size.
         modify_field(l4_metadata.tcp_data_len, l4_metadata.tcp_rcvr_win_sz);
+        subtract_from_field(control_metadata.packet_len,
+                           (l4_metadata.tcp_data_len - l4_metadata.tcp_rcvr_win_sz));
+        subtract_from_field(ipv4.totalLen,
+                           (l4_metadata.tcp_data_len - l4_metadata.tcp_rcvr_win_sz));
+        if (tunnel_metadata.tunnel_terminate == TRUE) {
+            subtract_from_field(inner_ipv4.totalLen,
+                               (l4_metadata.tcp_data_len - l4_metadata.tcp_rcvr_win_sz));
+        }
     }
 
     //timestamp option present, but not negotiated and this is not a SYN packet
