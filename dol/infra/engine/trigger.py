@@ -442,6 +442,15 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                 descriptor.descriptor.ring.Post(descriptor.descriptor.object)
                 ring_set.add(descriptor.descriptor.ring)
 
+            if (hasattr(self._tc_step.trigger, "doorbell") and
+                self._tc_step.trigger.doorbell and
+                    self._tc_step.trigger.doorbell.object):
+                for ring in ring_set:
+                    self._logger.info("Posting doorbell %s" %
+                                      self._tc_step.trigger.doorbell.object)
+                    self._connector.doorbell(
+                        self._tc_step.trigger.doorbell, ring)
+
             for packet in self._tc_step.trigger.packets:
                 assert packet.packet
                 sdata = bytes(packet.packet.spkt)
@@ -452,15 +461,6 @@ class TriggerTestCaseStep(objects.FrameworkObject):
                         self._logger.info(
                             "Sending Input Packet (id=%s) of len:%d, Port = %d" % (packet.packet.GID(), len(sdata), port))
                         self._connector.send(sdata, port)
-
-            if (hasattr(self._tc_step.trigger, "doorbell") and
-                self._tc_step.trigger.doorbell and
-                    self._tc_step.trigger.doorbell.object):
-                for ring in ring_set:
-                    self._logger.info("Posting doorbell %s" %
-                                      self._tc_step.trigger.doorbell.object)
-                    self._connector.doorbell(
-                        self._tc_step.trigger.doorbell, ring)
 
             # if self._exp_rcv_descr:
             #    self._connector.consume_rings(self._exp_rcv_descr.keys())

@@ -72,8 +72,8 @@ class TriggerEngineObject:
     def __trigger_step(self, tc, step):
         self.__trigger_delay(step, tc)
         self.__trigger_descriptors(step, tc)
-        self.__trigger_packets(step, tc)
         self.__ring_doorbell(step, tc)
+        self.__trigger_packets(step, tc)
         tc.TriggerCallback()
         return
         
