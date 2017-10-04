@@ -43,6 +43,13 @@ steps:
             flags   : ack
 
     - step:
+        id          : RFLOW_SYN_ONLY
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn
+            ack     : callback://firewall/alu/Mul/val=0
+
+    - step:
         id          : IFLOW_DATA
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 100

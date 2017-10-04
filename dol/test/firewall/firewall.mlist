@@ -21,6 +21,18 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
 
     - module:
+        name    : CONN_SETUP_SIMUL_OPEN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ONLY
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            - step  : ref://trackerstore/steps/id=RFLOW_ACK
+
+    - module:
         name    : FULL
         tracker : True
         args    :
@@ -72,8 +84,14 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
-            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            # First sending rflow data so that the iflow_data
+            # when sent will ack it and then we can send a
+            # retransmit from responder side.
+            # If we reverse this order then since rflow data
+            # is still not acked yet it is not considered as
+            # a retransmit
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
             # RFLOW Retransmit
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_RETRANSMIT
             # Send some more data in both directions
@@ -109,8 +127,14 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
-            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            # First sending rflow data so that the iflow_data
+            # when sent will ack it and then we can send a
+            # partial left overlap packet from responder side.
+            # If we reverse this order then since rflow data
+            # is still not acked yet it is not considered as
+            # a retransmit
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
             # RFLOW Overlap Left
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_OVERLAP_LEFT
 
