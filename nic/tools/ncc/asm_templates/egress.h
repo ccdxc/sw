@@ -183,26 +183,57 @@ struct ${table}_${actionname}_d {
 //::                        endindex = len(pddict['tables'][table]['asm_ki_fields'])
 //::                        keyencountered = False
 //::                        for fields in pddict['tables'][table]['asm_ki_fields']:
-//::                            (multip4fldname, p4fldname, p4fldwidth, phvbit, \
-//::                            flit, flitoffset, typestr, hdrname) = fields
-//::                            if not keyencountered:
-//::                                if typestr != 'K':
-//::                                    startindex += 1
-//::                                else:
-//::                                    keyencountered = True
+//::                            if fields[0] == 'unionized':
+//::                                ustr, uflds = fields
+//::                                for fields in uflds:
+//::                                     (multip4fldname, p4fldname, p4fldwidth, phvbit, \
+//::                                     flit, flitoffset, typestr, hdrname) = fields
+//::                                     if not keyencountered:
+//::                                         if typestr != 'K':
+//::                                             startindex += 1
+//::                                         else:
+//::                                             keyencountered = True
+//::                                         #endif
+//::                                     #endif
+//::                                #endfor
+//::                            else:
+//::                                (multip4fldname, p4fldname, p4fldwidth, phvbit, \
+//::                                flit, flitoffset, typestr, hdrname) = fields
+//::                                if not keyencountered:
+//::                                    if typestr != 'K':
+//::                                        startindex += 1
+//::                                    else:
+//::                                        keyencountered = True
+//::                                    #endif
 //::                                #endif
 //::                            #endif
 //::                        #endfor
 //::                        keyencountered = False
 //::                        for fields in reversed(pddict['tables'][table]['asm_ki_fields']):
-//::                            (multip4fldname, p4fldname, p4fldwidth, phvbit, \
-//::                            flit, flitoffset, typestr, hdrname) = fields
-//::                            if not keyencountered:
-//::                                if typestr != 'K':
-//::                                    endindex -= 1
-//::                                else:
-//::                                    keyencountered = True
-//::                                    break
+//::                            if fields[0] == 'unionized':
+//::                                ustr, uflds = fields
+//::                                for fields in uflds:
+//::                                    (multip4fldname, p4fldname, p4fldwidth, phvbit, \
+//::                                    flit, flitoffset, typestr, hdrname) = fields
+//::                                    if not keyencountered:
+//::                                        if typestr != 'K':
+//::                                            endindex -= 1
+//::                                        else:
+//::                                            keyencountered = True
+//::                                            break
+//::                                        #endif
+//::                                    #endif
+//::                                #endfor
+//::                            else:
+//::                                (multip4fldname, p4fldname, p4fldwidth, phvbit, \
+//::                                flit, flitoffset, typestr, hdrname) = fields
+//::                                if not keyencountered:
+//::                                    if typestr != 'K':
+//::                                        endindex -= 1
+//::                                    else:
+//::                                        keyencountered = True
+//::                                        break
+//::                                    #endif
 //::                                #endif
 //::                            #endif
 //::                        #endfor
