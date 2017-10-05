@@ -1,0 +1,24 @@
+meta:
+    id      : ESP_PAYLOAD
+
+size: 138
+
+data: AA AA AA AA AA AA AA AA
+      23 C0 FF C2 37 9E BF 29
+      09 60 48 11 91 CC 16 C3
+      0C 94 D6 F0 CF 3B EE AA 
+      D2 DE 97 86 D4 3A AD 8E
+      F8 F1 28 A2 C1 4B 73 A2 
+      D9 28 B0 09 69 24 62 2E
+      06 18 71 2C 8E BC F2 DA 
+      41 76 8B DB CE 75 23 41
+      4A 44 84 60 69 39 C8 7D 
+      82 49 70 5A 4D C5 BE 12
+      FA 2C A0 A0 D1 88 CF 66 
+      5A 3C FF FD 00 D9 F1 96
+      88 12 DE 6D 80 32 61 0F 
+      3F 19 0B 1C 4C 56 BF 89
+      08 06 00 00 00 00 00 00 
+      00 00 D5 DF 16 A3 DD 6F
+      9D 3B
+

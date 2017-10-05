@@ -18,6 +18,7 @@ gl_ignore_fields = {
     'UDP'   : [ 'chksum' ],
     'ICMP'  : [ 'chksum' ],
     'CRC'   : [ 'crc' ],
+    'ESP'   : [ 'data'],
 }
 
 class CrPacket:

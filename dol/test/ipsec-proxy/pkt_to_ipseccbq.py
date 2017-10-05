@@ -81,7 +81,7 @@ def TestCaseVerify(tc):
     # 4. Verify PI for RNMDR got incremented by 1
     if (rnmdr_cur.pi != rnmdr.pi+2):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
-        #return False
+        return False
 
     # 5. Verify descriptor
     if rnmdr.ringentries[rnmdr.pi].handle != ipseccbqq_cur.ringentries[ipseccb.pi].handle:

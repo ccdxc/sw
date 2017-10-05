@@ -7,12 +7,12 @@ headers:
         template: ref://store/headers/id=ETHERNET
         fields:
             type: ethertype/0x800
-    
+ 
     - header:
         id      : ipv4
         template: ref://store/headers/id=IPV4
         fields:
-            proto: ipproto/6
+            proto: ipproto/50
     
     - header:
         id      : esp

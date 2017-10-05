@@ -12,7 +12,7 @@ headers:
         id      : ipv6
         template: ref://store/headers/id=IPV6
         fields:
-            nh: ipproto/6
+            nh: ipproto/50
     
     - header:
         id      : esp

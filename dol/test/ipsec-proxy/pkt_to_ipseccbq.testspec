@@ -5,12 +5,12 @@ selectors:
     # templates.
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        segment     : filter://native=False
         endpoint    : filter://remote=True
         qpair       : filter://any # Local QPair
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        segment     : filter://native=False
         endpoint    : filter://remote=True
         qpair       : filter://any 
     flow        : filter://proto=TCP,label=IPSEC-PROXY,fwtype=L2,direction=IFLOW
@@ -30,6 +30,7 @@ packets:
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id
+                prio    : 0
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -45,28 +46,51 @@ packets:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
     - packet:
         id          : PKT2
-        template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        encaps      : callback://networking/packets/GetPacketEncaps
+        template    : ref://factory/packets/id=ETH_IPV4_ESP
+        payloadsize : ref://factory/payloads/id=ESP_PAYLOAD/size
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
+                src     : callback://ipsec/ipsec/GetSMac 
+                dst     : callback://ipsec/ipsec/GetDMac 
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : callback://ipsec/ipsec/GetEncapVlan
+                prio    : 0
             ipv4:
-                src     : callback://ipseccb/ipseccb/GetIPSecTunnelSrcIp
-                dst     : callback://ipseccb/ipseccb/GetIPSecTunnelDstIp
-                ttl     : 64
-                proto   : esp
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : 64
+                src     : callback://ipsec/ipsec/GetSIp
+                dst     : callback://ipsec/ipsec/GetDIp 
+                ttl     : 255
+                len     : 166
+                id      : 0
+                tos     : 0
+                chksum  : 0
             esp:
-                spi     : callback://ipseccb/ipseccb/GetESPPktSPI
+                spi     : callback://ipsec/ipsec/GetSpi
+                iv      : callback://ipsec/ipsec/GetIv
             payload:
-                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+                data    : ref://factory/payloads/id=ESP_PAYLOAD/data 
+    - packet:
+        id          : PKT3
+        template    : ref://factory/packets/id=ETH_IPV4_ESP
+        payloadsize : ref://factory/payloads/id=ESP_PAYLOAD/size
+        encaps      : None
+        headers     :
+            eth:
+                src     : callback://ipsec/ipsec/GetSMac 
+                dst     : callback://ipsec/ipsec/GetDMac 
+            ipv4:
+                src     : callback://ipsec/ipsec/GetSIp
+                dst     : callback://ipsec/ipsec/GetDIp 
+                ttl     : 255
+                len     : 166
+                id      : 0
+                tos     : 0
+                chksum  : 0
+            esp:
+                spi     : callback://ipsec/ipsec/GetSpi
+                iv      : callback://ipsec/ipsec/GetIv
+            payload:
+                data    : ref://factory/payloads/id=ESP_PAYLOAD/data 
 
 trigger:
     packets:
@@ -75,11 +99,12 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
+    delay : 2
     packets:
         - packet:
-            object  : ref://testcase/packets/id=PKT2
-            port    : ref://testcase/config/src/endpoint/intf/ports
+            object  : ref://testcase/packets/id=PKT3
+            port    : 128 
         - packet:
             object  : ref://testcase/packets/id=PKT2
-            port    : 128 
+            port    : 2 
 
