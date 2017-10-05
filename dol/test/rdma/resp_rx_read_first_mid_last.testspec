@@ -1,0 +1,196 @@
+# Test Spec
+selectors:
+#   src:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=True
+#       interface   : filter://any
+#   dst:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=False
+#       interface   : filter://any
+#   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :   
+        base        : filter://any
+        lqp         : filter://any
+        rqp         : filter://any
+#    maxflows    : 1 
+    maxrdmasessions     : 1 
+
+packets:
+   - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : 2112
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+   - packet:
+        id          : IN_PKT    # First packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_RETH
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                ttl     : 64
+            #ipv6:
+            #    src     : ref://testcase/config/flow/sip
+            #    dst     : ref://testcase/config/flow/dip
+            #    hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 12
+                destqp  : ref://testcase/config/rdmasession/lqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+            reth:
+                va      : callback://rdma/rdma/GetVAfromSLAB/slab_id=SLAB0000,offset=1024
+                dma_len : 2112  # 2 pmtu plus 64 bytes
+                r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+   - packet:
+        id          : EXP_PKT1    # Output packet, Reverse all fields from the IN_PKT
+        payloadsize : 1024
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_AETH
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            #ipv6:
+            #    src     : ref://testcase/config/flow/sip
+            #    dst     : ref://testcase/config/flow/dip
+            #    hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 13 # RDMA READ Response First
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0  #Resp should carry PSN from Req
+            aeth:
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+   - packet:
+        id          : EXP_PKT2    # Output packet, Reverse all fields from the IN_PKT
+        payloadsize : 1024
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            #ipv6:
+            #    src     : ref://testcase/config/flow/sip
+            #    dst     : ref://testcase/config/flow/dip
+            #    hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 14 # RDMA READ Response Middle
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=1  #Resp should carry PSN from Req + 1
+            # no aeth for middle packet
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+   - packet:
+        id          : EXP_PKT3    # Output packet, Reverse all fields from the IN_PKT
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_AETH
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            #ipv6:
+            #    src     : ref://testcase/config/flow/sip
+            #    dst     : ref://testcase/config/flow/dip
+            #    hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 15 # RDMA READ Response Last
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=2  #Resp should carry PSN from Req + 2
+            aeth:
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+buffers:
+    - buffer:
+        id      : BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           offset  : 1024
+           segments:
+               - size    : 2112
+                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT1
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT2
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT3
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports

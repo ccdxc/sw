@@ -44,6 +44,7 @@ add_headers:
     tblwr       d.read_rsp_in_progress, k.args.read_rsp_in_progress
     seq         c1, k.args.read_rsp_in_progress, 1
     cmov        CURR_READ_RSP_PSN, c1, k.args.curr_read_rsp_psn, 0
+    add.c1      CURR_READ_RSP_PSN, CURR_READ_RSP_PSN, 1
 
     // TODO: ordering rules
     tblwr       d.curr_read_rsp_psn, CURR_READ_RSP_PSN

@@ -1,3 +1,5 @@
+import math
+
 def VerifyFieldModify(tc, pre_state, post_state, field_name, incr):
     pre_val = getattr(pre_state, field_name)
     post_val = getattr(post_state, field_name)
@@ -29,8 +31,11 @@ def ValidateRespRxCQChecks(tc):
     rs = tc.config.rdmasession
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
+    log_num_cq_wqes = getattr(tc.pvtdata.rq_cq_post_qstate, 'log_num_wqes')
+    ring0_mask = (2 ** log_num_cq_wqes) - 1
+
     # verify that p_index is incremented by 1, as cqwqe is posted
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'p_index0', 1):
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'p_index0', ring0_mask, 1):
         return False
 
     # verify that color bit in CQWQE and CQCB are same
@@ -45,8 +50,15 @@ def ValidateNoCQChanges(tc):
     rs = tc.config.rdmasession
     rs.lqp.rq_cq.qstate.Read()
     tc.pvtdata.rq_cq_post_qstate = rs.lqp.rq_cq.qstate.data
+    log_num_cq_wqes = getattr(tc.pvtdata.rq_cq_post_qstate, 'log_num_wqes')
+    ring0_mask = (2 ** log_num_cq_wqes) - 1
+
     # verify that no change to p_index
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'p_index0', 0):
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'p_index0', ring0_mask, 0):
+        return False
+
+    # verify that no change to c_index
+    if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_cq_pre_qstate, tc.pvtdata.rq_cq_post_qstate, 'c_index0', ring0_mask, 0):
         return False
 
     return True

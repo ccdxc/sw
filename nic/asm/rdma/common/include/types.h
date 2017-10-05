@@ -114,7 +114,7 @@ struct rdma_atomiceth_t {
     add             _tmp, r0, d.log_num_wqes; \
     sllv            _tmp, 1, _tmp; \
     add             _credits, RQ_P_INDEX, _tmp; \
-    sub             _credits, _credits, RQ_C_INDEX; \
+    sub             _credits, _credits, PROXY_RQ_C_INDEX; \
     mincr           _credits, d.log_num_wqes, 0; \
     seq             _tmp_c, _credits, r0; \
     clz.!_tmp_c     _credits, _credits; \

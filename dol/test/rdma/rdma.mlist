@@ -249,6 +249,22 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RESP_RX_READ_FIRST_LAST
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_first_last
+        spec    : resp_rx_read_first_last.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RESP_RX_READ_FIRST_MID_LAST
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_first_mid_last
+        spec    : resp_rx_read_first_mid_last.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_WRITE_ONLY
         enable  : True
         package : test.rdma
