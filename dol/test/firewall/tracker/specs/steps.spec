@@ -149,3 +149,70 @@ steps:
             seq     : callback://firewall/alu/Add/val=10000
             flags   : ack
 
+    - step:
+        id          : IFLOW_DATA_WIN_ZERO
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 1000
+        fields      :
+            win     : 0
+            flags   : ack
+
+    - step:
+        id          : RFLOW_DATA_WIN_ZERO
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 1000
+        fields      :
+            win     : 0
+            flags   : ack
+
+    - step:
+        id          : IFLOW_ZERO_DATA_RCV_NEXT_MINUS_1
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
+        fields      :
+            flags   : ack
+            seq     : callback://firewall/alu/Sub/val=1
+
+    - step:
+        id          : RFLOW_ZERO_DATA_RCV_NEXT_MINUS_1
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 0
+        fields      :
+            flags   : ack
+            seq     : callback://firewall/alu/Sub/val=1
+
+    - step:
+        id          : IFLOW_ZERO_DATA_RCV_NEXT_MINUS_2
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
+        permit      : False
+        fields      :
+            flags   : ack
+            seq     : callback://firewall/alu/Sub/val=2
+
+    - step:
+        id          : RFLOW_ZERO_DATA_RCV_NEXT_MINUS_2
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 0
+        permit      : False
+        fields      :
+            flags   : ack
+            seq     : callback://firewall/alu/Sub/val=2
+
+    - step:
+        id          : IFLOW_ZERO_DATA_RCV_NEXT_PLUS_1
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
+        permit      : False
+        fields      :
+            flags   : ack
+            seq     : callback://firewall/alu/Add/val=1
+
+    - step:
+        id          : RFLOW_ZERO_DATA_RCV_NEXT_PLUS_1
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 0
+        permit      : False
+        fields      :
+            flags   : ack
+            seq     : callback://firewall/alu/Add/val=1
