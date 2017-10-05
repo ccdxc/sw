@@ -327,3 +327,11 @@ modules:
         spec    : resp_rx_write_first_mid_last_imm.testspec
         ignore  : False
  
+    - module:
+        name    : RDMA_RX_WRITE_FML_READ_FML
+        enable  : True
+        package : test.rdma
+        module  : resp_write_fml_read_fml
+        spec    : resp_write_fml_read_fml.testspec
+        ignore  : False
+ 
