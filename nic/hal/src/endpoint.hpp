@@ -30,6 +30,8 @@ using endpoint::EndpointUpdateRequestMsg;
 using endpoint::EndpointUpdateResponseMsg;
 using endpoint::EndpointUpdateRequest;
 using endpoint::EndpointKeyHandle;
+using endpoint::EndpointDeleteRequest;
+using endpoint::EndpointDeleteResponseMsg;
 
 using hal::utils::ht_ctxt_t;
 
@@ -74,7 +76,8 @@ typedef struct ep_s {
     hal_handle_t         l2seg_handle;         // L2 segment this endpoint belongs to
     hal_handle_t         if_handle;            // interface endpoint is attached to
     hal_handle_t         pinned_if_handle;     // interface endpoint is attached to
-    tenant_id_t          tenant_id;            // VRF this endpoint belongs to
+    hal_handle_t         tenant_handle;        // tenant handle 
+    // tenant_id_t          tenant_id;            // VRF this endpoint belongs to
     vlan_id_t            useg_vlan;            // micro-seg vlan allocated for this endpoint
     uint64_t             ep_flags;             // endpoint flags
     dllist_ctxt_t        ip_list_head;         // list of IP addresses for this endpoint
@@ -86,25 +89,169 @@ typedef struct ep_s {
     pd::pd_ep_t          *pd;                  // all PD specific state
 
     // meta data maintained for endpoint
-    ht_ctxt_t            l2key_ht_ctxt;        // hal handle based hash table ctxt
-    ht_ctxt_t            hal_handle_ht_ctxt;   // hal handle based hash table ctxt
-    dllist_ctxt_t        tenant_ep_lentry;     // links in L2 segment endpoint list
-    dllist_ctxt_t        l2seg_ep_lentry;      // links in L2 segment endpoint list
-    dllist_ctxt_t        if_ep_lentry;         // links in inteface endpoint list
+    // ht_ctxt_t            l2key_ht_ctxt;        // hal handle based hash table ctxt
+    // ht_ctxt_t            hal_handle_ht_ctxt;   // hal handle based hash table ctxt
+    // llist_ctxt_t        tenant_ep_lentry;     // links in L2 segment endpoint list
+    // dllist_ctxt_t        l2seg_ep_lentry;      // links in L2 segment endpoint list
+    // dllist_ctxt_t        if_ep_lentry;         // links in inteface endpoint list
     dllist_ctxt_t        session_list_head;    // session from/to this EP
 } __PACK__ ep_t;
 
 // Endpoint's intermediate L3 entry object that points to actual endpoint info
 typedef struct ep_l3_entry_s {
     ep_l3_key_t             l3_key;           // EP's L3 key
-    ep_t                    *ep;              // pointer to the EP record
+    // ep_t                    *ep;              // pointer to the EP record
+    hal_handle_t            ep_hal_handle;       // HAL allocated handle
     ep_ip_entry_t           *ep_ip;           // pointer to IP entry in the EP
 
-    ht_ctxt_t               ep_l3_ht_ctxt;    // EP's l3 key based hash table ctxt
+    ht_ctxt_t               ht_ctxt;    // EP's l3 key based hash table ctxt
 } __PACK__ ep_l3_entry_t;
 
 // max. number of endpoints supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_ENDPOINTS                            (1 << 20)
+
+// CB data structures
+typedef struct ep_create_app_ctxt_s {
+    tenant_t        *tenant;
+    l2seg_t         *l2seg;
+    if_t            *hal_if;
+} __PACK__ ep_create_app_ctxt_t;
+
+typedef struct ep_update_app_ctxt_s {
+    bool            iplist_change;
+
+    dllist_ctxt_t   *add_iplist;
+    dllist_ctxt_t   *del_iplist;
+} __PACK__ ep_update_app_ctxt_t;
+
+// allocate a ep instance
+static inline ep_t *
+ep_alloc (void)
+{
+    ep_t    *ep;
+
+    ep = (ep_t *)g_hal_state->ep_slab()->alloc();
+    if (ep == NULL) {
+        return NULL;
+    }
+    return ep;
+}
+
+// initialize a ep instance
+static inline ep_t *
+ep_init (ep_t *ep)
+{
+    if (!ep) {
+        return NULL;
+    }
+    memset(ep, 0, sizeof(ep_t));
+    HAL_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_PRIVATE);
+    
+    utils::dllist_reset(&ep->ip_list_head);
+    utils::dllist_reset(&ep->session_list_head);
+
+    return ep;
+}
+
+// allocate and initialize a ep instance
+static inline ep_t *
+ep_alloc_init (void)
+{
+    return ep_init(ep_alloc());
+}
+
+static inline hal_ret_t
+ep_free (ep_t *ep)
+{
+    HAL_SPINLOCK_DESTROY(&ep->slock);
+
+    // TODO: may have to free list of ip entries
+    g_hal_state->ep_slab()->free(ep);
+    return HAL_RET_OK;
+}
+
+// find EP from l2 key
+static inline ep_t *
+find_ep_by_l2_key (l2seg_id_t l2seg_id, const mac_addr_t mac_addr)
+{
+    hal_handle_id_ht_entry_t    *entry;
+    ep_l2_key_t                 l2_key = { 0 };
+    ep_t                        *ep;
+
+    l2_key.l2_segid = l2seg_id;
+    memcpy(&l2_key.mac_addr, mac_addr, ETH_ADDR_LEN);
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+        ep_l2_ht()->lookup(&l2_key);
+    if (entry) {
+        // check for object type
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
+                   HAL_OBJ_ID_ENDPOINT);
+        ep = (ep_t *)hal_handle_get_obj(entry->handle_id);
+        return ep;
+    }
+    return NULL;
+}
+
+// find EP from hal handle
+static inline ep_t *
+find_ep_by_handle (hal_handle_t handle)
+{
+    // check for object type
+    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
+               HAL_OBJ_ID_ENDPOINT);
+    return (ep_t *)hal_handle_get_obj(handle);
+}
+
+// find EP from l3 key
+static inline ep_t *
+find_ep_by_l3_key (ep_l3_key_t *ep_l3_key)
+{
+    ep_l3_entry_t    *ep_l3_entry;
+
+    HAL_ASSERT(ep_l3_key != NULL);
+    ep_l3_entry =
+        (ep_l3_entry_t *)g_hal_state->ep_l3_entry_ht()->lookup(ep_l3_key);
+    if (ep_l3_entry == NULL) {
+        return NULL;
+    }
+    return find_ep_by_handle(ep_l3_entry->ep_hal_handle);
+}
+
+// find EP from v4 key
+static inline ep_t *
+find_ep_by_v4_key (tenant_id_t tid, uint32_t v4_addr)
+{
+    ep_l3_key_t    l3_key = { 0 };
+
+    l3_key.tenant_id = tid;
+    l3_key.ip_addr.af = IP_AF_IPV4;
+    l3_key.ip_addr.addr.v4_addr = v4_addr;
+    return find_ep_by_l3_key(&l3_key);
+}
+
+// find EP from v6 key
+static inline ep_t *
+find_ep_by_v6_key (tenant_id_t tid, const ip_addr_t *ip_addr)
+{
+    ep_l3_key_t    l3_key = { 0 };
+
+    l3_key.tenant_id = tid;
+    memcpy(&l3_key.ip_addr, ip_addr, sizeof(ip_addr_t));
+    return find_ep_by_l3_key(&l3_key);
+}
+
+
+
+
+
+
+
+
+
+
+#if 0
+
 
 static inline ep_t *
 find_ep_by_handle (hal_handle_t handle)
@@ -158,8 +305,7 @@ find_ep_by_v6_key (tenant_id_t tid, const ip_addr_t *ip_addr)
     memcpy(&l3_key.ip_addr, ip_addr, sizeof(ip_addr_t));
     return find_ep_by_l3_key(&l3_key);
 }
-
-const char *ep_l2_key_to_str(ep_t *ep);
+#endif
 
 extern void *ep_get_l2_key_func(void *entry);
 extern uint32_t ep_compute_l2_hash_func(void *key, uint32_t ht_size);
@@ -169,21 +315,31 @@ extern void *ep_get_l3_key_func(void *entry);
 extern uint32_t ep_compute_l3_hash_func(void *key, uint32_t ht_size);
 extern bool ep_compare_l3_key_func(void *key1, void *key2);
 
-extern void *ep_get_handle_key_func(void *entry);
-extern uint32_t ep_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool ep_compare_handle_key_func(void *key1, void *key2);
-
-hal_ret_t endpoint_create(endpoint::EndpointSpec& spec,
-                          endpoint::EndpointResponse *rsp);
-
-hal_ret_t endpoint_update(endpoint::EndpointUpdateRequest& spec,
-                          endpoint::EndpointResponse *rsp);
-
-hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
-                       endpoint::EndpointGetResponseMsg *rsp);
+//extern void *ep_get_handle_key_func(void *entry);
+//extern uint32_t ep_compute_handle_hash_func(void *key, uint32_t ht_size);
+//extern bool ep_compare_handle_key_func(void *key1, void *key2);
 mac_addr_t *ep_get_mac_addr(ep_t *pi_ep);
 mac_addr_t *ep_get_rmac(ep_t *pi_ep, l2seg_t *l2seg);
+hal_ret_t endpoint_update_pi_with_iplist(ep_t *ep, dllist_ctxt_t *add_iplist,
+                                         dllist_ctxt_t *del_iplist);  
+
+// Debug APIs
 void ep_print_ips(ep_t *ep);
+const char *ep_l2_key_to_str(ep_t *ep);
+
+
+
+// SVC CRUD APIs
+hal_ret_t endpoint_create(EndpointSpec& spec, EndpointResponse *rsp);
+hal_ret_t endpoint_update(EndpointUpdateRequest& spec, EndpointResponse *rsp);
+hal_ret_t endpoint_delete(EndpointDeleteRequest& spec, 
+                          EndpointDeleteResponseMsg *rsp);
+hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
+                       endpoint::EndpointGetResponseMsg *rsp);
+
+
+
+
 }    // namespace hal
 
 #endif    // __ENDPOINT_HPP__

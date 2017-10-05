@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nic/include/hal_state.hpp"
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -114,6 +115,7 @@ protected:
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
     hal_initialize();
+    hal_test_utils_slab_disable_delete();
   }
   // Will be called at the end of all test cases in this class
   static void TearDownTestCase() {
@@ -543,7 +545,7 @@ TEST_F(session_test, test3)
     NetworkSpec                 nw_spec, nw_spec1;
     NetworkResponse             nw_rsp, nw_rsp1;
     ::std::string ipv6_ip1 = "00010001000100010001000100010001"; 
-    ::std::string ipv6_ip2 = "00010001000100010001000100010002"; 
+    ::std::string ipv6_ip2 = "10010001000100010001000100010002"; 
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(3);
@@ -1753,7 +1755,7 @@ TEST_F(session_test, test10)
     NetworkSpec                 nw_spec, nw_spec1;
     NetworkResponse             nw_rsp, nw_rsp1;
     ::std::string ipv6_ip1 = "00010001000100010001000100010001"; 
-    ::std::string ipv6_ip2 = "00010001000100010001000100010002"; 
+    ::std::string ipv6_ip2 = "00020001000100010001000100010002"; 
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(10);

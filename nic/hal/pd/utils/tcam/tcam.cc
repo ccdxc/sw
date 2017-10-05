@@ -381,7 +381,7 @@ Tcam::program_table_(TcamEntry *te)
     HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
     // Entry trace
-    entry_trace_(te);
+    // entry_trace_(te);
 
     // P4-API: write
     pd_err = p4pd_entry_write(table_id_, te->get_index(), (uint8_t *)hwkey, 

@@ -40,7 +40,7 @@ l2seg_id_compute_hash_func (void *key, uint32_t ht_size)
 }
 
 // ----------------------------------------------------------------------------
-// hash table tenant_id => entry - compare function
+// hash table seg_id => entry - compare function
 // ----------------------------------------------------------------------------
 bool
 l2seg_id_compare_key_func (void *key1, void *key2)
@@ -63,7 +63,7 @@ l2seg_add_to_db (l2seg_t *l2seg, hal_handle_t handle)
 
     HAL_TRACE_DEBUG("pi-l2seg:{}:adding to l2seg id hash table", 
                     __FUNCTION__);
-    // allocate an entry to establish mapping from tenant id to its handle
+    // allocate an entry to establish mapping from seg id to its handle
     entry =
         (hal_handle_id_ht_entry_t *)g_hal_state->
         hal_handle_id_ht_entry_slab()->alloc();
@@ -71,7 +71,7 @@ l2seg_add_to_db (l2seg_t *l2seg, hal_handle_t handle)
         return HAL_RET_OOM;
     }
 
-    // add mapping from tenant id to its handle
+    // add mapping from seg id to its handle
     entry->handle_id = handle;
     ret = g_hal_state->l2seg_id_ht()->insert_with_key(&l2seg->seg_id,
                                                        entry, &entry->ht_ctxt);

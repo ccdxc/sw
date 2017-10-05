@@ -32,11 +32,9 @@ pd_ep_create(pd_ep_args_t *args)
 
     mac = ep_get_mac_addr(args->ep);
 
-    HAL_TRACE_DEBUG("PD-EP::{}: Creating pd state for EP: {}:{}", 
-                    __FUNCTION__, ep_get_l2segid(args->ep), 
-                    ether_ntoa((struct ether_addr*)*mac));
-
-
+    HAL_TRACE_DEBUG("pd-ep::{}: creating pd state for ep: {}", 
+                    __FUNCTION__, ep_l2_key_to_str(args->ep));
+                    
     // Create ep PD
     pd_ep = ep_pd_alloc_init();
     if (pd_ep == NULL) {
@@ -45,15 +43,13 @@ pd_ep_create(pd_ep_args_t *args)
     }
 
     // Link PI & PD
-    link_pi_pd(pd_ep, args->ep);
+    ep_link_pi_pd(pd_ep, args->ep);
 
     // Create EP L3 entry PDs
     ret = ep_pd_alloc_ip_entries(args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-EP::{}: Unable to alloc. resources for IP entries "
-                      "EP: {}:{}", 
-                      __FUNCTION__, ep_get_l2segid(args->ep), 
-                ether_ntoa((struct ether_addr*)*mac));
+        HAL_TRACE_ERR("pd-ep::{}: unable to alloc. ip entries: ep:{}",
+                      __FUNCTION__, ep_l2_key_to_str(args->ep));
         goto end;
     }
 
@@ -72,8 +68,9 @@ pd_ep_create(pd_ep_args_t *args)
 
 end:
     if (ret != HAL_RET_OK) {
-        unlink_pi_pd(pd_ep, args->ep);
-        ep_pd_free(pd_ep);
+        // unlink_pi_pd(pd_ep, args->ep);
+        // ep_pd_free(pd_ep);
+        ep_pd_cleanup(pd_ep);
     }
 
     return ret;
@@ -87,7 +84,7 @@ pd_ep_update (pd_ep_upd_args_t *pd_ep_upd_args)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("PD-EP::{}: Updating pd state for EP:{}", 
+    HAL_TRACE_DEBUG("pd-ep::{}: updating pd state for ep:{}", 
                     __FUNCTION__,
                     ep_l2_key_to_str(pd_ep_upd_args->ep));
 
@@ -95,7 +92,88 @@ pd_ep_update (pd_ep_upd_args_t *pd_ep_upd_args)
         ret = pd_ep_upd_iplist_change(pd_ep_upd_args);
     }
 
+    return ret;
+}
 
+//-----------------------------------------------------------------------------
+// PD Endpoint Delete
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_ep_delete (pd_ep_args_t *args)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+    pd_ep_t    *ep_pd;
+
+    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->ep != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->ep->pd != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("pd-ep:{}:deleting pd state for ep {}",
+                    __FUNCTION__, ep_l2_key_to_str(args->ep));
+    ep_pd = (pd_ep_t *)args->ep->pd;
+
+    // deprogram hw
+    ret = ep_pd_depgm_ipsg_tbl_ip_entries(args->ep,
+                                          &(args->ep->ip_list_head));
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-EP: Failed to depgm IPSG, ret:{}", ret);
+        goto end;
+    }
+
+    // free up the resource and memory
+    ret = ep_pd_cleanup(ep_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-ep:{}:failed pd ep delete",
+                      __FUNCTION__);
+    }
+
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// PD Endpoint Cleanup
+//  - Release all resources
+//  - Delink PI <-> PD
+//  - Free PD Endpoint
+//  Note:
+//      - Just free up whatever PD has. 
+//      - Dont use this inplace of delete. Delete may result in giving callbacks
+//        to others.
+//-----------------------------------------------------------------------------
+hal_ret_t
+ep_pd_cleanup(pd_ep_t *ep_pd)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    if (!ep_pd) {
+        // Nothing to do
+        goto end;
+    }
+
+    // Releasing resources
+    ret = ep_pd_dealloc_res(ep_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-ep:{}: unable to dealloc res for ep: {}", 
+                      __FUNCTION__, 
+                      (ep_l2_key_to_str((ep_t *)(ep_pd->pi_ep))));
+        goto end;
+    }
+
+    // Free up IPs PD State
+    ret = ep_pd_delete_pd_ip_entries((ep_t *)ep_pd->pi_ep,
+                                     &((ep_t *)(ep_pd->pi_ep))->ip_list_head);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-ep: failed to free pd ip entries. ret:{}", ret);
+        goto end;
+    }
+
+
+    // Delinking PI<->PD
+    ep_delink_pi_pd(ep_pd, (ep_t *)ep_pd->pi_ep);
+
+    // Freeing PD
+    ep_pd_free(ep_pd);
+end:
     return ret;
 }
 
@@ -108,12 +186,12 @@ pd_ep_upd_iplist_change (pd_ep_upd_args_t *pd_ep_upd_args)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("PD-EP:{} IP-List Change: ", __FUNCTION__);
+    HAL_TRACE_DEBUG("pd-ep:{} ip-list change: ", __FUNCTION__);
 
     // Allocated PD State for new IP entries
     ret = ep_pd_alloc_pd_ip_entries(pd_ep_upd_args->add_iplist);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-EP: Failed to alloced PD IP entries "
+        HAL_TRACE_ERR("pd-ep: failed to alloced pd ip entries "
                 "for new ip. ret:{}", ret);
         goto end;
     }
@@ -122,7 +200,7 @@ pd_ep_upd_iplist_change (pd_ep_upd_args_t *pd_ep_upd_args)
     ret = ep_pd_pgm_ipsg_tbl_ip_entries(pd_ep_upd_args->ep,
                                         pd_ep_upd_args->add_iplist);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-EP: Failed to pgm IPSG"
+        HAL_TRACE_ERR("pd-ep: failed to pgm IPSG"
                 "for new ip. ret:{}", ret);
         goto end;
     }
@@ -131,7 +209,7 @@ pd_ep_upd_iplist_change (pd_ep_upd_args_t *pd_ep_upd_args)
     ret = ep_pd_depgm_ipsg_tbl_ip_entries(pd_ep_upd_args->ep,
                                         pd_ep_upd_args->del_iplist);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-EP: Failed to depgm IPSG"
+        HAL_TRACE_ERR("pd-ep: failed to depgm IPSG"
                 "for deleted ip. ret:{}", ret);
         goto end;
     }
@@ -140,7 +218,7 @@ pd_ep_upd_iplist_change (pd_ep_upd_args_t *pd_ep_upd_args)
     ret = ep_pd_delete_pd_ip_entries(pd_ep_upd_args->ep,
                                      pd_ep_upd_args->del_iplist);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-EP: Failed to free PD IP entries. ret:{}", ret);
+        HAL_TRACE_ERR("pd-ep: failed to free pd ip entries. ret:{}", ret);
         goto end;
     }
 
@@ -281,47 +359,6 @@ ep_pd_delete_pd_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list)
 
 
 // ----------------------------------------------------------------------------
-// Allocate and Initialize EP PD Instance
-// ----------------------------------------------------------------------------
-pd_ep_t *
-ep_pd_alloc_init(void)
-{
-    return ep_pd_init(ep_pd_alloc());
-}
-
-// ----------------------------------------------------------------------------
-// Allocate EP Instance
-// ----------------------------------------------------------------------------
-pd_ep_t *
-ep_pd_alloc (void)
-{
-    pd_ep_t    *ep;
-
-    ep = (pd_ep_t *)g_hal_state_pd->ep_pd_slab()->alloc();
-    if (ep == NULL) {
-        return NULL;
-    }
-
-    return ep;
-}
-
-// ----------------------------------------------------------------------------
-// Initialize EP PD instance
-// ----------------------------------------------------------------------------
-pd_ep_t *
-ep_pd_init (pd_ep_t *ep)
-{
-    // Nothing to do currently
-    if (!ep) {
-        return NULL;
-    }
-
-    // Set here if you want to initialize any fields
-
-    return ep;
-}
-
-// ----------------------------------------------------------------------------
 // Allocate resources for PD EP
 // ----------------------------------------------------------------------------
 hal_ret_t 
@@ -337,6 +374,17 @@ ep_pd_alloc_res(pd_ep_t *pd_ep)
         return HAL_RET_NO_RESOURCE;
     }
 #endif
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// De-Allocate resources for PD EP
+// ----------------------------------------------------------------------------
+hal_ret_t 
+ep_pd_dealloc_res(pd_ep_t *pd_ep)
+{
+    hal_ret_t            ret = HAL_RET_OK;
 
     return ret;
 }
@@ -659,35 +707,66 @@ end:
 
 
 // ----------------------------------------------------------------------------
-// Freeing EP PD
-// ----------------------------------------------------------------------------
-hal_ret_t
-ep_pd_free (pd_ep_t *ep)
-{
-    g_hal_state_pd->ep_pd_slab()->free(ep);
-    return HAL_RET_OK;
-}
-
-// ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
 void 
-link_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
+ep_link_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
 {
     pd_ep->pi_ep = pi_ep;
     ep_set_pd_ep(pi_ep, pd_ep);
 }
 
 // ----------------------------------------------------------------------------
-// Un-Linking PI <-> PD
+// De-Linking PI <-> PD
 // ----------------------------------------------------------------------------
 void 
-unlink_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
+ep_delink_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
 {
     pd_ep->pi_ep = NULL;
     ep_set_pd_ep(pi_ep, NULL);
 }
 
+// ----------------------------------------------------------------------------
+// Makes a clone
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_ep_make_clone(ep_t *ten, ep_t *clone)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    pd_ep_t         *pd_ep_clone = NULL;
+
+    pd_ep_clone = ep_pd_alloc_init();
+    if (pd_ep_clone == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    memcpy(pd_ep_clone, ten->pd, sizeof(pd_ep_t));
+
+    ep_link_pi_pd(pd_ep_clone, clone);
+
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Frees PD memory without indexer free.
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_ep_mem_free(pd_ep_args_t *args)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+    pd_ep_t    *ep_pd;
+
+    ep_pd = (pd_ep_t *)args->ep->pd;
+    ep_pd_mem_free(ep_pd);
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Gets hw lif id from the interface
+// ----------------------------------------------------------------------------
 uint32_t
 ep_pd_get_hw_lif_id(ep_t *pi_ep) 
 {
@@ -734,6 +813,9 @@ ep_pd_get_hw_lif_id(ep_t *pi_ep)
     return 0;
 }
 
+// ----------------------------------------------------------------------------
+// Gets interface type
+// ----------------------------------------------------------------------------
 intf::IfType
 ep_pd_get_if_type(ep_t *pi_ep) 
 {

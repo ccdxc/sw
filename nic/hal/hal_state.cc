@@ -90,12 +90,14 @@ hal_cfg_db::init(void)
                             hal::if_id_compare_key_func);
     HAL_ASSERT_RETURN((if_id_ht_ != NULL), false);
 
+#if 0
     // initialize endpoint related data structures
     ep_hal_handle_ht_ = ht::factory(HAL_MAX_ENDPOINTS,
                                     hal::ep_get_handle_key_func,
                                     hal::ep_compute_handle_hash_func,
                                     hal::ep_compare_handle_key_func);
     HAL_ASSERT_RETURN((ep_hal_handle_ht_ != NULL), false);
+#endif
 
     // initialize flow/session related data structures
     session_id_ht_ = ht::factory(HAL_MAX_SESSIONS,

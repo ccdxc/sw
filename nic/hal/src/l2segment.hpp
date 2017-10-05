@@ -63,6 +63,7 @@ typedef struct l2seg_s {
     dllist_ctxt_t         session_list_head;       // tenant's L2 segment list link
 } __PACK__ l2seg_t;
 
+// CB data structures
 typedef struct l2seg_create_app_ctxt_s {
     tenant_t    *tenant;
 } __PACK__ l2seg_create_app_ctxt_t;
@@ -175,16 +176,16 @@ l2seg_t *l2seg_lookup_key_or_handle (const L2SegmentKeyHandle& kh);
 hal_ret_t l2seg_add_if(l2seg_t *l2seg, if_t *hal_if);
 hal_ret_t l2seg_del_if (l2seg_t *l2seg, if_t *hal_if);
 
-hal_ret_t l2segment_create(l2segment::L2SegmentSpec& spec,
-                           l2segment::L2SegmentResponse *rsp);
-
-hal_ret_t l2segment_update(l2segment::L2SegmentSpec& spec,
-                           l2segment::L2SegmentResponse *rsp);
+// SVC CRUD APIs
+hal_ret_t l2segment_create(L2SegmentSpec& spec,
+                           L2SegmentResponse *rsp);
+hal_ret_t l2segment_update(L2SegmentSpec& spec,
+                           L2SegmentResponse *rsp);
 hal_ret_t l2segment_delete(L2SegmentDeleteRequest& req,
                            L2SegmentDeleteResponseMsg *rsp);
-
 hal_ret_t l2segment_get(l2segment::L2SegmentGetRequest& req,
                         l2segment::L2SegmentGetResponse *rsp);
+
 }    // namespace hal
 
 #endif    // __L2SEGMENT_HPP__

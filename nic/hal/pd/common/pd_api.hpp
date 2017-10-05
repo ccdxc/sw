@@ -352,6 +352,8 @@ uint32_t l4lb_pd_get_rw_tbl_idx_from_pi_l4lb(l4lb_service_entry_t *pi_l4lb,
 hal_ret_t pd_ep_create(pd_ep_args_t *pd_ep_args);
 hal_ret_t pd_ep_update(pd_ep_upd_args_t *pd_ep_upd_args);
 hal_ret_t pd_ep_delete(pd_ep_args_t *pd_ep_args);
+hal_ret_t pd_ep_mem_free(pd_ep_args_t *args);
+hal_ret_t pd_ep_make_clone(ep_t *ep, ep_t *clone);
 
 hal_ret_t pd_session_create(pd_session_args_t *session);
 hal_ret_t pd_session_update(pd_session_args_t *session);

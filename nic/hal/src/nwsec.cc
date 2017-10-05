@@ -738,7 +738,7 @@ security_profile_update (nwsec::SecurityProfileSpec& spec,
                              nwsec_update_cleanup_cb);
 
 end:
-    nwsec_prepare_rsp(rsp, ret, sec_prof->hal_handle);
+    nwsec_prepare_rsp(rsp, ret, sec_prof ? sec_prof->hal_handle : 0);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 

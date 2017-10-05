@@ -21,17 +21,111 @@ struct pd_ep_ip_entry_s {
     void        *pi_ep_ip_entry;
 } __PACK__;
 
+// allocate EP Instance
+static inline pd_ep_t *
+ep_pd_alloc (void)
+{
+    pd_ep_t    *ep;
 
-hal_ret_t pd_ep_create(pd_ep_args_t *args);
-pd_ep_t *ep_pd_alloc();
-pd_ep_t *ep_pd_init(pd_ep_t *up_ep);
-pd_ep_t *ep_pd_alloc_init();
-hal_ret_t ep_pd_free(pd_ep_t *up_ep);
+    ep = (pd_ep_t *)g_hal_state_pd->ep_pd_slab()->alloc();
+    if (ep == NULL) {
+        return NULL;
+    }
+
+    return ep;
+}
+
+// initialize EP PD instance
+static inline pd_ep_t *
+ep_pd_init (pd_ep_t *ep)
+{
+    // Nothing to do currently
+    if (!ep) {
+        return NULL;
+    }
+
+    // Set here if you want to initialize any fields
+
+    return ep;
+}
+
+// allocate and Initialize EP PD Instance
+static inline pd_ep_t *
+ep_pd_alloc_init(void)
+{
+    return ep_pd_init(ep_pd_alloc());
+}
+
+// freeing EP PD
+static inline hal_ret_t
+ep_pd_free (pd_ep_t *ep)
+{
+    g_hal_state_pd->ep_pd_slab()->free(ep);
+    return HAL_RET_OK;
+}
+
+
+// freeing EP PD memory
+static inline hal_ret_t
+ep_pd_mem_free (pd_ep_t *ep)
+{
+    g_hal_state_pd->ep_pd_slab()->free(ep);
+    return HAL_RET_OK;
+}
+
+// allocate EP IP Instance
+static inline pd_ep_ip_entry_t *
+ep_pd_ip_alloc (void)
+{
+    pd_ep_ip_entry_t    *ep_ip;
+
+    ep_ip = (pd_ep_ip_entry_t *)g_hal_state_pd->ep_pd_ip_entry_slab()->alloc();
+    if (ep_ip == NULL) {
+        return NULL;
+    }
+
+    return ep_ip;
+}
+
+// initialize EP IP instance
+static inline pd_ep_ip_entry_t *
+ep_pd_ip_init (pd_ep_ip_entry_t *ep_ip)
+{
+    // Nothing to do currently
+    if (!ep_ip) {
+        return NULL;
+    }
+
+    // Set here if you want to initialize any fields
+
+    return ep_ip;
+}
+
+// allocate and Initialize EP PD Instance
+static inline pd_ep_ip_entry_t *
+ep_pd_ip_alloc_init(void)
+{
+    return ep_pd_ip_init(ep_pd_ip_alloc());
+}
+
+// freeing EP IP
+static inline hal_ret_t
+ep_pd_ip_free (pd_ep_ip_entry_t *ep_ip)
+{
+    g_hal_state_pd->ep_pd_ip_entry_slab()->free(ep_ip);
+    return HAL_RET_OK;
+}
+
+
 hal_ret_t ep_pd_alloc_res(pd_ep_t *up_ep);
+hal_ret_t ep_pd_dealloc_res(pd_ep_t *up_ep);
+hal_ret_t ep_pd_cleanup(pd_ep_t *ep_pd);
+
+
 hal_ret_t ep_pd_alloc_ip_entries(pd_ep_args_t *args);
 hal_ret_t ep_pd_program_hw(pd_ep_t *up_ep);
-void link_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep);
-void unlink_pi_pd(pd_ep_t *pd_ep, ep_t *pi_up_ep);
+void ep_link_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep);
+void ep_delink_pi_pd(pd_ep_t *pd_ep, ep_t *pi_up_ep);
 // hal_ret_t ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep);
 hal_ret_t ep_pd_pgm_ipsg_tbl(pd_ep_t *pd_ep);
 hal_ret_t ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, 
