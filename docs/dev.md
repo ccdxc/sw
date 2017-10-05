@@ -5,7 +5,7 @@ experimenting with the changes.
 
 #### Prerequisites
 - Git
-- [Virtualbox 5.1.4](https://www.virtualbox.org/wiki/Download_Old_Builds_5_1)
+- [Virtualbox 5.1.24](https://www.virtualbox.org/wiki/Download_Old_Builds_5_1)
 - [Vagrant 1.8.6](https://www.vagrantup.com/downloads.html)
 
 
