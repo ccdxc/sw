@@ -13,15 +13,15 @@ import (
 	"strings"
 
 	cniapi "github.com/containernetworking/cni/pkg/skel"
-	"github.com/pensando/sw/nic/agent/netagent/httputils"
+	"github.com/containernetworking/cni/pkg/types"
+	"github.com/gorilla/mux"
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/httputils"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
-	"github.com/containernetworking/cni/pkg/types"
-	"github.com/gorilla/mux"
-	"github.com/pensando/sw/nic/agent/netagent/state"
 )
 
 // CniServerListenURL URL to listen on
@@ -48,9 +48,9 @@ type PodArgs struct {
 
 // Server is an instance of CNI http server
 type Server struct {
-	listenURL  string              // URL where this server is listening
-	listener   net.Listener        // listener socket
-	kubeclient *KubeClient         // k8s api server client
+	listenURL  string           // URL where this server is listening
+	listener   net.Listener     // listener socket
+	kubeclient *KubeClient      // k8s api server client
 	agent      state.PluginIntf // network agent
 }
 

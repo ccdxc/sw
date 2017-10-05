@@ -3,8 +3,8 @@
 package datapath
 
 import (
-	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/fswitch"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -12,9 +12,9 @@ import (
 // NaplesDatapath has the fake datapath for testing purposes
 type NaplesDatapath struct {
 	ag         state.DatapathIntf // agent
-	fSwitch    *fswitch.Fswitch      // fswitch instance
-	hostIntf   string                // host facing interface
-	uplinkIntf string                // uplink interface
+	fSwitch    *fswitch.Fswitch   // fswitch instance
+	hostIntf   string             // host facing interface
+	uplinkIntf string             // uplink interface
 }
 
 // NewNaplesDatapath returns a new fake datapath

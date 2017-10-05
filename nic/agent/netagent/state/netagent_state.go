@@ -11,9 +11,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-
 // NewNetAgentCreater creates a new network agent
-func NewNetAgentCreater(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, error){
+func NewNetAgentCreater(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, error) {
 	var emdb emstore.Emstore
 	var err error
 
@@ -26,7 +25,6 @@ func NewNetAgentCreater(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, 
 		log.Errorf("Error opening the embedded db. Err: %v", err)
 		return nil, err
 	}
-
 
 	agent := NetAgent{
 		store:            emdb,
@@ -84,7 +82,6 @@ func (na *NetAgent) create(dp NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resol
 
 	return na, nil
 }
-
 
 // RegisterCtrlerIf registers a controller object
 func (na *NetAgent) RegisterCtrlerIf(ctrlerif CtrlerAPI) error {

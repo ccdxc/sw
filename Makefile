@@ -1,7 +1,6 @@
 # Makefile for building packages
 
-EXCLUDE_DIRS := bin docs Godeps vendor scripts grpc-gateway nic bazel-cache
-PKG_DIRS := $(filter-out $(EXCLUDE_DIRS),$(subst /,,$(sort $(dir $(wildcard */)))))
+EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|scripts"
 TO_BUILD := ./venice/utils/... ./nic/agent/... ./venice/cmd/... ./venice/apigw/... ./venice/orch/... \
 ./venice/apiserver/... ./venice/globals/... ./venice/ctrler/... ./test/... ./api/ ./api/hooks/... \
 ./api/listerwatcher/... ./api/cache/... ./api/integration/... ./venice/exe/venice/... ./venice/collector/...
@@ -9,7 +8,7 @@ TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent
 TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 
 GOFMT_CMD := gofmt -s -l
-GOVET_CMD := go tool vet
+GOVET_CMD := go vet
 SHELL := /bin/bash
 GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
@@ -20,17 +19,24 @@ deps:
 	@( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/lint/golint/ && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/kardianos/govendor/ && go install )
 
-gofmt-src: $(PKG_DIRS)
+gofmt-src:
 	$(info +++ gofmt $(PKG_DIRS))
-	@for dir in $?; do $(GOFMT_CMD) $${dir} | grep "go"; [[ $$? -ne 0 ]] || exit 1; done
+ifdef JOB_ID
+	@echo "Running in CI; checking go fmt"
+	@$(eval FMT=`find . -name '*.go' -print | egrep -v ${EXCLUDE_DIRS} | xargs ${GOFMT_CMD}`)
+	@echo "go fmt found errors in the following files(if any):"
+	@echo $(FMT)
+	@test -z "$(FMT)"
+endif
+	@find . -name '*.go' -print | egrep -v ${EXCLUDE_DIRS} | xargs ${GOFMT_CMD} -w
 
-golint-src: $(PKG_DIRS)
+golint-src:
 	$(info +++ golint $(TO_BUILD))
 	@scripts/validate-lint.sh $(TO_BUILD)
 
-govet-src: $(PKG_DIRS)
+govet-src:
 	$(info +++ govet $(PKG_DIRS))
-	@for dir in $(PKG_DIRS); do $(GOVET_CMD) $${dir} || exit 1;done
+	@${GOVET_CMD} $(shell go list -e ./... | egrep -v ${EXCLUDE_DIRS})
 
 checks: gofmt-src golint-src govet-src
 

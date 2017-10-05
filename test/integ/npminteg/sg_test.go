@@ -170,9 +170,10 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
 			ep, ok := ag.datapath.EndpointUpdateDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
-			c.Assert(ok, Equals, true)
-			c.Assert(len(ep.Request), Equals, 1)
-			return (len(ep.Request[0].SecurityGroup) == 0), nil
+			if ok && len(ep.Request) == 1 && len(ep.Request[0].SecurityGroup) == 0 {
+				return true, nil
+			}
+			return false, nil
 		}, "endpoint still found on agent", "10ms", it.pollTimeout())
 	}
 

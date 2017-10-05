@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/fswitch"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
-	"github.com/pensando/sw/nic/agent/netagent/state"
 )
 
 // FakeDatapath has the fake datapath for testing purposes

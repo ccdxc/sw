@@ -168,7 +168,6 @@ func createNetAgent(t *testing.T) (*NetAgent, *mockDatapath, *mockCtrler) {
 		return nil, nil, nil
 	}
 
-
 	// fake controller intf
 	nagent.RegisterCtrlerIf(ct)
 

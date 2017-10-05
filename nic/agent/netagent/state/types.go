@@ -15,7 +15,6 @@ type IntfInfo struct {
 	SwitchIntfName    string // Name of switch side of the interface
 }
 
-
 // NetAgent is the network agent instance
 type NetAgent struct {
 	sync.Mutex                                          // global lock for the agent

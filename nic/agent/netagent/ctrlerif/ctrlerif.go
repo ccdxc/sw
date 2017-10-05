@@ -25,7 +25,7 @@ type NpmClient struct {
 	resolverURLs    string                        // Resolver URLs
 	resolverClient  resolver.Interface            // Resolver client
 	waitGrp         sync.WaitGroup                // wait group to wait on all go routines to exit
-	agent           state.CtrlerIntf           // net Agent API
+	agent           state.CtrlerIntf              // net Agent API
 	netGrpcClient   *rpckit.RPCClient             // grpc client
 	sgGrpcClient    *rpckit.RPCClient             // grpc client
 	epGrpcClient    *rpckit.RPCClient             // grpc client

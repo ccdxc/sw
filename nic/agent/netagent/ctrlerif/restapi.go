@@ -8,18 +8,18 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pensando/sw/nic/agent/netagent/httputils"
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // this package contains the REST API provided by the agent
 
 // RestServer is the REST api server
 type RestServer struct {
-	listenURL  string              // URL where http server is listening
+	listenURL  string           // URL where http server is listening
 	agent      state.CtrlerIntf // net Agent API
-	listener   net.Listener        // socket listener
-	httpServer *http.Server        // HTTP server
+	listener   net.Listener     // socket listener
+	httpServer *http.Server     // HTTP server
 }
 
 // Catchall http handler

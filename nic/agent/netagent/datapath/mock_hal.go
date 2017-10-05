@@ -13,9 +13,9 @@ import (
 	"sync"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pensando/sw/nic/agent/netagent/state"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -23,18 +23,18 @@ import (
 // MockHalDatapath contains mock hal clients
 type MockHalDatapath struct {
 	sync.Mutex
-	MockCtrl      *gomock.Controller
-	Epclient      *halproto.MockEndpointClient
-	Ifclient      *halproto.MockInterfaceClient
-	Netclient     *halproto.MockL2SegmentClient
-	Lbclient      *halproto.MockL4LbClient
-	Sgclient      *halproto.MockNwSecurityClient
-	Sessclient    *halproto.MockSessionClient
-	Tnclient      *halproto.MockTenantClient
-	EndpointDB    map[string]*halproto.EndpointRequestMsg
-	EndpointUpdateDB    map[string]*halproto.EndpointUpdateRequestMsg
-	EndpointDelDB map[string]*halproto.EndpointDeleteRequestMsg
-	SgDB          map[string]*halproto.SecurityGroupRequestMsg
+	MockCtrl         *gomock.Controller
+	Epclient         *halproto.MockEndpointClient
+	Ifclient         *halproto.MockInterfaceClient
+	Netclient        *halproto.MockL2SegmentClient
+	Lbclient         *halproto.MockL4LbClient
+	Sgclient         *halproto.MockNwSecurityClient
+	Sessclient       *halproto.MockSessionClient
+	Tnclient         *halproto.MockTenantClient
+	EndpointDB       map[string]*halproto.EndpointRequestMsg
+	EndpointUpdateDB map[string]*halproto.EndpointUpdateRequestMsg
+	EndpointDelDB    map[string]*halproto.EndpointDeleteRequestMsg
+	SgDB             map[string]*halproto.SecurityGroupRequestMsg
 }
 
 // NewMockHalDatapath returns a mock hal datapath
@@ -285,11 +285,9 @@ func (hd *MockHalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 		SecurityGroup:   sgids,
 	}
 
-
 	epUpdateReqMsg := halproto.EndpointUpdateRequestMsg{
 		Request: []*halproto.EndpointUpdateRequest{&epUpdateReq},
 	}
-
 
 	// call hal to update the endpoint
 	// FIXME: handle response

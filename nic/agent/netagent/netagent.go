@@ -3,9 +3,9 @@
 package netagent
 
 import (
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 /* Rough Architecture for Pensando Agent
@@ -38,10 +38,10 @@ import (
 
 // Agent contains agent state
 type Agent struct {
-	datapath   state.NetDatapathAPI
-	NetworkAgent   *state.NetAgent
-	npmClient  *ctrlerif.NpmClient
-	restServer *ctrlerif.RestServer
+	datapath     state.NetDatapathAPI
+	NetworkAgent *state.NetAgent
+	npmClient    *ctrlerif.NpmClient
+	restServer   *ctrlerif.RestServer
 }
 
 // NewAgent creates an agent instance
@@ -53,7 +53,6 @@ func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverURLs
 		log.Errorf("Error creating network agent. Err: %v", err)
 		return nil, err
 	}
-
 
 	// create the NPM client
 	npmClient, err := ctrlerif.NewNpmClient(nagent, ctrlerURL, resolverURLs)
@@ -73,10 +72,10 @@ func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverURLs
 
 	// create the agent instance
 	ag := Agent{
-		datapath: dp,
+		datapath:     dp,
 		NetworkAgent: nagent,
-		npmClient:  npmClient,
-		restServer: restServer,
+		npmClient:    npmClient,
+		restServer:   restServer,
 	}
 
 	return &ag, nil

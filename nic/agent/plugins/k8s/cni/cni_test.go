@@ -15,10 +15,10 @@ import (
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
-	"github.com/pensando/sw/nic/agent/netagent/state"
 )
 
 const fakeCniServerURL = "/tmp/fake-cni.sock"
