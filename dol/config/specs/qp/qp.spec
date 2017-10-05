@@ -3,7 +3,7 @@ meta:
     id: QP_RDMA
 
 
-count           : 2
+count           : 4
 hostmem_pg_size : 4096
 pmtu            : 1024
 atomic_enabled  : True
