@@ -17,12 +17,12 @@ class ConfigStore:
         return self.tunnels.SetAll(objs)
     def GetTunnelsVxlan(self):
         vxlan_tunnels = []
-        for tun in self.tunnels.GetAll():
+        for tun in self.tunnels.GetAllInList():
             if tun.IsVxlan(): vxlan_tunnels.append(tun)
         return vxlan_tunnels
 
     def GetTrunkingUplinks(self):
-        return self.trunks.GetAll()
+        return self.trunks.GetAllInList()
     def SetTrunkingUplinks(self, objs):
         return self.trunks.SetAll(objs)
 

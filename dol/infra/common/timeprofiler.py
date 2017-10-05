@@ -6,7 +6,8 @@ class TimeProfiler:
         self.name = name
         self.start = None
         self.end = None
-        self.total = None
+        self.total = 0
+        return
 
     def Start(self):
         self.start = timeit.default_timer()
@@ -14,7 +15,7 @@ class TimeProfiler:
 
     def Stop(self):
         self.stop = timeit.default_timer()
-        self.total = self.stop - self.start
+        self.total += (self.stop - self.start)
         return
 
     def Show(self):
@@ -29,9 +30,13 @@ InitTimeProfiler    = TimeProfiler('Init')
 ConfigTimeProfiler  = TimeProfiler('Config')
 TestTimeProfiler    = TimeProfiler('Tests')
 TotalTimeProfiler   = TimeProfiler('Total')
+SelectorProfiler    = TimeProfiler('Selector')
+DbGetAllProfiler    = TimeProfiler('DbGetAll')
 
 def Show():
     InitTimeProfiler.Show()
     ConfigTimeProfiler.Show()
+    #SelectorProfiler.Show()
     TestTimeProfiler.Show()
     TotalTimeProfiler.Show()
+    #DbGetAllProfiler.Show()

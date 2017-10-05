@@ -6,6 +6,7 @@ import copy
 import infra.common.defs            as defs
 import infra.common.objects         as objects
 import infra.common.utils           as utils
+import infra.common.timeprofiler    as timeprofiler
 import infra.config.base            as base
 
 import config.resmgr                  as resmgr
@@ -390,25 +391,29 @@ class SessionObjectHelper:
         return ssns[:selectors.maxsessions]
 
     def __get_matching_flows(self, selectors = None):
+        timeprofiler.SelectorProfiler.Start()
         flows = []
         for ssn in self.objs:
             if ssn.iflow.IsFilterMatch(selectors):
                 flows.append(ssn.iflow)
             if ssn.rflow.IsFilterMatch(selectors):
                 flows.append(ssn.rflow)
-        if selectors.maxflows == None:
+        if selectors.maxflows is None:
             return flows
         if selectors.maxflows >= len(flows):
             return flows
-        return flows[:selectors.maxflows]
+        objs = flows[:selectors.maxflows]
+        timeprofiler.SelectorProfiler.Stop()
+        return objs
 
     def GetMatchingConfigObjects(self, selectors = None):
         if selectors.IsFlowBased():
-            return self.__get_matching_flows(selectors)
+            objs = self.__get_matching_flows(selectors)
         elif selectors.IsSessionBased():
-            return self.__get_matching_sessions(selectors)
-        
-        cfglogger.error("INVALID Config Filter in testspec.")
-        return []
+            objs = self.__get_matching_sessions(selectors)
+        else:
+            objs = []
+            cfglogger.error("INVALID Config Filter in testspec.")
+        return objs
 
 SessionHelper = SessionObjectHelper()

@@ -252,32 +252,11 @@ class Module(objects.FrameworkObject):
         self.__process_results()
         return
 
-
-class ModuleListParser:
-    def __init__(self, module_list_file):
-        self.module_list_file = module_list_file
-        self.parsed_module_list = []
-        self.parse()
-        return
-
-    def parse(self):
-        full_path = utils.GetFullPath(self.module_list_file)
-        genobj = dyml.main(full_path)
-        for elem in genobj.modules:
-            logger.debug("Parsed MODULE:%s" % elem.module.name)
-            self.parsed_module_list.append(elem.module)
-            elem.show()
-        return
-
-
 class ModuleDatabase:
-    def __init__(self, module_list_file=defs.DEFAULT_MODULES_LIST_FILE):
+    def __init__(self):
         self.db = {}
-        self.parser = ModuleListParser(module_list_file)
         if GlobalOptions.test != None:
             GlobalOptions.test = GlobalOptions.test.split(',')
-        if GlobalOptions.module != None:
-            GlobalOptions.module = GlobalOptions.module.split(',')
         if GlobalOptions.pkglist != None:
             GlobalOptions.pkglist = GlobalOptions.pkglist.split(',')
         return
@@ -341,26 +320,11 @@ class ModuleDatabase:
         self.db[module.GID()] = module
         return
 
-    def __add_all(self):
-        for pmod in self.parser.parsed_module_list:
-            self.__add(pmod)
-        return
-
     def GetAll(self):
         return self.db.values()
-
-    def Process(self):
-        self.__add_all()
-        return
 
     def Add(self, spec):
         self.__add(spec)
         return
 
-modlist = 'modules.list'
-if GlobalOptions.modlist is not None:
-    modlist = GlobalOptions.modlist
-
-ModuleStore = ModuleDatabase(modlist)
-def Init():
-    ModuleStore.Process()
+ModuleStore = ModuleDatabase()

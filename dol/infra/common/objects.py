@@ -8,6 +8,7 @@ import copy
 import infra.common.utils as utils
 import infra.common.loader as loader
 import infra.common.defs as defs
+import infra.common.timeprofiler as timeprofiler
 import infra.penscapy.penscapy as penscapy
 
 from collections import OrderedDict
@@ -935,10 +936,11 @@ class ObjectDatabase(FrameworkObject):
     def Get(self, key):
         return self.db[key]
 
+    def GetAllInList(self):
+        return list(self.db.values())
+
     def GetAll(self):
-        values = []
-        for val in self.db.values():
-            values.append(val)
+        values =  self.db.values()
         return values
 
     def GetAllByClass(self, object_class):

@@ -18,11 +18,7 @@ from config.store           import Store
 from infra.engine.modmgr    import ModuleStore
 
 def init():
-    if GlobalOptions.feature is None:
-        modmgr.Init()
-
-    if GlobalOptions.modlist is None:
-        feature.Init()
+    feature.Init()
     return
 
 def CreateInfraData():

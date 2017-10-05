@@ -9,8 +9,6 @@ parser.add_argument('--debug', dest='debug',
                     action='store_true', help='Enable Debug Mode')
 parser.add_argument('--verbose', dest='verbose',
                     action='store_true', help='Enable Verbose Mode')
-parser.add_argument('--modlist', dest='modlist',
-                    default=None, help='Module List File')
 parser.add_argument('--pkglist', dest='pkglist', default=None, 
                     help='Run only the tests in package list')
 parser.add_argument('--config-only', dest='cfgonly',
