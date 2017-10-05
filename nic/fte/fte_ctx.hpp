@@ -376,8 +376,11 @@ public:
     hal::l2seg_t *dl2seg() const { return dl2seg_; }
     hal::if_t *sif() const { return sif_; }
     hal::if_t *dif() const { return dif_; }
+    void set_sif(hal::if_t *sif) { sif_ = sif; }
+    void set_dif(hal::if_t *dif) { dif_ = dif; }
     hal::ep_t *sep() const { return sep_; }
     hal::ep_t *dep() const { return dep_; }
+
     hal::alg_proto_state_t alg_proto_state() const { return alg_proto_state_; }
     void  set_alg_proto_state(hal::alg_proto_state_t state) { alg_proto_state_ = state; }
 

@@ -283,13 +283,14 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
     if (((l2seg_t *)(l2seg_pd->l2seg))->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
         key.vlan_tag_valid = 0;
         key.vlan_tag_vid = 0;
+        inp_prop.dir = FLOW_DIR_FROM_ENIC;
     } else {
         key.vlan_tag_valid = 1;
         key.vlan_tag_vid = l2seg_pd->l2seg_fromcpu_id;
+        inp_prop.dir = FLOW_DIR_FROM_UPLINK;
     }
 
     inp_prop.vrf = l2seg_pd->l2seg_ten_hw_id;
-    inp_prop.dir = FLOW_DIR_FROM_ENIC;
     inp_prop.l4_profile_idx = 0;
     inp_prop.ipsg_enable = 0;
     inp_prop.src_lport = 0;
@@ -611,6 +612,24 @@ pd_l2seg_make_clone(l2seg_t *l2seg, l2seg_t *clone)
 
 end:
     return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Returns the internal vlan of l2seg (used for input_properites lookup of
+// reinjected packets) returns false if vlan is not valid
+//-----------------------------------------------------------------------------
+bool
+pd_l2seg_get_fromcpu_id(l2seg_t *l2seg, uint16_t *vid)
+{
+
+    if (l2seg->segment_type == types::L2_SEGMENT_TYPE_INFRA) {
+        return false;
+    }
+
+    if (vid) {
+        *vid = ((pd_l2seg_t *)l2seg->pd)->l2seg_fromcpu_id;
+    }
+    return true;
 }
 
 // ----------------------------------------------------------------------------

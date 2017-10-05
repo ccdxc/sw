@@ -81,6 +81,17 @@ packets:
                 tc  : ref://testcase/config/flow/eg_qos/dscp
             tcp:
                 flags: ack
+    - packet:
+        id          : PKT3 # Expected Packet on FTE
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : None
+        headers     :
+            ipv4:
+                tos : ref://testcase/config/flow/eg_qos/dscp
+            ipv6:
+                tc  : ref://testcase/config/flow/eg_qos/dscp
+            tcp:
+                flags: ack
 
 buffers:
     - buffer:
@@ -127,7 +138,13 @@ trigger:
             port    : callback://networking/fwmode/GetRxTriggerPorts
 
 expect:
+    delay   : callback://networking/packets/GetExpectDelay
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
             ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+    packets:
+         - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=PKT3
+            port    : 128
+

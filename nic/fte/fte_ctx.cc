@@ -6,6 +6,7 @@
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/pd/common/cpupkt_headers.hpp"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
+#include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
 std::ostream& operator<<(std::ostream& os, const ether_addr& val)
 {
@@ -818,8 +819,13 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
         pkt_info->cpu_header = *cpu_header;
     } else {
         pkt_info->cpu_header.src_lif = cpu_rxhdr_->src_lif;
-        // TODO(goli)change lif for uplink pkts
-        // pkt_info->hw_vlan_id = internal_uplink_vid;
+        // change lif/vlan for uplink pkts
+        if (key_.dir == FLOW_DIR_FROM_UPLINK) {
+            pkt_info->cpu_header.src_lif = hal::SERVICE_LIF_CPU;
+            if (hal::pd::pd_l2seg_get_fromcpu_id(sl2seg_, &pkt_info->cpu_header.hw_vlan_id)) {
+                pkt_info->cpu_header.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
+            }
+        }
     }
     
     if (p4plus_header) {

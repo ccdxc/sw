@@ -238,6 +238,7 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
         attrs.tnnl_vnid = rewrite.ether.vlan_id;
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
     }
+
     if (rewrite.valid_flds.dot1p) {
         attrs.dot1p = rewrite.ether.dot1p;
         attrs.dot1p_en = true;

@@ -5,7 +5,7 @@ meta:
 type        : tenant
 native      : False
 fabencap    : vxlan
-broadcast   : drop
+broadcast   : flood
 multicast   : drop
 l4lb        : False
 endpoints   :

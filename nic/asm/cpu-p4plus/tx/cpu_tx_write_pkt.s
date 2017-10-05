@@ -68,6 +68,7 @@ dma_cmd_trailer:
     //  trailer start =header start + header size
     add     r4, r4, r5
     sub     r5, k.to_s5_len, r5
+    sub     r5, r5, CPU_TO_P4PLUS_HDR_SIZE
    
     // Remove any existing vlan tag from the packet
     sne     c1, k.to_s5_vlan_tag_exists, r0

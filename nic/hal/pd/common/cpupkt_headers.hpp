@@ -113,13 +113,16 @@ struct ipv4_header_t {
 struct ipv6_header_t {
 #if __BYTE_ORDER == __BIG_ENDIAN
     uint8_t    version:4;
-    uint8_t    priority:4;
+    uint8_t    tc_high:4;
+    uint8_t    tc_low:4;
+    uint8_t    flow_lbl_high:4;
 #else
-    uint8_t    priority:4;
+    uint8_t    tc_high:4;
     uint8_t    version:4;
+    uint8_t    flow_lbl_high:4;
+    uint8_t    tc_low:4;
 #endif
-    uint8_t    flow_lbl[3];
-
+    uint8_t    flow_lbl[2];
     uint16_t   payload_len;
     uint8_t    nexthdr;
     uint8_t    hop_limit;

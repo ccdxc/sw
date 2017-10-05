@@ -7,11 +7,12 @@ namespace hal {
 namespace net {
 
 static inline hal_ret_t
-update_tunnel_info(fte::ctx_t&ctx, hal::if_t *dif, hal::l2seg_t *dl2seg)
+update_tunnel_info(fte::ctx_t&ctx)
 {
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_PUSH};
 
-    if (dif->if_type != intf::IF_TYPE_TUNNEL) {
+
+    if (ctx.dif() == NULL || ctx.dif()->if_type != intf::IF_TYPE_TUNNEL) {
         return HAL_RET_OK;
     }
 
@@ -21,9 +22,9 @@ update_tunnel_info(fte::ctx_t&ctx, hal::if_t *dif, hal::l2seg_t *dl2seg)
     HEADER_SET_FLD(flowupd.header_push, ipv4, sip, ipv4_addr_t{});
     HEADER_SET_FLD(flowupd.header_push, ipv4, dip, ipv4_addr_t{});
     
-    switch (dl2seg->fabric_encap.type) {
+    switch (ctx.dl2seg()->fabric_encap.type) {
     case types::encapType::ENCAP_TYPE_VXLAN:
-        HEADER_SET_FLD(flowupd.header_push, vxlan, tenant_id, dl2seg->fabric_encap.val);
+        HEADER_SET_FLD(flowupd.header_push, vxlan, tenant_id, ctx.dl2seg()->fabric_encap.val);
         break;
     default:
         return HAL_RET_INVALID_ARG;
@@ -37,7 +38,7 @@ tunnel_exec(fte::ctx_t& ctx)
 {
     hal_ret_t ret;
 
-    ret = update_tunnel_info(ctx, ctx.dif(), ctx.dl2seg());
+    ret = update_tunnel_info(ctx);
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
         return fte::PIPELINE_END; 

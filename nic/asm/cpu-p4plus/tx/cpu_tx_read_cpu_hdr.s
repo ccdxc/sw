@@ -31,7 +31,7 @@ cpu_tx_read_cpu_hdr_done:
                           TABLE_LOCK_DIS,
                           cpu_tx_read_l2_vlan_hdr_start,
                           r3,
-                          TABLE_SIZE_32_BITS)
+                          TABLE_SIZE_512_BITS)
    
     nop.e
     nop

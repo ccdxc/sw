@@ -29,7 +29,7 @@ update_flow_from_qos_spec(fte::ctx_t& ctx, const session::FlowInfo& flow_info)
 fte::pipeline_action_t
 qos_exec(fte::ctx_t& ctx)
 {
-    hal_ret_t ret;
+    hal_ret_t ret = HAL_RET_OK;
 
     if (ctx.protobuf_request()) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
@@ -41,14 +41,14 @@ qos_exec(fte::ctx_t& ctx)
             ret = update_flow_from_qos_spec(ctx,
                     ctx.sess_spec()->responder_flow().flow_data().flow_info());
         }
-        if (ret != HAL_RET_OK) {
-            ctx.set_feature_status(ret);
-            return fte::PIPELINE_END;
-        }
+    }
+
+    if (ret != HAL_RET_OK) {
+        ctx.set_feature_status(ret);
+        return fte::PIPELINE_END;
     }
 
     return fte::PIPELINE_CONTINUE;
-
 }
 
 }
