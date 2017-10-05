@@ -1,7 +1,7 @@
 # Feature Test Modules List
 feature:
     id          : rdma
-    sub         : l2uc
+    sub         : rdma
     package     : test.rdma
     module      : rdma
     enable      : True
@@ -174,7 +174,15 @@ modules:
         module  : resp_rx_send_only
         spec    : resp_rx_send_only.testspec
         ignore  : False
- 
+
+    - module:
+        name    : RDMA_RX_SEND_FIRST_INV_SRVC_ERR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_inv_srvc_err
+        spec    : resp_rx_send_first_inv_srvc_err.testspec
+        ignore  : False
+
     - module:
         name    : RDMA_RX_SEND_ONLY_2SGES
         enable  : True
@@ -231,15 +239,22 @@ modules:
         spec    : resp_rx_send_first_mid_last_inv_2sges.testspec
         ignore  : False
 
-    # TODO: Enable this test after Model bug is fixed for handling instrinsic drop
-    #- module:
-    #    name    : RDMA_RX_SEND_FIRST_LAST_PMTU_ERR
-    #    enable  : True
-    #    package : test.rdma
-    #    module  : resp_rx_send_first_last_pmtu_err
-    #    spec    : resp_rx_send_first_last_pmtu_err.testspec
-    #    ignore  : False
+    - module:
+        name    : RDMA_RX_SEND_FIRST_PMTU_ERR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_pmtu_err
+        spec    : resp_rx_send_first_pmtu_err.testspec
+        ignore  : False
  
+    - module:
+        name    : RDMA_RX_SEND_FIRST_SEQ_ERR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_first_seq_err
+        spec    : resp_rx_send_first_seq_err.testspec
+        ignore  : False
+
     - module:
         name    : RDMA_RESP_RX_READ_ONLY
         enable  : True

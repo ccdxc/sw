@@ -354,6 +354,5 @@ nak:
 
     // release chance to next packet
     tbladd  d.nxt_to_go_token_id, 1  
-    phvwr   p.common.p4_intr_global_drop, 1
     nop.e
     nop

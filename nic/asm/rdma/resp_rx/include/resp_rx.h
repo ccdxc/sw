@@ -28,8 +28,8 @@
     add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, ack_nak_psn); \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.psn, ack_info.psn, _tmp_r); \
     DMA_NEXT_CMD_I_BASE_GET(_dma_base_r, 1); \
-    DOORBELL_INC_PINDEX(_lif, _qtype, _qid, ACK_NAK_RING_ID, _db_addr_r, _db_data_r);\
-    phvwr       p.db_data, _db_data_r.wx; \
+    PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, ACK_NAK_RING_ID, _db_addr_r, _db_data_r);\
+    phvwr       p.db_data, _db_data_r.dx; \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, db_data, db_data, _db_addr_r); \
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
     

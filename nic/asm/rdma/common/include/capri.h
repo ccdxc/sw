@@ -671,9 +671,12 @@ struct capri_dma_cmd_mem2mem_t {
     CAPRI_SETUP_DB_DATA(_qid, _ring_id, _pindex, _data);                                            \
     memwr.dx   _addr, _data;
 
-#define DOORBELL_INC_PINDEX(_lif, _qtype, _qid, _ring_id, _addr, _data)                              \
+#define PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, _ring_id, _addr, _data)                     \
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_INC_PINDEX, DB_SCHED_WR_EVAL_RING, _lif, _qtype, _addr);   \
     CAPRI_SETUP_DB_DATA(_qid, _ring_id, r0, _data);                                                 \
+
+#define DOORBELL_INC_PINDEX(_lif, _qtype, _qid, _ring_id, _addr, _data)                             \
+    PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, _ring_id, _addr, _data);                        \
     memwr.dx   _addr, _data;
 
 #define IS_RING_EMPTY(_c, _flags_r, _ring_id_bmap) \

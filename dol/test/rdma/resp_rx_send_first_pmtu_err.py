@@ -45,11 +45,11 @@ def TestCaseVerify(tc):
 
 
     # verify that token_id is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 2):
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 1):
         return False
 
     # verify that nxt_to_go_token_id is incremented by 1
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 2):
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
         return False
 
     # verify that busy is 0
@@ -59,5 +59,9 @@ def TestCaseVerify(tc):
     return True
 
 def TestCaseTeardown(tc):
+    rs = tc.config.rdmasession
+    tc.info("Setting proxy_cindex equal to p_index0\n")
+    rs.lqp.rq.qstate.data.proxy_cindex = tc.pvtdata.rq_post_qstate.p_index0;
+    rs.lqp.rq.qstate.Write();
     tc.info("RDMA TestCaseTeardown() Implementation.")
     return

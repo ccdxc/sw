@@ -39,7 +39,7 @@ def GetPacketPayloadSize(tc, pkt, args):
 
 def GetAckSyndrome(tc, pkt, args):
     # AETH_CODE_ACK << AETH_SYNDROME_CODE_SHIFT | CCCCC (credit count)
-    # 8 bits: 3 ack/nack code + 5 bits
+    # 8 bits: 3 ack/Nak code + 5 bits
     # 3 bits for ACK: 000
     # 5 bits for lsn(ciredits) = log2(rqwqes) * 2 . If no RQWQEs posted, set credits to zero: 00000
     credits = 0
@@ -47,6 +47,10 @@ def GetAckSyndrome(tc, pkt, args):
         credits = 0
     else:
         credits = math.log(rqwqes, 2) * 2
-
     syndrome = ((0 << 5) | credits)
+    return syndrome
+
+def GetNakSyndrome(tc, pkt, args):
+    # AETH_CODE_NAK << AETH_SYNDROME_CODE_SHIFT | nak_code
+    syndrome = ((3 << 5) | args.nak_code) 
     return syndrome

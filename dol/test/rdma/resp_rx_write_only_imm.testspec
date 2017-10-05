@@ -108,7 +108,7 @@ descriptors:
         id      : RQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_RQ
         fields:
-            wrid: 15
+            wrid: 0x12345678
             num_sges: 1
                
             sges:
@@ -121,7 +121,7 @@ descriptors:
 #       template: ref://factory/templates/id=DESC_RDMA_RQ
 #       fields:
 #           buff: ref://testcase/buffers/id=EXP_RQ_BUF
-#           wrid: 15
+#           wrid: 0x12345678
 #           num_sges: 1
 #              
 #           sges:

@@ -927,10 +927,10 @@ p4pd_decode_roce_opcode_init (void)
             data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.raw_flags =
                 opc_to_info[idx].raw_flags;
         } else {
-            //for now skip programming the invalid opcode cases, to speed up bootup 
-            continue;
-            // nop entry
-            data.actionid = DECODE_ROCE_OPCODE_NOP_ID;
+            data.actionid = DECODE_ROCE_OPCODE_DECODE_ROCE_OPCODE_ID;
+            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.qtype = Q_TYPE_RDMA_RQ;
+            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.len = sizeof(rdma_bth_t);
+            data.decode_roce_opcode_action_u.decode_roce_opcode_decode_roce_opcode.raw_flags = 0;
         }
 
         ret = dm->insert_withid(&data, idx);
