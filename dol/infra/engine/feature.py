@@ -18,6 +18,7 @@ BaseTopoExcludeFeatureList = [
     'ipsg',
     'firewall',
     'proxy',
+    'ipsec',
     'hostpin',
 ]
 

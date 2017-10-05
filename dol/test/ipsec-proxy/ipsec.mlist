@@ -1,0 +1,19 @@
+feature:
+    id          : ipsec 
+    sub         : ipsec 
+    package     : test.ipsec-proxy
+    module      : None
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : PKT_TO_IPSECCBQ
+        enable  : True
+        package : test.ipsec-proxy
+        module  : pkt_to_ipseccbq
+        spec    : pkt_to_ipseccbq.testspec
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
+
