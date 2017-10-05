@@ -1,5 +1,6 @@
 /*
  * 	Implements the reading of BRQ to pick up the completed barco request
+ * Stage 2, Table 0
  */
 
 #include "tls-constants.h"
@@ -10,8 +11,8 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 
-struct tx_table_s2_t0_k k       ;
-struct phv_ p	;
+struct tx_table_s2_t0_k     k;
+struct phv_                 p;
 struct tx_table_s2_t0_tls_read_desc_d d	;
 
 	    
@@ -21,10 +22,11 @@ struct tx_table_s2_t0_tls_read_desc_d d	;
     .param      tls_enc_free_rnmpr
 
 tls_enc_read_desc_process:
-    CAPRI_SET_DEBUG_STAGE0_3(p.to_s5_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
+    CAPRI_SET_DEBUG_STAGE0_3(p.to_s7_debug_stage0_3_thread, CAPRI_MPU_STAGE_2, CAPRI_MPU_TABLE_0)
     phvwr       p.read_desc_status, d.status
     phvwr       p.read_desc_output_list_address, d.output_list_address
-    phvwr       p.to_s4_odesc, d.output_list_address
+    phvwr       p.to_s6_odesc, d.{output_list_address}.dx
+    phvwr       p.to_s3_odesc, d.{output_list_address}.dx
     CAPRI_OPERAND_DEBUG(d.output_list_address)
 table_read_bsq_consume:
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_enc_bsq_consume_process,

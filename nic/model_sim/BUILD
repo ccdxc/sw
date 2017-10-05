@@ -50,3 +50,17 @@ cc_binary(
             "-Wno-maybe-uninitialized",
             ],
     )
+
+cc_binary(
+    name = "model_cli",
+    srcs = [
+            "examples/model_cli.cc",
+            ],
+    deps = [
+            "//nic/model_sim/include:modelsim_includes",
+            "//nic/model_sim:model_client",
+            ],
+    linkopts = [
+            "-lzmq",
+            ],
+)

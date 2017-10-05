@@ -113,6 +113,7 @@ hal:
 capmodel:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:cap_model
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_client
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_cli
 
 bazel-build:
 	make -C p4

@@ -68,10 +68,6 @@ no_dma_cmd:
     phvwr       p.s3_s4_t0_phv_idesc_aol0_addr, k.s2_s3_t0_phv_idesc_aol0_addr
     phvwr       p.s3_s4_t0_phv_idesc_aol0_offset, k.s2_s3_t0_phv_idesc_aol0_offset
     phvwr       p.s3_s4_t0_phv_idesc_aol0_len, k.s2_s3_t0_phv_idesc_aol0_len      
-#if 1
-    /* FIXME: Workaround to DoL packet injection issue */
-    addi        r2, r2, 4
-#endif
 
 table_read_tls_header:	
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_read_header_process, r2, TABLE_SIZE_512_BITS)

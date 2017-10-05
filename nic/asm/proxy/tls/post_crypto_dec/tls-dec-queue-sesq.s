@@ -28,6 +28,11 @@ tls_dec_queue_sesq_process:
 	add		    r4, r5, r0
 	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r4
 
+tls_dec_odesc_write:
+    add         r3, r0, k.to_s5_odesc
+    addi        r3, r3, PKT_DESC_AOL_OFFSET
+
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r3, odesc_A0, odesc_next_pkt)
 
 dma_cmd_sesq_slot:
 	add		    r5, r0, d.u.tls_queue_sesq_d.sw_sesq_pi
@@ -35,7 +40,6 @@ dma_cmd_sesq_slot:
 	/* Set the DMA_WRITE CMD for SESQ slot */
 	add		    r1, r5, d.u.tls_queue_sesq_d.sesq_base
 
-	phvwr		p.dma_cmd0_dma_cmd_addr, r1
     add         r3, r0, k.to_s5_odesc
 #if 1
     /* FIXME : remove the offset when enqueueing to SESQ */
@@ -48,7 +52,7 @@ dma_cmd_sesq_slot:
     CAPRI_OPERAND_DEBUG(k.to_s5_odesc)
     CAPRI_OPERAND_DEBUG(k.to_s5_other_fid)
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r1, ring_entry_descr_addr,ring_entry_descr_addr)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r1, ring_entry_descr_addr,ring_entry_descr_addr)
 
     smeqb       c1, k.to_s5_debug_dol, TLS_DDOL_SESQ_STOP, TLS_DDOL_SESQ_STOP
     bcf         [c1], tls_sesq_produce_skip
@@ -60,15 +64,15 @@ tls_sesq_produce:
     add.c1      r7, k.tls_global_phv_fid, r0
     add.!c1     r7, k.to_s5_other_fid, r0
 
-    CAPRI_DMA_CMD_RING_DOORBELL(dma_cmd1_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
+    CAPRI_DMA_CMD_RING_DOORBELL(dma_cmd2_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
                                 d.u.tls_queue_sesq_d.sw_sesq_pi, db_data_data)
                               
-    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd1_dma_cmd)
+    CAPRI_DMA_CMD_STOP_FENCE(dma_cmd2_dma_cmd)
     b           tls_queue_sesq_process_done
     nop
 tls_sesq_produce_skip:
-    phvwri      p.dma_cmd0_dma_cmd_eop, 1
-    phvwri      p.dma_cmd0_dma_cmd_wr_fence, 1
+    phvwri      p.dma_cmd1_dma_cmd_eop, 1
+    phvwri      p.dma_cmd1_dma_cmd_wr_fence, 1
         
 tls_queue_sesq_process_done:
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_dec_post_crypto_stats_process,

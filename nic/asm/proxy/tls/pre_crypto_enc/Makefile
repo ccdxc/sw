@@ -39,7 +39,8 @@ SRC_FILES := \
     $(SRC_DIR)/tls-enc-bld-barco-req.s \
     $(SRC_DIR)/tls-enc-bubble.s \
     $(SRC_DIR)/tls-enc-serq.s \
-    $(SRC_DIR)/tls-enc-pre-crypto-stats.s
+    $(SRC_DIR)/tls-enc-pre-crypto-stats.s \
+	$(SRC_DIR)/tls-enc-read-pkt-descr.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

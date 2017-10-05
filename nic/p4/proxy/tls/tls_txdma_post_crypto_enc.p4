@@ -8,15 +8,20 @@
 #define tx_table_s1_t0_action       tls_rx_bsq
 
 #define tx_table_s2_t0_action       tls_read_desc
+#define tx_table_s2_t3_action       tls_read_idesc
 
 
 #define tx_table_s3_t0_action       tls_bsq_consume
 #define tx_table_s3_t1_action       read_rnmdr_free_pi
 #define tx_table_s3_t2_action       read_rnmpr_free_pi
 
-#define tx_table_s4_t0_action       tls_queue_sesq
+#define tx_table_s4_t0_action       tls_read_odesc
 
-#define tx_table_s5_t0_action       tls_post_crypto_stats5
+#define tx_table_s5_t0_action       tls_read_aad
+
+#define tx_table_s6_t0_action       tls_queue_sesq
+
+#define tx_table_s7_t0_action       tls_post_crypto_stats5
 
 #include "../../common-p4+/common_txdma.p4"
 #include "tls_txdma_common.p4"
@@ -56,21 +61,30 @@ header_type tls_global_phv_t {
 
 header_type to_stage_3_phv_t {
     fields {
-        bsq_ci                          : 16;
         idesc                           : HBM_ADDRESS_WIDTH;
         ipage                           : HBM_ADDRESS_WIDTH;
+        odesc                           : HBM_ADDRESS_WIDTH;
     }
 }
 
-header_type to_stage_4_phv_t {
+#define GENERATE_TO_S3_K                                                                                \
+    modify_field(to_s3_scratch.idesc, to_s3.idesc);                                                     \
+    modify_field(to_s3_scratch.odesc, to_s3.odesc);                                                     \
+    modify_field(to_s3_scratch.ipage, to_s3.ipage);
+
+header_type to_stage_6_phv_t {
     fields {
         odesc                           : ADDRESS_WIDTH;
         debug_dol                       : 8;
         other_fid                       : 16;
     }
 }
+#define GENERATE_TO_S6_K                                                                                \
+    modify_field(to_s6_scratch.odesc, to_s6.odesc);                                                     \
+    modify_field(to_s6_scratch.debug_dol, to_s6.debug_dol);                                             \
+    modify_field(to_s6_scratch.other_fid, to_s6.other_fid);
 
-header_type to_stage_5_phv_t {
+header_type to_stage_7_phv_t {
     fields {
         rnmdr_free                      : 8;
         rnmpr_free                      : 8;
@@ -100,6 +114,9 @@ metadata barco_result_t read_desc_d;
 metadata tls_global_phv_t tls_global_phv_scratch;
 
 @pragma scratch_metadata
+metadata pkt_descr_aol_t PKT_DESCR_AOL_SCRATCH;
+
+@pragma scratch_metadata
 metadata read_rnmdr_free_pi_d_t read_rnmdr_free_d;
 
 @pragma scratch_metadata
@@ -109,30 +126,34 @@ metadata read_rnmpr_free_pi_d_t read_rnmpr_free_d;
 metadata tls_stage_post_crypto_stats_d_t tls_post_crypto_stats_d;
 
 @pragma scratch_metadata
+metadata additional_data_t tls_post_enc_aad_d;
+
+@pragma scratch_metadata
 metadata to_stage_3_phv_t to_s3_scratch;
 
 @pragma scratch_metadata
-metadata to_stage_4_phv_t to_s4_scratch;
+metadata to_stage_6_phv_t to_s6_scratch;
 
 @pragma scratch_metadata
-metadata to_stage_5_phv_t to_s5_scratch;
+metadata to_stage_7_phv_t to_s7_scratch;
 
 
 @pragma pa_header_union ingress to_stage_3
 metadata to_stage_3_phv_t to_s3;
 
-@pragma pa_header_union ingress to_stage_4
-metadata to_stage_4_phv_t to_s4;
+@pragma pa_header_union ingress to_stage_6
+metadata to_stage_6_phv_t to_s6;
 
-@pragma pa_header_union ingress to_stage_5
-metadata to_stage_5_phv_t to_s5;
+@pragma pa_header_union ingress to_stage_7
+metadata to_stage_7_phv_t to_s7;
 
 
 @pragma pa_header_union ingress common_global
 metadata tls_global_phv_t tls_global_phv;
 
 
-
+@pragma dont_trim
+metadata pkt_descr_aol_t odesc; 
 @pragma dont_trim
 metadata barco_result_t read_desc;
 @pragma dont_trim
@@ -158,6 +179,8 @@ metadata dma_cmd_phv2mem_t dma_cmd6;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd7;
 
+@pragma dont_trim
+metadata tls_header_t tls_hdr;
 
 
 /* Stage 1 table 0 action */
@@ -181,17 +204,24 @@ action tls_read_desc(status, output_list_address, pad) {
 
 }
 
+/* Stage 2 table 3 action */
+action tls_read_idesc(PKT_DESCR_AOL_ACTION_PARAMS) {
+    GENERATE_GLOBAL_K
+
+    GENERATE_PKT_DESCR_AOL_D
+}
+
 /* Stage 3 table 0 action */
-action tls_bsq_consume(TLSCB_0_PARAMS) {
+action tls_bsq_consume(TLSCB_0_PARAMS_NON_STG0) {
 
     GENERATE_GLOBAL_K
 
     /* To Stage 3 fields */
-    modify_field(to_s3_scratch.bsq_ci, to_s3.bsq_ci);
+    GENERATE_TO_S3_K
 
 
     /* D vector */
-    GENERATE_TLSCB_0_D
+    GENERATE_TLSCB_0_D_NON_STG0
 
 }
 
@@ -202,7 +232,7 @@ action read_rnmdr_free_pi(rnmdr_free_pi) {
     GENERATE_GLOBAL_K
 
     /* To Stage 3 fields */
-    modify_field(to_s3_scratch.idesc, to_s3.idesc);
+    GENERATE_TO_S3_K
 
     // d for stage 3 table 1 
     modify_field(read_rnmdr_free_d.rnmdr_free_pi, rnmdr_free_pi);
@@ -215,42 +245,53 @@ action read_rnmpr_free_pi(rnmpr_free_pi) {
     GENERATE_GLOBAL_K
 
     /* To Stage 3 fields */
-    modify_field(to_s3_scratch.ipage, to_s3.ipage);
+    GENERATE_TO_S3_K
 
     // d for stage 2 table 2 
     modify_field(read_rnmpr_free_d.rnmpr_free_pi, rnmpr_free_pi);
 }
 
+/* Stage 4 Table 0 action */
+action tls_read_odesc(PKT_DESCR_AOL_ACTION_PARAMS) {
+    GENERATE_GLOBAL_K
+
+    GENERATE_PKT_DESCR_AOL_D
+}
+
+/* Stage 5 Table 0 action */
+action tls_read_aad(AAD_ACTION_PARAMS) {
+    GENERATE_GLOBAL_K
+
+    GENERATE_AAD_FIELDS_D(tls_post_enc_aad_d)
+}
 
 
-/* Stage 4 action */
-action tls_queue_sesq(TLSCB_0_PARAMS) {
+/* Stage 6 action */
+action tls_queue_sesq(TLSCB_0_PARAMS_NON_STG0) {
 
     GENERATE_GLOBAL_K
 
 
-    /* To Stage 4 fields */
-    modify_field(to_s4_scratch.odesc, to_s4.odesc);
-    modify_field(to_s4_scratch.debug_dol, to_s4.debug_dol);
-    modify_field(to_s4_scratch.other_fid, to_s4.other_fid);
+    /* To Stage 6 fields */
+    GENERATE_TO_S6_K
 
 
-    GENERATE_TLSCB_0_D
+    GENERATE_TLSCB_0_D_NON_STG0
 }
 
-/* Stage 5 action */
+/* Stage 7 action */
 action tls_post_crypto_stats5(STG_POST_CRYPTO_STATS_ACTION_PARAMS) {
 
     GENERATE_GLOBAL_K
 
 
-    /* To Stage 5 fields */
-    modify_field(to_s5_scratch.rnmdr_free, to_s5.rnmdr_free);
-    modify_field(to_s5_scratch.rnmpr_free, to_s5.rnmpr_free);
-    modify_field(to_s5_scratch.enc_completions, to_s5.enc_completions);
-    modify_field(to_s5_scratch.dec_completions, to_s5.dec_completions);
-    modify_field(to_s5_scratch.debug_stage0_3_thread, to_s5.debug_stage0_3_thread);
-    modify_field(to_s5_scratch.debug_stage4_7_thread, to_s5.debug_stage4_7_thread);
+    /* To Stage 7 fields */
+    modify_field(to_s7_scratch.rnmdr_free, to_s7.rnmdr_free);
+    modify_field(to_s7_scratch.rnmpr_free, to_s7.rnmpr_free);
+    modify_field(to_s7_scratch.enc_completions, to_s7.enc_completions);
+    modify_field(to_s7_scratch.dec_completions, to_s7.dec_completions);
+    modify_field(to_s7_scratch.debug_stage0_3_thread, to_s7.debug_stage0_3_thread);
+    modify_field(to_s7_scratch.debug_stage4_7_thread, to_s7.debug_stage4_7_thread);
 
 
     GENERATE_STG_POST_CRYPTO_STATS_D

@@ -20,7 +20,7 @@ struct tx_table_s3_t2_read_rnmpr_free_pi_d d ;
         .param          RNMPR_TABLE_BASE
 	    .align
 tls_enc_free_rnmpr:
-        CAPRI_SET_DEBUG_STAGE0_3(p.to_s5_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_2)
+        CAPRI_SET_DEBUG_STAGE0_3(p.to_s7_debug_stage0_3_thread, CAPRI_MPU_STAGE_3, CAPRI_MPU_TABLE_2)
         CAPRI_CLEAR_TABLE2_VALID
 
 	    addui		r3, r0, hiword(RNMPR_TABLE_BASE)
@@ -32,7 +32,7 @@ tls_enc_free_rnmpr:
         memwr.wx    r3, k.{to_s3_ipage}.wx
 
         /* TBD memwr A.CI */
-        phvwri      p.to_s5_rnmpr_free, 1
+        phvwri      p.to_s7_rnmpr_free, 1
 	    nop.e
 	    nop
 

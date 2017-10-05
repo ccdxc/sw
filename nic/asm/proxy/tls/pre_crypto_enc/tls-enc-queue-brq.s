@@ -1,5 +1,6 @@
 /*
  * 	Implements the writing of request to BRQ
+ *  Stage 5, Table 0
  */
 
 #include "tls-constants.h"
@@ -21,6 +22,8 @@ struct tx_table_s5_t0_d d;
     .param      tls_enc_pre_crypto_stats_process
         
 tls_enc_queue_brq_process:
+    smeqb       c5, k.to_s5_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
+
     CAPRI_SET_DEBUG_STAGE4_7(p.to_s6_debug_stage4_7_thread, CAPRI_MPU_STAGE_5, CAPRI_MPU_TABLE_0)
     CAPRI_CLEAR_TABLE0_VALID
 	addi		r5, r0, TLS_PHV_DMA_COMMANDS_START
@@ -50,24 +53,27 @@ dma_cmd_enc_desc_entry0:
 	addi		r5, r5, PKT_DESC_AOL_OFFSET
 	phvwr		p.dma_cmd1_dma_cmd_addr, r5
 
-	phvwr		p.aol_A0, k.{to_s5_opage}.dx
+	phvwr		p.odesc_A0, k.{to_s5_opage}.dx
 
 	addi		r4, r0, NIC_PAGE_HEADROOM
-	addi		r4, r4, TLS_HDR_SIZE
-	phvwr		p.aol_O0, r4.wx
+	phvwr		p.odesc_O0, r4.wx
+
+    /* odesc_L0 already setup in Stage 2, Table 3 */
 
 	/* r1 = d.cur_tls_data_len + TLS_HDR_SIZE */
-    addi        r1, r0, 512
-	phvwr		p.aol_L0, r1.wx
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r5, aol_A0, aol_next_pkt)
+    /* Setup Auth Tag Address */
+    add         r1, r0, k.to_s5_opage
+    add         r1, r1, r4 /* offset */
+    addi        r1, r1, NTLS_AAD_SIZE
+    add         r1, r1, k.s2_s5_t0_phv_aad_length
+    phvwr       p.barco_desc_auth_tag_addr, r1.dx
+
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r5, odesc_A0, odesc_next_pkt)
 
 
-dma_cmd_enc_tls_hdr:
+dma_cmd_enc_aad:
 	/* tlsh = (tls_hdr_t *)(u64)(md->opage + NIC_PAGE_HEADROOM); */
-	add		    r5, r0, k.to_s5_opage
-	addi		r5, r5, NIC_PAGE_HEADROOM
-
 
 	/*
 	  tlsh->type = NTLS_RECORD_DATA;
@@ -75,14 +81,13 @@ dma_cmd_enc_tls_hdr:
           tlsh->version_minor = NTLS_TLS_1_2_MINOR;
           tlsh->len = brq.idesc->data_len;
 	 */
-	
-	
-
-	phvwr		p.tls_global_phv_tls_hdr_len, k.to_s5_cur_tls_data_len
-
+    /*
+    Setup in Stage 2, Table 3
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r5,
                                 tls_global_phv_tls_hdr_type, tls_global_phv_tls_hdr_len)    
+    */
 
+    phvwri.c5    p.dma_cmd2_dma_cmd_type, 0
 
 dma_cmd_iv:
     add         r5, r0, k.to_s5_opage
@@ -91,7 +96,7 @@ dma_cmd_iv:
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd3_dma_cmd, r5, crypto_iv_explicit_iv, crypto_iv_salt)    
 
-dma_cmd_enc_brq_slot1:
+dma_cmd_enc_brq_slot:
     add         r7, r0, d.{u.tls_queue_brq5_d.pi}.wx
 
     sll		    r5, r7, NIC_BRQ_ENTRY_SIZE_SHIFT
@@ -101,16 +106,16 @@ dma_cmd_enc_brq_slot1:
 
 	/* Fill the barco request */        
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd4_dma_cmd, r1, barco_desc_input_list_address,
-                                barco_desc_application_tag)
-        
-
-dma_cmd_enc_brq_slot2:
-    /* The remaining BRQ descriptor at offset 64 bytes (512 bits) */
-    addi        r1, r1, 64
-
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd5_dma_cmd, r1, barco_desc_sector_num,
                                 barco_desc_doorbell_data)
+dma_cmd_idesc:
+    /* Already setup in Stage 2, Table 0 */
+    add         r1, r0, k.to_s5_idesc
+    addi        r1, r1, PKT_DESC_AOL_OFFSET
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd5_dma_cmd, r1, idesc_A0, idesc_next_pkt)
 
+    /* NOOP if we bypass Barco */
+    phvwri.c5    p.dma_cmd5_dma_cmd_type, 0
+        
 dma_cmd_output_list_addr:
 	add		    r5, r0, k.to_s5_idesc
 	addi		r5, r5, 4
@@ -119,8 +124,7 @@ dma_cmd_output_list_addr:
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd6_dma_cmd, r5, barco_desc_output_list_address,
                                 barco_desc_output_list_address)
 
-    smeqb       c1, k.to_s5_debug_dol, TLS_DDOL_BYPASS_BARCO, TLS_DDOL_BYPASS_BARCO
-    bcf         [!c1], dma_cmd_ring_bsq_doorbell_skip
+    bcf         [!c5], dma_cmd_ring_bsq_doorbell_skip
     nop
 
     /* for Barco bypass - use input descriptor */

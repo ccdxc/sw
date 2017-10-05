@@ -65,7 +65,7 @@ def TestCaseSetup(tc):
     tlscb_cur.command = 0x30000000
     tlscb_cur.crypto_key_idx = tlscb_cur.crypto_key.keyindex
     tlscb_cur.salt = 0x12345678
-    tlscb_cur.explicit_iv = 0xfedcba9876543210
+    tlscb_cur.explicit_iv = 0x0200000000000000
     tlscb_cur.is_decrypt_flow = False
     tlscb_cur.SetObjValPd()
 

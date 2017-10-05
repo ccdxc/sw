@@ -1,5 +1,6 @@
 /*
  * 	Implements the reading of SERQ to pick up the new descriptor to process
+ *  Stage 0, Table 0
  */
 
 #include "tls-constants.h"
@@ -28,11 +29,11 @@ tls_enc_pre_crypto_process:
     add         r3, r0, d.u.read_tls_stg0_d.ci_0
     sll         r3, r3, NIC_SERQ_ENTRY_SIZE_SHIFT
     # TBD  : move to updated ci
-    add         r3, r0, r0
+    #add         r3, r0, r0
     add         r3, r3, d.u.read_tls_stg0_d.serq_base
 
-	phvwr		p.to_s2_idesc, r3
-   	phvwr		p.to_s5_idesc, r3
+	#phvwr		p.to_s2_idesc, r3
+   	#phvwr		p.to_s5_idesc, r3
 	phvwri		p.tls_global_phv_pending_rx_serq, 1
 
     phvwr       p.tls_global_phv_qstate_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}

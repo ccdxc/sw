@@ -1,5 +1,6 @@
 /*
  * 	Implements the receipt of tls encrypt request from SERQ 
+ *  Stage 2, Table 0
  */
 
 #include "tls-constants.h"
@@ -42,9 +43,9 @@ dma_cmd_enc_desc_entry_last:
 	addi		r5, r0, NIC_DESC_ENTRY_L_OFFSET
 	add		    r5, r5, d.qtail
 
-	phvwr		p.aol_next_addr, k.to_s2_idesc
+	phvwr		p.idesc_next_addr, k.to_s2_idesc
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r5, aol_next_addr, aol_next_addr)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd0_dma_cmd, r5, idesc_next_addr, idesc_next_addr)
 
 no_dma_cmd_enc:        
 	/* etlsp->enc_nxt.desc = TAIL_DESC(*etlsp, enc); */

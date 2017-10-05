@@ -1,5 +1,6 @@
 /*
  * 	Implements the reading of SERQ descriptor
+ *  Stage 1, Table 0
  */
 
 #include "tls-constants.h"
@@ -24,14 +25,16 @@ struct tx_table_s1_t0_k k	    ;
         .param          tls_enc_rx_serq_process
         .param          tls_enc_alloc_tnmdr_process
         .param          tls_enc_alloc_tnmpr_process
-        
+        .param          tls_enc_pkt_descriptor_process
         
 tls_enc_read_serq_entry_process:
     CAPRI_SET_DEBUG_STAGE0_3(p.to_s6_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
     phvwr   p.to_s2_idesc, d.{idesc}
     phvwr   p.to_s4_idesc, d.{idesc}
     phvwr   p.to_s5_idesc, d.{idesc}
-    add     r1, r0, d.{idesc}
+
+    add     r2, r0, d.{idesc}
+    addi    r2, r2, PKT_DESC_AOL_OFFSET
 
 table_read_rx_serq_enc: 
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_enc_rx_serq_process,
@@ -48,6 +51,9 @@ table_read_TNMPR_ALLOC_IDX:
 	CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, tls_enc_alloc_tnmpr_process,
 	                    r3, TABLE_SIZE_16_BITS)
         
+table_read_idesc:
+	CAPRI_NEXT_TABLE_READ(3, TABLE_LOCK_DIS, tls_enc_pkt_descriptor_process,
+	                    r2, TABLE_SIZE_512_BITS)
 	nop.e
 	nop
 	

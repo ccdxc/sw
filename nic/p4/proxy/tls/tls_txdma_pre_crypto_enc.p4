@@ -9,7 +9,7 @@
 #define tx_table_s2_t0_action       tls_rx_serq 
 #define tx_table_s2_t1_action       read_tnmdr
 #define tx_table_s2_t2_action       read_tnmpr
-#define tx_table_s2_t3_action       tls_rx_serq
+#define tx_table_s2_t3_action       tls_read_pkt_descr_aol
 
 #define tx_table_s3_t0_action       tls_serq_consume
 #define tx_table_s3_t1_action       tdesc_alloc
@@ -190,19 +190,6 @@ header_type to_stage_7_phv_t {
 }
 
 
-#define GENERATE_S2_S4_T0                                                               \
-        modify_field(s2_s4_t0_scratch.idesc_aol0_addr, s2_s4_t0_phv.idesc_aol0_addr);   \
-        modify_field(s2_s4_t0_scratch.idesc_aol0_offset, s2_s4_t0_phv.idesc_aol0_offset);   \
-        modify_field(s2_s4_t0_scratch.idesc_aol0_len, s2_s4_t0_phv.idesc_aol0_len);
-header_type s2_s4_t0_phv_t {
-    fields {
-        idesc_aol0_addr                 : HBM_ADDRESS_WIDTH;
-        idesc_aol0_offset               : HBM_ADDRESS_WIDTH;
-        idesc_aol0_len                  : 16;
-    }
-}
-
-
 /* PHV PI storage */
 header_type barco_dbell_t {
     fields {
@@ -230,9 +217,12 @@ header_type s3_t2_s2s_phv_t {
     }
 }
 
+#define s2_s5_t0_phv_t  additional_data_t
+#define GENERATE_S2_S5_T0  GENERATE_AAD_FIELDS(s2_s5_t0_scratch, s2_s5_t0_phv)
+
 header_type barco_desc_pad_t {
     fields {
-        pad                     : 304;
+        pad                     : 96;
     }
 }
 
@@ -242,6 +232,9 @@ metadata tlscb_0_t tlscb_0_d;
 
 @pragma scratch_metadata
 metadata tlscb_1_t tlscb_1_d;
+
+@pragma scratch_metadata
+metadata pkt_descr_aol_t PKT_DESCR_AOL_SCRATCH;
 
 @pragma scratch_metadata
 metadata tls_stage_bld_barco_req_d_t tls_bld_barco_req_d;
@@ -275,7 +268,7 @@ metadata to_stage_7_phv_t to_s7;
 metadata tls_global_phv_t tls_global_phv;
 
 @pragma pa_header_union ingress  common_t0_s2s 
-metadata s2_s4_t0_phv_t s2_s4_t0_phv;
+metadata s2_s5_t0_phv_t s2_s5_t0_phv;
 
 
 @pragma pa_header_union ingress common_t1_s2s
@@ -286,11 +279,13 @@ metadata s3_t2_s2s_phv_t s3_t2_s2s;
 
 
 @pragma dont_trim
+metadata pkt_descr_aol_t idesc; 
+@pragma dont_trim
+metadata pkt_descr_aol_t odesc; 
+@pragma dont_trim
 metadata barco_desc_t barco_desc;
 @pragma dont_trim
 metadata barco_desc_pad_t   barco_desc_pad;
-@pragma dont_trim
-metadata pkt_descr_aol_t aol; 
 @pragma dont_trim
 metadata barco_dbell_t barco_dbell;
 @pragma dont_trim
@@ -329,13 +324,13 @@ metadata to_stage_5_phv_t to_s5_scratch;
 metadata to_stage_6_phv_t to_s6_scratch;
 @pragma scratch_metadata
 metadata to_stage_7_phv_t to_s7_scratch;
-@pragma scratch_metadata
-metadata s2_s4_t0_phv_t s2_s4_t0_scratch;
 
 @pragma scratch_metadata
 metadata s3_t1_s2s_phv_t s3_t1_s2s_scratch;
 @pragma scratch_metadata
 metadata s3_t2_s2s_phv_t s3_t2_s2s_scratch;
+@pragma scratch_metadata
+metadata s2_s5_t0_phv_t    s2_s5_t0_scratch;
 
 
 @pragma scratch_metadata
@@ -386,6 +381,14 @@ action read_tnmdr(tnmdr_pidx) {
 action read_tnmpr(tnmpr_pidx) {
     // d for stage 2 table 2 read-tnmpr-idx
     modify_field(read_tnmpr_d.tnmpr_pidx, tnmpr_pidx);
+}
+
+/*
+ * Stage 2 table 3 action
+ */
+action tls_read_pkt_descr_aol(PKT_DESCR_AOL_ACTION_PARAMS) {
+    // d for stage 2 table 3
+    GENERATE_PKT_DESCR_AOL_D
 }
 
 /* Stage 3 table 0 action */
@@ -458,8 +461,6 @@ action tls_bld_brq4(TLSCB_0_PARAMS_NON_STG0) {
 
     GENERATE_GLOBAL_K
 
-    GENERATE_S2_S4_T0
-
     /* To Stage 4 fields */
     modify_field(to_s4_scratch.idesc, to_s4.idesc);
     modify_field(to_s4_scratch.odesc, to_s4.odesc);
@@ -484,6 +485,7 @@ action tls_queue_brq5(BARCO_CHANNEL_PARAMS) {
     modify_field(to_s5_scratch.cur_tls_data_len, to_s5.cur_tls_data_len);
     modify_field(to_s5_scratch.debug_dol, to_s5.debug_dol);
 
+    GENERATE_S2_S5_T0
 
     GENERATE_BARCO_CHANNEL_D
 }

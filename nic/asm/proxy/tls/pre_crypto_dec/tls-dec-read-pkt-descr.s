@@ -28,19 +28,11 @@ tls_dec_pkt_descriptor_process:
     phvwr   p.idesc_A0, d.u.tls_read_pkt_descr_aol_d.A0
     add     r2, r0, d.{u.tls_read_pkt_descr_aol_d.A0}.dx
     add     r1, r0, d.{u.tls_read_pkt_descr_aol_d.O0}.wx
-#if 1
-    /* FIXME: Workaround to DoL packet injection issue */
-    addi    r1, r1, 4
-#endif
     phvwr   p.idesc_O0, r1.wx
 
     
     add     r3, r0, d.{u.tls_read_pkt_descr_aol_d.L0}.wx
     subi    r3, r3, TLS_AES_GCM_AUTH_TAG_SIZE
-#if 1
-    /* FIXME: Workaround to DoL packet injection issue */
-    subi    r3, r3, 20
-#endif
     phvwr   p.idesc_L0, r3.wx
 
     /* Setup DMA command to write the AAD */
@@ -52,10 +44,6 @@ tls_dec_pkt_descriptor_process:
     /* Setup barco command authentication tag address */
     add     r1, d.{u.tls_read_pkt_descr_aol_d.A0}.dx, d.{u.tls_read_pkt_descr_aol_d.O0}.wx
     add     r1, r1, d.{u.tls_read_pkt_descr_aol_d.L0}.wx
-#if 1
-    /* FIXME: Workaround to DoL packet injection issue */
-    subi    r1, r1, 16
-#endif
     sub     r1, r1, TLS_AES_GCM_AUTH_TAG_SIZE
     phvwr   p.barco_desc_auth_tag_addr, r1.dx
 

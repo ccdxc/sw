@@ -1,6 +1,7 @@
 /*
  * 	Doorbell write to clear the sched bit for the SERQ having
  *      finished the consumption processing.
+ *  Stage 3, Table 0
  */
 
 #include "tls-constants.h"

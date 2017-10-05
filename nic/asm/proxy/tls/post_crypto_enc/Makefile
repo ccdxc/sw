@@ -35,7 +35,10 @@ SRC_FILES := \
     $(SRC_DIR)/tls-enc-bsq-consume.s \
 	$(SRC_DIR)/tls-enc-read-rnmdr-free-idx.s \
 	$(SRC_DIR)/tls-enc-read-rnmpr-free-idx.s \
-	$(SRC_DIR)/tls-enc-post-crypto-stats.s
+	$(SRC_DIR)/tls-enc-post-crypto-stats.s \
+	$(SRC_DIR)/tls-enc-read-idesc.s \
+	$(SRC_DIR)/tls-enc-read-odesc.s \
+	$(SRC_DIR)/tls-enc-read-aad.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

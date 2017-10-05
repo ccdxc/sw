@@ -63,8 +63,11 @@ dma_cmd_dec_odesc:
 	phvwr		p.odesc_O0, r4.wx
 
 	/* r1 = d.cur_tls_data_len + TLS_HDR_SIZE */
-    /* Barco also copies out the AAD, hence account for that */
-    add         r4, r1, NTLS_AAD_SIZE
+    /* Includes the TLS header, explicit IV and authentication tag
+     * Output from Barco includes the AAD
+     */
+    add         r4, r0, k.to_s6_cur_tls_data_len
+    subi        r4, r4, (TLS_AES_GCM_AUTH_TAG_SIZE - NTLS_TLS_HEADER_SIZE)
 	phvwr		p.odesc_L0, r4.wx
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r5, odesc_A0, odesc_next_pkt)

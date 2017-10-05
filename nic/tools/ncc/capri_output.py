@@ -425,8 +425,15 @@ def capri_asm_output_pa(gress_pa):
 
     if active_union:
         pstr += active_union.print_union()
-        pstr_flit[fid] = copy.copy(pstr)
+        #pstr_flit[fid] = copy.copy(pstr)
+        phv_bit = active_union.end_phv
 
+    last_flit_pad = ((fid+1) * flit_sz) - phv_bit
+    if last_flit_pad:
+        pstr += indent + '_pad_%d_ : %d; // FLE[%d:%d]\n' % \
+                    (phv_bit, last_flit_pad,
+                    _phv_bit_flit_le_bit(phv_bit),
+                    _phv_bit_flit_le_bit(phv_bit+last_flit_pad-1))
     if fid < num_flits and pstr_flit[fid] == '':
         pstr_flit[fid] = copy.copy(pstr)
 

@@ -324,6 +324,8 @@ header_type additional_data_t {
     }
 }
 
+#define AAD_ACTION_PARAMS aad_seq_num, aad_type, aad_version_major, aad_version_minor, aad_length
+
 #define GENERATE_AAD_FIELDS(TO, FROM)                                                               \
     modify_field(TO.aad_seq_num, FROM.aad_seq_num);                                                 \
     modify_field(TO.aad_type, FROM.aad_type);                                                       \
@@ -331,3 +333,9 @@ header_type additional_data_t {
     modify_field(TO.aad_version_minor, FROM.aad_version_minor);                                     \
     modify_field(TO.aad_length, FROM.aad_length);
 
+#define GENERATE_AAD_FIELDS_D(TO)                                                               \
+    modify_field(TO.aad_seq_num, aad_seq_num);                                                 \
+    modify_field(TO.aad_type, aad_type);                                                       \
+    modify_field(TO.aad_version_major, aad_version_major);                                     \
+    modify_field(TO.aad_version_minor, aad_version_minor);                                     \
+    modify_field(TO.aad_length, aad_length);
