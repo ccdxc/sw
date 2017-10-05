@@ -19,6 +19,11 @@ service NwSecurity {
     rpc SecurityGroupUpdate (SecurityGroupRequestMsg) returns (SecurityGroupResponseMsg) {}
     rpc SecurityGroupDelete (SecurityGroupDeleteRequestMsg) returns (SecurityGroupDeleteResponseMsg) {}
     rpc SecurityGroupGet (SecurityGroupGetRequestMsg) returns (SecurityGroupGetResponseMsg) {}
+    
+    rpc DoSPolicyCreate (DoSPolicyRequestMsg) returns (DoSPolicyResponseMsg) {}
+    rpc DoSPolicyUpdate (DoSPolicyRequestMsg) returns (DoSPolicyResponseMsg) {}
+    rpc DoSPolicyDelete (DoSPolicyDeleteRequestMsg) returns (DoSPolicyDeleteResponseMsg) {}
+    rpc DoSPolicyGet (DoSPolicyGetRequestMsg) returns (DoSPolicyGetResponseMsg) {}
 }
 
 // normalization feature actions upon detecting malformed packets
@@ -177,7 +182,16 @@ message Service {
                                                      // 0 for other protocols
         types.ICMPMsgType      icmp_msg_type = 3;
     }
-    ALGName                    alg=4;                //  Identifies ALG name
+    ALGName                    alg           = 4;                //  Identifies ALG name
+}
+
+message DoSService {
+    types.IPProtocol           ip_protocol   = 1;    // IP protocol
+    oneof l4_info {
+        uint32                 dst_port      = 2;    // TCP or UDP port, 
+                                                     // 0 for other protocols
+        types.ICMPMsgType      icmp_msg_type = 3;
+    }
 }
 
 // Applicaion Layer Gateway (ALG) names for invoking appropriate ALG
@@ -334,7 +348,7 @@ message DoSFloodLimits {
 
 // DoSProtectionSpec defines DoS protection policy for a security group
 message DoSProtectionSpec {
-  Service             svc                  = 1;    // (optional) application
+  DoSService          svc                  = 1;    // (optional) application
                                                    // service for which rest of
                                                    // the DoS config to be
                                                    // applied on
@@ -346,6 +360,7 @@ message DoSProtectionSpec {
   DoSFloodLimits      icmp_flood_limits    = 7;    // ICMP flood limits
   DoSFloodLimits      other_flood_limits   = 8;    // flood limits for all other
                                                    // traffic (IP and non-IP)
+  uint32              peer_security_group = 9;     // TO security group
 }
 
 
@@ -363,8 +378,8 @@ message EgressDoSPolicy {
 // to create/update/delete/get DoS groups
 message DoSKeyHandle {
   oneof key_or_handle {
-   uint32     ddos_id     = 1;    // DoS id or label
-   fixed64    ddos_handle = 2;    // id of DoS returned by HAL
+   uint32     security_group_id = 1;    // security group id or label
+   fixed64    dos_handle = 2;    // id of DoS returned by HAL
   }
 }
 
@@ -377,14 +392,14 @@ message DoSSpec {
    EgressDoSPolicy            egress_policy  = 4;    // egress policy
 }
 
-// DoSRequestMsg is batched add or modify DoS request
-message DoSRequestMsg {
+// DoSPolicyRequestMsg is batched add or modify DoS request
+message DoSPolicyRequestMsg {
   repeated DoSSpec    request = 1;    // batched request
 }
 
 // DoS operational status
 message DoSStatus {
-  fixed64    ddos_handle = 1;    // id of the ddos returned by HAL
+  fixed64    dos_handle = 1;    // id of the dos returned by HAL
 }
 
 // DoSResponse is the response to DoSSpec
@@ -393,8 +408,8 @@ message DoSResponse {
   DoSStatus             status      = 2;    // operational status
 }
 
-// DoSResponseMsg is batched response to DoSRequestMsg
-message DoSResponseMsg {
+// DoSPolicyResponseMsg is batched response to DoSPolicyRequestMsg
+message DoSPolicyResponseMsg {
   repeated DoSResponse    response = 1;    // batched response
 }
 
@@ -404,14 +419,14 @@ message DoSDeleteRequest {
   DoSKeyHandle             key_or_handle  = 2;    // key or handle
 }
 
-// DoSDeleteRequestMsg is used to delete a batch of security groups
-message DoSDeleteRequestMsg {
+// DoSPolicyDeleteRequestMsg is used to delete a batch of security groups
+message DoSPolicyDeleteRequestMsg {
   repeated DoSDeleteRequest    request = 1;
 }
 
-// DoSDeleteResponseMsg is batched response to
-// DoSDeleteRequestMsg
-message DoSDeleteResponseMsg {
+// DoSPolicyDeleteResponseMsg is batched response to
+// DoSPolicyDeleteRequestMsg
+message DoSPolicyDeleteResponseMsg {
   repeated types.ApiStatus    api_status = 1;    // API status code
 }
 
@@ -421,8 +436,8 @@ message DoSGetRequest {
   DoSKeyHandle             key_or_handle  = 2;    // key or handle
 }
 
-// DoSGetRequestMsg is batched GET request for DoS
-message DoSGetRequestMsg {
+// DoSPolicyGetRequestMsg is batched GET request for DoS
+message DoSPolicyGetRequestMsg {
   repeated DoSGetRequest    request = 1;    // batched get request
 }
 
@@ -438,7 +453,7 @@ message DoSGetResponse {
   DoSStats     stats      = 4;    // debug status of DoS
 }
 
-// DoSGetResponseMsg is batched response to DoSGetRequestMsg
-message DoSGetResponseMsg {
+// DoSPolicyGetResponseMsg is batched response to DoSPolicyGetRequestMsg
+message DoSPolicyGetResponseMsg {
   repeated DoSGetResponse    response = 1;    // batched get response
 }

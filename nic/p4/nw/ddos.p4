@@ -293,8 +293,6 @@ table ddos_src_vf_policer {
     size : DDOS_SRC_VF_POLICER_TABLE_SIZE;
 }
 
-
-
 action ddos_src_vf_policer_action(ddos_src_vf_policer_idx,
                                   ddos_src_vf_policer_saved_color,
                                   ddos_src_vf_policer_dropped_packets) {
@@ -437,13 +435,6 @@ table ddos_service_policer_action {
     }
     default_action : nop;
     size : DDOS_SERVICE_POLICER_TABLE_SIZE;
-}
-
-meter ddos_src_dst_policer {
-    type           : packets;
-    static         : ddos_src_dst_policer;
-    result         : ddos_metadata.ddos_src_dst_policer_color;
-    instance_count : DDOS_SRC_DST_POLICER_TABLE_SIZE;
 }
 
 action execute_ddos_src_dst_policer(entry_valid, pkt_rate, rlimit_en,
