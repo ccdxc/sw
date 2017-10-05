@@ -136,7 +136,7 @@ def initCluster(nodeAddr):
         },
         "spec": {
             "quorumNodes": quorumNames,
-            "virtualIP": "192.168.30.10",
+            "virtualIP":  clustervip,
             "ntpServers": ["1.pool.ntp.org","2.pool.ntp.org"]
         }
     })
@@ -149,6 +149,7 @@ def initCluster(nodeAddr):
 # Create the parser and sub parser
 parser = argparse.ArgumentParser()
 parser.add_argument('--version', action='version', version='1.0.0')
+parser.add_argument("-clustervip", default="", help="VIP of the cluster")
 parser.add_argument("-nodes", default="", help="list of nodes(comma separated)")
 parser.add_argument("-quorum", default="", help="list of quorum nodenames(comma separated)")
 parser.add_argument("-user", default='vagrant', help="User id for ssh")
@@ -167,6 +168,15 @@ if args.nodes == '':
 
 if args.quorum == '':
     quorum = os.environ["PENS_QUORUM_NODENAMES"].split(",")
+
+if args.clustervip == '':
+    clustervip = os.environ["PENS_CLUSTER_VIP"]
+else:
+    clustervip = args.clustervip
+
+if clustervip == '':
+    print "Invalid ClusterVIP"
+    sys.exit(1)
 
 # Basic error checking
 if len(addrList) < 1:

@@ -38,6 +38,7 @@ def build_nodes(num_nodes, num_quorum_nodes, base_ip)
     cluster_ip_nodes: node_ips.join(","),
     base_ip:          base_ip,
     node_ips:         node_ips,
+    cluster_vip:      base_ip + "10",
   }
 end
 
@@ -58,6 +59,7 @@ def preamble_script(postamble)
     echo 'export GOPATH=/import/' >> /etc/profile.d/env.sh
     echo "export PENS_NODES=$3" >> /etc/profile.d/env.sh
     echo "export PENS_QUORUM_NODENAMES=$4" >> /etc/profile.d/env.sh
+    echo "export PENS_CLUSTER_VIP=$5" >> /etc/profile.d/env.sh
     echo 'export KUBECONFIG=$HOME/admin.conf' >> /etc/profile.d/env.sh
     source /etc/profile.d/env.sh
 
@@ -79,6 +81,13 @@ def preamble_script(postamble)
     # Add pensando internal docker registry
     mkdir -p /etc/docker
     echo '{ "insecure-registries" : ["srv1.pensando.io:5000"] }' > /etc/docker/daemon.json
+
+    # set timezone
+    timedatectl set-timezone PST8PDT
+    # populate the master virtual ip - seems to be used by nic/agent/netagent/scripts/runVms.py and nic/agent/cmd/vsimctl/vsimctl.go
+    echo "$5 pen-master" >> /etc/hosts
+    # add a friendly alias
+    echo 'alias pensw="cd /import/src/github.com/pensando/sw/"' >> /home/vagrant/.bashrc
     #{postamble}
   BASIC_SCRIPT
 end

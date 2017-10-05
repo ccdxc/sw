@@ -103,6 +103,20 @@ func defaultOptions(mysvcName string) *options {
 	}
 }
 
+type tcpKeepAliveListener struct {
+	*net.TCPListener
+}
+
+func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
+	tc, err := ln.AcceptTCP()
+	if err != nil {
+		return
+	}
+	tc.SetKeepAlive(true)
+	tc.SetKeepAlivePeriod(3 * time.Minute)
+	return tc, nil
+}
+
 // NewRPCServer returns a gRPC server listening on a local port
 func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, error) {
 	var server *grpc.Server
@@ -121,6 +135,8 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 	}
 	// If started with ":0", listenURL needs to be updated.
 	listenURL = lis.Addr().String()
+
+	lis = tcpKeepAliveListener{lis.(*net.TCPListener)}
 
 	// Create the RPC server instance with default values
 	rpcServer := &RPCServer{

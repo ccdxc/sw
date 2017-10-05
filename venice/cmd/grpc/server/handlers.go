@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	maxIters              = 50
+	maxIters              = 500
 	sleepBetweenItersMsec = 100
 	apiClientWaitTimeMsec = 200
 

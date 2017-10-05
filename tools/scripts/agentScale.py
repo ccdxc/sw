@@ -27,7 +27,7 @@ if args.stop:
     print """
     if [ "$(docker ps -aq -f ancestor=pen-n4sagent)" != "" ]
     then
-        docker stop $(docker ps -aq -f ancestor=pen-n4sagent) && docker system prune -f
+        docker stop $(docker ps -aq -f ancestor=pen-n4sagent) && docker rm $(docker ps -q -f status=exited)
     fi
     """
 
@@ -40,7 +40,8 @@ if args.stop:
 
 for i in range(base,base+num_agents):
     print """
-    ip link add s{} type veth peer name t{}
+    ip link add s{} type dummy
+    ip link add t{} type dummy
     ifconfig s{} hw ether 02:02:02:02:03:{:02x} promisc up
     ifconfig t{} hw ether 02:03:02:02:03:{:02x} promisc up
     docker run -d  --name a{} pen-n4sagent /bin/sh -c "/bin/sleep 10 ; /n4sagent -npm pen-npm -resolver-urls 192.168.30.10:9002 -hostif s{} -uplink t{}"

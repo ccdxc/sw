@@ -124,7 +124,6 @@ func (i *vipService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 
 	var err, er error
 	switch e.Evt {
-	case types.LeaderEventChange:
 	case types.LeaderEventWon:
 		i.isLeader = true
 		for ip := range i.virtualIPs {
@@ -143,6 +142,11 @@ func (i *vipService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 		// TODO: In a go routine, send GratARP few times to take care of any lost GratARP - making clients
 		// converge faster.
 
+		// On CMD restart(in case of a crash), vip service comes back up and participates in
+		// election. If some other node becomes leader in this case, LeaderEventChange is sent
+		// However we might have been leader before crash. So cleanup any virtualIP.
+	case types.LeaderEventChange:
+		fallthrough
 	case types.LeaderEventLost:
 		i.isLeader = false
 		for ip := range i.virtualIPs {

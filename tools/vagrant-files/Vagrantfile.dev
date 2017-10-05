@@ -11,7 +11,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box_version = "0.3"
   config.ssh.insert_key = false
 
+if ENV['SCALE_SETUP']
+  nodeprops = build_nodes(3, 3, "10.100.0.")
+else
   nodeprops = build_nodes(3, 3, "192.168.30.")
+end
 
   nodeprops[:num_nodes].times do |n|
     node_name = nodeprops[:node_names][n]
@@ -19,7 +23,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     config.vm.define node_name do |node|
       # Control Interface
-      node.vm.network :private_network, ip: node_addr
+      if ENV['SCALE_SETUP']
+         node.vm.network "public_network", bridge: "eno2" , ip: node_addr, netmask:"255.255.0.0"
+      else
+         node.vm.network :private_network, ip: node_addr
+      end
       # Data Interface
       node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: "data_net", auto_config: false
 
@@ -58,12 +66,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           s.inline = preamble_script <<-EOF
             # Start docker and kubelet services
             systemctl enable docker && systemctl start docker
-            # populate the master virtual ip
-            echo '192.168.30.10 pen-master' >> /etc/hosts
-            # add a friendly alias
-            echo 'alias pensw="cd /import/src/github.com/pensando/sw/"' >> /home/vagrant/.bashrc
           EOF
-          s.args = [node_name, node_addr, nodeprops[:cluster_ip_nodes], nodeprops[:quorum_nodenames] ]
+          s.args = [node_name, node_addr, nodeprops[:cluster_ip_nodes], nodeprops[:quorum_nodenames], nodeprops[:cluster_vip] ]
       end
 
       # mount the host directories

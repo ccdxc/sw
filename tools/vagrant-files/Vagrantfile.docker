@@ -52,7 +52,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             systemctl enable docker && systemctl start docker
             sudo chmod a+rw /var/run/docker.sock
           EOF
-          s.args = [node_name, node_addr, nodeprops[:cluster_ip_nodes]]
+          s.args = [node_name, node_addr, nodeprops[:cluster_ip_nodes], nodeprops[:quorum_nodenames], nodeprops[:cluster_vip] ]
       end
 
       # mount the host directories
