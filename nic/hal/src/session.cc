@@ -44,6 +44,8 @@ session_compare_key_func (void *key1, void *key2)
 void *
 session_get_handle_key_func(void *entry)
 {
+    HAL_TRACE_DEBUG("Entry HAL Handle:{}", ((session_t*)entry)->hal_handle);
+
     HAL_ASSERT(entry != NULL);
     return (void *)&(((session_t *)entry)->hal_handle);
 }
@@ -59,6 +61,52 @@ session_compare_handle_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
+        return true;
+    }
+    return false;
+}
+
+void *
+session_get_iflow_key_func(void *entry)
+{
+    HAL_ASSERT(entry != NULL);
+    return (void *)&(((session_t *)entry)->iflow->config.key);
+}
+
+uint32_t
+session_compute_iflow_hash_func (void *key, uint32_t ht_size)
+{
+    return (utils::hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size);
+}
+
+bool
+session_compare_iflow_key_func (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(flow_key_t))) {
+        return true;
+    }
+    return false;
+}
+
+void *
+session_get_rflow_key_func(void *entry)
+{
+    HAL_ASSERT(entry != NULL);
+    return (void *)&(((session_t *)entry)->rflow->config.key);
+}
+
+uint32_t
+session_compute_rflow_hash_func (void *key, uint32_t ht_size)
+{
+    return (utils::hash_algo::fnv_hash(key, sizeof(flow_key_t)) % ht_size);
+}
+
+bool
+session_compare_rflow_key_func (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(flow_key_t))) {
         return true;
     }
     return false;
@@ -1027,6 +1075,9 @@ add_session_to_db (tenant_t *tenant, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
                    ep_t *sep, ep_t *dep, if_t *sif, if_t *dif,
                    session_t *session)
 {
+    HAL_TRACE_DEBUG("Entering ADD session to DB:{}", session->hal_handle);
+
+
     session->session_id_ht_ctxt.reset();
     g_hal_state->session_id_ht()->insert(session,
                                          &session->session_id_ht_ctxt);
@@ -1034,6 +1085,17 @@ add_session_to_db (tenant_t *tenant, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
     session->hal_handle_ht_ctxt.reset();
     g_hal_state->session_hal_handle_ht()->insert(session,
                                                  &session->hal_handle_ht_ctxt);
+
+    session->hal_iflow_ht_ctxt.reset();
+    g_hal_state->session_hal_iflow_ht()->insert(session,
+                                                &session->hal_iflow_ht_ctxt);
+   
+    if (session->rflow) {
+        session->hal_rflow_ht_ctxt.reset();
+        g_hal_state->session_hal_rflow_ht()->insert_with_key(
+                                     (void *)std::addressof(session->rflow->config.key),
+                                     session, &session->hal_rflow_ht_ctxt);
+    }
 
     if (sep) {
         utils::dllist_reset(&session->sep_session_lentry);
@@ -1922,7 +1984,7 @@ flow_create_fte(const flow_cfg_t *cfg,
         *assoc_flow = {};
         HAL_SPINLOCK_INIT(&assoc_flow->slock, PTHREAD_PROCESS_PRIVATE);
         assoc_flow->flow_key_ht_ctxt.reset();
-        assoc_flow->config = *cfg;
+        assoc_flow->config = *cfg_assoc;
         if (attrs_assoc) {
             assoc_flow->pgm_attrs = *attrs_assoc;            
         }
@@ -1937,6 +1999,26 @@ flow_create_fte(const flow_cfg_t *cfg,
     }
 
     return flow;
+}
+
+//-----------------------------------------------------------------------------
+// Flow Update FTE
+//-----------------------------------------------------------------------------
+static hal_ret_t
+flow_update_fte(flow_t *flow, const flow_cfg_t *cfg,
+                const flow_pgm_attrs_t *attrs)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+
+    if (cfg) {
+        flow->config = *cfg;
+    }
+
+    if (attrs) {
+        flow->pgm_attrs = *attrs;
+    }
+
+    return ret;
 }
 
 hal_ret_t
@@ -2041,6 +2123,7 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
         session->rflow->reverse_flow = session->iflow;
     }
     session->hal_handle = hal_alloc_handle();
+    session->alg_proto_state = args->alg_proto_state;
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_args_init(&pd_session_args);
@@ -2049,6 +2132,7 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
     pd_session_args.rsp = args->rsp;
+    pd_session_args.pgm_rflow = args->pgm_rflow;
 
     ret = pd::pd_session_create(&pd_session_args);
     if (ret != HAL_RET_OK) {
@@ -2070,6 +2154,77 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
         HAL_TRACE_ERR("session create failure, err={}", ret);
         session_cleanup(session);
     }
+
+    return ret;
+}
+
+session_t *
+session_lookup_fte(flow_key_t key, flow_role_t *role)
+{
+    session_t *session = NULL;
+
+    // Should we look at iflow first ?
+    session = (session_t *)g_hal_state->session_hal_rflow_ht()->lookup(std::addressof(key));   
+    *role = FLOW_ROLE_RESPONDER; 
+    if (session == NULL) { 
+        session = (session_t *)g_hal_state->session_hal_iflow_ht()->lookup(std::addressof(key));
+        *role = FLOW_ROLE_INITIATOR;
+    }
+
+    return session;        
+}
+
+hal_ret_t
+session_update_fte(const session_args_fte_t *args, session_t *session) 
+{
+    hal_ret_t                ret;
+    pd::pd_session_args_t    pd_session_args;
+
+    // Update PI Flows
+    if (args->pgm_rflow) {
+        ret = flow_update_fte(session->rflow, args->rflow[0], args->rflow_attrs[0]);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Flow update failure, err : {}", ret);
+            return ret;
+        }
+    }
+    
+    // allocate all PD resources and finish programming, if any
+    pd::pd_session_args_init(&pd_session_args);
+    pd_session_args.tenant = args->tenant;
+    pd_session_args.session = session;
+    pd_session_args.session_state = args->session_state;
+    pd_session_args.rsp = args->rsp;
+    pd_session_args.pgm_rflow = args->pgm_rflow;
+
+    ret = pd::pd_session_update(&pd_session_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD session update failure, err : {}", ret);
+    }
+    
+    return ret;
+}
+
+hal_ret_t
+session_delete_fte(const session_args_fte_t *args, session_t *session)
+{
+    hal_ret_t                ret;
+    pd::pd_session_args_t    pd_session_args;
+
+    // allocate all PD resources and finish programming, if any
+    pd::pd_session_args_init(&pd_session_args);
+    pd_session_args.tenant = args->tenant;
+    pd_session_args.session = session;
+    pd_session_args.session_state = args->session_state;
+    pd_session_args.rsp = args->rsp;
+    pd_session_args.pgm_rflow = args->pgm_rflow;
+
+    ret = pd::pd_session_delete(&pd_session_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD session delete failure, err : {}", ret);
+        session_cleanup(session);
+    }
+    session_cleanup(session);
 
     return ret;
 }

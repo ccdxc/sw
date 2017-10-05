@@ -40,22 +40,26 @@ def AddIngressHeadersByFlow(testcase, packet):
 def AddEgressHeadersByFlow(testcase, packet):
     return
 
-def __get_packet_template_impl(flow):
+def __get_packet_template_impl(flow, args):
     template = 'ETH'
     if flow.IsIP():
         template += "_%s_%s" % (flow.type, flow.proto)
     else:
         assert(0)
+  
+    if args is not None:
+        template += "_%s" % (args.proto)
+
     return infra_api.GetPacketTemplate(template)
 
-def GetPacketTemplateByFlow(testcase, packet):
-    return __get_packet_template_impl(testcase.config.flow)
+def GetPacketTemplateByFlow(testcase, packet, args=None):
+    return __get_packet_template_impl(testcase.config.flow, args)
 
-def GetPacketTemplateBySessionIflow(testcase, packet):
-    return __get_packet_template_impl(testcase.config.session.iconfig.flow)
+def GetPacketTemplateBySessionIflow(testcase, packet, args=None):
+    return __get_packet_template_impl(testcase.config.session.iconfig.flow, args)
 
-def GetPacketTemplateBySessionRflow(testcase, packet):
-    return __get_packet_template_impl(testcase.config.session.rconfig.flow)
+def GetPacketTemplateBySessionRflow(testcase, packet, args=None):
+    return __get_packet_template_impl(testcase.config.session.rconfig.flow, args)
 
 def IsPriorityTagged(pvtdata):
     if 'priotag' in pvtdata.__dict__:
@@ -130,20 +134,58 @@ def GetExpectedPacketCos(testcase, packet):
 
     return 0
 
-def __get_expected_packet(testcase, args):
-    if testcase.config.flow.IsDrop():
+def __get_expected_packet(testcase, args, config=None):
+    root = getattr(testcase.config, 'flow', None)
+    if root is None:
+       if config is None:
+           config = testcase.config.session.iconfig
+       root = getattr(config, 'flow', None)
+
+    if root.IsDrop():
         return None
+
     if args is None:
         return testcase.packets.Get('EXP_PKT')
+
     return testcase.packets.Get(args.expktid)
 
 def GetL2UcExpectedPacket(testcase, args = None):
     return __get_expected_packet(testcase, args)
 
 def GetCpuPacket(testcase, args = None):
-    if testcase.config.flow.IsFteEnabled():
+    root = getattr(testcase.config, 'flow', None)
+    if root is None:
+       root = getattr(testcase.config.session.iconfig, 'flow', None)
+
+    if root.IsFteEnabled():
         return testcase.packets.Get(args.expktid)
     return None
+
+def GetCpuPacketbyIflow(testcase, args = None):
+    root = getattr(testcase.config, 'flow', None)
+    if root is None:
+        root = getattr(testcase.config.session.iconfig, 'flow', None)
+
+    if root.IsFteEnabled():
+        return testcase.packets.Get(args.expktid)
+ 
+    return None
+
+def GetCpuPacketbyRflow(testcase, args = None):
+    root = getattr(testcase.config, 'flow', None)
+    src = getattr(testcase.config, 'src', None)
+    if root is None:
+        root = getattr(testcase.config.session.rconfig, 'flow', None)
+        src = getattr(testcase.config.session.rconfig, 'src', None)
+
+    if not src.tenant.IsHostPinned():
+       return None
+
+    if root.IsFteEnabled():
+        return testcase.packets.Get(args.expktid)
+
+    return None
+
 
 def GetL3UcExpectedPacket(testcase, args = None):
     return __get_expected_packet(testcase, args)
@@ -185,6 +227,10 @@ def GetIngressPortIPSGDrop(testcase):
     return list(sport)[:1]
 
 def GetExpectDelay(testcase):
-    if testcase.config.flow.IsFteEnabled():
+    root = getattr(testcase.config, 'flow', None)
+    if root is None:
+       root = getattr(testcase.config.session.iconfig, 'flow', None)
+
+    if root.IsFteEnabled():
         return 1 # 1 second
     return 0

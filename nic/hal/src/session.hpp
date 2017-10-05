@@ -61,7 +61,8 @@ enum flow_direction_t {
 
 #define FLOW_ROLES(ENTRY)                                           \
     ENTRY(FLOW_ROLE_INITIATOR,      0, "iflow")                     \
-    ENTRY(FLOW_ROLE_RESPONDER,      1, "rflow")                     
+    ENTRY(FLOW_ROLE_RESPONDER,      1, "rflow")                     \
+    ENTRY(FLOW_ROLE_NONE,           2, "none") 
 
 DEFINE_ENUM(flow_role_t, FLOW_ROLES)
 #undef FLOW_ROLES
@@ -80,6 +81,17 @@ DEFINE_ENUM(flow_end_type_t, FLOW_END_TYPES)
 
 DEFINE_ENUM(session_dir_t, SESSION_DIRECTIONS)
 #undef SESSION_DIRECTIONS
+
+// ALG types
+#define ALG_PROTO_STATE(ENTRY)                                         \
+    ENTRY(ALG_PROTO_STATE_NONE,       0,  "ALG_PROTO_STATE_NONE")      \
+    ENTRY(ALG_PROTO_STATE_TFTP_RRQ,   1,  "ALG_PROTO_STATE_TFTP_RRQ")  \
+    ENTRY(ALG_PROTO_STATE_TFTP_WRQ,   2,  "ALG_PROTO_STATE_TFTP_WRQ")  \
+    ENTRY(ALG_PROTO_STATE_FTP,        3,  "ALG_PROTO_STATE_FTP")       \
+    ENTRY(ALG_PROTO_STATE_DNS,       4,  "ALG_PROTO_STATE_DNS")       
+
+DEFINE_ENUM(alg_proto_state_t, ALG_PROTO_STATE)
+#undef ALG_PROTO_STATE
 
 // NAT types
 enum nat_type_t {
@@ -264,6 +276,7 @@ typedef struct session_args_s {
     flow_cfg_t         *rflow;                    // responder flow
     session_state_t    *session_state;            // connection tracking state
     tenant_t           *tenant;                   // tenant
+
 #if 0
     ep_t               *sep;                      // spurce ep
     ep_t               *dep;                      // dest ep
@@ -286,6 +299,8 @@ typedef struct session_args_fte_s {
 
     session_state_t    *session_state;            // connection tracking state
     tenant_t           *tenant;                   // tenant
+    bool               pgm_rflow;                 // Software only rfow ?
+    alg_proto_state_t  alg_proto_state;           // ALG Protocol State
 
     ep_t               *sep;                      // spurce ep
     ep_t               *dep;                      // dest ep
@@ -313,7 +328,8 @@ struct session_s {
     session_dir_t       src_dir;                  // source direction
     session_dir_t       dst_dir;                  // destination direction
     app_session_t       *app_session;             // app session this L4 session is part of, if any
-    tenant_t           *tenant;                   // tenant
+    tenant_t            *tenant;                  // tenant
+    alg_proto_state_t   alg_proto_state;          // ALG Protocol State
 
     // PD state
     pd::pd_session_t    *pd;                      // all PD specific state
@@ -322,6 +338,8 @@ struct session_s {
     hal_handle_t        hal_handle;               // hal handle for this session
     ht_ctxt_t           session_id_ht_ctxt;       // session id based hash table ctxt
     ht_ctxt_t           hal_handle_ht_ctxt;       // hal handle based hash table ctxt
+    ht_ctxt_t           hal_iflow_ht_ctxt;        // hal iflow based hash table ctxt
+    ht_ctxt_t           hal_rflow_ht_ctxt;        // hal rflow based hash table ctxt 
     dllist_ctxt_t       sep_session_lentry;       // source EP's session list context
     dllist_ctxt_t       dep_session_lentry;       // destination EP's session list context
     dllist_ctxt_t       sif_session_lentry;       // source interface's session list context
@@ -357,6 +375,14 @@ extern void *session_get_handle_key_func(void *entry);
 extern uint32_t session_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool session_compare_handle_key_func(void *key1, void *key2);
 
+extern void *session_get_iflow_key_func(void *entry);
+extern uint32_t session_compute_iflow_hash_func(void *key, uint32_t ht_size);
+extern bool session_compare_iflow_key_func(void *key1, void *key2);
+
+extern void *session_get_rflow_key_func(void *entry);
+extern uint32_t session_compute_rflow_hash_func(void *key, uint32_t ht_size);
+extern bool session_compare_rflow_key_func(void *key1, void *key2);
+
 extern void *flow_get_key_func(void *entry);
 extern uint32_t flow_compute_hash_func(void *key, uint32_t ht_size);
 extern bool flow_compare_key_func(void *key1, void *key2);
@@ -373,6 +399,9 @@ hal_ret_t extract_flow_key_from_spec (tenant_id_t tid,
 
 hal_ret_t session_create(const session_args_t *args, hal_handle_t *session_handle);
 hal_ret_t session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle);
+hal_ret_t session_update_fte(const session_args_fte_t *args, session_t *session);
+hal_ret_t session_delete_fte(const session_args_fte_t *args, session_t *session);
+hal::session_t *session_lookup_fte(flow_key_t key, flow_role_t *role);
 
 hal_ret_t session_create(session::SessionSpec& spec,
                          session::SessionResponse *rsp);

@@ -103,7 +103,6 @@ class TFTP_OACK(Packet):
     def answers(self, other):
         return isinstance(other, TFTP_WRQ) or isinstance(other, TFTP_RRQ)
 
-
 bind_layers(UDP, TFTP, dport=69)
 bind_layers(TFTP, TFTP_RRQ, op=1)
 bind_layers(TFTP, TFTP_WRQ, op=2)

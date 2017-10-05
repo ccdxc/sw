@@ -17,6 +17,7 @@ namespace fte {
     ENTRY(FLOWUPD_HEADER_POP,    3, "pop header")                       \
     ENTRY(FLOWUPD_FLOW_STATE,    4,  "connection tracking state")        \
     ENTRY(FLOWUPD_FWDING_INFO,   5, "fwding info")                      \
+    ENTRY(FLOWUPD_KEY,           6, "flow key update")                  \
 
 DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
 #undef FTE_FLOW_UPDATE_CODES
@@ -243,6 +244,7 @@ typedef struct flow_update_s {
         header_pop_info_t header_pop;
         flow_state_t flow_state;
         fwding_info_t fwding;
+        hal::flow_key_t key;
     };
 }__PACK__ flow_update_t;
 
@@ -287,6 +289,8 @@ struct txpkt_info_s {
 typedef hal::pd::p4_to_p4plus_cpu_pkt_t cpu_rxhdr_t;
 class flow_t;
 
+static const uint8_t MAX_FLOW_KEYS = 2;
+
 // FTE context passed between features in a pipeline
 class ctx_t {
 public:
@@ -298,9 +302,18 @@ public:
     hal_ret_t init(SessionSpec *spec, SessionResponse *rsp,
                    flow_t iflow[], flow_t rflow[]);
 
+    hal_ret_t update_flow(const flow_update_t& flowupd, const hal::flow_role_t role);
+
     hal_ret_t update_flow(const flow_update_t& flowupd);
 
     hal_ret_t update_gft();
+
+    hal_ret_t build_wildcard_key(hal::flow_key_t& key);
+ 
+    uint8_t construct_lookup_keys(hal::flow_key_t *key);
+
+    // Get key based on role
+    const hal::flow_key_t& get_key(hal::flow_role_t role);
 
     // Firewall action
     bool drop() const { return drop_; }
@@ -314,7 +327,7 @@ public:
 
     // flow key of the current pkts flow
     const hal::flow_key_t& key() const { return key_; }
-
+    
     // Following are valid only for packets punted to ARM
     const cpu_rxhdr_t* cpu_rxhdr() const { return cpu_rxhdr_; }
     uint8_t* pkt() const { return pkt_; }
@@ -335,6 +348,7 @@ public:
     bool protobuf_request() { return sess_spec_ != NULL; }
     session::SessionSpec* sess_spec() {return sess_spec_; }
     session::SessionResponse* sess_resp() {return sess_resp_; }
+    hal::session_t* session() { return session_; }
 
     const lifqid_t& arm_lifq() const { return arm_lifq_; }
     void set_arm_lifq(const lifqid_t& arm_lifq) {arm_lifq_= arm_lifq;}
@@ -350,8 +364,12 @@ public:
     hal_ret_t feature_status() const { return feature_status_; } 
     void set_feature_status(hal_ret_t ret) { feature_status_ = ret; }
 
-    bool flow_miss() const { return ((session_ == NULL) && (arm_lifq_.lif == hal::SERVICE_LIF_CPU)); }
+    bool flow_miss() const { return (((session_ == NULL) || \
+                     ((role_ == hal::FLOW_ROLE_RESPONDER) && (pgm_rflow_ == true))) && \
+                      (arm_lifq_.lif == hal::SERVICE_LIF_CPU)); }
     bool valid_rflow() const { return valid_rflow_; }
+    bool pgm_rflow()  const { return pgm_rflow_; }
+    void set_pgm_rflow(bool pgm) { pgm_rflow_ = pgm; }
 
     hal::tenant_t *tenant() const { return tenant_; }
     hal::l2seg_t *sl2seg() const { return sl2seg_; }
@@ -360,6 +378,15 @@ public:
     hal::if_t *dif() const { return dif_; }
     hal::ep_t *sep() const { return sep_; }
     hal::ep_t *dep() const { return dep_; }
+    hal::alg_proto_state_t alg_proto_state() const { return alg_proto_state_; }
+    void  set_alg_proto_state(hal::alg_proto_state_t state) { alg_proto_state_ = state; }
+
+    nwsec::ALGName alg_proto() const { return alg_proto_; }
+    void set_alg_proto(nwsec::ALGName proto) { alg_proto_ = proto; }
+
+    bool hal_cleanup() const { return cleanup_hal_; }
+    void set_hal_cleanup(bool val) { cleanup_hal_ = val; }
+    void swap_flow_objs();
 
 private:
     lifqid_t              arm_lifq_;
@@ -379,13 +406,15 @@ private:
     const char*           feature_name_;   // Name of the feature being executed (for logging)
     hal_ret_t             feature_status_; // feature exit status (set by features to pass the error status)
 
-    bool                  drop_;           // Drop the packet
+    bool                  drop_;           // Drop the packeto
     hal::session_t        *session_;
+    bool                  cleanup_hal_;    // Cleanup hal session
 
     hal::flow_role_t      role_;            // current flow role
     uint8_t               istage_;          // current iflow stage
     uint8_t               rstage_;          // current rflow stage
-    bool                  valid_rflow_;
+    bool                  valid_rflow_;     // Is rflow valid
+    bool                  pgm_rflow_;       // Is rflow software only ?
     flow_t                *iflow_[MAX_STAGES];       // iflow 
     flow_t                *rflow_[MAX_STAGES];       // rflow 
 
@@ -396,6 +425,8 @@ private:
     hal::if_t             *dif_;
     hal::ep_t             *sep_;
     hal::ep_t             *dep_;
+    nwsec::ALGName        alg_proto_;         // ALG Proto to be applied
+    hal::alg_proto_state_t  alg_proto_state_; // ALG Proto state machine state
 
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
     hal_ret_t lookup_flow_objs();

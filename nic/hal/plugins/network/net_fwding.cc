@@ -97,12 +97,7 @@ fwding_exec(fte::ctx_t& ctx)
 {
     hal_ret_t ret;
 
-    if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
-        ret = update_flow(ctx, ctx.dep(), ctx.dif(), ctx.sl2seg(), ctx.dl2seg());
-    } else {
-        ret = update_flow(ctx, ctx.sep(), ctx.sif(), ctx.dl2seg(), ctx.sl2seg());
-    }
-
+    ret = update_flow(ctx, ctx.dep(), ctx.dif(), ctx.sl2seg(), ctx.dl2seg());
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
         return fte::PIPELINE_END; 

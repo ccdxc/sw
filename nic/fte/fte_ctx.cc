@@ -243,33 +243,98 @@ ctx_t::lookup_flow_objs()
     return HAL_RET_OK;
 }
 
+const hal::flow_key_t& 
+ctx_t::get_key(hal::flow_role_t role)
+{
+    flow_t *flow = NULL;
+
+    if (role == hal::FLOW_ROLE_INITIATOR) {
+        flow = iflow_[istage_];
+    } else {
+        flow = rflow_[rstage_];
+    }
+
+    HAL_ASSERT(flow != NULL);
+
+    return flow->key();
+}
+
+// Zero out sport to check for responder flows
+// for ALG(TFTP)
+hal_ret_t
+ctx_t::build_wildcard_key(hal::flow_key_t& key)
+{
+    memcpy(std::addressof(key), &key_, sizeof(hal::flow_key_t));
+
+    if (key.flow_type != hal::FLOW_TYPE_L2 && key.proto == IP_PROTO_UDP) {
+        key.sport = 0;
+    }
+
+    return HAL_RET_OK; 
+}
+
+uint8_t
+ctx_t::construct_lookup_keys(hal::flow_key_t *keys)
+{
+    uint8_t i=0;
+
+    //Incoming Key
+    keys[i++] = key_;
+
+    //ALG Variations
+    build_wildcard_key(keys[i++]);
+
+    return (i);
+}
+
 hal_ret_t
 ctx_t::lookup_session()
 {
-    hal::flow_t *hflow;
+    hal::flow_t *hflow = NULL;
+    hal::flow_key_t keys[MAX_FLOW_KEYS];
+    uint8_t num_keys = 0;
+    int i = 0, stage = 0;
 
-    hflow = NULL; // TODO(goli) do hal::lookup_flow(ctx.key);
-    if (!hflow) {
+    // TODO(pavithra) handle protobuf requests
+    if (protobuf_request()) {
+        return HAL_RET_SESSION_NOT_FOUND; 
+    }
+
+    num_keys = construct_lookup_keys(keys);
+
+    while (i < num_keys) {
+        HAL_TRACE_DEBUG("Looking up session for key: {}", keys[i]);
+        session_ = hal::session_lookup_fte(keys[i++], std::addressof(role_));
+        if (!session_) {
+            continue;
+        } else {
+            HAL_TRACE_DEBUG("Session Found with key: {}", keys[i-1]);
+            break;
+        }
+    }
+
+    if (!session_) {
         return HAL_RET_SESSION_NOT_FOUND;
     }
 
     HAL_TRACE_DEBUG("fte: found existing session");
-#if 0
-    session_ = hflow->session;
 
+    hflow = session_->iflow;
     // TODO(goli) handle post svc flows
     if (hflow->config.role == hal::FLOW_ROLE_INITIATOR) {
-        iflow_->from_config(hflow->config, hflow->pgm_attrs);
-        if (hflow->reverse_flow) {
-            rflow_->from_config(hflow->reverse_flow->config, hflow->reverse_flow->pgm_attrs);
-        } else {
-            rflow_ = NULL;
-        }
+        iflow_[stage]->from_config(hflow->config, hflow->pgm_attrs);
+            if (hflow->reverse_flow) {
+                rflow_[stage]->from_config(hflow->reverse_flow->config, 
+                                               hflow->reverse_flow->pgm_attrs);
+                valid_rflow_ = true;
+            } else {
+                rflow_[stage] = NULL;
+            }
     } else {
-        rflow_->from_config(hflow->config, hflow->pgm_attrs);
-        iflow_->from_config(hflow->reverse_flow->config, hflow->reverse_flow->pgm_attrs);
+        rflow_[stage]->from_config(hflow->config, hflow->pgm_attrs);
+        iflow_[stage]->from_config(hflow->reverse_flow->config, hflow->reverse_flow->pgm_attrs);
+        valid_rflow_ = true;
     }
-#endif
 
     return HAL_RET_OK;
 }
@@ -287,6 +352,9 @@ ctx_t::create_session()
     for (int i = 0; i < MAX_STAGES; i++) {
         iflow_[i]->set_key(ikey);
     }
+ 
+    cleanup_hal_ = false;
+    pgm_rflow_ = true;
 
     // read rkey from spec
     if (protobuf_request()) {
@@ -457,6 +525,7 @@ ctx_t::update_gft()
                         rflow_attrs.nat_type);
     }
 
+    session_args.pgm_rflow = pgm_rflow_;
     session_args.tenant = tenant_;
     session_args.sep = sep_;
     session_args.dep = dep_;
@@ -466,8 +535,21 @@ ctx_t::update_gft()
     session_args.dl2seg = dl2seg_;
     session_args.spec = sess_spec_;
     session_args.rsp = sess_resp_;
-    
-    ret =  hal::session_create_fte(&session_args, &session_handle);
+    session_args.alg_proto_state = alg_proto_state_;
+
+    if (hal_cleanup() == true) {
+        // Cleanup session if hal_cleanup is set
+        if (session_) {
+            ret = hal::session_delete_fte(&session_args, session_);
+        }
+    } else if (session_) { 
+        // Update session if it already exists
+        ret = hal::session_update_fte(&session_args, session_);
+    } else {
+        // Create a new HAL session
+        ret = hal::session_create_fte(&session_args, &session_handle);
+    }
+
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("fte: session create failure, err : {}", ret);
         return ret;
@@ -516,7 +598,6 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
     }
 
     dl2seg = hal::find_l2seg_by_handle(dep->l2seg_handle);
-    HAL_ASSERT(dl2seg != NULL);
 
     dif = hal::find_if_by_handle(dep->if_handle);
     HAL_ASSERT(dif != NULL);
@@ -566,6 +647,8 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
     if (ret != HAL_RET_OK) {
         return ret;
     }
+
+    set_role(hal::FLOW_ROLE_NONE);
 
     // Lookup old session
     ret = lookup_session();
@@ -625,11 +708,18 @@ ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflo
 hal_ret_t
 ctx_t::update_flow(const flow_update_t& flowupd)
 {
+    return update_flow(flowupd, role());
+}
+
+hal_ret_t
+ctx_t::update_flow(const flow_update_t& flowupd, 
+                   const hal::flow_role_t role)
+{
     hal_ret_t ret;
 
     flow_t *flow;
 
-    if (role_ == hal::FLOW_ROLE_INITIATOR) {
+    if (role == hal::FLOW_ROLE_INITIATOR) {
         flow = iflow_[istage_];
     } else {
         flow = rflow_[rstage_];
@@ -646,41 +736,47 @@ ctx_t::update_flow(const flow_update_t& flowupd)
             drop_ = true;
         }
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} action={}",
-                        role_, feature_name_, ret, flowupd.action);
+                        role, feature_name_, ret, flowupd.action);
         break;
 
     case FLOWUPD_HEADER_REWRITE:
         ret = flow->header_rewrite(flowupd.header_rewrite);
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} header_rewrite={}",
-                        role_, feature_name_, ret, flowupd.header_rewrite);
+                        role, feature_name_, ret, flowupd.header_rewrite);
         if (ret == HAL_RET_OK) {
             // check if dep needs to be updated
-            ret = update_for_dnat(role_, flowupd.header_rewrite);
+            ret = update_for_dnat(role, flowupd.header_rewrite);
         }
         break;
 
     case FLOWUPD_HEADER_PUSH:
         ret = flow->header_push(flowupd.header_push);
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} header_push={}",
-                        role_, feature_name_, ret, flowupd.header_push);
+                        role, feature_name_, ret, flowupd.header_push);
         break;
 
     case FLOWUPD_HEADER_POP:
         ret = flow->header_pop(flowupd.header_pop);
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} header_pop={}",
-                        role_, feature_name_, ret, flowupd.header_pop);
+                        role, feature_name_, ret, flowupd.header_pop);
         break;
 
     case FLOWUPD_FLOW_STATE:
         ret = flow->set_flow_state(flowupd.flow_state);
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} flow_state={}",
-                        role_, feature_name_, ret, flowupd.flow_state);
+                        role, feature_name_, ret, flowupd.flow_state);
         break;
 
     case FLOWUPD_FWDING_INFO:
         ret = flow->set_fwding(flowupd.fwding);
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} fwding_info={}",
-                        role_, feature_name_, ret, flowupd.fwding);
+                        role, feature_name_, ret, flowupd.fwding);
+        break;
+
+    case FLOWUPD_KEY:
+        ret = flow->set_key(flowupd.key);
+        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} key={}",
+                        role, feature_name_, ret, flowupd.key);
         break;
     }
 
@@ -754,6 +850,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 {
     hal_ret_t ret;
 
+    HAL_TRACE_DEBUG("send queue pkts txpkt_cnt_: {} flow_miss: {} drop: {}", txpkt_cnt_, flow_miss(), drop());
     // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
     if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop()) {
         queue_txpkt(pkt_, pkt_len_);
@@ -787,6 +884,21 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
     txpkt_cnt_ = 0;
 
     return HAL_RET_OK;
+}
+
+void
+ctx_t::swap_flow_objs()
+{
+    hal::if_t    *dif = sif_;
+    hal::ep_t    *dep = sep_;
+    hal::l2seg_t *dl2seg = sl2seg_;
+
+    sif_ = dif_;
+    dif_ = dif;
+    sep_ = dep_;
+    dep_ = dep;
+    sl2seg_ = dl2seg_;
+    dl2seg_ = dl2seg;
 }
 
 std::ostream& operator<<(std::ostream& os, const mpls_label_t& val)

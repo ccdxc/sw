@@ -1,0 +1,19 @@
+# Feature Test Modules List
+feature:
+    id          : fte
+    sub         : tftp 
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : TFTP_RRQ_UTAG
+        spec    : tftp.testspec
+        iterate :
+            - session   : filter://type=IPV4,proto=UDP,label=FTE
+              srcseg    : filter://native=True
+            - session   : filter://type=IPV6,proto=UDP,label=FTE
+              srcseg    : filter://native=True
+

@@ -6,6 +6,10 @@ def Setup(infra, module):
     module.logger.info("Iterator Selectors")
 
     if iterelem:
+        if 'session' in iterelem.__dict__:
+            module.logger.info("- session: %s" % iterelem.session)
+            module.testspec.selectors.session.base.Extend(iterelem.session)
+
         if 'flow' in iterelem.__dict__:
             module.logger.info("- flow: %s" % iterelem.flow)
             module.testspec.selectors.flow.Extend(iterelem.flow)
@@ -66,8 +70,12 @@ def TestCaseVerify(tc):
     return True
 
 def TestCaseTeardown(tc):
-    if tc.config.flow.IsFteEnabled():
-        tc.config.flow.SetLabel("FTE_DONE")
+    root = getattr(tc.config, 'flow', None)
+    if root is None:
+       root = getattr(tc.config.session.iconfig, 'flow', None)
+
+    if root.IsFteEnabled():
+        root.SetLabel("FTE_DONE")
     return
 
 def TestCaseStepSetup(tc, step):

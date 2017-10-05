@@ -110,6 +110,18 @@ hal_cfg_db::init(void)
                                          hal::session_compare_handle_key_func);
     HAL_ASSERT_RETURN((session_hal_handle_ht_ != NULL), false);
 
+    session_hal_iflow_ht_ = ht::factory(HAL_MAX_SESSIONS,
+                                    hal::session_get_iflow_key_func,
+                                    hal::session_compute_iflow_hash_func,
+                                    hal::session_compare_iflow_key_func);
+    HAL_ASSERT_RETURN((session_hal_iflow_ht_ != NULL), false);
+
+    session_hal_rflow_ht_ = ht::factory(HAL_MAX_SESSIONS,
+                                    hal::session_get_rflow_key_func,
+                                    hal::session_compute_rflow_hash_func,
+                                    hal::session_compare_rflow_key_func);
+    HAL_ASSERT_RETURN((session_hal_rflow_ht_ != NULL), false);
+
     // initialize l4lb related data structures
     l4lb_ht_ = ht::factory(HAL_MAX_L4LB_SERVICES,
                            hal::l4lb_get_key_func,
@@ -304,6 +316,8 @@ hal_cfg_db::hal_cfg_db()
 
     session_id_ht_ = NULL;
     session_hal_handle_ht_ = NULL;
+    session_hal_iflow_ht_  = NULL;
+    session_hal_rflow_ht_  = NULL;
 
     l4lb_ht_ = NULL;
     l4lb_hal_handle_ht_ = NULL;
@@ -400,6 +414,8 @@ hal_cfg_db::~hal_cfg_db()
 
     session_id_ht_ ? delete session_id_ht_ : HAL_NOP;
     session_hal_handle_ht_ ? delete session_hal_handle_ht_ : HAL_NOP;
+    session_hal_iflow_ht_ ? delete session_hal_iflow_ht_ : HAL_NOP;
+    session_hal_rflow_ht_ ? delete session_hal_rflow_ht_ : HAL_NOP;
 
     l4lb_ht_ ? delete l4lb_ht_ : HAL_NOP;
     l4lb_hal_handle_ht_ ? delete l4lb_hal_handle_ht_ : HAL_NOP;

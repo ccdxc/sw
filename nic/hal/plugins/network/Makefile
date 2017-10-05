@@ -19,6 +19,7 @@ SOURCES = \
 	net_dfw.cc \
 	net_lb.cc \
 	net_qos.cc \
+        net_alg.cc \
 	dol_test.cc \
 	$(NULL)
 

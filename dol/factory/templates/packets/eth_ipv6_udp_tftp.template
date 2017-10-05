@@ -1,0 +1,40 @@
+meta:
+    id: ETH_IPV6_UDP_TFTP
+
+headers:
+    - header:
+        id      : eth
+        template: ref://store/headers/id=ETHERNET
+        fields:
+            type: ethertype/0x86DD
+
+    - header:
+        id      : ipv6
+        template: ref://store/headers/id=IPV6
+        fields:
+            nh: ipproto/17
+
+    - header:
+        id      : udp
+        template: ref://store/headers/id=UDP
+        fields:
+
+    - header:
+        id      : tftp
+        template: ref://store/headers/id=TFTP
+        fields:
+
+    - header:
+        id      : payload
+        template: ref://store/headers/id=PAYLOAD
+        fields:
+
+    - header:
+        id      : pendol
+        template: ref://store/headers/id=PENDOL
+        fields:
+
+    - header:
+        id      : crc
+        template: ref://store/headers/id=CRC
+        fields:

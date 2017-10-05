@@ -19,6 +19,7 @@ inline hal_ret_t init_plugins() {
     fte::feature_id_t flow_miss_outbound[] = {
         fte::FTE_FEATURE_DOL_TEST_ONLY,
         fte::FTE_FEATURE_DFW,
+        fte::FTE_FEATURE_ALG,
         fte::FTE_FEATURE_TCP_PROXY,
         fte::FTE_FEATURE_IPSEC,
         fte::FTE_FEATURE_STAGE_MARKER,
@@ -37,6 +38,7 @@ inline hal_ret_t init_plugins() {
         fte::FTE_FEATURE_IPSEC,
         fte::FTE_FEATURE_STAGE_MARKER,
         fte::FTE_FEATURE_DFW,
+        fte::FTE_FEATURE_ALG,
         fte::FTE_FEATURE_QOS,
         fte::FTE_FEATURE_FWDING,
         fte::FTE_FEATURE_TUNNEL,

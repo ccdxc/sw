@@ -475,7 +475,7 @@ hal_ret_t flow_t::merge_flow(const flow_t &flow)
 
 void flow_t::from_config(const hal::flow_cfg_t &flow_cfg, const hal::flow_pgm_attrs_t  &attrs)
 {
-    // TODO(goli)
+    key_ = flow_cfg.key;
 }
 
 } // namespace fte

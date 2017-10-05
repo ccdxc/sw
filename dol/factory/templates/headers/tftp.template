@@ -1,0 +1,7 @@
+meta:
+    id      : TFTP
+    scapy   : TFTP
+    size    : 0
+
+fields:
+    op      : RRQ  

@@ -17,7 +17,6 @@
 #include "nic/p4/nw/include/defines.h"
 #include <string.h>
 
-
 namespace hal {
 namespace pd {
 
@@ -73,15 +72,18 @@ p4pd_del_flow_stats_table_entry (uint32_t flow_stats_idx)
 hal_ret_t
 p4pd_add_flow_stats_table_entries (pd_session_t *session_pd)
 {
-    hal_ret_t    ret;
+    hal_ret_t    ret = HAL_RET_OK;
 
     // program flow_stats table entry for iflow
-    ret = p4pd_add_flow_stats_table_entry(&session_pd->iflow.flow_stats_hw_id);
-    if (ret != HAL_RET_OK) {
-        return ret;
+    if (!session_pd->iflow.flow_stats_hw_id) {
+        ret = p4pd_add_flow_stats_table_entry(&session_pd->iflow.flow_stats_hw_id);
+        if (ret != HAL_RET_OK) {
+            return ret;
+        }
     }
 
-    if (session_pd->iflow_aug_valid) {
+    if (session_pd->iflow_aug_valid && \
+        !session_pd->iflow_aug.flow_stats_hw_id) {
         ret = p4pd_add_flow_stats_table_entry(&session_pd->iflow_aug.flow_stats_hw_id);
         if (ret != HAL_RET_OK) {
             return ret;
@@ -89,7 +91,8 @@ p4pd_add_flow_stats_table_entries (pd_session_t *session_pd)
     }
 
     // program flow_stats table entry for rflow
-    if (session_pd->rflow_valid) {
+    if (session_pd->rflow_valid && \
+        !session_pd->rflow.flow_stats_hw_id) {
         ret = p4pd_add_flow_stats_table_entry(&session_pd->rflow.flow_stats_hw_id);
         if (ret != HAL_RET_OK) {
             p4pd_del_flow_stats_table_entry(session_pd->iflow.flow_stats_hw_id);
@@ -97,7 +100,8 @@ p4pd_add_flow_stats_table_entries (pd_session_t *session_pd)
         }
     }
 
-    if (session_pd->rflow_aug_valid) {
+    if (session_pd->rflow_aug_valid && \
+        !session_pd->rflow_aug.flow_stats_hw_id) {
         ret = p4pd_add_flow_stats_table_entry(&session_pd->rflow_aug.flow_stats_hw_id);
         if (ret != HAL_RET_OK) {
             return ret;
@@ -203,7 +207,7 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
     // insert the entry
     ret = dm->insert(&d, &session_pd->session_state_idx);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("flow state table write failure, err : {}", ret);
+        HAL_TRACE_ERR("session state table write failure, err : {}", ret);
         return ret;
     }
 
@@ -237,7 +241,7 @@ p4pd_del_session_state_table_entry (uint32_t session_state_idx)
 // 2. twice nat not supported
 //-----------------------------------------------------------------------------
 hal_ret_t
-p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_role_t role, bool aug)
+p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_role_t role, bool aug)
 {
     hal_ret_t                ret;
     DirectMap                *dm;
@@ -246,12 +250,17 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     flow_pgm_attrs_t         *flow_attrs = NULL;
     flow_cfg_t               *flow_cfg = NULL;
     pd_session_t             *sess_pd = NULL;
+    bool                     entry_exists = false;
 
     sess_pd = session->pd;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
     HAL_ASSERT(dm != NULL);
 
+    ret = dm->retrieve(flow_pd->flow_stats_hw_id, &d);
+    if (ret == HAL_RET_OK) {
+        entry_exists = true;
+    }
     // get the flow attributes
     if (role == FLOW_ROLE_INITIATOR) {
         flow_attrs = aug ? &session->iflow->assoc_flow->pgm_attrs :
@@ -357,7 +366,6 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     d.flow_info_action_u.flow_info_flow_info.dscp_en = flow_attrs->dscp_en;
     d.flow_info_action_u.flow_info_flow_info.dscp = flow_attrs->dscp;
 
-
     // TBD: check class NIC mode and set this
     d.flow_info_action_u.flow_info_flow_info.qid_en = flow_attrs->qid_en;
     if (flow_attrs->qid_en) {
@@ -398,12 +406,22 @@ p4pd_add_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow_rol
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     d.flow_info_action_u.flow_info_flow_info.start_timestamp = ts.tv_sec;
 
-    // insert the entry
-    ret = dm->insert_withid(&d, flow_pd->flow_stats_hw_id);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("flow state table write failure, idx : {}, err : {}",
+    if (entry_exists) {
+       // Update the entry
+       ret = dm->update(flow_pd->flow_stats_hw_id, &d);
+       if (ret != HAL_RET_OK) {
+           HAL_TRACE_ERR("flow info table update failure, idx : {}, err : {}",
                       flow_pd->flow_stats_hw_id, ret);
-        return ret;
+           return ret;
+       }
+    } else {
+       // insert the entry
+       ret = dm->insert_withid(&d, flow_pd->flow_stats_hw_id);
+       if (ret != HAL_RET_OK) {
+           HAL_TRACE_ERR("flow info table write failure, idx : {}, err : {}",
+                      flow_pd->flow_stats_hw_id, ret);
+           return ret;
+       }
     }
 
     return HAL_RET_OK;
@@ -462,13 +480,13 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
     hal_ret_t       ret;
     pd_session_t    *session_pd = (pd_session_t *)args->session->pd;
 
-    ret = p4pd_add_flow_info_table_entry(args->session, &session_pd->iflow, FLOW_ROLE_INITIATOR, false);
+    ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->iflow, FLOW_ROLE_INITIATOR, false);
     if (ret != HAL_RET_OK) {
         return ret;
     }
 
     if (session_pd->iflow_aug_valid) {
-        ret = p4pd_add_flow_info_table_entry(args->session, &session_pd->iflow_aug, FLOW_ROLE_INITIATOR, true);
+        ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->iflow_aug, FLOW_ROLE_INITIATOR, true);
         if (ret != HAL_RET_OK) {
             return ret;
         }
@@ -476,13 +494,13 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
 
     // program flow_info table entry for rflow
     if (session_pd->rflow_valid) {
-        ret = p4pd_add_flow_info_table_entry(args->session, &session_pd->rflow, FLOW_ROLE_RESPONDER, false);
+        ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->rflow, FLOW_ROLE_RESPONDER, false);
         if (ret != HAL_RET_OK) {
             p4pd_del_flow_info_table_entry(session_pd->iflow.flow_stats_hw_id);
             return ret;
         }
         if (session_pd->rflow_aug_valid) {
-            ret = p4pd_add_flow_info_table_entry(args->session, &session_pd->rflow_aug, FLOW_ROLE_RESPONDER, true);
+            ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->rflow_aug, FLOW_ROLE_RESPONDER, true);
             if (ret != HAL_RET_OK) {
                 return ret;
             }
@@ -600,22 +618,25 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
     hal_ret_t               ret;
     session_t               *session = (session_t *)session_pd->session;
 
-    ret = p4pd_add_flow_hash_table_entry(&session->iflow->config.key,
+    if (!session_pd->iflow.flow_hash_hw_id) {
+        ret = p4pd_add_flow_hash_table_entry(&session->iflow->config.key,
                                          session->iflow->pgm_attrs.lkp_inst,
                                          (pd_l2seg_t *)(session->iflow->sl2seg->pd),
                                          &session_pd->iflow);
-    if (ret == HAL_RET_FLOW_COLL) {
-        if (args->rsp) {
-            args->rsp->mutable_status()->mutable_iflow_status()->set_flow_coll(true);
+        if (ret == HAL_RET_FLOW_COLL) {
+            if (args->rsp) {
+                args->rsp->mutable_status()->mutable_iflow_status()->set_flow_coll(true);
+            }
+            HAL_TRACE_DEBUG("IFlow Collision!");
+            ret = HAL_RET_OK;
         }
-        HAL_TRACE_DEBUG("IFlow Collision!");
-        ret = HAL_RET_OK;
     }
     if (ret != HAL_RET_OK) {
         return ret;
     }
 
-    if (session_pd->iflow_aug_valid) {
+    if (session_pd->iflow_aug_valid && \
+        !session_pd->iflow_aug.flow_hash_hw_id) {
         ret = p4pd_add_flow_hash_table_entry(&session->iflow->assoc_flow->config.key,
                                              session->iflow->assoc_flow->pgm_attrs.lkp_inst,
                                              (pd_l2seg_t *)(session->iflow->dl2seg->pd),
@@ -631,7 +652,8 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
             return ret;
         }
     }
-    if (session_pd->rflow_valid) {
+    if (session_pd->rflow_valid && \
+        !session_pd->rflow.flow_hash_hw_id) {
         ret = p4pd_add_flow_hash_table_entry(&session->rflow->config.key,
                                              session->rflow->pgm_attrs.lkp_inst,
                                              (pd_l2seg_t *)session->rflow->sl2seg->pd,
@@ -646,7 +668,8 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         if (ret != HAL_RET_OK) {
             p4pd_del_flow_hash_table_entry(session_pd->iflow.flow_hash_hw_id);
         }
-        if (session_pd->rflow_aug_valid) {
+        if (session_pd->rflow_aug_valid && \
+            !session_pd->rflow_aug.flow_hash_hw_id) {
             // TODO: key has to involve service done? populate in flow_attrs
             ret = p4pd_add_flow_hash_table_entry(&session->rflow->assoc_flow->config.key,
                                                  session->rflow->assoc_flow->pgm_attrs.lkp_inst,
@@ -669,6 +692,58 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
 }
 
 //------------------------------------------------------------------------------
+// Remove all valid flow hash table entries with given data (flow index)
+//------------------------------------------------------------------------------
+hal_ret_t
+p4pd_del_flow_hash_table_entries (pd_session_t *session_pd) 
+{
+    hal_ret_t     ret = HAL_RET_OK;
+
+    if (session_pd->iflow.flow_hash_hw_id) {
+        ret = p4pd_del_flow_hash_table_entry(session_pd->iflow.flow_hash_hw_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("iflow flow info table entry delete failed, "
+                      "idx : {}, err : {}",
+                      session_pd->iflow.flow_hash_hw_id, ret);
+        }
+    }    
+
+    if (session_pd->iflow_aug_valid && \
+        session_pd->iflow_aug.flow_hash_hw_id) {
+        ret = p4pd_del_flow_hash_table_entry(session_pd->iflow_aug.flow_hash_hw_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("iflow aug flow info table entry delete failed, "
+                      "idx : {}, err : {}",
+                      session_pd->iflow_aug.flow_hash_hw_id, ret);
+        }
+    }
+
+    if (session_pd->rflow_valid && \
+        session_pd->rflow.flow_hash_hw_id) {
+        ret = p4pd_del_flow_hash_table_entry(session_pd->rflow.flow_hash_hw_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("rflow flow info table entry delete failed, "
+                      "idx : {}, err : {}",
+                      session_pd->rflow.flow_hash_hw_id, ret);
+        }   
+    }
+ 
+ 
+    if (session_pd->rflow_aug_valid && \
+        session_pd->rflow_aug.flow_hash_hw_id) {
+        ret = p4pd_del_flow_hash_table_entry(session_pd->rflow_aug.flow_hash_hw_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("rflow aug flow info table entry delete failed, "
+                      "idx : {}, err : {}",
+                      session_pd->rflow_aug.flow_hash_hw_id, ret);
+        }   
+
+    }
+ 
+    return ret;
+}
+
+//------------------------------------------------------------------------------
 // program all PD tables for given session and maintain meta data in PD state
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -687,7 +762,8 @@ pd_session_create (pd_session_args_t *args)
     session_pd->session = args->session;
     args->session->pd = session_pd;
 
-    if (session->rflow) {
+    if (session->rflow && args->pgm_rflow) {
+        HAL_TRACE_DEBUG("Programming Rflow");
         session_pd->rflow_valid = TRUE;
         if (session->rflow->assoc_flow) {
             session_pd->rflow_aug_valid = true;
@@ -739,6 +815,104 @@ cleanup:
         session_pd_free(session_pd);
         args->session->pd = NULL;
     }
+    return ret;
+}
+
+//-----------------------------------------
+// update PD tables for given session 
+//------------------------------------------
+hal_ret_t
+pd_session_update (pd_session_args_t *args)
+{
+    hal_ret_t          ret;
+    pd_session_t       *session_pd = NULL;
+    session_t          *session = args->session;
+
+    HAL_TRACE_DEBUG("Updating pd state for session");
+
+    session_pd = session->pd;
+
+    HAL_ASSERT(session_pd != NULL);
+
+    if (session->rflow && args->pgm_rflow) {
+        HAL_TRACE_DEBUG("Programming Rflow");
+        session_pd->rflow_valid = TRUE;
+        if (session->rflow->assoc_flow) {
+            session_pd->rflow_aug_valid = true;
+        }
+    } else {
+        session_pd->rflow_valid = FALSE;
+    }
+
+    if (session->iflow->assoc_flow) {
+        session_pd->iflow_aug_valid = true;
+    }
+
+    // update/add flow stats entries first
+    ret = p4pd_add_flow_stats_table_entries(session_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Flow stats table entry upd failure");
+        return ret;
+    }
+
+    // update/add flow info table entries
+    ret = p4pd_add_flow_info_table_entries(args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Flow info table entry upd failure");
+        goto cleanup;
+    }
+
+    ret = p4pd_add_flow_hash_table_entries(session_pd, args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Flow hash table entry upd failure");
+        goto cleanup;
+    }
+
+    return HAL_RET_OK;
+
+cleanup:
+
+    if (session_pd) {
+        p4pd_del_flow_stats_table_entries(session_pd);
+        p4pd_del_session_state_table_entry(session_pd->session_state_idx);
+        p4pd_del_flow_info_table_entries(session_pd);
+        session_pd_free(session_pd);
+        args->session->pd = NULL;
+    }
+  
+    return ret;
+}
+
+//-----------------------------------------
+// Delete PD tables for given session
+//------------------------------------------
+hal_ret_t
+pd_session_delete (pd_session_args_t *args)
+{
+    hal_ret_t          ret = HAL_RET_OK;
+    pd_session_t       *session_pd = NULL;
+
+    HAL_TRACE_DEBUG("Deleting pd state for session");
+
+    session_pd = args->session->pd;
+
+    HAL_ASSERT(session_pd != NULL);
+ 
+    // del flow stats entries first
+    p4pd_del_flow_stats_table_entries(session_pd);
+
+    // Del session state
+    p4pd_del_session_state_table_entry(session_pd->session_state_idx);
+
+    // del flow info table entries
+    p4pd_del_flow_info_table_entries(session_pd);
+
+    // del flow hash table entries
+    p4pd_del_flow_hash_table_entries(session_pd);
+   
+    session_pd_free(session_pd);
+    args->session->pd = NULL;
+
     return ret;
 }
 

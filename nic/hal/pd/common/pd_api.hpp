@@ -112,6 +112,7 @@ typedef struct pd_ep_upd_args_s {
 typedef struct pd_sessoin_args_s {
     tenant_t           *tenant;
     nwsec_profile_t    *nwsec_prof;
+    bool               pgm_rflow;
 #if 0
     l2seg_t            *l2seg_s;
     l2seg_t            *l2seg_d;

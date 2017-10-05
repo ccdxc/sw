@@ -45,6 +45,7 @@ class SessionObject(base.ConfigObjectBase):
         if status != defs.status.SUCCESS: return status
 
         
+        self.type = self.initiator.type	
         self.label = self.spec.label.upper()
         
         assert(initiator.proto == responder.proto)

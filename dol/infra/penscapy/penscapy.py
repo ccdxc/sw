@@ -251,6 +251,7 @@ class BTH(Packet):
 
 bind_layers(UDP, BTH, dport=4791)
 
+bind_layers(UDP, TFTP, dport=65530)
 
 
 

@@ -1,0 +1,112 @@
+# Test Spec
+selectors:
+    src:
+        tenant    : filter://overlay=VLAN,type=TENANT
+        segment   : filter://any
+        endpoint  : filter://remote=True
+    dst:
+        tenant    : filter://overlay=VLAN,type=TENANT
+        segment   : filter://any
+        endpoint  : filter://remote=True
+    #flow          : filter://fwtype=L3
+    session       :
+        base      : filter://proto=UDP
+        iflow     : filter://any
+        rflow     : filter://any
+    maxsessions   : 8
+
+packets:
+    - packet:
+        id          : IFLOW_BASE  # IFlow Base Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateBySessionIflow/proto=TFTP
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            ipv4:
+                src     : ref://testcase/config/session/iconfig/flow/sip
+                dst     : ref://testcase/config/session/iconfig/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/session/iconfig/flow/sip
+                dst     : ref://testcase/config/session/iconfig/flow/dip
+                hlim    : 64
+            udp:
+                sport   : 65530 
+                dport   : 69 
+            tftp:
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : RFLOW_BASE  # RFlow Base Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateBySessionRflow/proto=TFTP
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            ipv4:
+                src     : ref://testcase/config/session/rconfig/flow/sip
+                dst     : ref://testcase/config/session/rconfig/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/session/rconfig/flow/sip
+                dst     : ref://testcase/config/session/rconfig/flow/dip
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/session/rconfig/flow/sport 
+                dport   : 65530
+            tftp:
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id           : IFLOW_PKT1     # IFlow Packet
+        clone        : ref://testcase/packets/id=IFLOW_BASE
+        headers      :
+            tftp     :
+                op   : RRQ
+
+    - packet:
+        id            : RFLOW_PKT1     # RFlow packet
+        clone         : ref://testcase/packets/id=RFLOW_BASE
+        headers       :
+            tftp      :
+                op    : DATA
+
+session:
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IFLOW_PKT1
+                    port    : ref://testcase/config/session/iconfig/src/endpoint/intf/ports
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            packets:
+                - packet:
+                    #object  : ref://testcase/packets/id=IFLOW_PKT1
+                    object  : callback://networking/packets/GetL3UcExpectedPacket/expktid=IFLOW_PKT1
+                    port    : ref://testcase/config/session/iconfig/dst/endpoint/intf/ports
+ 
+                - packet:
+                    object  : callback://networking/packets/GetCpuPacketbyIflow/expktid=IFLOW_PKT1
+                    port    : 128
+
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=RFLOW_PKT1
+                    port    : ref://testcase/config/session/rconfig/src/endpoint/intf/ports
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            packets:
+                - packet:
+                    #object  : ref://testcase/packets/id=RFLOW_PKT1
+                    object  : callback://networking/packets/GetL3UcExpectedPacket/expktid=RFLOW_PKT1 
+                    port    : ref://testcase/config/session/rconfig/dst/endpoint/intf/ports
+ 
+                - packet:
+                    object  : callback://networking/packets/GetCpuPacketbyRflow/expktid=RFLOW_PKT1
+                    port    : 128

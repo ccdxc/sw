@@ -135,6 +135,31 @@ class ScapyHeaderBuilder_IPV4(ScapyHeaderBuilder_BASE):
         return super().build(hdr)
 IPV4_builder = ScapyHeaderBuilder_IPV4()
 
+class ScapyHeaderBuilder_TFTP(ScapyHeaderBuilder_BASE):
+    opcode_map = [
+           ('RRQ', 0x1),
+           ('WRQ', 0x2),
+           ('DATA', 0x3),
+           ('ACK', 0x4),
+           ('ERROR', 0x5),
+           ('OACK', 0x6)]
+ 
+    def __translate_opcode(self, hdr):
+        if hdr.fields.op == None:
+            return
+         
+        op = 0x0
+        for tup in self.opcode_map:
+             if tup[0] == hdr.fields.op:
+                 op = tup[1]
+        hdr.fields.op = op
+        return
+     
+    def build(self, hdr):
+        self.__translate_opcode(hdr)
+        return super().build(hdr)
+TFTP_builder = ScapyHeaderBuilder_TFTP()
+
 class ScapyPacketObject:
     def __init__(self):
         self.spkt       = None

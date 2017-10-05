@@ -89,6 +89,8 @@ public:
 
     ht *session_id_ht(void) const { return session_id_ht_; }
     ht *session_hal_handle_ht(void) const { return session_hal_handle_ht_; }
+    ht *session_hal_iflow_ht(void)  const { return session_hal_iflow_ht_; }
+    ht *session_hal_rflow_ht(void)  const { return session_hal_rflow_ht_; }
 
     ht *tlscb_id_ht(void) const { return tlscb_id_ht_; }
     ht *tlscb_hal_handle_ht(void) const { return tlscb_hal_handle_ht_; }
@@ -199,6 +201,8 @@ private:
     struct {
         ht         *session_id_ht_;
         ht         *session_hal_handle_ht_;
+        ht         *session_hal_iflow_ht_;
+        ht         *session_hal_rflow_ht_;
     } __PACK__;
 
     // l4lb related config
@@ -488,6 +492,8 @@ public:
     slab *session_slab(void) const { return mem_db_->session_slab(); }
     ht *session_id_ht(void) const { return cfg_db_->session_id_ht(); }
     ht *session_hal_handle_ht(void) const { return cfg_db_->session_hal_handle_ht(); }
+    ht *session_hal_iflow_ht(void) const { return cfg_db_->session_hal_iflow_ht(); }
+    ht *session_hal_rflow_ht(void) const { return cfg_db_->session_hal_rflow_ht(); }
 
     // get APIs for TLS CB state
     slab *tlscb_slab(void) const { return mem_db_->tlscb_slab(); }

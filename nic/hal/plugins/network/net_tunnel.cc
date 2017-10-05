@@ -37,12 +37,7 @@ tunnel_exec(fte::ctx_t& ctx)
 {
     hal_ret_t ret;
 
-    if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
-        ret = update_tunnel_info(ctx, ctx.dif(), ctx.dl2seg());
-    } else {
-        ret = update_tunnel_info(ctx, ctx.sif(), ctx.sl2seg());
-    }
-
+    ret = update_tunnel_info(ctx, ctx.dif(), ctx.dl2seg());
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
         return fte::PIPELINE_END; 

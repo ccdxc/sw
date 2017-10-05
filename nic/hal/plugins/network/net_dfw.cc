@@ -17,6 +17,14 @@ pol_check_sg_policy(fte::ctx_t &ctx)
         return session::FLOW_ACTION_DROP;
     }
 
+    // HACK: To test TFTP ALG
+    if (ctx.role() == hal::FLOW_ROLE_INITIATOR && 
+        ctx.key().dport == 69) {
+        ctx.set_alg_proto(nwsec::APP_SVC_TFTP);
+    } else {
+        ctx.set_alg_proto(nwsec::APP_SVC_NONE);
+    }
+
     // TODO(goli) check Security policy
     return session::FLOW_ACTION_ALLOW;
 }

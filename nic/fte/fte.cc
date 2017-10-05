@@ -227,11 +227,22 @@ pipeline_execute_(ctx_t &ctx)
         }
         
         // Invoke all initiator feature handlers 
-        ctx.set_role(hal::FLOW_ROLE_INITIATOR);
+        if (ctx.role() == hal::FLOW_ROLE_NONE) {
+            ctx.set_role(hal::FLOW_ROLE_INITIATOR);
+        }
+        
         rc = pipeline_invoke_exec_(pipeline, ctx, iflow_start, iflow_end);
-        if (rc == PIPELINE_CONTINUE && ctx.valid_rflow()) {
+        if (ctx.role() == hal::FLOW_ROLE_INITIATOR && \
+            rc == PIPELINE_CONTINUE && ctx.valid_rflow()) {
+            //Swap the derived flow objects 
+            //for the reverse flow
+            ctx.swap_flow_objs();
+
             ctx.set_role(hal::FLOW_ROLE_RESPONDER);
             rc = pipeline_invoke_exec_(pipeline, ctx, rflow_start, rflow_end);
+
+            //Swap back before GFT update happens
+            ctx.swap_flow_objs();
         }
     } while (rc == PIPELINE_RESTART);
 
