@@ -10,6 +10,7 @@ model_sim/build/libmodelclient.so
 model_sim/build/model_server.o
 sknobs_gen/output.sknobs
 capri_tbl_rw.log
+capri_loader.conf
 proto/agents_proto
 proto/hal_proto
 proto/proto

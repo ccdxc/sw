@@ -77,8 +77,8 @@ def run_model(args):
 #    p = Popen(["sh", "run_model"], stdout=log, stderr=log)
     model_cmd = ["./cap_model"]
     if args.modellogs:
-        model_cmd.extend(["+plog=info",
-                   "+model_debug=../../gen/iris/dbg_out/model_debug.json"])
+        model_cmd.append("+plog=info")
+        model_cmd.append("+model_debug=" + nic_dir + "/gen/iris/dbg_out/model_debug.json")
     if args.coveragerun:
         dump_file= nic_dir + "/coverage/asm_cov.dump"
         model_cmd.append("+mpu_cov_dump_file=" + dump_file)
