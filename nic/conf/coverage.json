@@ -55,7 +55,7 @@
                 "/external/*",
                 "/bazel-out/*"
             ],
-            "obj_dir" : "../bazel-out/local-fastbuild/bin/bazel-out/local-fastbuild/bin",
+            "obj_dir" : "../bazel-out/local-fastbuild/bin",
             "obj_dir_type" : "bazel",
             "cov_type" : "lcov"
         },
