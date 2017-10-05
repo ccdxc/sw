@@ -16,7 +16,7 @@ selectors:
         lqp         : filter://any
         rqp         : filter://any
 #    maxflows    : 1
-    maxrdmasessions     : 1
+#    maxrdmasessions     : 1
 
 packets:
     - packet:
