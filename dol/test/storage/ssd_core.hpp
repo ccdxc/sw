@@ -27,10 +27,10 @@ struct SsdWorkingParams {
   uint64_t compq_pa;
 
   // Producer/Consumer indices
-  uint16_t *subq_pi_va;
+  uint32_t *subq_pi_va;
   uint64_t subq_pi_pa;
-  uint16_t *compq_ci_va;
-  uint16_t compq_ci_pa;
+  uint32_t *compq_ci_va;
+  uint64_t compq_ci_pa;
 };
 
 // SSD simulation for DOL. Points to note:
@@ -82,10 +82,10 @@ class NvmeSsdCore {
   NvmeCmd *subq_;
   NvmeStatus *compq_;
   struct ctrl_data {
-    uint16_t subq_pi;
-    uint16_t subq_ci;
-    uint16_t compq_pi;
-    uint16_t compq_ci;
+    uint32_t subq_pi;
+    uint32_t subq_ci;
+    uint32_t compq_pi;
+    uint32_t compq_ci;
   } *ctrl_;
 }; 
 

@@ -837,7 +837,7 @@ int test_run_nvme_be_wrr6() {
                          10, 63);   // num_running, max_cmds
 }
 
-int test_run_nvme_e2e_test(uint16_t io_priority, uint16_t is_read) {
+int test_run_nvme_e2e_io(uint16_t io_priority, uint16_t is_read) {
   int rc;
   uint8_t *cmd_buf;
   uint16_t ssd_q = 21, ssd_handle = 2;
@@ -863,9 +863,11 @@ int test_run_nvme_e2e_test(uint16_t io_priority, uint16_t is_read) {
   }
   struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
 
+#if 0
+  // Test code to check the doorbell (now done in P4)
   // Ring the SSD doorbell.
-  // TODO: Move this to P4
   queues::ring_nvme_e2e_ssd();
+#endif
 
   // Wait for a bit as SSD backend runs in a different thread
   sleep(1);
@@ -891,26 +893,43 @@ int test_run_nvme_e2e_test(uint16_t io_priority, uint16_t is_read) {
   return rc;
 }
 
-int test_run_nvme_read_comp() {
-  return test_run_nvme_e2e_test(0, 1); // io_priority, is_read
+int test_run_nvme_read_comp1() {
+  return test_run_nvme_e2e_io(0, 1); // io_priority, is_read
 }
 
-int test_run_nvme_write_comp() {
-  return test_run_nvme_e2e_test(0, 0); // io_priority, is_read
+int test_run_nvme_write_comp1() {
+  return test_run_nvme_e2e_io(0, 0); // io_priority, is_read
 }
 
-int test_run_nvme_e2e() {
+int test_run_nvme_read_comp2() {
+  return test_run_nvme_e2e_io(1, 1); // io_priority, is_read
+}
+
+int test_run_nvme_write_comp2() {
+  return test_run_nvme_e2e_io(1, 0); // io_priority, is_read
+}
+
+int test_run_nvme_read_comp3() {
+  return test_run_nvme_e2e_io(2, 1); // io_priority, is_read
+}
+
+int test_run_nvme_write_comp3() {
+  return test_run_nvme_e2e_io(2, 0); // io_priority, is_read
+}
+
+int test_run_nvme_local_e2e(uint16_t io_priority) {
+
   int rc;
 
   // First write data
-  rc = test_run_nvme_e2e_test(0, 0); // io_priority, is_read
+  rc = test_run_nvme_e2e_io(io_priority, 0); // is_read
   if (rc < 0) {
     printf("e2e test write part failed \n");
     return rc;
   } 
 
   // Then read back the data
-  rc = test_run_nvme_e2e_test(0, 1); // io_priority, is_read
+  rc = test_run_nvme_e2e_io(io_priority, 1); // is_read
   if (rc < 0) {
     printf("e2e test write part failed \n");
     return rc;
@@ -921,6 +940,18 @@ int test_run_nvme_e2e() {
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
   return (rc ? -1 : 0);
+}
+
+int test_run_nvme_local_e2e1() {
+  return test_run_nvme_local_e2e(0);
+}
+
+int test_run_nvme_local_e2e2() {
+  return test_run_nvme_local_e2e(1);
+}
+
+int test_run_nvme_local_e2e3() {
+  return test_run_nvme_local_e2e(2);
 }
 
 }  // namespace tests

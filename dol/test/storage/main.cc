@@ -33,9 +33,15 @@ struct {
   {&tests::test_run_nvme_be_wrr4, "NVME Backend WRR 4", false},
   {&tests::test_run_nvme_be_wrr5, "NVME Backend WRR 5", false},
   {&tests::test_run_nvme_be_wrr6, "NVME Backend WRR 6", false},
-  {&tests::test_run_nvme_read_comp, "NVME Read comp case", false},
-  {&tests::test_run_nvme_write_comp, "NVME Write comp case", false},
-  {&tests::test_run_nvme_e2e, "NVME End2End case 1", false},
+  {&tests::test_run_nvme_read_comp1, "PVM Local Read Comp 1", false},
+  {&tests::test_run_nvme_write_comp1, "PVM Local Write Comp 1", false},
+  {&tests::test_run_nvme_read_comp2, "PVM Local Read Comp 2", false},
+  {&tests::test_run_nvme_write_comp2, "PVM Local Write Comp 2", false},
+  {&tests::test_run_nvme_read_comp3, "PVM Local Read Comp 3", false},
+  {&tests::test_run_nvme_write_comp3, "PVM Local Write Comp 3", false},
+  {&tests::test_run_nvme_local_e2e1, "NVME Local Tgt E2E 1", false},
+  {&tests::test_run_nvme_local_e2e2, "NVME Local Tgt E2E 2", false},
+  {&tests::test_run_nvme_local_e2e3, "NVME Local Tgt E2E 3", false},
 
   // Always last entry
   {0}

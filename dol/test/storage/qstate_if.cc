@@ -32,7 +32,7 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                   uint64_t base_addr, uint64_t entry_size, bool dst_valid, 
                   uint16_t dst_lif, uint8_t dst_qtype, uint32_t dst_qid, 
                   uint16_t vf_id, uint16_t sq_id, uint64_t ssd_bm_addr, 
-                  uint16_t ssd_q_num, uint16_t ssd_q_size) {
+                  uint16_t ssd_q_num, uint16_t ssd_q_size, uint64_t ssd_ci_addr) {
 
   uint8_t q_state[64];
   uint8_t pc_offset;
@@ -81,6 +81,7 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
   write_bit_fields(q_state, 340, 34, ssd_bm_addr);
   write_bit_fields(q_state, 374, 16, ssd_q_num);
   write_bit_fields(q_state, 390, 16, ssd_q_size);
+  write_bit_fields(q_state, 406, 34, ssd_ci_addr);
 
   //log::dump(q_state);
 
@@ -91,6 +92,45 @@ int setup_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
 
   printf("Q state created with lif %u type %u, qid %u next_pc %lx base_addr %lx\n", 
          src_lif, src_qtype, src_qid, next_pc, base_addr);
+  return 0;
+}
+
+int setup_pci_q_state(int src_lif, int src_qtype, int src_qid,
+                      uint8_t total_rings, uint8_t host_rings, 
+                      uint16_t num_entries, uint64_t base_addr, 
+                      uint64_t entry_size, uint64_t push_addr,
+                      uint64_t intr_addr, uint32_t intr_data, uint8_t intr_en) {
+
+  uint8_t q_state[64];
+  uint8_t pc_offset;
+
+  bzero(q_state, sizeof(q_state));
+
+  if (hal_if::get_pgm_label_offset("txdma_stage0.bin", "storage_tx_stage0", &pc_offset) < 0) {
+    printf("Failed to get pc offset for storage tx stage0\n");
+    return -1;
+  }
+
+  write_bit_fields(q_state, 0, 8, pc_offset);
+  write_bit_fields(q_state, 40, 4, total_rings);
+  write_bit_fields(q_state, 44, 4, host_rings);
+  write_bit_fields(q_state, 112, 16, num_entries);
+  write_bit_fields(q_state, 128, 64, base_addr);
+  write_bit_fields(q_state, 192, 16, entry_size);
+  write_bit_fields(q_state, 208, 64, push_addr);
+  write_bit_fields(q_state, 272, 64, intr_addr);
+  write_bit_fields(q_state, 336, 32, intr_data);
+  write_bit_fields(q_state, 368, 1, intr_en);
+
+  //log::dump(q_state);
+
+  if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
+    printf("Failed to set lif_qstate addr \n");
+    return -1;
+  }
+
+  printf("PCI Q state created with lif %u type %u, qid %u base_addr %lx\n", 
+         src_lif, src_qtype, src_qid, base_addr);
   return 0;
 }
 
@@ -189,6 +229,17 @@ int update_pri_q_state(int src_lif, int src_qtype, int src_qid,
   // Write the qstate back
   if (hal_if::set_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
     printf("Failed to set lif_qstate addr \n");
+    return -1;
+  }
+  return 0;
+}
+
+int get_qstate_addr(int lif, int qtype, int qid, uint64_t *qaddr) {
+
+  if (!qaddr) return -1;
+
+  if (hal_if::get_lif_qstate_addr(lif, qtype, qid, qaddr) < 0) {
+    printf("Failed to get lif_qstate addr \n");
     return -1;
   }
   return 0;

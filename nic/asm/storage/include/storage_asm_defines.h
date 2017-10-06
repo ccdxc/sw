@@ -46,6 +46,8 @@
 	k.{storage_kivec1_src_qaddr_sbit0_ebit1...storage_kivec1_src_qaddr_sbit2_ebit33}
 #define STORAGE_KIVEC1_XTS_DESC_SIZE	\
 	k.storage_kivec1_xts_desc_size
+#define STORAGE_KIVEC1_SSD_CI_ADDR	\
+	k.{storage_kivec1_ssd_ci_addr_sbit0_ebit31...storage_kivec1_ssd_ci_addr_sbit32_ebit33}
 
 #define STORAGE_KIVEC2_SSD_Q_NUM	\
 	k.storage_kivec2_ssd_q_num
@@ -95,26 +97,21 @@
   addi		r2, r0, _load_size;					\
   LOAD_TABLE_FOR_ADDR(_table_addr, r2, r1)				\
 
+// Calculate a table address based on index and size
+// addr = _table_base + (_entry_index * (2 ^_entry_size))
+#define TABLE_ADDR_FOR_INDEX(_table_base, _entry_index, _entry_size)	\
+  add		r1, r0, _table_base;					\
+  add 		r2, r0, _entry_size;					\
+  sllv		r3, _entry_index, r2;					\
+  add		r7, r1, r3;						\
+
 // Load a table based with a calculation based on index
 // addr = _table_base + (_entry_index * (2 ^_entry_size))
 // PC input must be a 28-bit value
 #define LOAD_TABLE_FOR_INDEX(_table_base, _entry_index, _entry_size,	\
                              _load_size, _pc)				\
-  add		r1, r0, _table_base;					\
-  add 		r2, r0, _entry_size;					\
-  sllv		r3, _entry_index, r2;					\
-  add		r1, r1, r3;						\
-  LOAD_TABLE_FOR_ADDR(r1, _load_size, _pc)				\
-
-// Load a table based with a calculation based on index
-// addr = _table_base + (_entry_index * (2 ^_entry_size))
-// PC input is a .param resolved by the loader (34-bit value)
-#define LOAD_TABLE_FOR_INDEX_PARAM(_table_base, _entry_index,		\
-                                   _entry_size, _load_size, _pc)	\
-  addi		r5, r0, _pc;						\
-  srl		r5, r5, 6;						\
-  addi		r6, r0, _load_size;					\
-  LOAD_TABLE_FOR_INDEX(_table_base, _entry_index, _entry_size, r6, r5)	\
+  TABLE_ADDR_FOR_INDEX(_table_base, _entry_index, _entry_size)		\
+  LOAD_TABLE_FOR_ADDR(r7, _load_size, _pc)				\
 
 // Load a table based with a calculation based on index and priority
 // addr = _table_base + ((_entry_index + ( _pri * (2 ^ _num_entries))) 
@@ -276,6 +273,26 @@
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
                        _sched, DOORBELL_UPDATE_P_NDX)			\
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
+                     r7, _dma_cmd_ptr)					\
+   DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
+
+// Set the data to be pushed across the PCI layer to be the p_ndx. Issue
+// DMA write of this data to the address in the d-vector. Set the fence
+// bit for the data push.
+#define PCI_QUEUE_PUSH_DATA_UPDATE(_dma_cmd_ptr)			\
+   add		r1, r0, d.p_ndx;					\
+   phvwr	p.pci_push_data_data, r1.wx;				\
+   add		r7, r0, d.push_addr;					\
+   DMA_PHV2MEM_SETUP(pci_push_data_data, pci_push_data_data,		\
+                     r7, _dma_cmd_ptr)					\
+   DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
+
+// Raise an interrupt by using the address and data specified in the
+// d-vector
+#define PCI_QUEUE_PUSH_INTR_UPDATE(_dma_cmd_ptr)			\
+   phvwr	p.pci_intr_data_data, d.intr_data;			\
+   add		r7, r0, d.intr_addr;					\
+   DMA_PHV2MEM_SETUP(pci_intr_data_data, pci_intr_data_data,		\
                      r7, _dma_cmd_ptr)					\
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 

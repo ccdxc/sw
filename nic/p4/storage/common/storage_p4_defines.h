@@ -54,16 +54,17 @@
 
 // Macros for ASM param addresses (hardcoded in P4)
 #define q_state_push_start		0x80000000
-#define seq_q_state_push_start		0x80001000
-#define pri_q_state_push_start		0x80002000
-#define pri_q_state_incr_start		0x80003000
-#define pri_q_state_decr_start		0x80004000
-#define nvme_be_wqe_prep_start		0x80005000
-#define nvme_be_wqe_save_start		0x80006000
-#define nvme_be_wqe_release_start	0x80007000
-#define nvme_be_wqe_handler_start	0x80008000
-#define nvme_be_cmd_handler_start	0x80009000
-#define seq_barco_ring_push_start	0x8000A000
+#define pci_q_state_push_start		0x80001000
+#define seq_q_state_push_start		0x80002000
+#define pri_q_state_push_start		0x80003000
+#define pri_q_state_incr_start		0x80004000
+#define pri_q_state_decr_start		0x80005000
+#define nvme_be_wqe_prep_start		0x80006000
+#define nvme_be_wqe_save_start		0x80007000
+#define nvme_be_wqe_release_start	0x80008000
+#define nvme_be_wqe_handler_start	0x80009000
+#define nvme_be_cmd_handler_start	0x8000A000
+#define seq_barco_ring_push_start	0x8000B000
 
 // Generic Queue State. Total size can be 64 bytes at most.
 header_type q_state_t {
@@ -93,7 +94,8 @@ header_type q_state_t {
     ssd_bm_addr	: 34;	// Pointer to bitmap which is used to save SSD commands
     ssd_q_num	: 16;	// Number of entries in the SSD priority queue
     ssd_q_size	: 16;	// Size of each queue state entry in SSD priority queue
-    pad		: 106;	// Align to 64 bytes
+    ssd_ci_addr	: 34;	// Address of the consumer index in the SSD qstate
+    pad		: 72;	// Align to 64 bytes
   }
 }
 
@@ -139,6 +141,33 @@ header_type pri_q_state_t {
   }
 }
 
+// Queue State for access across the PCI bus - e.g. NVME driver, SSD, PVM. 
+// Total size can be 64 bytes at most.
+header_type pci_q_state_t {
+  fields {
+    pc_offset	: 8;	// Program counter (relative offset)
+    rsvd	: 8;	// Hardware reserved field
+    cosA	: 4;	// Cos value A
+    cosB	: 4;	// Cos value B
+    cos_sel	: 8;	// Cos selector
+    eval_last	: 8;	// Evaluator of "work ready" for ring
+    total_rings	: 4;	// Total number of rings used by this qstate
+    host_rings	: 4;	// Number of host facing rings used by this qstate
+    pid		: 16;	// PID value to be compared with that from host
+    p_ndx	: 16;	// Producer Index
+    c_ndx	: 16;	// Consumer Index
+    w_ndx	: 16;	// Working consumer index
+    num_entries	: 16;	// Number of queue entries (power of 2 of this value)
+    base_addr	: 64;	// Base address of queue entries
+    entry_size	: 16;	// Size of each queue entry
+    push_addr	: 64;	// Address where the push data (pndx) is to be written
+    intr_addr	: 64;	// Address where the MSI-X interrupt is to be raised
+    intr_data	: 32;	// Preformed data for raising the MSI-X interrupt
+    intr_en	: 1;	// If interrupts are enabled 
+    pad		: 143;	// Align to 64 bytes
+  }
+}
+
 // Barco XTS ring 
 header_type barco_xts_ring_t {
   fields {
@@ -175,8 +204,9 @@ header_type barco_xts_ring_t {
   modify_field(q_state.vf_id, vf_id);			\
   modify_field(q_state.sq_id, sq_id);			\
   modify_field(q_state.ssd_bm_addr, ssd_bm_addr);	\
-  modify_field(q_state.ssd_q_num, ssd_q_num);	\
-  modify_field(q_state.ssd_q_size, ssd_q_size);	\
+  modify_field(q_state.ssd_q_num, ssd_q_num);		\
+  modify_field(q_state.ssd_q_size, ssd_q_size);		\
+  modify_field(q_state.ssd_ci_addr, ssd_ci_addr);	\
 
 #define Q_STATE_COPY(q_state)				\
   Q_STATE_COPY_STAGE0(q_state)				\
@@ -221,6 +251,31 @@ header_type barco_xts_ring_t {
 
 #define PRI_Q_STATE_COPY(q_state)			\
   PRI_Q_STATE_COPY_STAGE0(q_state)			\
+  modify_field(q_state.pad, pad);			\
+
+#define PCI_Q_STATE_COPY_STAGE0(q_state)		\
+  modify_field(q_state.pc_offset, pc_offset);		\
+  modify_field(q_state.rsvd, rsvd);			\
+  modify_field(q_state.cosA, cosA);			\
+  modify_field(q_state.cosB, cosB);			\
+  modify_field(q_state.cos_sel, cos_sel);		\
+  modify_field(q_state.eval_last, eval_last);		\
+  modify_field(q_state.total_rings, total_rings);	\
+  modify_field(q_state.host_rings, host_rings);		\
+  modify_field(q_state.pid, pid);			\
+  modify_field(q_state.p_ndx, p_ndx);			\
+  modify_field(q_state.c_ndx, c_ndx);			\
+  modify_field(q_state.w_ndx, w_ndx);			\
+  modify_field(q_state.num_entries, num_entries);	\
+  modify_field(q_state.base_addr, base_addr);		\
+  modify_field(q_state.entry_size, entry_size);		\
+  modify_field(q_state.push_addr, push_addr);		\
+  modify_field(q_state.intr_addr, intr_addr);		\
+  modify_field(q_state.intr_data, intr_data);		\
+  modify_field(q_state.intr_en, intr_en);		\
+
+#define PCI_Q_STATE_COPY(q_state)			\
+  PCI_Q_STATE_COPY_STAGE0(q_state)			\
   modify_field(q_state.pad, pad);			\
 
 // Queue empty macros
@@ -345,6 +400,7 @@ header_type storage_kivec1_t {
     src_qid	: 24;	// Source queue number (within the LIF)
     src_qaddr	: 34;	// Source queue state address
     xts_desc_size	: 16;	// Barco XTS descriptor size
+    ssd_ci_addr	: 34;	// Address of the consumer index in the SSD qstate
   }
 }
 
@@ -375,6 +431,7 @@ header_type storage_kivec2_t {
   modify_field(scratch.src_qid, kivec.src_qid);				\
   modify_field(scratch.src_qaddr, kivec.src_qaddr);			\
   modify_field(scratch.xts_desc_size, kivec.xts_desc_size);		\
+  modify_field(scratch.ssd_ci_addr, kivec.ssd_ci_addr);			\
 
 #define STORAGE_KIVEC2_USE(scratch, kivec)				\
   modify_field(scratch.ssd_q_num, kivec.ssd_q_num);			\
@@ -507,9 +564,12 @@ header_type nvme_be_sta_hdr_t {
 // NVME status processed by NVME backend and carried over ROCE
 header_type nvme_be_sta_t {
   fields {
-    nvme_sta_lo		: 96;	// First 12 bytes of NVME status
-    nvme_sta_cid	: 16;	// Command id in the NVME status 
-    nvme_sta_w7		: 16;	// Final 16 bits of NVME status
+    cspec		: 32;	// Command specific data
+    rsvd		: 32;	// Reserved
+    sq_head		: 16;	// SQ head pointer
+    sq_id		: 16;	// SQ id
+    cid			: 16;	// Command id that was passed in NVME command
+    status_phase	: 16;	// Status and phase bit
   }
 }
 
@@ -569,13 +629,19 @@ header_type ssd_cmds_t {
   }
 }
 
+// SSD's consumder index value stored in PHV for DMA
+header_type ssd_ci_t {
+  fields {
+    c_ndx	: 16;	// SSD's Consumer index value
+  }
+}
 
 
 // Pad for storage, vary this based on PHV allocation to align DMA commands
 // to 16 byte boundary
 header_type storage_pad_t {
   fields {
-    pad		: 88;	// Align DMA commands to 16 byte to boundary
+    pad		: 8;	// Align DMA commands to 16 byte to boundary
   }
 }
 
@@ -589,6 +655,13 @@ header_type storage_doorbell_addr_t {
 header_type storage_doorbell_data_t {
   fields {
     data	: 64;	// 64 bit data
+  }
+}
+
+// PCI push/interrupt data defintion 
+header_type storage_pci_data_t  {
+  fields {
+    data	: 32;	// 32 bit data
   }
 }
 

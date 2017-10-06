@@ -13,7 +13,7 @@ struct s4_tbl_nvme_be_wqe_save_d d;
 struct phv_ p;
 
 %%
-   .param storage_tx_q_state_push_start
+   .param storage_tx_pci_q_state_push_start
 
 storage_tx_nvme_be_wqe_save_start:
 
@@ -51,7 +51,7 @@ storage_tx_nvme_be_wqe_save_start:
 
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
-                             storage_tx_q_state_push_start)
+                             storage_tx_pci_q_state_push_start)
 
 exit:
    nop.e

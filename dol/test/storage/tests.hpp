@@ -47,11 +47,23 @@ int test_run_nvme_be_wrr5();
 
 int test_run_nvme_be_wrr6();
 
-int test_run_nvme_read_comp();
+int test_run_nvme_read_comp1();
 
-int test_run_nvme_write_comp();
+int test_run_nvme_write_comp1();
 
-int test_run_nvme_e2e();
+int test_run_nvme_read_comp2();
+
+int test_run_nvme_write_comp2();
+
+int test_run_nvme_read_comp3();
+
+int test_run_nvme_write_comp3();
+
+int test_run_nvme_local_e2e1();
+
+int test_run_nvme_local_e2e2();
+
+int test_run_nvme_local_e2e3();
 
 }  // namespace tests
 

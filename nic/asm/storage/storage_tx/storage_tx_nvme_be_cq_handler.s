@@ -20,8 +20,8 @@ storage_tx_nvme_be_cq_handler_start:
    QUEUE_POP_DOORBELL_UPDATE
 
    // Save the R2N WQE to PHV
-   phvwr	p.{nvme_be_sta_nvme_sta_lo...nvme_be_sta_nvme_sta_w7},	\
-   		d.{nvme_sta_lo...nvme_sta_w7}
+   phvwr	p.{nvme_be_sta_cspec...nvme_be_sta_status_phase},	\
+   		d.{cspec...status_phase}
 
    // Set the state information for the NVME backend status header
    // TODO: FIXME
@@ -30,10 +30,18 @@ storage_tx_nvme_be_cq_handler_start:
    phvwri	p.nvme_be_sta_hdr_is_q0, 0
    phvwri	p.nvme_be_sta_hdr_rsvd, 0
 
+   // Store the SSD's c_ndx value for DMA to the NVME backend SQ
+   add		r1, r0, d.sq_head
+   phvwr	p.ssd_ci_c_ndx, r1.hx
+
+   // Setup the DMA command to push the sq_head to the c_ndx of the SSD
+   DMA_PHV2MEM_SETUP(ssd_ci_c_ndx, ssd_ci_c_ndx, 
+                     STORAGE_KIVEC1_SSD_CI_ADDR, dma_p2m_2)
+
    // Obtain the saved command index from the command id in the status
    // and save it in the PHV. Store the result in GPR r6 to pass as input
    // to SSD_CMD_ENTRY_ADDR_CALC
-   add		r6, d.nvme_sta_cid, r0
+   add		r6, d.cid, r0
    add		r6, r0, r6.hx
    andi		r6, r6, 0xFF
    phvwr	p.r2n_wqe_nvme_cmd_cid, r6
