@@ -17,6 +17,7 @@ esp_ipv4_tunnel_n2h_allocate_output_desc_index:
     phvwri p.common_te1_phv_table_lock_en, 0
     phvwr p.common_te1_phv_table_addr, d.out_desc_index 
     phvwr p.t1_s2s_out_desc_addr, d.out_desc_index
+    phvwr p.ipsec_to_stage4_out_desc_addr, d.out_desc_index
     nop.e
     nop 
 

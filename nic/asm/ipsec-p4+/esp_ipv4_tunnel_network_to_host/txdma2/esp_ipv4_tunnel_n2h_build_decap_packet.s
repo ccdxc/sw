@@ -28,5 +28,8 @@ esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     //payload-size includes pad - subtract pad_size now
     sub r3, r3, k.txdma2_global_pad_size
     phvwr p.dec_pay_load_dma_cmd_size, r3
+
+    phvwri p.p4_txdma_intr_dma_cmd_ptr, N2H_TXDMA2_DMA_COMMANDS_OFFSET
+
     nop.e 
     nop

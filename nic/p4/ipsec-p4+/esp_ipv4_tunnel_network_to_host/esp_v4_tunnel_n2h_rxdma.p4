@@ -26,7 +26,7 @@
 
 header_type ipsec_to_stage3_t {
     fields {
-        packet_length : 16; 
+        payload_size : 16; 
         iv_salt       : 32;
         iv_size       : 8;
         iv_salt_off   : 8;
@@ -204,6 +204,13 @@ metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
     modify_field(ipsec_global_scratch.ipsec_cb_index, ipsec_global.ipsec_cb_index); \
     modify_field(ipsec_global_scratch.packet_length, ipsec_global.packet_length);
 
+#define IPSEC_TO_STAGE3_SCRATCH \
+    modify_field(ipsec_to_stage3_scratch.iv_size, ipsec_to_stage3.iv_size); \
+    modify_field(ipsec_to_stage3_scratch.iv_salt_off, ipsec_to_stage3.iv_salt_off); \
+    modify_field(ipsec_to_stage3_scratch.iv_salt, ipsec_to_stage3.iv_salt); \
+    modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr); \
+    modify_field(ipsec_to_stage3_scratch.payload_size, ipsec_to_stage3.payload_size); \
+
 
 
 
@@ -271,6 +278,7 @@ action esp_v4_tunnel_n2h_update_input_desc_aol (addr0, offset0, length0,
                               addr2, offset2, length2,
                               nextptr, rsvd)
 {
+    IPSEC_TO_STAGE3_SCRATCH
     // pass input page in s2s data K+I - change it later
     //modify_field(barco_desc_in.A0_addr, t0_s2s.in_page_addr);
     modify_field(barco_desc_in.O0, 0);
@@ -286,7 +294,7 @@ action esp_v4_tunnel_n2h_update_input_desc_aol (addr0, offset0, length0,
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T0_S2S
     // 1. Original pkt to input descriptor pkt2mem 
-    DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem, addr0, ipsec_global.packet_length, 0, 0)
+    DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem, addr0, ipsec_to_stage3.payload_size, 0, 0)
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_iv_salt, addr0+ipsec_to_stage3.iv_salt_off, IPSEC_IN_DESC_IV_SALT_START, IPSEC_IN_DESC_IV_SALT_END, 0, 0, 0, 0)
 }
 

@@ -16,7 +16,13 @@ esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc:
     addi r1, r1, 1
     tblwr d.cb_pindex, r1
     nop
-     
+    phvwri p.app_header_table0_valid, 0
+    phvwri p.app_header_table1_valid, 0
+    phvwri p.app_header_table2_valid, 0
+    phvwri p.app_header_table3_valid, 0
+
+    phvwri p.p4_rxdma_intr_dma_cmd_ptr, N2H_RXDMA_IPSEC_DMA_COMMANDS_OFFSET
+ 
 dma_cmd_to_write_ipsec_int_from_rxdma_to_txdma:
     phvwri p.dma_cmd_phv2mem_ipsec_int_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr p.dma_cmd_phv2mem_ipsec_int_dma_cmd_addr, k.t0_s2s_in_desc_addr
@@ -45,7 +51,7 @@ esp_ipv4_tunnel_n2h_dma_cmd_incr_pindex:
 
 dma_cmd_ring_doorbell:
     /* address will be in r4 */
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_IPSEC_ESP)
+    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 1, LIF_IPSEC_ESP)
         /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA(0, k.ipsec_global_ipsec_cb_index, 0, d.cb_pindex)                                                                                                                                    
         phvwr           p.doorbell_cmd_dma_cmd_addr, r4

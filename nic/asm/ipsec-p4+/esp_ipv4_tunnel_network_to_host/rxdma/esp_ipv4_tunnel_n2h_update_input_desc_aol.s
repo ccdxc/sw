@@ -16,16 +16,28 @@ struct phv_ p;
 esp_ipv4_tunnel_n2h_update_input_desc_aol:
     phvwri p.app_header_table0_valid, 1
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc[33:6] 
-    phvwri p.common_te0_phv_table_raw_table_size, 7
+    phvwri p.common_te0_phv_table_raw_table_size, 6
     phvwri p.common_te0_phv_table_lock_en, 0
     phvwr p.common_te0_phv_table_addr, k.ipsec_to_stage3_ipsec_cb_addr 
 
-    phvwr p.barco_desc_in_A0_addr, k.t0_s2s_in_page_addr 
+    add r2, r0, k.ipsec_to_stage3_iv_salt_off
+    subi r5, r2, 4
+    addi r2, r2, 4
+    add r2, r2, k.ipsec_to_stage3_iv_size
+    add r3, r2, k.t0_s2s_in_page_addr
+
+    phvwr p.barco_desc_in_A0_addr, r5 
     phvwri p.barco_desc_in_O0, 0
-    phvwr p.barco_desc_in_L0, k.ipsec_global_packet_length
+    addi r4, r0, ESP_FIXED_HDR_SIZE
+    add r4, r4, k.ipsec_to_stage3_iv_size 
+    phvwr p.barco_desc_in_L0, r4 
+
+    phvwr p.barco_desc_in_A1_addr, r3 
+    phvwri p.barco_desc_in_O1, 0
+    phvwr p.barco_desc_in_L1, k.ipsec_to_stage3_payload_size
 
 dma_cmd_to_move_input_pkt_to_mem:
-    phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
+    phvwri p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
     phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, k.t0_s2s_in_page_addr
     phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_global_packet_length
 

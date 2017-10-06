@@ -17,7 +17,7 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
 
     addi r1, r0, 1
     add r1, r1, d.barco_ring_cindex
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_IPSEC_ESP)
+    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 1, LIF_IPSEC_ESP)
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, r1)
     memwr.dx  r4, r3
     tblwr d.barco_ring_cindex, r1
