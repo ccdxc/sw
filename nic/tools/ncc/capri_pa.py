@@ -131,7 +131,7 @@ class capri_field:
         if self.is_flit_pad:
             return 100
         elif not self.is_meta or self.is_intrinsic or self.is_predicate or self.is_hv:
-            # do not change order of hv, intrinsic,..., and non-meta flds 
+            # do not change order of hv, intrinsic,..., and non-meta flds
             return 0
         if self.is_key and not self.is_input:
             return 10
@@ -232,7 +232,6 @@ class capri_flit:
                 if cf.need_phv() and cf.width and \
                     not self.gress_pa.pa.be.args.p4_plus and \
                     not cf.is_intrinsic:
-                    
                     cf_end = self.flit_used + cf.width
 
                     if cf.is_index_key and cf.width > 8 and (cf_end % 8):
@@ -285,7 +284,7 @@ class capri_flit:
                     hdr_list += hdr_group
 
             # check fld union, get all the associated headers and associated states
-            # Parser-constraint: Allocate everything extracted in one parser state in a flit 
+            # Parser-constraint: Allocate everything extracted in one parser state in a flit
             # This has to be done when the header is first evaluated
             for t_cf in self.gress_pa.get_header_all_cfields(hdr):
                 if t_cf in self.gress_pa.fld_unions:
@@ -313,7 +312,7 @@ class capri_flit:
             meta_fld_size = 0
             flit_used = self.flit_used
             for cs in ext_cstates:
-                hdr_list += cs.headers 
+                hdr_list += cs.headers
                 for mf in cs.meta_extracted_fields:
                     if mf not in meta_list:
                         meta_fld_size += mf.width
@@ -357,7 +356,7 @@ class capri_flit:
 
             for sh in unique_hdr_list:
                 self.headers[sh] = cf
-                
+
         if hdr and hdr not in self.headers and not cf.is_hdr_union and is_synthetic_header(hdr):
             hdr_size = self.gress_pa.get_header_phv_size(hdr)
             bits_needed = (hdr_size * 8)
@@ -396,7 +395,7 @@ class capri_flit:
                 self._add_pad_512b_crossing(cf, phv_flit_sz)
 
         self.field_order.append(cf)
-        
+
         return True
 
     def _add_byte_alignment_pad(self, cf):
@@ -453,7 +452,7 @@ class capri_flit:
 
     def flit_close(self):
         if len(self.field_order) == 0: pdb.set_trace()
-            
+
         self.gress_pa.logger.debug("%s:Close flit[%d], used %d, at %s" % \
             (self.gress_pa.d.name, self.id, self.flit_used, self.field_order[-1].hfname))
 
@@ -494,7 +493,7 @@ class capri_flit:
         # within meta flds, keep all key_fields together and I fields together as -
         # k, (k and I), I
         self.field_order = sorted(self.field_order, key=methodcaller('flit_meta_order'))
-        ''' 
+        '''
 
     def flit_chunk_alloc(self, csize, location=-1, align=0, justify=JUSTIFY_LEFT, fixed_loc=0,
                             cross_512b=True):
@@ -522,7 +521,7 @@ class capri_flit:
                 continue
 
             # floc | align | justify | fixed_loc
-            #  >=0    0         X       1       : allocate at specified floc   
+            #  >=0    0         X       1       : allocate at specified floc
             #  >=0    !0        L       0       : allocate at aligned_start >= floc
             #  >=0    !0        R       0       : allocate at start >= floc and aligned_end
             #  <0      0        X       X       : allocate at any available location
@@ -539,7 +538,7 @@ class capri_flit:
                         return -1
 
                     # chunk start at or before floc - check the size
-                    if (cs+cw) < (floc+csize): 
+                    if (cs+cw) < (floc+csize):
                         return -1
                 else:
                     floc = cs
@@ -593,7 +592,7 @@ class capri_flit:
             return self.base_phv_bit + a_cs # return global phv bit#
         # did not find any sutable free chunk
         return -1
-                    
+
     def flit_chunk_free(self, location, csize):
         assert location >= self.base_phv_bit and location < (self.base_phv_bit+self.fsize)
         assert (location+csize) <= (self.base_phv_bit+self.fsize)
@@ -626,7 +625,7 @@ class capri_flit:
                 self.flit_avail += csize
                 return
         assert 0, pdb.set_trace()
-        
+
 
 class capri_gress_pa:
     def __init__(self, capri_pa, d):
@@ -857,7 +856,7 @@ class capri_gress_pa:
             # table
             self.insert_table_meta_fields()
         # add other metadata fields that are not referred to by the parser
-        # Add fields from a given header consecutively to start with, 
+        # Add fields from a given header consecutively to start with,
         # these flds can be moved around later
         for h in self.pa.be.h.p4_header_instances.values():
             if not h.metadata:
@@ -899,12 +898,12 @@ class capri_gress_pa:
         self.print_field_order_info(msg="PHV order(Init)")
         #self.logger.debug("Field Order(Pre) %s" % self.field_order)
 
-            
+
         # clear fld union destinations from earlier round, so we can re-compute
         for k,v in self.fld_unions.items():
             self.fld_unions[k] = (v[0], None)
 
-        # re-init hdr_phv_fld 
+        # re-init hdr_phv_fld
         self.hdr_phv_fld = OrderedDict() # {hdr: first_phv_field}
         if not self.pa.be.args.p4_plus:
             # Go thru' header unions and find the first(topological) header for each union
@@ -932,7 +931,7 @@ class capri_gress_pa:
             for uh in v[1]:
                 # fix other header entries in this union
                 self.hdr_unions[uh] = (v[0], v[1], hdr_list[first_idx])
-                
+
         for i,f in enumerate(self.field_order):
             hdr = f.p4_fld.instance
             if hdr not in self.hdr_phv_fld:
@@ -1037,7 +1036,7 @@ class capri_gress_pa:
                     if not self.fld_unions[uf][1]:
                         self.fld_unions[uf] = (self.fld_unions[uf][0], uf)
                         uf.is_fld_union_storage = True
-                            
+
     def assign_phv(self, start=0, end=-1):
         # In new phv allocation - this function is not needed
         if not self.pa.be.args.old_phv_allocation:
@@ -1055,7 +1054,7 @@ class capri_gress_pa:
                 cf.phv_bit = bit_idx
             else:
                 cf.phv_bit = bit_idx
-            
+
             if not cf.need_phv():
                 continue
 
@@ -1137,7 +1136,7 @@ class capri_gress_pa:
     def clear_phv_assignment(self):
         for cf in self.field_order:
             cf.phv_bit = -1
-            
+
     def get_field(self, hfname):
         # return capri_field object for a given header.field name
         if hfname not in self.fields:
@@ -1194,7 +1193,7 @@ class capri_gress_pa:
                 pass
         assert((hphv % 8) == 0)
         return (hphv+7)/8
-        
+
     def get_header_storage_size(self, hdr):
         # Count only non-unioned and non-ohi fields
         # for header union (not storage, it will return 0, but for union-storage
@@ -1305,7 +1304,7 @@ class capri_gress_pa:
             hv_location = self.pa.be.hw_model['parser']['hv_location']
             max_hv_bits = self.pa.be.hw_model['parser']['max_hv_bits']
             flit_hv_bits = self.pa.be.hw_model['parser']['flit_hv_bits']
-            
+
             tmp_pad = hv_location - bits_used
             dummy_pf = capri_field(None, self.d, tmp_pad, 'pad_before_hv_%d_' % (tmp_pad))
             # XXX set a flag so we can relocate meta flds in here later
@@ -1320,7 +1319,7 @@ class capri_gress_pa:
             if flit.add_cfield(cf):
                 return True
         return self.flits[f_id].add_cfield(cf)
-            
+
     def _create_flits(self, add_hv=False):
         # XXX To be removed.. old phv allocation scheme
         cfid = 0
@@ -1415,7 +1414,7 @@ class capri_gress_pa:
             if cf.is_fld_union_storage:
                 for uf in self.fld_unions[cf][0]:
                     uf.phv_bit = -1
-        
+
     def check_512b_fld_crossing(self, flit, hdr, start_phv):
         # return extra bits needed if any fld crosses 512b boundary, else 0
         # For hdr-union check all headers and report max of extra bits needed
@@ -1435,6 +1434,7 @@ class capri_gress_pa:
             hdrs = [hdr]
         for h in hdrs:
             extra_bits = 0
+            hdr_byte_aligned_cfs = self.hdr_get_byte_aligned_fld_chunks(h)
             foffset = start_phv - flit.base_phv_bit
             for f in h.fields:
                 cf = self.get_field(get_hfname(f))
@@ -1450,7 +1450,7 @@ class capri_gress_pa:
                 if cf.storage_size():
                     foffset += cf.storage_size() + extra_bits
         return max_extra_bits
-        
+
     def assign_phv_to_hdr_flds(self, flit, hdr, start_phv):
         # assumption: 512b fld crossing check is done by the caller
         # this is called for hdr unions as well hdrs that may some some fld union flds
@@ -1654,14 +1654,14 @@ class capri_gress_pa:
                 cf.is_flit_pad = True
                 cf.phv_bit = flit.base_phv_bit + chunk[0]
                 self.field_order.append(cf)
-                
+
                 if clen1 > 0:
                     cf = capri_field(None, self.d, clen1, '_flit_pad__%d' % \
                         (flit.base_phv_bit + phv_flit_sz))
                     cf.is_flit_pad = True
                     cf.phv_bit = flit.base_phv_bit + phv_flit_sz
                     self.field_order.append(cf)
-                    
+
 
         self.pa.logger.debug("%s: total unused bits %d" % (self.d.name, total_unused_bits))
         # sort the fld order based on phv#
@@ -1704,7 +1704,7 @@ class capri_gress_pa:
                         first_cf = self.get_field(get_hfname(hf.fields[0]))
                         assert first_cf
                         phv_bit = first_cf.phv_bit
-                    
+
                     for uh in self.hdr_unions[hf][1]:
                         if uh == hf:
                             continue
@@ -1730,7 +1730,7 @@ class capri_gress_pa:
             return False
         return True
 
-    def allocate_phv_for_hf(self, flit, hf): 
+    def allocate_phv_for_hf(self, flit, hf):
         # Assumptions:
         # - hf is either a header or metadata fld
         # - hf can be hdr union or some of the hdr flds can be part fld union
@@ -1739,7 +1739,7 @@ class capri_gress_pa:
         # For P4:
         # - Find all associated/connected headers and flds for a given hf and try to
         # allocate them in a single flit
-        # For P4+ : 
+        # For P4+ :
         # handled in a separate function
         # - Flit restriction is not applied
         # - meta flds can be hdr or fld unions
@@ -1773,14 +1773,13 @@ class capri_gress_pa:
                     self.pa.logger.debug("%s:Allocated %s at %d in closed flit %d" % \
                         (self.d.name, hf.hfname, hf.phv_bit, fid))
                     return True
-            
+
             # try current flit
             phv_bit = flit.flit_chunk_alloc(hf.width, -1, 0, 0, 0, False)
             if phv_bit >= 0:
                 hf.phv_bit = phv_bit
                 return True
             # cannot allocate in current flit
-            pdb.set_trace()
             return False
 
         # get all the headers and flds that need to go into a single flit
@@ -1791,11 +1790,11 @@ class capri_gress_pa:
             self.find_hf_flit_group(hf_list, cs_list, hf)
 
         # allocate phv for the headers/flds that are not already placed
-        # i2e header - XXX 
+        # i2e header - XXX
         # - do not pad i2 flds at init time
         # - combine all relocatable i2e flds into bytes
         # - combine all i2e flds that fall in this flit together and pad the collection to byte
-        # - create the definition of i2e header at the end of ingress phv allocation 
+        # - create the definition of i2e header at the end of ingress phv allocation
         # XXX deparse-only headers can be allocated into earlier flits - TBD
         new_hfs = []
         bits_needed = 0
@@ -1844,11 +1843,11 @@ class capri_gress_pa:
             (self.d.name, flit.id, total_bits_needed, flit.flit_avail, hf_list))
 
         # sort new_hf - allocate headers first, then meta flds
-        # for fld unions - the union headers will be placed first, ensure that by sorting 
+        # for fld unions - the union headers will be placed first, ensure that by sorting
         # new_hf based on position in hdr_fld_order.
         # worry about k-i meta flds??
 
-        # most likely the things will fit.. when pad is added to align/justify flds, it can 
+        # most likely the things will fit.. when pad is added to align/justify flds, it can
         # overflow available space
         allocated_chunks = []
         new_allocated_hfs = []
@@ -1888,7 +1887,7 @@ class capri_gress_pa:
 
             if phv_bit > last_hdr_bit:
                 last_hdr_bit = phv_bit
-            
+
             allocated_chunks.append((phv_bit, hdr_storage_size))
             # XXX check p4plus flag
             extra_bits = self.check_512b_fld_crossing(flit, n_hf, phv_bit)
@@ -1940,7 +1939,7 @@ class capri_gress_pa:
                     if phv_bit < 0:
                         overflow = True
                         break
-                        
+
                     allocated_chunks.append((phv_bit, fsize))
                 else:
                     assert phv_bit >= 0, pdb.set_trace()
@@ -1962,7 +1961,7 @@ class capri_gress_pa:
                 (self.d.name, flit.id, flit.flit_avail, new_hfs))
             self.clear_new_flit_phv_assignment(flit, allocated_chunks, new_allocated_hfs)
             return False
-            
+
         for n_hf in new_hfs:
             if not isinstance(n_hf, capri_field):
                 continue
@@ -2000,7 +1999,7 @@ class capri_gress_pa:
             else:
                 start_loc = -1
 
-            phv_bit = flit.flit_chunk_alloc(n_hf.storage_size(), start_loc, 
+            phv_bit = flit.flit_chunk_alloc(n_hf.storage_size(), start_loc,
                                             alignment, justify, 0, False)
             if phv_bit < 0:
                 overflow = True
@@ -2084,7 +2083,7 @@ class capri_gress_pa:
             uhdrs = []
             if hf in self.hdr_unions:
                 #pdb.set_trace()
-                uhdrs = self.hdr_unions[hf][1]
+                uhdrs += self.hdr_unions[hf][1]
             elif self.hdr_has_fld_unions(hf):
                 #pdb.set_trace()
                 # fld unions may be with other meta flds not headers
@@ -2171,6 +2170,14 @@ class capri_gress_pa:
 
         return phv_chunks
 
+    def get_hdr_phv_start(self, hdr):
+        for f in hdr.fields:
+            cf = self.get_field(get_hfname(f))
+            assert cf, "unknown field %s" % (hdr.name + f.name)
+            if not cf.is_ohi:
+                return cf.phv_bit
+        return -1
+
     def get_hdr_phv_chunks(self, fl, check_ohi=True):
         phv_chunks = []
         if len(fl) == 0:
@@ -2232,7 +2239,7 @@ class capri_gress_pa:
                         if cf.is_ohi:
                             cf.is_ohi = False
                             self.logger.debug("Set no_ohi on synthetic header fld %s" % cf.hfname)
-                    
+
 
                 continue
 
@@ -2347,7 +2354,7 @@ class capri_pa:
                     ecf = self.allocate_field(p4f, xgress.EGRESS)
                 ecf.is_ohi = False
                 ecf.is_intrinsic = True
-                
+
             self.gress_pa[xgress.INGRESS].capri_p4_intr_hdr = p4_intr_hdr
             self.gress_pa[xgress.EGRESS].capri_p4_intr_hdr = p4_intr_hdr
 
@@ -2394,6 +2401,16 @@ class capri_pa:
                         "Cannot used parser local field %s in egress pipeline" % \
                         (cfe.hfname)
 
+            # create all header fields.. if direction is not known, do it in both dir
+            # this is done so that hdr and fleld unions can be processed before parser
+            # initialization. This change is done so that parser topo sorting can use
+            # hdr/fld union info to create fake branches between states that extract
+            # same meta fld or extract unioned headers
+            if not f.instance.metadata:
+                if not cfi:
+                    cfi = self.gress_pa[xgress.INGRESS].allocate_field(f)
+                if not cfe:
+                    cfe = self.gress_pa[xgress.EGRESS].allocate_field(f)
             if self.be.args.p4_plus and not cfi and f.instance.name != 'standard_metadata':
                 # add all fields to ingress for p4_plus program
                 cfi = self.gress_pa[xgress.INGRESS].allocate_field(f)
@@ -2470,7 +2487,7 @@ class capri_pa:
         # create a dummy i2e_meta header on ingress for deparser to add it to pkt
         # and for ingress parser to set hv bit
         if self.gress_pa[xgress.EGRESS].i2e_hdr:
-            # keep an empty header for now... 
+            # keep an empty header for now...
             # XXX see if we can simplify processing by populating it
             self.gress_pa[xgress.INGRESS].i2e_hdr = copy.copy(self.gress_pa[xgress.EGRESS].i2e_hdr)
             self.gress_pa[xgress.INGRESS].i2e_hdr.header_type = copy.copy(i2e_hdr.header_type)
@@ -2486,6 +2503,16 @@ class capri_pa:
                 cf.width = ecf.width
                 cf.pad = pad
                 cf.p4_fld.width = cf.width
+
+    def hdr_union_add(self, hdr_list, d):
+        # support multiple definitions (transitive) of header unions for a given header
+        unioned_hdrs = set([])
+        unioned_hdrs |= set(hdr_list)
+        for uh in hdr_list:
+            if uh in self.gress_pa[d].hdr_unions:
+                unioned_hdrs |= set(self.gress_pa[d].hdr_unions[uh][1])
+        for uh in list(unioned_hdrs):
+            self.gress_pa[d].hdr_unions[uh] = (d, list(unioned_hdrs), None)
 
     def initialize_unions(self):
         # Read p4 header info find header uninons specified by pa_header_union
@@ -2519,20 +2546,11 @@ class capri_pa:
                         if hdr not in hdr_list:
                             hdr_list.append(hdr)
                         self.logger.debug("Header union %s->%s" % (name, hdr_list))
-                        for uh in hdr_list:
-                            if direction.upper() == 'INGRESS' or direction.upper() == 'XGRESS':
-                                assert uh not in self.gress_pa[xgress.INGRESS].hdr_unions, \
-                                    "%s:Header %s is already in union, can specify only once" % \
-                                    (direction.upper(), uh.name)
-                                self.gress_pa[xgress.INGRESS].hdr_unions[uh] = \
-                                    (direction.upper(), hdr_list, None)
-                            if direction.upper() == 'EGRESS' or direction.upper() == 'XGRESS':
-                                assert uh not in self.gress_pa[xgress.EGRESS].hdr_unions, \
-                                    "%s:Header %s is already in union, can specify only once" % \
-                                    (direction.upper(), uh.name)
-                                self.gress_pa[xgress.EGRESS].hdr_unions[uh] = \
-                                    (direction.upper(), hdr_list, None)
-                    else: 
+                        if direction.upper() == 'INGRESS' or direction.upper() == 'XGRESS':
+                            self.hdr_union_add(hdr_list, xgress.INGRESS)
+                        if direction.upper() == 'EGRESS' or direction.upper() == 'XGRESS':
+                            self.hdr_union_add(hdr_list, xgress.EGRESS)
+                    else:
                         self.logger.warning(\
                             "Invalid header_union pragma: Need gress parameter: %s" % \
                             prg)
@@ -2568,12 +2586,13 @@ class capri_pa:
                         self.gress_pa[xgress.INGRESS].add_fld_union(fld_union)
                         self.gress_pa[xgress.EGRESS].add_fld_union(fld_union)
 
+    def init_synthetic_headers(self):
         for d in xgress:
             self.gress_pa[d].init_synthetic_headers()
 
     def allocate_field(self, f, d):
         return self.gress_pa[d].allocate_field(f)
-        
+
     def get_field(self, hfname, d):
         # return capri_field object for a given header.field name
         return self.gress_pa[d].get_field(hfname)
@@ -2617,6 +2636,9 @@ class capri_pa:
 
     def get_hdr_phv_chunks(self, fl, d, check_ohi=True):
         return self.gress_pa[d].get_hdr_phv_chunks(fl, check_ohi)
+
+    def get_hdr_phv_start(self, hdr, d):
+        return self.gress_pa[d].get_hdr_phv_start(hdr)
 
     def capri_asm_output(self):
         for d in xgress:

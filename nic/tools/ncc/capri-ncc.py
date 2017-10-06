@@ -97,12 +97,13 @@ class capri_backend:
     def initialize(self):
         # collect information from hlir into various objects
         self.pa.initialize()
+        self.pa.initialize_unions()
         self.tables.initialize_tables()
         for p in self.parsers:
             p.initialize()
         for dp in self.deparsers:
             dp.initialize()
-        self.pa.initialize_unions()
+        self.pa.init_synthetic_headers()
 
     def model_dbg_output(self):
         pa_dbg = self.pa.phv_dbg_output()
@@ -196,6 +197,9 @@ def main():
     # Generate various outputs
     for d in xgress:
         if not capri_be.args.p4_plus:
+            # Additional validation
+            capri_be.parsers[d].parser_check_flit_violation()
+
             capri_be.parsers[d].generate_output()
             #capri_be.parsers[d].print_long_paths(10)
             #capri_be.parsers[d].print_short_paths(10)

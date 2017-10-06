@@ -645,8 +645,10 @@ class capri_table:
 
         # move i_bits chunk to byte extraction
         for rc in rm_chunks:
+            w = rc[1]
             self.gtm.tm.logger.debug('%s:convert %s i_bits to i_bytes' % \
                 (self.p4_table.name, rc))
+            b = rc[0]
             if rc[0] % 8:
                 b = (rc[0]/8) * 8
                 w += rc[0] - b
@@ -655,7 +657,7 @@ class capri_table:
 
             #pdb.set_trace()
             self.i_bit_ext.remove(rc)
-            fid = rc[0]/flit_size
+            fid = b/flit_size
             self.km_flits[fid].i_bit_ext.remove(rc)
             # add it to i1 or i2
             if len(self.km_flits[fid].k_phv_chunks) and \
@@ -667,6 +669,13 @@ class capri_table:
                 self.km_flits[fid].i2_phv_chunks.append((b,w))
                 self.km_flits[fid].i2_phv_chunks = \
                     sorted(self.km_flits[fid].i2_phv_chunks, key=lambda k:k[0])
+
+        for km_flit in self.km_flits:
+            # remove duplicate/overlapping chunks from i1 and i2
+            km_flit.i1_phv_chunks = \
+                self._remove_overlapping_chunks(km_flit.i1_phv_chunks)
+            km_flit.i2_phv_chunks = \
+                self._remove_overlapping_chunks(km_flit.i2_phv_chunks)
 
         if len(i2k_bits) and self.is_tcam_table():
             for b,w in i2k_bits:
@@ -715,6 +724,27 @@ class capri_table:
 
             ## assert extra_bits <= 0, pdb.set_trace()
         return True
+
+    def _remove_overlapping_chunks(self, phv_chunks):
+        new_phv_chunks = []
+        c_offset = -1
+        for c, (cs,cw) in enumerate(phv_chunks):
+            if cs > c_offset:
+                c_offset = cs+cw
+                new_phv_chunks.append((cs,cw))
+                continue
+
+            # overlap or duplicate
+            if (cs+cw) <= c_offset:
+                # full overlap
+                continue
+
+            # add to last chunk (merge contiguous/overlapping chunks)
+            (l_cs, l_cw) = new_phv_chunks.pop()
+            add_w = (cs+cw) - c_offset
+            new_phv_chunks.append((l_cs, l_cw+add_w))
+            c_offset = cs+cw
+        return new_phv_chunks
 
     def ct_update_table_config(self):
         # sort the keys based on phv position
@@ -820,26 +850,9 @@ class capri_table:
             # these are removed later by _remove_duplicate function - only if there are k-bytes
             # so fix it here as well
             # if self.p4_table.name == 'l4_profile': pdb.set_trace()
-            c_offset = -1
             # sort based on cstart
             tmp_i_phv_chunks = sorted(new_i_phv_chunks, key=lambda k:k[0])
-            new_i_phv_chunks = []
-            for c, (cs,cw) in enumerate(tmp_i_phv_chunks):
-                if cs > c_offset:
-                    c_offset = cs+cw
-                    new_i_phv_chunks.append((cs,cw))
-                    continue
-
-                # overlap or duplicate
-                if (cs+cw) <= c_offset:
-                    # full overlap
-                    continue
-
-                # add to last chunk (merge contiguous/overlapping chunks)
-                (l_cs, l_cw) = new_i_phv_chunks.pop()
-                add_w = (cs+cw) - c_offset
-                new_i_phv_chunks.append((l_cs, l_cw+add_w))
-                c_offset = cs+cw
+            new_i_phv_chunks = self._remove_overlapping_chunks(tmp_i_phv_chunks)
 
             new_k_size = sum(cw for (cs, cw) in new_k_phv_chunks)
             new_i_size = sum(cw for (cs, cw) in new_i_phv_chunks)
@@ -5254,7 +5267,8 @@ class capri_table_manager:
                             # If there is more than 16bits of leading space unfilled, then use axi-shift.
                             # P4PD has to pack actiondata and match key such that unfilled bit space is before
                             # action-data,actionpc.
-                            profile['axishift']['value'] = "0x%x" % ((ctable.start_key_off - ctable.d_size) >> 4)
+                            wordmultiple_dsize = ctable.d_size - ctable.d_size % 16
+                            profile['axishift']['value'] = "0x%x" % ((ctable.start_key_off - wordmultiple_dsize) >> 4)
                         else:
                             profile['axishift']['value'] = "0x%x" % (0)
                     elif mem_type == 'tcam':

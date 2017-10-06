@@ -631,6 +631,16 @@ ${table}_pack_action_data(uint32_t tableid,
     *actiondata_len_before_key = 0;
     *actiondata_len_after_key = 0;
 
+//::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
+//::            mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
+//::            mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
+//::            spilled_adata_bits = 0
+//::            max_adata_bits_before_key = max_actionfld_len
+//::            if max_actionfld_len < mat_key_start_bit and (mat_key_start_bit - max_actionfld_len ) > 16:
+//::                spilled_adata_bits = max_actionfld_len % 16
+//::                max_adata_bits_before_key = max_actionfld_len - spilled_adata_bits
+//::            #endif
+
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                add_action_pc = True
 //::            else:
@@ -645,9 +655,6 @@ ${table}_pack_action_data(uint32_t tableid,
 //::                    continue
 //::                #endif
         case ${tbl}_${actname}_ID:
-//::                mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
-//::                mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
-//::                mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
 //::                if add_action_pc:
             mat_key_start_bit = ${mat_key_start_bit} - 8 /* 8 bits for action pc */; /* MatchKeyStart with APC before Key */ 
 //::                else:
@@ -692,7 +699,35 @@ ${table}_pack_action_data(uint32_t tableid,
                     bits_to_copy = ${actionfldwidth} - bits_before_mat_key;
                     source_start_bit = 0;
 
+                } 
+//::                if spilled_adata_bits > 0:
+                if ((before_key_adata_start_bit + 
+                           ${actionfldwidth}) > ${max_adata_bits_before_key}) {
+                    /* Due to axishift alignemnt, copy part of the field 
+                     * before MatchKey part of the key after MatchKey.
+                     */
+//::                    _adata_bits_before_mat_key = actionfldwidth - spilled_adata_bits 
+                    p4pd_copy_le_src_to_be_dest(packed_action_data,
+                                   dest_start_bit,
+//::                    if actionfldwidth <= 32:
+                                   (uint8_t*)&(actiondata->${table}_action_u.\
+                                   ${table}_${actionname}.${actionfldname}),
+//::                    else:
+                                   (uint8_t*)(actiondata->${table}_action_u.\
+                                   ${table}_${actionname}.${actionfldname}),
+//::                    #endif
+                                   ${_adata_bits_before_mat_key}, 
+                                   bits_before_mat_key);
+                    (*actiondata_len_before_key) += ${_adata_bits_before_mat_key};
+                    copy_before_key = false;
+                    packed_action_data = packed_actiondata_after_key;
+                    dest_start_bit = 0;
+                    /* remaining field bits to be copied after end of match key */
+                    bits_to_copy = ${spilled_adata_bits};
+                    source_start_bit = 0;
                 }
+//::                #endif
+                
             }
             p4pd_copy_le_src_to_be_dest(packed_action_data,
                            dest_start_bit,

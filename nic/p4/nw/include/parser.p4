@@ -99,16 +99,26 @@ header erspan_header_t3_t erspan_t3_header;
 @pragma pa_header_union ingress inner_udp icmp icmpv6
 header tcp_t tcp;
 // TCP options
+//@pragma no_ohi xgress
 header tcp_option_eol_t tcp_option_eol;
+//@pragma no_ohi xgress
 header tcp_option_nop_t tcp_option_nop;
+//@pragma no_ohi xgress
 header tcp_option_mss_t tcp_option_mss;
+//@pragma no_ohi xgress
 header tcp_option_ws_t tcp_option_ws;
+//@pragma no_ohi xgress
 header tcp_option_sack_perm_t tcp_option_sack_perm;
 @pragma pa_header_union xgress tcp_option_two_sack tcp_option_three_sack tcp_option_four_sack
+//@pragma no_ohi xgress
 header tcp_option_one_sack_t tcp_option_one_sack;
+//@pragma no_ohi xgress
 header tcp_option_two_sack_t tcp_option_two_sack;
+//@pragma no_ohi xgress
 header tcp_option_three_sack_t tcp_option_three_sack;
+//@pragma no_ohi xgress
 header tcp_option_four_sack_t tcp_option_four_sack;
+//@pragma no_ohi xgress
 header tcp_option_timestamp_t tcp_option_timestamp;
 
 // IPv4 Options
@@ -404,10 +414,8 @@ calculated_field ipv4.hdrChecksum  {
 }
 
 parser parse_base_ipv4 {
-# if 1
     // option-blob parsing - parse_ipv4 does not extract ipv4 header
     extract(ipv4);
-#endif
     return select(ipv4.fragOffset, ipv4.protocol) {
         IP_PROTO_ICMP : parse_icmp;
         IP_PROTO_TCP : parse_tcp;
@@ -496,7 +504,6 @@ parser parse_ipv4_options_blob {
     extract(ipv4);
     // All options are extracted as a single header
     extract(ipv4_options_blob);
-
     set_metadata(l3_metadata.ip_option_seen, 1);
     return select(ipv4.fragOffset, ipv4.protocol) {
         IP_PROTO_ICMP : parse_icmp;
@@ -512,19 +519,10 @@ parser parse_ipv4_options_blob {
 }
 
 parser parse_ipv4 {
-#if 1
     return select(current(0,8)) {
         0x45    : parse_base_ipv4;
         default : parse_ipv4_options_blob;
     }
-#else
-    extract(ipv4);
-    set_metadata(parser_metadata.parse_ipv4_counter, (ipv4.ihl << 2) - 20);
-    return select(parser_metadata.parse_ipv4_counter) {
-        0x0 : parse_base_ipv4;
-        default : parse_ipv4_options;
-    }
-#endif
 }
 
 parser parse_ipv4_in_ip {
@@ -1211,6 +1209,7 @@ parser parse_inner_udp {
     //return ingress;
 }
 
+@pragma deparse_only
 parser parse_dummy {
     // This state is added as a work-around until NCC has a fix for handling 
     // hdr unions and same set_metadata from multiple states while computing topo-graph

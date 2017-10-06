@@ -142,9 +142,15 @@ struct ${table}_${actionname}_d {
 //::                    assert(mat_key_start_bit >= actionpc_bits)
 //::                    adata_bits_before_key = mat_key_start_bit - actionpc_bits
 //::                    axi_pad_bits = 0
-//::                    if adata_bits_before_key > totaladatabits:
+//::                    spilled_adata_bits = 0
+//::                    max_adata_bits_before_key = min(totaladatabits, adata_bits_before_key)
+//::                    if totaladatabits < mat_key_start_bit and (mat_key_start_bit - totaladatabits) > 16:
+//::                        spilled_adata_bits = totaladatabits % 16
+//::                        max_adata_bits_before_key = totaladatabits - spilled_adata_bits
+//::                    #endif
+//::                    if adata_bits_before_key > max_adata_bits_before_key:
 //::                        # Pad axi shift amount of bits
-//::                        axi_pad_bits = ((adata_bits_before_key - totaladatabits) >> 4) << 4
+//::                        axi_pad_bits = ((adata_bits_before_key - max_adata_bits_before_key) >> 4) << 4
 //::                        if axi_pad_bits:
     __pad_axi_shift_bits : ${axi_pad_bits};
 //::                        #endif
@@ -153,7 +159,7 @@ struct ${table}_${actionname}_d {
 //::                    last_actionfld_bits = 0
 //::                    if adata_bits_before_key:
 //::                        total_adatabits_beforekey = 0
-//::                        fill_adata = adata_bits_before_key
+//::                        fill_adata = max_adata_bits_before_key
 //::                        for actionfld in actionfldlist:
 //::                            actionfldname, actionfldwidth = actionfld
 //::                            if actionfldwidth <= fill_adata:

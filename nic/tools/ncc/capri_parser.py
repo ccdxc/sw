@@ -64,12 +64,12 @@ def _resolve_len_expr(parser, hdr, l_exp, hlen_fld_name, hlen_dummy):
 # XXX what is really needed is topological header ordering (not just states)
 # and un-rolling of any loops to handle header-stacks
 # we can support only one header-stack per loop
-def _parser_topo_sort(d, parse_states, node, marker, sorted_list):
+def _parser_topo_sort(d, parse_states, node, marker, sorted_list, depth=0):
     # Toposort algorithm from wikipedia
     #print "Check node %s" % str(node)
     if node in marker:
         if marker[node] == 1:
-            #print "Cyclic visit node %s" % str(node)
+            #print "Cyclic visit node %s" % (str(node))
             return True #cycles
         if marker[node] == 2:
             return False
@@ -90,16 +90,20 @@ def _parser_topo_sort(d, parse_states, node, marker, sorted_list):
             if 'xgress' in next_node.p4_state._parsed_pragmas:
                 if next_node.p4_state._parsed_pragmas['xgress'].keys()[0].upper() != d.name:
                     continue # skip - specified only for parser in other direction
-            if _parser_topo_sort(d, parse_states, next_node, marker, sorted_list):
+            if _parser_topo_sort(d, parse_states, next_node, marker, sorted_list, depth+1):
                 if 'header_ordering' in next_node.p4_state._parsed_pragmas:
                     continue # allow looping
                 vhdr = _get_p4_virtual_headers(next_node.p4_state)
                 if len(vhdr) != 0:
                     continue
+                #print "Cyclic visit node %s->%s - %s\n%s" % \
+                #            (str(node), str(next_node), node_list, sorted_list)
                 return True
 
         #print "Confirm node %s" % node.name
         marker[node] = 2
+        if depth > node.depth:
+            node.depth = depth
         sorted_list.insert(0, node)
 
         return False
@@ -352,6 +356,7 @@ class capri_parse_state:
         self.id = -1
         self.parser = parser
         self.p4_state = p4_state
+        self.depth = 0
         # copy info from p4 state that may be modified later (merge/split/unroll)
         self.name = p4_state.name[:] if p4_state else name
         self.branch_on = [] # p4_state.branch_on[:] if p4_state else []
@@ -372,7 +377,7 @@ class capri_parse_state:
         self.variable_hdr = False
         self.deparse_only = False
 
-        self.fld_off = OrderedDict()               # pkt offset(bit) of each fld relative to this state
+        self.fld_off = OrderedDict()    # pkt offset(bit) of each fld relative to this state
         self.extract_len = -1
         self.max_extract_len = -1
         self.lkp_flds = OrderedDict()   # {cf.hfname : list of capri_lkp_fld objects}
@@ -755,6 +760,7 @@ class capri_parser:
         # initialize headers and fields extracted in each state and in a global list
         # A field is added to extracted_fields only if it is used in the pipeline
         ohi_flds = OrderedDict()
+
         for s in self.states:
             if s.is_virtual:
                 continue
@@ -776,6 +782,17 @@ class capri_parser:
                             self.logger.warning(\
                                 "i2e_metadata cannot be extracted by ingress parser, IGNORED")
                             continue
+
+                    hdr_no_ohi = False
+                    if not self.be.args.no_ohi:
+                        # check if header has no-ohi pragma
+                        if 'no_ohi' in hdr._parsed_pragmas:
+                            assert len(hdr._parsed_pragmas['no_ohi'].keys()), \
+                            "Provide direction [xgress/ingress/egress] for no_ohi pragma"
+                            pdirection = hdr._parsed_pragmas['no_ohi'].keys()[0]
+                            if pdirection.upper() == 'XGRESS' or \
+                                pdirection.upper() == self.d.name:
+                                hdr_no_ohi = True
 
                     for fld in hdr.fields:
                         if is_synthetic_header(hdr):
@@ -808,13 +825,12 @@ class capri_parser:
                                 self.extracted_fields.append(cfield)
                             s.extracted_fields.append(cfield)
 
-                            if not self.be.args.no_ohi:
-                                if not hdr_is_intrinsic(hdr):
-                                    cfield.set_ohi()
-                                    if hdr not in s_ohi_flds:
-                                        s_ohi_flds[hdr] = [cfield]
-                                    else:
-                                        s_ohi_flds[hdr].append(cfield)
+                            if not hdr_is_intrinsic(hdr) and not hdr_no_ohi:
+                                cfield.set_ohi()
+                                if hdr not in s_ohi_flds:
+                                    s_ohi_flds[hdr] = [cfield]
+                                else:
+                                    s_ohi_flds[hdr].append(cfield)
                             else:
                                 # if --no-ohi is set, cannot allow variable len flds
                                 assert not cfield.is_ohi, \
@@ -860,18 +876,6 @@ class capri_parser:
                             self.logger.info("%s:%s:Allow set_metadata() to %s" % \
                                 (self.d.name, s.name, cfield.hfname))
 
-                        '''
-                        # moving field causes problems when it is referenced from different
-                        # states and those states have headers in different flit.. this problem
-                        # cannot be solved (easily) given parser constraints
-                        if cfield in self.extracted_fields:
-                            # move it to the end to keep topo order for meta flds as well
-                            self.logger.warning("%s:%s:Moving %s to the end" % \
-                                (self.d.name, s.name, cfield.hfname))
-                            self.extracted_fields.remove(cfield)
-                        # add to parser.extracted_fields, not state
-                        self.extracted_fields.append(cfield)
-                        '''
                         cfield.is_parser_extracted = True
                         if cfield not in self.extracted_fields:
                             self.extracted_fields.append(cfield)
@@ -939,7 +943,7 @@ class capri_parser:
                         continue
                     p4_hdr_group.append(p4h)
                 if len(p4_hdr_group) != 0:
-                    self.hdr_order_groups.append(hdr_group)
+                    self.hdr_order_groups.append(p4_hdr_group)
 
             if not cs.p4_state or cs.is_virtual:
                 continue
@@ -1067,6 +1071,32 @@ class capri_parser:
                 hdrs_covered[hdr] = True
         for h in self.headers:
             assert h in hdrs_covered, "Missed header %s in path calculations" % h.name
+
+        # Remove impossible branches - these are added to create deparser parse-graph
+        # Removing them will reduce processing and resource requirements like saved registers
+        # 'impossible' branch is the one where mask is set to mask off non-zero bits in case val
+        # also remove all branches after 'default'
+        for cs in self.states:
+            found_default = False
+            for bkey,bval in cs.branch_to.items():
+                if bkey == p4.P4_DEFAULT:
+                    found_default = True
+                    continue
+                if not isinstance(bkey, tuple):
+                    if found_default:
+                        del cs.brach_to[bkey]
+                    continue
+
+                cval = int(bkey[0])
+                mask = int(bkey[1])
+                if cval and (cval & mask) == 0:
+                    # remove this branch
+                    self.logger.debug("%s:Removing impossible branch (0x%x & 0x%x)->%s from %s" %\
+                        (self.d.name, cval, mask, cs.branch_to[bkey], cs.name))
+                    del cs.branch_to[bkey]
+
+        # recompute the paths after removing the dummy(impossible) branches
+        _, self.path_states = self._find_parser_paths(self.start_state)
 
     def create_hw_start_state(self):
         # NOT USED
@@ -1555,16 +1585,54 @@ class capri_parser:
                  scope.end_cs, self.states.index(scope.end_cs), scope.reg_id))
             start_found = False
             # XXX optimize by traversing thru' topo list once XXX
-            for cs in self.states:
-                if cs == scope.start_cs:
-                    start_found = True
+            # Go thru each path that contains start and end states and make reservations
+            # only along the path
+            lf_reservations = {} #{lf:[cs]}
+            for path in self.path_states:
+                if scope.start_cs not in path or scope.end_cs not in path:
+                    path_cs = None
+                    # Since only one scope is maintained per LF, there are new cases
+                    # where same LF name must be used on different paths. This causes
+                    # that both start and end states are not on the same path, as a work-aournd
+                    # save register only in the start/end state that is on a give path
+                    # XXX - keep multiple scopes per LF
+                    if scope.start_cs in path:
+                        path_cs = scope.start_cs
+                    if scope.end_cs in path:
+                        path_cs = scope.end_cs
+                    if path_cs == None:
+                        continue
 
-                if start_found:
+                    if lf not in lf_reservations:
+                        lf_reservations[lf] = []
+                    if path_cs in lf_reservations[lf]:
+                        continue
+                    path_cs.reserved_lfs.append(lf)
+                    self.logger.debug("%s:state %s:Reserve LF(only one state on path) %s" % \
+                        (self.d.name, path_cs.name, lf.hfname))
+                    lf_reservations[lf].append(path_cs)
+                    continue
+                #if lf.hfname == 'parser_metadata.ipv6_nextHdr': pdb.set_trace()
+                # when header_ordring pragma is used, the path_states order is not as per the topo
+                # order, consult both
+                start_idx = self.states.index(scope.start_cs)
+                end_idx = self.states.index(scope.end_cs)
+                for c in range(start_idx, end_idx+1):
+                    cs = self.states[c]
+                    if cs not in path:
+                        continue
+                    if lf not in lf_reservations:
+                        lf_reservations[lf] = []
+
+                    if cs in lf_reservations[lf]:
+                        continue
+
                     cs.reserved_lfs.append(lf)
+                    self.logger.debug("%s:state %s:Reserve LF %s" % \
+                        (self.d.name, cs.name, lf.hfname))
+                    lf_reservations[lf].append(cs)
 
-                if cs == scope.end_cs:
-                    break
-                
+
     def lf_reg_find(self, lf):
         for i, reg_lf in enumerate(self.lf_reg_allocation):
             if lf == reg_lf:
@@ -1654,7 +1722,7 @@ class capri_parser:
             rid = self.lf_reg_find(cf)
             reg_type = lkp_reg_type.LKP_REG_RETAIN
             if rid == None:
-                assert cs == self.lf_scope[cf].start_cs
+                assert cs == self.lf_scope[cf].start_cs, pdb.set_trace()
                 rid = self.lf_reg_alloc(cf)
                 reg_type = lkp_reg_type.LKP_REG_LOAD
                 if not cf.is_meta:
@@ -2499,3 +2567,41 @@ class capri_parser:
         for cs in self.states:
             parser_state_ids[cs.id] = cs.name
         return parser_state_ids
+
+    def parser_check_flit_violation(self):
+        flit_sz = self.be.hw_model['parser']['flit_size']
+        path_states = sorted(self.path_states, key=lambda p: len(p), reverse=True)
+        for path in path_states:
+            last_flit = 0
+            last_cs = None
+            cs_flit = -1
+            for cs in path:
+                if cs.deparse_only:
+                    continue
+                for hdr in cs.headers:
+                    if hdr in self.ohi:
+                        continue
+                    hdr_phv_bit = self.be.pa.get_hdr_phv_start(hdr, self.d)
+                    cs_flit = hdr_phv_bit/flit_sz
+                    if cs_flit < last_flit:
+                        self.logger.critical( \
+                        "%s:Flit violation at %s phv %d, last_cs %s last_flit %d on path:\n %s" % \
+                            (self.d.name, hdr.name, hdr_phv_bit, last_cs.name, last_flit, path))
+                        assert 0, pdb.set_trace()
+                        return True
+
+                for cf in cs.meta_extracted_fields:
+                    cs_flit = cf.phv_bit / flit_sz
+                    if cs_flit < last_flit: 
+                        self.logger.critical( \
+                        "%s:Flit violation at %s phv %d, last_cs %s last_flit %d on path:\n %s" % \
+                            (self.d.name, hdr.name, hdr_phv_bit, last_cs.name, last_flit, path))
+                        assert 0, pdb.set_trace()
+                        return True
+
+                if cs_flit >= 0:
+                    last_flit = cs_flit
+                last_cs = cs
+
+        self.logger.info("%s:No parser flit violations detected" % (self.d.name))
+        return False

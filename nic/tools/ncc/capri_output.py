@@ -359,6 +359,7 @@ def capri_asm_output_pa(gress_pa):
                 phv_bit = active_union.end_phv
                 active_union = None
             flit_pad = cf.phv_bit - phv_bit
+            assert flit_pad >= 0, pdb.set_trace()
             if flit_pad > 0:
                 pstr += indent + '_flit_%d_pad_%d_ : %d; // FLE[%d:%d]\n' % \
                     (fid, phv_bit, flit_pad, 
@@ -377,6 +378,7 @@ def capri_asm_output_pa(gress_pa):
                 active_union = None
             # check for gaps
             if phv_bit != cf.phv_bit:
+                assert (cf.phv_bit - phv_bit) >= 0, pdb.set_trace()
                 pstr += indent + '_pad_%d_ : %d; // FLE[%d:%d]\n' % \
                     (phv_bit, cf.phv_bit - phv_bit,
                     _phv_bit_flit_le_bit(phv_bit),_phv_bit_flit_le_bit(cf.phv_bit-1))
@@ -398,7 +400,6 @@ def capri_asm_output_pa(gress_pa):
             storage_hdr_name = gress_pa.hdr_unions[cf.get_p4_hdr()][2].name
             if active_union and active_union.name != storage_hdr_name:
                 pstr += active_union.print_union()
-                phv_bit = active_union.end_phv
                 active_union = None
 
             if active_union:
@@ -406,6 +407,7 @@ def capri_asm_output_pa(gress_pa):
             else:
                 active_union = _phv_union(storage_hdr_name)
                 active_union.add_cfld(hdr_name, cf)
+            phv_bit = active_union.end_phv
 
         elif cf.is_fld_union_storage or cf.is_fld_union:
             #pdb.set_trace()
@@ -417,15 +419,16 @@ def capri_asm_output_pa(gress_pa):
 
             if active_union:
                 active_union.add_cfld(cf.hfname, cf)
+                phv_bit = active_union.end_phv
             else:
                 active_union = _phv_union(storage_fld_name)
                 active_union.add_cfld(cf.hfname, cf)
+                phv_bit = active_union.end_phv
         else:
             pass # covered first
 
     if active_union:
         pstr += active_union.print_union()
-        #pstr_flit[fid] = copy.copy(pstr)
         phv_bit = active_union.end_phv
 
     last_flit_pad = ((fid+1) * flit_sz) - phv_bit
@@ -1455,6 +1458,7 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
         elif lkp_reg.type == lkp_reg_type.LKP_REG_STORED:
             if add_cs != None:
                 # convert stored to retain as we did not have a chance to store them
+                # retain and save for future use
                 sram['lkp_val_inst'][r]['sel']['value'] = str(2)
                 sram['lkp_val_inst'][r]['muxsel']['value'] = str(0)  # NA
             else:
@@ -2338,8 +2342,10 @@ def capri_te_cfg_output(stage):
         # setup sram entry to launch no lookup
         se = json_regs['cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
         se['lkup']['value'] = te_consts['no_op']
-	for kmid in range(num_km):
-	    se['km_new_key%d' % kmid]['value'] = str(1)
+        # For good measures, hw model checks that key-makers are cleared on very first
+        # cycle of the sequencer
+        for kmid in range(num_km):
+            se['km_new_key%d' % kmid]['value'] = str(1)
 
         stage.gtm.tm.logger.debug( \
             "%s:Stage %d:Table profile (catch-all)TCAM[%d]:(val %s, mask %s): prof_val %d, %s, mpu_res %d" % \
