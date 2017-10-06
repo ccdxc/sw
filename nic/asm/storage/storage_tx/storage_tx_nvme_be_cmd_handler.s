@@ -18,13 +18,12 @@ struct phv_ p;
 storage_tx_nvme_be_cmd_handler_start:
 
    // Save the NVME command to PHV
-   phvwr	p.{nvme_be_cmd_nvme_cmd_w0...nvme_be_cmd_nvme_cmd_hi}, 	\
-		d.{nvme_cmd_w0...nvme_cmd_hi}
+   phvwr	p.{nvme_cmd_opc...nvme_cmd_dw15}, d.{opc...dw15}                                           
 
    // Store the original value of NVME command id in R2N WQE in PHV. This will 
    // be saved to HBM so that this command id can be restored when processing
    // the NVME status.
-   phvwr	p.r2n_wqe_nvme_cmd_cid, d.nvme_cmd_cid
+   phvwr	p.r2n_wqe_nvme_cmd_cid, d.cid
 
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC1_SRC_QADDR, Q_STATE_SIZE,

@@ -21,7 +21,7 @@ storage_tx_nvme_be_wqe_handler_start:
 
    // Restore the fields in the NVME backend status to saved values
    phvwr	p.nvme_be_sta_hdr_r2n_buf_handle, d.r2n_buf_handle
-   phvwr	p.nvme_be_sta_cid, d.nvme_cmd_cid
+   phvwr	p.nvme_sta_cid, d.nvme_cmd_cid
 
    // Save the SSD handle and priority into the K+I vector
    phvwr	p.storage_kivec0_ssd_handle, d.ssd_handle

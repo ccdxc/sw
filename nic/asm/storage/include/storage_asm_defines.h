@@ -441,9 +441,8 @@
 		d.{handle...status};					\
 
 #define R2N_WQE_FULL_COPY						\
-   phvwr 	p.{r2n_wqe_handle...r2n_wqe_nvme_cmd_cid},		\
-		d.{handle...nvme_cmd_cid};				\
-   phvwr 	p.r2n_wqe_pri_qaddr, d.pri_qaddr;			\
+   phvwr 	p.{r2n_wqe_handle...r2n_wqe_pri_qaddr},			\
+		d.{handle...pri_qaddr};					\
 
 // Calculate the table address based on the command index offset into
 // the SSD's list of outstanding commands

@@ -30,8 +30,7 @@ storage_tx_nvme_be_wqe_save_start:
    phvwr	p.storage_kivec0_cmd_index, r6
 
    // Store the command index (in GPR r6) in the NVME command as well
-   // TODO: Enable this after fixing command definitions
-   phvwr	p.nvme_be_cmd_nvme_cmd_cid, r6.hx
+   phvwr	p.nvme_cmd_cid, r6.hx
 
    // Calculate the address to save R2N WQE based on the command index offset into
    // the SSD's list of outstanding commands. Output is stored in GPR r7.
@@ -46,8 +45,7 @@ storage_tx_nvme_be_wqe_save_start:
    // Setup the DMA command to push the NVME command entry. For now keep the 
    // destination address to be 0 (in GPR r0). Set this correctly in the
    // next stage.
-   DMA_PHV2MEM_SETUP(nvme_be_cmd_nvme_cmd_w0, nvme_be_cmd_nvme_cmd_hi, r0, 
-                     dma_p2m_1)
+   DMA_PHV2MEM_SETUP(nvme_cmd_opc, nvme_cmd_dw15, r0, dma_p2m_1)
 
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,

@@ -20,8 +20,7 @@ storage_tx_nvme_be_cq_handler_start:
    QUEUE_POP_DOORBELL_UPDATE
 
    // Save the R2N WQE to PHV
-   phvwr	p.{nvme_be_sta_cspec...nvme_be_sta_status_phase},	\
-   		d.{cspec...status_phase}
+   phvwr	p.{nvme_sta_cspec...nvme_sta_status}, d.{cspec...status}
 
    // Set the state information for the NVME backend status header
    // TODO: FIXME

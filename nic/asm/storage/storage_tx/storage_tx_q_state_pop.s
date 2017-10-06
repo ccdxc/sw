@@ -47,8 +47,8 @@ storage_tx_q_state_pop_start:
    phvwr	p.storage_kivec0_is_q0, 0
    
    // Initialize the vf_id and sq_id fields in the PHV
-   phvwr	p.pvm_cmd_vf_id, d.vf_id
-   phvwr	p.pvm_cmd_sq_id, d.sq_id
+   phvwr	p.pvm_cmd_trailer_vf_id, d.vf_id
+   phvwr	p.pvm_cmd_trailer_sq_id, d.sq_id
    
    // Set the table and program address for the next stage to process
    // the popped entry (based on the working consumer index in GPR r6).

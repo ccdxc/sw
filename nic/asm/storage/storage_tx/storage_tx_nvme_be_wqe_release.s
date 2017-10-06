@@ -28,7 +28,7 @@ storage_tx_nvme_be_wqe_release_start:
    // Setup the DMA command to push the NVME backend status entry. For now keep 
    // the destination address to be 0 (in GPR r0). Set this correctly in the
    // next stage.
-   DMA_PHV2MEM_SETUP(nvme_be_sta_hdr_time_us, nvme_be_sta_status_phase, r0, 
+   DMA_PHV2MEM_SETUP(nvme_be_sta_hdr_time_us, nvme_sta_status, r0, 
                      dma_p2m_1)
 
    // Set the table and program address 
