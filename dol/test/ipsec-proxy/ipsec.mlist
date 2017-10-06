@@ -9,11 +9,20 @@ feature:
 modules:
     - module:
         name    : PKT_TO_IPSECCBQ
-        enable  : True
+        enable  : True 
         package : test.ipsec-proxy
         module  : pkt_to_ipseccbq
         spec    : pkt_to_ipseccbq.testspec
         ignore  : False
         iterate :
             - flow: filter://type=IPV4,proto=TCP
+    - module:
+        name    : DECRYPT_PKT_TO_IPSECCBQ
+        enable  : False 
+        package : test.ipsec-proxy
+        module  : decrypt_ipsec_to_eth 
+        spec    : decrypt_ipsec_to_eth.testspec 
+        ignore  : True 
+        iterate :
+            - flow: filter://type=IPV4
 

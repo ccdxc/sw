@@ -18,6 +18,7 @@ sessions:
     unidest:
         ipv4:
             - ref://store/specs/id=SESSION_UDP_SERVICES_PROXY
+            - ref://store/specs/id=SESSION_ESP_PROXY
         ipv6: None
         mac: None
 

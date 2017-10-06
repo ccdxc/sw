@@ -34,7 +34,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
                 req_spec.proxy_en = True
                 req_spec.alloc_qid = True
             self.session.iflow.PrepareHALRequestSpec(req_spec)
-        elif self.session.iflow.label == 'ESP':
+        elif self.session.iflow.label == 'ESP-PROXY':
             print("Configuring esp ipsec proxy for the flow with label: " + self.session.iflow.label)
             req_spec.meta.tenant_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 0
@@ -73,7 +73,7 @@ class ProxyCbServiceObjectHelper:
 
     def Configure(self):
         for proxycb in self.proxy_service_list:
-            if proxycb.session.iflow.label == 'TCP-PROXY' or proxycb.session.iflow.label == 'ESP' or proxycb.session.iflow.label == 'IPSEC-PROXY':
+            if proxycb.session.iflow.label == 'TCP-PROXY' or proxycb.session.iflow.label == 'ESP-PROXY' or proxycb.session.iflow.label == 'IPSEC-PROXY':
                 lst = []
                 lst.append(proxycb)
                 halapi.ConfigureProxyCbService(lst)

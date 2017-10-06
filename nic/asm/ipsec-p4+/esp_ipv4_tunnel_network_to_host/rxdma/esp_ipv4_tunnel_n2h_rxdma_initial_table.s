@@ -50,7 +50,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     bcf [c1], ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno
     sub r1, d.expected_seq_no, k.p42p4plus_hdr_seq_no
     addi r2, r0, IPSEC_WIN_REPLAY_MAX_DIFF
-    slt c2, r1, r2 
+    slt c2, r2, r1 
     bcf [c2], ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed
     nop
     addi r7, r0, 1
@@ -83,10 +83,13 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwri p.common_te3_phv_table_raw_table_size, 4
     phvwri p.common_te3_phv_table_lock_en, 0
     phvwri p.common_te3_phv_table_addr, OUTPAGE_SEMAPHORE_ADDR
+    nop.e
+    nop
  
 ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
     //ori r4, k.ipsec_int_drop_mask, IPSEC_BAD_SEQ_NO
     //phvwr.e p.ipsec_int_drop_mask, r4
+    nop.e
     nop
 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
@@ -102,6 +105,7 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
     tblwr d.replay_seq_no_bmp, r3
     nop
     tblwr d.expected_seq_no, k.p42p4plus_hdr_seq_no
+    nop.e
     nop
 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
