@@ -29,6 +29,12 @@ def GetCQExpColor (tc, desc, args = None):
     else:
        return (tc.pvtdata.rq_cq_pre_qstate.color)
 
+def GetReqRxCQExpColor (tc, desc, args = None):
+    if tc.pvtdata.sq_cq_pre_qstate.p_index0 == 0:
+       return (not tc.pvtdata.sq_cq_pre_qstate.color)
+    else:
+       return (tc.pvtdata.sq_cq_pre_qstate.color)
+     
 def GetPacketPayloadSize(tc, pkt, args):
     pmtu = 1 << tc.pvtdata.rq_pre_qstate.log_pmtu
     if ((args.pkt_num + 1) <= (args.msg_size / pmtu)):

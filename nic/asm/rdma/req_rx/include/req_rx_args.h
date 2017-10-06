@@ -29,7 +29,8 @@ struct req_rx_sqcb1_to_rrqwqe_info_t {
     rrq_empty               : 1;
     timer_active            : 1;
     dma_cmd_start_index     : 4;
-    pad                     : 33;
+    rrq_cindex              : 8;
+    pad                     : 24;
 };
 
 struct req_rx_rrqwqe_to_sge_info_t {
@@ -42,8 +43,10 @@ struct req_rx_rrqwqe_to_sge_info_t {
     num_valid_sges          : 8;
     in_progress             : 1;
     is_atomic               : 1;
+    dma_cmd_eop             : 1;
     dma_cmd_start_index     : 4;
-    pad                     : 26;
+    rrq_cindex              : 8;
+    pad                     : 17;
 };
 
 struct req_rx_rrqsge_to_lkey_info_t {
@@ -69,7 +72,7 @@ struct req_rx_sqcb1_write_back_info_t {
     num_sges                : 8;
     incr_nxt_to_go_token_id : 1;
     tbl_id                  : 8;
-    pad                     : 62;
+    pad                     : 54;
 };
 
 struct req_rx_rrqlkey_to_ptseg_info_t {
@@ -80,7 +83,7 @@ struct req_rx_rrqlkey_to_ptseg_info_t {
     is_atomic               : 1;
     dma_cmd_eop             : 1;
     sge_index               : 8;
-    pad                     : 97;
+    pad                     : 89;
 };
 
 struct req_rx_rrqwqe_to_cq_info_t {

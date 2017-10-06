@@ -4,6 +4,7 @@
 struct req_rx_phv_t p;
 struct req_rx_rrqptseg_process_k_t k;
 
+#define ATOMICAETH_ORIG_DATA common.rdma_bth_aeth_atomicaeth_atomicaeth_orig_data
 %%
 
 req_rx_rrqptseg_process:
@@ -41,8 +42,21 @@ ptseg_loop:
     tblrdp.dx     r6, r6, 0, CAPRI_SIZEOF_U64_BITS
     add           r6, r2, r6
 
-    // setup mem2pkt cmd to transfer data from host memory to pkt payload
+    seq           c1, k.args.is_atomic, 1
+    bcf           [!c1], pkt2mem
+    nop
+
+phv2mem:
+    // setup phv2mem cmd to transfer data from atomicaeth to host memory
+    DMA_HOST_PHV2MEM_SETUP(r7, ATOMICAETH_ORIG_DATA, ATOMICAETH_ORIG_DATA, r6)
+    b             continue
+    nop
+
+pkt2mem:
+    // setup pkt2mem cmd to transfer data from paylaod to host memory
     DMA_HOST_PKT2MEM_SETUP(r7, r5, r6)
+
+continue:
 
     // transfer_bytes -= page_bytes
     sub        r4, r4, r5

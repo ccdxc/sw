@@ -38,15 +38,10 @@ struct req_tx_phv_t {
     // dma commands
 
     /* flit 11 */
-    union {
-        struct rrqwqe_t rrqwqe;
-        struct {
-            dma_cmd12 : 128;
-            dma_cmd13 : 128;
-            dma_cmd14 : 128;
-            dma_cmd15 : 128;
-        };
-    };
+    dma_cmd12 : 128;
+    dma_cmd13 : 128;
+    dma_cmd14 : 128;
+    dma_cmd15 : 128;
 
     /* flit 10 */
     dma_cmd8 : 128;
@@ -68,7 +63,10 @@ struct req_tx_phv_t {
 
     /* flit 7 */
     rsvd_flit_7 : 136;
-    inline_data: 256;
+    union {
+        struct rrqwqe_t rrqwqe;
+        inline_data: 256;
+    };
     struct p4plus_to_p4_header_t p4plus_to_p4;
     rsvd       : 6;
     in_progress: 1;

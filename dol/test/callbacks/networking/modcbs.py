@@ -79,13 +79,21 @@ def TestCaseTeardown(tc):
     return
 
 def TestCaseStepSetup(tc, step):
+    assert(tc is not None)
+    assert(step is not None)
     return
 
 def TestCaseStepTrigger(tc, step):
+    assert(tc is not None)
+    assert(step is not None)
     return
 
 def TestCaseStepVerify(tc, step):
+    assert(tc is not None)
+    assert(step is not None)
     return True
 
 def TestCaseStepTeardown(tc, step):
+    assert(tc is not None)
+    assert(step is not None)
     return

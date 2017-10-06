@@ -8,7 +8,7 @@
 #include "common_phv.h"
 
 #define REQ_RX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
-#define REQ_RX_RDMA_PYALOAD_DMA_CMDS_START 8
+#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 8
 #define REQ_RX_MAX_DMA_CMDS             16
 #define REQ_RX_DMA_CMD_CQ               (REQ_RX_MAX_DMA_CMDS - 3)
 

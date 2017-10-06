@@ -98,7 +98,7 @@ op_type_read:
     phvwr          RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_READ
     phvwr          RRQWQE_NUM_SGES, k.args.op.rd.num_sges
     phvwr          RRQWQE_PSN, d.tx_psn           
-    phvwr          RRQWQE_MSN, d.msn
+    phvwr          RRQWQE_MSN, d.ssn
     phvwr          RRQWQE_READ_LEN, k.args.op.rd.read_len
     add            r1, k.to_stage.wqe_addr, TXWQE_SGE_OFFSET
     phvwr          RRQWQE_READ_WQE_SGE_LIST_ADDR, r1

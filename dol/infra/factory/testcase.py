@@ -328,10 +328,10 @@ class TestCase(objects.FrameworkObject):
 
     def __process_verify_callback_retval(self, ret):
         if ret is defs.status.SUCCESS or ret is True:
-            self.info("Verify Callback Status = Success")
+            self.info("- Verify Callback Status = Success")
             status =  defs.status.SUCCESS
         else:
-            self.info("Verify Callback Status = Failure")
+            self.error("- Verify Callback Status = Failure")
             status = defs.status.ERROR
         return status
 
@@ -350,22 +350,22 @@ class TestCase(objects.FrameworkObject):
         self.module.RunModuleCallback('TestCaseTrigger', self)
         return
 
-    def StepSetupCallback(self):
+    def StepSetupCallback(self, step):
         self.info("Invoking TestCaseStepSetup.")
-        self.module.RunModuleCallback('TestCaseStepSetup', self)
+        self.module.RunModuleCallback('TestCaseStepSetup', self, step)
         return
 
-    def StepTriggerCallback(self):
+    def StepTriggerCallback(self, step):
         self.info("Invoking TestCaseStepTrigger.")
-        self.module.RunModuleCallback('TestCaseStepTrigger', self)
+        self.module.RunModuleCallback('TestCaseStepTrigger', self, step)
         return
 
-    def StepVerifyCallback(self):
+    def StepVerifyCallback(self, step):
         self.info("Invoking TestCaseStepVerify.")
-        ret = self.module.RunModuleCallback('TestCaseStepVerify', self)
+        ret = self.module.RunModuleCallback('TestCaseStepVerify', self, step)
         return self.__process_verify_callback_retval(ret)
 
-    def StepTeardownCallback(self):
+    def StepTeardownCallback(self, step):
         self.info("Invoking TestCaseStepTeardown.")
-        self.module.RunModuleCallback('TestCaseStepTeardown', self)
+        self.module.RunModuleCallback('TestCaseStepTeardown', self, step)
         return

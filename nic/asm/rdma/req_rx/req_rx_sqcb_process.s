@@ -100,7 +100,7 @@ next_stage_arg:
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, rrq_cindex, RRQ_C_INDEX)
     cmov           r4, c4, 1, 0
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, rrq_empty, r4)
-    //CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, dma_cmd_start_index, REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START)
+    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, dma_cmd_start_index, REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START)
 
     CAPRI_GET_STAGE_1_ARG(req_rx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB0_TO_STAGE_T, msn, CAPRI_APP_DATA_AETH_MSN)

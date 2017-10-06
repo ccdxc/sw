@@ -17,6 +17,9 @@
 #define RRQ_P_INDEX d.{ring5.pindex}.hx
 #define RRQ_C_INDEX d.{ring5.cindex}.hx
 
+#define RRQ_P_INDEX_OFFSET FIELD_OFFSET(sqcb0_t, ring5.pindex)
+#define RRQ_C_INDEX_OFFSET FIELD_OFFSET(sqcb0_t, ring5.cindex)
+
 #define SQCB_T struct sqcb_t
 #define SQCB0_T struct sqcb0_t
 #define SQCB1_T struct sqcb1_t

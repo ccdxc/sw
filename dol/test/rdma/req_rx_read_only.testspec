@@ -52,8 +52,8 @@ packets:
                 va      : ref://testcase/pvtdata/va
                 r_key   : ref://testcase/pvtdata/r_key
                 dma_len : ref://testcase/pvtdata/dma_len
-            #payload:
-            #    data    : None
+            payload:
+                data    : None
 
     - packet:
          id          : READ_RESP_ONLY_PYLD # Receive payload
@@ -91,10 +91,10 @@ packets:
              bth:
                  opcode  : 16
                  destqp  : ref://testcase/config/rdmasession/lqp/id
-                 psn     : 0 #ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+                 psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
              aeth:
-                syndrome : 0
-                msn      : 0
+                syndrome : 0 # TODO - credits
+                msn      : ref://testcase/pvtdata/sq_pre_qstate/ssn
              payload:
                  data    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/data
 
@@ -158,25 +158,35 @@ descriptors:
                   len : ref://testcase/buffers/id=HOST_MEM/size
                   l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
 
+    - descriptor:
+        id      : EXP_CQ_WQE
+        template: ref://factory/templates/id=DESC_RDMA_CQ
+        fields:
+            wrid:  ref://testcase/pvtdata/sq_pre_qstate/ssn
+            qp: ref://testcase/config/rdmasession/lqp/id
+            op_type: 3 #OP_TYPE_READ
+            status : 0  #CQ_STATUS_SUCCESS
+            color  : callback://rdma/rdma/GetReqRxCQExpColor
+
 session:
 
-#    - step: # READ Request Transmit
-#        trigger:
-#            descriptors:
-#                - descriptor:
-#                    object  : ref://testcase/descriptors/id=SQ_WQE
-#                    ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+    - step: # READ Request Transmit
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=SQ_WQE
+                    ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
             
-#            doorbell:
-#                object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
-#                fields:
-#                    upd : 0x3 # DB_SCHED_WR(1)
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
+                fields:
+                    upd : 0x3 # DB_SCHED_WR(1)
         
-#        expect:
-#            packets:
-#                - packet:
-#                    object  : ref://testcase/packets/id=READ_REQ
-#                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=READ_REQ
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
     - step: # READ Response Receive
         trigger:
@@ -190,8 +200,8 @@ session:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_SQ_WQE
                     ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
-               # - descriptor:
-               #     object  : ref://testcase/descriptors/id=EXP_CQ_DESC
-               #     ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_CQ_WQE
+                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
 
 

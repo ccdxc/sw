@@ -74,7 +74,7 @@ sge_loop:
    
     setcf          c4, [!c2 & c3 & c7]
     // set dma_cmd_eop in last dma cmd for the pkt
-    CAPRI_SET_FIELD_C(r7, RRQSGE_TO_LKEY_T, dma_cmd_eop, 1, !c4)
+    CAPRI_SET_FIELD_C(r7, RRQSGE_TO_LKEY_T, dma_cmd_eop, k.args.dma_cmd_eop, !c4)
 
     GET_NUM_PAGES(r6, r4, LOG_PAGE_SIZE, r5, r4)
 
@@ -136,17 +136,24 @@ sge_loop:
 
     // TODO Set Phv recirc if remaining_payload_bytes is non-zero (cf - c2 set to False)
 
-
     //if (REQ_RX_FLAG_IS_SET(last) || (REQ_RX_FLAG_ONLY(only)))
     add             r7, r0, k.global.flags
     IS_ANY_FLAG_SET(c5, r7, REQ_RX_FLAG_LAST|REQ_RX_FLAG_ONLY)
 
-    // current_sge_id = 0
-    add.c5          r1, r0, r0
-    // currrent_sge_offset = 0
-    add.c5          r2, r0, r0
+    bcf            [!c5], set_arg
     // in_progress = FALSE
-    cmov            r4, c5, 0, 1
+    cmov            r4, c5, 0, 1 // Branch Delay Slot
+    // current_sge_id = 0
+    add             r1, r0, r0
+    // currrent_sge_offset = 0
+    add             r2, r0, r0
+
+    // RING_C_INDEX_INCREMENT(rrq_ring_id) TODO Need to do via DMA and Fence it
+    SQCB0_ADDR_GET(r5)
+    add            r6, r5, RRQ_C_INDEX_OFFSET
+    memwr.hx       r6, k.args.rrq_cindex
+
+set_arg:
 
     CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r7)
 
@@ -157,10 +164,10 @@ sge_loop:
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 2)
 
-    SQCB1_ADDR_GET(r1)
+    SQCB1_ADDR_GET(r5)
     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
  
     nop.e
     nop

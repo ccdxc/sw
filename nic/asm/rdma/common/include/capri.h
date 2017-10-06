@@ -541,7 +541,7 @@ struct capri_dma_cmd_mem2mem_t {
 
 #define FIELD_OFFSET(__struct, __field) \
         ((sizeof(struct __struct) - offsetof(struct __struct, __field) - sizeof(struct __struct.__field)) >> 3)
-    
+
 
 #define PHV_FIELD_END_OFFSET(_field) \
         (((offsetof(p, _field) / 512 + 1) * 512 - offsetof(p, _field) \
@@ -567,7 +567,7 @@ struct capri_dma_cmd_mem2mem_t {
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_start), sizeof(DMA_CMD_PHV2MEM_T.phv_start), PHV_FIELD_START_OFFSET(_start); \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, phv_end), sizeof(DMA_CMD_PHV2MEM_T.phv_end), PHV_FIELD_END_OFFSET(_end) - 1; \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, addr), sizeof(DMA_CMD_PHV2MEM_T.addr), _addr; \
-    phvwrp        _base_r, offsetof(DMA_CMD_PHV2MEM_T, host_addr), sizeof(DMA_CMD_PHV2MEM_T.host_addr), 1; \
+    phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, host_addr), sizeof(DMA_CMD_PHV2MEM_T.host_addr), 1; \
     phvwrp       _base_r, offsetof(DMA_CMD_PHV2MEM_T, cmdtype), sizeof(DMA_CMD_PHV2MEM_T.cmdtype), DMA_CMD_TYPE_PHV2MEM;
 
 #define DMA_PHV2PKT_SETUP(_base_r, _start, _end)         \

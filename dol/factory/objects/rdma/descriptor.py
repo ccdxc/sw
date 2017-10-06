@@ -254,6 +254,35 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         desc.show()
         #TODO: Check if we need to show SGEs
 
+    def __eq__(self, other):
+        cfglogger.info("__eq__ operator invoked on descriptor, ignoring for now..")
+        return True
+
+    def GetBuffer(self):
+        cfglogger.info("GetBuffer() operator invoked on descriptor")
+
+        #if hasattr(self.spec.fields, 'buff'):
+        if not hasattr(self, 'address'):
+            return self.spec.fields.buff
+
+        rdmabuff = rdmabuffer.RdmaBufferObject()
+        cfglogger.info("wrid: %d num_sges: %d len: %d" % (self.wrid, self.num_sges, len(self.sges)));
+        total_data = bytearray()
+        total_size = 0 
+        for idx in range(self.num_sges):
+            sge = self.sges[idx]
+            cfglogger.info("Reading sge content : 0x%x  len: %d" %(sge.va, sge.len))
+            mem_handle = resmgr.MemHandle(sge.va,
+                                    resmgr.HostMemoryAllocator.get_v2p(sge.va))
+            sge_data = resmgr.HostMemoryAllocator.read(mem_handle, sge.len)
+            cfglogger.info("     sge data: %s" % bytes(sge_data))
+            total_data.extend(sge_data)
+            total_size += sge.len
+        rdmabuff.data = bytes(total_data)
+        rdmabuff.size = total_size
+        cfglogger.info("Total data: %s" % bytes(total_data))
+        return rdmabuff
+
 class RdmaRqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()

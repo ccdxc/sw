@@ -133,6 +133,8 @@ in_progress_end:
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, page_offset, r1)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, remaining_payload_bytes, r4)
+    // TODO Need to check for room in RRQ ring for Read/Atomic before
+    // proceeding further. Otherwise recirc until there is room
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, rrq_p_index, RRQ_P_INDEX)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, log_pmtu, d.log_pmtu)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, page_seg_offset, r2)

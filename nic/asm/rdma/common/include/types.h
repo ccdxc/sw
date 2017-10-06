@@ -448,13 +448,13 @@ struct sqwqe_t {
 struct rrqwqe_read_t {
     len                : 32;
     wqe_sge_list_addr  : 64;
-    pad                : 352; 
+    pad                : 96; 
 };
 
 struct rrqwqe_atomic_t {
     struct sge_t sge;
     op_type            : 8;
-    pad                : 312;
+    pad                : 56;
 
 };
 
@@ -471,6 +471,20 @@ struct rrqwqe_t {
         struct rrqwqe_read_t   read;
         struct rrqwqe_atomic_t atomic;
     };
+};
+
+struct rrqwqe_d_t {
+    read_rsp_or_atomic : 1;
+    num_sges           : 7;
+    psn                : 24;
+    msn                : 24;
+    rsvd               : 8;
+    union {
+        struct rrqwqe_read_t   read;
+        struct rrqwqe_atomic_t atomic;
+    };
+    // pad added for easy access of d[] in mpu program
+    pad                : 256; 
 };
 
 #define RQWQE_SGE_OFFSET  32

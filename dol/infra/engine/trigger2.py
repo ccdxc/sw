@@ -84,7 +84,7 @@ class TriggerEngineObject:
         
     def __verify_step(self, tc, step):
         vfstatus = tc.infra_data.VerifEngine.Verify(step, tc)
-        cbstatus = tc.StepVerifyCallback()
+        cbstatus = tc.StepVerifyCallback(step)
         step.status = self.__resolve_status(vfstatus, cbstatus)
         if step.status is defs.status.ERROR:
             tc.error("Step%d FINAL STATUS = FAIL(Verify:%s Callback:%s)" %\
@@ -97,10 +97,11 @@ class TriggerEngineObject:
     def __trigger(self, tc):
         status = defs.status.SUCCESS
         for step in tc.session.steps:
-            tc.StepTriggerCallback()
+            tc.StepSetupCallback(step)
+            tc.StepTriggerCallback(step)
             self.__trigger_step(tc, step)
             vfstatus = self.__verify_step(tc, step)
-            tc.StepTeardownCallback()
+            tc.StepTeardownCallback(step)
             if vfstatus is defs.status.ERROR:
                 break
         cbstatus = tc.VerifyCallback()
