@@ -1038,4 +1038,366 @@ security_profile_get (nwsec::SecurityProfileGetRequest& req,
     return HAL_RET_OK;
 }
 
+// Security Group related
+void *
+nwsec_policy_cfg_get_key_func (void *entry)
+{
+    HAL_ASSERT(entry != NULL);
+    return (void *)&(((nwsec_policy_cfg_t *)entry)->sg_id);
+}
+
+uint32_t
+nwsec_policy_cfg_compute_hash_func (void *key, uint32_t ht_size)
+{
+    return utils::hash_algo::fnv_hash(key,
+                                      sizeof(nwsec_policy_cfg_id_t)) % ht_size;
+}
+
+bool
+nwsec_policy_cfg_compare_key_func (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (*(nwsec_policy_cfg_id_t *)key1 == *(nwsec_policy_cfg_id_t *)key2) {
+        return true;
+    }
+    return false;
+}
+
+//------------------------------------------------------------------------
+// validate an incoming security group create request
+
+static hal_ret_t
+validate_nwsec_policy_cfg_create(nwsec::SecurityGroupSpec& spec,
+                                 nwsec::SecurityGroupResponse *rsp)
+{
+    // key-handle field must be set
+    if (!spec.has_key_or_handle()) {
+        HAL_TRACE_ERR("{}: security group id or handle not set in request",
+                      __FUNCTION__);
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        return HAL_RET_INVALID_ARG;
+    }
+    
+    auto kh = spec.key_or_handle();
+    if (kh.key_or_handle_case() != SecurityGroupKeyHandle::kSecurityGroupId) {
+        // key-handle field set, but securityGroup id not provided
+        HAL_TRACE_ERR("{}: security group id not set in"
+                      "request", __FUNCTION__);
+        rsp->set_api_status(types::API_STATUS_SECURITY_GROUP_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+    
+    // Need to check if the sg id is in the valid range
+    return HAL_RET_OK;
+
+}
+
+hal_ret_t
+nwsec_policy_cfg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t                               ret = HAL_RET_OK;
+    dllist_ctxt_t                           *lnode = NULL;
+    dhl_entry_t                             *dhl_entry = NULL;
+    nwsec_policy_cfg_t                      *nwsec_plcy_cfg = NULL;
+    //nwsec_policy_cfg_create_app_ctxt_t    *app_ctxt = NULL;
+
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("{}: invalid cfg_ctxt", __FUNCTION__);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+    
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    //app_ctxt = (nwsec_policy_cfg_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    
+    nwsec_plcy_cfg = (nwsec_policy_cfg_t *) dhl_entry->obj;
+    
+    HAL_TRACE_DEBUG("{}: sg_id {}",
+                   __FUNCTION__, nwsec_plcy_cfg->sg_id);
+    // No PD calls for security group objects
+
+end:
+    return ret;
+}
+
+//------------------------------------------------------------------------
+// 1. Update the PI DBs as 
+//     a. Add to sg_id hash table  cfg database
+//     b. Populate the oper db
+///------------------------------------------------------------------------
+hal_ret_t 
+nwsec_policy_cfg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t             ret = HAL_RET_OK;
+    dllist_ctxt_t          *lnode = NULL;
+    dhl_entry_t           *dhl_entry  = NULL;
+    nwsec_policy_cfg_t    *nwsec_plcy_cfg;
+    hal_handle_t          hal_handle = 0;
+    
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("{}: invalid cfg_ctxt",
+                      __FUNCTION__);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    nwsec_plcy_cfg = (nwsec_policy_cfg_t *) dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    HAL_TRACE_DEBUG("{}:sg_id {} handle {}",
+                    __FUNCTION__, nwsec_plcy_cfg->sg_id, hal_handle);
+    ret = add_nwsec_policy_cfg_to_db(nwsec_plcy_cfg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: failed to add sg_id {} to db,"
+                      "err : {}", __FUNCTION__, nwsec_plcy_cfg->sg_id,
+                      ret);
+        goto end;
+    }
+end:
+    return ret;
+}
+
+
+//------------------------------------------------------------------------
+// Network policyt config create abort:
+//------------------------------------------------------------------------
+hal_ret_t
+nwsec_policy_cfg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+
+    return ret;
+    
+}
+
+//------------------------------------------------------------------------
+// Dummy create cleanup callback
+//------------------------------------------------------------------------
+hal_ret_t
+nwsec_policy_cfg_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    return ret;
+}
+
+
+//------------------------------------------------------------------------------
+// Converts hal_ret_t to API status
+//------------------------------------------------------------------------------
+hal_ret_t
+nwsec_policy_cfg_prepare_rsp(SecurityGroupResponse *rsp, hal_ret_t ret,
+                             hal_handle_t hal_handle)
+{
+    if (ret == HAL_RET_OK) {
+        rsp->mutable_status()->set_sg_handle(hal_handle);
+    }
+    rsp->set_api_status(hal_prepare_rsp(ret));
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+extract_rules_from_sg_spec(SecurityGroupSpec& spec, 
+                           nwsec_policy_cfg_t *nwsec_plcy_cfg)
+{   
+    hal_ret_t                   ret = HAL_RET_OK;
+    nwsec_policy_rules_t        *nwsec_plcy_rules = NULL;
+    nwsec_policy_svc_t          *nwsec_plcy_svc = NULL;
+    uint32_t                    fw_sz = 0, svcs_sz = 0;
+
+    if (spec.has_ingress_policy()) {
+        fw_sz = spec.ingress_policy().fw_rules_size();
+        for (uint32_t i = 0; i < fw_sz; i++) {
+            nwsec_plcy_rules = nwsec_policy_rules_alloc_and_init();
+            if (nwsec_plcy_rules == NULL) {
+                HAL_TRACE_ERR("{}: unable to"
+                              "allocate handle/memory"
+                              "ret: {}", __FUNCTION__, ret);
+                //ToDo:Cleanup the nwsec_plcy_rules allocated till now
+                return HAL_RET_OOM;
+           }
+           nwsec_plcy_rules->dst_sg = spec.ingress_policy().fw_rules(i).peer_security_group();
+           svcs_sz = spec.ingress_policy().fw_rules(i).svc_size();
+           for (uint32_t svcs_cnt = 0; svcs_cnt < svcs_sz; svcs_cnt++) {
+                nwsec_plcy_svc = nwsec_policy_svc_alloc_and_init();
+                if (nwsec_plcy_svc == NULL) {
+                         
+                    HAL_TRACE_ERR("{}: unable to"
+                                  "allocate handle/memory"
+                                  "ret: {}", __FUNCTION__, ret);
+                    //ToDo:Cleanup the nwsec_plcy_rules allocated till now
+                    return HAL_RET_OOM;
+                }
+                nwsec_plcy_svc->ipproto = 
+                                spec.ingress_policy().fw_rules(i).svc(svcs_cnt).ip_protocol();
+                if (spec.ingress_policy().fw_rules(i).svc(svcs_cnt).l4_info_case()
+                                                     == Service::kDstPort){
+                    nwsec_plcy_svc->dst_port =
+                            spec.ingress_policy().fw_rules(i).svc(svcs_cnt).dst_port();
+                } else {
+                    nwsec_plcy_svc->icmp_msg_type =
+                            spec.ingress_policy().fw_rules(i).svc(svcs_cnt).icmp_msg_type();
+                }
+                //To Do: Check to Get lock on nwsec_plcy_rules ??
+                dllist_add(&nwsec_plcy_rules->fw_svc_list_head,
+                           &nwsec_plcy_svc->lentry);
+            }
+            dllist_add(&nwsec_plcy_cfg->ingress_rules_head, 
+                       &nwsec_plcy_rules->lentry);
+        }
+    }
+    
+    if (spec.has_egress_policy()) {
+        fw_sz = spec.egress_policy().fw_rules_size();
+        for (uint32_t i = 0; i < fw_sz; i++) {
+            nwsec_plcy_rules = nwsec_policy_rules_alloc_and_init();
+            if (nwsec_plcy_rules == NULL) {
+                HAL_TRACE_ERR("{}: unable to"
+                              "allocate handle/memory"
+                              "ret: {}", __FUNCTION__, ret);
+                //ToDo:Cleanup the nwsec_plcy_rules allocated till now
+                return HAL_RET_OOM;
+           }
+           nwsec_plcy_rules->dst_sg = spec.egress_policy().fw_rules(i).peer_security_group();
+           svcs_sz = spec.egress_policy().fw_rules(i).svc_size();
+           for (uint32_t svcs_cnt = 0; svcs_cnt < svcs_sz; svcs_cnt++) {
+                nwsec_plcy_svc = nwsec_policy_svc_alloc_and_init();
+                if (nwsec_plcy_svc == NULL) {
+                         
+                    HAL_TRACE_ERR("{}: unable to"
+                                  "allocate handle/memory"
+                                  "ret: {}", __FUNCTION__, ret);
+                    //ToDo:Cleanup the nwsec_plcy_rules allocated till now
+                    return HAL_RET_OOM;
+                }
+                nwsec_plcy_svc->ipproto = 
+                                spec.egress_policy().fw_rules(i).svc(svcs_cnt).ip_protocol();
+                if (spec.egress_policy().fw_rules(i).svc(svcs_cnt).l4_info_case()
+                                                == Service::L4InfoCase::kDstPort){
+                    nwsec_plcy_svc->dst_port =
+                            spec.egress_policy().fw_rules(i).svc(svcs_cnt).dst_port();
+                } else {
+                    nwsec_plcy_svc->icmp_msg_type =
+                            spec.egress_policy().fw_rules(i).svc(svcs_cnt).icmp_msg_type();
+                }
+                //ToDo: Check to Get lock on nwsec_plcy_rules ??
+                dllist_add(&nwsec_plcy_rules->fw_svc_list_head,
+                           &nwsec_plcy_svc->lentry);
+            }
+            dllist_add(&nwsec_plcy_cfg->egress_rules_head, 
+                       &nwsec_plcy_rules->lentry);
+        }
+    }
+    return ret;
+}
+
+hal_ret_t
+security_group_create(nwsec::SecurityGroupSpec& spec,
+                      nwsec::SecurityGroupResponse *rsp)
+{
+    hal_ret_t                           ret;
+    nwsec_policy_cfg_t                  *nwsec_plcy_cfg;
+    nwsec_policy_cfg_create_app_ctxt_t  *app_ctxt  = NULL;
+   
+    dhl_entry_t             dhl_entry = { 0 };
+    cfg_op_ctxt_t           cfg_ctxt =  { 0 };
+ 
+    
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("{}: Creating nwsec group, sg_id {}", __FUNCTION__,
+                    spec.key_or_handle().security_group_id());
+    
+    ret = validate_nwsec_policy_cfg_create(spec, rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: validation failed, sg_id {} ret: {}",
+                      __FUNCTION__,  spec.key_or_handle().security_group_id(),
+                      ret);
+        goto end;
+    }
+    // Check of the sgid is already present
+    
+    // instanstiate the sgid
+    nwsec_plcy_cfg  = nwsec_policy_cfg_alloc_init();
+    if (nwsec_plcy_cfg == NULL) {
+        HAL_TRACE_ERR("{}: unable to allocate handle/memory"
+                      "ret: {}", __FUNCTION__, ret);
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    ret = extract_rules_from_sg_spec(spec, nwsec_plcy_cfg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: unable to extract rules from"
+                      "spec err:{}", __FUNCTION__, ret);
+        nwsec_policy_cfg_free(nwsec_plcy_cfg);
+        goto end;
+    }
+
+    // allocate hal handle id
+    nwsec_plcy_cfg->hal_handle = hal_handle_alloc(HAL_OBJ_ID_SECURITY_GROUP);
+    if (nwsec_plcy_cfg->hal_handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_ERR("{}: failed to alloc handle for sg_id: {}",
+                     __FUNCTION__, nwsec_plcy_cfg->sg_id);
+        nwsec_policy_cfg_free(nwsec_plcy_cfg);
+        //ToDo: lseshan: Call free for rules and svc list
+        ret = HAL_RET_HANDLE_INVALID;
+        goto end;
+    }
+
+    // form cntxt and call infra add. No app ctxt as of now.
+    //app_ctxt.   =  ;
+    dhl_entry.handle = nwsec_plcy_cfg->hal_handle;
+    dhl_entry.obj  = nwsec_plcy_cfg;
+    cfg_ctxt.app_ctxt = &app_ctxt;
+    
+    utils::dllist_reset(&cfg_ctxt.dhl);
+    utils::dllist_reset(&dhl_entry.dllist_ctxt);
+    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+    ret = hal_handle_add_obj(nwsec_plcy_cfg->hal_handle, &cfg_ctxt,
+                             nwsec_policy_cfg_create_add_cb,
+                             nwsec_policy_cfg_create_commit_cb,
+                             nwsec_policy_cfg_create_abort_cb,
+                             nwsec_policy_cfg_create_cleanup_cb);
+end:
+    nwsec_policy_cfg_prepare_rsp(rsp, ret, nwsec_plcy_cfg->hal_handle);
+     
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    return ret;
+}
+
+hal_ret_t
+security_group_update(nwsec::SecurityGroupSpec& spec,
+                      nwsec::SecurityGroupResponse *res)
+{
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("{}: Updating nwsec group, sg_id {} handle {}", __FUNCTION__,
+                    spec.key_or_handle().security_group_id(),
+                    spec.key_or_handle().security_group_handle());
+    return HAL_RET_OK;
+
+}  
+
+hal_ret_t
+security_group_delete(nwsec::SecurityGroupSpec& spec,
+                      nwsec::SecurityGroupResponse *res)
+{
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,
+                    spec.key_or_handle().security_group_id());
+    return HAL_RET_OK;
+}    
+
+hal_ret_t
+security_group_get(nwsec::SecurityGroupGetRequest& spec,
+                   nwsec::SecurityGroupGetResponse *res)
+{
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,
+                    spec.key_or_handle().security_group_id());
+    return HAL_RET_OK;
+}    
+
+
 }    // namespace hal

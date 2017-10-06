@@ -86,6 +86,7 @@ typedef enum hal_obj_id_e {
     HAL_OBJ_ID_ENDPOINT,
     HAL_OBJ_ID_SESSION,
     HAL_OBJ_ID_ACL,
+    HAL_OBJ_ID_SECURITY_GROUP,
 
     HAL_OBJ_ID_MAX
 } hal_obj_id_t;

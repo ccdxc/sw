@@ -29,6 +29,11 @@ using nwsec::SecurityGroupRequestMsg;
 using nwsec::SecurityGroupStatus;
 using nwsec::SecurityGroupResponse;
 using nwsec::SecurityGroupResponseMsg;
+using nwsec::SecurityGroupDeleteRequestMsg;
+using nwsec::SecurityGroupDeleteResponseMsg;
+using nwsec::SecurityGroupGetRequestMsg;
+using nwsec::SecurityGroupGetResponseMsg;
+using nwsec::SecurityGroupGetResponse;
 using nwsec::Service;
 
 class NwSecurityServiceImpl final : public NwSecurity::Service {
@@ -49,6 +54,22 @@ public:
     Status SecurityProfileGet(ServerContext *context,
                               const SecurityProfileGetRequestMsg *req,
                               SecurityProfileGetResponseMsg *rsp) override;
+
+    Status SecurityGroupCreate(ServerContext *context,
+                               const SecurityGroupRequestMsg *req,
+                               SecurityGroupResponseMsg      *rsp) override;
+
+    Status SecurityGroupUpdate(ServerContext *context,
+                               const SecurityGroupRequestMsg *req,
+                               SecurityGroupResponseMsg      *rsp) override;
+
+    Status SecurityGroupDelete(ServerContext *context,
+                               const SecurityGroupDeleteRequestMsg *req,
+                               SecurityGroupDeleteResponseMsg      *rsp) override;
+    
+    Status SecurityGroupGet(ServerContext *context,
+                            const SecurityGroupGetRequestMsg *req,
+                            SecurityGroupGetResponseMsg      *rsp) override;
 };
 
 #endif    // __NWSEC_SVC_HPP__

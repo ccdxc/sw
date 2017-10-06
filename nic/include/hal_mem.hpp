@@ -39,6 +39,10 @@ typedef enum hal_slab_e {
     HAL_SLAB_IPSECCB,
     HAL_SLAB_L4LB,
     HAL_SLAB_CPUCB,
+    HAL_SLAB_NWSEC_POLICY,
+    HAL_SLAB_NWSEC_POLICY_RULES,
+    HAL_SLAB_NWSEC_POLICY_CFG,
+    HAL_SLAB_NWSEC_POLICY_SVC,
     HAL_SLAB_PI_MAX,                 // NOTE: MUST be last PI slab id
 
     // PD Slabs

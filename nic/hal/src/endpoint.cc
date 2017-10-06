@@ -569,7 +569,7 @@ hal_ret_t
 endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
-    int                             i, num_ips = 0;
+    int                             i, num_ips = 0, num_sgs = 0;
     tenant_id_t                     tid;
     hal_handle_t                    if_handle, l2seg_handle;
     ep_t                            *ep = NULL;
@@ -688,6 +688,16 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         ip_entry[i]->ip_flags = EP_FLAGS_LEARN_SRC_CFG; 
         ep->ep_flags |= EP_FLAGS_LEARN_SRC_CFG;
         utils::dllist_add(&ep->ip_list_head, &ip_entry[i]->ep_ip_lentry);
+    }
+
+    num_sgs = spec.security_group_size();
+    if (num_sgs) {
+        //To Do:Handle cases where the num_sgs greater that MAX_SG_PER_ARRAY
+        for (i = 0; i < num_sgs; i++) {
+            ep->sgs.arr_sg_id[i] = spec.security_group(i);
+            ep->sgs.sg_id_cnt++;
+            ep->sgs.next_sg_p = NULL;
+        }
     }
 
     // allocate hal handle id

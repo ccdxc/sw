@@ -89,7 +89,8 @@ enum ApiStatus {
   API_STATUS_PROXY_NOT_ENABLED            = 56;    // proxy service not enabled
   API_STATUS_PROXY_FLOW_NOT_FOUND         = 57;    // proxy service not found for a flow
   API_STATUS_CFG_DB_ERR                   = 58;    // config database inconsistency
-  API_STATUS_ENDPOINT_UPD_KEY_HDL_INVALID = 59;    // ep update with no key and hdl
+  API_STATUS_SECURITY_GROUP_ID_INVALID    = 59;    // Security group id invalid
+  API_STATUS_ENDPOINT_UPD_KEY_HDL_INVALID = 60;    // ep update with no key and hdl
 }
 
 // common meta object that is part of all other top level objects

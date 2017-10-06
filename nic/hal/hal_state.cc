@@ -287,7 +287,12 @@ hal_cfg_db::init(void)
                                        hal::cpucb_compute_handle_hash_func,
                                        hal::cpucb_compare_handle_key_func);
     HAL_ASSERT_RETURN((cpucb_hal_handle_ht_ != NULL), false);
-
+    
+    nwsec_policy_cfg_ht_ = ht::factory(HAL_MAX_NW_SEC_POLICY_CFG,
+                                       hal::nwsec_policy_cfg_get_key_func,
+                                       hal::nwsec_policy_cfg_compute_hash_func, 
+                                       hal::nwsec_policy_cfg_compare_key_func);
+    HAL_ASSERT_RETURN((nwsec_policy_cfg_ht_ != NULL), false);
     return true;
 }
 
@@ -326,6 +331,7 @@ hal_cfg_db::hal_cfg_db()
 
     nwsec_profile_id_ht_ = NULL;
     nwsec_profile_hal_handle_ht_ = NULL;
+    nwsec_policy_cfg_ht_  = NULL;
 
     buf_pool_id_ht_ = NULL;
     buf_pool_hal_handle_ht_ = NULL;
@@ -402,6 +408,8 @@ hal_cfg_db::~hal_cfg_db()
 
     nwsec_profile_id_ht_ ? delete nwsec_profile_id_ht_ : HAL_NOP;
     nwsec_profile_hal_handle_ht_ ? delete nwsec_profile_hal_handle_ht_ : HAL_NOP;
+
+    nwsec_policy_cfg_ht_ ? delete nwsec_policy_cfg_ht_ : HAL_NOP;
 
     l2seg_id_ht_ ? delete l2seg_id_ht_ : HAL_NOP;
     // l2seg_hal_handle_ht_ ? delete l2seg_hal_handle_ht_ : HAL_NOP;
@@ -1173,7 +1181,26 @@ hal_mem_db::init(void)
                                 sizeof(hal::cpucb_t), 16,
                                 false, true, true, true);
     HAL_ASSERT_RETURN((cpucb_slab_ != NULL), false);
+    
+    nwsec_policy_slab_ = slab::factory("nwsec_policy", HAL_SLAB_NWSEC_POLICY,
+                                       sizeof(hal::nwsec_policy_entry_t), 64,
+                                       true, true, true, true);
+    HAL_ASSERT_RETURN((nwsec_policy_slab_ != NULL), false);
 
+    nwsec_policy_rules_slab_ = slab::factory("nwsec_policy_rules", HAL_SLAB_NWSEC_POLICY_RULES,
+                                             sizeof(hal::nwsec_policy_rules_t), 64,
+                                             true, true, true, true);
+    HAL_ASSERT_RETURN((nwsec_policy_rules_slab_ != NULL), false);
+
+    nwsec_policy_cfg_slab_ = slab::factory("nwsec_policy_cfg", HAL_SLAB_NWSEC_POLICY_CFG,
+                                           sizeof(hal::nwsec_policy_cfg_t), 64,
+                                           true, true, true, true);
+    HAL_ASSERT_RETURN((nwsec_policy_cfg_slab_ != NULL), false);
+
+    nwsec_policy_svc_slab_ = slab::factory("nwsec_policy_svc", HAL_SLAB_NWSEC_POLICY_SVC,
+                                           sizeof(hal::nwsec_policy_svc_t), 64,
+                                           true, true, true, true);
+    HAL_ASSERT_RETURN((nwsec_policy_svc_slab_ != NULL), false);
     return true;
 }
 
@@ -1191,6 +1218,10 @@ hal_mem_db::hal_mem_db()
     tenant_slab_ = NULL;
     network_slab_ = NULL;
     nwsec_profile_slab_ = NULL;
+    nwsec_policy_slab_  = NULL;
+    nwsec_policy_rules_slab_ = NULL;
+    nwsec_policy_cfg_slab_ = NULL;
+    nwsec_policy_svc_slab_ = NULL;
     l2seg_slab_ = NULL;
     lif_slab_ = NULL;
     if_slab_ = NULL;
@@ -1247,6 +1278,10 @@ hal_mem_db::~hal_mem_db()
     tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
     network_slab_ ? delete network_slab_ : HAL_NOP;
     nwsec_profile_slab_ ? delete nwsec_profile_slab_ : HAL_NOP;
+    nwsec_policy_slab_ ? delete nwsec_policy_slab_ : HAL_NOP;
+    nwsec_policy_rules_slab_ ? delete nwsec_policy_rules_slab_ : HAL_NOP;
+    nwsec_policy_cfg_slab_ ? delete nwsec_policy_cfg_slab_ : HAL_NOP;
+    nwsec_policy_svc_slab_ ? delete nwsec_policy_svc_slab_ : HAL_NOP;
     l2seg_slab_ ? delete l2seg_slab_ : HAL_NOP;
     lif_slab_ ? delete lif_slab_ : HAL_NOP;
     if_slab_ ? delete if_slab_ : HAL_NOP;
@@ -1285,6 +1320,10 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     GET_SLAB(tenant_slab_);
     GET_SLAB(network_slab_);
     GET_SLAB(nwsec_profile_slab_);
+    GET_SLAB(nwsec_policy_slab_);
+    GET_SLAB(nwsec_policy_rules_slab_);
+    GET_SLAB(nwsec_policy_cfg_slab_);
+    GET_SLAB(nwsec_policy_svc_slab_);
     GET_SLAB(l2seg_slab_);
     GET_SLAB(lif_slab_);
     GET_SLAB(if_slab_);
@@ -1485,7 +1524,23 @@ free_to_slab (hal_slab_t slab_id, void *elem)
     case HAL_SLAB_SECURITY_PROFILE:
         g_hal_state->nwsec_profile_slab()->free_(elem);
         break;
- 
+
+    case HAL_SLAB_NWSEC_POLICY:
+        g_hal_state->nwsec_policy_slab()->free_(elem);
+        break;
+    
+    case HAL_SLAB_NWSEC_POLICY_CFG:
+        g_hal_state->nwsec_policy_cfg_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_NWSEC_POLICY_RULES:
+        g_hal_state->nwsec_policy_rules_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_NWSEC_POLICY_SVC:
+        g_hal_state->nwsec_policy_svc_slab()->free_(elem);
+        break;
+
     case HAL_SLAB_TLSCB:
         g_hal_state->tlscb_slab()->free_(elem);
         break;

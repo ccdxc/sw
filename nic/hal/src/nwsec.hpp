@@ -29,8 +29,13 @@ using nwsec::SecurityGroupSpec;
 using nwsec::SecurityGroupRequestMsg;
 using nwsec::SecurityGroupStatus;
 using nwsec::SecurityGroupResponse;
-using nwsec::SecurityGroupResponseMsg;
+using nwsec::SecurityGroupGetResponse;
 using nwsec::Service;
+using nwsec::SecurityGroupKeyHandle;
+using types::IPProtocol;
+using types::ICMPMsgType;
+using nwsec::FirewallAction;
+
 
 namespace hal {
 
@@ -208,6 +213,319 @@ nwsec_profile_t *nwsec_lookup_key_or_handle (const SecurityProfileKeyHandle& kh)
 // extern uint32_t nwsec_profile_compute_handle_hash_func(void *key, uint32_t ht_size);
 // extern bool nwsec_profile_compare_handle_key_func(void *key1, void *key2);
 
+
+// Data structure to maintain for security group:
+// CFG_DB:
+//    nwsec_policy_cfg_t - sg_id (key and stored into nwsec_policy_cfg_ht in cfg_db)
+//            maintains linked list of ingres and egress rules.
+//            rules are of data type - nwsec_policy_rules_t
+//            each rule has list of services defined by - nwsec_policy_svc_t;
+//
+//
+// OPER_DB: 
+//     nwsec_policy_entry_t
+//        We need to key in (src sg_id, dst sg_id)
+//        Define a structure nwsec_policy_entry_t and this will point to the rules list
+// To DO:
+//      Introduce a indirection and make
+//      nwsec_policy_rules_t sharable between cfg and oper db
+//
+//
+
+typedef struct nwsec_policy_key_s {
+    uint32_t            src_sg;
+    uint32_t            dst_sg;
+} __PACK__ nwsec_policy_key_t;
+ 
+typedef struct nwsec_policy_entry_s {
+    nwsec_policy_key_t      plcy_key;           // Identifies the policy hash key(SSG, DSG)
+    dllist_ctxt_t           fw_rules_list_head;
+    FirewallAction          action;
+    bool                    log;    
+    ht_ctxt_t               plcy_ht_ctxt;       // policy hash table ctxt
+} __PACK__ nwsec_policy_entry_t;
+
+typedef struct nwsec_policy_svc_s {
+    hal_spinlock_t      slock;              // Lock to protect this structure
+    IPProtocol          ipproto;
+    union {
+        uint32_t        dst_port;
+        ICMPMsgType     icmp_msg_type;
+    }__PACK__;
+    dllist_ctxt_t       lentry;
+} __PACK__ nwsec_policy_svc_t;
+
+typedef  struct nwsec_policy_rules_s {
+    hal_spinlock_t         slock; 
+    uint32_t               dst_sg;
+    dllist_ctxt_t          fw_svc_list_head;
+    bool                   log;
+    FirewallAction         action;
+    dllist_ctxt_t          lentry;
+} __PACK__ nwsec_policy_rules_t;
+
+typedef struct nwsec_policy_cfg_s {
+    hal_spinlock_t               slock;              // lock to protect this strucuture
+    uint32_t                     sg_id;              // Security_group id
+    dllist_ctxt_t                ingress_rules_head; // List of rules - nwsec_policy_rules_cfg_t
+    dllist_ctxt_t                egress_rules_head;  // List of rules - nwsec_policy_rules_cfg_t
+    
+    // operational state of security group
+    hal_handle_t                 hal_handle;         // HAL allocated handle
+    ht_ctxt_t                    ht_ctxt;
+} __PACK__ nwsec_policy_cfg_t;
+
+
+//-----------------------------------------------------------------------------
+//  APIs related to nwsec_policy_entry_t - to enhance to use cfgdb data 
+//_____________________________________________________________________________
+/*static inline nwsec_policy_entry_t *
+nwsec_policy_entry_alloc(void) 
+{
+    nwsec_policy_entry_t   *nwsec_plcy;
+    nwsec_policy_rules_t   *nwsec_plcy_rules;
+
+    nwsec_plcy_rules = (nwsec_policy_rules_t *)
+                              g_hal_state->nwsec_policy_rules_slab()->alloc();
+    if (nwsec_plcy_rules == NULL) {
+        return NULL;
+    }
+
+    nwsec_plcy = (nwsec_policy_entry_t *) g_hal_state->nwsec_policy_slab()->alloc();
+    if (nwsec_plcy == NULL) {
+        g_hal_state->nwsec_policy_rules_slab()->free();
+        return NULL; 
+    }
+    nwsec_plcy->plcy_rules = nwsec_plcy_rules;    
+    return nwsec_plcy;
+}
+
+// initialize a security policy instance
+static inline nwsec_policy_entry_t *
+nwsec_policy_entry_init (nwsec_policy_entry_t *nwsec_plcy)
+{
+    if (!nwsec_plcy) {
+        return NULL;
+    }
+    // initialize the operational state
+    
+    // initialize the meta information
+    nwsec_plcy->plcy_ht_ctxt.reset();
+    if (nwsec_plcy->plcy_rules) {
+        HAL_SPINLOCK_INIT(&nwsec_plcy->plcy_rules->slock, PTHREAD_PROCESS_PRIVATE);
+        // ToDo: check any intialisation for the dllist
+    }
+    return nwsec_plcy;
+}
+
+// allocate and initialize a security policy instance
+static inline nwsec_policy_entry_t *
+nwsec_policy_entry_alloc_init (void)
+{
+    return nwsec_policy_entry_init(nwsec_policy_entry_alloc());
+}
+
+// free security policy instance
+static inline hal_ret_t
+nwsec_policy_entry_free(nwsec_policy_entry_t *nwsec_plcy_entry)
+{
+    if (nwsec_plcy_entry->plcy_rules) {
+        HAL_SPINLOCK_DESTROY(&nwsec_plcy->slock);
+        g_hal_state->nwsec_policy_rules_slab()->free(nwsec_plcy->plcy_rules);
+    }
+    g_hal_state->nwsec_policy_slab()->free(nwsec_plcy_entry);
+    return HAL_RET_OK;
+}
+
+// insert a security policy to meta data strucutre
+static inline hal_ret_t
+add_nwsec_policy_to_db (nwsec_policy_entry_t *nwsec_policy)
+{
+    g_hal_state->nwsec_policy_entry_ht()->insert(nwsec_policy, 
+                                                &nwsec_policy->ht_ctxt);
+    return HAL_RET_OK;
+}
+
+// find a security group by (ssg, dsg pair)
+static inline nwsec_policy_entry_t *
+nwsec_policy_entry_lookup_by_key(nwsec_policy_key_t nwsec_plcy_key)
+{
+    return (nwsec_policy_entry_t *)
+         g_hal_state->nwsec_policy_ht()->lookup(&nwsec_plcy_key);
+}
+*/
+
+// Empty context for now
+typedef struct nwsec_policy_cfg_create_app_ctxt_s {
+} __PACK__ nwsec_policy_cfg_create_app_ctxt_t;
+
+//-----------------------------------------------------------------------------
+//  APIs related to nwsec_policy_svc_t 
+//_____________________________________________________________________________
+static inline nwsec_policy_svc_t *
+nwsec_policy_svc_alloc(void)
+{
+    nwsec_policy_svc_t *nwsec_plcy_svc;
+    nwsec_plcy_svc = (nwsec_policy_svc_t *)
+                        g_hal_state->nwsec_policy_svc_slab()->alloc();
+    if (nwsec_plcy_svc == NULL) {
+        return NULL;
+    }
+    return nwsec_plcy_svc;
+}
+
+static inline nwsec_policy_svc_t *
+nwsec_policy_svc_init(nwsec_policy_svc_t *nwsec_plcy_svcs)
+{
+    if (!nwsec_plcy_svcs) {
+        return NULL;
+    }
+    HAL_SPINLOCK_INIT(&nwsec_plcy_svcs->slock, PTHREAD_PROCESS_PRIVATE);
+    dllist_reset(&nwsec_plcy_svcs->lentry); 
+    return nwsec_plcy_svcs;
+}
+
+static inline nwsec_policy_svc_t *
+nwsec_policy_svc_alloc_and_init(void) 
+{
+    return nwsec_policy_svc_init(nwsec_policy_svc_alloc());
+} 
+
+static inline hal_ret_t 
+nwsec_policy_svc_free(nwsec_policy_svc_t *nwsec_plcy_rules) 
+{
+    HAL_SPINLOCK_DESTROY(&nwsec_plcy_rules->slock);
+    g_hal_state->nwsec_policy_svc_slab()->free(nwsec_plcy_rules);
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+//  APIs related to nwsec_policy_rules_t 
+//_____________________________________________________________________________
+static inline nwsec_policy_rules_t *
+nwsec_policy_rules_alloc(void)
+{
+    nwsec_policy_rules_t *nwsec_plcy_rules;
+    nwsec_plcy_rules = (nwsec_policy_rules_t *)
+                        g_hal_state->nwsec_policy_rules_slab()->alloc();
+    if (nwsec_plcy_rules == NULL) {
+        return NULL;
+    }
+    return nwsec_plcy_rules;
+}
+
+static inline nwsec_policy_rules_t *
+nwsec_policy_rules_init(nwsec_policy_rules_t *nwsec_plcy_rules)
+{
+    if (!nwsec_plcy_rules) {
+        return NULL;
+    }
+    dllist_reset(&nwsec_plcy_rules->fw_svc_list_head);
+    dllist_reset(&nwsec_plcy_rules->lentry);
+    HAL_SPINLOCK_INIT(&nwsec_plcy_rules->slock, PTHREAD_PROCESS_PRIVATE);
+     
+    return nwsec_plcy_rules;
+}
+
+static inline nwsec_policy_rules_t *
+nwsec_policy_rules_alloc_and_init(void) 
+{
+    return nwsec_policy_rules_init(nwsec_policy_rules_alloc());
+} 
+
+static inline hal_ret_t 
+nwsec_policy_rules_free(nwsec_policy_rules_t *nwsec_plcy_rules) 
+{
+    HAL_SPINLOCK_DESTROY(&nwsec_plcy_rules->slock);
+    g_hal_state->nwsec_policy_rules_slab()->free(nwsec_plcy_rules);
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+//  APIs related to nwsec_policy_cfg_t 
+//_____________________________________________________________________________
+
+
+extern void *
+nwsec_policy_cfg_get_key_func (void *entry);
+
+extern uint32_t
+nwsec_policy_cfg_compute_hash_func (void *key, uint32_t ht_size);
+
+extern bool
+nwsec_policy_cfg_compare_key_func (void *key1, void *key2);
+
+// max. number of SGs supported  (TODO: we can take this from cfg file)
+#define HAL_MAX_NW_SEC_POLICY_CFG  8192
+
+typedef uint32_t nwsec_policy_cfg_id_t;
+// nwsec_policy_cfg related functions
+
+static inline nwsec_policy_cfg_t *
+nwsec_policy_cfg_alloc(void) 
+{
+    nwsec_policy_cfg_t     *nwsec_plcy_cfg;
+
+    nwsec_plcy_cfg = (nwsec_policy_cfg_t *)
+                              g_hal_state->nwsec_policy_cfg_slab()->alloc();
+    if (nwsec_plcy_cfg == NULL) {
+        return NULL;
+    }
+    
+    return nwsec_plcy_cfg;
+}
+
+// initialize a security policy cfg instance
+static inline nwsec_policy_cfg_t *
+nwsec_policy_cfg_init (nwsec_policy_cfg_t *nwsec_plcy_cfg)
+{
+    if (!nwsec_plcy_cfg) {
+        return NULL;
+    }
+    // initialize the operational state
+    
+    // initialize the meta information
+    nwsec_plcy_cfg->ht_ctxt.reset();
+    nwsec_plcy_cfg->hal_handle = HAL_HANDLE_INVALID;
+    dllist_reset(&nwsec_plcy_cfg->ingress_rules_head);
+    dllist_reset(&nwsec_plcy_cfg->egress_rules_head);
+    return nwsec_plcy_cfg;
+}
+
+// allocate and initialize a security policy cfg instance
+static inline nwsec_policy_cfg_t *
+nwsec_policy_cfg_alloc_init (void)
+{
+    return nwsec_policy_cfg_init(nwsec_policy_cfg_alloc());
+}
+
+// free security policy cfg instance
+static inline hal_ret_t
+nwsec_policy_cfg_free(nwsec_policy_cfg_t *nwsec_plcy_cfg)
+{
+    g_hal_state->nwsec_policy_cfg_slab()->free(nwsec_plcy_cfg);
+    return HAL_RET_OK;
+}
+
+// insert a security policy to meta data strucutre
+static inline hal_ret_t
+add_nwsec_policy_cfg_to_db (nwsec_policy_cfg_t *nwsec_plcy_cfg)
+{
+    g_hal_state->nwsec_policy_cfg_ht()->insert(nwsec_plcy_cfg, 
+                                               &nwsec_plcy_cfg->ht_ctxt);
+    return HAL_RET_OK;
+}
+
+
+// find a security policy by sg
+static inline nwsec_policy_cfg_t *
+nwsec_policy_cfg_lookup_by_key(uint32_t sg_id_key)
+{
+    return (nwsec_policy_cfg_t *)
+         g_hal_state->nwsec_policy_cfg_ht()->lookup(&sg_id_key);
+}
+
+
 hal_ret_t security_profile_create(nwsec::SecurityProfileSpec& spec,
                                   nwsec::SecurityProfileResponse *rsp);
 
@@ -220,6 +538,17 @@ hal_ret_t security_profile_delete(nwsec::SecurityProfileDeleteRequest& req,
 hal_ret_t security_profile_get(nwsec::SecurityProfileGetRequest& req,
                                nwsec::SecurityProfileGetResponse *rsp);
 
+hal_ret_t security_group_create(nwsec::SecurityGroupSpec& req,
+                               nwsec::SecurityGroupResponse *rsp);
+
+hal_ret_t security_group_update(nwsec::SecurityGroupSpec& req,
+                               nwsec::SecurityGroupResponse *rsp);
+
+hal_ret_t security_group_delete(nwsec::SecurityGroupSpec& req,
+                               nwsec::SecurityGroupResponse *rsp);
+
+hal_ret_t security_group_get(nwsec::SecurityGroupGetRequest& req,
+                               nwsec::SecurityGroupGetResponse *rsp);
 }    // namespace hal
 
 #endif    // __NWSEC_HPP__

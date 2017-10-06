@@ -44,6 +44,8 @@ namespace hal {
 #define EP_FLAGS_LEARN_SRC_RARP                      0x10
 #define EP_FLAGS_LEARN_SRC_CFG                       0x20
 
+#define MAX_SG_PER_ARRAY                             0x10 //16 
+
 // L2 key of the endpoint
 typedef struct ep_l2_key_s {
     l2seg_id_t    l2_segid;    // L2 segment id
@@ -67,6 +69,15 @@ typedef struct ep_ip_entry_s {
     dllist_ctxt_t        ep_ip_lentry;        // IP entry list context
 } __PACK__ ep_ip_entry_t;
 
+// Stores the list of Security_group_ids in this strucutre.
+// Expected to store MAX_SG_PER_ARRAY per structure. If it exceeds
+// we populate next sg_p structure
+typedef struct ep_sg_s {
+    uint8_t             sg_id_cnt;                       // Current sec_group id < MAX_SG_PER_ARRAY
+    uint32_t            arr_sg_id[MAX_SG_PER_ARRAY];     // Array of security group ids
+    struct ep_sg_s      *next_sg_p;                      // Point to the next set of securiy_group_ids
+}__PACK__ ep_sginfo_t;
+
 // endpoint data structure
 // TODO: capture multiple categories of multiple-labels
 typedef struct ep_s {
@@ -80,6 +91,7 @@ typedef struct ep_s {
     // tenant_id_t          tenant_id;            // VRF this endpoint belongs to
     vlan_id_t            useg_vlan;            // micro-seg vlan allocated for this endpoint
     uint64_t             ep_flags;             // endpoint flags
+    ep_sginfo_t          sgs;                  // Holds the security group ids
     dllist_ctxt_t        ip_list_head;         // list of IP addresses for this endpoint
 
     // operational state of endpoint

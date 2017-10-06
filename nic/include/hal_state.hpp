@@ -72,6 +72,7 @@ public:
     ht *nwsec_profile_id_ht(void) const { return nwsec_profile_id_ht_; }
     ht *nwsec_profile_hal_handle_ht(void) const { return nwsec_profile_hal_handle_ht_ ; }
 
+    ht *nwsec_policy_cfg_ht(void) const { return nwsec_policy_cfg_ht_; }
     ht *l2seg_id_ht(void) const { return l2seg_id_ht_; }
     // ht *l2seg_hal_handle_ht(void) const { return l2seg_hal_handle_ht_; }
 
@@ -173,6 +174,10 @@ private:
         ht         *nwsec_profile_id_ht_;
         ht         *nwsec_profile_hal_handle_ht_;
     } __PACK__;
+    // security group related config
+    struct {
+        ht         *nwsec_policy_cfg_ht_;
+    }__PACK__;
 
     // l2segment related config
     struct {
@@ -358,6 +363,10 @@ public:
     slab *tenant_slab(void) const { return tenant_slab_; }
     slab *network_slab(void) const { return network_slab_; }
     slab *nwsec_profile_slab(void) const { return nwsec_profile_slab_; }
+    slab *nwsec_policy_slab(void) const { return nwsec_policy_slab_; }
+    slab *nwsec_policy_rules_slab(void) const { return nwsec_policy_slab_; }
+    slab *nwsec_policy_cfg_slab(void) const { return nwsec_policy_cfg_slab_; }
+    slab *nwsec_policy_svc_slab(void) const { return nwsec_policy_svc_slab_; }
     slab *l2seg_slab(void) const { return l2seg_slab_; }
     slab *lif_slab(void) const { return lif_slab_; }
     slab *if_slab(void) const { return if_slab_; }
@@ -376,7 +385,6 @@ public:
     slab *wring_slab(void) const { return wring_slab_; }
     slab *ipseccb_slab(void) const { return ipseccb_slab_; }
     slab *cpucb_slab(void) const { return cpucb_slab_; }
-
 private:
     bool init(void);
     hal_mem_db();
@@ -391,6 +399,10 @@ private:
     slab    *tenant_slab_;
     slab    *network_slab_;
     slab    *nwsec_profile_slab_;
+    slab    *nwsec_policy_slab_;
+    slab    *nwsec_policy_rules_slab_;
+    slab    *nwsec_policy_cfg_slab_;
+    slab    *nwsec_policy_svc_slab_;
     slab    *l2seg_slab_;
     slab    *lif_slab_;
     slab    *if_slab_;
@@ -458,6 +470,12 @@ public:
     ht *nwsec_profile_id_ht(void) const { return cfg_db_->nwsec_profile_id_ht(); }
     ht *nwsec_profile_hal_handle_ht(void) const { return cfg_db_->nwsec_profile_hal_handle_ht(); }
 
+    // get APIs for security Policy related state
+    slab *nwsec_policy_slab(void) const { return mem_db_->nwsec_policy_slab(); }
+    slab *nwsec_policy_rules_slab(void) const { return mem_db_->nwsec_policy_rules_slab(); }
+    slab *nwsec_policy_cfg_slab(void) const { return mem_db_->nwsec_policy_cfg_slab(); }
+    slab *nwsec_policy_svc_slab(void) const { return mem_db_->nwsec_policy_svc_slab(); }
+    ht   *nwsec_policy_cfg_ht(void) const { return cfg_db_->nwsec_policy_cfg_ht(); }
     // get APIs for L2 segment state
     slab *l2seg_slab(void) const { return mem_db_->l2seg_slab(); }
     ht *l2seg_id_ht(void) const { return cfg_db_->l2seg_id_ht(); }
@@ -572,6 +590,7 @@ private:
 };
 
 extern class hal_state    *g_hal_state;
+
 
 static inline bool
 is_forwarding_mode_host_pinned()
