@@ -8,7 +8,7 @@ class FlowStateData:
         self.seq    = None
         self.ack    = None
         self.flags  = None
-        self.win    = None
+        self.window    = None
         self.scale  = None
         self.mss    = None
         return
@@ -18,7 +18,7 @@ class FlowStateData:
         self.seq    = getattr(spec, 'seq', self.seq)
         self.ack    = getattr(spec, 'ack', self.ack)
         self.flags  = getattr(spec, 'flags', self.flags)
-        self.win    = getattr(spec, 'win', self.win)
+        self.window = getattr(spec, 'window', self.window)
         self.scale  = getattr(spec, 'scale', self.scale)
         self.mss    = getattr(spec, 'mss', self.mss)
         return
@@ -37,7 +37,7 @@ class FlowStateData:
         lg.info("- Seq  : ", self.seq)
         lg.info("- Ack  : ", self.ack)
         lg.info("- Flags: ", self.flags)
-        lg.info("- Win  : ", self.win)
+        lg.info("- Win  : ", self.window)
         lg.info("- Scale: ", self.scale)
         lg.info("- MSS  : ", self.mss)
         return
@@ -82,8 +82,8 @@ class FlowState:
             lg.info("- Seq  : prev=", self.prev.seq, " curr=", self.curr.seq)
         if self.prev.ack != self.curr.ack:
             lg.info("- Ack  : prev=", self.prev.ack, " curr=", self.curr.ack)
-        if self.prev.win != self.curr.win:
-            lg.info("- Win  : prev=", self.prev.win, " curr=", self.curr.win)
+        if self.prev.window != self.curr.window:
+            lg.info("- Win  : prev=", self.prev.window, " curr=", self.curr.window)
         if self.prev.scale != self.curr.scale:
             lg.info("- Scale: prev=", self.prev.scale, " curr=", self.curr.scale)
         if self.prev.mss != self.curr.mss:

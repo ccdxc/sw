@@ -1,16 +1,22 @@
 #! /usr/bin/python3
 
-def Add(orig, args):
+def Add(step, orig, args):
     return orig + args.val
 
-def Sub(orig, args):
+def Sub(step, orig, args):
     return orig - args.val
 
-def Mul(orig, args):
+def Mul(step, orig, args):
     return orig * args.val
 
-def Div(orig, args):
+def Div(step, orig, args):
     return orig * args.val
 
-def Mod(orig, args):
+def Mod(step, orig, args):
     return orig % args.val
+
+def AddWithWindow(step, orig, args):
+    return orig + step.neighbor_flowstate.window + args.val
+
+def SubWithWindow(step, orig, args):
+    return orig + step.neighbor_flowstate.window - args.val

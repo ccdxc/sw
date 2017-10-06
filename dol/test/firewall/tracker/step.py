@@ -58,16 +58,18 @@ class StepObject(objects.FrameworkTemplateObject):
         if curr is None:
             value = orig
         elif objects.IsCallback(curr):
-            value = curr.call(orig)
+            value = curr.call(self, orig)
         assert(value is not None)
         setattr(self.fields, attr, value)
         return
 
-    def CopyFlowState(self, fs):
+    def SetFlowStates(self, fs, nbrfs):
+        self.flowstate = fs
+        self.neighbor_flowstate = nbrfs
         self.__resolve('seq', fs.seq)
         self.__resolve('ack', fs.ack)
         self.__resolve('flags', fs.flags)
-        self.__resolve('win', fs.win)
+        self.__resolve('window', fs.window)
         self.__resolve('scale', fs.scale)
         self.__resolve('mss', fs.mss)
         return
@@ -83,12 +85,12 @@ class StepObject(objects.FrameworkTemplateObject):
 
     def Show(self, lg):
         lg.info("Tracker Step: %s" % self.GID())
-        lg.info("- Seq  : ", self.fields.seq)
-        lg.info("- Ack  : ", self.fields.ack)
-        lg.info("- Flags: ", self.fields.flags)
-        lg.info("- Win  : ", self.fields.win)
-        lg.info("- Scale: ", self.fields.scale)
-        lg.info("- MSS  : ", self.fields.mss)
+        lg.info("- Seq      : ", self.fields.seq)
+        lg.info("- Ack      : ", self.fields.ack)
+        lg.info("- Flags    : ", self.fields.flags)
+        lg.info("- Window   : ", self.fields.window)
+        lg.info("- Scale    : ", self.fields.scale)
+        lg.info("- MSS      : ", self.fields.mss)
         return
 
 def __parse_step_specs():

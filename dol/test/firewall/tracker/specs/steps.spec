@@ -57,9 +57,25 @@ steps:
             flags   : ack
 
     - step:
+        id          : IFLOW_DATA_DROP
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 100
+        permit      : False
+        fields      :
+            flags   : ack
+
+    - step:
         id          : RFLOW_DATA
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 100
+        fields      :
+            flags   : ack
+
+    - step:
+        id          : RFLOW_DATA_DROP
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 100
+        permit      : False
         fields      :
             flags   : ack
 
@@ -134,8 +150,7 @@ steps:
         advance     : False
         permit      : False
         fields      :
-            # Change the constant below to use rcvr_win_sz
-            seq     : callback://firewall/alu/Add/val=10000
+            seq     : callback://firewall/alu/AddWithWindow/val=1000
             flags   : ack
 
     - step:
@@ -145,8 +160,65 @@ steps:
         advance     : False
         permit      : False
         fields      :
-            # Change the constant below to use rcvr_win_sz
-            seq     : callback://firewall/alu/Add/val=10000
+            seq     : callback://firewall/alu/AddWithWindow/val=1000
+            flags   : ack
+
+    - step:
+        id          : IFLOW_ZERO_DATA_LEFT_OF_WINDOW
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
+        advance     : False
+        fields      :
+            seq     : callback://firewall/alu/SubWithWindow/val=1
+            flags   : ack
+
+    - step:
+        id          : RFLOW_ZERO_DATA_LEFT_OF_WINDOW
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 0
+        advance     : False
+        fields      :
+            seq     : callback://firewall/alu/SubWithWindow/val=1
+            flags   : ack
+
+    - step:
+        id          : IFLOW_ZERO_DATA_ON_WINDOW
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
+        advance     : False
+        permit      : False
+        fields      :
+            seq     : callback://firewall/alu/SubWithWindow/val=0
+            flags   : ack
+
+    - step:
+        id          : RFLOW_ZERO_DATA_ON_WINDOW
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 0
+        advance     : False
+        permit      : False
+        fields      :
+            seq     : callback://firewall/alu/SubWithWindow/val=0
+            flags   : ack
+
+    - step:
+        id          : IFLOW_ZERO_DATA_RIGHT_OF_WINDOW
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
+        advance     : False
+        permit      : False
+        fields      :
+            seq     : callback://firewall/alu/AddWithWindow/val=1
+            flags   : ack
+
+    - step:
+        id          : RFLOW_ZERO_DATA_RIGHT_OF_WINDOW
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 0
+        advance     : False
+        permit      : False
+        fields      :
+            seq     : callback://firewall/alu/AddWithWindow/val=1
             flags   : ack
 
     - step:
@@ -154,7 +226,7 @@ steps:
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 1000
         fields      :
-            win     : 0
+            window  : 0
             flags   : ack
 
     - step:
@@ -162,7 +234,7 @@ steps:
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 1000
         fields      :
-            win     : 0
+            window  : 0
             flags   : ack
 
     - step:

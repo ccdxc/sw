@@ -7,14 +7,14 @@ connections:
             port    : range/32000/33000
             seq     : 1000
             ack     : 0
-            win     : 8192
+            window  : 8192
             scale   : 1
             mss     : 1460
         responder:
             port    : range/32000/33000
             seq     : 2000
             ack     : 0
-            win     : 8192
+            window  : 8192
             scale   : 1
             mss     : 1460
     - connection:
@@ -24,14 +24,14 @@ connections:
             port    : range/34000/35000
             seq     : 0xfffffff0
             ack     : 0
-            win     : 8192
+            window  : 8192
             scale   : 1
             mss     : 1460
         responder:
             port    : range/34000/35000
             seq     : 2000
             ack     : 0
-            win     : 8192
+            window  : 8192
             scale   : 1
             mss     : 1460
 

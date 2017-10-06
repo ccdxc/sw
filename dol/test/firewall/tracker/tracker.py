@@ -40,12 +40,20 @@ class TrackerObject:
     def IsCpuCopyValid(self):
         return self.cpu_copy_valid
 
+    def __set_flow_states(self):
+        ifs = self.flowstate.GetState(True)
+        rfs = self.flowstate.GetState(False)
+        if self.step.IsIflow():
+            self.step.SetFlowStates(ifs, rfs)
+        else:
+            self.step.SetFlowStates(rfs, ifs)
+        return
+
     def SetStep(self, stepspec, lg):
         self.lg = lg
         step = stepspec.step.Get(TrackerStore)
         self.step = copy.copy(step)
-        state = self.flowstate.GetState(self.step.IsIflow())
-        self.step.CopyFlowState(state)
+        self.__set_flow_states()
         self.step.SetPorts(self.iport, self.rport)
         self.step.Show(self.lg)
         return
