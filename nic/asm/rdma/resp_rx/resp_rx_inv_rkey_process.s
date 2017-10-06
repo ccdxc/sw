@@ -29,14 +29,12 @@ resp_rx_inv_rkey_process:
 
     CAPRI_TABLE_GET_FIELD(r1, KEY_P, KEY_ENTRY_T, state) //BD Slot
     seq         c1, r1, KEY_STATE_INVALID
-    bcf         [!c1], error_completion
+    bcf         [c1], error_completion
     nop
     
-    // TODO: below instruction doesn't work till model migrates
-    // to capas version (capas -s and look at first line) v09182017
-
     // update the state to FREE
-    //CAPRI_TABLE_SET_FIELD(KEY_STATE_FREE, KEY_P, KEY_ENTRY_T, state)
+    add r2, r0, KEY_STATE_FREE
+    CAPRI_TABLE_SET_FIELD(r2, KEY_P, KEY_ENTRY_T, state)
 
     add         TBL_ID, r0, k.args.tbl_id
     CAPRI_SET_TABLE_I_VALID(TBL_ID, 0)

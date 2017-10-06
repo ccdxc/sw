@@ -74,22 +74,24 @@ def TestCaseVerify(tc):
     # read the key table entry for the rkey being invalidated 
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_r_key)
 
-    # TODO: Due to capas issue, asm is not able to invalidate key entry, waiting for fix 
-    # from Yogesh, then will enable the following validation
+    if not (kt_entry.data.state == 1): # KEY_STATE_FREE = 1
+        tc.info("RDMA TestCaseVerify(): Rkey invalidated fails for hw_lif %d qp %s rkey %d " % 
+                (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
+        tc.info("RDMA TestCaseVerify(): Invalidated rkey is not in Free state: state %d" %
+                kt_entry.data.state)
+        return False
 
-    #if not (kt_entry.data.state == 1): # KEY_STATE_FREE = 1
-    #    tc.info("RDMA TestCaseVerify(): Rkey invalidated fails for hw_lif %d qp %s rkey %d " % 
-    #            (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
-    #    tc.info("RDMA TestCaseVerify(): Invalidated rkey is not in Free state: state %d" %
-    #            kt_entry.data.state)
-    #    return False
-
-    #tc.info("RDMA TestCaseVerify(): Rkey is invalidated for hw_lif %d qp %s rkey %d" % 
-    #        (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
-    ## validate the key again for further tests
-    #kt_entry.data.state = 2  
-    #kt_entry.Write()
-    #assert (kt_entry.data.state == 2) # KEY_STATE_VALID = 2
+    tc.info("RDMA TestCaseVerify(): Rkey is invalidated for hw_lif %d qp %s rkey %d" % 
+            (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
+    # validate the key again for further tests
+    kt_entry.data.state = 2  
+    kt_entry.Write()
+    if not (kt_entry.data.state == 2): # KEY_STATE_VALID = 2
+        tc.info("RDMA TestCaseVerify(): Unable to set Rkey to valid state for hw_lif %d qp %s rkey %d " % 
+                (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key))
+        tc.info("RDMA TestCaseVerify(): Rkey current state: state %d" %
+                kt_entry.data.state)
+        return False
 
     return True
 
