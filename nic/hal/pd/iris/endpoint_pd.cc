@@ -730,10 +730,10 @@ ep_delink_pi_pd(pd_ep_t *pd_ep, ep_t *pi_ep)
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_ep_make_clone(ep_t *ten, ep_t *clone)
+pd_ep_make_clone(ep_t *ep, ep_t *clone)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    pd_ep_t         *pd_ep_clone = NULL;
+    pd_ep_t             *pd_ep_clone = NULL;
 
     pd_ep_clone = ep_pd_alloc_init();
     if (pd_ep_clone == NULL) {
@@ -741,7 +741,7 @@ pd_ep_make_clone(ep_t *ten, ep_t *clone)
         goto end;
     }
 
-    memcpy(pd_ep_clone, ten->pd, sizeof(pd_ep_t));
+    memcpy(pd_ep_clone, ep->pd, sizeof(pd_ep_t));
 
     ep_link_pi_pd(pd_ep_clone, clone);
 
@@ -756,7 +756,7 @@ hal_ret_t
 pd_ep_mem_free(pd_ep_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
-    pd_ep_t    *ep_pd;
+    pd_ep_t        *ep_pd;
 
     ep_pd = (pd_ep_t *)args->ep->pd;
     ep_pd_mem_free(ep_pd);

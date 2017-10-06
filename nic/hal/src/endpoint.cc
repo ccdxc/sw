@@ -142,7 +142,7 @@ ep_add_to_l2_db (ep_t *ep, hal_handle_t handle)
     // add mapping from tenant id to its handle
     entry->handle_id = handle;
     ret = g_hal_state->ep_l2_ht()->insert_with_key(&ep->l2_key,
-                                                       entry, &entry->ht_ctxt);
+                                                   entry, &entry->ht_ctxt);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-ep:{}:failed to add l2 key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
@@ -166,7 +166,7 @@ ep_del_from_l2_db (ep_t *ep)
     HAL_TRACE_DEBUG("pi-ep:{}:removing from l2 hash table", __FUNCTION__);
     // remove from hash table
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->ep_l2_ht()->
-        remove(&ep->l2_key);
+            remove(&ep->l2_key);
 
     if (entry) {
         // free up
@@ -200,7 +200,7 @@ ep_add_to_l3_db (ep_l3_key_t *l3_key, ep_ip_entry_t *ep_ip,
     entry->ep_ip = ep_ip;
     entry->ht_ctxt.reset();
     ret = g_hal_state->ep_l3_entry_ht()->insert_with_key(l3_key,
-                                                       entry, &entry->ht_ctxt);
+                                                         entry, &entry->ht_ctxt);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-ep:{}:failed to add l2 key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
@@ -295,7 +295,7 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::pd_ep_create(&pd_ep_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-ep:{}:failed to create ep pd, err : {}", 
-                __FUNCTION__, ret);
+                      __FUNCTION__, ret);
     }
 
 end:

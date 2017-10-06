@@ -9,7 +9,6 @@
 #include "nic/proto/hal/l2segment.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/utils.hpp"
-#include "nic/hal/src/interface.hpp"
 
 using l2segment::L2SegmentDeleteRequest;
 using l2segment::L2SegmentDeleteResponseMsg;
@@ -78,6 +77,20 @@ typedef struct l2seg_update_app_ctxt_s {
 
 // max. number of L2 segments supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_L2SEGMENTS                           2048
+
+static inline void 
+l2seg_lock(l2seg_t *l2seg)
+{
+    HAL_TRACE_DEBUG("{}:locking l2seg:{}", __FUNCTION__, l2seg->seg_id);
+    HAL_SPINLOCK_LOCK(&l2seg->slock);
+}
+
+static inline void 
+l2seg_unlock(l2seg_t *l2seg)
+{
+    HAL_TRACE_DEBUG("{}:unlocking l2seg:{}", __FUNCTION__, l2seg->seg_id);
+    HAL_SPINLOCK_UNLOCK(&l2seg->slock);
+}
 
 // allocate a l2segment instance
 static inline l2seg_t *
@@ -172,9 +185,6 @@ extern void *l2seg_id_get_key_func(void *entry);
 extern uint32_t l2seg_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool l2seg_id_compare_key_func(void *key1, void *key2);
 l2seg_t *l2seg_lookup_key_or_handle (const L2SegmentKeyHandle& kh);
-
-hal_ret_t l2seg_add_if(l2seg_t *l2seg, if_t *hal_if);
-hal_ret_t l2seg_del_if (l2seg_t *l2seg, if_t *hal_if);
 
 // SVC CRUD APIs
 hal_ret_t l2segment_create(L2SegmentSpec& spec,

@@ -1,5 +1,6 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
+#include "nic/hal/pd/common/pd_api.hpp"
 #include "nic/hal/src/if_utils.hpp"
 namespace hal {
 

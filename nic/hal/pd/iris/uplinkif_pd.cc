@@ -104,12 +104,20 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
     indexer::status      rs = indexer::SUCCESS;
 
     // Allocate lif hwid
+#if 0
     rs = g_hal_state_pd->lif_hwid_idxr()->
         alloc((uint32_t *)&pd_upif->hw_lif_id);
     if (rs != indexer::SUCCESS) {
         HAL_TRACE_ERR("pd-uplinkif:{}:failed to alloc hw_lif_id err: {}", 
                       __FUNCTION__, rs);
         pd_upif->hw_lif_id = INVALID_INDEXER_INDEX;
+        return HAL_RET_NO_RESOURCE;
+    }
+#endif
+    pd_upif->hw_lif_id = if_allocate_hwlif_id();
+    if (pd_upif->hw_lif_id == INVALID_INDEXER_INDEX) {
+        HAL_TRACE_ERR("pd-uplinkif:{}:failed to alloc hw_lif_id err: {}", 
+                      __FUNCTION__, rs);
         return HAL_RET_NO_RESOURCE;
     }
     HAL_TRACE_DEBUG("pd-uplinkif:{}:if_id:{} allocated hw_lif_id: {}", 
@@ -157,6 +165,7 @@ uplinkif_pd_dealloc_res(pd_uplinkif_t *upif_pd)
     indexer::status     rs;
 
     if (upif_pd->hw_lif_id != INVALID_INDEXER_INDEX) {
+#if 0
         rs = g_hal_state_pd->lif_hwid_idxr()->free(upif_pd->hw_lif_id);
         if (rs != indexer::SUCCESS) {
             HAL_TRACE_ERR("pd-uplinkif:{}:failed to free hw_lif_id err: {}", 
@@ -164,6 +173,8 @@ uplinkif_pd_dealloc_res(pd_uplinkif_t *upif_pd)
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
+#endif
+        // TODO: Have to free up the index from lif manager
 
         HAL_TRACE_DEBUG("pd-uplinkif:{}:freed hw_lif_id: {}", 
                         __FUNCTION__, upif_pd->hw_lif_id);

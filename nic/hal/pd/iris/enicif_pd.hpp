@@ -5,6 +5,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/common/pd_api.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
 
 namespace hal {
 namespace pd {
@@ -96,7 +97,10 @@ void link_pi_pd(pd_enicif_t *pd_upif, if_t *pi_if);
 void unlink_pi_pd(pd_enicif_t *pd_upif, if_t *pi_if);
 hal_ret_t pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, 
         nwsec_profile_t *nwsec_prof);
-hal_ret_t pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif);
+hal_ret_t
+pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif, 
+                                    pd_if_lif_upd_args_t *lif_upd,
+                                    table_oper_t oper);
 hal_ret_t pd_enicif_cleanup(pd_enicif_t *pd_enicif);
 
 uint32_t pd_enicif_get_l4_prof_idx(pd_enicif_t *pd_enicif);
@@ -106,6 +110,7 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
                               nwsec_profile_t *nwsec_prof,
                               input_properties_mac_vlan_actiondata &data,
                               bool host_entry);
+hal_ret_t pd_enicif_lif_update(pd_if_lif_upd_args_t *args);
 hal_ret_t
 pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif, 
                                      nwsec_profile_t *nwsec_prof);
@@ -113,6 +118,7 @@ hal_ret_t
 pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif);
 hal_ret_t pd_enicif_pd_depgm_output_mapping_tbl (pd_enicif_t *pd_enicif);
 hal_ret_t pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif);
+bool pd_enicif_get_vlan_strip (lif_t *lif, pd_if_lif_upd_args_t *lif_upd);
 
 hal_ret_t pd_enicif_create(pd_if_args_t *args);
 hal_ret_t pd_enicif_update(pd_if_args_t *args);

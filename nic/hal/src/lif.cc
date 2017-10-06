@@ -13,6 +13,7 @@
 #include "nic/hal/src/lif.hpp"
 
 using hal::pd::pd_if_args_t;
+using hal::pd::pd_if_lif_upd_args_t;
 
 namespace hal {
 
@@ -565,11 +566,11 @@ hal_ret_t
 lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_lif_args_t           pd_lif_args = { 0 };
+    pd::pd_lif_upd_args_t       args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     lif_t                       *lif = NULL;
-    // lif_update_app_ctxt_t       *app_ctxt = NULL;
+    lif_update_app_ctxt_t       *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif{}:invalid cfg_ctxt", __FUNCTION__);
@@ -579,7 +580,7 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    // app_ctxt = (lif_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt = (lif_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     lif = (lif_t *)dhl_entry->obj;
 
@@ -587,14 +588,20 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, lif->lif_id);
 
     // 1. PD Call to allocate PD resources and HW programming
-    pd::pd_lif_args_init(&pd_lif_args);
-    pd_lif_args.lif = lif;
-    ret = pd::pd_lif_update(&pd_lif_args);
+    pd::pd_lif_upd_args_init(&args);
+    args.lif = lif;
+    args.vlan_strip_en_changed = app_ctxt->vlan_strip_en_changed;
+    args.vlan_strip_en = app_ctxt->vlan_strip_en;
+    ret = pd::pd_lif_update(&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-lif:{}:failed to delete lif pd, err : {}",
                       __FUNCTION__, ret);
     }
 
+    if (app_ctxt->vlan_strip_en_changed) {
+        // Triggers reprogramming of output mapping table for enicifs and uplinks
+        ret = lif_handle_vlan_strip_en_update(lif, app_ctxt->vlan_strip_en);
+    }
 end:
     return ret;
 }
@@ -626,8 +633,8 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_lif_args_t           pd_lif_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    lif_t                       *lif = NULL;
-    // lif_update_app_ctxt_t    *app_ctxt = NULL;
+    lif_t                       *lif = NULL, *lif_clone = NULL;
+    lif_update_app_ctxt_t    *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif{}:invalid cfg_ctxt", __FUNCTION__);
@@ -637,12 +644,22 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    // app_ctxt = (lif_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt = (lif_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     lif = (lif_t *)dhl_entry->obj;
+    lif_clone = (lif_t *)dhl_entry->cloned_obj;
 
     HAL_TRACE_DEBUG("pi-lif:{}:update commit CB {}",
                     __FUNCTION__, lif->lif_id);
+
+    // Update PI clone
+    if (app_ctxt->vlan_strip_en_changed) {
+        lif_clone->vlan_strip_en = app_ctxt->vlan_strip_en;
+    }
+    dllist_move(&lif_clone->if_list_head, &lif->if_list_head);
+
+    HAL_TRACE_DEBUG("Printing IFs from clone:");
+    lif_print_ifs(lif_clone);
 
     // Free PD
     pd::pd_lif_args_init(&pd_lif_args);
@@ -726,6 +743,26 @@ lif_lookup_key_or_handle (const LifKeyHandle& kh)
 
     return lif;
 }
+
+//------------------------------------------------------------------------------
+// Handle update. Checks what changed
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    LifSpec             *spec = app_ctxt->spec;
+
+    if (lif->vlan_strip_en != spec->vlan_strip_en()) {
+        HAL_TRACE_DEBUG("pi-lif:{}:vlan_strip_en changed {} => {}",
+                        __FUNCTION__, lif->vlan_strip_en, spec->vlan_strip_en());
+        app_ctxt->vlan_strip_en_changed = true;
+        app_ctxt->vlan_strip_en = spec->vlan_strip_en();
+    }
+
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // process a lif update request
 //------------------------------------------------------------------------------
@@ -738,6 +775,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     const LifKeyHandle          &kh = spec.key_or_handle();
     lif_update_app_ctxt_t       app_ctxt = { 0 };
+    hal_handle_t                hal_handle = 0;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
 
@@ -759,8 +797,23 @@ lif_update (LifSpec& spec, LifResponse *rsp)
     HAL_TRACE_DEBUG("pi-lif:{}:update lif {}", __FUNCTION__, 
                     lif->lif_id);
 
-    // Check for any change, if there is none goto end.
+    hal_handle = lif->hal_handle;
 
+    // Check for any change, if there is none goto end.
+    app_ctxt.spec = &spec;
+    app_ctxt.rsp = rsp;
+    ret = lif_handle_update(&app_ctxt, lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-lif:{}:lif check update failed, ret : {}", 
+                      __FUNCTION__, ret);
+        goto end;
+    }
+
+    if (!app_ctxt.vlan_strip_en_changed) {
+        HAL_TRACE_ERR("pi-lif:{}:no change in lif update: noop", __FUNCTION__);
+        goto end;
+    }
+    
     lif_make_clone(lif, (lif_t **)&dhl_entry.cloned_obj);
 
     // form ctxt and call infra update object
@@ -777,7 +830,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
                              lif_update_cleanup_cb);
 
 end:
-    lif_prepare_rsp(rsp, ret, lif->hal_handle);
+    lif_prepare_rsp(rsp, ret, hal_handle);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }
@@ -1027,4 +1080,123 @@ hal_ret_t lif_get(LifGetRequest& req,
 {
     return HAL_RET_OK;
 }
+
+//-----------------------------------------------------------------------------
+// Adds If into lif list
+//-----------------------------------------------------------------------------
+hal_ret_t
+lif_add_if (lif_t *lif, if_t *hal_if)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    hal_handle_id_list_entry_t  *entry = NULL;
+
+    if (lif == NULL || hal_if == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    // Allocate the entry
+    entry = (hal_handle_id_list_entry_t *)g_hal_state->
+        hal_handle_id_list_entry_slab()->alloc();
+    if (entry == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+    entry->handle_id = hal_if->hal_handle;
+
+    lif_lock(lif);      // lock
+    // Insert into the list
+    utils::dllist_add(&lif->if_list_head, &entry->dllist_ctxt);
+    lif_unlock(lif);    // unlock
+
+end:
+    HAL_TRACE_DEBUG("pi-lif:{}:add if:{} to lif:{}, ret:{}",
+                    __FUNCTION__, hal_if->if_id, lif->lif_id, ret);
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Remove If from lif list
+//-----------------------------------------------------------------------------
+hal_ret_t
+lif_del_if (lif_t *lif, if_t *hal_if)
+{
+    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
+    hal_handle_id_list_entry_t  *entry = NULL;
+    dllist_ctxt_t               *curr = NULL, *next = NULL;
+
+
+    lif_lock(lif);      // lock
+    dllist_for_each_safe(curr, next, &lif->if_list_head) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        if (entry->handle_id == hal_if->hal_handle) {
+            // Remove from list
+            utils::dllist_del(&entry->dllist_ctxt);
+            // Free the entry
+            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+
+            ret = HAL_RET_OK;
+        }
+    }
+    lif_unlock(lif);    // unlock
+
+    HAL_TRACE_DEBUG("pi-lif:{}:del if:{} to lif:{}, ret:{}",
+                    __FUNCTION__, hal_if->if_id, lif->lif_id, ret);
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// handling vlan strip en update
+//------------------------------------------------------------------------------
+hal_ret_t
+lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    dllist_ctxt_t               *lnode = NULL;
+    hal_handle_id_list_entry_t  *entry = NULL;
+    if_t                        *hal_if = NULL;
+    pd::pd_if_lif_upd_args_t    args = { 0 };
+
+    if (lif == NULL) {
+        return ret;
+    }
+
+    HAL_TRACE_DEBUG("pi-lif:{}:lif_id: {}", 
+                    __FUNCTION__, lif->lif_id);
+
+    pd::pd_if_lif_upd_args_init(&args);
+    // Walk L2 segs
+    dllist_for_each(lnode, &lif->if_list_head) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        hal_if = find_if_by_handle(entry->handle_id);
+        if (!hal_if) {
+            HAL_TRACE_ERR("pi-lif:{}:unable to find if with handle:{}",
+                          __FUNCTION__, entry->handle_id);
+            continue;
+        }
+        args.intf = hal_if;
+        args.lif = lif;
+        args.vlan_strip_en_changed = true;
+        args.vlan_strip_en = vlan_strip_en;
+        if_handle_lif_update(&args);
+    }
+
+    return ret;
+}
+
+void
+lif_print_ifs(lif_t *lif)
+{
+    dllist_ctxt_t               *lnode = NULL;
+    hal_handle_id_list_entry_t  *entry = NULL;
+    if_t                        *hal_if = NULL;
+
+    dllist_for_each(lnode, &(lif->if_list_head)) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        hal_if = find_if_by_handle(entry->handle_id);
+        HAL_TRACE_DEBUG("pi-lif:{}: if: {}", 
+                __FUNCTION__, hal_if->if_id);
+    }
+}
+
 }    // namespace hal

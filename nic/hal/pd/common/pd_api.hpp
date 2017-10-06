@@ -68,6 +68,13 @@ typedef struct pd_lif_args_s {
     uint32_t hw_lif_id;
 } __PACK__ pd_lif_args_t;
 
+typedef struct pd_lif_upd_args_s {
+    lif_t    *lif;
+
+    bool    vlan_strip_en_changed;
+    bool    vlan_strip_en;
+} pd_lif_upd_args_t;
+
 typedef struct pd_if_args_s {
     if_t    *intf;
     union {
@@ -81,6 +88,10 @@ typedef struct pd_if_args_s {
             // uplink pc specific info
             struct {
             } __PACK__;
+            // enic if specific info
+            struct {
+                lif_t *lif;
+            } __PACK__;
         } __PACK__;
     } __PACK__;
 } __PACK__ pd_if_args_t;
@@ -90,6 +101,14 @@ typedef struct pd_if_nwsec_upd_args_s {
     if_t            *intf;
     nwsec_profile_t *nwsec_prof;
 } __PACK__ pd_if_nwsec_upd_args_t;
+
+typedef struct pd_if_lif_upd_args_s {
+    if_t            *intf;
+    lif_t           *lif;
+
+    bool            vlan_strip_en_changed;
+    bool            vlan_strip_en;
+} __PACK__ pd_if_lif_upd_args_t;
 
 typedef struct pd_ep_args_s {
     tenant_t        *tenant;
@@ -208,6 +227,13 @@ pd_lif_args_init (pd_lif_args_t *args)
 }
 
 static inline void
+pd_lif_upd_args_init (pd_lif_upd_args_t *args)
+{
+    memset(args, 0, sizeof(pd_lif_upd_args_t));
+    return;
+}
+
+static inline void
 pd_if_args_init (pd_if_args_t *args)
 {
     args->intf = NULL;
@@ -222,6 +248,12 @@ pd_if_nwsec_upd_args_init (pd_if_nwsec_upd_args_t *args)
     return;
 }
 
+static inline void
+pd_if_lif_upd_args_init (pd_if_lif_upd_args_t *args)
+{
+    memset(args, 0, sizeof(pd_if_lif_upd_args_t));
+    return;
+}
 
 static inline void
 pd_ep_args_init (pd_ep_args_t *args)
@@ -328,7 +360,7 @@ hal_ret_t pd_nwsec_profile_make_clone(nwsec_profile_t *nwsec,
                                       nwsec_profile_t *clone);
 
 hal_ret_t pd_lif_create(pd_lif_args_t *lif);
-hal_ret_t pd_lif_update(pd_lif_args_t *lif);
+hal_ret_t pd_lif_update(pd_lif_upd_args_t *lif);
 hal_ret_t pd_lif_delete(pd_lif_args_t *lif);
 hal_ret_t pd_lif_mem_free(pd_lif_args_t *lif);
 hal_ret_t pd_lif_make_clone(lif_t *lif, lif_t *clone);
@@ -337,6 +369,7 @@ hal_ret_t pd_if_create(pd_if_args_t *hal_if);
 hal_ret_t pd_if_update(pd_if_args_t *hal_if);
 hal_ret_t pd_if_delete(pd_if_args_t *hal_if);
 hal_ret_t pd_if_nwsec_update(pd_if_nwsec_upd_args_t *args);
+hal_ret_t pd_if_lif_update(pd_if_lif_upd_args_t *args);
 hal_ret_t pd_if_mem_free(pd_if_args_t *intf);
 hal_ret_t pd_if_make_clone(if_t *hal_if, if_t *clone);
 

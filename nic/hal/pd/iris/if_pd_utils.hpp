@@ -8,6 +8,14 @@
 namespace hal {
 namespace pd {
 
+#define OPER_TYPES(ENTRY)                         \
+    ENTRY(TABLE_OPER_INSERT,    0, "INSERT")      \
+    ENTRY(TABLE_OPER_UPDATE,    1, "UPDATE")      \
+    ENTRY(TABLE_OPER_REMOVE,    2, "REMOVE")
+
+DEFINE_ENUM(table_oper_t, OPER_TYPES)
+#undef OPER_TYPES
+
 // Interface APIs
 bool if_is_cpu_if(if_t *pi_if);
 bool if_is_tunnel_if(if_t *pi_if);

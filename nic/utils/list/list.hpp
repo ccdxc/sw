@@ -72,6 +72,20 @@ dllist_empty (dllist_ctxt_t *head)
     return head->next == head;
 }
 
+// move list from src_head to dst_head
+static inline void
+dllist_move (dllist_ctxt_t *dst_head, dllist_ctxt_t *src_head)
+{
+    if (dst_head == NULL || src_head == NULL) {
+        return;
+    }
+    dst_head->prev = src_head->prev;
+    dst_head->next = src_head->next;
+    src_head->next->prev = dst_head;
+    src_head->prev->next = dst_head;
+    dllist_reset(src_head);
+}
+
 /**
  * dlist_entry - get the struct for this entry
  * @ptr:	the &struct list_head pointer.
@@ -109,6 +123,21 @@ dllist_empty (dllist_ctxt_t *head)
     for (pos = (head)->next, n = pos->next; pos != (head);        \
          pos = n, n = pos->next)
 
+
+static inline uint32_t
+dllist_count (dllist_ctxt_t *head)
+{
+    dllist_ctxt_t   *lnode = NULL;
+    uint32_t        count = 0;
+    if (!head) {
+        return count;
+    }
+    dllist_for_each(lnode, head) {
+        count++;
+    }
+
+    return count;
+}
 
 }    // namespace utils
 }    // namespace hal

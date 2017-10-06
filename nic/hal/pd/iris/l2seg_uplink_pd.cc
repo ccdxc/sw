@@ -37,8 +37,8 @@ pd_add_l2seg_uplink(pd_l2seg_uplink_args_t *args)
 hal_ret_t
 l2seg_uplink_program_hw(pd_l2seg_uplink_args_t *args)
 {
-    hal_ret_t       ret = HAL_RET_OK;
-    nwsec_profile_t      *pi_nwsec = NULL;
+    hal_ret_t           ret = HAL_RET_OK;
+    nwsec_profile_t     *pi_nwsec = NULL;
 
     pi_nwsec = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)args->l2seg);
 

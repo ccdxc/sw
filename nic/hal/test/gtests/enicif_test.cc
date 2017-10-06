@@ -181,6 +181,14 @@ TEST_F(enicif_test, test1)
     hal::hal_cfg_db_close(false);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+    // update lif
+    lif_spec.set_vlan_strip_en(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_update(lif_spec, &lif_rsp);
+    hal::hal_cfg_db_close(false);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+
     // delete enicif
     del_req.mutable_key_or_handle()->set_interface_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

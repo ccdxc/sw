@@ -54,10 +54,23 @@ end:
 // PD Lif Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_lif_update (pd_lif_args_t *args)
+pd_lif_update (pd_lif_upd_args_t *args)
 {
-    // Nothing to do for now
-    return HAL_RET_OK;
+    hal_ret_t           ret = HAL_RET_OK;
+
+    if (args->vlan_strip_en_changed) {
+        HAL_TRACE_DEBUG("pd-lif:{}: vlan_strip_en changed. ", __FUNCTION__);
+
+        // Program output mapping table
+        ret = lif_pd_pgm_output_mapping_tbl((pd_lif_t *)args->lif->pd_lif, 
+                                            args, TABLE_OPER_UPDATE);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-lif:{}:unable to program hw", __FUNCTION__);
+        }
+
+    }
+
+    return ret;
 }
 
 //-----------------------------------------------------------------------------
@@ -114,7 +127,7 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_args_t *args)
         HAL_ASSERT(0);
     }
 
-    HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{} Allocated hw_lif_id:{}", 
+    HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{} allocated hw_lif_id:{}", 
                     __FUNCTION__, 
                     lif_get_lif_id((lif_t *)pd_lif->pi_lif),
                     pd_lif->hw_lif_id);
@@ -252,7 +265,7 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
     hal_ret_t            ret;
 
     // Program output mapping table
-    ret = lif_pd_pgm_output_mapping_tbl(pd_lif);
+    ret = lif_pd_pgm_output_mapping_tbl(pd_lif, NULL, TABLE_OPER_INSERT);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-lif:{}:unable to program hw", __FUNCTION__);
     }
@@ -278,11 +291,23 @@ l2seg_pd_deprogram_hw (pd_lif_t *pd_lif)
 }
 
 // ----------------------------------------------------------------------------
+// Get vlan strip enable
+// ----------------------------------------------------------------------------
+bool
+pd_lif_get_vlan_strip_en (lif_t *lif, pd_lif_upd_args_t *args)
+{
+    if (args && args->vlan_strip_en_changed) {
+        return args->vlan_strip_en;
+    }
+    return lif->vlan_strip_en;
+}
+// ----------------------------------------------------------------------------
 // Program Output Mapping Table
 // ----------------------------------------------------------------------------
 #define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
 hal_ret_t
-lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif)
+lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args, 
+                              table_oper_t oper)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     uint8_t                     tm_oport = 0;
@@ -317,6 +342,8 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif)
     om_tmoport.p4plus_app_id = p4plus_app_id;
     om_tmoport.rdma_enabled = lif_get_enable_rdma((lif_t *)pd_lif->pi_lif);
     om_tmoport.dst_lif = pd_lif->hw_lif_id;
+    om_tmoport.vlan_strip = pd_lif_get_vlan_strip_en((lif_t *)pd_lif->pi_lif, args);
+
 
     // Program OutputMapping table
     //  - Get tmoport from PI
@@ -327,13 +354,34 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif)
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
-    ret = dm_omap->insert_withid(&data, pd_lif->lif_lport_id);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-lif::{}:lif_id:{},unable to program",
-                __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+    if (oper == TABLE_OPER_INSERT) {
+        ret = dm_omap->insert_withid(&data, pd_lif->lif_lport_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-lif::{}:lif_id:{} {} unable to program",
+                          __FUNCTION__, 
+                          lif_get_lif_id((lif_t *)pd_lif->pi_lif),
+                          oper);
+        } else {
+            HAL_TRACE_DEBUG("pd-lif::{}:lif_id:{},{} programmed output "
+                            "mapping at:{}",
+                            __FUNCTION__, 
+                            lif_get_lif_id((lif_t *)pd_lif->pi_lif),
+                            oper, pd_lif->lif_lport_id);
+        }
     } else {
-        HAL_TRACE_DEBUG("pd-lif::{}:lif_id:{},programmed output mapping",
-                __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+        ret = dm_omap->update(pd_lif->lif_lport_id, &data);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-lif::{}:lif_id:{},{} unable to program",
+                          __FUNCTION__, 
+                          lif_get_lif_id((lif_t *)pd_lif->pi_lif),
+                          oper);
+        } else {
+            HAL_TRACE_DEBUG("pd-lif::{}:lif_id:{},{} programmed output "
+                            "mapping at:{}",
+                            __FUNCTION__, 
+                            lif_get_lif_id((lif_t *)pd_lif->pi_lif),
+                            oper, pd_lif->lif_lport_id);
+        }
     }
     return ret;
 }

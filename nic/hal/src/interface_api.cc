@@ -2,6 +2,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/nwsec.hpp"
 #include "nic/include/interface_api.hpp"
+#include "nic/hal/src/lif_manager.hpp"
 
 namespace hal {
 
@@ -260,6 +261,22 @@ if_enicif_get_ipsg_en(if_t *pi_if)
     }
 
     return pi_nwsec->ipsg_en;
+}
+
+// ----------------------------------------------------------------------------
+// Returns hwlif id
+// ----------------------------------------------------------------------------
+uint32_t
+if_allocate_hwlif_id()
+{
+    int32_t hw_lif_id = -1;
+
+    hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
+    if (hw_lif_id < 0) {
+        HAL_TRACE_ERR("Failed to allocate hw_lif_id : {}", hw_lif_id);
+        return INVALID_INDEXER_INDEX;
+    }
+    return (uint32_t)hw_lif_id;
 }
 
 // ----------------------------------------------------------------------------

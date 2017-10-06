@@ -8,8 +8,8 @@
 #include "nic/utils/ht/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/proto/hal/interface.pb.h"
-#include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/lif.hpp"
 
 using hal::utils::ht_ctxt_t;
@@ -50,7 +50,6 @@ using intf::SetQStateResponseMsg;
 namespace hal {
 
 typedef uint64_t if_id_t;
-typedef struct l2seg_s l2seg_t;
 
 // Interface strucutre
 typedef struct if_s {
@@ -112,7 +111,8 @@ typedef struct if_s {
 } __PACK__ if_t;
 
 typedef struct if_create_app_ctxt_s {
-    l2seg_t    *l2seg;                                 // valid only for enic if
+    l2seg_t    *l2seg;                                 // valid for enic if
+    lif_t      *lif;                                   // valid for enic if 
 } __PACK__ if_create_app_ctxt_t;
 
 typedef struct if_update_app_ctxt_s {
@@ -128,6 +128,20 @@ typedef struct if_update_app_ctxt_s {
 
 // max. number of interfaces supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_INTERFACES                           2048
+
+static inline void 
+if_lock(if_t *hal_if)
+{
+    HAL_TRACE_DEBUG("{}:locking if:{}", __FUNCTION__, hal_if->if_id);
+    HAL_SPINLOCK_LOCK(&hal_if->slock);
+}
+
+static inline void 
+if_unlock(if_t *hal_if)
+{
+    HAL_TRACE_DEBUG("{}:unlocking if:{}", __FUNCTION__, hal_if->if_id);
+    HAL_SPINLOCK_UNLOCK(&hal_if->slock);
+}
 
 // allocate a interface instance
 static inline if_t *

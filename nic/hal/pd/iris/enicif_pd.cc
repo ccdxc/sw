@@ -1,6 +1,6 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "nic/include/pd_api.hpp"
+#include "nic/hal/pd/common/pd_api.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/include/l2segment_api.hpp"
 #include "nic/proto/hal/interface.pb.h"
@@ -297,7 +297,29 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
     ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, pi_nwsec);
 
     // Program Output Mapping 
-    ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif);
+    ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, NULL,
+                                              TABLE_OPER_INSERT);
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Enic reprogramming because of lif params change
+// ----------------------------------------------------------------------------
+hal_ret_t 
+pd_enicif_lif_update(pd_if_lif_upd_args_t *args)
+{
+    hal_ret_t            ret = HAL_RET_OK;; 
+    pd_enicif_t          *pd_enicif;
+
+    HAL_TRACE_DEBUG("pd-enicif:{}: updating lif params for enicif: {}", 
+                    __FUNCTION__, if_get_if_id(args->intf));
+
+    pd_enicif = (pd_enicif_t *)args->intf->pd_if;
+
+    // Program Output Mapping 
+    ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, args, 
+                                              TABLE_OPER_UPDATE);
 
     return ret;
 }
@@ -307,7 +329,9 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
 // ----------------------------------------------------------------------------
 #define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
 hal_ret_t
-pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif)
+pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif, 
+                                    pd_if_lif_upd_args_t *lif_upd,
+                                    table_oper_t oper)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     uint8_t                     tm_oport = 0;
@@ -333,17 +357,40 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif)
     om_tmoport.rdma_enabled = lif_get_enable_rdma((lif_t *)pd_lif->pi_lif);
     om_tmoport.encap_vlan_id_valid = 1;
     om_tmoport.encap_vlan_id = if_get_encap_vlan((if_t *)pd_enicif->pi_if);
+    om_tmoport.vlan_strip = pd_enicif_get_vlan_strip((lif_t *)pd_lif->pi_lif,
+                                                     lif_upd);
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
-    ret = dm_omap->insert_withid(&data, pd_enicif->enic_lport_id);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-enicif::{}: lif_id:{} unable to program",
-                __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+    if (oper == TABLE_OPER_INSERT) {
+        ret = dm_omap->insert_withid(&data, pd_enicif->enic_lport_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-enicif::{}:if_id:{} {} unable to program",
+                          __FUNCTION__, 
+                          ((if_t*)pd_enicif->pi_if)->if_id,
+                          oper);
+        } else {
+            HAL_TRACE_DEBUG("pd-enicif:{}: lif_id:{} {} programmed output "
+                            "mapping at:{}",
+                            __FUNCTION__, 
+                            ((if_t*)pd_enicif->pi_if)->if_id,
+                            oper, pd_enicif->enic_lport_id);
+        }
     } else {
-        HAL_TRACE_DEBUG("pd-enicif:{}: lif_id:{} Success",
-                __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+        ret = dm_omap->update(pd_enicif->enic_lport_id, &data);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-enicif::{}:if_id:{} {} unable to program",
+                          __FUNCTION__, 
+                          ((if_t*)pd_enicif->pi_if)->if_id,
+                          oper);
+        } else {
+            HAL_TRACE_DEBUG("pd-enicif:{}: lif_id:{} {} programmed output "
+                            "mapping at:{}",
+                            __FUNCTION__, 
+                            ((if_t*)pd_enicif->pi_if)->if_id,
+                            oper, pd_enicif->enic_lport_id);
+        }
     }
     return ret;
 }
@@ -403,29 +450,6 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, nwsec_profile_t *nws
     memset(mask.ethernet_srcAddr_mask, ~0, sizeof(mask.ethernet_srcAddr_mask));
 
     pd_enicif_inp_prop_form_data(pd_enicif, nwsec_prof, data, true);
-#if 0
-    pd_l2seg = (pd_l2seg_t *)if_enicif_get_pd_l2seg((if_t*)pd_enicif->pi_if);
-    HAL_ASSERT_RETURN((pd_l2seg != NULL), HAL_RET_ERR);
-    data.actionid = INPUT_PROPERTIES_MAC_VLAN_INPUT_PROPERTIES_MAC_VLAN_ID;
-    inp_prop_mac_vlan_data.vrf = pd_l2seg->l2seg_ten_hw_id;
-    inp_prop_mac_vlan_data.dir = FLOW_DIR_FROM_ENIC;
-    // inp_prop_mac_vlan_data.ipsg_enable = if_enicif_get_ipsg_en((if_t *)pd_enicif->pi_if);
-    inp_prop_mac_vlan_data.ipsg_enable = nwsec_prof ? nwsec_prof->ipsg_en : 0;
-    inp_prop_mac_vlan_data.src_lif_check_en = 0; // Enabled only for Deja-vu entry
-    inp_prop_mac_vlan_data.src_lif = 0;
-    // inp_prop_mac_vlan_data.l4_profile_idx = pd_enicif_get_l4_prof_idx(pd_enicif);
-    inp_prop_mac_vlan_data.l4_profile_idx = nwsec_get_nwsec_prof_hw_id(nwsec_prof);
-    inp_prop_mac_vlan_data.src_lport = pd_enicif->enic_lport_id;
-#endif
-
-    // TODO: Fill these fields eventually
-#if 0
-    inp_prop_mac_vlan_data.flow_miss_action    
-    inp_prop_mac_vlan_data.flow_miss_idx    
-    inp_prop_mac_vlan_data.dscp    
-    inp_prop_mac_vlan_data.dst_lif    
-    inp_prop_mac_vlan_data.filter    
-#endif
 
     ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
                                         &(pd_enicif->inp_prop_mac_vlan_idx_host));
@@ -618,6 +642,15 @@ pd_enicif_get_pd_lif(pd_enicif_t *pd_enicif)
     HAL_ASSERT(pi_lif != NULL);
 
     return pd_lif;
+}
+
+bool
+pd_enicif_get_vlan_strip (lif_t *lif, pd_if_lif_upd_args_t *lif_upd)
+{
+    if (lif_upd && lif_upd->vlan_strip_en_changed) {
+        return lif_upd->vlan_strip_en;
+    }
+    return lif->vlan_strip_en;
 }
 
 }    // namespace pd

@@ -39,6 +39,7 @@ bool is_l2seg_native(l2seg_t *l2seg, if_t *pi_if);
 lif_t *if_get_lif(if_t *pi_if);
 hal_ret_t if_l2seg_get_encap(if_t *pi_if, l2seg_t *pi_l2seg, 
                                      uint8_t *vlan_v, uint16_t *vlan_id);
+uint32_t if_allocate_hwlif_id();
 
 // Interface APIs for EnicIf
 intf::IfEnicType if_get_enicif_type(if_t *pi_if);

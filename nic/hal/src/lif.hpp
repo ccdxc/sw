@@ -24,6 +24,7 @@ using hal::utils::bitmap;
 namespace hal {
 
 typedef uint32_t lif_id_t;
+// typedef struct if_s if_t;
 
 // LIF structure
 // TODO: capture Q information etc.
@@ -41,7 +42,7 @@ typedef struct lif_s {
     // operational state of interface
     hal_handle_t        hal_handle;                  // HAL allocated handle
 
-    // dllist_ctxt_t       if_list_head;                // interfaces behind this lif
+    dllist_ctxt_t       if_list_head;                // interfaces(enics) behind this lif
 
     void                *pd_lif;
 } __PACK__ lif_t;
@@ -59,12 +60,28 @@ typedef struct lif_create_app_ctxt_s {
 } __PACK__ lif_create_app_ctxt_t;
 
 typedef struct lif_update_app_ctxt_s {
-    lif_t               *lif;
     LifSpec             *spec;
     LifResponse         *rsp;
+
+    bool                vlan_strip_en_changed;
+    bool                vlan_strip_en;
 } __PACK__ lif_update_app_ctxt_t;
 
 #define HAL_MAX_LIFS                                 1024
+
+static inline void 
+lif_lock(lif_t *lif)
+{
+    HAL_TRACE_DEBUG("{}:locking lif:{}", __FUNCTION__, lif->lif_id);
+    HAL_SPINLOCK_LOCK(&lif->slock);
+}
+
+static inline void 
+lif_unlock(lif_t *lif)
+{
+    HAL_TRACE_DEBUG("{}:unlocking lif:{}", __FUNCTION__, lif->lif_id);
+    HAL_SPINLOCK_UNLOCK(&lif->slock);
+}
 
 // allocate a LIF instance
 static inline lif_t *
@@ -92,7 +109,7 @@ lif_init (lif_t *lif)
     lif->hal_handle = HAL_HANDLE_INVALID;
 
     // initialize meta information
-    // utils::dllist_reset(&lif->if_list_head);
+    utils::dllist_reset(&lif->if_list_head);
 
     return lif;
 }
@@ -141,10 +158,13 @@ find_lif_by_handle (hal_handle_t handle)
 extern void *lif_id_get_key_func(void *entry);
 extern uint32_t lif_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool lif_id_compare_key_func(void *key1, void *key2);
+hal_ret_t lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en);
+void lif_print_ifs(lif_t *lif);
 
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);
 
+// SVC APIs
 hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp, 
                      lif_hal_info_t *lif_hal_info);
 hal_ret_t lif_update(LifSpec& spec, LifResponse *rsp);

@@ -1019,11 +1019,12 @@ l2seg_add_if (l2seg_t *l2seg, if_t *hal_if)
     }
     entry->handle_id = hal_if->hal_handle;
 
+    l2seg_lock(l2seg);      // lock
     // Insert into the list
     utils::dllist_add(&l2seg->if_list_head, &entry->dllist_ctxt);
+    l2seg_unlock(l2seg);    // unlock
 
 end:
-    // TODO: Increment the ref count of l2seg
     HAL_TRACE_DEBUG("pi-l2seg:{}:add if:{} to l2seg:{}, ret:{}",
                     __FUNCTION__, hal_if->if_id, l2seg->seg_id, ret);
     return ret;
@@ -1040,6 +1041,7 @@ l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
     dllist_ctxt_t               *curr, *next;
 
 
+    l2seg_lock(l2seg);      // lock
     dllist_for_each_safe(curr, next, &l2seg->if_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == hal_if->hal_handle) {
@@ -1051,8 +1053,8 @@ l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
             ret = HAL_RET_OK;
         }
     }
+    l2seg_unlock(l2seg);    // unlock
 
-    // TODO: Decrement the ref count of l2seg
     HAL_TRACE_DEBUG("pi-l2seg:{}:del if:{} to l2seg:{}, ret:{}",
                     __FUNCTION__, hal_if->if_id, l2seg->seg_id, ret);
     return ret;

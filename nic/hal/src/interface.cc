@@ -255,7 +255,7 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *hal_if = NULL;
-    // if_create_app_ctxt_t        *app_ctxt = NULL; 
+    if_create_app_ctxt_t        *app_ctxt = NULL; 
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-if:{}: invalid cfg_ctxt", __FUNCTION__);
@@ -265,7 +265,7 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    // app_ctxt = (if_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt = (if_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     hal_if = (if_t *)dhl_entry->obj;
 
@@ -275,6 +275,7 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     pd::pd_if_args_init(&pd_if_args);
     pd_if_args.intf = hal_if;
+    pd_if_args.lif = app_ctxt->lif;
     ret = pd::pd_if_create(&pd_if_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-if:{}:failed to create if pd, err : {}", 
@@ -316,7 +317,7 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, hal_if->if_id);
 
 
-    // 1. a. Add to if id hash table
+    // Add to if id hash table
     ret = if_add_to_db(hal_if, hal_handle);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-if:{}:failed to add if {} to db, err : {}", 
@@ -324,9 +325,14 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    // If its enic, add to l2seg
+    // If its enic, add to l2seg and lif
     if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+        // add to l2seg
         ret = l2seg_add_if(app_ctxt->l2seg, hal_if);
+        HAL_ABORT(ret == HAL_RET_OK);
+
+        // add to lif
+        ret = lif_add_if(app_ctxt->lif, hal_if);
         HAL_ABORT(ret == HAL_RET_OK);
 
         // Add to bcast list
@@ -456,6 +462,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     l2seg_t                     *l2seg = NULL;
+    lif_t                       *lif = NULL;
     if_t                        *hal_if = NULL, *hal_if1 = NULL;
     if_create_app_ctxt_t        app_ctxt = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
@@ -483,7 +490,6 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
         return HAL_RET_ENTRY_EXISTS;
     }
-    HAL_TRACE_DEBUG("pi-if:{}:Done validating", __FUNCTION__);
 
     // allocate and initialize interface instance
     hal_if = if_alloc_init();
@@ -493,8 +499,6 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
         return HAL_RET_OOM;
     }
-    HAL_TRACE_DEBUG("pi-if:{}:Done allocating.", __FUNCTION__);
-    printf("allocated hal_if:%p\n", hal_if);
 
     // consume the config
     hal_if->if_id = spec.key_or_handle().interface_id();
@@ -509,7 +513,10 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
             goto end;
         }
 
+        lif = find_lif_by_handle(hal_if->lif_handle);
+        HAL_ASSERT(lif != NULL);
         l2seg = find_l2seg_by_handle(hal_if->l2seg_handle);
+        HAL_ASSERT(l2seg != NULL);
         break;
 
     case intf::IF_TYPE_UPLINK:
@@ -565,6 +572,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 
     // form ctxt and call infra add
     app_ctxt.l2seg = l2seg;
+    app_ctxt.lif = lif;
     dhl_entry.handle = hal_if->hal_handle;
     dhl_entry.obj = hal_if;
     cfg_ctxt.app_ctxt = &app_ctxt;
@@ -1569,6 +1577,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *intf = NULL;
     l2seg_t                     *l2seg = NULL;
+    lif_t                       *lif = NULL;
     hal_handle_t                hal_handle = 0;
     oif_t                       oif = { 0 };
 
@@ -1587,12 +1596,21 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("pi-if:{}:delete commit CB {}",
                     __FUNCTION__, intf->if_id);
 
-    // Remove from l2seg
     if (intf->if_type == intf::IF_TYPE_ENIC) {
+        // Remove from l2seg
         l2seg = find_l2seg_by_handle(intf->l2seg_handle);
         ret = l2seg_del_if(l2seg, intf);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-enicif:{}:unable to remove if from l2seg",
+                          __FUNCTION__);
+            goto end;
+        }
+
+        // Remove from lif
+        lif = find_lif_by_handle(intf->lif_handle);
+        ret = lif_del_if(lif, intf);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pi-enicif:{}:unable to remove if from lif",
                           __FUNCTION__);
             goto end;
         }
@@ -1796,8 +1814,28 @@ end:
     return ret;
 }
 
+hal_ret_t
+if_handle_lif_update (pd::pd_if_lif_upd_args_t *args)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
 
+    if (args == NULL) {
+        HAL_TRACE_ERR("{}:args is NULL", __FUNCTION__);
+        return HAL_RET_INVALID_ARG;
+    }
 
+    HAL_TRACE_DEBUG("{}: if_id: {}", __FUNCTION__, args->intf->if_id);
+
+    ret = pd::pd_if_lif_update(args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: PD call for lif update on if failed. ret: {}", 
+                __FUNCTION__, ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
 
 
 }    // namespace hal
