@@ -29,22 +29,9 @@ set_tm_oport:
   sub         r7, 28, r7, 2
   srlv        r6, d.{u.set_tm_oport_d.egress_port1...u.set_tm_oport_d.egress_port8}, r7
   phvwr       p.capri_intrinsic_tm_oport, r6
-  seq         c1, d.u.set_tm_oport_d.encap_vlan_id_valid, TRUE
+  phvwr       p.control_metadata_vlan_strip, d.u.set_tm_oport_d.vlan_strip
+  seq.e       c1, d.u.set_tm_oport_d.encap_vlan_id_valid, TRUE
   phvwr.c1    p.rewrite_metadata_tunnel_vnid, d.u.set_tm_oport_d.encap_vlan_id
-  seq         c1, d.u.set_tm_oport_d.vlan_strip, TRUE
-  nop.!c1.e
-  seq         c1, k.vlan_tag_valid, TRUE
-  nop.!c1.e
-  or          r1, k.p4_to_p4plus_classic_nic_flags, CLASSIC_NIC_FLAGS_VLAN_VALID
-  phvwr       p.ethernet_etherType, k.vlan_tag_etherType
-  phvwr       p.p4_to_p4plus_classic_nic_vlan_pcp, k.vlan_tag_pcp
-  phvwr       p.p4_to_p4plus_classic_nic_vlan_dei, k.vlan_tag_dei
-  phvwr       p.p4_to_p4plus_classic_nic_vlan_vid, \
-                  k.{vlan_tag_vid_sbit0_ebit3, vlan_tag_vid_sbit4_ebit11}
-  sub         r7, k.control_metadata_packet_len, 4
-  phvwr       p.control_metadata_packet_len, r7
-  phvwr.e     p.vlan_tag_valid, FALSE
-  phvwr       p.p4_to_p4plus_classic_nic_flags, r1
 
 .align
 redirect_to_cpu:

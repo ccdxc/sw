@@ -45,8 +45,19 @@ action p4plus_app_classic_nic() {
     add_header(p4_to_p4plus_classic_nic);
     modify_field(p4_to_p4plus_classic_nic.p4plus_app_id,
                  control_metadata.p4plus_app_id);
-
     modify_field(scratch_metadata.classic_nic_flags, CLASSIC_NIC_FLAGS_FCS_OK);
+
+    if ((control_metadata.vlan_strip == TRUE) and (vlan_tag.valid == TRUE)) {
+        modify_field(ethernet.etherType, vlan_tag.etherType);
+        modify_field(p4_to_p4plus_classic_nic.vlan_pcp, vlan_tag.pcp);
+        modify_field(p4_to_p4plus_classic_nic.vlan_dei, vlan_tag.dei);
+        modify_field(p4_to_p4plus_classic_nic.vlan_vid, vlan_tag.vid);
+        bit_or(p4_to_p4plus_classic_nic.flags, p4_to_p4plus_classic_nic.flags,
+               CLASSIC_NIC_FLAGS_VLAN_VALID);
+        remove_header(vlan_tag);
+        subtract(control_metadata.packet_len, control_metadata.packet_len, 4);
+    }
+
     if ((inner_ipv4.valid == TRUE) or (inner_ipv6.valid == TRUE)) {
         add_header(p4_to_p4plus_classic_nic_inner_ip);
         if (inner_ipv4.valid == TRUE) {

@@ -46,21 +46,6 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
                      rewrite_metadata.entropy_hash);
     }
 
-    if (vlan_strip == TRUE) {
-        if (vlan_tag.valid == TRUE) {
-            modify_field(ethernet.etherType, vlan_tag.etherType);
-            modify_field(p4_to_p4plus_classic_nic.vlan_pcp, vlan_tag.pcp);
-            modify_field(p4_to_p4plus_classic_nic.vlan_dei, vlan_tag.dei);
-            modify_field(p4_to_p4plus_classic_nic.vlan_vid, vlan_tag.vid);
-            bit_or(p4_to_p4plus_classic_nic.flags,
-                   p4_to_p4plus_classic_nic.flags,
-                   CLASSIC_NIC_FLAGS_VLAN_VALID);
-            remove_header(vlan_tag);
-            subtract(control_metadata.packet_len,
-                     control_metadata.packet_len, 4);
-        }
-    }
-
     if (egress_mirror_en == TRUE) {
         modify_field(capri_intrinsic.tm_span_session,
                      control_metadata.egress_mirror_session_id);
@@ -72,9 +57,9 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
     }
     modify_field(control_metadata.rdma_enabled, rdma_enabled);
     modify_field(control_metadata.p4plus_app_id, p4plus_app_id);
+    modify_field(control_metadata.vlan_strip, vlan_strip);
 
     // dummy ops to keep compiler happy
-    modify_field(scratch_metadata.vlan_strip, vlan_strip);
     modify_field(scratch_metadata.egress_port, egress_port1);
     modify_field(scratch_metadata.egress_port, egress_port2);
     modify_field(scratch_metadata.egress_port, egress_port3);

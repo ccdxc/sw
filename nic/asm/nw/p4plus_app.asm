@@ -14,11 +14,25 @@ nop:
 
 .align
 p4plus_app_classic_nic:
+  // r7 : packet_len
+  // r1 : flags
+  add         r7, r0, k.control_metadata_packet_len
+  seq         c1, k.control_metadata_vlan_strip, TRUE
+  seq         c2, k.vlan_tag_valid, TRUE
+  bcf         [!c1 | !c2], p4plus_app_classic_nic_no_vlan_strip
+  or          r1, r0, CLASSIC_NIC_FLAGS_FCS_OK
+  or          r1, r1, CLASSIC_NIC_FLAGS_VLAN_VALID
+  phvwr       p.ethernet_etherType, k.vlan_tag_etherType
+  phvwr       p.{p4_to_p4plus_classic_nic_vlan_pcp...p4_to_p4plus_classic_nic_vlan_vid}, \
+                  k.{vlan_tag_pcp...vlan_tag_vid_sbit4_ebit11}
+  phvwr       p.vlan_tag_valid, FALSE
+  sub         r7, r7, 4
+
+p4plus_app_classic_nic_no_vlan_strip:
   seq         c1, k.inner_ipv4_valid, TRUE
   seq         c2, k.inner_ipv6_valid, TRUE
   setcf       c3, [c1|c2]
   bcf         [!c3], p4plus_app_classic_nic_native
-  or          r1, k.p4_to_p4plus_classic_nic_flags, CLASSIC_NIC_FLAGS_FCS_OK
 
   phvwr.c1    p.p4_to_p4plus_classic_nic_ip_proto, k.inner_ipv4_protocol
   or.c1       r1, r1, CLASSIC_NIC_FLAGS_IPV4_VALID
@@ -64,7 +78,7 @@ p4plus_app_classic_nic_common:
   phvwr       p.p4_to_p4plus_classic_nic_flags, r1
   phvwr       p.p4_to_p4plus_classic_nic_valid, TRUE
   phvwr       p.p4_to_p4plus_classic_nic_p4plus_app_id, k.control_metadata_p4plus_app_id
-  phvwr       p.p4_to_p4plus_classic_nic_packet_len, k.control_metadata_packet_len
+  phvwr       p.p4_to_p4plus_classic_nic_packet_len, r7
   phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
@@ -159,7 +173,7 @@ p4plus_app_ipsec:
   seq         c1, k.vlan_tag_valid, TRUE
   cmov        r6, c1, 18, 14
   phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_start, r6
-  or          r1, k.ipv4_totalLen, r0
+  or          r1, k.ipv4_totalLen_sbit8_ebit15, k.ipv4_totalLen_sbit0_ebit7, 8
   add         r3, r6, r1
   phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_end, r3
   phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
