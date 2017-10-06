@@ -16,4 +16,6 @@ import (
 	_ "github.com/pensando/sw/api/generated/network/grpc/server"
 	// blank import to pull in networkencryption service into api server
 	_ "github.com/pensando/sw/api/generated/networkencryption/grpc/server"
+	// blank import to pull in telemetry service into api server
+	_ "github.com/pensando/sw/api/generated/telemetry/grpc/server"
 )

@@ -1,0 +1,1269 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Service name",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/{O.Tenant}/collectionPolicy": {
+      "post": {
+        "operationId": "AutoAddCollectionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryCollectionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetryCollectionPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "CollectionPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/collectionPolicy/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetCollectionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryCollectionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Attributes",
+            "description": "UserName is the login id to be used towards the external entity.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.MonitoringPolicies",
+            "description": "Export Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "CollectionPolicyV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteCollectionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryCollectionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CollectionPolicyV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateCollectionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryCollectionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetryCollectionPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "CollectionPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/exportPolicy": {
+      "post": {
+        "operationId": "AutoAddExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryExportPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetryExportPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "ExportPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/exportPolicy/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryExportPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.ExportInterval",
+            "description": "Attributes are a set of field names that needs to be collected\nUser is expected to define a set of parameters to be collected as templates that\nare attached to specific workloads, etc. e.g. user may want to collect smaller set\nof parameters on normal basis except for certain critical traffic.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Format",
+            "description": "Collection Trigger specifies start or stop triggers for data collection.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.CollectorIpAddress",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.CollectorPort",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Credentials.UserName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Credentials.Password",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Credentials.BearerToken",
+            "description": "Spec contains the configuration of the collection policy.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Credentials.CertData",
+            "description": "Status contains the current state of the collection policy.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "Spec.Credentials.KeyData",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "Spec.Credentials.CaData",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "Status.MonitoringPolicies",
+            "description": "list of monitoring policies that refer to this collection policy.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "ExportPolicyV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryExportPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ExportPolicyV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateExportPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryExportPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetryExportPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "ExportPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/monitoringPolicy": {
+      "post": {
+        "operationId": "AutoAddMonitoringPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryMonitoringPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetryMonitoringPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/monitoringPolicy/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetMonitoringPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryMonitoringPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.Area",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.CollectionPolicy",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.RetentionPolicy",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.ExportPolicies",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.Workloads",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringPolicyV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteMonitoringPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryMonitoringPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MonitoringPolicyV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateMonitoringPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryMonitoringPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetryMonitoringPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "MonitoringPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/retentionPolicy": {
+      "post": {
+        "operationId": "AutoAddRetentionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryRetentionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetryRetentionPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "RetentionPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/retentionPolicy/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetRetentionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryRetentionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.CompactionInterval",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.CompactionMethod",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.MaxRetentionTime",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.MonitoringPolicies",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "RetentionPolicyV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteRetentionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryRetentionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "RetentionPolicyV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateRetentionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetryRetentionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetryRetentionPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "RetentionPolicyV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiListMeta": {
+      "type": "object",
+      "properties": {
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version of object store at the time of list generation."
+        }
+      },
+      "description": "ListMeta contains the metadata for list of objects."
+    },
+    "apiListWatchOptions": {
+      "type": "object",
+      "properties": {
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "LabelSelector": {
+          "type": "string"
+        },
+        "FieldSelector": {
+          "type": "string"
+        },
+        "PrefixWatch": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "Tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "Namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "UUID": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "APIVersion": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "telemetryAutoMsgCollectionPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "title": "Area describes an area for which the monitoring policy is specified"
+        },
+        "Object": {
+          "$ref": "#/definitions/telemetryCollectionPolicy",
+          "title": "object selector for the service (list of object kind/namespace/instance to match)\nTBD: this would need to be replaced by a generic definition of an object selector"
+        }
+      }
+    },
+    "telemetryAutoMsgExportPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "title": "list of workloads to be monitored for the policy"
+        },
+        "Object": {
+          "$ref": "#/definitions/telemetryExportPolicy"
+        }
+      }
+    },
+    "telemetryAutoMsgMonitoringPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/telemetryMonitoringPolicy"
+        }
+      }
+    },
+    "telemetryAutoMsgRetentionPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "title": "Compaction Interval is the time in minutes, hours or days before compaction starts on the data\nCompaction results into data granularity loss, therefore this period is kept to be as high as space permits\nfor how much data is being collected"
+        },
+        "Object": {
+          "$ref": "#/definitions/telemetryRetentionPolicy",
+          "title": "Compaction Method specifies the method to be used for aggregation i.e. 'linear', 'exponential'\nWhen compaction method is is unspecified system defaults to exponential aggregation over the period of time"
+        }
+      }
+    },
+    "telemetryCollectionPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "list of monitoring policies that refer to this collection policy"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/telemetryCollectionPolicySpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/telemetryCollectionPolicyStatus"
+        }
+      }
+    },
+    "telemetryCollectionPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/telemetryCollectionPolicy"
+          },
+          "description": "Spec contains the configuration of the retention policy."
+        }
+      }
+    },
+    "telemetryCollectionPolicySpec": {
+      "type": "object",
+      "properties": {
+        "Attributes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "UserName is the login id to be used towards the external entity"
+        },
+        "Triggers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/telemetryCollectionTrigger"
+          },
+          "title": "Password is one time specified, not visibile on read operations\nOnly valid when UserName is defined\nTBD: need to add (venice.secret) = \"true\" support for this"
+        }
+      },
+      "title": "------------------------ ExternalCred Object ----------------------------\nExternalCred defines credentails required to access an external entity, such as\na stats collector, compute orchestration entity, or a syslog server.\nExternal entity may support a variety of methods, like username/password,\nTLS Client authentication, or Bearer Token based authentication. User is\nexpected to configure one of the methods"
+    },
+    "telemetryCollectionPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "MonitoringPolicies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Export Interval defines how often to push the records to an external or internal collector\nThe value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'"
+        }
+      }
+    },
+    "telemetryCollectionTrigger": {
+      "type": "object",
+      "properties": {
+        "ConditionalTrigger": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "list of monitoring policies that refer to this collection policy"
+        },
+        "TimeTrigger": {
+          "type": "string"
+        }
+      }
+    },
+    "telemetryExportPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/telemetryExportPolicySpec",
+          "description": "Spec contains the configuration of the export policy."
+        },
+        "Status": {
+          "$ref": "#/definitions/telemetryExportPolicyStatus",
+          "description": "Status contains the current state of the export policy."
+        }
+      }
+    },
+    "telemetryExportPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "ConditionalTrigger allows start data collection when count exceeds\nIf the trigger is not met, the collection is discarded\nIt is a map of attribute (string name of the field) to a condition \"\u003e 2000\" or \"== true\", etc.\ndependng on the type of the field"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta",
+          "title": "TimeTrigger specifies the time when data should be collected, text strings as\n\"7pm\", \"8am-12am\", etc. format TBD"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/telemetryExportPolicy"
+          }
+        }
+      },
+      "title": "Specifies start or stop triggers for collecting data"
+    },
+    "telemetryExportPolicySpec": {
+      "type": "object",
+      "properties": {
+        "ExportInterval": {
+          "type": "string",
+          "title": "Attributes are a set of field names that needs to be collected\nUser is expected to define a set of parameters to be collected as templates that\nare attached to specific workloads, etc. e.g. user may want to collect smaller set\nof parameters on normal basis except for certain critical traffic"
+        },
+        "Format": {
+          "type": "string",
+          "title": "Collection Trigger specifies start or stop triggers for data collection"
+        },
+        "CollectorIpAddress": {
+          "type": "string"
+        },
+        "CollectorPort": {
+          "type": "string"
+        },
+        "Credentials": {
+          "$ref": "#/definitions/telemetryExternalCred"
+        }
+      }
+    },
+    "telemetryExportPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "MonitoringPolicies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "list of monitoring policies that refer to this collection policy"
+        }
+      }
+    },
+    "telemetryExternalCred": {
+      "type": "object",
+      "properties": {
+        "UserName": {
+          "type": "string"
+        },
+        "Password": {
+          "type": "string"
+        },
+        "BearerToken": {
+          "type": "string",
+          "description": "Spec contains the configuration of the collection policy."
+        },
+        "CertData": {
+          "type": "string",
+          "format": "byte",
+          "description": "Status contains the current state of the collection policy."
+        },
+        "KeyData": {
+          "type": "string",
+          "format": "byte"
+        },
+        "CaData": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "telemetryMonitoringPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/telemetryMonitoringPolicySpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/telemetryMonitoringPolicyStatus"
+        }
+      }
+    },
+    "telemetryMonitoringPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/telemetryMonitoringPolicy"
+          }
+        }
+      }
+    },
+    "telemetryMonitoringPolicySpec": {
+      "type": "object",
+      "properties": {
+        "Area": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ObjectSelector": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "CollectionPolicy": {
+          "type": "string"
+        },
+        "RetentionPolicy": {
+          "type": "string"
+        },
+        "ExportPolicies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "telemetryMonitoringPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "Workloads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "telemetryRetentionPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/telemetryRetentionPolicySpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/telemetryRetentionPolicyStatus"
+        }
+      }
+    },
+    "telemetryRetentionPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/telemetryRetentionPolicy"
+          }
+        }
+      }
+    },
+    "telemetryRetentionPolicySpec": {
+      "type": "object",
+      "properties": {
+        "CompactionInterval": {
+          "type": "string"
+        },
+        "CompactionMethod": {
+          "type": "string"
+        },
+        "MaxRetentionTime": {
+          "type": "string"
+        }
+      }
+    },
+    "telemetryRetentionPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "MonitoringPolicies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

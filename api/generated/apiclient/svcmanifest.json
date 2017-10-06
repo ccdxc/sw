@@ -105,5 +105,36 @@
     "Files": [
       "protos/networkencryption.proto"
     ]
+  },
+  "telemetry": {
+    "Svcs": {
+      "CollectionPolicyV1": {
+        "Version": "v1",
+        "Messages": [
+          "CollectionPolicy"
+        ]
+      },
+      "ExportPolicyV1": {
+        "Version": "v1",
+        "Messages": [
+          "ExportPolicy"
+        ]
+      },
+      "MonitoringPolicyV1": {
+        "Version": "v1",
+        "Messages": [
+          "MonitoringPolicy"
+        ]
+      },
+      "RetentionPolicyV1": {
+        "Version": "v1",
+        "Messages": [
+          "RetentionPolicy"
+        ]
+      }
+    },
+    "Files": [
+      "protos/telemetry.proto"
+    ]
   }
 }
