@@ -126,6 +126,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->header_len = spec.header_len();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
+    tcpcb->pending_ack_send = spec.pending_ack_send();
     tcpcb->state = spec.state();
     tcpcb->source_lif = spec.source_lif();
     
@@ -170,6 +171,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
 
     tcpcb = find_tcpcb_by_id(kh.tcpcb_id());
     if (tcpcb == NULL) {
+        HAL_TRACE_DEBUG("tcpcb_update cb not found: 0x{0:x}", kh.tcpcb_id());
         rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
         return HAL_RET_TCP_CB_NOT_FOUND;
     }
@@ -188,11 +190,12 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_mss = spec.rcv_mss();
     tcpcb->source_port = spec.source_port();
     tcpcb->dest_port = spec.dest_port();
+    tcpcb->state = spec.state();
+    tcpcb->source_lif = spec.source_lif();
+    tcpcb->pending_ack_send = spec.pending_ack_send();
     tcpcb->header_len = spec.header_len();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
-    tcpcb->state = spec.state();
-    tcpcb->source_lif = spec.source_lif();
     pd_tcpcb_args.tcpcb = tcpcb;
     
     ret = pd::pd_tcpcb_update(&pd_tcpcb_args);
@@ -245,16 +248,31 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     rsp->mutable_spec()->mutable_key_or_handle()->set_tcpcb_id(rtcpcb.cb_id);
     rsp->mutable_spec()->set_rcv_nxt(rtcpcb.rcv_nxt);
     rsp->mutable_spec()->set_snd_nxt(rtcpcb.snd_nxt);
-    rsp->mutable_spec()->set_debug_dol(rtcpcb.debug_dol);
-    rsp->mutable_spec()->set_debug_dol_tx(rtcpcb.debug_dol_tx);
+    rsp->mutable_spec()->set_snd_una(rtcpcb.snd_una);
+    rsp->mutable_spec()->set_rcv_tsval(rtcpcb.rcv_tsval);
+    rsp->mutable_spec()->set_ts_recent(rtcpcb.ts_recent);
     rsp->mutable_spec()->set_serq_base(rtcpcb.serq_base);
-    rsp->mutable_spec()->set_sesq_base(rtcpcb.sesq_base);
+    rsp->mutable_spec()->set_debug_dol(rtcpcb.debug_dol);
     rsp->mutable_spec()->set_sesq_pi(rtcpcb.sesq_pi);
     rsp->mutable_spec()->set_sesq_ci(rtcpcb.sesq_ci);
-    rsp->mutable_spec()->set_asesq_base(rtcpcb.asesq_base);
+    rsp->mutable_spec()->set_sesq_base(rtcpcb.sesq_base);
     rsp->mutable_spec()->set_asesq_pi(rtcpcb.asesq_pi);
     rsp->mutable_spec()->set_asesq_ci(rtcpcb.asesq_ci);
+    rsp->mutable_spec()->set_asesq_base(rtcpcb.asesq_base);
+    rsp->mutable_spec()->set_snd_wnd(rtcpcb.snd_wnd);
+    rsp->mutable_spec()->set_snd_cwnd(rtcpcb.snd_cwnd);
+    rsp->mutable_spec()->set_rcv_mss(rtcpcb.rcv_mss);
+    rsp->mutable_spec()->set_source_port(rtcpcb.source_port);
+    rsp->mutable_spec()->set_dest_port(rtcpcb.dest_port);
+    rsp->mutable_spec()->set_header_len(rtcpcb.header_len);
+    rsp->mutable_spec()->set_header_template(rtcpcb.header_template,
+                                             sizeof(rtcpcb.header_template));
+
     rsp->mutable_spec()->set_state(rtcpcb.state);
+    rsp->mutable_spec()->set_source_lif(rtcpcb.source_lif);
+    rsp->mutable_spec()->set_debug_dol_tx(rtcpcb.debug_dol_tx);
+    rsp->mutable_spec()->set_pending_ack_send(rtcpcb.pending_ack_send);
+
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);

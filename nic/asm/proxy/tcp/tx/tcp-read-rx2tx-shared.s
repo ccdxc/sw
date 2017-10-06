@@ -6,7 +6,7 @@
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
-#include "tcp-sched.h"
+#include "tcp_common.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
 	
@@ -85,6 +85,8 @@ tcp_tx_launch_sesq:
     nop.e
     nop
 tcp_tx_launch_asesq:
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_TX, TCP_TX_DDOL_DONT_TX
+    phvwri.c1       p.common_phv_debug_dol_dont_tx, 1
     phvwr           p.to_s2_sesq_cidx, d.{ci_4}.hx
     add             r3, d.{asesq_base}.wx, d.{ci_4}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
     phvwr           p.to_s1_sesq_ci_addr, r3

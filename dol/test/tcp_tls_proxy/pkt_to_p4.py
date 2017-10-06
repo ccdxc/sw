@@ -213,6 +213,7 @@ def TestCaseVerify(tc):
     if same_flow and other_tcpcb_cur.snd_nxt != tc.pvtdata.flow1_snd_nxt + \
             tc.packets.Get('PKT1').payloadsize:
         print("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)
+        print("mem2pkt failed pvtdata snd_nxt = 0x%x" % tc.pvtdata.flow1_snd_nxt)
         return False
     elif not same_flow and other_tcpcb_cur.snd_nxt != \
             tc.pvtdata.flow2_snd_nxt + tc.packets.Get('PKT1').payloadsize:

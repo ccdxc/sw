@@ -22,6 +22,7 @@ struct tcp_tx_tso_tso_d d    ;
 
 tcp_tso_process_start:
     /* check SESQ for pending data to be transmitted */
+    sne             c6, k.common_phv_debug_dol_dont_tx, r0
     or              r1, k.to_s4_pending_tso_data, k.to_s4_pending_tso_retx
     or              r1, r1, k.common_phv_pending_ack_send
     sne             c1, r1, r0
@@ -90,6 +91,8 @@ dma_cmd_intrinsic:
     // pipeline needs the original source_lif of the packet to derive
     // the input properties, as well as for spoofing checks
     phvwr           p.p4_intr_global_lif, d.source_lif
+    bcf             [c6], dma_cmd_data
+    nop
     phvwri          p.p4_txdma_intr_dma_cmd_ptr, TCP_PHV_TXDMA_COMMANDS_START
 
     CAPRI_DMA_CMD_PHV2PKT_SETUP(intrinsic_dma_dma_cmd, p4_intr_global_tm_iport, p4_intr_global_glb_rsv)
@@ -147,6 +150,8 @@ dma_cmd_data:
     add             r5, r6, k.t0_s2s_snd_nxt
     phvwr           p.tx2rx_snd_nxt, r5
 
+    bcf             [c6], bytes_sent_stats_update_start
+    nop
     CAPRI_DMA_CMD_MEM2PKT_SETUP(data_dma_dma_cmd, r2, r6)
     CAPRI_DMA_CMD_PKT_STOP(data_dma_dma)
         
@@ -173,7 +178,8 @@ debug_num_mem_to_pkt_stats_update_start:
 debug_num_mem_to_pkt_stats_update:
     CAPRI_STATS_INC_UPDATE(r1, d.debug_num_mem_to_pkt, p.to_s5_debug_num_mem_to_pkt)
 debug_num_mem_to_pkt_stats_update_end:
-
+    bcf             [c6], flow_tso_process_done
+    nop
     /*
      * if (tcp_in_cwnd_reduction(tp))
      *    tp->cc.prr_out += 1
@@ -186,7 +192,6 @@ debug_num_mem_to_pkt_stats_update_end:
 dma_cmd_write_tx2rx_shared:
     /* Set the DMA_WRITE CMD for copying tx2rx shared data from phv to mem */
     add             r5, k.common_phv_qstate_addr, TCP_TCB_TX2RX_SHARED_WRITE_OFFSET
-
 
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(tx2rx_dma_dma_cmd, r5, tx2rx_prr_out, tx2rx_pad2_tx2rx)

@@ -1,17 +1,19 @@
-/*
- * INET         An implementation of the TCP/IP protocol suite for the LINUX
- *              operating system.  INET is implemented using the  BSD Socket
- *              interface as the means of communication with the user level.
- *
- *              Definitions for the TCP protocol sk_state field.
- *
- *              This program is free software; you can redistribute it and/or
- *              modify it under the terms of the GNU General Public License
- *              as published by the Free Software Foundation; either version
- *              2 of the License, or (at your option) any later version.
- */
-#ifndef _LINUX_TCP_STATES_H
-#define _LINUX_TCP_STATES_H
+#ifndef __TCP_COMMON_H__
+#define __TCP_COMMON_H__
+
+#define TCP_SCHED_FLAG_FT             0x1
+#define TCP_SCHED_FLAG_ST             0x2
+#define TCP_SCHED_FLAG_FT_ERR         0x4
+#define TCP_SCHED_FLAG_ST_ERR         0x8
+#define TCP_SCHED_FLAG_PENDING_TX     0x10
+#define TCP_SCHED_FLAG_PENDING_TSO    0x20
+#define TCP_SCHED_FLAG_PENDING_OOO    0x40
+
+#define TCP_SCHED_RING_SESQ           0x0
+#define TCP_SCHED_RING_PENDING        0x1
+#define TCP_SCHED_RING_FT             0x2
+#define TCP_SCHED_RING_ST             0x3
+#define TCP_SCHED_RING_ASESQ          0x4
 
 #define TCP_ESTABLISHED   1
 #define TCP_SYN_SENT      2
@@ -45,6 +47,4 @@
 #define TCPF_CLOSING      (1 << 11)
 #define TCPF_NEW_SYN_RECV (1 << 12)
 
-        
-#endif  /* _LINUX_TCP_STATES_H */
-
+#endif /* #ifndef __TCP_COMMON_H__ */

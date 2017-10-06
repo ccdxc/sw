@@ -55,7 +55,8 @@
     modify_field(common_global_scratch.pending_sesq, common_phv.pending_sesq); \
     modify_field(common_global_scratch.pending_ack_send, common_phv.pending_ack_send); \
     modify_field(common_global_scratch.debug_dol_dont_send_ack, common_phv.debug_dol_dont_send_ack);\
-    modify_field(common_global_scratch.pending_asesq, common_phv.pending_asesq);
+    modify_field(common_global_scratch.pending_asesq, common_phv.pending_asesq); \
+    modify_field(common_global_scratch.debug_dol_dont_tx, common_phv.debug_dol_dont_tx);
 
 /******************************************************************************
  * D-vectors
@@ -130,6 +131,7 @@ header_type common_global_phv_t {
         pending_ack_send        : 1;
         debug_dol_dont_send_ack : 1;
         pending_asesq           : 1;
+        debug_dol_dont_tx       : 1;
     }
 }
 
@@ -380,7 +382,7 @@ action read_rx2tx_extra(
        sacked_out, lost_out, retrans_out, fackets_out, ooo_datalen,
        reordering, undo_marker, undo_retrans, snd_ssthresh, loss_cwnd,
        write_seq, tso_seq, rcv_mss, rto, ca_state, ecn_flags, num_sacks,
-       pending_challenge_ack_send, pending_ack_send, pending_sync_mss,
+       pending_ack_send, pending_challenge_ack_send, pending_sync_mss,
        pending_tso_keepalive, pending_tso_pmtu_probe, pending_tso_data,
        pending_tso_probe_data, pending_tso_probe,
        pending_ooo_se_recv, pending_tso_retx, pending_rexmit, pending,
@@ -418,8 +420,8 @@ action read_rx2tx_extra(
     modify_field(rx2tx_extra_d.ca_state, ca_state);
     modify_field(rx2tx_extra_d.ecn_flags, ecn_flags);
     modify_field(rx2tx_extra_d.num_sacks, num_sacks);
-    modify_field(rx2tx_extra_d.pending_challenge_ack_send, pending_challenge_ack_send);
     modify_field(rx2tx_extra_d.pending_ack_send, pending_ack_send);
+    modify_field(rx2tx_extra_d.pending_challenge_ack_send, pending_challenge_ack_send);
     modify_field(rx2tx_extra_d.pending_sync_mss, pending_sync_mss);
     modify_field(rx2tx_extra_d.pending_tso_keepalive, pending_tso_keepalive);
     modify_field(rx2tx_extra_d.pending_tso_pmtu_probe, pending_tso_pmtu_probe);

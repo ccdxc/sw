@@ -23,7 +23,7 @@ namespace pd {
 #define CPU_ASQ_QTYPE                   0
 #define CPU_ASQ_QID                     0
 #define CPU_SCHED_RING_ASQ              0
-#define TCP_SCHED_RING_ASESQ            4
+
 
 #define DB_ADDR_BASE                   0x800000 
 #define DB_ADDR_BASE_HOST              0x68400000
@@ -118,6 +118,13 @@ hal_ret_t cpupkt_send(cpupkt_ctxt_t* ctxt,
 
 hal_ret_t cpupkt_page_alloc(cpupkt_hw_id_t* page_addr);
 hal_ret_t cpupkt_descr_alloc(cpupkt_hw_id_t* descr_addr);
+
+hal_ret_t
+cpupkt_program_send_ring_doorbell(uint16_t dest_lif,
+                                  uint8_t  qtype,
+                                  uint32_t qid,
+                                  uint8_t  ring_number);
+
 
 } // namespace pd
 } // namespace hal

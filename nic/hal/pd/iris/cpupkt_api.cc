@@ -437,8 +437,7 @@ cpupkt_program_send_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t q
 }
 
 hal_ret_t
-cpupkt_program_send_ring_doorbell(cpupkt_ctxt_t* ctxt,
-                                  uint16_t dest_lif,
+cpupkt_program_send_ring_doorbell(uint16_t dest_lif,
                                   uint8_t  qtype,
                                   uint32_t qid,
                                   uint8_t  ring_number)
@@ -446,9 +445,6 @@ cpupkt_program_send_ring_doorbell(cpupkt_ctxt_t* ctxt,
     uint64_t            addr = 0;
     uint64_t            data = 0;
 
-    if(!ctxt) {
-        return HAL_RET_INVALID_ARG;    
-    }
     
     addr = 0 | DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_SET;
     addr = addr << DB_UPD_SHFT;
@@ -557,7 +553,7 @@ cpupkt_send(cpupkt_ctxt_t* ctxt,
     }
 
     // Ring doorbell
-    ret = cpupkt_program_send_ring_doorbell(ctxt, dest_lif, qtype, qid, ring_number);
+    ret = cpupkt_program_send_ring_doorbell(dest_lif, qtype, qid, ring_number);
     if(ret != HAL_RET_OK) {
         goto cleanup;    
     }

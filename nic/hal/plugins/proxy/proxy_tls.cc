@@ -1,6 +1,7 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
+#include "nic/include/tcp_common.h"
 
 namespace hal {
 namespace proxy {

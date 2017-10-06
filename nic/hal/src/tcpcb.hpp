@@ -26,10 +26,11 @@ using tcpcb::TcpCbGetRequestMsg;
 using tcpcb::TcpCbGetResponse;
 using tcpcb::TcpCbGetResponseMsg;
 
+#define INVALID_HEADER_TEMPLATE_LEN ((uint32_t)-1)
+
 namespace hal {
 
 typedef uint32_t tcpcb_id_t;
-
 typedef struct tcpcb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     tcpcb_id_t            cb_id;                   // TCP CB id
@@ -56,6 +57,7 @@ typedef struct tcpcb_s {
     uint16_t              source_lif;
     uint32_t              debug_dol_tx;
     uint32_t              header_len;
+    uint32_t              pending_ack_send;
     // operational state of TCP Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
 

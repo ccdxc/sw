@@ -11,6 +11,7 @@ tcp_debug_dol_leave_in_arq = 0x8
 tcp_debug_dol_dont_ring_tx_doorbell = 0x10
 
 tcp_tx_debug_dol_dont_send_ack = 0x1
+tcp_tx_debug_dol_dont_tx = 0x2
 
 tcp_state_ESTABLISHED = 1
 tcp_state_SYN_SENT = 2

@@ -341,9 +341,9 @@ modules:
 
 
     - module:
-        name    : TLS_HANDSHAKE_RX_LOOPBACK
+        name    : TLS_HANDSHAKE_TX
         package : test.tcp_tls_proxy
-        module  : tls_handshake_rx_loopback
+        module  : tls_handshake_tx
         spec    : tls_handshake.testspec
         args    :
             maxflows: 1
@@ -351,13 +351,14 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
-        name    : SYN_ACK_TO_ARQ_LOOPBACK
-        enable  : False
+        name    : ACK_SYN_ACK_TX
+        enable  : True
         package : test.tcp_tls_proxy
-        module  : syn_ack_to_arq_loopback
-        spec    : one_pkt.testspec
+        module  : ack_syn_ack_tx
+        spec    : ack_syn_ack_tx.testspec
         args    :
-            maxflows: 1
+            maxflows    : 1
+            send_ack    : 1
         iterate :
             - flow: filter://type=IPV4
 

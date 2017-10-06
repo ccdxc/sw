@@ -12,7 +12,6 @@
 #include "tls-table.h"
 #include "ingress.h"
 #include "INGRESS_p.h"        
-#include "tls-sched.h"
 
 
 struct phv_             p;

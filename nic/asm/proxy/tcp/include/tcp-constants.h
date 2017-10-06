@@ -2,7 +2,7 @@
 #define CONSTANTS_H
 
 #include "proxy-constants.h"
-#include "tcp-states.h"
+#include "tcp_common.h"
 
 #define TCPCB_SACKED_ACKED	0x01	/* SKB ACK'd by a SACK block	*/
 #define TCPCB_SACKED_RETRANS	0x02	/* SKB retransmitted		*/
@@ -293,6 +293,7 @@
 #define TCP_DDOL_LEAVE_IN_ARQ           0x8
 #define TCP_DDOL_DONT_RING_TX_DOORBELL  0x10
 // Tx encodings
-#define TCP_TX_DDOL_DONT_SEND_ACK       1
+#define TCP_TX_DDOL_DONT_SEND_ACK       0x1
+#define TCP_TX_DDOL_DONT_TX             0x2
 
 #endif /* #ifndef CONSTANTS_H */

@@ -13,7 +13,8 @@ selectors:
         segment     : filter://any
         endpoint    : filter://remote=True
         qpair       : filter://any 
-    flow        : filter://proto=TCP,label=TCP-PROXY,fwtype=L2,direction=IFLOW
+    flow        : filter://proto=TCP,label=TCP-PROXY,fwtype=L2
+    maxflows    : 1
 
 # Packet section defines the set of input and output packets. Input packets
 # will be used in triggers and output packets will be used in expect
@@ -21,14 +22,12 @@ packets:
     - packet:
         id          : PKT1
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : ref://factory/payloads/id=PAYLOAD_TLS_SERVER_HELLO/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -43,36 +42,67 @@ packets:
                 seq     : callback://tcpcb/tcpcb/GetSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckNum
             payload:
-                data: ref://factory/payloads/id=PAYLOAD_TLS_SERVER_HELLO/data 
+                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+
     - packet:
-        id          : PKT2
+        id          : PKT1_OUT
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : ref://factory/payloads/id=PAYLOAD_TLS_SERVER_HELLO_ACK/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                prio    : 0
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+                tos     : 8
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                seq     : callback://tcpcb/tcpcb/GetPktOutSeqNum
+                ack     : callback://tcpcb/tcpcb/GetPktOutAckNum
+                window  : 1000
+                flags   : ack
+            payload:
+                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+
+    - packet:
+        id          : PKT1_ACK_OUT
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        payloadsize : 0
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
                 src     : ref://testcase/config/dst/endpoint/macaddr
                 dst     : ref://testcase/config/src/endpoint/macaddr
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                prio    : 0
+                vlan    : ref://testcase/config/dst/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/dip
                 dst     : ref://testcase/config/flow/sip
                 ttl     : 64
+                tos     : 8
             ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
+                src     : ref://testcase/config/flow/dip
+                dst     : ref://testcase/config/flow/sip
                 hlim    : 64
             tcp:
                 sport   : ref://testcase/config/flow/dport
                 dport   : ref://testcase/config/flow/sport
                 seq     : callback://tcpcb/tcpcb/GetAckPktSeqNum
-                ack     : callback://tcpcb/tcpcb/GetAckPktAckNum
+                ack     : callback://tcpcb/tcpcb/GetSeqNum
                 window  : 1000
                 flags   : ack
-
-            payload:
-                data: ref://factory/payloads/id=PAYLOAD_TLS_SERVER_HELLO_ACK/data 
 
 trigger:
     packets:
@@ -81,8 +111,8 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
-    delay: 1
-#    packets:
-#        - packet:
-#            object  : ref://testcase/packets/id=PKT2
-#            port    : ref://testcase/config/src/endpoint/intf/ports
+    delay : 1
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1_ACK_OUT
+            port    : ref://testcase/config/src/endpoint/intf/ports

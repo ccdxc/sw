@@ -26,21 +26,32 @@ def TestCaseSetup(tc):
     tc.pvtdata = ObjectDatabase(logger)
     tcp_proxy.SetupProxyArgs(tc)
 
-    id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
+    id1, id2 = ProxyCbServiceHelper.GetSessionQids(tc.config.flow._FlowObject__session)
+    if tc.config.flow.IsIflow():
+        id = id1
+        other_fid = id2
+    else:
+        id = id2
+        other_fid = id1
+
     TcpCbHelper.main(id)
     tcbid = "TcpCb%04d" % id
     # 1. Configure TCB in HBM before packet injection
     tcb = tc.infra_data.ConfigStore.objects.db[tcbid]
-    tcb.rcv_nxt = 0xBABABABA
-    tcb.snd_nxt = 0xEFEFEFF0
-    tcb.snd_una = 0xEFEFEFEF
-    tcb.rcv_tsval = 0xFAFAFAFA
-    tcb.ts_recent = 0xFAFAFAF0
-    #tcb.debug_dol = tcp_proxy.tcp_debug_dol_leave_in_arq
+    tcp_proxy.init_tcb_inorder(tc, tcb)
     tcb.debug_dol = 0
     # set tcb state to SYN_SENT(2)
     tcb.state = tcp_proxy.tcp_state_SYN_SENT
     tcb.SetObjValPd()
+
+    TcpCbHelper.main(other_fid)
+    tcbid2 = "TcpCb%04d" % (other_fid)
+    tc.module.logger.info("Configuring %s" % tcbid2)
+    tcb2 = tc.infra_data.ConfigStore.objects.db[tcbid2]
+    tcp_proxy.init_tcb_inorder2(tc, tcb2)
+    tcb2.SetObjValPd()
+
+
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
@@ -74,32 +85,8 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseVerify(tc):
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
-    arq = tc.pvtdata.db["ARQ"]
 
-    # 1. Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.Configure()
-    arq_cur = tc.infra_data.ConfigStore.objects.db["ARQ"]
-    arq_cur.Configure()
-
-    print("arq pi 0x%x" % (arq.pi))
-    print("arq cur pi 0x%x" % (arq_cur.pi))
-    # 2. Verify descriptor
-    if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:
-    #if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[0].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
-        #print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
-        return False
-
-    print("Descriptor handle as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
-    # 3. Verify page
-    if rnmpr.ringentries[0].handle != arq_cur.swdre_list[0].Addr1:
-        print("Page handle not as expected in arq_cur.swdre_list")
-        #return False
+    # Verify ack tx (in testspec)
 
     return True
 

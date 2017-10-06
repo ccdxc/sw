@@ -61,8 +61,8 @@
         ca_state                        : 8                     ;\
         ecn_flags                       : 8                     ;\
         num_sacks                       : 8                     ;\
+        pending_ack_send                : 8                     ;\
         pending_challenge_ack_send      : 1                     ;\
-        pending_ack_send                : 1                     ;\
         pending_sync_mss                : 1                     ;\
         pending_tso_keepalive           : 1                     ;\
         pending_tso_pmtu_probe          : 1                     ;\

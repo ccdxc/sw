@@ -6,7 +6,7 @@
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
-#include "tcp-sched.h"
+#include "tcp_common.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
 	
