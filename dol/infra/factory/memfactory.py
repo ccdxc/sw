@@ -57,18 +57,51 @@ def __generate_common(tc, spec, write = True):
         obj.Write()
     return obj
 
+def __generate_descriptors_from_callback(tc, descr_entry):
+    cb = getattr(descr_entry, 'callback', None)
+    if cb is None:
+        return
+    descrs = cb.call(tc)
+    tc.descriptors.SetAll(descrs)
+    return
+
+def __generate_descriptors_from_spec(tc, desc_entry):
+    dspec = getattr(desc_entry, 'descriptor', None)
+    if dspec is None:
+        return
+    if dspec.id is None:
+        return
+    obj = __generate_common(tc, desc_entry.descriptor, write = False)
+    tc.descriptors.Add(obj)
+
 def GenerateDescriptors(tc):
     tc.info("Generating Descriptors")
     for desc_entry in tc.testspec.descriptors:
-        if desc_entry.descriptor.id == None: continue
-        obj = __generate_common(tc, desc_entry.descriptor, write = False)
-        tc.descriptors.Add(obj)
+        __generate_descriptors_from_callback(tc, desc_entry)
+        __generate_descriptors_from_spec(tc, desc_entry)
+    return
+
+def __generate_buffers_from_spec(tc, buff_entry):
+    bspec = getattr(buff_entry, 'buffer', None)
+    if bspec is None:
+        return
+    if bspec.id == None:
+        return
+    obj = __generate_common(tc, buff_entry.buffer)
+    tc.buffers.Add(obj)
+    return
+   
+def __generate_buffers_from_callback(tc, buff_entry):
+    cb = getattr(buff_entry, 'callback', None)
+    if cb is None:
+        return
+    bufs = cb.call(tc)
+    tc.buffers.SetAll(bufs)
     return
 
 def GenerateBuffers(tc):
     tc.info("Generating Buffers")
     for buff_entry in tc.testspec.buffers:
-        if buff_entry.buffer.id == None: continue
-        obj = __generate_common(tc, buff_entry.buffer)
-        tc.buffers.Add(obj)
+        __generate_buffers_from_spec(tc, buff_entry)
+        __generate_buffers_from_callback(tc, buff_entry)
     return

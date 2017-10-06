@@ -11,9 +11,6 @@ function ErrorCheckNExit() {
     exit 1
 }
 
-./ut/ut_run.sh; err=$?; cat ut_run.log;
-ErrorCheckNExit $err "utrun"
-
 # Build the minimum targets required for dryrun.
 #cd ../nic/utils/host_mem && make && cd -
 #cd ../nic/proto/ && make && cd -
@@ -30,6 +27,7 @@ function DryRunSanity()
     ErrorCheckNExit $? "$topo topo"
 }
 
+DryRunSanity eth dolut
 DryRunSanity eth eth
 DryRunSanity vxlan vxlan
 DryRunSanity up2up networking

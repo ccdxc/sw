@@ -8,7 +8,8 @@ from infra.common.glopts        import GlobalOptions
 from infra.engine.modmgr        import ModuleStore
 
 FeatureStore = objects.ObjectDatabase(logger)
-BaseTopoExcludeFeatureList = [ 
+BaseTopoExcludeFeatureList = [
+    'dolut',
     'fte',
     'norm',
     'eth' ,

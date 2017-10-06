@@ -47,8 +47,6 @@ packets:
                 ack     : ref://testcase/tracker/step/fields/ack
                 window  : ref://testcase/tracker/step/fields/window
                 flags   : ref://testcase/tracker/step/fields/flags
-            payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
 
 trigger:

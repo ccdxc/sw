@@ -8,7 +8,7 @@ selectors:
         tenant  : filter://any
         segment : filter://any
         endpoint: filter://any
-    flow        : filter://proto=TCP,dport=80,label=NETWORKING
+    flow        : filter://any
     maxflows    : 1
 
 packets:

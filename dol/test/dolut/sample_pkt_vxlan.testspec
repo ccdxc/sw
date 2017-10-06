@@ -8,7 +8,7 @@ selectors:
         tenant  : filter://any
         segment : filter://any
         endpoint: filter://any
-    flow        : filter://proto=TCP,dport=80,label=NETWORKING
+    flow        : filter://any
     maxflows    : 1
 
 packets:
@@ -18,6 +18,7 @@ packets:
         template    : ref://factory/packets/id=ETH_IPV4_TCP
         encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
+            - ref://factory/packets/id=ENCAP_VXLAN
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
@@ -28,10 +29,6 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : callback://networking/packets/GetTtl
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : callback://networking/packets/GetTtl
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
@@ -51,7 +48,6 @@ trigger:
             port    : 1
 
 expect:
-    callback: None
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT1

@@ -1,64 +1,57 @@
-# This file contains the list of DOL test modules.
+# Feature Test Modules List
+feature:
+    id          : dolut
+    sub         : dolut
+    package     : test.dolut
+    module      : dolut
+    enable      : True
+    ignore      : False
+
 modules:
     - module:
         name    : PKT_TO_PKT_MATCH
-        enable  : True
-        package : test.examples
-        module  : sample
         spec    : sample_pkt_to_pkt.testspec
 
     - module:
         name    : PKT_TO_PKT_MISMATCH
-        enable  : True
-        package : test.examples
-        module  : sample
         spec    : sample_pkt_to_pkt_mismatch.testspec
 
     - module:
         name    : PKT_TO_PKT_MISSING
-        enable  : True
-        package : test.examples
-        module  : sample
         spec    : sample_pkt_to_pkt_missing.testspec
 
     - module:
         name    : PKT_TO_PKT_EXTRA
-        enable  : True
-        package : test.examples
-        module  : sample
         spec    : sample_pkt_to_pkt_extra.testspec
 
     - module:
         name    : PKT_TO_PKT
-        enable  : True
-        package : test.examples
-        module  : sample
         spec    : sample_pkt_to_pkt.testspec
 
     - module:
         name    : PKT_SESSION
-        enable  : True
-        package : test.examples
-        module  : sample
         spec    : sample_pkt_to_pkt_session.testspec
 
     - module:
         name    : PKT_SESSION_FAIL
-        enable  : True
-        package : test.examples
-        module  : sample
         spec    : sample_pkt_to_pkt_session_fail.testspec
 
     - module:
         name    : PKT_TCP_OPTS
-        enable  : True
-        package : test.examples
-        module  : sample
         spec    : sample_pkt_tcp_options.testspec
 
     - module:
         name    : PKT_VXLAN
-        enable  : True
-        package : test.examples
-        module  : sample
         spec    : sample_pkt_vxlan.testspec
+
+    - module:
+        name    : PKT_SLICER
+        spec    : sample_pkt_slicer.testspec
+
+    - module:
+        name    : PKT_BUILDER
+        spec    : sample_pkt_builder_callback.testspec
+
+    - module:
+        name    : DESCR_BUILDER
+        spec    : sample_descr_builder.testspec

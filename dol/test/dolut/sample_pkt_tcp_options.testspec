@@ -8,13 +8,13 @@ selectors:
         tenant  : filter://any
         segment : filter://any
         endpoint: filter://any
-    flow        : filter://proto=TCP,dport=80,label=NETWORKING
+    flow        : filter://any
     maxflows    : 1
 
 packets:
     - packet:
-        id          : PKT1     # Input packet 1
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        id          : BASE     # Input packet 1
+        payloadsize : random/64/128
         template    : ref://factory/packets/id=ETH_IPV4_TCP
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
@@ -33,20 +33,24 @@ packets:
                 options:
                     - kind: MSS
                       data: 1024
-            payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
-            crc:
-                crc   : 2 # Opcode = DROP
-                    
+
+    - packet:
+        id          : PKT1
+        clone       : ref://testcase/packets/id=BASE
+        headers     :
+            tcp:
+                options:
+                    - kind: NOP
+                      data: None
+                    - kind: WScale
+                      data: 4
+                    - kind: SAck
+                      data: 0x30001000 0x30002000 12345678 12345679
+                    - kind: SAckOK
+                      data: 0
+                    - kind: Timestamp
+                      data: 12345678 12345679
 
 trigger:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=PKT1
-            port    : 1
 
 expect:
-    packets:
-        - packet:
-            object  : ref://testcase/packets/id=PKT1
-            port    : 1

@@ -8,15 +8,15 @@ selectors:
         tenant  : filter://any
         segment : filter://any
         endpoint: filter://any
-    flow        : filter://proto=TCP,dport=80,label=NETWORKING
+    flow        : filter://any
     maxflows    : 1
 
 packets:
     - packet:
-        id          : BASEPKT     # Input packet 1
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        id          : PKT1     # Input packet 1
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH_IPV4_TCP
-        encaps      :
+        encaps      : 
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth:
@@ -27,49 +27,57 @@ packets:
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
+                ttl     : callback://networking/packets/GetTtl
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : callback://networking/packets/GetTtl
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
-    - packet:
-        id          : PKT1
-        clone       : ref://testcase/packets/id=BASEPKT
-        headers     :
-            tcp:
-                flags: syn
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+            crc:
+                crc: 1
 
-    - packet:
-        id          : PKT2
-        clone       : ref://testcase/packets/id=BASEPKT
-        headers     :
-            tcp:
-                flags: syn,ack
+    - callback: callback://dolut/gen/ReplicatePackets/src=PKT1,count=3
 
-        
 session:
     - step:
         trigger:
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=PKT1
+                    object  : ref://testcase/packets/id=PKT1_1
                     port    : 1
 
         expect:
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=PKT1
+                    object  : ref://testcase/packets/id=PKT1_1
                     port    : 1
 
     - step:
         trigger:
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=PKT2
+                    object  : ref://testcase/packets/id=PKT1_2
                     port    : 1
 
         expect:
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=PKT2
+                    object  : ref://testcase/packets/id=PKT1_2
+                    port    : 1
+
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT1_3
+                    port    : 1
+
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=PKT1_3
                     port    : 1

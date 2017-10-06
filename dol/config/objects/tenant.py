@@ -216,6 +216,9 @@ class TenantObjectHelper:
         return
 
     def Generate(self, topospec):
+        tenspec = getattr(topospec, 'tenants', None)
+        if tenspec is None:
+            return
         for entry in topospec.tenants:
             spec = entry.spec.Get(Store)
             cfglogger.info("Creating %d Tenants" % entry.count)

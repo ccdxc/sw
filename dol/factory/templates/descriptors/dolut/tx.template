@@ -1,9 +1,9 @@
 # Framework UT Descriptor Template
 meta:
-    id      : DESC_INFRA_UT_TX
-    package : factory.objects.ut
+    id      : DOLUT_TX_DESCRIPTOR
+    package : factory.objects.dolut
     module  : descriptor
-    objname : InfraUtTxDescriptorObject
+    objname : DolUtTxDescriptorObject
 
 num_buffs   : None
 b0_address  : None

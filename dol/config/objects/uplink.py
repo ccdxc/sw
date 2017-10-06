@@ -103,7 +103,9 @@ class UplinkObjectHelper:
         return
 
     def Generate(self, topospec):
-        if topospec.uplink == None: return
+        upspec = getattr(topospec, 'uplink', None)
+        if upspec is None:
+            return
         for upl in topospec.uplink:
             obj = UplinkObject()
             obj.Init(upl.entry)

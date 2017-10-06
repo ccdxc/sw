@@ -175,14 +175,29 @@ class TestCase(objects.FrameworkObject):
         scapyobj.show2(indent = 0,
                         label_lvl = self.GetLogPrefix())
 
+    def __generate_packets_from_spec(self, pspec):
+        pktspec = getattr(pspec, 'packet', None)
+        if pktspec is None: return
+        if pktspec.id is None: return
+        packet = pktfactory.Packet(self, pktspec)
+        packet.Build(self)
+        if packet:
+            self.packets.Add(packet)
+        return
+
+    def __generate_packets_from_callback(self, pspec):
+        cb = getattr(pspec, 'callback', None)
+        if cb is None: return
+        pkts = cb.call(self)
+        self.packets.SetAll(pkts)
+        return
+
     def __generate_packets(self):
         self.info("Generating Packet Objects")
         if self.testspec.packets == None: return
         for pspec in self.testspec.packets:
-            if pspec.packet.id == None: return
-            packet = pktfactory.Packet(self, pspec.packet)
-            packet.Build(self)
-            if packet: self.packets.Add(packet)
+            self.__generate_packets_from_spec(pspec)
+            self.__generate_packets_from_callback(pspec)
         return
 
     def __generate_objects(self):

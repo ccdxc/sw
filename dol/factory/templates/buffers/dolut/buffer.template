@@ -1,9 +1,9 @@
 # Framework UT Descriptor Template
 meta:
-    id      : INFRA_UT_BUFFER
-    package : factory.objects.ut
+    id      : DOLUT_BUFFER
+    package : factory.objects.dolut
     module  : buffer
-    objname : InfraUtBufferObject
+    objname : DolUtBufferObject
 
 address : None
 size    : None

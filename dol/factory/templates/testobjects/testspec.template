@@ -32,6 +32,7 @@ packets:
         template    : None
         encaps      : None
         headers     : None
+      callback      : None
 
 match_profiles:
     - profile:
@@ -45,12 +46,14 @@ descriptors:
         id      : None
         template: None
         fields  : None
+      callback  : None
 
 buffers:
     - buffer:
         id      : None
         template: None
-        fields:
+        fields  : None
+      callback  : None
 
 state:
     - entry:

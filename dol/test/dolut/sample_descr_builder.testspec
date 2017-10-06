@@ -1,0 +1,64 @@
+# Test Spec
+selectors:
+    src:
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://remote=False
+    dst:
+        tenant  : filter://any
+        segment : filter://any
+        endpoint: filter://remote=True
+    flow        : filter://any
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : PKT100
+        payloadsize : random/64/128
+        template    : ref://factory/packets/id=ETH_IPV4_TCP
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=DOLUT_BUFFER
+        fields  :
+           size : ref://testcase/packets/id=PKT100/size
+           data : ref://testcase/packets/id=PKT100/rawbytes
+    - callback  : callback://dolut/gen/ReplicateBuffers/src=BUF1,count=2
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DOLUT_TX_DESCRIPTOR
+        fields:
+            address : ref://testcase/buffers/id=BUF1_2/address
+            len     : ref://testcase/buffers/id=BUF1_2/size
+    - callback  : callback://dolut/gen/ReplicateDescriptors/src=DESC1,count=2
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1_2
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+    doorbell:
+        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT100
+            port    : ref://testcase/config/dst/endpoint/intf/ports

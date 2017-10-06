@@ -96,6 +96,8 @@ class PacketHeader(objects.FrameworkObject):
         self.fields = PacketHeaderFields()
         if inst:
             self.__instantiate(inst)
+        self.start  = 0
+        self.size   = 0
         return
 
     def __instantiate(self, header):
@@ -291,11 +293,49 @@ class Packet(objects.FrameworkObject):
         self.headers.show()
         return
 
+    def __fixup_payloadsize(self, tc):
+        datasize = len(self.headers.payload.fields.data)
+        if datasize != self.payloadsize:
+            tc.warn("- Testspec payload data size:%d payloadsize:%d" %\
+                    (datasize, self.payloadsize))
+            tc.warn("- Fixing payloadsize to data size: %d" % datasize)
+            self.payloadsize = datasize
+        return
+
+    def __fixup_payload(self, tc):
+        currdata = self.headers.payload.fields.data
+        datasize = len(self.headers.payload.fields.data)
+        if datasize != self.payloadsize:
+            tc.warn("- Testspec payload data size:%d payloadsize:%d" %\
+                (len(self.headers.payload.fields.data), self.payloadsize))
+            tc.warn("- Fixing payload data.")
+            fac = int(self.payloadsize / datasize) + 1
+            newdata = currdata * fac
+            self.headers.payload.fields.data = newdata[:self.payloadsize]
+        return
+
     def __add_payload(self, tc):
-        pktlogger.debug("Payload size = %d" % self.payloadsize)
+        tc.info("- Adding Payload of Size = %d" % self.payloadsize)
         self.headers.payload.meta.size = self.payloadsize
-        self.headers.payload.fields.data =\
+        if self.headers.payload.fields.data is None:
+            self.headers.payload.fields.data =\
                          self.headers.payload.meta.pattern.get(self.payloadsize)
+        elif objects.IsCallback(self.headers.payload.fields.data):
+            cb = self.headers.payload.fields.data
+            self.headers.payload.fields.data = cb.call(tc,self)
+            self.__fixup_payload(tc)
+        elif objects.IsReference(self.headers.payload.fields.data):
+            ref = self.headers.payload.fields.data
+            if ref.GetRootID() == defs.ref_roots.FACTORY:
+                data = ref.Get(FactoryStore)
+            elif ref.GetRootID() == defs.ref_roots.TESTCASE:
+                data = ref.Get(tc)
+            else:
+                assert(0)
+            self.headers.payload.fields.data = list(data)
+            self.__fixup_payload(tc)
+        else:
+            self.__fixup_payload(tc)
         return
 
     def __process(self, tc):

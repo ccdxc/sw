@@ -370,7 +370,8 @@ class SessionObjectHelper:
         self.Generate()
         ProxyCbServiceHelper.main(self.objs)
         self.Configure()
-        Store.objects.SetAll(self.objs)
+        if len(self.objs):
+            Store.objects.SetAll(self.objs)
         return
 
     def GetAll(self):

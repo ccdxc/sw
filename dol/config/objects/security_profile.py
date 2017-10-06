@@ -114,7 +114,9 @@ class SecurityProfileObjectHelper:
         return
         
     def Generate(self, topospec):
-        if topospec.security_profiles == None: return
+        sps = getattr(topospec, 'security_profiles', None)
+        if sps is None: 
+            return
         spec = topospec.security_profiles.Get(Store)
         cfglogger.info("Creating %d SecurityProfiles." % len(spec.profiles))
         for p in spec.profiles:

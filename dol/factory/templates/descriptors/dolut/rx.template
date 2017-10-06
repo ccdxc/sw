@@ -1,9 +1,9 @@
 # Framework UT Descriptor Template
 meta:
-    id      : DESC_INFRA_UT_RX
-    package : factory.objects.ut
+    id      : DOLUT_RX_DESCRIPTOR
+    package : factory.objects.dolut
     module  : descriptor
-    objname : InfraUtRxDescriptorObject
+    objname : DolUtRxDescriptorObject
 
 
 vlan    : None # Vlan of the Recvd Packet

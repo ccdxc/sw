@@ -128,7 +128,9 @@ class UplinkPcObjectHelper:
         return
 
     def Generate(self, topospec):
-        if topospec.uplinkpc == None: return
+        upspec = getattr(topospec, 'uplinkpc', None)
+        if upspec is None:
+            return
         for upl in topospec.uplinkpc:
             obj = UplinkPcObject()
             obj.Init(upl.entry)

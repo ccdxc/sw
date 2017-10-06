@@ -168,6 +168,8 @@ class ScapyPacketObject:
         self.__dolhdr   = None
         self.__crchdr   = None
         self.padbytes   = None
+
+        self.curroffset = 0
         return
 
     def __build_header(self, hdr):
@@ -180,6 +182,9 @@ class ScapyPacketObject:
 
     def __add_header(self, hdr):
         shdr = self.__build_header(hdr)
+        hdr.start = self.curroffset
+        hdr.size = len(shdr)
+        self.curroffset += hdr.size
         if self.spkt != None:
             self.spkt = self.spkt / shdr
         else:
