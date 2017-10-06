@@ -15,24 +15,19 @@ SessionServiceImpl::SessionCreate(ServerContext *context,
 {
     uint32_t             i, nreqs = req->request_size();
     SessionResponse      *response;
-    hal_ret_t            ret;
 
     HAL_TRACE_DEBUG("Rcvd Session Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = fte::session_create(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        fte::session_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -64,6 +59,6 @@ SessionServiceImpl::SessionGet(ServerContext *context,
         auto spec = req->request(i);
         hal::session_get(spec, response);
     }
-    hal::hal_cfg_db_close(true);
+    hal::hal_cfg_db_close();
     return Status::OK;
 }

@@ -15,25 +15,19 @@ InterfaceServiceImpl::LifCreate(ServerContext *context,
 {
     uint32_t             i, nreqs = req->request_size();
     LifResponse          *response;
-    hal_ret_t            ret;
 
     HAL_TRACE_DEBUG("Rcvd Lif Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::lif_create(spec, response, NULL);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
-
+        hal::lif_create(spec, response, NULL);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -44,24 +38,19 @@ InterfaceServiceImpl::LifUpdate(ServerContext *context,
 {
     uint32_t          i, nreqs = req->request_size();
     LifResponse       *response;
-    hal_ret_t         ret;
 
     HAL_TRACE_DEBUG("Rcvd Lif Update Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::lif_update(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::lif_update(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -71,23 +60,18 @@ InterfaceServiceImpl::LifDelete(ServerContext *context,
                                 LifDeleteResponseMsg *rsp)
 {
     uint32_t     i, nreqs = req->request_size();
-    hal_ret_t    ret;
 
     HAL_TRACE_DEBUG("Rcvd Lif Delete Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         auto spec = req->request(i);
-        ret = hal::lif_delete(spec, rsp);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::lif_delete(spec, rsp);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -110,7 +94,7 @@ InterfaceServiceImpl::LifGet(ServerContext *context,
         auto request = req->request(i);
         hal::lif_get(request, response);
     }
-    hal::hal_cfg_db_close(true);
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -145,24 +129,19 @@ InterfaceServiceImpl::InterfaceCreate(ServerContext* context,
 {
     uint32_t             i, nreqs = req->request_size();
     InterfaceResponse    *response;
-    hal_ret_t            ret;
 
     HAL_TRACE_DEBUG("Rcvd Interface Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::interface_create(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::interface_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -173,24 +152,19 @@ InterfaceServiceImpl::InterfaceUpdate(ServerContext* context,
 {
     uint32_t             i, nreqs = req->request_size();
     InterfaceResponse    *response;
-    hal_ret_t            ret;
 
     HAL_TRACE_DEBUG("Rcvd Interface Update Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::interface_update(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::interface_update(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -200,23 +174,18 @@ InterfaceServiceImpl::InterfaceDelete(ServerContext *context,
                                       InterfaceDeleteResponseMsg *rsp)
 {
     uint32_t     i, nreqs = req->request_size();
-    hal_ret_t    ret;
 
     HAL_TRACE_DEBUG("Rcvd Interface Delete Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         auto spec = req->request(i);
-        ret = hal::interface_delete(spec, rsp);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::interface_delete(spec, rsp);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -239,7 +208,7 @@ InterfaceServiceImpl::InterfaceGet(ServerContext *context,
         auto spec = req->request(i);
         hal::interface_get(spec, response);
     }
-    hal::hal_cfg_db_close(true);
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -250,24 +219,19 @@ InterfaceServiceImpl::AddL2SegmentOnUplink(ServerContext *context,
 {
     uint32_t                        i, nreqs = req->request_size();
     InterfaceL2SegmentResponse      *response;
-    hal_ret_t                       ret;
 
     HAL_TRACE_DEBUG("Rcvd Add L2Segment to Uplink Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::add_l2seg_on_uplink(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::add_l2seg_on_uplink(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -278,23 +242,18 @@ InterfaceServiceImpl::DelL2SegmentOnUplink(ServerContext *context,
 {
     uint32_t                        i, nreqs = req->request_size();
     InterfaceL2SegmentResponse      *response;
-    hal_ret_t                       ret;
 
     HAL_TRACE_DEBUG("Rcvd Del L2Segment to Uplink Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::del_l2seg_on_uplink(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::del_l2seg_on_uplink(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }

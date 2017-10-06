@@ -23,7 +23,7 @@ typedef enum cfg_op_e {
 // Wrappers on HAL config db oeprations by APIs
 //------------------------------------------------------------------------------
 hal_ret_t hal_cfg_db_open(cfg_op_t op);
-hal_ret_t hal_cfg_db_close(bool abort);
+hal_ret_t hal_cfg_db_close(void);
 
 //------------------------------------------------------------------------------
 // HAL config db APIs store some context in the cfg_db_ctxt_t

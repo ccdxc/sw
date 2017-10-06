@@ -21,6 +21,6 @@ SystemServiceImpl::SystemGet(ServerContext *context,
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
     hal::system_get(rsp);
 
-    hal::hal_cfg_db_close(true);
+    hal::hal_cfg_db_close();
     return Status::OK;
 }

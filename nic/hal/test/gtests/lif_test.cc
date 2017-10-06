@@ -93,14 +93,14 @@ TEST_F(lif_test, test1)
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(spec, &rsp, NULL);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     printf("ret: %d\n", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     spec.set_vlan_strip_en(0);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_update(spec, &rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     printf("ret: %d\n", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
@@ -126,7 +126,7 @@ TEST_F(lif_test, test2)
         lif_info.hw_lif_id = hw_lif_id;
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::lif_create(spec, &rsp, &lif_info);
-        hal::hal_cfg_db_close(false);
+        hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
         hw_lif_id++;
     }
@@ -149,7 +149,7 @@ TEST_F(lif_test, test3)
 
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::lif_create(spec, &rsp, NULL);
-        hal::hal_cfg_db_close(false);
+        hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
     }
 
@@ -177,14 +177,14 @@ TEST_F(lif_test, test4)
     spec.mutable_key_or_handle()->set_lif_id(400);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(spec, &rsp, NULL);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete lif
     del_req.mutable_key_or_handle()->set_lif_id(400);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_delete(del_req, &del_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     post = hal_test_utils_collect_slab_stats();

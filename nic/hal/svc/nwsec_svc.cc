@@ -14,24 +14,19 @@ NwSecurityServiceImpl::SecurityProfileCreate(ServerContext *context,
 {
     uint32_t                   i, nreqs = req->request_size();
     SecurityProfileResponse    *response;
-    hal_ret_t                   ret;
 
     HAL_TRACE_DEBUG("Rcvd SecurityProfile Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::security_profile_create(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::security_profile_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -42,24 +37,19 @@ NwSecurityServiceImpl::SecurityProfileUpdate(ServerContext *context,
 {
     uint32_t                   i, nreqs = req->request_size();
     SecurityProfileResponse    *response;
-    hal_ret_t                  ret;
 
     HAL_TRACE_DEBUG("Rcvd SecurityProfile Update Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::security_profile_update(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::security_profile_update(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -70,23 +60,18 @@ NwSecurityServiceImpl::SecurityProfileDelete(ServerContext *context,
                                              SecurityProfileDeleteResponseMsg *rsp)
 {
     uint32_t     i, nreqs = req->request_size();
-    hal_ret_t    ret;
 
     HAL_TRACE_DEBUG("Rcvd SecurityProfile Delete Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         auto spec = req->request(i);
-        ret = hal::security_profile_delete(spec, rsp);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::security_profile_delete(spec, rsp);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -109,72 +94,62 @@ NwSecurityServiceImpl::SecurityProfileGet(ServerContext *context,
         auto request = req->request(i);
         hal::security_profile_get(request, response);
     }
-    hal::hal_cfg_db_close(true);
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
 
 Status
 NwSecurityServiceImpl::SecurityGroupCreate(ServerContext *context,
-                                             const SecurityGroupRequestMsg *req,
-                                             SecurityGroupResponseMsg *rsp)
+                                           const SecurityGroupRequestMsg *req,
+                                           SecurityGroupResponseMsg *rsp)
 {
     uint32_t                    i, nreqs = req->request_size();
     SecurityGroupResponse       *response;
-    hal_ret_t                   ret;
 
     HAL_TRACE_DEBUG("Rcvd SecurityProfile Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::security_group_create(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::security_group_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
 Status
 NwSecurityServiceImpl::SecurityGroupUpdate(ServerContext *context,
-                                             const SecurityGroupRequestMsg *req,
-                                             SecurityGroupResponseMsg *rsp)
+                                           const SecurityGroupRequestMsg *req,
+                                           SecurityGroupResponseMsg *rsp)
 {
     uint32_t                    i, nreqs = req->request_size();
     SecurityGroupResponse       *response;
-    hal_ret_t                   ret;
 
     HAL_TRACE_DEBUG("Rcvd SecurityGroup Update Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::security_group_update(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::security_group_update(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
 
 Status
 NwSecurityServiceImpl::SecurityGroupDelete(ServerContext *context,
-                                             const SecurityGroupDeleteRequestMsg *req,
-                                             SecurityGroupDeleteResponseMsg *rsp)
+                                           const SecurityGroupDeleteRequestMsg *req,
+                                           SecurityGroupDeleteResponseMsg *rsp)
 {
     HAL_TRACE_DEBUG("Rcvd Securitygroup Delete Request");
     return Status::OK;
@@ -182,8 +157,8 @@ NwSecurityServiceImpl::SecurityGroupDelete(ServerContext *context,
 
 Status
 NwSecurityServiceImpl::SecurityGroupGet(ServerContext *context,
-                                          const SecurityGroupGetRequestMsg *req,
-                                          SecurityGroupGetResponseMsg *rsp)
+                                        const SecurityGroupGetRequestMsg *req,
+                                        SecurityGroupGetResponseMsg *rsp)
 {
     uint32_t                      i, nreqs = req->request_size();
     SecurityGroupGetResponse    *response;
@@ -199,6 +174,6 @@ NwSecurityServiceImpl::SecurityGroupGet(ServerContext *context,
         auto request = req->request(i);
         hal::security_group_get(request, response);
     }
-    hal::hal_cfg_db_close(true);
+    hal::hal_cfg_db_close();
     return Status::OK;
 }

@@ -87,24 +87,19 @@ ProxyServiceImpl::ProxyFlowConfig(ServerContext *context,
 {
     uint32_t         i, nreqs = reqmsg->request_size();
     ProxyResponse    *response;
-    hal_ret_t            ret;
 
     HAL_TRACE_DEBUG("Rcvd Proxy Flow Config Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rspmsg->add_response();
         auto request = reqmsg->request(i);
-        ret = hal::proxy_flow_config(request, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::proxy_flow_config(request, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
    
 }
@@ -122,13 +117,13 @@ ProxyServiceImpl::ProxyGetFlowInfo(ServerContext *context,
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_READ);
         response = rspmsg->add_response();
         auto request = reqmsg->request(i);
         hal::proxy_get_flow_info(request, response);
-        hal::hal_cfg_db_close(true);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
    
 }

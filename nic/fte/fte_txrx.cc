@@ -75,7 +75,7 @@ pkt_loop(uint8_t fte_id)
                         cpu_rxhdr->l4_offset, cpu_rxhdr->payload_offset);
 
         // Process pkt with db open
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        hal::hal_cfg_db_open(hal::CFG_OP_READ);
         do {
             // Init ctx_t
             ret = ctx.init(cpu_rxhdr, pkt, pkt_len, iflow, rflow);
@@ -100,12 +100,12 @@ pkt_loop(uint8_t fte_id)
         } while(false);
 
         if (ret != HAL_RET_OK) {
-            hal::hal_cfg_db_close(true);
+            hal::hal_cfg_db_close();
             continue;
         }
 
         // Update and send the packet
-        hal::hal_cfg_db_close(false);
+        hal::hal_cfg_db_close();
 
         // write the packets
         ctx.send_queued_pkts(arm_ctx);

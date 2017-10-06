@@ -174,10 +174,10 @@ proxy_program_lif(proxy_t* proxy)
     ret = lif_create(lif_spec, &rsp, &lif_hal_info);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("lif creation failed for proxy service" );
-        hal::hal_cfg_db_close(true);
+        hal::hal_cfg_db_close();
         return ret;
     } else {
-        hal::hal_cfg_db_close(false);
+        hal::hal_cfg_db_close();
     }
 
     // program qstate

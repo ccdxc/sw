@@ -122,7 +122,7 @@ TEST_F(tunnelif_test, test1)
     ten_spec.mutable_key_or_handle()->set_tenant_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
@@ -133,7 +133,7 @@ TEST_F(tunnelif_test, test1)
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
@@ -145,7 +145,7 @@ TEST_F(tunnelif_test, test1)
     l2seg_spec.mutable_fabric_encap()->set_encap_value(11);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
@@ -156,7 +156,7 @@ TEST_F(tunnelif_test, test1)
     up_spec.mutable_if_uplink_info()->set_port_num(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
@@ -170,7 +170,7 @@ TEST_F(tunnelif_test, test1)
     ep_spec.mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     ep_spec1.mutable_meta()->set_tenant_id(1);
@@ -182,7 +182,7 @@ TEST_F(tunnelif_test, test1)
     ep_spec1.mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     
@@ -198,7 +198,7 @@ TEST_F(tunnelif_test, test1)
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(tnnl_spec, &tnnl_rsp);
     HAL_TRACE_DEBUG("ret:{}", ret);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // tunnel create
@@ -213,7 +213,7 @@ TEST_F(tunnelif_test, test1)
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(tnnl_spec1, &tnnl_rsp1);
     HAL_TRACE_DEBUG("ret:{}", ret);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
 #if 0

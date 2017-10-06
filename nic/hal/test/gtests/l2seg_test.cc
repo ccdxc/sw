@@ -126,7 +126,7 @@ TEST_F(l2seg_test, test1)
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
@@ -135,7 +135,7 @@ TEST_F(l2seg_test, test1)
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
 
@@ -144,7 +144,7 @@ TEST_F(l2seg_test, test1)
     ten_spec.set_security_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
 #if 0
@@ -153,7 +153,7 @@ TEST_F(l2seg_test, test1)
     del_req.mutable_key_or_handle()->set_tenant_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_delete(del_req, &del_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 #endif
 
@@ -165,7 +165,7 @@ TEST_F(l2seg_test, test1)
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
@@ -174,7 +174,7 @@ TEST_F(l2seg_test, test1)
     lif_spec.mutable_key_or_handle()->set_lif_id(21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     pre = hal_test_utils_collect_slab_stats();
@@ -187,7 +187,7 @@ TEST_F(l2seg_test, test1)
     l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete l2 segment failure
@@ -195,7 +195,7 @@ TEST_F(l2seg_test, test1)
     del_req.mutable_key_or_handle()->set_segment_id(20);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_delete(del_req, &del_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_L2SEG_NOT_FOUND);
 
@@ -204,7 +204,7 @@ TEST_F(l2seg_test, test1)
     del_req.mutable_key_or_handle()->set_segment_id(21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_delete(del_req, &del_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -216,7 +216,7 @@ TEST_F(l2seg_test, test1)
     l2seg_spec1.mutable_fabric_encap()->set_encap_value(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec1, &l2seg_rsp1);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete L2 segment
@@ -224,7 +224,7 @@ TEST_F(l2seg_test, test1)
     del_req.mutable_key_or_handle()->set_segment_id(21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_delete(del_req, &del_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -245,7 +245,7 @@ TEST_F(l2seg_test, test1)
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec, &enicif_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 #endif
 
@@ -255,7 +255,7 @@ TEST_F(l2seg_test, test1)
     ten_spec1.set_security_profile_handle(nwsec_hdl1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_update(ten_spec1, &ten_rsp1);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 #endif
 }
@@ -288,7 +288,7 @@ TEST_F(l2seg_test, test2)
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
@@ -297,7 +297,7 @@ TEST_F(l2seg_test, test2)
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
 
@@ -306,7 +306,7 @@ TEST_F(l2seg_test, test2)
     ten_spec.set_security_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
 #if 0
@@ -315,7 +315,7 @@ TEST_F(l2seg_test, test2)
     del_req.mutable_key_or_handle()->set_tenant_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_delete(del_req, &del_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 #endif
 
@@ -327,7 +327,7 @@ TEST_F(l2seg_test, test2)
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
@@ -342,7 +342,7 @@ TEST_F(l2seg_test, test2)
         l2seg_spec.mutable_key_or_handle()->set_segment_id(100+i);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
-        hal::hal_cfg_db_close(false);
+        hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
     }
 
@@ -352,7 +352,7 @@ TEST_F(l2seg_test, test2)
         del_req.mutable_key_or_handle()->set_segment_id(100+i);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::l2segment_delete(del_req, &del_rsp);
-        hal::hal_cfg_db_close(false);
+        hal::hal_cfg_db_close();
         HAL_TRACE_DEBUG("ret: {}", ret);
         ASSERT_TRUE(ret == HAL_RET_OK);
     }
@@ -392,7 +392,7 @@ TEST_F(l2seg_test, test3)
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec, &sp_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
@@ -401,7 +401,7 @@ TEST_F(l2seg_test, test3)
     sp_spec1.set_ipsg_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
 
@@ -410,7 +410,7 @@ TEST_F(l2seg_test, test3)
     ten_spec.set_security_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
 #if 0
@@ -419,7 +419,7 @@ TEST_F(l2seg_test, test3)
     del_req.mutable_key_or_handle()->set_tenant_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_delete(del_req, &del_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 #endif
 
@@ -431,7 +431,7 @@ TEST_F(l2seg_test, test3)
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
@@ -440,7 +440,7 @@ TEST_F(l2seg_test, test3)
     lif_spec.mutable_key_or_handle()->set_lif_id(31);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // pre = hal_test_utils_collect_slab_stats();
@@ -453,7 +453,7 @@ TEST_F(l2seg_test, test3)
     l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Update to l2segment with no change
@@ -463,7 +463,7 @@ TEST_F(l2seg_test, test3)
     l2seg_spec1.mutable_fabric_encap()->set_encap_value(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec1, &l2seg_rsp1);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
 
     // Update to l2segment with no change
@@ -473,7 +473,7 @@ TEST_F(l2seg_test, test3)
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_update(l2seg_spec1, &l2seg_rsp1);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
 

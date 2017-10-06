@@ -14,24 +14,19 @@ NetworkServiceImpl::NetworkCreate(ServerContext *context,
 {
     uint32_t           i, nreqs = req->request_size();
     NetworkResponse    *response;
-    hal_ret_t          ret;
 
     HAL_TRACE_DEBUG("Rcvd Network Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::network_create(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::network_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -42,24 +37,19 @@ NetworkServiceImpl::NetworkUpdate(ServerContext *context,
 {
     uint32_t           i, nreqs = req->request_size();
     NetworkResponse    *response;
-    hal_ret_t          ret;
 
     HAL_TRACE_DEBUG("Rcvd Network Update Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::network_update(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::network_update(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -90,6 +80,6 @@ NetworkServiceImpl::NetworkGet(ServerContext *context,
         auto request = req->request(i);
         hal::network_get(request, rsp);
     }
-    hal::hal_cfg_db_close(true);
+    hal::hal_cfg_db_close();
     return Status::OK;
 }

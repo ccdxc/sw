@@ -17,24 +17,19 @@ TenantServiceImpl::TenantCreate(ServerContext *context,
 {
     uint32_t          i, nreqs = req->request_size();
     TenantResponse    *response;
-    hal_ret_t         ret;
 
     HAL_TRACE_DEBUG("Rcvd Tenant Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::tenant_create(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::tenant_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -45,24 +40,19 @@ TenantServiceImpl::TenantUpdate(ServerContext *context,
 {
     uint32_t          i, nreqs = req->request_size();
     TenantResponse    *response;
-    hal_ret_t         ret;
 
     HAL_TRACE_DEBUG("Rcvd Tenant Update Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::tenant_update(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::tenant_update(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -73,23 +63,18 @@ TenantServiceImpl::TenantDelete(ServerContext *context,
                                 TenantDeleteResponseMsg *rsp)
 {
     uint32_t     i, nreqs = req->request_size();
-    hal_ret_t    ret;
 
     HAL_TRACE_DEBUG("Rcvd Tenant Delete Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         auto spec = req->request(i);
-        ret = hal::tenant_delete(spec, rsp);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::tenant_delete(spec, rsp);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -112,6 +97,6 @@ TenantServiceImpl::TenantGet(ServerContext *context,
         auto request = req->request(i);
         hal::tenant_get(request, response);
     }
-    hal::hal_cfg_db_close(true);
+    hal::hal_cfg_db_close();
     return Status::OK;
 }

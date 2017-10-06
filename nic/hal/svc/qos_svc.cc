@@ -15,24 +15,19 @@ QOSServiceImpl::BufPoolCreate(ServerContext *context,
 {
     uint32_t             i, nreqs = req->request_size();
     BufPoolResponse      *response;
-    hal_ret_t            ret;
 
     HAL_TRACE_DEBUG("Rcvd BufPool Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::buf_pool_create(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::buf_pool_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -70,24 +65,19 @@ QOSServiceImpl::QueueCreate(ServerContext *context,
 {
     uint32_t           i, nreqs = req->request_size();
     QueueResponse      *response;
-    hal_ret_t          ret;
 
     HAL_TRACE_DEBUG("Rcvd Queue Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::queue_create(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::queue_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -125,24 +115,19 @@ QOSServiceImpl::PolicerCreate(ServerContext *context,
 {
     uint32_t           i, nreqs = req->request_size();
     PolicerResponse    *response;
-    hal_ret_t          ret;
 
     HAL_TRACE_DEBUG("Rcvd Policer Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
 
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         response = rsp->add_response();
         auto spec = req->request(i);
-        ret = hal::policer_create(spec, response);
-        if (ret == HAL_RET_OK) {
-            hal::hal_cfg_db_close(false);
-        } else {
-            hal::hal_cfg_db_close(true);
-        }
+        hal::policer_create(spec, response);
     }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 

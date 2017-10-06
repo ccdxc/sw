@@ -104,7 +104,7 @@ TEST_F(acl_test, test1)
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::acl_create(spec, &rsp);
-    hal::hal_cfg_db_close(false);
+    hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     spec.Clear();
 }
@@ -133,7 +133,7 @@ TEST_F(acl_test, test2)
 
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::acl_create(spec, &rsp);
-        hal::hal_cfg_db_close(false);
+        hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
         spec.Clear();
     }
@@ -168,7 +168,7 @@ TEST_F(acl_test, test3)
 
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::acl_create(spec, &rsp);
-        hal::hal_cfg_db_close(false);
+        hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
 
         entries.push_back(rsp.status().acl_handle().handle());
@@ -180,7 +180,7 @@ TEST_F(acl_test, test3)
         del_req.mutable_key_or_handle()->mutable_acl_handle()->set_handle(entry);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::acl_delete(del_req, &del_rsp);
-        hal::hal_cfg_db_close(false);
+        hal::hal_cfg_db_close();
         ASSERT_EQ(ret, HAL_RET_OK);
         ASSERT_EQ(del_rsp.api_status(), types::API_STATUS_OK);
         del_req.Clear();

@@ -19,10 +19,9 @@ hal_cfg_db_open (cfg_op_t op)
 // API to close the HAL cfg db after performing commit/abort operation
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_cfg_db_close (bool abort)
+hal_cfg_db_close (void)
 {
     HAL_TRACE_DEBUG("Closing cfg db, current mode {}", t_cfg_db_ctxt.cfg_op_);
-    // TODO: for now
     return g_hal_state->cfg_db()->db_close();
 }
 
