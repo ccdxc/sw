@@ -52,8 +52,8 @@ flow_info:
 
   /* ttl change detected */
   seq         c1, d.u.flow_info_d.flow_ttl, \
-                  k.{flow_lkp_metadata_ip_ttl_sbit0_ebit0, \
-                     flow_lkp_metadata_ip_ttl_sbit1_ebit7}
+                  k.{flow_lkp_metadata_ip_ttl_sbit0_ebit4, \
+                     flow_lkp_metadata_ip_ttl_sbit5_ebit7}
   phvwr.c1    p.flow_info_metadata_flow_ttl_change_detected, k.l4_metadata_ip_ttl_change_detect_en
 
   /* Flow Connection Tracking enable */

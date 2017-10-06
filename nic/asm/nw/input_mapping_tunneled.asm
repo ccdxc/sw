@@ -35,7 +35,8 @@ tunneled_ipv4_packet:
 
   phvwr       p.tunnel_metadata_tunnel_terminate, 1
   phvwr       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
-  phvwr       p.flow_lkp_metadata_lkp_src, k.inner_ipv4_srcAddr
+  phvwr       p.flow_lkp_metadata_lkp_src[31:16], k.inner_ipv4_srcAddr_sbit0_ebit15
+  phvwr       p.flow_lkp_metadata_lkp_src[15:0], k.inner_ipv4_srcAddr_sbit16_ebit31
   phvwr       p.flow_lkp_metadata_lkp_dst, k.inner_ipv4_dstAddr
   phvwr       p.flow_lkp_metadata_lkp_proto, k.inner_ipv4_protocol
   phvwr       p.flow_lkp_metadata_ipv4_flags, k.inner_ipv4_flags
@@ -65,8 +66,8 @@ tunneled_ipv6_packet:
   cmov.!c1    r7, c2, PACKET_TYPE_BROADCAST, PACKET_TYPE_MULTICAST
   phvwr       p.flow_lkp_metadata_pkt_type, r7
 
-  or          r7, k.inner_ipv6_payloadLen_sbit0_ebit7, \
-                  k.inner_ipv6_payloadLen_sbit8_ebit15, 8
+  or          r7, k.inner_ipv6_payloadLen, \
+                  k.inner_ipv6_payloadLen, 0
   sub         r6, r7, k.tcp_dataOffset, 2
   phvwr       p.l4_metadata_tcp_data_len, r6
 

@@ -707,6 +707,7 @@ ${table}_pack_action_data(uint32_t tableid,
                      * before MatchKey part of the key after MatchKey.
                      */
 //::                    _adata_bits_before_mat_key = actionfldwidth - spilled_adata_bits 
+                    bits_before_mat_key = ${_adata_bits_before_mat_key};
                     p4pd_copy_le_src_to_be_dest(packed_action_data,
                                    dest_start_bit,
 //::                    if actionfldwidth <= 32:
@@ -716,7 +717,7 @@ ${table}_pack_action_data(uint32_t tableid,
                                    (uint8_t*)(actiondata->${table}_action_u.\
                                    ${table}_${actionname}.${actionfldname}),
 //::                    #endif
-                                   ${_adata_bits_before_mat_key}, 
+                                   ${actionfldwidth} - bits_before_mat_key,
                                    bits_before_mat_key);
                     (*actiondata_len_before_key) += ${_adata_bits_before_mat_key};
                     copy_before_key = false;

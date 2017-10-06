@@ -78,8 +78,9 @@ header ipv4_t ipv4;
 header ipv6_t ipv6;
 header icmp_t icmp;
 header icmp_t icmpv6;
+@pragma pa_header_union ingress v6_ah_esp
 header ah_t ah;
-@pragma pa_header_union ingress ah v6_ah_esp
+@pragma pa_header_union ingress v6_ah_esp
 header esp_t esp;
 
 header udp_t udp;
@@ -99,26 +100,26 @@ header erspan_header_t3_t erspan_t3_header;
 @pragma pa_header_union ingress inner_udp icmp icmpv6
 header tcp_t tcp;
 // TCP options
-//@pragma no_ohi xgress
+@pragma no_ohi xgress
 header tcp_option_eol_t tcp_option_eol;
-//@pragma no_ohi xgress
+@pragma no_ohi xgress
 header tcp_option_nop_t tcp_option_nop;
-//@pragma no_ohi xgress
+@pragma no_ohi xgress
 header tcp_option_mss_t tcp_option_mss;
-//@pragma no_ohi xgress
+@pragma no_ohi xgress
 header tcp_option_ws_t tcp_option_ws;
-//@pragma no_ohi xgress
+@pragma no_ohi xgress
 header tcp_option_sack_perm_t tcp_option_sack_perm;
 @pragma pa_header_union xgress tcp_option_two_sack tcp_option_three_sack tcp_option_four_sack
-//@pragma no_ohi xgress
+@pragma no_ohi xgress
 header tcp_option_one_sack_t tcp_option_one_sack;
-//@pragma no_ohi xgress
+@pragma no_ohi xgress
 header tcp_option_two_sack_t tcp_option_two_sack;
-//@pragma no_ohi xgress
+@pragma no_ohi xgress
 header tcp_option_three_sack_t tcp_option_three_sack;
-//@pragma no_ohi xgress
+@pragma no_ohi xgress
 header tcp_option_four_sack_t tcp_option_four_sack;
-//@pragma no_ohi xgress
+@pragma no_ohi xgress
 header tcp_option_timestamp_t tcp_option_timestamp;
 
 // IPv4 Options
@@ -994,10 +995,8 @@ calculated_field inner_ipv4.hdrChecksum {
 }
 
 parser parse_base_inner_ipv4 {
-#if 0
     // option-blob parsing - extract inner_ipv4 here
     extract(inner_ipv4);
-#endif
     return select(inner_ipv4.fragOffset, inner_ipv4.protocol) {
         IP_PROTO_ICMP : parse_icmp;
         IP_PROTO_TCP : parse_tcp;
@@ -1006,7 +1005,7 @@ parser parse_base_inner_ipv4 {
     }
 }
 
-#if 1
+#if 0
 parser parse_inner_ipv4_option_EOL {
      extract(inner_ipv4_option_EOL);
      set_metadata(parser_metadata.parse_inner_ipv4_counter, parser_metadata.parse_inner_ipv4_counter -1);
@@ -1089,17 +1088,12 @@ parser parse_inner_ipv4_options_blob {
 }
 
 parser parse_inner_ipv4 {
-#if 0
     // this code is kept disabled.. until NCC has a fix for handling 
     // hdr unions and same set_metadata from multiple states while computing topo-graph
     return select(current(0,8)) {
         0x45    : parse_base_inner_ipv4;
         default : parse_inner_ipv4_options_blob;
     }
-#else
-    extract(inner_ipv4);
-    return parse_base_inner_ipv4;
-#endif
 }
 
 field_list inner_ipv4_tcp_checksum_list {

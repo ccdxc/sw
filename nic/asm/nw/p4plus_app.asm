@@ -173,7 +173,7 @@ p4plus_app_ipsec:
   seq         c1, k.vlan_tag_valid, TRUE
   cmov        r6, c1, 18, 14
   phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_start, r6
-  or          r1, k.ipv4_totalLen_sbit8_ebit15, k.ipv4_totalLen_sbit0_ebit7, 8
+  or          r1, k.ipv4_totalLen, k.ipv4_totalLen, 0
   add         r3, r6, r1
   phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_end, r3
   phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE

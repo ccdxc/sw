@@ -11,6 +11,6 @@ k = {
   inner_ipv4_version = 4;
   inner_ipv4_ttl = 64;
   inner_ipv4_protocol = 17;
-  inner_ipv4_srcAddr = 0xbbccddee;
+  inner_ipv4_srcAddr_sbit0_ebit15 = 0xddee;
   inner_ipv4_dstAddr = 0xbbccddff;
 };
