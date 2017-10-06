@@ -15,7 +15,7 @@ import rdma_pb2                 as rdma_pb2
 from infra.common.glopts import GlobalOptions
 
 class MrObject(base.ConfigObjectBase):
-    def __init__(self, pd, slab,    
+    def __init__(self, pd, slab, id_substr="",
                  local_wr=False, remote_wr=False, 
                  remote_rd=False, remote_atomic=False):
         super().__init__()
@@ -24,7 +24,11 @@ class MrObject(base.ConfigObjectBase):
         self.lkey = pd.ep.intf.lif.GetMrKey()
         self.rkey = self.lkey+512
         self.id = slab.id
-        self.GID("MR-%s" % self.slab.GID())
+        if id_substr:
+            mr_id = ("MR-%s-%s" % (id_substr, self.slab.GID()))
+        else:
+            mr_id = ("MR-%s" % (self.slab.GID()))
+        self.GID(mr_id)
         self.local_wr = local_wr
         self.remote_wr = remote_wr
         self.remote_rd = remote_rd
@@ -79,7 +83,9 @@ class MrObjectHelper:
                        (count, pd.GID()))
         for i in range(count):
             slab = pd.ep.slabs.Get('SLAB%04d' % i)
-            mr = MrObject(pd, slab, local_wr=True, remote_wr=True, remote_rd=True, remote_atomic=True)
+            mr = MrObject(pd, slab, id_substr=None, local_wr=True, remote_wr=True, remote_rd=True, remote_atomic=True)
+            self.mrs.append(mr)
+            mr = MrObject(pd, slab, id_substr="RONLY", local_wr=False, remote_wr=False, remote_rd=True, remote_atomic=True)
             self.mrs.append(mr)
 
     def AddMr(self, mr):

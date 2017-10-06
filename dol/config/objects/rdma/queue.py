@@ -277,9 +277,9 @@ class RdmaQstateObject(object):
         self.set_pindex(ring, ((self.get_pindex(ring) + 1) & (ring_size - 1)))
         self.Write()
 
-    def incr_cindex(self, ring):
+    def incr_cindex(self, ring, ring_size):
         assert(ring < 7)
-        self.set_cindex(ring, self.get_cindex(ring) + 1)
+        self.set_cindex(ring, ((self.get_cindex(ring) + 1) & (ring_size - 1)))
         self.Write()
 
     def set_pindex(self, ring, value):

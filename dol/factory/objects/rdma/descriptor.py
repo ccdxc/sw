@@ -170,6 +170,8 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
 
     def Init(self, spec):
         super().Init(spec)
+        if hasattr(self.spec.fields, 'wrid'):
+            self.wrid = self.spec.fields.wrid
 
     def Write(self):
         """
@@ -177,8 +179,8 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         :return:
         """
         cfglogger.info("Writing Descriptor @0x%x = op_type: %d wrid: 0x%x num_sges: %d" % 
-                       (self.address, self.spec.fields.op_type, self.spec.fields.wrid, self.spec.fields.num_sges))
-        desc = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.spec.fields.wrid,
+                       (self.address, self.spec.fields.op_type, self.wrid, self.spec.fields.num_sges))
+        desc = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.wrid,
                                     num_sges=self.spec.fields.num_sges)
         if hasattr(self.spec.fields, 'send'):
            print("Reading Send")
@@ -260,7 +262,8 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
 
     def Init(self, spec):
         super().Init(spec)
-        self.wrid = self.spec.fields.wrid
+        if hasattr(self.spec.fields, 'wrid'):
+            self.wrid = self.spec.fields.wrid
 
     def Write(self):
         """
@@ -268,8 +271,8 @@ class RdmaRqDescriptorObject(base.FactoryObjectBase):
         :return:
         """
         cfglogger.info("Writing Descriptor @(va:0x%x, pa:0x%x) = wrid: 0x%x num_sges: %d" % 
-                       (self.mem_handle.va, self.mem_handle.pa, self.spec.fields.wrid, self.spec.fields.num_sges))
-        desc = RdmaRqDescriptorBase(wrid=self.spec.fields.wrid,
+                       (self.mem_handle.va, self.mem_handle.pa, self.wrid, self.spec.fields.num_sges))
+        desc = RdmaRqDescriptorBase(wrid=self.wrid,
                                     num_sges=self.spec.fields.num_sges)
         for sge in self.spec.fields.sges:
             cfglogger.info("sge: va: 0x%x len: %d l_key: %d" %(sge.va, sge.len, sge.l_key))

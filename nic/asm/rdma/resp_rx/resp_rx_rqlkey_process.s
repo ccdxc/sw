@@ -208,6 +208,9 @@ error_completion:
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_compl_or_inv_rkey_process)
     CAPRI_NEXT_TABLE_I_READ(T2_KEY, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
 
+    //clear both lkey0 and lkey1 table valid bits
+    CAPRI_SET_TABLE_0_VALID(0)
+    CAPRI_SET_TABLE_1_VALID(0)
     
     nop.e
     nop

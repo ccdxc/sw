@@ -20,16 +20,16 @@ selectors:
 
 packets:
    - packet:
-        id          : BASE_FIRST_PKT # Base packet
-        payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=1600,pkt_num=0
+        id          : BASE_PKT # Base packet
+        payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=600,pkt_num=0
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
    - packet:
-        id          : IN_FIRST_PKT    # Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        id          : IN_PKT    # Input packet 
+        payloadsize : callback://rdma/rdma/GetPacketPayloadSize/msg_size=600,pkt_num=0
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -49,8 +49,7 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                #purposefully give serv_type (MS 3 bits of opcode as non-zero)
-                opcode  : 32 #UC-send-only
+                opcode  : 4 #send-only
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
             payload:
@@ -86,8 +85,8 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
             aeth:
-                syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=1 #NAK_CODE_INV_REQ
-                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
+                syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=3 #NAK_CODE_REM_OP_ERR
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -99,7 +98,7 @@ buffers:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 0
            segments:
-               - size    : ref://testcase/packets/id=IN_FIRST_PKT/size
+               - size    : ref://testcase/packets/id=IN_PKT/size
                  data    : None
 
 descriptors:
@@ -107,13 +106,26 @@ descriptors:
         id      : RQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_RQ
         fields:
-            wrid: 5
+            wrid: 55555 
             num_sges: 1
                
             sges:
                 - va  : ref://testcase/buffers/id=RQ_BUF/address
                   len : ref://testcase/buffers/id=RQ_BUF/size
-                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  #purposefully, give invalid LKEY for this test
+                  #l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
+                  l_key: 300
+
+    - descriptor:
+        id      : EXP_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ
+        fields:
+            wrid: ref://testcase/descriptors/id=RQ_DESC/wrid
+            qp: ref://testcase/config/rdmasession/lqp/id
+            op_type: 17 #OP_TYPE_SEND_RCVD
+            status : 7  #CQ_STATUS_LOCAL_ACC_ERR
+            color  : callback://rdma/rdma/GetCQExpColor
+
 
 trigger:
     descriptors:
@@ -128,7 +140,7 @@ trigger:
 
     packets:
         - packet:
-            object  : ref://testcase/packets/id=IN_FIRST_PKT
+            object  : ref://testcase/packets/id=IN_PKT
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
 expect:
@@ -136,3 +148,7 @@ expect:
         - packet:
             object  : ref://testcase/packets/id=EXP_PKT
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_CQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ

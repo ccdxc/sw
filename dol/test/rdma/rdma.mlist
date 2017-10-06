@@ -176,6 +176,30 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_SEND_ONLY_INV_LKEY_ERR1
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_inv_lkey_err
+        spec    : resp_rx_send_only_inv_lkey_err1.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_INV_LKEY_ERR2
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_inv_lkey_err
+        spec    : resp_rx_send_only_inv_lkey_err2.testspec
+        ignore  : True
+
+    - module:
+        name    : RDMA_RX_SEND_ONLY_INV_LKEY_ERR3
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_inv_lkey_err3
+        spec    : resp_rx_send_only_inv_lkey_err3.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_FIRST_INV_SRVC_ERR
         enable  : True
         package : test.rdma
