@@ -12,6 +12,8 @@
 #include "nic/hal/src/cpucb.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
+#include "nic/hal/tls/tls_api.hpp"
+
 
 namespace hal {
 
@@ -217,6 +219,7 @@ proxy_program_lif(proxy_t* proxy)
 hal_ret_t 
 proxy_init_default_params(proxy_t* proxy)
 {
+    hal_ret_t   ret = HAL_RET_OK;
     if(NULL == proxy) 
     {
         return HAL_RET_INVALID_ARG;    
@@ -227,7 +230,16 @@ proxy_init_default_params(proxy_t* proxy)
     proxy->qstate_size = meta->qstate_size;
     proxy->qstate_entries = meta->qstate_entries;
     
-    return HAL_RET_OK;
+    // type specific proxy initialization
+    switch(proxy->type) {
+    case types::PROXY_TYPE_TLS:
+        ret = hal::tls::tls_api_init();
+        break;
+    default:
+        break;
+
+    }
+    return ret;
 }
 
 proxy_t* 

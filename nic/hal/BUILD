@@ -83,13 +83,13 @@ cc_library(
         "//nic/utils/host_mem:host_mem_includes",
         # "//nic/utils/host_mem:host_mem",
         "//nic/third-party/spdlog",
+        "//nic/hal/tls:tls_api",
     ],
 )
 
 cc_library(
     name = "hal_includes",
     srcs = [],
-    hdrs = ["hal.hpp",
-            "src/proxy.hpp",
-            "src/session.hpp"],
+    hdrs = ["hal.hpp",] + 
+            glob(["src/*.hpp",]),
 )

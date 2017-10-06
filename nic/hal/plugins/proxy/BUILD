@@ -13,6 +13,7 @@ cc_library(
         "//nic/utils/slab:slab",
         "//nic/utils/ht:ht",
         "//nic/utils/thread:thread",
+        "//nic/hal/tls:tls_api",
         #"//nic/fte",
         #"//nic/include:base_includes",
         #"//nic/proto:types_proto",
