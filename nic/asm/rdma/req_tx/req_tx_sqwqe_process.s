@@ -34,14 +34,45 @@ req_tx_sqwqe_process:
     nop
     beqi           r1, OP_TYPE_READ, read
     nop
+    beqi           r1, OP_TYPE_CMP_N_SWAP, atomic
+    nop
+    beqi           r1, OP_TYPE_FETCH_N_ADD, atomic
+    nop
+
+    nop.e
+    nop
+
+atomic:
+    phvwr          ATOMIC_VA, d.atomic.va
+    phvwr          ATOMIC_R_KEY, d.atomic.r_key
+    phvwr          ATOMIC_CMP_DATA, d.atomic.cmp_data
+    phvwr          ATOMIC_SWAP_OR_ADD_DATA, d.atomic.swap_or_add_data
+
+    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, busy, 0)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, in_progress, 0)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, first, 1)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, last, 1)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, op_type, r1)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.atomic.sge.va, d.atomic.sge.va)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.atomic.sge.len, d.atomic.sge.len)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.atomic.sge.l_key, d.atomic.sge.l_key)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, tbl_id, 0)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, log_pmtu, k.args.log_pmtu)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, rrq_p_index, k.args.rrq_p_index)
+
+    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
+    SQCB1_ADDR_GET(r1)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 
     nop.e
     nop
 
 read:
-    phvwr RETH_VA, d.read.va
-    phvwr RETH_RKEY, d.read.r_key
-    phvwr RETH_LEN, d.read.length
+    phvwr          RETH_VA, d.read.va
+    phvwr          RETH_RKEY, d.read.r_key
+    phvwr          RETH_LEN, d.read.length
 
 invoke_add_headers:
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, busy, 0)

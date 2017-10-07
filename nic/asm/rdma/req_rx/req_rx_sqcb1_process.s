@@ -38,7 +38,8 @@ req_rx_sqcb1_process:
     sle            c3, d.ssn, k.to_stage.msn 
     bcf            [c3], invalid_pkt_msn
     nop
-    tblwr          d.msn, k.to_stage.msn // Branch Delay Slot
+
+    tblwr          d.msn, k.to_stage.msn
     // TODO credits settings
 set_arg:
 

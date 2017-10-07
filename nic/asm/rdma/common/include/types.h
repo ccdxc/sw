@@ -422,8 +422,17 @@ struct sqwqe_write_t {
     r_key              : 32;
 };
 
-// Read
+//Atomic
+struct sqwqe_atomic_t {
+    r_key             : 32;
+    va                : 64;
+    swap_or_add_data  : 64;
+    cmp_data          : 64;
+    struct sge_t sge;
+    pad               : 64;
+};
 
+// Read
 struct sqwqe_read_t {
     rsvd               : 32;
     va                 : 64;
@@ -434,13 +443,18 @@ struct sqwqe_read_t {
 struct sqwqe_t {
     struct sqwqe_base_t base;
     union {
-        struct sqwqe_send_t send;
-        struct sqwqe_write_t write;
-        struct sqwqe_read_t read;
-    };
-    union {
-        pad : 256;
-        inline_data: 256;
+        struct sqwqe_atomic_t atomic;
+        struct {
+            union {
+                struct sqwqe_send_t send;
+                struct sqwqe_write_t write;
+                struct sqwqe_read_t read;
+            };
+            union {
+                pad : 256;
+                inline_data: 256;
+            };
+        };
     };
 };
 

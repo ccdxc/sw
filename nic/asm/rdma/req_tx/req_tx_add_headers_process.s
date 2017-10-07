@@ -72,23 +72,71 @@ req_tx_add_headers_process:
     add            r2, k.args.op_type, r0
     beqi           r2, OP_TYPE_SEND, op_type_send
     nop
+
     beqi           r2, OP_TYPE_SEND_INV, op_type_send_inv
     nop
+
     beqi           r2, OP_TYPE_SEND_IMM, op_type_send_imm
     nop
+
     beqi           r2, OP_TYPE_WRITE, op_type_write
     nop
+
     beqi           r2, OP_TYPE_WRITE_IMM, op_type_write_imm
     nop
+
     beqi           r2, OP_TYPE_READ, op_type_read
     nop
-    b              end
+
+    beqi           r2, OP_TYPE_CMP_N_SWAP, op_type_atomic_cmp_swap
     nop
+
+    beqi           r2, OP_TYPE_FETCH_N_ADD, op_type_atomic_fetch_add
+    nop
+
+    b              invalid_op_type
+    nop
+
+op_type_atomic_cmp_swap:
+    // opc = CMP_N_SWAP or FETCH_N_ADD
+    b              op_type_atomic
+    add            r2, RDMA_PKT_OPC_CMP_SWAP, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+    
+op_type_atomic_fetch_add:
+    add            r2, RDMA_PKT_OPC_FETCH_ADD, d.service, RDMA_OPC_SERV_TYPE_SHIFT
+
+op_type_atomic:
+    // add atomiceth hdr
+    DMA_PHV2PKT_SETUP(r6, atomiceth, atomiceth)
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
+
+    // rrqwqe_p = (rrqwqe_t *)(sqcb1_p->rrq_base_addr) + (rrqwqe_to_hdr_info_p->rrq_p_index * sizeof(rrqwqe_t))
+    add            r3, d.rrq_base_addr, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
+
+    phvwr          RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_ATOMIC
+    phvwr          RRQWQE_NUM_SGES, 1
+    phvwr          RRQWQE_PSN, d.tx_psn
+    phvwr          RRQWQE_ATOMIC_SGE_VA, k.args.op.atomic.sge.va
+    phvwr          RRQWQE_ATOMIC_SGE_LEN, k.args.op.atomic.sge.len
+    phvwr          RRQWQE_ATOMIC_SGE_LKEY, k.args.op.atomic.sge.l_key
+
+    // dma_cmd[6]
+    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+    DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
+
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
+
+    CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 1) // set for READ or atomic
+
+    b              set_bth_opc
+    // inc_lsn = TRUE
+    setcf          c4, [c0] // Branch Delay Slot
 
 op_type_read:
     //opc = read_req
     add            r2, RDMA_PKT_OPC_RDMA_READ_REQ, d.service, RDMA_OPC_SERV_TYPE_SHIFT
-     // add READ Req reth hdr
+
+    // add READ Req reth hdr
     DMA_PHV2PKT_SETUP(r6, reth, reth) 
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
 
@@ -98,7 +146,8 @@ op_type_read:
     phvwr          RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_READ
     phvwr          RRQWQE_NUM_SGES, k.args.op.rd.num_sges
     phvwr          RRQWQE_PSN, d.tx_psn           
-    phvwr          RRQWQE_MSN, d.ssn
+    add            r1, d.msn, 1
+    phvwr          RRQWQE_MSN, r1 
     phvwr          RRQWQE_READ_LEN, k.args.op.rd.read_len
     add            r1, k.to_stage.wqe_addr, TXWQE_SGE_OFFSET
     phvwr          RRQWQE_READ_WQE_SGE_LIST_ADDR, r1
@@ -307,5 +356,6 @@ inc_psn:
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
 
+invalid_op_type:
     nop.e
     nop

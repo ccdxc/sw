@@ -57,15 +57,15 @@ packets:
 
     - packet:
          id          : READ_RESP_ONLY_PYLD # Receive payload
-         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+         payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
          template    : ref://factory/packets/id=PAYLOAD
          headers     :
              payload:
-                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
     
     - packet:
          id          : READ_RESP_ONLY    # Receive packet 
-         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+         payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
          template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_AETH
          encaps      :
              - ref://factory/packets/id=ENCAP_QTAG
@@ -94,9 +94,9 @@ packets:
                  psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
              aeth:
                 syndrome : 0 # TODO - credits
-                msn      : ref://testcase/pvtdata/sq_pre_qstate/ssn
+                msn      : ref://testcase/pvtdata/msn
              payload:
-                 data    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/data
+                 data    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/rawbytes
 
 
 buffers:
@@ -162,7 +162,7 @@ descriptors:
         id      : EXP_CQ_WQE
         template: ref://factory/templates/id=DESC_RDMA_CQ
         fields:
-            wrid:  ref://testcase/pvtdata/sq_pre_qstate/ssn
+            wrid:  ref://testcase/pvtdata/msn
             qp: ref://testcase/config/rdmasession/lqp/id
             op_type: 3 #OP_TYPE_READ
             status : 0  #CQ_STATUS_SUCCESS

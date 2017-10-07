@@ -18,6 +18,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.va = 0x0102030405060708
     tc.pvtdata.dma_len = 64
     tc.pvtdata.r_key = 2
+    tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
 
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
@@ -45,31 +46,31 @@ def TestCaseStepVerify(tc, step):
         # verify that tx_psn is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 1):
             return False
-        
+
         # verify that p_index sq is incremented by 1
         if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index0', ring0_mask, 1):
             return False
-        
+
         # verify that c_index sq is incremented by 1
         if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index0', ring0_mask, 1):
             return False
-        
+
         # verify that p_index of rrq is incremented by 1
         if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index5', ring5_mask, 1):
             return False
-        
+
         # verify that ssn is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'ssn', 1):
             return False
-        
+
         # verify that lsn incremented
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'lsn', 1):
             return False
-        
+
         # verify that busy is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
             return False
-        
+
         # verify that in_progress is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
             return False
@@ -79,10 +80,6 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'msn', 1):
             return False
 
-        # verify that e_rsp_psn is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'e_rsp_psn', 1):
-            return False
-
         # verify that c_index of rrq is incremented by 1
         if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index5', ring5_mask, 1):
             return False
@@ -90,7 +87,7 @@ def TestCaseStepVerify(tc, step):
         # verify that busy is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
             return False
-        
+
         # verify that in_progress is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
             return False
@@ -98,7 +95,7 @@ def TestCaseStepVerify(tc, step):
         # verify that token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'token_id', 1):
             return False
-        
+
         # verify that nxt_to_go_token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False

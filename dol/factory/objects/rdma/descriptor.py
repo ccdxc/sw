@@ -50,6 +50,14 @@ class RdmaSqDescriptorRead(Packet):
         IntField("r_key", 0),
     ]
 
+class RdmaSqDescriptorAtomic(Packet):
+    fields_desc = [
+        IntField("r_key", 0),
+        LongField("va", 0),
+        LongField("swapdt", 0),
+        LongField("cmpdt", 0),
+    ]
+
 class RdmaRrqDescriptorBase(Packet):
     fields_desc = [
         BitField("read_resp_or_atomic", 0, 1),
@@ -206,6 +214,15 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            r_key = self.spec.fields.read.r_key if hasattr(self.spec.fields.read, 'r_key') else 0
            read = RdmaSqDescriptorRead(rsvd=rsvd, va=va, len=dma_len, r_key=r_key)
            desc = desc/read
+
+        if hasattr(self.spec.fields, 'atomic'):
+           print("Reading Atomic")
+           r_key = self.spec.fields.atomic.r_key if hasattr(self.spec.fields.atomic, 'r_key') else 0
+           va = self.spec.fields.atomic.va if hasattr(self.spec.fields.atomic, 'va') else 0
+           cmpdt = self.spec.fields.atomic.cmpdt if hasattr(self.spec.fields.atomic, 'cmpdt') else 0
+           swapdt = self.spec.fields.atomic.swapdt if hasattr(self.spec.fields.atomic, 'swapdt') else 0
+           atomic = RdmaSqDescriptorAtomic(r_key=r_key, va=va, cmpdt=cmpdt, swapdt=swapdt)
+           desc = desc/atomic
 
         for sge in self.spec.fields.sges:
             sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)

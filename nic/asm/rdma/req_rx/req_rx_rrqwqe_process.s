@@ -115,10 +115,11 @@ atomic:
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 2)
 
-    SQCB1_ADDR_GET(r1)
-    add            r6, r5, RRQ_C_INDEX_OFFSET
+    SQCB0_ADDR_GET(r1)
+    add            r6, r1, RRQ_C_INDEX_OFFSET
     memwr.h        r6, k.args.rrq_cindex
 
+    SQCB1_ADDR_GET(r1)
     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_write_back_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)

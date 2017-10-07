@@ -52,10 +52,15 @@ struct req_tx_sge_to_lkey_info_t {
     pad                           : 42; 
 };
 
+struct atomic_t {
+    struct sge_t sge;
+    pad                           : 8;
+};
+
 struct rd_t {
     read_len                      : 32;
     num_sges                      : 8;
-    pad                           : 56;
+    pad                           : 96;
 };
 
 struct send_wr_t {
@@ -64,11 +69,13 @@ struct send_wr_t {
     num_sges                      : 8;
     imm_data                      : 32;
     inv_key                       : 32;
+    pad                           : 24;
 };
 
 union op_t {
     struct rd_t rd;
     struct send_wr_t send_wr;
+    struct atomic_t atomic;
 };
 
 struct req_tx_rrqwqe_to_hdr_info_t {
@@ -81,7 +88,6 @@ struct req_tx_rrqwqe_to_hdr_info_t {
     log_pmtu                      : 5;
     rrq_p_index                   : 8;
     union op_t op;
-    pad                           : 24; 
 };
 
 struct req_tx_lkey_to_ptseg_info_t {

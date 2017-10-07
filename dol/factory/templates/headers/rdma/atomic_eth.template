@@ -1,7 +1,7 @@
 meta:
     id      : AtomicETH
     scapy   : AtomicETH
-    size    : None
+    size    : 28
 
 fields:
     va      : const/0x0

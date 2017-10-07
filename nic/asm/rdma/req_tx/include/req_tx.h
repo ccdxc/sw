@@ -23,6 +23,11 @@
 #define RETH_RKEY               p.reth.r_key
 #define RETH_LEN                p.reth.dma_len
 
+#define ATOMIC_VA               p.atomiceth.va
+#define ATOMIC_R_KEY            p.atomiceth.r_key
+#define ATOMIC_SWAP_OR_ADD_DATA p.atomiceth.swap_or_add_data
+#define ATOMIC_CMP_DATA         p.atomiceth.cmp_data
+
 #define RRQWQE_READ_RSP_OR_ATOMIC         p.rrqwqe.read_rsp_or_atomic
 #define RRQWQE_NUM_SGES                   p.rrqwqe.num_sges
 #define RRQWQE_PSN                        p.rrqwqe.psn
@@ -31,7 +36,7 @@
 #define RRQWQE_READ_WQE_SGE_LIST_ADDR     p.rrqwqe.read.wqe_sge_list_addr
 #define RRQWQE_ATOMIC_SGE_VA              p.rrqwqe.atomic.sge.va
 #define RRQWQE_ATOMIC_SGE_LEN             p.rrqwqe.atomic.sge.len
-#define RRQWQE_ATOMIC_SGE_LKEY            p.rrqwqe.atomic.sge.lkey
+#define RRQWQE_ATOMIC_SGE_LKEY            p.rrqwqe.atomic.sge.l_key
 
 // phv 
 struct req_tx_phv_t {

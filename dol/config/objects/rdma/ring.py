@@ -57,6 +57,8 @@ class RdmaRingObject(ring.RingObject):
     def Consume(self, descriptor):
         if self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_RECV":
             descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_proxy_cindex()))
+        elif self.queue.queue_type.purpose.upper() == "LIF_QUEUE_PURPOSE_RDMA_SEND":
+           descriptor.address = (self.address + (self.desc_size * ((self.queue.qstate.get_cindex(0) - 1) & (self.size - 1))))
         else:
             descriptor.address = (self.address + (self.desc_size * self.queue.qstate.get_cindex(0)))
     
