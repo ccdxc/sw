@@ -24,7 +24,7 @@ func main() {
 	// Fill logger config params
 	logConfig := &log.Config{
 		Module:      "NPM",
-		Format:      log.LogFmt,
+		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       *debugflag,
 		CtxSelector: log.ContextAll,

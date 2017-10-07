@@ -15,7 +15,7 @@ func main() {
 	// Fill logger config params
 	logConfig := &log.Config{
 		Module:      "K8sAgent",
-		Format:      log.LogFmt,
+		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       false,
 		CtxSelector: log.ContextAll,

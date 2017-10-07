@@ -145,7 +145,7 @@ func main() {
 	// Fill logger config params
 	logConfig := &log.Config{
 		Module:      "vchub",
-		Format:      log.LogFmt,
+		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
 		Debug:       false,
 		LogToStdout: true,

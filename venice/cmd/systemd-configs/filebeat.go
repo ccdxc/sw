@@ -39,6 +39,8 @@ filebeat.prospectors:
   paths:
    - {{.LogDir}}/*.log
   symlinks: true
+  json.message_key: event
+  json.keys_under_root: true
 
 #================================ General =====================================
 fields:
@@ -52,6 +54,8 @@ fields:
 output.elasticsearch:
   # Array of hosts to connect to.
   hosts: ["{{.ElasticEndpoint}}"]
+  template.name: filebeat
+  template.path: filebeat.template.json
 
   # Optional protocol and basic auth credentials.
   #protocol: "https"

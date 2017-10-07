@@ -36,7 +36,7 @@ func main() {
 		}
 		logConfig := &log.Config{
 			Module:      srvName,
-			Format:      log.LogFmt,
+			Format:      log.JSONFmt,
 			Filter:      log.AllowAllFilter,
 			Debug:       *debugflag,
 			CtxSelector: log.ContextAll,
