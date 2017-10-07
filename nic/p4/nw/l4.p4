@@ -489,6 +489,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                scratch_metadata.rflow_tcp_state == FLOW_STATE_FIN_RCVD) {
 
                modify_field (scratch_metadata.iflow_tcp_state, FLOW_STATE_BIDIR_FIN_RCVD);
+               modify_field (scratch_metadata.rflow_tcp_state, FLOW_STATE_BIDIR_FIN_RCVD);
                // Redirect to ARM CPU for FTE to start aging this flow.
                // goto INITIATOR_TCP_SESSION_UPDATE
            }
@@ -877,6 +878,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                scratch_metadata.iflow_tcp_state == FLOW_STATE_FIN_RCVD) {
 
                modify_field (scratch_metadata.rflow_tcp_state, FLOW_STATE_BIDIR_FIN_RCVD);
+               modify_field (scratch_metadata.iflow_tcp_state, FLOW_STATE_BIDIR_FIN_RCVD);
                // Redirect to ARM CPU for FTE to start aging this flow.
                // goto RESPONDER_TCP_SESSION_UPDATE
            }

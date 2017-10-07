@@ -25,6 +25,13 @@ steps:
             flags   : syn
 
     - step:
+        id          : IFLOW_SYN_DROP
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        permit      : False
+        fields      :
+            flags   : syn
+
+    - step:
         id          : RFLOW_SYN_ACK
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         fields      :
@@ -48,6 +55,13 @@ steps:
         fields      :
             flags   : syn
             ack     : callback://firewall/alu/Mul/val=0
+
+    - step:
+        id          : RFLOW_SYN_DROP
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        permit      : False
+        fields      :
+            flags   : syn
 
     - step:
         id          : IFLOW_DATA
@@ -86,10 +100,24 @@ steps:
             flags   : fin,ack
 
     - step:
+        id          : IFLOW_FIN_ACK_MINUS_1
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : fin,ack
+            ack     : callback://firewall/alu/Sub/val=1
+
+    - step:
         id          : RFLOW_FIN
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         fields      :
             flags   : fin,ack
+
+    - step:
+        id          : RFLOW_FIN_ACK_MINUS_1
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : fin,ack
+            ack     : callback://firewall/alu/Sub/val=1
 
     - step:
         id          : IFLOW_DATA_OVERLAP_LEFT
@@ -288,3 +316,17 @@ steps:
         fields      :
             flags   : ack
             seq     : callback://firewall/alu/Add/val=1
+
+    - step:
+        id          : IFLOW_RST
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 0
+        fields      :
+            flags   : rst
+
+    - step:
+        id          : RFLOW_RST
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 0
+        fields      :
+            flags   : rst

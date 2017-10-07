@@ -28,9 +28,13 @@ class FlowStateData:
         obj.__dict__.update(self.__dict__)
         return obj
 
-    def IncrSeqNum(self, size):
+    def IncrementSeqNum(self, size):
         self.seq += size
-        lg.info("Advancing SEQ number to %d" % self.seq)
+        self.seq &= 0xFFFFFFFF
+        return
+    def IncrementAckNum(self, size):
+        self.ack += size
+        self.ack &= 0xFFFFFFFF
         return
 
     def Show(self, lg):
@@ -70,11 +74,11 @@ class FlowState:
         return
 
     def IncrementSeqNum(self, size):
-        self.curr.seq += size
+        self.curr.IncrementSeqNum(size)
         return
 
     def IncrementAckNum(self, size):
-        self.curr.ack += size
+        self.curr.IncrementAckNum(size)
         return
 
     def ShowDiff(self, lg):

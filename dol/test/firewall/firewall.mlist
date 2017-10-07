@@ -55,7 +55,7 @@ modules:
     - module:
         name    : FULL_SEQ_ROLLOVER
         tracker : True
-        enable  : False
+        enable  : True
         args    :
             connspec: ref://trackerstore/connections/id=SEQ_ROLLOVER
         iterate :
@@ -558,4 +558,242 @@ modules:
             # Send updated window from Responder side
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_WIN_ZERO
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+
+
+    # Test targetting state machine trasnsition related code.
+    - module:
+        name    : TCP_CLOSE_RES_FIRST_FIN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Close from the Responder Side
+            - step  : ref://trackerstore/steps/id=RFLOW_FIN
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Close from the Initiator Side
+            - step  : ref://trackerstore/steps/id=IFLOW_FIN
+            - step  : ref://trackerstore/steps/id=RFLOW_ACK
+
+    # Test targetting state machine trasnsition related code.
+    - module:
+        name    : TCP_CLOSE_FIN_CROSS_INIT_FIRST
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Close from the Initator Side
+            - step  : ref://trackerstore/steps/id=IFLOW_FIN
+            # TBD need to make sure that the below FIN doesn't
+            # ack the fin from responder side. By default
+            # tracker does this, so we might need to write a new
+            # step to take the ack back.
+            - step  : ref://trackerstore/steps/id=RFLOW_FIN_ACK_MINUS_1
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            - step  : ref://trackerstore/steps/id=RFLOW_ACK
+
+    - module:
+        name    : TCP_CLOSE_FIN_CROSS_RES_FIRST
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Close from the Responder Side
+            - step  : ref://trackerstore/steps/id=RFLOW_FIN
+            # TBD need to make sure that the below FIN doesn't
+            # ack the fin from responder side. By default
+            # tracker does this, so we might need to write a new
+            # step to take the ack back.
+            - step  : ref://trackerstore/steps/id=IFLOW_FIN_ACK_MINUS_1
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            - step  : ref://trackerstore/steps/id=RFLOW_ACK
+
+    - module:
+        name    : INIT_DATA_AFTER_FIN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Close from the Initator Side
+            - step  : ref://trackerstore/steps/id=IFLOW_FIN
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
+
+    - module:
+        name    : RES_DATA_AFTER_FIN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Close from the Initator Side
+            - step  : ref://trackerstore/steps/id=RFLOW_FIN
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+
+
+    - module:
+        name    : INIT_DATA_AFTER_BIDIR_FIN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Close from the Initator Side
+            - step  : ref://trackerstore/steps/id=IFLOW_FIN
+            - step  : ref://trackerstore/steps/id=RFLOW_FIN
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
+
+    - module:
+        name    : RES_DATA_AFTER_BIDIR_FIN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Close from the Initator Side
+            - step  : ref://trackerstore/steps/id=RFLOW_FIN
+            - step  : ref://trackerstore/steps/id=IFLOW_FIN
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+
+    - module:
+        name    : INIT_RST_ON_ESTAB_CONN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Reset from the Initator Side
+            - step  : ref://trackerstore/steps/id=IFLOW_RST
+
+    - module:
+        name    : RES_RST_ON_ESTAB_CONN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Reset from the Initator Side
+            - step  : ref://trackerstore/steps/id=RFLOW_RST
+
+    - module:
+        name    : INIT_DATA_ON_RST_CONN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Reset from the Initator Side
+            - step  : ref://trackerstore/steps/id=IFLOW_RST
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
+
+    - module:
+        name    : RES_DATA_ON_RST_CONN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Reset from the Initator Side
+            - step  : ref://trackerstore/steps/id=RFLOW_RST
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+
+    - module:
+        name    : INIT_SYN_ON_ESTAB_CONN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Reset from the Initator Side
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_DROP
+
+    - module:
+        name    : RESP_SYN_ON_ESTAB_CONN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Reset from the Initator Side
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_DROP
 
