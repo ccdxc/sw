@@ -51,6 +51,7 @@ resp_rx_rqpt_process:
     CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, cache, k.args.cache)
     CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
     CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, tbl_id, k.args.tbl_id)
+    CAPRI_SET_FIELD(TBL_ARG_P, INFO_OUT1_T, inv_r_key, k.args.inv_r_key)
 
     // if write_with_imm, load resp_rx_rqwqe_wrid_process, 
     // else load resp_rx_rqwqe_process
