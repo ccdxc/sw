@@ -30,7 +30,3 @@ storage_tx_nvme_be_wqe_handler_start:
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR_PARAM(d.pri_qaddr, Q_STATE_SIZE,
                              storage_tx_pri_q_state_decr_start)
-
-exit:
-   nop.e
-   nop

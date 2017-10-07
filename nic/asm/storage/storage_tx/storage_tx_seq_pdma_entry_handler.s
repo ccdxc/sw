@@ -41,6 +41,3 @@ storage_tx_seq_pdma_entry_handler_start:
                  p4_txdma_intr_dma_cmd_ptr)
 
    LOAD_NO_TABLES
-exit:
-   nop.e
-   nop

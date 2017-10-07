@@ -227,7 +227,7 @@
    DOORBELL_DATA_SETUP(qpop_doorbell_data_data, STORAGE_KIVEC0_W_NDX,	\
                        r0, STORAGE_KIVEC1_SRC_QID, r0)			\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC1_SRC_LIF, STORAGE_KIVEC1_SRC_QTYPE,\
-                       DOORBELL_SCHED_WR_RESET, DOORBELL_UPDATE_C_NDX)	\
+                       DOORBELL_SCHED_WR_NONE, DOORBELL_UPDATE_C_NDX)	\
    DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
                      r7, dma_p2m_0)					\
 
@@ -242,15 +242,19 @@
    DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
                      r7, dma_p2m_0)					\
 
-// Clear the doorbell as there was no work to be done
-// TODO: Fix the ring
-#define PRI_QUEUE_POP_DOORBELL_CLEAR					\
-   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, r0, r0,			\
+// Clear the doorbell as there was no work to be done. Note index can
+// be 0 (r0) as there is no update.
+#define QUEUE_DOORBELL_CLEAR(_ring)					\
+   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, r0, _ring,		\
                        STAGE0_KIVEC_QID, r0)				\
    DOORBELL_ADDR_SETUP(STAGE0_KIVEC_LIF, STAGE0_KIVEC_QTYPE,		\
                        DOORBELL_SCHED_WR_RESET, DOORBELL_UPDATE_NONE)	\
    DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
                      r7, dma_p2m_0)					\
+
+// TODO: Fix the ring for the priority queue API
+#define PRI_QUEUE_POP_DOORBELL_CLEAR	QUEUE_DOORBELL_CLEAR(r0)
+#define QUEUE_POP_DOORBELL_CLEAR	QUEUE_DOORBELL_CLEAR(r0)
 
 // Setup the lif, type, qid, pindex for the doorbell push.  Set the fence 
 // bit for the doorbell 

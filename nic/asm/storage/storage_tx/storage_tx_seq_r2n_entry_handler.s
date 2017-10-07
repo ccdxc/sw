@@ -39,7 +39,3 @@ storage_tx_seq_r2n_entry_handler_start:
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR_PARAM(d.dst_qaddr, Q_STATE_SIZE,
                              storage_tx_seq_q_state_push_start)
-
-exit:
-   nop.e
-   nop

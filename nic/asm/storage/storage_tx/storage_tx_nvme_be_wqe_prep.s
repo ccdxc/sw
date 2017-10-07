@@ -42,7 +42,3 @@ storage_tx_nvme_be_wqe_prep_start:
    // Use the address calculated above to set the table and program address 
    LOAD_TABLE_FOR_ADDR_PARAM(r7, Q_STATE_SIZE,
                              storage_tx_pri_q_state_push_start)
-
-exit:
-   nop.e
-   nop

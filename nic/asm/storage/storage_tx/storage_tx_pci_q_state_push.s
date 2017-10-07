@@ -17,7 +17,8 @@ struct phv_ p;
 
 storage_tx_pci_q_state_push_start:
    // Check queue full condition and exit
-   QUEUE_FULL(d.p_ndx, d.c_ndx, d.num_entries, exit)
+   // TODO: Push error handling
+   QUEUE_FULL(d.p_ndx, d.c_ndx, d.num_entries, tbl_load)
 
    // Calculate the address to which the entry to be pushed has to be 
    // written to in the destination queue. Output will be stored in GPR r7.
@@ -48,9 +49,6 @@ send_intr:
    // Setup the start and end DMA pointers
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_4_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
+
 tbl_load:
    LOAD_NO_TABLES
-
-exit:
-   nop.e
-   nop

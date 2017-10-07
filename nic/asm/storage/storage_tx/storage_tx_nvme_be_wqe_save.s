@@ -50,7 +50,3 @@ storage_tx_nvme_be_wqe_save_start:
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR_PARAM(STORAGE_KIVEC0_DST_QADDR, Q_STATE_SIZE,
                              storage_tx_pci_q_state_push_start)
-
-exit:
-   nop.e
-   nop

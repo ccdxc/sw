@@ -27,7 +27,3 @@ storage_tx_nvme_be_sq_handler_start:
    add		r7, d.handle, r7
    LOAD_TABLE_FOR_ADDR_PARAM(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE,
                              storage_tx_nvme_be_cmd_handler_start)
-
-exit:
-   nop.e
-   nop
