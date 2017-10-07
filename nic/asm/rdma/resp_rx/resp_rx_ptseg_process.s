@@ -13,6 +13,7 @@ struct resp_rx_ptseg_process_k_t k;
 #define DMA_BYTES r3
 #define DMA_ADDR r2
 #define DMA_CMD_BASE r1
+#define GLOBAL_FLAGS r6
 
 #define F_FIRST_PASS c7
 
@@ -20,6 +21,14 @@ struct resp_rx_ptseg_process_k_t k;
 
 .align
 resp_rx_ptseg_process:
+
+    // MPU GLOBAL
+    // take a copy of raw_flags in GLOBAL_FLAGS and keep it for further checks
+    add     GLOBAL_FLAGS, r0, k.global.flags.flags
+
+    // do not perform any payload xfers if qp was err disabled
+    IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP)
+    bcf     [c1], exit
 
     add         r1, r0, k.args.log_page_size
 
@@ -71,14 +80,15 @@ transfer_loop:
     // first_pass = FALSE
     setcf       F_FIRST_PASS, [!c0]  // BD Slot
 
+    seq                 c1, k.args.dma_cmdeop, 1
+    DMA_SET_END_OF_CMDS_C(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE, c1)
+    
+exit:
+    
     seq                 c1, k.args.sge_index, 0
     CAPRI_SET_TABLE_0_VALID_C(c1, 0)
     CAPRI_SET_TABLE_1_VALID_C(!c1, 0)
 
-    seq                 c1, k.args.dma_cmdeop, 1
-    DMA_SET_END_OF_CMDS_C(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE, c1)
-    
-    
     nop.e
     nop
 

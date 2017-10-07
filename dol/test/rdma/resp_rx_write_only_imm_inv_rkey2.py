@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 from test.rdma.utils import *
+import random
 
 def Setup(infra, module):
     return
@@ -17,6 +18,7 @@ def TestCaseSetup(tc):
     tc.pvtdata.rq_pre_qstate = rs.lqp.rq.qstate.data
     tc.pvtdata.send_first_psn = tc.pvtdata.rq_pre_qstate.e_psn
     tc.pvtdata.send_last_psn = tc.pvtdata.rq_pre_qstate.e_psn + 1
+    tc.pvtdata.imm_data = random.randrange(0, 0xffffffff)
 
     # Read CQ pre state
     rs.lqp.rq_cq.qstate.Read()

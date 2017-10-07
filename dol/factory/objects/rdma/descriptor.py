@@ -449,7 +449,29 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
         cfglogger.info('other(actual):\n')
         other.Show()
 
-        return self.desc == other.desc
+        if self.desc.status == 0: #CQ_STATUS_SUCCESS
+            return self.desc == other.desc
+
+        cfglogger.info('status is not 0\n')
+
+        if self.desc.wrid != other.desc.wrid:
+            return False
+
+        cfglogger.info('wrid matched\n')
+
+        if self.desc.op_type != other.desc.op_type:
+            return False
+
+        cfglogger.info('op_type matched\n')
+
+        if self.desc.status != other.desc.status:
+            return False
+
+        cfglogger.info('status matched\n')
+
+        return True
+
+        #no need to compare other params as they are meaningful only incase of SUCCESS
 
 
     def GetBuffer(self):
