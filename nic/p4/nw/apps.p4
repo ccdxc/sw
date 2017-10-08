@@ -3,7 +3,7 @@
 /*****************************************************************************/
 action p4plus_app_tcp_proxy() {
     if ((tcp.flags & TCP_FLAG_SYN) == TCP_FLAG_SYN) {
-        f_p4plus_cpu_pkt();
+        f_p4plus_cpu_pkt(0);
     } else {
         remove_header(ethernet);
         remove_header(vlan_tag);
@@ -157,7 +157,7 @@ action p4plus_app_rdma() {
     remove_header(udp);
 }
 
-action f_p4plus_cpu_pkt() {
+action f_p4plus_cpu_pkt(offset) {
     add_header(p4_to_p4plus_cpu_pkt);
 
     modify_field(p4_to_p4plus_cpu_pkt.src_lif, control_metadata.src_lif);
@@ -177,7 +177,7 @@ action f_p4plus_cpu_pkt() {
     modify_field(p4_to_p4plus_cpu_pkt.l4_offset, 0xFFFF);
     modify_field(p4_to_p4plus_cpu_pkt.payload_offset, 0xFFFF);
 
-    modify_field(scratch_metadata.offset, 0);
+    modify_field(scratch_metadata.offset, offset);
     modify_field(scratch_metadata.cpu_flags, 0);
 
     if (ethernet.valid == TRUE) {
@@ -249,7 +249,48 @@ action p4plus_app_cpu() {
         modify_field(p4_to_p4plus_cpu.l4_sport, icmpv6.typeCode);
     }
 
-    f_p4plus_cpu_pkt();
+    f_p4plus_cpu_pkt(0);
+
+    add(p4_to_p4plus_cpu.packet_len, control_metadata.packet_len,
+        P4PLUS_CPU_PKT_SZ);
+
+    add_header(capri_rxdma_p4_intrinsic);
+    add_header(capri_rxdma_intrinsic);
+    modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
+                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                  P4PLUS_CPU_HDR_SZ));
+    modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
+    modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
+}
+
+action p4plus_app_raw_redir() {
+    add_header(p4_to_p4plus_cpu);
+    add_header(p4_to_p4plus_cpu_ip);
+    modify_field(p4_to_p4plus_cpu.p4plus_app_id,
+                 control_metadata.p4plus_app_id);
+
+    if (ipv4.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu.ip_proto, ipv4.protocol);
+    }
+    if (ipv6.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu.ip_proto, ipv6.nextHdr);
+    }
+    if (udp.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu.l4_sport, udp.srcPort);
+        modify_field(p4_to_p4plus_cpu.l4_dport, udp.dstPort);
+    }
+    if (tcp.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu.l4_sport, tcp.srcPort);
+        modify_field(p4_to_p4plus_cpu.l4_dport, tcp.dstPort);
+    }
+    if (icmp.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu.l4_sport, icmp.typeCode);
+    }
+    if (icmpv6.valid == TRUE) {
+        modify_field(p4_to_p4plus_cpu.l4_sport, icmpv6.typeCode);
+    }
+
+    f_p4plus_cpu_pkt(P4PLUS_RAW_REDIR_HDR_SZ);
 
     add(p4_to_p4plus_cpu.packet_len, control_metadata.packet_len,
         P4PLUS_CPU_PKT_SZ);
@@ -274,6 +315,7 @@ table p4plus_app {
         p4plus_app_ipsec;
         p4plus_app_rdma;
         p4plus_app_cpu;
+        p4plus_app_raw_redir;
         nop;
     }
     size : P4PLUS_APP_TABLE_SIZE;

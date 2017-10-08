@@ -91,6 +91,7 @@ p4plus_app_classic_nic_common:
 p4plus_app_tcp_proxy:
   smeqb       c1, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   balcf       r7, [c1], f_p4plus_cpu_pkt
+  add         r6, r0, r0 // pass packet start offset = 0
 
   phvwr.!c1   p.ethernet_valid, FALSE
   phvwr.!c1   p.vlan_tag_valid, FALSE
@@ -121,7 +122,9 @@ p4plus_app_tcp_proxy:
 .align
 p4plus_app_cpu:
   phvwr       p.p4_to_p4plus_cpu_table0_valid, TRUE
+  add         r6, r0, r0 // pass packet start offset = 0
 
+p4plus_app_cpu_raw_redir_common:
   or          r1, r0, r0
   seq         c1, k.ipv4_valid, TRUE
   seq         c2, k.ipv6_valid, TRUE
@@ -185,6 +188,11 @@ p4plus_app_ipsec:
   phvwr       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype
 
 .align
+p4plus_app_raw_redir:
+  b           p4plus_app_cpu_raw_redir_common
+  add         r6, r0, P4PLUS_RAW_REDIR_HDR_SZ // pass packet start offset
+
+.align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 p4plus_app_rdma:
   phvwr       p.p4_to_p4plus_roce_p4plus_app_id, k.control_metadata_p4plus_app_id
@@ -194,6 +202,7 @@ p4plus_app_rdma:
   phvwr.e     p.ipv6_valid, FALSE
   phvwr       p.udp_valid, FALSE
 
+// input r6 : packet start offset
 f_p4plus_cpu_pkt:
   phvwr       p.p4_to_p4plus_cpu_pkt_valid, TRUE
   phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, k.{control_metadata_src_lif}.hx
@@ -206,13 +215,16 @@ f_p4plus_cpu_pkt:
                   k.control_metadata_lkp_flags_egress
   sub         r1, r0, 1
   phvwr       p.{p4_to_p4plus_cpu_pkt_l2_offset...p4_to_p4plus_cpu_pkt_payload_offset}, r1
-  add         r1, r0, r0
+  // r1 : offset
+  // r2 : flags
+  add         r1, r0, r6
   add         r2, r0, r0
   seq         c1, k.ethernet_valid, TRUE
   phvwr.c1    p.p4_to_p4plus_cpu_pkt_l2_offset, r1.hx
   seq         c2, k.vlan_tag_valid, TRUE
   or.c2       r2, r2, CPU_FLAGS_VLAN_VALID
-  cmov.c1     r1, c2, 18, 14
+  cmov        r3, c2, 18, 14
+  add.c1      r1, r1, r3
   seq         c1, k.ipv4_valid, TRUE
   seq         c2, k.ipv6_valid, TRUE
   setcf       c3, [c1|c2]

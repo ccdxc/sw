@@ -424,6 +424,9 @@ p4pd_p4plus_app_init (void)
             case P4PLUS_APPTYPE_CPU:
                 data.actionid = P4PLUS_APP_P4PLUS_APP_CPU_ID;
                 break;
+            case P4PLUS_APPTYPE_RAW_REDIR:
+                data.actionid = P4PLUS_APP_P4PLUS_APP_RAW_REDIR_ID;
+                break;
             default:
                 HAL_TRACE_ERR("Unknown app_type: {}", i);
                 HAL_ASSERT(0);
