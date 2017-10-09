@@ -91,6 +91,8 @@ enum ApiStatus {
   API_STATUS_CFG_DB_ERR                   = 58;    // config database inconsistency
   API_STATUS_SECURITY_GROUP_ID_INVALID    = 59;    // Security group id invalid
   API_STATUS_ENDPOINT_UPD_KEY_HDL_INVALID = 60;    // ep update with no key and hdl
+  API_STATUS_DOS_POLICY_ID_INVALID        = 61;    // dos policy id invalid
+  API_STATUS_DOS_POLICY_NOT_FOUND         = 62;    // dos policy not found
 }
 
 // common meta object that is part of all other top level objects

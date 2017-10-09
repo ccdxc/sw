@@ -334,13 +334,13 @@ message DoSFloodLimits {
   message RestrictLimits {
     uint32    pps               = 1;    // packet-per-second limit
     uint32    burst_pps         = 2;    // packets-per-second burst
-    uint32    restrict_interval = 3;    // restrict action duration in seconds
+    uint32    duration          = 3;    // restrict action duration in seconds
   }
   // default and only action in protection phase is drop
   message ProtectLimits {
     uint32    pps               = 1;    // packet-per-second limit
     uint32    burst_pps         = 2;    // packets-per-second burst
-    uint32    restrict_interval = 3;    // protect action duration in seconds
+    uint32    duration          = 3;    // protect action duration in seconds
   }
   RestrictLimits    restrict_limits = 1;
   ProtectLimits     protect_limits  = 2;
@@ -360,7 +360,7 @@ message DoSProtectionSpec {
   DoSFloodLimits      icmp_flood_limits    = 7;    // ICMP flood limits
   DoSFloodLimits      other_flood_limits   = 8;    // flood limits for all other
                                                    // traffic (IP and non-IP)
-  uint32              peer_security_group = 9;     // TO security group
+  uint32              peer_security_group  = 9;    // TO security group
 }
 
 
@@ -374,54 +374,48 @@ message EgressDoSPolicy {
     DoSProtectionSpec dos_protection = 1;  //egress (D)DoS Protection policy
 }
 
-// DoSKeyHandle uniquely identifies a DoS and is used
-// to create/update/delete/get DoS groups
-message DoSKeyHandle {
-  oneof key_or_handle {
-   uint32     security_group_id = 1;    // security group id or label
-   fixed64    dos_handle = 2;    // id of DoS returned by HAL
-  }
-}
-
-// DoSSpec that has the ingressDosPolicy and EgressDoSPolicy,
-// Spec is identified by the keyHandle
-message DoSSpec {
-   types.ObjectMeta           meta           = 1;    // object meta
-   DoSKeyHandle               key_or_handle  = 2;    // key or handle
-   IngressDoSPolicy           ingress_policy = 3;    // ingress policy
-   EgressDoSPolicy            egress_policy  = 4;    // egress policy
+// DoSPolicySpec that has the ingressDosPolicy and EgressDoSPolicy,
+// Spec is identified by the handle. HAL will assign a unique handle for each
+// DoSPolicy object and the clients are expected to pass the handle for
+// Get/Modify/Delete calls. Note that there is no identifier for this object
+message DoSPolicySpec {
+   types.ObjectMeta           meta              = 1;    // object meta
+   IngressDoSPolicy           ingress_policy    = 2;    // ingress policy
+   EgressDoSPolicy            egress_policy     = 3;    // egress policy
+   fixed64                    dos_handle        = 4;    // dos policy handle
+   repeated uint32            security_group_id = 5;    // List of security groups
 }
 
 // DoSPolicyRequestMsg is batched add or modify DoS request
 message DoSPolicyRequestMsg {
-  repeated DoSSpec    request = 1;    // batched request
+  repeated DoSPolicySpec    request = 1;    // batched request
 }
 
 // DoS operational status
-message DoSStatus {
+message DoSPolicyStatus {
   fixed64    dos_handle = 1;    // id of the dos returned by HAL
 }
 
-// DoSResponse is the response to DoSSpec
-message DoSResponse {
-  types.ApiStatus        api_status  = 1;    // API status code
-  DoSStatus             status      = 2;    // operational status
+// DoSResponse is the response to DoSPolicySpec
+message DoSPolicyResponse {
+  types.ApiStatus       api_status  = 1;    // API status code
+  DoSPolicyStatus       status      = 2;    // operational status
 }
 
 // DoSPolicyResponseMsg is batched response to DoSPolicyRequestMsg
 message DoSPolicyResponseMsg {
-  repeated DoSResponse    response = 1;    // batched response
+  repeated DoSPolicyResponse    response = 1;    // batched response
 }
 
 // DoSRequest is used to delete a DoS
-message DoSDeleteRequest {
-  types.ObjectMeta          meta           = 1;    // object meta
-  DoSKeyHandle             key_or_handle  = 2;    // key or handle
+message DoSPolicyDeleteRequest {
+  types.ObjectMeta  meta           = 1;    // object meta
+  fixed64           dos_handle     = 2;    // object handle
 }
 
 // DoSPolicyDeleteRequestMsg is used to delete a batch of security groups
 message DoSPolicyDeleteRequestMsg {
-  repeated DoSDeleteRequest    request = 1;
+  repeated DoSPolicyDeleteRequest    request = 1;
 }
 
 // DoSPolicyDeleteResponseMsg is batched response to
@@ -431,29 +425,29 @@ message DoSPolicyDeleteResponseMsg {
 }
 
 // DoSGetRequest is used to get information about a DoS
-message DoSGetRequest {
-  types.ObjectMeta          meta           = 1;    // object meta
-  DoSKeyHandle             key_or_handle  = 2;    // key or handle
+message DoSPolicyGetRequest {
+  types.ObjectMeta  meta           = 1;    // object meta
+  fixed64           dos_handle     = 2;    // object handle
 }
 
 // DoSPolicyGetRequestMsg is batched GET request for DoS
 message DoSPolicyGetRequestMsg {
-  repeated DoSGetRequest    request = 1;    // batched get request
+  repeated DoSPolicyGetRequest    request = 1;    // batched get request
 }
 
-// DoSStats is the statistics object for a security group
-message DoSStats {
+// DoSPolicyStats is the statistics object for a security group
+message DoSPolicyStats {
 }
 
 // DoSGetResponse captures all the information about a security group
-message DoSGetResponse {
-  types.ApiStatus        api_status = 1;    // API status code
-  DoSSpec      spec       = 2;    // configuration of DoS
-  DoSStatus    status     = 3;    // operational state of DoS
-  DoSStats     stats      = 4;    // debug status of DoS
+message DoSPolicyGetResponse {
+  types.ApiStatus         api_status = 1;    // API status code
+  DoSPolicySpec           spec       = 2;    // configuration of DoS
+  DoSPolicyStatus         status     = 3;    // operational state of DoS
+  DoSPolicyStats          stats      = 4;    // debug status of DoS
 }
 
 // DoSPolicyGetResponseMsg is batched response to DoSPolicyGetRequestMsg
 message DoSPolicyGetResponseMsg {
-  repeated DoSGetResponse    response = 1;    // batched get response
+  repeated DoSPolicyGetResponse    response = 1;    // batched get response
 }

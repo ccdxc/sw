@@ -34,6 +34,12 @@ using nwsec::SecurityGroupDeleteResponseMsg;
 using nwsec::SecurityGroupGetRequestMsg;
 using nwsec::SecurityGroupGetResponseMsg;
 using nwsec::SecurityGroupGetResponse;
+using nwsec::DoSPolicyRequestMsg;
+using nwsec::DoSPolicyResponseMsg;
+using nwsec::DoSPolicyDeleteRequestMsg;
+using nwsec::DoSPolicyDeleteResponseMsg;
+using nwsec::DoSPolicyGetRequestMsg;
+using nwsec::DoSPolicyGetResponseMsg;
 using nwsec::Service;
 
 class NwSecurityServiceImpl final : public NwSecurity::Service {
@@ -45,7 +51,6 @@ public:
     Status SecurityProfileUpdate(ServerContext *context,
                                  const SecurityProfileRequestMsg *req,
                                  SecurityProfileResponseMsg *rsp) override;
-
 
     Status SecurityProfileDelete(ServerContext *context,
                                  const SecurityProfileDeleteRequestMsg *req,
@@ -70,6 +75,22 @@ public:
     Status SecurityGroupGet(ServerContext *context,
                             const SecurityGroupGetRequestMsg *req,
                             SecurityGroupGetResponseMsg      *rsp) override;
+
+    Status DoSPolicyCreate(ServerContext *context,
+                           const DoSPolicyRequestMsg *req,
+                           DoSPolicyResponseMsg *rsp) override;
+
+    Status DoSPolicyUpdate(ServerContext *context,
+                           const DoSPolicyRequestMsg *req,
+                           DoSPolicyResponseMsg *rsp) override;
+
+    Status DoSPolicyDelete(ServerContext *context,
+                           const DoSPolicyDeleteRequestMsg *req,
+                           DoSPolicyDeleteResponseMsg *rsp) override;
+
+    Status DoSPolicyGet(ServerContext *context,
+                        const DoSPolicyGetRequestMsg *req,
+                        DoSPolicyGetResponseMsg *rsp) override;
 };
 
 #endif    // __NWSEC_SVC_HPP__
