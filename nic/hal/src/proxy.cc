@@ -44,6 +44,9 @@ proxy_meta_init() {
     g_meta[types::PROXY_TYPE_IPFIX] =
         (proxy_meta_t) {true, SERVICE_LIF_IPFIX, 0, 1, 1};
 
+    g_meta[types::PROXY_TYPE_RAW_REDIR] = 
+        (proxy_meta_t) {true, SERVICE_LIF_RAW_REDIR, 0, 2, 10};
+
     return HAL_RET_OK;
 }
 

@@ -1,0 +1,26 @@
+# RAWR CB Object Template File.
+meta:
+    id: RAWRCB
+    grpc:
+        package                       : rawrcb
+        service                       : RawrCb
+        apis:
+            create:
+                name                  : RawrCbCreate
+                message               : RawrCbRequestMsg
+            get:
+                name                  : RawrCbGet
+                message               : RawrCbGetRequestMsg
+
+id                              : 0 # RAWR CB Local ID
+spec                            : None # (REF) RAWR CB Spec from Base Config.
+chain_rxq_base                  : 0
+chain_rxq_sem_alloc_idx         : 0
+chain_rxq_qidxr_base            : 0
+chain_qidxr_entry_size_shift    : 0
+chain_rxq_ring_size_shift       : 0
+chain_rxq_entry_size_shift      : 0
+chain_qidxr_pi                  : 0
+desc_valid_bit_upd              : 0
+desc_valid_bit_req              : 0
+

@@ -202,6 +202,7 @@ do {                                                       \
     ENTRY(HAL_RET_NWSEC_ID_INVALID,           44, "nwsec id invalid")          \
     ENTRY(HAL_RET_INTERFACE_ID_INVALID,       45, "interface id invalid")      \
     ENTRY(HAL_RET_DOS_POLICY_ID_INVALID,      46, "dos policy id invalid")          \
+    ENTRY(HAL_RET_RAWR_CB_NOT_FOUND,          47, "Raw redirect CB not found") \
                                                                                \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

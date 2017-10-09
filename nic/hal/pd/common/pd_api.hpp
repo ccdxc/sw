@@ -20,6 +20,7 @@
 #include "nic/hal/src/cpucb.hpp"
 #include "nic/hal/src/system.hpp"
 #include "nic/include/oif_list_api.hpp"
+#include "nic/hal/src/rawrcb.hpp"
 
 namespace hal {
 namespace pd {
@@ -44,6 +45,7 @@ using hal::mirror_session_t;
 using hal::ipseccb_t;
 using hal::l4lb_service_entry_t;
 using hal::cpucb_t;
+using hal::rawrcb_t;
 
 typedef uint16_t    l2seg_hw_id_t;
 
@@ -177,6 +179,10 @@ typedef struct pd_l4lb_args_s {
 typedef struct pd_cpucb_args_s {
     cpucb_t            *cpucb;
 } __PACK__ pd_cpucb_args_t;
+
+typedef struct pd_rawrcb_args_s {
+    rawrcb_t           *rawrcb;
+} __PACK__ pd_rawrcb_args_t;
 
 typedef struct pd_rw_entry_args_s {
     mac_addr_t          mac_sa;
@@ -338,6 +344,13 @@ pd_cpucb_args_init (pd_cpucb_args_t *args)
     return;
 }
 
+static inline void
+pd_rawrcb_args_init (pd_rawrcb_args_t *args)
+{
+    args->rawrcb = NULL;
+    return;
+}
+
 hal_ret_t pd_tenant_create(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_update(pd_tenant_args_t *tenant);
 hal_ret_t pd_tenant_delete(pd_tenant_args_t *tenant);
@@ -422,6 +435,11 @@ hal_ret_t pd_cpucb_delete(pd_cpucb_args_t *cpucb);
 hal_ret_t pd_cpucb_get(pd_cpucb_args_t *cpucb);
 hal_ret_t pd_rw_entry_find_or_alloc(pd_rw_entry_args_t *rw_key, 
                                     uint32_t *rw_idx);
+hal_ret_t pd_rawrcb_create(pd_rawrcb_args_t *rawrcb);
+hal_ret_t pd_rawrcb_update(pd_rawrcb_args_t *rawrcb);
+hal_ret_t pd_rawrcb_delete(pd_rawrcb_args_t *rawrcb);
+hal_ret_t pd_rawrcb_get(pd_rawrcb_args_t *rawrcb);
+
 
 typedef struct pd_buf_pool_args_s {
     buf_pool_t    *buf_pool;

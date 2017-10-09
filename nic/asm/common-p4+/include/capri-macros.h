@@ -292,6 +292,11 @@
 #define RNMPR_TABLE_SIZE                255
 #define RNMPR_TABLE_SIZE_SHFT           8
 
+#define RNMPR_SMALL_TABLE_BASE          hbm_rnmpr_small_table_base
+#define RNMPR_SMALL_TABLE_ENTRY_SIZE    8 /* 8B */
+#define RNMPR_SMALL_TABLE_ENTRY_SIZE_SHFT 3 /* 8B */
+#define RNMPR_SMALL_TABLE_SIZE          255
+#define RNMPR_SMALL_TABLE_SIZE_SHFT     8
 
 #define TNMDR_TABLE_BASE                hbm_tnmdr_table_base
 #define TNMDR_TABLE_ENTRY_SIZE          8 /* 8B */

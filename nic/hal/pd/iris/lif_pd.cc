@@ -305,6 +305,7 @@ pd_lif_get_vlan_strip_en (lif_t *lif, pd_lif_upd_args_t *args)
 // Program Output Mapping Table
 // ----------------------------------------------------------------------------
 #define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
+#define om_cpu data.output_mapping_action_u.output_mapping_redirect_to_cpu
 hal_ret_t
 lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args, 
                               table_oper_t oper)
@@ -344,6 +345,18 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args,
     om_tmoport.dst_lif = pd_lif->hw_lif_id;
     om_tmoport.vlan_strip = pd_lif_get_vlan_strip_en((lif_t *)pd_lif->pi_lif, args);
 
+
+    /*
+     * Raw Redirect (for L7 phase 1) goes to CPU, but through
+     * its own lif.
+     */
+    if (((lif_t *)pd_lif->pi_lif)->lif_id == 1006) {
+        data.actionid = OUTPUT_MAPPING_REDIRECT_TO_CPU_ID;
+        memset(&data.output_mapping_action_u, 0, sizeof(data.output_mapping_action_u));
+        om_cpu.dst_lif = pd_lif->hw_lif_id;
+        om_cpu.egress_mirror_en = 0;
+        om_cpu.tm_oqueue = 0;
+    }
 
     // Program OutputMapping table
     //  - Get tmoport from PI

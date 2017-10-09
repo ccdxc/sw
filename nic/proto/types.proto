@@ -93,6 +93,8 @@ enum ApiStatus {
   API_STATUS_ENDPOINT_UPD_KEY_HDL_INVALID = 60;    // ep update with no key and hdl
   API_STATUS_DOS_POLICY_ID_INVALID        = 61;    // dos policy id invalid
   API_STATUS_DOS_POLICY_NOT_FOUND         = 62;    // dos policy not found
+  API_STATUS_RAWR_CB_ID_INVALID           = 63;    // invalid Raw Redirect CB id
+  API_STATUS_RAWR_CB_NOT_FOUND            = 64;    // invalid Raw Redirect CB
 }
 
 // common meta object that is part of all other top level objects
@@ -174,6 +176,7 @@ enum WRingType {
   WRING_TYPE_ARQRX          = 12;
   WRING_TYPE_ASQ            = 13;
   WRING_TYPE_ASESQ          = 14;    
+  WRING_TYPE_RAWRCB         = 15;
 }
 
 // Types of Proxy Service
@@ -184,6 +187,7 @@ enum ProxyType {
   PROXY_TYPE_IPSEC         = 3;    
   PROXY_TYPE_CPU           = 4;
   PROXY_TYPE_IPFIX         = 5;
+  PROXY_TYPE_RAW_REDIR     = 6;
 }
 
 // Types of Cryptographic keys

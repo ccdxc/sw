@@ -26,7 +26,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         print("Configuring proxy for the flow with label: " + self.session.iflow.label)
-        if self.session.iflow.label == 'TCP-PROXY':
+        if self.session.iflow.label == 'TCP-PROXY' or self.session.iflow.label == 'RAW-REDIR':
             req_spec.meta.tenant_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 0
             req_spec.spec.proxy_type = 1
@@ -73,7 +73,7 @@ class ProxyCbServiceObjectHelper:
 
     def Configure(self):
         for proxycb in self.proxy_service_list:
-            if proxycb.session.iflow.label == 'TCP-PROXY' or proxycb.session.iflow.label == 'ESP-PROXY' or proxycb.session.iflow.label == 'IPSEC-PROXY':
+            if proxycb.session.iflow.label == 'TCP-PROXY' or proxycb.session.iflow.label == 'ESP-PROXY' or proxycb.session.iflow.label == 'IPSEC-PROXY' or proxycb.session.iflow.label == 'RAW-REDIR':
                 lst = []
                 lst.append(proxycb)
                 halapi.ConfigureProxyCbService(lst)

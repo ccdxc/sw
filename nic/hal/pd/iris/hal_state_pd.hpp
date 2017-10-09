@@ -159,6 +159,10 @@ public:
     slab *cpucb_slab(void) const { return cpucb_slab_; }
     ht *cpucb_hwid_ht(void) const { return cpucb_hwid_ht_; }
 
+    // get APIs for Raw Redirect CB related state
+    slab *rawrcb_slab(void) const { return rawrcb_slab_; }
+    ht *rawrcb_hwid_ht(void) const { return rawrcb_hwid_ht_; }
+
     // get APIs for RW table related state
     slab *rw_entry_slab(void) const { return rw_entry_slab_; }
     ht *rw_table_ht(void) const { return rw_table_ht_; }
@@ -379,6 +383,12 @@ private:
         slab       *cpupkt_qinst_info_slab_;
         indexer    *cpupkt_descr_hwid_idxr_;
         indexer    *cpupkt_page_hwid_idxr_;
+    } __PACK__;
+
+    // Raw Redirect CB related state
+    struct {
+        slab       *rawrcb_slab_;
+        ht         *rawrcb_hwid_ht_;
     } __PACK__;
 
     DirectMap    **dm_tables_;

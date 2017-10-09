@@ -18,6 +18,7 @@
 #include "nic/hal/src/ipseccb.hpp"
 #include "nic/hal/src/l4lb.hpp"
 #include "nic/hal/src/cpucb.hpp"
+#include "nic/hal/src/rawrcb.hpp"
  
 namespace hal {
 
@@ -287,7 +288,20 @@ hal_cfg_db::init(void)
                                        hal::cpucb_compute_handle_hash_func,
                                        hal::cpucb_compare_handle_key_func);
     HAL_ASSERT_RETURN((cpucb_hal_handle_ht_ != NULL), false);
-    
+
+    // initialize Raw Redirect CB related data structures
+    rawrcb_id_ht_ = ht::factory(HAL_MAX_RAWRCB,
+                                hal::rawrcb_get_key_func,
+                                hal::rawrcb_compute_hash_func,
+                                hal::rawrcb_compare_key_func);
+    HAL_ASSERT_RETURN((rawrcb_id_ht_ != NULL), false);
+
+    rawrcb_hal_handle_ht_ = ht::factory(HAL_MAX_RAWRCB,
+                                        hal::rawrcb_get_handle_key_func,
+                                        hal::rawrcb_compute_handle_hash_func,
+                                        hal::rawrcb_compare_handle_key_func);
+    HAL_ASSERT_RETURN((rawrcb_hal_handle_ht_ != NULL), false);
+
     nwsec_policy_cfg_ht_ = ht::factory(HAL_MAX_NW_SEC_POLICY_CFG,
                                        hal::nwsec_policy_cfg_get_key_func,
                                        hal::nwsec_policy_cfg_compute_hash_func, 
@@ -366,6 +380,9 @@ hal_cfg_db::hal_cfg_db()
     
     cpucb_id_ht_ = NULL;
     cpucb_hal_handle_ht_ = NULL;
+
+    rawrcb_id_ht_ = NULL;
+    rawrcb_hal_handle_ht_ = NULL;
 
     forwarding_mode_ = HAL_FORWARDING_MODE_NONE;
 }
@@ -463,6 +480,9 @@ hal_cfg_db::~hal_cfg_db()
 
     cpucb_id_ht_ ? delete cpucb_id_ht_ : HAL_NOP;
     cpucb_hal_handle_ht_ ? delete cpucb_hal_handle_ht_ : HAL_NOP;
+
+    rawrcb_id_ht_ ? delete rawrcb_id_ht_ : HAL_NOP;
+    rawrcb_hal_handle_ht_ ? delete rawrcb_hal_handle_ht_ : HAL_NOP;
 }
 
 void
@@ -1181,7 +1201,13 @@ hal_mem_db::init(void)
                                 sizeof(hal::cpucb_t), 16,
                                 false, true, true, true);
     HAL_ASSERT_RETURN((cpucb_slab_ != NULL), false);
-    
+
+    // initialize Raw Redirect CB related data structures
+    rawrcb_slab_ = slab::factory("rawrcb", HAL_SLAB_RAWRCB,
+                                 sizeof(hal::rawrcb_t), 16,
+                                 false, true, true, true);
+    HAL_ASSERT_RETURN((rawrcb_slab_ != NULL), false);
+
     nwsec_policy_slab_ = slab::factory("nwsec_policy", HAL_SLAB_NWSEC_POLICY,
                                        sizeof(hal::nwsec_policy_entry_t), 64,
                                        true, true, true, true);
@@ -1240,6 +1266,7 @@ hal_mem_db::hal_mem_db()
     acl_slab_ = NULL;
     ipseccb_slab_ = NULL;
     cpucb_slab_ = NULL;
+    rawrcb_slab_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -1300,6 +1327,7 @@ hal_mem_db::~hal_mem_db()
     acl_slab_ ? delete acl_slab_ : HAL_NOP;
     ipseccb_slab_ ? delete ipseccb_slab_ : HAL_NOP;
     cpucb_slab_ ? delete cpucb_slab_ : HAL_NOP;
+    rawrcb_slab_ ? delete rawrcb_slab_ : HAL_NOP;
 }
 
 // ----------------------------------------------------------------------------
@@ -1582,6 +1610,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
     
     case HAL_SLAB_CPUCB:
         g_hal_state->cpucb_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_RAWRCB:
+        g_hal_state->rawrcb_slab()->free_(elem);
         break;
 
     default:

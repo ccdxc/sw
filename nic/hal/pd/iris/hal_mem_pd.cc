@@ -30,6 +30,7 @@
 #include "nic/hal/pd/iris/rw_pd.hpp"
 #include "nic/hal/pd/iris/cpucb_pd.hpp"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
+#include "nic/hal/pd/iris/rawrcb_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -304,6 +305,18 @@ hal_state_pd::init(void)
     cpupkt_page_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_CPU_PKT_PAGE_ENTRIES);
     HAL_ASSERT_RETURN((cpupkt_page_hwid_idxr_ != NULL), false);
 
+    // initialize RAWRCB related data structures
+    rawrcb_slab_ = slab::factory("RAWRCB PD", HAL_SLAB_RAWRCB_PD,
+                                 sizeof(hal::pd::pd_rawrcb_t), 128,
+                                 true, true, true, true);
+    HAL_ASSERT_RETURN((rawrcb_slab_ != NULL), false);
+
+    rawrcb_hwid_ht_ = ht::factory(HAL_MAX_HW_RAWRCBS,
+                                 hal::pd::rawrcb_pd_get_hw_key_func,
+                                 hal::pd::rawrcb_pd_compute_hw_hash_func,
+                                 hal::pd::rawrcb_pd_compare_hw_key_func);
+    HAL_ASSERT_RETURN((rawrcb_hwid_ht_ != NULL), false);
+
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
     tcam_tables_ = NULL;
@@ -401,6 +414,9 @@ hal_state_pd::hal_state_pd()
     cpupkt_qinst_info_slab_ = NULL;
     cpupkt_descr_hwid_idxr_ = NULL;
     cpupkt_page_hwid_idxr_ = NULL;
+
+    rawrcb_slab_ = NULL;
+    rawrcb_hwid_ht_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -479,6 +495,9 @@ hal_state_pd::~hal_state_pd()
     cpupkt_qinst_info_slab_ ? delete cpupkt_qinst_info_slab_ : HAL_NOP;
     cpupkt_descr_hwid_idxr_ ? delete  cpupkt_descr_hwid_idxr_ : HAL_NOP;
     cpupkt_page_hwid_idxr_ ? delete  cpupkt_page_hwid_idxr_ : HAL_NOP;
+
+    rawrcb_slab_ ? delete rawrcb_slab_ : HAL_NOP;
+    rawrcb_hwid_ht_ ? delete rawrcb_hwid_ht_ : HAL_NOP;
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -1170,9 +1189,14 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state_pd->cpupkt_slab()->free_(elem);
         break;
 
+    case HAL_SLAB_RAWRCB_PD:
+        g_hal_state_pd->rawrcb_slab()->free_(elem);
+        break;
+
     case HAL_SLAB_CPUPKT_QINST_INFO_PD:
         g_hal_state_pd->cpupkt_qinst_info_slab()->free_(elem);
         break;
+
     default:
         HAL_TRACE_ERR("Unknown slab id {}", slab_id);
         HAL_ASSERT(FALSE);

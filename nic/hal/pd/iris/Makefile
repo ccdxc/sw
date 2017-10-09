@@ -28,6 +28,7 @@ LCXXFLAGS = \
 			-I../../../gen/esp_v4_tunnel_n2h_rxdma/include \
 			-I../../../gen/cpu_rxdma/include \
 			-I../../../gen/cpu_txdma/include \
+			-I../../../gen/rawr_rxdma/include \
             -I../../../gen/common_rxdma_actions/include \
 			-I../../../gen/tls_txdma/include \
 			-I../../../p4/nw/include \
@@ -77,6 +78,7 @@ SOURCES = \
 		  rw_pd.cc \
 		  cpucb_pd.cc \
 		  cpupkt_api.cc \
+		  rawrcb_pd.cc \
 		  system_pd.cc \
 		  $(NULL)
 

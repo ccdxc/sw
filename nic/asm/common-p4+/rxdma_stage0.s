@@ -22,6 +22,7 @@
     .param      eth_rx_fetch_desc
     .param      esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table
     .param      esp_ipv4_tunnel_n2h_rxdma_initial_table
+    .param      rawr_s0_rx_start
 
 
 //Keep offset 0 for none to avoid invoking unrelated program when
@@ -70,4 +71,9 @@ cpu_rx_stage0:
 .align
 ipsec_rx_n2h_stage0:
     j esp_ipv4_tunnel_n2h_rxdma_initial_table
+    nop
+
+.align
+rawr_rx_stage0:
+    j rawr_s0_rx_start
     nop

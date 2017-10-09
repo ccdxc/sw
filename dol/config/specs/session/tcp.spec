@@ -78,6 +78,15 @@ entries:
             port : const/44445
 
     - entry:
+        label: raw-redir
+        tracking: False
+        timestamp: False
+        responder:
+            port : const/23767
+        initiator:
+            port : const/23768
+
+    - entry:
         label: networking
         tracking: False
         timestamp: False

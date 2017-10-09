@@ -131,6 +131,9 @@ public:
     ht *cpucb_id_ht(void) const { return cpucb_id_ht_; }
     ht *cpucb_hal_handle_ht(void) const { return cpucb_hal_handle_ht_; }
 
+    // get APIs for Raw Redirect CB state
+    ht *rawrcb_id_ht(void) const { return rawrcb_id_ht_; }
+    ht *rawrcb_hal_handle_ht(void) const { return rawrcb_hal_handle_ht_; }
     void set_forwarding_mode(std::string modestr);
     hal_forwarding_mode_t forwarding_mode() { return forwarding_mode_; }
 
@@ -288,6 +291,12 @@ private:
         ht         *cpucb_hal_handle_ht_;
     } __PACK__;
 
+    // Raw Redirect CB related state
+    struct {
+        ht         *rawrcb_id_ht_;
+        ht         *rawrcb_hal_handle_ht_;
+    } __PACK__;
+
     // CFG parameters from JSON file.
     struct {
         hal_forwarding_mode_t   forwarding_mode_;
@@ -394,6 +403,8 @@ public:
     slab *wring_slab(void) const { return wring_slab_; }
     slab *ipseccb_slab(void) const { return ipseccb_slab_; }
     slab *cpucb_slab(void) const { return cpucb_slab_; }
+    slab *rawrcb_slab(void) const { return rawrcb_slab_; }
+
 private:
     bool init(void);
     hal_mem_db();
@@ -431,6 +442,7 @@ private:
     slab    *acl_slab_;
     slab    *ipseccb_slab_;
     slab    *cpucb_slab_;
+    slab    *rawrcb_slab_;
 };
 
 //------------------------------------------------------------------------------
@@ -587,6 +599,11 @@ public:
     slab *cpucb_slab(void) const { return mem_db_->cpucb_slab(); }
     ht *cpucb_id_ht(void) const { return cfg_db_->cpucb_id_ht(); }
     ht *cpucb_hal_handle_ht(void) const { return cfg_db_->cpucb_hal_handle_ht(); }
+
+    // get APIs for Raw Redirect CB state
+    slab *rawrcb_slab(void) const { return mem_db_->rawrcb_slab(); }
+    ht *rawrcb_id_ht(void) const { return cfg_db_->rawrcb_id_ht(); }
+    ht *rawrcb_hal_handle_ht(void) const { return cfg_db_->rawrcb_hal_handle_ht(); }
 
     //Forwarding mode APIs
     void set_forwarding_mode(std::string modestr) { 

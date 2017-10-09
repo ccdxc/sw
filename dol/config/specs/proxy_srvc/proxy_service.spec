@@ -12,6 +12,9 @@ entries:
     - entry:
         name        : SERVICE_LIF
         type        : IPSEC_PROXY
+    - entry:
+        name        : SERVICE_LIF
+        type        : RAW_REDIR
 #    - entry:
 #        name        : SERVICE_LIF
 #        type        : CPU_PROXY

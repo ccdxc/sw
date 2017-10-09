@@ -77,6 +77,9 @@ wring_pd_meta_init() {
     g_meta[types::WRING_TYPE_ASQ] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_ASQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};
 
+    g_meta[types::WRING_TYPE_RAWRCB] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_RAWRCB, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
+
     g_meta[types::WRING_TYPE_ASESQ] = 
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASESQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL};
     return HAL_RET_OK;

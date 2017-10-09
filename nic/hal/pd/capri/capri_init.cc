@@ -6,7 +6,7 @@
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 40
+#define CAPRI_P4PLUS_NUM_SYMBOLS 46
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
@@ -375,6 +375,36 @@ capri_p4p_asm_init()
         get_start_offset(p4pd_tbl_names[P4TBL_ID_FLOW_STATS]);
     symbols[39].params[1].name = P4_FLOW_ATOMIC_STATS_BASE;
     symbols[39].params[1].val = get_start_offset(JP4_ATOMIC_STATS);
+
+    symbols[40].name = "rawr_desc_sem_post_update.bin";
+    symbols[40].num_params = 1;
+    symbols[40].params[0].name = RNMDR_TABLE_BASE;
+    symbols[40].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+
+    symbols[41].name = "rawr_desc_free.bin";
+    symbols[41].num_params = 1;
+    symbols[41].params[0].name = RNMDR_TABLE_BASE;
+    symbols[41].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+
+    symbols[42].name = "rawr_ppage_sem_post_update.bin";
+    symbols[42].num_params = 1;
+    symbols[42].params[0].name = RNMPR_TABLE_BASE;
+    symbols[42].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+
+    symbols[43].name = "rawr_ppage_free.bin";
+    symbols[43].num_params = 1;
+    symbols[43].params[0].name = RNMPR_TABLE_BASE;
+    symbols[43].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+
+    symbols[44].name = "rawr_mpage_sem_post_update.bin";
+    symbols[44].num_params = 1;
+    symbols[44].params[0].name = RNMPR_SMALL_TABLE_BASE;
+    symbols[44].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
+
+    symbols[45].name = "rawr_mpage_free.bin";
+    symbols[45].num_params = 1;
+    symbols[45].params[0].name = RNMPR_SMALL_TABLE_BASE;
+    symbols[45].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

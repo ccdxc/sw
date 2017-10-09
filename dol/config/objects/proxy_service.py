@@ -41,6 +41,10 @@ class ProxyServiceObject(base.ConfigObjectBase):
             reqspec.key_or_handle.proxy_id = 3
             reqspec.proxy_type = 4
 
+        if self.type == "RAW_REDIR":
+            reqspec.key_or_handle.proxy_id = 4
+            reqspec.proxy_type = 5
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
