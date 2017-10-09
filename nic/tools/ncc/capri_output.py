@@ -1687,6 +1687,7 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
         mux_inst_id = None
         dst_phv = None
         val = 0
+        use_or = False
         assert mid < max_mid
         if op.op_type == meta_op.EXTRACT_REG:
             #pdb.set_trace() # un-tested so far
@@ -1715,8 +1716,13 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
         elif op.op_type == meta_op.EXTRACT_CONST:
             #pdb.set_trace()
             dst_phv = op.dst.phv_bit
-            assert (dst_phv % 8) == 0, "Destination phv %s must be byte aligned" % op.dst.hfname
+            #assert (dst_phv % 8) == 0, "Destination phv %s must be byte aligned" % op.dst.hfname
             val = op.const
+            if (dst_phv %8) or (op.dst.width % 8):
+                # if not writing integral byte, OR the value
+                assert op.dst.width < 8, "%s:%s must be <8bit wide to use set_metadata()" % \
+                    (nxt_cs, op.dst.hfname)
+                use_or = True
         else:
             continue
 
@@ -1727,10 +1733,16 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
 
         sram['meta_inst'][mid]['phv_idx']['value'] = str((dst_phv / 8) & 0x7F)
         if mux_inst_id == None:
-            sram['meta_inst'][mid]['sel']['value'] = meta_ops['set_val']
+            if use_or:
+                sram['meta_inst'][mid]['sel']['value'] = meta_ops['or_val']
+            else:
+                sram['meta_inst'][mid]['sel']['value'] = meta_ops['set_val']
             sram['meta_inst'][mid]['val']['value'] = str(val)
         else:
-            sram['meta_inst'][mid]['sel']['value'] = meta_ops['set_mux_data']
+            if use_or:
+                sram['meta_inst'][mid]['sel']['value'] = meta_ops['or_mux_data']
+            else:
+                sram['meta_inst'][mid]['sel']['value'] = meta_ops['set_mux_data']
             sram['meta_inst'][mid]['val']['value'] = str(mux_inst_id)
         mid += 1
 

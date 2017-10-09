@@ -164,7 +164,6 @@ class capri_parser_set_op:
         if isinstance(src, int):
             # loading a const into register(local_var) has to be done indirectly
             # using a expression - cookup a simple expr for this
-            # XXX is this supported
             if dst.parser_local:
                 # reg <-  const : Load
                 self.op_type = meta_op.LOAD_REG
@@ -178,10 +177,18 @@ class capri_parser_set_op:
                 self.const = src
                 if (dst.width % 8):
                     assert dst.is_meta
-                    pad = 8-(dst.width % 8)
-                    dst.width += pad
-                    cstate.parser.logger.warning("%s:%s:Pad Metadata %s to %d" % \
-                            (cstate.parser.d.name, cstate.name, dst.hfname, dst.width))
+                    if (dst.width % 8) < 4:
+                        # don;t pad below 4 bits.
+                        cstate.parser.logger.debug("%s:%s:set_metadata to %s will use OR instn" % \
+                            (cstate.parser.d.name, cstate.name, dst.hfname))
+                    else:
+                        # padding flds >= 4b seems to help key maker sharing for ???
+                        pad = 8-(dst.width % 8)
+                        dst.width += pad
+                        cstate.parser.logger.warning("%s:%s:Pad Metadata %s to %d" % \
+                                (cstate.parser.d.name, cstate.name, dst.hfname, dst.width))
+                        cstate.parser.logger.debug("%s:%s:set_metadata to %s will use OR instn" % \
+                            (cstate.parser.d.name, cstate.name, dst.hfname))
                     
             return
 

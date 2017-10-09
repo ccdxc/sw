@@ -1557,7 +1557,15 @@ class capri_gress_pa:
                     cf.is_predicate = True
                     flit.add_cfield(cf)
                     bits_used += cf.width
-                    phv_bit = flit.flit_chunk_alloc(cf.width, -1, 0, 0, 0, False)
+                    if cf.is_parser_extracted:
+                        alignment = 8
+                        justify = JUSTIFY_RIGHT
+                    else:
+                        alignment = 0
+                        justify = JUSTIFY_LEFT
+
+                    phv_bit = flit.flit_chunk_alloc(cf.width, -1,
+                                            alignment, justify, 0, False)
                     assert phv_bit >= 0, pdb.set_trace()
                     cf.phv_bit = phv_bit
                     self.allocated_hf[cf] = phv_bit
@@ -1993,6 +2001,7 @@ class capri_gress_pa:
 
                 if n_hf.is_parser_extracted:
                     alignment = 8
+                    justify = JUSTIFY_RIGHT
 
             if use_last_hdr_bit:
                 start_loc = last_hdr_bit
