@@ -240,6 +240,7 @@ parser parse_ingress_to_egress {
 parser parse_egress_to_egress {
     return select(capri_intrinsic.tm_instance_type) {
         TM_INSTANCE_TYPE_SPAN : parse_span_copy;
+        TM_INSTANCE_TYPE_SPAN_AND_DROP : parse_span_copy;
         default : parse_ethernet;
     }
 }
@@ -256,12 +257,15 @@ parser parse_i2e_metadata {
     extract(capri_i2e_metadata);
     return select(capri_intrinsic.tm_instance_type) {
         TM_INSTANCE_TYPE_SPAN : parse_span_copy;
+        TM_INSTANCE_TYPE_SPAN_AND_DROP : parse_span_copy;
         default : parse_ethernet;
     }
 }
 
 @pragma xgress egress
+@pragma allow_set_meta control_metadata.span_copy
 parser parse_span_copy {
+    set_metadata(control_metadata.span_copy, 1);
     extract(ethernet);
     return ingress;
 }

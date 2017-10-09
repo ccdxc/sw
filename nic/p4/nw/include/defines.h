@@ -140,6 +140,8 @@
 #define TM_INSTANCE_TYPE_MULTICAST     1
 #define TM_INSTANCE_TYPE_CPU           2
 #define TM_INSTANCE_TYPE_SPAN          3
+#define TM_INSTANCE_TYPE_CPU_AND_DROP  4
+#define TM_INSTANCE_TYPE_SPAN_AND_DROP 5
 
 /*****************************************************************************/
 /* flow key types                                                            */

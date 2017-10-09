@@ -60,6 +60,7 @@ header_type control_metadata_t {
         flow_miss_egress               : 1;  // NCC workaround for predication
         lkp_flags_egress               : 8;
         vlan_strip                     : 1;
+        span_copy                      : 1;
 
         egress_ddos_src_vf_policer_drop   : 1;
         egress_ddos_service_policer_drop  : 1;

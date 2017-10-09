@@ -145,7 +145,7 @@ table mirror {
 }
 
 control process_rewrites {
-    if (capri_intrinsic.tm_instance_type == TM_INSTANCE_TYPE_SPAN) {
+    if (control_metadata.span_copy == TRUE) {
         apply(mirror);
     } else {
         if (tunnel_metadata.tunnel_terminate_egress == TRUE) {
