@@ -9,7 +9,7 @@
 
 syntax = "proto3";
 
-import "nic/proto/types.proto";
+import public "nic/proto/types.proto";
 
 package endpoint;
 option go_package="halproto";
@@ -96,7 +96,8 @@ message EndpointKeyHandle {
 // Endpoint Update message
 message EndpointUpdateRequest {
   types.ObjectMeta            meta                 = 1;    // object meta
-  EndpointKeyHandle           key_or_handle        = 2;    // Endpoint being updated
+  // key_or_handle is used to identify an endpoint uniquely
+  EndpointKeyHandle           key_or_handle        = 2 [(gogoproto.moretags) = "venice:\"key\""];
   fixed64                     l2_segment_handle    = 3;    // L2 segment endpoint is in
   uint64                      mac_address          = 4;    // MAC address of endpoint
   fixed64                     interface_handle     = 5;    // interface endpoint is reachable on
@@ -128,7 +129,8 @@ message EndpointFilter {
 message EndpointDeleteRequest {
   types.ObjectMeta       meta          = 1;    // object meta
   oneof delete_by {
-    EndpointKeyHandle    key_or_handle = 2;    // Endpoint being deleted
+  // key_or_handle is used to identify the endpoint being deleted
+    EndpointKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
     EndpointFilter       filter        = 3;    // delete by interface and/or L2 segment etc.
   }
 }
@@ -146,7 +148,8 @@ message EndpointDeleteResponseMsg {
 // EndpointGetRequest is used to get information about an endpoint
 message EndpointGetRequest {
   types.ObjectMeta     meta          = 1;    // object meta
-  EndpointKeyHandle    key_or_handle = 2;    // Endpoint being deleted
+  // key_or_handle is the endpoint's identifier for retrieval
+  EndpointKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // EndpointGetRequestMsg is batched GET request for endpoints

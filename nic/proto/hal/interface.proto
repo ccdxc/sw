@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-import "nic/proto/types.proto";
+import public "nic/proto/types.proto";
 import "nic/proto/hal/l2segment.proto";
 import "nic/proto/hal/qos.proto";
 
@@ -119,7 +119,8 @@ message LifKeyHandle {
 // LIF object
 message LifSpec {
   types.ObjectMeta         meta              = 1;    // object meta
-  LifKeyHandle             key_or_handle     = 2;    // LIF's key or handle
+  // key_or_handle is LIF's key or handle
+  LifKeyHandle             key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""];
   uint64                   mac_addr          = 3;    // link MAC address, if any
   LifPortType              port_type         = 4;    // LIF port type
   uint32                   port_num          = 5;    // LIF port number (TM oport#)
@@ -241,7 +242,8 @@ message SetQStateResponseMsg {
 // LifDeleteRequest  is used to delete a LIF object
 message LifDeleteRequest {
   types.ObjectMeta    meta          = 1;    // object meta
-  LifKeyHandle        key_or_handle = 2;    // LIF being deleted
+  // key_or_handle is LIF's unique identifier for deletion
+  LifKeyHandle        key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // LifDeleteRequestMsg is used to delete a batch of LIFs
@@ -299,7 +301,8 @@ message LifStats {
 // LifGetRequest is used to get information about a LIF
 message LifGetRequest {
   types.ObjectMeta    meta          = 1;    // object meta
-  LifKeyHandle        key_or_handle = 2;    // key or handle
+  // key_or_handle is lif's unique identifier for retrieval
+  LifKeyHandle        key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
   LifStats            stats         = 3;    // LIF statistics
 }
 

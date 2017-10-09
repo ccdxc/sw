@@ -25,5 +25,5 @@ build --strip=never
 build --cxxopt="-Werror"
 
 # show timestamps
-build --show_timestamps --keep_going
+#build --show_timestamps --keep_going
 #build --show_timestamps --keep_going --jobs 600

@@ -6,7 +6,7 @@
 
 syntax = "proto3";
 
-import "nic/proto/types.proto";
+import public "nic/proto/types.proto";
 
 package nw;
 option go_package="halproto";
@@ -29,7 +29,8 @@ message NetworkKeyHandle {
 // NetworkSpec is used to add or modify a network object
 message NetworkSpec {
   types.ObjectMeta    meta              = 1;    // common object meta
-  NetworkKeyHandle    key_or_handle     = 2;    // network being create or updated
+  // key_or_handle is the network being create or updated
+  NetworkKeyHandle    key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""];
   uint64              rmac              = 3;    // router mac for this network
   repeated uint32     security_group    = 4;    // security group list(s) of this network
 }
@@ -59,7 +60,8 @@ message NetworkResponseMsg {
 // NetworkDeleteRequest is used to delete a network policy object
 message NetworkDeleteRequest {
   types.ObjectMeta    meta             = 1;    // object meta
-  NetworkKeyHandle    key_or_handle    = 2;    // network being deleted
+  // key_or_handle is the network being deleted
+  NetworkKeyHandle    key_or_handle    = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // NetworkDeleteRequestMsg is used to delete a batch of network policy objects
@@ -79,7 +81,8 @@ message NetworkStats {
 // NetworkGetRequest is used to get information about a network
 message NetworkGetRequest {
   types.ObjectMeta    meta          = 1;    // object meta
-  NetworkKeyHandle    key_or_handle = 2;    // network key or handle
+  // key_or_handle is the key or handle of the network object being retrieved
+  NetworkKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // NetworkGetRequestMsg is batched GET request for networks

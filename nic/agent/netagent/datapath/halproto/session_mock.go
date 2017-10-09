@@ -44,6 +44,31 @@ func (mr *MockisFlowKeyV4_L4FieldsMockRecorder) isFlowKeyV4_L4Fields() *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isFlowKeyV4_L4Fields", reflect.TypeOf((*MockisFlowKeyV4_L4Fields)(nil).isFlowKeyV4_L4Fields))
 }
 
+// MarshalTo mocks base method
+func (m *MockisFlowKeyV4_L4Fields) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisFlowKeyV4_L4FieldsMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisFlowKeyV4_L4Fields)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisFlowKeyV4_L4Fields) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisFlowKeyV4_L4FieldsMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisFlowKeyV4_L4Fields)(nil).Size))
+}
+
 // MockisFlowKeyV6_L4Fields is a mock of isFlowKeyV6_L4Fields interface
 type MockisFlowKeyV6_L4Fields struct {
 	ctrl     *gomock.Controller
@@ -77,6 +102,31 @@ func (mr *MockisFlowKeyV6_L4FieldsMockRecorder) isFlowKeyV6_L4Fields() *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isFlowKeyV6_L4Fields", reflect.TypeOf((*MockisFlowKeyV6_L4Fields)(nil).isFlowKeyV6_L4Fields))
 }
 
+// MarshalTo mocks base method
+func (m *MockisFlowKeyV6_L4Fields) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisFlowKeyV6_L4FieldsMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisFlowKeyV6_L4Fields)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisFlowKeyV6_L4Fields) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisFlowKeyV6_L4FieldsMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisFlowKeyV6_L4Fields)(nil).Size))
+}
+
 // MockisFlowKey_FlowKey is a mock of isFlowKey_FlowKey interface
 type MockisFlowKey_FlowKey struct {
 	ctrl     *gomock.Controller
@@ -108,6 +158,31 @@ func (m *MockisFlowKey_FlowKey) isFlowKey_FlowKey() {
 // isFlowKey_FlowKey indicates an expected call of isFlowKey_FlowKey
 func (mr *MockisFlowKey_FlowKeyMockRecorder) isFlowKey_FlowKey() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isFlowKey_FlowKey", reflect.TypeOf((*MockisFlowKey_FlowKey)(nil).isFlowKey_FlowKey))
+}
+
+// MarshalTo mocks base method
+func (m *MockisFlowKey_FlowKey) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisFlowKey_FlowKeyMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisFlowKey_FlowKey)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisFlowKey_FlowKey) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisFlowKey_FlowKeyMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisFlowKey_FlowKey)(nil).Size))
 }
 
 // MockSessionClient is a mock of SessionClient interface

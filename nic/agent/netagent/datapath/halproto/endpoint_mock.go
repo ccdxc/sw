@@ -44,6 +44,31 @@ func (mr *MockisEndpointKey_EndpointL2L3KeyMockRecorder) isEndpointKey_EndpointL
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isEndpointKey_EndpointL2L3Key", reflect.TypeOf((*MockisEndpointKey_EndpointL2L3Key)(nil).isEndpointKey_EndpointL2L3Key))
 }
 
+// MarshalTo mocks base method
+func (m *MockisEndpointKey_EndpointL2L3Key) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisEndpointKey_EndpointL2L3KeyMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisEndpointKey_EndpointL2L3Key)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisEndpointKey_EndpointL2L3Key) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisEndpointKey_EndpointL2L3KeyMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisEndpointKey_EndpointL2L3Key)(nil).Size))
+}
+
 // MockisEndpointKeyHandle_KeyOrHandle is a mock of isEndpointKeyHandle_KeyOrHandle interface
 type MockisEndpointKeyHandle_KeyOrHandle struct {
 	ctrl     *gomock.Controller
@@ -77,6 +102,31 @@ func (mr *MockisEndpointKeyHandle_KeyOrHandleMockRecorder) isEndpointKeyHandle_K
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isEndpointKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisEndpointKeyHandle_KeyOrHandle)(nil).isEndpointKeyHandle_KeyOrHandle))
 }
 
+// MarshalTo mocks base method
+func (m *MockisEndpointKeyHandle_KeyOrHandle) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisEndpointKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisEndpointKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisEndpointKeyHandle_KeyOrHandle) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisEndpointKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisEndpointKeyHandle_KeyOrHandle)(nil).Size))
+}
+
 // MockisEndpointDeleteRequest_DeleteBy is a mock of isEndpointDeleteRequest_DeleteBy interface
 type MockisEndpointDeleteRequest_DeleteBy struct {
 	ctrl     *gomock.Controller
@@ -108,6 +158,31 @@ func (m *MockisEndpointDeleteRequest_DeleteBy) isEndpointDeleteRequest_DeleteBy(
 // isEndpointDeleteRequest_DeleteBy indicates an expected call of isEndpointDeleteRequest_DeleteBy
 func (mr *MockisEndpointDeleteRequest_DeleteByMockRecorder) isEndpointDeleteRequest_DeleteBy() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isEndpointDeleteRequest_DeleteBy", reflect.TypeOf((*MockisEndpointDeleteRequest_DeleteBy)(nil).isEndpointDeleteRequest_DeleteBy))
+}
+
+// MarshalTo mocks base method
+func (m *MockisEndpointDeleteRequest_DeleteBy) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisEndpointDeleteRequest_DeleteByMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisEndpointDeleteRequest_DeleteBy)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisEndpointDeleteRequest_DeleteBy) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisEndpointDeleteRequest_DeleteByMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisEndpointDeleteRequest_DeleteBy)(nil).Size))
 }
 
 // MockEndpointClient is a mock of EndpointClient interface

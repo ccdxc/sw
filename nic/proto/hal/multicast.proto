@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-import "nic/proto/types.proto";
+import public "nic/proto/types.proto";
 
 package multicast;
 option go_package="halproto";
@@ -43,7 +43,7 @@ message MulticastEntryKeyHandle {
 
 message MulticastEntrySpec {
   types.ObjectMeta        meta        = 1;
-  MulticastEntryKeyHandle key         = 2;          // key
+  MulticastEntryKeyHandle key         = 2 [(gogoproto.moretags) = "venice:\"key\""];
   repeated fixed64        oif_handles = 3;          // output interface handles
 }
 
@@ -66,7 +66,7 @@ message MulticastEntryResponseMsg {
 
 message MulticastEntryDeleteRequest {
   types.ObjectMeta        meta          = 1;
-  MulticastEntryKeyHandle key_or_handle = 2;        // key or handle to delete
+  MulticastEntryKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 message MulticastEntryDeleteRequestMsg {
@@ -79,7 +79,7 @@ message MulticastEntryDeleteResponseMsg {
 
 message MulticastEntryGetRequest {
   types.ObjectMeta        meta          = 1;
-  MulticastEntryKeyHandle key_or_handle = 2;        // key or handle for request
+  MulticastEntryKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 message MulticastEntryGetRequestMsg {

@@ -9,7 +9,7 @@
 
 syntax = "proto3";
 
-import "nic/proto/types.proto";
+import public "nic/proto/types.proto";
 
 package qos;
 option go_package="halproto";
@@ -80,7 +80,8 @@ message BufPoolKeyHandle {
 // Buffer Pool specification
 message BufPoolSpec {
   types.ObjectMeta      meta             = 1;     // object meta
-  BufPoolKeyHandle      key_or_handle    = 2;     // Buffer pool's key or handle
+  // key_or_handle is Buffer pool's key or handle
+  BufPoolKeyHandle      key_or_handle    = 2 [(gogoproto.moretags) = "venice:\"key\""];
   uint32                port_num         = 3;     // Port number (TM port#)
   uint32                reserved_bytes   = 4;     // Number of bytes reserved for
                                                   // this pool
@@ -121,7 +122,8 @@ message BufPoolResponseMsg {
 // BufPoolDeleteRequest  is used to delete a Buffer Pool object
 message BufPoolDeleteRequest {
   types.ObjectMeta meta          = 1;    // object meta
-  BufPoolKeyHandle key_or_handle = 2;    // Buffer pool being deleted
+  // key_or_handle is to identify Buffer pool being deleted
+  BufPoolKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // BufPoolDeleteRequestMsg is used to delete a batch of Buffer pools
@@ -142,7 +144,8 @@ message BufPoolStats {
 // BufPoolGetRequest is used to get information about a Buffer Pool
 message BufPoolGetRequest {
   types.ObjectMeta meta          = 1;    // object meta
-  BufPoolKeyHandle key_or_handle = 2;    // Key or handle for the buffer pool
+  // key_or_handle is to identify Buffer pool being deleted
+  BufPoolKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // Batched request message to get the stats about a batch of Buffer pools
@@ -205,7 +208,8 @@ message QueueSchedulerNode {
 }
 
 message QueueInfo {
-  QueueKeyHandle     key_or_handle = 1;    // Queue's key or handle
+  // key_or_handle is Queue's key or handle
+  QueueKeyHandle     key_or_handle = 1 [(gogoproto.moretags) = "venice:\"key\""];
   QueueSchedulerNode queue_info    = 2;    // Info about the queue
 }
 
@@ -246,7 +250,8 @@ message QueueResponseMsg {
 // QueueDeleteRequest  is used to delete a Queue object
 message QueueDeleteRequest {
   types.ObjectMeta meta          = 1;    // object meta
-  QueueKeyHandle   key_or_handle = 2;    // Handle for the queue
+  // key_or_handle is Queue's key or handle
+  QueueKeyHandle   key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // QueueDeleteRequestMsg is used to delete a batch of Queues
@@ -267,7 +272,8 @@ message QueueStats {
 // QueueGetRequest is used to get information about a Queue
 message QueueGetRequest {
   types.ObjectMeta meta          = 1;    // object meta
-  QueueKeyHandle   key_or_handle = 2;    // Handle for the queue
+  // key_or_handle is Queue's key or handle
+  QueueKeyHandle   key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 message QueueGetRequestMsg {
@@ -306,12 +312,13 @@ enum PolicerDirection {
 
 // Specifications of a policer
 message PolicerSpec {
-  types.ObjectMeta       meta                      = 1;    // object meta
-  PolicerKeyHandle       key_or_handle             = 2;    // Policer's key or handle
-  PolicerDirection       direction                 = 3;    // Policer direction
-  uint32                 bandwidth                 = 4;    // Bandwidth for this policer
-  uint32                 burst_size                = 5;    // Burst size allowed for the policer
-  MarkingActionSpec      marking_spec              = 6;    // Optional packet marking action
+  types.ObjectMeta       meta           = 1;    // object meta
+  // key_or_handle is policer's unique identifier
+  PolicerKeyHandle       key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  PolicerDirection       direction      = 3;    // Policer direction
+  uint32                 bandwidth      = 4;    // Bandwidth for this policer
+  uint32                 burst_size     = 5;    // Burst size allowed for the policer
+  MarkingActionSpec      marking_spec   = 6;    // Optional packet marking action
 }
 
 // Batched requests to create/update policers
@@ -336,7 +343,8 @@ message PolicerResponseMsg {
 
 message PolicerDeleteRequest {
   types.ObjectMeta meta          = 1;    // object meta
-  PolicerKeyHandle key_or_handle = 2;    // Policer's key or handle
+  // key_or_handle is policer's unique identifier
+  PolicerKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // Batched requests to delete policers
@@ -352,7 +360,8 @@ message PolicerDeleteResponseMsg {
 // PolicerGetRequest is used to get information about a policer
 message PolicerGetRequest {
   types.ObjectMeta meta          = 1;    // object meta
-  PolicerKeyHandle key_or_handle = 2;    // Policer's key or handle
+  // key_or_handle is policer's unique identifier
+  PolicerKeyHandle key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 message PolicerGetRequestMsg {

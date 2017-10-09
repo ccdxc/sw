@@ -8,7 +8,7 @@
 
 syntax = "proto3";
 
-import "nic/proto/types.proto";
+import public "nic/proto/types.proto";
 
 package l2segment;
 option go_package="halproto";
@@ -52,7 +52,8 @@ enum MulticastFwdPolicy {
 // L2SegmentSpec message is used to do add/mod of vlan
 message L2SegmentSpec {
   types.ObjectMeta       meta                       = 1;    // common object meta
-  L2SegmentKeyHandle     key_or_handle              = 2;    // L2 segment being created/updated
+  // key_or_handle is L2 segment's unique identifier
+  L2SegmentKeyHandle     key_or_handle              = 2 [(gogoproto.moretags) = "venice:\"key\""];
   repeated fixed64       network_handle             = 3;    // network handle
   types.L2SegmentType    segment_type               = 4;    // L2 segment type
   MulticastFwdPolicy     mcast_fwd_policy           = 5;    // multicast forwarding policy
@@ -86,7 +87,8 @@ message L2SegmentResponseMsg {
 // L2SegmentDeleteRequest is used to delete a L2 segment
 message L2SegmentDeleteRequest {
   types.ObjectMeta      meta          = 1;    // object meta
-  L2SegmentKeyHandle    key_or_handle = 2;    // L2 segment being deleted
+  // key_or_handle is L2 segment's unique identifier
+  L2SegmentKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // L2SegmentDeleteRequestMsg is used to delete a batch of L2 segments
@@ -102,7 +104,8 @@ message L2SegmentDeleteResponseMsg {
 // L2SegmentGetRequest is used to get information about a L2 Segment
 message L2SegmentGetRequest {
   types.ObjectMeta      meta          = 1;    // object meta
-  L2SegmentKeyHandle    key_or_handle = 2;    // L2 segment key or handle
+  // key_or_handle is L2 segment's unique identifier
+  L2SegmentKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // L2SegmentGetRequestMsg is batched GET request for L2 segments

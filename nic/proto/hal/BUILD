@@ -9,6 +9,7 @@ cc_proto_library(
    proto_deps = [
        "//nic/proto:types_proto",
    ],
+    imports = ["/usr/local/include"],
    with_grpc = True,
 )
 
@@ -20,5 +21,6 @@ py_proto_compile(
     deps = [
         "//nic/proto:types_proto_py",
     ],
+    imports = ["/usr/local/include"],
     with_grpc = True,
 )

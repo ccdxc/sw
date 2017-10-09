@@ -77,8 +77,6 @@ cc_library(
         #"//nic/proto:types_proto_py",
         "//nic/proto/hal:hal_proto",
         #"//nic/proto/hal:hal_proto_py",
-        "//nic/proto/agents:agents_proto",
-        #"//nic/proto/agents:agents_proto_py",
         "//nic:gen_includes",
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd/iris:iris_includes",

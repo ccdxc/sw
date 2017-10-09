@@ -21,6 +21,6 @@ default:
 
 hal-proto:
 	# Compile proto definitions
-	protoc --proto_path=../../../../../ --go_out=plugins=grpc:$(GEN_DIR) ../../../../../nic/proto/hal/*.proto ../../../../../nic/proto/types.proto
+	protoc --proto_path=../../../../../ --gofast_out=plugins=grpc:$(GEN_DIR) ../../../../../nic/proto/hal/*.proto ../../../../../nic/proto/types.proto
 
 

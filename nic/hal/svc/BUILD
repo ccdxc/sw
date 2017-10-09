@@ -10,7 +10,6 @@ cc_library(
     deps = ["//nic/include:base_includes",
             "//nic/proto:types_proto",
             "//nic/proto/hal:hal_proto",
-            "//nic/proto/agents:agents_proto",
             "//nic:gen_includes",
             "//nic/hal:hal_src",
             "//nic/third-party/spdlog:spdlog"],

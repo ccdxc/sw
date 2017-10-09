@@ -5,6 +5,8 @@
 
 syntax = "proto3";
 
+import public "protos/github/gogo/protobuf/gogoproto/gogo.proto";
+
 package types;
 option go_package="halproto";
 

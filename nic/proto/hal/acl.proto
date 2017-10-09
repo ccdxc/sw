@@ -4,8 +4,8 @@
 
 syntax = "proto3";
 
+import public "nic/proto/types.proto";
 import "nic/proto/hal/tenant.proto";
-import "nic/proto/types.proto";
 import "nic/proto/hal/interface.proto";
 import "nic/proto/hal/l2segment.proto";
 import "nic/proto/hal/telemetry.proto";
@@ -201,7 +201,8 @@ message AclActionInfo {
 // ACL entry configuration
 message AclSpec {
   types.ObjectMeta meta          = 1;    // common object meta
-  AclKeyHandle     key_or_handle = 2;    // Acl's key or handle
+  // key_or_handle is ACL's key or handle
+  AclKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
   uint32           priority      = 3;    // priority of the rule (0 being lowest)
                                          // TBD: is this per-tenant priority ? or global ?
   AclSelector      match         = 4;    // match conditions
@@ -231,7 +232,8 @@ message AclResponseMsg {
 
 message AclDeleteRequest {
   types.ObjectMeta meta          = 1;    // object meta
-  AclKeyHandle     key_or_handle = 2;    // Acl's key or handle
+  // key_or_handle is unique identifier of ACL being deleted
+  AclKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // Batched requests to delete acls
@@ -252,7 +254,8 @@ message AclDeleteResponseMsg {
 // AclGetRequest is used to get information about a acl
 message AclGetRequest {
   types.ObjectMeta meta          = 1;    // object meta
-  AclKeyHandle     key_or_handle = 2;    // Acl's key or handle
+  // key_or_handle is ACL's identifier for retrieval
+  AclKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 message AclGetRequestMsg {

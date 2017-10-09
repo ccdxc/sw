@@ -11,7 +11,6 @@ cc_library(
         "//nic/hal/svc:hal_svc",
         "//nic/proto:types_proto",
         "//nic/proto/hal:hal_proto",
-        "//nic/proto/agents:agents_proto",
         "//nic:gen_includes",
         "//nic/p4/nw/include:p4_nw_includes",
         "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",

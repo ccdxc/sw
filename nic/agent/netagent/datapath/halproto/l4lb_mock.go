@@ -44,6 +44,31 @@ func (mr *MockisL4LbServiceKeyHandle_KeyOrHandleMockRecorder) isL4LbServiceKeyHa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isL4LbServiceKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisL4LbServiceKeyHandle_KeyOrHandle)(nil).isL4LbServiceKeyHandle_KeyOrHandle))
 }
 
+// MarshalTo mocks base method
+func (m *MockisL4LbServiceKeyHandle_KeyOrHandle) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisL4LbServiceKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisL4LbServiceKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisL4LbServiceKeyHandle_KeyOrHandle) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisL4LbServiceKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisL4LbServiceKeyHandle_KeyOrHandle)(nil).Size))
+}
+
 // MockisL4LbBackendKeyHandle_KeyOrHandle is a mock of isL4LbBackendKeyHandle_KeyOrHandle interface
 type MockisL4LbBackendKeyHandle_KeyOrHandle struct {
 	ctrl     *gomock.Controller
@@ -75,6 +100,31 @@ func (m *MockisL4LbBackendKeyHandle_KeyOrHandle) isL4LbBackendKeyHandle_KeyOrHan
 // isL4LbBackendKeyHandle_KeyOrHandle indicates an expected call of isL4LbBackendKeyHandle_KeyOrHandle
 func (mr *MockisL4LbBackendKeyHandle_KeyOrHandleMockRecorder) isL4LbBackendKeyHandle_KeyOrHandle() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isL4LbBackendKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisL4LbBackendKeyHandle_KeyOrHandle)(nil).isL4LbBackendKeyHandle_KeyOrHandle))
+}
+
+// MarshalTo mocks base method
+func (m *MockisL4LbBackendKeyHandle_KeyOrHandle) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisL4LbBackendKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisL4LbBackendKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisL4LbBackendKeyHandle_KeyOrHandle) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisL4LbBackendKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisL4LbBackendKeyHandle_KeyOrHandle)(nil).Size))
 }
 
 // MockL4LbClient is a mock of L4LbClient interface

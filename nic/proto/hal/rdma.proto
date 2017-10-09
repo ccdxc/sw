@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-import "nic/proto/types.proto";
+import public "nic/proto/types.proto";
 option go_package="halproto";
 
 package rdma;

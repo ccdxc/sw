@@ -6,7 +6,7 @@
 
 syntax = "proto3";
 
-import "nic/proto/types.proto";
+import public "nic/proto/types.proto";
 
 package tenant;
 option go_package="halproto";
@@ -30,7 +30,8 @@ message TenantKeyHandle {
 // TenantSpec captures all the tenant level configuration
 message TenantSpec {
   types.ObjectMeta    meta                       = 1;    // common object meta
-  TenantKeyHandle     key_or_handle              = 2;    // tenant being created/updated
+  // key_or_handle is tenant's unique identifier
+  TenantKeyHandle     key_or_handle              = 2 [(gogoproto.moretags) = "venice:\"key\""];
   fixed64             security_profile_handle    = 3;    // security profile, if any
 }
 
@@ -58,7 +59,8 @@ message TenantResponseMsg {
 // TenantDeleteRequest is used to delete a tenant
 message TenantDeleteRequest {
   types.ObjectMeta    meta          = 1;    // object meta
-  TenantKeyHandle     key_or_handle = 2;    // Tenant key or handle
+  // key_or_handle is tenant's unique identifier
+  TenantKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // TenantDeleteRequestMsg is used to delete a batch of tenants
@@ -74,7 +76,8 @@ message TenantDeleteResponseMsg {
 // TenantGetRequest is used to get information about a tenant
 message TenantGetRequest {
   types.ObjectMeta      meta          = 1;    // object meta
-  TenantKeyHandle       key_or_handle = 2;    // Tenant key or handle
+  // key_or_handle is tenant's unique identifier
+  TenantKeyHandle       key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // TenantGetRequestMsg is batched GET requests for tenants

@@ -44,6 +44,31 @@ func (mr *MockisTenantKeyHandle_KeyOrHandleMockRecorder) isTenantKeyHandle_KeyOr
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isTenantKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisTenantKeyHandle_KeyOrHandle)(nil).isTenantKeyHandle_KeyOrHandle))
 }
 
+// MarshalTo mocks base method
+func (m *MockisTenantKeyHandle_KeyOrHandle) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisTenantKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisTenantKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisTenantKeyHandle_KeyOrHandle) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisTenantKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisTenantKeyHandle_KeyOrHandle)(nil).Size))
+}
+
 // MockTenantClient is a mock of TenantClient interface
 type MockTenantClient struct {
 	ctrl     *gomock.Controller

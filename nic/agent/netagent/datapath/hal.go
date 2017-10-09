@@ -821,7 +821,7 @@ func (hd *HalDatapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.Se
 
 	// build security rule
 	rl := halproto.FirewallRuleSpec{
-		PeerSecurityGroup: []uint32{rule.PeerGroupID},
+		PeerSecurityGroup: rule.PeerGroupID,
 		Svc:               srvs,
 		Action:            act,
 		Log:               rule.Log,

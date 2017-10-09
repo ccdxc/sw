@@ -4,7 +4,7 @@
 
 syntax = "proto3";
 
-import "nic/proto/types.proto";
+import public "nic/proto/types.proto";
 import "nic/proto/hal/qos.proto";
 import "nic/proto/hal/telemetry.proto";
 
@@ -168,7 +168,8 @@ message FlowSpec {
 // It is possible to have a session with just one flow (for L2 mcast/bcast)
 message SessionSpec {
   types.ObjectMeta     meta                   = 1;    // object meta
-  fixed32              session_id             = 2;    // unique session identifier
+  // session_id is unique session identifier
+  fixed32              session_id             = 2 [(gogoproto.jsontag) = "key"];
   bool                 conn_track_en          = 3;    // TRUE if connection tracking is ON
   bool                 tcp_ts_option          = 4;   // TCP timestamp option seen or not
   sint32               iflow_syn_ack_delta    = 5;    // syn cookie delta of iflow
@@ -211,7 +212,8 @@ message SessionResponseMsg {
 // SessionDeleteRequest is used to delete a session
 message SessionDeleteRequest {
   types.ObjectMeta    meta           = 1;    // object meta
-  fixed64             session_handle = 2;    // session handle
+  // session_handle is the handle of the session
+  fixed64             session_handle = 2 [(gogoproto.jsontag) = "key"];
 }
 
 // SessionDeleteRequestMsg is batched session delete request
@@ -227,7 +229,8 @@ message SessionDeleteResponseMsg {
 // SessionGetRequest  is used to get information about a session
 message SessionGetRequest {
   types.ObjectMeta    meta           = 1;    // object meta
-  fixed64             session_handle = 2;    // session handle
+  // session_handle is the handle of the session
+  fixed64             session_handle = 2 [(gogoproto.jsontag) = "key"];
 }
 
 // SessionGetRequestMsg  is batched get request
