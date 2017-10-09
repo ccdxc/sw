@@ -1,6 +1,6 @@
 # LIF Configuration Template
 meta:
-    id: LIF_ETH
+    id: LIF_MCAST
 
 queue_types:
     - queue_type:

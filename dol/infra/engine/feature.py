@@ -21,6 +21,7 @@ BaseTopoExcludeFeatureList = [
     'proxy',
     'ipsec',
     'hostpin',
+    'l2mc'
 ]
 
 class FeatureObject:

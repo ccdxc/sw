@@ -15,6 +15,8 @@ targets:
   admin:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo admin --feature admin" ]
   hostpin:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo fte --feature fte --hostpin" ]
   agent: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && (./tools/start-hal-stub.sh &) && cd $GOPATH/src/github.com/pensando/sw && go test -v ./test/integ/venice_integ... -datapath=hal && go test -v ./test/integ/npminteg/..."]
+  agent: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && go test ./test/integ/..."]
+  l2mc:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo mcast --feature l2mc" ]
 cache:
   name: "sw"
   mount_dir: "/root/.cache"

@@ -8,6 +8,7 @@ import config.resmgr            as resmgr
 import config.objects.endpoint  as endpoint
 import config.objects.enic      as enic
 import config.objects.network   as nw
+import config.objects.oif_list  as oiflist
 
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
@@ -33,6 +34,7 @@ class SegmentObject(base.ConfigObjectBase):
         self.blackhole  = getattr(spec, 'blackhole', False)
         self.fabencap   = getattr(spec, 'fabencap', 'vlan')
         self.fabencap   = self.fabencap.upper()
+        self.floodlist  = None
 
         if self.blackhole:
             self.vlan_id    = resmgr.BlackHoleSegVlanAllocator.get()
@@ -66,15 +68,19 @@ class SegmentObject(base.ConfigObjectBase):
         
         self.obj_helper_ep = endpoint.EndpointObjectHelper()
         self.obj_helper_enic = enic.EnicObjectHelper()
-        self.obj_helper_nw = nw.NetworkObjectHelper()   
+        self.obj_helper_nw = nw.NetworkObjectHelper()
+        self.obj_helper_oiflist = oiflist.OifListObjectHelper()
 
         self.hal_handle = None
 
         self.Show()
         self.obj_helper_nw.Generate(self)
-
         self.obj_helper_enic.Generate(self, self.spec.endpoints)
         self.obj_helper_ep.Generate(self, self.spec.endpoints)
+        self.obj_helper_oiflist.Generate(self)
+
+        self.floodlist = self.obj_helper_oiflist.GetOifList()
+
         self.Show(detail = True)
         return
 
@@ -116,6 +122,7 @@ class SegmentObject(base.ConfigObjectBase):
         cfglogger.info("  - Subnet6    = %s" % self.subnet6.get())
         cfglogger.info("  - Broadcast  = %s" % self.spec.broadcast)
         cfglogger.info("  - Multicast  = %s" % self.spec.multicast)
+        cfglogger.info("  - FloodList  = %s" %(self.floodlist.GID() if self.floodlist else 'None'))
 
         if detail == False: return
         self.obj_helper_ep.Show()

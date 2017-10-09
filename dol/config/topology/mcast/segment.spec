@@ -6,11 +6,9 @@ type        : tenant
 native      : False
 broadcast   : flood
 multicast   : drop
-l4lb        : True
+l4lb        : False
 endpoints   :
     useg    : 0
-    pvlan   : 0
+    pvlan   : 2
     direct  : 0
-    remote  : 1 # Remote TEPs
-    remote  : 2 # Remote TEPs
-    remote  : 3 # Remote TEPs
+    remote  : 5 # Remote TEPs

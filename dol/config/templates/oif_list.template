@@ -1,0 +1,7 @@
+# OifList Object Template File.
+meta:
+    id: OIF_LIST
+
+id  : None # List ID
+oifs:
+    -   oif: None # Refs to specs for the OIF

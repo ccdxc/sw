@@ -3,13 +3,22 @@ feature:
     id          : l2mc
     package     : test.networking
     module      : networking
-    enable      : False
+    enable      : True
     ignore      : False
 
 modules:
     - module:
-        name    : L2MC
-        spec    : l2mc.testspec
+        name    : L2MC-UPLINK
+        spec    : l2mc-uplink.testspec
         iterate :
             - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
-
+    - module:
+        name    : L2MC-UPLINKPC
+        spec    : l2mc-uplinkpc.testspec
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+    - module:
+        name    : L2MC-ENIC
+        spec    : l2mc-enic.testspec
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING

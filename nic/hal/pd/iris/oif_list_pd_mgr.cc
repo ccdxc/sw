@@ -6,6 +6,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/if_pd.hpp"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
+#include "hal_state_pd.hpp"
 
 using namespace hal;
 
@@ -28,9 +29,8 @@ hal_ret_t oif_list_delete(oif_list_id_t list)
 hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif)
 {
     hal_ret_t ret;
-    uint32_t encap_data;
-    uint32_t rewrite_idx;
-    uint32_t tnnl_rewrite_idx;
+    uint8_t is_tagged;
+    uint16_t vlan_id;
     p4_replication_data_t data = { 0 };
     // if_t *pi_if = find_if_by_id(oif->if_id);
     // l2seg_t *pi_l2seg = find_l2seg_by_id(oif->l2_seg_id);
@@ -39,16 +39,48 @@ hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif)
 
     HAL_ASSERT_RETURN(pi_if && pi_l2seg, HAL_RET_INVALID_ARG);
 
-    ret = if_l2seg_get_encap_rewrite(pi_if, pi_l2seg, &encap_data, &rewrite_idx, &tnnl_rewrite_idx);
+    ret = if_l2seg_get_encap(pi_if, pi_l2seg, &is_tagged, &vlan_id);
 
-    if (ret != HAL_RET_OK){
+    if (ret != HAL_RET_OK) {
         return ret;
     }
 
+    data.rewrite_index = g_hal_state_pd->rwr_tbl_decap_vlan_idx();
+
+    if (is_tagged) {
+        data.tunnel_rewrite_index = g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
+    } else {
+        data.tunnel_rewrite_index = 0; // NOP. Theres no API in g_hal_state_pd for this.
+    }
+
     data.lport = if_get_lport_id(pi_if);
-    data.tunnel_rewrite_index = tnnl_rewrite_idx;
-    data.qid_or_vnid = encap_data;
-    data.rewrite_index = rewrite_idx;
+    switch(hal::intf_get_if_type(pi_if)) {
+        case intf::IF_TYPE_ENIC:
+        {
+            hal::lif_t *lif = if_get_lif(pi_if);
+            if (lif == NULL){
+                return HAL_RET_LIF_NOT_FOUND;
+            }
+
+            data.qtype = lif_get_qtype(lif, intf::LIF_QUEUE_PURPOSE_RX);
+            data.qid_or_vnid = 0; // TODO refer to update_fwding_info()
+            break;
+        }
+        case intf::IF_TYPE_UPLINK:
+        case intf::IF_TYPE_UPLINK_PC:
+        {
+            data.qid_or_vnid = vlan_id;
+            break;
+        }
+        case intf::IF_TYPE_TUNNEL:
+            // TODO: Handle for Tunnel case
+            break;
+        default:
+            HAL_ASSERT(0);
+    }
+
+    HAL_TRACE_DEBUG("Replication lport : {} qtype : {} qid : {}",
+                   data.lport, data.qtype, data.qid_or_vnid);
     return g_hal_state_pd->met_table()->add_replication(list, (void*)&data);
 }
 
