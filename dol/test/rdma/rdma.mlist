@@ -256,6 +256,46 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_SEND_FML_ACK
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_ack
+        spec    : resp_rx_send_fml_ack.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FML_ACK_SYNDROME8
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_ack
+        spec    : resp_rx_send_fml_ack_syndrome8.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FML_ACK_SYNDROME13
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_ack
+        spec    : resp_rx_send_fml_ack_syndrome13.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_SEND_FML_ACK_SYNDROME25
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_ack
+        spec    : resp_rx_send_fml_ack_syndrome25.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_RX_SEND_FML_ACK_SYNDROME35
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_fml_ack
+        spec    : resp_rx_send_fml_ack_syndrome35.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_FIRST_MID_LAST_2SGES
         enable  : True
         package : test.rdma

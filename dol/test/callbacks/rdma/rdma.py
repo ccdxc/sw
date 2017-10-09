@@ -43,6 +43,13 @@ def GetPacketPayloadSize(tc, pkt, args):
         pkt_payload_size = args.msg_size % pmtu
     return (pkt_payload_size)
 
+def MSB( n ):
+  ndx = 0
+  while ( 1 < n ):
+    n = ( n >> 1 )
+    ndx += 1
+  return ndx
+
 def GetAckSyndrome(tc, pkt, args):
     # AETH_CODE_ACK << AETH_SYNDROME_CODE_SHIFT | CCCCC (credit count)
     # 8 bits: 3 ack/Nak code + 5 bits
@@ -52,7 +59,8 @@ def GetAckSyndrome(tc, pkt, args):
     if (args.rqwqes == 0):
         credits = 0
     else:
-        credits = math.log(rqwqes, 2) * 2
+        #credits = int(math.log(args.rqwqes, 2) + 1) * 2
+        credits = MSB(args.rqwqes) * 2
     syndrome = ((0 << 5) | credits)
     return syndrome
 
