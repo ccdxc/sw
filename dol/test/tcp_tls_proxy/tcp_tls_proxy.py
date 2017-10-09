@@ -26,9 +26,11 @@ def tls_cb_verify (fwdata, usrdata):
     return True
 
 # NOTE: this should match the payload from  PAYLOAD_TLS_AES128_GCM_RECORD payload definition
+# This is already part of the actual payload
+
 tls_aes128_gcm_explicit_iv = 0x627788b54033b07f
 def tls_aes128_gcm_decrypt_setup(tc, tlscb):
-    tc.module.logger.info("AES128-GCM Setup:")
+    tc.module.logger.info("AES128-GCM Decrypt Setup:")
     
     # Key Setup
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
@@ -46,5 +48,81 @@ def tls_aes128_gcm_decrypt_setup(tc, tlscb):
     tlscb.explicit_iv = 0x0100000000000000
     tlscb.is_decrypt_flow = True
     tlscb.SetObjValPd()
+
     print("IS Decrypt Flow: %s" % tlscb.is_decrypt_flow)
     return
+
+def tls_aes128_gcm_encrypt_setup(tc, tlscb):
+    tc.module.logger.info("AES128-GCM Encrypt Setup:")
+    
+    # Key Setup
+    key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
+    key_size = 16
+    key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    tlscb.crypto_key.Update(key_type, key_size, key)
+
+    # TLS-CB Setup
+    tlscb.command = 0x30000000
+    tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
+    tlscb.salt = 0x12345678
+
+    # IV: 
+    tlscb.explicit_iv = 0x0100000000000000
+    tlscb.is_decrypt_flow = False
+    tlscb.SetObjValPd()
+    print("IS Decrypt Flow: %s" % tlscb.is_decrypt_flow)
+    return
+
+# Explicit IV : 0x94 0xcb 0x98 0x62 0x80 0xff 0xdb 0x23
+tls_aes256_gcm_explicit_iv = 0x23dbff806298cb94
+def tls_aes256_gcm_decrypt_setup(tc, tlscb):
+    tc.module.logger.info("AES256-GCM Decrypt Setup:")
+    
+    # Key Setup
+    key_type = types_pb2.CRYPTO_KEY_TYPE_AES256
+    key_size = 32
+    key = b'\x30\xdb\x63\x16\x2b\x2f\x4e\xb6\xce\x4b\xbd\x21\x7e\xf7\x64\xc6\xdb\xfb\xf9\xec\x3b\x83\x8b\xa9\x19\xf8\xfd\xb8\x81\xbd\x9a\xc3'
+    tlscb.crypto_key.Update(key_type, key_size, key)
+
+    # TLS-CB Setup
+    tlscb.command = 0x30100000
+    tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
+    # Salt: 0x1a 0x8c 0x86 0x99
+    tlscb.salt = 0x99868c1a
+
+    # IV: 
+    tlscb.explicit_iv = 0x0100000000000000
+    tlscb.is_decrypt_flow = True
+    tlscb.SetObjValPd()
+
+    print("IS Decrypt Flow: %s" % tlscb.is_decrypt_flow)
+    return
+
+def tls_aes256_gcm_encrypt_setup(tc, tlscb):
+    tc.module.logger.info("AES256-GCM Encrypt Setup:")
+    
+    # Key Setup
+    key_type = types_pb2.CRYPTO_KEY_TYPE_AES256
+    key_size = 32
+    key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    tlscb.crypto_key.Update(key_type, key_size, key)
+
+    # TLS-CB Setup
+    tlscb.command = 0x30000000
+    tlscb.crypto_key_idx = tlscb.crypto_key.keyindex
+    tlscb.salt = 0x12345678
+
+    # IV: 
+    tlscb.explicit_iv = 0x0100000000000000
+    tlscb.is_decrypt_flow = False
+    tlscb.SetObjValPd()
+    print("IS Decrypt Flow: %s" % tlscb.is_decrypt_flow)
+    return
+
+
+
+def tls_explicit_iv(key_size):
+    if key_size == 16:
+        return tls_aes128_gcm_explicit_iv
+    elif key_size == 32:
+        return tls_aes256_gcm_explicit_iv

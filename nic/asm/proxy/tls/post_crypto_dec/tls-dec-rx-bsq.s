@@ -29,6 +29,7 @@ tls_dec_rx_bsq_process:
 	   dtlsp->dec_una.desc = HEAD_DESC(*dtlsp, dec);
 	*/
     phvwri  p.to_s6_dec_completions, 1
+    phvwr   p.to_s5_other_fid, d.other_fid
     seq		c1, d.qhead, r0
 	bcf		[c1], tls_rx_bsq_dec_process_done
 	nop

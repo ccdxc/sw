@@ -49,27 +49,20 @@ def TestCaseSetup(tc):
     tnmdr.Configure()
     tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
     tnmpr.Configure()
+
+
+
     tlscbid = "TlsCb%04d" % id
-    tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
-
-    tlscb_cur.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy | \
+    tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
+    tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy | \
                             tcp_tls_proxy.tls_debug_dol_sesq_stop
-    tlscb_cur.other_fid = 0xffff
-    # Key Setup
-    key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
-    key_size = 16
-    key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-    tlscb_cur.crypto_key.Update(key_type, key_size, key)
+    tlscb.other_fid = 0xffff
 
-    # TLS-CB Setup
-    tlscb_cur.command = 0x30000000
-    tlscb_cur.crypto_key_idx = tlscb_cur.crypto_key.keyindex
-    tlscb_cur.salt = 0x12345678
-    tlscb_cur.explicit_iv = 0x0200000000000000
-    tlscb_cur.is_decrypt_flow = False
-    tlscb_cur.SetObjValPd()
+    if tc.module.args.key_size == 16:
+        tcp_tls_proxy.tls_aes128_gcm_encrypt_setup(tc, tlscb)
+    elif tc.module.args.key_size == 32:
+        tcp_tls_proxy.tls_aes256_gcm_encrypt_setup(tc, tlscb)
 
-    tlscb = copy.deepcopy(tlscb_cur)
     tlscb.GetObjValPd()
     print("snapshot1: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests))
     print("snapshot1: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions))
@@ -178,33 +171,74 @@ def TestCaseVerify(tc):
         return False
 
 
+    # 6. Verify PI for TNMPR got incremented by 1
+    if (tnmpr_cur.pi != tnmpr.pi+1):
+        print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
+        return False
+    print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
+
+    print("BRQ: Current PI %d" % brq_cur.pi)
 
 
-    # 6. Verify descriptor on the BRQ
-    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[0].ilist_addr - 0x40)):
+    # 7. Verify descriptor on the BRQ
+    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-1].ilist_addr - 0x40)):
         print("RNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
         return False
 
 
-    # 7. Verify descriptor on the BRQ
-    if (tnmdr.ringentries[tnmdr.pi].handle != (brq_cur.ring_entries[0].olist_addr - 0x40)):
+    # 8. Verify descriptor on the BRQ
+    if (tnmdr.ringentries[tnmdr.pi].handle != (brq_cur.ring_entries[brq_cur.pi-1].olist_addr - 0x40)):
         print("TNMDR Check: Descriptor handle not as expected in ringentries 0x%x 0x%x" % (tnmdr.ringentries[tnmdr.pi].handle, brq_cur.ring_entries[0].olist_addr))
         return False
 
 
 
-    # 8. Verify BRQ Descriptor Command field
-    if brq_cur.ring_entries[0].command != tlscb.command:
+    # 9. Verify BRQ Descriptor Command field
+    if brq_cur.ring_entries[brq_cur.pi-1].command != tlscb.command:
         print("BRQ Command Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[0].command, tlscb.command))
         return False
 
 
-    # 9. Verify BRQ Descriptor Key Index field
-    if brq_cur.ring_entries[0].key_desc_index != tlscb.crypto_key_idx:
+    # 10. Verify BRQ Descriptor Key Index field
+    if brq_cur.ring_entries[brq_cur.pi-1].key_desc_index != tlscb.crypto_key_idx:
         print("BRQ Crypto Key Index Check: Failed : Got: 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[0].key_desc_index, tlscb.crypto_key_idx))
         return False
 
-    # 11. Verify page
+    # 11. Verify Salt
+    if brq_cur.ring_entries[brq_cur.pi-1].salt != tlscb.salt:
+        print("Salt Check Failed: Got 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[brq_cur.pi-1].salt, tlscb.salt))
+        return False
+    print("Salt Check Success: Got 0x%x, Expected: 0x%x" % (brq_cur.ring_entries[brq_cur.pi-1].salt, tlscb.salt))
+        
+    # 12. Verify Explicit IV
+    tls_explicit_iv = tlscb.explicit_iv
+    if brq_cur.ring_entries[brq_cur.pi-1].explicit_iv != tls_explicit_iv:
+        print("Explicit IV Check Failed: Got 0x%x, Expected: 0x%x" %
+                                (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
+        return False
+    else:
+        print("Explicit IV Check Success: Got 0x%x, Expected: 0x%x" %
+                                (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
+
+    # 13. Verify header size, this is the AAD size and is 13 bytes 
+    if brq_cur.ring_entries[brq_cur.pi-1].header_size != 0xd:
+        print("Header Size Check Failed: Got 0x%x, Expected: 0xd" %
+                                (brq_cur.ring_entries[brq_cur.pi-1].header_size))
+        return False
+    else:
+        print("Header Size Check Success: Got 0x%x, Expected: 0xd" %
+                                (brq_cur.ring_entries[brq_cur.pi-1].header_size))
+
+    # 14. Barco Status check
+    if brq_cur.ring_entries[brq_cur.pi-1].barco_status != 0:
+        print("Barco Status Check Failed: Got 0x%x, Expected: 0" %
+                                (brq_cur.ring_entries[brq_cur.pi-1].barco_status))
+        return False
+    else:
+        print("Barco Status Check Success: Got 0x%x, Expected: 0" %
+                                (brq_cur.ring_entries[brq_cur.pi-1].barco_status))
+
+    # 15. Verify page
     #if rnmpr.ringentries[0].handle != brq_cur.swdre_list[0].Addr1:
     #    print("Page handle not as expected in brq_cur.swdre_list")
         #return False

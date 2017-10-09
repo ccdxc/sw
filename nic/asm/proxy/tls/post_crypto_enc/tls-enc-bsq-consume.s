@@ -34,8 +34,14 @@ tls_enc_bsq_consume_process:
 	CAPRI_RING_DOORBELL_DATA(0, r1, TLS_SCHED_RING_BSQ, r5)
 
 	memwr.dx  	 r4, r3
+
+    /* For now, if we have a Barco Op error, bail out right here */
+    sne     c1, r0, k.tls_global_phv_barco_op_failed
+    bcf     [c1], tls_enc_bsq_consume_process_done
+    nop
 table_read_QUEUE_SESQ:
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_enc_post_read_odesc,
                        	   k.to_s3_odesc, TABLE_SIZE_512_BITS)
+tls_enc_bsq_consume_process_done:
 	nop.e
 	nop

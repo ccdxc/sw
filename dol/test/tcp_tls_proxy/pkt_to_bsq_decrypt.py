@@ -56,8 +56,15 @@ def TestCaseSetup(tc):
     tlscbid = "TlsCb%04d" % id
     tlscb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tlscbid])
 
+    tlscb.debug_dol = tcp_tls_proxy.tls_debug_dol_bypass_proxy | \
+                            tcp_tls_proxy.tls_debug_dol_sesq_stop
+    tlscb.other_fid = 0xffff
 
-    tcp_tls_proxy.tls_aes128_gcm_decrypt_setup(tc, tlscb)
+
+    if tc.module.args.key_size == 16:
+        tcp_tls_proxy.tls_aes128_gcm_decrypt_setup(tc, tlscb)
+    elif tc.module.args.key_size == 32:
+        tcp_tls_proxy.tls_aes256_gcm_decrypt_setup(tc, tlscb)
 
     tc.pvtdata.Add(tlscb)
     tc.pvtdata.Add(rnmdr)
@@ -157,22 +164,23 @@ def TestCaseVerify(tc):
         
     # 8. Verify Explicit IV
     # This is bound to fail until the DoL payload issue is fixed
-    if brq_cur.ring_entries[brq_cur.pi-1].explicit_iv != tcp_tls_proxy.tls_aes128_gcm_explicit_iv:
+    tls_explicit_iv = tcp_tls_proxy.tls_explicit_iv(tc.module.args.key_size)
+    if brq_cur.ring_entries[brq_cur.pi-1].explicit_iv != tls_explicit_iv:
         print("Explicit IV Check Failed: Got 0x%x, Expected: 0x%x" %
-                                (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tcp_tls_proxy.tls_aes128_gcm_explicit_iv))
-    else:
-        print("Explicit IV Check Success: Got 0x%x, Expected: 0x%x" %
-                                (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tcp_tls_proxy.tls_aes128_gcm_explicit_iv))
+                                (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
+        return False
+    print("Explicit IV Check Success: Got 0x%x, Expected: 0x%x" %
+                            (brq_cur.ring_entries[brq_cur.pi-1].explicit_iv, tls_explicit_iv))
 
     # 9. Verify header size, this is the AAD size and is 13 bytes 
     if brq_cur.ring_entries[brq_cur.pi-1].header_size != 0xd:
         print("Header Size Check Failed: Got 0x%x, Expected: 0xd" %
                                 (brq_cur.ring_entries[brq_cur.pi-1].header_size))
-    else:
-        print("Header Size Check Success: Got 0x%x, Expected: 0xd" %
-                                (brq_cur.ring_entries[brq_cur.pi-1].header_size))
+        return False
+    print("Header Size Check Success: Got 0x%x, Expected: 0xd" %
+                            (brq_cur.ring_entries[brq_cur.pi-1].header_size))
 
-    # 10. Status check
+    # 10. Barco Status check
     if brq_cur.ring_entries[brq_cur.pi-1].barco_status != 0:
         print("Barco Status Check Failed: Got 0x%x, Expected: 0" %
                                 (brq_cur.ring_entries[brq_cur.pi-1].barco_status))

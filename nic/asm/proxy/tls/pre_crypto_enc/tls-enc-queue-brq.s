@@ -94,7 +94,7 @@ dma_cmd_iv:
 
     phvwr       p.barco_desc_iv_address, r5.dx
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd3_dma_cmd, r5, crypto_iv_explicit_iv, crypto_iv_salt)    
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd3_dma_cmd, r5, crypto_iv_salt, crypto_iv_explicit_iv)
 
 dma_cmd_enc_brq_slot:
     add         r7, r0, d.{u.tls_queue_brq5_d.pi}.wx

@@ -197,14 +197,6 @@ header_type barco_dbell_t {
     } 
 }
 
-header_type crypto_iv_t {
-    fields {
-        explicit_iv                         : 64;
-        salt                                : 32;
-    }
-}
-
-
 header_type s3_t1_s2s_phv_t {
     fields {
         tnmdr_pidx              : 16;

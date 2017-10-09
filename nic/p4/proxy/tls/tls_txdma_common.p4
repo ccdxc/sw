@@ -339,3 +339,11 @@ header_type additional_data_t {
     modify_field(TO.aad_version_major, aad_version_major);                                     \
     modify_field(TO.aad_version_minor, aad_version_minor);                                     \
     modify_field(TO.aad_length, aad_length);
+
+header_type crypto_iv_t {
+    fields {
+        salt                                : 32;
+        explicit_iv                         : 64;
+    }
+}
+

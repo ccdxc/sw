@@ -239,13 +239,6 @@ header_type barco_dbell_t {
     } 
 }
 
-header_type crypto_iv_t {
-    fields {
-        salt                                : 32;
-        explicit_iv                         : 64;
-    }
-}
-
 header_type odesc_dma_src_t {
     fields {
         odesc                               : 64;
