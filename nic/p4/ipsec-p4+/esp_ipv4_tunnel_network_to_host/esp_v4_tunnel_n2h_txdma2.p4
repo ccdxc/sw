@@ -286,29 +286,7 @@ action esp_v4_tunnel_n2h_txdma2_initial_table(rsvd, cosA, cosB,
                                        cb_pindex, cb_cindex, cb_ring_base_addr, 
                                        iv_salt, ipsec_cb_pad)
 {
-    modify_field(ipsec_cb_scratch.pid, pid);
-    modify_field(ipsec_cb_scratch.total, total);
-    modify_field(ipsec_cb_scratch.host, host);
-    modify_field(ipsec_cb_scratch.eval_last, eval_last);
-    modify_field(ipsec_cb_scratch.cos_sel, cos_sel);
-    modify_field(ipsec_cb_scratch.cosB, cosB);
-    modify_field(ipsec_cb_scratch.cosA, cosA);
-    modify_field(ipsec_cb_scratch.rsvd, rsvd);
-
-    modify_field(ipsec_cb_scratch.rxdma_ring_pindex, rxdma_ring_pindex);
-    modify_field(ipsec_cb_scratch.rxdma_ring_cindex, rxdma_ring_cindex);
-    modify_field(ipsec_cb_scratch.barco_ring_pindex, barco_ring_pindex);
-    modify_field(ipsec_cb_scratch.barco_ring_cindex, barco_ring_cindex);
-
-    modify_field(ipsec_cb_scratch.key_index, key_index);
-    modify_field(ipsec_cb_scratch.iv_size, iv_size);
-    modify_field(ipsec_cb_scratch.icv_size, icv_size);
-    modify_field(ipsec_cb_scratch.last_replay_seq_no, last_replay_seq_no);
-    modify_field(ipsec_cb_scratch.expected_seq_no, expected_seq_no);
-    modify_field(ipsec_cb_scratch.replay_seq_no_bmp, replay_seq_no_bmp);
-    modify_field(ipsec_cb_scratch.barco_enc_cmd,barco_enc_cmd);
-    modify_field(ipsec_cb_scratch.block_size, block_size);
-    modify_field(ipsec_cb_scratch.ipsec_cb_index, ipsec_cb_index);
+    IPSEC_CB_SCRATCH
 
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
@@ -324,6 +302,6 @@ action esp_v4_tunnel_n2h_txdma2_initial_table(rsvd, cosA, cosB,
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 7);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR+(BRQ_REQ_RING_ENTRY_SIZE * barco_ring_cindex));
+    //modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR+(BRQ_REQ_RING_ENTRY_SIZE * barco_ring_cindex));
    
 }

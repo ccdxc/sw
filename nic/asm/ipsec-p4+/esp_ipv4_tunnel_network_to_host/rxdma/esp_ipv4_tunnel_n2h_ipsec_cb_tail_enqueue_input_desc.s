@@ -35,9 +35,11 @@ dma_cmd_to_write_input_desc_aol:
     
 dma_cmd_to_write_output_desc_aol:
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwr p.dma_cmd_out_desc_aol_dma_cmd_addr, k.ipsec_to_stage4_out_desc_addr
-    phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_start_addr, IPSEC_IN_DESC_AOL_START
-    phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_IN_DESC_AOL_END
+    add r1, r0, k.ipsec_to_stage4_out_desc_addr
+    addi r1, r1, 64
+    phvwr p.dma_cmd_out_desc_aol_dma_cmd_addr, r1 
+    phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_start_addr, IPSEC_OUT_DESC_AOL_START
+    phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_OUT_DESC_AOL_END
 
 esp_ipv4_tunnel_n2h_post_to_cb_ring:
     add r2, r0, d.cb_ring_base_addr
