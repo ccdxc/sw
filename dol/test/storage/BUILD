@@ -7,9 +7,6 @@ cc_library(
         "log.cc",
         "log.hpp",
     ],
-    deps = [
-        "//external:gflags",
-    ]
 )
 
 cc_library(
@@ -20,7 +17,6 @@ cc_library(
     ],
     deps = [
         "//nic/proto/hal:hal_proto",
-        "//external:gflags",
     ]
 )
 
@@ -118,6 +114,5 @@ cc_binary(
         ":hal_if",
         ":qstate_if",
         ":tests",
-        "//external:gflags",
     ],
 )

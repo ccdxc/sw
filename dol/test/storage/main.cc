@@ -2,11 +2,18 @@
 #include <stdio.h>
 #include <strings.h>
 #include <string>
-#include <gflags/gflags.h>
+#include <execinfo.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "dol/test/storage/tests.hpp"
 
-DEFINE_uint64(hal_port, 50052, "TCP port hal is listening to");
+namespace queues {
+void queues_shutdown();
+}
+
+uint64_t hal_port = 50052;
 
 struct {
   int (*test_fn)();
@@ -47,9 +54,27 @@ struct {
   {0}
 };
 
+void sig_handler(int sig) {
+  void *array[16];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 16);
+
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
+}
 
 int main(int argc, char**argv) {
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  signal(SIGSEGV, sig_handler);
+  if (argc != 2) {
+    printf("Usage: storage_test <hal_port>\n");
+    exit(1);
+  }
+  hal_port = strtoul(argv[1], nullptr, 0);
+
   if (tests::test_setup() < 0) {
     printf("Setup failed\n");
     return 1;
@@ -62,6 +87,7 @@ int main(int argc, char**argv) {
     else
       test_suite[i].test_succeded = true;
   }
+  queues::queues_shutdown();
 
   printf("\nConsolidated Test Report \n");
   printf("--------------------------------------------------------------\n");
@@ -74,6 +100,5 @@ int main(int argc, char**argv) {
     printf("%s\n", test_suite[i].test_succeded ? "Success" : "Failure");
   }
   fflush(stdout);
-  // TODO: Figreout success/failure return
-  return 0;
+  exit(0);
 }

@@ -123,6 +123,7 @@ bazel-build:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto/hal:all
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto/agents:all
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //dol/test/storage:storage_test
 	make capmodel
 
 bazel-gtests:

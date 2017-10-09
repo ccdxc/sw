@@ -31,6 +31,7 @@ build_log = nic_dir + "/build.log"
 model_log = nic_dir + "/model.log"
 hal_log = nic_dir + "/hal.log"
 dol_log = nic_dir + "/dol.log"
+storage_dol_log = nic_dir + "/storage_dol.log"
 sample_client_log = nic_dir + "/sample_client.log"
 
 lock_file = nic_dir + "/.run.pid"
@@ -153,6 +154,17 @@ def dump_coverage_data():
     model_process.send_signal(signal.SIGINT)
     hal_process.send_signal(signal.SIGUSR1)
     time.sleep(5)
+
+
+# Run Storage DOL
+def run_storage_dol(port):
+    bin_dir = nic_dir + "/../bazel-bin/dol/test/storage"
+    os.chdir(bin_dir)
+    cmd = ['./storage_test', str(port)]
+    p = Popen(cmd)
+    p.communicate()
+    return p.returncode
+
 
 # DOL
 
@@ -294,6 +306,8 @@ def main():
                         default=None, help='Module List File')
     parser.add_argument('--hostpin', dest='hostpin', action="store_true",
                         help='Run tests in Hostpinned mode.')
+    parser.add_argument('--storage', dest='storage', action="store_true",
+                        help='Run storage dol as well.')
     args = parser.parse_args()
 
     if args.cleanup:
@@ -316,6 +330,11 @@ def main():
 
         run_model(args)
         run_hal(args)
+        if (args.storage):
+          status = run_storage_dol(port)
+          if status != 0:
+            print "- Storage dol failed, status=", status
+            sys.exit(status)
         status = run_dol(args)
         if args.coveragerun:
             dump_coverage_data()
