@@ -8,8 +8,6 @@ import (
 	"time"
 
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
-	k8sclient "k8s.io/client-go/kubernetes"
-	k8srest "k8s.io/client-go/rest"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/apiclient"
@@ -17,7 +15,6 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc/server"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/quorum"
@@ -170,10 +167,7 @@ func StartQuorumServices(c utils.Cluster) {
 	env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, hostname)
 	env.SystemdService = services.NewSystemdService()
 	env.VipService = services.NewVIPService()
-	config := &k8srest.Config{
-		Host: fmt.Sprintf("%v:%v", c.VirtualIP, globals.KubeAPIServerPort),
-	}
-	env.K8sService = services.NewK8sService(k8sclient.NewForConfigOrDie(config))
+	env.K8sService = services.NewK8sService()
 	env.ResolverService = services.NewResolverService(env.K8sService)
 	env.MasterService = services.NewMasterService(c.VirtualIP, services.WithK8sSvcMasterOption(env.K8sService),
 		services.WithResolverSvcMasterOption(env.ResolverService))

@@ -95,10 +95,7 @@ func NewMasterService(virtualIP string, options ...MasterOption) types.MasterSer
 		panic("Current implementation of Master Service needs a global SystemdService")
 	}
 	if m.k8sSvc == nil {
-		config := &k8srest.Config{
-			Host: fmt.Sprintf("%v:%v", virtualIP, globals.KubeAPIServerPort),
-		}
-		m.k8sSvc = NewK8sService(k8sclient.NewForConfigOrDie(config))
+		m.k8sSvc = NewK8sService()
 	}
 	if m.resolverSvc == nil {
 		m.resolverSvc = NewResolverService(m.k8sSvc)
@@ -126,6 +123,7 @@ func (m *masterService) Start() error {
 	if m.isLeader {
 		return m.startLeaderServices(m.virtualIP)
 	}
+	m.resolverSvc.Start()
 	return nil
 }
 
@@ -142,8 +140,6 @@ func (m *masterService) startLeaderServices(virtualIP string) error {
 			return err
 		}
 	}
-	m.resolverSvc.Start()
-	m.k8sSvc.Start()
 	return nil
 }
 
@@ -154,11 +150,12 @@ func (m *masterService) Stop() {
 	defer m.Unlock()
 	m.enabled = false
 	m.stopLeaderServices()
+	m.k8sSvc.Stop()
+	m.resolverSvc.Stop()
 }
 
 // caller holds the lock
 func (m *masterService) stopLeaderServices() {
-	m.resolverSvc.Stop()
 	m.k8sSvc.Stop()
 	for ii := range masterServices {
 		if err := m.sysSvc.StopUnit(fmt.Sprintf("%s.service", masterServices[ii])); err != nil {
@@ -195,6 +192,11 @@ func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 			m.stopLeaderServices()
 		}
 	}
+	m.k8sSvc.Stop()
+	config := &k8srest.Config{
+		Host: fmt.Sprintf("%v:%v", e.Leader, globals.KubeAPIServerPort),
+	}
+	m.k8sSvc.Start(k8sclient.NewForConfigOrDie(config), m.isLeader)
 	return err
 }
 

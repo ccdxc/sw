@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"k8s.io/api/core/v1"
+	k8sclient "k8s.io/client-go/kubernetes"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
@@ -274,7 +275,7 @@ type K8sService struct {
 }
 
 // Start is a mock implementation of starting kubernetes service.
-func (m *K8sService) Start() {
+func (m *K8sService) Start(client k8sclient.Interface, isLeader bool) {
 }
 
 // Stop is a mock implementation of stopping kubernetes service.

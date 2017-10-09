@@ -7,8 +7,6 @@ import (
 	"time"
 
 	context "golang.org/x/net/context"
-	k8sclient "k8s.io/client-go/kubernetes"
-	k8srest "k8s.io/client-go/rest"
 
 	"github.com/pensando/sw/venice/cmd/apiclient"
 	"github.com/pensando/sw/venice/cmd/env"
@@ -18,7 +16,6 @@ import (
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/cmd/utils"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -155,10 +152,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.LeaderService = services.NewLeaderService(kv, masterLeaderKey, hostname)
 		env.SystemdService = services.NewSystemdService()
 		env.VipService = services.NewVIPService()
-		config := &k8srest.Config{
-			Host: fmt.Sprintf("%v:%v", req.VirtualIp, globals.KubeAPIServerPort),
-		}
-		env.K8sService = services.NewK8sService(k8sclient.NewForConfigOrDie(config))
+		env.K8sService = services.NewK8sService()
 		env.ResolverService = services.NewResolverService(env.K8sService)
 		env.MasterService = services.NewMasterService(req.VirtualIp, services.WithK8sSvcMasterOption(env.K8sService),
 			services.WithResolverSvcMasterOption(env.ResolverService))

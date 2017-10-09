@@ -1,8 +1,10 @@
 package types
 
 import (
-	"github.com/pensando/sw/api/generated/cmd"
 	"k8s.io/api/core/v1"
+	k8sclient "k8s.io/client-go/kubernetes"
+
+	"github.com/pensando/sw/api/generated/cmd"
 )
 
 // LeaderEvtType indicates what happened regarding the leadership
@@ -188,7 +190,7 @@ type K8sService interface {
 	UnRegister(K8sPodEventObserver)
 
 	// Start the k8s service.
-	Start()
+	Start(client k8sclient.Interface, isLeader bool)
 
 	// Stop the k8s service.
 	Stop()

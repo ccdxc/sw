@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -38,10 +37,12 @@ const (
 // services deployed through k8s.
 type k8sService struct {
 	sync.Mutex
+	sync.WaitGroup
 	client    k8sclient.Interface
 	ctx       context.Context
 	cancel    context.CancelFunc
 	running   bool
+	isLeader  bool
 	modCh     chan types.Module
 	observers []types.K8sPodEventObserver
 }
@@ -269,16 +270,15 @@ var k8sModules = map[string]types.Module{
 }
 
 // NewK8sService creates a new kubernetes service.
-func NewK8sService(client k8sclient.Interface) types.K8sService {
+func NewK8sService() types.K8sService {
 	return &k8sService{
-		client:    client,
 		modCh:     make(chan types.Module, maxModules),
 		observers: make([]types.K8sPodEventObserver, 0),
 	}
 }
 
 // Start starts the kubernetes service.
-func (k *k8sService) Start() {
+func (k *k8sService) Start(client k8sclient.Interface, isLeader bool) {
 	k.Lock()
 	defer k.Unlock()
 	if k.running {
@@ -286,9 +286,14 @@ func (k *k8sService) Start() {
 	}
 	k.running = true
 	log.Infof("Starting k8s service")
+	k.Add(1)
+	k.client = client
+	k.isLeader = isLeader
 	k.ctx, k.cancel = context.WithCancel(context.Background())
-	for _, mod := range k8sModules {
-		k.modCh <- mod
+	if k.isLeader {
+		for _, mod := range k8sModules {
+			k.modCh <- mod
+		}
 	}
 	go k.waitForAPIServerOrCancel()
 }
@@ -299,6 +304,9 @@ func (k *k8sService) waitForAPIServerOrCancel() {
 	ii := 0
 	for {
 		select {
+		case <-k.ctx.Done():
+			k.Done()
+			return
 		case <-time.After(waitTime):
 			if _, err := k.client.Extensions().DaemonSets(defaultNS).List(metav1.ListOptions{}); err == nil {
 				go k.runUntilCancel()
@@ -308,8 +316,6 @@ func (k *k8sService) waitForAPIServerOrCancel() {
 			if ii%10 == 0 {
 				log.Errorf("Waiting for K8s apiserver to come up for %v seconds", ii)
 			}
-		case <-k.ctx.Done():
-			return
 		}
 	}
 }
@@ -324,18 +330,23 @@ func (k *k8sService) runUntilCancel() {
 	ii := 0
 	for err != nil {
 		select {
+		case <-k.ctx.Done():
+			k.Done()
+			return
 		case <-time.After(time.Second):
 			watcher, err = k.client.CoreV1().Pods(defaultNS).Watch(metav1.ListOptions{})
 			ii++
 			if ii%10 == 0 {
 				log.Errorf("Waiting for pod watch to succeed for %v seconds", ii)
 			}
-		case <-k.ctx.Done():
-			return
 		}
 	}
 	for {
 		select {
+		case <-k.ctx.Done():
+			watcher.Stop()
+			k.Done()
+			return
 		case mod := <-k.modCh:
 			log.Infof("Deploying mod %v", mod)
 			k.deployModule(&mod)
@@ -361,23 +372,22 @@ func (k *k8sService) runUntilCancel() {
 				log.Errorf("Failed to notify %+v with error: %v", e, err)
 			}
 		case <-time.After(interval):
-			foundModules, err := getModules(k.client)
-			if err != nil {
-				break
-			}
-			modulesToDeploy := make(map[string]types.Module)
-			for name, module := range k8sModules {
-				if _, ok := foundModules[name]; !ok {
-					modulesToDeploy[name] = module
-				} else {
-					delete(foundModules, name)
+			if k.isLeader {
+				foundModules, err := getModules(k.client)
+				if err != nil {
+					break
 				}
+				modulesToDeploy := make(map[string]types.Module)
+				for name, module := range k8sModules {
+					if _, ok := foundModules[name]; !ok {
+						modulesToDeploy[name] = module
+					} else {
+						delete(foundModules, name)
+					}
+				}
+				k.deployModules(modulesToDeploy)
+				k.deleteModules(foundModules)
 			}
-			k.deployModules(modulesToDeploy)
-			k.deleteModules(foundModules)
-		case <-k.ctx.Done():
-			watcher.Stop()
-			return
 		}
 	}
 }
@@ -461,15 +471,7 @@ func populateDynamicArgs(args []string) []string {
 		case strings.Compare(arg, "$KVSTORE_URL") == 0:
 			arg = strings.Join(env.KVServers, ",")
 		case strings.Compare(arg, "$RESOLVER_URLS") == 0:
-			servers := make([]string, 0)
-			// TODO - Enable resolver service on all Quorum nodes, currently it only runs at master.
-			if env.VipService != nil {
-				vips := env.VipService.GetAllVirtualIPs()
-				for jj := range vips {
-					servers = append(servers, fmt.Sprintf("%s:%s", vips[jj], globals.CMDGRPCPort))
-				}
-				arg = strings.Join(servers, ",")
-			}
+			arg = strings.Join(env.QuorumNodes, ",")
 		}
 		result = append(result, arg)
 	}
@@ -623,6 +625,9 @@ func (k *k8sService) Stop() {
 		k.cancel = nil
 	}
 	k.running = false
+	k.isLeader = false
+	// Wait for go routine to terminate
+	k.Wait()
 }
 
 func (k *k8sService) Register(o types.K8sPodEventObserver) {
