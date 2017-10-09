@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
+	//"github.com/golang/mock/gomock"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	. "gopkg.in/check.v1"
@@ -36,6 +36,7 @@ import (
 	_ "github.com/pensando/sw/api/generated/network/gateway"
 	_ "github.com/pensando/sw/api/hooks"
 
+	"github.com/golang/mock/gomock"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -46,6 +47,7 @@ const (
 	integTestApisrvURL = "localhost:8082"
 	integTestAPIGWURL  = "localhost:9092"
 	vchTestURL         = "localhost:19003"
+	agentDatapathKind  = "mock"
 )
 
 // veniceIntegSuite is the state of integ test
@@ -54,7 +56,8 @@ type veniceIntegSuite struct {
 	apiGw        apigw.APIGateway
 	ctrler       *npm.Netctrler
 	agents       []*netagent.Agent
-	datapaths    []*datapath.MockHalDatapath
+	datapaths    []*datapath.HalDatapath
+	datapathKind datapath.Kind
 	numAgents    int
 	restClient   apiclient.Services
 	apisrvClient apiclient.Services
@@ -63,6 +66,7 @@ type veniceIntegSuite struct {
 
 // test args
 var numAgents = flag.Int("agents", numIntegTestAgents, "Number of agents")
+var datapathKind = flag.String("datapath", agentDatapathKind, "Specify the datapath type. mock | hal")
 
 // Hook up gocheck into the "go test" runner.
 func TestVeniceInteg(t *testing.T) {
@@ -76,6 +80,7 @@ func TestVeniceInteg(t *testing.T) {
 func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	// test parameters
 	it.numAgents = *numAgents
+	it.datapathKind = datapath.Kind(*datapathKind)
 
 	logger := log.GetNewLogger(log.GetDefaultConfig("venice_integ"))
 
@@ -140,7 +145,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	// create agents
 	for i := 0; i < it.numAgents; i++ {
 		// mock datapath
-		dp, aerr := datapath.NewMockHalDatapath()
+		dp, aerr := datapath.NewHalDatapath(it.datapathKind)
 		c.Assert(aerr, IsNil)
 		it.datapaths = append(it.datapaths, dp)
 
@@ -183,7 +188,7 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 		ag.Stop()
 	}
 	it.agents = []*netagent.Agent{}
-	it.datapaths = []*datapath.MockHalDatapath{}
+	it.datapaths = []*datapath.HalDatapath{}
 
 	// stop server and client
 	it.ctrler.RPCServer.Stop()
@@ -196,9 +201,11 @@ func (it *veniceIntegSuite) TearDownSuite(c *C) {
 // basic test to make sure all components come up
 func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 	// expect a network create/delete call in data path
-	for _, dp := range it.datapaths {
-		dp.Netclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		dp.Netclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+	if it.datapathKind.String() == "mock" {
+		for _, dp := range it.datapaths {
+			dp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+			dp.Hal.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+		}
 	}
 
 	// create a network using REST api

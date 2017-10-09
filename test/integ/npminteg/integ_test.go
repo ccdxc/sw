@@ -8,11 +8,12 @@ import (
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/golang/mock/gomock"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm"
 
+	"github.com/golang/mock/gomock"
+	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	. "gopkg.in/check.v1"
 )
@@ -21,17 +22,20 @@ import (
 const (
 	numIntegTestAgents = 16
 	integTestRPCURL    = "localhost:9595"
+	agentDatapathKind  = "mock"
 )
 
 // integTestSuite is the state of integ test
 type integTestSuite struct {
-	ctrler    *npm.Netctrler
-	agents    []*Dpagent
-	numAgents int
+	ctrler       *npm.Netctrler
+	agents       []*Dpagent
+	datapathKind datapath.Kind
+	numAgents    int
 }
 
 // test args
 var numAgents = flag.Int("agents", numIntegTestAgents, "Number of agents")
+var datapathKind = flag.String("datapath", agentDatapathKind, "Specify the datapath type. mock | hal")
 
 // Hook up gocheck into the "go test" runner.
 func TestNpmInteg(t *testing.T) {
@@ -45,6 +49,7 @@ func TestNpmInteg(t *testing.T) {
 func (it *integTestSuite) SetUpSuite(c *C) {
 	// test parameters
 	it.numAgents = *numAgents
+	it.datapathKind = datapath.Kind(*datapathKind)
 
 	// create a controller
 	ctrler, err := npm.NewNetctrler(integTestRPCURL, "", "", "")
@@ -55,7 +60,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 	// create agents
 	for i := 0; i < it.numAgents; i++ {
-		agent, err := CreateAgent(fmt.Sprintf("dummy-uuid-%d", i), integTestRPCURL)
+		agent, err := CreateAgent(it.datapathKind, fmt.Sprintf("dummy-uuid-%d", i), integTestRPCURL)
 		c.Assert(err, IsNil)
 		it.agents = append(it.agents, agent)
 	}
@@ -88,9 +93,11 @@ func (it *integTestSuite) TearDownSuite(c *C) {
 // basic connectivity tests between NPM and agent
 func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 	// expect a network create/delete call in data path
-	for _, ag := range it.agents {
-		ag.datapath.Netclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		ag.datapath.Netclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+	if it.datapathKind.String() == "mock" {
+		for _, ag := range it.agents {
+			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+		}
 	}
 
 	// create a network in controller
@@ -124,11 +131,13 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 // test endpoint create workflow e2e
 func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	// expect network and endpoint calls
-	for _, ag := range it.agents {
-		ag.datapath.Netclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		ag.datapath.Epclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).MaxTimes(it.numAgents+1).Return(nil, nil)
-		ag.datapath.Epclient.EXPECT().EndpointDelete(gomock.Any(), gomock.Any()).MaxTimes(it.numAgents+1).Return(nil, nil)
-		ag.datapath.Netclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+	if it.datapathKind.String() == "mock" {
+		for _, ag := range it.agents {
+			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockEpclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).MaxTimes(it.numAgents+1).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockEpclient.EXPECT().EndpointDelete(gomock.Any(), gomock.Any()).MaxTimes(it.numAgents+1).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+		}
 	}
 
 	// create a network in controller

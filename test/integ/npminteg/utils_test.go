@@ -14,7 +14,7 @@ import (
 
 // Dpagent is an agent instance
 type Dpagent struct {
-	datapath *datapath.MockHalDatapath
+	datapath *datapath.HalDatapath
 	nagent   *netagent.Agent
 }
 
@@ -29,9 +29,9 @@ func (it *integTestSuite) pollTimeout() string {
 }
 
 // CreateAgent creates an instance of agent
-func CreateAgent(nodeUUID, srvURL string) (*Dpagent, error) {
+func CreateAgent(kind datapath.Kind, nodeUUID, srvURL string) (*Dpagent, error) {
 	// mock datapath
-	dp, err := datapath.NewMockHalDatapath()
+	dp, err := datapath.NewHalDatapath(kind)
 	if err != nil {
 		log.Errorf("Error creating hal datapath. Err: %v", err)
 		return nil, err

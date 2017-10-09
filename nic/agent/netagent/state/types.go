@@ -80,6 +80,7 @@ type NetDatapathAPI interface {
 
 // DatapathIntf is the API provided by the netagent to datapaths
 type DatapathIntf interface {
+	GetAgentID() string
 	EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, *IntfInfo, error) // Creates an endpoint
 	EndpointDeleteReq(epinfo *netproto.Endpoint) error                                  // deletes an endpoint
 }

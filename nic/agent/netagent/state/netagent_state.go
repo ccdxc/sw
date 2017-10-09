@@ -11,8 +11,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// NewNetAgentCreater creates a new network agent
-func NewNetAgentCreater(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, error) {
+// NewNetAgent creates a new network agent
+func NewNetAgent(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, error) {
 	var emdb emstore.Emstore
 	var err error
 
@@ -26,7 +26,7 @@ func NewNetAgentCreater(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, 
 		return nil, err
 	}
 
-	agent := NetAgent{
+	nagent := NetAgent{
 		store:            emdb,
 		nodeUUID:         nodeUUID,
 		datapath:         dp,
@@ -37,50 +37,15 @@ func NewNetAgentCreater(dp NetDatapathAPI, dbPath, nodeUUID string) (*NetAgent, 
 		currentSgID:      1,
 	}
 
-	err = dp.SetAgent(&agent)
+	err = dp.SetAgent(&nagent)
 	if err != nil {
 		// cleanup emstore and return
 		emdb.Close()
 		return nil, err
 	}
 
-	return &agent, nil
+	return &nagent, nil
 
-}
-
-func (na *NetAgent) create(dp NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverURLs, restListenURL string) (*NetAgent, error) {
-	var emdb emstore.Emstore
-	var err error
-
-	if dbPath == "" {
-		emdb, err = emstore.NewEmstore(emstore.MemStoreType, "")
-	} else {
-		emdb, err = emstore.NewEmstore(emstore.BoltDBType, dbPath)
-	}
-	if err != nil {
-		log.Errorf("Error opening the embedded db. Err: %v", err)
-		return nil, err
-	}
-
-	agent := NetAgent{
-		store:            emdb,
-		nodeUUID:         nodeUUID,
-		datapath:         dp,
-		networkDB:        make(map[string]*netproto.Network),
-		endpointDB:       make(map[string]*netproto.Endpoint),
-		secgroupDB:       make(map[string]*netproto.SecurityGroup),
-		currentNetworkID: 1,
-		currentSgID:      1,
-	}
-
-	err = dp.SetAgent(&agent)
-	if err != nil {
-		// cleanup emstore and return
-		emdb.Close()
-		return nil, err
-	}
-
-	return na, nil
 }
 
 // RegisterCtrlerIf registers a controller object

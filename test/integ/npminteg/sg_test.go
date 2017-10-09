@@ -7,7 +7,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pensando/sw/api/generated/network"
-
 	. "github.com/pensando/sw/venice/utils/testutils"
 	. "gopkg.in/check.v1"
 )
@@ -15,10 +14,12 @@ import (
 // TestNpmSgCreateDelete
 func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// expect sg calls in datapath
-	for _, ag := range it.agents {
-		ag.datapath.Sgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		ag.datapath.Sgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
-		ag.datapath.Sgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+	if it.datapathKind.String() == "mock" {
+		for _, ag := range it.agents {
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+		}
 	}
 
 	// create sg in watcher
@@ -28,9 +29,9 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify all agents have the security group
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			return (len(ag.datapath.SgDB) == 1), nil
+			return len(ag.datapath.DB.SgDB) == 1, nil
 		}, "Sg not found on agent", "10ms", it.pollTimeout())
-		c.Assert(len(ag.datapath.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")].Request), Equals, 1)
+		c.Assert(len(ag.datapath.DB.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")].Request), Equals, 1)
 	}
 
 	// incoming rule
@@ -54,7 +55,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify datapath has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			sg, ok := ag.datapath.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")]
+			sg, ok := ag.datapath.DB.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")]
 			if !ok {
 				return false, nil
 			}
@@ -70,7 +71,7 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify rules are gone from datapath
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			sg, ok := ag.datapath.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")]
+			sg, ok := ag.datapath.DB.SgDB[fmt.Sprintf("%s|%s", "default", "testsg")]
 			if !ok {
 				return false, nil
 			}
@@ -78,7 +79,6 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 			return ((len(sg.Request[0].IngressPolicy.FwRules) == 0) && (len(sg.Request[0].EgressPolicy.FwRules) == 0)), nil
 		}, "Sg rules still found on agent", "10ms", it.pollTimeout())
 	}
-
 	// delete the security group
 	err = it.ctrler.Watchr.DeleteSecurityGroup("default", "testsg")
 	c.Assert(err, IsNil)
@@ -86,23 +86,29 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify sg is removed from datapath
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			return (len(ag.datapath.SgDB) == 0), nil
+			return (len(ag.datapath.DB.SgDB) == 0), nil
 		}, "Sg still found on agent", "10ms", it.pollTimeout())
 	}
 }
 
 func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// expect sg & ep calls in datapath
-	for _, ag := range it.agents {
-		ag.datapath.Netclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		ag.datapath.Sgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-		ag.datapath.Epclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
-		ag.datapath.Sgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
-		ag.datapath.Epclient.EXPECT().EndpointDelete(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
-		ag.datapath.Sgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-		ag.datapath.Epclient.EXPECT().EndpointUpdate(gomock.Any(), gomock.Any()).MaxTimes(1).Return(nil, nil)
-		ag.datapath.Netclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
-
+	//FIXME with real hal
+	// expect sg calls in datapath
+	if it.datapathKind.String() == "mock" {
+		for _, ag := range it.agents {
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockEpclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockEpclient.EXPECT().EndpointDelete(gomock.Any(), gomock.Any()).MaxTimes(2).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockSgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockEpclient.EXPECT().EndpointUpdate(gomock.Any(), gomock.Any()).MaxTimes(1).Return(nil, nil)
+			ag.datapath.Hal.MockClients.MockNetclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+		}
 	}
 
 	// create a network in controller
@@ -128,9 +134,9 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// verify endpoint is present in all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			return (len(ag.datapath.EndpointDB) == 1), nil
+			return (len(ag.datapath.DB.EndpointDB) == 1), nil
 		}, "endpoint not found on agent", "10ms", it.pollTimeout())
-		ep, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
+		ep, ok := ag.datapath.DB.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
 		c.Assert(ok, Equals, true)
 		c.Assert(len(ep.Request), Equals, 1)
 		c.Assert(len(ep.Request[0].SecurityGroup), Equals, 1)
@@ -144,9 +150,9 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// verify new endpoint is present in all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			return (len(ag.datapath.EndpointDB) == 2), nil
+			return (len(ag.datapath.DB.EndpointDB) == 2), nil
 		}, "endpoint not found on agent", "10ms", it.pollTimeout())
-		ep, ok := ag.datapath.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint2")]
+		ep, ok := ag.datapath.DB.EndpointDB[fmt.Sprintf("%s|%s", "default", "testEndpoint2")]
 		c.Assert(ok, Equals, true)
 		c.Assert(len(ep.Request), Equals, 1)
 		c.Assert(len(ep.Request[0].SecurityGroup), Equals, 1)
@@ -158,7 +164,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	c.Assert(err, IsNil)
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			return (len(ag.datapath.EndpointDB) == 1), nil
+			return (len(ag.datapath.DB.EndpointDB) == 1), nil
 		}, "endpoint still found on agent", "10ms", it.pollTimeout())
 	}
 
@@ -169,7 +175,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// verify sg is removed from the endpoint
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			ep, ok := ag.datapath.EndpointUpdateDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
+			ep, ok := ag.datapath.DB.EndpointUpdateDB[fmt.Sprintf("%s|%s", "default", "testEndpoint1")]
 			if ok && len(ep.Request) == 1 && len(ep.Request[0].SecurityGroup) == 0 {
 				return true, nil
 			}
@@ -182,7 +188,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	c.Assert(err, IsNil)
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, []interface{}) {
-			return (len(ag.datapath.EndpointDB) == 0), nil
+			return (len(ag.datapath.DB.EndpointDB) == 0), nil
 		}, "endpoint still found on agent", "10ms", it.pollTimeout())
 	}
 

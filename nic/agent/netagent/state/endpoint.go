@@ -181,7 +181,7 @@ func (na *NetAgent) DeleteEndpoint(ep *netproto.Endpoint) error {
 	_, ok := na.endpointDB[key]
 	na.Unlock()
 	if !ok {
-		log.Errorf("Endpoint %v was not found", ep.ObjectMeta)
+		log.Errorf("Endpoint %#v was not found", key)
 		return ErrEndpointNotFound
 	}
 

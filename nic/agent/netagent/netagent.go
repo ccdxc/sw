@@ -47,7 +47,7 @@ type Agent struct {
 // NewAgent creates an agent instance
 func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverURLs, restListenURL string) (*Agent, error) {
 	// create a new network agent
-	nagent, err := state.NewNetAgentCreater(dp, dbPath, nodeUUID)
+	nagent, err := state.NewNetAgent(dp, dbPath, nodeUUID)
 
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)

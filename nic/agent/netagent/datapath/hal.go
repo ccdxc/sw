@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os"
 	"regexp"
 	"strconv"
 	"sync"
@@ -18,58 +19,138 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
-// MockHalDatapath contains mock hal clients
-type MockHalDatapath struct {
-	sync.Mutex
-	MockCtrl         *gomock.Controller
-	Epclient         *halproto.MockEndpointClient
-	Ifclient         *halproto.MockInterfaceClient
-	Netclient        *halproto.MockL2SegmentClient
-	Lbclient         *halproto.MockL4LbClient
-	Sgclient         *halproto.MockNwSecurityClient
-	Sessclient       *halproto.MockSessionClient
-	Tnclient         *halproto.MockTenantClient
+const (
+	halGRPCDefaultBaseURL = "localhost"
+	halGRPCDefaultPort    = "50054"
+)
+
+// Kind holds the HAL Datapath kind. It could either be mock HAL or real HAL.
+type Kind string
+
+// Hal holds clients to talk to HAL gRPC server.
+type Hal struct {
+	client      *rpckit.RPCClient
+	mockCtrl    *gomock.Controller
+	MockClients mockClients
+	Epclient    halproto.EndpointClient
+	Ifclient    halproto.InterfaceClient
+	Netclient   halproto.L2SegmentClient
+	Lbclient    halproto.L4LbClient
+	Sgclient    halproto.NwSecurityClient
+	Sessclient  halproto.SessionClient
+	Tnclient    halproto.TenantClient
+}
+
+// MockClients stores references for mockclients to be used for setting expectations
+type mockClients struct {
+	MockEpclient   *halproto.MockEndpointClient
+	MockIfclient   *halproto.MockInterfaceClient
+	MockNetclient  *halproto.MockL2SegmentClient
+	MockLbclient   *halproto.MockL4LbClient
+	MockSgclient   *halproto.MockNwSecurityClient
+	MockSessclient *halproto.MockSessionClient
+	MockTnclient   *halproto.MockTenantClient
+}
+
+// DB holds all the state information.
+type DB struct {
 	EndpointDB       map[string]*halproto.EndpointRequestMsg
 	EndpointUpdateDB map[string]*halproto.EndpointUpdateRequestMsg
 	EndpointDelDB    map[string]*halproto.EndpointDeleteRequestMsg
 	SgDB             map[string]*halproto.SecurityGroupRequestMsg
 }
 
-// NewMockHalDatapath returns a mock hal datapath
-func NewMockHalDatapath() (*MockHalDatapath, error) {
-	haldp := MockHalDatapath{}
+// HalDatapath contains mock and hal clients.
+type HalDatapath struct {
+	sync.Mutex
+	Kind Kind
+	Hal  Hal
+	DB   DB
+}
 
-	// create mock controller
-	haldp.MockCtrl = gomock.NewController(&haldp)
-
-	// create mock hal clients
-	haldp.Epclient = halproto.NewMockEndpointClient(haldp.MockCtrl)
-	haldp.Ifclient = halproto.NewMockInterfaceClient(haldp.MockCtrl)
-	haldp.Netclient = halproto.NewMockL2SegmentClient(haldp.MockCtrl)
-	haldp.Lbclient = halproto.NewMockL4LbClient(haldp.MockCtrl)
-	haldp.Sgclient = halproto.NewMockNwSecurityClient(haldp.MockCtrl)
-	haldp.Sessclient = halproto.NewMockSessionClient(haldp.MockCtrl)
-	haldp.Tnclient = halproto.NewMockTenantClient(haldp.MockCtrl)
-
-	// init message databases
-	haldp.EndpointDB = make(map[string]*halproto.EndpointRequestMsg)
-	haldp.EndpointUpdateDB = make(map[string]*halproto.EndpointUpdateRequestMsg)
-	haldp.EndpointDelDB = make(map[string]*halproto.EndpointDeleteRequestMsg)
-	haldp.SgDB = make(map[string]*halproto.SecurityGroupRequestMsg)
-
-	return &haldp, nil
+// String returns string value of the datapath kind
+func (k *Kind) String() string {
+	return string(*k)
 }
 
 // Errorf for satisfying gomock
-func (hd *MockHalDatapath) Errorf(format string, args ...interface{}) {
+func (hd *Hal) Errorf(format string, args ...interface{}) {
 	log.Errorf(format, args...)
 }
 
 // Fatalf for satisfying gomock
-func (hd *MockHalDatapath) Fatalf(format string, args ...interface{}) {
+func (hd *Hal) Fatalf(format string, args ...interface{}) {
 	log.Fatalf(format, args...)
+}
+
+// NewHalDatapath returns a mock hal datapath
+func NewHalDatapath(kind Kind) (*HalDatapath, error) {
+	var err error
+	var hal Hal
+	haldp := HalDatapath{}
+	haldp.Kind = kind
+
+	db := DB{EndpointDB: make(map[string]*halproto.EndpointRequestMsg),
+		EndpointUpdateDB: make(map[string]*halproto.EndpointUpdateRequestMsg),
+		EndpointDelDB:    make(map[string]*halproto.EndpointDeleteRequestMsg),
+		SgDB:             make(map[string]*halproto.SecurityGroupRequestMsg),
+	}
+	haldp.DB = db
+	if haldp.Kind.String() == "hal" {
+		hal.client, err = hal.createNewGRPCClient()
+		if err != nil {
+			return nil, err
+		}
+		hal.Epclient = halproto.NewEndpointClient(hal.client.ClientConn)
+		hal.Ifclient = halproto.NewInterfaceClient(hal.client.ClientConn)
+		hal.Netclient = halproto.NewL2SegmentClient(hal.client.ClientConn)
+		hal.Lbclient = halproto.NewL4LbClient(hal.client.ClientConn)
+		hal.Sgclient = halproto.NewNwSecurityClient(hal.client.ClientConn)
+		hal.Sessclient = halproto.NewSessionClient(hal.client.ClientConn)
+		hal.Tnclient = halproto.NewTenantClient(hal.client.ClientConn)
+		haldp.Hal = hal
+		return &haldp, nil
+	}
+	hal.mockCtrl = gomock.NewController(&hal)
+	hal.MockClients = mockClients{
+		MockEpclient:   halproto.NewMockEndpointClient(hal.mockCtrl),
+		MockIfclient:   halproto.NewMockInterfaceClient(hal.mockCtrl),
+		MockNetclient:  halproto.NewMockL2SegmentClient(hal.mockCtrl),
+		MockLbclient:   halproto.NewMockL4LbClient(hal.mockCtrl),
+		MockSgclient:   halproto.NewMockNwSecurityClient(hal.mockCtrl),
+		MockSessclient: halproto.NewMockSessionClient(hal.mockCtrl),
+		MockTnclient:   halproto.NewMockTenantClient(hal.mockCtrl),
+	}
+
+	hal.Epclient = hal.MockClients.MockEpclient
+	hal.Ifclient = hal.MockClients.MockIfclient
+	hal.Netclient = hal.MockClients.MockNetclient
+	hal.Lbclient = hal.MockClients.MockLbclient
+	hal.Sgclient = hal.MockClients.MockSgclient
+	hal.Sessclient = hal.MockClients.MockSessclient
+	hal.Tnclient = hal.MockClients.MockTnclient
+	haldp.Hal = hal
+	return &haldp, nil
+}
+
+func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {
+	halPort := os.Getenv("HAL_GRPC_PORT")
+	if halPort == "" {
+		halPort = halGRPCDefaultPort
+	}
+	srvURL := halGRPCDefaultBaseURL + ":" + halPort
+	// create a grpc client
+	// ToDo Use AgentID for mysvcName
+	rpcClient, err := rpckit.NewRPCClient("hal", srvURL)
+	if err != nil {
+		log.Errorf("Creating gRPC Client failed on HAL Datapath. Server URL: %s", srvURL)
+		return nil, err
+	}
+
+	return rpcClient, err
 }
 
 // objectKey returns object key from meta
@@ -88,9 +169,9 @@ func ipv42int(ip net.IP) uint32 {
 
 // FindEndpoint finds an endpoint in datapath
 // used for testing mostly..
-func (hd *MockHalDatapath) FindEndpoint(epKey string) (*halproto.EndpointRequestMsg, error) {
+func (hd *HalDatapath) FindEndpoint(epKey string) (*halproto.EndpointRequestMsg, error) {
 	hd.Lock()
-	epr, ok := hd.EndpointDB[epKey]
+	epr, ok := hd.DB.EndpointDB[epKey]
 	hd.Unlock()
 	if !ok {
 		return nil, errors.New("Endpoint not found")
@@ -101,9 +182,9 @@ func (hd *MockHalDatapath) FindEndpoint(epKey string) (*halproto.EndpointRequest
 
 // FindEndpointDel finds an endpoint delete record
 // used for testing mostly
-func (hd *MockHalDatapath) FindEndpointDel(epKey string) (*halproto.EndpointDeleteRequestMsg, error) {
+func (hd *HalDatapath) FindEndpointDel(epKey string) (*halproto.EndpointDeleteRequestMsg, error) {
 	hd.Lock()
-	epdr, ok := hd.EndpointDelDB[epKey]
+	epdr, ok := hd.DB.EndpointDelDB[epKey]
 	hd.Unlock()
 	if !ok {
 		return nil, errors.New("Endpoint delete record not found")
@@ -113,19 +194,19 @@ func (hd *MockHalDatapath) FindEndpointDel(epKey string) (*halproto.EndpointDele
 }
 
 // GetEndpointCount returns number of endpoints in db
-func (hd *MockHalDatapath) GetEndpointCount() int {
+func (hd *HalDatapath) GetEndpointCount() int {
 	hd.Lock()
 	defer hd.Unlock()
-	return len(hd.EndpointDB)
+	return len(hd.DB.EndpointDB)
 }
 
 // SetAgent sets the agent for this datapath
-func (hd *MockHalDatapath) SetAgent(ag state.DatapathIntf) error {
+func (hd *HalDatapath) SetAgent(ag state.DatapathIntf) error {
 	return nil
 }
 
 // CreateLocalEndpoint creates an endpoint
-func (hd *MockHalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*state.IntfInfo, error) {
+func (hd *HalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) (*state.IntfInfo, error) {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
@@ -170,22 +251,21 @@ func (hd *MockHalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 
 	// call hal to create the endpoint
 	// FIXME: handle response
-	_, err := hd.Epclient.EndpointCreate(context.Background(), &epReq)
+	_, err := hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
 	if err != nil {
 		log.Errorf("Error creating endpoint. Err: %v", err)
 		return nil, err
 	}
-
 	// save the endpoint message
 	hd.Lock()
-	hd.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
+	hd.DB.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
 	hd.Unlock()
 
 	return nil, nil
 }
 
 // CreateRemoteEndpoint creates remote endpoint
-func (hd *MockHalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+func (hd *HalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
@@ -230,7 +310,7 @@ func (hd *MockHalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 
 	// call hal to create the endpoint
 	// FIXME: handle response
-	_, err := hd.Epclient.EndpointCreate(context.Background(), &epReq)
+	_, err := hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
 	if err != nil {
 		log.Errorf("Error creating endpoint. Err: %v", err)
 		return err
@@ -238,14 +318,14 @@ func (hd *MockHalDatapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 
 	// save the endpoint message
 	hd.Lock()
-	hd.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
+	hd.DB.EndpointDB[objectKey(&ep.ObjectMeta)] = &epReq
 	hd.Unlock()
 
 	return nil
 }
 
 // UpdateLocalEndpoint updates the endpoint
-func (hd *MockHalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+func (hd *HalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
@@ -291,22 +371,22 @@ func (hd *MockHalDatapath) UpdateLocalEndpoint(ep *netproto.Endpoint, nw *netpro
 
 	// call hal to update the endpoint
 	// FIXME: handle response
-	_, err := hd.Epclient.EndpointUpdate(context.Background(), &epUpdateReqMsg)
+
+	_, err := hd.Hal.Epclient.EndpointUpdate(context.Background(), &epUpdateReqMsg)
 	if err != nil {
-		log.Errorf("Error creating endpoint. Err: %v", err)
+		log.Errorf("Error updating endpoint. Err: %v", err)
 		return err
 	}
-
 	// save the endpoint message
 	hd.Lock()
-	hd.EndpointUpdateDB[objectKey(&ep.ObjectMeta)] = &epUpdateReqMsg
+	hd.DB.EndpointUpdateDB[objectKey(&ep.ObjectMeta)] = &epUpdateReqMsg
 	hd.Unlock()
 
 	return nil
 }
 
 // UpdateRemoteEndpoint updates an existing endpoint
-func (hd *MockHalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
+func (hd *HalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Network, sgs []*netproto.SecurityGroup) error {
 	// convert mac address
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
@@ -352,22 +432,22 @@ func (hd *MockHalDatapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netpr
 
 	// call hal to update the endpoint
 	// FIXME: handle response
-	_, err := hd.Epclient.EndpointUpdate(context.Background(), &epUpdateReqMsg)
+	_, err := hd.Hal.Epclient.EndpointUpdate(context.Background(), &epUpdateReqMsg)
 	if err != nil {
-		log.Errorf("Error creating endpoint. Err: %v", err)
+		log.Errorf("Error updating endpoint. Err: %v", err)
 		return err
 	}
 
 	// save the endpoint message
 	hd.Lock()
-	hd.EndpointUpdateDB[objectKey(&ep.ObjectMeta)] = &epUpdateReqMsg
+	hd.DB.EndpointUpdateDB[objectKey(&ep.ObjectMeta)] = &epUpdateReqMsg
 	hd.Unlock()
 
 	return nil
 }
 
 // DeleteLocalEndpoint deletes an endpoint
-func (hd *MockHalDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
+func (hd *HalDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 	// convert v4 address
 	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
 	log.Infof("Deleting endpoint: {%+v}, addr: %v/%v. Err: %v", ep, ep.Status.IPv4Address, ipaddr, err)
@@ -399,7 +479,7 @@ func (hd *MockHalDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 		Request: []*halproto.EndpointDeleteRequest{&epdel},
 	}
 	// delete it from hal
-	_, err = hd.Epclient.EndpointDelete(context.Background(), &delReq)
+	_, err = hd.Hal.Epclient.EndpointDelete(context.Background(), &delReq)
 	if err != nil {
 		log.Errorf("Error deleting endpoint. Err: %v", err)
 		return err
@@ -407,15 +487,15 @@ func (hd *MockHalDatapath) DeleteLocalEndpoint(ep *netproto.Endpoint) error {
 
 	// save the endpoint delete message
 	hd.Lock()
-	hd.EndpointDelDB[objectKey(&ep.ObjectMeta)] = &delReq
-	delete(hd.EndpointDB, objectKey(&ep.ObjectMeta))
+	hd.DB.EndpointDelDB[objectKey(&ep.ObjectMeta)] = &delReq
+	delete(hd.DB.EndpointDB, objectKey(&ep.ObjectMeta))
 	hd.Unlock()
 
 	return nil
 }
 
 // DeleteRemoteEndpoint deletes remote endpoint
-func (hd *MockHalDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
+func (hd *HalDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 	// convert v4 address
 	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
 	log.Infof("Deleting endpoint: {%+v}, addr: %v/%v. Err: %v", ep, ep.Status.IPv4Address, ipaddr, err)
@@ -447,7 +527,7 @@ func (hd *MockHalDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 		Request: []*halproto.EndpointDeleteRequest{&epdel},
 	}
 	// delete it from hal
-	_, err = hd.Epclient.EndpointDelete(context.Background(), &delReq)
+	_, err = hd.Hal.Epclient.EndpointDelete(context.Background(), &delReq)
 	if err != nil {
 		log.Errorf("Error deleting endpoint. Err: %v", err)
 		return err
@@ -455,15 +535,15 @@ func (hd *MockHalDatapath) DeleteRemoteEndpoint(ep *netproto.Endpoint) error {
 
 	// save the endpoint delete message
 	hd.Lock()
-	hd.EndpointDelDB[objectKey(&ep.ObjectMeta)] = &delReq
-	delete(hd.EndpointDB, objectKey(&ep.ObjectMeta))
+	hd.DB.EndpointDelDB[objectKey(&ep.ObjectMeta)] = &delReq
+	delete(hd.DB.EndpointDB, objectKey(&ep.ObjectMeta))
 	hd.Unlock()
 
 	return nil
 }
 
 // CreateNetwork creates a network in datapath
-func (hd *MockHalDatapath) CreateNetwork(nw *netproto.Network) error {
+func (hd *HalDatapath) CreateNetwork(nw *netproto.Network) error {
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
 		Meta: &halproto.ObjectMeta{},
@@ -489,7 +569,7 @@ func (hd *MockHalDatapath) CreateNetwork(nw *netproto.Network) error {
 	}
 
 	// create the l2 segment
-	_, err := hd.Netclient.L2SegmentCreate(context.Background(), &segReq)
+	_, err := hd.Hal.Netclient.L2SegmentCreate(context.Background(), &segReq)
 	if err != nil {
 		log.Errorf("Error creating network. Err: %v", err)
 		return err
@@ -499,7 +579,7 @@ func (hd *MockHalDatapath) CreateNetwork(nw *netproto.Network) error {
 }
 
 // UpdateNetwork updates a network in datapath
-func (hd *MockHalDatapath) UpdateNetwork(nw *netproto.Network) error {
+func (hd *HalDatapath) UpdateNetwork(nw *netproto.Network) error {
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
 		Meta: &halproto.ObjectMeta{},
@@ -525,9 +605,9 @@ func (hd *MockHalDatapath) UpdateNetwork(nw *netproto.Network) error {
 	}
 
 	// update the l2 segment
-	_, err := hd.Netclient.L2SegmentUpdate(context.Background(), &segReq)
+	_, err := hd.Hal.Netclient.L2SegmentUpdate(context.Background(), &segReq)
 	if err != nil {
-		log.Errorf("Error creating network. Err: %v", err)
+		log.Errorf("Error updating network. Err: %v", err)
 		return err
 	}
 
@@ -535,7 +615,7 @@ func (hd *MockHalDatapath) UpdateNetwork(nw *netproto.Network) error {
 }
 
 // DeleteNetwork deletes a network from datapath
-func (hd *MockHalDatapath) DeleteNetwork(nw *netproto.Network) error {
+func (hd *HalDatapath) DeleteNetwork(nw *netproto.Network) error {
 	// build the segment message
 	seg := halproto.L2SegmentDeleteRequest{
 		Meta: &halproto.ObjectMeta{},
@@ -551,9 +631,9 @@ func (hd *MockHalDatapath) DeleteNetwork(nw *netproto.Network) error {
 	}
 
 	// delete the l2 segment
-	_, err := hd.Netclient.L2SegmentDelete(context.Background(), &segDelReqMsg)
+	_, err := hd.Hal.Netclient.L2SegmentDelete(context.Background(), &segDelReqMsg)
 	if err != nil {
-		log.Errorf("Error creating network. Err: %v", err)
+		log.Errorf("Error deleting network. Err: %v", err)
 		return err
 	}
 
@@ -561,7 +641,7 @@ func (hd *MockHalDatapath) DeleteNetwork(nw *netproto.Network) error {
 }
 
 // CreateSecurityGroup creates a security group
-func (hd *MockHalDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
+func (hd *HalDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error {
 	var inrules []*halproto.FirewallRuleSpec
 	var outrules []*halproto.FirewallRuleSpec
 
@@ -600,22 +680,22 @@ func (hd *MockHalDatapath) CreateSecurityGroup(sg *netproto.SecurityGroup) error
 	}
 
 	// add security group
-	_, err := hd.Sgclient.SecurityGroupCreate(context.Background(), &sgmsg)
+	_, err := hd.Hal.Sgclient.SecurityGroupCreate(context.Background(), &sgmsg)
 	if err != nil {
-		log.Errorf("Error creating network. Err: %v", err)
-		return err
+		log.Errorf("Error creating security group. Err: %v", err)
+		//return nil
 	}
 
 	// save the sg message
 	hd.Lock()
-	hd.SgDB[objectKey(&sg.ObjectMeta)] = &sgmsg
+	hd.DB.SgDB[objectKey(&sg.ObjectMeta)] = &sgmsg
 	hd.Unlock()
 
 	return nil
 }
 
 // UpdateSecurityGroup updates a security group
-func (hd *MockHalDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
+func (hd *HalDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 	var inrules []*halproto.FirewallRuleSpec
 	var outrules []*halproto.FirewallRuleSpec
 
@@ -654,22 +734,22 @@ func (hd *MockHalDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error
 	}
 
 	// update security group
-	_, err := hd.Sgclient.SecurityGroupUpdate(context.Background(), &sgmsg)
+	_, err := hd.Hal.Sgclient.SecurityGroupUpdate(context.Background(), &sgmsg)
 	if err != nil {
-		log.Errorf("Error creating network. Err: %v", err)
+		log.Errorf("Error updating security group. Err: %v", err)
 		return err
 	}
 
 	// save the sg message
 	hd.Lock()
-	hd.SgDB[objectKey(&sg.ObjectMeta)] = &sgmsg
+	hd.DB.SgDB[objectKey(&sg.ObjectMeta)] = &sgmsg
 	hd.Unlock()
 
 	return nil
 }
 
 // DeleteSecurityGroup deletes a security group
-func (hd *MockHalDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
+func (hd *HalDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	// build security group message
 	sgdel := halproto.SecurityGroupDeleteRequest{
 		Meta: &halproto.ObjectMeta{},
@@ -684,21 +764,21 @@ func (hd *MockHalDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error
 	}
 
 	// delete security group
-	_, err := hd.Sgclient.SecurityGroupDelete(context.Background(), &sgmsg)
+	_, err := hd.Hal.Sgclient.SecurityGroupDelete(context.Background(), &sgmsg)
 	if err != nil {
-		log.Errorf("Error creating network. Err: %v", err)
+		log.Errorf("Error deleting security group. Err: %v", err)
 		return err
 	}
 
 	// delete the sg message
 	hd.Lock()
-	delete(hd.SgDB, objectKey(&sg.ObjectMeta))
+	delete(hd.DB.SgDB, objectKey(&sg.ObjectMeta))
 	hd.Unlock()
 
 	return nil
 }
 
-func (hd *MockHalDatapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule) (*halproto.FirewallRuleSpec, error) {
+func (hd *HalDatapath) convertRule(sg *netproto.SecurityGroup, rule *netproto.SecurityRule) (*halproto.FirewallRuleSpec, error) {
 	// convert the action
 	act := halproto.FirewallAction_FIREWALL_ACTION_NONE
 	switch rule.Action {
