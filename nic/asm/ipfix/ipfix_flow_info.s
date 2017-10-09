@@ -6,6 +6,7 @@ struct phv_        p;
 
 %%
 
+    .param      p4_session_state_base
     .param      ipfix_session_state
 
 ipfix_flow_info:
@@ -19,7 +20,8 @@ ipfix_flow_info:
     phvwr       p.ipfix_record_ip_ttl, d.u.flow_info_d.flow_ttl
 
     // table 0 : lookup session_state
-    addi        r1, r0, 0x9c100000
+    addi        r1, r0, loword(p4_session_state_base)
+    addui       r1, r1, hiword(p4_session_state_base)
     add         r1, r1, d.u.flow_info_d.session_state_index, 6
     phvwr       p.common_te0_phv_table_addr, r1
     phvwri      p.common_te0_phv_table_pc, ipfix_session_state[33:6]

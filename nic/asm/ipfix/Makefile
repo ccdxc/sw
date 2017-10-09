@@ -21,7 +21,10 @@ SRC_FILES := \
     $(SRC_DIR)/ipfix_flow_hash.s \
     $(SRC_DIR)/ipfix_flow_info.s \
     $(SRC_DIR)/ipfix_session_state.s \
+    $(SRC_DIR)/ipfix_flow_atomic_stats.s \
     $(SRC_DIR)/ipfix_flow_stats.s \
+    $(SRC_DIR)/ipfix_record.s \
+    $(SRC_DIR)/ipfix_export.s \
 	$(NULL)
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))

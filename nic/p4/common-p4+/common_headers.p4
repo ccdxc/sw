@@ -37,7 +37,7 @@
 #define DMA_CMD_TYPE_PKT2MEM     4
 #define DMA_CMD_TYPE_SKIP        5
 #define DMA_CMD_TYPE_MEM2MEM     6
-#define DMA_CMD_TYPE_NOP         7
+#define DMA_CMD_TYPE_NOP         0
 
 #define DMA_CMD_TYPE_MEM2MEM_TYPE_SRC        0
 #define DMA_CMD_TYPE_MEM2MEM_TYPE_DST        1

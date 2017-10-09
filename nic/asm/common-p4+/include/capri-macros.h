@@ -197,7 +197,7 @@
 #define CAPRI_DMA_COMMAND_PKT_TO_MEM      4
 #define CAPRI_DMA_COMMAND_SKIP            5
 #define CAPRI_DMA_COMMAND_MEM_TO_MEM      6
-#define CAPRI_DMA_COMMAND_NOP             7
+#define CAPRI_DMA_COMMAND_NOP             0
 
 #define CAPRI_MPU_PC_SHIFT                6
 

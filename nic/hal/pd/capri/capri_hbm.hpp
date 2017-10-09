@@ -88,6 +88,12 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define ARQRX_BASE              "hbm_arqrx_base"
 #define ARQRX_QIDXR_BASE        "hbm_arqrx_qidxr_base"
 
+#define P4_FLOW_HASH_BASE               "p4_flow_hash_base"
+#define P4_FLOW_INFO_BASE               "p4_flow_info_base"
+#define P4_SESSION_STATE_BASE           "p4_session_state_base"
+#define P4_FLOW_STATS_BASE              "p4_flow_stats_base"
+#define P4_FLOW_ATOMIC_STATS_BASE       "p4_flow_atomic_stats_base"
+
 typedef struct capri_descr_s {
         uint64_t        scratch[8];
         uint64_t        A0;

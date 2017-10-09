@@ -53,5 +53,5 @@ flow_stats_index_zero:
 /*
  * stats allocation in the atomic add region:
  * 8B permit bytes, 8B permit packets, 8B deny bytes, 8B deby packets
- * total per policer index = 32B
+ * total per flow index = 32B
  */

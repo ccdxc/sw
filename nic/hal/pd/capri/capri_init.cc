@@ -4,8 +4,9 @@
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "nic/gen/iris/include/p4pd.h"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 36
+#define CAPRI_P4PLUS_NUM_SYMBOLS 40
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
@@ -349,8 +350,34 @@ capri_p4p_asm_init()
     symbols[35].params[1].name = ARQRX_QIDXR_BASE;
     symbols[35].params[1].val = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
 
+    symbols[36].name = "ipfix.bin";
+    symbols[36].num_params = 1;
+    symbols[36].params[0].name = P4_FLOW_HASH_BASE;
+    symbols[36].params[0].val =
+        get_start_offset(p4pd_tbl_names[P4TBL_ID_FLOW_HASH]);
+
+    symbols[37].name = "ipfix_flow_hash.bin";
+    symbols[37].num_params = 1;
+    symbols[37].params[0].name = P4_FLOW_INFO_BASE;
+    symbols[37].params[0].val =
+        get_start_offset(p4pd_tbl_names[P4TBL_ID_FLOW_INFO]);
+
+    symbols[38].name = "ipfix_flow_info.bin";
+    symbols[38].num_params = 1;
+    symbols[38].params[0].name = P4_SESSION_STATE_BASE;
+    symbols[38].params[0].val =
+        get_start_offset(p4pd_tbl_names[P4TBL_ID_SESSION_STATE]);
+
+    symbols[39].name = "ipfix_session_state.bin";
+    symbols[39].num_params = 2;
+    symbols[39].params[0].name = P4_FLOW_STATS_BASE;
+    symbols[39].params[0].val =
+        get_start_offset(p4pd_tbl_names[P4TBL_ID_FLOW_STATS]);
+    symbols[39].params[1].name = P4_FLOW_ATOMIC_STATS_BASE;
+    symbols[39].params[1].val = get_start_offset(JP4_ATOMIC_STATS);
+
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
-    
+
     p4plus_prm_base_addr = (uint64_t)get_start_offset((char *)JP4PLUS_PRGM);
     HAL_TRACE_DEBUG("base addr {:#x}", p4plus_prm_base_addr);
     capri_load_mpu_programs("p4plus", (char *)full_path.c_str(),

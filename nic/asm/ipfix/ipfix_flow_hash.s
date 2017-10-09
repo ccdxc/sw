@@ -7,6 +7,7 @@ struct phv_        p;
 
 %%
 
+    .param      p4_flow_info_base
     .param      ipfix_flow_info
 
 ipfix_flow_hash:
@@ -45,7 +46,8 @@ ipfix_flow_hash_common:
     phvwr       p.ipfix_record_common_flow_id, d.flow_hash_info_d.flow_index
 
     // table 0 : lookup flow_info
-    addi        r1, r0, 0x98100000
+    addi        r1, r0, loword(p4_flow_info_base)
+    addui       r1, r1, hiword(p4_flow_info_base)
     add         r1, r1, d.flow_hash_info_d.flow_index, 6
     phvwr       p.common_te0_phv_table_addr, r1
     phvwri      p.common_te0_phv_table_pc, ipfix_flow_info[33:6]
