@@ -7,6 +7,7 @@ struct tx_table_s2_t0_esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header_d d;
 struct phv_ p;
 
 %%
+        .param esp_v4_tunnel_n2h_write_barco_req
         .align
 esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
     add r1, r0, d.in_desc
@@ -32,8 +33,15 @@ esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
     // Header size is iv_size+ESP_FIXED header size 
     add r3, r0, k.t0_s2s_iv_size
     addi r3, r0, ESP_FIXED_HDR_SIZE 
-    phvwr p.barco_req_header_size, r3.wx 
+    phvwr p.barco_req_header_size, r3.wx
 
+    phvwri p.app_header_table0_valid, 1
+    phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_write_barco_req[33:6]
+    phvwri p.common_te0_phv_table_raw_table_size, 6
+    phvwri p.common_te0_phv_table_lock_en, 0
+    phvwr p.common_te0_phv_table_addr, d.in_desc 
+
+     
 esp_ipv4_tunnel_n2h_txdma1_ipsec_encap_fill_zero_in_out_desc:
     addi r1, r0, 96 
     add r2, r1, d.in_desc

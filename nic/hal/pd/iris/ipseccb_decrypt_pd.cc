@@ -93,7 +93,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size = ipseccb_pd->ipseccb->icv_size;
         //data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd = ipseccb_pd->ipseccb->barco_enc_cmd;
         // for now aes-decrypt-encoding hard-coded.
-        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd = htonl(0x30100000);
+        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd = 0x30100000;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.expected_seq_no = ipseccb_pd->ipseccb->esn_lo;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index = ipseccb_pd->ipseccb->key_index;
   

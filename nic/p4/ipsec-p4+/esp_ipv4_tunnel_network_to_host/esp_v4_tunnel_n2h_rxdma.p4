@@ -163,6 +163,8 @@ metadata dma_cmd_phv2mem_t dma_cmd_out_desc_aol;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_iv_salt; 
 @pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_post_cb_ring;
+@pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t doorbell_cmd;
@@ -230,7 +232,7 @@ action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc (pc, rsvd, cosA, cosB,
                                        ipsec_cb_index, block_size, 
                                        cb_pindex, cb_cindex, cb_ring_base_addr, iv_salt, ipsec_cb_pad)
 {
-    IPSEC_CB_SCRATCH
+    IPSEC_CB_SCRATCH_WITH_PC
     //table write in_desc into rsvd value of tail_desc - write this part in assembly.
     // pass the in_desc value in s2s data or global data. 
     //modify_field(t0_s2s.in_desc_addr, ipsec_global.in_desc_addr);

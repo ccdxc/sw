@@ -12,10 +12,6 @@ struct phv_ p;
 
 esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc:
     phvwr p.ipsec_int_header_in_desc, k.t0_s2s_in_desc_addr
-    add r1, r0, d.cb_pindex
-    addi r1, r1, 1
-    tblwr d.cb_pindex, r1
-    nop
     phvwri p.app_header_table0_valid, 0
     phvwri p.app_header_table1_valid, 0
     phvwri p.app_header_table2_valid, 0
@@ -43,11 +39,23 @@ dma_cmd_to_write_output_desc_aol:
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_start_addr, IPSEC_IN_DESC_AOL_START
     phvwri p.dma_cmd_out_desc_aol_dma_cmd_phv_end_addr, IPSEC_IN_DESC_AOL_END
 
+esp_ipv4_tunnel_n2h_post_to_cb_ring:
+    add r2, r0, d.cb_ring_base_addr
+    add r3, r0, d.cb_pindex
+    andi r3, r3, IPSEC_CB_RING_INDEX_MASK
+    sll r3, r3, IPSEC_CB_RING_ENTRY_SHIFT_SIZE
+    add r3, r3, r2
+    phvwri p.dma_cmd_post_cb_ring_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwr p.dma_cmd_post_cb_ring_dma_cmd_addr, r3
+    phvwri p.dma_cmd_post_cb_ring_dma_cmd_phv_start_addr, IPSEC_CB_RING_IN_DESC_START
+    phvwri p.dma_cmd_post_cb_ring_dma_cmd_phv_end_addr, IPSEC_CB_RING_IN_DESC_END
+
 esp_ipv4_tunnel_n2h_dma_cmd_incr_pindex:
     add r2, r0, d.cb_pindex
     addi r2, r2, 1
     andi r2, r2, 0x3F
     tblwr d.cb_pindex, r2
+    nop
 
 dma_cmd_ring_doorbell:
     /* address will be in r4 */

@@ -17,4 +17,5 @@ esp_v4_tunnel_n2h_txdma1_allocate_barco_req_pindex:
     addi r1, r1, BRQ_BASE
     phvwr p.ipsec_to_stage2_barco_req_addr, r1
     phvwr p.ipsec_to_stage3_barco_req_addr, r1
+    nop.e
     nop 
