@@ -2,6 +2,9 @@ package globals
 
 const (
 
+	// RegistryConfigFile is used to store the docker registry
+	RegistryConfigFile = "/etc/pensando/registry.conf"
+
 	// FilebeatConfigFile is used by Filebeat
 	FilebeatConfigFile = "/etc/pensando/filebeat.yml"
 

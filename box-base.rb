@@ -1,4 +1,4 @@
-from "golang:1.8.3"
+from "golang:1.9"
 
 PACKAGE = "github.com/pensando/sw"
 DIR     = "/go/src/#{PACKAGE}"

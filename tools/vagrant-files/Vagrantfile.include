@@ -80,7 +80,7 @@ def preamble_script(postamble)
     
     # Add pensando internal docker registry
     mkdir -p /etc/docker
-    echo '{ "insecure-registries" : ["srv1.pensando.io:5000", "https://registry.test.pensando.io:5000"] }' > /etc/docker/daemon.json
+    echo '{ "insecure-registries" : ["registry.test.pensando.io:5000"] }' > /etc/docker/daemon.json
 
     # set timezone
     timedatectl set-timezone PST8PDT

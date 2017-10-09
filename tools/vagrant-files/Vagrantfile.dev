@@ -7,8 +7,8 @@ load "#{dir}/tools/vagrant-files/Vagrantfile.include"
 
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "shaleman/centos73"
-  config.vm.box_version = "0.3"
+  config.vm.box = "ravigadde/centos73"
+  config.vm.box_version = "0.4"
   config.ssh.insert_key = false
 
 if ENV['SCALE_SETUP']

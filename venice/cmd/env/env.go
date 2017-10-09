@@ -16,6 +16,7 @@ import (
 var (
 	Logger            log.Logger
 	Options           *options.ServerRunOptions
+	RegistryURL       string
 	Scheme            *runtime.Scheme
 	KVStore           kvstore.Interface
 	QuorumNodes       []string

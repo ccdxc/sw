@@ -9,6 +9,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/server"
 	"github.com/pensando/sw/venice/cmd/server/options"
 	"github.com/pensando/sw/venice/cmd/startup"
+	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/systemd"
@@ -16,8 +17,9 @@ import (
 
 func main() {
 	var (
-		debugflag = flag.Bool("debug", false, "Enable debug mode")
-		logToFile = flag.String("logtofile", "/var/log/pensando/cmd.log", "Redirect logs to file")
+		debugflag   = flag.Bool("debug", false, "Enable debug mode")
+		logToFile   = flag.String("logtofile", "/var/log/pensando/cmd.log", "Redirect logs to file")
+		registryURL = flag.String("registry-url", "registry.test.pensando.io:5000", "URL to docker registry")
 	)
 
 	// Fill logger config params
@@ -40,9 +42,14 @@ func main() {
 	// Initialize logger config
 	env.Logger = log.SetConfig(logConfig)
 
+	env.RegistryURL = *registryURL
 	env.Scheme = runtime.NewScheme()
 	env.Scheme.AddKnownTypes(&cmd.Cluster{}, &cmd.Node{})
 	env.Options = options.NewServerRunOptions()
+
+	if err := configs.GenerateRegistryConfig(env.RegistryURL); err != nil {
+		fmt.Printf("Error %v while generating registry config at startup", err)
+	}
 
 	// We need to issue equivalent of 'systemctl daemon-reload' before anything else to make systemd read the config files
 	s := systemd.New()

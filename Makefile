@@ -12,6 +12,7 @@ GOVET_CMD := go vet
 SHELL := /bin/bash
 GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
+REGISTRY_URL ?= registry.test.pensando.io:5000
 
 default: build unit-test cover
 
@@ -61,7 +62,7 @@ c-stop:
 	@tools/scripts/create-container.sh stopCluster
 
 install:
-	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/cbin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 strip ${TO_STRIP}
+	@docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.4 strip ${TO_STRIP}
 	@for c in $(TO_DOCKERIZE); do cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; tools/scripts/create-container.sh $${c}; done
 	@tools/scripts/create-container.sh createBinContainerTarBall
 
@@ -88,17 +89,17 @@ cluster-stop:
 clean: c-stop
 
 helper-containers:
-	@cd tools/docker-files/ntp; docker build -t srv1.pensando.io:5000/pens-ntp:v0.2 .
-	@cd tools/docker-files/pens-base; docker build -t srv1.pensando.io:5000/pens-base:v0.1 .
-	@cd tools/docker-files/build-container; docker build -t srv1.pensando.io:5000/pens-bld:v0.3 .
+	@cd tools/docker-files/ntp; docker build -t ${REGISTRY_URL}/pens-ntp:v0.2 .
+	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.1 .
+	@cd tools/docker-files/build-container; docker build -t ${REGISTRY_URL}/pens-bld:v0.4 .
 
 container-qcompile:
 	mkdir -p ${PWD}/bin/cbin
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3 make qbuild
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.4 make qbuild
 
 container-compile:
 	mkdir -p ${PWD}/bin/cbin
-	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin srv1.pensando.io:5000/pens-bld:v0.3
+	docker run --rm -v${PWD}/../../..:/import/src -v${PWD}/bin/pkg:/import/pkg -v${PWD}/bin/cbin:/import/bin ${REGISTRY_URL}/pens-bld:v0.4
 
 ws-tools:
 	$(info +++ building WS tools)

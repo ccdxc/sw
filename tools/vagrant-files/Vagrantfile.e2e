@@ -50,7 +50,7 @@ def configure_vm(node, node_name)
             gpasswd -a vagrant docker
             # Add pensando internal docker registry
             mkdir -p /etc/docker
-            echo '{ "insecure-registries" : ["srv1.pensando.io:5000"] }' > /etc/docker/daemon.json
+            echo '{ "insecure-registries" : ["registry.test.pensando.io:5000"] }' > /etc/docker/daemon.json
             # Start docker
             systemctl enable docker && systemctl start docker
             # populate the master virtual ip
@@ -139,8 +139,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     venice_node_names = num_venice_nodes.times.collect { |n| "node#{n+1}" }
 
     config.vm.define node_name do |node|
-      node.vm.box = "shaleman/centos73"
-      node.vm.box_version = "0.3"
+      node.vm.box = "ravigadde/centos73"
+      node.vm.box_version = "0.4"
       # Control Interface
       node.vm.network :private_network, ip: node_addr, virtualbox__intnet:get_user_specific_nw("control")
 

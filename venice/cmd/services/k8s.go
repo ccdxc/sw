@@ -111,7 +111,7 @@ var k8sModules = map[string]types.Module{
 			Submodules: []*types.ModuleSpec_Submodule{
 				{
 					Name:  globals.Filebeat,
-					Image: "srv1.pensando.io:5000/beats/filebeat:5.4.1",
+					Image: "$REGISTRY_URL/beats/filebeat:5.4.1",
 				},
 			},
 			Volumes: []*types.ModuleSpec_Volume{
@@ -132,7 +132,7 @@ var k8sModules = map[string]types.Module{
 			Submodules: []*types.ModuleSpec_Submodule{
 				{
 					Name:       globals.Ntp,
-					Image:      "srv1.pensando.io:5000/pens-ntp:v0.2",
+					Image:      "$REGISTRY_URL/pens-ntp:v0.2",
 					Privileged: true,
 				},
 			},
@@ -249,7 +249,7 @@ var k8sModules = map[string]types.Module{
 			Submodules: []*types.ModuleSpec_Submodule{
 				{
 					Name:  globals.Influx,
-					Image: "srv1.pensando.io:5000/influxdb",
+					Image: "$REGISTRY_URL/influxdb",
 					Services: []*types.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Influx,
@@ -478,6 +478,13 @@ func populateDynamicArgs(args []string) []string {
 	return result
 }
 
+func populateImage(image string) string {
+	if strings.HasPrefix(image, "$REGISTRY_URL") {
+		return strings.Replace(image, "$REGISTRY_URL", env.RegistryURL, 1)
+	}
+	return image
+}
+
 func makeContainers(module *types.Module, volumeMounts []v1.VolumeMount) []v1.Container {
 	containers := make([]v1.Container, 0)
 	for _, sm := range module.Spec.Submodules {
@@ -490,7 +497,7 @@ func makeContainers(module *types.Module, volumeMounts []v1.VolumeMount) []v1.Co
 		}
 		containers = append(containers, v1.Container{
 			Name:            sm.Name,
-			Image:           sm.Image,
+			Image:           populateImage(sm.Image),
 			ImagePullPolicy: v1.PullIfNotPresent,
 			Ports:           ports,
 			VolumeMounts:    volumeMounts,

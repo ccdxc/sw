@@ -39,16 +39,16 @@ sudo yum remove -y docker docker-common  docker-selinux docker-engine
 sudo yum group install -y "Development Tools"
 sudo yum install -y net-tools tcpdump wget git gcc gcc-c++ CUnit-devel  \
     openssl-devel vim pciutils libtool curl unzip openssl  \
-    python-paramiko kernel-devel glibc.i686 libgcc.i686 \
+    python-paramiko python-setuptools kernel-devel glibc.i686 libgcc.i686 \
     libstdc++.i686 glibc-devel.i686 kubelet kubeadm kubectl kubernetes-cni \
     device-mapper-persistent-data lvm2 docker-ce libpcap-devel
 
 
 
 cd /tmp
-wget https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.8.3.linux-amd64.tar.gz
-rm go1.8.3.linux-amd64.tar.gz
+wget https://storage.googleapis.com/golang/go1.9.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.9.linux-amd64.tar.gz
+rm go1.9.linux-amd64.tar.gz
 
 
 # Install Swagger

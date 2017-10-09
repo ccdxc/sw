@@ -29,11 +29,11 @@ function createVCSimContainer() {
 }
 
 function createBinContainerTarBall() {
-    staticimages="srv1.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6 \
-        srv1.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.6.6 \
-        srv1.pensando.io:5000/google_containers/kube-apiserver-amd64:v1.6.6 \
-        srv1.pensando.io:5000/coreos/etcd:v3.2.1 srv1.pensando.io:5000/elasticsearch/elasticsearch:5.4.1 \
-        srv1.pensando.io:5000/beats/filebeat:5.4.1 srv1.pensando.io:5000/pens-ntp:v0.2"
+    staticimages="registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6 \
+        registry.test.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.6.6 \
+        registry.test.pensando.io:5000/google_containers/kube-apiserver-amd64:v1.6.6 \
+        registry.test.pensando.io:5000/coreos/etcd:v3.2.1 registry.test.pensando.io:5000/elasticsearch/elasticsearch:5.4.1 \
+        registry.test.pensando.io:5000/beats/filebeat:5.4.1 registry.test.pensando.io:5000/pens-ntp:v0.2"
     for i in $staticimages
     do
         if [ "$(docker images -q $i)"  == "" ]
@@ -46,7 +46,7 @@ function createBinContainerTarBall() {
         pen-vcsim:latest pen-n4sagent:latest"
     for i in $staticimages $dynamicimages
     do
-        # i is srv1.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
+        # i is registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
         # ${i##[^/]*/} is kube-controller-manager-amd64:v1.6.6
         # ${i##[^/]*/} | cut -d: -f1 is kube-controller-manager-amd64
         docker save -o bin/tars/$(echo ${i##[^/]*/} | cut -d: -f1).tar $i
