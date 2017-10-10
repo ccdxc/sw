@@ -30,10 +30,7 @@
 # $Date$
 #
 
-try:
-    import html
-except:
-    import cgi as html
+import cgi as html
 import copy
 import os
 import re
@@ -499,7 +496,9 @@ def process_gcov_data(data_fname, covdata, source_fname, options):
     currdir = os.getcwd()
     root_dir = os.path.abspath(options.root)
     if source_fname is None:
-        common_dir = os.path.commonprefix([data_fname, currdir])
+        #Search the Source file in the same directory.
+        common_dir = os.path.dirname(data_fname) 
+	#common_dir = os.path.commonprefix([data_fname, currdir])
         if sys.version_info >= (2, 6):
             fname = aliases.unalias_path(os.path.join(common_dir, segments[-1].strip()))
         else:

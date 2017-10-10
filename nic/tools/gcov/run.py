@@ -6,6 +6,7 @@ import sys
 import subprocess
 import json
 import csv
+import pdb
 from collections import defaultdict
 
 parser = argparse.ArgumentParser(description='Coverage generator')
@@ -271,7 +272,7 @@ class CapcovCoverage(CoverageBase):
     def gen_html_local(info_file=None, info_dir=None, cov_output_dir=None, ignore_errors=True):
         cwd = os.getcwd()
         os.chdir(info_dir)
-        cmd = [gcovr_cmd, "-r",  ".", "--html", "-o",
+        cmd = [gcovr_cmd, "-r",  ".", "--html", "--html-details", "-o",
                  cov_output_dir + "/" + info_file + ".html", "-g", "-k", "--gcov-ext", "cacov"]
         subprocess.call(cmd)
         os.chdir(cwd)
@@ -319,6 +320,8 @@ class CapcovCoverage(CoverageBase):
                         cmd.append(cano_file)
                         subprocess.call(cmd, stdout=FNULL, stderr=FNULL)
                         subprocess.call(["mv", capcov_out_file, root_output_dir], stderr=FNULL)
+                        #Copy Source file too to generate HTML output.
+                        subprocess.call(["cp", file, root_output_dir], stderr=FNULL)
                 try:
                     #Generate Directory level (Feature) coverage information.
                     if len(root.split("/")) == 2:
@@ -488,7 +491,7 @@ def generate_coverage_summary_page(cov_output_dir, page_name="coverage_summary.h
     op_file.write(asm_cov_str)
     for root, dirs, files in os.walk("total_cov/asm", topdown=True):
         for file in files:
-            if ".html" in file:
+            if ".html" in file and len(file.split(".")) == 2:
                 line = "<br><a href=%s>%s</a></br>" % (root + "/" + file, file.split(".html")[0])
                 op_file.write(line + "\n")
 

@@ -21,5 +21,6 @@ hal.log*
 model.log*
 dol.log*
 *.log
+*.cacov
 sample_client.log
 tags
