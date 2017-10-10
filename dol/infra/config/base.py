@@ -46,6 +46,18 @@ class ConfigObjectBase(objects.FrameworkObject):
         cfglogger.verbose("  - Found Match !!")
         return True
 
+    def Equals(self, other):
+        logger.error("Method %s not implemented by class: %s" %
+                     (utils.GetFunctionName(), self.__class__))
+        assert(0)
+        return
+
+    def Copy(self):
+        logger.error("Method %s not implemented by class: %s" %
+                     (utils.GetFunctionName(), self.__class__))
+        assert(0)
+        return
+
     def PrepareHALRequestSpec(self, reqspec):
         logger.error("Method %s not implemented by class: %s" %\
                      (utils.GetFunctionName(), self.__class__))
@@ -82,3 +94,15 @@ class ConfigObjectBase(objects.FrameworkObject):
                      (utils.GetFunctionName(), self.__class__))
         assert(0)
         return
+
+    def SetupTestcaseConfig(self, obj):
+        obj.root = self
+        return
+
+    def ShowTestcaseConfig(self, obj, logger):
+        logger.info("%s Config object :  %s" % (type(self).__name__, self.GID()))
+        return
+    
+    def CompareObjectFields(self, other, fields, lgh):
+        return utils.CompareObjectFields(self, other, fields, lgh)
+        

@@ -1614,6 +1614,9 @@ end:
 static void
 ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
 {
+    dllist_ctxt_t       *lnode = NULL;
+    ep_ip_entry_t       *pi_ip_entry = NULL;
+
     response->mutable_spec()->mutable_meta()->set_tenant_id(tenant_lookup_by_handle(ep->tenant_handle)->tenant_id);
     response->mutable_spec()->set_l2_segment_handle(ep->l2seg_handle);
     response->mutable_spec()->set_mac_address(MAC_TO_UINT64(ep->l2_key.mac_addr));
@@ -1626,6 +1629,14 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
     response->mutable_status()->set_learn_source_rarp(ep->ep_flags & EP_FLAGS_LEARN_SRC_RARP);
     response->mutable_status()->set_learn_source_config(ep->ep_flags & EP_FLAGS_LEARN_SRC_CFG);
     response->mutable_status()->set_is_endpoint_local(ep->ep_flags & EP_FLAGS_LOCAL);
+
+    lnode = ep->ip_list_head.next;
+    dllist_for_each(lnode, &(ep->ip_list_head)) {
+        pi_ip_entry = (ep_ip_entry_t *)((char *)lnode -
+                offsetof(ep_ip_entry_t, ep_ip_lentry));
+        types::IPAddress *ip_addr_spec = response->mutable_spec()->add_ip_address();
+        ip_addr_to_spec(ip_addr_spec, &pi_ip_entry->ip_addr);
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -1682,6 +1693,7 @@ endpoint_get (EndpointGetRequest& req, EndpointGetResponseMsg *rsp)
     }
 
     ep_to_ep_get_response(ep, response);
+    response->set_api_status(types::API_STATUS_OK);
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }

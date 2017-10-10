@@ -1,8 +1,8 @@
 # Tenant Object Template File.
 meta:
-    id      : SEGMENT
+    id      : NETWORK
     package : config.objects
-    module  : segment
+    module  : network
 
 id      : None # Segment Local ID
 spec    : None # (REF) Segment Spec Object
@@ -15,9 +15,5 @@ vxlan_id: None
 macaddr : None # Router MAC Address
 subnet  : None # IPv4 Subnet
 subnet6 : None # IPv6 Subnet
-
-policies:
-    broadcast   : None # Flood/Drop
-    multicast   : None # Flood/Forward/Drop
 
 

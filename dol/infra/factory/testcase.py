@@ -61,6 +61,14 @@ class TestCaseTrigExpDescriptorSpec:
         self.descriptor = TestCaseTrigExpDescriptorObject()
         return
 
+class TestCaseTrigExpConfigObject:
+    def __init__(self):
+        self.original_object = None
+        self.actual_object = None
+        self.method = None
+        self.spec = None
+        return
+ 
 class TestCaseSessionEntryObject:
     def __init__(self):
         self.step = None
@@ -72,6 +80,7 @@ class TestCaseSessionStepTriggerExpectReceivedObject:
         self.packets        = []
         self.descriptors    = []
         self.doorbell       = TestCaseTrigExpDoorbellObject()
+        self.configs        = []
         return
 
 class TestCaseSessionStepObject:
@@ -278,6 +287,19 @@ class TestCase(objects.FrameworkObject):
         self.info("- Adding Doorbell: %s" % tcsn.doorbell.object.GID())
         return
    
+    def __setup_config_objects(self, tcsn, spsn):
+        if not hasattr(spsn, "configs") or spsn.configs == None:
+            return
+        for spec_config_entry in spsn.configs:
+            if spec_config_entry.object == None:
+                continue
+            tc_config = TestCaseTrigExpConfigObject()
+            tc_config.actual_object = spec_config_entry.object.Get(self)
+            tc_config.original_object = copy.copy(tc_config.actual_object)
+            tc_config.method = spec_config_entry.method
+            tc_config.spec = getattr(spec_config_entry, "fields", None)
+            tcsn.configs.append(tc_config)
+   
     def __setup_delay(self, tcsn, spsn):
         spdelay = getattr(spsn, 'delay', 0)
         if objects.IsCallback(spdelay):
@@ -296,6 +318,7 @@ class TestCase(objects.FrameworkObject):
         self.__setup_delay(tcstep.trigger, spstep.trigger)
         self.__setup_packets(tcstep.step_id, tcstep.trigger, spstep.trigger)
         self.__setup_descriptors(tcstep.trigger, spstep.trigger)
+        self.__setup_config_objects(tcstep.trigger, spstep.trigger)
         self.__setup_doorbell(tcstep.trigger, spstep.trigger)
         return defs.status.SUCCESS
 
@@ -305,6 +328,7 @@ class TestCase(objects.FrameworkObject):
         self.__setup_delay(tcstep.expect, spstep.expect)
         self.__setup_packets(tcstep.step_id, tcstep.expect, spstep.expect)
         self.__setup_descriptors(tcstep.expect, spstep.expect)
+        self.__setup_config_objects(tcstep.expect, spstep.expect)
         if hasattr(spstep.expect, "callback"):
             assert(objects.IsCallback(spstep.expect.callback))
             tcstep.expect.callback = spstep.expect.callback

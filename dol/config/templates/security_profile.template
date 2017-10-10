@@ -1,6 +1,8 @@
 # Security Profile Object Template.
 meta:
-    id: SECURITY_PROFILE
+    id      : SECURITY_PROFILE
+    package : config.objects
+    module  : security_profile
 
 fields:
     cnxn_tracking_en: 0

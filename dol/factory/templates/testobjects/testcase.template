@@ -11,6 +11,7 @@ step_id : None
 pvtdata : None  # Private data
 
 config:
+    root: None
     session:
         iconfig:
             src:
@@ -103,6 +104,10 @@ session:
                 # List of Descriptors
                 - object  : None
                   ring    : None
+            configs:
+                # List of Objects
+                - object : None
+                  method : None
 
         expect:
             timeout : None
@@ -115,6 +120,10 @@ session:
                 - object  : None
                   ring    : None
                     # actual : None  # Framework provided empty actual
+            configs:
+                # List of Objects
+                - object : None
+                  method : None
 
         received:
             timeout     : None

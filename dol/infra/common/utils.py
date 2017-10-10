@@ -128,6 +128,31 @@ def log_exception(lg):
     lg.info("%s" % pprint.pformat(traceback.format_tb(exc_traceback)))
     lg.info('-' * 60)
 
+
+def CompareObjectFields(self, other, fields, lgh):
+    if other == None and self == None:
+        return True
+
+    if (other == None and self != None) or \
+        (self == None and other != None):
+        return False
+    
+    ret = True
+    for field in fields:
+        exp_value = getattr(self, field) 
+        actual_val =  getattr(other, field)
+        if isinstance(exp_value, list):
+            if set(exp_value) != set(actual_val):
+                lgh.error("Field mismatch : Field : %s Expected : %s, actual : %s"
+                          %(field, set(exp_value), set(actual_val)))
+                ret = False
+        else:
+            if exp_value != actual_val:
+                lgh.error("Field mismatch : Field : %s, Expected : %s, Actual : %s" %(
+                    field,  exp_value, actual_val))
+                ret = False
+    return ret
+
 def convert_scapy_out_to_dict(spkt):
     capture = StringIO()
     save_stdout = sys.stdout

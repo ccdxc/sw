@@ -15,6 +15,7 @@ BaseTopoExcludeFeatureList = [
     'eth' ,
     'acl',
     'networking',
+    'config',
     'vxlan',
     'ipsg',
     'firewall',

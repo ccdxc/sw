@@ -155,7 +155,7 @@ find_network_by_key (tenant_id_t tid, const ip_prefix_t *ip_pfx)
     if (entry) {
         // check for object type
         HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == 
-                   HAL_OBJ_ID_ENDPOINT);
+                HAL_OBJ_ID_NETWORK);
         nw = (network_t *)hal_handle_get_obj(entry->handle_id);
         return nw;
     }

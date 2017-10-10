@@ -38,6 +38,7 @@ class TenantObject(base.ConfigObjectBase):
         self.overlay = spec.overlay.upper()
         self.security_profile = None
         self.bhseg = None
+        self.security_profile_handle = 0
         if spec.security_profile:
             self.security_profile = spec.security_profile.Get(Store)
         if self.IsInfra():
@@ -67,6 +68,23 @@ class TenantObject(base.ConfigObjectBase):
             self.__create_span_sessions()
         return
 
+
+    def __copy__(self):
+        ten = TenantObject()
+        ten.id = self.id
+        ten.security_profile_handle = self.security_profile_handle
+        ten.security_profile = self.security_profile
+        return ten
+
+
+    def Equals(self, other, lgh):
+        if not isinstance(other, self.__class__):
+            return False
+        fields = ["id", "security_profile_handle"]
+        if not self.CompareObjectFields(other, fields, lgh):
+            return False        
+        return True
+    
     def Show(self):
         cfglogger.info("Tenant  : %s" % self.GID())
         cfglogger.info("- Type      : %s" % self.type)
@@ -183,6 +201,7 @@ class TenantObject(base.ConfigObjectBase):
         reqspec.key_or_handle.tenant_id = self.id
         if self.security_profile:
             reqspec.security_profile_handle = self.security_profile.hal_handle
+            self.security_profile_handle = self.security_profile.hal_handle
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -190,6 +209,22 @@ class TenantObject(base.ConfigObjectBase):
                        (self.GID(), \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         return
+
+    def PrepareHALGetRequestSpec(self, get_req_spec):
+        get_req_spec.meta.tenant_id = self.id
+        get_req_spec.key_or_handle.tenant_id = self.id
+        return
+
+    def ProcessHALGetResponse(self, get_req_spec, get_resp_spec):
+        if get_resp_spec.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):
+            self.id = get_resp_spec.spec.meta.tenant_id
+            self.security_profile_handle = get_resp_spec.spec.security_profile_handle
+        else:
+            self.security_profile_handle = None
+        return
+
+    def Get(self):
+        halapi.GetTenants([self])
 
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
@@ -235,3 +270,7 @@ class TenantObjectHelper:
 
 
 TenantHelper = TenantObjectHelper()
+
+def GetMatchingObjects(selectors):
+    tenants =  Store.objects.GetAllByClass(TenantObject)
+    return [ten for ten in tenants if ten.IsFilterMatch(selectors.tenant)]

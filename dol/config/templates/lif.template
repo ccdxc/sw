@@ -1,6 +1,8 @@
 # LIF Object Template
 meta:
-    id: LIF
+    id      : LIF
+    package : config.objects
+    module  : lif
 
 id      : None  # LIF ID
 macaddr : None  # Mac Address

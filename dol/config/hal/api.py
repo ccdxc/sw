@@ -116,6 +116,11 @@ def __config(objs, reqmsg_class, config_method):
     return __hal_api_handler(objs, reqmsg_class, config_method,\
                             "PrepareHALRequestSpec", "ProcessHALResponse")
 
+
+def __get(objs, reqmsg_class, config_method):
+    return __hal_api_handler(objs, reqmsg_class, config_method,\
+                            "PrepareHALGetRequestSpec", "ProcessHALGetResponse")
+
 def __delete(objs, reqmsg_class, config_method):
     return __hal_api_handler(objs, reqmsg_class, config_method,\
                             "PrepareHALDeleteRequestSpec", "ProcessHALDeleteResponse")
@@ -145,12 +150,28 @@ def ConfigureLifs(objlist):
              stub.LifCreate)
     return
 
+def GetLifs(objlist):
+    if IsHalDisabled():
+        return
+    stub = interface_pb2.InterfaceStub(HalChannel)
+    __get(objlist, interface_pb2.LifGetRequestMsg,
+          stub.LifGet)
+    return
+
 def ConfigureInterfaces(objlist, update = False):
     if IsHalDisabled(): return
     stub = interface_pb2.InterfaceStub(HalChannel)
     api = stub.InterfaceCreate
     if update: api = stub.InterfaceUpdate
     __config(objlist, interface_pb2.InterfaceRequestMsg, api)
+    return
+
+def GetInterfaces(objlist):
+    if IsHalDisabled():
+        return
+    stub = interface_pb2.InterfaceStub(HalChannel)
+    __get(objlist, interface_pb2.InterfaceGetRequestMsg,
+          stub.InterfaceGet)
     return
 
 def ConfigureInterfaceSegmentAssociations(intfs, segs):
@@ -172,6 +193,14 @@ def ConfigureTenants(objlist):
     stub = tenant_pb2.TenantStub(HalChannel)
     __config(objlist, tenant_pb2.TenantRequestMsg,
              stub.TenantCreate)
+    return
+
+def GetTenants(objlist):
+    if IsHalDisabled():
+        return
+    stub = tenant_pb2.TenantStub(HalChannel)
+    __get(objlist, tenant_pb2.TenantGetRequestMsg,
+          stub.TenantGet)
     return
 
 def ConfigureTcpCbs(objlist):
@@ -293,6 +322,14 @@ def ConfigureSegments(objlist):
              stub.L2SegmentCreate)
     return
 
+def GetSegments(objlist):
+    if IsHalDisabled():
+        return
+    stub = l2segment_pb2.L2SegmentStub(HalChannel)
+    __get(objlist, l2segment_pb2.L2SegmentGetRequestMsg,
+          stub.L2SegmentGet)
+    return
+
 def ConfigureEndpoints(objlist):
     if IsHalDisabled(): return
     stub = endpoint_pb2.EndpointStub(HalChannel)
@@ -300,11 +337,27 @@ def ConfigureEndpoints(objlist):
              stub.EndpointCreate)
     return
 
+def GetEndpoints(objlist):
+    if IsHalDisabled():
+        return
+    stub = endpoint_pb2.EndpointStub(HalChannel)
+    __get(objlist, endpoint_pb2.EndpointGetRequestMsg,
+          stub.EndpointGet)
+    return
+
 def ConfigureSessions(objlist):
     if IsHalDisabled(): return
     stub = session_pb2.SessionStub(HalChannel)
     __config(objlist, session_pb2.SessionRequestMsg,
              stub.SessionCreate)
+    return
+
+def GetSessions(objlist):
+    if IsHalDisabled():
+        return
+    stub = session_pb2.SessionStub(HalChannel)
+    __get(objlist, session_pb2.SessionGetRequestMsg,
+          stub.SessionGet)
     return
 
 def ConfigureLifsForObjects(objlist):
@@ -321,6 +374,14 @@ def ConfigureSecurityProfiles(objlist, update = False):
     api = stub.SecurityProfileCreate
     if update: api = stub.SecurityProfileUpdate
     __config(objlist, nwsec_pb2.SecurityProfileRequestMsg, api)
+    return
+
+def GetSecurityProfiles(objlist):
+    if IsHalDisabled():
+        return
+    stub = nwsec_pb2.NwSecurityStub(HalChannel)
+    __get(objlist, nwsec_pb2.SecurityProfileGetRequestMsg,
+          stub.SecurityProfileGet)
     return
 
 def ConfigureSpanSessions(objlist):
@@ -342,6 +403,14 @@ def ConfigureNetworks(objlist):
     stub = nw_pb2.NetworkStub(HalChannel)
     __config(objlist, nw_pb2.NetworkRequestMsg,
              stub.NetworkCreate)
+    return
+
+def GetNetworks(objlist):
+    if IsHalDisabled():
+        return
+    stub = nw_pb2.NetworkStub(HalChannel)
+    __get(objlist, nw_pb2.NetworkGetRequestMsg,
+          stub.NetworkGet)
     return
 
 def GetDscrAolObjectState(objlist):

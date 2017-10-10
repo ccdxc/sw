@@ -173,9 +173,10 @@ message EndpointStats {
 
 // EndpointGetResponse captures all the information about one Endpoint
 message EndpointGetResponse {
-  EndpointSpec      spec   = 1;    // Endpoint config
-  EndpointStatus    status = 2;    // Endpoint operational status
-  EndpointStats     stats  = 3;    // Endpoint stats, if any
+  types.ApiStatus   api_status = 1;    // API status code
+  EndpointSpec      spec       = 2;    // Endpoint config
+  EndpointStatus    status     = 3;    // Endpoint operational status
+  EndpointStats     stats      = 4;    // Endpoint stats, if any
 }
 
 // EndpointGetResponseMsg is batched response to EndpointGetRequestMsg

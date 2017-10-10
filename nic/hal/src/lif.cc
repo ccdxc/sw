@@ -488,6 +488,8 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->vlan_strip_en = spec.vlan_strip_en();
     //lif->allmulti = spec.allmulti();
     lif->enable_rdma = spec.enable_rdma();
+    lif->rdma_max_keys = spec.rdma_max_keys();
+    lif->rdma_max_pt_entries = spec.rdma_max_pt_entries();
 
     // allocate hal handle id
     hal_handle = hal_handle_alloc(HAL_OBJ_ID_LIF);
@@ -509,7 +511,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     utils::dllist_reset(&cfg_ctxt.dhl);
     utils::dllist_reset(&dhl_entry.dllist_ctxt);
     utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_add_obj(hal_handle, &cfg_ctxt, 
+    ret = hal_handle_add_obj(hal_handle, &cfg_ctxt,
                              lif_create_add_cb,
                              lif_create_commit_cb,
                              lif_create_abort_cb, 
@@ -1078,6 +1080,31 @@ LifSetQState (const intf::QStateSetReq &req, intf::QStateSetResp *rsp)
 hal_ret_t lif_get(LifGetRequest& req,
                   LifGetResponse *rsp)
 {
+    lif_t            *lif;
+    LifSpec          *spec;
+
+    if (!req.has_key_or_handle()) {
+        rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    lif = lif_lookup_key_or_handle(req.key_or_handle());
+    if (!lif) {
+        rsp->set_api_status(types::API_STATUS_INTERFACE_NOT_FOUND);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // fill in the config spec of this lif.
+    spec = rsp->mutable_spec();
+    spec->mutable_key_or_handle()->set_lif_id(lif->lif_id);
+    spec->set_mac_addr(MAC_TO_UINT64(lif->mac_addr));
+    spec->set_port_num(lif->port_num);
+    spec->set_admin_status(lif->admin_status);
+    spec->set_enable_rdma(lif->enable_rdma);
+    spec->set_rdma_max_keys(lif->rdma_max_keys);
+    spec->set_rdma_max_pt_entries(lif->rdma_max_pt_entries);
+
+    rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }
 

@@ -37,7 +37,7 @@ hal_ret_t
 ip_addr_to_spec (types::IPAddress *ip_addr_spec,
                  const ip_addr_t *ip_addr)
 {
-    if (ip_addr->af == types::IP_AF_INET) {
+    if (ip_addr->af == IP_AF_IPV4) {
         ip_addr_spec->set_ip_af(types::IP_AF_INET);
         ip_addr_spec->set_v4_addr(ip_addr->addr.v4_addr);
     } else {

@@ -33,6 +33,8 @@ class SessionObject(base.ConfigObjectBase):
         self.id = resmgr.SessionIdAllocator.get()
         self.GID("Session%d" % self.id)
         self.spec = spec
+        self.conn_track_en = getattr(self.spec, 'tracking', False)
+        self.tcp_ts_option = getattr(self.spec, 'timestamp', False)
 
         self.fte = getattr(spec, 'fte', False)
         self.initiator = flowep.FlowEndpointObject(srcobj = initiator)
@@ -97,6 +99,33 @@ class SessionObject(base.ConfigObjectBase):
         cfglogger.info(" Responder SPAN sessions : %d/%d" % (ingspanlen, egspanlen))
         return
 
+    def __copy__(self):
+        session = SessionObject()
+        session.id = self.id
+        session.hal_handle = self.hal_handle
+        session.conn_track_en = self.conn_track_en
+        session.tcp_ts_option = self.tcp_ts_option
+        session.iflow = copy.copy(self.iflow)
+        session.rflow = copy.copy(self.rflow)
+        
+        return session
+  
+    def Equals(self, other, lgh):
+        if not isinstance(other, self.__class__):
+            return False
+        
+        fields = ["id", "hal_handle", "tcp_ts_option", "conn_track_en"]
+        if not self.CompareObjectFields(other, fields, lgh):
+            return False
+               
+        if not self.iflow.Equals(other.iflow, lgh) or not self.rflow.Equals(other.rflow, lgh):
+            return False
+        
+        return True
+
+    def Get(self):
+        halapi.GetSessions([self])
+
     def IsTCP(self):
         return self.initiator.IsTCP()
 
@@ -134,6 +163,25 @@ class SessionObject(base.ConfigObjectBase):
 
         return
 
+    def PrepareHALGetRequestSpec(self, get_req_spec):
+        get_req_spec.meta.tenant_id = self.initiator.ep.tenant.id
+        get_req_spec.session_handle = self.hal_handle
+        return
+
+    def ProcessHALGetResponse(self, get_req_spec, get_resp):
+        if get_resp.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):
+            self.id = get_resp.spec.session_id
+            self.tcp_ts_option = get_resp.spec.tcp_ts_option
+            self.conn_track_en = get_resp.spec.conn_track_en
+        else:
+            self.id = None
+            self.tcp_ts_option = None
+            self.conn_track_en = None
+
+        self.iflow.ProcessHALGetResponse(get_req_spec, get_resp.spec.initiator_flow)
+        self.rflow.ProcessHALGetResponse(get_req_spec, get_resp.spec.responder_flow)
+        return
+    
     def IsFilterMatch(self, selectors):
         cfglogger.debug("Matching Session %s" % self.GID())
         # Match on Initiator Flow
@@ -154,6 +202,7 @@ class SessionObject(base.ConfigObjectBase):
     def SetupTestcaseConfig(self, obj):
         self.iflow.SetupTestcaseConfig(obj.session.iconfig)
         self.rflow.SetupTestcaseConfig(obj.session.rconfig)
+        obj.root = self
         return
 
     def ShowTestcaseConfig(self, obj, logger):
@@ -404,3 +453,7 @@ class SessionObjectHelper:
         return objs
 
 SessionHelper = SessionObjectHelper()
+
+def GetMatchingObjects(selectors):
+    sessions =  Store.objects.GetAllByClass(SessionObject)
+    return [session for session in sessions if session.IsFilterMatch(selectors)]

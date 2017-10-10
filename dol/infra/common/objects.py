@@ -93,8 +93,7 @@ class FrameworkTemplateObject(FrameworkObject):
     def __init__(self):
         super().__init__()
         return
-
-
+    
 class FrameworkFieldObject(FrameworkObject):
     def __init__(self):
         super().__init__()
@@ -160,24 +159,34 @@ class IntegerRange(FrameworkFieldObject):
         return self.end - self.start + 1
 
 class MacAddressBase(FrameworkFieldObject):
-    def __init__(self, string):
+    def __init__(self, string=None, integer=None):
         super().__init__()
-        if "." in string:
-            words16 = string.split(".")
-            assert(len(words16) == 3)
-            self.num = (int(words16[0], 16) << 32) +\
-                       (int(words16[1], 16) << 16) +\
-                       (int(words16[2], 16))
-        elif ":" in string:
-            by8 = string.split(":")
-            assert(len(by8) == 6)
-            self.num = (int(by8[0], 16) << 40) +\
-                       (int(by8[1], 16) << 32) +\
-                       (int(by8[2], 16) << 24) +\
-                       (int(by8[3], 16) << 16) +\
-                       (int(by8[4], 16) << 8) +\
-                       (int(by8[5], 16))
+        if string:
+            if "." in string:
+                words16 = string.split(".")
+                assert(len(words16) == 3)
+                self.num = (int(words16[0], 16) << 32) +\
+                           (int(words16[1], 16) << 16) +\
+                           (int(words16[2], 16))
+            elif ":" in string:
+                by8 = string.split(":")
+                assert(len(by8) == 6)
+                self.num = (int(by8[0], 16) << 40) +\
+                           (int(by8[1], 16) << 32) +\
+                           (int(by8[2], 16) << 24) +\
+                           (int(by8[3], 16) << 16) +\
+                           (int(by8[4], 16) << 8) +\
+                           (int(by8[5], 16))
+            else:
+                assert 0
+        elif integer is not None:
+            #Assume its converted.
+            self.num = integer
         return
+    
+    def __str__(self):
+        return self.get()
+        
 
     def get(self):
         by = [0] * 6
@@ -197,6 +206,9 @@ class MacAddressBase(FrameworkFieldObject):
     def update(self, macincr):
         self.num += macincr
         return
+    
+    def __eq__(self, other):
+        return other and self.getnum() == other.getnum()
 
 
 class MacAddress(FrameworkFieldObject):
@@ -235,22 +247,32 @@ class MacAddressStep(FrameworkFieldObject):
 
 
 class IpAddress(FrameworkFieldObject):
-    def __init__(self, valobj=None, string=None):
+    def __init__(self, valobj=None, string=None, integer=None):
         super().__init__()
         if valobj:
             self.value = ipaddress.IPv4Address(valobj.params[0])
         elif string:
             self.value = ipaddress.IPv4Address(string)
+        elif integer is not None:
+            self.value = ipaddress.IPv4Address(integer)
         else:
             assert(0)
         return
 
+    def __str__(self):
+        return self.get()
+    
     def get(self):
         return str(self.value)
 
     def getnum(self):
         return int(self.value)
 
+    def __eq__(self, other):
+        return other and self.value == other.value
+    
+    def __hash__(self):
+        return hash(self.value)
 
 class IpAddressStep(FrameworkFieldObject):
     def __init__(self, valobj):
@@ -276,22 +298,32 @@ class IpAddressStep(FrameworkFieldObject):
 
 
 class Ipv6Address(FrameworkFieldObject):
-    def __init__(self, valobj=None, string=None):
+    def __init__(self, valobj=None, string=None, integer=None):
         super().__init__()
         if valobj:
             self.value = ipaddress.IPv6Address(valobj.params[0])
         elif string:
             self.value = ipaddress.IPv6Address(string)
+        elif integer is not None:
+            self.value = ipaddress.IPv6Address(integer)
         else:
             assert(0)
         return
 
+    def __str__(self):
+        return self.get()
+
+    def __hash__(self):
+        return hash(self.value)
+    
     def get(self):
         return str(self.value)
 
     def getnum(self):
         return int(self.value)
 
+    def __eq__(self, other):
+        return other and self.value == other.value
 
 class Ipv6AddressStep(FrameworkFieldObject):
     def __init__(self, valobj):

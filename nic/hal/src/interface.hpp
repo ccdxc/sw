@@ -122,6 +122,7 @@ typedef struct if_update_app_ctxt_s {
         // uplink interface/pc info
         struct {
             bool            native_l2seg_change;
+            bool            l2segids_change;
             l2seg_t         *native_l2seg;             // native (vlan) on uplink (pc)
 
             // only to PC

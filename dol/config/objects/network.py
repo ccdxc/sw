@@ -14,12 +14,13 @@ from config.store               import Store
 class NetworkObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
-        self.Clone(Store.templates.Get('SEGMENT'))
+        self.Clone(Store.templates.Get('NETWORK'))
         return
 
     def Init(self, segment, prefix, af):
         self.segment = segment
         self.id = self.segment.id
+        self.tenant = segment.tenant
         self.GID("Nw%04d" % self.segment.id)
 
         self.af = af
@@ -30,6 +31,7 @@ class NetworkObject(base.ConfigObjectBase):
             self.prefix_len = 96
         self.rmac = segment.macaddr
         self.hal_handle = None
+        self.security_groups = []
 
         self.Show()
         return
@@ -38,6 +40,31 @@ class NetworkObject(base.ConfigObjectBase):
         return self.af == 'IPV4'
     def IsIpv6(self):
         return self.af == 'IPV6'
+
+    def __copy__(self):
+        nw = NetworkObject()
+        nw.tenant = self.tenant
+        nw.hal_handle = self.hal_handle
+        nw.rmac = self.rmac
+        nw.prefix = self.prefix
+        nw.prefix_len = self.prefix_len
+        nw.af = self.af
+        nw.id = self.id
+        nw.security_groups = self.security_groups[:]
+        return nw
+
+
+    def Equals(self, other, lgh):
+        if not isinstance(other, self.__class__):
+            return False
+        fields = ["id", "rmac", "prefix", "prefix_len", "af", "hal_handle",
+                  "security_groups"]
+        
+        if not self.CompareObjectFields(other, fields, lgh):
+            return False
+        
+        return True
+
 
     def Show(self, detail = False):
         cfglogger.info("- Network = %s(%d)" % (self.GID(), self.id))
@@ -65,6 +92,29 @@ class NetworkObject(base.ConfigObjectBase):
         self.hal_handle = resp_spec.status.nw_handle
         return
 
+    def PrepareHALGetRequestSpec(self, get_req_spec):
+        get_req_spec.meta.tenant_id = self.tenant.id
+        if self.IsIpv4():
+            get_req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET
+            get_req_spec.key_or_handle.ip_prefix.address.v4_addr = self.prefix.getnum()
+            get_req_spec.key_or_handle.ip_prefix.prefix_len = self.prefix_len
+        else:
+            get_req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET6
+            get_req_spec.key_or_handle.ip_prefix.address.v6_addr = self.prefix.getnum().to_bytes(16, 'big')
+            get_req_spec.key_or_handle.ip_prefix.prefix_len = self.prefix_len
+        return        
+
+    def ProcessHALGetResponse(self, get_req_spec, get_resp_spec):
+        if get_resp_spec.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):
+            self.rmac = objects.MacAddressBase(integer=get_resp_spec.spec.rmac)
+        else:
+            cfglogger.error("- Network  %s = %s is missing." %\
+                       (self.GID(), haldefs.common.ApiStatus.Name(get_resp_spec.api_status)))
+            self.hal_handle = None
+            
+    def Get(self):
+        halapi.GetNetworks([self])
+
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
@@ -75,7 +125,7 @@ class NetworkObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Networks" % len(self.nws)) 
+        cfglogger.info("Configuring %d Networks" % len(self.nws))
         halapi.ConfigureNetworks(self.nws)
         return
 
@@ -89,4 +139,9 @@ class NetworkObjectHelper:
         nw = NetworkObject()
         nw.Init(segment, segment.subnet6, 'IPV6')
         self.nws.append(nw)
+        Store.objects.Set(nw.GID(), nw)
         return
+
+def GetMatchingObjects(selectors):
+    networks =  Store.objects.GetAllByClass(NetworkObject)
+    return [nw for nw in networks if nw.IsFilterMatch(selectors.network)]

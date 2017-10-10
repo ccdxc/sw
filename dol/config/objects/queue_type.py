@@ -3,6 +3,7 @@ import pdb
 import math
 
 import infra.common.defs        as defs
+import infra.config.base        as base
 import infra.common.objects     as objects
 import config.resmgr            as resmgr
 import config.objects.queue     as queue
@@ -18,7 +19,7 @@ from infra.common.logging       import cfglogger
 eth_queue_type_ids = {'RX', 'TX', 'ADMIN'}
 rdma_queue_type_ids = {'RDMA_SQ', 'RDMA_RQ', 'RDMA_CQ', 'RDMA_EQ'}
 
-class QueueTypeObject(objects.FrameworkObject):
+class QueueTypeObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
         return
@@ -31,6 +32,7 @@ class QueueTypeObject(objects.FrameworkObject):
         self.purpose    = spec.purpose.upper()
         self.size       = spec.size
         self.count      = spec.count
+        self.entries    = None
 
         self.queueid_allocator = objects.TemplateFieldObject("range/0/16384")
 
@@ -49,11 +51,43 @@ class QueueTypeObject(objects.FrameworkObject):
 
         self.Show()
 
+
+    def __copy__(self):
+        q_type = QueueTypeObject()
+        q_type.id = self.id
+        q_type.lif = self.lif
+        q_type.type = self.type
+        q_type.purpose = self.purpose
+        q_type.size = self.size
+        q_type.count = self.count
+        q_type.entries = self.entries
+        
+        return q_type
+
+    
+    def Equals(self, other, lgh):
+        if not isinstance(other, self.__class__):
+            return False
+        fields = ["id", "type", "purpose", "entries"]
+        if not self.CompareObjectFields(other, fields, lgh):
+            return False
+       
+        return True
+        
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.type_num   = self.type
         req_spec.size       = int(math.log(self.size, 2)) - 5
-        req_spec.entries    = int(math.log(self.count, 2))
+        req_spec.entries    = self.entries = int(math.log(self.count, 2))
         req_spec.purpose = haldefs.interface.LifQPurpose.Value(self.purpose)
+
+    def PrepareHALGetRequestSpec(self, get_req_spec):
+        #Should never be called.
+        assert 0
+
+    def ProcessHALGetResponse(self, get_req_spec, get_resp):
+        self.type = get_resp.type_num
+        self.entries = get_resp.entries
+        self.purpose = haldefs.interface.LifQPurpose.Name(get_resp.purpose)
 
     def GetQid(self):
         return self.queueid_allocator.get()

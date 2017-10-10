@@ -1,6 +1,8 @@
 # Enic Config Object Template
 meta:
-    id: ENIC
+    id      : ENIC
+    package : config.objects
+    module  : enic
 
 id      : None  # Name of the object
 txqos   :
@@ -9,3 +11,5 @@ txqos   :
 rxqos   :
     cos : None
     dscp: None
+
+macaddr: None

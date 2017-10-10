@@ -34,6 +34,7 @@ class FlowObject(base.ConfigObjectBase):
         self.__dseg     = dfep.GetSegment()
         self.__sten     = self.__sseg.tenant
         self.__dten     = self.__dseg.tenant
+        self.__span     = span
         self.ing_mirror_sessions = []
         self.egr_mirror_sessions = []
         if span:
@@ -52,6 +53,8 @@ class FlowObject(base.ConfigObjectBase):
         self.direction  = direction
         self.type       = sfep.type
         self.fwtype     = 'L2' if self.__sseg == self.__dseg else 'L3'
+        self.sseg_id    = self.__sseg.id
+        self.dseg_id    = self.__dseg.id
         self.sip        = None
         self.dip        = None
         self.proto      = None
@@ -221,6 +224,63 @@ class FlowObject(base.ConfigObjectBase):
         hal_ipproto = haldefs.common.IPProtocol.Value(hal_ipproto_str)
         return hal_ipproto
 
+    def __getStringValue(self, field, val):
+        return field.Name(val).split("_")[-1]
+
+    def __copy__(self):
+        flow = FlowObject(self.__session, self.__sfep, self.__dfep, self.direction,
+                           self.label, self.__span)
+        flow.smac = self.smac
+        flow.dmac = self.dmac
+        if self.IsMAC():
+            flow.ethertype = self.ethertype
+        else:
+            flow.proto = self.proto
+            flow.sip = self.sip
+            flow.dip = self.dip
+        flow.sseg_id = self.sseg_id
+        flow.dseg_id = self.dseg_id
+        flow.type = self.type
+        return flow
+
+    def Equals(self, other, lgh):
+        if not isinstance(other, self.__class__):
+            return False
+       
+        fields = ["type"]
+        if not self.CompareObjectFields(other, fields, lgh):
+            return False
+        
+        if self.IsMAC():
+            fields.extend(["smac", "dmac", "ethertype"])
+        elif self.IsIP():
+            fields.extend(["sip", "dip", "proto"])
+        else:
+            assert 0
+            
+        if not self.CompareObjectFields(other, fields, lgh):
+            return False
+        
+        if self.IsTCP() or self.IsUDP():
+            fields.extend(["sport", "dport"])
+        elif self.IsICMP():
+            fields.extend(["icmptype", "icmpcode", "icmpid"])
+        elif self.IsESP():
+            #TODO
+            pass
+               
+        if self.IsNat():
+            fields.extend(["nat_sip", "nat_dip", "nat_sport", "nat_dport"])
+        
+        #This has to be generalized.
+        if not utils.CompareObjectFields(self.txqos, other.txqos, ["cos", "dscp"], lgh):
+            return False
+
+        if not utils.CompareObjectFields(self.rxqos, other.rxqos, ["cos", "dscp"], lgh):
+            return False
+        
+        return True
+    
     def PrepareHALRequestSpec(self, req_spec):
         if self.IsMAC():
             req_spec.flow_key.l2_key.smac = self.smac.getnum()
@@ -351,6 +411,72 @@ class FlowObject(base.ConfigObjectBase):
                         self.hal_handle, self.label))
         return
 
+    def PrepareHALGetRequestSpec(self, get_req_spec):
+        #Should never be called.
+        assert 0
+        return
+
+
+    def ProcessHALGetResponse(self, get_req_spec, get_resp):
+       
+        def set_flow_l4_info(flow_key): 
+            if flow_key.HasField("tcp_udp"):
+                self.sport = flow_key.tcp_udp.sport
+                self.dport = flow_key.tcp_udp.dport
+            elif flow_key.HasField("icmp"):
+                self.icmpcode = flow_key.icmp.code
+                self.icmptype = flow_key.icmp.type
+                self.icmpid = flow_key.icmp.id
+            else:
+                self.sport = self.dport = self.icmpcode = self.icmptype = self.icmpid = None
+        
+        if get_resp.flow_key.HasField("l2_key"):
+            self.smac = objects.MacAddressBase(integer=get_resp.flow_key.l2_key.smac)
+            self.dmac = objects.MacAddressBase(integer=get_resp.flow_key.l2_key.dmac)
+            self.ethertype = get_resp.flow_key.l2_key.ether_type
+            self.sseg_id = get_resp.flow_key.l2_key.l2_segment_id
+            self.type = 'MAC'
+        elif get_resp.flow_key.HasField("v4_key"):
+            self.sip = objects.IpAddress(integer=get_resp.flow_key.v4_key.sip)
+            self.dip = objects.IpAddress(integer=get_resp.flow_key.v4_key.dip)
+            self.proto = self.__getStringValue(haldefs.common.IPProtocol,
+                get_resp.flow_key.v4_key.ip_proto)
+            self.type = 'IPV4'
+            set_flow_l4_info(get_resp.flow_key.v4_key)
+        elif get_resp.flow_key.HasField("v6_key"):
+           self.sip = objects.Ipv6Address(integer=get_resp.flow_key.v6_key.sip.v6_addr) 
+           self.dip = objects.Ipv6Address(integer=get_resp.flow_key.v6_key.dip.v6_addr) 
+           self.proto = self.__getStringValue(haldefs.common.IPProtocol,
+               get_resp.flow_key.v6_key.ip_proto)
+           self.type = 'IPV6'
+           set_flow_l4_info(get_resp.flow_key.v6_key)
+        else:
+            assert 0
+            
+        flow_info = get_resp.flow_data.flow_info
+        self.action = self.__getStringValue(haldefs.session.FlowAction,
+                                            flow_info.flow_action)
+        self.nat_type = self.__getStringValue(haldefs.session.NatType,
+                                              flow_info.nat_type)
+            
+        if self.IsNat():
+            if self.IsIPV4():
+                self.nat_sip = objects.IpAddress(integer=flow_info.nat_sip.v4_addr)
+                self.nat_dip = objects.IpAddress(integer=flow_info.nat_dip.v4_addr)
+            elif self.IsIPV6():
+                set.nat_sip = objects.Ipv6Address(integer=flow_info.nat_sip.v6_addr)
+                set.nat_dip = objects.Ipv6Address(integer=flow_info.nat_dip.v6_addr)
+            self.nat_sport = flow_info.nat_sport
+            self.nat_dport = flow_info.nat_dport
+
+        if flow_info.eg_qos_actions.marking_spec.pcp_rewrite_en:
+            self.txqos.cos  = flow_info.eg_qos_actions.marking_spec.pcp
+        else:
+            self.txqos.cos = None
+        if flow_info.eg_qos_actions.marking_spec.dscp_rewrite_en:
+            self.txqos.dscp  = flow_info.eg_qos_actions.marking_spec.dscp
+        else:
+            self.txqos.dscp = None
 
     def IsFilterMatch(self, selectors):
         cfglogger.debug("Matching %s Flow:%s, Session:%s" %\

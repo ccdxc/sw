@@ -37,6 +37,8 @@ typedef struct lif_s {
     bool                vlan_strip_en;               // vlan strip enable
     //bool                allmulti;                    // All multicast enable
     bool                enable_rdma;                 // enable rdma on this LIF
+    uint32_t            rdma_max_keys;
+    uint32_t            rdma_max_pt_entries;
     uint8_t             qtypes[intf::LifQPurpose_MAX+1]; // purpose to qtype mapping
 
     // operational state of interface

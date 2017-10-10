@@ -1,6 +1,8 @@
 # Tenant Object Template File.
 meta:
-    id: TENANT
+    id      : TENANT
+    package : config.objects
+    module  : tenant
 
 id          : None # Tenant Local ID
 spec        : None # (REF) Tenant Spec from Base Config.

@@ -948,7 +948,9 @@ end:
 hal_ret_t
 l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
 {
-    l2seg_t    *l2seg;
+    l2seg_t       *l2seg;
+    dllist_ctxt_t *lnode = NULL;
+    network_t     *nw;
 
     if (!req.has_meta() || req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
@@ -986,6 +988,11 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
     rsp->mutable_spec()->mutable_fabric_encap()->set_encap_type(l2seg->fabric_encap.type);
     rsp->mutable_spec()->mutable_fabric_encap()->set_encap_value(l2seg->fabric_encap.val);
 
+    lnode = l2seg->nw_list_head.next;
+    dllist_for_each(lnode, &(l2seg->nw_list_head)) {
+        nw = dllist_entry(lnode, network_t, l2seg_nw_lentry);
+        rsp->mutable_spec()->add_network_handle(nw->hal_handle);
+    }
     // fill operational state of this L2 segment
     rsp->mutable_status()->set_l2segment_handle(l2seg->hal_handle);
 

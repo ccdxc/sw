@@ -253,12 +253,14 @@ message SessionStats {
 
 // SessionGetResponse is response to one SessionGetRequest
 message SessionGetResponse {
-  SessionSpec         session_spec    = 1;
-  SessionStatus       session_status  = 2;
-  SessionStats        session_stats   = 3;
+ types.ApiStatus      api_status = 1;    // API status code
+  SessionSpec         spec       = 2;
+  SessionStatus       status     = 3;
+  SessionStats        stats      = 4;
 }
 
 // SesssionGetResponseMsg is batched response to SesssionGetRequestMsg
 message SessionGetResponseMsg {
-  repeated SessionGetResponse    response = 1;    // batched response
+  types.ApiStatus                api_status = 1;    // API status code
+  repeated SessionGetResponse    response   = 2;    // batched response
 }

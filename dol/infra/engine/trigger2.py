@@ -61,6 +61,17 @@ class TriggerEngineObject:
         db.Ring(dbsp.spec)
         return
 
+    def __trigger_config(self, step, lgh):
+        if step.trigger.configs == None:
+            return
+
+        for config in step.trigger.configs:
+            method = getattr(config.actual_object, config.method)
+            if not method:
+                 assert 0
+            method(config_spec.spec)
+        return
+
     def __trigger_delay(self, step, lgh):
         if GlobalOptions.dryrun:
             return

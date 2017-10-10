@@ -30,6 +30,7 @@ class EnicObject(base.ConfigObjectBase):
     def Init(self, segment, type, l4lb_backend = False):
         self.segment        = segment
         self.tenant         = segment.tenant
+        self.tenant_id      = self.tenant.id
         self.type           = type
         self.l4lb_backend   = l4lb_backend
         
@@ -62,7 +63,9 @@ class EnicObject(base.ConfigObjectBase):
     def AttachEndpoint(self, ep):
         assert(self.ep == None)
         self.lif = self.tenant.AllocLif()
+        self.lif_id = self.lif.id
         self.ep = ep
+        self.ep_segment_id = self.ep.segment.id 
         self.Show()
         return
 
@@ -109,6 +112,31 @@ class EnicObject(base.ConfigObjectBase):
 
     def GetRxQosDscp(self):
         return self.rxqos.cos
+
+    def __copy__(self):
+        enic = EnicObject()
+        enic.id = self.id
+        enic.hal_handle = self.hal_handle
+        enic.tenant_id = self.tenant_id
+        enic.lif_id = self.lif_id
+        enic.ep_segment_id = self.ep_segment_id
+        enic.encap_vlan_id = self.encap_vlan_id
+        enic.macaddr = self.macaddr
+        enic.type = self.type
+        return enic
+    
+    def Equals(self, other, lgh):
+        if not isinstance(other, self.__class__):
+            return False
+        fields = ["tenant_id", "hal_handle", "lif_id", "ep_segment_id", "encap_vlan_id", "type"]
+        if not self.CompareObjectFields(other, fields, lgh):
+            return False
+       
+        if  self.macaddr.getnum() != other.macaddr.getnum():
+            lgh.error("Field mismatch, Field : %s, Expected : %s, Actual : %s"
+                 %("macaddr", self.macaddr.string, other.macaddr.string))
+            return False
+        return True
 
     def IsSegmentMatch(self, segid):
         return self.segment.GID() == segid
@@ -160,6 +188,35 @@ class EnicObject(base.ConfigObjectBase):
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),\
                         self.hal_handle, self.label))
         return
+
+    def PrepareHALGetRequestSpec(self, get_req_spec):
+        get_req_spec.meta.tenant_id = self.tenant.id
+        get_req_spec.key_or_handle.if_handle = self.hal_handle
+        return
+
+    def ProcessHALGetResponse(self, get_req_spec, get_resp):
+        self.tenant_id = get_resp.spec.meta.tenant_id
+        if get_resp.spec.key_or_handle.HasField("interface_id"):
+            self.id = get_resp.spec.key_or_handle.interface_id
+        else:
+            self.hal_handle = get_resp.spec.key_or_handle.if_handle
+            
+        if get_resp.spec.type == haldefs.interface.IF_TYPE_ENIC:
+            if get_resp.spec.if_enic_info.enic_type == haldefs.interface.IF_ENIC_TYPE_DIRECT:
+                self.type = ENIC_TYPE_DIRECT
+            elif get_resp.spec.if_enic_info.enic_type == haldefs.interface.IF_ENIC_TYPE_USEG:
+                self.type  = ENIC_TYPE_USEG
+            elif get_resp.spec.if_enic_info.enic_type  == haldefs.interface.IF_ENIC_TYPE_PVLAN:
+                self.type  = ENIC_TYPE_PVLAN
+            else:
+                self.type = None
+        self.lif.id = get_resp.spec.if_enic_info.lif_key_or_handle.lif_id
+        self.macaddr = objects.MacAddressBase(integer=get_resp.spec.if_enic_info.mac_address)
+        self.encap_vlan_id = get_resp.spec.if_enic_info.encap_vlan_id
+        self.ep_segment_id = get_resp.spec.if_enic_info.l2segment_id
+
+    def Get(self):
+        halapi.GetInterfaces([self])       
 
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
@@ -251,3 +308,7 @@ class EnicObjectHelper:
                            len(self.backend_enics))
             halapi.ConfigureInterfaces(self.backend_enics)
         return
+
+def GetMatchingObjects(selectors):
+    enics =  Store.objects.GetAllByClass(EnicObject)
+    return [enic for enic in enics if enic.IsFilterMatch(selectors.enic)]

@@ -163,7 +163,8 @@ message SecurityProfileGetResponse {
 
 // SecurityProfileGetResponseMsg is the batched response to SecurityProfileGetRequestMsg
 message SecurityProfileGetResponseMsg {
-  repeated SecurityProfileGetResponse    response = 1;    // batched get response
+  types.ApiStatus     		          api_status = 1;    // API status code
+  repeated SecurityProfileGetResponse     response   = 2;    // batched get response
 }
 
 // Firewall policy actions

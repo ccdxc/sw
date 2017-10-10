@@ -15,6 +15,10 @@
 
 using telemetry::MirrorSessionId;
 using session::FlowInfo;
+using session::FlowKeyTcpUdpInfo;
+using session::FlowKeyICMPInfo;
+using session::FlowData;
+using session::ConnTrackInfo;
 
 namespace hal {
 
@@ -385,6 +389,28 @@ extract_flow_info_from_spec (flow_cfg_t *flow, bool is_initiator_flow,
     if (ret != HAL_RET_OK) {
         return ret;
     }
+
+    return HAL_RET_OK;
+}
+
+
+
+hal_ret_t
+conn_track_to_conn_track_spec(const flow_state_t *flow_state,
+        ConnTrackInfo *conn_track_info);
+hal_ret_t
+conn_track_to_conn_track_spec(const flow_state_t *flow_state,
+        ConnTrackInfo *conn_track_info)
+{
+    conn_track_info->set_flow_create_ts(flow_state->create_ts);
+    conn_track_info->set_flow_bytes(flow_state->bytes);
+    conn_track_info->set_flow_packets(flow_state->packets);
+    conn_track_info->set_exception_bits(flow_state->exception_bmap);
+    conn_track_info->set_tcp_seq_num(flow_state->tcp_seq_num);
+    conn_track_info->set_tcp_ack_num(flow_state->tcp_ack_num);
+    conn_track_info->set_tcp_win_sz(flow_state->tcp_win_sz);
+    conn_track_info->set_tcp_win_scale(flow_state->tcp_win_scale);
+    conn_track_info->set_tcp_mss(flow_state->tcp_mss);
 
     return HAL_RET_OK;
 }
@@ -1879,6 +1905,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         return ret;
     }
     session.conn_track_en = spec.conn_track_en();
+    session.tcp_ts_option = spec.tcp_ts_option();
     if (session.conn_track_en) {
         args.session_state = &session_state;
         args.session_state->tcp_ts_option = spec.tcp_ts_option();
@@ -1937,9 +1964,115 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     return ret;
 }
 
-hal_ret_t
-session_get (SessionGetRequest& spec, SessionGetResponse *rsp)
+static void
+flow_tcp_to_flow_tcp_spec(flow_t *flow, FlowKeyTcpUdpInfo *tcp_udp)
 {
+    tcp_udp->set_sport(flow->config.key.sport);
+    tcp_udp->set_dport(flow->config.key.dport);
+}
+
+static void
+flow_icmp_to_flow_icmp_spec(flow_t *flow, FlowKeyICMPInfo *icmp)
+{
+    icmp->set_type(flow->config.key.icmp_type);
+    icmp->set_code(flow->config.key.icmp_code);
+    icmp->set_id(flow->config.key.icmp_id);
+}
+
+static void
+flow_data_to_flow_data_spec(flow_t *flow, FlowData *flow_data)
+{
+    FlowInfo *flow_info = flow_data->mutable_flow_info();
+    flow_info->set_flow_action((session::FlowAction)(flow->config.action));
+    flow_info->set_nat_type((session::NatType)(flow->config.nat_type));
+    ip_addr_to_spec(flow_info->mutable_nat_sip(), &flow->config.nat_sip);
+    ip_addr_to_spec(flow_info->mutable_nat_dip(), &flow->config.nat_dip);
+    flow_info->set_nat_sport(flow->config.nat_sport);
+    flow_info->set_nat_dport(flow->config.nat_dport);
+
+    qos_action_to_qos_action_spec(&flow->config.in_qos_action,
+            flow_info->mutable_in_qos_actions());
+    qos_action_to_qos_action_spec(&flow->config.eg_qos_action,
+            flow_info->mutable_eg_qos_actions());
+
+
+    /* TODO: Connection Tracking Info framework has to be done still.
+    conn_track_to_conn_track_spec(flow,
+            flow_data->mutable_conn_track_info());
+            */
+}
+
+static void
+flow_to_flow_spec(flow_t *flow, FlowSpec *spec)
+{
+    if (flow->config.key.flow_type == FLOW_TYPE_L2) {
+        FlowKeyL2 *l2_key = spec->mutable_flow_key()->mutable_l2_key();
+        l2_key->set_smac(MAC_TO_UINT64(flow->config.key.smac));
+        l2_key->set_dmac(MAC_TO_UINT64(flow->config.key.dmac));
+        l2_key->set_ether_type(flow->config.key.ether_type);
+        l2_key->set_l2_segment_id(flow->config.key.l2seg_id);
+    } else if (flow->config.key.flow_type == FLOW_TYPE_V4) {
+        FlowKeyV4 *v4_key = spec->mutable_flow_key()->mutable_v4_key();
+        v4_key->set_sip(flow->config.key.sip.v4_addr);
+        v4_key->set_dip(flow->config.key.dip.v4_addr);
+        v4_key->set_ip_proto(types::IPProtocol(flow->config.key.proto));
+        if ((flow->config.key.proto == types::IPPROTO_TCP) ||
+            (flow->config.key.proto == types::IPPROTO_UDP)) {
+            flow_tcp_to_flow_tcp_spec(flow, v4_key->mutable_tcp_udp());
+        } else if (flow->config.key.proto == types::IPPROTO_ICMP) {
+            flow_icmp_to_flow_icmp_spec(flow, v4_key->mutable_icmp());
+        }
+
+    } else if (flow->config.key.flow_type == FLOW_TYPE_V6) {
+        FlowKeyV6 *v6_key = spec->mutable_flow_key()->mutable_v6_key();
+        v6_key->mutable_sip()->set_v6_addr(&flow->config.key.sip.v6_addr, IP6_ADDR8_LEN);
+        v6_key->mutable_dip()->set_v6_addr(&flow->config.key.dip.v6_addr, IP6_ADDR8_LEN);
+        v6_key->set_ip_proto(types::IPProtocol(flow->config.key.proto));
+        if ((flow->config.key.proto == types::IPPROTO_TCP) ||
+            (flow->config.key.proto == types::IPPROTO_UDP)) {
+            flow_tcp_to_flow_tcp_spec(flow, v6_key->mutable_tcp_udp());
+        } else if (flow->config.key.proto == types::IPPROTO_ICMPV6) {
+            flow_icmp_to_flow_icmp_spec(flow, v6_key->mutable_icmp());
+        }
+    }
+
+    flow_data_to_flow_data_spec(flow, spec->mutable_flow_data());
+
+}
+
+static void
+session_to_session_get_response (session_t *session, SessionGetResponse *response)
+{
+    response->mutable_spec()->mutable_meta()->set_tenant_id(session->tenant->tenant_id);
+    response->mutable_spec()->set_session_id(session->config.session_id);
+    response->mutable_spec()->set_conn_track_en(session->config.conn_track_en);
+    response->mutable_spec()->set_tcp_ts_option(session->config.tcp_ts_option);
+
+    flow_to_flow_spec(session->iflow, response->mutable_spec()->mutable_initiator_flow());
+    flow_to_flow_spec(session->rflow, response->mutable_spec()->mutable_responder_flow());
+}
+
+
+hal_ret_t
+session_get (SessionGetRequest& req, SessionGetResponse *response)
+{
+    session_t              *session;
+
+    if (!req.has_meta() ||
+        req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
+        response->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    session = find_session_by_handle(req.session_handle());
+
+    if (session == NULL) {
+        response->set_api_status(types::API_STATUS_SESSION_NOT_FOUND);
+        return HAL_RET_SESSION_NOT_FOUND;
+    }
+
+    session_to_session_get_response(session, response);
+    response->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }
 

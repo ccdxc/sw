@@ -35,6 +35,8 @@ class SegmentObject(base.ConfigObjectBase):
         self.fabencap   = getattr(spec, 'fabencap', 'vlan')
         self.fabencap   = self.fabencap.upper()
         self.floodlist  = None
+        
+        self.nw_hal_handles = []
 
         if self.blackhole:
             self.vlan_id    = resmgr.BlackHoleSegVlanAllocator.get()
@@ -106,6 +108,36 @@ class SegmentObject(base.ConfigObjectBase):
         return self.fabencap == 'VLAN'
     def IsFabEncapVxlan(self):
         return self.fabencap == 'VXLAN'
+
+    def __copy__(self):
+        seg = SegmentObject()
+        seg.id = self.id
+        seg.hal_handle = self.hal_handle
+        seg.type = self.type
+        seg.fabencap = self.fabencap
+        seg.vlan_id = self.vlan_id
+        seg.vxlan_id = self.vxlan_id
+        seg.multicast_policy = self.multicast_policy
+        seg.broadcast_policy = self.broadcast_policy
+        seg.nw_hal_handles = self.nw_hal_handles[:]
+        return seg
+
+
+    def Equals(self, other, lgh):
+        if not isinstance(other, self.__class__):
+            return False
+        fields = ["id", "hal_handle", "type", "fabencap", "vlan_id", "vxlan_id",
+                  "multicast_policy", "broadcast_policy"]
+        if not self.CompareObjectFields(other, fields, lgh):
+            return False
+        
+        if set(self.nw_hal_handles) != set(other.nw_hal_handles):
+            pdb.set_trace()
+            lgh.error("Network handles don't match Expected : %s, actual : %s"
+                      %(set(self.nw_hal_handles), set(other.nw_hal_handles)))
+            return False
+            
+        return True
 
     def Show(self, detail = False):
         cfglogger.info("- Segment = %s(%d)" % (self.GID(), self.id))
@@ -204,6 +236,7 @@ class SegmentObject(base.ConfigObjectBase):
         for nw in self.obj_helper_nw.nws:
             if nw.hal_handle:
                 req_spec.network_handle.append(nw.hal_handle)
+                self.nw_hal_handles.append(nw.hal_handle)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -211,6 +244,47 @@ class SegmentObject(base.ConfigObjectBase):
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         self.hal_handle = resp_spec.l2segment_status.l2segment_handle
         return
+
+    def PrepareHALGetRequestSpec(self, get_req_spec):
+        get_req_spec.meta.tenant_id = self.tenant.id
+        get_req_spec.key_or_handle.l2segment_handle = self.hal_handle
+        return
+
+    def ProcessHALGetResponse(self, get_req_spec, get_resp_spec):
+        if get_resp_spec.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):
+            self.id = get_resp_spec.spec.key_or_handle.segment_id
+            if get_resp_spec.spec.segment_type == haldefs.common.L2_SEGMENT_TYPE_TENANT:
+                self.type = 'TENANT'
+            elif get_resp_spec.spec.segment_type == haldefs.common.L2_SEGMENT_TYPE_INFRA:
+                self.type = 'INFRA'
+            else:
+                self.type = None
+          
+            self.vlan_id = get_resp_spec.spec.access_encap.encap_value
+            if get_resp_spec.spec.fabric_encap.encap_type ==  haldefs.common.ENCAP_TYPE_VXLAN:
+                self.fabencap = 'VXLAN'
+                self.vxlan_id = get_resp_spec.spec.fabric_encap.encap_value
+            elif get_resp_spec.spec.fabric_encap.encap_type ==  haldefs.common.ENCAP_TYPE_DOT1Q:
+                self.fabencap = 'VLAN'
+                self.vlan_id = get_resp_spec.spec.fabric_encap.encap_value
+            else:
+                self.fabencap = None
+                
+            self.multicast_policy = get_resp_spec.spec.mcast_fwd_policy
+            self.broadcast_policy = get_resp_spec.spec.bcast_fwd_policy
+           
+            self.nw_hal_handles = []
+            for nw_handle in get_resp_spec.spec.network_handle:
+                self.nw_hal_handles.append(nw_handle)
+            
+        else:
+            cfglogger.error("- Segment %s = %s is missing." %\
+                       (self.GID(), haldefs.common.ApiStatus.Name(get_resp_spec.api_status)))
+            self.id = None
+        return
+
+    def Get(self):
+        halapi.GetSegments([self])
     
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
@@ -296,3 +370,8 @@ class SegmentObjectHelper:
 
     def GetBlackholeSegment(self):
         return self.bhseg
+
+
+def GetMatchingObjects(selectors):
+    segments =  Store.objects.GetAllByClass(SegmentObject)
+    return [seg for seg in segments if seg.IsFilterMatch(selectors.segment)]

@@ -1,0 +1,33 @@
+# Test Spec
+selectors:
+    root             : ref://store/templates/id=ENDPOINT
+    tenant           : filter://any
+    network          : filter://any
+    segment          : filter://any
+    endpoint         : filter://any
+    security_profile : filter://any
+    enic             : filter://any
+    lif              : filter://any
+    uplink           : filter://any
+    uplinkpc         : filter://any
+    session         :
+        base        : filter://any
+        iflow       : filter://any
+        rflow       : filter://any
+
+
+trigger:
+    configs:
+    #  - object: ref://testcase/config/flow
+    #    method: Update
+    #    fields:
+    #        proto: UDP
+    #        f1: a1        
+    #        f2: a2       
+    #        f3: a3        
+
+expect:
+    configs:
+      - object: ref://testcase/config/root
+        method: Get
+        match: exact

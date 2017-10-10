@@ -92,9 +92,10 @@ message NetworkGetRequestMsg {
 
 // NetworkGetResponse captures all the information about a network
 message NetworkGetResponse {
-  NetworkSpec      spec     = 1;    // network specification/configuration
-  NetworkStatus    status   = 2;    // network status
-  NetworkStats     stats    = 3;    // network statistics
+  types.ApiStatus  api_status = 1;    // API status code
+  NetworkSpec      spec       = 2;    // network specification/configuration
+  NetworkStatus    status     = 3;    // network status
+  NetworkStats     stats      = 4;    // network statistics
 }
 
 // NetworkGetResponseMsg is response to NetworkGetRequestMsg

@@ -15,6 +15,8 @@ using hal::pd::pd_if_args_t;
 
 namespace hal {
 
+static hal_ret_t uplinkpc_add_l2segment (if_t *uppc, l2seg_t *seg);
+
 void *
 if_id_get_key_func (void *entry)
 {
@@ -415,6 +417,14 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
         }
+        dllist_for_each_safe(curr, next, &hal_if->l2seg_list_head) {
+            entry = dllist_entry(curr, hal_handle_id_list_entry_t,
+                        dllist_ctxt);
+            // Remove from list
+            utils::dllist_del(&entry->dllist_ctxt);
+            // Free the entry
+            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+        }
     }
 
     // remove the object
@@ -577,7 +587,8 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     utils::dllist_reset(&cfg_ctxt.dhl);
     utils::dllist_reset(&dhl_entry.dllist_ctxt);
     utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_add_obj(hal_if->hal_handle, &cfg_ctxt, 
+    ret = HAL_RET_OK;
+    ret = hal_handle_add_obj(hal_if->hal_handle, &cfg_ctxt,
                              if_create_add_cb,
                              if_create_commit_cb,
                              if_create_abort_cb, 
@@ -620,7 +631,9 @@ validate_if_update (InterfaceSpec& spec, InterfaceResponse*rsp)
 hal_ret_t
 if_make_clone (if_t *hal_if, if_t **if_clone)
 {
+
     *if_clone = if_alloc_init();
+
     memcpy(*if_clone, hal_if, sizeof(if_t));
 
     pd::pd_if_make_clone(hal_if, *if_clone);
@@ -715,8 +728,10 @@ uplink_pc_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
                                    if_update_app_ctxt_t *app_ctxt,
                                    bool *has_changed)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    l2seg_id_t          new_seg_id = 0;
+    hal_ret_t   ret = HAL_RET_OK;
+    l2seg_id_t  new_seg_id = 0;
+    uint64_t    l2seg_id = 0;
+    l2seg_t     *l2seg = NULL;
 
     HAL_TRACE_DEBUG("pi-uplinkpc:{}: update for if_id:{}", __FUNCTION__, 
                     spec.key_or_handle().interface_id());
@@ -753,6 +768,17 @@ uplink_pc_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
     }
     if (app_ctxt->mbrlist_change) {
         *has_changed = true;
+    }
+    /*
+     *TODO: We should ignore the ones which are already added.
+     */
+    utils::dllist_reset(&hal_if->l2seg_list_head);
+    for (int i = 0; i < spec.if_uplink_pc_info().l2segment_id_size(); i++) {
+        l2seg_id = spec.if_uplink_pc_info().l2segment_id(i);
+        l2seg = find_l2seg_by_id(l2seg_id);
+        HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_INVALID_ARG);
+        uplinkpc_add_l2segment(hal_if, l2seg);
+        app_ctxt->l2segids_change = true;
     }
 
 end:
@@ -893,6 +919,9 @@ if_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *intf = NULL, *intf_clone;
     if_update_app_ctxt_t        *app_ctxt = NULL;
+    if_t                        *mbr_if = NULL;
+    l2seg_t                     *l2seg = NULL;
+
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-if{}:invalid cfg_ctxt", __FUNCTION__);
@@ -907,6 +936,28 @@ if_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     intf = (if_t *)dhl_entry->obj;
     intf_clone = (if_t *)dhl_entry->cloned_obj;
 
+    if (intf->if_type == intf::IF_TYPE_UPLINK_PC) {
+        dllist_ctxt_t *curr = intf->mbr_if_list_head.next;
+        hal_handle_id_list_entry_t *entry;
+        utils::dllist_reset(&intf_clone->mbr_if_list_head);
+        dllist_for_each(curr, &(intf->mbr_if_list_head)) {
+            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+            mbr_if = find_if_by_handle(entry->handle_id);
+            if (mbr_if != NULL) {
+                uplinkpc_add_uplinkif(intf_clone, mbr_if);
+            }
+        }
+
+        // Walk through l2segments.
+        utils::dllist_reset(&intf_clone->l2seg_list_head);
+        dllist_for_each(curr, &(intf->l2seg_list_head)) {
+            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+            l2seg = find_l2seg_by_handle(entry->handle_id);
+            if (l2seg != NULL) {
+                uplinkpc_add_l2segment(intf_clone, l2seg);
+            }
+        }
+    }
     HAL_TRACE_DEBUG("pi-if:{}:update commit CB {}",
                     __FUNCTION__, intf->if_id);
     printf("Original: %p, Clone: %p\n", intf, intf_clone);
@@ -1094,6 +1145,7 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
     spec->mutable_key_or_handle()->set_interface_id(hal_if->if_id);
     spec->set_type(hal_if->if_type);
     spec->set_admin_status(hal_if->if_admin_status);
+    spec->mutable_meta()->set_tenant_id(hal_if->tid);
     switch (hal_if->if_type) {
     case intf::IF_TYPE_ENIC:
     {
@@ -1110,7 +1162,8 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
     case intf::IF_TYPE_UPLINK:
     {
         auto uplink_if_info = spec->mutable_if_uplink_info();
-        uplink_if_info->set_port_num(hal_if->uplink_port_num);
+        //Port number is 0 based.
+        uplink_if_info->set_port_num(hal_if->uplink_port_num + 1);
         uplink_if_info->set_native_l2segment_id(hal_if->native_l2seg);
         // TODO: is this populated today ?
         //uplink_if_info->set_l2segment_id();
@@ -1124,12 +1177,23 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
         auto uplink_pc_info = spec->mutable_if_uplink_pc_info();
         uplink_pc_info->set_uplink_pc_num(hal_if->uplink_pc_num);
         uplink_pc_info->set_native_l2segment_id(hal_if->native_l2seg);
-        // TODO: is this populated today ???
-        //uplink_pc_info->set_l2segment_id();
-        // TODO: don't see this info populated in if_t today !!!
-        //uplink_pc_info->set_rx_traffic_class_info();
-        // TODO: not available in if_t today !!!
-        //uplink_pc_info->set_member_if_handle();
+        dllist_ctxt_t *curr, *next;
+        hal_handle_id_list_entry_t *entry;
+        dllist_for_each_safe(curr, next, &hal_if->mbr_if_list_head) {
+            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+            HAL_TRACE_ERR("pi-uplinkpc:{}:READ ..unable to add non-uplinkif. "
+                          "Skipping if id: {}", __FUNCTION__, entry->handle_id);
+            uplink_pc_info->add_member_if_handle(entry->handle_id);
+        }
+        dllist_for_each_safe(curr, next, &hal_if->l2seg_list_head) {
+            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+            HAL_TRACE_ERR("pi-uplinkpc:{}:READ ..unable to add segment id "
+                          "Skipping segment ID: {}", __FUNCTION__, entry->handle_id);
+            l2seg_t *l2seg = find_l2seg_by_handle(entry->handle_id);
+            if (l2seg != NULL) {
+                uplink_pc_info->add_l2segment_id(l2seg->seg_id);
+            }
+        }
     }
         break;
 
@@ -1520,6 +1584,40 @@ uplink_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// Adds l2segments into uplinkpc's member list
+//-----------------------------------------------------------------------------
+static hal_ret_t
+uplinkpc_add_l2segment (if_t *uppc, l2seg_t *seg)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    hal_handle_id_list_entry_t  *entry = NULL;
+
+    if (uppc == NULL || seg == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    // Allocate the entry
+    entry = (hal_handle_id_list_entry_t *)g_hal_state->
+        hal_handle_id_list_entry_slab()->alloc();
+    if (entry == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+    entry->handle_id = seg->hal_handle;
+
+    if_lock(uppc);      // lock
+    // Insert into the list
+    utils::dllist_add(&uppc->l2seg_list_head, &entry->dllist_ctxt);
+    if_unlock(uppc);      // unlock
+
+end:
+    HAL_TRACE_DEBUG("pi-uplinkpc:{}:add Segment ID :{} to uplinkpc_id:{}, ret:{}",
+                    __FUNCTION__, seg->seg_id, uppc->if_id, ret);
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // Uplink PC If Create 
 //------------------------------------------------------------------------------
@@ -1529,7 +1627,9 @@ uplink_pc_create (InterfaceSpec& spec, InterfaceResponse *rsp,
 {
     hal_ret_t    ret = HAL_RET_OK;
     uint64_t     mbr_if_handle = 0;
+    uint64_t     l2seg_id = 0;
     if_t         *mbr_if = NULL;
+    l2seg_t      *l2seg = NULL;
 
     HAL_TRACE_DEBUG("pi-uplinkpc:{}:uplinkpc create for id {}", __FUNCTION__, 
                     spec.key_or_handle().interface_id());
@@ -1551,8 +1651,16 @@ uplink_pc_create (InterfaceSpec& spec, InterfaceResponse *rsp,
                           "Skipping if id: {}", __FUNCTION__, mbr_if->if_id);
             continue;
         }
-
         uplinkpc_add_uplinkif(hal_if, mbr_if);
+    }
+
+    // Walk through l2segments.
+    utils::dllist_reset(&hal_if->l2seg_list_head);
+    for (int i = 0; i < spec.if_uplink_pc_info().l2segment_id_size(); i++) {
+        l2seg_id = spec.if_uplink_pc_info().l2segment_id(i);
+        l2seg = find_l2seg_by_id(l2seg_id);
+        HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_INVALID_ARG);
+        uplinkpc_add_l2segment(hal_if, l2seg);
     }
 
     return ret;

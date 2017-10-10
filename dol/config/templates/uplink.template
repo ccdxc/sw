@@ -1,6 +1,8 @@
 # Uplink Config Object Template
 meta:
-    id: UPLINK
+    id      : UPLINK
+    package : config.objects
+    module  : uplink
 
 id      : None  # Name of the object
 port    : None  # Port Number of the object

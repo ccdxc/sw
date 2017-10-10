@@ -16,6 +16,7 @@ from config.objects.session import SessionHelper
 from config.objects.rdma.session import RdmaSessionHelper
 from infra.common.logging   import logger
 from infra.common.glopts    import GlobalOptions
+from config.store import Store  as ConfigStore
 
 ModuleIdAllocator = objects.TemplateFieldObject("range/1/8192")
 TestCaseIdAllocator = objects.TemplateFieldObject("range/1/65535")
@@ -82,10 +83,16 @@ class Module(objects.FrameworkObject):
 
     def __select_config(self):
         utils.LogFunctionBegin(self.logger)
-        if self.testspec.selectors.IsRdmaSessionBased():
-            objs = RdmaSessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
+        if hasattr(self.testspec.selectors, "root"):
+            obj = self.testspec.selectors.root.Get(ConfigStore)
+            module_hdl = loader.ImportModule(obj.meta.package, obj.meta.module)
+            assert(module_hdl)
+            objs = module_hdl.GetMatchingObjects(self.testspec.selectors)
         else:
-            objs = SessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
+            if self.testspec.selectors.IsRdmaSessionBased():
+                objs = RdmaSessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
+            else:
+                objs = SessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
         self.testspec.selectors.roots = objs
         self.logger.info("- Selected %d Matching Objects" % len(objs))
         utils.LogFunctionEnd(self.logger)

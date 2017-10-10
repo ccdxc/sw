@@ -1,6 +1,8 @@
 # Config Session Object Template
 meta:
-    id: SESSION
+    id      : SESSION
+    package : config.objects
+    module  : session
     grpc:
         package         : session # session_pb2 and session_pb2_grpc
         service         : Session # SessionStub

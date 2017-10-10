@@ -266,6 +266,7 @@ typedef struct session_state_s {
 } __PACK__ session_state_t;
 
 typedef struct session_cfg_s {
+    uint8_t             tcp_ts_option:1;
     session_id_t        session_id;               // unique session id
     uint16_t            conn_track_en:1;          // enable connection tracking
 } __PACK__ session_cfg_t;
@@ -366,6 +367,20 @@ struct app_session_s {
 // max. number of session supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_SESSIONS                             524288
 #define HAL_MAX_FLOWS                                (HAL_MAX_SESSIONS << 1)
+
+
+static inline session_t *
+find_session_by_handle (hal_handle_t handle)
+{
+    return (session_t *)g_hal_state->session_hal_handle_ht()->lookup(&handle);
+}
+
+static inline session_t *
+find_session_by_id (session_id_t session_id)
+{
+    return (session_t *)g_hal_state->session_id_ht()->lookup(&session_id);
+}
+
 
 extern void *session_get_key_func(void *entry);
 extern uint32_t session_compute_hash_func(void *key, uint32_t ht_size);

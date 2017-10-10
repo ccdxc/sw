@@ -67,6 +67,9 @@ qos_extract_action_from_spec (qos_action_t *qos_action,
                               const qos::QOSActions& spec,
                               qos_direction_e direction);
 
+hal_ret_t
+qos_action_to_qos_action_spec (const qos_action_t *qos_action,
+                                 qos::QOSActions *spec);
 
 typedef uint32_t buf_pool_id_t;
 

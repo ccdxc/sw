@@ -30,11 +30,13 @@ class EndpointObject(base.ConfigObjectBase):
         return
 
     def Init(self, segment, backend):
-        self.segment    = segment
-        self.local      = True
-        self.tenant     = segment.tenant
-        self.segment    = segment
-        self.remote     = False
+        self.segment            = segment
+        self.local              = True
+        self.tenant             = segment.tenant
+        self.segment            = segment
+        self.remote             = False
+        self.segment_hal_handle = segment.hal_handle
+        self.tenant_id          = segment.tenant.id
 
         self.is_l4lb_backend = backend
         self.is_l4lb_service = False
@@ -116,6 +118,29 @@ class EndpointObject(base.ConfigObjectBase):
     def GetRxQosDscp(self):
         return self.intf.GetRxQosDscp()
     
+    def __copy__(self):
+        endpoint = EndpointObject()
+        endpoint.id = self.id
+        endpoint.hal_handle = self.hal_handle
+        endpoint.tenant_id = self.tenant_id
+        endpoint.segment_hal_handle = self.segment_hal_handle
+        endpoint.intf_hal_handle = self.intf_hal_handle
+        endpoint.macaddr = self.macaddr
+        endpoint.ipaddrs = self.ipaddrs[:]
+        endpoint.ipv6addrs = self.ipv6addrs[:]
+        return endpoint
+    
+    def Equals(self, other, lgh):
+        if not isinstance(other, self.__class__):
+            return False
+
+        fields = ["tenant_id", "hal_handle", "segment_hal_handle", "intf_hal_handle",
+                  "macaddr", "ipaddrs", "ipv6addrs"]
+        if not self.CompareObjectFields(other, fields, lgh):
+            return False
+            
+        return True
+        
     def Show(self):
         cfglogger.info("- Endpoint = %s(%d)" % (self.GID(), self.id))
         cfglogger.info("  - IsBackend = %s" % self.IsL4LbBackend())
@@ -141,6 +166,9 @@ class EndpointObject(base.ConfigObjectBase):
         req_spec.l2_segment_handle  = self.segment.hal_handle
         req_spec.interface_handle   = self.intf.hal_handle
         req_spec.mac_address        = self.macaddr.getnum()
+        #Interface should be created by now.
+        self.segment_hal_handle     = self.segment.hal_handle
+        self.intf_hal_handle        = self.intf.hal_handle
 
         for ipaddr in self.ipaddrs:
             ip = req_spec.ip_address.add()
@@ -160,6 +188,28 @@ class EndpointObject(base.ConfigObjectBase):
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),
                         self.hal_handle))
         return
+
+    def PrepareHALGetRequestSpec(self, get_req_spec):
+        get_req_spec.meta.tenant_id = self.tenant.id
+        get_req_spec.key_or_handle.endpoint_handle = self.hal_handle
+        return
+
+    def ProcessHALGetResponse(self, get_req_spec, get_resp):
+        self.tenant_id = get_resp.spec.meta.tenant_id
+        self.segment_hal_handle = get_resp.spec.l2_segment_handle
+        self.intf_hal_handle = get_resp.spec.interface_handle
+        self.macaddr = objects.MacAddressBase(integer=get_resp.spec.mac_address)
+       
+        self.ipaddrs = []
+        self.ipv6addrs = []
+        for ipaddr in get_resp.spec.ip_address:
+            if ipaddr.ip_af == haldefs.common.IP_AF_INET:
+                self.ipaddrs.append(objects.IpAddress(integer=ipaddr.v4_addr))
+            else:
+                self.ipv6addrs.append(objects.Ipv6Address(integer=ipaddr.v6_addr))
+
+    def Get(self):
+        halapi.GetEndpoints([self])
 
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
@@ -349,3 +399,7 @@ class EndpointObjectHelper:
                 self.__create_pds(pd_spec)
 
         return
+    
+def GetMatchingObjects(selectors):
+    endpoints =  Store.objects.GetAllByClass(EndpointObject)
+    return [ep for ep in endpoints if ep.IsFilterMatch(selectors.endpoint)]

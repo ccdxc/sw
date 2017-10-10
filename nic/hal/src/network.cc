@@ -369,6 +369,9 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
 
     // fill config spec of this tenant
     response->mutable_spec()->mutable_meta()->set_tenant_id(nw->nw_key.tenant_id);
+    response->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
+
+    response->set_api_status(types::API_STATUS_OK);
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

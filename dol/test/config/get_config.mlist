@@ -1,0 +1,37 @@
+# This file contains the list of DOL test modules.
+feature:
+    id      : config
+    sub     : config
+    package : test.config
+    module  : config
+    enable  : True
+    ignore  : False
+
+modules:
+    - module:
+        name    : CONFIG_GET
+        spec    : get_config.testspec
+        iterate :
+            - root              : ref://store/templates/id=TENANT
+              tenant            : filter://any
+            - root              : ref://store/templates/id=LIF
+              network           : filter://any
+            - root              : ref://store/templates/id=UPLINKPC
+              network           : filter://any
+            - root              : ref://store/templates/id=UPLINK
+              network           : filter://any
+            - root              : ref://store/templates/id=NETWORK
+              network           : filter://any
+            - root              : ref://store/templates/id=SEGMENT
+              segment           : filter://any
+            - root              : ref://store/templates/id=ENDPOINT
+              endpoint          : filter://any
+            - root              : ref://store/templates/id=SECURITY_PROFILE
+              security_profile  : filter://any
+            - root              : ref://store/templates/id=ENIC
+              enic              : filter://any
+            - root              : ref://store/templates/id=SESSION
+              session:
+                base         : filter://any
+                iflow        : filter://any
+                rflow        : filter://any

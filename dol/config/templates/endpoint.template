@@ -1,5 +1,7 @@
 # Tenant Object Template File.
 meta:
-    id: ENDPOINT
+    id      : ENDPOINT
+    package : config.objects
+    module  : endpoint
 
 macaddr: None

@@ -140,6 +140,18 @@ class VerifEngineObject:
                 return status
         return defs.status.SUCCESS
 
+    def __verify_configs(self, step, lgh):
+        for config in step.expect.configs:
+            method = getattr(config.actual_object, config.method)
+            if not method:
+                assert 0
+                
+            method()
+            if not config.original_object.Equals(config.actual_object, lgh):
+                lgh.error("Config object compare result = MisMatch")
+                return defs.status.ERROR
+        return defs.status.SUCCESS
+
     def __receive_packets(self, pcr, step, lgh):
         mpkts = ModelConnector.Receive()
         for mpkt in mpkts:
@@ -184,6 +196,13 @@ class VerifEngineObject:
 
         dstatus = self.__verify_descriptors(step, lgh)
         if dstatus == defs.status.ERROR:
+            verify_pass = False
+
+        if verify_pass == False:
+            return defs.status.ERROR
+
+        cstatus = self.__verify_configs(step, lgh)
+        if cstatus == defs.status.ERROR:
             verify_pass = False
 
         if verify_pass == False:

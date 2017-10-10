@@ -41,6 +41,24 @@ class SecurityProfileObject(base.ConfigObjectBase):
         halapi.ConfigureSecurityProfiles([ self ], update = True)
         return
 
+    def __copy__(self):
+        sc_profile = SecurityProfileObject()
+        sc_profile.id = self.id
+        sc_profile.fields = copy.copy(self.fields)
+        return sc_profile
+
+    def Equals(self, other, lgh):
+        if not isinstance(other, self.__class__):
+            return False
+        fields = ["id"]
+        if not self.CompareObjectFields(other, fields, lgh):
+            return False
+        fields = self.fields.__dict__        
+        if not utils.CompareObjectFields(self.fields, other.fields, fields, lgh):
+            return False
+        return True
+
+
     def Show(self):
         cfglogger.info("- Security Profile  : %s (id: %d)" %\
                        (self.GID(), self.id))
@@ -49,6 +67,9 @@ class SecurityProfileObject(base.ConfigObjectBase):
     def __getEnumValue(self, val):
         valstr = "NORM_ACTION_" + val
         return haldefs.nwsec.NormalizationAction.Value(valstr)
+
+    def __getStringValue(self, val):
+        return haldefs.nwsec.NormalizationAction.Name(val).split("_")[-1]
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.profile_id = self.id
@@ -99,6 +120,56 @@ class SecurityProfileObject(base.ConfigObjectBase):
                         self.hal_handle))
         return
 
+    def PrepareHALGetRequestSpec(self, get_req_spec):
+        get_req_spec.key_or_handle.profile_id = self.id
+        return
+
+    def ProcessHALGetResponse(self, get_req_spec, get_resp):
+        if get_resp.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):
+            self.id = get_resp.spec.key_or_handle.profile_id
+            self.fields.cnxn_tracking_en = get_resp.spec.cnxn_tracking_en
+            self.fields.ipsg_en = get_resp.spec.ipsg_en
+            self.fields.tcp_rtt_estimate_en = get_resp.spec.tcp_rtt_estimate_en
+            self.fields.session_idle_timeout = get_resp.spec.session_idle_timeout
+            self.fields.tcp_cnxn_setup_timeout = get_resp.spec.tcp_cnxn_setup_timeout
+            self.fields.tcp_close_timeout = get_resp.spec.tcp_close_timeout
+            self.fields.tcp_close_wait_timeout = get_resp.spec.tcp_close_wait_timeout
+            self.fields.ip_normalization_en = get_resp.spec.ip_normalization_en
+            self.fields.tcp_normalization_en = get_resp.spec.tcp_normalization_en
+            self.fields.icmp_normalization_en = get_resp.spec.icmp_normalization_en
+            self.fields.ip_ttl_change_detect_en = get_resp.spec.ip_ttl_change_detect_en
+            self.fields.ip_rsvd_flags_action = self.__getStringValue(get_resp.spec.ip_rsvd_flags_action)
+            self.fields.ip_df_action = self.__getStringValue(get_resp.spec.ip_df_action)
+            self.fields.ip_options_action = self.__getStringValue(get_resp.spec.ip_options_action)
+            self.fields.ip_invalid_len_action = self.__getStringValue(get_resp.spec.ip_invalid_len_action)
+            self.fields.ip_normalize_ttl = get_resp.spec.ip_normalize_ttl
+            self.fields.icmp_invalid_code_action = self.__getStringValue(get_resp.spec.icmp_invalid_code_action)
+            self.fields.icmp_deprecated_msgs_drop = get_resp.spec.icmp_deprecated_msgs_drop
+            self.fields.icmp_redirect_msg_drop = get_resp.spec.icmp_redirect_msg_drop
+            self.fields.tcp_non_syn_first_pkt_drop = get_resp.spec.tcp_non_syn_first_pkt_drop
+            self.fields.tcp_syncookie_en = get_resp.spec.tcp_syncookie_en
+            self.fields.tcp_split_handshake_detect_en = get_resp.spec.tcp_split_handshake_detect_en
+            self.fields.tcp_split_handshake_drop = get_resp.spec.tcp_split_handshake_drop
+            self.fields.tcp_rsvd_flags_action = self.__getStringValue(get_resp.spec.tcp_rsvd_flags_action)
+            self.fields.tcp_unexpected_mss_action = self.__getStringValue(get_resp.spec.tcp_unexpected_mss_action)
+            self.fields.tcp_unexpected_win_scale_action = self.__getStringValue(get_resp.spec.tcp_unexpected_win_scale_action)
+            self.fields.tcp_urg_ptr_not_set_action = self.__getStringValue(get_resp.spec.tcp_urg_ptr_not_set_action)
+            self.fields.tcp_urg_flag_not_set_action = self.__getStringValue(get_resp.spec.tcp_urg_flag_not_set_action)
+            self.fields.tcp_urg_payload_missing_action = self.__getStringValue(get_resp.spec.tcp_urg_payload_missing_action)
+            self.fields.tcp_rst_with_data_action = self.__getStringValue(get_resp.spec.tcp_rst_with_data_action)
+            self.fields.tcp_data_len_gt_mss_action = self.__getStringValue(get_resp.spec.tcp_data_len_gt_mss_action)
+            self.fields.tcp_data_len_gt_win_size_action = self.__getStringValue(get_resp.spec.tcp_data_len_gt_win_size_action)
+            self.fields.tcp_unexpected_ts_option_action = self.__getStringValue(get_resp.spec.tcp_unexpected_ts_option_action)
+            self.fields.tcp_unexpected_echo_ts_action = self.__getStringValue(get_resp.spec.tcp_unexpected_echo_ts_action)
+            self.fields.tcp_ts_not_present_drop = get_resp.spec.tcp_ts_not_present_drop
+            self.fields.tcp_invalid_flags_drop = get_resp.spec.tcp_invalid_flags_drop
+            self.fields.tcp_nonsyn_noack_drop = get_resp.spec.tcp_nonsyn_noack_drop
+
+        return
+
+    def Get(self):
+        halapi.GetSecurityProfiles([self])
+
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
@@ -132,3 +203,7 @@ class SecurityProfileObjectHelper:
         return
 
 SecurityProfileHelper = SecurityProfileObjectHelper()
+
+def GetMatchingObjects(selectors):
+    sps =  Store.objects.GetAllByClass(SecurityProfileObject)
+    return [sp for sp in sps if sp.IsFilterMatch(selectors.security_profile)]

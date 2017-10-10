@@ -806,6 +806,22 @@ policer_update (PolicerSpec& spec,
 
 
 hal_ret_t
+qos_action_to_qos_action_spec (const qos_action_t *qos_action,
+                               qos::QOSActions *spec)
+{
+    spec->mutable_queue_key_or_handle()->mutable_queue_handle()->set_handle(qos_action->queue_handle);
+    spec->mutable_policer_key_or_handle()->mutable_policer_handle()->set_handle(qos_action->policer_handle);
+
+    qos::MarkingActionSpec *marking_spec = spec->mutable_marking_spec();
+    marking_spec->set_pcp_rewrite_en(qos_action->marking_action.pcp_rewrite_en);
+    marking_spec->set_pcp(qos_action->marking_action.pcp);
+    marking_spec->set_dscp_rewrite_en(qos_action->marking_action.dscp_rewrite_en);
+    marking_spec->set_dscp(qos_action->marking_action.dscp);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 qos_extract_action_from_spec (qos_action_t *qos_action,
                               const qos::QOSActions& spec,
                               qos_direction_e direction)

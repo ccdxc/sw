@@ -29,6 +29,7 @@ class UplinkObject(base.ConfigObjectBase):
         self.mode   = spec.mode
         self.ports  = [ spec.port ]
         self.native_segment = None
+        self.native_segment_id = 0
         self.__init_qos()
         return
 
@@ -50,7 +51,32 @@ class UplinkObject(base.ConfigObjectBase):
 
     def GetRxQosDscp(self):
         return self.rxqos.dscp
+    
+    def __copy__(self):
+        uplink = UplinkObject()
+        uplink.id = self.id
+        uplink.port = self.port
+        uplink.type = self.type
+        uplink.status = self.status
+        uplink.ports = self.ports
+        uplink.native_segment = self.native_segment
+        uplink.native_segment_id = self.native_segment_id
+        uplink.mode = self.mode
+        uplink.sriov = self.sriov
+        return uplink
 
+
+    def Equals(self, other, lgh):
+        if not isinstance(other, self.__class__):
+            return False
+        fields = ["id", "port", "type", "status", "ports", "native_segment",
+                  "native_segment_id", "mode", "sriov"]
+        
+        if not self.CompareObjectFields(other, fields, lgh):
+            return False
+        
+        return True
+    
     def Show(self):
         cfglogger.info("Creating Uplink = %s Port=%d" %\
                        (self.GID(), self.port))
@@ -75,6 +101,7 @@ class UplinkObject(base.ConfigObjectBase):
         cfglogger.info("Adding Segment:%s as native segment on Uplink:%s" %\
                        (seg.GID(), self.GID()))
         self.native_segment = seg
+        self.native_segment_id = seg.id
         return
 
     def PrepareHALRequestSpec(self, req_spec):
@@ -104,6 +131,29 @@ class UplinkObject(base.ConfigObjectBase):
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),\
                         self.hal_handle))
         return
+
+    def PrepareHALGetRequestSpec(self, get_req_spec):
+        get_req_spec.key_or_handle.if_handle = self.hal_handle
+        return
+
+    def ProcessHALGetResponse(self, get_req_spec, get_resp):
+        if get_resp.spec.key_or_handle.HasField("interface_id"):
+            self.id = get_resp.spec.key_or_handle.interface_id
+        else:
+            self.hal_handle = get_resp.spec.key_or_handle.if_handle
+            
+        if get_resp.spec.type == haldefs.interface.IF_TYPE_UPLINK:
+            self.status = get_resp.spec.admin_status
+            self.port = get_resp.spec.if_uplink_info.port_num
+            self.native_segment_id = get_resp.spec.if_uplink_info.native_l2segment_id
+        else:
+            self.status = None
+            self.port = 0
+            self.native_segment_id = 0
+        
+    def Get(self):
+        halapi.GetInterfaces([self])
+            
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
@@ -161,3 +211,7 @@ class UplinkObjectHelper:
         return self.trunks
 
 UplinkHelper = UplinkObjectHelper()
+
+def GetMatchingObjects(selectors):
+    uplinks =  Store.objects.GetAllByClass(UplinkObject)
+    return [uplink for uplink in uplinks if uplink.IsFilterMatch(selectors.uplink)]

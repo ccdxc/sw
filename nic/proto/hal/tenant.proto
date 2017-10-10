@@ -104,5 +104,6 @@ message TenantGetResponse {
 
 // TenantGetResponseMsg is batched response to TenantGetRequestMsg
 message TenantGetResponseMsg {
-  repeated TenantGetResponse    response = 1;    // batch get response
+  types.ApiStatus               api_status = 1;    // API status code
+  repeated TenantGetResponse    response   = 2;    // batch get response
 }

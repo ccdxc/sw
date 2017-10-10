@@ -35,7 +35,7 @@ typedef struct eth_dot1q_hdr_ {
 #define MAC_TO_UINT64(mac_addr)                                           \
             ((mac_addr[5] & 0xFF)                                       | \
              ((mac_addr[4] & 0xFF) << 8) | ((mac_addr[3] & 0xFF) << 16) | \
-             ((mac_addr[2] & 0xFF) << 24)                               | \
+             (((uint64_t)(mac_addr[2]) & 0xFF) << 24)                   | \
              ((uint64_t)(mac_addr[1] & 0xFF) << 32ul)                   | \
              ((uint64_t)(mac_addr[0] & 0xFF) << 40ul))
 

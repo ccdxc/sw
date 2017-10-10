@@ -5,9 +5,7 @@ def Setup(infra, module):
 
     if iterelem:
         if 'root' in iterelem.__dict__:
-            #Alterative would be to do Get on root by passing ConfigStore
-            #However this is testspec, not a good idea to import.
-            module.testspec.selectors.root.re_init(iterelem.root)
+            module.testspec.selectors.root = iterelem.root
 
         if 'tenant' in iterelem.__dict__:
             module.testspec.selectors.tenant.Extend(iterelem.tenant)
@@ -44,24 +42,17 @@ def Setup(infra, module):
     if module.args == None:
         return
 
-    if 'maxflows' in module.args.__dict__:
-        module.testspec.selectors.maxflows = module.args.maxflows
-
     return
 
 def Teardown(infra, module):
-    print("Teardown(): Sample Implementation.")
     return
 
 def TestCaseSetup(tc):
-    print("TestCaseSetup(): Sample Implementation.")
     return
 
 def TestCaseVerify(tc):
-    print("TestCaseVerify(): Sample Implementation.")
     return True
 
 def TestCaseTeardown(tc):
-    print("TestCaseTeardown(): Sample Implementation.")
     return
 
