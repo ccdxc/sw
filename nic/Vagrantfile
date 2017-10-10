@@ -76,6 +76,8 @@ yum install -y python36u-devel python-pip python-devel python-yaml
 yum install -y Judy-devel cmake git git gcc-c++ gcc-c++ wget autoconf automake libtool libtool make g++
 yum install -y unzip pkg-config graphviz flex gmp-devel mpfr-devel mpc-devel libmpc-devel bzip2 which
 yum install -y python-setuptools python-enum34 swig openssl-devel libpcap-devel
+yum install cscope 
+yum install ctags
 
 # install golang
 ln -s /usr/share/pkgconfig /usr/lib/pkgconfig
@@ -159,7 +161,7 @@ make install
 
 # untar sknobs.tar.gz
 cd /
-tar xzf sknobs.tar.gz
+tar xzf /home/vagrant/sknobs.tar.gz
 
 # cleanup /tmp/ now
 cd /tmp
@@ -213,5 +215,5 @@ def get_files_into_server(node)
   node.vm.provision "file", source: "~/.vim", destination: ".vim"
   node.vm.provision "file", source: "~/.vim_go_runtime", destination: ".vim_go_runtime"
   node.vm.provision "file", source: "~/.gdbinit", destination: ".gdbinit"
-  node.vm.provision "file", source: "~/sknobs.tar.gz", destination: "/"
+  node.vm.provision "file", source: "~/sknobs.tar.gz", destination: "sknobs.tar.gz"
 end

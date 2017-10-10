@@ -65,7 +65,7 @@ nwsec_lookup_key_or_handle (const SecurityProfileKeyHandle& kh)
 }
 
 //------------------------------------------------------------------------------
-// insert a nwsecment to HAL config db
+// insert a nwsec to HAL config db
 //------------------------------------------------------------------------------
 static inline hal_ret_t
 nwsec_add_to_db (nwsec_profile_t *nwsec, hal_handle_t handle)
@@ -1397,7 +1397,48 @@ security_group_get(nwsec::SecurityGroupGetRequest& spec,
     HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,
                     spec.key_or_handle().security_group_id());
     return HAL_RET_OK;
-}    
+}
+
+// Security Policy ep_info get
+// ToDo: Check should we use sg_handle to get nwsec_policy_cfg instead of sg_id??
+dllist_ctxt_t *
+get_ep_list_for_security_group(uint32_t sg_id)
+{
+    nwsec_policy_cfg_t     *nwsec_policy_cfg = NULL;
+
+    nwsec_policy_cfg = nwsec_policy_cfg_lookup_by_key(sg_id);
+    if (nwsec_policy_cfg == NULL) {
+        HAL_TRACE_DEBUG("seg_id {} not found", sg_id);
+        return NULL;
+    }
+    return &nwsec_policy_cfg->ep_list_head;
+}
+
+//Security Policy ep_info add
+hal_ret_t
+add_ep_to_security_group(uint32_t sg_id, hal_handle_t ep_handle)
+{
+    nwsec_policy_cfg_t     *nwsec_policy_cfg = NULL;
+    nwsec_policy_ep_info_t *nwsec_policy_ep_info = NULL;
+    nwsec_policy_cfg = nwsec_policy_cfg_lookup_by_key(sg_id);
+    if (nwsec_policy_cfg == NULL) {
+        HAL_TRACE_DEBUG("seg_id {} not found");
+        return HAL_RET_SG_NOT_FOUND;
+    }
+
+    nwsec_policy_ep_info = nwsec_policy_ep_info_alloc_and_init();
+    if (nwsec_policy_ep_info == NULL) {
+        HAL_TRACE_DEBUG("Unable to alloc and store ep_info for ep_handle:{}",
+                        ep_handle);
+        return HAL_RET_OOM;
+    }
+
+    HAL_SPINLOCK_LOCK(&nwsec_policy_cfg->slock);
+    dllist_add(&nwsec_policy_cfg->ep_list_head, &nwsec_policy_ep_info->lentry);
+    HAL_SPINLOCK_UNLOCK(&nwsec_policy_cfg->slock);
+
+    return HAL_RET_OK;
+}
 
 
 }    // namespace hal

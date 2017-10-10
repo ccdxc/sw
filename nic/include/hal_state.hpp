@@ -384,6 +384,7 @@ public:
     slab *nwsec_policy_rules_slab(void) const { return nwsec_policy_slab_; }
     slab *nwsec_policy_cfg_slab(void) const { return nwsec_policy_cfg_slab_; }
     slab *nwsec_policy_svc_slab(void) const { return nwsec_policy_svc_slab_; }
+    slab *nwsec_policy_ep_info_slab(void) const { return nwsec_policy_ep_info_slab_;}
     slab *dos_policy_slab(void) const { return dos_policy_slab_; }
     slab *l2seg_slab(void) const { return l2seg_slab_; }
     slab *lif_slab(void) const { return lif_slab_; }
@@ -423,6 +424,7 @@ private:
     slab    *nwsec_policy_rules_slab_;
     slab    *nwsec_policy_cfg_slab_;
     slab    *nwsec_policy_svc_slab_;
+    slab    *nwsec_policy_ep_info_slab_;
     slab    *dos_policy_slab_;
     slab    *l2seg_slab_;
     slab    *lif_slab_;
@@ -497,6 +499,7 @@ public:
     slab *nwsec_policy_rules_slab(void) const { return mem_db_->nwsec_policy_rules_slab(); }
     slab *nwsec_policy_cfg_slab(void) const { return mem_db_->nwsec_policy_cfg_slab(); }
     slab *nwsec_policy_svc_slab(void) const { return mem_db_->nwsec_policy_svc_slab(); }
+    slab *nwsec_policy_ep_info_slab(void) const { return mem_db_->nwsec_policy_ep_info_slab(); }
     ht   *nwsec_policy_cfg_ht(void) const { return cfg_db_->nwsec_policy_cfg_ht(); }
 
     // get APIs for dos policy related state
