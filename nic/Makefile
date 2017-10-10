@@ -115,6 +115,9 @@ capmodel:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_client
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_cli
 
+go-proto:
+	make -C agent/netagent/datapath/halproto
+
 bazel-build:
 	make -C p4
 	make -C asm
@@ -125,6 +128,7 @@ bazel-build:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //dol/test/storage:storage_test
 	make capmodel
+	make go-proto
 
 bazel-gtests:
 	# PI gtests

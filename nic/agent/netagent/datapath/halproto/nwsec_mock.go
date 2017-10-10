@@ -127,6 +127,64 @@ func (mr *MockisService_L4InfoMockRecorder) Size() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisService_L4Info)(nil).Size))
 }
 
+// MockisDoSService_L4Info is a mock of isDoSService_L4Info interface
+type MockisDoSService_L4Info struct {
+	ctrl     *gomock.Controller
+	recorder *MockisDoSService_L4InfoMockRecorder
+}
+
+// MockisDoSService_L4InfoMockRecorder is the mock recorder for MockisDoSService_L4Info
+type MockisDoSService_L4InfoMockRecorder struct {
+	mock *MockisDoSService_L4Info
+}
+
+// NewMockisDoSService_L4Info creates a new mock instance
+func NewMockisDoSService_L4Info(ctrl *gomock.Controller) *MockisDoSService_L4Info {
+	mock := &MockisDoSService_L4Info{ctrl: ctrl}
+	mock.recorder = &MockisDoSService_L4InfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisDoSService_L4Info) EXPECT() *MockisDoSService_L4InfoMockRecorder {
+	return m.recorder
+}
+
+// isDoSService_L4Info mocks base method
+func (m *MockisDoSService_L4Info) isDoSService_L4Info() {
+	m.ctrl.Call(m, "isDoSService_L4Info")
+}
+
+// isDoSService_L4Info indicates an expected call of isDoSService_L4Info
+func (mr *MockisDoSService_L4InfoMockRecorder) isDoSService_L4Info() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isDoSService_L4Info", reflect.TypeOf((*MockisDoSService_L4Info)(nil).isDoSService_L4Info))
+}
+
+// MarshalTo mocks base method
+func (m *MockisDoSService_L4Info) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisDoSService_L4InfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisDoSService_L4Info)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisDoSService_L4Info) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisDoSService_L4InfoMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisDoSService_L4Info)(nil).Size))
+}
+
 // MockisSecurityGroupKeyHandle_KeyOrHandle is a mock of isSecurityGroupKeyHandle_KeyOrHandle interface
 type MockisSecurityGroupKeyHandle_KeyOrHandle struct {
 	ctrl     *gomock.Controller
@@ -183,64 +241,6 @@ func (m *MockisSecurityGroupKeyHandle_KeyOrHandle) Size() int {
 // Size indicates an expected call of Size
 func (mr *MockisSecurityGroupKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisSecurityGroupKeyHandle_KeyOrHandle)(nil).Size))
-}
-
-// MockisDoSKeyHandle_KeyOrHandle is a mock of isDoSKeyHandle_KeyOrHandle interface
-type MockisDoSKeyHandle_KeyOrHandle struct {
-	ctrl     *gomock.Controller
-	recorder *MockisDoSKeyHandle_KeyOrHandleMockRecorder
-}
-
-// MockisDoSKeyHandle_KeyOrHandleMockRecorder is the mock recorder for MockisDoSKeyHandle_KeyOrHandle
-type MockisDoSKeyHandle_KeyOrHandleMockRecorder struct {
-	mock *MockisDoSKeyHandle_KeyOrHandle
-}
-
-// NewMockisDoSKeyHandle_KeyOrHandle creates a new mock instance
-func NewMockisDoSKeyHandle_KeyOrHandle(ctrl *gomock.Controller) *MockisDoSKeyHandle_KeyOrHandle {
-	mock := &MockisDoSKeyHandle_KeyOrHandle{ctrl: ctrl}
-	mock.recorder = &MockisDoSKeyHandle_KeyOrHandleMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockisDoSKeyHandle_KeyOrHandle) EXPECT() *MockisDoSKeyHandle_KeyOrHandleMockRecorder {
-	return m.recorder
-}
-
-// isDoSKeyHandle_KeyOrHandle mocks base method
-func (m *MockisDoSKeyHandle_KeyOrHandle) isDoSKeyHandle_KeyOrHandle() {
-	m.ctrl.Call(m, "isDoSKeyHandle_KeyOrHandle")
-}
-
-// isDoSKeyHandle_KeyOrHandle indicates an expected call of isDoSKeyHandle_KeyOrHandle
-func (mr *MockisDoSKeyHandle_KeyOrHandleMockRecorder) isDoSKeyHandle_KeyOrHandle() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isDoSKeyHandle_KeyOrHandle", reflect.TypeOf((*MockisDoSKeyHandle_KeyOrHandle)(nil).isDoSKeyHandle_KeyOrHandle))
-}
-
-// MarshalTo mocks base method
-func (m *MockisDoSKeyHandle_KeyOrHandle) MarshalTo(arg0 []byte) (int, error) {
-	ret := m.ctrl.Call(m, "MarshalTo", arg0)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// MarshalTo indicates an expected call of MarshalTo
-func (mr *MockisDoSKeyHandle_KeyOrHandleMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisDoSKeyHandle_KeyOrHandle)(nil).MarshalTo), arg0)
-}
-
-// Size mocks base method
-func (m *MockisDoSKeyHandle_KeyOrHandle) Size() int {
-	ret := m.ctrl.Call(m, "Size")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// Size indicates an expected call of Size
-func (mr *MockisDoSKeyHandle_KeyOrHandleMockRecorder) Size() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisDoSKeyHandle_KeyOrHandle)(nil).Size))
 }
 
 // MockNwSecurityClient is a mock of NwSecurityClient interface
@@ -410,6 +410,78 @@ func (mr *MockNwSecurityClientMockRecorder) SecurityGroupGet(ctx, in interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecurityGroupGet", reflect.TypeOf((*MockNwSecurityClient)(nil).SecurityGroupGet), varargs...)
 }
 
+// DoSPolicyCreate mocks base method
+func (m *MockNwSecurityClient) DoSPolicyCreate(ctx context.Context, in *DoSPolicyRequestMsg, opts ...grpc.CallOption) (*DoSPolicyResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DoSPolicyCreate", varargs...)
+	ret0, _ := ret[0].(*DoSPolicyResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DoSPolicyCreate indicates an expected call of DoSPolicyCreate
+func (mr *MockNwSecurityClientMockRecorder) DoSPolicyCreate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoSPolicyCreate", reflect.TypeOf((*MockNwSecurityClient)(nil).DoSPolicyCreate), varargs...)
+}
+
+// DoSPolicyUpdate mocks base method
+func (m *MockNwSecurityClient) DoSPolicyUpdate(ctx context.Context, in *DoSPolicyRequestMsg, opts ...grpc.CallOption) (*DoSPolicyResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DoSPolicyUpdate", varargs...)
+	ret0, _ := ret[0].(*DoSPolicyResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DoSPolicyUpdate indicates an expected call of DoSPolicyUpdate
+func (mr *MockNwSecurityClientMockRecorder) DoSPolicyUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoSPolicyUpdate", reflect.TypeOf((*MockNwSecurityClient)(nil).DoSPolicyUpdate), varargs...)
+}
+
+// DoSPolicyDelete mocks base method
+func (m *MockNwSecurityClient) DoSPolicyDelete(ctx context.Context, in *DoSPolicyDeleteRequestMsg, opts ...grpc.CallOption) (*DoSPolicyDeleteResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DoSPolicyDelete", varargs...)
+	ret0, _ := ret[0].(*DoSPolicyDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DoSPolicyDelete indicates an expected call of DoSPolicyDelete
+func (mr *MockNwSecurityClientMockRecorder) DoSPolicyDelete(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoSPolicyDelete", reflect.TypeOf((*MockNwSecurityClient)(nil).DoSPolicyDelete), varargs...)
+}
+
+// DoSPolicyGet mocks base method
+func (m *MockNwSecurityClient) DoSPolicyGet(ctx context.Context, in *DoSPolicyGetRequestMsg, opts ...grpc.CallOption) (*DoSPolicyGetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DoSPolicyGet", varargs...)
+	ret0, _ := ret[0].(*DoSPolicyGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DoSPolicyGet indicates an expected call of DoSPolicyGet
+func (mr *MockNwSecurityClientMockRecorder) DoSPolicyGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoSPolicyGet", reflect.TypeOf((*MockNwSecurityClient)(nil).DoSPolicyGet), varargs...)
+}
+
 // MockNwSecurityServer is a mock of NwSecurityServer interface
 type MockNwSecurityServer struct {
 	ctrl     *gomock.Controller
@@ -535,4 +607,56 @@ func (m *MockNwSecurityServer) SecurityGroupGet(arg0 context.Context, arg1 *Secu
 // SecurityGroupGet indicates an expected call of SecurityGroupGet
 func (mr *MockNwSecurityServerMockRecorder) SecurityGroupGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SecurityGroupGet", reflect.TypeOf((*MockNwSecurityServer)(nil).SecurityGroupGet), arg0, arg1)
+}
+
+// DoSPolicyCreate mocks base method
+func (m *MockNwSecurityServer) DoSPolicyCreate(arg0 context.Context, arg1 *DoSPolicyRequestMsg) (*DoSPolicyResponseMsg, error) {
+	ret := m.ctrl.Call(m, "DoSPolicyCreate", arg0, arg1)
+	ret0, _ := ret[0].(*DoSPolicyResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DoSPolicyCreate indicates an expected call of DoSPolicyCreate
+func (mr *MockNwSecurityServerMockRecorder) DoSPolicyCreate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoSPolicyCreate", reflect.TypeOf((*MockNwSecurityServer)(nil).DoSPolicyCreate), arg0, arg1)
+}
+
+// DoSPolicyUpdate mocks base method
+func (m *MockNwSecurityServer) DoSPolicyUpdate(arg0 context.Context, arg1 *DoSPolicyRequestMsg) (*DoSPolicyResponseMsg, error) {
+	ret := m.ctrl.Call(m, "DoSPolicyUpdate", arg0, arg1)
+	ret0, _ := ret[0].(*DoSPolicyResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DoSPolicyUpdate indicates an expected call of DoSPolicyUpdate
+func (mr *MockNwSecurityServerMockRecorder) DoSPolicyUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoSPolicyUpdate", reflect.TypeOf((*MockNwSecurityServer)(nil).DoSPolicyUpdate), arg0, arg1)
+}
+
+// DoSPolicyDelete mocks base method
+func (m *MockNwSecurityServer) DoSPolicyDelete(arg0 context.Context, arg1 *DoSPolicyDeleteRequestMsg) (*DoSPolicyDeleteResponseMsg, error) {
+	ret := m.ctrl.Call(m, "DoSPolicyDelete", arg0, arg1)
+	ret0, _ := ret[0].(*DoSPolicyDeleteResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DoSPolicyDelete indicates an expected call of DoSPolicyDelete
+func (mr *MockNwSecurityServerMockRecorder) DoSPolicyDelete(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoSPolicyDelete", reflect.TypeOf((*MockNwSecurityServer)(nil).DoSPolicyDelete), arg0, arg1)
+}
+
+// DoSPolicyGet mocks base method
+func (m *MockNwSecurityServer) DoSPolicyGet(arg0 context.Context, arg1 *DoSPolicyGetRequestMsg) (*DoSPolicyGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "DoSPolicyGet", arg0, arg1)
+	ret0, _ := ret[0].(*DoSPolicyGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DoSPolicyGet indicates an expected call of DoSPolicyGet
+func (mr *MockNwSecurityServerMockRecorder) DoSPolicyGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoSPolicyGet", reflect.TypeOf((*MockNwSecurityServer)(nil).DoSPolicyGet), arg0, arg1)
 }

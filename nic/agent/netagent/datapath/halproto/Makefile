@@ -21,6 +21,6 @@ default:
 
 hal-proto:
 	# Compile proto definitions
-	protoc --proto_path=../../../../../ --gofast_out=plugins=grpc:$(GEN_DIR) ../../../../../nic/proto/hal/*.proto ../../../../../nic/proto/types.proto
+	protoc --proto_path=../../../../../ --gofast_out=Mprotos/github/gogo/protobuf/gogoproto/gogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:$(GEN_DIR) ../../../../../nic/proto/hal/*.proto ../../../../../nic/proto/types.proto
 
 

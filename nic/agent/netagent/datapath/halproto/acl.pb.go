@@ -10,7 +10,6 @@
 		nic/proto/hal/crypto_keys.proto
 		nic/proto/hal/descriptor_aol.proto
 		nic/proto/hal/endpoint.proto
-		nic/proto/hal/events.proto
 		nic/proto/hal/interface.proto
 		nic/proto/hal/internal.proto
 		nic/proto/hal/ipseccb.proto
@@ -22,6 +21,7 @@
 		nic/proto/hal/nwsec.proto
 		nic/proto/hal/proxy.proto
 		nic/proto/hal/qos.proto
+		nic/proto/hal/rawrcb.proto
 		nic/proto/hal/rdma.proto
 		nic/proto/hal/session.proto
 		nic/proto/hal/system.proto
@@ -283,6 +283,7 @@
 		SecurityProfileGetResponse
 		SecurityProfileGetResponseMsg
 		Service
+		DoSService
 		FirewallRuleSpec
 		IngressSGPolicy
 		EgressSGPolicy
@@ -306,20 +307,19 @@
 		DoSProtectionSpec
 		IngressDoSPolicy
 		EgressDoSPolicy
-		DoSKeyHandle
-		DoSSpec
-		DoSRequestMsg
-		DoSStatus
-		DoSResponse
-		DoSResponseMsg
-		DoSDeleteRequest
-		DoSDeleteRequestMsg
-		DoSDeleteResponseMsg
-		DoSGetRequest
-		DoSGetRequestMsg
-		DoSStats
-		DoSGetResponse
-		DoSGetResponseMsg
+		DoSPolicySpec
+		DoSPolicyRequestMsg
+		DoSPolicyStatus
+		DoSPolicyResponse
+		DoSPolicyResponseMsg
+		DoSPolicyDeleteRequest
+		DoSPolicyDeleteRequestMsg
+		DoSPolicyDeleteResponseMsg
+		DoSPolicyGetRequest
+		DoSPolicyGetRequestMsg
+		DoSPolicyStats
+		DoSPolicyGetResponse
+		DoSPolicyGetResponseMsg
 		ProxyKeyHandle
 		ProxySpec
 		ProxyRequestMsg
@@ -334,6 +334,7 @@
 		ProxyStats
 		ProxyGetResponse
 		ProxyGetResponseMsg
+		IpsecFlowConfig
 		ProxyFlowConfigRequest
 		ProxyFlowConfigRequestMsg
 		ProxyGetFlowInfoRequest
@@ -393,6 +394,20 @@
 		PolicerStats
 		PolicerGetResponse
 		PolicerGetResponseMsg
+		RawrCbKeyHandle
+		RawrCbSpec
+		RawrCbRequestMsg
+		RawrCbStatus
+		RawrCbResponse
+		RawrCbResponseMsg
+		RawrCbDeleteRequest
+		RawrCbDeleteRequestMsg
+		RawrCbDeleteResponseMsg
+		RawrCbGetRequest
+		RawrCbGetRequestMsg
+		RawrCbStats
+		RawrCbGetResponse
+		RawrCbGetResponseMsg
 		RdmaQpSpec
 		RdmaQpRequestMsg
 		RdmaQpResponse
