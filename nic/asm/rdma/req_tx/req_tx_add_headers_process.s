@@ -7,9 +7,7 @@ struct req_tx_phv_t p;
 struct req_tx_add_headers_process_k_t k;
 struct sqcb1_t d;
 
-#define INFO_OUT_T struct req_tx_sqcb_write_back_info_t
 %%
-    .param    req_tx_write_back_process
 
 .align
 req_tx_add_headers_process:
@@ -55,8 +53,8 @@ req_tx_add_headers_process:
 
     // get tbl_id from s2s data
     add            r1, k.args.tbl_id, r0
-    CAPRI_GET_TABLE_I_ARG(req_tx_phv_t, r1, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 0) // set for READ or atomic
+    CAPRI_SET_TABLE_I_VALID(r1, 0)
+    //CAPRI_GET_TABLE_I_ARG(req_tx_phv_t, r1, r7)
 
     #c1 - last
     #c2 - first
@@ -64,6 +62,10 @@ req_tx_add_headers_process:
     #c4 - incr_lsn
     #c5 - check credits
     #c6 - adjust_psn/incr_psn
+    #c7 - incr_rrq_pindex
+
+    //CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 0) // set for READ or atomic
+    setcf          c7, [!c0]
 
     seq            c2, k.args.first, 1
     seq            c1, k.args.last, 1
@@ -126,7 +128,8 @@ op_type_atomic:
 
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 1) // set for READ or atomic
+    //CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 1) // set for READ or atomic
+    setcf          c7, [c0]
 
     b              set_bth_opc
     // inc_lsn = TRUE
@@ -158,7 +161,8 @@ op_type_read:
 
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 1) // set for READ or atomic
+    //CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 1) // set for READ or atomic
+    setcf          c7, [c0]
     
     setcf          c4, [c0]
     b              set_bth_opc
@@ -334,27 +338,22 @@ inc_psn:
     //     write_back_info_p->set_credits = TRUE
     slt.c5         c5, d.lsn, d.ssn
     phvwr.c5       BTH_ACK_REQ, 1
-    CAPRI_SET_FIELD_C(r7, INFO_OUT_T, set_credits, 1, c5)
-
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, in_progress, k.args.in_progress)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, busy, k.args.busy)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, current_sge_id, k.args.op.send_wr.current_sge_id)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, current_sge_offset, k.args.op.send_wr.current_sge_offset)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, num_sges, k.args.op.send_wr.num_sges)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, log_rrq_size, d.log_rrq_size)
-    //CAPRI_SET_FIELD(r7, INFO_OUT_T, wqe_addr, k.args.wqe_addr)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, last, k.args.last)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, first, k.args.first)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, op_type, k.args.op_type)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, tbl_id, k.args.tbl_id)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, set_li_fence, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, set_fence, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, set_bktrack, 0)
-
+    
     SQCB0_ADDR_GET(r2)
-    CAPRI_GET_TABLE_I_K(req_tx_phv_t, r1, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    // incr_rrq_p_index if reqd
+    add.c7          r3, r2, RRQ_P_INDEX_OFFSET
+    add.c7          r7, r0, k.args.rrq_p_index
+    mincr.c7        r7, d.log_rrq_size, 1
+    memwr.hx.c7      r3, r7
+
+    // cb1_busy is by default set to FALSE
+    add            r7, r0, r0
+
+    // on top of it, set need_credits flag is conditionally
+    add.c5         r7, r7, SQCB0_NEED_CREDITS_FLAG
+
+    add            r3, r2, FIELD_OFFSET(sqcb0_t, cb1_byte)
+    memwr.b        r3, r7
 
 invalid_op_type:
     nop.e

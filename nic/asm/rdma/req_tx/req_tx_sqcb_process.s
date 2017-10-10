@@ -38,6 +38,16 @@ req_tx_sqcb_process:
     //set dma_cmd_ptr in phv
     TXDMA_DMA_CMD_PTR_SET(REQ_TX_DMA_CMD_START_FLIT_ID) // Branch Delay Slot
 
+    // if either of the busy flags are set, give up the scheduler opportunity
+    seq            c1, d.busy, 1
+    seq            c2, d.cb1_busy, 1
+    bcf            [c1 | c2], exit
+    nop
+    
+    // take both the busy flags
+    tblwr          d.busy, 1
+    tblwr          d.cb1_busy, 1
+
     // if (sqcb0_p->fence) goto fence
     seq            c1, d.fence, 1
     bcf            [c1], fence
@@ -164,5 +174,10 @@ fence:
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqwqe_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, d.curr_wqe_ptr)
 
+    nop.e
+    nop
+
+exit:
+    phvwr   p.common.p4_intr_global_drop, 1
     nop.e
     nop

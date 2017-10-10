@@ -79,8 +79,7 @@ union op_t {
 };
 
 struct req_tx_rrqwqe_to_hdr_info_t {
-    busy                          : 1;
-    in_progress                   : 1;
+    rsvd                          : 2;
     first                         : 1;
     last                          : 1;
     op_type                       : 4;
@@ -105,20 +104,18 @@ struct req_tx_sqcb_write_back_info_t {
     in_progress                  : 1;
     first                        : 1;
     last                         : 1;
-    incr_rrq_pindex              : 1;
-    log_rrq_size                 : 5;
     tbl_id                       : 3;
     set_fence                    : 1;
     set_li_fence                 : 1;
-    set_credits                  : 1;
     set_bktrack                  : 1;
     bktracking                   : 1;
+    release_cb1_busy             : 1;
     num_sges                     : 8;
     current_sge_id               : 8;
     op_type                      : 8;
     sq_c_index                   : 16;
     current_sge_offset           : 32;
-    pad                          : 70;
+    pad                          : 76;
 };
 
 struct req_tx_to_stage_t {

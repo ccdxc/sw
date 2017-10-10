@@ -11,6 +11,8 @@ struct sqcb0_t d;
 .align
 req_tx_write_back_process:
      tblwr         d.busy, k.args.busy
+     seq           c1, k.args.release_cb1_busy, 1
+     tblwr.c1      d.cb1_busy, 0
      tblwr         d.num_sges, k.args.num_sges
      tblwr         d.in_progress, k.args.in_progress
      tblwr         d.current_sge_id, k.args.current_sge_id
@@ -23,7 +25,7 @@ req_tx_write_back_process:
      seq           c1, k.args.last, 1
      //tblmincri.c1  SQ_C_INDEX, d.log_num_wqes, 1
      bcf           [!c1], skip_db_update
-     seq           c2, k.args.incr_rrq_pindex, 1 // Branch Delay Slot
+     nop           //BD Slot
 
      //add.c1        r1, SQ_C_INDEX, 1 // Delay slot
      //add           r1, SQ_C_INDEX, r0
@@ -32,9 +34,6 @@ req_tx_write_back_process:
      DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, SQ_RING_ID, SQ_C_INDEX, r2, r3)
 
 skip_db_update:
-     // if (write_back_info_p->incr_rrq_pindex)
-     //  RING_P_NDEX_INCREMENT(sqcb0_p, RRQ_RING_ID)
-     tblmincri.c2  RRQ_P_INDEX, k.args.log_rrq_size, 1
 
      add           r1, k.args.tbl_id, r0
      CAPRI_SET_TABLE_I_VALID(r1, 0)

@@ -8,17 +8,18 @@ struct req_tx_sqwqe_process_k_t k;
 
 #define INFO_OUT1_T struct req_tx_wqe_to_sge_info_t
 #define INFO_OUT2_T struct req_tx_rrqwqe_to_hdr_info_t
+#define INFO_OUT3_T struct req_tx_sqcb_write_back_info_t
 
 
 %%
     .param    req_tx_sqsge_process
     .param    req_tx_add_headers_process
+    .param    req_tx_write_back_process
 
 .align
 req_tx_sqwqe_process:
 
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-    add   r2, r0, offsetof(struct phv_, common_global_global_data)
     seq   c1, d.base.inline_data_vld, 1 
 
     add            r1, r0, d.base.op_type
@@ -48,9 +49,6 @@ atomic:
     phvwr          ATOMIC_CMP_DATA, d.atomic.cmp_data
     phvwr          ATOMIC_SWAP_OR_ADD_DATA, d.atomic.swap_or_add_data
 
-    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, busy, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, in_progress, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, first, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, last, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op_type, r1)
@@ -63,8 +61,21 @@ atomic:
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
-    SQCB1_ADDR_GET(r1)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    SQCB1_ADDR_GET(r2)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+
+    CAPRI_GET_TABLE_1_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, 1)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, last, 1)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, r1)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, tbl_id, 1)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, release_cb1_busy, 0)
+    // leave rest of variables to FALSE
+
+    CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
+    SQCB0_ADDR_GET(r2)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
 
     nop.e
     nop
@@ -75,8 +86,6 @@ read:
     phvwr          RETH_LEN, d.read.length
 
 invoke_add_headers:
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, busy, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, in_progress, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, first, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, last, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op_type, r1)
@@ -88,8 +97,24 @@ invoke_add_headers:
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
-    SQCB1_ADDR_GET(r1)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    SQCB1_ADDR_GET(r2)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+
+    CAPRI_GET_TABLE_1_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, 1)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, last, 1)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, r1)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, tbl_id, 1)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, release_cb1_busy, 0)
+    // leave rest of variables to FALSE
+
+    CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
+    SQCB0_ADDR_GET(r2)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+
+    nop.e
+    nop
 
     nop.e
     nop
@@ -150,7 +175,7 @@ inline_data:
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r4)  //BD Slot
     // NOTE: it should be noted that invoke_add_headers will directly invoke
     // add_headers phase without any sge process as the data is inline.
-    // The length of data is copulated in length argument. All the 'length'
+    // The length of data is populated in length argument. All the 'length'
     // parameter values for various union cases such as read/write/send are located
     // at same offset. So, though argument passing code is passing read.length, 
     // it should work for inline data as well.
