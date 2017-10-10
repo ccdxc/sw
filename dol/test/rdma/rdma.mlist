@@ -41,6 +41,22 @@ modules:
         ignore  : False
  
     - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_16B
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only
+        spec    : req_tx_send_only_inline_16B.testspec
+        ignore  : False
+ 
+    - module:
         name    : RDMA_TX_SEND_ONLY_IMM
         enable  : True
         package : test.rdma
@@ -49,11 +65,27 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_SEND_ONLY_INLINE_IMM
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_imm
+        spec    : req_tx_send_only_inline_imm.testspec
+        ignore  : False
+
+    - module:
        name    : RDMA_TX_SEND_ONLY_INV
        enable  : True
        package : test.rdma
        module  : req_tx_send_only_inv
        spec    : req_tx_send_only_inv.testspec
+       ignore  : False
+
+    - module:
+       name    : RDMA_TX_SEND_ONLY_INLINE_INV
+       enable  : True
+       package : test.rdma
+       module  : req_tx_send_only_inv
+       spec    : req_tx_send_only_inline_inv.testspec
        ignore  : False
 
     - module:
@@ -81,11 +113,34 @@ modules:
         ignore  : False
  
     - module:
+        name    : RDMA_TX_WRITE_ONLY_INLINE
+        enable  : True
+        package : test.rdma
+        module  : req_tx_write_only
+        spec    : req_tx_write_only_inline.testspec
+        ignore  : False
+ 
+    - module:
+        name    : RDMA_TX_WRITE_ONLY_INLINE_16B
+        enable  : True
+        package : test.rdma
+        module  : req_tx_write_only
+        spec    : req_tx_write_only_inline_16B.testspec
+        ignore  : False
+ 
+    - module:
         name    : RDMA_TX_WRITE_ONLY_IMM
         enable  : True
         package : test.rdma
         module  : req_tx_write_only_imm
         spec    : req_tx_write_only_imm.testspec
+ 
+    - module:
+        name    : RDMA_TX_WRITE_ONLY_INLINE_IMM
+        enable  : True
+        package : test.rdma
+        module  : req_tx_write_only_imm
+        spec    : req_tx_write_only_inline_imm.testspec
  
     - module:
         name    : RDMA_TX_WRITE_FIRST_LAST

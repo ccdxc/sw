@@ -16,6 +16,7 @@ num_sges        : 2
 send:
     imm_data    : None
     inv_key     : None
+    len         : None
     
 write:
     imm_data    : None

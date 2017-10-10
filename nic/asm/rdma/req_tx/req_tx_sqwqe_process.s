@@ -141,8 +141,11 @@ common:
 
 inline_data:
     DMA_CMD_I_BASE_GET(r4, r5, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
-    DMA_PHV2PKT_SETUP(r4, inline_data, inline_data)
+    DMA_PHV2PKT_START_LEN_SETUP(r4, r5, inline_data, d.read.length)
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r4)
+    // should work for both send/write as imm_data is located at same offset in wqe for both operations
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.imm_data, d.send.imm_data)
+    CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.inv_key, d.send.inv_key)
     b   invoke_add_headers
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r4)  //BD Slot
     // NOTE: it should be noted that invoke_add_headers will directly invoke

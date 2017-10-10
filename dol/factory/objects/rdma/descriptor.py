@@ -20,7 +20,7 @@ class RdmaSqDescriptorBase(Packet):
         BitField("complete_notify", 0, 1),
         BitField("fence", 0, 1),
         BitField("solicited_event", 0, 1),
-        BitField("rsvd1", 0, 1),
+        BitField("inline_data_vld", 0, 1),
         ByteField("num_sges", 0),
         ShortField("rsvd1", 0),
     ]
@@ -29,8 +29,8 @@ class RdmaSqDescriptorSend(Packet):
     fields_desc = [
         IntField("imm_data", 0),
         IntField("inv_key", 0),
-        IntField("rsvd0", 0),
-        IntField("rsvd1", 0),
+        IntField("rsvd1", 0),      # rsvd1 is to ensure len field in Sq Send and Write defined at same offset
+        IntField("len", 0),
         IntField("rsvd2", 0),
     ]
 
@@ -38,7 +38,7 @@ class RdmaSqDescriptorWrite(Packet):
     fields_desc = [
         IntField("imm_data", 0),
         LongField("va", 0),
-        IntField("len", 0),
+        IntField("len", 0),    # ensure that len is defined at same offset b/w Sq Send and Write descriptors
         IntField("r_key", 0),
     ]
 
@@ -186,15 +186,27 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor at "self.address"
         :return:
         """
-        cfglogger.info("Writing Descriptor @0x%x = op_type: %d wrid: 0x%x num_sges: %d" % 
-                       (self.address, self.spec.fields.op_type, self.wrid, self.spec.fields.num_sges))
+        inline_data_vld = self.spec.fields.inline_data_vld if hasattr(self.spec.fields, 'inline_data_vld') else 0
+        num_sges = self.spec.fields.num_sges if hasattr(self.spec.fields, 'num_sges') else 0
+        cfglogger.info("Writing Descriptor @0x%x = op_type: %d wrid: 0x%x inline_data_vld: %d num_sges: %d" % 
+                       (self.address, self.spec.fields.op_type, self.wrid, inline_data_vld, num_sges))
         desc = RdmaSqDescriptorBase(op_type=self.spec.fields.op_type, wrid=self.wrid,
-                                    num_sges=self.spec.fields.num_sges)
+                                    inline_data_vld = inline_data_vld, num_sges=num_sges)
+        inline_data_len = 0
+        inline_data = None
+
+        # Make sure Inline data is specificied only for Send and Write, assert in other operations
         if hasattr(self.spec.fields, 'send'):
            print("Reading Send")
            imm_data = self.spec.fields.send.imm_data if hasattr(self.spec.fields.send, 'imm_data') else 0
            inv_key = self.spec.fields.send.inv_key if hasattr(self.spec.fields.send, 'inv_key') else 0
-           send = RdmaSqDescriptorSend(imm_data=imm_data, inv_key=inv_key)
+           data_len = self.spec.fields.send.len if hasattr(self.spec.fields.send, 'len') else 0
+           if inline_data_vld:
+               inline_data_len = data_len
+               # Create the Inline data of size provided
+               inline_data = bytearray(inline_data_len)
+               inline_data[0:inline_data_len] = self.spec.fields.send.inline_data[0:inline_data_len]
+           send = RdmaSqDescriptorSend(imm_data=imm_data, inv_key=inv_key, len=data_len)
            desc = desc/send
 
         if hasattr(self.spec.fields, 'write'):
@@ -202,21 +214,28 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            imm_data = self.spec.fields.write.imm_data if hasattr(self.spec.fields.write, 'imm_data') else 0
            va = self.spec.fields.write.va if hasattr(self.spec.fields.write, 'va') else 0
            dma_len = self.spec.fields.write.len if hasattr(self.spec.fields.write, 'len') else 0
+           if inline_data_vld:
+               inline_data_len = dma_len
+               # Create the Inline data of size provided
+               inline_data = bytearray(inline_data_len)
+               inline_data[0:inline_data_len] = self.spec.fields.write.inline_data[0:inline_data_len]
            r_key = self.spec.fields.write.r_key if hasattr(self.spec.fields.write, 'r_key') else 0
            write = RdmaSqDescriptorWrite(imm_data=imm_data, va=va, len=dma_len, r_key=r_key)
            desc = desc/write
 
         if hasattr(self.spec.fields, 'read'):
            print("Reading Read")
+           assert(inline_data_vld == 0)
            rsvd = self.spec.fields.read.rsvd if hasattr(self.spec.fields.read, 'rsvd') else 0
            va = self.spec.fields.read.va if hasattr(self.spec.fields.read, 'va') else 0
-           dma_len = self.spec.fields.read.len if hasattr(self.spec.fields.read, 'len') else 0
+           len = self.spec.fields.read.len if hasattr(self.spec.fields.read, 'len') else 0
            r_key = self.spec.fields.read.r_key if hasattr(self.spec.fields.read, 'r_key') else 0
-           read = RdmaSqDescriptorRead(rsvd=rsvd, va=va, len=dma_len, r_key=r_key)
+           read = RdmaSqDescriptorRead(rsvd=rsvd, va=va, len=len, r_key=r_key)
            desc = desc/read
 
         if hasattr(self.spec.fields, 'atomic'):
            print("Reading Atomic")
+           assert(inline_data_vld == 0)
            r_key = self.spec.fields.atomic.r_key if hasattr(self.spec.fields.atomic, 'r_key') else 0
            va = self.spec.fields.atomic.va if hasattr(self.spec.fields.atomic, 'va') else 0
            cmpdt = self.spec.fields.atomic.cmpdt if hasattr(self.spec.fields.atomic, 'cmpdt') else 0
@@ -224,11 +243,15 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
            atomic = RdmaSqDescriptorAtomic(r_key=r_key, va=va, cmpdt=cmpdt, swapdt=swapdt)
            desc = desc/atomic
 
-        for sge in self.spec.fields.sges:
-            sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
-            cfglogger.info("Read Sge[] = va: 0x%x len: %d l_key: %d" % 
-                           (sge.va, sge.len, sge.l_key))
-            desc = desc/sge_entry
+        if inline_data_vld:
+           print("Inline Data: %s " % bytes(inline_data[0:inline_data_len]))
+           desc = desc/bytes(inline_data)
+        else:
+            for sge in self.spec.fields.sges:
+                sge_entry = RdmaSge(va=sge.va, len=sge.len, l_key=sge.l_key)
+                cfglogger.info("Read Sge[] = va: 0x%x len: %d l_key: %d" % 
+                               (sge.va, sge.len, sge.l_key))
+                desc = desc/sge_entry
               
         desc.show()
         #model_wrap.write_mem(self.address, bytes(desc), len(desc))

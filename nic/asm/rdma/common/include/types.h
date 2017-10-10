@@ -410,8 +410,9 @@ struct sqwqe_base_t {
 struct sqwqe_send_t {
     imm_data           : 32;
     inv_key            : 32;
+    rsvd1              : 32;  // to align length to match position in write/read reqs
     length             : 32;
-    rsvd               : 64;    // for now
+    rsvd2              : 32;    // for now
 };
 
 // write
