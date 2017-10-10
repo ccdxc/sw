@@ -9,7 +9,6 @@ entries:
         fte: True
         initiator:
             ethertype: 0xCCC0
-
         responder:
             ethertype: 0xCCC0
 

@@ -66,6 +66,15 @@ class SessionObject(base.ConfigObjectBase):
     def IsFteEnabled(self):
         return self.fte
 
+    def SetLabel(self, label, update_iflow=True, update_rflow=True):
+        cfglogger.info("Updating %s Label to %s" % (self.GID(), label))
+        self.label = label
+        if update_iflow:
+            self.iflow.SetLabel(label)
+        if update_rflow:
+            self.rflow.SetLabel(label)
+        return
+
     def Show(self):
         cfglogger.info("Created Session with GID:%s" % self.GID())
         cfglogger.info("- Label    : %s" % self.label)

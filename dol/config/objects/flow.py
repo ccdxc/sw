@@ -180,8 +180,12 @@ class FlowObject(base.ConfigObjectBase):
         return self.label == FLOW_COLLISION_LABEL
 
     def SetLabel(self, label):
+        cfglogger.info("Updating %s Label to %s" % (self.GID(), label))
         self.label = label
         return
+
+    def GetSession(self):
+        return self.__session
 
     def GetIngressMirrorSession(self, idx = 0):
         if idx > len(self.ing_mirror_sessions):

@@ -71,7 +71,9 @@ class ParserBase:
 def ParseFile(path, filename):
     parser = ParserBase()
     objlist = parser.Parse(path, filename)
-    return objlist[0]
+    if len(objlist):
+        return objlist[0]
+    return None
 
 def ParseDirectory(path, extn):
     parser = ParserBase()

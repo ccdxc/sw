@@ -74,7 +74,14 @@ def TestCaseTeardown(tc):
     if root is None:
        root = getattr(tc.config.session.iconfig, 'flow', None)
 
-    if root.IsFteEnabled():
+    if root.IsFteEnabled() is False:
+        return
+
+    fte_session_aware = getattr(tc.pvtdata, 'fte_session_aware', True)
+    if fte_session_aware is True:
+        session = root.GetSession()
+        session.SetLabel("FTE_DONE")
+    else:
         root.SetLabel("FTE_DONE")
     return
 

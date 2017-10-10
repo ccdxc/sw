@@ -2,8 +2,8 @@
 feature:
     id          : fte
     sub         : tftp 
-    package     : test.networking
-    module      : networking
+    package     : test.fte
+    module      : tftp
     enable      : True
     ignore      : False
 

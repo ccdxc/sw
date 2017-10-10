@@ -101,7 +101,7 @@ class Module(objects.FrameworkObject):
     def __load_spec(self):
         utils.LogFunctionBegin(self.logger)
         self.logger.info("- Loading TEST SPEC = %s" % self.spec)
-        self.testspec = testspec.TestSpecObject(self.path, self.spec)
+        self.testspec = testspec.TestSpecObject(self.path, self.spec, self.logger)
         utils.LogFunctionEnd(self.logger)
         return defs.status.SUCCESS
 

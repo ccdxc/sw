@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import copy
+import sys
 
 import infra.common.defs    as defs
 import infra.common.parser  as parser
@@ -41,9 +42,13 @@ class TestSpecSessionStep(objects.FrameworkObject):
         return
 
 class TestSpecObject(objects.FrameworkObject):
-    def __init__(self, path, filename):
+    def __init__(self, path, filename, logger):
         super().__init__()
         tspec = parser.ParseFile(path, filename)
+        if tspec is None:
+            logger.error("Failed to parse testspec file: %s/%s" %\
+                         (path, filename))
+            sys.exit(1)
         self.Clone(tspec)
         
         self.template = FactoryStore.testobjects.Get('TESTSPEC')

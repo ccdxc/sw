@@ -7,5 +7,6 @@ def Setup(infra, module):
     return
 
 def TestCaseTeardown(tc):
-    tc.config.flow.SetLabel("FTE_DONE")
+    session = tc.config.flow..GetSession()
+    session.SetLabel("FTE_DONE")
     return
