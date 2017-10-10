@@ -29,11 +29,35 @@ class UplinkObject(base.ConfigObjectBase):
         self.mode   = spec.mode
         self.ports  = [ spec.port ]
         self.native_segment = None
-
+        self.__init_qos()
         return
+
+    def __init_qos(self):
+        self.txqos.cos = resmgr.QosCosAllocator.get()
+        self.rxqos.cos = resmgr.QosCosAllocator.get()
+        self.txqos.dscp = resmgr.QosDscpAllocator.get()
+        self.rxqos.dscp = resmgr.QosDscpAllocator.get()
+        return
+
+    def GetTxQosCos(self):
+        return self.txqos.cos
+
+    def GetRxQosCos(self):
+        return self.rxqos.cos
+
+    def GetTxQosDscp(self):
+        return self.txqos.dscp
+
+    def GetRxQosDscp(self):
+        return self.rxqos.dscp
+
     def Show(self):
         cfglogger.info("Creating Uplink = %s Port=%d" %\
                        (self.GID(), self.port))
+        cfglogger.info("- txqos: Cos:%s/Dscp:%s" %\
+                       (str(self.txqos.cos), str(self.txqos.dscp)))
+        cfglogger.info("- rxqos: Cos:%s/Dscp:%s" %\
+                       (str(self.rxqos.cos), str(self.rxqos.dscp)))
         return
 
     def Summary(self):
@@ -62,7 +86,15 @@ class UplinkObject(base.ConfigObjectBase):
         req_spec.if_uplink_info.port_num = self.port
         if self.native_segment:
             req_spec.if_uplink_info.native_l2segment_id = self.native_segment.id
-        
+     
+        # QOS stuff
+        if self.txqos.cos is not None:
+            req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True
+            req_spec.tx_qos_actions.marking_spec.pcp = self.txqos.cos
+        if self.txqos.dscp is not None:
+            req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
+            req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
+   
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

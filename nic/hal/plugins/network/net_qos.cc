@@ -18,8 +18,13 @@ update_flow_from_qos_spec(fte::ctx_t& ctx, const session::FlowInfo& flow_info)
         }
         //HAL_TRACE_DEBUG("Set pcp() : {}",  flow_info.eg_qos_actions().marking_spec().pcp());
         if (flow_info.eg_qos_actions().marking_spec().dscp_rewrite_en()) {
-            HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dscp,
-                flow_info.eg_qos_actions().marking_spec().dscp());
+            if (ctx.key().flow_type == hal::FLOW_TYPE_V4) {
+                HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dscp,
+                    flow_info.eg_qos_actions().marking_spec().dscp());
+            } else {
+                HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dscp,
+                    flow_info.eg_qos_actions().marking_spec().dscp());
+            }
         }
         //HAL_TRACE_DEBUG("Set dscp(): {}", flow_info.eg_qos_actions().marking_spec().dscp());
     }

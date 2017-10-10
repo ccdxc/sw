@@ -56,13 +56,11 @@ packets:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                prio    : 0
                 vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
-                tos     : 8
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -87,13 +85,11 @@ packets:
                 src     : ref://testcase/config/dst/endpoint/macaddr
                 dst     : ref://testcase/config/src/endpoint/macaddr
             qtag:
-                prio    : 0
                 vlan    : ref://testcase/config/dst/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/dip
                 dst     : ref://testcase/config/flow/sip
                 ttl     : 64
-                tos     : 8
             ipv6:
                 src     : ref://testcase/config/flow/dip
                 dst     : ref://testcase/config/flow/sip

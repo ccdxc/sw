@@ -95,12 +95,6 @@ class FlowEndpointObject(base.ConfigObjectBase):
         if 'flow_info' in entry.__dict__:
             self.flow_info = objects.MergeObjects(entry.flow_info,
                                                   self.flow_info)
-        if not self.GetTenant().IsQOSEnable():
-            self.flow_info.in_qos = None
-            self.flow_info.eg_qos.cos_rw = objects.TemplateFieldObject("const/0")
-            self.flow_info.eg_qos.cos = objects.TemplateFieldObject("const/7")
-            self.flow_info.eg_qos.dscp_rw = objects.TemplateFieldObject("const/0")
-            self.flow_info.eg_qos.dscp = objects.TemplateFieldObject("const/7")
         return
 
     def SetInfo(self, entry):
@@ -174,11 +168,6 @@ class FlowEndpointObject(base.ConfigObjectBase):
             return self.l4lb_service.tenant.id
         return self.ep.tenant.id
 
-    def GetSegment(self):
-        if self.IsL4LbServiceFlowEp():
-            return self.l4lb_backend.ep.segment
-        return self.ep.segment
-
     def GetIpAddrs(self):
         if self.IsL4LbServiceFlowEp():
             return [ self.l4lb_service.vip ]
@@ -193,6 +182,32 @@ class FlowEndpointObject(base.ConfigObjectBase):
         if self.IsL4LbServiceFlowEp():
             return self.l4lb_service.GID()
         return self.ep.GID()
+
+    def __get_ep(self):
+        if self.IsL4LbServiceFlowEp():
+            return self.l4lb_backend.ep
+        return self.ep
+       
+
+    def GetSegment(self):
+        ep = self.__get_ep()
+        return ep.segment
+
+    def GetRxQosCos(self):
+        ep = self.__get_ep()
+        return ep.GetRxQosCos()
+
+    def GetRxQosDscp(self):
+        ep = self.__get_ep()
+        return ep.GetRxQosDscp()
+
+    def GetTxQosCos(self):
+        ep = self.__get_ep()
+        return ep.GetTxQosCos()
+
+    def GetTxQosDscp(self):
+        ep = self.__get_ep()
+        return ep.GetTxQosDscp()
 
     def Show(self, prefix):
         string = self.GetGID() + ':' + self.type + '/'

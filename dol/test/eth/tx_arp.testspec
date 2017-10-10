@@ -47,7 +47,7 @@ packets:
         headers     :
             qtag:
                 vlan: ref://testcase/config/dst/segment/vlan_id
-                prio: ref://testcase/config/flow/eg_qos/cos
+                prio: ref://testcase/config/flow/txqos/cos
 
 buffers:
     - buffer:

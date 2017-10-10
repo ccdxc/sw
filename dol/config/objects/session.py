@@ -79,24 +79,8 @@ class SessionObject(base.ConfigObjectBase):
 
         self.initiator.Show('Initiator')
         self.iflow.Show()
-        if self.iflow.in_qos:
-            cfglogger.info("  -   Ingress QoS   : CosRW=%s/Cos=%d, DscpRW=%s/Dscp=%d" %\
-                           (self.iflow.in_qos.cos_rw.get(), self.iflow.in_qos.cos.get(),
-                            self.iflow.in_qos.dscp_rw.get(), self.iflow.in_qos.dscp.get()))
-        if self.iflow.eg_qos:
-            cfglogger.info("  -   Eggress QoS   : CosRW=%s/Cos=%d, DscpRW=%s/Dscp=%d" %\
-                           (self.iflow.eg_qos.cos_rw.get(), self.iflow.eg_qos.cos.get(),
-                            self.iflow.eg_qos.dscp_rw.get(), self.iflow.eg_qos.dscp.get()))
         self.responder.Show('Responder')
         self.rflow.Show()
-        if self.rflow.in_qos:
-            cfglogger.info("  -   Ingress QoS   : CosRW=%s/Cos=%d, DscpRW=%s/Dscp=%d" %\
-                           (self.rflow.in_qos.cos_rw.get(), self.rflow.in_qos.cos.get(),
-                            self.rflow.in_qos.dscp_rw.get(), self.rflow.in_qos.dscp.get()))
-        if self.rflow.eg_qos:
-            cfglogger.info("  -   Eggress QoS   : CosRW=%s/Cos=%d, DscpRW=%s/Dscp=%d" %\
-                           (self.rflow.eg_qos.cos_rw.get(), self.rflow.eg_qos.cos.get(),
-                            self.rflow.eg_qos.dscp_rw.get(), self.rflow.eg_qos.dscp.get()))
         ingspanlen = 0
         egspanlen = 0
         if self.spec.initiator.span != None and 'ingress' in self.spec.initiator.span.__dict__:
@@ -329,14 +313,16 @@ class SessionObjectHelper:
         if svc.IsTwiceNAT():
             return
 
+        l4lbspec = getattr(tenant.spec.sessions, 'l4lb', None)
+        if l4lbspec is None:
+            return
+
         flowep1 = flowep.FlowEndpointObject(ep = ep)
         flowep2 = flowep.FlowEndpointObject(l4lbsvc = svc)
-        if tenant.spec.sessions.l4lb.ipv4:
-            self.__process_ipv4(flowep1, flowep2,
-                                tenant.spec.sessions.l4lb.ipv4)
-        if tenant.spec.sessions.l4lb.ipv6:
-            self.__process_ipv6(flowep1, flowep2,
-                                tenant.spec.sessions.l4lb.ipv6)
+        if l4lbspec.ipv4:
+            self.__process_ipv4(flowep1, flowep2, l4lbspec.ipv4)
+        if l4lbspec.ipv6:
+            self.__process_ipv6(flowep1, flowep2, l4lbspec.ipv6)
         return
 
     def __process_l4lb(self, ep_list):

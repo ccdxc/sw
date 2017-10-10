@@ -1,6 +1,6 @@
 # Topology Specification
 meta:
-    id: TOPO_ETH
+    id: TOPO_L4LB
 
 uplink:
     - entry:
@@ -47,21 +47,16 @@ uplinkpc:
         members :
             - ref://store/objects/id=Uplink4
 
+
 acls: None
 
-qos : True
+qos : False
 
-security_profiles: ref://store/specs/id=SECURITY_PROFILES_ETH
+security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 
 tenants:
-    -   spec    : ref://store/specs/id=TENANT_INFRA_ETH
+    -   spec    : ref://store/specs/id=TENANT_L4LB
         count   : 1
-        lifns   : range/101/110
-    -   spec    : ref://store/specs/id=TENANT_ETH_VXLAN
-        count   : 1
-        lifns   : range/111/120
-    -   spec    : ref://store/specs/id=TENANT_ETH
-        count   : 1
-        lifns   : range/121/130
+        lifns   : range/101/101
 
 cpu: None

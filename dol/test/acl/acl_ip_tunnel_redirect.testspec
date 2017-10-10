@@ -91,16 +91,16 @@ packets:
                 id      : 0
             qtag:
                 vlan    : ref://testcase/pvtdata/acl/fields/action/redirect_if/vlan_id
-                prio    : ref://testcase/config/flow/eg_qos/cos
+                prio    : ref://testcase/config/flow/txqos/cos
             outerudp:
                 chksum  : 0
             vxlan       :
                 vni     : ref://testcase/pvtdata/acl/fields/action/encap_id
             ipv4:
-                tos     : ref://testcase/config/flow/eg_qos/dscp
+                tos     : ref://testcase/config/flow/txqos/dscp
                 ttl     : 63
             ipv6:
-                tc      : ref://testcase/config/flow/eg_qos/dscp
+                tc      : ref://testcase/config/flow/txqos/dscp
                 hlim    : 63
 
 

@@ -73,15 +73,15 @@ packets:
                 id      : 0
             qtag:
                 vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
-                prio    : ref://testcase/config/flow/eg_qos/cos
+                prio    : ref://testcase/config/flow/txqos/cos
             outerudp:
                 chksum  : 0
             vxlan       :
                 vni     : ref://testcase/config/dst/segment/vxlan_id
             ipv4:
-                tos     : ref://testcase/config/flow/eg_qos/dscp
+                tos     : ref://testcase/config/flow/txqos/dscp
             ipv6:
-                tc      : ref://testcase/config/flow/eg_qos/dscp
+                tc      : ref://testcase/config/flow/txqos/dscp
 
 buffers:
     - buffer:

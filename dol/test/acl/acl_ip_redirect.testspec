@@ -75,12 +75,12 @@ packets:
                 dst     : ref://testcase/pvtdata/acl/fields/action/macda
             qtag:
                 vlan    : ref://testcase/pvtdata/acl/fields/action/encap_id
-                prio    : ref://testcase/config/flow/eg_qos/cos
+                prio    : ref://testcase/config/flow/txqos/cos
             ipv4:
-                tos     : ref://testcase/config/flow/eg_qos/dscp
+                tos     : ref://testcase/config/flow/txqos/dscp
                 ttl     : 63
             ipv6:
-                tc      : ref://testcase/config/flow/eg_qos/dscp
+                tc      : ref://testcase/config/flow/txqos/dscp
                 hlim    : 63
 
 trigger:

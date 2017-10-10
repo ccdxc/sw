@@ -56,10 +56,8 @@ packets:
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             qtag:
-                prio    : 0
                 vlan    : ref://testcase/config/dst/segment/vlan_id
             ipv4:
-                tos     : 8
             tcp:
                 seq     : callback://tcpcb/tcpcb/GetPktOutSeqNum
                 ack     : callback://tcpcb/tcpcb/GetPktOutAckNum

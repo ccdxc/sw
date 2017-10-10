@@ -1,0 +1,11 @@
+# Enic Config Object Template
+meta:
+    id: ENIC
+
+id      : None  # Name of the object
+txqos   :
+    cos : None
+    dscp: None
+rxqos   :
+    cos : None
+    dscp: None

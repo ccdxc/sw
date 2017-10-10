@@ -71,10 +71,10 @@ packets:
                 prio    : callback://networking/packets/GetExpectedPacketCos
                 vlan    : ref://testcase/config/dst/segment/vlan_id
             ipv4:
-                tos     : ref://testcase/config/flow/eg_qos/dscp
+                tos     : ref://testcase/config/flow/txqos/dscp
                 ttl     : callback://networking/packets/GetRoutedTtl
             ipv6:
-                tc      : ref://testcase/config/flow/eg_qos/dscp
+                tc      : ref://testcase/config/flow/txqos/dscp
                 hlim    : callback://networking/packets/GetRoutedTtl
 
 trigger:

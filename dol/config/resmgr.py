@@ -10,7 +10,6 @@ import pdb
 
 HostMemoryAllocator = None
 
-
 FlowIdAllocator         = objects.TemplateFieldObject("range/1/65535")
 L4LbServiceIdAllocator  = objects.TemplateFieldObject("range/1/4096")
 L4LbBackendIdAllocator  = objects.TemplateFieldObject("range/1/16384")
@@ -64,6 +63,8 @@ L4LbServiceIpv6Allocator        = objects.TemplateFieldObject("ipv6step/3333::0:
 L4LbBackendIpSubnetAllocator    = objects.TemplateFieldObject("ipstep/172.16.0.0/0.1.0.0")
 L4LbBackendIpv6SubnetAllocator  = objects.TemplateFieldObject("ipv6step/4444::0/0::1:0:0")
 
+QosCosAllocator     = objects.TemplateFieldObject("range/1/6")
+QosDscpAllocator    = objects.TemplateFieldObject("range/32/48")
 
 def CreateIpv4AddrPool(subnet):
     allocator = objects.TemplateFieldObject("ipstep/" + subnet + "/0.0.0.1")
@@ -160,3 +161,13 @@ def init():
     global HostMemoryAllocator
     HostMemoryAllocator = HostMemory()
     assert(HostMemoryAllocator != None)
+
+def InitQos(topospec):
+    global QosCosAllocator
+    global QosDscpAllocator
+    qos = getattr(topospec, "qos", False)
+    if qos is False:
+        QosCosAllocator = objects.TemplateFieldObject("range/7/7")
+        QosDscpAllocator = objects.TemplateFieldObject("range/7/7")
+    QosCosAllocator.EnableWrapAround()
+    QosDscpAllocator.EnableWrapAround()

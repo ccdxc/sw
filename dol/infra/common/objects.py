@@ -135,7 +135,7 @@ class IntegerRange(FrameworkFieldObject):
         self.allow_wrap = False
         return
 
-    def wrap_enable(self):
+    def EnableWrapAround(self):
         self.allow_wrap = True
         return
 

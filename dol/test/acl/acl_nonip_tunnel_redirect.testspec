@@ -67,7 +67,7 @@ packets:
                 id      : 0
             qtag:
                 vlan    : ref://testcase/pvtdata/acl/fields/action/redirect_if/vlan_id
-                prio    : ref://testcase/config/flow/eg_qos/cos
+                prio    : ref://testcase/config/flow/txqos/cos
             outerudp:
                 chksum  : 0
             vxlan       :

@@ -32,6 +32,7 @@ modules:
 
     - module:
         name    : IPV4_UTAG
+        ignore  : True
         iterate :
             # Untagged Cases
             - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
@@ -43,6 +44,7 @@ modules:
 
     - module:
         name    : IPV6_UTAG
+        ignore  : True
         iterate :
             - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True

@@ -9,4 +9,9 @@ mode    : TRUNK
 status  : UP
 sriov   : False
 lif     : None  # Object Reference ref://store/object/id=LIFxxx
-
+txqos   :
+    cos : None
+    dscp: None
+rxqos   :
+    cos : None
+    dscp: None

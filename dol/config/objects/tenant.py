@@ -25,7 +25,7 @@ class TenantObject(base.ConfigObjectBase):
         self.Clone(Store.templates.Get('TENANT'))
         return
         
-    def Init(self, spec, lifns = None):
+    def Init(self, spec, lifns, topospec):
         self.id = resmgr.TenIdAllocator.get()
         gid = "Ten%04d" % self.id
         self.GID(gid)
@@ -33,7 +33,7 @@ class TenantObject(base.ConfigObjectBase):
         self.hostpinned = GlobalOptions.hostpin
         self.spec = spec
         self.type = spec.type.upper()
-        self.qos_enable = getattr(spec, 'qos_enable', True) 
+        self.qos_enable = getattr(topospec, 'qos_enable', False)
 
         self.overlay = spec.overlay.upper()
         self.security_profile = None
@@ -91,6 +91,8 @@ class TenantObject(base.ConfigObjectBase):
         return self.type == 'TENANT'
     def IsHostPinned(self):
         return self.hostpinned
+    def IsQosEnabled(self):
+        return self.qos_enable
 
     # Comment this before removing. Vxlan or Vlan is a segment level prop.
     #def IsOverlayVxlan(self):
@@ -176,9 +178,6 @@ class TenantObject(base.ConfigObjectBase):
     def GetLocalEps(self, backend = False):
         return self.obj_helper_segment.GetLocalEps(backend)
 
-    def IsQOSEnable(self):
-        return self.qos_enable
-
     def PrepareHALRequestSpec(self, reqspec):
         reqspec.meta.tenant_id          = self.id
         reqspec.key_or_handle.tenant_id = self.id
@@ -224,7 +223,7 @@ class TenantObjectHelper:
             cfglogger.info("Creating %d Tenants" % entry.count)
             for c in range(entry.count):
                 ten = TenantObject()
-                ten.Init(spec, entry.lifns)
+                ten.Init(spec, entry.lifns, topospec)
                 self.tens.append(ten)
         Store.objects.SetAll(self.tens)
         return

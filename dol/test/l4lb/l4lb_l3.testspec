@@ -71,12 +71,12 @@ packets:
             ipv4:
                 src     : ref://testcase/config/flow/nat_sip
                 dst     : ref://testcase/config/flow/nat_dip
-                tos     : ref://testcase/config/flow/eg_qos/dscp
+                tos     : ref://testcase/config/flow/txqos/dscp
                 ttl     : callback://networking/packets/GetRoutedTtl
             ipv6:
                 src     : ref://testcase/config/flow/nat_sip
                 dst     : ref://testcase/config/flow/nat_dip
-                tc      : ref://testcase/config/flow/eg_qos/dscp
+                tc      : ref://testcase/config/flow/txqos/dscp
                 hlim    : callback://networking/packets/GetRoutedTtl
             udp:
                 sport   : ref://testcase/config/flow/nat_sport

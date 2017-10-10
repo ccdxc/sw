@@ -57,17 +57,17 @@ packets:
                 src     : callback://l4lb/callbacks/GetL2FlowL4LbPostNatSmac
                 dst     : callback://l4lb/callbacks/GetL2FlowL4LbPostNatDmac
             qtag:
-                prio    : ref://testcase/config/flow/eg_qos/cos
+                prio    : ref://testcase/config/flow/txqos/cos
             ipv4:
                 src     : ref://testcase/config/flow/nat_sip
                 dst     : ref://testcase/config/flow/nat_dip
                 ttl     : 64
-                tos     : ref://testcase/config/flow/eg_qos/dscp
+                tos     : ref://testcase/config/flow/txqos/dscp
             ipv6:
                 src     : ref://testcase/config/flow/nat_sip
                 dst     : ref://testcase/config/flow/nat_dip
                 hlim    : 64
-                tc      : ref://testcase/config/flow/eg_qos/dscp
+                tc      : ref://testcase/config/flow/txqos/dscp
             udp:
                 sport   : ref://testcase/config/flow/nat_sport
                 dport   : ref://testcase/config/flow/nat_dport

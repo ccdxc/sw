@@ -27,13 +27,18 @@ function DryRunSanity()
     ErrorCheckNExit $? "$topo topo"
 }
 
-DryRunSanity eth dolut
-DryRunSanity eth eth
-DryRunSanity vxlan vxlan
-DryRunSanity up2up networking
-DryRunSanity telemetry telemetry
 DryRunSanity fte fte
-DryRunSanity admin admin
+DryRunSanity norm norm
+DryRunSanity eth eth
+DryRunSanity acl acl
 DryRunSanity proxy proxy
+#DryRunSanity proxy ipsec
+DryRunSanity up2up networking
+DryRunSanity vxlan vxlan
+DryRunSanity eth ipsg
+DryRunSanity firewall firewall
+DryRunSanity telemetry telemetry
+DryRunSanity admin admin
 
+DryRunSanity eth dolut
 exit 0

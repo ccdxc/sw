@@ -21,6 +21,8 @@ uplinkpc: None
 
 acls: None
 
+qos : False
+
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_DEFAULT
 
 tenants:

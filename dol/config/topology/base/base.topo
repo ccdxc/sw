@@ -52,6 +52,8 @@ ipsec: True
 
 acls: ref://store/specs/id=ACL
 
+qos : False
+
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_DEFAULT
 
 tenants:

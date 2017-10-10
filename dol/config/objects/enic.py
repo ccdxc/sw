@@ -22,6 +22,7 @@ gl_pinif_iter = 0
 class EnicObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
+        self.Clone(Store.templates.Get('ENIC'))
         self.id = resmgr.InterfaceIdAllocator.get()
         self.GID("Enic%d" % self.id)
         return
@@ -42,6 +43,7 @@ class EnicObject(base.ConfigObjectBase):
             self.encap_vlan_id = segment.vlan_id
         self.ep = None
         self.label = None
+        self.__init_qos()
         return
 
     def __pin_interface(self):
@@ -71,6 +73,10 @@ class EnicObject(base.ConfigObjectBase):
         cfglogger.info("  - EnicType   = %s" % self.type)
         cfglogger.info("  - EncapVlan  = %d" % self.encap_vlan_id)
         cfglogger.info("  - Lif        = %s" % self.lif.GID())
+        cfglogger.info("  - txqos: Cos:%s/Dscp:%s" %\
+                       (str(self.txqos.cos), str(self.txqos.dscp)))
+        cfglogger.info("  - rxqos: Cos:%s/Dscp:%s" %\
+                       (str(self.rxqos.cos), str(self.rxqos.dscp)))
         if self.pinnedif:
             cfglogger.info("  - PinnedIF   = %s" % self.pinnedif.GID())
         return
@@ -84,6 +90,25 @@ class EnicObject(base.ConfigObjectBase):
         summary += '/EncVlan:%s' % self.encap_vlan_id
         summary += '/%s' % self.lif.GID()
         return summary
+
+    def __init_qos(self):
+        self.txqos.cos = resmgr.QosCosAllocator.get()
+        self.rxqos.cos = resmgr.QosCosAllocator.get()
+        self.txqos.dscp = resmgr.QosDscpAllocator.get()
+        self.rxqos.dscp = resmgr.QosDscpAllocator.get()
+        return
+
+    def GetTxQosCos(self):
+        return self.txqos.cos
+
+    def GetRxQosCos(self):
+        return self.rxqos.cos
+
+    def GetTxQosDscp(self):
+        return self.txqos.dscp
+
+    def GetRxQosDscp(self):
+        return self.rxqos.cos
 
     def IsSegmentMatch(self, segid):
         return self.segment.GID() == segid
@@ -115,7 +140,14 @@ class EnicObject(base.ConfigObjectBase):
             req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_PVLAN
         else:
             assert(0)
-
+        # QOS stuff
+        if self.txqos.cos is not None:
+            req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True
+            req_spec.tx_qos_actions.marking_spec.pcp = self.txqos.cos
+        if self.txqos.dscp is not None:
+            req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
+            req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
+ 
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

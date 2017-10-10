@@ -25,15 +25,6 @@ l4lb: ref://store/specs/id=L4LB
 security_profile: ref://store/objects/id=SEC_PROF_ACTIVE
 
 sessions:
-    l4lb:
-        ipv4:
-            - ref://store/specs/id=SESSION_L4LB_TCP
-            - ref://store/specs/id=SESSION_L4LB_UDP
-
-        ipv6:
-            - ref://store/specs/id=SESSION_L4LB_TCP
-            - ref://store/specs/id=SESSION_L4LB_UDP
-
     unidest:
         scale: 16
         ipv4:

@@ -269,6 +269,10 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
             nat_dip.af = IP_AF_IPV6;
             nat_dip.addr.v6_addr = rewrite.ipv6.dip;
         }
+        if (rewrite.valid_flds.dscp) {
+            attrs.dscp_en = true;
+            attrs.dscp = rewrite.ipv6.dscp;
+        }
         break;
     }
 

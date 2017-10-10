@@ -5,6 +5,7 @@ import infra.common.defs            as defs
 import infra.common.parser          as parser
 import infra.common.timeprofiler    as timeprofiler
 import config.hal.api               as halapi
+import config.resmgr                as resmgr
 
 from config.objects.uplink              import UplinkHelper
 from config.objects.uplinkpc            import UplinkPcHelper
@@ -23,6 +24,7 @@ from config.objects.brq                 import BRQHelper
 from config.objects.timer               import TimerHelper
 
 def process(topospec):
+    resmgr.InitQos(topospec)
     # Security Profiles
     SecurityProfileHelper.main(topospec)
     # Uplinks

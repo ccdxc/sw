@@ -119,18 +119,18 @@ def GetExpectedPacketEncaps(testcase, packet):
     return encaps
 
 def GetExpectedPacketCos(testcase, packet):
-    if testcase.config.flow.eg_qos.cos_rw.get():
-        return testcase.config.flow.eg_qos.cos.get()
+    if testcase.config.flow.txqos.cos is not None:
+        return testcase.config.flow.txqos.cos
 
     # If we sent pkt with a tag, we should receive with same cos we sent with
     if testcase.config.src.segment.native == False or \
         IsPriorityTagged(testcase.pvtdata) == True:
-        return testcase.config.flow.eg_qos.cos.get()
+        return testcase.config.flow.txqos.cos
 
     # For Host TX cases they have a qtag
     if testcase.config.src.endpoint and\
         testcase.config.src.endpoint.remote == False:
-        return testcase.config.flow.eg_qos.cos.get()
+        return testcase.config.flow.txqos.cos
 
     return 0
 

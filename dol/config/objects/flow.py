@@ -65,12 +65,18 @@ class FlowObject(base.ConfigObjectBase):
         self.espspi     = None
         self.state      = self.__sfep.flow_info.state.upper()
         self.action     = self.__sfep.flow_info.action.upper()
-        self.in_qos     = self.__sfep.flow_info.in_qos
-        self.eg_qos     = self.__dfep.flow_info.eg_qos
 
         self.__init_key()
         self.__init_info()
         self.__init_nat()
+        self.__init_qos()
+        return
+
+    def __init_qos(self):
+        self.txqos.cos  = self.__sfep.GetTxQosCos()
+        self.txqos.dscp = self.__sfep.GetTxQosDscp()
+        self.rxqos.cos  = self.__dfep.GetRxQosCos()
+        self.rxqos.dscp = self.__dfep.GetRxQosDscp()
         return
 
     def __init_nat(self):
@@ -81,10 +87,10 @@ class FlowObject(base.ConfigObjectBase):
         else:
             self.nat_type = 'NONE'
 
-        self.nat_sip = self.__sfep.GetNatSip()
-        self.nat_sport = self.__sfep.GetNatSport()
-        self.nat_dip = self.__dfep.GetNatDip()
-        self.nat_dport = self.__dfep.GetNatDport()
+        self.nat_sip    = self.__sfep.GetNatSip()
+        self.nat_sport  = self.__sfep.GetNatSport()
+        self.nat_dip    = self.__dfep.GetNatDip()
+        self.nat_dport  = self.__dfep.GetNatDport()
         return
 
 
@@ -264,13 +270,16 @@ class FlowObject(base.ConfigObjectBase):
             req_spec.flow_data.conn_track_info.tcp_win_scale = self.__sfep.tracking_info.tcp_win_scale.get()
             req_spec.flow_data.conn_track_info.tcp_mss = self.__sfep.tracking_info.tcp_mss.get()
 
-        #req_spec.flow_data.flow_info.egress_mirror_session = self.__span.hal_handle
         # QOS stuff
-        req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.pcp_rewrite_en = self.eg_qos.cos_rw.get()
-        req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.pcp = self.eg_qos.cos.get()
-        req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp_rewrite_en = self.eg_qos.dscp_rw.get()
-        req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp = self.eg_qos.dscp.get()
+        #if self.__sten.IsQosEnabled():
+        if self.txqos.cos is not None:
+            req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.pcp_rewrite_en = True
+            req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.pcp = self.txqos.cos
+        if self.txqos.dscp is not None:
+            req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp_rewrite_en = True
+            req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp = self.txqos.dscp
 
+        #req_spec.flow_data.flow_info.egress_mirror_session = self.__span.hal_handle
         for ssn in self.ing_mirror_sessions:
             ssn_spec = req_spec.flow_data.flow_info.ing_mirror_sessions.add()
             ssn_spec.session_id = ssn.id
@@ -314,6 +323,11 @@ class FlowObject(base.ConfigObjectBase):
         if self.IsDnat():
             string += '/%s/%s/%d' % (self.nat_type, self.nat_dip.get(), self.nat_dport)
         cfglogger.info("  - info   : %s" % string)
+
+        cfglogger.info('  - txqos: Cos:%s/Dscp:%s' %\
+                       (str(self.txqos.cos), str(self.txqos.dscp)))
+        cfglogger.info('  - rxqos: Cos:%s/Dscp:%s' %\
+                       (str(self.rxqos.cos), str(self.rxqos.dscp)))
 
         if len(self.ing_mirror_sessions):
             string = ''

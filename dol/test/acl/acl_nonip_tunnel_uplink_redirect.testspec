@@ -61,7 +61,7 @@ packets:
                 dst     : ref://testcase/pvtdata/acl/fields/action/macda
             qtag:
                 vlan    : ref://testcase/pvtdata/acl/fields/action/encap_id
-                prio    : ref://testcase/config/flow/eg_qos/cos
+                prio    : ref://testcase/config/flow/txqos/cos
 
 trigger:
     packets:

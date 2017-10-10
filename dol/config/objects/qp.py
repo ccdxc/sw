@@ -215,10 +215,10 @@ class QpObject(base.ConfigObjectBase):
         EthHdr = scapy.Ether(src=rdma_session.session.initiator.ep.macaddr.get(),
                              dst=rdma_session.session.responder.ep.macaddr.get())
         Dot1qHdr = scapy.Dot1Q(vlan=rdma_session.session.initiator.ep.intf.encap_vlan_id,
-                               prio=rdma_session.session.iflow.eg_qos.cos.get())
+                               prio=rdma_session.session.iflow.txqos.cos)
         IpHdr = scapy.IP(src=rdma_session.session.initiator.addr.get(),
                          dst=rdma_session.session.responder.addr.get(),
-                         tos=rdma_session.session.iflow.eg_qos.dscp.get(),
+                         tos=rdma_session.session.iflow.txqos.dscp,
                          len = 0, chksum = 0)
         UdpHdr = scapy.UDP(sport=rdma_session.session.iflow.sport,
                            dport=rdma_session.session.iflow.dport,

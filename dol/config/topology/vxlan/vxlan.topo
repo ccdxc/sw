@@ -53,6 +53,8 @@ ipsec: None
 
 acls: None
 
+qos : True
+
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 
 tenants:

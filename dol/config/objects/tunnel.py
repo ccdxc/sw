@@ -33,8 +33,28 @@ class TunnelObject(base.ConfigObjectBase):
         self.vlan_id    = self.remote_ep.segment.vlan_id
         self.macaddr    = self.remote_ep.segment.macaddr
         self.rmacaddr   = self.remote_ep.macaddr
+        self.__init_qos()
         self.Show()
         return
+
+    def __init_qos(self):
+        self.txqos.cos = resmgr.QosCosAllocator.get()
+        self.rxqos.cos = resmgr.QosCosAllocator.get()
+        self.txqos.dscp = resmgr.QosDscpAllocator.get()
+        self.rxqos.dscp = resmgr.QosDscpAllocator.get()
+        return
+
+    def GetTxQosCos(self):
+        return self.txqos.cos
+
+    def GetRxQosCos(self):
+        return self.rxqos.cos
+
+    def GetTxQosDscp(self):
+        return self.txqos.dscp
+
+    def GetRxQosDscp(self):
+        return self.rxqos.dscp
 
     def Show(self):
         cfglogger.info("Tunnel = %s" % self.GID())
@@ -44,6 +64,10 @@ class TunnelObject(base.ConfigObjectBase):
         cfglogger.info("- RemoteTep   = %s" % self.rtep.get())
         cfglogger.info("- Interface   = %s" % self.remote_ep.GetInterface().GID())
         cfglogger.info("- Ports       =", self.ports)
+        cfglogger.info("- txqos: Cos:%s/Dscp:%s" %\
+                       (str(self.txqos.cos), str(self.txqos.dscp)))
+        cfglogger.info("- rxqos: Cos:%s/Dscp:%s" %\
+                       (str(self.rxqos.cos), str(self.rxqos.dscp)))
         return
 
     def Summary(self):
@@ -75,6 +99,15 @@ class TunnelObject(base.ConfigObjectBase):
             req_spec.if_tunnel_info.vxlan_info.remote_tep.v4_addr = self.rtep.getnum()
         else:
             assert(0)
+
+        # QOS stuff
+        if self.txqos.cos is not None:
+            req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True
+            req_spec.tx_qos_actions.marking_spec.pcp = self.txqos.cos
+        if self.txqos.dscp is not None:
+            req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
+            req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
+ 
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

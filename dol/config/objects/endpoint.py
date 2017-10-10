@@ -103,6 +103,18 @@ class EndpointObject(base.ConfigObjectBase):
             self.SetMacAddress(intf.macaddr)
         self.Show()
         return
+
+    def GetTxQosCos(self):
+        return self.intf.GetTxQosCos()
+
+    def GetRxQosCos(self):
+        return self.intf.GetRxQosCos()
+
+    def GetTxQosDscp(self):
+        return self.intf.GetTxQosDscp()
+
+    def GetRxQosDscp(self):
+        return self.intf.GetRxQosDscp()
     
     def Show(self):
         cfglogger.info("- Endpoint = %s(%d)" % (self.GID(), self.id))

@@ -39,12 +39,36 @@ class UplinkPcObject(base.ConfigObjectBase):
             mbrobj = mbr.Get(Store)
             self.members.append(mbrobj)
             self.ports.append(mbrobj.port)
+        self.__init_qos()
         self.Show()
         return
+
+    def __init_qos(self):
+        self.txqos.cos = resmgr.QosCosAllocator.get()
+        self.rxqos.cos = resmgr.QosCosAllocator.get()
+        self.txqos.dscp = resmgr.QosDscpAllocator.get()
+        self.rxqos.dscp = resmgr.QosDscpAllocator.get()
+        return
+
+    def GetTxQosCos(self):
+        return self.txqos.cos
+
+    def GetRxQosCos(self):
+        return self.rxqos.cos
+
+    def GetTxQosDscp(self):
+        return self.txqos.dscp
+
+    def GetRxQosDscp(self):
+        return self.rxqos.dscp
 
     def Show(self):
         cfglogger.info("Creating UplinkPC = %s(IFID:%d) Port=%d" %\
                        (self.GID(), self.id, self.port))
+        cfglogger.info("- txqos: Cos:%s/Dscp:%s" %\
+                       (str(self.txqos.cos), str(self.txqos.dscp)))
+        cfglogger.info("- rxqos: Cos:%s/Dscp:%s" %\
+                       (str(self.rxqos.cos), str(self.rxqos.dscp)))
         for mbr in self.members:
             cfglogger.info("- Member: %s" % mbr.GID())
         return
@@ -84,7 +108,14 @@ class UplinkPcObject(base.ConfigObjectBase):
         segments = Store.objects.GetAllByClass(segment.SegmentObject)
         for seg in segments:
             req_spec.if_uplink_pc_info.l2segment_id.append(seg.id)
-
+        # QOS stuff
+        if self.txqos.cos is not None:
+            req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True
+            req_spec.tx_qos_actions.marking_spec.pcp = self.txqos.cos
+        if self.txqos.dscp is not None:
+            req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
+            req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
+ 
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

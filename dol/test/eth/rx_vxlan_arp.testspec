@@ -57,7 +57,7 @@ packets:
         headers     :
             qtag:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
-                prio: ref://testcase/config/flow/eg_qos/cos
+                prio: ref://testcase/config/flow/txqos/cos
 
     - packet:
         id          : PKT3 # Expected Packet on FTE

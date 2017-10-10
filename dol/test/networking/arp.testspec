@@ -43,7 +43,7 @@ packets:
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             qtag    :
-                prio: ref://testcase/config/flow/eg_qos/cos
+                prio: ref://testcase/config/flow/txqos/cos
 
 trigger:
     packets:
