@@ -269,6 +269,11 @@ parser parse_i2e_metadata {
 @pragma allow_set_meta control_metadata.span_copy
 parser parse_span_copy {
     set_metadata(control_metadata.span_copy, 1);
+    return parse_ethernet_span_copy;
+}
+
+@pragma xgress egress
+parser parse_ethernet_span_copy {
     extract(ethernet);
     return ingress;
 }
