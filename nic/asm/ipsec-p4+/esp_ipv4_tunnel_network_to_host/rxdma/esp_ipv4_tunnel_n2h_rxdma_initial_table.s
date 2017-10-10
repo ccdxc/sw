@@ -15,6 +15,10 @@ struct phv_ p;
 esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
 
+    phvwri p.p4_intr_global_tm_oport, TM_OPORT_P4INGRESS
+    phvwri p.p4_intr_global_tm_iport, TM_OPORT_DMA
+    phvwri p.p4_intr_global_lif, 1003
+
    //payload_start sent by p4 as outer-IP+base-esp(8 bytes)
     //add r1, r0, d.iv_size
     phvwr p.ipsec_int_header_payload_start, k.p42p4plus_hdr_ipsec_payload_start 
@@ -30,7 +34,9 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     //addi r3, r3, ESP_FIXED_HDR_SIZE 
     //sub r4, k.p42p4plus_hdr_ipsec_payload_start, r3 
     phvwr p.ipsec_int_header_headroom, k.p42p4plus_hdr_ipsec_payload_start 
-    phvwr p.ipsec_int_header_headroom_offset, k.p42p4plus_hdr_ipsec_payload_start 
+    add r3, r0, k.p42p4plus_hdr_ipsec_payload_start
+    add r3, r3, k.p42p4plus_hdr_ip_hdr_size
+    phvwr p.ipsec_int_header_headroom_offset, r3 
   
     add r1, r0, k.p42p4plus_hdr_ipsec_payload_start
     add r1, r1, k.p42p4plus_hdr_ip_hdr_size
@@ -48,7 +54,8 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     add r6, r0, k.p42p4plus_hdr_ipsec_payload_start
     add r6, r6, k.p42p4plus_hdr_ip_hdr_size
     addi r6, r6, 4
-    phvwr p.ipsec_to_stage3_iv_salt_off, r6 
+    phvwr p.ipsec_to_stage3_iv_salt_off, r6
+    phvwr p.ipsec_to_stage3_iv_salt, d.iv_salt 
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 
     // seq-no logic

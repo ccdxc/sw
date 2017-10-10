@@ -37,6 +37,13 @@ header_type ipsec_table0_s2s {
     }
 }
 
+#define IPSEC_DECRYPT_TXDMA2_T0_S2S_SCRATCH \
+    modify_field(t0_s2s_scratch.in_page_addr, t0_s2s.in_page_addr); \
+    modify_field(t0_s2s_scratch.out_page_addr, t0_s2s.out_page_addr); \
+    modify_field(t0_s2s_scratch.headroom_offset, t0_s2s.headroom_offset); \
+    modify_field(t0_s2s_scratch.tailroom_offset, t0_s2s.tailroom_offset); \
+
+
 header_type ipsec_table1_s2s {
     fields {
         out_desc_addr : ADDRESS_WIDTH;
@@ -74,8 +81,9 @@ header_type ipsec_to_stage2_t {
 
 header_type ipsec_to_stage3_t {
     fields {
-        stage3_pad0     : ADDRESS_WIDTH;
-        stage3_pad1     : ADDRESS_WIDTH;
+        in_page        : ADDRESS_WIDTH;
+        headroom       : 16;
+        stage3_pad1     : 48;
     }
 }
 
@@ -153,6 +161,15 @@ metadata ipsec_int_pad_t ipsec_int_pad_scratch;
     modify_field(barco_req_scratch.sector_size,sector_size); \
     modify_field(barco_req_scratch.application_tag,application_tag); \
 
+#define IPSEC_DECRYPT_GLOBAL_SCRATCH \
+    modify_field(txdma2_global_scratch.in_desc_addr, txdma2_global.in_desc_addr); \
+    modify_field(txdma2_global_scratch.ipsec_cb_index, txdma2_global.ipsec_cb_index); \
+    modify_field(txdma2_global_scratch.iv_size, txdma2_global.iv_size); \
+    modify_field(txdma2_global_scratch.icv_size, txdma2_global.icv_size); \
+    modify_field(txdma2_global_scratch.pad_size, txdma2_global.pad_size); \
+    modify_field(txdma2_global_scratch.l4_protocol, txdma2_global.l4_protocol); \
+    modify_field(txdma2_global_scratch.payload_size, txdma2_global.payload_size); \
+
 
 //stage 4
 action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
@@ -166,14 +183,18 @@ action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
                                        cb_pindex, cb_cindex, cb_ring_base_addr, 
                                        iv_salt, ipsec_cb_pad)
 {
+    IPSEC_DECRYPT_GLOBAL_SCRATCH
+    IPSEC_DECRYPT_TXDMA2_T0_S2S_SCRATCH
+    modify_field(ipsec_to_stage3_scratch.in_page, ipsec_to_stage3.in_page);
+    modify_field(ipsec_to_stage3_scratch.headroom, ipsec_to_stage3.headroom);
     // Add intrinsic and app header
     DMA_COMMAND_PHV2PKT_FILL(intrinsic_app_hdr, 0, 32, 0)
 
     // Add ethernet, optional-vlan and outer-ip from input-descriptor
-    DMA_COMMAND_MEM2PKT_FILL(eth_hdr, t0_s2s.in_page_addr, t0_s2s.headroom_offset, 0, 0, 0) 
+    //DMA_COMMAND_MEM2PKT_FILL(eth_hdr, t0_s2s.in_page_addr, t0_s2s.headroom_offset, 0, 0, 0) 
 
     // Add decrypted payload from output page size is payload_size-pad
-    DMA_COMMAND_MEM2PKT_FILL(dec_pay_load, t0_s2s.out_page_addr, (txdma2_global.payload_size - txdma2_global.pad_size), 0, 0, 0)
+    //DMA_COMMAND_MEM2PKT_FILL(dec_pay_load, t0_s2s.out_page_addr, (txdma2_global.payload_size - txdma2_global.pad_size), 0, 0, 0)
 
     modify_field(p4_txdma_intr.dma_cmd_ptr, TXDMA2_DECRYPT_DMA_COMMANDS_OFFSET);
 

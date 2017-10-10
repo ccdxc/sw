@@ -19,8 +19,8 @@ esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     phvwri p.ipsec_app_hdr_dma_cmd_phv_end_addr, IPSEC_TXDMA2_APP_HEADER_END 
     
     phvwri p.eth_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    phvwr  p.eth_hdr_dma_cmd_addr, k.t0_s2s_in_page_addr
-    phvwr  p.eth_hdr_dma_cmd_size, k.t0_s2s_headroom_offset
+    phvwr  p.eth_hdr_dma_cmd_addr, k.ipsec_to_stage3_in_page
+    phvwr  p.eth_hdr_dma_cmd_size, k.ipsec_to_stage3_headroom
     
     phvwri p.dec_pay_load_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     phvwr p.dec_pay_load_dma_cmd_addr, k.t0_s2s_out_page_addr
