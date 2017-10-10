@@ -76,7 +76,8 @@ capri_model = {
                 'or_val' : '4',
                 'set_val' : '5'
             },
-        }
+        },
+        'max_csum_engines' : 4
     },
     'deparser': {
         'max_hdr_flds' : 256,
@@ -85,5 +86,8 @@ capri_model = {
         'dpa_src_phv' : 1,
         'dpa_src_ohi' : 2,
         'dpa_src_pkt' : 3,
+        'len_phv_start' : 512,
+        'max_csum_engines' : 4,
+        'dpa_start_hvb_in_phv' : 511
     },
 }

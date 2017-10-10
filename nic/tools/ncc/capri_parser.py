@@ -399,6 +399,18 @@ class capri_parse_state:
         self.hw_lkp_size = sum([v for v in self.parser.be.hw_model['parser']['lkp_regs']])
         self.key_l2p_map = None
 
+        # Checksum / Calculated Field List related values stored in parse-state
+        self.verify_cal_field_objs = [] # List of objects (At most 2 supported 
+                                        # in a parse state)
+        self.phdr_offset_ohi_id = -1    # In case of phdr capture IP hdr offset
+                                        # start in this ohi_sel.
+        self.totalLen_ohi_id = -1       # used to store ohi# where
+                                        # totaLen-ihl*4 is captured
+        self.payloadLen_stored_lkp_reg = -1 # lkp reg where v6.payloadlen
+                                            # is stored.
+        self.phdr_type = ''             # Used to indicate phdr is v4/v6
+
+
     def lkp_reg_alloc(self):
         for i,lr in enumerate(self.lkp_regs):
             if lr.type == lkp_reg_type.LKP_REG_NONE:
@@ -619,6 +631,15 @@ class capri_parser_expr:
                 self.op3 = '-'
                 self.const = s_val * (-1)
 
+    def flatten_capri_expr(self):
+        pstr = 'EXPR:%s %s (%s %s %s) %s %s\n' % \
+                (self.src_reg.hfname if self.src_reg else None, self.op2,
+                 self.src1.hfname if isinstance(self.src1, capri_field) else self.src1, 
+                 self.op1, self.shft,
+                 self.op3, self.const)
+        return pstr
+
+
     def __repr__(self):
         if self.src_reg and not isinstance(self.src_reg, capri_field): pdb.set_trace()
         pstr = 'EXPR:%s %s (%s %s %s) %s %s\n' % \
@@ -653,6 +674,7 @@ class capri_parser:
         parser_flits = self.be.hw_model['parser']['parser_num_flits']
         hv_per_flit = self.be.hw_model['parser']['flit_hv_bits']
         self.hdr_hv_bit = OrderedDict() # ordered so it is easy to debug when printed
+        self.csum_hdr_hv_bit = OrderedDict()
         self.hv_bit_header = [ None for _ in range(self.be.hw_model['parser']['max_hv_bits']) ]     
 
         self.var_len_headers = OrderedDict() # {hdr_name : var_len_exp|str}
@@ -669,6 +691,11 @@ class capri_parser:
         self.saved_lkp_scope = OrderedDict()  # { cf : _scope() } - scope of a saved_lkp_field
         self.saved_lkp_reg_allocation = [None for _ in self.be.hw_model['parser']['lkp_regs']]
         self.saved_lkp_fld = OrderedDict() # {cf : saved_lkp_reg} XXX multiple regs per field
+
+        self.free_chksum_ohi_slots = [True for i in \
+                range(self.be.hw_model['parser']['ohi_threshold'] \
+                + self.be.hw_model['parser']['max_csum_engines'] * 2, \
+                self.be.hw_model['parser']['num_ohi'])]
 
     def get_header_size(self, hdr):
         # return fixed len or P4field/expression that represents len
@@ -1288,6 +1315,29 @@ class capri_parser:
         self.logger.debug("%s:OHI %s" % (self.d.name, ohi))
         return ohi
 
+
+    def assign_ohi_slots_for_checksum(self, csum_unit, instance):
+        '''
+        Every Csum engine needs atleast 2 OHIs. One for storing offset and
+        second for storing csum  len. Hence for 5 csum engines first 10
+        OHI slots are used. 
+        In some cases a csum unit needs more than 2 slots. Storing phdr offset
+        tcp offset, tcp len.
+        '''
+        if instance != -1:
+            ohid = self.be.hw_model['parser']['ohi_threshold'] + \
+                   (csum_unit * 2) + instance
+        else:
+            try:
+                ohid = self.free_chksum_ohi_slots.index(True)
+                self.free_chksum_ohi_slots[ohid] = False
+                ohid += self.be.hw_model['parser']['ohi_threshold'] \
+                        + (self.be.hw_model['parser']['max_csum_engines'] * 2)
+            except:
+                assert(0), pdb.set_trace()
+
+        return ohid
+
     def assign_ohi_slots(self):
         # go thru' longest parse_path and assign ohi slots to headers as needed
         # keep doing it until all headers are done
@@ -1509,8 +1559,9 @@ class capri_parser:
             else:
                 hv_headers.insert(0, self.be.pa.gress_pa[xgress.INGRESS].i2e_hdr)
 
-        for hidx in range(len(hv_headers)):
-            h = hv_headers[hidx]
+        hidx = 0
+        for _hidx in range(len(hv_headers)):
+            h = hv_headers[_hidx]
             hf_name = h.name + '.valid'
             cf = self.be.pa.get_field(hf_name, self.d)
             assert cf and cf.is_hv, pdb.set_trace()
@@ -1520,6 +1571,19 @@ class capri_parser:
             self.hdr_hv_bit[h] = hv_bit
             self.hv_bit_header[max_hv_bits - hidx - 1] = h
             hv_bit -= 1
+            hidx += 1
+
+            #CSUM: Build csum hv bit dict
+            if self.d == xgress.EGRESS and self.be.CalFieldList.IsHdrInCsumCompute(h.name):
+                hf_name = h.name + '.csum'
+                csum_cf = self.be.pa.get_field(hf_name, self.d)
+                assert csum_cf and cf.is_hv, pdb.set_trace()
+                csum_cf.phv_bit = hv_bit
+                self.be.pa.replace_hv_field(hv_bit, csum_cf, self.d)
+                self.csum_hdr_hv_bit[h] = hv_bit
+                self.hv_bit_header[max_hv_bits - hidx - 1] = h
+                hv_bit -= 1
+                hidx += 1
 
     def assign_state_ids(self):
         # for now just assign sequential ids

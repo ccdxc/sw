@@ -22,6 +22,9 @@ header_type parser_metadata_t {
         parse_tcp_counter               : 8;
         l4_options_length               : 8;
         ipv6_nextHdr                    : 8;
+        ipv6_payloadLen                 : 16;
+        ipv4hdr_len                     : 16;
+        inner_ipv4hdr_len               : 16;
     }
 }
 @pragma pa_parser_local
@@ -405,6 +408,7 @@ field_list ipv4_checksum_list {
     ipv4.dstAddr;
 }
 
+@pragma checksum hdr_len_expr parser_metadata.ipv4hdr_len + 20
 field_list_calculation ipv4_checksum {
     input {
         ipv4_checksum_list;
@@ -421,6 +425,7 @@ calculated_field ipv4.hdrChecksum  {
 parser parse_base_ipv4 {
     // option-blob parsing - parse_ipv4 does not extract ipv4 header
     extract(ipv4);
+    set_metadata(parser_metadata.ipv4hdr_len, (ipv4.ihl << 2) - 20);
     return select(ipv4.fragOffset, ipv4.protocol) {
         IP_PROTO_ICMP : parse_icmp;
         IP_PROTO_TCP : parse_tcp;
@@ -497,9 +502,9 @@ parser parse_ipv4_options {
 }
 #endif
 
+
 @pragma hdr_len ipv4.ihl
 header ipv4_options_blob_t ipv4_options_blob;
-
 parser parse_ipv4_options_blob {
     // Separate state is created to set options_seen flag 
     // Otherwise options can be extracted blindly.. if they happen to be 0 len
@@ -507,6 +512,11 @@ parser parse_ipv4_options_blob {
 
     // Must extract ipv4 header and ipv4_options_blob in the same state
     extract(ipv4);
+
+    // set hdr len same as option header len. In csum profile
+    // standard IP hdr len of 20 bytes is adjusted.
+    set_metadata(parser_metadata.ipv4hdr_len, (ipv4.ihl << 2) - 20);
+
     // All options are extracted as a single header
     extract(ipv4_options_blob);
     set_metadata(l3_metadata.ip_option_seen, 1);
@@ -521,6 +531,7 @@ parser parse_ipv4_options_blob {
         IP_PROTO_IPSEC_ESP : parse_ipsec_esp;
         default: ingress;
     }
+
 }
 
 parser parse_ipv4 {
@@ -546,6 +557,11 @@ header ipv6_extn_ah_esp_t v6_ah_esp;
 parser parse_v6_generic_ext_hdr {
     extract(v6_generic);
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
+
+    // !!!TODO!!! -- how to decement size of header ???
+    //set_metadata(parser_metadata.ipv6_payloadLen, parser_metadata.ipv6_payloadLen - sizeof option header);
+
+
     return parse_ipv6_extn_hdrs;
 }
 
@@ -593,6 +609,7 @@ parser parse_ipv6_extn_hdrs {
 parser parse_ipv6 {
     extract(ipv6);
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
+    set_metadata(parser_metadata.ipv6_payloadLen, ipv6.payloadLen);
     return select(parser_metadata.ipv6_nextHdr) {
         // go to ulp if no extention headers to avoid a state transition
         IP_PROTO_ICMPV6 : parse_icmpv6;
@@ -669,6 +686,7 @@ field_list ipv4_tcp_checksum_list {
     payload;
 }
 
+@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
 field_list_calculation ipv4_tcp_checksum {
     input {
         ipv4_tcp_checksum_list;
@@ -695,6 +713,7 @@ field_list ipv6_tcp_checksum_list {
     payload;
 }
 
+@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
 field_list_calculation ipv6_tcp_checksum {
     input {
         ipv6_tcp_checksum_list;
@@ -704,6 +723,8 @@ field_list_calculation ipv6_tcp_checksum {
 }
 
 calculated_field tcp.checksum {
+    verify ipv4_tcp_checksum;
+    verify ipv6_tcp_checksum;
     update ipv4_tcp_checksum if (nat_metadata.update_checksum == TRUE);
     update ipv6_tcp_checksum if (valid(ipv6));
 }
@@ -865,6 +886,7 @@ field_list ipv4_udp_checksum_list {
     payload;
 }
 
+@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
 field_list_calculation ipv4_udp_checksum {
     input {
         ipv4_udp_checksum_list;
@@ -883,6 +905,7 @@ field_list ipv6_udp_checksum_list {
     payload;
 }
 
+@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
 field_list_calculation ipv6_udp_checksum {
     input {
         ipv6_udp_checksum_list;
@@ -892,6 +915,8 @@ field_list_calculation ipv6_udp_checksum {
 }
 
 calculated_field udp.checksum {
+    verify ipv4_udp_checksum;
+    verify ipv6_udp_checksum;
     update ipv4_udp_checksum if (nat_metadata.update_checksum == TRUE);
     update ipv6_udp_checksum if (valid(ipv6));
 }
@@ -985,6 +1010,7 @@ field_list inner_ipv4_checksum_list {
     inner_ipv4.dstAddr;
 }
 
+@pragma checksum hdr_len_expr parser_metadata.inner_ipv4hdr_len + 20
 field_list_calculation inner_ipv4_checksum {
     input {
         inner_ipv4_checksum_list;
@@ -1001,6 +1027,7 @@ calculated_field inner_ipv4.hdrChecksum {
 parser parse_base_inner_ipv4 {
     // option-blob parsing - extract inner_ipv4 here
     extract(inner_ipv4);
+    set_metadata(parser_metadata.inner_ipv4hdr_len, (inner_ipv4.ihl << 2) - 20);
     return select(inner_ipv4.fragOffset, inner_ipv4.protocol) {
         IP_PROTO_ICMP : parse_icmp;
         IP_PROTO_TCP : parse_tcp;
@@ -1071,7 +1098,6 @@ parser parse_inner_ipv4_options {
 
 @pragma hdr_len inner_ipv4.ihl
 header ipv4_options_blob_t inner_ipv4_options_blob;
-
 parser parse_inner_ipv4_options_blob {
     // Separate state is created to set options_seen flag 
     // Otherwise options can be extracted blindly.. if they happen to be 0 len
@@ -1079,6 +1105,9 @@ parser parse_inner_ipv4_options_blob {
 
     // Must extract inner_ipv4 header and inner_ipv4_options_blob in the same state
     extract(inner_ipv4);
+    // set hdr len same as option header len. In csum profile
+    // standard IP hdr len of 20 bytes is adjusted.
+    set_metadata(parser_metadata.inner_ipv4hdr_len, (inner_ipv4.ihl << 2) - 20);
     // All options are extracted as a single header
     extract(inner_ipv4_options_blob);
     set_metadata(l3_metadata.inner_ip_option_seen, 1);
@@ -1092,8 +1121,6 @@ parser parse_inner_ipv4_options_blob {
 }
 
 parser parse_inner_ipv4 {
-    // this code is kept disabled.. until NCC has a fix for handling 
-    // hdr unions and same set_metadata from multiple states while computing topo-graph
     return select(current(0,8)) {
         0x45    : parse_base_inner_ipv4;
         default : parse_inner_ipv4_options_blob;
@@ -1118,6 +1145,7 @@ field_list inner_ipv4_tcp_checksum_list {
     payload;
 }
 
+@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
 field_list_calculation inner_ipv4_tcp_checksum {
     input {
         inner_ipv4_tcp_checksum_list;
@@ -1144,6 +1172,8 @@ field_list inner_ipv6_tcp_checksum_list {
     payload;
 }
 
+    
+@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
 field_list_calculation inner_ipv6_tcp_checksum {
     input {
         inner_ipv6_tcp_checksum_list;
@@ -1153,6 +1183,8 @@ field_list_calculation inner_ipv6_tcp_checksum {
 }
 
 calculated_field tcp.checksum {
+    verify inner_ipv4_tcp_checksum;
+    verify inner_ipv6_tcp_checksum;
     update inner_ipv4_tcp_checksum if (nat_metadata.update_inner_checksum == TRUE);
     update inner_ipv6_tcp_checksum if (valid(inner_ipv6));
 }
@@ -1168,6 +1200,7 @@ field_list inner_ipv4_udp_checksum_list {
     payload;
 }
 
+@pragma checksum payload_len capri_deparser_len_hdr.inner_l4_payload_len
 field_list_calculation inner_ipv4_udp_checksum {
     input {
         inner_ipv4_udp_checksum_list;
@@ -1186,6 +1219,7 @@ field_list inner_ipv6_udp_checksum_list {
     payload;
 }
 
+@pragma checksum payload_len capri_deparser_len_hdr.inner_l4_payload_len
 field_list_calculation inner_ipv6_udp_checksum {
     input {
         inner_ipv6_udp_checksum_list;
@@ -1195,6 +1229,8 @@ field_list_calculation inner_ipv6_udp_checksum {
 }
 
 calculated_field inner_udp.checksum {
+    verify inner_ipv4_udp_checksum;
+    verify inner_ipv6_udp_checksum;
     update inner_ipv4_udp_checksum if (nat_metadata.update_inner_checksum == TRUE);
     update inner_ipv6_udp_checksum if (valid(inner_ipv6));
 }

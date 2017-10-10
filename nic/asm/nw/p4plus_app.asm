@@ -206,8 +206,8 @@ p4plus_app_rdma:
 f_p4plus_cpu_pkt:
   phvwr       p.p4_to_p4plus_cpu_pkt_valid, TRUE
   phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, k.{control_metadata_src_lif}.hx
-  phvwr       p.p4_to_p4plus_cpu_pkt_lif, k.{capri_intrinsic_lif_sbit0_ebit2,\
-                                             capri_intrinsic_lif_sbit3_ebit10}.hx
+  or          r1, k.capri_intrinsic_lif_sbit3_ebit10, k.capri_intrinsic_lif_sbit0_ebit2, 8
+  phvwr       p.p4_to_p4plus_cpu_pkt_lif, r1[15:0].hx
   phvwr       p.p4_to_p4plus_cpu_pkt_qid, k.{control_metadata_qid}.wx
   phvwr       p.p4_to_p4plus_cpu_pkt_qtype, k.control_metadata_qtype
   phvwr       p.p4_to_p4plus_cpu_pkt_lkp_vrf, k.{flow_lkp_metadata_lkp_vrf}.hx

@@ -1164,6 +1164,7 @@ def capri_deparser_logical_output(deparser):
 
 
 def capri_deparser_cfg_output(deparser):
+    hv_fld_slots = {} # Key = HVbit, Value = (fld_start, fld_end)
     # read the register spec json
     cur_path = os.path.abspath(__file__)
     cur_path = os.path.split(cur_path)[0]
@@ -1217,6 +1218,7 @@ def capri_deparser_cfg_output(deparser):
         rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx)
         dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-1)
         dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = str(0)
+        hv_fld_slots[max_hv_bit_idx] = (max_hdr_flds-1, 0)
         dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-1)
         dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-1)
         dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
@@ -1237,19 +1239,19 @@ def capri_deparser_cfg_output(deparser):
             continue
 
         assert h in deparser.topo_ordered_phv_ohi_chunks, pdb.set_trace()
+
         dp_hdr_fields = deparser.topo_ordered_phv_ohi_chunks[h]
 
-        #compute number of header field info slots this header needs.
-        # which is sum of PHV chunks and OHI slots
         phvchunks = 0 
         ohis = 0 
+
+        first_ohi = False
+        start_fld = used_hdr_fld_info_slots
 
         #Generate DPP block configurations
         rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx - hvb)
         # Logic = all_1_mask >> fld_end  & (all_1_mask << fld_start)
         
-        first_ohi = False
-        start_fld = used_hdr_fld_info_slots
         for i, chunks in enumerate(dp_hdr_fields):
             assert used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble"
             dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
@@ -1282,6 +1284,12 @@ def capri_deparser_cfg_output(deparser):
         dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(start_fld)
         dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = \
             str(max_hdr_flds - used_hdr_fld_info_slots)
+        hv_fld_slots[(max_hv_bit_idx - hvb)] = \
+                (start_fld, (max_hdr_flds - used_hdr_fld_info_slots), h.name)
+
+    if deparser.d == xgress.EGRESS:
+        deparser.be.CalFieldList.CsumDeParserConfigGenerate(deparser, \
+                                            hv_fld_slots, dpp_json)
 
     json.dump(dpp_json['cap_dpp']['registers'],
                 dpp_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
@@ -1372,7 +1380,7 @@ def _create_template(reg_json, decoder_json, ename):
     else:
         return copy.deepcopy(elem), None
 
-def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
+def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = None):
     parser.logger.debug("%s:fill_sram_entry for %s + %s" % \
         (parser.d.name, bi.nxt_state, add_cs))
     sram = copy.deepcopy(sram_t)
@@ -1438,6 +1446,35 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
         # add_off is not added into expr, instead it is added by h/w using 'value'
         offset_inst['val']['value'] = str(add_off)
 
+
+    
+    # As there is instruction pressure in entering into ipv4 or
+    # inner_ipv4 state. For CSUM try to reuse instructions.
+    option_len_expr_found = 0
+    reuse_mux_idx_id = -1
+    reuse_mux_instr_id = -1
+    reuse_instr_of_lkp_reg = -1
+    reuse_option_len_ohi_id = -1
+    if len(nxt_cs.verify_cal_field_objs) > 0:
+        for calfldobj in nxt_cs.verify_cal_field_objs:
+            if calfldobj.csum_hdrlen_parser_local_var != '':
+                for s_ops, set_ops_field in enumerate(nxt_cs.set_ops):
+                    if set_ops_field.dst.hfname == \
+                        calfldobj.csum_hdrlen_parser_local_var:
+                        option_len_expr_found = 1
+                        break
+                if option_len_expr_found:
+                    hdr_len_const = set_ops_field.const
+                    csum_hdr_len_expr = set_ops_field.capri_expr
+                    break
+    if option_len_expr_found:
+        hdr_len_expr_str = csum_hdr_len_expr.flatten_capri_expr()
+        for l_reg, lkp_reg  in enumerate(nxt_cs.lkp_regs):
+            if lkp_reg != None and lkp_reg.capri_expr and \
+                lkp_reg.capri_expr.flatten_capri_expr() == hdr_len_expr_str:
+                reuse_instr_of_lkp_reg = l_reg
+                break
+
     # lkp_val_inst
     for r,lkp_reg in enumerate(nxt_cs.lkp_regs):
         if lkp_reg.type == lkp_reg_type.LKP_REG_NONE:
@@ -1481,6 +1518,10 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
                     mux_id, lkp_reg.capri_expr)
                 sram['lkp_val_inst'][r]['sel']['value'] = str(1)
                 sram['lkp_val_inst'][r]['muxsel']['value'] = str(mux_inst_id)
+                
+                if reuse_instr_of_lkp_reg == r:
+                    reuse_mux_instr_id = mux_inst_id
+                    reuse_mux_idx_id = mux_id
             else:
                 # local var load from pkt
                 if lkp_reg.first_pkt_fld:
@@ -1493,6 +1534,7 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
 
                     sram['lkp_val_inst'][r]['sel']['value'] = str(0)
                     sram['lkp_val_inst'][r]['muxsel']['value'] = str(mux_id)
+
             
         if lkp_reg.store_en:
             sram['lkp_val_inst'][r]['store_en']['value'] = str(1)
@@ -1500,6 +1542,9 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
             sram['lkp_val_inst'][r]['store_en']['value'] = str(1)        
         else:
             sram['lkp_val_inst'][r]['store_en']['value'] = str(0)
+
+    #lkp instructions allocated so far
+    lkp_instr_inst = r
 
     # extract_inst
     # For all fields that go to phv, check if fields can be combined to extract
@@ -1583,9 +1628,19 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
                 s += 1
 
             if not isinstance(ohi.length, int):
+                # ohi.length is a capri expression
+                if option_len_expr_found:
+                    #When option hdr len expression is specified in parse-state,
+                    #lets reuse same instructions allocated to evaluate the expr
+                    #to specify option len in OHI
+                    mux_inst_id = reuse_mux_instr_id 
+                    reuse_option_len_ohi_id = ohi.var_id
+                else:
+                    #need to allocate mux_idx and inst
+                    mux_inst_id = _mux_inst_alloc()
+                    reuse_option_len_ohi_id = -1
+
                 #pdb.set_trace()
-                # ohi.length is a capri expression, need to allocate mux_idx and inst
-                mux_inst_id = _mux_inst_alloc()
                 assert ohi.length.src1, "No oprand for ohi.length expression %s" % ohi.length
 
                 # special case for option_blob where ohi len comes from another header field
@@ -1613,6 +1668,55 @@ def _fill_parser_sram_entry(sram_t, parser, bi, add_cs = None):
                 
             parser.logger.debug('OHI instruction[%d]: off %d, len %s' % \
                 (ohi.id, ohi.start + hdr_off, ohi.length))
+
+    #Generate Checksum related Configuration in parser.
+    if len(nxt_cs.verify_cal_field_objs) > 0:
+        #Too many OHIs in the state; cannot allocate OHI for checksum
+        assert s < hw_max_ohi_per_state, pdb.set_trace()
+
+        '''
+        # !!! Assert only one header is extracted; If more, then current offset
+        # capture for checksum/calfld verification will be a bit complicated !!!
+        assert s <= 1, pdb.set_trace()
+        # At a minimum, 2 ohi inst are needed. If payload checksum, three are
+        # needed. Check if that many ohi inst are available in this state.
+        assert(s + 2) < hw_max_ohi_per_state, pdb.set_trace()
+        '''
+        
+        if reuse_instr_of_lkp_reg != -1:
+            #Use same instrucstions that were used for
+            assert(reuse_mux_instr_id != -1), pdb.set_trace()
+            assert(reuse_mux_idx_id != -1), pdb.set_trace()
+
+        # Genearate Checksum config since transition to parser state 'nxt_cs'
+        # will extract header which has checksum field (p4 cal fld for verification)
+        s = parser.be.CalFieldList.CsumParserConfigGenerate(parser, \
+                                               parse_states_in_path, nxt_cs, sram, s,\
+                                               lkp_instr_inst, mux_idx_allocator,\
+                                               mux_inst_allocator, \
+                                               reuse_mux_instr_id, reuse_mux_idx_id, \
+                                               reuse_option_len_ohi_id)
+        if nxt_cs.is_end:
+            assert(s < hw_max_ohi_per_state), pdb.set_trace()
+    elif nxt_cs.phdr_offset_ohi_id != -1:
+        # Case where parse state is moving into ipv4/ipv6
+        # and ipv4 hdr is not part of header checksum verification
+        #   - an ohi_slot is allocated to capture start of IP hdr which
+        #     serves as start of phdr
+        #   - store payloadLen in OhiSlot used in case of ipv4 -> tcp;
+        #     In case of v6 -> TCP, since v6 options need to be decremented
+        #     from payloadLen, store v6.payload in stored lookup register.
+        s = parser.be.CalFieldList.CsumParserPhdrOffsetInstrGenerate(\
+                                               nxt_cs, sram, s,\
+                                               lkp_instr_inst, mux_idx_allocator,\
+                                               mux_inst_allocator)
+        # Also capture PayloadLen in ohi slot or stored lookup reg
+        s = parser.be.CalFieldList.CsumParserPayloadLenGenerate(\
+                                               nxt_cs, sram, s,\
+                                               lkp_instr_inst, mux_idx_allocator,\
+                                               mux_inst_allocator, reuse_mux_idx_id)
+
+
 
     if nxt_cs.is_end:
         # need to capture current_offset where parser stops parsing. This is needed for the
@@ -1862,9 +1966,14 @@ def capri_parser_output_decoders(parser):
                             'cap_ppa_csr_dhs_bndl0_state_lkp_tcam_entry[0]')
     sram_t, sram_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
                             'cap_ppa_csr_dhs_bndl0_state_lkp_sram_entry[0]')
+    csum_t, csum_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
+                            'cap_ppa_csr_cfg_csum_profile[0]')
+    csum_phdr_t, phdr_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
+                            'cap_ppa_csr_cfg_csum_phdr_profile[0]')
     tcam0 = []
     sram0 = []
 
+    '''
     for cs in parser.states:
         # create a match entry for {state_id, lkp_flds, lkp_fld_mask}
         if not parser.be.args.post_extract and cs.is_end:
@@ -1895,6 +2004,91 @@ def capri_parser_output_decoders(parser):
             parser.logger.debug('SRAM-decoder[%d] - \n%s' % \
                 (idx, _parser_sram_print(parser,sram0[idx])))
             idx += 1
+    '''
+
+    parse_state_stack = []
+    bi_processed_list = [] #(parse-state, [all-parse-states-along-the path])
+    parse_state_stack.append((parser.states[0], [parser.states[0]]))
+    while len(parse_state_stack):
+        cs, parse_states_in_path = parse_state_stack.pop(0)
+        assert cs != None, pdb.set_trace()
+        for bi in cs.branches:
+            if bi not in bi_processed_list:
+                bi_processed_list.append(bi)
+
+                # create a match entry for {state_id, lkp_flds, lkp_fld_mask}
+                if not parser.be.args.post_extract and cs.is_end:
+                    # Terminal state
+                    parser.logger.debug('Skip transition from %s -> __END__,\
+                                        Terminate' % (cs.name))
+                    continue
+
+                parse_state_stack.append((bi.nxt_state, parse_states_in_path + \
+                                         [bi.nxt_state]))
+
+                parser.logger.debug('%s:%s[%d]->%s[%d]' % \
+                        (parser.d.name, cs.name, cs.id, bi.nxt_state.name, \
+                         bi.nxt_state.id))
+                te = _fill_parser_tcam_entry(tcam_t, parser, cs, bi)
+                if cs.is_hw_start:
+                    add_cs = cs
+                else:
+                    add_cs = None
+                se = _fill_parser_sram_entry(parse_states_in_path + \
+                                             [bi.nxt_state],\
+                                             sram_t, parser, bi, add_cs)
+
+                # Allow smaller json definition file and add entries
+                te['entry_idx'] = str(idx)  # debug aid
+                se['entry_idx'] = str(idx)  # debug aid
+                if idx < len(tcam0):
+                    tcam0[idx] = te
+                    sram0[idx] = se
+                else:
+                    tcam0.append(te)
+                    sram0.append(se)
+                parser.logger.debug('TCAM-decoder[%d] - \n%s' % (idx,
+                                                _parser_tcam_print(tcam0[idx])))
+                parser.logger.debug('SRAM-decoder[%d] - \n%s' % \
+                    (idx, _parser_sram_print(parser,sram0[idx])))
+                idx += 1
+
+                #Generate csum related profile config for parser block
+                csum_prof, cprof_inst = parser.be.CalFieldList.\
+                                ParserCsumProfileGenerate(parser, \
+                                                          parse_states_in_path+\
+                                                          [bi.nxt_state], bi.nxt_state,\
+                                                          csum_t)
+                csum_phdr_prof, phdr_inst = parser.be.CalFieldList.\
+                           ParserCsumPhdrProfileGenerate(parser, \
+                                                         parse_states_in_path +\
+                                                         [bi.nxt_state], bi.nxt_state,\
+                                                         csum_phdr_t)
+                if csum_prof != None:
+                    #csum_prof_list[cprof_inst] = csum_prof
+                    ppa_json['cap_ppa']['registers']\
+                        ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
+                            ['cap_ppa_csr_cfg_csum'] = {}
+                    ppa_json['cap_ppa']['registers']\
+                        ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
+                            ['cap_ppa_csr_cfg_csum']['entries'] = csum_prof
+                if csum_phdr_prof != None:
+                    #csum_phdr_prof_list[phdr_inst] = csum_phdr_prof
+                    ppa_json['cap_ppa']['registers']\
+                        ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
+                            ['cap_ppa_csr_cfg_csum_phdr'] = {}
+                    ppa_json['cap_ppa']['registers']\
+                        ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
+                            ['cap_ppa_csr_cfg_csum_phdr']['entries'] = \
+                                                         csum_phdr_prof['fld']
+
+    #Create logical output of configuration pushed to parser
+    #for checksum verification.
+    #TODO: Move this once deparser config is also generated.
+    # Can be called once for both parser and deparser config.
+    #parser.be.CalFieldList.ChecksumLogicalOutputCreate()
+
+
     # XXX add a catch-all end state
     te = _fill_parser_tcam_catch_all(tcam_t)
     se = _fill_parser_sram_catch_all(sram_t)
@@ -2536,6 +2730,7 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
     base_addr += addr_map_size * cap_inst
 
     for name, conf in regs.iteritems():
+        if 'addr_offset' not in conf.keys(): pdb.set_trace()
         addr_offset = int(conf['addr_offset'], 16) + base_addr
         word_size = int(conf['word_size'], 16)
         is_array = int(conf['is_array'])
@@ -2549,26 +2744,32 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
             skip = False
             m = re.search('(\w+)_entry\[(\d+)\]', name)
             if m == None:
-              continue 
+                m = re.search('(\w+)_profile\[(\d+)\]', name)
+            if m == None:
+                continue 
             decoder = m.group(1)
             idx = int(m.group(2))
-            if idx > (len(mems[decoder]['entries']) - 1):
-                # entry does not exist in the decode, skip it
-                continue
-            else:
-                result = [data, 0]
-                _decode_mem(mems[decoder]['entries'][int(idx)], result)
-                data = result[0]
-
-            # find the correct width of the entry
-            for field, attrib in conf.iteritems():
-                if ((field == 'word_size') or (field == 'inst_name') or
-                    (field == 'addr_offset') or (field == 'decoder') or
-                    (field == 'is_array')):
+            if decoder in mems:
+                if idx > (len(mems[decoder]['entries']) - 1):
+                    # entry does not exist in the decode, skip it
                     continue
-                lsb  = int(attrib['field_lsb'])
-                msb  = int(attrib['field_msb'])
-                width += msb - lsb + 1
+                else:
+                    result = [data, 0]
+                    _decode_mem(mems[decoder]['entries'][int(idx)], result)
+                    data = result[0]
+
+                # find the correct width of the entry
+                for field, attrib in conf.iteritems():
+                    if ((field == 'word_size') or (field == 'inst_name') or
+                        (field == 'addr_offset') or (field == 'decoder') or
+                        (field == 'is_array')):
+                        continue
+                    lsb  = int(attrib['field_lsb'])
+                    msb  = int(attrib['field_msb'])
+                    width += msb - lsb + 1
+            if decoder in regs:
+                #TODO : Checksum reg dump.. 
+                pass
         else:
             for field, attrib in conf.iteritems():
                 if ((field == 'word_size') or (field == 'inst_name') or

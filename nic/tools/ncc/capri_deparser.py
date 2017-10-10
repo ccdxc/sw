@@ -34,14 +34,18 @@ class capri_deparser:
         self.logger = logging.getLogger('DP')
         # Topological Order of PHV chunks and OHI of a header. Key = header
         self.topo_ordered_phv_ohi_chunks = OrderedDict()
-        pass
+
+        #self.hv_fld_slots = {} # Key = HVbit, Value = (fld_start, fld_end)
 
     def initialize(self):
         pass
 
     def generate_output(self):
         capri_deparser_logical_output(self)
-        capri_deparser_cfg_output(self)
+        capri_deparser_cfg_output(self)#, self.hv_fld_slots)
+        #if self.d == xgress.EGRESS:
+        #    self.be.CalFieldList.CsumDeParserConfigGenerate(self, \
+        #                                         self.hv_fld_slots)
 
     def build_field_dictionary(self):
         headers = self.be.parsers[self.d].headers
