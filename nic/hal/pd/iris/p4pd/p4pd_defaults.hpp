@@ -5,7 +5,8 @@
 #define L4_PROF_DEFAULT_ENTRY       0
 
 // Flow info table
-#define FLOW_INFO_DROP_ENTRY        0
+#define FLOW_INFO_MISS_ENTRY        0
+#define FLOW_INFO_DROP_ENTRY        1
 
 // Session State table
 #define SESSION_STATE_NOP_ENTRY     0

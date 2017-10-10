@@ -4,6 +4,7 @@
 #include "nic/include/base.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
 
 namespace hal {
 namespace pd {
@@ -104,7 +105,11 @@ hal_ret_t uplinkpc_pd_pgm_tm_register(pd_uplinkpc_t *up_if, bool add);
 hal_ret_t uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppcif, 
                                                  pd_uplinkif_t *pd_upif, 
                                                  bool add);
-hal_ret_t uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *up_if);
+hal_ret_t uplinkpc_pd_upd_tm_register (pd_if_args_t *args);
+hal_ret_t
+uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif,
+                                   dllist_ctxt_t *mbr_list,
+                                   table_oper_t oper);
 hal_ret_t uplinkpc_pd_cleanup(pd_uplinkpc_t *upif_pd);
 hal_ret_t uplinkpc_pd_deprogram_hw (pd_uplinkpc_t *pd_upif);
 hal_ret_t uplinkpc_pd_depgm_output_mapping_tbl (pd_uplinkpc_t *pd_upif);

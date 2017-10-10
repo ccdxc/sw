@@ -59,7 +59,35 @@ end:
 hal_ret_t
 pd_uplinkpc_update (pd_if_args_t *args)
 {
-    // Nothing to do for now
+    hal_ret_t       ret = HAL_RET_OK;
+    pd_uplinkpc_t   *pd_uppc = (pd_uplinkpc_t *)args->intf->pd_if;
+    if (!args) {
+        goto end;
+    }
+    // update mbr ifs
+    if (args->mbrlist_change) {
+        // Reprogram output mapping table
+        ret = uplinkpc_pd_pgm_output_mapping_tbl(pd_uppc,
+                                                 args->aggr_mbrlist,
+                                                 TABLE_OPER_UPDATE);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-uplinkpc:{}:failed to program "
+                          "table:output_mapping, ret:{}",
+                          __FUNCTION__, ret);
+            goto end;
+        }
+
+        // Reprogram tm register
+        ret = uplinkpc_pd_upd_tm_register(args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-uplinkpc:{}:failed to program "
+                          "table:tm_register, ret:{}",
+                          __FUNCTION__, ret);
+            goto end;
+        }
+    }
+
+end:
     return HAL_RET_OK;
 }
 
@@ -330,13 +358,18 @@ hal_ret_t
 uplinkpc_pd_program_hw(pd_uplinkpc_t *pd_upif)
 {
     hal_ret_t            ret;
+    if_t                 *pi_if = NULL;
+
+    pi_if = (if_t *)(pd_upif->pi_if);
 
     // TODO: Program TM table port_num -> lif_hw_id
     ret = uplinkpc_pd_pgm_tm_register(pd_upif, true);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     // Program Output Mapping Table
-    ret = uplinkpc_pd_pgm_output_mapping_tbl(pd_upif);
+    ret = uplinkpc_pd_pgm_output_mapping_tbl(pd_upif, 
+                                             &pi_if->mbr_if_list_head,
+                                             TABLE_OPER_INSERT);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     // TODO: Un-program Output Mapping Table and 
@@ -344,6 +377,46 @@ uplinkpc_pd_program_hw(pd_uplinkpc_t *pd_upif)
 
     return ret;
 }
+
+// ----------------------------------------------------------------------------
+// ReProgram TM Register
+// ----------------------------------------------------------------------------
+hal_ret_t
+uplinkpc_pd_upd_tm_register (pd_if_args_t *args)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    dllist_ctxt_t               *curr, *next;
+    hal_handle_id_list_entry_t  *entry = NULL;
+    if_t                        *pi_up_if = NULL;
+    pd_uplinkpc_t               *pd_uppcif = (pd_uplinkpc_t *)args->intf->pd_if;
+
+    // Walk the newly added mbr list
+    dllist_for_each_safe(curr, next, args->add_mbrlist) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        pi_up_if = find_if_by_handle(entry->handle_id);
+
+        ret = uplinkpc_pd_pgm_tm_register_per_upif(pd_uppcif, 
+                (pd_uplinkif_t *)pi_up_if->pd_if, true);
+        if (ret != HAL_RET_OK) {
+            continue;
+        }
+    }
+
+    // Walk the deleted mbr list
+    dllist_for_each_safe(curr, next, args->del_mbrlist) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        pi_up_if = find_if_by_handle(entry->handle_id);
+
+        ret = uplinkpc_pd_pgm_tm_register_per_upif(pd_uppcif, 
+                (pd_uplinkif_t *)pi_up_if->pd_if, false);
+        if (ret != HAL_RET_OK) {
+            continue;
+        }
+    }
+
+    return ret;
+}
+
 
 // ----------------------------------------------------------------------------
 // Program TM Register
@@ -378,7 +451,7 @@ uplinkpc_pd_pgm_tm_register(pd_uplinkpc_t *pd_uppcif, bool add)
 // ----------------------------------------------------------------------------
 hal_ret_t
 uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppc, 
-                                       pd_uplinkif_t *pd_upif, bool add)
+                                     pd_uplinkif_t *pd_upif, bool add)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     uint8_t                     tm_oport = 0;
@@ -409,30 +482,60 @@ uplinkpc_pd_pgm_tm_register_per_upif(pd_uplinkpc_t *pd_uppc,
     return ret;
 }
 
+#define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
+
+// ----------------------------------------------------------------------------
+// Form info for Output Mapping Table
+// ----------------------------------------------------------------------------
+hal_ret_t
+uplinkpc_pd_form_mbr_info_omap_table (dllist_ctxt_t *mbr_list, 
+                                      output_mapping_actiondata &data)
+{
+    dllist_ctxt_t               *curr, *next;
+    uint8_t                     *tm_oport = NULL;
+    if_t                        *pi_up_if = NULL;
+    hal_handle_id_list_entry_t  *entry = NULL;
+
+    tm_oport = &om_tmoport.egress_port1;
+    dllist_for_each_safe(curr, next, mbr_list) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        pi_up_if = find_if_by_handle(entry->handle_id);
+        *tm_oport = uplinkif_get_port_num(pi_up_if);
+        
+        om_tmoport.nports++;
+        tm_oport++;
+    }
+
+    return HAL_RET_OK;
+}
+
 // ----------------------------------------------------------------------------
 // Program Output Mapping Table
 // ----------------------------------------------------------------------------
-#define om_tmoport data.output_mapping_action_u.output_mapping_set_tm_oport
 hal_ret_t
-uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif)
+uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif,
+                                   dllist_ctxt_t *mbr_list,
+                                   table_oper_t oper)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    uint8_t                     *tm_oport = NULL;
-    if_t                        *pi_if = NULL, *pi_up_if = NULL;
+    // uint8_t                     *tm_oport = NULL;
+    // if_t                        *pi_if = NULL, *pi_up_if = NULL;
     output_mapping_actiondata   data;
     DirectMap                   *dm_omap = NULL;
-    dllist_ctxt_t               *curr, *next;
-    hal_handle_id_list_entry_t  *entry = NULL;
+    // dllist_ctxt_t               *curr, *next;
+    // hal_handle_id_list_entry_t  *entry = NULL;
 
     memset(&data, 0, sizeof(data));
-    tm_oport = &om_tmoport.egress_port1;
+    // tm_oport = &om_tmoport.egress_port1;
 
-    pi_if = (if_t *)(pd_uppcif->pi_if);
+    // pi_if = (if_t *)(pd_uppcif->pi_if);
 
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 0;
     om_tmoport.egress_mirror_en = 1;
 
+    uplinkpc_pd_form_mbr_info_omap_table(mbr_list, data);
+#if 0
     // Walk the member ports and set the lif for each uplink
     dllist_for_each_safe(curr, next, &pi_if->mbr_if_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
@@ -442,6 +545,7 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif)
         om_tmoport.nports++;
         tm_oport++;
     }
+#endif
     om_tmoport.dst_lif = pd_uppcif->hw_lif_id;
 
     // Program OutputMapping table
@@ -452,14 +556,29 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif)
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
 
-    ret = dm_omap->insert_withid(&data, pd_uppcif->uppc_lport_id);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD-UplinkPC::{}: if_id:{} Unable to program",
-                __FUNCTION__, if_get_if_id((if_t *)pd_uppcif->pi_if));
+
+    if (oper == TABLE_OPER_INSERT) {
+        ret = dm_omap->insert_withid(&data, pd_uppcif->uppc_lport_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-uplinkpc:{}:{} unable to program. ret:{}",
+                    __FUNCTION__, oper, ret);
+        } else {
+            HAL_TRACE_DEBUG("pd-uplinkpc:{}:{} programmed "
+                            "table:output_mapping index:{}",
+                            __FUNCTION__, oper,
+                            pd_uppcif->uppc_lport_id);
+        }
     } else {
-        HAL_TRACE_DEBUG("PD-UplinkPC::{}: Programmed for if_id: {} at {}",
-                __FUNCTION__, if_get_if_id((if_t *)pd_uppcif->pi_if),
-                pd_uppcif->uppc_lport_id);
+        ret = dm_omap->update(pd_uppcif->uppc_lport_id, &data);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-uplinkpc:{}:{} unable to "
+                          "program table:output_mapping. ret:{}",
+                          __FUNCTION__, oper, ret);
+        } else {
+            HAL_TRACE_DEBUG("pd-uplinkpc:{}:{} programmed table:output_mapping index:{}",
+                            __FUNCTION__, oper,
+                            pd_uppcif->uppc_lport_id);
+        }
     }
     return ret;
 }

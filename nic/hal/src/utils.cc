@@ -1,5 +1,6 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
+#include "nic/include/hal_state.hpp"
 #include "nic/hal/src/utils.hpp"
 
 using types::ApiStatus;
@@ -177,11 +178,17 @@ hal_prepare_rsp (hal_ret_t ret)
         case HAL_RET_TENANT_ID_INVALID:
             return types::API_STATUS_TENANT_ID_INVALID;
             break;
+        case HAL_RET_L2SEG_ID_INVALID:
+            return types::API_STATUS_L2_SEGMENT_ID_INVALID;
+            break;
         case HAL_RET_NWSEC_ID_INVALID:
             return types::API_STATUS_NWSEC_PROFILE_ID_INVALID;
             break;
         case HAL_RET_ENTRY_EXISTS:
             return types::API_STATUS_EXISTS_ALREADY;
+            break;
+        case HAL_RET_REFERENCES_EXIST:
+            return types::API_STATUS_REFERENCES_EXIST;
             break;
         default:
             return types::API_STATUS_ERR;
@@ -189,6 +196,60 @@ hal_prepare_rsp (hal_ret_t ret)
     }
 }
 
+// ----------------------------------------------------------------------------
+// Use this at the begin and end of a svc api
+// ----------------------------------------------------------------------------
+void
+hal_api_trace (const char *trace)
+{
+    fmt::MemoryWriter   buf;
+
+    if (!trace) return;
+
+    for (int i = 0; i < NUM_DASHES; i++) {
+        buf.write("{}", "-");
+    }
+    buf.write("{}", trace);
+    for (int i = 0; i < NUM_DASHES; i++) {
+        buf.write("{}", "-");
+    }
+    HAL_TRACE_DEBUG(buf.c_str());
+}
+
+// ----------------------------------------------------------------------------
+// Prints handles from the list
+// ----------------------------------------------------------------------------
+void
+hal_print_handles_list(dllist_ctxt_t  *list)
+{
+    dllist_ctxt_t                   *lnode = NULL;
+    hal_handle_id_list_entry_t      *entry = NULL;
+
+    dllist_for_each(lnode, list) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        HAL_TRACE_DEBUG("handle: {}", entry->handle_id);
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Free handle entries in a list. 
+// - Please take locks if necessary outside this call.
+// ----------------------------------------------------------------------------
+void
+hal_free_handles_list(dllist_ctxt_t *list)
+{
+    dllist_ctxt_t                   *lnode = NULL;
+    hal_handle_id_list_entry_t      *entry = NULL;
+
+    dllist_for_each(lnode, list) {
+        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+        HAL_TRACE_DEBUG("{}: freeing list handle: {}", __FUNCTION__, entry->handle_id);
+        // Remove from list
+        utils::dllist_del(&entry->dllist_ctxt);
+        // Free the entry
+        g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+    }
+}
 
 
 

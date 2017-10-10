@@ -334,6 +334,7 @@ mac_addr_t *ep_get_mac_addr(ep_t *pi_ep);
 mac_addr_t *ep_get_rmac(ep_t *pi_ep, l2seg_t *l2seg);
 hal_ret_t endpoint_update_pi_with_iplist(ep_t *ep, dllist_ctxt_t *add_iplist,
                                          dllist_ctxt_t *del_iplist);  
+hal_ret_t endpoint_free_ip_list(dllist_ctxt_t *iplist);
 
 // Debug APIs
 void ep_print_ips(ep_t *ep);

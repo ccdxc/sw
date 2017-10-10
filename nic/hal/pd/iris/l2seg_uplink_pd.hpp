@@ -8,11 +8,14 @@ namespace hal {
 namespace pd {
 
 hal_ret_t l2seg_uplink_program_hw(pd_l2seg_uplink_args_t *args);
-hal_ret_t l2set_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, 
+hal_ret_t l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, 
                                                 nwsec_profile_t *nwsec_prof);
-hal_ret_t l2set_uplink_upd_input_properties_tbl (pd_l2seg_uplink_args_t *args,
+hal_ret_t l2seg_uplink_upd_input_properties_tbl (pd_l2seg_uplink_args_t *args,
                                                  nwsec_profile_t *nwsec_prof);
 
+hal_ret_t l2seg_uplink_deprogram_hw(pd_l2seg_uplink_args_t *args);
+hal_ret_t 
+l2seg_uplink_depgm_input_properties_tbl(pd_l2seg_uplink_args_t *args);
 } // namespace pd
 } // namespace hal
 

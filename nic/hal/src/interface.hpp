@@ -71,7 +71,8 @@ typedef struct if_s {
 
         // uplink interface info
         struct {
-            l2seg_id_t    native_l2seg;              // native (vlan) on uplink (pc)
+            l2seg_id_t          native_l2seg;              // native (vlan) on uplink (pc)
+
             // TOOD: List of L2segs on this Uplink
             // uplink if
             struct {
@@ -97,14 +98,15 @@ typedef struct if_s {
     } __PACK__;
 
     // operational state of interface
-    hal_handle_t        hal_handle;                  // HAL allocated handle
-    uint32_t            num_ep;                      // no. of endpoints
-    intf::IfStatus      if_op_status;                // operational status
+    hal_handle_t        hal_handle;         // HAL allocated handle
+    uint32_t            num_ep;             // no. of endpoints
+    intf::IfStatus      if_op_status;       // operational status
 
     // meta data maintained for interface
-    dllist_ctxt_t       ep_list_head;                // endpoints behind this interface
-    dllist_ctxt_t       session_list_head;           // session from this
-    dllist_ctxt_t       mbr_if_list_head;            // list of member ports
+    dllist_ctxt_t       l2seg_list_head;    // l2segments - valid only for uplinks
+    dllist_ctxt_t       mbr_if_list_head;   // list of member ports for uplink PC
+    // dllist_ctxt_t       ep_list_head;       // endpoints behind this interface
+    // dllist_ctxt_t       session_list_head;  // session from this
 
     // PD Uplink/Enic ... Interpret based on type ... Careful!!
     void                *pd_if;                      
@@ -121,6 +123,12 @@ typedef struct if_update_app_ctxt_s {
         struct {
             bool            native_l2seg_change;
             l2seg_t         *native_l2seg;             // native (vlan) on uplink (pc)
+
+            // only to PC
+            bool            mbrlist_change;
+            dllist_ctxt_t   *add_mbrlist;
+            dllist_ctxt_t   *del_mbrlist;
+            dllist_ctxt_t   *aggr_mbrlist;
         } __PACK__;
     } __PACK__;
 
@@ -170,8 +178,8 @@ if_init (if_t *hal_if)
     hal_if->pd_if = NULL;
 
     // initialize meta information
-    utils::dllist_reset(&hal_if->ep_list_head);
-    utils::dllist_reset(&hal_if->session_list_head);
+    utils::dllist_reset(&hal_if->l2seg_list_head);
+    utils::dllist_reset(&hal_if->mbr_if_list_head);
 
     return hal_if;
 }
@@ -259,6 +267,17 @@ find_lif_by_if_handle (hal_handle_t if_handle)
 extern void *if_id_get_key_func(void *entry);
 extern uint32_t if_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool if_id_compare_key_func(void *key1, void *key2);
+
+hal_ret_t uplinkpc_add_uplinkif (if_t *uppc, if_t *upif);
+hal_ret_t uplinkpc_del_uplinkif (if_t *uppc, if_t *upif);
+hal_ret_t
+uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
+                        bool *mbrlist_change,
+                        dllist_ctxt_t **add_mbrlist, 
+                        dllist_ctxt_t **del_mbrlist,
+                        dllist_ctxt_t **aggr_mbrlist);
+
+
 
 hal_ret_t enic_if_create(intf::InterfaceSpec& spec, 
                          intf::InterfaceResponse *rsp,

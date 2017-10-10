@@ -119,8 +119,9 @@ dllist_move (dllist_ctxt_t *dst_head, dllist_ctxt_t *src_head)
  * @n:		another &struct list_head to use as temporary storage
  * @head:	the head for your list.
  */
-#define dllist_for_each_safe(pos, n, head)                        \
-    for (pos = (head)->next, n = pos->next; pos != (head);        \
+#define dllist_for_each_safe(pos, n, head)                              \
+    for (pos = head ? (head)->next : NULL, n = pos ? pos->next : NULL;  \
+            pos != (head) && head != NULL;                              \
          pos = n, n = pos->next)
 
 

@@ -1055,7 +1055,7 @@ l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
     }
     l2seg_unlock(l2seg);    // unlock
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:del if:{} to l2seg:{}, ret:{}",
+    HAL_TRACE_DEBUG("pi-l2seg:{}:del if:{} from l2seg:{}, ret:{}",
                     __FUNCTION__, hal_if->if_id, l2seg->seg_id, ret);
     return ret;
 }

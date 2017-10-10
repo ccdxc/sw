@@ -57,11 +57,13 @@ hal_cfg_db::init(void)
                                   hal::network_compare_key_func);
     HAL_ASSERT_RETURN((network_key_ht_ != NULL), false);
 
+#if 0
     network_hal_handle_ht_ = ht::factory(HAL_MAX_VRFS,
                                          hal::network_get_handle_key_func,
                                          hal::network_compute_handle_hash_func,
                                          hal::network_compare_handle_key_func);
     HAL_ASSERT_RETURN((network_hal_handle_ht_ != NULL), false);
+#endif
 
     // initialize security profile related data structures
     nwsec_profile_id_ht_ = ht::factory(HAL_MAX_NWSEC_PROFILES,
@@ -319,7 +321,7 @@ hal_cfg_db::hal_cfg_db()
     // tenant_hal_handle_ht_ = NULL;
 
     network_key_ht_ = NULL;
-    network_hal_handle_ht_ = NULL;
+    // network_hal_handle_ht_ = NULL;
 
     nwsec_profile_id_ht_ = NULL;
     nwsec_profile_hal_handle_ht_ = NULL;
@@ -421,7 +423,7 @@ hal_cfg_db::~hal_cfg_db()
     // tenant_hal_handle_ht_ ? delete tenant_hal_handle_ht_ : HAL_NOP;
 
     network_key_ht_ ? delete network_key_ht_ : HAL_NOP;
-    network_hal_handle_ht_ ? delete network_hal_handle_ht_ : HAL_NOP;
+    // network_hal_handle_ht_ ? delete network_hal_handle_ht_ : HAL_NOP;
 
     nwsec_profile_id_ht_ ? delete nwsec_profile_id_ht_ : HAL_NOP;
     nwsec_profile_hal_handle_ht_ ? delete nwsec_profile_hal_handle_ht_ : HAL_NOP;

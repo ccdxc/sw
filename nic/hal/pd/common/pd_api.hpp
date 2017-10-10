@@ -89,6 +89,10 @@ typedef struct pd_if_args_s {
             } __PACK__;
             // uplink pc specific info
             struct {
+                bool            mbrlist_change;
+                dllist_ctxt_t   *add_mbrlist;
+                dllist_ctxt_t   *del_mbrlist;
+                dllist_ctxt_t   *aggr_mbrlist;
             } __PACK__;
             // enic if specific info
             struct {
@@ -406,6 +410,7 @@ hal_ret_t pd_session_update(pd_session_args_t *session);
 hal_ret_t pd_session_delete(pd_session_args_t *session);
 
 hal_ret_t pd_add_l2seg_uplink(pd_l2seg_uplink_args_t *args);
+hal_ret_t pd_del_l2seg_uplink(pd_l2seg_uplink_args_t *args);
 
 hal_ret_t pd_tlscb_create(pd_tlscb_args_t *tlscb);
 hal_ret_t pd_tlscb_update(pd_tlscb_args_t *tlscb);

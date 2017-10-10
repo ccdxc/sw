@@ -259,7 +259,6 @@ p4pd_l4_profile_init (void)
 static hal_ret_t
 p4pd_flow_info_init (void)
 {
-    uint32_t                idx = FLOW_INFO_DROP_ENTRY;
     hal_ret_t               ret;
     DirectMap               *dm;
     flow_info_actiondata    data = { 0 };
@@ -269,22 +268,21 @@ p4pd_flow_info_init (void)
 
     // "catch-all" flow miss entry
     data.actionid = FLOW_INFO_FLOW_MISS_ID;
-    ret = dm->insert_withid(&data, idx);
+    ret = dm->insert_withid(&data, FLOW_INFO_MISS_ENTRY);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("flow info table write failure, idx : {}, err : {}",
-                      idx, ret);
+        HAL_TRACE_ERR("flow info table write failure for miss entry, err : {}",
+                      ret);
         return ret;
     }
 
     // common flow hit & drop entry
-    ++idx;
     data.actionid = FLOW_INFO_FLOW_HIT_DROP_ID;
     data.flow_info_action_u.flow_info_flow_hit_drop.flow_index = 0;
     data.flow_info_action_u.flow_info_flow_hit_drop.start_timestamp = 0;
-    ret = dm->insert_withid(&data, idx);
+    ret = dm->insert_withid(&data, FLOW_INFO_DROP_ENTRY);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("flow info table write failure, idx : {}, err : {}",
-                      idx, ret);
+        HAL_TRACE_ERR("flow info table write failure for drop entry, err : {}",
+                      ret);
         return ret;
     }
 

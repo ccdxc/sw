@@ -26,8 +26,13 @@ hal_ret_t if_handle_nwsec_update (l2seg_t *l2seg, if_t *hal_if,
 hal_ret_t lif_add_if (lif_t *lif, if_t *hal_if);
 hal_ret_t lif_del_if (lif_t *lif, if_t *hal_if);
 
+// Adding ifs to l2seg
 hal_ret_t l2seg_add_if (l2seg_t *l2seg, if_t *hal_if);
 hal_ret_t l2seg_del_if (l2seg_t *l2seg, if_t *hal_if);
+
+// Adding l2segs to if
+hal_ret_t if_add_l2seg (if_t *hal_if, l2seg_t *l2seg);
+hal_ret_t if_del_l2seg (if_t *hal_if, l2seg_t *l2seg);
 
 // Handle lif update in IF
 hal_ret_t if_handle_lif_update (pd::pd_if_lif_upd_args_t *args);

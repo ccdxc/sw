@@ -1115,14 +1115,14 @@ add_session_to_db (tenant_t *tenant, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
 
     utils::dllist_reset(&session->sif_session_lentry);
     HAL_SPINLOCK_LOCK(&sif->slock);
-    utils::dllist_add(&sif->session_list_head, &session->sif_session_lentry);
+    // utils::dllist_add(&sif->session_list_head, &session->sif_session_lentry);
     HAL_SPINLOCK_UNLOCK(&sif->slock);
 
     if (sif != dif) {
         utils::dllist_reset(&session->dif_session_lentry);
         HAL_SPINLOCK_LOCK(&dif->slock);
-        utils::dllist_add(&dif->session_list_head,
-                          &session->dif_session_lentry);
+        // utils::dllist_add(&dif->session_list_head,
+        //                  &session->dif_session_lentry);
         HAL_SPINLOCK_UNLOCK(&dif->slock);
     }
 

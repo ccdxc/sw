@@ -95,31 +95,6 @@ ep_compare_l3_key_func (void *key1, void *key2)
     return false;
 }
 
-#if 0
-void *
-ep_get_handle_key_func(void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((ep_t *)entry)->hal_handle);
-}
-
-uint32_t
-ep_compute_handle_hash_func (void *key, uint32_t ht_size)
-{
-    return utils::hash_algo::fnv_hash(key, sizeof(hal_handle_t)) % ht_size;
-}
-
-bool
-ep_compare_handle_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
-        return true;
-    }
-    return false;
-}
-#endif
-
 //------------------------------------------------------------------------------
 // insert an ep to l2 db
 //------------------------------------------------------------------------------
@@ -482,7 +457,7 @@ endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 2. remove object from hal_handle id based hash table in infra
     hal_handle_free(hal_handle);
 
-    // 3. Free PI tenant
+    // 3. Free PI EP
     endpoint_cleanup(ep);
 end:
     return ret;
@@ -777,7 +752,6 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     rsp->mutable_endpoint_status()->set_endpoint_handle(ep->hal_handle);
 
 end:
-
     if (ret != HAL_RET_OK) {
         if (ep) {
             ep_free(ep);
@@ -934,6 +908,7 @@ endpoint_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__);
 
     // Update PI structures
+    // TODO: Move like how we did in if for uplink mbrs
     ep_copy_ip_list(ep_clone, ep);
     endpoint_update_pi_with_iplist(ep_clone, app_ctxt->add_iplist,
                                    app_ctxt->del_iplist);
@@ -967,6 +942,7 @@ endpoint_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     ep_t                        *ep = NULL;
+    ep_update_app_ctxt_t        *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-ep{}:invalid cfg_ctxt", __FUNCTION__);
@@ -976,6 +952,7 @@ endpoint_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    app_ctxt = (ep_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     // assign clone as we are trying to free only the clone
     ep = (ep_t *)dhl_entry->cloned_obj;
@@ -991,6 +968,10 @@ endpoint_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         HAL_TRACE_ERR("pi-ep:{}:failed to delete ep pd, err : {}",
                       __FUNCTION__, ret);
     }
+
+    // Free up add & del ip lists
+    endpoint_free_ip_list(app_ctxt->add_iplist);
+    endpoint_free_ip_list(app_ctxt->del_iplist);
 
     // Free PI
     ep_free(ep);
@@ -1175,6 +1156,24 @@ endpoint_ip_list_update(EndpointUpdateRequest& req, ep_t *ep,
     return ret;
 }
 
+
+hal_ret_t
+endpoint_free_ip_list(dllist_ctxt_t *iplist)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    dllist_ctxt_t   *curr, *next;
+    ep_ip_entry_t   *pi_ip_entry;
+
+    dllist_for_each_safe(curr, next, iplist) {
+        pi_ip_entry = dllist_entry(curr, ep_ip_entry_t, ep_ip_lentry);
+        // delete from list
+        utils::dllist_del(&pi_ip_entry->ep_ip_lentry);
+        // free the entry
+        g_hal_state->ep_ip_entry_slab()->free(pi_ip_entry);
+    }
+
+    return ret;
+}
 
 hal_ret_t
 endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,

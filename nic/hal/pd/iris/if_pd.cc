@@ -219,7 +219,7 @@ pd_if_nwsec_update(pd_if_nwsec_upd_args_t *args)
         case intf::IF_TYPE_UPLINK_PC:
             uplink_args.l2seg = args->l2seg;
             uplink_args.intf = args->intf;
-            ret = l2set_uplink_upd_input_properties_tbl(&uplink_args, 
+            ret = l2seg_uplink_upd_input_properties_tbl(&uplink_args, 
                                                         args->nwsec_prof);
             break;
         default:
