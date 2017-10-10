@@ -33,7 +33,7 @@ func deepCopy(old, new reflect.Value) {
 		if old.IsNil() {
 			return
 		}
-		new.Set(reflect.MakeMap(old.Type()))
+		new.Set(reflect.MakeMapWithSize(old.Type(), old.Len()))
 		for _, key := range old.MapKeys() {
 			oValue := old.MapIndex(key)
 			nValue := reflect.New(oValue.Type()).Elem()
