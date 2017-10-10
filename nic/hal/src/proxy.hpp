@@ -256,11 +256,20 @@ hal_ret_t proxy_get(proxy::ProxyGetRequest& req,
 hal_ret_t proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
                             proxy::ProxyResponse *rsp);
 
+hal_ret_t proxy_flow_enable(types::ProxyType proxy_type,
+                            const flow_key_t &flow_key,
+                            bool alloc_qid,
+                            proxy::ProxyResponse *rsp = NULL,
+                            const proxy::IpsecFlowConfig *ipsec_flow_config = NULL);
+
 proxy_flow_info_t* proxy_get_flow_info(types::ProxyType proxy_type,
                                        const flow_key_t* flow_key);
 
 hal_ret_t proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
                               proxy::ProxyGetFlowInfoResponse* rsp);
+
+bool is_proxy_enabled_for_flow(types::ProxyType proxy_type,
+                               const flow_key_t &flow_key);
 
 }    // namespace hal
 

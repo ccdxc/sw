@@ -506,15 +506,88 @@ validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
 }
 
 hal_ret_t 
+proxy_flow_enable(types::ProxyType proxy_type,
+                  const flow_key_t &flow_key,
+                  bool alloc_qid,
+                  proxy::ProxyResponse *rsp,
+                  const proxy::IpsecFlowConfig *ipsec_flow_config)
+{
+    proxy_flow_info_t   *pfi = NULL;
+    proxy_t*            proxy = NULL;
+    indexer::status     rs;
+
+    HAL_TRACE_DEBUG("proxy: enable proxy for the flow: {}", proxy_type);
+
+    proxy = find_proxy_by_type(proxy_type);
+    if(proxy == NULL) {
+        if(rsp)
+            rsp->set_api_status(types::API_STATUS_PROXY_NOT_ENABLED);
+        HAL_TRACE_ERR("{}: proxy {} not found", __func__, proxy_type);
+        return HAL_RET_PROXY_NOT_FOUND;
+    }
+
+    pfi = find_proxy_flow_info(proxy, &flow_key);
+    if(pfi) {
+        HAL_TRACE_DEBUG("Proxy already enabled for the flow");
+        if(rsp)
+            rsp->set_api_status(types::API_STATUS_OK);
+        return HAL_RET_OK;
+    }
+
+    pfi = proxy_flow_info_alloc_init();
+    if(!pfi) {
+        if(rsp)
+            rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
+        return HAL_RET_OOM;
+    }
+
+    pfi->flow_key = flow_key;
+    pfi->proxy = proxy;
+
+    // Allocate QID for this flow
+    if(alloc_qid) {
+        rs = proxy->qid_idxr_->alloc(&(pfi->qid1));
+        if(rs != indexer::SUCCESS) {
+            HAL_TRACE_ERR("Error in qid1 allocation, err: {}", rs);
+            if(rsp)
+                rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
+            return HAL_RET_NO_RESOURCE;
+        }
+
+        rs = proxy->qid_idxr_->alloc(&(pfi->qid2));
+        if(rs != indexer::SUCCESS) {
+            HAL_TRACE_ERR("Error in qid2 allocation, err: {}", rs);
+            if(rsp)
+                rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
+            return HAL_RET_NO_RESOURCE;
+        }
+
+        HAL_TRACE_DEBUG("Received qid1: {}, qid2: {}", pfi->qid1, pfi->qid2);
+    }
+
+    if(proxy->type == types::PROXY_TYPE_IPSEC) {
+        HAL_TRACE_DEBUG("ipsec proxy flow configured");
+        if(ipsec_flow_config->encrypt()) {
+            HAL_TRACE_DEBUG("ipsec proxy host flow configured");
+            extract_flow_key_from_spec(flow_key.tenant_id,
+                                       &pfi->u.ipsec.u.host_flow.esp_flow_key,
+                                       ipsec_flow_config->esp_flow_key());
+        }
+    }
+    add_proxy_flow_info_to_db(pfi);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
                   proxy::ProxyResponse *rsp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     tenant_id_t         tid = 0;
     flow_key_t          flow_key = {0};
-    proxy_t*            proxy = NULL;
     proxy_flow_info_t*  pfi = NULL;
-    indexer::status     rs;
+    proxy_t*            proxy = NULL;
+
 
     ret = validate_proxy_flow_config_request(req, rsp);
     if(ret != HAL_RET_OK) {
@@ -522,13 +595,6 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
         return ret;
     }
   
-    proxy = find_proxy_by_type(req.spec().proxy_type()); 
-    if(proxy == NULL) {
-        rsp->set_api_status(types::API_STATUS_PROXY_NOT_ENABLED);
-        HAL_TRACE_ERR("{}: proxy {} not found", __func__, req.spec().proxy_type());
-        return HAL_RET_INVALID_ARG;    
-    }
-   
     tid = req.meta().tenant_id();
     extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
    
@@ -536,55 +602,24 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
     flow_key.dir = 0;
 
     if(req.proxy_en()) {
-        HAL_TRACE_DEBUG("proxy: enable proxy for the flow: {}", proxy->type);
-        pfi = find_proxy_flow_info(proxy, &flow_key);
-        if(pfi) {
-            HAL_TRACE_DEBUG("Proxy already enabled for the flow");
-            rsp->set_api_status(types::API_STATUS_OK);
-            return HAL_RET_OK;
+        ret = proxy_flow_enable(req.spec().proxy_type(),
+                                flow_key,
+                                req.alloc_qid(),
+                                rsp,
+                                &(req.ipsec_config()));
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_DEBUG("Failed to enable proxy service for a flow");
+            return ret;
         }
-        
-        pfi = proxy_flow_info_alloc_init();
-        if(!pfi) {
-            rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-            return HAL_RET_OOM;
-        }
-        
-        pfi->flow_key = flow_key;
-        pfi->proxy = proxy;
-
-        // Allocate QID for this flow
-        if(req.alloc_qid()) {
-            rs = proxy->qid_idxr_->alloc(&(pfi->qid1));
-            if(rs != indexer::SUCCESS) {
-                HAL_TRACE_ERR("Error in qid1 allocation, err: {}", rs);
-                rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
-                return HAL_RET_NO_RESOURCE;
-            }
-            
-            rs = proxy->qid_idxr_->alloc(&(pfi->qid2));
-            if(rs != indexer::SUCCESS) {
-                HAL_TRACE_ERR("Error in qid2 allocation, err: {}", rs);
-                rsp->set_api_status(types::API_STATUS_OUT_OF_RESOURCE);
-                return HAL_RET_NO_RESOURCE;
-            }
-
-            HAL_TRACE_DEBUG("Received qid1: {}, qid2: {}", pfi->qid1, pfi->qid2);
-        }
-        
-        if(proxy->type == types::PROXY_TYPE_IPSEC) {
-            HAL_TRACE_DEBUG("ipsec proxy flow configured");
-            if(req.ipsec_config().encrypt()) {
-                HAL_TRACE_DEBUG("ipsec proxy host flow configured");
-                extract_flow_key_from_spec(tid, 
-                                           &pfi->u.ipsec.u.host_flow.esp_flow_key,
-                                           req.ipsec_config().esp_flow_key());
-            }
-        }
-        add_proxy_flow_info_to_db(pfi);
-
     } else {
         HAL_TRACE_DEBUG("proxy: disable proxy for the flow");
+        proxy = find_proxy_by_type(req.spec().proxy_type());
+        if(proxy == NULL) {
+            if(rsp)
+                rsp->set_api_status(types::API_STATUS_PROXY_NOT_ENABLED);
+            HAL_TRACE_ERR("{}: proxy {} not found", __func__, req.spec().proxy_type());
+            return HAL_RET_PROXY_NOT_FOUND;
+        }
         pfi = (proxy_flow_info_t *)proxy->flow_ht_->remove(&flow_key);
         proxy_flow_info_free(pfi);
     }
@@ -681,4 +716,10 @@ proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
     return HAL_RET_OK;;
 }
 
+bool
+is_proxy_enabled_for_flow(types::ProxyType proxy_type,
+                          const flow_key_t &flow_key)
+{
+    return (NULL != proxy_get_flow_info(proxy_type, &flow_key));
+}
 }    // namespace hal
