@@ -4,6 +4,9 @@ meta:
 profiles:
     - id: SEC_PROF_ACTIVE
       fields:
+         ip_normalization_en: 0
+         tcp_normalization_en: 0
+         icmp_normalization_en: 0
 
     - id: SEC_PROF_DEFAULT
       fields:
