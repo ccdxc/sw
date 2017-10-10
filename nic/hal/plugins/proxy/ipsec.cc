@@ -18,10 +18,10 @@ update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
         ) {
         
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
-        HAL_TRACE_DEBUG("IPSec updating lport = {}", pfi->proxy->lport_id);
+        HAL_TRACE_DEBUG("IPSec updating lport = {}", pfi->proxy->meta->lif_info[0].lport_id);
 
         // update fwding info
-        flowupd.fwding.lport = pfi->proxy->lport_id;
+        flowupd.fwding.lport = pfi->proxy->meta->lif_info[0].lport_id;
         flowupd.fwding.qid_en = true;
         flowupd.fwding.qtype = 0;
         //flowupd.fwding.qid = pfi->qid1;
@@ -44,9 +44,9 @@ update_esp_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
         ) {
         
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
-        HAL_TRACE_DEBUG("IPSec updating lport = {}", pfi->proxy->lport_id);
+        HAL_TRACE_DEBUG("IPSec updating lport = {}", pfi->proxy->meta->lif_info[0].lport_id);
         // update fwding info
-        flowupd.fwding.lport = pfi->proxy->lport_id;
+        flowupd.fwding.lport = pfi->proxy->meta->lif_info[0].lport_id;
         flowupd.fwding.qid_en = true;
         flowupd.fwding.qtype = 1;
         //flowupd.fwding.qid = pfi->qid1;

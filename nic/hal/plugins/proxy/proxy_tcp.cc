@@ -12,9 +12,9 @@ update_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
 
     // update fwding info
-    flowupd.fwding.lport = pfi->proxy->lport_id;
+    flowupd.fwding.lport = pfi->proxy->meta->lif_info[0].lport_id;
     flowupd.fwding.qid_en = true;
-    flowupd.fwding.qtype = pfi->proxy->qtype;
+    flowupd.fwding.qtype = pfi->proxy->meta->lif_info[0].qtype_info[0].qtype_val;
     if (ctx.role() ==  hal::FLOW_ROLE_INITIATOR) {
         flowupd.fwding.qid = pfi->qid1;
     } else {

@@ -28,26 +28,23 @@ proxy_meta_init() {
 
     // CB size 1024, num_entries 4096
     g_meta[types::PROXY_TYPE_TCP] = 
-        (proxy_meta_t) {false, SERVICE_LIF_TCP_PROXY, 0, 5, 12};
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_TCP_PROXY, 1, {0, 5, 12}}};
  
     // CB size 512, num_entries 4096
     g_meta[types::PROXY_TYPE_TLS] = 
-        (proxy_meta_t) {false, SERVICE_LIF_TLS_PROXY, 0, 4, 12};
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_TLS_PROXY, 1, {0, 4, 12}}};
 
     g_meta[types::PROXY_TYPE_IPSEC] = 
-        (proxy_meta_t) {true, SERVICE_LIF_IPSEC_ESP, 0, 2, 4};
-    
-    g_meta[types::PROXY_TYPE_IPSEC] = 
-        (proxy_meta_t) {true, SERVICE_LIF_IPSEC_ESP, 1, 2, 4};
+        (proxy_meta_t) {false, 1, {SERVICE_LIF_IPSEC_ESP, 2, {{0, 2, 4}, {1, 2, 4}}}};
     
     g_meta[types::PROXY_TYPE_CPU] = 
-        (proxy_meta_t) {true, SERVICE_LIF_CPU, 0, 1, 1};
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 1, 1}}};
 
     g_meta[types::PROXY_TYPE_IPFIX] =
-        (proxy_meta_t) {true, SERVICE_LIF_IPFIX, 0, 1, 1};
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 1}}};
 
     g_meta[types::PROXY_TYPE_RAW_REDIR] = 
-        (proxy_meta_t) {true, SERVICE_LIF_RAW_REDIR, 0, 2, 10};
+        (proxy_meta_t) {true, 1, { SERVICE_LIF_RAW_REDIR, 1, {0, 2, 10}}};
 
     return HAL_RET_OK;
 }
@@ -168,44 +165,54 @@ proxy_program_lif(proxy_t* proxy)
     intf::LifResponse   rsp;
     LIFQStateParams     qstate_params = {0};
     lif_hal_info_t      lif_hal_info = {0};
-    
-    // Create LIF 
-    lif_spec.mutable_key_or_handle()->set_lif_id(proxy->lif_id); 
-    lif_spec.set_admin_status(intf::IF_STATUS_UP);
-    lif_hal_info.with_hw_lif_id = true;
-    lif_hal_info.hw_lif_id = proxy->lif_id;
-    HAL_TRACE_DEBUG("Calling lif create with id: {}", lif_hal_info.hw_lif_id);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = lif_create(lif_spec, &rsp, &lif_hal_info);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("lif creation failed for proxy service" );
-        hal::hal_cfg_db_close();
-        return ret;
-    } else {
-        hal::hal_cfg_db_close();
-    }
+    proxy_meta_t        *meta = &g_meta[proxy->type];
+    proxy_meta_lif_t    *meta_lif_info = NULL;
+    proxy_meta_qtype_t  *meta_qtype_info = NULL;
 
-    // program qstate
-    qstate_params.dont_zero_memory = true;
-    qstate_params.type[proxy->qtype].entries = proxy->qstate_entries;
-    qstate_params.type[proxy->qtype].size = proxy->qstate_size;
-    
-    int32_t rs = g_lif_manager->InitLIFQState(proxy->lif_id, &qstate_params);
-    if(rs != 0) {
-        HAL_TRACE_ERR("Failed to program lif qstate params: 0x{0:x}", rs);
-        return HAL_RET_HW_PROG_ERR;
-    }
+    // program LIF(s)
+    for(uint i = 0; i < meta->num_lif; i++) {
+        meta_lif_info = &(meta->lif_info[i]);
+        lif_spec.Clear();
+        // Create LIF
+        lif_spec.mutable_key_or_handle()->set_lif_id(meta_lif_info->lif_id);
+        lif_spec.set_admin_status(intf::IF_STATUS_UP);
+        lif_hal_info.with_hw_lif_id = true;
+        lif_hal_info.hw_lif_id = meta_lif_info->lif_id;
+        HAL_TRACE_DEBUG("Calling lif create with id: {}", lif_hal_info.hw_lif_id);
 
-    // Get the base address based on QID of '0'
-    proxy->base_addr = g_lif_manager->GetLIFQStateAddr(proxy->lif_id, proxy->qtype, 0);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = lif_create(lif_spec, &rsp, &lif_hal_info);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("lif creation failed for proxy service {} with id: {}",
+                                    proxy->type, meta_lif_info->lif_id);
+            hal::hal_cfg_db_close();
+            return ret;
+        } else {
+            hal::hal_cfg_db_close();
+        }
 
-    // get lport-id for this lif
-    lif_t* lif = find_lif_by_id(proxy->lif_id);
-    HAL_ASSERT_RETURN((NULL != lif), HAL_RET_LIF_NOT_FOUND);
+        // program qstate for the lif
+        for(uint j = 0; j < meta_lif_info->num_qtype; j++) {
+            meta_qtype_info = &(meta_lif_info->qtype_info[j]);
+            qstate_params.dont_zero_memory = true;
+            qstate_params.type[meta_qtype_info->qtype_val].entries = meta_qtype_info->qstate_entries;
+            qstate_params.type[meta_qtype_info->qtype_val].size = meta_qtype_info->qstate_size;
 
-    proxy->lport_id = pd::lif_get_lport_id(lif);
-    HAL_TRACE_DEBUG("Received lport-id: {} for lif: {}", proxy->lport_id, proxy->lif_id);
+            int32_t rs = g_lif_manager->InitLIFQState(meta_lif_info->lif_id, &qstate_params);
+            if(rs != 0) {
+                HAL_TRACE_ERR("Failed to program lif qstate for Lif {}, qtype {}: err: 0x{0:x}",
+                            meta_lif_info->lif_id, meta_qtype_info->qtype_val, rs);
+                return HAL_RET_HW_PROG_ERR;
+            }
+        } // end qtype loop
 
+        // get lport-id for this lif
+        lif_t* lif = find_lif_by_id(meta_lif_info->lif_id);
+        HAL_ASSERT_RETURN((NULL != lif), HAL_RET_LIF_NOT_FOUND);
+
+        meta_lif_info->lport_id = pd::lif_get_lport_id(lif);
+        HAL_TRACE_DEBUG("Received lport-id: {} for lif: {}", meta_lif_info->lport_id, meta_lif_info->lif_id);
+    } // end lif loop
     return HAL_RET_OK;
 }
 
@@ -215,25 +222,51 @@ proxy_program_lif(proxy_t* proxy)
 // TODO: if Proxy exists, treat this as modify (tenant id in the meta must
 // match though)
 //------------------------------------------------------------------------------
+hal_ret_t
+proxy_create_cpucb(void)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    cpucb::CpuCbSpec        spec;
+    cpucb::CpuCbResponse   rsp;
+
+    spec.mutable_key_or_handle()->set_cpucb_id(0);
+    ret = cpucb_create(spec, &rsp);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create cpucb: {}", ret);
+    }
+
+    return ret;
+}
 
 hal_ret_t 
 proxy_init_default_params(proxy_t* proxy)
 {
-    hal_ret_t   ret = HAL_RET_OK;
     if(NULL == proxy) 
     {
         return HAL_RET_INVALID_ARG;    
     }
-    proxy_meta_t* meta = &g_meta[proxy->type];
-    proxy->lif_id = meta->lif_id;
-    proxy->qtype = meta->qtype; 
-    proxy->qstate_size = meta->qstate_size;
-    proxy->qstate_entries = meta->qstate_entries;
     
+    proxy->meta = &g_meta[proxy->type];
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+proxy_post_lif_program_init(proxy_t* proxy)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    if(NULL == proxy)
+    {
+        return HAL_RET_INVALID_ARG;
+    }
+
     // type specific proxy initialization
     switch(proxy->type) {
     case types::PROXY_TYPE_TLS:
         ret = hal::tls::tls_api_init();
+        break;
+    case types::PROXY_TYPE_CPU:
+        ret = proxy_create_cpucb();
         break;
     default:
         break;
@@ -275,6 +308,9 @@ proxy_factory(types::ProxyType type)
     // program LIF for this proxy
     proxy_program_lif(proxy);
     
+    // post lif programming initialization
+    proxy_post_lif_program_init(proxy);
+
     // add this Proxy to our db
     ret = add_proxy_to_db(proxy);
     HAL_ASSERT(ret == HAL_RET_OK);
@@ -312,22 +348,6 @@ proxy_enable(ProxySpec& spec, ProxyResponse *rsp)
 //------------------------------------------------------------------------------
 // Initialize default proxy services
 //------------------------------------------------------------------------------
-hal_ret_t
-proxy_create_cpucb(void)
-{
-    hal_ret_t               ret = HAL_RET_OK;
-    cpucb::CpuCbSpec        spec;
-    cpucb::CpuCbResponse   rsp;
-
-    spec.mutable_key_or_handle()->set_cpucb_id(0);
-    ret = cpucb_create(spec, &rsp);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to create cpucb: {}", ret);    
-    }
-
-    return ret;
-}
-
 hal_ret_t 
 hal_proxy_system_svc_init(void)
 {
@@ -372,11 +392,6 @@ hal_proxy_svc_init(void)
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize proxy system services");
         return ret;
-    }
-    
-    ret = proxy_create_cpucb();
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed to create cpu cb");    
     }
 
     return HAL_RET_OK;
@@ -657,8 +672,8 @@ proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
     *(rsp->mutable_meta()) = req.meta();
     rsp->set_proxy_type(proxy->type);
     *(rsp->mutable_flow_key()) = req.flow_key();;
-    rsp->set_lif_id(proxy->lif_id);
-    rsp->set_qtype(proxy->qtype);
+    rsp->set_lif_id(proxy->meta->lif_info[0].lif_id);
+    rsp->set_qtype(proxy->meta->lif_info[0].qtype_info[0].qtype_val);
     rsp->set_qid1(pfi->qid1);
     rsp->set_qid2(pfi->qid2);
 

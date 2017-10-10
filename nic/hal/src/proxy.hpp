@@ -31,6 +31,8 @@ namespace hal {
 #define HAL_MAX_PROXY_FLOWS                     16000
 #define HAL_MAX_QID                             16777215
 #define SERVICE_LIF_START                       1001
+#define HAL_PROXY_MAX_ST_LIF_PER_SVC            5
+#define HAL_PROXY_MAX_QTYPE_PER_LIF             8
 
 enum {
     SERVICE_LIF_TCP_PROXY = SERVICE_LIF_START,
@@ -46,26 +48,34 @@ typedef uint32_t lif_id_t;
 typedef uint8_t  qtype_t;
 typedef uint32_t  qid_t;
 
-typedef struct proxy_meta_s {
-    bool        is_system_svc;
-    lif_id_t    lif_id;
-    qtype_t     qtype;
+typedef struct proxy_meta_qtype_s {
+    qtype_t     qtype_val;
     uint8_t     qstate_size;
     uint8_t     qstate_entries;
+} proxy_meta_qtype_t;
+
+typedef struct proxy_meta_lif_s {
+    lif_id_t    lif_id;
+    uint32_t    num_qtype;
+    proxy_meta_qtype_t  qtype_info[HAL_PROXY_MAX_QTYPE_PER_LIF];
+    uint32_t    lport_id;                // lport-id for the proxy lif
+} proxy_meta_lif_t;
+
+typedef struct proxy_meta_s {
+    bool                is_system_svc;
+    uint32_t            num_lif;
+    proxy_meta_lif_t    lif_info[HAL_PROXY_MAX_ST_LIF_PER_SVC];
 } proxy_meta_t;
 
 typedef struct proxy_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     types::ProxyType      type;                    // Proxy Type
-    lif_id_t              lif_id;                  // LIF for this service
-    uint32_t              lport_id;                // lport-id for the proxy lif
-    qtype_t               qtype;                   // Default QType
-    uint8_t               qstate_size;             // Size of each qstate
-    uint8_t               qstate_entries;          // # of entries in the qstate
 
+    // meta
+    proxy_meta_t          *meta;                    // meta information
     // operational state of Proxy
     hal_handle_t          hal_handle;              // HAL allocated handle
-    uint64_t              base_addr;               // Base address of qstate
+
     // PD state
     void                  *pd;                     // all PD specific state
    
@@ -77,7 +87,7 @@ typedef struct proxy_s {
 } __PACK__ proxy_t;
 
 
-// allocate a proxyment instance
+// allocate a proxy instance
 static inline proxy_t *
 proxy_alloc (void)
 {
