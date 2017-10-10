@@ -173,6 +173,10 @@ public:
     slab *rawrcb_slab(void) const { return rawrcb_slab_; }
     ht *rawrcb_hwid_ht(void) const { return rawrcb_hwid_ht_; }
 
+    // get APIs for Raw Chain CB related state
+    slab *rawccb_slab(void) const { return rawccb_slab_; }
+    ht *rawccb_hwid_ht(void) const { return rawccb_hwid_ht_; }
+
     // get APIs for RW table related state
     slab *rw_entry_slab(void) const { return rw_entry_slab_; }
     ht *rw_table_ht(void) const { return rw_table_ht_; }
@@ -428,6 +432,12 @@ private:
     // TXS scheduler related state
     struct {
         BMAllocator    *txs_scheduler_map_idxr_;
+    } __PACK__;
+
+    // Raw Chain CB related state
+    struct {
+        slab       *rawccb_slab_;
+        ht         *rawccb_hwid_ht_;
     } __PACK__;
 
     DirectMap    **dm_tables_;

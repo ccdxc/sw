@@ -14,7 +14,7 @@ entries:
         type        : IPSEC_PROXY
     - entry:
         name        : SERVICE_LIF
-        type        : RAW_REDIR
+        type        : APP_REDIR
 #    - entry:
 #        name        : SERVICE_LIF
 #        type        : CPU_PROXY

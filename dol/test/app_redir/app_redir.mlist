@@ -1,0 +1,24 @@
+# Feature Test Modules List
+#
+feature:
+    id          : app_redir
+    package     : test.app_redir
+    module      : app_redir
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : APP_REDIR_RAW_RX_TX
+        module  : app_redir_raw_rx_tx
+        spec    : app_redir_raw.testspec
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : APP_REDIR_RAW_RX_TX_MULTI_PKTS
+        module  : app_redir_raw_rx_tx
+        spec    : app_redir_raw_multi_pkts.testspec
+        iterate :
+            - flow: filter://type=IPV4
+

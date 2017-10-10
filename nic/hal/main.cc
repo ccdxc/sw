@@ -47,6 +47,7 @@
 #include "nic/hal/svc/crypto_keys_svc.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
 #include "nic/hal/svc/rawrcb_svc.hpp"
+#include "nic/hal/svc/rawccb_svc.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -83,6 +84,7 @@ svc_reg (const std::string& server_addr)
     CpuCbServiceImpl         cpucb_svc;
     CryptoKeyServiceImpl     crypto_key_svc; 
     RawrCbServiceImpl        rawrcb_svc;
+    RawcCbServiceImpl        rawccb_svc;
 
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
 
@@ -113,6 +115,7 @@ svc_reg (const std::string& server_addr)
     server_builder.RegisterService(&cpucb_svc);
     server_builder.RegisterService(&crypto_key_svc);
     server_builder.RegisterService(&rawrcb_svc);
+    server_builder.RegisterService(&rawccb_svc);
 
     HAL_TRACE_DEBUG("gRPC server listening on ... {}", server_addr.c_str());
 

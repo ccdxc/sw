@@ -3,6 +3,7 @@
 #include "nic/include/base.h"
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/rawrcb.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/include/cpupkt_api.hpp"
 #include <netinet/ether.h>
@@ -272,6 +273,7 @@ const lifqid_t FLOW_MISS_LIFQ = {hal::SERVICE_LIF_CPU, 0, 0};
 const lifqid_t TCP_PROXY_LIFQ = {hal::SERVICE_LIF_TCP_PROXY, 0, 0};
 const lifqid_t TLS_PROXY_LIFQ = {hal::SERVICE_LIF_TLS_PROXY, 0, 0};
 const lifqid_t ALG_CFLOW_LIFQ = {hal::SERVICE_LIF_CPU, 3, 0};
+const lifqid_t APP_REDIR_LIFQ = {hal::SERVICE_LIF_APP_REDIR, hal::APP_REDIR_RAWR_QTYPE, 0};
 
 inline std::ostream& operator<<(std::ostream& os, const lifqid_t& lifq)
 {

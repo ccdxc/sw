@@ -29,6 +29,7 @@ LCXXFLAGS = \
 			-I../../../gen/cpu_rxdma/include \
 			-I../../../gen/cpu_txdma/include \
 			-I../../../gen/rawr_rxdma/include \
+			-I../../../gen/rawc_txdma/include \
             -I../../../gen/common_rxdma_actions/include \
 			-I../../../gen/tls_txdma/include \
 			-I../../../p4/nw/include \
@@ -79,6 +80,7 @@ SOURCES = \
 		  cpucb_pd.cc \
 		  cpupkt_api.cc \
 		  rawrcb_pd.cc \
+		  rawccb_pd.cc \
 		  system_pd.cc \
 		  scheduler_pd.cc \
 		  $(NULL)

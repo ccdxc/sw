@@ -44,14 +44,23 @@ class RawrCbObject(base.ConfigObjectBase):
         req_spec.key_or_handle.rawrcb_id    = self.id
         if req_spec.__class__.__name__ != 'RawrCbGetRequest':
            req_spec.chain_rxq_base               = self.chain_rxq_base
-           req_spec.chain_rxq_sem_alloc_idx      = self.chain_rxq_sem_alloc_idx
-           req_spec.chain_rxq_qidxr_base         = self.chain_rxq_qidxr_base
-           req_spec.chain_qidxr_entry_size_shift = self.chain_qidxr_entry_size_shift
+           req_spec.chain_rxq_ring_indices_addr  = self.chain_rxq_ring_indices_addr
            req_spec.chain_rxq_ring_size_shift    = self.chain_rxq_ring_size_shift
            req_spec.chain_rxq_entry_size_shift   = self.chain_rxq_entry_size_shift
+           req_spec.chain_rxq_ring_index_select  = self.chain_rxq_ring_index_select
+
+           req_spec.chain_txq_base               = self.chain_txq_base
+           req_spec.chain_txq_ring_indices_addr  = self.chain_txq_ring_indices_addr
+           req_spec.chain_txq_ring_size_shift    = self.chain_txq_ring_size_shift
+           req_spec.chain_txq_entry_size_shift   = self.chain_txq_entry_size_shift
+           req_spec.chain_txq_ring_index_select  = self.chain_txq_ring_index_select
+           req_spec.chain_txq_lif                = self.chain_txq_lif
+           req_spec.chain_txq_qtype              = self.chain_txq_qtype
+           req_spec.chain_txq_qid                = self.chain_txq_qid
+           req_spec.chain_txq_doorbell_no_sched  = self.chain_txq_doorbell_no_sched
+
            req_spec.desc_valid_bit_upd           = self.desc_valid_bit_upd
            req_spec.desc_valid_bit_req           = self.desc_valid_bit_req
-           req_spec.chain_qidxr_pi               = self.chain_qidxr_pi
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -60,14 +69,23 @@ class RawrCbObject(base.ConfigObjectBase):
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'RawrCbResponse':
             self.chain_rxq_base               = resp_spec.spec.chain_rxq_base
-            self.chain_rxq_sem_alloc_idx      = resp_spec.spec.chain_rxq_sem_alloc_idx
-            self.chain_rxq_qidxr_base         = resp_spec.spec.chain_rxq_qidxr_base
-            self.chain_qidxr_entry_size_shift = resp_spec.spec.chain_qidxr_entry_size_shift
+            self.chain_rxq_ring_indices_addr  = resp_spec.spec.chain_rxq_ring_indices_addr
             self.chain_rxq_ring_size_shift    = resp_spec.spec.chain_rxq_ring_size_shift
             self.chain_rxq_entry_size_shift   = resp_spec.spec.chain_rxq_entry_size_shift
+            self.chain_rxq_ring_index_select  = resp_spec.spec.chain_rxq_ring_index_select
+
+            self.chain_txq_base               = resp_spec.spec.chain_txq_base
+            self.chain_txq_ring_indices_addr  = resp_spec.spec.chain_txq_ring_indices_addr
+            self.chain_txq_ring_size_shift    = resp_spec.spec.chain_txq_ring_size_shift
+            self.chain_txq_entry_size_shift   = resp_spec.spec.chain_txq_entry_size_shift
+            self.chain_txq_ring_index_select  = resp_spec.spec.chain_txq_ring_index_select
+            self.chain_txq_lif                = resp_spec.spec.chain_txq_lif
+            self.chain_txq_qtype              = resp_spec.spec.chain_txq_qtype
+            self.chain_txq_qid                = resp_spec.spec.chain_txq_qid
+            self.chain_txq_doorbell_no_sched  = resp_spec.spec.chain_txq_doorbell_no_sched
+
             self.desc_valid_bit_upd           = resp_spec.spec.desc_valid_bit_upd
             self.desc_valid_bit_req           = resp_spec.spec.desc_valid_bit_req
-            self.chain_qidxr_pi               = resp_spec.spec.chain_qidxr_pi
 
         return
 

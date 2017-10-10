@@ -7,6 +7,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/iris/wring_pd.hpp"
 #include "nic/hal/src/proxy.hpp"
+#include "nic/hal/src/rawrcb.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/lif_manager.hpp"
 #include "nic/gen/rawr_rxdma/include/rawr_rxdma_p4plus_ingress.h"
@@ -86,12 +87,10 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd, bool del)
 
         if (rawrcb->chain_rxq_base) {
             data.u.rawr_rx_start_d.chain_rxq_base = rawrcb->chain_rxq_base;
-            data.u.rawr_rx_start_d.chain_rxq_sem_alloc_idx = rawrcb->chain_rxq_sem_alloc_idx;
-            data.u.rawr_rx_start_d.chain_rxq_qidxr_base = rawrcb->chain_rxq_qidxr_base;
-            data.u.rawr_rx_start_d.chain_qidxr_entry_size_shift = rawrcb->chain_qidxr_entry_size_shift;
+            data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr = rawrcb->chain_rxq_ring_indices_addr;
             data.u.rawr_rx_start_d.chain_rxq_ring_size_shift = rawrcb->chain_rxq_ring_size_shift;
             data.u.rawr_rx_start_d.chain_rxq_entry_size_shift = rawrcb->chain_rxq_entry_size_shift;
-            data.u.rawr_rx_start_d.chain_qidxr_pi = rawrcb->chain_qidxr_pi;
+            data.u.rawr_rx_start_d.chain_rxq_ring_index_select = rawrcb->chain_rxq_ring_index_select;
         } else {
 
             /*
@@ -100,20 +99,25 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd, bool del)
             pd_wring_meta = wring_pd_get_meta(types::WRING_TYPE_ARQRX);
             ret = wring_pd_get_base_addr(types::WRING_TYPE_ARQRX, 0, &arq_base);
             if((ret == HAL_RET_OK) && pd_wring_meta) {
-                HAL_TRACE_DEBUG("RAWRCB{} arq base: {:#x} alloc_semaphore_addr: {:#x}",
-                                rawrcb->cb_id, arq_base, pd_wring_meta->alloc_semaphore_addr);
+                HAL_TRACE_DEBUG("RAWRCB {} arq_base: {:#x}",
+                                rawrcb->cb_id, arq_base);
                 data.u.rawr_rx_start_d.chain_rxq_base = arq_base;
-                data.u.rawr_rx_start_d.chain_rxq_sem_alloc_idx = pd_wring_meta->alloc_semaphore_addr;
-                data.u.rawr_rx_start_d.chain_rxq_qidxr_base = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
+                data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
                 data.u.rawr_rx_start_d.chain_rxq_ring_size_shift = log2(pd_wring_meta->num_slots);
                 data.u.rawr_rx_start_d.chain_rxq_entry_size_shift = log2(pd_wring_meta->slot_size_in_bytes);
-                data.u.rawr_rx_start_d.chain_qidxr_entry_size_shift = data.u.rawr_rx_start_d.chain_rxq_entry_size_shift;
-                data.u.rawr_rx_start_d.chain_qidxr_pi = 0;
+                data.u.rawr_rx_start_d.chain_rxq_ring_index_select = 0;
+                HAL_TRACE_DEBUG("RAWRCB chain_rxq_ring_indices_addr: {:#x} chain_rxq_ring_size_shift: {} "
+                                "chain_rxq_entry_size_shift: {} chain_rxq_ring_index_select: {}",
+                                data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr,
+                                data.u.rawr_rx_start_d.chain_rxq_ring_size_shift,
+                                data.u.rawr_rx_start_d.chain_rxq_entry_size_shift,
+                                data.u.rawr_rx_start_d.chain_rxq_ring_index_select);
             } else {
                 HAL_TRACE_ERR("Failed to receive ARQRX info for RAWRCB");
             }
         }
 
+        data.u.rawr_rx_start_d.desc_valid_bit_req = TRUE;
         if (rawrcb->desc_valid_bit_upd) {
             data.u.rawr_rx_start_d.desc_valid_bit_req = rawrcb->desc_valid_bit_req;
         }
@@ -158,12 +162,21 @@ p4pd_get_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd)
     }
     rawrcb = rawrcb_pd->rawrcb;
     rawrcb->chain_rxq_base = data.u.rawr_rx_start_d.chain_rxq_base;
-    rawrcb->chain_rxq_sem_alloc_idx = data.u.rawr_rx_start_d.chain_rxq_sem_alloc_idx;
-    rawrcb->chain_rxq_qidxr_base = data.u.rawr_rx_start_d.chain_rxq_qidxr_base;
+    rawrcb->chain_rxq_ring_indices_addr = data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr;
     rawrcb->chain_rxq_ring_size_shift = data.u.rawr_rx_start_d.chain_rxq_ring_size_shift;
     rawrcb->chain_rxq_entry_size_shift = data.u.rawr_rx_start_d.chain_rxq_entry_size_shift;
-    rawrcb->chain_qidxr_entry_size_shift = data.u.rawr_rx_start_d.chain_qidxr_entry_size_shift;
-    rawrcb->chain_qidxr_pi = data.u.rawr_rx_start_d.chain_qidxr_pi;
+    rawrcb->chain_rxq_ring_index_select = data.u.rawr_rx_start_d.chain_rxq_ring_index_select;
+
+    rawrcb->chain_txq_base = data.u.rawr_rx_start_d.chain_txq_base;
+    rawrcb->chain_txq_ring_indices_addr = data.u.rawr_rx_start_d.chain_txq_ring_indices_addr;
+    rawrcb->chain_txq_ring_size_shift = data.u.rawr_rx_start_d.chain_txq_ring_size_shift;
+    rawrcb->chain_txq_entry_size_shift = data.u.rawr_rx_start_d.chain_txq_entry_size_shift;
+    rawrcb->chain_txq_ring_index_select = data.u.rawr_rx_start_d.chain_txq_ring_index_select;
+    rawrcb->chain_txq_lif = data.u.rawr_rx_start_d.chain_txq_lif;
+    rawrcb->chain_txq_qtype = data.u.rawr_rx_start_d.chain_txq_qtype;
+    rawrcb->chain_txq_qid = data.u.rawr_rx_start_d.chain_txq_qid;
+    rawrcb->chain_txq_doorbell_no_sched = data.u.rawr_rx_start_d.chain_txq_doorbell_no_sched;
+
     rawrcb->desc_valid_bit_upd = FALSE;
     rawrcb->desc_valid_bit_req = data.u.rawr_rx_start_d.desc_valid_bit_req;
 
@@ -213,7 +226,7 @@ pd_rawrcb_get_base_hw_index(pd_rawrcb_t* rawrcb_pd)
     
     // Get the base address of RAWR CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset. 
-    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_RAW_REDIR, 0, 0);
+    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR, APP_REDIR_RAWR_QTYPE, 0);
     HAL_TRACE_DEBUG("RAWRCB received offset 0x{0:x}", offset);
     return offset + \
         (rawrcb_pd->rawrcb->cb_id * P4PD_HBM_RAWR_CB_ENTRY_SIZE);

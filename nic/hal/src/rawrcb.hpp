@@ -27,6 +27,12 @@ using rawrcb::RawrCbGetResponseMsg;
 
 namespace hal {
 
+
+enum {
+    RAWR_REDIR_QTYPE        = 0,
+    RAWR_CHAIN_QTYPE,
+};
+
 typedef uint32_t          rawrcb_id_t;
 
 typedef struct rawrcb_s {
@@ -39,13 +45,21 @@ typedef struct rawrcb_s {
      * ordering defined in rawr_rxdma_p4plus_ingress.h
      * see hal/pd/iris/rawrcb_pd.cc)
      */
-    uint32_t              chain_rxq_base;           // next service chain queue base
-    uint32_t              chain_rxq_sem_alloc_idx;  //    "  " pindex alloc semaphore, if any
-    uint32_t              chain_rxq_qidxr_base;     //    "  " when semaphore is not applicable
-    uint8_t               chain_qidxr_entry_size_shift;
+    uint32_t              chain_rxq_base;           // next service chain RxQ base
+    uint32_t              chain_rxq_ring_indices_addr;
     uint8_t               chain_rxq_ring_size_shift;
     uint8_t               chain_rxq_entry_size_shift;
-    uint8_t               chain_qidxr_pi;
+    uint8_t               chain_rxq_ring_index_select;
+
+    uint32_t              chain_txq_base;           // next service chain TxQ base, if any
+    uint32_t              chain_txq_ring_indices_addr;
+    uint32_t              chain_txq_qid;
+    uint16_t              chain_txq_lif;
+    uint8_t               chain_txq_qtype;
+    uint8_t               chain_txq_ring_size_shift;
+    uint8_t               chain_txq_entry_size_shift;
+    uint8_t               chain_txq_ring_index_select;
+    uint8_t               chain_txq_doorbell_no_sched;
 
     uint8_t               desc_valid_bit_upd;       // descriptor valid bit update
     uint8_t               desc_valid_bit_req;       // descriptor valid bit required

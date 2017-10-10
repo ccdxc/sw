@@ -28,6 +28,7 @@ inline hal_ret_t init_plugins() {
         fte::FTE_FEATURE_QOS,
         fte::FTE_FEATURE_FWDING,
         fte::FTE_FEATURE_TUNNEL,
+        fte::FTE_FEATURE_APP_REDIR_MISS,
     };
 
     // inbound features - applied to pkts destined to local host 
@@ -43,6 +44,7 @@ inline hal_ret_t init_plugins() {
         fte::FTE_FEATURE_QOS,
         fte::FTE_FEATURE_FWDING,
         fte::FTE_FEATURE_TUNNEL,
+        fte::FTE_FEATURE_APP_REDIR_MISS,
     };
 
     register_pipeline("flow-miss", fte::FLOW_MISS_LIFQ,
@@ -74,6 +76,19 @@ inline hal_ret_t init_plugins() {
     register_pipeline("alg-cflow", fte::ALG_CFLOW_LIFQ,
                                     alg_cflow_outbound, sizeof(alg_cflow_outbound)/sizeof(fte::feature_id_t),
                                     {}, 0, {0x7FF, 0, 0}); 
+    // L7 App Redirect Pipeline
+    fte::feature_id_t app_redir_inbound[] = {
+    	fte::FTE_FEATURE_APP_REDIR,
+    };
+
+    fte::feature_id_t app_redir_outbound[] = {
+    	fte::FTE_FEATURE_APP_REDIR,
+    };
+
+    register_pipeline("app-redir", fte::APP_REDIR_LIFQ,
+                      app_redir_outbound, sizeof(app_redir_outbound)/sizeof(fte::feature_id_t),
+                      app_redir_inbound, sizeof(app_redir_inbound)/sizeof(fte::feature_id_t),
+                      {0x7FF, 0, 0});
 
     return HAL_RET_OK;
 }

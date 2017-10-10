@@ -40,9 +40,18 @@ enum {
     SERVICE_LIF_CPU,
     SERVICE_LIF_IPSEC_ESP,
     SERVICE_LIF_IPFIX,
-    SERVICE_LIF_RAW_REDIR,
+    SERVICE_LIF_APP_REDIR,
     SERVICE_LIF_END
 };
+
+enum {
+    APP_REDIR_RAWR_QTYPE = 0,       // raw redirect
+    APP_REDIR_RAWC_QTYPE,           // raw chain
+    APP_REDIR_PROXYR_QTYPE,         // TCP/TLS proxy redirect
+    APP_REDIR_PROXYC_QTYPE,         // TCP/TLS proxy chain
+    APP_REDIR_NUM_QTYPES_MAX
+};
+
 
 typedef uint32_t lif_id_t;
 typedef uint8_t  qtype_t;
