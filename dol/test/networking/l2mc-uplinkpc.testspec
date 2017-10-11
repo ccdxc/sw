@@ -106,28 +106,28 @@ descriptors:
         id      : RX_DESC_ENIC15 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
-            buf   : ref://testcase/buffers/id=RX_BUF_ENIC15
+            _buf  : ref://testcase/buffers/id=RX_BUF_ENIC15
             addr  : ref://testcase/buffers/id=RX_BUF_ENIC15/addr
             len   : ref://testcase/buffers/id=RX_BUF_ENIC15/size
     - descriptor:
         id      : RX_DESC_ENIC16 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
-            buf   : ref://testcase/buffers/id=RX_BUF_ENIC16
+            _buf  : ref://testcase/buffers/id=RX_BUF_ENIC16
             addr  : ref://testcase/buffers/id=RX_BUF_ENIC16/addr
             len   : ref://testcase/buffers/id=RX_BUF_ENIC16/size
     - descriptor:
         id      : EXP_DESC_ENIC15 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            buf   : ref://testcase/buffers/id=EXP_BUF_ENIC15
-            len   : ref://testcase/buffers/id=EXP_BUF_ENIC15/size
+            _buf          : ref://testcase/buffers/id=EXP_BUF_ENIC15
+            bytes_written : ref://testcase/buffers/id=EXP_BUF_ENIC15/size
     - descriptor:
         id      : EXP_DESC_ENIC16 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            buf   : ref://testcase/buffers/id=EXP_BUF_ENIC16
-            len   : ref://testcase/buffers/id=EXP_BUF_ENIC16/size
+            _buf          : ref://testcase/buffers/id=EXP_BUF_ENIC16
+            bytes_written : ref://testcase/buffers/id=EXP_BUF_ENIC16/size
 
 trigger:
     descriptors:

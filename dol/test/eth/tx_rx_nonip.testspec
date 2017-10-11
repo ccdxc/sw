@@ -72,7 +72,7 @@ descriptors:
         id      : TXDESCR
         template: ref://factory/templates/id=DESCR_ETH_TX
         fields:
-            buf   : ref://testcase/buffers/id=TXBUF
+            _buf  : ref://testcase/buffers/id=TXBUF
             addr  : ref://testcase/buffers/id=TXBUF/addr
             len   : ref://testcase/buffers/id=TXBUF/size
 
@@ -80,7 +80,7 @@ descriptors:
         id      : RXDESCR
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
-            buf   : ref://testcase/buffers/id=RXBUF
+            _buf  : ref://testcase/buffers/id=RXBUF
             addr  : ref://testcase/buffers/id=RXBUF/addr
             len   : ref://testcase/buffers/id=RXBUF/size
 
@@ -88,15 +88,14 @@ descriptors:
         id      : EX_TXDESCR
         template: ref://factory/templates/id=DESCR_ETH_TX_CQ
         fields:
-        fields:
             err_code : 0x0
 
     - descriptor:
         id      : EX_RXDESCR
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            buf   : ref://testcase/buffers/id=EXBUF
-            len   : ref://testcase/buffers/id=EXBUF/size
+            _buf          : ref://testcase/buffers/id=EXBUF
+            bytes_written : ref://testcase/buffers/id=EXBUF/size
 
 
 trigger:

@@ -11,11 +11,9 @@
 header_type eth_tx_cq_desc_p {
     fields {
         completion_index : 16;
-        rsvd0 : 8;
         queue_id : 8;
-        rsvd1 : 80;
         err_code : 8;
-        rsvd2 : 7;
+        rsvd0 : 95;
         color : 1;
     }
 }
@@ -110,11 +108,6 @@ metadata eth_tx_desc_d eth_tx_desc;
  *****************************************************************************/
 // Union with Common-TXDMA PHV headers
 
-// App Header
-@pragma dont_trim
-@pragma pa_header_union ingress app_header
-metadata p4plus_to_p4_header_t eth_tx_app_header;
-
 // Global PHV headers (Available in STAGES=ALL, MPUS=ALL)
 @pragma pa_header_union ingress common_global
 metadata eth_tx_global_k eth_tx_global;
@@ -161,6 +154,14 @@ metadata eth_tx_to_stage_7_p eth_tx_to_s7_scratch;
 
 // Stage N to N+1 PHV headers (Available in STAGE=N,N+1 MPUS=ALL)
 
+/*****************************************************************************
+ * P-vetor
+ *****************************************************************************/
+
+// App Header
+@pragma dont_trim
+@pragma pa_header_union ingress app_header
+metadata p4plus_to_p4_header_t eth_tx_app_hdr;
 
 // Part of the PHV after Common Area
 @pragma dont_trim

@@ -34,4 +34,3 @@ entries:
             ethertype: 0x806
         responder:
             ethertype: 0x806
-

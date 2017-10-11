@@ -49,7 +49,8 @@ action eth_tx_fetch_desc(
     modify_field(eth_tx_qstate.cq_ring_base, cq_ring_base);
 }
 
-action eth_tx_packet(addr, len)
+action eth_tx_packet(addr, len, vlan_tag, mss, encap, hdr_len, offload, eop,
+                     cq_entry, vlan_insert, rsvd0)
 {
     // For K+I struct generation
 
@@ -66,4 +67,13 @@ action eth_tx_packet(addr, len)
     // For D-struct generation
     modify_field(eth_tx_desc.addr, addr);
     modify_field(eth_tx_desc.len, len);
+    modify_field(eth_tx_desc.vlan_tag, vlan_tag);
+    modify_field(eth_tx_desc.mss, mss);
+    modify_field(eth_tx_desc.encap, encap);
+    modify_field(eth_tx_desc.hdr_len, hdr_len);
+    modify_field(eth_tx_desc.offload, offload);
+    modify_field(eth_tx_desc.eop, eop);
+    modify_field(eth_tx_desc.cq_entry, cq_entry);
+    modify_field(eth_tx_desc.vlan_insert, vlan_insert);
+    modify_field(eth_tx_desc.rsvd0, rsvd0);
 }

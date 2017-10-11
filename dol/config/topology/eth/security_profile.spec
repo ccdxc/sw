@@ -4,5 +4,3 @@ meta:
 profiles:
     - id: SEC_PROF_ACTIVE
       fields:
-
-

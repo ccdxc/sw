@@ -1,6 +1,6 @@
 meta:
     id      : DESCR_ETH_RX_CQ
-    size    : 16
+    size    : 32
     package : factory.objects.eth
     module  : descriptor
     objname : EthRxCqDescriptorObject

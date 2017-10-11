@@ -54,7 +54,6 @@ packets:
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             qtag:
-                #vlan    : ref://testcase/config/src/segment/vlan_id
                 vlan    : ref://testcase/config/src/tenant/bhseg/vlan_id
             tcp:
                 flags: ack
@@ -74,7 +73,6 @@ packets:
             tcp:
                 flags: ack
 
-
 buffers:
     - buffer:
         id      : BUF1  # Input Descriptor
@@ -84,29 +82,14 @@ buffers:
             size: 1518
             data: None
 
-    - buffer:
-        id      : BUF2  # Expected Descriptor
-        template: ref://factory/templates/id=ETH_BUFFER
-        fields:
-            bind  : False
-            size  : ref://testcase/packets/id=PKT2/size
-            data  : ref://testcase/packets/id=PKT2/rawbytes
-
 descriptors:
     - descriptor:
         id      : DESC1 # Input Buffer
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
-            buf   : ref://testcase/buffers/id=BUF1
+            _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
-
-    - descriptor:
-        id      : DESC2 # Expected Buffer
-        template: ref://factory/templates/id=DESCR_ETH_RX
-        fields:
-            buf   : ref://testcase/buffers/id=BUF2
-            len   : ref://testcase/buffers/id=BUF2/size
 
 trigger:
     descriptors:
@@ -123,12 +106,4 @@ expect:
     descriptors:
         - descriptor:
             object  : None
-            #object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
-            # Expected Buffer on this descriptor
-            buffer  : ref://testcase/buffers/id=BUF2
-            # Expected packet from this descriptor/buffer.
-            # Infra calls BUF2.IsPacket() and then calls BUF2.Read()
-            # and compares with the below packet.
-            packet  : ref://testcase/packets/id=PKT2
-
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1

@@ -68,7 +68,7 @@ descriptors:
         id      : DESC1
         template: ref://factory/templates/id=DESCR_ETH_TX
         fields:
-            buf   : ref://testcase/buffers/id=BUF1
+            _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
 

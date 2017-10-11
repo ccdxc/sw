@@ -89,7 +89,7 @@ descriptors:
         id      : DESC1
         template: ref://factory/templates/id=DESCR_ETH_TX
         fields:
-            buf   : ref://testcase/buffers/id=BUF1
+            _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
 
@@ -102,8 +102,6 @@ trigger:
 
     doorbell:
         object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
-        fields:
-            upd : 3
 
 expect:
     packets:

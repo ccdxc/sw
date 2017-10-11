@@ -8,9 +8,9 @@ overlay : vlan
 segments:
     - spec  : ref://store/specs/id=SEGMENT_ETH
       count : 1
-    - spec  : ref://store/specs/id=SEGMENT_BLACKHOLE
-      count : 1
     - spec  : ref://store/specs/id=SEGMENT_NATIVE_ETH
+      count : 1
+    - spec  : ref://store/specs/id=SEGMENT_BLACKHOLE
       count : 1
 
 # NFV Endpoints:

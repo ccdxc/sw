@@ -88,6 +88,9 @@ class FrameworkObject(object):
                 logger.log(level, "%s = %s" % (k, str(v)))
         return
 
+    def keys(self):
+        return [k for k in self.__dict__ if not k.startswith('_')]
+
 
 class FrameworkTemplateObject(FrameworkObject):
     def __init__(self):

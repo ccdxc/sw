@@ -13,19 +13,17 @@ header_type eth_rx_cq_desc_p {
     fields {
         completion_index : 16;
         queue_id : 8;
-        rss_type : 8;
-        rss_hash : 32;
+        err_code : 8;
+        // From - P4
+        flags : 16;
+        vlan_tag : 16;
         checksum : 32;
         bytes_written : 16;
-        vlan_tci : 16;
-        flags : 16;
-        rsvd0 : 96;
-        rsvd1 : 10;
-        checksum_valid : 1;
-        vlan_valid : 1;
-        encap : 1;
-        pkt_error : 1;
-        dma_error : 1;
+        // From - RSS table
+        rss_type : 8;
+        rss_hash : 32;
+        // END
+        rsvd0 : 103;
         color : 1;
     }
 }
@@ -164,6 +162,9 @@ metadata eth_rx_to_stage_7_k eth_rx_to_s7_scratch;
 
 // Stage N to N+1 PHV headers (Available in STAGE=N,N+1 MPUS=ALL)
 
+/*****************************************************************************
+ *  P-vector
+ *****************************************************************************/
 
 // Part of the PHV after K
 @pragma dont_trim

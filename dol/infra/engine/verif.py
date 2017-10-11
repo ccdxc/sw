@@ -71,7 +71,7 @@ class VerifEngineObject:
 
         return ebuf == abuf
 
-    def __get_pktbuffer(self, buf):
+    def __get_pktbuffer(self, buf, lgh):
         if buf is not None:
             return buf.Read()
 
@@ -91,8 +91,8 @@ class VerifEngineObject:
         if ebuf.IsPacket() is False:
             return defs.status.SUCCESS
        
-        epktbuf = self.__get_pktbuffer(ebuf)
-        apktbuf = self.__get_pktbuffer(abuf)
+        epktbuf = self.__get_pktbuffer(ebuf, lgh)
+        apktbuf = self.__get_pktbuffer(abuf, lgh)
         return self.__verify_pktbuffers(epktbuf, apktbuf, lgh)
 
     def __get_buffer(self, descr, lgh):
@@ -120,6 +120,7 @@ class VerifEngineObject:
         ebuf = self.__get_buffer(edescr, lgh)
         abuf = self.__get_buffer(adescr, lgh)
         if ebuf is None:
+            lgh.info("Expected buffer is None = Buffer Verification skipped!")
             return defs.status.SUCCESS
         return self.__verify_buffers(ebuf, abuf, lgh)
 

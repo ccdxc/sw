@@ -38,6 +38,7 @@ class LifObject(base.ConfigObjectBase):
         self.status     = haldefs.interface.IF_STATUS_UP
         self.hw_lif_id = 0
         self.qstate_base = {}
+
         self.c_lib_name = getattr(spec, 'c_lib', None)
         if self.c_lib_name:
             self.c_lib = clibs.LoadCLib(self.c_lib_name)
@@ -58,6 +59,8 @@ class LifObject(base.ConfigObjectBase):
             self.rdma_max_keys = 0
         self.rdma_pt_base_addr = 0
         self.rdma_kt_base_addr = 0
+
+        self.vlan_strip_en = False
 
         self.queue_types = objects.ObjectDatabase(cfglogger)
         self.obj_helper_q = queue_type.QueueTypeObjectHelper()
@@ -153,6 +156,7 @@ class LifObject(base.ConfigObjectBase):
         req_spec.enable_rdma = self.enable_rdma
         req_spec.rdma_max_keys = self.rdma_max_keys
         req_spec.rdma_max_pt_entries = self.rdma_max_pt_entries
+        req_spec.vlan_strip_en = self.vlan_strip_en
         for queue_type in self.queue_types.GetAll():
             qstate_map_spec = req_spec.lif_qstate_map.add()
             queue_type.PrepareHALRequestSpec(qstate_map_spec)
@@ -217,6 +221,10 @@ class LifObject(base.ConfigObjectBase):
        qinfo = QInfoStruct(GlobalOptions.dryrun, resp_spec.hw_lif_id, qaddrs)
        self.c_lib_config(ctypes.byref(qinfo))
 
+    def Update(self):
+        halapi.ConfigureLifs([self], update=True)
+        self.ConfigureQueueTypes()
+
 
 class LifObjectHelper:
     def __init__(self):
@@ -237,6 +245,12 @@ class LifObjectHelper:
         for lif in self.lifs:
             lif.ConfigureQueueTypes()
         Store.objects.SetAll(self.lifs)
+
+    def Update(self):
+        cfglogger.info("Updating %d LIFs." % len(self.lifs))
+        halapi.ConfigureLifs(self.lifs, update=True)
+        for lif in self.lifs:
+            lif.ConfigureQueueTypes()
 
     def Alloc(self):
         if self.aidx >= len(self.lifs):

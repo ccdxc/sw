@@ -469,5 +469,3 @@ modules:
             - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
             - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
             - flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
-
-

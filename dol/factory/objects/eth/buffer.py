@@ -1,6 +1,5 @@
 #! /usr/bin/python3
 
-import binascii
 import config.resmgr                as resmgr
 import infra.factory.scapyfactory   as scapyfactory
 import infra.factory.base           as base
@@ -28,9 +27,6 @@ class EthBufferObject(base.FactoryObjectBase):
             # Allocate Memory for the buffer
             self._mem = resmgr.HostMemoryAllocator.get(self.size)
             self.addr = self._mem.pa
-            # Set buffer contents
-            if self.data is None:
-                self.data = bytes([0x0] * spec.fields.size)
 
         self.logger.info("Init %s" % self)
 
@@ -42,11 +38,13 @@ class EthBufferObject(base.FactoryObjectBase):
         if not self._mem: return
 
         self.logger.info("Writing %s" % self)
-        resmgr.HostMemoryAllocator.write(self._mem, bytes(self.data))
-
-        self.logger.info("=" * 30, "WRITING BUFFER", "=" * 30)
-        scapyfactory.ScapyPacketObject.ShowRawPacket(self.data, self.logger)
-        self.logger.info("=" * 30, "END WRITING BUFFER", "=" * 30)
+        if self.data is None:
+            resmgr.HostMemoryAllocator.zero(self._mem, self.size)
+        else:
+            resmgr.HostMemoryAllocator.write(self._mem, bytes(self.data))
+            self.logger.info("=" * 30, "WRITING BUFFER", "=" * 30)
+            scapyfactory.ScapyPacketObject.ShowRawPacket(self.data, self.logger)
+            self.logger.info("=" * 30, "END WRITING BUFFER", "=" * 30)
 
     def Read(self):
         """
@@ -70,9 +68,8 @@ class EthBufferObject(base.FactoryObjectBase):
         self.addr = mem.pa
 
     def __str__(self):
-        return "%s GID:%s/Id:0x%x/Memory:%s/Size:0x%x/crc(data):0x%x" % (
-                self.__class__.__name__, self.GID(), id(self), self._mem, self.size,
-                binascii.crc32(self.data) if self.data is not None else 0x0)
+        return "%s GID:%s/Id:0x%x/Memory:%s/Size:0x%x" % (
+                self.__class__.__name__, self.GID(), id(self), self._mem, self.size)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):

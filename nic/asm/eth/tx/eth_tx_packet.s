@@ -2,6 +2,7 @@
 #include "INGRESS_p.h"
 #include "ingress.h"
 #include "defines.h"
+#include "../../p4/nw/include/defines.h"
 
 struct phv_ p;
 struct tx_table_s1_t0_k k;
@@ -17,9 +18,17 @@ eth_tx_packet:
     add         r7, r0, d.{len}.hx
 #endif
 
+    // Indicate VLAN insertion offload
+    seq         c1, d.vlan_insert, 1
+    addi.c1     r1, r0, P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG
+    phvwr.c1    p.eth_tx_app_hdr_vlan_tag, d.{vlan_tag}.hx
+
+    // Set offload flags (Assume in R1)
+    phvwr.c1    p.eth_tx_app_hdr_flags, r1
+
     // Set intrinsics
-    phvwri      p.p4_intr_global_tm_iport, 9
-    phvwri      p.p4_intr_global_tm_oport, 11
+    phvwri      p.p4_intr_global_tm_iport, TM_PORT_DMA
+    phvwri      p.p4_intr_global_tm_oport, TM_PORT_INGRESS
     phvwri      p.p4_intr_global_tm_oq, 0
 
     // Setup DMA CMD PTR
@@ -44,8 +53,8 @@ eth_tx_packet:
 
     // DMA p4plus_to_p4_header_t (14B)
     phvwri      p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_tx_app_header_p4plus_app_id)
-    phvwri      p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_tx_app_header_vlan_tag)
+    phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_tx_app_hdr_p4plus_app_id)
+    phvwri      p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_tx_app_hdr_vlan_tag)
     phvwri      p.dma_cmd1_dma_pkt_eop, 0
     phvwri      p.dma_cmd1_dma_cmd_eop, 0
 

@@ -138,16 +138,17 @@ def init():
     HalChannel = grpc.insecure_channel(server)
     cfglogger.info("Waiting for HAL to be ready ...")
     grpc.channel_ready_future(HalChannel).result()
+    cfglogger.info("Connected to HAL!")
     return
 
 def IsHalDisabled():
     return GlobalOptions.no_hal or GlobalOptions.dryrun
 
-def ConfigureLifs(objlist):
+def ConfigureLifs(objlist, update = False):
     if IsHalDisabled(): return
     stub = interface_pb2.InterfaceStub(HalChannel)
-    __config(objlist, interface_pb2.LifRequestMsg,
-             stub.LifCreate)
+    api = stub.LifUpdate if update else stub.LifCreate
+    __config(objlist, interface_pb2.LifRequestMsg, api)
     return
 
 def GetLifs(objlist):
@@ -161,8 +162,7 @@ def GetLifs(objlist):
 def ConfigureInterfaces(objlist, update = False):
     if IsHalDisabled(): return
     stub = interface_pb2.InterfaceStub(HalChannel)
-    api = stub.InterfaceCreate
-    if update: api = stub.InterfaceUpdate
+    api = stub.InterfaceUpdate if update else stub.InterfaceCreate
     __config(objlist, interface_pb2.InterfaceRequestMsg, api)
     return
 

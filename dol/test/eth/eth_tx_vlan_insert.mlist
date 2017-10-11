@@ -1,0 +1,86 @@
+feature:
+    id          : eth
+    sub         : tx_vlan_insert
+    package     : test.eth
+    module      : eth
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IPv4_VLAN
+        spec    : tx_vlan_insert.testspec
+        ignore  : True
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=False
+
+    - module:
+        name    : IPv6_VLAN
+        spec    : tx_vlan_insert.testspec
+        ignore  : True
+        iterate :
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment   : filter://native=False
+
+    - module:
+        name    : IPv4_NATIVE
+        spec    : tx_vlan_insert.testspec
+        ignore  : True
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : IPv6_NATIVE
+        spec    : tx_vlan_insert.testspec
+        ignore  : True
+        iterate :
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : IPv4_PRI
+        spec    : tx_vlan_insert.testspec
+        ignore  : True
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+              priotag   : True
+
+    - module:
+        name    : IPv6_PRI
+        spec    : tx_vlan_insert.testspec
+        ignore  : True
+        iterate :
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+              priotag   : True
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment   : filter://native=True
+              priotag   : True

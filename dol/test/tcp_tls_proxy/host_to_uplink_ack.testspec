@@ -43,7 +43,7 @@ packets:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
     - packet:
-        id          : PKT1
+        id          : PKT1  # Input Packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
@@ -93,7 +93,6 @@ packets:
                 window  : 1000
                 flags   : ack
 
-
 buffers:
     - buffer:
         id      : BUF1
@@ -102,6 +101,7 @@ buffers:
             bind: True
             size: ref://testcase/packets/id=PKT1/size
             data: ref://testcase/packets/id=PKT1/rawbytes
+
     - buffer:
         id      : BUF2
         template: ref://factory/templates/id=ETH_BUFFER
@@ -112,42 +112,58 @@ buffers:
 
 descriptors:
     - descriptor:
-        id      : DESC1 # Input Buffer
+        id      : TX_DESC # TX Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX
         fields:
-            buf   : ref://testcase/buffers/id=BUF1
+            _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
+
     - descriptor:
-        id      : DESC2 # Output Buffer
-        template: ref://factory/templates/id=DESCR_ETH_TX
+        id      : TX_CMPL_DESC # Expected TX Completion Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
         fields:
-            buf   : ref://testcase/buffers/id=BUF2
+            err_code : 0x0
+
+    - descriptor:
+        id      : RX_DESC # RX Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF2
             addr  : ref://testcase/buffers/id=BUF2/addr
             len   : ref://testcase/buffers/id=BUF2/size
+
+    - descriptor:
+        id      : RX_CMPL_DESC # Expected RX Completion Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=BUF2
+            bytes_written : ref://testcase/buffers/id=BUF2/size
 
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=DESC1
+            object  : ref://testcase/descriptors/id=TX_DESC
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+
         - descriptor:
-            object  : ref://testcase/descriptors/id=DESC2
+            object  : ref://testcase/descriptors/id=RX_DESC
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
 
     doorbell:
         object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
-        fields:
-            upd : 3
 
 expect:
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT2
             port    : ref://testcase/config/dst/endpoint/intf/ports
+
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
-            buffer  : ref://testcase/buffers/id=BUF2
-            packet  : ref://testcase/packets/id=PKT2
+            object  : ref://testcase/descriptors/id=TX_CMPL_DESC
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=RX_CMPL_DESC
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1

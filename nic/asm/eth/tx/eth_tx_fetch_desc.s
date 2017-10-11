@@ -37,7 +37,7 @@ eth_tx_fetch_desc:
   phvwr           p.eth_tx_to_s1_cq_desc_addr, r1
 
   // Completion descriptor
-  phvwr           p.eth_tx_cq_desc_completion_index, d.c_index0
+  phvwr           p.eth_tx_cq_desc_completion_index, d.{c_index0}.hx
   phvwr           p.eth_tx_cq_desc_queue_id, k.{p4_txdma_intr_qid}.hx
   phvwr           p.eth_tx_cq_desc_err_code, 0
   phvwr           p.eth_tx_cq_desc_color, 0

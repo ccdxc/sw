@@ -56,12 +56,12 @@ security_profiles: ref://store/specs/id=SECURITY_PROFILES_ETH
 tenants:
     -   spec    : ref://store/specs/id=TENANT_INFRA_ETH
         count   : 1
-        lifns   : range/101/110
-    -   spec    : ref://store/specs/id=TENANT_ETH_VXLAN
-        count   : 1
-        lifns   : range/111/120
+        lifns   : range/100/100
     -   spec    : ref://store/specs/id=TENANT_ETH
         count   : 1
-        lifns   : range/121/130
+        lifns   : range/200/205
+    -   spec    : ref://store/specs/id=TENANT_ETH_VXLAN
+        count   : 1
+        lifns   : range/300/305
 
 cpu: None

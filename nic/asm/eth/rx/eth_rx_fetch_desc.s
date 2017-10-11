@@ -41,19 +41,14 @@ eth_rx_fetch_desc:
   phvwr           p.eth_rx_to_s1_cq_desc_addr, r1
 
   // Completion descriptor
-  phvwr           p.eth_rx_cq_desc_completion_index, d.{c_index0}.hx
+  phvwr           p.eth_rx_cq_desc_completion_index, d.c_index0
   phvwr           p.eth_rx_cq_desc_queue_id, k.{p4_rxdma_intr_qid}.hx
   phvwr           p.eth_rx_cq_desc_bytes_written, k.{p4_to_p4plus_packet_len}.hx
-
-  phvwri          p.eth_rx_cq_desc_checksum_valid, 1
   phvwr           p.eth_rx_cq_desc_checksum, k.{p4_to_p4plus_l4_checksum}.wx
-
-  phvwr           p.eth_rx_cq_desc_vlan_valid, 1
-  or              r1, k.p4_to_p4plus_vlan_vid_sbit4_ebit11, k.p4_to_p4plus_vlan_vid_sbit0_ebit3, 4
+  or              r1, k.p4_to_p4plus_vlan_vid_sbit4_ebit11, k.p4_to_p4plus_vlan_vid_sbit0_ebit3, 8
   or              r1, r1, k.p4_to_p4plus_vlan_dei, 12
   or              r1, r1, k.p4_to_p4plus_vlan_pcp, 13
-  phvwr           p.eth_rx_cq_desc_vlan_tci, r1
-
+  phvwr           p.eth_rx_cq_desc_vlan_tag, r1.hx
   phvwr           p.eth_rx_cq_desc_flags, k.{p4_to_p4plus_flags}.hx
 
   // Claim the descriptor

@@ -134,6 +134,19 @@ def GetExpectedPacketCos(testcase, packet):
 
     return 0
 
+def GetExpectedVlanId(testcase, packet):
+    if testcase.config.dst.segment.IsFabEncapVxlan():
+        return testcase.config.dst.endpoint.intf.vlan_id
+    return testcase.config.dst.segment.vlan_id
+
+def GetExpectedPacketQtag(testcase, args=None):
+    assert(testcase.config.dst.endpoint.remote == False)    # Always Host RX
+    pri = testcase.config.flow.txqos.cos
+    vlan_id = testcase.config.dst.endpoint.intf.encap_vlan_id
+    qtag = (pri << 13) + vlan_id
+    assert(qtag <= 0xffff)
+    return qtag
+
 def __get_expected_packet(testcase, args, config=None):
     root = getattr(testcase.config, 'flow', None)
     if root is None:
@@ -186,7 +199,6 @@ def GetCpuPacketbyRflow(testcase, args = None):
 
     return None
 
-
 def GetL3UcExpectedPacket(testcase, args = None):
     return __get_expected_packet(testcase, args)
 
@@ -196,11 +208,6 @@ def GetVlanId(testcase, packet):
     elif testcase.config.src.segment.IsFabEncapVxlan():
         return testcase.config.src.endpoint.intf.vlan_id
     return testcase.config.src.segment.vlan_id
-
-def GetExpectedVlanId(testcase, packet):
-    if testcase.config.dst.segment.IsFabEncapVxlan():
-        return testcase.config.dst.endpoint.intf.vlan_id
-    return testcase.config.dst.segment.vlan_id
 
 def GetPacketRawBytes(testcase, packet):
     packet.Build(testcase)
@@ -234,3 +241,6 @@ def GetExpectDelay(testcase):
     if root.IsFteEnabled():
         return 1 # 1 second
     return 0
+
+def PacketIsVlanTagged(testcase, args=None):
+    return 0 if __get_packet_encap_vlan(testcase, testcase.config.dst) is None else 1

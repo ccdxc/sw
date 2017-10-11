@@ -76,7 +76,7 @@ descriptors:
         id      : DESC1 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
-            buf   : ref://testcase/buffers/id=BUF1
+            _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
 
@@ -84,8 +84,8 @@ descriptors:
         id      : DESC2 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            buf   : ref://testcase/buffers/id=BUF2
-            len   : ref://testcase/buffers/id=BUF2/size
+            _buf          : ref://testcase/buffers/id=BUF2
+            bytes_written : ref://testcase/buffers/id=BUF2/size
 
 trigger:
     descriptors:

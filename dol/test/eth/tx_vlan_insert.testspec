@@ -23,13 +23,11 @@ packets:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             ipv4:
-                src     : 10.255.1.1
-                #src     : ref://testcase/config/flow/sip
+                src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
             ipv6:
-                src     : 2001:FFFF::1
-                #src     : ref://testcase/config/flow/sip
+                src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 hlim    : 64
             udp:
@@ -53,12 +51,8 @@ packets:
     - packet:
         id          : PKT1 # Base packet
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetPacketEncaps
+        encaps      :
         headers     :
-            qtag    :
-                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
-            tcp:
-                flags: ack
 
     - packet:
         id          : EXP_PKT # Base packet
@@ -72,12 +66,10 @@ packets:
                 tos : ref://testcase/config/flow/txqos/dscp
             ipv6:
                 tc  : ref://testcase/config/flow/txqos/dscp
-            tcp:
-                flags: ack
 
 buffers:
     - buffer:
-        id      : BUF1    # Input Buffer
+        id      : BUF1 # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
            bind : True
@@ -86,12 +78,14 @@ buffers:
 
 descriptors:
     - descriptor:
-        id      : DESC1   # Input Descriptor
+        id      : DESC1 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX
         fields:
             _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
+            vlan_insert : 1
+            vlan_tag : callback://networking/packets/GetVlanId
 
     - descriptor:
         id      : DESC2 # Expected Descriptor
@@ -109,12 +103,12 @@ trigger:
         object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
 
 expect:
+    packets:
+        - packet:
+            object  : callback://networking/packets/GetL2UcExpectedPacket
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
-
-    packets:
-        - packet:
-            object  : None
-            port    : ref://testcase/config/dst/endpoint/intf/ports

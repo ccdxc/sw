@@ -13,7 +13,7 @@ class EthRingObject(ring.RingObject):
         self._mem = None
 
     def __str__(self):
-        return ("%s Lif:%s QueueType:%s Queue:%s Ring:%s Mem:%s Size=%d DescSize=%d" %
+        return ("%s Lif:%s/QueueType:%s/Queue:%s/Ring:%s/Mem:%s/Size:%d/DescSize:%d" %
                 (self.__class__.__name__,
                  self.queue.queue_type.lif.hw_lif_id,
                  self.queue.queue_type.type,
@@ -36,6 +36,9 @@ class EthRingObject(ring.RingObject):
     def Post(self, descriptor):
         cfglogger.info("Posting %s @ %s on %s" % (descriptor, self.queue.qstate.get_pindex(self.num), self))
 
+        # Check descriptor compatibility
+        assert(self.desc_size == descriptor.size)
+
         # Bind the descriptor to the ring
         descriptor.Bind(self._mem + (self.desc_size * self.queue.qstate.get_pindex(self.num)))
         # Remember descriptor for completion processing
@@ -49,12 +52,15 @@ class EthRingObject(ring.RingObject):
     def Consume(self, descriptor):
         cfglogger.info("Consuming %s @ %s on %s" % (descriptor, self.queue.qstate.get_cindex(self.num), self))
 
+        # Check descriptor compatibility
+        assert(self.desc_size == descriptor.size)
+
         # Bind the descriptor to the ring
         descriptor.Bind(self._mem + (self.desc_size * self.queue.qstate.get_cindex(self.num)))
         # Retreive descriptor for completion processing
-        buf = self.queue.descriptors[self.queue.qstate.get_cindex(self.num)].buf
-        if hasattr(descriptor, 'buf') and descriptor.buf is not None:
-            descriptor.buf.Bind(buf._mem)
+        d = self.queue.descriptors[self.queue.qstate.get_cindex(self.num)]
+        if descriptor._buf is not None and d._buf is not None:
+            descriptor._buf.Bind(d._buf._mem)
         descriptor.Read()
 
         # Increment consumer index

@@ -101,6 +101,9 @@ class MemHandle(object):
         return MemHandle(self.va + other, self.pa + other)
 
 
+NullMemHandle = MemHandle(0, 0)
+
+
 class HostMemory(object):
     def __init__(self):
         lib = clibs.libHostMem
@@ -113,12 +116,14 @@ class HostMemory(object):
         self.init_host_mem()
 
     def get(self, size):
-        assert(isinstance(size, int))
+        if GlobalOptions.dryrun: return NullMemHandle
+        assert isinstance(size, int)
         ptr = self.alloc_host_mem(size)
         return MemHandle(ptr, self.host_mem_v2p(ptr))
 
     def p2v(self, pa):
-        assert(isinstance(pa, int))
+        if GlobalOptions.dryrun: return NullMemHandle
+        assert isinstance(pa, int)
         return MemHandle(self.host_mem_p2v(pa), pa)
 
     def write(self, memhandle, data):
@@ -129,10 +134,12 @@ class HostMemory(object):
         ba = bytearray(data)
         arr = c_char * len(ba)
         arr = arr.from_buffer(ba)
-        # print([x for x in arr])
         memmove(va, arr, sizeof(arr))
 
     def read(self, memhandle, size):
+        if GlobalOptions.dryrun: return bytes()
+        assert isinstance(memhandle, MemHandle)
+        assert isinstance(size, int)
         ba = bytearray([0x0]*size)
         if GlobalOptions.dryrun:
             return bytes(ba)
@@ -141,21 +148,22 @@ class HostMemory(object):
         arr = c_char * size
         arr = arr.from_buffer(ba)
         memmove(arr, va, sizeof(arr))
-        # print([x for x in out_arr])
         return bytes(ba)
 
     def zero(self, memhandle, size):
+        if GlobalOptions.dryrun: return
+        assert isinstance(memhandle, MemHandle)
+        assert isinstance(size, int)
         va = memhandle.va
-        memset(va, 0, size)
-    '''
-    def get_va(self, size):
-        return self.alloc_host_mem(size)
-    '''
+        memset(va, 0, c_uint64(size))
+
     def get_v2p(self, va):
+        if GlobalOptions.dryrun: return NullMemHandle.pa
         return self.host_mem_v2p(va)
 
     def __del__(self):
         self.delete_host_mem()
+
 
 def init():
     global HostMemoryAllocator

@@ -105,7 +105,7 @@ buffers:
             data: None
 
     - buffer:
-        id      : BUF2
+        id      : BUF2  # Expected Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: False
@@ -114,19 +114,19 @@ buffers:
 
 descriptors:
     - descriptor:
-        id      : DESC1 # Input Buffer
+        id      : DESC1 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
-            buf   : ref://testcase/buffers/id=BUF1
+            _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
 
     - descriptor:
-        id      : DESC2
-        template: ref://factory/templates/id=DESCR_ETH_RX
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            buf   : ref://testcase/buffers/id=BUF2
-            len   : ref://testcase/buffers/id=BUF2/size
+            _buf          : ref://testcase/buffers/id=BUF2
+            bytes_written : ref://testcase/buffers/id=BUF2/size
 
 trigger:
     descriptors:
@@ -143,13 +143,8 @@ expect:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
-            # Expected Buffer on this descriptor
-            buffer  : ref://testcase/buffers/id=BUF2
-            # Expected packet from this descriptor/buffer.
-            # Infra calls BUF2.IsPacket() and then calls BUF2.Read()
-            # and compares with the below packet.
-            packet  : ref://testcase/packets/id=PKT2
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT2_ACK_OUT
