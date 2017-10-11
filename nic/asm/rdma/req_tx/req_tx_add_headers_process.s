@@ -129,8 +129,6 @@ op_type_atomic:
     DMA_NEXT_CMD_I_BASE_GET(r6, 1)
     DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
 
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
-
     //CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 1) // set for READ or atomic
     setcf          c7, [c0]
 
@@ -161,8 +159,6 @@ op_type_read:
     // dma_cmd[6]
     DMA_NEXT_CMD_I_BASE_GET(r6, 1)
     DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3) 
-
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 
     //CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 1) // set for READ or atomic
     setcf          c7, [c0]
@@ -343,20 +339,30 @@ inc_psn:
     phvwr.c5       BTH_ACK_REQ, 1
     
     SQCB0_ADDR_GET(r2)
-    // incr_rrq_p_index if reqd
-    add.c7          r3, r2, RRQ_P_INDEX_OFFSET
-    add.c7          r7, r0, k.args.rrq_p_index
-    mincr.c7        r7, d.log_rrq_size, 1
-    memwr.hx.c7      r3, r7
 
+    // do we need to increment rrq_pindex ?
+    bcf             [!c7], cb1_byte_update
     // cb1_busy is by default set to FALSE
-    add            r7, r0, r0
+    add            r5, r0, r0   //BD Slot
+
+    // incr_rrq_p_index
+    add             r3, r2, RRQ_P_INDEX_OFFSET
+    add             r7, r0, k.args.rrq_p_index
+    mincr           r7, d.log_rrq_size, 1
+    phvwr           p.rrq_p_index, r7.hx
+
+    // dma_cmd[7] - incr rrq_p_index for read/atomic
+    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+    DMA_HBM_PHV2MEM_SETUP(r6, rrq_p_index, rrq_p_index, r3)
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
+
+cb1_byte_update:
 
     // on top of it, set need_credits flag is conditionally
-    add.c5         r7, r7, SQCB0_NEED_CREDITS_FLAG
+    add.c5         r5, r5, SQCB0_NEED_CREDITS_FLAG
 
     add            r3, r2, FIELD_OFFSET(sqcb0_t, cb1_byte)
-    memwr.b        r3, r7
+    memwr.b        r3, r5
 
 invalid_op_type:
     nop.e

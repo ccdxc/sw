@@ -67,7 +67,8 @@ struct req_tx_phv_t {
     dma_cmd3 : 128;
 
     /* flit 7 */
-    rsvd_flit_7 : 136;
+    rsvd_flit_7 : 120;
+    rrq_p_index: 16;
     union {
         struct rrqwqe_t rrqwqe;
         inline_data: 256;

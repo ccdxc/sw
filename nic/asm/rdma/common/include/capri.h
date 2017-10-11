@@ -686,6 +686,15 @@ struct capri_dma_cmd_mem2mem_t {
     PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, _ring_id, _addr, _data);                        \
     memwr.dx   _addr, _data;
 
+// always use ring_id as r0
+#define PREPARE_DOORBELL_NO_UPDATE(_lif, _qtype, _qid, _addr, _data)                   \
+    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_NO_UPDATE, DB_SCHED_WR_EVAL_RING, _lif, _qtype, _addr);   \
+    CAPRI_SETUP_DB_DATA(_qid, r0, r0, _data);                                            \
+
+#define DOORBELL_NO_UPDATE(_lif, _qtype, _qid, _addr, _data)                   \
+    PREPARE_DOORBELL_NO_UPDATE(_lif, _qtype, _qid, _addr, _data);                  \
+    memwr.dx   _addr, _data;
+
 #define IS_RING_EMPTY(_c, _flags_r, _ring_id_bmap) \
     smneb   _c, _flags_r, _ring_id_bmap, _ring_id_bmap;
 

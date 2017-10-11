@@ -20,8 +20,13 @@ struct rdma_stage0_table_k k;
 
 .align
 req_tx_sqcb_process:
+
+    // are all rings empty ?
+    seq            c1, r7[MAX_SQ_HOST_RINGS-1:0], r0
+    bcf            [c1], all_rings_empty
+
     // copy intrinsic to global
-    add            r1, r0, offsetof(struct phv_, common_global_global_data)
+    add            r1, r0, offsetof(struct phv_, common_global_global_data) //BD Slot
 
     // enable below code after spr_tbladdr special purpose register is available in capsim
     #mfspr         r1, spr_tbladdr
@@ -177,7 +182,12 @@ fence:
     nop.e
     nop
 
+all_rings_empty:
+    // ring doorbell to re-evaluate scheduler
+    DOORBELL_NO_UPDATE(CAPRI_TXDMA_INTRINSIC_LIF, CAPRI_TXDMA_INTRINSIC_QTYPE, CAPRI_TXDMA_INTRINSIC_QID, r2, r3)
+
 exit:
     phvwr   p.common.p4_intr_global_drop, 1
     nop.e
     nop
+
