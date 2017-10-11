@@ -19,7 +19,7 @@
     .param      req_tx_sqcb_process
     .param      storage_tx_q_state_pop_start
     .param      storage_tx_pri_q_state_pop_start
-    .param      tcp_tx_stage0_process
+    .param      tcp_tx_read_rx2tx_shared_process
     .param      tls_stage0
     .param      eth_tx_fetch_desc
     .param      esp_ipv4_tunnel_h2n_txdma_stage0
@@ -59,7 +59,7 @@ eth_tx_stage0:
 
 .align
 tcp_tx_stage0:
-    j   tcp_tx_stage0_process
+    j   tcp_tx_read_rx2tx_shared_process
     nop
 
 .align

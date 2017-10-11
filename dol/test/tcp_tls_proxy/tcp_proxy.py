@@ -166,6 +166,8 @@ def init_tcb_inorder2(tc, tcb):
     else:
         tcb.debug_dol = tcp_debug_dol_dont_ring_tx_doorbell
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack 
+    if tc.pvtdata.test_timer:
+        tcb.debug_dol |= tcp_debug_dol_del_ack_timer
     tcb.source_port = tc.config.flow.sport
     tcb.dest_port = tc.config.flow.dport
     vlan_id = 0

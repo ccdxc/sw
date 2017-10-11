@@ -199,7 +199,7 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
-        name    : UPLINK_TO_UPLINK_BYPASS_BARCO_SAME_FLOW
+        name    : UL_TO_UL_BYPASS_BARCO_SAME_FLOW
         spec    : uplink_to_uplink.testspec
         module  : pkt_to_p4
         args    :
@@ -211,7 +211,7 @@ modules:
               segment   : filter://native=False
 
     - module:
-        name    : UPLINK_TO_UPLINK_BYPASS_BARCO
+        name    : UL_TO_UL_BYPASS_BARCO
         spec    : uplink_to_uplink.testspec
         module  : pkt_to_p4
         args    :
@@ -231,7 +231,7 @@ modules:
               dstseg    : filter://fabencap=VXLAN
 
     - module:
-        name    : UPLINK_TO_UPLINK_BYPASS_BARCO_SEND_ACK
+        name    : UL_TO_UL_BYPASS_BARCO_SEND_ACK
         spec    : uplink_to_uplink_ack.testspec
         module  : pkt_to_p4
         args    :
@@ -245,7 +245,27 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : UPLINK_TO_HOST_BYPASS_BARCO_SAME_FLOW
+        name    : UL_TO_UL_BYPASS_BARCO_DEL_ACK_TIMER
+        spec    : uplink_to_uplink_ack.testspec
+        module  : pkt_to_p4
+        enable  : False
+        args    :
+            bypass_barco : 1
+            send_ack : 1
+            test_timer : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_CANCEL_DEL_ACK_TIMER
+        spec    : uplink_to_uplink_cancel_ack.testspec
+        module  : pkt_to_p4
+        enable  : False
+        args    :
+            bypass_barco : 1
+            send_ack : 1
+            test_timer : 1
+
+    - module:
+        name    : UL_TO_HOST_BYPASS_BARCO_SAME_FLOW
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4
         args :
@@ -257,7 +277,7 @@ modules:
               segment   : filter://native=False
 
     - module:
-        name    : UPLINK_TO_HOST_BYPASS_BARCO
+        name    : UL_TO_HOST_BYPASS_BARCO
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4
         args :
@@ -274,7 +294,7 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : UPLINK_TO_HOST_BYPASS_BARCO_SEND_ACK
+        name    : UL_TO_HOST_BYPASS_BARCO_SEND_ACK
         spec    : uplink_to_host_ack.testspec
         module  : pkt_to_p4
         args    :
@@ -288,7 +308,7 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : HOST_TO_UPLINK_BYPASS_BARCO_SAME_FLOW
+        name    : HOST_TO_UL_BYPASS_BARCO_SAME_FLOW
         spec    : host_to_uplink.testspec
         module  : pkt_to_p4
         args :
@@ -300,7 +320,7 @@ modules:
               segment   : filter://native=False
 
     - module:
-        name    : HOST_TO_UPLINK_BYPASS_BARCO
+        name    : HOST_TO_UL_BYPASS_BARCO
         spec    : host_to_uplink.testspec
         module  : pkt_to_p4
         args :
@@ -317,7 +337,7 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : HOST_TO_UPLINK_BYPASS_BARCO_SEND_ACK
+        name    : HOST_TO_UL_BYPASS_BARCO_SEND_ACK
         spec    : host_to_uplink_ack.testspec
         module  : pkt_to_p4
         args    :

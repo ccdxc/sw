@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <map>
+#include "nic/include/capri_common.h"
 //#include "nic/include/base.h"
 
 #include "nic/p4/nw/include/defines.h"
@@ -509,6 +510,14 @@ capri_timer_init(void)
     txs_csr->cfg_timer_static.tmr_hsh_depth(CAPRI_TIMER_NUM_KEY_CACHE_LINES - 1);
     txs_csr->cfg_timer_static.tmr_wheel_depth(CAPRI_TIMER_WHEEL_DEPTH - 1);
     txs_csr->cfg_timer_static.write();
+
+    txs_csr->cfg_fast_timer_dbell.read();
+    txs_csr->cfg_fast_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_EVAL);
+    txs_csr->cfg_fast_timer_dbell.write();
+
+    txs_csr->cfg_slow_timer_dbell.read();
+    txs_csr->cfg_slow_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_EVAL);
+    txs_csr->cfg_slow_timer_dbell.write();
 
     // TODO:remove
     txs_csr->cfg_timer_static.read();

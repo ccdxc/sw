@@ -18,8 +18,8 @@ struct tcp_tx_sesq_consume_k k;
 
 tcp_tx_sesq_consume_stage2_start:
     CAPRI_CLEAR_TABLE_VALID(1)
-    /* address will be in r4 */
-    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* store address in r4 */
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     sne             c1, k.common_phv_pending_asesq, r0
     bcf             [c1], asesq_consume
     nop

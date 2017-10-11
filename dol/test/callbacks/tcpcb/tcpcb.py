@@ -12,6 +12,12 @@ def GetSeqNum (tc, pkt):
 def GetAckNum (tc, pkt):
     return tc.pvtdata.flow1_snd_una
 
+def GetReverseFlowSeqNum (tc, pkt):
+    return tc.pvtdata.flow2_rcv_nxt
+
+def GetReverseFlowAckNum (tc, pkt):
+    return tc.pvtdata.flow2_snd_una
+
 def GetNxtPktSeqNum (tc, pkt):
     return tc.pvtdata.flow1_rcv_nxt + pkt.payloadsize
 
@@ -30,11 +36,23 @@ def GetPktOutAckNum (tc, pkt):
     else:
         return tc.pvtdata.flow2_rcv_nxt
 
+def GetReverseFlowPktOutSeqNum (tc, pkt):
+    return tc.pvtdata.flow1_snd_nxt
+
+def GetReverseFlowPktOutAckNum (tc, pkt):
+    return tc.pvtdata.flow1_rcv_nxt + pkt.payloadsize
+
 def GetAckPktSeqNum (tc, pkt):
     return tc.pvtdata.flow1_snd_nxt
 
 def GetAckPktAckNum (tc, pkt):
     return tc.pvtdata.flow1_rcv_nxt + tc.packets.Get('PKT1').payloadsize
+
+def GetReverseFlowAckPktSeqNum (tc, pkt):
+    return tc.pvtdata.flow2_snd_nxt
+
+def GetReverseFlowAckPktAckNum (tc, pkt):
+    return tc.pvtdata.flow2_rcv_nxt + tc.packets.Get('PKT2').payloadsize
 
 def GetDstIp (tc, pkt):
     return "54.0.0.2"

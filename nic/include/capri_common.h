@@ -140,4 +140,16 @@
                             (_millisecs / CAPRI_FAST_TIMER_RESOLUTION)
 #define CAPRI_SLOW_TIMER_TICKS(_millisecs) \
                             (_millisecs / CAPRI_SLOW_TIMER_RESOLUTION)
+
+// Doorbell
+#define DB_IDX_UPD_NOP                 (0x0 << 2)
+#define DB_IDX_UPD_CIDX_SET            (0x1 << 2)
+#define DB_IDX_UPD_PIDX_SET            (0x2 << 2)
+#define DB_IDX_UPD_PIDX_INC            (0x3 << 2)
+
+#define DB_SCHED_UPD_NOP               (0x0)
+#define DB_SCHED_UPD_EVAL              (0x1)
+#define DB_SCHED_UPD_CLEAR             (0x2)
+#define DB_SCHED_UPD_SET               (0x3)
+
 #endif

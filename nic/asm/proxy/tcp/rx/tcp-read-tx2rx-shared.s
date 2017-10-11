@@ -60,6 +60,8 @@ tcp_rx_read_shared_stage0_start:
 	//phvwr		p.ecn_flags_tx, d.ecn_flags_tx
 	phvwr		p.common_phv_ecn_flags, d.ecn_flags_tx
 	phvwr		p.s1_s2s_packets_out, d.packets_out
+    phvwr       p.s1_s2s_rcv_wup, d.rcv_wup
+    phvwr       p.s1_s2s_quick_acks_decr, d.quick_acks_decr
     phvwr       p.common_phv_qstate_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 
 

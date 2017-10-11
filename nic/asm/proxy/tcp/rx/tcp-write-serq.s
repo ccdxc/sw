@@ -91,7 +91,8 @@ dma_cmd_write_rx2tx_extra_shared:
     addi        r7, r7, 1
 
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DEL_ACK_TIMER, TCP_DDOL_DEL_ACK_TIMER
-    bcf         [c1], dma_cmd_start_del_ack_timer
+    seq         c2, k.common_phv_pending_del_ack_send, 1
+    bcf         [c1 | c2], dma_cmd_start_del_ack_timer
     nop
 
 dma_cmd_ring_tcp_tx_doorbell:
@@ -106,13 +107,16 @@ dma_cmd_ring_tcp_tx_doorbell:
     nop
 
 dma_cmd_start_del_ack_timer:
+    tbladd      d.ft_pi, 1
     phvwri      p.dma_cmd5_dma_cmd_addr, CAPRI_FAST_TIMER_ADDR(LIF_TCP)
     // result will be in r3
-    CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_FT, CAPRI_FAST_TIMER_TICKS(100)) // TODO, get ato_deadline
+    CAPRI_OPERAND_DEBUG(k.s6_s2s_ato)
+    CAPRI_TIMER_DATA(0, k.common_phv_fid, TCP_SCHED_RING_FT, k.s6_s2s_ato)
     phvwr       p.{db_data2_pid...db_data2_index}, r3.dx
     phvwri      p.dma_cmd5_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(db_data2_pid)
-    phvwri      p.dma_cmd5_dma_cmd_phv_end_addr, CAPRI_PHV_START_OFFSET(db_data2_index)
+    phvwri      p.dma_cmd5_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(db_data2_index)
     phvwri      p.dma_cmd5_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwr       p.rx2tx_ft_pi, d.ft_pi
 
 tcp_serq_produce:
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_PKT_TO_SERQ, TCP_DDOL_PKT_TO_SERQ

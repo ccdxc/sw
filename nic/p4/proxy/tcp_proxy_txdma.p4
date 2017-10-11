@@ -324,7 +324,7 @@ metadata dma_cmd_phv2mem_t dma_cmd8_dma;     // dma cmd 8
 
 #define RX2TX_PARAMS                                                                                  \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1, pi_2, ci_2, pi_3, ci_3,\
-pi_4, ci_4, debug_dol_tx, sesq_base, asesq_base,snd_una, rcv_nxt, snd_wnd, snd_up, snd_cwnd, rto_deadline, \
+pi_4, ci_4, debug_dol_tx, sesq_base, asesq_base,snd_una, rcv_nxt, snd_wnd, ft_pi, snd_cwnd, rto_deadline, \
 pending_ft_clear, pending_ft_reset
 
 
@@ -353,7 +353,7 @@ pending_ft_clear, pending_ft_reset
     modify_field(rx2tx_d.snd_una, snd_una);                                                            \
     modify_field(rx2tx_d.rcv_nxt, rcv_nxt);                                                            \
     modify_field(rx2tx_d.snd_wnd, snd_wnd);                                                            \
-    modify_field(rx2tx_d.snd_up, snd_up);                                                              \
+    modify_field(rx2tx_d.ft_pi, ft_pi);                                                                \
     modify_field(rx2tx_d.snd_cwnd, snd_cwnd);                                                          \
     modify_field(rx2tx_d.rto_deadline, rto_deadline);                                                  \
     modify_field(rx2tx_d.pending_ft_clear, pending_ft_clear);                                          \

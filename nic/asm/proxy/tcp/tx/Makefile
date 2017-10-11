@@ -37,7 +37,6 @@ ORIG_SRC_FILES := \
     $(SRC_DIR)/tcp-tdesc-alloc.s \
 
 SRC_FILES := \
-    $(SRC_DIR)/tcp-tx-stage0.s \
     $(SRC_DIR)/tcp-read-rx2tx-shared.s \
     $(SRC_DIR)/tcp-read-rx2tx-shared-extra.s \
     $(SRC_DIR)/tcp-read-sesq-ci.s \

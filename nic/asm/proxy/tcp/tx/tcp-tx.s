@@ -23,42 +23,43 @@ tcp_tx_process_stage3_start:
     phvwr           p.t0_s2s_snd_nxt, d.snd_nxt
     /* check SESQ for pending data to be transmitted */
     seq             c1, k.common_phv_pending_sesq, 1
-    seq             c2, k.common_phv_pending_asesq, 1
+    seq             c5, k.common_phv_pending_asesq, 1
 
     //bal.c1        r7, tcp_retxq_consume
     //nop
     bal.c1          r7, tcp_retx_enqueue
     nop
 
-    bal.c2          r7, tcp_retx_enqueue
+    bal.c5          r7, tcp_retx_enqueue
     nop
-
-    seq             c1, k.common_phv_pending_ack_send, 1
-    bcf             [c1], table_read_TSO
-    nop
-
 
     /* Check if there is retx q cleanup needed at head due
      * to ack
      */
     slt             c1, d.retx_snd_una, k.common_phv_snd_una
-    //bal.c1        r7, tcp_clean_retx_queue
+    bal.c1          r7, tcp_clean_retx_queue
     nop
 
     /* Check if cwnd allows transmit of data */
     /* Return value in r6 */
+    /* cwnd permits transmit of data if r6 != 0*/
     bal             r7, tcp_cwnd_test
     nop
-    /* cwnd permits transmit of data if r6 != 0*/
     sne             c1, r6, r0
+
     /* Check if peer rcv wnd allows transmit of data
      * Return value in r6
+     * Peer rcv wnd allows transmit of data if r6 != 0
      */
     bal.c1          r7, tcp_snd_wnd_test
     nop
-    /* Peer rcv wnd allows transmit of data if r6 != 0 */
     sne             c2, r6, r0
-    bcf             [!c1 | !c2], tcp_ack_snd_check
+
+    seq             c3, k.common_phv_pending_ack_send, 1
+    bcf             [c3], table_read_TSO
+    nop
+
+    bcf             [!c1 | !c2], tcp_tx_no_window
     nop
     /* Inform TSO stage following later to check for any data to
      * send from retx queue
@@ -103,39 +104,6 @@ table_read_xmit_cursor:
     add.c1          r1, d.retx_xmit_cursor, r0
 
 flow_read_xmit_cursor_done:
-
-tcp_ack_snd_check:
-    /* r1 = rcv_nxt - rcv_wup */
-    sub             r1, k.common_phv_rcv_nxt , d.rcv_wup
-
-    addi            r2, r0, 1
-    add             r3, k.to_s3_rcv_mss_shft, r0
-    sllv            r2, r2, r3
-    /* r2 = rcv_mss */
-    /* c1 = ((rcv_nxt - rcv_wup) > rcv_mss) */
-    /* c1 = more than one full frame received */
-    slt             c1, r2, r1
-
-    addi            r1, r0, 1
-    sub             r1, r1, k.to_s3_pingpong
-    /* r1 = 1 - pingpong = !pingpong */
-    sne             c2, r0, r0
-    /* xxx: c2 = (new rcv window >= rcv_wnd) */
-    /* r2 = quick && !pingpong */
-    and             r2, k.to_s3_quick, r1
-    sne             c3, r2, r0
-    /* c3 = in quick ack mode */
-    /* c4 = we have out of order data */
-    sne             c4, k.to_s3_ooo_datalen, r0
-    addi            r1, r0, 1
-    bcf             [c1 | c2 | c3 | c4], pending_ack_tx
-    nop
-flow_tx_process_done:
-    tblwr.e         d.pending_delayed_ack_tx,r1
-    nop.e
-pending_ack_tx:
-    tblwr.e         d.pending_ack_tx, r1
-    nop.e
 
 
 
@@ -186,29 +154,37 @@ tcp_snd_wnd_test:
 
 
 tcp_retx_enqueue:
-    /* All the previous packets were acked or first packet
-         *   retxq tail descriptor is NULL
-     * Wait for a new descriptor to be allocated from TNMDR
-     */
     seq             c1, d.retx_tail_desc, r0
-    sne             c2, k.to_s3_sesq_desc_addr, r0
-    bcf             [c1 & c2], queue_to_empty_retx // TODO: what if queue is not empty
-    nop
-    bcf             [c1], table_read_TNMDR
-    nop
 
-queue_to_empty_retx:
-    tblwr.c2        d.retx_head_desc, k.to_s3_sesq_desc_addr
-    tblwr.c2        d.retx_tail_desc, k.to_s3_sesq_desc_addr
+    /*
+     * If retx_tail is not NULL, queue to tail, update tail and return
+     */
+    add.!c1         r1, d.retx_tail_desc, NIC_DESC_ENTRY_NEXT_ADDR_OFFSET
+    memwr.w.!c1     r1, k.to_s3_sesq_desc_addr
+    tblwr           d.retx_tail_desc, k.to_s3_sesq_desc_addr
+    jr.!c1          r7
+
+    /*
+     * retx empty, update head/tail and cursors
+     */
     add             r2, k.to_s3_addr, k.to_s3_offset
-    tblwr.c2        d.retx_xmit_cursor, r2
-    tblwr.c2        d.xmit_cursor_addr, r2
+    tblwr           d.retx_head_desc, k.to_s3_sesq_desc_addr
+    tblwr           d.retx_xmit_cursor, r2
+    tblwr           d.xmit_cursor_addr, r2
     phvwr           p.to_s4_xmit_cursor_addr, k.to_s3_addr
     phvwr           p.to_s4_xmit_cursor_offset, k.to_s3_offset
     phvwr           p.to_s4_xmit_cursor_len, k.to_s3_len
+    tblwr           d.retx_snd_una, k.common_phv_snd_una
     sne             c4, r7, r0
     jr.c4           r7
+    nop
 
+tcp_clean_retx_queue:
+    // TODO: schedule ourselves to clean retx
+    jr              r7
+    nop
+
+#if 0
     /* retxq tail descriptor is not NULL
      * check if the retxq tail descriptor entries are all filled
      * up.
@@ -256,7 +232,6 @@ nic_desc_entry_write:
 
 
 table_read_TNMDR:
-#if 0
     addi            r1,r0,TNMDR_TABLE_BASE
     addi            r2,r0,TNMDR_ALLOC_IDX
     mincr           r2,1,TNMDR_TABLE_SIZE_SHFT
@@ -268,6 +243,10 @@ table_read_TNMDR:
     phvwr.e         p.table_addr, r1
     nop.e
 #endif
+
+tcp_tx_no_window:
+    // We have no window, wait till window opens up
+    CAPRI_CLEAR_TABLE_VALID(0)
     nop.e
     nop
 

@@ -128,16 +128,6 @@
 #define DB_TYPE_SHFT                   3
 
 
-#define DB_IDX_UPD_NOP                 (0x0 << 2)
-#define DB_IDX_UPD_CIDX_SET            (0x1 << 2)
-#define DB_IDX_UPD_PIDX_SET            (0x2 << 2)
-#define DB_IDX_UPD_PIDX_INC            (0x3 << 2)
-
-#define DB_SCHED_UPD_NOP               (0x0)
-#define DB_SCHED_UPD_EVAL              (0x1)
-#define DB_SCHED_UPD_CLEAR             (0x2)
-#define DB_SCHED_UPD_SET               (0x3)
-
 #define LIF_WIDTH                      11
 #define QTYPE_WIDTH                    3
 #define QID_WIDTH                      24        

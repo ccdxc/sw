@@ -221,6 +221,7 @@
 
 #define HZ (1)
 
+#if 0
 #define TCP_DELACK_MAX  ((HZ/5))      /* maximal time to delay before sending an ACK */
 #if HZ >= 100
 #define TCP_DELACK_MIN  ((HZ/25))     /* minimal time to delay before sending an ACK */
@@ -228,6 +229,11 @@
 #else
 #define TCP_DELACK_MIN  4
 #define TCP_ATO_MIN     4
+#endif
+#else
+#define TCP_DELACK_MAX  (200) /* 200ms */
+#define TCP_DELACK_MIN  (40)  /* 40ms */
+#define TCP_ATO_MIN     (40)  /* 40ms */
 #endif
 
 #define TCP_RTO_MAX     ((120*HZ)) /* 120s */

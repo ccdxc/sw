@@ -59,7 +59,7 @@ write_phv:
 	            b tcp_tx_pending_rx2tx
 	            nop
 	        .brcase 2
-	            b tcp_tx_rx2tx_end // shouldn't happen
+	            b tcp_tx_ft_expired
 	            nop
 	        .brcase 3
 	            b tcp_tx_rx2tx_end // shouldn't happen
@@ -78,17 +78,26 @@ tcp_tx_launch_sesq:
     phvwr           p.to_s2_sesq_cidx, d.{ci_0}.hx
     add             r3, d.{sesq_base}.wx, d.{ci_0}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
     phvwr           p.to_s1_sesq_ci_addr, r3
+    tbladd          d.{ci_0}.hx, 1
 
     phvwri          p.common_phv_pending_sesq, 1
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)
+    /* Check if we have pending del ack timer (fast timer)
+     * and cancel if running. The cancel is done by setting ci = pi
+     */
+    sne             c1, d.{pi_2}.hx, d.ft_pi
+    tblwr.c1        d.{ci_2}, d.{ft_pi}.hx
     nop.e
     nop
 tcp_tx_launch_asesq:
+    // TODO check pi != ci
+    phvwri          p.common_phv_pending_asesq, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_TX, TCP_TX_DDOL_DONT_TX
     phvwri.c1       p.common_phv_debug_dol_dont_tx, 1
     phvwr           p.to_s2_sesq_cidx, d.{ci_4}.hx
     add             r3, d.{asesq_base}.wx, d.{ci_4}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
+    tbladd          d.{ci_4}.hx, 1
     phvwr           p.to_s1_sesq_ci_addr, r3
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)
@@ -96,8 +105,48 @@ tcp_tx_launch_asesq:
     nop
 
 tcp_tx_pending_rx2tx:
+    // TODO check pi against ci
+    phvwri          p.common_phv_pending_rx2tx, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, TCP_TX_DDOL_DONT_SEND_ACK
     phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING, d.{ci_1}.hx)
+    tbladd          d.{ci_1}.hx, 1
+    add             r3, r3, 1
+    memwr.dx        r4, r3
+    nop.e
+    nop
+
+tcp_tx_ft_expired:
+    // TODO check pi against ci
+    phvwri          p.common_phv_pending_rx2tx, 1
+    /* Check if SW PI (ft_pi) == timer pi
+     * If TRUE, we want to process this timer, else its an old timer expiry and we can
+     * ignore it
+     */
+    seq             c1, d.{pi_2}.hx, d.ft_pi
+
+    /* For old timer expiry, no more processing, invalidate table bits */
+    phvwri.!c1      p.app_header_table0_valid, 0
+
+tcp_tx_cancel_fast_timer:
+    /* Store new CI in r5; new ci = sw pi */
+    add             r5, r0, d.ft_pi
+    /* For old timer expiry, set new ci == sw pi - 1 */
+    sub.!c1         r5, r5, 1
+
+    /* Ring FT doorbell to update CI
+     * store address in r4
+     */
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
+
+    // data will be in r3
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_FT, r5)
+    memwr.dx.e      r4, r3
+    tbladd          d.{ci_2}.hx, 1
+    nop
+    
 tcp_tx_rx2tx_end:
     nop.e
     nop

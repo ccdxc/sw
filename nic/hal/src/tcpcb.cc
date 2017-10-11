@@ -125,7 +125,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->dest_port = spec.dest_port();
     tcpcb->header_len = spec.header_len();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
-            std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
+            std::min(sizeof(tcpcb->header_template), spec.header_template().size()));
     tcpcb->pending_ack_send = spec.pending_ack_send();
     tcpcb->state = spec.state();
     tcpcb->source_lif = spec.source_lif();

@@ -378,6 +378,7 @@ flow_fra_process_done:
     phvwr       p.to_s4_snd_ssthresh, d.snd_ssthresh
     
 table_read_CC:
+    phvwr       p.s4_s2s_debug_stage4_7_thread, 0
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                     tcp_rx_cc_stage4_start, k.common_phv_qstate_addr,
                     TCP_TCB_CC_OFFSET, TABLE_SIZE_512_BITS)

@@ -116,6 +116,7 @@ dma_cmd_hdr:
     CAPRI_OPERAND_DEBUG(d.header_len)
     CAPRI_DMA_CMD_MEM2PKT_SETUP(l2l3_header_dma_dma_cmd, r5, d.header_len)
 dma_cmd_tcp_header:
+    tbladd          d.quick_acks_decr, 1
     phvwr           p.tcp_header_source_port, d.source_port
     phvwr           p.tcp_header_dest_port, d.dest_port
     phvwr           p.tcp_header_seq_no, k.t0_s2s_snd_nxt
@@ -123,6 +124,7 @@ dma_cmd_tcp_header:
     phvwr           p.tcp_header_data_ofs, 5
     phvwr           p.tcp_header_flags, TCPHDR_ACK
     phvwr           p.tcp_header_window, k.t0_s2s_snd_wnd
+    phvwr           p.tx2rx_quick_acks_decr, d.quick_acks_decr
 
     CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_header_urg)
 
@@ -194,7 +196,7 @@ dma_cmd_write_tx2rx_shared:
     add             r5, k.common_phv_qstate_addr, TCP_TCB_TX2RX_SHARED_WRITE_OFFSET
 
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(tx2rx_dma_dma_cmd, r5, tx2rx_prr_out, tx2rx_pad2_tx2rx)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(tx2rx_dma_dma_cmd, r5, tx2rx_prr_out, tx2rx_pad1_tx2rx)
     CAPRI_DMA_CMD_STOP(tx2rx_dma_dma_cmd)
      
     bcf             [c1], update_xmit_cursor
