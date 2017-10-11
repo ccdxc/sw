@@ -615,10 +615,10 @@ hal_ret_t
 p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
                                   pd_session_args_t *args)
 {
-    hal_ret_t               ret;
+    hal_ret_t               ret = HAL_RET_OK;
     session_t               *session = (session_t *)session_pd->session;
 
-    if (!session_pd->iflow.flow_hash_hw_id) {
+    if (!session_pd->iflow.flow_hash_hw_id && args->update_iflow) {
         ret = p4pd_add_flow_hash_table_entry(&session->iflow->config.key,
                                          session->iflow->pgm_attrs.lkp_inst,
                                          (pd_l2seg_t *)(session->iflow->sl2seg->pd),
@@ -631,11 +631,13 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
             ret = HAL_RET_OK;
         }
     }
+
     if (ret != HAL_RET_OK) {
         return ret;
     }
 
-    if (session_pd->iflow_aug_valid && \
+    if (args->update_iflow && \
+        session_pd->iflow_aug_valid && \
         !session_pd->iflow_aug.flow_hash_hw_id) {
         ret = p4pd_add_flow_hash_table_entry(&session->iflow->assoc_flow->config.key,
                                              session->iflow->assoc_flow->pgm_attrs.lkp_inst,
@@ -762,8 +764,7 @@ pd_session_create (pd_session_args_t *args)
     session_pd->session = args->session;
     args->session->pd = session_pd;
 
-    if (session->rflow && args->pgm_rflow) {
-        HAL_TRACE_DEBUG("Programming Rflow");
+    if (session->rflow) {
         session_pd->rflow_valid = TRUE;
         if (session->rflow->assoc_flow) {
             session_pd->rflow_aug_valid = true;
@@ -834,7 +835,7 @@ pd_session_update (pd_session_args_t *args)
 
     HAL_ASSERT(session_pd != NULL);
 
-    if (session->rflow && args->pgm_rflow) {
+    if (session->rflow) {
         HAL_TRACE_DEBUG("Programming Rflow");
         session_pd->rflow_valid = TRUE;
         if (session->rflow->assoc_flow) {

@@ -8,6 +8,7 @@
 namespace hal {
 
 inline hal_ret_t init_plugins() {
+    fte::init();
     hal::net::init();
     hal::proxy::init();
 

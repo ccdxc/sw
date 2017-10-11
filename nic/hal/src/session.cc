@@ -2134,28 +2134,9 @@ flow_create_fte(const flow_cfg_t *cfg,
     return flow;
 }
 
-//-----------------------------------------------------------------------------
-// Flow Update FTE
-//-----------------------------------------------------------------------------
-static hal_ret_t
-flow_update_fte(flow_t *flow, const flow_cfg_t *cfg,
-                const flow_pgm_attrs_t *attrs)
-{
-    hal_ret_t      ret = HAL_RET_OK;
-
-    if (cfg) {
-        flow->config = *cfg;
-    }
-
-    if (attrs) {
-        flow->pgm_attrs = *attrs;
-    }
-
-    return ret;
-}
-
 hal_ret_t
-session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
+session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle, 
+                   session_t **session_p)
 {
     hal_ret_t ret;
     nwsec_profile_t         *nwsec_prof;
@@ -2236,7 +2217,7 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
     session->iflow->sif = args->sif;
     session->iflow->dif = args->dif;
 
-    if (args->rflow) {
+    if (args->valid_rflow) {
         session->rflow = flow_create_fte(args->rflow[0], args->rflow[1],
                                          args->rflow_attrs[0], args->rflow_attrs[1],
                                          session, bridged);
@@ -2256,7 +2237,6 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
         session->rflow->reverse_flow = session->iflow;
     }
     session->hal_handle = hal_alloc_handle();
-    session->alg_proto_state = args->alg_proto_state;
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_args_init(&pd_session_args);
@@ -2265,7 +2245,7 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
     pd_session_args.rsp = args->rsp;
-    pd_session_args.pgm_rflow = args->pgm_rflow;
+    pd_session_args.update_iflow = true;
 
     ret = pd::pd_session_create(&pd_session_args);
     if (ret != HAL_RET_OK) {
@@ -2280,6 +2260,10 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
 
     if (session_handle) {
         *session_handle = session->hal_handle;
+    }
+
+    if (session_p) {
+        *session_p = session;
     }
 
  end:
@@ -2297,14 +2281,14 @@ session_lookup_fte(flow_key_t key, flow_role_t *role)
     session_t *session = NULL;
 
     // Should we look at iflow first ?
-    session = (session_t *)g_hal_state->session_hal_rflow_ht()->lookup(std::addressof(key));   
-    *role = FLOW_ROLE_RESPONDER; 
-    if (session == NULL) { 
+    session = (session_t *)g_hal_state->session_hal_rflow_ht()->lookup(std::addressof(key));
+    *role = FLOW_ROLE_RESPONDER;
+    if (session == NULL) {
         session = (session_t *)g_hal_state->session_hal_iflow_ht()->lookup(std::addressof(key));
         *role = FLOW_ROLE_INITIATOR;
     }
 
-    return session;        
+    return session;
 }
 
 hal_ret_t
@@ -2312,23 +2296,34 @@ session_update_fte(const session_args_fte_t *args, session_t *session)
 {
     hal_ret_t                ret;
     pd::pd_session_args_t    pd_session_args;
+    bool bridged = (args->sl2seg == args->dl2seg);
 
     // Update PI Flows
-    if (args->pgm_rflow) {
-        ret = flow_update_fte(session->rflow, args->rflow[0], args->rflow_attrs[0]);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Flow update failure, err : {}", ret);
-            return ret;
+    if (args->valid_rflow) {
+        session->rflow = flow_create_fte(args->rflow[0], args->rflow[1],
+                                         args->rflow_attrs[0], args->rflow_attrs[1],
+                                         session, bridged);
+        if (session->rflow == NULL) {
+            return HAL_RET_OOM;
         }
+
+        session->rflow->sl2seg = args->dl2seg;
+        session->rflow->dl2seg = args->sl2seg;
+        session->rflow->sep = args->dep;
+        session->rflow->dep = args->sep;
+        session->rflow->sif = args->dif;
+        session->rflow->dif = args->sif;
+
+        session->iflow->reverse_flow = session->rflow;
+        session->rflow->reverse_flow = session->iflow;
     }
-    
+ 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_args_init(&pd_session_args);
     pd_session_args.tenant = args->tenant;
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
     pd_session_args.rsp = args->rsp;
-    pd_session_args.pgm_rflow = args->pgm_rflow;
 
     ret = pd::pd_session_update(&pd_session_args);
     if (ret != HAL_RET_OK) {
@@ -2350,7 +2345,6 @@ session_delete_fte(const session_args_fte_t *args, session_t *session)
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
     pd_session_args.rsp = args->rsp;
-    pd_session_args.pgm_rflow = args->pgm_rflow;
 
     ret = pd::pd_session_delete(&pd_session_args);
     if (ret != HAL_RET_OK) {

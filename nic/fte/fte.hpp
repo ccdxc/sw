@@ -34,6 +34,11 @@ const feature_id_t FTE_FEATURE_ALG           = 11;
 DEFINE_ENUM(pipeline_action_t, FTE_PIPELINE_ACTION_ENTRIES)
 #undef FTE_PIPELINE_ACTION_ENTRIES
 
+hal_ret_t build_wildcard_key(hal::flow_key_t& key);
+alg_entry_t *lookup_alg_db(ctx_t *ctx);
+alg_entry_t *insert_alg_entry(ctx_t *ctx, hal::session_t *sess);
+alg_entry_t *remove_alg_entry(hal::flow_key_t key);
+
 typedef std::function<pipeline_action_t(ctx_t &ctx)> exec_handler_t;
 typedef std::function<void(ctx_t &ctx)> commit_handler_t;
 hal_ret_t register_feature(const feature_id_t& fid,
@@ -62,5 +67,7 @@ hal_ret_t session_create(SessionSpec& spec, SessionResponse *rsp);
 // FTE pkt loop (infinite loop)
 void pkt_loop(uint8_t fte_id);
 
+// FTE Init routine
+hal_ret_t init();
 
 } // namespace fte

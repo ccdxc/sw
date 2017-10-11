@@ -6,6 +6,7 @@
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/include/cpupkt_api.hpp"
 #include <netinet/ether.h>
+#include "nic/include/fte_db.hpp"
 
 namespace fte {
 
@@ -308,10 +309,6 @@ public:
 
     hal_ret_t update_gft();
 
-    hal_ret_t build_wildcard_key(hal::flow_key_t& key);
- 
-    uint8_t construct_lookup_keys(hal::flow_key_t *key);
-
     // Get key based on role
     const hal::flow_key_t& get_key(hal::flow_role_t role);
 
@@ -364,12 +361,11 @@ public:
     hal_ret_t feature_status() const { return feature_status_; } 
     void set_feature_status(hal_ret_t ret) { feature_status_ = ret; }
 
-    bool flow_miss() const { return (((session_ == NULL) || \
-                     ((role_ == hal::FLOW_ROLE_RESPONDER) && (pgm_rflow_ == true))) && \
-                      (arm_lifq_.lif == hal::SERVICE_LIF_CPU)); }
+    bool flow_miss() const { return flow_miss_; }
+    void set_flow_miss(bool val) { flow_miss_ = val; }
+
     bool valid_rflow() const { return valid_rflow_; }
-    bool pgm_rflow()  const { return pgm_rflow_; }
-    void set_pgm_rflow(bool pgm) { pgm_rflow_ = pgm; }
+    void set_valid_rflow(bool val) { valid_rflow_ = val; }
 
     hal::tenant_t *tenant() const { return tenant_; }
     hal::l2seg_t *sl2seg() const { return sl2seg_; }
@@ -381,8 +377,8 @@ public:
     hal::ep_t *sep() const { return sep_; }
     hal::ep_t *dep() const { return dep_; }
 
-    hal::alg_proto_state_t alg_proto_state() const { return alg_proto_state_; }
-    void  set_alg_proto_state(hal::alg_proto_state_t state) { alg_proto_state_ = state; }
+    alg_proto_state_t alg_proto_state() const { return alg_proto_state_; }
+    void  set_alg_proto_state(alg_proto_state_t state) { alg_proto_state_ = state; }
 
     nwsec::ALGName alg_proto() const { return alg_proto_; }
     void set_alg_proto(nwsec::ALGName proto) { alg_proto_ = proto; }
@@ -394,6 +390,7 @@ public:
 private:
     lifqid_t              arm_lifq_;
     hal::flow_key_t       key_;
+    bool                  flow_miss_;
 
     cpu_rxhdr_t           *cpu_rxhdr_; // metadata from p4 to cpu
     uint8_t               *pkt_;
@@ -417,7 +414,6 @@ private:
     uint8_t               istage_;          // current iflow stage
     uint8_t               rstage_;          // current rflow stage
     bool                  valid_rflow_;     // Is rflow valid
-    bool                  pgm_rflow_;       // Is rflow software only ?
     flow_t                *iflow_[MAX_STAGES];       // iflow 
     flow_t                *rflow_[MAX_STAGES];       // rflow 
 
@@ -429,7 +425,7 @@ private:
     hal::ep_t             *sep_;
     hal::ep_t             *dep_;
     nwsec::ALGName        alg_proto_;         // ALG Proto to be applied
-    hal::alg_proto_state_t  alg_proto_state_; // ALG Proto state machine state
+    alg_proto_state_t     alg_proto_state_;   // ALG Proto state machine state
 
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
     hal_ret_t lookup_flow_objs();

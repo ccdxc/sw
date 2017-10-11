@@ -11,6 +11,84 @@
 
 namespace fte {
 
+// global instance of all FTE data
+fte_db  *g_fte_db;
+
+/*-----------------------------------------------------
+    Begin Hash Utility APIs 
+------------------------------------------------------*/
+void *
+alg_flow_get_key_func(void *entry)
+{
+    HAL_ASSERT(entry != NULL);
+    return (void *)&(((alg_entry_t *)entry)->key);
+}
+
+uint32_t
+alg_flow_compute_hash_func (void *key, uint32_t ht_size)
+{
+    return (hal::utils::hash_algo::fnv_hash(key, \
+                       sizeof(hal::flow_key_t)) % ht_size);
+}
+
+bool
+alg_flow_compare_key_func (void *key1, void *key2)
+{
+    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    if (!memcmp(key1, key2, sizeof(hal::flow_key_t))) {
+        return true;
+    }
+    return false;
+}
+
+/*-----------------------------------------------------
+    End Hash Utility APIs
+------------------------------------------------------*/
+
+/*-----------------------------------------------------
+    Begin FTE DB Constructor/Destructor APIs
+------------------------------------------------------*/
+
+hal_ret_t
+fte_db::init(void)
+{
+    // initialize tenant related data structures
+    alg_flow_key_ht_ = hal::utils::ht::factory(FTE_MAX_ALG_KEYS,
+                                               alg_flow_get_key_func,
+                                               alg_flow_compute_hash_func,
+                                               alg_flow_compare_key_func);
+    HAL_ASSERT_RETURN((alg_flow_key_ht_ != NULL), HAL_RET_ERR);
+
+    return HAL_RET_OK;
+}
+
+fte_db::~fte_db(void)
+{
+    alg_flow_key_ht_ ? delete alg_flow_key_ht_ : HAL_NOP;
+}
+
+fte_db *
+fte_db::factory(void)
+{
+    void         *mem;
+    fte_db       *db;
+
+    mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(fte_db));
+    HAL_ABORT(mem != NULL);
+    db = new (mem) fte_db();
+    if (db->init() == HAL_RET_ERR) {
+        db->~fte_db();
+        HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
+            return NULL;
+    }
+
+    return db;
+}
+
+/*-----------------------------------------------------
+    End FTE DB Constructor/Destructor APIs
+------------------------------------------------------*/
+
 // FTE features
 typedef struct feature_s feature_t;
 struct feature_s {
@@ -128,6 +206,9 @@ static inline pipeline_action_t
 pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start, uint8_t end)
 {
     pipeline_action_t rc;
+
+    HAL_TRACE_DEBUG("Invoking pipeline with start: {} end: {}", start, end);
+
     for (int i = start; i < end; i++) {
         feature_t *feature = pipeline->features[i];
 
@@ -225,13 +306,21 @@ pipeline_execute_(ctx_t &ctx)
             rflow_end = iflow_start = pipeline->num_features_outbound;
             iflow_end = pipeline->num_features_outbound + pipeline->num_features_inbound;
         }
-        
-        // Invoke all initiator feature handlers 
+       
         if (ctx.role() == hal::FLOW_ROLE_NONE) {
+            // Invoke all initiator feature handlers
             ctx.set_role(hal::FLOW_ROLE_INITIATOR);
         }
-        
-        rc = pipeline_invoke_exec_(pipeline, ctx, iflow_start, iflow_end);
+
+        if (ctx.role() == hal::FLOW_ROLE_RESPONDER) {
+            // Invoke all responder feature handlers if we are processing Rflow
+            rc = pipeline_invoke_exec_(pipeline, ctx, rflow_start, rflow_end); 
+        } else {
+            rc = pipeline_invoke_exec_(pipeline, ctx, iflow_start, iflow_end);
+        }
+       
+        // If we are processing Iflow and Rflow in the same
+        // context swap the flow objects and invoke pipeline 
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR && \
             rc == PIPELINE_CONTINUE && ctx.valid_rflow()) {
             //Swap the derived flow objects 
@@ -272,6 +361,18 @@ void unregister_features_and_pipelines() {
         STAILQ_REMOVE_HEAD(&g_feature_list_, entries);
         HAL_FREE(feature_t, feature);
     }
+}
+
+/*------------------------------------------------------------
+    FTE Init API to initialize FTE top-level data structure
+--------------------------------------------------------------*/
+
+hal_ret_t init(void) 
+{
+    g_fte_db = fte_db::factory();
+    HAL_ASSERT_RETURN((g_fte_db != NULL), HAL_RET_ERR);
+
+    return HAL_RET_OK;
 }
 
 } // namespace fte

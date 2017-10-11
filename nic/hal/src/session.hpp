@@ -82,17 +82,6 @@ DEFINE_ENUM(flow_end_type_t, FLOW_END_TYPES)
 DEFINE_ENUM(session_dir_t, SESSION_DIRECTIONS)
 #undef SESSION_DIRECTIONS
 
-// ALG types
-#define ALG_PROTO_STATE(ENTRY)                                         \
-    ENTRY(ALG_PROTO_STATE_NONE,       0,  "ALG_PROTO_STATE_NONE")      \
-    ENTRY(ALG_PROTO_STATE_TFTP_RRQ,   1,  "ALG_PROTO_STATE_TFTP_RRQ")  \
-    ENTRY(ALG_PROTO_STATE_TFTP_WRQ,   2,  "ALG_PROTO_STATE_TFTP_WRQ")  \
-    ENTRY(ALG_PROTO_STATE_FTP,        3,  "ALG_PROTO_STATE_FTP")       \
-    ENTRY(ALG_PROTO_STATE_DNS,       4,  "ALG_PROTO_STATE_DNS")       
-
-DEFINE_ENUM(alg_proto_state_t, ALG_PROTO_STATE)
-#undef ALG_PROTO_STATE
-
 // NAT types
 enum nat_type_t {
     NAT_TYPE_NONE         = 0,
@@ -300,8 +289,7 @@ typedef struct session_args_fte_s {
 
     session_state_t    *session_state;            // connection tracking state
     tenant_t           *tenant;                   // tenant
-    bool               pgm_rflow;                 // Software only rfow ?
-    alg_proto_state_t  alg_proto_state;           // ALG Protocol State
+    bool               valid_rflow;               // Rflow valid ?
 
     ep_t               *sep;                      // spurce ep
     ep_t               *dep;                      // dest ep
@@ -330,7 +318,6 @@ struct session_s {
     session_dir_t       dst_dir;                  // destination direction
     app_session_t       *app_session;             // app session this L4 session is part of, if any
     tenant_t            *tenant;                  // tenant
-    alg_proto_state_t   alg_proto_state;          // ALG Protocol State
 
     // PD state
     pd::pd_session_t    *pd;                      // all PD specific state
@@ -413,7 +400,7 @@ hal_ret_t extract_flow_key_from_spec (tenant_id_t tid,
                                       const FlowKey& flow_spec_key);
 
 hal_ret_t session_create(const session_args_t *args, hal_handle_t *session_handle);
-hal_ret_t session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle);
+hal_ret_t session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle, session_t **sess);
 hal_ret_t session_update_fte(const session_args_fte_t *args, session_t *session);
 hal_ret_t session_delete_fte(const session_args_fte_t *args, session_t *session);
 hal::session_t *session_lookup_fte(flow_key_t key, flow_role_t *role);

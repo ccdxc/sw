@@ -26,6 +26,116 @@ std::ostream& operator<<(std::ostream& os, session::FlowAction val)
 
 namespace fte {
 
+/*-----------------------------------------------------------------------
+- Builds wildcard keys for lookup into ALG table. This will be used when
+  a flow miss happens to check if we have any previously saved state for 
+  the flow.
+-------------------------------------------------------------------------*/
+static hal_ret_t
+build_wildcard_key(hal::flow_key_t& key, hal::flow_key_t key_)
+{
+    memcpy(std::addressof(key), &key_, sizeof(hal::flow_key_t));
+
+    if (key.flow_type != hal::FLOW_TYPE_L2 && key.proto == IP_PROTO_UDP) {
+        key.sport = 0;
+    }
+
+    return HAL_RET_OK;
+}
+
+
+/*-----------------------------------------------------------------------
+- Performs lookup on ALG hash table with the given flow key and a wildcard
+  key on a flow miss. 
+-------------------------------------------------------------------------*/
+alg_entry_t *
+lookup_alg_db(ctx_t *ctx)
+{
+    uint8_t         i=0, num_keys=0;
+    hal::flow_key_t keys[MAX_FLOW_KEYS];
+    alg_entry_t     *entry = NULL;
+
+    //Incoming Key
+    keys[num_keys++] = ctx->key();
+
+    //ALG Variations
+    build_wildcard_key(keys[num_keys++], ctx->key());
+
+    g_fte_db->rlock();
+    while (i < num_keys) {
+        HAL_TRACE_DEBUG("Looking up ALG DB for key: {}", keys[i]);
+        entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->lookup(std::addressof(keys[i++]));
+        if (!entry) {
+            continue;
+        } else {
+            HAL_TRACE_DEBUG("ALG Entry Found with key: {}", keys[i-1]);
+            break;
+        }
+    }
+    g_fte_db->runlock();
+
+    return (entry);
+}
+
+/*-----------------------------------------------------------------------
+- This API can be used to insert a new entry into the ALG wildcard table 
+  when the firewall has indicated ALG action on the flow.
+-------------------------------------------------------------------------*/
+alg_entry_t *
+insert_alg_entry(ctx_t *ctx, hal::session_t *sess)
+{
+    alg_entry_t     *entry = NULL;
+    hal::flow_key_t  key = ctx->key();
+    hal::flow_role_t role = hal::FLOW_ROLE_INITIATOR;
+ 
+    entry = (alg_entry_t *)HAL_CALLOC(alg_entry_t, sizeof(alg_entry_t));
+    if (!entry) {
+        return NULL;
+    }
+
+    switch (ctx->alg_proto()) {
+        case nwsec::APP_SVC_TFTP:
+            role = hal::FLOW_ROLE_RESPONDER;
+            key = ctx->get_key(role);
+            key.sport = 0;
+            break;
+        default:
+            break;
+    }
+
+    entry->key = key;
+    entry->role = role;
+    entry->session = sess;
+    entry->alg_proto_state = ctx->alg_proto_state();
+
+    HAL_TRACE_DEBUG("Inserting Key: {} in ALG table", key);
+
+    entry->flow_key_ht_ctxt.reset();
+    g_fte_db->wlock();
+    g_fte_db->alg_flow_key_ht()->insert(entry, &entry->flow_key_ht_ctxt);
+    g_fte_db->wunlock();
+
+    return entry;
+}
+
+/*-----------------------------------------------------------------------
+- This API can be used to remove an entry from ALG hash table when either
+  there was an error processing the reverse flow or the Iflow/Rflow has been
+  successfully installed and we do not need to keep this software entry 
+  around.
+-------------------------------------------------------------------------*/
+alg_entry_t *
+remove_alg_entry(hal::flow_key_t key)
+{
+    alg_entry_t   *entry = NULL;
+
+    g_fte_db->wlock();
+    entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->remove((void *)std::addressof(key));
+    g_fte_db->wunlock();
+
+    return entry;
+}
+
 // extract session key (iflow key) from spec
 hal_ret_t
 ctx_t::extract_flow_key_from_spec(hal::flow_key_t *key, const FlowKey&  flow_spec_key,
@@ -260,58 +370,36 @@ ctx_t::get_key(hal::flow_role_t role)
     return flow->key();
 }
 
-// Zero out sport to check for responder flows
-// for ALG(TFTP)
-hal_ret_t
-ctx_t::build_wildcard_key(hal::flow_key_t& key)
-{
-    memcpy(std::addressof(key), &key_, sizeof(hal::flow_key_t));
-
-    if (key.flow_type != hal::FLOW_TYPE_L2 && key.proto == IP_PROTO_UDP) {
-        key.sport = 0;
-    }
-
-    return HAL_RET_OK; 
-}
-
-uint8_t
-ctx_t::construct_lookup_keys(hal::flow_key_t *keys)
-{
-    uint8_t i=0;
-
-    //Incoming Key
-    keys[i++] = key_;
-
-    //ALG Variations
-    build_wildcard_key(keys[i++]);
-
-    return (i);
-}
-
 hal_ret_t
 ctx_t::lookup_session()
 {
     hal::flow_t *hflow = NULL;
-    hal::flow_key_t keys[MAX_FLOW_KEYS];
-    uint8_t num_keys = 0;
-    int i = 0, stage = 0;
+    int stage = 0;
+    alg_entry_t  *entry = NULL;
 
     // TODO(pavithra) handle protobuf requests
     if (protobuf_request()) {
         return HAL_RET_SESSION_NOT_FOUND; 
     }
 
-    num_keys = construct_lookup_keys(keys);
-
-    while (i < num_keys) {
-        HAL_TRACE_DEBUG("Looking up session for key: {}", keys[i]);
-        session_ = hal::session_lookup_fte(keys[i++], std::addressof(role_));
-        if (!session_) {
-            continue;
-        } else {
-            HAL_TRACE_DEBUG("Session Found with key: {}", keys[i-1]);
-            break;
+    entry = lookup_alg_db(this);
+    if (entry) {
+        // ALG Entry found
+        session_ = entry->session;
+        set_alg_proto_state(entry->alg_proto_state);
+         
+        // This is an RFlow if we found its key and role
+        // set as responder. Initialize the rflow_ stage
+        if (entry->role == hal::FLOW_ROLE_RESPONDER) {
+            valid_rflow_ = true;
+            rflow_[stage]->set_key(key());
         }
+        set_role(entry->role);  
+        set_flow_miss(true);
+    }
+
+    if (!session_) {
+        session_ = hal::session_lookup_fte(key_, std::addressof(role_));
     }
 
     if (!session_) {
@@ -328,8 +416,6 @@ ctx_t::lookup_session()
                 rflow_[stage]->from_config(hflow->reverse_flow->config, 
                                                hflow->reverse_flow->pgm_attrs);
                 valid_rflow_ = true;
-            } else {
-                rflow_[stage] = NULL;
             }
     } else {
         rflow_[stage]->from_config(hflow->config, hflow->pgm_attrs);
@@ -355,8 +441,7 @@ ctx_t::create_session()
     }
  
     cleanup_hal_ = false;
-    pgm_rflow_ = true;
-
+   
     // read rkey from spec
     if (protobuf_request()) {
         if (sess_spec_->has_responder_flow()) {
@@ -414,14 +499,20 @@ ctx_t::create_session()
         }
     } 
 
+    set_role(hal::FLOW_ROLE_NONE);
+    if (arm_lifq_.lif == hal::SERVICE_LIF_CPU) { 
+        set_flow_miss(true);
+    }
+
     return HAL_RET_OK;
 }
 
 hal_ret_t
 ctx_t::update_gft()
 {
-    hal_ret_t ret;
-    hal_handle_t  session_handle;
+    hal_ret_t       ret;
+    hal_handle_t    session_handle;
+    hal::session_t *session = NULL;
 
     hal::session_args_fte_t session_args = {};
     hal::session_cfg_t session_cfg = {};
@@ -487,7 +578,6 @@ ctx_t::update_gft()
                         iflow_attrs.nat_type);
     }
 
-
     for (uint8_t stage = 0; valid_rflow_ && stage <= rstage_; stage++) {
         flow_t *rflow = rflow_[stage];
         hal::flow_cfg_t &rflow_cfg = rflow_cfg_list[stage];
@@ -526,7 +616,6 @@ ctx_t::update_gft()
                         rflow_attrs.nat_type);
     }
 
-    session_args.pgm_rflow = pgm_rflow_;
     session_args.tenant = tenant_;
     session_args.sep = sep_;
     session_args.dep = dep_;
@@ -536,7 +625,7 @@ ctx_t::update_gft()
     session_args.dl2seg = dl2seg_;
     session_args.spec = sess_spec_;
     session_args.rsp = sess_resp_;
-    session_args.alg_proto_state = alg_proto_state_;
+    session_args.valid_rflow = valid_rflow_;
 
     if (hal_cleanup() == true) {
         // Cleanup session if hal_cleanup is set
@@ -548,7 +637,10 @@ ctx_t::update_gft()
         ret = hal::session_update_fte(&session_args, session_);
     } else {
         // Create a new HAL session
-        ret = hal::session_create_fte(&session_args, &session_handle);
+        ret = hal::session_create_fte(&session_args, &session_handle, &session);
+        if (alg_proto() != nwsec::APP_SVC_NONE) {
+            insert_alg_entry(this, session); 
+        }
     }
 
     if (ret != HAL_RET_OK) {
@@ -649,8 +741,6 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
         return ret;
     }
 
-    set_role(hal::FLOW_ROLE_NONE);
-
     // Lookup old session
     ret = lookup_session();
     if (ret == HAL_RET_SESSION_NOT_FOUND) {
@@ -675,12 +765,13 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, flow_t iflow[]
     pkt_len_ = pkt_len;
     arm_lifq_ = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
+
     if (cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) {
-      ret = init_flows(iflow, rflow);
-      if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: failed to init flows, err={}", ret);
-        return ret;
-      }
+        ret = init_flows(iflow, rflow);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte: failed to init flows, err={}", ret);
+            return ret;
+        }
     }
 
     return HAL_RET_OK;
@@ -856,7 +947,6 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 {
     hal_ret_t ret;
 
-    HAL_TRACE_DEBUG("send queue pkts txpkt_cnt_: {} flow_miss: {} drop: {}", txpkt_cnt_, flow_miss(), drop());
     // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
     if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop()) {
         queue_txpkt(pkt_, pkt_len_);
@@ -892,6 +982,9 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
     return HAL_RET_OK;
 }
 
+/*-----------------------------------------------------------------------
+- Swap the derived flow objects for reverse flow processing.
+-------------------------------------------------------------------------*/
 void
 ctx_t::swap_flow_objs()
 {
