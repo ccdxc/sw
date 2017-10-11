@@ -35,6 +35,8 @@ modules:
             # Flow config - unset tcp_ts_option - timestamp not negotiated, send pkt with ts option
             - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_DROP
               flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
             # Flow config - set tcp_ts_option, send pkt without ts option. must drop/not-drop
             - profile    : SEC_PROF_TCP_TS_NOT_PRESENT_DROP_ENABLE
               flow       : filter://type=IPV4,proto=TCP,label=NORM_TS,direction=IFLOW
@@ -45,6 +47,13 @@ modules:
               flow       : filter://type=IPV4,proto=TCP,label=NORM_TCP_NON_SYN,direction=IFLOW
             - profile    : SEC_PROF_TCP_NON_SYN_FIRST_PKT_DROP_DISABLE
               flow       : filter://type=IPV4,proto=TCP,label=NORM_TCP_NON_SYN,direction=IFLOW
+            # Flow config - set tcp_ts_option - timestamp negotiated, send pkt with ts option
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_ALLOW
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_DROP
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
+            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_EDIT
+              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
 
     - module:
         name    : TCP_STATEFUL_IGNORE
@@ -59,15 +68,6 @@ modules:
             # Flow config - unset tcp_ts_option - timestamp not negotiated, send pkt with ts option
             - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_EDIT
               flow       : filter://type=IPV4,proto=TCP,label=NORM
-            # Flow config - set tcp_ts_option - timestamp negotiated, send pkt with ts option
-            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_ALLOW
-              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
-            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_DROP
-              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
-            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NEG_ACTION_EDIT
-              flow       : filter://type=IPV4,proto=TCP,label=NORM_TS
-            - profile    : SEC_PROF_TCP_UNEXPECTED_TS_OPTION_NOT_NEG_ACTION_ALLOW
-              flow       : filter://type=IPV4,proto=TCP,label=NORM_NON_TS
 
     - module:
         name    : IP
