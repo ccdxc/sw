@@ -9,8 +9,8 @@
 
 Status
 RdmaServiceImpl::RdmaQpCreate(ServerContext *context,
-                                const RdmaQpRequestMsg *req,
-                                RdmaQpResponseMsg *rsp)
+                              const RdmaQpRequestMsg *req,
+                              RdmaQpResponseMsg *rsp)
 {
     uint32_t             i, nreqs = req->request_size();
     RdmaQpResponse          *response;
@@ -31,18 +31,31 @@ RdmaServiceImpl::RdmaQpCreate(ServerContext *context,
 
 Status
 RdmaServiceImpl::RdmaQpUpdate(ServerContext *context,
-                                const RdmaQpRequestMsg *req,
-                                RdmaQpResponseMsg *rsp)
+                              const RdmaQpUpdateRequestMsg *req,
+                              RdmaQpUpdateResponseMsg *rsp)
 {
+    uint32_t             i, nreqs = req->request_size();
+    RdmaQpUpdateResponse *response;
+
     HAL_TRACE_DEBUG("Rcvd RdmaQp Update Request");
+    if (nreqs == 0) {
+        HAL_TRACE_DEBUG("Rcvd RdmaQp Update Request: Zero requests, returning");
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::rdma_qp_update(spec, response);
+    }
     return Status::OK;
 }
 
 #if 0
 Status
 RdmaServiceImpl::RdmaQpDelete(ServerContext *context,
-                                const RdmaQpDeleteRequestMsg *req,
-                                RdmaQpDeleteResponseMsg *rsp)
+                              const RdmaQpDeleteRequestMsg *req,
+                              RdmaQpDeleteResponseMsg *rsp)
 {
     HAL_TRACE_DEBUG("Rcvd RdmaQp Update Request");
     return Status::OK;
@@ -50,8 +63,8 @@ RdmaServiceImpl::RdmaQpDelete(ServerContext *context,
 
 Status
 RdmaServiceImpl::RdmaQpGet(ServerContext *context,
-                             const RdmaQpGetRequestMsg *req,
-                             RdmaQpGetResponseMsg *rsp)
+                           const RdmaQpGetRequestMsg *req,
+                           RdmaQpGetResponseMsg *rsp)
 {
     HAL_TRACE_DEBUG("Rcvd RdmaQp Get Request");
     return Status::OK;

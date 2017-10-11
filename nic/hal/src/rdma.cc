@@ -806,11 +806,78 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 }
 
 hal_ret_t
-rdma_qp_update (RdmaQpSpec& spec, RdmaQpResponse *rsp)
+rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
 {
-    assert(0);
-}
+    uint32_t     lif = spec.hw_lif_id();
+    uint32_t     qp_num = spec.qp_num();
+    uint32_t     oper = spec.oper();
+    sqcb_t       sqcb;
+    sqcb_t       *sqcb_p = &sqcb;
+    rqcb_t       rqcb;
+    rqcb_t       *rqcb_p = &rqcb;
+    uint32_t     header_template_addr;
 
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("PI-LIF:{}: RDMA QP Update for lif {} QID {} oper type {}", 
+                    __FUNCTION__, lif, qp_num, oper);
+
+    HAL_TRACE_DEBUG("{}: Inputs: dst_qp: {}", __FUNCTION__,
+                    spec.dst_qp_num());
+    HAL_TRACE_DEBUG("{}: Inputs: header_template: {}", __FUNCTION__,
+                    spec.header_template());
+
+    // Read sqcb from HW
+    memset(sqcb_p, 0, sizeof(sqcb_t));
+    g_lif_manager->ReadQState(lif, Q_TYPE_SQ, qp_num, (uint8_t *)sqcb_p, sizeof(sqcb_t));
+    pd::memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
+    pd::memrev((uint8_t*)&sqcb_p->sqcb1, sizeof(sqcb1_t));
+
+    // Read rqcb from HW
+    memset(rqcb_p, 0, sizeof(rqcb_t));
+    g_lif_manager->ReadQState(lif, Q_TYPE_RQ, qp_num, (uint8_t *)rqcb_p, sizeof(rqcb_t));
+    pd::memrev((uint8_t*)&rqcb_p->rqcb0, sizeof(rqcb0_t));
+    pd::memrev((uint8_t*)&rqcb_p->rqcb1, sizeof(rqcb1_t));
+
+    switch (oper) {
+
+        case rdma::RDMA_UPDATE_QP_OPER_SET_DEST_QP:
+            rqcb_p->rqcb1.dst_qp = spec.dst_qp_num();
+            sqcb_p->sqcb1.dst_qp = spec.dst_qp_num();
+            HAL_TRACE_DEBUG("{}: Update: Setting dst_qp to: {}", __FUNCTION__,
+                    spec.dst_qp_num());
+        break;
+        
+        case rdma::RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
+            header_template_addr = sqcb_p->sqcb1.header_template_addr;
+            header_template_t header_template;
+
+            memcpy(&header_template, (uint8_t *)spec.header_template().c_str(),
+                   std::min(sizeof(header_template_t), spec.header_template().size()));
+        
+            capri_hbm_write_mem((uint64_t)header_template_addr, (uint8_t *)&header_template, sizeof(header_template_t));
+
+            HAL_TRACE_DEBUG("{}: Update: Setting header_template content to: {}", 
+                            __FUNCTION__, spec.header_template());
+        break;
+
+        default:
+        break;
+    }
+    
+    // Convert and write SQCB to HBM
+    pd::memrev((uint8_t*)&sqcb_p->sqcb0, sizeof(sqcb0_t));
+    pd::memrev((uint8_t*)&sqcb_p->sqcb1, sizeof(sqcb1_t));
+    g_lif_manager->WriteQState(lif, Q_TYPE_SQ, spec.qp_num(), (uint8_t *)sqcb_p, sizeof(sqcb_t));
+
+    // Convert and write RQCB to HBM
+    pd::memrev((uint8_t*)&rqcb_p->rqcb0, sizeof(rqcb0_t));
+    pd::memrev((uint8_t*)&rqcb_p->rqcb1, sizeof(rqcb1_t));
+    g_lif_manager->WriteQState(lif, Q_TYPE_RQ, spec.qp_num(), (uint8_t *)rqcb_p, sizeof(rqcb_t));
+    
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+
+    return (HAL_RET_OK);
+}
 
 hal_ret_t
 rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)

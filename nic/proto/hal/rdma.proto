@@ -13,7 +13,7 @@ package rdma;
 service Rdma {
   // Queue Pair related APIs
   rpc RdmaQpCreate(RdmaQpRequestMsg) returns (RdmaQpResponseMsg) {}
-  rpc RdmaQpUpdate(RdmaQpRequestMsg) returns (RdmaQpResponseMsg) {}
+  rpc RdmaQpUpdate(RdmaQpUpdateRequestMsg) returns (RdmaQpUpdateResponseMsg) {}
 
   // Completion Q related APIs
   rpc RdmaCqCreate(RdmaCqRequestMsg) returns (RdmaCqResponseMsg) {}
@@ -38,23 +38,23 @@ enum RdmaServiceType {
 // RdmaQp object
 message RdmaQpSpec {
   types.ObjectMeta         meta            = 1;    // object meta
-  uint32                   qp_num          = 2;    // SQWQE size
-  uint32                   hw_lif_id       = 3;    // SQWQE size
+  uint32                   qp_num          = 2;    // qp number
+  uint32                   hw_lif_id       = 3;    // hw lif id
   uint32                   sq_wqe_size     = 4;    // SQWQE size
-  uint32                   rq_wqe_size     = 5;    // SQWQE size
+  uint32                   rq_wqe_size     = 5;    // RQWQE size
   uint32                   num_sq_wqes     = 6;    // Num SQWQEs
   uint32                   num_rq_wqes     = 7;    // Num RQWQEs
   uint32                   num_rsq_wqes    = 8;    // Num RSQWQEs
   uint32                   num_rrq_wqes    = 9;    // Num RRQWQEs
-  uint32                   pd              = 10;    // Protection domain
-  uint32                   pmtu            = 11;    // Path MTU
-  uint32                   hostmem_pg_size = 12;    // Path MTU
+  uint32                   pd              = 10;   // Protection domain
+  uint32                   pmtu            = 11;   // Path MTU
+  uint32                   hostmem_pg_size = 12;   // Host Memory Page Size
   RdmaServiceType          svc             = 13;   // RDMA service type
-  bool                     atomic_enabled  = 14;   // LIF vlan strip enable
-  uint32                   sq_lkey         = 15;    // SQ's lkey
-  uint32                   rq_lkey         = 16;    // RQ's lkey
-  uint32                   rq_cq_num       = 17;    // RQ's CQ Number
-  uint32                   sq_cq_num       = 18;    // SQ's CQ Number
+  bool                     atomic_enabled  = 14;   // enable Atomic Ops
+  uint32                   sq_lkey         = 15;   // SQ's lkey
+  uint32                   rq_lkey         = 16;   // RQ's lkey
+  uint32                   rq_cq_num       = 17;   // RQ's CQ Number
+  uint32                   sq_cq_num       = 18;   // SQ's CQ Number
 }
 
 // RdmaQpRequestMsg is batched request used to create/update of Rdma QPs
@@ -74,6 +74,39 @@ message RdmaQpResponse {
 // RdmaQpResponseMsg is response to RdmaQpRequestMsg
 message RdmaQpResponseMsg {
   repeated RdmaQpResponse    response = 1;    // batch of responses
+}
+
+// types of Update QP operations
+enum RdmaQpUpdateOper {
+    RDMA_UPDATE_QP_OPER_SET_DEST_QP    = 0;  // Dest QP
+    RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE = 1;  // L2/L3 Header Params
+}
+ 
+//****************   Update Queue Pair  ********************************//
+// RdmaQpUpdate object
+message RdmaQpUpdateSpec {
+  types.ObjectMeta         meta            = 1;    // object meta
+  uint32                   qp_num          = 2;    // QP number
+  uint32                   hw_lif_id       = 3;    // hw lif id
+  RdmaQpUpdateOper         oper            = 4;    // type of Update operation
+  uint32                   dst_qp_num      = 5;    // Dest QP value
+  bytes                    header_template = 6;    // Header Vector Params
+}
+
+// RdmaQpRequestMsg is batched request used to create/update of Rdma QPs
+message RdmaQpUpdateRequestMsg {
+  repeated RdmaQpUpdateSpec    request = 1;    // batch of requests
+}
+
+// RdmaQpResponse response to one RdmaQpSpec
+message RdmaQpUpdateResponse {
+  types.ApiStatus     api_status       = 1;    // API status code
+  //RdmaQpUpdateStatus        status           = 2;    // operational status
+}
+
+// RdmaQpUpdateResponseMsg is response to RdmaQpUpdateRequestMsg
+message RdmaQpUpdateResponseMsg {
+  repeated RdmaQpUpdateResponse    response = 1;    // batch of responses
 }
 
 //**********************   Completion Queue  *****************************//

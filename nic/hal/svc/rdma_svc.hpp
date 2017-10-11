@@ -15,6 +15,11 @@ using rdma::RdmaQpSpec;
 using rdma::RdmaQpRequestMsg;
 using rdma::RdmaQpResponse;
 using rdma::RdmaQpResponseMsg;
+using rdma::RdmaQpUpdateSpec;
+using rdma::RdmaQpUpdateRequestMsg;
+using rdma::RdmaQpUpdateResponse;
+using rdma::RdmaQpUpdateResponseMsg;
+using rdma::RdmaQpUpdateOper;
 using rdma::RdmaCqSpec;
 using rdma::RdmaCqRequestMsg;
 using rdma::RdmaCqResponse;
@@ -31,8 +36,8 @@ public:
                         RdmaQpResponseMsg *rsp) override;
 
     Status RdmaQpUpdate(ServerContext *context,
-                        const RdmaQpRequestMsg *req,
-                        RdmaQpResponseMsg *rsp) override;
+                        const RdmaQpUpdateRequestMsg *req,
+                        RdmaQpUpdateResponseMsg *rsp) override;
 #if 0
     Status RdmaQpDelete(ServerContext *context,
                         const LifDeleteRequestMsg *req,
