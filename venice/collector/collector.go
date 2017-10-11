@@ -20,6 +20,7 @@ const (
 // Backend defines a backend interface
 type Backend interface {
 	Open(BEConfig, chan<- error) error
+	Close()
 	Write(interface{}, *sync.WaitGroup)
 }
 
@@ -45,6 +46,7 @@ type Collector struct {
 	batchSize     int
 	backends      map[string]Backend
 	activeBatches map[string]BatchWriter
+	incrID        uint32
 }
 
 // NewCollector returns a new instance of Collector with default settings
@@ -85,8 +87,10 @@ func (c *Collector) AddBackEnd(addr string) error {
 		return err
 	}
 
-	c.backends[addr] = be
-	go c.watchErrors(addr, errCh)
+	beID := fmt.Sprintf("%s:%d", addr, c.incrID)
+	c.incrID++
+	c.backends[beID] = be
+	go c.watchErrors(beID, errCh)
 	return nil
 }
 
@@ -95,13 +99,15 @@ func (c *Collector) WritePoints(db, meas string, points []models.Point) {
 	key := db + meas
 	wf := func(bp influx.BatchPoints) {
 		// write to all backends and block until completion
-		var wg sync.WaitGroup
-		for _, be := range c.readBackends() {
-			wg.Add(1)
-			go be.Write(bp, &wg)
+		var batchWG sync.WaitGroup
+		c.mutex.RLock()
+		for _, be := range c.backends {
+			batchWG.Add(1)
+			be.Write(bp, &batchWG)
 		}
+		c.mutex.RUnlock()
 
-		wg.Wait()
+		batchWG.Wait()
 	}
 	c.mutex.Lock()
 	b := c.activeBatches[key]
@@ -121,27 +127,29 @@ func (c *Collector) WritePoints(db, meas string, points []models.Point) {
 	b.WaitCompletion()
 }
 
-func (c *Collector) readBackends() []Backend {
-	c.mutex.RLock()
-	defer c.mutex.RUnlock()
-
-	res := make([]Backend, 0, len(c.backends))
-	for _, be := range c.backends {
-		res = append(res, be)
-	}
-
-	return res
-}
-
 // watchErrors monitors a backend
-func (c *Collector) watchErrors(addr string, errCh <-chan error) {
-	select {
-	case <-errCh:
-		log.Infof("Backend %s went down", addr)
+func (c *Collector) watchErrors(beID string, errCh <-chan error) {
+	cleanup := func() {
 		c.mutex.Lock()
-		delete(c.backends, addr)
+		be := c.backends[beID]
+		delete(c.backends, beID)
 		c.mutex.Unlock()
-		// TODO notify controller
-	case <-c.ctx.Done():
+		if be != nil {
+			go be.Close()
+		}
+	}
+	for {
+		select {
+		case err, active := <-errCh:
+			if !active {
+				// this means we closed the backend
+				return
+			}
+			log.Infof("Backend %s went down with %s", beID, err.Error())
+			cleanup()
+			// TODO notify controller
+		case <-c.ctx.Done():
+			cleanup()
+		}
 	}
 }
