@@ -1,8 +1,6 @@
 package configs
 
 import (
-	"path"
-
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/systemd"
 )
@@ -16,7 +14,7 @@ const (
 func GenerateRegistryConfig(registryURL string) error {
 	cfgMap := make(map[string]string)
 	cfgMap[registryVar] = registryURL
-	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.ConfigDir, globals.RegistryConfigFile))
+	return systemd.WriteCfgMapToFile(cfgMap, globals.RegistryConfigFile)
 }
 
 // RemoveRegistryConfig removes the config file with docker registry URL.
