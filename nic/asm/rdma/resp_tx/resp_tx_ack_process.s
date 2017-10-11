@@ -34,7 +34,7 @@ resp_tx_ack_process:
 add_headers:
     // intrinsic
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, r3, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_INTRINSIC)
-    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, common.p4_intr_global_tm_iport, common.p4_intr_global_glb_rsv)
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, common.p4_intr_global_tm_iport, common.p4_intr_global_tm_instance_type)
     phvwri          p.common.p4_intr_global_tm_iport, TM_PORT_DMA
     phvwri          p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
     phvwri          p.common.p4_intr_global_tm_oq, 0

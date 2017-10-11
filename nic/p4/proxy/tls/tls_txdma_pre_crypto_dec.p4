@@ -258,9 +258,9 @@ header_type s3_t2_s2s_phv_t {
     }
 }
 
-header_type barco_desc_pad_t {
+header_type pad_to_dma_cmds_t {
     fields {
-        pad                     : 96;
+        pad                     : 32;
     }
 }
 
@@ -362,7 +362,9 @@ metadata pkt_descr_aol_t odesc;
 @pragma dont_trim
 metadata barco_desc_t barco_desc;
 @pragma dont_trim
-metadata barco_desc_pad_t barco_desc_pad;
+metadata ring_entry_t ring_entry;
+@pragma dont_trim
+metadata pad_to_dma_cmds_t pad_to_dma_cmds;
 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd0;
@@ -380,13 +382,6 @@ metadata dma_cmd_phv2mem_t dma_cmd5;
 metadata dma_cmd_phv2mem_t dma_cmd6;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd7;
-
-@pragma dont_trim
-metadata ring_entry_t ring_entry; 
-
-/* FIXME: Remove when the pad generation is fixed in the NCC */
-@pragma dont_trim
-metadata ring_entry_pad_t ring_entry_pad;
 
 @pragma scratch_metadata
 metadata tls_global_phv_t tls_global_phv_scratch;

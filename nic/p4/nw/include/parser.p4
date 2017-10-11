@@ -315,7 +315,7 @@ parser parse_txdma {
 
 parser parse_nic {
     extract(capri_intrinsic);
-    set_metadata(control_metadata.uplink, capri_intrinsic.tm_replicate_ptr >> 15); 
+    set_metadata(control_metadata.uplink, capri_intrinsic.tm_replicate_ptr >> 15);
     return parse_ethernet;
 }
 

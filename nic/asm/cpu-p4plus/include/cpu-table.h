@@ -26,7 +26,7 @@
 #define CPU_PHV_AOL_DESC_END            CAPRI_PHV_END_OFFSET(aol_next_pkt)
 
 #define CPU_PHV_INTRINSIC_START         CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
-#define CPU_PHV_INTRINSIC_END           CAPRI_PHV_END_OFFSET(p4_intr_global_glb_rsv)
+#define CPU_PHV_INTRINSIC_END           CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type)
 
 #define CPU_PHV_TXDMA_INTRINSIC_START   CAPRI_PHV_START_OFFSET(p4_txdma_intr_qid)
 #define CPU_PHV_TXDMA_INTRINSIC_END     CAPRI_PHV_END_OFFSET(p4_txdma_intr_txdma_rsv)

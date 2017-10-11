@@ -31,7 +31,7 @@ eth_tx_packet:
     // DMA cap_phv_intr_global_t (18B)
     phvwri      p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwri      p.dma_cmd0_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
-    phvwri      p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(p4_intr_global_glb_rsv)
+    phvwri      p.dma_cmd0_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type)
     phvwri      p.dma_cmd0_dma_pkt_eop, 0
     phvwri      p.dma_cmd0_dma_cmd_eop, 0
 

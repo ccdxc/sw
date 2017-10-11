@@ -76,7 +76,7 @@ def run_model(args):
 
     log = open(model_log, "w")
 #    p = Popen(["sh", "run_model"], stdout=log, stderr=log)
-    model_cmd = ["./cap_model"]
+    model_cmd = [ "./cap_model", "+PLOG_MAX_QUIT_COUNT=0" ]
     if args.modellogs:
         model_cmd.append("+plog=info")
         model_cmd.append("+model_debug=" + nic_dir + "/gen/iris/dbg_out/model_debug.json")

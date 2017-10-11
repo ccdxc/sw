@@ -10,6 +10,7 @@
 using namespace std;
 
 typedef enum state {front_door_e, back_door_e, air_slave_e } cpu_access_type_e;
+typedef enum cpu_acc_flags {none_acc_e=0, secure_acc_e=1<<0 } cpu_acc_flags_e;
 
 class cpu_csr_node_info_base {
     public:
@@ -26,10 +27,10 @@ class cpu_csr_node_info_base {
         }
         virtual ~cpu_csr_node_info_base() {}
 
-        virtual void write(uint64_t addr, uint32_t data) {};
-        virtual uint32_t read(uint64_t addr) { return 0xdeadbeef; };
-        virtual void block_write(uint64_t addr, int size, vector<uint32_t> data) {}
-        virtual vector<uint32_t> block_read(uint64_t addr, int size) {
+        virtual void write(uint64_t addr, uint32_t data, uint32_t flags) {};
+        virtual uint32_t read(uint64_t addr, uint32_t flags) { return 0xdeadbeef; };
+        virtual void block_write(uint64_t addr, int size, vector<uint32_t> data, uint32_t flags) {}
+        virtual vector<uint32_t> block_read(uint64_t addr, int size, uint32_t flags) {
             vector<uint32_t> a;
             for(int ii = 0; ii < size; ii++) { a.push_back(0xdeadbeef); }
             return a;
@@ -61,10 +62,10 @@ public:
   string get_if_name(void) const { return _cpu_if_name; };
   string get_hier_path(void) const { return _cpu_if_hier_path; };
 
-  virtual uint32_t read(uint32_t chip, uint64_t addr, cpu_access_type_e do_backdoor=front_door_e) = 0 ; 
-  virtual void write(uint32_t chip, uint64_t addr, uint32_t data, cpu_access_type_e do_backdoor=front_door_e) = 0;
-  virtual void block_write(uint32_t chip, uint64_t addr, int size, vector<uint32_t> data, cpu_access_type_e do_backdoor=front_door_e) = 0;
-  virtual vector<uint32_t> block_read(uint32_t chip, uint64_t addr, int size, cpu_access_type_e do_backdoor=front_door_e) = 0; 
+  virtual uint32_t read(uint32_t chip, uint64_t addr, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) = 0 ; 
+  virtual void write(uint32_t chip, uint64_t addr, uint32_t data, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) = 0;
+  virtual void block_write(uint32_t chip, uint64_t addr, int size, vector<uint32_t> data, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) = 0;
+  virtual vector<uint32_t> block_read(uint32_t chip, uint64_t addr, int size, cpu_access_type_e do_backdoor=front_door_e, uint32_t flags=secure_acc_e) = 0; 
 
   //virtual int call_uvm_hdl_deposit(uint32_t chip, char * path, vector<uint32_t> & value) { return 0; }
 

@@ -11,11 +11,14 @@ struct sqcb1_t d;
 
 .align
 req_tx_add_headers_process:
+    // initialize  cf to 0
+    crestore        [c7-c1], r0, 0xf7
+
     // get DMA cmd entry based on dma_cmd_index
     DMA_CMD_I_BASE_GET(r6, r2, REQ_TX_DMA_CMD_START_FLIT_ID, r0)
 
     // dma_cmd[0] - p4_intr
-    DMA_PHV2PKT_SETUP(r6, common.p4_intr_global_tm_iport, common.p4_intr_global_glb_rsv)
+    DMA_PHV2PKT_SETUP(r6, common.p4_intr_global_tm_iport, common.p4_intr_global_tm_instance_type)
     phvwri          p.common.p4_intr_global_tm_iport, TM_PORT_DMA
     phvwri          p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
     phvwri          p.common.p4_intr_global_tm_oq, 0

@@ -67,7 +67,7 @@
 #define TCP_PHV_DMA_COMMAND_TOTAL_LEN   (TCP_PHV_DMA_COMMAND_CMD_OFFESET+TCP_PHV_DMA_COMMAND_CMD_LEN)
 
 #define TCP_PHV_INTRINSIC_START         CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
-#define TCP_PHV_INTRINSIC_END           CAPRI_PHV_END_OFFSET(p4_intr_global_glb_rsv)
+#define TCP_PHV_INTRINSIC_END           CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type)
 
 #define TCP_PHV_TXDMA_INTRINSIC_START   CAPRI_PHV_START_OFFSET(p4_txdma_intr_qid)
 #define TCP_PHV_TXDMA_INTRINSIC_END     CAPRI_PHV_END_OFFSET(p4_txdma_intr_txdma_rsv)

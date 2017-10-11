@@ -531,6 +531,17 @@ capri_timer_init(void)
     HAL_TRACE_DEBUG("Done initializing timer wheel");
 }
 
+static void
+capri_deparser_init() {
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap0.dpr.dpr[0].cfg_global_2.read();
+    cap0.dpr.dpr[0].cfg_global_2.increment_recirc_cnt_en(0);
+    cap0.dpr.dpr[0].cfg_global_2.write();
+    cap0.dpr.dpr[1].cfg_global_2.read();
+    cap0.dpr.dpr[1].cfg_global_2.increment_recirc_cnt_en(0);
+    cap0.dpr.dpr[1].cfg_global_2.write();
+}
+
 int capri_table_rw_init()
 {
     // !!!!!!
@@ -577,6 +588,9 @@ int capri_table_rw_init()
     cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
     cap0_ptr->init(0);
     CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
+
+    /* Initialize the deparsers */
+    capri_deparser_init();
 
     /* Fill up table base address and action-pcs */
     capri_table_mpu_base_init();

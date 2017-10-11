@@ -32,6 +32,7 @@ tcp_rx_process_stage1_start:
     seq         c1, d.u.tcp_rx_d.state, r1
     phvwri.!c1  p.common_phv_write_arq, 1
     bcf         [!c1], flow_rx_process_done
+    setcf       c7, [!c0]
     nop
     /* Setup the to-stage/stage-to-stage variables */
     phvwr       p.common_phv_snd_una, d.u.tcp_rx_d.snd_una

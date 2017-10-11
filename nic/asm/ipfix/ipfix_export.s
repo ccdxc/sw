@@ -17,7 +17,7 @@ ipfix_export_packet:
     phvwr       p.phv2pkt_cmd1_dma_cmd_phv_start_addr, \
                     CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport)
     phvwr       p.phv2pkt_cmd1_dma_cmd_phv_end_addr, \
-                    CAPRI_PHV_END_OFFSET(p4_intr_global_glb_rsv)
+                    CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type)
 
     // p4plus header to packet
     phvwr       p.phv2pkt_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT

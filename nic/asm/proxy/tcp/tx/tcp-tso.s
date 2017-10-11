@@ -95,7 +95,7 @@ dma_cmd_intrinsic:
     nop
     phvwri          p.p4_txdma_intr_dma_cmd_ptr, TCP_PHV_TXDMA_COMMANDS_START
 
-    CAPRI_DMA_CMD_PHV2PKT_SETUP(intrinsic_dma_dma_cmd, p4_intr_global_tm_iport, p4_intr_global_glb_rsv)
+    CAPRI_DMA_CMD_PHV2PKT_SETUP(intrinsic_dma_dma_cmd, p4_intr_global_tm_iport, p4_intr_global_tm_instance_type)
 
 // TODO: This is temporary. There is now support to DMA multiple PHV segments
 // in the same command. Once model gets that feature, we can fold this into the

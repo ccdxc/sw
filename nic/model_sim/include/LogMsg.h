@@ -12,8 +12,9 @@
 using namespace std;
 class LogMsg {
 
-
-
+    private:
+        uint32_t m_cur_error_count;
+        uint32_t m_max_error_count;
 
     public:
         enum msgLevelEnum { ERROR = 1, WARNING = 2, MSG = 10, INFO = 20, CPU = 30, DEBUG = 40}; 
@@ -22,6 +23,7 @@ class LogMsg {
         vector<string> enabledScopes;
         unsigned int curMsgLevel;
         void logNow(string msg);
+        void exitSim();
         //stringstream localStringStream;
 
     public:
