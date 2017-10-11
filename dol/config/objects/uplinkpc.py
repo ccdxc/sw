@@ -85,14 +85,14 @@ class UplinkPcObject(base.ConfigObjectBase):
         if not isinstance(other, self.__class__):
             return False
         fields = ["id", "port", "type", "status", "ports", "native_segment",
-                  "native_segment_id", "mode", "sriov", "members", 
+                  "native_segment_id", "mode", "sriov", "members",
                   "members_hdls", "segment_ids"]
-        
+
         if not self.CompareObjectFields(other, fields, lgh):
             return False
-        
+
         return True
-    
+
 
     def Show(self):
         cfglogger.info("Creating UplinkPC = %s(IFID:%d) Port=%d" %\
@@ -132,17 +132,17 @@ class UplinkPcObject(base.ConfigObjectBase):
         req_spec.type = haldefs.interface.IF_TYPE_UPLINK_PC
         req_spec.admin_status = self.status
 
-        req_spec.if_uplink_pc_info.uplink_pc_num = self.port
+        #req_spec.if_uplink_pc_info.uplink_pc_num = self.port
         if self.native_segment:
             req_spec.if_uplink_pc_info.native_l2segment_id = self.native_segment.id
         for mbr in self.members:
             req_spec.if_uplink_pc_info.member_if_handle.append(mbr.hal_handle)
             self.members_hdls.append(mbr.hal_handle)
 
-        segments = Store.objects.GetAllByClass(segment.SegmentObject)
-        for seg in segments:
-            req_spec.if_uplink_pc_info.l2segment_id.append(seg.id)
-            self.segment_ids.append(seg.id)
+        #segments = Store.objects.GetAllByClass(segment.SegmentObject)
+        #for seg in segments:
+        #    req_spec.if_uplink_pc_info.l2segment_id.append(seg.id)
+        #    self.segment_ids.append(seg.id)
 
         # QOS stuff
         if self.txqos.cos is not None:
@@ -151,7 +151,7 @@ class UplinkPcObject(base.ConfigObjectBase):
         if self.txqos.dscp is not None:
             req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
             req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
- 
+
 
         return
 
@@ -174,15 +174,15 @@ class UplinkPcObject(base.ConfigObjectBase):
             self.hal_handle = get_resp.spec.key_or_handle.if_handle
         if get_resp.spec.type == haldefs.interface.IF_TYPE_UPLINK_PC:
             self.status = get_resp.spec.admin_status
-            self.port = get_resp.spec.if_uplink_pc_info.uplink_pc_num
+            #self.port = get_resp.spec.if_uplink_pc_info.uplink_pc_num
             self.native_segment_id = get_resp.spec.if_uplink_pc_info.native_l2segment_id
             get_resp.spec.if_uplink_pc_info.member_if_handle
             self.members_hdls = []
             for mbr in get_resp.spec.if_uplink_pc_info.member_if_handle:
                 self.members_hdls.append(mbr)
-            self.segment_ids  = []
-            for segment_id in get_resp.spec.if_uplink_pc_info.l2segment_id:
-                self.segment_ids.append(segment_id)
+            #self.segment_ids  = []
+            #for segment_id in get_resp.spec.if_uplink_pc_info.l2segment_id:
+            #    self.segment_ids.append(segment_id)
         else:
             self.status = None
             self.port = None
@@ -190,7 +190,7 @@ class UplinkPcObject(base.ConfigObjectBase):
             self.members = []
             self.members_hdls = []
             self.segment_ids = []
-        
+
     def Get(self):
         halapi.GetInterfaces([self])
     def IsFilterMatch(self, spec):

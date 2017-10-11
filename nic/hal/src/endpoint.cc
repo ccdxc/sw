@@ -179,7 +179,7 @@ ep_add_to_l3_db (ep_l3_key_t *l3_key, ep_ip_entry_t *ep_ip,
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-ep:{}:failed to add l2 key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+        g_hal_state->ep_l3_entry_slab()->free(entry);
     }
 
     return ret;
@@ -375,7 +375,7 @@ endpoint_cleanup(ep_t *ep)
     // Remove EP from L2 DB
     ret = ep_del_from_l2_db(ep);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:enable to delete EP from L3 DB", __FUNCTION__);
+        HAL_TRACE_ERR("pi-ep:{}:unable to delete EP from L3 DB", __FUNCTION__);
         goto end;
     }
     HAL_TRACE_ERR("pi-ep:{}:deleted EP:{} from L2 DB", 
@@ -701,56 +701,6 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
                              endpoint_create_abort_cb, 
                              endpoint_create_cleanup_cb);
 
-
-
-
-
-
-
-#if 0
-
-    // handle is allocated only after PD programming is SUCCESS
-    ep->hal_handle = hal_alloc_handle();
-    ep->hal_handle_ht_ctxt.reset();
-    g_hal_state->ep_hal_handle_ht()->insert(ep, &ep->hal_handle_ht_ctxt);
-
-    // add L2 lookup entry for this EP with (L2SEG, MAC) key
-    ep->l2key_ht_ctxt.reset();
-    g_hal_state->ep_l2_ht()->insert(ep, &ep->l2key_ht_ctxt);
-
-    // insert this EP in the tenant's EP list
-    utils::dllist_reset(&ep->tenant_ep_lentry);
-    HAL_SPINLOCK_LOCK(&tenant->slock);
-    utils::dllist_add(&tenant->ep_list_head, &ep->tenant_ep_lentry);
-    HAL_SPINLOCK_UNLOCK(&tenant->slock);
-
-    // insert this EP in the L2 segment's EP list
-    utils::dllist_reset(&ep->l2seg_ep_lentry);
-    HAL_SPINLOCK_LOCK(&l2seg->slock);
-    utils::dllist_add(&l2seg->ep_list_head, &ep->l2seg_ep_lentry);
-    HAL_SPINLOCK_UNLOCK(&l2seg->slock);
-
-    // insert this EP in the interface' EP list
-    utils::dllist_reset(&ep->if_ep_lentry);
-    HAL_SPINLOCK_LOCK(&hal_if->slock);
-    utils::dllist_add(&hal_if->ep_list_head, &ep->if_ep_lentry);
-    HAL_SPINLOCK_UNLOCK(&hal_if->slock);
-#endif
-#if 0
-    // prepare the response
-    rsp->set_api_status(types::API_STATUS_OK);
-    rsp->mutable_endpoint_status()->set_endpoint_handle(ep->hal_handle);
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
-    return HAL_RET_OK;
-#endif
-
-    // initialize session list
-    // utils::dllist_reset(&hal_if->session_list_head);
-
-    // prepare the response
-    rsp->set_api_status(types::API_STATUS_OK);
-    rsp->mutable_endpoint_status()->set_endpoint_handle(ep->hal_handle);
-
 end:
     if (ret != HAL_RET_OK) {
         if (ep) {
@@ -759,7 +709,7 @@ end:
         }
     }
 
-    ep_prepare_rsp(rsp, ret, ep ? ep->hal_handle : 0);
+    ep_prepare_rsp(rsp, ret, ep ? ep->hal_handle : HAL_HANDLE_INVALID);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return HAL_RET_OK;
 }
@@ -1414,7 +1364,7 @@ end:
         HAL_FREE(HAL_MEM_ALLOC_DLLIST, del_iplist);
     }
 
-    ep_prepare_rsp(rsp, ret, ep ? ep->hal_handle : 0);
+    ep_prepare_rsp(rsp, ret, ep ? ep->hal_handle : HAL_HANDLE_INVALID);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }

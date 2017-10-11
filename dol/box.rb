@@ -7,6 +7,10 @@ if getenv("NO_COPY") == ""
   copy ".", ".", ignore_list: %w[.git]
 end
 
+copy "entrypoint.sh", "/entrypoint.sh"
+run "chmod +x /entrypoint.sh"
 workdir "/sw"
+
+entrypoint "/entrypoint.sh"
 
 tag "pensando/dol"

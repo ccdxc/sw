@@ -341,10 +341,10 @@ uplinkpc_pd_depgm_output_mapping_tbl (pd_uplinkpc_t *pd_upif)
     
     ret = dm_omap->remove(pd_upif->uppc_lport_id);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-uplinkpc:{}:unable to deprogram omapping table",
+        HAL_TRACE_ERR("pd-uplinkpc:{}:unable to deprogram omapping table. index:{}",
                 __FUNCTION__, pd_upif->uppc_lport_id);
     } else {
-        HAL_TRACE_ERR("pd-uplinkpc:{}:deprogrammed omapping table",
+        HAL_TRACE_ERR("pd-uplinkpc:{}:deprogrammed omapping table. index:{}",
                 __FUNCTION__, pd_upif->uppc_lport_id);
     }
 

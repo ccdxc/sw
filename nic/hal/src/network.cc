@@ -307,7 +307,7 @@ end:
         // network_free(nw);
         nw = NULL;
     }
-    network_prepare_rsp(rsp, ret, nw ? nw->hal_handle : 0);
+    network_prepare_rsp(rsp, ret, nw ? nw->hal_handle : HAL_HANDLE_INVALID);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }

@@ -400,7 +400,7 @@ end:
         }
     }
 
-    dos_policy_prepare_rsp(rsp, ret, dosp ? dosp->hal_handle : 0);
+    dos_policy_prepare_rsp(rsp, ret, dosp ? dosp->hal_handle : HAL_HANDLE_INVALID);
     HAL_TRACE_DEBUG("--------------------- API End ------------------------");
     return ret;
 }
@@ -651,7 +651,7 @@ dos_policy_update (nwsec::DoSPolicySpec& spec,
                              dos_policy_update_cleanup_cb);
 
 end:
-    dos_policy_prepare_rsp(rsp, ret, dosp ? dosp->hal_handle : 0);
+    dos_policy_prepare_rsp(rsp, ret, dosp ? dosp->hal_handle : HAL_HANDLE_INVALID);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 

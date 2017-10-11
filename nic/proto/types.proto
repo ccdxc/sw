@@ -97,7 +97,7 @@ enum ApiStatus {
   API_STATUS_DOS_POLICY_NOT_FOUND         = 62;    // dos policy not found
   API_STATUS_RAWR_CB_ID_INVALID           = 63;    // invalid Raw Redirect CB id
   API_STATUS_RAWR_CB_NOT_FOUND            = 64;    // invalid Raw Redirect CB
-  API_STATUS_REFERENCES_EXIST             = 65;    // references exist
+  API_STATUS_OBJECT_IN_USE                = 65;    // object is in use
 }
 
 // common meta object that is part of all other top level objects

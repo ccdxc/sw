@@ -93,3 +93,9 @@ cc_library(
     hdrs = ["hal.hpp",] + 
             glob(["src/*.hpp",]),
 )
+
+cc_library(
+    name = "hal_utils_includes",
+    srcs = [],
+    hdrs = ["src/utils.hpp"],
+)

@@ -11,6 +11,7 @@
 #include "nic/hal/src/tenant.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/lif.hpp"
+#include "nic/hal/src/utils.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
@@ -71,16 +72,21 @@ typedef struct if_s {
 
         // uplink interface info
         struct {
-            l2seg_id_t          native_l2seg;              // native (vlan) on uplink (pc)
+            // doesnt have to exist. hence storing the id. have to exist only
+            //    on add_l2seg_to_uplink
+            l2seg_id_t          native_l2seg;        // native (vlan) on uplink (pc).
+                                                     
 
             // TOOD: List of L2segs on this Uplink
             // uplink if
             struct {
-                uint32_t      uplink_port_num;       // uplink port number
+                uint32_t        uplink_port_num;     // uplink port number
+                bool            is_pc_mbr;           // is a PC member   
+                hal_handle_t    uplinkpc_handle;     // PC its part of
             } __PACK__;
             // uplink PC if
             struct {
-                uint32_t      uplink_pc_num;         // uplink port channel number
+                // uint32_t      uplink_pc_num;         // uplink port channel number
             } __PACK__;
         } __PACK__;
         // tunnel interface info
@@ -122,7 +128,7 @@ typedef struct if_update_app_ctxt_s {
         // uplink interface/pc info
         struct {
             bool            native_l2seg_change;
-            bool            l2segids_change;
+            // bool            l2segids_change;
             l2seg_t         *native_l2seg;             // native (vlan) on uplink (pc)
 
             // only to PC
@@ -141,15 +147,17 @@ typedef struct if_update_app_ctxt_s {
 static inline void 
 if_lock(if_t *hal_if)
 {
-    HAL_TRACE_DEBUG("{}:locking if:{}", __FUNCTION__, hal_if->if_id);
+    HAL_TRACE_DEBUG("{}:operlock:locking if:{}", __FUNCTION__, hal_if->if_id);
     HAL_SPINLOCK_LOCK(&hal_if->slock);
+    custom_backtrace();
 }
 
 static inline void 
 if_unlock(if_t *hal_if)
 {
-    HAL_TRACE_DEBUG("{}:unlocking if:{}", __FUNCTION__, hal_if->if_id);
+    HAL_TRACE_DEBUG("{}:operlock:unlocking if:{}", __FUNCTION__, hal_if->if_id);
     HAL_SPINLOCK_UNLOCK(&hal_if->slock);
+    custom_backtrace();
 }
 
 // allocate a interface instance
@@ -177,8 +185,11 @@ if_init (if_t *hal_if)
     // initialize the operational state
     hal_if->num_ep = 0;
     hal_if->pd_if = NULL;
-
-    // initialize meta information
+    hal_if->hal_handle = HAL_HANDLE_INVALID;
+    hal_if->lif_handle = HAL_HANDLE_INVALID;
+    hal_if->l2seg_handle = HAL_HANDLE_INVALID;
+    hal_if->is_pc_mbr = false;
+    hal_if->uplinkpc_handle = HAL_HANDLE_INVALID;
     utils::dllist_reset(&hal_if->l2seg_list_head);
     utils::dllist_reset(&hal_if->mbr_if_list_head);
 
@@ -235,6 +246,9 @@ find_if_by_id (if_id_t if_id)
 static inline if_t *
 find_if_by_handle (hal_handle_t handle)
 {
+    // TODO: hal_handle can be NULL if there is no if with handle. 
+    //       Print proper msg.
+
     // check for object type
     HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
                HAL_OBJ_ID_INTERFACE);
@@ -269,6 +283,10 @@ extern void *if_id_get_key_func(void *entry);
 extern uint32_t if_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool if_id_compare_key_func(void *key1, void *key2);
 
+hal_ret_t uplinkif_add_uplinkpc (if_t *upif, if_t *uppc);
+hal_ret_t uplinkif_del_uplinkpc (if_t *upif, if_t *uppc);
+hal_ret_t uplinkpc_update_mbrs_relation (dllist_ctxt_t *mbr_list, 
+                                         if_t *uppc, bool add);
 hal_ret_t uplinkpc_add_uplinkif (if_t *uppc, if_t *upif);
 hal_ret_t uplinkpc_del_uplinkif (if_t *uppc, if_t *upif);
 hal_ret_t
@@ -277,6 +295,7 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
                         dllist_ctxt_t **add_mbrlist, 
                         dllist_ctxt_t **del_mbrlist,
                         dllist_ctxt_t **aggr_mbrlist);
+hal_ret_t interface_cleanup_handle_list(dllist_ctxt_t **list);
 
 
 

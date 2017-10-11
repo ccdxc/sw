@@ -22,6 +22,7 @@ ApiStatus hal_prepare_rsp (hal_ret_t ret);
 void hal_api_trace (const char *trace);
 void hal_print_handles_list(dllist_ctxt_t  *list);
 void hal_free_handles_list(dllist_ctxt_t *list);
+void custom_backtrace();
 }    // namespace hal
 
 #endif    // __UTILS_HPP__

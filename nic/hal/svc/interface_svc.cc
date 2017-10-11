@@ -16,7 +16,7 @@ InterfaceServiceImpl::LifCreate(ServerContext *context,
     uint32_t             i, nreqs = req->request_size();
     LifResponse          *response;
 
-    HAL_TRACE_DEBUG("SVC:lif create");
+    HAL_TRACE_DEBUG("Received lif Create");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -39,7 +39,7 @@ InterfaceServiceImpl::LifUpdate(ServerContext *context,
     uint32_t          i, nreqs = req->request_size();
     LifResponse       *response;
 
-    HAL_TRACE_DEBUG("SVC:lif update");
+    HAL_TRACE_DEBUG("Received lif update");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -61,7 +61,7 @@ InterfaceServiceImpl::LifDelete(ServerContext *context,
 {
     uint32_t     i, nreqs = req->request_size();
 
-    HAL_TRACE_DEBUG("SVC:lif delete");
+    HAL_TRACE_DEBUG("Received lif delete");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -83,7 +83,7 @@ InterfaceServiceImpl::LifGet(ServerContext *context,
     uint32_t             i, nreqs = req->request_size();
     LifGetResponse       *response;
 
-    HAL_TRACE_DEBUG("SVC:lif get");
+    HAL_TRACE_DEBUG("Received lif get");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -130,7 +130,7 @@ InterfaceServiceImpl::InterfaceCreate(ServerContext* context,
     uint32_t             i, nreqs = req->request_size();
     InterfaceResponse    *response;
 
-    HAL_TRACE_DEBUG("SVC:if create");
+    HAL_TRACE_DEBUG("Received if create");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -153,7 +153,7 @@ InterfaceServiceImpl::InterfaceUpdate(ServerContext* context,
     uint32_t             i, nreqs = req->request_size();
     InterfaceResponse    *response;
 
-    HAL_TRACE_DEBUG("SVC:if update");
+    HAL_TRACE_DEBUG("Received if update");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -175,7 +175,7 @@ InterfaceServiceImpl::InterfaceDelete(ServerContext *context,
 {
     uint32_t     i, nreqs = req->request_size();
 
-    HAL_TRACE_DEBUG("SVC:if delete");
+    HAL_TRACE_DEBUG("Received if delete");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -197,7 +197,7 @@ InterfaceServiceImpl::InterfaceGet(ServerContext *context,
     uint32_t                i, nreqs = req->request_size();
     InterfaceGetResponse    *response;
 
-    HAL_TRACE_DEBUG("SVC:if get ");
+    HAL_TRACE_DEBUG("Received if get ");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -220,7 +220,7 @@ InterfaceServiceImpl::AddL2SegmentOnUplink(ServerContext *context,
     uint32_t                        i, nreqs = req->request_size();
     InterfaceL2SegmentResponse      *response;
 
-    HAL_TRACE_DEBUG("SVC:add l2seg on uplink");
+    HAL_TRACE_DEBUG("Received add l2seg on uplink");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -243,7 +243,7 @@ InterfaceServiceImpl::DelL2SegmentOnUplink(ServerContext *context,
     uint32_t                        i, nreqs = req->request_size();
     InterfaceL2SegmentResponse      *response;
 
-    HAL_TRACE_DEBUG("SVC:delete l2seg on uplink");
+    HAL_TRACE_DEBUG("Received delete l2seg on uplink");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }

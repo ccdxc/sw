@@ -261,7 +261,7 @@ TEST_F(uplinkif_test, test3)
     ret = hal::interface_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
     HAL_TRACE_DEBUG("ret: {}", ret);
-    ASSERT_TRUE(ret == HAL_RET_REFERENCES_EXIST);
+    ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
 
     // Delete l2segment on uplink
     if_l2seg_spec.mutable_l2segment_key_or_handle()->set_segment_id(1);

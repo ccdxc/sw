@@ -204,7 +204,7 @@ do {                                                       \
     ENTRY(HAL_RET_DOS_POLICY_ID_INVALID,      46, "dos policy id invalid")     \
     ENTRY(HAL_RET_RAWR_CB_NOT_FOUND,          47, "Raw redirect CB not found") \
     ENTRY(HAL_RET_L2SEG_ID_INVALID,           48, "l2seg id invalid")          \
-    ENTRY(HAL_RET_REFERENCES_EXIST,           49, "references exist")          \
+    ENTRY(HAL_RET_OBJECT_IN_USE,              49, "object in use")             \
     ENTRY(HAL_RET_SG_ID_INVALID,              50, "seg id invalid")            \
     ENTRY(HAL_RET_SG_NOT_FOUND,               51, "seg id not found")          \
                                                                                \

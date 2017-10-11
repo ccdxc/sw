@@ -2,6 +2,9 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/utils.hpp"
+#include <cxxabi.h>
+#include <execinfo.h>
+#include <iostream>
 
 using types::ApiStatus;
 
@@ -187,8 +190,8 @@ hal_prepare_rsp (hal_ret_t ret)
         case HAL_RET_ENTRY_EXISTS:
             return types::API_STATUS_EXISTS_ALREADY;
             break;
-        case HAL_RET_REFERENCES_EXIST:
-            return types::API_STATUS_REFERENCES_EXIST;
+        case HAL_RET_OBJECT_IN_USE:
+            return types::API_STATUS_OBJECT_IN_USE;
             break;
         default:
             return types::API_STATUS_ERR;
@@ -238,11 +241,11 @@ hal_print_handles_list(dllist_ctxt_t  *list)
 void
 hal_free_handles_list(dllist_ctxt_t *list)
 {
-    dllist_ctxt_t                   *lnode = NULL;
+    dllist_ctxt_t                   *curr, *next;
     hal_handle_id_list_entry_t      *entry = NULL;
 
-    dllist_for_each(lnode, list) {
-        entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
+    dllist_for_each_safe(curr, next, list) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         HAL_TRACE_DEBUG("{}: freeing list handle: {}", __FUNCTION__, entry->handle_id);
         // Remove from list
         utils::dllist_del(&entry->dllist_ctxt);
@@ -252,5 +255,72 @@ hal_free_handles_list(dllist_ctxt_t *list)
 }
 
 
+std::string demangle( const char* const symbol )
+{
+    const std::unique_ptr< char, decltype( &std::free ) > demangled(
+            abi::__cxa_demangle( symbol, 0, 0, 0 ), &std::free );
+    if( demangled ) {
+        return demangled.get();
+    }
+    else {
+        return symbol;
+    }
+}
 
+// ----------------------------------------------------------------------------
+// Prints the 2nd frame in the BT.
+// - x -> y -> custom_backtrace
+//   - prints the x frame
+// ----------------------------------------------------------------------------
+void custom_backtrace()
+{
+    // TODO: replace hardcoded limit?               
+    void* addresses[ 256 ];
+    const int n = ::backtrace( addresses, std::extent< decltype( addresses ) >::value );
+    const std::unique_ptr< char*, decltype( &std::free ) > symbols(
+            ::backtrace_symbols( addresses, n ), &std::free );
+    for( int i = 0; i < n; ++i ) {
+        if (i != 2) {
+            continue;
+        }
+        // we parse the symbols retrieved from backtrace_symbols() to
+        // extract the "real" symbols that represent the mangled names.  
+        char* const symbol = symbols.get()[ i ];
+        char* end = symbol;
+        while( *end ) {
+            ++end;
+        }
+        // scanning is done backwards, since the module name
+        // might contain both '+' or '(' characters.
+        while( end != symbol && *end != '+' ) {
+            --end;
+        }
+        char* begin = end;
+        while( begin != symbol && *begin != '(' ) {
+            --begin;
+        }
+
+        if( begin != symbol ) {
+            // std::cout << std::string( symbol, ++begin - symbol );
+            *end++ = '\0';
+            std::cout << demangle( begin ) << '+' << end;
+        }
+        else {
+            std::cout << symbol;
+        }
+        // Revisit: Line number not working. 
+#if 0
+        // For line number
+        size_t p = 0;
+        while(symbol[p] != '(' && symbol[p] != ' '
+                && symbol[p] != 0)
+            ++p;
+        char syscom[256];
+        sprintf(syscom,"addr2line %p -e %.*s", addresses[i], (int)p, symbol);
+        //last parameter is the file name of the symbol
+        system(syscom);
+#endif
+        std::cout << std::endl;
+    }
+}
 }    // namespace hal
