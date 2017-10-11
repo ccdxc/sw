@@ -55,7 +55,6 @@ code/binaries that were altered from within the VM
 
 ### Vendoring external packages
 We use govendor for external package management. Please see links below.
-<<<<<<< HEAD
 
 [ Govendor Readme ](https://github.com/kardianos/govendor/blob/master/README.md)
 
