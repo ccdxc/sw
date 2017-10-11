@@ -65,6 +65,8 @@ int test_run_nvme_local_e2e2();
 
 int test_run_nvme_local_e2e3();
 
+int test_run_seq1();
+
 }  // namespace tests
 
 #endif   // _TESTS_HPP_

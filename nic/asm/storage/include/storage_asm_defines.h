@@ -65,9 +65,9 @@
 
 // TODO: Fix these to use the values defined in hardware
 #define CAPRI_DMA_PHV2MEM		3
-#define CAPRI_DMA_MEM2MEM		5
-#define CAPRI_DMA_M2M_TYPE_SRC		1
-#define CAPRI_DMA_M2M_TYPE_DST		2
+#define CAPRI_DMA_MEM2MEM		6
+#define CAPRI_DMA_M2M_TYPE_SRC		0
+#define CAPRI_DMA_M2M_TYPE_DST		1
 
 // Load a table based on absolute address
 // PC input must be a 28-bit value
@@ -258,20 +258,25 @@
 
 // Setup the lif, type, qid, pindex for the doorbell push.  Set the fence 
 // bit for the doorbell 
-#define QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr)			\
+#define _QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, _sched)		\
    DOORBELL_DATA_SETUP(qpush_doorbell_data_data, d.p_ndx, r0,		\
                        STORAGE_KIVEC0_DST_QID, r0)			\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
-                       DOORBELL_SCHED_WR_NONE,				\
-                       DOORBELL_UPDATE_NONE)				\
+                       _sched, DOORBELL_UPDATE_NONE)			\
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
                      r7, _dma_cmd_ptr)					\
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 
+#define QUEUE_PUSH_DOORBELL_RING(_dma_cmd_ptr)				\
+   _QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET)	\
+
+#define QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr)			\
+   _QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, DOORBELL_SCHED_WR_NONE)	\
+
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O
 // priority is used to select the ring. Set the fence bit for the doorbell.
-#define PRI_QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, _p_ndx, _sched,	\
-                                       _qid, _pri)			\
+#define _PRI_QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, _p_ndx, _sched,	\
+                                        _qid, _pri)			\
    DOORBELL_DATA_SETUP(qpush_doorbell_data_data, _p_ndx,		\
                        _pri, _qid, r0)					\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
@@ -390,8 +395,8 @@
    DMA_ADDR_UPDATE(r7, dma_p2m_1)					\
    QUEUE_PUSH(_p_ndx, _num_entries)					\
    add		r6, STORAGE_KIVEC0_DST_QID, STORAGE_KIVEC0_SSD_HANDLE;	\
-   PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_3, _p_ndx,			\
-                                  DOORBELL_SCHED_WR_SET, r6, _pri_vec)	\
+   _PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_3, _p_ndx,			\
+                                   DOORBELL_SCHED_WR_SET, r6, _pri_vec)	\
 
 
 // Increment the priority running counter and the total running counter.

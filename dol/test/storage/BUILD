@@ -2,10 +2,10 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
-    name= "log",
+    name= "utils",
     srcs = [
-        "log.cc",
-        "log.hpp",
+        "utils.cc",
+        "utils.hpp",
     ],
 )
 
@@ -28,7 +28,7 @@ cc_library(
     ],
     deps = [
         ":hal_if",
-        ":log",
+        ":utils",
     ]
 )
 
@@ -55,7 +55,7 @@ cc_library(
         "ssd_core.hpp",
     ],
     deps = [
-        ":log",
+        ":utils",
     ]
 )
 
@@ -99,7 +99,7 @@ cc_library(
         ":qstate_if",
         ":r2n",
         ":ssd",
-        ":log",
+        ":utils",
         "//nic/utils/host_mem",
         "//nic/model_sim:model_client",
     ]

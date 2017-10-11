@@ -20,6 +20,7 @@ struct {
   const std::string test_name;
   bool test_succeded;
 } test_suite[] = {
+#if 0
   {&tests::test_run_nvme_pvm_admin_cmd, "NVME->PVM Admin Cmd", false},
   {&tests::test_run_nvme_pvm_read_cmd, "NVME->PVM Read Cmd", false},
   {&tests::test_run_nvme_pvm_write_cmd, "NVME->PVM Write Cmd", false},
@@ -49,6 +50,8 @@ struct {
   {&tests::test_run_nvme_local_e2e1, "NVME Local Tgt E2E 1", false},
   {&tests::test_run_nvme_local_e2e2, "NVME Local Tgt E2E 2", false},
   {&tests::test_run_nvme_local_e2e3, "NVME Local Tgt E2E 3", false},
+#endif
+  {&tests::test_run_seq1, "NVME Local Tgt Seq 1", false},
 
   // Always last entry
   {0}

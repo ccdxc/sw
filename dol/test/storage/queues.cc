@@ -22,6 +22,8 @@ const static uint32_t	kPvmNumNvmeSQs		 = 1;
 const static uint32_t	kPvmNumR2nSQs		 = 0; // 2^0 => 1 queue
 const static uint32_t	kPvmNumNvmeBeSQs	 = 4;
 const static uint32_t	kPvmNumSsdSQs	 	 = 4;
+const static uint32_t	kPvmNumSeqPdmaSQs	 = 3;
+const static uint32_t	kPvmNumSeqR2nSQs	 = 3;
 const static uint32_t	kPvmNumNvmeCQs		 = 1;
 const static uint32_t	kPvmNumR2nCQs		 = 0; // 2^0 => 1 queue
 const static uint32_t	kPvmNumNvmeBeCQs	 = 4;
@@ -30,17 +32,22 @@ const static uint32_t	kPvmNvmeSQEntrySize	 = 7; // PVM SQ is 128 bytes (NVME com
 const static uint32_t	kNvmeCQEntrySize	 = 4; // NVME CQ is 16 bytes
 const static uint32_t	kNvmeNumEntries		 = 6;
 const static uint32_t	kPvmNumEntries		 = 6;
+const static uint32_t	kPvmNumSeqEntries	 = 1;
 const static char	*kNvmeSqHandler		 = "storage_tx_nvme_sq_handler.bin";
 const static char	*kPvmCqHandler		 = "storage_tx_pvm_cq_handler.bin";
 const static char	*kR2nSqHandler		 = "storage_tx_r2n_sq_handler.bin";
 const static char	*kNvmeBeSqHandler	 = "storage_tx_nvme_be_sq_handler.bin";
 const static char	*kNvmeBeCqHandler	 = "storage_tx_nvme_be_cq_handler.bin";
+const static char	*kSeqPdmaSqHandler	 = "storage_tx_seq_pdma_entry_handler.bin";
+const static char	*kSeqR2nSqHandler	 = "storage_tx_seq_r2n_entry_handler.bin";
 const static uint32_t	kDefaultTotalRings	 = 1;
 const static uint32_t	kDefaultHostRings	 = 1;
 const static uint32_t	kDefaultNoHostRings	 = 0;
 const static uint32_t	kNvmeBeTotalRings	 = 3;
 
+
 const static uint32_t	kDbAddrHost		 = 0x400000;
+const static uint32_t	kDbAddrCapri		 = 0x68800000;
 const static uint32_t	kDbAddrUpdate		 = 0xB;
 const static uint32_t	kDbQidShift		 = 24;
 const static uint32_t	kDbRingShift		 = 16;
@@ -146,6 +153,31 @@ void *queue_consume_entry(queues_t *queue, uint16_t *index) {
   queue->index = ((queue->index + 1)  % queue->num_entries);
   *index = queue->index;
   return (void *) ((uint8_t *) queue->vaddr + (curr_index * queue->entry_size));
+}
+
+
+
+int seq_queue_setup(queues_t *q_ptr, uint32_t qid, char *pgm_bin, 
+                    uint16_t total_rings, uint16_t host_rings) {
+
+  // Initialize the queue in the DOL enviroment
+  if (queue_init(q_ptr, NUM_TO_VAL(kPvmNumSeqEntries),
+                 NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+    printf("Unable to allocate host memory for PVM Seq SQ %d\n", qid);
+    return -1;
+  }
+  printf("Initialized PVM Seq SQ %d \n", qid);
+
+  // Setup the queue state in Capri:
+  if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, qid, pgm_bin, 
+                               total_rings, host_rings, 
+                               kPvmNumSeqEntries, q_ptr->paddr,
+                               kDefaultEntrySize, false, 0, 0,
+                               0, 0, 0, storage_hbm_addr, 0, 0, 0) < 0) {
+    printf("Failed to setup PVM Seq SQ %d state \n", qid);
+    return -1;
+  }
+  return 0;
 }
 
 int queues_setup() {
@@ -381,6 +413,26 @@ int queues_setup() {
     printf("SSD %d qaddr %lx cndx_addr %lx \n", j, qaddr, ssd_cndx_addr[j]);
   }
 
+  // Initialize PVM SQs for processing Sequencer commands for PDMA
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqPdmaSQs); j++, i++) {
+    if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqPdmaSqHandler,
+                        kDefaultTotalRings, kDefaultHostRings) < 0) {
+      printf("Failed to setup PVM Seq PDMA queue %d \n", i);
+      return -1;
+    }
+    printf("Setup PVM Seq PDMA queue %d \n", i);
+  }
+
+  // Initialize PVM SQs for processing Sequencer commands for R2N
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqR2nSQs); j++, i++) {
+    if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqR2nSqHandler,
+                        kDefaultTotalRings, kDefaultNoHostRings) < 0) {
+      printf("Failed to setup PVM Seq R2n queue %d \n", i);
+      return -1;
+    }
+    printf("Setup PVM Seq R2n queue %d \n", i);
+  }
+
   // Initialize PVM CQs for processing commands from NVME VF only
   // Note: i is overall index across PVM CQs, j iterates the loop
   for (j = 0, i = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeCQs); j++, i++) {
@@ -512,6 +564,21 @@ void get_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
   *db_data = (qid << kDbQidShift) | (ring << kDbRingShift) | bswap_16(index);
   *db_addr = kDbAddrHost |  (kDbAddrUpdate << kDbUpdateShift) | 
              (lif << kDbLifShift) | (qtype << kDbTypeShift);
+}
+
+void get_capri_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
+                        uint8_t ring, uint16_t index, 
+                        uint64_t *db_addr, uint64_t *db_data) {
+
+  if (!db_addr || !db_data) return;
+
+  *db_data = (qid << kDbQidShift) | (ring << kDbRingShift) | bswap_16(index);
+  *db_addr = kDbAddrCapri |  (kDbAddrUpdate << kDbUpdateShift) | 
+             (lif << kDbLifShift) | (qtype << kDbTypeShift);
+}
+
+uint64_t get_storage_hbm_addr() {
+  return storage_hbm_addr;
 }
 
 void queues_shutdown() {

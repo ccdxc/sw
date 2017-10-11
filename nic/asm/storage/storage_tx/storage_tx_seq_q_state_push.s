@@ -31,7 +31,7 @@ storage_tx_seq_q_state_push_start:
    QUEUE_PUSH(d.p_ndx, d.num_entries)
 
    // Ring the doorbell for the recipient of the push.
-   QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_3)
+   QUEUE_PUSH_DOORBELL_RING(dma_p2m_3)
    
    // Setup the start and end DMA pointers
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_3_dma_cmd_eop,
