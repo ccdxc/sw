@@ -70,8 +70,8 @@ uint64_t NvmeSsdCore::MoveData(NvmeCmd *cmd, uint64_t prp, uint64_t offset,
 }
 
 bool NvmeSsdCore::ExecuteRW(NvmeCmd *cmd) {
-  printf("NVME command received by SSD\n");
-  utils::dump((uint8_t *) cmd);
+  //printf("NVME command received by SSD\n");
+  //utils::dump((uint8_t *) cmd);
 
   if ((cmd->dw0.opc != NVME_READ_CMD_OPCODE) &&
       (cmd->dw0.opc != NVME_WRITE_CMD_OPCODE)) {

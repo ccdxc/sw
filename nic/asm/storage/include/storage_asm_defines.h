@@ -35,6 +35,8 @@
 	k.{storage_kivec0_cmd_index_sbit0_ebit3...storage_kivec0_cmd_index_sbit4_ebit7}
 #define STORAGE_KIVEC0_SSD_HANDLE	\
 	k.{storage_kivec0_ssd_handle_sbit0_ebit3...storage_kivec0_ssd_handle_sbit12_ebit15}
+#define STORAGE_KIVEC0_DST_REWRITE	\
+	k.storage_kivec0_dst_rewrite
 
 #define STORAGE_KIVEC1_SRC_LIF		\
 	k.{storage_kivec1_src_lif_sbit0_ebit7...storage_kivec1_src_lif_sbit8_ebit10}
@@ -285,6 +287,16 @@
                      r7, _dma_cmd_ptr)					\
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 
+// Setup the sequencer doorbell based on the lif, type, qid specified in
+// the WQE.
+#define SEQUENCER_DOORBELL_UPDATE(_dma_cmd_ptr)				\
+   DOORBELL_DATA_SETUP(seq_doorbell_data_data, d.db_index, r0, 		\
+                       d.db_qid, r0)					\
+   DOORBELL_ADDR_SETUP(d.db_lif, d.db_qtype, DOORBELL_SCHED_WR_SET,	\
+                       DOORBELL_UPDATE_P_NDX)				\
+   DMA_PHV2MEM_SETUP(seq_doorbell_data_data, seq_doorbell_data_data,	\
+                     r7, _dma_cmd_ptr)					\
+
 // Set the data to be pushed across the PCI layer to be the p_ndx. Issue
 // DMA write of this data to the address in the d-vector. Set the fence
 // bit for the data push.
@@ -446,8 +458,8 @@
    
 
 #define R2N_WQE_BASE_COPY						\
-   phvwr 	p.{r2n_wqe_handle...r2n_wqe_status},			\
-		d.{handle...status};					\
+   phvwr 	p.{r2n_wqe_handle...r2n_wqe_db_index},			\
+		d.{handle...db_index};					\
 
 #define R2N_WQE_FULL_COPY						\
    phvwr 	p.{r2n_wqe_handle...r2n_wqe_pri_qaddr},			\

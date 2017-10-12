@@ -27,27 +27,29 @@ storage_tx_pci_q_state_push_start:
    // DMA command address update
    DMA_ADDR_UPDATE(r7, dma_p2m_1)
    
+   // DMA entry #3 is used for ringing additional doorbells (default NOP)
+   
    // Push the entry to the queue (this increments p_ndx and writes to table)
    QUEUE_PUSH(d.p_ndx, d.num_entries)
 
    // Push the p_ndx by doing a DMA update
-   PCI_QUEUE_PUSH_DATA_UPDATE(dma_p2m_3)
+   PCI_QUEUE_PUSH_DATA_UPDATE(dma_p2m_4)
 
    // Check if interrupt is enabled and branch
    seq		c1, d.intr_en, 1
    bcf		[c1], send_intr
 
    // Setup the start and end DMA pointers and branch to table load
-   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_3_dma_cmd_eop,
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_4_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
    b		tbl_load
 
 send_intr:
    // Raise the interrupt with a DMA update
-   PCI_QUEUE_PUSH_INTR_UPDATE(dma_p2m_4)
+   PCI_QUEUE_PUSH_INTR_UPDATE(dma_p2m_5)
 
    // Setup the start and end DMA pointers
-   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_4_dma_cmd_eop,
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_5_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
 
 tbl_load:

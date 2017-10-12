@@ -20,7 +20,6 @@ struct {
   const std::string test_name;
   bool test_succeded;
 } test_suite[] = {
-#if 0
   {&tests::test_run_nvme_pvm_admin_cmd, "NVME->PVM Admin Cmd", false},
   {&tests::test_run_nvme_pvm_read_cmd, "NVME->PVM Read Cmd", false},
   {&tests::test_run_nvme_pvm_write_cmd, "NVME->PVM Write Cmd", false},
@@ -50,8 +49,18 @@ struct {
   {&tests::test_run_nvme_local_e2e1, "NVME Local Tgt E2E 1", false},
   {&tests::test_run_nvme_local_e2e2, "NVME Local Tgt E2E 2", false},
   {&tests::test_run_nvme_local_e2e3, "NVME Local Tgt E2E 3", false},
-#endif
-  {&tests::test_run_seq1, "NVME Local Tgt Seq 1", false},
+  {&tests::test_run_seq_write1, "Seq Local Tgt Write 1", false},
+  {&tests::test_run_seq_write2, "Seq Local Tgt Write 2", false},
+  {&tests::test_run_seq_write3, "Seq Local Tgt Write 3", false},
+  {&tests::test_run_seq_write4, "Seq Local Tgt Write 4", false},
+  {&tests::test_run_seq_read1, "Seq Local Tgt Read 1", false},
+  {&tests::test_run_seq_read2, "Seq Local Tgt Read 2", false},
+  {&tests::test_run_seq_read3, "Seq Local Tgt Read 3", false},
+  {&tests::test_run_seq_read4, "Seq Local Tgt Read 4", false},
+  {&tests::test_run_seq_e2e1, "Seq Local Tgt E2E 1", false},
+  {&tests::test_run_seq_e2e2, "Seq Local Tgt E2E 2", false},
+  {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
+  {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
 
   // Always last entry
   {0}

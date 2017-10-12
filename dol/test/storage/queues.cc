@@ -433,6 +433,31 @@ int queues_setup() {
     printf("Setup PVM Seq R2n queue %d \n", i);
   }
 
+  // Initialize PVM SQs for processing R2N commands from the Sequencer.
+  // This is strictly to avoid queue sharing between PVM and P4+ code.
+  // Note: This is different from the Sequencer R2N entry handler queue 
+  // created above.
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumR2nSQs); j++, i++) {
+    // Initialize the queue in the DOL enviroment
+    if (queue_init(&pvm_sqs[i], NUM_TO_VAL(kPvmNumEntries),
+                   NUM_TO_VAL(kDefaultEntrySize)) < 0) {
+      printf("Unable to allocate host memory for PVM R2N SQ for Seq %d\n", i);
+      return -1;
+    }
+    printf("Initialized PVM R2N SQ %d for Seq \n", i);
+
+    // Setup the queue state in Capri:
+    if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, i, (char *) kR2nSqHandler, 
+                                 kDefaultTotalRings, kDefaultHostRings, 
+                                 kPvmNumEntries, pvm_sqs[i].paddr,
+                                 kDefaultEntrySize, true, pvm_lif, SQ_TYPE,
+                                 nvme_be_q, 0, 0, storage_hbm_addr, 
+                                 kPvmNumNvmeBeSQs, kDefaultEntrySize, 0) < 0) {
+      printf("Failed to setup PVM R2N SQ %d state for Seq \n", i);
+      return -1;
+    }
+  }
+
   // Initialize PVM CQs for processing commands from NVME VF only
   // Note: i is overall index across PVM CQs, j iterates the loop
   for (j = 0, i = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeCQs); j++, i++) {

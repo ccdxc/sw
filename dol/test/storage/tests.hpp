@@ -65,7 +65,29 @@ int test_run_nvme_local_e2e2();
 
 int test_run_nvme_local_e2e3();
 
-int test_run_seq1();
+int test_run_seq_write1();
+
+int test_run_seq_write2();
+
+int test_run_seq_write3();
+
+int test_run_seq_write4();
+
+int test_run_seq_read1();
+
+int test_run_seq_read2();
+
+int test_run_seq_read3();
+
+int test_run_seq_read4();
+
+int test_run_seq_e2e1();
+
+int test_run_seq_e2e2();
+
+int test_run_seq_e2e3();
+
+int test_run_seq_e2e4();
 
 }  // namespace tests
 

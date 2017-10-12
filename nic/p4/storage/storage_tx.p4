@@ -69,6 +69,10 @@ metadata pvm_cmd_trailer_t pvm_cmd_trailer;
 @pragma dont_trim
 metadata r2n_wqe_t r2n_wqe;
 
+// SSD's consumer index
+@pragma dont_trim
+metadata ssd_ci_t ssd_ci;
+
 // TODO: Remove this if NCC does not add pads to DMA regions with pragma
 @pragma dont_trim
 metadata storage_pad0_t storage_pad0;
@@ -87,6 +91,8 @@ metadata nvme_sta_t nvme_sta;
 metadata storage_doorbell_data_t qpush_doorbell_data;
 @pragma dont_trim
 metadata storage_doorbell_data_t qpop_doorbell_data;
+@pragma dont_trim
+metadata storage_doorbell_data_t seq_doorbell_data;
 
 // Push/interrupt data across PCI bus
 @pragma dont_trim
@@ -94,13 +100,11 @@ metadata storage_pci_data_t pci_push_data;
 @pragma dont_trim
 metadata storage_pci_data_t pci_intr_data;
 
-// SSD's consumer index
-@pragma dont_trim
-metadata ssd_ci_t ssd_ci;
-
+#if 0
 // TODO: Remove this when NCC supports pragma for aligning this at 16 byte boundary
 @pragma dont_trim
 metadata storage_pad1_t storage_pad1;
+#endif
   
 // DMA commands metadata
 @pragma dont_trim
@@ -132,6 +136,12 @@ metadata dma_cmd_phv2mem_t dma_p2m_4;
 @pragma dont_trim
 @pragma pa_header_union ingress dma_p2m_4
 metadata dma_cmd_mem2mem_t dma_m2m_4;
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_p2m_5;
+@pragma dont_trim
+@pragma pa_header_union ingress dma_p2m_5
+metadata dma_cmd_mem2mem_t dma_m2m_5;
 
 /*****************************************************************************
  * Storage Tx PHV layout END 
@@ -421,7 +431,7 @@ action q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
                                           DOORBELL_UPDATE_P_NDX_INCR));
     modify_field(qpush_doorbell_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
 
-    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_4, 
                              0,
                              PHV_FIELD_OFFSET(qpush_doorbell_data.data),
                              PHV_FIELD_OFFSET(qpush_doorbell_data.data),
@@ -476,7 +486,7 @@ action pci_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
   // Setup the DMA command to push the entry by incrementing p_ndx
   modify_field(doorbell_addr.addr, pci_q_state_scratch.push_addr);
   modify_field(pci_push_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
-  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
+  DMA_COMMAND_PHV2MEM_FILL(dma_p2m_4, 
                            0,
                            PHV_FIELD_OFFSET(qpush_doorbell_data.data),
                            PHV_FIELD_OFFSET(qpush_doorbell_data.data),
@@ -486,7 +496,7 @@ action pci_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
   if (pci_q_state_scratch.intr_en == 1) {
     modify_field(pci_intr_addr.addr, pci_q_state_scratch.intr_addr);
     modify_field(pci_intr_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
-    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_4, 
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_5, 
                              0,
                              PHV_FIELD_OFFSET(intr_data.data),
                              PHV_FIELD_OFFSET(intr_data.data),
@@ -706,7 +716,8 @@ action pri_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                  priority ring to post to.
  *****************************************************************************/
 
-action r2n_sq_handler(handle, data_size, opcode, status) {
+action r2n_sq_handler(handle, data_size, opcode, status, db_enable, db_lif,
+                      db_qtype, db_qid, db_index) {
 
   // Carry forward state information to be saved with R2N WQE in PHV
   R2N_WQE_BASE_COPY(r2n_wqe)
@@ -767,8 +778,9 @@ action nvme_be_wqe_prep(src_queue_id, ssd_handle, io_priority, is_read,
  *                      Load the actual NVME command for the next stage.
  *****************************************************************************/
 
-action nvme_be_sq_handler(handle, data_size, opcode, status, src_queue_id,
-                          ssd_handle, io_priority, is_read, r2n_buf_handle,
+action nvme_be_sq_handler(handle, data_size, opcode, status, db_enable, 
+                          db_lif, db_qtype, db_qid, db_index, src_queue_id, 
+                          ssd_handle, io_priority, is_read, r2n_buf_handle, 
                           is_local, nvme_cmd_cid, pri_qaddr) {
 
   // Carry forward state information to be saved with R2N WQE in PHV
@@ -916,8 +928,10 @@ action nvme_be_cq_handler(cspec, rsvd, sq_head, sq_id, cid, phase, status) {
  *                       queue's running counters to update
  *****************************************************************************/
 
-action nvme_be_wqe_handler(handle, data_size, opcode, status, src_queue_id,
-                           ssd_handle, io_priority, is_read, r2n_buf_handle,
+
+action nvme_be_wqe_handler(handle, data_size, opcode, status, db_enable, 
+                           db_lif, db_qtype, db_qid, db_index, src_queue_id, 
+                           ssd_handle, io_priority, is_read, r2n_buf_handle, 
                            is_local, nvme_cmd_cid, pri_qaddr) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
@@ -930,6 +944,18 @@ action nvme_be_wqe_handler(handle, data_size, opcode, status, src_queue_id,
   // Store fields needed in the K+I vector
   modify_field(storage_kivec0.ssd_handle, ssd_handle);
   modify_field(storage_kivec0.io_priority, io_priority);
+
+  // Rewrite the destination as needed
+  if (r2n_wqe_scratch.db_enable == 1) {
+    // TODO: In ASM calculate from LIF/Type/Qid etc.
+    modify_field(doorbell_addr.addr, 0);
+    modify_field(seq_doorbell_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
+                             0,
+                             PHV_FIELD_OFFSET(seq_doorbell_data.data),
+                             PHV_FIELD_OFFSET(seq_doorbell_data.data),
+                             0, 0, 0, 0)
+  }
 
   // Load the priority queue state of the NVME backend to clear the running
   // counters
@@ -969,9 +995,7 @@ action nvme_be_wqe_release(bitmap) {
                            PHV_FIELD_OFFSET(nvme_be_sta.status_phase),
                            0, 0, 0, 0)
 
-  // Load the SSD SQ context for the next stage to push the NVME command
-  // TODO: FIXME. This has multiple destinations (PVM/ROCE). Need to 
-  //       qualify dest_addr
+  // Load the R2N CQ context for the next stage to push the completion
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, storage_kivec0.dst_qaddr,
                         Q_STATE_SIZE, q_state_push_start)
 }

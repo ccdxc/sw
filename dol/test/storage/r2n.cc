@@ -2,6 +2,7 @@
 #include <strings.h>
 #include <stdio.h>
 #include <byteswap.h>
+#include "dol/test/storage/utils.hpp"
 #include "nic/utils/host_mem/c_if.h"
 #include "dol/test/storage/r2n.hpp"
 
@@ -47,5 +48,16 @@ void r2n_wqe_init(void *r2n_wqe_buf, void *r2n_buf) {
   r2n_wqe->data_size = bswap_32(size);
 }
 
+void r2n_wqe_db_update(void *r2n_wqe_buf, uint16_t lif, uint8_t qtype, 
+                       uint32_t qid, uint16_t index) {
+  if (!r2n_wqe_buf) return;
+  
+  utils::write_bit_fields(r2n_wqe_buf, 128, 1, 1);
+  utils::write_bit_fields(r2n_wqe_buf, 129, 11, lif);
+  utils::write_bit_fields(r2n_wqe_buf, 140, 3, qtype);
+  utils::write_bit_fields(r2n_wqe_buf, 143, 24, qid);
+  utils::write_bit_fields(r2n_wqe_buf, 167, 16, index);
+  
+}
 
 }  // namespace r2n

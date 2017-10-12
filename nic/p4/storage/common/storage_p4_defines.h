@@ -588,6 +588,15 @@ header_type r2n_wqe_t {
     opcode		: 16;	// Each use case has a distinct opcode
     status		: 16;	// Success/failure status
 
+    // Note: These fields are provided in the WQE from PVM for additional
+    // doorbell ring on the response handling from the SSD on a per WQE basis
+    // (when sequencer is used). The status is sent to PVM's R2N CQ.
+    db_enable		: 1;	// Doorbell to ring 
+    db_lif		: 11;	// Doorbell LIF number
+    db_qtype		: 3;	// Doorbell LIF type (within the LIF)
+    db_qid		: 24;	// Doorbell queue number (within the LIF)
+    db_index		: 16;	// Doorbell pindex
+
     // Note: These fields are not part of the WQE from PVM
     src_queue_id	: 32;	// ROCE source queue id
     ssd_handle		: 16;	// SSD handle to select NVME backend
@@ -623,12 +632,12 @@ header_type ssd_ci_t {
 // to 16 byte boundary, not to have NCC generated pads in DMA regions etc.
 header_type storage_pad0_t {
   fields {
-    pad		: 88;	
+    pad		: 16;	
   }
 }
 header_type storage_pad1_t {
   fields {
-    pad		: 48;	
+    pad		: 16;	
   }
 }
 
@@ -730,9 +739,13 @@ header_type seq_barco_entry_t {
   modify_field(wqe.handle, handle);				\
   modify_field(wqe.data_size, data_size);			\
   modify_field(wqe.opcode, opcode);				\
-  modify_field(wqe.status, status);
+  modify_field(wqe.status, status);				\
+  modify_field(wqe.db_enable, db_enable);			\
+  modify_field(wqe.db_lif, db_lif);				\
+  modify_field(wqe.db_qtype, db_qtype);				\
+  modify_field(wqe.db_qid, db_qid);				\
+  modify_field(wqe.db_index, db_index);				\
 
-// Copy the NVME backend command header - also present in R2N WQE
 #define NVME_BE_CMD_HDR_COPY(hdr)				\
   modify_field(hdr.src_queue_id, src_queue_id);			\
   modify_field(hdr.ssd_handle, ssd_handle);			\

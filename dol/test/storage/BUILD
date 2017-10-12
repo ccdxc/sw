@@ -40,6 +40,7 @@ cc_library(
         "nvme.hpp",
     ],
     deps = [
+        ":utils",
         "//nic/utils/host_mem",
     ]
 )
