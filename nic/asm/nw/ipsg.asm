@@ -12,13 +12,12 @@ ipsg_miss:
   seq         c1, k.tcp_valid, TRUE
   seq         c2, k.l4_metadata_tcp_normalization_en, TRUE
   balcf       r7, [c1 & c2], f_tcp_stateless_normalization
-  seq         c1, k.control_metadata_ipsg_enable, FALSE
-  nop.c1.e
-  smeqb       c2, k.flow_lkp_metadata_lkp_type, \
+  seq         c1, k.control_metadata_ipsg_enable, TRUE
+  smeqb.c1    c1, k.flow_lkp_metadata_lkp_type, \
                 FLOW_KEY_LOOKUP_TYPE_IP_MASK, FLOW_KEY_LOOKUP_TYPE_IP_MASK
-  bcf         [c2], ipsg_drop
-  nop.!c2.e
-  nop
+  phvwr.c1    p.control_metadata_drop_reason[DROP_IPSG], 1
+  nop.e
+  phvwr.c1    p.capri_intrinsic_drop, 1
 
 .align
 ipsg_hit:
@@ -28,14 +27,11 @@ ipsg_hit:
   seq         c1, k.control_metadata_ipsg_enable, FALSE
   nop.c1.e
   sne         c1, k.control_metadata_src_lif, d.u.ipsg_hit_d.src_lif
-  sne         c2, k.ethernet_srcAddr, d.u.ipsg_hit_d.mac
-  // sne         c3, k.vlan_tag_valid, d.u.ipsg_hit_d.vlan_valid
-  sne         c4, k.{vlan_tag_vid_sbit0_ebit3, vlan_tag_vid_sbit4_ebit11}, d.u.ipsg_hit_d.vlan_id
-  // bcf         [c1|c2|c3|c4], ipsg_drop
-  bcf         [c1|c2|c4], ipsg_drop
-  nop
+  sne.!c1     c1, k.ethernet_srcAddr, d.u.ipsg_hit_d.mac
+  sne.!c1     c1, k.{vlan_tag_vid_sbit0_ebit3, vlan_tag_vid_sbit4_ebit11}, d.u.ipsg_hit_d.vlan_id
+  phvwr.c1    p.control_metadata_drop_reason[DROP_IPSG], 1
   nop.e
-  nop
+  phvwr.c1    p.capri_intrinsic_drop, 1
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX

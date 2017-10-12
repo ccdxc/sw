@@ -1,10 +1,10 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 
-#define TX_UCAST_BYTES_OVERFLOW_ADDRESS  0
-#define TX_MCAST_BYTES_OVERFLOW_ADDRESS  TX_UCAST_BYTES_OVERFLOW_ADDRESS + 16
-#define TX_BCAST_BYTES_OVERFLOW_ADDRESS  TX_UCAST_BYTES_OVERFLOW_ADDRESS + 32
-#define TX_EGRESS_DROPS_OVERFLOW_ADDRESS TX_UCAST_BYTES_OVERFLOW_ADDRESS + 46
+#define TX_UCAST_BYTES_OVERFLOW_OFFSET  0
+#define TX_MCAST_BYTES_OVERFLOW_OFFSET  (TX_UCAST_BYTES_OVERFLOW_OFFSET + 16)
+#define TX_BCAST_BYTES_OVERFLOW_OFFSET  (TX_UCAST_BYTES_OVERFLOW_OFFSET + 32)
+#define TX_EGRESS_DROPS_OVERFLOW_OFFSET (TX_UCAST_BYTES_OVERFLOW_OFFSET + 46)
 
 struct tx_stats_k k;
 struct tx_stats_d d;
@@ -59,7 +59,7 @@ tx_ucast_bytes_overflow:
 
 tx_mcast_bytes_overflow:
   add         r5, r5, r4
-  add         r5, r5, TX_MCAST_BYTES_OVERFLOW_ADDRESS
+  add         r5, r5, TX_MCAST_BYTES_OVERFLOW_OFFSET
   memwr.d     r5, r6
   add         r5, r5, 8
   memwr.d     r5, d.tx_stats_d.tx_mcast_pkts
@@ -68,7 +68,7 @@ tx_mcast_bytes_overflow:
 
 tx_bcast_bytes_overflow:
   add         r5, r5, r4
-  add         r5, r5, TX_BCAST_BYTES_OVERFLOW_ADDRESS
+  add         r5, r5, TX_BCAST_BYTES_OVERFLOW_OFFSET
   memwr.d     r5, r6
   add         r5, r5, 8
   memwr.d     r5, d.tx_stats_d.tx_bcast_pkts
@@ -77,7 +77,7 @@ tx_bcast_bytes_overflow:
 
 tx_egress_drops_overflow:
   add         r5, r5, r4
-  addi        r5, r5, TX_EGRESS_DROPS_OVERFLOW_ADDRESS
+  addi        r5, r5, TX_EGRESS_DROPS_OVERFLOW_OFFSET
   memwr.d.e   r5, r6
   tblwr       d.tx_stats_d.tx_egress_drops, r0
 

@@ -379,7 +379,7 @@ action execute_ddos_service_policer(entry_valid, pkt_rate, rlimit_en,
     modify_field(scratch_metadata.policer_tbkt, tbkt2);
 }
 
-@pragma stage 2
+@pragma stage 1
 @pragma policer_table three_color
 table ddos_service_policer {
     reads {

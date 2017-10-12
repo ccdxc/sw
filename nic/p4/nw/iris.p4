@@ -293,11 +293,11 @@ control egress {
     if (control_metadata.egress_bypass == FALSE) {
         process_replica();
         process_output_mapping();
+        process_roce();
         process_rewrites();
         process_egress_policer();
         process_ddos_egress();
         process_copp();
     }
     process_tx_stats();
-    process_roce();
 }

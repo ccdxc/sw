@@ -656,11 +656,11 @@ class capri_p4pd:
                         else:
                             (cf_, cf_startbit_ , width_, ftype_)  =  cfs
                         if cf == cf_ and cf_startbit_ == cf_startbit:
-                            if (cf_, width_) not in pad_dup_cf.values():
-                                pad_dup_cf[k1] = (cf_, width_)
+                            if (cf_, cf_startbit, width_) not in pad_dup_cf.values():
+                                pad_dup_cf[k1] = (cf_, cf_startbit, width_)
         if len(pad_dup_cf):
             for k, dict_cf_ in pad_dup_cf.items():
-                (cf, width) = dict_cf_
+                (cf, startbit, width) = dict_cf_
                 cf_list = ki_or_kd_to_cf_map[k]
                 for idx, elem in enumerate(cf_list):
                     if elem[0] == None:
@@ -1011,9 +1011,19 @@ class capri_p4pd:
                     done = True
                 else:
                     for z in range(fields):
-                        if v1[z][0] != v2[z][0]:
+                        #if both fields are valid
+                        if v1[z][0] != None and v2[z][0] != None:
+                            if v1[z][0] != v2[z][0]:
+                                done = True
+                                break
+                        elif (v1[z][0] != None and v2[z][0] == None) \
+                             or (v1[z][0] == None and v2[z][0] != None):
                             done = True
                             break
+                        elif (v1[z][0] == None and v2[z][0] == None):
+                            if (v1[z][4] != v2[z][4]):
+                                done = True
+                                break
                     if done:
                         break
                     else:
@@ -1069,10 +1079,8 @@ class capri_p4pd:
                 if key_position < ctable.start_key_off or \
                             	key_position > ctable.end_key_off or self.be.args.p4_plus:
                     return 
-		else:
-		    #pad
+                else:
                     pad = '__pad_'
-
             asm_field_info.append((pad + p4fldname, pad + _get_output_name(cf.hfname), \
                                  p4f_size, cf.phv_bit, \
                                  cf.phv_bit / flit_sz, cf.phv_bit % flit_sz,\

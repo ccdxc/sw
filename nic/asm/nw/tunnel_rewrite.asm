@@ -54,11 +54,10 @@ encap_vlan:
   add         r7, k.control_metadata_packet_len, 4
   phvwr       p.control_metadata_packet_len, r7
   phvwr       p.vlan_tag_etherType, k.ethernet_etherType
-  phvwr       p.vlan_tag_vid, k.rewrite_metadata_tunnel_vnid
-  phvwr       p.vlan_tag_valid, 1
+  phvwr       p.{vlan_tag_dei, vlan_tag_vid}, k.rewrite_metadata_tunnel_vnid[11:0]
   seq         c7, k.qos_metadata_cos_en, 1
   phvwr.c7    p.vlan_tag_pcp, k.qos_metadata_cos
-  phvwr.e     p.vlan_tag_dei, 0
+  phvwr.e     p.vlan_tag_valid, 1
   phvwr       p.ethernet_etherType, ETHERTYPE_VLAN
 
 .align

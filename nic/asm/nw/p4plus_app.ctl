@@ -3,7 +3,6 @@
 #include "../../p4/nw/include/defines.h"
 
 struct p4plus_app_k k;
-struct p4plus_app_d d;
 struct phv_         p;
 
 k = {

@@ -159,5 +159,6 @@ control process_rewrites {
         apply(tunnel_encap_update_inner);
     }
     apply(tunnel_rewrite);
+    apply(p4plus_app_prep);
     apply(p4plus_app);
 }

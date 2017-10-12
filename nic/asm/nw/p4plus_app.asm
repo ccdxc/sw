@@ -3,7 +3,6 @@
 #include "../../p4/nw/include/defines.h"
 
 struct p4plus_app_k k;
-struct p4plus_app_d d;
 struct phv_         p;
 
 %%
@@ -15,13 +14,12 @@ nop:
 .align
 p4plus_app_classic_nic:
   // r7 : packet_len
-  // r1 : flags
   add         r7, r0, k.control_metadata_packet_len
   seq         c1, k.control_metadata_vlan_strip, TRUE
   seq         c2, k.vlan_tag_valid, TRUE
   bcf         [!c1 | !c2], p4plus_app_classic_nic_no_vlan_strip
-  or          r1, r0, CLASSIC_NIC_FLAGS_FCS_OK
-  or          r1, r1, CLASSIC_NIC_FLAGS_VLAN_VALID
+  or          r1, k.p4_to_p4plus_classic_nic_flags, CLASSIC_NIC_FLAGS_VLAN_VALID
+  phvwr       p.p4_to_p4plus_classic_nic_flags, r1
   phvwr       p.ethernet_etherType, k.vlan_tag_etherType
   phvwr       p.{p4_to_p4plus_classic_nic_vlan_pcp...p4_to_p4plus_classic_nic_vlan_vid}, \
                   k.{vlan_tag_pcp...vlan_tag_vid_sbit4_ebit11}
@@ -29,58 +27,11 @@ p4plus_app_classic_nic:
   sub         r7, r7, 4
 
 p4plus_app_classic_nic_no_vlan_strip:
-  seq         c1, k.inner_ipv4_valid, TRUE
-  seq         c2, k.inner_ipv6_valid, TRUE
-  setcf       c3, [c1|c2]
-  bcf         [!c3], p4plus_app_classic_nic_native
-
-  phvwr.c1    p.p4_to_p4plus_classic_nic_ip_proto, k.inner_ipv4_protocol
-  or.c1       r1, r1, CLASSIC_NIC_FLAGS_IPV4_VALID
-  phvwr.c2    p.p4_to_p4plus_classic_nic_ip_proto, k.inner_ipv6_nextHdr
-  or.c2       r1, r1, CLASSIC_NIC_FLAGS_IPV6_VALID
-  phvwr.c3    p.p4_to_p4plus_classic_nic_inner_ip_valid, TRUE
-  b           p4plus_app_classic_nic_l4
-  or.c3       r1, r1, CLASSIC_NIC_FLAGS_TUNNELED
-
-p4plus_app_classic_nic_native:
-  phvwr       p.p4_to_p4plus_classic_nic_ip_valid, TRUE
-  seq         c1, k.ipv4_valid, TRUE
-  seq         c2, k.ipv6_valid, TRUE
-  phvwr.c1    p.p4_to_p4plus_classic_nic_ip_proto, k.ipv4_protocol
-  or.c1       r1, r1, CLASSIC_NIC_FLAGS_IPV4_VALID
-  phvwr.c2    p.p4_to_p4plus_classic_nic_ip_proto, k.ipv6_nextHdr
-  or.c2       r1, r1, CLASSIC_NIC_FLAGS_IPV6_VALID
-
-p4plus_app_classic_nic_l4:
-  seq         c1, k.tcp_valid, TRUE
-  bcf         [!c1], p4plus_app_classic_nic_l4_inner_udp
-  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport, k.tcp_srcPort
-  phvwr       p.p4_to_p4plus_classic_nic_l4_dport, k.tcp_dstPort
-  b           p4plus_app_classic_nic_common
-  phvwr       p.p4_to_p4plus_classic_nic_l4_checksum, k.tcp_checksum
-
-p4plus_app_classic_nic_l4_inner_udp:
-  seq         c1, k.inner_udp_valid, TRUE
-  bcf         [!c1], p4plus_app_classic_nic_l4_udp
-  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport, k.inner_udp_srcPort
-  phvwr       p.p4_to_p4plus_classic_nic_l4_dport, k.inner_udp_dstPort
-  b           p4plus_app_classic_nic_common
-  phvwr       p.p4_to_p4plus_classic_nic_l4_checksum, k.inner_udp_checksum
-
-p4plus_app_classic_nic_l4_udp:
-  seq         c1, k.udp_valid, TRUE
-  bcf         [!c1], p4plus_app_classic_nic_common
-  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport, k.udp_srcPort
-  phvwr       p.p4_to_p4plus_classic_nic_l4_dport, k.udp_dstPort
-  phvwr       p.p4_to_p4plus_classic_nic_l4_checksum, k.udp_checksum
-
-p4plus_app_classic_nic_common:
-  phvwr       p.p4_to_p4plus_classic_nic_flags, r1
-  phvwr       p.p4_to_p4plus_classic_nic_valid, TRUE
-  phvwr       p.p4_to_p4plus_classic_nic_p4plus_app_id, k.control_metadata_p4plus_app_id
   phvwr       p.p4_to_p4plus_classic_nic_packet_len, r7
+  phvwr       p.p4_to_p4plus_classic_nic_valid, TRUE
   phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
+  phvwr       p.p4_to_p4plus_classic_nic_p4plus_app_id, k.control_metadata_p4plus_app_id
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
               (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
               P4PLUS_CLASSIC_NIC_HDR_SZ)
@@ -205,7 +156,9 @@ p4plus_app_rdma:
 // input r6 : packet start offset
 f_p4plus_cpu_pkt:
   phvwr       p.p4_to_p4plus_cpu_pkt_valid, TRUE
-  phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, k.{control_metadata_src_lif}.hx
+  or          r1, k.control_metadata_src_lif_sbit8_ebit15, \
+                  k.control_metadata_src_lif_sbit0_ebit7, 8
+  phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, r1[15:0].hx
   or          r1, k.capri_intrinsic_lif_sbit3_ebit10, k.capri_intrinsic_lif_sbit0_ebit2, 8
   phvwr       p.p4_to_p4plus_cpu_pkt_lif, r1[15:0].hx
   phvwr       p.p4_to_p4plus_cpu_pkt_qid, k.{control_metadata_qid}.wx

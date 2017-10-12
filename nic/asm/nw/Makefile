@@ -50,6 +50,7 @@ SRC_FILES := \
     $(SRC_DIR)/nacl.asm \
     $(SRC_DIR)/output_mapping.asm \
     $(SRC_DIR)/p4plus_app.asm \
+    $(SRC_DIR)/p4plus_app_prep.asm \
     $(SRC_DIR)/replica.asm \
     $(SRC_DIR)/rewrite.asm \
     $(SRC_DIR)/tunnel_decap.asm \

@@ -41,23 +41,8 @@ action p4plus_app_tcp_proxy() {
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
 }
 
-action p4plus_app_classic_nic() {
-    add_header(p4_to_p4plus_classic_nic);
-    modify_field(p4_to_p4plus_classic_nic.p4plus_app_id,
-                 control_metadata.p4plus_app_id);
+action f_p4plus_app_classic_nic_prep() {
     modify_field(scratch_metadata.classic_nic_flags, CLASSIC_NIC_FLAGS_FCS_OK);
-
-    if ((control_metadata.vlan_strip == TRUE) and (vlan_tag.valid == TRUE)) {
-        modify_field(ethernet.etherType, vlan_tag.etherType);
-        modify_field(p4_to_p4plus_classic_nic.vlan_pcp, vlan_tag.pcp);
-        modify_field(p4_to_p4plus_classic_nic.vlan_dei, vlan_tag.dei);
-        modify_field(p4_to_p4plus_classic_nic.vlan_vid, vlan_tag.vid);
-        bit_or(p4_to_p4plus_classic_nic.flags, p4_to_p4plus_classic_nic.flags,
-               CLASSIC_NIC_FLAGS_VLAN_VALID);
-        remove_header(vlan_tag);
-        subtract(control_metadata.packet_len, control_metadata.packet_len, 4);
-    }
-
     if ((inner_ipv4.valid == TRUE) or (inner_ipv6.valid == TRUE)) {
         add_header(p4_to_p4plus_classic_nic_inner_ip);
         if (inner_ipv4.valid == TRUE) {
@@ -111,10 +96,25 @@ action p4plus_app_classic_nic() {
     }
     bit_or(p4_to_p4plus_classic_nic.flags, p4_to_p4plus_classic_nic.flags,
            scratch_metadata.classic_nic_flags);
-    modify_field(p4_to_p4plus_classic_nic.packet_len, control_metadata.packet_len);
+}
 
+action p4plus_app_classic_nic() {
+    if ((control_metadata.vlan_strip == TRUE) and (vlan_tag.valid == TRUE)) {
+        modify_field(ethernet.etherType, vlan_tag.etherType);
+        modify_field(p4_to_p4plus_classic_nic.vlan_pcp, vlan_tag.pcp);
+        modify_field(p4_to_p4plus_classic_nic.vlan_dei, vlan_tag.dei);
+        modify_field(p4_to_p4plus_classic_nic.vlan_vid, vlan_tag.vid);
+        bit_or(p4_to_p4plus_classic_nic.flags, p4_to_p4plus_classic_nic.flags,
+               CLASSIC_NIC_FLAGS_VLAN_VALID);
+        remove_header(vlan_tag);
+        subtract(control_metadata.packet_len, control_metadata.packet_len, 4);
+    }
+    modify_field(p4_to_p4plus_classic_nic.packet_len, control_metadata.packet_len);
+    add_header(p4_to_p4plus_classic_nic);
     add_header(capri_rxdma_p4_intrinsic);
     add_header(capri_rxdma_intrinsic);
+    modify_field(p4_to_p4plus_classic_nic.p4plus_app_id,
+                 control_metadata.p4plus_app_id);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_CLASSIC_NIC_HDR_SZ));
@@ -319,6 +319,20 @@ table p4plus_app {
         nop;
     }
     size : P4PLUS_APP_TABLE_SIZE;
+}
+
+action p4plus_app_prep() {
+    if (control_metadata.p4plus_app_id == P4PLUS_APPTYPE_CLASSIC_NIC) {
+        f_p4plus_app_classic_nic_prep();
+    }
+}
+
+@pragma stage 3
+table p4plus_app_prep {
+    actions {
+        p4plus_app_prep;
+    }
+    default_action : p4plus_app_prep;
 }
 
 /*****************************************************************************/

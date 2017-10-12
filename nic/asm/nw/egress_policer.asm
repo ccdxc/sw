@@ -9,8 +9,7 @@ struct phv_             p;
 
 execute_egress_policer:
   seq         c1, d.execute_egress_policer_d.entry_valid, TRUE
-  seq         c2, d.execute_egress_policer_d.tbkt[39], TRUE
-  setcf       c3, [c1&c2]
-  nop.!c3.e
-  phvwr.c3.e  p.policer_metadata_egress_policer_color, POLICER_COLOR_RED
+  seq.c1      c1, d.execute_egress_policer_d.tbkt[39], TRUE
+  nop.!c1.e
+  phvwr.c1.e  p.policer_metadata_egress_policer_color, POLICER_COLOR_RED
   phvwr       p.capri_intrinsic_drop, TRUE
