@@ -33,6 +33,7 @@
 #define CAPRI_APP_DATA_BTH_OPCODE k.rdma_bth_bth_opcode
 #define CAPRI_APP_DATA_BTH_PSN k.rdma_bth_bth_psn
 #define CAPRI_APP_DATA_AETH_MSN k.rdma_bth_aeth_aeth_msn
+#define CAPRI_APP_DATA_AETH_SYNDROME k.rdma_bth_aeth_aeth_syndrome
 #define CAPRI_APP_DATA_BTH_ACK_REQ  k.rdma_bth_bth_a
 
 #define CAPRI_RAW_TABLE_PC_SHIFT 6

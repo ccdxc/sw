@@ -881,7 +881,8 @@ typedef enum rdma_pkt_opc_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
-    uint8_t  rsvd1[4];
+    uint8_t  rsvd1[3];
+    uint8_t  cb1_byte;
     uint32_t pd;
     uint8_t  bktrack_in_progress:1;
     uint8_t  need_credits:1;
@@ -910,9 +911,9 @@ typedef struct sqcb0_s {
 } PACKED sqcb0_t;
 
 typedef struct sqcb1_s {
-    uint8_t rsvd2[8];
+    uint8_t rsvd4[7];
     uint8_t p4plus_to_p4_flags;
-    uint32_t rsvd1:2;
+    uint32_t rsvd3:2;
     uint32_t err_retry_ctr:3;
     uint32_t nak_retry_ctr:3;
     uint32_t wqe_start_psn:24;
@@ -924,11 +925,13 @@ typedef struct sqcb1_s {
     uint32_t rrqwqe_cur_sge_offset;
     uint8_t  rrqwqe_cur_sge_id;
     uint8_t  rrqwqe_num_sges;
+    uint32_t rsvd2:5;
     uint32_t local_ack_timeout:5;
     uint32_t timer_active:1;
     uint32_t service:4;
     uint32_t in_progress:1;
     uint32_t credits:5;
+    uint32_t rsvd1:3;
     uint32_t msn:24;
     uint32_t lsn:24;
     uint32_t ssn:24;

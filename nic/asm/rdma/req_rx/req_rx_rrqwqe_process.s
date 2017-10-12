@@ -20,7 +20,98 @@ struct req_rx_rrqwqe_process_k_t k;
 req_rx_rrqwqe_process:
 
     // TODO ack processing
+    add            r5, r0, k.global.flags
+    ARE_ALL_FLAGS_SET(c1, r5, REQ_RX_FLAG_ACK)
 
+    bcf            [!c1], read_or_atomic
+    ARE_ALL_FLAGS_SET(c4, r5, REQ_RX_FLAG_COMPLETION)  // Branch Delay Slot
+ack:
+    CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, r7)
+    add            r1, k.to_stage.syndrome, r0
+
+    seq            c2, k.args.rrq_empty, 1
+    //phv_p->cqwqe.id.msn = pkt_msn
+    //if (sqcb1_to_rrqwqe_info_p->rrq_empty == FALSE)
+    //    phv_p->cqwqe.id.msn = min((rrqwqe_p->msn - 1), phv_p->aeth.msn)
+    bcf            [c2], p_ack
+    phvwr          p.cqwqe.id.msn, k.to_stage.msn // Branch Delay Slot
+    add            r2, d.msn, 0
+    mincr          r2, 24, -1
+    scwle24        c3, r2, k.to_stage.msn
+    cmov           r2, c3, r2, k.to_stage.msn
+    phvwr          p.cqwqe.id.msn, r2
+
+p_ack:
+    IS_ANY_FLAG_SET_B(c3, r1, RNR_SYNDROME|RESV_SYNDROME|NAK_SYNDROME)
+    bcf            [c3], n_ack
+    nop            // Branch Delay Slot
+
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, k.args.e_rsp_psn)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, k.args.cur_sge_id)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, k.args.cur_sge_offset) 
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, in_progress, k.args.in_progress)
+  
+    // if (pkt_psn >= rrqwqe_p->psn)
+    // implicit nak, ring bktrack ring setting rexmit_psn to rrqwqe_p->psn
+    scwle24.!c2        c1, d.psn, k.to_stage.bth_psn
+    phvwr              p.rexmit_psn, d.psn
+    CAPRI_SET_FIELD_C(r7, SQCB1_WRITE_BACK_T, post_bktrack, 1, c1)
+
+    SQCB1_ADDR_GET(r5)
+    CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_write_back_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
+
+    b              set_cqcb_arg
+    nop            // Branch Delay Slot
+
+n_ack:
+    ARE_ALL_FLAGS_SET_B(c3, r1, NAK_SYNDROME)
+    bcf            [!c3], rnr
+    nop            // Branch Delay Slot
+
+nak_seq_error:
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, k.args.e_rsp_psn)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, k.args.cur_sge_id)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, k.args.cur_sge_offset) 
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, in_progress, k.args.in_progress)
+
+    // SQ backtrack if NAK is due to SEQ_ERR    
+    seq            c3, r1, NAK_SEQ_ERR_SYNDROME
+    CAPRI_SET_FIELD_C(r7, SQCB1_WRITE_BACK_T, post_bktrack, 1, c3)
+
+    SQCB1_ADDR_GET(r5)
+    CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_write_back_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
+
+    b              set_cqcb_arg
+    nop            // Branch Delay Slot
+
+rnr:
+    ARE_ALL_FLAGS_SET_B(c3, r1, RNR_SYNDROME)
+    bcf            [!c3], invalid_syndrome
+    nop            // Branch Delay Slot
+
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, k.args.e_rsp_psn)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, k.args.cur_sge_id)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, k.args.cur_sge_offset) 
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, in_progress, k.args.in_progress)
+
+    SQCB1_ADDR_GET(r5)
+    CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_write_back_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
+
+    // TODO Start timer if timer is not active currently 
+
+    b              set_cqcb_arg
+    nop            // Branch Delay Slot
+
+read_or_atomic:
     // if (in_progress) 
     //     pkt->psn == sqcb1_p->e_rsp_psn
     //  else
@@ -29,10 +120,9 @@ req_rx_rrqwqe_process:
     sne.c1         c2, k.to_stage.bth_psn, k.args.e_rsp_psn
     sne.!c1        c2, k.to_stage.bth_psn, d.psn
     bcf            [c2], out_of_order_rsp
+    nop            // Branch Delay Slot
     
-    add            r5, r0, k.global.flags
     ARE_ALL_FLAGS_SET(c3, r5, REQ_RX_FLAG_FIRST)
-    ARE_ALL_FLAGS_SET(c4, r5, REQ_RX_FLAG_COMPLETION) 
 
     // if (first)
     //     min((rrqwqe_p->msn -1), sqcb1_to_rrqwqe_info_p->msn)
@@ -40,12 +130,13 @@ req_rx_rrqwqe_process:
     //     min(rrqwqe_p->msn, sqcb1_to_rrqwqe_info_p->msn)
     add            r1, d.msn, 0
     mincr.c3       r1, 24, -1
-    sle            c2, r1, k.to_stage.msn
+    scwle24        c2, r1, k.to_stage.msn
     cmov           r1, c2, r1, k.to_stage.msn
     phvwr          p.cqwqe.id.msn, r1
     
     seq            c2, d.read_rsp_or_atomic, RRQ_OP_TYPE_READ
     bcf            [!c2], atomic
+    nop            // Branch Delay Slot
 
 read:
     CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, r7)
@@ -56,6 +147,7 @@ read:
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, in_progress, k.args.in_progress)
     CAPRI_SET_FIELD_C(r7, RRQWQE_TO_SGE_T, dma_cmd_eop, 1, !c4)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, rrq_cindex, k.args.rrq_cindex)
+    CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
     sub            r1, d.num_sges, k.args.cur_sge_id
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, num_valid_sges, r1)
     cmov           r1, c1, k.args.e_rsp_psn, d.psn
@@ -67,7 +159,7 @@ read:
     add            r1, d.read.wqe_sge_list_addr, k.args.cur_sge_id, LOG_SIZEOF_SGE_T
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
     b              set_cqcb_arg
-    nop
+    nop            // Branch Delay Slot
 
 atomic:
     phvwr          p.cqwqe.op_type, d.atomic.op_type
@@ -125,8 +217,9 @@ atomic:
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 
 set_cqcb_arg:
-    ARE_ALL_FLAGS_SET(c1, r5, REQ_RX_FLAG_COMPLETION)
-    bcf            [!c1], end
+    // if(!completion) goto end
+    bcf            [!c4], end
+    nop      // Branch Delay Slot
 
     // Hardcode table id 3 for CQCB process
     CAPRI_GET_TABLE_3_ARG(req_rx_phv_t, r7)
@@ -139,6 +232,7 @@ set_cqcb_arg:
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 
 out_of_order_rsp:
+invalid_syndrome:
 
 end:
     nop.e

@@ -698,4 +698,17 @@ struct header_template_t {
 #define HDR_TEMPLATE_T struct header_template_t
 #define HDR_TEMPLATE_T_SIZE_BYTES (sizeof(struct header_template_t)/8)
  
+#define ACK_SYNDROME        0x00
+#define RNR_SYNDROME        0x20
+#define RESV_SYNDROME       0x40
+#define NAK_SYNDROME        0x60
+
+#define NAK_SEQ_ERR_SYNDROME   0x60
+#define SYNDROME_CREDITS_MASK 0x1F
+
+#define DECODE_NAK_SYNDROME_CREDITS(_credits_r, _syndrome, _cf)         \
+    seq            _cf, _syndrome[4:0], r0;                             \
+    srl            _credits_r, _syndrome[4:0], 1;                       \
+    sllv.!_cf      _credits_r, 1, _credits_r;
+
 #endif //__TYPES_H

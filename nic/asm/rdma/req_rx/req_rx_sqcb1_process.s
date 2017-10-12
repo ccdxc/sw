@@ -34,13 +34,52 @@ req_rx_sqcb1_process:
     add            r2, r0, k.global.flags
     ARE_ALL_FLAGS_SET(c2, r2, REQ_RX_FLAG_AETH)
     bcf            [!c2], set_arg
+    nop            // Branch Delay Slot
+ 
     // if (msn >= sqcb1_p->ssn) invalid_pkt_msn
-    sle            c3, d.ssn, k.to_stage.msn 
+    scwle24        c3, d.ssn, k.to_stage.msn 
     bcf            [c3], invalid_pkt_msn
-    nop
+    nop            // Branch Delay Slot
 
-    tblwr          d.msn, k.to_stage.msn
-    // TODO credits settings
+    // get DMA cmd entry based on dma_cmd_index
+    DMA_CMD_I_BASE_GET(r6, r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
+    SQCB1_ADDR_GET(r3)
+
+    IS_ANY_FLAG_SET_B(c3, r1, RNR_SYNDROME|RESV_SYNDROME|NAK_SYNDROME)
+    bcf            [c3], post_rexmit_psn
+    phvwr          p.rexmit_psn, k.to_stage.bth_psn // Branch Delay Slot
+   
+    // if ACK, rexmit_psn is ack_psn + 1
+    add            r1, k.to_stage.bth_psn, 1
+    phvwr          p.rexmit_psn, r1
+
+    // if (sqcb1_p->lsn != ((1 << (sqcb1_p->credits >> 1)) + sqcb1_p->msn))
+    //     doorbell_incr_pindex(fc_ring_id) 
+    DECODE_NAK_SYNDROME_CREDITS(r2, k.to_stage.syndrome, c1)
+    mincr          r2, 24, k.to_stage.msn
+    sne            c1, d.lsn, r2
+
+post_credits:
+    // dma_cmd - msn and credits
+    phvwr          p.msn, k.to_stage.msn
+    phvwr          p.credits, k.to_stage.syndrome[4:0]
+
+    add            r4, r3, SQCB1_MSN_OFFSET
+    DMA_HBM_PHV2MEM_SETUP(r6, msn, credits, r4)
+    bcf            [!c1], post_rexmit_psn
+    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+
+    // dma_cmd - fc_ring db data
+    PREPARE_DOORBELL_INC_PINDEX(k.global.lif, k.global.qtype, k.global.qid, FC_RING_ID, r1, r2)
+    phvwr          p.db_data1, r2.dx
+    DMA_HBM_PHV2MEM_SETUP(r6, db_data1, db_data1, r1)
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)
+    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+
+post_rexmit_psn:
+    add            r4, r3, SQCB1_REXMIT_PSN_OFFSET
+    DMA_HBM_PHV2MEM_SETUP(r6, rexmit_psn, rexmit_psn, r4)
+
 set_arg:
 
     CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, r7)
@@ -57,10 +96,10 @@ set_arg:
     mincr          r2, d.log_rrq_size, 1
     CAPRI_SET_FIELD(r7, SQCB1_TO_RRQWQE_T, rrq_cindex, r2)
 
-    add            r1, d.rrq_base_addr, k.args.rrq_cindex, LOG_RRQ_WQE_SIZE
+    add            r5, d.rrq_base_addr, k.args.rrq_cindex, LOG_RRQ_WQE_SIZE
     CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_rx_rrqwqe_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
 
     nop.e
     nop

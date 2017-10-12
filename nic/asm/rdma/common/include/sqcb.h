@@ -2,24 +2,32 @@
 #define __SQCB_H
 #include "capri.h"
 
-#define MAX_SQ_RINGS	6
+#define MAX_SQ_RINGS            6
 #define MAX_SQ_HOST_RINGS (MAX_SQ_RINGS - 1)
-#define SQ_RING_ID 	0
-#define FC_RING_ID 	1
-#define RRQ_RING_ID	(MAX_SQ_RINGS - 1)	
 
-#define SQ_RING_ID_BITMAP       0x0
-#define FC_RING_ID_BITMAP       0x01
+#define SQ_RING_ID              0
+#define FC_RING_ID              1
+#define SQ_BACKTRACK_RING_ID    2
+#define TIMER_RING_ID           3
+#define RRQ_RING_ID	        (MAX_SQ_RINGS - 1)
+
+#define SQ_RING_ID_BITMAP       0x01
+#define FC_RING_ID_BITMAP       0x02
 
 #define RRQ_RING_ID_BITMAP      0x20
 
 #define SQ_P_INDEX  d.{ring0.pindex}.hx
 #define SQ_C_INDEX  d.{ring0.cindex}.hx
+#define FC_P_INDEX  d.{ring1.pindex}.hx
+#define FC_C_INDEX  d.{ring1.cindex}.hx
 #define RRQ_P_INDEX d.{ring5.pindex}.hx
 #define RRQ_C_INDEX d.{ring5.cindex}.hx
 
-#define RRQ_P_INDEX_OFFSET FIELD_OFFSET(sqcb0_t, ring5.pindex)
-#define RRQ_C_INDEX_OFFSET FIELD_OFFSET(sqcb0_t, ring5.cindex)
+#define RRQ_P_INDEX_OFFSET           FIELD_OFFSET(sqcb0_t, ring5.pindex)
+#define RRQ_C_INDEX_OFFSET           FIELD_OFFSET(sqcb0_t, ring5.cindex)
+#define SQCB1_MSN_OFFSET             FIELD_OFFSET(sqcb1_t, msn)
+#define SQCB1_REXMIT_PSN_OFFSET      FIELD_OFFSET(sqcb1_t, rexmit_psn)
+#define SQCB1_MSN_CREDITS_BYTES      4
 
 #define SQCB_T struct sqcb_t
 #define SQCB0_T struct sqcb0_t
@@ -86,11 +94,13 @@ struct sqcb1_t {
     ssn                            : 24;
     lsn                            : 24;
     msn                            : 24;
+    rsvd1                          : 3;
     credits                        : 5;
     in_progress                    : 1;
     service                        : 4;
     timer_active                   : 1;
     local_ack_timeout              : 5;
+    rsvd2                          : 5;
     rrqwqe_num_sges                : 8;
     rrqwqe_cur_sge_id              : 8;
     rrqwqe_cur_sge_offset          : 32;
@@ -102,9 +112,9 @@ struct sqcb1_t {
     wqe_start_psn                  : 24;
     nak_retry_ctr                  : 3;
     err_retry_ctr                  : 3;
-    rsvd1                          : 2;
+    rsvd3                          : 2;
     p4plus_to_p4_flags             : 8;
-    rvsd2                          : 64;
+    rvsd4                          : 56;
 };
 
 struct sqcb_t {

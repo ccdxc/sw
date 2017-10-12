@@ -12,11 +12,13 @@ struct rdma_stage0_table_k k;
 #define INFO_OUT2_T struct req_tx_sqcb_to_wqe_info_t
 #define INFO_OUT3_T struct req_tx_wqe_to_sge_info_t
 #define INFO_OUT4_T struct req_tx_to_stage_t
+#define SQCB0_TO_SQCB1_T struct req_tx_sqcb0_to_sqcb1_info_t
 
 %%
     .param    req_tx_sqpt_process
     .param    req_tx_sqwqe_process
     .param    req_tx_sqsge_process
+    .param    req_tx_sqcb1_process
 
 .align
 req_tx_sqcb_process:
@@ -53,6 +55,39 @@ req_tx_sqcb_process:
     tblwr          d.busy, 1
     tblwr          d.cb1_busy, 1
 
+    IS_RING_EMPTY(c1, r7, FC_RING_ID_BITMAP)
+    bcf          [c1], chk_bktrack
+    nop          // Branch Delay Slot 
+
+update_credits:
+    // set cindex same as pindex without ringing doorbell, as stage0
+    // can get scheduled again while doorbell memwr is still in the queue
+    // to be processed. This will cause credits to get updated again. Instead,
+    // set cindex to pindex using tblwr. When the queue gets scheduled again, 
+    // check for ring empty case and perform doorbell to eval scheduler at that
+    // time
+    tblwr          FC_C_INDEX, FC_P_INDEX
+
+    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, update_credits, 1)
+    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, bktrack, 0)
+
+    // sqcb1_p
+    add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
+    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqcb1_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    
+    nop.e
+    nop
+
+chk_bktrack: 
+
+chk_credits:
+    seq            c1, d.need_credits, 1
+    bcf            [c1], exit
+    nop
+                          
     // if (sqcb0_p->fence) goto fence
     seq            c1, d.fence, 1
     bcf            [c1], fence
@@ -179,6 +214,7 @@ fence:
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqwqe_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, d.curr_wqe_ptr)
 
+end:
     nop.e
     nop
 

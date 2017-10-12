@@ -12,7 +12,7 @@ struct sqcb1_t d;
 .align
 req_tx_add_headers_process:
     // initialize  cf to 0
-    crestore        [c7-c1], r0, 0xf7
+    crestore        [c7-c1], r0, 0xfe
 
     // get DMA cmd entry based on dma_cmd_index
     DMA_CMD_I_BASE_GET(r6, r2, REQ_TX_DMA_CMD_START_FLIT_ID, r0)
@@ -193,11 +193,14 @@ op_type_send_inv:
     .brcase 2 //first, not-last
         add            r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
         b              set_bth_opc
-        nop
-
+        // check_credits = TRUE
+        setcf          c5, [c0] // Branch Delay Slot
+    
     .brcase 3 //first, last (only)
         // add IMMETH hdr
         // dma_cmd[5]
+        // check_credits = TRUE
+        setcf          c5, [c0] // Branch Delay Slot
         DMA_PHV2PKT_SETUP(r6, ieth, ieth)
         add            r2, RDMA_PKT_OPC_SEND_ONLY_WITH_INV, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         b              set_bth_opc
@@ -235,9 +238,12 @@ op_type_send:
     .brcase 2 //first, not-last
         add            r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
         b              set_bth_opc
-        nop
+        // check_credits = TRUE
+        setcf          c5, [c0] // Branch Delay Slot
 
     .brcase 3 //first, last (only)
+        // check_credits = TRUE
+        setcf          c5, [c0] // Branch Delay Slot
         bcf            [!c3], set_bth_opc
         add            r2, RDMA_PKT_OPC_SEND_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         // add IMMETH hdr
@@ -273,6 +279,8 @@ op_type_write:
     .brcase 1 //not-first, last
         bcf            [!c3], set_bth_opc
         add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
+        // check_credits = TRUE
+        setcf          c5, [c0] // Branch Delay Slot
         // dma_cmd[5] - add IMMETH hdr
         //jump to next flit
         DMA_PHV2PKT_SETUP(r6, immeth, immeth)
@@ -289,6 +297,8 @@ op_type_write:
 
         bcf            [!c3], set_bth_opc
         add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        // check_credits = TRUE
+        setcf          c5, [c0] // Branch Delay Slot
         // add IMMETH hdr
         // dma_cmd[6]
         DMA_NEXT_CMD_I_BASE_GET(r6, 1)
@@ -302,8 +312,7 @@ op_type_write:
 set_bth_opc:
     phvwr          BTH_OPCODE, r2
     b              end
-    // check_credits = TRUE
-    setcf          c5, [c0] // Branch Delay Slot
+    nop
 
 end:
     b.!c6          inc_psn
@@ -335,7 +344,7 @@ inc_psn:
     // if (check_credits && (sqcb1_p->ssn > sqcb1_p->lsn))
     //     phv_p->bth.a = 1
     //     write_back_info_p->set_credits = TRUE
-    slt.c5         c5, d.lsn, d.ssn
+    scwlt24.c5     c5, d.lsn, d.ssn
     phvwr.c5       BTH_ACK_REQ, 1
     
     SQCB0_ADDR_GET(r2)

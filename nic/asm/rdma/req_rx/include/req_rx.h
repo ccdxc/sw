@@ -7,17 +7,25 @@
 #include "ingress.h"
 #include "common_phv.h"
 
-#define REQ_RX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
-#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 8
-#define REQ_RX_MAX_DMA_CMDS             16
-#define REQ_RX_DMA_CMD_CQ               (REQ_RX_MAX_DMA_CMDS - 3)
+#define REQ_RX_DMA_CMD_START_FLIT_ID       8 // flits 8-11 are used for dma cmds
+#define REQ_RX_DMA_CMD_START               0
+#define REQ_RX_BKTRACK_PSN_DMA_CMD         3
+#define REQ_RX_RDMA_PAYLOAD_DMA_CMDS_START 4
+#define REQ_RX_MAX_DMA_CMDS                16
+#define REQ_RX_DMA_CMD_CQ                  (REQ_RX_MAX_DMA_CMDS - 3)
 
 // phv 
 struct req_rx_phv_t {
     // dma commands
 
     // scratch
-    eq_int_num: 16;
+    rexmit_psn              : 24;
+    msn                     : 24;
+    rsvd                    : 3;
+    credits                 : 5;
+    db_data2                : 64;
+    db_data1                : 64;
+    eq_int_num              : 16;
     struct eqwqe_t eqwqe;
     struct cqwqe_t cqwqe;
     my_token_id             : 8;

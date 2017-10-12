@@ -1,0 +1,8 @@
+- PSN, MSN wraparound test cases
+- Ring empty and full testcases
+- PSN, MSN checks using scwlt24/scwle24 instruction
+- RRQ posting and pindex increment using DMA
+- Remove doorbell_inc_cindex for SQ ring and re-eval in stage0 if r7 is empty
+- DMA of RRQ posting and pindex++ with fence
+- Color in RRQ wqe so that rrq posting and pindex increemnt can be independent
+- FC ring , set cindex to pindex and use r7 empty to eval 

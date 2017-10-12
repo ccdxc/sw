@@ -12,6 +12,7 @@ RDMA_RXPROJ = rdma_rxdma
 RDMA_TXPROJ = rdma_txdma
 RDMA_RXGEN_FILE = $(GEN_DIR)/$(RDMA_RXPROJ)/asm_out/ingress.h
 RDMA_TXGEN_FILE = $(GEN_DIR)/$(RDMA_TXPROJ)/asm_out/ingress.h
+inc_deps = $(shell find ../include -name '*')
 ncc_deps = $(shell find $(TOPDIR)/tools/ncc -path $(TOPDIR)/tools/ncc/utest -prune -o -name '*.c' -print -o -name '*.h' -print -o -name '*.py' -print)
 
 my_all: $(RDMA_RXGEN_FILE) $(RDMA_TXGEN_FILE)

@@ -7,15 +7,17 @@
 struct req_rx_to_stage_t {
     msn                     : 24;
     bth_psn                 : 24; 
-    pad                     : 80;
+    syndrome                :  8;
+    pad                     : 72;
 };
 
 struct req_rx_sqcb0_to_sqcb1_info_t {
     remaining_payload_bytes : 32;
     rrq_cindex              : 8;
     rrq_empty               : 1;
+    need_credits            : 1;
     dma_cmd_start_index     : 4;
-    pad                     : 115;
+    pad                     : 114;
 };
 
 struct req_rx_sqcb1_to_rrqwqe_info_t {
@@ -67,12 +69,12 @@ struct req_rx_sqcb1_write_back_info_t {
     cur_sge_offset          : 32;
     e_rsp_psn               : 24;
     cur_sge_id              : 8;
-    rexmit_psn              : 24;
     in_progress             : 1;
-    num_sges                : 8;
     incr_nxt_to_go_token_id : 1;
+    post_bktrack            : 1;
+    num_sges                : 8;
     tbl_id                  : 8;
-    pad                     : 54;
+    pad                     : 67;
 };
 
 struct req_rx_rrqlkey_to_ptseg_info_t {

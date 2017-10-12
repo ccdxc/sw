@@ -118,6 +118,17 @@ struct req_tx_sqcb_write_back_info_t {
     pad                          : 76;
 };
 
+struct req_tx_sqcb0_to_sqcb1_info_t {
+    update_credits                : 1;
+    bktrack                       : 1; 
+    pad                           : 158;
+};
+
+struct req_tx_sqcb1_to_credits_info_t {
+    need_credits                 : 1;
+    pad                          : 159;
+};
+
 struct req_tx_to_stage_t {
     wqe_addr : 64;
     rsvd     : 64;
