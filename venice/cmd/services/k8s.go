@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -471,7 +472,11 @@ func populateDynamicArgs(args []string) []string {
 		case strings.Compare(arg, "$KVSTORE_URL") == 0:
 			arg = strings.Join(env.KVServers, ",")
 		case strings.Compare(arg, "$RESOLVER_URLS") == 0:
-			arg = strings.Join(env.QuorumNodes, ",")
+			servers := make([]string, 0)
+			for _, jj := range env.QuorumNodes {
+				servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDGRPCPort))
+			}
+			arg = strings.Join(servers, ",")
 		}
 		result = append(result, arg)
 	}
