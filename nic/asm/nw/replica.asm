@@ -12,7 +12,10 @@ set_replica_rewrites:
   phvwr       p.tunnel_metadata_tunnel_originate_egress, k.tunnel_metadata_tunnel_originate
   phvwr       p.tunnel_metadata_tunnel_terminate_egress, k.tunnel_metadata_tunnel_terminate
   seq         c1, k.capri_intrinsic_tm_instance_type, TM_INSTANCE_TYPE_CPU
+  seq.!c1     c1, k.capri_intrinsic_tm_instance_type, TM_INSTANCE_TYPE_CPU_AND_DROP
   phvwr.c1    p.control_metadata_dst_lport, CPU_LPORT
+  phvwr.c1    p.rewrite_metadata_tunnel_rewrite_index, 0
+  phvwr.c1    p.rewrite_metadata_rewrite_index, 0
 
   seq         c1, k.tm_replication_data_valid, TRUE
   nop.!c1.e

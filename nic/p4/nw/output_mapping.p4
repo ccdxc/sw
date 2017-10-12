@@ -47,7 +47,7 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
     }
 
     if ((egress_mirror_en == TRUE) and
-        (capri_intrinsic.tm_instance_type != TM_INSTANCE_TYPE_SPAN)) {
+        (control_metadata.span_copy == FALSE)) {
         modify_field(capri_intrinsic.tm_span_session,
                      control_metadata.egress_mirror_session_id);
     }

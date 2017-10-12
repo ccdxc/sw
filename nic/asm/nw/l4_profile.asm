@@ -200,6 +200,8 @@ f_p4plus_to_p4_apps:
   add         r1, k.control_metadata_packet_len, 4
   phvwr.c2    p.control_metadata_packet_len, r1
   phvwr.c2    p.capri_p4_intrinsic_packet_len, r1
+  seq         c2, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CPU
+  phvwr.c2    p.control_metadata_from_cpu, TRUE
   phvwr       p.capri_txdma_intrinsic_valid, FALSE
   jr          r7
   phvwr       p.p4plus_to_p4_valid, FALSE

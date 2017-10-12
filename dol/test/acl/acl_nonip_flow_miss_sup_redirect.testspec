@@ -37,7 +37,11 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
+    delay : 3
     packets:
         - packet:
             object  : ref://testcase/packets/id=IN_PKT
             port    : 128
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : ref://testcase/config/dst/endpoint/intf/ports

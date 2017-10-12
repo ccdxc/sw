@@ -82,7 +82,7 @@ table nacl {
         // Removing tunnel_terminate as transit is not supported
         // tunnel_metadata.tunnel_terminate                   : ternary;
         entry_inactive.nacl                                : ternary;
-        flow_lkp_metadata.lkp_inst                         : ternary;
+        control_metadata.from_cpu                          : ternary;
         flow_lkp_metadata.lkp_dir                          : ternary;
         flow_lkp_metadata.lkp_type                         : ternary;
         flow_lkp_metadata.lkp_vrf                          : ternary;

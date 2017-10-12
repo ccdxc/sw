@@ -295,9 +295,9 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     key.entry_inactive_nacl = 0;
     mask.entry_inactive_nacl_mask = 0x1;
 
-    // Match only when lkp_inst is 0
-    key.flow_lkp_metadata_lkp_inst = 0;
-    mask.flow_lkp_metadata_lkp_inst_mask = 1;
+    // Match only when from_cpu is 0
+    key.control_metadata_from_cpu = 0;
+    mask.control_metadata_from_cpu_mask = 1;
 
     pd_get_l2seg_ten_masks(&l2seg_mask, &ten_mask, &ten_shift);
     if (ms->tenant_match) {

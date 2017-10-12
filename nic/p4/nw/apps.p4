@@ -370,6 +370,11 @@ action f_p4plus_to_p4() {
         modify_field(capri_p4_intrinsic.packet_len,
                      control_metadata.packet_len);
     }
+
+    if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_CPU)  {
+        modify_field(control_metadata.from_cpu, TRUE); 
+    }
+
     remove_header(p4plus_to_p4);
     remove_header(capri_txdma_intrinsic);
 }
