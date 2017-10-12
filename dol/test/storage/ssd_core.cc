@@ -56,15 +56,15 @@ void NvmeSsdCore::Dtor() {
   DMAMemFree(compq_);
   DMAMemFree(ctrl_);
 }
- 
+
 uint64_t NvmeSsdCore::MoveData(NvmeCmd *cmd, uint64_t prp, uint64_t offset,
                            uint64_t size_left) {
   uint64_t copy_size = std::min(PRP_SIZE(prp), size_left);
  
   if (cmd->dw0.opc == NVME_READ_CMD_OPCODE) {
-    memcpy(DMAMemP2V(prp), &data_[offset], copy_size);
+    DMAMemCopyV2P(&data_[offset], prp, copy_size);
   } else {
-    memcpy(&data_[offset], DMAMemP2V(prp), copy_size);
+    DMAMemCopyP2V(prp, &data_[offset], copy_size);
   } 
   return copy_size;
 }
@@ -116,7 +116,9 @@ bool NvmeSsdCore::ExecuteRW(NvmeCmd *cmd) {
     return true;
   }
   // Pull PRP List.
-  uint64_t *prp_list = (uint64_t *)DMAMemP2V(cmd->prp.prp2);
+  std::unique_ptr<uint64_t[]> plist(new uint64_t[8]);
+  uint64_t *prp_list = plist.get();
+  DMAMemCopyP2V(cmd->prp.prp2, prp_list, std::min(PRP_SIZE(cmd->prp.prp2), 64ul));
   int ndx = 0;
   while (size_done < size) {
     if (ndx == 8) {
