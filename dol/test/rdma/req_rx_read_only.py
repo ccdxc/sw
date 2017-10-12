@@ -3,6 +3,8 @@
 from test.rdma.utils import *
 import pdb
 import copy
+from infra.common.glopts import GlobalOptions
+
 
 def Setup(infra, module):
     return
@@ -35,6 +37,7 @@ def TestCaseVerify(tc):
     return True
 
 def TestCaseStepVerify(tc, step):
+    if (GlobalOptions.dryrun): return True
     tc.info("RDMA TestCaseStepVerify() Implementation for Step: %d" %step.step_id)
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()

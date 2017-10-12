@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 from test.rdma.utils import *
+from infra.common.glopts import GlobalOptions
 
 def Setup(infra, module):
     return
@@ -29,6 +30,7 @@ def TestCaseTrigger(tc):
     return
 
 def TestCaseVerify(tc):
+    if (GlobalOptions.dryrun): return True
     tc.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()
@@ -39,6 +41,7 @@ def TestCaseVerify(tc):
 
 
 def TestCaseStepVerify(tc, step):
+    if (GlobalOptions.dryrun): return True
     tc.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()
@@ -76,6 +79,7 @@ def TestCaseStepVerify(tc, step):
     return True
 
 def TestCaseTeardown(tc):
+    if (GlobalOptions.dryrun): return True
     tc.info("RDMA TestCaseTeardown() Implementation.")
     rs = tc.config.rdmasession
     tc.info("Setting proxy_cindex equal to p_index0\n")

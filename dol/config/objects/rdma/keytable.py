@@ -5,7 +5,7 @@ import infra.common.objects     as objects
 import model_sim.src.model_wrap as model_wrap
 from infra.common.logging       import cfglogger
 from scapy.all import *
-
+from infra.common.glopts import GlobalOptions
 
 class RdmaKeyTableEntry(Packet):
     name = "RdmaKeyTableEntry"
@@ -31,11 +31,16 @@ class RdmaKeyTableEntryObject(object):
         self.Read()
 
     def Write(self):
+        if (GlobalOptions.dryrun): return
         cfglogger.info("Writing KeyTableEntry @0x%x size: %d" % (self.addr, self.size))
         model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
         self.Read()
 
     def Read(self):
+        if (GlobalOptions.dryrun):
+            data = bytes(self.size)
+            self.data = RdmaKeyTableEntry(data)
+            return
         self.data = RdmaKeyTableEntry(model_wrap.read_mem(self.addr, self.size))
         cfglogger.info("Read KeyTableEntry @ 0x%x size: %d: " % (self.addr, self.size))
         self.data.show()

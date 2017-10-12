@@ -2,6 +2,7 @@
 
 from test.rdma.utils import *
 from config.objects.rdma.keytable import *
+from infra.common.glopts import GlobalOptions
 import random
 
 def Setup(infra, module):
@@ -43,6 +44,7 @@ def TestCaseTrigger(tc):
     return
 
 def TestCaseVerify(tc):
+    if (GlobalOptions.dryrun): return True
     tc.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()

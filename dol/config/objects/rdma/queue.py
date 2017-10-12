@@ -14,6 +14,7 @@ from infra.common.logging       import cfglogger
 from config.objects.queue       import QueueObject
 
 import model_sim.src.model_wrap as model_wrap
+from infra.common.glopts import GlobalOptions
 
 from scapy.all import *
 
@@ -272,11 +273,16 @@ class RdmaQstateObject(object):
         self.Read()
 
     def Write(self):
+        if (GlobalOptions.dryrun): return
         cfglogger.info("Writing Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))
         model_wrap.write_mem(self.addr, bytes(self.data), len(self.data))
         self.Read()
 
     def Read(self):
+        if (GlobalOptions.dryrun):
+            data = bytes(self.size)
+            self.data = qt_params[self.queue_type]['state'](data)
+            return
         self.data = qt_params[self.queue_type]['state'](model_wrap.read_mem(self.addr, self.size))
         self.data.show()
         cfglogger.info("Read Qstate @0x%x Type: %s size: %d" % (self.addr, self.queue_type, self.size))

@@ -104,6 +104,8 @@ class LifObject(base.ConfigObjectBase):
             return qt.queues.Get(str(qid))
 
     def GetQstateAddr(self, type):
+        if GlobalOptions.dryrun:
+            return 0
         return self.qstate_base[type]
 
     def ConfigureQueueTypes(self):

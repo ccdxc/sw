@@ -7,6 +7,7 @@ import infra.factory.base as base
 from infra.common.logging   import cfglogger
 
 import model_sim.src.model_wrap as model_wrap
+from infra.common.glopts import GlobalOptions
 
 
 class RdmaXferObject(base.FactoryObjectBase):
@@ -19,6 +20,7 @@ class RdmaXferObject(base.FactoryObjectBase):
 
     def Init(self, spec):
         #self.LockAttributes()
+        if (GlobalOptions.dryrun): return
        
         self.size = spec.fields.size if hasattr(spec.fields, 'size') else 0 
         self.offset = spec.fields.offset if hasattr(spec.fields, 'offset') else 0 

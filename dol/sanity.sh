@@ -39,6 +39,6 @@ DryRunSanity eth ipsg
 DryRunSanity firewall firewall
 DryRunSanity telemetry telemetry
 DryRunSanity admin admin
-
+DryRunSanity rdma rdma
 DryRunSanity eth dolut
 exit 0

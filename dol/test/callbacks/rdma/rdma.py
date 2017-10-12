@@ -6,6 +6,8 @@ from infra.api.objects import PacketHeader
 import infra.api.api as infra_api
 from infra.common.logging       import logger
 import infra.common.defs as defs
+from infra.common.glopts import GlobalOptions
+
 
 def GetRqPreEpsn (tc, pkt):
     return tc.pvtdata.rq_pre_qstate.e_psn
@@ -21,6 +23,7 @@ def GetLastSuccessMsn (tc, pkt, args):
     return (tc.pvtdata.rq_pre_qstate.msn + args.num_msgs)   # increment by number of msgs received
 
 def GetVAfromSLAB (tc, pkt, args):
+    if (GlobalOptions.dryrun): return 0
     return (tc.config.rdmasession.lqp.pd.ep.slabs.Get(args.slab_id).address + args.offset)
 
 def GetCQExpColor (tc, desc, args = None):

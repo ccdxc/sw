@@ -7,7 +7,7 @@ import infra.factory.base as base
 from infra.common.logging   import cfglogger
 
 import model_sim.src.model_wrap as model_wrap
-
+from infra.common.glopts        import GlobalOptions
 
 class RdmaBufferObject(base.FactoryObjectBase):
 
@@ -17,10 +17,12 @@ class RdmaBufferObject(base.FactoryObjectBase):
         self.size = 0
         self.offset = 0
         self.segments = []
+        self.address = 0
 
     def Init(self, spec):
         #self.LockAttributes()
         super().Init(spec)
+        if (GlobalOptions.dryrun): return
        
         for segment in spec.fields.segments:
             skip_bytes = segment.skip if hasattr(segment, 'skip') else 0

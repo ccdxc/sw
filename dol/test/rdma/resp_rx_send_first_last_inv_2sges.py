@@ -3,6 +3,8 @@
 from test.rdma.utils import *
 
 from config.objects.rdma.keytable import *
+from infra.common.glopts import GlobalOptions
+
 
 def Setup(infra, module):
     return
@@ -29,6 +31,7 @@ def TestCaseSetup(tc):
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.inv_r_key)
     tc.info("RDMA TestCaseSetup(): Lkey state for SLAB0 of hw_lif %d qp %s rkey: %d state: %d" %
             (rs.lqp.pd.ep.intf.lif.hw_lif_id, rs.lqp.GID(), tc.pvtdata.inv_r_key, kt_entry.data.state))
+    if (GlobalOptions.dryrun): return
     # Make sure that lkey is valid before the test
     assert (kt_entry.data.state == 2) # KEY_STATE_VALID = 2
     return
@@ -38,6 +41,7 @@ def TestCaseTrigger(tc):
     return
 
 def TestCaseVerify(tc):
+    if (GlobalOptions.dryrun): return True
     tc.info("RDMA TestCaseVerify() Implementation.")
     rs = tc.config.rdmasession
     rs.lqp.rq.qstate.Read()
