@@ -98,7 +98,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 			"TestAutoAdmitValidNIC",
 			"4444.4444.0001",
 			true,
-			[]byte(validCertSignature),
+			[]byte(ValidCertSignature),
 			cmd.SmartNICSpec_ADMITTED.String(),
 			cmd.SmartNICCondition{
 				Type:   cmd.SmartNICCondition_HEALTHY.String(),
@@ -121,7 +121,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 			"TestManualValidNIC",
 			"4444.4444.0003",
 			false,
-			[]byte(validCertSignature),
+			[]byte(ValidCertSignature),
 			cmd.SmartNICSpec_PENDING.String(),
 			cmd.SmartNICCondition{
 				Type:   cmd.SmartNICCondition_HEALTHY.String(),
@@ -134,7 +134,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 			"TestManualValidApprovedNIC",
 			"4444.4444.0004",
 			false,
-			[]byte(validCertSignature),
+			[]byte(ValidCertSignature),
 			cmd.SmartNICSpec_PENDING.String(),
 			cmd.SmartNICCondition{
 				Type:   cmd.SmartNICCondition_HEALTHY.String(),
@@ -214,8 +214,8 @@ func TestRegisterSmartNIC(t *testing.T) {
 			t.Logf("Testcase: %s MAC: %s expected: %v obtained: %v err: %v", tc.name, tc.mac, tc.expected, resp, err)
 
 			AssertOk(t, err, "Error registering NIC")
-			Assert(t, resp.Status == tc.expected, "\nexpected:\n%v\nobtained:\n%v",
-				tc.expected, resp.Status)
+			Assert(t, resp.Phase == tc.expected, "\nexpected:\n%v\nobtained:\n%v",
+				tc.expected, resp.Phase)
 
 			if tc.expected == cmd.SmartNICSpec_ADMITTED.String() || tc.expected == cmd.SmartNICSpec_PENDING.String() {
 

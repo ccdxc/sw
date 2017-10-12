@@ -187,8 +187,8 @@ message NodeCondition {
                                     (gogoproto.jsontag) = "status,omitempty"];
 
     // The last time the condition transitioned
-    int64 LastTransitionTime    = 3 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
+    string LastTransitionTime   = 3 [(gogoproto.nullable) = true,
+                                    (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
 
     // The reason for the condition's last transition
     string Reason               = 4 [(gogoproto.nullable) = true,
@@ -253,7 +253,7 @@ message SmartNICSpec {
     // Various phases in lifecycle of a SmartNIC
     enum SmartNICPhase {
         UNKNOWN      = 0; // Unknown status
-        REJECTED     = 1; // NIC is rejected
+        REJECTED     = 1; // NIC is rejected, due to invalid cert
         PENDING      = 2; // NIC is validated but waiting for manual approval
         ADMITTED     = 3; // NIC is validated and admitted
     }
@@ -322,7 +322,7 @@ message SmartNICCondition {
                                         (gogoproto.jsontag) = "status,omitempty"];
 
     // The last time the condition transitioned
-    int64 LastTransitionTime        = 3 [(gogoproto.nullable) = true,
+    string LastTransitionTime       = 3 [(gogoproto.nullable) = true,
                                         (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
 
     // The reason for the condition's last transition
@@ -378,7 +378,7 @@ message PortCondition {
                                     (gogoproto.jsontag) = "status,omitempty"];
 
     // The last time the condition transitioned
-    int64 LastTransitionTime    = 3 [(gogoproto.nullable) = true,
+    string LastTransitionTime   = 3 [(gogoproto.nullable) = true,
                                     (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
 
     // The reason for the condition's last transition

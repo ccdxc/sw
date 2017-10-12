@@ -1,0 +1,560 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+package state
+
+import (
+	"os"
+	"sync"
+	"testing"
+
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/nic/agent/nmd/protos"
+	"github.com/pensando/sw/venice/cmd/grpc"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
+	. "github.com/pensando/sw/venice/utils/testutils"
+)
+
+// Test params
+var (
+	// Bolt DB file
+	emDBPath = "/tmp/nmd.db"
+
+	// NIC to be admitted
+	nicKey1 = "2222.2222.2222"
+
+	// NIC to be in pending state
+	nicKey2 = "4444.4444.4444"
+
+	// NIC to be rejected
+	nicKey3 = "6666.6666.6666"
+)
+
+// Mock platform agent
+type mockAgent struct {
+	sync.Mutex
+	nicDB map[string]*cmd.SmartNIC
+}
+
+// RegisterNMD registers NMD with PlatformAgent
+func (m *mockAgent) RegisterNMD(nmd NmdPlatformAPI) error {
+	return nil
+}
+
+// CreateSmartNIC creates a smart NIC object
+func (m *mockAgent) CreateSmartNIC(nic *cmd.SmartNIC) error {
+	m.Lock()
+	defer m.Unlock()
+
+	key := objectKey(nic.ObjectMeta)
+	m.nicDB[key] = nic
+	return nil
+}
+
+// UpdateSmartNIC updates a smart NIC object
+func (m *mockAgent) UpdateSmartNIC(nic *cmd.SmartNIC) error {
+	m.Lock()
+	defer m.Unlock()
+
+	key := objectKey(nic.ObjectMeta)
+	m.nicDB[key] = nic
+	return nil
+}
+
+// DeleteSmartNIC deletes a smart NIC object
+func (m *mockAgent) DeleteSmartNIC(nic *cmd.SmartNIC) error {
+	m.Lock()
+	defer m.Unlock()
+
+	key := objectKey(nic.ObjectMeta)
+	delete(m.nicDB, key)
+	return nil
+}
+
+type mockCtrler struct {
+	sync.Mutex
+	nicDB map[string]*cmd.SmartNIC
+}
+
+func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, error) {
+	m.Lock()
+	defer m.Unlock()
+
+	key := objectKey(nic.ObjectMeta)
+	m.nicDB[key] = nic
+	if nic.Name == nicKey1 {
+		return grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_ADMITTED.String()}, nil
+	}
+	if nic.Name == nicKey2 {
+		return grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_PENDING.String()}, nil
+	}
+	return grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_REJECTED.String(), Reason: string("Invalid Cert")}, nil
+}
+
+func (m *mockCtrler) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error) {
+	m.Lock()
+	defer m.Unlock()
+
+	key := objectKey(nic.ObjectMeta)
+	m.nicDB[key] = nic
+	return nic, nil
+}
+
+// createNMD creates a NMD server
+func createNMD(t *testing.T, dbPath string) (*NMD, *mockAgent, *mockCtrler) {
+	ag := &mockAgent{
+		nicDB: make(map[string]*cmd.SmartNIC),
+	}
+	ct := &mockCtrler{
+		nicDB: make(map[string]*cmd.SmartNIC),
+	}
+
+	// create new NMD
+	nm, err := NewNMD(ag, dbPath, "ABCD-1234-WXYZ", "localhost:0")
+	if err != nil {
+		t.Fatalf("Error creating NMD. Err: %v", err)
+		return nil, nil, nil
+	}
+	Assert(t, nm.GetAgentID() == "ABCD-1234-WXYZ", "Failed to match nodeUUID", nm)
+
+	// fake CMD intf
+	nm.RegisterCMD(ct)
+
+	return nm, ag, ct
+}
+
+// stopNMD stops NMD server and optionally deleted emDB file
+func stopNMD(t *testing.T, nm *NMD, cleanupDB bool) {
+
+	nm.Stop()
+
+	if cleanupDB {
+		err := os.Remove(emDBPath)
+		if err != nil {
+			t.Fatalf("Error deleting emDB file, err: %v", err)
+		}
+	}
+}
+
+func getNMDUrl(nm *NMD) string {
+	return "http://" + nm.getListenURL() + ConfigURL
+}
+
+func TestSmartNICCreateUpdateDelete(t *testing.T) {
+
+	// create nmd
+	nm, _, _ := createNMD(t, "")
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+	defer stopNMD(t, nm, false)
+
+	// NIC message
+	nic := cmd.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   nicKey1,
+		},
+	}
+
+	// create smartNIC
+	err := nm.CreateSmartNIC(&nic)
+	AssertOk(t, err, "Error creating nic")
+	n, err := nm.GetSmartNIC()
+	AssertOk(t, err, "NIC was not found in DB")
+	Assert(t, n.ObjectMeta.Name == nicKey1, "NIC name did not match", n)
+
+	// update smartNIC
+	nic.Status = cmd.SmartNICStatus{
+		Conditions: []*cmd.SmartNICCondition{
+			{
+				Type:   cmd.SmartNICCondition_HEALTHY.String(),
+				Status: cmd.ConditionStatus_TRUE.String(),
+			},
+		},
+	}
+	err = nm.UpdateSmartNIC(&nic)
+	AssertOk(t, err, "Error updating nic")
+	n, err = nm.GetSmartNIC()
+	AssertOk(t, err, "NIC was not found in DB")
+	Assert(t, n.Status.Conditions[0].Status == cmd.ConditionStatus_TRUE.String() && nic.ObjectMeta.Name == "2222.2222.2222", "NIC status did not match", n)
+
+	// delete smartNIC
+	err = nm.DeleteSmartNIC(&nic)
+	AssertOk(t, err, "Error deleting nic")
+	nicObj, err := nm.GetSmartNIC()
+	Assert(t, (nicObj == nil), "NIC was still found in database after deleting", nm)
+}
+
+func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
+	// create nmd
+	nm, _, _ := createNMD(t, emDBPath)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+	defer stopNMD(t, nm, true)
+
+	// NIC message
+	nic := cmd.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name: nicKey1,
+		},
+	}
+
+	// create smartNIC
+	resp, err := nm.RegisterSmartNICReq(&nic)
+	AssertOk(t, err, "Error registering nic")
+	Assert(t, resp.Phase == cmd.SmartNICSpec_ADMITTED.String(), "NIC is not admitted", nic)
+
+	// update smartNIC
+	nic.Status = cmd.SmartNICStatus{
+		Conditions: []*cmd.SmartNICCondition{
+			{
+				Type:   cmd.SmartNICCondition_HEALTHY.String(),
+				Status: cmd.ConditionStatus_TRUE.String(),
+			},
+		},
+	}
+	n, err := nm.UpdateSmartNICReq(&nic)
+	AssertOk(t, err, "Error updating nic")
+	Assert(t, n.Status.Conditions[0].Status == cmd.ConditionStatus_TRUE.String() &&
+		nic.ObjectMeta.Name == "2222.2222.2222", "NIC status did not match", n)
+}
+
+func TestNaplesDefaultClassicMode(t *testing.T) {
+
+	// create nmd
+	nm, _, _ := createNMD(t, emDBPath)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+	defer stopNMD(t, nm, true)
+
+	f1 := func() (bool, []interface{}) {
+
+		cfg := nm.getNaplesConfig()
+		if cfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE && nm.getListenURL() != "" &&
+			nm.getUpdStatus() == false && nm.getRegStatus() == false && nm.getRestServerStatus() == true {
+			return true, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f1, "Failed to verify mode is in Classic")
+
+	var naplesCfg nmd.Naples
+
+	f2 := func() (bool, []interface{}) {
+		err := netutils.HTTPGet(getNMDUrl(nm)+"/", &naplesCfg)
+		if err != nil {
+			t.Errorf("Failed to get naples config, err:%+v", err)
+			return false, nil
+		}
+
+		if naplesCfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE {
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f2, "Failed to get the default naples config")
+
+	// Negative testcase, start another restserver and it should fail
+	err := nm.StartRestServer()
+	Assert(t, err != nil, "Starting redundant REST server should have failed")
+}
+
+func TestNaplesRestartClassicMode(t *testing.T) {
+
+	// create nmd
+	nm, _, _ := createNMD(t, emDBPath)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+
+	f1 := func() (bool, []interface{}) {
+
+		cfg := nm.getNaplesConfig()
+		if cfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE && nm.getListenURL() != "" &&
+			nm.getUpdStatus() == false && nm.getRegStatus() == false && nm.getRestServerStatus() == true {
+			return true, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f1, "Failed to verify mode is in Classic")
+
+	// stop NMD, don't clean up DB
+	stopNMD(t, nm, false)
+
+	// start/create NMD again, simulating restart
+	nm, _, _ = createNMD(t, emDBPath)
+	defer stopNMD(t, nm, true)
+
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+	AssertEventually(t, f1, "Failed to verify Classic mode, after Restart")
+}
+
+// TestNaplesModeTransitions tests the mode transition
+// Classic -> Managed -> Classic
+func TestNaplesModeTransitions(t *testing.T) {
+
+	// create nmd
+	nm, _, _ := createNMD(t, emDBPath)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+	defer stopNMD(t, nm, true)
+
+	f1 := func() (bool, []interface{}) {
+
+		cfg := nm.getNaplesConfig()
+		if cfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE && nm.getUpdStatus() == false && nm.getRegStatus() == false && nm.getRestServerStatus() == true {
+			return true, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f1, "Failed to verify mode is in Classic")
+
+	// Switch to Managed mode
+	naplesCfg := &nmd.Naples{
+		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
+		TypeMeta:   api.TypeMeta{Kind: "Naples"},
+		Spec: nmd.NaplesSpec{
+			Mode:           nmd.NaplesMode_MANAGED_MODE,
+			PrimaryMac:     nicKey1,
+			ClusterAddress: []string{"192.168.30.10:9200"},
+		},
+	}
+
+	log.Infof("Naples config: %+v", naplesCfg)
+
+	var err error
+	var resp NaplesConfigResp
+
+	f2 := func() (bool, []interface{}) {
+		err = netutils.HTTPPost(getNMDUrl(nm), naplesCfg, &resp)
+		if err != nil {
+			t.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f2, "Failed to post the naples config")
+
+	f3 := func() (bool, []interface{}) {
+
+		cfg := nm.getNaplesConfig()
+		log.Infof("NaplesConfig: %v", cfg)
+		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
+			log.Error("Failed to switch to managed mode")
+			t.Errorf("Failed to switch to managed mode")
+			return false, nil
+		}
+
+		nic, err := nm.GetSmartNIC()
+		if nic == nil || err != nil {
+			t.Errorf("NIC not found in nicDB, mac:%s", nicKey1)
+			return false, nil
+		}
+
+		if nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+			t.Errorf("NIC is not admitted")
+			return false, nil
+		}
+
+		if nm.getUpdStatus() == false {
+			t.Errorf("Update NIC is not in progress")
+			return false, nil
+		}
+
+		if nm.getRestServerStatus() == true {
+			t.Errorf("REST server is still up")
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f3, "Failed to verify mode is in Managed Mode", string("10ms"), string("30s"))
+
+	// Switch to classic mode
+	naplesCfg.Spec.Mode = nmd.NaplesMode_CLASSIC_MODE
+	AssertEventually(t, f2, "Failed to post the naples config")
+
+	// Verify it is in classic mode
+	AssertEventually(t, f1, "Failed to verify mode is in Classic")
+}
+
+func TestNaplesManagedModeManualApproval(t *testing.T) {
+
+	// create nmd
+	nm, _, _ := createNMD(t, emDBPath)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+	defer stopNMD(t, nm, true)
+
+	var err error
+	var resp NaplesConfigResp
+
+	// Switch to Managed mode
+	naplesCfg := &nmd.Naples{
+		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
+		TypeMeta:   api.TypeMeta{Kind: "Naples"},
+		Spec: nmd.NaplesSpec{
+			Mode:       nmd.NaplesMode_MANAGED_MODE,
+			PrimaryMac: nicKey2,
+		},
+	}
+
+	f1 := func() (bool, []interface{}) {
+		err = netutils.HTTPPost(getNMDUrl(nm), naplesCfg, &resp)
+		if err != nil {
+			t.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f1, "Failed to post the naples config")
+
+	f2 := func() (bool, []interface{}) {
+
+		cfg := nm.getNaplesConfig()
+		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
+			t.Errorf("Failed to switch to managed mode")
+			return false, nil
+		}
+
+		nic, err := nm.GetSmartNIC()
+		if nic == nil || err != nil {
+			t.Errorf("NIC not found in nicDB")
+			return false, nil
+		}
+
+		if nic.Spec.Phase != cmd.SmartNICSpec_PENDING.String() {
+			t.Errorf("NIC is not admitted")
+			return false, nil
+		}
+
+		if nm.getRegStatus() == false {
+			t.Errorf("Registration is not in progress")
+			return false, nil
+		}
+
+		if nm.getRestServerStatus() == true {
+			t.Errorf("REST server is still up")
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f2, "Failed to verify PendingNIC in Managed Mode", string("10ms"), string("30s"))
+}
+
+func TestNaplesManagedModeInvalidNIC(t *testing.T) {
+
+	// create nmd
+	nm, _, _ := createNMD(t, emDBPath)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+	defer stopNMD(t, nm, true)
+
+	var err error
+	var resp NaplesConfigResp
+
+	// Switch to Managed mode
+	naplesCfg := &nmd.Naples{
+		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
+		TypeMeta:   api.TypeMeta{Kind: "Naples"},
+		Spec: nmd.NaplesSpec{
+			Mode:       nmd.NaplesMode_MANAGED_MODE,
+			PrimaryMac: nicKey3,
+		},
+	}
+
+	f1 := func() (bool, []interface{}) {
+		err = netutils.HTTPPost(getNMDUrl(nm), naplesCfg, &resp)
+		if err != nil {
+			t.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
+		}
+		return true, nil
+	}
+	AssertEventually(t, f1, "Failed to post the naples config")
+
+	f2 := func() (bool, []interface{}) {
+
+		cfg := nm.getNaplesConfig()
+		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
+		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
+			t.Errorf("Failed to switch to managed mode")
+			return false, nil
+		}
+
+		nic, err := nm.GetSmartNIC()
+		if nic == nil || err != nil {
+			t.Errorf("NIC not found in nicDB")
+			return false, nil
+		}
+
+		if nic.Spec.Phase != cmd.SmartNICSpec_REJECTED.String() {
+			t.Errorf("NIC is not rejected")
+			return false, nil
+		}
+
+		if nm.getRegStatus() == true {
+			t.Errorf("Registration is still in progress")
+			return false, nil
+		}
+
+		if nm.getUpdStatus() == true {
+			t.Errorf("UpdateNIC is still in progress")
+			return false, nil
+		}
+
+		if nm.getRegStatus() == true {
+			t.Errorf("REST server is still up")
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f2, "Failed to verify mode RejectedNIC in Managed Mode", string("10ms"), string("30s"))
+}
+
+func TestNaplesRestartManagedMode(t *testing.T) {
+
+	// create nmd
+	nm, _, _ := createNMD(t, emDBPath)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+
+	var err error
+	var resp NaplesConfigResp
+
+	// Switch to Managed mode
+	naplesCfg := &nmd.Naples{
+		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
+		TypeMeta:   api.TypeMeta{Kind: "Naples"},
+		Spec: nmd.NaplesSpec{
+			Mode:       nmd.NaplesMode_MANAGED_MODE,
+			PrimaryMac: nicKey1,
+		},
+	}
+
+	f1 := func() (bool, []interface{}) {
+		err = netutils.HTTPPost(getNMDUrl(nm), naplesCfg, &resp)
+		if err != nil {
+			t.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f1, "Failed to post the naples config")
+
+	f2 := func() (bool, []interface{}) {
+
+		cfg := nm.getNaplesConfig()
+		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
+		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
+			t.Errorf("Failed to switch to managed mode")
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f2, "Failed to verify Managed Mode", string("10ms"), string("30s"))
+
+	// stop NMD, don't clean up DB file
+	stopNMD(t, nm, false)
+
+	// create NMD again, simulating restart
+	nm, _, _ = createNMD(t, emDBPath)
+	defer stopNMD(t, nm, true)
+	Assert(t, (nm != nil), "Failed to create nmd", nm)
+	AssertEventually(t, f2, "Failed to verify Managed Mode after Restart", string("10ms"), string("30s"))
+}

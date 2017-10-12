@@ -16,7 +16,7 @@ import (
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/gorilla/mux"
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/httputils"
+	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"

@@ -938,8 +938,7 @@
           "title": "Ports holds a list of Port Specs"
         },
         "LastTransitionTime": {
-          "type": "string",
-          "format": "int64"
+          "type": "string"
         },
         "Reason": {
           "type": "string"
@@ -1019,7 +1018,6 @@
         },
         "LastTransitionTime": {
           "type": "string",
-          "format": "int64",
           "title": "List of current Port conditions"
         },
         "Reason": {
@@ -1085,8 +1083,7 @@
           "type": "string"
         },
         "LastTransitionTime": {
-          "type": "string",
-          "format": "int64"
+          "type": "string"
         },
         "Reason": {
           "type": "string"

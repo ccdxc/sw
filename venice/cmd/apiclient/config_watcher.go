@@ -30,11 +30,14 @@ const (
 // for the node and cluster management. if needed
 type CfgWatcherService struct {
 	sync.Mutex
-	ctx        context.Context
-	cancel     context.CancelFunc
-	logger     log.Logger
-	clientConn *grpc.ClientConn
-	apiClient  cmd.CmdV1Interface
+	ctx             context.Context
+	cancel          context.CancelFunc
+	logger          log.Logger
+	clientConn      *grpc.ClientConn
+	apiClient       cmd.CmdV1Interface
+	clusterWatcher  kvstore.Watcher // Cluster object watcher
+	nodeWatcher     kvstore.Watcher // Node endpoint watcher
+	smartNICWatcher kvstore.Watcher // SmartNIC object watcher
 }
 
 // apiClientConn creates a gRPC client Connection to API server
@@ -126,17 +129,73 @@ func (k *CfgWatcherService) waitForAPIServerOrCancel() {
 	}
 }
 
+// handleNodeEvent handles Node update
+func (k *CfgWatcherService) handleNodeEvent(et kvstore.WatchEventType, node *cmd.Node) {
+	switch et {
+	case kvstore.Created:
+		op := ops.NewNodeJoinOp(node)
+		_, err := ops.Run(op)
+		if err != nil {
+			k.logger.Infof("Error %v while joining Node %v to cluster", err, node.Name)
+		}
+	case kvstore.Updated:
+	case kvstore.Deleted:
+		op := ops.NewNodeDisjoinOp(node)
+		_, err := ops.Run(op)
+		if err != nil {
+			k.logger.Infof("Error %v while disjoin Node %v from cluster", err, node.Name)
+		}
+	}
+}
+
+// handleClusterEvent handles Cluster update
+func (k *CfgWatcherService) handleClusterEvent(et kvstore.WatchEventType, node *cmd.Cluster) {
+	switch et {
+	case kvstore.Created:
+		return
+	case kvstore.Updated:
+		// TODO: process updates to ApprovedNIC list
+		// Walk the ApprovedList to admit the NICs and remove them from
+		// pendingNIC status
+		return
+	case kvstore.Deleted:
+		return
+	}
+}
+
+// handleSmartNIC handles SmartNIC updates
+func (k *CfgWatcherService) handleSmartNICEvent(et kvstore.WatchEventType, node *cmd.SmartNIC) {
+	switch et {
+	case kvstore.Created:
+		return
+	case kvstore.Updated:
+		return
+	case kvstore.Deleted:
+		return
+	}
+}
+
+// stopWatchers stops all watchers
+func (k *CfgWatcherService) stopWatchers() {
+	k.clusterWatcher.Stop()
+	k.nodeWatcher.Stop()
+	k.smartNICWatcher.Stop()
+}
+
 // runUntilCancel implements the config Watcher service.
 func (k *CfgWatcherService) runUntilCancel() {
-	opts := api.ListWatchOptions{}
-	nodeWatcher, err := k.apiClient.Node().Watch(k.ctx, &opts)
 
+	var err error
+	opts := api.ListWatchOptions{}
+
+	// Init Node watcher
+	k.nodeWatcher, err = k.apiClient.Node().Watch(k.ctx, &opts)
 	ii := 0
 	for err != nil {
 		select {
 		case <-time.After(time.Second):
 
-			nodeWatcher, err = k.apiClient.Node().Watch(k.ctx, &opts)
+			k.nodeWatcher, err = k.apiClient.Node().Watch(k.ctx, &opts)
 			ii++
 			if ii%10 == 0 {
 				k.logger.Errorf("Waiting for Node watch to succeed for %v seconds", ii)
@@ -146,68 +205,92 @@ func (k *CfgWatcherService) runUntilCancel() {
 		}
 	}
 
-	clusterWatcher, err := k.apiClient.Cluster().Watch(k.ctx, &opts)
-
+	// Init Cluster watcher
+	k.clusterWatcher, err = k.apiClient.Cluster().Watch(k.ctx, &opts)
 	ii = 0
 	for err != nil {
 		select {
 		case <-time.After(time.Second):
 
-			clusterWatcher, err = k.apiClient.Cluster().Watch(k.ctx, &opts)
+			k.clusterWatcher, err = k.apiClient.Cluster().Watch(k.ctx, &opts)
 			ii++
 			if ii%10 == 0 {
 				k.logger.Errorf("Waiting for Cluster watch to succeed for %v seconds", ii)
 			}
 		case <-k.ctx.Done():
-			nodeWatcher.Stop()
+			k.stopWatchers()
 			return
 		}
 	}
 
-	for {
+	// Init SmartNIC watcher
+	k.smartNICWatcher, err = k.apiClient.SmartNIC().Watch(k.ctx, &opts)
+	ii = 0
+	for err != nil {
 		select {
-		case event, ok := <-clusterWatcher.EventChan():
-			if !ok {
-				// restart this routine.
-				nodeWatcher.Stop()
-				go k.runUntilCancel()
-				return
-			}
-			k.logger.Debugf("cfgWatcher Received %+v", event)
+		case <-time.After(time.Second):
 
-		case event, ok := <-nodeWatcher.EventChan():
-			if !ok {
-				// restart this routine.
-				clusterWatcher.Stop()
-				go k.runUntilCancel()
-				return
-			}
-			k.logger.Debugf("cfgWatcher Received %+v", event)
-			n, ok := event.Object.(*cmd.Node)
-			if !ok {
-				k.logger.Infof("Node Watcher didnt get Node Object")
-				break
-			}
-
-			switch event.Type {
-			case kvstore.Created:
-				op := ops.NewNodeJoinOp(n)
-				_, err := ops.Run(op)
-				if err != nil {
-					k.logger.Infof("Error %v while joining Node %v to cluster", err, n.Name)
-				}
-			case kvstore.Updated:
-			case kvstore.Deleted:
-				op := ops.NewNodeDisjoinOp(n)
-				_, err := ops.Run(op)
-				if err != nil {
-					k.logger.Infof("Error %v while disjoin Node %v from cluster", err, n.Name)
-				}
-
+			k.smartNICWatcher, err = k.apiClient.SmartNIC().Watch(k.ctx, &opts)
+			ii++
+			if ii%10 == 0 {
+				k.logger.Errorf("Waiting for SmartNIC watch to succeed for %v seconds", ii)
 			}
 		case <-k.ctx.Done():
-			nodeWatcher.Stop()
-			clusterWatcher.Stop()
+			k.stopWatchers()
+			return
+		}
+	}
+
+	// Handle config watcher events
+	for {
+		select {
+		case event, ok := <-k.clusterWatcher.EventChan():
+			if !ok {
+				// restart this routine.
+				k.stopWatchers()
+				go k.runUntilCancel()
+				return
+			}
+			k.logger.Debugf("cfgWatcher Received %+v", event)
+			cluster, ok := event.Object.(*cmd.Cluster)
+			if !ok {
+				k.logger.Infof("Cluster Watcher failed to get Cluster Object")
+				break
+			}
+			go k.handleClusterEvent(event.Type, cluster)
+
+		case event, ok := <-k.nodeWatcher.EventChan():
+			if !ok {
+				// restart this routine.
+				k.stopWatchers()
+				go k.runUntilCancel()
+				return
+			}
+			k.logger.Debugf("cfgWatcher Received %+v", event)
+			node, ok := event.Object.(*cmd.Node)
+			if !ok {
+				k.logger.Infof("Node Watcher failed to get Node Object")
+				break
+			}
+			go k.handleNodeEvent(event.Type, node)
+
+		case event, ok := <-k.smartNICWatcher.EventChan():
+			if !ok {
+				// restart this routine.
+				k.stopWatchers()
+				go k.runUntilCancel()
+				return
+			}
+			k.logger.Debugf("cfgWatcher Received %+v", event)
+			snic, ok := event.Object.(*cmd.SmartNIC)
+			if !ok {
+				k.logger.Infof("SmartNIC Watcher failed to get SmartNIC Object")
+				break
+			}
+			go k.handleSmartNICEvent(event.Type, snic)
+
+		case <-k.ctx.Done():
+			k.stopWatchers()
 			return
 		}
 	}

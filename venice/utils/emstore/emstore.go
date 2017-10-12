@@ -120,7 +120,7 @@ func (bdb *BoltdbStore) Read(obj Object) (Object, error) {
 		return nil, err
 	}
 
-	// check if we got enything
+	// check if we got anything
 	if data == nil {
 		return nil, errors.New("Object not found")
 	}

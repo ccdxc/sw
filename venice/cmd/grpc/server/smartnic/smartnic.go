@@ -39,7 +39,7 @@ func NewRPCServer(cIf cmd.ClusterInterface, nIf cmd.NodeInterface, sIf cmd.Smart
 
 // Temporary definition, until CKM provides a API to validate Cert
 const (
-	validCertSignature = "O=Pensando Systems, Inc., OU=Pensando Manufacturing, CN=Pensando Manufacturing CA/emailAddress=mfgca@pensando.io"
+	ValidCertSignature = "O=Pensando Systems, Inc., OU=Pensando Manufacturing, CN=Pensando Manufacturing CA/emailAddress=mfgca@pensando.io"
 )
 
 // IsValidFactoryCert inspects the certificate for validity and returns boolean
@@ -48,7 +48,7 @@ func (s *RPCServer) IsValidFactoryCert(cert []byte) bool {
 	// TODO: For now, it just looks for a pensando string signature
 	// Will use CKM APIs once it is available for checking validity
 	str := string(cert)
-	if strings.Contains(str, validCertSignature) {
+	if strings.Contains(str, ValidCertSignature) {
 		return true
 	}
 
@@ -101,7 +101,7 @@ func (s *RPCServer) GetNode(om api.ObjectMeta) (*cmd.Node, error) {
 }
 
 // UpdateNode updates the list of Nics in status of Node object
-// Node object is   created if it does not exist.
+// Node object is  created if it does not exist.
 func (s *RPCServer) UpdateNode(nic *cmd.SmartNIC) (*cmd.Node, error) {
 
 	// Check if object exists
@@ -206,19 +206,20 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 	// Validate the factory cert obtained in the request
 	if s.IsValidFactoryCert(cert) == false {
 
-		// Reject NIC is the certificate is not valid
-		return &grpc.RegisterNICResponse{Status: cmd.SmartNICSpec_REJECTED.String()}, nil
+		// Reject NIC if the certificate is not valid
+		// TODO: Add exact reason to the response once CKM api is used
+		return &grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_REJECTED.String(), Reason: string("Invalid Cert")}, nil
 	}
 
 	// Get the Cluster object
 	clusterObj, err := s.GetCluster()
 	if err != nil {
 		log.Errorf("Error getting Cluster object, err: %v", err)
-		return &grpc.RegisterNICResponse{Status: cmd.SmartNICSpec_REJECTED.String()}, err
+		return &grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_UNKNOWN.String()}, err
 	}
 
 	// Process the request based on the configured admission mode
-	phase := cmd.SmartNICSpec_REJECTED.String()
+	var phase string
 	if clusterObj.Spec.AutoAdmitNICs == true {
 
 		// Admit NIC if autoAdmission is enabled
@@ -236,7 +237,7 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 		_, err = s.UpdateSmartNIC(&nic)
 		if err != nil {
 			log.Errorf("Error updating smartNIC object, mac: %s err: %v", nic.ObjectMeta.Name, err)
-			return &grpc.RegisterNICResponse{Status: phase}, err
+			return &grpc.RegisterNICResponse{Phase: phase}, err
 		}
 
 		// Create or Update the Node object for Workload nodes
@@ -248,7 +249,7 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 		}
 	}
 
-	return &grpc.RegisterNICResponse{Status: phase}, err
+	return &grpc.RegisterNICResponse{Phase: phase}, err
 }
 
 // UpdateNIC handles the update to smartNIC object

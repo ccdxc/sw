@@ -1,0 +1,65 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package nmd;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/protos/cmd.proto";
+
+
+// Naples config object
+message Naples {
+
+    option (venice.objectPrefix) = "config";
+
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the NIC.
+    NaplesSpec Spec     = 3 [(gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the NIC.
+    NaplesStatus Status = 4 [(gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// NaplesSpec contains initial bootstrap configuration of the Naples I/O subsystem
+message NaplesSpec {
+
+    // Operational mode of the NIC
+    NaplesMode Mode                 = 1 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "mode,omitempty"];
+
+    // List of IP/hostname:Port address of Venice quorum nodes in comma separated format
+    // For eg: IP1:port1,IP2:port2,IP3:port3
+    repeated string ClusterAddress  = 2 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "clusterAddress,omitempty"];
+
+    // PrimaryMac of the NIC adapter
+    string PrimaryMac               = 3 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "primaryMac,omitempty"];
+}
+
+// NaplesStatus contains current status of a Naples I/O subsystem
+message NaplesStatus {
+
+    // Current phase of the NIC adapter in the system
+    cmd.SmartNICSpec.SmartNICPhase Phase = 1 [(gogoproto.nullable) = true,
+                                             (gogoproto.jsontag) = "phase,omitempty"];
+}
+
+// Operational mode of a Naples
+enum NaplesMode {
+    CLASSIC_MODE     = 0; // Classic mode (Unmanaged mode)
+    MANAGED_MODE     = 1; // Managed mode
+}

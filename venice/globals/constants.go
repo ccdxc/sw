@@ -34,6 +34,9 @@ const (
 	CKMAPILocalPort = "9007"
 	CKMEndpointName = "ckm"
 
+	// NMD
+	NmdRESTPort = "9008"
+
 	// KVStore
 	KVStorePeerPort   = "5001"
 	KVStoreClientPort = "5002"

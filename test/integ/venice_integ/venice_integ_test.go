@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	//"github.com/golang/mock/gomock"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	. "gopkg.in/check.v1"

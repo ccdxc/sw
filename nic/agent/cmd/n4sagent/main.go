@@ -7,6 +7,8 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/nmd"
+	"github.com/pensando/sw/nic/agent/nmd/platform"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -18,8 +20,10 @@ func main() {
 	var (
 		hostIf       = flag.String("hostif", "ntrunk0", "Host facing interface")
 		uplinkIf     = flag.String("uplink", "eth2", "Uplink interface")
-		dbPath       = flag.String("db", "/tmp/n4sagent.db", "Database file")
+		agentDbPath  = flag.String("agentdb", "/tmp/n4sagent.db", "Agent Database file")
+		nmdDbPath    = flag.String("nmddb", "/tmp/nmd.db", "NMD Database file")
 		npmURL       = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
+		cmdURL       = flag.String("cmd", "master.local:"+globals.CMDGRPCPort, "CMD RPC server URL")
 		debugflag    = flag.Bool("debug", false, "Enable debug mode")
 		logToFile    = flag.String("logtofile", "/var/log/pensando/n4sagent.log", "Redirect logs to file")
 		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:Port>")
@@ -34,7 +38,7 @@ func main() {
 		Debug:       *debugflag,
 		CtxSelector: log.ContextAll,
 		LogToStdout: true,
-		LogToFile:   false,
+		LogToFile:   true,
 		FileCfg: log.FileConfig{
 			Filename:   *logToFile,
 			MaxSize:    10, // TODO: These needs to be part of Service Config Object
@@ -61,13 +65,26 @@ func main() {
 		log.Fatalf("Error creating fake datapath. Err: %v", err)
 	}
 
-	// create the new agent
-	ag, err := netagent.NewAgent(dp, *dbPath, macAddr.String(), *npmURL, *resolverURLs, ":"+globals.AgentRESTPort)
+	// create a platform agent
+	pa, err := platform.NewNaplesPlatformAgent()
 	if err != nil {
-		log.Fatalf("Error creating network agent. Err: %v", err)
+		log.Fatalf("Error creating platform agent. Err: %v", err)
 	}
 
-	log.Printf("Agent {%+v} is running", ag)
+	// create the new NetAgent
+	ag, err := netagent.NewAgent(dp, *agentDbPath, macAddr.String(), *npmURL, *resolverURLs, ":"+globals.AgentRESTPort)
+	if err != nil {
+		log.Fatalf("Error creating NetAgent. Err: %v", err)
+	}
+	log.Printf("NetAgent {%+v} is running", ag)
+
+	// create the new NMD
+	nm, err := nmd.NewAgent(pa, *nmdDbPath, macAddr.String(), *cmdURL, *resolverURLs, ":"+globals.NmdRESTPort)
+	if err != nil {
+		log.Fatalf("Error creating NMD. Err: %v", err)
+	}
+
+	log.Printf("NMD {%+v} is running", nm)
 
 	// wait forever
 	<-waitCh

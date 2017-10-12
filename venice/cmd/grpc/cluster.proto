@@ -96,7 +96,11 @@ message RegisterNICRequest {
 message RegisterNICResponse {
 
 	// Admission Status of NIC - string enum of cmd.SmartNICSpec.SmartNICPhase
-	string Status = 1 [(gogoproto.jsontag) = "status,omitempty"];
+	string Phase = 1 [(gogoproto.jsontag) = "phase,omitempty"];
+
+	// Reason is an optional field. It is populated with reason
+	// when there is an Admisison failure
+	string Reason = 2 [(gogoproto.jsontag) = "reason,omitempty"];
 }
 
 // Update NIC request
