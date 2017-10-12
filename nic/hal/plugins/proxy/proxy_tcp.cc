@@ -2,9 +2,67 @@
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/src/tcpcb.hpp"
 #include "nic/include/tcp_common.h"
+#include "nic/include/interface_api.hpp"
+#include "nic/hal/pd/common/pd_api.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/endpoint_pd.hpp"
 
 namespace hal {
 namespace proxy {
+
+#define SET_COMMON_IP_HDR(_buf, _i) \
+    _buf[_i++] = 0x08; \
+    _buf[_i++] = 0x00; \
+    _buf[_i++] = 0x45; \
+    _buf[_i++] = 0x08; \
+    _buf[_i++] = 0x00; \
+    _buf[_i++] = 0x7c; \
+    _buf[_i++] = 0x00; \
+    _buf[_i++] = 0x01; \
+    _buf[_i++] = 0x00; \
+    _buf[_i++] = 0x00; \
+    _buf[_i++] = 0x40; \
+    _buf[_i++] = 0x06; \
+    _buf[_i++] = 0xfa; \
+    _buf[_i++] = 0x71;
+
+hal_ret_t
+init_tcp_cb(fte::ctx_t &ctx, qid_t qid, TcpCbSpec &spec)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    uint8_t         buf[64];
+    uint8_t         i = 0;
+    uint8_t         vlan_valid;
+    uint16_t        vlan_id;
+
+    spec.set_source_port(ctx.key().dport);
+    spec.set_dest_port(ctx.key().sport);
+    spec.set_source_lif(hal::pd::ep_pd_get_hw_lif_id(ctx.dep()));
+
+    if_l2seg_get_encap(ctx.dif(), ctx.dl2seg(), &vlan_valid, &vlan_id);
+
+    memcpy(&buf[i], ctx.sep()->l2_key.mac_addr, sizeof(ctx.sep()->l2_key.mac_addr));
+    i += sizeof(ctx.sep()->l2_key.mac_addr);
+    memcpy(&buf[i], ctx.dep()->l2_key.mac_addr, sizeof(ctx.dep()->l2_key.mac_addr));
+    i += sizeof(ctx.dep()->l2_key.mac_addr);
+    if (vlan_valid) {
+        buf[i++] = 0x81;
+        buf[i++] = 0x00;
+        vlan_id = htons(vlan_id);
+        memcpy(&buf[i], &vlan_id, sizeof(vlan_id));
+        i += sizeof(vlan_id);
+    }
+    SET_COMMON_IP_HDR(buf, i);
+    memcpy(buf, &ctx.key().dip.v4_addr, sizeof(ctx.key().dip.v4_addr));
+    i += sizeof(ctx.key().dip.v4_addr);
+    memcpy(buf, &ctx.key().sip.v4_addr, sizeof(ctx.key().sip.v4_addr));
+    i += sizeof(ctx.key().sip.v4_addr);
+
+    HAL_ABORT(i < sizeof(buf));
+
+    spec.set_header_template(buf, i + 1);
+    return ret;
+}
 
 hal_ret_t
 tcp_create_cb(fte::ctx_t &ctx, qid_t qid)
@@ -12,11 +70,14 @@ tcp_create_cb(fte::ctx_t &ctx, qid_t qid)
     hal_ret_t       ret = HAL_RET_OK;
     TcpCbSpec       spec;
     TcpCbResponse   rsp;
-    TcpCbKeyHandle  kh;
 
+    if(ctx.dif() == NULL || ctx.dif()->if_type == intf::IF_TYPE_TUNNEL) {
+        HAL_TRACE_DEBUG("Skipping TCPCB creation for TUNNEL interface");
+        return HAL_RET_OK;
+    }
     HAL_TRACE_DEBUG("Create TCPCB for qid: {}", qid);
-    kh.set_tcpcb_id(qid);
-
+    spec.mutable_key_or_handle()->set_tcpcb_id(qid);
+    ret = init_tcp_cb(ctx, qid, spec);
     ret = tcpcb_create(spec, &rsp);
     if(ret != HAL_RET_OK || rsp.api_status() != types::API_STATUS_OK) {
         HAL_TRACE_ERR("Failed to create TCP cb for id: {}, ret: {}, rsp: ",

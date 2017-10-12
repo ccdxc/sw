@@ -14,6 +14,7 @@ cc_library(
         "//nic/utils/ht:ht",
         "//nic/utils/thread:thread",
         "//nic/hal/tls:tls_api",
+        "//nic/hal/pd/iris",
         #"//nic/fte",
         #"//nic/include:base_includes",
         #"//nic/proto:types_proto",
