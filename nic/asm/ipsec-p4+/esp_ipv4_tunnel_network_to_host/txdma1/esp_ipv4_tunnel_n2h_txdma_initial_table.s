@@ -25,6 +25,9 @@ esp_ipv4_tunnel_n2h_txdma1_initial_table:
     phvwr p.t0_s2s_iv_size, d.iv_size
     phvwr p.t0_s2s_icv_size, d.icv_size
 
+    add r5, r0, d.rxdma_ring_pindex
+    add r6, r0, d.rxdma_ring_cindex
+
     //Increment PI
     add r1, r0, d.barco_ring_pindex
     addi r1, r1, 1
@@ -34,15 +37,17 @@ esp_ipv4_tunnel_n2h_txdma1_initial_table:
     phvwri p.common_te0_phv_table_lock_en, 1 
     phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex[33:6] 
     phvwri p.common_te0_phv_table_raw_table_size, 3
-    add r1, r0, d.cb_cindex
+    add r1, r0, d.{rxdma_ring_cindex}.hx
     sll r2, r1, 3
     add r2, r2, d.cb_ring_base_addr
     phvwr p.common_te0_phv_table_addr, r2
+    add r1, r0, d.rxdma_ring_cindex
     addi r1, r1, 1
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 1, LIF_IPSEC_ESP)
-    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 0, d.cb_pindex)
+    CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 0, r1)
     memwr.dx  r4, r3
     tblwr d.cb_cindex, r1
+    nop
  
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 1, LIF_IPSEC_ESP) 
     phvwr p.barco_req_doorbell_address, r4.dx 
