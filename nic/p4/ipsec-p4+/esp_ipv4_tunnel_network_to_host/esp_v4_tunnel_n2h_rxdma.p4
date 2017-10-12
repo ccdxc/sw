@@ -83,7 +83,8 @@ header_type ipsec_rxdma_global_t {
         qid            : 24;
         packet_length  : 16; 
         ipsec_cb_index : 16;
-        rxdma_pad22    : 56; 
+        icv_size       : 8;
+        rxdma_pad22    : 48; 
     }
 }
 
@@ -204,7 +205,8 @@ metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
     modify_field(ipsec_global_scratch.qtype, ipsec_global.qtype); \
     modify_field(ipsec_global_scratch.qid, ipsec_global.qid); \
     modify_field(ipsec_global_scratch.ipsec_cb_index, ipsec_global.ipsec_cb_index); \
-    modify_field(ipsec_global_scratch.packet_length, ipsec_global.packet_length);
+    modify_field(ipsec_global_scratch.packet_length, ipsec_global.packet_length); \
+    modify_field(ipsec_global_scratch.icv_size, ipsec_global.icv_size); \
 
 #define IPSEC_TO_STAGE3_SCRATCH \
     modify_field(ipsec_to_stage3_scratch.iv_size, ipsec_to_stage3.iv_size); \
@@ -269,6 +271,7 @@ action esp_v4_tunnel_n2h_update_output_desc_aol(addr0, offset0, length0,
     modify_field(barco_desc_out.O0, 0);
     modify_field(barco_desc_out.L0, 0); 
 
+    IPSEC_TO_STAGE3_SCRATCH
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T1_S2S
 

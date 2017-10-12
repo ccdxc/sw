@@ -78,6 +78,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     phvwr p.icv_header_dma_cmd_size, k.txdma2_global_icv_size
     add r1, r0, k.t0_s2s_out_page_addr
     addi r1, r1, ESP_FIXED_HDR_SIZE 
+    add r1, r1, k.txdma2_global_pad_size
     add r1, r1, k.t0_s2s_tailroom_offset
     addi r1, r1, 2
     phvwr p.icv_header_dma_cmd_addr, r1

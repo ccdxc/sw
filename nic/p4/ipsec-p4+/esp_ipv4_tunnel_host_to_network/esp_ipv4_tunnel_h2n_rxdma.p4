@@ -271,6 +271,7 @@ action update_output_desc_aol(addr0, offset0, length0,
 
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T1_S2S
+    modify_field(ipsec_to_stage3_scratch.iv_size, ipsec_to_stage3.iv_size);
 
 }
 

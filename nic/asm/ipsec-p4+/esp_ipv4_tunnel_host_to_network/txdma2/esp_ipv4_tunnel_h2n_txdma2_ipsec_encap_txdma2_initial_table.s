@@ -21,10 +21,12 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwri p.common_te0_phv_table_lock_en, 1
     phvwri p.common_te0_phv_table_raw_table_size, 6
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_barco_req[33:6] 
+
     add r1, r0, d.barco_ring_cindex
     sll r1, r1, BRQ_RING_ENTRY_SIZE_SHIFT 
     addi r1, r1, BRQ_BASE 
     phvwr  p.common_te0_phv_table_addr, r1
+
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
     addi r1, r0, 1

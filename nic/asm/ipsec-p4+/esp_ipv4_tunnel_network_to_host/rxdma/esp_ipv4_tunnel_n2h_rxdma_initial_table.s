@@ -28,6 +28,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     sub r2, r2, d.icv_size
     subi r2, r2, 2
     phvwr p.ipsec_int_header_tailroom_offset, r2
+    phvwr p.ipsec_global_icv_size, d.icv_size
 
    //Ethernet header excluding IP, ESP, IV
     //add r3, r0, k.p42p4plus_hdr_ip_hdr_size
@@ -45,6 +46,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     sub r5, r2, r1
     phvwr p.ipsec_int_header_payload_size, r5
     phvwr p.ipsec_to_stage3_payload_size, r5 
+    phvwr p.ipsec_to_stage3_iv_size, d.iv_size
 
     phvwr p.ipsec_global_lif, k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
     phvwr p.ipsec_global_qtype, k.p4_rxdma_intr_qtype
