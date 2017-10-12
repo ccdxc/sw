@@ -250,7 +250,6 @@ header_type scratch_metadata_t {
 @pragma deparser_variable_length_header
 @pragma dont_trim
 metadata deparser_len_t capri_deparser_len_hdr;
-metadata cap_phv_intr_p4_t capri_p4_intrinsic;
 metadata l3_metadata_t l3_metadata;
 metadata control_metadata_t control_metadata;
 metadata entry_inactive_t entry_inactive;

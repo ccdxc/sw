@@ -202,6 +202,7 @@ action flow_hit_from_vm_bounce(src_lif) {
     remove_header(ipv4);
     remove_header(udp);
     remove_header(vxlan_gpe);
+    add_header(capri_p4_intrinsic);
     add_header(recirc_header);
     modify_field(recirc_header.reason, RECIRC_VM_BOUNCE);
     modify_field(capri_intrinsic.lif, src_lif);
@@ -283,6 +284,7 @@ action flow_hash_info(entry_valid, export_en,
     if ((control_metadata.flow_miss == TRUE) and
         (hash1 == scratch_metadata.flow_hash1)) {
         modify_field(control_metadata.ingress_bypass, 1);
+        add_header(capri_p4_intrinsic);
         add_header(recirc_header);
         modify_field(recirc_header.reason, RECIRC_FLOW_HASH_OVERFLOW);
         // do not assign it to larger variable.. can result in K+D violation
@@ -321,6 +323,7 @@ action flow_hash_overflow(lkp_inst, lkp_dir, lkp_type, lkp_vrf, lkp_src, lkp_dst
                           hash4, hint4, hash5, hint5, hash6, hint6,
                           more_hashs, more_hints) {
     // remove the recirc header
+    remove_header(capri_p4_intrinsic);
     remove_header(recirc_header);
 
     // check if the key matches the entry data
@@ -383,6 +386,7 @@ action flow_hash_overflow(lkp_inst, lkp_dir, lkp_type, lkp_vrf, lkp_src, lkp_dst
     if ((control_metadata.flow_miss == TRUE) and
         (hash1 == scratch_metadata.flow_hash1)) {
         modify_field(control_metadata.ingress_bypass, 1);
+        add_header(capri_p4_intrinsic);
         add_header(recirc_header);
         modify_field(recirc_header.reason, RECIRC_FLOW_HASH_OVERFLOW);
         // modify_field(recirc_header.overflow_entry_index, hint1);

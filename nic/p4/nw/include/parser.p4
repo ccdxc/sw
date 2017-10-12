@@ -54,6 +54,8 @@ header cap_phv_intr_global_t capri_intrinsic;
 header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 header cap_phv_intr_txdma_t capri_txdma_intrinsic;
 
+header cap_phv_intr_p4_t    capri_p4_intrinsic;
+
 @pragma synthetic_header
 @pragma pa_field_union egress capri_rxdma_p4_intrisic.no_data       capri_p4_intrinsic.no_data
 @pragma pa_field_union egress capri_rxdma_p4_intrisic.recirc        capri_p4_intrinsic.recirc
@@ -297,6 +299,7 @@ parser deparse_rxdma {
 
 parser parse_recirc {
     extract(capri_intrinsic);
+    extract(capri_p4_intrinsic);
     extract(recirc_header);
     return parse_ethernet;
 }
