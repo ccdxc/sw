@@ -3021,8 +3021,8 @@ def capri_dump_table_memory(be, memory, tables, mem_type, region):
             depth = capri_get_depth_from_layout(tables[mem_type][region][i]['layout'])
             reqd += tables[mem_type][region][i]['width'] * tables[mem_type][region][i]['depth']
 
-            if width == 1 and depth == 1:
-                layout_string = 'width: None, depth: None'
+            if width == 0 and depth == 0:
+                layout_string = 'width: NONE, depth: NONE'
             else:
                 layout_string = 'width: %d, depth: %d' % (width, depth)
                 total += width * depth

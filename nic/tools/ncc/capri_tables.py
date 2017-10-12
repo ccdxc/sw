@@ -4689,6 +4689,7 @@ class capri_table_mapper:
                 self.memory[mem_type][region]['space'] = []
                 self.memory[mem_type][region]['depth'] = spec[mem_type][region]['depth']
                 self.memory[mem_type][region]['blk_d'] = spec[mem_type][region]['depth']
+                self.memory[mem_type][region]['blk_c'] = spec[mem_type][region]['count']
                 self.memory[mem_type][region]['blk_w'] = table_width_to_allocation_units(mem_type, spec[mem_type][region]['width'])
                 self.memory[mem_type][region]['width'] = table_width_to_allocation_units(mem_type, spec[mem_type][region]['width'] *
                                                                                                    spec[mem_type][region]['count'])
@@ -4740,7 +4741,7 @@ class capri_table_mapper:
         return layout
 
     # Allocates space for a table as per requirements
-    def scavenge_unused_space(self, mem_type, region, table_depth, table_width, index):
+    def scavenge_unused_space(self, mem_type, region, table_depth, table_width, entry_width, index):
         # Get the memory space and its properties
         memory = self.memory[mem_type][region]
         mem_depth = memory['depth']
@@ -4751,8 +4752,14 @@ class capri_table_mapper:
         for top in range(mem_depth - table_depth + 1):
             # Scan columns looking for free position to start the table at
             for left in range(mem_width - table_width + 1):
-                if ((left % get_block_width(mem_type)) + table_width) > (get_block_width(mem_type) * 4):
-                    # Tables can only span a max of 4 blocks
+
+                failed = False
+                for entry_left in range(left, left + table_width, entry_width):
+                    if ((entry_left % get_block_width(mem_type)) + entry_width) > (get_block_width(mem_type) * 4):
+                        failed = True # Table entries can only span a max of 4 blocks
+                        break
+
+                if failed:
                     continue
 
                 if mem_space[top][left] == 0:
@@ -4981,12 +4988,34 @@ class capri_table_mapper:
         mem_type = 'sram'
         tables = self.tables[mem_type][region]
         memory = self.memory[mem_type][region]
-
         memory['space'] = [[0 for x in range(memory['width'])] for y in range(memory['depth'])]
 
-        i = self.get_next_unplaced_table(tables, -1)
-        self.place_sram_table(region, {'top':0, 'left':0}, i, tables[i]['width'], tables[i]['depth'],
-                              memory['width'], memory['depth'])
+        blk_width = self.memory[mem_type][region]['blk_w']
+        blk_depth = self.memory[mem_type][region]['blk_d']
+        blk_count = self.memory[mem_type][region]['blk_c']
+
+        curr_blk = 0
+        for table in tables:
+            ctable = self.tmgr.gress_tm[xgress_from_string(region)].tables[table['name']]
+            if ctable.is_policer or ctable.is_writeback:
+
+                tbl_depth = table['depth']
+                tbl_width = table['width']
+                index = self.tables[mem_type][region].index(table)
+
+                while tbl_depth > blk_depth:
+                    tbl_depth = tbl_depth / 2
+                    tbl_width = tbl_width * 2
+
+                blks_reqd = (tbl_width + blk_width - 1) / blk_width
+
+                if (curr_blk + blks_reqd) <= blk_count:
+                    top = 0
+                    left = curr_blk * blk_width
+                    table['layout'] = self.carve_memory(memory, top, left, top + tbl_depth - 1, left + tbl_width - 1, index)
+                    curr_blk += blks_reqd
+
+        return
 
     def map_hbm_tables(self, region):
         mem_type = 'hbm'
@@ -5040,7 +5069,7 @@ class capri_table_mapper:
                             if mem_type != 'hbm':
                                 index = self.tables[mem_type][region].index(table)
                                 while not table['layout'] and depth > 0:
-                                    table['layout'] = self.scavenge_unused_space(mem_type, region, depth, width, index)
+                                    table['layout'] = self.scavenge_unused_space(mem_type, region, depth, width, table['width'], index)
 
                                     if mem_type == 'tcam':
                                         break # Can't fold TCAM tables, so break out
