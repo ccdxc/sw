@@ -5,6 +5,7 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/gen/iris/include/p4pd.h"
+#include "nic/include/asic_rw.hpp"
 
 #define CAPRI_P4PLUS_NUM_SYMBOLS 46
 
@@ -40,6 +41,17 @@ capri_init (capri_cfg_t *cfg = NULL)
 
 
     return ret;
+}
+
+//------------------------------------------------------------------------------
+// perform all the CAPRI specific initialization
+//------------------------------------------------------------------------------
+hal_ret_t
+hal::pd::asic_init (hal::pd::asic_cfg_t *cfg = NULL)
+{
+    capri_cfg_t capri_cfg;
+    capri_cfg.loader_info_file = cfg->loader_info_file;
+    return capri_init(&capri_cfg);
 }
 
 static hal_ret_t

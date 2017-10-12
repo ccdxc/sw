@@ -6,6 +6,10 @@
 namespace hal {
 namespace pd {
 
+typedef struct asic_cfg_s {
+    std::string      loader_info_file;
+} asic_cfg_t;
+
 //------------------------------------------------------------------------------
 // public API for register read operations
 // NOTE: this is always a blocking call and this API runs in the calling
@@ -35,6 +39,9 @@ hal_ret_t asic_mem_write(uint64_t addr, uint8_t *data,
 
 // starting point for asic read-write thread
 void *asic_rw_start(void *ctxt);
+
+// initialize the asic
+hal_ret_t asic_init(asic_cfg_t *asic_cfg);
 
 // return TRUE if asic is initialized and ready for read/writes
 bool is_asic_rw_ready(void);

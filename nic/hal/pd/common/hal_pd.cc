@@ -2,6 +2,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/include/asic_rw.hpp"
+#include "nic/include/port.hpp"
 
 namespace hal {
 namespace pd {
@@ -15,6 +16,7 @@ hal_ret_t
 hal_pd_init (hal_cfg_t *hal_cfg)
 {
     hal_ret_t ret;
+    int thread_id = HAL_THREAD_ID_CONTROL;
 
     HAL_ASSERT(hal_cfg != NULL);
 
@@ -24,14 +26,15 @@ hal_pd_init (hal_cfg_t *hal_cfg)
         goto cleanup;
     }
 
-    HAL_TRACE_DEBUG("Starting asic-rw thread ...");
-    g_hal_threads[HAL_THREAD_ID_ASIC_RW] =
-        thread::factory(std::string("asic-rw").c_str(),
-                        HAL_THREAD_ID_ASIC_RW, HAL_CONTROL_CORE_ID,
-                        hal::pd::asic_rw_start,
-                        sched_get_priority_max(SCHED_FIFO), SCHED_FIFO, true);
-    HAL_ABORT(g_hal_threads[HAL_THREAD_ID_ASIC_RW] != NULL);
-    g_hal_threads[HAL_THREAD_ID_ASIC_RW]->start(hal_cfg);
+    /* start HAL control thread */
+    HAL_TRACE_DEBUG("Starting hal-control thread ...");
+    g_hal_threads[thread_id] =
+        thread::factory(std::string("hal-control").c_str(),
+                thread_id, HAL_CONTROL_CORE_ID,
+                hal::pd::hal_control_start,
+                sched_get_priority_max(SCHED_FIFO), SCHED_FIFO, true);
+    HAL_ABORT(g_hal_threads[thread_id] != NULL);
+    g_hal_threads[thread_id]->start(hal_cfg);
 
     HAL_TRACE_DEBUG("Waiting for asic-rw thread to be ready ...");
     // wait for ASIC RW thread to be ready before initializing table entries

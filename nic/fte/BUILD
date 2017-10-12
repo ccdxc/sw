@@ -51,6 +51,7 @@ cc_test(
         "//nic/hal/pd/iris",
         "//nic:capricsr_int",
         "//nic/hal/pd/capri",
+        "//nic/hal/pd/control",
         "//nic/model_sim:model_client",
         "//nic:p4pd",
         "//nic:p4pluspd_txdma",

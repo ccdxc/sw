@@ -22,6 +22,14 @@ namespace periodic {
 
 void *periodic_thread_start(void *ctxt);
 
+//------------------------------------------------------------------------------
+// API invoked by other threads to trigger cb after timeout
+// Returns the timer entry used to update/delete the timer
+//------------------------------------------------------------------------------
+void*
+periodic_timer_schedule (uint32_t timer_id, uint64_t timeout, void *ctxt,
+                         hal::utils::twheel_cb_t cb, bool periodic);
+
 // API to delay delete any slab objects
 hal_ret_t delay_delete_to_slab(hal_slab_t slab_id,             // slab to free back to
                                void *elem);                    // element to free back

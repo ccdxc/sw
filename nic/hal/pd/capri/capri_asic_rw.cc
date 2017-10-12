@@ -61,22 +61,6 @@ is_asic_rw_ready (void)
 }
 
 //------------------------------------------------------------------------------
-// attempt to connect to ASIC model in sim mode
-//------------------------------------------------------------------------------
-static hal_ret_t
-asic_sim_connect (hal_cfg_t *hal_cfg)
-{
-    int    rc;
-
-    HAL_TRACE_DEBUG("Connecting to ASIC SIM");
-    if ((rc = lib_model_connect()) == -1) {
-        HAL_TRACE_ERR("Failed to connect to ASIC. Return code: {}", rc);
-        return HAL_RET_ERR;
-    }
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
 // read data from specified address in the memory to given buffer
 // NOTE: this is always a blocking call and this API runs in the calling
 //       thread's context
@@ -292,31 +276,7 @@ asic_rw_loop (void)
 void *
 asic_rw_start (void *ctxt)
 {
-    hal_ret_t    ret;
-    hal_cfg_t    *hal_cfg = (hal_cfg_t *)ctxt;
-    capri_cfg_t capri_cfg;
-
-    HAL_TRACE_DEBUG("ASIC-RW thread started ...");
-    if (hal_cfg == NULL) {
-        return NULL;
-    }
     HAL_THREAD_INIT();
-
-    if (hal_cfg->sim) {
-        do {
-            ret = asic_sim_connect(hal_cfg);
-            if (ret == HAL_RET_OK) {
-                HAL_TRACE_DEBUG("Connected to the ASIC model...");
-                break;
-            }
-            HAL_TRACE_WARN("Failed to connect to asic, retrying in 1 sec ...");
-            sleep(1);
-        } while (ret != HAL_RET_OK);
-    }
-
-    // do capri initialization
-    capri_cfg.loader_info_file = hal_cfg->loader_info_file;
-    HAL_ABORT(capri_init(&capri_cfg) == HAL_RET_OK);
 
     // announce asic-rw thread as ready
     g_asic_rw_ready_ = true;

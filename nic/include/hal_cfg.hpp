@@ -69,7 +69,8 @@ enum {
     HAL_THREAD_ID_FTE_MIN    = 2,
     HAL_THREAD_ID_FTE_MAX    = 4,
     HAL_THREAD_ID_ASIC_RW    = 5,
-    HAL_THREAD_ID_MAX        = 6,
+    HAL_THREAD_ID_CONTROL    = 6,
+    HAL_THREAD_ID_MAX        = 7,
 };
 
 //------------------------------------------------------------------------------

@@ -30,7 +30,7 @@ cc_test(
     deps = [
         ":directmap",
         "//:gtest",
-		"//nic/utils/trace",
+        "//nic/utils/trace",
         "//nic/fte:fte",
         "//nic/hal/plugins/network:network",
         "//nic/hal/plugins/proxy:proxyplugin",
@@ -39,24 +39,25 @@ cc_test(
         "//nic/hal/lkl:lkl_api",
         "//nic:lkl",
 
-		# PD
-		"//nic/hal/pd/common:pdcommon",
-		"//nic/hal/pd/utils/hash:hash",
-		"//nic/hal/pd/utils/tcam:tcam",
-		"//nic/hal/pd/utils/flow:flow",
-		"//nic/hal/pd/utils/met:met",
-		"//nic/hal/pd/iris/p4pd:p4pdapi",
-		"//nic/hal/pd/iris",
-		"//nic:capricsr_int",
-		"//nic/hal/pd/capri",
-		"//nic/model_sim:model_client",
-		"//nic:p4pd",
-		"//nic:p4pluspd_txdma",
-		"//nic:p4pluspd_rxdma",
-		"//nic:asic_libs",
+        # PD
+        "//nic/hal/pd/common:pdcommon",
+        "//nic/hal/pd/utils/hash:hash",
+        "//nic/hal/pd/utils/tcam:tcam",
+        "//nic/hal/pd/utils/flow:flow",
+        "//nic/hal/pd/utils/met:met",
+        "//nic/hal/pd/iris/p4pd:p4pdapi",
+        "//nic/hal/pd/iris",
+        "//nic:capricsr_int",
+        "//nic/hal/pd/capri",
+        "//nic/hal/pd/control",
+        "//nic/model_sim:model_client",
+        "//nic:p4pd",
+        "//nic:p4pluspd_txdma",
+        "//nic:p4pluspd_rxdma",
+        "//nic:asic_libs",
         "//nic/hal/pd/utils/p4pd_mock:p4pd_mock"
-		],
+],
    linkopts = [
          "-lzmq",
      ],
-	)
+)

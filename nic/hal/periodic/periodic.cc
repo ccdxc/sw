@@ -175,5 +175,16 @@ delay_delete_to_slab (hal_slab_t slab_id, void *elem)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// API invoked by other threads to trigger cb after timeout
+// Returns the timer entry used to update/delete the timer
+//------------------------------------------------------------------------------
+void*
+periodic_timer_schedule (uint32_t timer_id, uint64_t timeout, void *ctxt,
+                         hal::utils::twheel_cb_t cb, bool periodic)
+{
+    return g_twheel->add_timer(timer_id, timeout, ctxt, cb, periodic);
+}
+
 }    // namespace periodic
 }    // namespace hal
