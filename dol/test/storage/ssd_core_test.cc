@@ -9,7 +9,13 @@ class ssdtest : public storage_test::NvmeSsdCore {
   virtual void DMAMemFree(void *ptr) { free(ptr); }
   virtual uint64_t DMAMemV2P(void *ptr) { return (uint64_t)ptr; }
   virtual void *DMAMemP2V(uint64_t addr) { return (void *)addr; }
-  virtual void RaiseInterrupt() { intr_counter_++; }
+  virtual void DMAMemCopyP2V(uint64_t src, void *dst, uint32_t size) {
+    memcpy(dst, (void *)src, size);
+  }
+  virtual void DMAMemCopyV2P(void *src, uint64_t dst, uint32_t size) {
+    memcpy((void *)dst, src, size);
+  }
+  virtual void RaiseInterrupt(uint16_t index = 0) { intr_counter_++; }
 
   unsigned intr_counter_ = 0;
 };
@@ -33,7 +39,7 @@ class SsdCoreTest : public testing::Test {
   }
 
   bool PopCompletion(NvmeStatus *comp) {
-    if (params_.compq_va[compq_ci_].dw3.phase != expected_phase_)
+    if ((params_.compq_va[compq_ci_].dw3.status_phase & 1) != expected_phase_)
       return false;
     bcopy(&params_.compq_va[compq_ci_], comp, sizeof (*comp));
     compq_ci_++;
@@ -75,7 +81,7 @@ TEST_F(SsdCoreTest, BasicTest) {
   ASSERT_TRUE(ssd_->intr_counter_ != old_intr_counter);
   ASSERT_TRUE(PopCompletion(&comp));
   ASSERT_EQ(0x1234, comp.dw3.cid);
-  ASSERT_EQ(1, comp.dw3.phase);
-  ASSERT_EQ(0, comp.dw3.status);
+  ASSERT_EQ(1, (comp.dw3.status_phase & 1));
+  ASSERT_EQ(0, (comp.dw3.status_phase >> 1));
   ASSERT_EQ(1, comp.dw2.sq_head);
 }
