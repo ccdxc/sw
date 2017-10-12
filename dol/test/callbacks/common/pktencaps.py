@@ -12,7 +12,15 @@ def AddPacketEncapQtag(pkt, encap):
     pkt.hdrsorder.insert(1, 'qtag')
     return
 
-def AddPacketEncapQinQ(tc, pkt):
+def AddPacketEncapQinQ(pkt, encap):
+    if pkt.hdrsorder[0] == 'outereth':
+        pkt.headers.qtag.fields.type = pkt.headers.outereth.fields.type
+        pkt.headers.outereth.fields.type = encap.headers.eth.fields.type
+    elif  pkt.hdrsorder[0] == 'eth':
+        pkt.headers.qtag.fields.type = pkt.headers.eth.fields.type
+        pkt.headers.eth.fields.type = encap.headers.eth.fields.type
+    pkt.hdrsorder.insert(1, 'qtag')
+    pkt.hdrsorder.insert(1, 'outerqtag')
     return
 
 def AddPacketEncapVxlan(pkt, encap):

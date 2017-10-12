@@ -15,19 +15,14 @@ selectors:
 
 packets:
     - packet:
-        id          : PKT1     # Input packet 1
+        id          : BASE     # BASE Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        encaps      : 
-            - ref://factory/packets/id=ENCAP_QTAG
+        encaps      : None
         headers     :
-            # Add all possible headers, the final headers will be selected
-            # based on the Flow.
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -54,6 +49,16 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
+        id          : PKT1     # Input packet 1
+        clone       : ref://testcase/packets/id=BASE
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+
+
+    - packet:
         id          : SPAN_PKT1     # Span packet 1
         clone       : ref://testcase/packets/id=PKT1
         #encaps      : None
@@ -65,14 +70,14 @@ packets:
 
     - packet:
         id          : RSPAN_PKT1     # Span packet 1
-        clone       : ref://testcase/packets/id=PKT1
-        #encaps      : None
-            #- ref://factory/packets/id=ENCAP_QTAG
+        clone       : ref://testcase/packets/id=BASE
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QINQ
         headers     :
-            ipv4:
-            qtag:
+            outerqtag:
                 vlan: callback://telemetry/callbacks/GetRspanVlan 
-
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
 
 trigger:
     packets:
