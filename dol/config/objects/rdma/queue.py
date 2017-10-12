@@ -311,11 +311,6 @@ class RdmaQstateObject(object):
     def get_proxy_cindex(self):
         return getattr(self.data, 'proxy_cindex')
 
-    def set_dst_qp(self, value):
-        self.Read()
-        setattr(self.data, 'dst_qp', value)
-        self.Write()
-
     def Show(self, lgh = cfglogger):
         lgh.ShowScapyObject(self.data) 
 
@@ -343,9 +338,6 @@ class RdmaQueueObject(QueueObject):
         if self._qstate is None:
             self._qstate = RdmaQstateObject(queue_type=self.queue_type.GID(), addr=self.GetQstateAddr(), size=self.queue_type.size)
         return self._qstate
-
-    def set_dst_qp(self, value):
-        self.qstate.set_dst_qp(value)
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.lif_handle = 0  # HW LIF ID is not known in DOL. Assume it is filled in by hal::LifCreate.

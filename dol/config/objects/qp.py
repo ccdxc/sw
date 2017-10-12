@@ -133,61 +133,89 @@ class QpObject(base.ConfigObjectBase):
         if not self.remote:
             cfglogger.info('SQ_CQ: %s RQ_CQ: %s' %(self.sq_cq.GID(), self.rq_cq.GID()))
 
+    def set_dst_qp(self, value):
+        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QP
+        self.dst_qp = value
+        halapi.ModifyQps([self])
 
     def PrepareHALRequestSpec(self, req_spec):
         cfglogger.info("QP: %s PD: %s Remote: %s HW_LIF: %d\n" %\
                         (self.GID(), self.pd.GID(), self.remote, self.pd.ep.intf.lif.hw_lif_id))
+
         if (GlobalOptions.dryrun): return
-        req_spec.qp_num = self.id
-        req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
-        req_spec.sq_wqe_size = self.sqwqe_size
-        req_spec.rq_wqe_size = self.rqwqe_size
-        req_spec.num_sq_wqes = self.num_sq_wqes
-        req_spec.num_rq_wqes = self.num_rq_wqes
-        req_spec.num_rsq_wqes = self.num_rsq_wqes
-        req_spec.num_rrq_wqes = self.num_rrq_wqes
-        req_spec.pd = self.pd.id
-        req_spec.pmtu = self.pmtu
-        req_spec.hostmem_pg_size = self.hostmem_pg_size
-        req_spec.svc = self.svc
-        req_spec.atomic_enabled = self.atomic_enabled
-        req_spec.sq_lkey = self.sq_mr.lkey
-        req_spec.rq_lkey = self.rq_mr.lkey
-        req_spec.sq_cq_num = self.sq_cq.id
-        req_spec.rq_cq_num = self.rq_cq.id
+
+        if req_spec.__class__.__name__ == "RdmaQpSpec":  
+    
+            req_spec.qp_num = self.id
+            req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
+            req_spec.sq_wqe_size = self.sqwqe_size
+            req_spec.rq_wqe_size = self.rqwqe_size
+            req_spec.num_sq_wqes = self.num_sq_wqes
+            req_spec.num_rq_wqes = self.num_rq_wqes
+            req_spec.num_rsq_wqes = self.num_rsq_wqes
+            req_spec.num_rrq_wqes = self.num_rrq_wqes
+            req_spec.pd = self.pd.id
+            req_spec.pmtu = self.pmtu
+            req_spec.hostmem_pg_size = self.hostmem_pg_size
+            req_spec.svc = self.svc
+            req_spec.atomic_enabled = self.atomic_enabled
+            req_spec.sq_lkey = self.sq_mr.lkey
+            req_spec.rq_lkey = self.rq_mr.lkey
+            req_spec.sq_cq_num = self.sq_cq.id
+            req_spec.rq_cq_num = self.rq_cq.id
+    
+        elif req_spec.__class__.__name__ == "RdmaQpUpdateSpec":
+
+            req_spec.qp_num = self.id
+            req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
+            req_spec.oper = self.modify_qp_oper
+            if req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QP:
+               req_spec.dst_qp_num = self.dst_qp
+            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
+               req_spec.header_template = bytes(self.HdrTemplate)
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        self.rsq_base_addr = resp_spec.rsq_base_addr
-        self.rrq_base_addr = resp_spec.rrq_base_addr
-        self.header_temp_addr = resp_spec.header_temp_addr
-        self.sq.SetRingParams('SQ', True, 
-                              self.sq_slab.mem_handle,
-                              self.sq_slab.address, 
-                              self.num_sq_wqes, 
-                              self.sqwqe_size)
-        self.rq.SetRingParams('RQ', True, 
-                              self.rq_slab.mem_handle,
-                              self.rq_slab.address,
-                              self.num_rq_wqes, 
-                              self.rqwqe_size)
-        self.sq.SetRingParams('RRQ', False, 
-                              None,
-                              self.rrq_base_addr,
-                              self.num_rrq_wqes,
-                              self.rrqwqe_size)
-        self.rq.SetRingParams('RSQ', False, 
-                              None,
-                              self.rsq_base_addr,
-                              self.num_rsq_wqes,
-                              self.rsqwqe_size)
-        cfglogger.info("QP: %s PD: %s Remote: %s \n"
-                       "sq_base_addr: 0x%x rq_base_addr: 0x%x "
-                       "rsq_base_addr: 0x%x rrq_base_addr: 0x%x "
-                       "header_temp_addr: 0x%x\n" %\
-                        (self.GID(), self.pd.GID(), self.remote,
-                         self.sq_slab.address, self.rq_slab.address,
-                         self.rsq_base_addr, self.rrq_base_addr,
-                         self.header_temp_addr))
+
+        if req_spec.__class__.__name__ == "RdmaQpSpec":  
+    
+            self.rsq_base_addr = resp_spec.rsq_base_addr
+            self.rrq_base_addr = resp_spec.rrq_base_addr
+            self.header_temp_addr = resp_spec.header_temp_addr
+            self.sq.SetRingParams('SQ', True, 
+                                  self.sq_slab.mem_handle,
+                                  self.sq_slab.address, 
+                                  self.num_sq_wqes, 
+                                  self.sqwqe_size)
+            self.rq.SetRingParams('RQ', True, 
+                                  self.rq_slab.mem_handle,
+                                  self.rq_slab.address,
+                                  self.num_rq_wqes, 
+                                  self.rqwqe_size)
+            self.sq.SetRingParams('RRQ', False, 
+                                  None,
+                                  self.rrq_base_addr,
+                                  self.num_rrq_wqes,
+                                  self.rrqwqe_size)
+            self.rq.SetRingParams('RSQ', False, 
+                                  None,
+                                  self.rsq_base_addr,
+                                  self.num_rsq_wqes,
+                                  self.rsqwqe_size)
+            cfglogger.info("QP: %s PD: %s Remote: %s \n"
+                           "sq_base_addr: 0x%x rq_base_addr: 0x%x "
+                           "rsq_base_addr: 0x%x rrq_base_addr: 0x%x "
+                           "header_temp_addr: 0x%x\n" %\
+                            (self.GID(), self.pd.GID(), self.remote,
+                             self.sq_slab.address, self.rq_slab.address,
+                             self.rsq_base_addr, self.rrq_base_addr,
+                             self.header_temp_addr))
+    
+        elif req_spec.__class__.__name__ == "RdmaQpUpdateSpec":
+
+            cfglogger.info("Resp for RdmaQpUpdateSpec, "
+                           "QP: %s PD: %s oper: %d\n" %\
+                            (self.GID(), self.pd.GID(), req_spec.oper))
+
 
         #self.sq_cq.qstate.data.show()
 
@@ -223,11 +251,14 @@ class QpObject(base.ConfigObjectBase):
         UdpHdr = scapy.UDP(sport=rdma_session.session.iflow.sport,
                            dport=rdma_session.session.iflow.dport,
                            len = 0, chksum = 0)
-        HdrTemplate = EthHdr/Dot1qHdr/IpHdr/UdpHdr
+        self.HdrTemplate = EthHdr/Dot1qHdr/IpHdr/UdpHdr
+
+        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE
 
         if (GlobalOptions.dryrun): return
 
-        model_wrap.write_mem(self.header_temp_addr, bytes(HdrTemplate), len(HdrTemplate))
+        halapi.ModifyQps([self])
+
         return
          
 class QpObjectHelper:
