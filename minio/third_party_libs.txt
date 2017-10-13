@@ -1,2 +1,13 @@
 nic/third-party/googletest-release-1.8.0/googletest/make/*.a
 nic/third-party/lkl/export/bin/liblkl.so
+nic/third-party/openssl/lib/libpencrypto.a
+nic/third-party/openssl/lib/libpencrypto.so
+nic/third-party/openssl/lib/libpencrypto.so.1.1
+nic/third-party/openssl/lib/libpenssl.a
+nic/third-party/openssl/lib/libpenssl.so
+nic/third-party/openssl/lib/libpenssl.so.1.1
+nic/third-party/openssl/lib/engines-1.1/capi.so
+nic/third-party/openssl/lib/engines-1.1/padlock.so
+nic/third-party/openssl/bin/c_rehash
+nic/third-party/openssl/bin/openssl
+nic/third-party/crchack/bin/crchack
