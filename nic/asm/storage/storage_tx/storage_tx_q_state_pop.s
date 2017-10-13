@@ -18,7 +18,7 @@ struct phv_ p;
 
 storage_tx_q_state_pop_start:
    // If queue is empty, exit
-   QUEUE_EMPTY(d.p_ndx, d.c_ndx, exit)
+   QUEUE_EMPTY(d.p_ndx, d.c_ndx, clear_doorbell)
 
    // Pop the entry from the queue. Note: The working consumer index is updated
    // in the pop operation to ensure that 2 consumers don't pop the same entry.
@@ -43,17 +43,24 @@ storage_tx_q_state_pop_start:
    phvwr	p.storage_kivec1_ssd_ci_addr, d.ssd_ci_addr
    phvwr	p.storage_kivec2_ssd_q_num, d.ssd_q_num
    phvwr	p.storage_kivec2_ssd_q_size, d.ssd_q_size
-   // TODO: FIXME, dervive is_q0 from QID
+   // TODO: derive is_q0 from QID
    phvwr	p.storage_kivec0_is_q0, 0
    
    // Initialize the vf_id and sq_id fields in the PHV
-   phvwr	p.pvm_cmd_vf_id, d.vf_id
-   phvwr	p.pvm_cmd_sq_id, d.sq_id
+   phvwr	p.pvm_cmd_trailer_vf_id, d.vf_id
+   phvwr	p.pvm_cmd_trailer_sq_id, d.sq_id
    
    // Set the table and program address for the next stage to process
    // the popped entry (based on the working consumer index in GPR r6).
    LOAD_TABLE_FOR_INDEX(d.base_addr, r6, d.entry_size, d.entry_size,
                         d.next_pc)
-exit:
-   nop.e
-   nop
+clear_doorbell:
+   // Update the queue doorbell to clear the scheduler bit
+   QUEUE_POP_DOORBELL_CLEAR
+
+   // Setup the start and end DMA pointers to the doorbell pop
+   DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_0_dma_cmd_eop,
+                 p4_txdma_intr_dma_cmd_ptr)
+
+   // Nothing more to process in subsequent stages
+   LOAD_NO_TABLES

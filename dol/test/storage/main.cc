@@ -49,6 +49,18 @@ struct {
   {&tests::test_run_nvme_local_e2e1, "NVME Local Tgt E2E 1", false},
   {&tests::test_run_nvme_local_e2e2, "NVME Local Tgt E2E 2", false},
   {&tests::test_run_nvme_local_e2e3, "NVME Local Tgt E2E 3", false},
+  {&tests::test_run_seq_write1, "Seq Local Tgt Write 1", false},
+  {&tests::test_run_seq_write2, "Seq Local Tgt Write 2", false},
+  {&tests::test_run_seq_write3, "Seq Local Tgt Write 3", false},
+  {&tests::test_run_seq_write4, "Seq Local Tgt Write 4", false},
+  {&tests::test_run_seq_read1, "Seq Local Tgt Read 1", false},
+  {&tests::test_run_seq_read2, "Seq Local Tgt Read 2", false},
+  {&tests::test_run_seq_read3, "Seq Local Tgt Read 3", false},
+  {&tests::test_run_seq_read4, "Seq Local Tgt Read 4", false},
+  {&tests::test_run_seq_e2e1, "Seq Local Tgt E2E 1", false},
+  {&tests::test_run_seq_e2e2, "Seq Local Tgt E2E 2", false},
+  {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
+  {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
 
   // Always last entry
   {0}

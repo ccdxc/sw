@@ -21,16 +21,19 @@ storage_tx_nvme_be_wqe_handler_start:
 
    // Restore the fields in the NVME backend status to saved values
    phvwr	p.nvme_be_sta_hdr_r2n_buf_handle, d.r2n_buf_handle
-   phvwr	p.nvme_be_sta_cid, d.nvme_cmd_cid
+   phvwr	p.nvme_sta_cid, d.nvme_cmd_cid
 
    // Save the SSD handle and priority into the K+I vector
    phvwr	p.storage_kivec0_ssd_handle, d.ssd_handle
    phvwr	p.storage_kivec0_io_priority, d.io_priority
 
+   // Ring the sequencer doorbell as needed
+   addi		r1, r0, 1
+   seq		c1, d.db_enable, r1
+   bcf		![c1], load_tbl
+   SEQUENCER_DOORBELL_UPDATE(dma_p2m_3)
+
+load_tbl:
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR_PARAM(d.pri_qaddr, Q_STATE_SIZE,
                              storage_tx_pri_q_state_decr_start)
-
-exit:
-   nop.e
-   nop

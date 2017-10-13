@@ -20,11 +20,11 @@ storage_tx_nvme_be_cq_handler_start:
    QUEUE_POP_DOORBELL_UPDATE
 
    // Save the R2N WQE to PHV
-   phvwr	p.{nvme_be_sta_cspec...nvme_be_sta_status_phase},	\
-   		d.{cspec...status_phase}
+   phvwr	p.{nvme_sta_cspec...nvme_sta_status}, d.{cspec...status}
 
    // Set the state information for the NVME backend status header
-   // TODO: FIXME
+   // TODO: Is there any time where error status needs to be set ? 
+   //       Set is_q0, time_us correctly.
    phvwri	p.nvme_be_sta_hdr_time_us, 0
    phvwri	p.nvme_be_sta_hdr_be_status, 0
    phvwri	p.nvme_be_sta_hdr_is_q0, 0
@@ -54,7 +54,3 @@ storage_tx_nvme_be_cq_handler_start:
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR_PARAM(r7, STORAGE_DEFAULT_TBL_LOAD_SIZE,
                              storage_tx_nvme_be_wqe_handler_start)
-
-exit:
-   nop.e
-   nop

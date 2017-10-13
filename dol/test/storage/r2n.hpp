@@ -68,6 +68,8 @@ uint8_t *r2n_nvme_cmd_ptr(void *r2n_buf);
 
 void r2n_wqe_init(void *r2n_wqe_buf, void *r2n_buf);
 
+void r2n_wqe_db_update(void *r2n_wqe_buf, uint16_t lif, uint8_t qtype, 
+                       uint32_t qid, uint16_t index);
 
 }  // namespace r2n
 

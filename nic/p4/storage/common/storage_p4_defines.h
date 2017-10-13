@@ -443,8 +443,8 @@ header_type storage_kivec2_t {
 // LB size calculation
 #define LB_SIZE(nlb)				(nlb << LB_SIZE_SHIFT)
 
-// NVME command sent to PVM
-header_type pvm_cmd_t {
+// NVME command definition
+header_type nvme_cmd_t {
   fields {
     // NVME command Dword 0
     opc		: 8;	// Opcode
@@ -488,23 +488,17 @@ header_type pvm_cmd_t {
 
     // NVME command Dword 15
     dw15	: 32;
-
-    // Information passed to PVM
-    tickreg	: 64;	// Microsecond reg from NIC
-    vf_id	: 16;	// VF number
-    sq_id	: 16;	// Submission queue id
-    num_prps	: 8;	// Number of additional PRPs
   }
 }
 
-// NVME status obtained from PVM
-header_type pvm_status_t {
+// NVME status definition
+header_type nvme_sta_t {
   fields {
     // NVME status Dword 0
     cspec	: 32;	// Command specific
 
     // NVME status Dword 1
-    rsvd0	: 32;
+    rsvd	: 32;
 
     // NVME status Dword 2
     sq_head	: 16;	// Submission queue head pointer
@@ -517,8 +511,18 @@ header_type pvm_status_t {
   }
 }
 
+// Trailer in the PVM cmd containing source information
+header_type pvm_cmd_trailer_t {
+  fields {
+    tickreg	: 64;	// Microsecond reg from NIC
+    vf_id	: 16;	// VF number
+    sq_id	: 16;	// Submission queue id
+    num_prps	: 8;	// Number of additional PRPs
+  }
+}
+
 // Trailer in the PVM status used to push the status back
-header_type pvm_status_trailer_t {
+header_type pvm_sta_trailer_t {
   fields {
     // Information passed back by PVM
     dst_lif	: 11;	// Destination LIF number
@@ -540,16 +544,6 @@ header_type nvme_be_cmd_hdr_t {
   }
 }
 
-// NVME command processed by NVME backend and carried over ROCE
-header_type nvme_be_cmd_t {
-  fields {
-    nvme_cmd_w0		: 16;	// First 16 bits of actual NVME command
-    nvme_cmd_cid	: 16;	// Command id in the NVME command
-    nvme_cmd_hi		: 480;	// Final 60 bytes of actual NVME command
-  }
-}
-
-
 // NVME backend status header carried over ROCE
 header_type nvme_be_sta_hdr_t {
   fields {
@@ -558,18 +552,6 @@ header_type nvme_be_sta_hdr_t {
     is_q0		: 8;	// Is queue 0 (admin queue)
     rsvd		: 16;	// Padding for 64 bit alignment
     r2n_buf_handle	: 64;	// Back pointer to the R2N buffer
-  }
-}
-
-// NVME status processed by NVME backend and carried over ROCE
-header_type nvme_be_sta_t {
-  fields {
-    cspec		: 32;	// Command specific data
-    rsvd		: 32;	// Reserved
-    sq_head		: 16;	// SQ head pointer
-    sq_id		: 16;	// SQ id
-    cid			: 16;	// Command id that was passed in NVME command
-    status_phase	: 16;	// Status and phase bit
   }
 }
 
@@ -606,6 +588,15 @@ header_type r2n_wqe_t {
     opcode		: 16;	// Each use case has a distinct opcode
     status		: 16;	// Success/failure status
 
+    // Note: These fields are provided in the WQE from PVM for additional
+    // doorbell ring on the response handling from the SSD on a per WQE basis
+    // (when sequencer is used). The status is sent to PVM's R2N CQ.
+    db_enable		: 1;	// Doorbell to ring 
+    db_lif		: 11;	// Doorbell LIF number
+    db_qtype		: 3;	// Doorbell LIF type (within the LIF)
+    db_qid		: 24;	// Doorbell queue number (within the LIF)
+    db_index		: 16;	// Doorbell pindex
+
     // Note: These fields are not part of the WQE from PVM
     src_queue_id	: 32;	// ROCE source queue id
     ssd_handle		: 16;	// SSD handle to select NVME backend
@@ -637,11 +628,16 @@ header_type ssd_ci_t {
 }
 
 
-// Pad for storage, vary this based on PHV allocation to align DMA commands
-// to 16 byte boundary
-header_type storage_pad_t {
+// Pads for storage, vary this based on PHV allocation to align DMA commands
+// to 16 byte boundary, not to have NCC generated pads in DMA regions etc.
+header_type storage_pad0_t {
   fields {
-    pad		: 8;	// Align DMA commands to 16 byte to boundary
+    pad		: 16;	
+  }
+}
+header_type storage_pad1_t {
+  fields {
+    pad		: 16;	
   }
 }
 
@@ -705,14 +701,51 @@ header_type seq_barco_entry_t {
 }
 
 
+  // Carry forward NVME command information to be sent to PVM in the PHV 
+#define NVME_CMD_COPY(cmd)			\
+  modify_field(cmd.opc, opc);			\
+  modify_field(cmd.fuse, fuse);			\
+  modify_field(cmd.rsvd0, rsvd0);		\
+  modify_field(cmd.psdt, psdt);			\
+  modify_field(cmd.cid, cid);			\
+  modify_field(cmd.nsid, nsid);			\
+  modify_field(cmd.rsvd2, rsvd2);		\
+  modify_field(cmd.rsvd3, rsvd3);		\
+  modify_field(cmd.mptr, mptr);			\
+  modify_field(cmd.dptr1, dptr1);		\
+  modify_field(cmd.dptr2, dptr2);		\
+  modify_field(cmd.slba, slba);			\
+  modify_field(cmd.nlb, nlb);			\
+  modify_field(cmd.rsvd12, rsvd12);		\
+  modify_field(cmd.prinfo, prinfo);		\
+  modify_field(cmd.fua, fua);			\
+  modify_field(cmd.lr, lr);			\
+  modify_field(cmd.dsm, dsm);			\
+  modify_field(cmd.rsvd13, rsvd13);		\
+  modify_field(cmd.dw14, dw14);			\
+  modify_field(cmd.dw15, dw15);			\
+
+#define NVME_STATUS_COPY(sta)			\
+  modify_field(sta.cspec, cspec);		\
+  modify_field(sta.rsvd, rsvd);			\
+  modify_field(sta.sq_head, sq_head);		\
+  modify_field(sta.sq_id, sq_id);		\
+  modify_field(sta.cid, cid);			\
+  modify_field(sta.phase, phase);		\
+  modify_field(sta.status, status);		\
+
 // Copy the basic part of R2N WQE - the one sent by PVM
 #define R2N_WQE_BASE_COPY(wqe)					\
   modify_field(wqe.handle, handle);				\
   modify_field(wqe.data_size, data_size);			\
   modify_field(wqe.opcode, opcode);				\
-  modify_field(wqe.status, status);
+  modify_field(wqe.status, status);				\
+  modify_field(wqe.db_enable, db_enable);			\
+  modify_field(wqe.db_lif, db_lif);				\
+  modify_field(wqe.db_qtype, db_qtype);				\
+  modify_field(wqe.db_qid, db_qid);				\
+  modify_field(wqe.db_index, db_index);				\
 
-// Copy the NVME backend command header - also present in R2N WQE
 #define NVME_BE_CMD_HDR_COPY(hdr)				\
   modify_field(hdr.src_queue_id, src_queue_id);			\
   modify_field(hdr.ssd_handle, ssd_handle);			\

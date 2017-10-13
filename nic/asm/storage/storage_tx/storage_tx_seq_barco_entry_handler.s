@@ -50,7 +50,3 @@ storage_tx_seq_barco_entry_handler_start:
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR_SIZE_PARAM(d.xts_ring_addr, d.xts_ring_load_size,
                                   storage_tx_seq_barco_ring_push_start)
-
-exit:
-   nop.e
-   nop

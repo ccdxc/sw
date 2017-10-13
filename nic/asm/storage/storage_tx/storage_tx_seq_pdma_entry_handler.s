@@ -31,16 +31,13 @@ storage_tx_seq_pdma_entry_handler_start:
    // to ring it
    phvwr	p.qpush_doorbell_data_data, d.next_db_data
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,
-                     d.next_db_addr, dma_m2m_3)
+                     d.next_db_addr, dma_p2m_3)
 
    // Set the fence bit for the doorbell 
-   DMA_PHV2MEM_FENCE(dma_m2m_3)
+   DMA_PHV2MEM_FENCE(dma_p2m_3)
 
    // Setup the start and end DMA pointers
    DMA_PTR_SETUP(dma_p2m_0_dma_cmd_pad, dma_p2m_3_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
 
    LOAD_NO_TABLES
-exit:
-   nop.e
-   nop

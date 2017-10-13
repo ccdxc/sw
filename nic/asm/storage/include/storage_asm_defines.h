@@ -35,6 +35,8 @@
 	k.{storage_kivec0_cmd_index_sbit0_ebit3...storage_kivec0_cmd_index_sbit4_ebit7}
 #define STORAGE_KIVEC0_SSD_HANDLE	\
 	k.{storage_kivec0_ssd_handle_sbit0_ebit3...storage_kivec0_ssd_handle_sbit12_ebit15}
+#define STORAGE_KIVEC0_DST_REWRITE	\
+	k.storage_kivec0_dst_rewrite
 
 #define STORAGE_KIVEC1_SRC_LIF		\
 	k.{storage_kivec1_src_lif_sbit0_ebit7...storage_kivec1_src_lif_sbit8_ebit10}
@@ -65,9 +67,9 @@
 
 // TODO: Fix these to use the values defined in hardware
 #define CAPRI_DMA_PHV2MEM		3
-#define CAPRI_DMA_MEM2MEM		5
-#define CAPRI_DMA_M2M_TYPE_SRC		1
-#define CAPRI_DMA_M2M_TYPE_DST		2
+#define CAPRI_DMA_MEM2MEM		6
+#define CAPRI_DMA_M2M_TYPE_SRC		0
+#define CAPRI_DMA_M2M_TYPE_DST		1
 
 // Load a table based on absolute address
 // PC input must be a 28-bit value
@@ -227,7 +229,7 @@
    DOORBELL_DATA_SETUP(qpop_doorbell_data_data, STORAGE_KIVEC0_W_NDX,	\
                        r0, STORAGE_KIVEC1_SRC_QID, r0)			\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC1_SRC_LIF, STORAGE_KIVEC1_SRC_QTYPE,\
-                       DOORBELL_SCHED_WR_RESET, DOORBELL_UPDATE_C_NDX)	\
+                       DOORBELL_SCHED_WR_NONE, DOORBELL_UPDATE_C_NDX)	\
    DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
                      r7, dma_p2m_0)					\
 
@@ -242,32 +244,41 @@
    DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
                      r7, dma_p2m_0)					\
 
-// Clear the doorbell as there was no work to be done
-// TODO: Fix the ring
-#define PRI_QUEUE_POP_DOORBELL_CLEAR					\
-   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, r0, r0,			\
+// Clear the doorbell as there was no work to be done. Note index can
+// be 0 (r0) as there is no update.
+#define QUEUE_DOORBELL_CLEAR(_ring)					\
+   DOORBELL_DATA_SETUP(qpop_doorbell_data_data, r0, _ring,		\
                        STAGE0_KIVEC_QID, r0)				\
    DOORBELL_ADDR_SETUP(STAGE0_KIVEC_LIF, STAGE0_KIVEC_QTYPE,		\
                        DOORBELL_SCHED_WR_RESET, DOORBELL_UPDATE_NONE)	\
    DMA_PHV2MEM_SETUP(qpop_doorbell_data_data, qpop_doorbell_data_data,	\
                      r7, dma_p2m_0)					\
 
+// TODO: Fix the ring for the priority queue API
+#define PRI_QUEUE_POP_DOORBELL_CLEAR	QUEUE_DOORBELL_CLEAR(r0)
+#define QUEUE_POP_DOORBELL_CLEAR	QUEUE_DOORBELL_CLEAR(r0)
+
 // Setup the lif, type, qid, pindex for the doorbell push.  Set the fence 
 // bit for the doorbell 
-#define QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr)			\
+#define _QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, _sched)		\
    DOORBELL_DATA_SETUP(qpush_doorbell_data_data, d.p_ndx, r0,		\
                        STORAGE_KIVEC0_DST_QID, r0)			\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
-                       DOORBELL_SCHED_WR_NONE,				\
-                       DOORBELL_UPDATE_NONE)				\
+                       _sched, DOORBELL_UPDATE_NONE)			\
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
                      r7, _dma_cmd_ptr)					\
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 
+#define QUEUE_PUSH_DOORBELL_RING(_dma_cmd_ptr)				\
+   _QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET)	\
+
+#define QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr)			\
+   _QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, DOORBELL_SCHED_WR_NONE)	\
+
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O
 // priority is used to select the ring. Set the fence bit for the doorbell.
-#define PRI_QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, _p_ndx, _sched,	\
-                                       _qid, _pri)			\
+#define _PRI_QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, _p_ndx, _sched,	\
+                                        _qid, _pri)			\
    DOORBELL_DATA_SETUP(qpush_doorbell_data_data, _p_ndx,		\
                        _pri, _qid, r0)					\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
@@ -275,6 +286,16 @@
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
                      r7, _dma_cmd_ptr)					\
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
+
+// Setup the sequencer doorbell based on the lif, type, qid specified in
+// the WQE.
+#define SEQUENCER_DOORBELL_UPDATE(_dma_cmd_ptr)				\
+   DOORBELL_DATA_SETUP(seq_doorbell_data_data, d.db_index, r0, 		\
+                       d.db_qid, r0)					\
+   DOORBELL_ADDR_SETUP(d.db_lif, d.db_qtype, DOORBELL_SCHED_WR_SET,	\
+                       DOORBELL_UPDATE_P_NDX)				\
+   DMA_PHV2MEM_SETUP(seq_doorbell_data_data, seq_doorbell_data_data,	\
+                     r7, _dma_cmd_ptr)					\
 
 // Set the data to be pushed across the PCI layer to be the p_ndx. Issue
 // DMA write of this data to the address in the d-vector. Set the fence
@@ -386,8 +407,8 @@
    DMA_ADDR_UPDATE(r7, dma_p2m_1)					\
    QUEUE_PUSH(_p_ndx, _num_entries)					\
    add		r6, STORAGE_KIVEC0_DST_QID, STORAGE_KIVEC0_SSD_HANDLE;	\
-   PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_3, _p_ndx,			\
-                                  DOORBELL_SCHED_WR_SET, r6, _pri_vec)	\
+   _PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_3, _p_ndx,			\
+                                   DOORBELL_SCHED_WR_SET, r6, _pri_vec)	\
 
 
 // Increment the priority running counter and the total running counter.
@@ -437,13 +458,12 @@
    
 
 #define R2N_WQE_BASE_COPY						\
-   phvwr 	p.{r2n_wqe_handle...r2n_wqe_status},			\
-		d.{handle...status};					\
+   phvwr 	p.{r2n_wqe_handle...r2n_wqe_db_index},			\
+		d.{handle...db_index};					\
 
 #define R2N_WQE_FULL_COPY						\
-   phvwr 	p.{r2n_wqe_handle...r2n_wqe_nvme_cmd_cid},		\
-		d.{handle...nvme_cmd_cid};				\
-   phvwr 	p.r2n_wqe_pri_qaddr, d.pri_qaddr;			\
+   phvwr 	p.{r2n_wqe_handle...r2n_wqe_pri_qaddr},			\
+		d.{handle...pri_qaddr};					\
 
 // Calculate the table address based on the command index offset into
 // the SSD's list of outstanding commands

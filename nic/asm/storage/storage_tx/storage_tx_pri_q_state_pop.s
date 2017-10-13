@@ -27,7 +27,7 @@ storage_tx_pri_q_state_pop_start:
    phvwr	p.storage_kivec1_src_lif, STAGE0_KIVEC_LIF
    phvwr	p.storage_kivec1_src_qtype, STAGE0_KIVEC_QTYPE
    phvwr	p.storage_kivec1_src_qid, STAGE0_KIVEC_QID
-   // TODO: FIXME, dervive is_q0 from QID
+   // TODO: derive is_q0 from QID
    phvwr	p.storage_kivec0_is_q0, 0
 
    // Pop the entry from the priority queue. The working consumer index is 
@@ -52,11 +52,11 @@ check_med:
 check_lo:
    // If medium priority queue can be serviced, go with it, else exit
    PRI_QUEUE_CAN_POP(d.p_ndx_lo, d.c_ndx_lo, d.lo_running, d.lo_weight,
-                     exit)
+                     clear_doorbell)
    SERVICE_PRI_QUEUE(d.w_ndx_lo, NVME_BE_PRIORITY_LO)
 
 
-exit:
+clear_doorbell:
    // Nothing can be popped => Clear the doorbell
    // TODO: Ring this doorbell in the NVME backend response processing path
    PRI_QUEUE_POP_DOORBELL_CLEAR
@@ -68,5 +68,3 @@ exit:
    // Nothing more to process in subsequent stages
    LOAD_NO_TABLES
 
-   nop.e
-   nop
