@@ -77,21 +77,15 @@ int test_setup() {
   if (read_buf == nullptr || write_buf == nullptr) return -1;
   printf("read_buf address %p write_buf address %p\n", read_buf, write_buf);
 
-#if 0
   // Allocate the read and write buffer in HBM for the sequencer
   read_hbm_buf = queues::get_storage_hbm_addr() + kHbmSsdBitmapSize;
+  // Align it to a 4K page for PRP usage
+  read_hbm_buf = (read_hbm_buf + 4095) & 0xFFFFFFFFFFFFF000L;
+  // Naturally aligned  a 4K page as kHbmRWBufSize is aligned
   write_hbm_buf = read_hbm_buf + kHbmRWBufSize;
   printf("HBM read_buf address %lx write_buf address %lx\n", read_hbm_buf, write_hbm_buf);
-#else
-  // For now allocate the read and write buffer in HBM from host memory for the sequencer
-  // because SSD emulation layer expects it this way
-  void *ptr;
-  if ((ptr = alloc_page_aligned_host_mem(kDefaultBufSize)) == nullptr) return -1;
-  read_hbm_buf = host_mem_v2p(ptr);
-  if ((ptr = alloc_page_aligned_host_mem(kDefaultBufSize)) == nullptr) return -1;
-  write_hbm_buf = host_mem_v2p(ptr);
-#endif
 
+  // Allocate sequencer doorbell data that will be updated by sequencer and read by PVM
   if ((seq_db_data = alloc_host_mem(kSeqDbDataSize)) == nullptr) return -1;
   memset(seq_db_data, 0, kSeqDbDataSize);
 
