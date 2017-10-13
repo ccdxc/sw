@@ -161,6 +161,9 @@ metadata dma_cmd_pkt2mem_t dma_cmd_pkt2mem;
 metadata dma_cmd_phv2mem_t dma_cmd_phv2mem_ipsec_int;
 
 @pragma dont_trim
+metadata dma_cmd_phv2mem_t tail_2_bytes;
+
+@pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_fill_esp_hdr;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_in_desc_aol; 

@@ -135,8 +135,6 @@ metadata dma_cmd_mem2pkt_t esp_iv_hdr;
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t enc_pay_load;
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t tail_2_bytes;
-@pragma dont_trim
 metadata dma_cmd_mem2pkt_t icv_header;
 
 @pragma scratch_metadata
@@ -211,9 +209,6 @@ action ipsec_build_encap_packet()
 
     // Add encrypted payload from output page size is payload_size+pad
     //DMA_COMMAND_MEM2PKT_FILL(enc_pay_load, t0_s2s.out_page_addr, (txdma2_global.payload_size + txdma2_global.pad_size), 0, 0, 0)
-
-    // Fill right values below - fill 2 bytes of pad_size and l4protocl from global phv which are contiguous
-    DMA_COMMAND_PHV2PKT_FILL(tail_2_bytes, 0, 0, 0) 
 
     // Add ICV
     //DMA_COMMAND_MEM2PKT_FILL(icv_header, t0_s2s.out_page_addr+t0_s2s.tailroom_offset+2, txdma2_global.icv_size, 1, 0, 0)

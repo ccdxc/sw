@@ -30,6 +30,7 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     sub r6, d.block_size, 1
     and r4, r3, r6 
     sub r5, d.block_size, r4
+    subi r5, r5, 2
     phvwr p.ipsec_int_header_pad_size, r5
     addi r6, r0, IPSEC_PAD_BYTES_HBM_TABLE_BASE 
     phvwr p.ipsec_to_stage3_pad_addr, r6

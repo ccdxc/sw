@@ -61,8 +61,8 @@
 #define IPSEC_BARCO_DOORBELL_OFFSET_END CAPRI_PHV_END_OFFSET(barco_dbell_pi)
  
 
-#define IPSEC_TAIL_2_BYTES_PHV_START  CAPRI_PHV_START_OFFSET(txdma2_global_pad_size) 
-#define IPSEC_TAIL_2_BYTES_PHV_END    CAPRI_PHV_END_OFFSET(txdma2_global_l4_protocol) 
+#define IPSEC_TAIL_2_BYTES_PHV_START  CAPRI_PHV_START_OFFSET(ipsec_int_header_pad_size) 
+#define IPSEC_TAIL_2_BYTES_PHV_END    CAPRI_PHV_END_OFFSET(ipsec_int_header_l4_protocol) 
 
 #define IPSEC_IN_DESC_IV_SALT_START CAPRI_PHV_START_OFFSET(ipsec_to_stage3_iv_salt)
 #define IPSEC_IN_DESC_IV_SALT_END   CAPRI_PHV_END_OFFSET(ipsec_to_stage3_iv_salt)

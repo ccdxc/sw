@@ -60,7 +60,7 @@ packets:
                 src     : callback://ipsec/ipsec/GetSIp
                 dst     : callback://ipsec/ipsec/GetDIp 
                 ttl     : 255
-                len     : 166
+                len     : 164
                 id      : 0
                 tos     : 0
                 chksum  : 0
@@ -82,7 +82,7 @@ packets:
                 src     : callback://ipsec/ipsec/GetSIp
                 dst     : callback://ipsec/ipsec/GetDIp 
                 ttl     : 255
-                len     : 166
+                len     : 164
                 id      : 0
                 tos     : 0
                 chksum  : 0
