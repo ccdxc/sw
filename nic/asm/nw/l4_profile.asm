@@ -10,25 +10,14 @@ struct phv_         p;
 %%
 
 l4_profile:
-  ASSERT_PHVWR(p, l4_metadata_ip_normalization_en, l4_metadata_ip_rsvd_flags_action,
-               d, u.l4_profile_d.ip_normalization_en, u.l4_profile_d.ip_rsvd_flags_action)
-  phvwr       p.{l4_metadata_ip_normalization_en, \
-                 l4_metadata_icmp_normalization_en, \
-                 l4_metadata_tcp_normalization_en, \
-                 l4_metadata_ip_rsvd_flags_action}, \
-              d.{u.l4_profile_d.ip_normalization_en, \
-                 u.l4_profile_d.icmp_normalization_en, \
-                 u.l4_profile_d.tcp_normalization_en, \
-                 u.l4_profile_d.ip_rsvd_flags_action}
-  ASSERT_PHVWR(p, l4_metadata_ip_df_action, l4_metadata_ip_invalid_len_action,
-               d, u.l4_profile_d.ip_df_action, u.l4_profile_d.ip_invalid_len_action)
-  phvwr       p.{l4_metadata_ip_df_action, \
-                 l4_metadata_ip_options_action, \
+  ASSERT_PHVWR(p, l4_metadata_ip_normalization_en, l4_metadata_ip_invalid_len_action,
+               d, u.l4_profile_d.ip_normalization_en, u.l4_profile_d.ip_invalid_len_action)
+  phvwr       p.{l4_metadata_ip_normalization_en ...\
                  l4_metadata_ip_invalid_len_action}, \
-              d.{u.l4_profile_d.ip_df_action, \
-                 u.l4_profile_d.ip_options_action, \
+              d.{u.l4_profile_d.ip_normalization_en ...\
                  u.l4_profile_d.ip_invalid_len_action}
 
+  phvwr       p.l4_metadata_tcp_normalization_en, d.u.l4_profile_d.tcp_normalization_en
   phvwr       p.l4_metadata_ip_normalize_ttl, d.u.l4_profile_d.ip_normalize_ttl
   phvwr       p.l4_metadata_ip_fragment_drop, d.u.l4_profile_d.ip_fragment_drop
 
@@ -73,8 +62,6 @@ l4_profile:
   phvwr       p.l4_metadata_tcp_invalid_flags_drop, d.u.l4_profile_d.tcp_invalid_flags_drop
   bal         r7, f_ip_normalization
   phvwr       p.l4_metadata_tcp_split_handshake_detect_en, d.u.l4_profile_d.tcp_split_handshake_detect_en
-  seq         c2, k.p4plus_to_p4_valid, TRUE
-  bal.c2      r7, f_p4plus_to_p4_apps
   phvwr       p.l4_metadata_tcp_non_syn_first_pkt_drop, d.u.l4_profile_d.tcp_non_syn_first_pkt_drop
   phvwr.e     p.l4_metadata_tcp_split_handshake_drop, d.u.l4_profile_d.tcp_split_handshake_drop
   phvwr       p.l4_metadata_ip_ttl_change_detect_en, d.u.l4_profile_d.ip_ttl_change_detect_en
@@ -155,56 +142,6 @@ lb_ip_norm_header_length:
 lb_ip_norm_ttl:
   jr r7
   nop
-
-f_p4plus_to_p4_apps:
-  // update IP id
-  smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID, \
-                  P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID
-  add         r1, k.ipv4_identification, k.p4plus_to_p4_ip_id_delta
-  phvwr.c2    p.ipv4_identification, r1
-
-  // update IP length
-  seq         c2, k.vlan_tag_valid, TRUE
-  cmov        r1, c2, 18, 14
-  sub         r1, k.control_metadata_packet_len, r1
-  seq         c3, k.ipv4_valid, TRUE
-  sub.c3      r2, r1, k.ipv4_ihl, 2
-  seq         c4, k.ipv6_valid, TRUE
-  sub.c4      r2, r1, 40
-  smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN, \
-                  P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN
-  andcf       c3, [c2]
-  andcf       c4, [c2]
-  phvwr.c3    p.ipv4_totalLen, r1
-  phvwr.c4    p.ipv6_payloadLen, r2
-
-  // update UDP length
-  smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN, \
-                  P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN
-  phvwr.c2    p.udp_len, r2
-
-  // update TCP sequence number
-  smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO, \
-                  P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO
-  add         r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, \
-                  k.p4plus_to_p4_tcp_seq_delta
-  phvwr.c2    p.tcp_seqNo, r1
-  smeqb       c2, k.p4plus_to_p4_flags, P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG, \
-                  P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG
-
-  // insert vlan tag
-  phvwr.c2    p.vlan_tag_valid, TRUE
-  phvwr.c2    p.{vlan_tag_pcp...vlan_tag_vid}, k.p4plus_to_p4_vlan_tag
-  phvwr.c2    p.vlan_tag_etherType, k.ethernet_etherType
-  phvwr.c2    p.ethernet_etherType, ETHERTYPE_VLAN
-  add         r1, k.control_metadata_packet_len, 4
-  phvwr.c2    p.control_metadata_packet_len, r1
-  phvwr.c2    p.capri_p4_intrinsic_packet_len, r1
-  seq         c2, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CPU
-  phvwr.c2    p.control_metadata_from_cpu, TRUE
-  phvwr       p.capri_txdma_intrinsic_valid, FALSE
-  jr          r7
-  phvwr       p.p4plus_to_p4_valid, FALSE
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX

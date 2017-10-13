@@ -275,8 +275,10 @@ action permit_packet() {
 control ingress {
     if (control_metadata.ingress_bypass == FALSE) {
         process_input_mapping();
+        process_p4plus_to_p4();
         process_l4_profile();
         process_ipsg();
+        process_normalization();
         process_flow_table();
         process_nacl();
         process_ingress_policer();

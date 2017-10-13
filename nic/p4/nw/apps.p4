@@ -338,12 +338,37 @@ table p4plus_app_prep {
 /*****************************************************************************/
 /* P4+ to P4 app processing                                                  */
 /*****************************************************************************/
-action f_p4plus_to_p4() {
+action f_p4plus_to_p4_1() {
     // update IP id
     if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_IP_ID) != 0) {
         add(ipv4.identification, ipv4.identification, p4plus_to_p4.ip_id_delta);
     }
 
+    // update TCP sequence number
+    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO) != 0) {
+        add(tcp.seqNo, tcp.seqNo, p4plus_to_p4.tcp_seq_delta);
+    }
+
+    // insert vlan tag
+    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG) != 0) {
+        add_header(vlan_tag);
+        modify_field(vlan_tag.pcp, p4plus_to_p4.vlan_tag >> 13);
+        modify_field(vlan_tag.dei, p4plus_to_p4.vlan_tag >> 12);
+        modify_field(vlan_tag.vid, p4plus_to_p4.vlan_tag);
+        modify_field(vlan_tag.etherType, ethernet.etherType);
+        modify_field(ethernet.etherType, ETHERTYPE_VLAN);
+        add_to_field(control_metadata.packet_len, 4);
+        modify_field(capri_p4_intrinsic.packet_len,
+                     control_metadata.packet_len);
+    }
+
+    // update from cpu flag
+    if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_CPU)  {
+        modify_field(control_metadata.from_cpu, TRUE);
+    }
+}
+
+action f_p4plus_to_p4_2() {
     // update IP length
     if (vlan_tag.valid == TRUE) {
         subtract(scratch_metadata.packet_len, control_metadata.packet_len, 18);
@@ -367,34 +392,29 @@ action f_p4plus_to_p4() {
         modify_field(udp.len, scratch_metadata.packet_len);
     }
 
-    // update TCP sequence number
-    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_TCP_SEQ_NO) != 0) {
-        add(tcp.seqNo, tcp.seqNo, p4plus_to_p4.tcp_seq_delta);
-    }
-
-    // insert vlan tag
-    if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG) != 0) {
-        add_header(vlan_tag);
-        modify_field(vlan_tag.pcp, p4plus_to_p4.vlan_tag >> 13);
-        modify_field(vlan_tag.dei, p4plus_to_p4.vlan_tag >> 12);
-        modify_field(vlan_tag.vid, p4plus_to_p4.vlan_tag);
-        modify_field(vlan_tag.etherType, ethernet.etherType);
-        modify_field(ethernet.etherType, ETHERTYPE_VLAN);
-        add_to_field(control_metadata.packet_len, 4);
-        modify_field(capri_p4_intrinsic.packet_len,
-                     control_metadata.packet_len);
-    }
-
-    if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_CPU)  {
-        modify_field(control_metadata.from_cpu, TRUE); 
-    }
-
     remove_header(p4plus_to_p4);
     remove_header(capri_txdma_intrinsic);
 }
 
-action p4plus_to_p4_apps() {
+@pragma stage 1
+table p4plus_to_p4_1 {
+    actions {
+        f_p4plus_to_p4_1;
+    }
+    default_action : f_p4plus_to_p4_1;
+}
+
+@pragma stage 5
+table p4plus_to_p4_2 {
+    actions {
+        f_p4plus_to_p4_2;
+    }
+    default_action : f_p4plus_to_p4_2;
+}
+
+control process_p4plus_to_p4 {
     if (p4plus_to_p4.valid == TRUE) {
-        f_p4plus_to_p4();
+        apply(p4plus_to_p4_1);
+        apply(p4plus_to_p4_2);
     }
 }

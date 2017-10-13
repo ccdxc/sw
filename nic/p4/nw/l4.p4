@@ -98,7 +98,6 @@ metadata l4_metadata_t l4_metadata;
 
 action l4_profile(ip_normalization_en,
                   icmp_normalization_en,
-                  tcp_normalization_en,
                   ip_rsvd_flags_action,
                   ip_df_action,
                   ip_options_action,
@@ -125,7 +124,8 @@ action l4_profile(ip_normalization_en,
                   tcp_invalid_flags_drop,
                   tcp_non_syn_first_pkt_drop,
                   tcp_split_handshake_detect_en,
-                  tcp_split_handshake_drop) {
+                  tcp_split_handshake_drop,
+                  tcp_normalization_en) {
 
     modify_field(l4_metadata.ip_normalization_en, ip_normalization_en);
     modify_field(l4_metadata.icmp_normalization_en, icmp_normalization_en);
@@ -159,7 +159,6 @@ action l4_profile(ip_normalization_en,
     modify_field(l4_metadata.ip_ttl_change_detect_en, ip_ttl_change_detect_en);
 
     ip_normalization_checks();
-    p4plus_to_p4_apps();
 }
 
 @pragma stage 1
@@ -1155,12 +1154,7 @@ action icmp_normalization_checks() {
     }
 }
 
-action tcp_stateless_normalization_checks() {
-
-    if (tcp.valid == FALSE or
-        l4_metadata.tcp_normalization_en == FALSE) {
-        // no action needed, exit the routine.
-    }
+action tcp_stateless_normalization() {
     // Reserved bits in the TCP header are non-zero
     if ((tcp.res != 0) and
         (l4_metadata.tcp_rsvd_flags_action == NORMALIZATION_ACTION_DROP)) {
@@ -1363,20 +1357,25 @@ action tcp_session_normalization() {
     }
 }
 
-action stateless_normalization() {
-    icmp_normalization_checks();
-}
-
-@pragma stage 3
-table stateless_normalization {
-    actions {
-        stateless_normalization;
-    }
-}
-
 control process_session_state {
     if ((capri_intrinsic.drop == FALSE) and
         (l4_metadata.flow_conn_track == TRUE)) {
         apply(session_state);
+    }
+}
+
+@pragma stage 2
+table tcp_stateless_normalization {
+    actions {
+        tcp_stateless_normalization;
+    }
+    default_action : tcp_stateless_normalization;
+}
+
+control process_normalization {
+    if (tcp.valid == TRUE) {
+        if (l4_metadata.tcp_normalization_en == TRUE) {
+            apply(tcp_stateless_normalization);
+        }
     }
 }
