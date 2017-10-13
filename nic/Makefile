@@ -4,61 +4,6 @@ default: hal
 TOPDIR = .
 TOPDIR_ABS = ${CURDIR}
 CUSTOM = hal
-#LIBDIRS = \
-#		  utils \
-#		  hal/pd/capri/csr \
-#		  proto gen/protobuf \
-#		  p4 \
-#		  capsim \
-#		  asm \
-#		  model_sim/build \
-#		  fte \
-#		  hal/svc \
-#		  hal/lkl \
-#		  hal/src \
-#		  hal/periodic \
-#		  hal/pd/iris/p4pd \
-#		  gen/iris/src \
-#		  gen/common_rxdma_actions/src \
-#		  gen/common_txdma_actions/src \
-#		  hal/plugins \
-#		  hal/pd/common \
-#		  hal/pd/iris \
-#		  hal/pd/capri \
-#		  hal/pd/utils/directmap\
-#		  hal/pd/utils/flow \
-#		  hal/pd/utils/hash \
-#		  hal/pd/utils/met \
-#		  hal/pd/utils/tcam \
-#		  hal/pd/utils/acl_tcam \
-#		  hal/pd/utils \
-#		  hal/pd/utils/p4pd_mock \
-#		  hal/test/utils \
-#		  $(NULL)
-#
-#PGMDIRS = \
-#		  hal \
-#		  hal/test \
-#		  fte/test \
-#		  hal/test/gtests \
-#		  utils/indexer/test \
-#		  utils/shm/test \
-#		  utils/list/test \
-#		  utils/pt/test \
-#		  utils/slab/test \
-#		  utils/twheel/test \
-#		  utils/host_mem/test \
-#		  hal/pd/utils/directmap/test \
-#		  hal/pd/utils/flow/test \
-#		  hal/pd/utils/hash/test \
-#		  hal/pd/utils/met/test \
-#		  hal/pd/utils/tcam/test \
-#		  hal/pd/utils/acl_tcam/test \
-#		  hal/pd/iris/test/rw_tbl_lib \
-#		  hal/test \
-#		  agents \
-#		  $(NULL)
-#SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 
 include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
@@ -192,6 +137,11 @@ run-gtests:
 	#cd ../bazel-bin && LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/pd/utils/flow/flow_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/flow.xml"
 	cd ../bazel-bin && LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/pd/utils/hash/hash_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/hash_test.xml"
 	cd ../bazel-bin && LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/pd/utils/met/met_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/met_test.xml"
+
+run-gtests-valgrind:
+	# PI gtests
+	cd ../bazel-bin && CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf valgrind ./nic/hal/test/gtests/uplinkif_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/uplinkif_test.xml"
+	cd ../bazel-bin && CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf valgrind ./nic/hal/test/gtests/uplinkpc_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/uplinkpc_test.xml"
 
 clean:
 	$(MAKE) -C p4 clean

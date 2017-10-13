@@ -9,6 +9,8 @@ using types::ApiStatus;
 namespace hal {
 
 #define NUM_DASHES 20
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
 
 hal_ret_t ip_addr_spec_to_ip_addr(ip_addr_t *out_ipaddr,
                                   const types::IPAddress& in_ipaddr);

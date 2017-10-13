@@ -62,7 +62,7 @@ network_add_to_db (network_t *nw, hal_handle_t handle)
     hal_ret_t                   ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:adding to network key hash table", 
+    HAL_TRACE_DEBUG("pi-network:{}:adding to network key hash table", 
                     __FUNCTION__);
     // allocate an entry to establish mapping from l2key to its handle
     entry =
@@ -78,7 +78,7 @@ network_add_to_db (network_t *nw, hal_handle_t handle)
                                                          entry, 
                                                          &entry->ht_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to network key to handle mapping, "
+        HAL_TRACE_ERR("pi-network:{}:failed to network key to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
@@ -95,20 +95,27 @@ network_add_to_db (network_t *nw, hal_handle_t handle)
 static inline hal_ret_t
 network_del_from_db (network_t *nw)
 {
+    hal_ret_t                   ret = HAL_RET_OK;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-ep:{}:removing from network key hash table", 
+    HAL_TRACE_DEBUG("pi-network:{}:removing from network key hash table", 
                     __FUNCTION__);
     // remove from hash table
-    entry = (hal_handle_id_ht_entry_t *)g_hal_state->ep_l2_ht()->
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->network_key_ht()->
             remove(&nw->nw_key);
 
     if (entry) {
         // free up
         g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+    } else {
+        HAL_TRACE_ERR("pi-network:{}:unable to find network:{}",
+                      __FUNCTION__, network_to_str(nw));
+        ret = HAL_RET_NETWORK_NOT_FOUND;
+        goto end;
     }
 
-    return HAL_RET_OK;
+end:
+    return ret;;
 }
 
 
@@ -157,7 +164,7 @@ network_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                    hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("pi-network:{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -176,7 +183,7 @@ network_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Add network to key DB
     ret = network_add_to_db (nw, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-ep:{}:unable to add network to DB", 
+        HAL_TRACE_ERR("pi-network:{}:unable to add network to DB", 
                       __FUNCTION__);
         goto end;
     }
@@ -575,14 +582,14 @@ network_add_l2seg (network_t *nw, l2seg_t *l2seg)
     }
     entry->handle_id = l2seg->hal_handle;
 
-    network_lock(nw);      // lock
+    network_lock(nw, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
     utils::dllist_add(&nw->l2seg_list_head, &entry->dllist_ctxt);
-    network_unlock(nw);    // unlock
+    network_unlock(nw, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-network:{}:add l2seg:{} to nw:{}, ret:{}",
-                    __FUNCTION__, l2seg->seg_id, network_to_str(nw), ret);
+    HAL_TRACE_DEBUG("pi-network:{}:add network => l2seg, {} => {}, ret:{}",
+                    __FUNCTION__, network_to_str(nw), l2seg->seg_id, ret);
     return ret;
 }
 
@@ -597,7 +604,7 @@ network_del_l2seg (network_t *nw, l2seg_t *l2seg)
     dllist_ctxt_t               *curr = NULL, *next = NULL;
 
 
-    network_lock(nw);      // lock
+    network_lock(nw, __FILENAME__, __LINE__, __func__);      // lock
     dllist_for_each_safe(curr, next, &nw->l2seg_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == l2seg->hal_handle) {
@@ -609,10 +616,10 @@ network_del_l2seg (network_t *nw, l2seg_t *l2seg)
             ret = HAL_RET_OK;
         }
     }
-    network_unlock(nw);    // unlock
+    network_unlock(nw, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-network:{}:del l2seg:{} from network:{}, ret:{}",
-                    __FUNCTION__, l2seg->seg_id, network_to_str(nw), ret);
+    HAL_TRACE_DEBUG("pi-network:{}:del network =/=> l2seg, {} =/=> {}, ret:{}",
+                    __FUNCTION__, network_to_str(nw), l2seg->seg_id, ret);
     return ret;
 }
 

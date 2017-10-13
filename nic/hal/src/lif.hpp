@@ -44,6 +44,7 @@ typedef struct lif_s {
     // operational state of interface
     hal_handle_t        hal_handle;                  // HAL allocated handle
 
+    // back references to enic ifs
     dllist_ctxt_t       if_list_head;                // interfaces(enics) behind this lif
 
     void                *pd_lif;
@@ -72,16 +73,22 @@ typedef struct lif_update_app_ctxt_s {
 #define HAL_MAX_LIFS                                 1024
 
 static inline void 
-lif_lock(lif_t *lif)
+lif_lock(lif_t *lif, const char *fname,
+         int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:locking lif:{}", __FUNCTION__, lif->lif_id);
+    HAL_TRACE_DEBUG("{}:operlock:locking lif:{} from {}:{}:{}", 
+                    __FUNCTION__, lif->lif_id,
+                    fname, lineno, fxname);
     HAL_SPINLOCK_LOCK(&lif->slock);
 }
 
 static inline void 
-lif_unlock(lif_t *lif)
+lif_unlock(lif_t *lif, const char *fname,
+           int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:unlocking lif:{}", __FUNCTION__, lif->lif_id);
+    HAL_TRACE_DEBUG("{}:operlock:unlocking lif:{} from {}:{}:{}", 
+                    __FUNCTION__, lif->lif_id,
+                    fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&lif->slock);
 }
 

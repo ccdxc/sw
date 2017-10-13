@@ -495,7 +495,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
 
     hal_api_trace(" API Begin: interface create ");
-    HAL_TRACE_DEBUG("pi-if:{}:if create for id {} Type: {} EnicType: {}",
+    HAL_TRACE_DEBUG("pi-if:{}:if create for id {} type: {} enictype: {}",
                     __FUNCTION__, spec.key_or_handle().interface_id(),
                     IfType_Name(spec.type()), 
                     IfEnicType_Name(spec.if_enic_info().enic_type()));
@@ -503,7 +503,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     // do basic validations on interface
     ret = validate_interface_create(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PI-IF:{}: Validation failed. Err: {} ApiStatus: {}",
+        HAL_TRACE_ERR("pi-if:{}: validation failed. err: {} apistatus: {}",
                       __FUNCTION__, ret, rsp->api_status());
         return ret;
     }
@@ -907,7 +907,7 @@ if_update_pi_with_mbr_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
 
     // lock if. 
     // Revisit: this is a clone and may be we dont have to take the lock
-    if_lock(hal_if);
+    if_lock(hal_if, __FILENAME__, __LINE__, __func__);
 
     // Free list in clone
     hal_free_handles_list(&hal_if->mbr_if_list_head);
@@ -941,7 +941,7 @@ end:
     interface_cleanup_handle_list(&app_ctxt->aggr_mbrlist);
 
     // Unlock if
-    if_unlock(hal_if);
+    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);
 
     return ret;
 }
@@ -1145,10 +1145,11 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pi-if:{}: if update for id {} type: {} enictype: {}",
+    HAL_TRACE_DEBUG("pi-if:{}: if update for id {} type:{} enictype:{}",
                     __FUNCTION__, hal_if->if_id, 
-                    IfType_Name(hal_if->if_type),
-                    IfEnicType_Name(hal_if->enic_type));
+                    IfType_Name(hal_if->if_type), 
+                    (hal_if->if_type == intf::IF_TYPE_ENIC) ?
+                    IfEnicType_Name(hal_if->enic_type) : "IF_ENIC_TYPE_NONE");
 
     // Check for changes
     ret = if_update_check_for_change(spec, hal_if, &app_ctxt, &has_changed);
@@ -2064,10 +2065,11 @@ interface_delete (InterfaceDeleteRequest& req, InterfaceDeleteResponseMsg *rsp)
         ret = HAL_RET_IF_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("pi-if:{}: if delete for id {} type: {} enictype: {}",
+    HAL_TRACE_DEBUG("pi-if:{}: if delete for id {} type:{} enictype:{}",
                     __FUNCTION__, hal_if->if_id, 
-                    IfType_Name(hal_if->if_type),
-                    IfEnicType_Name(hal_if->enic_type));
+                    IfType_Name(hal_if->if_type), 
+                    (hal_if->if_type == intf::IF_TYPE_ENIC) ?
+                    IfEnicType_Name(hal_if->enic_type) : "IF_ENIC_TYPE_NONE");
 
     ret = validate_if_delete(hal_if);
     if (ret != HAL_RET_OK) {
@@ -2413,16 +2415,16 @@ uplinkif_add_uplinkpc (if_t *upif, if_t *uppc)
         goto end;
     }
 
-    if_lock(upif);
+    if_lock(upif, __FILENAME__, __LINE__, __func__);
 
     upif->is_pc_mbr = true;
     upif->uplinkpc_handle = uppc->hal_handle;
 
-    if_unlock(upif);
+    if_unlock(upif, __FILENAME__, __LINE__, __func__);
 
 
 end:
-    HAL_TRACE_DEBUG("{}: add relation uplinkif => uplinkpc , {} -> {}",
+    HAL_TRACE_DEBUG("{}: add uplinkif => uplinkpc , {} => {}",
                     upif->if_id, uppc->if_id);
     return ret;
 }
@@ -2441,16 +2443,16 @@ uplinkif_del_uplinkpc (if_t *upif, if_t *uppc)
         goto end;
     }
 
-    if_lock(upif);
+    if_lock(upif, __FILENAME__, __LINE__, __func__);
 
     upif->is_pc_mbr = false;
     upif->uplinkpc_handle = HAL_HANDLE_INVALID;
 
-    if_unlock(upif);
+    if_unlock(upif, __FILENAME__, __LINE__, __func__);
 
 
 end:
-    HAL_TRACE_DEBUG("{}: del relation uplinkif =/=> uplinkpc , {} -> {}",
+    HAL_TRACE_DEBUG("{}: del uplinkif =/=> uplinkpc , {} =/=> {}",
                     __FUNCTION__, upif->if_id, uppc->if_id);
     return ret;
 }
@@ -2479,13 +2481,13 @@ uplinkpc_add_uplinkif (if_t *uppc, if_t *upif)
     }
     entry->handle_id = upif->hal_handle;
 
-    if_lock(uppc);          // lock
+    if_lock(uppc, __FILENAME__, __LINE__, __func__);          // lock
     // Insert into the list
     utils::dllist_add(&uppc->mbr_if_list_head, &entry->dllist_ctxt);
-    if_unlock(uppc);      // unlock
+    if_unlock(uppc, __FILENAME__, __LINE__, __func__);      // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-uplinkpc:{}:add uplinkif_id:{} to uplinkpc_id:{}, ret:{}",
+    HAL_TRACE_DEBUG("pi-uplinkpc:{}: add uplinkpc => uplinkif, {} => {}, ret:{}",
                     __FUNCTION__, uppc->if_id, upif->if_id, ret);
     return ret;
 }
@@ -2496,11 +2498,11 @@ end:
 hal_ret_t
 uplinkpc_del_uplinkif (if_t *uppc, if_t *upif)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
+    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
     hal_handle_id_list_entry_t  *entry = NULL;
     dllist_ctxt_t               *curr, *next;
 
-    if_lock(uppc);      // lock
+    if_lock(uppc, __FILENAME__, __LINE__, __func__);      // lock
     dllist_for_each_safe(curr, next, &uppc->mbr_if_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == upif->hal_handle) {
@@ -2508,16 +2510,13 @@ uplinkpc_del_uplinkif (if_t *uppc, if_t *upif)
             utils::dllist_del(&entry->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-            goto end;
+            ret = HAL_RET_OK;
         }
     }
-    if_unlock(uppc);    // unlock
+    if_unlock(uppc, __FILENAME__, __LINE__, __func__);    // unlock
 
-    ret = HAL_RET_IF_NOT_FOUND;
-
-end:
-    HAL_TRACE_DEBUG("pi-uplinkpc:{}:del uplinkif:{} from uplinkpc:{}, reg:{}",
-                    __FUNCTION__, upif->if_id, uppc->if_id, ret);
+    HAL_TRACE_DEBUG("pi-uplinkpc:{}: del uplinkpc =/=> uplinkif, {} =/=> {}, ret:{}",
+                    __FUNCTION__, uppc->if_id, upif->if_id, ret);
     return ret;
 }
 
@@ -2544,14 +2543,14 @@ if_add_l2seg (if_t *hal_if, l2seg_t *l2seg)
     }
     entry->handle_id = l2seg->hal_handle;
 
-    if_lock(hal_if);      // lock
+    if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
     utils::dllist_add(&hal_if->l2seg_list_head, &entry->dllist_ctxt);
-    if_unlock(hal_if);    // unlock
+    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-if:{}:add l2seg:{} to if:{}, ret:{}",
-                    __FUNCTION__, l2seg->seg_id, hal_if->if_id, ret);
+    HAL_TRACE_DEBUG("pi-if:{}: add if => l2seg, {} => {}, ret:{}",
+                    __FUNCTION__, hal_if->if_id, l2seg->seg_id, ret);
     return ret;
 }
 
@@ -2566,7 +2565,7 @@ if_del_l2seg (if_t *hal_if, l2seg_t *l2seg)
     dllist_ctxt_t               *curr = NULL, *next = NULL;
 
 
-    if_lock(hal_if);      // lock
+    if_lock(hal_if, __FILENAME__, __LINE__, __func__);      // lock
     dllist_for_each_safe(curr, next, &hal_if->l2seg_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == l2seg->hal_handle) {
@@ -2578,10 +2577,10 @@ if_del_l2seg (if_t *hal_if, l2seg_t *l2seg)
             ret = HAL_RET_OK;
         }
     }
-    if_unlock(hal_if);    // unlock
+    if_unlock(hal_if, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-lif:{}:del l2seg:{} from if:{}, ret:{}",
-                    __FUNCTION__, l2seg->seg_id, hal_if->if_id, ret);
+    HAL_TRACE_DEBUG("pi-if:{}: del if =/=> l2seg, {} =/=> {}, ret:{}",
+                    __FUNCTION__, hal_if->if_id, l2seg->seg_id, ret);
     return ret;
 }
 

@@ -22,6 +22,9 @@ hal_ret_t l2seg_handle_nwsec_update (l2seg_t *l2seg,
 
 hal_ret_t if_handle_nwsec_update (l2seg_t *l2seg, if_t *hal_if, 
                                   nwsec_profile_t *nwsec_prof);
+hal_ret_t tenant_handle_nwsec_update (tenant_t *tenant, 
+                                      nwsec_profile_t *nwsec_prof);
+
 // Adding IFs to lif 
 hal_ret_t lif_add_if (lif_t *lif, if_t *hal_if);
 hal_ret_t lif_del_if (lif_t *lif, if_t *hal_if);
@@ -33,6 +36,13 @@ hal_ret_t l2seg_del_if (l2seg_t *l2seg, if_t *hal_if);
 // Adding l2segs to if
 hal_ret_t if_add_l2seg (if_t *hal_if, l2seg_t *l2seg);
 hal_ret_t if_del_l2seg (if_t *hal_if, l2seg_t *l2seg);
+
+// Adding tenants to nwsec profile
+hal_ret_t nwsec_prof_add_tenant (nwsec_profile_t *nwsec, 
+                                 tenant_t *tenant);
+hal_ret_t nwsec_prof_del_tenant (nwsec_profile_t *nwsec, 
+                                 tenant_t *tenant);
+
 
 // Handle lif update in IF
 hal_ret_t if_handle_lif_update (pd::pd_if_lif_upd_args_t *args);

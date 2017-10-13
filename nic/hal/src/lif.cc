@@ -838,10 +838,10 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// validate tenant delete request
+// validate lif delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_lif_delete (LifDeleteRequest& req, LifDeleteResponseMsg *rsp)
+validate_lif_delete_req (LifDeleteRequest& req, LifDeleteResponseMsg *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -849,6 +849,24 @@ validate_lif_delete (LifDeleteRequest& req, LifDeleteResponseMsg *rsp)
     if (!req.has_key_or_handle()) {
         HAL_TRACE_ERR("pi-lif:{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// validate lif delete request
+//------------------------------------------------------------------------------
+hal_ret_t
+validate_lif_delete (lif_t *lif)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    // check for no presence of back references
+    if (dllist_count(&lif->if_list_head)) {
+        ret = HAL_RET_OBJECT_IN_USE;
+        HAL_TRACE_ERR("pi-lif:{}:ifs still referring:", __FUNCTION__);
+        hal_print_handles_list(&lif->if_list_head);
     }
 
     return ret;
@@ -983,7 +1001,7 @@ lif_delete (LifDeleteRequest& req, LifDeleteResponseMsg *rsp)
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
 
     // validate the request message
-    ret = validate_lif_delete(req, rsp);
+    ret = validate_lif_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-lif:{}:lif delete validation failed, ret : {}",
                       __FUNCTION__, ret);
@@ -999,6 +1017,15 @@ lif_delete (LifDeleteRequest& req, LifDeleteResponseMsg *rsp)
     }
     HAL_TRACE_DEBUG("pi-lif:{}:deleting lif {}", 
                     __FUNCTION__, lif->lif_id);
+
+    // validate if there no objects referring this sec. profile
+    ret = validate_lif_delete(lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-lif:{}:lif delete validation failed, "
+                      "ret : {}",
+                      __FUNCTION__, ret);
+        goto end;
+    }
 
     // form ctxt and call infra add
     dhl_entry.handle = lif->hal_handle;
@@ -1131,14 +1158,14 @@ lif_add_if (lif_t *lif, if_t *hal_if)
     }
     entry->handle_id = hal_if->hal_handle;
 
-    lif_lock(lif);      // lock
+    lif_lock(lif, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
     utils::dllist_add(&lif->if_list_head, &entry->dllist_ctxt);
-    lif_unlock(lif);    // unlock
+    lif_unlock(lif, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-lif:{}:add if:{} to lif:{}, ret:{}",
-                    __FUNCTION__, hal_if->if_id, lif->lif_id, ret);
+    HAL_TRACE_DEBUG("pi-if:{}: add lif => if, {} => {}, ret:{}",
+                    __FUNCTION__, lif->lif_id, hal_if->if_id, ret);
     return ret;
 }
 
@@ -1153,7 +1180,7 @@ lif_del_if (lif_t *lif, if_t *hal_if)
     dllist_ctxt_t               *curr = NULL, *next = NULL;
 
 
-    lif_lock(lif);      // lock
+    lif_lock(lif, __FILENAME__, __LINE__, __func__);      // lock
     dllist_for_each_safe(curr, next, &lif->if_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == hal_if->hal_handle) {
@@ -1165,10 +1192,10 @@ lif_del_if (lif_t *lif, if_t *hal_if)
             ret = HAL_RET_OK;
         }
     }
-    lif_unlock(lif);    // unlock
+    lif_unlock(lif, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-lif:{}:del if:{} to lif:{}, ret:{}",
-                    __FUNCTION__, hal_if->if_id, lif->lif_id, ret);
+    HAL_TRACE_DEBUG("pi-if:{}: add lif =/=> if, {} =/=> {}, ret:{}",
+                    __FUNCTION__, lif->lif_id, hal_if->if_id, ret);
     return ret;
 }
 

@@ -88,14 +88,11 @@ typedef struct nwsec_profile_s {
 
     hal_handle_t          hal_handle;             // HAL allocated handle
 
+    // operational state of nwsec profile
+    dllist_ctxt_t         tenant_list_head;
+
     // PD state
     void                  *pd;                    // all PD specific state
-
-    // TODO: maintian list of tenants who are using this nwsec prof.
-    //       change should trigger all tenants.
-    // meta data maintained for tenant
-    // ht_ctxt_t             ht_ctxt;                // profile id based hash table ctxt
-    // ht_ctxt_t             hal_handle_ht_ctxt;     // hal handle based hash table ctxt
 } __PACK__ nwsec_profile_t;
 
 typedef struct nwsec_create_app_ctxt_s {
@@ -104,10 +101,36 @@ typedef struct nwsec_create_app_ctxt_s {
 typedef struct nwsec_update_app_ctxt_s {
     bool        ipsg_changed;                       // ipsg changed
     bool        nwsec_changed;                      // Any field changed
+
+    // valid for ipsg_changed
+    uint32_t    ipsg_en:1;                          // new ipsg_en value
+
+    // valid for any change
+    SecurityProfileSpec *spec;
 } __PACK__ nwsec_update_app_ctxt_t;
 
 // max. number of security profiles supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_NWSEC_PROFILES                       256
+
+static inline void 
+nwsec_profile_lock(nwsec_profile_t *nwsec_profile, const char *fname, 
+                   int lineno, const char *fxname)
+{
+    HAL_TRACE_DEBUG("{}:operlock:locking nwsec_profile:{} from {}:{}:{}", 
+                    __FUNCTION__, nwsec_profile->profile_id,
+                    fname, lineno, fxname);
+    HAL_SPINLOCK_LOCK(&nwsec_profile->slock);
+}
+
+static inline void 
+nwsec_profile_unlock(nwsec_profile_t *nwsec_profile, const char *fname, 
+                     int lineno, const char *fxname)
+{
+    HAL_TRACE_DEBUG("{}:operlock:unlocking nwsec_profile:{} from {}:{}:{}", 
+                    __FUNCTION__, nwsec_profile->profile_id,
+                    fname, lineno, fxname);
+    HAL_SPINLOCK_UNLOCK(&nwsec_profile->slock);
+}
 
 // allocate a security profile instance
 static inline nwsec_profile_t *
@@ -129,13 +152,13 @@ nwsec_profile_init (nwsec_profile_t *sec_prof)
     if (!sec_prof) {
         return NULL;
     }
+    memset(sec_prof, 0, sizeof(nwsec_profile_t));
+
+
     HAL_SPINLOCK_INIT(&sec_prof->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
-
-    // initialize meta information
-    // sec_prof->ht_ctxt.reset();
-    // sec_prof->hal_handle_ht_ctxt.reset();
+    utils::dllist_reset(&sec_prof->tenant_list_head);
 
     return sec_prof;
 }
@@ -155,20 +178,6 @@ nwsec_profile_free (nwsec_profile_t *sec_prof)
     g_hal_state->nwsec_profile_slab()->free(sec_prof);
     return HAL_RET_OK;
 }
-
-#if 0
-// insert a security profile in all meta data structures
-// NOTE: nwsec profile is single write object, only config thread can update
-//       the spec of this object, not FTE threads
-static inline hal_ret_t
-add_nwsec_profile_to_db (nwsec_profile_t *sec_prof)
-{
-    g_hal_state->nwsec_profile_id_ht()->insert(sec_prof, &sec_prof->ht_ctxt);
-    g_hal_state->nwsec_profile_hal_handle_ht()->insert(sec_prof,
-                                                       &sec_prof->hal_handle_ht_ctxt);
-    return HAL_RET_OK;
-}
-#endif
 
 // find a security profile instance by its id
 static inline nwsec_profile_t *
@@ -208,6 +217,11 @@ extern void *nwsec_profile_id_get_key_func(void *entry);
 extern uint32_t nwsec_profile_id_compute_hash_func(void *key, uint32_t ht_size);
 extern bool nwsec_profile_id_compare_key_func(void *key1, void *key2);
 nwsec_profile_t *nwsec_lookup_key_or_handle (const SecurityProfileKeyHandle& kh);
+
+
+
+
+// TODO: Move nwsec policy to a separate file
 
 // extern void *nwsec_profile_get_handle_key_func(void *entry);
 // extern uint32_t nwsec_profile_compute_handle_hash_func(void *key, uint32_t ht_size);

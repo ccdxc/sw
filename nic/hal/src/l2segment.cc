@@ -7,6 +7,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/include/oif_list_api.hpp"
 #include "nic/hal/src/if_utils.hpp"
+#include "nic/hal/src/utils.hpp"
 
 namespace hal {
 
@@ -213,7 +214,9 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     l2seg_t                     *l2seg = NULL;
+    tenant_t                    *tenant = NULL;
     hal_handle_t                hal_handle = 0;
+    l2seg_create_app_ctxt_t     *app_ctxt = NULL; 
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-l2seg:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -224,6 +227,7 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    app_ctxt = (l2seg_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     l2seg = (l2seg_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
@@ -244,8 +248,14 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    // TODO: Increment the ref counts of dependent objects
-    //  - Have to increment ref count for tenant
+    // Add l2seg to tenant's l2seg list
+    tenant = app_ctxt->tenant;
+    ret = tenant_add_l2seg(tenant, l2seg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-l2seg:{}:failed to add rel. from tenant",
+                __FUNCTION__);
+        goto end;
+    }
 
 end:
     return ret;
@@ -351,7 +361,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
 
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    hal_api_trace(" API Begin: l2segment create ");
     HAL_TRACE_DEBUG("pi-l2seg:{}:l2seg create with id:{}", __FUNCTION__, 
                     spec.key_or_handle().segment_id());
 
@@ -462,8 +472,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                              l2seg_create_cleanup_cb);
 
     l2seg_prepare_rsp(rsp, ret, l2seg->hal_handle);
-
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    hal_api_trace(" API End: l2segment create ");
     return ret;
 
 }
@@ -590,7 +599,7 @@ l2seg_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_l2seg_args_t         pd_l2seg_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    l2seg_t                     *l2seg = NULL;
+    l2seg_t                     *l2seg = NULL, *l2seg_clone = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-l2seg{}:invalid cfg_ctxt", __FUNCTION__);
@@ -602,9 +611,14 @@ l2seg_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
     l2seg = (l2seg_t *)dhl_entry->obj;
+    l2seg_clone = (l2seg_t *)dhl_entry->cloned_obj;
 
     HAL_TRACE_DEBUG("pi-l2seg:{}:update commit CB {}",
                     __FUNCTION__, l2seg->seg_id);
+
+    // move lists to clone
+    dllist_move(&l2seg_clone->nw_list_head, &l2seg->nw_list_head);
+    dllist_move(&l2seg_clone->if_list_head, &l2seg->if_list_head);
 
     // Free PD
     pd::pd_l2seg_args_init(&pd_l2seg_args);
@@ -684,7 +698,7 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     const L2SegmentKeyHandle    &kh = spec.key_or_handle();
     l2seg_update_app_ctxt_t     app_ctxt = { 0 };
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    hal_api_trace(" API Begin: l2segment update ");
 
     // validate the request message
     ret = validate_l2seg_update(spec, rsp);
@@ -737,7 +751,7 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 
 end:
     l2seg_prepare_rsp(rsp, ret, l2seg->hal_handle);
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    hal_api_trace(" API End: l2segment update ");
     return ret;
 }
 
@@ -762,7 +776,7 @@ l2seg_lookup_key_or_handle (const L2SegmentKeyHandle& kh)
 // validate l2seg delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_l2seg_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponseMsg* rsp)
+validate_l2seg_delete_req (L2SegmentDeleteRequest& req, L2SegmentDeleteResponseMsg* rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -770,6 +784,24 @@ validate_l2seg_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponseMsg* 
     if (!req.has_key_or_handle()) {
         HAL_TRACE_ERR("pi-l2seg:{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// validate l2seg delete request
+//------------------------------------------------------------------------------
+hal_ret_t
+validate_l2seg_delete (l2seg_t *l2seg)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    // check for no presence of back refernces
+    if (dllist_count(&l2seg->if_list_head)) {
+        ret = HAL_RET_OBJECT_IN_USE;
+        HAL_TRACE_ERR("pi-l2seg:{}:ifs still referring:", __FUNCTION__);
+        hal_print_handles_list(&l2seg->if_list_head);
     }
 
     return ret;
@@ -834,6 +866,7 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     l2seg_t                     *l2seg = NULL;
+    tenant_t                    *tenant = NULL;
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
@@ -850,6 +883,15 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("pi-l2seg:{}:delete commit CB {}",
                     __FUNCTION__, l2seg->seg_id);
+
+    // Remove l2seg references from other objects
+    tenant = tenant_lookup_by_handle(l2seg->tenant_handle);
+    ret = tenant_del_l2seg(tenant, l2seg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-l2seg:{}:failed to del rel. from tenant",
+                __FUNCTION__);
+        goto end;
+    }
 
     // a. Remove from l2seg id hash table
     ret = l2seg_del_from_db(l2seg);
@@ -902,16 +944,15 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponseMsg *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     const L2SegmentKeyHandle    &kh = req.key_or_handle();
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    hal_api_trace(" API Begin: l2segment delete ");
 
     // validate the request message
-    ret = validate_l2seg_delete(req, rsp);
+    ret = validate_l2seg_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2seg:{}:l2seg delete validation failed, ret : {}",
                       __FUNCTION__, ret);
         goto end;
     }
-
 
     l2seg = l2seg_lookup_key_or_handle(kh);
     if (l2seg == NULL) {
@@ -922,6 +963,15 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponseMsg *rsp)
     }
     HAL_TRACE_DEBUG("pi-l2seg:{}:deleting l2seg {}", 
                     __FUNCTION__, l2seg->seg_id);
+
+    // validate if there no objects referring this sec. profile
+    ret = validate_l2seg_delete(l2seg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-l2seg:{}:l2seg delete validation failed, "
+                      "ret : {}",
+                      __FUNCTION__, ret);
+        goto end;
+    }
 
     // form ctxt and call infra add
     dhl_entry.handle = l2seg->hal_handle;
@@ -938,7 +988,7 @@ l2segment_delete (L2SegmentDeleteRequest& req, L2SegmentDeleteResponseMsg *rsp)
 
 end:
     rsp->add_api_status(hal_prepare_rsp(ret));
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    hal_api_trace(" API End: l2segment delete ");
     return ret;
 }
 
@@ -1026,14 +1076,14 @@ l2seg_add_if (l2seg_t *l2seg, if_t *hal_if)
     }
     entry->handle_id = hal_if->hal_handle;
 
-    l2seg_lock(l2seg);      // lock
+    l2seg_lock(l2seg, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
     utils::dllist_add(&l2seg->if_list_head, &entry->dllist_ctxt);
-    l2seg_unlock(l2seg);    // unlock
+    l2seg_unlock(l2seg, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-l2seg:{}:add if:{} to l2seg:{}, ret:{}",
-                    __FUNCTION__, hal_if->if_id, l2seg->seg_id, ret);
+    HAL_TRACE_DEBUG("pi-l2seg:{}: add l2seg => if ,{} => {}, ret:{}",
+                    __FUNCTION__, l2seg->seg_id, hal_if->if_id, ret);
     return ret;
 }
 
@@ -1048,7 +1098,7 @@ l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
     dllist_ctxt_t               *curr, *next;
 
 
-    l2seg_lock(l2seg);      // lock
+    l2seg_lock(l2seg, __FILENAME__, __LINE__, __func__);      // lock
     dllist_for_each_safe(curr, next, &l2seg->if_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == hal_if->hal_handle) {
@@ -1060,10 +1110,10 @@ l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
             ret = HAL_RET_OK;
         }
     }
-    l2seg_unlock(l2seg);    // unlock
+    l2seg_unlock(l2seg, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-l2seg:{}:del if:{} from l2seg:{}, ret:{}",
-                    __FUNCTION__, hal_if->if_id, l2seg->seg_id, ret);
+    HAL_TRACE_DEBUG("pi-l2seg:{}: del l2seg =/=> if ,{} =/=> {}, ret:{}",
+                    __FUNCTION__, l2seg->seg_id, hal_if->if_id, ret);
     return ret;
 }
 

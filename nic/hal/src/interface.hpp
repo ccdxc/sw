@@ -108,9 +108,13 @@ typedef struct if_s {
     uint32_t            num_ep;             // no. of endpoints
     intf::IfStatus      if_op_status;       // operational status
 
-    // meta data maintained for interface
-    dllist_ctxt_t       l2seg_list_head;    // l2segments - valid only for uplinks
+    // forward references
     dllist_ctxt_t       mbr_if_list_head;   // list of member ports for uplink PC
+    // back references
+    dllist_ctxt_t       l2seg_list_head;    // l2segments - valid only for uplinks
+
+
+
     // dllist_ctxt_t       ep_list_head;       // endpoints behind this interface
     // dllist_ctxt_t       session_list_head;  // session from this
 
@@ -145,19 +149,21 @@ typedef struct if_update_app_ctxt_s {
 #define HAL_MAX_INTERFACES                           2048
 
 static inline void 
-if_lock(if_t *hal_if)
+if_lock(if_t *hal_if, const char *fname, int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:locking if:{}", __FUNCTION__, hal_if->if_id);
+    HAL_TRACE_DEBUG("{}:operlock:locking if:{} from {}:{}:{}", 
+                    __FUNCTION__, hal_if->if_id,
+                    fname, lineno, fxname);
     HAL_SPINLOCK_LOCK(&hal_if->slock);
-    custom_backtrace();
 }
 
 static inline void 
-if_unlock(if_t *hal_if)
+if_unlock(if_t *hal_if, const char *fname, int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:operlock:unlocking if:{}", __FUNCTION__, hal_if->if_id);
+    HAL_TRACE_DEBUG("{}:operlock:unlocking if:{} from {}:{}:{}", 
+                    __FUNCTION__, hal_if->if_id,
+                    fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&hal_if->slock);
-    custom_backtrace();
 }
 
 // allocate a interface instance
@@ -184,6 +190,7 @@ if_init (if_t *hal_if)
 
     // initialize the operational state
     hal_if->num_ep = 0;
+    hal_if->enic_type = intf::IF_ENIC_TYPE_NONE;
     hal_if->pd_if = NULL;
     hal_if->hal_handle = HAL_HANDLE_INVALID;
     hal_if->lif_handle = HAL_HANDLE_INVALID;

@@ -51,15 +51,17 @@ typedef struct l2seg_s {
     // operational state of L2 segment
     hal_handle_t          hal_handle;              // HAL allocated handle
     uint32_t              num_ep;                  // no. of endpoints
+    // forward references
+    dllist_ctxt_t         nw_list_head;            // network list
+    // back references
+    dllist_ctxt_t         if_list_head;            // interface list
+
+    dllist_ctxt_t         ep_list_head;            // endpoint list
+    dllist_ctxt_t         session_list_head;       // tenant's L2 segment list link
 
     // PD state
     void                  *pd;                     // all PD specific state
 
-    // meta data maintained for tenant
-    dllist_ctxt_t         if_list_head;            // interface list
-    dllist_ctxt_t         nw_list_head;            // network list
-    dllist_ctxt_t         ep_list_head;            // endpoint list
-    dllist_ctxt_t         session_list_head;       // tenant's L2 segment list link
 } __PACK__ l2seg_t;
 
 // CB data structures
@@ -79,16 +81,20 @@ typedef struct l2seg_update_app_ctxt_s {
 #define HAL_MAX_L2SEGMENTS                           2048
 
 static inline void 
-l2seg_lock(l2seg_t *l2seg)
+l2seg_lock(l2seg_t *l2seg, const char *fname, int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:locking l2seg:{}", __FUNCTION__, l2seg->seg_id);
+    HAL_TRACE_DEBUG("{}:operlock:locking l2seg:{} from {}:{}:{}", 
+                    __FUNCTION__, l2seg->seg_id,
+                    fname, lineno, fxname);
     HAL_SPINLOCK_LOCK(&l2seg->slock);
 }
 
 static inline void 
-l2seg_unlock(l2seg_t *l2seg)
+l2seg_unlock(l2seg_t *l2seg, const char *fname, int lineno, const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:unlocking l2seg:{}", __FUNCTION__, l2seg->seg_id);
+    HAL_TRACE_DEBUG("{}:operlock:unlocking l2seg:{} from {}:{}:{}", 
+                    __FUNCTION__, l2seg->seg_id,
+                    fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&l2seg->slock);
 }
 

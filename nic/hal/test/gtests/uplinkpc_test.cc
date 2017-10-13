@@ -457,6 +457,176 @@ TEST_F(uplinkpc_test, test5)
     ASSERT_TRUE(is_leak == false);
 }
 
+// ----------------------------------------------------------------------------
+// Test 6:
+// - Create multiple uplinks
+// - Create multiple l2segs and make them up on uplinks
+// - Remove l2segs on uplinks
+// - Delete l2segs
+// - Delete uplinks
+// ----------------------------------------------------------------------------
+TEST_F(uplinkpc_test, test6)
+{
+    hal_ret_t                       ret;
+    InterfaceSpec                   if_spec;
+    InterfaceResponse               if_rsp;
+    L2SegmentSpec                   l2seg_spec;
+    L2SegmentResponse               l2seg_rsp;
+    L2SegmentDeleteRequest          l2seg_del_req;
+    L2SegmentDeleteResponseMsg      l2seg_del_rsp;
+    TenantSpec                      ten_spec;
+    TenantResponse                  ten_rsp;
+    InterfaceL2SegmentSpec          if_l2seg_spec;
+    InterfaceL2SegmentResponse      if_l2seg_rsp;
+    InterfaceDeleteRequest          del_req;
+    InterfaceDeleteResponseMsg      del_rsp;
+    InterfaceSpec                   pc_spec;
+    InterfaceResponse               pc_rsp;
+    SecurityProfileSpec             sp_spec;
+    SecurityProfileResponse         sp_rsp;
+    NetworkSpec                     nw_spec;
+    NetworkResponse                 nw_rsp;
+    int                             num_uplinks = 8;
+    int                             num_l2segs = 100;
+    slab_stats_t                    *pre = NULL, *post = NULL;
+    bool                            is_leak = false;
+    hal_handle_t                    upif_handles[8];
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(6);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(6);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create network
+    nw_spec.mutable_meta()->set_tenant_id(6);
+    nw_spec.set_rmac(0x0000DEADBEEF);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+
+    pre = hal_test_utils_collect_slab_stats();
+
+    // Create l2segments
+    l2seg_spec.add_network_handle(nw_hdl);
+    for (int i = 1; i <= num_l2segs; i++) {
+        // Create l2segment
+        l2seg_spec.mutable_meta()->set_tenant_id(6);
+        l2seg_spec.mutable_key_or_handle()->set_segment_id(600 + i);
+        l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+        l2seg_spec.mutable_fabric_encap()->set_encap_value(600 + i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    // Create Uplinks
+    for (int i = 1; i <= num_uplinks; i++) {
+        // Create uplink
+        if_spec.set_type(intf::IF_TYPE_UPLINK);
+        if_spec.mutable_key_or_handle()->set_interface_id(600 + i);
+        if_spec.mutable_if_uplink_info()->set_port_num(i);
+        if_spec.mutable_if_uplink_info()->set_native_l2segment_id(600+1);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::interface_create(if_spec, &if_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+        upif_handles[i-1] = if_rsp.mutable_status()->if_handle();
+    }
+
+    // Uplink PC Create with 1 mbr
+    pc_spec.set_type(intf::IF_TYPE_UPLINK_PC);
+    pc_spec.mutable_key_or_handle()->set_interface_id(600 + num_uplinks + 1);
+    pc_spec.mutable_if_uplink_pc_info()->add_member_if_handle(upif_handles[0]);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(pc_spec, &pc_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Add 7 uplinks to PC
+    pc_spec.set_type(intf::IF_TYPE_UPLINK_PC);
+    pc_spec.mutable_key_or_handle()->set_interface_id(600 + num_uplinks + 1);
+    for (int i = 2; i <= num_uplinks; i++) {
+        pc_spec.mutable_if_uplink_pc_info()->add_member_if_handle(upif_handles[i-1]);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::interface_update(pc_spec, &pc_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    // Adding L2segment on UplinkPC
+    for (int j = 1; j <= num_l2segs; j++) {
+        if_l2seg_spec.mutable_l2segment_key_or_handle()->set_segment_id(600+j);
+        if_l2seg_spec.mutable_if_key_handle()->set_interface_id(600 + num_uplinks + 1);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::add_l2seg_on_uplink(if_l2seg_spec, &if_l2seg_rsp);
+        HAL_TRACE_DEBUG("ret:{}", ret);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+        hal::hal_cfg_db_close();
+    }
+
+    // Deleting L2segment on UplinkPC
+    for (int j = 1; j <= num_l2segs; j++) {
+        if_l2seg_spec.mutable_l2segment_key_or_handle()->set_segment_id(600+j);
+        if_l2seg_spec.mutable_if_key_handle()->set_interface_id(600 + num_uplinks + 1);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::del_l2seg_on_uplink(if_l2seg_spec, &if_l2seg_rsp);
+        HAL_TRACE_DEBUG("ret:{}", ret);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+        hal::hal_cfg_db_close();
+    }
+
+    // Delete PC
+    del_req.mutable_key_or_handle()->set_interface_id(600 + num_uplinks + 1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Delete uplinks
+    for (int i = 1; i <= num_uplinks; i++) {
+        del_req.mutable_key_or_handle()->set_interface_id(600 + i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::interface_delete(del_req, &del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    // Delete l2segments
+    for (int i = 1; i <= num_l2segs; i++) {
+        l2seg_del_req.mutable_meta()->set_tenant_id(6);
+        l2seg_del_req.mutable_key_or_handle()->set_segment_id(600 + i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::l2segment_delete(l2seg_del_req, &l2seg_del_rsp);
+        hal::hal_cfg_db_close();
+        HAL_TRACE_DEBUG("ret: {}", ret);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    // Checking for slab leak
+    post = hal_test_utils_collect_slab_stats();
+    hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    ASSERT_TRUE(is_leak == false);
+}
+
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

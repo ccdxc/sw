@@ -11,8 +11,6 @@
 
 namespace hal {
 
-// static inline hal_ret_t tenant_delete_cb(void *obj);
-
 // ----------------------------------------------------------------------------
 // hash table tenant_id => entry
 //  - Get key from entry
@@ -200,6 +198,7 @@ tenant_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     tenant_t                    *tenant = NULL;
     hal_handle_t                hal_handle = 0;
+    tenant_create_app_ctxt_t    *app_ctxt = NULL; 
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-tenant:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -210,6 +209,7 @@ tenant_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    app_ctxt = (tenant_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     tenant = (tenant_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
@@ -225,8 +225,15 @@ tenant_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    // TODO: Increment the ref counts of dependent objects
-    //  - Have to increment ref count for nwsec profile
+    // Add tenant to nwsec profile
+    if (tenant->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+        ret = nwsec_prof_add_tenant(app_ctxt->sec_prof, tenant);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pi-tenant:{}:failed to add rel. from nwsec. prof",
+                          __FUNCTION__);
+            goto end;
+        }
+    }
 
 end:
     return ret;
@@ -327,7 +334,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    hal_api_trace(" API Begin: tenant create ");
     HAL_TRACE_DEBUG("pi-tenant:{}:creating tenant with id {}",
                     __FUNCTION__, spec.key_or_handle().tenant_id());
 
@@ -336,7 +343,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-tenant:{}:validation failed, ret : {}", 
                 __FUNCTION__, ret);
-        return ret;
+        goto end;
     }
 
     // check if tenant exists already, and reject if one is found
@@ -344,16 +351,16 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
         HAL_TRACE_ERR("pi-tenant:{}:failed to create a tenant, "
                       "tenant {} exists already", __FUNCTION__, 
                       spec.key_or_handle().tenant_id());
-        rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
-        return HAL_RET_ENTRY_EXISTS;
+        ret = HAL_RET_ENTRY_EXISTS;
+        goto end;
     }
 
     // instantiate a PI tenant object
     tenant = tenant_alloc_init();
     if (tenant == NULL) {
-        rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
         HAL_TRACE_ERR("pi-tenant:{}:failed to create teanant, err : {}", ret);
-        return HAL_RET_OOM;
+        ret = HAL_RET_OOM;
+        goto end;
     }
     tenant->tenant_id = spec.key_or_handle().tenant_id();
     tenant->nwsec_profile_handle = spec.security_profile_handle();
@@ -369,7 +376,8 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
                           __FUNCTION__, tenant->nwsec_profile_handle);
             rsp->set_api_status(types::API_STATUS_NWSEC_PROFILE_NOT_FOUND);
             tenant_free(tenant);
-            return HAL_RET_SECURITY_PROFILE_NOT_FOUND;
+            ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
+            goto end;
         }
     }
 
@@ -380,7 +388,8 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
                       __FUNCTION__, tenant->tenant_id);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         tenant_free(tenant);
-        return HAL_RET_HANDLE_INVALID;
+        ret = HAL_RET_HANDLE_INVALID;
+        goto end;
     }
 
     // form ctxt and call infra add
@@ -397,9 +406,18 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
                              tenant_create_abort_cb, 
                              tenant_create_cleanup_cb);
 
-    tenant_prepare_rsp(rsp, ret, hal_handle);
 
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+end:
+    if (ret != HAL_RET_OK) {
+        if (tenant) {
+            // if there is an error, if will be freed in abort CB
+            tenant = NULL;
+        }
+    }
+
+    tenant_prepare_rsp(rsp, ret, 
+                      tenant ? tenant->hal_handle : HAL_HANDLE_INVALID);
+    hal_api_trace(" API End: tenant create ");
     return ret;
 }
 
@@ -551,6 +569,7 @@ tenant_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     tenant_t                    *tenant = NULL, *tenant_clone = NULL;
     tenant_update_app_ctxt_t    *app_ctxt = NULL;
+    nwsec_profile_t             *nwsec_prof = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-tenant{}:invalid cfg_ctxt", __FUNCTION__);
@@ -568,9 +587,40 @@ tenant_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("pi-tenant:{}:update commit CB {}",
                     __FUNCTION__, tenant->tenant_id);
 
+    // move lists to clone
+    dllist_move(&tenant_clone->l2seg_list_head, &tenant->l2seg_list_head);
+
     // update clone with new attrs
     if (app_ctxt->nwsec_prof_change) {
         tenant_clone->nwsec_profile_handle = app_ctxt->nwsec_profile_handle;
+
+        if (tenant->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+            // detach from old nwsec prof
+            nwsec_prof = find_nwsec_profile_by_handle(
+                         tenant->nwsec_profile_handle);
+            if (nwsec_prof == NULL) {
+                HAL_TRACE_ERR("pi-tenant:{}:unable to find nwsec prof "
+                        "with hdl:{}",
+                        __FUNCTION__, tenant->nwsec_profile_handle);
+                goto end;
+            }
+            ret = nwsec_prof_del_tenant(nwsec_prof, tenant);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("pi-tenant:{}:unable to detach old nwsec prof",
+                        __FUNCTION__);
+                goto end;
+            }
+        }
+
+        if (tenant_clone->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+            // attach to new nwsec prof
+            ret = nwsec_prof_add_tenant(app_ctxt->nwsec_prof, tenant_clone);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("pi-tenant:{}:unable to attach new nwsec prof",
+                        __FUNCTION__);
+                goto end;
+            }
+        }
     }
 
     // Free PD
@@ -652,7 +702,7 @@ tenant_update (TenantSpec& spec, TenantResponse *rsp)
     const TenantKeyHandle       &kh = spec.key_or_handle();
     tenant_update_app_ctxt_t    app_ctxt = { 0 };
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    hal_api_trace(" API Begin: tenant update");
 
     // validate the request message
     ret = validate_tenant_update(spec, rsp);
@@ -688,16 +738,22 @@ tenant_update (TenantSpec& spec, TenantResponse *rsp)
         goto end;
     }
 
-    app_ctxt.nwsec_prof = find_nwsec_profile_by_handle(app_ctxt.nwsec_profile_handle);
-    if (app_ctxt.nwsec_prof == NULL) {
-        HAL_TRACE_ERR("pi-tenant:{}:security profile with handle {} not found", 
-                      __FUNCTION__, 
-                      app_ctxt.nwsec_profile_handle);
-        // ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
-        // goto end;
+    if (app_ctxt.nwsec_profile_handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_DEBUG("pi-tenant:{}: No nwsec prof passed, "
+                        "using default security profile", __FUNCTION__);
+        app_ctxt.nwsec_prof = NULL;
     } else {
-        HAL_TRACE_DEBUG("pi-tenant:{}:new nwsec profile id: {}", __FUNCTION__, 
-                        app_ctxt.nwsec_prof->profile_id);
+        app_ctxt.nwsec_prof = find_nwsec_profile_by_handle(app_ctxt.nwsec_profile_handle);
+        if (app_ctxt.nwsec_prof == NULL) {
+            HAL_TRACE_ERR("pi-tenant:{}:security profile with handle {} not found", 
+                    __FUNCTION__, 
+                    app_ctxt.nwsec_profile_handle);
+            // ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
+            // goto end;
+        } else {
+            HAL_TRACE_DEBUG("pi-tenant:{}:new nwsec profile id: {}", __FUNCTION__, 
+                    app_ctxt.nwsec_prof->profile_id);
+        }
     }
 
     tenant_make_clone(tenant, (tenant_t **)&dhl_entry.cloned_obj);
@@ -717,7 +773,7 @@ tenant_update (TenantSpec& spec, TenantResponse *rsp)
 
 end:
     tenant_prepare_rsp(rsp, ret, tenant->hal_handle);
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    hal_api_trace(" API End: tenant update");
     return ret;
 }
 
@@ -768,104 +824,11 @@ tenant_get (TenantGetRequest& req, TenantGetResponse *rsp)
     return HAL_RET_OK;
 }
 
-#if 0
-//------------------------------------------------------------------------------
-// process a tenant get request
-//------------------------------------------------------------------------------
-hal_ret_t
-tenant_get (TenantGetRequest& req, TenantGetResponse *rsp)
-{
-    tenant_t     *tenant;
-
-    // key-handle field must be set
-    if (!req.has_key_or_handle()) {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    auto kh = req.key_or_handle();
-    if (kh.key_or_handle_case() == TenantKeyHandle::kTenantId) {
-        tenant = tenant_lookup_by_id(kh.tenant_id());
-    } else if (kh.key_or_handle_case() == TenantKeyHandle::kTenantHandle) {
-        tenant = tenant_lookup_by_handle(kh.tenant_handle());
-    } else {
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-
-    if (tenant == NULL) {
-        rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
-        return HAL_RET_TENANT_NOT_FOUND;
-    }
-
-    // fill config spec of this tenant
-    rsp->mutable_spec()->mutable_meta()->set_tenant_id(tenant->tenant_id);
-    rsp->mutable_spec()->mutable_key_or_handle()->set_tenant_id(tenant->tenant_id);
-    rsp->mutable_spec()->set_security_profile_handle(tenant->nwsec_profile_handle);
-
-    // fill operational state of this tenant
-    rsp->mutable_status()->set_tenant_handle(tenant->hal_handle);
-
-    // fill stats of this tenant
-    rsp->mutable_stats()->set_num_l2_segments(tenant->num_l2seg);
-    rsp->mutable_stats()->set_num_security_groups(tenant->num_sg);
-    rsp->mutable_stats()->set_num_l4lb_services(tenant->num_l4lb_svc);
-    rsp->mutable_stats()->set_num_endpoints(tenant->num_ep);
-
-    rsp->set_api_status(types::API_STATUS_OK);
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// tenant delete callback function, this will be invoked when no other thread is
-// using this object once tenant delete API is called
-// NOTE: hal handle allocated for this object shouldn't be explicitly deleted
-//------------------------------------------------------------------------------
-static inline hal_ret_t
-tenant_delete_cb (void *obj)
-{
-    hal_ret_t                ret;
-    tenant_t                 *tenant = (tenant_t *)obj;
-    hal_handle_ht_entry_t    *entry;
-    pd::pd_tenant_args_t     pd_tenant_args;
-
-    if (tenant == NULL) {
-        HAL_TRACE_ERR("Invalid tenant object passed for deletion");
-        return HAL_RET_INVALID_ARG;
-    }
-    HAL_TRACE_DEBUG("Started Tenant {} deletion", tenant->tenant_id);
-
-    // delete this tenant from all the meta data structures
-    entry = (hal_handle_ht_entry_t *)
-                g_hal_state->tenant_id_ht()->remove(&tenant->tenant_id);
-    if (entry == NULL) {
-        HAL_TRACE_ERR("Failed to find tenant tenant-id HT, tenant id {}",
-                      tenant->tenant_id);
-        // still go ahead and cleanup whatever we can !!!
-    } else {
-        g_hal_state->hal_handle_ht_entry_slab()->free(entry);
-    }
-
-    // do the actual cleanup for this tenant object now
-    if (tenant->pd) {
-        pd::pd_tenant_args_init(&pd_tenant_args);
-        pd_tenant_args.tenant = tenant;
-        ret = pd::pd_tenant_delete(&pd_tenant_args);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to delete tenant pd, err : {}", ret);
-        }
-    }
-    tenant_free(tenant);
-
-    return HAL_RET_OK;
-}
-#endif
-
 //------------------------------------------------------------------------------
 // validate tenant delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_tenant_delete (TenantDeleteRequest& req, TenantDeleteResponseMsg *rsp)
+validate_tenant_delete_req (TenantDeleteRequest& req, TenantDeleteResponseMsg *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -952,6 +915,7 @@ tenant_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     tenant_t                    *tenant = NULL;
     hal_handle_t                hal_handle = 0;
+    nwsec_profile_t             *sec_prof = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-tenant:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -968,6 +932,18 @@ tenant_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     HAL_TRACE_DEBUG("pi-tenant:{}:delete commit CB {}",
                     __FUNCTION__, tenant->tenant_id);
 
+    // Remove tenant references from other objects
+    if (tenant->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+        sec_prof = find_nwsec_profile_by_handle(tenant->nwsec_profile_handle);
+        ret = nwsec_prof_del_tenant(sec_prof, tenant);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pi-tenant:{}:failed to del rel. from nwsec. prof",
+                          __FUNCTION__);
+            goto end;
+        }
+
+    }
+
     // a. Remove from tenant id hash table
     ret = tenant_del_from_db(tenant);
     if (ret != HAL_RET_OK) {
@@ -981,9 +957,6 @@ tenant_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // c. Free PI tenant
     tenant_free(tenant);
-
-    // TODO: Decrement the ref counts of dependent objects
-    //  - Have to decrement ref count for nwsec profile
 
 end:
     return ret;
@@ -1008,6 +981,24 @@ tenant_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 //------------------------------------------------------------------------------
+// validate tenant delete request
+//------------------------------------------------------------------------------
+hal_ret_t
+validate_tenant_delete (tenant_t *tenant)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    // check for no presence of l2segs
+    if (dllist_count(&tenant->l2seg_list_head)) {
+        ret = HAL_RET_OBJECT_IN_USE;
+        HAL_TRACE_ERR("pi-tenant:{}:l2segs still referring:", __FUNCTION__);
+        hal_print_handles_list(&tenant->l2seg_list_head);
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
 // process a tenant delete request
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -1019,16 +1010,15 @@ tenant_delete (TenantDeleteRequest& req, TenantDeleteResponseMsg *rsp)
     dhl_entry_t                 dhl_entry = { 0 };
     const TenantKeyHandle       &kh = req.key_or_handle();
 
-    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    hal_api_trace(" API Begin: tenant delete ");
 
     // validate the request message
-    ret = validate_tenant_delete(req, rsp);
+    ret = validate_tenant_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-tenant:{}:tenant delete validation failed, ret : {}",
                       __FUNCTION__, ret);
         goto end;
     }
-
 
     tenant = tenant_lookup_key_or_handle(kh);
     if (tenant == NULL) {
@@ -1037,8 +1027,18 @@ tenant_delete (TenantDeleteRequest& req, TenantDeleteResponseMsg *rsp)
         ret = HAL_RET_TENANT_NOT_FOUND;
         goto end;
     }
+
     HAL_TRACE_DEBUG("pi-tenant:{}:deleting tenant {}", 
                     __FUNCTION__, tenant->tenant_id);
+
+    // validate if there no objects referring this sec. profile
+    ret = validate_tenant_delete(tenant);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-tenant:{}:tenant delete validation failed, "
+                      "ret : {}",
+                      __FUNCTION__, ret);
+        goto end;
+    }
 
     // form ctxt and call infra add
     dhl_entry.handle = tenant->hal_handle;
@@ -1055,7 +1055,7 @@ tenant_delete (TenantDeleteRequest& req, TenantDeleteResponseMsg *rsp)
 
 end:
     rsp->add_api_status(hal_prepare_rsp(ret));
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    hal_api_trace(" API End: tenant delete ");
     return ret;
 }
 
@@ -1074,7 +1074,6 @@ tenant_add_l2seg (tenant_t *tenant, l2seg_t *l2seg)
         goto end;
     }
 
-
     // Allocate the entry
     entry = (hal_handle_id_list_entry_t *)g_hal_state->
         hal_handle_id_list_entry_slab()->alloc();
@@ -1084,26 +1083,28 @@ tenant_add_l2seg (tenant_t *tenant, l2seg_t *l2seg)
     }
     entry->handle_id = l2seg->hal_handle;
 
+    tenant_lock(tenant, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
     utils::dllist_add(&tenant->l2seg_list_head, &entry->dllist_ctxt);
+    tenant_unlock(tenant, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-tenant:{}:add l2seg:{} to tenant:{}, ret:{}",
-                    __FUNCTION__, l2seg->seg_id, tenant->tenant_id, ret);
+    HAL_TRACE_DEBUG("pi-tenant:{}:add tenant => l2seg, {} => {}, ret:{}",
+                    __FUNCTION__, tenant->tenant_id, l2seg->seg_id, ret);
     return ret;
 }
 
 //-----------------------------------------------------------------------------
-// Remove If from l2seg list
+// Remove l2seg from tenant list
 //-----------------------------------------------------------------------------
 hal_ret_t
 tenant_del_l2seg (tenant_t *tenant, l2seg_t *l2seg)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
+    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
     hal_handle_id_list_entry_t  *entry = NULL;
     dllist_ctxt_t               *curr, *next;
 
-
+    tenant_lock(tenant, __FILENAME__, __LINE__, __func__);      // lock
     dllist_for_each_safe(curr, next, &tenant->l2seg_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == l2seg->hal_handle) {
@@ -1111,19 +1112,14 @@ tenant_del_l2seg (tenant_t *tenant, l2seg_t *l2seg)
             utils::dllist_del(&entry->dllist_ctxt);
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
-            ret = HAL_RET_L2SEG_NOT_FOUND;
+            ret = HAL_RET_OK;
         }
     }
+    tenant_unlock(tenant, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:del l2seg:{} from tenant:{}, reg:{}",
-                    __FUNCTION__, l2seg->seg_id, tenant->tenant_id, ret);
+    HAL_TRACE_DEBUG("pi-tenant:{}:del tenant =/=> l2seg, {} =/=> {}, ret:{}",
+                    __FUNCTION__, tenant->tenant_id, l2seg->seg_id, ret);
     return ret;
 }
-
-
-
-
-
-
 
 }    // namespace hal

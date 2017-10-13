@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include "nic/utils/slab/slab.hpp"
 #include "nic/include/hal_mem.hpp"
+#include <cxxabi.h>
+#include <execinfo.h>
+#include <iostream>
 
 namespace hal {
 
@@ -12,6 +15,76 @@ hal_ret_t delay_delete_to_slab(hal_slab_t slab_id_, void *elem);
 namespace utils {
 
 bool slab::g_delay_delete = true;
+
+std::string slab_demangle( const char* const symbol )
+{
+    const std::unique_ptr< char, decltype( &std::free ) > demangled(
+            abi::__cxa_demangle( symbol, 0, 0, 0 ), &std::free );
+    if( demangled ) {
+        return demangled.get();
+    }
+    else {
+        return symbol;
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Prints the 2nd frame in the BT.
+// - x -> y -> custom_backtrace
+//   - prints the x frame
+// ----------------------------------------------------------------------------
+void slab_custom_backtrace()
+{
+    // TODO: replace hardcoded limit?
+    void* addresses[ 256 ];
+    const int n = ::backtrace( addresses, std::extent< decltype( addresses ) >::value );
+    const std::unique_ptr< char*, decltype( &std::free ) > symbols(
+            ::backtrace_symbols( addresses, n ), &std::free );
+    for( int i = 0; i < n; ++i ) {
+        if (i != 2) {
+            continue;
+        }
+        // we parse the symbols retrieved from backtrace_symbols() to
+        // extract the "real" symbols that represent the mangled names.
+        char* const symbol = symbols.get()[ i ];
+        char* end = symbol;
+        while( *end ) {
+            ++end;
+        }
+        // scanning is done backwards, since the module name
+        // might contain both '+' or '(' characters.
+        while( end != symbol && *end != '+' ) {
+            --end;
+        }
+        char* begin = end;
+        while( begin != symbol && *begin != '(' ) {
+            --begin;
+        }
+
+        if( begin != symbol ) {
+            // std::cout << std::string( symbol, ++begin - symbol );
+            *end++ = '\0';
+            std::cout << slab_demangle( begin ) << '+' << end;
+        }
+        else {
+            std::cout << symbol;
+        }
+        // Revisit: Line number not working.
+#if 0
+        // For line number
+        size_t p = 0;
+        while(symbol[p] != '(' && symbol[p] != ' '
+                && symbol[p] != 0)
+            ++p;
+        char syscom[256];
+        sprintf(syscom,"addr2line %p -e %.*s", addresses[i], (int)p, symbol);
+        //last parameter is the file name of the symbol
+        system(syscom);
+#endif
+        std::cout << std::endl;
+    }
+}
+
 
 //------------------------------------------------------------------------------
 // private function to allocate and initialize a new block
@@ -168,6 +241,8 @@ slab::alloc(void)
     void            *elem = NULL;
     slab_block_t    *block;
 
+    HAL_TRACE_DEBUG("slaballoc:slab_id:{} ", slab_id_);
+	slab_custom_backtrace();
     if (thread_safe_) {
         HAL_SPINLOCK_LOCK(&slock_);
     }
@@ -274,6 +349,8 @@ slab::free_(void *elem)
 void
 slab::free(void *elem)
 {
+    HAL_TRACE_DEBUG("slabfree:slab_id:{} ", slab_id_);
+	slab_custom_backtrace();
     if (delay_delete_ && g_delay_delete) {
         hal::periodic::delay_delete_to_slab(slab_id_, elem);
     } else {

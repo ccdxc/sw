@@ -45,14 +45,15 @@ typedef struct tenant_s {
     uint32_t           num_sg;               // no. of security groups
     uint32_t           num_l4lb_svc;         // no. of L4 LB services
     uint32_t           num_ep;               // no. of endpoints
+    // Back references
+    dllist_ctxt_t      l2seg_list_head;      // L2 segment list
+
+    // TODO: Check 
+    dllist_ctxt_t      ep_list_head;         // endpoint list
+    dllist_ctxt_t      session_list_head;    // session list
 
     // PD state
     void               *pd;                  // all PD specific state
-
-    // meta data maintained for tenant
-    dllist_ctxt_t      l2seg_list_head;      // L2 segment list
-    dllist_ctxt_t      ep_list_head;         // endpoint list
-    dllist_ctxt_t      session_list_head;    // session list
 } __PACK__ tenant_t;
 
 typedef struct tenant_create_app_ctxt_s {
@@ -70,6 +71,24 @@ typedef struct tenant_update_app_ctxt_s {
 
 // max. number of VRFs supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_VRFS                                 256
+
+static inline void 
+tenant_lock(tenant_t *tenant, const char *fname, int lineno, const char *fxname)
+{
+    HAL_TRACE_DEBUG("{}:operlock:locking tenant:{} from {}:{}:{}", 
+                    __FUNCTION__, tenant->tenant_id,
+                    fname, lineno, fxname);
+    HAL_SPINLOCK_LOCK(&tenant->slock);
+}
+
+static inline void 
+tenant_unlock(tenant_t *tenant, const char *fname, int lineno, const char *fxname)
+{
+    HAL_TRACE_DEBUG("{}:operlock:unlocking tenant:{} from {}:{}:{}", 
+                    __FUNCTION__, tenant->tenant_id,
+                    fname, lineno, fxname);
+    HAL_SPINLOCK_UNLOCK(&tenant->slock);
+}
 
 // allocate a tenant instance
 static inline tenant_t *

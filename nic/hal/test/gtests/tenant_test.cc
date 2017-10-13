@@ -90,6 +90,7 @@ protected:
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
     hal_initialize();
+    hal_test_utils_slab_disable_delete();
   }
   // Will be called at the end of all test cases in this class
   static void TearDownTestCase() {
@@ -111,8 +112,6 @@ TEST_F(tenant_test, test1)
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
 
-
-    hal_test_utils_slab_disable_delete();
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
@@ -656,8 +655,6 @@ TEST_F(tenant_test, test7)
     // bool                            is_leak = false;
 
 
-    hal_test_utils_slab_disable_delete();
-
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(71);
     sp_spec.set_ipsg_en(true);
@@ -824,16 +821,34 @@ TEST_F(tenant_test, test9)
     TenantResponse                  ten_rsp, ten_rsp1;
     SecurityProfileSpec             sp_spec, sp_spec1;
     SecurityProfileResponse         sp_rsp, sp_rsp1;
-    // TenantDeleteRequest             del_req;
-    // TenantDeleteResponseMsg         del_rsp;
+    SecurityProfileDeleteRequest    sp_del_req;
+    SecurityProfileDeleteResponseMsg sp_del_rsp;    
+    TenantDeleteRequest             ten_del_req;
+    TenantDeleteResponseMsg         ten_del_rsp;
+    LifSpec                         lif_spec;
+    LifResponse                     lif_rsp;
+    LifDeleteRequest                lif_del_req;
+    LifDeleteResponseMsg            lif_del_rsp;
     L2SegmentSpec                   l2seg_spec;
     L2SegmentResponse               l2seg_rsp;
+    L2SegmentDeleteRequest          l2seg_del_req;
+    L2SegmentDeleteResponseMsg      l2seg_del_rsp;
     InterfaceSpec                   if_spec;
     InterfaceResponse               if_rsp;
+    InterfaceDeleteRequest          enicif_del_req, up_del_req;
+    InterfaceDeleteResponseMsg      enicif_del_rsp, up_del_rsp;
     NetworkSpec                     nw_spec;
     NetworkResponse                 nw_rsp;
+    NetworkDeleteRequest            nw_del_req;
+    NetworkDeleteResponseMsg        nw_del_rsp;
     InterfaceL2SegmentSpec          if_l2seg_spec;
     InterfaceL2SegmentResponse      if_l2seg_rsp;
+    InterfaceSpec                   enicif_spec;
+    InterfaceResponse               enicif_rsp;
+    slab_stats_t                    *pre = NULL, *post = NULL;
+    bool                            is_leak = false;
+
+    pre = hal_test_utils_collect_slab_stats();
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(91);
@@ -844,9 +859,9 @@ TEST_F(tenant_test, test9)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
-    // Create nwsec
+    // Create another nwsec
     sp_spec1.mutable_key_or_handle()->set_profile_id(92);
-    sp_spec1.set_ipsg_en(false);
+    sp_spec1.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
     hal::hal_cfg_db_close();
@@ -883,9 +898,16 @@ TEST_F(tenant_test, test9)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
+    // Create a lif
+    lif_spec.set_port_num(9);
+    lif_spec.mutable_key_or_handle()->set_lif_id(91);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
     // Create Uplink If
     if_spec.set_type(intf::IF_TYPE_UPLINK);
-
     for (int i = 0; i < 4; i++) {
         if_spec.mutable_key_or_handle()->set_interface_id(900 + i);
         if_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -899,7 +921,6 @@ TEST_F(tenant_test, test9)
     l2seg_spec.mutable_meta()->set_tenant_id(9);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
-
     for (int i = 0; i < 10; i++) {
         // Creating 10 l2segs
         l2seg_spec.mutable_key_or_handle()->set_segment_id(90 + i);
@@ -909,6 +930,19 @@ TEST_F(tenant_test, test9)
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
     }
+
+    // Create enicif
+    enicif_spec.mutable_meta()->set_tenant_id(9);
+    enicif_spec.set_type(intf::IF_TYPE_ENIC);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(91);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(921);
+    enicif_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
+    enicif_spec.mutable_if_enic_info()->set_l2segment_id(90);
+    enicif_spec.mutable_if_enic_info()->set_encap_vlan_id(20);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(enicif_spec, &enicif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Adding L2segment on Uplink
     for (int i = 0; i < 10; i++) {
@@ -924,6 +958,14 @@ TEST_F(tenant_test, test9)
         }
     }
 
+    // Update nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(91);
+    sp_spec.set_ipsg_en(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_update(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
     // Update tenant
     ten_spec1.mutable_key_or_handle()->set_tenant_id(9);
     ten_spec1.set_security_profile_handle(nwsec_hdl1);
@@ -931,8 +973,192 @@ TEST_F(tenant_test, test9)
     ret = hal::tenant_update(ten_spec1, &ten_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Remove L2 segments - Errors out
+    l2seg_del_req.mutable_meta()->set_tenant_id(9);
+    for (int i = 0; i < 10; i++) {
+        // Delete 10 l2segs
+        l2seg_del_req.mutable_key_or_handle()->set_segment_id(90 + i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::l2segment_delete(l2seg_del_req, &l2seg_del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
+    }
+
+    // Delete l2segment on uplink
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 4; j++) {
+            if_l2seg_spec.mutable_l2segment_key_or_handle()->set_segment_id(90 + i);
+            if_l2seg_spec.mutable_if_key_handle()->set_interface_id(900 + j);
+            hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+            ret = hal::del_l2seg_on_uplink(if_l2seg_spec, &if_l2seg_rsp);
+            printf("ret: %d api_status: %d\n", ret, if_l2seg_rsp.api_status());
+            ASSERT_TRUE(ret == HAL_RET_OK);
+            hal::hal_cfg_db_close();
+
+        }
+    }
+    // Remove lif, errors out
+    lif_del_req.mutable_key_or_handle()->set_lif_id(91);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_delete(lif_del_req, &lif_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
+
+    // Remove enicif
+    enicif_del_req.mutable_key_or_handle()->set_interface_id(921);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(enicif_del_req, &enicif_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // TODO:Remove network. errors out
+
+    // Remove tenant, errors out
+    ten_del_req.mutable_meta()->set_tenant_id(9);
+    ten_del_req.mutable_key_or_handle()->set_tenant_id(9);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_delete(ten_del_req, &ten_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
+
+    // Remove L2 segments
+    l2seg_del_req.mutable_meta()->set_tenant_id(9);
+    for (int i = 0; i < 10; i++) {
+        // Delete 10 l2segs
+        l2seg_del_req.mutable_key_or_handle()->set_segment_id(90 + i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::l2segment_delete(l2seg_del_req, &l2seg_del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+    // Remove uplink
+    // up_del_req.set_type(intf::IF_TYPE_UPLINK);
+    for (int i = 0; i < 4; i++) {
+        up_del_req.mutable_key_or_handle()->set_interface_id(900 + i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::interface_delete(up_del_req, &up_del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    // Remove lif
+    lif_del_req.mutable_key_or_handle()->set_lif_id(91);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_delete(lif_del_req, &lif_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Remove network
+    nw_del_req.mutable_meta()->set_tenant_id(9);
+    nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_delete(nw_del_req, &nw_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Remove nwsec, errors out
+    sp_del_req.mutable_key_or_handle()->set_profile_id(92);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_delete(sp_del_req, &sp_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
+
+    // Remove tenant
+    ten_del_req.mutable_meta()->set_tenant_id(9);
+    ten_del_req.mutable_key_or_handle()->set_tenant_id(9);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_delete(ten_del_req, &ten_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Remove both nwsecs
+    sp_del_req.mutable_key_or_handle()->set_profile_id(91);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_delete(sp_del_req, &sp_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    sp_del_req.mutable_key_or_handle()->set_profile_id(92);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_delete(sp_del_req, &sp_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Memleak check
+    post = hal_test_utils_collect_slab_stats();
+    hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    ASSERT_TRUE(is_leak == false);
 }
 
+// ----------------------------------------------------------------------------
+// Create Tenant
+// Update nwsec
+// ----------------------------------------------------------------------------
+TEST_F(tenant_test, test10) 
+{
+    hal_ret_t                           ret;
+    TenantSpec                          ten_spec;
+    TenantResponse                      ten_rsp;
+    SecurityProfileSpec                 sp_spec;
+    SecurityProfileResponse             sp_rsp;
+    SecurityProfileDeleteRequest        sp_del_req;
+    SecurityProfileDeleteResponseMsg    sp_del_rsp;   
+    TenantDeleteRequest                 del_req;
+    TenantDeleteResponseMsg             del_rsp;
+    slab_stats_t                        *pre = NULL, *post = NULL;
+    bool                                is_leak = false;
+
+    pre = hal_test_utils_collect_slab_stats();
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(10);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(10);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+
+    // Try to delete nwsec
+    sp_del_req.mutable_key_or_handle()->set_profile_id(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_delete(sp_del_req, &sp_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
+
+    // Delete tenant
+    del_req.mutable_meta()->set_tenant_id(10);
+    del_req.mutable_key_or_handle()->set_tenant_id(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Delete nwsec
+    sp_del_req.mutable_key_or_handle()->set_profile_id(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_delete(sp_del_req, &sp_del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+
+    post = hal_test_utils_collect_slab_stats();
+    hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    ASSERT_TRUE(is_leak == false);
+
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

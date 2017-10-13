@@ -43,6 +43,7 @@ typedef struct network_s {
     // meta data maintained for network     
     // ht_ctxt_t         nwkey_ht_ctxt;        // network key based hash table ctxt
     // ht_ctxt_t         hal_handle_ht_ctxt;   // hal handle based hash table ctxt
+    // Clean up 
     dllist_ctxt_t     l2seg_nw_lentry;      // L2 segment's nw list entry
 } __PACK__ network_t;
 
@@ -51,18 +52,24 @@ typedef struct network_s {
 
 const char *network_to_str (network_t *nw);
 static inline void 
-network_lock(network_t *network)
+network_lock(network_t *network, const char *fname, int lineno, 
+             const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:locking network:{}", __FUNCTION__, 
-                    network_to_str(network));
+    HAL_TRACE_DEBUG("{}:locking network:{} from {}:{}:{}", 
+                    __FUNCTION__, 
+                    network_to_str(network), 
+                    fname, lineno, fxname);
     HAL_SPINLOCK_LOCK(&network->slock);
 }
 
 static inline void 
-network_unlock(network_t *network)
+network_unlock(network_t *network, const char *fname, int lineno, 
+               const char *fxname)
 {
-    HAL_TRACE_DEBUG("{}:unlocking network:{}", __FUNCTION__, 
-                    network_to_str(network));
+    HAL_TRACE_DEBUG("{}:unlocking network:{} from {}:{}:{}", 
+                    __FUNCTION__, 
+                    network_to_str(network), 
+                    fname, lineno, fxname);
     HAL_SPINLOCK_UNLOCK(&network->slock);
 }
 
