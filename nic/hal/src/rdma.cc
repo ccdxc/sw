@@ -806,6 +806,74 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
 }
 
 hal_ret_t
+rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
+{
+    uint32_t     header_template_addr;
+    uint8_t      smac[ETH_ADDR_LEN], dmac[ETH_ADDR_LEN];
+    header_template_t temp;
+    
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("PI-LIF:{}: RDMA AH Create", __FUNCTION__);
+
+    memcpy(smac, spec.smac().c_str(), spec.smac().size());
+    memcpy(dmac, spec.dmac().c_str(), spec.dmac().size());
+    
+    // HAL_TRACE_DEBUG("{}: Inputs: smac: {} dmac: {} ethtype: {} vlan: {} "
+    //                 "vlan_pri: {} vlan_cfi: {} ip_ver: {} ip_tos: {} "
+    //                 "ip_ttl: {} ip_saddr: {} ip_daddr: {} "
+    //                 "udp_sport: {} udp_dport: {}",
+    //                 __FUNCTION__, (struct ether_addr*)smac,
+    //                 (struct ether_addr*)spec.dmac().c_str(),
+    //                 (struct ether_addr*)spec.smac().c_str(), 
+    //                 spec.vlan(), spec.vlan_pri(), spec.vlan_cfi(),
+    //                 spec.ip_ver(), spec.ip_tos(), spec.ip_ttl(),
+    //                 spec.ip_saddr(), spec.ip_daddr(),
+    //                 spec.udp_sport(), spec.udp_dport());
+
+    HAL_TRACE_DEBUG("{}: Inputs: ethtype: {} vlan: {} "
+                    "vlan_pri: {} vlan_cfi: {} ip_ver: {} ip_tos: {} "
+                    "ip_ttl: {} ip_saddr: {} ip_daddr: {} "
+                    "udp_sport: {} udp_dport: {}",
+                    __FUNCTION__, spec.ethtype(),
+                    spec.vlan(), spec.vlan_pri(), spec.vlan_cfi(),
+                    spec.ip_ver(), spec.ip_tos(), spec.ip_ttl(),
+                    spec.ip_saddr(), spec.ip_daddr(),
+                    spec.udp_sport(), spec.udp_dport());
+
+    memset(&temp, 0, sizeof(temp));
+    memcpy(&temp.eth.dmac, dmac, MAC_SIZE);
+    memcpy(&temp.eth.smac, smac, MAC_SIZE);
+    temp.eth.ethertype = 0x8100;
+    temp.vlan.pri = spec.vlan_pri();
+    temp.vlan.vlan = spec.vlan();
+    temp.vlan.ethertype = spec.ethtype();
+    temp.ip.version = spec.ip_ver();
+    temp.ip.ihl = 5;
+    temp.ip.tos = spec.ip_tos();
+    temp.ip.ttl = spec.ip_ttl();
+    temp.ip.protocol = 17;
+    temp.ip.saddr = spec.ip_saddr();
+    temp.ip.daddr = spec.ip_daddr();
+    temp.ip.id = 1;
+    temp.udp.sport = spec.udp_sport();
+    temp.udp.dport = spec.udp_dport();
+
+    header_template_addr = g_rdma_manager->HbmAlloc(sizeof(header_template_t));
+    HAL_ASSERT(header_template_addr);
+    HAL_ASSERT(header_template_addr != (uint32_t)-ENOMEM);
+
+    pd::memrev((uint8_t*)&temp, sizeof(temp));
+    capri_hbm_write_mem((uint64_t)header_template_addr, (uint8_t*) &temp, sizeof(temp));
+
+    rsp->set_api_status(types::API_STATUS_OK);
+    rsp->set_ah_handle(header_template_addr);
+
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+
+    return (HAL_RET_OK);
+}
+
+hal_ret_t
 rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
 {
     uint32_t     lif = spec.hw_lif_id();

@@ -18,6 +18,12 @@ send:
     inv_key     : None
     len         : None
     
+ud_send:
+    imm_data    : None
+    q_key       : None
+    dst_qp      : None
+    ah_handle   : None
+    
 write:
     imm_data    : None
     va          : None

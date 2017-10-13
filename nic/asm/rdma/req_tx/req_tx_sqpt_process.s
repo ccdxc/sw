@@ -37,7 +37,8 @@ req_tx_sqpt_process:
     //CAPRI_SET_FIELD(r7, INFO_OUT_T, wqe_addr, r1)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, rrq_p_index, k.args.rrq_p_index)
     //CAPRI_SET_FIELD(r7, INFO_OUT_T, pd, k.args.pd)
-
+    CAPRI_SET_FIELD(r7, INFO_OUT_T, ud, k.args.ud)
+    
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
     CAPRI_GET_STAGE_0_ARG(req_tx_phv_t, r7)

@@ -524,6 +524,9 @@ struct capri_dma_cmd_mem2mem_t {
 #define DMA_NEXT_CMD_I_BASE_GET(_base_r, _cmd_idx) \
     sub         _base_r, _base_r, _cmd_idx, LOG_DMA_CMD_SIZE_BITS
 
+#define DMA_NEXT_CMD_I_BASE_GET_C(_base_r, _cmd_idx, _cf)               \
+    sub._cf         _base_r, _base_r, _cmd_idx, LOG_DMA_CMD_SIZE_BITS
+
 // x = offsetof(_field)
 // flit = x / 512
 // base = flit * 512

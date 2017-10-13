@@ -11,10 +11,9 @@ selectors:
 #       endpoint    : filter://remote=False
 #       interface   : filter://any
 #   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
-    rdmasession     :   
-        base        : filter://any
-        lqp         : filter://any
-        rqp         : filter://any
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
 #    maxflows    : 1 
 #    maxrdmasessions     : 4 
 

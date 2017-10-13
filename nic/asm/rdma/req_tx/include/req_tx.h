@@ -28,6 +28,9 @@
 #define ATOMIC_SWAP_OR_ADD_DATA p.atomiceth.swap_or_add_data
 #define ATOMIC_CMP_DATA         p.atomiceth.cmp_data
 
+#define DETH_Q_KEY              p.deth.q_key
+#define DETH_SRC_QP             p.deth.src_qp
+
 #define RRQWQE_READ_RSP_OR_ATOMIC         p.rrqwqe.read_rsp_or_atomic
 #define RRQWQE_NUM_SGES                   p.rrqwqe.num_sges
 #define RRQWQE_PSN                        p.rrqwqe.psn
@@ -82,7 +85,12 @@ struct req_tx_phv_t {
     struct rdma_ieth_t ieth;
     struct rdma_atomiceth_t atomiceth;
     struct rdma_immeth_t immeth;
-    struct rdma_reth_t reth;
+
+    union {
+        struct rdma_reth_t reth;
+        struct rdma_deth_t deth;    
+    };
+
     struct rdma_bth_t bth;  // should be from a byte boundary
 
     // common tx

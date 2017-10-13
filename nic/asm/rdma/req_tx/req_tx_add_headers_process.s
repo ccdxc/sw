@@ -38,11 +38,17 @@ req_tx_add_headers_process:
     phvwr          P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
     phvwr          P4PLUS_TO_P4_VLAN_TAG, 0
 
+    #c7 - UD service. Needed only for send & send_imm
+    seq            c7, d.service, RDMA_SERV_TYPE_UD
+
     // dma_cmd[3] - header_template
     DMA_NEXT_CMD_I_BASE_GET(r6, 1)
     // PHV_Q_DMA_CMD(phv_p, dma_cmd_index, DMA_CMD_TYPE_MEM_TO_PKT, hbm_addr_get(sqcb1_p->header_template_addr),
     //                 sizeof(header_template_t))
-    DMA_HBM_MEM2PKT_SETUP(r6, HDR_TEMPLATE_T_SIZE_BYTES, d.header_template_addr)
+
+    //For UD, ah_handle comes in send req.
+    cmov            r3, c7, k.args.op.send_wr.ah_handle, d.header_template_addr
+    DMA_HBM_MEM2PKT_SETUP(r6, HDR_TEMPLATE_T_SIZE_BYTES, r3)
 
     // dma_cmd[4] - BTH
     addi           r6, r6, DMA_SWITCH_TO_NEXT_FLIT_BITS
@@ -51,8 +57,8 @@ req_tx_add_headers_process:
     // setup for dma_cmd[5]
     DMA_NEXT_CMD_I_BASE_GET(r6, 1)
 
-    // phv_p->bth.dst_qp = sqcb1_p->dst_qp
-    phvwr          BTH_DST_QP, d.dst_qp
+    // phv_p->bth.dst_qp = sqcb1_p->dst_qp if it is not UD service
+    phvwr.!c7         BTH_DST_QP, d.dst_qp
 
     // get tbl_id from s2s data
     add            r1, k.args.tbl_id, r0
@@ -66,9 +72,7 @@ req_tx_add_headers_process:
     #c5 - check credits
     #c6 - adjust_psn/incr_psn
     #c7 - incr_rrq_pindex
-
-    //CAPRI_SET_FIELD(r7, INFO_OUT_T, incr_rrq_pindex, 0) // set for READ or atomic
-    setcf          c7, [!c0]
+    #c7 - UD service. Needed only for send & send_imm. Overloading the flag c7
 
     seq            c2, k.args.first, 1
     seq            c1, k.args.last, 1
@@ -228,8 +232,9 @@ op_type_send:
     .brcase 1 //not-first, last
         bcf            [!c3], set_bth_opc
         add            r2, RDMA_PKT_OPC_SEND_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+
         // add IMMETH hdr
-        // dma_cmd[4]
+        // dma_cmd[5]
         DMA_PHV2PKT_SETUP(r6, immeth, immeth)
         add            r2, RDMA_PKT_OPC_SEND_LAST_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         b              set_bth_opc
@@ -244,12 +249,22 @@ op_type_send:
     .brcase 3 //first, last (only)
         // check_credits = TRUE
         setcf          c5, [c0] // Branch Delay Slot
+
+        // dma_cmd[5]
+        // Add deth only if it is UD service
+        DMA_PHV2PKT_SETUP_C(r6, deth, deth, c7)
+        DMA_NEXT_CMD_I_BASE_GET_C(r6, 1, c7)
+
+        //This flag is being reused for RRQ so resetting back.
+        setcf c7, [!c0]
+
         bcf            [!c3], set_bth_opc
         add            r2, RDMA_PKT_OPC_SEND_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+
         // add IMMETH hdr
-        // dma_cmd[4]
+        // dma_cmd[6]
         DMA_PHV2PKT_SETUP(r6, immeth, immeth)
-        add            r2, RDMA_PKT_OPC_SEND_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
+        add            r2, RDMA_PKT_OPC_SEND_ONLY_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT
         b              set_bth_opc
         phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data //branch delay slot
     .csend
@@ -376,3 +391,8 @@ cb1_byte_update:
 invalid_op_type:
     nop.e
     nop
+
+    
+ud_error:
+    //For UD we can silently drop
+    phvwr   p.common.p4_intr_global_drop, 1

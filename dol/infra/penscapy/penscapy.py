@@ -112,6 +112,12 @@ class RDETH(Packet):
         BitField("eecnxt",      0,      24),
     ]
 
+class ImmDT(Packet):
+    name = "ImmDT"
+    fields_desc = [
+        BitField("imm_data",    0,      32),
+    ]
+
 
 class DETH(Packet):
     name = "DETH"
@@ -120,13 +126,15 @@ class DETH(Packet):
         BitField("rsvd",        0,      8),
         BitField("srcqp",       0,      24),
     ]
+    next_hdr = { 101: ImmDT, #send-only-with-imm
+    }
 
-class ImmDT(Packet):
-    name = "ImmDT"
-    fields_desc = [
-        BitField("imm_data",    0,      32),
-    ]
-
+    def guess_payload_class(self, payload):
+        if (self.next_hdr[self.underlayer.opcode]): 
+            return self.next_hdr[self.underlayer.opcode]
+        else:
+            assert(0);
+            return super().guess_payload_class()
 
 class RETH(Packet):
     name = "RETH"
@@ -240,6 +248,8 @@ class BTH(Packet):
                  21: Raw, #rsvd
                  22: IETH, #send-last-with-inv
                  23: IETH, #send-only-with-inv
+                 100: DETH, #UD send-only
+                 101: DETH, #UD send-only-with-imm
     }
 
     def guess_payload_class(self, payload):

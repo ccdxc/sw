@@ -11,6 +11,10 @@ struct req_tx_sqwqe_process_k_t k;
 #define INFO_OUT3_T struct req_tx_sqcb_write_back_info_t
 
 
+    #c1 - inline_data_vld
+    #c2 - UD service
+    #c3 - UD error
+    
 %%
     .param    req_tx_sqsge_process
     .param    req_tx_add_headers_process
@@ -18,10 +22,22 @@ struct req_tx_sqwqe_process_k_t k;
 
 .align
 req_tx_sqwqe_process:
-
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-    seq   c1, d.base.inline_data_vld, 1 
+    seq   c1, d.base.inline_data_vld, 1
 
+    //if service == UD, length should not be greater than one PMTU
+    //TODO: See if this can be optimized. Do we really need to do this check,
+    // or can we do this check in Driver itself?
+
+    seq       c2, k.args.ud, 1
+    bcf       [!c2], skip_to_common
+    add       r3, r0, k.args.log_pmtu
+    sllv      r3, 1, r3
+    add       r4, r0, d.ud_send.length
+    blt       r3, r4, ud_error
+    nop
+
+skip_to_common: 
     add            r1, r0, d.base.op_type
     beqi           r1, OP_TYPE_WRITE, write
     nop
@@ -136,7 +152,17 @@ send_inv:
 
 send_imm:
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, imm_data, d.send.imm_data)
+
 send:
+
+    bcf   [!c2], common //If not UD, skip error checking
+    nop
+    
+    // Needed only for UD service    
+    phvwr DETH_Q_KEY, d.ud_send.q_key
+    phvwr DETH_SRC_QP, k.global.qid
+    phvwr BTH_DST_QP, d.ud_send.dst_qp
+    CAPRI_SET_FIELD(r7, INFO_OUT1_T, ah_handle, d.ud_send.ah_handle) 
 
 common:
     bcf         [c1], inline_data
@@ -179,3 +205,13 @@ inline_data:
     // parameter values for various union cases such as read/write/send are located
     // at same offset. So, though argument passing code is passing read.length, 
     // it should work for inline data as well.
+
+    nop.e
+    nop
+    
+ud_error:
+    //For UD we can silently drop
+    phvwr.e   p.common.p4_intr_global_drop, 1
+    CAPRI_SET_TABLE_0_VALID(0);     
+
+    

@@ -5,6 +5,7 @@
 #include <grpc++/grpc++.h>
 #include "nic/proto/types.pb.h"
 #include "nic/proto/hal/rdma.grpc.pb.h"
+#include "nic/proto/hal/rdma.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;
@@ -28,6 +29,10 @@ using rdma::RdmaMemRegSpec;
 using rdma::RdmaMemRegRequestMsg;
 using rdma::RdmaMemRegResponse;
 using rdma::RdmaMemRegResponseMsg;
+using rdma::RdmaAhRequestMsg;
+using rdma::RdmaAhResponseMsg;
+using rdma::RdmaAhSpec;
+using rdma::RdmaAhResponse;
 
 class RdmaServiceImpl final : public Rdma::Service {
 public:
@@ -56,6 +61,9 @@ public:
                       const RdmaMemRegRequestMsg *reqs,
                       RdmaMemRegResponseMsg *resps) override;
 
+    Status RdmaAhCreate(ServerContext *context,
+                        const RdmaAhRequestMsg *req,
+                        RdmaAhResponseMsg *rsp) override;
 };
 
 #endif    // __RDMA_SVC_HPP__

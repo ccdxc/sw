@@ -12,25 +12,25 @@ selectors:
 #        interface   : filter://any
 #    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
     rdmasession     :
-        lqp         : filter://svc=0
-        rqp         : filter://svc=0
-#    maxflows    : 1 
+        lqp         : filter://svc=3
+        rqp         : filter://svc=3
+#    maxflows    : 1
 #    maxrdmasessions     : 4
 
 packets:
     - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
         id          : EXP_PKT # Base packet
-        payloadsize : 32
-        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_IMMDT 
-        encaps      :   
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_DETH_IMMDT
+        encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             # Add all possible headers, the final headers will be selected
@@ -52,13 +52,16 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 5 # RDMA SEND Only with Immediate
+                opcode  : 101 # RDMA SEND Only
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+            deth:
+                qkey    : ref://testcase/pvtdata/q_key
+                srcqp   : ref://testcase/config/rdmasession/lqp/id
             immdt:
                 imm_data: ref://testcase/pvtdata/imm_data
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
 buffers:
     - buffer:
@@ -76,19 +79,26 @@ descriptors:
         id      : DESC
         template: ref://factory/templates/id=DESC_RDMA_SQ
         fields:
-            op_type : 2  # OP_TYPE_SEND_WITH_IMM
+            op_type : 2  # OP_TYPE_SEND
             wrid    : 6
-            inline_data_vld : 1
+            num_sges: 1
 
-            send    :
-                imm_data    : ref://testcase/pvtdata/imm_data
-                len         : 32
-                inline_data : ref://testcase/packets/id=BASE_PKT/rawbytes
-               
+            ud_send:
+                q_key:  ref://testcase/pvtdata/q_key
+                dst_qp: ref://testcase/pvtdata/dst_qp
+                ah_handle: ref://testcase/pvtdata/ah_handle
+                imm_data: ref://testcase/pvtdata/imm_data
+                
+            sges:
+                - va  : ref://testcase/buffers/id=BUF/address
+                  len : ref://testcase/buffers/id=BUF/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+
 trigger:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC
+            //ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/queue_types/id=RDMA_SQ/queues/id=0/rings/id=SQ
             ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
 
     doorbell:

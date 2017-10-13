@@ -1,7 +1,7 @@
 meta:
     id      : DETH
     scapy   : DETH
-    size    : None
+    size    : 8
 
 fields:
     qkey    : const/0x0

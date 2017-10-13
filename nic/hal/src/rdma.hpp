@@ -27,6 +27,10 @@ using rdma::RdmaCqSpec;
 using rdma::RdmaCqRequestMsg;
 using rdma::RdmaCqResponse;
 using rdma::RdmaCqResponseMsg;
+using rdma::RdmaAhRequestMsg;
+using rdma::RdmaAhResponseMsg;
+using rdma::RdmaAhSpec;
+using rdma::RdmaAhResponse;
 
 namespace hal {
 
@@ -38,7 +42,7 @@ extern hal_ret_t rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp);
 extern hal_ret_t rdma_memory_register(RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp);
 extern uint64_t rdma_lif_pt_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_kt_base_addr(uint32_t lif_id);
-
+extern  hal_ret_t rdma_ah_create(RdmaAhSpec& spec, RdmaAhResponse *rsp);
 
 
 
@@ -798,40 +802,40 @@ typedef struct rdma_hdr_s {
 } PACKED rdma_hdr_t;
 
 typedef struct udphdr_s {
-    uint16_t   sport;
-    uint16_t   dport;
-    uint16_t   length;
     uint16_t   csum;
+    uint16_t   length;
+    uint16_t   dport;
+    uint16_t   sport;
 } PACKED udphdr_t;
 
 typedef struct iphdr_s {
-    uint8_t    version:4;
-    uint8_t    ihl:4;
-    uint8_t    tos;
-    uint16_t   tot_len;
-    uint16_t   id;
-    uint16_t   frag_off;
-    uint8_t    ttl;
-    uint8_t    protocol;
-    uint16_t   check;
-    uint32_t   saddr;
     uint32_t   daddr;
+    uint32_t   saddr;
+    uint16_t   check;
+    uint8_t    protocol;
+    uint8_t    ttl;
+    uint16_t   frag_off;
+    uint16_t   id;
+    uint16_t   tot_len;
+    uint8_t    tos;
+    uint8_t    ihl:4;
+    uint8_t    version:4;
 /*The options start here. */
 } PACKED iphdr_t;
 
 #define MAC_SIZE 6
 
 typedef struct ethhdr_s {
-    uint8_t   dmac[MAC_SIZE];
-    uint8_t   smac[MAC_SIZE];
     uint16_t  ethertype;
+    uint8_t   smac[MAC_SIZE];
+    uint8_t   dmac[MAC_SIZE];
 } PACKED ethhdr_t;
 
 typedef struct vlanhdr_s {
-    uint16_t pri: 3;
-    uint16_t cfi: 1;
-    uint16_t vlan: 12;
     uint16_t ethertype;
+    uint16_t vlan: 12;
+    uint16_t cfi: 1;
+    uint16_t pri: 3;
 } PACKED vlanhdr_t;
 
 typedef struct rocev2_pkt_s {
@@ -951,10 +955,10 @@ typedef struct sqcb_s {
 } PACKED sqcb_t;
 
 typedef struct header_template_s {
-    ethhdr_t    eth;
-    vlanhdr_t   vlan;
-    iphdr_t     ip;
     udphdr_t    udp;
+    iphdr_t     ip;
+    vlanhdr_t   vlan;
+    ethhdr_t    eth;
 } PACKED header_template_t;
 
 #define RQ_RING_ID            RING_ID_0

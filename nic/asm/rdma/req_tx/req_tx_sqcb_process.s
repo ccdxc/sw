@@ -179,6 +179,11 @@ in_progress:
     nop
 
 in_progress_end:
+
+    // Is it UD service?
+    seq            c7, d.service, RDMA_SERV_TYPE_UD
+    cmov           r5, c7, 1, 0
+    
     // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, page_offset, r1)
@@ -189,6 +194,7 @@ in_progress_end:
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, log_pmtu, d.log_pmtu)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, page_seg_offset, r2)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, pd, d.pd)
+    CAPRI_SET_FIELD(r7, INFO_OUT1_T, ud, r5)
 
     // populate t0 PC and table address
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)

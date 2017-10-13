@@ -21,6 +21,7 @@ import config.objects.mr        as mr
 
 from factory.objects.rdma.descriptor import RdmaSqDescriptorBase
 from factory.objects.rdma.descriptor import RdmaSqDescriptorSend
+from factory.objects.rdma.descriptor import RdmaSqDescriptorUDSend
 from factory.objects.rdma.descriptor import RdmaRqDescriptorBase
 from factory.objects.rdma.descriptor import RdmaRrqDescriptorBase
 from factory.objects.rdma.descriptor import RdmaRrqDescriptorRead
@@ -42,7 +43,7 @@ class QpObject(base.ConfigObjectBase):
         self.spec = spec
 
         self.pd = pd
-        self.svc = rdma_pb2.RDMA_SERV_TYPE_RC
+        self.svc = spec.service
 
         self.pmtu = spec.pmtu
         self.hostmem_pg_size = spec.hostmem_pg_size
@@ -219,6 +220,12 @@ class QpObject(base.ConfigObjectBase):
 
         #self.sq_cq.qstate.data.show()
 
+    def IsFilterMatch(self, spec):
+        cfglogger.debug("Matching QID %d svc %d" %(self.id, self.svc))
+        match = super().IsFilterMatch(spec.filters)
+
+        return match
+
     def ShowTestcaseConfig(self, obj, logger):
         logger.info("Config Objects for %s" % (self.GID()))
         return
@@ -267,13 +274,18 @@ class QpObjectHelper:
 
     def Generate(self, pd, spec):
         self.pd = pd
-        count = spec.count
-        cfglogger.info("Creating %d Qps. for PD:%s" %\
-                       (count, pd.GID()))
-        for i in range(count):
-            qp_id = i if pd.remote else pd.ep.intf.lif.GetQpid()
-            qp = QpObject(pd, qp_id, spec)
-            self.qps.append(qp)
+        rc_spec, ud_spec = spec.rc, spec.ud
+        j = 0
+
+        for spec in rc_spec, ud_spec:
+            count = spec.count
+            cfglogger.info("Creating %d %s Qps. for PD:%s" %\
+                           (count, spec.svc_name, pd.GID()))
+            for i in range(count):
+                qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
+                qp = QpObject(pd, qp_id, spec)
+                self.qps.append(qp)
+                j += 1
 
     def Configure(self):
         if self.pd.remote:

@@ -34,6 +34,15 @@ class RdmaSqDescriptorSend(Packet):
         IntField("rsvd2", 0),
     ]
 
+class RdmaSqDescriptorUDSend(Packet):
+    fields_desc = [
+        IntField("imm_data", 0),
+        IntField("q_key", 0),
+        IntField("length", 0),
+        IntField("dst_qp", 0),
+        IntField("ah_handle", 0),
+    ]
+
 class RdmaSqDescriptorWrite(Packet):
     fields_desc = [
         IntField("imm_data", 0),
@@ -207,6 +216,15 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
                inline_data = bytearray(inline_data_len)
                inline_data[0:inline_data_len] = self.spec.fields.send.inline_data[0:inline_data_len]
            send = RdmaSqDescriptorSend(imm_data=imm_data, inv_key=inv_key, len=data_len)
+           desc = desc/send
+
+        if hasattr(self.spec.fields, 'ud_send'):
+           print("Reading UD Send")
+           dst_qp = self.spec.fields.ud_send.dst_qp if hasattr(self.spec.fields.ud_send, 'dst_qp') else 0
+           q_key = self.spec.fields.ud_send.q_key if hasattr(self.spec.fields.ud_send, 'q_key') else 0
+           ah_handle = self.spec.fields.ud_send.ah_handle if hasattr(self.spec.fields.ud_send, 'ah_handle') else 0
+           imm_data = self.spec.fields.ud_send.imm_data if hasattr(self.spec.fields.ud_send, 'imm_data') else 0
+           send = RdmaSqDescriptorUDSend(imm_data=imm_data, q_key=q_key, dst_qp=dst_qp, ah_handle=ah_handle)
            desc = desc/send
 
         if hasattr(self.spec.fields, 'write'):

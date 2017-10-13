@@ -326,6 +326,9 @@ struct resp_tx_flags_t {
 
 #define RDMA_OPC_SERV_TYPE_SHIFT               5
 
+#define RDMA_SERV_TYPE_RC                      0
+#define RDMA_SERV_TYPE_UD                      3
+
 #define RDMA_PKT_OPC_SEND_FIRST                0
 #define RDMA_PKT_OPC_SEND_MIDDLE               1
 #define RDMA_PKT_OPC_SEND_LAST                 2
@@ -406,13 +409,22 @@ struct sqwqe_base_t {
     rsvd2              : 16;
 };
 
-// send
+// RC send
 struct sqwqe_send_t {
     imm_data           : 32;
     inv_key            : 32;
     rsvd1              : 32;  // to align length to match position in write/read reqs
     length             : 32;
     rsvd2              : 32;    // for now
+};
+
+// UD send
+struct sqwqe_ud_send_t {
+    imm_data           : 32;
+    q_key              : 32;
+    length             : 32;
+    dst_qp             : 32;
+    ah_handle          : 32;
 };
 
 // write
@@ -448,6 +460,7 @@ struct sqwqe_t {
         struct {
             union {
                 struct sqwqe_send_t send;
+                struct sqwqe_ud_send_t ud_send;
                 struct sqwqe_write_t write;
                 struct sqwqe_read_t read;
             };

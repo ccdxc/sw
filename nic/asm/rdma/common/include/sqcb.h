@@ -104,7 +104,10 @@ struct sqcb1_t {
     rrqwqe_num_sges                : 8;
     rrqwqe_cur_sge_id              : 8;
     rrqwqe_cur_sge_offset          : 32;
-    header_template_addr           : 32;
+    union {
+        header_template_addr       : 32;
+        q_key                      : 32; //header_template comes in every send req for UD
+    };
     nxt_to_go_token_id             : 8;
     token_id                       : 8;
     e_rsp_psn                      : 24;

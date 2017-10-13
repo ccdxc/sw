@@ -11,7 +11,8 @@ struct req_tx_sqcb_to_pt_info_t {
     rrq_p_index                    : 8;
     log_pmtu                       : 5;
     pd                             : 32;
-    pad                            : 64; // pad to 160bits for S2S data
+    ud                             : 1;
+    pad                            : 63; // pad to 160bits for S2S data
 };
 
 struct req_tx_sqcb_to_wqe_info_t {
@@ -24,7 +25,8 @@ struct req_tx_sqcb_to_wqe_info_t {
     remaining_payload_bytes        : 16;
     rrq_p_index                    : 8;
     pd                             : 32;
-    pad                            : 49;
+    ud                             : 1;
+    pad                            : 48;
 };
 
 struct req_tx_wqe_to_sge_info_t {
@@ -38,7 +40,10 @@ struct req_tx_wqe_to_sge_info_t {
     dma_cmd_start_index            : 6; // TODO Different from "C" code due to space scarcity
     op_type                        : 8;
     imm_data                       : 32;
-    inv_key                        : 32;
+    union {
+        inv_key                        : 32;
+        ah_handle                      : 32;
+    };
 };
 
 struct req_tx_sge_to_lkey_info_t {
@@ -68,7 +73,10 @@ struct send_wr_t {
     current_sge_id                : 8;
     num_sges                      : 8;
     imm_data                      : 32;
-    inv_key                       : 32;
+    union {
+        inv_key                       : 32;
+        ah_handle                     : 32;
+    };
     pad                           : 24;
 };
 

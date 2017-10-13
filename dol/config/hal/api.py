@@ -489,6 +489,12 @@ def ModifyQps(objlist):
     stub = rdma_pb2.RdmaStub(HalChannel)
     __config(objlist, rdma_pb2.RdmaQpUpdateRequestMsg,
              stub.RdmaQpUpdate)
+
+def ConfigureAhs(objlist):
+    if IsHalDisabled(): return
+    stub = rdma_pb2.RdmaStub(HalChannel)
+    __config(objlist, rdma_pb2.RdmaAhRequestMsg,
+             stub.RdmaAhCreate)
     return
 
 def ConfigureCqs(objlist):
