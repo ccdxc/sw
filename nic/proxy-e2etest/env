@@ -1,0 +1,1 @@
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:$NIC_DIR/obj:$NIC_DIR/model_sim/build/:$NIC_DIR/model_sim/libs/:$NIC_DIR/test

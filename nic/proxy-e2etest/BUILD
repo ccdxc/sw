@@ -1,0 +1,354 @@
+package(default_visibility = ["//visibility:public"])
+licenses(["notice"])  # MIT license
+
+cc_library(
+    name = "lib_driver",
+    srcs = [
+             "lib_driver.cc",
+           ],
+    hdrs = glob(["*.hpp"]),
+    deps = [
+        "//nic/model_sim/include:modelsim_includes",
+        "//nic/include:base_includes",
+        "//nic/utils/host_mem:host_mem",
+        #"//nic/hal:hal_src",
+        #"//nic/hal/svc:hal_svc",
+        "//nic/proto:types_proto",
+        "//nic/proto/hal:hal_proto",
+        #"//nic/proto/agents:agents_proto",
+        "//nic:gen_includes",
+        "//nic/p4/nw/include:p4_nw_includes",
+        "//nic/third-party/spdlog:spdlog"
+    ],
+    alwayslink = 1,
+)
+
+cc_binary(
+    name = "nic_proxy-e2etest_ethqstate",
+    srcs = [
+        "test/eth_qstate.cc",
+    ],
+    deps = [
+        "//nic/model_sim/include:modelsim_includes",
+        #"//nic/hal:hal_src",
+        # PI
+        "//nic/proxy-e2etest:lib_driver",
+        #"//nic/hal/periodic",
+        #"//nic/hal/svc:hal_svc",
+        #"//nic/utils/trace",
+        #"//nic/utils/print",
+        #"//nic/hal/plugins/network:network",
+        #"//nic/hal/plugins/proxy:proxyplugin",
+        "//nic/utils/host_mem:host_mem",
+        #"//nic/hal/test/utils:haltestutils",
+        #"//nic/hal/lkl:lkl_api",
+        #"//nic:lkl",
+
+        # PD
+        #"//nic/hal/pd/common:pdcommon",
+        #"//nic/hal/pd/utils/directmap",
+        #"//nic/hal/pd/utils/hash",
+        #"//nic/hal/pd/utils/tcam",
+        #"//nic/hal/pd/utils/flow",
+        #"//nic/hal/pd/utils/met",
+        #"//nic/hal/pd/utils/acl_tcam",
+        #"//nic/hal/pd/iris/p4pd:p4pdapi",
+        #"//nic/hal/pd/iris",
+        "//nic:capricsr_int",
+        #"//nic/hal/pd/capri",
+        "//nic/model_sim:model_client",
+        #"//nic:p4pd",
+        #"//nic:p4pluspd_txdma",
+        #"//nic:p4pluspd_rxdma",
+        #"//nic:asic_libs",
+        "//nic/third-party/spdlog:spdlog",
+    ],
+)
+
+cc_binary(
+    name = "nic_proxy-e2etest_ethtx",
+    srcs = [
+        "test/eth_tx.cc",
+    ],
+    deps = [
+        "//nic/model_sim/include:modelsim_includes",
+        #"//nic/hal:hal_src",
+        # PI
+        "//nic/proxy-e2etest:lib_driver",
+        #"//nic/hal/periodic",
+        #"//nic/hal/svc:hal_svc",
+        "//nic/utils/trace",
+        "//nic/utils/print",
+        #"//nic/hal/plugins/network:network",
+        #"//nic/hal/plugins/proxy:proxyplugin",
+        "//nic/utils/host_mem:host_mem",
+        #"//nic/hal/test/utils:haltestutils",
+        #"//nic/hal/lkl:lkl_api",
+        #"//nic:lkl",
+
+        # PD
+        #"//nic/hal/pd/common:pdcommon",
+        #"//nic/hal/pd/utils/directmap",
+        #"//nic/hal/pd/utils/hash",
+        #"//nic/hal/pd/utils/tcam",
+        #"//nic/hal/pd/utils/flow",
+        #"//nic/hal/pd/utils/met",
+        #"//nic/hal/pd/utils/acl_tcam",
+        #"//nic/hal/pd/iris/p4pd:p4pdapi",
+        #"//nic/hal/pd/iris",
+        #"//nic:capricsr_int",
+        #"//nic/hal/pd/capri",
+        "//nic/model_sim:model_client",
+        #"//nic:p4pd",
+        #"//nic:p4pluspd_txdma",
+        #"//nic:p4pluspd_rxdma",
+        #"//nic:asic_libs",
+        "//nic/third-party/spdlog:spdlog",
+    ],
+)
+
+cc_binary(
+    name = "nic_proxy-e2etest_ethrx",
+    srcs = [
+        "test/eth_rx.cc",
+    ],
+    deps = [
+        "//nic/model_sim/include:modelsim_includes",
+        #"//nic/hal:hal_src",
+        # PI
+        "//nic/proxy-e2etest:lib_driver",
+        #"//nic/hal/periodic",
+        #"//nic/hal/svc:hal_svc",
+        "//nic/utils/trace",
+        "//nic/utils/print",
+        #"//nic/hal/plugins/network:network",
+        #"//nic/hal/plugins/proxy:proxyplugin",
+        "//nic/utils/host_mem:host_mem",
+        #"//nic/hal/test/utils:haltestutils",
+        #"//nic/hal/lkl:lkl_api",
+        #"//nic:lkl",
+
+        # PD
+        #"//nic/hal/pd/common:pdcommon",
+        #"//nic/hal/pd/utils/directmap",
+        #"//nic/hal/pd/utils/hash",
+        #"//nic/hal/pd/utils/tcam",
+        #"//nic/hal/pd/utils/flow",
+        #"//nic/hal/pd/utils/met",
+        #"//nic/hal/pd/utils/acl_tcam",
+        #"//nic/hal/pd/iris/p4pd:p4pdapi",
+        #"//nic/hal/pd/iris",
+        #"//nic:capricsr_int",
+        #"//nic/hal/pd/capri",
+        "//nic/model_sim:model_client",
+        #"//nic:p4pd",
+        #"//nic:p4pluspd_txdma",
+        #"//nic:p4pluspd_rxdma",
+        #"//nic:asic_libs",
+    ],
+)
+
+cc_binary(
+    name = "nic_proxy-e2etest_hntap",
+    srcs = [
+        "test/hntap.cc",
+    ],
+    deps = [
+        "//nic/model_sim/include:modelsim_includes",
+        #"//nic/hal:hal_src",
+        # PI
+        "//nic/proxy-e2etest:lib_driver",
+        #"//nic/hal/periodic",
+        #"//nic/hal/svc:hal_svc",
+        "//nic/utils/trace",
+        "//nic/utils/print",
+        #"//nic/hal/plugins/network:network",
+        #"//nic/hal/plugins/proxy:proxyplugin",
+        "//nic/utils/host_mem:host_mem",
+        #"//nic/hal/test/utils:haltestutils",
+        #"//nic/hal/lkl:lkl_api",
+        #"//nic:lkl",
+
+        # PD
+        #"//nic/hal/pd/common:pdcommon",
+        #"//nic/hal/pd/utils/directmap",
+        #"//nic/hal/pd/utils/hash",
+        #"//nic/hal/pd/utils/tcam",
+        #"//nic/hal/pd/utils/flow",
+        #"//nic/hal/pd/utils/met",
+        #"//nic/hal/pd/utils/acl_tcam",
+        #"//nic/hal/pd/iris/p4pd:p4pdapi",
+        #"//nic/hal/pd/iris",
+        #"//nic:capricsr_int",
+        #"//nic/hal/pd/capri",
+        "//nic/model_sim:model_client",
+        #"//nic:p4pd",
+        #"//nic:p4pluspd_txdma",
+        #"//nic:p4pluspd_rxdma",
+        #"//nic:asic_libs",
+    ],
+)
+
+cc_binary(
+    name = "nic_proxy-e2etest_tls-client",
+    srcs = [
+        "utls/tls-client.cc",
+    ],
+    deps = [
+        #"//nic/model_sim/include:modelsim_includes",
+        #"//nic/hal:hal_src",
+        # PI
+        "//nic/proxy-e2etest:lib_driver",
+        #"//nic/hal/periodic",
+        #"//nic/hal/svc:hal_svc",
+        "//nic/utils/trace",
+        "//nic/utils/print",
+        #"//nic/hal/plugins/network:network",
+        #"//nic/hal/plugins/proxy:proxyplugin",
+        "//nic/utils/host_mem:host_mem",
+        #"//nic/hal/test/utils:haltestutils",
+        #"//nic/hal/lkl:lkl_api",
+        #"//nic:lkl",
+
+        # PD
+        #"//nic/hal/pd/common:pdcommon",
+        #"//nic/hal/pd/utils/directmap",
+        #"//nic/hal/pd/utils/hash",
+        #"//nic/hal/pd/utils/tcam",
+        #"//nic/hal/pd/utils/flow",
+        #"//nic/hal/pd/utils/met",
+        #"//nic/hal/pd/utils/acl_tcam",
+        #"//nic/hal/pd/iris/p4pd:p4pdapi",
+        #"//nic/hal/pd/iris",
+        #"//nic:capricsr_int",
+        #"//nic/hal/pd/capri",
+        "//nic/model_sim:model_client",
+        #"//nic:p4pd",
+        #"//nic:p4pluspd_txdma",
+        #"//nic:p4pluspd_rxdma",
+        #"//nic:asic_libs",
+    ],
+)
+cc_binary(
+    name = "nic_proxy-e2etest_tcp-client",
+    srcs = [
+        "utls/tcp-client.cc",
+    ],
+    deps = [
+        #"//nic/model_sim/include:modelsim_includes",
+        #"//nic/hal:hal_src",
+        # PI
+        "//nic/proxy-e2etest:lib_driver",
+        #"//nic/hal/periodic",
+        #"//nic/hal/svc:hal_svc",
+        "//nic/utils/trace",
+        "//nic/utils/print",
+        #"//nic/hal/plugins/network:network",
+        #"//nic/hal/plugins/proxy:proxyplugin",
+        "//nic/utils/host_mem:host_mem",
+        #"//nic/hal/test/utils:haltestutils",
+        #"//nic/hal/lkl:lkl_api",
+        #"//nic:lkl",
+
+        # PD
+        #"//nic/hal/pd/common:pdcommon",
+        #"//nic/hal/pd/utils/directmap",
+        #"//nic/hal/pd/utils/hash",
+        #"//nic/hal/pd/utils/tcam",
+        #"//nic/hal/pd/utils/flow",
+        #"//nic/hal/pd/utils/met",
+        #"//nic/hal/pd/utils/acl_tcam",
+        #"//nic/hal/pd/iris/p4pd:p4pdapi",
+        #"//nic/hal/pd/iris",
+        #"//nic:capricsr_int",
+        #"//nic/hal/pd/capri",
+        "//nic/model_sim:model_client",
+        #"//nic:p4pd",
+        #"//nic:p4pluspd_txdma",
+        #"//nic:p4pluspd_rxdma",
+        #"//nic:asic_libs",
+    ],
+)
+
+cc_binary(
+    name = "nic_proxy-e2etest_tls-server",
+    srcs = [
+        "utls/tls-server.cc",
+    ],
+    deps = [
+        #"//nic/model_sim/include:modelsim_includes",
+        #"//nic/hal:hal_src",
+        # PI
+        "//nic/proxy-e2etest:lib_driver",
+        #"//nic/hal/periodic",
+        #"//nic/hal/svc:hal_svc",
+        "//nic/utils/trace",
+        "//nic/utils/print",
+        #"//nic/hal/plugins/network:network",
+        #"//nic/hal/plugins/proxy:proxyplugin",
+        "//nic/utils/host_mem:host_mem",
+        #"//nic/hal/test/utils:haltestutils",
+        #"//nic/hal/lkl:lkl_api",
+        #"//nic:lkl",
+
+        # PD
+        #"//nic/hal/pd/common:pdcommon",
+        #"//nic/hal/pd/utils/directmap",
+        #"//nic/hal/pd/utils/hash",
+        #"//nic/hal/pd/utils/tcam",
+        #"//nic/hal/pd/utils/flow",
+        #"//nic/hal/pd/utils/met",
+        #"//nic/hal/pd/utils/acl_tcam",
+        #"//nic/hal/pd/iris/p4pd:p4pdapi",
+        #"//nic/hal/pd/iris",
+        #"//nic:capricsr_int",
+        #"//nic/hal/pd/capri",
+        "//nic/model_sim:model_client",
+        #"//nic:p4pd",
+        #"//nic:p4pluspd_txdma",
+        #"//nic:p4pluspd_rxdma",
+        #"//nic:asic_libs",
+    ],
+)
+
+cc_binary(
+    name = "nic_proxy-e2etest_tcp-server",
+    srcs = [
+        "utls/tcp-server.cc",
+    ],
+    deps = [
+        #"//nic/model_sim/include:modelsim_includes",
+        #"//nic/hal:hal_src",
+        # PI
+        "//nic/proxy-e2etest:lib_driver",
+        #"//nic/hal/periodic",
+        #"//nic/hal/svc:hal_svc",
+        "//nic/utils/trace",
+        "//nic/utils/print",
+        #"//nic/hal/plugins/network:network",
+        #"//nic/hal/plugins/proxy:proxyplugin",
+        "//nic/utils/host_mem:host_mem",
+        #"//nic/hal/test/utils:haltestutils",
+        #"//nic/hal/lkl:lkl_api",
+        #"//nic:lkl",
+
+        # PD
+        #"//nic/hal/pd/common:pdcommon",
+        #"//nic/hal/pd/utils/directmap",
+        #"//nic/hal/pd/utils/hash",
+        #"//nic/hal/pd/utils/tcam",
+        #"//nic/hal/pd/utils/flow",
+        #"//nic/hal/pd/utils/met",
+        #"//nic/hal/pd/utils/acl_tcam",
+        #"//nic/hal/pd/iris/p4pd:p4pdapi",
+        #"//nic/hal/pd/iris",
+        #"//nic:capricsr_int",
+        #"//nic/hal/pd/capri",
+        "//nic/model_sim:model_client",
+        #"//nic:p4pd",
+        #"//nic:p4pluspd_txdma",
+        #"//nic:p4pluspd_rxdma",
+        #"//nic:asic_libs",
+    ],
+)
+
