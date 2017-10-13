@@ -187,7 +187,7 @@ inside BASE_BUILD_DIR do
   run "./bazel-0.5.4-installer-linux-x86_64.sh"
 end
 
-copy "sknobs.tar.gz", "#{BASE_BUILD_DIR}/sknobs.tar.gz"
+copy "nic/sknobs.tar.gz", "#{BASE_BUILD_DIR}/sknobs.tar.gz"
 inside "/" do
   run "tar xzf #{BASE_BUILD_DIR}/sknobs.tar.gz"
 end

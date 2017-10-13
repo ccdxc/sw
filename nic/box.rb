@@ -7,14 +7,15 @@ inside "/etc" do
   run "ln -s /usr/share/zoneinfo/US/Pacific localtime"
 end 
 
+workdir "/sw"
+
 # in the CI this block is triggered; in the Makefiles it is not.
 if getenv("NO_COPY") == ""
-  copy ".", ".", ignore_list: %w[.git]
+  copy ".", "/sw", ignore_list: %w[.git]
 end
 
-copy "entrypoint.sh", "/entrypoint.sh"
+copy "nic/entrypoint.sh", "/entrypoint.sh"
 run "chmod +x /entrypoint.sh"
-workdir "/sw"
 
 entrypoint "/entrypoint.sh"
 
