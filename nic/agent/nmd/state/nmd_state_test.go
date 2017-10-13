@@ -409,28 +409,28 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 
 		cfg := nm.getNaplesConfig()
 		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
-			t.Errorf("Failed to switch to managed mode")
+			log.Errorf("Failed to switch to managed mode")
 			return false, nil
 		}
 
 		nic, err := nm.GetSmartNIC()
 		if nic == nil || err != nil {
-			t.Errorf("NIC not found in nicDB")
+			log.Errorf("NIC not found in nicDB")
 			return false, nil
 		}
 
 		if nic.Spec.Phase != cmd.SmartNICSpec_PENDING.String() {
-			t.Errorf("NIC is not admitted")
+			log.Errorf("NIC is not admitted")
 			return false, nil
 		}
 
 		if nm.getRegStatus() == false {
-			t.Errorf("Registration is not in progress")
+			log.Errorf("Registration is not in progress")
 			return false, nil
 		}
 
 		if nm.getRestServerStatus() == true {
-			t.Errorf("REST server is still up")
+			log.Errorf("REST server is still up")
 			return false, nil
 		}
 
@@ -462,7 +462,7 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 	f1 := func() (bool, []interface{}) {
 		err = netutils.HTTPPost(getNMDUrl(nm), naplesCfg, &resp)
 		if err != nil {
-			t.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
+			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
 		}
 		return true, nil
 	}
@@ -473,33 +473,33 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 		cfg := nm.getNaplesConfig()
 		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
 		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
-			t.Errorf("Failed to switch to managed mode")
+			log.Errorf("Failed to switch to managed mode")
 			return false, nil
 		}
 
 		nic, err := nm.GetSmartNIC()
 		if nic == nil || err != nil {
-			t.Errorf("NIC not found in nicDB")
+			log.Errorf("NIC not found in nicDB")
 			return false, nil
 		}
 
 		if nic.Spec.Phase != cmd.SmartNICSpec_REJECTED.String() {
-			t.Errorf("NIC is not rejected")
+			log.Errorf("NIC is not rejected")
 			return false, nil
 		}
 
 		if nm.getRegStatus() == true {
-			t.Errorf("Registration is still in progress")
+			log.Errorf("Registration is still in progress")
 			return false, nil
 		}
 
 		if nm.getUpdStatus() == true {
-			t.Errorf("UpdateNIC is still in progress")
+			log.Errorf("UpdateNIC is still in progress")
 			return false, nil
 		}
 
 		if nm.getRegStatus() == true {
-			t.Errorf("REST server is still up")
+			log.Errorf("REST server is still up")
 			return false, nil
 		}
 
@@ -530,7 +530,7 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 	f1 := func() (bool, []interface{}) {
 		err = netutils.HTTPPost(getNMDUrl(nm), naplesCfg, &resp)
 		if err != nil {
-			t.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
+			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
 			return false, nil
 		}
 		return true, nil
@@ -542,7 +542,7 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 		cfg := nm.getNaplesConfig()
 		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
 		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
-			t.Errorf("Failed to switch to managed mode")
+			log.Errorf("Failed to switch to managed mode")
 			return false, nil
 		}
 		return true, nil

@@ -23,7 +23,7 @@ const (
 // UpdateNaplesConfig updates a local Naples Config object
 func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 
-	log.Infof("NIC mode: %v", cfg.Spec.Mode)
+	log.Infof("NIC mode desired: %v", cfg.Spec.Mode)
 
 	// Detect if there is a mode change
 	var modeChanged bool
@@ -32,7 +32,7 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 		modeChanged = true
 	}
 
-	log.Infof("Modechange: %v Config: %v", modeChanged, n.config.Spec.Mode)
+	log.Infof("Modechange: %v old-mode: %v", modeChanged, config.Spec.Mode)
 
 	// Update nic config in the DB
 	n.setNaplesConfig(cfg)
