@@ -210,7 +210,7 @@ main (int argc, char **argv)
         exit(1);
     }
 
-    if (hal::lkl_init() != HAL_RET_OK) {
+    if (hal::pd::lkl_init() != HAL_RET_OK) {
         fprintf(stderr, "LKL initialization failed, quitting ...\n");
         exit(1);
     }

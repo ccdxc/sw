@@ -94,4 +94,10 @@
 
 #define LKL_SCM_TIMESTAMPING_OPT_STATS	54
 
+#define LKL_SO_PAGEHDR_SMAC              55
+#define LKL_SO_PAGEHDR_DMAC              56
+#define LKL_SO_PAGEHDR_PROTO             57
+#define LKL_SO_PAGEHDR_SIP               58
+#define LKL_SO_PAGEHDR_FLOW              59
+
 #endif /* __LKL__ASM_GENERIC_SOCKET_H */

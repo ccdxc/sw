@@ -146,6 +146,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     ret = add_tcpcb_to_db(tcpcb);
     HAL_ASSERT(ret == HAL_RET_OK);
 
+    HAL_TRACE_DEBUG("Added TCPCB to DB  with id: {}", tcpcb->cb_id);
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->mutable_tcpcb_status()->set_tcpcb_handle(tcpcb->hal_handle);
@@ -171,7 +172,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
 
     tcpcb = find_tcpcb_by_id(kh.tcpcb_id());
     if (tcpcb == NULL) {
-        HAL_TRACE_DEBUG("tcpcb_update cb not found: 0x{0:x}", kh.tcpcb_id());
+        HAL_TRACE_DEBUG("tcpcb_update cb not found: {}", kh.tcpcb_id());
         rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
         return HAL_RET_TCP_CB_NOT_FOUND;
     }
@@ -226,7 +227,8 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
 
     tcpcb = find_tcpcb_by_id(kh.tcpcb_id());
     if (tcpcb == NULL) {
-        rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
+        HAL_TRACE_ERR("TCPCB get: Failed to find cb with id {}", kh.tcpcb_id());
+	rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
         return HAL_RET_TCP_CB_NOT_FOUND;
     }
     

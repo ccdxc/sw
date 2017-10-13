@@ -149,6 +149,27 @@ int lkl_is_running(void);
 int lkl_printf(const char *, ...);
 void lkl_bug(const char *, ...);
 
-void* lkl_get_skbuff(void);
+void lkl_skb_init(void);
+void* lkl_alloc_skb(int len, void* dev);
+void lkl_kfree_skb(void* skb);
+void lkl_skb_reserve(void* skb);
+void lkl_skb_copy_to_linear_data(void* skb, char* pkt, unsigned int len);
+void lkl_skb_set_mac_header(void* skb, signed short offset);
+void lkl_skb_set_network_header(void* skb, signed short offset);
+void lkl_skb_set_transport_header(void* skb, signed short offset);
+int lkl_tcp_v4_rcv(void* skb);
+void* lkl_create_net_ns(void);
+void* lkl_dev_get_by_name(const char* name);
+void lkl_dev_net_set(void* dev, void* net);
+void* lkl_get_mac_start(void* skb);
+void* lkl_get_network_start(void* skb);
+void* lkl_get_transport_start(void* skb);
+char* lkl_get_skb_dev(void *skb);
+void lkl_register_tx_func(void* fn);
+unsigned int lkl_tcpcb_rcv_nxt(void *tcpcb);
+unsigned int lkl_tcpcb_snd_nxt(void *tcpcb);
+unsigned int lkl_tcpcb_snd_una(void *tcpcb);
+unsigned int lkl_tcpcb_rcv_tsval(void *tcpcb);
+unsigned int lkl_tcpcb_ts_recent(void *tcpcb);
 
 #endif

@@ -7,10 +7,12 @@ import sys
 total = 0
 
 paths = [
-    '/dol',
-    '/nic/gen/protobuf/',
+    '/bazel-genfiles/',
+    '/bazel-genfiles/nic/proto/',
+    '/bazel-genfiles/nic/proto/hal/',
+    '/nic',
     '/dol/third_party/',
-    '/nic'
+    '/dol',
 ]
 ws_top = os.path.dirname(sys.argv[0]) + '/../../../../'
 ws_top = os.path.abspath(ws_top)
@@ -22,8 +24,13 @@ for path in paths:
     print("Adding Path: %s" % fullpath)
     sys.path.insert(0, fullpath)
 
-import infra.engine.modmgr as modmgr
-ModuleDatabaseObj = modmgr.ModuleDatabase('modules.list')
+from infra.common.glopts    import GlobalOptions
+import infra.engine.feature         as feature
+from infra.engine.modmgr    import ModuleStore
+GlobalOptions.topology = 'proxy'
+GlobalOptions.feature = 'proxy'
+feature.Init()
+
 
 ProxyModulesDB = {}
 
@@ -48,23 +55,26 @@ class Result:
         return
 
 ResultDB = {} 
-module = ModuleDatabaseObj.getfirst()
-while module != None:
-    if module.parsedata.enable == True and module.parsedata.ignore == False:
-        if module.parsedata.module in ProxyModulesDB.keys():
-            insert = False
-            if module.parsedata.module in ResultDB.keys():
-                obj = ResultDB[module.parsedata.module]
-            else:
-                obj = Result(module.parsedata.module)
-                insert = True
-            obj.namelist.append(module.parsedata.name)
-            obj.count = ProxyModulesDB[module.parsedata.module]
-            obj.multiplier = obj.multiplier+1
-            obj.total = obj.count * obj.multiplier
-            if insert:
-                ResultDB[module.parsedata.module] = obj         
-    module = ModuleDatabaseObj.getnext()
+for module in ModuleStore.GetAll():
+    if hasattr(module, 'enable'):
+        if module.enable == False:
+            continue
+    if hasattr(module, 'ignore'):
+        if module.ignore == True:
+            continue
+    if module.module in ProxyModulesDB.keys():
+        insert = False
+        if module.module in ResultDB.keys():
+            obj = ResultDB[module.module]
+        else:
+            obj = Result(module.module)
+            insert = True
+        obj.namelist.append(module.name)
+        obj.count = ProxyModulesDB[module.module]
+        obj.multiplier = obj.multiplier+1
+        obj.total = obj.count * obj.multiplier
+        if insert:
+            ResultDB[module.module] = obj         
 
 print("%-40s %-10s %-10s %-10s %-20s" % ('Module', 'multiplier', 'count', 'tests', 'test-name'))
 for key, value in ResultDB.items():
