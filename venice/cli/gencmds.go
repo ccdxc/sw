@@ -103,6 +103,15 @@ var editCommands = []cli.Command{
 	},
 
 	{
+		Name:         "smartNIC",
+		Usage:        "create a smartNIC",
+		ArgsUsage:    "[smartNIC]",
+		Action:       editCmd,
+		BashComplete: bashEditSmartNICCompleter,
+		Flags:        append(editFlags, CreateSmartNICFlags...),
+	},
+
+	{
 		Name:         "tenant",
 		Usage:        "create a tenant",
 		ArgsUsage:    "[tenant]",
@@ -211,6 +220,15 @@ var updateCommands = []cli.Command{
 		Action:       updateCmd,
 		BashComplete: bashUpdateSgpolicyCompleter,
 		Flags:        append(createFlags, CreateSgpolicyFlags...),
+	},
+
+	{
+		Name:         "smartNIC",
+		Usage:        "create a smartNIC",
+		ArgsUsage:    "[smartNIC]",
+		Action:       updateCmd,
+		BashComplete: bashUpdateSmartNICCompleter,
+		Flags:        append(createFlags, CreateSmartNICFlags...),
 	},
 
 	{
@@ -332,6 +350,15 @@ var createCommands = []cli.Command{
 	},
 
 	{
+		Name:         "smartNIC",
+		Usage:        "create a smartNIC",
+		ArgsUsage:    "[smartNIC]",
+		Action:       createCmd,
+		BashComplete: bashCreateSmartNICCompleter,
+		Flags:        append(createFlags, CreateSmartNICFlags...),
+	},
+
+	{
 		Name:         "tenant",
 		Usage:        "create a tenant",
 		ArgsUsage:    "[tenant]",
@@ -440,6 +467,15 @@ var readCommands = []cli.Command{
 		Action:       readCmd,
 		Flags:        readFlags,
 		BashComplete: bashReadSgpolicyCompleter,
+	},
+
+	{
+		Name:         "smartNIC",
+		ArgsUsage:    " ",
+		Usage:        "read specified [smartNIC](s)",
+		Action:       readCmd,
+		Flags:        readFlags,
+		BashComplete: bashReadSmartNICCompleter,
 	},
 
 	{
@@ -554,6 +590,15 @@ var deleteCommands = []cli.Command{
 	},
 
 	{
+		Name:         "smartNIC",
+		ArgsUsage:    "[smartNIC]",
+		Usage:        "delete specified [smartNIC](s)",
+		Flags:        deleteFlags,
+		Action:       deleteCmd,
+		BashComplete: bashDeleteSmartNICCompleter,
+	},
+
+	{
 		Name:         "tenant",
 		ArgsUsage:    "[tenant]",
 		Usage:        "delete specified [tenant](s)",
@@ -665,6 +710,15 @@ var labelCommands = []cli.Command{
 	},
 
 	{
+		Name:         "smartNIC",
+		ArgsUsage:    " ",
+		Usage:        "label specified [smartNIC](s)",
+		Action:       labelCmd,
+		Flags:        labelFlags,
+		BashComplete: bashLabelSmartNICCompleter,
+	},
+
+	{
 		Name:         "tenant",
 		ArgsUsage:    " ",
 		Usage:        "label specified [tenant](s)",
@@ -766,6 +820,14 @@ var exampleCommands = []cli.Command{
 	},
 
 	{
+		Name:         "smartNIC",
+		Usage:        "show examples of the smartNIC",
+		Flags:        exampleFlags,
+		Action:       exampleCmd,
+		BashComplete: bashExampleSmartNICCompleter,
+	},
+
+	{
 		Name:         "tenant",
 		Usage:        "show examples of the tenant",
 		Flags:        exampleFlags,
@@ -862,6 +924,14 @@ var definitionCommands = []cli.Command{
 		Flags:        definitionFlags,
 		Action:       definitionCmd,
 		BashComplete: bashDefinitionSgpolicyCompleter,
+	},
+
+	{
+		Name:         "smartNIC",
+		Usage:        "show definifition of the smartNIC",
+		Flags:        definitionFlags,
+		Action:       definitionCmd,
+		BashComplete: bashDefinitionSmartNICCompleter,
 	},
 
 	{
@@ -1073,6 +1143,18 @@ var CreateSgpolicyFlags = []cli.Flag{
 
 	cli.StringSliceFlag{
 		Name: "ports",
+	},
+}
+
+// CreateSmartNICFlags specifies flagsfor smartNIC create operation
+var CreateSmartNICFlags = []cli.Flag{
+
+	cli.StringSliceFlag{
+		Name: "macAddress",
+	},
+
+	cli.StringFlag{
+		Name: "phase",
 	},
 }
 
@@ -1859,6 +1941,83 @@ func bashUpdateSgpolicyCompleter(c *cli.Context) {
 	args := c.Args()
 	if len(args) <= 0 {
 		bashObjectSgpolicyCompleter(c)
+	}
+}
+
+func bashExampleSmartNICCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, exampleFlags)
+}
+
+func bashDefinitionSmartNICCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, definitionFlags)
+}
+
+func bashLabelSmartNICCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, labelFlags)
+	bashObjectSmartNICCompleter(c)
+}
+
+func bashReadSmartNICCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, readFlags)
+	bashObjectSmartNICCompleter(c)
+}
+
+func bashDeleteSmartNICCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, deleteFlags)
+	bashObjectSmartNICCompleter(c)
+}
+
+func bashObjectSmartNICCompleter(c *cli.Context) {
+	if len(c.Args()) > 0 {
+		namesRe := c.Args()[len(c.Args())-1]
+		namesRe = strings.Split(namesRe, ",")[0]
+		c.Set("re", namesRe)
+	}
+
+	ctx := &context{cli: c, tenant: defaultTenant}
+	ctx.cmd = "read"
+	ctx.subcmd = "smartNIC"
+
+	names := getFilteredNames(ctx)
+
+	if len(names) > 40 {
+		fmt.Printf("too-many-smartNICs! ")
+		return
+	}
+
+	for _, name := range names {
+		fmt.Printf("%s ", name)
+	}
+}
+
+func bashEditSmartNICCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, editFlags)
+	bashObjectSmartNICCompleter(c)
+}
+
+func bashCreateSmartNICCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateSmartNICFlags...))
+
+	if _, found := getLastFlagSuggestion(c, CreateSmartNICFlags); found {
+		return
+	}
+
+	args := c.Args()
+	if len(args) <= 0 {
+		fmt.Printf("{smartNIC} ")
+	}
+}
+
+func bashUpdateSmartNICCompleter(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, append(createFlags, CreateSmartNICFlags...))
+
+	if _, found := getLastFlagSuggestion(c, CreateSmartNICFlags); found {
+		return
+	}
+
+	args := c.Args()
+	if len(args) <= 0 {
+		bashObjectSmartNICCompleter(c)
 	}
 }
 

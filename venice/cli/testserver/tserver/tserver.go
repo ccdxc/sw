@@ -50,6 +50,8 @@ func Start(port string) {
 
 	s.AddKnownTypes(&network.Sgpolicy{}, &network.SgpolicyList{})
 
+	s.AddKnownTypes(&cmd.SmartNIC{}, &cmd.SmartNICList{})
+
 	s.AddKnownTypes(&network.Tenant{}, &network.TenantList{})
 
 	s.AddKnownTypes(&api.User{}, &api.UserList{})
@@ -162,6 +164,15 @@ func NewHTTPServer() *martini.ClassicMartini {
 	m.Get(api.Objs["sgpolicy"].URL+"/:name", SgpolicyGetHandler)
 	m.Get(api.Objs["sgpolicy"].URL, SgpolicyListHandler)
 	m.Get("/watch"+api.Objs["sgpolicy"].URL, SgpolicysWatchHandler)
+
+	m.Post("/test"+api.Objs["smartNIC"].URL, SmartNICCreateHandler)
+	m.Post(api.Objs["smartNIC"].URL, SmartNICCreateHandler)
+	m.Put(api.Objs["smartNIC"].URL+"/:name", SmartNICCreateHandler)
+	m.Delete("/test"+api.Objs["smartNIC"].URL+"/:name", SmartNICTestDeleteHandler)
+	m.Delete(api.Objs["smartNIC"].URL+"/:name", SmartNICActualDeleteHandler)
+	m.Get(api.Objs["smartNIC"].URL+"/:name", SmartNICGetHandler)
+	m.Get(api.Objs["smartNIC"].URL, SmartNICListHandler)
+	m.Get("/watch"+api.Objs["smartNIC"].URL, SmartNICsWatchHandler)
 
 	m.Post("/test"+api.Objs["tenant"].URL, TenantCreateHandler)
 	m.Post(api.Objs["tenant"].URL, TenantCreateHandler)
@@ -2201,6 +2212,210 @@ func SgpolicysWatchHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	encoder := json.NewEncoder(w)
 	watcher, err := kvStore.PrefixWatch(context.Background(), api.Objs["sgpolicy"].URL, "0")
+	if err != nil {
+		return
+	}
+	ch := watcher.EventChan()
+	for {
+		select {
+		case event, ok := <-ch:
+			if !ok {
+				return
+			}
+
+			if err := encoder.Encode(event); err != nil {
+				return
+			}
+			if len(ch) == 0 {
+				flusher.Flush()
+			}
+		case <-notifier.CloseNotify():
+			return
+		}
+	}
+}
+
+// SmartNICCreateHandler creates a smartNIC.
+func SmartNICCreateHandler(w http.ResponseWriter, req *http.Request) (int, string) {
+	decoder := json.NewDecoder(req.Body)
+	defer req.Body.Close()
+
+	smartNICObj := cmd.SmartNIC{}
+	oldsmartNIC := cmd.SmartNIC{}
+	if err := decoder.Decode(&smartNICObj); err != nil {
+		return http.StatusBadRequest, fmt.Sprintf("Unable to decode\n")
+	}
+
+	dryRun := false
+	if strings.HasPrefix(req.URL.Path, "/test") {
+		req.URL.Path = strings.TrimPrefix(req.URL.Path, "/test")
+		dryRun = true
+	}
+
+	objName := smartNICObj.Name
+	objUUID := smartNICObj.UUID
+	if objName != "" {
+		v, err := findUUIDByName("smartNIC", objName)
+		if err == nil {
+			if objUUID != "" && v != objUUID {
+				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
+			}
+			objUUID = v
+		}
+	}
+
+	if objUUID == "" {
+		if objName == "" {
+			return http.StatusNotFound, fmt.Sprintf("Either a name or UUID must be specified")
+		}
+		objUUID = uuid.NewV4().String()
+		smartNICObj.UUID = objUUID
+	}
+
+	update := false
+	key := path.Join(api.Objs["smartNIC"].URL, objUUID)
+	if err := kvStore.Get(context.Background(), key, &oldsmartNIC); err == nil {
+		smartNICObj.Status = oldsmartNIC.Status
+		smartNICObj.UUID = oldsmartNIC.UUID
+		update = true
+	}
+
+	if err := PreCreateCallback(&smartNICObj, update, dryRun); err != nil {
+		return http.StatusInternalServerError, err.Error()
+	}
+	log.Infof("Create key: %s object %+v", key, smartNICObj)
+
+	if dryRun {
+		return http.StatusOK, fmt.Sprintf("SmartNIC %q creation would be successful", smartNICObj.Name)
+	}
+
+	if update {
+		if err := kvStore.Update(context.Background(), key, &smartNICObj); err != nil {
+			return http.StatusBadRequest, err.Error()
+		}
+	} else {
+		if err := kvStore.Create(context.Background(), key, &smartNICObj); err != nil {
+			return http.StatusBadRequest, err.Error()
+		}
+	}
+	saveNameUUID(smartNICObj.Kind, objName, objUUID)
+
+	return http.StatusOK, "{}"
+}
+
+// SmartNICTestDeleteHandler is
+func SmartNICTestDeleteHandler(w http.ResponseWriter, params martini.Params) (int, string) {
+	return SmartNICDeleteHandler(w, params, true)
+}
+
+// SmartNICActualDeleteHandler is
+func SmartNICActualDeleteHandler(w http.ResponseWriter, params martini.Params) (int, string) {
+	return SmartNICDeleteHandler(w, params, false)
+}
+
+// SmartNICDeleteHandler is
+func SmartNICDeleteHandler(w http.ResponseWriter, params martini.Params, dryRun bool) (int, string) {
+	objName := params["name"]
+	objUUID := ""
+	if objName != "" {
+		v, err := findUUIDByName("smartNIC", objName)
+		if err != nil {
+			return http.StatusNotFound, fmt.Sprintf("object %s not found", objName)
+		}
+		objUUID = v
+	}
+
+	key := path.Join(api.Objs["smartNIC"].URL, objUUID)
+	smartNIC := cmd.SmartNIC{}
+	if err := kvStore.Get(context.Background(), key, &smartNIC); err != nil {
+		return http.StatusNotFound, fmt.Sprintf("SmartNIC %q deletion failed: %v\n", objName, err)
+	}
+
+	if err := PreDeleteCallback(&smartNIC, dryRun); err != nil {
+		return http.StatusInternalServerError, err.Error()
+	}
+
+	if dryRun {
+		return http.StatusOK, fmt.Sprintf("SmartNIC %q creation would be successful", smartNIC.Name)
+	}
+
+	if err := kvStore.Delete(context.Background(), key, nil); err != nil {
+		return http.StatusNotFound, fmt.Sprintf("SmartNIC %q deletion failed: %v\n", objName, err)
+	}
+	clearNameUUID("smartNIC", objName, objUUID)
+
+	out, err := json.Marshal(&smartNIC)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
+	}
+	return http.StatusOK, string(out)
+}
+
+// SmartNICGetHandler looks up a smartNIC.
+func SmartNICGetHandler(w http.ResponseWriter, params martini.Params) (int, string) {
+	objName := params["name"]
+	objUUID := ""
+	if objName != "" {
+		v, err := findUUIDByName("smartNIC", objName)
+		if err != nil {
+			return http.StatusNotFound, ""
+		}
+		objUUID = v
+	}
+
+	key := path.Join(api.Objs["smartNIC"].URL, objUUID)
+
+	smartNIC := cmd.SmartNIC{}
+
+	if err := kvStore.Get(context.Background(), key, &smartNIC); err != nil {
+		if kvstore.IsKeyNotFoundError(err) {
+			return http.StatusNotFound, fmt.Sprintf("SmartNIC %q not found\n", objName)
+		}
+		return http.StatusInternalServerError, fmt.Sprintf("SmartNIC %q get failed with error: %v\n", objName, err)
+	}
+
+	out, err := json.Marshal(&smartNIC)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
+	}
+	return http.StatusOK, string(out)
+}
+
+// SmartNICListHandler lists all smartNICs.
+func SmartNICListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
+	smartNICs := cmd.SmartNICList{}
+
+	// FIXME: URL tenant messup bug
+	url := api.Objs["smartNIC"].URL
+	url = strings.Replace(url, "//", "/", -1)
+	if err := kvStore.List(context.Background(), url, &smartNICs); err != nil {
+		if kvstore.IsKeyNotFoundError(err) {
+			return http.StatusNotFound, fmt.Sprintf("SmartNICs not found\n")
+		}
+		return http.StatusInternalServerError, fmt.Sprintf("SmartNICs list failed with error: %v\n", err)
+	}
+
+	out, err := json.Marshal(&smartNICs)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
+	}
+
+	return http.StatusOK, string(out)
+}
+
+// SmartNICsWatchHandler establishes a watch on smartNICs hierarchy.
+func SmartNICsWatchHandler(w http.ResponseWriter, req *http.Request) {
+	notifier, ok := w.(http.CloseNotifier)
+	if !ok {
+		return
+	}
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		return
+	}
+	encoder := json.NewEncoder(w)
+	watcher, err := kvStore.PrefixWatch(context.Background(), api.Objs["smartNIC"].URL, "0")
 	if err != nil {
 		return
 	}

@@ -48,20 +48,20 @@ func TestStartServer(t *testing.T) {
 	for {
 		err = httpPost(url, cluster)
 		if err == nil {
-			return
+			break
 		}
 		if strings.Contains(err.Error(), "connection refused") {
 			// server may not be ready by now
 			count--
 			if count <= 0 {
-				break
+				t.Fatalf("error creating default cluster: %s", err)
+				return
 			}
 			t.Logf("error - server not ready")
 			time.Sleep(10 * time.Millisecond)
 		}
 	}
 	os.RemoveAll(snapshotDir)
-	t.Fatalf("error creating default cluster: %s", err)
 }
 
 func TestClusterCreate(t *testing.T) {
@@ -104,6 +104,47 @@ func TestClusterUpdate(t *testing.T) {
 		cluster.Labels["type"] != "vcenter" || cluster.Spec.VirtualIP != "151.21.43.44" {
 		t.Fatalf("Update operation failed: %+v\n", cluster)
 	}
+}
+
+func TestSmartNICCreate(t *testing.T) {
+	addSnic := func(t *testing.T, snic *cmd.SmartNIC) error {
+		url := "http://localhost:" + testServerPort + "/v1/cmd/smartnics"
+		if err := httpPost(url, snic); err != nil {
+			t.Fatalf("error posting smart nic: %+v", snic)
+			return err
+		}
+		return nil
+	}
+
+	snic := &cmd.SmartNIC{}
+	snic.Kind = "smartnic"
+
+	snic.Name = "naples1"
+	snic.Status.PrimaryMacAddress = "0029.ef38.8a01"
+	snic.Status.NodeName = "vm221"
+	addSnic(t, snic)
+
+	/*
+		out := veniceCLI("read smartNIC naples2")
+		snic = &cmd.SmartNIC{}
+		if err := json.Unmarshal([]byte(out), snic); err != nil {
+			t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
+		}
+		if snic.Spec.Phase != cmd.SmartNICSpec_UNKNOWN.String() {
+			t.Fatalf("Read operation failed: %+v \n", snic)
+		}
+	*/
+
+	snic.Name = "naples2"
+	snic.Status.PrimaryMacAddress = "0029.ef38.8a02"
+	snic.Status.NodeName = "vm222"
+	addSnic(t, snic)
+
+	snic.Name = "naples3"
+	snic.Status.PrimaryMacAddress = "0029.ef38.8a03"
+	snic.Status.NodeName = "vm223"
+	addSnic(t, snic)
+
 }
 
 func TestNodeCreate(t *testing.T) {
@@ -152,6 +193,24 @@ func TestNodeUpdate(t *testing.T) {
 	if node.Labels["vCenter"] != "vc2" || len(node.Spec.Roles) != 1 || node.Spec.Roles[0] != cmd.NodeSpec_CONTROLLER.String() {
 		t.Fatalf("Update operation failed: %+v \n", node)
 	}
+}
+
+func TestSmartNICUpdate(t *testing.T) {
+	/*
+		out := veniceCLI(fmt.Sprintf("update smartNIC --phase %s naples2", cmd.SmartNICSpec_ADMITTED.String()))
+
+		if !fmtOutput && strings.TrimSpace(out) != "" {
+			t.Fatalf("Update: garbled output '%s'", out)
+		}
+			out = veniceCLI("read smartNIC naples2")
+			snic := &cmd.SmartNIC{}
+			if err := json.Unmarshal([]byte(out), snic); err != nil {
+				t.Fatalf("Unmarshling error: %s\nRec: %s\n", err, out)
+			}
+			if snic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+				t.Fatalf("Update operation failed: %+v \n", snic)
+			}
+	*/
 }
 
 func TestTenantCreate(t *testing.T) {
@@ -646,6 +705,19 @@ func TestCommandCompletion(t *testing.T) {
 		t.Fatalf("node command completion: invalid output '%s'", out)
 	}
 
+	out = veniceCLI("create smartNIC --gbc")
+	if !strings.Contains(out, "--label --dry-run --file --macAddress --phase {smartNIC}") {
+		t.Fatalf("smartNIC command completion: invalid output '%s'", out)
+	}
+	out = veniceCLI("update smartNIC --gbc")
+	if !strings.Contains(out, "--label --dry-run --file --macAddress --phase") {
+		t.Fatalf("smartNIC command completion: invalid output '%s'", out)
+	}
+	out = veniceCLI("delete smartNIC --gbc")
+	if !strings.Contains(out, "--label --dry-run --regular-expression") {
+		t.Fatalf("smartNIC command completion: invalid output '%s'", out)
+	}
+
 	out = veniceCLI("create endpoint --gbc")
 	if !strings.Contains(out, "--label --dry-run --file {endpoint}") {
 		t.Fatalf("endpoint command completion: invalid output '%s'", out)
@@ -1011,7 +1083,7 @@ func TestEditCommand(t *testing.T) {
 	sg.Labels["five"] = "six"
 	b, err := json.Marshal(sg)
 	if err != nil {
-		t.Fatalf("Unable to marshal node object %+v", sg)
+		t.Fatalf("Unable to marshal sg object %+v", sg)
 	}
 	ioutil.WriteFile("tmp-3772.json", b, 0644)
 	defer os.RemoveAll("tmp-3772.json")
@@ -1141,12 +1213,20 @@ func TestDeleteList(t *testing.T) {
 }
 
 func TestMultiRead(t *testing.T) {
+	// read naples that were created during bootup
+	out := veniceCLI("read smartNIC")
+	if !matchLineFields(out, []string{"naples1", "vm221", "0029.ef38.8a01"}) ||
+		!matchLineFields(out, []string{"naples2", "vm222", "0029.ef38.8a02"}) ||
+		!matchLineFields(out, []string{"naples3", "vm223", "0029.ef38.8a03"}) {
+		t.Fatalf("Unable to read smartNIC objects\n%s", out)
+	}
+
 	veniceCLI("create endpoint --label dmz:yes --label dc:lab-22 --label tier:frontend testep-vm23")
 	veniceCLI("create endpoint --label dmz:no --label dc:lab-22 --label tier:frontend testep-vm24")
 	veniceCLI("create endpoint --label dmz:no --label dc:lab-22 --label tier:frontend blah-vm25")
 	veniceCLI("create endpoint --label dmz:yes --label dc:lab-22 --label tier:frontend blah-vm26")
 
-	out := veniceCLI("read endpoint -q")
+	out = veniceCLI("read endpoint -q")
 	if !matchLineFields(out, []string{"testep-vm23"}) || !matchLineFields(out, []string{"testep-vm24"}) ||
 		!matchLineFields(out, []string{"blah-vm25"}) || !matchLineFields(out, []string{"blah-vm26"}) {
 		t.Fatalf("Unable to read objects in quiet mode:\n%s", out)

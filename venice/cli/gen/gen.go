@@ -541,6 +541,9 @@ func restGet(url, tenant string, obj interface{}) error {
 	log.Debugf("get url: %s", url)
 
 	urlStrs := strings.Split(url, "/")
+	if len(urlStrs) < 3 {
+		return fmt.Errorf("invalid url: '%s'", url)
+	}
 	objName := urlStrs[len(urlStrs)-1]
 	hostName := strings.Join(urlStrs[:3], "/")
 
@@ -578,6 +581,9 @@ func restDelete(objKind, url, tenant string) error {
 	log.Debugf("delete url: %s", url)
 
 	urlStrs := strings.Split(url, "/")
+	if len(urlStrs) < 3 {
+		return fmt.Errorf("invalid url: '%s'", url)
+	}
 	objName := urlStrs[len(urlStrs)-1]
 	hostName := strings.Join(urlStrs[:3], "/")
 
@@ -611,6 +617,9 @@ func restPost(url, tenant string, obj interface{}) error {
 	log.Debugf("post url: %s", url)
 
 	urlStrs := strings.Split(url, "/")
+	if len(urlStrs) < 3 {
+		return fmt.Errorf("invalid url: '%s'", url)
+	}
 	hostName := strings.Join(urlStrs[:3], "/")
 
 	restcl, err := apiclient.NewRestAPIClient(hostName)
@@ -635,6 +644,9 @@ func restPut(url, tenant string, obj interface{}) error {
 	log.Debugf("put url: %s", url)
 
 	urlStrs := strings.Split(url, "/")
+	if len(urlStrs) < 3 {
+		return fmt.Errorf("invalid url: '%s'", url)
+	}
 	hostName := strings.Join(urlStrs[:3], "/")
 
 	restcl, err := apiclient.NewRestAPIClient(hostName)

@@ -87,7 +87,7 @@ var definitionFlags = []cli.Flag{}
 // terminating flags are special in the sense that if they are present, no other options are permitted after them
 var terminatingFlags = []cli.Flag{showDefinitionFlag, showExampleFlag, fileFlag}
 
-// The top level command hierarchy
+// Commands is the top level command hierarchy
 var Commands = []cli.Command{
 	{
 		Name:   "version",

@@ -42,6 +42,8 @@ type RfCtx struct {
 type kvContext struct {
 	mapKey    string
 	prefixKey string
+	sskip     bool
+	isKey     bool
 	fieldName string
 	inSlice   bool
 }
@@ -192,9 +194,13 @@ func getFieldName(kvCtx *kvContext, typeFieldName, veniceTag string) string {
 	return fieldName
 }
 
-func insertTag(kvCtx *kvContext, veniceTag string, fieldName string) string {
+func insertTag(kvCtx *kvContext, veniceTag string, fieldName string) (string, bool, bool) {
 	insTag := veniceTagString(veniceTag, "ins")
+	sskip := kvCtx.sskip
+	isKey := kvCtx.isKey
 	kvCtx.fieldName = fieldName
+	kvCtx.sskip = veniceTagBool(veniceTag, "sskip")
+	kvCtx.isKey = veniceTagBool(veniceTag, "key")
 
 	if insTag != "" {
 		if kvCtx.prefixKey != "" {
@@ -203,14 +209,16 @@ func insertTag(kvCtx *kvContext, veniceTag string, fieldName string) string {
 		kvCtx.prefixKey += insTag
 	}
 
-	return insTag
+	return insTag, sskip, isKey
 }
 
-func removeTag(kvCtx *kvContext, insTag string) {
+func removeTag(kvCtx *kvContext, insTag string, sskip, isKey bool) {
 	if insTag != "" {
 		kvCtx.prefixKey = strings.TrimSuffix(kvCtx.prefixKey, insTag)
 		kvCtx.prefixKey = strings.TrimSuffix(kvCtx.prefixKey, "_")
 	}
+	kvCtx.sskip = sskip
+	kvCtx.isKey = isKey
 	kvCtx.fieldName = ""
 }
 
@@ -235,7 +243,6 @@ func getKvs(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FIn
 func getKvsSliceOne(kind reflect.Kind, v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]FInfo) {
 	fieldName := kvCtx.fieldName
 	if isPrimitive(kind, kind.String()) {
-		veniceTag := kvCtx.prefixKey
 		t, val, isLeaf := getKv(kvCtx, v)
 		if isLeaf {
 			if newVal, ok := kvs[fieldName]; ok {
@@ -245,8 +252,9 @@ func getKvsSliceOne(kind reflect.Kind, v reflect.Value, kvCtx *kvContext, refCtx
 				kvs[fieldName] = FInfo{
 					TypeStr:  t,
 					ValueStr: []string{val},
-					SSkip:    veniceTagBool(veniceTag, "sskip"),
-					Key:      veniceTagBool(veniceTag, "key")}
+					SSkip:    kvCtx.sskip,
+					Key:      kvCtx.isKey,
+				}
 			}
 		}
 	} else {
@@ -285,8 +293,7 @@ func getKvsMap(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]
 		if isPrimitive(elem.Kind(), elem.Kind().String()) {
 			typeStr := elem.Kind().String()
 			fieldName := kvCtx.fieldName
-			veniceTag := kvCtx.prefixKey
-			kvs[fieldName] = FInfo{TypeStr: typeStr, SSkip: veniceTagBool(veniceTag, "sskip"), Key: veniceTagBool(veniceTag, "key")}
+			kvs[fieldName] = FInfo{TypeStr: typeStr, SSkip: kvCtx.sskip, Key: kvCtx.isKey}
 		} else {
 			getKvs(rv, kvCtx, refCtx, kvs)
 		}
@@ -296,7 +303,6 @@ func getKvsMap(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]
 		if isPrimitive(elem.Kind(), elem.Kind().String()) {
 			typeStr := elem.Kind().String()
 			fieldName := kvCtx.fieldName
-			veniceTag := kvCtx.prefixKey
 			valueStr := fmt.Sprintf("%s:%s", key, val)
 			if newVal, ok := kvs[fieldName]; ok {
 				newVal.ValueStr = append(newVal.ValueStr, valueStr)
@@ -305,8 +311,9 @@ func getKvsMap(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[string]
 				kvs[fieldName] = FInfo{
 					TypeStr:  typeStr,
 					ValueStr: []string{valueStr},
-					SSkip:    veniceTagBool(veniceTag, "sskip"),
-					Key:      veniceTagBool(veniceTag, "key")}
+					SSkip:    kvCtx.sskip,
+					Key:      kvCtx.isKey,
+				}
 			}
 		} else {
 			kvCtx.mapKey = fmt.Sprintf("%s", key)
@@ -343,9 +350,9 @@ func getKvsStruct(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[stri
 					Key:      veniceTagBool(veniceTag, "key")}
 			}
 		} else {
-			insTag := insertTag(kvCtx, veniceTag, fieldName)
+			insTag, sskip, isKey := insertTag(kvCtx, veniceTag, fieldName)
 			getKvs(val, kvCtx, refCtx, kvs)
-			removeTag(kvCtx, insTag)
+			removeTag(kvCtx, insTag, sskip, isKey)
 		}
 	}
 }
@@ -585,9 +592,9 @@ func writeKvsStruct(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kv
 		if isLeaf {
 			mapKey = writeKvsOne(fieldName, v, newField, origField, kvCtx, refCtx, kvs)
 		} else {
-			insTag := insertTag(kvCtx, veniceTag, fieldName)
+			insTag, sskip, key := insertTag(kvCtx, veniceTag, fieldName)
 			mapKey = writeKvs(newField, origField, kvCtx, refCtx, kvs)
-			removeTag(kvCtx, insTag)
+			removeTag(kvCtx, insTag, sskip, key)
 		}
 	}
 

@@ -48,7 +48,9 @@ type ObjectInfo struct {
 var Objs = map[string]ObjectInfo{
 	"node": {Name: "node", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/nodes", Perms: "rw",
 		Structs: []GenObjStruct{{Name: "NodeCondition"}, {Name: "PortCondition"}, {Name: "ConditionStatus"}}},
-	"cluster":       {Name: "cluster", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/cluster", Perms: "rw"},
+	"cluster": {Name: "cluster", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/cluster", Perms: "rw"},
+	"smartNIC": {Name: "smartNIC", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/smartnics", Perms: "rw",
+		Structs: []GenObjStruct{{Name: "PortSpec"}, {Name: "PortStatus"}, {Name: "SmartNICCondition"}}},
 	"tenant":        {Name: "tenant", Package: "network", GrpcService: "tenant", URL: "/v1/tenants/tenants", Perms: "rw"},
 	"network":       {Name: "network", Package: "network", GrpcService: "network", URL: "/v1/networks/:tenant/networks", Perms: "rw"},
 	"securityGroup": {Name: "securityGroup", Package: "network", GrpcService: "securityGroup", URL: "/v1/security-groups/:tenant/security-groups", Perms: "rw"},

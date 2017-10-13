@@ -720,7 +720,7 @@ func dumpStruct(ctx *context, obj interface{}) []byte {
 	return y
 }
 
-// showVersion shows the venice version
+// DefaultVersion is the bakend in image version for the CLI frontend
 // TODO: obtain the server version from the backend
 const DefaultVersion = "v0.1-alpha"
 

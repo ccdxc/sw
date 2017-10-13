@@ -3,7 +3,9 @@
 EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|scripts"
 TO_BUILD := ./venice/utils/... ./nic/agent/... ./venice/cmd/... ./venice/apigw/... ./venice/orch/... \
 ./venice/apiserver/... ./venice/globals/... ./venice/ctrler/... ./test/... ./api/ ./api/hooks/... \
-./api/listerwatcher/... ./api/cache/... ./api/integration/... ./venice/exe/venice/... ./venice/collector/...
+./api/listerwatcher/... ./api/cache/... ./api/integration/... ./venice/exe/venice/... ./venice/collector/... \
+./venice/cli/...
+
 TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent
 TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 

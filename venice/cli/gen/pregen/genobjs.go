@@ -43,6 +43,9 @@ func GetObjSpec(objName string) interface{} {
 	case "sgpolicy":
 		return network.SgpolicySpec{}
 
+	case "smartNIC":
+		return cmd.SmartNICSpec{}
+
 	case "tenant":
 		return network.TenantSpec{}
 
@@ -75,6 +78,18 @@ func GetSubObj(kind string) interface{} {
 
 	case "SGRule":
 		var v network.SGRule
+		return &v
+
+	case "PortSpec":
+		var v cmd.PortSpec
+		return &v
+
+	case "PortStatus":
+		var v cmd.PortStatus
+		return &v
+
+	case "SmartNICCondition":
+		var v cmd.SmartNICCondition
 		return &v
 
 	case "UserAuditLog":
@@ -127,6 +142,10 @@ func GetObjStatus(objName string) interface{} {
 
 	case "sgpolicy":
 		o := network.Sgpolicy{}
+		return o.Status
+
+	case "smartNIC":
+		o := cmd.SmartNIC{}
 		return o.Status
 
 	case "tenant":

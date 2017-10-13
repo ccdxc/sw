@@ -112,6 +112,16 @@ func GetSgpolicyByName(objName string) (*network.Sgpolicy, error) {
 	return sgpolicyObj, nil
 }
 
+// GetSmartNICByName is
+func GetSmartNICByName(objName string) (*cmd.SmartNIC, error) {
+	obj, err := GetObjByName("smartNIC", objName)
+	if err != nil {
+		return nil, err
+	}
+	smartNICObj := obj.(*cmd.SmartNIC)
+	return smartNICObj, nil
+}
+
 // GetTenantByName is
 func GetTenantByName(objName string) (*network.Tenant, error) {
 	obj, err := GetObjByName("tenant", objName)
@@ -272,6 +282,20 @@ func UpdateSgpolicy(obj *network.Sgpolicy) error {
 	return nil
 }
 
+// UpdateSmartNIC is
+func UpdateSmartNIC(obj *cmd.SmartNIC) error {
+	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
+	if err != nil {
+		return err
+	}
+	key := path.Join(api.Objs["smartNIC"].URL, uuidStr)
+	err = kvStore.Update(context.Background(), key, obj)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // UpdateTenant is
 func UpdateTenant(obj *network.Tenant) error {
 	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
@@ -333,6 +357,9 @@ func getEmptyObj(kind string) (obj interface{}, objList interface{}) {
 	case "sgpolicy":
 		return &network.Sgpolicy{}, &network.SgpolicyList{}
 
+	case "smartNIC":
+		return &cmd.SmartNIC{}, &cmd.SmartNICList{}
+
 	case "tenant":
 		return &network.Tenant{}, &network.TenantList{}
 
@@ -393,6 +420,11 @@ func getObjFromList(objList interface{}, idx int) interface{} {
 	if ol, ok := objList.(*network.SgpolicyList); ok {
 		sgpolicy := ol.Items[idx]
 		return &sgpolicy
+	}
+
+	if ol, ok := objList.(*cmd.SmartNICList); ok {
+		smartNIC := ol.Items[idx]
+		return &smartNIC
 	}
 
 	if ol, ok := objList.(*network.TenantList); ok {

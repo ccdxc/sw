@@ -85,7 +85,7 @@ message NetworkStatus {
     // list of all workloads in this network
     repeated string Workloads = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "workloads,omitempty"];
     // allocated IPv4 addresses (bitmap)
-    bytes AllocatedIPv4Addrs = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "allocated-ipv4-addrs,omitempty"];
+    bytes AllocatedIPv4Addrs = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "allocated-ipv4-addrs,omitempty", (gogoproto.moretags)="venice:\"sskip\""];
 }
 
 // Network represents a subnet

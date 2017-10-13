@@ -66,30 +66,31 @@ type NodeCondition struct {
 }
 
 type UserSpec struct {
-	Aliases      string             `json:"aliases,omitempty"`
-	Roles        []string           `json:"roles,omitempty"`
-	DummyRoles   []string           `json:"dummyRoles,omitempty"`
-	MatchLabels  map[string]string  `json:"matchLabels,omitempty"`
-	AttachGroup  string             `json:"attachGroup,omitempty"`
-	InRules      []SGRule           `json:"igRules,omitempty" venice:"ins=in"`
-	OutRules     []SGRule           `json:"egRules,omitempty" venice:"ins=out"`
-	Interval     int                `json:"interval,omitempty"`
-	SkippedField string             `json:"uuid,omitempty" venice:"sskip"`
-	Perms        *Permission        `json:"perm,omitempty"`
-	Policies     map[string]Policy  `json:"policiesMap,omitempty"`
-	UserHandle   uint64             `json:"userHandle,omitempty"`
-	Uint32Field  uint32             `json:"uint32Field,omitempty"`
-	Int32Field   int32              `json:"int32Field,omitempty"`
-	SIPAddress   *string            `json:"sipAddress,omitempty"`
-	MacAddrs     []*string          `json:"macAdds,omitempty"`
-	IPOpts       []*IPOpt           `json:"fwProfiles,omitempty"`
-	InRulesR     []*SGRule          `json:"igRulesR,omitempty" venice:"ins=inr"`
-	OutRulesR    []*SGRule          `json:"egRulesR,omitempty" venice:"ins=outr"`
-	FixedRules   [2]SGRule          `json:"fixedRule,omitempty" venice:"ins=fix"`
-	NodeRoles    []NodeSpecNodeRole `json:"nodeRoles,omitempty"`
-	Conditions   []*NodeCondition   `json:"conditions,omitempty"`
-	BoolFlag     bool               `json:"boolFlag, omitempty"`
-	FloatVal     float64            `json:"floatVal,omitempty"`
+	Aliases            string             `json:"aliases,omitempty"`
+	Roles              []string           `json:"roles,omitempty"`
+	DummyRoles         []string           `json:"dummyRoles,omitempty"`
+	MatchLabels        map[string]string  `json:"matchLabels,omitempty"`
+	AttachGroup        string             `json:"attachGroup,omitempty"`
+	InRules            []SGRule           `json:"igRules,omitempty" venice:"ins=in"`
+	OutRules           []SGRule           `json:"egRules,omitempty" venice:"ins=out"`
+	Interval           int                `json:"interval,omitempty"`
+	SkippedField       string             `json:"uuid,omitempty" venice:"sskip"`
+	Perms              *Permission        `json:"perm,omitempty"`
+	Policies           map[string]Policy  `json:"policiesMap,omitempty"`
+	UserHandle         uint64             `json:"userHandle,omitempty"`
+	Uint32Field        uint32             `json:"uint32Field,omitempty"`
+	Int32Field         int32              `json:"int32Field,omitempty"`
+	SIPAddress         *string            `json:"sipAddress,omitempty" venice:"sskip"`
+	MacAddrs           []*string          `json:"macAdds,omitempty"`
+	IPOpts             []*IPOpt           `json:"fwProfiles,omitempty"`
+	InRulesR           []*SGRule          `json:"igRulesR,omitempty" venice:"ins=inr"`
+	OutRulesR          []*SGRule          `json:"egRulesR,omitempty" venice:"ins=outr"`
+	FixedRules         [2]SGRule          `json:"fixedRule,omitempty" venice:"ins=fix"`
+	NodeRoles          []NodeSpecNodeRole `json:"nodeRoles,omitempty"`
+	Conditions         []*NodeCondition   `json:"conditions,omitempty"`
+	BoolFlag           bool               `json:"boolFlag, omitempty"`
+	FloatVal           float64            `json:"floatVal,omitempty"`
+	AllocatedIPv4Addrs []byte             `json:"allocated-ipv4-addrs,omitempty" venice:"sskip"`
 }
 
 type UserList struct {
@@ -177,6 +178,7 @@ func TestWalkStruct(t *testing.T) {
     }
     BoolFlag: bool
     FloatVal: float64
+    AllocatedIPv4Addrs: []uint8
   }
 }
 `
@@ -438,6 +440,11 @@ func TestEmptyGet(t *testing.T) {
 		t.Fatalf("FloatVal not found in kvs")
 	}
 	total++
+	if _, ok := kvs["AllocatedIPv4Addrs"]; !ok {
+		printKvs("kvs", kvs, true)
+		t.Fatalf("AllocatedIPv4Addrs not found in kvs")
+	}
+	total++
 
 	if len(kvs) != total {
 		printKvs("kvs", kvs, true)
@@ -456,6 +463,7 @@ func TestGet(t *testing.T) {
 	outr1 := SGRule{Ports: "udp/221", PeerGroup: "g3", Action: "dennny"}
 	cond1 := NodeCondition{Type: 1, Status: 2, LastTransitionTime: 90001, Reason: "some reason", Message: "some message"}
 	cond2 := NodeCondition{Type: 2, Status: 0, LastTransitionTime: 80001, Reason: "some other reason", Message: "some other message"}
+	byteArray := []byte("EIIUSXN!@")
 
 	u := User{
 		TypeMeta:   TypeMeta{Kind: "user"},
@@ -486,10 +494,11 @@ func TestGet(t *testing.T) {
 				{Ports: "tcp/80,tcp/443", Action: "permit,log", PeerGroup: "web-sg"},
 				{Ports: "udp/80", Action: "permit,log", PeerGroup: "app-sg"},
 			},
-			NodeRoles:  []NodeSpecNodeRole{997, 799},
-			Conditions: []*NodeCondition{&cond1, &cond2},
-			BoolFlag:   true,
-			FloatVal:   77.983,
+			NodeRoles:          []NodeSpecNodeRole{997, 799},
+			Conditions:         []*NodeCondition{&cond1, &cond2},
+			BoolFlag:           true,
+			FloatVal:           77.983,
+			AllocatedIPv4Addrs: byteArray,
 		},
 	}
 	kvs := make(map[string]FInfo)
@@ -695,7 +704,7 @@ func TestGet(t *testing.T) {
 	}
 
 	if fi, ok := kvs["SIPAddress"]; ok {
-		if fi.Key || len(fi.ValueStr) != 1 || fi.ValueStr[0] != ip1 {
+		if fi.Key || !fi.SSkip || len(fi.ValueStr) != 1 || fi.ValueStr[0] != ip1 {
 			printKvs("spec", kvs, false)
 			t.Fatalf("error! SIPAddress %v not found '%v'", ip1, fi.ValueStr)
 		}
@@ -858,7 +867,16 @@ func TestGet(t *testing.T) {
 			t.Fatalf("error! FloatVal not found '%v'", fi.ValueStr)
 		}
 	} else {
-		t.Fatalf("Condition Reason not found")
+		t.Fatalf("FloatVal not found")
+	}
+
+	if fi, ok := kvs["AllocatedIPv4Addrs"]; ok {
+		if !fi.SSkip || fi.Key || len(fi.ValueStr) != 9 {
+			printKvs("spec", kvs, false)
+			t.Fatalf("error! Invalid AllocatedIPv4Addrs found '%+v'", fi)
+		}
+	} else {
+		t.Fatalf("AllocatedIPv4Addrs not found")
 	}
 }
 

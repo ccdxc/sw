@@ -52,6 +52,9 @@ func getObj(ctx *context) (obj interface{}, objList interface{}) {
 	case "sgpolicy":
 		return &network.Sgpolicy{}, &network.SgpolicyList{}
 
+	case "smartNIC":
+		return &cmd.SmartNIC{}, &cmd.SmartNICList{}
+
 	case "tenant":
 		return &network.Tenant{}, &network.TenantList{}
 
@@ -83,6 +86,18 @@ func getSubObj(kind string) interface{} {
 
 	case "SGRule":
 		var v network.SGRule
+		return v
+
+	case "PortSpec":
+		var v cmd.PortSpec
+		return v
+
+	case "PortStatus":
+		var v cmd.PortStatus
+		return v
+
+	case "SmartNICCondition":
+		var v cmd.SmartNICCondition
 		return v
 
 	case "UserAuditLog":
@@ -143,6 +158,11 @@ func getObjFromList(objList interface{}, idx int) interface{} {
 	if ol, ok := objList.(*network.SgpolicyList); ok {
 		sgpolicy := ol.Items[idx]
 		return sgpolicy
+	}
+
+	if ol, ok := objList.(*cmd.SmartNICList); ok {
+		smartNIC := ol.Items[idx]
+		return smartNIC
 	}
 
 	if ol, ok := objList.(*network.TenantList); ok {
@@ -220,6 +240,12 @@ func removeObjOper(obj interface{}) error {
 		v.Status = network.SgpolicyStatus{}
 	}
 
+	if v, ok := obj.(*cmd.SmartNIC); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.Status = cmd.SmartNICStatus{}
+	}
+
 	if v, ok := obj.(*network.Tenant); ok {
 		v.UUID = ""
 		v.ResourceVersion = ""
@@ -275,6 +301,10 @@ func writeObj(obj interface{}, objmKvs, specKvs map[string]ref.FInfo) interface{
 
 	if v, ok := obj.(*network.Sgpolicy); ok {
 		return writeSgpolicyObj(*v, objmKvs, specKvs)
+	}
+
+	if v, ok := obj.(*cmd.SmartNIC); ok {
+		return writeSmartNICObj(*v, objmKvs, specKvs)
 	}
 
 	if v, ok := obj.(*network.Tenant); ok {
@@ -507,6 +537,27 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 			}
 		}
 
+	case "smartNIC":
+		smartNICList := objList.(*cmd.SmartNICList)
+		for idx, o := range smartNICList.Items {
+			objmKvs = append(objmKvs, make(map[string]ref.FInfo))
+			specKvs = append(specKvs, make(map[string]ref.FInfo))
+			ref.GetKvs(o.ObjectMeta, refCtx, objmKvs[idx])
+
+			ref.GetKvs(o.Spec, refCtx, specKvs[idx])
+			ref.GetKvs(o.Status, refCtx, specKvs[idx])
+			for key, fi := range objmKvs[idx] {
+				if strings.Join(fi.ValueStr, "") != "" && !fi.SSkip {
+					objmValidKvs[key] = true
+				}
+			}
+			for key, fi := range specKvs[idx] {
+				if strings.Join(fi.ValueStr, "") != "" && !fi.SSkip {
+					specValidKvs[key] = true
+				}
+			}
+		}
+
 	case "tenant":
 		tenantList := objList.(*network.TenantList)
 		for idx, o := range tenantList.Items {
@@ -597,6 +648,33 @@ func writeSGRuleObj(obj network.SGRule, specKvs map[string]ref.FInfo) *network.S
 	newSGRule := new.(network.SGRule)
 
 	return &newSGRule
+}
+
+func writePortSpecObj(obj cmd.PortSpec, specKvs map[string]ref.FInfo) *cmd.PortSpec {
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newPortSpec := new.(cmd.PortSpec)
+
+	return &newPortSpec
+}
+
+func writePortStatusObj(obj cmd.PortStatus, specKvs map[string]ref.FInfo) *cmd.PortStatus {
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newPortStatus := new.(cmd.PortStatus)
+
+	return &newPortStatus
+}
+
+func writeSmartNICConditionObj(obj cmd.SmartNICCondition, specKvs map[string]ref.FInfo) *cmd.SmartNICCondition {
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	newSmartNICCondition := new.(cmd.SmartNICCondition)
+
+	return &newSmartNICCondition
 }
 
 func writeUserAuditLogObj(obj api.UserAuditLog, specKvs map[string]ref.FInfo) *api.UserAuditLog {
@@ -748,6 +826,20 @@ func writeSgpolicyObj(obj network.Sgpolicy, metaKvs, specKvs map[string]ref.FInf
 	return newSgpolicy
 }
 
+func writeSmartNICObj(obj cmd.SmartNIC, metaKvs, specKvs map[string]ref.FInfo) *cmd.SmartNIC {
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+
+	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
+	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
+
+	newSmartNIC := &cmd.SmartNIC{
+		TypeMeta:   swapi.TypeMeta{Kind: "smartNIC"},
+		ObjectMeta: newObjm.(swapi.ObjectMeta),
+		Spec:       newSpec.(cmd.SmartNICSpec),
+	}
+	return newSmartNIC
+}
+
 func writeTenantObj(obj network.Tenant, metaKvs, specKvs map[string]ref.FInfo) *network.Tenant {
 	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
 
@@ -808,6 +900,9 @@ func createObjFromBytes(ctx *context, objName, inp string) error {
 
 	case "sgpolicy":
 		createSgpolicyFromBytes(ctx, inp)
+
+	case "smartNIC":
+		createSmartNICFromBytes(ctx, inp)
 
 	case "tenant":
 		createTenantFromBytes(ctx, inp)
@@ -969,6 +1064,21 @@ func createSgpolicyFromBytes(ctx *context, inp string) error {
 	return nil
 }
 
+func createSmartNICFromBytes(ctx *context, inp string) error {
+	smartNIC := &cmd.SmartNIC{}
+	if err := json.Unmarshal([]byte(inp), smartNIC); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	smartNIC.Tenant = ctx.tenant
+	if err := postObj(ctx, smartNIC, true); err != nil {
+		fmt.Printf("post error %s", err)
+	}
+
+	return nil
+}
+
 func createTenantFromBytes(ctx *context, inp string) error {
 	tenant := &network.Tenant{}
 	if err := json.Unmarshal([]byte(inp), tenant); err != nil {
@@ -1041,6 +1151,10 @@ func updateLabel(obj interface{}, newLabels map[string]string) error {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
 
+	if o, ok := obj.(*cmd.SmartNIC); ok {
+		return updateMetaLabel(&o.ObjectMeta, newLabels)
+	}
+
 	if o, ok := obj.(*network.Tenant); ok {
 		return updateMetaLabel(&o.ObjectMeta, newLabels)
 	}
@@ -1056,6 +1170,9 @@ func restGet(url, tenant string, obj interface{}) error {
 	log.Debugf("get url: %s", url)
 
 	urlStrs := strings.Split(url, "/")
+	if len(urlStrs) < 3 {
+		return fmt.Errorf("invalid url: '%s'", url)
+	}
 	objName := urlStrs[len(urlStrs)-1]
 	hostName := strings.Join(urlStrs[:3], "/")
 
@@ -1233,6 +1350,27 @@ func restGet(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
+	if v, ok := obj.(*cmd.SmartNIC); ok {
+		objm := v.ObjectMeta
+		objm.Name = objName
+		objm.Tenant = tenant
+		nv, err := restcl.CmdV1().SmartNIC().Get(ctx, &objm)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+		return nil
+	}
+	if v, ok := obj.(*cmd.SmartNICList); ok {
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
+		nlist, err := restcl.CmdV1().SmartNIC().List(ctx, &opts)
+		if err != nil {
+			return err
+		}
+		v.Items = nlist
+		return nil
+	}
+
 	if v, ok := obj.(*network.Tenant); ok {
 		objm := v.ObjectMeta
 		objm.Name = objName
@@ -1261,6 +1399,9 @@ func restDelete(objKind, url, tenant string) error {
 	log.Debugf("delete url: %s", url)
 
 	urlStrs := strings.Split(url, "/")
+	if len(urlStrs) < 3 {
+		return fmt.Errorf("invalid url: '%s'", url)
+	}
 	objName := urlStrs[len(urlStrs)-1]
 	hostName := strings.Join(urlStrs[:3], "/")
 
@@ -1406,6 +1547,23 @@ func restDelete(objKind, url, tenant string) error {
 		return nil
 	}
 
+	if objKind == "smartNIC" {
+		objm := swapi.ObjectMeta{}
+		objm.Name = objName
+		objm.Tenant = tenant
+		obj, err := restcl.CmdV1().SmartNIC().Delete(ctx, &objm)
+		if err != nil {
+			return err
+		}
+		out, err := json.Marshal(obj)
+		if err == nil {
+			fmt.Printf("%s", string(out))
+		} else {
+			fmt.Printf("Unable to marshal object %+v\n", obj)
+		}
+		return nil
+	}
+
 	if objKind == "tenant" {
 		objm := swapi.ObjectMeta{}
 		objm.Name = objName
@@ -1430,6 +1588,9 @@ func restPost(url, tenant string, obj interface{}) error {
 	log.Debugf("post url: %s", url)
 
 	urlStrs := strings.Split(url, "/")
+	if len(urlStrs) < 3 {
+		return fmt.Errorf("invalid url: '%s'", url)
+	}
 	hostName := strings.Join(urlStrs[:3], "/")
 
 	restcl, err := apiclient.NewRestAPIClient(hostName)
@@ -1510,6 +1671,15 @@ func restPost(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
+	if v, ok := obj.(*cmd.SmartNIC); ok {
+		v.Tenant = tenant
+		_, err := restcl.CmdV1().SmartNIC().Create(ctx, v)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
 	if v, ok := obj.(*network.Tenant); ok {
 		v.Tenant = tenant
 		_, err := restcl.TenantV1().Tenant().Create(ctx, v)
@@ -1526,6 +1696,9 @@ func restPut(url, tenant string, obj interface{}) error {
 	log.Debugf("put url: %s", url)
 
 	urlStrs := strings.Split(url, "/")
+	if len(urlStrs) < 3 {
+		return fmt.Errorf("invalid url: '%s'", url)
+	}
 	hostName := strings.Join(urlStrs[:3], "/")
 
 	restcl, err := apiclient.NewRestAPIClient(hostName)
@@ -1606,6 +1779,15 @@ func restPut(url, tenant string, obj interface{}) error {
 		return nil
 	}
 
+	if v, ok := obj.(*cmd.SmartNIC); ok {
+		v.Tenant = tenant
+		_, err := restcl.CmdV1().SmartNIC().Update(ctx, v)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
 	if v, ok := obj.(*network.Tenant); ok {
 		v.Tenant = tenant
 		_, err := restcl.TenantV1().Tenant().Update(ctx, v)
@@ -1639,6 +1821,8 @@ var objOrder = []string{
 	"service",
 
 	"sgpolicy",
+
+	"smartNIC",
 
 	"tenant",
 
