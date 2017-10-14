@@ -26,7 +26,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     // p4 sends payload_end as end of the packet including 2+icv
     add r2, r0, k.p42p4plus_hdr_ipsec_payload_end
     sub r2, r2, d.icv_size
-    subi r2, r2, 2
+    addi r2, r2, IPSEC_SALT_HEADROOM
     phvwr p.ipsec_int_header_tailroom_offset, r2
     phvwr p.ipsec_global_icv_size, d.icv_size
 
@@ -42,7 +42,8 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     add r1, r0, k.p42p4plus_hdr_ipsec_payload_start
     add r1, r1, k.p42p4plus_hdr_ip_hdr_size
     addi r1, r1, ESP_FIXED_HDR_SIZE
-    add r1, r1, d.iv_size 
+    add r1, r1, d.iv_size
+    subi r2, r2, IPSEC_SALT_HEADROOM
     sub r5, r2, r1
     phvwr p.ipsec_int_header_payload_size, r5
     phvwr p.ipsec_to_stage3_payload_size, r5 
@@ -55,7 +56,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
      
     add r6, r0, k.p42p4plus_hdr_ipsec_payload_start
     add r6, r6, k.p42p4plus_hdr_ip_hdr_size
-    addi r6, r6, 4
+    addi r6, r6, ESP_FIXED_HDR_SIZE 
     phvwr p.ipsec_to_stage3_iv_salt_off, r6
     phvwr p.ipsec_to_stage3_iv_salt, d.iv_salt 
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}

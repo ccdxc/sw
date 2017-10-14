@@ -15,8 +15,8 @@ esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int:
     phvwr p.txdma2_global_payload_size, d.payload_size
     phvwr p.t0_s2s_headroom_offset, d.headroom_offset
     phvwr p.t0_s2s_tailroom_offset, d.tailroom_offset
-    phvwr p.ipsec_to_stage3_in_page, d.in_page
-    phvwr p.ipsec_to_stage3_headroom, d.headroom
+    phvwr p.ipsec_to_stage4_in_page, d.in_page
+    phvwr p.ipsec_to_stage4_headroom, d.headroom
     nop.e
     nop
  

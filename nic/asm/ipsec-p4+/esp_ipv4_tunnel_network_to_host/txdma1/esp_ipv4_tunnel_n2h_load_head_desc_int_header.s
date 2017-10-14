@@ -22,11 +22,10 @@ esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
     // iv_address = in_page+payload_start-4
     add r1, r0, d.in_page
     add r1, r1, d.headroom_offset
-    addi r1, r1, 4 
+    addi r1, r1, ESP_FIXED_HDR_SIZE 
     phvwr p.barco_req_iv_address, r1.dx 
 
     add r1, r0, d.tailroom_offset
-    addi r1, r1, 2
     add r1, r1, d.in_page
     phvwr p.barco_req_auth_tag_addr, r1.dx
 

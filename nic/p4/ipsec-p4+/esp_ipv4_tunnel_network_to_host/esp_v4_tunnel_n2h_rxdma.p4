@@ -164,6 +164,8 @@ metadata dma_cmd_phv2mem_t dma_cmd_out_desc_aol;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_iv_salt; 
 @pragma dont_trim
+metadata dma_cmd_pkt2mem_t dma_cmd_pkt2mem2;
+@pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_post_cb_ring;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex;
@@ -235,6 +237,8 @@ action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc (pc, rsvd, cosA, cosB,
                                        cb_pindex, cb_cindex, cb_ring_base_addr, iv_salt, ipsec_cb_pad)
 {
     IPSEC_CB_SCRATCH_WITH_PC
+    IPSEC_SCRATCH_GLOBAL
+    IPSEC_SCRATCH_T0_S2S
     //table write in_desc into rsvd value of tail_desc - write this part in assembly.
     // pass the in_desc value in s2s data or global data. 
     //modify_field(t0_s2s.in_desc_addr, ipsec_global.in_desc_addr);
@@ -256,8 +260,6 @@ action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc (pc, rsvd, cosA, cosB,
     // Ring HW doorbell for pindex incr ??
     modify_field(p4_rxdma_intr.dma_cmd_ptr, RXDMA_IPSEC_DMA_COMMANDS_OFFSET);
     // Ring Barco-Doorbell for IPSec-CB (svc_lif, type, ipsec-cb-index(qid))
-    IPSEC_SCRATCH_GLOBAL
-    IPSEC_SCRATCH_T0_S2S
 }
 
 //stage 3
@@ -299,7 +301,8 @@ action esp_v4_tunnel_n2h_update_input_desc_aol (addr0, offset0, length0,
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T0_S2S
     // 1. Original pkt to input descriptor pkt2mem 
-    DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem, addr0, ipsec_to_stage3.payload_size, 0, 0)
+    //DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem1, addr0, ipsec_to_stage3.payload_size, 0, 0)
+    //DMA_COMMAND_PKT2MEM_FILL(dma_cmd_pkt2mem2, addr0, ipsec_to_stage3.payload_size, 0, 0)
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_iv_salt, addr0+ipsec_to_stage3.iv_salt_off, IPSEC_IN_DESC_IV_SALT_START, IPSEC_IN_DESC_IV_SALT_END, 0, 0, 0, 0)
 }
 

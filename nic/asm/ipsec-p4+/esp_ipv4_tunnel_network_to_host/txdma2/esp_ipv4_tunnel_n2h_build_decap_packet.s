@@ -3,13 +3,15 @@
 #include "ipsec_asm_defines.h"
 #include "capri-macros.h"
 
-struct tx_table_s3_t0_k k;
-struct tx_table_s3_t0_tx_table_s3_t0_cfg_action_d d;
+struct tx_table_s4_t0_k k;
+struct tx_table_s4_t0_tx_table_s4_t0_cfg_action_d d;
 struct phv_ p;
 
 %%
         .align
 esp_v4_tunnel_n2h_txdma2_build_decap_packet:
+    phvwri p.p4plus2p4_hdr_flags, P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN
+
     phvwri p.intrinsic_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwri p.intrinsic_app_hdr_dma_cmd_phv_start_addr, 0
     phvwri p.intrinsic_app_hdr_dma_cmd_phv_end_addr, 16
@@ -19,14 +21,17 @@ esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     phvwri p.ipsec_app_hdr_dma_cmd_phv_end_addr, IPSEC_TXDMA2_APP_HEADER_END 
     
     phvwri p.eth_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    phvwr  p.eth_hdr_dma_cmd_addr, k.ipsec_to_stage3_in_page
-    phvwr  p.eth_hdr_dma_cmd_size, k.ipsec_to_stage3_headroom
+    phvwr  p.eth_hdr_dma_cmd_addr, k.ipsec_to_stage4_in_page
+    phvwr  p.eth_hdr_dma_cmd_size, k.ipsec_to_stage4_headroom
     
     phvwri p.dec_pay_load_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    phvwr p.dec_pay_load_dma_cmd_addr, k.t0_s2s_out_page_addr
+    add r4, r0, k.t0_s2s_out_page_addr
+    addi r4, r4, ESP_FIXED_HDR_SIZE
+    phvwr p.dec_pay_load_dma_cmd_addr, r4 
     add r3, r0, k.txdma2_global_payload_size
     //payload-size includes pad - subtract pad_size now
     sub r3, r3, k.txdma2_global_pad_size
+    subi r3, r3, 2
     phvwr p.dec_pay_load_dma_cmd_size, r3
     phvwri p.dec_pay_load_dma_cmd_eop, 1
     phvwri p.dec_pay_load_dma_pkt_eop, 1

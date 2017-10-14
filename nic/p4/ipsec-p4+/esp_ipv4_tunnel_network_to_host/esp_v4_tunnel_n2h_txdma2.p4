@@ -8,7 +8,9 @@
 #define tx_table_s2_t1_action esp_v4_tunnel_n2h_txdma2_load_out_desc 
 #define tx_table_s2_t2_action esp_v4_tunnel_n2h_txdma2_load_ipsec_int
 
-#define tx_table_s3_t0_action esp_v4_tunnel_n2h_txdma2_build_decap_packet
+#define tx_table_s3_t0_action esp_v4_tunnel_n2h_txdma2_load_pad_size_and_l4_proto
+
+#define tx_table_s4_t0_action esp_v4_tunnel_n2h_txdma2_build_decap_packet
 
 #include "../../common-p4+/common_txdma.p4"
 
@@ -75,15 +77,22 @@ header_type ipsec_to_stage1_t {
 header_type ipsec_to_stage2_t {
     fields {
         barco_req_addr   : ADDRESS_WIDTH;
-        ipsec_cb_addr : ADDRESS_WIDTH;
+        stage2_pad : 64;
     }
 }
 
 header_type ipsec_to_stage3_t {
     fields {
+        ipsec_cb_addr : ADDRESS_WIDTH;
+        stage3_pad : 64;
+    }
+}
+
+header_type ipsec_to_stage4_t {
+    fields {
         in_page        : ADDRESS_WIDTH;
         headroom       : 16;
-        stage3_pad1     : 48;
+        stage4_pad1     : 48;
     }
 }
 
@@ -103,6 +112,9 @@ metadata ipsec_to_stage2_t ipsec_to_stage2;
 
 @pragma pa_header_union ingress to_stage_3
 metadata ipsec_to_stage3_t ipsec_to_stage3;
+
+@pragma pa_header_union ingress to_stage_4
+metadata ipsec_to_stage4_t ipsec_to_stage4;
 
 @pragma pa_header_union ingress common_t0_s2s
 metadata ipsec_table0_s2s t0_s2s;
@@ -136,10 +148,16 @@ metadata ipsec_txdma2_global_t txdma2_global_scratch;
 metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
 
 @pragma scratch_metadata
+metadata ipsec_to_stage4_t ipsec_to_stage4_scratch;
+
+@pragma scratch_metadata
 metadata ipsec_table0_s2s t0_s2s_scratch;
 
 @pragma scratch_metadata
 metadata barco_request_t barco_req_scratch;
+
+@pragma scratch_metadata
+metadata barco_descriptor_t barco_desc_scratch;
 
 @pragma scratch_metadata
 metadata ipsec_int_header_t ipsec_int_hdr_scratch;
@@ -185,8 +203,8 @@ action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
 {
     IPSEC_DECRYPT_GLOBAL_SCRATCH
     IPSEC_DECRYPT_TXDMA2_T0_S2S_SCRATCH
-    modify_field(ipsec_to_stage3_scratch.in_page, ipsec_to_stage3.in_page);
-    modify_field(ipsec_to_stage3_scratch.headroom, ipsec_to_stage3.headroom);
+    modify_field(ipsec_to_stage4_scratch.in_page, ipsec_to_stage4.in_page);
+    modify_field(ipsec_to_stage4_scratch.headroom, ipsec_to_stage4.headroom);
     // Add intrinsic and app header
     DMA_COMMAND_PHV2PKT_FILL(intrinsic_app_hdr, 0, 32, 0)
 
@@ -200,9 +218,18 @@ action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
 
     //tblwr barco_ring_cindex
 }
+
+//stage 3
+action esp_v4_tunnel_n2h_txdma2_load_pad_size_and_l4_proto(pad_size, l4_proto)
+{
+    IPSEC_DECRYPT_GLOBAL_SCRATCH
+    IPSEC_DECRYPT_TXDMA2_T0_S2S_SCRATCH
+    modify_field(txdma2_global.pad_size, pad_size);
+    modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr);
+}
  
 
-//stage 3 table 2 
+//stage 2 table 2 
 action esp_v4_tunnel_n2h_txdma2_load_ipsec_int(in_desc, out_desc,
                                                in_page, out_page,
                                                ipsec_cb_index, headroom,
@@ -212,6 +239,7 @@ action esp_v4_tunnel_n2h_txdma2_load_ipsec_int(in_desc, out_desc,
                                                payload_size, l4_protocol, pad_size)
 {
     IPSEC_INT_HDR_SCRATCH
+    IPSEC_DECRYPT_GLOBAL_SCRATCH
     modify_field(txdma2_global.pad_size, pad_size);
     modify_field(txdma2_global.l4_protocol, l4_protocol);
     modify_field(txdma2_global.payload_size, payload_size);
@@ -221,30 +249,34 @@ action esp_v4_tunnel_n2h_txdma2_load_ipsec_int(in_desc, out_desc,
     modify_field(p4plus2p4_hdr.table2_valid, 0);
 }
 
-//stage 3 table 1 
+//stage 2 table 1 
 action esp_v4_tunnel_n2h_txdma2_load_out_desc(addr0, offset0, length0,
                                         addr1, offset1, length1,
                                         addr2, offset2, length2,
                                         nextptr, rsvd)
 {
+    IPSEC_DECRYPT_GLOBAL_SCRATCH
     modify_field(t0_s2s.out_page_addr, addr0);
-
+    //modify_field(txdma2_global.payload_size, length0-ESP_FIXED_HDR_SIZE);
+    modify_field(barco_desc_scratch.L0, length0);
+    modify_field(barco_desc_scratch.O0, offset0);
     modify_field(p4plus2p4_hdr.table1_valid, 0);
 }
 
-//stage 3 table 0 
+//stage 2 table 0 
 action esp_v4_tunnel_n2h_txdma2_load_in_desc(addr0, offset0, length0,
                                        addr1, offset1, length1,
                                        addr2, offset2, length2,
                                        nextptr, rsvd)
 {
+    IPSEC_DECRYPT_GLOBAL_SCRATCH
     modify_field(t0_s2s.in_page_addr, addr0);
 
-    modify_field(p4plus2p4_hdr.table0_valid, 1);
-    modify_field(common_te0_phv.table_pc, 0);
-    modify_field(common_te0_phv.table_raw_table_size, 0);
-    modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, ipsec_to_stage2.ipsec_cb_addr);
+    //modify_field(p4plus2p4_hdr.table0_valid, 1);
+    //modify_field(common_te0_phv.table_pc, 0);
+    //modify_field(common_te0_phv.table_raw_table_size, 0);
+    //modify_field(common_te0_phv.table_lock_en, 0);
+    //modify_field(common_te0_phv.table_addr, ipsec_to_stage3.ipsec_cb_addr);
 }
 
 
@@ -324,5 +356,6 @@ action esp_v4_tunnel_n2h_txdma2_initial_table(rsvd, cosA, cosB,
     modify_field(common_te0_phv.table_raw_table_size, 7);
     modify_field(common_te0_phv.table_lock_en, 0);
     //modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR+(BRQ_REQ_RING_ENTRY_SIZE * barco_ring_cindex));
+    modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr);
    
 }

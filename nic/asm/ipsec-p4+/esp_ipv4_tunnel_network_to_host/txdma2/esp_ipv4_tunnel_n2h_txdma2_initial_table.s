@@ -38,7 +38,7 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     memwr.dx  r4, r3
     //tblwr d.barco_ring_cindex, r1
     //nop
-    phvwr p.ipsec_to_stage2_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+    phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
     nop.e
     nop
