@@ -36,7 +36,7 @@ class LifObject(base.ConfigObjectBase):
         self.GID("Lif%d" % self.id)
         self.mac_addr   = resmgr.LifMacAllocator.get()
         self.status     = haldefs.interface.IF_STATUS_UP
-        self.hw_lif_id = 0
+        self.hw_lif_id = -1
         self.qstate_base = {}
 
         self.c_lib_name = getattr(spec, 'c_lib', None)
@@ -170,7 +170,9 @@ class LifObject(base.ConfigObjectBase):
         self.hal_handle = resp_spec.status.lif_handle
         if (self.c_lib):
             self.CLibConfig(resp_spec)
-        self.hw_lif_id = resp_spec.hw_lif_id
+        if self.hw_lif_id == -1:
+            # HAL does not return hw_lif_id in the UpdateResponse. Set the hw_lif_id only once.
+            self.hw_lif_id = resp_spec.hw_lif_id
         cfglogger.info("- LIF %s = %s HW_LIF_ID = %s (HDL = 0x%x)" %
                        (self.GID(),
                         haldefs.common.ApiStatus.Name(resp_spec.api_status),
