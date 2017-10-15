@@ -11,7 +11,7 @@ clean-docker: build-image
 	docker run -it -v ${PWD}:/sw/dol -v ${PWD}/../nic:/sw/nic pensando/dol make clean
 
 build-image: install_box
-	BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box box.rb
+	cd .. && BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box dol/box.rb
 
 install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi

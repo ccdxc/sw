@@ -28,7 +28,7 @@ REGISTRY = registry.test.pensando.io:5000
 
 build-runtime-image: install_box
 	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:1.1; fi
-	BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box box.rb
+	cd .. && BOX_INCLUDE_ENV="NO_COPY" NO_COPY=1 box nic/box.rb
 
 install_box:
 	@if [ ! -x /usr/local/bin/box ]; then echo "Installing box, sudo is required"; curl -sSL box-builder.sh | sudo bash; fi
@@ -36,7 +36,7 @@ install_box:
 # make a trial dependencies image. pass RELEASE=1 or run `make deps-release` to
 # do a release build.
 deps: install_box
-	RELEASE=${RELEASE} BOX_INCLUDE_ENV="RELEASE" box -t '$(REGISTRY)/pensando/nic:1.1' box-deps.rb
+	cd .. && RELEASE=${RELEASE} BOX_INCLUDE_ENV="RELEASE" box -t '$(REGISTRY)/pensando/nic:1.1' nic/box-deps.rb
 
 # make a release build of the dependencies image
 deps-release:
