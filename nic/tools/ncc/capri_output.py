@@ -1288,7 +1288,7 @@ def capri_deparser_cfg_output(deparser):
                 (start_fld, (max_hdr_flds - used_hdr_fld_info_slots), h.name)
 
     if deparser.d == xgress.EGRESS:
-        deparser.be.CalFieldList.CsumDeParserConfigGenerate(deparser, \
+        deparser.be.checksum.CsumDeParserConfigGenerate(deparser, \
                                             hv_fld_slots, dpp_json)
 
     json.dump(dpp_json['cap_dpp']['registers'],
@@ -1380,28 +1380,63 @@ def _create_template(reg_json, decoder_json, ename):
     else:
         return copy.deepcopy(elem), None
 
+def mux_idx_alloc(mux_idx_allocator, pkt_off):
+    for i, used in enumerate(mux_idx_allocator):
+        # check for sharing a slot
+        if used != None and mux_idx_allocator[i] == pkt_off:
+            return i
+    for i, used in enumerate(mux_idx_allocator):
+        if used == None:
+            mux_idx_allocator[i] = pkt_off
+            return i
+    assert 0, pdb.set_trace()
+
+def mux_inst_alloc(mux_inst_allocator, expr, adjust_const=False):
+    if expr:
+        flat_expr_str = expr.flatten_capri_expr()
+        flat_expr_wo_const_str = expr.flatten_capri_expr(no_const=True)
+        if adjust_const:
+            #if constant value can be adjusted (only in the case if
+            # mux_instr is used in offset_instr), try to share
+            # mux_instr by looking for another expression that was
+            # already allocated mux-instr 
+            for i, value in enumerate(mux_inst_allocator):
+                _flat_expr_str, _flat_expr_wo_const_str, _expr = value
+                if _flat_expr_wo_const_str == flat_expr_wo_const_str:
+                    #Found mux instruction that can be shared by adjusting
+                    #constant value of offset_instr
+                    assert _expr.const <= expr.const, pdb.set_trace()
+
+                    # Adjust constant in the expression
+                    expr.const = expr.const - _expr.const
+                    return i, expr.const
+
+        for i, value in enumerate(mux_inst_allocator):
+            try:
+                _flat_expr_str, _flat_expr_wo_const_str, _expr = value
+                if _flat_expr_str == flat_expr_str:
+                    return i, 0
+            except:
+                pdb.set_trace()
+    else:
+        flat_expr_str = 'Not shared'
+        flat_expr_wo_const_str = 'Not shared'
+
+    #Instruction need to be allocated because either expr has never been
+    # allocated instruction or expr = '' 
+    for i, value in enumerate(mux_inst_allocator):
+        _flat_expr_str, _flat_expr_wo_const_str, _expr = value
+        if _flat_expr_str == None:
+            mux_inst_allocator[i] = (flat_expr_str, flat_expr_wo_const_str, expr)
+            return i, 0
+    assert 0, pdb.set_trace()
+
+
 def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = None):
     parser.logger.debug("%s:fill_sram_entry for %s + %s" % \
         (parser.d.name, bi.nxt_state, add_cs))
     sram = copy.deepcopy(sram_t)
 
-    def _mux_idx_alloc(pkt_off):
-        for i, used in enumerate(mux_idx_allocator):
-            # check for sharing a slot
-            if used != None and mux_idx_allocator[i] == pkt_off:
-                return i
-        for i, used in enumerate(mux_idx_allocator):
-            if used == None:
-                mux_idx_allocator[i] = pkt_off
-                return i
-        assert 0, pdb.set_trace()
-
-    def _mux_inst_alloc():
-        for i, used in enumerate(mux_inst_allocator):
-            if used == None:
-                mux_inst_allocator[i] = 1
-                return i
-        assert 0, pdb.set_trace()
     # add_cs is valid when this is the first state that h/w enters via cfg registers
     # add extractions, setops, hv bits etc from add_cs to this
     add_off = 0 # Bytes
@@ -1412,7 +1447,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 (add_cs.name)
 
     mux_idx_allocator = [None for _ in sram['mux_idx']]
-    mux_inst_allocator = [None for _ in sram['mux_inst']]
+    mux_inst_allocator = [(None, None, None) for _ in sram['mux_inst']]
 
     nxt_cs = bi.nxt_state
 
@@ -1420,32 +1455,6 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     sram['nxt_state']['value'] = str(nxt_cs.id)
 
     current_flit = None
-    # for pre extraction, use info from next state for offset
-    # offset_inst
-    offset_inst = sram['offset_inst']
-    if isinstance(nxt_cs.extract_len, int):
-        offset_inst['sel']['value'] = str(0)
-        offset_inst['muxsel']['value'] = str(0)
-        offset_inst['val']['value'] = str(nxt_cs.extract_len + add_off)
-    else: 
-        #assert isinstance(nxt_cs.extract_len, capri_parser_expr)
-        mux_inst_id = _mux_inst_alloc()
-        off = 0
-        if nxt_cs.extract_len.src1:
-            off = nxt_cs.fld_off[nxt_cs.extract_len.src1]
-
-        # use add_off to access pkt field from nxt_cs
-        mux_id = _mux_idx_alloc((off/8)+add_off)
-        sram['mux_idx'][mux_id]['sel']['value'] = str(0)
-        sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
-        sram['mux_idx'][mux_id]['idx']['value'] = str((off/8)+add_off)
-        _build_mux_inst(parser, nxt_cs, -1, 
-            sram['mux_inst'][mux_inst_id], mux_id, nxt_cs.extract_len)
-        offset_inst['sel']['value'] = str(1)
-        offset_inst['muxsel']['value'] = str(mux_inst_id)
-        # add_off is not added into expr, instead it is added by h/w using 'value'
-        offset_inst['val']['value'] = str(add_off)
-
 
     
     # As there is instruction pressure in entering into ipv4 or
@@ -1480,7 +1489,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         if lkp_reg.type == lkp_reg_type.LKP_REG_NONE:
             continue
         elif lkp_reg.type == lkp_reg_type.LKP_REG_PKT:
-            mux_id = _mux_idx_alloc((lkp_reg.pkt_off/8) + add_off)
+            mux_id = mux_idx_alloc(mux_idx_allocator, (lkp_reg.pkt_off/8) + add_off)
             sram['mux_idx'][mux_id]['sel']['value'] = str(0)
             sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
             sram['mux_idx'][mux_id]['idx']['value'] = str((lkp_reg.pkt_off/8) + add_off)
@@ -1507,13 +1516,14 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     assert lkp_reg.capri_expr.src1, pdb.set_trace()
                     assert lkp_reg.pkt_off != -1
                     off = lkp_reg.pkt_off
-                    mux_id = _mux_idx_alloc((off/8) + add_off)
+                    mux_id = mux_idx_alloc(mux_idx_allocator, (off/8) + add_off)
                     sram['mux_idx'][mux_id]['sel']['value'] = str(0)
                     sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
                     sram['mux_idx'][mux_id]['idx']['value'] = str((off/8) + add_off)
                 else:
                     mux_id = 0    # NA
-                mux_inst_id = _mux_inst_alloc()
+
+                mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, lkp_reg.capri_expr)
                 _build_mux_inst(parser, nxt_cs, r, sram['mux_inst'][mux_inst_id], 
                     mux_id, lkp_reg.capri_expr)
                 sram['lkp_val_inst'][r]['sel']['value'] = str(1)
@@ -1527,7 +1537,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 if lkp_reg.first_pkt_fld:
                     assert lkp_reg.pkt_off != -1
                     off = lkp_reg.pkt_off
-                    mux_id = _mux_idx_alloc((lkp_reg.pkt_off/8) + add_off)
+                    mux_id = mux_idx_alloc(mux_idx_allocator, (lkp_reg.pkt_off/8) + add_off)
                     sram['mux_idx'][mux_id]['sel']['value'] = str(0)
                     sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
                     sram['mux_idx'][mux_id]['idx']['value'] = str((lkp_reg.pkt_off/8) + add_off)
@@ -1637,7 +1647,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     reuse_option_len_ohi_id = ohi.var_id
                 else:
                     #need to allocate mux_idx and inst
-                    mux_inst_id = _mux_inst_alloc()
+                    mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, ohi.length)
                     reuse_option_len_ohi_id = -1
 
                 #pdb.set_trace()
@@ -1650,7 +1660,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     ohi_len_fld_off = hdr_off + (ohi.length.src1.p4_fld.offset / 8)
                 
                 # pkt_mux provides correct pkt field for calculation
-                mux_id = _mux_idx_alloc(ohi_len_fld_off)
+                mux_id = mux_idx_alloc(mux_idx_allocator, ohi_len_fld_off)
                 sram['mux_idx'][mux_id]['sel']['value'] = str(0)
                 sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
                 sram['mux_idx'][mux_id]['idx']['value'] = str(ohi_len_fld_off)
@@ -1669,9 +1679,47 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             parser.logger.debug('OHI instruction[%d]: off %d, len %s' % \
                 (ohi.id, ohi.start + hdr_off, ohi.length))
 
+
+    # Build offset instruction at the end so that if possible
+    # mux instructions can be re-used by adjusting constant values
+    # for pre extraction, use info from next state for offset
+    # offset_inst
+    offset_inst = sram['offset_inst']
+    if isinstance(nxt_cs.extract_len, int):
+        offset_inst['sel']['value'] = str(0)
+        offset_inst['muxsel']['value'] = str(0)
+        offset_inst['val']['value'] = str(nxt_cs.extract_len + add_off)
+    else: 
+        #assert isinstance(nxt_cs.extract_len, capri_parser_expr)
+        expr_const = nxt_cs.extract_len.const
+        mux_inst_id, adjusted_const = mux_inst_alloc(mux_inst_allocator,\
+                                                     nxt_cs.extract_len,\
+                                                     adjust_const=True)
+        off = 0
+        if nxt_cs.extract_len.src1:
+            off = nxt_cs.fld_off[nxt_cs.extract_len.src1]
+
+        # use add_off to access pkt field from nxt_cs
+        mux_id = mux_idx_alloc(mux_idx_allocator, (off/8)+add_off)
+        sram['mux_idx'][mux_id]['sel']['value'] = str(0)
+        sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
+        sram['mux_idx'][mux_id]['idx']['value'] = str((off/8)+add_off)
+        _build_mux_inst(parser, nxt_cs, -1, 
+            sram['mux_inst'][mux_inst_id], mux_id, nxt_cs.extract_len)
+        offset_inst['sel']['value'] = str(1)
+        offset_inst['muxsel']['value'] = str(mux_inst_id)
+        # add_off is not added into expr, instead it is added by h/w using 'value'
+        offset_inst['val']['value'] = str(add_off + adjusted_const)
+
+        if adjusted_const:
+            #Reset constant value back to original so that when processing
+            #all parser branches from parse-state, original
+            #expression is used.
+            nxt_cs.extract_len.const = expr_const
+
     #Generate Checksum related Configuration in parser.
     if len(nxt_cs.verify_cal_field_objs) > 0:
-        #Too many OHIs in the state; cannot allocate OHI for checksum
+        # Check for availability of OHI instr in this parse state.
         assert s < hw_max_ohi_per_state, pdb.set_trace()
 
         '''
@@ -1690,7 +1738,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
         # Genearate Checksum config since transition to parser state 'nxt_cs'
         # will extract header which has checksum field (p4 cal fld for verification)
-        s = parser.be.CalFieldList.CsumParserConfigGenerate(parser, \
+        s = parser.be.checksum.CsumParserConfigGenerate(parser, \
                                                parse_states_in_path, nxt_cs, sram, s,\
                                                lkp_instr_inst, mux_idx_allocator,\
                                                mux_inst_allocator, \
@@ -1699,6 +1747,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         if nxt_cs.is_end:
             assert(s < hw_max_ohi_per_state), pdb.set_trace()
     elif nxt_cs.phdr_offset_ohi_id != -1:
+        #TODO : Remove this code and add phdr object as reference in parse state
         # Case where parse state is moving into ipv4/ipv6
         # and ipv4 hdr is not part of header checksum verification
         #   - an ohi_slot is allocated to capture start of IP hdr which
@@ -1706,17 +1755,21 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         #   - store payloadLen in OhiSlot used in case of ipv4 -> tcp;
         #     In case of v6 -> TCP, since v6 options need to be decremented
         #     from payloadLen, store v6.payload in stored lookup register.
-        s = parser.be.CalFieldList.CsumParserPhdrOffsetInstrGenerate(\
+        s = parser.be.checksum.CsumParserPhdrOffsetInstrGenerate(\
                                                nxt_cs, sram, s,\
                                                lkp_instr_inst, mux_idx_allocator,\
                                                mux_inst_allocator)
         # Also capture PayloadLen in ohi slot or stored lookup reg
-        s = parser.be.CalFieldList.CsumParserPayloadLenGenerate(\
+        s = parser.be.checksum.CsumParserPayloadLenGenerate(\
                                                nxt_cs, sram, s,\
                                                lkp_instr_inst, mux_idx_allocator,\
                                                mux_inst_allocator, reuse_mux_idx_id)
-
-
+    if nxt_cs.csum_payloadlen_ohi_instr_gen[0]:
+        #In case of option parsing, parse states where l4_verify_len is updated,
+        #store the expression result back into OHI. 
+        s = parser.be.checksum.CsumParserPayloadLenUpdateInstrGenerate(\
+                                                        nxt_cs, sram, s, mux_inst_allocator,\
+                                                        mux_idx_allocator)
 
     if nxt_cs.is_end:
         # need to capture current_offset where parser stops parsing. This is needed for the
@@ -1796,21 +1849,21 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         if op.op_type == meta_op.EXTRACT_REG:
             #pdb.set_trace() # un-tested so far
             assert op.rid
-            mux_inst_id = _mux_inst_alloc()
+            mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, op.capri_expr)
             _build_mux_inst(parser, op.cstate, op.rid, sram['mux_inst'][mux_inst_id], 
                 0, op.capri_expr)
             dst_phv = op.dst.phv_bit
         elif op.op_type == meta_op.EXTRACT_META:
             #pdb.set_trace()
             assert op.src1
-            mux_inst_id = _mux_inst_alloc()
+            mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, op.capri_expr)
             op_off = op.cstate.fld_off[op.src1]
             if op.cstate == nxt_cs:
                 fld_off = (op_off/8) + add_off
             else:
                 fld_off = (op_off/8)
                 
-            mux_id = _mux_idx_alloc((fld_off))
+            mux_id = mux_idx_alloc(mux_idx_allocator, fld_off)
             sram['mux_idx'][mux_id]['sel']['value'] = str(0)
             sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
             sram['mux_idx'][mux_id]['idx']['value'] = str(fld_off)
@@ -1973,39 +2026,6 @@ def capri_parser_output_decoders(parser):
     tcam0 = []
     sram0 = []
 
-    '''
-    for cs in parser.states:
-        # create a match entry for {state_id, lkp_flds, lkp_fld_mask}
-        if not parser.be.args.post_extract and cs.is_end:
-            # Terminal state
-            parser.logger.debug('Skip transition from %s -> __END__, Terminate' % (cs.name))
-            continue
-        for bi in cs.branches:
-            parser.logger.debug('%s:%s[%d]->%s[%d]' % 
-                    (parser.d.name, cs.name, cs.id, bi.nxt_state.name, \
-                     bi.nxt_state.id))
-            te = _fill_parser_tcam_entry(tcam_t, parser, cs, bi)
-            if cs.is_hw_start:
-                add_cs = cs
-            else:
-                add_cs = None
-            se = _fill_parser_sram_entry(sram_t, parser, bi, add_cs)
-
-            # Allow smaller json definition file and add entries
-            te['entry_idx'] = str(idx)  # debug aid
-            se['entry_idx'] = str(idx)  # debug aid
-            if idx < len(tcam0):
-                tcam0[idx] = te
-                sram0[idx] = se
-            else:
-                tcam0.append(te)
-                sram0.append(se)
-            parser.logger.debug('TCAM-decoder[%d] - \n%s' % (idx, _parser_tcam_print(tcam0[idx])))
-            parser.logger.debug('SRAM-decoder[%d] - \n%s' % \
-                (idx, _parser_sram_print(parser,sram0[idx])))
-            idx += 1
-    '''
-
     parse_state_stack = []
     bi_processed_list = [] #(parse-state, [all-parse-states-along-the path])
     parse_state_stack.append((parser.states[0], [parser.states[0]]))
@@ -2054,12 +2074,12 @@ def capri_parser_output_decoders(parser):
                 idx += 1
 
                 #Generate csum related profile config for parser block
-                csum_prof, cprof_inst = parser.be.CalFieldList.\
+                csum_prof, cprof_inst = parser.be.checksum.\
                                 ParserCsumProfileGenerate(parser, \
                                                           parse_states_in_path+\
                                                           [bi.nxt_state], bi.nxt_state,\
                                                           csum_t)
-                csum_phdr_prof, phdr_inst = parser.be.CalFieldList.\
+                csum_phdr_prof, phdr_inst = parser.be.checksum.\
                            ParserCsumPhdrProfileGenerate(parser, \
                                                          parse_states_in_path +\
                                                          [bi.nxt_state], bi.nxt_state,\
@@ -2081,12 +2101,6 @@ def capri_parser_output_decoders(parser):
                         ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
                             ['cap_ppa_csr_cfg_csum_phdr']['entries'] = \
                                                          csum_phdr_prof['fld']
-
-    #Create logical output of configuration pushed to parser
-    #for checksum verification.
-    #TODO: Move this once deparser config is also generated.
-    # Can be called once for both parser and deparser config.
-    #parser.be.CalFieldList.ChecksumLogicalOutputCreate()
 
 
     # XXX add a catch-all end state

@@ -129,6 +129,7 @@ from enum import IntEnum
 from p4_hlir.main import HLIR
 import p4_hlir.hlir.p4 as p4
 import capri_logging
+from capri_output import *
 from capri_utils import *
 
 
@@ -189,8 +190,6 @@ class ParserPhdrProfile:
         phdr_profile['fld'][3]['fld_start'] = self.fld3_start
         phdr_profile['fld'][3]['fld_end']   = self.fld3_end
         phdr_profile['fld'][3]['add_len']   = self.fld3_add_len
-
-        
 
 
 class ParserCsumProfile:
@@ -352,43 +351,47 @@ class ParserCalField:
         self.phdr_name                  = ''
         self.phdr_type                  = ''
         self.payload_hdr_type           = ''
+        self.l4_verify_len_field        = ''
         self.csum_hdrlen_parser_local_var = ''
 
-        self.FieldListCalculation       = self.be.h.\
+        self.P4FieldListCalculation       = self.be.h.\
                                             p4_field_list_calculations\
                                             [VerifyOrUpdateFunc]
         #P4 code should have atleast one input field list.
-        assert(self.FieldListCalculation.input[0].fields[0] != None)
+        assert(self.P4FieldListCalculation.input[0].fields[0] != None)
 
         #Check last input field and last field within the last input field
         #to determine 'payload' keyword is part of field list.
         self.payload_checksum           = True\
                                              if isinstance(\
-                                                  self.FieldListCalculation.\
+                                                  self.P4FieldListCalculation.\
                                                   input[-1].fields[-1],\
                                                   p4.p4_header_keywords)\
                                              else\
                                           False
         #Find pseudo header associated with payload checksum
         if self.payload_checksum and 'checksum' in \
-            self.FieldListCalculation._parsed_pragmas.keys():
+            self.P4FieldListCalculation._parsed_pragmas.keys():
+            if 'verify_len' in \
+                self.P4FieldListCalculation._parsed_pragmas['checksum']:
+                self.l4_verify_len_field = self.P4FieldListCalculation._parsed_pragmas\
+                                   ['checksum']['verify_len'].keys()[0]
             self.phdr_name, self.phdr_type, self.payload_hdr_type, self.phdr_fields = \
-                self.be.CalFieldList.ProcessCalFields(\
-                                            self.FieldListCalculation,\
+                self.be.checksum.ProcessCalFields(\
+                                            self.P4FieldListCalculation,\
                                             self.dstField)
-        elif 'checksum' in self.FieldListCalculation._parsed_pragmas.keys():
+        elif 'checksum' in self.P4FieldListCalculation._parsed_pragmas.keys():
             #TODO: Process constant from pragma expression
-            #pdb.set_trace()
-            if 'hdr_len_expr' in self.FieldListCalculation.\
+            if 'hdr_len_expr' in self.P4FieldListCalculation.\
                                     _parsed_pragmas['checksum'].keys():
                 self.csum_hdrlen_parser_local_var = \
-                   self.FieldListCalculation.\
+                   self.P4FieldListCalculation.\
                     _parsed_pragmas['checksum']['hdr_len_expr'].keys()[0]
             assert self.csum_hdrlen_parser_local_var != '', pdb.set_trace()
 
-        assert(self.FieldListCalculation != None)
-        assert(self.FieldListCalculation.algorithm == 'csum16')
-        assert(self.FieldListCalculation.output_width == 16)
+        assert(self.P4FieldListCalculation != None)
+        assert(self.P4FieldListCalculation.algorithm == 'csum16')
+        assert(self.P4FieldListCalculation.output_width == 16)
 
 
     def CalculatedFieldHdrGet(self):
@@ -435,21 +438,13 @@ class ParserCalField:
         self.logstr_tbl.append(logstr)
 
     @staticmethod
-    def _mux_idx_alloc(mux_idx_allocator):
-        for i, used in enumerate(mux_idx_allocator):
-            if used == None:
-                mux_idx_allocator[i] = 0x1234   # Some value to indicate
-                                                # mux_idx in use.
-                return i
-        assert 0, pdb.set_trace()
+    def mux_idx_allocate(mux_idx_allocator, pkt_off):
+        return mux_idx_alloc(mux_idx_allocator, pkt_off)
 
     @staticmethod
-    def _mux_inst_alloc(mux_inst_allocator):
-        for i, used in enumerate(mux_inst_allocator):
-            if used == None:
-                mux_inst_allocator[i] = 1
-                return i
-        assert 0, pdb.set_trace()
+    def mux_inst_allocate(mux_inst_allocator, expr):
+        instr, _ = mux_inst_alloc(mux_inst_allocator, expr)
+        return instr
 
     @staticmethod
     def _build_mux_idx(sram, mux_sel, index):
@@ -469,24 +464,23 @@ class ParserCalField:
         return log_str
 
     @staticmethod
-    def _build_mux_instr(sram, mux_instr_sel, mux_sel, mask, add_sub,\
+    def _build_mux_instr(sram, sel, mux_instr_sel, mux_sel, mask, add_sub,\
                          add_sub_val, shift_val, shift_left, \
                          load_mux_pkt, lkpsel):
-        sram['mux_inst'][mux_instr_sel]['sel']['value']         = str(1)
+        sram['mux_inst'][mux_instr_sel]['sel']['value']         = str(sel)
         sram['mux_inst'][mux_instr_sel]['muxsel']['value']      = str(mux_sel)
         sram['mux_inst'][mux_instr_sel]['mask_val']['value']    = str(mask)
         sram['mux_inst'][mux_instr_sel]['addsub_val']['value']  = str(add_sub_val) 
         sram['mux_inst'][mux_instr_sel]['addsub']['value']      = str(add_sub)
         sram['mux_inst'][mux_instr_sel]['shift_left']['value']  = str(shift_left)
         sram['mux_inst'][mux_instr_sel]['shift_val']['value']   = str(shift_val) 
-        # TODO once HW instr change is in
-        #sram['mux_inst'][mux_instr_sel]['load_mux_pkt']['value'] = str(load_mux_pkt) 
-        #sram['mux_inst'][mux_instr_sel]['lkpsel']['value'] = str(lkpsel) 
+        sram['mux_inst'][mux_instr_sel]['load_mux_pkt']['value']= str(load_mux_pkt)
+        sram['mux_inst'][mux_instr_sel]['lkpsel']['value']      = str(lkpsel)
 
         log_str = ''
         log_str += 'Instruction: mux_Instr\n'
         log_str += '    Instruction#  %d \n' % (mux_instr_sel)
-        log_str += '        sel         = %d \n' % (1)
+        log_str += '        sel         = %d \n' % (sel)
         log_str += '        muxsel      = %d \n' % (mux_sel)
         log_str += '        mask_val    = 0%x\n' % (mask)
         log_str += '        addsub      = %d \n' % (add_sub)
@@ -494,7 +488,7 @@ class ParserCalField:
         log_str += '        shiftleft   = %d \n' % (shift_left)
         log_str += '        shift_val   = %d \n' % (shift_val)
         log_str += '        shift_val   = %d \n' % (shift_val)
-        log_str += '        load_mux_pkt= %d \n'% (load_mux_pkt)
+        log_str += '        load_mux_pkt= %d \n' % (load_mux_pkt)
         log_str += '        lkp_sel     = %d \n' % (lkpsel)
         log_str += '\n'
 
@@ -512,11 +506,11 @@ class ParserCalField:
 
             log_str = ''
             log_str += 'Instruction: Ohi_Instr\n'
-            log_str += '    Instruction#  %d \n'    % (ohi_instr_inst)
-            log_str += '        sel         = %d \n'    % (select)
-            log_str += '        muxsel      = %d \n'    % (mux_instr_sel)
+            log_str += '    Instruction#  %d \n'     % (ohi_instr_inst)
+            log_str += '        sel         = %d \n' % (select)
+            log_str += '        muxsel      = %d \n' % (mux_instr_sel)
             log_str += '        idx_value   = %d \n' % (index)
-            log_str += '        ohiSlot     = %d \n'    % (ohi_slot_num)
+            log_str += '        ohiSlot     = %d \n' % (ohi_slot_num)
             log_str += '\n'
             return log_str
         except:
@@ -564,7 +558,7 @@ class ParserCalField:
         return log_str
 
 
-    def PhdrProfileBuild(self, parse_state, phdr_profile_obj):
+    def PhdrProfileBuild(self, parse_state, phdr_profile_obj, add_len):
         '''
             Pseudo header of type based config for pulling phdr fields
         '''
@@ -577,8 +571,9 @@ class ParserCalField:
             phdr_profile_obj.fld0_start    = 12 # SA offset from
                                                 # the start of phdr
             phdr_profile_obj.fld0_end      = 16 # Size of IPSA 
-            phdr_profile_obj.fld0_add_len  = 1  # Adds len field
-                                                # to phdr
+            phdr_profile_obj.fld0_add_len  = add_len  # Adds 16b len field
+                                                      # to phdr only in case of TCP
+                                                      # (TCP hdr no payload len field)
             phdr_profile_obj.fld0_align    = 0
 
             phdr_profile_obj.fld1_en       = 1
@@ -601,8 +596,9 @@ class ParserCalField:
             phdr_profile_obj.fld0_start    = 8  # SA offset from
                                                 # the start of phdr
             phdr_profile_obj.fld0_end      = 24 # Size of IPSA 
-            phdr_profile_obj.fld0_add_len  = 1  # Adds len field
-                                                # to phdr
+            phdr_profile_obj.fld0_add_len  = add_len  # Adds 16b len field
+                                                      # to phdr only in case of TCP
+                                                      # (TCP hdr no payload len field)
             phdr_profile_obj.fld0_align    = 0
 
             phdr_profile_obj.fld1_en       = 1

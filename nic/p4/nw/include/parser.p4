@@ -23,6 +23,7 @@ header_type parser_metadata_t {
         l4_options_length               : 8;
         ipv6_nextHdr                    : 8;
         ipv6_payloadLen                 : 16;
+        inner_ipv6_payloadLen           : 16;
         ipv4hdr_len                     : 16;
         inner_ipv4hdr_len               : 16;
     }
@@ -565,11 +566,7 @@ header ipv6_extn_ah_esp_t v6_ah_esp;
 parser parse_v6_generic_ext_hdr {
     extract(v6_generic);
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
-
-    // !!!TODO!!! -- how to decement size of header ???
-    //set_metadata(parser_metadata.ipv6_payloadLen, parser_metadata.ipv6_payloadLen - sizeof option header);
-
-
+    set_metadata(parser_metadata.ipv6_payloadLen, parser_metadata.ipv6_payloadLen - (v6_generic.len << 3) + 8);
     return parse_ipv6_extn_hdrs;
 }
 
@@ -578,6 +575,7 @@ parser parse_v6_generic_ext_hdr {
 // be last in v6 ext-header sequence.
 parser parse_v6_ipsec_hdr {
     extract(v6_ah_esp);
+    set_metadata(parser_metadata.ipv6_payloadLen, parser_metadata.ipv6_payloadLen - 12);
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
     set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
     set_metadata(flow_lkp_metadata.lkp_dport, latest.spi_lo);
@@ -589,12 +587,16 @@ parser parse_v6_ipsec_hdr {
 parser parse_fragment_hdr {
     extract(v6_frag);
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
+    set_metadata(parser_metadata.ipv6_payloadLen, parser_metadata.ipv6_payloadLen - 8);
     return parse_ipv6_extn_hdrs;
 }
 
 @pragma header_ordering v6_generic v6_frag
 parser parse_ipv6_extn_hdrs {
     set_metadata(l3_metadata.ip_option_seen, 1);
+    // To store back into OHI payloadLen - Sum of option hdr len,
+    // use set_metadata with zero len
+    set_metadata(parser_metadata.ipv6_payloadLen, parser_metadata.ipv6_payloadLen + 0);
     return select(parser_metadata.ipv6_nextHdr) {
         0x00: ingress; // hop-by-hop option, not supported
         0x2b: parse_v6_generic_ext_hdr;
@@ -694,7 +696,7 @@ field_list ipv4_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len_hdr.l4_payload_len
 field_list_calculation ipv4_tcp_checksum {
     input {
         ipv4_tcp_checksum_list;
@@ -721,7 +723,8 @@ field_list ipv6_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum verify_len parser_metadata.ipv6_payloadLen
 field_list_calculation ipv6_tcp_checksum {
     input {
         ipv6_tcp_checksum_list;
@@ -894,7 +897,7 @@ field_list ipv4_udp_checksum_list {
     payload;
 }
 
-@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len_hdr.l4_payload_len
 field_list_calculation ipv4_udp_checksum {
     input {
         ipv4_udp_checksum_list;
@@ -913,7 +916,8 @@ field_list ipv6_udp_checksum_list {
     payload;
 }
 
-@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum verify_len parser_metadata.ipv6_payloadLen
 field_list_calculation ipv6_udp_checksum {
     input {
         ipv6_udp_checksum_list;
@@ -1153,7 +1157,7 @@ field_list inner_ipv4_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len_hdr.inner_l4_payload_len
 field_list_calculation inner_ipv4_tcp_checksum {
     input {
         inner_ipv4_tcp_checksum_list;
@@ -1181,7 +1185,8 @@ field_list inner_ipv6_tcp_checksum_list {
 }
 
     
-@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len_hdr.inner_l4_payload_len
+@pragma checksum verify_len parser_metadata.inner_ipv6_payloadLen
 field_list_calculation inner_ipv6_tcp_checksum {
     input {
         inner_ipv6_tcp_checksum_list;
@@ -1208,7 +1213,7 @@ field_list inner_ipv4_udp_checksum_list {
     payload;
 }
 
-@pragma checksum payload_len capri_deparser_len_hdr.inner_l4_payload_len
+@pragma checksum update_len capri_deparser_len_hdr.inner_l4_payload_len
 field_list_calculation inner_ipv4_udp_checksum {
     input {
         inner_ipv4_udp_checksum_list;
@@ -1227,7 +1232,8 @@ field_list inner_ipv6_udp_checksum_list {
     payload;
 }
 
-@pragma checksum payload_len capri_deparser_len_hdr.inner_l4_payload_len
+@pragma checksum update_len capri_deparser_len_hdr.inner_l4_payload_len
+@pragma checksum verify_len parser_metadata.inner_ipv6_payloadLen
 field_list_calculation inner_ipv6_udp_checksum {
     input {
         inner_ipv6_udp_checksum_list;
@@ -1274,6 +1280,7 @@ parser parse_inner_ipv6 {
     extract(inner_ipv6);
     set_metadata(flow_lkp_metadata.lkp_src, latest.srcAddr);
     set_metadata(flow_lkp_metadata.lkp_dst, latest.dstAddr);
+    set_metadata(parser_metadata.inner_ipv6_payloadLen, inner_ipv6.payloadLen);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmpv6;
         IP_PROTO_TCP : parse_tcp;

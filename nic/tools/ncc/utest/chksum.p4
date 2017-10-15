@@ -1,3 +1,10 @@
+header_type deparser_len_t {
+    fields {
+        l4_payload_len  : 16;
+        inner_l4_payload_len  : 16;
+    }
+}
+
 
 header_type parser_metadata_t {
     fields {
@@ -91,11 +98,13 @@ header ipv6_t ipv6;
 header tcp_t tcp;
 header udp_t udp;
 
+@pragma deparser_variable_length_header
+@pragma dont_trim
+metadata deparser_len_t capri_deparser_len_hdr;
 @pragma pa_parser_local
 metadata meta_t meta;
 @pragma pa_parser_local
 metadata parser_meta_t parsermeta;
-
 
 field_list ipv4_checksum_list {
     ipv4.version;
@@ -111,7 +120,7 @@ field_list ipv4_checksum_list {
     ipv4.dstAddr;
 }
 
-@pragma __checksum hdr_len_expr parser_metadata.ipv4hdr_len + 20
+@pragma checksum hdr_len_expr parser_metadata.ipv4hdr_len + 20
 field_list_calculation ipv4_checksum {
     input {
         ipv4_checksum_list;
@@ -137,9 +146,7 @@ field_list udp_checksum_list {
     payload;
 }
 
-@pragma __checksum pseudo_header name ipv4
-@pragma __checksum pseudo_header type v4
-@pragma __checksum payload_header type udp
+@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
 field_list_calculation ipv4_udp_checksum {
     input {
         udp_checksum_list;
@@ -159,9 +166,7 @@ field_list v6_udp_checksum_list {
     payload;
 }
 
-@pragma __checksum pseudo_header name ipv6
-@pragma __checksum pseudo_header type v6
-@pragma __checksum payload_header type udp
+@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
 field_list_calculation ipv6_udp_checksum {
     input {
         v6_udp_checksum_list;
@@ -199,9 +204,7 @@ field_list tcp_checksum_list {
     payload;
 }
 
-@pragma __checksum pseudo_header name ipv4
-@pragma __checksum pseudo_header type v4
-@pragma __checksum payload_header type tcp
+@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
 field_list_calculation ipv4_tcp_checksum {
     input {
         tcp_checksum_list;
@@ -228,9 +231,7 @@ field_list v6_tcp_checksum_list {
     payload;
 }
 
-@pragma __checksum pseudo_header name ipv6
-@pragma __checksum pseudo_header type v6
-@pragma __checksum payload_header type tcp
+@pragma checksum payload_len capri_deparser_len_hdr.l4_payload_len
 field_list_calculation ipv6_tcp_checksum {
     input {
         v6_tcp_checksum_list;

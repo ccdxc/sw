@@ -2361,7 +2361,7 @@ class capri_pa:
                         if d == xgress.EGRESS:
                             #If header is part of hdr-checksum or payload checksum
                             #allocate csum_hv bit capri-field -- Only in egress pipe.
-                            if self.be.CalFieldList.IsHdrInCsumCompute(name):
+                            if self.be.checksum.IsHdrInCsumCompute(name):
                                 csum_cf = self.allocate_csum_hv_field(name, d)
 
             #capture metadata hdr inst that is used to store variable pkt len

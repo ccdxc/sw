@@ -73,25 +73,41 @@ class ParserCsumEngine:
         self.max_csum_units         = self.be.hw_model['parser']['max_csum_engines']
         self.max_cprofiles          = 8
         self.max_phdr_profiles      = 8
-        self.allocated_csum_units   = 0
+        self.allocated_csum_units   = [False, False, False, False]
         self.allocated_cprofile     = 0
         self.allocated_phdr_profile = 0
         self.csum_units             = {} # k = checksumfield, v = csum-unit#
         self.csum_profile           = {} # k = checksumfield, v = csum-profile#
         self.csum_phdr_profile      = {} # k = checksumfield, v = csum-phdr-profile#
+        self.csum_units_in_use      = 0
 
     def ResetCsumResources(self):
-        self.allocated_csum_units   = 0
         #self.allocated_cprofile     = 0
         #self.allocated_phdr_cprofile= 0
+        self.csum_units_in_use   = 0
+        for i in range(self.max_csum_units):
+            self.allocated_csum_units[i] = False
 
     def AllocateCsumUnit(self, csumField):
         if csumField in self.csum_units.keys():
             return self.csum_units[csumField]
-        assert(self.allocated_csum_units < self.max_csum_units), pdb.set_trace()
-        self.csum_units[csumField] = self.allocated_csum_units
-        self.allocated_csum_units += 1
-        return (self.allocated_csum_units - 1) # Units numbered from 0
+        assert(self.csum_units_in_use < self.max_csum_units), pdb.set_trace()
+        self.csum_units[csumField] = self.allocated_csum_units.index(False)
+        self.allocated_csum_units[self.csum_units[csumField]] = True
+        self.csum_units_in_use += 1
+        return (self.csum_units[csumField])
+
+    def DeAllocateCsumUnit(self, csumField):
+        if csumField in self.csum_units.keys():
+            self.allocated_csum_units[self.csum_units[csumField]] = False
+            self.csum_units_in_use -= 1
+            del self.csum_units[csumField]
+
+    def AlreadyAllocatedCsumUnitSet(self, csumField, csumUnit):
+        assert csumUnit != -1, pdb.set_trace()
+        self.allocated_csum_units[csumUnit] = True
+        self.csum_units_in_use += 1
+        
 
     def AllocateCsumProfile(self, csumField):
         if csumField in self.csum_profile.keys():
@@ -105,8 +121,6 @@ class ParserCsumEngine:
         if (csumField,phdr) in self.csum_phdr_profile.keys():
             return self.csum_phdr_profile[(csumField, phdr)]
         assert(self.allocated_phdr_profile < self.max_phdr_profiles), pdb.set_trace()
-        # print "csum %s  phdr %s  Profile# %d" %(csumField, phdr,\
-        #                                         self.allocated_phdr_profile)
         self.csum_phdr_profile[(csumField, phdr)] = self.allocated_phdr_profile
         self.allocated_phdr_profile += 1
         return (self.allocated_phdr_profile - 1)
@@ -123,23 +137,39 @@ class DeParserCsumEngine:
         self.max_csum_units         = self.be.hw_model['deparser']['max_csum_engines']
         self.max_cprofiles          = 8
         self.max_phdr_profiles      = 8
-        self.allocated_csum_units   = 0
+        self.allocated_csum_units   = [False, False, False, False]
         self.allocated_cprofile     = 0
         self.allocated_phdr_profile = 0
         self.csum_units             = {} # k = checksumfield, v = csum-unit#
         self.csum_profile           = {} # k = checksumfield, v = csum-profile#
         self.csum_phdr_profile      = {} # k = checksumfield, v = csum-phdr-profile#
+        self.csum_units_in_use      = 0
 
     def ResetCsumResources(self):
-        self.allocated_csum_units   = 0
+        self.csum_units_in_use   = 0
+        for i in range(self.max_csum_units):
+            self.allocated_csum_units[i] = False
 
     def AllocateCsumUnit(self, csumField):
         if csumField in self.csum_units.keys():
             return self.csum_units[csumField]
-        assert(self.allocated_csum_units < self.max_csum_units), pdb.set_trace()
-        self.csum_units[csumField] = self.allocated_csum_units
-        self.allocated_csum_units += 1
-        return (self.allocated_csum_units - 1) # Units numbered from 0
+        assert(self.csum_units_in_use < self.max_csum_units), pdb.set_trace()
+        self.csum_units[csumField] = self.allocated_csum_units.index(False)
+        self.allocated_csum_units[self.csum_units[csumField]] = True
+        self.csum_units_in_use += 1
+        return (self.csum_units[csumField])
+
+    def DeAllocateCsumUnit(self, csumField):
+        if csumField in self.csum_units.keys():
+            self.allocated_csum_units[self.csum_units[csumField]] = False
+            self.csum_units_in_use -= 1
+            del self.csum_units[csumField]
+
+    def AlreadyAllocatedCsumUnitSet(self, csumField, csumUnit):
+        assert csumUnit != -1, pdb.set_trace()
+        self.allocated_csum_units[csumUnit] = True
+        self.csum_units_in_use += 1
+        
 
     def AllocateCsumProfile(self, csumField):
         if csumField in self.csum_profile.keys():
@@ -161,7 +191,7 @@ class DeParserCsumEngine:
 # If P4 has calculated_fields, process and build objects
 # There can be 2 types of objects. One for verfication
 # and one for update.
-class CalculatedFieldList:
+class Checksum:
     def __init__(self, capri_be):
         self.be                     = capri_be
         self.logstr_tbl             = []
@@ -218,6 +248,30 @@ class CalculatedFieldList:
 
         return phdr_name, phdr_type, payload_hdr_type, phdr_fields 
 
+    def ProcessVerifyLenFieldComputedParseStates(self, parser, dest_parse_states,\
+                                                 verify_len_field, ohi_id, \
+                                                 calfldobj):
+        '''
+            Get all parse states that appear before dest_parse_state in topo
+            sorted parse states and where verify_len_field is adjusted. In all
+            such states, add csum object to so that the verify_len_field value
+            is stored in OHI.
+            One usage of this function is to collect all parse states where
+            v6 option length is decremented using a parse local field. Those
+            parse states that branch to dest_parse_state is where final V6 option
+            is processed. In such states, load final option-len decremented
+            from payload-len into OHI.
+        '''
+        for dest_parse_state in dest_parse_states:
+            for parse_state in parser.states:
+                if parse_state == dest_parse_state:
+                    break
+                for setop in parse_state.set_ops:
+                    if setop.dst.hfname == verify_len_field:
+                        #Indicate that the parse state should generate OHI instr
+                        #by setting True and OHI# to use is ohi_id
+                        parse_state.csum_payloadlen_ohi_instr_gen = (True, ohi_id, calfldobj)
+
     def CalFldListLogStrTableGet(self):
         return self.logstr_tbl
 
@@ -227,23 +281,37 @@ class CalculatedFieldList:
     def VerifyCalFieldObjGet(self, header, phdr):
         # Given header name and pseudo hdr,
         # return Calculated Field Obj that is verified
+        calfldlist = []
         for calflistobj in self.verify_cal_fieldlist:
             if header == calflistobj.CalculatedFieldHdrGet():
                 if phdr != '' and calflistobj.CsumPhdrNameGet() == phdr:
                     return calflistobj
                 elif phdr == '':
-                    return calflistobj
+                    calfldlist.append(calflistobj)
+        if phdr == '':
+            if len(calfldlist):
+                return calfldlist
+            else:
+                return None
+
         return None
 
     def UpdateCalFieldObjGet(self, header, phdr):
         # Given header name and pseudo hdr,
-        # return Calculated Field Obj that is verified
+        # return Calculated Field Obj that is updated
+        calfldlist = []
         for calflistobj in self.update_cal_fieldlist:
             if header == calflistobj.CalculatedFieldHdrGet():
                 if phdr != '' and calflistobj.CsumPhdrNameGet() == phdr:
                     return calflistobj
                 elif phdr == '':
-                    return calflistobj
+                    calfldlist.append(calflistobj)
+        if phdr == '':
+            if len(calfldlist):
+                return calfldlist
+            else:
+                return None
+
         return None
 
     def IsHdrInCsumVerify(self, hdrname):
@@ -304,26 +372,38 @@ class CalculatedFieldList:
                                                                         csum_unit, -1)
                                         phdr_parse_state.phdr_offset_ohi_id = \
                                                                 phdr_offset_ohi_id
-                                        if phdr_parse_state.phdr_type == 'v4':
-                                            phdr_parse_state.totalLen_ohi_id = \
+                                        phdr_parse_state.totalLen_ohi_id = \
                                                 parser.assign_ohi_slots_for_checksum(\
                                                                     csum_unit, 1)
-                                            phdr_parse_state.\
-                                                payloadLen_stored_lkp_reg = -1
-                                        elif phdr_parse_state.phdr_type == 'v6':
-                                            phdr_parse_state.\
-                                              payloadLen_stored_lkp_reg =\
-                                              parser.assign_ohi_slots_for_checksum(\
-                                                                    csum_unit, 1)
-                                            phdr_parse_state.totalLen_ohi_id = -1
-                                        else:
-                                            assert(0), pdb.set_trace()
                                     else:
                                         #phdr is also cal fld obj (hdr checksum case).
                                         #Use same ohi_slot that is used for storing
                                         #hdr offset star to calculate hdr checksum.
                                         phdr_parse_state.phdr_type = \
                                             calfldobj.CsumPhdrTypeGet()
+
+                                #Handle v6 option parsing case.
+                                if phdr_parse_state.phdr_type == 'v6':
+                                    # Find all parse states where option len is
+                                    # decremented from payload Len
+                                    # In those parse states, since there is need
+                                    # store the new payload len in OHI, indicate
+                                    # the need for generating OHI instruction to
+                                    # store result of l4_verify_len parser local.
+                                    # variable into OHI
+                                    #pdb.set_trace()
+                                    
+                                    l4hdr_parse_states = parser.get_ext_cstates(\
+                                        self.be.h.p4_header_instances[hdr.name])
+
+                                    l4_verify_len_adjusted_last_parse_states =  \
+                                    self.ProcessVerifyLenFieldComputedParseStates(
+                                                                       parser, \
+                                                            l4hdr_parse_states,\
+                                                 calfldobj.l4_verify_len_field,\
+                                              phdr_parse_state.totalLen_ohi_id,\
+                                                                      calfldobj)
+
                         #In the parse states where the header is extracted,
                         #put reference to verify checksum obj
                         for parsestate in parser.get_ext_cstates(hdr):
@@ -375,14 +455,39 @@ class CalculatedFieldList:
                 if len(_s):
                     assert(len(_s) <= 2), pdb.set_trace()
                     pseudo_hdrs = _s
+
+                #After resetting csum unit allocation to start from start,
+                #ensure same csum unit is assigned if the hdr is also
+                #in another parse path.
                 for hdr in parse_path:
                     if hdr.name not in all_csum_hdrs:
                         continue
-                    calfldobj = self.VerifyCalFieldObjGet(hdr.name, '')
-                    if calfldobj == None:
+                    calfldobjlist = self.VerifyCalFieldObjGet(hdr.name, '')
+                    if calfldobjlist == None:
+                        continue
+                    for calfldobj in calfldobjlist:
+                        if calfldobj not in csum_objects:
+                            #This header was allocated Csum unit
+                            #while processing parse path previously.
+                            #Provide same csum unit.
+                            self.IngParserCsumEngineObj.AlreadyAllocatedCsumUnitSet(\
+                                    calfldobj.CalculatedFieldHdrGet(),\
+                                    calfldobj.ParserCsumObjGet().CsumUnitNumGet())
+
+
+                for hdr in parse_path:
+                    if hdr.name not in all_csum_hdrs:
+                        continue
+                    calfldobjlist = self.VerifyCalFieldObjGet(hdr.name, '')
+                    if calfldobjlist == None:
                         # ipv6 doesn't have calculated field object..
                         # continue
                         continue
+                    #Pick first calfldobj from the list is fine. In case of hdr
+                    #checksum only one elem will be in the list. In case of
+                    #payload checksum elem# = #phdrs. For payload checksum
+                    #calfldobjlist is not used.
+                    calfldobj = calfldobjlist[0]
                     if not calfldobj.payload_checksum and \
                                     calfldobj in csum_objects:
                         calfldhdr = calfldobj.CalculatedFieldHdrGet()
@@ -438,6 +543,16 @@ class CalculatedFieldList:
                                                                  phdr)
                         if pl_calfldobj and pl_calfldobj in csum_objects:
                             calfldhdr = pl_calfldobj.CalculatedFieldHdrGet()
+
+                            #Inorder to handle case where phdr is not part of
+                            # header checksum (v6), skip checksum unit
+                            # as though csum unit is allocated for phdr.
+                            # This is needed because if [ipv6, udp,..] parse path
+                            # is processed before [ipv4, udp, ....], then UDP
+                            # csum unit assignment will not be correct.
+                            if pl_calfldobj.phdr_name not in csum_hdrs:
+                                self.IngParserCsumEngineObj.\
+                                    AllocateCsumUnit(pl_calfldobj.phdr_name)
                             # Payload checksum node needs 1 csum engine
                             # and 1 csum profile but more csum phdr profiles
                             # depending on which pseudo hdr is in the packet
@@ -445,6 +560,9 @@ class CalculatedFieldList:
                             pl_calfldobj.ParserCsumObjGet().CsumUnitNumSet(\
                                 self.IngParserCsumEngineObj.
                                                AllocateCsumUnit(calfldhdr))
+                            if pl_calfldobj.phdr_name not in csum_hdrs:
+                                self.IngParserCsumEngineObj.\
+                                    DeAllocateCsumUnit(pl_calfldobj.phdr_name)
                             pl_calfldobj.ParserCsumProfileGet().\
                                             CsumProfileUnitNumSet(\
                                 self.IngParserCsumEngineObj.\
@@ -469,7 +587,7 @@ class CalculatedFieldList:
                             self.csum_verify_logger.debug(\
                                 'Checksum %s Phdr %s Phdr Profile#' \
                                 ' %d, CsumProfile# %d Csum# %d ' \
-                                'OhiStart %d OhiLen %d TotalLen/PaylodLen' % \
+                                'OhiStart %d OhiLen %d TotalLen/PayloadLen' % \
                                 (pl_calfldobj.dstField, \
                                  pl_calfldobj.phdr_name, \
                                  pl_calfldobj.ParserPhdrProfileGet().\
@@ -488,6 +606,83 @@ class CalculatedFieldList:
                     break
         #Assert if all calfld objects are allocated resources
         assert(len(csum_objects) == 0), pdb.set_trace()
+ 
+    def CsumParserPayloadLenUpdateInstrGenerate(self, parse_state, sram,\
+                                                ohi_instr_inst,         \
+                                                mux_inst_allocator,
+                                                mux_idx_allocator):
+        '''
+        When option length has to be decremented from phdr, this
+        function is used to update OHI slot with computed length.
+        '''
+        gen_ohi_instr, ohi_id, calfldobj = \
+                        parse_state.csum_payloadlen_ohi_instr_gen
+        assert gen_ohi_instr, pdb.set_trace()
+        assert ohi_id != -1, pdb.set_trace()
+        assert calfldobj, pdb.set_trace()
+        #len_local_var_str is parser local variable that captures payloadLen. In
+        #each option parsing state, payloadLen is updated to decrement by
+        #option header size.
+        len_local_var_str = calfldobj.l4_verify_len_field
+
+        #check if len_local_var_str is src_reg in a capri_expr for which mux_inst
+        #has been allocated. Use that expr and reallocate mux_instr. By trying to
+        #reallocate, it is expected to get same mux_instruction-id that was
+        #already assigned for expression computation.
+        for mux_instr in mux_inst_allocator:
+            if not mux_instr: continue
+            flat_expr_str, flat_expr_wo_const_str, capri_expr = mux_instr
+            if not capri_expr: continue
+            if not capri_expr.src_reg: continue
+            if capri_expr.src_reg.hfname == len_local_var_str:
+                mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, capri_expr)
+                #Build OHI instr to load result into OHI-Slot.
+                select          = 3 # ohi[slot_num] = mux_inst_data[muxsel]
+                mux_sel         = mux_inst_id
+                index           = 0
+
+                log_str = ParserCalField._build_ohi_instr(sram, ohi_instr_inst,\
+                                                          select, mux_sel, \
+                                                          index, ohi_id)
+                calfldobj.ParserCsumObjAddLog(log_str)
+                ohi_instr_inst += 1
+                return ohi_instr_inst
+        #Len_Local_Var is not in list of expressions. One possibility in that
+        #len local variable is loaded from packet field. For this case, check
+        #if the variable is in lookup reg with type = LKP_REG_PKT/REG_LOAD/REG_UPDATE
+        for lkp_reg in parse_state.lkp_regs:
+            for k, fld in lkp_reg.flds.items():
+                cf, _, _ = fld
+                if cf.hfname == len_local_var_str:
+                    #Get muxid that is already allocated 
+                    mux_id = mux_idx_alloc(mux_idx_allocator, (lkp_reg.pkt_off/8))
+                    #Since OHI slot can only be loaded from mux_instr data, 
+                    #allocate mux_instr and save mux
+                    mux_instr_id, _ = mux_inst_alloc(mux_inst_allocator, None)
+                    mask        = 0xFFFF
+                    shift_left  = 0
+                    shift_val   = 0
+                    add_sub     = 0
+                    add_sub_val = 0
+                    load_mux_pkt = 0
+                    log_str = ParserCalField._build_mux_instr(sram, 0, \
+                                    mux_instr_id, mux_id,\
+                                    mask, add_sub, add_sub_val, shift_val,\
+                                    shift_left, load_mux_pkt, 0)
+                    #Build OHI instr to load result into OHI-Slot.
+                    select          = 3 # ohi[slot_num] = mux_inst_data[muxsel]
+                    mux_sel         = mux_instr_id
+                    index           = 0
+
+                    log_str += ParserCalField._build_ohi_instr(sram, ohi_instr_inst,\
+                                                               select, mux_sel,\
+                                                               index, ohi_id)
+                    calfldobj.ParserCsumObjAddLog(log_str)
+                    ohi_instr_inst += 1
+                    return ohi_instr_inst
+
+        pdb.set_trace()
+        return ohi_instr_inst
 
 
     def CsumParserPhdrOffsetInstrGenerate(self, parse_state, sram, 
@@ -522,12 +717,12 @@ class CalculatedFieldList:
             assert(reuse_mux_idx_id != -1), pdb.set_trace()
             mux_sel_ihl = reuse_mux_idx_id
             #Allocate mux idx instr to load totalLen
-            mux_sel_totalLen = ParserCalField._mux_idx_alloc(mux_idx_allocator)
             index       = 2 # 2nd byte in hdr
+            mux_sel_totalLen = ParserCalField.mux_idx_allocate(mux_idx_allocator, index)
             log_str = ParserCalField._build_mux_idx(sram, mux_sel_totalLen, index)
             # Compute totalLen  - ihl * 4
-            mux_instr_sel_PayloadLen = ParserCalField._mux_inst_alloc(\
-                                                   mux_inst_allocator)
+            mux_instr_sel_PayloadLen = ParserCalField.mux_inst_allocate(\
+                                                   mux_inst_allocator, None)
             index       = 0
             mask        = 0x0F00
             shift_left  = 0
@@ -535,7 +730,7 @@ class CalculatedFieldList:
             add_sub     = 0
             add_sub_val = 0
             load_mux_pkt = 1
-            log_str += ParserCalField._build_mux_instr(sram, \
+            log_str += ParserCalField._build_mux_instr(sram, 1, \
                             mux_instr_sel_PayloadLen, mux_sel_ihl,\
                             mask, add_sub, add_sub_val, shift_val,\
                             shift_left, load_mux_pkt, mux_sel_totalLen)
@@ -548,32 +743,8 @@ class CalculatedFieldList:
                                              na, parse_state.totalLen_ohi_id)
             ohi_instr_inst += 1
         elif parse_state.phdr_type == 'v6':
-            ''' 
-            TODO -- Fix this once V6 related changes are done.
-            #Allocate mux instr to load payloadLen
-            mux_sel_payloadLen = self._mux_idx_alloc(mux_idx_allocator)
-            index       = 4 # 2nd byte in hdr
-            log_str = self._build_mux_idx(sram, mux_sel_payloadLen, index)
-            # Save payloadLen in lookup reg and enable store so as to use
-            # it in next state in v6 option states to decrement option
-            # header sizes.
-
-            # Check if atleast one lkp_val_instr is available to use.
-            assert(len(parse_state.lkp_regs) < len(sram['lkp_val_inst'])),\
-                 pdb.set_trace()
-
-            lkp_val_instr = len(parse_state.lkp_regs)
-            select      = 3 # Load mux_instr_data into OHI
-            store_en    = 1
-            na          = 0 #NA
-            sram['lkp_val_inst'][lkp_instr_inst]['sel']['value'] = str(select)
-            sram['lkp_val_inst'][lkp_instr_inst]['muxsel']['value'] = str(na)
-            sram['lkp_val_inst'][lkp_instr_inst]['store_en']['value'] = str(store_en)
-
-            parse_state.payloadLen_stored_lkp_reg = lkp_instr_inst
-            '''
-            # TODO : Use P4 to store payload Len in parser local variable.
-            # save lkp_val_inst# so that it can be used in TCP state as Payload Len
+            #In case of v6 with option parsing, each option parsing state will
+            # adjust payload len.
             pass
         else:
             assert(0), pdb.set_trace()
@@ -669,7 +840,6 @@ class CalculatedFieldList:
                 phdr_parse_state.phdr_offset_ohi_id != -1:
                 phdr_ohi_id = phdr_parse_state.phdr_offset_ohi_id
                 totalLen_ohi_id = phdr_parse_state.totalLen_ohi_id
-                payloadLen_stored_lkp_reg = phdr_parse_state.payloadLen_stored_lkp_reg
             elif calfldobj.payload_checksum and \
                  phdr_parse_state.phdr_offset_ohi_id == -1:
                 #Go back to calfld obj where ipv4 hdr is processed to compute
@@ -681,7 +851,6 @@ class CalculatedFieldList:
                 totalLen_ohi_id = phdr_parse_state.\
                                 verify_cal_field_objs[0].ParserCsumObjGet().\
                                 CsumOhiTotalLenGet()
-                payloadLen_stored_lkp_reg  = -1
             elif calfldobj.payload_checksum:
                 assert(0), pdb.set_trace()
         hdr_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiStartSelGet()
@@ -690,12 +859,8 @@ class CalculatedFieldList:
         assert len_ohi_id != -1, pdb.set_trace()
         if calfldobj.payload_checksum:
             assert phdr_ohi_id != -1, pdb.set_trace()
-            # TODO enable following assert once logic to capture
-            # payloadLen_stored_lkp_reg is implemented.
-            #assert (totalLen_ohi_id != -1 or \
-            #        payloadLen_stored_lkp_reg != -1), pdb.set_trace()
-
-            # Save phdr_ohi_id, totalLen_ohi_id, payloadLen_stored_lkp_reg
+            assert totalLen_ohi_id != -1, pdb.set_trace()
+            # Save phdr_ohi_id, totalLen_ohi_id,
             # in calfldobj where payload checksum is verified (udp/tcp checksum)
             calfldobj.ParserCsumObjGet().CsumOhiPhdrSelSet(phdr_ohi_id)
             calfldobj.ParserCsumObjGet().CsumOhiTotalLenSet(totalLen_ohi_id)
@@ -730,12 +895,12 @@ class CalculatedFieldList:
 
             #Allocate Instr to calculate payloadLen
             # Capture total pkt len which will be used for payload checksum
-            mux_sel_totalLen = ParserCalField._mux_idx_alloc(mux_idx_allocator)
             index       = 2 # 2nd byte in hdr
+            mux_sel_totalLen = ParserCalField.mux_idx_allocate(mux_idx_allocator, index)
             log_str += ParserCalField._build_mux_idx(sram, mux_sel_totalLen,\
                                                      index)
             mux_instr_sel_PayloadLen = ParserCalField.\
-                                        _mux_inst_alloc(mux_inst_allocator)
+                                        mux_inst_allocate(mux_inst_allocator, None)
             index       = 0
             mask        = 0x0F00
             shift_left  = 0
@@ -743,7 +908,7 @@ class CalculatedFieldList:
             add_sub     = 0
             add_sub_val = 0
             load_mux_pkt = 1
-            log_str += ParserCalField._build_mux_instr(sram, \
+            log_str += ParserCalField._build_mux_instr(sram, 1, \
                                              mux_instr_sel_PayloadLen,\
                                              mux_sel_ihl, mask, add_sub,\
                                              add_sub_val, shift_val,\
@@ -775,7 +940,7 @@ class CalculatedFieldList:
             csum_profile_obj.CsumProfileCsumLocSet(addsub_csum_loc=1,\
                                                    csum_loc_adj=10)
         if calfldobj.payload_checksum:
-            # TCP case
+            # UDP/TCP case
             #  - Get PhdrOffset OHI# from IP parse state
             #  - Get PayLoadLen OHI# if parser moved from v4 to TCP
             #    else for v6 to TCP, read stored lkp_reg where PayLoadLen
@@ -786,22 +951,25 @@ class CalculatedFieldList:
             # calculated PayloadLen when in ipv6 parse state also includes
             # ipv6 options as well. Size of all ipv6 options needs to be
             # decremented. Decrementing option size should be specified
-            # in P4.--- TODO
+            # in P4.
             csum_profile_obj = calfldobj.ParserCsumProfileGet()
             phdr_profile_obj = calfldobj.ParserPhdrProfileGet()
-            log_str += calfldobj.PhdrProfileBuild(phdr_parse_state,\
-                                              phdr_profile_obj)
-            log_str += calfldobj.PayloadCsumProfileBuild(phdr_parse_state,\
-                                                     csum_profile_obj)
-            # checksum location byte offset in TCP=16/UDP=6 hdr
+            addsub_csum_loc = 1
             if calfldobj.CsumPayloadHdrTypeGet() == 'tcp':
-                csum_profile_obj.CsumProfileCsumLocSet(addsub_csum_loc=1,\
-                                                       csum_loc_adj=16)
+                addlen = 1
+                # checksum location byte offset in TCP=16/UDP=6 hdr
+                csum_loc_adj = 16
             elif calfldobj.CsumPayloadHdrTypeGet() == 'udp':
-                csum_profile_obj.CsumProfileCsumLocSet(addsub_csum_loc=1,\
-                                                       csum_loc_adj=6)
+                addlen = 0
+                csum_loc_adj = 6
             else:
                 assert(0), pdb.set_trace()
+            log_str += calfldobj.PhdrProfileBuild(phdr_parse_state,\
+                                              phdr_profile_obj, addlen)
+            log_str += calfldobj.PayloadCsumProfileBuild(phdr_parse_state,\
+                                                         csum_profile_obj)
+            csum_profile_obj.CsumProfileCsumLocSet(addsub_csum_loc,\
+                                                   csum_loc_adj)
 
         calfldobj.ParserCsumObjAddLog(log_str)
         #Program Csum unit
@@ -816,21 +984,13 @@ class CalculatedFieldList:
             phdr_profile = calfldobj.ParserPhdrProfileGet().\
                                         CsumPhdrProfileUnitNumGet()
             assert(phdr_profile != None), pdb.set_trace()
-            #Get correct ohi id that has totalLen/PayloadLen - v6-option-size
-            if payloadLen_stored_lkp_reg == -1:
-                #Pseudo hdr is v4
-                len_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiTotalLenGet()
-                #Incase of UDP checksum and pseudo hdr = v4, udp_hdr.length
-                #is same as ipv4hdr.totalLen - (ihl * 4), udp_hdr.length is
-                #not read from packet and used as payload checksum len; 
-                #totalLen_ohi_id would have captured ipv4hdr.totalLen-ihl*4.
-                #Use that value even in case of UDP checksum.
-            else:
-                #Pseudo hdr is v6
-                #TODO: Get payloadLen_stored_lkp_reg here..should ideally
-                #come from calfldobj object
-                payloadLen_stored_lkp_reg  = -1
-                len_ohi_id = payloadLen_stored_lkp_reg 
+            #Get ohi id that has totalLen/PayloadLen - v6-option-size
+            len_ohi_id = calfldobj.ParserCsumObjGet().CsumOhiTotalLenGet()
+            #Incase of UDP checksum and pseudo hdr = v4, udp_hdr.length
+            #is same as ipv4hdr.totalLen - (ihl * 4), udp_hdr.length is
+            #not read from packet and used as payload checksum len; 
+            #totalLen_ohi_id would have captured ipv4hdr.totalLen-ihl*4.
+            #Use that value even in case of UDP checksum.
         else:
             phdr_ohi_id = -1
             phdr_profile = -1
@@ -898,6 +1058,7 @@ class CalculatedFieldList:
         #TODO: Remove next line of code when model changes are in master.
         return phdr_profile, p
 
+
         if not len(parse_state.verify_cal_field_objs):
             return phdr_profile, p
         from_parse_state = parse_states_in_path[-2]
@@ -920,18 +1081,49 @@ class CalculatedFieldList:
 
         return phdr_profile, p
 
+    def ParserCsumUnitAllocationCodeGenerate(self, parser):
+        '''
+            Generates Csum Engine Allocation to CsumHeader mapping.
+            This mapping is needed for MPU microcode to check for
+            checksum error
+        '''
+        gen_dir = self.be.args.gen_dir
+        cur_path = gen_dir + '/%s/asm_out' % self.be.prog_name
+        if not os.path.exists(cur_path):
+            os.makedirs(cur_path)
+        fname = cur_path + '/CSUM_%s.h' % parser.d.name
+        hfile = open(fname, 'w')
+        HdrCsumD = {}
+        for calfldobj in self.verify_cal_fieldlist:
+            csum_hdr = calfldobj.CalculatedFieldHdrGet()
+            csum_unit = calfldobj.ParserCsumObjGet().CsumUnitNumGet()
+            if csum_hdr not in HdrCsumD.keys():
+                HdrCsumD[csum_hdr] = csum_unit
+            else:
+                assert HdrCsumD[csum_hdr] == csum_unit
+        csum_str = '//The file contaiins mapping of checksum header to checksum '\
+                   'engine allocation.\n'
+        csum_str += '//Checksum Engine allcation number can be used to check '\
+                    'checksum error status bit.\n'
+        csum_str += "\n\n\n\n\n"
+        hfile.write(csum_str)
+        for k, v in HdrCsumD.items():
+            csum_str = "#define csum_hdr_%s %10d\n" % (k, v)
+            hfile.write(csum_str)
+        hfile.close()
+
 
     # -- Methods to process update calculated field list to compute checksum --
 
-    def DeParserPhdrCsumObjSet(self, hdr_name, dpr_csum_obj, csum_unit):
-        if hdr_name not in self.dpr_phdr_csum_obj.keys():
-            self.dpr_phdr_csum_obj[hdr_name] = [(dpr_csum_obj, csum_unit)]
+    def DeParserPhdrCsumObjSet(self, phdr_name, dpr_csum_obj, csum_unit, hdr):
+        if (phdr_name, hdr) not in self.dpr_phdr_csum_obj.keys():
+            self.dpr_phdr_csum_obj[(phdr_name, hdr)] = [(dpr_csum_obj, csum_unit, hdr)]
         else:
-            self.dpr_phdr_csum_obj[hdr_name].append((dpr_csum_obj, csum_unit))
+            self.dpr_phdr_csum_obj[(phdr_name, hdr)].append((dpr_csum_obj, csum_unit, hdr))
 
-    def DeParserPhdrCsumObjGet(self, hdr_name, csum_unit):
-        if hdr_name in self.dpr_phdr_csum_obj.keys():
-            for csum_obj, _csum_unit in self.dpr_phdr_csum_obj[hdr_name]:
+    def DeParserPhdrCsumObjGet(self, phdr_name, csum_unit, hdr):
+        if (phdr_name, hdr) in self.dpr_phdr_csum_obj.keys():
+            for csum_obj, _csum_unit, hdr in self.dpr_phdr_csum_obj[(phdr_name, hdr)]:
                 if csum_unit == _csum_unit:
                     return csum_obj
             return None
@@ -944,9 +1136,9 @@ class CalculatedFieldList:
         return False
 
     def DeParserPayLoadLenSlotGet(self, calfldobj, eg_parser):
-        assert calfldobj.l4_pl_field != '', pdb.set_trace()
-        cf_l4_pl_len = self.be.pa.get_field(calfldobj.l4_pl_field, eg_parser.d)
-        pl_slot = (cf_l4_pl_len.phv_bit - 
+        assert calfldobj.l4_update_len_field != '', pdb.set_trace()
+        cf_l4_update_len = self.be.pa.get_field(calfldobj.l4_update_len_field, eg_parser.d)
+        pl_slot = (cf_l4_update_len.phv_bit - 
                    self.be.hw_model['deparser']['len_phv_start']) / 16
         
         return pl_slot
@@ -1000,7 +1192,7 @@ class CalculatedFieldList:
             csum_phdr = calfldobj.CsumPhdrNameGet()
             if csum_phdr != '' and csum_phdr not in csum_phdrs:
                 csum_phdrs.add(csum_phdr)
-                self.DeParserPhdrCsumObjSet(csum_phdr, DeParserCsumObj(), -1)
+                self.DeParserPhdrCsumObjSet(csum_phdr, DeParserCsumObj(), -1, '')
 
     def AllocateDeParserCsumResources(self, eg_parser):
         '''
@@ -1043,24 +1235,46 @@ class CalculatedFieldList:
                     assert(len(_s) <= 2), pdb.set_trace()
                     pseudo_hdrs = _s
 
+                #After resetting csum unit allocation to start from start,
+                #ensure same csum unit is assigned if the hdr is also
+                #in another parse path.
+                for hdr in parse_path:
+                    if hdr.name not in all_csum_hdrs:
+                        continue
+                    calfldobjlist = self.UpdateCalFieldObjGet(hdr.name, '')
+                    if calfldobjlist == None:
+                        continue
+                    for calfldobj in calfldobjlist:
+                        if calfldobj not in csum_objects:
+                            #This header was allocated Csum unit
+                            #while processing parse path previously.
+                            #Provide same csum unit.
+                            self.EgDeParserCsumEngineObj.AlreadyAllocatedCsumUnitSet(\
+                                    calfldobj.CalculatedFieldHdrGet(),\
+                                    calfldobj.DeParserCsumObjGet().CsumUnitNumGet())
+
                 current_phdr_obj = None
                 payload_csum_obj_list = [] #used to include inner payload csum
                                            #result into outer PL csum calculation
                 for hdr in parse_path:
                     if hdr.name not in all_csum_hdrs:
                         continue
-                    calfldobj = self.UpdateCalFieldObjGet(hdr.name, '')
-                    if calfldobj == None:
+                    calfldobjlist = self.UpdateCalFieldObjGet(hdr.name, '')
+                    if calfldobjlist == None:
                         # ipv6 doesn't have calculated field object..
-                        phdr_csum_obj = self.DeParserPhdrCsumObjGet(hdr.name, -1)
+                        phdr_csum_obj = self.DeParserPhdrCsumObjGet(hdr.name, -1, '')
                         assert phdr_csum_obj != None, pdb.set_trace()
                         #CsumHV bit for phdrs that are not calfldobjs (ipv6) is
                         #same as HV bit.
                         phdr_csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[hdr])
                         phdr_csum_obj.CsumHvBitNumSet(eg_parser.hdr_hv_bit[hdr])
-
                         continue
 
+                    #Pick first calfldobj from the list is fine. In case of hdr
+                    #checksum only one elem will be in the list. In case of
+                    #payload checksum elem# = #phdrs. For payload checksum
+                    #calfldobjlist is not used.
+                    calfldobj = calfldobjlist[0]
                     if not calfldobj.payload_checksum and calfldobj in csum_objects:
                         _csum_obj = calfldobj.DeParserCsumObjGet()
                         _csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[hdr])
@@ -1106,12 +1320,24 @@ class CalculatedFieldList:
                                                                  phdr)
                         if pl_calfldobj and pl_calfldobj in csum_objects:
                             calfldhdr = pl_calfldobj.CalculatedFieldHdrGet()
+                            #Inorder to handle case where phdr is not part of
+                            # header checksum (v6), skip checksum unit
+                            # as though csum unit is allocated for phdr. 
+                            # This is needed because if [ipv6, udp,..] parse path
+                            # is processed before [ipv4, udp, ....], then UDP
+                            # csum unit assignment will not be correct.
+                            if pl_calfldobj.phdr_name not in csum_hdrs:
+                                self.EgDeParserCsumEngineObj.\
+                                    AllocateCsumUnit(pl_calfldobj.phdr_name)
                             # Payload checksum node needs 1 csum engine
                             # and 1 csum profile but more csum phdr profiles
                             # depending on which pseudo hdr is in the packet
                             # /parse path.
                             csum_unit = self.EgDeParserCsumEngineObj.\
                                             AllocateCsumUnit(calfldhdr)
+                            if pl_calfldobj.phdr_name not in csum_hdrs:
+                                self.EgDeParserCsumEngineObj.\
+                                    DeAllocateCsumUnit(pl_calfldobj.phdr_name)
                             csum_profile = self.EgDeParserCsumEngineObj.\
                                             AllocateCsumProfile(calfldhdr)
                             _csum_obj = pl_calfldobj.DeParserCsumObjGet()
@@ -1133,19 +1359,22 @@ class CalculatedFieldList:
                                     self.DeParserPayLoadLenSlotGet(pl_calfldobj, eg_parser)
                             _csum_profile_obj.CsumProfilePhvLenSelSet(1, \
                                                         dprsr_payload_len_slot)
+
                             #TODO use p4field hlir-offset to set checksum location
                             if pl_calfldobj.CsumPayloadHdrTypeGet() == 'tcp':
                                 _csum_profile_obj.CsumProfileCsumLocSet(16)
+                                add_len = 1
                             elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'udp':
                                 _csum_profile_obj.CsumProfileCsumLocSet(6)
+                                add_len = 0
 
-                            if self.DeParserPhdrCsumObjGet(phdr, \
-                                                           csum_unit) == None:
+                            if self.DeParserPhdrCsumObjGet(phdr, csum_unit,\
+                                                           hdr.name) == None:
                                 #Set Phdr profile#, in csum hdr object of Phdr
                                 #Phdr that this payload csum uses.
                                 phdr_csum_obj = \
                                         self.DeParserPhdrCsumObjGet(phdr,\
-                                                                    -1)
+                                                                    -1, '')
                                 assert phdr_csum_obj != None, pdb.set_trace()
                                 _phdr_csum_obj = copy.copy(phdr_csum_obj)
                                 _phdr_csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[hdr])
@@ -1154,18 +1383,15 @@ class CalculatedFieldList:
                                           AllocatePhdrProfile(calfldhdr, phdr)
                                 _phdr_csum_obj.PhdrProfileNumSet(phdr_profile)
                                 self.DeParserPhdrCsumObjSet(phdr, \
-                                            _phdr_csum_obj, csum_unit)
+                                            _phdr_csum_obj, csum_unit, hdr.name)
                                 pl_calfldobj.DeParserPhdrCsumObjSet(_phdr_csum_obj)
                                 assert pl_calfldobj.DeParserPhdrProfileObjGet()\
                                        == None, pdb.set_trace()
                                 pl_calfldobj.DeParserPhdrProfileObjSet(\
                                               DeParserPhdrProfile(phdr_profile,\
-                                               pl_calfldobj.CsumPhdrTypeGet()))
+                                               pl_calfldobj.CsumPhdrTypeGet(), add_len))
                             else:
                                 assert(0), pdb.set_trace()
-                                _phdr_csum_obj = \
-                                    self.DeParserPhdrCsumObjGet(phdr, csum_unit)
-                                pl_calfldobj.DeParserPhdrCsumObjSet(_phdr_csum_obj)
 
                             _phdr_csum_obj.PhdrValidSet(1)
                             _phdr_csum_obj.PhdrUnitSet(csum_unit)
@@ -1248,7 +1474,7 @@ class CalculatedFieldList:
         #Json is dumped in the caller to cfg-file.
 
 
-    def ChecksumLogicalOutputCreate(self):
+    def CsumLogicalOutputCreate(self):
         '''
             Generates csum.out file containing configuration pushed to HW.
         '''

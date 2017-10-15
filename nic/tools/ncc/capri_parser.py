@@ -400,14 +400,19 @@ class capri_parse_state:
         self.key_l2p_map = None
 
         # Checksum / Calculated Field List related values stored in parse-state
+        self.csum_payloadlen_ohi_instr_gen = (False, -1, None)
+                                                #When true, in the parse-state
+                                                #also generate OHI instruction
+                                                #to load OHI slot 
+                                                #(totalLen_ohi_id) with
+                                                #l4_verify_len value
         self.verify_cal_field_objs = [] # List of objects (At most 2 supported 
                                         # in a parse state)
         self.phdr_offset_ohi_id = -1    # In case of phdr capture IP hdr offset
                                         # start in this ohi_sel.
         self.totalLen_ohi_id = -1       # used to store ohi# where
-                                        # totaLen-ihl*4 is captured
-        self.payloadLen_stored_lkp_reg = -1 # lkp reg where v6.payloadlen
-                                            # is stored.
+                                        # totaLen-ihl*4 is captured or
+                                        #v6.payloadLen - Sum(all v6_options)
         self.phdr_type = ''             # Used to indicate phdr is v4/v6
 
 
@@ -631,8 +636,17 @@ class capri_parser_expr:
                 self.op3 = '-'
                 self.const = s_val * (-1)
 
-    def flatten_capri_expr(self):
-        pstr = 'EXPR:%s %s (%s %s %s) %s %s\n' % \
+    def flatten_capri_expr(self, no_const=False):
+        if no_const:
+            # Keep operator used with constant so that expr has
+            # no numerical value but all other part.
+            pstr = 'EXPR:%s %s (%s %s %s) %s\n' % \
+                (self.src_reg.hfname if self.src_reg else None, self.op2,
+                 self.src1.hfname if isinstance(self.src1, capri_field) else self.src1, 
+                 self.op1, self.shft, self.op3)
+                 
+        else:
+            pstr = 'EXPR:%s %s (%s %s %s) %s %s\n' % \
                 (self.src_reg.hfname if self.src_reg else None, self.op2,
                  self.src1.hfname if isinstance(self.src1, capri_field) else self.src1, 
                  self.op1, self.shft,
@@ -1130,7 +1144,7 @@ class capri_parser:
                     del cs.branch_to[bkey]
 
         # recompute the paths after removing the dummy(impossible) branches
-        _, self.path_states = self._find_parser_paths(self.start_state)
+        self.paths, self.path_states = self._find_parser_paths(self.start_state)
 
     def create_hw_start_state(self):
         # NOT USED
@@ -1574,7 +1588,7 @@ class capri_parser:
             hidx += 1
 
             #CSUM: Build csum hv bit dict
-            if self.d == xgress.EGRESS and self.be.CalFieldList.IsHdrInCsumCompute(h.name):
+            if self.d == xgress.EGRESS and self.be.checksum.IsHdrInCsumCompute(h.name):
                 hf_name = h.name + '.csum'
                 csum_cf = self.be.pa.get_field(hf_name, self.d)
                 assert csum_cf and cf.is_hv, pdb.set_trace()

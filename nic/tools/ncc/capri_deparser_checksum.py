@@ -104,7 +104,7 @@ class DeParserPhdrProfile:
     '''
     Csum Pseudo header field profile. 
     '''
-    def __init__(self, phdr_profile, phdr_type):
+    def __init__(self, phdr_profile, phdr_type, add_len):
         self.phdr_profile   = phdr_profile
         self.phdr_type      = phdr_type
         if phdr_type == 'v4':
@@ -122,13 +122,16 @@ class DeParserPhdrProfile:
             self.fld2_start    = 9 # start of zeros/protocol
             self.fld2_end      = 10 
             self.fld2_align    = 1 # Aligns protocol 8b value as bottom
-            self.add_len       = 1
-
+            self.add_len       = add_len# Add 16b payload len to computed checksum
+                                        # only in case of TCP payload csum (TCP hdr
+                                        # has no payload len field)
         elif phdr_type == 'v6':
             self.fld0_en       = 1
             self.fld0_start    = 8  # SA offset from the start of phdr
             self.fld0_end      = 24 # Size of IPSA 
-            self.fld0_add_len  = 1  # Adds len field to phdr
+            self.fld0_add_len  = add_len# Add 16b payload len to computed checksum
+                                        # only in case of TCP payload csum (TCP hdr
+                                        # has no payload len field)
             self.fld0_align    = 0
 
             self.fld1_en       = 1
@@ -401,31 +404,31 @@ class DeParserCalField:
                                           # obj to build Phdr profile.
         self.phdr_csum_hdr_obj     = None # Reference to phdr csum hdr obj
                                           # in case of payload checksum
-        self.FieldListCalculation           = self.be.h.\
+        self.P4FieldListCalculation= self.be.h.\
                                               p4_field_list_calculations\
                                                  [VerifyOrUpdateFunc]
         #P4 code should have atleast one input field list.
-        assert(self.FieldListCalculation.input[0].fields[0] != None)
+        assert(self.P4FieldListCalculation.input[0].fields[0] != None)
         #Check last input field and last field within the last input field
         #to determine 'payload' keyword is part of field list.
         self.payload_checksum      = True\
                                        if isinstance(\
-                                           self.FieldListCalculation.\
+                                           self.P4FieldListCalculation.\
                                            input[-1].fields[-1],\
                                            p4.p4_header_keywords)\
                                        else\
                                            False
         #Find pseudo header associated with payload checksum
         if self.payload_checksum and 'checksum' in \
-            self.FieldListCalculation._parsed_pragmas.keys():
-            if 'payload_len' in \
-                self.FieldListCalculation._parsed_pragmas['checksum']:
-                self.l4_pl_field = self.FieldListCalculation._parsed_pragmas\
-                                   ['checksum']['payload_len'].keys()[0]
+            self.P4FieldListCalculation._parsed_pragmas.keys():
+            if 'update_len' in \
+                self.P4FieldListCalculation._parsed_pragmas['checksum']:
+                self.l4_update_len_field = self.P4FieldListCalculation._parsed_pragmas\
+                                   ['checksum']['update_len'].keys()[0]
 
             self.phdr_name, self.phdr_type, self.payload_hdr_type, self.phdr_fields = \
-                self.be.CalFieldList.ProcessCalFields(\
-                                            self.FieldListCalculation,\
+                self.be.checksum.ProcessCalFields(\
+                                            self.P4FieldListCalculation,\
                                             self.dstField)
 
         else:
@@ -433,11 +436,11 @@ class DeParserCalField:
             self.phdr_type = ''
             self.payload_hdr_type = ''
             self.phdr_fields = None
-            self.l4_pl_field = ''
+            self.l4_update_len_field = ''
 
-        assert(self.FieldListCalculation != None)
-        assert(self.FieldListCalculation.algorithm == 'csum16')
-        assert(self.FieldListCalculation.output_width == 16)
+        assert(self.P4FieldListCalculation != None)
+        assert(self.P4FieldListCalculation.algorithm == 'csum16')
+        assert(self.P4FieldListCalculation.output_width == 16)
 
 
     def CalculatedFieldHdrGet(self):

@@ -44,7 +44,7 @@ class capri_deparser:
         capri_deparser_logical_output(self)
         capri_deparser_cfg_output(self)#, self.hv_fld_slots)
         #if self.d == xgress.EGRESS:
-        #    self.be.CalFieldList.CsumDeParserConfigGenerate(self, \
+        #    self.be.checksum.CsumDeParserConfigGenerate(self, \
         #                                         self.hv_fld_slots)
 
     def build_field_dictionary(self):
@@ -128,7 +128,6 @@ class capri_deparser:
         for hdr, phv_ohi_chunks in self.topo_ordered_phv_ohi_chunks.items():
             for (phv_ohi, chunk_type, _) in phv_ohi_chunks:
                 if (chunk_type == self.field_type_phv):
-                    for phv_chunk in phv_ohi:
-                        self.logger.debug('%s:%s Phv %s ' % (self.d.name, hdr.name, phv_chunk))
+                    self.logger.debug('%s:%s Phv ChunkStart %d ChunkLen %d' % (self.d.name, hdr.name, phv_ohi[0], phv_ohi[1]))
                 if (chunk_type == self.field_type_ohi):
                         self.logger.debug('%s:%s Ohi %s' % (self.d.name, hdr.name, phv_ohi))
