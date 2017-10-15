@@ -416,6 +416,10 @@
 		RdmaQpUpdateRequestMsg
 		RdmaQpUpdateResponse
 		RdmaQpUpdateResponseMsg
+		RdmaAhSpec
+		RdmaAhRequestMsg
+		RdmaAhResponse
+		RdmaAhResponseMsg
 		RdmaCqSpec
 		RdmaCqRequestMsg
 		RdmaCqResponse

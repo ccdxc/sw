@@ -76,8 +76,8 @@ yum install -y python36u-devel python-pip python-devel python-yaml
 yum install -y Judy-devel cmake git git gcc-c++ gcc-c++ wget autoconf automake libtool libtool make g++
 yum install -y unzip pkg-config graphviz flex gmp-devel mpfr-devel mpc-devel libmpc-devel bzip2 which
 yum install -y python-setuptools python-enum34 swig openssl-devel libpcap-devel
-yum install cscope 
-yum install ctags
+yum install -y cscope 
+yum install -y ctags
 
 # install golang
 ln -s /usr/share/pkgconfig /usr/lib/pkgconfig
@@ -173,7 +173,8 @@ pip3 install --upgrade ruamel.yaml scapy-python3 google-api-python-client Tenjin
 # install all python2.7 packages
 pip install --upgrade ply==3.9 cmd2
 
-yum install -y dkms iproute2 net-tools zip zlib1g-dev
+yum install -y kernel-devel kernel-headers dkms iproute2 net-tools zip zlib1g-dev
+yum install -y gdb
 
 # install bazel
 cd /tmp

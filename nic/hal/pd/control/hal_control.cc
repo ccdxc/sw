@@ -137,7 +137,7 @@ hal_control_start (void *ctxt)
         thread::factory(std::string("asic-rw").c_str(),
                 HAL_THREAD_ID_ASIC_RW, HAL_CONTROL_CORE_ID,
                 hal::pd::asic_rw_start,
-                sched_get_priority_max(SCHED_FIFO), SCHED_FIFO, true);
+                sched_get_priority_max(SCHED_RR), SCHED_RR, true);
     HAL_ABORT(g_hal_threads[HAL_THREAD_ID_ASIC_RW] != NULL);
     g_hal_threads[HAL_THREAD_ID_ASIC_RW]->start(hal_cfg);
 

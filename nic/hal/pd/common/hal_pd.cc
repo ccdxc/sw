@@ -32,7 +32,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
         thread::factory(std::string("hal-control").c_str(),
                 thread_id, HAL_CONTROL_CORE_ID,
                 hal::pd::hal_control_start,
-                sched_get_priority_max(SCHED_FIFO), SCHED_FIFO, true);
+                sched_get_priority_max(SCHED_RR), SCHED_RR, true);
     HAL_ABORT(g_hal_threads[thread_id] != NULL);
     g_hal_threads[thread_id]->start(hal_cfg);
 
