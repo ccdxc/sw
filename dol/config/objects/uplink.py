@@ -34,10 +34,10 @@ class UplinkObject(base.ConfigObjectBase):
         return
 
     def __init_qos(self):
-        self.txqos.cos = resmgr.QosCosAllocator.get()
-        self.rxqos.cos = resmgr.QosCosAllocator.get()
-        self.txqos.dscp = resmgr.QosDscpAllocator.get()
-        self.rxqos.dscp = resmgr.QosDscpAllocator.get()
+        self.txqos.cos = 7
+        self.rxqos.cos = 7
+        self.txqos.dscp = 7
+        self.rxqos.dscp = 7
         return
 
     def GetTxQosCos(self):

@@ -487,6 +487,67 @@ if_prepare_rsp (InterfaceResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
 }
 
 //------------------------------------------------------------------------------
+// Populates PI structure from proto spec
+//------------------------------------------------------------------------------
+hal_ret_t
+interface_populate_qos_params(if_t *hal_if, InterfaceSpec& spec)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    if (!hal_if) {
+        ret = HAL_RET_INVALID_ARG;
+        return ret;
+    }
+
+    if (spec.has_tx_qos_actions()) {
+        auto tx_qos = spec.tx_qos_actions();
+        if (tx_qos.has_queue_key_or_handle()) {
+        }
+        if (tx_qos.has_policer_key_or_handle()) {
+        }
+        if (tx_qos.has_marking_spec()) {
+            auto mark_spec = tx_qos.marking_spec();
+            hal_if->tx_qos_actions.pcp_write_en = mark_spec.pcp_rewrite_en();
+            hal_if->tx_qos_actions.pcp = mark_spec.pcp();
+            hal_if->tx_qos_actions.dscp_write_en = mark_spec.dscp_rewrite_en();  
+            hal_if->tx_qos_actions.dscp = mark_spec.dscp();
+
+            HAL_TRACE_DEBUG("pi-if:{}:setting tx pcp_en:{}, pcp:{}, "
+                            "dscp_en:{}, dscp:{}",
+                            __FUNCTION__, hal_if->tx_qos_actions.pcp_write_en,
+                            hal_if->tx_qos_actions.pcp,
+                            hal_if->tx_qos_actions.dscp_write_en,
+                            hal_if->tx_qos_actions.dscp);
+        }
+
+    }
+    if (spec.has_rx_qos_actions()) {
+        auto rx_qos = spec.rx_qos_actions();
+        if (rx_qos.has_queue_key_or_handle()) {
+        }
+        if (rx_qos.has_policer_key_or_handle()) {
+        }
+        if (rx_qos.has_marking_spec()) {
+            auto mark_spec = rx_qos.marking_spec();
+            hal_if->rx_qos_actions.pcp_write_en = mark_spec.pcp_rewrite_en();
+            hal_if->rx_qos_actions.pcp = mark_spec.pcp();
+            hal_if->rx_qos_actions.dscp_write_en = mark_spec.dscp_rewrite_en();  
+            hal_if->rx_qos_actions.dscp = mark_spec.dscp();
+
+            HAL_TRACE_DEBUG("pi-if:{}:setting rx pcp_en:{}, pcp:{}, "
+                            "dscp_en:{}, dscp:{}",
+                            __FUNCTION__, hal_if->rx_qos_actions.pcp_write_en,
+                            hal_if->rx_qos_actions.pcp,
+                            hal_if->rx_qos_actions.dscp_write_en,
+                            hal_if->rx_qos_actions.dscp);
+        }
+
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
 // process a interface create request
 // TODO: if interface already exists, treat it as modify
 //------------------------------------------------------------------------------
@@ -538,6 +599,11 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     hal_if->if_type = spec.type();
     hal_if->if_admin_status = spec.admin_status();
     hal_if->if_op_status = intf::IF_STATUS_NONE;      // TODO: set this later !!
+    ret = interface_populate_qos_params(hal_if, spec);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-if:{}:unable to read qos params", __FUNCTION__);
+        goto end;
+    }
 
     switch (hal_if->if_type) {
     case intf::IF_TYPE_ENIC:
@@ -1191,6 +1257,30 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
     spec->set_type(hal_if->if_type);
     spec->set_admin_status(hal_if->if_admin_status);
     spec->mutable_meta()->set_tenant_id(hal_if->tid);
+    spec->mutable_tx_qos_actions()->mutable_queue_key_or_handle()->
+        mutable_queue_handle()->set_handle(hal_if->tx_qos_actions.queue_handle);
+    spec->mutable_tx_qos_actions()->mutable_policer_key_or_handle()->
+        mutable_policer_handle()->set_handle(hal_if->tx_qos_actions.policer_handle);
+    spec->mutable_tx_qos_actions()->mutable_marking_spec()->
+        set_pcp_rewrite_en(hal_if->tx_qos_actions.pcp_write_en);
+    spec->mutable_tx_qos_actions()->mutable_marking_spec()->
+        set_pcp(hal_if->tx_qos_actions.pcp);
+    spec->mutable_tx_qos_actions()->mutable_marking_spec()->
+        set_dscp_rewrite_en(hal_if->tx_qos_actions.dscp_write_en);
+    spec->mutable_tx_qos_actions()->mutable_marking_spec()->
+        set_dscp(hal_if->tx_qos_actions.dscp);
+    spec->mutable_rx_qos_actions()->mutable_queue_key_or_handle()->
+        mutable_queue_handle()->set_handle(hal_if->rx_qos_actions.queue_handle);
+    spec->mutable_rx_qos_actions()->mutable_policer_key_or_handle()->
+        mutable_policer_handle()->set_handle(hal_if->rx_qos_actions.policer_handle);
+    spec->mutable_rx_qos_actions()->mutable_marking_spec()->
+        set_pcp_rewrite_en(hal_if->rx_qos_actions.pcp_write_en);
+    spec->mutable_rx_qos_actions()->mutable_marking_spec()->
+        set_pcp(hal_if->rx_qos_actions.pcp);
+    spec->mutable_rx_qos_actions()->mutable_marking_spec()->
+        set_dscp_rewrite_en(hal_if->rx_qos_actions.dscp_write_en);
+    spec->mutable_rx_qos_actions()->mutable_marking_spec()->
+        set_dscp(hal_if->rx_qos_actions.dscp);
     switch (hal_if->if_type) {
     case intf::IF_TYPE_ENIC:
     {

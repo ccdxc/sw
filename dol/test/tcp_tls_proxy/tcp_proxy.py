@@ -116,6 +116,7 @@ def init_tcb_inorder(tc, tcb):
             vlan_id = tc.config.dst.endpoint.intf.encap_vlan_id
             tcb.source_lif = tc.config.dst.endpoint.intf.lif.hw_lif_id
     if vlan_id != 0:
+        vlan_id = 0x7 << 13 | vlan_id
         vlan_etype_bytes = bytes([0x81, 0x00]) + \
                 vlan_id.to_bytes(2, 'big') + \
                 bytes([0x08, 0x00])
@@ -129,7 +130,7 @@ def init_tcb_inorder(tc, tcb):
              tc.config.dst.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
              tc.config.src.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
              vlan_etype_bytes + \
-             bytes([0x45, 0x08, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00]) + \
+             bytes([0x45, 0x07, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00]) + \
              bytes([0x40, 0x06, 0xfa, 0x71]) + \
              tc.config.flow.sip.getnum().to_bytes(4, 'big') + \
              tc.config.flow.dip.getnum().to_bytes(4, 'big')
@@ -139,7 +140,7 @@ def init_tcb_inorder(tc, tcb):
              tc.config.src.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
              tc.config.dst.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
              vlan_etype_bytes + \
-             bytes([0x45, 0x08, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00]) + \
+             bytes([0x45, 0x07, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00]) + \
              bytes([0x40, 0x06, 0xfa, 0x71]) + \
              tc.config.flow.dip.getnum().to_bytes(4, 'big') + \
              tc.config.flow.sip.getnum().to_bytes(4, 'big')
@@ -177,6 +178,7 @@ def init_tcb_inorder2(tc, tcb):
         vlan_id = tc.config.src.endpoint.intf.encap_vlan_id
         tcb.source_lif = tc.config.src.endpoint.intf.lif.hw_lif_id
     if vlan_id != 0:
+        vlan_id = 0x7 << 13 | vlan_id
         vlan_etype_bytes = bytes([0x81, 0x00]) + \
                 vlan_id.to_bytes(2, 'big') + \
                 bytes([0x08, 0x00])
@@ -188,7 +190,7 @@ def init_tcb_inorder2(tc, tcb):
              tc.config.dst.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
              tc.config.src.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
              vlan_etype_bytes + \
-             bytes([0x45, 0x08, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00]) + \
+             bytes([0x45, 0x07, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00]) + \
              bytes([0x40, 0x06, 0xfa, 0x71]) + \
              tc.config.flow.sip.getnum().to_bytes(4, 'big') + \
              tc.config.flow.dip.getnum().to_bytes(4, 'big')

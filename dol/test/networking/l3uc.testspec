@@ -51,6 +51,7 @@ packets:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/src/segment/macaddr
             qtag:
+                prio    : 0
                 vlan    : callback://networking/packets/GetVlanId
             ipv4:
                 ttl     : callback://networking/packets/GetTtl
@@ -66,7 +67,7 @@ packets:
                 src     : ref://testcase/config/dst/segment/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                prio    : callback://networking/packets/GetExpectedPacketCos
+                prio    : 0 #callback://networking/packets/GetExpectedPacketCos
                 vlan    : ref://testcase/config/dst/segment/vlan_id
             ipv4:
                 tos     : ref://testcase/config/flow/txqos/dscp

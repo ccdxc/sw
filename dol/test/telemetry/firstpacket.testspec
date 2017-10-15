@@ -75,6 +75,7 @@ packets:
             - ref://factory/packets/id=ENCAP_QINQ
         headers     :
             outerqtag:
+                prio: 0
                 vlan: callback://telemetry/callbacks/GetRspanVlan 
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id

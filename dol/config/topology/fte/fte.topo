@@ -49,7 +49,7 @@ uplinkpc:
 
 acls: None
 
-qos : False
+qos : True
 
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 

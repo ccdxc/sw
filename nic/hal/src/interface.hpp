@@ -52,6 +52,15 @@ namespace hal {
 
 typedef uint64_t if_id_t;
 
+typedef struct qos_actions_s {
+    hal_handle_t        queue_handle;
+    hal_handle_t        policer_handle;
+    bool                pcp_write_en;
+    uint32_t            pcp;
+    bool                dscp_write_en;
+    uint32_t            dscp;
+} qos_actions_t;
+
 // Interface strucutre
 typedef struct if_s {
     hal_spinlock_t      slock;                       // lock to protect this structure
@@ -59,6 +68,10 @@ typedef struct if_s {
     intf::IfType        if_type;                     // interface type
     intf::IfStatus      if_admin_status;             // admin status
     tenant_id_t         tid;                         // tenant id (TODO: what is this for ?)
+    // tx/rx is wrt to the workload behind this if
+    qos_actions_t       tx_qos_actions;              // qos actions for packets from this if
+    qos_actions_t       rx_qos_actions;              // qos actions for packets to this if
+
 
     union {
         // enic interface info
@@ -186,6 +199,7 @@ if_init (if_t *hal_if)
     if (!hal_if) {
         return NULL;
     }
+    memset(hal_if, 0, sizeof(if_t));
     HAL_SPINLOCK_INIT(&hal_if->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state

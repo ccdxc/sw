@@ -303,11 +303,11 @@ class FlowObject(base.ConfigObjectBase):
             fields.extend(["nat_sip", "nat_dip", "nat_sport", "nat_dport"])
         
         #This has to be generalized.
-        if not utils.CompareObjectFields(self.txqos, other.txqos, ["cos", "dscp"], lgh):
-            return False
+        #if not utils.CompareObjectFields(self.txqos, other.txqos, ["cos", "dscp"], lgh):
+        #    return False
 
-        if not utils.CompareObjectFields(self.rxqos, other.rxqos, ["cos", "dscp"], lgh):
-            return False
+        #if not utils.CompareObjectFields(self.rxqos, other.rxqos, ["cos", "dscp"], lgh):
+        #    return False
         
         return True
     
@@ -362,12 +362,12 @@ class FlowObject(base.ConfigObjectBase):
 
         # QOS stuff
         #if self.__sten.IsQosEnabled():
-        if self.txqos.cos is not None:
-            req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.pcp_rewrite_en = True
-            req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.pcp = self.txqos.cos
-        if self.txqos.dscp is not None:
-            req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp_rewrite_en = True
-            req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp = self.txqos.dscp
+        #if self.txqos.cos is not None:
+        #    req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.pcp_rewrite_en = True
+        #    req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.pcp = self.txqos.cos
+        #if self.txqos.dscp is not None:
+        #    req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp_rewrite_en = True
+        #    req_spec.flow_data.flow_info.eg_qos_actions.marking_spec.dscp = self.txqos.dscp
 
         #req_spec.flow_data.flow_info.egress_mirror_session = self.__span.hal_handle
         for ssn in self.ing_mirror_sessions:

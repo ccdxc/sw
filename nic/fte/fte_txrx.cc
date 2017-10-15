@@ -80,7 +80,7 @@ pkt_loop(uint8_t fte_id)
             // Init ctx_t
             ret = ctx.init(cpu_rxhdr, pkt, pkt_len, iflow, rflow);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
+                HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
                 break;;
             }
             

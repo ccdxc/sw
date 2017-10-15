@@ -313,7 +313,7 @@ message LifGetRequestMsg {
 // LifGetResponse captures all the information about a LIF
 message LifGetResponse {
   types.ApiStatus           api_status = 1;    // API status code
-  LifSpec     		    spec       = 2;    // LIF configuration
+  LifSpec                   spec       = 2;    // LIF configuration
   LifStatus                 status     = 3;    // LIF operational status
   LifStats                  stats      = 4;    // LIF statistics
 }

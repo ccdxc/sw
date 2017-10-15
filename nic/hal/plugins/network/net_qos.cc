@@ -5,28 +5,26 @@ namespace hal {
 namespace net {
 
 static inline hal_ret_t
-update_flow_from_qos_spec(fte::ctx_t& ctx, const session::FlowInfo& flow_info)
+update_flow_from_qos_spec(fte::ctx_t& ctx)
 {
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
+    qos_actions_t src_if_tx_qos_actions;
 
-    //No rewrite on ingress as per qos_extract_action_from_spec() in src/qos.cc
-    if (flow_info.has_eg_qos_actions()) {
-        //QoS action
-        if (flow_info.eg_qos_actions().marking_spec().pcp_rewrite_en()) {
-            HEADER_SET_FLD(flowupd.header_rewrite, ether, dot1p,
-                flow_info.eg_qos_actions().marking_spec().pcp());
+    src_if_tx_qos_actions = ctx.sif()->tx_qos_actions;
+
+    //QoS action
+    if (src_if_tx_qos_actions.pcp_write_en) {
+        HEADER_SET_FLD(flowupd.header_rewrite, ether, dot1p,
+                       src_if_tx_qos_actions.pcp);
+    }
+    if (src_if_tx_qos_actions.dscp_write_en) {
+        if (ctx.key().flow_type == hal::FLOW_TYPE_V4) {
+            HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dscp,
+                           src_if_tx_qos_actions.dscp);
+        } else {
+            HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dscp,
+                           src_if_tx_qos_actions.dscp);
         }
-        //HAL_TRACE_DEBUG("Set pcp() : {}",  flow_info.eg_qos_actions().marking_spec().pcp());
-        if (flow_info.eg_qos_actions().marking_spec().dscp_rewrite_en()) {
-            if (ctx.key().flow_type == hal::FLOW_TYPE_V4) {
-                HEADER_SET_FLD(flowupd.header_rewrite, ipv4, dscp,
-                    flow_info.eg_qos_actions().marking_spec().dscp());
-            } else {
-                HEADER_SET_FLD(flowupd.header_rewrite, ipv6, dscp,
-                    flow_info.eg_qos_actions().marking_spec().dscp());
-            }
-        }
-        //HAL_TRACE_DEBUG("Set dscp(): {}", flow_info.eg_qos_actions().marking_spec().dscp());
     }
     return ctx.update_flow(flowupd);
 }
@@ -36,18 +34,11 @@ qos_exec(fte::ctx_t& ctx)
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    if (ctx.protobuf_request()) {
-        if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
-            //Lookup for qos action Based on the key
-            HAL_TRACE_DEBUG("Initiator flow");
-            ret = update_flow_from_qos_spec(ctx,
-                    ctx.sess_spec()->initiator_flow().flow_data().flow_info());
-        } else {
-            ret = update_flow_from_qos_spec(ctx,
-                    ctx.sess_spec()->responder_flow().flow_data().flow_info());
-        }
+    HAL_TRACE_DEBUG("Initiator flow");
+    if (ctx.sif()->if_type == intf::IF_TYPE_ENIC) {
+        HAL_TRACE_DEBUG("Enic interface:Update Qos");
+        ret = update_flow_from_qos_spec(ctx);
     }
-
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
         return fte::PIPELINE_END;
