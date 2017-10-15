@@ -515,7 +515,8 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
 //------------------------------------------------------------------------------
 hal_ret_t
 p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint8_t lkp_inst,
-                                pd_l2seg_t *l2seg_pd, pd_flow_t *flow_pd)
+                                pd_l2seg_t *l2seg_pd, pd_flow_t *flow_pd,
+                                uint32_t *flow_hash_p)
 {
     hal_ret_t                ret;
     flow_hash_swkey_t        key = { 0 };
@@ -596,6 +597,9 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint8_t lkp_inst,
         return ret;
     }
 
+    // TODO: REMOVE. Added for DOL tests only
+    *flow_hash_p = g_hal_state_pd->flow_table()->calc_hash_(&key, &flow_data);
+
     return ret;
 }
 
@@ -617,12 +621,17 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
 {
     hal_ret_t               ret = HAL_RET_OK;
     session_t               *session = (session_t *)session_pd->session;
+    uint32_t                flow_hash = 0;
 
     if (!session_pd->iflow.flow_hash_hw_id && args->update_iflow) {
         ret = p4pd_add_flow_hash_table_entry(&session->iflow->config.key,
                                          session->iflow->pgm_attrs.lkp_inst,
                                          (pd_l2seg_t *)(session->iflow->sl2seg->pd),
-                                         &session_pd->iflow);
+                                         &session_pd->iflow,
+                                         &flow_hash);
+        if (args->rsp) {
+            args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
+        }
         if (ret == HAL_RET_FLOW_COLL) {
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_iflow_status()->set_flow_coll(true);
@@ -642,7 +651,11 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         ret = p4pd_add_flow_hash_table_entry(&session->iflow->assoc_flow->config.key,
                                              session->iflow->assoc_flow->pgm_attrs.lkp_inst,
                                              (pd_l2seg_t *)(session->iflow->dl2seg->pd),
-                                             &session_pd->iflow_aug);
+                                             &session_pd->iflow_aug,
+                                             &flow_hash);
+        if (args->rsp) {
+            args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
+        }
         if (ret == HAL_RET_FLOW_COLL) {
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_iflow_status()->set_flow_coll(true);
@@ -659,7 +672,12 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         ret = p4pd_add_flow_hash_table_entry(&session->rflow->config.key,
                                              session->rflow->pgm_attrs.lkp_inst,
                                              (pd_l2seg_t *)session->rflow->sl2seg->pd,
-                                             &session_pd->rflow);
+                                             &session_pd->rflow,
+                                             &flow_hash);
+
+        if (args->rsp) {
+            args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
+        }
         if (ret == HAL_RET_FLOW_COLL) {
             if (args->rsp) {
                 args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);
@@ -676,7 +694,11 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
             ret = p4pd_add_flow_hash_table_entry(&session->rflow->assoc_flow->config.key,
                                                  session->rflow->assoc_flow->pgm_attrs.lkp_inst,
                                                  (pd_l2seg_t *)session->rflow->dl2seg->pd,
-                                                 &session_pd->rflow_aug);
+                                                 &session_pd->rflow_aug,
+                                                 &flow_hash);
+            if (args->rsp) {
+                args->rsp->mutable_status()->mutable_rflow_status()->set_flow_hash(flow_hash);
+            }
             if (ret == HAL_RET_FLOW_COLL) {
                 if (args->rsp) {
                     args->rsp->mutable_status()->mutable_rflow_status()->set_flow_coll(true);

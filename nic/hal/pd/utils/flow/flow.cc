@@ -124,7 +124,6 @@ Flow::calc_hash_(void *key, void *data)
     hal_ret_t                       rs = HAL_RET_OK;
     FlowEntry                       *entry = NULL;
     uint32_t                        hash_val = 0;
-    uint32_t                        ft_bits = 0;
     void                            *hwkey = NULL;
 
     // create a flow entry
@@ -141,12 +140,9 @@ Flow::calc_hash_(void *key, void *data)
     hash_val = generate_hash_(hwkey, hwkey_len_, false);
     ::operator delete(hwkey);
 
-    // check if flow table entry exists
-    ft_bits = fetch_flow_table_bits_(hash_val);
-
     delete entry;
 
-    return ft_bits;
+    return hash_val;
 }
 
 // ---------------------------------------------------------------------------

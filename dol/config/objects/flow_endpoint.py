@@ -31,6 +31,7 @@ class FlowEndpointObject(base.ConfigObjectBase):
         self.esp_spi    = None
         self.l4lb_service = l4lbsvc
         self.l4lb_backend = None
+        self.__flow     = None
         if srcobj:
             self.__copy(srcobj)
 
@@ -54,6 +55,7 @@ class FlowEndpointObject(base.ConfigObjectBase):
         self.esp_spi    = src.esp_spi
         self.l4lb_service = src.l4lb_service
         self.l4lb_backend = src.l4lb_backend
+        self.flowhash     = src.flowhash.get()
         return
 
     def __set_tcpudp_info(self, entry):
@@ -81,6 +83,8 @@ class FlowEndpointObject(base.ConfigObjectBase):
         return
 
     def __set_info(self, entry):
+        if 'flowhash' in entry.__dict__:
+            self.flowhash = entry.flowhash.get()
         if self.IsIP():
             if self.IsTCP() or self.IsUDP():
                 self.__set_tcpudp_info(entry)
@@ -100,6 +104,9 @@ class FlowEndpointObject(base.ConfigObjectBase):
     def SetInfo(self, entry):
         self.__set_info(entry)
         return
+
+    def SetFlow(self, flow):
+        self.__flow = flow
 
     def IsTCP(self):
         return self.proto == 'TCP'
@@ -140,11 +147,17 @@ class FlowEndpointObject(base.ConfigObjectBase):
         return self.GetFlowSip()
 
     def GetFlowSport(self):
+        hashgen = self.__flow.GetHashGen()
+        if hashgen:
+            self.port = hashgen.GetSport()
         if self.IsL4LbServiceFlowEp():
             return self.l4lb_backend.port.get()
         return self.port
 
     def GetFlowDport(self):
+        hashgen = self.__flow.GetHashGen()
+        if hashgen:
+            self.port = hashgen.GetDport()
         return self.port
 
     def GetNatSport(self):

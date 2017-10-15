@@ -189,6 +189,7 @@ message FlowStatus {
   fixed64             flow_handle     = 1;    // id of the flow (returned by HAL)
   ConnTrackInfo       conn_track_info = 2;    // connection tracking info
   bool                flow_coll       = 3;    // TODO: flow collision. Only till recirc works  
+  uint32              flow_hash       = 4;    // TODO: REMOVE flow hash. Only for DOL testing
 }
 
 // SessionStatus captures the operational status of the session

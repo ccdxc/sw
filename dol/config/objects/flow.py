@@ -7,6 +7,7 @@ import infra.common.defs        as defs
 import infra.common.objects     as objects
 import infra.common.utils       as utils
 import config.resmgr            as resmgr
+import config.hashgen           as hashgen
 import infra.config.base        as base
 
 from config.store               import Store
@@ -23,6 +24,9 @@ class FlowObject(base.ConfigObjectBase):
         self.ID(resmgr.FlowIdAllocator.get())
         assert(sfep.type == dfep.type)
 
+        sfep.SetFlow(self)
+        dfep.SetFlow(self)
+
         # Private members (Not available for Filters)
         self.__domid    = sfep.dom
         self.__session  = session
@@ -35,6 +39,8 @@ class FlowObject(base.ConfigObjectBase):
         self.__sten     = self.__sseg.tenant
         self.__dten     = self.__dseg.tenant
         self.__span     = span
+        self.__flowhash = 0
+        self.__hashgen  = None
         self.ing_mirror_sessions = []
         self.egr_mirror_sessions = []
         if span:
@@ -75,6 +81,19 @@ class FlowObject(base.ConfigObjectBase):
         self.__init_qos()
         return
 
+    def __init_hashgen(self):
+        if self.__flowhash:
+            if self.IsTCP() or self.IsUDP():
+                self.__hashgen = hashgen.TcpUdpHashGen(self.sip.getnum(),
+                                                       self.dip.getnum(), 
+                                                       self.proto, 
+                                                       self.type)
+                self.__hashgen.Process(self.__flowhash)
+            else:
+                # Hash gen is not supported for non-tcp/udp flows
+                assert 0
+        return
+
     def __init_qos(self):
         self.txqos.cos  = self.__sfep.GetTxQosCos()
         self.txqos.dscp = self.__sfep.GetTxQosDscp()
@@ -102,6 +121,10 @@ class FlowObject(base.ConfigObjectBase):
         self.dip = self.__dfep.GetFlowDip()
         assert(self.__sfep.proto == self.__dfep.proto)
         self.proto = self.__sfep.proto
+        self.__flowhash = self.__sfep.flowhash
+        if self.__flowhash:
+            self.__init_hashgen()
+
         if self.IsTCP() or self.IsUDP():
             self.sport = self.__sfep.GetFlowSport()
             self.dport = self.__dfep.GetFlowDport()
@@ -196,6 +219,9 @@ class FlowObject(base.ConfigObjectBase):
         if idx > len(self.egr_mirror_sessions):
             return None
         return self.egr_mirror_sessions[idx - 1]
+    
+    def GetHashGen(self):
+        return self.__hashgen
 
     def IsSnat(self):
         return self.nat_type == 'SNAT'
@@ -381,6 +407,8 @@ class FlowObject(base.ConfigObjectBase):
         if self.IsTCP():
             string += "/%s" % self.state
 
+        if self.__flowhash:
+            cfglogger.info("  - flowhash : 0x%08x" % self.__flowhash)
         cfglogger.info("  - label  : %s" % self.label)
         if self.IsSnat():
             string += '/%s/%s/%d' % (self.nat_type, self.nat_sip.get(), self.nat_sport)
@@ -408,6 +436,10 @@ class FlowObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.flow_handle
+        if self.__flowhash and resp_spec.flow_hash != self.__flowhash:
+            assert 0, 'Recirc hash 0x%x does not match expected 0x%x' %\
+                    (resp_spec.flow_hash, self.__flowhash)
+
         if resp_spec.flow_coll and self.label == 'RECIRC':
             self.label = FLOW_COLLISION_LABEL
         cfglogger.info("- %s %s = (HDL = %x), Label = %s" %\

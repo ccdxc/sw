@@ -8,74 +8,46 @@ feature:
 
 modules:
     - module:
-        name    : L2UC
+        name    : 21BIT_IPV4
         spec    : l2uc.testspec
         args    :
             maxflows : 1
         iterate:
-            # Tagged Cases
-            - flow    : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
-              segment : filter://native=False
-            - flow    : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
-              segment : filter://native=False
-            - flow    : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
-              segment : filter://native=False
-            - flow    : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
-              segment : filter://native=False
-            - flow    : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
-              segment : filter://native=False
-            # Untagged Cases
-            - flow    : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
-              segment : filter://native=True
-            - flow    : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
-              segment : filter://native=True
-            - flow    : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
-              segment : filter://native=True
-            - flow    : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
-              segment : filter://native=True
-            - flow    : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
-              segment : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=RECIRC_21BIT_FLOW_1,direction=IFLOW
+            - flow    : filter://type=IPV4,proto=TCP,label=RECIRC_21BIT_FLOW_1,direction=RFLOW
+            - flow    : filter://type=IPV4,proto=UDP,label=RECIRC_21BIT_FLOW_1,direction=IFLOW
+            - flow    : filter://type=IPV4,proto=UDP,label=RECIRC_21BIT_FLOW_1,direction=RFLOW
 
     - module:
-        name    : L2UC_NONIP
-        enable  : False
-        spec    : l2uc_nonip.testspec
-        ignore  : True
+        name    : 21BIT_IPV6
+        spec    : l2uc.testspec
         args    :
             maxflows : 1
         iterate:
-            - segment  : filter://native=False
-              flow     : filter://label=FLOW-COLLISION
-            - segment  : filter://native=True
-              flow     : filter://label=FLOW-COLLISION
+            - flow    : filter://type=IPV6,proto=TCP,label=RECIRC_21BIT_FLOW_1,direction=IFLOW
+            - flow    : filter://type=IPV6,proto=TCP,label=RECIRC_21BIT_FLOW_1,direction=RFLOW
+            - flow    : filter://type=IPV6,proto=UDP,label=RECIRC_21BIT_FLOW_1,direction=IFLOW
+            - flow    : filter://type=IPV6,proto=UDP,label=RECIRC_21BIT_FLOW_1,direction=RFLOW
 
     - module:
-        name    : L3UC
-        spec    : l3uc.testspec
+        name    : 32BIT_IPV4
+        spec    : l2uc.testspec
         args    :
             maxflows : 1
         iterate:
-            # Tagged Cases
-            - flow      : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
-              srcseg    : filter://native=False
-            - flow      : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
-              srcseg    : filter://native=False
-            - flow      : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
-              srcseg    : filter://native=False
-            - flow      : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
-              srcseg    : filter://native=False
-            - flow      : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
-              srcseg    : filter://native=False
-            # Untagged Cases
-            - flow      : filter://type=IPV4,proto=UDP,label=FLOW-COLLISION
-              srcseg    : filter://native=True
-            - flow      : filter://type=IPV6,proto=UDP,label=FLOW-COLLISION
-              srcseg    : filter://native=True
-            - flow      : filter://type=IPV4,proto=TCP,label=FLOW-COLLISION
-              srcseg    : filter://native=True
-            - flow      : filter://type=IPV6,proto=TCP,label=FLOW-COLLISION
-              srcseg    : filter://native=True
-            - flow      : filter://type=IPV4,proto=ICMP,label=FLOW-COLLISION
-              srcseg    : filter://native=True
+            - flow    : filter://type=IPV4,proto=TCP,label=RECIRC_32BIT_FLOW_1,direction=IFLOW
+            - flow    : filter://type=IPV4,proto=TCP,label=RECIRC_32BIT_FLOW_1,direction=RFLOW
+            - flow    : filter://type=IPV4,proto=UDP,label=RECIRC_32BIT_FLOW_1,direction=IFLOW
+            - flow    : filter://type=IPV4,proto=UDP,label=RECIRC_32BIT_FLOW_1,direction=RFLOW
 
+    - module:
+        name    : 32BIT_IPV6
+        spec    : l2uc.testspec
+        args    :
+            maxflows : 1
+        iterate:
+            - flow    : filter://type=IPV6,proto=TCP,label=RECIRC_32BIT_FLOW_1,direction=IFLOW
+            - flow    : filter://type=IPV6,proto=TCP,label=RECIRC_32BIT_FLOW_1,direction=RFLOW
+            - flow    : filter://type=IPV6,proto=UDP,label=RECIRC_32BIT_FLOW_1,direction=IFLOW
+            - flow    : filter://type=IPV6,proto=UDP,label=RECIRC_32BIT_FLOW_1,direction=RFLOW
 
