@@ -7,9 +7,6 @@ default:
 	mv nic/proto/hal/*.pb.go .
 	rm -rf nic
 
-	# Install gomock tool
-	go get github.com/golang/mock/gomock
-	go get github.com/golang/mock/mockgen
 	# Generate mock files
 	mockgen -source=endpoint.pb.go -destination=endpoint_mock.go -package=halproto
 	mockgen -source=interface.pb.go -destination=interface_mock.go -package=halproto

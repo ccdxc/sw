@@ -933,10 +933,22 @@
 			"revisionTime": "2017-06-02T23:41:31Z"
 		},
 		{
-			"checksumSHA1": "L1EnSrVt8iXe1VtEfYopRet5+N8=",
+			"checksumSHA1": "M3BUApw7nNipzKvYbHSpxqE04FY=",
 			"path": "github.com/golang/mock/gomock",
-			"revision": "c7d0ee73a597d1349404607d9f692cacd09cdc06",
-			"revisionTime": "2017-09-16T22:02:29Z"
+			"revision": "13f360950a79f5864a972c786a10a50e44b69541",
+			"revisionTime": "2017-07-22T14:45:13Z"
+		},
+		{
+			"checksumSHA1": "6FjsmQQqRy5wvsCuCZMzrow4xLY=",
+			"path": "github.com/golang/mock/mockgen",
+			"revision": "13f360950a79f5864a972c786a10a50e44b69541",
+			"revisionTime": "2017-07-22T14:45:13Z"
+		},
+		{
+			"checksumSHA1": "wGZhkbTbPQijd6l6ROwbtPeCr8E=",
+			"path": "github.com/golang/mock/mockgen/model",
+			"revision": "13f360950a79f5864a972c786a10a50e44b69541",
+			"revisionTime": "2017-07-22T14:45:13Z"
 		},
 		{
 			"path": "github.com/golang/protobuf/jsonpb",

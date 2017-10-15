@@ -110,7 +110,9 @@ ws-tools:
 	( cd $(GOPATH)/src/github.com/pensando/sw/venice/utils/apigen/protoc-gen-pensando && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/GeertJohan/go.rice/rice/ && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/ && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-swagger/ && go install )
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-swagger/ && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/gomock/ && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/mockgen/ && go install )
 
 unit-test:
 	$(info +++ go test $(TO_BUILD))
