@@ -169,10 +169,10 @@ TEST_F(endpoint_test, test1)
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::network_create(nw_spec, &nw_rsp);
+    ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl1 = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(1);

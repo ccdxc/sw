@@ -56,8 +56,9 @@ typedef struct l2seg_s {
     // back references
     dllist_ctxt_t         if_list_head;            // interface list
 
-    dllist_ctxt_t         ep_list_head;            // endpoint list
-    dllist_ctxt_t         session_list_head;       // tenant's L2 segment list link
+    // Looks like sessions need only if, ep, network
+    // dllist_ctxt_t         ep_list_head;            // endpoint list
+    // dllist_ctxt_t         session_list_head;       // tenant's L2 segment list link
 
     // PD state
     void                  *pd;                     // all PD specific state
@@ -70,11 +71,17 @@ typedef struct l2seg_create_app_ctxt_s {
 } __PACK__ l2seg_create_app_ctxt_t;
 
 typedef struct l2seg_update_app_ctxt_s {
+    bool                l2seg_change;               // global change
     bool                mcast_fwd_policy_change;
     bool                bcast_fwd_policy_change;
+    bool                nwlist_change;
 
     MulticastFwdPolicy  new_mcast_fwd_policy;
     BroadcastFwdPolicy  new_bcast_fwd_policy;
+    // nw list change
+    dllist_ctxt_t       *add_nwlist;
+    dllist_ctxt_t       *del_nwlist;
+    dllist_ctxt_t       *aggr_nwlist;
 } __PACK__ l2seg_update_app_ctxt_t;
 
 // max. number of L2 segments supported  (TODO: we can take this from cfg file)
@@ -132,9 +139,8 @@ l2seg_init (l2seg_t *l2seg)
     // initialize meta information
     utils::dllist_reset(&l2seg->if_list_head);
     utils::dllist_reset(&l2seg->nw_list_head);
-    utils::dllist_reset(&l2seg->ep_list_head);
-    // utils::dllist_reset(&l2seg->tenant_l2seg_lentry);
-    utils::dllist_reset(&l2seg->session_list_head);
+    // utils::dllist_reset(&l2seg->ep_list_head);
+    // utils::dllist_reset(&l2seg->session_list_head);
 
     return l2seg;
 }

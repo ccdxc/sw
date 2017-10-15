@@ -235,6 +235,48 @@ hal_print_handles_list(dllist_ctxt_t  *list)
 }
 
 // ----------------------------------------------------------------------------
+// check if handle is present in handle list
+// ----------------------------------------------------------------------------
+bool
+hal_handle_in_list(dllist_ctxt_t *handle_list, hal_handle_t handle)
+{
+    dllist_ctxt_t                   *curr, *next;
+    hal_handle_id_list_entry_t      *entry = NULL;
+
+    dllist_for_each_safe(curr, next, handle_list) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        if (entry->handle_id == handle) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// ----------------------------------------------------------------------------
+// adds handle to the handles list
+// ----------------------------------------------------------------------------
+hal_ret_t
+hal_add_to_handle_list(dllist_ctxt_t *handle_list, hal_handle_t handle)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    hal_handle_id_list_entry_t      *entry = NULL;
+
+    // Allocate the entry
+    entry = (hal_handle_id_list_entry_t *)g_hal_state->
+            hal_handle_id_list_entry_slab()->alloc();
+    if (entry == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+    entry->handle_id = handle;
+    // Insert into the list
+    utils::dllist_add(handle_list, &entry->dllist_ctxt);
+
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Free handle entries in a list. 
 // - Please take locks if necessary outside this call.
 // ----------------------------------------------------------------------------
@@ -254,7 +296,28 @@ hal_free_handles_list(dllist_ctxt_t *list)
     }
 }
 
+// ----------------------------------------------------------------------------
+// Clean up list
+// ----------------------------------------------------------------------------
+hal_ret_t
+hal_cleanup_handle_list(dllist_ctxt_t **list)
+{
+    hal_ret_t       ret = HAL_RET_OK;
 
+    if (*list == NULL) {
+        return ret;
+    }
+    hal_free_handles_list(*list);
+    HAL_FREE(HAL_MEM_ALLOC_DLLIST, *list);
+    *list = NULL;
+
+    return ret;
+}
+
+
+// ----------------------------------------------------------------------------
+// Demangling symbols for custom backtrace
+// ----------------------------------------------------------------------------
 std::string demangle( const char* const symbol )
 {
     const std::unique_ptr< char, decltype( &std::free ) > demangled(

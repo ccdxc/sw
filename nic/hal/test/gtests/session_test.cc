@@ -170,10 +170,10 @@ TEST_F(session_test, test1)
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::network_create(nw_spec, &nw_rsp);
+    ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl1 = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(1);
@@ -341,10 +341,10 @@ TEST_F(session_test, test2)
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xb0000000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::network_create(nw_spec, &nw_rsp);
+    ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl1 = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(2);
@@ -581,10 +581,10 @@ TEST_F(session_test, test3)
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr("00010002000000000000000000000000");
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::network_create(nw_spec, &nw_rsp);
+    ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl1 = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(3);
@@ -753,7 +753,7 @@ TEST_F(session_test, test4)
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
-    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x40020000);
+    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x40020001);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
@@ -1271,10 +1271,10 @@ TEST_F(session_test, test7)
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::network_create(nw_spec, &nw_rsp);
+    ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl1 = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(7);
@@ -1629,10 +1629,10 @@ TEST_F(session_test, test9)
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::network_create(nw_spec, &nw_rsp);
+    ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl1 = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(9);
@@ -1778,7 +1778,7 @@ TEST_F(session_test, test10)
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
-    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr("00010001000000000000000000000000");
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr("00010001000000000000000000000010");
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
@@ -1789,12 +1789,12 @@ TEST_F(session_test, test10)
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
-    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr("00010002000000000000000000000000");
+    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr("00010002000000000000000000000010");
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::network_create(nw_spec, &nw_rsp);
+    ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nw_hdl1 = nw_rsp.mutable_status()->nw_handle();
+    uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_tenant_id(10);

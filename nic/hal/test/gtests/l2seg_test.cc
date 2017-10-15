@@ -33,45 +33,6 @@ using nwsec::SecurityProfileResponse;
 using nw::NetworkSpec;
 using nw::NetworkResponse;
 
-void
-hal_initialize()
-{
-    char 			cfg_file[] = "hal.json";
-	char 			*cfg_path;
-    std::string     full_path;
-    hal::hal_cfg_t  hal_cfg = { 0 };
-
-    cfg_path = std::getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-        full_path =  std::string(cfg_path) + "/" + std::string(cfg_file);
-        std::cerr << "full path " << full_path << std::endl;
-    } else {
-        full_path = std::string(cfg_file);
-    }
-
-    // make sure cfg file exists
-    if (access(full_path.c_str(), R_OK) < 0) {
-        fprintf(stderr, "config file %s has no read permissions\n",
-                full_path.c_str());
-        exit(1);
-    }
-
-    printf("Json file: %s\n", full_path.c_str());
-
-    if (hal::hal_parse_cfg(full_path.c_str(), &hal_cfg) != HAL_RET_OK) {
-        fprintf(stderr, "HAL config file parsing failed, quitting ...\n");
-        ASSERT_TRUE(0);
-    }
-    printf("Parsed cfg json file \n");
-
-    // initialize HAL
-    if (hal::hal_init(&hal_cfg) != HAL_RET_OK) {
-        fprintf(stderr, "HAL initialization failed, quitting ...\n");
-        exit(1);
-    }
-    printf("HAL Initialized \n");
-}
-
 class l2seg_test : public ::testing::Test {
 protected:
   l2seg_test() {
@@ -477,6 +438,166 @@ TEST_F(l2seg_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
+// l2segments with multiple networks
+TEST_F(l2seg_test, test4) 
+{
+    hal_ret_t                       ret;
+    TenantSpec                      ten_spec;
+    TenantResponse                  ten_rsp;
+    SecurityProfileSpec             sp_spec;
+    SecurityProfileResponse         sp_rsp;
+    TenantDeleteRequest             ten_del_req;
+    TenantDeleteResponseMsg         ten_del_rsp;
+    L2SegmentSpec                   l2seg_spec, l2seg_spec1;
+    L2SegmentResponse               l2seg_rsp, l2seg_rsp1;
+    L2SegmentDeleteRequest          l2seg_del_req;
+    L2SegmentDeleteResponseMsg      l2seg_del_rsp;
+    NetworkSpec                     nw_spec, nw_spec_v6;
+    NetworkResponse                 nw_rsp, nw_rsp_v6;
+    NetworkDeleteRequest            nw_del_req;
+    NetworkDeleteResponseMsg        nw_del_rsp;
+    slab_stats_t                    *pre = NULL, *post = NULL;
+    bool                            is_leak = false;
+    hal_handle_t                    nw_v4handles[100], nw_v6handles[100];
+    std::string                     ipv6_ip1 = "00010001000100010001000100010001"; 
+    std::string                     ipv6_ip2 = "00010001000100010001000100010001"; 
+    std::string                     v6_pattern = "010101";
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(4);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(4);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    pre = hal_test_utils_collect_slab_stats();
+
+    // Create network
+    for (int i = 0; i < 10; i++) {
+        // Create network
+        nw_spec.mutable_meta()->set_tenant_id(4);
+        nw_spec.set_rmac(0x0000DEADBEEF);
+        nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+        nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+        nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000 + i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::network_create(nw_spec, &nw_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+        nw_v4handles[i] = nw_rsp.mutable_status()->nw_handle();
+
+        // Create v6 network
+        nw_spec_v6.mutable_meta()->set_tenant_id(4);
+        nw_spec_v6.set_rmac(0x0000DEADBEEF);
+        nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+        nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
+        nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr(ipv6_ip1);
+        ipv6_ip1.replace(i, 5, v6_pattern);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::network_create(nw_spec_v6, &nw_rsp_v6);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+        nw_v6handles[i] = nw_rsp_v6.mutable_status()->nw_handle();
+    }
+
+    // Create 10 l2segs
+    l2seg_spec.mutable_meta()->set_tenant_id(4);
+    for (int i = 0; i < 10; i++) {
+        // Add nw handles
+        l2seg_spec.add_network_handle(nw_v4handles[i]);
+    }
+    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
+    for (int i = 0; i < 10; i++) {
+        l2seg_spec.mutable_key_or_handle()->set_segment_id(400+i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    // Update l2segs with more network
+    l2seg_spec1.mutable_meta()->set_tenant_id(4);
+    for (int i = 0; i < 10; i++) {
+        // Add nw handles
+        l2seg_spec1.add_network_handle(nw_v6handles[i]);
+    }
+    l2seg_spec1.add_network_handle(nw_v4handles[0]);
+    l2seg_spec1.add_network_handle(nw_v4handles[1]);
+    l2seg_spec1.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec1.mutable_fabric_encap()->set_encap_value(10);
+    for (int i = 0; i < 10; i++) {
+        l2seg_spec1.mutable_key_or_handle()->set_segment_id(400+i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::l2segment_update(l2seg_spec1, &l2seg_rsp1);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    for (int i = 0; i < 10; i++) {
+#if 0
+        // Remove network
+        nw_del_req.mutable_meta()->set_tenant_id(4);
+        nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_v4handles[i]);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::network_delete(nw_del_req, &nw_del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
+#endif
+
+        // Remove v6 network
+        nw_del_req.mutable_meta()->set_tenant_id(4);
+        nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_v6handles[i]);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::network_delete(nw_del_req, &nw_del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OBJECT_IN_USE);
+    }
+
+    // Delete 10 l2segs
+    l2seg_del_req.mutable_meta()->set_tenant_id(4);
+    for (int i = 0; i < 10; i++) {
+        l2seg_del_req.mutable_key_or_handle()->set_segment_id(400+i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::l2segment_delete(l2seg_del_req, &l2seg_del_rsp);
+        hal::hal_cfg_db_close();
+        HAL_TRACE_DEBUG("ret: {}", ret);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    for (int i = 0; i < 10; i++) {
+        // Remove network
+        nw_del_req.mutable_meta()->set_tenant_id(4);
+        nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_v4handles[i]);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::network_delete(nw_del_req, &nw_del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+
+        // Remove v6 network
+        nw_del_req.mutable_meta()->set_tenant_id(4);
+        nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_v6handles[i]);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::network_delete(nw_del_req, &nw_del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    // Memleak check
+    post = hal_test_utils_collect_slab_stats();
+    hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    ASSERT_TRUE(is_leak == false);
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

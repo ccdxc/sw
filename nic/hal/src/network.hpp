@@ -38,17 +38,38 @@ typedef struct network_s {
     // operational state of network
     hal_handle_t      hal_handle;           // HAL allocated handle
 
+    // forward references
+    dllist_ctxt_t     sg_list_head;         // security group list   
+    // back references
     dllist_ctxt_t     l2seg_list_head;      // l2segs referring to this
+    dllist_ctxt_t     session_list_head;    // sessions referring to this
 
     // meta data maintained for network     
     // ht_ctxt_t         nwkey_ht_ctxt;        // network key based hash table ctxt
     // ht_ctxt_t         hal_handle_ht_ctxt;   // hal handle based hash table ctxt
     // Clean up 
-    dllist_ctxt_t     l2seg_nw_lentry;      // L2 segment's nw list entry
+    // dllist_ctxt_t     l2seg_nw_lentry;      // L2 segment's nw list entry
 } __PACK__ network_t;
 
 // max. number of networks supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_NETWORKS                           4096
+
+// CB data structures
+typedef struct network_create_app_ctxt_s {
+} __PACK__ network_create_app_ctxt_t;
+
+typedef struct network_update_app_ctxt_s {
+    bool            network_changed;
+    bool            gw_ep_changed;
+    bool            sglist_changed;
+
+    // new gateway EP handle
+    hal_handle_t    new_gw_ep_handle;
+    // sg list change
+    dllist_ctxt_t   *add_sglist;
+    dllist_ctxt_t   *del_sglist;
+    dllist_ctxt_t   *aggr_sglist;
+} __PACK__ network_update_app_ctxt_t;
 
 const char *network_to_str (network_t *nw);
 static inline void 
@@ -73,13 +94,6 @@ network_unlock(network_t *network, const char *fname, int lineno,
     HAL_SPINLOCK_UNLOCK(&network->slock);
 }
 
-// CB data structures
-typedef struct network_create_app_ctxt_s {
-} __PACK__ network_create_app_ctxt_t;
-
-typedef struct network_update_app_ctxt_s {
-} __PACK__ network_update_app_ctxt_t;
-
 // allocate a network instance
 static inline network_t *
 network_alloc (void)
@@ -103,6 +117,7 @@ network_init (network_t *network)
     HAL_SPINLOCK_INIT(&network->slock, PTHREAD_PROCESS_PRIVATE);
 
     utils::dllist_reset(&network->l2seg_list_head);
+    utils::dllist_reset(&network->session_list_head);
 
 
     // initialize the operational state
@@ -132,19 +147,6 @@ network_free (network_t *network)
     return HAL_RET_OK;
 }
 
-#if 0
-// insert this network in all meta data structures
-static inline hal_ret_t
-add_network_to_db (network_t *network)
-{
-    g_hal_state->network_hal_handle_ht()->insert(network,
-                                                &network->hal_handle_ht_ctxt);
-    g_hal_state->network_key_ht()->insert(network, &network->nwkey_ht_ctxt);
-
-    return HAL_RET_OK;
-}
-#endif
- 
 // find a network instance by its id
 static inline network_t *
 find_network_by_key (tenant_id_t tid, const ip_prefix_t *ip_pfx)
@@ -167,8 +169,6 @@ find_network_by_key (tenant_id_t tid, const ip_prefix_t *ip_pfx)
         return nw;
     }
     return NULL;
-
-    // return (network_t *)g_hal_state->network_key_ht()->lookup(&nw_key);
 }
 
 // find a network instance by its handle
@@ -185,12 +185,6 @@ find_network_by_handle (hal_handle_t handle)
 extern void *network_get_key_func(void *entry);
 extern uint32_t network_compute_hash_func(void *key, uint32_t ht_size);
 extern bool network_compare_key_func(void *key1, void *key2);
-
-#if 0
-extern void *network_get_handle_key_func(void *entry);
-extern uint32_t network_compute_handle_hash_func(void *key, uint32_t ht_size);
-extern bool network_compare_handle_key_func(void *key1, void *key2);
-#endif
 
 hal_ret_t network_create(nw::NetworkSpec& spec,
                          nw::NetworkResponse *rsp);

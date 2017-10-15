@@ -43,6 +43,11 @@ hal_ret_t nwsec_prof_add_tenant (nwsec_profile_t *nwsec,
 hal_ret_t nwsec_prof_del_tenant (nwsec_profile_t *nwsec, 
                                  tenant_t *tenant);
 
+// Adding sessions & l2segs to network
+hal_ret_t network_add_l2seg (network_t *nw, l2seg_t *l2seg);
+hal_ret_t network_del_l2seg (network_t *nw, l2seg_t *l2seg);
+hal_ret_t network_add_session (network_t *nw, session_t *sess);
+hal_ret_t network_del_session (network_t *nw, session_t *sess);
 
 // Handle lif update in IF
 hal_ret_t if_handle_lif_update (pd::pd_if_lif_upd_args_t *args);

@@ -395,8 +395,8 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     if_t                        *hal_if = NULL;
     hal_handle_t                hal_handle = 0;
     dllist_ctxt_t               *lnode = NULL;
-    dllist_ctxt_t               *curr, *next;
-    hal_handle_id_list_entry_t  *entry = NULL;
+    // dllist_ctxt_t               *curr, *next;
+    // hal_handle_id_list_entry_t  *entry = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-if:{}:invalid cfg_ctxt", __FUNCTION__);
@@ -426,6 +426,12 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // members are populated before commit_cb itself. So if it fails, we have to clean
     if (hal_if->if_type == intf::IF_TYPE_UPLINK_PC) {
+        HAL_TRACE_DEBUG("pi-uplinkpc:{}:freeing up mbr and l2seg lists", 
+                        __FUNCTION__);
+        hal_free_handles_list(&hal_if->mbr_if_list_head);
+        hal_free_handles_list(&hal_if->l2seg_list_head);
+
+#if 0
         // if uplinkpc, clean up the member ports
         dllist_for_each_safe(curr, next, &hal_if->mbr_if_list_head) {
             entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
@@ -443,6 +449,7 @@ if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
             // Free the entry
             g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
         }
+#endif
     }
 
     // remove the object
@@ -978,30 +985,6 @@ if_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     intf = (if_t *)dhl_entry->obj;
     intf_clone = (if_t *)dhl_entry->cloned_obj;
 
-#if 0
-    if (intf->if_type == intf::IF_TYPE_UPLINK_PC) {
-        dllist_ctxt_t *curr = intf->mbr_if_list_head.next;
-        hal_handle_id_list_entry_t *entry;
-        utils::dllist_reset(&intf_clone->mbr_if_list_head);
-        dllist_for_each(curr, &(intf->mbr_if_list_head)) {
-            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-            mbr_if = find_if_by_handle(entry->handle_id);
-            if (mbr_if != NULL) {
-                uplinkpc_add_uplinkif(intf_clone, mbr_if);
-            }
-        }
-
-        // Walk through l2segments.
-        utils::dllist_reset(&intf_clone->l2seg_list_head);
-        dllist_for_each(curr, &(intf->l2seg_list_head)) {
-            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-            l2seg = find_l2seg_by_handle(entry->handle_id);
-            if (l2seg != NULL) {
-                uplinkpc_add_l2segment(intf_clone, l2seg);
-            }
-        }
-    }
-#endif
     HAL_TRACE_DEBUG("pi-if:{}:update commit CB {}",
                     __FUNCTION__, intf->if_id);
     printf("Original: %p, Clone: %p\n", intf, intf_clone);
@@ -1159,8 +1142,6 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
     }
 
     if_make_clone(hal_if, (if_t **)&dhl_entry.cloned_obj);
-
-    printf("Cloned object: %p\n", dhl_entry.cloned_obj);
 
     // form ctxt and call infra update object
     dhl_entry.handle = hal_if->hal_handle;
@@ -2237,27 +2218,6 @@ mbrif_in_pc (if_t *up_pc, hal_handle_t mbr_handle, hal_handle_id_list_entry_t **
 }
 
 hal_ret_t
-hal_add_to_handle_list(dllist_ctxt_t *handle_list, hal_handle_t handle)
-{
-    hal_ret_t                       ret = HAL_RET_OK;
-    hal_handle_id_list_entry_t      *entry = NULL;
-
-    // Allocate the entry
-    entry = (hal_handle_id_list_entry_t *)g_hal_state->
-            hal_handle_id_list_entry_slab()->alloc();
-    if (entry == NULL) {
-        ret = HAL_RET_OOM;
-        goto end;
-    }
-    entry->handle_id = handle;
-    // Insert into the list
-    utils::dllist_add(handle_list, &entry->dllist_ctxt);
-
-end:
-    return ret;
-}
-
-hal_ret_t
 uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
                          bool *mbrlist_change,
                          dllist_ctxt_t **add_mbrlist, 
@@ -2290,7 +2250,7 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
     utils::dllist_reset(*aggr_mbrlist);
 
     num_mbrs = spec.if_uplink_pc_info().member_if_handle_size();
-    HAL_TRACE_DEBUG("pi-ep:{}:pc mbrs:{}", 
+    HAL_TRACE_DEBUG("pi-if:{}:pc mbrs:{}", 
                     __FUNCTION__, num_mbrs);
     for (i = 0; i < num_mbrs; i++) {
         mbr_if_handle = spec.if_uplink_pc_info().member_if_handle(i);

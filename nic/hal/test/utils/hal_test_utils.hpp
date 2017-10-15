@@ -25,4 +25,7 @@ slab_stats_t *hal_test_utils_collect_slab_stats();
 void hal_test_utils_slab_stats_free(slab_stats_t *stats);
 void hal_test_utils_check_slab_leak(slab_stats_t *pre, slab_stats_t *post, 
                                     bool *is_leak);
+
+// hal initialization
+void hal_initialize();
 #endif // __HAL_TEST_UTILS_HPP__

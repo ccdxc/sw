@@ -753,7 +753,7 @@ hal_ret_t
 security_profile_update (nwsec::SecurityProfileSpec& spec,
                          nwsec::SecurityProfileResponse *rsp)
 {
-    hal_ret_t                      ret;
+    hal_ret_t                      ret = HAL_RET_OK;
     nwsec_profile_t                *sec_prof;
     // nwsec_profile_t                local_sec_prof;
     cfg_op_ctxt_t                  cfg_ctxt = { 0 };
@@ -784,6 +784,7 @@ security_profile_update (nwsec::SecurityProfileSpec& spec,
         goto end;
     }
 
+    // check what changed
     ret = nwsec_handle_update(spec, sec_prof, &app_ctxt);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-sec-prof:{}:nwsec check update failed, ret : {}", 

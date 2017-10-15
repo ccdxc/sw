@@ -39,6 +39,15 @@ gl_deps = [
         # External
         "//:gtest",
         ]
+
+cc_test(
+    name = "network_test",
+    srcs = ["network_test.cc"],
+    deps = gl_deps,
+    linkopts = [
+            "-lzmq",
+            ],
+)
 cc_test(
     name = "acl_test",
     srcs = ["acl_test.cc"],

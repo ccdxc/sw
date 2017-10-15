@@ -1,0 +1,208 @@
+#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/network.hpp"
+#include "nic/hal/src/interface.hpp"
+#include "nic/hal/src/l2segment.hpp"
+#include "nic/proto/hal/interface.pb.h"
+#include "nic/proto/hal/l2segment.pb.h"
+#include "nic/proto/hal/tenant.pb.h"
+#include "nic/proto/hal/nwsec.pb.h"
+#include "nic/hal/hal.hpp"
+#include "nic/hal/src/nwsec.hpp"
+#include <gtest/gtest.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "nic/hal/test/utils/hal_test_utils.hpp"
+
+using intf::InterfaceSpec;
+using intf::InterfaceResponse;
+using intf::InterfaceKeyHandle;
+using intf::InterfaceL2SegmentSpec;
+using intf::InterfaceL2SegmentResponse;
+using intf::LifSpec;
+using intf::LifResponse;
+using intf::LifKeyHandle;
+using l2segment::L2SegmentSpec;
+using l2segment::L2SegmentResponse;
+using l2segment::L2SegmentDeleteRequest;
+using tenant::TenantSpec;
+using tenant::TenantResponse;
+using tenant::TenantDeleteRequest;
+using tenant::TenantDeleteResponseMsg;
+using nwsec::SecurityProfileSpec;
+using nwsec::SecurityProfileResponse;
+using nw::NetworkSpec;
+using nw::NetworkResponse;
+
+class nw_test : public ::testing::Test {
+protected:
+  nw_test() {
+  }
+
+  virtual ~nw_test() {
+  }
+
+  // will be called immediately after the constructor before each test
+  virtual void SetUp() {
+  }
+
+  // will be called immediately after each test before the destructor
+  virtual void TearDown() {
+  }
+
+  // Will be called at the beginning of all test cases in this class
+  static void SetUpTestCase() {
+    hal_initialize();
+    hal_test_utils_slab_disable_delete();
+  }
+  // Will be called at the end of all test cases in this class
+  static void TearDownTestCase() {
+  }
+};
+
+// Update networktest with enicifs
+TEST_F(nw_test, test1) 
+{
+    hal_ret_t                       ret;
+    TenantSpec                      ten_spec, ten_spec1;
+    TenantResponse                  ten_rsp, ten_rsp1;
+    SecurityProfileSpec             sp_spec, sp_spec1;
+    SecurityProfileResponse         sp_rsp, sp_rsp1;
+    // TenantDeleteRequest             del_req;
+    // TenantDeleteResponseMsg         del_rsp;
+    LifSpec                         lif_spec;
+    LifResponse                     lif_rsp;
+    L2SegmentSpec                   l2seg_spec, l2seg_spec1;
+    L2SegmentResponse               l2seg_rsp, l2seg_rsp1;
+    L2SegmentDeleteRequest          del_req;
+    L2SegmentDeleteResponseMsg      del_rsp;
+    InterfaceSpec                   enicif_spec;
+    InterfaceResponse               enicif_rsp;
+    NetworkSpec                     nw_spec, nw_spec_v6;
+    NetworkResponse                 nw_rsp, nw_rsp_v6;
+    NetworkDeleteRequest            nw_del_req;
+    NetworkDeleteResponseMsg        nw_del_rsp;
+    slab_stats_t                    *pre = NULL, *post = NULL;
+    bool                            is_leak = false;
+    hal_handle_t                    nw_v4handles[100], nw_v6handles[100];
+    std::string                     ipv6_ip1 = "00010001000100010001000100010001"; 
+    std::string                     ipv6_ip2 = "00010001000100010001000100010001"; 
+    std::string                     v6_pattern = "010101";
+
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(1);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Create nwsec
+    sp_spec1.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec1.set_ipsg_en(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec1, &sp_rsp1);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(1);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+#if 0
+    // Delete tenant
+    del_req.mutable_meta()->set_tenant_id(1);
+    del_req.mutable_key_or_handle()->set_tenant_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+#endif
+
+    pre = hal_test_utils_collect_slab_stats();
+
+    for (int i = 0; i < 10; i++) {
+        // Create network
+        nw_spec.mutable_meta()->set_tenant_id(1);
+        nw_spec.set_rmac(0x0000DEADBEEF);
+        nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+        nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+        nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000 + i);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::network_create(nw_spec, &nw_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+        nw_v4handles[i] = nw_rsp.mutable_status()->nw_handle();
+
+        // Create v6 network
+        nw_spec_v6.mutable_meta()->set_tenant_id(1);
+        nw_spec_v6.set_rmac(0x0000DEADBEEF);
+        nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+        nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
+        nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr(ipv6_ip1);
+        ipv6_ip1.replace(i, 5, v6_pattern);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::network_create(nw_spec_v6, &nw_rsp_v6);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+        nw_v6handles[i] = nw_rsp_v6.mutable_status()->nw_handle();
+
+    }
+
+    // Duplicate create
+    // Create network
+    nw_spec.mutable_meta()->set_tenant_id(1);
+    nw_spec.set_rmac(0x0000DEADBEEF);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
+
+    // Create v6 network
+    nw_spec_v6.mutable_meta()->set_tenant_id(1);
+    nw_spec_v6.set_rmac(0x0000DEADBEEF);
+    nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
+    nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr(ipv6_ip2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec_v6, &nw_rsp_v6);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
+
+    for (int i = 0; i < 10; i++) {
+        // Remove network
+        nw_del_req.mutable_meta()->set_tenant_id(1);
+        nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_v4handles[i]);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::network_delete(nw_del_req, &nw_del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+
+        // Remove v6 network
+        nw_del_req.mutable_meta()->set_tenant_id(1);
+        nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_v6handles[i]);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::network_delete(nw_del_req, &nw_del_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    // Memleak check
+    post = hal_test_utils_collect_slab_stats();
+    hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    ASSERT_TRUE(is_leak == false);
+}
+
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
