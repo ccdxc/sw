@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nic/hal/test/utils/hal_test_utils.hpp"
+#include "nic/hal/test/utils/hal_base_test.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -33,7 +34,7 @@ using nwsec::SecurityProfileResponse;
 using nw::NetworkSpec;
 using nw::NetworkResponse;
 
-class nw_test : public ::testing::Test {
+class nw_test : public hal_base_test {
 protected:
   nw_test() {
   }
@@ -51,11 +52,8 @@ protected:
 
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
-    hal_initialize();
+    hal_base_test::SetUpTestCase();
     hal_test_utils_slab_disable_delete();
-  }
-  // Will be called at the end of all test cases in this class
-  static void TearDownTestCase() {
   }
 };
 

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nic/p4/nw/include/defines.h"
+#include "nic/hal/test/utils/hal_base_test.hpp"
 
 using qos::QueueSpec;
 using qos::QueueResponse;
@@ -12,46 +13,7 @@ using qos::QueueKeyHandle;
 using qos::QueueInfo;
 using qos::QueueSchedulerNode;
 
-void
-hal_initialize()
-{
-    char 			cfg_file[] = "hal.json";
-	char 			*cfg_path;
-    std::string     full_path;
-    hal::hal_cfg_t  hal_cfg = { 0 };
-
-    cfg_path = std::getenv("HAL_CONFIG_PATH");
-    if (cfg_path) {
-        full_path =  std::string(cfg_path) + "/" + std::string(cfg_file);
-        std::cerr << "full path " << full_path << std::endl;
-    } else {
-        full_path = std::string(cfg_file);
-    }
-
-    // make sure cfg file exists
-    if (access(full_path.c_str(), R_OK) < 0) {
-        fprintf(stderr, "config file %s has no read permissions\n",
-                full_path.c_str());
-        exit(1);
-    }
-
-    printf("Json file: %s\n", full_path.c_str());
-
-    if (hal::hal_parse_cfg(full_path.c_str(), &hal_cfg) != HAL_RET_OK) {
-        fprintf(stderr, "HAL config file parsing failed, quitting ...\n");
-        ASSERT_TRUE(0);
-    }
-    printf("Parsed cfg json file \n");
-
-    // initialize HAL
-    if (hal::hal_init(&hal_cfg) != HAL_RET_OK) {
-        fprintf(stderr, "HAL initialization failed, quitting ...\n");
-        exit(1);
-    }
-    printf("HAL Initialized \n");
-}
-
-class queue_test : public ::testing::Test {
+class queue_test : public hal_base_test {
 protected:
   queue_test() {
   }
@@ -67,13 +29,6 @@ protected:
   virtual void TearDown() {
   }
 
-  // Will be called at the beginning of all test cases in this class
-  static void SetUpTestCase() {
-    hal_initialize();
-  }
-  // Will be called at the end of all test cases in this class
-  static void TearDownTestCase() {
-  }
 };
 
 // Creating queues

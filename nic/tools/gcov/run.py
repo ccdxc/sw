@@ -159,9 +159,9 @@ class LcovCoverage(CoverageBase):
         
         #This is hack for now, move all the *.gcda and *.gcno files to same level.
         if data.get("obj_dir_type") == "bazel":
-            #Copy all the GCDA files to same location.
+            #Move all the GCDA files to same location.
             os.chdir(data.get("obj_dir"))
-            mv_cmd = "find . -name '*.gcda'  -type f |  xargs -i cp {} " + bazel_tmp_dir + "/" + name
+            mv_cmd = "find . -name '*.gcda'  -type f |  xargs -i mv {} " + bazel_tmp_dir + "/" + name
             subprocess.call([mv_cmd], shell=True)
             os.chdir(nic_dir)
         

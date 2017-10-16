@@ -1,5 +1,6 @@
 #include "nic/utils/bm_allocator/bm_allocator.hpp"
 #include <gtest/gtest.h>
+#include "nic/hal/test/utils/hal_base_test.hpp"
 #include <stdio.h>
 
 TEST(BitmapTest, TestALL)
