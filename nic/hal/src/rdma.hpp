@@ -968,11 +968,11 @@ typedef struct header_template_s {
 #define MAX_RQ_RINGS          6
 
 typedef struct rqcb0_s {
-    uint8_t  rsvd3[4];
+    uint8_t  rsvd2[2];
 
+    uint16_t proxy_cindex;
     uint32_t pd;
 
-    uint8_t  rsvd2;
     uint32_t msn:24;
 
     uint8_t  adjust_rsq_c_index;
@@ -991,7 +991,7 @@ typedef struct rqcb0_s {
     uint32_t  log_rq_page_size: 5;
     uint32_t  log_pmtu: 5;
 
-    uint8_t  rsq_pindex_prime;
+    uint16_t  rsq_pindex_prime;
     uint8_t  nxt_to_go_token_id;
     uint8_t  token_id;
     uint8_t  log_rsq_size: 5;

@@ -11,6 +11,7 @@ struct rdma_stage0_table_k k;
 
 #define RQCB_TO_RQCB1_T struct resp_tx_rqcb_to_rqcb1_info_t
 #define ACK_INFO_T struct resp_tx_rqcb_to_ack_info_t
+#define BT_ADJUST_INFO_T struct resp_tx_rsq_backtrack_adjust_info_t 
 
 #define RSQWQE_P            r1
 #define RQCB1_P             r2
@@ -26,6 +27,7 @@ struct rdma_stage0_table_k k;
 %%
     .param      resp_tx_rqcb1_process
     .param      resp_tx_ack_process
+    .param      resp_tx_rsq_backtrack_adjust_process
 
 resp_tx_rqcb_process:
     // copy intrinsic to global
@@ -42,6 +44,33 @@ resp_tx_rqcb_process:
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, lif, CAPRI_TXDMA_INTRINSIC_LIF)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qtype, CAPRI_TXDMA_INTRINSIC_QTYPE)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
+
+    CAPRI_GET_TABLE_0_ARG(resp_tx_phv_t, r4)
+    //TODO: migrate to efficient way of demuxing work (based on r7)
+
+check_backtrack_q:
+    seq         c1, RSQ_BT_C_INDEX, RSQ_BT_P_INDEX
+    seq         c2, d.adjust_rsq_c_index_in_progress, 0
+
+    // if backtrack ring is invoked, but adjust_rsq_c_index_in_progress is not set
+    // (which is set in RXDMA), then ignore backtrack ring and check for other work
+    // It is possible that backtrack ring was already invoked which set
+    // adjust_rsq_c_index_in_progress to 0, but might not have made backtrack_c_index     // equal to backtrack_p_index yet (due to DMA delays) and scheduler gave one
+    // more opportunity. 
+    bcf         [c1 | c2], check_rq
+    tblwr       d.adjust_rsq_c_index_in_progress, 0
+
+backtrack_q:
+    add         RQCB1_P, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES //BD Slot
+    CAPRI_SET_FIELD(r4, BT_ADJUST_INFO_T, adjust_rsq_c_index, d.adjust_rsq_c_index)
+    CAPRI_SET_FIELD(r4, BT_ADJUST_INFO_T, rsq_bt_p_index, RSQ_BT_P_INDEX)
+
+    CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rsq_backtrack_adjust_process)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_P)
+
+    nop.e
+    nop
 
 check_rq:
     seq         c1, RQ_C_INDEX, RQ_P_INDEX
@@ -69,7 +98,6 @@ rsq:
     add         NEW_RSQ_C_INDEX, r0, RSQ_C_INDEX
     mincr       NEW_RSQ_C_INDEX, d.log_rsq_size, 1
 
-    CAPRI_GET_TABLE_0_ARG(resp_tx_phv_t, r4)
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, rsqwqe_addr, RSQWQE_P)
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, serv_type, d.serv_type)
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, log_pmtu, d.log_pmtu)
@@ -88,7 +116,6 @@ check_ack_nak:
     nop
 
 ack_nak:
-    CAPRI_GET_TABLE_0_ARG(resp_tx_phv_t, r4)
     CAPRI_SET_FIELD(r4, ACK_INFO_T, serv_type, d.serv_type)
     CAPRI_SET_FIELD(r4, ACK_INFO_T, new_c_index, ACK_NAK_P_INDEX)
 

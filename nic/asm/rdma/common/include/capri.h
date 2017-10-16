@@ -1,6 +1,11 @@
 #ifndef __CAPRI_H
 #define __CAPRI_H
 
+#define CAPRI_NUM_STAGES    8
+#define CAPRI_STAGE_FIRST   0
+#define CAPRI_STAGE_LAST    (CAPRI_NUM_STAGES-1)
+
+
 // intrinsic fields
 #define CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 #define CAPRI_RXDMA_INTRINSIC_LIF k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
@@ -642,6 +647,9 @@ struct capri_dma_cmd_mem2mem_t {
 #define DMA_SET_WR_FENCE(_cmd_t, _base_r) \
     phvwrp     _base_r, offsetof(_cmd_t, wr_fence), sizeof(_cmd_t.wr_fence), 1
 
+#define DMA_SET_WR_FENCE_FENCE(_cmd_t, _base_r) \
+    phvwrp     _base_r, offsetof(_cmd_t, wr_fence_fence), sizeof(_cmd_t.wr_fence_fence), 1
+
 #define DB_ADDR_BASE           0x68800000
 
 #define DB_RING_UPD_SHIFT      2
@@ -672,14 +680,20 @@ struct capri_dma_cmd_mem2mem_t {
     add       _capri_data, _ring_index, _ring, DB_RING_SHIFT;                                    \
     add       _capri_data, _capri_data, _qid, DB_QID_SHIFT;
 
-#define DOORBELL_WRITE_CINDEX(_lif, _qtype, _qid, _ring_id, _cindex, _addr, _data)                  \
+#define PREPARE_DOORBELL_WRITE_CINDEX(_lif, _qtype, _qid, _ring_id, _cindex, _addr, _data)                  \
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_CINDEX, DB_SCHED_WR_EVAL_RING, _lif, _qtype, _addr);   \
     CAPRI_SETUP_DB_DATA(_qid, _ring_id, _cindex, _data);                                            \
+
+#define DOORBELL_WRITE_CINDEX(_lif, _qtype, _qid, _ring_id, _cindex, _addr, _data)                  \
+    PREPARE_DOORBELL_WRITE_CINDEX(_lif, _qtype, _qid, _ring_id, _cindex, _addr, _data);                 \
     memwr.dx   _addr, _data;
 
-#define DOORBELL_WRITE_PINDEX(_lif, _qtype, _qid, _ring_id, _pindex, _addr, _data)                   \
+#define PREPARE_DOORBELL_WRITE_PINDEX(_lif, _qtype, _qid, _ring_id, _pindex, _addr, _data)                   \
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, _lif, _qtype, _addr);   \
     CAPRI_SETUP_DB_DATA(_qid, _ring_id, _pindex, _data);                                            \
+
+#define DOORBELL_WRITE_PINDEX(_lif, _qtype, _qid, _ring_id, _pindex, _addr, _data)                   \
+    PREPARE_DOORBELL_WRITE_PINDEX(_lif, _qtype, _qid, _ring_id, _pindex, _addr, _data);                  \
     memwr.dx   _addr, _data;
 
 #define PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, _ring_id, _addr, _data)                     \

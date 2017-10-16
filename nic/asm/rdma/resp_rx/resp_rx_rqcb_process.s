@@ -11,6 +11,8 @@ struct rdma_stage0_table_k k;
 
 #define RQCB_TO_WRITE_T struct resp_rx_rqcb_to_write_rkey_info_t
 #define INFO_OUT1_T struct resp_rx_rqcb_to_pt_info_t
+#define RSQ_BT_S2S_INFO_T struct resp_rx_rsq_backtrack_info_t 
+#define RSQ_BT_TO_S_INFO_T struct resp_rx_to_stage_backtrack_info_t
 #define RQCB_TO_RQCB1_T struct resp_rx_rqcb_to_rqcb1_info_t
 #define RAW_TABLE_PC r2
 
@@ -27,6 +29,7 @@ struct rdma_stage0_table_k k;
     .param    resp_rx_rqpt_process
     .param    resp_rx_rqcb1_in_progress_process
     .param    resp_rx_write_dummy_process
+    .param    resp_rx_rsq_backtrack_process
 
 .align
 resp_rx_rqcb_process:
@@ -81,15 +84,14 @@ resp_rx_rqcb_process:
     add     r2, r0, NAK_CODE_INV_REQ //BD Slot
 
     // check for seq_err (e_psn < bth.psn)
-    // TODO: psn wraparound
-    slt     c1, d.e_psn, CAPRI_APP_DATA_BTH_PSN
-    bcf     [c1], nak
-    add     r2, r0, NAK_CODE_SEQ_ERR //BD Slot
+    //slt     c1, d.e_psn, CAPRI_APP_DATA_BTH_PSN
+    scwlt24     c1, d.e_psn, CAPRI_APP_DATA_BTH_PSN
+    bcf         [c1], nak
+    add         r2, r0, NAK_CODE_SEQ_ERR //BD Slot
 
     // check for duplicate
-    // TODO: psn wraparound
-    slt     c1, CAPRI_APP_DATA_BTH_PSN, d.e_psn
-    bcf     [c1], duplicate
+    seq     c1, CAPRI_APP_DATA_BTH_PSN, d.e_psn
+    bcf     [!c1], duplicate
     nop     //BD Slot
 
     IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_READ_REQ)
@@ -130,36 +132,48 @@ read:
 
     // wqe_p = (void *)(hbm_addr_get(rqcb_p->rsq_base_addr) +    
     //                      (sizeof(rsqwqe_t) * p_index));
-    add         RSQWQE_P, d.rsq_base_addr, RSQ_P_INDEX, LOG_SIZEOF_RSQWQE_T
+    seq         c1, d.rsq_quiesce, 1
+    // if rsq_quiesce is on, use rsq_p_index_prime, else use rsq_p_index
+    cmov        NEW_RSQ_P_INDEX, c1, RSQ_P_INDEX_PRIME, RSQ_P_INDEX
+    add         RSQWQE_P, d.rsq_base_addr, NEW_RSQ_P_INDEX, LOG_SIZEOF_RSQWQE_T
     // p_index/c_index are in little endian
-    add         NEW_RSQ_P_INDEX, r0, RSQ_P_INDEX
     mincr       NEW_RSQ_P_INDEX, d.log_rsq_size, 1
    
     // DMA for RSQWQE
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQWQE)
-    DMA_PHV2MEM_SETUP(DMA_CMD_BASE, c1, rsqwqe, rsqwqe, RSQWQE_P)
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, rsqwqe, rsqwqe, RSQWQE_P)
+    
+    // in case of quiesce mode, only duplicate reqs would move rsq_p_index in a 
+    // lock step manner. If we receive non-duplicate, we increment only
+    // rsq_p_index_prime. Standard is not clear whether we can handle fresh
+    // requests while duplicate requests are being handled. If needed, we can
+    // stop dropping new requests if quiesce mode is on.
+    // 
+    bcf         [c1], skip_rsq_doorbell
+    tblwr.c1    RSQ_P_INDEX_PRIME, NEW_RSQ_P_INDEX      //BD Slot
 
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, CAPRI_RXDMA_INTRINSIC_LIF, CAPRI_RXDMA_INTRINSIC_QTYPE, DB_ADDR)
     CAPRI_SETUP_DB_DATA(CAPRI_RXDMA_INTRINSIC_QID, RSQ_RING_ID, NEW_RSQ_P_INDEX, DB_DATA)
     // store db_data in LE format
-    phvwr   p.db_data, DB_DATA.dx
+    phvwr   p.db_data1, DB_DATA.dx
 
     // DMA for RSQ DoorBell
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQ_DB)
-    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, db_data, db_data, DB_ADDR)
+    DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, db_data1, db_data1, DB_ADDR)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
+
+skip_rsq_doorbell:
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
 
     // increment nxt_to_go_token_id to give control to next pkt
     tbladd  d.nxt_to_go_token_id, 1  
 
-    // if (adjust_psn)
-    // sqcb1_p->tx_psn += rrqwqe_to_hdr_info_p->op.rd.read_len >> rrqwqe_to_hdr_info_p->log_pmtu
+    // e_psn += read_len >> log_pmtu
     add            r3, d.log_pmtu, r0
     srlv           r3, CAPRI_RXDMA_RETH_DMA_LEN, r3
     tblmincr       d.e_psn, 24, r3
 
-    // sqcb1_p->tx_psn += (rrqwqe_to_hdr_info_p->op.rd.read_len & ((1 << rrqwqe_to_hdr_info_p->log_pmtu) -1)) ? 1 : 0
+    // e_psn += (read_len & ((1 << log_pmtu) -1)) ? 1 : 0
     add            r3, CAPRI_RXDMA_RETH_DMA_LEN, r0
     mincr          r3, d.log_pmtu, r0
     sle            c6, r3, r0
@@ -326,6 +340,114 @@ checkout:
     nop
 
 duplicate:
+
+    IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_ATOMIC_FNA|RESP_RX_FLAG_ATOMIC_CSWAP|RESP_RX_FLAG_READ_REQ)
+    bcf             [!c1], duplicate_wr_send
+    nop             //BD Slot
+
+duplicate_rd_atomic:
+
+    // recirc if threre is already another duplicate req in progress
+    seq             c1, d.adjust_rsq_c_index_in_progress, 1
+    bcf             [c1], recirc
+    nop             //BD Slot
+
+    ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_READ_REQ)
+    // RETH and ATOMICETH have VA, r_key at same location 
+    CAPRI_RXDMA_RETH_VA(r1)
+    add             r5, r0, CAPRI_RXDMA_RETH_R_KEY
+    cmov            r6, c2, CAPRI_RXDMA_RETH_DMA_LEN, 8
+
+    // since there is no space in stage-to-stage data, using to-stage
+    // to populate va/r_key/len so that it is accessible to backtrack_process
+    // function which may get called multiple times in successive stages
+    // during backtrack process
+    CAPRI_GET_STAGE_0_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
+
+    CAPRI_GET_STAGE_1_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
+
+    CAPRI_GET_STAGE_2_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
+
+    CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
+
+    CAPRI_GET_STAGE_4_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
+
+    CAPRI_GET_STAGE_5_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
+
+    CAPRI_GET_STAGE_6_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
+
+    CAPRI_GET_STAGE_7_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, va, r1)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, r_key, r5)
+    CAPRI_SET_FIELD(r4, RSQ_BT_TO_S_INFO_T, len, r6)
+
+
+    seq         c3, d.rsq_quiesce, 1
+    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, search_psn, CAPRI_APP_DATA_BTH_PSN)
+    CAPRI_SET_FIELD_C(r4, RSQ_BT_S2S_INFO_T, lo_index, RSQ_P_INDEX_PRIME, c3)
+    CAPRI_SET_FIELD_C(r4, RSQ_BT_S2S_INFO_T, lo_index, RSQ_P_INDEX, !c3)
+    add         r5, r0, RSQ_P_INDEX
+    mincr       r5, d.log_rsq_size, -1
+    // in quiesce mode, make sure hi_index is 1 more than RSQ_P_INDEX.
+    // since previous mincr has decremented by 1, we are incrementing by 2 here.
+    mincr.c3    r5, d.log_rsq_size, +2
+    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, hi_index, r5)
+    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, index, RSQ_C_INDEX)
+    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, rsq_base_addr, d.rsq_base_addr)
+    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, log_pmtu, d.log_pmtu)
+    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, walk, RSQ_EVAL_MIDDLE)
+    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, log_rsq_size, d.log_rsq_size)
+    
+    cmov        r5, c2, RSQ_OP_TYPE_READ, RSQ_OP_TYPE_ATOMIC 
+    CAPRI_SET_FIELD(r4, RSQ_BT_S2S_INFO_T, read_or_atomic, r5)
+    
+    //load entry at cindex first
+    add         r3, d.rsq_base_addr, RSQ_C_INDEX, LOG_SIZEOF_RSQWQE_T
+    CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rsq_backtrack_process)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+
+    
+    nop.e
+    nop
+    
+
+duplicate_wr_send:
+    // duplicate write/send, there is nothing to do.
+    // release chance to next packet
+    tbladd          d.nxt_to_go_token_id, 1  
+
+    // ring the ack_nak ring one more time so that a new ack is pushed out
+    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
+
+    RESP_RX_RING_ACK_NAK_DB(DMA_CMD_BASE, \
+                            CAPRI_RXDMA_INTRINSIC_LIF, \
+                            CAPRI_RXDMA_INTRINSIC_QTYPE, \
+                            CAPRI_RXDMA_INTRINSIC_QID, \
+                            DB_ADDR, DB_DATA)
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE);
     nop.e
     nop
 

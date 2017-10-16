@@ -8,6 +8,7 @@
 #include "defines.h"
 
 #define RESP_TX_MAX_DMA_CMDS            16
+#define RESP_TX_DMA_CMD_START           0
 #define RESP_TX_DMA_CMD_INTRINSIC       0
 #define RESP_TX_DMA_CMD_TXDMA_INTRINSIC 1
 #define RESP_TX_DMA_CMD_COMMON_P4PLUS   2
@@ -23,7 +24,8 @@ struct resp_tx_phv_t {
     // dma commands (flit 8 - 11)
 
     // scratch (flit 6 - 7)
-    db_data: 32;
+    db_data1: 64;
+    db_data2: 64;
     struct rdma_aeth_t aeth;
     struct rdma_bth_t bth;
     struct p4plus_to_p4_header_t p4plus_to_p4;
@@ -130,5 +132,20 @@ struct resp_tx_ack_process_k_t {
     struct resp_tx_to_stage_t to_stage;
     struct phv_global_common_t global;
 };
+
+struct resp_tx_rsq_backtrack_adjust_info_t {
+    adjust_rsq_c_index: 16;
+    rsq_bt_p_index: 16;
+    pad: 128;
+};
+
+struct resp_tx_rsq_backtrack_adjust_process_k_t {
+    struct capri_intrinsic_raw_k_t intrinsic;
+    struct resp_tx_rsq_backtrack_adjust_info_t args;
+    struct resp_tx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
+
+
 
 #endif //__RESP_TX_H

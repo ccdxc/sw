@@ -17,7 +17,12 @@
 #define ACK_NAK_P_INDEX d.{ring2.pindex}.hx
 #define ACK_NAK_C_INDEX d.{ring2.cindex}.hx
 
+#define RSQ_BT_P_INDEX d.{ring3.pindex}.hx
+#define RSQ_BT_C_INDEX d.{ring3.cindex}.hx
+
 #define PROXY_RQ_C_INDEX   d.{proxy_cindex}.hx
+
+#define RSQ_P_INDEX_PRIME d.{rsq_pindex_prime}.hx
 
 struct rqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
@@ -37,7 +42,7 @@ struct rqcb0_t {
     
     token_id: 8;
     nxt_to_go_token_id: 8;
-    rsq_pindex_prime: 8;
+    rsq_pindex_prime: 16;
 
 
     log_pmtu: 5;
@@ -58,13 +63,12 @@ struct rqcb0_t {
     adjust_rsq_c_index: 8;
 
     msn:24; 
-    rsvd2:8; 
 
     pd: 32; 
 
     proxy_cindex: 16; // place holder for a copy of c_index to avoid
                        // scheduler ringing RQ all the time.
-    rsvd3: 16;
+    rsvd2: 16;
 };
 
 struct rqcb1_t {

@@ -49,10 +49,11 @@ class RdmaRQstate(Packet):
 
         IntField("rsq_base_addr", 0),
 
-        ByteField("log_rsq_size", 0),
+        BitField("rsvd1", 0, 3),
+        BitField("log_rsq_size", 0, 5),
         ByteField("token_id", 0),
         ByteField("nxt_to_go_token_id", 0),
-        ByteField("rsq_pindex_prime", 0),                                            
+        LEShortField("rsq_pindex_prime", 0),                                            
 
         BitField("log_pmtu", 0xa, 5),
         BitField("log_rq_page_size", 0xc, 5),
@@ -62,7 +63,7 @@ class RdmaRQstate(Packet):
         BitField("srq_enabled", 0, 1),
         BitField("busy", 0, 1),
         BitField("in_progress", 0, 1),
-        BitField("rsvd1", 0, 3),
+        BitField("rsvd2", 0, 3),
         BitField("adjust_rsq_c_index_in_progress", 0, 1),
         BitField("rsq_quiesce", 0, 1),
         BitField("cache", 0, 1),
@@ -71,7 +72,6 @@ class RdmaRQstate(Packet):
         ByteField("adjust_rsq_c_index", 0),
 
         X3BytesField("msn", 0),
-        ByteField("rsvd2", 0),
 
         IntField("pd", 0),
 
