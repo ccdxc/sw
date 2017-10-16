@@ -359,3 +359,41 @@ steps:
             seq     : 0
             ack     : callback://firewall/alu/Sub/val=1
 
+    - step:
+        id          : IFLOW_DATA_ABS
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 100
+        fields      :
+            flags   : ack
+        state       :
+            iflow   :
+                seq : 9876
+                ack : 5432
+                window: 3859
+
+    - step:
+        id          : RFLOW_DATA_ABS
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 100
+        fields      :
+            flags   : ack
+        state       :
+            rflow   :
+                seq : 6789
+                ack : 2345
+                window: 4096
+
+    - step:
+        id          : IFLOW_DATA_ABS_BOTH
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 100
+        fields      :
+            flags   : ack
+        state       :
+            iflow   :
+                seq : 9876222
+                ack : 5432111
+                window: 4096
+            rflow   :
+                seq : 4677789
+                ack : 5442378

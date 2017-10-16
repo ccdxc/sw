@@ -989,3 +989,18 @@ modules:
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_DROP
 
+    - module:
+        name    : ABS_STEP_TEST
+        tracker : True
+        ignore  : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_ABS
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_ABS
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_ABS_BOTH
+

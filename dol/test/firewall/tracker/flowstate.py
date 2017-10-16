@@ -36,6 +36,23 @@ class FlowStateData:
         self.ack += size
         self.ack &= 0xFFFFFFFF
         return
+    def SetSeq(self, seq):
+        self.seq = seq
+        self.seq &= 0xFFFFFFFF
+        return
+    def SetAck(self, ack):
+        self.ack = ack
+        self.ack &= 0xFFFFFFFF
+        return
+    def SetWindow(self, win):
+        self.window = win
+        return
+    def SetScale(self, scale):
+        self.scale = scale
+        return
+    def SetMss(self, mss):
+        self.mss = mss
+        return
 
     def Show(self, lg):
         lg.info("- Seq  : ", self.seq)
@@ -81,6 +98,23 @@ class FlowState:
         self.curr.IncrementAckNum(size)
         return
 
+    def SetSeq(self, seq):
+        self.curr.SetSeq(seq)
+        return
+    def SetAck(self, ack):
+        self.curr.SetAck(ack)
+        return
+    def SetWindow(self, win):
+        self.curr.SetWindow(win)
+        return
+    def SetScale(self, scale):
+        self.curr.SetScale(scale)
+        return
+    def SetMss(self, mss):
+        self.curr.SetMss(mss)
+        return
+
+
     def ShowDiff(self, lg):
         if self.prev.seq != self.curr.seq:
             lg.info("- Seq  : prev=", self.prev.seq, " curr=", self.curr.seq)
@@ -121,7 +155,42 @@ class FlowStateTracker:
         self.iflowstate.IncrementAckNum(ackincr)
         return
 
-    def Advance(self, step):
+    def __advance_common_abs(self, prefix, flow, flowstate):
+        seq = getattr(flow, 'seq', None)
+        if seq is not None:
+            self.lg.info("%s: ABS Advancing Seq:%d" % (prefix, seq))
+            flowstate.SetSeq(seq)
+
+        ack = getattr(flow, 'ack', None)
+        if seq is not None:
+            self.lg.info("%s: ABS Advancing Ack:%d" % (prefix, ack))
+            flowstate.SetAck(seq)
+
+        win = getattr(flow, 'window', None)
+        if win is not None:
+            self.lg.info("%s: ABS Advancing Win:%d" % (prefix, win))
+            flowstate.SetWindow(win)
+
+        scale = getattr(flow, 'scale', None)
+        if scale is not None:
+            self.lg.info("%s: ABS Advancing Scale:%d" % (prefix, scale))
+            flowstate.SetScale(scale)
+           
+        mss = getattr(flow, 'mss', None)
+        if mss is not None:
+            self.lg.info("%s: ABS Advancing MSS:%d" % (prefix, mss))
+            flowstate.SetMss(mss)
+        return
+
+    def __advance_iflow_abs(self, flow):
+        self.__advance_common_abs("IFLOW", flow, self.iflowstate)
+        return
+ 
+    def __advance_rflow_abs(self, flow):
+        self.__advance_common_abs("RFLOW", flow, self.rflowstate)
+        return
+
+    def __advance(self, step):
         incr = 0
         if step.IsSyn() or step.IsFin():
             incr = 1
@@ -139,12 +208,29 @@ class FlowStateTracker:
             self.__advance_iflow(seqincr, ackincr)
         else:
             self.__advance_rflow(seqincr, ackincr)
+        return
+
+    def __advance_abs(self, step):
+        iflow = getattr(step.state, 'iflow', None)
+        if iflow is not None:
+            self.__advance_iflow_abs(iflow)
+
+        rflow = getattr(step.state, 'rflow', None)
+        if rflow is not None:
+            self.__advance_rflow_abs(rflow)
+        return
+
+    def Advance(self, step):
+        state = getattr(step, 'state', None)
+        if state is None:
+            self.__advance(step)
+        else:
+            self.__advance_abs(step)
 
         self.lg.info("IFLOW FlowState Diff:")
         self.iflowstate.ShowDiff(self.lg)
         self.lg.info("RFLOW FlowState Diff:")
         self.rflowstate.ShowDiff(self.lg)
-
         return
 
     def GetState(self, iflow):

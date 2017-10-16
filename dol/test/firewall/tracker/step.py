@@ -23,6 +23,7 @@ class StepObject(objects.FrameworkTemplateObject):
             return
         base = base.Get(TrackerStore)
         self.fields = objects.MergeObjects(self.fields, base.fields)
+        self.state = getattr(self, 'state', None)
         self.payloadsize = getattr(self, 'payloadsize', base.payloadsize)
         self.direction = getattr(self, 'direction', base.direction)
         self.advance = getattr(self, 'advance', base.advance)
@@ -34,6 +35,7 @@ class StepObject(objects.FrameworkTemplateObject):
         obj = type(self)()
         obj.GID(self.GID())
         obj.fields = copy.copy(self.fields)
+        obj.state = copy.deepcopy(self.state)
         obj.payloadsize = self.payloadsize
         obj.direction = self.direction
         obj.advance = self.advance
