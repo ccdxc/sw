@@ -449,8 +449,6 @@ drop_reason_to_define (const acl::DropReason drop_reason)
             return DROP_IP_NORMALIZATION;
         case acl::TCP_NORMALIZATION__DROP:
             return DROP_TCP_NORMALIZATION;
-        case acl::TCP_XMAS_TREE_PKT__DROP:
-            return DROP_TCP_XMAS_TREE_PKT;
         case acl::TCP_NON_SYN_FIRST_PKT__DROP:
             return DROP_TCP_NON_SYN_FIRST_PKT;
         case acl::ICMP_NORMALIZATION__DROP:

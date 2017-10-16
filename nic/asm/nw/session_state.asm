@@ -365,10 +365,16 @@ lb_tss_r_1:
   smeqb        c3, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_ACK, TCP_FLAG_SYN|TCP_FLAG_ACK
   seq          c4, k.tcp_ackNo, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   bcf          [c1 & c2 & c3 & c4], lb_tss_r_tcp_state_transition
+  smeqb        c3, k.tcp_flags, TCP_FLAG_RST, TCP_FLAG_RST
+  setcf        c3, [c1 & c2 & c3 & !c4]
+  ori.c3       r2, r2, TCP_RST_WITH_INVALID_ACK_NUM
+  phvwr.c3     p.control_metadata_drop_reason[DROP_TCP_RST_WITH_INVALID_ACK_NUM], 1
+  b.c3         lb_tss_r_exit
+  phvwr.c3     p.capri_intrinsic_drop, 1
   smeqb        c3, k.tcp_flags, TCP_FLAG_ACK, TCP_FLAG_ACK
   bcf          [c1 & c2 & c3 & c4], lb_tss_r_tcp_state_transition
   smeqb        c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
-  bcf          [c1 & c2 & c3 & c4], lb_tss_r_tcp_state_transition
+  bcf          [c1 & c2 & c3], lb_tss_r_tcp_state_transition
   sub          r1, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, 1
   scwle        c1, r1, r7
   scwlt        c2, r7, r4
@@ -536,7 +542,7 @@ lb_tss_r_init_3:
   smeqb        c1, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   b.!c1        lb_tss_r_exit
   seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_ws_option_sent, 1
-  tblwr        d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_TCP_SYN_ACK_RCVD
+  tblwr        d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD
   seq          c2, k.tcp_option_ws_valid, 1
   setcf        c1, [c1 & c2]
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_win_scale, k.tcp_option_ws_value

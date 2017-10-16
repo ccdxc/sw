@@ -205,7 +205,7 @@
 #define DROP_FRAGMENT_TOO_SMALL        10
 #define DROP_IP_NORMALIZATION          11
 #define DROP_TCP_NORMALIZATION         12
-#define DROP_TCP_XMAS_TREE_PKT         13
+#define DROP_TCP_RST_WITH_INVALID_ACK_NUM         13
 #define DROP_TCP_NON_SYN_FIRST_PKT     14
 #define DROP_ICMP_NORMALIZATION        15
 #define DROP_ICMP_SRC_QUENCH_MSG       16
@@ -266,6 +266,7 @@
 #define TCP_NON_RST_PKT_AFTER_RST      0x0400
 #define TCP_INVALID_RESPONDER_FIRST_PKT 0x0800
 #define TCP_UNEXPECTED_SYN             0x1000
+#define TCP_RST_WITH_INVALID_ACK_NUM   0x2000
 
 
 /*****************************************************************************/

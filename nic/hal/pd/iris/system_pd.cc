@@ -126,8 +126,6 @@ pd_system_decode(drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
             key->control_metadata_drop_reason & DROP_IP_NORMALIZATION);
     stats_entry->set_drop_tcp_normalization(
             key->control_metadata_drop_reason & DROP_TCP_NORMALIZATION);
-    stats_entry->set_drop_tcp_xmas_tree_pkt(
-            key->control_metadata_drop_reason & DROP_TCP_XMAS_TREE_PKT);
     stats_entry->set_drop_tcp_non_syn_first_pkt(
             key->control_metadata_drop_reason & DROP_TCP_NON_SYN_FIRST_PKT);
     stats_entry->set_drop_icmp_normalization(

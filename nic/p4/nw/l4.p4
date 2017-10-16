@@ -650,6 +650,17 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                    // new connection
                   // goto RESPONDER_TCP_STATE_TRANSITION:
                }
+               // From RFC: 793
+               // In all states except SYN-SENT, all reset (RST) segments are validated by
+               // checking their SEQ-fields.  A reset is valid if its sequence number is in the window.
+               // In the SYN-SENT state (a RST received in response to an initial SYN),
+               // the RST is acceptable if the ACK field acknowledges the SYN.
+               if ((tcp.flags & (TCP_FLAG_RST) == TCP_FLAG_RST) and
+                   (tcp.ackNo != iflow_tcp_seq_num)) {
+                   bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_RST_WITH_INVALID_ACK_NUM);
+                   modify_field(control_metadata.drop_reason, DROP_TCP_RST_WITH_INVALID_ACK_NUM);
+                   drop_packet();
+               }
                if ((tcp.flags & (TCP_FLAG_ACK) == TCP_FLAG_ACK) and
                    (tcp.ackNo == iflow_tcp_seq_num)) {
                    // This will be true for any genuine packet that is sent by responder in response to
@@ -836,7 +847,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
            // iflow_tcp_state should be in FLOW_STATE_TCP_SYN_RCVD only
            if (tcp.flags & (TCP_FLAG_SYN) == (TCP_FLAG_SYN)) {
 
-                modify_field(scratch_metadata.rflow_tcp_state, FLOW_STATE_TCP_SYN_ACK_RCVD);
+                modify_field(scratch_metadata.rflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD);
                 if (scratch_metadata.iflow_tcp_ws_option_sent == TRUE and
                     tcp_option_ws.valid == TRUE) {
                     modify_field (scratch_metadata.rflow_tcp_win_scale, tcp_option_ws.value);
