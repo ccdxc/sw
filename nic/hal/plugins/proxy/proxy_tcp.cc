@@ -1,3 +1,7 @@
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/src/tcpcb.hpp"
@@ -19,7 +23,7 @@ thread_local fte::ctx_t *gl_ctx;
     _buf[_i++] = 0x45; \
     _buf[_i++] = 0x08; \
     _buf[_i++] = 0x00; \
-    _buf[_i++] = 0x7c; \
+    _buf[_i++] = 0x28; \
     _buf[_i++] = 0x00; \
     _buf[_i++] = 0x01; \
     _buf[_i++] = 0x00; \
@@ -29,47 +33,95 @@ thread_local fte::ctx_t *gl_ctx;
     _buf[_i++] = 0xfa; \
     _buf[_i++] = 0x71;
 
+// byte array to hex string for logging
+std::string hex_dump(const uint8_t *buf, size_t sz)
+{
+    std::ostringstream result;
+
+    for(size_t i = 0; i < sz; i+=8) {
+        result << " 0x";
+        for (size_t j = i ; j < sz && j < i+8; j++) {
+            result << std::setw(2) << std::setfill('0') << std::hex << (int)buf[j];
+        }
+    }
+
+    return result.str();
+}
+
+
 hal_ret_t
-init_tcp_cb(fte::ctx_t &ctx, qid_t qid, TcpCbSpec &spec)
+proxy_create_hdr_template(TcpCbSpec &spec,
+                          ether_header_t *eth,
+                          vlan_header_t* vlan,
+                          ipv4_header_t *ip,
+                          tcp_header_t *tcp,
+                          bool is_itor_dir)
 {
     hal_ret_t       ret = HAL_RET_OK;
     uint8_t         buf[64];
     uint8_t         i = 0;
-    uint8_t         vlan_valid;
     uint16_t        vlan_id;
+    uint16_t        sport, dport;
+    uint32_t        sip, dip;
+    mac_addr_t      smac, dmac;
 
-    spec.set_source_port(ctx.key().dport);
-    spec.set_dest_port(ctx.key().sport);
-    spec.set_source_lif(hal::pd::ep_pd_get_hw_lif_id(ctx.dep()));
+    HAL_TRACE_DEBUG("tcp-proxy: header template eth={}", hex_dump((uint8_t*)eth, 18));
+    HAL_TRACE_DEBUG("tcp-proxy: header template ip={}", hex_dump((uint8_t*)ip, sizeof(ipv4_header_t)));
+    HAL_TRACE_DEBUG("tcp-proxy: header template tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
 
-    if_l2seg_get_encap(ctx.dif(), ctx.dl2seg(), &vlan_valid, &vlan_id);
+    if (is_itor_dir) {
+        sport = tcp->sport;
+        dport = tcp->dport;
+        memcpy(&sip, &ip->saddr, sizeof(ip->saddr));
+        memcpy(&dip, &ip->daddr, sizeof(ip->daddr));
+        memcpy(&smac, eth->smac, ETH_ADDR_LEN);
+        memcpy(&dmac, eth->dmac, ETH_ADDR_LEN);
+        vlan_id = vlan->vlan_tag;
+        //spec.set_source_lif(hal::pd::ep_pd_get_hw_lif_id(ctx.dep()));
+    } else {
+        sport = tcp->dport;
+        dport = tcp->sport;
+        memcpy(&sip, &ip->daddr, sizeof(ip->daddr));
+        memcpy(&dip, &ip->saddr, sizeof(ip->saddr));
+        memcpy(&smac, eth->dmac, ETH_ADDR_LEN);
+        memcpy(&dmac, eth->smac, ETH_ADDR_LEN);
+        vlan_id = vlan->vlan_tag;
+        //spec.set_source_lif(hal::pd::ep_pd_get_hw_lif_id(ctx.sep()));
+     }
+    HAL_TRACE_DEBUG("tcp-proxy: sport={}", hex_dump((uint8_t*)&sport, sizeof(sport)));
+    HAL_TRACE_DEBUG("tcp-proxy: dport={}", hex_dump((uint8_t*)&dport, sizeof(dport)));
+    HAL_TRACE_DEBUG("tcp-proxy: sip={}", hex_dump((uint8_t*)&sip, sizeof(sip)));
+    HAL_TRACE_DEBUG("tcp-proxy: dip={}", hex_dump((uint8_t*)&dip, sizeof(dip)));
+    HAL_TRACE_DEBUG("tcp-proxy: smac={}", hex_dump((uint8_t*)smac, sizeof(smac)));
+    HAL_TRACE_DEBUG("tcp-proxy: dmac={}", hex_dump((uint8_t*)dmac, sizeof(dmac)));
+    HAL_TRACE_DEBUG("tcp-proxy: vlan={}", hex_dump((uint8_t*)&vlan_id, sizeof(vlan_id)));
 
-    memcpy(&buf[i], ctx.sep()->l2_key.mac_addr, sizeof(ctx.sep()->l2_key.mac_addr));
-    i += sizeof(ctx.sep()->l2_key.mac_addr);
-    memcpy(&buf[i], ctx.dep()->l2_key.mac_addr, sizeof(ctx.dep()->l2_key.mac_addr));
-    i += sizeof(ctx.dep()->l2_key.mac_addr);
-    if (vlan_valid) {
-        buf[i++] = 0x81;
-        buf[i++] = 0x00;
-        vlan_id = htons(vlan_id);
-        memcpy(&buf[i], &vlan_id, sizeof(vlan_id));
-        i += sizeof(vlan_id);
-    }
+    spec.set_source_port(ntohs(dport));
+    spec.set_dest_port(ntohs(sport));
+    memcpy(&buf[i], &smac, sizeof(smac));
+    i += sizeof(smac);
+    memcpy(&buf[i], &dmac, sizeof(dmac));
+    i += sizeof(smac);
+    buf[i++] = 0x81;
+    buf[i++] = 0x00;
+    memcpy(&buf[i], &vlan_id, sizeof(vlan_id));
+    i += sizeof(vlan_id);
     SET_COMMON_IP_HDR(buf, i);
-    memcpy(buf, &ctx.key().dip.v4_addr, sizeof(ctx.key().dip.v4_addr));
-    i += sizeof(ctx.key().dip.v4_addr);
-    memcpy(buf, &ctx.key().sip.v4_addr, sizeof(ctx.key().sip.v4_addr));
-    i += sizeof(ctx.key().sip.v4_addr);
+    memcpy(&buf[i], &dip, sizeof(dip));
+    i += sizeof(dip);
+    memcpy(&buf[i], &sip, sizeof(sip));
+    i += sizeof(sip);
 
     HAL_ABORT(i < sizeof(buf));
 
-    spec.set_header_template(buf, i + 1);
+    HAL_TRACE_DEBUG("Header template = {}", hex_dump((uint8_t*)buf, sizeof(buf)));
+    spec.set_header_template(buf, i);
+    spec.set_header_len(i);
     return ret;
 }
 
-#if 0
 hal_ret_t
-tcp_create_cb(qid_t qid)
+tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* vlan, ipv4_header_t *ip, tcp_header_t *tcp, bool is_itor_dir)
 {
     hal_ret_t       ret = HAL_RET_OK;
     TcpCbSpec       spec;
@@ -82,43 +134,22 @@ tcp_create_cb(qid_t qid)
 
     HAL_TRACE_DEBUG("Create TCPCB for qid: {}", qid);
     spec.mutable_key_or_handle()->set_tcpcb_id(qid);
-    ret = init_tcp_cb(ctx, qid, spec);
+    spec.set_source_lif(src_lif);
+    ret = proxy_create_hdr_template(spec, eth, vlan, ip, tcp, is_itor_dir);;
     ret = tcpcb_create(spec, &rsp);
     if(ret != HAL_RET_OK || rsp.api_status() != types::API_STATUS_OK) {
         HAL_TRACE_ERR("Failed to create TCP cb for id: {}, ret: {}, rsp: ",
                         qid, ret, rsp.api_status());
         return ret;
     }
+
     HAL_TRACE_DEBUG("Successfully created TCPCB for id: {}", qid);
     return ret;
 }
-#endif
 
-hal_ret_t
-tcp_create_cb(fte::ctx_t &ctx, qid_t qid)
-{
-    hal_ret_t       ret = HAL_RET_OK;
-    TcpCbSpec       spec;
-    TcpCbResponse   rsp;
-
-    if(ctx.dif() == NULL || ctx.dif()->if_type == intf::IF_TYPE_TUNNEL) {
-        HAL_TRACE_DEBUG("Skipping TCPCB creation for TUNNEL interface");
-        return HAL_RET_OK;
-    }
-    HAL_TRACE_DEBUG("Create TCPCB for qid: {}", qid);
-    spec.mutable_key_or_handle()->set_tcpcb_id(qid);
-    ret = init_tcp_cb(ctx, qid, spec);
-    ret = tcpcb_create(spec, &rsp);
-    if(ret != HAL_RET_OK || rsp.api_status() != types::API_STATUS_OK) {
-        HAL_TRACE_ERR("Failed to create TCP cb for id: {}, ret: {}, rsp: ",
-                        qid, ret, rsp.api_status());
-        return ret;
-    }
-    return ret;
-}
 
 void
-tcp_update_cb(void *tcpcb, uint32_t qid)
+tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
 {
     hal_ret_t ret = HAL_RET_OK;
     TcpCbSpec *spec = new TcpCbSpec;
@@ -169,8 +200,12 @@ tcp_update_cb(void *tcpcb, uint32_t qid)
 
     spec->set_header_template(data, sizeof(data));
 
-    spec->set_state(TCP_ESTABLISHED);
-    spec->set_source_lif(get_rsp.mutable_spec()->source_lif());
+    spec->set_state(hal::pd::lkl_get_tcpcb_state(tcpcb));
+    if (src_lif == 0) {
+      src_lif = get_rsp.mutable_spec()->source_lif();
+    }
+    HAL_TRACE_DEBUG("Calling TCPCB Update with src_lif: {}", src_lif);
+    spec->set_source_lif(src_lif);
     spec->set_asesq_base(get_rsp.mutable_spec()->asesq_base());
     spec->set_asesq_pi(get_rsp.mutable_spec()->asesq_pi());
     spec->set_asesq_ci(get_rsp.mutable_spec()->asesq_ci());
@@ -186,8 +221,9 @@ tcp_update_cb(void *tcpcb, uint32_t qid)
     }
 }
 
+
 hal_ret_t
-tcp_trigger_ack_send(uint32_t qid)
+tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
 {
     hal_ret_t ret = HAL_RET_OK;
     TcpCbSpec *spec = new TcpCbSpec;
@@ -202,8 +238,14 @@ tcp_trigger_ack_send(uint32_t qid)
     tcpcb_get(*get_req, &get_rsp);
 
     spec->set_allocated_key_or_handle(&kh);
-    spec->set_rcv_nxt(get_rsp.mutable_spec()->rcv_nxt());
-    spec->set_snd_nxt(get_rsp.mutable_spec()->snd_nxt());
+    if (tcp != NULL) {
+      
+      spec->set_rcv_nxt(ntohl(tcp->seq)+1);
+      HAL_TRACE_DEBUG("lkl_trigger_ack_send: rcv_nxt=0x{0:x}", ntohl(tcp->seq));
+    } else {
+      spec->set_rcv_nxt(get_rsp.mutable_spec()->rcv_nxt());
+    }
+    spec->set_snd_nxt(get_rsp.mutable_spec()->snd_nxt()+1);
     spec->set_snd_una(get_rsp.mutable_spec()->snd_una());
     spec->set_rcv_tsval(get_rsp.mutable_spec()->rcv_tsval());
     spec->set_ts_recent(get_rsp.mutable_spec()->ts_recent());
@@ -268,10 +310,8 @@ update_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
     flowupd.fwding.qtype = pfi->proxy->meta->lif_info[0].qtype_info[0].qtype_val;
     if (ctx.role() ==  hal::FLOW_ROLE_INITIATOR) {
         flowupd.fwding.qid = pfi->qid1;
-        tcp_create_cb(ctx, pfi->qid1);
     } else {
         flowupd.fwding.qid = pfi->qid2;
-        tcp_create_cb(ctx, pfi->qid2);
     }
 
     return ctx.update_flow(flowupd);
@@ -292,6 +332,12 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
     if(!is_proxy_enabled_for_flow(types::PROXY_TYPE_TCP,
                                  flow_key)) {
         HAL_TRACE_DEBUG("tcp-proxy: not enabled for flow: {}", ctx.key());
+        return fte::PIPELINE_CONTINUE;
+    }
+
+    // Check if exising session , then do nothing
+    if(ctx.existing_session()) {
+        HAL_TRACE_DEBUG("tcp-proxy: already enabled for flow: {}", ctx.key());
         return fte::PIPELINE_CONTINUE;
     }
 
@@ -325,7 +371,7 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
         return fte::PIPELINE_CONTINUE;
     }
 
-#if 0
+#if 1
     if (!ctx.protobuf_request()) {
         HAL_TRACE_DEBUG("LKL return {}",
                         hal::pd::lkl_handle_flow_miss_pkt(
@@ -334,13 +380,14 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
                                                            ctx.pkt_len(),
                                                            ctx.direction()),
                                  ctx.direction(),
-                                 pfi->qid1, pfi->qid2));
+                                 pfi->qid1, pfi->qid2,
+                                 ctx.cpu_rxhdr()));
     }
 #endif
     return fte::PIPELINE_CONTINUE;
 }
 
-#if 0
+#if 1
 fte::pipeline_action_t
 tcp_exec_tcp_lif(fte::ctx_t& ctx)
 {
@@ -355,7 +402,7 @@ tcp_exec_tcp_lif(fte::ctx_t& ctx)
 
     return fte::PIPELINE_CONTINUE;
 }
-#endif
+#else
 fte::pipeline_action_t
 tcp_exec_tcp_lif(fte::ctx_t& ctx)
 {
@@ -367,6 +414,7 @@ tcp_exec_tcp_lif(fte::ctx_t& ctx)
 
     return fte::PIPELINE_CONTINUE;
 }
+#endif
 
 fte::pipeline_action_t
 tcp_exec(fte::ctx_t& ctx)
@@ -382,6 +430,7 @@ tcp_exec(fte::ctx_t& ctx)
     return fte::PIPELINE_CONTINUE;
 }
 
+
 void
 tcp_transmit_pkt(unsigned char* pkt, unsigned int len, bool is_connect_req, uint16_t dst_lif) {
     if (gl_ctx) {
@@ -392,6 +441,7 @@ tcp_transmit_pkt(unsigned char* pkt, unsigned int len, bool is_connect_req, uint
         }
     }
 }
+
 
 } // namespace hal
 } // namespace net

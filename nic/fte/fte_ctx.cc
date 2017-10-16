@@ -403,11 +403,12 @@ ctx_t::lookup_session()
     }
 
     if (!session_) {
+        existing_session_ = false;
         return HAL_RET_SESSION_NOT_FOUND;
     }
 
     HAL_TRACE_DEBUG("fte: found existing session");
-
+    existing_session_ = true;
     hflow = session_->iflow;
     // TODO(goli) handle post svc flows
     if (hflow->config.role == hal::FLOW_ROLE_INITIATOR) {

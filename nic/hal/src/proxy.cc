@@ -720,7 +720,14 @@ bool
 is_proxy_enabled_for_flow(types::ProxyType proxy_type,
                           const flow_key_t &flow_key)
 {
-    if ((flow_key.dport == 7777) && (flow_key.sport == 47273)) return true;
+
+#if 0
+    if (((flow_key.dport == 80) && (flow_key.sport == 47802)) ||
+        ((flow_key.sport == 80) && (flow_key.dport == 47802))) {
+        HAL_TRACE_DEBUG("PROXY FLOW\n");
+        return true;
+    }
+#endif
     return (NULL != proxy_get_flow_info(proxy_type, &flow_key));
 }
 }    // namespace hal

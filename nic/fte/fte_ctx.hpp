@@ -346,6 +346,7 @@ public:
     session::SessionSpec* sess_spec() {return sess_spec_; }
     session::SessionResponse* sess_resp() {return sess_resp_; }
     hal::session_t* session() { return session_; }
+    bool existing_session() const { return existing_session_; }
 
     const lifqid_t& arm_lifq() const { return arm_lifq_; }
     void set_arm_lifq(const lifqid_t& arm_lifq) {arm_lifq_= arm_lifq;}
@@ -407,6 +408,7 @@ private:
     hal_ret_t             feature_status_; // feature exit status (set by features to pass the error status)
 
     bool                  drop_;           // Drop the packeto
+    bool                  existing_session_;// Existing or new session ?
     hal::session_t        *session_;
     bool                  cleanup_hal_;    // Cleanup hal session
 

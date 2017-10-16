@@ -63,9 +63,9 @@ void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, 
     return skb;
 }
 
-bool lkl_handle_flow_miss_pkt(void* skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid) {
+  bool lkl_handle_flow_miss_pkt(void* skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, const p4_to_p4plus_cpu_pkt_t *rxhdr) {
     if (!skb) return false;
-    return hal::lklshim_process_flow_miss_rx_packet(skb, dir, iqid, rqid);
+    return hal::lklshim_process_flow_miss_rx_packet(skb, dir, iqid, rqid, rxhdr->src_lif);
 }
 
 bool lkl_handle_flow_hit_pkt(void* skb, hal::flow_direction_t dir, const p4_to_p4plus_cpu_pkt_t* rxhdr) {
@@ -96,6 +96,15 @@ uint32_t lkl_get_tcpcb_rcv_tsval(void *tcpcb)
 uint32_t lkl_get_tcpcb_ts_recent(void *tcpcb)
 {
     return lkl_tcpcb_ts_recent(tcpcb);
+}
+
+uint32_t lkl_get_tcpcb_state(void *tcpcb)
+{
+#if 0
+    return lkl_tcpcb_state(tcpcb);
+#else
+    return 0;
+#endif
 }
 
 }

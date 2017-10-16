@@ -650,7 +650,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         !session_pd->iflow_aug.flow_hash_hw_id) {
         ret = p4pd_add_flow_hash_table_entry(&session->iflow->assoc_flow->config.key,
                                              session->iflow->assoc_flow->pgm_attrs.lkp_inst,
-                                             (pd_l2seg_t *)(session->iflow->dl2seg->pd),
+                                             (pd_l2seg_t *)(session->iflow->sl2seg->pd),
                                              &session_pd->iflow_aug,
                                              &flow_hash);
         if (args->rsp) {
@@ -693,7 +693,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
             // TODO: key has to involve service done? populate in flow_attrs
             ret = p4pd_add_flow_hash_table_entry(&session->rflow->assoc_flow->config.key,
                                                  session->rflow->assoc_flow->pgm_attrs.lkp_inst,
-                                                 (pd_l2seg_t *)session->rflow->dl2seg->pd,
+                                                 (pd_l2seg_t *)session->rflow->sl2seg->pd,
                                                  &session_pd->rflow_aug,
                                                  &flow_hash);
             if (args->rsp) {

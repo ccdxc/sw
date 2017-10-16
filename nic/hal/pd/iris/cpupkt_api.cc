@@ -444,6 +444,7 @@ cpupkt_program_send_ring_doorbell(uint16_t dest_lif,
 {
     uint64_t            addr = 0;
     uint64_t            data = 0;
+    uint64_t            qid64 = qid;
 
     
     addr = 0 | DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_SET;
@@ -453,7 +454,7 @@ cpupkt_program_send_ring_doorbell(uint16_t dest_lif,
     addr += DB_ADDR_BASE;
 
     data += ((uint64_t)CPU_ASQ_PID << DB_PID_SHFT);
-    data += (qid << DB_QID_SHFT);
+    data += (qid64 << DB_QID_SHFT);
     data += (ring_number << DB_RING_SHFT);
 
     HAL_TRACE_DEBUG("Ringing Doorbell with addr: {:#x} data: {:#x}",

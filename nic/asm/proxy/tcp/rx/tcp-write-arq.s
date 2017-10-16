@@ -32,33 +32,12 @@ dma_cmd_data:
     add         r1, r0, k.to_s6_page
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
 
+#if 1
+    addi        r6, r6, (70+NIC_CPU_HDR_SIZE_BYTES)
+    CAPRI_DMA_CMD_PKT2MEM_SETUP(dma_cmd0_dma_cmd, r3, r6)
+#else
     CAPRI_DMA_CMD_PKT2MEM_SETUP(dma_cmd0_dma_cmd, r3, k.to_s6_payload_len)
-
-dma_cmd_cpu_hdr:
-    phvwri      p.cpu_hdr1_src_lif,0
-
-    addi        r4, r0, LIF_TCP
-    phvwr       p.cpu_hdr1_lif, r4.hx
-
-    phvwri      p.cpu_hdr1_qtype, 0
-        
-    add         r4, k.common_phv_fid, r0
-    phvwr       p.cpu_hdr1_qid, r4.wx
-
-    phvwri      p.cpu_hdr1_lkp_vrf, 0
-    phvwri      p.cpu_hdr1_lkp_dir, 0
-    phvwri      p.cpu_hdr1_lkp_inst, 0
-    phvwri      p.cpu_hdr1_lkp_type, 0
-
-    phvwri      p.cpu_hdr1_l2_offset, 0xFFFF
-    phvwri      p.cpu_hdr1_l3_offset_1, 0xFF
-    phvwri      p.cpu_hdr2_l3_offset_2, 0xFF
-    phvwri      p.cpu_hdr2_l4_offset, 0xFFFF
-    phvwri      p.cpu_hdr2_payload_offset, 0
-        
-    subi        r3, r3, NIC_CPU_HDR_SIZE_BYTES
-
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr2_tcp_window)
+#endif
 
 dma_cmd_descr:    
     /* Set the DMA_WRITE CMD for descr */
@@ -71,10 +50,17 @@ dma_cmd_descr:
     sub         r4, r3, k.to_s6_page
     phvwr       p.aol_O0, r4.wx
 
+    /* We have to get the length of (eth+ip+tcp) for syn ack from P4.
+     * Till then...
+     */
+#if 1
+    add         r4, r6, r0
+#else
     add         r4, k.to_s6_payload_len, NIC_CPU_HDR_SIZE_BYTES
+#endif
     phvwr       p.aol_L0, r4.wx
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r1, aol_A0, aol_next_pkt)    
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r1, aol_A0, aol_next_pkt)    
     
 
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_LEAVE_IN_ARQ, TCP_DDOL_LEAVE_IN_ARQ
@@ -85,7 +71,7 @@ dma_cmd_arq_slot:
                    r6,
                    k.to_s6_xrq_base,
                    ring_entry_descr_addr,
-                   dma_cmd3_dma_cmd, 
+                   dma_cmd2_dma_cmd, 
                    1, 
                    1, 
                    c1)  

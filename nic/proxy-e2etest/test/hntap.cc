@@ -180,6 +180,8 @@ long get_tcp_checksum(struct ipv4_header_t * myip, struct tcp_header_t * mytcp) 
 void 
 hntap_nat_worker(char *pkt, int len, bool source_ip, uint32_t orig_addr, uint32_t to_addr)
 {
+
+#if 0
   int i;
   for (i = 0; i< len; i++) {
     if (i % 16 == 0) {
@@ -188,6 +190,7 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, uint32_t orig_addr, uint32_
     printf(" 0x%02x", (unsigned char)pkt[i]);
   }
   printf("\n");
+#endif
 
   struct ether_header_t *eth;
   struct vlan_header_t *vlan;
@@ -597,6 +600,7 @@ hntap_handle_host_tx (char *pktbuf, int nread)
   std::cout << "Host-Tx to Model: packet sent with " << nread << " bytes" << std::endl;
   if (nread < (int) sizeof(struct ether_header)) return;
 
+  hntap_dump_pkt(pktbuf, nread);
   eth_header = (struct ether_header_t *) pktbuf;
 
   if (hntap_get_etype(eth_header) == ETHERTYPE_IP) {
@@ -614,11 +618,15 @@ hntap_net_rx_to_model (char *pktbuf, int size)
 {
   uint16_t lif_id = (uint16_t)(HNTAP_LIF_ID & 0xffff);
   uint32_t port = 0;
+  uint16_t rsize = 0;
 
   uint8_t *pkt = (uint8_t *) pktbuf;
-  std::vector<uint8_t> ipkt;
+  std::vector<uint8_t> ipkt,opkt;
+
 
   ipkt.resize(size);
+  opkt.resize(size);
+
   memcpy(ipkt.data(), pkt, size);
 
   lib_model_connect();
@@ -641,23 +649,47 @@ hntap_net_rx_to_model (char *pktbuf, int size)
   std::cout << "Sending packet to model! size: " << ipkt.size() << " on port: " << port << std::endl;
   step_network_pkt(ipkt, port);
 
-  poll_queue(lif_id, RX, 0);
-  std::cout << "Got some packet" << std::endl;
-  // Receive Packet
-  uint16_t rsize;
-  consume_buffer(lif_id, RX, 0, buf, &rsize);
-  if (!rsize) {
-    std::cout << "Did not get packet back from model!" << std::endl;
+  if (poll_queue(lif_id, RX, 0)) {
+    std::cout << "Got some packet" << std::endl;
+    // Receive Packet
+    consume_buffer(lif_id, RX, 0, buf, &rsize);
+    if (!rsize) {
+      std::cout << "Did not get packet back from host side of model!" << std::endl;
+    } else {
+      std::cout << "Got packet of size " << rsize << " bytes back from host side of model!" << std::endl;
+    }
   } else {
-    std::cout << "Got packet of size " << rsize << " bytes back from model!" << std::endl;
+    uint32_t port = 0, cos = 0;
+    get_next_pkt(opkt, port, cos);
+    if (!opkt.size()) {
+      std::cout << "NO packet back from nw side of model! size: " << opkt.size() << std::endl;
+    } else {
+      std::cout << "Got packet back from nw side of model! size: " << opkt.size() << " on port: " << port << " cos " << cos
+              << std::endl;
+    }
+    
+  }
+  lib_model_conn_close();
+  if (opkt.size()) {
+    /*
+     * Now that we got the packet from the Model, lets send it out on the Net-Tap interface.
+     */
+    int nwrite;
+
+    hntap_net_client_to_server_nat((char *)opkt.data(), opkt.size());
+
+    if ((nwrite = write(net_tap_fd, opkt.data()+sizeof(struct ether_header_t), opkt.size()-sizeof(struct ether_header_t))) < 0){
+      perror("Writing data");
+    } else {
+      printf("Wrote packet with %lu bytes to Network Tap (Tx)\n", opkt.size() - sizeof(struct ether_header_t));
+    }
   }
 
-  lib_model_conn_close();
 
-  hntap_dump_pkt((char *)buf, rsize);
 
 
   if (rsize) {
+    hntap_dump_pkt((char *)buf, rsize);
     /*
      * Now that we got the packet from the Model, lets send it out on the Host-Tap interface.
      */
@@ -680,6 +712,7 @@ hntap_handle_net_rx (char *pktbuf, int nread)
   std::cout << "Net-Rx to Model: packet sent with " << nread << " bytes" << std::endl;
   if (nread < (int) sizeof(struct ether_header)) return;
 
+  hntap_dump_pkt(pktbuf, nread);
   eth_header = (struct ether_header_t *) pktbuf;
   if ((ntohs(eth_header->etype) == ETHERTYPE_IP) ||
       (ntohs(eth_header->etype) == ETHERTYPE_VLAN)) {
@@ -804,6 +837,11 @@ hntap_do_select_loop (void)
         exit(1);
       }
 
+      if (p[sizeof(struct vlan_header_t)] != 0x45) {
+        printf("Not an IP packet 0x%x\n", p[sizeof(struct vlan_header_t)]);
+        continue;
+      }
+
       num_hosttap_pkts++;
       std::cout << "Host-Tap " << num_hosttap_pkts << " : Read " << nread << " bytes from host tap interface" << std::endl;
       hntap_host_ether_header_add(pktbuf);
@@ -822,6 +860,11 @@ hntap_do_select_loop (void)
       if ((nread = read(net_tap_fd, p+sizeof(struct ether_header_t), PKTBUF_LEN)) < 0) {
         perror("Read from net-tap failed!");
 		exit(1);
+      }
+
+      if (p[sizeof(struct ether_header_t)] != 0x45) {
+        printf("Not an IP packet 0x%x\n", p[sizeof(struct ether_header_t)]);
+        continue;
       }
 
       num_nettap_pkts++;

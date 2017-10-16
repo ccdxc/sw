@@ -74,7 +74,7 @@ std::pair<uint32_t,uint64_t>
 make_doorbell(int upd, int lif, int type, int pid, int qid, int ring, int p_index);
 
 void alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size);
-void poll_queue(uint64_t lif, queue_type qtype, uint32_t qid);
+bool poll_queue(uint64_t lif, queue_type qtype, uint32_t qid);
 void write_queue(uint64_t lif, queue_type qtype, uint32_t qid);
 void read_queue(uint64_t lif, queue_type qtype, uint32_t qid);
 void print_queue(uint64_t lif, queue_type qtype, uint32_t qid);

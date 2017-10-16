@@ -31,6 +31,15 @@ tcp_rx_read_shared_stage0_start:
 	phvwr		p.common_phv_fid, k.p4_rxdma_intr_qid
 	and         r1, k.tcp_app_header_flags, TCPHDR_SYN
 	phvwr		p.common_phv_syn, r1
+    and         r2, k.tcp_app_header_flags, TCPHDR_ACK
+    /* If we see a pure SYN drop it */
+    sne         c1, r1, r0
+    seq         c2, r2, r0
+    setcf       c3, [c1 & c2]
+    phvwri.c3   p.p4_intr_global_drop, 1
+    bcf         [c3], flow_terminate
+    nop
+    
 	and         r1, k.tcp_app_header_flags, TCPHDR_ECE
 	phvwr		p.common_phv_ece, r1
 
@@ -64,5 +73,6 @@ table_read_RX:
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                 tcp_rx_process_stage1_start, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33},
                 TCP_TCB_RX_OFFSET, TABLE_SIZE_512_BITS)
+flow_terminate:
     nop.e
     nop

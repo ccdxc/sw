@@ -389,7 +389,7 @@ modules:
 
     - module:
         name    : ACK_SYN_ACK_TX
-        enable  : True
+        enable  : False
         package : test.tcp_tls_proxy
         module  : ack_syn_ack_tx
         spec    : ack_syn_ack_tx.testspec

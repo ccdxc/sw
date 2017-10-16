@@ -1,3 +1,7 @@
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <iomanip>
 #include "nic/include/base.h"
 #include <arpa/inet.h>
 #include "nic/include/hal_lock.hpp"
@@ -14,6 +18,20 @@
 
 namespace hal {
 namespace pd {
+// byte array to hex string for logging
+std::string hex_dump(const uint8_t *buf, size_t sz)
+{
+    std::ostringstream result;
+
+    for(size_t i = 0; i < sz; i+=8) {
+        result << " 0x";
+        for (size_t j = i ; j < sz && j < i+8; j++) {
+            result << std::setw(2) << std::setfill('0') << std::hex << (int)buf[j];
+        }
+    }
+
+    return result.str();
+}
 
 void *
 tcpcb_pd_get_hw_key_func (void *entry)
@@ -644,6 +662,8 @@ p4pd_add_or_del_tcp_tx_header_template_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     
     if(!del) {
 		memcpy(data, tcpcb_pd->tcpcb->header_template, sizeof(data));
+        HAL_TRACE_DEBUG("TCPCB header template addr 0x{0:x}", hwid);
+        HAL_TRACE_DEBUG("TCPCB header template={}", hex_dump((uint8_t*)data, sizeof(data)));
     }
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET)){
         HAL_TRACE_ERR("Failed to create tx: read_rx2tx entry for TCP CB");

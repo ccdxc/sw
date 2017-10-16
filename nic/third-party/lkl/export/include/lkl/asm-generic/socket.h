@@ -99,5 +99,6 @@
 #define LKL_SO_PAGEHDR_PROTO             57
 #define LKL_SO_PAGEHDR_SIP               58
 #define LKL_SO_PAGEHDR_FLOW              59
+#define LKL_SO_PAGEHDR_VLAN              60
 
 #endif /* __LKL__ASM_GENERIC_SOCKET_H */

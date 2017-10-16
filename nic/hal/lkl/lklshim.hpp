@@ -48,6 +48,7 @@ typedef struct lklshim_flow_key_t_ {
 } PACKED lklshim_flow_key_t;
 
 #define MAC_SIZE 6
+#define VLAN_SIZE 2
 
 typedef struct lklshim_flow_ns_t_ {
     int                  sockfd;
@@ -58,6 +59,7 @@ typedef struct lklshim_flow_ns_t_ {
     char                 dev[16];
     uint8_t   src_mac[MAC_SIZE];
     uint8_t   dst_mac[MAC_SIZE];
+    uint8_t   vlan[VLAN_SIZE];
 } lklshim_flow_ns_t;
 
 typedef struct lklshim_flow_t_ {
@@ -73,6 +75,7 @@ typedef struct lklshim_flow_t_ {
 
     ht_ctxt_t               ht_ctxt;
     hal::flow_direction_t   itor_dir;
+    uint16_t                src_lif;
     uint16_t                dst_lif;
     uint32_t                iqid;
     uint32_t                rqid;
@@ -111,7 +114,7 @@ lklshim_flow_entry_lookup (lklshim_flow_key_t *key)
     return(lklshim_flow);
 }
 
-bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid);
+bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif);
 bool lklshim_process_flow_hit_rx_packet (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
 void lklshim_process_tx_packet(unsigned char* pkt, unsigned int len, void* flow, bool is_connect_req, void *tcpcb);
 

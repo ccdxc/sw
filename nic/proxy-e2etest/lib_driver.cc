@@ -223,7 +223,7 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
   write_queue(lif, qtype, qid);
 }
 
-void
+bool
 poll_queue(uint64_t lif, queue_type qtype, uint32_t qid) {
   queue_info_t qi = get_queue_info(lif, qtype, qid);
 
@@ -234,7 +234,10 @@ poll_queue(uint64_t lif, queue_type qtype, uint32_t qid) {
     printf("Polling QSTATE ... %u tries\n", count++);
     read_queue(lif, qtype, qid);
     sleep(1);
+    if (count >= 3) 
+      return false;
   } while (prev_cindex == qi.qstate->c_index0);
+  return true;
 }
 
 void

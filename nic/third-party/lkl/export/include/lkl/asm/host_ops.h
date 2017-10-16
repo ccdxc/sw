@@ -171,5 +171,6 @@ unsigned int lkl_tcpcb_snd_nxt(void *tcpcb);
 unsigned int lkl_tcpcb_snd_una(void *tcpcb);
 unsigned int lkl_tcpcb_rcv_tsval(void *tcpcb);
 unsigned int lkl_tcpcb_ts_recent(void *tcpcb);
+unsigned int lkl_tcpcb_state(void *tcpcb);
 
 #endif

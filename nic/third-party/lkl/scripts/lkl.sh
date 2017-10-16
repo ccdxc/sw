@@ -12,6 +12,7 @@ BUILD=0
 CLEAN=0
 REPLACE=0
 DELETE=0
+NEWENTRYPOINT=0
 HELP=0
 
 if [ "$#" -eq "0" ]
@@ -42,6 +43,10 @@ case $i in
     ;;
     -d|--delete)
     DELETE=1
+    #shift # past argument=value
+    ;;
+    -nep|--newentrypoint)
+    NEWENTRYPOINT=1
     #shift # past argument=value
     ;;
     -h|--help)
@@ -108,6 +113,13 @@ then
     rm -rf linux/
 fi
 
+if [ "$NEWENTRYPOINT" -eq "1" ]
+then
+    echo "Deleting vmlinux, lkl.o..."
+    rm -rf linux/vmlinux
+    rm -rf linux/lkl.o
+fi
+
 
 if [ "$HELP" -eq "1" ]
 then
@@ -116,4 +128,5 @@ then
     echo "lkl.sh -mc|--makeclean : Make Clean LKL code"
     echo "lkl.sh -r|--replace    : Replace export/ content from lkl tree"
     echo "lkl.sh -d|--delete     : Delete lkl tree"
+    echo "lkl.sh -nep|--newentrypoint     : Delete lkl.o vmlinux"
 fi
