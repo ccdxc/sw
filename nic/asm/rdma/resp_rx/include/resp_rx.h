@@ -14,6 +14,7 @@
 #define RESP_RX_DMA_CMD_START       0
 #define RESP_RX_DMA_CMD_ACK         0
 #define RESP_RX_DMA_CMD_CQ          (RESP_RX_MAX_DMA_CMDS - 3)
+#define RESP_RX_DMA_CMD_IMMDT_AS_DBELL RESP_RX_DMA_CMD_CQ //mutually exclusive
 
 #define RESP_RX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
 
@@ -41,6 +42,14 @@
     add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, ack_nak_psn); \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.psn, ack_info.psn, _tmp_r); \
 
+#define RESP_RX_POST_IMMDT_AS_DOORBELL(_dma_base_r, _tmp_r, \
+                                       _lif, _qtype, _qid, \
+                                       _db_addr_r, _db_data_r) \
+    PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, 0, _db_addr_r, _db_data_r);\
+    phvwr       p.immdt_as_dbell_data, _db_data_r.dx; \
+    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, immdt_as_dbell_data, immdt_as_dbell_data, _db_addr_r); \
+    DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
+       
 #define RESP_RX_RING_ACK_NAK_DB(_dma_base_r,  \
                                 _lif, _qtype, _qid, \
                                 _db_addr_r, _db_data_r) \
@@ -58,7 +67,8 @@ struct resp_rx_phv_t {
     // dma commands (flit 8 - 11)
 
     // scratch (flit 7):
-    // size: 30 =  2 + 8 + 8 + 2 + 5 + 4 + 1
+
+    // size: 38 =  2 + 8 + 8 + 2 + 5 + 4 + 1 + 8
     eq_int_num: 16;
     db_data1: 64;
     db_data2: 64;
@@ -66,6 +76,7 @@ struct resp_rx_phv_t {
     struct ack_info_t ack_info;
     struct eqwqe_t eqwqe;
     my_token_id: 8;
+    immdt_as_dbell_data: 64;
 
     // scratch (flit 6)
     // size: 64  = 32 + 32

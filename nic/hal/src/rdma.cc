@@ -686,6 +686,8 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
                     spec.sq_lkey(), spec.rq_lkey());
     HAL_TRACE_DEBUG("{}: Inputs: sq_cq_id: {} rq_cq_id: {}", __FUNCTION__,
                     spec.sq_cq_num(), spec.rq_cq_num());
+    HAL_TRACE_DEBUG("{}: Inputs: atomic_enabled: {} immdt_as_dbell: {}", __FUNCTION__,
+                    spec.atomic_enabled(), spec.immdt_as_dbell());
 
     // allocate sq and rq
     sqwqe_size = roundup_to_pow_2(spec.sq_wqe_size());
@@ -769,6 +771,7 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rqcb.rqcb0.log_num_wqes = log2(num_rq_wqes);
     rqcb.rqcb0.log_pmtu = log2(spec.pmtu());
     rqcb.rqcb0.cache = FALSE;
+    rqcb.rqcb0.immdt_as_dbell = spec.immdt_as_dbell();
     rqcb.rqcb0.pd = spec.pd();
     rqcb.rqcb1.cq_id = spec.rq_cq_num();
     rqcb.rqcb1.header_template_addr = header_template_addr;

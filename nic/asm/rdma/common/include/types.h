@@ -297,6 +297,7 @@ struct resp_rx_flags_t {
 #define RESP_RX_FLAG_INV_RKEY           0x0800
 #define RESP_RX_FLAG_COMPLETION         0x1000
 #define RESP_RX_FLAG_ACK_REQ            0x2000
+#define RESP_RX_FLAG_RING_DBELL         0x4000
 
 struct req_tx_flags_t {
     error_disable_qp: 1;

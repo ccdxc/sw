@@ -37,7 +37,8 @@ struct rqcb0_t {
 
     rsq_base_addr: 32;
 
-    rsvd0: 3;
+    immdt_as_dbell: 1;
+    rsvd0: 2;
     log_rsq_size: 5;
     
     token_id: 8;

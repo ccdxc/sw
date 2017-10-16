@@ -48,18 +48,19 @@ resp_rx_rqcb_process:
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, qtype, CAPRI_RXDMA_INTRINSIC_QTYPE)
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, qid, CAPRI_RXDMA_INTRINSIC_QID)
 
+    // MPU GLOBAL
+    // take a copy of raw_flags in r7 and keep it for further checks
+    add     r7, r0, CAPRI_APP_DATA_RAW_FLAGS
+
     // TODO: Migrate ACK_REQ flag to P4 table
-    add     r1, r0, CAPRI_APP_DATA_RAW_FLAGS
     seq     c1, CAPRI_APP_DATA_BTH_ACK_REQ, 1
-    or.c1   r1, r1, RESP_RX_FLAG_ACK_REQ
-    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, r1)
+    or.c1   r7, r7, RESP_RX_FLAG_ACK_REQ
+
+    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, r7)
 
     //set DMA cmd ptr
     RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID)
 
-    // MPU GLOBAL
-    // take a copy of raw_flags in r7 and keep it for further checks
-    add     r7, r0, CAPRI_APP_DATA_RAW_FLAGS
     add     REM_PYLD_BYTES, r0, CAPRI_APP_DATA_PAYLOAD_LEN
 
     // get a tokenid
@@ -221,10 +222,33 @@ write:
     // populate immediate data. 
     phvwr.c5    p.cqwqe.imm_data_vld, 1
     // IMM & LAST
-    phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
-    CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA(r4)
-    phvwr.c7    p.cqwqe.imm_data, r4
-    
+    #phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
+    add.c6      r2, r0, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
+    CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(r2, c7)
+    phvwr.c5    p.cqwqe.imm_data, r2
+
+    // If immdt_as_dbell flag is set, adjust the flags
+    seq     c1, d.immdt_as_dbell, 1
+    bcf     [!c1], skip_immdt_as_dbell
+    nop     //BD Slot
+    and     r7, r7, ~(RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_COMPLETION)
+    or      r7, r7, RESP_RX_FLAG_RING_DBELL
+    setcf   c5, [!c0]
+    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, r7)
+
+    //r4 has imm_data
+    //format: <lif(11), qtype(3), qid(18)>
+
+    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_IMMDT_AS_DBELL)
+    RESP_RX_POST_IMMDT_AS_DOORBELL(DMA_CMD_BASE, TMP, \
+                                   r2[31:21], \
+                                   r2[20:18], \
+                                   r2[17:0], \
+                                   DB_ADDR, DB_DATA)
+    DMA_SET_END_OF_CMDS(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
+
+skip_immdt_as_dbell:
+   
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
 
     //CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 0, c4)
@@ -238,7 +262,7 @@ write:
     // TODO: DANGER: do we need to set incr_c_index to 0 otherwise ? 
     // If not, would it accidentally carry previous s2s data and increment c_index ?
     CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, incr_c_index, 1, c5)
-    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, remaining_payload_bytes, r6)
+    CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, remaining_payload_bytes, REM_PYLD_BYTES)
 
     // NOTE: key_table_base_addr is NOT known yet at this time
     // as this is still stage 0 and parallel SRAM lookup would
