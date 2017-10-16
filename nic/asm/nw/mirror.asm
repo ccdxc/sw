@@ -19,7 +19,7 @@ local_span:
   phvwr       p.tunnel_metadata_tunnel_originate, FALSE
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, 0
   seq.e       c1, d.u.local_span_d.truncate_len, 0
-  phvwr.!c1   p.capri_p4_intrinsic_frame_size, d.u.local_span_d.truncate_len
+  phvwr.!c1   p.capri_deparser_len_trunc_pkt_len, d.u.local_span_d.truncate_len
 
 .align
 remote_span:
@@ -29,7 +29,7 @@ remote_span:
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, d.u.remote_span_d.tunnel_rewrite_index
   phvwr       p.rewrite_metadata_tunnel_vnid, d.u.remote_span_d.vlan
   seq.e       c1, d.u.remote_span_d.truncate_len, 0
-  phvwr.!c1   p.capri_p4_intrinsic_frame_size, d.u.remote_span_d.truncate_len
+  phvwr.!c1   p.capri_deparser_len_trunc_pkt_len, d.u.remote_span_d.truncate_len
 
 .align
 erspan_mirror:
@@ -38,7 +38,7 @@ erspan_mirror:
   phvwr       p.tunnel_metadata_tunnel_originate, TRUE
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, d.u.erspan_mirror_d.tunnel_rewrite_index
   seq.e       c1, d.u.erspan_mirror_d.truncate_len, 0
-  phvwr.!c1   p.capri_p4_intrinsic_frame_size, d.u.erspan_mirror_d.truncate_len
+  phvwr.!c1   p.capri_deparser_len_trunc_pkt_len, d.u.erspan_mirror_d.truncate_len
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX

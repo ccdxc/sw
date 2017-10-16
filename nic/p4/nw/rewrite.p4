@@ -95,7 +95,7 @@ table rewrite {
 /*****************************************************************************/
 action mirror_truncate(truncate_len) {
     if (truncate_len != 0) {
-        modify_field(capri_p4_intrinsic.frame_size, truncate_len);
+        modify_field(capri_deparser_len.trunc_pkt_len, truncate_len);
     }
 }
 

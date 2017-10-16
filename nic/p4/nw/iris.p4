@@ -23,15 +23,13 @@
 #include "input_mapping.p4"
 #include "output_mapping.p4"
 
-header_type deparser_len_t {
+header_type capri_deparser_len_t {
     fields {
         l4_payload_len  : 16;
         inner_l4_payload_len  : 16;
         trunc_pkt_len   : 16;
     }
 }
-
-
 
 header_type l3_metadata_t {
     fields {
@@ -249,7 +247,7 @@ header_type scratch_metadata_t {
 
 @pragma deparser_variable_length_header
 @pragma dont_trim
-metadata deparser_len_t capri_deparser_len_hdr;
+metadata capri_deparser_len_t capri_deparser_len;
 metadata l3_metadata_t l3_metadata;
 metadata control_metadata_t control_metadata;
 metadata entry_inactive_t entry_inactive;

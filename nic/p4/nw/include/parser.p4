@@ -696,7 +696,7 @@ field_list ipv4_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum update_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len.l4_payload_len
 field_list_calculation ipv4_tcp_checksum {
     input {
         ipv4_tcp_checksum_list;
@@ -723,7 +723,7 @@ field_list ipv6_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum update_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len.l4_payload_len
 @pragma checksum verify_len parser_metadata.ipv6_payloadLen
 field_list_calculation ipv6_tcp_checksum {
     input {
@@ -897,7 +897,7 @@ field_list ipv4_udp_checksum_list {
     payload;
 }
 
-@pragma checksum update_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len.l4_payload_len
 field_list_calculation ipv4_udp_checksum {
     input {
         ipv4_udp_checksum_list;
@@ -916,7 +916,7 @@ field_list ipv6_udp_checksum_list {
     payload;
 }
 
-@pragma checksum update_len capri_deparser_len_hdr.l4_payload_len
+@pragma checksum update_len capri_deparser_len.l4_payload_len
 @pragma checksum verify_len parser_metadata.ipv6_payloadLen
 field_list_calculation ipv6_udp_checksum {
     input {
@@ -1157,7 +1157,7 @@ field_list inner_ipv4_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum update_len capri_deparser_len_hdr.inner_l4_payload_len
+@pragma checksum update_len capri_deparser_len.inner_l4_payload_len
 field_list_calculation inner_ipv4_tcp_checksum {
     input {
         inner_ipv4_tcp_checksum_list;
@@ -1184,8 +1184,7 @@ field_list inner_ipv6_tcp_checksum_list {
     payload;
 }
 
-    
-@pragma checksum update_len capri_deparser_len_hdr.inner_l4_payload_len
+@pragma checksum update_len capri_deparser_len.inner_l4_payload_len
 @pragma checksum verify_len parser_metadata.inner_ipv6_payloadLen
 field_list_calculation inner_ipv6_tcp_checksum {
     input {
@@ -1213,7 +1212,7 @@ field_list inner_ipv4_udp_checksum_list {
     payload;
 }
 
-@pragma checksum update_len capri_deparser_len_hdr.inner_l4_payload_len
+@pragma checksum update_len capri_deparser_len.inner_l4_payload_len
 field_list_calculation inner_ipv4_udp_checksum {
     input {
         inner_ipv4_udp_checksum_list;
@@ -1232,7 +1231,7 @@ field_list inner_ipv6_udp_checksum_list {
     payload;
 }
 
-@pragma checksum update_len capri_deparser_len_hdr.inner_l4_payload_len
+@pragma checksum update_len capri_deparser_len.inner_l4_payload_len
 @pragma checksum verify_len parser_metadata.inner_ipv6_payloadLen
 field_list_calculation inner_ipv6_udp_checksum {
     input {

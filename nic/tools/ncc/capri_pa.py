@@ -2444,6 +2444,8 @@ class capri_pa:
                     _ = self.gress_pa[xgress.INGRESS].allocate_field(f)
                     _ = self.gress_pa[xgress.EGRESS].allocate_field(f)
                     continue
+            if self.dprsr_len_hdr and f.instance.name == self.dprsr_len_hdr.name:
+                continue
             if f.instance.name == 'capri_p4_intrinsic':
                 continue
             if f.instance.name == 'capri_i2e_metadata':
