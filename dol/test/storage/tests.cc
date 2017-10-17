@@ -99,7 +99,18 @@ void test_ring_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid,
   uint64_t db_data;
   uint64_t db_addr;
 
-  queues::get_doorbell(lif, qtype, qid, ring, index, &db_addr, &db_data);
+  queues::get_host_doorbell(lif, qtype, qid, ring, index, &db_addr, &db_data);
+
+  printf("Ring Doorbell: Addr %lx Data %lx \n", db_addr, db_data);
+  step_doorbell(db_addr, db_data);
+}
+
+void test_ring_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
+                             uint8_t ring, uint16_t index) {
+  uint64_t db_data;
+  uint64_t db_addr;
+
+  queues::get_nvme_doorbell(lif, qtype, qid, ring, index, &db_addr, &db_data);
 
   printf("Ring Doorbell: Addr %lx Data %lx \n", db_addr, db_data);
   step_doorbell(db_addr, db_data);
@@ -120,6 +131,25 @@ int send_and_check(uint8_t *send_cmd, uint8_t *recv_cmd, uint32_t size,
 
   rc = memcmp(send_cmd, recv_cmd, size);
   printf("POST doorbell cmd comparison %d \n", rc);
+
+  return rc;
+}
+
+int send_nvme_and_check(uint8_t *send_cmd, uint8_t *recv_cmd, uint32_t size,
+                        uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t ring,
+                        uint16_t index) {
+  int rc;
+
+  printf("Sending data size %u, lif %u, type %u, queue %u, ring %u, index %u"
+         "\n", size, lif, qtype, qid, ring, index);
+
+  rc = memcmp(send_cmd, recv_cmd, size);
+  printf("PRE NVME doorbell cmd comparison %d \n", rc);
+
+  test_ring_nvme_doorbell(lif, qtype, qid, ring, index);
+
+  rc = memcmp(send_cmd, recv_cmd, size);
+  printf("POST NVME doorbell cmd comparison %d \n", rc);
 
   return rc;
 }
@@ -388,8 +418,8 @@ int test_run_nvme_pvm_admin_cmd() {
   admin_cmd->dw10_11.qsize = 64;
 
   // Send the NVME admin command and check on PVM side
-  rc = send_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
-                      queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
+  rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
+                           queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
   return (rc ? -1 : 0);
@@ -415,8 +445,8 @@ int test_run_nvme_pvm_read_cmd() {
   }
 
   // Send the NVME admin command and check on PVM side
-  rc = send_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
-                      queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
+  rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
+                           queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
   return (rc ? -1 : 0);
@@ -443,8 +473,8 @@ int test_run_nvme_pvm_write_cmd() {
 
 
   // Send the NVME admin command and check on PVM side
-  rc = send_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
-                      queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
+  rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
+                           queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
   return (rc ? -1 : 0);
@@ -470,8 +500,8 @@ int test_run_nvme_pvm_hashing1() {
   }
 
   // Send the NVME admin command and check on PVM side
-  rc = send_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
-                      queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
+  rc = send_nvme_and_check(nvme_cmd, pvm_cmd, sizeof(struct NvmeCmd), 
+                           queues::get_nvme_lif(), SQ_TYPE, nvme_q, 0, nvme_index);
 
   // rc could be <, ==, > 0. We need to return -1 from this API on error.
   return (rc ? -1 : 0);
@@ -978,7 +1008,7 @@ int test_run_nvme_e2e_io(uint16_t io_priority, uint16_t is_read) {
 #endif
 
   // Wait for a bit as SSD backend runs in a different thread
-  sleep(1);
+  sleep(2);
 
   //printf("Recv status \n");
   //utils::dump(status_buf);
@@ -1160,7 +1190,7 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
   
   // Wait for a bit as SSD backend runs in a different thread
-  sleep(1);
+  sleep(2);
 
   //printf("Recv status \n");
   //utils::dump(status_buf);
@@ -1241,7 +1271,7 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
   
   // Wait for a bit as SSD backend runs in a different thread
-  sleep(1);
+  sleep(2);
 
   //printf("Recv status \n");
   //utils::dump(status_buf);

@@ -106,11 +106,14 @@ int main(int argc, char**argv) {
   printf("Number\t\tName\t\t\tResult\n");
   printf("--------------------------------------------------------------\n");
   
+  int rc = 0;
   for (int i = 0; test_suite[i].test_fn != nullptr; i++) {
     printf("%d\t\t", i+1);
     printf("%s\t", test_suite[i].test_name.c_str());
     printf("%s\n", test_suite[i].test_succeded ? "Success" : "Failure");
+    if (!test_suite[i].test_succeded) rc = 1;
   }
   fflush(stdout);
+  if (rc != 0) return rc;
   exit(0);
 }

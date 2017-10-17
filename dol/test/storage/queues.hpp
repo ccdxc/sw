@@ -26,9 +26,13 @@ uint16_t get_pvm_lif();
 
 void ring_nvme_e2e_ssd();
 
-void get_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
-                  uint8_t ring, uint16_t index, 
-                  uint64_t *db_addr, uint64_t *db_data);
+void get_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
+                       uint8_t ring, uint16_t index, 
+                       uint64_t *db_addr, uint64_t *db_data);
+
+void get_host_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
+                       uint8_t ring, uint16_t index, 
+                       uint64_t *db_addr, uint64_t *db_data);
 
 void get_capri_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
                         uint8_t ring, uint16_t index, 
