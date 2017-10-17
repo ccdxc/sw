@@ -18,13 +18,22 @@ modules:
             - flow: filter://type=IPV4,proto=TCP
     - module:
         name    : ICMP_PKT_TO_IPSECCBQ
-        enable  : False 
+        enable  : True 
         package : test.ipsec-proxy
         module  : pkt_to_ipseccbq
         spec    : icmp_pkt_to_ipseccbq.testspec
         ignore  : True 
         iterate :
             - flow: filter://type=IPV4,proto=ICMP
+    - module:
+        name    : UDP_PKT_TO_IPSECCBQ
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : pkt_to_ipseccbq
+        spec    : udp_pkt_to_ipseccbq.testspec
+        ignore  : True 
+        iterate :
+            - flow: filter://type=IPV4,proto=UDP
     - module:
         name    : DECRYPT_PKT_TO_IPSECCBQ
         enable  : True 

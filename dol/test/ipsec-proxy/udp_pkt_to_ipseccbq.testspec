@@ -13,7 +13,7 @@ selectors:
         segment     : filter://native=False
         endpoint    : filter://remote=True
         qpair       : filter://any 
-    flow        : filter://proto=ICMP,label=IPSEC-PROXY,fwtype=L2,direction=IFLOW
+    flow        : filter://proto=UDP,label=IPSEC-PROXY,fwtype=L2,direction=IFLOW
     maxflows    : 1
 
 # Packet section defines the set of input and output packets. Input packets
@@ -39,10 +39,9 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 hlim    : 64
-            icmp:
-                type    : ref://testcase/config/flow/icmptype
-                code    : ref://testcase/config/flow/icmpcode
-                id      : ref://testcase/config/flow/icmpid
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
     - packet:
