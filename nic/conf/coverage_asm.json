@@ -1,0 +1,23 @@
+{
+    "modules": {
+        "asm": {
+            "dirs": [
+                "asm"
+            ],
+            "file_patterns": [
+                ".asm",
+                ".s"
+            ],
+            "obj_dir" : "obj/cano",
+            "obj_dir_type" : "flat",
+            "cov_type" : "capcov"
+        }
+    },
+    "run": {
+        "dol": {
+            "modules": [
+                "asm"
+            ]
+        }
+    }
+}

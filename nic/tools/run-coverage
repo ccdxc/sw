@@ -1,17 +1,66 @@
 #! /bin/bash
-if [ -z "$NIC_DIR" ]; then
-    export NIC_DIR=`dirname $PWD`
+
+TOOLS_DIR=`dirname $0`
+ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
+export NIC_DIR=`dirname $ABS_TOOLS_DIR`
+
+#Parse Command line options first.
+getopt --test > /dev/null
+if [[ $? -ne 4 ]]; then
+    echo "I?m sorry, `getopt --test` failed in this environment."
+    exit 1
 fi
+
+OPTIONS="kc:"
+LONGOPTIONS="keep-data,configfile:"
+
+PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
+if [[ $? -ne 0 ]]; then
+    # e.g. $? == 1
+    #  then getopt has complained about wrong arguments to stdout
+    exit 2
+fi
+
+eval set -- "$PARSED"
+
+# now enjoy the options in order and nicely split until we see --
+
+config_file="coverage.json"
+keep_data=0
+while true; do
+    case "$1" in
+        -k |--keep-data)
+            keep_data=1
+            shift
+            ;;
+        -c|--config-file)
+            config_file=$2
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "Programming error"
+            exit 3
+            ;;
+    esac
+done
+
 export COVERAGE_CONFIG_PATH=$NIC_DIR/conf/
 export COVERAGE_OUTPUT=$NIC_DIR/coverage
 
-rm -rf $COVERAGE_OUTPUT
+
+if [ $keep_data -eq 0 ];then
+    rm -rf $COVERAGE_OUTPUT
+    rm -f $MPU_COV_DUMP_FILE
+fi
 
 export MPU_COV_DUMP_FILE=$NIC_DIR/coverage/asm_cov.dump
 export MPU_PC_COV_DUMP_DIR=$NIC_DIR/coverage/asm_out_all
 
 #Remove mpu coverage dump file as its incremental.
-rm -f $MPU_COV_DUMP_FILE
 mkdir -p $MPU_PC_COV_DUMP_DIR
 
 export CAPCOV=$NIC_DIR/asic/capri/model/capsim-gen/bin/capcov
@@ -24,4 +73,5 @@ if [ $OUT -ne 0 ];then
    echo "Dol coverage run generation failed!"
    exit 1
 fi
-$NIC_DIR/tools/gcov/run.py 2>&1 | tee $NIC_DIR/coverage.log
+$NIC_DIR/tools/gcov/run.py --config $config_file 2>&1 | tee $NIC_DIR/coverage.log
+rm -f $MPU_COV_DUMP_FILE

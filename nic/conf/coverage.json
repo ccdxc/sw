@@ -40,7 +40,7 @@
                 ".c",
                 ".cc"
             ],
-            "build_cmd": "make c=1  && mkdir -p obj/cano &&  mv obj/asm_bin/*.cano obj/cano && mv obj/p4plus_bin/*.cano obj/cano",
+            "build_cmd": "make c=1"
             "clean_cmd": "make clean && find ../bazel-out/local-fastbuild/bin -name '*.gcda'  -type f -delete",
             "remove_files": [
                "/usr/include/*",

@@ -54,6 +54,7 @@ deps-test-build:
 hal:
 	make bazel-build
 	make bazel-gtests
+	make post-make
 
 capmodel:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:cap_model
@@ -95,6 +96,11 @@ bazel-gtests:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/hash:hash_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/met:met_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/tcam:tcam_test
+
+post-make:
+	mkdir -p obj/cano
+	mv obj/asm_bin/*.cano obj/cano 2>/dev/null || :
+	mv obj/p4plus_bin/*.cano obj/cano 2>/dev/null || :
 
 GEN_TEST_RESULTS_DIR = $(TOPDIR_ABS)/gen/test_results
 run-gtests:

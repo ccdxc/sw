@@ -8,7 +8,7 @@ import re
 import time
 import signal
 
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, call
 
 # git clone https://github.com/pensando/sw
 # cd sw && git submodule update --init
@@ -80,7 +80,7 @@ def run_model(args):
     if args.modellogs:
         model_cmd.append("+plog=info")
         model_cmd.append("+model_debug=" + nic_dir + "/gen/iris/dbg_out/model_debug.json")
-    if args.coveragerun:
+    if args.coveragerun or args.asmcov:
         dump_file= nic_dir + "/coverage/asm_cov.dump"
         model_cmd.append("+mpu_cov_dump_file=" + dump_file)
         dump_dir= nic_dir + "/coverage/asm_out_all"
@@ -308,6 +308,8 @@ def main():
                         help='Run tests in Hostpinned mode.')
     parser.add_argument('--storage', dest='storage', action="store_true",
                         help='Run storage dol as well.')
+    parser.add_argument("--asmcov", action="store_true",
+                        help="Generate ASM coverage for this run")
     args = parser.parse_args()
 
     if args.cleanup:
@@ -339,6 +341,9 @@ def main():
         if args.coveragerun:
             dump_coverage_data()
         cleanup(keep_logs=True)
+        os.chdir(nic_dir)
+        if args.asmcov:
+            call(["tools/run-coverage -k -c coverage_asm.json"], shell=True)
         sys.exit(status)
     else:
         print "- build failed!"

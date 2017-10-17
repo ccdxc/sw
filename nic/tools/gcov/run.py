@@ -449,8 +449,8 @@ def run_and_generate_coverage(data):
                     generate_run_coverage(run_name, sub_run)
                     pass
         else:
-            print "cmd or cmd_cfg not specified."
-            assert 0
+            #Run not specified, may be all the meta files already generated.
+            generate_run_coverage(run_name)
 
     # Finally generate lcov combined output as well.
     for module_name in module_infos:
