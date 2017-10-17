@@ -748,8 +748,8 @@ tenant_update (TenantSpec& spec, TenantResponse *rsp)
             HAL_TRACE_ERR("pi-tenant:{}:security profile with handle {} not found", 
                     __FUNCTION__, 
                     app_ctxt.nwsec_profile_handle);
-            // ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
-            // goto end;
+            ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
+            goto end;
         } else {
             HAL_TRACE_DEBUG("pi-tenant:{}:new nwsec profile id: {}", __FUNCTION__, 
                     app_ctxt.nwsec_prof->profile_id);
@@ -772,8 +772,9 @@ tenant_update (TenantSpec& spec, TenantResponse *rsp)
                              tenant_update_cleanup_cb);
 
 end:
-    tenant_prepare_rsp(rsp, ret, tenant->hal_handle);
-    hal_api_trace(" API End: tenant update");
+    tenant_prepare_rsp(rsp, ret, 
+                       tenant ? tenant->hal_handle : HAL_HANDLE_INVALID);
+    hal_api_trace(" API End: tenant update ");
     return ret;
 }
 

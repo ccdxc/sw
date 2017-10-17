@@ -343,15 +343,19 @@ enum IfEnicType {
   IF_ENIC_TYPE_PVLAN    = 2;    // workload attachment used in PVLAN mode
   IF_ENIC_TYPE_DIRECT   = 3;    // workload attachment used for SR-IOV,
                                 // VSS/DVS connectivity etc.
+  IF_ENIC_TYPE_CLASSIC  = 4;    // enics in classic mode
 }
 
 // mandatory attributes expected if interface type is IF_TYPE_ENIC
 message IfEnicInfo {
-  IfEnicType            enic_type           = 1;    // type of enic interface
-  LifKeyHandle          lif_key_or_handle   = 2;    // LIF identifier for this interface
-  uint32                l2segment_id        = 3;    // user (external) vlan
-  fixed64               mac_address         = 4;    // MAC address of the endpoint
-  uint32                encap_vlan_id       = 5;    // Encap Vlan
+  IfEnicType            enic_type                   = 1;    // type of enic interface
+  LifKeyHandle          lif_key_or_handle           = 2;    // LIF identifier for this interface
+  uint32                l2segment_id                = 3;    // user (external) vlan
+  fixed64               mac_address                 = 4;    // MAC address of the endpoint
+  uint32                encap_vlan_id               = 5;    // Encap Vlan
+  repeated uint64       l2segment_handle            = 6;    // classic: l2segs allowed on the enic
+  uint64                native_l2segment_handle     = 7;    // classic: native l2seg on the enic
+  uint64                pinned_uplink_if_handle     = 8;    // classic: pinned uplink
 }
 
 // Interface attributes to specify the derivation of traffic class

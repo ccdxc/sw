@@ -23,6 +23,7 @@ typedef enum hal_forwarding_mode_s {
     HAL_FORWARDING_MODE_NONE        = 0,
     HAL_FORWARDING_MODE_DEFAULT     = 1,
     HAL_FORWARDING_MODE_HOST_PINNED = 2,
+    HAL_FORWARDING_CLASSIC          = 3,
 } hal_forwarding_mode_t;
 
 #define HAL_HANDLE_HT_SZ                             (16 << 10)

@@ -51,9 +51,11 @@ hal_state_pd::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((tenant_slab_ != NULL), false);
 
-    tenant_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_VRFS);
+    tenant_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_VRFS,
+                                                true, /* thread safe */ 
+                                                true); /*skip zero */
     HAL_ASSERT_RETURN((tenant_hwid_idxr_ != NULL), false);
-    tenant_hwid_idxr_->alloc_withid(0);
+    // tenant_hwid_idxr_->alloc_withid(0);
 
     // initialize security related data structures
     nwsec_profile_hwid_idxr_ =

@@ -103,7 +103,6 @@ TEST_F(tenant_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     post = hal_test_utils_collect_slab_stats();
-
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
 
@@ -1117,6 +1116,155 @@ TEST_F(tenant_test, test10)
     post = hal_test_utils_collect_slab_stats();
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
+
+}
+
+// ----------------------------------------------------------------------------
+// Tenant -ve test cases
+// ----------------------------------------------------------------------------
+TEST_F(tenant_test, test11) 
+{
+    hal_ret_t                       ret;
+    TenantSpec                      ten_spec, ten_spec1;
+    TenantResponse                  ten_rsp, ten_rsp1;
+    SecurityProfileSpec             sp_spec;
+    SecurityProfileResponse         sp_rsp;
+    TenantDeleteRequest             del_req;
+    TenantDeleteResponseMsg         del_rsp;
+    // slab_stats_t                    *pre = NULL, *post = NULL;
+    // bool                            is_leak = false;
+
+    // pre = hal_test_utils_collect_slab_stats();
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(11);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+
+    // Create tenant with wrong nwsec profile handle
+    ten_spec.mutable_key_or_handle()->set_tenant_id(11);
+    ten_spec.set_security_profile_handle(nwsec_hdl + 1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_SECURITY_PROFILE_NOT_FOUND);
+
+
+    // Create tenant with no key
+    ten_spec1.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec1, &ten_rsp1);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+    
+    // Create tenant with handle and not key
+    ten_spec.mutable_key_or_handle()->set_tenant_handle(1000);
+    ten_spec.set_security_profile_handle(nwsec_hdl );
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+
+    // Create tenant with tenant id as invalid HAL_TENANT_ID_INVALID
+    ten_spec.mutable_key_or_handle()->set_tenant_id(HAL_TENANT_ID_INVALID);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(11);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create tenant which already exists
+    ten_spec.mutable_key_or_handle()->set_tenant_id(11);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
+    
+    // Create more than 256 tenants. Will result in PD failure and create 
+    for (int i = 0; i < 254; i++) {
+        ten_spec.mutable_key_or_handle()->set_tenant_id(1100 + i);
+        ten_spec.set_security_profile_handle(nwsec_hdl);
+        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+        ret = hal::tenant_create(ten_spec, &ten_rsp);
+        hal::hal_cfg_db_close();
+        ASSERT_TRUE(ret == HAL_RET_OK || ret == HAL_RET_NO_RESOURCE);
+    }
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(1100 + 255);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_NO_RESOURCE);
+
+    // abort will be called
+
+    // Update tenant with no key or handle
+    // ten_spec.mutable_key_or_handle()->set_tenant_id(2);
+    ten_spec1.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_update(ten_spec1, &ten_rsp1);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+
+    // Update tenant with hdle which doesnt exist
+    ten_spec.mutable_key_or_handle()->set_tenant_handle(1000);
+    ten_spec.set_security_profile_handle(nwsec_hdl );
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+
+    // Update tenant with nwsec handle which doesnt exist
+    ten_spec.mutable_key_or_handle()->set_tenant_id(11);
+    ten_spec.set_security_profile_handle(nwsec_hdl + 1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_update(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_SECURITY_PROFILE_NOT_FOUND);
+
+    // Delete tenant with no key or handle
+    del_req.mutable_meta()->set_tenant_id(111);
+    // del_req.mutable_key_or_handle()->set_tenant_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+
+    // Delete tenant with hdle which doesnt exist
+    del_req.mutable_meta()->set_tenant_id(11);
+    del_req.mutable_key_or_handle()->set_tenant_handle(2000);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    ASSERT_TRUE(ret == HAL_RET_TENANT_NOT_FOUND);
+
+#if 0
+    post = hal_test_utils_collect_slab_stats();
+    hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    ASSERT_TRUE(is_leak == false);
+#endif
 
 }
 
