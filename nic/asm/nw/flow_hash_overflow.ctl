@@ -8,8 +8,8 @@ struct phv_        p;
 d = {
   flow_hash_info_d.entry_valid = 1;
   flow_hash_info_d.flow_index = 0x3aba;
-  flow_hash_info_d.hash1_sbit0_ebit9 = 0x331;
-  flow_hash_info_d.hash1_sbit10_ebit10 = 1;
+  flow_hash_info_d.hash1_sbit0_ebit6 = 0x31;
+  flow_hash_info_d.hash1_sbit7_ebit10 = 0xe;
   flow_hash_info_d.hash2 = 0x732;
   flow_hash_info_d.hash3 = 0x733;
   flow_hash_info_d.hash4 = 0x734;

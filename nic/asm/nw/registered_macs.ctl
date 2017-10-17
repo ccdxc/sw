@@ -7,5 +7,5 @@ struct registered_macs_d d;
 struct phv_              p;
 
 d = {
-  u.registered_macs_hit_d.dst_lport = 0x7aa;
+  registered_macs_d.dst_lport= 0x7aa;
 };

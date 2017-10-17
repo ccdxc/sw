@@ -16,6 +16,7 @@
 #include "roce.p4"
 #include "stats.p4"
 #include "tunnel.p4"
+#include "classic.p4"
 #include "policer.p4"
 #include "replica.p4"
 #include "rewrite.p4"
@@ -70,6 +71,8 @@ header_type control_metadata_t {
         lkp_flags_egress               : 8;
         vlan_strip                     : 1;
         span_copy                      : 1;
+        lif_filter                     : 5;
+        nic_mode                       : 1;
 
         egress_ddos_src_vf_policer_drop   : 1;
         egress_ddos_service_policer_drop  : 1;
@@ -83,6 +86,7 @@ header_type entry_inactive_t {
         input_mapping    : 1;
         input_properties : 1;
         input_mac_vlan   : 1;
+        registered_macs  : 1;
         ipsg             : 1;
         nacl             : 1;
         drop_stats       : 1;
@@ -280,6 +284,7 @@ control ingress {
         process_ipsg();
         process_normalization();
         process_flow_table();
+        process_registered_macs();
         process_nacl();
         process_ingress_policer();
         process_session_state();

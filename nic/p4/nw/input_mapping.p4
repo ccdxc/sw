@@ -188,7 +188,7 @@ table input_mapping_native {
 
 action input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
                         ipsg_enable, dscp, l4_profile_idx, src_lport,
-                        flow_miss_tm_oqueue) {
+                        flow_miss_tm_oqueue, dst_lport, filter) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
     modify_field(control_metadata.flow_miss_action, flow_miss_action);
@@ -197,9 +197,13 @@ action input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
     modify_field(control_metadata.ipsg_enable, ipsg_enable);
     modify_field(qos_metadata.dscp, dscp);
     modify_field(l4_metadata.profile_idx, l4_profile_idx);
-
     modify_field(control_metadata.src_lif, capri_intrinsic.lif);
     modify_field(control_metadata.src_lport, src_lport);
+    modify_field(control_metadata.dst_lport, dst_lport);
+    modify_field(control_metadata.lif_filter, filter);
+
+    // write nic mode (table constant)
+    modify_field(control_metadata.nic_mode, scratch_metadata.flag);
 }
 
 // this table will only be programmed for uplinks and not for southbound enics
@@ -246,7 +250,7 @@ table input_properties {
 action input_properties_mac_vlan(src_lif, src_lif_check_en,
                                  vrf, dir, flow_miss_action,flow_miss_idx,
                                  ipsg_enable, dscp, l4_profile_idx, src_lport,
-                                 flow_miss_tm_oqueue) {
+                                 flow_miss_tm_oqueue, dst_lport, filter) {
     adjust_lkp_fields();
 
     // if table is a miss, return. do not perform rest of the actions.
@@ -260,7 +264,7 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
     modify_field(control_metadata.src_lif, src_lif);
     input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
                      ipsg_enable, dscp, l4_profile_idx, src_lport,
-                     flow_miss_tm_oqueue);
+                     flow_miss_tm_oqueue, dst_lport, filter);
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.src_lif_check_en, src_lif_check_en);

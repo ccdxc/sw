@@ -613,6 +613,9 @@ int capri_table_rw_init()
 
     capri_stats_region_init();
     hbm_mem_base_addr = (uint64_t)get_start_offset((char*)JP4_PRGM);
+
+    /* TODO: configure nic mode programmatically */
+    capri_table_constant_write(P4TBL_ID_INPUT_PROPERTIES, 0);
 #endif
     return (CAPRI_OK);
 }
@@ -1272,7 +1275,7 @@ int capri_hbm_table_entry_read(uint32_t tableid,
     assert(index < tbl_ctx.tabledepth);
 
     uint64_t entry_start_addr = (index * tbl_ctx.hbm_layout.entry_width);
-                                
+
 #ifndef P4PD_CLI
     read_mem(get_start_offset(tbl_ctx.tablename) + entry_start_addr, hwentry,
              tbl_ctx.hbm_layout.entry_width);

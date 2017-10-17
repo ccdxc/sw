@@ -1,8 +1,7 @@
 TOPDIR = ../..
 GEN_DIR = ../../gen
 CUSTOM = $(GEN_DIR)/.nw_asm
-CUSTOM_CLEAN = clean
-
+CUSTOM_CLEAN = asm_clean
 
 include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
@@ -35,6 +34,7 @@ SRC_FILES := \
     $(SRC_DIR)/flow_hash.asm \
     $(SRC_DIR)/flow_hash_overflow.asm \
     $(SRC_DIR)/flow_info.asm \
+    $(SRC_DIR)/registered_macs.asm \
     $(SRC_DIR)/session_state.asm \
     $(SRC_DIR)/flow_stats.asm \
     $(SRC_DIR)/ingress_policer_action.asm \
@@ -128,7 +128,7 @@ $(TMP_FILES): %.x: %.ctl
 
 gtest: $(TMP_FILES)
 
-clean:
+asm_clean:
 	@rm -fR $(OBJ_DIR)/*.bin
 	@rm -fR $(GEN_DIR)/.nw_asm
 

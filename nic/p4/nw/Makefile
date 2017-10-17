@@ -1,7 +1,7 @@
 TOPDIR = ../..
 GEN_DIR = ../../gen
 CUSTOM = $(GEN_DIR)/.nw_p4
-CUSTOM_CLEAN = clean
+CUSTOM_CLEAN = p4_clean
 
 include $(TOPDIR)/make/Makefile.inc
 
@@ -19,7 +19,7 @@ $(GEN_DIR)/.nw_p4: $(local_deps) $(inc_deps) $(ncc_deps)
 	$(NCC) $(NCC_OPTIONS) $(PROJ).p4
 	touch $@
 
-clean:
+p4_clean:
 	rm -rf $(GEN_DIR)/$(PROJ)
 	rm -rf $(OBJ_DIR)/pgm_bin/$(PROJ)*.bin
 	rm -rf $(GEN_DIR)/.nw_p4

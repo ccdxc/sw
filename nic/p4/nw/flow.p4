@@ -137,6 +137,10 @@ action flow_info(dst_lport, multicast_en, qtype,
         modify_field(control_metadata.qtype, qtype);
     }
 
+    if (control_metadata.nic_mode == NIC_MODE_CLASSIC) {
+        /* return */
+    }
+
     /* mirror session id */
     modify_field(capri_intrinsic.tm_span_session, ingress_mirror_session_id);
     modify_field(control_metadata.egress_mirror_session_id,

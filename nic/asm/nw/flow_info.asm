@@ -33,8 +33,12 @@ flow_info:
   phvwr.c1    p.control_metadata_qid, d.u.flow_info_d.tunnel_vnid
   phvwr.c1    p.control_metadata_qtype, d.u.flow_info_d.qtype
 
+  /* nic mode check */
+  seq         c1, k.control_metadata_nic_mode, NIC_MODE_CLASSIC
+  nop.c1.e
+
   /* mirror session id */
-  phvwr       p.capri_intrinsic_tm_span_session, d.u.flow_info_d.ingress_mirror_session_id
+  phvwr.!c1   p.capri_intrinsic_tm_span_session, d.u.flow_info_d.ingress_mirror_session_id
   phvwr       p.control_metadata_egress_mirror_session_id, d.u.flow_info_d.egress_mirror_session_id
 
   /* logging */
@@ -166,10 +170,10 @@ validate_ipv4_flow_key:
   seq         c1, k.flow_lkp_metadata_lkp_src[31:24], 0x7f
   seq         c2, k.flow_lkp_metadata_lkp_src[31:28], 0xe
   seq         c3, k.flow_lkp_metadata_lkp_src[31:0], r7
-  seq         c4, k.flow_lkp_metadata_lkp_dst_sbit40_ebit127[31:0], r0
-  seq         c5, k.flow_lkp_metadata_lkp_dst_sbit40_ebit127[31:24], 0x7f
+  seq         c4, k.flow_lkp_metadata_lkp_dst_sbit32_ebit127[31:0], r0
+  seq         c5, k.flow_lkp_metadata_lkp_dst_sbit32_ebit127[31:24], 0x7f
   seq         c6, k.flow_lkp_metadata_lkp_src[31:0], \
-                  k.flow_lkp_metadata_lkp_dst_sbit40_ebit127[31:0]
+                  k.flow_lkp_metadata_lkp_dst_sbit32_ebit127[31:0]
   bcf         [c1|c2|c3|c4|c5|c6], malformed_flow_key
   nop
   b           flow_miss_common
@@ -180,9 +184,9 @@ validate_ipv6_flow_key:
   add         r2, r0, k.flow_lkp_metadata_lkp_src[127:64]
   add         r3, r0, k.flow_lkp_metadata_lkp_src[63:0]
   // dstAddr ==> r4(hi), r5(lo)
-  or          r4, k.flow_lkp_metadata_lkp_dst_sbit40_ebit127[87:64], \
-                  k.flow_lkp_metadata_lkp_dst_sbit0_ebit39, 24
-  add         r5, r0, k.flow_lkp_metadata_lkp_dst_sbit40_ebit127[63:0]
+  or          r4, k.flow_lkp_metadata_lkp_dst_sbit32_ebit127[95:64], \
+                  k.flow_lkp_metadata_lkp_dst_sbit0_ebit31, 32
+  add         r5, r0, k.flow_lkp_metadata_lkp_dst_sbit32_ebit127[63:0]
 
   add         r6, r0, 1
   seq         c1, r4, r0
