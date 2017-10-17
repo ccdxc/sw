@@ -42,11 +42,11 @@
         },
         {
             "name": "nmdr-tx",
-            "size_kb": 128 
+            "size_kb": 128
         },
         {
             "name": "nmdr-rx",
-            "size_kb": 128 
+            "size_kb": 128
         },
         {
             "name": "nmpr-small-tx",
@@ -131,10 +131,10 @@
         {
             "name": "key-mem",
             "size_kb": 2048
-        }, 
+        },
         {
             "name": "ipsec_pad_table",
-            "size_kb": 1 
+            "size_kb": 1
         },
         {
             "name":"ipsec_ip_header",
@@ -155,6 +155,10 @@
         {
             "name": "asesq",
             "size_kb": 16384
+        },
+        {
+            "name": "ipfix",
+            "size_kb": 64
         },
         {
             "_comment": "space = N/2 + 2N/3, N = Num timers",

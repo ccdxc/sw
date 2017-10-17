@@ -115,6 +115,8 @@ header_type scratch_metadata_t {
         dst_lport_en               : 1;
         egress_policer_en          : 1;
         entry_valid                : 1;
+        export_en                  : 4;
+        export_id                  : 4;
         oport_en                   : 1;
         stats_idx                  : 5;
         drop_reason                : 32;

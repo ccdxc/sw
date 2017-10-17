@@ -14,7 +14,7 @@ flow_hash_info:
   phvwr       p.control_metadata_lkp_flags_egress, r7
   seq         c2, d.flow_hash_info_d.entry_valid, 1
   bcf         [c1&c2], flow_hash_hit
-  or          r7,  d.flow_hash_info_d.hash1_sbit10_ebit10, d.flow_hash_info_d.hash1_sbit0_ebit9, 1
+  or          r7,  d.flow_hash_info_d.hash1_sbit7_ebit10, d.flow_hash_info_d.hash1_sbit0_ebit6, 4
   seq         c1, r1[31:21], r7
   bcf         [c1&c2], flow_hash_hint1
   seq         c1, r1[31:21], d.flow_hash_info_d.hash2

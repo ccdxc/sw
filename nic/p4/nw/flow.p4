@@ -108,7 +108,8 @@ action flow_info(dst_lport, multicast_en, qtype,
                  flow_conn_track, flow_ttl, flow_role,
                  session_state_index, start_timestamp,
                  ingress_tm_oqueue, egress_tm_oqueue,
-                 expected_src_lif_check_en, expected_src_lif) {
+                 expected_src_lif_check_en, expected_src_lif,
+                 export_id1, export_id2, export_id3, export_id4) {
     /* expected src lif check */
     if ((expected_src_lif_check_en == TRUE) and
         (p4plus_to_p4.p4plus_app_id != P4PLUS_APPTYPE_CPU) and
@@ -189,6 +190,10 @@ action flow_info(dst_lport, multicast_en, qtype,
     modify_field(scratch_metadata.log_en, log_en);
     modify_field(scratch_metadata.flag, expected_src_lif_check_en);
     modify_field(scratch_metadata.src_lif, expected_src_lif);
+    modify_field(scratch_metadata.export_id, export_id1);
+    modify_field(scratch_metadata.export_id, export_id2);
+    modify_field(scratch_metadata.export_id, export_id3);
+    modify_field(scratch_metadata.export_id, export_id4);
 
     /* promote size of data fields to multiple of bytes */
     modify_field(scratch_metadata.size16, twice_nat_idx);
@@ -239,12 +244,12 @@ table flow_info {
 }
 
 action flow_hash_info(entry_valid, export_en,
-                      flow_index, hash1, hint1, hash2, hint2,
-                      hash3, hint3, hash4, hint4, hash5, hint5, hash6, hint6, 
+                      flow_index, hash1, hint1, hash2, hint2, hash3, hint3,
+                      hash4, hint4, hash5, hint5, hash6, hint6,
                       more_hashs, more_hints) {
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.entry_valid, entry_valid);
-    modify_field(scratch_metadata.entry_valid, export_en);
+    modify_field(scratch_metadata.export_en, export_en);
     modify_field(scratch_metadata.flow_hash1, hash1);
     modify_field(scratch_metadata.flow_hash2, hash2);
     modify_field(scratch_metadata.flow_hash3, hash3);
@@ -317,9 +322,10 @@ table flow_hash {
     size : FLOW_HASH_TABLE_SIZE;
 }
 
-action flow_hash_overflow(lkp_inst, lkp_dir, lkp_type, lkp_vrf, lkp_src, lkp_dst, lkp_proto,
-                          lkp_sport, lkp_dport, entry_valid, export_en,
-                          flow_index, hash1, hint1, hash2, hint2, hash3, hint3,
+action flow_hash_overflow(lkp_inst, lkp_dir, lkp_type, lkp_vrf, lkp_src,
+                          lkp_dst, lkp_proto, lkp_sport, lkp_dport,
+                          entry_valid, export_en, flow_index,
+                          hash1, hint1, hash2, hint2, hash3, hint3,
                           hash4, hint4, hash5, hint5, hash6, hint6,
                           more_hashs, more_hints) {
     // remove the recirc header
@@ -366,7 +372,7 @@ action flow_hash_overflow(lkp_inst, lkp_dir, lkp_type, lkp_vrf, lkp_src, lkp_dst
     modify_field(scratch_metadata.lkp_sport, lkp_sport);
     modify_field(scratch_metadata.lkp_dport, lkp_dport);
     modify_field(scratch_metadata.entry_valid, entry_valid);
-    modify_field(scratch_metadata.entry_valid, export_en);
+    modify_field(scratch_metadata.export_en, export_en);
     modify_field(scratch_metadata.flow_hash1, hash1);
     modify_field(scratch_metadata.flow_hash2, hash2);
     modify_field(scratch_metadata.flow_hash3, hash3);

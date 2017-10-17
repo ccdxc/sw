@@ -10,8 +10,8 @@ struct phv_                  p;
 
 ipfix_create_record:
     // construct IPv4 record
-    phvwr       p.ipfix_record_common_set_id, IPFIX_IPv4_RECORD_ID
-    phvwr       p.ipfix_record_common_len, IPFIX_IPv4_RECORD_SIZE
+    phvwr       p.ipfix_record_ipv4_set_id, IPFIX_IPv4_RECORD_ID
+    phvwr       p.ipfix_record_ipv4_len, IPFIX_IPv4_RECORD_SIZE
 
     phvwr       p.p4_txdma_intr_dma_cmd_ptr, \
                     CAPRI_PHV_START_OFFSET(phv2mem_cmd1_dma_cmd_pad) / 16
@@ -20,18 +20,18 @@ ipfix_create_record:
                     d.u.ipfix_create_record_d.pktsize
     phvwr       p.phv2mem_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.phv2mem_cmd1_dma_cmd_phv_start_addr, \
-                    CAPRI_PHV_START_OFFSET(ipfix_record_common_set_id)
+                    CAPRI_PHV_START_OFFSET(ipfix_record_ipv4_set_id)
     phvwr       p.phv2mem_cmd1_dma_cmd_phv_end_addr, \
-                    CAPRI_PHV_END_OFFSET(ipfix_record_ipv4_ip_da)
+                    CAPRI_PHV_END_OFFSET(ipfix_record_ipv4_dport)
     phvwr       p.phv2mem_cmd1_dma_cmd_addr, r1
-    add         r1, r1, (CAPRI_PHV_END_OFFSET(ipfix_record_ipv4_ip_da) - \
-                         CAPRI_PHV_START_OFFSET(ipfix_record_common_set_id))
+    add         r1, r1, (CAPRI_PHV_END_OFFSET(ipfix_record_ipv4_dport) - \
+                         CAPRI_PHV_START_OFFSET(ipfix_record_ipv4_set_id))
 
     phvwr       p.phv2mem_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.phv2mem_cmd2_dma_cmd_phv_start_addr, \
                     CAPRI_PHV_START_OFFSET(ipfix_record_ip_flow_state_index)
     phvwr       p.phv2mem_cmd2_dma_cmd_phv_end_addr, \
-                    CAPRI_PHV_END_OFFSET(ipfix_record_ip_ttl)
+                    CAPRI_PHV_END_OFFSET(ipfix_record_common_drop_vector)
     phvwr       p.phv2mem_cmd2_dma_cmd_addr, r1
 
     add         r1, d.u.ipfix_create_record_d.pktsize, IPFIX_IPv4_RECORD_SIZE

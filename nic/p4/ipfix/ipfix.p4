@@ -33,19 +33,15 @@ metadata ipfix_metadata_t ipfix_metadata;
 metadata ipfix_t0_metadata_t ipfix_t0_metadata;
 
 @pragma dont_trim
-metadata ipfix_ipv6_udp_header_t ipfix_ipv6_udp;
-@pragma dont_trim
-metadata ipfix_ipv4_udp_header_t ipfix_ipv4_udp;
-@pragma dont_trim
 metadata ipfix_record_header_t ipfix_record_header;
-@pragma dont_trim
-metadata ipfix_record_common_t ipfix_record_common;
 @pragma dont_trim
 metadata ipfix_record_ipv4_t ipfix_record_ipv4;
 @pragma dont_trim
-metadata ipfix_record_ipv6_t ipfix_record_ipv6;
-@pragma dont_trim
 metadata ipfix_record_ip_t ipfix_record_ip;
+@pragma dont_trim
+metadata ipfix_record_common_t ipfix_record_common;
+@pragma dont_trim
+metadata ipfix_record_ipv6_t ipfix_record_ipv6;
 @pragma dont_trim
 metadata ipfix_record_nonip_t ipfix_record_nonip;
 @pragma dont_trim

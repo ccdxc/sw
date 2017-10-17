@@ -24,25 +24,28 @@ ipfix_flow_hash:
     bcf         [!c1], ipfix_flow_hash_skip_entry
     phvwr.c1    p.ipfix_record_nonip_mac_sa, d.flow_hash_info_d.flow_lkp_metadata_lkp_src
     phvwr       p.ipfix_record_nonip_mac_da, d.flow_hash_info_d.flow_lkp_metadata_lkp_dst
-    b           ipfix_flow_hash_common
     phvwr       p.ipfix_record_nonip_ether_type, d.flow_hash_info_d.flow_lkp_metadata_lkp_sport
+    b           ipfix_flow_hash_common
+    phvwr       p.ipfix_record_nonip_vrf, d.flow_hash_info_d.flow_lkp_metadata_lkp_vrf
 
 ipfix_flow_hash_ipv4_entry:
+    phvwr       p.ipfix_record_ipv4_vrf, d.flow_hash_info_d.flow_lkp_metadata_lkp_vrf
     phvwr       p.ipfix_record_ipv4_ip_sa, d.flow_hash_info_d.flow_lkp_metadata_lkp_src
-    b           ipfix_flow_hash_ip_common
     phvwr       p.ipfix_record_ipv4_ip_da, d.flow_hash_info_d.flow_lkp_metadata_lkp_dst
+    phvwr       p.ipfix_record_ipv4_proto, d.flow_hash_info_d.flow_lkp_metadata_lkp_proto
+    phvwr       p.ipfix_record_ipv4_sport, d.flow_hash_info_d.flow_lkp_metadata_lkp_sport
+    b           ipfix_flow_hash_common
+    phvwr       p.ipfix_record_ipv4_dport, d.flow_hash_info_d.flow_lkp_metadata_lkp_dport
 
 ipfix_flow_hash_ipv6_entry:
+    phvwr       p.ipfix_record_ipv6_vrf, d.flow_hash_info_d.flow_lkp_metadata_lkp_vrf
     phvwr       p.ipfix_record_ipv6_ip_sa, d.flow_hash_info_d.flow_lkp_metadata_lkp_src
     phvwr       p.ipfix_record_ipv6_ip_da, d.flow_hash_info_d.flow_lkp_metadata_lkp_dst
-
-ipfix_flow_hash_ip_common:
-    phvwr       p.ipfix_record_ip_proto, d.flow_hash_info_d.flow_lkp_metadata_lkp_proto
-    phvwr       p.ipfix_record_ip_sport, d.flow_hash_info_d.flow_lkp_metadata_lkp_sport
-    phvwr       p.ipfix_record_ip_dport, d.flow_hash_info_d.flow_lkp_metadata_lkp_dport
+    phvwr       p.ipfix_record_ipv6_proto, d.flow_hash_info_d.flow_lkp_metadata_lkp_proto
+    phvwr       p.ipfix_record_ipv6_sport, d.flow_hash_info_d.flow_lkp_metadata_lkp_sport
+    phvwr       p.ipfix_record_ipv6_dport, d.flow_hash_info_d.flow_lkp_metadata_lkp_dport
 
 ipfix_flow_hash_common:
-    phvwr       p.ipfix_record_common_vrf, d.flow_hash_info_d.flow_lkp_metadata_lkp_vrf
     phvwr       p.ipfix_record_common_flow_id, d.flow_hash_info_d.flow_index
 
     // table 0 : lookup flow_info
