@@ -42,7 +42,7 @@ req_rx_sqcb1_process:
     nop            // Branch Delay Slot
 
     // get DMA cmd entry based on dma_cmd_index
-    DMA_CMD_I_BASE_GET(r6, r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_START)
     SQCB1_ADDR_GET(r3)
 
     IS_ANY_FLAG_SET_B(c3, r1, RNR_SYNDROME|RESV_SYNDROME|NAK_SYNDROME)

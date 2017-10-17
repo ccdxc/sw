@@ -22,7 +22,7 @@ req_rx_sqcb1_write_back_process:
 
 post_bktrack_ring:
      // get DMA cmd entry based on dma_cmd_index
-    DMA_CMD_I_BASE_GET(r6, r2, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_BKTRACK_PSN_DMA_CMD)
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_BKTRACK_PSN_DMA_CMD)
 
     // dma_cmd - bktrack_ring db data
     PREPARE_DOORBELL_INC_PINDEX(k.global.lif, k.global.qtype, k.global.qid, SQ_BACKTRACK_RING_ID, r1, r2)

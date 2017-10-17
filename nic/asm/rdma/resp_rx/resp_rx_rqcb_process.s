@@ -128,7 +128,7 @@ read:
 
     // DMA for copying phv.ack_info to RQCB1 
     add     RQCB1_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
     RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(DMA_CMD_BASE, RQCB1_ADDR, TMP)
 
     // wqe_p = (void *)(hbm_addr_get(rqcb_p->rsq_base_addr) +    
@@ -141,7 +141,7 @@ read:
     mincr       NEW_RSQ_P_INDEX, d.log_rsq_size, 1
    
     // DMA for RSQWQE
-    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQWQE)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQWQE)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, rsqwqe, rsqwqe, RSQWQE_P)
     
     // in case of quiesce mode, only duplicate reqs would move rsq_p_index in a 
@@ -159,7 +159,7 @@ read:
     phvwr   p.db_data1, DB_DATA.dx
 
     // DMA for RSQ DoorBell
-    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQ_DB)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_RSQ_DB)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, db_data1, db_data1, DB_ADDR)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE)
 
@@ -239,7 +239,7 @@ write:
     //r4 has imm_data
     //format: <lif(11), qtype(3), qid(18)>
 
-    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_IMMDT_AS_DBELL)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_IMMDT_AS_DBELL)
     RESP_RX_POST_IMMDT_AS_DOORBELL(DMA_CMD_BASE, TMP, \
                                    r2[31:21], \
                                    r2[20:18], \
@@ -464,7 +464,7 @@ duplicate_wr_send:
     tbladd          d.nxt_to_go_token_id, 1  
 
     // ring the ack_nak ring one more time so that a new ack is pushed out
-    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
 
     RESP_RX_RING_ACK_NAK_DB(DMA_CMD_BASE, \
                             CAPRI_RXDMA_INTRINSIC_LIF, \
@@ -489,7 +489,7 @@ nak:
     phvwr   p.ack_info.aeth.syndrome, r3
     
     add     RQCB1_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
 
     RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB1_ADDR, TMP, \
                                    CAPRI_RXDMA_INTRINSIC_LIF, \

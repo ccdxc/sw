@@ -74,7 +74,7 @@ incr_c_index_exit:
     // to generate ACK only when needed. Remove ACK_REQ bit check later ?
     bcf     [!c1 | !c2], exit
     RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
-    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
 
     // prepare for acknowledgement
     RESP_RX_POST_ACK_INFO_TO_TXDMA(DMA_CMD_BASE, RQCB1_ADDR, TMP, \

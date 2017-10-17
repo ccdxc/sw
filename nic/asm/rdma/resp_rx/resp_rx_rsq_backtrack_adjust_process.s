@@ -22,7 +22,7 @@ resp_rx_rsq_backtrack_adjust_process:
 
     // increment nxt_to_go_token_id to release control to others
     tbladd      d.nxt_to_go_token_id, 1
-    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_START)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_START)
 
 check_adjust_c_index:
     seq         c1, k.args.adjust_c_index, 1

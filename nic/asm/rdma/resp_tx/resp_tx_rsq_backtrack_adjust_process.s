@@ -20,7 +20,7 @@ resp_tx_rsq_backtrack_adjust_process:
 
 add_headers:
 
-    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, TMP, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_START)
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_START)
 
     // reset all the in_progress variables
     tblwr       d.read_rsp_in_progress, 0

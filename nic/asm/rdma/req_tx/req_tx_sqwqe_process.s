@@ -191,7 +191,7 @@ common:
     nop
 
 inline_data:
-    DMA_CMD_I_BASE_GET(r4, r5, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
+    DMA_CMD_STATIC_BASE_GET(r4, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
     DMA_PHV2PKT_START_LEN_SETUP(r4, r5, inline_data, d.read.length)
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r4)
     // should work for both send/write as imm_data is located at same offset in wqe for both operations
