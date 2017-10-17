@@ -10,10 +10,10 @@ selectors:
         qpair       : filter://any # Local QPair
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        segment     : filter://native=False
         endpoint    : filter://remote=True
         qpair       : filter://any 
-    flow        : filter://proto=ESP,label=ESP-PROXY,fwtype=L2,direction=IFLOW
+    flow        : filter://proto=ICMP,label=IPSEC-PROXY,fwtype=L2,direction=IFLOW
     maxflows    : 1
 
 # Packet section defines the set of input and output packets. Input packets
@@ -39,9 +39,10 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 hlim    : 64
-            tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
+            icmp:
+                type    : ref://testcase/config/flow/icmptype
+                code    : ref://testcase/config/flow/icmpcode
+                id      : ref://testcase/config/flow/icmpid
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
     - packet:
@@ -57,10 +58,10 @@ packets:
                 vlan    : callback://ipsec/ipsec/GetEncapVlan
                 prio    : 0
             ipv4:
-                src     : callback://ipsec/ipsec/GetDIp
-                dst     : callback://ipsec/ipsec/GetSIp 
+                src     : callback://ipsec/ipsec/GetSIp
+                dst     : callback://ipsec/ipsec/GetDIp 
                 ttl     : 255
-                len     : 164
+                len     : 148
                 id      : 0
                 tos     : 0
                 chksum  : 0
@@ -79,10 +80,10 @@ packets:
                 src     : callback://ipsec/ipsec/GetSMac 
                 dst     : callback://ipsec/ipsec/GetDMac 
             ipv4:
-                src     : callback://ipsec/ipsec/GetDIp
-                dst     : callback://ipsec/ipsec/GetSIp 
+                src     : callback://ipsec/ipsec/GetSIp
+                dst     : callback://ipsec/ipsec/GetDIp 
                 ttl     : 255
-                len     : 164
+                len     : 148
                 id      : 0
                 tos     : 0
                 chksum  : 0
@@ -95,8 +96,16 @@ packets:
 trigger:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=PKT2
+            object  : ref://testcase/packets/id=PKT1
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
+    delay : 2
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT3
+            port    : 128 
+        - packet:
+            object  : ref://testcase/packets/id=PKT2
+            port    : 2 
 

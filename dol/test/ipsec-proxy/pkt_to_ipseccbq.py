@@ -12,6 +12,7 @@ from infra.common.objects import ObjectDatabase as ObjectDatabase
 from infra.common.logging import logger
 from infra.common.glopts import GlobalOptions
 
+rnmdr = 0
 ipseccbq = 0
 ipseccb = 0
 
@@ -28,6 +29,7 @@ def Teardown(infra, module):
 def TestCaseSetup(tc):
     global ipseccbq
     global ipseccb
+    global rnmdr
 
     tc.pvtdata = ObjectDatabase(logger)
     print("TestCaseSetup(): Sample Implementation.")
@@ -87,7 +89,6 @@ def TestCaseVerify(tc):
     if (ipseccb_cur.pi != ipseccb.pi or ipseccb_cur.ci != ipseccb.ci):
         print("serq pi/ci not as expected")
         return False
-
     # 3. Fetch current values from Platform
     ipseccbqq_cur = tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"]
     ipseccbqq_cur.Configure()
@@ -160,6 +161,14 @@ def TestCaseVerify(tc):
         print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
+    # 10. Verify SeqNo increment
+    if (ipseccb_cur.esn_lo != ipseccb.esn_lo+1):
+        print ("seq_no 0x%x 0x%x" % (ipseccb_cur.esn_lo, ipseccb.esn_lo))
+        #return False
+
+    if (ipseccb_cur.iv != ipseccb.iv+1):
+        print ("iv : 0x%x 0x%x" % (ipseccb_cur.iv, ipseccb.iv))
+        #`return False
 
     return True
 

@@ -187,7 +187,7 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for IPSEC CB");
         return HAL_RET_HW_FAIL;
     }
-    ipseccb_pd->ipseccb->iv = data.u.ipsec_encap_rxdma_initial_table_d.iv;
+    ipseccb_pd->ipseccb->iv = ntohll(data.u.ipsec_encap_rxdma_initial_table_d.iv);
     ipseccb_pd->ipseccb->iv_salt = data.u.ipsec_encap_rxdma_initial_table_d.iv_salt;
     HAL_TRACE_DEBUG("Got salt {}", ipseccb_pd->ipseccb->iv_salt);
     ipseccb_pd->ipseccb->iv_size = data.u.ipsec_encap_rxdma_initial_table_d.iv_size;
@@ -196,7 +196,7 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
     ipseccb_pd->ipseccb->icv_size = data.u.ipsec_encap_rxdma_initial_table_d.icv_size;
     ipseccb_pd->ipseccb->barco_enc_cmd = data.u.ipsec_encap_rxdma_initial_table_d.barco_enc_cmd;
     ipseccb_pd->ipseccb->esn_hi = data.u.ipsec_encap_rxdma_initial_table_d.esn_hi; 
-    ipseccb_pd->ipseccb->esn_lo = data.u.ipsec_encap_rxdma_initial_table_d.esn_lo;
+    ipseccb_pd->ipseccb->esn_lo = ntohl(data.u.ipsec_encap_rxdma_initial_table_d.esn_lo);
     ipseccb_pd->ipseccb->spi = data.u.ipsec_encap_rxdma_initial_table_d.spi;
     ipseccb_pd->ipseccb->key_index = data.u.ipsec_encap_rxdma_initial_table_d.key_index;
    

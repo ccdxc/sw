@@ -84,6 +84,7 @@ dma_cmd_write_salt_to_in_desc:
     phvwri p.dma_cmd_iv_salt_dma_cmd_phv_start_addr, IPSEC_IN_DESC_IV_SALT_START
     phvwri p.dma_cmd_iv_salt_dma_cmd_phv_end_addr, IPSEC_IN_DESC_IV_SALT_END 
 
+// Need to change the below to phv2mem
 dma_cmd_write_iv_to_in_desc:
     add r1, r0, k.ipsec_to_stage3_iv_size
     add r2, r0, k.{ipsec_global_ipsec_cb_addr_sbit0_ebit31...ipsec_global_ipsec_cb_addr_sbit32_ebit33}

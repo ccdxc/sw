@@ -40,7 +40,8 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 0, d.cb_pindex)
     memwr.dx  r4, r3
     tblwr d.cb_cindex, r1
- 
+    nop
+    
     CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_INC, DB_SCHED_UPD_SET, 0, LIF_IPSEC_ESP) 
     phvwr p.barco_req_doorbell_address, r4.dx
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, 0)
@@ -53,10 +54,17 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     phvwri p.common_te1_phv_table_addr, BRQ_REQ_SEMAPHORE_ADDR
   
     phvwr p.txdma1_global_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+
+    // this needs to be moved to rxdma and it needs to be moved to different memory for DMA
+    // For DOL this is OK
+    add r1, r0, d.esn_lo
+    addi r1, r1, 1
+    tblwr d.esn_lo, r1
+    nop
+    // I understand that I need to take care of 32 bit overflow into esn-hi etc.
+    add r1, r0, d.iv
+    addi r1, r1, 1
+    tblwr  d.iv, r1
     nop.e
     nop
-
-    
-
-
 
