@@ -18,6 +18,8 @@ if nic_dir is None:
 
 model_log = nic_dir + "/model.log"
 model1_log = nic_dir + "/model1.log"
+inscount_log = nic_dir + "/inscount.log"
+inscount_sort_log = nic_dir + "/inscount_sort.log"
 hal_log = nic_dir + "/hal.log"
 dol_log = nic_dir + "/dol.log"
 print "- Model Log file: " + model_log
@@ -45,14 +47,32 @@ def parse_logs():
     modelfile  = open(model_log, "r")
     os.remove(model1_log) if os.path.exists(model1_log) else None
     model1file  = open(model1_log, "a+")
+    os.remove(inscount_log) if os.path.exists(inscount_log) else None
+    inscountfile  = open(inscount_log, "a+")
+    os.remove(inscount_sort_log) if os.path.exists(inscount_sort_log) else None
+    inscount_sort_file  = open(inscount_sort_log, "a+")
+    program = ""
     for linenum, line in enumerate(modelfile):
         if re.match("(.*) Setting PC to 0x(.*)\[ (.*)", line, re.I):
             fields = re.split(r'(.*) Setting PC to 0x(.*)\[ (.*)', line)
-            print linenum, '0x'+fields[2], symbols['0x'+fields[2].upper()]
-            line = line.replace('0x'+fields[2], symbols['0x'+fields[2].upper()])
+            program = symbols['0x'+fields[2].upper()]
+            programline = linenum
+            print linenum, '0x'+fields[2], program
+            line = line.replace('0x'+fields[2], program)
+        elif re.match("^\[(.*)\]: (.*)\.e(.*)", line, re.I):
+            fields1 = re.split(r'\[(.*)\]: (.*)\.e(.*)', line)
+            inscountfile.write("%s %s %d\n" % (fields1[1], program, programline))
+            #print(fields1[1], program, programline, linenum)
         model1file.write(line)
     modelfile.close()
     model1file.close()
+    inscountfile.close()
+
+    # prepare sorted inscount file
+    with open(inscount_log) as f:
+        sorted_file = sorted(f, reverse=True)
+    inscount_sort_file.writelines(sorted_file)
+    inscount_sort_file.close()
     return
 
 # main()
