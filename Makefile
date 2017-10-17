@@ -214,5 +214,5 @@ test-clean:
 create-assets:
 	bash scripts/create-assets.sh
 
-pull-assets:
+pull-assets: ws-tools
 	bash scripts/pull-assets.sh
