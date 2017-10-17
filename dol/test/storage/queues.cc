@@ -47,6 +47,7 @@ const static uint32_t	kNvmeBeTotalRings	 = 3;
 
 
 const static uint32_t	kDbAddrHost		 = 0x400000;
+const static uint32_t	kDbAddrNvme		 = 0xC00000;
 const static uint32_t	kDbAddrCapri		 = 0x68800000;
 const static uint32_t	kDbAddrUpdate		 = 0xB;
 const static uint32_t	kDbQidShift		 = 24;
@@ -54,6 +55,10 @@ const static uint32_t	kDbRingShift		 = 16;
 const static uint32_t	kDbUpdateShift		 = 17;
 const static uint32_t	kDbLifShift		 = 6;
 const static uint32_t	kDbTypeShift		 = 3;
+const static uint32_t	kNvmeDbQidShift		 = 16;
+const static uint32_t	kNvmeDbTypeShift	 = 2;
+const static uint32_t	kNvmeDbLifShift	 	 = 5;
+const static uint32_t	kNvmeDbUpdateShift	 = 16;
 
 // Special SSD marked for running E2e traffic with queues from 
 // NvmeSsd class
@@ -373,7 +378,7 @@ int queues_setup() {
       uint64_t db_addr;
       uint64_t db_data;
       uint32_t qid = (int) NUM_TO_VAL(kPvmNumNvmeCQs) + (int) NUM_TO_VAL(kPvmNumR2nCQs) + kE2eSsdhandle;
-      queues::get_doorbell(pvm_lif, CQ_TYPE, qid, 0, 0, &db_addr, &db_data);
+      queues::get_host_doorbell(pvm_lif, CQ_TYPE, qid, 0, 0, &db_addr, &db_data);
       nvme_e2e_ssd_db_init(db_addr, db_data);
       printf("Initialized backend doorbell for SSD %d \n", i);
 
@@ -580,9 +585,20 @@ void ring_nvme_e2e_ssd() {
   *((uint32_t *) params.subq_pi_va) =   (*((uint32_t *) params.subq_pi_va)) + 1;
 }
 
-void get_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
-                  uint8_t ring, uint16_t index, 
-                  uint64_t *db_addr, uint64_t *db_data) {
+void get_nvme_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
+                       uint8_t ring, uint16_t index, 
+                       uint64_t *db_addr, uint64_t *db_data) {
+
+  if (!db_addr || !db_data) return;
+
+  *db_data = (qid << kNvmeDbQidShift) | bswap_16(index);
+  *db_addr = kDbAddrNvme |  (kDbAddrUpdate << kNvmeDbUpdateShift) | 
+             (lif << kNvmeDbLifShift) | (qtype << kNvmeDbTypeShift);
+}
+
+void get_host_doorbell(uint16_t lif, uint8_t qtype, uint32_t qid, 
+                       uint8_t ring, uint16_t index, 
+                       uint64_t *db_addr, uint64_t *db_data) {
 
   if (!db_addr || !db_data) return;
 
