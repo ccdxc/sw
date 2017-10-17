@@ -72,7 +72,7 @@ process_read:
     .brcase 0
     or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_MID
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, transfer_bytes, PMTU)
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, last_or_only, 0)
+    //CAPRI_SET_FIELD(r4, RKEY_INFO_T, last_or_only, 0)
     b           next
     nop
 
@@ -82,7 +82,7 @@ process_read:
     or          BTH_OPCODE, BTH_OPCODE, RDMA_PKT_OPC_RDMA_READ_RESP_FIRST
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, send_aeth, 1)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, transfer_bytes, PMTU)
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, last_or_only, 0)
+    //CAPRI_SET_FIELD(r4, RKEY_INFO_T, last_or_only, 0)
     b           next
     nop
 
@@ -125,19 +125,25 @@ next:
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET()) +
     // ((sge_p->l_key & KEY_INDEX_MASK) * sizeof(key_entry_t));
     add         r2, r0, d.read.r_key
-    andi        r2, r2, KEY_INDEX_MASK
-    sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
 
-    add         KEY_ADDR, r2, KT_BASE_ADDR
+    //andi        r2, r2, KEY_INDEX_MASK
+    //sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
+    //add         KEY_ADDR, r2, KT_BASE_ADDR
+
+    KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, r2)
 
     //aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK;
-    and         r6, KEY_ADDR, HBM_CACHE_LINE_SIZE_MASK
-    sub         ALIGNED_KEY_ADDR, KEY_ADDR, r6
+    //and         r6, KEY_ADDR, HBM_CACHE_LINE_SIZE_MASK
+    //sub         ALIGNED_KEY_ADDR, KEY_ADDR, r6
+
+    KEY_ENTRY_ALIGNED_ADDR_GET(ALIGNED_KEY_ADDR, KEY_ADDR)
 
     //key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
     // compute (key_addr - aligned_key_addr) >> log_key_entry_t
-    sub         KEY_ID, KEY_ADDR, ALIGNED_KEY_ADDR
-    srl         KEY_ID, KEY_ID, LOG_SIZEOF_KEY_ENTRY_T
+    //sub         KEY_ID, KEY_ADDR, ALIGNED_KEY_ADDR
+    //srl         KEY_ID, KEY_ID, LOG_SIZEOF_KEY_ENTRY_T
+
+    KEY_ID_GET(KEY_ID, KEY_ADDR)
 
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, key_id, KEY_ID)
 

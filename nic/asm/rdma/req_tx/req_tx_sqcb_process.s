@@ -70,7 +70,7 @@ update_credits:
 
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, update_credits, 1)
-    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, bktrack, 0)
+    //CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, bktrack, 0)
 
     // sqcb1_p
     add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
@@ -142,7 +142,7 @@ in_progress:
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, remaining_payload_bytes, r4)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, dma_cmd_start_index, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
     //CAPRI_SET_FIELD(r7, INFO_OUT3_T, wqe_addr, d.curr_wqe_ptr)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, d.curr_op_type)
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
@@ -206,15 +206,15 @@ in_progress_end:
 
 fence:
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, in_progress, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, current_sge_id, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, current_sge_offset, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, num_valid_sges, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, remaining_payload_bytes, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, in_progress, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, current_sge_id, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, current_sge_offset, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, num_valid_sges, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, remaining_payload_bytes, 0)
     //CAPRI_SET_FIELD(r7, INFO_OUT2_T, wqe_ptr, d.curr_wqe_ptr)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, rrq_p_index, RRQ_P_INDEX)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, log_pmtu, d.log_pmtu)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, li_fence_cleared, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, li_fence_cleared, 0)
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqwqe_process)

@@ -349,8 +349,8 @@ checkout:
     // now r3 has page_p to load
     
     CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4)
-    CAPRI_SET_FIELD(r4, INFO_OUT1_T, in_progress, 0)
-    CAPRI_SET_FIELD(r4, INFO_OUT1_T, tbl_id, 0) //TODO: set tbl_id
+    //CAPRI_SET_FIELD(r4, INFO_OUT1_T, in_progress, 0)
+    //CAPRI_SET_FIELD(r4, INFO_OUT1_T, tbl_id, 0) //TODO: set tbl_id
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, cache, d.cache)
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, page_seg_offset, r5)
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, page_offset, r1)

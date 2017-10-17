@@ -113,7 +113,7 @@ loop:
     //sge_to_lkey_info_p->sge_index = index;
     cmov        r2, F_FIRST_PASS, 0, 1
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, tbl_id, r2)
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmdeop, 0)
+    //CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmdeop, 0)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, acc_ctrl, ACC_CTRL_LOCAL_WRITE)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, nak_code, NAK_CODE_REM_OP_ERR)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, inv_r_key, k.args.inv_r_key)
@@ -123,10 +123,13 @@ loop:
     //current_sge_offset += transfer_bytes;
     add         r2, CURR_SGE_OFFSET, r6
     // shift right and then shift left to clear bottom 32 bits
-    srl         r1, r1, SGE_OFFSET_SHIFT
-    sll         r1, r1, SGE_OFFSET_SHIFT
+    //srl         r1, r1, SGE_OFFSET_SHIFT
+    //sll         r1, r1, SGE_OFFSET_SHIFT
     // now or it with new value
-    or          r1, r1, r2[31:0]
+    //or          r1, r1, r2[31:0]
+
+    // above 3 commented instructions are same as below single instruction
+    add         r1, r2[31:0], r1[63:32], 32
 
     //  r6 <- sge_p->len
     CAPRI_TABLE_GET_FIELD(r6, SGE_P, SGE_T, len)
@@ -134,8 +137,11 @@ loop:
     // if (current_sge_offset == sge_p->len) {
     seq         c2, r6, r2[31:0]
     //current_sge_id++;
-    srl.c2      r1, r1, SGE_OFFSET_SHIFT
-    add.c2      r1, r1, 1
+    //srl.c2      r1, r1, SGE_OFFSET_SHIFT
+    //add.c2      r1, r1, 1
+
+    // above 2 commented instructions are same as below single instruction
+    add.c2      r1, r1[63:32], 1
     //current_sge_offset = 0;
     sll.c2      r1, r1, SGE_OFFSET_SHIFT
 
@@ -151,21 +157,30 @@ loop:
 
     //key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET()) +
     // ((sge_p->l_key & KEY_INDEX_MASK) * sizeof(key_entry_t));
-    andi        r2, r2, KEY_INDEX_MASK
-    sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
+    //andi        r2, r2, KEY_INDEX_MASK
+    //sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
+    //add         r2, r2, r6
 
-    add         r2, r2, r6
+    // above 3 commented instructions are same as below single instruction
+    //add         r2, r6, KEY_INDEX_GET(r2), LOG_SIZEOF_KEY_ENTRY_T
+    KEY_ENTRY_ADDR_GET(r2, r6, r2)
+
     // now r2 has key_addr
 
     //aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK;
-    and         r6, r2, HBM_CACHE_LINE_SIZE_MASK
-    sub         r6, r2, r6
+    //and         r6, r2, HBM_CACHE_LINE_SIZE_MASK
+    //sub         r6, r2, r6
+
+    KEY_ENTRY_ALIGNED_ADDR_GET(r6, r2)
     // r6 now has aligned_key_addr
+
 
     //key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
     // compute (key_addr - aligned_key_addr) >> log_key_entry_t
-    sub         r2, r2, r6
-    srl         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
+    //sub         r2, r2, r6
+    //srl         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
+
+    KEY_ID_GET(r2, r2)
     // r2 now has key_id
     
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, key_id, r2)
@@ -234,7 +249,7 @@ exit:
     //  rqcb_write_back_info_p->tbl_id = index;
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, in_progress, 1)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, 1)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_c_index, 0)
+    //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_c_index, 0)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, cache, k.args.cache)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, tbl_id, TABLE_2)
 
@@ -261,7 +276,7 @@ exit:
     //  rqcb_write_back_info_p->incr_c_index = 1;
     //  rqcb_write_back_info_p->cache = rqcb_to_wqe_info_p->cache;
     //  rqcb_write_back_info_p->tbl_id = index;
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, in_progress, 0)
+    //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, in_progress, 0)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_c_index, 1)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, cache, k.args.cache)
@@ -272,8 +287,8 @@ exit:
     //  rqcb1_write_back_info_p->curr_wqe_ptr = rqcb_to_wqe_info_p->curr_wqe_ptr;
     //  rqcb1_write_back_info_p->num_sges = 0;
     //  rqcb1_write_back_info_p->update_num_sges = 1;
-    CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, current_sge_id, 0)
-    CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, current_sge_offset, 0)
+    //CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, current_sge_id, 0)
+    //CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, current_sge_offset, 0)
     CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
     CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, update_wqe_ptr, 1)
     // do we need to even set the curr_wqe_ptr for this case ?
@@ -281,8 +296,8 @@ exit:
     // TODO: migrate to below register and decommision curr_wqe_ptr from s2s args
     //mfspr r3, spr_tbladdr	
     //CAPRI_SET_FIELD_C(T3_ARG, INFO_WBCB1_T, curr_wqe_ptr, r3, c2)
-    CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, num_sges, 0)
-    CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, update_num_sges, 0)
+    //CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, num_sges, 0)
+    //CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, update_num_sges, 0)
 
     b       cb0_cb1_wb_exit
     nop

@@ -140,7 +140,7 @@ read_or_atomic:
 
 read:
     CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, is_atomic, 0)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, is_atomic, 0)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, cur_sge_id, k.args.cur_sge_id)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_SGE_T, cur_sge_offset, k.args.cur_sge_offset)
@@ -167,42 +167,47 @@ atomic:
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+
     //                     ((sge_p->lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
     add            r2, d.atomic.sge.l_key, r0
-    andi           r2, r2, KEY_INDEX_MASK
-    sll            r2, r2, LOG_SIZEOF_KEY_ENTRY_T
-    add            r1, r1, r6
+    //andi           r2, r2, KEY_INDEX_MASK
+    //sll            r2, r2, LOG_SIZEOF_KEY_ENTRY_T
+    //add            r1, r1, r6
+
+    KEY_ENTRY_ADDR_GET(r2, r1, r2)
 
     // aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK
-    and            r2, r1, HBM_CACHE_LINE_SIZE_MASK // HBM_CACHE_LINE
-    sub            r2, r1, r2
+    //and            r2, r1, HBM_CACHE_LINE_SIZE_MASK // HBM_CACHE_LINE
+    //sub            r2, r1, r2
+    
+    KEY_ENTRY_ALIGNED_ADDR_GET(r1, r2)
 
     // (key_addr % HBM_CACHE_LINE_SIZE) is computed as (key_addr - aligned_key_addr)
     // key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
-    sub            r3, r1, r2
-    srl            r3, r3, LOG_SIZEOF_KEY_ENTRY_T
+    //sub            r3, r1, r2
+    //srl            r3, r3, LOG_SIZEOF_KEY_ENTRY_T
+    KEY_ID_GET(r2, r2)
 
     CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, r7)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, sge_va, d.atomic.sge.va)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, sge_bytes, d.atomic.sge.len)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, dma_cmd_eop, 1)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
-    CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, key_id, r3)
-    CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, sge_index, 0)
+    CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, key_id, r2)
+    //CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, sge_index, 0)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, cq_dma_cmd_index, REQ_RX_DMA_CMD_CQ)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, cq_id, k.args.cq_id)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, is_atomic, 1)
 
     CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_rx_rrqlkey_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 
     // Hardcode table id 2 for write_back process
     // to keep it consistent with read process where
     // table 0 and 1 are taken for sge process
     CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r7)
 
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, in_progress, 0)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, 0)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, 0)
+    //CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, in_progress, 0)
+    //CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, 0)
+    //CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, 0)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, d.psn)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 2)

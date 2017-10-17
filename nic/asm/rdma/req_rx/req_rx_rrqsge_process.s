@@ -60,7 +60,7 @@ sge_loop:
 
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, log_page_size, LOG_PAGE_SIZE) // TODO page_size ???
     // To start with, set dma_cmd_eop to 0
-    CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, dma_cmd_eop, 0)
+    //CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, dma_cmd_eop, 0)
 
     // current_sge_offset += transfer_bytes
     add            r2, r2, r4
@@ -89,18 +89,24 @@ sge_loop:
 
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+
     //                     ((sge_p->lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
-    andi           r4, r4, KEY_INDEX_MASK
-    sll            r4, r4, LOG_SIZEOF_KEY_ENTRY_T
-    add            r4, r4, r6
+    //andi           r4, r4, KEY_INDEX_MASK
+    //sll            r4, r4, LOG_SIZEOF_KEY_ENTRY_T
+    //add            r4, r4, r6
 
+    KEY_ENTRY_ADDR_GET(r4, r6, r4)
+    
     // aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK
-    and            r6, r4, HBM_CACHE_LINE_SIZE_MASK // HBM_CACHE_LINE
-    sub            r6, r4, r6
+    //and            r6, r4, HBM_CACHE_LINE_SIZE_MASK // HBM_CACHE_LINE
+    //sub            r6, r4, r6
+
+    KEY_ENTRY_ALIGNED_ADDR_GET(r6, r4)
 
     // (key_addr % HBM_CACHE_LINE_SIZE) is computed as (key_addr - aligned_key_addr)
     // key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
-    sub            r4, r4, r6
-    srl            r4, r4, LOG_SIZEOF_KEY_ENTRY_T
+    //sub            r4, r4, r6
+    //srl            r4, r4, LOG_SIZEOF_KEY_ENTRY_T
+
+    KEY_ID_GET(r4, r4)
 
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, key_id, r4)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, is_atomic, k.args.is_atomic)

@@ -55,21 +55,30 @@ inv_rkey:
     //key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET()) +
     // ((sge_p->l_key & KEY_INDEX_MASK) * sizeof(key_entry_t));
     add         r2, r0, k.args.r_key    
-    andi        r2, r2, KEY_INDEX_MASK
-    sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
 
-    add         r2, r2, r3
+    //andi        r2, r2, KEY_INDEX_MASK
+    //sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
+    //add         r2, r2, r3
+
+    KEY_ENTRY_ADDR_GET(r2, r3, r2)
+
     // now r2 has key_addr
 
     //aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK;
-    and         r3, r2, HBM_CACHE_LINE_SIZE_MASK
-    sub         KEY_ADDR, r2, r3
+    //and         r3, r2, HBM_CACHE_LINE_SIZE_MASK
+    //sub         KEY_ADDR, r2, r3
+
+    KEY_ENTRY_ALIGNED_ADDR_GET(KEY_ADDR, r2)
+
     // r3 now has aligned_key_addr
 
     //key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
     // compute (key_addr - aligned_key_addr) >> log_key_entry_t
-    sub         r2, r2, r3
-    srl         KEY_ID, r2, LOG_SIZEOF_KEY_ENTRY_T
+    //sub         r2, r2, r3
+    //srl         KEY_ID, r2, LOG_SIZEOF_KEY_ENTRY_T
+
+    KEY_ID_GET(KEY_ID, r2)
+
     // r2 now has key_id
 
     CAPRI_GET_TABLE_I_K_AND_ARG(resp_rx_phv_t, TBL_ID, KEY_P, ARG_P)

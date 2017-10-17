@@ -124,7 +124,7 @@ invoke_pt:
     CAPRI_SET_FIELD(r7, PTSEG_INFO_T, pt_seg_bytes, k.args.transfer_bytes)
     CAPRI_SET_FIELD(r7, PTSEG_INFO_T, dma_cmd_start_index, RESP_TX_DMA_CMD_PYLD_BASE)
     CAPRI_SET_FIELD(r7, PTSEG_INFO_T, log_page_size, LOG_PAGE_SIZE)
-    CAPRI_SET_FIELD(r7, PTSEG_INFO_T, tbl_id, TABLE_0)
+    //CAPRI_SET_FIELD(r7, PTSEG_INFO_T, tbl_id, TABLE_0)
     CAPRI_SET_FIELD(r7, PTSEG_INFO_T, dma_cmdeop, 1)
 
 add_headers:

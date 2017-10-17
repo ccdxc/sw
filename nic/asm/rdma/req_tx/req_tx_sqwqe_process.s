@@ -71,7 +71,7 @@ atomic:
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.atomic.sge.va, d.atomic.sge.va)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.atomic.sge.len, d.atomic.sge.len)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.atomic.sge.l_key, d.atomic.sge.l_key)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, tbl_id, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, tbl_id, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, log_pmtu, k.args.log_pmtu)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, rrq_p_index, k.args.rrq_p_index)
 
@@ -85,7 +85,7 @@ atomic:
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, last, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, r1)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, tbl_id, 1)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, release_cb1_busy, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT3_T, release_cb1_busy, 0)
     // leave rest of variables to FALSE
 
     CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7)
@@ -107,7 +107,7 @@ invoke_add_headers:
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op_type, r1)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.rd.read_len, d.read.length)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.rd.num_sges, d.base.num_sges)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, tbl_id, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, tbl_id, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, log_pmtu, k.args.log_pmtu)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, rrq_p_index, k.args.rrq_p_index)
 
@@ -121,7 +121,7 @@ invoke_add_headers:
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, last, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, r1)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, tbl_id, 1)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, release_cb1_busy, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT3_T, release_cb1_busy, 0)
     // leave rest of variables to FALSE
 
     CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7)
@@ -170,8 +170,8 @@ common:
     // populate stage-2-stage data req_tx_wqe_to_sge_info_t for next stage
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, in_progress, k.args.in_progress)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, first, 1)
-    CAPRI_SET_FIELD(r7, INFO_OUT1_T, current_sge_id, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT1_T, current_sge_offset, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT1_T, current_sge_id, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT1_T, current_sge_offset, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, num_valid_sges, d.base.num_sges)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
     //CAPRI_SET_FIELD(r7, INFO_OUT1_T, wqe_addr, k.args.wqe_addr)

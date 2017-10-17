@@ -27,12 +27,12 @@ req_tx_sqpt_process:
 
     // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, in_progress, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT_T, in_progress, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, log_pmtu, k.args.log_pmtu)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, li_fence_cleared, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, current_sge_id, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, num_valid_sges, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT_T, current_sge_offset, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT_T, li_fence_cleared, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT_T, current_sge_id, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT_T, num_valid_sges, 0)
+    //CAPRI_SET_FIELD(r7, INFO_OUT_T, current_sge_offset, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
     //CAPRI_SET_FIELD(r7, INFO_OUT_T, wqe_addr, r1)
     CAPRI_SET_FIELD(r7, INFO_OUT_T, rrq_p_index, k.args.rrq_p_index)

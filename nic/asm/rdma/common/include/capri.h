@@ -521,10 +521,8 @@ struct capri_dma_cmd_mem2mem_t {
     sll         _base_r, _base_r, LOG_NUM_BITS_PER_FLIT; \
     add         _base_r, _base_r, (_flit_id+1), LOG_NUM_BITS_PER_FLIT; \
     add         _tmp_r, r0, _index; \
-    mincr       _tmp_r, LOG_NUM_DMA_CMDS_PER_FLIT, r0; \
-    add         _tmp_r, _tmp_r, 1; \
-    sll         _tmp_r, _tmp_r, LOG_DMA_CMD_SIZE_BITS; \
-    sub         _base_r, _base_r, _tmp_r;
+    add         _tmp_r, _tmp_r[1:0], 1; \
+    sub         _base_r, _base_r, _tmp_r, LOG_DMA_CMD_SIZE_BITS;
     
 #define DMA_NEXT_CMD_I_BASE_GET(_base_r, _cmd_idx) \
     sub         _base_r, _base_r, _cmd_idx, LOG_DMA_CMD_SIZE_BITS

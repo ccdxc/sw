@@ -622,6 +622,9 @@ struct rsqwqe_t {
 #define KEY_STATE_VALID     2
 
 #define KEY_INDEX_MASK      0x00ffffff
+
+#define KEY_INDEX_GET(_r) _r[23:0]
+
 #define KEY_INDEX_SHIFT     0
 #define KEY_USER_KEY_MASK   0xff000000
 #define KEY_USER_KEY_SHIFT  24
@@ -642,6 +645,19 @@ struct rsqwqe_t {
 #define KEY_ENTRY_T struct key_entry_t
 #define LOG_SIZEOF_KEY_ENTRY_T  5   // 2^5 = 32 bytes
 #define LOG_SIZEOF_KEY_ENTRY_T_BITS (LOG_SIZEOF_KEY_ENTRY_T + LOG_BITS_PER_BYTE)
+
+// entry_addr = base_addr + ((index & INDEX_MASK) * sizeof(key_entry_t))
+#define KEY_ENTRY_ADDR_GET(_entry_addr_r, _kt_base_r, _key_index_r) \
+    add     _entry_addr_r, _kt_base_r, KEY_INDEX_GET(_key_index_r), LOG_SIZEOF_KEY_ENTRY_T;
+
+// aligned_entry_addr =  entry_addr & ~HBM_CACHE_LINE_MASK;
+#define KEY_ENTRY_ALIGNED_ADDR_GET(_aligned_entry_addr_r, _entry_addr_r) \
+    sub     _aligned_entry_addr_r, _entry_addr_r, _entry_addr_r[5:0];
+
+//key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
+#define KEY_ID_GET(_key_id_r, _key_addr_r) \
+    srl     _key_id_r, _key_addr_r[5:0], LOG_SIZEOF_KEY_ENTRY_T
+
 
 struct key_entry_t {
     user_key: 8;

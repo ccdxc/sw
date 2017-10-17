@@ -28,11 +28,9 @@ struct phv_to_stage_t {
     sll     _r, k.global.pt_base_addr_page_id, HBM_PAGE_SIZE_SHIFT;
 
 #define KT_BASE_ADDR_GET(_r, _tmp_r) \
-    sll    _r, k.global.pt_base_addr_page_id, HBM_PAGE_SIZE_SHIFT;\
     add    _tmp_r, CAPRI_LOG_SIZEOF_U64, k.global.log_num_pt_entries; \
     sllv   _tmp_r, 1, _tmp_r; \
-    add    _r, _r, _tmp_r;
-
+    add    _r, _tmp_r, k.global.pt_base_addr_page_id, HBM_PAGE_SIZE_SHIFT;
 
 #define CQCB_BASE_ADDR_GET(_r) \
     sll     _r, k.global.cqcb_base_addr_page_id, HBM_PAGE_SIZE_SHIFT;
@@ -42,8 +40,7 @@ struct phv_to_stage_t {
     add _r, _r, _cqid, LOG_SIZEOF_CQCB_T
 
 #define EQCB_BASE_ADDR_GET(_r) \
-    add     _r, k.global.log_num_cq_entries, LOG_SIZEOF_CQCB_T; \
-    add     _r, _r, HBM_PAGE_SIZE_SHIFT; \
+    add     _r, k.global.log_num_cq_entries, (HBM_PAGE_SIZE_SHIFT + LOG_SIZEOF_CQCB_T); \
     sllv    _r, k.global.cqcb_base_addr_page_id, _r; 
 
 #define EQCB_ADDR_GET(_r, _eqid) \

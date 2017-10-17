@@ -49,19 +49,24 @@ resp_rx_write_dummy_process:
 
     //key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET()) +
     // ((sge_p->l_key & KEY_INDEX_MASK) * sizeof(key_entry_t));
-    andi        r2, R_KEY, KEY_INDEX_MASK
-    sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
+    //andi        r2, R_KEY, KEY_INDEX_MASK
+    //sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
+    //add         KEY_ADDR, r2, KT_BASE_ADDR
 
-    add         KEY_ADDR, r2, KT_BASE_ADDR
+    KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, R_KEY)
 
     //aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK;
-    and         r6, KEY_ADDR, HBM_CACHE_LINE_SIZE_MASK
-    sub         ALIGNED_KEY_ADDR, KEY_ADDR, r6
+    //and         r6, KEY_ADDR, HBM_CACHE_LINE_SIZE_MASK
+    //sub         ALIGNED_KEY_ADDR, KEY_ADDR, r6
+
+    KEY_ENTRY_ALIGNED_ADDR_GET(ALIGNED_KEY_ADDR, KEY_ADDR)
 
     //key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
     // compute (key_addr - aligned_key_addr) >> log_key_entry_t
-    sub         KEY_ID, KEY_ADDR, ALIGNED_KEY_ADDR
-    srl         KEY_ID, KEY_ID, LOG_SIZEOF_KEY_ENTRY_T
+    //sub         KEY_ID, KEY_ADDR, ALIGNED_KEY_ADDR
+    //srl         KEY_ID, KEY_ID, LOG_SIZEOF_KEY_ENTRY_T
+
+    KEY_ID_GET(KEY_ID, KEY_ADDR)
 
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, key_id, KEY_ID)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, dma_cmd_start_index, RESP_RX_DMA_CMD_PYLD_BASE)
@@ -82,7 +87,7 @@ resp_rx_write_dummy_process:
 
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, r4)
     CAPRI_SET_FIELD(r4, RQCB0_WB_T, tbl_id, TABLE_2)
-    CAPRI_SET_FIELD(r4, RQCB0_WB_T, in_progress, 0)
+    //CAPRI_SET_FIELD(r4, RQCB0_WB_T, in_progress, 0)
     CAPRI_SET_FIELD(r4, RQCB0_WB_T, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD(r4, RQCB0_WB_T, incr_c_index, k.args.incr_c_index)
 
