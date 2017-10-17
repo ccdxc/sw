@@ -67,6 +67,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_CPU_PAGE           "cpu-page"
 #define CAPRI_HBM_REG_ARQRX_QIDXR        "arqrx-qidxr"
 #define CAPRI_HBM_REG_RAWRCB             "rawr-cb"
+#define CAPRI_HBM_REG_TXS_SCHEDULER      "tx-scheduler"
 #define CAPRI_NUM_SEMAPHORES            512
 
 #define PAGE_SCRATCH_SIZE               512

@@ -25,6 +25,7 @@ cc_library(
             "capri_tm_rw.cc",
             "capri_init.cc",
             "capri_repl.cc",
+            "capri_txs_scheduler.cc"
             ],
     hdrs = [
         #"capri_hbm.hpp",
@@ -33,7 +34,8 @@ cc_library(
         #"capri_config.hpp",
         #"capri.hpp",
         #"capri_tbl_rw.hpp",
-        #"capri_tm_rw.hpp"
+        #"capri_tm_rw.hpp",
+        #"capri_txs_scheduler.hpp"
     ] + glob(["*.hpp"]) + glob(["*.h"]),
     deps = [
         "//nic:asic_includes",

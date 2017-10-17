@@ -6,6 +6,7 @@
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/asic_rw.hpp"
+#include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 
 #define CAPRI_P4PLUS_NUM_SYMBOLS 46
 
@@ -26,11 +27,15 @@ capri_init (capri_cfg_t *cfg = NULL)
     ret = capri_hbm_parse();
 
     ret = capri_hbm_regions_init();
-
+    
     if (capri_table_rw_init()) {
         return HAL_RET_ERR;
     }
-
+ 
+    if (capri_txs_scheduler_init()) {
+        return HAL_RET_ERR;
+    }
+ 
     if (ret == HAL_RET_OK) {
         ret = capri_repl_init();
     }

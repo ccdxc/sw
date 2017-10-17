@@ -45,6 +45,7 @@ SOURCES = \
 		  capri_repl.cc \
 		  capri_qstate.cc \
 		  capri_barco_crypto.cc \
+		  capri_txs_scheduler.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc
