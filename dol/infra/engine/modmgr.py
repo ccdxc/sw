@@ -268,6 +268,9 @@ class ModuleDatabase:
             GlobalOptions.pkglist = GlobalOptions.pkglist.split(',')
         return
 
+    def __len__(self):
+        return len(self.db)
+
     def __is_test_match(self, name):
         if GlobalOptions.test == None:
             return True

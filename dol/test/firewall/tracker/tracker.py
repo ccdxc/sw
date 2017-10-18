@@ -21,13 +21,11 @@ class TrackerObject:
         self.conn = connspec.Get(TrackerStore)
         lg.info("- Loading Connection Params from Spec: %s" % self.conn.GID())
         self.flowstate.Init(self.conn, lg)
-        self.cpu_copy_valid = True
         self.iport = self.flowstate.GetInitiatorPort()
         self.rport = self.flowstate.GetResponderPort()
         return
 
     def Advance(self):
-        self.cpu_copy_valid = False
         if self.step.IsDrop():
             self.lg.info("- Step Action is NOT PERMIT. Not advancing the step...")
             return
@@ -38,7 +36,7 @@ class TrackerObject:
         return
 
     def IsCpuCopyValid(self):
-        return self.cpu_copy_valid
+        return self.step.IsCpuCopyValid()
 
     def __set_flow_states(self):
         ifs = self.flowstate.GetState(True)
@@ -53,6 +51,7 @@ class TrackerObject:
         self.lg = lg
         step = stepspec.step.Get(TrackerStore)
         self.step = copy.copy(step)
+        self.step.SetCpuCopyValid(getattr(stepspec, 'cpu', False))
         self.__set_flow_states()
         self.step.SetPorts(self.iport, self.rport)
         self.step.Show(self.lg)

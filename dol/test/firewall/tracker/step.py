@@ -53,6 +53,10 @@ class StepObject(objects.FrameworkTemplateObject):
         return self.permit == False
     def NeedsAdvance(self):
         return self.advance
+    def IsCpuCopyValid(self):
+        return self.cpu_copy_valid
+    def SetCpuCopyValid(self, cpu_copy_valid):
+        self.cpu_copy_valid = cpu_copy_valid
 
     def __resolve(self, attr, orig):
         curr = getattr(self.fields, attr, None)

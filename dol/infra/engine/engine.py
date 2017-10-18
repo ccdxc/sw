@@ -60,8 +60,8 @@ def GetSummaryAndResult():
         ntotal += module.stats.total
     
     print("-" * 78)
-    print("%-16s %-32s %-6s %6d %6d %6d" %\
-          ('Total', '', '', npass, nfail, ntotal))
+    totstr = 'Total (Num Modules = %d)' % len(ModuleStore)
+    print("%-56s %6d %6d %6d" % (totstr, npass, nfail, ntotal))
     print("-" * 78)
 
     #if ntotal == 0:

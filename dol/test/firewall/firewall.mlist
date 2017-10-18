@@ -17,6 +17,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
 
@@ -28,6 +29,7 @@ modules:
         iterate :
             # 4-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ONLY
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
@@ -40,6 +42,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ONLY
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
@@ -52,6 +55,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ONLY
             - step  : ref://trackerstore/steps/id=IFLOW_SYN_ACK
@@ -65,6 +69,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -86,6 +91,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -108,6 +114,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -127,6 +134,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -152,6 +160,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -168,6 +177,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -190,6 +200,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -206,6 +217,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -223,6 +235,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -239,6 +252,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -256,6 +270,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -279,6 +294,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -303,6 +319,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -327,6 +344,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -350,6 +368,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -373,6 +392,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -397,6 +417,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -421,6 +442,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -445,6 +467,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -462,6 +485,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -479,6 +503,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -496,6 +521,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -513,6 +539,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -530,6 +557,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -547,6 +575,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -570,6 +599,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -594,6 +624,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -615,6 +646,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -638,6 +670,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -661,6 +694,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -678,6 +712,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -695,6 +730,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -713,6 +749,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -730,6 +767,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -747,6 +785,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -765,6 +804,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -783,6 +823,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -801,6 +842,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -819,6 +861,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -836,6 +879,7 @@ modules:
             connspec: ref://trackerstore/connections/id=DEFAULT
         iterate :
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_RST_FOR_SYN
 
     - module:
@@ -845,6 +889,7 @@ modules:
             connspec: ref://trackerstore/connections/id=DEFAULT
         iterate :
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_RST_FOR_SYN_INVALID_ACK_NUM
 
     - module:
@@ -854,6 +899,7 @@ modules:
             connspec: ref://trackerstore/connections/id=DEFAULT
         iterate :
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_RST
 
@@ -865,6 +911,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -881,6 +928,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -897,6 +945,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -914,6 +963,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -931,6 +981,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -948,6 +999,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -965,6 +1017,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -981,6 +1034,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Send some data in both directions
@@ -998,6 +1052,7 @@ modules:
         iterate :
             # 3-way handshake
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_ABS
