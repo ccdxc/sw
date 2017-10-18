@@ -411,7 +411,7 @@ tcp_exec_tcp_lif(fte::ctx_t& ctx)
                                  hal::pd::lkl_alloc_skbuff(ctx.cpu_rxhdr(),
                                                            ctx.pkt(),
                                                            ctx.pkt_len(),
-                                                           ctx.direction()),
+                                                           (hal::flow_direction_t)FLOW_DIR_FROM_UPLINK),//ctx.direction()),
                                  ctx.direction(),
                                  ctx.cpu_rxhdr()));
 

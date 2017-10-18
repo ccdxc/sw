@@ -227,7 +227,11 @@ static bool lklshim_setsockopt_and_bind(int fd,
 
     memset(&local, 0, sizeof(local));
     local.sin_family = AF_INET;
-    local.sin_addr.s_addr = htonl(INADDR_ANY);
+    if (src_ip) {
+        local.sin_addr.s_addr = htonl(flow->key.src_ip);
+    } else {
+        local.sin_addr.s_addr = htonl(INADDR_ANY);
+    }
     local.sin_port = htons(bind_portnum);
     if (lkl_sys_bind(fd, (struct lkl_sockaddr*) &local, sizeof(local)) != 0) {
         perror("bind");
@@ -369,7 +373,6 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
     if (lkl_tcp_v4_rcv(pkt_skb)) {
         return false;
     }
-    hal::proxy::tcp_trigger_ack_send(rxhdr->qid, tcp);
     
     if (flow->hostns.skbuff != NULL) {
         void *pkt_skb = flow->hostns.skbuff;
@@ -487,22 +490,31 @@ void lklshim_process_tx_packet(unsigned char* pkt,
                                unsigned int len,
                                void* flowp,
                                bool is_connect_req,
-                               void *tcpcb) 
+                               void *tcpcb,
+                               bool tx_pkt) 
 {
-    HAL_TRACE_DEBUG("lklshim_process_tx_packet len={} pkt={}", len, hex_dump((const uint8_t *)pkt, len));
-    if (tcpcb != NULL)  {
-      HAL_TRACE_DEBUG("flowp={} is_connect_req={} tcpcb={}", flowp, is_connect_req, tcpcb);
+    if (pkt) {
+        HAL_TRACE_DEBUG("lklshim_process_tx_packet len={} pkt={}", len, hex_dump((const uint8_t *)pkt, len));
     } else {
-      HAL_TRACE_DEBUG("flowp={} is_connect_req={} tcpcb=NULL", flowp, is_connect_req);
+       HAL_TRACE_DEBUG("lklshim_process_tx_packet sending ack");
+    }
+    if (tcpcb != NULL)  {
+        HAL_TRACE_DEBUG("flowp={} is_connect_req={} tcpcb={} tx_pkt={}", flowp, is_connect_req, tcpcb, tx_pkt);
+    } else {
+        HAL_TRACE_DEBUG("flowp={} is_connect_req={} tcpcb=NULL tx_pkt={}", flowp, is_connect_req, tx_pkt);
     }
     lklshim_flow_t* flow = (lklshim_flow_t*)flowp;
     if (flow) {
         uint32_t qid = (is_connect_req?flow->rqid:flow->iqid);
         HAL_TRACE_DEBUG("flow dst lif={} src lif={}", flow->dst_lif, flow->src_lif);
         lklshim_update_tcpcb(tcpcb, qid, flow->src_lif);
-        proxy::tcp_transmit_pkt(pkt, len, is_connect_req, flow->dst_lif, 
-				flow->src_lif, flow->itor_dir, flow->hw_vlan_id);
-        //lklshim_process_listen(flow);
+        if (tx_pkt) {
+            HAL_TRACE_DEBUG("Calling tcp_transmit_pkt");
+            proxy::tcp_transmit_pkt(pkt, len, is_connect_req, flow->dst_lif, flow->src_lif, flow->itor_dir, flow->hw_vlan_id);
+        } else {
+            HAL_TRACE_DEBUG("Calling tcp_ring_doorbell");
+            proxy::tcp_ring_doorbell(qid);
+        }
     }
 }
 

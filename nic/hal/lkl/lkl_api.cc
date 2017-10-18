@@ -44,8 +44,12 @@ int lkl_init(void) {
 }
 
 void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, size_t pkt_len, hal::flow_direction_t direction) {
-    if (rxhdr == NULL) {HAL_TRACE_DEBUG("LKL call!"); return NULL;}
-    HAL_TRACE_DEBUG("Allocating SKBUFF\n");
+    if (rxhdr == NULL) {
+        HAL_TRACE_DEBUG("LKL call!"); 
+        return NULL;
+    }
+    HAL_TRACE_DEBUG("Allocating SKBUFF direction {}\n",
+                           (direction==hal::FLOW_DIR_FROM_ENIC)?"from host":"from net");
     void *dev = NULL;
     if (direction == hal::FLOW_DIR_FROM_ENIC) {
         dev = host_dev;
