@@ -866,25 +866,29 @@ class capri_gress_pa:
             if h == self.capri_p4_intr_hdr:
                 continue
 
+            if h in self.hdr_fld_order or is_parser_local_header(h) or is_scratch_header(h) or \
+                h.name == 'standard_metadata':
+                continue
+
+            # for P4plus, hdr used will remove all the field from egress direction
             hdr_used = False
             for f in h.fields:
                 cf = self.get_field(get_hfname(f))
                 if not cf:
                     continue # could be unused in this direction
-                if not cf.is_scratch and \
-                        not cf.parser_local and cf not in self.field_order:
+                hdr_used = True
+                if cf not in self.field_order:
                     self.field_order.append(cf)
-                    hdr_used = True
-                    if cf not in self.hdr_fld_order and not self.pa.be.args.p4_plus:
+                    if cf not in self.hdr_fld_order and \
+                        not self.pa.be.args.p4_plus and not is_atomic_header(h):
                         self.hdr_fld_order.append(cf)
 
-                    if not self.pa.be.args.p4_plus and cf not in self.i2e_fields and \
+                    if cf not in self.i2e_fields and \
                         not cf.is_key and not cf.is_input:
                         cf.allow_relocation = True
 
-            if self.pa.be.args.p4_plus and hdr_used:
-                if h.name != 'standard_metadata' and h not in self.hdr_fld_order:
-                    self.hdr_fld_order.append(h)
+            if hdr_used and (self.pa.be.args.p4_plus or is_atomic_header(h)):
+                self.hdr_fld_order.append(h)
 
         var_flds = [f.hfname for f in self.field_order if f.width == p4.P4_AUTO_WIDTH]
         # XXX : no assert yet - ip_options are causing problem due to add/copy_header()
@@ -1157,9 +1161,8 @@ class capri_gress_pa:
             self.fields[hfname] = cfield
             # check pragmas
             hdr = cfield.get_p4_hdr()
-            if len(hdr._parsed_pragmas):
-                if 'pa_parser_local' in hdr._parsed_pragmas:
-                    cfield.parser_local = True
+            if is_parser_local_header(hdr):
+                cfield.parser_local = True
         return cfield
 
     def allocate_hv_field(self, hdr_name):
@@ -1218,7 +1221,7 @@ class capri_gress_pa:
                                         for uh in self.hdr_unions[hdr][1]])
         for f in hdr.fields:
             cf = self.get_field(get_hfname(f))
-            assert cf, "unknown field %s" % (hdr.name + f.name)
+            assert cf, "unknown field %s" % get_hfname(f)
             if cf.is_union() or cf.is_ohi:
                 continue
             hphv += cf.width + cf.union_pad_size
@@ -1919,7 +1922,13 @@ class capri_gress_pa:
             #pdb.set_trace()
 
             # allocate on next byte boundary
-            phv_bit = flit.flit_chunk_alloc(hdr_storage_size, -1, 8, 0, 0, True)
+            align = get_header_alignment(n_hf)
+            if align == 0:
+                align = 8
+            else:
+                # pdb.set_trace()
+                pass
+            phv_bit = flit.flit_chunk_alloc(hdr_storage_size, -1, align, 0, 0, True)
             if phv_bit < 0:
                 overflow = True
                 break
@@ -2013,7 +2022,13 @@ class capri_gress_pa:
             assert n_hf.is_meta, pdb.set_trace()
             alignment = 0; justify = JUSTIFY_LEFT
             use_last_hdr_bit = False
-            if not self.pa.be.args.p4_plus:
+            hdr_alignment = 0
+            if n_hf.p4_fld and n_hf.p4_fld.instance:
+                hdr_alignment = get_header_alignment(n_hf.p4_fld.instance)
+            if hdr_alignment and n_hf.p4_fld.offset == 0:
+                alignment = hdr_alignment
+                pdb.set_trace()
+            else:
                 if n_hf.is_key or n_hf.is_input or (self.d == xgress.INGRESS and n_hf.is_i2e_meta):
                     # XXX for fld unions - propagate the flags is_key... to union storage field
                     if n_hf.is_index_key:

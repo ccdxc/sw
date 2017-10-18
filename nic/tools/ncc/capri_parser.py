@@ -2404,6 +2404,10 @@ class capri_parser:
         self.assign_state_ids()
 
     def get_ext_cstates(self, hdr):
+        if hdr not in self.hdr_ext_states:
+            assert hdr.metadata, pdb.set_trace()
+            # not a real header, but atomic meta header
+            return []
         return [cs for cs in self.hdr_ext_states[hdr] if not cs.deparse_only]
 
     def get_meta_ext_cstates(self, mf):

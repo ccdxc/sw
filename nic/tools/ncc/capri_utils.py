@@ -116,6 +116,27 @@ def is_synthetic_header(h):
         return True
     return False
 
+def is_parser_local_header(h):
+    if h._parsed_pragmas and 'pa_parser_local' in h._parsed_pragmas:
+        return True
+    return False
+
+def is_atomic_header(h):
+    if h._parsed_pragmas and 'pa_atomic' in h._parsed_pragmas:
+        return True
+    return False
+
+def get_header_alignment(h):
+    # align header to specified boundary
+    supported_alignments = [8, 16, 32, 64, 128, 256, 512, 1024]
+    if h._parsed_pragmas and 'pa_align' in h._parsed_pragmas:
+        alignment = int(h._parsed_pragmas['pa_align'].keys()[0])
+        if alignment in supported_alignments:
+            return alignment
+    if h._parsed_pragmas and 'pa_atomic' in h._parsed_pragmas: 
+        return 8
+    return 0 # no alignment restrictions
+
 def get_pragma_param_list(parsed_pragmas):
     # convert recursive dictionaries into a simple list
     param_list = []
