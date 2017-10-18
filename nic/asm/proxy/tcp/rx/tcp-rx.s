@@ -46,6 +46,7 @@ tcp_rx_process_stage1_start:
     /* if (cp->seq != tp->rx.rcv_nxt) { */
     sne             c7, k.to_s1_seq, d.u.tcp_rx_d.rcv_nxt
     phvwri.c7       p.common_phv_ooo_rcv, 1
+    phvwri.c7       p.p4_intr_global_drop, 1
     bcf             [c7], flow_rx_process_done
     nop
 
@@ -648,6 +649,10 @@ table_read_SACK:
                         k.common_phv_qstate_addr, TCP_TCB_SACK_OFFSET,
                         TABLE_SIZE_512_BITS)
 #endif
+    nop.e
+    nop
+flow_rx_drop:
+    CAPRI_CLEAR_TABLE0_VALID
     nop.e
     nop
 

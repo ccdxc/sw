@@ -24,8 +24,13 @@ tcp_rx_write_serq_stage6_start:
     tblwr       d.debug_stage0_3_thread, k.s6_s2s_debug_stage0_3_thread
     tblwr       d.debug_stage4_7_thread, k.s6_s2s_debug_stage4_7_thread
     sne         c1, k.common_phv_write_arq, r0
-    bcf         [c1], flow_write_serq_process_done
+    seq         c2, k.to_s6_payload_len, r0
+    setcf       c3, [!c1 & c2]
+    phvwri.c3   p.p4_intr_global_drop, 1
+    phvwri.c3   p.p4_intr_no_data, 0
+    bcf         [c1 | c2], flow_write_serq_process_done
     nop
+
     /* r4 is loaded at the beginning of the stage with current timestamp value */
     tblwr       d.curr_ts, r4
     /* if (k.write_serq) is set in a previous stage , trigger writes to serq slot */
@@ -67,10 +72,11 @@ dma_cmd_descr:
     bcf         [c1], dma_cmd_write_rx2tx_shared
     nop
 dma_cmd_serq_slot:
-    add         r5, r0, k.to_s6_xrq_pidx
-    sll         r5, r5, NIC_SERQ_ENTRY_SIZE_SHIFT
+    CAPRI_OPERAND_DEBUG(d.{serq_pidx}.hx)
+    sll         r5, d.{serq_pidx}.hx, NIC_SERQ_ENTRY_SIZE_SHIFT
     /* Set the DMA_WRITE CMD for SERQ slot */
     add         r1, r5, k.to_s6_xrq_base
+    // increment serq pi as a part of ringing dorrbell 
 
     phvwr       p.ring_entry_descr_addr, k.to_s6_descr
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd2_dma_cmd, r1, ring_entry_descr_addr, ring_entry_descr_addr)
@@ -127,6 +133,7 @@ tcp_serq_produce:
     b           flow_write_serq_process_done
     nop
 ring_doorbell:
+    tbladd      d.{serq_pidx}.hx, 1
 
     CAPRI_DMA_CMD_RING_DOORBELL2(dma_cmd6_dma_cmd, LIF_TLS, 0, k.common_phv_fid, 0,
                                  k.to_s6_xrq_pidx, db_data_pid, db_data_index)

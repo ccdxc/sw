@@ -149,8 +149,7 @@ dma_cmd_data:
     slt             c1, k.to_s4_rcv_mss, k.to_s4_xmit_cursor_len
     add.c1          r6, k.to_s4_rcv_mss, r0
     add.!c1         r6, k.to_s4_xmit_cursor_len, r0
-    add             r5, r6, k.t0_s2s_snd_nxt
-    phvwr           p.tx2rx_snd_nxt, r5
+    phvwr           p.tx2rx_snd_nxt, d.snd_nxt
 
     bcf             [c6], bytes_sent_stats_update_start
     nop

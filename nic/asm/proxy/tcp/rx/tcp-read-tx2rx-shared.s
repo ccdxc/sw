@@ -29,8 +29,8 @@ tcp_rx_read_shared_stage0_start:
 	 * the stages to use it
 	 */
 	phvwr		p.common_phv_fid, k.p4_rxdma_intr_qid
-	and         r1, k.tcp_app_header_flags, TCPHDR_SYN
-	phvwr		p.common_phv_syn, r1
+	smeqb       c1, k.tcp_app_header_flags, TCPHDR_SYN, TCPHDR_SYN
+	phvwri.c1	p.common_phv_syn, 1
     and         r2, k.tcp_app_header_flags, TCPHDR_ACK
     /* If we see a pure SYN drop it */
     sne         c1, r1, r0
@@ -66,11 +66,8 @@ tcp_rx_read_shared_stage0_start:
 
 
 	phvwr		p.to_s6_payload_len, k.tcp_app_header_payload_len
+    CAPRI_OPERAND_DEBUG(k.tcp_app_header_payload_len)
 
-    // TODO : Check for q full
-    phvwr       p.to_s6_xrq_pidx, d.serq_pidx
-    tbladd      d.serq_pidx, 1
-	
 table_read_RX:	
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                 tcp_rx_process_stage1_start, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33},

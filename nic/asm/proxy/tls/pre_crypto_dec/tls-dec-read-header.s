@@ -54,7 +54,8 @@ tls_dec_read_header_process:
 
     phvwr       p.crypto_iv_explicit_iv, d.u.tls_read_tls_header_d.tls_iv
 
-    phvwr       p.to_s6_cur_tls_data_len, d.u.tls_read_tls_header_d.tls_hdr_len
+    sub         r1, k.s3_s4_t0_phv_idesc_aol0_len, k.tls_global_phv_next_tls_hdr_offset
+    phvwr       p.to_s6_cur_tls_data_len, r1
 
 	
 #if 0

@@ -123,6 +123,15 @@ proxy_create_hdr_template(TcpCbSpec &spec,
 }
 
 hal_ret_t
+proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
+{
+    spec.set_snd_wnd(8000);
+    spec.set_snd_cwnd(8000);
+    spec.set_rcv_mss(9216);
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* vlan, ipv4_header_t *ip, tcp_header_t *tcp, bool is_itor_dir)
 {
     hal_ret_t       ret = HAL_RET_OK;
@@ -137,7 +146,18 @@ tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* v
     HAL_TRACE_DEBUG("Create TCPCB for qid: {}", qid);
     spec.mutable_key_or_handle()->set_tcpcb_id(qid);
     spec.set_source_lif(src_lif);
-    ret = proxy_create_hdr_template(spec, eth, vlan, ip, tcp, is_itor_dir);;
+    ret = proxy_tcp_cb_init_def_params(spec);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize CB");
+        return ret;
+    }
+
+    ret = proxy_create_hdr_template(spec, eth, vlan, ip, tcp, is_itor_dir);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize header templates");
+        return ret;
+    }
+
     ret = tcpcb_create(spec, &rsp);
     if(ret != HAL_RET_OK || rsp.api_status() != types::API_STATUS_OK) {
         HAL_TRACE_ERR("Failed to create TCP cb for id: {}, ret: {}, rsp: ",

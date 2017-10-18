@@ -24,10 +24,10 @@ tls_dec_pre_crypto_process:
     CAPRI_OPERAND_DEBUG(d.u.read_tls_stg0_d.debug_dol)
 
 	phvwr		p.tls_global_phv_fid, k.p4_txdma_intr_qid
-    add         r3, r0, d.u.read_tls_stg0_d.ci_0
+    add         r3, r0, d.{u.read_tls_stg0_d.ci_0}.hx
     sll         r3, r3, NIC_SERQ_ENTRY_SIZE_SHIFT
     # TBD  : move to updated ci
-    add         r3, r0, r0
+    //add         r3, r0, r0
     add         r3, r3, d.u.read_tls_stg0_d.serq_base
 
 	phvwri		p.tls_global_phv_pending_rx_serq, 1

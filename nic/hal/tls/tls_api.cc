@@ -2,6 +2,7 @@
 #include "ssl_helper.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
+#include "nic/hal/src/tlscb.hpp"
 
 namespace hal {
 namespace tls {
@@ -9,7 +10,7 @@ namespace tls {
 static SSLHelper g_ssl_helper;
 static hal::pd::cpupkt_ctxt_t* asesq_ctx = NULL;
 //static int tcpfd = 0;
-static int port = 56789;
+static int port = 80;
 
 /**********************************************************'
  * Dummy test code. TODO: REMOVEME
@@ -24,7 +25,8 @@ int create_socket() {
   dest_addr.sin_family=AF_INET;
   dest_addr.sin_port=htons(port);
 
-  inet_pton(AF_INET, "192.168.69.35", &dest_addr.sin_addr.s_addr);
+  //inet_pton(AF_INET, "192.168.69.35", &dest_addr.sin_addr.s_addr);
+  inet_pton(AF_INET, "127.0.0.1", &dest_addr.sin_addr.s_addr);
 
   if ( connect(sockfd, (struct sockaddr *) &dest_addr,
                sizeof(struct sockaddr_in)) == -1 ) {
@@ -47,6 +49,7 @@ hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
     if(bytes <= 1024) {
         tls_api_data_receive(id, buf, bytes);
     }
+    return HAL_RET_OK;
     */
     return hal::pd::cpupkt_send(asesq_ctx,
                                 types::WRING_TYPE_ASESQ,
@@ -86,6 +89,24 @@ tls_api_init(void)
     //tcpfd = create_socket();
     //tls_api_start_handshake(100);
 
+    return ret;
+}
+
+hal_ret_t
+tls_api_init_flow(uint32_t qid, bool is_decrypt_flow)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    TlsCbSpec            spec;
+    TlsCbResponse        rsp;
+
+    HAL_TRACE_DEBUG("Creating TLS Cb with for qid: {}, is_decrypt: ", qid, is_decrypt_flow);
+    spec.mutable_key_or_handle()->set_tlscb_id(qid);
+    spec.set_is_decrypt_flow(is_decrypt_flow);
+    spec.set_other_fid(0xFFFF);
+    ret = hal::tlscb_create(spec, &rsp);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create tls cb with id: {}, err: {}", qid, ret);
+    }
     return ret;
 }
 

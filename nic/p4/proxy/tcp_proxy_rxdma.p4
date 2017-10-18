@@ -110,8 +110,7 @@ header_type read_tx2rxd_t {
         pid                     : 16; // 8 bytes
 
         serq_ring_size          : 16;
-        serq_pidx               : 16; 
-        pad2                    : 32; // 8 bytes
+        pad2                    : 48; // 8 bytes
 
         // written by TLS P4+ program
         serq_cidx               : 16;
@@ -276,6 +275,7 @@ header_type write_serq_d_t {
         debug_stage0_3_thread   : 16;
         debug_stage4_7_thread   : 16;
         ft_pi                   : 16;
+        serq_pidx               : 16; 
 
         // stats
         pkts_rcvd               : 8;
@@ -591,7 +591,7 @@ metadata dma_cmd_phv2mem_t dma_cmd7;
  * Stage 0 table 0 action
  */
 action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-                  serq_ring_size, serq_pidx, pad2, serq_cidx, pad1, prr_out,
+                  serq_ring_size, pad2, serq_cidx, pad1, prr_out,
                   snd_nxt, rcv_wup, packets_out, ecn_flags_tx, quick_acks_decr,
                   pad1_tx2rx) {
     // k + i for stage 0
@@ -636,7 +636,6 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     modify_field(read_tx2rxd.total, total);
     modify_field(read_tx2rxd.pid, pid);
     modify_field(read_tx2rxd.serq_ring_size, serq_ring_size);
-    modify_field(read_tx2rxd.serq_pidx, serq_pidx);
     modify_field(read_tx2rxd.pad2, pad2);
     modify_field(read_tx2rxd.serq_cidx, serq_cidx);
     modify_field(read_tx2rxd.pad1, pad1);
@@ -911,7 +910,7 @@ action tcp_fc(page_cnt) {
  * Stage 6 table 0 action
  */
 action write_serq(nde_addr, nde_offset, nde_len, curr_ts,
-        debug_stage0_3_thread, debug_stage4_7_thread, ato,
+        debug_stage0_3_thread, debug_stage4_7_thread, serq_pidx, ato,
         pkts_rcvd, pages_alloced, desc_alloced, debug_num_pkt_to_mem,
         debug_num_phv_to_mem, ft_pi) {
     // k + i for stage 6
@@ -938,6 +937,7 @@ action write_serq(nde_addr, nde_offset, nde_len, curr_ts,
     modify_field(write_serq_d.curr_ts, curr_ts);
     modify_field(write_serq_d.debug_stage0_3_thread, debug_stage0_3_thread);
     modify_field(write_serq_d.debug_stage4_7_thread, debug_stage4_7_thread);
+    modify_field(write_serq_d.serq_pidx, serq_pidx);
     modify_field(write_serq_d.pkts_rcvd, pkts_rcvd);
     modify_field(write_serq_d.pages_alloced, pages_alloced);
     modify_field(write_serq_d.desc_alloced, desc_alloced);

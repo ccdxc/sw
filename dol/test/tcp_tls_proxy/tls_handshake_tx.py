@@ -162,7 +162,7 @@ def TestCaseVerify(tc):
         print("pkt tx stats (%d) not as expected (%d)" % (tcb_cur.pkts_sent, tcb.pkts_sent))
         return False
 
-    if ((tcb_cur.bytes_sent - tcb.bytes_sent) != 66): # TODO: remove hardcoding
+    if ((tcb_cur.bytes_sent - tcb.bytes_sent) != 71): # TODO: remove hardcoding
         print("Warning! pkt tx byte stats not as expected %d %d" % (tcb_cur.bytes_sent, tcb.bytes_sent))
         return False
 

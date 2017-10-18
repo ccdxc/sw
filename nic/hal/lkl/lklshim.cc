@@ -7,6 +7,7 @@
 #include "nic/hal/lkl/lklshim.hpp"
 #include "nic/include/cpupkt_headers.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
+#include "nic/hal/tls/tls_api.hpp"
 
 extern "C" {
 #include "nic/third-party/lkl/export/include/lkl.h"
@@ -388,6 +389,8 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
     }
 
 
+    hal::tls::tls_api_start_handshake(rxhdr->qid);
+
     return true;
 }
 
@@ -423,6 +426,10 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
     flow->src_lif = src_lif;
     proxy::tcp_create_cb(flow->iqid, flow->src_lif, eth, vlan, ip, tcp, true);
     proxy::tcp_create_cb(flow->rqid, flow->src_lif, eth, vlan, ip, tcp, false);
+    // create tlscb
+    hal::tls::tls_api_init_flow(flow->iqid, false);
+    hal::tls::tls_api_init_flow(flow->rqid, true);
+
     if (dir == hal::FLOW_DIR_FROM_ENIC) {
         flow->hostns.skbuff = pkt_skb;
         flow->netns.skbuff = NULL;

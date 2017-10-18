@@ -175,6 +175,8 @@ tcp_retx_enqueue:
     phvwr           p.to_s4_xmit_cursor_offset, k.to_s3_offset
     phvwr           p.to_s4_xmit_cursor_len, k.to_s3_len
     tblwr           d.retx_snd_una, k.common_phv_snd_una
+    phvwr           p.t0_s2s_snd_nxt, d.snd_nxt
+    tbladd          d.snd_nxt, k.to_s3_len
     sne             c4, r7, r0
     jr.c4           r7
     nop

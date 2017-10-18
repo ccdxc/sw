@@ -266,6 +266,21 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     return ret;
 }
 
+hal_ret_t 
+p4pd_add_or_del_tcpcb_write_serq(pd_tcpcb_t* tcpcb_pd, bool del)
+{
+    tcp_rx_write_serq_write_serq_d write_serq_d = { 0 };
+
+    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id + 
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_WRITE_SERQ);
+
+    if(!p4plus_hbm_write(hwid, (uint8_t *)&write_serq_d, sizeof(write_serq_d))) {
+        HAL_TRACE_ERR("Failed to create rx: write_serq entry for TCP CB");
+        return HAL_RET_HW_FAIL;
+    }
+    return HAL_RET_OK;
+}
+
 
 
 hal_ret_t 
@@ -302,8 +317,12 @@ p4pd_add_or_del_tcpcb_rxdma_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }
-
-
+    
+    ret = p4pd_add_or_del_tcpcb_write_serq(tcpcb_pd, del);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+ 
     return HAL_RET_OK;
 cleanup:
     /* TODO: CLEANUP */

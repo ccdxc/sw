@@ -41,6 +41,7 @@ cc_library(
         "//nic/hal/plugins:plugins_includes",
         "//nic/hal/plugins/network:network_includes",
         "//nic/hal/plugins/proxy:proxyplugin_includes",
+        "//nic/hal/tls:tls_api",
             ],
     includes = [
             "nic/third-party/lkl/export/include",

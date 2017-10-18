@@ -1,5 +1,43 @@
 #include "nic/proxy-e2etest/ntls.hpp"
 
+#define WHERE_INFO(ssl, w, flag, msg) { \
+    if(w & flag) { \
+      printf("\t"); \
+      printf(msg); \
+      printf(" - %s ", SSL_state_string(ssl)); \
+      printf(" - %s ", SSL_state_string_long(ssl)); \
+      printf("\n"); \
+    }\
+ }
+
+// INFO CALLBACK
+void dummy_ssl_info_callback(const SSL* ssl, int where, int ret) {
+  if(ret == 0) {
+    printf("ssl error occured.\n");
+    return;
+  }
+  WHERE_INFO(ssl, where, SSL_CB_LOOP, "LOOP");
+  WHERE_INFO(ssl, where, SSL_CB_EXIT, "EXIT");
+  WHERE_INFO(ssl, where, SSL_CB_READ, "READ");
+  WHERE_INFO(ssl, where, SSL_CB_WRITE, "WRITE");
+  WHERE_INFO(ssl, where, SSL_CB_ALERT, "ALERT");
+  WHERE_INFO(ssl, where, SSL_CB_HANDSHAKE_DONE, "HANDSHAKE DONE");
+}
+
+// MSG CALLBACK
+void dummy_ssl_msg_callback(
+                            int writep
+                            ,int version
+                            ,int contentType
+                            ,const void* buf
+                            ,size_t len
+                            ,SSL* ssl
+                            ,void *arg
+                            )
+{
+  printf("\tMessage callback with length: %zu\n", len);
+}
+
 int bytes_recv,bytes_sent;
 int port;
 
@@ -70,6 +108,9 @@ SSL_CTX* InitServerCTX(void)
       ERR_print_errors_fp(stderr);
       abort();
     }
+
+   SSL_CTX_set_info_callback(ctx, dummy_ssl_info_callback);
+   SSL_CTX_set_msg_callback(ctx, dummy_ssl_msg_callback);
   return ctx;
 }
 
@@ -151,7 +192,7 @@ void *main_server(void* unused)
 
   ctx = InitServerCTX();/* initialize SSL */
   LoadCertificates(ctx, "proxy-e2etest/ca.crt", "proxy-e2etest/ca.pem");/* load certs */
-  SSL_CTX_set_cipher_list(ctx, "ECDH-ECDSA-AES128-GCM-SHA256");
+  SSL_CTX_set_cipher_list(ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
 
   int server = OpenListener(port);/* create server socket */
   while (1)

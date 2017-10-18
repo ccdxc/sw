@@ -18,12 +18,10 @@ tls_exec(fte::ctx_t& ctx)
     uint32_t datalen = ctx.pkt_len();
     
     // Give the data to SSL/TLS library
-    /*
     ret = hal::tls::tls_api_data_receive(cpu_rxhdr->qid, data, datalen);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed to process tls packet: {}", ret);
     }
-    */
     if (asesq_ctx == NULL)   {
         asesq_ctx = hal::pd::cpupkt_ctxt_alloc_init();
         HAL_ASSERT_RETURN(asesq_ctx != NULL, fte::PIPELINE_CONTINUE);
@@ -44,7 +42,6 @@ tls_exec(fte::ctx_t& ctx)
                          0,
                          cpu_rxhdr->qid,
                          TCP_SCHED_RING_ASESQ);
-    
 	return fte::PIPELINE_CONTINUE;
 }
 
