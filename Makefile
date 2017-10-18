@@ -130,6 +130,9 @@ cover:
 	$(info +++ go test -cover -tags test $(TO_BUILD))
 	@scripts/test-coverage.sh $(TO_BUILD)
 
+report:
+	$(GOCMD) run scripts/report.go $(TO_BUILD)
+
 ci-testrun:
 	tools/scripts/CI.sh
 
