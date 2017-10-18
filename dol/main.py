@@ -7,9 +7,8 @@ import infra.common.timeprofiler    as timeprofiler
 timeprofiler.TotalTimeProfiler.Start()
 timeprofiler.InitTimeProfiler.Start()
 paths = [
-    '/bazel-genfiles/',
-    '/bazel-genfiles/nic/proto/',
-    '/bazel-genfiles/nic/proto/hal/',
+    '/nic/gen/proto/',
+    '/nic/gen/proto/hal/',
     '/nic',
     '/dol/third_party/'
 ]

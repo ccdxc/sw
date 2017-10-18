@@ -1,5 +1,6 @@
 from "registry.test.pensando.io:5000/pensando/nic:1.1"
 
+env GOPATH: "/usr"
 run "yum install tcpdump -y"
 run "pip3 install mock zmq grpcio"
 
