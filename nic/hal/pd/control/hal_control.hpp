@@ -16,10 +16,10 @@ namespace pd {
 // one such entry is added to the queue for every operation
 //------------------------------------------------------------------------------
 typedef struct hal_ctrl_entry_ {
-    uint8_t   opn:2;     // operation requested to perform
-    uint8_t   done:1;    // TRUE if thread performed operation
-    hal_ret_t status;    // result status of operation requested
-    void      *data;     // data passed by called
+    uint8_t           opn:2;   // operation requested to perform
+    std::atomic<bool> done;    // TRUE if thread performed operation
+    hal_ret_t         status;  // result status of operation requested
+    void              *data;   // data passed by called
 } hal_ctrl_entry_t;
 
 //------------------------------------------------------------------------------

@@ -7,18 +7,12 @@
 #include "nic/utils/twheel/twheel.hpp"
 #include "nic/utils/thread/thread.hpp"
 #include "hal_control.hpp"
+#include "nic/include/periodic.hpp"
+#include "port_mac.hpp"
 
 namespace hal {
 
 extern thread_local hal::utils::thread *t_curr_thread;
-
-namespace periodic {
-void* periodic_timer_schedule (uint32_t timer_id,
-                               uint64_t timeout,
-                               void *ctxt,
-                               hal::utils::twheel_cb_t cb,
-                               bool periodic);
-}    // namespace periodic
 
 namespace pd {
 
@@ -28,7 +22,7 @@ port::port_event_notify(void *ctxt)
 {
     port *port_p = (port*)ctxt;
 
-    port_p->port_link_sm();
+    port_p->port_link_sm_process();
 
     return HAL_RET_OK;
 }
@@ -48,16 +42,27 @@ port::link_bring_up_timer_cb(uint32_t timer_id, void *ctxt)
         return HAL_RET_HW_PROG_ERR;
     }
     pindx = g_hal_ctrl_workq[curr_tid].pindx;
+
     rw_entry = &g_hal_ctrl_workq[curr_tid].entries[pindx];
     rw_entry->opn = HAL_CONTROL_OPERATION_PORT;
-    rw_entry->done = FALSE;
     rw_entry->status = HAL_RET_ERR;
     rw_entry->data = ctxt;
+    rw_entry->done.store(false);
+
     g_hal_ctrl_workq[curr_tid].nentries++;
-    while (!rw_entry->done) {
+
+    while (rw_entry->done.load() == false) {
         if (t_curr_thread->can_yield()) {
             pthread_yield();
         }
+    }
+
+    // move the producer index to next slot.
+    // consumer is unaware of the blocking/non-blocking call and always
+    // moves to the next slot.
+    g_hal_ctrl_workq[curr_tid].pindx++;
+    if (g_hal_ctrl_workq[curr_tid].pindx >= HAL_CONTROL_Q_SIZE) {
+        g_hal_ctrl_workq[curr_tid].pindx = 0;
     }
 
     return rw_entry->status;
@@ -71,12 +76,6 @@ port::port_serdes_cfg()
 
 hal_ret_t
 port::port_mac_init()
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-port::port_mac_soft_reset(bool reset)
 {
     return HAL_RET_OK;
 }
@@ -117,39 +116,90 @@ port::port_mac_ch_mode_cfg()
     return HAL_RET_OK;
 }
 
-hal_ret_t
-port::port_mac_stats_reset(bool reset)
+uint32_t
+port::port_mac_port_num_calc()
 {
-    return HAL_RET_OK;
+    return (this->mac_id * PORT_LANES_MAX) + this->mac_ch;
 }
 
 hal_ret_t
 port::port_mac_cfg()
 {
-    port_mac_init();
+    uint32_t mac_port_num = port_mac_port_num_calc();
 
-    port_mac_soft_reset(true);
-
-    port_mac_fifo_ctrl();
-
-    port_mac_global_mode_cfg();
-
-    port_mac_ch_enable(false);
-
-    port_mac_generic_cfg();
-
-    port_mac_rx_tx_enable(false, false);
-
-    port_mac_ch_mode_cfg();
-
-    port_mac_stats_reset(true);
-    port_mac_stats_reset(false);
+    mac_cfg(mac_port_num,
+            static_cast<uint32_t>(this->port_speed_),
+            this->num_lanes);
 
     return HAL_RET_OK;
 }
 
 hal_ret_t
-port::port_link_sm()
+port::port_mac_enable(bool enable)
+{
+    uint32_t mac_port_num = port_mac_port_num_calc();
+
+    mac_enable(mac_port_num,
+               static_cast<uint32_t>(this->port_speed_),
+               this->num_lanes,
+               enable);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+port::port_mac_soft_reset(bool reset)
+{
+    uint32_t mac_port_num = port_mac_port_num_calc();
+
+    mac_soft_reset(mac_port_num,
+                   static_cast<uint32_t>(this->port_speed_),
+                   this->num_lanes,
+                   reset);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+port::port_mac_stats_reset(bool reset)
+{
+    uint32_t mac_port_num = port_mac_port_num_calc();
+
+    mac_stats_reset(mac_port_num,
+                    static_cast<uint32_t>(this->port_speed_),
+                    this->num_lanes,
+                    reset);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+port::port_mac_intr_en(bool enable)
+{
+    uint32_t mac_port_num = port_mac_port_num_calc();
+
+    mac_intr_enable(mac_port_num,
+            static_cast<uint32_t>(this->port_speed_),
+            this->num_lanes,
+            enable);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+port::port_mac_intr_clr()
+{
+    uint32_t mac_port_num = port_mac_port_num_calc();
+
+    mac_intr_clear(mac_port_num,
+            static_cast<uint32_t>(this->port_speed_),
+            this->num_lanes);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+port::port_link_sm_process()
 {
     int timeout = 0;
     bool sig_detect = false;
@@ -158,10 +208,25 @@ port::port_link_sm()
 
     switch (this->link_sm_) {
         case port_link_sm_t::PORT_LINK_SM_DISABLED:
-            // stop timers
+            // stop link bring up timer
+            hal::periodic::periodic_timer_delete (this->link_bring_up_timer_);
+            this->link_bring_up_timer_ = NULL;  // sanity
+
+            // disable and claer mac interrupts
+            port_mac_intr_en(false);
+            port_mac_intr_clr();
+
             // disable serdes
-            // disable mac interrupts
+
             // mac reset
+            port_mac_soft_reset(true);
+
+            // mac disable
+            port_mac_enable(false);
+
+            // mac stats reset
+            port_mac_stats_reset(true);
+
             break;
 
         case port_link_sm_t::PORT_LINK_SM_ENABLED:
@@ -187,7 +252,8 @@ port::port_link_sm()
             sig_detect = true;
 
             if(sig_detect == false) {
-                hal::periodic::periodic_timer_schedule(
+                this->link_bring_up_timer_ =
+                    hal::periodic::periodic_timer_schedule(
                             0, timeout, this,
                             (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
                             false);
@@ -202,10 +268,11 @@ port::port_link_sm()
             serdes_rdy = true;
 
             if(serdes_rdy == false) {
-                hal::periodic::periodic_timer_schedule(
-                    0, timeout, this,
-                    (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
-                    false);
+                this->link_bring_up_timer_ =
+                    hal::periodic::periodic_timer_schedule(
+                        0, timeout, this,
+                        (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
+                        false);
                 break;
             }
 
@@ -214,8 +281,9 @@ port::port_link_sm()
 
         case port_link_sm_t::PORT_LINK_SM_MAC_ENABLE:
 
+            port_mac_stats_reset(false);
+            port_mac_enable(true);
             port_mac_soft_reset(false);
-            port_mac_ch_enable(true);
 
             // transition to wait for clear mac faults
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_CLEAR_FAULTS);
@@ -225,10 +293,11 @@ port::port_link_sm()
             mac_faults = false;
 
             if(mac_faults == true) {
-                hal::periodic::periodic_timer_schedule(
-                    0, timeout, this,
-                    (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
-                    false);
+                this->link_bring_up_timer_ =
+                    hal::periodic::periodic_timer_schedule(
+                        0, timeout, this,
+                        (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
+                        false);
                 break;
             }
 
@@ -237,7 +306,10 @@ port::port_link_sm()
 
         case port_link_sm_t::PORT_LINK_SM_UP:
             // enable mac interrupts
+            port_mac_intr_en(true);
+
             // enable pCal
+            // notify others that link is up
             break;
 
         default:
@@ -258,7 +330,7 @@ port::port_enable()
     /* enable the port */
     set_port_link_sm(port_link_sm_t::PORT_LINK_SM_ENABLED);
 
-    port_link_sm();
+    port_link_sm_process();
 
     this->admin_state_ = true;
 
@@ -274,6 +346,9 @@ port::port_disable()
     }
 
     /* disable the port */
+    set_port_link_sm(port_link_sm_t::PORT_LINK_SM_DISABLED);
+
+    port_link_sm_process();
 
     this->admin_state_ = false;
 

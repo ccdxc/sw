@@ -19,7 +19,7 @@
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/hal_pd.hpp"
-#include "nic/include/asic_rw.hpp"
+#include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/iris/tlscb_pd.hpp"
 #include "nic/hal/pd/iris/tcpcb_pd.hpp"
 #include "nic/hal/pd/iris/wring_pd.hpp"

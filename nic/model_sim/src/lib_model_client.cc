@@ -303,3 +303,37 @@ bool dump_hbm ()
     zmq_send(__zmq_sock, buffer, 1024, 0);
     return true;
 }
+
+int lib_model_mac_msg_send (uint32_t port_num,
+                            uint32_t speed,
+                            buff_type_e type,
+                            uint32_t num_lanes,
+                            uint32_t val)
+{
+    // thread safe
+    int rc = 0;
+
+    std::lock_guard<std::mutex> lock(g_zmq_mutex);
+
+    char buffer[MODEL_ZMQ_BUFF_SIZE] = {0};
+    buffer_hdr_t *buff;
+
+    if (__lmodel_env)
+        return true;
+    buff = (buffer_hdr_t *) buffer;
+    buff->type = type;
+    buff->port = port_num;
+
+    buff->size = sizeof(buffer_port_t);
+
+    buffer_port_t *port_buf = (buffer_port_t*)&buff->data;
+    port_buf->speed = speed;
+    port_buf->num_lanes = num_lanes;
+    port_buf->val = val;
+
+    zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+
+    return rc;
+}
+

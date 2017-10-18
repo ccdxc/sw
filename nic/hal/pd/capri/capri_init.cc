@@ -5,7 +5,7 @@
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 #include "nic/gen/iris/include/p4pd.h"
-#include "nic/include/asic_rw.hpp"
+#include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 
 #define CAPRI_P4PLUS_NUM_SYMBOLS 46

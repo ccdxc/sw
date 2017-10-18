@@ -30,6 +30,11 @@ void*
 periodic_timer_schedule (uint32_t timer_id, uint64_t timeout, void *ctxt,
                          hal::utils::twheel_cb_t cb, bool periodic);
 
+//------------------------------------------------------------------------------
+// API invoked by other threads to delete the scheduled timer
+//------------------------------------------------------------------------------
+void* periodic_timer_delete (void *timer);
+
 // API to delay delete any slab objects
 hal_ret_t delay_delete_to_slab(hal_slab_t slab_id,             // slab to free back to
                                void *elem);                    // element to free back

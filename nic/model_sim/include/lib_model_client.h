@@ -1,7 +1,8 @@
-#ifndef LIB_MODEL_CLIENT_H_
-#define LIB_MODEL_CLIENT_H_
+#ifndef __LIB_MODEL_CLIENT_H__
+#define __LIB_MODEL_CLIENT_H__
 
 #include <vector>
+#include "buf_hdr.h"
 
 int lib_model_connect();
 int lib_model_conn_close();
@@ -15,4 +16,11 @@ void step_doorbell (uint64_t addr, uint64_t data);
 bool dump_hbm(void);
 void step_cpu_pkt(const uint8_t* pkt, size_t pkt_len);
 
-#endif
+// mac config APIs to model
+int lib_model_mac_msg_send (uint32_t port_num,
+                            uint32_t speed,
+                            buff_type_e type,
+                            uint32_t num_lanes,
+                            uint32_t val);
+
+#endif // __LIB_MODEL_CLIENT_H__

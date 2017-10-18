@@ -236,6 +236,91 @@ void process_buff (buffer_hdr_t *buff, cap_env_base *env) {
             }
         }
             break;
+
+        case BUFF_TYPE_MAC_CFG:
+            {
+                bool ret = true;
+                if (!ret) {
+                    std::cout << "ERROR: MAC CFG" << std::endl;
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = -1;
+                } else {
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = 0;
+                }
+            }
+            break;
+
+        case BUFF_TYPE_MAC_EN:
+            {
+                bool ret = true;
+                if (!ret) {
+                    std::cout << "ERROR: MAC EN" << std::endl;
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = -1;
+                } else {
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = 0;
+                }
+            }
+            break;
+
+        case BUFF_TYPE_MAC_SOFT_RESET:
+            {
+                bool ret = true;
+                if (!ret) {
+                    std::cout << "ERROR: MAC SOFT RESET" << std::endl;
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = -1;
+                } else {
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = 0;
+                }
+            }
+            break;
+
+        case BUFF_TYPE_MAC_STATS_RESET:
+            {
+                bool ret = true;
+                if (!ret) {
+                    std::cout << "ERROR: MAC STATS RESET" << std::endl;
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = -1;
+                } else {
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = 0;
+                }
+            }
+            break;
+
+        case BUFF_TYPE_MAC_INTR_EN:
+            {
+                bool ret = true;
+                if (!ret) {
+                    std::cout << "ERROR: MAC INTR EN/DISABLE" << std::endl;
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = -1;
+                } else {
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = 0;
+                }
+            }
+            break;
+
+        case BUFF_TYPE_MAC_INTR_CLR:
+            {
+                bool ret = true;
+                if (!ret) {
+                    std::cout << "ERROR: MAC INTR CLEAR" << std::endl;
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = -1;
+                } else {
+                    buff->type = BUFF_TYPE_STATUS;
+                    buff->status = 0;
+                }
+            }
+            break;
+
         case BUFF_TYPE_STATUS:
         default:
             assert(0);

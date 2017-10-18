@@ -186,5 +186,14 @@ periodic_timer_schedule (uint32_t timer_id, uint64_t timeout, void *ctxt,
     return g_twheel->add_timer(timer_id, timeout, ctxt, cb, periodic);
 }
 
+//------------------------------------------------------------------------------
+// API invoked by other threads to delete the scheduled timer
+//------------------------------------------------------------------------------
+void*
+periodic_timer_delete (void *timer)
+{
+    return g_twheel->del_timer(timer);
+}
+
 }    // namespace periodic
 }    // namespace hal

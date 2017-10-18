@@ -8,6 +8,8 @@
 namespace hal {
 namespace pd {
 
+#define PORT_LANES_MAX 4
+
 // starting point for control thread
 void *hal_control_start(void *ctxt);
 
@@ -45,15 +47,15 @@ public:
         this->port_num_ = port_num_;
     }
 
-    port_num_t get_port_num() {
+    port_num_t port_num() {
         return this->port_num_;
     }
 
-    bool get_admin_state() {
+    bool admin_state() {
         return this->admin_state_;
     }
 
-    port_oper_status_t get_oper_status() {
+    port_oper_status_t oper_status() {
         return this->oper_status_;
     }
 
@@ -61,7 +63,7 @@ public:
         this->oper_status_ = oper_status;
     }
 
-    port_speed_t get_port_speed() {
+    port_speed_t port_speed() {
         return this->port_speed_;
     }
 
@@ -69,7 +71,7 @@ public:
         this->port_speed_ = port_speed;
     }
 
-    port_type_t get_port_type() {
+    port_type_t port_type() {
         return this->port_type_;
     }
 
@@ -77,7 +79,7 @@ public:
         this->port_type_ = port_type;
     }
 
-    port_link_sm_t get_port_link_sm() {
+    port_link_sm_t port_link_sm() {
         return this->link_sm_;
     }
 
@@ -87,20 +89,50 @@ public:
 
     hal_ret_t port_enable();
     hal_ret_t port_disable();
-    hal_ret_t port_link_sm();
+    hal_ret_t port_link_sm_process();
     hal_ret_t port_serdes_cfg();
 
     // MAC CFG
     hal_ret_t port_mac_cfg();
-    hal_ret_t port_mac_init();
+
+    // mac enable or disable
+    hal_ret_t port_mac_enable(bool);
+
+    // mac software reset
     hal_ret_t port_mac_soft_reset(bool);
-    hal_ret_t port_mac_fifo_ctrl();
-    hal_ret_t port_mac_global_mode_cfg();
-    hal_ret_t port_mac_ch_enable(bool);
-    hal_ret_t port_mac_generic_cfg();
-    hal_ret_t port_mac_rx_tx_enable(bool, bool);
-    hal_ret_t port_mac_ch_mode_cfg();
+
+    // mac stats reset
     hal_ret_t port_mac_stats_reset(bool);
+
+    // mac interrupt enable or disable
+    hal_ret_t port_mac_intr_en(bool enable);
+
+    // mac interrupt clear
+    hal_ret_t port_mac_intr_clr();
+
+    // tdm config and any other mac init
+    hal_ret_t port_mac_init();
+
+    // mac fifo ctrl 1 configure
+    hal_ret_t port_mac_fifo_ctrl();
+
+    // set the mac global mode
+    hal_ret_t port_mac_global_mode_cfg();
+
+    // mac channel enable
+    hal_ret_t port_mac_ch_enable(bool);
+
+    // mac generic cfg
+    // app fifo portmap
+    // rx fifo control
+    // channel mapping
+    hal_ret_t port_mac_generic_cfg();
+
+    // mac rx and tx enable
+    hal_ret_t port_mac_rx_tx_enable(bool, bool);
+
+    //mac channel mode config
+    hal_ret_t port_mac_ch_mode_cfg();
 
     static hal_ret_t
         link_bring_up_timer_cb(uint32_t timer_id, void *ctxt);
@@ -114,7 +146,14 @@ private:
     port_speed_t        port_speed_;     // port speed
     port_type_t         port_type_;      // port type
     port_link_sm_t      link_sm_;        // port link state machine
-    void                *link_bring_up_timer;   // port link bring up timer
+    void                *link_bring_up_timer_;   // port link bring up timer
+
+    uint32_t            mac_id;          // mac instance for this port
+    uint32_t            mac_ch;          // mac channel within mac instance
+    uint32_t            num_lanes;       // number of lanes for this port
+
+    // MAC port num calculation based on mac instance and mac channel
+    uint32_t  port_mac_port_num_calc();
 };
 
 }    // namespace pd

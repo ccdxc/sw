@@ -3,7 +3,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <atomic>
-#include "nic/include/asic_rw.hpp"
+#include "nic/include/asic_pd.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/utils/thread/thread.hpp"
 #include "nic/hal/hal.hpp"
@@ -54,7 +54,7 @@ hal_control_loop (void)
 
             // populate the results
             rw_entry->status =  rv ? HAL_RET_OK : HAL_RET_ERR;
-            rw_entry->done = TRUE;
+            rw_entry->done.store(true);
 
             // advance to next entry in the queue
             g_hal_ctrl_workq[qid].cindx++;

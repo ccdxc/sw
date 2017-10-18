@@ -5,7 +5,7 @@
 #include <atomic>
 #include "nic/hal/hal.hpp"
 #include "nic/hal/pd/capri/capri.hpp"
-#include "nic/include/asic_rw.hpp"
+#include "nic/include/asic_pd.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
 
 namespace hal {
@@ -28,13 +28,13 @@ static bool g_asic_rw_ready_;
 // thread's queue whenever asic read/write is attempted by any HAL thread
 //------------------------------------------------------------------------------
 typedef struct asic_rw_entry_ {
-    uint8_t      opn:2;     // operation requested to perform
-    uint8_t      done:1;    // TRUE if asic-rw thread performed operation
-    hal_ret_t    status;    // result status of operation requested
-    uint64_t     addr;      // address to write to or read from
-    uint32_t     len;       // length of data to read or write
-    uint8_t      *data;     // data to write or buffer to copy data to for mem read/write
-    uint32_t      reg_data;     // data to write or buffer to copy data to for mem read/write
+    uint8_t           opn:2;     // operation requested to perform
+    std::atomic<bool> done;      // TRUE if thread performed operation
+    hal_ret_t         status;    // result status of operation requested
+    uint64_t          addr;      // address to write to or read from
+    uint32_t          len;       // length of data to read or write
+    uint8_t           *data;     // data to write or buffer to copy data to for mem read/write
+    uint32_t          reg_data;  // data to write or buffer to copy data to for mem read/write
 } asic_rw_entry_t;
 
 //------------------------------------------------------------------------------
@@ -82,15 +82,18 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
         return HAL_RET_HW_PROG_ERR;
     }
     pindx = g_asic_rw_workq[curr_tid].pindx;
+
     rw_entry = &g_asic_rw_workq[curr_tid].entries[pindx];
     rw_entry->opn = opn;
-    rw_entry->done = FALSE;
     rw_entry->status = HAL_RET_ERR;
     rw_entry->addr = addr;
     rw_entry->len = len;
     rw_entry->data = data;
+    rw_entry->done.store(false);
+
     g_asic_rw_workq[curr_tid].nentries++;
-    while (!rw_entry->done) {
+
+    while (rw_entry->done.load() == false) {
         if (t_curr_thread->can_yield()) {
             pthread_yield();
         }
@@ -142,9 +145,9 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
         return HAL_RET_HW_PROG_ERR;
     }
     pindx = g_asic_rw_workq[curr_tid].pindx;
+
     rw_entry = &g_asic_rw_workq[curr_tid].entries[pindx];
     rw_entry->opn = opn;
-    rw_entry->done = FALSE;
     rw_entry->status = HAL_RET_ERR;
     rw_entry->addr = addr;
     rw_entry->len = len;
@@ -153,22 +156,27 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
     } else {
         rw_entry->data = data;
     }
+    rw_entry->done.store(false);
+
     g_asic_rw_workq[curr_tid].nentries++;
 
     if (blocking) {
-        while (!rw_entry->done) {
+        while (rw_entry->done.load() == false) {
             if (t_curr_thread->can_yield()) {
                 pthread_yield();
             }
         }
         ret = rw_entry->status;
     } else {
-        // move the producer index to next slot
-        g_asic_rw_workq[curr_tid].pindx++;
-        if (g_asic_rw_workq[curr_tid].pindx >= HAL_ASIC_RW_Q_SIZE) {
-            g_asic_rw_workq[curr_tid].pindx = 0;
-        }
         ret = HAL_RET_OK;
+    }
+
+    // move the producer index to next slot.
+    // consumer is unaware of the blocking/non-blocking call and always
+    // moves to the next slot.
+    g_asic_rw_workq[curr_tid].pindx++;
+    if (g_asic_rw_workq[curr_tid].pindx >= HAL_ASIC_RW_Q_SIZE) {
+        g_asic_rw_workq[curr_tid].pindx = 0;
     }
 
     return ret;
@@ -251,7 +259,7 @@ asic_rw_loop (void)
 
             // populate the results
             rw_entry->status =  rv ? HAL_RET_OK : HAL_RET_ERR;
-            rw_entry->done = TRUE;
+            rw_entry->done.store(true);
 
             // advance to next entry in the queue
             g_asic_rw_workq[qid].cindx++;
