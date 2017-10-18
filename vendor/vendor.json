@@ -1435,6 +1435,12 @@
 			"revision": "ca336a1f95a6b89be9c250df26c7a41742eb4a6f"
 		},
 		{
+			"checksumSHA1": "pyhzJ50mNUDrMrTXSC2rk7+jjTk=",
+			"path": "github.com/miekg/pkcs11",
+			"revision": "eda1d775a087f2a96fec7c7876ea94dea43e6027",
+			"revisionTime": "2017-09-15T06:47:24Z"
+		},
+		{
 			"checksumSHA1": "q8VfSvQ6fZY+QwtlMPtQsJrNews=",
 			"path": "github.com/minio/go-homedir",
 			"revision": "21304a94172ae3a09dee2cd86a12fb6f842138c7",

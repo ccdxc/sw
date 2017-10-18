@@ -5,7 +5,6 @@ package keymgr
 import (
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"sync"
 
@@ -210,9 +209,11 @@ func NewKeyMgr(backend Backend) (*KeyMgr, error) {
 // NewDefaultBackend returns an instance of the default backend
 // It allows switching from one backend to the other without making clients of KeyMgr aware of the change
 func NewDefaultBackend() (Backend, error) {
-	dir, err := ioutil.TempDir("", "gocrypto_be_test")
+	pkcs11be, err := NewPkcs11Backend(Pkcs11Lib, "keymgr", "1234")
 	if err != nil {
-		return nil, errors.Wrap(err, "Error instantiating default backend")
+		return nil, errors.Wrapf(err, "Error instantiating default backend: %s", err)
 	}
-	return NewGoCryptoBackend(dir)
+	hsmInfo, _ := pkcs11be.GetInfo() // do not return failure if the call to GetInfo fails
+	log.Infof("Default backend is Pkcs11Backend, module: %v, moduleInfo:%+v\n", Pkcs11Lib, hsmInfo)
+	return pkcs11be, nil
 }

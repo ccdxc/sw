@@ -73,9 +73,13 @@ func testObjectStoreSerialAccess(t *testing.T, keyMgr *KeyMgr, prefix string) {
 	Assert(t, err != nil, "Destroying non-existing certificate did not fail as expected")
 
 	// CertificateBundle object
+	signKeyID := "sign-" + keyID
+	signKey, err := keyMgr.CreateKeyPair(signKeyID, ECDSA384)
+	AssertOk(t, err, "Error generating private key")
+	defer keyMgr.DestroyObject(signKeyID, ObjectTypeKeyPair)
 	bundle := make([]*x509.Certificate, 0)
 	for i := 0; i < 20; i++ {
-		cert, err := certs.SelfSign(1, getBundleCertificateID(bundleID, i), key)
+		cert, err := certs.SelfSign(1, getBundleCertificateID(bundleID, i), signKey)
 		bundle = append(bundle, cert)
 		AssertOk(t, err, "Error generating self-signed certificate")
 	}
@@ -199,6 +203,34 @@ func testWarmStart(t *testing.T, be Backend) {
 	AssertOk(t, err, "Error retrieving certificate")
 	Assert(t, cert2 != nil, "Certificate not found")
 	Assert(t, reflect.DeepEqual(certObj, cert2), fmt.Sprintf("Looked-up object does not match stored one. Have: %+v, Want: %+v", cert2, certObj))
+}
+
+// For the moment key import functions are used for testing only.
+func testKeyImport(t *testing.T, be Backend) {
+	// instantiate a KeyMgr instance and populate it with a KeyPair and a cert
+	keyMgr, err := NewKeyMgr(be)
+	AssertOk(t, err, "Error instantiating KeyMgr")
+
+	for i, keyType := range keyPairTypes {
+		keyID := fmt.Sprintf("importedKey-%d", i)
+		var keyPair *KeyPair
+		switch keyType {
+		case RSA1024, RSA2048, RSA4096:
+			key, err := rsa.GenerateKey(rand.Reader, rsaKeyTypeToBitSize[keyType])
+			AssertOk(t, err, fmt.Sprintf("Error creating key, type : %v", keyType))
+			keyPair = NewKeyPairObject(keyID, key)
+		case ECDSA224, ECDSA256, ECDSA384, ECDSA521:
+			key, err := ecdsa.GenerateKey(ecdsaKeyTypeToCurve[keyType], rand.Reader)
+			AssertOk(t, err, fmt.Sprintf("Error creating key, type : %v", keyType))
+			keyPair = NewKeyPairObject(keyID, key)
+		}
+		defer keyMgr.DestroyObject(keyID, ObjectTypeKeyPair)
+		err = keyMgr.StoreObject(keyPair)
+		AssertOk(t, err, fmt.Sprintf("Error storing key pair %+v", keyPair))
+		keyPair2, err := keyMgr.GetObject(keyID, ObjectTypeKeyPair)
+		AssertOk(t, err, fmt.Sprintf("Error retrieving key pair %+v", keyPair))
+		Assert(t, reflect.DeepEqual(keyPair, keyPair2), fmt.Sprintf("Looked-up object does not match stored one. Have: %+v, Want: %+v", keyPair2, keyPair))
+	}
 }
 
 func testParallelAccess(t *testing.T, be Backend) {

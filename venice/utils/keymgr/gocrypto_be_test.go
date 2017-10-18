@@ -39,6 +39,12 @@ func TestGoCryptoBackendKeyOps(t *testing.T) {
 	testKeyOps(t, be)
 }
 
+func TestGoCryptoKeyImport(t *testing.T) {
+	be := newGoCryptoBackend(t)
+	defer be.Close()
+	testKeyImport(t, be)
+}
+
 func TestGoCryptoBackendWarmStart(t *testing.T) {
 	be := newGoCryptoBackend(t)
 	defer be.Close()

@@ -86,6 +86,11 @@ end
         s.inline = "echo '#{nodeprops[:node_ips][0]} master.local' >> /etc/hosts"
       end
 
+      # install additional packages
+      node.vm.provision "shell" do |s|
+				s.inline = "sudo yum install -y softhsm libtool-ltdl-devel"
+			end
+
       # port mappings
       if n == 0 then
           node.vm.network "forwarded_port", guest: 80, host: 9980, auto_correct: true

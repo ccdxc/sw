@@ -38,7 +38,7 @@ func createDefaultKeyMgr(t *testing.T) (*keymgr.KeyMgr, keymgr.Backend) {
 func TestCaInit(t *testing.T) {
 	// NEGATIVE TEST-CASES
 
-	// empty dir
+	// nil KeyMgr
 	_, err := NewCertificateAuthority(nil)
 	Assert(t, err != nil, "NewCertificateAuthority succeeded nil KeyMgr")
 }
@@ -68,6 +68,13 @@ func preloadCAKeys(t *testing.T, km *keymgr.KeyMgr) (*keymgr.KeyPair, *x509.Cert
 	return kp, caCertificate, trustRoots
 }
 
+func cleanupCAKeys(t *testing.T, km *keymgr.KeyMgr) {
+	km.DestroyObject(caKeyID, keymgr.ObjectTypeKeyPair)
+	km.DestroyObject(caCertificateID, keymgr.ObjectTypeCertificate)
+	km.DestroyObject(intermediatesBundleName, keymgr.ObjectTypeCertificateBundle)
+	km.DestroyObject(trustRootsBundleName, keymgr.ObjectTypeCertificateBundle)
+}
+
 func TestSelfSignedFlow(t *testing.T) {
 	// create keymgr instance
 	km, be := createDefaultKeyMgr(t)
@@ -76,6 +83,7 @@ func TestSelfSignedFlow(t *testing.T) {
 	// test the bootstrap case where we start with no keys and certs
 	cs, err := NewCertificateAuthority(km)
 	AssertOk(t, err, "Error instantiating new CA")
+	defer cleanupCAKeys(t, km)
 	Assert(t, cs.IsReady(), "Certificates service failed to start")
 
 	// Check that CA key and certificates have been generated properly
@@ -94,8 +102,8 @@ func TestSelfSignedFlow(t *testing.T) {
 	Assert(t, valid && (err == nil), fmt.Sprintf("Public and private key do not match, error: %v", err))
 
 	// check that the self-signed certificate is the only trust root
+	Assert(t, len(cs.TrustRoots()) == 1, "Found unexpected number of trust roots, want: 1, have: %d", len(cs.TrustRoots()))
 	Assert(t, caCertificate.Equal(&cs.TrustRoots()[0]), "CA certificate not found in trusted roots")
-	Assert(t, len(cs.TrustRoots()) == 1, "Found unexpected certificate in trust roots")
 
 	// check that the ca trust chain contains only the self-signed cert
 	Assert(t, caCertificate.Equal(&cs.TrustChain()[0]), "CA certificate not found in CA trust chain")
@@ -123,6 +131,7 @@ func TestExternalCAFlow(t *testing.T) {
 	// Instantiate CA
 	ca, err := NewCertificateAuthority(km)
 	AssertOk(t, err, "Error instantiating certificate authority")
+	defer cleanupCAKeys(t, km)
 
 	// compare against a reference instance
 	refCa := &CertificateAuthority{
@@ -150,6 +159,7 @@ func TestCertificateVerification(t *testing.T) {
 
 	cs, err := NewCertificateAuthority(km)
 	AssertOk(t, err, "Error starting certificates service")
+	defer cleanupCAKeys(t, km)
 
 	// Open a certificate that was signed by this CA and check that it passes verification
 	testCertPath := path.Join(testCertsDir, "nic-secp256r1-ecdsa.cert.pem")
@@ -172,7 +182,9 @@ func TestCertificatesApi(t *testing.T) {
 
 	// Instantiate a new CA with self-signed certificate
 	cs, err := NewCertificateAuthority(km)
-	Assert(t, err == nil && cs.IsReady(), fmt.Sprintf("Error instantiating certificate authority: %v", err))
+	AssertOk(t, err, "Error instantiating certificate authority")
+	Assert(t, cs.IsReady(), "CA not ready")
+	defer cleanupCAKeys(t, km)
 
 	key, err := km.CreateKeyPair("testkey", keymgr.ECDSA256)
 	AssertOk(t, err, "Error generating private key")
