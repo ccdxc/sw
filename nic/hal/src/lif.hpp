@@ -8,7 +8,7 @@
 #include "nic/utils/ht/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/hal/src/tenant.hpp"
-#include "nic/proto/hal/interface.pb.h"
+#include "nic/gen/proto/hal/interface.pb.h"
 
 using intf::LifSpec;
 using intf::LifResponse;

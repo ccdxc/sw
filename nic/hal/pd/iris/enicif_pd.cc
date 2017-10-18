@@ -3,7 +3,7 @@
 #include "nic/hal/pd/common/pd_api.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/include/l2segment_api.hpp"
-#include "nic/proto/hal/interface.pb.h"
+#include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/pd/iris/if_pd.hpp"
 #include "nic/hal/pd/iris/lif_pd.hpp"
 #include "nic/hal/pd/iris/enicif_pd.hpp"

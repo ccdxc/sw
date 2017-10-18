@@ -4,7 +4,7 @@
 #include "nic/utils/indexer/indexer.hpp"
 #include "nic/include/base.h"
 #include "nic/utils/ht/ht.hpp"
-#include "nic/proto/hal/proxy.pb.h"
+#include "nic/gen/proto/hal/proxy.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/session.hpp"

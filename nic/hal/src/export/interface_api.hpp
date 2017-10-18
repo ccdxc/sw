@@ -11,7 +11,7 @@
 #define __INTERFACE_API_HPP__
 
 #include "nic/hal/src/interface.hpp"
-#include "nic/proto/hal/interface.pb.h"
+#include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/src/l2segment.hpp"
 
 namespace hal {

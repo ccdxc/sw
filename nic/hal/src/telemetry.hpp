@@ -3,7 +3,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/include/interface_api.hpp"
-#include "nic/proto/hal/telemetry.grpc.pb.h"
+#include "nic/gen/proto/hal/telemetry.grpc.pb.h"
 
 using telemetry::Telemetry;
 using telemetry::MirrorSessionSpec;

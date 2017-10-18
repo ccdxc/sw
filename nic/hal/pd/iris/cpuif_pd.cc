@@ -2,7 +2,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/interface_api.hpp"
-#include "nic/proto/hal/interface.pb.h"
+#include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/pd/iris/lif_pd.hpp"
 #include "nic/hal/pd/iris/cpuif_pd.hpp"
 #include "nic/hal/pd/iris/l2seg_pd.hpp"

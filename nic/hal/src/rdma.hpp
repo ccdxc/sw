@@ -5,7 +5,7 @@
 #include <memory>
 #include <map>
 #include "nic/hal/src/interface.hpp"
-#include "nic/proto/hal/rdma.pb.h"
+#include "nic/gen/proto/hal/rdma.pb.h"
 // #include "rdma_svc.hpp"
 #include "nic/utils/bm_allocator/bm_allocator.hpp"
 

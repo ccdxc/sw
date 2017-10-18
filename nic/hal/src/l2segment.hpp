@@ -6,7 +6,7 @@
 #include "nic/include/list.hpp"
 #include "nic/utils/ht/ht.hpp"
 #include "nic/hal/src/tenant.hpp"
-#include "nic/proto/hal/l2segment.pb.h"
+#include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/utils.hpp"
 

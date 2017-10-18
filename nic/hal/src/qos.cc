@@ -5,7 +5,7 @@
 #include "nic/hal/src/qos.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/proto/hal/qos.pb.h"
+#include "nic/gen/proto/hal/qos.pb.h"
 
 namespace hal {
 

@@ -3,8 +3,8 @@
 
 #include "nic/include/base.h"
 #include "grpc++/grpc++.h"
-#include "nic/proto/types.pb.h"
-#include "nic/proto/hal/tcp_proxy_cb.grpc.pb.h"
+#include "nic/gen/proto/hal/types.pb.h"
+#include "nic/gen/proto/hal/tcp_proxy_cb.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

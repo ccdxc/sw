@@ -2,7 +2,7 @@
 #define __NETWORK_HPP__
 
 #include "nic/hal/src/tenant.hpp"
-#include "nic/proto/hal/nw.pb.h"
+#include "nic/gen/proto/hal/nw.pb.h"
 #include "nic/include/ip.h"
 
 using nw::NetworkSpec;

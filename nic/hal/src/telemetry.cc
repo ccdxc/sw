@@ -5,9 +5,9 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/telemetry.hpp"
-#include "nic/proto/hal/telemetry.pb.h"
+#include "nic/gen/proto/hal/telemetry.pb.h"
 // #include "nic/hal/svc/telemetry_svc.hpp"
-#include "nic/proto/types.pb.h"
+#include "nic/gen/proto/hal/types.pb.h"
 
 using telemetry::MirrorSession;
 using telemetry::MirrorSessionStatus;

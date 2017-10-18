@@ -6,7 +6,7 @@
 #include "nic/utils/ht/ht.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/proto/hal/tenant.pb.h"
+#include "nic/gen/proto/hal/tenant.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/hal/src/nwsec.hpp"

@@ -203,6 +203,37 @@ cc_library(
 )
 
 cc_library(
+    name = "gen_proto_includes",
+    srcs = [
+    ] + glob(["gen/proto/hal/*.hpp"]),
+    hdrs = glob(["gen/proto/hal/*.hpp",
+                 "gen/proto/hal/*.h"]),
+)
+
+cc_library(
+    name = "halproto",
+    srcs = [
+            "obj/libhalproto.so",
+            ],
+    linkopts = [
+        "-Lnic/obj"
+        ],
+)
+
+cc_library(
+    name = "grpc",
+    srcs = [
+            "third-party/grpc/libgrpc++_reflection.a",
+            "third-party/grpc/libgrpc++.a",
+            "third-party/grpc/libgrpc_unsecure.a",
+            "third-party/grpc/libgrpc++_unsecure.a",
+            ],
+    linkopts = [
+        "-Lthird-party/grpc",
+        ],
+)
+
+cc_library(
     name = "lkl_includes",
     srcs = [
             "third-party/lkl/export/include/lkl.h",

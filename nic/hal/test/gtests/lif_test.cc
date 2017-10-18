@@ -1,5 +1,5 @@
 #include "nic/hal/src/interface.hpp"
-#include "nic/proto/hal/interface.pb.h"
+#include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>

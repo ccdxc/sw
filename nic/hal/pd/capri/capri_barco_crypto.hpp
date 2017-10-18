@@ -1,7 +1,7 @@
 #ifndef __CAPRI_BARCO_CRYPTO_HPP__
 #define __CAPRI_BARCO_CRYPTO_HPP__
 
-#include "nic/proto/types.pb.h"
+#include "nic/gen/proto/hal/types.pb.h"
 
 namespace hal {
 namespace pd {

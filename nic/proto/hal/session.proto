@@ -4,9 +4,9 @@
 
 syntax = "proto3";
 
-import public "nic/proto/types.proto";
-import "nic/proto/hal/qos.proto";
-import "nic/proto/hal/telemetry.proto";
+import "types.proto";
+import "qos.proto";
+import "telemetry.proto";
 
 package session;
 option go_package="halproto";

@@ -2,7 +2,7 @@
 #define __SYSTEM_HPP__
 
 #include "nic/include/base.h"
-#include "nic/proto/hal/system.pb.h"
+#include "nic/gen/proto/hal/system.pb.h"
 
 using sys::SystemResponse;
 

@@ -1,5 +1,5 @@
 #include "nic/hal/src/qos.hpp"
-#include "nic/proto/hal/qos.pb.h"
+#include "nic/gen/proto/hal/qos.pb.h"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include <gtest/gtest.h>

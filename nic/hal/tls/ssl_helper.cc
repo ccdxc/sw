@@ -96,12 +96,14 @@ SSLConnection::do_handshake()
     }
     transmit_pending_data();
 
+#if 0
     if(SSL_is_init_finished(ssl)){
         HAL_TRACE_DEBUG("SSL: handshake complete");
         if(helper && helper->get_hs_done_cb()) {
             helper->get_hs_done_cb()(id, err);
         }
     }
+#endif
 
     return ret;
 }

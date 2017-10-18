@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include <grpc++/grpc++.h>
 #include <memory>
-#include "nic/proto/hal/internal.pb.h"
-#include "nic/proto/hal/internal.grpc.pb.h"
-#include "nic/proto/hal/interface.pb.h"
-#include "nic/proto/hal/interface.grpc.pb.h"
+#include "nic/gen/proto/hal/internal.pb.h"
+#include "nic/gen/proto/hal/internal.grpc.pb.h"
+#include "nic/gen/proto/hal/interface.pb.h"
+#include "nic/gen/proto/hal/interface.grpc.pb.h"
 #include "dol/test/storage/hal_if.hpp"
 
 extern uint64_t hal_port;

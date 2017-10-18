@@ -6,7 +6,7 @@
 
 syntax = "proto3";
 
-import public "nic/proto/types.proto";
+import "types.proto";
 
 package tenant;
 option go_package="halproto";

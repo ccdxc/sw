@@ -1,5 +1,5 @@
 #include "nic/hal/src/internal.hpp"
-#include "nic/proto/hal/internal.pb.h"
+#include "nic/gen/proto/hal/internal.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>

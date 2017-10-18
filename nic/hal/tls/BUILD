@@ -14,8 +14,9 @@ cc_library(
             "//nic/hal/pd/common:pdcommon",
             "//nic/utils/slab:slab",
             "//nic/utils/indexer:indexer",
-            "//nic/proto:types_proto",
-            "//nic/proto/hal:hal_proto",
+            "//nic:gen_proto_includes",
+            #"//nic/proto:types_proto",
+            #"//nic/proto/hal:hal_proto",
             "//nic:p4pd"
     ],
 )

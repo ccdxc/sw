@@ -68,5 +68,6 @@ cc_test(
         ],
    linkopts = [
          "-lzmq",
+        "-lprotobuf"
      ],
 )

@@ -59,5 +59,8 @@ cc_test(
 ],
    linkopts = [
          "-lzmq",
+         "-lpthread",
+         "-pthread",
+         "-lprotobuf"
      ],
 )

@@ -5,7 +5,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/utils/ht/ht.hpp"
 #include "nic/include/bitmap.hpp"
-#include "nic/proto/hal/qos.pb.h"
+#include "../../gen/proto/hal/qos.pb.h"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::bitmap;

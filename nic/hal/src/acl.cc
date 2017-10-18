@@ -5,7 +5,7 @@
 #include "nic/hal/src/acl.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/proto/hal/acl.pb.h"
+#include "nic/gen/proto/hal/acl.pb.h"
 
 namespace hal {
 

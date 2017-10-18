@@ -1,7 +1,7 @@
 #include "nic/include/base.h"
 #include "nic/hal/src/acl.hpp"
-#include "nic/proto/types.pb.h"
-#include "nic/proto/hal/acl.pb.h"
+#include "nic/gen/proto/hal/types.pb.h"
+#include "nic/gen/proto/hal/acl.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>

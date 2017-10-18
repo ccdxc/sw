@@ -5,7 +5,7 @@
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/lif.hpp"
-#include "nic/proto/types.pb.h"
+#include "nic/gen/proto/hal/types.pb.h"
 #include "nic/include/ip.h"
 
 namespace hal {

@@ -8,7 +8,7 @@
 #include "nic/utils/ht/ht.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/l2segment.hpp"
-#include "nic/proto/hal/endpoint.pb.h"
+#include "nic/gen/proto/hal/endpoint.pb.h"
 #include "nic/include/pd.hpp"
 #include <netinet/ether.h>
 

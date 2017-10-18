@@ -1,5 +1,5 @@
 #include "nic/hal/src/tcpcb.hpp"
-#include "nic/proto/hal/tcp_proxy_cb.pb.h"
+#include "nic/gen/proto/hal/tcp_proxy_cb.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>

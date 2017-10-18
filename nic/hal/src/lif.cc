@@ -4,7 +4,7 @@
 #include "nic/hal/src/interface.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/proto/hal/l2segment.pb.h"
+#include "../../gen/proto/hal/l2segment.pb.h"
 #include "nic/hal/src/lif_manager.hpp"
 #include "nic/hal/src/utils.hpp"
 #include "nic/include/oif_list_api.hpp"

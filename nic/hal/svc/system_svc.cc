@@ -8,7 +8,7 @@
 #include "nic/include/trace.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/hal/svc/system_svc.hpp"
-#include "nic/proto/hal/system.pb.h"
+#include "nic/gen/proto/hal/system.pb.h"
 #include "nic/hal/src/system.hpp"
 
 Status

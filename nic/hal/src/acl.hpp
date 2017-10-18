@@ -5,7 +5,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/utils/ht/ht.hpp"
 #include "nic/include/ip.h"
-#include "nic/proto/hal/acl.pb.h"
+#include "nic/gen/proto/hal/acl.pb.h"
 
 // Include key of internal fields for use only with DOL/testing infra
 // For production builds this needs to be removed

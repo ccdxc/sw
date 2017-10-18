@@ -4,9 +4,9 @@
 
 syntax = "proto3";
 
-import public "nic/proto/types.proto";
-import "nic/proto/hal/l2segment.proto";
-import "nic/proto/hal/qos.proto";
+import "types.proto";
+import "l2segment.proto";
+import "qos.proto";
 
 package intf;
 option go_package="halproto";

@@ -1,5 +1,5 @@
 #include "nic/hal/src/tlscb.hpp"
-#include "nic/proto/hal/tls_proxy_cb.pb.h"
+#include "nic/gen/proto/hal/tls_proxy_cb.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>

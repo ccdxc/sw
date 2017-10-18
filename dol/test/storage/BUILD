@@ -16,7 +16,8 @@ cc_library(
         "hal_if.hpp",
     ],
     deps = [
-        "//nic/proto/hal:hal_proto",
+        "//nic:halproto",
+        "//nic:gen_proto_includes",
     ]
 )
 
@@ -115,5 +116,12 @@ cc_binary(
         ":hal_if",
         ":qstate_if",
         ":tests",
+        "//nic:grpc",
+    ],
+    linkopts = [
+        "-lpthread",
+        "-pthread",
+        "-lz",
+        "-lprotobuf",
     ],
 )

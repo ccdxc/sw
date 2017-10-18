@@ -1,5 +1,5 @@
 
-TOPDIR = ../..
+TOPDIR = ../../..
 SHAREDLIBRARY = libhalproto.so
 
 LCXXFLAGS = \

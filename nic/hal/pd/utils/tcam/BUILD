@@ -28,6 +28,9 @@ cc_test(
     srcs = ["test/tcam_test.cc"],
     linkopts = [
         "-lzmq",
+        "-lpthread",
+        "-pthread",
+        "-lprotobuf"
     ],
     deps = [
         ":tcam",

@@ -70,6 +70,9 @@ cc_test(
         "//nic/hal/pd/utils/p4pd_mock:p4pd_mock"
 ],
    linkopts = [
-         "-lzmq",
+        "-lzmq",
+        "-lpthread",
+        "-pthread",
+        "-lprotobuf"
      ],
 )

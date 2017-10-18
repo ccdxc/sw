@@ -35,6 +35,9 @@ cc_test(
     srcs = ["test/hash_test.cc"],
     linkopts = [
         "-lzmq",
+        "-lpthread",
+        "-pthread",
+        "-lprotobuf"
     ],
     deps = [
         ":hash",

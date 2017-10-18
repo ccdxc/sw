@@ -8,7 +8,7 @@
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/endpoint.hpp"
-#include "nic/proto/hal/session.pb.h"
+#include "nic/gen/proto/hal/session.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/src/qos.hpp"

@@ -4,11 +4,11 @@
 
 syntax = "proto3";
 
-import public "nic/proto/types.proto";
-import "nic/proto/hal/tenant.proto";
-import "nic/proto/hal/interface.proto";
-import "nic/proto/hal/l2segment.proto";
-import "nic/proto/hal/telemetry.proto";
+import "types.proto";
+import "tenant.proto";
+import "interface.proto";
+import "l2segment.proto";
+import "telemetry.proto";
 
 package acl;
 option go_package="halproto";

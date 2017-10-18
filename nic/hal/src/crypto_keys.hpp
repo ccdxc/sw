@@ -3,8 +3,8 @@
 #include "nic/include/base.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/proto/hal/crypto_keys.pb.h"
-#include "nic/proto/types.pb.h"
+#include "nic/gen/proto/hal/crypto_keys.pb.h"
+#include "nic/gen/proto/hal/types.pb.h"
 
 
 using cryptokey::CryptoKeySpec;

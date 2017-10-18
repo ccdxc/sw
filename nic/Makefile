@@ -62,15 +62,18 @@ capmodel:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:model_cli
 
 go-proto:
-	make -C agent/netagent/datapath/halproto
+	#cd agent/netagent/datapath/halproto && make
+	#make -C agent/netagent/datapath/halproto
 
 bazel-build:
 	make -C p4
 	make -C asm
+	make -C proto
+	make -C gen/proto/hal
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto:all
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //protos:all
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto/hal:all
+	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto:all
+	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //protos:all
+	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto/hal:all
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //dol/test/storage:storage_test
 	make capmodel

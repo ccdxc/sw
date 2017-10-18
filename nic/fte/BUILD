@@ -9,12 +9,13 @@ cc_library(
         "//nic/include:base_includes",
         "//nic/hal:hal_src",
         "//nic/hal/svc:hal_svc",
-        "//nic/proto:types_proto",
-        "//nic/proto/hal:hal_proto",
         "//nic:gen_includes",
+        "//nic:gen_proto_includes",
         "//nic/p4/nw/include:p4_nw_includes",
         "//nic/asm/cpu-p4plus/include:cpu_p4plus_includes",
-        "//nic/third-party/spdlog:spdlog"
+        "//nic/third-party/spdlog:spdlog",
+        "//nic:halproto",
+        "//nic:grpc",
     ],
     alwayslink = 1,
 )
@@ -38,6 +39,8 @@ cc_test(
         "//nic/hal/test/utils:haltestutils",
         "//nic/hal/lkl:lkl_api",
         "//nic:lkl",
+        "//nic:halproto",
+        "//nic:grpc",
 
         # PD
         "//nic/hal/pd/common:pdcommon",
@@ -61,4 +64,9 @@ cc_test(
         # External
         "//:gtest",
     ],
+    linkopts = [
+        "-lpthread",
+        "-pthread",
+        "-lprotobuf"
+    ]
 )

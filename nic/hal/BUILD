@@ -9,7 +9,10 @@ cc_binary(
     ],
     linkopts = [
         "-lzmq",
-        "-Lnic/third-party/lkl/export/bin -llkl"
+        "-lpthread",
+        "-pthread",
+        "-lz",
+        "-lprotobuf",
     ],
     deps = [
         ":hal_src",
@@ -24,6 +27,8 @@ cc_binary(
         "//nic/utils/host_mem:host_mem",
         "//nic/hal/lkl:lkl_api",
         "//nic:lkl",
+        "//nic:halproto",
+        "//nic:grpc",
 
         # PD
         "//nic/hal/pd/common:pdcommon",
@@ -74,11 +79,8 @@ cc_library(
         "//nic/utils/slab:slab",
         "//nic/utils/indexer:indexer",
         "//nic/utils/ht:ht",
-        "//nic/proto:types_proto",
-        #"//nic/proto:types_proto_py",
-        "//nic/proto/hal:hal_proto",
-        #"//nic/proto/hal:hal_proto_py",
         "//nic:gen_includes",
+        "//nic:gen_proto_includes",
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd/iris:iris_includes",
         "//nic/utils/host_mem:host_mem_includes",

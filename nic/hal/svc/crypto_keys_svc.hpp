@@ -2,8 +2,8 @@
 #define __CRYPT_KEYS_SVC_HPP__
 #include "nic/include/base.h"
 #include "grpc++/grpc++.h"
-#include "nic/proto/types.pb.h"
-#include "nic/proto/hal/crypto_keys.grpc.pb.h"
+#include "nic/gen/proto/hal/types.pb.h"
+#include "nic/gen/proto/hal/crypto_keys.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;

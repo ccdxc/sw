@@ -2,7 +2,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 //#include <internal_svc.hpp>
-#include "nic/proto/hal/interface.grpc.pb.h"
+#include "nic/gen/proto/hal/interface.grpc.pb.h"
 #include "nic/hal/src/internal.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"

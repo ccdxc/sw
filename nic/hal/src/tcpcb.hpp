@@ -5,7 +5,7 @@
 #include "nic/include/encap.hpp"
 #include "nic/include/list.hpp"
 #include "nic/utils/ht/ht.hpp"
-#include "nic/proto/hal/tcp_proxy_cb.pb.h"
+#include "nic/gen/proto/hal/tcp_proxy_cb.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal_state.hpp"
 

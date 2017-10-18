@@ -7,7 +7,7 @@
 #include "nic/include/list.hpp"
 #include "nic/utils/ht/ht.hpp"
 #include "nic/include/bitmap.hpp"
-#include "nic/proto/hal/interface.pb.h"
+#include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/hal/src/tenant.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/lif.hpp"

@@ -1,10 +1,10 @@
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/network.hpp"
 #include "nic/hal/src/nwsec.hpp"
-#include "nic/proto/hal/interface.pb.h"
-#include "nic/proto/hal/l2segment.pb.h"
-#include "nic/proto/hal/tenant.pb.h"
-#include "nic/proto/hal/nwsec.pb.h"
+#include "nic/gen/proto/hal/interface.pb.h"
+#include "nic/gen/proto/hal/l2segment.pb.h"
+#include "nic/gen/proto/hal/tenant.pb.h"
+#include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
 #include <stdio.h>

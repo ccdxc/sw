@@ -11,9 +11,10 @@ cc_library(
         "//nic/fte",
         "//nic/include:base_includes",
         "//nic/model_sim/include:modelsim_includes",
-        "//nic/proto:types_proto",
-        "//nic/proto/hal:hal_proto",
+        #"//nic/proto:types_proto",
+        #"//nic/proto/hal:hal_proto",
         "//nic/third-party/spdlog",
+        "//nic:gen_proto_includes",
     ],
     alwayslink = 1,
 )

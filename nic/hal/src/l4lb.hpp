@@ -6,7 +6,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/include/ip.h"
 #include "nic/utils/ht/ht.hpp"
-#include "nic/proto/hal/l4lb.pb.h"
+#include "nic/gen/proto/hal/l4lb.pb.h"
 #include <netinet/ether.h>
 #include "nic/hal/src/tenant.hpp"
 

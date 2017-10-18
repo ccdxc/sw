@@ -12,3 +12,4 @@ nic/third-party/openssl/bin/c_rehash
 nic/third-party/openssl/bin/openssl
 nic/third-party/crchack/bin/crchack
 nic/third-party/snort3/export/bin/libsnort.so
+nic/third-party/grpc/*.a

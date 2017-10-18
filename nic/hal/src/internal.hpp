@@ -7,7 +7,7 @@
 #include "nic/include/list.hpp"
 #include "nic/utils/ht/ht.hpp"
 #include "nic/include/bitmap.hpp"
-#include "nic/proto/hal/internal.pb.h"
+#include "nic/gen/proto/hal/internal.pb.h"
 #include "nic/hal/src/internal.hpp"
 
 

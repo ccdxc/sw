@@ -47,6 +47,9 @@ cc_test(
     srcs = ["test/met_test.cc"],
     linkopts = [
         "-lzmq",
+        "-lpthread",
+        "-pthread",
+        "-lprotobuf"
     ],
     deps = [
         ":met",

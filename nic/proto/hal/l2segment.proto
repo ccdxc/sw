@@ -8,7 +8,7 @@
 
 syntax = "proto3";
 
-import public "nic/proto/types.proto";
+import "types.proto";
 
 package l2segment;
 option go_package="halproto";

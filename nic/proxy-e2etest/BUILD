@@ -13,10 +13,11 @@ cc_library(
         "//nic/utils/host_mem:host_mem",
         #"//nic/hal:hal_src",
         #"//nic/hal/svc:hal_svc",
-        "//nic/proto:types_proto",
-        "//nic/proto/hal:hal_proto",
+        #"//nic/proto:types_proto",
+        #"//nic/proto/hal:hal_proto",
         #"//nic/proto/agents:agents_proto",
         "//nic:gen_includes",
+        "//nic:gen_proto_includes",
         "//nic/p4/nw/include:p4_nw_includes",
         "//nic/third-party/spdlog:spdlog"
     ],
