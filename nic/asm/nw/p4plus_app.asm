@@ -48,7 +48,8 @@ p4plus_app_tcp_proxy:
   phvwr.!c1   p.vlan_tag_valid, FALSE
   phvwr.!c1   p.ipv4_valid, FALSE
   phvwr.!c1   p.ipv6_valid, FALSE
-  phvwr.!c1   p.tcp_valid, FALSE
+  .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_valid) == 11)
+  phvwr.!c1   p.{tcp_option_eol_valid...tcp_valid}, r0
 
   phvwr       p.p4_to_p4plus_tcp_proxy_valid, TRUE
   phvwr       p.p4_to_p4plus_tcp_proxy_sack_valid, TRUE
@@ -156,9 +157,7 @@ p4plus_app_rdma:
 // input r6 : packet start offset
 f_p4plus_cpu_pkt:
   phvwr       p.p4_to_p4plus_cpu_pkt_valid, TRUE
-  or          r1, k.control_metadata_src_lif_sbit8_ebit15, \
-                  k.control_metadata_src_lif_sbit0_ebit7, 8
-  phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, r1[15:0].hx
+  phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, k.{control_metadata_src_lif}.hx
   or          r1, k.capri_intrinsic_lif_sbit3_ebit10, k.capri_intrinsic_lif_sbit0_ebit2, 8
   phvwr       p.p4_to_p4plus_cpu_pkt_lif, r1[15:0].hx
   phvwr       p.p4_to_p4plus_cpu_pkt_qid, k.{control_metadata_qid}.wx

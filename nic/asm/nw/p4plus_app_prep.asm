@@ -37,24 +37,24 @@ p4plus_app_classic_nic_native:
 p4plus_app_classic_nic_l4:
   seq         c1, k.tcp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_l4_inner_udp
-  phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, p4_to_p4plus_classic_nic_l4_dport}, \
-                  k.{tcp_srcPort, tcp_dstPort}
+  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport, k.tcp_srcPort
+  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_dport, k.tcp_dstPort
   phvwr.e     p.p4_to_p4plus_classic_nic_l4_checksum, k.tcp_checksum
   phvwr       p.p4_to_p4plus_classic_nic_flags, r1
 
 p4plus_app_classic_nic_l4_inner_udp:
   seq         c1, k.inner_udp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_l4_udp
-  phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, p4_to_p4plus_classic_nic_l4_dport}, \
-                  k.{inner_udp_srcPort, inner_udp_dstPort}
+  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport, k.inner_udp_srcPort
+  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_dport, k.inner_udp_dstPort
   phvwr.e     p.p4_to_p4plus_classic_nic_l4_checksum, k.inner_udp_checksum
   phvwr       p.p4_to_p4plus_classic_nic_flags, r1
 
 p4plus_app_classic_nic_l4_udp:
   seq         c1, k.udp_valid, TRUE
   bcf         [!c1], p4plus_app_classic_nic_l4_unknown
-  phvwr.c1    p.{p4_to_p4plus_classic_nic_l4_sport, p4_to_p4plus_classic_nic_l4_dport}, \
-                  k.{udp_srcPort, udp_dstPort}
+  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_sport, k.udp_srcPort
+  phvwr.c1    p.p4_to_p4plus_classic_nic_l4_dport, k.udp_dstPort
   phvwr.e     p.p4_to_p4plus_classic_nic_l4_checksum, k.udp_checksum
   phvwr       p.p4_to_p4plus_classic_nic_flags, r1
 

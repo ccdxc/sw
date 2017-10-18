@@ -273,7 +273,6 @@ header_type tcp_option_sack_perm_t {
     fields {
         optType: 8;
         optLength : 8;
-        value : 16;
     }
 }
 

@@ -10,6 +10,16 @@ action p4plus_app_tcp_proxy() {
         remove_header(ipv4);
         remove_header(ipv6);
         remove_header(tcp);
+        remove_header(tcp_option_eol);
+        remove_header(tcp_option_nop);
+        remove_header(tcp_option_mss);
+        remove_header(tcp_option_ws);
+        remove_header(tcp_option_sack_perm);
+        remove_header(tcp_option_timestamp);
+        remove_header(tcp_option_one_sack);
+        remove_header(tcp_option_two_sack);
+        remove_header(tcp_option_three_sack);
+        remove_header(tcp_option_four_sack);
     }
 
     add_header(p4_to_p4plus_tcp_proxy);
