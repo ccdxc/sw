@@ -23,19 +23,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         goto end;
     }
 
-    // execute the pipeline
-    ret = execute_pipeline(ctx);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: failied to execute pipeline, ret={}", ret);
-        goto end;
-    }
-
-    // update GFT
-    ret = ctx.update_gft();
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("fte: failied to updated gft, ret={}", ret);
-        goto end;
-    }
+    ret = ctx.process();
 
  end:
     //update api status

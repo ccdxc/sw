@@ -40,11 +40,9 @@ alg_entry_t *insert_alg_entry(ctx_t *ctx, hal::session_t *sess);
 alg_entry_t *remove_alg_entry(hal::flow_key_t key);
 
 typedef std::function<pipeline_action_t(ctx_t &ctx)> exec_handler_t;
-typedef std::function<void(ctx_t &ctx)> commit_handler_t;
 hal_ret_t register_feature(const feature_id_t& fid,
                            const std::string& name,
-                           const exec_handler_t &exec_handler,
-                           const commit_handler_t &commit_handler = nullptr);
+                           const exec_handler_t &exec_handler);
 
 //  FTE Pipeline 
 hal_ret_t register_pipeline(const std::string& name, const lifqid_t &lifq,

@@ -289,6 +289,9 @@ struct txpkt_info_s {
 
 typedef hal::pd::p4_to_p4plus_cpu_pkt_t cpu_rxhdr_t;
 class flow_t;
+class ctx_t;
+
+typedef void (*completion_handler_t) (ctx_t &ctx, bool fail);
 
 static const uint8_t MAX_FLOW_KEYS = 2;
 
@@ -297,17 +300,17 @@ class ctx_t {
 public:
     static const uint8_t MAX_STAGES = hal::MAX_SESSION_FLOWS; // max no.of times a pkt enters p4 pipeline
     static const uint8_t MAX_QUEUED_PKTS = 2;  // max queued pkts for tx
+    static const uint8_t MAX_QUEUED_HANDLERS = 16; // max queued completion handlers
 
     hal_ret_t init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
                    flow_t iflow[], flow_t rflow[]);
     hal_ret_t init(SessionSpec *spec, SessionResponse *rsp,
                    flow_t iflow[], flow_t rflow[]);
+    hal_ret_t process();
 
     hal_ret_t update_flow(const flow_update_t& flowupd, const hal::flow_role_t role);
 
     hal_ret_t update_flow(const flow_update_t& flowupd);
-
-    hal_ret_t update_gft();
 
     // Get key based on role
     const hal::flow_key_t& get_key(hal::flow_role_t role);
@@ -362,6 +365,17 @@ public:
     hal_ret_t feature_status() const { return feature_status_; } 
     void set_feature_status(hal_ret_t ret) { feature_status_ = ret; }
 
+    // completion handlere rgistrations, registered handlers are called at the end of the
+    // packet processing (after updating the gft)
+    // callback's 'fail' argument is set to true if the pkt processing failed and
+    // flow is not getting installed.
+    hal_ret_t register_completion_handler(completion_handler_t handler) {
+        HAL_ASSERT_RETURN(num_handlers_ + 1 < MAX_QUEUED_HANDLERS, HAL_RET_INVALID_OP);
+        HAL_TRACE_DEBUG("fte: feature={} queued completion handler {:p}", feature_name_, (void*)handler);
+        completion_handlers_[num_handlers_++] = handler;
+        return HAL_RET_OK;
+    }
+
     bool flow_miss() const { return flow_miss_; }
     void set_flow_miss(bool val) { flow_miss_ = val; }
 
@@ -407,6 +421,10 @@ private:
     const char*           feature_name_;   // Name of the feature being executed (for logging)
     hal_ret_t             feature_status_; // feature exit status (set by features to pass the error status)
 
+    //completion handlers
+    uint8_t               num_handlers_;
+    completion_handler_t  completion_handlers_[MAX_QUEUED_HANDLERS];
+
     bool                  drop_;           // Drop the packeto
     bool                  existing_session_;// Existing or new session ?
     hal::session_t        *session_;
@@ -430,12 +448,17 @@ private:
     alg_proto_state_t     alg_proto_state_;   // ALG Proto state machine state
 
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
+    hal_ret_t update_flow_table();
     hal_ret_t lookup_flow_objs();
     hal_ret_t lookup_session();
     hal_ret_t create_session();
     hal_ret_t extract_flow_key();
+    void invoke_completion_handlers(bool fail);
     hal_ret_t update_for_dnat(hal::flow_role_t role,
                               const header_rewrite_info_t& header);
+    hal_ret_t build_wildcard_key(hal::flow_key_t& key);
+    uint8_t construct_lookup_keys(hal::flow_key_t *key);
+
     static hal_ret_t extract_flow_key_from_spec(hal::flow_key_t *key,
                                                 const FlowKey&  flow_spec_key,
                                                 hal::tenant_id_t tid);

@@ -84,31 +84,18 @@ pkt_loop(uint8_t fte_id)
                 break;;
             }
             
-            // execute the pipeline
-            ret = execute_pipeline(ctx);
+            // process the packet and update flow table
+            ret = ctx.process();
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("fte: failied to execute pipeline, ret={}", ret);
+                HAL_TRACE_ERR("fte: failied to process, ret={}", ret);
                 break;
             }
-            
-            // update GFT
-            ret = ctx.update_gft();
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("fte: failied to updated gft, ret={}", ret);
-                break;
-            }
+
+            // write the packets
+            ctx.send_queued_pkts(arm_ctx);
         } while(false);
 
-        if (ret != HAL_RET_OK) {
-            hal::hal_cfg_db_close();
-            continue;
-        }
-
-        // Update and send the packet
         hal::hal_cfg_db_close();
-
-        // write the packets
-        ctx.send_queued_pkts(arm_ctx);
     }
 }
 } //   namespace fte

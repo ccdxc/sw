@@ -96,7 +96,6 @@ struct feature_s {
     feature_id_t id;
     std::string name;
     exec_handler_t exec_handler;
-    commit_handler_t commit_handler;
 };
 
 static STAILQ_HEAD(feature_list_s_, feature_s) g_feature_list_ =
@@ -124,8 +123,7 @@ static inline feature_t *feature_lookup_(feature_id_t fid)
 }
 
 hal_ret_t register_feature(const feature_id_t& fid, const std::string& name,
-                           const exec_handler_t &exec_handler,
-                           const commit_handler_t &commit_handler)
+                           const exec_handler_t &exec_handler)
 {
     feature_t *feature;
 
@@ -147,7 +145,6 @@ hal_ret_t register_feature(const feature_id_t& fid, const std::string& name,
     feature->id = fid;
     feature->name = name;
     feature->exec_handler = exec_handler;
-    feature->commit_handler = commit_handler;
 
     feature_add_(feature);
 
@@ -280,8 +277,8 @@ register_pipeline(const std::string& name, const lifqid_t& lifq,
     return HAL_RET_OK;
 }
 
-static inline hal_ret_t
-pipeline_execute_(ctx_t &ctx)
+hal_ret_t
+execute_pipeline(ctx_t &ctx)
 {
     uint8_t iflow_start, iflow_end, rflow_start, rflow_end;
     pipeline_action_t rc;
@@ -336,17 +333,6 @@ pipeline_execute_(ctx_t &ctx)
     } while (rc == PIPELINE_RESTART);
 
     return ctx.feature_status();
-}
-
-hal_ret_t execute_pipeline(ctx_t &ctx)
-{
-    hal_ret_t rc = pipeline_execute_(ctx);
-
-    // TODO - invoke commit handlers
-    // need to track commit_handlers, we might have executed
-    // multiple pipelines and skipped some features.
-
-    return rc;
 }
 
 // for unit test code only

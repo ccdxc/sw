@@ -89,7 +89,7 @@ TEST_F(fte_test, execute_pipeline) {
     features = {1,3};
     register_pipeline("p2", {1,1,2}, &features[0], features.size());
 
-    ctx_t ctx;
+    ctx_t ctx = {};
 
     ctx.set_arm_lifq({1,1,1});
     auto rc = execute_pipeline(ctx);
@@ -106,7 +106,7 @@ TEST_F(fte_test, execute_pipeline) {
 
 // execute unknown pipeline
 TEST_F(fte_test, execute_pipeline_unk) {
-    ctx_t ctx;
+    ctx_t ctx = {};
     ctx.set_arm_lifq({1,1,1});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_INVALID_ARG);
@@ -123,7 +123,7 @@ TEST_F(fte_test, execute_pipeline_end) {
     vector<feature_id_t> features{1,2,4,3};
     register_pipeline("p1", {2,1,1}, &features[0], features.size());
 
-    ctx_t ctx;
+    ctx_t ctx = {};
     ctx.set_arm_lifq({2,1,1});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
@@ -157,7 +157,7 @@ TEST_F(fte_test, execute_pipeline_restart) {
     register_pipeline("p3", {1,1,3}, &features[0], features.size());
 
     // execute p3
-    ctx_t ctx;
+    ctx_t ctx={};
     ctx.set_arm_lifq({1, 1, 3});
     auto rc = execute_pipeline(ctx);
     EXPECT_EQ(rc, HAL_RET_OK);
@@ -189,7 +189,7 @@ TEST_F(fte_test, execute_pipeline_wildcard) {
     features  = {4};
     register_pipeline("p4", {0,0,0}, &features[0], features.size(), {}, 0, {0, 0, 0});
 
-    ctx_t ctx;
+    ctx_t ctx={};
 
     ctx.set_arm_lifq({1, 1, 1});
     execute_pipeline(ctx);

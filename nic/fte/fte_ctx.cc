@@ -1,3 +1,4 @@
+#include "fte.hpp"
 #include "fte_ctx.hpp"
 #include "fte_flow.hpp"
 #include "nic/hal/src/session.hpp"
@@ -509,7 +510,7 @@ ctx_t::create_session()
 }
 
 hal_ret_t
-ctx_t::update_gft()
+ctx_t::update_flow_table()
 {
     hal_ret_t       ret;
     hal_handle_t    session_handle;
@@ -989,6 +990,44 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 /*-----------------------------------------------------------------------
 - Swap the derived flow objects for reverse flow processing.
 -------------------------------------------------------------------------*/
+void
+ctx_t::invoke_completion_handlers(bool fail)
+{
+    HAL_TRACE_DEBUG("fte: invoking completion handlers count={}", num_handlers_);
+    for (int i = 0; i < num_handlers_; i++) {
+        HAL_TRACE_DEBUG("fte: invoking completion handler {:p}", (void*)(completion_handlers_[i]));
+        (*completion_handlers_[i])(*this, fail);
+    }
+}
+
+//
+// Process the packet and update the flow table
+hal_ret_t
+ctx_t::process()
+{
+    hal_ret_t ret;
+
+    // execute the pipeline
+    ret = execute_pipeline(*this);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failied to execute pipeline, ret={}", ret);
+        goto end;
+    }
+
+    // update flow table
+    ret = update_flow_table();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failied to updated gft, ret={}", ret);
+        goto end;
+    }
+
+ end:
+    // Invoke completion handlers
+    invoke_completion_handlers((ret==HAL_RET_OK));
+
+    return ret;
+}
+
 void
 ctx_t::swap_flow_objs()
 {
