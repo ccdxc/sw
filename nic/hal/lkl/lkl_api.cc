@@ -63,9 +63,9 @@ void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, 
     return skb;
 }
 
-  bool lkl_handle_flow_miss_pkt(void* skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, const p4_to_p4plus_cpu_pkt_t *rxhdr) {
+  bool lkl_handle_flow_miss_pkt(void* skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, const p4_to_p4plus_cpu_pkt_t *rxhdr, uint16_t hw_vlan_id) {
     if (!skb) return false;
-    return hal::lklshim_process_flow_miss_rx_packet(skb, dir, iqid, rqid, rxhdr->src_lif);
+    return hal::lklshim_process_flow_miss_rx_packet(skb, dir, iqid, rqid, rxhdr->src_lif, hw_vlan_id);
 }
 
 bool lkl_handle_flow_hit_pkt(void* skb, hal::flow_direction_t dir, const p4_to_p4plus_cpu_pkt_t* rxhdr) {

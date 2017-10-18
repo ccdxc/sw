@@ -224,19 +224,24 @@ alloc_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint16_t size) {
 }
 
 bool
-poll_queue(uint64_t lif, queue_type qtype, uint32_t qid) {
+poll_queue(uint64_t lif, queue_type qtype, uint32_t qid, uint32_t max_count, uint16_t *prev_cindex) {
   queue_info_t qi = get_queue_info(lif, qtype, qid);
 
-  uint16_t prev_cindex = qi.qstate->c_index0;
+  
   uint32_t count = 1;
 
+  if (*prev_cindex == 0xFFFF) {
+    *prev_cindex = qi.qstate->c_index0;
+  }
+
+
   do {
-    printf("Polling QSTATE ... %u tries\n", count++);
+    printf("Polling QSTATE[prev_cindex %d] ... %u tries\n", *prev_cindex, count++);
     read_queue(lif, qtype, qid);
     sleep(1);
-    if (count >= 3) 
+    if (count >= max_count) 
       return false;
-  } while (prev_cindex == qi.qstate->c_index0);
+  } while (*prev_cindex == qi.qstate->c_index0);
   return true;
 }
 
@@ -308,7 +313,7 @@ post_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t si
     txq = (struct tx_desc *) qi.queue;
     txq[qi.qstate->p_index0].addr = g_host_mem->VirtToPhys(buf);
     txq[qi.qstate->p_index0].len = size;
-    printf("txq[%p:%lx:%d] addr 0x%lx len 0x%x\n", 
+    printf("POST TXQ[%p:%lx:%d] addr 0x%lx len 0x%x\n", 
            txq,
            g_host_mem->VirtToPhys(txq),
            qi.qstate->p_index0,
@@ -320,6 +325,12 @@ post_buffer(uint64_t lif, queue_type qtype, uint32_t qid, void *buf, uint16_t si
     rxq = (struct rx_desc *) qi.queue;
     rxq[qi.qstate->p_index0].addr = g_host_mem->VirtToPhys(buf);
     rxq[qi.qstate->p_index0].len = size;
+    printf("POST RXQ[%p:%lx:%d] addr 0x%lx len 0x%x\n", 
+           rxq,
+           g_host_mem->VirtToPhys(rxq),
+           qi.qstate->p_index0,
+           rxq[qi.qstate->p_index0].addr,
+           rxq[qi.qstate->p_index0].len); 
     break;
   default:
     break;

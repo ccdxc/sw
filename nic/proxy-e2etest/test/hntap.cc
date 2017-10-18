@@ -619,6 +619,7 @@ hntap_net_rx_to_model (char *pktbuf, int size)
   uint16_t lif_id = (uint16_t)(HNTAP_LIF_ID & 0xffff);
   uint32_t port = 0;
   uint16_t rsize = 0;
+  uint16_t prev_cindex = 0xFFFF;
 
   uint8_t *pkt = (uint8_t *) pktbuf;
   std::vector<uint8_t> ipkt,opkt;
@@ -649,7 +650,7 @@ hntap_net_rx_to_model (char *pktbuf, int size)
   std::cout << "Sending packet to model! size: " << ipkt.size() << " on port: " << port << std::endl;
   step_network_pkt(ipkt, port);
 
-  if (poll_queue(lif_id, RX, 0)) {
+  if (poll_queue(lif_id, RX, 0, 3, &prev_cindex)) {
     std::cout << "Got some packet" << std::endl;
     // Receive Packet
     consume_buffer(lif_id, RX, 0, buf, &rsize);
@@ -669,7 +670,7 @@ hntap_net_rx_to_model (char *pktbuf, int size)
     }
     
   }
-  lib_model_conn_close();
+
   if (opkt.size()) {
     /*
      * Now that we got the packet from the Model, lets send it out on the Net-Tap interface.
@@ -685,8 +686,16 @@ hntap_net_rx_to_model (char *pktbuf, int size)
     }
   }
 
-
-
+  if (poll_queue(lif_id, RX, 0, 100, &prev_cindex)) {
+    std::cout << "Got some packet" << std::endl;
+    // Receive Packet
+    consume_buffer(lif_id, RX, 0, buf, &rsize);
+    if (!rsize) {
+      std::cout << "Did not get packet back from host side of model!" << std::endl;
+    } else {
+      std::cout << "Got packet of size " << rsize << " bytes back from host side of model!" << std::endl;
+    }
+  }
 
   if (rsize) {
     hntap_dump_pkt((char *)buf, rsize);
@@ -702,6 +711,7 @@ hntap_net_rx_to_model (char *pktbuf, int size)
       printf("Wrote packet with %lu bytes to Host Tap (Tx)\n", rsize - sizeof(struct vlan_header_t));
     }
   }
+  lib_model_conn_close();
 }
 
 void

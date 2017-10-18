@@ -370,6 +370,20 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
         return false;
     }
     hal::proxy::tcp_trigger_ack_send(rxhdr->qid, tcp);
+    
+    if (flow->hostns.skbuff != NULL) {
+        void *pkt_skb = flow->hostns.skbuff;
+        ether_header_t *eth = (ether_header_t*)lkl_get_mac_start(pkt_skb);
+        ipv4_header_t *ip = (ipv4_header_t*)lkl_get_network_start(pkt_skb);
+        tcp_header_t *tcp = (tcp_header_t*)lkl_get_transport_start(pkt_skb);
+
+        HAL_TRACE_DEBUG("lklshim: flow miss rx eth={}", hex_dump((uint8_t*)eth, 18));
+        HAL_TRACE_DEBUG("lklshim: flow miss rx ip={}", hex_dump((uint8_t*)ip, sizeof(ipv4_header_t)));
+        HAL_TRACE_DEBUG("lklshim: flow miss rx tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
+        
+        lkl_tcp_v4_rcv(pkt_skb);
+    }
+
 
     return true;
 }
@@ -377,7 +391,8 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
 bool
 lklshim_process_flow_miss_rx_packet (void *pkt_skb,
                                      hal::flow_direction_t dir,
-                                     uint32_t iqid, uint32_t rqid, uint16_t src_lif)
+                                     uint32_t iqid, uint32_t rqid, 
+				     uint16_t src_lif, uint16_t hw_vlan_id)
 {
     lklshim_flow_t     *flow;
     lklshim_flow_key_t flow_key;
@@ -399,6 +414,7 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
      * Cache the pointer to the packet as we'll process it later.
      */
     flow->itor_dir = dir;
+    flow->hw_vlan_id = hw_vlan_id;
     flow->iqid = iqid;
     flow->rqid = rqid;
     flow->src_lif = src_lif;
@@ -484,7 +500,8 @@ void lklshim_process_tx_packet(unsigned char* pkt,
         uint32_t qid = (is_connect_req?flow->rqid:flow->iqid);
         HAL_TRACE_DEBUG("flow dst lif={} src lif={}", flow->dst_lif, flow->src_lif);
         lklshim_update_tcpcb(tcpcb, qid, flow->src_lif);
-        proxy::tcp_transmit_pkt(pkt, len, is_connect_req, flow->dst_lif);
+        proxy::tcp_transmit_pkt(pkt, len, is_connect_req, flow->dst_lif, 
+				flow->src_lif, flow->itor_dir, flow->hw_vlan_id);
         //lklshim_process_listen(flow);
     }
 }

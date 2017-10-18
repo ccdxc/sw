@@ -906,13 +906,14 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     }
     
     pkt_info = &txpkts_[txpkt_cnt_++];
-    
+    HAL_TRACE_DEBUG("fte: txpkt for dir={}", key_.dir);
     if (cpu_header) {
         pkt_info->cpu_header = *cpu_header;
     } else {
         pkt_info->cpu_header.src_lif = cpu_rxhdr_->src_lif;
         // change lif/vlan for uplink pkts
         if (key_.dir == FLOW_DIR_FROM_UPLINK) {
+     	    HAL_TRACE_DEBUG("fte: setting defaults for uplink -> host direction");
             pkt_info->cpu_header.src_lif = hal::SERVICE_LIF_CPU;
             if (hal::pd::pd_l2seg_get_fromcpu_id(sl2seg_, &pkt_info->cpu_header.hw_vlan_id)) {
                 pkt_info->cpu_header.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;

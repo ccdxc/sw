@@ -79,6 +79,7 @@ typedef struct lklshim_flow_t_ {
     uint16_t                dst_lif;
     uint32_t                iqid;
     uint32_t                rqid;
+    uint16_t                hw_vlan_id;
 } lklshim_flow_t;
 
 typedef struct lklshim_listen_sockets_t_ {
@@ -114,7 +115,7 @@ lklshim_flow_entry_lookup (lklshim_flow_key_t *key)
     return(lklshim_flow);
 }
 
-bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif);
+  bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id);
 bool lklshim_process_flow_hit_rx_packet (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
 void lklshim_process_tx_packet(unsigned char* pkt, unsigned int len, void* flow, bool is_connect_req, void *tcpcb);
 

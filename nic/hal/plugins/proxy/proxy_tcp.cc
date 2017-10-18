@@ -11,6 +11,8 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/endpoint_pd.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
+#include "nic/p4/nw/include/defines.h"
+#include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
 namespace hal {
 namespace proxy {
@@ -373,15 +375,28 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
 
 #if 1
     if (!ctx.protobuf_request()) {
+        uint16_t shw_vlan_id, dhw_vlan_id;
+
+
+        if (hal::pd::pd_l2seg_get_fromcpu_id(ctx.sl2seg(), &shw_vlan_id)) {
+          HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for sl2seg", shw_vlan_id);
+        }
+
+        if (hal::pd::pd_l2seg_get_fromcpu_id(ctx.dl2seg(), &dhw_vlan_id)) {
+          HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for dl2seg", dhw_vlan_id);
+        }
+
+
         HAL_TRACE_DEBUG("LKL return {}",
                         hal::pd::lkl_handle_flow_miss_pkt(
-                                 hal::pd::lkl_alloc_skbuff(ctx.cpu_rxhdr(),
-                                                           ctx.pkt(),
-                                                           ctx.pkt_len(),
-                                                           ctx.direction()),
-                                 ctx.direction(),
-                                 pfi->qid1, pfi->qid2,
-                                 ctx.cpu_rxhdr()));
+                                                          hal::pd::lkl_alloc_skbuff(ctx.cpu_rxhdr(),
+                                                                                    ctx.pkt(),
+                                                                                    ctx.pkt_len(),
+                                                                                    ctx.direction()),
+                                                          ctx.direction(),
+                                                          pfi->qid1, pfi->qid2,
+                                                          ctx.cpu_rxhdr(),
+                                                          dhw_vlan_id));
     }
 #endif
     return fte::PIPELINE_CONTINUE;
@@ -432,10 +447,50 @@ tcp_exec(fte::ctx_t& ctx)
 
 
 void
-tcp_transmit_pkt(unsigned char* pkt, unsigned int len, bool is_connect_req, uint16_t dst_lif) {
+tcp_transmit_pkt(unsigned char* pkt, 
+                 unsigned int len, 
+                 bool is_connect_req, 
+                 uint16_t dst_lif, 
+                 uint16_t src_lif, 
+        		 hal::flow_direction_t dir, 
+                 uint16_t hw_vlan_id) 
+{
     if (gl_ctx) {
+        HAL_TRACE_DEBUG("tcp-proxy: txpkt dir={} src_lif={} hw_vlan_id={}", dir, src_lif, hw_vlan_id);
         if (true){//is_connect_req) {
-            gl_ctx->queue_txpkt(pkt, len);
+            hal::pd::cpu_to_p4plus_header_t cpu_header;
+            hal::pd::p4plus_to_p4_header_t  p4plus_header;
+
+            p4plus_header.flags = 0;
+            if (dir == FLOW_DIR_FROM_UPLINK) {
+                if (is_connect_req) {
+                    cpu_header.src_lif = hal::SERVICE_LIF_CPU;
+                    cpu_header.hw_vlan_id = hw_vlan_id;
+                    cpu_header.flags = CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
+                    p4plus_header.flags =  P4PLUS_TO_P4_FLAGS_LKP_INST;
+                    
+                } else {
+                    cpu_header.src_lif = src_lif;
+                    cpu_header.hw_vlan_id = 0;
+                    cpu_header.flags = 0;
+                }
+
+            } else {
+                if (is_connect_req) {
+                    cpu_header.src_lif = src_lif;
+                    cpu_header.hw_vlan_id = 0;
+                    cpu_header.flags = 0;
+                } else {
+                    cpu_header.src_lif = hal::SERVICE_LIF_CPU;
+                    cpu_header.hw_vlan_id = hw_vlan_id;
+                    cpu_header.flags = CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
+                    p4plus_header.flags =  P4PLUS_TO_P4_FLAGS_LKP_INST;
+                }
+            }
+            HAL_TRACE_DEBUG("tcp-proxy: txpkt cpu_header src_lif={} hw_vlan_id={} flags={}",
+                            cpu_header.src_lif, cpu_header.hw_vlan_id, cpu_header.flags);
+
+            gl_ctx->queue_txpkt(pkt, len, &cpu_header, &p4plus_header);
         } else {
             gl_ctx->queue_txpkt(pkt, len, NULL, NULL, dst_lif, CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ);
         }
