@@ -13,6 +13,7 @@ import config.hal.defs          as haldefs
 
 from config.store               import Store
 from infra.common.logging       import cfglogger
+from infra.common.glopts        import GlobalOptions
 
 #import config.objects.qp        as qp
 import config.objects.pd        as pd
@@ -42,21 +43,22 @@ class EndpointObject(base.ConfigObjectBase):
         self.is_l4lb_service = False
         self.l4lb_backend = None
 
-        num_ip_addrs = defs.HAL_NUM_IPADDRS_PER_ENDPOINT
-        num_ipv6_addrs = defs.HAL_NUM_IPV6ADDRS_PER_ENDPOINT
-        if segment.IsInfraSegment():
-            num_ip_addrs = 1
-            num_ipv6_addrs = 1
 
-        for ipidx in range(num_ip_addrs):
-            ipaddr = segment.AllocIpv4Address(self.IsL4LbBackend())
-            self.SetIpAddress(ipaddr)
+        if GlobalOptions.classic is False:
+            num_ip_addrs = defs.HAL_NUM_IPADDRS_PER_ENDPOINT
+            num_ipv6_addrs = defs.HAL_NUM_IPV6ADDRS_PER_ENDPOINT
+            if segment.IsInfraSegment():
+                num_ip_addrs = 1
+                num_ipv6_addrs = 1
 
-        for ipidx in range(num_ipv6_addrs):
-            ipv6addr = segment.AllocIpv6Address(self.IsL4LbBackend())
-            self.SetIpv6Address(ipv6addr)
+            for ipidx in range(num_ip_addrs):
+                ipaddr = segment.AllocIpv4Address(self.IsL4LbBackend())
+                self.SetIpAddress(ipaddr)
 
-        self.useg_vlan_id = 0
+            for ipidx in range(num_ipv6_addrs):
+                ipv6addr = segment.AllocIpv6Address(self.IsL4LbBackend())
+                self.SetIpv6Address(ipv6addr)
+            self.useg_vlan_id = 0
         return
 
     def IsL4LbBackend(self):
@@ -259,9 +261,20 @@ class EndpointObjectHelper:
         return
 
     def Show(self):
-        cfglogger.info("  - # EP: Dir=%d Useg=%d Pvlan=%d Loc=%d Rem=%d Tot=%d" %\
-                       (len(self.direct), len(self.useg), len(self.pvlan),
-                        len(self.local), len(self.remote), len(self.eps)))
+        string = ''
+        if len(self.direct):
+            string += 'Direct:%d ' % len(self.direct)
+        if len(self.useg):
+            string += 'Useg:%d ' % len(self.useg)
+        if len(self.pvlan):
+            string += 'Pvlan:%d ' % len(self.pvlan)
+        if len(self.local):
+            string += 'Local:%d ' % len(self.local)
+        if len(self.remote):
+            string += 'Remote:%d ' % len(self.remote)
+        if len(self.eps):
+            string += 'Total:%d' % len(self.eps)
+        cfglogger.info("- # EP: %s" % string)
         return
 
     def Configure(self):
@@ -316,7 +329,7 @@ class EndpointObjectHelper:
         return
 
     def __create_local(self, segment, spec):
-        if spec.direct:
+        if getattr(spec, 'direct', None):
             cfglogger.info("Creating %d DIRECT EPs in Segment = %s" %\
                            (spec.direct, segment.GID()))
             direct_enics = segment.GetDirectEnics()
@@ -332,7 +345,7 @@ class EndpointObjectHelper:
                                                     backend = True)
                 self.backend_local += self.backend_direct
 
-        if spec.pvlan:
+        if getattr(spec, 'pvlan', None):
             cfglogger.info("Creating %d PVLAN EPs in Segment = %s" %\
                            (spec.pvlan, segment.GID()))
             pvlan_enics = segment.GetPvlanEnics()
@@ -348,7 +361,7 @@ class EndpointObjectHelper:
                                                    backend = True)
                 self.backend_local += self.backend_pvlan
 
-        if spec.useg:
+        if getattr(spec, 'useg', None):
             cfglogger.info("Creating %d USEG EPs in Segment = %s" %\
                            (spec.useg, segment.GID()))
             useg_enics = segment.GetUsegEnics()
@@ -363,6 +376,13 @@ class EndpointObjectHelper:
                                                   spec.useg,
                                                   backend = True)
                 self.backend_local += self.backend_useg
+
+        if getattr(spec, 'classic', None):
+            cfglogger.info("Creating %d CLASSIC EPs in Segment = %s" %\
+                           (spec.classic, segment.GID()))
+            classic_enics = segment.GetClassicEnics()
+            self.classic = self.__create(segment, classic_enics, spec.classic)
+            self.local += self.classic
         return
 
     def __create_pds(self, spec):

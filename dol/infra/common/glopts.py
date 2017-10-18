@@ -29,4 +29,6 @@ parser.add_argument('--subfeature', dest='subfeature',
                     default=None, help='Run tests for a subfeature')
 parser.add_argument('--hostpin', dest='hostpin',
                     action='store_true', help='Run tests in host pinned mode.')
+parser.add_argument('--classic', dest='classic',
+                    action='store_true', help='Run tests in classic nic mode.')
 GlobalOptions = parser.parse_args()

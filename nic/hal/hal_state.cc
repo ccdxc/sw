@@ -494,6 +494,8 @@ hal_cfg_db::set_forwarding_mode(std::string modestr)
         forwarding_mode_ = HAL_FORWARDING_MODE_DEFAULT;
     } else if (modestr == "host-pinned") {
         forwarding_mode_ = HAL_FORWARDING_MODE_HOST_PINNED;
+    } else if (modestr == "classic") {
+        forwarding_mode_ = HAL_FORWARDING_MODE_CLASSIC;
     } else {
         HAL_ASSERT(FALSE);
     }

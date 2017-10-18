@@ -906,7 +906,8 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
         hal_cfg->forwarding_mode = pt.get<std::string>("sw.forwarding_mode");
         HAL_TRACE_INFO("HAL Forwarding Mode: {}", hal_cfg->forwarding_mode);
         if (hal_cfg->forwarding_mode != "default" &&
-            hal_cfg->forwarding_mode != "host-pinned") {
+            hal_cfg->forwarding_mode != "host-pinned" &&
+            hal_cfg->forwarding_mode != "classic") {
             HAL_TRACE_ERR("Invalid Forwarding Mode: aborting...");
             HAL_ABORT(0);
         }

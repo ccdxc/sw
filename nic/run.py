@@ -123,6 +123,8 @@ def run_hal(args):
     jsonfile = 'hal.json'
     if args.hostpin:
         jsonfile = 'hal_hostpin.json'
+    if args.classic:
+        jsonfile = 'hal_classic.json'
     p = Popen(["./hal", "--config", jsonfile], stdout=log, stderr=log)
     global hal_process
     hal_process = p
@@ -192,6 +194,8 @@ def run_dol(args):
         cmd.append(args.testcase)
     if args.hostpin is True:
         cmd.append('--hostpin')
+    if args.classic is True:
+        cmd.append('--classic')
     p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
     print "- Log file: " + dol_log + "\n"
@@ -306,6 +310,8 @@ def main():
                         default=None, help='Module List File')
     parser.add_argument('--hostpin', dest='hostpin', action="store_true",
                         help='Run tests in Hostpinned mode.')
+    parser.add_argument('--classic', dest='classic', action="store_true",
+                        help='Run tests in Classic NIC mode.')
     parser.add_argument('--storage', dest='storage', action="store_true",
                         help='Run storage dol as well.')
     parser.add_argument("--asmcov", action="store_true",

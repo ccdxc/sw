@@ -14,6 +14,7 @@ import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
 from infra.common.logging       import cfglogger
+from infra.common.glopts        import GlobalOptions
 from config.store               import Store
 
 class SegmentObject(base.ConfigObjectBase):
@@ -45,22 +46,23 @@ class SegmentObject(base.ConfigObjectBase):
             self.vlan_id    = resmgr.SegVlanAllocator.get()
             self.vxlan_id   = resmgr.SegVxlanAllocator.get()
 
-        self.macaddr    = resmgr.RouterMacAllocator.get()
-        if self.IsInfraSegment():
-            self.subnet     = resmgr.TepIpSubnetAllocator.get()
-            self.subnet6    = resmgr.TepIpv6SubnetAllocator.get()
-        else:
-            self.subnet     = resmgr.IpSubnetAllocator.get()
-            self.subnet6    = resmgr.Ipv6SubnetAllocator.get()
+        if GlobalOptions.classic is False:
+            self.macaddr    = resmgr.RouterMacAllocator.get()
+            if self.IsInfraSegment():
+                self.subnet     = resmgr.TepIpSubnetAllocator.get()
+                self.subnet6    = resmgr.TepIpv6SubnetAllocator.get()
+            else:
+                self.subnet     = resmgr.IpSubnetAllocator.get()
+                self.subnet6    = resmgr.Ipv6SubnetAllocator.get()
 
-        self.ipv4_pool  = resmgr.CreateIpv4AddrPool(self.subnet.get())
-        self.ipv6_pool  = resmgr.CreateIpv6AddrPool(self.subnet6.get())
+            self.ipv4_pool  = resmgr.CreateIpv4AddrPool(self.subnet.get())
+            self.ipv6_pool  = resmgr.CreateIpv6AddrPool(self.subnet6.get())
         
-        if self.l4lb:
-            self.bend_subnet = resmgr.L4LbBackendIpSubnetAllocator.get()
-            self.bend_subnet6 = resmgr.L4LbBackendIpv6SubnetAllocator.get()
-            self.bend_ipv4_pool = resmgr.CreateIpv4AddrPool(self.bend_subnet.get())
-            self.bend_ipv6_pool = resmgr.CreateIpv6AddrPool(self.bend_subnet6.get())
+            if self.l4lb:
+                self.bend_subnet = resmgr.L4LbBackendIpSubnetAllocator.get()
+                self.bend_subnet6 = resmgr.L4LbBackendIpv6SubnetAllocator.get()
+                self.bend_ipv4_pool = resmgr.CreateIpv4AddrPool(self.bend_subnet.get())
+                self.bend_ipv6_pool = resmgr.CreateIpv6AddrPool(self.bend_subnet6.get())
 
         policy = "BROADCAST_FWD_POLICY_" + spec.broadcast.upper()
         self.broadcast_policy = haldefs.segment.BroadcastFwdPolicy.Value(policy)
@@ -76,7 +78,8 @@ class SegmentObject(base.ConfigObjectBase):
         self.hal_handle = None
 
         self.Show()
-        self.obj_helper_nw.Generate(self)
+        if GlobalOptions.classic is False:
+            self.obj_helper_nw.Generate(self)
         self.obj_helper_enic.Generate(self, self.spec.endpoints)
         self.obj_helper_ep.Generate(self, self.spec.endpoints)
         self.obj_helper_oiflist.Generate(self)
@@ -108,7 +111,7 @@ class SegmentObject(base.ConfigObjectBase):
         return self.fabencap == 'VLAN'
     def IsFabEncapVxlan(self):
         return self.fabencap == 'VXLAN'
-
+    
     def __copy__(self):
         seg = SegmentObject()
         seg.id = self.id
@@ -140,21 +143,23 @@ class SegmentObject(base.ConfigObjectBase):
         return True
 
     def Show(self, detail = False):
-        cfglogger.info("- Segment = %s(%d)" % (self.GID(), self.id))
-        cfglogger.info("  - FabEncap   = %s" % self.fabencap)
-        cfglogger.info("  - VLAN       = %d" % self.vlan_id)
+        cfglogger.info("Segment = %s(%d)" % (self.GID(), self.id))
+        cfglogger.info("- FabEncap   = %s" % self.fabencap)
+        cfglogger.info("- VLAN       = %d" % self.vlan_id)
 
-        if not self.IsInfraSegment():
-            cfglogger.info("  - VXLAN      = %s" % self.vxlan_id)
-        cfglogger.info("  - Native     = %s" % self.native)
-        if self.blackhole:
-            cfglogger.info("  - BlackHole  = %s" % self.blackhole)
-        cfglogger.info("  - MAC        = %s" % self.macaddr.get())
-        cfglogger.info("  - Subnet     = %s" % self.subnet.get())
-        cfglogger.info("  - Subnet6    = %s" % self.subnet6.get())
-        cfglogger.info("  - Broadcast  = %s" % self.spec.broadcast)
-        cfglogger.info("  - Multicast  = %s" % self.spec.multicast)
-        cfglogger.info("  - FloodList  = %s" %(self.floodlist.GID() if self.floodlist else 'None'))
+        if GlobalOptions.classic is False:
+            if not self.IsInfraSegment():
+                cfglogger.info("- VXLAN      = %s" % self.vxlan_id)
+            cfglogger.info("- Native     = %s" % self.native)
+            if self.blackhole:
+                cfglogger.info("- BlackHole  = %s" % self.blackhole)
+            cfglogger.info("- MAC        = %s" % self.macaddr.get())
+            cfglogger.info("- Subnet     = %s" % self.subnet.get())
+            cfglogger.info("- Subnet6    = %s" % self.subnet6.get())
+        cfglogger.info("- Broadcast  = %s" % self.spec.broadcast)
+        cfglogger.info("- Multicast  = %s" % self.spec.multicast)
+        if self.floodlist:
+            self.floodlist.Show()
 
         if detail == False: return
         self.obj_helper_ep.Show()
@@ -186,6 +191,10 @@ class SegmentObject(base.ConfigObjectBase):
         if backend:
             return self.obj_helper_enic.backend_useg
         return self.obj_helper_enic.useg
+    def GetClassicEnics(self, backend = False):
+        if backend:
+            assert(0)
+        return self.obj_helper_enic.classic
     def GetEps(self, backend = False):
         if backend:
             return self.obj_helper_ep.backend_eps

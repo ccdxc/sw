@@ -1,5 +1,6 @@
 # /usr/bin/python3
 import pdb
+import copy
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
@@ -25,30 +26,36 @@ class TenantObject(base.ConfigObjectBase):
         self.Clone(Store.templates.Get('TENANT'))
         return
         
-    def Init(self, spec, lifns, topospec):
+    def Init(self, spec, entryspec, topospec):
         self.id = resmgr.TenIdAllocator.get()
         gid = "Ten%04d" % self.id
         self.GID(gid)
 
         self.hostpinned = GlobalOptions.hostpin
-        self.spec = spec
-        self.type = spec.type.upper()
+        self.spec = copy.deepcopy(spec)
+        self.type = self.spec.type.upper()
         self.qos_enable = getattr(topospec, 'qos_enable', False)
 
         self.overlay = spec.overlay.upper()
         self.security_profile = None
         self.bhseg = None
-        self.security_profile_handle = 0
-        if spec.security_profile:
+
+        if getattr(spec, 'security_profile', None) is not None:
             self.security_profile = spec.security_profile.Get(Store)
         if self.IsInfra():
             self.subnet     = resmgr.TepIpSubnetAllocator.get()
             self.ipv4_pool  = resmgr.CreateIpv4AddrPool(self.subnet.get())
             self.local_tep  = self.ipv4_pool.get()
-        self.Show()
         
+        # ClassicNicMode Specific Stuff
+        if GlobalOptions.classic:
+            # Process Pinned Uplinks
+            self.pinif = getattr(entryspec, 'uplink', None)
+            self.pinif = self.pinif.Get(Store)
+        self.Show()
+
         # Process LIFs
-        self.lifns = lifns  
+        self.lifns = entryspec.lifns  
         self.obj_helper_lif = lif.LifObjectHelper()
         self.__create_lifs()
         # Process Segments 
@@ -84,13 +91,16 @@ class TenantObject(base.ConfigObjectBase):
         if not self.CompareObjectFields(other, fields, lgh):
             return False        
         return True
-    
+   
     def Show(self):
         cfglogger.info("Tenant  : %s" % self.GID())
         cfglogger.info("- Type      : %s" % self.type)
         cfglogger.info("- HostPinned: %s" % self.hostpinned)
         if self.IsInfra():
             cfglogger.info("- LocalTep  : %s" % self.local_tep.get())
+        if GlobalOptions.classic:
+            cfglogger.info("- ClassicNicMode: True")
+            cfglogger.info("- Pinned IF     : %s" % self.pinif.GID())
         return
 
     def Summary(self):
@@ -258,7 +268,7 @@ class TenantObjectHelper:
             cfglogger.info("Creating %d Tenants" % entry.count)
             for c in range(entry.count):
                 ten = TenantObject()
-                ten.Init(spec, entry.lifns, topospec)
+                ten.Init(spec, entry, topospec)
                 self.tens.append(ten)
         Store.objects.SetAll(self.tens)
         return

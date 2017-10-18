@@ -7,6 +7,7 @@ import infra.config.base        as base
 import config.resmgr            as resmgr
 
 from infra.common.logging       import cfglogger
+from infra.common.glopts        import GlobalOptions
 from config.store               import Store
 
 import config.hal.api            as halapi
@@ -15,6 +16,7 @@ import config.hal.defs           as haldefs
 ENIC_TYPE_DIRECT= 'DIRECT'
 ENIC_TYPE_USEG  = 'USEG'
 ENIC_TYPE_PVLAN = 'PVLAN'
+ENIC_TYPE_CLASSIC = 'CLASSIC'
 
 global gl_pinif_iter
 gl_pinif_iter = 0
@@ -150,6 +152,9 @@ class EnicObject(base.ConfigObjectBase):
     def IsPvlan(self):
         return self.type == ENIC_TYPE_PVLAN
 
+    def IsClassic(self):
+        return self.type == ENIC_TYPE_CLASSIC
+
     def PrepareHALRequestSpec(self, req_spec):
         assert(self.ep != None)
         req_spec.meta.tenant_id = self.tenant.id
@@ -166,6 +171,8 @@ class EnicObject(base.ConfigObjectBase):
             req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_USEG
         elif self.IsPvlan():
             req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_PVLAN
+        elif self.IsClassic():
+            req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_PVLAN
         else:
             assert(0)
         # QOS stuff
@@ -180,13 +187,9 @@ class EnicObject(base.ConfigObjectBase):
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.if_handle
-
-        if self.lif.hw_lif_id < 28:
-            self.label = 'TXENABLE'
-        cfglogger.info("- Enic %s = %s (HDL = 0x%x) Label = %s" %\
-                       (self.GID(), \
-                        haldefs.common.ApiStatus.Name(resp_spec.api_status),\
-                        self.hal_handle, self.label))
+        cfglogger.info("- Enic %s = %s (HDL = 0x%x)" %\
+                       (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),\
+                        self.hal_handle))
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
@@ -235,10 +238,10 @@ class EnicObjectHelper:
         return
     
     def Show(self):
-        cfglogger.info("  - # Enics: Dir=%d Useg=%d Pvlan=%d Tot=%d" %\
+        cfglogger.info("- # Enics: Dir=%d Useg=%d Pvlan=%d Tot=%d" %\
                        (len(self.direct), len(self.useg),
                         len(self.pvlan), len(self.enics)))
-        cfglogger.info("  - # Backend Enics: Dir=%d Useg=%d Pvlan=%d Tot=%d" %\
+        cfglogger.info("- # Backend Enics: Dir=%d Useg=%d Pvlan=%d Tot=%d" %\
                        (len(self.backend_direct), len(self.backend_useg),
                         len(self.backend_pvlan), len(self.backend_enics)))
         return
@@ -253,7 +256,8 @@ class EnicObjectHelper:
 
     def __gen_direct(self, segment, spec, l4lb_backend = False):
         enics = []
-        if spec.direct == 0: return enics
+        num_direct = getattr(spec, 'direct', 0)
+        if num_direct == 0: return enics
         cfglogger.info("Creating %d DIRECT (Backend:%s) Enics in Segment = %s" %\
                        (spec.direct, l4lb_backend, segment.GID()))
         enics = self.__create(segment, spec.direct, ENIC_TYPE_DIRECT)
@@ -262,7 +266,8 @@ class EnicObjectHelper:
 
     def __gen_useg(self, segment, spec, l4lb_backend = False):
         enics = []
-        if spec.useg == 0: return enics
+        num_useg = getattr(spec, 'useg', 0)
+        if num_useg == 0: return enics
         cfglogger.info("Creating %d USEG (Backend:%s) Enics in Segment = %s" %\
                        (spec.useg, l4lb_backend, segment.GID()))
         enics = self.__create(segment, spec.useg, ENIC_TYPE_USEG)
@@ -271,12 +276,25 @@ class EnicObjectHelper:
 
     def __gen_pvlan(self, segment, spec, l4lb_backend = False):
         enics = []
-        if spec.pvlan == 0: return enics
+        num_pvlan = getattr(spec, 'pvlan', 0)
+        if num_pvlan == 0: return enics
         cfglogger.info("Creating %d PVLAN (Backend:%s) Enics in Segment = %s" %\
                        (spec.pvlan, l4lb_backend, segment.GID()))
         enics = self.__create(segment, spec.pvlan, ENIC_TYPE_PVLAN)
         Store.objects.SetAll(enics)
         return enics
+
+    def __gen_classic(self, segment, spec, l4lb_backend = False):
+        enics = []
+        if GlobalOptions.classic is False: return enics
+        num_classic = getattr(spec, 'classic', 0)
+        if num_classic == 0: return enics
+        cfglogger.info("Creating %d CLASSIC Enics in Segment = %s" %\
+                       (spec.classic, segment.GID()))
+        enics = self.__create(segment, spec.classic, ENIC_TYPE_CLASSIC)
+        Store.objects.SetAll(enics)
+        return enics
+
 
     def Generate(self, segment, spec):
         self.direct = self.__gen_direct(segment, spec)
@@ -285,6 +303,8 @@ class EnicObjectHelper:
         self.enics += self.useg
         self.pvlan = self.__gen_pvlan(segment, spec)
         self.enics += self.pvlan
+        self.classic = self.__gen_classic(segment, spec)
+        self.enics += self.classic
 
         if segment.l4lb:
             self.backend_direct = self.__gen_direct(segment, spec,

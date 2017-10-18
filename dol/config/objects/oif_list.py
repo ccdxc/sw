@@ -23,23 +23,16 @@ class OifListObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("Creating OifList = %s" % (self.GID()))
+        cfglogger.info("- OifList:%s NumOifs:%d" %\
+                       (self.GID(), len(self.oifs)))
+        for intf in self.oifs.GetAllInList():
+            cfglogger.info("  - Oif: %s" % (intf.Summary()))
         return
-
-    def Summary(self):
-        summary = ''
-        summary += 'GID: %s\n' % self.GID()
-        num = 0
-        for int in self.oifs.GetAllInList():
-            summary += '                    Oifs[%d]: %s\n' % (num, int.Summary())
-            num += 1
-        return summary
 
     def addOif(self, oif):
         for int in self.oifs.GetAllInList():
             if int == oif:
                 return
-
         self.oifs.Add(oif)
         return
 
@@ -52,10 +45,8 @@ class OifListObjectHelper:
     def Generate(self, segment):
         oiflist = OifListObject()
         oiflist.Init()
-        for endpoint in segment.obj_helper_ep.eps:
+        for endpoint in segment.GetEps():
             oiflist.addOif(endpoint.GetInterface())
-
-        cfglogger.info("%s" % (oiflist.Summary()))
         self.oiflist = oiflist
         return
 

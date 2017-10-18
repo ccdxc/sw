@@ -10,6 +10,7 @@ import config.objects.segment   as segment
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
+from infra.common.glopts        import GlobalOptions
 from infra.common.logging       import cfglogger
 from config.store               import Store
 
@@ -174,7 +175,7 @@ class UplinkObjectHelper:
         halapi.ConfigureInterfaces(self.objlist, update = True)
         return
 
-    def ConfigureAllSegments(self):
+    def __configure_all_segments(self):
         segs = Store.objects.GetAllByClass(segment.SegmentObject)
         for seg in segs:
             if seg.native == False: continue
@@ -182,6 +183,16 @@ class UplinkObjectHelper:
                 uplink.SetNativeSegment(seg)
         self.ReConfigure()
         halapi.ConfigureInterfaceSegmentAssociations(self.trunks, segs)
+        return
+
+    def __configure_all_segments_classic_nic(self):
+        return
+
+    def ConfigureAllSegments(self):
+        if GlobalOptions.classic:
+            self.__configure_all_segments_classic_nic()
+        else:
+            self.__configure_all_segments()
         return
 
     def Generate(self, topospec):
