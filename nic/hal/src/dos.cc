@@ -27,65 +27,6 @@ dos_policy_id_compare_key_func (void *key1, void *key2)
     return false;
 }
 
-//------------------------------------------------------------------------------
-// insert a new dos policy to HAL config db
-//------------------------------------------------------------------------------
-static inline hal_ret_t
-dos_policy_add_to_db (dos_policy_t *dosp, hal_handle_t handle)
-{
-    /* TODO: Remove this code. No id for DoS object */
-    hal_ret_t                   ret = HAL_RET_OK;
-#if 0
-    hal_handle_id_ht_entry_t    *entry;
-
-    HAL_TRACE_DEBUG("pi-dos-policy:{}:adding to dos_policy id hash table", 
-                    __FUNCTION__);
-    // allocate an entry to establish mapping from tenant id to its handle
-    entry =
-        (hal_handle_id_ht_entry_t *)g_hal_state->
-        hal_handle_id_ht_entry_slab()->alloc();
-    if (entry == NULL) {
-        return HAL_RET_OOM;
-    }
-
-    // add mapping from tenant id to its handle
-    entry->handle_id = handle;
-    ret = g_hal_state->dos_policy_id_ht()->
-    insert_with_key(&dosp->security_group_id, entry, &entry->ht_ctx);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-dos-policy:{}:failed to add dos_policy id to handle mapping, "
-                      "err : {}", __FUNCTION__, ret);
-        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
-    }
-
-    // TODO: Check if this is the right place
-    dosp->hal_handle = handle;
-#endif
-    return ret;
-}
-
-//------------------------------------------------------------------------------
-// delete a dos policy from the config database
-//------------------------------------------------------------------------------
-static inline hal_ret_t
-dos_policy_del_from_db (dos_policy_t *dosp)
-{
-    /* TODO: Remove this code since dop-policy does not have an id */
-#if 0
-    hal_handle_id_ht_entry_t    *entry;
-
-    HAL_TRACE_DEBUG("pi-dos-policy:{}:removing from seg id hash table", __FUNCTION__);
-    // remove from hash table
-    entry = (hal_handle_id_ht_entry_t *)g_hal_state->dos_policy_id_ht()->
-        remove(&dosp->security_group_id);
-    // free up
-    g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
-#endif
-
-    return HAL_RET_OK;
-}
-
-
 static inline hal_ret_t
 dos_policy_handle_update (DoSPolicySpec& spec, dos_policy_t *dosp, 
                           dos_policy_update_app_ctx_t *app_ctx)
@@ -109,40 +50,64 @@ dos_policy_props_init_from_spec (dos_policy_prop_t *dosp,
 
     dosp->session_setup_rate = spec.session_setup_rate();
 
-    dosp->session_limits.max_sessions = spec.session_limits().max_sessions();
+    dosp->session_limits.max_sessions     = spec.session_limits().max_sessions();
     dosp->session_limits.blocking_timeout = spec.session_limits().blocking_timeout();
 
+    dosp->policer.peak_rate     = spec.policer().peak_rate();
+    dosp->policer.burst_size    = spec.policer().burst_size();
     dosp->policer.bytes_per_sec = spec.policer().bytes_per_second();
-    dosp->policer.peak_rate = spec.policer().peak_rate();
-    dosp->policer.burst_size = spec.policer().burst_size();
 
-    dosp->tcp_syn_flood_limits.restrict_pps = spec.tcp_syn_flood_limits().restrict_limits().pps();
-    dosp->tcp_syn_flood_limits.restrict_burst_pps = spec.tcp_syn_flood_limits().restrict_limits().burst_pps();
-    dosp->tcp_syn_flood_limits.restrict_duration = spec.tcp_syn_flood_limits().restrict_limits().duration();
-    dosp->tcp_syn_flood_limits.protect_pps = spec.tcp_syn_flood_limits().protect_limits().pps();
-    dosp->tcp_syn_flood_limits.protect_burst_pps = spec.tcp_syn_flood_limits().protect_limits().burst_pps();
-    dosp->tcp_syn_flood_limits.protect_duration = spec.tcp_syn_flood_limits().protect_limits().duration();
+    dosp->tcp_syn_flood_limits.restrict_pps =
+        spec.tcp_syn_flood_limits().restrict_limits().pps();
+    dosp->tcp_syn_flood_limits.restrict_burst_pps =
+        spec.tcp_syn_flood_limits().restrict_limits().burst_pps();
+    dosp->tcp_syn_flood_limits.restrict_duration =
+        spec.tcp_syn_flood_limits().restrict_limits().duration();
+    dosp->tcp_syn_flood_limits.protect_pps =
+        spec.tcp_syn_flood_limits().protect_limits().pps();
+    dosp->tcp_syn_flood_limits.protect_burst_pps =
+        spec.tcp_syn_flood_limits().protect_limits().burst_pps();
+    dosp->tcp_syn_flood_limits.protect_duration =
+        spec.tcp_syn_flood_limits().protect_limits().duration();
 
-    dosp->udp_flood_limits.restrict_pps = spec.udp_flood_limits().restrict_limits().pps();
-    dosp->udp_flood_limits.restrict_burst_pps = spec.udp_flood_limits().restrict_limits().burst_pps();
-    dosp->udp_flood_limits.restrict_duration = spec.udp_flood_limits().restrict_limits().duration();
-    dosp->udp_flood_limits.protect_pps = spec.udp_flood_limits().protect_limits().pps();
-    dosp->udp_flood_limits.protect_burst_pps = spec.udp_flood_limits().protect_limits().burst_pps();
-    dosp->udp_flood_limits.protect_duration = spec.udp_flood_limits().protect_limits().duration();
+    dosp->udp_flood_limits.restrict_pps =
+        spec.udp_flood_limits().restrict_limits().pps();
+    dosp->udp_flood_limits.restrict_burst_pps =
+        spec.udp_flood_limits().restrict_limits().burst_pps();
+    dosp->udp_flood_limits.restrict_duration =
+        spec.udp_flood_limits().restrict_limits().duration();
+    dosp->udp_flood_limits.protect_pps =
+        spec.udp_flood_limits().protect_limits().pps();
+    dosp->udp_flood_limits.protect_burst_pps =
+        spec.udp_flood_limits().protect_limits().burst_pps();
+    dosp->udp_flood_limits.protect_duration =
+        spec.udp_flood_limits().protect_limits().duration();
 
-    dosp->icmp_flood_limits.restrict_pps = spec.icmp_flood_limits().restrict_limits().pps();
-    dosp->icmp_flood_limits.restrict_burst_pps = spec.icmp_flood_limits().restrict_limits().burst_pps();
-    dosp->icmp_flood_limits.restrict_duration = spec.icmp_flood_limits().restrict_limits().duration();
-    dosp->icmp_flood_limits.protect_pps = spec.icmp_flood_limits().protect_limits().pps();
-    dosp->icmp_flood_limits.protect_burst_pps = spec.icmp_flood_limits().protect_limits().burst_pps();
-    dosp->icmp_flood_limits.protect_duration = spec.icmp_flood_limits().protect_limits().duration();
+    dosp->icmp_flood_limits.restrict_pps =
+        spec.icmp_flood_limits().restrict_limits().pps();
+    dosp->icmp_flood_limits.restrict_burst_pps =
+        spec.icmp_flood_limits().restrict_limits().burst_pps();
+    dosp->icmp_flood_limits.restrict_duration =
+        spec.icmp_flood_limits().restrict_limits().duration();
+    dosp->icmp_flood_limits.protect_pps =
+        spec.icmp_flood_limits().protect_limits().pps();
+    dosp->icmp_flood_limits.protect_burst_pps =
+        spec.icmp_flood_limits().protect_limits().burst_pps();
+    dosp->icmp_flood_limits.protect_duration =
+        spec.icmp_flood_limits().protect_limits().duration();
 
-    dosp->other_flood_limits.restrict_pps = spec.other_flood_limits().restrict_limits().pps();
-    dosp->other_flood_limits.restrict_burst_pps = spec.other_flood_limits().restrict_limits().burst_pps();
-    dosp->other_flood_limits.restrict_duration = spec.other_flood_limits().restrict_limits().duration();
-    dosp->other_flood_limits.protect_pps = spec.other_flood_limits().protect_limits().pps();
-    dosp->other_flood_limits.protect_burst_pps = spec.other_flood_limits().protect_limits().burst_pps();
-    dosp->other_flood_limits.protect_duration = spec.other_flood_limits().protect_limits().duration();
+    dosp->other_flood_limits.restrict_pps =
+        spec.other_flood_limits().restrict_limits().pps();
+    dosp->other_flood_limits.restrict_burst_pps =
+        spec.other_flood_limits().restrict_limits().burst_pps();
+    dosp->other_flood_limits.restrict_duration =
+        spec.other_flood_limits().restrict_limits().duration();
+    dosp->other_flood_limits.protect_pps =
+        spec.other_flood_limits().protect_limits().pps();
+    dosp->other_flood_limits.protect_burst_pps =
+        spec.other_flood_limits().protect_limits().burst_pps();
+    dosp->other_flood_limits.protect_duration =
+        spec.other_flood_limits().protect_limits().duration();
 
     dosp->peer_sg_id = spec.peer_security_group();
 
@@ -153,13 +118,34 @@ static inline void
 dos_policy_init_from_spec (dos_policy_t *dosp,
                            nwsec::DoSPolicySpec& spec)
 {
+    /* TODO: Uncomment after SG apis are ready */
+#if 0
+    int num_sgs;
+    security_group_t *sg = NULL;
+
+    /*
+     * Populate the list of security groups that this DoS policy
+     * is attached to
+     */
+    num_sgs = spec.security_group_id_size();
+    for (int i = 0; i < num_sgs; i++) {
+        sg_id = spec.security_group_id(i);
+        sg = find_security_group_by_id(sg_id);
+        HAL_ASSERT_RETURN(sg != NULL, HAL_RET_INVALID_ARG);
+        /* Add to the security group list */
+        sg_handle = sg->hal_handle;
+        hal_add_to_handle_list(&dosp->sg_list_head, sg_handle);
+    }
+#endif
+    /* Populate Ingress and Egress policy params if present in the config */
     if (spec.has_ingress_policy()) {
-        dos_policy_props_init_from_spec(&dosp->ingress, spec.ingress_policy().dos_protection());
+        dos_policy_props_init_from_spec(&dosp->ingress,
+                            spec.ingress_policy().dos_protection());
     }
     if (spec.has_egress_policy()) {
-        dos_policy_props_init_from_spec(&dosp->egress, spec.egress_policy().dos_protection());
+        dos_policy_props_init_from_spec(&dosp->egress,
+                            spec.egress_policy().dos_protection());
     }
-
     return;
 }
 
@@ -170,9 +156,7 @@ hal_ret_t
 dos_policy_create_add_cb (cfg_op_ctxt_t *cfg_ctx)
 {
     hal_ret_t                       ret = HAL_RET_OK;
-    /* TODO: Hook up PD calls */
-#if 0
-    //pd::pd_dos_policy_args_t        pd_dosp_args = { 0 };
+    pd::pd_dos_policy_args_t        pd_dosp_args = { 0 };
     dllist_ctxt_t                   *lnode = NULL;
     dhl_entry_t                     *dhl_entry = NULL;
     dos_policy_t                    *dosp = NULL;
@@ -203,23 +187,18 @@ dos_policy_create_add_cb (cfg_op_ctxt_t *cfg_ctx)
     }
 
 end:
-#endif
     return ret;
 }
 
 //------------------------------------------------------------------------------
 // 1. Update PI DBs as dos_policy_create_add_cb() was a success
-//      a. Create the flood list
-//      b. Add to dos policy id hash table
 //------------------------------------------------------------------------------
 hal_ret_t
 dos_policy_create_commit_cb (cfg_op_ctxt_t *cfg_ctx)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    dllist_ctxt_t               *lnode = NULL;
-    dhl_entry_t                 *dhl_entry = NULL;
-    dos_policy_t             *dosp = NULL;
-    hal_handle_t                hal_handle = 0;
+    //dllist_ctxt_t               *lnode = NULL;
+    //dhl_entry_t                 *dhl_entry = NULL;
 
     if (cfg_ctx == NULL) {
         HAL_TRACE_ERR("pi-dos-policy:{}:invalid cfg_ctx", __FUNCTION__);
@@ -228,22 +207,11 @@ dos_policy_create_commit_cb (cfg_op_ctxt_t *cfg_ctx)
     }
 
     // assumption is there is only one element in the list
-    lnode = cfg_ctx->dhl.next;
-    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+    //lnode = cfg_ctx->dhl.next;
+    //dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-    dosp = (dos_policy_t *)dhl_entry->obj;
-    hal_handle = dhl_entry->handle;
-
-    //HAL_TRACE_DEBUG("pi-dos-policy:{}:create commit CB {}",
-    //                __FUNCTION__, dosp->security_group_id);
-
-    // 1. a. Add to dos policy id hash table
-    ret = dos_policy_add_to_db(dosp, hal_handle);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-dos-policy:{}:failed to add dos-policy {} to db, err : {}", 
-                __FUNCTION__, dosp->hal_handle, ret);
-        goto end;
-    }
+    HAL_TRACE_DEBUG("pi-dos-policy:{}:create commit CB",
+                    __FUNCTION__);
 
     // TODO: Increment the ref counts of dependent objects
     //  - Have to increment ref count for tenant
@@ -265,7 +233,7 @@ hal_ret_t
 dos_policy_create_abort_cb (cfg_op_ctxt_t *cfg_ctx)
 {
     hal_ret_t                       ret = HAL_RET_OK;
-    //pd::pd_dos_policy_args_t     pd_dosp_args = { 0 };
+    //pd::pd_dos_policy_args_t      pd_dosp_args = { 0 };
     dllist_ctxt_t                   *lnode = NULL;
     dhl_entry_t                     *dhl_entry = NULL;
     dos_policy_t                    *dosp = NULL;
@@ -772,18 +740,10 @@ dos_policy_delete_commit_cb (cfg_op_ctxt_t *cfg_ctx)
     HAL_TRACE_DEBUG("pi-dos-policy:{}:delete commit CB {}",
                     __FUNCTION__, dosp->hal_handle);
 
-    // a. Remove from dos policy id hash table
-    ret = dos_policy_del_from_db(dosp);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-dos-policy:{}:failed to del dos-policy {} from db, err : {}", 
-                      __FUNCTION__, dosp->hal_handle, ret);
-        goto end;
-    }
-
-    // b. Remove object from handle id based hash table
+    // a. Remove object from handle id based hash table
     hal_handle_free(hal_handle);
 
-    // c. Free PI dosp
+    // b. Free PI dosp
     dos_policy_free(dosp);
 
     // TODO: Decrement the ref counts of dependent objects

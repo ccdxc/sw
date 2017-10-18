@@ -6,6 +6,7 @@ namespace pd {
 
 typedef struct pd_tenant_s pd_tenant_t;
 typedef struct pd_nwsec_profile_s pd_nwsec_profile_t;
+typedef struct pd_dos_policy_s pd_dos_policy_t;
 typedef struct pd_l2seg_s pd_l2seg_t;
 typedef struct pd_lif_s pd_lif_t;
 typedef struct pd_uplinkif_s pd_uplinkif_t;

@@ -4,6 +4,7 @@
 #include "nic/hal/src/tenant.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/src/dos.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/network.hpp"
 #include "nic/hal/src/endpoint.hpp"
@@ -11,6 +12,7 @@
 #include "nic/hal/src/tlscb.hpp"
 #include "nic/hal/src/tcpcb.hpp"
 #include "nic/hal/src/qos.hpp"
+#include "nic/hal/src/dos.hpp"
 #include "nic/hal/src/acl.hpp"
 #include "nic/hal/src/wring.hpp"
 #include "nic/hal/src/telemetry.hpp"
@@ -29,6 +31,7 @@ using hal::tenant_t;
 using hal::l2seg_t;
 using hal::network_t;
 using hal::nwsec_profile_t;
+using hal::dos_policy_t;
 using hal::if_t;
 using hal::lif_t;
 using hal::session_t;
@@ -63,6 +66,11 @@ typedef struct pd_nwsec_profile_args_s {
     nwsec_profile_t    *nwsec_profile;
     nwsec_profile_t    *clone_profile;
 } __PACK__ pd_nwsec_profile_args_t;
+
+typedef struct pd_dos_policy_args_s {
+    dos_policy_t    *dos_policy;
+    dos_policy_t    *clone_policy;
+} __PACK__ pd_dos_policy_args_t;
 
 typedef struct pd_lif_args_s {
     lif_t    *lif;
@@ -229,6 +237,13 @@ pd_nwsec_profile_args_init (pd_nwsec_profile_args_t *args)
 }
 
 static inline void
+pd_dos_policy_args_init (pd_dos_policy_args_t *args)
+{
+    args->dos_policy = NULL;
+    return;
+}
+
+static inline void
 pd_lif_args_init (pd_lif_args_t *args)
 {
     args->lif = NULL;
@@ -378,6 +393,13 @@ hal_ret_t pd_nwsec_profile_delete(pd_nwsec_profile_args_t *nwsec_profile);
 hal_ret_t pd_nwsec_profile_mem_free(pd_nwsec_profile_args_t *args);
 hal_ret_t pd_nwsec_profile_make_clone(nwsec_profile_t *nwsec, 
                                       nwsec_profile_t *clone);
+
+hal_ret_t pd_dos_policy_create(pd_dos_policy_args_t *dos_policy);
+hal_ret_t pd_dos_policy_update(pd_dos_policy_args_t *dos_policy);
+hal_ret_t pd_dos_policy_delete(pd_dos_policy_args_t *dos_policy);
+hal_ret_t pd_dos_policy_mem_free(pd_dos_policy_args_t *args);
+hal_ret_t pd_dos_policy_make_clone(dos_policy_t *nwsec, 
+                                      dos_policy_t *clone);
 
 hal_ret_t pd_lif_create(pd_lif_args_t *lif);
 hal_ret_t pd_lif_update(pd_lif_upd_args_t *lif);

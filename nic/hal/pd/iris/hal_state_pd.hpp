@@ -111,6 +111,9 @@ public:
     // get APIs for nwsec related state
     slab *nwsec_pd_slab(void) const { return nwsec_pd_slab_; }
 
+    // get APIs for dos policy related state
+    slab *dos_pd_slab(void) const { return dos_pd_slab_; }
+
     // get APIs for session related state
     slab *session_slab(void) const { return session_slab_; }
 
@@ -297,6 +300,11 @@ private:
     // nwsec related state
     struct {
         slab       *nwsec_pd_slab_;
+    } __PACK__;
+
+    // dos policy related state
+    struct {
+        slab       *dos_pd_slab_;
     } __PACK__;
 
     // session related state
