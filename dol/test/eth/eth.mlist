@@ -469,3 +469,35 @@ modules:
             - flow: filter://type=IPV6,proto=UDP,label=NETWORKING
             - flow: filter://type=IPV6,proto=TCP,label=NETWORKING
             - flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+
+    - module:
+        name    : TX_RX_L3UC
+        spec    : tx_rx_l3.testspec
+        iterate:
+            # Untagged Flows
+            - flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg: filter://native=False
+            # Tagged Flows
+            - flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg: filter://native=True
+
