@@ -1,0 +1,268 @@
+// (c) Pensando Systems, Inc.
+// This is a generated file, please do not hand edit !!
+
+package tserver
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"path"
+	"strings"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/go-martini/martini"
+{{ include "../api/pkgs.txt" }}
+	"github.com/pensando/sw/venice/cli/api"
+	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
+	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/satori/go.uuid"
+)
+
+var (
+	kvStore kvstore.Interface
+)
+
+// Start spins up a test server on the local host on the specified port
+func Start(port string) {
+	s := runtime.NewScheme()
+{{ range $obj := . }}
+	s.AddKnownTypes(&{{$obj.Package}}.{{title $obj.Name}}{}, &{{$obj.Package}}.{{title $obj.Name}}List{})
+{{ end }}
+	config := store.Config{Type: store.KVStoreTypeMemkv, Servers: []string{""}, Codec: runtime.NewJSONCodec(s)}
+
+	kv, err := store.New(config)
+	if err != nil {
+		log.Fatalf("Failed to create store with error: %v", err)
+	}
+
+	kvStore = kv
+
+	mux := NewHTTPServer()
+
+	log.Infof("Starting http server at %v", port)
+	go mux.RunOnAddr(port)
+}
+
+// NewHTTPServer creates a http server for API endpoints.
+func NewHTTPServer() *martini.ClassicMartini {
+	m := martini.Classic()
+{{ range $obj := . }}
+	m.Post("/test"+api.Objs["{{$obj.Name}}"].URL, {{title $obj.Name}}CreateHandler)
+	m.Post(api.Objs["{{$obj.Name}}"].URL, {{title $obj.Name}}CreateHandler)
+	m.Put(api.Objs["{{$obj.Name}}"].URL+"/:name", {{title $obj.Name}}CreateHandler)
+	m.Delete("/test"+api.Objs["{{$obj.Name}}"].URL+"/:name", {{title $obj.Name}}TestDeleteHandler)
+	m.Delete(api.Objs["{{$obj.Name}}"].URL+"/:name", {{title $obj.Name}}ActualDeleteHandler)
+	m.Get(api.Objs["{{$obj.Name}}"].URL+"/:name", {{title $obj.Name}}GetHandler)
+	m.Get(api.Objs["{{$obj.Name}}"].URL, {{title $obj.Name}}ListHandler)
+	m.Get("/watch"+api.Objs["{{$obj.Name}}"].URL, {{title $obj.Name}}sWatchHandler)
+{{ end }}
+	return m
+}
+{{ range $obj := . }}
+// {{title $obj.Name}}CreateHandler creates a {{$obj.Name}}.
+func {{title $obj.Name}}CreateHandler(w http.ResponseWriter, req *http.Request) (int, string) {
+	decoder := json.NewDecoder(req.Body)
+	defer req.Body.Close()
+
+	{{$obj.Name}}Obj := {{$obj.Package}}.{{title $obj.Name}}{}
+	old{{$obj.Name}} := {{$obj.Package}}.{{title $obj.Name}}{}
+	if err := decoder.Decode(&{{$obj.Name}}Obj); err != nil {
+		return http.StatusBadRequest, fmt.Sprintf("Unable to decode\n")
+	}
+
+	dryRun := false
+	if strings.HasPrefix(req.URL.Path, "/test") {
+		req.URL.Path = strings.TrimPrefix(req.URL.Path, "/test")
+		dryRun = true
+	}
+
+	objName := {{$obj.Name}}Obj.Name
+	objUUID := {{$obj.Name}}Obj.UUID
+	if objName != "" {
+		v, err := findUUIDByName("{{$obj.Name}}", objName)
+		if err == nil {
+			if objUUID != "" && v != objUUID {
+				log.Infof("name '%s' is already used by uuid '%s'\n", v)
+				return http.StatusNotFound, fmt.Sprintf("name %s already in use", objName)
+			}
+			objUUID = v
+		}
+	}
+
+	if objUUID == "" {
+		if objName == "" {
+			return http.StatusNotFound, fmt.Sprintf("Either a name or UUID must be specified")
+		}
+		objUUID = uuid.NewV4().String()
+		{{$obj.Name}}Obj.UUID = objUUID
+	}
+
+	update := false
+	key := path.Join(api.Objs["{{$obj.Name}}"].URL, objUUID)
+	if err := kvStore.Get(context.Background(), key, &old{{$obj.Name}}); err == nil {
+		{{$obj.Name}}Obj.Status = old{{$obj.Name}}.Status
+		{{$obj.Name}}Obj.UUID = old{{$obj.Name}}.UUID
+		update = true
+	}
+
+	if err := PreCreateCallback(&{{$obj.Name}}Obj, update, dryRun); err != nil {
+		return http.StatusInternalServerError, err.Error()
+	}
+	log.Infof("Create key: %s object %+v", key, {{$obj.Name}}Obj)
+
+	if dryRun {
+		return http.StatusOK, fmt.Sprintf("{{title $obj.Name}} %q creation would be successful", {{$obj.Name}}Obj.Name)
+	}
+
+	if update {
+		if err := kvStore.Update(context.Background(), key, &{{$obj.Name}}Obj); err != nil {
+			return http.StatusBadRequest, err.Error()
+		}
+	} else {
+		if err := kvStore.Create(context.Background(), key, &{{$obj.Name}}Obj); err != nil {
+			return http.StatusBadRequest, err.Error()
+		}
+	}
+	saveNameUUID({{$obj.Name}}Obj.Kind, objName, objUUID)
+
+	return http.StatusOK, "{}"
+}
+
+// {{title $obj.Name}}TestDeleteHandler is
+func {{title $obj.Name}}TestDeleteHandler(w http.ResponseWriter, params martini.Params) (int, string) {
+	return {{title $obj.Name}}DeleteHandler(w, params, true)
+}
+
+// {{title $obj.Name}}ActualDeleteHandler is
+func {{title $obj.Name}}ActualDeleteHandler(w http.ResponseWriter, params martini.Params) (int, string) {
+	return {{title $obj.Name}}DeleteHandler(w, params, false)
+}
+
+// {{title $obj.Name}}DeleteHandler is
+func {{title $obj.Name}}DeleteHandler(w http.ResponseWriter, params martini.Params, dryRun bool) (int, string) {
+	objName := params["name"]
+	objUUID := ""
+	if objName != "" {
+		v, err := findUUIDByName("{{$obj.Name}}", objName)
+		if err != nil {
+			return http.StatusNotFound, fmt.Sprintf("object %s not found", objName)
+		}
+		objUUID = v
+	}
+
+	key := path.Join(api.Objs["{{$obj.Name}}"].URL, objUUID)
+	{{$obj.Name}} := {{$obj.Package}}.{{title $obj.Name}}{}
+	if err := kvStore.Get(context.Background(), key, &{{$obj.Name}}); err != nil {
+		return http.StatusNotFound, fmt.Sprintf("{{title $obj.Name}} %q deletion failed: %v\n", objName, err)
+	}
+
+	if err := PreDeleteCallback(&{{$obj.Name}}, dryRun); err != nil {
+		return http.StatusInternalServerError, err.Error()
+	}
+
+	if dryRun {
+		return http.StatusOK, fmt.Sprintf("{{title $obj.Name}} %q creation would be successful", {{$obj.Name}}.Name)
+	}
+
+	if err := kvStore.Delete(context.Background(), key, nil); err != nil {
+		return http.StatusNotFound, fmt.Sprintf("{{title $obj.Name}} %q deletion failed: %v\n", objName, err)
+	}
+	clearNameUUID("{{$obj.Name}}", objName, objUUID)
+
+	out, err := json.Marshal(&{{$obj.Name}})
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
+	}
+	return http.StatusOK, string(out)
+}
+
+// {{title $obj.Name}}GetHandler looks up a {{$obj.Name}}.
+func {{title $obj.Name}}GetHandler(w http.ResponseWriter, params martini.Params) (int, string) {
+	objName := params["name"]
+	objUUID := ""
+	if objName != "" {
+		v, err := findUUIDByName("{{$obj.Name}}", objName)
+		if err != nil {
+			return http.StatusNotFound, ""
+		}
+		objUUID = v
+	}
+
+	key := path.Join(api.Objs["{{$obj.Name}}"].URL, objUUID)
+
+	{{$obj.Name}} := {{$obj.Package}}.{{title $obj.Name}}{}
+
+	if err := kvStore.Get(context.Background(), key, &{{$obj.Name}}); err != nil {
+		if kvstore.IsKeyNotFoundError(err) {
+			return http.StatusNotFound, fmt.Sprintf("{{title $obj.Name}} %q not found\n", objName)
+		}
+		return http.StatusInternalServerError, fmt.Sprintf("{{title $obj.Name}} %q get failed with error: %v\n", objName, err)
+	}
+
+	out, err := json.Marshal(&{{$obj.Name}})
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
+	}
+	return http.StatusOK, string(out)
+}
+
+// {{title $obj.Name}}ListHandler lists all {{$obj.Name}}s.
+func {{title $obj.Name}}ListHandler(w http.ResponseWriter, params martini.Params) (int, string) {
+	{{$obj.Name}}s := {{$obj.Package}}.{{title $obj.Name}}List{}
+
+	// FIXME: URL tenant messup bug
+	url := api.Objs["{{$obj.Name}}"].URL
+	url = strings.Replace(url, "//", "/", -1)
+	if err := kvStore.List(context.Background(), url, &{{$obj.Name}}s); err != nil {
+		if kvstore.IsKeyNotFoundError(err) {
+			return http.StatusNotFound, fmt.Sprintf("{{title $obj.Name}}s not found\n")
+		}
+		return http.StatusInternalServerError, fmt.Sprintf("{{title $obj.Name}}s list failed with error: %v\n", err)
+	}
+
+	out, err := json.Marshal(&{{$obj.Name}}s)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Sprintf("Failed to encode\n")
+	}
+
+	return http.StatusOK, string(out)
+}
+
+// {{title $obj.Name}}sWatchHandler establishes a watch on {{$obj.Name}}s hierarchy.
+func {{title $obj.Name}}sWatchHandler(w http.ResponseWriter, req *http.Request) {
+	notifier, ok := w.(http.CloseNotifier)
+	if !ok {
+		return
+	}
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		return
+	}
+	encoder := json.NewEncoder(w)
+	watcher, err := kvStore.PrefixWatch(context.Background(), api.Objs["{{$obj.Name}}"].URL, "0")
+	if err != nil {
+		return
+	}
+	ch := watcher.EventChan()
+	for {
+		select {
+		case event, ok := <-ch:
+			if !ok {
+				return
+			}
+
+			if err := encoder.Encode(event); err != nil {
+				return
+			}
+			if len(ch) == 0 {
+				flusher.Flush()
+			}
+		case <-notifier.CloseNotify():
+			return
+		}
+	}
+}
+{{ end }}

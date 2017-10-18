@@ -12,7 +12,6 @@ go run gen.go
 
 gofmt -s -w $VENICE_DIR/gen/pregen/genobjs.go
 gofmt -s -w $VENICE_DIR/genobjs.go
-gofmt -s -w $VENICE_DIR/genobjs.go
 gofmt -s -w $VENICE_DIR/gencmds.go
 gofmt -s -w $VENICE_DIR/testserver/tserver/genobjs.go
 gofmt -s -w $VENICE_DIR/testserver/tserver/tserver.go

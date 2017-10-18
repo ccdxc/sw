@@ -1,0 +1,4 @@
+var objOrder = []string{
+{{ range $obj := . }}
+	"{{$obj.Name}}",
+{{ end }}}

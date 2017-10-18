@@ -1,0 +1,50 @@
+// (c) Pensando Systems, Inc.
+// This is a generated file, please do not hand edit !!
+
+package pregen
+
+import (
+	"github.com/pensando/sw/venice/cli/api"
+{{ include "../api/pkgs.txt" }}
+)
+
+// GetObjSpec is
+func GetObjSpec(objName string) interface{} {
+	switch objName {
+{{ range $apiObj := . }}
+	case "{{$apiObj.Name}}":
+		return {{$apiObj.Package}}.{{title $apiObj.Name}}Spec{}
+{{ end }}
+	}
+	return nil
+}
+
+// GetSubObj is
+func GetSubObj(kind string) interface{} {
+	switch kind {
+{{ cleanVisited }}
+{{ range $apiObj := . }}
+	{{ range $subObj := .Structs }}
+		{{ if eq (visited $subObj) false }}
+			case "{{$subObj}}":
+				var v {{$apiObj.Package}}.{{$subObj}}
+				return &v
+		{{ end }}
+	{{ end }}
+{{ end }}
+
+	}
+	return nil
+}
+
+// GetObjStatus is
+func GetObjStatus(objName string) interface{} {
+	switch objName {
+{{ range $apiObj := . }}
+	case "{{$apiObj.Name}}":
+		o := {{$apiObj.Package}}.{{title $apiObj.Name}}{}
+		return o.Status
+{{ end }}
+	}
+	return nil
+}

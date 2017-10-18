@@ -1,0 +1,120 @@
+// (c) Pensando Systems, Inc.
+// This is a generated file, edit at risk of loosing it !!
+
+package vcli
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/urfave/cli"
+)
+
+var editCommands = []cli.Command{
+{{ range $obj := . }}{{if checkPerms $obj "w"}}
+	{
+		Name:         "{{$obj.Name}}",
+		Usage:        "create a {{$obj.Name}}",
+		ArgsUsage:    "[{{$obj.Name}}]",
+		Action:       editCmd,
+		BashComplete: bashEdit{{title $obj.Name}}Completer,
+		Flags:        append(editFlags, Create{{title $obj.Name}}Flags...),
+	},
+{{ end }}{{end}}
+}
+
+var updateCommands = []cli.Command{
+{{ range $obj := . }}{{if checkPerms $obj "w"}}
+	{
+		Name:         "{{$obj.Name}}",
+		Usage:        "create a {{$obj.Name}}",
+		ArgsUsage:    "[{{$obj.Name}}]",
+		Action:       updateCmd,
+		BashComplete: bashUpdate{{title $obj.Name}}Completer,
+		Flags:        append(createFlags, Create{{title $obj.Name}}Flags...),
+	},
+{{ end }}{{end}}
+}
+
+var createCommands = []cli.Command{
+	{
+		Name:         "upload",
+		Action:       createFromFile,
+		BashComplete: bashFileNameCompleter,
+		Usage:        "Specify comma separated file names, directory names or URLs",
+		ArgsUsage:    "[filename]",
+	},
+{{ range $obj := . }}{{if checkPerms $obj "w"}}
+	{
+		Name:         "{{$obj.Name}}",
+		Usage:        "create a {{$obj.Name}}",
+		ArgsUsage:    "[{{$obj.Name}}]",
+		Action:       createCmd,
+		BashComplete: bashCreate{{title $obj.Name}}Completer,
+		Flags:        append(createFlags, Create{{title $obj.Name}}Flags...),
+	},
+{{ end }}{{end}}
+}
+
+var readCommands = []cli.Command{
+{{ range $obj := . }}
+	{
+		Name:         "{{$obj.Name}}",
+		ArgsUsage:    " ",
+		Usage:        "read specified [{{$obj.Name}}](s)",
+		Action:       readCmd,
+		Flags:        readFlags,
+		BashComplete: bashRead{{title $obj.Name}}Completer,
+	},
+{{ end }}
+}
+
+var deleteCommands = []cli.Command{
+{{ range $obj := . }}
+	{
+		Name:         "{{$obj.Name}}",
+		ArgsUsage:    "[{{$obj.Name}}]",
+		Usage:        "delete specified [{{$obj.Name}}](s)",
+		Flags:        deleteFlags,
+		Action:       deleteCmd,
+		BashComplete: bashDelete{{title $obj.Name}}Completer,
+	},
+{{ end }}
+}
+
+var labelCommands = []cli.Command{
+{{ range $obj := . }}
+	{
+		Name:         "{{$obj.Name}}",
+		ArgsUsage:    " ",
+		Usage:        "label specified [{{$obj.Name}}](s)",
+		Action:       labelCmd,
+		Flags:        labelFlags,
+		BashComplete: bashLabel{{title $obj.Name}}Completer,
+	},
+{{ end }}
+}
+
+var exampleCommands = []cli.Command{
+{{ range $obj := . }}
+	{
+		Name:         "{{$obj.Name}}",
+		Usage:        "show examples of the {{$obj.Name}}",
+		Flags:        exampleFlags,
+		Action:       exampleCmd,
+		BashComplete: bashExample{{title $obj.Name}}Completer,
+	},
+{{ end }}
+}
+
+var definitionCommands = []cli.Command{
+{{ range $obj := . }}
+	{
+		Name:         "{{$obj.Name}}",
+		Usage:        "show definifition of the {{$obj.Name}}",
+		Flags:        definitionFlags,
+		Action:       definitionCmd,
+		BashComplete: bashDefinition{{title $obj.Name}}Completer,
+	},
+{{ end }}
+}

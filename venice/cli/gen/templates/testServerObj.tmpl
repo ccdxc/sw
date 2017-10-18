@@ -1,0 +1,60 @@
+// (c) Pensando Systems, Inc.
+// This is a generated file, please do not hand edit !!
+
+package tserver
+
+import (
+	"context"
+	"path"
+
+{{ include "../api/pkgs.txt" }}
+	"github.com/pensando/sw/venice/cli/api"
+)
+
+{{ range $obj := . }}
+// Get{{title $obj.Name}}ByName is
+func Get{{title $obj.Name}}ByName(objName string) (*{{$obj.Package}}.{{title $obj.Name}}, error) {
+	obj, err := GetObjByName("{{$obj.Name}}", objName)
+	if err != nil {
+		return nil, err
+	}
+	{{$obj.Name}}Obj := obj.(*{{$obj.Package}}.{{title $obj.Name}})
+	return {{$obj.Name}}Obj, nil
+}
+{{ end }}
+
+{{ range $obj := . }}
+// Update{{title $obj.Name}} is
+func Update{{title $obj.Name}}(obj *{{$obj.Package}}.{{title $obj.Name}}) error {
+	uuidStr, err := findUUIDByName(obj.Kind, obj.Name)
+	if err != nil {
+		return err
+	}
+	key := path.Join(api.Objs["{{$obj.Name}}"].URL, uuidStr)
+	err = kvStore.Update(context.Background(), key, obj)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+{{ end }}
+
+func getEmptyObj(kind string) (obj interface{}, objList interface{}) {
+	switch kind {
+{{ range $obj := . }}
+	case "{{$obj.Name}}":
+		return &{{$obj.Package}}.{{title $obj.Name}}{}, &{{$obj.Package}}.{{title $obj.Name}}List{}
+{{ end }}
+	}
+	return nil, nil
+}
+
+func getObjFromList(objList interface{}, idx int) interface{} {
+{{ range $obj := . }}
+	if ol, ok := objList.(*{{$obj.Package}}.{{title $obj.Name}}List); ok {
+		{{$obj.Name}} := ol.Items[idx]
+		return &{{$obj.Name}}
+	}
+{{ end }}
+	return nil
+}

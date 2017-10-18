@@ -644,7 +644,7 @@ func getSpecKvs(ctx *context) (map[string]ref.FInfo, error) {
 			fi.TypeStr = "slice"
 			// fi.ValueStr = []string{strings.Join(flagVal, ",")}
 			fi.ValueStr = flagVal
-			kvs[strings.Title(sf.Name)] = fi
+			kvs[sf.Name] = fi
 		} else if sf, ok := f.(cli.StringFlag); ok && sf.Name != "" {
 			flagVal := c.String(sf.Name)
 			if len(flagVal) == 0 {
@@ -652,23 +652,23 @@ func getSpecKvs(ctx *context) (map[string]ref.FInfo, error) {
 			}
 			fi.TypeStr = "string"
 			fi.ValueStr = []string{flagVal}
-			kvs[strings.Title(sf.Name)] = fi
+			kvs[sf.Name] = fi
 		} else if bf, ok := f.(cli.BoolFlag); ok {
 			if strings.HasPrefix(bf.Name, "help, h") {
 				continue
 			}
-			kvs[strings.Title(bf.Name)] = fi
+			kvs[bf.Name] = fi
 		} else if intf, ok := f.(cli.IntFlag); ok {
 			flagval := strconv.Itoa(c.Int(intf.Name))
 			fi.TypeStr = "string"
 			fi.ValueStr = []string{flagval}
-			kvs[strings.Title(intf.Name)] = fi
+			kvs[intf.Name] = fi
 		} else if uintf, ok := f.(cli.UintFlag); ok {
 			uintVal := (uint64)(c.Uint(uintf.Name))
 			flagval := strconv.FormatUint(uintVal, 10)
 			fi.TypeStr = "string"
 			fi.ValueStr = []string{flagval}
-			kvs[strings.Title(uintf.Name)] = fi
+			kvs[uintf.Name] = fi
 		} else {
 			fmt.Printf("Unknown Flag = %#v\n", f)
 		}

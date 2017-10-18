@@ -28,11 +28,6 @@ type ObjectRln struct {
 	Field string
 }
 
-// GenObjStruct defines generation attributes
-type GenObjStruct struct {
-	Name string
-}
-
 // ObjectInfo is
 type ObjectInfo struct {
 	Name        string
@@ -41,27 +36,27 @@ type ObjectInfo struct {
 	URL         string
 	Perms       string
 	Rlns        []ObjectRln
-	Structs     []GenObjStruct
+	Structs     []string
 }
 
 // Objs are
 var Objs = map[string]ObjectInfo{
 	"node": {Name: "node", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/nodes", Perms: "rw",
-		Structs: []GenObjStruct{{Name: "NodeCondition"}, {Name: "PortCondition"}, {Name: "ConditionStatus"}}},
+		Structs: []string{"NodeCondition", "PortCondition", "ConditionStatus"}},
 	"cluster": {Name: "cluster", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/cluster", Perms: "rw"},
 	"smartNIC": {Name: "smartNIC", Package: "cmd", GrpcService: "cmd", URL: "/v1/cmd/smartnics", Perms: "rw",
-		Structs: []GenObjStruct{{Name: "PortSpec"}, {Name: "PortStatus"}, {Name: "SmartNICCondition"}}},
+		Structs: []string{"PortSpec", "PortStatus", "SmartNICCondition"}},
 	"tenant":        {Name: "tenant", Package: "network", GrpcService: "tenant", URL: "/v1/tenants/tenants", Perms: "rw"},
 	"network":       {Name: "network", Package: "network", GrpcService: "network", URL: "/v1/networks/:tenant/networks", Perms: "rw"},
 	"securityGroup": {Name: "securityGroup", Package: "network", GrpcService: "securityGroup", URL: "/v1/security-groups/:tenant/security-groups", Perms: "rw"},
 	"sgpolicy": {Name: "sgpolicy", Package: "network", GrpcService: "sgpolicy", URL: "/v1/sgpolicy/:tenant/sgpolicy", Perms: "rw",
-		Structs: []GenObjStruct{{Name: "SGRule"}}},
+		Structs: []string{"SGRule"}},
 	"service": {Name: "service", Package: "network", GrpcService: "service", URL: "/v1/services/:tenant/services", Perms: "rw"},
 	"lbPolicy": {Name: "lbPolicy", Package: "network", GrpcService: "lbPolicy", URL: "/v1/lb-policy/:tenant/lb-policy", Perms: "rw",
-		Structs: []GenObjStruct{{Name: "HealthCheckSpec"}}},
+		Structs: []string{"HealthCheckSpec"}},
 	"endpoint": {Name: "endpoint", Package: "network", GrpcService: "endpoint", URL: "/v1/endpoints/:tenant/endpoints", Perms: "rw"},
 	"user": {Name: "user", Package: "api", GrpcService: "api", URL: "/user", Perms: "rw",
-		Structs: []GenObjStruct{{Name: "UserAuditLog"}},
+		Structs: []string{"UserAuditLog"},
 		Rlns: []ObjectRln{
 			{Type: NamedRef, ToObj: "role", Field: "Spec.Roles"}}},
 	"role": {Name: "role", Package: "api", GrpcService: "api", URL: "/role", Perms: "rw",

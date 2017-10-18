@@ -65,7 +65,7 @@ func TestStartServer(t *testing.T) {
 }
 
 func TestClusterCreate(t *testing.T) {
-	out := veniceCLI("update cluster --label type:vcenter --label allowed:qa --label dc:sjc-lab22 --virtualIP 158.21.34.44 --quorumNodes mgmt1 --quorumNodes mgmt2 --quorumNodes mgmt3 --nTPServers ntp-svr1 --nTPServers ntp-svr2 --dNSSubDomain internal.pensando.io dc-az-cluster1")
+	out := veniceCLI("update cluster --label type:vcenter --label allowed:qa --label dc:sjc-lab22 --virtualIp 158.21.34.44 --quorumNodes mgmt1 --quorumNodes mgmt2 --quorumNodes mgmt3 --ntpServers ntp-svr1 --ntpServers ntp-svr2 --dnsSubdomain internal.pensando.io dc-az-cluster1")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("update: garbled output '%s'", out)
 	}
@@ -78,7 +78,7 @@ func TestClusterCreate(t *testing.T) {
 		len(cluster.Spec.NTPServers) != 2 || len(cluster.Spec.QuorumNodes) != 3 ||
 		cluster.Spec.NTPServers[0] != "ntp-svr1" || cluster.Spec.NTPServers[1] != "ntp-svr2" ||
 		cluster.Spec.QuorumNodes[0] != "mgmt1" || cluster.Spec.QuorumNodes[1] != "mgmt2" || cluster.Spec.QuorumNodes[2] != "mgmt3" {
-		t.Fatalf("Create operation failed: %+v \n", cluster)
+		t.Fatalf("Create operation failed: %+v \n, out = %s", cluster, out)
 	}
 
 	out = veniceCLI("read cluster dc-az --gbc")
@@ -89,7 +89,7 @@ func TestClusterCreate(t *testing.T) {
 }
 
 func TestClusterUpdate(t *testing.T) {
-	out := veniceCLI("update cluster --virtualIP 151.21.43.44 dc-az-cluster1")
+	out := veniceCLI("update cluster --virtualIp 151.21.43.44 dc-az-cluster1")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("update: garbled output '%s'", out)
 	}
@@ -214,7 +214,7 @@ func TestSmartNICUpdate(t *testing.T) {
 }
 
 func TestTenantCreate(t *testing.T) {
-	out := veniceCLI("create tenant newco --adminUser newco-admin")
+	out := veniceCLI("create tenant newco --admin-user newco-admin")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create: garbled output '%s'", out)
 	}
@@ -236,7 +236,7 @@ func TestTenantCreate(t *testing.T) {
 }
 
 func TestTenantUpdate(t *testing.T) {
-	out := veniceCLI("update tenant newco --adminUser newco-adm")
+	out := veniceCLI("update tenant newco --admin-user newco-adm")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create: garbled output '%s'", out)
 	}
@@ -252,7 +252,7 @@ func TestTenantUpdate(t *testing.T) {
 }
 
 func TestNetworkCreate(t *testing.T) {
-	out := veniceCLI("create network lab22-net145 --iPv4Subnet 145.1.1.0/24 --iPv4Gateway 145.1.1.254 --type vlan --iPv6Subnet 2001:db8::0/64 --iPv6Gateway 2001:db8::1 --vlanID 345")
+	out := veniceCLI("create network lab22-net145 --ipv4-subnet 145.1.1.0/24 --ipv4-gateway 145.1.1.254 --type vlan --ipv6-subnet 2001:db8::0/64 --ipv6-gateway 2001:db8::1 --vlan-id 345")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create: garbled output '%s'", out)
 	}
@@ -293,7 +293,7 @@ func TestNetworkUpdate(t *testing.T) {
 }
 
 func TestSecurityGroupCreate(t *testing.T) {
-	out := veniceCLI("create securityGroup sg10 --workloadSelector key1:val1 --workloadSelector key2:val2 --matchPrefixes 12.1.1.0/22")
+	out := veniceCLI("create securityGroup sg10 --workload-labels key1:val1 --workload-labels key2:val2 --match-prefixes 12.1.1.0/22")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create: garbled output '%s'", out)
 	}
@@ -317,7 +317,7 @@ func TestSecurityGroupCreate(t *testing.T) {
 }
 
 func TestSecurityGroupUpdate(t *testing.T) {
-	out := veniceCLI("update securityGroup sg10 --workloadSelector key3:val3")
+	out := veniceCLI("update securityGroup sg10 --workload-labels key3:val3")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create: garbled output '%s'", out)
 	}
@@ -334,12 +334,12 @@ func TestSecurityGroupUpdate(t *testing.T) {
 }
 
 func TestSecurityGroupPolicyCreate(t *testing.T) {
-	out := veniceCLI("create securityGroup sg20 --workloadSelector key5:val5")
+	out := veniceCLI("create securityGroup sg20 --workload-labels key5:val5")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create sg for sgpolicy: garbled output '%s'", out)
 	}
 
-	out = veniceCLI("create sgpolicy sg10-ingress --ports tcp/8440 --peerGroup sg20 --action permit --attachGroups sg10")
+	out = veniceCLI("create sgpolicy sg10-ingress --ports tcp/8440 --peer-group sg20 --action permit --attach-groups sg10")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create sgpolicy: garbled output '%s'", out)
 	}
@@ -363,7 +363,7 @@ func TestSecurityGroupPolicyCreate(t *testing.T) {
 }
 
 func TestSecurityGroupPolicyUpdate(t *testing.T) {
-	out := veniceCLI("update sgpolicy sg10-ingress --attachGroups sg30")
+	out := veniceCLI("update sgpolicy sg10-ingress --attach-groups sg30")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("update sgpolicy: garbled output '%s'", out)
 	}
@@ -379,7 +379,7 @@ func TestSecurityGroupPolicyUpdate(t *testing.T) {
 		t.Fatalf("Create operation failed: %+v \n", sgp)
 	}
 
-	out = veniceCLI("update sgpolicy sg10-ingress --ports tcp/4550 --peerGroup sg20 --action permit --ports tcp/8440 --peerGroup sg10 --action permit")
+	out = veniceCLI("update sgpolicy sg10-ingress --ports tcp/4550 --peer-group sg20 --action permit --ports tcp/8440 --peer-group sg10 --action permit")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("update sgpolicy: garbled output '%s'", out)
 	}
@@ -398,7 +398,7 @@ func TestSecurityGroupPolicyUpdate(t *testing.T) {
 }
 
 func TestServiceCreate(t *testing.T) {
-	out := veniceCLI("create service uService122 --virtualIp 12.1.1.122 --ports 8080 --workloadSelector tier:frontend --lBPolicy dev-lb-policy")
+	out := veniceCLI("create service uService122 --virtual-ip 12.1.1.122 --ports 8080 --workload-labels tier:frontend --lb-policy dev-lb-policy")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create: garbled output '%s'", out)
 	}
@@ -421,7 +421,7 @@ func TestServiceCreate(t *testing.T) {
 }
 
 func TestServiceUpdate(t *testing.T) {
-	out := veniceCLI("update service uService122 --virtualIp 12.1.1.123 --lBPolicy prod-lb-policy")
+	out := veniceCLI("update service uService122 --virtual-ip 12.1.1.123 --lb-policy prod-lb-policy")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("Update: garbled output '%s'", out)
 	}
@@ -438,7 +438,7 @@ func TestServiceUpdate(t *testing.T) {
 }
 
 func TestLbPolicyCreate(t *testing.T) {
-	out := veniceCLI("create lbPolicy --algorithm round-robin --probePortOrUrl /healthStatus --sessionAffinity yes --type l4 --interval 5 --maxTimeouts 25 dev-lb-policy")
+	out := veniceCLI("create lbPolicy --algorithm round-robin --probe-port-or-url /healthStatus --session-affinity yes --type l4 --interval 5 --max-timeouts 25 dev-lb-policy")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("create: garbled output '%s'", out)
 	}
@@ -679,7 +679,7 @@ func TestCommandCompletion(t *testing.T) {
 		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
 	}
 
-	out = veniceCLI("create cluster --virtualIP --gbc")
+	out = veniceCLI("create cluster --virtualIp --gbc")
 	if !strings.Contains(out, "{value}") {
 		t.Fatalf("command completion for string value failed: invalid output '%s'", out)
 	}
@@ -688,7 +688,7 @@ func TestCommandCompletion(t *testing.T) {
 		t.Fatalf("command completion for string-value map: invalid output '%s'", out)
 	}
 	out = veniceCLI("create cluster --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --autoAdmitNICs --dNSSubDomain --nTPServers --quorumNodes --virtualIP {cluster}") {
+	if !strings.Contains(out, "--label --dry-run --file --autoAdmitNics --dnsSubdomain --ntpServers --quorumNodes --virtualIp {cluster}") {
 		t.Fatalf("cluster command completion: invalid output '%s'", out)
 	}
 
@@ -728,24 +728,24 @@ func TestCommandCompletion(t *testing.T) {
 	}
 
 	out = veniceCLI("create tenant --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --adminUser {tenant}") {
+	if !strings.Contains(out, "--label --dry-run --file --admin-user {tenant}") {
 		t.Fatalf("tenant command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("update tenant --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --adminUser") {
+	if !strings.Contains(out, "--label --dry-run --file --admin-user") {
 		t.Fatalf("tenant command completion: invalid output '%s'", out)
 	}
 
 	out = veniceCLI("create securityGroup --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --matchPrefixes --serviceSelector --workloadSelector {securityGroup}") {
+	if !strings.Contains(out, "--label --dry-run --file --match-prefixes --service-labels --workload-labels {securityGroup}") {
 		t.Fatalf("security-group command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("update securityGroup blah-sg --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --matchPrefixes --serviceSelector --workloadSelector") {
+	if !strings.Contains(out, "--label --dry-run --file --match-prefixes --service-labels --workload-labels") {
 		t.Fatalf("security-group command completion: invalid output '%s'", out)
 	}
-	out = veniceCLI("update securityGroup blah-sg --matchPrefixes 1.1.1.3/32 --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --matchPrefixes --serviceSelector --workloadSelector") {
+	out = veniceCLI("update securityGroup blah-sg --match-prefixes 1.1.1.3/32 --gbc")
+	if !strings.Contains(out, "--label --dry-run --file --match-prefixes --service-labels --workload-labels") {
 		t.Fatalf("security-group command completion: invalid output '%s'", out)
 	}
 
@@ -794,11 +794,11 @@ func TestCommandCompletion(t *testing.T) {
 	}
 
 	out = veniceCLI("create service --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --lBPolicy --ports --virtualIp --workloadSelector {service}") {
+	if !strings.Contains(out, "--label --dry-run --file --lb-policy --ports --virtual-ip --workload-labels {service}") {
 		t.Fatalf("service command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("update service --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --lBPolicy --ports --virtualIp --workloadSelector uService122") {
+	if !strings.Contains(out, "--label --dry-run --file --lb-policy --ports --virtual-ip --workload-labels uService122") {
 		t.Fatalf("service command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("delete service --gbc")
@@ -807,11 +807,11 @@ func TestCommandCompletion(t *testing.T) {
 	}
 
 	out = veniceCLI("create sgpolicy --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --action --appUser --appUserGrp --apps --attachGroups --peerGroup --ports {sgpolicy}") {
+	if !strings.Contains(out, "--label --dry-run --file --action --app-user --app-user-group --apps --attach-groups --peer-group --ports {sgpolicy}") {
 		t.Fatalf("lbPolicy command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("update sgpolicy --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --action --appUser --appUserGrp --apps --attachGroups --peerGroup --ports") {
+	if !strings.Contains(out, "--label --dry-run --file --action --app-user --app-user-group --apps --attach-groups --peer-group --ports") {
 		t.Fatalf("lbPolicy command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("delete sgpolicy --gbc")
@@ -832,13 +832,13 @@ func TestCommandCompletion(t *testing.T) {
 		t.Fatalf("lbPolicy command completion: invalid output '%s'", out)
 	}
 
-	out = veniceCLI("create network lab22-net145 --iPv4Subnet 145.1.1.0/24 --iPv4Gateway 145.1.1.254 --type vlan --iPv6Subnet 2001:db8::0/64 --iPv6Gateway 2001:db8::1 --vlanID 345 --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --vxlanVNI") {
+	out = veniceCLI("create network lab22-net145 --ipv4-subnet 145.1.1.0/24 --ipv4-gateway 145.1.1.254 --type vlan --ipv6-subnet 2001:db8::0/64 --ipv6-gateway 2001:db8::1 --vlan-id 345 --gbc")
+	if !strings.Contains(out, "--label --dry-run --file --vxlan-vni") {
 		t.Fatalf("command completion with filled params failed: %s", out)
 	}
 
-	out = veniceCLI("create lbPolicy --algorithm round-robin --probePortOrUrl /healthStatus --sessionAffinity yes --type l4 --interval 5 --maxTimeouts 25 dev-lb-policy --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --declareHealthyCount --probesPerInterval") {
+	out = veniceCLI("create lbPolicy --algorithm round-robin --probe-port-or-url /healthStatus --session-affinity yes --type l4 --interval 5 --max-timeouts 25 dev-lb-policy --gbc")
+	if !strings.Contains(out, "--label --dry-run --file --declare-healthy-count --probes-per-interval") {
 		t.Fatalf("command completion with partially filled params failed: %s", out)
 	}
 
@@ -1062,7 +1062,7 @@ spec:
 }
 
 func TestEditCommand(t *testing.T) {
-	veniceCLI("create securityGroup editsg --label one:two --label three:four --workloadSelector tier:frontend")
+	veniceCLI("create securityGroup editsg --label one:two --label three:four --workload-labels tier:frontend")
 
 	// change the editor to cat command
 	oldEditor := os.Getenv("VENICE_EDITOR")
@@ -1181,16 +1181,16 @@ func TestList(t *testing.T) {
 		t.Fatalf("Invalid list:\n%s", out)
 	}
 
-	veniceCLI("create tenant test1 --adminUser test1-admin")
-	veniceCLI("create tenant test2 --adminUser test2-admin")
+	veniceCLI("create tenant test1 --admin-user test1-admin")
+	veniceCLI("create tenant test2 --admin-user test2-admin")
 	out = veniceCLI("read tenant")
 	if !matchLineFields(out, []string{"test1", "test1-admin"}) {
 		t.Fatalf("Invalid list:\n%s", out)
 	}
 
-	veniceCLI("create network test1 --label dhcp:yes --iPv4Subnet 13.1.1.0/24 --iPv4Gateway 13.1.1.254 --type vlan")
-	veniceCLI("create network test2 --label dhcp:no --label level:prod --iPv4Subnet 13.1.2.0/24 --iPv4Gateway 13.1.2.254 --type vlan")
-	veniceCLI("create network test3 --label dhcp:no --iPv4Subnet 13.1.3.0/24 --iPv4Gateway 13.1.3.254 --type vlan")
+	veniceCLI("create network test1 --label dhcp:yes --ipv4-subnet 13.1.1.0/24 --ipv4-gateway 13.1.1.254 --type vlan")
+	veniceCLI("create network test2 --label dhcp:no --label level:prod --ipv4-subnet 13.1.2.0/24 --ipv4-gateway 13.1.2.254 --type vlan")
+	veniceCLI("create network test3 --label dhcp:no --ipv4-subnet 13.1.3.0/24 --ipv4-gateway 13.1.3.254 --type vlan")
 	out = veniceCLI("read network")
 	if !matchLineFields(out, []string{"test2", "dhcp:no", "13.1.2.0/24", "13.1.2.254", "vlan"}) {
 		t.Fatalf("Invalid list:\n%s", out)
@@ -1201,9 +1201,9 @@ func TestList(t *testing.T) {
 }
 
 func TestDeleteList(t *testing.T) {
-	veniceCLI("create securityGroup test1 --label key1:label1 --label key2:label2 --workloadSelector tier:frontend")
-	veniceCLI("create securityGroup test2 --label key3:label3 --label key2:label2 --workloadSelector tier:backend")
-	veniceCLI("create securityGroup test3 --label key1:label1 --label key4:label4 --workloadSelector tier:app")
+	veniceCLI("create securityGroup test1 --label key1:label1 --label key2:label2 --workload-labels tier:frontend")
+	veniceCLI("create securityGroup test2 --label key3:label3 --label key2:label2 --workload-labels tier:backend")
+	veniceCLI("create securityGroup test3 --label key1:label1 --label key4:label4 --workload-labels tier:app")
 
 	veniceCLI("delete securityGroup --label key2:label2")
 	out := veniceCLI("read securityGroup")
@@ -1284,10 +1284,10 @@ func TestMultiRead(t *testing.T) {
 }
 
 func TestLabelCommand(t *testing.T) {
-	veniceCLI("create service testsvc1 --virtualIp 155.12.12.1 --ports 8001 --workloadSelector tier:frontend")
-	veniceCLI("create service testsvc2 --label auth:ldap --virtualIp 155.12.12.2 --ports 8002 --workloadSelector tier:app")
-	veniceCLI("create service testsvc3 --label auth:ldap --virtualIp 155.12.12.3 --ports 8003 --workloadSelector tier:db")
-	veniceCLI("create service testsvc4 --virtualIp 155.12.12.4 --ports 8004 --workloadSelector tier:db")
+	veniceCLI("create service testsvc1 --virtual-ip 155.12.12.1 --ports 8001 --workload-labels tier:frontend")
+	veniceCLI("create service testsvc2 --label auth:ldap --virtual-ip 155.12.12.2 --ports 8002 --workload-labels tier:app")
+	veniceCLI("create service testsvc3 --label auth:ldap --virtual-ip 155.12.12.3 --ports 8003 --workload-labels tier:db")
+	veniceCLI("create service testsvc4 --virtual-ip 155.12.12.4 --ports 8004 --workload-labels tier:db")
 
 	veniceCLI("label service --update-label dmz:yes testsvc1")
 	out := veniceCLI("read service")
@@ -1317,8 +1317,8 @@ func TestShowVersion(t *testing.T) {
 func TestSnapshot(t *testing.T) {
 
 	// create some objects
-	veniceCLI("create tenant snap-tenant --adminUser snap-admin")
-	veniceCLI("create lbPolicy --algorithm llatency --probePortOrUrl /healthStatus --sessionAffinity yes --type l4 --interval 5 --maxTimeouts 25 snap-lbpolicy")
+	veniceCLI("create tenant snap-tenant --admin-user snap-admin")
+	veniceCLI("create lbPolicy --algorithm llatency --probe-port-or-url /healthStatus --session-affinity yes --type l4 --interval 5 --max-timeouts 25 snap-lbpolicy")
 	//veniceCLI("create node --label vCenter:vc2 --roles 1 snap-node")
 	veniceCLI(fmt.Sprintf("create node --label vCenter:vc2 --roles %s snap-node", cmd.NodeSpec_WORKLOAD.String()))
 

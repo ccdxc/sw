@@ -1,0 +1,67 @@
+{{ range $obj := . }}
+
+// Create{{title $obj.Name}}Flags specifies flagsfor {{$obj.Name}} create operation
+var Create{{title $obj.Name}}Flags = []cli.Flag {
+	{{ range $name, $attr := $obj.CreateAttrs }}
+	{{ if eq $attr "slice" }}
+		cli.StringSliceFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "map" }}
+		cli.StringSliceFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "string" }}
+		cli.StringFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "bool" }}
+		cli.BoolFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "uint" }}
+		cli.UintFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "uint8" }}
+		cli.UintFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "uint16" }}
+		cli.UintFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "uint32" }}
+		cli.UintFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "uint64" }}
+		cli.UintFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "int" }}
+		cli.IntFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "int8" }}
+		cli.IntFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "int16" }}
+		cli.IntFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "int32" }}
+		cli.IntFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else if eq $attr "int64" }}
+		cli.IntFlag{
+			Name: "{{untitle $name}}",
+		},
+	{{ else }}
+			Error: Invalid Attribute '{{$attr}}'
+	{{ end }}
+	{{ end }}
+}
+{{ end }}

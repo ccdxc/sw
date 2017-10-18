@@ -1,0 +1,311 @@
+// (c) Pensando Systems, Inc.
+// This is a generated file, please do not hand edit !!
+
+package vcli
+
+import (
+	contxt "context"
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	log "github.com/Sirupsen/logrus"
+	swapi "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
+{{ include "../api/pkgs.txt" }}
+	"github.com/pensando/sw/venice/cli/api"
+	"github.com/pensando/sw/venice/cli/gen/pregen"
+	"github.com/pensando/sw/venice/utils/ref"
+)
+
+func getObj(ctx *context) (obj interface{}, objList interface{}) {
+	switch ctx.subcmd {
+{{ range $obj := . }}
+	case "{{$obj.Name}}":
+		return &{{$obj.Package}}.{{title $obj.Name}}{}, &{{$obj.Package}}.{{title $obj.Name}}List{}
+{{ end }}
+	}
+	return nil, nil
+}
+
+func getSubObj(kind string) interface{} {
+	switch kind {
+{{ cleanVisited }}
+{{ range $obj := . }}
+	{{ range $subObj := .Structs }}
+		{{ if eq (visited $subObj) false }}
+		case "{{$subObj}}":
+			var v {{$obj.Package}}.{{$subObj}}
+			return v
+		{{ end }}
+	{{ end }}
+{{ end }}
+	}
+	return nil
+}
+
+func getObjFromList(objList interface{}, idx int) interface{} {
+{{ range $obj := . }}
+	if ol, ok := objList.(*{{$obj.Package}}.{{title $obj.Name}}List); ok {
+		{{$obj.Name}} := ol.Items[idx]
+		return {{$obj.Name}}
+	}
+{{ end }}
+	return nil
+}
+
+func removeObjOper(obj interface{}) error {
+{{ range $obj := . }}
+	if v, ok := obj.(*{{$obj.Package}}.{{title $obj.Name}}); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.Status = {{$obj.Package}}.{{title $obj.Name}}Status{}
+	}
+{{ end }}
+	return nil
+}
+
+func writeObj(obj interface{}, objmKvs, specKvs map[string]ref.FInfo) interface{} {
+{{ range $obj := . }}
+	if v, ok := obj.(*{{$obj.Package}}.{{title $obj.Name}}); ok {
+		return write{{title $obj.Name}}Obj(*v, objmKvs, specKvs)
+	}
+{{ end }}
+	return nil
+}
+
+func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map[string]ref.FInfo, map[string]bool, map[string]bool) {
+	objmKvs := []map[string]ref.FInfo{}
+	specKvs := []map[string]ref.FInfo{}
+	objmValidKvs := make(map[string]bool)
+	specValidKvs := make(map[string]bool)
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+
+	switch ctx.subcmd {
+
+{{ range $obj := . }}
+	case "{{$obj.Name}}":
+		{{$obj.Name}}List := objList.(*{{$obj.Package}}.{{title $obj.Name}}List)
+		for idx, o := range {{$obj.Name}}List.Items {
+			objmKvs = append(objmKvs, make(map[string]ref.FInfo))
+			specKvs = append(specKvs, make(map[string]ref.FInfo))
+			ref.GetKvs(o.ObjectMeta, refCtx, objmKvs[idx])
+
+			ref.GetKvs(o.Spec, refCtx, specKvs[idx])
+			ref.GetKvs(o.Status, refCtx, specKvs[idx])
+			for key, fi := range objmKvs[idx] {
+				if strings.Join(fi.ValueStr, "") != "" && !fi.SSkip {
+					objmValidKvs[key] = true
+				}
+			}
+			for key, fi := range specKvs[idx] {
+				if strings.Join(fi.ValueStr, "") != "" && !fi.SSkip {
+					specValidKvs[key] = true
+				}
+			}
+		}
+{{ end }}
+	}
+
+	return objmKvs, specKvs, objmValidKvs, specValidKvs
+}
+
+{{ cleanVisited }}
+{{ range $obj := . }}
+	{{ range $subObj := .Structs }}
+		{{ if eq (visited $subObj) false }}
+func write{{ $subObj}}Obj(obj {{$obj.Package}}.{{ $subObj}}, specKvs map[string]ref.FInfo) *{{$obj.Package}}.{{ $subObj }} {
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+	new := ref.WriteKvs(obj, refCtx, specKvs)
+
+	new{{ $subObj }} := new.({{$obj.Package}}.{{ $subObj }})
+
+	return &new{{ $subObj }}
+}
+		{{ end }}
+	{{ end }}
+{{ end }}
+
+
+{{ range $obj := . }}
+func write{{title $obj.Name}}Obj(obj {{$obj.Package}}.{{title $obj.Name}}, metaKvs, specKvs map[string]ref.FInfo) *{{$obj.Package}}.{{title $obj.Name}} {
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
+
+	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
+	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
+
+	new{{title $obj.Name}} := &{{$obj.Package}}.{{title $obj.Name}}{
+		TypeMeta:   swapi.TypeMeta{Kind: "{{$obj.Name}}"},
+		ObjectMeta: newObjm.(swapi.ObjectMeta),
+		Spec:       newSpec.({{$obj.Package}}.{{title $obj.Name}}Spec),
+	}
+	return new{{ title $obj.Name }}
+}
+{{ end }}
+
+func createObjFromBytes(ctx *context, objName, inp string) error {
+	switch ctx.subcmd {
+{{ range $obj := . }}
+	case "{{$obj.Name}}":
+		create{{title $obj.Name}}FromBytes(ctx, inp)
+{{ end }}
+	}
+	return nil
+}
+
+{{ range $obj := . }}
+func create{{title $obj.Name}}FromBytes(ctx *context, inp string) error {
+	{{$obj.Name}} := &{{$obj.Package}}.{{title $obj.Name}}{}
+	if err := json.Unmarshal([]byte(inp), {{$obj.Name}}); err != nil {
+		fmt.Printf("Unmarshling error: %s\nRec: %s\n", err, inp)
+		return err
+	}
+
+	{{$obj.Name}}.Tenant = ctx.tenant
+	if err := postObj(ctx, {{$obj.Name}}, true); err != nil {
+		fmt.Printf("post error %s", err)
+	}
+
+	return nil
+}
+{{ end }}
+
+
+func updateLabel(obj interface{}, newLabels map[string]string) error {
+{{ range $obj := . }}
+	if o, ok := obj.(*{{$obj.Package}}.{{title $obj.Name}}); ok {
+		return updateMetaLabel(&o.ObjectMeta, newLabels)
+	}
+{{ end }}
+	return fmt.Errorf("unknown object")
+}
+
+func restGet(url, tenant string, obj interface{}) error {
+	log.Debugf("get url: %s", url)
+
+	urlStrs := strings.Split(url, "/")
+	if len(urlStrs) < 3 {
+		return fmt.Errorf("invalid url: '%s'", url)
+	}
+	objName := urlStrs[len(urlStrs)-1]
+	hostName := strings.Join(urlStrs[:3], "/")
+
+	restcl, err := apiclient.NewRestAPIClient(hostName)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	ctx := contxt.Background()
+{{ range $obj := . }}{{ if ne $obj.Package "api" }}
+	if v, ok := obj.(*{{$obj.Package}}.{{title $obj.Name}}); ok {
+		objm := v.ObjectMeta
+		objm.Name = objName
+		objm.Tenant = tenant
+		nv, err := restcl.{{title $obj.GrpcService}}V1().{{title $obj.Name}}().Get(ctx, &objm)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+		return nil
+	}
+	if v, ok := obj.(*{{$obj.Package}}.{{title $obj.Name}}List); ok {
+		opts := swapi.ListWatchOptions{ObjectMeta: swapi.ObjectMeta{Tenant: tenant}}
+		nlist, err := restcl.{{title $obj.GrpcService}}V1().{{title $obj.Name}}().List(ctx, &opts)
+		if err != nil {
+			return err
+		}
+		v.Items = nlist
+		return nil
+	}
+{{ end }}{{ end }}
+	return httpGet(url, obj)
+}
+
+func restDelete(objKind, url, tenant string) error {
+	log.Debugf("delete url: %s", url)
+
+	urlStrs := strings.Split(url, "/")
+	if len(urlStrs) < 3 {
+		return fmt.Errorf("invalid url: '%s'", url)
+	}
+	objName := urlStrs[len(urlStrs)-1]
+	hostName := strings.Join(urlStrs[:3], "/")
+
+	restcl, err := apiclient.NewRestAPIClient(hostName)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	ctx := contxt.Background()
+{{ range $obj := . }}{{ if ne $obj.Package "api" }}
+	if objKind == "{{$obj.Name}}" {
+		objm := swapi.ObjectMeta{}
+		objm.Name = objName
+		objm.Tenant = tenant
+		obj, err := restcl.{{title $obj.GrpcService}}V1().{{title $obj.Name}}().Delete(ctx, &objm)
+		if err != nil {
+			return err
+		}
+		out, err := json.Marshal(obj)
+		if err == nil {
+			fmt.Printf("%s", string(out))
+		} else {
+			fmt.Printf("Unable to marshal object %+v\n", obj)
+		}
+		return nil
+	}
+{{ end }}{{ end }}
+	return httpDelete(url)
+}
+
+func restPost(url, tenant string, obj interface{}) error {
+	log.Debugf("post url: %s", url)
+
+	urlStrs := strings.Split(url, "/")
+	if len(urlStrs) < 3 {
+		return fmt.Errorf("invalid url: '%s'", url)
+	}
+	hostName := strings.Join(urlStrs[:3], "/")
+
+	restcl, err := apiclient.NewRestAPIClient(hostName)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	ctx := contxt.Background()
+{{ range $obj := . }}{{ if ne $obj.Package "api" }}
+	if v, ok := obj.(*{{$obj.Package}}.{{title $obj.Name}}); ok {
+		v.Tenant = tenant 
+		_, err := restcl.{{title $obj.GrpcService}}V1().{{title $obj.Name}}().Create(ctx, v)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+{{ end }}{{ end }}
+	return httpPost(url, obj)
+}
+
+func restPut(url, tenant string, obj interface{}) error {
+	log.Debugf("put url: %s", url)
+
+	urlStrs := strings.Split(url, "/")
+	if len(urlStrs) < 3 {
+		return fmt.Errorf("invalid url: '%s'", url)
+	}
+	hostName := strings.Join(urlStrs[:3], "/")
+
+	restcl, err := apiclient.NewRestAPIClient(hostName)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	ctx := contxt.Background()
+{{ range $obj := . }}{{ if ne $obj.Package "api" }}
+	if v, ok := obj.(*{{$obj.Package}}.{{title $obj.Name}}); ok {
+		v.Tenant = tenant
+		_, err := restcl.{{title $obj.GrpcService}}V1().{{title $obj.Name}}().Update(ctx, v)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+{{ end }}{{ end }}
+	return httpPost(url, obj)
+}

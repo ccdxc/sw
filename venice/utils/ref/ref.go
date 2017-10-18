@@ -36,7 +36,8 @@ func NilSubObj(string) interface{} {
 
 // RfCtx is context used by the package to pass on intermediate context or user context
 type RfCtx struct {
-	GetSubObj GetSubObjFn
+	GetSubObj  GetSubObjFn
+	UseJSONTag bool
 }
 
 type kvContext struct {
@@ -84,7 +85,7 @@ func GetIndent(level int) string {
 
 // FieldByName find the values of a field name in a struct (recursively)
 // Fielname is represented with dotted notation to parse embedded structs or maps/arrays
-// Algorithm: fieldName could be a '.' separted struct fields, we compare the first field with
+// Algorithm: fieldName could be a '.' separted struct fields, we compare the first sield with
 //    current field's name, upon a match the current field is removed and recursion can
 //    on sub hierarchy of the field (which could be a struct)
 func FieldByName(v reflect.Value, fieldName string) []string {
@@ -180,8 +181,22 @@ func veniceTagString(allTags, lookupTag string) string {
 	return ""
 }
 
-func getFieldName(kvCtx *kvContext, typeFieldName, veniceTag string) string {
+func getJSONFieldName(refCtx *RfCtx, typeField *reflect.StructField) string {
+	typeFieldName := typeField.Name
+	if refCtx.UseJSONTag {
+		jsonTags := strings.Split(typeField.Tag.Get("json"), ",")
+		if len(jsonTags) > 0 && jsonTags[0] != "" {
+			typeFieldName = jsonTags[0]
+		}
+	}
+	return typeFieldName
+}
+
+func getFieldName(kvCtx *kvContext, refCtx *RfCtx, typeField *reflect.StructField) string {
+	veniceTag := typeField.Tag.Get("venice")
 	fieldName := kvCtx.prefixKey
+	typeFieldName := getJSONFieldName(refCtx, typeField)
+
 	if fieldName != "" {
 		fieldName += "_"
 	}
@@ -327,9 +342,9 @@ func getKvsStruct(v reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kvs map[stri
 	for i := 0; i < v.NumField(); i++ {
 		val := v.Field(i)
 		typeField := v.Type().Field(i)
-		veniceTag := typeField.Tag.Get("venice")
 
-		fieldName := getFieldName(kvCtx, typeField.Name, veniceTag)
+		veniceTag := typeField.Tag.Get("venice")
+		fieldName := getFieldName(kvCtx, refCtx, &typeField)
 
 		if val.Kind() == reflect.Ptr {
 			elem := typeField.Type.Elem()
@@ -568,7 +583,7 @@ func writeKvsStruct(new, orig reflect.Value, kvCtx *kvContext, refCtx *RfCtx, kv
 		typeField := orig.Type().Field(i)
 		val := orig.Field(i)
 		veniceTag := typeField.Tag.Get("venice")
-		fieldName := getFieldName(kvCtx, typeField.Name, veniceTag)
+		fieldName := getFieldName(kvCtx, refCtx, &typeField)
 
 		newField := new.Field(i)
 		origField := orig.Field(i)
@@ -725,6 +740,7 @@ func walkObjStruct(v reflect.Value, refCtx *RfCtx, level int) string {
 	for i := 0; i < v.NumField(); i++ {
 		val := v.Field(i)
 		typeField := v.Type().Field(i)
+		fieldName := getJSONFieldName(refCtx, &typeField)
 
 		ptrStr := ""
 		if val.Kind() == reflect.Ptr {
@@ -736,9 +752,9 @@ func walkObjStruct(v reflect.Value, refCtx *RfCtx, level int) string {
 
 		if isKindPrimitive(val.Kind()) {
 			valueStr := fmt.Sprintf("%s", val.Kind())
-			outStr += fmt.Sprintf("%s%s: %s\n", GetIndent(level), ptrStr+typeField.Name, valueStr)
+			outStr += fmt.Sprintf("%s%s: %s\n", GetIndent(level), ptrStr+fieldName, valueStr)
 		} else {
-			outStr += fmt.Sprintf("%s%s: ", GetIndent(level), ptrStr+typeField.Name)
+			outStr += fmt.Sprintf("%s%s: ", GetIndent(level), ptrStr+fieldName)
 			outStr += walkObj(val, refCtx, level)
 		}
 	}

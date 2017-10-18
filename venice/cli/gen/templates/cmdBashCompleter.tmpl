@@ -1,0 +1,78 @@
+{{ range $obj := . }}
+func bashExample{{title $obj.Name}}Completer(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, exampleFlags)
+}
+
+func bashDefinition{{title $obj.Name}}Completer(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, definitionFlags)
+}
+
+func bashLabel{{title $obj.Name}}Completer(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, labelFlags)
+	bashObject{{title $obj.Name}}Completer(c)
+}
+
+func bashRead{{title $obj.Name}}Completer(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, readFlags)
+	bashObject{{title $obj.Name}}Completer(c)
+}
+
+func bashDelete{{title $obj.Name}}Completer(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, deleteFlags)
+	bashObject{{title $obj.Name}}Completer(c)
+}
+
+func bashObject{{title $obj.Name}}Completer(c *cli.Context) {
+	if len(c.Args()) > 0 {
+		namesRe := c.Args()[len(c.Args())-1]
+		namesRe = strings.Split(namesRe, ",")[0]
+		c.Set("re", namesRe)
+	}
+
+	ctx := &context{cli: c, tenant: defaultTenant}
+	ctx.cmd = "read"
+	ctx.subcmd = "{{$obj.Name}}"
+
+	names := getFilteredNames(ctx)
+
+	if len(names) > 40 {
+		fmt.Printf("too-many-{{$obj.Name}}s! ")
+		return
+	}
+
+	for _, name := range names {
+		fmt.Printf("%s ", name)
+	}
+}
+
+func bashEdit{{title $obj.Name}}Completer(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, editFlags)
+	bashObject{{title $obj.Name}}Completer(c)
+}
+
+func bashCreate{{title $obj.Name}}Completer(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, append(createFlags, Create{{title $obj.Name}}Flags...))
+
+	if _, found := getLastFlagSuggestion(c, Create{{title $obj.Name}}Flags); found {
+		return
+	}
+
+	args := c.Args()
+	if len(args) <= 0 {
+		fmt.Printf("{{paranthesis $obj.Name}} ")
+	}
+}
+
+func bashUpdate{{title $obj.Name}}Completer(c *cli.Context) {
+	BashCompleter(c, []cli.Command{}, append(createFlags, Create{{title $obj.Name}}Flags...))
+
+	if _, found := getLastFlagSuggestion(c, Create{{title $obj.Name}}Flags); found {
+		return
+	}
+
+	args := c.Args()
+	if len(args) <= 0 {
+		bashObject{{title $obj.Name}}Completer(c)
+	}
+}
+{{ end }}

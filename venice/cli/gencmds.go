@@ -955,15 +955,15 @@ var definitionCommands = []cli.Command{
 var CreateClusterFlags = []cli.Flag{
 
 	cli.BoolFlag{
-		Name: "autoAdmitNICs",
+		Name: "autoAdmitNics",
 	},
 
 	cli.StringFlag{
-		Name: "dNSSubDomain",
+		Name: "dnsSubdomain",
 	},
 
 	cli.StringSliceFlag{
-		Name: "nTPServers",
+		Name: "ntpServers",
 	},
 
 	cli.StringSliceFlag{
@@ -971,7 +971,7 @@ var CreateClusterFlags = []cli.Flag{
 	},
 
 	cli.StringFlag{
-		Name: "virtualIP",
+		Name: "virtualIp",
 	},
 }
 
@@ -986,7 +986,7 @@ var CreateLbPolicyFlags = []cli.Flag{
 	},
 
 	cli.UintFlag{
-		Name: "declareHealthyCount",
+		Name: "declare-healthy-count",
 	},
 
 	cli.UintFlag{
@@ -994,19 +994,19 @@ var CreateLbPolicyFlags = []cli.Flag{
 	},
 
 	cli.UintFlag{
-		Name: "maxTimeouts",
+		Name: "max-timeouts",
 	},
 
 	cli.StringFlag{
-		Name: "probePortOrUrl",
+		Name: "probe-port-or-url",
 	},
 
 	cli.UintFlag{
-		Name: "probesPerInterval",
+		Name: "probes-per-interval",
 	},
 
 	cli.StringFlag{
-		Name: "sessionAffinity",
+		Name: "session-affinity",
 	},
 
 	cli.StringFlag{
@@ -1018,19 +1018,19 @@ var CreateLbPolicyFlags = []cli.Flag{
 var CreateNetworkFlags = []cli.Flag{
 
 	cli.StringFlag{
-		Name: "iPv4Gateway",
+		Name: "ipv4-gateway",
 	},
 
 	cli.StringFlag{
-		Name: "iPv4Subnet",
+		Name: "ipv4-subnet",
 	},
 
 	cli.StringFlag{
-		Name: "iPv6Gateway",
+		Name: "ipv6-gateway",
 	},
 
 	cli.StringFlag{
-		Name: "iPv6Subnet",
+		Name: "ipv6-subnet",
 	},
 
 	cli.StringFlag{
@@ -1038,11 +1038,11 @@ var CreateNetworkFlags = []cli.Flag{
 	},
 
 	cli.UintFlag{
-		Name: "vlanID",
+		Name: "vlan-id",
 	},
 
 	cli.UintFlag{
-		Name: "vxlanVNI",
+		Name: "vxlan-vni",
 	},
 }
 
@@ -1082,15 +1082,15 @@ var CreateRoleFlags = []cli.Flag{
 var CreateSecurityGroupFlags = []cli.Flag{
 
 	cli.StringSliceFlag{
-		Name: "matchPrefixes",
+		Name: "match-prefixes",
 	},
 
 	cli.StringSliceFlag{
-		Name: "serviceSelector",
+		Name: "service-labels",
 	},
 
 	cli.StringSliceFlag{
-		Name: "workloadSelector",
+		Name: "workload-labels",
 	},
 }
 
@@ -1098,7 +1098,7 @@ var CreateSecurityGroupFlags = []cli.Flag{
 var CreateServiceFlags = []cli.Flag{
 
 	cli.StringFlag{
-		Name: "lBPolicy",
+		Name: "lb-policy",
 	},
 
 	cli.StringFlag{
@@ -1106,11 +1106,11 @@ var CreateServiceFlags = []cli.Flag{
 	},
 
 	cli.StringFlag{
-		Name: "virtualIp",
+		Name: "virtual-ip",
 	},
 
 	cli.StringSliceFlag{
-		Name: "workloadSelector",
+		Name: "workload-labels",
 	},
 }
 
@@ -1122,11 +1122,11 @@ var CreateSgpolicyFlags = []cli.Flag{
 	},
 
 	cli.StringSliceFlag{
-		Name: "appUser",
+		Name: "app-user",
 	},
 
 	cli.StringSliceFlag{
-		Name: "appUserGrp",
+		Name: "app-user-group",
 	},
 
 	cli.StringSliceFlag{
@@ -1134,11 +1134,11 @@ var CreateSgpolicyFlags = []cli.Flag{
 	},
 
 	cli.StringSliceFlag{
-		Name: "attachGroups",
+		Name: "attach-groups",
 	},
 
 	cli.StringSliceFlag{
-		Name: "peerGroup",
+		Name: "peer-group",
 	},
 
 	cli.StringSliceFlag{
@@ -1162,7 +1162,7 @@ var CreateSmartNICFlags = []cli.Flag{
 var CreateTenantFlags = []cli.Flag{
 
 	cli.StringFlag{
-		Name: "adminUser",
+		Name: "admin-user",
 	},
 }
 

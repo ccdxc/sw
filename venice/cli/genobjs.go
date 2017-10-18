@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/api/generated/network"
+
 	"github.com/pensando/sw/venice/cli/api"
 	"github.com/pensando/sw/venice/cli/gen/pregen"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -323,7 +324,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 	specKvs := []map[string]ref.FInfo{}
 	objmValidKvs := make(map[string]bool)
 	specValidKvs := make(map[string]bool)
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	switch ctx.subcmd {
 
@@ -606,7 +607,7 @@ func getAllKvs(ctx *context, objList interface{}) ([]map[string]ref.FInfo, []map
 }
 
 func writeHealthCheckSpecObj(obj network.HealthCheckSpec, specKvs map[string]ref.FInfo) *network.HealthCheckSpec {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newHealthCheckSpec := new.(network.HealthCheckSpec)
@@ -615,7 +616,7 @@ func writeHealthCheckSpecObj(obj network.HealthCheckSpec, specKvs map[string]ref
 }
 
 func writeNodeConditionObj(obj cmd.NodeCondition, specKvs map[string]ref.FInfo) *cmd.NodeCondition {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newNodeCondition := new.(cmd.NodeCondition)
@@ -624,7 +625,7 @@ func writeNodeConditionObj(obj cmd.NodeCondition, specKvs map[string]ref.FInfo) 
 }
 
 func writePortConditionObj(obj cmd.PortCondition, specKvs map[string]ref.FInfo) *cmd.PortCondition {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newPortCondition := new.(cmd.PortCondition)
@@ -633,7 +634,7 @@ func writePortConditionObj(obj cmd.PortCondition, specKvs map[string]ref.FInfo) 
 }
 
 func writeConditionStatusObj(obj cmd.ConditionStatus, specKvs map[string]ref.FInfo) *cmd.ConditionStatus {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newConditionStatus := new.(cmd.ConditionStatus)
@@ -642,7 +643,7 @@ func writeConditionStatusObj(obj cmd.ConditionStatus, specKvs map[string]ref.FIn
 }
 
 func writeSGRuleObj(obj network.SGRule, specKvs map[string]ref.FInfo) *network.SGRule {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newSGRule := new.(network.SGRule)
@@ -651,7 +652,7 @@ func writeSGRuleObj(obj network.SGRule, specKvs map[string]ref.FInfo) *network.S
 }
 
 func writePortSpecObj(obj cmd.PortSpec, specKvs map[string]ref.FInfo) *cmd.PortSpec {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newPortSpec := new.(cmd.PortSpec)
@@ -660,7 +661,7 @@ func writePortSpecObj(obj cmd.PortSpec, specKvs map[string]ref.FInfo) *cmd.PortS
 }
 
 func writePortStatusObj(obj cmd.PortStatus, specKvs map[string]ref.FInfo) *cmd.PortStatus {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newPortStatus := new.(cmd.PortStatus)
@@ -669,7 +670,7 @@ func writePortStatusObj(obj cmd.PortStatus, specKvs map[string]ref.FInfo) *cmd.P
 }
 
 func writeSmartNICConditionObj(obj cmd.SmartNICCondition, specKvs map[string]ref.FInfo) *cmd.SmartNICCondition {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newSmartNICCondition := new.(cmd.SmartNICCondition)
@@ -678,7 +679,7 @@ func writeSmartNICConditionObj(obj cmd.SmartNICCondition, specKvs map[string]ref
 }
 
 func writeUserAuditLogObj(obj api.UserAuditLog, specKvs map[string]ref.FInfo) *api.UserAuditLog {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 	new := ref.WriteKvs(obj, refCtx, specKvs)
 
 	newUserAuditLog := new.(api.UserAuditLog)
@@ -687,7 +688,7 @@ func writeUserAuditLogObj(obj api.UserAuditLog, specKvs map[string]ref.FInfo) *a
 }
 
 func writeClusterObj(obj cmd.Cluster, metaKvs, specKvs map[string]ref.FInfo) *cmd.Cluster {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -701,7 +702,7 @@ func writeClusterObj(obj cmd.Cluster, metaKvs, specKvs map[string]ref.FInfo) *cm
 }
 
 func writeEndpointObj(obj network.Endpoint, metaKvs, specKvs map[string]ref.FInfo) *network.Endpoint {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -715,7 +716,7 @@ func writeEndpointObj(obj network.Endpoint, metaKvs, specKvs map[string]ref.FInf
 }
 
 func writeLbPolicyObj(obj network.LbPolicy, metaKvs, specKvs map[string]ref.FInfo) *network.LbPolicy {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -729,7 +730,7 @@ func writeLbPolicyObj(obj network.LbPolicy, metaKvs, specKvs map[string]ref.FInf
 }
 
 func writeNetworkObj(obj network.Network, metaKvs, specKvs map[string]ref.FInfo) *network.Network {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -743,7 +744,7 @@ func writeNetworkObj(obj network.Network, metaKvs, specKvs map[string]ref.FInfo)
 }
 
 func writeNodeObj(obj cmd.Node, metaKvs, specKvs map[string]ref.FInfo) *cmd.Node {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -757,7 +758,7 @@ func writeNodeObj(obj cmd.Node, metaKvs, specKvs map[string]ref.FInfo) *cmd.Node
 }
 
 func writePermissionObj(obj api.Permission, metaKvs, specKvs map[string]ref.FInfo) *api.Permission {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -771,7 +772,7 @@ func writePermissionObj(obj api.Permission, metaKvs, specKvs map[string]ref.FInf
 }
 
 func writeRoleObj(obj api.Role, metaKvs, specKvs map[string]ref.FInfo) *api.Role {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -785,7 +786,7 @@ func writeRoleObj(obj api.Role, metaKvs, specKvs map[string]ref.FInfo) *api.Role
 }
 
 func writeSecurityGroupObj(obj network.SecurityGroup, metaKvs, specKvs map[string]ref.FInfo) *network.SecurityGroup {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -799,7 +800,7 @@ func writeSecurityGroupObj(obj network.SecurityGroup, metaKvs, specKvs map[strin
 }
 
 func writeServiceObj(obj network.Service, metaKvs, specKvs map[string]ref.FInfo) *network.Service {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -813,7 +814,7 @@ func writeServiceObj(obj network.Service, metaKvs, specKvs map[string]ref.FInfo)
 }
 
 func writeSgpolicyObj(obj network.Sgpolicy, metaKvs, specKvs map[string]ref.FInfo) *network.Sgpolicy {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -827,7 +828,7 @@ func writeSgpolicyObj(obj network.Sgpolicy, metaKvs, specKvs map[string]ref.FInf
 }
 
 func writeSmartNICObj(obj cmd.SmartNIC, metaKvs, specKvs map[string]ref.FInfo) *cmd.SmartNIC {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -841,7 +842,7 @@ func writeSmartNICObj(obj cmd.SmartNIC, metaKvs, specKvs map[string]ref.FInfo) *
 }
 
 func writeTenantObj(obj network.Tenant, metaKvs, specKvs map[string]ref.FInfo) *network.Tenant {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
@@ -855,7 +856,7 @@ func writeTenantObj(obj network.Tenant, metaKvs, specKvs map[string]ref.FInfo) *
 }
 
 func writeUserObj(obj api.User, metaKvs, specKvs map[string]ref.FInfo) *api.User {
-	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj}
+	refCtx := &ref.RfCtx{GetSubObj: pregen.GetSubObj, UseJSONTag: true}
 
 	newObjm := ref.WriteKvs(obj.ObjectMeta, refCtx, metaKvs)
 	newSpec := ref.WriteKvs(obj.Spec, refCtx, specKvs)
