@@ -15,10 +15,10 @@ import (
 )
 
 // create a new resource manager instance with memkv as the backend
-func newRsrcmgr(t *testing.T) *RsrcMgr {
+func newRsrcmgr(t *testing.T, kvstoreURL string) *RsrcMgr {
 	// memkv config
 	s := kvapi.NewScheme()
-	config := store.Config{Type: store.KVStoreTypeMemkv, Servers: []string{""}, Codec: kvapi.NewJSONCodec(s)}
+	config := store.Config{Type: store.KVStoreTypeMemkv, Servers: strings.Split(kvstoreURL, ","), Codec: kvapi.NewJSONCodec(s)}
 
 	// create a new memkv store
 	kv, err := store.New(config)
@@ -42,7 +42,7 @@ func TestMain(m *testing.M) {
 // test least used scheduler
 func TestLeastUsedSched(t *testing.T) {
 	// create a resource manager instance
-	rm := newRsrcmgr(t)
+	rm := newRsrcmgr(t, t.Name())
 
 	rsrc := &rproto.Resource{
 		ResourceType: "type1",
@@ -124,7 +124,7 @@ func TestLeastUsedSched(t *testing.T) {
 
 func TestSchedConstraints(t *testing.T) {
 	// create a resource manager instance
-	rm := newRsrcmgr(t)
+	rm := newRsrcmgr(t, t.Name())
 
 	rsrc := &rproto.Resource{
 		ResourceType: "type1",
@@ -204,7 +204,7 @@ func TestSchedConcurrency(t *testing.T) {
 	errChan := make(chan error, (concurrency + 1))
 
 	// create a resource manager instance
-	rm := newRsrcmgr(t)
+	rm := newRsrcmgr(t, t.Name())
 
 	// create providers in parallel
 	for i := 0; i < concurrency/rsrcCount; i++ {
@@ -223,15 +223,14 @@ func TestSchedConcurrency(t *testing.T) {
 
 			// add the providers
 			err := rm.AddProvider(provide)
-			AssertOk(t, err, "AddProvider failed")
-
 			errChan <- err
 		}(i)
 	}
 
 	// wait for adds to complete
 	for i := 0; i < concurrency/rsrcCount; i++ {
-		<-errChan
+		err := <-errChan
+		AssertOk(t, err, "AddProvider failed")
 	}
 
 	// request resources in parallel
@@ -249,8 +248,6 @@ func TestSchedConcurrency(t *testing.T) {
 
 			// request some resources
 			c, err := rm.RequestResource(req)
-			AssertOk(t, err, "RequestResource failed to get a resource")
-
 			consumerList[reqID] = c
 			errChan <- err
 
@@ -259,29 +256,29 @@ func TestSchedConcurrency(t *testing.T) {
 
 	// wait for allocations to complete
 	for i := 0; i < concurrency; i++ {
-		<-errChan
+		err := <-errChan
+		AssertOk(t, err, "RequestResource failed to get a resource")
 	}
 
 	// free resources in parallel
 	for i := 0; i < concurrency; i++ {
 		go func(reqID int) {
 			err := rm.ReleaseResource(consumerList[reqID])
-			AssertOk(t, err, "ReleaseResource failed")
-
 			errChan <- err
 		}(i)
 	}
 
 	// wait for releases to complete
 	for i := 0; i < concurrency; i++ {
-		<-errChan
+		err := <-errChan
+		AssertOk(t, err, "ReleaseResource failed")
 	}
 }
 
 // test error conditions in add/delete provider
 func TestAddDelProvider(t *testing.T) {
 	// create a resource manager instance
-	rm := newRsrcmgr(t)
+	rm := newRsrcmgr(t, t.Name())
 
 	rsrc := &rproto.Resource{
 		ResourceType: "type1",
@@ -334,7 +331,7 @@ func TestAddDelProvider(t *testing.T) {
 // test failure conditions in resource allocation
 func TestResourceReqFailures(t *testing.T) {
 	// create a resource manager instance
-	rm := newRsrcmgr(t)
+	rm := newRsrcmgr(t, t.Name())
 
 	rsrc := &rproto.Resource{
 		ResourceType: "type1",
@@ -400,7 +397,7 @@ func TestResourceReqFailures(t *testing.T) {
 
 func TestRangeResource(t *testing.T) {
 	// create a resource manager instance
-	rm := newRsrcmgr(t)
+	rm := newRsrcmgr(t, t.Name())
 
 	rsrc := &rproto.Resource{
 		ResourceType: "type1",
@@ -481,7 +478,7 @@ func TestRangeResource(t *testing.T) {
 
 func TestSetResource(t *testing.T) {
 	// create a resource manager instance
-	rm := newRsrcmgr(t)
+	rm := newRsrcmgr(t, t.Name())
 
 	rsrc := &rproto.Resource{
 		ResourceType: "type1",
@@ -549,7 +546,7 @@ func TestSetResource(t *testing.T) {
 
 func TestResourcePartialFailure(t *testing.T) {
 	// create a resource manager instance
-	rm := newRsrcmgr(t)
+	rm := newRsrcmgr(t, t.Name())
 
 	rsrc := &rproto.Resource{
 		ResourceType: "type1",

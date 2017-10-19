@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 
 const (
 	retryDelay = 500 * time.Millisecond
+	maxRetries = 5
 )
 
 var kvStore kvstore.Interface
@@ -50,7 +52,7 @@ func Close() {
 // kvCreate is a wrapper that retries on transient kv errors
 func kvCreate(ctx context.Context, key string, obj runtime.Object) error {
 	log.Infof("kvCreate key: %s, obj: %+v", key, obj)
-	for {
+	for i := 0; i < maxRetries; i++ {
 		err := kvStore.Create(ctx, key, obj)
 		if err == nil || kvstore.IsKeyExistsError(err) || ctx.Err() != nil {
 			return err
@@ -58,12 +60,14 @@ func kvCreate(ctx context.Context, key string, obj runtime.Object) error {
 
 		Reinit()
 	}
+
+	return errors.New("Exceeded max retries")
 }
 
 // kvUpdate is a wrapper that retries on transient kv errors
 func kvUpdate(ctx context.Context, key string, obj runtime.Object) error {
 	log.Infof("kvUpdate key: %s, obj: %+v", key, obj)
-	for {
+	for i := 0; i < maxRetries; i++ {
 		err := kvStore.Update(ctx, key, obj)
 		if err == nil || kvstore.IsKeyNotFoundError(err) || ctx.Err() != nil {
 			return err
@@ -71,12 +75,29 @@ func kvUpdate(ctx context.Context, key string, obj runtime.Object) error {
 
 		Reinit()
 	}
+
+	return errors.New("Exceeded max retries")
+}
+
+// kvGet is a wrapper that retries on transient kv errors
+func kvGet(ctx context.Context, key string, obj runtime.Object) error {
+	log.Infof("kvGet key: %s, obj: %+v", key, obj)
+	for i := 0; i < maxRetries; i++ {
+		err := kvStore.Get(ctx, key, obj)
+		if err == nil || kvstore.IsKeyNotFoundError(err) || ctx.Err() != nil {
+			return err
+		}
+
+		Reinit()
+	}
+
+	return errors.New("Exceeded max retries")
 }
 
 // kvDelete is a wrapper that retries on transient kv errors
 func kvDelete(ctx context.Context, key string) error {
 	log.Infof("kvDelete key: %s", key)
-	for {
+	for i := 0; i < maxRetries; i++ {
 		err := kvStore.Delete(ctx, key, nil)
 		if err == nil || kvstore.IsKeyNotFoundError(err) || ctx.Err() != nil {
 			return err
@@ -84,4 +105,6 @@ func kvDelete(ctx context.Context, key string) error {
 
 		Reinit()
 	}
+
+	return errors.New("Exceeded max retries")
 }

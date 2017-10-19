@@ -365,6 +365,71 @@ func (e *etcdStore) NewTxn() kvstore.Txn {
 	return e.newTxn()
 }
 
+// runLeaseLoop runs lease keepalive loop
+func (e *etcdStore) runLeaseLoop(ctx context.Context, key string, leaseCh <-chan *clientv3.LeaseKeepAliveResponse, eventCh chan kvstore.LeaseEvent) {
+	for {
+		select {
+		case <-ctx.Done():
+			log.Infof("Context cancelled. stopping lease reneval for %s", key)
+			eventCh <- kvstore.LeaseCancelled
+			close(eventCh)
+			return
+		case resp, ok := <-leaseCh:
+			if !ok {
+				log.Errorf("Error receiving from lease ch for key %s.", key)
+				eventCh <- kvstore.LeaseError
+				close(eventCh)
+				return
+			}
+
+			// check if we lost the lease
+			if resp.ID == 0 {
+				eventCh <- kvstore.LeaseLost
+				close(eventCh)
+				return
+			}
+		}
+	}
+}
+
+// Lease takes a lease on a key with TTL and keeps it alive
+func (e *etcdStore) Lease(ctx context.Context, key string, obj runtime.Object, ttl uint64) (chan kvstore.LeaseEvent, error) {
+	// create a new lease
+	resp, err := e.client.Lease.Grant(ctx, int64(ttl))
+	if err != nil {
+		log.Errorf("Error getting a grant: Err: %v", err)
+		return nil, err
+	}
+
+	// encode the object
+	value, err := e.encode(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// put the object using lease
+	_, err = e.client.KV.Put(context.TODO(), key, string(value), clientv3.WithLease(resp.ID))
+	if err != nil {
+		log.Errorf("Error writing key %s to kvstore. Err: %v", key, err)
+		return nil, err
+	}
+
+	// keep the lease alive
+	leaseCh, err := e.client.Lease.KeepAlive(ctx, resp.ID)
+	if err != nil {
+		log.Errorf("Error during keepalive. Err: %v", err)
+		return nil, err
+	}
+
+	// channel to send out events
+	eventCh := make(chan kvstore.LeaseEvent, outCount)
+
+	// watch the lease channel
+	go e.runLeaseLoop(ctx, key, leaseCh, eventCh)
+
+	return eventCh, nil
+}
+
 // Close closes client connection to store
 func (e *etcdStore) Close() {
 	if e.client != nil {

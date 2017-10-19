@@ -7,13 +7,13 @@ package emstore
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/boltdb/bolt"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 )
 
 // Object is the interface all objects have to implement
@@ -34,9 +34,13 @@ const (
 	MemStoreType DbType = "memstore"
 )
 
+// ErrTableNotFound table not found error
+var ErrTableNotFound = errors.New("Table not found")
+
 // Emstore is the embedded datastore interface
 type Emstore interface {
 	Read(obj Object) (Object, error)
+	List(obj Object) ([]Object, error)
 	Write(obj Object) error
 	Delete(obj Object) error
 	Close() error
@@ -44,21 +48,26 @@ type Emstore interface {
 
 // BoltdbStore is the
 type BoltdbStore struct {
-	dbPath  string   // file path
-	boltDb  *bolt.DB // boltdb instance
-	boltBkt *bolt.Bucket
+	dbPath string   // file path
+	boltDb *bolt.DB // boltdb instance
+}
+
+// kindStoe stores all keys for a kind
+type kindStoe struct {
+	store map[string]Object // map of objects
 }
 
 // MemStore is in memory store to be used for unit testing
 type MemStore struct {
 	sync.Mutex
-	store map[string]Object
+	kindStoreMap map[string]*kindStoe // map of kinds
 }
 
 // getObjectKey return an object key for the object
 func getObjectKey(obj Object) []byte {
 	ometa := obj.GetObjectMeta()
-	return []byte(fmt.Sprintf("%s|%s|%s", obj.GetObjectKind(), ometa.GetTenant(), ometa.GetName()))
+	kstr := fmt.Sprintf("%s-%s-%s", obj.GetObjectKind(), ometa.GetTenant(), ometa.GetName())
+	return []byte(kstr)
 }
 
 // NewEmstore returns an embedded data store
@@ -83,25 +92,10 @@ func NewBoltdbStore(dbPath string) (*BoltdbStore, error) {
 		return nil, err
 	}
 
-	// create a bucket for storing objects
-	var bkt *bolt.Bucket
-	err = db.Update(func(tx *bolt.Tx) error {
-		bkt, err = tx.CreateBucket([]byte("default"))
-		if err != nil {
-			return fmt.Errorf("Error creating bucket: %s", err)
-		}
-		return nil
-	})
-	if err != nil && !strings.Contains(err.Error(), bolt.ErrBucketExists.Error()) {
-		log.Errorf("Error cretaing boltdb bucket. Err: %v", err)
-		return nil, err
-	}
-
 	// create boltdb instance
 	boltdb := BoltdbStore{
-		dbPath:  dbPath,
-		boltDb:  db,
-		boltBkt: bkt,
+		dbPath: dbPath,
+		boltDb: db,
 	}
 
 	return &boltdb, nil
@@ -109,11 +103,16 @@ func NewBoltdbStore(dbPath string) (*BoltdbStore, error) {
 
 // Read reads an object from embedded db and returns it
 func (bdb *BoltdbStore) Read(obj Object) (Object, error) {
+	kstr := getObjectKey(obj)
+
 	// read the data
 	var data []byte
-	err := bdb.boltDb.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("default"))
-		data = b.Get(getObjectKey(obj))
+	err := bdb.boltDb.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(obj.GetObjectKind()))
+		if b == nil {
+			return ErrTableNotFound
+		}
+		data = b.Get(kstr)
 		return nil
 	})
 	if err != nil {
@@ -134,6 +133,39 @@ func (bdb *BoltdbStore) Read(obj Object) (Object, error) {
 	return obj, nil
 }
 
+// List returns a list of all objects of a kind
+func (bdb *BoltdbStore) List(obj Object) ([]Object, error) {
+	// read the data
+	var list []Object
+	err := bdb.boltDb.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(obj.GetObjectKind()))
+		if b == nil {
+			return ErrTableNotFound
+		}
+		c := b.Cursor()
+
+		// loop thru all values
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			err := obj.Unmarshal(v)
+			if err != nil {
+				return err
+			}
+			newObj := ref.DeepCopy(obj)
+			switch newObj.(type) {
+			case Object:
+				lobj := newObj.(Object)
+				list = append(list, lobj)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return list, err
+}
+
 // Create creates an object in emstore
 func (bdb *BoltdbStore) Create(obj Object) error {
 	return bdb.Write(obj)
@@ -142,6 +174,28 @@ func (bdb *BoltdbStore) Create(obj Object) error {
 // Update updates an object in emstore
 func (bdb *BoltdbStore) Update(obj Object) error {
 	return bdb.Write(obj)
+}
+
+// rawWrite raw write to db
+func (bdb *BoltdbStore) rawWrite(kind string, key, data []byte) error {
+	// write to db
+	err := bdb.boltDb.Update(func(tx *bolt.Tx) error {
+		var terr error
+		b := tx.Bucket([]byte(kind))
+		if b == nil {
+			b, terr = tx.CreateBucket([]byte(kind))
+			if terr != nil {
+				return fmt.Errorf("Error creating bucket: %s", terr)
+			}
+		}
+		perr := b.Put(key, data)
+		return perr
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Write writes an object into embedded db
@@ -153,23 +207,17 @@ func (bdb *BoltdbStore) Write(obj Object) error {
 	}
 
 	// write to db
-	err = bdb.boltDb.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("default"))
-		perr := b.Put(getObjectKey(obj), data)
-		return perr
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return bdb.rawWrite(obj.GetObjectKind(), getObjectKey(obj), data)
 }
 
 // Delete deletes an object from db
 func (bdb *BoltdbStore) Delete(obj Object) error {
 	// delete from boltdb
 	err := bdb.boltDb.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("default"))
+		b := tx.Bucket([]byte(obj.GetObjectKind()))
+		if b == nil {
+			return ErrTableNotFound
+		}
 		derr := b.Delete(getObjectKey(obj))
 		return derr
 	})
@@ -190,7 +238,7 @@ func (bdb *BoltdbStore) Close() error {
 func NewMemStore() (*MemStore, error) {
 	// create memkv store instance
 	mkv := MemStore{
-		store: make(map[string]Object),
+		kindStoreMap: make(map[string]*kindStoe),
 	}
 
 	return &mkv, nil
@@ -202,12 +250,38 @@ func (mdb *MemStore) Read(robj Object) (Object, error) {
 	mdb.Lock()
 	defer mdb.Unlock()
 
+	// get kindStoe from kind
+	ks, ok := mdb.kindStoreMap[robj.GetObjectKind()]
+	if !ok {
+		return nil, ErrTableNotFound
+	}
+
 	// read it from map
-	obj, ok := mdb.store[string(getObjectKey(robj))]
+	obj, ok := ks.store[string(getObjectKey(robj))]
 	if !ok {
 		return nil, errors.New("Object not found")
 	}
 	return obj, nil
+}
+
+// List returns a list of objects of a kind
+func (mdb *MemStore) List(obj Object) ([]Object, error) {
+	// lock the memstore
+	mdb.Lock()
+	defer mdb.Unlock()
+
+	// get kindStoe from kind
+	ks, ok := mdb.kindStoreMap[obj.GetObjectKind()]
+	if !ok {
+		return nil, ErrTableNotFound
+	}
+
+	var lobj []Object
+	for _, v := range ks.store {
+		lobj = append(lobj, v)
+	}
+
+	return lobj, nil
 }
 
 // Update updates an object in memstore
@@ -216,8 +290,18 @@ func (mdb *MemStore) Write(obj Object) error {
 	mdb.Lock()
 	defer mdb.Unlock()
 
+	// get kindStoe from kind
+	ks, ok := mdb.kindStoreMap[obj.GetObjectKind()]
+	if !ok {
+		ks = &kindStoe{
+			store: make(map[string]Object),
+		}
+
+		mdb.kindStoreMap[obj.GetObjectKind()] = ks
+	}
+
 	// save it in map
-	mdb.store[string(getObjectKey(obj))] = obj
+	ks.store[string(getObjectKey(obj))] = obj
 	return nil
 }
 
@@ -227,8 +311,14 @@ func (mdb *MemStore) Delete(obj Object) error {
 	mdb.Lock()
 	defer mdb.Unlock()
 
+	// get kindStoe from kind
+	ks, ok := mdb.kindStoreMap[obj.GetObjectKind()]
+	if !ok {
+		return ErrTableNotFound
+	}
+
 	// delete from map
-	delete(mdb.store, string(getObjectKey(obj)))
+	delete(ks.store, string(getObjectKey(obj)))
 	return nil
 }
 

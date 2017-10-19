@@ -87,6 +87,7 @@ func RunInterfaceTests(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 		TestCancelElection,
 		TestTxn,
 		TestMultipleElection,
+		TestLease,
 	}
 
 	for _, fn := range fns {
@@ -1000,4 +1001,53 @@ func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cClea
 	}
 
 	t.Logf("TestTxn succeeded")
+}
+
+// TestLease tests multiple nodes taking a lease and stopping the lease
+func TestLease(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cCleanup ClusterCleanupFunc) {
+	var numNodes = 3
+	stores := make([]Interface, numNodes)
+	cancelFuncs := make([]context.CancelFunc, numNodes)
+	// setup cluster
+	cluster := cSetup(t)
+	defer cCleanup(t, cluster)
+
+	// setup stores and take a lease
+	for i := 0; i < numNodes; i++ {
+		store, _ := sSetup(t, cluster)
+		ctx, cancel := context.WithCancel(context.Background())
+		obj := &TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("testObj%d", i+1)}}
+
+		store.Lease(ctx, fmt.Sprintf("/lease/testObj%d", i+1), obj, 3)
+		stores[i] = store
+		cancelFuncs[i] = cancel
+	}
+
+	// watch the lease prefix and verify we get the leases
+	watch, err := stores[0].PrefixWatch(context.Background(), "/lease", "")
+	tutils.AssertOk(t, err, "Error during prefix watch")
+
+	// make sure we get all leases
+	for i := 0; i < numNodes; i++ {
+		obj, ok := <-watch.EventChan()
+		tutils.Assert(t, ok, "Error getting from watch channel")
+		tutils.Assert(t, (obj.Type == Created), "Incorrect event", obj)
+		tutils.Assert(t, (obj.Object.GetObjectKind() == "TestObj"), "Invalid object type", obj)
+	}
+
+	// cancel the leases
+	for i := 0; i < numNodes; i++ {
+		cancelFuncs[i]()
+	}
+
+	// verify we get deleted event
+	for i := 0; i < numNodes; i++ {
+		obj, ok := <-watch.EventChan()
+		tutils.Assert(t, ok, "Error getting from watch channel")
+		tutils.Assert(t, (obj.Type == Deleted), "Incorrect event", obj)
+		tutils.Assert(t, (obj.Object.GetObjectKind() == "TestObj"), "Invalid object type", obj)
+	}
+
+	t.Logf("TestLease succeeded")
+
 }

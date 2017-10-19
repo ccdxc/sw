@@ -15,31 +15,21 @@ import (
 
 func clusterSetup(t *testing.T) kvstore.TestCluster {
 	rand.Seed(74)
-	return &memkvCluster{
-		elections: make(map[string]*memkvElection),
-		clientID:  0,
-		stores:    make(map[string]*MemKv),
-	}
+	return getCluster([]string{"default"})
 }
 
 func clusterCleanup(t *testing.T, cluster kvstore.TestCluster) {
-	c, ok := cluster.(*memkvCluster)
+	c, ok := cluster.(*Cluster)
 	if !ok {
 		t.Fatalf("invalid cluster")
 	}
 
-	c.Lock()
-	defer c.Unlock()
-
 	// walk all state stores and delete keys
-	for memkvKey, f := range c.stores {
-		f.deleteAll()
-		delete(c.stores, memkvKey)
-	}
+	c.deleteAll()
 }
 
 func storeSetup(t *testing.T, cluster kvstore.TestCluster) (kvstore.Interface, error) {
-	c, ok := cluster.(*memkvCluster)
+	c, ok := cluster.(*Cluster)
 	if !ok {
 		t.Fatalf("invalid cluster")
 	}
@@ -52,12 +42,12 @@ func storeSetup(t *testing.T, cluster kvstore.TestCluster) (kvstore.Interface, e
 
 	s := runtime.NewScheme()
 	s.AddKnownTypes(&kvstore.TestObj{}, &kvstore.TestObjList{})
-	store, _ := NewMemKv(c, runtime.NewJSONCodec(s))
+	store, _ := NewMemKv([]string{"default"}, runtime.NewJSONCodec(s))
 	cs, ok := store.(*MemKv)
 	if !ok {
 		t.Fatalf("invalid store")
 	}
-	c.stores[clientName] = cs
+	c.clients[clientName] = cs
 
 	return store, nil
 }

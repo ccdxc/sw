@@ -36,68 +36,108 @@ type memKvRec struct {
 // MemKv is state store interface to a memkv client
 type MemKv struct {
 	sync.Mutex
-	cluster       interface{}
+	cluster       *Cluster
 	deleted       bool
 	codec         runtime.Codec
 	objVersioner  runtime.Versioner
 	listVersioner runtime.Versioner
-	kvs           map[string]*memKvRec
-	watchers      map[string]*watcher
 	returnErr     bool // when set, all interface methods will return an error
 }
 
+// Cluster memkv cluster (equivalent to an etcd backend cluster)
+type Cluster struct {
+	sync.Mutex
+	elections map[string]*memkvElection // current elections
+	clientID  int                       // current id of the store
+	clients   map[string]*MemKv         // all client stores
+	kvs       map[string]*memKvRec
+	watchers  map[string][]*watcher
+}
+
+// db of clusters
+var clusters = make(map[string]*Cluster)
+
 // NewMemKv creates a new in memory kv store
-func NewMemKv(cluster interface{}, codec runtime.Codec) (kvstore.Interface, error) {
-	kvs := make(map[string]*memKvRec)
-	watchers := make(map[string]*watcher)
+func NewMemKv(cluster []string, codec runtime.Codec) (kvstore.Interface, error) {
+	// create the client
 	fkv := &MemKv{
-		cluster:       cluster,
+		cluster:       getCluster(cluster),
 		deleted:       false,
 		codec:         codec,
 		objVersioner:  runtime.NewObjectVersioner(),
 		listVersioner: runtime.NewListVersioner(),
-		kvs:           kvs,
-		watchers:      watchers,
 	}
-	go ttlDecrement(fkv)
 	return fkv, nil
+}
+
+// NewCluster creates a new cluster
+func NewCluster() *Cluster {
+	cl := &Cluster{
+		elections: make(map[string]*memkvElection),
+		clientID:  0,
+		clients:   make(map[string]*MemKv),
+		kvs:       make(map[string]*memKvRec),
+		watchers:  make(map[string][]*watcher),
+	}
+
+	go ttlDecrement(cl)
+
+	return cl
+}
+
+// getCluster gets a cluster by url
+func getCluster(cluster []string) *Cluster {
+	// see if we have a cluster already
+	cl, ok := clusters[fmt.Sprintf("%v", cluster)]
+	if ok {
+		return cl
+	}
+
+	// create new cluster
+	cl = NewCluster()
+	clusters[fmt.Sprintf("%v", cluster)] = cl
+
+	return cl
 }
 
 // ttlDecrement would sleep for a second and decrement ttl for a key in kvstore
 // FIXME: this background task must be stopped, perhaps by having kvstore use the context
-func ttlDecrement(f *MemKv) {
+func ttlDecrement(cluster *Cluster) {
 	for {
 		time.Sleep(time.Second)
-		f.Lock()
-		if f.deleted {
-			f.Unlock()
-			break
-		}
-		for key, v := range f.kvs {
+		cluster.Lock()
+
+		for key, v := range cluster.kvs {
 			if v.ttl == 0 {
 				continue
 			}
 			v.ttl--
 			if v.ttl == 0 {
-				delete(f.kvs, key)
+				delete(cluster.kvs, key)
 			}
 		}
-		f.Unlock()
+		cluster.Unlock()
 	}
 }
 
-func (f *MemKv) deleteAll() {
-	f.Lock()
+func (cluster *Cluster) deleteAll() {
+	cluster.Lock()
+	defer cluster.Unlock()
+
 	// delete all kv pairs
-	for key := range f.kvs {
-		delete(f.kvs, key)
+	for key := range cluster.kvs {
+		delete(cluster.kvs, key)
 	}
 
 	// delete all watchers
-	for key := range f.watchers {
-		delete(f.watchers, key)
+	for key := range cluster.watchers {
+		delete(cluster.watchers, key)
 	}
-	f.Unlock()
+
+	// delete all clients
+	for key := range cluster.clients {
+		delete(cluster.clients, key)
+	}
 }
 
 // encode implements the serialization of an object to be stored in memkv.
@@ -135,14 +175,14 @@ func (f *MemKv) decode(value []byte, into runtime.Object, version int64) error {
 
 // Create creates a key in memkv with the provided object.
 func (f *MemKv) Create(ctx context.Context, key string, obj runtime.Object) error {
-	f.Lock()
-	defer f.Unlock()
+	f.cluster.Lock()
+	defer f.cluster.Unlock()
 
 	if f.returnErr {
 		return errors.New("returnErr set")
 	}
 
-	if _, ok := f.kvs[key]; ok {
+	if _, ok := f.cluster.kvs[key]; ok {
 		return kvstore.NewKeyExistsError(key, 0)
 	}
 
@@ -152,7 +192,7 @@ func (f *MemKv) Create(ctx context.Context, key string, obj runtime.Object) erro
 	}
 
 	v := &memKvRec{value: string(value), ttl: 0, revision: 1}
-	f.kvs[key] = v
+	f.cluster.kvs[key] = v
 	f.setupWatchers(key, v)
 
 	return f.objVersioner.SetVersion(obj, uint64(v.revision))
@@ -161,7 +201,7 @@ func (f *MemKv) Create(ctx context.Context, key string, obj runtime.Object) erro
 // MUST be called with the Lock HELD
 func compCheck(f *MemKv, cs ...kvstore.Cmp) error {
 	for _, cmp := range cs {
-		v, ok := f.kvs[cmp.Key]
+		v, ok := f.cluster.kvs[cmp.Key]
 		if !ok {
 			if cmp.Target == kvstore.Version &&
 				((cmp.Operator == "=" && cmp.Version == 0) || (cmp.Operator == "<" && cmp.Version == 1)) {
@@ -198,13 +238,13 @@ func compCheck(f *MemKv, cs ...kvstore.Cmp) error {
 // Delete removes a single key in MemKv. If "into" is not nil, it is set to the previous value
 // of the key in kv store. "cs" are comparators to allow for conditional deletes.
 func (f *MemKv) Delete(ctx context.Context, key string, into runtime.Object, cs ...kvstore.Cmp) error {
-	f.Lock()
-	defer f.Unlock()
+	f.cluster.Lock()
+	defer f.cluster.Unlock()
 	if f.returnErr {
 		return errors.New("returnErr set")
 	}
 
-	v, ok := f.kvs[key]
+	v, ok := f.cluster.kvs[key]
 	if !ok {
 		return kvstore.NewKeyNotFoundError(key, 0)
 	}
@@ -213,7 +253,7 @@ func (f *MemKv) Delete(ctx context.Context, key string, into runtime.Object, cs 
 		return err
 	}
 
-	defer delete(f.kvs, key)
+	defer delete(f.cluster.kvs, key)
 	f.sendWatchEvents(key, v, true)
 
 	if into != nil {
@@ -232,16 +272,16 @@ func (f *MemKv) PrefixDelete(ctx context.Context, prefix string) error {
 		prefix += "/"
 	}
 
-	f.Lock()
-	defer f.Unlock()
+	f.cluster.Lock()
+	defer f.cluster.Unlock()
 	if f.returnErr {
 		return errors.New("returnErr set")
 	}
 
-	for key, v := range f.kvs {
+	for key, v := range f.cluster.kvs {
 		if strings.HasPrefix(key, prefix) {
 			f.sendWatchEvents(key, v, true)
-			delete(f.kvs, key)
+			delete(f.cluster.kvs, key)
 		}
 	}
 
@@ -252,13 +292,13 @@ func (f *MemKv) PrefixDelete(ctx context.Context, prefix string) error {
 // can be used without comparators if a single writer owns the key. "cs" are comparators to allow
 // for conditional updates, including parallel updates.
 func (f *MemKv) Update(ctx context.Context, key string, obj runtime.Object, cs ...kvstore.Cmp) error {
-	f.Lock()
-	defer f.Unlock()
+	f.cluster.Lock()
+	defer f.cluster.Unlock()
 	if f.returnErr {
 		return errors.New("returnErr set")
 	}
 
-	v, ok := f.kvs[key]
+	v, ok := f.cluster.kvs[key]
 	if !ok {
 		return kvstore.NewKeyNotFoundError(key, 0)
 	}
@@ -317,16 +357,16 @@ func (f *MemKv) ConsistentUpdate(ctx context.Context, key string, into runtime.O
 			return err
 		}
 
-		f.Lock()
+		f.cluster.Lock()
 
-		v, ok := f.kvs[key]
+		v, ok := f.cluster.kvs[key]
 		if !ok {
 			v = &memKvRec{}
 		}
 		if v.revision == version {
 			value, err := f.encode(newObj)
 			if err != nil {
-				f.Unlock()
+				f.cluster.Unlock()
 				return err
 			}
 
@@ -336,24 +376,24 @@ func (f *MemKv) ConsistentUpdate(ctx context.Context, key string, into runtime.O
 			f.sendWatchEvents(key, v, false)
 
 			if into != nil {
-				f.Unlock()
+				f.cluster.Unlock()
 				return f.decode(value, into, version)
 			}
 		}
-		f.Unlock()
+		f.cluster.Unlock()
 	}
 }
 
 // Get the object corresponding to a single key
 func (f *MemKv) Get(ctx context.Context, key string, into runtime.Object) error {
-	f.Lock()
-	defer f.Unlock()
+	f.cluster.Lock()
+	defer f.cluster.Unlock()
 
 	if f.returnErr {
 		return errors.New("returnErr set")
 	}
 
-	v, ok := f.kvs[key]
+	v, ok := f.cluster.kvs[key]
 	if !ok {
 		return kvstore.NewKeyNotFoundError(key, 0)
 	}
@@ -382,8 +422,8 @@ func (f *MemKv) List(ctx context.Context, prefix string, into runtime.Object) er
 		prefix += "/"
 	}
 
-	f.Lock()
-	defer f.Unlock()
+	f.cluster.Lock()
+	defer f.cluster.Unlock()
 
 	ptr := false
 	elem := target.Type().Elem()
@@ -392,7 +432,7 @@ func (f *MemKv) List(ctx context.Context, prefix string, into runtime.Object) er
 		elem = elem.Elem()
 	}
 
-	for key, v := range f.kvs {
+	for key, v := range f.cluster.kvs {
 		if strings.HasPrefix(key, prefix) {
 			obj := reflect.New(elem).Interface().(runtime.Object)
 			if err := f.decode([]byte(v.value), obj, v.revision); err != nil {
@@ -457,8 +497,8 @@ func (f *MemKv) Close() {
 }
 
 func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
-	f.Lock()
-	defer f.Unlock()
+	f.cluster.Lock()
+	defer f.cluster.Unlock()
 	ret := kvstore.TxnResponse{}
 
 	if f.returnErr {
@@ -474,16 +514,16 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 	for _, o := range t.ops {
 		switch o.t {
 		case tCreate:
-			if _, ok := f.kvs[o.key]; ok {
+			if _, ok := f.cluster.kvs[o.key]; ok {
 				return ret, kvstore.NewKeyExistsError(o.key, 0)
 			}
 		case tUpdate:
-			_, ok := f.kvs[o.key]
+			_, ok := f.cluster.kvs[o.key]
 			if !ok {
 				return ret, kvstore.NewKeyNotFoundError(o.key, 0)
 			}
 		case tDelete:
-			_, ok := f.kvs[o.key]
+			_, ok := f.cluster.kvs[o.key]
 			if !ok {
 				return ret, kvstore.NewKeyNotFoundError(o.key, 0)
 			}
@@ -496,13 +536,13 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 		switch o.t {
 		case tCreate:
 			v := &memKvRec{value: o.val, revision: 1}
-			f.kvs[o.key] = v
+			f.cluster.kvs[o.key] = v
 			f.setupWatchers(o.key, v)
 			f.objVersioner.SetVersion(o.obj, uint64(v.revision))
 			opresp := kvstore.TxnOpResponse{Oper: kvstore.OperUpdate, Key: o.key, Obj: nil}
 			ret.Responses = append(ret.Responses, opresp)
 		case tUpdate:
-			v := f.kvs[o.key]
+			v := f.cluster.kvs[o.key]
 			v.value = o.val
 			v.revision++
 			f.sendWatchEvents(o.key, v, false)
@@ -510,12 +550,12 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 			opresp := kvstore.TxnOpResponse{Oper: kvstore.OperUpdate, Key: o.key, Obj: nil}
 			ret.Responses = append(ret.Responses, opresp)
 		case tDelete:
-			v, ok := f.kvs[o.key]
+			v, ok := f.cluster.kvs[o.key]
 			if ok {
 				into, err := f.codec.Decode([]byte(v.value), nil)
 				if err == nil {
 					opresp := kvstore.TxnOpResponse{Oper: kvstore.OperDelete, Key: o.key, Obj: into}
-					defer delete(f.kvs, o.key)
+					defer delete(f.cluster.kvs, o.key)
 					f.sendWatchEvents(o.key, v, true)
 					ret.Responses = append(ret.Responses, opresp)
 				}
@@ -528,38 +568,41 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 // InjectWatchEvent injects the given event to the watcher of the specified prefix
 // Useful for testing
 func (f *MemKv) InjectWatchEvent(prefix string, e *kvstore.WatchEvent, timeOutSec int) error {
-	f.Lock()
-	w := f.watchers[prefix]
-	f.Unlock()
-	if w == nil {
+	f.cluster.Lock()
+	wl := f.cluster.watchers[prefix]
+	f.cluster.Unlock()
+	if wl == nil {
 		return errors.New("No watcher on the prefix")
 	}
 
-	select {
-	case w.outCh <- e:
-		return nil
-	case <-time.After(time.Duration(timeOutSec) * time.Second):
-		return errors.New("Time out")
+	for _, w := range wl {
+		select {
+		default:
+			w.outCh <- e
+		case <-time.After(time.Duration(timeOutSec) * time.Second):
+			return errors.New("Time out")
+		}
 	}
 
+	return nil
 }
 
 // IsWatchActive tests the presence of a watcher on a given prefix
 // Useful for testing
 func (f *MemKv) IsWatchActive(prefix string) bool {
-	f.Lock()
-	defer f.Unlock()
-	w := f.watchers[prefix]
+	f.cluster.Lock()
+	defer f.cluster.Unlock()
+	w := f.cluster.watchers[prefix]
 	return w != nil
 }
 
 // CloseWatch closes the watch channel on a given prefix
 // Useful for testing
 func (f *MemKv) CloseWatch(prefix string) {
-	f.Lock()
-	w := f.watchers[prefix]
-	f.Unlock()
-	if w != nil {
+	f.cluster.Lock()
+	wl := f.cluster.watchers[prefix]
+	f.cluster.Unlock()
+	for _, w := range wl {
 		close(w.outCh)
 		w.f.deleteWatchers(w)
 	}
@@ -568,4 +611,34 @@ func (f *MemKv) CloseWatch(prefix string) {
 // SetErrorState sets the returnErr flag
 func (f *MemKv) SetErrorState(state bool) {
 	f.returnErr = state
+}
+
+// Lease takes a lease on a key and renews in background
+func (f *MemKv) Lease(ctx context.Context, key string, obj runtime.Object, ttl uint64) (chan kvstore.LeaseEvent, error) {
+	// create the object
+	err := f.Create(ctx, key, obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// channel to send out events
+	eventCh := make(chan kvstore.LeaseEvent, outCount)
+
+	// wait till the context is cancelled
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				// delete the object
+				f.Delete(context.Background(), key, nil)
+
+				// send cancelled event
+				eventCh <- kvstore.LeaseCancelled
+				close(eventCh)
+				return
+			}
+		}
+	}()
+
+	return eventCh, nil
 }

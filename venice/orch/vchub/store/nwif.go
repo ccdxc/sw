@@ -42,7 +42,7 @@ func NwIFCreate(ctx context.Context, ID string, n *orch.NwIF) error {
 
 	//if the object already exists, compare and update only if there is a change.
 	old := &orch.NwIF{}
-	err := kvStore.Get(ctx, key, old)
+	err := kvGet(ctx, key, old)
 	if err == nil {
 		n.ObjectMeta.ResourceVersion = old.ObjectMeta.ResourceVersion
 		if reflect.DeepEqual(old, n) {

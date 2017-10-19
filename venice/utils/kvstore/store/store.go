@@ -31,7 +31,7 @@ func New(c Config) (kvstore.Interface, error) {
 	case KVStoreTypeEtcd:
 		return etcd.NewEtcdStore(c.Servers, c.Codec)
 	case KVStoreTypeMemkv:
-		return memkv.NewMemKv(nil, c.Codec)
+		return memkv.NewMemKv(c.Servers, c.Codec)
 	}
 	return nil, fmt.Errorf("Unknown kv store type: %v", c.Type)
 }

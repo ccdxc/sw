@@ -87,15 +87,17 @@ func sendEvent(w *watcher, v *memKvRec, deleted bool) {
 // have been watching the newly added key. It sends notifications in case
 // there was a watcher and send them events
 func (f *MemKv) setupWatchers(key string, v *memKvRec) {
-	for watchKey, w := range f.watchers {
-		if w.recursive {
-			if strings.HasPrefix(key, watchKey) {
+	for watchKey, wl := range f.cluster.watchers {
+		for _, w := range wl {
+			if w.recursive {
+				if strings.HasPrefix(key, watchKey) {
+					v.watchers = append(v.watchers, w)
+					sendEvent(w, v, false)
+				}
+			} else if watchKey == key {
 				v.watchers = append(v.watchers, w)
 				sendEvent(w, v, false)
 			}
-		} else if watchKey == key {
-			v.watchers = append(v.watchers, w)
-			sendEvent(w, v, false)
 		}
 	}
 }
@@ -127,19 +129,25 @@ func (w *watcher) startWatching() {
 	// insert watcher in memKv's global list of watchers
 	// insert watcher into key's watcher list
 	// insert memKvRec into watcher's list (to handle Stop)
-	f.Lock()
-	defer f.Unlock()
+	f.cluster.Lock()
+	defer f.cluster.Unlock()
 
-	f.watchers[w.keyOrPrefix] = w
+	wl, ok := f.cluster.watchers[w.keyOrPrefix]
+	if !ok {
+		wl = []*watcher{}
+	}
+	wl = append(wl, w)
+	f.cluster.watchers[w.keyOrPrefix] = wl
+
 	if w.recursive {
-		for key, v := range f.kvs {
+		for key, v := range f.cluster.kvs {
 			if strings.HasPrefix(key, w.keyOrPrefix) {
 				w.keys = append(w.keys, key)
 				v.watchers = append(v.watchers, w)
 			}
 		}
 	} else {
-		if v, ok := f.kvs[w.keyOrPrefix]; ok {
+		if v, ok := f.cluster.kvs[w.keyOrPrefix]; ok {
 			w.keys = []string{w.keyOrPrefix}
 			v.watchers = append(v.watchers, w)
 		}
@@ -148,7 +156,7 @@ func (w *watcher) startWatching() {
 	// If starting from a lower verison that current object's version
 	// send current object(s) on the channel
 	for _, key := range w.keys {
-		v := f.kvs[key]
+		v := f.cluster.kvs[key]
 		if v.revision >= w.fromVersion {
 			sendEvent(w, v, false)
 		}
@@ -219,14 +227,27 @@ func (f *MemKv) deleteWatchers(w *watcher) {
 		}
 	}
 
-	f.Lock()
-	defer f.Unlock()
+	f.cluster.Lock()
+	defer f.cluster.Unlock()
 
 	for _, key := range w.keys {
-		v := f.kvs[key]
+		v := f.cluster.kvs[key]
 		deleteWatcher(v, w)
 	}
-	delete(f.watchers, w.keyOrPrefix)
+
+	wl, ok := f.cluster.watchers[w.keyOrPrefix]
+	if ok {
+		for idx, value := range wl {
+			if value == w {
+				wl = append(wl[:idx], wl[idx+1:]...)
+			}
+		}
+		if len(wl) == 0 {
+			delete(f.cluster.watchers, w.keyOrPrefix)
+		} else {
+			f.cluster.watchers[w.keyOrPrefix] = wl
+		}
+	}
 }
 
 // EventChan returns the channel for watch events.

@@ -2,7 +2,6 @@ package memkv
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -36,13 +35,6 @@ type memkvElection struct {
 	contenders []*election
 }
 
-type memkvCluster struct {
-	sync.Mutex
-	elections map[string]*memkvElection // current elections
-	clientID  int                       // current id of the store
-	stores    map[string]*MemKv         // all client stores
-}
-
 // newElection creates a new contender in an election.
 // memkv election is really a fake election because there is no real communication across
 // multiple nodes, therefore:
@@ -63,24 +55,14 @@ func (f *MemKv) newElection(ctx context.Context, name string, id string, ttl int
 	}
 
 	// update cluster's contender's list
-	f.Lock()
-
-	c, ok := f.cluster.(*memkvCluster)
-	if !ok {
-		log.Fatalf("invalid cluster")
-		f.Unlock()
-		return nil, errors.New("invalid cluster")
-	}
-
-	c.Lock()
-	if elec, ok := c.elections[name]; ok {
+	f.cluster.Lock()
+	if elec, ok := f.cluster.elections[name]; ok {
 		elec.contenders = append(elec.contenders, el)
 	} else {
 		elec := &memkvElection{contenders: []*election{el}, leader: ""}
-		c.elections[name] = elec
+		f.cluster.elections[name] = elec
 	}
-	c.Unlock()
-	f.Unlock()
+	f.cluster.Unlock()
 
 	// run election, select leader
 	go el.run(ctx)
@@ -116,18 +98,8 @@ func (el *election) run(ctx context.Context) {
 		}
 
 		f := el.f
-		f.Lock()
-
-		c, ok := f.cluster.(*memkvCluster)
-		if !ok {
-			log.Fatalf("invalid cluster")
-			f.Unlock()
-			el.Unlock()
-			return
-		}
-
-		c.Lock()
-		elec := c.elections[el.name]
+		f.cluster.Lock()
+		elec := f.cluster.elections[el.name]
 
 		// pick a leader, upon leader going away or first time
 		if elec.leader == "" {
@@ -150,8 +122,7 @@ func (el *election) run(ctx context.Context) {
 
 		// TBD: no need to adjust ttl and auto-renew the lease for memkv
 
-		f.Unlock()
-		c.Unlock()
+		f.cluster.Unlock()
 		el.Unlock()
 
 		time.Sleep(10 * time.Millisecond)
@@ -189,19 +160,10 @@ func (el *election) stop() {
 	el.enabled = false
 
 	f := el.f
-	f.Lock()
-	defer f.Unlock()
+	f.cluster.Lock()
+	defer f.cluster.Unlock()
 
-	c, ok := f.cluster.(*memkvCluster)
-	if !ok {
-		log.Fatalf("invalid cluster")
-		return
-	}
-
-	c.Lock()
-	defer c.Unlock()
-
-	elec := c.elections[el.name]
+	elec := f.cluster.elections[el.name]
 
 	// if you are the leader, mark leader to be undecided
 	if elec.leader == el.id {

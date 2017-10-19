@@ -29,7 +29,7 @@ func SmartNICCreate(ctx context.Context, ID string, s *orch.SmartNIC) error {
 
 	//if the object already exists, compare and update only if there is a change.
 	old := &orch.SmartNIC{}
-	err := kvStore.Get(ctx, key, old)
+	err := kvGet(ctx, key, old)
 
 	if err == nil {
 		s.ObjectMeta.ResourceVersion = old.ObjectMeta.ResourceVersion

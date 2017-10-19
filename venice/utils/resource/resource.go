@@ -276,7 +276,7 @@ func (rm *RsrcMgr) applyConstraints(rlist *RsrcList, req *rproto.ResourceRequest
 
 	// if no provider matched the constraits return
 	if len(matchedProviders) == 0 {
-		log.Infof("No provider matched the constraints of req: %+v")
+		log.Infof("No provider matched the constraints of req: %+v", req)
 		return nil, errors.New("No provider matched the constraints")
 	}
 

@@ -74,9 +74,23 @@ type Interface interface {
 	// for ttl duration, a new election is performed.
 	Contest(ctx context.Context, name string, id string, ttl uint64) (Election, error)
 
+	// Lease takes a lease on a key and renews the lease in background
+	// it returns an event channel where an event is sent if lease is lost or if there is an error
+	Lease(ctx context.Context, key string, obj runtime.Object, ttl uint64) (chan LeaseEvent, error)
+
 	// NewTxn creates a transaction object.
 	NewTxn() Txn
 
 	// Close closes any persistent connection for good cleanup
 	Close()
 }
+
+// LeaseEvent lease events
+type LeaseEvent string
+
+// lease events
+const (
+	LeaseLost      LeaseEvent = "Lost"      // lease was lost during keepalive
+	LeaseError     LeaseEvent = "Error"     // There was an error acquiring or renewing lease
+	LeaseCancelled LeaseEvent = "Cancelled" // lease was cancelled by the user
+)
