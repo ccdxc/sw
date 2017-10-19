@@ -11,6 +11,7 @@ run "yum -y install https://centos7.iuscommunity.org/ius-release.rpm"
 run "yum -y install python36u python36u-pip"
 run "ln -s /usr/bin/python3.6 /usr/bin/python3"
 run "ln -s /usr/bin/pip3.6 /usr/bin/pip3"
+run "yum install -y epel-release"
 
 PIP2_PACKAGES = %w[
   ply==3.9
@@ -63,6 +64,12 @@ PACKAGES = %w[
   swig
   openssl-devel
   libpcap-devel
+  pcre-devel
+  luajit-devel
+  hwloc-devel
+  iptables-devel
+  libdnet-devel
+  zlib-devel  
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -71,7 +78,7 @@ run "yum install -y #{PACKAGES.join(" ")}"
 run "ln -s /usr/share/pkgconfig /usr/lib/pkgconfig"
 
 run "curl -sSL https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz | tar xz -C /usr/local"
-run "go get github.com/golang/protobuf/... google.golang.org/grpc"
+run "go get github.com/golang/protobuf/... google.golang.org/grpc golang.org/x/tools/cmd/goimports"
 
 inside BASE_BUILD_DIR do
   run "curl ftp://ftp.gnu.org/pub/gnu/gcc/gcc-6.1.0/gcc-6.1.0.tar.bz2 | tar xj"
@@ -114,7 +121,7 @@ end
 
 # prep grpc
 inside BASE_BUILD_DIR do
-  run "git clone -b $(curl -L http://grpc.io/release) https://github.com/grpc/grpc"
+  run "git clone -b v1.6.1 https://github.com/grpc/grpc"
 end
 
 # install grpc
@@ -192,13 +199,37 @@ inside "/" do
   run "tar xzf #{BASE_BUILD_DIR}/sknobs.tar.gz"
 end
 
+DAQ_VERSION = "2.2.2"
+inside BASE_BUILD_DIR do
+  run "wget https://www.snort.org/downloads/snortplus/daq-#{DAQ_VERSION}.tar.gz \
+       && tar xvfz daq-#{DAQ_VERSION}.tar.gz \
+       && cd daq-#{DAQ_VERSION} \
+       && CFLAGS=\"$CFLAGS -fPIC\" ./configure && make && make install"
+end
+
+OPENAPP_VERSION = "6329"
+inside BASE_BUILD_DIR do
+  run "wget https://www.snort.org/downloads/openappid/#{OPENAPP_VERSION} \
+       && mv #{OPENAPP_VERSION} snort-openappid.tar.gz \
+       && tar -zxvf snort-openappid.tar.gz"
+end
+
+run "mkdir -p /var/log/snort && \
+     mkdir -p /usr/local/lib/snort_dynamicrules && \
+     mkdir -p /etc/snort && \
+     mkdir -p /etc/snort/rules && \
+     mkdir -p /etc/snort/preproc_rules && \
+     mkdir -p /etc/snort/so_rules && \
+     mkdir -p /etc/snort/etc 
+     cp -r #{BASE_BUILD_DIR}/odp /etc/snort/odp"
+
 run "mkdir -p #{ROOT}"
 workdir "/sw/nic"
 
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.1"
+tag "pensando/nic:1.2"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
