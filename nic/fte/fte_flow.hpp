@@ -66,6 +66,18 @@ public:
         return valid_.fwding;
     };
 
+    hal_ret_t set_mcast_copy(const uint8_t& copy_en) {
+        mcast_copy_en_ = copy_en;
+        valid_.mcast_copy = true;
+        return HAL_RET_OK;
+    }
+    const uint8_t& mcast_copy() const {
+        return mcast_copy_en_;
+    } 
+    bool valid_mcast_copy() const {
+        return valid_.mcast_copy;
+    }
+
 private:
     // Max header updates we track per flow
     // This is enough to pop the outer, rewrite inner and push new outer
@@ -78,12 +90,14 @@ private:
         uint8_t action:1;
         uint8_t flow_state:1;
         uint8_t fwding:1;
+        uint8_t mcast_copy:1;
     } valid_;
 
     hal::flow_key_t           key_;                 // flow's key
     session::FlowAction       action_;              // firwall action
     flow_state_t              flow_state_;          // connection tracking 
     fwding_info_t             fwding_;              // Fwding info
+    uint8_t                   mcast_copy_en_;             // Flow copy Enable 
 
     uint8_t                   num_header_updates_; // no.of valid updates
     header_update_t           header_updates_[MAX_HEADER_UPDATES];

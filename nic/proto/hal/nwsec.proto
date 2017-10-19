@@ -199,11 +199,13 @@ message DoSService {
 
 // Applicaion Layer Gateway (ALG) names for invoking appropriate ALG
 enum ALGName {
-   APP_SVC_NONE = 0;
-   APP_SVC_TFTP = 1;    // Trivial File Transfer Protocol
-   APP_SVC_FTP  = 2;    // File Transfer Protocol
-   APP_SVC_DNS  = 3;    // Domain Name System
-   APP_SVC_SIP  = 4;    // Session Initiation Protocol
+   APP_SVC_NONE       = 0;
+   APP_SVC_TFTP       = 1;    // Trivial File Transfer Protocol
+   APP_SVC_FTP        = 2;    // File Transfer Protocol
+   APP_SVC_DNS        = 3;    // Domain Name System
+   APP_SVC_SIP        = 4;    // Session Initiation Protocol
+   APP_SVC_SUN_RPC    = 5;    // SUN Remote Procedure Call
+   APP_SVC_MSFT_RPC   = 6;    // Microsoft Remote Procedure Call
 }
 
 // FirewallRuleSpec defines a stateful firewall rule that is part of a

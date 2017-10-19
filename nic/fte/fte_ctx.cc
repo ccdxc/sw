@@ -28,98 +28,6 @@ std::ostream& operator<<(std::ostream& os, session::FlowAction val)
 namespace fte {
 
 /*-----------------------------------------------------------------------
-- Builds wildcard keys for lookup into ALG table. This will be used when
-  a flow miss happens to check if we have any previously saved state for 
-  the flow.
--------------------------------------------------------------------------*/
-static hal_ret_t
-build_wildcard_key(hal::flow_key_t& key, hal::flow_key_t key_)
-{
-    memcpy(std::addressof(key), &key_, sizeof(hal::flow_key_t));
-
-    if (key.flow_type != hal::FLOW_TYPE_L2 && key.proto == IP_PROTO_UDP) {
-        key.sport = 0;
-    }
-
-    return HAL_RET_OK;
-}
-
-
-/*-----------------------------------------------------------------------
-- Performs lookup on ALG hash table with the given flow key and a wildcard
-  key on a flow miss. 
--------------------------------------------------------------------------*/
-alg_entry_t *
-lookup_alg_db(ctx_t *ctx)
-{
-    uint8_t         i=0, num_keys=0;
-    hal::flow_key_t keys[MAX_FLOW_KEYS];
-    alg_entry_t     *entry = NULL;
-
-    //Incoming Key
-    keys[num_keys++] = ctx->key();
-
-    //ALG Variations
-    build_wildcard_key(keys[num_keys++], ctx->key());
-
-    g_fte_db->rlock();
-    while (i < num_keys) {
-        HAL_TRACE_DEBUG("Looking up ALG DB for key: {}", keys[i]);
-        entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->lookup(std::addressof(keys[i++]));
-        if (!entry) {
-            continue;
-        } else {
-            HAL_TRACE_DEBUG("ALG Entry Found with key: {}", keys[i-1]);
-            break;
-        }
-    }
-    g_fte_db->runlock();
-
-    return (entry);
-}
-
-/*-----------------------------------------------------------------------
-- This API can be used to insert a new entry into the ALG wildcard table 
-  when the firewall has indicated ALG action on the flow.
--------------------------------------------------------------------------*/
-alg_entry_t *
-insert_alg_entry(ctx_t *ctx, hal::session_t *sess)
-{
-    alg_entry_t     *entry = NULL;
-    hal::flow_key_t  key = ctx->key();
-    hal::flow_role_t role = hal::FLOW_ROLE_INITIATOR;
- 
-    entry = (alg_entry_t *)HAL_CALLOC(alg_entry_t, sizeof(alg_entry_t));
-    if (!entry) {
-        return NULL;
-    }
-
-    switch (ctx->alg_proto()) {
-        case nwsec::APP_SVC_TFTP:
-            role = hal::FLOW_ROLE_RESPONDER;
-            key = ctx->get_key(role);
-            key.sport = 0;
-            break;
-        default:
-            break;
-    }
-
-    entry->key = key;
-    entry->role = role;
-    entry->session = sess;
-    entry->alg_proto_state = ctx->alg_proto_state();
-
-    HAL_TRACE_DEBUG("Inserting Key: {} in ALG table", key);
-
-    entry->flow_key_ht_ctxt.reset();
-    g_fte_db->wlock();
-    g_fte_db->alg_flow_key_ht()->insert(entry, &entry->flow_key_ht_ctxt);
-    g_fte_db->wunlock();
-
-    return entry;
-}
-
-/*-----------------------------------------------------------------------
 - This API can be used to remove an entry from ALG hash table when either
   there was an error processing the reverse flow or the Iflow/Rflow has been
   successfully installed and we do not need to keep this software entry 
@@ -395,6 +303,7 @@ ctx_t::lookup_session()
             valid_rflow_ = true;
             rflow_[stage]->set_key(key());
         }
+
         set_role(entry->role);  
         set_flow_miss(true);
     }
@@ -501,7 +410,7 @@ ctx_t::create_session()
         }
     } 
 
-    set_role(hal::FLOW_ROLE_NONE);
+    set_role(hal::FLOW_ROLE_INITIATOR);
     if (arm_lifq_.lif == hal::SERVICE_LIF_CPU) { 
         set_flow_miss(true);
     }
@@ -871,6 +780,12 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         ret = flow->set_key(flowupd.key);
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} key={}",
                         role, feature_name_, ret, flowupd.key);
+        break;
+
+    case FLOWUPD_MCAST_COPY:
+        ret = flow->set_mcast_copy(flowupd.mcast_copy_en);
+        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} mcast_copy_en={}",
+                        role, feature_name_, ret, flowupd.mcast_copy_en);
         break;
     }
 

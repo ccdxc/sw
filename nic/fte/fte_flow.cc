@@ -395,6 +395,10 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
         attrs.drop =  (action_ == session::FLOW_ACTION_DROP);
     }
 
+    if (valid_.mcast_copy) {
+        attrs.mcast_en = mcast_copy_en_;
+    }
+
     if (valid_.fwding) {
         attrs.lport = fwding_.lport;
         attrs.qid_en =  fwding_.qid_en;

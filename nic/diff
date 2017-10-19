@@ -1,0 +1,1025 @@
+diff --git a/dol/test/callbacks/networking/packets.py b/dol/test/callbacks/networking/packets.py
+index cc4a4111..37f57774 100644
+--- a/dol/test/callbacks/networking/packets.py
++++ b/dol/test/callbacks/networking/packets.py
+@@ -163,8 +163,13 @@ def GetCpuPacket(testcase, args = None):
+ 
+ def GetCpuPacketbyIflow(testcase, args = None):
+     root = getattr(testcase.config, 'flow', None)
++    src = getattr(testcase.config, 'src', None)
+     if root is None:
+         root = getattr(testcase.config.session.iconfig, 'flow', None)
++        src = getattr(testcase.config.session.rconfig, 'src', None)
++
++    if not src.tenant.IsHostPinned():
++       return None
+ 
+     if root.IsFteEnabled():
+         return testcase.packets.Get(args.expktid)
+@@ -173,14 +178,10 @@ def GetCpuPacketbyIflow(testcase, args = None):
+ 
+ def GetCpuPacketbyRflow(testcase, args = None):
+     root = getattr(testcase.config, 'flow', None)
+-    src = getattr(testcase.config, 'src', None)
+     if root is None:
+         root = getattr(testcase.config.session.rconfig, 'flow', None)
+         src = getattr(testcase.config.session.rconfig, 'src', None)
+ 
+-    if not src.tenant.IsHostPinned():
+-       return None
+-
+     if root.IsFteEnabled():
+         return testcase.packets.Get(args.expktid)
+ 
+diff --git a/nic/fte/fte.cc b/nic/fte/fte.cc
+index 3a2246e1..050afdc4 100644
+--- a/nic/fte/fte.cc
++++ b/nic/fte/fte.cc
+@@ -11,6 +11,84 @@
+ 
+ namespace fte {
+ 
++// global instance of all FTE data
++fte_db  *g_fte_db;
++
++/*-----------------------------------------------------
++    Begin Hash Utility APIs 
++------------------------------------------------------*/
++void *
++alg_flow_get_key_func(void *entry)
++{
++    HAL_ASSERT(entry != NULL);
++    return (void *)&(((alg_entry_t *)entry)->key);
++}
++
++uint32_t
++alg_flow_compute_hash_func (void *key, uint32_t ht_size)
++{
++    return (hal::utils::hash_algo::fnv_hash(key, \
++                       sizeof(hal::flow_key_t)) % ht_size);
++}
++
++bool
++alg_flow_compare_key_func (void *key1, void *key2)
++{
++    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
++    if (!memcmp(key1, key2, sizeof(hal::flow_key_t))) {
++        return true;
++    }
++    return false;
++}
++
++/*-----------------------------------------------------
++    End Hash Utility APIs
++------------------------------------------------------*/
++
++/*-----------------------------------------------------
++    Begin FTE DB Constructor/Destructor APIs
++------------------------------------------------------*/
++
++hal_ret_t
++fte_db::init(void)
++{
++    // initialize tenant related data structures
++    alg_flow_key_ht_ = hal::utils::ht::factory(FTE_MAX_ALG_KEYS,
++                                               alg_flow_get_key_func,
++                                               alg_flow_compute_hash_func,
++                                               alg_flow_compare_key_func);
++    HAL_ASSERT_RETURN((alg_flow_key_ht_ != NULL), HAL_RET_ERR);
++
++    return HAL_RET_OK;
++}
++
++fte_db::~fte_db(void)
++{
++    alg_flow_key_ht_ ? delete alg_flow_key_ht_ : HAL_NOP;
++}
++
++fte_db *
++fte_db::factory(void)
++{
++    void         *mem;
++    fte_db       *db;
++
++    mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(fte_db));
++    HAL_ABORT(mem != NULL);
++    db = new (mem) fte_db();
++    if (db->init() == HAL_RET_ERR) {
++        db->~fte_db();
++        HAL_FREE(HAL_MEM_ALLOC_INFRA, mem);
++            return NULL;
++    }
++
++    return db;
++}
++
++/*-----------------------------------------------------
++    End FTE DB Constructor/Destructor APIs
++------------------------------------------------------*/
++
+ // FTE features
+ typedef struct feature_s feature_t;
+ struct feature_s {
+@@ -274,4 +352,16 @@ void unregister_features_and_pipelines() {
+     }
+ }
+ 
++/*------------------------------------------------------------
++    FTE Init API to initialize FTE top-level data structure
++--------------------------------------------------------------*/
++
++hal_ret_t init(void) 
++{
++    g_fte_db = fte_db::factory();
++    HAL_ASSERT_RETURN((g_fte_db != NULL), HAL_RET_ERR);
++
++    return HAL_RET_OK;
++}
++
+ } // namespace fte
+diff --git a/nic/fte/fte.hpp b/nic/fte/fte.hpp
+index e45bfd20..4d5fbf8f 100644
+--- a/nic/fte/fte.hpp
++++ b/nic/fte/fte.hpp
+@@ -34,6 +34,11 @@ const feature_id_t FTE_FEATURE_ALG           = 11;
+ DEFINE_ENUM(pipeline_action_t, FTE_PIPELINE_ACTION_ENTRIES)
+ #undef FTE_PIPELINE_ACTION_ENTRIES
+ 
++hal_ret_t build_wildcard_key(hal::flow_key_t& key);
++alg_entry_t *lookup_alg_db(ctx_t *ctx);
++alg_entry_t *insert_alg_entry(ctx_t *ctx, hal::session_t *sess);
++alg_entry_t *remove_alg_entry(hal::flow_key_t key);
++
+ typedef std::function<pipeline_action_t(ctx_t &ctx)> exec_handler_t;
+ typedef std::function<void(ctx_t &ctx)> commit_handler_t;
+ hal_ret_t register_feature(const feature_id_t& fid,
+@@ -62,5 +67,7 @@ hal_ret_t session_create(SessionSpec& spec, SessionResponse *rsp);
+ // FTE pkt loop (infinite loop)
+ void pkt_loop(uint8_t fte_id);
+ 
++// FTE Init routine
++hal_ret_t init();
+ 
+ } // namespace fte
+diff --git a/nic/fte/fte_ctx.cc b/nic/fte/fte_ctx.cc
+index 5b1beacb..0756da7e 100644
+--- a/nic/fte/fte_ctx.cc
++++ b/nic/fte/fte_ctx.cc
+@@ -26,6 +26,116 @@ std::ostream& operator<<(std::ostream& os, session::FlowAction val)
+ 
+ namespace fte {
+ 
++/*-----------------------------------------------------------------------
++- Builds wildcard keys for lookup into ALG table. This will be used when
++  a flow miss happens to check if we have any previously saved state for 
++  the flow.
++-------------------------------------------------------------------------*/
++static hal_ret_t
++build_wildcard_key(hal::flow_key_t& key, hal::flow_key_t key_)
++{
++    memcpy(std::addressof(key), &key_, sizeof(hal::flow_key_t));
++
++    if (key.flow_type != hal::FLOW_TYPE_L2 && key.proto == IP_PROTO_UDP) {
++        key.sport = 0;
++    }
++
++    return HAL_RET_OK;
++}
++
++
++/*-----------------------------------------------------------------------
++- Performs lookup on ALG hash table with the given flow key and a wildcard
++  key on a flow miss. 
++-------------------------------------------------------------------------*/
++alg_entry_t *
++lookup_alg_db(ctx_t *ctx)
++{
++    uint8_t         i=0, num_keys=0;
++    hal::flow_key_t keys[MAX_FLOW_KEYS];
++    alg_entry_t     *entry = NULL;
++
++    //Incoming Key
++    keys[num_keys++] = ctx->key();
++
++    //ALG Variations
++    build_wildcard_key(keys[num_keys++], ctx->key());
++
++    g_fte_db->rlock();
++    while (i < num_keys) {
++        HAL_TRACE_DEBUG("Looking up ALG DB for key: {}", keys[i]);
++        entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->lookup(std::addressof(keys[i++]));
++        if (!entry) {
++            continue;
++        } else {
++            HAL_TRACE_DEBUG("ALG Entry Found with key: {}", keys[i-1]);
++            break;
++        }
++    }
++    g_fte_db->runlock();
++
++    return (entry);
++}
++
++/*-----------------------------------------------------------------------
++- This API can be used to insert a new entry into the ALG wildcard table 
++  when the firewall has indicated ALG action on the flow.
++-------------------------------------------------------------------------*/
++alg_entry_t *
++insert_alg_entry(ctx_t *ctx, hal::session_t *sess)
++{
++    alg_entry_t     *entry = NULL;
++    hal::flow_key_t  key = ctx->key();
++    hal::flow_role_t role = hal::FLOW_ROLE_INITIATOR;
++ 
++    entry = (alg_entry_t *)HAL_CALLOC(alg_entry_t, sizeof(alg_entry_t));
++    if (!entry) {
++        return NULL;
++    }
++
++    switch (ctx->alg_proto()) {
++        case nwsec::APP_SVC_TFTP:
++            role = hal::FLOW_ROLE_RESPONDER;
++            key = ctx->get_key(role);
++            key.sport = 0;
++            break;
++        default:
++            break;
++    }
++
++    entry->key = key;
++    entry->role = role;
++    entry->session = sess;
++    entry->alg_proto_state = ctx->alg_proto_state();
++
++    HAL_TRACE_DEBUG("Inserting Key: {} in ALG table", key);
++
++    entry->flow_key_ht_ctxt.reset();
++    g_fte_db->wlock();
++    g_fte_db->alg_flow_key_ht()->insert(entry, &entry->flow_key_ht_ctxt);
++    g_fte_db->wunlock();
++
++    return entry;
++}
++
++/*-----------------------------------------------------------------------
++- This API can be used to remove an entry from ALG hash table when either
++  there was an error processing the reverse flow or the Iflow/Rflow has been
++  successfully installed and we do not need to keep this software entry 
++  around.
++-------------------------------------------------------------------------*/
++alg_entry_t *
++remove_alg_entry(hal::flow_key_t key)
++{
++    alg_entry_t   *entry = NULL;
++
++    g_fte_db->wlock();
++    entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->remove((void *)std::addressof(key));
++    g_fte_db->wunlock();
++
++    return entry;
++}
++
+ // extract session key (iflow key) from spec
+ hal_ret_t
+ ctx_t::extract_flow_key_from_spec(hal::flow_key_t *key, const FlowKey&  flow_spec_key,
+@@ -260,58 +370,35 @@ ctx_t::get_key(hal::flow_role_t role)
+     return flow->key();
+ }
+ 
+-// Zero out sport to check for responder flows
+-// for ALG(TFTP)
+-hal_ret_t
+-ctx_t::build_wildcard_key(hal::flow_key_t& key)
+-{
+-    memcpy(std::addressof(key), &key_, sizeof(hal::flow_key_t));
+-
+-    if (key.flow_type != hal::FLOW_TYPE_L2 && key.proto == IP_PROTO_UDP) {
+-        key.sport = 0;
+-    }
+-
+-    return HAL_RET_OK; 
+-}
+-
+-uint8_t
+-ctx_t::construct_lookup_keys(hal::flow_key_t *keys)
+-{
+-    uint8_t i=0;
+-
+-    //Incoming Key
+-    keys[i++] = key_;
+-
+-    //ALG Variations
+-    build_wildcard_key(keys[i++]);
+-
+-    return (i);
+-}
+-
+ hal_ret_t
+ ctx_t::lookup_session()
+ {
+     hal::flow_t *hflow = NULL;
+-    hal::flow_key_t keys[MAX_FLOW_KEYS];
+-    uint8_t num_keys = 0;
+-    int i = 0, stage = 0;
++    int stage = 0;
++    alg_entry_t  *entry = NULL;
+ 
+     // TODO(pavithra) handle protobuf requests
+     if (protobuf_request()) {
+         return HAL_RET_SESSION_NOT_FOUND; 
+     }
+ 
+-    num_keys = construct_lookup_keys(keys);
+-
+-    while (i < num_keys) {
+-        HAL_TRACE_DEBUG("Looking up session for key: {}", keys[i]);
+-        session_ = hal::session_lookup_fte(keys[i++], std::addressof(role_));
+-        if (!session_) {
+-            continue;
+-        } else {
+-            HAL_TRACE_DEBUG("Session Found with key: {}", keys[i-1]);
+-            break;
++    entry = lookup_alg_db(this);
++    if (entry) {
++        // ALG Entry found
++        session_ = entry->session;
++        set_alg_proto_state(entry->alg_proto_state);
++         
++        // This is an RFlow if we found its key and role
++        // set as responder. Initialize the rflow_ stage
++        if (entry->role == hal::FLOW_ROLE_RESPONDER) {
++            valid_rflow_ = true;
++            rflow_[stage]->set_key(key());
+         }
++        set_role(entry->role);  
++    }
++
++    if (!session_) {
++        session_ = hal::session_lookup_fte(key_, std::addressof(role_));
+     }
+ 
+     if (!session_) {
+@@ -328,8 +415,6 @@ ctx_t::lookup_session()
+                 rflow_[stage]->from_config(hflow->reverse_flow->config, 
+                                                hflow->reverse_flow->pgm_attrs);
+                 valid_rflow_ = true;
+-            } else {
+-                rflow_[stage] = NULL;
+             }
+     } else {
+         rflow_[stage]->from_config(hflow->config, hflow->pgm_attrs);
+@@ -355,7 +440,6 @@ ctx_t::create_session()
+     }
+  
+     cleanup_hal_ = false;
+-    pgm_rflow_ = true;
+ 
+     // read rkey from spec
+     if (protobuf_request()) {
+@@ -420,8 +504,9 @@ ctx_t::create_session()
+ hal_ret_t
+ ctx_t::update_gft()
+ {
+-    hal_ret_t ret;
+-    hal_handle_t  session_handle;
++    hal_ret_t       ret;
++    hal_handle_t    session_handle;
++    hal::session_t *session = NULL;
+ 
+     hal::session_args_fte_t session_args = {};
+     hal::session_cfg_t session_cfg = {};
+@@ -487,8 +572,9 @@ ctx_t::update_gft()
+                         iflow_attrs.nat_type);
+     }
+ 
+-
++    HAL_TRACE_DEBUG("Valid Rflow: {}", valid_rflow_);
+     for (uint8_t stage = 0; valid_rflow_ && stage <= rstage_; stage++) {
++        HAL_TRACE_DEBUG("Filling in Rflow");
+         flow_t *rflow = rflow_[stage];
+         hal::flow_cfg_t &rflow_cfg = rflow_cfg_list[stage];
+         hal::flow_pgm_attrs_t& rflow_attrs = rflow_attrs_list[stage];
+@@ -526,7 +612,6 @@ ctx_t::update_gft()
+                         rflow_attrs.nat_type);
+     }
+ 
+-    session_args.pgm_rflow = pgm_rflow_;
+     session_args.tenant = tenant_;
+     session_args.sep = sep_;
+     session_args.dep = dep_;
+@@ -536,7 +621,7 @@ ctx_t::update_gft()
+     session_args.dl2seg = dl2seg_;
+     session_args.spec = sess_spec_;
+     session_args.rsp = sess_resp_;
+-    session_args.alg_proto_state = alg_proto_state_;
++    session_args.valid_rflow = valid_rflow_;
+ 
+     if (hal_cleanup() == true) {
+         // Cleanup session if hal_cleanup is set
+@@ -548,7 +633,10 @@ ctx_t::update_gft()
+         ret = hal::session_update_fte(&session_args, session_);
+     } else {
+         // Create a new HAL session
+-        ret = hal::session_create_fte(&session_args, &session_handle);
++        ret = hal::session_create_fte(&session_args, &session_handle, &session);
++        if (alg_proto() != nwsec::APP_SVC_NONE) {
++            insert_alg_entry(this, session); 
++        }
+     }
+ 
+     if (ret != HAL_RET_OK) {
+@@ -675,12 +763,14 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, flow_t iflow[]
+     pkt_len_ = pkt_len;
+     arm_lifq_ = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
+ 
++
+     if (cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) {
+-      ret = init_flows(iflow, rflow);
+-      if (ret != HAL_RET_OK) {
+-        HAL_TRACE_ERR("fte: failed to init flows, err={}", ret);
+-        return ret;
+-      }
++        set_flow_miss(true);
++        ret = init_flows(iflow, rflow);
++        if (ret != HAL_RET_OK) {
++            HAL_TRACE_ERR("fte: failed to init flows, err={}", ret);
++            return ret;
++        }
+     }
+ 
+     return HAL_RET_OK;
+@@ -892,6 +982,9 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
+     return HAL_RET_OK;
+ }
+ 
++/*-----------------------------------------------------------------------
++- Swap the derived flow objects for reverse flow processing.
++-------------------------------------------------------------------------*/
+ void
+ ctx_t::swap_flow_objs()
+ {
+diff --git a/nic/fte/fte_ctx.hpp b/nic/fte/fte_ctx.hpp
+index 65d0dc6e..515dfa58 100644
+--- a/nic/fte/fte_ctx.hpp
++++ b/nic/fte/fte_ctx.hpp
+@@ -6,6 +6,7 @@
+ #include "nic/include/cpupkt_headers.hpp"
+ #include "nic/include/cpupkt_api.hpp"
+ #include <netinet/ether.h>
++#include "nic/include/fte_db.hpp"
+ 
+ namespace fte {
+ 
+@@ -308,10 +309,6 @@ public:
+ 
+     hal_ret_t update_gft();
+ 
+-    hal_ret_t build_wildcard_key(hal::flow_key_t& key);
+- 
+-    uint8_t construct_lookup_keys(hal::flow_key_t *key);
+-
+     // Get key based on role
+     const hal::flow_key_t& get_key(hal::flow_role_t role);
+ 
+@@ -364,12 +361,11 @@ public:
+     hal_ret_t feature_status() const { return feature_status_; } 
+     void set_feature_status(hal_ret_t ret) { feature_status_ = ret; }
+ 
+-    bool flow_miss() const { return (((session_ == NULL) || \
+-                     ((role_ == hal::FLOW_ROLE_RESPONDER) && (pgm_rflow_ == true))) && \
+-                      (arm_lifq_.lif == hal::SERVICE_LIF_CPU)); }
++    bool flow_miss() const { return flow_miss_; }
++    void set_flow_miss(bool val) { flow_miss_ = val; }
++
+     bool valid_rflow() const { return valid_rflow_; }
+-    bool pgm_rflow()  const { return pgm_rflow_; }
+-    void set_pgm_rflow(bool pgm) { pgm_rflow_ = pgm; }
++    void set_valid_rflow(bool val) { valid_rflow_ = val; }
+ 
+     hal::tenant_t *tenant() const { return tenant_; }
+     hal::l2seg_t *sl2seg() const { return sl2seg_; }
+@@ -381,8 +377,8 @@ public:
+     hal::ep_t *sep() const { return sep_; }
+     hal::ep_t *dep() const { return dep_; }
+ 
+-    hal::alg_proto_state_t alg_proto_state() const { return alg_proto_state_; }
+-    void  set_alg_proto_state(hal::alg_proto_state_t state) { alg_proto_state_ = state; }
++    alg_proto_state_t alg_proto_state() const { return alg_proto_state_; }
++    void  set_alg_proto_state(alg_proto_state_t state) { alg_proto_state_ = state; }
+ 
+     nwsec::ALGName alg_proto() const { return alg_proto_; }
+     void set_alg_proto(nwsec::ALGName proto) { alg_proto_ = proto; }
+@@ -394,6 +390,7 @@ public:
+ private:
+     lifqid_t              arm_lifq_;
+     hal::flow_key_t       key_;
++    bool                  flow_miss_;
+ 
+     cpu_rxhdr_t           *cpu_rxhdr_; // metadata from p4 to cpu
+     uint8_t               *pkt_;
+@@ -417,7 +414,6 @@ private:
+     uint8_t               istage_;          // current iflow stage
+     uint8_t               rstage_;          // current rflow stage
+     bool                  valid_rflow_;     // Is rflow valid
+-    bool                  pgm_rflow_;       // Is rflow software only ?
+     flow_t                *iflow_[MAX_STAGES];       // iflow 
+     flow_t                *rflow_[MAX_STAGES];       // rflow 
+ 
+@@ -429,7 +425,7 @@ private:
+     hal::ep_t             *sep_;
+     hal::ep_t             *dep_;
+     nwsec::ALGName        alg_proto_;         // ALG Proto to be applied
+-    hal::alg_proto_state_t  alg_proto_state_; // ALG Proto state machine state
++    alg_proto_state_t     alg_proto_state_;   // ALG Proto state machine state
+ 
+     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
+     hal_ret_t lookup_flow_objs();
+diff --git a/nic/fte/fte_db.hpp b/nic/fte/fte_db.hpp
+new file mode 100644
+index 00000000..cc407da1
+--- /dev/null
++++ b/nic/fte/fte_db.hpp
+@@ -0,0 +1,59 @@
++#pragma once
++
++#include "nic/include/base.h"
++#include "nic/utils/ht/ht.hpp"
++
++namespace fte {
++
++// ALG types
++#define ALG_PROTO_STATE(ENTRY)                                         \
++    ENTRY(ALG_PROTO_STATE_NONE,       0,  "ALG_PROTO_STATE_NONE")      \
++    ENTRY(ALG_PROTO_STATE_TFTP_RRQ,   1,  "ALG_PROTO_STATE_TFTP_RRQ")  \
++    ENTRY(ALG_PROTO_STATE_TFTP_WRQ,   2,  "ALG_PROTO_STATE_TFTP_WRQ")  \
++    ENTRY(ALG_PROTO_STATE_FTP,        3,  "ALG_PROTO_STATE_FTP")       \
++    ENTRY(ALG_PROTO_STATE_DNS,       4,  "ALG_PROTO_STATE_DNS")
++
++DEFINE_ENUM(alg_proto_state_t, ALG_PROTO_STATE)
++#undef ALG_PROTO_STATE
++
++#define FTE_MAX_ALG_KEYS 524288
++
++typedef struct alg_entry_s {
++    hal::flow_key_t         key;
++    hal::session_t         *session;
++    alg_proto_state_t       alg_proto_state;
++    hal::flow_role_t        role;
++
++    // meta data maintained for flow
++    hal::utils::ht_ctxt_t   flow_key_ht_ctxt;  // Flow key based hash table
++} alg_entry_t;
++
++class fte_db {
++
++public:
++    static fte_db *factory(void);
++    ~fte_db();
++
++    hal_ret_t init(void);
++    void rlock(void) { rwlock_.rlock(); }
++    void runlock(void) { rwlock_.runlock(); }
++    void wlock(void) { rwlock_.wlock(); }
++    void wunlock(void) { rwlock_.wunlock(); }
++
++    hal::utils::ht *alg_flow_key_ht(void) const { return alg_flow_key_ht_; }
++
++private:
++    struct {
++        hal::utils::ht      *alg_flow_key_ht_;
++    } __PACK__;
++
++    wp_rwlock    rwlock_;
++};
++
++extern fte_db  *g_fte_db;
++
++void *alg_flow_get_key_func(void *entry);
++uint32_t alg_flow_compute_hash_func (void *key, uint32_t ht_size);
++bool alg_flow_compare_key_func (void *key1, void *key2);
++
++}
+diff --git a/nic/hal/pd/iris/session_pd.cc b/nic/hal/pd/iris/session_pd.cc
+index 4f4081c7..23c561ad 100644
+--- a/nic/hal/pd/iris/session_pd.cc
++++ b/nic/hal/pd/iris/session_pd.cc
+@@ -619,6 +619,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
+     session_t               *session = (session_t *)session_pd->session;
+ 
+     if (!session_pd->iflow.flow_hash_hw_id) {
++        HAL_TRACE_DEBUG("Installing IFLOW HASH: {}", session_pd->iflow.flow_hash_hw_id);
+         ret = p4pd_add_flow_hash_table_entry(&session->iflow->config.key,
+                                          session->iflow->pgm_attrs.lkp_inst,
+                                          (pd_l2seg_t *)(session->iflow->sl2seg->pd),
+@@ -630,6 +631,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
+             HAL_TRACE_DEBUG("IFlow Collision!");
+             ret = HAL_RET_OK;
+         }
++        HAL_TRACE_DEBUG("Installing IFLOW HASH: {}", session_pd->iflow.flow_hash_hw_id);
+     }
+     if (ret != HAL_RET_OK) {
+         return ret;
+@@ -654,6 +656,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
+     }
+     if (session_pd->rflow_valid && \
+         !session_pd->rflow.flow_hash_hw_id) {
++        HAL_TRACE_DEBUG("Installing RFLOW HASH");
+         ret = p4pd_add_flow_hash_table_entry(&session->rflow->config.key,
+                                              session->rflow->pgm_attrs.lkp_inst,
+                                              (pd_l2seg_t *)session->rflow->sl2seg->pd,
+@@ -762,7 +765,7 @@ pd_session_create (pd_session_args_t *args)
+     session_pd->session = args->session;
+     args->session->pd = session_pd;
+ 
+-    if (session->rflow && args->pgm_rflow) {
++    if (session->rflow) {
+         HAL_TRACE_DEBUG("Programming Rflow");
+         session_pd->rflow_valid = TRUE;
+         if (session->rflow->assoc_flow) {
+@@ -834,7 +837,7 @@ pd_session_update (pd_session_args_t *args)
+ 
+     HAL_ASSERT(session_pd != NULL);
+ 
+-    if (session->rflow && args->pgm_rflow) {
++    if (session->rflow) {
+         HAL_TRACE_DEBUG("Programming Rflow");
+         session_pd->rflow_valid = TRUE;
+         if (session->rflow->assoc_flow) {
+diff --git a/nic/hal/plugins/network/net_alg.cc b/nic/hal/plugins/network/net_alg.cc
+index b4c501c7..56911264 100644
+--- a/nic/hal/plugins/network/net_alg.cc
++++ b/nic/hal/plugins/network/net_alg.cc
+@@ -1,12 +1,13 @@
+ #include "nic/hal/plugins/network/net_plugin.hpp"
+ #include "nic/hal/src/session.hpp"
++#include "nic/include/fte_db.hpp"
+ 
+ namespace hal {
+ namespace net {
+ 
+ static inline hal_ret_t
+ update_alg_flow(fte::ctx_t& ctx, fte::flow_update_type_t type, 
+-            session::FlowAction action, hal::flow_key_t key = {}) {
++            session::FlowAction action) {
+     fte::flow_update_t flowupd;
+     hal_ret_t          ret = HAL_RET_OK;
+ 
+@@ -15,9 +16,6 @@ update_alg_flow(fte::ctx_t& ctx, fte::flow_update_type_t type,
+     if (type == fte::FLOWUPD_ACTION) {
+         // Only Drop action needs update
+         ret = ctx.update_flow(flowupd);
+-    } else if (type == fte::FLOWUPD_KEY) {
+-        flowupd.key = key;
+-        ret = ctx.update_flow(flowupd, hal::FLOW_ROLE_RESPONDER); 
+     }
+ 
+     return ret;
+@@ -27,11 +25,9 @@ static inline hal_ret_t
+ process_tftp_first_packet(fte::ctx_t& ctx)
+ {
+     hal_ret_t    ret = HAL_RET_OK;
+-    hal::alg_proto_state_t state = hal::ALG_PROTO_STATE_NONE;
++    fte::alg_proto_state_t state = fte::ALG_PROTO_STATE_NONE;
+     const uint8_t *pkt = ctx.pkt();
+     uint8_t offset = 0; 
+-    const hal::flow_key_t key_ = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
+-    hal::flow_key_t  key = {};
+ 
+     // Payload offset from CPU header 
+     offset = ctx.cpu_rxhdr()->payload_offset;
+@@ -40,25 +36,21 @@ process_tftp_first_packet(fte::ctx_t& ctx)
+         ret = update_alg_flow(ctx, fte::FLOWUPD_ACTION, 
+                  session::FLOW_ACTION_DROP); 
+     } else if (pkt[offset] == 1) { /* RRQ */ 
+-        state = hal::ALG_PROTO_STATE_TFTP_RRQ;
++        state = fte::ALG_PROTO_STATE_TFTP_RRQ;
+     } else if (pkt[offset] == 2) { /* WRQ */
+-        state = hal::ALG_PROTO_STATE_TFTP_WRQ;
++        state = fte::ALG_PROTO_STATE_TFTP_WRQ;
+     } else {
+         ret = update_alg_flow(ctx, fte::FLOWUPD_ACTION, 
+-                              session::FLOW_ACTION_DROP, key);
++                              session::FLOW_ACTION_DROP);
+     }
+ 
+     if (ret != HAL_RET_OK) {
+         return ret;
+     }
+  
+-    // Install a software rflow and do not update anything yet
+-    // Update the reverse flow key to have sport as wildcard 
+-    memcpy(&key,  &key_, sizeof(hal::flow_key_t));
+-    key.sport = 0;
+-    ret = update_alg_flow(ctx, fte::FLOWUPD_KEY, 
+-                          session::FLOW_ACTION_ALLOW, key);
+-    ctx.set_pgm_rflow(false); 
++    // Set Rflow to be invalid and ALG proto state
++    // We want the flow miss to happen on Rflow
++    ctx.set_valid_rflow(false);
+     ctx.set_alg_proto_state(state);
+ 
+     return ret;
+@@ -68,36 +60,32 @@ static inline hal_ret_t
+ process_tftp(fte::ctx_t& ctx)
+ {
+     hal_ret_t             ret = HAL_RET_OK;
+-    hal::flow_key_t       key;
+-    const hal::flow_key_t key_ = ctx.key();
++    hal::flow_key_t       key = ctx.key();
+     session::FlowAction   action = session::FLOW_ACTION_ALLOW;
+     const uint8_t        *pkt = ctx.pkt();
+     uint8_t               offset = 0;
++    fte::alg_entry_t     *entry = NULL;
+ 
+     // Payload offset from CPU header
+     offset = ctx.cpu_rxhdr()->payload_offset;
+     
+-    switch (ctx.session()->alg_proto_state)
++    switch (ctx.alg_proto_state())
+     {
+-        case ALG_PROTO_STATE_TFTP_RRQ:
++        case fte::ALG_PROTO_STATE_TFTP_RRQ:
+             HAL_TRACE_DEBUG("Received response for RRQ offset: {} opcode", 
+                             offset, pkt[offset+1]); 
+             if (pkt[offset++] != 0 ||
+                 (pkt[offset] != 3 && /* DATA */
+                 pkt[offset] != 6)) { /* OACK */
+                 action = session::FLOW_ACTION_DROP;
+-            } else {
+-                ctx.set_pgm_rflow(true);
+             }
+             break;
+ 
+-        case ALG_PROTO_STATE_TFTP_WRQ:
++        case fte::ALG_PROTO_STATE_TFTP_WRQ:
+             if (pkt[offset++] != 0 ||
+                 (pkt[offset] != 4 && /* ACK */
+                 pkt[offset] != 6)) { /* OACK */
+                 action = session::FLOW_ACTION_DROP;
+-            } else {
+-                ctx.set_pgm_rflow(true);
+             } 
+             break;
+  
+@@ -110,30 +98,25 @@ process_tftp(fte::ctx_t& ctx)
+         ret = update_alg_flow(ctx, fte::FLOWUPD_ACTION,
+                  session::FLOW_ACTION_DROP);
+         ctx.set_hal_cleanup(true);
+-    } else {
+-        // Install a software rflow and do not update anything yet
+-        // Update the reverse flow key to have sport as wildcard
+-        memcpy(&key,  &key_, sizeof(hal::flow_key_t));
+-        ret = update_alg_flow(ctx, fte::FLOWUPD_KEY,
+-                          session::FLOW_ACTION_ALLOW, key);
+-        ctx.set_pgm_rflow(true);
+     }
+ 
++    // Remove the ALG entry from wildcard table
++    // as we have processed the flow already and
++    // installed/dropped. 
++    key.sport = 0;
++    entry = fte::remove_alg_entry(key);
++    HAL_FREE(alg_entry_t, entry);
++
+     return ret;
+ }
+ 
+ static bool
+ IsAlgResponderFlow(fte::ctx_t& ctx)
+ {
+-    session_t  *sess = ctx.session();
+-
+-    if (!sess) 
+-        return false;
+-
+     HAL_TRACE_DEBUG("ALG Exec role: {} alg_proto_state: {}", 
+-                     ctx.role(), sess->alg_proto_state);
++                     ctx.role(), ctx.alg_proto_state());
+     return ((ctx.role() == hal::FLOW_ROLE_RESPONDER) && \
+-            (sess->alg_proto_state != ALG_PROTO_STATE_NONE));
++            (ctx.alg_proto_state() != fte::ALG_PROTO_STATE_NONE));
+ }
+ 
+ 
+@@ -146,9 +129,9 @@ alg_exec(fte::ctx_t& ctx)
+         ((ctx.alg_proto() != nwsec::APP_SVC_NONE) ||
+         (IsAlgResponderFlow(ctx)))) {
+          if (ctx.role() == hal::FLOW_ROLE_RESPONDER) {
+-             switch(ctx.session()->alg_proto_state) {
+-             case ALG_PROTO_STATE_TFTP_RRQ:
+-             case ALG_PROTO_STATE_TFTP_WRQ:
++             switch(ctx.alg_proto_state()) {
++             case fte::ALG_PROTO_STATE_TFTP_RRQ:
++             case fte::ALG_PROTO_STATE_TFTP_WRQ:
+                  ret = process_tftp(ctx);
+                  if (ret != HAL_RET_OK) {
+                     ctx.set_feature_status(ret);
+diff --git a/nic/hal/plugins/plugins.hpp b/nic/hal/plugins/plugins.hpp
+index 5a392237..b132aa9f 100644
+--- a/nic/hal/plugins/plugins.hpp
++++ b/nic/hal/plugins/plugins.hpp
+@@ -8,6 +8,7 @@
+ namespace hal {
+ 
+ inline hal_ret_t init_plugins() {
++    fte::init();
+     hal::net::init();
+     hal::proxy::init();
+ 
+diff --git a/nic/hal/src/session.cc b/nic/hal/src/session.cc
+index 43d91813..cbc79369 100644
+--- a/nic/hal/src/session.cc
++++ b/nic/hal/src/session.cc
+@@ -2001,28 +2001,9 @@ flow_create_fte(const flow_cfg_t *cfg,
+     return flow;
+ }
+ 
+-//-----------------------------------------------------------------------------
+-// Flow Update FTE
+-//-----------------------------------------------------------------------------
+-static hal_ret_t
+-flow_update_fte(flow_t *flow, const flow_cfg_t *cfg,
+-                const flow_pgm_attrs_t *attrs)
+-{
+-    hal_ret_t      ret = HAL_RET_OK;
+-
+-    if (cfg) {
+-        flow->config = *cfg;
+-    }
+-
+-    if (attrs) {
+-        flow->pgm_attrs = *attrs;
+-    }
+-
+-    return ret;
+-}
+-
+ hal_ret_t
+-session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
++session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle, 
++                   session_t **session_p)
+ {
+     hal_ret_t ret;
+     nwsec_profile_t         *nwsec_prof;
+@@ -2103,7 +2084,7 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
+     session->iflow->sif = args->sif;
+     session->iflow->dif = args->dif;
+ 
+-    if (args->rflow) {
++    if (args->valid_rflow) {
+         session->rflow = flow_create_fte(args->rflow[0], args->rflow[1],
+                                          args->rflow_attrs[0], args->rflow_attrs[1],
+                                          session, bridged);
+@@ -2123,7 +2104,6 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
+         session->rflow->reverse_flow = session->iflow;
+     }
+     session->hal_handle = hal_alloc_handle();
+-    session->alg_proto_state = args->alg_proto_state;
+ 
+     // allocate all PD resources and finish programming, if any
+     pd::pd_session_args_init(&pd_session_args);
+@@ -2132,7 +2112,6 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
+     pd_session_args.session = session;
+     pd_session_args.session_state = args->session_state;
+     pd_session_args.rsp = args->rsp;
+-    pd_session_args.pgm_rflow = args->pgm_rflow;
+ 
+     ret = pd::pd_session_create(&pd_session_args);
+     if (ret != HAL_RET_OK) {
+@@ -2149,6 +2128,10 @@ session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle)
+         *session_handle = session->hal_handle;
+     }
+ 
++    if (session_p) {
++        *session_p = session;
++    }
++
+  end:
+     if (session && ret != HAL_RET_OK) {
+         HAL_TRACE_ERR("session create failure, err={}", ret);
+@@ -2164,14 +2147,14 @@ session_lookup_fte(flow_key_t key, flow_role_t *role)
+     session_t *session = NULL;
+ 
+     // Should we look at iflow first ?
+-    session = (session_t *)g_hal_state->session_hal_rflow_ht()->lookup(std::addressof(key));   
+-    *role = FLOW_ROLE_RESPONDER; 
+-    if (session == NULL) { 
++    session = (session_t *)g_hal_state->session_hal_rflow_ht()->lookup(std::addressof(key));
++    *role = FLOW_ROLE_RESPONDER;
++    if (session == NULL) {
+         session = (session_t *)g_hal_state->session_hal_iflow_ht()->lookup(std::addressof(key));
+         *role = FLOW_ROLE_INITIATOR;
+     }
+ 
+-    return session;        
++    return session;
+ }
+ 
+ hal_ret_t
+@@ -2179,23 +2162,34 @@ session_update_fte(const session_args_fte_t *args, session_t *session)
+ {
+     hal_ret_t                ret;
+     pd::pd_session_args_t    pd_session_args;
++    bool bridged = (args->sl2seg == args->dl2seg);
+ 
+     // Update PI Flows
+-    if (args->pgm_rflow) {
+-        ret = flow_update_fte(session->rflow, args->rflow[0], args->rflow_attrs[0]);
+-        if (ret != HAL_RET_OK) {
+-            HAL_TRACE_ERR("Flow update failure, err : {}", ret);
+-            return ret;
++    if (args->valid_rflow) {
++        session->rflow = flow_create_fte(args->rflow[0], args->rflow[1],
++                                         args->rflow_attrs[0], args->rflow_attrs[1],
++                                         session, bridged);
++        if (session->rflow == NULL) {
++            return HAL_RET_OOM;
+         }
++
++        session->rflow->sl2seg = args->dl2seg;
++        session->rflow->dl2seg = args->sl2seg;
++        session->rflow->sep = args->dep;
++        session->rflow->dep = args->sep;
++        session->rflow->sif = args->dif;
++        session->rflow->dif = args->sif;
++
++        session->iflow->reverse_flow = session->rflow;
++        session->rflow->reverse_flow = session->iflow;
+     }
+-    
++ 
+     // allocate all PD resources and finish programming, if any
+     pd::pd_session_args_init(&pd_session_args);
+     pd_session_args.tenant = args->tenant;
+     pd_session_args.session = session;
+     pd_session_args.session_state = args->session_state;
+     pd_session_args.rsp = args->rsp;
+-    pd_session_args.pgm_rflow = args->pgm_rflow;
+ 
+     ret = pd::pd_session_update(&pd_session_args);
+     if (ret != HAL_RET_OK) {
+@@ -2217,7 +2211,6 @@ session_delete_fte(const session_args_fte_t *args, session_t *session)
+     pd_session_args.session = session;
+     pd_session_args.session_state = args->session_state;
+     pd_session_args.rsp = args->rsp;
+-    pd_session_args.pgm_rflow = args->pgm_rflow;
+ 
+     ret = pd::pd_session_delete(&pd_session_args);
+     if (ret != HAL_RET_OK) {
+diff --git a/nic/hal/src/session.hpp b/nic/hal/src/session.hpp
+index a781cdd4..9390375d 100644
+--- a/nic/hal/src/session.hpp
++++ b/nic/hal/src/session.hpp
+@@ -82,17 +82,6 @@ DEFINE_ENUM(flow_end_type_t, FLOW_END_TYPES)
+ DEFINE_ENUM(session_dir_t, SESSION_DIRECTIONS)
+ #undef SESSION_DIRECTIONS
+ 
+-// ALG types
+-#define ALG_PROTO_STATE(ENTRY)                                         \
+-    ENTRY(ALG_PROTO_STATE_NONE,       0,  "ALG_PROTO_STATE_NONE")      \
+-    ENTRY(ALG_PROTO_STATE_TFTP_RRQ,   1,  "ALG_PROTO_STATE_TFTP_RRQ")  \
+-    ENTRY(ALG_PROTO_STATE_TFTP_WRQ,   2,  "ALG_PROTO_STATE_TFTP_WRQ")  \
+-    ENTRY(ALG_PROTO_STATE_FTP,        3,  "ALG_PROTO_STATE_FTP")       \
+-    ENTRY(ALG_PROTO_STATE_DNS,       4,  "ALG_PROTO_STATE_DNS")       
+-
+-DEFINE_ENUM(alg_proto_state_t, ALG_PROTO_STATE)
+-#undef ALG_PROTO_STATE
+-
+ // NAT types
+ enum nat_type_t {
+     NAT_TYPE_NONE         = 0,
+@@ -299,8 +288,7 @@ typedef struct session_args_fte_s {
+ 
+     session_state_t    *session_state;            // connection tracking state
+     tenant_t           *tenant;                   // tenant
+-    bool               pgm_rflow;                 // Software only rfow ?
+-    alg_proto_state_t  alg_proto_state;           // ALG Protocol State
++    bool               valid_rflow;               // Rflow valid ?
+ 
+     ep_t               *sep;                      // spurce ep
+     ep_t               *dep;                      // dest ep
+@@ -329,7 +317,6 @@ struct session_s {
+     session_dir_t       dst_dir;                  // destination direction
+     app_session_t       *app_session;             // app session this L4 session is part of, if any
+     tenant_t            *tenant;                  // tenant
+-    alg_proto_state_t   alg_proto_state;          // ALG Protocol State
+ 
+     // PD state
+     pd::pd_session_t    *pd;                      // all PD specific state
+@@ -398,7 +385,7 @@ hal_ret_t extract_flow_key_from_spec (tenant_id_t tid,
+                                       const FlowKey& flow_spec_key);
+ 
+ hal_ret_t session_create(const session_args_t *args, hal_handle_t *session_handle);
+-hal_ret_t session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle);
++hal_ret_t session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle, session_t **sess);
+ hal_ret_t session_update_fte(const session_args_fte_t *args, session_t *session);
+ hal_ret_t session_delete_fte(const session_args_fte_t *args, session_t *session);
+ hal::session_t *session_lookup_fte(flow_key_t key, flow_role_t *role);
+diff --git a/nic/include/fte_db.hpp b/nic/include/fte_db.hpp
+new file mode 120000
+index 00000000..c5e7e593
+--- /dev/null
++++ b/nic/include/fte_db.hpp
+@@ -0,0 +1 @@
++../fte/fte_db.hpp
+\ No newline at end of file

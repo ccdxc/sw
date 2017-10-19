@@ -15,37 +15,6 @@ namespace fte {
 fte_db  *g_fte_db;
 
 /*-----------------------------------------------------
-    Begin Hash Utility APIs 
-------------------------------------------------------*/
-void *
-alg_flow_get_key_func(void *entry)
-{
-    HAL_ASSERT(entry != NULL);
-    return (void *)&(((alg_entry_t *)entry)->key);
-}
-
-uint32_t
-alg_flow_compute_hash_func (void *key, uint32_t ht_size)
-{
-    return (hal::utils::hash_algo::fnv_hash(key, \
-                       sizeof(hal::flow_key_t)) % ht_size);
-}
-
-bool
-alg_flow_compare_key_func (void *key1, void *key2)
-{
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (!memcmp(key1, key2, sizeof(hal::flow_key_t))) {
-        return true;
-    }
-    return false;
-}
-
-/*-----------------------------------------------------
-    End Hash Utility APIs
-------------------------------------------------------*/
-
-/*-----------------------------------------------------
     Begin FTE DB Constructor/Destructor APIs
 ------------------------------------------------------*/
 
@@ -303,16 +272,12 @@ execute_pipeline(ctx_t &ctx)
             rflow_end = iflow_start = pipeline->num_features_outbound;
             iflow_end = pipeline->num_features_outbound + pipeline->num_features_inbound;
         }
-       
-        if (ctx.role() == hal::FLOW_ROLE_NONE) {
-            // Invoke all initiator feature handlers
-            ctx.set_role(hal::FLOW_ROLE_INITIATOR);
-        }
 
         if (ctx.role() == hal::FLOW_ROLE_RESPONDER) {
             // Invoke all responder feature handlers if we are processing Rflow
             rc = pipeline_invoke_exec_(pipeline, ctx, rflow_start, rflow_end); 
         } else {
+            // Invoke all initiator feature handlers
             rc = pipeline_invoke_exec_(pipeline, ctx, iflow_start, iflow_end);
         }
        

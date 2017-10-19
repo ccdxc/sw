@@ -14,6 +14,13 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseTeardown(tc):
+    root = getattr(tc.config, 'flow', None)
+    if root is None:
+       root = getattr(tc.config.session.iconfig, 'flow', None)
+
+    session = root.GetSession()
+    session.SetLabel("FTE_DONE")
+
     tc.pvtdata.fte_session_aware = False
     modcbs.TestCaseTeardown(tc)
     return

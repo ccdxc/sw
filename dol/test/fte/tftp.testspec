@@ -13,7 +13,7 @@ selectors:
         base      : filter://proto=UDP
         iflow     : filter://any
         rflow     : filter://any
-    maxsessions   : 8
+    maxsessions   : 2
 
 packets:
     - packet:
@@ -65,14 +65,15 @@ packets:
         clone        : ref://testcase/packets/id=IFLOW_BASE
         headers      :
             tftp     :
-                op   : RRQ
+                op   : callback://alg/callbacks/GetExpectedTFTPIflowOp 
 
     - packet:
         id            : RFLOW_PKT1     # RFlow packet
         clone         : ref://testcase/packets/id=RFLOW_BASE
         headers       :
             tftp      :
-                op    : DATA
+                op    : callback://alg/callbacks/GetExpectedTFTPRflowOp
+
 
 session:
     - step:
@@ -85,12 +86,11 @@ session:
             delay   : callback://networking/packets/GetExpectDelay
             packets:
                 - packet:
-                    #object  : ref://testcase/packets/id=IFLOW_PKT1
-                    object  : callback://networking/packets/GetL3UcExpectedPacket/expktid=IFLOW_PKT1
+                    object  : callback://alg/callbacks/GetL3UcExpectedPacketbyIflow/expktid=IFLOW_PKT1
                     port    : ref://testcase/config/session/iconfig/dst/endpoint/intf/ports
  
                 - packet:
-                    object  : callback://networking/packets/GetCpuPacketbyIflow/expktid=IFLOW_PKT1
+                    object  : callback://alg/callbacks/GetCpuPacketbyIflow/expktid=IFLOW_PKT1
                     port    : 128
 
     - step:
@@ -103,10 +103,9 @@ session:
             delay   : callback://networking/packets/GetExpectDelay
             packets:
                 - packet:
-                    #object  : ref://testcase/packets/id=RFLOW_PKT1
-                    object  : callback://networking/packets/GetL3UcExpectedPacket/expktid=RFLOW_PKT1 
+                    object  : callback://alg/callbacks/GetL3UcExpectedPacketbyRflow/expktid=RFLOW_PKT1 
                     port    : ref://testcase/config/session/rconfig/dst/endpoint/intf/ports
  
                 - packet:
-                    object  : callback://networking/packets/GetCpuPacketbyRflow/expktid=RFLOW_PKT1
+                    object  : callback://alg/callbacks/GetCpuPacketbyRflow/expktid=RFLOW_PKT1
                     port    : 128

@@ -19,6 +19,7 @@ namespace fte {
     ENTRY(FLOWUPD_FLOW_STATE,    4,  "connection tracking state")        \
     ENTRY(FLOWUPD_FWDING_INFO,   5, "fwding info")                      \
     ENTRY(FLOWUPD_KEY,           6, "flow key update")                  \
+    ENTRY(FLOWUPD_MCAST_COPY,    7, "flow mcast copy update")           \
 
 DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
 #undef FTE_FLOW_UPDATE_CODES
@@ -246,6 +247,7 @@ typedef struct flow_update_s {
         flow_state_t flow_state;
         fwding_info_t fwding;
         hal::flow_key_t key;
+        uint8_t   mcast_copy_en;
     };
 }__PACK__ flow_update_t;
 

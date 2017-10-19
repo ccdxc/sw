@@ -4,16 +4,26 @@ feature:
     sub         : tftp 
     package     : test.fte
     module      : tftp
+    spec        : tftp.testspec
     enable      : True
     ignore      : False
 
 modules:
     - module:
-        name    : TFTP_RRQ_UTAG
-        spec    : tftp.testspec
+        name     : TFTP_UTAG
         iterate :
-            - session   : filter://type=IPV4,proto=UDP,label=FTE
-              srcseg    : filter://native=True
-            - session   : filter://type=IPV6,proto=UDP,label=FTE
-              srcseg    : filter://native=True
-
+            - profile   : RRQ_DATA
+              session  : filter://type=IPV4,proto=UDP,label=FTE
+              srcseg   : filter://native=True
+            - profile   : WRQ_ACK
+              session  : filter://type=IPV6,proto=UDP,label=FTE
+              srcseg   : filter://native=True
+            - profile   : RRQ_OACK
+              session  : filter://type=IPV4,proto=UDP,label=FTE
+              srcseg   : filter://native=True
+            - profile   : WRQ_OACK
+              session  : filter://type=IPV4,proto=UDP,label=FTE
+              srcseg   : filter://native=True
+            - profile   : RRQ_ERROR
+              session  : filter://type=IPV4,proto=UDP,label=FTE
+              srcseg   : filter://native=True
