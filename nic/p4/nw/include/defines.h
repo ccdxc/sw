@@ -424,18 +424,30 @@
 /*****************************************************************************/
 /* Classic NIC flags                                                         */
 /*****************************************************************************/
-#define CLASSIC_NIC_FLAGS_FCS_OK               0x0001
-#define CLASSIC_NIC_FLAGS_VLAN_VALID           0x0002
-#define CLASSIC_NIC_FLAGS_IPV4_VALID           0x0004
-#define CLASSIC_NIC_FLAGS_IPV6_VALID           0x0008
-#define CLASSIC_NIC_FLAGS_FRAGMENT             0x0010
-#define CLASSIC_NIC_FLAGS_TUNNELED             0x0020
-#define CLASSIC_NIC_FLAGS_CSUM_VERIFIED        0x0040
-#define CLASSIC_NIC_FLAGS_IP_CSUM_OK           0x0080
-#define CLASSIC_NIC_FLAGS_L4_CSUM_OK           0x0100
-#define CLASSIC_NIC_FLAGS_INNER_CSUM_VERIFIED  0x0200
-#define CLASSIC_NIC_FLAGS_INNER_IP_CSUM_OK     0x0400
-#define CLASSIC_NIC_FLAGS_INNER_L4_CSUM_OK     0x0800
+#define CLASSIC_NIC_FLAGS_VLAN_NONE            0x0
+#define CLASSIC_NIC_FLAGS_VLAN_VALID           0x1
+
+/*****************************************************************************/
+/* Classic NIC header flags                                                  */
+/*****************************************************************************/
+#define CLASSIC_NIC_HEADER_FLAGS_NONE          0x000
+#define CLASSIC_NIC_HEADER_FLAGS_IPV4          0x001
+#define CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP      0x002
+#define CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP      0x004
+#define CLASSIC_NIC_HEADER_FLAGS_IPV6          0x008
+#define CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP      0x010
+#define CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP      0x020
+
+/*****************************************************************************/
+/* Classic NIC checksum flags                                                */
+/*****************************************************************************/
+#define CLASSIC_NIC_CSUM_FLAGS_NONE            0x00
+#define CLASSIC_NIC_CSUM_FLAGS_VERIFIED        0x01
+#define CLASSIC_NIC_CSUM_FLAGS_IP_OK           0x02
+#define CLASSIC_NIC_CSUM_FLAGS_L4_OK           0x04
+#define CLASSIC_NIC_CSUM_FLAGS_INNER_VERIFIED  0x08
+#define CLASSIC_NIC_CSUM_FLAGS_INNER_IP_OK     0x10
+#define CLASSIC_NIC_CSUM_FLAGS_INNER_L4_OK     0x20
 
 /*****************************************************************************/
 /* CPU flags                                                                 */

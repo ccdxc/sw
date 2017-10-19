@@ -18,8 +18,7 @@ p4plus_app_classic_nic:
   seq         c1, k.control_metadata_vlan_strip, TRUE
   seq         c2, k.vlan_tag_valid, TRUE
   bcf         [!c1 | !c2], p4plus_app_classic_nic_no_vlan_strip
-  or          r1, k.p4_to_p4plus_classic_nic_flags, CLASSIC_NIC_FLAGS_VLAN_VALID
-  phvwr       p.p4_to_p4plus_classic_nic_flags, r1
+  phvwr       p.p4_to_p4plus_classic_nic_flags, CLASSIC_NIC_FLAGS_VLAN_VALID
   phvwr       p.ethernet_etherType, k.vlan_tag_etherType
   phvwr       p.{p4_to_p4plus_classic_nic_vlan_pcp...p4_to_p4plus_classic_nic_vlan_vid}, \
                   k.{vlan_tag_pcp...vlan_tag_vid_sbit4_ebit11}

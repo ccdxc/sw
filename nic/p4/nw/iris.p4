@@ -229,7 +229,7 @@ header_type scratch_metadata_t {
         icmp_code                     : 8;
         icmp_type                     : 8;
 
-        classic_nic_flags             : 16;
+        classic_nic_header_flags      : 16;
         cpu_flags                     : 8;
         packet_len                    : 16;
         offset                        : 16;

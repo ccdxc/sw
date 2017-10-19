@@ -52,39 +52,69 @@ action p4plus_app_tcp_proxy() {
 }
 
 action f_p4plus_app_classic_nic_prep() {
-    modify_field(scratch_metadata.classic_nic_flags, CLASSIC_NIC_FLAGS_FCS_OK);
-    if ((inner_ipv4.valid == TRUE) or (inner_ipv6.valid == TRUE)) {
+    if ((inner_ethernet.valid == TRUE) or (inner_ipv4.valid == TRUE) or
+        (inner_ipv6.valid == TRUE)) {
         add_header(p4_to_p4plus_classic_nic_inner_ip);
         if (inner_ipv4.valid == TRUE) {
-            modify_field(p4_to_p4plus_classic_nic.ip_proto,
-                         inner_ipv4.protocol);
-            bit_or(scratch_metadata.classic_nic_flags,
-                   scratch_metadata.classic_nic_flags,
-                   CLASSIC_NIC_FLAGS_IPV4_VALID);
+            if (inner_udp.valid == TRUE) {
+                modify_field(p4_to_p4plus_classic_nic.header_flags,
+                             CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP);
+            } else {
+                if (tcp.valid == TRUE) {
+                    modify_field(p4_to_p4plus_classic_nic.header_flags,
+                                 CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP);
+                }
+                else {
+                    modify_field(p4_to_p4plus_classic_nic.header_flags,
+                                 CLASSIC_NIC_HEADER_FLAGS_IPV4);
+                }
+            }
         }
         if (inner_ipv6.valid == TRUE) {
-            modify_field(p4_to_p4plus_classic_nic.ip_proto,
-                         inner_ipv6.nextHdr);
-            bit_or(scratch_metadata.classic_nic_flags,
-                   scratch_metadata.classic_nic_flags,
-                   CLASSIC_NIC_FLAGS_IPV6_VALID);
+            if (inner_udp.valid == TRUE) {
+                modify_field(p4_to_p4plus_classic_nic.header_flags,
+                             CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP);
+            } else {
+                if (tcp.valid == TRUE) {
+                    modify_field(p4_to_p4plus_classic_nic.header_flags,
+                                 CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP);
+                }
+                else {
+                    modify_field(p4_to_p4plus_classic_nic.header_flags,
+                                 CLASSIC_NIC_HEADER_FLAGS_IPV6);
+                }
+            }
         }
-        bit_or(scratch_metadata.classic_nic_flags,
-               scratch_metadata.classic_nic_flags, CLASSIC_NIC_FLAGS_TUNNELED);
     } else {
         add_header(p4_to_p4plus_classic_nic_ip);
-        if ((ipv4.valid == TRUE) or (ipv6.valid == TRUE)) {
-            if (ipv4.valid == TRUE) {
-                modify_field(p4_to_p4plus_classic_nic.ip_proto, ipv4.protocol);
-                bit_or(scratch_metadata.classic_nic_flags,
-                       scratch_metadata.classic_nic_flags,
-                       CLASSIC_NIC_FLAGS_IPV4_VALID);
+        if (ipv4.valid == TRUE) {
+            if (udp.valid == TRUE) {
+                modify_field(p4_to_p4plus_classic_nic.header_flags,
+                             CLASSIC_NIC_HEADER_FLAGS_IPV4_UDP);
+            } else {
+                if (tcp.valid == TRUE) {
+                    modify_field(p4_to_p4plus_classic_nic.header_flags,
+                                 CLASSIC_NIC_HEADER_FLAGS_IPV4_TCP);
+                }
+                else {
+                    modify_field(p4_to_p4plus_classic_nic.header_flags,
+                                 CLASSIC_NIC_HEADER_FLAGS_IPV4);
+                }
             }
-            if (ipv6.valid == TRUE) {
-                modify_field(p4_to_p4plus_classic_nic.ip_proto, ipv6.nextHdr);
-                bit_or(scratch_metadata.classic_nic_flags,
-                       scratch_metadata.classic_nic_flags,
-                       CLASSIC_NIC_FLAGS_IPV6_VALID);
+        }
+        if (ipv6.valid == TRUE) {
+            if (udp.valid == TRUE) {
+                modify_field(p4_to_p4plus_classic_nic.header_flags,
+                             CLASSIC_NIC_HEADER_FLAGS_IPV6_UDP);
+            } else {
+                if (tcp.valid == TRUE) {
+                    modify_field(p4_to_p4plus_classic_nic.header_flags,
+                                 CLASSIC_NIC_HEADER_FLAGS_IPV6_TCP);
+                }
+                else {
+                    modify_field(p4_to_p4plus_classic_nic.header_flags,
+                                 CLASSIC_NIC_HEADER_FLAGS_IPV6);
+                }
             }
         }
     }
@@ -104,8 +134,6 @@ action f_p4plus_app_classic_nic_prep() {
             modify_field(p4_to_p4plus_classic_nic.l4_checksum, tcp.checksum);
         }
     }
-    bit_or(p4_to_p4plus_classic_nic.flags, p4_to_p4plus_classic_nic.flags,
-           scratch_metadata.classic_nic_flags);
 }
 
 action p4plus_app_classic_nic() {
@@ -114,8 +142,8 @@ action p4plus_app_classic_nic() {
         modify_field(p4_to_p4plus_classic_nic.vlan_pcp, vlan_tag.pcp);
         modify_field(p4_to_p4plus_classic_nic.vlan_dei, vlan_tag.dei);
         modify_field(p4_to_p4plus_classic_nic.vlan_vid, vlan_tag.vid);
-        bit_or(p4_to_p4plus_classic_nic.flags, p4_to_p4plus_classic_nic.flags,
-               CLASSIC_NIC_FLAGS_VLAN_VALID);
+        modify_field(p4_to_p4plus_classic_nic.flags,
+                     CLASSIC_NIC_FLAGS_VLAN_VALID);
         remove_header(vlan_tag);
         subtract(control_metadata.packet_len, control_metadata.packet_len, 4);
     }

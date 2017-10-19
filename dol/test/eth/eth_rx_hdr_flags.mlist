@@ -4,7 +4,7 @@ feature:
     package     : test.eth
     module      : eth
     enable      : True
-    ignore      : False
+    ignore      : True
 
 modules:
     - module:

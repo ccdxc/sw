@@ -48,11 +48,12 @@ action eth_rx_fetch_desc(
     modify_field(p4_to_p4plus_scratch.table2_valid, p4_to_p4plus.table2_valid);
     modify_field(p4_to_p4plus_scratch.table3_valid, p4_to_p4plus.table3_valid);
     modify_field(p4_to_p4plus_scratch.flags, p4_to_p4plus.flags);
+    modify_field(p4_to_p4plus_scratch.header_flags, p4_to_p4plus.header_flags);
+    modify_field(p4_to_p4plus_scratch.checksum_flags, p4_to_p4plus.checksum_flags);
     modify_field(p4_to_p4plus_scratch.vlan_pcp, p4_to_p4plus.vlan_pcp);
     modify_field(p4_to_p4plus_scratch.vlan_dei, p4_to_p4plus.vlan_dei);
     modify_field(p4_to_p4plus_scratch.vlan_vid, p4_to_p4plus.vlan_vid);
     modify_field(p4_to_p4plus_scratch.l4_checksum, p4_to_p4plus.l4_checksum);
-    modify_field(p4_to_p4plus_scratch.ip_proto, p4_to_p4plus.ip_proto);
     modify_field(p4_to_p4plus_scratch.l4_sport, p4_to_p4plus.l4_sport);
     modify_field(p4_to_p4plus_scratch.l4_dport, p4_to_p4plus.l4_dport);
     modify_field(p4_to_p4plus_scratch.packet_len, p4_to_p4plus.packet_len);

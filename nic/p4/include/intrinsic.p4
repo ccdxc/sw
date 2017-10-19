@@ -125,20 +125,31 @@ header_type p4_to_p4plus_tcp_proxy_sack_header_t {
 }
 
 /*
- * flags_bits:
- *  0       : fcs ok
- *  1       : vlan valid
- *  2       : ipv4 valid
- *  3       : ipv6 valid
- *  4       : frag ?
- *  5       : tunneled ?
- *  6       : checksum verified by hardware
- *  7       : l3 checksum ok
- *  8       : l4 checksum ok
- *  9       : inner checksum verified by hardware
- *  10      : inner l3 checksum ok
- *  11      : inner l4 checksum ok
- *  [12-15] : unused
+ * header flags :
+ *  0       : ipv4
+ *  1       : ipv4 tcp
+ *  2       : ipv4 udp
+ *  3       : ipv6
+ *  4       : ipv6 tcp
+ *  5       : ipv6 udp
+ *  [6-11]  : unused
+ */
+
+/*
+ * flags :
+ *  0       : vlan valid
+ *  [1-3]   : unused
+ */
+
+/*
+ * checksum flags:
+ *  0       : checksum verified by hardware
+ *  1       : l3 checksum ok
+ *  2       : l4 checksum ok
+ *  3       : inner checksum verified by hardware
+ *  4       : inner l3 checksum ok
+ *  5       : inner l4 checksum ok
+ *  [6-7]   : unused
  */
 header_type p4_to_p4plus_classic_nic_header_t {
     fields {
@@ -147,15 +158,16 @@ header_type p4_to_p4plus_classic_nic_header_t {
         table1_valid        : 1;
         table2_valid        : 1;
         table3_valid        : 1;
-        flags               : 16;
+        header_flags        : 12;
+        flags               : 4;
+        checksum_flags      : 8;
+        l4_checksum         : 16;
         vlan_pcp            : 3;
         vlan_dei            : 1;
         vlan_vid            : 12;
-        l4_checksum         : 16;
-        ip_proto            : 8;
+        packet_len          : 16;
         l4_sport            : 16;
         l4_dport            : 16;
-        packet_len          : 16;
     }
 }
 
