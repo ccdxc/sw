@@ -66,26 +66,32 @@ func (e *etcdStore) watch(ctx context.Context, keyOrPrefix string, fromVersion s
 		ctx:         ctx,
 		cancel:      cancel,
 	}
-	go w.startWatching()
-	return w, nil
-}
-
-// startWatching starts the watch.
-func (w *watcher) startWatching() {
 	opts := []clientv3.OpOption{}
 	if w.recursive {
 		opts = append(opts, clientv3.WithPrefix())
 	}
 	watchVer := w.fromVersion
-	// If starting from 0, send current object(s) on the channel.
+	var resp *clientv3.GetResponse
+	// If starting from 0, need to send current object(s) on the channel.
 	if w.fromVersion == 0 {
-		resp, err := w.watchCtx.client.Get(w.ctx, w.keyOrPrefix, opts...)
+		resp, err = w.watchCtx.client.Get(w.ctx, w.keyOrPrefix, opts...)
 		if err != nil {
 			log.Errorf("Failed to get %v with error: %v", w.keyOrPrefix, err)
-			w.sendError(err)
-			close(w.outCh)
-			return
+			cancel()
+			return nil, err
 		}
+		watchVer = resp.Header.Revision
+	}
+	opts = append(opts, clientv3.WithRev(watchVer+1), clientv3.WithPrevKV())
+	wc := w.watchCtx.client.Watch(w.ctx, w.keyOrPrefix, opts...)
+	go w.startWatching(wc, resp)
+	return w, nil
+}
+
+// startWatching starts the watch.
+func (w *watcher) startWatching(wc clientv3.WatchChan, resp *clientv3.GetResponse) {
+	// If Get response is non-nil, send current object(s) on the channel.
+	if resp != nil {
 		for _, kv := range resp.Kvs {
 			evType := kvstore.Updated
 
@@ -95,11 +101,8 @@ func (w *watcher) startWatching() {
 
 			w.sendEvent(evType, kv.Value, kv.ModRevision)
 		}
-		watchVer = resp.Header.Revision
 	}
 
-	opts = append(opts, clientv3.WithRev(watchVer+1), clientv3.WithPrevKV())
-	wc := w.watchCtx.client.Watch(w.ctx, w.keyOrPrefix, opts...)
 	for wr := range wc {
 		if wr.Err() != nil {
 			log.Errorf("Failed watch on %v with error: %v", w.keyOrPrefix, wr.Err())
