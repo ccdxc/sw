@@ -204,7 +204,10 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 					el.sendEvent(kvstore.Elected, leader)
 				}
 			}
-			if !el.enabled {
+			el.Lock()
+			enabled := el.enabled
+			el.Unlock()
+			if !enabled {
 				// User invoked Stop on election. cleanup already happened in Stop.
 				return
 			}
