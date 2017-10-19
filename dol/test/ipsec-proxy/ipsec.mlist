@@ -20,7 +20,7 @@ modules:
         name    : ICMP_PKT_TO_IPSECCBQ
         enable  : True 
         package : test.ipsec-proxy
-        module  : pkt_to_ipseccbq
+        module  : icmp_pkt_to_ipseccbq
         spec    : icmp_pkt_to_ipseccbq.testspec
         ignore  : True 
         iterate :
@@ -29,7 +29,7 @@ modules:
         name    : UDP_PKT_TO_IPSECCBQ
         enable  : True 
         package : test.ipsec-proxy
-        module  : pkt_to_ipseccbq
+        module  : udp_pkt_to_ipseccbq
         spec    : udp_pkt_to_ipseccbq.testspec
         ignore  : True 
         iterate :

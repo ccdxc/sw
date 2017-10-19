@@ -6,9 +6,7 @@
 #define tx_table_s1_t1_action esp_v4_tunnel_n2h_allocate_barco_req_pindex
 
 
-//#define tx_table_s2_t0_action esp_v4_tunnel_n2h_txdma1_get_barco_req_index_ptr 
 #define tx_table_s2_t0_action esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header
-//#define tx_table_s2_t1_action esp_v4_tunnel_n2h_txdma1_dequeue_head_desc 
 
 #define tx_table_s3_t0_action esp_v4_tunnel_n2h_txdma1_write_barco_req
 
@@ -325,13 +323,14 @@ action esp_v4_tunnel_n2h_txdma1_dequeue_head_desc(addr0, offset0, length0,
 #endif
 
 //stage 1 - table1
-action esp_v4_tunnel_n2h_allocate_barco_req_pindex (barco_pindex)
+action esp_v4_tunnel_n2h_allocate_barco_req_pindex (pi)
 {
     modify_field(p4plus2p4_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 6);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR + (BRQ_REQ_RING_ENTRY_SIZE * barco_pindex));
+    modify_field(barco_dbell.pi, pi);
+    //modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR + (BRQ_REQ_RING_ENTRY_SIZE * pi));
     modify_field(p4plus2p4_hdr.table2_valid, 0);
 }
 

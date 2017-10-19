@@ -5,7 +5,7 @@ import copy
 
 import types_pb2                as types_pb2
 import crypto_keys_pb2          as crypto_keys_pb2
-import test.callbacks.networking.modcbs as modcbs
+#import crypto_keys_pb2_grpc     as crypto_keys_pb2_grpc
 
 from config.store               import Store
 from infra.common.objects import ObjectDatabase as ObjectDatabase
@@ -18,7 +18,8 @@ ipseccb = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
-    modcbs.Setup(infra, module)
+    elem = module.iterator.Get()
+    module.testspec.selectors.flow.Extend(elem.flow)
     return
 
 def Teardown(infra, module):
@@ -26,9 +27,9 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    global rnmdr
     global ipseccbq
     global ipseccb
+    global rnmdr
 
     tc.pvtdata = ObjectDatabase(logger)
     print("TestCaseSetup(): Sample Implementation.")
@@ -55,7 +56,6 @@ def TestCaseSetup(tc):
     ipseccb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"])
     ipseccb = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
@@ -75,13 +75,21 @@ def TestCaseSetup(tc):
     tc.pvtdata.Add(tnmdr)
     tc.pvtdata.Add(tnmpr)
     tc.pvtdata.Add(brq)
-
     return
 
 def TestCaseVerify(tc):
     global ipseccbq
     global ipseccb
 
+    # 1. Verify pi/ci got update got updated
+    ipseccb_cur = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
+    print("pre-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
+    ipseccb_cur.GetObjValPd()
+    print("post-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
+    if (ipseccb_cur.pi != ipseccb.pi or ipseccb_cur.ci != ipseccb.ci):
+        print("serq pi/ci not as expected")
+        return False
+    # 3. Fetch current values from Platform
     ipseccbqq_cur = tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"]
     ipseccbqq_cur.Configure()
 
@@ -102,28 +110,13 @@ def TestCaseVerify(tc):
     tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
     tnmpr_cur.Configure()
 
-    # 1. Verify pi/ci got update got updated
-    ipseccb_cur = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
-    print("pre-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
-    ipseccb_cur.GetObjValPd()
-    print("post-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
-    if (ipseccb_cur.pi != ipseccb.pi or ipseccb_cur.ci != ipseccb.ci):
-        print("serq pi/ci not as expected")
-        return False
-
-    # 3. Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.Configure()
-    ipseccbqq_cur = tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"]
-    ipseccbqq_cur.Configure()
-
     # 4. Verify PI for RNMDR got incremented by 1
     if (rnmdr_cur.pi - rnmdr.pi > 2):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
     # 5. Verify descriptor
-    if rnmdr.ringentries[rnmdr.pi].handle != ipseccbqq_cur.ringentries[ipseccb.pi].handle:
+    if rnmdr.ringentries[rnmdr.pi-1].handle != ipseccbqq_cur.ringentries[ipseccb.pi-1].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[ipseccb.pi].handle))
         #return False
 
@@ -152,9 +145,6 @@ def TestCaseVerify(tc):
     # this when this offset is removed.
     #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
     # 7. Verify brq input desc and rnmdr
-    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[0].ilist_addr - 0x40)):
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
-        #return False
     print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
 
     # 8. Verify PI for TNMDR got incremented by 1
@@ -168,6 +158,14 @@ def TestCaseVerify(tc):
         print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
+    # 10. Verify SeqNo increment
+    if (ipseccb_cur.esn_lo != ipseccb.esn_lo+1):
+        print ("seq_no 0x%x 0x%x" % (ipseccb_cur.esn_lo, ipseccb.esn_lo))
+        #return False
+
+    if (ipseccb_cur.iv != ipseccb.iv+1):
+        print ("iv : 0x%x 0x%x" % (ipseccb_cur.iv, ipseccb.iv))
+        #return False
 
     return True
 

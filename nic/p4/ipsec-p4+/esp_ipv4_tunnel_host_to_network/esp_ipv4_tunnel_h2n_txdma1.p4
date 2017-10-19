@@ -270,12 +270,13 @@ action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc, in_page, o
 
 
 //stage 1 - table1
-action allocate_barco_req_pindex (barco_pindex)
+action allocate_barco_req_pindex (pi)
 {
     modify_field(p4plus2p4_hdr.table1_valid, 1);
     modify_field(p4plus2p4_hdr.table2_valid, 0);
 
-    modify_field(ipsec_to_stage2.barco_req_addr, (barco_pindex * BRQ_REQ_RING_ENTRY_SIZE) + BRQ_REQ_RING_BASE_ADDR);
+    modify_field(barco_dbell.pi, pi);
+    //modify_field(ipsec_to_stage2.barco_req_addr, (pi* BRQ_REQ_RING_ENTRY_SIZE) + BRQ_REQ_RING_BASE_ADDR);
 }
 
 

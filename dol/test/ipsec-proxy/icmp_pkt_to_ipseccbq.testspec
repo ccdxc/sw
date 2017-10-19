@@ -103,9 +103,6 @@ expect:
     delay : 2
     packets:
         - packet:
-            object  : ref://testcase/packets/id=PKT3
-            port    : 128 
-        - packet:
             object  : ref://testcase/packets/id=PKT2
             port    : 2 
 

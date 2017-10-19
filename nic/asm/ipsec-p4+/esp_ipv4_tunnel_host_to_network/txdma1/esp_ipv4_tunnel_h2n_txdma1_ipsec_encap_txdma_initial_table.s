@@ -22,10 +22,6 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     phvwr p.barco_req_key_desc_index, d.key_index
 
     phvwr p.t0_s2s_iv_size, d.iv_size
-    //Increment PI
-    add r1, r0, d.barco_ring_pindex
-    addi r1, r1, 1
-    phvwr p.barco_dbell_pi, r1.wx
 
     phvwri p.app_header_table0_valid, 1 
     phvwri p.common_te0_phv_table_lock_en, 1 
@@ -47,11 +43,12 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_initial_table:
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, 0)
     phvwr p.barco_req_doorbell_data, r3.dx
      
+    addi        r3, r0, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX
     phvwri p.app_header_table1_valid, 1 
     phvwri p.common_te1_phv_table_lock_en, 1 
     phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex[33:6] 
     phvwri p.common_te1_phv_table_raw_table_size, 2
-    phvwri p.common_te1_phv_table_addr, BRQ_REQ_SEMAPHORE_ADDR
+    phvwr p.common_te1_phv_table_addr, r3 
   
     phvwr p.txdma1_global_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
