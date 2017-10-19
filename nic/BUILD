@@ -291,6 +291,22 @@ cc_library(
 )
 
 cc_library(
+    name = "openssl-native",
+    hdrs = glob(["third-party/openssl-native/include/openssl/*.h"]),
+    srcs = [
+            "third-party/openssl-native/lib/libssl.a",
+            "third-party/openssl-native/lib/libcrypto.a",
+            ],
+    includes = [
+            "third-party/openssl-native/include",
+            ],
+    linkopts = [
+        "-Lthird-party/openssl-native/lib -ldl",
+        ],
+
+)
+
+cc_library(
     name = "snort3",
     srcs = [
             "third-party/snort3/export/bin/libsnort.so",

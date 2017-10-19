@@ -19,7 +19,17 @@ cc_library(
         "//nic:gen_includes",
         "//nic:gen_proto_includes",
         "//nic/p4/nw/include:p4_nw_includes",
-        "//nic/third-party/spdlog:spdlog"
+        "//nic/third-party/spdlog:spdlog",
+        "//nic:grpc",
+        "//nic:halproto",
+    ],
+    linkopts = [
+        "-lpthread",
+        "-pthread",
+        "-lprotobuf",
+        "-Lthird-party/grpc",
+        "-lzmq",
+        "-lz",
     ],
     alwayslink = 1,
 )
@@ -210,6 +220,7 @@ cc_binary(
         #"//nic/hal/test/utils:haltestutils",
         #"//nic/hal/lkl:lkl_api",
         #"//nic:lkl",
+        "//nic:openssl-native",
 
         # PD
         #"//nic/hal/pd/common:pdcommon",
@@ -291,6 +302,7 @@ cc_binary(
         #"//nic/hal/test/utils:haltestutils",
         #"//nic/hal/lkl:lkl_api",
         #"//nic:lkl",
+        "//nic:openssl-native",
 
         # PD
         #"//nic/hal/pd/common:pdcommon",
@@ -332,6 +344,7 @@ cc_binary(
         #"//nic/hal/test/utils:haltestutils",
         #"//nic/hal/lkl:lkl_api",
         #"//nic:lkl",
+        "//nic:openssl-native",
 
         # PD
         #"//nic/hal/pd/common:pdcommon",

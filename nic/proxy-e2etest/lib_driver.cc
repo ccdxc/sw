@@ -5,7 +5,7 @@
 #include <grpc++/grpc++.h>
 #include <zmq.h>
 
-#include "nic/proto/hal/interface.grpc.pb.h"
+#include "nic/gen/proto/hal/interface.grpc.pb.h"
 
 #include "nic/model_sim/include/buf_hdr.h"
 #include "./lib_driver.hpp"

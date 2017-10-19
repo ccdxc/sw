@@ -10,6 +10,8 @@ nic/third-party/openssl/lib/engines-1.1/capi.so
 nic/third-party/openssl/lib/engines-1.1/padlock.so
 nic/third-party/openssl/bin/c_rehash
 nic/third-party/openssl/bin/openssl
+nic/third-party/openssl-native/lib/libcrypto.a
+nic/third-party/openssl-native/lib/libssl.a
 nic/third-party/crchack/bin/crchack
 nic/third-party/snort3/export/bin/libsnort.so
 nic/third-party/grpc/*.a
