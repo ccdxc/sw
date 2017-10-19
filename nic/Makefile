@@ -52,9 +52,9 @@ deps-test-build:
 
 
 hal:
-	make bazel-build
-	make bazel-gtests
-	make post-make
+	$(MAKE) bazel-build
+	$(MAKE) bazel-gtests
+	$(MAKE) post-make
 
 capmodel:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) model_sim:cap_model
@@ -63,21 +63,21 @@ capmodel:
 
 go-proto:
 	#cd agent/netagent/datapath/halproto && make
-	#make -C agent/netagent/datapath/halproto
+	#$(MAKE) -C agent/netagent/datapath/halproto
 
 bazel-build:
-	make -C p4
-	make -C asm
-	make -C proto
-	make -C gen/proto/hal
+	$(MAKE) -C p4
+	$(MAKE) -C asm
+	$(MAKE) -C proto
+	$(MAKE) -j4 -C gen/proto/hal
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
 	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto:all
 	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //protos:all
 	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto/hal:all
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/host_mem:all
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //dol/test/storage:storage_test
-	make capmodel
-	make go-proto
+	$(MAKE) capmodel
+	$(MAKE) go-proto
 
 bazel-gtests:
 	# PI gtests
@@ -184,3 +184,5 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 clean:
 	$(MAKE) -C p4 clean
 	$(MAKE) -C asm clean
+	$(MAKE) -C proto clean
+
