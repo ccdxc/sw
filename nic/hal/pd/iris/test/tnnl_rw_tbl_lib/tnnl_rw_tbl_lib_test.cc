@@ -1,17 +1,17 @@
 #include <gtest/gtest.h>
-#include "nic/hal/pd/iris/rw_pd.hpp"
+#include "nic/hal/pd/iris/tnnl_rw_pd.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/include/eth.h"
 
-using hal::pd::pd_rw_entry_key_t;
-using hal::pd::pd_rw_entry_t;
+using hal::pd::pd_tnnl_rw_entry_key_t;
+using hal::pd::pd_tnnl_rw_entry_t;
 
-class rw_test : public ::testing::Test {
+class tnnl_rw_test : public ::testing::Test {
 protected:
-    rw_test() {
+    tnnl_rw_test() {
   }
 
-  virtual ~rw_test() {
+  virtual ~tnnl_rw_test() {
   }
 
   // will be called immediately after the constructor before each test
@@ -32,58 +32,44 @@ protected:
  * - Insert DM Entry
  *
  * ---------------------------------------------------------------------------*/
-TEST_F(rw_test, test1) {
+TEST_F(tnnl_rw_test, test1) {
     hal_ret_t           ret;
-    pd_rw_entry_key_t   key;
-    pd_rw_entry_t       *rwe;
+    pd_tnnl_rw_entry_key_t   key;
+    pd_tnnl_rw_entry_t       *tnnl_rwe;
     uint64_t            mac_sa = 0x000000000001;
     uint64_t            mac_da = 0x000000000002;
     uint64_t            mac_da1 = 0x000000000003;
-    uint32_t            rw_idx = 0, rw_idx1 = 0;
+    uint32_t            tnnl_rw_idx = 0, tnnl_rw_idx1 = 0;
 
     MAC_UINT64_TO_ADDR(key.mac_sa, mac_sa);
     MAC_UINT64_TO_ADDR(key.mac_da, mac_da);
-    key.rw_act = REWRITE_REWRITE_ID;
+    key.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_ID;
 
-    ret = rw_entry_find(&key, &rwe);
+    ret = tnnl_rw_entry_find(&key, &tnnl_rwe);
     ASSERT_TRUE(ret == HAL_RET_ENTRY_NOT_FOUND);
 
-    ret = rw_entry_alloc(&key, NULL, &rw_idx);
+    ret = tnnl_rw_entry_alloc(&key, NULL, &tnnl_rw_idx);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    ret = rw_entry_find_or_alloc(&key, &rw_idx1);
+    ret = tnnl_rw_entry_find_or_alloc(&key, &tnnl_rw_idx1);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    ASSERT_TRUE(rw_idx == rw_idx1);
+    ASSERT_TRUE(tnnl_rw_idx == tnnl_rw_idx1);
 
     MAC_UINT64_TO_ADDR(key.mac_da, mac_da1);
-    ret = rw_entry_alloc(&key, NULL, &rw_idx);
+    ret = tnnl_rw_entry_alloc(&key, NULL, &tnnl_rw_idx);
     ASSERT_TRUE(ret == HAL_RET_OK);
     
     MAC_UINT64_TO_ADDR(key.mac_da, mac_da);
-    ret = rw_entry_delete(&key);
+    ret = tnnl_rw_entry_delete(&key);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    ret = rw_entry_delete(&key);
+    ret = tnnl_rw_entry_delete(&key);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    ret = rw_entry_delete(&key);
+    ret = tnnl_rw_entry_delete(&key);
     ASSERT_TRUE(ret == HAL_RET_ENTRY_NOT_FOUND);
 }
-
-#if 0
-TEST_F(rw_test, test1) {
-
-    output_mapping_actiondata dm;
-    uint32_t index;
-    dm.actionid = 1;
-
-    hal_ret_t rt;
-    rt = test_dm.insert(&dm, &index); 
-    ASSERT_TRUE(rt == HAL_RET_OK);
-
-}
-#endif
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

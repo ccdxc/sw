@@ -201,7 +201,7 @@ pd_tunnelif_deprogram_hw(pd_tunnelif_t *pd_tunnelif)
     ret = pd_tunnelif_del_inp_mapp_entries(pd_tunnelif,
                                            P4TBL_ID_INPUT_MAPPING_TUNNELED);
     /* Deprogram tunnel rewrite table */
-    ret = pd_tunnelif_del_tunnel_rw_table_entry(pd_tunnelif);
+    ret = pd_tunnelif_depgm_tunnel_rewrite_tbl(pd_tunnelif);
     return ret;
 }
 
@@ -417,6 +417,28 @@ pd_tunnelif_add_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif, uint8_t actionid,
 }
 
 hal_ret_t
+pd_tunnelif_depgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    pd_tnnl_rw_entry_key_t      key = { 0 };
+
+    ret = pd_tunnelif_form_data(&key, pd_tif);
+    HAL_ASSERT(ret == HAL_RET_OK);
+
+    ret = tnnl_rw_entry_delete(&key);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-tunnelif:{}:unable to deprogram tnnl rw table: ret:{}",
+                      __FUNCTION__, ret);
+    } else {
+        HAL_TRACE_DEBUG("pd-tunnelif:{}:deprogrammed tnnl rw table. index:{}",
+                        __FUNCTION__, pd_tif->tunnel_rw_idx);
+    }
+    pd_tif->tunnel_rw_idx = INVALID_INDEXER_INDEX;
+
+    return ret;
+}
+
+hal_ret_t
 pd_tunnelif_del_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif)
 {
     hal_ret_t   ret;
@@ -438,7 +460,6 @@ pd_tunnelif_del_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif)
     return ret;
 }
 
-
 tunnel_rewrite_actions_en
 pd_tunnelif_get_p4pd_encap_action_id (intf::IfTunnelEncapType encap_type)
 {
@@ -451,6 +472,89 @@ pd_tunnelif_get_p4pd_encap_action_id (intf::IfTunnelEncapType encap_type)
     return TUNNEL_REWRITE_NOP_ID;
 }
 
+hal_ret_t
+pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key, 
+                       pd_tunnelif_t *pd_tif)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    if_t        *pi_if;
+    l2seg_t     *l2seg;
+    ep_t        *remote_tep_ep;
+    uint8_t     actionid;
+    if_t        *ep_if;
+    uint8_t     vlan_v;
+    uint16_t    vlan_id;
+    mac_addr_t  *mac;
+    bool        v4_valid = FALSE;
+
+    memset(tnnl_rw_key, 0, sizeof(pd_tnnl_rw_entry_key_t));
+    pi_if = (if_t *) pd_tif->pi_if;
+    HAL_ASSERT(pi_if);
+
+    actionid = pd_tunnelif_get_p4pd_encap_action_id(pi_if->encap_type);
+
+    remote_tep_ep = if_get_tunnelif_remote_tep_ep(pi_if, &v4_valid);
+    HAL_ASSERT(remote_tep_ep);
+    
+    l2seg = find_l2seg_by_handle(remote_tep_ep->l2seg_handle);
+    HAL_ASSERT(l2seg);
+    
+    ep_if = find_if_by_handle(remote_tep_ep->if_handle);
+    HAL_ASSERT(ep_if);
+    
+    ret = if_l2seg_get_encap(ep_if, l2seg, &vlan_v, &vlan_id);
+    HAL_ASSERT(ret == HAL_RET_OK);
+
+    tnnl_rw_key->tnnl_rw_act = (tunnel_rewrite_actions_en)actionid;
+
+    if (actionid == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {
+        /* Populate vxlan encap params */
+        /* MAC DA */
+        mac = ep_get_mac_addr(remote_tep_ep);
+        memcpy(tnnl_rw_key->mac_da, mac, sizeof(mac_addr_t));
+
+        /* MAC SA */
+        mac = ep_get_rmac(remote_tep_ep, l2seg);
+        memcpy(tnnl_rw_key->mac_sa, mac, sizeof(mac_addr_t));
+
+        memcpy(&tnnl_rw_key->ip_sa, &pi_if->vxlan_ltep,
+               sizeof(ip_addr_t));
+        memcpy(&tnnl_rw_key->ip_da, &pi_if->vxlan_rtep,
+               sizeof(ip_addr_t));
+
+        tnnl_rw_key->ip_type = IP_HEADER_TYPE_IPV4;
+
+        tnnl_rw_key->vlan_valid = vlan_v;
+        tnnl_rw_key->vlan_id = vlan_id;
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Forms the data and call lib which shares the entries
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    pd_tnnl_rw_entry_key_t      key = { 0 };
+
+    ret = pd_tunnelif_form_data(&key, pd_tif);
+    HAL_ASSERT(ret == HAL_RET_OK);
+
+    ret = tnnl_rw_entry_find_or_alloc(&key, (uint32_t *)&pd_tif->tunnel_rw_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-tunnelif:{}:unable to program tnnl rw table: ret:{}",
+                      __FUNCTION__, ret);
+    } else {
+        HAL_TRACE_DEBUG("pd-tunnelif:{}:programmed tnnl rw table. index:{}",
+                        __FUNCTION__, pd_tif->tunnel_rw_idx);
+    }
+
+    return ret;
+}
+#if 0
 hal_ret_t
 pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
 {
@@ -527,6 +631,7 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
 fail_flag:
     return ret;
 }
+#endif
 
 // ----------------------------------------------------------------------------
 // Makes a clone

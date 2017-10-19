@@ -10,6 +10,7 @@
 #include "nic/include/bitmap.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
+#include "nic/include/ip.h"
 
 namespace hal {
 
@@ -348,6 +349,7 @@ public:
     bitmap *buf_pool_cos_usage_bmp(uint32_t port_num) const {
         return cos_in_use_bmp_[port_num];
     }
+    ip_addr_t *mytep(void) { return &mytep_ip; }
 
 private:
     bool init(void);
@@ -362,6 +364,7 @@ private:
     ht        *flow_ht_;
     // bitmap indicating if the cos is already assigned to a buffer pool
     bitmap    *cos_in_use_bmp_[HAL_MAX_TM_PORTS];
+    ip_addr_t mytep_ip;
 };
 
 // HAL memory slabs and any other memory manager state

@@ -371,6 +371,15 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     }
 
+    if (hal_if->if_type == intf::IF_TYPE_TUNNEL) {
+        // Update global mytep ip. 
+        // Assumption: There is only one mytep ip. So for all tunnel ifs,
+        //             my tep ip have to be same.
+        memcpy(g_hal_state->oper_db()->mytep(), &hal_if->vxlan_ltep, 
+               sizeof(ip_addr_t));
+        
+    }
+
     // TODO: Increment the ref counts of dependent objects
 
 end:

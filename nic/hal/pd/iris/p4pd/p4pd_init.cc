@@ -8,6 +8,7 @@
 #include "nic/p4/rdma/include/rdma_defines.h"
 #include "nic/p4/nw/include/table_sizes.h"
 #include "nic/hal/pd/iris/rw_pd.hpp"
+#include "nic/hal/pd/iris/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/p4pd/p4pd_defaults.hpp"
 
 using hal::pd::utils::Tcam;
@@ -793,15 +794,39 @@ p4pd_tunnel_encap_update_inner (void)
 static hal_ret_t
 p4pd_tunnel_rewrite_init (void)
 {
-    uint32_t                     noop_idx = 0, enc_vlan_idx = 1;
+    uint32_t                     noop_idx = 0, enc_vlan_idx = 1, idx;
     hal_ret_t                    ret;
     DirectMap                    *dm;
-    tunnel_rewrite_actiondata    data = { 0 };
+    // tunnel_rewrite_actiondata    data = { 0 };
+    pd_tnnl_rw_entry_key_t       rw_key{};
+    pd_tnnl_rw_entry_info_t      rw_info{};
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
     HAL_ASSERT(dm != NULL);
 
+    rw_info.with_id = true;
+
     // "catch-all" nop entry
+    rw_key.tnnl_rw_act = TUNNEL_REWRITE_NOP_ID;
+    rw_info.tnnl_rw_idx = noop_idx;
+    ret = tnnl_rw_entry_alloc(&rw_key, &rw_info, &idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel rewrite table write failure, idx : {}, err : {}",
+                      noop_idx, ret);
+        return ret;
+    }
+
+    // "encap_vlan" entry
+    rw_key.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VLAN_ID;
+    rw_info.tnnl_rw_idx = enc_vlan_idx;
+    ret = tnnl_rw_entry_alloc(&rw_key, &rw_info, &idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tunnel rewrite table write failure, idx : {}, err : {}",
+                      enc_vlan_idx, ret);
+        return ret;
+    }
+    g_hal_state_pd->set_tnnl_rwr_tbl_encap_vlan_idx(enc_vlan_idx);
+#if 0
     data.actionid = TUNNEL_REWRITE_NOP_ID;
     ret = dm->insert_withid(&data, noop_idx);
     if (ret != HAL_RET_OK) {
@@ -819,6 +844,7 @@ p4pd_tunnel_rewrite_init (void)
         return ret;
     }
     g_hal_state_pd->set_tnnl_rwr_tbl_encap_vlan_idx(enc_vlan_idx);
+#endif
     return HAL_RET_OK;
 }
 

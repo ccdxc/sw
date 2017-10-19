@@ -99,11 +99,14 @@ bazel-gtests:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/hash:hash_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/met:met_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/tcam:tcam_test
+	# PD
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/iris/test:all
 
 post-make:
 	mkdir -p obj/cano
 	mv obj/asm_bin/*.cano obj/cano 2>/dev/null || :
 	mv obj/p4plus_bin/*.cano obj/cano 2>/dev/null || :
+
 
 GEN_TEST_RESULTS_DIR = $(TOPDIR_ABS)/gen/test_results
 CMD_OPTS = cd ../bazel-bin && CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR_ABS)/../../.. HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf
@@ -147,6 +150,10 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	#cd ../bazel-bin && LD_PRELOAD=$(TOPDIR_ABS)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR_ABS)/conf ./nic/hal/pd/utils/flow/flow_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/flow.xml"
 	$(PD_CMD_OPTS) ./nic/hal/pd/utils/hash/hash_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/hash_test.xml"
 	$(PD_CMD_OPTS) ./nic/hal/pd/utils/met/met_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/met_test.xml"
+	# PD gtests
+	$(PD_CMD_OPTS) ./nic/hal/pd/iris/test/rw_tbl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/rw_tbl_test.xml"
+	$(PD_CMD_OPTS) ./nic/hal/pd/iris/test/tnnl_rw_tbl_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tnnl_rw_tbl_test.xml"
+
 
 VAL_CMD = valgrind --xml=yes 
 VAL_CMD_OPTS = $(CMD_OPTS) $(VAL_CMD)

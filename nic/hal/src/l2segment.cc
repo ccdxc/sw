@@ -117,7 +117,7 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
     if (!spec.has_meta() ||
         spec.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        HAL_TRACE_ERR("pi-l2seg:{}:invalid tenant id",
+        HAL_TRACE_ERR("pi-l2seg:{}:no meta or invalid tenant id",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -453,7 +453,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         // api_status already set, just return
         HAL_TRACE_ERR("pi-l2seg:{}:validation Failed. ret: {}",
                       __FUNCTION__, ret);
-        return ret;
+        goto end;
     }
 
     // check if l2segment exists already, and reject if one is found
@@ -462,7 +462,8 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                       "l2seg {} exists already", __FUNCTION__, 
                       spec.key_or_handle().segment_id());
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
-        return HAL_RET_ENTRY_EXISTS;
+        ret = HAL_RET_ENTRY_EXISTS;
+        goto end;
     }
 
     // fetch the tenant
@@ -472,7 +473,8 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         HAL_TRACE_ERR("pi-l2seg:{}: Fetch Tenant Id:{} Failed. ret: {}",
                       __FUNCTION__, tid, ret);
         rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
-        return HAL_RET_INVALID_ARG;
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
     }
 
     // instantiate the L2 segment
@@ -481,7 +483,8 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         HAL_TRACE_ERR("pi-l2seg:{}:unable to allocate handle/memory ret: {}",
                       __FUNCTION__, ret);
         rsp->set_api_status(types::API_STATUS_OUT_OF_MEM);
-        return HAL_RET_OOM;
+        ret = HAL_RET_OOM;
+        goto end;
     }
 
     l2seg->tenant_handle = tenant->hal_handle;
@@ -489,6 +492,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     l2seg->segment_type = spec.segment_type();
     l2seg->mcast_fwd_policy = spec.mcast_fwd_policy();
     l2seg->bcast_fwd_policy = spec.bcast_fwd_policy();
+    ip_addr_spec_to_ip_addr(&l2seg->gipo, spec.gipo());
     if (spec.has_access_encap()) {
         l2seg->access_encap.type = spec.access_encap().encap_type();
         l2seg->access_encap.val = spec.access_encap().encap_value();
@@ -525,7 +529,8 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                       __FUNCTION__, l2seg->seg_id);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
         l2seg_free(l2seg);
-        return HAL_RET_HANDLE_INVALID;
+        ret = HAL_RET_HANDLE_INVALID;
+        goto end;
     }
 
     // form ctxt and call infra add
@@ -543,12 +548,14 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                              l2seg_create_cleanup_cb);
 
 end:
-    if (ret != HAL_RET_OK && l2seg != NULL) {
-        // if there is an error, nw will be freed in abort CB.
-        // What about network list ??
-        // l2seg_free(nw);
-        hal_free_handles_list(&l2seg->nw_list_head);
-        l2seg = NULL;
+    if (ret != HAL_RET_OK) {
+        if (l2seg) {
+            // if there is an error, nw will be freed in abort CB.
+            // What about network list ??
+            // l2seg_free(nw);
+            hal_free_handles_list(&l2seg->nw_list_head);
+            l2seg = NULL;
+        }
     }
     l2seg_prepare_rsp(rsp, ret, l2seg ? l2seg->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: l2segment create ");

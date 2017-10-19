@@ -4,6 +4,7 @@
 #include "nic/include/base.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/iris/tnnl_rw_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -96,9 +97,12 @@ pd_tunnelif_delink_pi_pd(pd_tunnelif_t *pd_tunnelif, if_t *pi_if)
     if_set_pd_if(pi_if, NULL);
 }
 
+hal_ret_t pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key, 
+                                 pd_tunnelif_t *pd_tif);
 hal_ret_t pd_tunnelif_alloc_res(pd_tunnelif_t *pd_tunnelif);
 hal_ret_t pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif);
 hal_ret_t pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif);
+hal_ret_t pd_tunnelif_depgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif);
 hal_ret_t pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif);
 hal_ret_t pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif);
 hal_ret_t pd_tunnelif_deprogram_hw(pd_tunnelif_t *pd_tunnelif);

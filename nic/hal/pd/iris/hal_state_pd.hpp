@@ -33,7 +33,8 @@ namespace pd {
 #define HAL_MAX_UPLINK_IFS      16
 #define HAL_MAX_UPLINK_IF_PCS   32      // Both Uplink IFs and PCs combined
 
-#define HAL_RW_TABLE_SIZE       4096
+#define HAL_RW_TABLE_SIZE               4096
+#define HAL_TUNNEL_RW_TABLE_SIZE        1024
 
 #define HAL_MAX_HW_TM_PORTS             12
 #define HAL_MAX_HW_BUF_POOLS_PER_PORT   32
@@ -106,7 +107,7 @@ public:
     // get APIs for LIF related state
     slab *ep_pd_slab(void) const { return ep_pd_slab_; }
     slab *ep_pd_ip_entry_slab(void) const { return ep_pd_ip_entry_slab_; }
-    indexer *rw_table_idxr(void) const { return rw_table_idxr_; }
+    // indexer *rw_table_idxr(void) const { return rw_table_idxr_; }
 
     // get APIs for nwsec related state
     slab *nwsec_pd_slab(void) const { return nwsec_pd_slab_; }
@@ -170,6 +171,11 @@ public:
     slab *rw_entry_slab(void) const { return rw_entry_slab_; }
     ht *rw_table_ht(void) const { return rw_table_ht_; }
     indexer *rw_tbl_idxr(void) { return rw_tbl_idxr_; }
+
+    // get APIs for Tunnel RW table related state
+    slab *tnnl_rw_entry_slab(void) const { return tnnl_rw_entry_slab_; }
+    ht *tnnl_rw_table_ht(void) const { return tnnl_rw_table_ht_; }
+    indexer *tnnl_rw_tbl_idxr(void) { return tnnl_rw_tbl_idxr_; }
 
     // get APIs for CPU PKT related state
     slab *cpupkt_slab(void) const { return cpupkt_slab_; }
@@ -294,7 +300,7 @@ private:
     struct {
         slab       *ep_pd_slab_;
         slab       *ep_pd_ip_entry_slab_;
-        indexer    *rw_table_idxr_;
+        // indexer    *rw_table_idxr_;
     } __PACK__;
 
     // nwsec related state
@@ -377,6 +383,13 @@ private:
         slab      *rw_entry_slab_;
         ht        *rw_table_ht_;   
         indexer   *rw_tbl_idxr_;
+    } __PACK__;
+
+    // tnnl rw table management
+    struct {
+        slab      *tnnl_rw_entry_slab_;
+        ht        *tnnl_rw_table_ht_;   
+        indexer   *tnnl_rw_tbl_idxr_;
     } __PACK__;
     
     // cpucb related state

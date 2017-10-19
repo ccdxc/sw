@@ -203,9 +203,6 @@ find_nwsec_profile_by_id (nwsec_profile_id_t profile_id)
 static inline nwsec_profile_t *
 find_nwsec_profile_by_handle (hal_handle_t handle)
 {
-    if (handle == 0) {
-        return NULL;
-    }
     // return (nwsec_profile_t *)g_hal_state->nwsec_profile_hal_handle_ht()->lookup(&handle);
     // check for object type
     auto hal_handle = hal_handle_get_from_handle_id(handle);

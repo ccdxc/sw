@@ -175,11 +175,25 @@ find_network_by_key (tenant_id_t tid, const ip_prefix_t *ip_pfx)
 static inline network_t *
 find_network_by_handle (hal_handle_t handle)
 {
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_NETWORK) {
+        HAL_TRACE_DEBUG("{}:failed to find network with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    return (network_t *)hal_handle->get_obj();
+#if 0
     // check for object type
     HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
                HAL_OBJ_ID_NETWORK);
     return (network_t *)hal_handle_get_obj(handle);
     // return (network_t *)g_hal_state->network_hal_handle_ht()->lookup(&handle);
+#endif
 }
 
 extern void *network_get_key_func(void *entry);

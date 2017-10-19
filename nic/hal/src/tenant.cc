@@ -525,7 +525,7 @@ tenant_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_tenant_args.nwsec_profile = app_ctxt->nwsec_prof;
     ret = pd::pd_tenant_update(&pd_tenant_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to delete tenant pd, err : {}",
+        HAL_TRACE_ERR("pi-tenant:{}:failed to update tenant pd, err : {}",
                       __FUNCTION__, ret);
     }
 

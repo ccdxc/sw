@@ -60,6 +60,7 @@ message L2SegmentSpec {
   BroadcastFwdPolicy     bcast_fwd_policy           = 6;    // broadcast forwarding policy
   types.EncapInfo        access_encap               = 7;    // wire encap for workload
   types.EncapInfo        fabric_encap               = 8;    // wire encap on uplink(s)
+  types.IPAddress        gipo                       = 9;    // gipo for mcast vxlan traffic
 }
 
 // L2SegmentRequestMsg is batched add or modify L2 segment request

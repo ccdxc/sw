@@ -32,6 +32,7 @@ cc_library(
     hdrs = ["rdma_pd.hpp",
             "hal_state_pd.hpp",
             "rw_pd.hpp",
+            "tnnl_rw_pd.hpp",
             "if_pd_utils.hpp"],
     deps = [
             "//nic/hal/pd/utils/directmap:directmap_includes",

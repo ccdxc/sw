@@ -158,10 +158,24 @@ find_lif_by_id (lif_id_t lif_id)
 static inline lif_t *
 find_lif_by_handle (hal_handle_t handle)
 {
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_DEBUG("{}:failed to find object with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_LIF) {
+        HAL_TRACE_DEBUG("{}:failed to find lif with handle:{}",
+                        __FUNCTION__, handle);
+        return NULL;
+    }
+    return (lif_t *)hal_handle->get_obj();
+#if 0
     // check for object type
     HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
                HAL_OBJ_ID_LIF);
     return (lif_t *)hal_handle_get_obj(handle);
+#endif
 }
 
 extern void *lif_id_get_key_func(void *entry);

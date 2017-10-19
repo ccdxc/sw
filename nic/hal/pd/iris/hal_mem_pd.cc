@@ -28,6 +28,7 @@
 #include "nic/hal/pd/iris/ipseccb_pd.hpp"
 #include "nic/hal/pd/iris/l4lb_pd.hpp"
 #include "nic/hal/pd/iris/rw_pd.hpp"
+#include "nic/hal/pd/iris/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/cpucb_pd.hpp"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/hal/pd/iris/rawrcb_pd.hpp"
@@ -138,8 +139,11 @@ hal_state_pd::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((ep_pd_ip_entry_slab_ != NULL), false);
 
+#if 0
+    // rw table indexer
     rw_table_idxr_ = new hal::utils::indexer(HAL_RW_TABLE_SIZE);
     HAL_ASSERT_RETURN((rw_table_idxr_ != NULL), false);
+#endif
 
     // initialize nwsec PD related data structures
     nwsec_pd_slab_ = slab::factory("NWSEC_PD", HAL_SLAB_SECURITY_PROFILE_PD,
@@ -279,6 +283,21 @@ hal_state_pd::init(void)
 
     rw_tbl_idxr_ = new hal::utils::indexer(HAL_MAX_RW_TBL_ENTRIES);
     HAL_ASSERT_RETURN((rw_tbl_idxr_ != NULL), false);
+
+    // initialize tunnel rw table management structures
+    tnnl_rw_entry_slab_ = slab::factory("TUNNEL RW TBL", HAL_SLAB_TUNNEL_RW_PD,
+                                 sizeof(hal::pd::pd_tnnl_rw_entry_t), 128,
+                                 true, true, false, true);
+    HAL_ASSERT_RETURN((tnnl_rw_entry_slab_ != NULL), false);
+
+    tnnl_rw_table_ht_ = ht::factory(HAL_TUNNEL_RW_TABLE_SIZE,
+                               hal::pd::tnnl_rw_entry_pd_get_key_func,
+                               hal::pd::tnnl_rw_entry_pd_compute_hash_func,
+                               hal::pd::tnnl_rw_entry_pd_compare_key_func);
+    HAL_ASSERT_RETURN((tnnl_rw_table_ht_ != NULL), false);
+
+    tnnl_rw_tbl_idxr_ = new hal::utils::indexer(HAL_TUNNEL_RW_TABLE_SIZE);
+    HAL_ASSERT_RETURN((tnnl_rw_tbl_idxr_ != NULL), false);
     
     // initialize CPUCB related data structures
     cpucb_slab_ = slab::factory("CPUCB PD", HAL_SLAB_CPUCB_PD,

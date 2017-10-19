@@ -597,6 +597,105 @@ TEST_F(l2seg_test, test4)
     ASSERT_TRUE(is_leak == false);
 }
 
+// ----------------------------------------------------------------------------
+// L2Segment -ve test cases
+// ----------------------------------------------------------------------------
+TEST_F(l2seg_test, test5) 
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    L2SegmentSpec                   l2seg_spec, l2seg_spec1;
+    L2SegmentResponse               l2seg_rsp, l2seg_rsp1;
+    SecurityProfileSpec             sp_spec;
+    SecurityProfileResponse         sp_rsp;
+    TenantSpec                      ten_spec;
+    TenantResponse                  ten_rsp;
+    NetworkSpec                     nw_spec;
+    NetworkResponse                 nw_rsp;
+
+    // Create l2seg with tenant id doesnt exist
+    l2seg_spec.mutable_meta()->set_tenant_id(5);
+    // l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
+    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+
+    // Create l2seg with no meta
+    // l2seg_spec.mutable_meta()->set_tenant_id(5);
+    // l2seg_spec.add_network_handle(nw_hdl);
+    l2seg_spec1.mutable_key_or_handle()->set_segment_id(51);
+    l2seg_spec1.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec1.mutable_fabric_encap()->set_encap_value(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec1, &l2seg_rsp1);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(5);
+    sp_spec.set_ipsg_en(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_profile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
+    // Create tenant
+    ten_spec.mutable_key_or_handle()->set_tenant_id(5);
+    ten_spec.set_security_profile_handle(nwsec_hdl);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create network
+    nw_spec.mutable_meta()->set_tenant_id(5);
+    nw_spec.set_rmac(0x0000DEADBEEF);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+
+
+    // Create l2seg with network that doesnt exist
+    l2seg_spec.mutable_meta()->set_tenant_id(5);
+    l2seg_spec.add_network_handle(nw_hdl + 1);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
+    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    HAL_TRACE_DEBUG("ret: {}", ret);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
+
+
+    // Create l2seg
+    // Create l2seg which already exists
+    // Create l2seg with no access or fabric encap set
+    // Create the max number of HAL_MAX_HW_L2SEGMENTS
+    // Create l2seg resulting in no resource
+    // Update l2seg with no key or handle
+    // Update l2seg with handle that doesn't exist
+    // Update l2seg with different tenant not allowed
+    // Update l2seg with the same networks as when its created
+    // Update l2seg with a handle
+    // Delete l2seg with no key or handle
+    // Get of l2seg with no meta
+    // Get of l2seg with no key or handle
+    // Get of l2seg id for which l2seg is not present
+    // Delete all l2segs
+    // Delete all other objs
+}
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
