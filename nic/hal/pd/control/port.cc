@@ -12,8 +12,6 @@
 
 namespace hal {
 
-extern thread_local hal::utils::thread *t_curr_thread;
-
 namespace pd {
 
 // Invoked in control thread context
@@ -33,12 +31,13 @@ port::link_bring_up_timer_cb(uint32_t timer_id, void *ctxt)
 {
     // wake up the hal control thread to process port event
     uint16_t           pindx;
-    uint32_t           curr_tid = t_curr_thread->thread_id();
+    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
+    uint32_t           curr_tid = curr_thread->thread_id();
     hal_ctrl_entry_t   *rw_entry;
 
     if (g_hal_ctrl_workq[curr_tid].nentries >= HAL_CONTROL_Q_SIZE) {
         HAL_TRACE_ERR("port control operation for thread {}, tid {} full",
-                t_curr_thread->name(), curr_tid);
+                curr_thread->name(), curr_tid);
         return HAL_RET_HW_PROG_ERR;
     }
     pindx = g_hal_ctrl_workq[curr_tid].pindx;
@@ -52,7 +51,7 @@ port::link_bring_up_timer_cb(uint32_t timer_id, void *ctxt)
     g_hal_ctrl_workq[curr_tid].nentries++;
 
     while (rw_entry->done.load() == false) {
-        if (t_curr_thread->can_yield()) {
+        if (curr_thread->can_yield()) {
             pthread_yield();
         }
     }

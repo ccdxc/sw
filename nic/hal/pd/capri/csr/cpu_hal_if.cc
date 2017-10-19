@@ -1,20 +1,16 @@
 #include "cpu_hal_if.h"
 
-extern bool read_reg (uint64_t addr, uint32_t& data);
-extern bool write_reg(uint64_t addr, uint32_t  data);
+extern uint32_t read_reg_base (uint32_t chip, uint64_t addr);
+extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
 
 uint32_t
-cpu_hal_if::read(uint32_t chip, uint64_t addr, cpu_access_type_e do_backdoor, uint32_t flags) {
-    uint32_t data = 0;
-
-    (void)chip;
-    read_reg(addr, data);
-    return data;
+cpu_hal_if::read(uint32_t chip, uint64_t addr,
+                 cpu_access_type_e do_backdoor, uint32_t flags) {
+    return read_reg_base(chip, addr);
 }
 
 void
 cpu_hal_if::write(uint32_t chip, uint64_t addr, uint32_t data,
                   cpu_access_type_e do_backdoor, uint32_t flags) {
-    (void)chip;
-    write_reg(addr, data);
+    write_reg_base(chip, addr, data);
 }

@@ -34,7 +34,12 @@ hal_pd_init (hal_cfg_t *hal_cfg)
                 hal::pd::hal_control_start,
                 sched_get_priority_max(SCHED_RR), SCHED_RR, true);
     HAL_ABORT(g_hal_threads[thread_id] != NULL);
-    g_hal_threads[thread_id]->start(hal_cfg);
+
+    // set custom data
+    g_hal_threads[thread_id]->set_data(hal_cfg);
+
+    // invoke with thread instance reference
+    g_hal_threads[thread_id]->start(g_hal_threads[thread_id]);
 
     HAL_TRACE_DEBUG("Waiting for asic-rw thread to be ready ...");
     // wait for ASIC RW thread to be ready before initializing table entries

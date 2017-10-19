@@ -10,12 +10,10 @@
 
 namespace hal {
 
-extern thread_local thread *t_curr_thread;
-
 namespace pd {
 
 // asic model's cfg port socket descriptor
-static bool g_asic_rw_ready_;
+static std::atomic<bool> g_asic_rw_ready_;
 
 #define HAL_ASIC_RW_Q_SIZE                           128
 #define HAL_ASIC_RW_OPERATION_MEM_READ               0
@@ -57,7 +55,7 @@ asic_rw_queue_t    g_asic_rw_workq[HAL_THREAD_ID_MAX];
 bool
 is_asic_rw_ready (void)
 {
-    return g_asic_rw_ready_;
+    return g_asic_rw_ready_.load();
 }
 
 //------------------------------------------------------------------------------
@@ -69,7 +67,10 @@ static hal_ret_t
 asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
 {
     uint16_t           pindx;
-    uint32_t           curr_tid = t_curr_thread->thread_id();
+
+    thread *curr_thread = hal::utils::thread::current_thread();
+
+    uint32_t           curr_tid = curr_thread->thread_id();
     asic_rw_entry_t    *rw_entry;
 
     if (!data) {
@@ -78,7 +79,7 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
 
     if (g_asic_rw_workq[curr_tid].nentries >= HAL_ASIC_RW_Q_SIZE) {
         HAL_TRACE_ERR("ASIC rwq for thread {}, tid {} full, read failed",
-                      t_curr_thread->name(), curr_tid);
+                      curr_thread->name(), curr_tid);
         return HAL_RET_HW_PROG_ERR;
     }
     pindx = g_asic_rw_workq[curr_tid].pindx;
@@ -94,7 +95,7 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
     g_asic_rw_workq[curr_tid].nentries++;
 
     while (rw_entry->done.load() == false) {
-        if (t_curr_thread->can_yield()) {
+        if (curr_thread->can_yield()) {
             pthread_yield();
         }
     }
@@ -136,12 +137,13 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
 {
     hal_ret_t          ret;
     uint16_t           pindx;
-    uint32_t           curr_tid = t_curr_thread->thread_id();
+    thread *curr_thread = hal::utils::thread::current_thread();
+    uint32_t           curr_tid = curr_thread->thread_id();
     asic_rw_entry_t    *rw_entry;
 
     if (g_asic_rw_workq[curr_tid].nentries >= HAL_ASIC_RW_Q_SIZE) {
         HAL_TRACE_ERR("ASIC rwq for thread {}, tid {} full, write failed",
-                      t_curr_thread->name(), curr_tid);
+                      curr_thread->name(), curr_tid);
         return HAL_RET_HW_PROG_ERR;
     }
     pindx = g_asic_rw_workq[curr_tid].pindx;
@@ -162,7 +164,7 @@ asic_do_write (uint8_t opn, uint64_t addr, uint8_t *data,
 
     if (blocking) {
         while (rw_entry->done.load() == false) {
-            if (t_curr_thread->can_yield()) {
+            if (curr_thread->can_yield()) {
                 pthread_yield();
             }
         }
@@ -279,15 +281,64 @@ asic_rw_loop (void)
 }
 
 //------------------------------------------------------------------------------
+// attempt to connect to ASIC model in sim mode
+//------------------------------------------------------------------------------
+static hal_ret_t
+asic_sim_connect (hal_cfg_t *hal_cfg)
+{
+    int    rc;
+
+    HAL_TRACE_DEBUG("Connecting to ASIC SIM");
+    if ((rc = lib_model_connect()) == -1) {
+        HAL_TRACE_ERR("Failed to connect to ASIC. Return code: {}", rc);
+        return HAL_RET_ERR;
+    }
+    return HAL_RET_OK;
+}
+
+void
+capri_asic_rw_asic_init(hal_cfg_t *hal_cfg)
+{
+    asic_cfg_t asic_cfg;
+    hal_ret_t ret;
+
+    if (hal_cfg->sim) {
+        do {
+            ret = asic_sim_connect(hal_cfg);
+            if (ret == HAL_RET_OK) {
+                HAL_TRACE_DEBUG("Connected to the ASIC model...");
+                break;
+            }
+            HAL_TRACE_WARN("Failed to connect to asic, retrying in 1 sec ...");
+            sleep(1);
+        } while (ret != HAL_RET_OK);
+    }
+
+    // do asic initialization
+    asic_cfg.loader_info_file = hal_cfg->loader_info_file;
+    HAL_ABORT(asic_init(&asic_cfg) == HAL_RET_OK);
+    return;
+}
+
+//------------------------------------------------------------------------------
 // ASIC read/write thread's entry point
 //------------------------------------------------------------------------------
 void *
 asic_rw_start (void *ctxt)
 {
-    HAL_THREAD_INIT();
+    HAL_THREAD_INIT(ctxt);
+
+    hal_cfg_t *hal_cfg =
+                (hal_cfg_t *)hal::utils::thread::current_thread()->data();
+    if (hal_cfg == NULL) {
+        return NULL;
+    }
+
+    // asic init code
+    capri_asic_rw_asic_init(hal_cfg);
 
     // announce asic-rw thread as ready
-    g_asic_rw_ready_ = true;
+    g_asic_rw_ready_.store(true);
 
     // keep polling the queue and serve the read/write requests
     asic_rw_loop();

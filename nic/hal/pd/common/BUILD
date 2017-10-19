@@ -6,6 +6,7 @@ cc_library(
     name = "pdcommon",
     srcs = [
         "hal_pd.cc",
+        "asic_pd.cc",
         "pd.hpp",
         "pd_api.hpp",
     ],

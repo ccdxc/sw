@@ -15,13 +15,15 @@ typedef void *(*hal_thread_entry_func_t)(void *ctxt);
 #define HAL_MAX_THREAD_NAME_LEN        16
 
 // call this macro from the entry function of every thread
-#define HAL_THREAD_INIT()                                            \
-{                                                                    \
-    int __rv__, __old_type__;                                        \
-                                                                     \
-    __rv__ = pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,      \
-                                   &__old_type__);                   \
-    HAL_ABORT(__rv__ == 0);                                          \
+#define HAL_THREAD_INIT(ctxt)                                          \
+{                                                                      \
+    int __rv__, __old_type__;                                          \
+    __rv__ = pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,        \
+            &__old_type__);                                            \
+    HAL_ABORT(__rv__ == 0);                                            \
+    hal::utils::thread::set_current_thread((hal::utils::thread*)ctxt); \
+    HAL_TRACE_DEBUG("Thread {} initializing ...",                      \
+                hal::utils::thread::current_thread()->name());         \
 }
 
 class thread {
@@ -42,8 +44,20 @@ public:
     bool is_running(void) const { return running_; }
     void set_running(bool running) { running_ = running; }
     bool can_yield(void) const { return can_yield_; }
-    void set_ctxt(void *ctxt) { ctxt_ = ctxt; }
-    
+    void set_data(void *data) { data_ = data; }
+
+    void* data() {
+        return data_;
+    }
+
+    // set the current thread instance
+    static void set_current_thread(thread *curr_thread) {
+        t_curr_thread_ = curr_thread;
+    }
+
+    // get the current thread instance
+    static thread* current_thread();
+
 private:
     char                       name_[HAL_MAX_THREAD_NAME_LEN];
     uint32_t                   thread_id_;
@@ -52,10 +66,12 @@ private:
     uint32_t                   prio_;
     int                        sched_policy_;
     bool                       can_yield_;
-    void                       *ctxt_;
+    void                       *data_;
 
     pthread_t                  pthread_id_;
     bool                       running_;
+
+    static thread_local thread *t_curr_thread_;
 
 private:
     thread() {};

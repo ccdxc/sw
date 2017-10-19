@@ -3,8 +3,13 @@
 #include "nic/utils/thread/thread.hpp"
 
 namespace hal {
+
 extern bool gl_super_user;
+extern thread *g_hal_threads[HAL_THREAD_ID_MAX];
+
 namespace utils {
+
+thread_local thread* thread::t_curr_thread_ = NULL;
 
 //------------------------------------------------------------------------------
 // thread instance initialization
@@ -87,9 +92,6 @@ thread::start(void *ctxt)
         return HAL_RET_OK;
     }
 
-    // save the context
-    ctxt_ = ctxt;
-
     // initialize the pthread attributes
     rv = pthread_attr_init(&attr);
     if (rv != 0) {
@@ -133,7 +135,7 @@ thread::start(void *ctxt)
     }
 
     // create the thread now
-    rv = pthread_create(&pthread_id_, &attr, entry_func_, ctxt_);
+    rv = pthread_create(&pthread_id_, &attr, entry_func_, ctxt);
     if (rv != 0) {
         HAL_TRACE_ERR("pthread_create failure, err : {}", rv);
         return HAL_RET_ERR;
@@ -178,6 +180,15 @@ thread::stop(void)
 
     running_ = false;
     return HAL_RET_OK;
+}
+
+// get the current thread instance
+thread*
+hal::utils::thread::current_thread()
+{
+    return hal::utils::thread::t_curr_thread_ ?
+                        hal::utils::thread::t_curr_thread_ :
+                        g_hal_threads[HAL_THREAD_ID_CFG];
 }
 
 }    // namespace hal

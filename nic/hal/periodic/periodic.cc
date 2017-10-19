@@ -101,8 +101,7 @@ periodic_thread_start (void *ctxt)
     struct periodic_info    pinfo;
     uint64_t                missed;
 
-    t_curr_thread = (thread *)ctxt;
-    HAL_TRACE_DEBUG("Thread {} initializing ...", t_curr_thread->name());
+    HAL_THREAD_INIT(ctxt);
 
     // create a timer wheel
     g_twheel = hal::utils::twheel::factory(TWHEEL_DEFAULT_SLICE_DURATION,

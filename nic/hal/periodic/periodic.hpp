@@ -15,9 +15,6 @@
 
 namespace hal {
 
-using utils::thread;
-extern thread_local thread *t_curr_thread;
-
 namespace periodic {
 
 void *periodic_thread_start(void *ctxt);

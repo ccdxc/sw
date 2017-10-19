@@ -3,17 +3,12 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <atomic>
-#include "nic/include/asic_pd.hpp"
-#include "nic/model_sim/include/lib_model_client.h"
-#include "nic/utils/thread/thread.hpp"
 #include "nic/hal/hal.hpp"
 #include "hal_control.hpp"
 #include "port.hpp"
+#include "nic/include/asic_pd.hpp"
 
 namespace hal {
-
-extern thread_local hal::utils::thread *t_curr_thread;
-
 namespace pd {
 
 // per producer request queues
@@ -74,62 +69,18 @@ hal_control_loop (void)
 }
 
 //------------------------------------------------------------------------------
-// attempt to connect to ASIC model in sim mode
-//------------------------------------------------------------------------------
-static hal_ret_t
-asic_sim_connect (hal_cfg_t *hal_cfg)
-{
-    int    rc;
-
-    HAL_TRACE_DEBUG("Connecting to ASIC SIM");
-    if ((rc = lib_model_connect()) == -1) {
-        HAL_TRACE_ERR("Failed to connect to ASIC. Return code: {}", rc);
-        return HAL_RET_ERR;
-    }
-    return HAL_RET_OK;
-}
-
-void
-hal_control_asic_init(hal_cfg_t *hal_cfg)
-{
-    asic_cfg_t asic_cfg;
-    hal_ret_t ret;
-
-    if (hal_cfg->sim) {
-        do {
-            ret = asic_sim_connect(hal_cfg);
-            if (ret == HAL_RET_OK) {
-                HAL_TRACE_DEBUG("Connected to the ASIC model...");
-                break;
-            }
-            HAL_TRACE_WARN("Failed to connect to asic, retrying in 1 sec ...");
-            sleep(1);
-        } while (ret != HAL_RET_OK);
-    }
-
-    // do asic initialization
-    asic_cfg.loader_info_file = hal_cfg->loader_info_file;
-    HAL_ABORT(asic_init(&asic_cfg) == HAL_RET_OK);
-    return;
-}
-
-//------------------------------------------------------------------------------
 // hal-control thread's entry point
 //------------------------------------------------------------------------------
 void*
 hal_control_start (void *ctxt)
 {
-    HAL_TRACE_DEBUG("Thread {} initializing ...", t_curr_thread->name());
+    HAL_THREAD_INIT(ctxt);
 
-    hal_cfg_t    *hal_cfg = (hal_cfg_t *)ctxt;
+    hal_cfg_t *hal_cfg =
+                (hal_cfg_t *)hal::utils::thread::current_thread()->data();
     if (hal_cfg == NULL) {
         return NULL;
     }
-
-    HAL_THREAD_INIT();
-
-    // asic init code
-    hal_control_asic_init(hal_cfg);
 
     // start the asic-rw thread
     HAL_TRACE_DEBUG("Starting asic-rw thread ...");
@@ -139,7 +90,19 @@ hal_control_start (void *ctxt)
                 hal::pd::asic_rw_start,
                 sched_get_priority_max(SCHED_RR), SCHED_RR, true);
     HAL_ABORT(g_hal_threads[HAL_THREAD_ID_ASIC_RW] != NULL);
-    g_hal_threads[HAL_THREAD_ID_ASIC_RW]->start(hal_cfg);
+
+    // set custom data
+    g_hal_threads[HAL_THREAD_ID_ASIC_RW]->set_data(hal_cfg);
+
+    // invoke with thread instance reference
+    g_hal_threads[HAL_THREAD_ID_ASIC_RW]->start(
+                            g_hal_threads[HAL_THREAD_ID_ASIC_RW]);
+
+    HAL_TRACE_DEBUG("Waiting for asic-rw thread to be ready ...");
+    // wait for ASIC RW thread to be ready
+    while (!is_asic_rw_ready()) {
+        pthread_yield();
+    }
 
     // keep polling the queue and serve requests
     hal_control_loop();

@@ -23,7 +23,6 @@
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/hal/plugins/plugins.hpp"
 
-
 extern "C" void __gcov_flush(void);
 
 #ifdef COVERAGE
@@ -46,7 +45,6 @@ bool      gl_super_user = false;
 LIFManager *g_lif_manager = nullptr;
 
 // thread local variables
-thread_local thread *t_curr_thread;
 thread_local cfg_db_ctxt_t t_cfg_db_ctxt;
 
 using boost::property_tree::ptree;
@@ -57,23 +55,23 @@ using boost::property_tree::ptree;
 static void *
 fte_pkt_loop (void *ctxt)
 {
-    t_curr_thread = (thread *)ctxt;
-    HAL_TRACE_DEBUG("Thread {} initializing ...", t_curr_thread->name());
-    HAL_THREAD_INIT();
+    HAL_THREAD_INIT(ctxt);
 
-    fte::pkt_loop(HAL_THREAD_ID_FTE_MIN - t_curr_thread->thread_id());
+    thread *curr_thread = hal::utils::thread::current_thread();
+
+    fte::pkt_loop(HAL_THREAD_ID_FTE_MIN - curr_thread->thread_id());
 
     return NULL;
 }
 
 //------------------------------------------------------------------------------
-// return current thread pointer, for gRPC threads t_curr_thread is not set,
+// return current thread pointer, for gRPC threads curr_thread is not set,
 // however, they are considered as cfg threads
 //------------------------------------------------------------------------------
 thread *
 hal_get_current_thread (void)
 {
-    return t_curr_thread ? t_curr_thread : g_hal_threads[HAL_THREAD_ID_CFG];
+    return  hal::utils::thread::current_thread();
 }
 
 //------------------------------------------------------------------------------
@@ -823,8 +821,7 @@ hal_thread_init (void)
                         HAL_CONTROL_CORE_ID,
                         thread::dummy_entry_func,
                         sched_param.sched_priority, SCHED_RR, true);
-    g_hal_threads[HAL_THREAD_ID_CFG]->set_ctxt(g_hal_threads[HAL_THREAD_ID_CFG]);
-    t_curr_thread = g_hal_threads[HAL_THREAD_ID_CFG];
+    g_hal_threads[HAL_THREAD_ID_CFG]->set_data(g_hal_threads[HAL_THREAD_ID_CFG]);
     g_hal_threads[HAL_THREAD_ID_CFG]->set_pthread_id(pthread_self());
     g_hal_threads[HAL_THREAD_ID_CFG]->set_running(true);
 
@@ -987,6 +984,5 @@ hal_destroy (void)
     return HAL_RET_OK;
 
 }
-
 
 }    // namespace hal
