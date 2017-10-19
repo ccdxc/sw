@@ -9,6 +9,9 @@ import infra.common.defs as defs
 def GetSpi (tc, pkt):
     return 0 
 
+def GetSeqNo (tc, pkt):
+    return 1 
+
 def GetIv (tc, pkt):
     return "0xaaaaaaaaaaaaaaaa"
 

@@ -91,13 +91,9 @@ dma_cmd_write_iv_to_in_desc:
     addi r2, r2, IPSEC_CB_IV_OFFSET
     add r3, r0,  k.t0_s2s_in_page_addr
     addi r3, r3, IPSEC_SALT_HEADROOM
-    phvwri p.dma_cmd_iv_src_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_MEM
-    phvwri p.dma_cmd_iv_src_dma_cmd_mem2mem_type, DMA_CMD_TYPE_MEM2MEM_TYPE_SRC
-    phvwr p.dma_cmd_iv_src_dma_cmd_addr, r2
-    phvwr p.dma_cmd_iv_src_dma_cmd_size, r1
-    phvwri p.dma_cmd_iv_dst_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_MEM
-    phvwri p.dma_cmd_iv_dst_dma_cmd_mem2mem_type, DMA_CMD_TYPE_MEM2MEM_TYPE_DST
-    phvwr p.dma_cmd_iv_dst_dma_cmd_addr, r3
-    phvwr p.dma_cmd_iv_dst_dma_cmd_size, r1
+    phvwri p.dma_cmd_iv_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwr p.dma_cmd_iv_dma_cmd_addr, r2
+    phvwri p.dma_cmd_iv_dma_cmd_phv_start_addr, IPSEC_IN_DESC_IV_START
+    phvwri p.dma_cmd_iv_dma_cmd_phv_end_addr, IPSEC_IN_DESC_IV_END 
     nop.e 
     nop

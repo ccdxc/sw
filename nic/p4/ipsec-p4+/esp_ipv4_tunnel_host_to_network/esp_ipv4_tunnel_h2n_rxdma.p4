@@ -176,11 +176,9 @@ metadata dma_cmd_mem2mem_t dma_cmd_pad_byte_dst;
 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_iv_salt; 
- 
+
 @pragma dont_trim
-metadata dma_cmd_mem2mem_t dma_cmd_iv_src;
-@pragma dont_trim
-metadata dma_cmd_mem2mem_t dma_cmd_iv_dst;
+metadata dma_cmd_phv2mem_t dma_cmd_iv; 
 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_post_cb_ring;
@@ -308,7 +306,7 @@ action update_input_desc_aol (addr0, offset0, length0,
     modify_field(ipsec_to_stage3_scratch.iv_salt, ipsec_to_stage3.iv_salt); 
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_iv_salt, addr0, IPSEC_IN_DESC_IV_SALT_START, IPSEC_IN_DESC_IV_SALT_END, 0, 0, 0, 0) 
     // DMA IV to beginning of INPUT DESC 
-    DMA_COMMAND_MEM2MEM_FILL(dma_cmd_iv_src, dma_cmd_iv_dst, ipsec_global.ipsec_cb_addr+IPSEC_CB_IV_OFFSET, 0, addr0+IPSEC_SALT_HEADROOM, 0, ipsec_to_stage3.iv_size, 0, 0, 0)
+    DMA_COMMAND_PHV2MEM_FILL(dma_cmd_iv, addr0+IPSEC_SALT_HEADROOM, IPSEC_IN_DESC_IV_START, IPSEC_IN_DESC_IV_END, 0, 0, 0, 0)
   
 }
 

@@ -66,6 +66,7 @@ packets:
                 chksum  : 0
             esp:
                 spi     : callback://ipsec/ipsec/GetSpi
+                seq     : callback://ipsec/ipsec/GetSeqNo
                 iv      : callback://ipsec/ipsec/GetIv
             payload:
                 data    : ref://factory/payloads/id=ESP_ICMP_PAYLOAD/data 
@@ -88,6 +89,7 @@ packets:
                 chksum  : 0
             esp:
                 spi     : callback://ipsec/ipsec/GetSpi
+                seq     : callback://ipsec/ipsec/GetSeqNo
                 iv      : callback://ipsec/ipsec/GetIv
             payload:
                 data    : ref://factory/payloads/id=ESP_ICMP_PAYLOAD/data 

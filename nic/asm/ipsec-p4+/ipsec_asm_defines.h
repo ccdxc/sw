@@ -67,6 +67,9 @@
 #define IPSEC_IN_DESC_IV_SALT_START CAPRI_PHV_START_OFFSET(ipsec_to_stage3_iv_salt)
 #define IPSEC_IN_DESC_IV_SALT_END   CAPRI_PHV_END_OFFSET(ipsec_to_stage3_iv_salt)
 
+#define IPSEC_IN_DESC_IV_START CAPRI_PHV_START_OFFSET(esp_header_iv)
+#define IPSEC_IN_DESC_IV_END   CAPRI_PHV_END_OFFSET(esp_header_iv)
+
 #define IPSEC_CB_RING_IN_DESC_START CAPRI_PHV_START_OFFSET(t0_s2s_in_desc_addr)
 #define IPSEC_CB_RING_IN_DESC_END CAPRI_PHV_END_OFFSET(t0_s2s_in_desc_addr)
 

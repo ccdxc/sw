@@ -22,7 +22,7 @@ modules:
         package : test.ipsec-proxy
         module  : icmp_pkt_to_ipseccbq
         spec    : icmp_pkt_to_ipseccbq.testspec
-        ignore  : True 
+        ignore  : False 
         iterate :
             - flow: filter://type=IPV4,proto=ICMP
     - module:
@@ -31,7 +31,7 @@ modules:
         package : test.ipsec-proxy
         module  : udp_pkt_to_ipseccbq
         spec    : udp_pkt_to_ipseccbq.testspec
-        ignore  : True 
+        ignore  : False 
         iterate :
             - flow: filter://type=IPV4,proto=UDP
     - module:
@@ -40,7 +40,7 @@ modules:
         package : test.ipsec-proxy
         module  : decrypt_ipsec_to_eth 
         spec    : decrypt_ipsec_to_eth.testspec 
-        ignore  : True 
+        ignore  : False 
         iterate :
             - flow: filter://type=IPV4
 

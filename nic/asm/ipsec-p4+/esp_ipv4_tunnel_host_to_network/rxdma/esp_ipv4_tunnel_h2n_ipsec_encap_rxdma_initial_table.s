@@ -51,7 +51,7 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwr p.esp_header_spi, d.spi
     phvwr p.esp_header_seqno, d.esn_lo
     phvwr p.esp_header_iv, d.iv
- 
+
     phvwri p.app_header_table0_valid, 1
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore[33:6] 
     phvwri p.common_te0_phv_table_raw_table_size, 3
@@ -75,6 +75,15 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwri p.common_te3_phv_table_raw_table_size, 3
     phvwri p.common_te3_phv_table_lock_en, 0
     phvwri p.common_te3_phv_table_addr, OUTPAGE_SEMAPHORE_ADDR
+
+    add r1, r0, d.esn_lo
+    addi r1, r1, 1
+    tblwr d.esn_lo, r1
+    nop
+    // I understand that I need to take care of 32 bit overflow into esn-hi etc.
+    add r1, r0, d.iv
+    addi r1, r1, 1
+    tblwr  d.iv, r1
     nop.e
     nop
  
