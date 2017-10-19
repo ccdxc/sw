@@ -135,16 +135,17 @@ def initCluster(nodeAddr):
             "name": "testCluster"
         },
         "spec": {
-            "autoAdmitNics": True,
-            "quorumNodes": quorumNames,
-            "virtualIP":  clustervip,
-            "ntpServers": ["1.pool.ntp.org","2.pool.ntp.org"]
+            "auto-admin-nics": True,
+            "quorum-nodes": quorumNames,
+            "virtual-ip":  clustervip,
+            "ntp-servers": ["1.pool.ntp.org","2.pool.ntp.org"]
         }
     })
 
     # Post the data
     response = http.httpPost(postUrl, jdata)
-    print "Init cluster response is: " + response
+    print "Init cluster with " + jdata
+    print "cluster response is: " + response
 
 # Parse command line args
 # Create the parser and sub parser
