@@ -23,6 +23,7 @@ func main() {
 		nmdDbPath    = flag.String("nmddb", "/tmp/nmd.db", "NMD Database file")
 		npmURL       = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
 		cmdURL       = flag.String("cmd", "master.local:"+globals.CMDGRPCPort, "CMD RPC server URL")
+		mode         = flag.String("mode", "classic", "Naples mode, \"classic\" or \"managed\" ")
 		debugflag    = flag.Bool("debug", false, "Enable debug mode")
 		logToFile    = flag.String("logtofile", "/var/log/pensando/k8sagent.log", "Redirect logs to file")
 		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:Port>")
@@ -78,7 +79,7 @@ func main() {
 
 	log.Printf("NetAgent {%+v} is running", ag)
 
-	nm, err := nmd.NewAgent(pa, *nmdDbPath, macAddr.String(), *cmdURL, *resolverURLs, ":"+globals.NmdRESTPort)
+	nm, err := nmd.NewAgent(pa, *nmdDbPath, macAddr.String(), *cmdURL, *resolverURLs, ":"+globals.NmdRESTPort, *mode)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}

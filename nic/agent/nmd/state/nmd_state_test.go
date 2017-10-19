@@ -102,7 +102,7 @@ func (m *mockCtrler) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error)
 }
 
 // createNMD creates a NMD server
-func createNMD(t *testing.T, dbPath string) (*NMD, *mockAgent, *mockCtrler) {
+func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mockCtrler) {
 	ag := &mockAgent{
 		nicDB: make(map[string]*cmd.SmartNIC),
 	}
@@ -111,12 +111,12 @@ func createNMD(t *testing.T, dbPath string) (*NMD, *mockAgent, *mockCtrler) {
 	}
 
 	// create new NMD
-	nm, err := NewNMD(ag, dbPath, "ABCD-1234-WXYZ", "localhost:0")
+	nm, err := NewNMD(ag, dbPath, nodeID, "localhost:0", mode)
 	if err != nil {
-		t.Fatalf("Error creating NMD. Err: %v", err)
+		log.Errorf("Error creating NMD. Err: %v", err)
 		return nil, nil, nil
 	}
-	Assert(t, nm.GetAgentID() == "ABCD-1234-WXYZ", "Failed to match nodeUUID", nm)
+	Assert(t, nm.GetAgentID() == nodeID, "Failed to match nodeUUID", nm)
 
 	// fake CMD intf
 	nm.RegisterCMD(ct)
@@ -127,7 +127,9 @@ func createNMD(t *testing.T, dbPath string) (*NMD, *mockAgent, *mockCtrler) {
 // stopNMD stops NMD server and optionally deleted emDB file
 func stopNMD(t *testing.T, nm *NMD, cleanupDB bool) {
 
-	nm.Stop()
+	if nm != nil {
+		nm.Stop()
+	}
 
 	if cleanupDB {
 		err := os.Remove(emDBPath)
@@ -144,7 +146,7 @@ func getNMDUrl(nm *NMD) string {
 func TestSmartNICCreateUpdateDelete(t *testing.T) {
 
 	// create nmd
-	nm, _, _ := createNMD(t, "")
+	nm, _, _ := createNMD(t, "", "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, false)
 
@@ -188,7 +190,7 @@ func TestSmartNICCreateUpdateDelete(t *testing.T) {
 
 func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath)
+	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
@@ -223,7 +225,7 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 func TestNaplesDefaultClassicMode(t *testing.T) {
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath)
+	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
@@ -243,7 +245,7 @@ func TestNaplesDefaultClassicMode(t *testing.T) {
 	f2 := func() (bool, []interface{}) {
 		err := netutils.HTTPGet(getNMDUrl(nm)+"/", &naplesCfg)
 		if err != nil {
-			t.Errorf("Failed to get naples config, err:%+v", err)
+			log.Errorf("Failed to get naples config, err:%+v", err)
 			return false, nil
 		}
 
@@ -262,7 +264,7 @@ func TestNaplesDefaultClassicMode(t *testing.T) {
 func TestNaplesRestartClassicMode(t *testing.T) {
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath)
+	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
 	f1 := func() (bool, []interface{}) {
@@ -280,11 +282,58 @@ func TestNaplesRestartClassicMode(t *testing.T) {
 	stopNMD(t, nm, false)
 
 	// start/create NMD again, simulating restart
-	nm, _, _ = createNMD(t, emDBPath)
+	nm, _, _ = createNMD(t, emDBPath, "classic", nicKey1)
 	defer stopNMD(t, nm, true)
 
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	AssertEventually(t, f1, "Failed to verify Classic mode, after Restart")
+}
+
+func TestNaplesManagedMode(t *testing.T) {
+
+	// Start NMD in managed mode
+	nm, _, _ := createNMD(t, emDBPath, "managed", nicKey1)
+	defer stopNMD(t, nm, true)
+	Assert(t, (nm != nil), "Failed to start NMD in managed mode", nm)
+
+	f1 := func() (bool, []interface{}) {
+
+		// Verify mode
+		cfg := nm.getNaplesConfig()
+		log.Infof("NaplesConfig: %v", cfg)
+		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
+			log.Errorf("Mode is not managed")
+			return false, nil
+		}
+
+		// Verify nic state
+		nic, err := nm.GetSmartNIC()
+		if nic == nil || err != nil {
+			log.Errorf("NIC not found in nicDB, mac:%s", nicKey1)
+			return false, nil
+		}
+
+		// Verify NIC admission
+		if nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+			log.Errorf("NIC is not admitted")
+			return false, nil
+		}
+
+		// Verify update task
+		if nm.getUpdStatus() == false {
+			log.Errorf("Update NIC is not in progress")
+			return false, nil
+		}
+
+		// Verify rest server status
+		if nm.getRestServerStatus() == true {
+			log.Errorf("REST server is still up")
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f1, "Failed to verify Managed Mode", string("10ms"), string("30s"))
 }
 
 // TestNaplesModeTransitions tests the mode transition
@@ -292,7 +341,7 @@ func TestNaplesRestartClassicMode(t *testing.T) {
 func TestNaplesModeTransitions(t *testing.T) {
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath)
+	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
@@ -325,7 +374,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 	f2 := func() (bool, []interface{}) {
 		err = netutils.HTTPPost(getNMDUrl(nm), naplesCfg, &resp)
 		if err != nil {
-			t.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
+			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
 			return false, nil
 		}
 		return true, nil
@@ -337,29 +386,28 @@ func TestNaplesModeTransitions(t *testing.T) {
 		cfg := nm.getNaplesConfig()
 		log.Infof("NaplesConfig: %v", cfg)
 		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
-			log.Error("Failed to switch to managed mode")
-			t.Errorf("Failed to switch to managed mode")
+			log.Errorf("Failed to switch to managed mode")
 			return false, nil
 		}
 
 		nic, err := nm.GetSmartNIC()
 		if nic == nil || err != nil {
-			t.Errorf("NIC not found in nicDB, mac:%s", nicKey1)
+			log.Errorf("NIC not found in nicDB, mac:%s", nicKey1)
 			return false, nil
 		}
 
 		if nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
-			t.Errorf("NIC is not admitted")
+			log.Errorf("NIC is not admitted")
 			return false, nil
 		}
 
 		if nm.getUpdStatus() == false {
-			t.Errorf("Update NIC is not in progress")
+			log.Errorf("Update NIC is not in progress")
 			return false, nil
 		}
 
 		if nm.getRestServerStatus() == true {
-			t.Errorf("REST server is still up")
+			log.Errorf("REST server is still up")
 			return false, nil
 		}
 
@@ -378,7 +426,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 func TestNaplesManagedModeManualApproval(t *testing.T) {
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath)
+	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey2)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
@@ -398,7 +446,7 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 	f1 := func() (bool, []interface{}) {
 		err = netutils.HTTPPost(getNMDUrl(nm), naplesCfg, &resp)
 		if err != nil {
-			t.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
+			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
 			return false, nil
 		}
 		return true, nil
@@ -442,7 +490,7 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath)
+	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey3)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	defer stopNMD(t, nm, true)
 
@@ -511,7 +559,7 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 func TestNaplesRestartManagedMode(t *testing.T) {
 
 	// create nmd
-	nm, _, _ := createNMD(t, emDBPath)
+	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
 	var err error
@@ -553,8 +601,16 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 	stopNMD(t, nm, false)
 
 	// create NMD again, simulating restart
-	nm, _, _ = createNMD(t, emDBPath)
+	nm, _, _ = createNMD(t, emDBPath, "classic", "")
 	defer stopNMD(t, nm, true)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 	AssertEventually(t, f2, "Failed to verify Managed Mode after Restart", string("10ms"), string("30s"))
+}
+
+// Test invalid mode
+func TestNaplesInvalidMode(t *testing.T) {
+
+	// Negative test case, invalid mode
+	nm, _, _ := createNMD(t, emDBPath, "unknown", nicKey1)
+	Assert(t, (nm == nil), "Invalid mode should have been rejected", nm)
 }

@@ -51,8 +51,8 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 		case nmd.NaplesMode_MANAGED_MODE:
 			n.StopClassicMode(false)
 
+			n.Add(1)
 			go func() {
-				n.Add(1)
 				defer n.Done()
 				n.StartManagedMode()
 			}()
@@ -96,12 +96,12 @@ func (n *NMD) StartManagedMode() error {
 			}
 
 			// Send NIC register request to CMD
+			log.Infof("Registering NIC with CMD, mac: %+v", mac)
 			resp, err := n.RegisterSmartNICReq(&nicObj)
 
 			// Cache it in nicDB
 			nicObj.Spec.Phase = resp.Phase
 			n.SetSmartNIC(&nicObj)
-			log.Infof("Adding NIC mac:%s to nicDB", mac)
 
 			// Error and Phase response is handled according to the following rules.
 			//
@@ -121,6 +121,7 @@ func (n *NMD) StartManagedMode() error {
 				log.Errorf("Error registering nic, mac: %s err: %+v", mac, err)
 			} else {
 
+				log.Infof("Received register response: %+v", resp)
 				switch resp.Phase {
 
 				case cmd.SmartNICSpec_REJECTED.String():
@@ -151,8 +152,8 @@ func (n *NMD) StartManagedMode() error {
 					n.setRegStatus(false)
 
 					// Start goroutine to send periodic NIC updates
+					n.Add(1)
 					go func() {
-						n.Add(1)
 						defer n.Done()
 						n.SendNICUpdates()
 					}()

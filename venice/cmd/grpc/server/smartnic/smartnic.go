@@ -208,6 +208,7 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 
 		// Reject NIC if the certificate is not valid
 		// TODO: Add exact reason to the response once CKM api is used
+		log.Errorf("Invalid certificate, NIC rejected mac: %v", mac)
 		return &grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_REJECTED.String(), Reason: string("Invalid Cert")}, nil
 	}
 

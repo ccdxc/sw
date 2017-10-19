@@ -19,10 +19,24 @@ import (
 )
 
 // NewNMD returns a new NMD instance
-func NewNMD(platform PlatformAPI, dbPath, nodeUUID, listenURL string) (*NMD, error) {
+func NewNMD(platform PlatformAPI, dbPath, nodeUUID, listenURL string, mode string) (*NMD, error) {
 
 	var emdb emstore.Emstore
 	var err error
+
+	// Set mode and mac
+	var naplesMode nmd.NaplesMode
+	mac := ""
+	switch mode {
+	case "classic":
+		naplesMode = nmd.NaplesMode_CLASSIC_MODE
+	case "managed":
+		naplesMode = nmd.NaplesMode_MANAGED_MODE
+		mac = nodeUUID
+	default:
+		log.Errorf("Invalid mode, mode:%s", mode)
+		return nil, errors.New("Invalid mode")
+	}
 
 	// open the embedded database
 	if dbPath == "" {
@@ -45,7 +59,8 @@ func NewNMD(platform PlatformAPI, dbPath, nodeUUID, listenURL string) (*NMD, err
 			Kind: "Naples",
 		},
 		Spec: nmd.NaplesSpec{
-			Mode: nmd.NaplesMode_CLASSIC_MODE,
+			Mode:       naplesMode,
+			PrimaryMac: mac,
 		},
 	}
 
