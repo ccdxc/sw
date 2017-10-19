@@ -25,16 +25,16 @@ message MonitoringPolicySpec {
 
     // object selector for the service (list of object kind/namespace/instance to match)
     // TBD: this would need to be replaced by a generic definition of an object selector
-    map <string, string> ObjectSelector  = 2 [(gogoproto.jsontag) = "objectSelector,omitempty"];
+    map <string, string> ObjectSelector  = 2 [(gogoproto.jsontag) = "object-selector,omitempty"];
 
     // CollectionPolicy specifies parameters to collect, how often and aggregation performed on this
-    string CollectionPolicy  = 3 [(gogoproto.jsontag) = "collectionPolicy,omitempty"];
+    string CollectionPolicy  = 3 [(gogoproto.jsontag) = "collection-policy,omitempty"];
 
     // RetentionPolicy specifies for how long the data is kept
-    string RetentionPolicy  = 4 [(gogoproto.jsontag) = "retentionPolicy,omitempty"];
+    string RetentionPolicy  = 4 [(gogoproto.jsontag) = "retention-policy,omitempty"];
 
     // ExportPolicies defines the location, frequency and format of data to an external collector
-    repeated string ExportPolicies  = 5 [(gogoproto.jsontag) = "exportPolicy,omitempty"];
+    repeated string ExportPolicies  = 5 [(gogoproto.jsontag) = "export-policy,omitempty"];
 }
 
 message MonitoringPolicyStatus {
@@ -82,21 +82,21 @@ message RetentionPolicySpec {
     // Compaction Interval is the time in minutes, hours or days before compaction starts on the data
     // Compaction results into data granularity loss, therefore this period is kept to be as high as space permits
     // for how much data is being collected
-    string CompactionInterval  = 1 [(gogoproto.jsontag) = "compactionInterval ,omitempty"];
+    string CompactionInterval  = 1 [(gogoproto.jsontag) = "compaction-interval ,omitempty"];
 
     // Compaction Method specifies the method to be used for aggregation i.e. 'linear', 'exponential'
     // When compaction method is is unspecified system defaults to exponential aggregation over the period of time
-    string CompactionMethod  = 2 [(gogoproto.jsontag) = "compactionMethod,omitempty"];
+    string CompactionMethod  = 2 [(gogoproto.jsontag) = "compaction-method,omitempty"];
 
     // MaxRetentionTime defines for how long to keep the data before it is deleted
     // The value is specified as a string format to be hours, days, or hours etc.
     // e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
-    string MaxRetentionTime = 3 [(gogoproto.jsontag) = "maxRetentionTime,omitempty"];
+    string MaxRetentionTime = 3 [(gogoproto.jsontag) = "max-retention-time,omitempty"];
 }
 
 message RetentionPolicyStatus {
      // list of monitoring policies that refer to this collection policy
-     repeated string MonitoringPolicies = 1 [(gogoproto.jsontag) = "monitoringPolicies,omitempty"];
+     repeated string MonitoringPolicies = 1 [(gogoproto.jsontag) = "monitoring-policies,omitempty"];
 }
 
 message RetentionPolicy {
@@ -140,7 +140,7 @@ service RetentionPolicyV1 {
 // expected to configure one of the methods
 message ExternalCred {
     // UserName is the login id to be used towards the external entity
-    string UserName = 1 [(gogoproto.jsontag) = "userName,omitempty"];
+    string UserName = 1 [(gogoproto.jsontag) = "username,omitempty"];
 
     // Password is one time specified, not visibile on read operations
     // Only valid when UserName is defined
@@ -150,17 +150,17 @@ message ExternalCred {
     // External entity supports bearer tokens for authentication and authorization
     // Token refresh is not supported using OAuth2
     // TBD: need to add (venice.secret) = "true" support for this
-    string BearerToken = 3 [(gogoproto.jsontag) = "bearerToken,omitempty"];
+    string BearerToken = 3 [(gogoproto.jsontag) = "bearer-token,omitempty"];
 
     // CertData holds PEM-encoded bytes (typically read from a client certificate file).
-    bytes CertData = 4 [(gogoproto.jsontag) = "certData,omitempty"];
+    bytes CertData = 4 [(gogoproto.jsontag) = "cert-data,omitempty"];
 
     // KeyData holds PEM-encoded bytes (typically read from a client certificate key file).
     // TBD: need to add (venice.secret) = "true" support for this
-    bytes KeyData = 5 [(gogoproto.jsontag) = "keyData,omitempty"];
+    bytes KeyData = 5 [(gogoproto.jsontag) = "key-data,omitempty"];
 
     // CaData holds PEM-encoded bytes (typically read from a root certificates bundle).
-    bytes CaData = 6 [(gogoproto.jsontag) = "caData,omitempty"];
+    bytes CaData = 6 [(gogoproto.jsontag) = "ca-data,omitempty"];
 }
 
 // ----------------------------- Export Policy -----------------------------
@@ -169,7 +169,7 @@ message ExternalCred {
 message ExportPolicySpec {
     // Export Interval defines how often to push the records to an external or internal collector
     // The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
-    string ExportInterval = 1 [(gogoproto.jsontag) = "exportInterval,omitempty"];
+    string ExportInterval = 1 [(gogoproto.jsontag) = "export-interval,omitempty"];
 
     enum Formats {
       Netflow = 0;
@@ -181,10 +181,10 @@ message ExportPolicySpec {
 
     // IP address or DNS address of the collector/entity to which the data is to be exported
     // When unspecified this is assumed tobe Venice
-    string CollectorIpAddress = 3 [(gogoproto.jsontag) = "collectorIpAddress,omitempty"];
+    string CollectorIpAddress = 3 [(gogoproto.jsontag) = "collector-ip-address,omitempty"];
 
     // Protocol and Port number where an external collector is gathering the data
-    string CollectorPort = 4 [(gogoproto.jsontag) = "collectorPort,omitempty"];
+    string CollectorPort = 4 [(gogoproto.jsontag) = "collector-port,omitempty"];
 
     // Credentials provide secure access to the collector
     ExternalCred Credentials = 5 [(gogoproto.jsontag) = "credentials,omitempty"];
@@ -192,7 +192,7 @@ message ExportPolicySpec {
 
 message ExportPolicyStatus {
      // list of monitoring policies that refer to this collection policy
-     repeated string MonitoringPolicies = 1 [(gogoproto.jsontag) = "monitoringPolicies,omitempty"];
+     repeated string MonitoringPolicies = 1 [(gogoproto.jsontag) = "monitoring-policies,omitempty"];
 }
 
 message ExportPolicy {
@@ -237,11 +237,11 @@ message CollectionTrigger {
     // If the trigger is not met, the collection is discarded
     // It is a map of attribute (string name of the field) to a condition "> 2000" or "== true", etc.
     // dependng on the type of the field
-    map <string, string> ConditionalTrigger = 1 [(gogoproto.jsontag) = "conditionalTrigger,omitempty"];
+    map <string, string> ConditionalTrigger = 1 [(gogoproto.jsontag) = "conditional-trigger,omitempty"];
 
     // TimeTrigger specifies the time when data should be collected, text strings as
     // "7pm", "8am-12am", etc. format TBD
-    string TimeTrigger = 2 [(gogoproto.jsontag) = "timeTrigger,omitempty"];
+    string TimeTrigger = 2 [(gogoproto.jsontag) = "time-trigger,omitempty"];
 }
 
 message CollectionPolicySpec {
@@ -257,7 +257,7 @@ message CollectionPolicySpec {
 
 message CollectionPolicyStatus {
      // list of monitoring policies that refer to this collection policy
-     repeated string MonitoringPolicies = 1 [(gogoproto.jsontag) = "monitoringPolicies,omitempty"];
+     repeated string MonitoringPolicies = 1 [(gogoproto.jsontag) = "monitoring-policies,omitempty"];
 }
 
 message CollectionPolicy {

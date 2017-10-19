@@ -64,20 +64,20 @@ message Cluster {
 
 ### 3. Field Names and Json Tags must be camelCased and have a description
 All field names within a proto definition **MUST** be CamelCased and first letter **MUST** be capital for struct definitions.
-Json tags must use first letter as lowerCase and the name *MAY* differ from the field name, likely matching user expectation about a particular field.
+Json tags must use `-` sepearted definitions, thus *MAY* differ from the field name, likely matching user visible aspect of a particular field.
 e.g. various fields names, json tags, and field description in the following definition
 ```go
 message ExportPolicySpec {
     // Export Interval defines how often to push the records to an external or internal collector
     // The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
-    string ExportInterval = 1 [(gogoproto.jsontag) = "exportInterval,omitempty"];
+    string ExportInterval = 1 [(gogoproto.jsontag) = "export-interval,omitempty"];
 
     // IP address of the collector/entity to which the data is to be exported
     // When unspecified venice automatically becomes the data collector
-    string CollectorIpAddress = 2 [(gogoproto.jsontag) = "collectorIpAddress,omitempty"];
+    string CollectorIpAddress = 2 [(gogoproto.jsontag) = "collector-ip-address,omitempty"];
 
     // Protocol and Port number where an external collector is gathering the data
-    string CollectorPort = 3 [(gogoproto.jsontag) = "collectorPort,omitempty"];
+    string CollectorPort = 3 [(gogoproto.jsontag) = "collector-port,omitempty"];
 
     // Format is an enumeration from the list "netflow", "collectd", "kafka", etc. (TBD: choices)
     string Format = 4 [(gogoproto.jsontag) = "format,omitempty"];
@@ -155,5 +155,5 @@ message Network {
 
 ### 6. Plural fields **SHOULD** be appended with an `s`
 ```
-repeated SGRule InRules      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "inRules,omitempty"];
+repeated SGRule InRules      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "in-rules,omitempty"];
 ```

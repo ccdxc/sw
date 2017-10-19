@@ -53,23 +53,23 @@ message ClusterSpec {
 
     // QuorumNodes contains the list of hostnames for nodes configured to be quorum
     // nodes in the cluster.
-    repeated string QuorumNodes = 1 [(gogoproto.jsontag) = "quorumNodes,omitempty"];
+    repeated string QuorumNodes = 1 [(gogoproto.jsontag) = "quorum-nodes,omitempty"];
 
     // VirtualIP is the IP address for managing the cluster. It will be hosted by
     // the winner of election between quorum nodes.
-    string VirtualIP            = 2 [(gogoproto.jsontag) = "virtualIp,omitempty"];
+    string VirtualIP            = 2 [(gogoproto.jsontag) = "virtual-ip,omitempty"];
 
     // NTPServers contains the list of NTP servers for the cluster.
-    repeated string NTPServers  = 3 [(gogoproto.jsontag) = "ntpServers,omitempty"];
+    repeated string NTPServers  = 3 [(gogoproto.jsontag) = "ntp-servers,omitempty"];
 
     // DNSSubDomain is the DNS subdomain for the default tenant.
-    string DNSSubDomain         = 4 [(gogoproto.jsontag) = "dnsSubdomain,omitempty"];
+    string DNSSubDomain         = 4 [(gogoproto.jsontag) = "dns-subdomain,omitempty"];
 
     // AutoAdmitNICs when enabled auto-admits NICs that are validated
     // into Venice Cluster. When it is disabled, NICs validated by CMD are
     // set to Pending state and it requires Manual approval to be admitted
     // into the cluster.
-    bool AutoAdmitNICs          = 5 [(gogoproto.jsontag) = "autoAdmitNics,omitempty"];
+    bool AutoAdmitNICs          = 5 [(gogoproto.jsontag) = "auto-admit-nics,omitempty"];
 }
 
 // ClusterStatus contains the current state of the Cluster.
@@ -188,7 +188,7 @@ message NodeCondition {
 
     // The last time the condition transitioned
     string LastTransitionTime   = 3 [(gogoproto.nullable) = true,
-                                    (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
+                                    (gogoproto.jsontag) = "last-transition-time,omitempty"];
 
     // The reason for the condition's last transition
     string Reason               = 4 [(gogoproto.nullable) = true,
@@ -286,16 +286,16 @@ message SmartNICStatus {
 
     // Serial number
     string SerialNum                        = 2 [(gogoproto.nullable) = true,
-                                                (gogoproto.jsontag) = "serialNumber,omitempty"];
+                                                (gogoproto.jsontag) = "serial-num,omitempty"];
 
     // Primary MAC address, which is MAC address of the primary PF exposed by SmartNIC
     string PrimaryMacAddress                = 3 [(gogoproto.nullable) = true,
-                                                (gogoproto.jsontag) = "primaryMacAddress,omitempty"];
+                                                (gogoproto.jsontag) = "primary-mac-address,omitempty"];
 
     // Node name, will be populated by an entity in Venice (CMD)
     // based on host & nic inventory discovered via Orchestration interface
     string NodeName                         = 4 [(gogoproto.nullable) = true,
-                                                (gogoproto.jsontag) = "nodeName,omitempty"];
+                                                (gogoproto.jsontag) = "node-name,omitempty"];
 
     // Ports holds a list of PortStatus
     repeated PortStatus Ports               = 5 [(gogoproto.nullable) = true,
@@ -323,7 +323,7 @@ message SmartNICCondition {
 
     // The last time the condition transitioned
     string LastTransitionTime       = 3 [(gogoproto.nullable) = true,
-                                        (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
+                                        (gogoproto.jsontag) = "last-transition-time,omitempty"];
 
     // The reason for the condition's last transition
     string Reason                   = 4 [(gogoproto.nullable) = true,
@@ -339,7 +339,7 @@ message PortSpec {
 
     // Mac address of the Port, which is key identifier of the port
     string MacAddress   = 1 [(gogoproto.nullable) = true,
-                            (gogoproto.jsontag) = "macAddress,omitempty"];
+                            (gogoproto.jsontag) = "mac-address,omitempty"];
 
 }
 
@@ -348,11 +348,11 @@ message PortStatus {
 
     // Mac address of the Port, which is key identifier of the port
     string MacAddress                   = 1 [(gogoproto.nullable) = true,
-                                            (gogoproto.jsontag) = "macAddress,omitempty"];
+                                            (gogoproto.jsontag) = "mac-address,omitempty"];
 
     // LinkSpeed of the Port
     string LinkSpeed                    = 2 [(gogoproto.nullable) = true,
-                                            (gogoproto.jsontag) = "linkSpeed,omitempty"];
+                                            (gogoproto.jsontag) = "link-speed,omitempty"];
 
     // List of current Port conditions
     repeated PortCondition Conditions   = 3 [(gogoproto.nullable) = true,
@@ -379,7 +379,7 @@ message PortCondition {
 
     // The last time the condition transitioned
     string LastTransitionTime   = 3 [(gogoproto.nullable) = true,
-                                    (gogoproto.jsontag) = "lastTransitionTime,omitempty"];
+                                    (gogoproto.jsontag) = "last-transition-time,omitempty"];
 
     // The reason for the condition's last transition
     string Reason               = 4 [(gogoproto.nullable) = true,

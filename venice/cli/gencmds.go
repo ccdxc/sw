@@ -955,23 +955,23 @@ var definitionCommands = []cli.Command{
 var CreateClusterFlags = []cli.Flag{
 
 	cli.BoolFlag{
-		Name: "autoAdmitNics",
+		Name: "auto-admit-nics",
 	},
 
 	cli.StringFlag{
-		Name: "dnsSubdomain",
+		Name: "dns-subdomain",
 	},
 
 	cli.StringSliceFlag{
-		Name: "ntpServers",
+		Name: "ntp-servers",
 	},
 
 	cli.StringSliceFlag{
-		Name: "quorumNodes",
+		Name: "quorum-nodes",
 	},
 
 	cli.StringFlag{
-		Name: "virtualIp",
+		Name: "virtual-ip",
 	},
 }
 
@@ -1150,7 +1150,7 @@ var CreateSgpolicyFlags = []cli.Flag{
 var CreateSmartNICFlags = []cli.Flag{
 
 	cli.StringSliceFlag{
-		Name: "macAddress",
+		Name: "mac-address",
 	},
 
 	cli.StringFlag{

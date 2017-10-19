@@ -65,7 +65,7 @@ func TestStartServer(t *testing.T) {
 }
 
 func TestClusterCreate(t *testing.T) {
-	out := veniceCLI("update cluster --label type:vcenter --label allowed:qa --label dc:sjc-lab22 --virtualIp 158.21.34.44 --quorumNodes mgmt1 --quorumNodes mgmt2 --quorumNodes mgmt3 --ntpServers ntp-svr1 --ntpServers ntp-svr2 --dnsSubdomain internal.pensando.io dc-az-cluster1")
+	out := veniceCLI("update cluster --label type:vcenter --label allowed:qa --label dc:sjc-lab22 --virtual-ip 158.21.34.44 --quorum-nodes mgmt1 --quorum-nodes mgmt2 --quorum-nodes mgmt3 --ntp-servers ntp-svr1 --ntp-servers ntp-svr2 --dns-subdomain internal.pensando.io dc-az-cluster1")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("update: garbled output '%s'", out)
 	}
@@ -89,7 +89,7 @@ func TestClusterCreate(t *testing.T) {
 }
 
 func TestClusterUpdate(t *testing.T) {
-	out := veniceCLI("update cluster --virtualIp 151.21.43.44 dc-az-cluster1")
+	out := veniceCLI("update cluster --virtual-ip 151.21.43.44 dc-az-cluster1")
 	if !fmtOutput && strings.TrimSpace(out) != "" {
 		t.Fatalf("update: garbled output '%s'", out)
 	}
@@ -679,7 +679,7 @@ func TestCommandCompletion(t *testing.T) {
 		t.Fatalf("command completion for command names failed: invalid output '%s'", out)
 	}
 
-	out = veniceCLI("create cluster --virtualIp --gbc")
+	out = veniceCLI("create cluster --virtual-ip --gbc")
 	if !strings.Contains(out, "{value}") {
 		t.Fatalf("command completion for string value failed: invalid output '%s'", out)
 	}
@@ -688,7 +688,7 @@ func TestCommandCompletion(t *testing.T) {
 		t.Fatalf("command completion for string-value map: invalid output '%s'", out)
 	}
 	out = veniceCLI("create cluster --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --autoAdmitNics --dnsSubdomain --ntpServers --quorumNodes --virtualIp {cluster}") {
+	if !strings.Contains(out, "--label --dry-run --file --auto-admit-nics --dns-subdomain --ntp-servers --quorum-nodes --virtual-ip {cluster}") {
 		t.Fatalf("cluster command completion: invalid output '%s'", out)
 	}
 
@@ -706,11 +706,11 @@ func TestCommandCompletion(t *testing.T) {
 	}
 
 	out = veniceCLI("create smartNIC --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --macAddress --phase {smartNIC}") {
+	if !strings.Contains(out, "--label --dry-run --file --mac-address --phase {smartNIC}") {
 		t.Fatalf("smartNIC command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("update smartNIC --gbc")
-	if !strings.Contains(out, "--label --dry-run --file --macAddress --phase") {
+	if !strings.Contains(out, "--label --dry-run --file --mac-address --phase") {
 		t.Fatalf("smartNIC command completion: invalid output '%s'", out)
 	}
 	out = veniceCLI("delete smartNIC --gbc")

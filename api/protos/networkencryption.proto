@@ -18,7 +18,7 @@ message TLSProtocolSpec {
 
   // The name of the cipher suite in IANA format
   // default is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-  string CipherSuite = 2 [(gogoproto.jsontag) = "cipherSuite,omitempty"];
+  string CipherSuite = 2 [(gogoproto.jsontag) = "cipher-suite,omitempty"];
 
   // Not supported:
   // - compression (not secure)
@@ -27,11 +27,11 @@ message TLSProtocolSpec {
 
 message IPsecProtocolSpec {
   // ESP encryption algorithm. Default is "aes-256-gcm-128" (See RFC4106)
-  string EncryptionTransform = 1 [(gogoproto.jsontag) = "encryptionTransform,omitempty"];
+  string EncryptionTransform = 1 [(gogoproto.jsontag) = "encryption-transform,omitempty"];
 
   // ESP integrity algorithm.
   // Default is "NULL" (must be "NULL" if AES-GCM is used for encryption)
-  string IntegrityTransform = 2 [(gogoproto.jsontag) = "integrityTransform,omitempty"];
+  string IntegrityTransform = 2 [(gogoproto.jsontag) = "integrity-transform,omitempty"];
 
   // Not supported:
   // - IKE
@@ -53,7 +53,7 @@ message TrafficEncryptionPolicySpec {
   IPsecProtocolSpec IPsec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ipsec,omitempty"];
 
   // How often the keys should be rotated, in seconds
-  uint32  KeyRotationIntervalSecs = 4 [(gogoproto.jsontag) = "keyRotationIntervalSecs,omitempty"];
+  uint32  KeyRotationIntervalSecs = 4 [(gogoproto.jsontag) = "key-rotation-interval-secs,omitempty"];
 }
 
 message TrafficEncryptionPolicyStatus {
