@@ -202,6 +202,8 @@ class Checksum:
         self.IngParserCsumEngineObj = ParserCsumEngine(xgress.INGRESS, capri_be)
         self.EgDeParserCsumEngineObj = DeParserCsumEngine(xgress.EGRESS, capri_be)
         self.dpr_phdr_csum_obj      = {} #List of phdr objects k = hdr-name, v = obj
+        self.dpr_hw_csum_obj        = [] #Sorted list of (csum_obj, is_phdr, calfldobj)
+                                         #sorted based on fldstart value.
 
 
     def initialize(self):
@@ -744,8 +746,12 @@ class Checksum:
             ohi_instr_inst += 1
         elif parse_state.phdr_type == 'v6':
             #In case of v6 with option parsing, each option parsing state will
-            # adjust payload len.
-            pass
+            # adjust payload len. If any v6 state is loading PayloadLen from
+            # packet into variable, generate OHI instruction to load it.
+            self.CsumParserPayloadLenUpdateInstrGenerate(parse_state, sram, \
+                                                         ohi_instr_inst,    \
+                                                         mux_inst_allocator,\
+                                                         mux_idx_allocator)
         else:
             assert(0), pdb.set_trace()
 
@@ -960,7 +966,7 @@ class Checksum:
                 # checksum location byte offset in TCP=16/UDP=6 hdr
                 csum_loc_adj = 16
             elif calfldobj.CsumPayloadHdrTypeGet() == 'udp':
-                addlen = 0
+                addlen = 1
                 csum_loc_adj = 6
             else:
                 assert(0), pdb.set_trace()
@@ -1108,8 +1114,9 @@ class Checksum:
         csum_str += "\n\n\n\n\n"
         hfile.write(csum_str)
         for k, v in HdrCsumD.items():
-            csum_str = "#define csum_hdr_%s %10d\n" % (k, v)
+            csum_str = "#define csum_hdr_{:12s}{:8d}\n".format(k, v)
             hfile.write(csum_str)
+        csum_str += "\n"
         hfile.close()
 
 
@@ -1135,6 +1142,20 @@ class Checksum:
                 return True
         return False
 
+    def IsHdrInPayLoadCsumCompute(self, hdrname):
+        for calfldobj in self.update_cal_fieldlist:
+            if calfldobj.payload_checksum and \
+               calfldobj.CalculatedFieldHdrGet() == hdrname:
+                return True
+        return False
+
+    def IsHdrInCsumComputePhdr(self, hdrname):
+        for calfldobj in self.update_cal_fieldlist:
+            if calfldobj.payload_checksum and \
+               calfldobj.phdr_name == hdrname:
+                return True
+        return False
+
     def DeParserPayLoadLenSlotGet(self, calfldobj, eg_parser):
         assert calfldobj.l4_update_len_field != '', pdb.set_trace()
         cf_l4_update_len = self.be.pa.get_field(calfldobj.l4_update_len_field, eg_parser.d)
@@ -1153,6 +1174,7 @@ class Checksum:
         self.csum_compute_logger.debug('    Including Csum result of %s in '\
                                        'computation of following headers' % \
                                        csum_hdr)
+        #pdb.set_trace()
         #Include csum_unit in all outer payload checksum computation.
         #This is provided in csum_profile as csum-engine bit mask
         for outer_csum_obj, _csum_hdr in outer_csum_objs:
@@ -1201,7 +1223,6 @@ class Checksum:
         '''
         csum_hdrs = set()
         csum_phdrs = set()
-        payload_calfld_hdr = []
         for calfldobj in self.update_cal_fieldlist:
             csum_hdr = calfldobj.CalculatedFieldHdrGet()
             if csum_hdr not in csum_hdrs:
@@ -1266,8 +1287,6 @@ class Checksum:
                         assert phdr_csum_obj != None, pdb.set_trace()
                         #CsumHV bit for phdrs that are not calfldobjs (ipv6) is
                         #same as HV bit.
-                        phdr_csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[hdr])
-                        phdr_csum_obj.CsumHvBitNumSet(eg_parser.hdr_hv_bit[hdr])
                         continue
 
                     #Pick first calfldobj from the list is fine. In case of hdr
@@ -1278,7 +1297,7 @@ class Checksum:
                     if not calfldobj.payload_checksum and calfldobj in csum_objects:
                         _csum_obj = calfldobj.DeParserCsumObjGet()
                         _csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[hdr])
-                        _csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[hdr])
+                        _csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[hdr][0][0])
                         calfldhdr = calfldobj.CalculatedFieldHdrGet()
                         _csum_obj.CsumUnitNumSet(self.EgDeParserCsumEngineObj.\
                                                  AllocateCsumUnit(calfldhdr))
@@ -1318,6 +1337,14 @@ class Checksum:
                         phdr = topo_phdrs_in_parse_path[0]
                         pl_calfldobj = self.UpdateCalFieldObjGet(hdr.name,\
                                                                  phdr)
+                        if pl_calfldobj and pl_calfldobj not in csum_objects:
+                            # This payload object hash already been processed.
+                            # However to include result of inner csum into
+                            # outer csum, process it.
+                            _csum_obj = pl_calfldobj.DeParserCsumObjGet()
+                            self.DeParserInnerPayLoadCsumInclude(\
+                                        payload_csum_obj_list, hdr.name, _csum_obj, parse_path)
+
                         if pl_calfldobj and pl_calfldobj in csum_objects:
                             calfldhdr = pl_calfldobj.CalculatedFieldHdrGet()
                             #Inorder to handle case where phdr is not part of
@@ -1348,13 +1375,12 @@ class Checksum:
                                         payload_csum_obj_list, hdr.name, _csum_obj, parse_path)
                             payload_csum_obj_list.append((_csum_obj, hdr.name))
                             _csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[hdr])
-                            _csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[hdr])
+                            _csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[hdr][0][0])
                             _csum_obj.CsumProfileNumSet(csum_profile)
                             _csum_obj.PhdrValidSet(0)
                             _csum_profile_obj = pl_calfldobj.\
                                                     DeParserCsumProfileObjGet()
                             _csum_profile_obj.CsumProfileNumSet(csum_profile)
-                            _csum_profile_obj.CsumProfileAddLenSet(1)
                             dprsr_payload_len_slot = \
                                     self.DeParserPayLoadLenSlotGet(pl_calfldobj, eg_parser)
                             _csum_profile_obj.CsumProfilePhvLenSelSet(1, \
@@ -1366,7 +1392,8 @@ class Checksum:
                                 add_len = 1
                             elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'udp':
                                 _csum_profile_obj.CsumProfileCsumLocSet(6)
-                                add_len = 0
+                                add_len = 1
+                            _csum_profile_obj.CsumProfileAddLenSet(add_len)
 
                             if self.DeParserPhdrCsumObjGet(phdr, csum_unit,\
                                                            hdr.name) == None:
@@ -1377,8 +1404,15 @@ class Checksum:
                                                                     -1, '')
                                 assert phdr_csum_obj != None, pdb.set_trace()
                                 _phdr_csum_obj = copy.copy(phdr_csum_obj)
-                                _phdr_csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[hdr])
-                                _phdr_csum_obj.CsumHvBitNumSet(eg_parser.hdr_hv_bit[hdr])
+                                phdr_inst = self.be.h.p4_header_instances[phdr]
+                                _phdr_csum_obj.HvBitNumSet(eg_parser.hdr_hv_bit[phdr_inst])
+                                if pl_calfldobj.CsumPayloadHdrTypeGet() == 'tcp':
+                                    _phdr_csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[phdr_inst][-2][0])
+                                elif pl_calfldobj.CsumPayloadHdrTypeGet() == 'udp':
+                                    _phdr_csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[phdr_inst][-1][0])
+                                else:
+                                    pdb.set_trace()
+                                
                                 phdr_profile = self.EgDeParserCsumEngineObj.\
                                           AllocatePhdrProfile(calfldhdr, phdr)
                                 _phdr_csum_obj.PhdrProfileNumSet(phdr_profile)
@@ -1420,7 +1454,9 @@ class Checksum:
         '''
             Configure HdrFldStart,End and also generate JSON config output.
         '''
-        csum_hdr_index = 0
+        csum_hdrs = []
+        hw_csum_obj = [] # list of csumobj that need to be programmed in HW
+                         # without repeatation and maintaining Banyan contrainst.
         for calfldobj in self.update_cal_fieldlist:
             csum_hdr = calfldobj.CalculatedFieldHdrGet()
             _csum_obj = calfldobj.DeParserCsumObjGet()
@@ -1428,19 +1464,16 @@ class Checksum:
             assert _csum_obj != None, pdb.set_trace()
             assert _csum_profile_obj != None, pdb.set_trace()
             assert _csum_obj.hv != -1, pdb.set_trace()
-            idx = deparser.be.hw_model['deparser']['dpa_start_hvb_in_phv']\
-                                                             - _csum_obj.hv
-            fldstart, fldend, _ = hv_fld_slots[idx]
+            assert _csum_obj.csum_hv != -1, pdb.set_trace()
+            fldstart, fldend, _ = hv_fld_slots[_csum_obj.csum_hv]
             _csum_obj.HdrFldStartEndSet(fldstart,fldend)
             if calfldobj.payload_checksum:
                 _phdr_csum_obj = calfldobj.DeParserPhdrCsumObjGet() 
                 _phdr_profile_obj = calfldobj.DeParserPhdrProfileObjGet() 
                 assert _phdr_csum_obj != None, pdb.set_trace()
                 assert _phdr_profile_obj != None, pdb.set_trace()
-                assert _phdr_csum_obj.hv != -1, pdb.set_trace()
-                idx = deparser.be.hw_model['deparser']['dpa_start_hvb_in_phv']\
-                                                            - _phdr_csum_obj.hv
-                fldstart, fldend, _ = hv_fld_slots[idx]
+                assert _phdr_csum_obj.csum_hv != None, pdb.set_trace()
+                fldstart, fldend, _ = hv_fld_slots[_phdr_csum_obj.csum_hv]
                 _phdr_csum_obj.HdrFldStartEndSet(fldstart,fldend)
 
             #Generate Logical Output
@@ -1451,17 +1484,34 @@ class Checksum:
                                             LogGenerate(calfldobj.phdr_name))
                 calfldobj.DeParserCsumObjAddLog(_phdr_profile_obj.\
                                             LogGenerate())
-            #Generate ASIC Config
-            csum_hdr_cfg_name = 'cap_dppcsum_csr_cfg_csum_hdrs[%d]' %\
-                                    (csum_hdr_index)
-            csum_hdr_index += 1
-            _csum_obj.ConfigGenerate(dpp_json['cap_dpp']\
-                                    ['registers'][csum_hdr_cfg_name])
-            csum_profile_cfg_name = 'cap_dppcsum_csr_cfg_csum_profile[%d]' %\
-                                       _csum_profile_obj.CsumProfileNumGet()
-            _csum_profile_obj.ConfigGenerate(dpp_json['cap_dpp']\
-                                        ['registers'][csum_profile_cfg_name])
+            if csum_hdr not in csum_hdrs:
+                csum_hdrs.append(csum_hdr)
+                hw_csum_obj.append((_csum_obj, False, calfldobj))
+            #hw_csum_obj.append((_csum_obj, False, calfldobj))
             if calfldobj.payload_checksum:
+                hw_csum_obj.append((_phdr_csum_obj, True, calfldobj))
+
+        #Before generating HW config, sort based on StartFld Value.
+        self.dpr_hw_csum_obj = sorted(hw_csum_obj, key=lambda obj: obj[0].HdrFldStartGet())
+
+        #Generate ASIC Config
+        csum_hdr_index = 0
+        for _, is_phdr, _calfldobj in self.dpr_hw_csum_obj:
+            if not is_phdr:
+                _csum_obj = _calfldobj.DeParserCsumObjGet()
+                _csum_profile_obj = _calfldobj.DeParserCsumProfileObjGet()
+                csum_hdr_cfg_name = 'cap_dppcsum_csr_cfg_csum_hdrs[%d]' %\
+                                        (csum_hdr_index)
+                csum_hdr_index += 1
+                _csum_obj.ConfigGenerate(dpp_json['cap_dpp']\
+                                        ['registers'][csum_hdr_cfg_name])
+                csum_profile_cfg_name = 'cap_dppcsum_csr_cfg_csum_profile[%d]' %\
+                                           _csum_profile_obj.CsumProfileNumGet()
+                _csum_profile_obj.ConfigGenerate(dpp_json['cap_dpp']\
+                                           ['registers'][csum_profile_cfg_name])
+            if is_phdr:
+                _phdr_csum_obj = _calfldobj.DeParserPhdrCsumObjGet()
+                _phdr_profile_obj = _calfldobj.DeParserPhdrProfileObjGet()
                 csum_hdr_cfg_name = 'cap_dppcsum_csr_cfg_csum_hdrs[%d]' %\
                                     (csum_hdr_index)
                 csum_hdr_index += 1
@@ -1471,6 +1521,7 @@ class Checksum:
                                      _phdr_csum_obj.PhdrProfileNumGet()
                 _phdr_profile_obj.ConfigGenerate(dpp_json['cap_dpp']\
                                              ['registers'][phdr_cfg_name])
+
         #Json is dumped in the caller to cfg-file.
 
 
@@ -1493,10 +1544,41 @@ class Checksum:
             for log_str in calfldobj.DeParserCsumObjLogStrTableGet():
                 ofile.write(log_str)
 
+        ofile.write("Summary: Checksum Compute Config in Egress Deparser\n")
+        ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
 
+        
+        pstr = '{:12s}{:5s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
+               '{:5s}{:5s}{:5s}\n'.format("Hdr", "csum#", "  csum", "  HV", \
+                                               "Csum", "Phdr", "Phdr", "Phdr",\
+                                               "HdrFld", "HdrFld", "Csum", "use",\
+                                               "phv", "loc", "add")
+        pstr += '{:12s}{:5s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
+               '{:5s}{:5s}{:5s}\n'.format("   ", "    ", "  Hv", "   ", \
+                                               "Profile", "Valid", "Unit", "Profile",\
+                                               "Start", "End", "incl", "phv",\
+                                               "len", "adj", "len")
+        pstr += '{:12s}{:5s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
+               '{:5s}{:5s}{:5s}\n'.format("   ", "    ", " ", " ", \
+                                               "       ", "     ", "    ", "       ",\
+                                               "     ", "   ", "BM", "len",\
+                                               "sel", "   ", "   ")
+        pstr += '{:12s}{:5s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
+               '{:5s}{:5s}{:5s}\n'.format("   ", "    ", " ", " ", \
+                                               "       ", "     ", "    ", "       ",\
+                                               "     ", "   ", "  ", "   ",\
+                                               "   ", "   ", "   ")
+        ofile.write(pstr)
+        for _, is_phdr, _calfldobj in self.dpr_hw_csum_obj:
+            ofile.write(_calfldobj.DeparserCsumConfigMatrixRowLog(is_phdr))
+        ofile.write("\n\n")
+
+        '''
         ofile.write("Checksum Verify/Compute Config\n")
         ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
         for log_str in self.CalFldListLogStrTableGet():
             ofile.write(log_str)
+        '''
+
         ofile.close()
 

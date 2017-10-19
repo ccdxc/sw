@@ -167,29 +167,29 @@ class ParserPhdrProfile:
         self.phdr_profile = phdr_profile
 
     def ConfigGenerate(self, phdr_profile):
-        phdr_profile['fld'][0]['fld_en']    = self.fld0_en
-        phdr_profile['fld'][0]['fld_align'] = self.fld0_align
-        phdr_profile['fld'][0]['fld_start'] = self.fld0_start
-        phdr_profile['fld'][0]['fld_end']   = self.fld0_end
-        phdr_profile['fld'][0]['add_len']   = self.fld0_add_len
+        phdr_profile['fld'][0]['fld_en']    = str(self.fld0_en)
+        phdr_profile['fld'][0]['fld_align'] = str(self.fld0_align)
+        phdr_profile['fld'][0]['fld_start'] = str(self.fld0_start)
+        phdr_profile['fld'][0]['fld_end']   = str(self.fld0_end)
+        phdr_profile['fld'][0]['add_len']   = str(self.fld0_add_len)
 
-        phdr_profile['fld'][1]['fld_en']    = self.fld1_en
-        phdr_profile['fld'][1]['fld_align'] = self.fld1_align
-        phdr_profile['fld'][1]['fld_start'] = self.fld1_start
-        phdr_profile['fld'][1]['fld_end']   = self.fld1_end
-        phdr_profile['fld'][1]['add_len']   = self.fld1_add_len
+        phdr_profile['fld'][1]['fld_en']    = str(self.fld1_en)
+        phdr_profile['fld'][1]['fld_align'] = str(self.fld1_align)
+        phdr_profile['fld'][1]['fld_start'] = str(self.fld1_start)
+        phdr_profile['fld'][1]['fld_end']   = str(self.fld1_end)
+        phdr_profile['fld'][1]['add_len']   = str(self.fld1_add_len)
 
-        phdr_profile['fld'][2]['fld_en']    = self.fld2_en
-        phdr_profile['fld'][2]['fld_align'] = self.fld2_align
-        phdr_profile['fld'][2]['fld_start'] = self.fld2_start
-        phdr_profile['fld'][2]['fld_end']   = self.fld2_end
-        phdr_profile['fld'][2]['add_len']   = self.fld2_add_len
+        phdr_profile['fld'][2]['fld_en']    = str(self.fld2_en)
+        phdr_profile['fld'][2]['fld_align'] = str(self.fld2_align)
+        phdr_profile['fld'][2]['fld_start'] = str(self.fld2_start)
+        phdr_profile['fld'][2]['fld_end']   = str(self.fld2_end)
+        phdr_profile['fld'][2]['add_len']   = str(self.fld2_add_len)
 
-        phdr_profile['fld'][3]['fld_en']    = self.fld3_en
-        phdr_profile['fld'][3]['fld_align'] = self.fld3_align
-        phdr_profile['fld'][3]['fld_start'] = self.fld3_start
-        phdr_profile['fld'][3]['fld_end']   = self.fld3_end
-        phdr_profile['fld'][3]['add_len']   = self.fld3_add_len
+        phdr_profile['fld'][3]['fld_en']    = str(self.fld3_en)
+        phdr_profile['fld'][3]['fld_align'] = str(self.fld3_align)
+        phdr_profile['fld'][3]['fld_start'] = str(self.fld3_start)
+        phdr_profile['fld'][3]['fld_end']   = str(self.fld3_end)
+        phdr_profile['fld'][3]['add_len']   = str(self.fld3_add_len)
 
 
 class ParserCsumProfile:
@@ -239,18 +239,18 @@ class ParserCsumProfile:
 
 
     def ConfigGenerate(self, profile):
-        profile['len_mask']['value']       = self.len_mask
-        profile['len_shift_left']['value'] = self.len_shift_left
-        profile['len_shift_val']['value']  = self.len_shift_val
-        profile['addsub_start']['value']   = self.addsub_start
-        profile['start_adj']['value']      = self.start_adj
-        profile['addsub_end']['value']     = self.addsub_end
-        profile['end_adj']['value']        = self.end_adj
-        profile['addsub_phdr']['value']    = self.addsub_phdr
-        profile['phdr_adj']['value']       = self.phdr_adj
-        profile['addsub_csum_loc']['value']= self.addsub_csum_loc
-        profile['csum_loc_adj']['value']   = self.csum_loc_adj
-        profile['align']['value']          = self.align
+        profile['len_mask']['value']       = str(self.len_mask)
+        profile['len_shift_left']['value'] = str(self.len_shift_left)
+        profile['len_shift_val']['value']  = str(self.len_shift_val)
+        profile['addsub_start']['value']   = str(self.addsub_start)
+        profile['start_adj']['value']      = str(self.start_adj)
+        profile['addsub_end']['value']     = str(self.addsub_end)
+        profile['end_adj']['value']        = str(self.end_adj)
+        profile['addsub_phdr']['value']    = str(self.addsub_phdr)
+        profile['phdr_adj']['value']       = str(self.phdr_adj)
+        profile['addsub_csum_loc']['value']= str(self.addsub_csum_loc)
+        profile['csum_loc_adj']['value']   = str(self.csum_loc_adj)
+        profile['align']['value']          = str(self.align)
 
         log_str = ''
         log_str += 'Csum Profile\n'
@@ -482,7 +482,7 @@ class ParserCalField:
         log_str += '    Instruction#  %d \n' % (mux_instr_sel)
         log_str += '        sel         = %d \n' % (sel)
         log_str += '        muxsel      = %d \n' % (mux_sel)
-        log_str += '        mask_val    = 0%x\n' % (mask)
+        log_str += '        mask_val    = 0x%x\n'% (mask)
         log_str += '        addsub      = %d \n' % (add_sub)
         log_str += '        addsub_val  = %d \n' % (add_sub_val)
         log_str += '        shiftleft   = %d \n' % (shift_left)
@@ -652,11 +652,9 @@ class ParserCalField:
         if parse_state.phdr_type == 'v4':
             log_str     += '    PseudoHdr Type V4\n'
             addsub_end  = 1
-            end_adj     = 20
+            end_adj     = 0
             csum_profile_obj.CsumProfileShiftLeftSet(shift_left, shift_val)
             csum_profile_obj.CsumProfileStartAdjSet(addsub_start, start_adj)
-            #Since ihl*4 - 20 + totalLen is captured in OHI, add 20Bytes
-            #back so that payload len is adjusted.
             csum_profile_obj.CsumProfileEndAdjSet(addsub_end, end_adj)
             # Phdr start offset is same as IP hdr start offset
             csum_profile_obj.CsumProfilePhdrSet(addsub_phdr, phdr_adj)

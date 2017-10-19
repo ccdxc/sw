@@ -1176,13 +1176,22 @@ class capri_gress_pa:
         return cf
 
     def allocate_csum_hv_field(self, hdr_name):
-        hfname = hdr_name + '.csum'
-        if hfname not in self.fields:
-            cf = capri_field(None, self.d, 1, hfname)
-            self.fields[hfname] = cf
-        else:
-            cf = self.fields[hfname]
-        return cf
+        csum_hv_names = []
+        if self.pa.be.checksum.IsHdrInCsumCompute(hdr_name):
+            hfname = hdr_name + '.csum'
+            csum_hv_names.append(hfname)
+        if not self.pa.be.checksum.IsHdrInPayLoadCsumCompute(hdr_name):
+            hfname = hdr_name + '.tcp_csum'
+            csum_hv_names.append(hfname)
+            hfname = hdr_name + '.udp_csum'
+            csum_hv_names.append(hfname)
+
+        for hfname in csum_hv_names:
+            if hfname not in self.fields:
+                cf = capri_field(None, self.d, 1, hfname)
+                self.fields[hfname] = cf
+            else:
+                cf = self.fields[hfname]
 
 
     def header_has_ohi(self, hdr):
@@ -2376,8 +2385,9 @@ class capri_pa:
                         if d == xgress.EGRESS:
                             #If header is part of hdr-checksum or payload checksum
                             #allocate csum_hv bit capri-field -- Only in egress pipe.
-                            if self.be.checksum.IsHdrInCsumCompute(name):
-                                csum_cf = self.allocate_csum_hv_field(name, d)
+                            if self.be.checksum.IsHdrInCsumCompute(name) or \
+                                self.be.checksum.IsHdrInCsumComputePhdr(name):
+                                self.allocate_csum_hv_field(name, d)
 
             #capture metadata hdr inst that is used to store variable pkt len
             #and truncation length. Fields of this header have to be allocated in

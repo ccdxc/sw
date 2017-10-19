@@ -147,7 +147,7 @@ class DeParserPhdrProfile:
             self.fld2_align    = 1 # Aligns next_header
                                    # 8b value as bottom
                                    # 8b in 16b value
-            self.add_len       = 1
+            self.add_len       = add_len
         else:
             assert(0), pdb.set_trace()
 
@@ -254,8 +254,8 @@ class DeParserCsumProfile:
         csum_profile['end_adj']       ['value']=str(self.end_adj)
         csum_profile['loc_adj']       ['value']=str(self.csum_loc_adj)
         csum_profile['add_len']       ['value']=str(self.add_len)
-        csum_profile['csum_unit_include_bm']['value'] = \
-                                str(self.csum_unit_include_bm)
+        #csum_profile['csum_unit_include_bm']['value'] = \
+        #                        str(self.csum_unit_include_bm)
     def LogGenerate(self):
         log_str = ''
         log_str += 'DeParser Csum Profile:\n'
@@ -350,17 +350,26 @@ class DeParserCsumObj:
         self.hdrfld_start   = hdrfld_start
         self.hdrfld_end     = hdrfld_end
 
+    def HdrFldStartGet(self):
+        return self.hdrfld_start
+
     def ConfigGenerate(self, csum_hdr_cfg):
-        csum_hdr_cfg['hdr_num']['value'] = str(self.csum_hv)
+        #max_hv_bit_idx = self.be.hw_model['parser']['max_hv_bits'] - 1
+        max_hv_bit_idx = 127 #Add code to get BE reference in this obj
+        csum_hdr_cfg['hdr_num']['value'] = str(max_hv_bit_idx - self.csum_hv)
         if self.phdr_only:
             csum_hdr_cfg['csum_vld']['value']=str(0)
         else:
             csum_hdr_cfg['csum_vld']['value']=str(1)
-        csum_hdr_cfg['csum_unit']   ['value']=str(self.unit)
-        csum_hdr_cfg['csum_profile']['value']=str(self.profile)
+        csum_hdr_cfg['csum_unit']   ['value']=str(self.unit)\
+                                              if self.unit != -1 else str(0)
+        csum_hdr_cfg['csum_profile']['value']=str(self.profile)\
+                                              if self.profile != -1 else str(0)
         csum_hdr_cfg['phdr_vld']    ['value']=str(self.phdr_vld)
-        csum_hdr_cfg['phdr_unit']   ['value']=str(self.phdr_unit)
-        csum_hdr_cfg['phdr_profile']['value']=str(self.phdr_profile)
+        csum_hdr_cfg['phdr_unit']   ['value']=str(self.phdr_unit)\
+                                              if self.phdr_unit != -1 else str(0)
+        csum_hdr_cfg['phdr_profile']['value']=str(self.phdr_profile)\
+                                              if self.phdr_profile != -1 else str(0)
         csum_hdr_cfg['hdrfld_start']['value']=str(self.hdrfld_start)
         csum_hdr_cfg['hdrfld_end']  ['value']=str(self.hdrfld_end)
         csum_hdr_cfg['crc_include_bm']['value']=str(self.crc_include_bm)
@@ -486,4 +495,36 @@ class DeParserCalField:
     def DeParserCsumObjAddLog(self, logstr):
         self.logstr_tbl.append(logstr)
 
+    def DeparserCsumConfigMatrixRowLog(self, is_phdr):
+        if not is_phdr:
+            pstr = '{:12s}{:5d}{:5d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6d}{:5d}'\
+                   '{:5d}{:5d}{:5d}\n'.format(self.dstField.split(".")[0],
+                                       self.csum_hdr_obj.CsumUnitNumGet(),
+                                       self.csum_hdr_obj.CsumHvBitNumGet(),
+                                       self.csum_hdr_obj.HvBitNumGet(),
+                                       self.csum_hdr_obj.profile,
+                                       self.csum_hdr_obj.phdr_vld,
+                                       self.csum_hdr_obj.phdr_unit,
+                                       self.csum_hdr_obj.phdr_profile,
+                                       self.csum_hdr_obj.hdrfld_start,
+                                       self.csum_hdr_obj.hdrfld_end,
+                                       self.csum_hdr_obj.csum_unit_include_bm,
+                                       self.csum_profile_obj.use_phv_len,
+                                       self.csum_profile_obj.phv_len_sel,
+                                       self.csum_profile_obj.csum_loc_adj,
+                                       self.csum_profile_obj.add_len)
+        if is_phdr:
+            pstr = '{:12s}{:5d}{:5d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6d}'\
+                    '\n'.format(self.phdr_name,
+                                self.phdr_csum_hdr_obj.CsumUnitNumGet(),
+                                self.phdr_csum_hdr_obj.CsumHvBitNumGet(),
+                                self.phdr_csum_hdr_obj.HvBitNumGet(),
+                                self.phdr_csum_hdr_obj.profile,
+                                self.phdr_csum_hdr_obj.phdr_vld,
+                                self.phdr_csum_hdr_obj.phdr_unit,
+                                self.phdr_csum_hdr_obj.phdr_profile,
+                                self.phdr_csum_hdr_obj.hdrfld_start,
+                                self.phdr_csum_hdr_obj.hdrfld_end,
+                                self.phdr_csum_hdr_obj.csum_unit_include_bm)
+        return pstr
 

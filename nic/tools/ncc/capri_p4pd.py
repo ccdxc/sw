@@ -1155,12 +1155,6 @@ class capri_p4pd:
             for table_name in tbl_mgr.gress_tm[d].tables:
                 if table_name not in self.alltables.keys():
                     ctable = tbl_mgr.gress_tm[d].tables[table_name]
-                    if ctable.is_toeplitz_hash():
-                        # no programming apis needed for toeplitz hash table
-                        continue
-                    elif ctable.is_wide_key:
-                        # XXX need support for widekey programming
-                        continue
                     self.alltables[table_name] = ctable
 
         alltables = OrderedDict()

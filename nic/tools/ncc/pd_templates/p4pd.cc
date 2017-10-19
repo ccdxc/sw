@@ -1469,7 +1469,7 @@ ${table}_hwkey_build(uint32_t tableid,
 //::                i = 1
 //::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
 //::                    hdrcontainer, hdrukeys = hdr_un_containers
-//::                    if len(fldukeys) > 1:
+//::                    if len(hdrukeys) > 1:
 //::                        ustr = table + '_hdr_u' + str(i) + '.'
 //::                    else:
 //::                        ustr=''
@@ -1688,7 +1688,7 @@ ${table}_index_mapper(uint32_t tableid,
 //::                i = 1
 //::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
 //::                    hdrcontainer, hdrukeys = hdr_un_containers
-//::                    if len(fldukeys) > 1:
+//::                    if len(hdrukeys) > 1:
 //::                        ustr = table + '_hdr_u' + str(i) + '.'
 //::                    else:
 //::                        ustr=''
@@ -2678,7 +2678,7 @@ ${table}_hwkey_unbuild(uint32_t tableid,
 //::                i = 1
 //::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
 //::                    hdrcontainer, hdrukeys = hdr_un_containers
-//::                    if len(fldukeys) > 1:
+//::                    if len(hdrukeys) > 1:
 //::                        ustr = table + '_hdr_u' + str(i) + '.'
 //::                    else:
 //::                        ustr=''
@@ -3657,7 +3657,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                i = 1
 //::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
 //::                    hdrcontainer, hdrukeys = hdr_un_containers
-//::                    if len(fldukeys) > 1:
+//::                    if len(hdrukeys) > 1:
 //::                        ustr = table + '_hdr_u' + str(i) + '.'
 //::                    else:
 //::                        ustr=''
@@ -3665,7 +3665,7 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                    for fields in hdrukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, width, containerstart in key_byte_format:
 //::                                kbyte = kbit / 8
 //::                                tablebyte = kmbyte
 //::                                if p4fldwidth <= 32:
@@ -4217,7 +4217,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    for fields in fldukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, width, containerstart in key_byte_format:
 //::                                kbyte = kbit / 8
 //::                                tablebyte = kmbyte
 //::                                if p4fldwidth <= 32:
@@ -4254,7 +4254,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                i = 1
 //::                for hdr_un_containers in pddict['tables'][table]['hdrunion_keys']:
 //::                    hdrcontainer, hdrukeys = hdr_un_containers
-//::                    if len(fldukeys) > 1:
+//::                    if len(hdrukeys) > 1:
 //::                        ustr = table + '_hdr_u' + str(i) + '.'
 //::                    else:
 //::                        ustr=''
@@ -4262,7 +4262,7 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 //::                    for fields in hdrukeys:
 //::                        (p4fldname, p4fldwidth, mask, key_byte_format, key_bit_format) = fields
 //::                        if len(key_byte_format):
-//::                            for kmbyte, kbit in key_byte_format:
+//::                            for kmbyte, kbit, width, containerstart in key_byte_format:
 //::                                kbyte = kbit / 8
 //::                                tablebyte = kmbyte
 //::                                if p4fldwidth <= 32:

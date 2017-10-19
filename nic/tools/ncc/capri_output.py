@@ -1218,7 +1218,6 @@ def capri_deparser_cfg_output(deparser):
         rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx)
         dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-1)
         dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = str(0)
-        hv_fld_slots[max_hv_bit_idx] = (max_hdr_flds-1, 0)
         dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-1)
         dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-1)
         dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
@@ -1251,6 +1250,17 @@ def capri_deparser_cfg_output(deparser):
         #Generate DPP block configurations
         rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx - hvb)
         # Logic = all_1_mask >> fld_end  & (all_1_mask << fld_start)
+
+        csum_hvb = False
+        if h in deparser.be.parsers[deparser.d].csum_hdr_hv_bit.keys():
+            #HV bit used for csum purposes. Do not use them to
+            #include hdrs into packet.
+            for csum_h in \
+                deparser.be.parsers[deparser.d].csum_hdr_hv_bit[h]:
+                csum_allocated_hv, _, _ = csum_h
+                if csum_allocated_hv == hvb:
+                    csum_hvb = True
+                    break
         
         for i, chunks in enumerate(dp_hdr_fields):
             assert used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble"
@@ -1261,7 +1271,7 @@ def capri_deparser_cfg_output(deparser):
             (phv_ohi, chunk_type, _) = chunks
             if (chunk_type == deparser.field_type_phv):
                 dpp_rstr['size_sel']['value'] = str(fixed_sel)
-                dpp_rstr['size_val']['value'] = str(phv_ohi[1]/8) # in bytes
+                dpp_rstr['size_val']['value'] = str(phv_ohi[1]/8) if not csum_hvb else str(0) # in bytes
 
                 dpr_rstr['source_sel']['value'] = str(phv_sel)
                 dpr_rstr['source_oft']['value'] = str(phv_ohi[0]/8) # in bytes
@@ -1275,16 +1285,19 @@ def capri_deparser_cfg_output(deparser):
                     str((phv_ohi.start - fohi.start) << 6 | fohi.id)
                 if (isinstance(phv_ohi.length, int)):
                     dpp_rstr['size_sel']['value'] = str(fixed_sel)
-                    dpp_rstr['size_val']['value'] = str(phv_ohi.length)
+                    dpp_rstr['size_val']['value'] = str(phv_ohi.length) if not csum_hvb else str(0)
                 else:
                     dpp_rstr['size_sel']['value'] = str(ohi_sel)
-                    dpp_rstr['size_val']['value'] = str(phv_ohi.var_id)
+                    dpp_rstr['size_val']['value'] = str(phv_ohi.var_id) if not csum_hvb else str(0)
             used_hdr_fld_info_slots += 1
 
         dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(start_fld)
         dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = \
             str(max_hdr_flds - used_hdr_fld_info_slots)
-        hv_fld_slots[(max_hv_bit_idx - hvb)] = \
+
+        if csum_hvb:
+            #Collect startfld,endfld, hv to program deparser csum
+            hv_fld_slots[hvb] = \
                 (start_fld, (max_hdr_flds - used_hdr_fld_info_slots), h.name)
 
     if deparser.d == xgress.EGRESS:
@@ -2725,6 +2738,18 @@ def _decode_mem(entry, result):
             for field, attrib in entry.iteritems():
                 _decode_mem(attrib, result)
 
+def _decode_reg(entry, result):
+    if isinstance(entry, list):
+        for field in entry:
+            _decode_reg(field, result)
+    elif isinstance(entry, dict):
+        if 'value' in entry and 'size' in entry:
+            result[0] |= int(entry['value'], 0) << result[1]
+            result[1] += int(entry['size'], 0)
+        else:
+            for field, attrib in entry.iteritems():
+                _decode_reg(attrib, result)
+
 def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
     if cfg_out_dir is None or cap_mod is None or prog_name is None:
         return
@@ -2781,9 +2806,15 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
                     lsb  = int(attrib['field_lsb'])
                     msb  = int(attrib['field_msb'])
                     width += msb - lsb + 1
-            if decoder in regs:
-                #TODO : Checksum reg dump.. 
-                pass
+
+            elif m.group(0) in regs:
+                if decoder not in regs[m.group(0)]:
+                    continue
+                else:
+                    result = [data, 0]
+                    _decode_reg(regs[m.group(0)][decoder]['entries'], result)
+                    data = result[0]
+                    width = result[1]
         else:
             for field, attrib in conf.iteritems():
                 if ((field == 'word_size') or (field == 'inst_name') or

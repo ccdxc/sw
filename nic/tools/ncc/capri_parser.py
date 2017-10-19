@@ -1587,17 +1587,35 @@ class capri_parser:
             hv_bit -= 1
             hidx += 1
 
-            #CSUM: Build csum hv bit dict
-            if self.d == xgress.EGRESS and self.be.checksum.IsHdrInCsumCompute(h.name):
-                hf_name = h.name + '.csum'
-                csum_cf = self.be.pa.get_field(hf_name, self.d)
-                assert csum_cf and cf.is_hv, pdb.set_trace()
-                csum_cf.phv_bit = hv_bit
-                self.be.pa.replace_hv_field(hv_bit, csum_cf, self.d)
-                self.csum_hdr_hv_bit[h] = hv_bit
-                self.hv_bit_header[max_hv_bits - hidx - 1] = h
-                hv_bit -= 1
-                hidx += 1
+        #Avoid moving HV bits and allocate all HV bits needed for csum
+        #after allocating HV bits for hdrs.
+        for _hidx in range(len(hv_headers)):
+            h = hv_headers[_hidx]
+            if self.d == xgress.EGRESS and \
+                (self.be.checksum.IsHdrInCsumCompute(h.name) or
+                 self.be.checksum.IsHdrInCsumComputePhdr(h.name)):
+                csum_hv_names = []
+                if self.be.checksum.IsHdrInCsumCompute(h.name):
+                    hfname = h.name + '.csum'
+                    csum_hv_names.append(hfname)
+                if not self.be.checksum.IsHdrInPayLoadCsumCompute(h.name):
+                    hfname = h.name + '.tcp_csum'
+                    csum_hv_names.append(hfname)
+                    hfname = h.name + '.udp_csum'
+                    csum_hv_names.append(hfname)
+
+                #CSUM: Build csum hv bit dict
+                csum_hv_bit_and_hf = []
+                for hf_name in csum_hv_names:
+                    csum_cf = self.be.pa.get_field(hf_name, self.d)
+                    assert csum_cf and cf.is_hv, pdb.set_trace()
+                    csum_cf.phv_bit = hv_bit
+                    self.be.pa.replace_hv_field(hv_bit, csum_cf, self.d)
+                    csum_hv_bit_and_hf.append((max_hv_bits - hidx - 1, hv_bit, hf_name))
+                    self.hv_bit_header[max_hv_bits - hidx - 1] = h
+                    hv_bit -= 1
+                    hidx += 1
+                self.csum_hdr_hv_bit[h] = csum_hv_bit_and_hf
 
     def assign_state_ids(self):
         # for now just assign sequential ids
