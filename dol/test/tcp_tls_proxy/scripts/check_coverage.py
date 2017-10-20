@@ -7,12 +7,11 @@ import sys
 total = 0
 
 paths = [
-    '/bazel-genfiles/',
-    '/bazel-genfiles/nic/proto/',
-    '/bazel-genfiles/nic/proto/hal/',
+    '/nic/gen/proto/',
+    '/nic/gen/proto/hal/',
     '/nic',
-    '/dol/third_party/',
     '/dol',
+    '/dol/third_party/'
 ]
 ws_top = os.path.dirname(sys.argv[0]) + '/../../../../'
 ws_top = os.path.abspath(ws_top)
