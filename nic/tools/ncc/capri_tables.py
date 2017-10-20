@@ -4913,12 +4913,15 @@ class capri_table_mapper:
             if 'sram' in tspec.keys():
                 if tspec['overflow_parent']:
                     continue # Overflow SRAMs are appended to their parent SRAMs.
-                width = table_width_to_allocation_units('sram', tspec['sram']['width'])
                 depth = tspec['num_entries']
                 if tspec['overflow']:
                     for temp in table_specs:
                         if tspec['overflow'] == temp['name']:
                             depth += temp['num_entries']
+                width = table_width_to_allocation_units('sram', tspec['sram']['width'])
+                ctable = self.tmgr.gress_tm[xgress_from_string(tspec['region'])].tables[tspec['name']]
+                if ctable.is_policer or ctable.is_writeback:
+                    width = pad_to_x(width, self.memory['sram'][tspec['region']]['blk_w'])
                 self.insert_table('sram', tspec['region'], {'name':tspec['name'],
                                                                'stage':tspec['stage'],
                                                                'width':width,
@@ -5092,20 +5095,20 @@ class capri_table_mapper:
             ctable = self.tmgr.gress_tm[xgress_from_string(region)].tables[table['name']]
             if ctable.is_policer or ctable.is_writeback:
 
-                tbl_depth = table['depth']
-                tbl_width = table['width']
+                req_depth = table['depth']
+                req_width = table['width']
                 index = self.tables[mem_type][region].index(table)
 
-                while tbl_depth > blk_depth:
-                    tbl_depth = tbl_depth / 2
-                    tbl_width = tbl_width * 2
+                while req_depth > blk_depth:
+                    req_depth = req_depth / 2
+                    req_width = req_width * 2
 
-                blks_reqd = (tbl_width + blk_width - 1) / blk_width
+                blks_reqd = (req_width + blk_width - 1) / blk_width
 
                 if (curr_blk + blks_reqd) <= blk_count:
                     top = 0
                     left = curr_blk * blk_width
-                    table['layout'] = self.carve_memory(memory, top, left, top + tbl_depth - 1, left + tbl_width - 1, index)
+                    table['layout'] = self.carve_memory(memory, top, left, top + req_depth - 1, left + req_width - 1, index)
                     curr_blk += blks_reqd
 
         return
