@@ -9,6 +9,8 @@ import (
 	"os"
 	"testing"
 
+	"google.golang.org/grpc/grpclog"
+
 	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -22,7 +24,6 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
-	"google.golang.org/grpc/grpclog"
 )
 
 const (

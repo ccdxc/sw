@@ -8,14 +8,16 @@ import (
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm"
 
 	"github.com/golang/mock/gomock"
+	. "gopkg.in/check.v1"
+
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	. "github.com/pensando/sw/venice/utils/testutils"
-	. "gopkg.in/check.v1"
 )
 
 // integ test suite parameters

@@ -14,6 +14,7 @@ import (
 
 	opentracing "github.com/opentracing/opentracing-go"
 	otext "github.com/opentracing/opentracing-go/ext"
+
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"

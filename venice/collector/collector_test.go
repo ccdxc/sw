@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/influxdata/influxdb/models"
 	"net/http"
 	"reflect"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/influxdata/influxdb/models"
 
 	"github.com/pensando/sw/venice/collector/statssim"
 	"github.com/pensando/sw/venice/utils/log"

@@ -8,6 +8,8 @@ import (
 
 	context "golang.org/x/net/context"
 
+	"sync"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/nic/agent/nmd/state"
@@ -15,7 +17,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
-	"sync"
 )
 
 type mockAgent struct {

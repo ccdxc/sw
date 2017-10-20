@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
@@ -12,6 +11,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/errors"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/version"
 )

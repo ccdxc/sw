@@ -9,6 +9,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	etcdrpc "github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
+
 	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/api"

@@ -6,6 +6,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/golang/mock/gomock"
+
 	exproto "github.com/pensando/sw/venice/utils/rpckit/example/proto"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )

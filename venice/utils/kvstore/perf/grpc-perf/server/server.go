@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/go-martini/martini"
-	"github.com/pensando/sw/venice/utils/log"
 	"golang.org/x/net/context"
+
+	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/kvstore"

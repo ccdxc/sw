@@ -9,9 +9,10 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/pensando/sw/venice/utils/testutils"
 	"golang.org/x/net/context"
 	elastic "gopkg.in/olivere/elastic.v5"
+
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 var (
@@ -98,5 +99,7 @@ func TestMain(m *testing.M) {
 	if os.Getenv("LOG_INTEG_TEST") == "" {
 		os.Exit(0)
 	}
+
+	flag.Parse()
 	os.Exit(m.Run())
 }

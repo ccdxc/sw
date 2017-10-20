@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/pensando/sw/venice/utils/log"
 	k8sclient "k8s.io/client-go/kubernetes"
 	k8srest "k8s.io/client-go/rest"
+
+	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/venice/cmd/env"
 	configs "github.com/pensando/sw/venice/cmd/systemd-configs"

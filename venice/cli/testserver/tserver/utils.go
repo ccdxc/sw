@@ -10,10 +10,11 @@ import (
 	"path"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
+
 	"github.com/pensando/sw/venice/cli/api"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
-	uuid "github.com/satori/go.uuid"
 )
 
 // NameToUUID is

@@ -8,8 +8,9 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/minio/minio-go"
-	"github.com/pensando/sw/asset-build/asset"
 	"github.com/urfave/cli"
+
+	"github.com/pensando/sw/asset-build/asset"
 )
 
 func main() {

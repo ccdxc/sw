@@ -2,9 +2,10 @@ package statssim
 
 import (
 	"fmt"
-	"github.com/pensando/sw/venice/utils/log"
 	"math/rand"
 	"strings"
+
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (

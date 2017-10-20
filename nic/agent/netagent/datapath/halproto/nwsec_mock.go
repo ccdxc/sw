@@ -4,10 +4,11 @@
 package halproto
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
-	reflect "reflect"
 )
 
 // MockisSecurityProfileKeyHandle_KeyOrHandle is a mock of isSecurityProfileKeyHandle_KeyOrHandle interface

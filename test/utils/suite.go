@@ -10,10 +10,11 @@ import (
 	"time"
 
 	"github.com/onsi/ginkgo"
+	"golang.org/x/crypto/ssh"
+
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"golang.org/x/crypto/ssh"
 )
 
 // TestBedConfig is Config that can be changed with a json file and environment variables

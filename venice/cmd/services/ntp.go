@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	log "github.com/Sirupsen/logrus"
+
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"

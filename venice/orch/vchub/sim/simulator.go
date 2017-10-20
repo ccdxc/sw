@@ -17,11 +17,12 @@ import (
 
 	"github.com/vmware/govmomi/vim25/types"
 
+	"github.com/pensando/vic/pkg/vsphere/simulator"
+	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
+
 	"github.com/pensando/sw/venice/orch/simapi"
 	"github.com/pensando/sw/venice/utils/log"
 	n "github.com/pensando/sw/venice/utils/netutils"
-	"github.com/pensando/vic/pkg/vsphere/simulator"
-	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 )
 
 // Inventory maintains inventory info for the simulator

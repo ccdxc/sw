@@ -5,9 +5,10 @@ import (
 	"net"
 	"net/http"
 
+	"google.golang.org/grpc"
+
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
-	"google.golang.org/grpc"
 )
 
 // APIGatewayService is the interface satisfied by all all services registering to the API gateway

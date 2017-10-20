@@ -15,11 +15,12 @@ import (
 
 	context "golang.org/x/net/context"
 
+	"google.golang.org/grpc"
+
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/orch/vchub/store"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"google.golang.org/grpc"
 )
 
 const (

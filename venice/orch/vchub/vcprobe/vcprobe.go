@@ -9,12 +9,13 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/pensando/sw/venice/orch/vchub/defs"
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25/types"
+
+	"github.com/pensando/sw/venice/orch/vchub/defs"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 const (

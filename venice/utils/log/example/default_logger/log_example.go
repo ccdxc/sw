@@ -4,10 +4,11 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"flag"
+	"strconv"
+
 	"github.com/pensando/sw/venice/utils/log"
 	pkg1 "github.com/pensando/sw/venice/utils/log/example/default_logger/pkg1"
 	pkg2 "github.com/pensando/sw/venice/utils/log/example/default_logger/pkg2"
-	"strconv"
 )
 
 func getRandomString() string {

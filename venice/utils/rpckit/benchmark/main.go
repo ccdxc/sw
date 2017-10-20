@@ -9,8 +9,9 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/log"
 	"golang.org/x/net/context"
+
+	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"

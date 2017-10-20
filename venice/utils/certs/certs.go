@@ -22,8 +22,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pkg/errors"
+
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 const (

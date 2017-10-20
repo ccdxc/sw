@@ -4,10 +4,11 @@
 package halproto
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
-	reflect "reflect"
 )
 
 // MockisL2SegmentKeyHandle_KeyOrHandle is a mock of isL2SegmentKeyHandle_KeyOrHandle interface

@@ -1,8 +1,9 @@
 package pkg2
 
 import (
-	log "github.com/pensando/sw/venice/utils/log"
 	"os"
+
+	log "github.com/pensando/sw/venice/utils/log"
 )
 
 // Instance2 definition

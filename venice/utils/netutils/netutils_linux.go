@@ -9,9 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/vishvananda/netlink"
 	"github.com/vishvananda/netns"
+
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // CreateVethPair creates veth interface pairs with specified name

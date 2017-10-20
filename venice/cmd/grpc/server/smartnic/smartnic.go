@@ -6,13 +6,14 @@ import (
 	"errors"
 	"strings"
 
+	"golang.org/x/net/context"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	perror "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"golang.org/x/net/context"
 )
 
 // RPCServer implements SmartNIC gRPC service.

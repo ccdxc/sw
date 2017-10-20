@@ -5,11 +5,12 @@ package npminteg
 import (
 	"fmt"
 
+	"github.com/prometheus/common/log"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
-	"github.com/prometheus/common/log"
 )
 
 // Dpagent is an agent instance

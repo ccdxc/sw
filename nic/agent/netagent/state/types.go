@@ -3,10 +3,11 @@
 package state
 
 import (
+	"sync"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/emstore"
-	"sync"
 )
 
 // IntfInfo has the interface names to be plumbed into container

@@ -6,9 +6,10 @@ import (
 	"fmt"
 
 	"github.com/golang/mock/gomock"
+	. "gopkg.in/check.v1"
+
 	"github.com/pensando/sw/api/generated/network"
 	. "github.com/pensando/sw/venice/utils/testutils"
-	. "gopkg.in/check.v1"
 )
 
 // TestNpmSgCreateDelete

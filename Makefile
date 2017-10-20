@@ -11,6 +11,7 @@ TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 
 GOFMT_CMD := gofmt -s -l
 GOVET_CMD := go vet
+GOIMPORTS_CMD := goimports -local "github.com/pensando/sw" -l
 SHELL := /bin/bash
 GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
@@ -47,7 +48,11 @@ govet-src:
 	$(info +++ govet $(PKG_DIRS))
 	@${GOVET_CMD} $(shell go list -e ./... | egrep -v ${EXCLUDE_DIRS})
 
-checks: gofmt-src golint-src govet-src
+goimports-src:
+	$(info +++ goimports $(PKG_DIRS))
+	@find . -name '*.go' -print | egrep -v ${EXCLUDE_DIRS} | xargs ${GOIMPORTS_CMD} -w
+
+checks: gofmt-src golint-src govet-src goimports-src
 
 # pregen target generates code that is needed by other binaries
 pregen:

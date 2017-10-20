@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/golang/protobuf/proto"
+
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resource/rproto"

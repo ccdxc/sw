@@ -8,8 +8,9 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
-	"github.com/pensando/sw/venice/cli/api"
 	"github.com/urfave/cli"
+
+	"github.com/pensando/sw/venice/cli/api"
 )
 
 // File processing

@@ -17,12 +17,13 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/ghodss/yaml"
+	"github.com/urfave/cli"
+	"golang.org/x/crypto/ssh/terminal"
+
 	swapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cli/api"
 	"github.com/pensando/sw/venice/cli/gen/pregen"
 	"github.com/pensando/sw/venice/utils/ref"
-	"github.com/urfave/cli"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 // editCmd hands the edit command, which allows editing an existing object or a

@@ -4,6 +4,7 @@ import (
 	"github.com/gogo/protobuf/vanity"
 	"github.com/gogo/protobuf/vanity/command"
 	"github.com/golang/glog"
+
 	"github.com/pensando/sw/venice/utils/apigen/autogrpc"
 )
 

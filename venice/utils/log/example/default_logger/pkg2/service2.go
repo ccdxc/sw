@@ -1,8 +1,9 @@
 package pkg2
 
 import (
-	"github.com/pensando/sw/venice/utils/log"
 	"os"
+
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // Run starts the service

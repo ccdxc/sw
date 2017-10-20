@@ -1,8 +1,9 @@
 package configs
 
 import (
-	"github.com/pensando/sw/venice/utils/log"
 	"os"
+
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 func removeFiles(files []string) {

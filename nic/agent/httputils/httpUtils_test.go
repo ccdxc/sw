@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 

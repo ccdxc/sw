@@ -12,8 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/log"
 	"google.golang.org/grpc"
+
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // These are options that are common to both client and server

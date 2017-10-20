@@ -9,6 +9,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/concurrency"
+
 	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/venice/utils/kvstore"

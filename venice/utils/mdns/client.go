@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/grandcat/zeroconf"
+
 	"github.com/pensando/sw/api"
 )
 

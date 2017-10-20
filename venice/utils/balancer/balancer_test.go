@@ -7,8 +7,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/pensando/sw/venice/utils/resolver/mock"
 	"golang.org/x/net/context"
+
+	"github.com/pensando/sw/venice/utils/resolver/mock"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"

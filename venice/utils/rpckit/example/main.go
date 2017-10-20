@@ -8,11 +8,12 @@ import (
 	"os"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	exproto "github.com/pensando/sw/venice/utils/rpckit/example/proto"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
-	"golang.org/x/net/context"
 )
 
 // Usage:

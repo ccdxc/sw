@@ -6,6 +6,7 @@ import (
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/pensando/sw/api"
 
 	"google.golang.org/grpc"

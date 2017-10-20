@@ -8,6 +8,7 @@ run 'echo "deb http://http.debian.net/debian jessie-backports main" > /etc/apt/s
 run "apt-get update && apt-get install rsync libpcap-dev -y"
 run "apt-get install net-tools"
 run "apt-get install -y libltdl-dev softhsm2"
+run "go get golang.org/x/tools/cmd/goimports"
 
 if getenv("NO_COPY") == ""
   copy ".", DIR, ignore_list: [ ".git", "box.rb" ]

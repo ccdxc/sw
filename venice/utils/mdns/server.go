@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/grandcat/zeroconf"
+
 	"github.com/pensando/sw/venice/utils/sysif"
 )
 

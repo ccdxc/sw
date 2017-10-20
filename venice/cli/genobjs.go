@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+
 	swapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cmd"

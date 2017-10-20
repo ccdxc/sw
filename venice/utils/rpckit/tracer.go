@@ -12,6 +12,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
+
 	logger "github.com/pensando/sw/venice/utils/log"
 )
 

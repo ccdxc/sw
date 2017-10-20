@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+
 	"github.com/pensando/sw/api"
 )
 

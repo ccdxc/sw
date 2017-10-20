@@ -20,6 +20,7 @@ import (
 	descriptor "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
 	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
+
 	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 	mutator "github.com/pensando/sw/venice/utils/apigen/autogrpc"
 )

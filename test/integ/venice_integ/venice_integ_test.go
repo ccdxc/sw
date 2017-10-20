@@ -36,6 +36,7 @@ import (
 	_ "github.com/pensando/sw/api/hooks"
 
 	"github.com/golang/mock/gomock"
+
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 

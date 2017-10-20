@@ -12,8 +12,9 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/resource/rproto"
 
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/willf/bitset"
+
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // ------------------  wrappers for emulating runtime.Object interface -----------

@@ -15,11 +15,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+
+	"github.com/pensando/sw/venice/utils/log"
+
+	"github.com/pensando/vic/pkg/vsphere/simulator"
+	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 
 	infraapi "github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/orch"
@@ -32,8 +36,6 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore/memkv"
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
 	. "github.com/pensando/sw/venice/utils/testutils"
-	"github.com/pensando/vic/pkg/vsphere/simulator"
-	"github.com/pensando/vic/pkg/vsphere/simulator/esx"
 )
 
 const (

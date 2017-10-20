@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/coreos/go-systemd/dbus"
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pkg/errors"
+
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (

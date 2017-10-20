@@ -11,11 +11,12 @@ import (
 	"sync"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/willf/bitset"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
-	"github.com/willf/bitset"
 )
 
 // ErrorCoundNotFindEndpoint is returned when an endpoint is not found

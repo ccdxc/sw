@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/satori/go.uuid"
 
 	cmd "github.com/pensando/sw/api/generated/cmd"
@@ -15,6 +14,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/validation"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/errors"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 const (

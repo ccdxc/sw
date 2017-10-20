@@ -5,10 +5,11 @@ import (
 	"testing"
 
 	opentracing "github.com/opentracing/opentracing-go"
+	"google.golang.org/grpc/metadata"
+
 	"github.com/pensando/sw/api"
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
-	"google.golang.org/grpc/metadata"
 )
 
 // fakeMethod is used as mock Method for testing.

@@ -14,6 +14,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
+
 	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 )
 
