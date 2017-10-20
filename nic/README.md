@@ -1,4 +1,4 @@
-## HAL Coding Style (C/C++/protobuf only):
+## HAL Coding Style (C/C++/protobuf only)
 
 * Except for the protobuf generated files, don't use camel case for anything
   including class names, function names, variable names etc.
@@ -36,6 +36,11 @@
 * Make sure each header file can compile fully by itself, i.e., each header
   file should include all header files it depends on. Ensure there are no
   circular dependencies
+
+## Building and making sure HAL build is fine
+1. Under sw/, do "make pull-assets"
+2. Under sw/nic, do "make v=1" and this should build everything needed for HAL
+3. To ensure all is well, under sw/nic, do "./run.py"
 
 ## Container/CI tasks
 
