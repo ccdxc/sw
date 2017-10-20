@@ -45,73 +45,6 @@ remove_alg_entry(hal::flow_key_t key)
     return entry;
 }
 
-// extract session key (iflow key) from spec
-hal_ret_t
-ctx_t::extract_flow_key_from_spec(hal::flow_key_t *key, const FlowKey&  flow_spec_key,
-                                  hal::tenant_id_t tid)
-{
-    if (flow_spec_key.has_l2_key()) {
-        key->flow_type = hal::FLOW_TYPE_L2;
-        key->l2seg_id = flow_spec_key.l2_key().l2_segment_id();
-        key->ether_type = flow_spec_key.l2_key().ether_type();
-        MAC_UINT64_TO_ADDR(key->smac, flow_spec_key.l2_key().smac());
-        MAC_UINT64_TO_ADDR(key->dmac, flow_spec_key.l2_key().dmac());
-    } else if (flow_spec_key.has_v4_key()) {
-        key->flow_type = hal::FLOW_TYPE_V4;
-        key->tenant_id = tid;
-        key->sip.v4_addr = flow_spec_key.v4_key().sip();
-        key->dip.v4_addr = flow_spec_key.v4_key().dip();
-        key->proto = flow_spec_key.v4_key().ip_proto();
-        if ((key->proto == IP_PROTO_TCP) ||
-            (key->proto == IP_PROTO_UDP)) {
-            key->sport = flow_spec_key.v4_key().tcp_udp().sport();
-            key->dport = flow_spec_key.v4_key().tcp_udp().dport();
-        } else if (key->proto == IP_PROTO_ICMP) {
-            key->icmp_type = flow_spec_key.v4_key().icmp().type();
-            key->icmp_code = flow_spec_key.v4_key().icmp().code();
-            if ((key->icmp_type == 0) || (key->icmp_type == 8)) {
-                /* ICMP id is valid only for echo req & rep */
-                key->icmp_id = flow_spec_key.v4_key().icmp().id();
-            } else {
-                key->icmp_id = 0;
-            }
-        } else if (key->proto == IPPROTO_ESP) {
-            key->spi = flow_spec_key.v4_key().esp().spi();
-        } else {
-            key->sport = key->dport = 0;
-        }
-    } else if (flow_spec_key.has_v6_key()) {
-        key->flow_type = hal::FLOW_TYPE_V6;
-        key->tenant_id = tid;
-        memcpy(key->sip.v6_addr.addr8,
-               flow_spec_key.v6_key().sip().v6_addr().c_str(),
-               IP6_ADDR8_LEN);
-        memcpy(key->dip.v6_addr.addr8,
-               flow_spec_key.v6_key().dip().v6_addr().c_str(),
-               IP6_ADDR8_LEN);
-        key->proto = flow_spec_key.v6_key().ip_proto();
-        if ((key->proto == IP_PROTO_TCP) ||
-            (key->proto == IP_PROTO_UDP)) {
-            key->sport = flow_spec_key.v6_key().tcp_udp().sport();
-            key->dport = flow_spec_key.v6_key().tcp_udp().dport();;
-        } else if (key->proto == IP_PROTO_ICMPV6) {
-            key->icmp_type = flow_spec_key.v6_key().icmp().type();
-            key->icmp_code = flow_spec_key.v6_key().icmp().code();
-            key->icmp_id = flow_spec_key.v6_key().icmp().id();
-            // only echo request and reply
-            if(key->icmp_type != 128 && key->icmp_type != 129) {
-                HAL_TRACE_DEBUG("fte: invalid icmp type {}", key->icmp_type);
-                return HAL_RET_INVALID_ARG;
-            }
-        } else if (key->proto == IPPROTO_ESP) {
-            key->spi = flow_spec_key.v6_key().esp().spi();
-        } else {
-            key->sport = key->dport = 0;
-        }
-    }
-
-    return HAL_RET_OK;
-}
 
 // extract flow key from packet
 hal_ret_t
@@ -309,7 +242,7 @@ ctx_t::lookup_session()
     }
 
     if (!session_) {
-        session_ = hal::session_lookup_fte(key_, std::addressof(role_));
+        session_ = hal::session_lookup(key_, std::addressof(role_));
     }
 
     if (!session_) {
@@ -356,8 +289,10 @@ ctx_t::create_session()
     // read rkey from spec
     if (protobuf_request()) {
         if (sess_spec_->has_responder_flow()) {
-            ret = extract_flow_key_from_spec(&rkey, sess_spec_->responder_flow().flow_key(),
-                                             sess_spec_->meta().tenant_id());
+            ret = extract_flow_key_from_spec(sess_spec_->meta().tenant_id(),
+                                             &rkey,
+                                             sess_spec_->responder_flow().flow_key());
+            
             if (ret != HAL_RET_OK) {
                 return ret;
             }
@@ -425,7 +360,7 @@ ctx_t::update_flow_table()
     hal_handle_t    session_handle;
     hal::session_t *session = NULL;
 
-    hal::session_args_fte_t session_args = {};
+    hal::session_args_t session_args = {};
     hal::session_cfg_t session_cfg = {};
     hal::session_state_t session_state = {};
 
@@ -462,9 +397,12 @@ ctx_t::update_flow_table()
             iflow_attrs.lkp_inst = 1;
         }
 
+        iflow_attrs.tenant_hwid = hal::pd::pd_l2seg_get_ten_hwid(sl2seg_);
+
         // TODO(goli) fix tnnl_rw_idx lookup
         iflow_attrs.tnnl_rw_idx =
             hal::pd::ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(dep_, iflow_attrs.tnnl_rw_act);
+
 
         session_args.iflow[stage] = &iflow_cfg;
         session_args.iflow_attrs[stage] = &iflow_attrs;
@@ -501,6 +439,8 @@ ctx_t::update_flow_table()
         if (stage != 0) {
             rflow_attrs.lkp_inst = 1;
         }
+
+        rflow_attrs.tenant_hwid = hal::pd::pd_l2seg_get_ten_hwid(dl2seg_);
 
         // TODO(goli) fix tnnl w_idx lookup
         rflow_attrs.tnnl_rw_idx =
@@ -541,14 +481,14 @@ ctx_t::update_flow_table()
     if (hal_cleanup() == true) {
         // Cleanup session if hal_cleanup is set
         if (session_) {
-            ret = hal::session_delete_fte(&session_args, session_);
+            ret = hal::session_delete(&session_args, session_);
         }
     } else if (session_) { 
         // Update session if it already exists
-        ret = hal::session_update_fte(&session_args, session_);
+        ret = hal::session_update(&session_args, session_);
     } else {
         // Create a new HAL session
-        ret = hal::session_create_fte(&session_args, &session_handle, &session);
+        ret = hal::session_create(&session_args, &session_handle, &session);
         if (alg_proto() != nwsec::APP_SVC_NONE) {
             insert_alg_entry(this, session); 
         }
@@ -633,8 +573,9 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
 
     // Build the key and lookup flow
     if (sess_spec_) {
-        ret = extract_flow_key_from_spec(&key_, sess_spec_->initiator_flow().flow_key(),
-                                         sess_spec_->meta().tenant_id());
+        ret = extract_flow_key_from_spec(sess_spec_->meta().tenant_id(),
+                                         &key_,
+                                         sess_spec_->initiator_flow().flow_key());
     } else {
         ret = extract_flow_key();
     }

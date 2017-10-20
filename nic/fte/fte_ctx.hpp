@@ -460,10 +460,6 @@ private:
                               const header_rewrite_info_t& header);
     hal_ret_t build_wildcard_key(hal::flow_key_t& key);
     uint8_t construct_lookup_keys(hal::flow_key_t *key);
-
-    static hal_ret_t extract_flow_key_from_spec(hal::flow_key_t *key,
-                                                const FlowKey&  flow_spec_key,
-                                                hal::tenant_id_t tid);
 };
 
 } // namespace fte

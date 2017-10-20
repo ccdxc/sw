@@ -6,7 +6,6 @@
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
-#include "nic/hal/pd/iris/l2seg_pd.hpp"
 #include "nic/hal/pd/iris/session_pd.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/endpoint.hpp"
@@ -324,47 +323,6 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
             break;
     }
 
-#if 0
-    // TODO: Do this in PI
-    // there is no transit case for us, so this is always FALSE
-    if (is_if_type_tunnel(dif) && (sif->if_type != dif->if_type)) {
-        d.flow_info_action_u.flow_info_flow_info.tunnel_originate = TRUE;
-    } else {
-        d.flow_info_action_u.flow_info_flow_info.tunnel_originate = FALSE;
-    }
-
-    switch (flow->nat_type) {
-    case NAT_TYPE_SNAT:
-        memcpy(d.flow_info_action_u.flow_info_flow_info.nat_ip, &flow->nat_sip,
-               sizeof(ipvx_addr_t));
-        d.flow_info_action_u.flow_info_flow_info.nat_l4_port = flow->nat_sport;
-        break;
-
-    case NAT_TYPE_DNAT:
-        memcpy(d.flow_info_action_u.flow_info_flow_info.nat_ip, &flow->nat_dip,
-               sizeof(ipvx_addr_t));
-        d.flow_info_action_u.flow_info_flow_info.nat_l4_port = flow->nat_dport;
-        break;
-
-    case NAT_TYPE_TWICE_NAT:
-        if (flow->role == FLOW_ROLE_INITIATOR) {
-            memcpy(d.flow_info_action_u.flow_info_flow_info.nat_ip, &flow->nat_sip,
-                   sizeof(ipvx_addr_t));
-            d.flow_info_action_u.flow_info_flow_info.nat_l4_port = flow->nat_sport;
-            d.flow_info_action_u.flow_info_flow_info.twice_nat_idx = 0;
-        } else {
-            memcpy(d.flow_info_action_u.flow_info_flow_info.nat_ip, &flow->nat_dip,
-                   sizeof(ipvx_addr_t));
-            d.flow_info_action_u.flow_info_flow_info.nat_l4_port = flow->nat_dport;
-            d.flow_info_action_u.flow_info_flow_info.twice_nat_idx = 0;
-        }
-        break;
-
-    default:
-        break;
-    }
-#endif
-
     d.flow_info_action_u.flow_info_flow_info.cos_en = flow_attrs->dot1p_en;
     d.flow_info_action_u.flow_info_flow_info.cos = flow_attrs->dot1p;
     d.flow_info_action_u.flow_info_flow_info.dscp_en = flow_attrs->dscp_en;
@@ -395,11 +353,6 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
 
     if (flow_attrs->rw_act != REWRITE_NOP_ID) {
         d.flow_info_action_u.flow_info_flow_info.rewrite_index = flow_attrs->rw_idx;
-#if 0
-        d.flow_info_action_u.flow_info_flow_info.rewrite_index =
-            ep_pd_get_rw_tbl_idx(flow_attrs->dep->pd,
-                flow_attrs->rw_act);
-#endif
     }
     // TODO: if we are doing routing, then set ttl_dec to TRUE
     d.flow_info_action_u.flow_info_flow_info.flow_conn_track = session->config.conn_track_en;
@@ -518,8 +471,8 @@ p4pd_add_flow_info_table_entries (pd_session_args_t *args)
 // program flow hash table entry for a given flow
 //------------------------------------------------------------------------------
 hal_ret_t
-p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint8_t lkp_inst,
-                                pd_l2seg_t *l2seg_pd, pd_flow_t *flow_pd,
+p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
+                                uint8_t lkp_inst, pd_flow_t *flow_pd,
                                 uint32_t *flow_hash_p)
 {
     hal_ret_t                ret;
@@ -575,7 +528,7 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint8_t lkp_inst,
         // TODO: for now !!
         key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_NONE;
     }
-    key.flow_lkp_metadata_lkp_vrf = l2seg_pd->l2seg_ten_hw_id;
+    key.flow_lkp_metadata_lkp_vrf = lkp_vrf;
     key.flow_lkp_metadata_lkp_proto = flow_key->proto;
     key.flow_lkp_metadata_lkp_inst = lkp_inst;
     key.flow_lkp_metadata_lkp_dir = flow_key->dir;
@@ -629,10 +582,10 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
 
     if (!session_pd->iflow.flow_hash_hw_id && args->update_iflow) {
         ret = p4pd_add_flow_hash_table_entry(&session->iflow->config.key,
-                                         session->iflow->pgm_attrs.lkp_inst,
-                                         (pd_l2seg_t *)(session->iflow->sl2seg->pd),
-                                         &session_pd->iflow,
-                                         &flow_hash);
+                                             session->iflow->pgm_attrs.tenant_hwid,
+                                             session->iflow->pgm_attrs.lkp_inst,
+                                             &session_pd->iflow,
+                                             &flow_hash);
         if (args->rsp) {
             args->rsp->mutable_status()->mutable_iflow_status()->set_flow_hash(flow_hash);
         }
@@ -653,8 +606,8 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         session_pd->iflow_aug_valid && \
         !session_pd->iflow_aug.flow_hash_hw_id) {
         ret = p4pd_add_flow_hash_table_entry(&session->iflow->assoc_flow->config.key,
+                                             session->iflow->assoc_flow->pgm_attrs.tenant_hwid,
                                              session->iflow->assoc_flow->pgm_attrs.lkp_inst,
-                                             (pd_l2seg_t *)(session->iflow->sl2seg->pd),
                                              &session_pd->iflow_aug,
                                              &flow_hash);
         if (args->rsp) {
@@ -674,8 +627,8 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
     if (session_pd->rflow_valid && \
         !session_pd->rflow.flow_hash_hw_id) {
         ret = p4pd_add_flow_hash_table_entry(&session->rflow->config.key,
+                                             session->rflow->pgm_attrs.tenant_hwid,
                                              session->rflow->pgm_attrs.lkp_inst,
-                                             (pd_l2seg_t *)session->rflow->sl2seg->pd,
                                              &session_pd->rflow,
                                              &flow_hash);
 
@@ -696,8 +649,8 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
             !session_pd->rflow_aug.flow_hash_hw_id) {
             // TODO: key has to involve service done? populate in flow_attrs
             ret = p4pd_add_flow_hash_table_entry(&session->rflow->assoc_flow->config.key,
+                                                 session->rflow->assoc_flow->pgm_attrs.tenant_hwid,
                                                  session->rflow->assoc_flow->pgm_attrs.lkp_inst,
-                                                 (pd_l2seg_t *)session->rflow->sl2seg->pd,
                                                  &session_pd->rflow_aug,
                                                  &flow_hash);
             if (args->rsp) {

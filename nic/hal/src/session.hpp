@@ -174,6 +174,7 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  dot1p_en:1;          //enable dot1p rewrite
     uint64_t                  dscp_en:1;           //enable dscp rewrite
 
+    uint32_t                  tenant_hwid;         // source l2seg tenant hwid (lkp_vrf)
     rewrite_actions_en        rw_act;              // rewrite action
     uint32_t                  rw_idx;              // rewrite index
     tunnel_rewrite_actions_en tnnl_rw_act;         // tunnel rewrite action
@@ -186,15 +187,11 @@ typedef struct flow_pgm_attrs_s {
     uint16_t                  nat_l4_port;         // NAT L4 port
     uint8_t                   dot1p;               // Cos value
     uint8_t                   dscp;                // dscp value
-    ep_t                      *dep;                // only to get rw idx in PD
 } __PACK__ flow_pgm_attrs_t;
 
 // flow state
 struct flow_s {
     hal_spinlock_t    slock;               // lock to protect this structure
-    flow_role_t       role;                // flow role
-    flow_end_type_t   src_type;            // flow src type
-    flow_end_type_t   dst_type;            // flow dst type
     bool              is_aug_flow;         // is an augment flow
 
     flow_cfg_t        config;              // flow config
@@ -202,14 +199,6 @@ struct flow_s {
     flow_t            *reverse_flow;       // reverse flow data
     flow_t            *assoc_flow;         // valid only if flow has an associated flow
     session_t         *session;            // session this flow belongs to, if any
-
-    // flow src & dst info
-    ep_t               *sep;                      // spurce ep
-    ep_t               *dep;                      // dest ep
-    if_t               *sif;                      // source interface
-    if_t               *dif;                      // dest interface
-    l2seg_t            *sl2seg;                   // source l2seg
-    l2seg_t            *dl2seg;                   // dest l2seg
 
     // PD state
     pd::pd_flow_t     *pd;                 // all PD specific state
@@ -246,7 +235,7 @@ inline std::ostream& operator<<(std::ostream& os, const flow_state_t& val)
         os << ", tcp_seq_num=" << val.tcp_seq_num;
     }
     if (val.tcp_ack_num) {
-        os << ", syn_ack_delta=" << val.tcp_ack_num;
+        os << ", tcp_ack_num=" << val.tcp_ack_num;
     }
     return os << "}";
 }
@@ -263,27 +252,8 @@ typedef struct session_cfg_s {
     uint16_t            conn_track_en:1;          // enable connection tracking
 } __PACK__ session_cfg_t;
 
-typedef struct session_args_s {
-    session_cfg_t      *session;                  // session config
-    flow_cfg_t         *iflow;                    // initiator flow
-    flow_cfg_t         *rflow;                    // responder flow
-    session_state_t    *session_state;            // connection tracking state
-    tenant_t           *tenant;                   // tenant
-
-#if 0
-    ep_t               *sep;                      // spurce ep
-    ep_t               *dep;                      // dest ep
-    if_t               *sif;                      // source interface
-    if_t               *dif;                      // dest interface
-    l2seg_t            *sl2seg;                   // source l2seg
-    l2seg_t            *dl2seg;                   // dest l2seg
-#endif
-    SessionSpec        *spec;                     // session spec
-    SessionResponse    *rsp;                      // session response
-} __PACK__ session_args_t; 
-
 static const uint8_t MAX_SESSION_FLOWS = 2;
-typedef struct session_args_fte_s {
+typedef struct session_args_s {
     session_cfg_t      *session;                          // session config
     flow_cfg_t         *iflow[MAX_SESSION_FLOWS];         // initiator flow
     flow_cfg_t         *rflow[MAX_SESSION_FLOWS];         // responder flow
@@ -291,9 +261,9 @@ typedef struct session_args_fte_s {
     flow_pgm_attrs_t   *rflow_attrs[MAX_SESSION_FLOWS];   // responder flow attrs
 
     session_state_t    *session_state;            // connection tracking state
-    tenant_t           *tenant;                   // tenant
     bool               valid_rflow;               // Rflow valid ?
 
+    tenant_t           *tenant;                   // tenant
     ep_t               *sep;                      // spurce ep
     ep_t               *dep;                      // dest ep
     if_t               *sif;                      // source interface
@@ -302,7 +272,7 @@ typedef struct session_args_fte_s {
     l2seg_t            *dl2seg;                   // dest l2seg
     SessionSpec        *spec;                     // session spec
     SessionResponse    *rsp;                      // session response
-} __PACK__ session_args_fte_t;
+} __PACK__ session_args_t;
 
 
 //------------------------------------------------------------------------------
@@ -317,8 +287,6 @@ struct session_s {
     session_cfg_t       config;                   // session config
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
-    session_dir_t       src_dir;                  // source direction
-    session_dir_t       dst_dir;                  // destination direction
     app_session_t       *app_session;             // app session this L4 session is part of, if any
     tenant_t            *tenant;                  // tenant
 
@@ -402,14 +370,11 @@ hal_ret_t extract_flow_key_from_spec (tenant_id_t tid,
                                       flow_key_t *flow_key, 
                                       const FlowKey& flow_spec_key);
 
-hal_ret_t session_create(const session_args_t *args, hal_handle_t *session_handle);
-hal_ret_t session_create_fte(const session_args_fte_t *args, hal_handle_t *session_handle, session_t **sess);
-hal_ret_t session_update_fte(const session_args_fte_t *args, session_t *session);
-hal_ret_t session_delete_fte(const session_args_fte_t *args, session_t *session);
-hal::session_t *session_lookup_fte(flow_key_t key, flow_role_t *role);
+hal_ret_t session_create(const session_args_t *args, hal_handle_t *session_handle, session_t **sess);
+hal_ret_t session_update(const session_args_t *args, session_t *session);
+hal_ret_t session_delete(const session_args_t *args, session_t *session);
+hal::session_t *session_lookup(flow_key_t key, flow_role_t *role);
 
-hal_ret_t session_create(session::SessionSpec& spec,
-                         session::SessionResponse *rsp);
 
 hal_ret_t session_get(session::SessionGetRequest& spec,
                       session::SessionGetResponse *rsp);

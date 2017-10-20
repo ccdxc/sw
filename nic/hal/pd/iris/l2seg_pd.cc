@@ -615,6 +615,15 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// Returns the tenant hwid of the l2seg (used as lkp_vrf in flow key)
+//-----------------------------------------------------------------------------
+l2seg_hw_id_t
+pd_l2seg_get_ten_hwid(l2seg_t *l2seg)
+{
+    return ((pd_l2seg_t *)l2seg->pd)->l2seg_ten_hw_id;
+}
+
+//-----------------------------------------------------------------------------
 // Returns the internal vlan of l2seg (used for input_properites lookup of
 // reinjected packets) returns false if vlan is not valid
 //-----------------------------------------------------------------------------

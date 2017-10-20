@@ -397,95 +397,11 @@ ep_pd_program_hw(pd_ep_t *pd_ep)
 {
     hal_ret_t            ret = HAL_RET_OK;
 
-
-    // Program RW Table
-    //ret = ep_pd_pgm_rw_tbl(pd_ep);
-
     // Program IPSG Table
     ret = ep_pd_pgm_ipsg_tbl(pd_ep);
 
     return ret;
 }
-
-// Deprecated as we are maintaining a hash table for rw table.
-// Remove it ...
-#if 0
-hal_ret_t
-ep_pd_pgm_rw_tbl(pd_ep_t *pd_ep)
-{
-    hal_ret_t            ret = HAL_RET_OK;
-    mac_addr_t           mac_sa, mac_da;
-    rewrite_actiondata   data;
-    DirectMap            *rw_tbl = NULL;
-    mac_addr_t           *mac;
-    network_t            *nw = NULL;
-    ep_t                 *pi_ep = (ep_t *)pd_ep->pi_ep;
-    l2seg_t              *l2seg = NULL;
-
-    memset(mac_sa, 0, sizeof(mac_sa));
-    memset(mac_da, 0, sizeof(mac_da));
-    memset(&data, 0, sizeof(data));
-    
-    mac = ep_get_mac_addr((ep_t *)pd_ep->pi_ep);
-
-    rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
-    HAL_ASSERT_RETURN((rw_tbl != NULL), HAL_RET_ERR);
-
-    // mac_sa = ... Get it from l2seg rmac
-    // mac_da = ... Get it from EP's NH
-    // Start by skipping REWRITE_NOP_ID
-    for (int i = 1; i < REWRITE_MAX_ID; i++) {
-        switch(i) {
-            case REWRITE_REWRITE_ID:
-            case REWRITE_IPV4_NAT_SRC_REWRITE_ID:
-            case REWRITE_IPV4_NAT_DST_REWRITE_ID:
-            case REWRITE_IPV4_NAT_SRC_UDP_REWRITE_ID:
-            case REWRITE_IPV4_NAT_SRC_TCP_REWRITE_ID:
-            case REWRITE_IPV4_NAT_DST_UDP_REWRITE_ID:
-            case REWRITE_IPV4_NAT_DST_TCP_REWRITE_ID:
-            case REWRITE_IPV4_TWICE_NAT_REWRITE_ID:
-            case REWRITE_IPV4_TWICE_NAT_UDP_REWRITE_ID:
-            case REWRITE_IPV4_TWICE_NAT_TCP_REWRITE_ID:
-            case REWRITE_IPV6_NAT_SRC_REWRITE_ID:
-            case REWRITE_IPV6_NAT_DST_REWRITE_ID:
-            case REWRITE_IPV6_NAT_SRC_UDP_REWRITE_ID:
-            case REWRITE_IPV6_NAT_SRC_TCP_REWRITE_ID:
-            case REWRITE_IPV6_NAT_DST_UDP_REWRITE_ID:
-            case REWRITE_IPV6_NAT_DST_TCP_REWRITE_ID:
-            case REWRITE_IPV6_TWICE_NAT_REWRITE_ID:
-            case REWRITE_IPV6_TWICE_NAT_UDP_REWRITE_ID:
-            case REWRITE_IPV6_TWICE_NAT_TCP_REWRITE_ID:
-                l2seg = find_l2seg_by_handle(pi_ep->l2seg_handle);
-                HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
-                nw = ep_pd_get_nw(pi_ep, l2seg);
-                HAL_ASSERT_RETURN(nw != NULL, HAL_RET_NETWORK_NOT_FOUND);
-                if (nw) {
-                    memcpy(data.rewrite_action_u.rewrite_rewrite.mac_sa, nw->rmac_addr, 6);
-                    memrev(data.rewrite_action_u.rewrite_rewrite.mac_sa, 6);
-                } 
-                memcpy(data.rewrite_action_u.rewrite_rewrite.mac_da, *mac, 6);
-                memrev(data.rewrite_action_u.rewrite_rewrite.mac_da, 6);
-                break;
-            default:
-                HAL_ASSERT(0);
-        }
-        data.actionid = i;
-        ret = rw_tbl->insert(&data, &(pd_ep->rw_tbl_idx[i]));
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("PD-EP::{}: Unable to program for EP: {}:{}", 
-                    __FUNCTION__, ep_get_l2segid((ep_t *)pd_ep->pi_ep), 
-                    ether_ntoa((struct ether_addr*)*mac));
-        } else {
-            HAL_TRACE_DEBUG("PD-EP::{}: Programmed for EP: {}:{}", 
-                    __FUNCTION__, ep_get_l2segid((ep_t *)pd_ep->pi_ep), 
-                    ether_ntoa((struct ether_addr*)*mac));
-        }
-    }
-
-    return ret;
-}
-#endif
-
 
 hal_ret_t
 ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list)
