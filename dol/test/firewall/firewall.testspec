@@ -47,7 +47,19 @@ packets:
                 ack     : ref://testcase/tracker/step/fields/ack
                 window  : ref://testcase/tracker/step/fields/window
                 flags   : ref://testcase/tracker/step/fields/flags
-
+                options:
+                    - kind: ref://testcase/tracker/step/fields/options/nop_v
+                      data: ref://testcase/tracker/step/fields/options/nop
+                    - kind: ref://testcase/tracker/step/fields/options/scale_v
+                      data: ref://testcase/tracker/step/fields/options/scale
+                    - kind: ref://testcase/tracker/step/fields/options/sack_v
+                      data: ref://testcase/tracker/step/fields/options/sack
+                    - kind: ref://testcase/tracker/step/fields/options/sackok_v
+                      data: ref://testcase/tracker/step/fields/options/sackok
+                    - kind: ref://testcase/tracker/step/fields/options/timestamp_v
+                      data: ref://testcase/tracker/step/fields/options/timestamp
+                    - kind: ref://testcase/tracker/step/fields/options/mss_v
+                      data: ref://testcase/tracker/step/fields/options/mss
 
 trigger:
     packets:

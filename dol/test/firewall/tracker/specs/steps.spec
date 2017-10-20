@@ -365,6 +365,11 @@ steps:
         payloadsize : 100
         fields      :
             flags   : ack
+            options :
+                scale       : ref://step/ifstate/scale
+                mss         : ref://step/ifstate/mss
+                timestamp   : 12345678
+                
         state       :
             iflow   :
                 seq : 9876

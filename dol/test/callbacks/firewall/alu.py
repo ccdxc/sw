@@ -16,7 +16,7 @@ def Mod(step, orig, args):
     return orig % args.val
 
 def AddWithWindow(step, orig, args):
-    return orig + step.neighbor_flowstate.window + args.val
+    return orig + step.prfstate.window + args.val
 
 def SubWithWindow(step, orig, args):
-    return orig + step.neighbor_flowstate.window - args.val
+    return orig + step.prfstate.window - args.val

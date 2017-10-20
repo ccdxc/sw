@@ -78,16 +78,29 @@ class PacketHeaderFields(objects.FrameworkObject):
 
         return data.get()
 
-    def Build(self, testcase, packet):
-        for key,data in self.__dict__.items():
+    def __build_list(self, data, testcase, packet):
+        for e in data:
+            if objects.IsFrameworkObject(e):
+                self.__build(e, testcase, packet)
+        return
+
+    def __build(self, obj, testcase, packet):
+        for key,data in obj.__dict__.items():
             if objects.IsReference(data):
                 if data.GetRootID() == defs.ref_roots.TESTCASE:
-                    self.__dict__[key] = data.Get(testcase)
+                    obj.__dict__[key] = data.Get(testcase)
                 elif data.GetRootID() == defs.ref_roots.FACTORY:
-                    self.__dict__[key] = data.Get(FactoryStore)
+                    obj.__dict__[key] = data.Get(FactoryStore)
             elif objects.IsCallback(data):
                 retval = data.call(testcase, packet)
-                self.__dict__[key] = self.__get_field_value(retval)
+                obj.__dict__[key] = obj.__get_field_value(retval)
+            elif isinstance(data, list):
+                self.__build_list(data, testcase, packet)
+        return
+       
+
+    def Build(self, testcase, packet):
+        self.__build(self, testcase, packet)
         return
 
 class PacketHeader(objects.FrameworkObject):

@@ -117,15 +117,15 @@ class FlowState:
 
     def ShowDiff(self, lg):
         if self.prev.seq != self.curr.seq:
-            lg.info("- Seq  : prev=", self.prev.seq, " curr=", self.curr.seq)
+            lg.info("- Seq  : prev =", self.prev.seq, " curr =", self.curr.seq)
         if self.prev.ack != self.curr.ack:
-            lg.info("- Ack  : prev=", self.prev.ack, " curr=", self.curr.ack)
+            lg.info("- Ack  : prev =", self.prev.ack, " curr =", self.curr.ack)
         if self.prev.window != self.curr.window:
-            lg.info("- Win  : prev=", self.prev.window, " curr=", self.curr.window)
+            lg.info("- Win  : prev =", self.prev.window, " curr =", self.curr.window)
         if self.prev.scale != self.curr.scale:
-            lg.info("- Scale: prev=", self.prev.scale, " curr=", self.curr.scale)
+            lg.info("- Scale: prev =", self.prev.scale, " curr =", self.curr.scale)
         if self.prev.mss != self.curr.mss:
-            lg.info("- MSS  : prev=", self.prev.mss, " curr=", self.prev.mss)
+            lg.info("- MSS  : prev =", self.prev.mss, " curr =", self.prev.mss)
         return
 
 class FlowStateTracker:
