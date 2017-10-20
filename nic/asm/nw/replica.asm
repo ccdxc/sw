@@ -22,19 +22,26 @@ set_replica_rewrites:
   seq         c1, k.control_metadata_src_lport, k.{tm_replication_data_lport_sbit0_ebit4, \
                                                    tm_replication_data_lport_sbit5_ebit10}
   phvwr.c1.e  p.capri_intrinsic_drop, TRUE
+
+  seq         c1, k.tm_replication_data_repl_type, TM_REPL_TYPE_DEFAULT
+  seq         c2, k.tm_replication_data_repl_type, TM_REPL_TYPE_TO_CPU_REL_COPY
+  bcf         ![c1 | c2], lb_replica_honor_ingress
   phvwr       p.tm_replication_data_valid, FALSE
 
   phvwr       p.control_metadata_dst_lport, k.{tm_replication_data_lport_sbit0_ebit4, \
                                                tm_replication_data_lport_sbit5_ebit10}
-  phvwr       p.capri_rxdma_intrinsic_qtype, k.tm_replication_data_qtype
-  seq         c1, k.{tm_replication_data_tunnel_rewrite_index_sbit0_ebit1, \
-                     tm_replication_data_tunnel_rewrite_index_sbit2_ebit9}, 0
-  phvwr.c1    p.capri_rxdma_intrinsic_qid, k.tm_replication_data_qid_or_vnid
-  phvwr.!c1   p.rewrite_metadata_tunnel_rewrite_index, \
-                  k.{tm_replication_data_tunnel_rewrite_index_sbit0_ebit1, \
-                     tm_replication_data_tunnel_rewrite_index_sbit2_ebit9}
-  phvwr.!c1   p.rewrite_metadata_tunnel_vnid, k.tm_replication_data_qid_or_vnid
-  phvwr.e     p.rewrite_metadata_rewrite_index, \
+  phvwr       p.control_metadata_qtype, k.tm_replication_data_qtype
+  phvwr       p.rewrite_metadata_rewrite_index, \
                   k.{tm_replication_data_rewrite_index_sbit0_ebit3, \
                      tm_replication_data_rewrite_index_sbit4_ebit11}
+  seq         c1, k.tm_replication_data_is_qid, TRUE
+  phvwr.c1    p.control_metadata_qid, k.tm_replication_data_qid_or_vnid
+  phvwr.!c1   p.rewrite_metadata_tunnel_vnid, k.tm_replication_data_qid_or_vnid
+  phvwr.e     p.tunnel_metadata_tunnel_originate_egress, k.tm_replication_data_is_tunnel
+  phvwr       p.rewrite_metadata_tunnel_rewrite_index, \
+                  k.{tm_replication_data_tunnel_rewrite_index_sbit0_ebit1, \
+                     tm_replication_data_tunnel_rewrite_index_sbit2_ebit9}
+
+lb_replica_honor_ingress:
+  nop.e
   nop

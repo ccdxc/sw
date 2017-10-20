@@ -483,13 +483,18 @@ header_type recirc_header_t {
     }
 }
 
+/*
+ * repl_type values defined in  p4/nw/include/defines.h
+ */
 header_type tm_replication_data_t {
     fields {
         qtype                  : 3;
         lport                  : 11;
         tunnel_rewrite_index   : 10;
         qid_or_vnid            : 24;
-        pad_1                  : 4;
+        repl_type              : 2;
+        is_qid                 : 1;
+        is_tunnel              : 1;
         rewrite_index          : 12;
     }
 }

@@ -60,6 +60,7 @@ public:
     uint32_t get_max_num_repls_per_entry() { return max_num_repls_per_entry_; }
     // Methods
     hal_ret_t create_repl_list(uint32_t *repl_list_idx);
+    hal_ret_t create_repl_list_with_id(uint32_t repl_list_idx);
     hal_ret_t add_replication(uint32_t repl_list_idx, void *data);
     hal_ret_t del_replication(uint32_t repl_list_idx, void *data);
     hal_ret_t delete_repl_list(uint32_t repl_list_idx);

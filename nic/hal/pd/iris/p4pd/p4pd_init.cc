@@ -971,6 +971,64 @@ p4pd_decode_roce_opcode_init (void)
     return HAL_RET_OK;
 }
 
+// We need these to be defined by FTE and we need access to those in this function
+// We need changes from P4PLUS side to take non-zero qid. Goli will take care of it.
+#define HAL_FTE_FIN_QID               0
+#define HAL_FTE_RST_QID               0
+#define HAL_FTE_FLOW_REL_COPY_QID     0
+
+hal_ret_t
+capri_repl_pgm_def_entries (void)
+{
+    p4_replication_data_t data;
+
+    /*Create as many Lists as required*/
+    hal::pd::g_hal_state_pd->met_table()->create_repl_list_with_id(P4_NW_MCAST_INDEX_FIN_COPY);
+    hal::pd::g_hal_state_pd->met_table()->create_repl_list_with_id(P4_NW_MCAST_INDEX_RST_COPY);
+    hal::pd::g_hal_state_pd->met_table()->create_repl_list_with_id(P4_NW_MCAST_INDEX_FLOW_REL_COPY);
+
+    /* Add 1st repication copy for list 1*/
+    memset(&data, 0, sizeof(data));
+    data.repl_type = TM_REPL_TYPE_HONOR_INGRESS;
+    hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_FIN_COPY, &data);
+
+    /* Add 2nd repication copy for list 1*/
+    memset(&data, 0, sizeof(data));
+    data.repl_type = TM_REPL_TYPE_TO_CPU_REL_COPY;
+    data.lport = CPU_LPORT;
+    data.is_qid = 1;
+    data.qid_or_vnid = HAL_FTE_FIN_QID;
+    hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_FIN_COPY, &data);
+
+
+    /* Add 1st repication copy for list 2*/
+    memset(&data, 0, sizeof(data));
+    data.repl_type = TM_REPL_TYPE_HONOR_INGRESS;
+    hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_RST_COPY, &data);
+
+    /* Add 2nd repication copy for list 2*/
+    memset(&data, 0, sizeof(data));
+    data.repl_type = TM_REPL_TYPE_TO_CPU_REL_COPY;
+    data.lport = CPU_LPORT;
+    data.is_qid = 1;
+    data.qid_or_vnid = HAL_FTE_RST_QID;
+    hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_RST_COPY, &data);
+
+    /* Add 1st repication copy for list 2*/
+    memset(&data, 0, sizeof(data));
+    data.repl_type = TM_REPL_TYPE_HONOR_INGRESS;
+    hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_FLOW_REL_COPY, &data);
+
+    /* Add 2nd repication copy for list 2*/
+    memset(&data, 0, sizeof(data));
+    data.repl_type = TM_REPL_TYPE_TO_CPU_REL_COPY;
+    data.lport = CPU_LPORT;
+    data.is_qid = 1;
+    data.qid_or_vnid = HAL_FTE_FLOW_REL_COPY_QID;
+    hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_FLOW_REL_COPY, &data);
+    return HAL_RET_OK;
+}
+
 hal_ret_t
 p4pd_table_defaults_init (void)
 {
@@ -993,6 +1051,11 @@ p4pd_table_defaults_init (void)
     HAL_ASSERT(p4pd_p4plus_app_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_mirror_table_init() == HAL_RET_OK);
 
+    // initialize all PB/TM tables with default entries, if any
+    // Even though this is not really a P4 Table it is very
+    // tightly coupled with our P4 Program and after discussing
+    // we put this call here conciously.
+    HAL_ASSERT(capri_repl_pgm_def_entries() == HAL_RET_OK);
     return HAL_RET_OK;
 }
 

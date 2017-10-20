@@ -99,7 +99,7 @@ action flow_hit_drop(flow_index, start_timestamp) {
 // Is p4+ expecting a flow_index per flow or per session ?
 // We should have a flag here which enables/disables connection tracking.
 // Change all timestamps to be 48 bit.
-action flow_info(dst_lport, multicast_en, qtype,
+action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
                  ingress_policer_index, egress_policer_index,
                  ingress_mirror_session_id, egress_mirror_session_id,
                  rewrite_index, tunnel_rewrite_index, tunnel_vnid,
@@ -120,12 +120,9 @@ action flow_info(dst_lport, multicast_en, qtype,
 
     /* egress port/vf */
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
-    if (multicast_en == TRUE) {
-        modify_field(capri_intrinsic.tm_replicate_en, multicast_en);
-        modify_field(capri_intrinsic.tm_replicate_ptr, dst_lport);
-    } else {
-        modify_field(control_metadata.dst_lport, dst_lport);
-    }
+    modify_field(capri_intrinsic.tm_replicate_en, multicast_en);
+    modify_field(capri_intrinsic.tm_replicate_ptr, multicast_ptr);
+    modify_field(control_metadata.dst_lport, dst_lport);
 
     /* Output queue selection */
     modify_field(capri_intrinsic.tm_oq, ingress_tm_oqueue);

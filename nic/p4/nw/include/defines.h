@@ -496,3 +496,27 @@
 #define P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN_BIT_POS      3
 #define P4PLUS_TO_P4_FLAGS_INSERT_VLAN_TAG_BIT_POS     4
 #define P4PLUS_TO_P4_FLAGS_LKP_INST_BIT_POS            7
+
+
+/*****************************************************************************/
+/* When FTE needs to see a copy of a packet instead of redirecting we will   */
+/* replicate the packet and send one copy to regular destination dicated by  */
+/* flow and the other replicated packet will be sent to CPU. This will       */
+/* that the packet will be delivered to FTE and will not be lost.            */
+/* Copy is not repliable hence we are using this approach.                   */
+/* Reserved multicast indices that will be used in P4 for packets like       */
+/* 1. FIN Packets that will be forwarded and redirected to CPU_LPORT         */
+/* 2. ALGs have some requirements where the requirment is to drive           */
+/*    specific qnum per flow but that is not possible with this solution.    */
+/*****************************************************************************/
+#define P4_NW_MCAST_INDEX_FIN_COPY                     1
+#define P4_NW_MCAST_INDEX_RST_COPY                     2
+#define P4_NW_MCAST_INDEX_FLOW_REL_COPY                3
+
+
+/*****************************************************************************/
+/* Defines for repl_type field in tm_replication_data_t                      */
+/*****************************************************************************/
+#define TM_REPL_TYPE_DEFAULT            0  // This is for normal multicast replication
+#define TM_REPL_TYPE_TO_CPU_REL_COPY    1  // This is for copy to cpu using replication and reliable
+#define TM_REPL_TYPE_HONOR_INGRESS      2  // Normal forwarding, Honor the ingress flow decided rewrites.

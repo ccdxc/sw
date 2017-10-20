@@ -64,6 +64,7 @@ hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif)
 
             data.qtype = lif_get_qtype(lif, intf::LIF_QUEUE_PURPOSE_RX);
             data.qid_or_vnid = 0; // TODO refer to update_fwding_info()
+            data.is_qid = 1;
             break;
         }
         case intf::IF_TYPE_UPLINK:
@@ -74,6 +75,7 @@ hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif)
         }
         case intf::IF_TYPE_TUNNEL:
             // TODO: Handle for Tunnel case
+            data.is_tunnel = 1;
             break;
         default:
             HAL_ASSERT(0);

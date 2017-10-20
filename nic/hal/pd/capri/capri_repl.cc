@@ -6,7 +6,9 @@
 #include "nic/include/hal_pd_error.hpp"
 #include "nic/hal/pd/capri/capri_repl.hpp"
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/model_sim/include/lib_model_client.h"
+#include "nic/p4/nw/include/defines.h"
 
 /* HBM base address in System memory map; Cached once at the init time */
 static uint64_t repl_table_base_addr;

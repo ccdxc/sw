@@ -32,6 +32,7 @@
 #include "nic/hal/pd/iris/cpucb_pd.hpp"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/hal/pd/iris/rawrcb_pd.hpp"
+#include "nic/hal/pd/capri/capri_repl.hpp"
 
 namespace hal {
 namespace pd {

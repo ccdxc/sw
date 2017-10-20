@@ -19,10 +19,9 @@ flow_info:
 
   /* egress port/vf */
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
-  seq         c1, d.u.flow_info_d.multicast_en, 1
-  phvwr.c1    p.capri_intrinsic_tm_replicate_en, 1
-  phvwr.c1    p.capri_intrinsic_tm_replicate_ptr, d.u.flow_info_d.dst_lport
-  phvwr.!c1   p.control_metadata_dst_lport, d.u.flow_info_d.dst_lport
+  phvwr       p.capri_intrinsic_tm_replicate_en, d.u.flow_info_d.multicast_en
+  phvwr       p.capri_intrinsic_tm_replicate_ptr, d.u.flow_info_d.multicast_ptr
+  phvwr       p.control_metadata_dst_lport, d.u.flow_info_d.dst_lport
 
   /* output queue selection */
   phvwr       p.capri_intrinsic_tm_oq, d.u.flow_info_d.ingress_tm_oqueue

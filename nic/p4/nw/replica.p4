@@ -19,19 +19,31 @@ action set_replica_rewrites() {
         if (control_metadata.src_lport == tm_replication_data.lport) {
             modify_field(capri_intrinsic.drop, TRUE);
         }
-        modify_field(control_metadata.dst_lport, tm_replication_data.lport);
-        modify_field(capri_rxdma_intrinsic.qtype, tm_replication_data.qtype);
-        modify_field(rewrite_metadata.rewrite_index,
+        if ((tm_replication_data.repl_type == TM_REPL_TYPE_DEFAULT) or
+            (tm_replication_data.repl_type == TM_REPL_TYPE_TO_CPU_REL_COPY)) {
+            modify_field(control_metadata.dst_lport, tm_replication_data.lport);
+            modify_field(control_metadata.qtype, tm_replication_data.qtype);
+            modify_field(rewrite_metadata.rewrite_index,
                      tm_replication_data.rewrite_index);
-        if (tm_replication_data.tunnel_rewrite_index == 0) {
-            modify_field(capri_rxdma_intrinsic.qid,
+
+            if (tm_replication_data.is_qid == TRUE) {
+                modify_field(control_metadata.qid,
                          tm_replication_data.qid_or_vnid);
-        } else {
-            modify_field(tunnel_metadata.tunnel_originate_egress, TRUE);
+            } else {
+                modify_field(rewrite_metadata.tunnel_vnid,
+                         tm_replication_data.qid_or_vnid);
+            }
+            if (tm_replication_data.is_tunnel == TRUE) {
+                modify_field(tunnel_metadata.tunnel_originate_egress, TRUE);
+            } else {
+                modify_field(tunnel_metadata.tunnel_originate_egress, FALSE);
+            }
             modify_field(rewrite_metadata.tunnel_rewrite_index,
                          tm_replication_data.tunnel_rewrite_index);
-            modify_field(rewrite_metadata.tunnel_vnid,
-                         tm_replication_data.qid_or_vnid);
+        }
+
+        if (tm_replication_data.repl_type == TM_REPL_TYPE_HONOR_INGRESS) {
+            // Honor all the rewrites that Ingress flow lookup has given out.
         }
         remove_header(tm_replication_data);
     }

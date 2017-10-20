@@ -29,6 +29,35 @@ Met::~Met()
 }
 
 // ----------------------------------------------------------------------------
+// Create a Replication List with a known ID
+// ----------------------------------------------------------------------------
+hal_ret_t
+Met::create_repl_list_with_id(uint32_t repl_list_idx)
+{
+    hal_ret_t   rs = HAL_RET_OK;
+    ReplList    *repl_list = NULL;
+
+    // Allocate the index in repl. table
+    indexer::status irs = repl_table_indexer_->alloc_withid(repl_list_idx);
+    if (irs != indexer::SUCCESS) {
+        rs =  HAL_RET_NO_RESOURCE;
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Met:{}: Alloc repl table id: {}", __FUNCTION__, repl_list_idx);
+
+    repl_list = new ReplList(repl_list_idx, this);
+
+    repl_list_map_[repl_list_idx] = repl_list;
+
+    // TODO: Only for debugging
+    trace_met();
+    end:
+    return rs;
+}
+
+
+// ----------------------------------------------------------------------------
 // Create a Replication List
 // ----------------------------------------------------------------------------
 hal_ret_t

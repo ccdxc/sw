@@ -77,9 +77,11 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Initiator Side
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
             # Close from the Responder Side
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
 
     - module:
@@ -101,9 +103,11 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Initiator Side
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
             # Close from the Responder Side
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
 
     - module:
@@ -632,9 +636,11 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Responder Side
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             # Close from the Initiator Side
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
 
     # Test targetting state machine trasnsition related code.
@@ -654,11 +660,13 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Initator Side
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
+              cpu   : True
             # TBD need to make sure that the below FIN doesn't
             # ack the fin from responder side. By default
             # tracker does this, so we might need to write a new
             # step to take the ack back.
             - step  : ref://trackerstore/steps/id=RFLOW_FIN_ACK_MINUS_1
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
 
@@ -678,11 +686,13 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Responder Side
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
+              cpu   : True
             # TBD need to make sure that the below FIN doesn't
             # ack the fin from responder side. By default
             # tracker does this, so we might need to write a new
             # step to take the ack back.
             - step  : ref://trackerstore/steps/id=IFLOW_FIN_ACK_MINUS_1
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
 
@@ -702,6 +712,7 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Initator Side
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
 
     - module:
@@ -720,6 +731,7 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
 
     - module:
@@ -739,6 +751,7 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_DATA
             # Close from the Initator Side
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_RETRANSMIT
 
     - module:
@@ -757,6 +770,7 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_RETRANSMIT
 
     - module:
@@ -775,6 +789,7 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_DATA
 
     - module:
@@ -793,6 +808,7 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Initator Side
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
 
 
@@ -812,7 +828,9 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Initator Side
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
 
     - module:
@@ -831,7 +849,9 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
 
     - module:
@@ -850,7 +870,9 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Initator Side
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_RETRANSMIT
 
     - module:
@@ -869,7 +891,9 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Close from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_FIN
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_RETRANSMIT
 
     - module:
@@ -881,6 +905,7 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_SYN
               cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_RST_FOR_SYN
+              cpu   : True
 
     - module:
         name    : INIT_SYN_RESP_RST_INVALID_ACK_NUM
@@ -902,6 +927,7 @@ modules:
               cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=IFLOW_RST
+              cpu   : True
 
     - module:
         name    : INIT_RST_ON_ESTAB_CONN
@@ -919,6 +945,7 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=IFLOW_RST
+              cpu   : True
 
     - module:
         name    : RES_RST_ON_ESTAB_CONN
@@ -936,6 +963,7 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_RST
+              cpu   : True
 
     - module:
         name    : INIT_DATA_ON_INIT_RST_CONN
@@ -953,6 +981,7 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=IFLOW_RST
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
 
     - module:
@@ -971,6 +1000,7 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=IFLOW_RST
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
 
     - module:
@@ -989,6 +1019,7 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_RST
+              cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
 
     - module:
@@ -1007,6 +1038,7 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_RST
+              cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
 
     - module:
