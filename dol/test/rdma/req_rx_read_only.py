@@ -87,6 +87,10 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'c_index5', ring5_mask, 1):
             return False
 
+        # verify rexmit_psn is incremented by 1
+        #if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'rexmit_psn', 1):
+        #    return False
+
         # verify that busy is 0
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
             return False

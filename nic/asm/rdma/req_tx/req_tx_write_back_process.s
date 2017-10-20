@@ -20,16 +20,27 @@ req_tx_write_back_process:
      tblwr         d.curr_wqe_ptr, k.to_stage.wqe_addr
      tblwr         d.curr_op_type, k.args.op_type
 
+     seq           c1, k.args.set_bktrack, 1
+     bcf           [!c1], sq_ring_update
+     nop           // Branch Delay Slot
+
+     seq           c2, k.args.empty_rrq_bktrack, 1
+     bcf           [!c2], sq_ring_update
+     // set SQ c_index to the backtracked value
+     tblwr         SQ_C_INDEX, k.args.sq_c_index // Branch Delay Slot
+
+     // Empty RRQ ring
+     tblwr         RRQ_C_INDEX, RRQ_P_INDEX
+     // Empty backtrack ring
+     tblwr         SQ_BKTRACK_C_INDEX, SQ_BKTRACK_P_INDEX
+
+sq_ring_update:
      // if (write_back_info_p->last)
      // RING_C_INDEX_INCREMENT(sqcb0_p, SQ_RING_ID)
      seq           c1, k.args.last, 1
-     //tblmincri.c1  SQ_C_INDEX, d.log_num_wqes, 1
-     bcf           [!c1], skip_db_update
+     bcf           [!c1], skip_sq_ring_update
      nop           //BD Slot
 
-     //add.c1        r1, SQ_C_INDEX, 1 // Delay slot
-     //add           r1, SQ_C_INDEX, r0
-     //mincr         r1, d.log_num_wqes, 1
      tblmincri     SQ_C_INDEX, d.log_num_wqes, 1
      // Ordering rules:
      // We decided NOT to ring doorbell to update the c_index and there by re-evaluate scheduler.
@@ -45,7 +56,7 @@ req_tx_write_back_process:
      // every wqe that is posted.
      //DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, SQ_RING_ID, SQ_C_INDEX, r2, r3)
 
-skip_db_update:
+skip_sq_ring_update:
 
      add           r1, k.args.tbl_id, r0
      CAPRI_SET_TABLE_I_VALID(r1, 0)

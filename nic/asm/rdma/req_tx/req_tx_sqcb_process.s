@@ -11,7 +11,7 @@ struct rdma_stage0_table_k k;
 #define INFO_OUT1_T struct req_tx_sqcb_to_pt_info_t
 #define INFO_OUT2_T struct req_tx_sqcb_to_wqe_info_t
 #define INFO_OUT3_T struct req_tx_wqe_to_sge_info_t
-#define INFO_OUT4_T struct req_tx_to_stage_t
+#define TO_STAGE_T struct req_tx_to_stage_t
 #define SQCB0_TO_SQCB1_T struct req_tx_sqcb0_to_sqcb1_info_t
 
 %%
@@ -55,8 +55,8 @@ req_tx_sqcb_process:
     tblwr          d.busy, 1
     tblwr          d.cb1_busy, 1
 
-    IS_RING_EMPTY(c1, r7, FC_RING_ID_BITMAP)
-    bcf          [c1], chk_bktrack
+    ARE_ALL_RINGS_EMPTY(c1, r7[MAX_SQ_HOST_RINGS-1:0], FC_RING_ID_BITMAP)
+    bcf          [c1], sq_bktrack1
     nop          // Branch Delay Slot 
 
 update_credits:
@@ -81,7 +81,66 @@ update_credits:
     nop.e
     nop
 
-chk_bktrack: 
+sq_bktrack1:
+    ARE_ALL_RINGS_EMPTY(c1, r7[MAX_SQ_HOST_RINGS-1:0], SQ_BKTRACK_RING_ID_BITMAP|TIMER_RING_ID_BITMAP)
+    bcf          [c1], chk_credits 
+    nop          // Branch Delay Slot 
+
+    // Check for fence in the starting wqe and go past it for backtracking
+    ssle           c1, r0, d.fence, d.li_fence
+    bcf            [c1], sq_bktrack2
+    add            r1, r0, SQ_C_INDEX
+    mincr          r1, d.log_num_wqes, -1
+    seq            c1, r1, SQ_P_INDEX
+    bcf            [c1], invalid_bktrack
+
+sq_bktrack2:
+    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
+
+    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, sq_c_index, r1)
+    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, sq_p_index, SQ_P_INDEX)
+    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, in_progress, d.in_progress)
+    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, bktrack_in_progress, d.bktrack_in_progress)
+    CAPRI_SET_FIELD_RANGE(r7, SQCB0_TO_SQCB1_T, num_sges, 48, d.{current_sge_offset...num_sges})
+    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, update_credits, 0)
+    CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, bktrack, 1)
+
+    add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
+    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqcb1_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+
+    // if (sqcb0_p->in_progress || sqcb0_p->bktracking)
+    //     sqcb0_to_sqcb1_info_p->cur_wqe_addr = sqcb0_p->curr_wqe_ptr
+    ssle           c1, r0, d.in_progress, d.bktrack_in_progress
+    cmov           r1, c1, r0, d.curr_wqe_ptr
+
+    CAPRI_GET_STAGE_1_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, log_num_wqes, 52, d.{pt_base_addr...log_num_wqes})
+
+    CAPRI_GET_STAGE_2_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, log_num_wqes, 52, d.{pt_base_addr...log_num_wqes})
+
+    CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, log_num_wqes, 52, d.{pt_base_addr...log_num_wqes})
+ 
+    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, log_num_wqes, 52, d.{pt_base_addr...log_num_wqes})
+
+    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, log_num_wqes, 52, d.{pt_base_addr...log_num_wqes})
+
+    CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, log_num_wqes, 52, d.{pt_base_addr...log_num_wqes})
+
+    nop.e
+    nop
 
 chk_credits:
     seq            c1, d.need_credits, 1
@@ -152,28 +211,28 @@ in_progress:
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
     CAPRI_GET_STAGE_0_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT4_T, wqe_addr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
 
     CAPRI_GET_STAGE_1_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT4_T, wqe_addr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
 
     CAPRI_GET_STAGE_2_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT4_T, wqe_addr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
 
     CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT4_T, wqe_addr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
 
     CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT4_T, wqe_addr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
 
     CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT4_T, wqe_addr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
 
     CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT4_T, wqe_addr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
 
     CAPRI_GET_STAGE_7_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT4_T, wqe_addr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
 
     nop.e
     nop
@@ -233,3 +292,13 @@ exit:
     nop.e
     nop
 
+invalid_bktrack:
+    phvwr  p.common.p4_intr_global_drop, 1
+    // TODO Error Disable the QP
+    // fall through to unlock and exit
+
+unlock_and_exit:
+    tblwr          d.busy, 0
+    tblwr          d.cb1_busy, 0
+    nop.e
+    nop

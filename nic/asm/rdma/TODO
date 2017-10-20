@@ -6,4 +6,5 @@
 - DMA of RRQ posting and pindex++ with fence
 - Color in RRQ wqe so that rrq posting and pindex increemnt can be independent
 - FC ring , set cindex to pindex and use r7 empty to eval 
-
+- nxt_to_go_token_id should use mincri and circular comparsion
+- cb1_busy should be an expect criteria in all tests

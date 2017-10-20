@@ -26,9 +26,23 @@ req_rx_rrqwqe_process:
     bcf            [!c1], read_or_atomic
     ARE_ALL_FLAGS_SET(c4, r5, REQ_RX_FLAG_COMPLETION)  // Branch Delay Slot
 ack:
-    CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, r7)
+    // Hardcode table 2 for write_back process
+    SQCB1_ADDR_GET(r5)
+    CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_write_back_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
+
+    CAPRI_GET_TABLE_2_ARG(req_rx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, k.args.e_rsp_psn)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, k.args.cur_sge_id)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, k.args.cur_sge_offset)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, in_progress, k.args.in_progress)
+
+    // r1 = aeth_syndrome
     add            r1, k.to_stage.syndrome, r0
 
+    // c2 = TRUE if rrq_empty
     seq            c2, k.args.rrq_empty, 1
     //phv_p->cqwqe.id.msn = pkt_msn
     //if (sqcb1_to_rrqwqe_info_p->rrq_empty == FALSE)
@@ -45,23 +59,12 @@ p_ack:
     IS_ANY_FLAG_SET_B(c3, r1, RNR_SYNDROME|RESV_SYNDROME|NAK_SYNDROME)
     bcf            [c3], n_ack
     nop            // Branch Delay Slot
-
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, k.args.e_rsp_psn)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, k.args.cur_sge_id)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, k.args.cur_sge_offset) 
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, in_progress, k.args.in_progress)
   
     // if (pkt_psn >= rrqwqe_p->psn)
     // implicit nak, ring bktrack ring setting rexmit_psn to rrqwqe_p->psn
     scwle24.!c2        c1, d.psn, k.to_stage.bth_psn
-    phvwr              p.rexmit_psn, d.psn
+    phvwr.c1           p.rexmit_psn, d.psn
     CAPRI_SET_FIELD_C(r7, SQCB1_WRITE_BACK_T, post_bktrack, 1, c1)
-
-    SQCB1_ADDR_GET(r5)
-    CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
 
     b              set_cqcb_arg
     nop            // Branch Delay Slot
@@ -72,20 +75,9 @@ n_ack:
     nop            // Branch Delay Slot
 
 nak_seq_error:
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, k.args.e_rsp_psn)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, k.args.cur_sge_id)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, k.args.cur_sge_offset) 
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, in_progress, k.args.in_progress)
-
     // SQ backtrack if NAK is due to SEQ_ERR    
     seq            c3, r1, NAK_SEQ_ERR_SYNDROME
     CAPRI_SET_FIELD_C(r7, SQCB1_WRITE_BACK_T, post_bktrack, 1, c3)
-
-    SQCB1_ADDR_GET(r5)
-    CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
 
     b              set_cqcb_arg
     nop            // Branch Delay Slot
@@ -94,17 +86,6 @@ rnr:
     ARE_ALL_FLAGS_SET_B(c3, r1, RNR_SYNDROME)
     bcf            [!c3], invalid_syndrome
     nop            // Branch Delay Slot
-
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, e_rsp_psn, k.args.e_rsp_psn)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, incr_nxt_to_go_token_id, 1)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, k.args.cur_sge_id)
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, k.args.cur_sge_offset) 
-    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, in_progress, k.args.in_progress)
-
-    SQCB1_ADDR_GET(r5)
-    CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
 
     // TODO Start timer if timer is not active currently 
 

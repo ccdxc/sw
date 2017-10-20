@@ -718,8 +718,12 @@ addi _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PER_FL
     PREPARE_DOORBELL_NO_UPDATE(_lif, _qtype, _qid, _addr, _data);                  \
     memwr.dx   _addr, _data;
 
-#define IS_RING_EMPTY(_c, _flags_r, _ring_id_bmap) \
-    smneb   _c, _flags_r, _ring_id_bmap, _ring_id_bmap;
+#define ARE_ALL_RINGS_EMPTY(_c, _flags_r, _ring_id_bmap) \
+    smeqb   _c, _flags_r, _ring_id_bmap, 0;
 
 #define PENDING_RECIR_PKTS_MAX  4
+
+#define CAPRI_SET_FIELD_RANGE(_base_r, _struct_name, _start_field_name, _len, _src_range)    \
+    phvwrp  _base_r, offsetof(_struct_name, _start_field_name), _len, _src_range
+    
 #endif //__CAPRI_H

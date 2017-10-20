@@ -25,7 +25,7 @@ post_bktrack_ring:
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_BKTRACK_PSN_DMA_CMD)
 
     // dma_cmd - bktrack_ring db data
-    PREPARE_DOORBELL_INC_PINDEX(k.global.lif, k.global.qtype, k.global.qid, SQ_BACKTRACK_RING_ID, r1, r2)
+    PREPARE_DOORBELL_INC_PINDEX(k.global.lif, k.global.qtype, k.global.qid, SQ_BKTRACK_RING_ID, r1, r2)
     phvwr          p.db_data2, r2.dx
     DMA_HBM_PHV2MEM_SETUP(r6, db_data2, db_data2, r1)
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, r6)

@@ -475,7 +475,7 @@ struct sqwqe_t {
     };
 };
 
-#define LOG_RRQ_WQE_SIZE 6
+#define LOG_RRQ_WQE_SIZE 5
 struct rrqwqe_read_t {
     len                : 32;
     wqe_sge_list_addr  : 64;

@@ -7,21 +7,23 @@
 
 #define SQ_RING_ID              0
 #define FC_RING_ID              1
-#define SQ_BACKTRACK_RING_ID    2
+#define SQ_BKTRACK_RING_ID      2
 #define TIMER_RING_ID           3
 #define RRQ_RING_ID	        (MAX_SQ_RINGS - 1)
 
-#define SQ_RING_ID_BITMAP       0x01
-#define FC_RING_ID_BITMAP       0x02
+#define SQ_RING_ID_BITMAP            0x01 // (1 << SQ_RING_ID)
+#define FC_RING_ID_BITMAP            0x02 // (1 << FC_RING_ID)
+#define SQ_BKTRACK_RING_ID_BITMAP    0x04 // (1 << SQ_BACKTRACK_RING_ID)
+#define TIMER_RING_ID_BITMAP         0x08 // (1 << TIMER_RING_ID)
 
-#define RRQ_RING_ID_BITMAP      0x20
-
-#define SQ_P_INDEX  d.{ring0.pindex}.hx
-#define SQ_C_INDEX  d.{ring0.cindex}.hx
-#define FC_P_INDEX  d.{ring1.pindex}.hx
-#define FC_C_INDEX  d.{ring1.cindex}.hx
-#define RRQ_P_INDEX d.{ring5.pindex}.hx
-#define RRQ_C_INDEX d.{ring5.cindex}.hx
+#define SQ_P_INDEX                   d.{ring0.pindex}.hx
+#define SQ_C_INDEX                   d.{ring0.cindex}.hx
+#define FC_P_INDEX                   d.{ring1.pindex}.hx
+#define FC_C_INDEX                   d.{ring1.cindex}.hx
+#define SQ_BKTRACK_P_INDEX           d.{ring2.pindex}.hx
+#define SQ_BKTRACK_C_INDEX           d.{ring2.cindex}.hx
+#define RRQ_P_INDEX                  d.{ring5.pindex}.hx
+#define RRQ_C_INDEX                  d.{ring5.cindex}.hx
 
 #define RRQ_P_INDEX_OFFSET           FIELD_OFFSET(sqcb0_t, ring5.pindex)
 #define RRQ_C_INDEX_OFFSET           FIELD_OFFSET(sqcb0_t, ring5.cindex)
