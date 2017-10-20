@@ -225,12 +225,15 @@ typedef struct flow_state_s {
     uint64_t        bytes;               // byte count on this flow
     uint32_t        exception_bmap;      // exceptions seen on this flow
     session::FlowTCPState   state;             // flow state
+
     uint32_t        tcp_seq_num;
     uint32_t        tcp_ack_num;
     uint32_t        tcp_win_sz;
-    uint8_t         tcp_win_scale;
-    uint16_t        tcp_mss;
     int32_t         syn_ack_delta;            // ACK delta of iflow
+    uint16_t        tcp_mss;
+    uint8_t         tcp_win_scale;
+    uint8_t         tcp_ws_option_sent : 1;
+    uint8_t         tcp_ts_option_sent : 1;
 } __PACK__ flow_state_t;
 
 inline std::ostream& operator<<(std::ostream& os, const flow_state_t& val)

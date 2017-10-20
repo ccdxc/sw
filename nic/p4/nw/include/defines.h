@@ -459,6 +459,14 @@
 #define CPU_FLAGS_TCP_OPTIONS_PRESENT          0x10
 
 /*****************************************************************************/
+/* TCP OPTIONS                                                               */
+/*****************************************************************************/
+#define CPU_TCP_OPTIONS_WINDOW_SCALE          0x01
+#define CPU_TCP_OPTIONS_MSS                   0x02
+#define CPU_TCP_OPTIONS_TIMESTAMP             0x04
+#define CPU_TCP_OPTIONS_SACK_PERMITTED        0x08
+
+/*****************************************************************************/
 /* ROCE flags                                                                */
 /*****************************************************************************/
 #define ROCE_FLAGS_IPV6                0x1

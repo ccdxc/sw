@@ -1,8 +1,11 @@
 #include "nic/hal/plugins/network/net_plugin.hpp"
 #include "nic/hal/src/session.hpp"
+#include "nic/p4/nw/include/defines.h"
 
 namespace hal {
 namespace net {
+
+#define DEFAULT_MSS 536 // RFC6691
 
 static inline session::FlowAction
 pol_check_sg_policy(fte::ctx_t &ctx)
@@ -107,11 +110,30 @@ dfw_exec(fte::ctx_t& ctx)
             flowupd.flow_state.tcp_seq_num = ntohl(rxhdr->tcp_seq_num) + 1;
             flowupd.flow_state.tcp_ack_num = ntohl(rxhdr->tcp_ack_num);
             flowupd.flow_state.tcp_win_sz = ntohs(rxhdr->tcp_window);
-            flowupd.flow_state.tcp_win_scale = rxhdr->tcp_ws;
-            flowupd.flow_state.tcp_mss = ntohs(rxhdr->tcp_mss);
-            
+
+            // TCP Options
+            if (rxhdr->flags & CPU_FLAGS_TCP_OPTIONS_PRESENT) {
+                // MSS Option
+                flowupd.flow_state.tcp_mss = DEFAULT_MSS;
+                if (rxhdr->tcp_options & CPU_TCP_OPTIONS_MSS) {
+                    flowupd.flow_state.tcp_mss = ntohs(rxhdr->tcp_mss);
+                }
+
+                // Window Scale option
+                flowupd.flow_state.tcp_ws_option_sent = 0;
+                if (rxhdr->tcp_options & CPU_TCP_OPTIONS_WINDOW_SCALE) {
+                    flowupd.flow_state.tcp_ws_option_sent = 1;
+                    flowupd.flow_state.tcp_win_scale = rxhdr->tcp_ws;
+                }
+
+                // timestamp option
+                flowupd.flow_state.tcp_ts_option_sent = 0;
+                if (rxhdr->tcp_options & CPU_TCP_OPTIONS_TIMESTAMP) {
+                    flowupd.flow_state.tcp_ts_option_sent = 1;
+                }
+            }
         }
-    } else {
+    } else { /* rflow */
         if (ctx.protobuf_request()) {
             extract_session_state_from_spec(&flowupd.flow_state,
                                             ctx.sess_spec()->responder_flow().flow_data());

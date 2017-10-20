@@ -177,6 +177,10 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
             session_state->iflow_state.tcp_win_scale;
         d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_mss =
             session_state->iflow_state.tcp_mss;
+        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_ws_option_sent =
+            session_state->iflow_state.tcp_ws_option_sent;
+        d.session_state_action_u.session_state_tcp_session_state_info.iflow_tcp_ts_option_sent =
+            session_state->iflow_state.tcp_ts_option_sent;
         d.session_state_action_u.session_state_tcp_session_state_info.iflow_exceptions_seen =
             session_state->iflow_state.exception_bmap;
 
