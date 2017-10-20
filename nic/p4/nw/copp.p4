@@ -64,6 +64,7 @@ action copp_action(permitted_packets, permitted_bytes,
 }
 
 @pragma stage 5
+@pragma table_write
 table copp_action {
     reads {
         copp_metadata.policer_index : exact;
@@ -73,6 +74,7 @@ table copp_action {
     }
     size : COPP_TABLE_SIZE;
 }
+
 control process_copp {
     if (control_metadata.cpu_copy == TRUE) {
         apply(copp);

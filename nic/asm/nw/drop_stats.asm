@@ -28,7 +28,7 @@ drop_stats_overflow:
   addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
   add         r6, r6, r5[26:0]
   or          r7, r7, r5[31:27], 58
-  memwr.d.e   r6, r7
+  memwr.dx.e  r6, r7
   tblwr       d.u.drop_stats_d.drop_pkts, r0
 
 /*

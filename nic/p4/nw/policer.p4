@@ -62,6 +62,7 @@ action ingress_policer_action(cos_en, cos, dscp_en, dscp,
 }
 
 @pragma stage 4
+@pragma table_write
 table ingress_policer_action {
     reads {
         policer_metadata.ingress_policer_index : exact;
@@ -128,6 +129,7 @@ action egress_policer_action(permitted_packets, permitted_bytes,
 }
 
 @pragma stage 5
+@pragma table_write
 table egress_policer_action {
     reads {
         policer_metadata.egress_policer_index : exact;

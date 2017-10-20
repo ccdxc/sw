@@ -24,7 +24,7 @@ ingress_policer_action:
 
 ingress_policer_permitted_stats_overflow:
   add         r7, d.ingress_policer_action_d.permitted_bytes, k.control_metadata_packet_len
-  addi        r6, r0, 0x10000F
+  addi        r6, r0, 0x100000F
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
 
@@ -32,7 +32,7 @@ ingress_policer_permitted_stats_overflow:
   addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
   add         r6, r6, r5[26:0]
 
-  memwr.d.e   r6, r7
+  memwr.dx.e  r6, r7
   tblwr       d.ingress_policer_action_d.permitted_bytes, 0
 
 ingress_policer_deny:
@@ -44,7 +44,7 @@ ingress_policer_deny:
 
 ingress_policer_denied_stats_overflow:
   add         r7, d.ingress_policer_action_d.denied_bytes, k.control_metadata_packet_len
-  addi        r6, r0, 0x10000F
+  addi        r6, r0, 0x100000F
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
 
@@ -53,7 +53,7 @@ ingress_policer_denied_stats_overflow:
   addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
   add         r6, r6, r5[26:0]
 
-  memwr.d.e   r6, r7
+  memwr.dx.e  r6, r7
   tblwr       d.ingress_policer_action_d.denied_bytes, 0
 
 /*

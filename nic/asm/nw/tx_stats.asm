@@ -52,7 +52,7 @@ tx_egress_drops:
 
 tx_ucast_overflow:
   add         r7, d.tx_stats_d.tx_ucast_bytes, k.control_metadata_packet_len
-  addi        r6, r0, 0x10000F
+  addi        r6, r0, 0x100000F
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
 
@@ -60,12 +60,12 @@ tx_ucast_overflow:
   addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
   add         r6, r6, r5[26:0]
 
-  memwr.d.e   r6, r7
+  memwr.dx.e  r6, r7
   tblwr       d.tx_stats_d.tx_ucast_bytes, r0
 
 tx_mcast_overflow:
   add         r7, d.tx_stats_d.tx_mcast_bytes, k.control_metadata_packet_len
-  addi        r6, r0, 0x10000F
+  addi        r6, r0, 0x100000F
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
 
@@ -74,12 +74,12 @@ tx_mcast_overflow:
   addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
   add         r6, r6, r5[26:0]
 
-  memwr.d.e   r6, r7
+  memwr.dx.e  r6, r7
   tblwr       d.tx_stats_d.tx_mcast_bytes, r0
 
 tx_bcast_overflow:
   add         r7, d.tx_stats_d.tx_bcast_bytes, k.control_metadata_packet_len
-  addi        r6, r0, 0x10000F
+  addi        r6, r0, 0x100000F
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
 
@@ -88,7 +88,7 @@ tx_bcast_overflow:
   addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
   add         r6, r6, r5[26:0]
 
-  memwr.d.e   r6, r7
+  memwr.dx.e  r6, r7
   tblwr       d.tx_stats_d.tx_mcast_bytes, r0
 
 tx_egress_drops_overflow:
@@ -99,7 +99,7 @@ tx_egress_drops_overflow:
   addi        r5, r5, TX_EGRESS_DROPS_OVERFLOW_OFFSET
   add         r6, r6, r5[26:0]
 
-  memwr.d.e   r6, r7
+  memwr.dx.e  r6, r7
   tblwr       d.tx_stats_d.tx_egress_drops, r0
 
 /*

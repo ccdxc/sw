@@ -31,7 +31,7 @@ flow_stats_permitted_overflow:
   addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
   add         r6, r6, r5[26:0]
 
-  memwr.d     r6, r7
+  memwr.dx    r6, r7
   tblwr.e     d.flow_stats_d.permit_packets, 0
   tblwr       d.flow_stats_d.permit_bytes, 0
 
@@ -54,7 +54,7 @@ flow_stats_dropped_overflow:
   addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
   add         r6, r6, r5[26:0]
 
-  memwr.d     r6, r7
+  memwr.dx    r6, r7
   tblwr.e     d.flow_stats_d.drop_packets, 0
   tblwr       d.flow_stats_d.drop_bytes, 0
 
