@@ -1,6 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
+#include "../../include/capri_common.h"
 
 struct copp_action_k k;
 struct copp_action_d d;
@@ -13,7 +14,7 @@ copp_action:
   bcf         [c1], copp_deny
   add         r7, d.copp_action_d.permitted_packets, 1
   bgti        r7, 0xF, copp_permitted_stats_overflow
-  tblwr       d.copp_action_d.permitted_packets, r6[3:0]
+  tblwr       d.copp_action_d.permitted_packets, r7[3:0]
   tbladd.e    d.copp_action_d.permitted_bytes, k.control_metadata_packet_len
   nop
 
@@ -21,14 +22,19 @@ copp_permitted_stats_overflow:
   add         r7, d.copp_action_d.permitted_bytes, k.control_metadata_packet_len
   addi        r6, r0, 0x10000F
   or          r7, r7, r6, 32
+  or          r7, r7, r5[31:27], 58
+
   add         r5, r5, k.copp_metadata_policer_index, 5
-  memwr.d.e   r5, r7
+  addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+  add         r6, r6, r5[26:0]
+
+  memwr.d.e   r6, r7
   tblwr       d.copp_action_d.permitted_bytes, 0
 
 copp_deny:
   add         r7, d.copp_action_d.denied_packets, 1
   bgti        r7, 0xF, copp_denied_stats_overflow
-  tblwr       d.copp_action_d.denied_packets, r6[3:0]
+  tblwr       d.copp_action_d.denied_packets, r7[3:0]
   tbladd.e    d.copp_action_d.denied_bytes, k.control_metadata_packet_len
   nop
 
@@ -36,9 +42,14 @@ copp_denied_stats_overflow:
   add         r7, d.copp_action_d.denied_bytes, k.control_metadata_packet_len
   addi        r6, r0, 0x10000F
   or          r7, r7, r6, 32
+  or          r7, r7, r5[31:27], 58
+
   add         r5, r5, k.copp_metadata_policer_index, 5
   add         r5, r5, 16
-  memwr.d.e   r5, r7
+  addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+  add         r6, r6, r5[26:0]
+
+  memwr.d.e   r6, r7
   tblwr       d.copp_action_d.denied_bytes, 0
 
 /*

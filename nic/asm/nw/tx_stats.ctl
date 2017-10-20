@@ -7,9 +7,9 @@ struct phv_       p;
 
 d = {
   tx_stats_d.tx_egress_drops = 0xffe;
-  tx_stats_d.tx_ucast_pkts = 0x64;
-  tx_stats_d.tx_mcast_pkts = 0x65;
-  tx_stats_d.tx_bcast_pkts = 0x66;
+  tx_stats_d.tx_ucast_pkts = 0xf;
+  tx_stats_d.tx_mcast_pkts = 0x6;
+  tx_stats_d.tx_bcast_pkts = 0x6;
   tx_stats_d.tx_ucast_bytes = 0xff0;
   tx_stats_d.tx_mcast_bytes = 0x3ff1;
   tx_stats_d.tx_bcast_bytes = 0x3ff2;
@@ -22,4 +22,4 @@ k = {
   flow_lkp_metadata_pkt_type = 0;
 };
 
-r5 = 0xdead0000;
+r5 = 0x5ead0000;

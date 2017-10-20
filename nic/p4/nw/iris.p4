@@ -124,8 +124,8 @@ header_type scratch_metadata_t {
         oport_en                   : 1;
         stats_idx                  : 5;
         drop_reason                : 32;
-        stats_packets              : 16;
-        stats_bytes                : 20;
+        stats_packets              : 4;
+        stats_bytes                : 18;
 		flag                       : 1;
         ethtype                    : 16;
         num_labels                 : 2;

@@ -31,7 +31,7 @@ action drop_stats(stats_idx, drop_pkts, mirror_en, mirror_session_id) {
     modify_field(scratch_metadata.stats_packets, drop_pkts);
     modify_field(scratch_metadata.stats_idx, stats_idx);
     modify_field(scratch_metadata.ingress_mirror_en, mirror_en);
-    
+
     // TCP options padding - required due to normalization
     if ((tcp.valid == TRUE) and (tcp.dataOffset > 5)) {
         // Pad tcp options header to make it multiple of 4

@@ -1,6 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "../../p4/nw/include/defines.h"
+#include "../../include/capri_common.h"
 
 struct flow_stats_k k;
 struct flow_stats_d d;
@@ -24,8 +25,13 @@ flow_stats_permitted_overflow:
   add         r7, d.flow_stats_d.permit_bytes, k.control_metadata_packet_len
   or          r7, r7, 0xF, 32
   or          r7, r7, 1, 56
+  or          r7, r7, r5[31:27], 58
+
   add         r5, r5, k.flow_info_metadata_flow_index, 5
-  memwr.d     r5, r7
+  addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+  add         r6, r6, r5[26:0]
+
+  memwr.d     r6, r7
   tblwr.e     d.flow_stats_d.permit_packets, 0
   tblwr       d.flow_stats_d.permit_bytes, 0
 
@@ -41,9 +47,14 @@ flow_stats_dropped_overflow:
   add         r7, d.flow_stats_d.drop_bytes, k.control_metadata_packet_len
   or          r7, r7, 0xF, 32
   or          r7, r7, 1, 56
+  or          r7, r7, r5[31:27], 58
+
   add         r5, r5, k.flow_info_metadata_flow_index, 5
   add         r5, r5, 16
-  memwr.d     r5, r7
+  addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+  add         r6, r6, r5[26:0]
+
+  memwr.d     r6, r7
   tblwr.e     d.flow_stats_d.drop_packets, 0
   tblwr       d.flow_stats_d.drop_bytes, 0
 

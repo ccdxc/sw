@@ -279,6 +279,10 @@ static int capri_stats_region_init()
     stats_region_start = stats_base_addr = get_start_offset(JP4_ATOMIC_STATS);
     stats_region_size = get_size_kb(JP4_ATOMIC_STATS) * 1024;
 
+    // reset bit 31 (saves one ASM instruction)
+    stats_region_start &= 0x7FFFFFFF;
+    stats_base_addr &= 0x7FFFFFFF;
+
     capri_table_constant_write(P4TBL_ID_FLOW_STATS, stats_base_addr);
     p4pd_table_properties_get(P4TBL_ID_FLOW_STATS, &tbl_ctx);
     stats_base_addr += tbl_ctx.tabledepth * 32;
