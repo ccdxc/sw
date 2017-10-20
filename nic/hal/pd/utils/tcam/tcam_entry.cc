@@ -15,6 +15,7 @@ TcamEntry::TcamEntry(void *key, void *key_mask, uint32_t key_len,
     data_len_ = data_len;
     index_    = index;
     priority_ = priority;
+    refcnt_   = 0;
 
     key_        = ::operator new(key_len);
     key_mask_   = ::operator new(key_len);

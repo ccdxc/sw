@@ -97,10 +97,11 @@ private:
 
     uint64_t        *stats_;                // Statistics
 
-	hal_ret_t alloc_index_(uint32_t *idx, bool lowest);
-	hal_ret_t alloc_index_withid_(uint32_t idx);
-	hal_ret_t free_index_(uint32_t idx);
-    bool tcam_entry_exists_(void *key, void *key_mask, uint32_t key_len);
+    hal_ret_t alloc_index_(uint32_t *idx, bool lowest);
+    hal_ret_t alloc_index_withid_(uint32_t idx);
+    hal_ret_t free_index_(uint32_t idx);
+    bool tcam_entry_exists_(void *key, void *key_mask, uint32_t key_len,
+                            TcamEntry **te);
     hal_ret_t program_table_(TcamEntry *te);
     hal_ret_t deprogram_table_(TcamEntry *te);
     void stats_incr(stats stat);

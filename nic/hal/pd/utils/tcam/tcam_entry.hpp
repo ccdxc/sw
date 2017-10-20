@@ -38,6 +38,7 @@ private:
     uint32_t    data_len_;      // sw/hw data len
     uint32_t    index_;         // tcam index
     priority_t  priority_;      // tcam entry priority
+    int         refcnt_;        // tcam entry reference count
 
 public:
     TcamEntry (void *key, void *key_mask, uint32_t key_len, 
@@ -56,8 +57,10 @@ public:
     uint32_t get_index() { return index_; }
     void set_index(uint32_t index) { index_ = index; }
     priority_t get_priority() { return priority_; }
-
-
+    int get_refcnt() { return refcnt_; }
+    void set_refcnt(int refcnt) { refcnt_ = refcnt; }
+    void incr_refcnt() { refcnt_++; }
+    void decr_refcnt() { refcnt_--; }
 };
 
 }    // namespace utils

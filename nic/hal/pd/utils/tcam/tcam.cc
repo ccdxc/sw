@@ -72,9 +72,20 @@ Tcam::insert(void *key, void *key_mask, void *data, uint32_t *index, bool lowest
     hal_ret_t rs        = HAL_RET_OK;
     TcamEntry *te       = NULL;
     
-    // check if entry already exists
-    if (!allow_dup_insert_ && tcam_entry_exists_(key, key_mask, swkey_len_)) {
-        return HAL_RET_DUP_INS_FAIL;
+    // Check if TCAM entry already exists
+    if (tcam_entry_exists_(key, key_mask, swkey_len_, &te)) {
+        if (!allow_dup_insert_) {
+            HAL_TRACE_DEBUG("TCAM: Table: {} Entry exists at {} return err",
+                             table_name_.c_str(), *index);
+            return HAL_RET_DUP_INS_FAIL;
+        } else {
+            // If entry exisits, then increment ref-count and return the index
+            HAL_TRACE_DEBUG("TCAM: Table: {} Entry exists at {} refcount {}",
+                             table_name_.c_str(), *index, te->get_refcnt());
+            te->incr_refcnt();
+            *index = te->get_index();
+            return HAL_RET_OK;
+        }
     }
 
     // alloc index
@@ -118,10 +129,19 @@ Tcam::insert_withid(void *key, void *key_mask, void *data, uint32_t index)
     hal_ret_t rs        = HAL_RET_OK;
     TcamEntry *te       = NULL;
     
-    // check if entry already exists
-    if (!allow_dup_insert_ && tcam_entry_exists_(key, key_mask, swkey_len_)) {
-        HAL_TRACE_DEBUG("Tcam::{}: Keys Match!!", table_name_.c_str());
-        return HAL_RET_DUP_INS_FAIL;
+    // Check if TCAM entry already exists
+    if (tcam_entry_exists_(key, key_mask, swkey_len_, &te)) {
+        if (!allow_dup_insert_) {
+            HAL_TRACE_DEBUG("TCAM: Table: {} Entry exists at {} return err",
+                             table_name_.c_str(), index);
+            return HAL_RET_DUP_INS_FAIL;
+        } else {
+            // If entry exisits, then increment ref-count and return the index
+            HAL_TRACE_DEBUG("TCAM: Table: {} Entry exists at {} refcount {}",
+                             table_name_.c_str(), index, te->get_refcnt());
+            te->incr_refcnt();
+            return HAL_RET_OK;
+        }
     }
 
     // alloc index
@@ -215,6 +235,15 @@ Tcam::remove(uint32_t tcam_idx)
         goto end;
     }
     
+    if (allow_dup_insert_) {
+        // Check refcnt and delete only if refcnt is zero
+        HAL_TRACE_DEBUG("TCAM: Table: {} Entry delete refcount {}",
+                        table_name_.c_str(), itr->second->get_refcnt());
+        itr->second->decr_refcnt();
+        if (itr->second->get_refcnt() != 0)
+            return HAL_RET_OK;
+    }
+
     // de-program hw
     rs = deprogram_table_(itr->second);
 
@@ -335,7 +364,8 @@ Tcam::iterate(tcam_iterate_func_t cb, const void *cb_data)
 // True: Tcam Entry is present.
 // ---------------------------------------------------------------------------
 bool
-Tcam::tcam_entry_exists_(void *key, void *key_mask, uint32_t key_len)
+Tcam::tcam_entry_exists_(void *key, void *key_mask, uint32_t key_len,
+                         TcamEntry **te)
 {
     TcamEntryMap::iterator itr;
     TcamEntry *tmp_te = NULL;
@@ -346,10 +376,12 @@ Tcam::tcam_entry_exists_(void *key, void *key_mask, uint32_t key_len)
                              key_len) &&
                 !std::memcmp(key_mask, tmp_te->get_key_mask(), 
                              key_len)) {
+            *te = tmp_te;
             return TRUE;
         }
 
     }
+    *te = NULL;
     return FALSE;
 }
 
