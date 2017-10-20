@@ -20,7 +20,7 @@ targets:
   pin2:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo fte --feature fte2 --hostpin" ]
   pinvxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo fte --feature ftevxlan --hostpin" ]
   agent: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && (./tools/start-hal-stub.sh &) && cd $GOPATH/src/github.com/pensando/sw && go test -v ./test/integ/venice_integ... -datapath=hal && go test -v ./test/integ/npminteg/..."]
-  l2mc:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo mcast --feature l2mc" ]
+  multicast:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo multicast --feature multicast" ]
   l4lb:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo l4lb --feature l4lb" ]
   recirc:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo recirc --feature recirc" ]
 cache:

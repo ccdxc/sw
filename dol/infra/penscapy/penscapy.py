@@ -80,6 +80,15 @@ class PENDOL(Packet):
 
 PENDOL_LENGTH = len(PENDOL())
 
+class IGMP(Packet):
+    name = "IGMP"
+    fields_desc = [
+        BitField("type", 0, 8),
+        BitField("maxresptime", 0, 8),
+        BitField("checksum", 0, 16),
+        BitField("groupaddress", 0, 32),
+    ]
+
 class GRH(Packet):
     name = "GRH"
     fields_desc = [

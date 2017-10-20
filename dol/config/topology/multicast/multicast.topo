@@ -1,6 +1,6 @@
 # Topology Specification
 meta:
-    id: TOPO_MCAST
+    id: TOPO_MULTICAST
 
 uplink:
     - entry:
@@ -68,14 +68,24 @@ uplinkpc:
             - ref://store/objects/id=Uplink6
             - ref://store/objects/id=Uplink7
             - ref://store/objects/id=Uplink8
-acls: None
 
-security_profiles: None
+acls: ref://store/specs/id=ACL
+
+security_profiles: ref://store/specs/id=SECURITY_PROFILES_DEFAULT
 
 tenants:
-    -   spec    : ref://store/specs/id=TENANT_MCAST
+    -   spec    : ref://store/specs/id=TENANT_MULTICAST
         count   : 1
         lifns   : range/101/104
+    -   spec    : ref://store/specs/id=TENANT_MULTICAST_INFRA
+        count   : 1
+        lifns   : range/200/204
+    -   spec    : ref://store/specs/id=TENANT_MULTICAST_VXLAN
+        count   : 1
+        lifns   : range/300/304
+    -   spec    : ref://store/specs/id=TENANT_SPAN_VLAN
+        count   : 1
+        lifns   : range/401/401
 
 cpu:
     - entry:

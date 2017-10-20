@@ -1,8 +1,9 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_MCAST
+    id: SEGMENT_MULTICAST_VXLAN
 
 type        : tenant
+fabencap    : vxlan
 native      : False
 broadcast   : flood
 multicast   : drop

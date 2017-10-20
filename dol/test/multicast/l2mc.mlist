@@ -1,8 +1,8 @@
 # Feature Test Modules List
 feature:
-    id          : l2mc
-    package     : test.networking
-    module      : networking
+    id          : multicast
+    package     : test.multicast
+    module      : multicast
     enable      : True
     ignore      : False
 

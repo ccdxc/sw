@@ -633,7 +633,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
             goto end;
         }
 
-        // Will be added to broadcast list through add_uplink_to_l2seg() call
+        // Will be added to broadcast list through add_l2seg_on_uplink() call
         break;
 
     case intf::IF_TYPE_UPLINK_PC:
@@ -642,7 +642,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
             goto end;
         }
 
-        // Will be added to broadcast list through add_uplink_to_l2seg() call
+        // Will be added to broadcast list through add_l2seg_on_uplink() call
         break;
 
     case intf::IF_TYPE_TUNNEL:
@@ -650,6 +650,8 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         if (ret != HAL_RET_OK) {
             goto end;
         }
+
+        // Will be added to broadcast list through add_l2seg_on_uplink() call
         break;
 
     case intf::IF_TYPE_CPU:

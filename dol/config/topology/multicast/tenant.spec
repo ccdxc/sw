@@ -1,12 +1,12 @@
 # Configuration Template.
 meta:
-    id: TENANT_MCAST
+    id: TENANT_MULTICAST
 
 type    : tenant
 overlay : vlan
 
 segments:
-    - spec  : ref://store/specs/id=SEGMENT_MCAST
+    - spec  : ref://store/specs/id=SEGMENT_MULTICAST
       count : 1
 
 # NFV Endpoints:
@@ -19,7 +19,7 @@ security_profile: None
 sessions:
     unidest:
         ipv4:
-            - ref://store/specs/id=MCAST_TOPO_SESSION_DUMMY
+            - ref://store/specs/id=MULTICAST_TOPO_SESSION_DUMMY
         ipv6:
         mac:
 

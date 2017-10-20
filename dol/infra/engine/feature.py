@@ -24,7 +24,7 @@ BaseTopoExcludeFeatureList = [
     'proxy',
     'ipsec',
     'hostpin',
-    'l2mc',
+    'multicast',
     'l4lb',
     'recirc'
 ]
