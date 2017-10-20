@@ -1,11 +1,11 @@
 # Feature Test Modules List
 feature:
-    id      : fte
-    sub     : rxvxlan
+    id      : ftevxlan
+    sub     : rx
     package : test.eth
     module  : eth
     enable  : True
-    ignore  : True
+    ignore  : False
     args    :
         maxflows: 4
 
@@ -49,6 +49,8 @@ modules:
 
     - module:
          name    : NONIP
+         enable  : False
+         ignore  : True
          spec    : rx_vxlan_non_ip.testspec
          iterate :
              - flow: filter://label=FTE,type=MAC

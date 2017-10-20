@@ -98,8 +98,9 @@ class TriggerEngineObject:
         cbstatus = tc.StepVerifyCallback(step)
         step.status = self.__resolve_status(vfstatus, cbstatus)
         if step.status is defs.status.ERROR:
-            tc.error("Step%d FINAL STATUS = FAIL(Verify:%s Callback:%s)" %\
-                     (step.step_id, defs.status.str(vfstatus),
+            tc.error("Step%d FINAL STATUS = %s (Verify:%s Callback:%s)" %\
+                     (step.step_id, 'IGNORE' if tc.IsIgnore() else 'FAIL',
+                      defs.status.str(vfstatus),
                       defs.status.str(cbstatus)))
             return step.status
         tc.info("Step%d FINAL STATUS = PASS" % step.step_id)
@@ -118,8 +119,10 @@ class TriggerEngineObject:
         cbstatus = tc.VerifyCallback()
         status = self.__resolve_status(vfstatus, cbstatus)
         if status is defs.status.ERROR:
-            tc.error("TESTCASE FINAL STATUS = FAIL(Verify:%s Callback:%s)" %\
-                     (defs.status.str(vfstatus), defs.status.str(cbstatus)))
+            tc.error("TESTCASE FINAL STATUS = %s(Verify:%s Callback:%s)" %\
+                     ('IGNORE' if tc.IsIgnore() else 'FAIL',
+                      defs.status.str(vfstatus),
+                      defs.status.str(cbstatus)))
         tc.TeardownCallback()
         return status
 

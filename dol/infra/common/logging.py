@@ -20,8 +20,19 @@ __levels = {
     6: 'VERBOSE',
     7: 'MAX'
 }
-
 levels = defs.Dict2Enum(__levels)
+
+prefixes = {
+    0: 'NONE',
+    1: 'CRIT',
+    2: 'ERRR',
+    3: 'WARN',
+    4: 'INFO',
+    5: 'DEBG',
+    6: 'VERB',
+    7: 'MAX'
+}
+
 class LoggerSink:
     def __init__(self, stdout = None, logfile = None):
         self.sink = None
@@ -82,7 +93,7 @@ class Logger:
             if indent >= defs.LOGGING_DEFAULT_REV_OFFSET:
                 indent = indent - defs.LOGGING_DEFAULT_REV_OFFSET
         level = kwargs['level']
-        prefix = levels.str(level)
+        prefix = prefixes[self.level]
         if self.level < level:
             return None
         text = text + self.__get_timestamp()

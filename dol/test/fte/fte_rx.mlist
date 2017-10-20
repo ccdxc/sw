@@ -1,5 +1,5 @@
 feature:
-    id      : fte
+    id      : fte2
     sub     : rx
     package : test.eth
     module  : eth
@@ -32,7 +32,6 @@ modules:
 
     - module:
         name    : IPV4_UTAG
-        ignore  : True
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
               segment   : filter://native=True
@@ -43,7 +42,6 @@ modules:
 
     - module:
         name    : IPV6_UTAG
-        ignore  : True
         iterate:
             - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               segment   : filter://native=True

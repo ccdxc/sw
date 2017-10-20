@@ -18,7 +18,6 @@ packets:
         id          : BASE     # Input packet 1
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -53,6 +52,7 @@ packets:
     - packet:
         id          : INPUT     # Input packet
         clone       : ref://testcase/packets/id=BASE
+        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -68,10 +68,12 @@ packets:
                 vni     : ref://testcase/config/src/segment/vxlan_id
             qtag:
                 vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
+                prio    : 0
         
     - packet:
         id          : EXPECTED   # Expected packet
         clone       : ref://testcase/packets/id=BASE
+        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -85,7 +87,7 @@ packets:
                 id      : 0
             qtag:
                 vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
-                prio    : ref://testcase/config/flow/txqos/cos
+                prio    : 0
             outerudp:
                 chksum  : 0
             vxlan       :
@@ -105,5 +107,8 @@ expect:
     delay   : callback://networking/packets/GetExpectDelay
     packets:
         - packet:
-            object  : callback://networking/packets/GetL3UcExpectedPacket/expktid=EXPECTED
+            object  : callback://networking/packets/GetL2UcExpectedPacket/expktid=EXPECTED
             port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=BASE
+            port    : 128

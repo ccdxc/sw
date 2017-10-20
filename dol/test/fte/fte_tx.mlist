@@ -1,6 +1,6 @@
 # Feature Test Modules List
 feature:
-    id      : fte
+    id      : fte2
     sub     : tx
     package : test.eth
     module  : eth

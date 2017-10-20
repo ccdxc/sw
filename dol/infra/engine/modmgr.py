@@ -152,6 +152,9 @@ class Module(objects.FrameworkObject):
             return 1
         return 0
 
+    def IsIgnore(self):
+        return self.ignore
+
     def PrintResultSummary(self):
         status = ''
         if self.stats.total == 0:
@@ -166,7 +169,7 @@ class Module(objects.FrameworkObject):
         feature = self.feature[:16]
         name = self.name[:32]
         print("%-16s %-32s %-6s %6d %6d %6d" %\
-              (feature.upper(), name, status,
+              (feature, name, status,
                self.stats.passed, self.stats.failed,
                self.stats.total))
         return
@@ -238,7 +241,7 @@ class Module(objects.FrameworkObject):
 
     def main(self, infra_data):
         self.infra_data = infra_data
-        prefix = "%s/%s" % (self.feature.upper(), self.name)
+        prefix = "%s/%s" % (self.feature, self.name)
         self.logger = logging.Logger(level=logging.levels.INFO, stdout=True,
                                      name=prefix)
         self.infra_data.Logger = self.logger

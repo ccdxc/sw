@@ -16,7 +16,6 @@ packets:
         id          : BASE      # Input packet 1
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH_ARP
-        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
@@ -36,6 +35,7 @@ packets:
     - packet:
         id          : INPUT     # Input packet
         clone       : ref://testcase/packets/id=BASE
+        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -51,10 +51,12 @@ packets:
                 vni     : ref://testcase/config/src/segment/vxlan_id
             qtag:
                 vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
+                prio    : 0
 
     - packet:
         id          : EXPECTED   # Expected packet
         clone       : ref://testcase/packets/id=BASE
+        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -70,7 +72,7 @@ packets:
                 vni     : ref://testcase/config/dst/segment/vxlan_id
             qtag:
                 vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
-                prio    : ref://testcase/config/flow/txqos/cos
+                prio    : 0
             outerudp:
                 chksum  : 0
 
@@ -84,5 +86,8 @@ expect:
     delay   : callback://networking/packets/GetExpectDelay
     packets:
         - packet:
-            object  : ref://testcase/packets/id=EXPECTED
+            object  : callback://networking/packets/GetL2UcExpectedPacket/expktid=EXPECTED
             port    : ref://testcase/config/dst/endpoint/intf/ports
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=BASE
+            port    : 128

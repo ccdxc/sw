@@ -6,7 +6,7 @@ type        : tenant
 native      : False
 fabencap    : vxlan
 broadcast   : flood
-multicast   : drop
+multicast   : flood
 l4lb        : False
 endpoints   :
     useg    : 0

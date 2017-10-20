@@ -153,10 +153,21 @@ class VerifEngineObject:
                 return defs.status.ERROR
         return defs.status.SUCCESS
 
+    def __retry_wait(self, lgh):
+        if GlobalOptions.dryrun:
+            return
+        lgh.info("Retry wait.........")
+        time.sleep(1)
+        return
+
     def __receive_packets(self, pcr, step, lgh):
-        mpkts = ModelConnector.Receive()
-        for mpkt in mpkts:
-            pcr.AddReceived(mpkt.rawpkt, [ mpkt.port ])
+        for r in range(10):
+            mpkts = ModelConnector.Receive()
+            for mpkt in mpkts:
+                pcr.AddReceived(mpkt.rawpkt, [ mpkt.port ])
+            if pcr.GetRxPacketCount() >= pcr.GetExPacketCount():
+                break
+            self.__retry_wait(lgh)
         return
 
     def __add_expected(self, pcr, step, lgh):

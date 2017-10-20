@@ -1,79 +1,80 @@
-# Feature Test Modules List
 feature:
-    id      : fte
-    sub     : l3uc
-    package : test.networking
-    module  : networking
-    spec    : l3uc.testspec
-    enable  : True
-    ignore  : False
+    id      : fte2
+    sub     : rxl3
+    package : test.eth
+    module  : eth
+    enable  : False
+    ignore  : True
+    spec    : rx_l3.testspec
+    args:
+        maxflows: 4
 
 modules:
     - module:
         name    : IPV4_QTAG
-        iterate :
-            # Tagged Cases
+        iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
               srcseg    : filter://native=False
-            - flow      : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
-              srcseg    : filter://native=False
             - flow      : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
+              srcseg    : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
               srcseg    : filter://native=False
 
     - module:
         name    : IPV6_QTAG
-        iterate :
+        iterate:
             - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               srcseg    : filter://native=False
-            - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
+            - flow      : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
               srcseg    : filter://native=False
             - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
               srcseg    : filter://native=False
 
     - module:
         name    : IPV4_UTAG
-        iterate :
-            # Untagged Cases
+        iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
-            - flow      : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
-              srcseg    : filter://native=True
             - flow      : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
+              srcseg    : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
 
     - module:
         name    : IPV6_UTAG
-        iterate :
-            - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
+        iterate:
+            - flow      : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
-            - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
+            - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
             - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
 
     - module:
         name    : IPV4_PTAG
-        iterate :
-            # Priority Tag Cases
+        iterate:
+            # Priority Tagged Cases
             - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
-              srcseg    : filter://native=True
-              priotag   : True
-            - flow      : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
               priotag   : True
             - flow      : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
               priotag   : True
+            - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
+              srcseg    : filter://native=True
+              priotag   : True
 
     - module:
         name    : IPV6_PTAG
-        iterate :
-            - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
+        iterate:
+            - flow      : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
               priotag   : True
-            - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
+            - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
               priotag   : True
             - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
               srcseg    : filter://native=True
               priotag   : True
+
+

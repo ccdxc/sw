@@ -243,7 +243,7 @@ def GetExpectDelay(testcase):
        root = getattr(testcase.config.session.iconfig, 'flow', None)
 
     if root.IsFteEnabled():
-        return 1 # 1 second
+        return 2
     return 0
 
 def PacketIsVlanTagged(testcase, args=None):

@@ -284,6 +284,11 @@ class PacketComparator:
             self.__add_pair(None, rpkt)
         return
 
+    def GetExPacketCount(self):
+        return len(self.expkts)
+    def GetRxPacketCount(self):
+        return len(self.rxpkts)
+
     def AddExpected(self, spkt, ports, pktid):
         self.eid += 1
         epgid = '%s::%d' % (pktid, self.eid)

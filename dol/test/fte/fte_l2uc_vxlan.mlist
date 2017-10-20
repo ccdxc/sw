@@ -1,0 +1,52 @@
+# Feature Test Modules List
+feature:
+    id      : ftevxlan
+    sub     : l2uc
+    package : test.networking
+    module  : networking
+    enable  : True
+    ignore  : False
+    args    :
+        maxflows: 4
+
+modules:
+    - module:
+        name    : IPV4
+        spec    : l2uc_vxlan.testspec
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
+            - flow    : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
+            - flow    : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
+
+    - module:
+        name    : IPV6
+        spec    : l2uc_vxlan.testspec
+        iterate :
+            - flow    : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
+            - flow    : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
+
+    - module:
+        name    : NONIP
+        spec    : l2uc_nonip_vxlan.testspec
+        iterate :
+            - flow   : filter://label=FTE,direction=IFLOW
+
+    - module:
+        name    : ARP
+        spec    : arp_vxlan.testspec
+        iterate :
+            - type      : ARP_REQ_UC
+              flow      : filter://fwtype=L2,type=MAC,label=ARP,direction=IFLOW
+            - type      : ARP_RESP
+              flow      : filter://fwtype=L2,type=MAC,label=ARP,direction=IFLOW
+
+    - module:
+        name    : RARP
+        spec    : arp_vxlan.testspec
+        iterate :
+            - type      : RARP_REQ_UC
+              flow      : filter://fwtype=L2,type=MAC,label=ARP,direction=IFLOW
+            - type      : RARP_RESP
+              flow      : filter://fwtype=L2,type=MAC,label=ARP,direction=IFLOW
+

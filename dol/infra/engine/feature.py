@@ -11,6 +11,8 @@ FeatureStore = objects.ObjectDatabase(logger)
 BaseTopoExcludeFeatureList = [
     'dolut',
     'fte',
+    'fte2',
+    'ftevxlan',
     'norm',
     'eth' ,
     'acl',

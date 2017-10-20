@@ -132,6 +132,9 @@ class TestCase(objects.FrameworkObject):
         self.__generate()
         return
 
+    def IsIgnore(self):
+        return self.module.IsIgnore()
+
     def __setup_config(self, root):
         self.__root = root
         root.SetupTestcaseConfig(self.config)
