@@ -50,8 +50,8 @@ struct phv_to_stage_t {
 #define PHV_GLOBAL_COMMON_T struct phv_global_common_t
 struct phv_global_common_t {
     lif: 11;
-    qtype: 3;
     qid: 24;
+    qtype: 3;
     cb_addr: 25;
     pt_base_addr_page_id: 20;
     log_num_pt_entries: 5;

@@ -8,9 +8,11 @@
 
 // intrinsic fields
 #define CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
+#define CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(_shift) k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33[31:_shift]}
 #define CAPRI_RXDMA_INTRINSIC_LIF k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
 #define CAPRI_RXDMA_INTRINSIC_QTYPE k.p4_rxdma_intr_qtype
 #define CAPRI_RXDMA_INTRINSIC_QID k.p4_rxdma_intr_qid
+#define CAPRI_RXDMA_INTRINSIC_QID_QTYPE k.{p4_rxdma_intr_qid...p4_rxdma_intr_qtype}
 
 #define CAPRI_RXDMA_RETH_VA(_r) \
     add _r, k.{rdma_bth_reth_reth_va_sbit56_ebit63}, k.{rdma_bth_reth_reth_va_sbit0_ebit7...rdma_bth_reth_reth_va_sbit40_ebit55}, 8
@@ -111,6 +113,10 @@ struct capri_intrinsic_ring_t {
 
 #define CAPRI_SET_FIELD(_base_r, _struct_name, _field_name, _src) \
     phvwrp  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src; 
+
+#define CAPRI_SET_2_FIELDS(_base_r, _struct_name, _first_field_name, _second_field_name, _src) \
+    phvwrp  _base_r, offsetof(_struct_name, _first_field_name), \
+            sizeof(_struct_name._first_field_name) + sizeof(_struct_name._second_field_name), _src;
 
 #define CAPRI_SET_FIELD_IMM(_base_r, _struct_name, _field_name, _immdata) \
     phvwrpi  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _immdata; 
