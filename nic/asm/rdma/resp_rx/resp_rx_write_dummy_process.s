@@ -74,7 +74,7 @@ resp_rx_write_dummy_process:
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, tbl_id, TABLE_1)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, dma_cmdeop, 1)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, acc_ctrl, ACC_CTRL_REMOTE_WRITE)
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, nak_code, NAK_CODE_REM_ACC_ERR)
+    CAPRI_SET_FIELD(r4, RKEY_INFO_T, nak_code, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR))
 
     CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqlkey_process)

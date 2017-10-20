@@ -115,7 +115,7 @@ loop:
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, tbl_id, r2)
     //CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmdeop, 0)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, acc_ctrl, ACC_CTRL_LOCAL_WRITE)
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, nak_code, NAK_CODE_REM_OP_ERR)
+    CAPRI_SET_FIELD(r7, INFO_LKEY_T, nak_code, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR))
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, inv_r_key, k.args.inv_r_key)
 
     //remaining_payload_bytes -= transfer_bytes;

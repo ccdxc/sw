@@ -54,11 +54,10 @@ resp_rx_rqlkey_process:
     and         r1, r1, k.args.acc_ctrl
     seq         c1, r1, k.args.acc_ctrl
     bcf         [!c1], error_completion
-    add         r2, r0, k.args.nak_code     //BD Slot
+    CAPRI_TABLE_GET_FIELD(BASE_VA, KEY_P, KEY_ENTRY_T, base_va) //BD Slot
 
     //  if ((lkey_info_p->sge_va < lkey_p->base_va) ||
     //  ((lkey_info_p->sge_va + lkey_info_p->sge_bytes) > (lkey_p->base_va + lkey_p->len))) {
-    CAPRI_TABLE_GET_FIELD(BASE_VA, KEY_P, KEY_ENTRY_T, base_va)
     CAPRI_TABLE_GET_FIELD(LEN, KEY_P, KEY_ENTRY_T, len)
     CAPRI_TABLE_GET_FIELD(LOG_PAGE_SIZE, KEY_P, KEY_ENTRY_T, log_page_size)
     slt         c1, k.args.va, BASE_VA 
@@ -66,13 +65,12 @@ resp_rx_rqlkey_process:
     add         r2, k.args.va, k.args.len
     slt         c2, r1, r2
     bcf         [c1 | c2], error_completion
-    add         r2, r0, k.args.nak_code     //BD Slot
+    CAPRI_TABLE_GET_FIELD(r1, KEY_P, KEY_ENTRY_T, pt_base) //BD Slot
     
     // my_pt_base_addr = (void *)
     //     (hbm_addr_get(PHV_GLOBAL_PT_BASE_ADDR_GET()) +
     //         (lkey_p->pt_base * sizeof(u64)));
 
-    CAPRI_TABLE_GET_FIELD(r1, KEY_P, KEY_ENTRY_T, pt_base)
     PT_BASE_ADDR_GET(r2)
     add         MY_PT_BASE_ADDR, r2, r1, CAPRI_LOG_SIZEOF_U64
     // now r2 has my_pt_base_addr
@@ -168,8 +166,7 @@ error_completion:
     add         GLOBAL_FLAGS, r0, k.global.flags
     IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_SEND | RESP_RX_FLAG_COMPLETION)
 
-    AETH_NAK_SYNDROME_GET(r3, r2)
-    phvwr       p.ack_info.aeth.syndrome, r3
+    phvwr       p.ack_info.aeth.syndrome, k.args.nak_code
     phvwr       p.cqwqe.status, CQ_STATUS_LOCAL_ACC_ERR
 
     // set error disable flag such that ptseg code wouldn't enqueue

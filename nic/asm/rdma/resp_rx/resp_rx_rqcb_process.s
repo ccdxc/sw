@@ -79,16 +79,16 @@ resp_rx_rqcb_process:
     phvwr   p.ack_info.aeth.msn, d.msn
 
     // is service type correct ?
-    srl     r1, CAPRI_APP_DATA_BTH_OPCODE, BTH_OPC_SVC_SHIFT
-    seq     c1, r1, d.serv_type
-    bcf     [!c1], nak
-    add     r2, r0, NAK_CODE_INV_REQ //BD Slot
+    srl         r1, CAPRI_APP_DATA_BTH_OPCODE, BTH_OPC_SVC_SHIFT
+    seq         c1, r1, d.serv_type
+    bcf         [!c1], nak
+    phvwr.!c1   p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ) //BD Slot
 
     // check for seq_err (e_psn < bth.psn)
     //slt     c1, d.e_psn, CAPRI_APP_DATA_BTH_PSN
     scwlt24     c1, d.e_psn, CAPRI_APP_DATA_BTH_PSN
     bcf         [c1], nak
-    add         r2, r0, NAK_CODE_SEQ_ERR //BD Slot
+    phvwr.c1    p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR) //BD Slot
 
     // check for duplicate
     seq     c1, CAPRI_APP_DATA_BTH_PSN, d.e_psn
@@ -191,9 +191,9 @@ check_write:
     sllv    r1, 1, r1
     sub     r1, REM_PYLD_BYTES, r1
     // first/middle packets should be of pmtu size
-    seq     c2, r1, r0
-    bcf.c1  [!c2], nak
-    add.c1  r2, r0, NAK_CODE_INV_REQ //BD Slot
+    seq         c2, r1, r0
+    bcf.c1      [!c2], nak
+    phvwr.c1    p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ) //BD Slot
      
     // INCREMENT E_PSN HERE
     tblmincri   d.e_psn, 24, 1
@@ -482,12 +482,6 @@ recirc:
     nop
 
 nak:
-    // assumption: r2 has the nak code
-
-    // copy nak info
-    AETH_NAK_SYNDROME_GET(r3, r2)
-    phvwr   p.ack_info.aeth.syndrome, r3
-    
     add     RQCB1_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
 

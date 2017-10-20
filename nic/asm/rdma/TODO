@@ -6,3 +6,4 @@
 - DMA of RRQ posting and pindex++ with fence
 - Color in RRQ wqe so that rrq posting and pindex increemnt can be independent
 - FC ring , set cindex to pindex and use r7 empty to eval 
+

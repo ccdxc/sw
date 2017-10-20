@@ -27,12 +27,10 @@
     sll     _r, k.global.cb_addr, SQCB_ADDR_SHIFT;
 
 #define SQCB1_ADDR_GET(_r)                         \
-     sll    _r, k.global.cb_addr, SQCB_ADDR_SHIFT; \
-     add    _r, _r, CB_UNIT_SIZE_BYTES
+     add    _r, CB_UNIT_SIZE_BYTES, k.global.cb_addr, SQCB_ADDR_SHIFT;
 
 #define RQCB1_ADDR_GET(_r) \
-    sll     _r, k.global.cb_addr, RQCB_ADDR_SHIFT; \
-    add     _r, _r, CB_UNIT_SIZE_BYTES
+    add     _r, CB_UNIT_SIZE_BYTES, k.global.cb_addr, RQCB_ADDR_SHIFT;
     
 #define RQCB0_ADDR_GET(_r) \
     sll     _r, k.global.cb_addr, RQCB_ADDR_SHIFT;
@@ -102,6 +100,10 @@ struct rdma_atomiceth_t {
 
 #define AETH_NAK_SYNDROME_GET(_dst, _nak_code) \
     AETH_SYNDROME_GET(_dst, AETH_CODE_NAK, _nak_code)
+
+#define AETH_NAK_SYNDROME_INLINE_GET(_nak_code) \
+    ((AETH_CODE_NAK << AETH_SYNDROME_CODE_SHIFT) | (_nak_code));
+
 
 #define AETH_ACK_SYNDROME_GET(_dst, _credits) \
     AETH_SYNDROME_GET(_dst, AETH_CODE_ACK, _credits)
