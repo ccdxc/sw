@@ -101,7 +101,7 @@ sq_bktrack2:
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, sq_p_index, SQ_P_INDEX)
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, in_progress, d.in_progress)
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, bktrack_in_progress, d.bktrack_in_progress)
-    CAPRI_SET_FIELD_RANGE(r7, SQCB0_TO_SQCB1_T, num_sges, 48, d.{current_sge_offset...num_sges})
+    CAPRI_SET_FIELD_RANGE(r7, SQCB0_TO_SQCB1_T, current_sge_offset, num_sges, d.{current_sge_offset...num_sges})
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, update_credits, 0)
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, bktrack, 1)
 
@@ -117,27 +117,27 @@ sq_bktrack2:
 
     CAPRI_GET_STAGE_1_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
-    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, log_num_wqes, 52, d.{pt_base_addr...log_num_wqes})
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, pt_base_addr, log_num_wqes, d.{pt_base_addr...log_num_wqes})
 
     CAPRI_GET_STAGE_2_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
-    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, log_num_wqes, 52, d.{pt_base_addr...log_num_wqes})
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, pt_base_addr, log_num_wqes, d.{pt_base_addr...log_num_wqes})
 
     CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
-    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, log_num_wqes, 52, d.{pt_base_addr...log_num_wqes})
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, pt_base_addr, log_num_wqes, d.{pt_base_addr...log_num_wqes})
  
     CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
-    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, log_num_wqes, 52, d.{pt_base_addr...log_num_wqes})
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, pt_base_addr, log_num_wqes, d.{pt_base_addr...log_num_wqes})
 
     CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
-    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, log_num_wqes, 52, d.{pt_base_addr...log_num_wqes})
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, pt_base_addr, log_num_wqes, d.{pt_base_addr...log_num_wqes})
 
     CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
-    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, log_num_wqes, 52, d.{pt_base_addr...log_num_wqes})
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, pt_base_addr, log_num_wqes, d.{pt_base_addr...log_num_wqes})
 
     nop.e
     nop

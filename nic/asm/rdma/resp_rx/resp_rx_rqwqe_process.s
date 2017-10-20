@@ -49,14 +49,11 @@ resp_rx_rqwqe_process:
 
     // current_sge_id = rqcb_to_wqe_info_p->current_sge_id;
     // current_sge_offset = rqcb_to_wqe_info_p->current_sge_offset; 
-    add         r1, r0, k.args.current_sge_id
-    add         r2, r0, k.args.current_sge_offset
 
     //DANGER: because of register scarcity, encode both
     // current_sge_id and current_sge_offset in r1 and free r2 
-    sll         r1, r1, SGE_OFFSET_SHIFT
-    add         r1, r1, r2
     // now r1 = (current_sge_id << 32) + current_sge_offset
+    add         r1, k.args.current_sge_offset, k.args.current_sge_id, SGE_OFFSET_SHIFT
 
     seq         c1, k.args.in_progress, 1
 
@@ -65,11 +62,11 @@ resp_rx_rqwqe_process:
     cmov        NUM_VALID_SGES, c1, k.args.num_valid_sges, d.num_sges
 
     //sge_p = (in_progress == TRUE) ? d_p : (d_p + RQWQE_SGE_OFFSET)
-    //big-endian
-    cmov        SGE_P, c1, HBM_CACHE_LINE_SIZE_BITS, RQWQE_SGE_OFFSET_BITS
     // we need to add SIZEOF_SGE_T_BITS because SGE is accessed from bottom to top in big-endian
     //big-endian
-    sub         SGE_P, SGE_P, 1, LOG_SIZEOF_SGE_T_BITS
+    cmov        SGE_P, c1, \
+                (HBM_CACHE_LINE_SIZE_BITS - (1 << LOG_SIZEOF_SGE_T_BITS)),  \
+                (RQWQE_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
 
     //phv_p->cqwqe.id.wrid = wqe_p->wrid;
     phvwr.!c1   p.cqwqe.id.wrid, d.wrid
@@ -107,12 +104,10 @@ loop:
     // sge_to_lkey_info_p->sge_bytes = transfer_bytes;
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, len, r6)
     // sge_to_lkey_info_p->dma_cmd_start_index = dma_cmd_index;
-    add         r2, r0, RESP_RX_DMA_CMD_PYLD_BASE
-    add.!F_FIRST_PASS   r2, r2, MAX_PYLD_DMA_CMDS_PER_SGE
+    cmov        r2, F_FIRST_PASS, RESP_RX_DMA_CMD_PYLD_BASE, (RESP_RX_DMA_CMD_PYLD_BASE + MAX_PYLD_DMA_CMDS_PER_SGE)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmd_start_index, r2)
     //sge_to_lkey_info_p->sge_index = index;
-    cmov        r2, F_FIRST_PASS, 0, 1
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, tbl_id, r2)
+    CAPRI_SET_FIELD_C(r7, INFO_LKEY_T, tbl_id, 1, !F_FIRST_PASS)
     //CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmdeop, 0)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, acc_ctrl, ACC_CTRL_LOCAL_WRITE)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, nak_code, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR))
@@ -123,12 +118,6 @@ loop:
     //current_sge_offset += transfer_bytes;
     add         r2, CURR_SGE_OFFSET, r6
     // shift right and then shift left to clear bottom 32 bits
-    //srl         r1, r1, SGE_OFFSET_SHIFT
-    //sll         r1, r1, SGE_OFFSET_SHIFT
-    // now or it with new value
-    //or          r1, r1, r2[31:0]
-
-    // above 3 commented instructions are same as below single instruction
     add         r1, r2[31:0], r1[63:32], 32
 
     //  r6 <- sge_p->len
@@ -137,10 +126,6 @@ loop:
     // if (current_sge_offset == sge_p->len) {
     seq         c2, r6, r2[31:0]
     //current_sge_id++;
-    //srl.c2      r1, r1, SGE_OFFSET_SHIFT
-    //add.c2      r1, r1, 1
-
-    // above 2 commented instructions are same as below single instruction
     add.c2      r1, r1[63:32], 1
     //current_sge_offset = 0;
     sll.c2      r1, r1, SGE_OFFSET_SHIFT
@@ -155,21 +140,8 @@ loop:
     //sge_p++;
     sub.c2      SGE_P, SGE_P, 1, LOG_SIZEOF_SGE_T_BITS
 
-    //key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET()) +
-    // ((sge_p->l_key & KEY_INDEX_MASK) * sizeof(key_entry_t));
-    //andi        r2, r2, KEY_INDEX_MASK
-    //sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
-    //add         r2, r2, r6
-
-    // above 3 commented instructions are same as below single instruction
-    //add         r2, r6, KEY_INDEX_GET(r2), LOG_SIZEOF_KEY_ENTRY_T
     KEY_ENTRY_ADDR_GET(r2, r6, r2)
-
     // now r2 has key_addr
-
-    //aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK;
-    //and         r6, r2, HBM_CACHE_LINE_SIZE_MASK
-    //sub         r6, r2, r6
 
     KEY_ENTRY_ALIGNED_ADDR_GET(r6, r2)
     // r6 now has aligned_key_addr
@@ -177,9 +149,6 @@ loop:
 
     //key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
     // compute (key_addr - aligned_key_addr) >> log_key_entry_t
-    //sub         r2, r2, r6
-    //srl         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
-
     KEY_ID_GET(r2, r2)
     // r2 now has key_id
     
@@ -270,17 +239,19 @@ exit:
 
     .cscase 1
     
-    IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_ONLY)
+    //IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_ONLY)
     //  rqcb_write_back_info_p->in_progress = FALSE;
     //  rqcb_write_back_info_p->incr_nxt_to_go_token_id = 1;
     //  rqcb_write_back_info_p->incr_c_index = 1;
     //  rqcb_write_back_info_p->cache = rqcb_to_wqe_info_p->cache;
     //  rqcb_write_back_info_p->tbl_id = index;
-    //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, in_progress, 0)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, 1)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_c_index, 1)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, cache, k.args.cache)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, tbl_id, TABLE_2)
+
+    // set incr_nxt_to_go_token_id, incr_c_index and tbl_id using
+    // single instruction, in_progress is set to default
+    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, tbl_id, (1<<4 | 1<<3 | TABLE_2)) 
+
+    // ignore cache for now
+    //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, cache, k.args.cache)
 
     //  rqcb1_write_back_info_p->current_sge_id = 0;
     //  rqcb1_write_back_info_p->current_sge_offset = 0;

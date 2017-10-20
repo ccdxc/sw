@@ -125,6 +125,13 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_SET_FIELD_C(_base_r, _struct_name, _field_name, _src, _c_flag) \
     phvwrp._c_flag  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src; 
 
+#define CAPRI_SIZEOF_RANGE(_s, _f1, _fn) \
+    (offsetof(_s, _f1) + sizeof(_s._f1) - offsetof(_s, _fn))
+
+// f1 is the most significant field and fn is the least significant field in big-endian format
+#define CAPRI_SET_FIELD_RANGE(_base_r, _s, _f1, _fn, _src_range)    \
+    phvwrp  _base_r, offsetof(_s, _fn), CAPRI_SIZEOF_RANGE(_s, _f1, _fn), _src_range
+
 #define CAPRI_GET_TABLE_ADDR(_addr_r, _table_base_r, _eid, _entry_size_shift) \
     add  _addr_r, r0, _eid; \
     sll  _addr_r, _addr_r, _entry_size_shift; \
@@ -722,8 +729,5 @@ addi _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PER_FL
     smeqb   _c, _flags_r, _ring_id_bmap, 0;
 
 #define PENDING_RECIR_PKTS_MAX  4
-
-#define CAPRI_SET_FIELD_RANGE(_base_r, _struct_name, _start_field_name, _len, _src_range)    \
-    phvwrp  _base_r, offsetof(_struct_name, _start_field_name), _len, _src_range
-    
+   
 #endif //__CAPRI_H

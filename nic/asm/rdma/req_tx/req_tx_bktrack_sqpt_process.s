@@ -47,7 +47,7 @@ req_tx_bktrack_sqpt_process:
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, sq_p_index, k.args.sq_p_index)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, in_progress, k.args.in_progress)
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, bktrack_in_progress, k.args.bktrack_in_progress)
-    CAPRI_SET_FIELD_RANGE(r7, SQ_BKTRACK_T, num_sges, 48, k.{args.current_sge_offset...args.num_sges})
+    CAPRI_SET_FIELD_RANGE(r7, SQ_BKTRACK_T, current_sge_offset, num_sges, k.{args.current_sge_offset...args.num_sges})
 
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
