@@ -9,10 +9,10 @@ package {{.GoPkg.Name}}ApiServer{{$validators := getValidatorManifest .}}
 import (
 	"context"
 	"fmt"
+	"time"
 
+    "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
-	"google.golang.org/grpc"
-
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated/{{.GoPkg.Name}}"
@@ -22,6 +22,8 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/listerwatcher"
+	"github.com/satori/go.uuid"
+	"google.golang.org/grpc"
 )
 {{$pkgname := .GoPkg.Name}}{{$flname := (getFileName .Name)}}
 
@@ -103,6 +105,26 @@ func (s *s{{$pkgname}}{{$flname}}Backend) CompleteRegistration(ctx context.Conte
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.({{$pkgname}}.{{.Name}})
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.({{$pkgname}}.{{.Name}})
+			var err error
+            ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.({{$pkgname}}.{{.Name}})
+			var err error
+            ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := {{$pkgname}}.{{.Name}}{}
 			err := kvs.Get(ctx, key, &r)

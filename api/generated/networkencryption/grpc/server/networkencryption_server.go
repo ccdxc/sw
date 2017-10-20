@@ -9,10 +9,9 @@ package networkencryptionApiServer
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/pkg/errors"
-	"google.golang.org/grpc"
-
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
 	networkencryption "github.com/pensando/sw/api/generated/networkencryption"
 	"github.com/pensando/sw/api/listerwatcher"
@@ -22,6 +21,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
+	"google.golang.org/grpc"
 )
 
 // dummy vars to suppress unused errors
@@ -109,6 +111,26 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(networkencryption.TrafficEncryptionPolicy)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(networkencryption.TrafficEncryptionPolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(networkencryption.TrafficEncryptionPolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := networkencryption.TrafficEncryptionPolicy{}
 			err := kvs.Get(ctx, key, &r)

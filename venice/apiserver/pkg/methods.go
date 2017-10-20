@@ -303,6 +303,26 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 			return nil, errRequestValidation
 		}
 	}
+	if oper == apiserver.CreateOper {
+		i, err = m.requestType.CreateUUID(i)
+		if err != nil {
+			l.ErrorLog("msg", "UUID creation failed", "error", err)
+			return nil, errInternalError
+		}
+		i, err = m.requestType.WriteCreationTime(i)
+		if err != nil {
+			l.ErrorLog("msg", "CTime updation failed", "error", err)
+			return nil, errInternalError
+		}
+	}
+	if oper == apiserver.CreateOper || oper == apiserver.UpdateOper {
+		i, err = m.requestType.WriteModTime(i)
+		if err != nil {
+			l.ErrorLog("msg", "Mtime updation failed", "error", err)
+			return nil, errInternalError
+		}
+	}
+
 	if span != nil {
 		span.LogFields(log.String("event", "calling precommit hooks"))
 	}

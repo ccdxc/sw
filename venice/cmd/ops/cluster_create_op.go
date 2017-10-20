@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/pborman/uuid"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/satori/go.uuid"
 
 	cmd "github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/venice/cmd/env"
@@ -52,7 +52,7 @@ func (o *clusterCreateOp) Validate() error {
 // populateClusterDefaults fills in the defaults for cluster object.
 func (o *clusterCreateOp) populateClusterDefaults() {
 	o.cluster.Kind = "Cluster"
-	o.cluster.UUID = uuid.New()
+	o.cluster.UUID = uuid.NewV4().String()
 	if len(o.cluster.Spec.NTPServers) == 0 {
 		o.cluster.Spec.NTPServers = append(o.cluster.Spec.NTPServers, defaultNTPServer)
 	}

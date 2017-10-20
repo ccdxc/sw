@@ -49,6 +49,12 @@ type MessageHdlr struct {
 	kvWatchFunc apisrv.WatchKvFunc
 	// Kind holds the kind of object.
 	Kind string
+	// uuidWriter is a function that creates and sets UUID during object creation
+	uuidWriter apisrv.CreateUUIDFunc
+	// creationTimeWriter is a function that sets the creation time of object
+	creationTimeWriter apisrv.SetCreationTimeFunc
+	// modTimeWriter is a function that sets the modification time of object
+	modTimeWriter apisrv.SetModTimeFunc
 }
 
 // NewMessage creates a new message performing all initialization needed.
@@ -203,6 +209,24 @@ func (m *MessageHdlr) WithObjectVersionWriter(fn apisrv.SetObjectVersionFunc) ap
 	return m
 }
 
+// WithUUIDWriter is helper function to write UUID of the object
+func (m *MessageHdlr) WithUUIDWriter(fn apisrv.CreateUUIDFunc) apisrv.Message {
+	m.uuidWriter = fn
+	return m
+}
+
+// WithCreationTimeWriter is helper function to write CreationTime of the object
+func (m *MessageHdlr) WithCreationTimeWriter(fn apisrv.SetCreationTimeFunc) apisrv.Message {
+	m.creationTimeWriter = fn
+	return m
+}
+
+// WithModTimeWriter is helper function to write ModTime of the object
+func (m *MessageHdlr) WithModTimeWriter(fn apisrv.SetModTimeFunc) apisrv.Message {
+	m.modTimeWriter = fn
+	return m
+}
+
 // PrepareMsg applies needed transforms to transform the message to the "to" version. Used
 //  for request and response but in opposite directions.
 func (m *MessageHdlr) PrepareMsg(from, to string, i interface{}) (interface{}, error) {
@@ -210,7 +234,7 @@ func (m *MessageHdlr) PrepareMsg(from, to string, i interface{}) (interface{}, e
 		if fn, ok := v[to]; ok {
 			return fn(from, to, i), nil
 		}
-		i = m.WriteObjVersion(i, to)
+		m.WriteObjVersion(i, to)
 	}
 	return nil, errors.New("unsupported tranformation")
 }
@@ -239,6 +263,30 @@ func (m *MessageHdlr) WriteObjVersion(i interface{}, version string) interface{}
 		return m.objVersionerFunc(i, version)
 	}
 	return i
+}
+
+// CreateUUID updates UUID in the object meta
+func (m *MessageHdlr) CreateUUID(i interface{}) (interface{}, error) {
+	if m.uuidWriter != nil {
+		return m.uuidWriter(i)
+	}
+	return i, nil
+}
+
+// WriteCreationTime updates CTime in the object meta
+func (m *MessageHdlr) WriteCreationTime(i interface{}) (interface{}, error) {
+	if m.creationTimeWriter != nil {
+		return m.creationTimeWriter(i)
+	}
+	return i, nil
+}
+
+// WriteModTime updates MTime in the object meta
+func (m *MessageHdlr) WriteModTime(i interface{}) (interface{}, error) {
+	if m.modTimeWriter != nil {
+		return m.modTimeWriter(i)
+	}
+	return i, nil
 }
 
 // WatchFromKv implements the watch function from KV store and bridges it to the grpc stream

@@ -9,10 +9,9 @@ package telemetryApiServer
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/pkg/errors"
-	"google.golang.org/grpc"
-
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
 	telemetry "github.com/pensando/sw/api/generated/telemetry"
 	"github.com/pensando/sw/api/listerwatcher"
@@ -22,6 +21,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
+	"google.golang.org/grpc"
 )
 
 // dummy vars to suppress unused errors
@@ -146,6 +148,26 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(telemetry.CollectionPolicy)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(telemetry.CollectionPolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(telemetry.CollectionPolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := telemetry.CollectionPolicy{}
 			err := kvs.Get(ctx, key, &r)
@@ -232,6 +254,26 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(telemetry.ExportPolicy)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(telemetry.ExportPolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(telemetry.ExportPolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := telemetry.ExportPolicy{}
 			err := kvs.Get(ctx, key, &r)
@@ -318,6 +360,26 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(telemetry.MonitoringPolicy)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(telemetry.MonitoringPolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(telemetry.MonitoringPolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := telemetry.MonitoringPolicy{}
 			err := kvs.Get(ctx, key, &r)
@@ -403,6 +465,26 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(telemetry.RetentionPolicy)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(telemetry.RetentionPolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(telemetry.RetentionPolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := telemetry.RetentionPolicy{}
 			err := kvs.Get(ctx, key, &r)

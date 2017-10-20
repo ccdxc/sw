@@ -150,6 +150,15 @@ type ListFromKvFunc func(ctx context.Context, kvs kvstore.Interface, options *ap
 //  - txfn is the version transformation function to be used during the watch.
 type WatchKvFunc func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error
 
+// CreateUUIDFunc is a function that creates and sets UUID during object creation
+type CreateUUIDFunc func(i interface{}) (interface{}, error)
+
+// SetCreationTimeFunc is a function that sets the Creation time of object
+type SetCreationTimeFunc func(i interface{}) (interface{}, error)
+
+// SetModTimeFunc is a function that sets the Modification time of object
+type SetModTimeFunc func(i interface{}) (interface{}, error)
+
 // Message is the interface satisfied by the representation of the Message in the Api Server infra.
 // A Message may be the definition of parameters passed in and out of a gRPC method or an object that
 // is persisted in the KV store.
@@ -186,6 +195,12 @@ type MessageRegistration interface {
 	WithKvListFunc(fn ListFromKvFunc) Message
 	// WithKvWatchFunc watches the KV store for changes to object(s)
 	WithKvWatchFunc(fn WatchKvFunc) Message
+	// WithUUIDWriter registers UUID writer function
+	WithUUIDWriter(fn CreateUUIDFunc) Message
+	// WithCreationTimeWriter registers CreationTime Writer function
+	WithCreationTimeWriter(fn SetCreationTimeFunc) Message
+	// WithModTimeWriter registers ModTime Writer function
+	WithModTimeWriter(fn SetModTimeFunc) Message
 }
 
 // MessageAction is the set of the Actions possible on a Message.
@@ -218,6 +233,12 @@ type MessageAction interface {
 	Default(i interface{}) interface{}
 	// Validate validates the message by invoking the custom validation function registered.
 	Validate(i interface{}, ver string, ignoreStatus bool) error
+	// CreateUUID creates uuid when the object is first created
+	CreateUUID(i interface{}) (interface{}, error)
+	// WriteCreationTime writes the creation time of the object to now
+	WriteCreationTime(i interface{}) (interface{}, error)
+	// WriteModTime writes the modification time of the object to now
+	WriteModTime(i interface{}) (interface{}, error)
 }
 
 // Method is the interface satisfied by the representaion of the RPC Method in the API Server infra.

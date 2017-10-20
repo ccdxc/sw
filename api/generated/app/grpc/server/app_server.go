@@ -9,10 +9,9 @@ package appApiServer
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/pkg/errors"
-	"google.golang.org/grpc"
-
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
 	app "github.com/pensando/sw/api/generated/app"
 	"github.com/pensando/sw/api/listerwatcher"
@@ -22,6 +21,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
+	"google.golang.org/grpc"
 )
 
 // dummy vars to suppress unused errors
@@ -118,6 +120,26 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(app.App)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(app.App)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(app.App)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := app.App{}
 			err := kvs.Get(ctx, key, &r)
@@ -203,6 +225,26 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(app.AppUser)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(app.AppUser)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(app.AppUser)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := app.AppUser{}
 			err := kvs.Get(ctx, key, &r)
@@ -275,6 +317,26 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(app.AppUserGrp)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(app.AppUserGrp)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(app.AppUserGrp)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := app.AppUserGrp{}
 			err := kvs.Get(ctx, key, &r)

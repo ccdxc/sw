@@ -16,7 +16,13 @@ GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 
-default: build unit-test cover
+default: 
+	$(MAKE) deps
+	$(MAKE) ws-tools
+	$(MAKE) checks
+	$(MAKE) qbuild
+	$(MAKE) unit-test 
+	$(MAKE) cover
 
 deps:
 	@( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/lint/golint/ && go install ) && \

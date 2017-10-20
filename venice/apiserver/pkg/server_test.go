@@ -3,7 +3,6 @@ package apisrvpkg
 import (
 	"bytes"
 	"context"
-	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -172,10 +171,10 @@ func TestRunApiSrv(t *testing.T) {
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Timeout waiting on lock")
 	}
-	err = errors.New("Testing Exit for Api Server")
-	a.doneCh <- err
+
+	a.Stop()
 	time.Sleep(100 * time.Millisecond)
-	if !strings.Contains(buf.String(), "Testing Exit for Api Server") {
+	if !strings.Contains(buf.String(), "Stop called by user") {
 		t.Errorf("APIServer Run did not close on error")
 	}
 	if s1.hookcbCalled != 2 {

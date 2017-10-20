@@ -303,7 +303,7 @@ func fillKeys(kvs map[string]ref.FInfo, tags map[string]string) error {
 
 func fillFields(kvs map[string]ref.FInfo, fields map[string]interface{}) error {
 	// TBD: deletion of skipNames can be avoided if caller passes just the spec
-	skipNames := []string{"Kind", "UUID", "ResourceVersion", "Name", "Namespace", "Tenant", "Labels"}
+	skipNames := []string{"Kind", "UUID", "ResourceVersion", "Name", "Namespace", "Tenant", "Labels", "CTime", "MTime"}
 	for _, key := range skipNames {
 		delete(kvs, key)
 	}
@@ -315,6 +315,9 @@ func fillFields(kvs map[string]ref.FInfo, fields map[string]interface{}) error {
 		switch v.TypeStr {
 		case "string":
 			fields[key] = v.ValueStr[0]
+		case "int64", "int32":
+			intVal, _ := strconv.ParseInt(v.ValueStr[0], 10, 64)
+			fields[key] = intVal
 		case "uint64", "uint32":
 			uintVal, _ := strconv.ParseUint(v.ValueStr[0], 10, 64)
 			fields[key] = uintVal
@@ -328,7 +331,7 @@ func fillFields(kvs map[string]ref.FInfo, fields map[string]interface{}) error {
 			}
 			fields[key] = flag
 		default:
-			return fmt.Errorf("unrecognized type")
+			return fmt.Errorf("unrecognized type %+v", v.TypeStr)
 		}
 	}
 

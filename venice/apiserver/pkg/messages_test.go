@@ -31,6 +31,7 @@ type fakeMessage struct {
 	txngets        int
 	txndels        int
 	objverwrite    int
+	uuidwrite      int
 }
 
 var txnTestKey = "/txn/testobj"
@@ -48,6 +49,9 @@ func (m *fakeMessage) WithKvTxnUpdater(fn apisrv.UpdateKvTxnFunc) apisrv.Message
 func (m *fakeMessage) WithKvListFunc(fn apisrv.ListFromKvFunc) apisrv.Message                { return m }
 func (m *fakeMessage) WithKvWatchFunc(fn apisrv.WatchKvFunc) apisrv.Message                  { return m }
 func (m *fakeMessage) WithObjectVersionWriter(fn apisrv.SetObjectVersionFunc) apisrv.Message { return m }
+func (m *fakeMessage) WithUUIDWriter(fn apisrv.CreateUUIDFunc) apisrv.Message                { return m }
+func (m *fakeMessage) WithCreationTimeWriter(fn apisrv.SetCreationTimeFunc) apisrv.Message   { return m }
+func (m *fakeMessage) WithModTimeWriter(fn apisrv.SetModTimeFunc) apisrv.Message             { return m }
 func (m *fakeMessage) GetKind() string                                                       { return "" }
 func (m *fakeMessage) WriteObjVersion(i interface{}, version string) interface{}             { return i }
 func (m *fakeMessage) ListFromKv(ctx context.Context, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -161,6 +165,16 @@ func (m *fakeMessage) kvListFunc(ctx context.Context, kvs kvstore.Interface, opt
 	m.kvlists++
 	return nil, nil
 }
+func (m *fakeMessage) CreateUUID(i interface{}) (interface{}, error) {
+	m.uuidwrite++
+	return i, nil
+}
+func (m *fakeMessage) WriteCreationTime(i interface{}) (interface{}, error) {
+	return i, nil
+}
+func (m *fakeMessage) WriteModTime(i interface{}) (interface{}, error) {
+	return i, nil
+}
 
 // TestPrepareMessage
 // Tests the version transform functionality of the message.
@@ -216,6 +230,7 @@ func TestMessageWith(t *testing.T) {
 	m = m.WithKvUpdater(f.kvUpdateFunc).WithKvGetter(f.kvGetFunc).WithKvDelFunc(f.kvDelFunc).WithObjectVersionWriter(f.objVerWrite)
 	m = m.WithKvTxnUpdater(f.txnUpdateFunc).WithKvTxnDelFunc(f.delFromKvTxnFunc)
 	m = m.WithKvWatchFunc(f.kvWatchFunc).WithKvListFunc(f.kvListFunc)
+	m = m.WithUUIDWriter(f.CreateUUID)
 	m.Validate(nil, "", true)
 	if f.validateCalled != 1 {
 		t.Errorf("Expecting validation count of %v found", f.validateCalled)
@@ -248,6 +263,11 @@ func TestMessageWith(t *testing.T) {
 	if f.txndels != 1 {
 		t.Errorf("Expecting 1 call to KV Del found %d", f.kvdels)
 	}
+	m.CreateUUID(nil)
+	if f.uuidwrite != 1 {
+		t.Errorf("Expecting 1 call to CreateUUID found %d", f.uuidwrite)
+	}
+
 	ctx := context.TODO()
 	md := metadata.Pairs(apisrv.RequestParamVersion, "v1",
 		apisrv.RequestParamMethod, "WATCH")

@@ -9,10 +9,9 @@ package networkApiServer
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/pkg/errors"
-	"google.golang.org/grpc"
-
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
 	network "github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/listerwatcher"
@@ -22,6 +21,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
+	"google.golang.org/grpc"
 )
 
 // dummy vars to suppress unused errors
@@ -185,6 +187,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Endpoint)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Endpoint)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Endpoint)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.Endpoint{}
 			err := kvs.Get(ctx, key, &r)
@@ -271,6 +293,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.LbPolicy)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.LbPolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.LbPolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.LbPolicy{}
 			err := kvs.Get(ctx, key, &r)
@@ -356,6 +398,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Network)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Network)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Network)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.Network{}
 			err := kvs.Get(ctx, key, &r)
@@ -442,6 +504,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.SecurityGroup)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.SecurityGroup)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.SecurityGroup)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.SecurityGroup{}
 			err := kvs.Get(ctx, key, &r)
@@ -527,6 +609,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Service)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Service)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Service)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.Service{}
 			err := kvs.Get(ctx, key, &r)
@@ -612,6 +714,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Sgpolicy)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Sgpolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Sgpolicy)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.Sgpolicy{}
 			err := kvs.Get(ctx, key, &r)
@@ -697,6 +819,26 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 				err = errors.Wrap(err, "KV transaction update failed")
 			}
 			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Tenant)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Tenant)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(network.Tenant)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
 		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 			r := network.Tenant{}
 			err := kvs.Get(ctx, key, &r)

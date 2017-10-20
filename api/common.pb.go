@@ -15,6 +15,7 @@
 		Empty
 		TypeMeta
 		ListMeta
+		Timestamp
 		ObjectMeta
 		ObjectRef
 		ListWatchOptions

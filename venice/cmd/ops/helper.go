@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pborman/uuid"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cmd"
@@ -24,7 +24,7 @@ func makeNode(name string) *cmd.Node {
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name: name,
-			UUID: uuid.New(),
+			UUID: uuid.NewV4().String(),
 		},
 	}
 }

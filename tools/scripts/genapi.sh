@@ -58,7 +58,7 @@ do
 done < ${curdir}/generated/manifest
 
 cd ${curdir}
-PROTOSUBST=Mgoogle/api/annotations.proto=github.com/pensando/grpc-gateway/third_party/googleapis/google/api
+PROTOSUBST=Mgoogle/api/annotations.proto=github.com/pensando/grpc-gateway/third_party/googleapis/google/api,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types
 cd $protopath && while read -r line || [[ -n "$line" ]];
 do
     protofile=$(echo $line | awk '{ print $1 }')

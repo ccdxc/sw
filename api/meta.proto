@@ -2,6 +2,10 @@ syntax = "proto3";
 package api;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+  option (gogoproto.unmarshaler_all) = true;
+  option (gogoproto.marshaler_all) = true;
 
 // TypeMeta contains the metadata about kind and version for all API objects.
 message TypeMeta {
@@ -17,6 +21,9 @@ message ListMeta {
   string ResourceVersion=1;
 }
 
+message Timestamp {
+  google.protobuf.Timestamp time = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true ];
+}
 // ObjectMeta contains metadata that all objects stored in kvstore must have.
 message ObjectMeta {
   // Name of the object, unique within a Namespace for scoped objects.
@@ -32,7 +39,10 @@ message ObjectMeta {
   string UUID = 5;
   // Labels are arbitrary (key,value) pairs associated with any object.
   map <string, string> Labels = 6;
-  // TODO: Add timestamps, etc.
+  // CreationTime is the creation time of Object
+  Timestamp CreationTime = 7 [(gogoproto.nullable) = false];
+  // ModTime is the Last Modification time of Object
+  Timestamp ModTime = 8 [(gogoproto.nullable) = false];
 }
 
 // ObjectRef contains identifying information about an object.

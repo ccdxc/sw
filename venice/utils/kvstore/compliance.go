@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	rt "runtime"
 	"strings"
 	"testing"
 	"time"
@@ -91,7 +92,11 @@ func RunInterfaceTests(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupF
 	}
 
 	for _, fn := range fns {
+		testName := rt.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
+		testName = testName[strings.LastIndex(testName, ".")+1:]
+		t.Logf("Starting Test %#v", testName)
 		fn(t, cSetup, sSetup, cCleanup)
+		t.Logf("Completed Test %#v", testName)
 	}
 }
 
