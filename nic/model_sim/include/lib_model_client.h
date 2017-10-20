@@ -19,7 +19,7 @@ void step_cpu_pkt(const uint8_t* pkt, size_t pkt_len);
 // mac config APIs to model
 int lib_model_mac_msg_send (uint32_t port_num,
                             uint32_t speed,
-                            buff_type_e type,
+                            uint32_t type,
                             uint32_t num_lanes,
                             uint32_t val);
 

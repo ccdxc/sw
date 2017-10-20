@@ -46,6 +46,14 @@ hal_ret_t asic_init(asic_cfg_t *asic_cfg);
 // return TRUE if asic is initialized and ready for read/writes
 bool is_asic_rw_ready(void);
 
+// port related config
+hal_ret_t
+asic_port_cfg (uint32_t port_num,
+               uint32_t speed,
+               uint32_t type,
+               uint32_t num_lanes,
+               uint32_t val);
+
 }    // namespace pd
 }    // namespace hal
 

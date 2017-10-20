@@ -306,7 +306,7 @@ bool dump_hbm ()
 
 int lib_model_mac_msg_send (uint32_t port_num,
                             uint32_t speed,
-                            buff_type_e type,
+                            uint32_t type,
                             uint32_t num_lanes,
                             uint32_t val)
 {
@@ -321,7 +321,7 @@ int lib_model_mac_msg_send (uint32_t port_num,
     if (__lmodel_env)
         return true;
     buff = (buffer_hdr_t *) buffer;
-    buff->type = type;
+    buff->type = (buff_type_e)type;
     buff->port = port_num;
 
     buff->size = sizeof(buffer_port_t);

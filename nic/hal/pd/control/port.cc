@@ -14,6 +14,8 @@ namespace hal {
 
 namespace pd {
 
+mac_fn_t port::mac_fn;
+
 // Invoked in control thread context
 hal_ret_t
 port::port_event_notify(void *ctxt)
@@ -118,7 +120,7 @@ port::port_mac_ch_mode_cfg()
 uint32_t
 port::port_mac_port_num_calc()
 {
-    return (this->mac_id * PORT_LANES_MAX) + this->mac_ch;
+    return (this->mac_id_ * PORT_LANES_MAX) + this->mac_ch_;
 }
 
 hal_ret_t
@@ -126,9 +128,10 @@ port::port_mac_cfg()
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    mac_cfg(mac_port_num,
+    port::mac_fn.mac_cfg(
+            mac_port_num,
             static_cast<uint32_t>(this->port_speed_),
-            this->num_lanes);
+            this->num_lanes_);
 
     return HAL_RET_OK;
 }
@@ -138,9 +141,10 @@ port::port_mac_enable(bool enable)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    mac_enable(mac_port_num,
+    port::mac_fn.mac_enable(
+               mac_port_num,
                static_cast<uint32_t>(this->port_speed_),
-               this->num_lanes,
+               this->num_lanes_,
                enable);
 
     return HAL_RET_OK;
@@ -151,9 +155,10 @@ port::port_mac_soft_reset(bool reset)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    mac_soft_reset(mac_port_num,
+    port::mac_fn.mac_soft_reset(
+                   mac_port_num,
                    static_cast<uint32_t>(this->port_speed_),
-                   this->num_lanes,
+                   this->num_lanes_,
                    reset);
 
     return HAL_RET_OK;
@@ -164,9 +169,10 @@ port::port_mac_stats_reset(bool reset)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    mac_stats_reset(mac_port_num,
+    port::mac_fn.mac_stats_reset(
+                    mac_port_num,
                     static_cast<uint32_t>(this->port_speed_),
-                    this->num_lanes,
+                    this->num_lanes_,
                     reset);
 
     return HAL_RET_OK;
@@ -177,9 +183,10 @@ port::port_mac_intr_en(bool enable)
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    mac_intr_enable(mac_port_num,
+    port::mac_fn.mac_intr_enable(
+            mac_port_num,
             static_cast<uint32_t>(this->port_speed_),
-            this->num_lanes,
+            this->num_lanes_,
             enable);
 
     return HAL_RET_OK;
@@ -190,9 +197,10 @@ port::port_mac_intr_clr()
 {
     uint32_t mac_port_num = port_mac_port_num_calc();
 
-    mac_intr_clear(mac_port_num,
+    port::mac_fn.mac_intr_clear(
+            mac_port_num,
             static_cast<uint32_t>(this->port_speed_),
-            this->num_lanes);
+            this->num_lanes_);
 
     return HAL_RET_OK;
 }
@@ -352,6 +360,19 @@ port::port_disable()
     this->admin_state_ = false;
 
     return HAL_RET_OK;;
+}
+
+hal_ret_t
+port::port_init(bool is_sim)
+{
+    hal_ret_t rc = HAL_RET_OK;
+
+    rc = port::port_mac_init(is_sim);
+    if (rc != HAL_RET_OK) {
+        HAL_TRACE_ERR("port mac init failed");
+    }
+
+    return rc;
 }
 
 }    // namespace pd

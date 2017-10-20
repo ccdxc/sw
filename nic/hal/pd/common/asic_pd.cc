@@ -39,10 +39,10 @@ read_reg_base(uint32_t chip, uint64_t addr)
     uint32_t data = 0;
     hal_ret_t rc = HAL_RET_OK;
 
-    hal::utils::thread *t_curr_thread = hal::utils::thread::current_thread();
+    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
 
     if (hal::pd::is_asic_rw_thread(
-                        chip, t_curr_thread->thread_id()) == false) {
+                        chip, curr_thread->thread_id()) == false) {
         rc = hal::pd::asic_reg_read(addr, &data);
         if (rc != HAL_RET_OK) {
             HAL_TRACE_ERR("Error reading chip: %d addr: 0x%llx",
@@ -60,10 +60,10 @@ write_reg_base(uint32_t chip, uint64_t addr, uint32_t data)
 {
     hal_ret_t rc = HAL_RET_OK;
 
-    hal::utils::thread *t_curr_thread = hal::utils::thread::current_thread();
+    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
 
     if (hal::pd::is_asic_rw_thread(
-                        chip, t_curr_thread->thread_id()) == false) {
+                        chip, curr_thread->thread_id()) == false) {
         rc = hal::pd::asic_reg_write(addr, &data, true);
         if (rc != HAL_RET_OK) {
             HAL_TRACE_ERR("Error writing chip: %d addr: 0x%llx data: 0x%x",

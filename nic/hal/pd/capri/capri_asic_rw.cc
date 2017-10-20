@@ -20,19 +20,33 @@ static std::atomic<bool> g_asic_rw_ready_;
 #define HAL_ASIC_RW_OPERATION_MEM_WRITE              1
 #define HAL_ASIC_RW_OPERATION_REG_READ               2
 #define HAL_ASIC_RW_OPERATION_REG_WRITE              3
+#define HAL_ASIC_RW_OPERATION_PORT                   4
+
+//------------------------------------------------------------------------------
+// custom struct passed between control thread and asic-rw thread
+// for port related operations
+//------------------------------------------------------------------------------
+typedef struct asic_rw_port_entry_ {
+    uint32_t    port_num;  // port number
+    uint32_t    speed;     // port speed
+    uint32_t    type;      // buffer type between model client and server
+    uint32_t    num_lanes; // number of lanes for port
+    uint32_t    val;       // custom value per operation
+} asic_rw_port_entry_t;
 
 //------------------------------------------------------------------------------
 // asic read-write entry, one such entry is added to the asic read/write
 // thread's queue whenever asic read/write is attempted by any HAL thread
 //------------------------------------------------------------------------------
 typedef struct asic_rw_entry_ {
-    uint8_t           opn:2;     // operation requested to perform
-    std::atomic<bool> done;      // TRUE if thread performed operation
-    hal_ret_t         status;    // result status of operation requested
-    uint64_t          addr;      // address to write to or read from
-    uint32_t          len;       // length of data to read or write
-    uint8_t           *data;     // data to write or buffer to copy data to for mem read/write
-    uint32_t          reg_data;  // data to write or buffer to copy data to for mem read/write
+    uint8_t              opn;        // operation requested to perform
+    std::atomic<bool>    done;       // TRUE if thread performed operation
+    hal_ret_t            status;     // result status of operation requested
+    uint64_t             addr;       // address to write to or read from
+    uint32_t             len;        // length of data to read or write
+    uint8_t              *data;      // data to write or buffer to copy data to for mem read/write
+    uint32_t             reg_data;   // data to write or buffer to copy data to for mem read/write
+    asic_rw_port_entry_t port_entry; // port data
 } asic_rw_entry_t;
 
 //------------------------------------------------------------------------------
@@ -208,6 +222,62 @@ asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len, bool blocking)
                          addr, data, len, blocking);
 }
 
+hal_ret_t
+asic_port_cfg (uint32_t port_num,
+               uint32_t speed,
+               uint32_t type,
+               uint32_t num_lanes,
+               uint32_t val)
+{
+    hal_ret_t          ret = HAL_RET_OK;
+    uint16_t           pindx  = 0;
+    asic_rw_entry_t    *rw_entry = NULL;
+    uint32_t           op = HAL_ASIC_RW_OPERATION_PORT;
+
+    thread *curr_thread = hal::utils::thread::current_thread();
+    uint32_t           curr_tid = curr_thread->thread_id();
+
+    if (g_asic_rw_workq[curr_tid].nentries >= HAL_ASIC_RW_Q_SIZE) {
+        HAL_TRACE_ERR("ASIC rwq for thread {}, tid {} full, write failed",
+                      curr_thread->name(), curr_tid);
+        return HAL_RET_HW_PROG_ERR;
+    }
+
+    pindx = g_asic_rw_workq[curr_tid].pindx;
+    rw_entry = &g_asic_rw_workq[curr_tid].entries[pindx];
+
+    rw_entry->opn = (uint8_t)op;
+    rw_entry->status = HAL_RET_ERR;
+
+    asic_rw_port_entry_t *port_entry = &rw_entry->port_entry;
+    port_entry->port_num  = port_num;
+    port_entry->speed     = speed;
+    port_entry->type      = type;
+    port_entry->num_lanes = num_lanes;
+    port_entry->val       = val;
+
+    rw_entry->done.store(false);
+
+    g_asic_rw_workq[curr_tid].nentries++;
+
+    while (rw_entry->done.load() == false) {
+        if (curr_thread->can_yield()) {
+            pthread_yield();
+        }
+    }
+    ret = rw_entry->status;
+
+    // move the producer index to next slot.
+    // consumer is unaware of the blocking/non-blocking call and always
+    // moves to the next slot.
+    g_asic_rw_workq[curr_tid].pindx++;
+    if (g_asic_rw_workq[curr_tid].pindx >= HAL_ASIC_RW_Q_SIZE) {
+        g_asic_rw_workq[curr_tid].pindx = 0;
+    }
+
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // ASIC read-write thread's forever loop to server read and write requests from
 // other HAL threads
@@ -251,6 +321,15 @@ asic_rw_loop (void)
             case HAL_ASIC_RW_OPERATION_REG_WRITE:
                 regval = rw_entry->reg_data;
                 rv = write_reg(rw_entry->addr, regval);
+                break;
+
+            case HAL_ASIC_RW_OPERATION_PORT:
+                lib_model_mac_msg_send(
+                        rw_entry->port_entry.port_num,
+                        rw_entry->port_entry.speed,
+                        rw_entry->port_entry.type,
+                        rw_entry->port_entry.num_lanes,
+                        rw_entry->port_entry.val);
                 break;
 
             default:
