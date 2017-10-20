@@ -77,7 +77,8 @@ run "yum install -y #{PACKAGES.join(" ")}"
 # otherwise protobuf.pc will end up in the wrong spot, required for building protobuf-c
 run "ln -s /usr/share/pkgconfig /usr/lib/pkgconfig"
 
-run "curl -sSL https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz | tar xz -C /usr/local"
+# Install go 1.9
+run "curl -sSL https://storage.googleapis.com/golang/go1.9.linux-amd64.tar.gz | tar xz -C /usr/local"
 run "go get github.com/golang/protobuf/... google.golang.org/grpc golang.org/x/tools/cmd/goimports"
 
 inside BASE_BUILD_DIR do
@@ -229,7 +230,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.2"
+tag "pensando/nic:1.3"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
