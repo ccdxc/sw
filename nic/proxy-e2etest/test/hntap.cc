@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <net/ethernet.h>
+#include <net/route.h>
 #include <zmq.h>
 #include <assert.h>
 #include "nic/model_sim/include/buf_hdr.h"
@@ -26,11 +27,19 @@
 #include "nic/model_sim/include/buf_hdr.h"
 #include "nic/proxy-e2etest/lib_driver.hpp"
 
-#define HNTAP_HOST_TAPIF    "hntap_host0"
-#define HNTAP_HOST_TAPIF_IP "10.0.100.1"
-#define HNTAP_NET_TAPIF     "hntap_net0"
-#define HNTAP_NET_TAPIF_IP  "20.0.100.1"
-#define PKTBUF_LEN          2000
+#define HNTAP_HOST_TAPIF        "hntap_host0"
+#define HNTAP_HOST_TAPIF_IP     "64.1.0.4"
+#define HNTAP_HOST_TAPIF_IPMASK "255.255.255.0"
+#define HNTAP_HOST_ROUTE_DESTIP "64.0.0.1"
+#define HNTAP_HOST_ROUTE_GWIP   "64.1.0.4"
+
+#define HNTAP_NET_TAPIF         "hntap_net0"
+#define HNTAP_NET_TAPIF_IP      "64.0.0.2"
+#define HNTAP_NET_TAPIF_IPMASK  "255.255.255.0"
+#define HNTAP_NET_ROUTE_DESTIP  "64.1.0.3"
+#define HNTAP_NET_ROUTE_GWIP    "64.0.0.2"
+
+#define PKTBUF_LEN              2000
 
 #define HNTAP_LIF_ID      14 
 #define HNTAP_QSTATE_ADDR 0xa4512000
@@ -39,6 +48,10 @@
 int host_tap_fd, net_tap_fd;
 void hntap_dump_pkt(char *pkt, int len);
 void hntap_nat(char *pkt, int len);
+
+extern int tcp_server_main(int argv, char *argc[]);
+
+bool hntap_go_thru_model = false; // Go thru model for host<->nw talk
 
 #define ETH_ADDR_LEN 6
 
@@ -391,9 +404,31 @@ hntap_host_ether_header_add(char *pkt)
 }
 
 
+int hntap_route_add (int sockfd, const char *dest_addr, const char *gateway_addr) {
+  
+  struct rtentry     route;
+  struct sockaddr_in *addr;
 
+  int err = 0;
+  memset(&route, 0, sizeof(route));
+  addr = (struct sockaddr_in*) &route.rt_gateway;
+  addr->sin_family = AF_INET;
+  addr->sin_addr.s_addr = inet_addr(gateway_addr);
+  addr = (struct sockaddr_in*) &route.rt_dst;
+  addr->sin_family = AF_INET;
+  addr->sin_addr.s_addr = inet_addr(dest_addr);
 
-int hntap_create_tundev (const char *dev, const char *dev_ip)
+  route.rt_flags = RTF_HOST;
+
+  if ((err = ioctl(sockfd, SIOCADDRT, &route)) < 0) {
+      perror("Route add failed");
+      return -1;
+  }
+  return 1;
+}                         
+
+int hntap_create_tundev (const char *dev, const char *dev_ip, const char *dev_ipmask,
+			 const char *route_dest, const char *route_gw)
 {
   struct ifreq ifr;
   int	   fd, err, sock;
@@ -449,12 +484,39 @@ int hntap_create_tundev (const char *dev, const char *dev_ip)
     printf("5\n");
     return err;
   }
-   
+
+  /*
+   * Add the netmask.
+   */
+  memset(&sa, 0, sizeof(struct sockaddr_in));
+  sa.sin_family = AF_INET;
+  sa.sin_addr.s_addr = inet_addr((const char *)dev_ipmask);
+  memcpy(&ifr.ifr_addr, &sa, sizeof(struct sockaddr));
+
+  if ((err = ioctl(sock, SIOCSIFNETMASK, &ifr)) < 0) {
+    perror("IP address mask config failed");
+    close(sock);
+    close(fd);
+    printf("5\n");
+    return err;
+  }
+
+  /*
+   * Add a route to the host/nw dest reachable thru this tap device.
+   */
+  if ((err = hntap_route_add(sock, route_dest, route_gw)) < 0) {
+      perror("IP Route add failed");
+      close(sock);
+      close(fd);
+      printf("5\n");
+      return err;
+  }
+
   return fd;
 }
 
 
-int hntap_create_tapdev (const char *dev, const char *dev_ip)
+int hntap_create_tapdev (const char *dev, const char *dev_ip, const char *dev_ipmask)
 {
   struct ifreq ifr;
   int	   fd, err, sock;
@@ -510,6 +572,19 @@ int hntap_create_tapdev (const char *dev, const char *dev_ip)
     printf("5\n");
     return err;
   }
+
+  memset(&sa, 0, sizeof(struct sockaddr_in));
+  sa.sin_family = AF_INET;
+  sa.sin_addr.s_addr = inet_addr((const char *)dev_ipmask);
+  memcpy(&ifr.ifr_addr, &sa, sizeof(struct sockaddr));
+
+  if ((err = ioctl(sock, SIOCSIFNETMASK, &ifr)) < 0) {
+    perror("IP address mask config failed");
+    close(sock);
+    close(fd);
+    printf("5\n");
+    return err;
+  }
    
   return fd;
 }
@@ -522,10 +597,24 @@ hntap_host_tx_to_model (char *pktbuf, int size)
 
   uint8_t *pkt = (uint8_t *) pktbuf;
   std::vector<uint8_t> ipkt, opkt;
+  std::pair<uint32_t, uint64_t> db;
+  uint8_t *buf;
 
   ipkt.resize(size);
   opkt.resize(size);
   memcpy(ipkt.data(), pkt, size);
+
+  if (!hntap_go_thru_model) {
+
+      /*
+       * Bypass the model and send packet to Network-tap directly. Test only
+       */
+      memcpy(opkt.data(), pkt, size);
+      std::cout << "Host-Tx: Bypassing model, packet size: " << opkt.size() << ", "
+	      << size << " on port: " << port << " cos " << cos
+              << std::endl;
+      goto send_to_nettap;
+  }
 
   lib_model_connect();
 
@@ -538,7 +627,7 @@ hntap_host_tx_to_model (char *pktbuf, int size)
   // --------------------------------------------------------------------------------------------------------//
 
   // Post tx buffer
-  uint8_t *buf = alloc_buffer(ipkt.size());
+  buf = alloc_buffer(ipkt.size());
   assert(buf != NULL);
   memcpy(buf, ipkt.data(), ipkt.size());
   printf("buf %p size %lu\n", buf, ipkt.size());
@@ -549,9 +638,8 @@ hntap_host_tx_to_model (char *pktbuf, int size)
   std::cout << "Writing packet to model! size: " << ipkt.size() << " on port: " << port << std::endl;
 
   printf("\nDOORBELL\n");
-  std::pair<uint32_t, uint64_t> db = make_doorbell(
-                                                   0x3 /* upd */, lif_id /* lif */, TX /* type */,
-                                                   0 /* pid */, 0 /* qid */, 0 /* ring */, 0 /* p_index */);
+  db = make_doorbell(0x3 /* upd */, lif_id /* lif */, TX /* type */,
+		     0 /* pid */, 0 /* qid */, 0 /* ring */, 0 /* p_index */);
   step_doorbell(db.first, db.second);
 
   // Wait for packet to come out of port
@@ -565,18 +653,28 @@ hntap_host_tx_to_model (char *pktbuf, int size)
 
   lib_model_conn_close();
 
+ send_to_nettap:
+
   if (opkt.size()) {
     /*
      * Now that we got the packet from the Model, lets send it out on the Net-Tap interface.
      */
     int nwrite;
-
     hntap_net_client_to_server_nat((char *)opkt.data(), opkt.size());
-
-    if ((nwrite = write(net_tap_fd, opkt.data()+sizeof(struct ether_header_t), opkt.size()-sizeof(struct ether_header_t))) < 0){
-      perror("Writing data");
+    if (hntap_go_thru_model) {
+        nwrite = write(net_tap_fd, opkt.data()+sizeof(struct ether_header_t), opkt.size()-sizeof(struct ether_header_t));
     } else {
-      printf("Wrote packet with %lu bytes to Network Tap (Tx)\n", opkt.size() - sizeof(struct ether_header_t));
+
+        /*
+         * When not going thru model, we'll send the original packet as-is to the net-tap.
+	 */
+        nwrite = write(net_tap_fd, opkt.data() + sizeof(struct vlan_header_t), opkt.size() - sizeof(struct vlan_header_t));
+    }
+
+    if (nwrite < 0) {
+        perror("Host-Tx: Writing data to net-tap");
+    } else {
+        printf("Wrote packet with %lu bytes (%d) to Network Tap (Tx)\n", opkt.size() - sizeof(struct ether_header_t), nwrite);
     }
   }
 }
@@ -623,12 +721,25 @@ hntap_net_rx_to_model (char *pktbuf, int size)
 
   uint8_t *pkt = (uint8_t *) pktbuf;
   std::vector<uint8_t> ipkt,opkt;
+  uint8_t *buf;
 
 
   ipkt.resize(size);
   opkt.resize(size);
 
   memcpy(ipkt.data(), pkt, size);
+
+  if (!hntap_go_thru_model) {
+
+      /*
+       * Bypass the model and send packet to Host-tap directly. Test only.
+       */
+      buf = (uint8_t *) pktbuf;
+      rsize = size;
+      std::cout << "Net-Rx: Bypassing model, packet size!" << rsize << std::endl;
+      goto send_to_hosttap;
+
+  }
 
   lib_model_connect();
 
@@ -641,7 +752,7 @@ hntap_net_rx_to_model (char *pktbuf, int size)
   // --------------------------------------------------------------------------------------------------------//
 
   // Post buffer
-  uint8_t *buf = alloc_buffer(9126);
+  buf = alloc_buffer(9126);
   assert(buf != NULL);
   memset(buf, 0, 9126);
   post_buffer(lif_id, RX, 0, buf, 9126);
@@ -680,15 +791,15 @@ hntap_net_rx_to_model (char *pktbuf, int size)
     hntap_net_client_to_server_nat((char *)opkt.data(), opkt.size());
 
     if ((nwrite = write(net_tap_fd, opkt.data()+sizeof(struct ether_header_t), opkt.size()-sizeof(struct ether_header_t))) < 0){
-      perror("Writing data");
+      perror("Net-Rx: Writing data to net-tap");
     } else {
-      printf("Wrote packet with %lu bytes to Network Tap (Tx)\n", opkt.size() - sizeof(struct ether_header_t));
+      printf("Wrote packet with %lu bytes to Network Tap (Rx)\n", opkt.size() - sizeof(struct ether_header_t));
     }
   }
 
   if (poll_queue(lif_id, RX, 0, 100, &prev_cindex)) {
     std::cout << "Got some packet" << std::endl;
-    // Receive Packet
+    // Receive Packet                                                                                                                                            
     consume_buffer(lif_id, RX, 0, buf, &rsize);
     if (!rsize) {
       std::cout << "Did not get packet back from host side of model!" << std::endl;
@@ -697,20 +808,36 @@ hntap_net_rx_to_model (char *pktbuf, int size)
     }
   }
 
+
+ send_to_hosttap:
+
   if (rsize) {
     hntap_dump_pkt((char *)buf, rsize);
     /*
      * Now that we got the packet from the Model, lets send it out on the Host-Tap interface.
      */
     int nwrite;
+
     hntap_host_server_to_client_nat((char*)buf,rsize);
-    if ((nwrite = write(host_tap_fd, buf + sizeof(struct vlan_header_t), 
-                        rsize - sizeof(struct vlan_header_t))) < 0){
-      perror("Writing data");
+    if (hntap_go_thru_model) {
+
+        nwrite = write(host_tap_fd, buf + sizeof(struct vlan_header_t), 
+		       rsize - sizeof(struct vlan_header_t));
+    } else {
+
+        /*
+         * When not going thru model, we'll send the original packet as-is to the host-tap.
+	 */
+        nwrite = write(host_tap_fd, buf + sizeof(struct ether_header_t), rsize - sizeof(struct ether_header_t));
+    }
+
+    if (nwrite < 0) {
+      perror("Net-Rx: Writing data to host-tap");
     } else {
       printf("Wrote packet with %lu bytes to Host Tap (Tx)\n", rsize - sizeof(struct vlan_header_t));
     }
   }
+
   lib_model_conn_close();
 }
 
@@ -894,21 +1021,33 @@ hntap_do_select_loop (void)
   }
 }
 
-int main()
+int main(int argv, char *argc[])
 {
+
   /* Create tap interface for Host-tap */
   if ((host_tap_fd = hntap_create_tundev(HNTAP_HOST_TAPIF,
-                                         HNTAP_HOST_TAPIF_IP)) < 0 ) {
+                                         HNTAP_HOST_TAPIF_IP,
+                                         HNTAP_HOST_TAPIF_IPMASK,
+					 HNTAP_HOST_ROUTE_DESTIP,
+					 HNTAP_HOST_ROUTE_GWIP)) < 0 ) {
     std::cout << "Error creating tap interface %s!" << HNTAP_HOST_TAPIF << std::endl;
 	exit(1);
   }
 
   /* Create tap interface for Network-tap */
   if ((net_tap_fd = hntap_create_tundev(HNTAP_NET_TAPIF,
-                                        HNTAP_NET_TAPIF_IP)) < 0 ) {
+                                        HNTAP_NET_TAPIF_IP,
+                                        HNTAP_NET_TAPIF_IPMASK,
+					HNTAP_NET_ROUTE_DESTIP,
+					HNTAP_NET_ROUTE_GWIP)) < 0 ) {
     std::cout << "Error creating tap interface %s!" << HNTAP_NET_TAPIF << std::endl;
 	exit(1);
   }
+
+  /*
+   * Setup a tcp server on the specified port.
+   */
+  tcp_server_main(argv, argc);
 
   hntap_do_select_loop();
 

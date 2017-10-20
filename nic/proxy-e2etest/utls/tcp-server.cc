@@ -8,24 +8,27 @@ pthread_t server_thread;
 
 void *main_server(void*);
 
-int main(int argv, char* argc[]) {
+int tcp_server_main(int argv, char* argc[]) {
 
   if (argv != 2) {
-    printf("usage: ./tls port\n");
+    fprintf(stderr, "usage: ./hntap <tcp-port-num>\n");
     exit(-1);
   }
   port = atoi(argc[1]);
-  printf("Serving port %i\n", port);
+  fprintf(stderr, "Serving port %i\n", port);
 
 
   int rc = pthread_create(&server_thread, NULL, main_server, NULL);
   if (rc) {
-    printf("Error creating server %i\n", rc);
+    fprintf(stderr, "Error creating server %i\n", rc);
     exit(-1);
   }
+
+  /*
   while (1) { 
 	sleep(2);
   }
+  */
 
   return 0;
 }
@@ -41,6 +44,9 @@ int OpenListener(int port)
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+  int optval = 1;
+  setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval, sizeof(optval));
+
   if ( bind(sd, (const struct sockaddr*)&addr, sizeof(addr)) != 0 )
     {
       perror("can't bind port");
@@ -51,6 +57,7 @@ int OpenListener(int port)
       perror("Can't configure listening port");
       abort();
     }
+  fprintf(stderr, "Created listener on port %d!!\n", port);
   return sd;
 }
 
@@ -65,18 +72,19 @@ void test_tcp(int sd)
     bytes = recv(sd, buf, sizeof(buf), 0);/* get request */
     if ( bytes > 0 ) {
       bytes_recv += bytes;
-      printf("Bytes recv: %i\n", bytes_recv);
+      fprintf(stderr, "Bytes recv: %i\n", bytes_recv);
     }
     else {
       ERR_print_errors_fp(stderr);
       break;
     }
     for (i = 0; i < bytes; i++) {
-      printf(" %02x", buf[i]);
+      fprintf(stderr, " %02x", buf[i]);
     }
-    printf("\n");
+    fprintf(stderr, "  %s", buf);
+    fprintf(stderr, "\n");
     send_bytes = send(sd, buf, bytes, 0);
-    printf("Bytes sent: %i\n", send_bytes);
+    fprintf(stderr, "Bytes sent: %i\n", send_bytes);
     bytes_sent += send_bytes; 
   } while (bytes > 0 );
 
@@ -89,12 +97,13 @@ void Servlet(int client)/* Serve the connection -- threadable */
 
   test_tcp(sd);
 
-  while (1) {
+  do {
       sleep(5);
-  }
+  } while(0);
 
-  close(sd);/* close connection */
-  exit(0);
+  //close(sd);/* close connection */
+
+  //exit(0);
 }
 
 void *main_server(void* unused)
@@ -105,7 +114,7 @@ void *main_server(void* unused)
     {
       struct sockaddr_in addr;
       unsigned int len = sizeof(addr);
-
+      fprintf(stderr, "Waiting to accept!!\n");
       int client = accept(server, (struct sockaddr*) &addr, &len);/* accept connection as usual */
       Servlet(client);/* service connection */
     }

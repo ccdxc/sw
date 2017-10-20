@@ -163,6 +163,7 @@ cc_binary(
     name = "nic_proxy-e2etest_hntap",
     srcs = [
         "test/hntap.cc",
+        "utls/tcp-server.cc"
     ],
     deps = [
         "//nic/model_sim/include:modelsim_includes",
@@ -179,6 +180,7 @@ cc_binary(
         #"//nic/hal/test/utils:haltestutils",
         #"//nic/hal/lkl:lkl_api",
         #"//nic:lkl",
+        "//nic:openssl-native",
 
         # PD
         #"//nic/hal/pd/common:pdcommon",
@@ -327,7 +329,7 @@ cc_binary(
 cc_binary(
     name = "nic_proxy-e2etest_tcp-server",
     srcs = [
-        "utls/tcp-server.cc",
+        "utls/tcp-client.cc",
     ],
     deps = [
         #"//nic/model_sim/include:modelsim_includes",
@@ -365,4 +367,3 @@ cc_binary(
         #"//nic:asic_libs",
     ],
 )
-

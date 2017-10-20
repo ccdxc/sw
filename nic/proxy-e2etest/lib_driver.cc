@@ -48,7 +48,7 @@ map<tuple<uint64_t, uint32_t, uint32_t>, queue_info_t> queue_map;
 
 uint64_t
 get_qstate_addr(uint64_t lif, uint32_t qtype, uint32_t qid) {
-  shared_ptr<Channel> channel = CreateChannel("localhost:8773", InsecureChannelCredentials());
+  shared_ptr<Channel> channel = CreateChannel("localhost:50054", InsecureChannelCredentials());
   StubOptions options;
 
   unique_ptr<Interface::Stub> svc = Interface::NewStub(channel, options);

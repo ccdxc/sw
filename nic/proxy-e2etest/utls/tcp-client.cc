@@ -3,7 +3,7 @@
 int bytes_recv;
 int port;
 char* test_data;
-
+bool from_localhost;
 
 pthread_t server_thread;
 
@@ -12,14 +12,42 @@ int main_tcp_client(void);
 
 int main(int argv, char* argc[]) {
 
-  if (argv != 3) {
-    printf("usage: ./tls port test_data_file\n");
+  int opt = 0;
+
+  if (argv != 7) {
+    fprintf(stderr, "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net \n");
     exit(-1);
   }
-  port = atoi(argc[1]);
-  printf("Connecting to port %i\n", port);
-  test_data = argc[2];
 
+  while ((opt = getopt(argv, argc, "p:d:m:")) != -1) {
+    switch (opt) {
+    case 'p':
+        port = atoi(optarg);
+	fprintf(stderr, "port=%d\n", port);
+	break;
+    case 'd':
+        test_data = optarg;
+	break;
+    case 'm':
+        if (!strncmp(optarg, "from-host", 10)) {
+            from_localhost = true;
+        } else if (!strncmp(optarg, "from-net", 10)) {
+	    from_localhost = false;
+	} else {
+            fprintf(stderr, "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net \n");
+	    exit(-1);
+	}
+        break;
+    case '?':
+    default:
+        fprintf(stderr, "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net \n");
+	exit(-1);
+        break;
+    }
+
+  }
+
+  fprintf(stderr, "Connecting to port %i, test-data file %s\n", port, test_data);
 
   main_tcp_client();
   return 0;
@@ -36,19 +64,30 @@ int create_socket() {
   src_addr.sin_family=AF_INET;
   src_addr.sin_port=htons(0xbaba);
 
-  inet_pton(AF_INET, "64.1.0.4", &src_addr.sin_addr.s_addr);
+  if (from_localhost) {
+      inet_pton(AF_INET, "64.1.0.4", &src_addr.sin_addr.s_addr);
+  } else {
+      inet_pton(AF_INET, "64.0.0.2", &src_addr.sin_addr.s_addr);
+  }
+
+
+  int optval = 1;
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval, sizeof(optval));
 
   if ( bind(sockfd, (const struct sockaddr*)&src_addr, sizeof(src_addr)) != 0 ) {
     perror("can't bind port");
     exit(-1);
   }
 
-
   memset(&(dest_addr), '\0', sizeof(dest_addr));
   dest_addr.sin_family=AF_INET;
   dest_addr.sin_port=htons(port);
 
-  inet_pton(AF_INET, "64.0.0.1", &dest_addr.sin_addr.s_addr);
+  if (from_localhost) {
+      inet_pton(AF_INET, "64.0.0.1", &dest_addr.sin_addr.s_addr);
+  } else {
+      inet_pton(AF_INET, "64.1.0.3", &dest_addr.sin_addr.s_addr);
+  }
 
   if ( connect(sockfd, (struct sockaddr *) &dest_addr,
                sizeof(struct sockaddr_in)) == -1 ) {
@@ -86,16 +125,16 @@ void test_tcp(int transport_fd)
     totalbytes += bytes;
     if (bytes > 0) {
       send(transport_fd, buf, bytes, 0);
-      printf("Sent bytes so far %i\n", totalbytes);
+      fprintf(stderr, "Sent bytes so far %i\n", totalbytes);
     } else {
       break;
     }
-    res = recv(transport_fd, buf, 1, 0);
+    res = recv(transport_fd, buf, sizeof(buf), 0);
     total_recv += res;
     if (res < 0) {
-      printf("TCP Read error: %i\n", res);
+      fprintf(stderr, "TCP Read error: %i\n", res);
     } else {
-      printf("Received tcp test data: %i %i\n", res, total_recv);
+      fprintf(stderr, "Received tcp test data: %i %i, %s\n", res, total_recv, buf);
     }
 	
   } while(bytes > 0);
@@ -106,7 +145,7 @@ void test_tcp(int transport_fd)
   end = clock();
   cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-  printf("TCP talk time: %.02f\n", cpu_time_used);
+  fprintf(stderr, "TCP talk time: %.02f\n", cpu_time_used);
 }
 
 int main_tcp_client() 
@@ -116,10 +155,10 @@ int main_tcp_client()
 
   transport_fd = create_socket();
 
-  printf("Connected ! - transport fd %d\n", transport_fd);
-  while(1) {
+  fprintf(stderr, "Connected ! - transport fd %d\n", transport_fd);
+  do {
     sleep(5);
-  }
+  } while(0);
 
   // Start tests
   test_tcp(transport_fd);
