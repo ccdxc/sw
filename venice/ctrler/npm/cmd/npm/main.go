@@ -18,6 +18,7 @@ func main() {
 		logToFile    = flag.String("logtofile", "/var/log/pensando/npm.log", "Redirect logs to file")
 		listenURL    = flag.String("listen-url", ":"+globals.NpmRPCPort, "gRPC listener URL")
 		resolverURLs = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:Port>")
+		restURL      = flag.String("rest-url", ":"+globals.NpmRESTPort, "rest listener URL")
 	)
 	flag.Parse()
 
@@ -45,7 +46,7 @@ func main() {
 	waitCh := make(chan bool)
 
 	// create the controller
-	ctrler, err := npm.NewNetctrler(*listenURL, globals.APIServer, globals.VCHub, *resolverURLs)
+	ctrler, err := npm.NewNetctrler(*listenURL, *restURL, globals.APIServer, globals.VCHub, *resolverURLs)
 	if err != nil || ctrler == nil {
 		log.Fatalf("Error creating controller instance: %v", err)
 	}

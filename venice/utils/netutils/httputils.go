@@ -123,9 +123,5 @@ func HTTPGet(url string, jdata interface{}) error {
 		return err
 	}
 
-	if err := json.Unmarshal(response, jdata); err != nil {
-		return err
-	}
-
-	return nil
+	return json.Unmarshal(response, jdata)
 }

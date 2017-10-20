@@ -132,6 +132,5 @@ func (n *NMD) getListenURL() string {
 	if n.listener != nil {
 		return n.listener.Addr().String()
 	}
-
 	return ""
 }

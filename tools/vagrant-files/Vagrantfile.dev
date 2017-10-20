@@ -32,6 +32,10 @@ end
       node.vm.network :private_network, ip: "0.0.0.0", virtualbox__intnet: "data_net", auto_config: false
 
       node.vm.provider "virtualbox" do |v|
+      if ENV['SCALE_SETUP']
+              v.cpus = 4
+              v.memory = 16384
+      else
           if n == 0
               v.cpus = 2
               v.memory = 3072
@@ -42,6 +46,7 @@ end
               v.cpus = 1
               v.memory = 1024
           end
+       end
           v.linked_clone = true # use base image and clone from it. for multi-VM, saves space
 
           # this makes provisioning faster for yum-install type of stuff with caching
@@ -61,6 +66,18 @@ end
           v.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
           v.customize ['modifyvm', :id, '--paravirtprovider', "kvm"]
       end
+
+        if ENV['SCALE_SETUP']
+              node.vm.provision "shell", inline: <<-END_OF_SCRIPT
+                mkdir -p /var/lib/pensando
+                mkdir -p /var/lib/docker
+                cat >> /etc/fstab <<END
+                        none /var/lib/pensando tmpfs defaults 0 0
+                        none /var/lib/docker tmpfs defaults 0 0
+END
+                mount -a
+                END_OF_SCRIPT
+        end
 
       node.vm.provision "shell" do |s|
           s.inline = preamble_script <<-EOF

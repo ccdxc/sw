@@ -9,6 +9,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
+	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	"golang.org/x/net/context"
@@ -16,7 +17,8 @@ import (
 
 // NetworkRPCServer is the network RPC server
 type NetworkRPCServer struct {
-	stateMgr *statemgr.Statemgr // reference to network manager
+	stateMgr   *statemgr.Statemgr // reference to network manager
+	debugStats *debug.Stats
 }
 
 // GetNetwork returns an instance of network
@@ -145,7 +147,7 @@ func (n *NetworkRPCServer) WatchNetworks(sel *api.ObjectMeta, stream netproto.Ne
 					},
 				},
 			}
-
+			n.debugStats.Increment("NetworkWatchSentEvent")
 			err = stream.Send(&watchEvt)
 			if err != nil {
 				log.Errorf("Error sending stream. Err: %v", err)
@@ -159,6 +161,6 @@ func (n *NetworkRPCServer) WatchNetworks(sel *api.ObjectMeta, stream netproto.Ne
 }
 
 // NewNetworkRPCServer returns a network RPC server
-func NewNetworkRPCServer(stateMgr *statemgr.Statemgr) (*NetworkRPCServer, error) {
-	return &NetworkRPCServer{stateMgr: stateMgr}, nil
+func NewNetworkRPCServer(stateMgr *statemgr.Statemgr, debugStats *debug.Stats) (*NetworkRPCServer, error) {
+	return &NetworkRPCServer{stateMgr: stateMgr, debugStats: debugStats}, nil
 }

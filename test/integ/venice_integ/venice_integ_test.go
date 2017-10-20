@@ -41,12 +41,13 @@ import (
 
 // integ test suite parameters
 const (
-	numIntegTestAgents = 3
-	integTestNpmURL    = "localhost:9495"
-	integTestApisrvURL = "localhost:8082"
-	integTestAPIGWURL  = "localhost:9092"
-	vchTestURL         = "localhost:19003"
-	agentDatapathKind  = "mock"
+	numIntegTestAgents  = 3
+	integTestNpmURL     = "localhost:9495"
+	integTestNpmRESTURL = "localhost:9496"
+	integTestApisrvURL  = "localhost:8082"
+	integTestAPIGWURL   = "localhost:9092"
+	vchTestURL          = "localhost:19003"
+	agentDatapathKind   = "mock"
 )
 
 // veniceIntegSuite is the state of integ test
@@ -135,7 +136,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *C) {
 	go it.apiGw.Run(apigwConfig)
 
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestApisrvURL, "", "")
+	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestNpmRESTURL, integTestApisrvURL, "", "")
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
 

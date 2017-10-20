@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/venice/orch"
 	vchserver "github.com/pensando/sw/venice/orch/vchub/server"
 	vchstore "github.com/pensando/sw/venice/orch/vchub/store"
+	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -77,7 +78,7 @@ func TestApiWatcher(t *testing.T) {
 	time.Sleep(time.Millisecond * 10)
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, apisrvURL, vmmURL, "")
+	watcher, err := NewWatcher(stateMgr, apisrvURL, vmmURL, "", debug.New(t.Name()))
 	AssertOk(t, err, "Error creating watchr")
 	Assert(t, (watcher != nil), "Error creating watcher", watcher)
 	time.Sleep(time.Millisecond * 10)
@@ -210,7 +211,7 @@ func TestApiWatcherConnectDisconnect(t *testing.T) {
 	Assert(t, (kvs != nil), "Error creating kvstore")
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, "", vmmURL, "")
+	watcher, err := NewWatcher(stateMgr, "", vmmURL, "", debug.New(t.Name()))
 	AssertOk(t, err, "Error creating watchr")
 	Assert(t, (watcher != nil), "Error creating watcher", watcher)
 	time.Sleep(time.Millisecond * 10)

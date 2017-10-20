@@ -1,0 +1,7 @@
+{
+    "ClusterVIP": "10.100.0.10",
+    "NumVeniceNodes" : 3,
+    "SSHUser":        "vagrant",
+    "SSHPasswd":      "vagrant",
+    "SSHAuthMethod":  "password"
+}

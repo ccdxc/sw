@@ -25,13 +25,14 @@ const (
 	VCHubAPIPort = "9004"
 
 	// NPM
-	NpmRPCPort = "9005"
+	NpmRPCPort  = "9005"
+	NpmRESTPort = "9006"
 
 	// Agent
-	AgentRESTPort = "9006"
+	AgentRESTPort = "9007"
 
 	// Cluster Key Managements Services
-	CKMAPILocalPort = "9007"
+	CKMAPILocalPort = "9008"
 	CKMEndpointName = "ckm"
 
 	// NMD

@@ -17,29 +17,29 @@ import (
 var _ = Describe("cluster tests", func() {
 	Context("Services should be running", func() {
 		It("pen-base should be running on all nodes", func() {
-			for _, ip := range e2eTest.veniceNodeIPs {
-				out := commandOutput(ip, "docker ps -q -f Name=pen-cmd")
+			for _, ip := range ts.tu.VeniceNodeIPs {
+				out := ts.tu.CommandOutput(ip, "docker ps -q -f Name=pen-cmd")
 				Expect(out).ShouldNot(BeEmpty(), "pen-cmd container should be running on %s", ip)
 			}
 		})
 		It("etcd should be running on all quorum nodes", func() {
-			for _, qnode := range e2eTest.quorumnodes {
-				ip := e2eTest.nameToIPMap[qnode]
-				out := commandOutput(ip, "docker ps -q -f Name=pen-etcd")
+			for _, qnode := range ts.tu.QuorumNodes {
+				ip := ts.tu.NameToIPMap[qnode]
+				out := ts.tu.CommandOutput(ip, "docker ps -q -f Name=pen-etcd")
 				Expect(out).ShouldNot(BeEmpty(), "pen-etcd container should be running on %s(%s)",
-					e2eTest.ipToNameMap[ip], ip)
+					ts.tu.IPToNameMap[ip], ip)
 			}
 		})
 		It("etcd should not be running on non-quorum nodes", func() {
-			ips := nonClusterNodes()
+			ips := ts.tu.NonQuorumNodes()
 			for nonQnode := range ips {
-				out := commandOutput(nonQnode, "docker ps -q -f Name=pen-etcd")
+				out := ts.tu.CommandOutput(nonQnode, "docker ps -q -f Name=pen-etcd")
 				Expect(out).Should(BeEmpty(), "pen-etcd container should not be running on %s(%s)",
-					e2eTest.ipToNameMap[nonQnode], nonQnode)
+					ts.tu.IPToNameMap[nonQnode], nonQnode)
 			}
 		})
 		It("kubernetes indicated all pods to be Running", func() {
-			out := strings.Split(vipCommandOutput("kubectl get pods --no-headers"), "\n")
+			out := strings.Split(ts.tu.VIPCommandOutput("kubectl get pods --no-headers"), "\n")
 			for _, line := range out {
 				Expect(line).Should(ContainSubstring("Running"), "pod should be in Running state")
 			}
@@ -53,7 +53,7 @@ var _ = Describe("cluster tests", func() {
 			err error
 		)
 		BeforeEach(func() {
-			apiGwAddr := e2eTest.ClusterVIP + ":" + globals.APIGwRESTPort
+			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 			cmdClient := cmdclient.NewRestCrudClientCmdV1(apiGwAddr)
 			clusterIf := cmdClient.Cluster()
 			obj = api.ObjectMeta{Name: "testCluster"}

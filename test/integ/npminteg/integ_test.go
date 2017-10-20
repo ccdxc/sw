@@ -22,6 +22,7 @@ import (
 const (
 	numIntegTestAgents = 16
 	integTestRPCURL    = "localhost:9595"
+	integTestRESTURL   = "localhost:9596"
 	agentDatapathKind  = "mock"
 )
 
@@ -52,7 +53,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	it.datapathKind = datapath.Kind(*datapathKind)
 
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestRPCURL, "", "", "")
+	ctrler, err := npm.NewNetctrler(integTestRPCURL, integTestRESTURL, "", "", "")
 	c.Assert(err, IsNil)
 	it.ctrler = ctrler
 

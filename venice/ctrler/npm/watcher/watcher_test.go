@@ -8,6 +8,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
+	"github.com/pensando/sw/venice/utils/debug"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -41,7 +42,7 @@ func TestNetworkWatcher(t *testing.T) {
 	}
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, "", "", "")
+	watcher, err := NewWatcher(stateMgr, "", "", "", debug.New(t.Name()))
 	if err != nil {
 		t.Fatalf("Error creating api server watcher. Err: %v", err)
 		return
@@ -85,7 +86,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	}
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, "", "", "")
+	watcher, err := NewWatcher(stateMgr, "", "", "", debug.New(t.Name()))
 	if err != nil {
 		t.Fatalf("Error creating api server watcher. Err: %v", err)
 		return
@@ -145,7 +146,7 @@ func TestSecurityGroupWatcher(t *testing.T) {
 	}
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, "", "", "")
+	watcher, err := NewWatcher(stateMgr, "", "", "", debug.New(t.Name()))
 	if err != nil {
 		t.Fatalf("Error creating api server watcher. Err: %v", err)
 		return
@@ -189,7 +190,7 @@ func TestSgPolicyWatcher(t *testing.T) {
 	}
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, "", "", "")
+	watcher, err := NewWatcher(stateMgr, "", "", "", debug.New(t.Name()))
 	if err != nil {
 		t.Fatalf("Error creating api server watcher. Err: %v", err)
 		return

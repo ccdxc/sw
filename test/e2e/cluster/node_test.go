@@ -23,13 +23,13 @@ var _ = Describe("node tests", func() {
 			err      error
 		)
 		BeforeEach(func() {
-			if e2eTest.NumQuorumNodes == e2eTest.NumVeniceNodes {
+			if ts.tu.NumQuorumNodes == ts.tu.NumVeniceNodes {
 				Skip("All venice nodes are quorum nodes. Skipping non-quorum node addition tests")
 			}
-			numAvailNodes := rand.Intn(e2eTest.NumVeniceNodes - e2eTest.NumQuorumNodes)
-			nonQnode = "node" + strconv.Itoa(e2eTest.NumQuorumNodes+1+numAvailNodes)
+			numAvailNodes := rand.Intn(ts.tu.NumVeniceNodes - ts.tu.NumQuorumNodes)
+			nonQnode = "node" + strconv.Itoa(ts.tu.NumQuorumNodes+1+numAvailNodes)
 
-			apiGwAddr := e2eTest.ClusterVIP + ":" + globals.APIGwRESTPort
+			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 			cmdClient := cmdclient.NewRestCrudClientCmdV1(apiGwAddr)
 			nodeIf = cmdClient.Node()
 			node := &cmd.Node{
@@ -61,7 +61,7 @@ var _ = Describe("node tests", func() {
 			}
 
 			Eventually(func() bool {
-				out := vipCommandOutput("kubectl get pods  -l name=pen-ntp -o json")
+				out := ts.tu.VIPCommandOutput("kubectl get pods  -l name=pen-ntp -o json")
 				json.Unmarshal([]byte(out), &kubeOut)
 				for _, i := range kubeOut.Items {
 					if i.Spec.NodeName == nonQnode {
@@ -72,7 +72,7 @@ var _ = Describe("node tests", func() {
 			}, 35, 1).Should(BeTrue(), "pen-ntp container should be scheduled by kubernetes on node %s", nonQnode)
 
 			Eventually(func() string {
-				return commandOutput(e2eTest.nameToIPMap[nonQnode], "/usr/bin/docker ps -q -f 'label=io.kubernetes.container.name=pen-ntp'")
+				return ts.tu.CommandOutput(ts.tu.NameToIPMap[nonQnode], "/usr/bin/docker ps -q -f 'label=io.kubernetes.container.name=pen-ntp'")
 			}, 35, 1).ShouldNot(BeEmpty(), "pen-ntp docker container should be running on %s", nonQnode)
 
 		})

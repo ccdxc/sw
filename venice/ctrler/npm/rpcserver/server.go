@@ -5,6 +5,7 @@ package rpcserver
 import (
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
+	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -16,6 +17,7 @@ type RPCServer struct {
 	networkHandler  *NetworkRPCServer   // network RPC server
 	endpointHandler *EndpointRPCHandler // endpoint RPC handler
 	securityHandler *SecurityRPCServer  // security RPC handler
+	debugStats      *debug.Stats        // Debug stats
 }
 
 // Stop stops the rpc server
@@ -25,7 +27,7 @@ func (rs *RPCServer) Stop() error {
 }
 
 // NewRPCServer creates a new instance of
-func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr) (*RPCServer, error) {
+func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr, debugStats *debug.Stats) (*RPCServer, error) {
 	// create an RPC server
 	grpcServer, err := rpckit.NewRPCServer("netctrler", listenURL)
 	if err != nil {
@@ -33,7 +35,7 @@ func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr) (*RPCServer, er
 	}
 
 	// create network RPC server
-	networkHandler, err := NewNetworkRPCServer(stateMgr)
+	networkHandler, err := NewNetworkRPCServer(stateMgr, debugStats)
 	if err != nil {
 		log.Fatalf("Error creating network rpc server. Err; %v", err)
 	}
@@ -61,6 +63,7 @@ func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr) (*RPCServer, er
 		networkHandler:  networkHandler,
 		endpointHandler: endpointHandler,
 		securityHandler: securityHandler,
+		debugStats:      debugStats,
 	}
 
 	return &rpcServer, nil

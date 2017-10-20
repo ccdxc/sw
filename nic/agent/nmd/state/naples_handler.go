@@ -3,11 +3,12 @@
 package state
 
 import (
+	"time"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/utils/log"
-	"time"
 )
 
 const (
@@ -86,6 +87,8 @@ func (n *NMD) StartManagedMode() error {
 
 			// For the NIC in Naples Config, start the registration
 			mac := n.config.Spec.PrimaryMac
+			// TODO
+			// mac = n.nodeUUID
 
 			// Construct smartNIC object
 			nicObj := cmd.SmartNIC{

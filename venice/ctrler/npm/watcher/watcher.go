@@ -9,6 +9,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
+	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -27,27 +28,35 @@ type Watcher struct {
 	watchCtx        context.Context         // ctx for watchers
 	watchCancel     context.CancelFunc      // cancel for watchers
 	stopFlag        bool                    // boolean flag to exit the API watchers
+	debugStats      *debug.Stats            // debug Stats
 }
 
 // handleNetworkEvent handles network event
 func (w *Watcher) handleNetworkEvent(et kvstore.WatchEventType, nw *network.Network) {
 	switch et {
 	case kvstore.Created:
+		w.debugStats.Increment("CreateNetwork")
 		// ask statemgr to create the network
 		err := w.statemgr.CreateNetwork(nw)
 		if err != nil {
 			log.Errorf("Error creating network {%+v}. Err: %v", nw, err)
+			w.debugStats.Increment("CreateNetworkFails")
 			return
 		}
+
 	case kvstore.Updated:
 		// FIXME:
 	case kvstore.Deleted:
+
+		w.debugStats.Increment("DeleteNetwork")
 		// ask statemgr to delete the network
 		err := w.statemgr.DeleteNetwork(nw.Tenant, nw.Name)
 		if err != nil {
 			log.Errorf("Error deleting network {%+v}. Err: %v", nw, err)
+			w.debugStats.Increment("DeleteNetworkFails")
 			return
 		}
+
 	}
 }
 
@@ -153,10 +162,10 @@ func (w *Watcher) runNetwatcher() {
 				return
 			}
 
-			log.Infof("Watcher: Got network watch event: {%+v}", nw)
+			log.Infof("Watcher: Got network watch event(%s): {%+v}", evt.Type, nw)
 
-			// process each event in its own go routine
-			go w.handleNetworkEvent(evt.Type, nw)
+			// TODO process each event in its own go routine
+			w.handleNetworkEvent(evt.Type, nw)
 		}
 	}
 }
@@ -191,8 +200,8 @@ func (w *Watcher) runVmmEpwatcher() {
 
 			log.Infof("Watcher: Got vmm endpoint watch event(%s): {%+v}", evt.Type, ep)
 
-			// process each event in its own go routine
-			go w.handleEndpointEvent(evt.Type, ep)
+			// TODO process each event in its own go routine
+			w.handleEndpointEvent(evt.Type, ep)
 		}
 	}
 }
@@ -227,8 +236,8 @@ func (w *Watcher) runSgwatcher() {
 
 			log.Infof("Watcher: Got SecurityGroup watch event(%s): {%+v}", evt.Type, ep)
 
-			// process each event in its own go routine
-			go w.handleSgEvent(evt.Type, ep)
+			// TODO process each event in its own go routine
+			w.handleSgEvent(evt.Type, ep)
 		}
 	}
 }
@@ -263,8 +272,8 @@ func (w *Watcher) runSgPolicyWatcher() {
 
 			log.Infof("Watcher: Got SgPolicy watch event(%s): {%+v}", evt.Type, sgp)
 
-			// process each event in its own go routine
-			go w.handleSgPolicyEvent(evt.Type, sgp)
+			// TODO process each event in its own go routine
+			w.handleSgPolicyEvent(evt.Type, sgp)
 		}
 	}
 }
@@ -286,7 +295,7 @@ func (w *Watcher) Stop() {
 }
 
 // NewWatcher returns a new watcher object
-func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL, resolverURLs string) (*Watcher, error) {
+func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL, resolverURLs string, debugStats *debug.Stats) (*Watcher, error) {
 	// create context and cancel
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
@@ -299,6 +308,7 @@ func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL, vmmURL, resolverURLs str
 		sgPolicyWatcher: make(chan kvstore.WatchEvent, watcherQueueLen),
 		watchCtx:        watchCtx,
 		watchCancel:     watchCancel,
+		debugStats:      debugStats,
 	}
 
 	// start a go routine to handle messages coming on watcher channel
