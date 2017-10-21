@@ -10,6 +10,8 @@ import (
 	"encoding/asn1"
 	"fmt"
 	"math/big"
+
+	"github.com/pkg/errors"
 )
 
 // from src/pkg/crypto/rsa/pkcs1v15.go
@@ -137,5 +139,28 @@ func getSignerFromPrivateKey(key crypto.PrivateKey) crypto.Signer {
 		return key.(*ecdsa.PrivateKey)
 	default:
 		return nil
+	}
+}
+
+// VerifySignature verifies that the RSA/ECDSA signature of msg using the supplied public key
+func VerifySignature(publicKey crypto.PublicKey, signature, msg []byte, opts crypto.Hash) (bool, error) {
+	switch keyType := publicKey.(type) {
+	case *rsa.PublicKey:
+		key := publicKey.(*rsa.PublicKey)
+		err := rsa.VerifyPKCS1v15(key, opts, msg, signature)
+		if err != nil {
+			return false, errors.Wrapf(err, "Error verifying RSA signature")
+		}
+		return true, nil
+	case *ecdsa.PublicKey:
+		key := publicKey.(*ecdsa.PublicKey)
+		sigParams := new(struct{ R, S *big.Int })
+		_, err := asn1.Unmarshal(signature, sigParams)
+		if err != nil {
+			return false, errors.Wrapf(err, "Error parsing ECDSA signature")
+		}
+		return ecdsa.Verify(key, msg, sigParams.R, sigParams.S), nil
+	default:
+		return false, fmt.Errorf("Unknown keypair type: %T", keyType)
 	}
 }

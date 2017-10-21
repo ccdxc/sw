@@ -1,3 +1,7 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+// +build linux
+
 package keymgr
 
 // pkcs11_be.go implements a PKCS#11 backend for KeyMgr

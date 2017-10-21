@@ -8,9 +8,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/asn1"
 	"fmt"
-	"math/big"
 	mathrand "math/rand"
 	"reflect"
 	"sync"
@@ -30,6 +28,9 @@ var keyPairTypes = []KeyType{
 	//ECDSA521, // not supported by SoftHSM installed in dev VMs
 }
 
+// ---------------------------------------------------------------------------------------//
+// helper functions for multiple test-cases                                               //
+// ---------------------------------------------------------------------------------------//
 func testObjectStoreSerialAccess(t *testing.T, keyMgr *KeyMgr, prefix string) {
 	keyID := prefix + "-key"
 	certID := prefix + "-cert"
@@ -111,36 +112,20 @@ func testSerialKeyOps(t *testing.T, keyMgr *KeyMgr, keyPrefix string) {
 
 		signature, err := keyPair.Sign(rand.Reader, msg, signerOpts)
 		AssertOk(t, err, fmt.Sprintf("Error signing msg with key pair, type: %d", i))
-
-		switch keyType := keyPair.Public().(type) {
-		case *rsa.PublicKey:
-			pubKey := keyPair.Public().(*rsa.PublicKey)
-			err = rsa.VerifyPKCS1v15(pubKey, signerOpts, msg, signature)
-			AssertOk(t, err, fmt.Sprintf("Error verifying RSA signature, type: %d", i))
-
-		case *ecdsa.PublicKey:
-			pubKey := keyPair.Public().(*ecdsa.PublicKey)
-			sigParams := new(struct{ R, S *big.Int })
-			_, err := asn1.Unmarshal(signature, sigParams)
-			AssertOk(t, err, fmt.Sprintf("Error parsing ECDSA signature, type: %d", i))
-			valid := ecdsa.Verify(pubKey, msg, sigParams.R, sigParams.S)
-			Assert(t, valid, fmt.Sprintf("Invalid ECDSA signature, type: %d", i))
-
-		default:
-			t.Fatalf("Unknown keypair type: %T", keyType)
-		}
+		valid, err := VerifySignature(keyPair.Public(), signature, msg, signerOpts)
+		AssertOk(t, err, fmt.Sprintf("Error verifying signature, key pair type: %d", i))
+		Assert(t, valid, fmt.Sprintf("Signature not valid, key pair type: %d", i))
 	}
 }
 
 // ---------------------------------------------------------------------------------------//
-// The following test functions are meant to be invoked from backend-specific test suites.
-// They are supposed to succeed for all backends.
+// Test functions. Should pass for all backends.                                          //
+// ---------------------------------------------------------------------------------------//
 
 // test creating, storing, retrieving and destroying objects
 func testObjectStore(t *testing.T, be Backend) {
 	keyMgr, err := NewKeyMgr(be)
 	AssertOk(t, err, "Error instantiating KeyMgr")
-	defer be.Close()
 
 	// NEGATIVE TEST-CASES
 	// Empty ID
@@ -259,4 +244,18 @@ func testParallelAccess(t *testing.T, be Backend) {
 		}()
 	}
 	wg.Wait()
+}
+
+// ---------------------------------------------------------------------------------------//
+// "main" function. Execute all tests for all backends.                                   //
+// ---------------------------------------------------------------------------------------//
+func testAll(t *testing.T, backends []Backend) {
+	// Tests for individual backends
+	for _, be := range backends {
+		testObjectStore(t, be)
+		testKeyOps(t, be)
+		testKeyImport(t, be)
+		testWarmStart(t, be)
+		testParallelAccess(t, be)
+	}
 }

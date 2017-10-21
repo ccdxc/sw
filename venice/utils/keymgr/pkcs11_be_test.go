@@ -1,5 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
+// +build linux
+
 package keymgr
 
 import (
@@ -19,7 +21,6 @@ func newPkcs11Backend(t *testing.T) *Pkcs11Backend {
 
 func TestInitPkcs11Backend(t *testing.T) {
 	// NEGATIVE TEST-CASES
-
 	// empty module path
 	_, err := NewPkcs11Backend("", "hello", "1234")
 	Assert(t, err != nil, "NewPkcs11Backend succeeded when expected to fail")
@@ -55,34 +56,4 @@ func TestInitPkcs11Backend(t *testing.T) {
 			defer be2.Close()
 		}
 	}
-}
-
-func TestPkcs11BackendObjectStore(t *testing.T) {
-	be := newPkcs11Backend(t)
-	defer be.Close()
-	testObjectStore(t, be)
-}
-
-func TestPkcs11BackendKeyOps(t *testing.T) {
-	be := newPkcs11Backend(t)
-	defer be.Close()
-	testKeyOps(t, be)
-}
-
-func TestPkcs11BackendKeyImport(t *testing.T) {
-	be := newPkcs11Backend(t)
-	defer be.Close()
-	testKeyImport(t, be)
-}
-
-func TestPkcs11BackendWarmStart(t *testing.T) {
-	be := newPkcs11Backend(t)
-	defer be.Close()
-	testWarmStart(t, be)
-}
-
-func TestPkcs11BackendParallelAccess(t *testing.T) {
-	be := newPkcs11Backend(t)
-	defer be.Close()
-	testParallelAccess(t, be)
 }

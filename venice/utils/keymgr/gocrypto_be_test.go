@@ -26,33 +26,3 @@ func newGoCryptoBackend(t *testing.T) Backend {
 	AssertOk(t, err, "Error instantiating GoCrypto backend")
 	return be
 }
-
-func TestGoCryptoBackendObjectStore(t *testing.T) {
-	be := newGoCryptoBackend(t)
-	defer be.Close()
-	testObjectStore(t, be)
-}
-
-func TestGoCryptoBackendKeyOps(t *testing.T) {
-	be := newGoCryptoBackend(t)
-	defer be.Close()
-	testKeyOps(t, be)
-}
-
-func TestGoCryptoKeyImport(t *testing.T) {
-	be := newGoCryptoBackend(t)
-	defer be.Close()
-	testKeyImport(t, be)
-}
-
-func TestGoCryptoBackendWarmStart(t *testing.T) {
-	be := newGoCryptoBackend(t)
-	defer be.Close()
-	testWarmStart(t, be)
-}
-
-func TestGoCryptoBackendParallelAccess(t *testing.T) {
-	be := newGoCryptoBackend(t)
-	defer be.Close()
-	testParallelAccess(t, be)
-}
