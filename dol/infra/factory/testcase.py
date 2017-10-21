@@ -11,6 +11,7 @@ import infra.factory.memfactory as memfactory
 from config.store import Store  as ConfigStore
 from infra.factory.store import FactoryStore as FactoryStore
 from infra.common.logging import logger
+from infra.misc.coverage import TestCaseCoverageHelper
 
 class TestCaseParser(parser.ParserBase):
     def __init__(self, path, filename):
@@ -127,6 +128,7 @@ class TestCase(objects.FrameworkObject):
         self.session        = TestCaseSessionObject()
         self.step_id        = 0
         self.pvtdata        = TestCasePrivateData()
+        self.coverage       = TestCaseCoverageHelper(self)
 
         self.logpfx         = "TC%06d:" % self.ID()
         self.__generate()
@@ -385,6 +387,7 @@ class TestCase(objects.FrameworkObject):
     def TeardownCallback(self):
         self.info("Invoking TestCaseTeardown.")
         self.module.RunModuleCallback('TestCaseTeardown', self)
+        self.coverage.Process()
         return
 
     def TriggerCallback(self):

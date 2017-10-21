@@ -14,4 +14,6 @@ nic/third-party/openssl-native/lib/libcrypto.a
 nic/third-party/openssl-native/lib/libssl.a
 nic/third-party/crchack/bin/crchack
 nic/third-party/snort3/export/bin/libsnort.so
+nic/third-party/snort3/export/bin/libsnort.so.0
+nic/third-party/snort3/export/bin/libsnort.so.0.0.0
 nic/third-party/grpc/*.a

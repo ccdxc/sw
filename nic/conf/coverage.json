@@ -41,7 +41,7 @@
                 ".cc"
             ],
             "build_cmd": "make c=1",
-            "clean_cmd": "make clean && find ../bazel-out/local-fastbuild/bin -name '*.gcda'  -type f -delete",
+            "clean_cmd": "make clean && (find ../bazel-out/local-fastbuild/bin -name '*.gcda'  -type f -delete || :)",
             "remove_files": [
                "/usr/include/*",
                 "/usr/local/*",
@@ -65,6 +65,7 @@
             ],
             "file_patterns": [
                 ".asm",
+                ".h",
                 ".s"
             ],
             "obj_dir" : "obj/cano",

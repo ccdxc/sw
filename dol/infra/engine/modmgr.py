@@ -2,6 +2,7 @@
 import os
 import pdb
 import importlib
+import subprocess
 
 import infra.common.dyml        as dyml
 import infra.common.defs        as defs
@@ -17,6 +18,7 @@ from config.objects.rdma.session import RdmaSessionHelper
 from infra.common.logging   import logger
 from infra.common.glopts    import GlobalOptions
 from config.store import Store  as ConfigStore
+from infra.misc import coverage
 
 ModuleIdAllocator = objects.TemplateFieldObject("range/1/8192")
 TestCaseIdAllocator = objects.TemplateFieldObject("range/1/65535")
@@ -101,6 +103,7 @@ class Module(objects.FrameworkObject):
 
     def __load_spec(self):
         utils.LogFunctionBegin(self.logger)
+        coverage.Init(self)
         self.logger.info("- Loading TEST SPEC = %s" % self.spec)
         self.testspec = testspec.TestSpecObject(self.path, self.spec, self.logger)
         if self.selectors is not None:

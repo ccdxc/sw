@@ -196,6 +196,8 @@ def run_dol(args):
         cmd.append('--hostpin')
     if args.classic is True:
         cmd.append('--classic')
+    if args.coveragerun is True:
+        cmd.append('--coveragerun')
     p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
     print "- Log file: " + dol_log + "\n"

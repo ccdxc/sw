@@ -8,51 +8,23 @@ import json
 import csv
 import pdb
 from collections import defaultdict
+import asm_data_process
+import env
+import utils
 
 parser = argparse.ArgumentParser(description='Coverage generator')
 parser.add_argument('--config', dest='conf_file',
                     default='coverage.json', help='Coverage config file')
 args = parser.parse_args()
 
-coverage_path = os.environ.get("COVERAGE_CONFIG_PATH")
-if not coverage_path:
-    print "Coverage config path not set, please set COVERAGE_CONFIG_PATH"
-    sys.exit(1)
-coverage_path = os.path.abspath(coverage_path) + "/"
 
-coverage_output_path = os.environ.get("COVERAGE_OUTPUT")
-if not coverage_output_path:
-    print "Coverage output not set, please set COVERAGE_OUTPUT"
-    sys.exit(1)
-coverage_output_path = os.path.abspath(coverage_output_path) + "/"
-bazel_tmp_dir = coverage_output_path + ".bazel_tmp_out"
+bazel_tmp_dir = env.coverage_output_path + ".bazel_tmp_out"
 subprocess.call(["mkdir", "-p", bazel_tmp_dir])
-
-
-nic_dir = os.environ.get("NIC_DIR")
-if not nic_dir:
-    print "Nic not set, please set NIC_DIR"
-    sys.exit(1)
-nic_dir = os.path.abspath(nic_dir)
-
-capcov_cmd = os.environ.get("CAPCOV")
-if not capcov_cmd:
-    print "Capcov command path not set, please set CAPCOV"
-    sys.exit(1)
-
-gcovr_cmd = os.environ.get("GCOVR")
-if not gcovr_cmd:
-    print "Gcvor command path not set, please set GCOVR"
-    sys.exit(1)
-    
-capri_loader_conf = os.environ.get("CAPRI_LOADER_CONF")
-if not capri_loader_conf:
-    print "Capri loader conf path not set, please set CAPRI_LOADER_CONF"
-    sys.exit(1)
 
 gcov_out_name = "gcov_out"
 FNULL = open(os.devnull, 'w')
 
+instruction_summary_page_name = "instructions_summary.html"
 
 def get_obj_dirs(obj_dir_type, top_dir, relative_path):
 
@@ -64,7 +36,6 @@ def get_obj_dirs(obj_dir_type, top_dir, relative_path):
 
 
 coverage_registry = {}
-
 
 def register_connector(target_class):
     coverage_registry[target_class.__name__] = target_class
@@ -154,8 +125,8 @@ class LcovCoverage(CoverageBase):
         data.get("obj_dir_type")
         subprocess.call(["mkdir", "-p", gcov_out_dir])
         lcov_info_files = []
-        os.chdir(nic_dir)
-        exclude_dirs = [nic_dir + "/" + d for d in data.get("exclude_dirs", [])]
+        os.chdir(env.nic_dir)
+        exclude_dirs = [env.nic_dir + "/" + d for d in data.get("exclude_dirs", [])]
         
         #This is hack for now, move all the *.gcda and *.gcno files to same level.
         if data.get("obj_dir_type") == "bazel":
@@ -163,11 +134,11 @@ class LcovCoverage(CoverageBase):
             os.chdir(data.get("obj_dir"))
             mv_cmd = "find . -name '*.gcda'  -type f |  xargs -i mv {} " + bazel_tmp_dir + "/" + name
             subprocess.call([mv_cmd], shell=True)
-            os.chdir(nic_dir)
+            os.chdir(env.nic_dir)
         
         for dir in data.get("dirs", []):
             for root, dirs, files in os.walk(dir, topdown=True):
-                dirs[:] = [d for d in dirs if nic_dir  + "/" + root + "/" + d not in exclude_dirs]
+                dirs[:] = [d for d in dirs if env.nic_dir  + "/" + root + "/" + d not in exclude_dirs]
                 output_dir = gcov_out_dir + "/" + root
                 subprocess.call(["mkdir", "-p", output_dir])
                 cur_dir = os.getcwd()
@@ -229,7 +200,7 @@ class LcovCoverage(CoverageBase):
         if data.get("obj_dir_type") == "bazel":
             os.chdir(bazel_tmp_dir + "/" + name)
             subprocess.call(["find . -type f -name '*.gcda' -delete"], shell=True)
-            os.chdir(nic_dir)
+            os.chdir(env.nic_dir)
         return output_file
 
     @staticmethod
@@ -272,7 +243,7 @@ class CapcovCoverage(CoverageBase):
     def gen_html_local(info_file=None, info_dir=None, cov_output_dir=None, ignore_errors=True):
         cwd = os.getcwd()
         os.chdir(info_dir)
-        cmd = [gcovr_cmd, "-r",  ".", "--html", "--html-details", "-o",
+        cmd = [env.gcovr_cmd, "-r",  ".", "--html", "--html-details", "-o",
                  cov_output_dir + "/" + info_file + ".html", "-g", "-k", "--gcov-ext", "cacov"]
         subprocess.call(cmd)
         os.chdir(cwd)
@@ -288,7 +259,7 @@ class CapcovCoverage(CoverageBase):
         subprocess.call(["mkdir", "-p", cov_output_dir])
 
         try:
-            reader = csv.reader(open(capri_loader_conf, 'rb'))
+            reader = csv.reader(open(env.capri_loader_conf, 'rb'))
         except:
             print "Error reading capri loader configuration file"
             sys.exit(1)
@@ -313,7 +284,7 @@ class CapcovCoverage(CoverageBase):
                         cano_file = file.rsplit(".", 1)[0] + ".cano"
                         capcov_out_file = file + ".cacov"
                         cano_file = cur_dir + "/" + obj_dir_path + cano_file
-                        cmd =  [capcov_cmd]
+                        cmd =  [env.capcov_cmd]
                         cmd.append("-s")
                         cmd.append(program_info["start_addr"])
                         cmd.append(gcda_file)
@@ -383,7 +354,7 @@ class CapcovCoverage(CoverageBase):
             if len(root.split("/")) == 2:
                 root_output_dir = dst_dir_name + "/" + "capcov_out" + "/" + "/".join(root.split("/")[1:])
                 CapcovCoverage.gen_html_local(root.split("/")[1], root_output_dir, dst_dir_name)
-        os.chdir(nic_dir)
+        os.chdir(env.nic_dir)
                 
         #Generate top level HTML information.
         CapcovCoverage.gen_html_local(test_name, dst_dir_name, dst_dir_name)
@@ -400,7 +371,7 @@ def run(cmd, exit_on_error=True):
 
 def build_modules(data):
     # build all modules.
-    os.chdir(nic_dir)
+    os.chdir(env.nic_dir)
     for module_name in data["modules"]:
         module_data = data["modules"][module_name]
         print "Building module: ", module_name
@@ -413,10 +384,10 @@ def build_modules(data):
         if module_data["obj_dir_type"] == "bazel":
             gcno_dir = bazel_tmp_dir + "/" + module_name
             subprocess.call(["mkdir", "-p", gcno_dir])
-            os.chdir(module_data["obj_dir"] +  "/" + os.path.basename(nic_dir))
+            os.chdir(module_data["obj_dir"] +  "/" + os.path.basename(env.nic_dir))
             cp_cmd = "find . -name '*.gcno'  -type f |  xargs -i cp {} " + gcno_dir
             subprocess.call([cp_cmd], shell=True)
-            os.chdir(nic_dir)
+            os.chdir(env.nic_dir)
  
 def run_and_generate_coverage(data):
 
@@ -424,16 +395,16 @@ def run_and_generate_coverage(data):
         for module_name in data["run"][run_name]["modules"]:
             module = data["modules"][module_name]
             dir_name = "_".join([run_name, sub_run_name]) if sub_run_name else run_name
-            cov_output_dir = coverage_output_path + dir_name + "/" + module_name
+            cov_output_dir = env.coverage_output_path + dir_name + "/" + module_name
             cov_instance = CoverageBase.factory(module["cov_type"])
             module_infos[module_name].append(cov_instance.generate_coverage(
                 module, module_name, cov_output_dir))
 
-            os.chdir(nic_dir)
+            os.chdir(env.nic_dir)
             obj_dir = module.get("obj_dir")
             os.chdir(obj_dir)
             subprocess.call(["find . -type f -name '*.gcda' -delete"], shell=True)
-            os.chdir(nic_dir)
+            os.chdir(env.nic_dir)
 
     
     module_infos = defaultdict(lambda: [])
@@ -455,7 +426,7 @@ def run_and_generate_coverage(data):
     # Finally generate lcov combined output as well.
     for module_name in module_infos:
         module = data["modules"][module_name]
-        cov_output_dir = coverage_output_path + "/" + "total_cov" + "/" + module_name
+        cov_output_dir = env.coverage_output_path + "/" + "total_cov" + "/" + module_name
         subprocess.call(["mkdir", "-p", cov_output_dir])
         output_file = cov_output_dir + "/total.info"
         cov_instance = CoverageBase.factory(module["cov_type"])
@@ -477,6 +448,7 @@ def generate_coverage_summary_page(cov_output_dir, page_name="coverage_summary.h
 
 <body>"""
     op_file = open(page_name, "w+")
+    op_file.write(header)
     total_cov_info = """
     <strong>Total Coverage</strong>
     <p class="indent": 5em>
@@ -487,24 +459,29 @@ def generate_coverage_summary_page(cov_output_dir, page_name="coverage_summary.h
     """
 
     op_file.write(total_cov_info)
-    asm_cov_str = "<br><strong>ASM Coverage Information</strong></br>"
+    asm_cov_str = "<br><br><strong>ASM Detailed Information</strong></br></br>"
     op_file.write(asm_cov_str)
     for root, dirs, files in os.walk("total_cov/asm", topdown=True):
         for file in files:
             if ".html" in file and len(file.split(".")) == 2:
-                line = "<br><a href=%s>%s</a></br>" % (root + "/" + file, file.split(".html")[0])
-                op_file.write(line + "\n")
+                line = "&nbsp <a href=%s>%s</a> &nbsp;" % (root + "/" + file, file.split(".html")[0])
+                op_file.write(line)
 
+    instructions_summary_page = env.p4_data_output_path + "/" + instruction_summary_page_name
+    line = "<br><br><a href=%s>%s</a></br> </br>" % (os.path.relpath(instructions_summary_page, os.getcwd()),
+                                                "ASM Instructions Statistics")
+    op_file.write(line)
+    
     trailer= """</body>
 
 </html>"""
     op_file.write(trailer + "\n")
     op_file.close()
-    os.chdir(nic_dir)
+    os.chdir(env.nic_dir)
 
 
 if __name__ == '__main__':
-    config_file = coverage_path + args.conf_file
+    config_file = env.coverage_path + args.conf_file
     if not os.path.isfile(config_file):
         print "Config file %s found" % (config_file)
         sys.exit(1)
@@ -513,7 +490,16 @@ if __name__ == '__main__':
         data = json.load(data_file)
 
 
-    os.chdir(nic_dir)
+    os.chdir(env.nic_dir)
     build_modules(data)
     run_and_generate_coverage(data)
-    generate_coverage_summary_page(coverage_output_path)
+    subprocess.call(["mkdir", "-p", env.p4_data_output_path])
+    for module_name in data["modules"]:
+        if data["modules"][module_name]["cov_type"] == "capcov":
+            asm_data_process.generate_pipeline_data(data["modules"][module_name], 
+                                    env.asm_out_final, env.p4_data_output_path)
+            asm_data_process.generate_pipeline_summary_page(env.p4_data_output_path,
+                                                             instruction_summary_page_name)
+
+    generate_coverage_summary_page(env.coverage_output_path)
+

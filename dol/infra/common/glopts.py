@@ -31,4 +31,6 @@ parser.add_argument('--hostpin', dest='hostpin',
                     action='store_true', help='Run tests in host pinned mode.')
 parser.add_argument('--classic', dest='classic',
                     action='store_true', help='Run tests in classic nic mode.')
+parser.add_argument('--coveragerun', dest='coveragerun',
+                    action='store_true', help='Move asm data if coverage run enabled')
 GlobalOptions = parser.parse_args()

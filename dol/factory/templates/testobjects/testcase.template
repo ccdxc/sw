@@ -9,6 +9,7 @@ logpfx  : None  # Logger Prefix for all logs of this Testcase.
 module  : None  # Module
 step_id : None
 pvtdata : None  # Private data
+coverage : None  # Coverage helper
 
 config:
     root: None

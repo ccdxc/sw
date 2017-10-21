@@ -66,6 +66,7 @@ mkdir -p $MPU_PC_COV_DUMP_DIR
 export CAPCOV=$NIC_DIR/asic/capri/model/capsim-gen/bin/capcov
 export CAPRI_LOADER_CONF=$NIC_DIR/../bazel-bin/nic/hal/capri_loader.conf
 export GCOVR=$NIC_DIR/third-party/gcovr-3.3/scripts/gcovr
+export GEN_DIR=$NIC_DIR/gen
 
 $NIC_DIR/tools/gen_dol_cov_run.py
 OUT=$?

@@ -17,6 +17,8 @@ ws_top = os.path.dirname(sys.argv[0]) + '/../'
 ws_top = os.path.abspath(ws_top)
 os.environ['WS_TOP'] = ws_top
 os.environ['MODEL_SOCK_PATH'] = ws_top + '/nic/'
+os.environ['MODEL_DATA_OUT_DIR'] = ws_top + '/nic/coverage/asm_out_all'
+os.environ['MODEL_DATA_DEST_DIR'] = ws_top + '/nic/coverage/asm_out_final'
 for path in paths:
     fullpath = ws_top + path
     print("Adding Path: %s" % fullpath)
