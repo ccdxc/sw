@@ -106,6 +106,7 @@ struct resp_rx_to_stage_t {
 
 // stage to stage argument structures
 
+// 20
 struct resp_rx_rqcb_to_pt_info_t {
     in_progress: 1;
     page_seg_offset: 3;
@@ -124,6 +125,7 @@ struct resp_rx_rqpt_process_k_t {
     struct phv_global_common_t global;
 };
 
+// 20
 struct resp_rx_rqcb_to_wqe_info_t {
     //rqcb1
     in_progress:1;
@@ -146,6 +148,7 @@ struct resp_rx_rqwqe_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_key_info_t {
     va: 64;
     len: 16;
@@ -167,6 +170,7 @@ struct resp_rx_key_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_rqcb0_write_back_info_t {
     in_progress: 8;
     incr_nxt_to_go_token_id: 1;
@@ -184,6 +188,7 @@ struct resp_rx_rqcb0_write_back_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_rqcb1_write_back_info_t {
     curr_wqe_ptr: 64;
     current_sge_offset: 32;
@@ -201,6 +206,7 @@ struct resp_rx_rqcb1_write_back_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_lkey_to_pt_info_t {
     pt_offset: 32;
     pt_bytes: 16;
@@ -219,6 +225,7 @@ struct resp_rx_ptseg_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_compl_or_inv_rkey_info_t {
     r_key:  32;
     dma_cmd_index: 8;
@@ -234,6 +241,7 @@ struct resp_rx_compl_or_inv_rkey_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_rqcb_to_cq_info_t {
     tbl_id: 3;
     rsvd: 5;
@@ -248,6 +256,7 @@ struct resp_rx_cqcb_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_cqcb_to_pt_info_t {
     page_offset: 16;
     page_seg_offset: 8;
@@ -267,6 +276,7 @@ struct resp_rx_cqpt_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_cqcb_to_eq_info_t {
     tbl_id: 3;
     rsvd: 5;
@@ -282,6 +292,7 @@ struct resp_rx_eqcb_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_rqcb_to_rqcb1_info_t {
     in_progress: 1;
     rsvd: 7;
@@ -297,6 +308,7 @@ struct resp_rx_rqcb1_in_progress_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_rqcb_to_write_rkey_info_t {
     va: 64;
     len: 32;
@@ -315,6 +327,7 @@ struct resp_rx_write_dummy_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_inv_rkey_info_t {
     tbl_id: 8;
     key_id: 8;
@@ -328,6 +341,7 @@ struct resp_rx_inv_rkey_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_rsq_backtrack_info_t {                         
     log_pmtu: 5;
     read_or_atomic:1;                                             
@@ -349,6 +363,7 @@ struct resp_rx_rsq_backtrack_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_rx_rsq_backtrack_adjust_info_t {
     adjust_c_index: 1;
     adjust_p_index: 1;

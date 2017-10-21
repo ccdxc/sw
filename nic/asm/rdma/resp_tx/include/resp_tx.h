@@ -40,11 +40,13 @@ struct resp_tx_phv_global_t {
 
 // stage to stage argument structures
 
+//20
 struct resp_tx_rqcb_to_rqcb1_info_t {
     rsqwqe_addr: 64;
     log_pmtu: 5;
     serv_type: 3;
     new_rsq_c_index: 16;
+    pad: 72;
 };
 
 struct resp_tx_rqcb1_process_k_t {
@@ -54,6 +56,7 @@ struct resp_tx_rqcb1_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_tx_rqcb1_to_rsqwqe_info_t {
     curr_read_rsp_psn: 24;
     log_pmtu: 5;
@@ -62,6 +65,7 @@ struct resp_tx_rqcb1_to_rsqwqe_info_t {
     read_rsp_in_progress: 1;
     rsvd0: 7;
     new_rsq_c_index: 16;
+    pad: 72;
 };
 
 struct resp_tx_rsqwqe_process_k_t {
@@ -71,6 +75,7 @@ struct resp_tx_rsqwqe_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_tx_rsqwqe_to_rkey_info_t {
     transfer_va: 64;
     header_template_addr: 32;
@@ -90,11 +95,13 @@ struct resp_tx_rsqrkey_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_tx_rqcb1_write_back_info_t {
     curr_read_rsp_psn: 24;
     read_rsp_in_progress: 1;
     rsvd0: 7;
     new_rsq_c_index: 16;
+    pad: 112;
 };
 
 struct resp_tx_rqcb1_write_back_process_k_t {
@@ -104,6 +111,7 @@ struct resp_tx_rqcb1_write_back_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_tx_rkey_to_ptseg_info_t {
     pt_seg_offset: 32;
     pt_seg_bytes: 32;
@@ -111,6 +119,7 @@ struct resp_tx_rkey_to_ptseg_info_t {
     log_page_size: 5;
     tbl_id: 2;
     dma_cmdeop: 1;
+    pad: 80;
 };
 
 struct resp_tx_rsqptseg_process_k_t {
@@ -120,10 +129,12 @@ struct resp_tx_rsqptseg_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_tx_rqcb_to_ack_info_t {
     //dst_qp: 24;
     serv_type: 8;
     new_c_index: 16;
+    pad: 136;
 };
 
 struct resp_tx_ack_process_k_t {
@@ -133,6 +144,7 @@ struct resp_tx_ack_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
 struct resp_tx_rsq_backtrack_adjust_info_t {
     adjust_rsq_c_index: 16;
     rsq_bt_p_index: 16;
