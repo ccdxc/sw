@@ -206,6 +206,7 @@ def main():
             capri_be.checksum.AllocateDeParserCsumResources(\
                                                 capri_be.parsers[d])
     capri_be.tables.update_table_config()
+    capri_be.tables.create_key_makers()
     capri_be.tables.program_tables()
 
     # Generate various outputs

@@ -258,6 +258,7 @@ class capri_table:
         self.hash_ct = None         # parent hash table assiciated with this overflow table
         self.otcam_ct = None        # otcam associated with this hash table
         self.collision_ct = None    # collision table associated with this hash table
+        self.collision_cf = None    # collision table index
         self.hash_type = 0  # pragma hash_type
         self.is_raw = False # Raw table (used in p4_plus)
         self.is_raw_index = False # Raw index table (used in p4_plus) - slightly different from raw
@@ -925,6 +926,7 @@ class capri_table:
 
         for cs, cw in i_phv_chunks:
             start_fid = cs/flit_size
+            if start_fid < 0: pdb.set_trace()
             end_fid = (cs+cw-1)/flit_size
             if start_fid == end_fid:
                 flit_i_phv_chunks[start_fid].append((cs,cw))
@@ -1347,7 +1349,7 @@ class capri_table:
                 kf = self.km_flits[fid]
                 bytes_avail0 = max_kmB
                 bytes_avail1 = max_kmB
-                if len(kf.km_profile.bit_sel):
+                if len(kf.km_profile.bit_sel): #{
                     k0_bits = min(max_km_bits, len(kf.km_profile.k_bit_sel))
                     i0_bits = min(max_km_bits-k0_bits, len(kf.km_profile.i_bit_sel))
                     for k in range(k0_bits):
@@ -1384,13 +1386,15 @@ class capri_table:
                 # if there is any wastage due to bit extractors not being full, make sure
                 # rest of the required byte can be loaded
                 # need to add bytes for action_pc/overflow index alignment
-                assert len(kf.km_profile.byte_sel) <= (bytes_avail0+bytes_avail1), pdb.set_trace()
-                k0_bytes = min(bytes_avail0, len(kf.km_profile.k_byte_sel))
+                bytes_needed = len(kf.km_profile.byte_sel)
                 if fid == last_fid:
-                    # account for action_pc/collision idx
-                    k0_bytes += reserve_bytes
-                k1_bytes = 0 if len(kf.km_profile.k_byte_sel) < k0_bytes else \
-                    len(kf.km_profile.k_byte_sel) - k0_bytes
+                    bytes_avail0 -= reserve_bytes
+
+                assert bytes_needed <= (bytes_avail0+bytes_avail1), pdb.set_trace()
+                k0_bytes = min(bytes_avail0, len(kf.km_profile.k_byte_sel))
+
+                k1_bytes = len(kf.km_profile.k_byte_sel) - k0_bytes
+                assert k1_bytes < max_kmB, pdb.set_trace()
 
                 # for wide-key, we can have i1 and i2 bytes only on the last flit as -
                 # action_pc/collision_idx - i1bytes - key - i2bytes
@@ -1399,10 +1403,9 @@ class capri_table:
                 # if key spans km0 and km1, i1bytes must be in km0 and i2bytes must be in km1
                 i10_bytes = min(bytes_avail0-k0_bytes, len(kf.km_profile.i1_byte_sel))
                 i20_bytes = min(bytes_avail0-i10_bytes, len(kf.km_profile.i2_byte_sel))
-                i11_bytes = 0 if len(kf.km_profile.i1_byte_sel) < i10_bytes else \
-                    len(kf.km_profile.i1_byte_sel) - i10_bytes
-                i21_bytes = 0 if len(kf.km_profile.i2_byte_sel) < i20_bytes else \
-                    len(kf.km_profile.i2_byte_sel) - i20_bytes
+
+                i11_bytes = len(kf.km_profile.i1_byte_sel) - i10_bytes
+                i21_bytes = len(kf.km_profile.i2_byte_sel) - i20_bytes
 
                 if fid != last_fid:
                     assert (i10_bytes+i20_bytes+i11_bytes+i21_bytes) == 0, pdb.set_trace()
@@ -1955,42 +1958,6 @@ class capri_table:
                     self.end_key_off = (lk_idx * 8) + 8 - self.end_key_off_delta
                     self.gtm.tm.logger.debug("%s:Using km0 byte_location %d as k-end" % \
                             (self.p4_table.name, self.end_key_off))
-        '''
-        lk_end_byte = -1
-        if lk_bit in km0.combined_profile.bit_sel:
-            lk_bit_idx = km0.combined_profile.bit_sel.index(lk_bit)
-            if lk_bit_idx < 8:
-                self.end_key_off = (km0.combined_profile.bit_loc*8) + lk_bit_idx + 1
-                lk_end_byte = km0.combined_profile.bit_loc
-            else:
-                self.end_key_off = (km0.combined_profile.bit_loc1*8) + (lk_bit_idx%8) + 1
-                lk_end_byte = km0.combined_profile.bit_loc1
-        if lk_byte in km0.combined_profile.byte_sel:
-            lk_idx = km0.combined_profile.byte_sel.index(lk_byte)
-            if lk_idx > lk_end_byte:
-                self.end_key_off = (lk_idx * 8) + 8 - self.end_key_off_delta
-                self.gtm.tm.logger.debug("%s:Using km0 byte_location %d as k-end" % \
-                        (self.p4_table.name, self.end_key_off))
-
-        lk_end_byte = -1
-        if self.end_key_off == -1:
-            assert km1
-            if lk_bit in km1.combined_profile.bit_sel:
-                lk_bit_idx = km1.combined_profile.bit_sel.index(lk_bit)
-                if lk_bit_idx < 8:
-                    self.end_key_off = (km1.combined_profile.bit_loc*8) + lk_bit_idx + 1 + max_km_width
-                    lk_end_byte = km1.combined_profile.bit_loc
-                else:
-                    self.end_key_off = (km1.combined_profile.bit_loc1*8) + (lk_bit_idx%8) + max_km_width
-                    lk_end_byte = km1.combined_profile.bit_loc1
-
-            if lk_byte in km1.combined_profile.byte_sel:
-                lk_idx = km1.combined_profile.byte_sel.index(lk_byte)
-                if lk_idx > lk_end_byte:
-                    self.end_key_off = (lk_idx * 8) + 8 + max_km_width - self.end_key_off_delta
-                    self.gtm.tm.logger.debug("%s:Using km1 byte_location %d as k-end" % \
-                            (self.p4_table.name, self.end_key_off))
-        '''
         assert self.end_key_off != -1, pdb.set_trace()
         # For index and hash tables that use multiple key makers,
         # if key is split between the two kms and if 
@@ -2033,9 +2000,13 @@ class capri_table:
             assert cf.width == collision_key_size, pdb.set_trace()
             assert (cf.phv_bit % 8) == 0, pdb.set_trace()
             phvB = cf.phv_bit / 8
-            km_prof = self.key_makers[0].shared_km.combined_profile \
-                if self.key_makers[0].shared_km else \
-                    self.key_makers[0].combined_profile
+            if self.is_wide_key:
+                km0 = self.key_makers[-2]
+            else:
+                km0 = self.key_makers[0].shared_km if self.key_makers[0].shared_km else \
+                        self.key_makers[0]
+               
+            km_prof = km0.combined_profile
 
             for i in range(collision_key_size/8):
                 assert km_prof.byte_sel[i] == phvB + i, \
@@ -2957,6 +2928,17 @@ class capri_key_maker:
             return self.shared_km.hw_id
         return self.hw_id
 
+    def copy_km(self):
+        new_km = capri_key_maker(self.stage, [])
+        new_km.km_id = self.km_id
+        new_km.hw_id = self.hw_id
+        new_km.is_shared = False
+        new_km.shared_km = None
+        new_km.flits_used = copy.copy(self.flits_used)
+        new_km.combined_profile = copy.deepcopy(self.combined_profile)
+        new_km.flit_km_profiles = copy.deepcopy(self.flit_km_profiles)
+        return new_km
+
 class capri_km_profile:
     def __init__(self, gtm):
         self.gtm = gtm
@@ -3092,8 +3074,8 @@ class capri_km_profile:
         new_obj.byte_sel = copy.copy(self.byte_sel)
         new_obj.bit_sel = copy.copy(self.bit_sel)
 
-        new_obj.bit_loc = self.bit_loc = -1     # byte(s) reseved for bit extracted values
-        new_obj.bit_loc1 = self.bit_loc1 = -1     # byte(s) reseved for bit extracted values
+        new_obj.bit_loc = self.bit_loc      # byte(s) reseved for bit extracted values
+        new_obj.bit_loc1 = self.bit_loc1    # byte(s) reseved for bit extracted values
         new_obj.start_key_off = self.start_key_off
         new_obj.end_key_off = self.end_key_off
 
@@ -3211,8 +3193,9 @@ class capri_km_profile:
 
     def __repr__(self):
         if len(self.byte_sel) or len(self.bit_sel):
-            return '[id%d] : byte_sel[%d]: %s :\nbit_sel[%d]: %s' % \
-                (self.hw_id, len(self.byte_sel), self.byte_sel, len(self.bit_sel), self.bit_sel)
+            return '[id%d] : byte_sel[%d]: %s :\nbit_sel[%d]: %s bit_loc=%d,%d\n' % \
+                (self.hw_id, len(self.byte_sel), self.byte_sel, len(self.bit_sel), 
+                 self.bit_sel, self.bit_loc, self.bit_loc1)
         else:
             return ''
 
@@ -3458,8 +3441,8 @@ class capri_stage:
 
     def _allocate_km(self, fid, ct, p_excl_tbls, need_sharing):
         if ct.is_overflow:
-            #pdb.set_trace()
-            return True
+            if ct.is_otcam:
+                return True
         if ct.num_km == 0:
             ct.key_makers[0].hw_id = 0
             return True
@@ -3600,12 +3583,7 @@ class capri_stage:
 
         return 0
 
-    def program_tables(self):
-        num_flits = self.gtm.tm.be.hw_model['phv']['num_flits']
-        km_width  = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
-        km_bits  = self.gtm.tm.be.hw_model['match_action']['num_bit_extractors']
-        max_kmB = km_width / 8
-
+    def stg_create_key_makers(self):
         ct_list = []
         tbl_id = 1  # avoid 0 ??
         for t in self.p4_table_list:
@@ -3621,44 +3599,17 @@ class capri_stage:
             ct.create_key_makers()
 
         self.ct_list = ct_list
-
         # for otcam, use same tbl_id as its hash table
-        for ct in ct_list:
-            if not ct.is_otcam:
-                continue
-            ct.tbl_id = ct.hash_ct.tbl_id
+        for ct in self.ct_list:
+            if ct.is_otcam:
+                ct.tbl_id = ct.hash_ct.tbl_id
             
-        for ct in ct_list:
-            if ct.is_overflow:
-                # copy the overflow index key into parent hash. key-maker merge logic is used so
-                # that required information is also updated in the key-maker
-                # for otcam, just copy parent key-makers to the otcam table (used by API gen code)
-                if ct.hash_ct.is_wide_key:
-                    # for wide key table there cannot be otcam
-                    # the overflow table will only receive the information from the last flit
-                    # so merge the overflow table key in last km0
-                    # XXXX for GFT program this does not work.. since overflow table is not in the
-                    # same stage using recirc... need different way to initialize this
-                    pdb.set_trace()
-                    assert not ct.is_otcam
-                    assert ct.num_km == 1, pdb.set_trace()
-                    km0 = ct.hash_ct.key_makers[-2]
-                    km1 = ct.hash_ct.key_makers[-1]
-                    km0._merge(ct.key_makers[0], is_overflow_key_merge=True)
-                    ct.key_makers[0] = km
-                    ct.key_makers.append(km1)
-                    ct.num_km = 2
-                    continue
 
-                for k,km in enumerate(ct.hash_ct.key_makers):
-                    if ct.is_otcam:
-                        ct.key_makers.append(km)
-                        continue
-                    if k < ct.num_km:
-                        km._merge(ct.key_makers[k], is_overflow_key_merge=True)
-                        ct.key_makers[k] = km
-                    else:
-                        ct.key_makers.append(km)
+    def program_tables(self):
+        num_flits = self.gtm.tm.be.hw_model['phv']['num_flits']
+        km_width  = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
+        km_bits  = self.gtm.tm.be.hw_model['match_action']['num_bit_extractors']
+        max_kmB = km_width / 8
 
         key_makers = []
         per_flit_kms = [[] for _ in range(num_flits)]
@@ -3757,7 +3708,7 @@ class capri_stage:
 
         # update key offsets so that all offsets are initialized before sorting and fixing 
         # km_profiles based on hardware constraints
-        for ct in ct_list:
+        for ct in self.ct_list:
             ct.ct_update_key_offsets()
         ct_list = sorted(self.ct_list, key=lambda c: c.start_key_off)
         for ct in ct_list:
@@ -4271,6 +4222,7 @@ class capri_gress_tm:
         # hardware information
         # XXX do we need a class to manage resources in each stage??
         self.stages = OrderedDict()
+        self.wide_key_tables = []
 
     def print_tables(self):
         pstr = '%s Tables %d, Tables-Predicates %d\n' % \
@@ -4446,10 +4398,22 @@ class capri_gress_tm:
                     key_size = 0
                     for cf, mtype, mask in ctable.keys:
                         # compute key size (w/o pad adjustments)
-                        key_size += (cf.width-cf.pad)
+                        # No hdr/fld unions supported for wide key XXX
+                        if not cf.is_union():
+                            key_size += (cf.width-cf.pad)
                         if cf.is_hdr_union and not is_ternary:
-                            self.tm.logger.warning('%s:CAUTION: Hdr union field %s in tbl key %s\n' % \
+                            self.tm.logger.warning('%s:CAUTION:Hdr union field %s in tbl key %s' % \
                                 (self.d, cf.hf_name, t.name))
+
+                    if key_size > 512: # use model param XXX
+                        ctable.is_wide_key = True
+                        # record initial key_size - over-written later
+                        # does not take into a/c unions etc.. will be inaccurate
+                        ctable.key_size = key_size
+                        assert ctable not in self.wide_key_tables, pdb.set_trace()
+                        self.wide_key_tables.append(ctable)
+                        for cf, _, _ in ctable.keys:
+                            cf.is_wide_key = True
                     if is_ternary:
                         ctable.match_type = match_type.TERNARY
                         if ctable.is_overflow:
@@ -4493,6 +4457,7 @@ class capri_gress_tm:
                     _input_flds, _out_flds = t.retrieve_action_fields()
                     input_flds = sorted(_input_flds, key=lambda k: k.name)
                     out_flds = sorted(_out_flds, key=lambda k: k.name)
+                    i_size = 0
                     for f in input_flds:
                         # can be p4_field or p4_pseudo_field(.valid)
                         hf_name = get_hfname(f)
@@ -4502,7 +4467,14 @@ class capri_gress_tm:
                             continue
                         if cf not in ctable.input_fields and cf not in key_cfs:
                             cf.is_input = True
+                            if ctable.is_wide_key:
+                                cf.is_wide_input = True
                             ctable.input_fields.append(cf)
+                            if not cf.is_union():
+                                i_size += cf.width
+                    if ctable.is_wide_key:
+                        # record initial i_size - over-written later
+                        ctable.i_size = i_size
 
                     for f in out_flds:
                         # out fields are not really useful at this time since action can write
@@ -4573,6 +4545,7 @@ class capri_gress_tm:
                     "Only single %dbit key is allowed for overflow hash table %s" % \
                     (collision_index_sz, ct.p4_table.name)
                 cf = ct.keys[0][0]
+                ct.hash_ct.collision_cf = cf
                 assert cf.width == collision_key_size, \
                     "Invalid key width %d (allowed %d) for overflow hash table %s" % \
                     (cf.width, collision_key_size, ct.p4_table.name)
@@ -4748,6 +4721,78 @@ class capri_gress_tm:
         if len(table_list):
             _find_paths(table_list[0], paths, current_path, table_list)
         return paths
+
+    def create_key_makers(self):
+        for stg in self.stages.keys():
+            self.stages[stg].stg_create_key_makers()
+
+        # Fix the key makers for overflow/collision hash tables
+        # Overflow tcam and parent hash must be in the same stage and share table-id. BUT,
+        # collision hash (overflow) table can be in a different stage than its parent hash
+        # table. It can be in a earlier/same stage when used via recirc OR it can be in a
+        # later stage when used on detecting collision
+        # Fix the keymakers for all the collision tables and their parent hash tables across
+        # all stages
+        for stg in self.stages.values():
+            for ct in stg.ct_list:
+                if ct.is_overflow:
+                    # copy the overflow index key into parent hash.
+                    # key-maker merge logic is used so that required information is 
+                    # also updated in the key-maker for otcam, just copy parent key-makers 
+                    # to the otcam table (used by API gen code)
+                    if ct.hash_ct.is_wide_key:
+                        # for wide key table there cannot be otcam
+                        # the overflow table will only receive the information from the last flit
+                        # so merge the overflow table key in last km0
+                        # for GFT program this does not work.. since overflow table is not in the
+                        # same stage using recirc... need different way to initialize this
+                        assert not ct.is_otcam
+                        assert ct.num_km == 1, pdb.set_trace()
+                        km0 = ct.hash_ct.key_makers[-2]
+                        km1 = ct.hash_ct.key_makers[-1]
+                        km0._merge(ct.key_makers[0], is_overflow_key_merge=True)
+                        km0.ctables.remove(ct)
+
+                        for k in range(0, len(ct.hash_ct.key_makers)-2):
+                            km = ct.hash_ct.key_makers[k].copy_km()
+                            km.km_id = k
+                            km.ctables.append(ct)
+                            if k < ct.num_km:
+                                ct.key_makers[k] = km
+                            else:
+                                ct.key_makers.append(km)
+
+                        km_id = len(ct.key_makers)
+                        km = km0.copy_km()
+                        km.km_id = km_id
+                        km.ctables.append(ct)
+                        km_id += 1
+                        ct.key_makers.append(km)
+
+                        km = km1.copy_km()
+                        km.km_id = km_id
+                        km.ctables.append(ct)
+                        ct.key_makers.append(km)
+                        ct.num_km = len(ct.key_makers)
+                        continue
+
+                    for k,_km in enumerate(ct.hash_ct.key_makers):
+                        if ct.is_otcam:
+                            ct.key_makers.append(_km)
+                            continue
+                        if k < ct.num_km:
+                            _km._merge(ct.key_makers[k], is_overflow_key_merge=True)
+                            _km.ctables.remove(ct)
+                            km = _km.copy_km()
+                            km.ctables.append(ct)
+                            km.km_id = k
+                            ct.key_makers[k] = km
+                        else:
+                            km = _km.copy_km()
+                            km.ctables.append(ct)
+                            km.km_id = k
+                            ct.key_makers.append(km)
+                    ct.num_km = len(ct.key_makers)
 
     def program_tables(self):
         for stg in self.stages.keys():
@@ -5310,6 +5355,10 @@ class capri_table_manager:
     def program_tables(self):
         for gtm in self.gress_tm:
             gtm.program_tables()
+
+    def create_key_makers(self):
+        for gtm in self.gress_tm:
+            gtm.create_key_makers()
 
     def capri_asm_output(self):
         for d in xgress:

@@ -10,7 +10,8 @@ capri_model = {
         'num_flits' : 10,   # change containers as well (below)
         'max_hw_flits' : 12,    # max allowed value for num_flits
         'flit_size' : 512, # max_size/num_flits
-        'containers': {8: 640} # {size:num} all 8 bit containers
+        'containers': {8: 640}, # {size:num} all 8 bit containers
+        'wide_key_start_flit' : 2
     },
     'match_action': {
         'num_stages' : 6,

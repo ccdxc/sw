@@ -1568,10 +1568,14 @@ class capri_parser:
             # It is assumed to be in this order intrinsic -> [tm_replication_data] -> i2e -> ..
             # tm_replication data is only seen by egress parser so insert i2e right after 
             # intrinsic header
-            if hv_headers[0] == self.be.pa.gress_pa[xgress.INGRESS].capri_intr_hdr:
-                hv_headers.insert(1, self.be.pa.gress_pa[xgress.INGRESS].i2e_hdr)
+            # New: Add i2e header after p4_intr
+            if self.be.pa.gress_pa[xgress.INGRESS].capri_p4_intr_hdr in hv_headers:
+                hvidx = hv_headers.index(self.be.pa.gress_pa[xgress.INGRESS].capri_p4_intr_hdr)
+            elif self.be.pa.gress_pa[xgress.INGRESS].capri_intr_hdr in hv_headers:
+                hvidx = hv_headers.index(self.be.pa.gress_pa[xgress.INGRESS].capri_intr_hdr)
             else:
-                hv_headers.insert(0, self.be.pa.gress_pa[xgress.INGRESS].i2e_hdr)
+                hvidx = -1
+            hv_headers.insert(hvidx+1, self.be.pa.gress_pa[xgress.INGRESS].i2e_hdr)
 
         hidx = 0
         for _hidx in range(len(hv_headers)):

@@ -81,7 +81,9 @@ class capri_field:
         self.is_fld_union_storage = False
         self.is_i2e_meta = False
         self.is_key = False
+        self.is_wide_key = False    # part of a widekey table - key
         self.is_input = False
+        self.is_wide_input = False    # part of a widekey table - input
         self.is_intrinsic = False
         self.is_predicate = False
         self.is_parser_extracted = False
@@ -91,6 +93,9 @@ class capri_field:
         self.phv_bit = -1   # bit index in phv
         self.pad = 0        # internal pad added to the field (due to alignment requirements)
         self.union_pad_size = 0 # valid when is_fld_union_storage == True
+
+    def is_wide_ki(self):
+        return self.is_wide_key or self.is_wide_input
 
     def set_ohi(self):
         #self.width = 0
@@ -880,8 +885,13 @@ class capri_gress_pa:
                 if cf not in self.field_order:
                     self.field_order.append(cf)
                     if cf not in self.hdr_fld_order and \
-                        not self.pa.be.args.p4_plus and not is_atomic_header(h):
+                        not self.pa.be.args.p4_plus and not is_atomic_header(h) and \
+                        not cf.is_wide_ki():
                         self.hdr_fld_order.append(cf)
+
+                    if cf.is_wide_ki() and not self.pa.be.args.p4_plus:
+                        # ignore any cfs that are used for widekey lookup
+                        hdr_used = False
 
                     if cf not in self.i2e_fields and \
                         not cf.is_key and not cf.is_input:
@@ -1527,7 +1537,6 @@ class capri_gress_pa:
         flit_sz = self.pa.be.hw_model['parser']['flit_size']
         foffset = start_phv
 
-        hdr_byte_aligned_cfs = self.hdr_get_byte_aligned_fld_chunks(hdr)
         for f in hdr.fields:
             flit_phv = foffset % flit_sz
             cf = self.get_field(get_hfname(f))
@@ -1536,8 +1545,8 @@ class capri_gress_pa:
                 cf.is_ohi = False
                 assert cf.is_intrinsic, pdb.set_trace()
 
-            if not cf.is_fld_union and cf in hdr_byte_aligned_cfs:
-                blen = hdr_byte_aligned_cfs[cf]
+            if not cf.is_fld_union:
+                blen = cf.storage_size()
                 if flit_phv < 512 and flit_phv+blen > 512:
                     #pdb.set_trace()
                     foffset += 512-flit_phv
@@ -1639,6 +1648,84 @@ class capri_gress_pa:
         for hv_field in hv_flds:
             self.field_order.insert(0, hv_field)
 
+    def wide_key_table_phv_allocate(self):
+        # start parser-flit for wide key tables is 1 (can change it - cmd line or pragma??)
+        wide_key_fid = self.pa.be.hw_model['phv']['wide_key_start_flit']
+        phv_flit_sz = self.pa.be.hw_model['phv']['flit_size']
+        start_phv = wide_key_fid * phv_flit_sz
+        fstart = start_phv
+
+        for wct in self.pa.be.tables.gress_tm[self.d].wide_key_tables:
+            # Start allocating from current start_phv forward.
+            # once we reach last flit, add the space for collision_cf/action_pc and i-data
+            reserve = 0
+            id_size = max(wct.i_size, wct.d_size)
+            if wct.collision_cf:
+                assert (wct.collision_cf.width + id_size) < phv_flit_sz, pdb.set_trace()
+                reserve = wct.collision_cf.width
+            elif wct.num_actions() > 1:
+                reserve = 8
+            i = -1
+            fid = fstart/phv_flit_sz
+            remaining_key_size = wct.key_size
+            for i, (cf, mt, mask) in enumerate(wct.keys):
+                flit_end = (fid+1)*phv_flit_sz
+                if remaining_key_size+reserve+id_size <= phv_flit_sz:
+                    fstart = flit_end
+                    break
+
+                if fstart+cf.width > flit_end:
+                    fstart = flit_end
+
+                fid = fstart/phv_flit_sz
+                flit = self.flits[fid/2]    # use parser flits for allocation
+                phv_bit = flit.flit_chunk_alloc(cf.width, fstart,
+                                        align=0, justify=0, fixed_loc=1, cross_512b=False)
+                cf.phv_bit = phv_bit
+                assert phv_bit == fstart, pdb.set_trace()
+                fstart = phv_bit+cf.width
+                remaining_key_size -= cf.width
+                self.allocated_hf[cf] = phv_bit
+
+            assert i > 0, pdb.set_trace()
+
+            fid = fstart/phv_flit_sz
+            flit = self.flits[fid/2]    # use parser flits for allocation
+            if wct.collision_cf:
+                cf = wct.collision_cf
+                phv_bit = flit.flit_chunk_alloc(cf.width, fstart,
+                                        align=0, justify=0, fixed_loc=1, cross_512b=False)
+                assert phv_bit == fstart, pdb.set_trace()
+                cf.phv_bit = phv_bit
+                fstart += cf.width
+                self.allocated_hf[cf] = phv_bit
+            else:
+                fstart += reserve
+
+            # place remaining keys followed by i fields
+            for i in range(i, len(wct.keys)):
+                cf, _, _ = wct.keys[i]
+                phv_bit = flit.flit_chunk_alloc(cf.width, fstart,
+                                        align=0, justify=0, fixed_loc=1, cross_512b=False)
+                assert phv_bit == fstart, pdb.set_trace()
+                cf.phv_bit = phv_bit
+                fstart += cf.width
+                self.allocated_hf[cf] = phv_bit
+
+            # add input fields
+            for cf in wct.input_fields:
+                assert not cf.is_union(), pdb.set_trace()   # no unions in wide key
+                phv_bit = flit.flit_chunk_alloc(cf.width, fstart,
+                                        align=0, justify=0, fixed_loc=1, cross_512b=False)
+                cf.phv_bit = phv_bit
+                assert phv_bit == fstart, pdb.set_trace()
+                fstart += cf.width
+                self.allocated_hf[cf] = phv_bit
+
+            wct.isize = -1 # reset these values for the rest of the processing
+            wct.key_size = -1 # reset these values for the rest of the processing
+
+
     def create_flits(self, add_hv=False):
         if self.pa.be.args.old_phv_allocation:
             return self._create_flits(add_hv)
@@ -1658,6 +1745,10 @@ class capri_gress_pa:
                 assert 0
             self.field_order = sorted(self.field_order, key=lambda cf: cf.phv_bit)
             return
+
+        # process special allocation for wide-key cfs.. 
+        if len(self.pa.be.tables.gress_tm[self.d].wide_key_tables):
+            self.wide_key_table_phv_allocate()
 
         flit = self.flits[0]
         self.add_intrinsic_meta_and_hv(flit, add_hv)
@@ -1946,7 +2037,6 @@ class capri_gress_pa:
                 last_hdr_bit = phv_bit
 
             allocated_chunks.append((phv_bit, hdr_storage_size))
-            # XXX check p4plus flag
             extra_bits = self.check_512b_fld_crossing(flit, n_hf, phv_bit)
             if extra_bits:
                 #pdb.set_trace()
@@ -2036,7 +2126,6 @@ class capri_gress_pa:
                 hdr_alignment = get_header_alignment(n_hf.p4_fld.instance)
             if hdr_alignment and n_hf.p4_fld.offset == 0:
                 alignment = hdr_alignment
-                pdb.set_trace()
             else:
                 if n_hf.is_key or n_hf.is_input or (self.d == xgress.INGRESS and n_hf.is_i2e_meta):
                     # XXX for fld unions - propagate the flags is_key... to union storage field

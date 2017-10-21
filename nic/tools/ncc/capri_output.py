@@ -2590,11 +2590,7 @@ def capri_te_cfg_output(stage):
                     te_ctrl_sram_print(se, json_sram_ext)))
         
     for ct in stage.ct_list:
-        # XXX Work-in-progress
-        if ct.is_wide_key:
-            stage.gtm.tm.logger.critical("Wide key table programming is not complete %s" % \
-                (ct.p4_table.name))
-            continue
+
         if ct.is_otcam:
             continue
         json_tbl_ = json_regs['cap_te_csr_cfg_table_property[%d]' % ct.tbl_id]
