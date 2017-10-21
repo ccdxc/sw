@@ -377,8 +377,12 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
         return false;
     }
     
-    hal::tls::tls_api_start_handshake(rxhdr->qid);
-
+    if(flow->itor_dir == hal::FLOW_DIR_FROM_ENIC){
+        hal::tls::tls_api_start_handshake(flow->iqid, flow->rqid);
+    } else {
+        hal::tls::tls_api_start_handshake(flow->rqid, flow->iqid);
+    }
+ 
     return true;
 }
 bool
@@ -538,6 +542,7 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
     hal::tls::tls_api_init_flow(flow->rqid, true);
 
     if (dir == hal::FLOW_DIR_FROM_ENIC) {
+        hal::tls::tls_api_init_flow(flow->iqid, flow->rqid);
         flow->hostns.skbuff = pkt_skb;
         flow->netns.skbuff = NULL;
         flow->hostns.state = FLOW_STATE_SYN_RCVD;
@@ -559,6 +564,7 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
         lklshim_create_listen_sockets(dir, flow);
         lklshim_trigger_flow_connection(flow, dir);
     } else {
+        hal::tls::tls_api_init_flow(flow->rqid, flow->iqid);
         flow->netns.skbuff = pkt_skb;
         flow->hostns.skbuff = NULL;
         flow->netns.state = FLOW_STATE_SYN_RCVD;

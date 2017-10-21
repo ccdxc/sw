@@ -4,6 +4,8 @@
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/hal/src/tlscb.hpp"
 #include "nic/hal/lkl/lklshim_tls.hpp"
+#include "nic/hal/src/crypto_keys.hpp"
+
 namespace hal {
 namespace tls {
 
@@ -41,7 +43,6 @@ int create_socket() {
 hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
 {
     HAL_TRACE_DEBUG("tls: tx data of len: {}", len);
-
     /*
     uint8_t buf[1024];
     send(tcpfd, data, len, 0);
@@ -65,14 +66,144 @@ hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
 }
 
 hal_ret_t
-tls_api_handshake_done_cb(uint32_t qid, int err)
+tls_api_program_crypto_key(char* key, uint32_t* key_index)
 {
-  HAL_TRACE_DEBUG("SSL Handshake completed for qid = {} error = {}", qid, err);
-  if (err == 0) { 
-      lklshim_release_client_syn(qid);
-  }
-  return HAL_RET_OK;
+    hal_ret_t                   ret = HAL_RET_OK;
+    CryptoKeyCreateRequest      create_req;
+    CryptoKeyCreateResponse     create_resp;
+    CryptoKeyUpdateRequest      update_req;
+    CryptoKeyUpdateResponse     update_resp;
+
+    ret = crypto_key_create(create_req, &create_resp);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create crypto key: {}", ret);
+        return ret;
+    }
+
+    *key_index = create_resp.keyindex();
+
+    HAL_TRACE_DEBUG("Updating crypto key with index: {}", *key_index);
+    if(!key) {
+        HAL_TRACE_DEBUG("KEY IS NULL");
+        return HAL_RET_INVALID_ARG;
+    }
+    HAL_TRACE_DEBUG("Updating cypto key with value: {}", *key);
+    CryptoKeySpec* spec = update_req.mutable_key();
+    spec->set_keyindex(*key_index);
+    spec->set_key_type(types::CRYPTO_KEY_TYPE_AES128);
+    spec->set_key_size(16);
+    spec->set_key(key);
+    ret = crypto_key_update(update_req, &update_resp);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tls: failed to update key, ret: {}", ret);
+        return ret;
+    }
+    return HAL_RET_OK;
 }
+
+hal_ret_t
+tls_api_update_cb(uint32_t id,
+                  uint32_t key_index,
+                  uint32_t command,
+                  uint32_t salt,
+                  uint64_t explicit_iv,
+                  bool     is_decrypt_flow
+                  )
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    TlsCbSpec           spec;
+    TlsCbResponse       resp;
+
+    spec.mutable_key_or_handle()->set_tlscb_id(id);
+    spec.set_crypto_key_idx(key_index);
+    spec.set_command(command);
+    spec.set_salt(salt);
+    spec.set_explicit_iv(explicit_iv);
+    spec.set_is_decrypt_flow(is_decrypt_flow);
+
+    HAL_TRACE_DEBUG("tls: updating TCPCB: id: {}, key_index: {}, command: {}, salt: {}, iv: {}, is_decrypt: {}",
+                     id, key_index, command, salt, explicit_iv, is_decrypt_flow);
+    ret = tlscb_update(spec, &resp);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update tlscb for id: {}, ret: ", id, ret);
+        return ret;
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* args)
+{
+    uint32_t            enc_key_index = 0;
+    uint32_t            dec_key_index = 0;
+
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("SSL Handshake failed, err: {}", ret);
+        return ret;
+    }
+
+    // Program enc key
+    ret = tls_api_program_crypto_key((char*)args->write_key, &enc_key_index);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program enc crypto key, ret {}", ret);
+        return ret;
+    }
+
+    // Program dec key
+    ret = tls_api_program_crypto_key((char*)args->read_key, &dec_key_index);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program dec crypto key, ret {}", ret);
+        return ret;
+    }
+
+    // program tlscb for decr
+    ret = tls_api_update_cb(id,
+                            dec_key_index,
+                            0x30100000,
+                            (uint32_t) *(args->read_iv),
+                            (uint64_t)*(args->read_seq_num),
+                            false);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tls: Failed to program decrypt TLSCB for id: {}, ret: {}", id, ret);
+        return ret;
+    }
+
+    // program encr flow
+    ret = tls_api_update_cb(oflowid,
+                            enc_key_index,
+                            0x30000000,
+                            (uint32_t) *(args->write_iv),
+                            (uint64_t)*(args->write_seq_num),
+                            false);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tls: Failed to program TLSCB for id: {}, ret: {}", oflowid, ret);
+        return ret;
+    }
+      
+    // Inform LKL  
+    lklshim_release_client_syn(id);
+
+    return ret;
+}
+
+hal_ret_t
+tls_api_createcb(uint32_t qid, bool is_decrypt_flow)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    TlsCbSpec            spec;
+    TlsCbResponse        rsp;
+
+    HAL_TRACE_DEBUG("Creating TLS Cb with for qid: {}, is_decrypt: ", qid, is_decrypt_flow);
+    spec.mutable_key_or_handle()->set_tlscb_id(qid);
+    spec.set_is_decrypt_flow(is_decrypt_flow);
+    spec.set_other_fid(0xFFFF);
+    ret = hal::tlscb_create(spec, &rsp);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to create tls cb with id: {}, err: {}", qid, ret);
+    }
+    return ret;
+}
+
 /*************************
  * APIs
  ************************/
@@ -94,39 +225,39 @@ tls_api_init(void)
     }
 
     g_ssl_helper.set_send_cb(&tls_api_send_data_cb);
-    g_ssl_helper.set_hs_done_cb(&tls_api_handshake_done_cb);
+    g_ssl_helper.set_hs_done_cb(&tls_api_hs_done_cb);
 
     //tcpfd = create_socket();
-    //tls_api_start_handshake(100);
+    //tls_api_start_handshake(100, 101);
 
     return ret;
 }
 
 hal_ret_t
-tls_api_init_flow(uint32_t qid, bool is_decrypt_flow)
+tls_api_init_flow(uint32_t enc_qid, uint32_t dec_qid)
 {
-    hal_ret_t            ret = HAL_RET_OK;
-    TlsCbSpec            spec;
-    TlsCbResponse        rsp;
-
-    HAL_TRACE_DEBUG("Creating TLS Cb with for qid: {}, is_decrypt: ", qid, is_decrypt_flow);
-    spec.mutable_key_or_handle()->set_tlscb_id(qid);
-    spec.set_is_decrypt_flow(is_decrypt_flow);
-    spec.set_other_fid(0xFFFF);
-    ret = hal::tlscb_create(spec, &rsp);
+    hal_ret_t   ret = HAL_RET_OK;
+    ret = tls_api_createcb(enc_qid, false);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to create tls cb with id: {}, err: {}", qid, ret);
+        HAL_TRACE_ERR("tls: Failed to create enc flow tlscb, qid: {}, ret: {}", enc_qid, ret);
+        return ret;
+    }
+    ret = tls_api_createcb(dec_qid, true);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("tls: Failed to create dec flow tlscb, qid: {}, ret: {}", dec_qid, ret);
+        return ret;
     }
     return ret;
 }
 
 hal_ret_t
-tls_api_start_handshake(uint32_t qid)
+tls_api_start_handshake(uint32_t enc_qid, uint32_t dec_qid)
 {
+    // Start handskake towards decrypt
     // register this qid to send context
-    hal::pd::cpupkt_register_tx_queue(asesq_ctx, types::WRING_TYPE_ASESQ, qid);
+    hal::pd::cpupkt_register_tx_queue(asesq_ctx, types::WRING_TYPE_ASESQ, dec_qid);
 
-    return g_ssl_helper.start_connection(qid);
+    return g_ssl_helper.start_connection(dec_qid, enc_qid);
 }
 
 hal_ret_t

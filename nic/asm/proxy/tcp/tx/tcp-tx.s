@@ -154,6 +154,8 @@ tcp_snd_wnd_test:
 
 
 tcp_retx_enqueue:
+    tblwr           d.retx_tail_desc, r0
+    nop 
     seq             c1, d.retx_tail_desc, r0
 
     /*

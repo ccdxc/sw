@@ -279,8 +279,8 @@ cc_library(
     name = "openssl",
     hdrs = glob(["third-party/openssl/include/openssl/*.h"]),
     srcs = [
-            "third-party/openssl/lib/libpenssl.a",
-            "third-party/openssl/lib/libpencrypto.a",
+            "third-party/openssl/lib/libssl.a",
+            "third-party/openssl/lib/libcrypto.a",
             ],
     includes = [
             "third-party/openssl/include",

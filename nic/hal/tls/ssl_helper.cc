@@ -3,7 +3,7 @@
 
 #define WHERE_INFO(ssl, w, flag, msg) { \
     if(w & flag) { \
-        HAL_TRACE_DEBUG("\t{} - {} - {}", msg, pen_SSL_state_string(ssl), pen_SSL_state_string_long(ssl)); \
+        HAL_TRACE_DEBUG("\t{} - {} - {}", msg, SSL_state_string(ssl), SSL_state_string_long(ssl)); \
     }\
 }
 
@@ -53,16 +53,16 @@ SSLConnection::init(SSLHelper* _helper, conn_id_t _id, SSL_CTX *_ctx)
     helper = _helper;
     ctx = _ctx;
     id = _id;
-    ssl = pen_SSL_new(ctx);
-    pen_BIO_new_bio_pair(&ibio, 0, &nbio, 0);
+    ssl = SSL_new(ctx);
+    BIO_new_bio_pair(&ibio, 0, &nbio, 0);
     if(ibio == NULL || nbio == NULL) {
         HAL_TRACE_ERR("Failed to allocate bio");
         return HAL_RET_NO_RESOURCE;
     }
-    pen_SSL_set_bio(ssl, ibio, ibio);
+    SSL_set_bio(ssl, ibio, ibio);
     // TBD figure out of this needs to be CLIENT or Server
     // Init to client for now
-    pen_SSL_set_connect_state(ssl);
+    SSL_set_connect_state(ssl);
 
     return HAL_RET_OK;
 }
@@ -70,40 +70,63 @@ SSLConnection::init(SSLHelper* _helper, conn_id_t _id, SSL_CTX *_ctx)
 hal_ret_t
 SSLConnection::terminate()
 {
-    pen_SSL_free(ssl); // Takes care of freeing internal BIO
-    pen_BIO_free(nbio);
+    SSL_free(ssl); // Takes care of freeing internal BIO
+    BIO_free(nbio);
     return HAL_RET_OK;
+}
+
+void
+SSLConnection::get_hs_args(hs_out_args_t& args)
+{
+    EVP_CIPHER_CTX * write_ctx = ssl->enc_write_ctx;
+    EVP_CIPHER_CTX * read_ctx = ssl->enc_read_ctx;
+
+    EVP_AES_GCM_CTX* gcm_write = (EVP_AES_GCM_CTX*)(write_ctx->cipher_data);
+    EVP_AES_GCM_CTX* gcm_read = (EVP_AES_GCM_CTX*)(read_ctx->cipher_data);
+
+    args.write_key = (unsigned char*)(gcm_write->gcm.key);
+    args.read_key = (unsigned char*)(gcm_read->gcm.key);
+    HAL_TRACE_DEBUG("Key, write: {}, read: {}", args.write_key, args.read_key);
+
+    args.write_iv = gcm_write->iv;
+    args.read_iv = gcm_read->iv;
+    HAL_TRACE_DEBUG("IV, write: {}, read: {}", args.write_iv, args.read_iv);
+
+    args.write_seq_num = ssl->s3->write_sequence;
+    args.read_seq_num = ssl->s3->read_sequence;
+    HAL_TRACE_DEBUG("SeqNum, write: {}, read: {}", args.write_seq_num, args.read_seq_num);
 }
 
 hal_ret_t
 SSLConnection::do_handshake()
 {
-    hal_ret_t   ret = HAL_RET_OK;
-    int         err = 0;
+    hal_ret_t       ret = HAL_RET_OK;
+    int             err = 0;
+    hs_out_args_t   hsargs = {0};
+
     if(!ssl) {
         HAL_TRACE_ERR("SSL: connection not initialized");
         return HAL_RET_INVALID_ARG;
     }
 
-    err = pen_SSL_do_handshake(ssl);
+    err = SSL_do_handshake(ssl);
     ret = handle_ssl_ret(err);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("SSL: Failed to start handshake");
+        HAL_TRACE_ERR("SSL: handshake failed for id: {}", id);
         if(helper && helper->get_hs_done_cb()) {
-            helper->get_hs_done_cb()(id, err);
+            helper->get_hs_done_cb()(id, oflowid, ret, NULL);
         }
         return ret;
     }
     transmit_pending_data();
 
-#if 0
-    if(pen_SSL_is_init_finished(ssl)){
+    if(SSL_is_init_finished(ssl)){
         HAL_TRACE_DEBUG("SSL: handshake complete");
         if(helper && helper->get_hs_done_cb()) {
-            helper->get_hs_done_cb()(id, 0);
+            get_hs_args(hsargs);
+            helper->get_hs_done_cb()(id, oflowid, ret, &hsargs);
         }
     }
-#endif
 
     return ret;
 }
@@ -112,10 +135,10 @@ hal_ret_t
 SSLConnection::transmit_pending_data()
 {
     uint8_t buf[1024]; // TODO: avoid this on every transmit
-    if(pen_BIO_ctrl_pending(nbio) > 0) {
-        int ret = pen_BIO_read(nbio, buf, sizeof(buf));
+    if(BIO_ctrl_pending(nbio) > 0) {
+        int ret = BIO_read(nbio, buf, sizeof(buf));
         if(ret <= 0) {
-            if(!pen_BIO_should_retry(nbio)) {
+            if(!BIO_should_retry(nbio)) {
                 handle_ssl_ret(ret);
             }
         } else {
@@ -140,13 +163,13 @@ SSLConnection::process_nw_data(uint8_t* data, size_t len)
         return HAL_RET_INVALID_ARG;
     }
     HAL_TRACE_DEBUG("SSL: Received data of len: {}", len);
-    int err = pen_BIO_write(nbio, data, len);
+    int err = BIO_write(nbio, data, len);
     ret = handle_ssl_ret(err);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SSL: Failed to process nw data: {}:{}", ret, err);
         return ret;
     }
-    if((pen_SSL_in_init(ssl) > 0)) {
+    if((SSL_in_init(ssl) > 0)) {
         ret = do_handshake();
     }
     return ret;
@@ -159,7 +182,7 @@ SSLConnection::handle_ssl_ret(int ret)
         return HAL_RET_OK;
     }
 
-    int error = pen_SSL_get_error(ssl, ret);
+    int error = SSL_get_error(ssl, ret);
     switch(error) {
     case SSL_ERROR_NONE:
     case SSL_ERROR_ZERO_RETURN:
@@ -168,7 +191,7 @@ SSLConnection::handle_ssl_ret(int ret)
 
     default:
         char buf[256];
-        pen_ERR_error_string_n(error, buf, sizeof(buf));
+        ERR_error_string_n(error, buf, sizeof(buf));
         HAL_TRACE_ERR("SSL: SSL operation failed with error: {} {}",
                         error, buf);
         return HAL_RET_ERR;
@@ -191,11 +214,11 @@ SSLHelper::SSLHelper()
 hal_ret_t
 SSLHelper::init(void) {
 
-    pen_SSL_library_init();
-    pen_OpenSSL_add_all_algorithms();
-    pen_ERR_load_BIO_strings();
-    pen_ERR_load_crypto_strings();
-    pen_SSL_load_error_strings();
+    SSL_library_init();
+    OpenSSL_add_all_algorithms();
+    ERR_load_BIO_strings();
+    ERR_load_crypto_strings();
+    SSL_load_error_strings();
 
     return this->init_ssl_ctxt();
     return HAL_RET_OK;
@@ -207,25 +230,25 @@ SSLHelper::init_ssl_ctxt()
 
     HAL_TRACE_DEBUG("SSL: Initializing SSL Context");
     // Client
-    client_ctx =  pen_SSL_CTX_new(SSLv23_client_method());
+    client_ctx =  SSL_CTX_new(SSLv23_client_method());
     HAL_ASSERT(client_ctx != NULL);
-    pen_SSL_CTX_set_options(client_ctx, SSL_OP_NO_SSLv2);
-    pen_SSL_CTX_set_cipher_list(client_ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
-    pen_SSL_CTX_set_info_callback(client_ctx, ssl_info_callback);
-    pen_SSL_CTX_set_msg_callback(client_ctx, ssl_msg_callback);
+    SSL_CTX_set_options(client_ctx, SSL_OP_NO_SSLv2);
+    SSL_CTX_set_cipher_list(client_ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
+    SSL_CTX_set_info_callback(client_ctx, ssl_info_callback);
+    SSL_CTX_set_msg_callback(client_ctx, ssl_msg_callback);
 
     // Server
-    server_ctx = pen_SSL_CTX_new(SSLv23_server_method());
+    server_ctx = SSL_CTX_new(SSLv23_server_method());
     HAL_ASSERT(server_ctx != NULL);
-    pen_SSL_CTX_set_options(server_ctx, SSL_OP_NO_SSLv2);
-    pen_SSL_CTX_set_cipher_list(server_ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
-    pen_SSL_CTX_set_info_callback(server_ctx, ssl_info_callback);
-    pen_SSL_CTX_set_msg_callback(server_ctx, ssl_msg_callback);
+    SSL_CTX_set_options(server_ctx, SSL_OP_NO_SSLv2);
+    SSL_CTX_set_cipher_list(server_ctx, "ECDHE-ECDSA-AES128-GCM-SHA256");
+    SSL_CTX_set_info_callback(server_ctx, ssl_info_callback);
+    SSL_CTX_set_msg_callback(server_ctx, ssl_msg_callback);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-SSLHelper::start_connection(conn_id_t id)
+SSLHelper::start_connection(conn_id_t id, conn_id_t oflow_id)
 {
     if(!client_ctx || !server_ctx) {
         HAL_TRACE_ERR("SSL client/server context not initialized");
@@ -235,6 +258,7 @@ SSLHelper::start_connection(conn_id_t id)
 
     // Initialize connection
     conn[id].init(this, id, client_ctx);
+    conn[id].set_oflowid(oflow_id);
     return conn[id].do_handshake();
 }
 
