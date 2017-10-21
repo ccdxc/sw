@@ -309,11 +309,11 @@ need_checkout:
     CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4) //BD Slot
 
     bcf     [!c1], exit
-    //nop     //BD Slot
-    CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, remaining_payload_bytes, REM_PYLD_BYTES) //BD Slot
+    nop     //BD Slot
     // by the time we reach here, it is SEND & in_progress == TRUE
 
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, in_progress, d.in_progress)
+    CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, remaining_payload_bytes, REM_PYLD_BYTES)
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
@@ -356,7 +356,7 @@ checkout:
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, cache, d.cache)
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, page_seg_offset, r5)
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, page_offset, r1)
-    //CAPRI_SET_FIELD(r4, INFO_OUT1_T, remaining_payload_bytes, REM_PYLD_BYTES)
+    CAPRI_SET_FIELD(r4, INFO_OUT1_T, remaining_payload_bytes, REM_PYLD_BYTES)
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
