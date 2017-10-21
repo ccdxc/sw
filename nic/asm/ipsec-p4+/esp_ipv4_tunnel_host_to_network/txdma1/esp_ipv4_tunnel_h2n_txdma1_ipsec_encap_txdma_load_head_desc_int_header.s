@@ -33,7 +33,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req[33:6] 
     phvwri p.common_te0_phv_table_lock_en, 1
     phvwri p.common_te0_phv_table_raw_table_size, 6
-    phvwr  p.common_te0_phv_table_addr, k.ipsec_to_stage2_barco_req_addr 
+    phvwr  p.common_te0_phv_table_addr, k.txdma1_global_ipsec_cb_addr
     phvwri p.app_header_table1_valid, 0
 esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_fill_zero_in_out_desc:
     addi r1, r0, 96 

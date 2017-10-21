@@ -41,6 +41,10 @@
             "size_kb": 64
         },
         {
+            "name": "ipsec_cb_barco",
+            "size_kb": 1024 
+        },
+        {
             "name": "nmdr-tx",
             "size_kb": 128
         },

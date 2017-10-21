@@ -68,7 +68,7 @@ packets:
             esp:
                 spi     : callback://ipsec/ipsec/GetSpi
                 seq     : callback://ipsec/ipsec/GetSeqNo
-                iv      : callback://ipsec/ipsec/GetIv
+                iv      : callback://ipsec/ipsec/GetIcmpIv
             payload:
                 data    : ref://factory/payloads/id=ESP_ICMP_PAYLOAD/data 
     - packet:
@@ -91,7 +91,7 @@ packets:
             esp:
                 spi     : callback://ipsec/ipsec/GetSpi
                 seq     : callback://ipsec/ipsec/GetSeqNo
-                iv      : callback://ipsec/ipsec/GetIv
+                iv      : callback://ipsec/ipsec/GetIcmpIv
             payload:
                 data    : ref://factory/payloads/id=ESP_ICMP_PAYLOAD/data 
 

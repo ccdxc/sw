@@ -13,7 +13,7 @@ struct phv_ p;
 
 esp_ipv4_tunnel_h2n_allocate_output_page_semaphore:
     phvwri p.app_header_table3_valid, 1
-    sll r1, d.out_page_ring_index, 3 
+    sll r1, d.{out_page_ring_index}.dx, 3 
     addi r1, r1, TNMPR_TABLE_BASE 
     phvwr p.common_te3_phv_table_addr, r1
     phvwri p.common_te3_phv_table_raw_table_size, 3

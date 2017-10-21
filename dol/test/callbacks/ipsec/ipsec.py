@@ -15,6 +15,12 @@ def GetSeqNo (tc, pkt):
 def GetIv (tc, pkt):
     return "0xaaaaaaaaaaaaaaaa"
 
+def GetIcmpIv (tc, pkt):
+    return "0xaaaaaaaaaaaaaaab"
+
+def GetUdpIv (tc, pkt):
+    return "0xaaaaaaaaaaaaaaab"
+
 def GetSMac (tc, pkt):
     return "00:ee:ff:00:00:02"
 

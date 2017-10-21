@@ -15,7 +15,8 @@ from infra.common.glopts import GlobalOptions
 rnmdr = 0
 ipseccbq = 0
 ipseccb = 0
-
+iv = 0
+seq = 0
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
     elem = module.iterator.Get()
@@ -30,6 +31,8 @@ def TestCaseSetup(tc):
     global ipseccbq
     global ipseccb
     global rnmdr
+    global iv
+    global seq
 
     tc.pvtdata = ObjectDatabase(logger)
     print("TestCaseSetup(): Sample Implementation.")
@@ -69,6 +72,9 @@ def TestCaseSetup(tc):
 
     brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"])
     brq.Configure()
+
+    iv = ipseccb.iv
+    seq = ipseccb.esn_lo
 
     tc.pvtdata.Add(rnmdr)
     tc.pvtdata.Add(rnmpr)
@@ -143,15 +149,16 @@ def TestCaseVerify(tc):
     print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
 
     # 5. Verify descriptor
-    if rnmdr.ringentries[rnmdr.pi-1].handle != ipseccbqq_cur.ringentries[brq_cur.pi-1].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[brq_cur.pi].handle))
-        #return False
+    if rnmdr.ringentries[rnmdr.pi].handle != ipseccbqq_cur.ringentries[ipseccb_cur.pi-1].handle:
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[ipseccb_cur.pi-1].handle))
+        return False
 
-    print("Descriptor handle expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[brq_cur.pi].handle))
-    if rnmdr.swdre_list[rnmdr.pi].DescAddr != ipseccbqq_cur.swdre_list[brq_cur.pi].DescAddr:
-        print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[brq_cur.pi].DescAddr))
-        #return False
-    print("Descriptor handle expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[brq_cur.pi].DescAddr))
+    print("Descriptor handle expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[ipseccb_cur.pi-1].handle))
+    if rnmdr.swdre_list[rnmdr.pi].DescAddr != ipseccbqq_cur.swdre_list[ipseccb_cur.pi-1].DescAddr:
+        print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[ipseccb_cur.pi-1].DescAddr))
+        return False
+    print("Descriptor handle expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[ipseccb_cur.pi-1].DescAddr))
+
     # 8. Verify PI for TNMDR got incremented by 1
     if (tnmdr_cur.pi != tnmdr.pi+1):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
@@ -164,13 +171,13 @@ def TestCaseVerify(tc):
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
     # 10. Verify SeqNo increment
-    if (ipseccb_cur.esn_lo != ipseccb.esn_lo+1):
+    if (ipseccb_cur.esn_lo != seq+1):
         print ("seq_no 0x%x 0x%x" % (ipseccb_cur.esn_lo, ipseccb.esn_lo))
-        #return False
+        return False
 
-    if (ipseccb_cur.iv != ipseccb.iv+1):
+    if (ipseccb_cur.iv != iv+1):
         print ("iv : 0x%x 0x%x" % (ipseccb_cur.iv, ipseccb.iv))
-        #`return False
+        return False
 
     return True
 

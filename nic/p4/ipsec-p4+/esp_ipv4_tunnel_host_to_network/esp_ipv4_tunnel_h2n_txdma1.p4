@@ -137,6 +137,8 @@ metadata dma_cmd_phv2mem_t brq_out_desc_zero;
 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t brq_req_write;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_post_barco_ring;
 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex;
@@ -217,7 +219,8 @@ action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,
                              key_index, iv_size, icv_size, spi,
                              esn_lo, iv, esn_hi, barco_enc_cmd,
                              ipsec_cb_index, block_size,
-                             cb_pindex, cb_cindex, cb_ring_base_addr, 
+                             cb_pindex, cb_cindex, barco_pindex, barco_cindex, 
+                             cb_ring_base_addr, barco_ring_base_addr, 
                              iv_salt, ipsec_cb_pad)
 {
     IPSEC_CB_SCRATCH_WITH_PC
@@ -300,7 +303,8 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
                                        key_index, iv_size, icv_size, spi,
                                        esn_lo, iv, esn_hi, barco_enc_cmd,
                                        ipsec_cb_index, block_size,
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, 
+                                       cb_pindex, cb_cindex, barco_pindex, barco_cindex, 
+                                       cb_ring_base_addr, barco_ring_base_addr,
                                        iv_salt, ipsec_cb_pad)
 {
 

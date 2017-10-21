@@ -69,6 +69,7 @@ esp_ipv4_tunnel_h2n_dma_cmd_incr_pindex:
     addi r2, r2, 1
     andi r2, r2, 0x3F
     tblwr d.cb_pindex, r2
+    nop
 
 esp_ipv4_tunnel_h2n_rxdma_dma_cmd_ring_doorbell:
     /* address will be in r4 */

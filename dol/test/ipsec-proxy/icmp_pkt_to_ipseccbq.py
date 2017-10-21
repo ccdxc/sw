@@ -15,6 +15,8 @@ from infra.common.glopts import GlobalOptions
 rnmdr = 0
 ipseccbq = 0
 ipseccb = 0
+iv = 0
+seq = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -30,6 +32,8 @@ def TestCaseSetup(tc):
     global ipseccbq
     global ipseccb
     global rnmdr
+    global iv
+    global seq
 
     tc.pvtdata = ObjectDatabase(logger)
     print("TestCaseSetup(): Sample Implementation.")
@@ -55,6 +59,8 @@ def TestCaseSetup(tc):
     ipseccb.key_index                 = ipseccb.crypto_key.keyindex
     ipseccb.SetObjValPd()
 
+    seq = ipseccb.esn_lo
+    iv = ipseccb.iv
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"])
@@ -115,14 +121,6 @@ def TestCaseVerify(tc):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
-    # 5. Verify descriptor
-    if rnmdr.ringentries[rnmdr.pi-1].handle != ipseccbqq_cur.ringentries[ipseccb.pi-1].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[ipseccb.pi].handle))
-        #return False
-
-    if rnmdr.swdre_list[rnmdr.pi].DescAddr != ipseccbqq_cur.swdre_list[ipseccb.pi].DescAddr:
-        print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[ipseccb.pi].DescAddr))
-        #return False
     # 6. Verify pi/ci got update got updated for BRQ
     brq = tc.pvtdata.db["BRQ_ENCRYPT"]
     brq_cur = tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT"]
@@ -135,17 +133,28 @@ def TestCaseVerify(tc):
         #return False
 
     print("BRQ:")
-    print("ilist_addr 0x%x" % brq_cur.ring_entries[0].ilist_addr)
-    print("olist_addr 0x%x" % brq_cur.ring_entries[0].olist_addr)
-    print("command 0x%x" % brq_cur.ring_entries[0].command)
-    print("key_desc_index 0x%x" % brq_cur.ring_entries[0].key_desc_index)
-    print("iv_addr 0x%x" % brq_cur.ring_entries[0].iv_addr)
-    print("status_addr 0x%x" % brq_cur.ring_entries[0].status_addr)
+    print("ilist_addr 0x%x" % brq_cur.ring_entries[brq.pi].ilist_addr)
+    print("olist_addr 0x%x" % brq_cur.ring_entries[brq.pi].olist_addr)
+    print("command 0x%x" % brq_cur.ring_entries[brq.pi].command)
+    print("key_desc_index 0x%x" % brq_cur.ring_entries[brq.pi].key_desc_index)
+    print("iv_addr 0x%x" % brq_cur.ring_entries[brq.pi].iv_addr)
+    print("status_addr 0x%x" % brq_cur.ring_entries[brq.pi].status_addr)
     # There is an offset of 64 to go past scratch when queuing to barco. Pls modify
     # this when this offset is removed.
     #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
     # 7. Verify brq input desc and rnmdr
-    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
+    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
+
+    # 5. Verify descriptor
+    if rnmdr.ringentries[rnmdr.pi].handle != ipseccbqq_cur.ringentries[0].handle:
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[0].handle))
+        #return False
+    print("Descriptor handle expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[0].handle))
+
+    if rnmdr.swdre_list[rnmdr.pi].DescAddr != ipseccbqq_cur.swdre_list[0].DescAddr:
+        print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[0].DescAddr))
+        #return False
+    print("Descriptor handle expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[0].DescAddr))
 
     # 8. Verify PI for TNMDR got incremented by 1
     if (tnmdr_cur.pi - tnmdr.pi > 1):
@@ -159,13 +168,13 @@ def TestCaseVerify(tc):
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
     # 10. Verify SeqNo increment
-    if (ipseccb_cur.esn_lo != ipseccb.esn_lo+1):
+    if (ipseccb_cur.esn_lo != seq+1):
         print ("seq_no 0x%x 0x%x" % (ipseccb_cur.esn_lo, ipseccb.esn_lo))
-        #return False
+        return False
 
-    if (ipseccb_cur.iv != ipseccb.iv+1):
+    if (ipseccb_cur.iv != iv+1):
         print ("iv : 0x%x 0x%x" % (ipseccb_cur.iv, ipseccb.iv))
-        #return False
+        return False
 
     return True
 

@@ -15,6 +15,8 @@ from infra.common.glopts import GlobalOptions
 rnmdr = 0
 ipseccbq = 0
 ipseccb = 0
+iv = 0
+seq = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -30,6 +32,8 @@ def TestCaseSetup(tc):
     global ipseccbq
     global ipseccb
     global rnmdr
+    global iv
+    global seq
 
     tc.pvtdata = ObjectDatabase(logger)
     print("TestCaseSetup(): Sample Implementation.")
@@ -54,6 +58,9 @@ def TestCaseSetup(tc):
     ipseccb.spi                       = 0
     ipseccb.key_index                 = ipseccb.crypto_key.keyindex
     ipseccb.SetObjValPd()
+
+    seq = ipseccb.esn_lo
+    iv = ipseccb.iv
 
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
@@ -135,17 +142,17 @@ def TestCaseVerify(tc):
         #return False
 
     print("BRQ:")
-    print("ilist_addr 0x%x" % brq_cur.ring_entries[0].ilist_addr)
-    print("olist_addr 0x%x" % brq_cur.ring_entries[0].olist_addr)
-    print("command 0x%x" % brq_cur.ring_entries[0].command)
-    print("key_desc_index 0x%x" % brq_cur.ring_entries[0].key_desc_index)
-    print("iv_addr 0x%x" % brq_cur.ring_entries[0].iv_addr)
-    print("status_addr 0x%x" % brq_cur.ring_entries[0].status_addr)
+    print("ilist_addr 0x%x" % brq_cur.ring_entries[brq.pi].ilist_addr)
+    print("olist_addr 0x%x" % brq_cur.ring_entries[brq.pi].olist_addr)
+    print("command 0x%x" % brq_cur.ring_entries[brq.pi].command)
+    print("key_desc_index 0x%x" % brq_cur.ring_entries[brq.pi].key_desc_index)
+    print("iv_addr 0x%x" % brq_cur.ring_entries[brq.pi].iv_addr)
+    print("status_addr 0x%x" % brq_cur.ring_entries[brq.pi].status_addr)
     # There is an offset of 64 to go past scratch when queuing to barco. Pls modify
     # this when this offset is removed.
     #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
     # 7. Verify brq input desc and rnmdr
-    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
+    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
 
     # 8. Verify PI for TNMDR got incremented by 1
     if (tnmdr_cur.pi != tnmdr.pi+1):
@@ -159,13 +166,13 @@ def TestCaseVerify(tc):
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))
     # 10. Verify SeqNo increment
-    if (ipseccb_cur.esn_lo != ipseccb.esn_lo+1):
+    if (ipseccb_cur.esn_lo != seq+1):
         print ("seq_no 0x%x 0x%x" % (ipseccb_cur.esn_lo, ipseccb.esn_lo))
-        #return False
+        return False
 
-    if (ipseccb_cur.iv != ipseccb.iv+1):
+    if (ipseccb_cur.iv != iv+1):
         print ("iv : 0x%x 0x%x" % (ipseccb_cur.iv, ipseccb.iv))
-        #return False
+        return False
 
     return True
 
