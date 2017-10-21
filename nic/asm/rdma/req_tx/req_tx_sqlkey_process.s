@@ -61,32 +61,34 @@ req_tx_sqlkey_process:
      add          r5, r2, k.args.sge_bytes
      //  pt_seg_size = 1 << (LOG_PAGE_SIZE + HBM_MUM_PT_ENTRIES_PER_CACHE_LINE)
      sllv         r6, 1, r4
-     slt          c1, r6, r5
-     add          r5, r2, r0
+     //slt          c1, r6, r5
+     blt          r6, r5, pt_unaligned_access
+     add          r5, r2, r0 // Branch Delay Slot
+
+     // Aligned PT access
+pt_aligned_access:
+     // pt_offset = transfer_offset % pt_seg_size
+     mincr        r5, r4, r0
+
+     // pt_seg_p = (u64 *)my_pt_base_addr + ((transfer_offset /lkey_info_p->page_size) / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)
+     srlv         r2, r2, r4
+     b            set_arg
+     add          r3, r3, r2, CAPRI_LOG_SIZEOF_U64 
+     //add          r3, r3, r2, LOG_HBM_CACHE_LINE_SIZE
 
      // Unaligned PT access
 pt_unaligned_access:
      // pt_offset = transfer_offset % lkey_info_p->page_size
-     mincr.c1     r5, k.args.log_page_size, r0
+     mincr        r5, k.args.log_page_size, r0
 
      // pt_seg_p = (u64 *)my_pt_base_addr + (transfer_offset / lkey_info_p->log_page_size)
-     add.c1       r4, r1, r0
-     srlv.c1      r2, r2, r4
-     add.c1       r3, r3, r2, CAPRI_LOG_SIZEOF_U64
+     add          r4, r1, r0
+     srlv         r2, r2, r4
+     add          r3, r3, r2, CAPRI_LOG_SIZEOF_U64
 
-     // else
-     // Aligned PT access
-pt_aligned_access:
-     // pt_offset = transfer_offset % pt_seg_size
-     mincr.!c1    r5, r4, r0
-
-     // pt_seg_p = (u64 *)my_pt_base_addr + ((transfer_offset /lkey_info_p->page_size) / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE)
-     srlv.!c1     r2, r2, r4
-     add.!c1      r3, r3, r2, CAPRI_LOG_SIZEOF_U64 
-     //add.!c1      r3, r3, r2, LOG_HBM_CACHE_LINE_SIZE
-
-     add          r2, k.args.sge_index, r0
-     CAPRI_GET_TABLE_I_ARG(req_tx_phv_t, r2, r7)
+set_arg:
+     seq          c1, k.args.sge_index, 0
+     CAPRI_GET_TABLE_0_OR_1_ARG(req_tx_phv_t, r7, c1)
      CAPRI_SET_FIELD(r7, INFO_OUT_T, pt_offset, r5)
      CAPRI_SET_FIELD(r7, INFO_OUT_T, pt_bytes, k.args.sge_bytes)
      CAPRI_SET_FIELD(r7, INFO_OUT_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
@@ -94,7 +96,7 @@ pt_aligned_access:
      CAPRI_SET_FIELD(r7, INFO_OUT_T, sge_index, k.args.sge_index)
      CAPRI_SET_FIELD(r7, INFO_OUT_T, dma_cmd_eop, k.args.dma_cmd_eop)
 
-     CAPRI_GET_TABLE_I_K(req_tx_phv_t, r2, r7)
+     CAPRI_GET_TABLE_0_OR_1_K(req_tx_phv_t, r7, c1)
      CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqptseg_process)
      CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r3)
 

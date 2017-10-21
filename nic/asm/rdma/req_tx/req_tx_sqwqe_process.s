@@ -60,11 +60,20 @@ skip_to_common:
     nop
 
 atomic:
+    // prepare atomic header
     phvwr          ATOMIC_VA, d.atomic.va
     phvwr          ATOMIC_R_KEY, d.atomic.r_key
     phvwr          ATOMIC_CMP_DATA, d.atomic.cmp_data
     phvwr          ATOMIC_SWAP_OR_ADD_DATA, d.atomic.swap_or_add_data
 
+    // prepare RRQWQE descriptor
+    phvwr          RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_ATOMIC
+    phvwr          RRQWQE_NUM_SGES, 1
+    phvwr          RRQWQE_ATOMIC_SGE_VA, d.atomic.sge.va
+    phvwr          RRQWQE_ATOMIC_SGE_LEN, d.atomic.sge.len
+    phvwr          RRQWQE_ATOMIC_SGE_LKEY, d.atomic.sge.l_key
+ 
+    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, first, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, last, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op_type, r1)
@@ -75,12 +84,12 @@ atomic:
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, log_pmtu, k.args.log_pmtu)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, rrq_p_index, k.args.rrq_p_index)
 
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
     SQCB1_ADDR_GET(r2)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
 
-    CAPRI_GET_TABLE_1_ARG(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, last, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, r1)
@@ -88,19 +97,31 @@ atomic:
     //CAPRI_SET_FIELD(r7, INFO_OUT3_T, release_cb1_busy, 0)
     // leave rest of variables to FALSE
 
-    CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     SQCB0_ADDR_GET(r2)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    CAPRI_SET_TABLE_0_VALID(0);     
+    CAPRI_SET_TABLE_1_VALID(0);     
 
     nop.e
     nop
 
 read:
+    // prepare atomic header
+    #phvwr           RETH_VA_RKEY_LEN, d.{read.va...read.length}
     phvwr          RETH_VA, d.read.va
     phvwr          RETH_RKEY, d.read.r_key
     phvwr          RETH_LEN, d.read.length
 
+    // prepare RRQWQE descriptor
+    phvwr          RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_READ
+    phvwr          RRQWQE_NUM_SGES, d.base.num_sges
+    phvwr          RRQWQE_READ_LEN, d.read.length
+    add            r2, k.to_stage.wqe_addr, TXWQE_SGE_OFFSET
+    phvwr          RRQWQE_READ_WQE_SGE_LIST_ADDR, r2
+
+    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
 invoke_add_headers:
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, first, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, last, 1)
@@ -111,12 +132,12 @@ invoke_add_headers:
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, log_pmtu, k.args.log_pmtu)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, rrq_p_index, k.args.rrq_p_index)
 
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
     SQCB1_ADDR_GET(r2)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
 
-    CAPRI_GET_TABLE_1_ARG(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, last, 1)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, r1)
@@ -124,13 +145,12 @@ invoke_add_headers:
     //CAPRI_SET_FIELD(r7, INFO_OUT3_T, release_cb1_busy, 0)
     // leave rest of variables to FALSE
 
-    CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     SQCB0_ADDR_GET(r2)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
-
-    nop.e
-    nop
+    CAPRI_SET_TABLE_0_VALID(0);     
+    CAPRI_SET_TABLE_1_VALID(0);     
 
     nop.e
     nop
@@ -170,15 +190,11 @@ common:
     // populate stage-2-stage data req_tx_wqe_to_sge_info_t for next stage
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, in_progress, k.args.in_progress)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, first, 1)
-    //CAPRI_SET_FIELD(r7, INFO_OUT1_T, current_sge_id, 0)
-    //CAPRI_SET_FIELD(r7, INFO_OUT1_T, current_sge_offset, 0)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, num_valid_sges, d.base.num_sges)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
     //CAPRI_SET_FIELD(r7, INFO_OUT1_T, wqe_addr, k.args.wqe_addr)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, dma_cmd_start_index, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, op_type, d.base.op_type)
-    //CAPRI_SET_FIELD(r7, INFO_OUT1_T, imm_data, 0)
-    //CAPRI_SET_FIELD(r7, INFO_OUT1_T, inv_key, 0)
 
     // sqwqe_p->sge_list[0] = sqcb_to_wqe_info_p->wqe_ptr + TX_SGE_OFFSET
     add            r3, k.to_stage.wqe_addr, TXWQE_SGE_OFFSET
@@ -195,6 +211,7 @@ inline_data:
     DMA_PHV2PKT_START_LEN_SETUP(r4, r5, inline_data, d.read.length)
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r4)
     // should work for both send/write as imm_data is located at same offset in wqe for both operations
+    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.imm_data, d.send.imm_data)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.inv_key, d.send.inv_key)
     b   invoke_add_headers

@@ -18,11 +18,10 @@ req_tx_write_back_process:
      tblwr         d.current_sge_id, k.args.current_sge_id
      tblwr         d.current_sge_offset, k.args.current_sge_offset
      tblwr         d.curr_wqe_ptr, k.to_stage.wqe_addr
-     tblwr         d.curr_op_type, k.args.op_type
 
      seq           c1, k.args.set_bktrack, 1
      bcf           [!c1], sq_ring_update
-     nop           // Branch Delay Slot
+     tblwr         d.curr_op_type, k.args.op_type // Branch Delay Slot
 
      seq           c2, k.args.empty_rrq_bktrack, 1
      bcf           [!c2], sq_ring_update
@@ -38,10 +37,8 @@ sq_ring_update:
      // if (write_back_info_p->last)
      // RING_C_INDEX_INCREMENT(sqcb0_p, SQ_RING_ID)
      seq           c1, k.args.last, 1
-     bcf           [!c1], skip_sq_ring_update
-     nop           //BD Slot
+     tblmincri.c1  SQ_C_INDEX, d.log_num_wqes, 1
 
-     tblmincri     SQ_C_INDEX, d.log_num_wqes, 1
      // Ordering rules:
      // We decided NOT to ring doorbell to update the c_index and there by re-evaluate scheduler.
      // The decision is taken because of the ordering complexity between cb0/cb1 busy bit release
@@ -56,10 +53,7 @@ sq_ring_update:
      // every wqe that is posted.
      //DOORBELL_WRITE_CINDEX(k.global.lif, k.global.qtype, k.global.qid, SQ_RING_ID, SQ_C_INDEX, r2, r3)
 
-skip_sq_ring_update:
-
-     add           r1, k.args.tbl_id, r0
-     CAPRI_SET_TABLE_I_VALID(r1, 0)
+     CAPRI_SET_TABLE_3_VALID(0)
 
      nop.e
      nop
