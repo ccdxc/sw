@@ -92,7 +92,7 @@ packets:
                  destqp  : ref://testcase/config/rdmasession/lqp/id
                  psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
              aeth:
-                syndrome : 0 # TODO - credits
+                syndrome : 14 # TODO - credits
                 msn      : ref://testcase/pvtdata/msn
              payload:
                  data    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/rawbytes

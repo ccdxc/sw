@@ -40,6 +40,7 @@ class FeatureObject:
         self.sub        = getattr(spec.feature, 'sub', None)
         self.testspec   = getattr(spec.feature, 'spec', None)
         self.args       = getattr(spec.feature, 'args', None)
+        self.selectors  = getattr(spec.feature, 'selectors', None)
         return
 
     def LoadModules(self):
@@ -55,6 +56,7 @@ class FeatureObject:
             mspec.package   = getattr(mspec, 'package', self.package)
             mspec.spec      = getattr(mspec, 'spec', self.testspec)
             mspec.args      = getattr(mspec, 'args', self.args)
+            mspec.selectors = getattr(mspec, 'selectors', self.selectors)
             ModuleStore.Add(mspec)
         return
 

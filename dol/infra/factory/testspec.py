@@ -10,10 +10,11 @@ import infra.common.utils   as utils
 
 from infra.factory.store import FactoryStore as FactoryStore
 
-class TestSpecConfigFilter(objects.FrameworkObject):
+class TestSpecConfigSelectors(objects.FrameworkObject):
     def __init__(self, spec):
         super().__init__()
         self.Clone(spec)
+        self.spec = spec
         return
 
     def IsFlowBased(self):
@@ -29,6 +30,11 @@ class TestSpecConfigFilter(objects.FrameworkObject):
         if self.flow and self.session:
             return False
         return True
+
+    def Merge(self, selectors):
+        newspec = objects.MergeObjects(selectors, self.spec)
+        self.Clone(newspec)
+        return
 
 class TestSpecSessionStepEntry(objects.FrameworkObject):
     def __init__(self):
@@ -69,7 +75,11 @@ class TestSpecObject(objects.FrameworkObject):
             self.session[0].step = step
 
         self.__merge()
-        self.selectors = TestSpecConfigFilter(self.selectors)
+        self.selectors = TestSpecConfigSelectors(self.selectors)
+        return
+
+    def MergeSelectors(self, selectors):
+        self.selectors.Merge(selectors)
         return
 
     def __merge_section(self, name):

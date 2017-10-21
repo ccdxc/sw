@@ -729,10 +729,10 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     sqcb_p->sqcb1.cq_id = spec.sq_cq_num();
     sqcb_p->sqcb0.service = spec.svc();
     sqcb_p->sqcb1.service = spec.svc();
-    sqcb_p->sqcb1.lsn = 32; // FOR now allowing 32 sq send/write_imm requests
+    sqcb_p->sqcb1.lsn = 128; // FOR now allowing 128 sq send/write_imm requests
     sqcb_p->sqcb1.ssn = 1;
     sqcb_p->sqcb1.msn = 0;
-    sqcb_p->sqcb1.credits = 0xa;
+    sqcb_p->sqcb1.credits = 0xe; // 0x01110 - 128
     sqcb_p->sqcb1.p4plus_to_p4_flags = 0xA;
     //sqcb_p->sqcb1.p4plus_to_p4_flags = (P4PLUS_TO_P4_UPDATE_UDP_LEN |
     //                                    P4PLUS_TO_P4_UPDATE_IP_LEN);

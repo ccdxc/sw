@@ -62,6 +62,7 @@ class Module(objects.FrameworkObject):
         self.ignore     = spec.ignore
         self.iterator   = ModuleIterator(spec.iterate)
         self.args       = getattr(spec, 'args', None)
+        self.selectors  = getattr(spec, 'selectors', None)
         self.tracker    = getattr(spec, 'tracker', False)
         self.id         = ModuleIdAllocator.get()
         self.module_hdl = None
@@ -102,6 +103,8 @@ class Module(objects.FrameworkObject):
         utils.LogFunctionBegin(self.logger)
         self.logger.info("- Loading TEST SPEC = %s" % self.spec)
         self.testspec = testspec.TestSpecObject(self.path, self.spec, self.logger)
+        if self.selectors is not None:
+            self.testspec.MergeSelectors(self.selectors)
         utils.LogFunctionEnd(self.logger)
         return defs.status.SUCCESS
 
