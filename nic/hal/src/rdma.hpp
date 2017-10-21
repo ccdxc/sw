@@ -887,6 +887,8 @@ typedef enum rdma_pkt_opc_e {
 typedef struct sqcb0_s {
     uint8_t  rsvd1[3];
     uint8_t  cb1_byte;
+    uint8_t  busy: 1;        //tx
+    uint8_t  rsvd: 7;
     uint32_t pd;
     uint8_t  bktrack_in_progress:1;
     uint8_t  need_credits:1;
@@ -896,8 +898,6 @@ typedef struct sqcb0_s {
     uint8_t  disable_e2e_fc: 1;//tx
     uint8_t  signalled_completion: 1;//rx
     uint8_t  in_progress: 1; //tx
-    uint8_t  busy: 1;        //tx
-    uint8_t  rsvd: 7;
     uint8_t  num_sges;
     uint8_t  current_sge_id;
     uint32_t  current_sge_offset;

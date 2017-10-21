@@ -40,16 +40,10 @@ resp_rx_rqcb_process:
     // we don't need spr_tbladdr for now, as QSTATE_ADDR is anyway available
     // as part of raw intrinsic params
     #mfspr r1, spr_tbladdr	
-    //add r1, r0, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR
-    //srl r1, r1, RQCB_ADDR_SHIFT
-    //CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, r1)
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT))
 
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
-    //CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, qtype, CAPRI_RXDMA_INTRINSIC_QTYPE)
-    //CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, qid, CAPRI_RXDMA_INTRINSIC_QID)
-    CAPRI_SET_2_FIELDS(r3, PHV_GLOBAL_COMMON_T, qtype, qid, CAPRI_RXDMA_INTRINSIC_QID_QTYPE)
-    //CAPRI_SET_FIELD_RANGE(r3, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE)
+    CAPRI_SET_FIELD_RANGE(r3, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE)
 
     // MPU GLOBAL
     // take a copy of raw_flags in r7 and keep it for further checks
@@ -113,7 +107,6 @@ resp_rx_rqcb_process:
 check_read:
     ARE_ALL_FLAGS_SET(c1, r7, RESP_RX_FLAG_READ_REQ)
     bcf     [!c1], check_write
-    //nop     //BD Slot
     IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_FIRST|RESP_RX_FLAG_MIDDLE) //BD Slot
 
 read:
@@ -197,7 +190,6 @@ check_write:
     phvwr.c1    p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ) //BD Slot
      
     crestore [c5,c4,c3,c2,c1], r7, (RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_WRITE | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_LAST | RESP_RX_FLAG_FIRST)
-    //ARE_ALL_FLAGS_SET(c4, r7, RESP_RX_FLAG_WRITE)
     bcf     [!c4], need_checkout
     // INCREMENT E_PSN HERE
     tblmincri   d.e_psn, 24, 1 //BD slot
@@ -205,11 +197,7 @@ check_write:
 
 write:
     // only first and only packets have reth header
-    //IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_FIRST)
-    //IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_LAST)
-    //IS_ANY_FLAG_SET(c3, r7, RESP_RX_FLAG_ONLY)
     setcf   c4, [c1 | c3]       // FIRST | ONLY
-    #IS_ANY_FLAG_SET(c5, r7, RESP_RX_FLAG_IMMDT)
     setcf   c6, [c5 & c2]       // IMM & LAST
     setcf   c7, [c5 & c3]       // IMM & ONLY
 
@@ -223,7 +211,6 @@ write:
     // populate immediate data. 
     phvwr.c5    p.cqwqe.imm_data_vld, 1
     // IMM & LAST
-    #phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
     add.c6      r2, r0, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
     CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(r2, c7)
     phvwr.c5    p.cqwqe.imm_data, r2
@@ -279,9 +266,7 @@ skip_immdt_as_dbell:
 need_checkout:
 
     crestore [c7, c5, c1], r7, (RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_SEND) 
-    //ARE_ALL_FLAGS_SET(c1, r7, RESP_RX_FLAG_SEND)
     ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
-    //ARE_ALL_FLAGS_SET(c7, r7, RESP_RX_FLAG_COMPLETION)
     seq     c3, d.in_progress, 1
     setcf   c4, [c1 & !c3]
 
@@ -298,14 +283,12 @@ need_checkout:
     phvwr.c6    p.cqwqe.imm_data_vld, 1
     phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
 
-    //ARE_ALL_FLAGS_SET(c5, r7, RESP_RX_FLAG_INV_RKEY)
     phvwr.c5    p.cqwqe.rkey_inv_vld, 1 
     phvwr.c5    p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
     
     // checkout a RQ descriptor if it is a send AND in_progress is FALSE
     // OR write_with_imm
     bcf     [c2|c4], checkout
-    //nop     //BD Slot
     CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4) //BD Slot
 
     bcf     [!c1], exit

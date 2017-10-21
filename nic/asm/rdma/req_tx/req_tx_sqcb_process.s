@@ -32,32 +32,21 @@ req_tx_sqcb_process:
 
     // enable below code after spr_tbladdr special purpose register is available in capsim
     #mfspr         r1, spr_tbladdr
-    #srl           r1, r1, SQCB_ADDR_SHIFT
-    #CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, cb_addr, r1)
-    add            r2, r0, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR
-    srl            r2, r2, SQCB_ADDR_SHIFT
-
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cb_addr, r2)
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(SQCB_ADDR_SHIFT))
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, lif, CAPRI_TXDMA_INTRINSIC_LIF)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qtype, CAPRI_TXDMA_INTRINSIC_QTYPE)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
 
+    // if either of the busy flags are set, give up the scheduler opportunity
+    crestore [c2,c1], d.{busy...cb1_busy}, 0x3
+    bcf            [c1 | c2], exit
     //set dma_cmd_ptr in phv
     TXDMA_DMA_CMD_PTR_SET(REQ_TX_DMA_CMD_START_FLIT_ID) // Branch Delay Slot
-
-    // if either of the busy flags are set, give up the scheduler opportunity
-    seq            c1, d.busy, 1
-    seq            c2, d.cb1_busy, 1
-    bcf            [c1 | c2], exit
-    nop
     
-    // take both the busy flags
-    tblwr          d.busy, 1
-    tblwr          d.cb1_busy, 1
-
     ARE_ALL_RINGS_EMPTY(c1, r7[MAX_SQ_HOST_RINGS-1:0], FC_RING_ID_BITMAP)
     bcf          [c1], sq_bktrack1
-    nop          // Branch Delay Slot 
+    // take both the busy flags
+    tblwr          d.{busy...cb1_busy}, 0x3 //Branch Delay Slot
 
 update_credits:
     // set cindex same as pindex without ringing doorbell, as stage0

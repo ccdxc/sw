@@ -28,6 +28,7 @@
 #define CAPRI_RXDMA_BTH_IETH_R_KEY k.{rdma_bth_ieth_ieth_r_key_sbit0_ebit7...rdma_bth_ieth_ieth_r_key_sbit8_ebit31}
 
 #define CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+#define CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(_shift) k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33[31:_shift]}
 #define CAPRI_TXDMA_INTRINSIC_LIF k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
 #define CAPRI_TXDMA_INTRINSIC_QTYPE k.p4_txdma_intr_qtype
 #define CAPRI_TXDMA_INTRINSIC_QID k.p4_txdma_intr_qid

@@ -59,8 +59,6 @@ struct sqcb0_t {
     current_sge_offset: 32;
     current_sge_id: 8;
     num_sges: 8;
-    rsvd0: 7;
-    busy: 1;
     in_progress: 1;
     signalled_completion: 1;
     disable_e2e_fc: 1;
@@ -70,6 +68,8 @@ struct sqcb0_t {
     rsvd1: 1;
     bktrack_in_progress: 1;
     pd: 32;
+    rsvd0: 7;
+    busy: 1;
     // a byte field located in sqcb0, but manipulated from
     // add_headers stage (operating on sqcb1) using memwr/DMA
     // to preserve the ordering semantics
