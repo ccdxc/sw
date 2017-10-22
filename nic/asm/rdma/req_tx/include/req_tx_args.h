@@ -48,13 +48,23 @@ struct req_tx_wqe_to_sge_info_t {
 
 struct req_tx_sge_to_lkey_info_t {
     sge_va                        : 64;
-    sge_bytes                     : 16;
-    log_page_size                 : 5;
-    dma_cmd_start_index           : 16;
     key_id                        : 8;
+    log_page_size                 : 5;
+    sge_bytes                     : 16;
+    dma_cmd_start_index           : 8;
     sge_index                     : 8;
     dma_cmd_eop                   : 1;
-    pad                           : 42; 
+    pad                           : 50; 
+};
+
+struct req_tx_lkey_to_ptseg_info_t {
+    pt_offset                    : 32;
+    log_page_size                : 5;
+    pt_bytes                     : 16;
+    dma_cmd_start_index          : 8;
+    sge_index                    : 8;
+    dma_cmd_eop                  : 1;
+    pad                          : 90;
 };
 
 struct atomic_t {
@@ -95,16 +105,6 @@ struct req_tx_rrqwqe_to_hdr_info_t {
     log_pmtu                      : 5;
     rrq_p_index                   : 8;
     union op_t op;
-};
-
-struct req_tx_lkey_to_ptseg_info_t {
-    pt_offset                    : 32;
-    pt_bytes                     : 16;
-    log_page_size                : 16;
-    dma_cmd_start_index          : 8;
-    sge_index                    : 8;
-    dma_cmd_eop                  : 1;
-    pad                          : 79;
 };
 
 struct req_tx_sqcb_write_back_info_t {

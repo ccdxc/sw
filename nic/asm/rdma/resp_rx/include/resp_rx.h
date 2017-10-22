@@ -151,11 +151,13 @@ struct resp_rx_rqwqe_process_k_t {
 //20
 struct resp_rx_key_info_t {
     va: 64;
+    //keep len...tbl_id in the same order
+    //aligning with resp_rx_lkey_to_pt_info_t
     len: 16;
-    acc_ctrl: 8;
     dma_cmd_start_index: 8;
-    key_id: 8;
     tbl_id: 8;
+    acc_ctrl: 8;
+    key_id: 8;
     dma_cmdeop: 1;
     cq_dma_cmd_index: 7;
     inv_r_key: 32;
@@ -209,6 +211,8 @@ struct resp_rx_rqcb1_write_back_process_k_t {
 //20
 struct resp_rx_lkey_to_pt_info_t {
     pt_offset: 32;
+    //keep pt_bytes...sge_index in the same order
+    //aligning with resp_rx_key_info_t
     pt_bytes: 16;
     dma_cmd_start_index: 8;
     sge_index: 8;
