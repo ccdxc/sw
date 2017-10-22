@@ -79,7 +79,7 @@ pt_aligned_access:
      // Unaligned PT access
 pt_unaligned_access:
      // pt_offset = transfer_offset % lkey_info_p->page_size
-     mincr        r5, k.args.log_page_size, r0
+     mincr        r5, r1, r0
 
      // pt_seg_p = (u64 *)my_pt_base_addr + (transfer_offset / lkey_info_p->log_page_size)
      add          r4, r1, r0
