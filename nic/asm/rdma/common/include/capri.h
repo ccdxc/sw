@@ -150,18 +150,14 @@ struct capri_intrinsic_ring_t {
 
 #define CAPRI_SET_RAW_TABLE_PC(_r, _pc) \
     addi _r, r0, _pc; \
-    srl _r, _r, CAPRI_RAW_TABLE_PC_SHIFT;
 
 #define CAPRI_SET_RAW_TABLE_PC_C(_c, _r, _pc) \
     addi._c    _r, r0, _pc; \
-    srl._c     _r, _r, CAPRI_RAW_TABLE_PC_SHIFT;
 
 #define CAPRI_NEXT_TABLE_I_READ(_base_r, _lock_en, _table_read_size, _table_pc_r, _table_addr_r) \
-    phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, lock_en), sizeof(INTRINSIC_RAW_K_T.lock_en), _lock_en; \
-    phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), sizeof(INTRINSIC_RAW_K_T.table_read_size), _table_read_size; \
-    phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_pc), sizeof(INTRINSIC_RAW_K_T.table_pc), _table_pc_r; \
+    phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size); \
+    phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_pc), sizeof(INTRINSIC_RAW_K_T.table_pc), _table_pc_r[63:CAPRI_RAW_TABLE_PC_SHIFT]; \
     phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_addr), sizeof(INTRINSIC_RAW_K_T.table_addr), _table_addr_r;
-
 
 #define CAPRI_SET_TABLE_0_VALID(_vld) \
     phvwri   p.common.app_header_table0_valid, _vld;
@@ -233,27 +229,23 @@ _table_i_valid_c:;
     .brcase 0; \
         add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te0_phv_table_addr); \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data); \
-        CAPRI_SET_TABLE_0_VALID(1);  \
         b _next; \
-        nop; \
+        CAPRI_SET_TABLE_0_VALID(1);  \
     .brcase 1; \
         add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te1_phv_table_addr); \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
-        CAPRI_SET_TABLE_1_VALID(1);  \
         b _next; \
-        nop; \
+        CAPRI_SET_TABLE_1_VALID(1);  \
     .brcase 2; \
         add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te2_phv_table_addr); \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data); \
-        CAPRI_SET_TABLE_2_VALID(1);  \
         b _next; \
-        nop; \
+        CAPRI_SET_TABLE_2_VALID(1);  \
     .brcase 3; \
         add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te3_phv_table_addr); \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data); \
-        CAPRI_SET_TABLE_3_VALID(1);  \
         b _next; \
-        nop; \
+        CAPRI_SET_TABLE_3_VALID(1);  \
     .brend; \
 _next:;
     
@@ -264,27 +256,23 @@ _next:;
     .brcase 0; \
         add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te0_phv_table_addr); \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data); \
-        CAPRI_SET_TABLE_0_VALID(1);  \
         b _next2; \
-        nop; \
+        CAPRI_SET_TABLE_0_VALID(1);  \
     .brcase 1; \
         add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te1_phv_table_addr); \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
-        CAPRI_SET_TABLE_1_VALID(1);  \
         b _next2; \
-        nop; \
+        CAPRI_SET_TABLE_1_VALID(1);  \
     .brcase 2; \
         add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te2_phv_table_addr); \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data); \
-        CAPRI_SET_TABLE_2_VALID(1);  \
         b _next2; \
-        nop; \
+        CAPRI_SET_TABLE_2_VALID(1);  \
     .brcase 3; \
         add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te3_phv_table_addr); \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data); \
-        CAPRI_SET_TABLE_3_VALID(1);  \
         b _next2; \
-        nop; \
+        CAPRI_SET_TABLE_3_VALID(1);  \
     .brend; \
 _next2:;
     
@@ -332,20 +320,20 @@ _next2:;
     br      _tbl_id_r[1:0]; \
     nop; \
     .brcase 0; \
-        b _I_ARG_next; \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data); \
+        b _I_ARG_next; \
         phvwr    p.common.common_t0_s2s_s2s_data, r0; \
     .brcase 1; \
-        b _I_ARG_next; \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
+        b _I_ARG_next; \
         phvwr    p.common.common_t1_s2s_s2s_data, r0; \
     .brcase 2; \
-        b _I_ARG_next; \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data); \
+        b _I_ARG_next; \
         phvwr    p.common.common_t2_s2s_s2s_data, r0; \
     .brcase 3; \
-        b _I_ARG_next; \
         add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data); \
+        b _I_ARG_next; \
         phvwr    p.common.common_t3_s2s_s2s_data, r0; \
     .brend; \
 _I_ARG_next:;
@@ -683,13 +671,14 @@ addi _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PER_FL
 #define DB_SET_PINDEX         0x2
 #define DB_INC_PINDEX         0x3
 
+#define CAPRI_ENCODE_DB_ADDR_UPD_BITS(__ring_upd, __sched_wr) \
+    (DB_ADDR_BASE + (((__ring_upd << DB_RING_UPD_SHIFT) + __sched_wr) << DB_UPD_SHIFT))
+
 #define CAPRI_SETUP_DB_ADDR(_addr_prefix, _ring_upd, _sched_wr, _lif, _qtype, _capri_addr)       \
-    add       _capri_addr, _sched_wr, _ring_upd, DB_RING_UPD_SHIFT;                              \
-    sll       _capri_addr, _capri_addr, DB_UPD_SHIFT;                                            \
-    add       _capri_addr, _capri_addr, _lif, DB_LIF_SHIFT;                                      \
-    add       _capri_addr, _capri_addr, _qtype, DB_QTYPE_SHIFT;                                  \
-    addi      _capri_addr, _capri_addr, _addr_prefix;
-     
+    add     _capri_addr, r0, _lif, DB_LIF_SHIFT; \
+    add     _capri_addr, _capri_addr, _qtype, DB_QTYPE_SHIFT; \
+    addi    _capri_addr, _capri_addr, CAPRI_ENCODE_DB_ADDR_UPD_BITS(_ring_upd, _sched_wr);
+
 #define CAPRI_SETUP_DB_DATA(_qid, _ring, _ring_index, _capri_data)                               \
     add       _capri_data, _ring_index, _ring, DB_RING_SHIFT;                                    \
     add       _capri_data, _capri_data, _qid, DB_QID_SHIFT;
