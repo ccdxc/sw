@@ -24,11 +24,8 @@
 #define RESP_RX_POST_ACK_INFO_TO_TXDMA(_dma_base_r, _rqcb1_addr_r, _tmp_r, \
                                        _lif, _qtype, _qid, \
                                        _db_addr_r, _db_data_r) \
-    add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, aeth); \
-    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.aeth, ack_info.aeth, _tmp_r); \
-    DMA_NEXT_CMD_I_BASE_GET(_dma_base_r, 1); \
     add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, ack_nak_psn); \
-    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.psn, ack_info.psn, _tmp_r); \
+    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.psn, ack_info.aeth.msn, _tmp_r); \
     DMA_NEXT_CMD_I_BASE_GET(_dma_base_r, 1); \
     PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, ACK_NAK_RING_ID, _db_addr_r, _db_data_r);\
     phvwr       p.db_data1, _db_data_r.dx; \
@@ -36,11 +33,8 @@
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
     
 #define RESP_RX_POST_ACK_INFO_TO_TXDMA_NO_DB(_dma_base_r, _rqcb1_addr_r, _tmp_r) \
-    add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, aeth); \
-    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.aeth, ack_info.aeth, _tmp_r); \
-    DMA_NEXT_CMD_I_BASE_GET(_dma_base_r, 1); \
     add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, ack_nak_psn); \
-    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.psn, ack_info.psn, _tmp_r); \
+    DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.psn, ack_info.aeth.msn, _tmp_r); \
 
 #define RESP_RX_POST_IMMDT_AS_DOORBELL(_dma_base_r, _tmp_r, \
                                        _lif, _qtype, _qid, \

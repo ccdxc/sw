@@ -366,8 +366,8 @@ union roce_opcode_flags_t {
 }; 
 
 struct ack_info_t {
-    struct rdma_aeth_t  aeth;
     psn: 24;
+    struct rdma_aeth_t  aeth;
 };
 
 #define SGE_T struct sge_t
