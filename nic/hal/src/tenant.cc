@@ -550,6 +550,11 @@ tenant_make_clone (tenant_t *ten, tenant_t **ten_clone)
     *ten_clone = tenant_alloc_init();
     memcpy(*ten_clone, ten, sizeof(tenant_t));
 
+    // After clone always reset lists
+    dllist_reset(&(*ten_clone)->l2seg_list_head);
+    dllist_reset(&(*ten_clone)->ep_list_head);
+    dllist_reset(&(*ten_clone)->session_list_head);
+
     pd::pd_tenant_make_clone(ten, *ten_clone);
 
     return HAL_RET_OK;

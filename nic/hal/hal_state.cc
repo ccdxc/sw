@@ -1121,6 +1121,12 @@ hal_mem_db::init(void)
                              false, true, true, true);
     HAL_ASSERT_RETURN((if_slab_ != NULL), false);
 
+    // initialize enic l2seg entry related data structures
+    enic_l2seg_entry_slab_ = slab::factory("interface", HAL_SLAB_IF,
+                             sizeof(hal::if_l2seg_entry_t), 16,
+                             false, true, true, true);
+    HAL_ASSERT_RETURN((enic_l2seg_entry_slab_ != NULL), false);
+
     // initialize endpoint related data structures
     ep_slab_ = slab::factory("EP", HAL_SLAB_EP, sizeof(hal::ep_t), 128,
                              true, true, true, true);
@@ -1261,6 +1267,7 @@ hal_mem_db::hal_mem_db()
     l2seg_slab_ = NULL;
     lif_slab_ = NULL;
     if_slab_ = NULL;
+    enic_l2seg_entry_slab_ = NULL;
     ep_slab_ = NULL;
     ep_ip_entry_slab_ = NULL;
     ep_l3_entry_slab_ = NULL;
@@ -1323,6 +1330,7 @@ hal_mem_db::~hal_mem_db()
     l2seg_slab_ ? delete l2seg_slab_ : HAL_NOP;
     lif_slab_ ? delete lif_slab_ : HAL_NOP;
     if_slab_ ? delete if_slab_ : HAL_NOP;
+    enic_l2seg_entry_slab_ ? delete enic_l2seg_entry_slab_ : HAL_NOP;
     ep_slab_ ? delete ep_slab_ : HAL_NOP;
     ep_ip_entry_slab_ ? delete ep_ip_entry_slab_ : HAL_NOP;
     ep_l3_entry_slab_ ? delete ep_l3_entry_slab_ : HAL_NOP;
@@ -1539,6 +1547,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_IF:
         g_hal_state->if_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_ENIC_L2SEG_ENTRY:
+        g_hal_state->enic_l2seg_entry_slab()->free(elem);
         break;
 
     case HAL_SLAB_EP:

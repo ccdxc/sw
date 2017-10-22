@@ -710,6 +710,8 @@ end:
         }
     }
 
+    // TODO: Free up ip_entry and l3_entry
+
     ep_prepare_rsp(rsp, ret, ep ? ep->hal_handle : HAL_HANDLE_INVALID);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return HAL_RET_OK;
@@ -799,6 +801,9 @@ ep_make_clone (ep_t *ep, ep_t **ep_clone)
     memcpy(*ep_clone, ep, sizeof(ep_t));
 
     pd::pd_ep_make_clone(ep, *ep_clone);
+
+    // After clone always reset lists
+    dllist_reset(&(*ep_clone)->session_list_head);
 
     return HAL_RET_OK;
 }
@@ -921,8 +926,8 @@ endpoint_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // Free up add & del ip lists
-    endpoint_free_ip_list(app_ctxt->add_iplist);
-    endpoint_free_ip_list(app_ctxt->del_iplist);
+    endpoint_cleanup_ip_list(&app_ctxt->add_iplist);
+    endpoint_cleanup_ip_list(&app_ctxt->del_iplist);
 
     // Free PI
     ep_free(ep);
@@ -1103,11 +1108,35 @@ endpoint_ip_list_update(EndpointUpdateRequest& req, ep_t *ep,
         }
         ip_exists = false;
     }
+    if (!*iplist_change) {
+        endpoint_cleanup_ip_list(add_iplist);
+        endpoint_cleanup_ip_list(del_iplist);
+    }
 
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// Clean up IP list.
+// ----------------------------------------------------------------------------
+hal_ret_t
+endpoint_cleanup_ip_list(dllist_ctxt_t **list)
+{
+    hal_ret_t       ret = HAL_RET_OK;
 
+    if (*list == NULL) {
+        return ret;
+    }
+    endpoint_free_ip_list(*list);
+    HAL_FREE(HAL_MEM_ALLOC_DLLIST, *list);
+    *list = NULL;
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Free elements in ip list
+// ----------------------------------------------------------------------------
 hal_ret_t
 endpoint_free_ip_list(dllist_ctxt_t *iplist)
 {

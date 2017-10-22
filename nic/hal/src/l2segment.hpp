@@ -193,7 +193,9 @@ find_l2seg_by_handle (hal_handle_t handle)
                         __FUNCTION__, handle);
         return NULL;
     }
-    return (l2seg_t *)hal_handle->get_obj();
+    // HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
+    //           HAL_OBJ_ID_TENANT);
+   return (l2seg_t *)hal_handle_get_obj(handle); 
 #if 0
     // check for object type
     HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 

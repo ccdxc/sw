@@ -61,6 +61,13 @@ typedef struct qos_actions_s {
     uint32_t            dscp;
 } qos_actions_t;
 
+// l2seg entry used for classic enic if
+typedef struct if_l2seg_entry_s {
+    hal_handle_t    l2seg_handle;               // l2segment handle
+    void            *pd;                        // pd pointer
+    dllist_ctxt_t   lentry;                     // list context
+} __PACK__ if_l2seg_entry_t;
+
 // Interface strucutre
 typedef struct if_s {
     hal_spinlock_t      slock;                       // lock to protect this structure
@@ -81,6 +88,9 @@ typedef struct if_s {
             hal_handle_t        l2seg_handle;        // handle to l2seg
             mac_addr_t          mac_addr;            // EP's MAC addr
             vlan_id_t           encap_vlan;          // vlan enabled on this if
+            // classic mode fields
+            hal_handle_t        native_l2seg_clsc;   // native l2seg
+            hal_handle_t        pinned_up_clsc;      // pinned uplink
         } __PACK__;
 
         // uplink interface info
@@ -117,14 +127,19 @@ typedef struct if_s {
     } __PACK__;
 
     // operational state of interface
-    hal_handle_t        hal_handle;         // HAL allocated handle
-    uint32_t            num_ep;             // no. of endpoints
-    intf::IfStatus      if_op_status;       // operational status
+    hal_handle_t        hal_handle;             // HAL allocated handle
+    uint32_t            num_ep;                 // no. of endpoints
+    intf::IfStatus      if_op_status;           // operational status
 
     // forward references
-    dllist_ctxt_t       mbr_if_list_head;   // list of member ports for uplink PC
+    dllist_ctxt_t       mbr_if_list_head;       // list of member ports for uplink PC
+    dllist_ctxt_t       l2seg_list_clsc_head;   // l2segments in classic nic
+                                                // mode for enic ifs. 
+                                                // l2seg_entry_classic_t
     // back references
-    dllist_ctxt_t       l2seg_list_head;    // l2segments - valid only for uplinks
+    // Uplinks
+    dllist_ctxt_t       l2seg_list_head;        // l2segments, add_l2seg_on_uplink
+    dllist_ctxt_t       enicif_list_head;       // enicifs, Classic enics 
 
 
 
@@ -136,7 +151,7 @@ typedef struct if_s {
 } __PACK__ if_t;
 
 typedef struct if_create_app_ctxt_s {
-    l2seg_t    *l2seg;                                 // valid for enic if
+    // l2seg_t    *l2seg;                                 // valid for enic if
     lif_t      *lif;                                   // valid for enic if 
 } __PACK__ if_create_app_ctxt_t;
 
@@ -153,6 +168,23 @@ typedef struct if_update_app_ctxt_s {
             dllist_ctxt_t   *add_mbrlist;
             dllist_ctxt_t   *del_mbrlist;
             dllist_ctxt_t   *aggr_mbrlist;
+        } __PACK__;
+
+        // enicif interface info
+        struct {
+            // classic: native l2seg change
+            bool            native_l2seg_clsc_change;
+            hal_handle_t    new_native_l2seg_clsc;
+
+            // classic: pinned uplink change
+            bool            pinned_up_clsc_change;
+            hal_handle_t    new_pinned_uplink_clsc;
+
+            // classic: l2seg list change
+            bool            l2segclsclist_change;
+            dllist_ctxt_t   *add_l2segclsclist;
+            dllist_ctxt_t   *del_l2segclsclist;
+            // dllist_ctxt_t   *aggr_l2segclsclist;
         } __PACK__;
     } __PACK__;
 
@@ -209,10 +241,13 @@ if_init (if_t *hal_if)
     hal_if->hal_handle = HAL_HANDLE_INVALID;
     hal_if->lif_handle = HAL_HANDLE_INVALID;
     hal_if->l2seg_handle = HAL_HANDLE_INVALID;
+    hal_if->native_l2seg_clsc = HAL_HANDLE_INVALID;
     hal_if->is_pc_mbr = false;
     hal_if->uplinkpc_handle = HAL_HANDLE_INVALID;
     utils::dllist_reset(&hal_if->l2seg_list_head);
+    utils::dllist_reset(&hal_if->enicif_list_head);
     utils::dllist_reset(&hal_if->mbr_if_list_head);
+    utils::dllist_reset(&hal_if->l2seg_list_clsc_head);
 
     return hal_if;
 }
@@ -278,8 +313,12 @@ find_if_by_handle (hal_handle_t handle)
                         __FUNCTION__, handle);
         return NULL;
     }
-    return (if_t *)hal_handle->get_obj();
+   return (if_t *)hal_handle_get_obj(handle); 
+
 #if 0
+    // TODO: hal_handle can be NULL if there is no if with handle. 
+    //       Print proper msg.
+
     // check for object type
     HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
                HAL_OBJ_ID_INTERFACE);
@@ -328,6 +367,18 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
                         dllist_ctxt_t **del_mbrlist,
                         dllist_ctxt_t **aggr_mbrlist);
 hal_ret_t interface_cleanup_handle_list(dllist_ctxt_t **list);
+void enicif_print_l2seg_entry_list(dllist_ctxt_t  *list);
+void enicif_free_l2seg_entry_list(dllist_ctxt_t *list);
+hal_ret_t
+enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
+                              bool *l2seglist_change,
+                              dllist_ctxt_t **add_l2seglist, 
+                              dllist_ctxt_t **del_l2seglist);
+hal_ret_t enicif_update_l2segs_relation (dllist_ctxt_t *l2segs_list, 
+                                         if_t *hal_if, bool add);
+hal_ret_t enicif_cleanup_l2seg_entry_list(dllist_ctxt_t **list);
+bool l2seg_in_classic_enicif(if_t *hal_if, hal_handle_t l2seg_handle, 
+                             if_l2seg_entry_t **l2seg_entry);
 
 
 

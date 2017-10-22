@@ -12,7 +12,6 @@
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/pd/iris/p4pd/p4pd_defaults.hpp"
 
-
 namespace hal {
 namespace pd {
 
@@ -37,6 +36,14 @@ pd_enicif_create(pd_if_args_t *args)
 
     // Link PI & PD
     pd_enicif_link_pi_pd(pd_enicif, args->intf);
+
+    // Create L2segs PD entries for classic
+    ret = pd_enicif_alloc_l2seg_entries(pd_enicif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-enicif::{}: unable to alloc. pd l2seg entries: ret:{}",
+                      __FUNCTION__, ret);
+        goto end;
+    }
 
     // Allocate Resources
     ret = pd_enicif_alloc_res(pd_enicif);
@@ -64,8 +71,20 @@ end:
 hal_ret_t
 pd_enicif_update (pd_if_args_t *args)
 {
-    // Nothing to do for now
-    return HAL_RET_OK;
+    hal_ret_t           ret = HAL_RET_OK;
+
+    if (args->l2seg_clsc_change) {
+        ret = pd_enicif_upd_l2seg_clsc_change(args);
+    } else {
+        if (args->native_l2seg_clsc_change) {
+            ret = pd_enicif_upd_native_l2seg_clsc_change(args);
+        }
+        if (args->pinned_uplink_clsc_change) {
+        }
+    }
+
+
+    return ret;
 }
 
 //-----------------------------------------------------------------------------
@@ -98,6 +117,202 @@ pd_enicif_delete (pd_if_args_t *args)
 
     return ret;
 }
+
+// ----------------------------------------------------------------------------
+// Enicif Update: Handling pinned uplink change
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_upd_pinned_uplink_clsc_change(pd_if_args_t *args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
+    if_t            *hal_if = (if_t *)pd_enicif->pi_if;
+
+    HAL_TRACE_DEBUG("pd-enicif:{} pinned uplink change: ", __FUNCTION__);
+
+    // Program input prop. entries for new l2segs
+    ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, &hal_if->l2seg_list_clsc_head,
+                                    args, TABLE_OPER_UPDATE);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-enicif: failed to repgm input prop."
+                "for l2segs. ret:{}", ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Enicif Update: Handling native l2seg change
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_upd_native_l2seg_clsc_change(pd_if_args_t *args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
+    l2seg_t         *native_l2seg = NULL;
+
+    HAL_TRACE_DEBUG("pd-enicif:{} native l2seg change: ", __FUNCTION__);
+
+    // Remove old native l2seg input prop entry
+    ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_enicif->
+                                            inp_prop_native_l2seg_clsc);
+
+    if (args->new_native_l2seg_clsc != HAL_HANDLE_INVALID) {
+        // Install new native l2seg input prop entry
+        native_l2seg = find_l2seg_by_handle(args->new_native_l2seg_clsc);
+        ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif, 
+                                              native_l2seg,
+                                              NULL, args,
+                                              TABLE_OPER_INSERT);
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Enicif Update: Handling l2seg list change
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_upd_l2seg_clsc_change(pd_if_args_t *args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
+
+    HAL_TRACE_DEBUG("pd-enicif:{} l2seg-list change: ", __FUNCTION__);
+
+    // Allocated PD State for new IP entries
+    ret = pd_enicif_alloc_pd_l2seg_entries(args->add_l2seg_clsclist);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-enicif: failed to alloced pd l2seg entries "
+                "for new l2segs. ret:{}", ret);
+        goto end;
+    }
+
+    // Program input prop. entries for new l2segs
+    ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, args->add_l2seg_clsclist,
+                                    args, TABLE_OPER_UPDATE);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-enicif: failed to pgm input prop."
+                "for new l2segs. ret:{}", ret);
+        goto end;
+    }
+
+    // Deprogram input prop. entries for deleted l2segs
+    ret = pd_enicif_pd_depgm_inp_prop(pd_enicif,
+                                      args->del_l2seg_clsclist);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-enicif: failed to depgm input prop."
+                "for deleted l2segs ret:{}", ret);
+        goto end;
+    }
+
+    // free up delete IPs PD state
+    ret = pd_enicif_dealloc_pd_l2seg_entries(args->del_l2seg_clsclist);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-enicif: failed to free pd l2seg entries. ret:{}", ret);
+        goto end;
+    }
+
+
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Allocate PD state for l2segs for classic enic
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_alloc_l2seg_entries (pd_enicif_t *pd_enicif)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    if_t                 *hal_if = (if_t *)pd_enicif->pi_if;
+
+    ret = pd_enicif_alloc_pd_l2seg_entries(&(hal_if->l2seg_list_clsc_head));
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-enicif:{}: failed to allocated pd l2seg entries.",
+                __FUNCTION__);
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Allocate PD l2seg entries of a list of PI entries
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_alloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    dllist_ctxt_t           *lnode = NULL;
+    if_l2seg_entry_t         *pi_l2seg_entry = NULL;
+
+    // Walk through l2seg entries
+    dllist_for_each(lnode, pi_l2seg_list) {
+        pi_l2seg_entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
+
+        pi_l2seg_entry->pd = (pd_if_l2seg_entry_t *)g_hal_state_pd->
+                             if_l2seg_entry_slab()->alloc();
+        if (!pi_l2seg_entry->pd) {
+            ret = HAL_RET_OOM;
+            goto end;
+        }
+
+        // Link PI to PD
+        ((pd_if_l2seg_entry_t *)(pi_l2seg_entry->pd))->pi_if_l2seg_entry = pi_l2seg_entry;
+
+        HAL_TRACE_DEBUG("pd-enicif:{}: Allocating pd l2seg entry for l2seg_hdl:{}",
+                __FUNCTION__, pi_l2seg_entry->l2seg_handle);
+    }
+
+end:
+
+    if (ret != HAL_RET_OK) {
+        // Walk through l2seg entries
+        dllist_for_each(lnode, pi_l2seg_list) {
+            pi_l2seg_entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
+            if (pi_l2seg_entry->pd) {
+                // Free PD l2seg entry
+                g_hal_state_pd->if_l2seg_entry_slab()->free(pi_l2seg_entry->pd);
+                // Unlink PD from PI
+                pi_l2seg_entry->pd = NULL;
+            }
+        }
+    }
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Deleted PD IP entries
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_dealloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    dllist_ctxt_t   *lnode = NULL;
+    if_l2seg_entry_t         *pi_l2seg_entry = NULL;
+
+    // Walk through ip entries
+    dllist_for_each(lnode, pi_l2seg_list) {
+        pi_l2seg_entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
+        if (pi_l2seg_entry->pd) {
+            // Free PD IP entry
+            g_hal_state_pd->if_l2seg_entry_slab()->free(pi_l2seg_entry->pd);
+            // Unlink PD from PI
+            pi_l2seg_entry->pd = NULL;
+            HAL_TRACE_DEBUG("pd-enicif:{}: freeing pd enicif l2seg entry for l2seg_hdl: {}",
+                    __FUNCTION__, pi_l2seg_entry->l2seg_handle);
+        } else {
+            HAL_ASSERT(0);
+        }
+    }
+
+    return ret;
+}
+
+
+
 
 // ----------------------------------------------------------------------------
 // Allocate resources for PD EnicIf
@@ -165,6 +380,7 @@ hal_ret_t
 pd_enicif_cleanup(pd_enicif_t *pd_enicif)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    if_t            *hal_if = (if_t *)pd_enicif->pi_if;
 
     if (!pd_enicif) {
         // Nothing to do
@@ -179,6 +395,10 @@ pd_enicif_cleanup(pd_enicif_t *pd_enicif)
                       ((if_t *)(pd_enicif->pi_if))->if_id);
         goto end;
     }
+
+    // Free up l2segs PD state
+    ret = pd_enicif_pd_depgm_inp_prop(pd_enicif, 
+                                      &hal_if->l2seg_list_clsc_head);
 
     // Delinking PI<->PD
     pd_enicif_delink_pi_pd(pd_enicif, (if_t *)pd_enicif->pi_if);
@@ -287,21 +507,333 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
 {
     hal_ret_t            ret;
     nwsec_profile_t      *pi_nwsec = NULL;
+    if_t                 *hal_if = (if_t *)pd_enicif->pi_if;
+    l2seg_t              *native_l2seg_clsc = NULL;
 
     pi_nwsec = (nwsec_profile_t *)if_enicif_get_pi_nwsec((if_t *)pd_enicif->pi_if);
     if (pi_nwsec == NULL) {
         HAL_TRACE_DEBUG("pd-enicif:{}: No nwsec. Programming default", __FUNCTION__);
     }
 
-    // Program Input Properties Mac Vlan
-    ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, pi_nwsec);
+    // Check if classic
+    if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
+        // Program Input Properties Mac Vlan
+        ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, pi_nwsec);
+    }
 
     // Program Output Mapping 
     ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, NULL,
                                               TABLE_OPER_INSERT);
 
+    // Check if classic
+    if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+        ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, 
+                                        &hal_if->l2seg_list_clsc_head,
+                                        NULL, TABLE_OPER_INSERT);
+
+        // Program native l2seg
+        if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
+            native_l2seg_clsc = 
+                find_l2seg_by_handle(hal_if->native_l2seg_clsc);
+            ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif, 
+                                                  native_l2seg_clsc,
+                                                  NULL, NULL,
+                                                  TABLE_OPER_INSERT);
+        }
+    }
+
     return ret;
 }
+
+// ----------------------------------------------------------------------------
+// Programming input properties table for classic nic
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif, 
+                          dllist_ctxt_t *l2sege_list,
+                          pd_if_args_t *args,
+                          table_oper_t oper)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    dllist_ctxt_t           *lnode = NULL;
+    if_l2seg_entry_t        *pi_l2seg_entry = NULL;
+    l2seg_t                 *l2seg = NULL;
+
+    // Walk through l2seg entries
+    dllist_for_each(lnode, l2sege_list) {
+        pi_l2seg_entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
+        l2seg = find_l2seg_by_handle(pi_l2seg_entry->l2seg_handle);
+        if (l2seg == NULL) {
+            HAL_TRACE_ERR("pd-enicif:{}:unable to find l2seg for handle:{}",
+                          __FUNCTION__, pi_l2seg_entry->l2seg_handle);
+            goto end;
+        }
+
+        ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif, l2seg, 
+                                              (pd_if_l2seg_entry_t *)
+                                              pi_l2seg_entry->pd,
+                                              args, oper);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-enicif:{}:unable to pgm for l2seg:{}, if{}",
+                           l2seg->seg_id, 
+                           if_get_if_id((if_t *)pd_enicif->pi_if));
+        }
+    }
+
+end:
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// DeProgramming input properties table for classic nic
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_pd_depgm_inp_prop(pd_enicif_t *pd_enicif, dllist_ctxt_t *l2sege_list)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    dllist_ctxt_t           *lnode = NULL;
+    if_l2seg_entry_t        *pi_l2seg_entry = NULL;
+    l2seg_t                 *l2seg = NULL;
+    pd_if_l2seg_entry_t     *pd_l2seg_entry = NULL;
+
+    // Walk through l2seg entries
+    dllist_for_each(lnode, l2sege_list) {
+        pi_l2seg_entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
+        pd_l2seg_entry = (pd_if_l2seg_entry_t *)pi_l2seg_entry->pd;
+
+        ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_l2seg_entry->inp_prop_idx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-enicif:{}:unable to depgm input properties for "
+                          "l2seg:{}, if{}",
+                          l2seg->seg_id, 
+                          if_get_if_id((if_t *)pd_enicif->pi_if));
+        }
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Check if l2seg is native on enicif in classic mode
+// ----------------------------------------------------------------------------
+bool
+is_l2seg_native_on_enicif_classic(if_t *hal_if, l2seg_t *l2seg)
+{
+    bool            is_native = false;
+    l2seg_t         *if_native_l2seg = NULL;
+
+    if_native_l2seg = find_l2seg_by_handle(hal_if->native_l2seg_clsc);
+    if (if_native_l2seg) {
+        if (if_native_l2seg->seg_id == l2seg->seg_id) {
+            is_native = true;
+        }
+    }
+
+    return is_native;
+}
+
+// ----------------------------------------------------------------------------
+// Programming input properties table for classic nic
+// ----------------------------------------------------------------------------
+#define inp_prop data.input_properties_action_u.input_properties_input_properties
+hal_ret_t
+pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
+                                pd_if_l2seg_entry_t *if_l2seg,
+                                pd_if_args_t *args,
+                                table_oper_t oper)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    input_properties_swkey_t    key;
+    input_properties_actiondata data;
+    if_t                        *hal_if = (if_t *)pd_enicif->pi_if;
+    if_t                        *uplink = NULL;
+    pd_l2seg_t                  *l2seg_pd;
+    Hash                        *inp_prop_tbl = NULL;
+    uint32_t                    hash_idx = INVALID_INDEXER_INDEX;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
+    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+
+    l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
+    if (args && args->pinned_uplink_clsc_change) {
+        uplink = find_if_by_handle(args->new_pinned_uplink_clsc);
+    } else {
+        uplink = find_if_by_handle(hal_if->pinned_up_clsc);
+    }
+
+
+    // Key
+    key.capri_intrinsic_lif = if_get_hw_lif_id(hal_if);
+    if (!is_l2seg_native_on_enicif_classic(hal_if, l2seg)) {
+        key.vlan_tag_valid = 1;
+        key.vlan_tag_vid = l2seg_get_fab_encap_val(l2seg);
+    }
+
+    // Data
+    inp_prop.vrf = l2seg_pd->l2seg_ten_hw_id;
+    inp_prop.dir = FLOW_DIR_FROM_ENIC;
+    inp_prop.l4_profile_idx = L4_PROF_DEFAULT_ENTRY;
+    inp_prop.ipsg_enable = 0;
+    inp_prop.src_lport = pd_enicif->enic_lport_id;
+    inp_prop.dst_lport = if_get_lport_id(uplink);
+    inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(l2seg);
+    inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(l2seg);
+    
+    if (oper == TABLE_OPER_INSERT) {
+        // Insert
+        ret = inp_prop_tbl->insert(&key, &data, &hash_idx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-enicif:{}:classic: unable to program for "
+                          "(l2seg, upif): ({}, {})",
+                          __FUNCTION__, 
+                          hal::l2seg_get_l2seg_id(l2seg), 
+                          if_get_if_id(hal_if));
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("pd-enicif:{}:classic: Programmed "
+                            "table:input_properties index:{} ", __FUNCTION__,
+                            hash_idx);
+        }
+
+        if (if_l2seg) {
+            // Non-Native l2seg
+            if_l2seg->inp_prop_idx = hash_idx;
+        } else {
+            // Native l2seg
+            pd_enicif->inp_prop_native_l2seg_clsc = hash_idx;
+        }
+    } else {
+        // hash_idx
+        if (if_l2seg) {
+            hash_idx = if_l2seg->inp_prop_idx;
+        } else {
+            // No if_l2seg for native case
+            hash_idx = pd_enicif->inp_prop_native_l2seg_clsc;
+        }
+        // Update
+        ret = inp_prop_tbl->update(hash_idx, &data);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-enicif:{}:classic: unable to reprogram for "
+                          "(l2seg, upif): ({}, {})",
+                          __FUNCTION__, 
+                          hal::l2seg_get_l2seg_id(l2seg), 
+                          if_get_if_id(hal_if));
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("pd-enicif:{}:classic: reprogrammed "
+                            "table:input_properties index:{} ", __FUNCTION__,
+                            hash_idx);
+        }
+    }
+
+end:
+    return ret;
+}
+
+
+#if 0
+hal_ret_t
+pd_enicif_pd_repgm_inp_prop_l2seg(pd_if_args_t *args, 
+                                  l2seg_t *l2seg,
+                                  pd_if_l2seg_entry_t *if_l2seg)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    input_properties_swkey_t    key;
+    input_properties_actiondata data;
+    if_t                        *hal_if = args->intf;
+    if_t                        *uplink = NULL;
+    pd_enicif_t                 *pd_enicif = (pd_enicif_t *)hal_if->pd_if;
+    pd_l2seg_t                  *l2seg_pd;
+    Hash                        *inp_prop_tbl = NULL;
+    uint32_t                    hash_idx = INVALID_INDEXER_INDEX;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
+    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+
+    l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
+    if (args->pinned_uplink_clsc_change) {
+        uplink = find_if_by_handle(args->new_pinned_uplink_clsc);
+    } else {
+        uplink = find_if_by_handle(hal_if->pinned_up_clsc);
+    }
+
+    // Key
+    if (if_l2seg) {
+        hash_idx = if_l2seg->inp_prop_idx;
+    } else {
+        hash_idx = pd_enicif->inp_prop_native_l2seg_clsc;
+    }
+
+    // Data
+    inp_prop.vrf = l2seg_pd->l2seg_ten_hw_id;
+    inp_prop.dir = FLOW_DIR_FROM_ENIC;
+    inp_prop.l4_profile_idx = L4_PROF_DEFAULT_ENTRY;
+    inp_prop.ipsg_enable = 0;
+    inp_prop.src_lport = pd_enicif->enic_lport_id;
+    inp_prop.dst_lport = if_get_lport_id(uplink);
+    inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(l2seg);
+    inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(l2seg);
+    
+    // Update
+    ret = inp_prop_tbl->update(hash_idx, &data);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-enicif:{}:classic: unable to reprogram for "
+                      "(l2seg, upif): ({}, {})",
+                      __FUNCTION__, 
+                      hal::l2seg_get_l2seg_id(l2seg), 
+                      if_get_if_id(hal_if));
+        goto end;
+    } else {
+        HAL_TRACE_DEBUG("pd-enicif:{}:classic: reprogrammed "
+                        "table:input_properties index:{} ", __FUNCTION__,
+                        hash_idx);
+    }
+
+end:
+    return ret;
+}
+#endif
+
+
+
+
+// ----------------------------------------------------------------------------
+// Deprogram input properties for classic
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_pd_depgm_inp_prop_l2seg(uint32_t inp_prop_idx)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    input_properties_swkey_t    key;
+    input_properties_actiondata data;
+    Hash                        *inp_prop_tbl = NULL;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
+    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    
+    ret = inp_prop_tbl->remove(inp_prop_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-enicif:{}:classic: unable to deprogram at:{} ",
+                      __FUNCTION__, inp_prop_idx);
+        goto end;
+    } else {
+        HAL_TRACE_ERR("pd-enicif:{}:classic: deprogrammed at:{} ",
+                      __FUNCTION__, inp_prop_idx);
+    }
+end:
+    return ret;
+}
+
+
 
 // ----------------------------------------------------------------------------
 // Enic reprogramming because of lif params change

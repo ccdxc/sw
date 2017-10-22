@@ -76,9 +76,12 @@ dllist_empty (dllist_ctxt_t *head)
 static inline void
 dllist_move (dllist_ctxt_t *dst_head, dllist_ctxt_t *src_head)
 {
-    if (dst_head == NULL || src_head == NULL) {
+    if (dst_head == NULL || src_head == NULL ||
+            ((src_head->prev == src_head->next) &&
+             (src_head == src_head->prev))) { // no elements in src
         return;
     }
+    
     dst_head->prev = src_head->prev;
     dst_head->next = src_head->next;
     src_head->next->prev = dst_head;

@@ -49,6 +49,10 @@ hal_ret_t network_del_l2seg (network_t *nw, l2seg_t *l2seg);
 hal_ret_t network_add_session (network_t *nw, session_t *sess);
 hal_ret_t network_del_session (network_t *nw, session_t *sess);
 
+// Add enicifs to uplink
+hal_ret_t uplink_add_enicif (if_t *uplink, if_t *enic_if);
+hal_ret_t uplink_del_enicif (if_t *uplink, if_t *enic_if);
+
 // Handle lif update in IF
 hal_ret_t if_handle_lif_update (pd::pd_if_lif_upd_args_t *args);
 

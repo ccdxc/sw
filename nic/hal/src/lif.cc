@@ -613,12 +613,15 @@ end:
 // - Both PI and PD objects cloned. 
 //------------------------------------------------------------------------------
 hal_ret_t
-lif_make_clone (lif_t *ten, lif_t **ten_clone)
+lif_make_clone (lif_t *lif, lif_t **lif_clone)
 {
-    *ten_clone = lif_alloc_init();
-    memcpy(*ten_clone, ten, sizeof(lif_t));
+    *lif_clone = lif_alloc_init();
+    memcpy(*lif_clone, lif, sizeof(lif_t));
 
-    pd::pd_lif_make_clone(ten, *ten_clone);
+    // After clone always reset lists
+    dllist_reset(&(*lif_clone)->if_list_head);
+
+    pd::pd_lif_make_clone(lif, *lif_clone);
 
     return HAL_RET_OK;
 }
@@ -1164,8 +1167,10 @@ lif_add_if (lif_t *lif, if_t *hal_if)
     lif_unlock(lif, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-if:{}: add lif => if, {} => {}, ret:{}",
-                    __FUNCTION__, lif->lif_id, hal_if->if_id, ret);
+    HAL_TRACE_DEBUG("pi-if:{}: add lif => if, ids: {} => {}, "
+                    "hdls: {} => {}, ret:{}",
+                    __FUNCTION__, lif->lif_id, hal_if->if_id, 
+                    lif->hal_handle, hal_if->hal_handle, ret);
     return ret;
 }
 

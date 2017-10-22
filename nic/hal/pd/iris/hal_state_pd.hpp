@@ -97,6 +97,7 @@ public:
 
     // get APIs for enicif  related state
     slab *enicif_pd_slab(void) const { return enicif_pd_slab_; }
+    slab *if_l2seg_entry_slab(void) const { return if_l2seg_entry_slab_; }
 
     // get APIs for cpuif  related state
     slab *cpuif_pd_slab(void) const { return cpuif_pd_slab_; }
@@ -284,6 +285,7 @@ private:
     // Enic IF related state
     struct {
         slab       *enicif_pd_slab_;
+        slab       *if_l2seg_entry_slab_;
     } __PACK__;
 
     // CPU IF related state

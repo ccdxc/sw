@@ -12,6 +12,7 @@ typedef struct pd_lif_s pd_lif_t;
 typedef struct pd_uplinkif_s pd_uplinkif_t;
 typedef struct pd_uplinkpc_s pd_uplinkpc_t;
 typedef struct pd_enicif_s pd_enicif_t;
+typedef struct pd_if_l2seg_entry_s pd_if_l2seg_entry_t;
 typedef struct pd_cpuif_s pd_cpuif_t;
 typedef struct pd_tunnelif_s pd_tunnelif_t;
 typedef struct pd_if_s pd_if_t;

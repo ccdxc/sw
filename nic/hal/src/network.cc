@@ -460,6 +460,13 @@ network_make_clone (network_t *nw, network_t **nw_clone)
     *nw_clone = network_alloc_init();
     memcpy(*nw_clone, nw, sizeof(network_t));
 
+
+    // After clone always reset lists
+    dllist_reset(&(*nw_clone)->sg_list_head);
+    dllist_reset(&(*nw_clone)->l2seg_list_head);
+    dllist_reset(&(*nw_clone)->session_list_head);
+
+
     // nw doesnt have PD
     // pd::pd_nwsec_profile_make_clone(nwsec, *nwsec_clone);
 

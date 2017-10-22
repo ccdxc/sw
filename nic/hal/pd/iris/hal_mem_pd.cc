@@ -115,6 +115,12 @@ hal_state_pd::init(void)
                                  false, true, true, true);
     HAL_ASSERT_RETURN((enicif_pd_slab_ != NULL), false);
 
+    // initialize ENIC If l2seg PD related data structures
+    if_l2seg_entry_slab_ = slab::factory("IF_L2SEG_PD", HAL_SLAB_IF_L2SEG_PD,
+                                 sizeof(hal::pd::pd_if_l2seg_entry_t), 8,
+                                 false, true, true, true);
+    HAL_ASSERT_RETURN((if_l2seg_entry_slab_ != NULL), false);
+
     // initialize CPU If PD related data structures
     cpuif_pd_slab_ = slab::factory("CPUIF_PD", HAL_SLAB_CPUIF_PD,
                                  sizeof(hal::pd::pd_cpuif_t), 8,
@@ -379,6 +385,7 @@ hal_state_pd::hal_state_pd()
     uplinkifpc_idxr_ = NULL;
 
     enicif_pd_slab_ = NULL;
+    if_l2seg_entry_slab_ = NULL;
     tunnelif_pd_slab_ = NULL;
 
     cpuif_pd_slab_ = NULL;
@@ -1139,6 +1146,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_ENICIF_PD:
         g_hal_state_pd->enicif_pd_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_IF_L2SEG_PD:
+        g_hal_state_pd->if_l2seg_entry_slab()->free_(elem);
         break;
 
     case HAL_SLAB_CPUIF_PD:

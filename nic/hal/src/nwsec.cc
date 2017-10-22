@@ -634,6 +634,9 @@ nwsec_make_clone (nwsec_profile_t *nwsec, nwsec_profile_t **nwsec_clone,
     *nwsec_clone = nwsec_profile_alloc_init();
     memcpy(*nwsec_clone, nwsec, sizeof(nwsec_profile_t));
 
+    // After clone always reset lists
+    dllist_reset(&(*nwsec_clone)->tenant_list_head);
+
     pd::pd_nwsec_profile_make_clone(nwsec, *nwsec_clone);
 
 

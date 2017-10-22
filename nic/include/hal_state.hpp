@@ -393,6 +393,7 @@ public:
     slab *l2seg_slab(void) const { return l2seg_slab_; }
     slab *lif_slab(void) const { return lif_slab_; }
     slab *if_slab(void) const { return if_slab_; }
+    slab *enic_l2seg_entry_slab(void) { return enic_l2seg_entry_slab_; }
     slab *ep_slab(void) const { return ep_slab_; }
     slab *ep_ip_entry_slab(void) const { return ep_ip_entry_slab_; }
     slab *ep_l3_entry_slab(void) const { return ep_l3_entry_slab_; }
@@ -433,6 +434,7 @@ private:
     slab    *l2seg_slab_;
     slab    *lif_slab_;
     slab    *if_slab_;
+    slab    *enic_l2seg_entry_slab_;
     slab    *ep_slab_;
     slab    *ep_ip_entry_slab_;
     slab    *ep_l3_entry_slab_;
@@ -525,6 +527,7 @@ public:
     ht *if_id_ht(void) const { return cfg_db_->if_id_ht(); }
     // ht *if_hal_handle_ht(void) const { return cfg_db_->if_hal_handle_ht(); }
     // ht *if_hwid_ht(void) const { return oper_db_->if_hwid_ht(); }
+    slab *enic_l2seg_entry_slab(void) const { return mem_db_->enic_l2seg_entry_slab(); }
 
     // get APIs for endpoint state
     slab *ep_slab(void) const { return mem_db_->ep_slab(); }

@@ -227,7 +227,9 @@ end:
     return ret;
 }
 
-
+// ----------------------------------------------------------------------------
+// Allocate PD IP entries of a list of PI entries
+// ----------------------------------------------------------------------------
 hal_ret_t
 ep_pd_alloc_pd_ip_entries (dllist_ctxt_t *pi_ep_list)
 {
@@ -279,9 +281,7 @@ hal_ret_t
 ep_pd_alloc_ip_entries(pd_ep_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
-    // dllist_ctxt_t   *lnode = NULL;
     ep_t            *pi_ep = args->ep;
-    // ep_ip_entry_t   *pi_ip_entry = NULL;
 
     ret = ep_pd_alloc_pd_ip_entries(&(pi_ep->ip_list_head));
     if (ret != HAL_RET_OK) {
@@ -596,7 +596,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep, pd_ep_ip_entry_t *pd_ip_entry)
             &data.ipsg_action_u.ipsg_ipsg_hit.vlan_id);
 
      ret = ipsg_tbl->insert(&key, &key_mask, &data,
-                                         &(pd_ip_entry->ipsg_tbl_idx));
+                            &(pd_ip_entry->ipsg_tbl_idx));
      if (ret != HAL_RET_OK) {
          HAL_TRACE_ERR("PD-EP::{}: Unable to program IPSG for: {}",
                  __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));

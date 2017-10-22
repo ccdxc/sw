@@ -35,7 +35,7 @@ class EnicObject(base.ConfigObjectBase):
         self.tenant_id      = self.tenant.id
         self.type           = type
         self.l4lb_backend   = l4lb_backend
-        
+
         self.pinnedif       = None
         self.macaddr = resmgr.EnicMacAllocator.get()
         self.__pin_interface()
@@ -67,7 +67,7 @@ class EnicObject(base.ConfigObjectBase):
         self.lif = self.tenant.AllocLif()
         self.lif_id = self.lif.id
         self.ep = ep
-        self.ep_segment_id = self.ep.segment.id 
+        self.ep_segment_id = self.ep.segment.id
         self.Show()
         return
 
@@ -126,14 +126,14 @@ class EnicObject(base.ConfigObjectBase):
         enic.macaddr = self.macaddr
         enic.type = self.type
         return enic
-    
+
     def Equals(self, other, lgh):
         if not isinstance(other, self.__class__):
             return False
         fields = ["tenant_id", "hal_handle", "lif_id", "ep_segment_id", "encap_vlan_id", "type"]
         if not self.CompareObjectFields(other, fields, lgh):
             return False
-       
+
         if  self.macaddr.getnum() != other.macaddr.getnum():
             lgh.error("Field mismatch, Field : %s, Expected : %s, Actual : %s"
                  %("macaddr", self.macaddr.string, other.macaddr.string))
@@ -162,9 +162,9 @@ class EnicObject(base.ConfigObjectBase):
         req_spec.admin_status   = haldefs.interface.IF_STATUS_UP
         req_spec.key_or_handle.interface_id = self.id
         req_spec.if_enic_info.lif_key_or_handle.lif_id = self.lif.id
-        req_spec.if_enic_info.mac_address = self.macaddr.getnum()
-        req_spec.if_enic_info.encap_vlan_id = self.encap_vlan_id
-        req_spec.if_enic_info.l2segment_id = self.ep.segment.id
+        req_spec.if_enic_info.enic_info.mac_address = self.macaddr.getnum()
+        req_spec.if_enic_info.enic_info.encap_vlan_id = self.encap_vlan_id
+        req_spec.if_enic_info.enic_info.l2segment_id = self.ep.segment.id
         if self.IsDirect():
             req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_DIRECT
         elif self.IsUseg():
@@ -182,7 +182,7 @@ class EnicObject(base.ConfigObjectBase):
         if self.txqos.dscp is not None:
             req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
             req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
- 
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -203,7 +203,7 @@ class EnicObject(base.ConfigObjectBase):
             self.id = get_resp.spec.key_or_handle.interface_id
         else:
             self.hal_handle = get_resp.spec.key_or_handle.if_handle
-            
+
         if get_resp.spec.type == haldefs.interface.IF_TYPE_ENIC:
             if get_resp.spec.if_enic_info.enic_type == haldefs.interface.IF_ENIC_TYPE_DIRECT:
                 self.type = ENIC_TYPE_DIRECT
@@ -219,7 +219,7 @@ class EnicObject(base.ConfigObjectBase):
         self.ep_segment_id = get_resp.spec.if_enic_info.l2segment_id
 
     def Get(self):
-        halapi.GetInterfaces([self])       
+        halapi.GetInterfaces([self])
 
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
@@ -236,7 +236,7 @@ class EnicObjectHelper:
         self.backend_useg   = []
         self.backend_pvlan  = []
         return
-    
+
     def Show(self):
         cfglogger.info("- # Enics: Dir=%d Useg=%d Pvlan=%d Tot=%d" %\
                        (len(self.direct), len(self.useg),
@@ -310,7 +310,7 @@ class EnicObjectHelper:
             self.backend_direct = self.__gen_direct(segment, spec,
                                                     l4lb_backend = True)
             self.backend_enics += self.backend_direct
-        
+
             self.backend_useg = self.__gen_useg(segment, spec,
                                                 l4lb_backend = True)
             self.backend_enics += self.backend_useg

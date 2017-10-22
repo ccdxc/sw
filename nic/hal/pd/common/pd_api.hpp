@@ -105,6 +105,15 @@ typedef struct pd_if_args_s {
             // enic if specific info
             struct {
                 lif_t *lif;
+
+                // Classic mode fields
+                bool            pinned_uplink_clsc_change;
+                hal_handle_t    new_pinned_uplink_clsc;
+                bool            native_l2seg_clsc_change;
+                hal_handle_t    new_native_l2seg_clsc;
+                bool            l2seg_clsc_change;
+                dllist_ctxt_t   *add_l2seg_clsclist;
+                dllist_ctxt_t   *del_l2seg_clsclist;
             } __PACK__;
         } __PACK__;
     } __PACK__;

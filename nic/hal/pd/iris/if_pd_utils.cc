@@ -75,7 +75,9 @@ if_get_lport_id(if_t *pi_if)
     intf::IfType    if_type;
     uint32_t        lport_id = 0;
 
-    HAL_ASSERT(pi_if != NULL);
+    if (pi_if == NULL) {
+        goto end;
+    }
 
     if_type = intf_get_if_type(pi_if);
     switch(if_type) {
@@ -119,6 +121,7 @@ if_get_lport_id(if_t *pi_if)
             HAL_ASSERT(0);
     }
 
+end:
     return lport_id;
 }
 

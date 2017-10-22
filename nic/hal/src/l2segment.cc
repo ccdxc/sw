@@ -672,6 +672,10 @@ l2seg_make_clone (l2seg_t *l2seg, l2seg_t **l2seg_clone)
 
     pd::pd_l2seg_make_clone(l2seg, *l2seg_clone);
 
+    // After clone always reset lists
+    dllist_reset(&(*l2seg_clone)->nw_list_head);
+    dllist_reset(&(*l2seg_clone)->if_list_head);
+
     return HAL_RET_OK;
 }
 
