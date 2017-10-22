@@ -245,6 +245,22 @@ action f_p4plus_cpu_pkt(offset) {
     if (tcp.valid == TRUE) {
         modify_field(p4_to_p4plus_cpu_pkt.l4_offset, scratch_metadata.offset);
         add_to_field(scratch_metadata.offset, tcp.dataOffset << 2);
+        if (tcp.dataOffset > 5) {
+            bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+                   CPU_FLAGS_TCP_OPTIONS_PRESENT);
+            if (tcp_option_ws.valid == TRUE) {
+                bit_or(scratch_metadata.cpu_tcp_options, scratch_metadata.cpu_tcp_options,
+                       CPU_TCP_OPTIONS_WINDOW_SCALE);
+            }
+            if (tcp_option_mss.valid == TRUE) {
+                bit_or(scratch_metadata.cpu_tcp_options, scratch_metadata.cpu_tcp_options,
+                       CPU_TCP_OPTIONS_MSS);
+            }
+            if (tcp_option_timestamp.valid == TRUE) {
+                bit_or(scratch_metadata.cpu_tcp_options, scratch_metadata.cpu_tcp_options,
+                       CPU_TCP_OPTIONS_TIMESTAMP);
+            }
+        }
     }
     if ((icmp.valid == TRUE) or (icmpv6.valid == TRUE)) {
         modify_field(p4_to_p4plus_cpu_pkt.l4_offset, scratch_metadata.offset);
@@ -257,6 +273,7 @@ action f_p4plus_cpu_pkt(offset) {
 
     modify_field(p4_to_p4plus_cpu_pkt.payload_offset, scratch_metadata.offset);
     modify_field(p4_to_p4plus_cpu_pkt.flags, scratch_metadata.cpu_flags);
+    modify_field(p4_to_p4plus_cpu_pkt.tcp_options, scratch_metadata.cpu_tcp_options);
 }
 
 action p4plus_app_cpu() {

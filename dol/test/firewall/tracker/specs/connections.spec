@@ -34,4 +34,21 @@ connections:
             window  : 8192
             scale   : 1
             mss     : 1460
+    - connection:
+        id  : WINDOW_SCALE
+        # Starting parameters of the connections
+        initiator:
+            port    : range/36000/37000
+            seq     : 0xffffff00
+            ack     : 0
+            window  : 8192
+            scale   : 2
+            mss     : 1460
+        responder:
+            port    : range/36000/37000
+            seq     : 0xfffffff0
+            ack     : 0
+            window  : 8192
+            scale   : 3
+            mss     : 1460
 

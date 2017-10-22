@@ -469,6 +469,8 @@ lb_tss_r_6:
   seq          c2, k.tcp_option_timestamp_valid, 1
   setcf        c1, [c1 & c2]
   tblwr.c1     d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, 1
+  seq          c1, k.tcp_option_mss_valid, 1
+  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_mss, k.tcp_option_mss_value
   tblwr        d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
   tblwr        d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_ackNo
   b            lb_tss_r_exit
@@ -514,6 +516,8 @@ lb_tss_r_init_2_1:
   seq          c2, k.tcp_option_timestamp_valid, 1
   setcf        c1, [c1 & c2]
   tblwr.c1     d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, 1
+  seq          c1, k.tcp_option_mss_valid, 1
+  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_mss, k.tcp_option_mss_value
   b            lb_tss_r_exit
   tblwr        d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
 
@@ -554,6 +558,8 @@ lb_tss_r_init_3:
   seq          c2, k.tcp_option_timestamp_valid, 1
   setcf        c1, [c1 & c2]
   tblwr.c1     d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, 1
+  seq          c1, k.tcp_option_mss_valid, 1
+  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_mss, k.tcp_option_mss_value
   b            lb_tss_r_exit
   tblwr        d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
 

@@ -187,22 +187,36 @@ f_p4plus_cpu_pkt:
   seq         c2, k.ipv4_ihl, 5
   setcf       c1, [c1 & !c2]
   or.c1       r2, r2, CPU_FLAGS_IP_OPTIONS_PRESENT
+  seq         c1, k.tcp_valid, TRUE
+  b.c1        lb_cpu_pkt_tcp
   or          r6, k.udp_valid, k.esp_valid
-  seq         c1, r6, 1
-  seq         c2, k.tcp_valid, TRUE
+  seq         c2, r6, 1
   or          r6, k.icmp_valid, k.icmpv6_valid
   seq         c3, r6, 1
   or          r6, k.ah_valid, k.v6_ah_esp_valid
   seq         c4, r6, 1
-  setcf       c5, [c1|c2|c3|c4]
+  setcf       c5, [c2|c3|c4]
   phvwr.c5    p.p4_to_p4plus_cpu_pkt_l4_offset, r1.hx
-  add.c1      r1, r1, 8
-  add.c2      r1, r1, k.tcp_dataOffset, 2
+  add.c2      r1, r1, 8
   add.c3      r1, r1, 4
   add.c4      r1, r1, 12
   phvwr       p.p4_to_p4plus_cpu_pkt_payload_offset, r1.hx
-  seq         c3, k.tcp_dataOffset, 5
-  setcf       c1, [c2 & !c3]
-  or.c1       r2, r2, CPU_FLAGS_TCP_OPTIONS_PRESENT
   jr          r7
   phvwr       p.p4_to_p4plus_cpu_pkt_flags, r2
+
+lb_cpu_pkt_tcp:
+  phvwr       p.p4_to_p4plus_cpu_pkt_l4_offset, r1.hx
+  add         r1, r1, k.tcp_dataOffset, 2
+  phvwr       p.p4_to_p4plus_cpu_pkt_payload_offset, r1.hx
+  sle         c3, k.tcp_dataOffset, 5 
+  or.!c3      r2, r2, CPU_FLAGS_TCP_OPTIONS_PRESENT
+  phvwr       p.p4_to_p4plus_cpu_pkt_flags, r2
+  add         r2, r0, r0
+  seq         c1, k.tcp_option_ws_valid, TRUE
+  or.c1       r2, r2, CPU_TCP_OPTIONS_WINDOW_SCALE
+  seq         c1, k.tcp_option_mss_valid, TRUE
+  or.c1       r2, r2, CPU_TCP_OPTIONS_MSS
+  seq         c1, k.tcp_option_timestamp_valid, TRUE
+  or.c1       r2, r2, CPU_TCP_OPTIONS_TIMESTAMP
+  jr          r7
+  phvwr       p.p4_to_p4plus_cpu_pkt_tcp_options, r2

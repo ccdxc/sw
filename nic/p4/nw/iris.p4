@@ -221,6 +221,7 @@ header_type scratch_metadata_t {
         rflow_tcp_win_sz              : 16;           // TCP window size
         rflow_tcp_win_scale           : 4;            // TCP window scale
         rflow_tcp_state               : 4;            // flow_state
+        rflow_tcp_mss                 : 16;
         rflow_exceptions_seen         : 14;           // list of exceptions seen
 
         syn_cookie_delta              : 32 (signed);  // TCP seq/ack# adjustment
@@ -231,6 +232,7 @@ header_type scratch_metadata_t {
 
         classic_nic_header_flags      : 16;
         cpu_flags                     : 8;
+        cpu_tcp_options               : 8;
         packet_len                    : 16;
         offset                        : 16;
 

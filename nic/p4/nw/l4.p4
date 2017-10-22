@@ -773,7 +773,9 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                     tcp_option_timestamp.valid == TRUE) {
                     modify_field (l4_metadata.tcp_ts_option_negotiated, 1);
                 }
-
+                if (tcp_option_mss.valid == TRUE) {
+                    modify_field (scratch_metadata.rflow_tcp_mss, tcp_option_mss.value);
+                }
                 // We will have to update the responder flows seq and ack directly here as the
                 // commmon code will check for greater than and it might not do the right stuff
                 // as the initial values are zero when the session entry is programmed.
@@ -814,6 +816,9 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                     if (scratch_metadata.iflow_tcp_ts_option_sent == TRUE  and
                         tcp_option_timestamp.valid == TRUE) {
                         modify_field (l4_metadata.tcp_ts_option_negotiated, 1);
+                    }
+                    if (tcp_option_mss.valid == TRUE) {
+                        modify_field (scratch_metadata.rflow_tcp_mss, tcp_option_mss.value);
                     }
                     // We will have to update the responder flows seq and ack directly here as the
                     // commmon code will check for greater than and it might not do the right stuff
@@ -864,6 +869,10 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                     tcp_option_timestamp.valid == TRUE) {
                     modify_field (l4_metadata.tcp_ts_option_negotiated, 1);
                 }
+                if (tcp_option_mss.valid == TRUE) {
+                    modify_field (scratch_metadata.rflow_tcp_mss, tcp_option_mss.value);
+                }
+                // We will have to update the responder flows seq and ack directly here as the
                 // We will have to update the responder flows seq and ack directly here as the
                 // commmon code will check for greater than and it might not do the right stuff
                 // as the initial values are zero when the session entry is programmed.

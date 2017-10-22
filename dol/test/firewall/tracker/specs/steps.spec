@@ -25,6 +25,40 @@ steps:
             flags   : syn
 
     - step:
+        id          : IFLOW_SYN_WS
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            options :
+                scale       : ref://step/ifstate/scale
+
+    - step:
+        id          : IFLOW_SYN_MSS
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            options :
+                mss       : ref://step/ifstate/mss
+
+    - step:
+        id          : IFLOW_SYN_WS_MSS
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            options :
+                scale     : ref://step/ifstate/scale
+                mss       : ref://step/ifstate/mss
+
+    - step:
+        id          : IFLOW_SYN_TS
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            options :
+                timestamp       : 0x12345678
+                NOP             : 0
+
+    - step:
         id          : IFLOW_SYN_DROP
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         permit      : False
@@ -46,6 +80,40 @@ steps:
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         fields      :
             flags   : syn,ack
+
+    - step:
+        id          : RFLOW_SYN_ACK_WS
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            options :
+                scale       : ref://step/rfstate/scale
+
+    - step:
+        id          : RFLOW_SYN_ACK_MSS
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            options :
+                mss       : ref://step/rfstate/mss
+
+    - step:
+        id          : RFLOW_SYN_ACK_WS_MSS
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            options :
+                scale     : ref://step/rfstate/scale
+                mss       : ref://step/rfstate/mss
+
+    - step:
+        id          : RFLOW_SYN_ACK_TS
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            options :
+                timestamp       : 0x23456789
+                nop             : none
 
     - step:
         id          : IFLOW_ACK
