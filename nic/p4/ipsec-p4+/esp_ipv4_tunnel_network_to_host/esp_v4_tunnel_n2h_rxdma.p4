@@ -234,7 +234,10 @@ action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc (pc, rsvd, cosA, cosB,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size, 
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, iv_salt, ipsec_cb_pad)
+                                       cb_pindex, cb_cindex, 
+                                       barco_pindex, barco_cindex, 
+                                       cb_ring_base_addr, barco_ring_base_addr, 
+                                       iv_salt, ipsec_cb_pad)
 {
     IPSEC_CB_SCRATCH_WITH_PC
     IPSEC_SCRATCH_GLOBAL
@@ -421,7 +424,10 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size, 
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, iv_salt, ipsec_cb_pad)
+                                       cb_pindex, cb_cindex, 
+                                       barco_pindex, barco_cindex, 
+                                       cb_ring_base_addr, barco_ring_base_addr, 
+                                       iv_salt, ipsec_cb_pad)
 {
 
     //Set all variables to scratch so that they are not removed

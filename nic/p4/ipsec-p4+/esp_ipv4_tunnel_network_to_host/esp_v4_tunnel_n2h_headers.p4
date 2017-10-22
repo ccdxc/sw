@@ -26,9 +26,12 @@ header_type ipsec_cb_metadata_t {
         barco_enc_cmd  : 32;
         ipsec_cb_index : 16;
         block_size     : 8;
-        cb_pindex      : 16;
-        cb_cindex      : 16;
-        cb_ring_base_addr : ADDRESS_WIDTH;
+        cb_pindex      : 8;
+        cb_cindex      : 8;
+        barco_pindex   : 8;
+        barco_cindex   : 8;
+        cb_ring_base_addr : 32;
+        barco_ring_base_addr : 32;
         iv_salt        : 32;
         ipsec_cb_pad   : 24;
     }
@@ -165,7 +168,10 @@ header_type barco_request_t {
     modify_field(ipsec_cb_scratch.ipsec_cb_index, ipsec_cb_index); \
     modify_field(ipsec_cb_scratch.cb_pindex, cb_pindex); \
     modify_field(ipsec_cb_scratch.cb_cindex, cb_cindex); \
+    modify_field(ipsec_cb_scratch.barco_pindex, barco_pindex); \
+    modify_field(ipsec_cb_scratch.barco_cindex, barco_cindex); \
     modify_field(ipsec_cb_scratch.cb_ring_base_addr, cb_ring_base_addr); \
+    modify_field(ipsec_cb_scratch.barco_ring_base_addr, barco_ring_base_addr); \
     modify_field(ipsec_cb_scratch.iv_salt, iv_salt); \
     modify_field(ipsec_cb_scratch.ipsec_cb_pad, ipsec_cb_pad);               
 

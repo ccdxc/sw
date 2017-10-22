@@ -198,7 +198,9 @@ action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size,
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, 
+                                       cb_pindex, cb_cindex, 
+                                       barco_pindex, barco_cindex, 
+                                       cb_ring_base_addr, barco_ring_base_addr, 
                                        iv_salt, ipsec_cb_pad)
 {
     IPSEC_DECRYPT_GLOBAL_SCRATCH
@@ -336,7 +338,9 @@ action esp_v4_tunnel_n2h_txdma2_initial_table(rsvd, cosA, cosB,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size,
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, 
+                                       cb_pindex, cb_cindex, 
+                                       barco_pindex, barco_cindex, 
+                                       cb_ring_base_addr, barco_ring_base_addr, 
                                        iv_salt, ipsec_cb_pad)
 {
     IPSEC_CB_SCRATCH

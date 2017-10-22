@@ -38,7 +38,7 @@ esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
     phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_write_barco_req[33:6]
     phvwri p.common_te0_phv_table_raw_table_size, 6
     phvwri p.common_te0_phv_table_lock_en, 0
-    phvwr p.common_te0_phv_table_addr, d.in_desc 
+    phvwr p.common_te0_phv_table_addr, k.txdma1_global_ipsec_cb_addr 
 
      
 esp_ipv4_tunnel_n2h_txdma1_ipsec_encap_fill_zero_in_out_desc:

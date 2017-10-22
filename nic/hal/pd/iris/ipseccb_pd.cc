@@ -114,7 +114,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
          
         ipsec_barco_ring_base = (uint32_t) get_start_offset(CAPRI_HBM_REG_IPSECCB_BARCO);
         ipsec_barco_ring_addr = (uint32_t) (ipsec_barco_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_BARCO_RING_ENTRY_SIZE));
-        HAL_TRACE_DEBUG("Ring base 0x{0:x} CB Ring Addr 0x{0:x}", ipsec_cb_ring_base, ipsec_cb_ring_addr);
+        HAL_TRACE_DEBUG("Ring base 0x{0:x} Barco Ring Addr 0x{0:x}", ipsec_barco_ring_base, ipsec_barco_ring_addr);
 
         data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr = htonl(ipsec_barco_ring_addr);
         data.u.ipsec_encap_rxdma_initial_table_d.barco_cindex = 0;

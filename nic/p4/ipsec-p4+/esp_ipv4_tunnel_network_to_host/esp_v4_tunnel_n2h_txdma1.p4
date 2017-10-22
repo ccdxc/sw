@@ -12,28 +12,9 @@
 
 #define tx_table_s4_t0_action esp_v4_tunnel_n2h_txdma1_update_cb
 
-
 #include "../../common-p4+/common_txdma.p4"
-
 #include "../ipsec_defines.h"
-
 #include "esp_v4_tunnel_n2h_headers.p4"
-
-
-#if 0
-header_type p4plus_to_p4_ipsec_header_t {
-    fields {
-        app_type : 4;
-        table0_valid : 1;
-        table1_valid : 1;
-        table2_valid : 1;
-        table3_valid : 1;
-        ipsec_pad : 256;
-        ipsec_pad1 : 256;
-    }
-}
-#endif
-
 
 header_type ipsec_txdma1_global_t {
     fields {
@@ -160,6 +141,9 @@ metadata dma_cmd_phv2mem_t brq_out_desc_zero;
 metadata dma_cmd_phv2mem_t brq_req_write;
 
 @pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd_post_barco_ring;
+
+@pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd_incr_pindex; 
 
 @pragma dont_trim
@@ -193,11 +177,6 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
 @pragma scratch_metadata
 metadata ipsec_int_header_t ipsec_int_hdr_scratch;
-
-#define IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT \
-    modify_field(txdma1_global_scratch.ipsec_cb_index, txdma1_global.ipsec_cb_index); \
-    modify_field(txdma1_global_scratch.in_desc_addr, txdma1_global.in_desc_addr); \
-    modify_field(txdma1_global_scratch.ipsec_global_pad, txdma1_global.ipsec_global_pad); 
 
 #define IPSEC_TXDMA1_S2S0_SCRATCH_INIT \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
@@ -243,7 +222,10 @@ action esp_v4_tunnel_n2h_txdma1_update_cb(pc, rsvd, cosA, cosB,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size,
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, iv_salt, ipsec_cb_pad)
+                                       cb_pindex, cb_cindex, 
+                                       barco_pindex, barco_cindex, 
+                                       cb_ring_base_addr, barco_ring_base_addr, 
+                                       iv_salt, ipsec_cb_pad)
 {
     modify_field(p4plus2p4_hdr.table0_valid, 0);
     IPSEC_CB_SCRATCH_WITH_PC
@@ -251,16 +233,28 @@ action esp_v4_tunnel_n2h_txdma1_update_cb(pc, rsvd, cosA, cosB,
 }
 
 //stage 3 table 0
-action esp_v4_tunnel_n2h_txdma1_write_barco_req(l4_protocol, pad_size)
+action esp_v4_tunnel_n2h_txdma1_write_barco_req(pc, rsvd, cosA, cosB,
+                                       cos_sel, eval_last, host, total, pid,
+                                       rxdma_ring_pindex, rxdma_ring_cindex,
+                                       barco_ring_pindex, barco_ring_cindex,
+                                       key_index, iv_size, icv_size,
+                                       expected_seq_no, last_replay_seq_no,
+                                       replay_seq_no_bmp, barco_enc_cmd,
+                                       ipsec_cb_index, block_size,
+                                       cb_pindex, cb_cindex, 
+                                       barco_pindex, barco_cindex, 
+                                       cb_ring_base_addr, barco_ring_base_addr, 
+                                       iv_salt, ipsec_cb_pad)
 {
+    IPSEC_CB_SCRATCH_WITH_PC
 
     DMA_COMMAND_PHV2MEM_FILL(brq_req_write, ipsec_to_stage3.barco_req_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END, 0, 0, 0, 0) 
     modify_field(p4_txdma_intr.dma_cmd_ptr, TXDMA1_DMA_COMMANDS_OFFSET);
    
     //table writes for these 2 bytes here
     // should this be made DMA by doing phv2mem ?? Anyway these are needed only by txdma2. 
-    modify_field(ipsec_int_header.l4_protocol, l4_protocol);
-    modify_field(ipsec_int_header.pad_size, pad_size);
+    //modify_field(ipsec_int_header.l4_protocol, l4_protocol);
+    //modify_field(ipsec_int_header.pad_size, pad_size);
 
     // RING Barco-doorbell
     
@@ -270,23 +264,6 @@ action esp_v4_tunnel_n2h_txdma1_write_barco_req(l4_protocol, pad_size)
     modify_field(common_te0_phv.table_lock_en, 0);
     modify_field(common_te0_phv.table_addr, txdma1_global.ipsec_cb_addr);
 }
-
-#if 0
-//stage 2 table 0
-action esp_v4_tunnel_n2h_txdma1_get_barco_req_index_ptr(barco_req_index_address)
-{
-    modify_field(ipsec_to_stage3.barco_req_addr, barco_req_index_address);
-
-    modify_field(p4plus2p4_hdr.table0_valid, 1);
-    modify_field(common_te0_phv.table_pc, 0);
-    modify_field(common_te0_phv.table_raw_table_size, 1);
-    modify_field(common_te0_phv.table_lock_en, 0);
-    // read 2 bytes at tailroom-offset so that we know l4proto and pad_size 
-    // and update ipsec_int_header with that(which is in descriptor beginning)
-    modify_field(common_te0_phv.table_addr, t0_s2s.in_page_addr+t0_s2s.tailroom_offset);
-    modify_field(p4plus2p4_hdr.table2_valid, 0);
-}
-#endif
 
 //stage 2 - table1
 action esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header(in_desc, out_desc,
@@ -303,24 +280,8 @@ action esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header(in_desc, out_desc,
 
     modify_field(barco_req.input_list_address, in_desc);
     modify_field(barco_req.output_list_address, out_desc);
-    //modify_field(barco_req.auth_tag_addr, out_desc+tailroom_offset+pad_size+2);
-    //modify_field(barco_req.header_size, payload_start);
-    //modify_field(t0_s2s.tailroom_offset, tailroom_offset);
+    modify_field(txdma1_global_scratch.ipsec_cb_addr, txdma1_global.ipsec_cb_addr);
 }
-
-#if 0
-//stage 2 - table2
-action esp_v4_tunnel_n2h_txdma1_dequeue_head_desc(addr0, offset0, length0,
-                              addr1, offset1, length1,
-                              addr2, offset2, length2,
-                              nextptr, rsvd)
-{
-
-    modify_field(p4plus2p4_hdr.table1_valid, 0);
-    modify_field(t0_s2s.in_page_addr, addr0);
-     
-}
-#endif
 
 //stage 1 - table1
 action esp_v4_tunnel_n2h_allocate_barco_req_pindex (pi)
@@ -361,7 +322,10 @@ action esp_v4_tunnel_n2h_txdma1_initial_table(pc, rsvd, cosA, cosB,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
                                        ipsec_cb_index, block_size,
-                                       cb_pindex, cb_cindex, cb_ring_base_addr, iv_salt, ipsec_cb_pad)
+                                       cb_pindex, cb_cindex, 
+                                       barco_pindex, barco_cindex, 
+                                       cb_ring_base_addr, barco_ring_base_addr, 
+                                       iv_salt, ipsec_cb_pad)
 {
     IPSEC_CB_SCRATCH 
 
