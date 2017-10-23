@@ -55,8 +55,8 @@ steps:
         fields      :
             flags   : syn
             options :
-                timestamp       : 0x12345678
-                NOP             : 0
+                timestamp   : 0x12345678
+                nop         : 0
 
     - step:
         id          : IFLOW_SYN_DROP
@@ -437,6 +437,7 @@ steps:
                 scale       : ref://step/ifstate/scale
                 mss         : ref://step/ifstate/mss
                 timestamp   : 12345678
+                #nop         : 0
                 
         state       :
             iflow   :

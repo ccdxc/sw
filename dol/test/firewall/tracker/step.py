@@ -64,6 +64,9 @@ class StepTcpOptions:
 
         if getattr(spec, 'mss', None) is not None:
             self.__init_mss(spec)
+
+        if getattr(spec, 'nop', None) is not None:
+            self.__init_nop(spec)
         return
 
     def Show(self, lg):
