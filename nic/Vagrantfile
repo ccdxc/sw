@@ -115,7 +115,7 @@ ldconfig
 
 # install grpc
 cd /tmp
-git clone -b $(curl -L http://grpc.io/release) https://github.com/grpc/grpc
+git clone -b v1.6.6  https://github.com/grpc/grpc
 cd grpc
 git submodule update --init
 make -j$(grep -c processor /proc/cpuinfo)
@@ -190,20 +190,6 @@ mkdir -p /home/ubuntu/.ssh/ && touch $f
 grep -q 'StrictHostKeyChecking' $f
 echo 'StrictHostKeyChecking no' >> $f
 
-SCRIPT
-
-# config git
-$gitconfig_script = <<-SCRIPT
-  cat > ~/.gitconfig <<-EOF
-  [github]
-     user = sarat-k
-     name = Sarat Kamisety 
-     ;token = 027645c86abbd90fb1c5e4f3aa36b4ff49c860e2
-  [url "https://github.com/"]
-  insteadOf = git://github.com/
-  [url "https://github.com/"]
-  insteadOf = git@github.com:
-  EOF
 SCRIPT
 
 # copy your environment

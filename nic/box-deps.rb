@@ -122,7 +122,7 @@ end
 
 # prep grpc
 inside BASE_BUILD_DIR do
-  run "git clone -b v1.6.1 https://github.com/grpc/grpc"
+  run "git clone -b v1.6.6 https://github.com/grpc/grpc"
 end
 
 # install grpc
