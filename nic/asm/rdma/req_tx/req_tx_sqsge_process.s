@@ -172,19 +172,22 @@ sge_loop:
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.num_sges, r5)
     //CAPRI_SET_FIELD(r7, INFO_OUT2_T, wqe_addr, k.args.wqe_addr)
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, last, r3)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, first, k.args.first)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, op_type, k.args.op_type)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, first, k.args.first)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, op_type, k.args.op_type)
+    CAPRI_SET_FIELD_RANGE(r7, INFO_OUT2_T, op_type, first, k.{args.op_type...args.first})
     CAPRI_SET_FIELD(r7, INFO_OUT2_T, tbl_id, 2) // Table 2
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.imm_data, k.args.imm_data)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.inv_key, k.args.inv_key)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.imm_data, k.args.imm_data)
+    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, op.send_wr.inv_key, k.args.inv_key)
+    CAPRI_SET_FIELD_RANGE(r7, INFO_OUT2_T, op.send_wr.imm_data, op.send_wr.inv_key, k.{args.imm_data...args.inv_key})
 
     CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
 
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, in_progress, r4)
     //CAPRI_SET_FIELD(r7, INFO_OUT3_T, busy, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, k.args.first)
+    //CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, k.args.op_type)
+    //CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, k.args.first)
+    CAPRI_SET_FIELD_RANGE(r7, INFO_OUT3_T, op_type, first, k.{args.op_type...args.first})
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, last, r3)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, k.args.op_type)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, tbl_id, 3) // Table 3
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, num_sges, r5)
     CAPRI_SET_FIELD(r7, INFO_OUT3_T, current_sge_id, r1)

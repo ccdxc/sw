@@ -31,6 +31,7 @@ struct req_tx_sqcb_to_wqe_info_t {
 
 struct req_tx_wqe_to_sge_info_t {
     in_progress                    : 1;
+    op_type                        : 8;
     first                          : 1;
     current_sge_id                 : 8;
     num_valid_sges                 : 8;
@@ -38,7 +39,6 @@ struct req_tx_wqe_to_sge_info_t {
     remaining_payload_bytes        : 16;
     payload_offset                 : 16;
     dma_cmd_start_index            : 6; // TODO Different from "C" code due to space scarcity
-    op_type                        : 8;
     imm_data                       : 32;
     union {
         inv_key                        : 32;
@@ -98,9 +98,10 @@ union op_t {
 
 struct req_tx_rrqwqe_to_hdr_info_t {
     rsvd                          : 2;
-    first                         : 1;
     last                          : 1;
+    //keep op_type...first contiguous
     op_type                       : 4;
+    first                         : 1;
     tbl_id                        : 3;
     log_pmtu                      : 5;
     rrq_p_index                   : 8;
@@ -110,6 +111,8 @@ struct req_tx_rrqwqe_to_hdr_info_t {
 struct req_tx_sqcb_write_back_info_t {
     busy                         : 1;
     in_progress                  : 1;
+    //keep op_type...first contiguous
+    op_type                      : 8;
     first                        : 1;
     last                         : 1;
     tbl_id                       : 3;
@@ -120,7 +123,6 @@ struct req_tx_sqcb_write_back_info_t {
     release_cb1_busy             : 1;
     num_sges                     : 8;
     current_sge_id               : 8;
-    op_type                      : 8;
     sq_c_index                   : 16;
     current_sge_offset           : 32;
     pad                          : 76;
