@@ -12,7 +12,7 @@
 namespace hal {
 namespace pd {
 
-static pd_wring_meta_t g_meta[types::WRingType_MAX];
+static pd_wring_meta_t g_meta[types::WRingType_MAX + 1];
 
 hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
 hal_ret_t arqrx_get_hw_meta(pd_wring_t* wring_pd);
