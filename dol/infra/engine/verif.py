@@ -15,6 +15,8 @@ from infra.common.glopts    import GlobalOptions
 from infra.common.logging   import logger as logger
 from infra.asic.model       import ModelConnector
 
+MAX_RETRIES = 10
+
 class VerifEngineObject:
     def __init__(self):
         # Pending testcase database
@@ -124,18 +126,30 @@ class VerifEngineObject:
             return defs.status.SUCCESS
         return self.__verify_buffers(ebuf, abuf, lgh)
 
-    def __consume_descriptor(self, edescr, ring):
+    def __retry_wait(self, lgh):
+        if GlobalOptions.dryrun:
+            return
+        lgh.info("Retry wait.........")
+        time.sleep(1)
+        return
+
+    def __consume_descriptor(self, edescr, ring, lgh):
         if GlobalOptions.dryrun:
             return None
-        else:
-            adescr = copy.copy(edescr)
-            ring.Consume(adescr)
+        
+        adescr = copy.copy(edescr)
+        for r in range(MAX_RETRIES):
+            status = ring.Consume(adescr)
+            if status != defs.status.RETRY: break
+            self.__retry_wait(lgh)
         return adescr
 
     def __verify_descriptors(self, step, lgh):
         for dsp in step.expect.descriptors:
             edescr = dsp.descriptor.object
-            adescr = self.__consume_descriptor(edescr, dsp.descriptor.ring)
+            adescr = self.__consume_descriptor(edescr,
+                                               dsp.descriptor.ring,
+                                               lgh)
             status = self.__verify_one_descriptor(edescr, adescr, lgh)
             if status == defs.status.ERROR:
                 return status
@@ -153,13 +167,6 @@ class VerifEngineObject:
                 return defs.status.ERROR
         return defs.status.SUCCESS
 
-    def __retry_wait(self, lgh):
-        if GlobalOptions.dryrun:
-            return
-        lgh.info("Retry wait.........")
-        time.sleep(1)
-        return
-
     def __receive_packets(self, pcr, step, lgh):
         for r in range(10):
             mpkts = ModelConnector.Receive()
@@ -167,6 +174,8 @@ class VerifEngineObject:
                 pcr.AddReceived(mpkt.rawpkt, [ mpkt.port ])
             if pcr.GetRxPacketCount() >= pcr.GetExPacketCount():
                 break
+            lgh.info("RETRY required: ExPktCount:%d RxPktCount:%d" %\
+                     (pcr.GetExPacketCount(), pcr.GetRxPacketCount()))
             self.__retry_wait(lgh)
         return
 

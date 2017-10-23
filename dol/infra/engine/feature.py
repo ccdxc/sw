@@ -26,7 +26,8 @@ BaseTopoExcludeFeatureList = [
     'hostpin',
     'multicast',
     'l4lb',
-    'recirc'
+    'recirc',
+    'admin'
 ]
 
 class FeatureObject:

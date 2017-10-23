@@ -1,11 +1,10 @@
 #! /usr/bin/python3
 
-import copy
-
+import math
 import config.resmgr            as resmgr
 import config.objects.ring      as ring
 from infra.common.logging   import cfglogger
-
+from infra.common.defs import status
 
 class EthRingObject(ring.RingObject):
     def __init__(self):
@@ -35,6 +34,9 @@ class EthRingObject(ring.RingObject):
 
     def Post(self, descriptor):
         cfglogger.info("Posting %s @ %s on %s" % (descriptor, self.queue.qstate.get_pindex(self.num), self))
+        #if (self.queue.qstate.get_pindex(self.num) + 1) % math.pow(2, self.size)\
+        #        == self.queue.qstate.get_cindex(self.num):
+        #    return status.RETRY
 
         # Check descriptor compatibility
         assert(self.desc_size == descriptor.size)
@@ -62,10 +64,17 @@ class EthRingObject(ring.RingObject):
         if descriptor._buf is not None and d._buf is not None:
             descriptor._buf.Bind(d._buf._mem)
         descriptor.Read()
-
+        
+        qstate_ci = self.queue.qstate.get_cindex(self.num)
+        descr_ci = getattr(descriptor._data, 'completion_index', None)
+        if descr_ci is not None and descr_ci != qstate_ci:
+            cfglogger.info("RETRY required: DescrCINDEX:%d QstateCINDEX:%d" %\
+                           (descr_ci, qstate_ci))
+            return status.RETRY
         # Increment consumer index
         self.queue.qstate.incr_cindex(self.num)
         self.queue.qstate.Read()
+        return status.SUCCESS
 
 
 class EthRingObjectHelper:

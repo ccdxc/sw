@@ -61,6 +61,7 @@ __status = [
     'ABORT',
     'INVALID_INPUT',
     'NULL_INPUT',
+    'RETRY',
 ]
 status = List2Enum(__status)
 
