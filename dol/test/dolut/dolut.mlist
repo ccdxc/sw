@@ -55,3 +55,9 @@ modules:
     - module:
         name    : DESCR_BUILDER
         spec    : sample_descr_builder.testspec
+
+    - module:
+        name    : PKT_VERIFY_FAILURE
+        ignore  : True
+        spec    : sample_pkt_to_pkt.testspec
+        module  : dolut_verify_fail

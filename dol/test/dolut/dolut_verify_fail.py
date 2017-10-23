@@ -12,6 +12,9 @@ def TestCaseSetup(tc):
     modcbs.TestCaseSetup(tc)
     return
 
+def TestCaseVerify(tc):
+    return False
+
 def TestCaseTeardown(tc):
     modcbs.TestCaseTeardown(tc)
     return

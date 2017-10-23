@@ -104,7 +104,7 @@ class TriggerEngineObject:
                       defs.status.str(cbstatus)))
             return step.status
         tc.info("Step%d FINAL STATUS = PASS" % step.step_id)
-        return
+        return step.status
 
     def __trigger(self, tc):
         status = defs.status.SUCCESS
