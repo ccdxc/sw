@@ -36,7 +36,7 @@ class RawcCbObject(base.ConfigObjectBase):
         # assert(len(self.uplinks) > 0)
         cfglogger.info("  - %s" % self)
 
-        self.app_redir = SwDscrRingHelper.main("RAWCCBQ", gid, self.id)
+        self.rawccbq = SwDscrRingHelper.main("RAWCCBQ", gid, self.id)
         return
 
 

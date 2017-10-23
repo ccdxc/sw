@@ -5,6 +5,6 @@ meta:
 entries:
     - entry:
         name        : RAWCCBQ
-        haltype     : 15
+        haltype     : 17
         type        : DESCR_AOL_VIA_REF
         count       : 16
