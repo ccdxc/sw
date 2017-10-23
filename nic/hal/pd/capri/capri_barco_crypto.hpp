@@ -14,6 +14,8 @@ namespace pd {
 /* FIXME: this needs to be driven from HAL PD, but the includes do not make it to capri */
 #define CRYPTO_KEY_COUNT_MAX                (64 * 1024)
 
+hal_ret_t capri_barco_rings_init(void);
+hal_ret_t capri_barco_res_allocator_init(void);
 hal_ret_t capri_barco_crypto_init(void);
 hal_ret_t capri_barco_init_key(uint32_t key_idx, uint64_t key_addr);
 hal_ret_t capri_barco_setup_key(uint32_t key_idx, types::CryptoKeyType key_type, uint8_t *key,

@@ -33,6 +33,7 @@
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/hal/pd/iris/rawrcb_pd.hpp"
 #include "nic/hal/pd/capri/capri_repl.hpp"
+#include "nic/hal/pd/capri/capri_barco_res.hpp"
 
 namespace hal {
 namespace pd {
@@ -246,6 +247,15 @@ hal_state_pd::init(void)
     // Indexer based allocator to manage the crypto session keys
     session_keys_idxr_ = new hal::utils::indexer(CRYPTO_KEY_COUNT_MAX);
     HAL_ASSERT_RETURN((session_keys_idxr_ != NULL), false);
+
+    crypto_asym_dma_descr_idxr_ = new hal::utils::indexer(CRYPTO_ASYM_DMA_DESCR_COUNT_MAX);
+    HAL_ASSERT_RETURN((crypto_asym_dma_descr_idxr_ != NULL), false);
+
+    hbm_mem_idxr_ = new hal::utils::indexer(CRYPTO_HBM_MEM_COUNT_MAX);
+    HAL_ASSERT_RETURN((hbm_mem_idxr_!= NULL), false);
+
+    crypto_asym_key_descr_idxr_ = new hal::utils::indexer(CRYPTO_ASYM_KEY_DESCR_COUNT_MAX);
+    HAL_ASSERT_RETURN((crypto_asym_key_descr_idxr_!= NULL), false);
     
     // initialize IPSECCB related data structures
     ipseccb_slab_ = slab::factory("IPSECCB PD", HAL_SLAB_IPSECCB_PD,

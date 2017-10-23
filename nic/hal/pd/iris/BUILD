@@ -21,6 +21,7 @@ cc_library(
             "//nic/hal/pd/utils/acl_tcam:acl_tcam",
             "//nic:gen_includes",
             "//nic/hal/pd/iris/p4pd:p4pdapi",
+            "//nic/hal/pd/capri:capri_includes",
             ],
     alwayslink = 1,
 )

@@ -81,6 +81,18 @@
             "size_kb": 128
         },
         {
+            "name": "brq-ring-asym",
+            "size_kb": 32
+        },
+        {
+            "name": "crypto-asym-dma-descr",
+            "size_kb": 24
+        },
+        {
+            "name": "crypto-hbm-mem",
+            "size_kb": 512
+        },
+        {
             "name": "arq-rx",
             "size_kb": 64
         },
@@ -135,6 +147,10 @@
         {
             "name": "key-mem",
             "size_kb": 2048
+        },
+        {
+            "name": "crypto-asym-key-desc-array",
+            "size_kb": 1024
         },
         {
             "name": "ipsec_pad_table",

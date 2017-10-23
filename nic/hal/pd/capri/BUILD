@@ -8,6 +8,7 @@ cc_library(
     hdrs = [
         "capri_hbm.hpp",
         "capri_loader.h",
+        "capri_barco_rings.hpp"
     ],
 )
 
@@ -25,7 +26,9 @@ cc_library(
             "capri_tm_rw.cc",
             "capri_init.cc",
             "capri_repl.cc",
-            "capri_txs_scheduler.cc"
+            "capri_txs_scheduler.cc",
+		    "capri_barco_rings.cc",
+            "capri_barco_res.cc"
             ],
     hdrs = [
         #"capri_hbm.hpp",
