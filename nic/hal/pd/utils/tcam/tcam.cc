@@ -75,13 +75,13 @@ Tcam::insert(void *key, void *key_mask, void *data, uint32_t *index, bool lowest
     // Check if TCAM entry already exists
     if (tcam_entry_exists_(key, key_mask, swkey_len_, &te)) {
         if (!allow_dup_insert_) {
-            HAL_TRACE_DEBUG("TCAM: Table: {} Entry exists at {} return err",
-                             table_name_.c_str(), *index);
+            HAL_TRACE_DEBUG("TCAM: Table: {} Entry already exists at {} return err",
+                             table_name_.c_str(), te->get_index());
             return HAL_RET_DUP_INS_FAIL;
         } else {
-            // If entry exisits, then increment ref-count and return the index
+            // If entry exists, then increment ref-count and return the index
             HAL_TRACE_DEBUG("TCAM: Table: {} Entry exists at {} refcount {}",
-                             table_name_.c_str(), *index, te->get_refcnt());
+                             table_name_.c_str(), te->get_index(), te->get_refcnt());
             te->incr_refcnt();
             *index = te->get_index();
             return HAL_RET_OK;

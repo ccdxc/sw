@@ -805,6 +805,16 @@ hal_state_pd::init_tables(void)
                                                tinfo.key_struct_size, 
                                                tinfo.actiondata_struct_size, true);
                 HAL_ASSERT(acl_table_ != NULL);
+            } else if ((tid == P4TBL_ID_DDOS_SRC_VF) ||
+                       (tid == P4TBL_ID_DDOS_SRC_DST) ||
+                       (tid == P4TBL_ID_DDOS_SERVICE)) {
+                /* Allow dup entries must be set to true for ddos tcam tables */
+                if (!tinfo.is_oflow_table) {
+                    tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
+                        new Tcam(tinfo.tablename, tid, tinfo.tabledepth,
+                                 tinfo.key_struct_size, tinfo.actiondata_struct_size, true);
+                    HAL_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
+                }
             } else {
                 if (!tinfo.is_oflow_table) {
                     tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =

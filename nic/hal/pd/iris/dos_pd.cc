@@ -125,6 +125,235 @@ pd_dos_policy_delete (pd_dos_policy_args_t *args)
     return ret;
 }
 
+hal_ret_t
+dos_pd_program_ddos_src_vf_tcam (uint16_t slport, int actionid,
+                                 uint16_t policer_idx,
+                                 p4pd_table_id tbl_id, int *idx)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    ddos_src_vf_swkey_t         key;
+    ddos_src_vf_swkey_mask_t    mask;
+    ddos_src_vf_actiondata      data;
+    Tcam                        *tcam = NULL;
+    uint32_t                    ret_idx;
+
+    tcam = g_hal_state_pd->tcam_table(tbl_id);
+    HAL_ASSERT(tcam != NULL);
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    
+    key.entry_inactive_ddos_src_vf = 0;
+    key.control_metadata_src_lport = slport;
+    mask.entry_inactive_ddos_src_vf_mask = 0xFF;
+    mask.control_metadata_src_lport_mask = 0xFFFF;
+    
+    data.actionid = actionid;
+    data.ddos_src_vf_action_u.ddos_src_vf_ddos_src_vf_hit.ddos_src_vf_base_policer_idx = policer_idx;
+    
+    ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    if (ret == HAL_RET_DUP_INS_FAIL) {
+        /* Entry already exists. Can be skipped */
+        *idx = -1;
+    } else {
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("DDoS src-vf tcam write failure, "
+                          "idx : {}, err : {}", ret_idx, ret);
+            return ret;
+        }
+    }
+    HAL_TRACE_DEBUG("DDoS src-vf tcam write, "
+                    "idx : {}, ret: {}", ret_idx, ret);
+    *idx = (int) ret_idx;
+    return ret;
+}
+
+hal_ret_t
+dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr,
+                                  uint16_t dport, uint8_t proto,
+                                  uint16_t vrf, int actionid,
+                                  uint16_t policer_idx, bool v4_addr,
+                                  p4pd_table_id tbl_id, int *idx)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    ddos_service_swkey_t        key;
+    ddos_service_swkey_mask_t   mask;
+    ddos_service_actiondata     data;
+    Tcam                        *tcam = NULL;
+    uint32_t                    ret_idx;
+
+    tcam = g_hal_state_pd->tcam_table(tbl_id);
+    HAL_ASSERT(tcam != NULL);
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    
+    if (v4_addr) {
+        memcpy(key.flow_lkp_metadata_lkp_dst, &ip_addr->addr.v4_addr,
+               sizeof(ipv4_addr_t));
+        memset(&mask.flow_lkp_metadata_lkp_dst_mask, 0xFF,
+               sizeof(ipv4_addr_t));
+    } else {
+        memcpy(key.flow_lkp_metadata_lkp_dst, &ip_addr->addr.v6_addr,
+               sizeof(ipv6_addr_t));
+        memset(&mask.flow_lkp_metadata_lkp_dst_mask, 0xFF,
+               sizeof(ipv6_addr_t));
+    }
+    key.flow_lkp_metadata_lkp_dport = dport;
+    mask.flow_lkp_metadata_lkp_dport_mask = 0xFFFF;
+    key.flow_lkp_metadata_lkp_proto = proto;
+    mask.flow_lkp_metadata_lkp_proto_mask = 0xFF;
+    key.flow_lkp_metadata_lkp_vrf = vrf;
+    mask.flow_lkp_metadata_lkp_vrf_mask = 0xFFFF;
+    key.entry_inactive_ddos_service = 0;
+    mask.entry_inactive_ddos_service_mask = 0xFF;
+     
+    data.actionid = actionid;
+    data.ddos_service_action_u.ddos_service_ddos_service_hit.ddos_service_base_policer_idx = policer_idx;
+
+    ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    if (ret == HAL_RET_DUP_INS_FAIL) {
+        /* Entry already exists. Can be skipped */
+        *idx = -1;
+    } else {
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("DDoS service tcam write failure, "
+                          "idx : {}, err : {}", ret_idx, ret);
+            return ret;
+        }
+    }
+    HAL_TRACE_DEBUG("DDoS service tcam write, "
+                    "idx : {}, ret: {}", ret_idx, ret);
+    *idx = (int) ret_idx;
+    return ret;
+}
+
+hal_ret_t
+dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
+                                  ip_addr_t *dst_ip_addr,
+                                  uint16_t dport, uint8_t proto,
+                                  uint16_t vrf, int actionid,
+                                  uint16_t policer_idx, bool v4_addr,
+                                  p4pd_table_id tbl_id, int *idx)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    ddos_src_dst_swkey_t        key;
+    ddos_src_dst_swkey_mask_t   mask;
+    ddos_src_dst_actiondata     data;
+    Tcam                        *tcam = NULL;
+    uint32_t                    ret_idx;
+
+    tcam = g_hal_state_pd->tcam_table(tbl_id);
+    HAL_ASSERT(tcam != NULL);
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    
+    if (v4_addr) {
+        memcpy(key.flow_lkp_metadata_lkp_src, &src_ip_addr->addr.v4_addr,
+               sizeof(ipv4_addr_t));
+        memset(&mask.flow_lkp_metadata_lkp_src_mask, 0xFF,
+               sizeof(ipv4_addr_t));
+        memcpy(key.flow_lkp_metadata_lkp_dst, &dst_ip_addr->addr.v4_addr,
+               sizeof(ipv4_addr_t));
+        memset(&mask.flow_lkp_metadata_lkp_dst_mask, 0xFF,
+               sizeof(ipv4_addr_t));
+    } else {
+        memcpy(key.flow_lkp_metadata_lkp_src, &src_ip_addr->addr.v6_addr,
+               sizeof(ipv6_addr_t));
+        memset(&mask.flow_lkp_metadata_lkp_src_mask, 0xFF,
+               sizeof(ipv6_addr_t));
+        memcpy(key.flow_lkp_metadata_lkp_dst, &dst_ip_addr->addr.v6_addr,
+               sizeof(ipv6_addr_t));
+        memset(&mask.flow_lkp_metadata_lkp_dst_mask, 0xFF,
+               sizeof(ipv6_addr_t));
+    }
+    key.flow_lkp_metadata_lkp_dport = dport;
+    mask.flow_lkp_metadata_lkp_dport_mask = 0xFFFF;
+    key.flow_lkp_metadata_lkp_proto = proto;
+    mask.flow_lkp_metadata_lkp_proto_mask = 0xFF;
+    key.flow_lkp_metadata_lkp_vrf = vrf;
+    mask.flow_lkp_metadata_lkp_vrf_mask = 0xFFFF;
+    key.entry_inactive_ddos_src_dst = 0;
+    mask.entry_inactive_ddos_src_dst_mask = 0xFF;
+    
+    data.actionid = actionid;
+    data.ddos_src_dst_action_u.ddos_src_dst_ddos_src_dst_hit.ddos_src_dst_base_policer_idx = policer_idx;
+
+    ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    if (ret == HAL_RET_DUP_INS_FAIL) {
+        /* Entry already exists. Can be skipped */
+        *idx = -1;
+    } else {
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("DDoS service tcam write failure, "
+                          "idx : {}, err : {}", ret_idx, ret);
+            return ret;
+        }
+    }
+
+    HAL_TRACE_DEBUG("DDoS service tcam write, "
+                    "idx : {}, ret: {}", ret_idx, ret);
+    *idx = (int) ret_idx;
+    return ret;
+}
+
+#define DDOS_POLICER(_arg) d.ddos_service_policer_action_u.ddos_service_policer_execute_ddos_service_policer._arg
+
+hal_ret_t
+dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
+                             bool color_aware, uint32_t cir, uint32_t cbr,
+                             uint32_t pir, uint32_t pbr,
+                             p4pd_table_id tbl_id, uint32_t *idx)
+{
+    hal_ret_t                           ret = HAL_RET_OK;
+    DirectMap                           *dm;
+    ddos_service_policer_actiondata     d = { 0 };
+    
+    dm = g_hal_state_pd->dm_table(tbl_id);
+    HAL_ASSERT(dm != NULL);
+    
+    DDOS_POLICER(entry_valid) = 1;
+    DDOS_POLICER(pkt_rate) = (pps) ? 1 : 0;
+    DDOS_POLICER(color_aware) = (color_aware) ? 1 : 0;
+    memcpy(DDOS_POLICER(rate), &cir, sizeof(uint32_t));
+    memcpy(DDOS_POLICER(burst), &cbr, sizeof(uint32_t));
+
+    DDOS_POLICER(entry_valid2) = 1;
+    DDOS_POLICER(pkt_rate2) = (pps) ? 1 : 0;
+    DDOS_POLICER(color_aware2) = (color_aware) ? 1 : 0;
+    memcpy(DDOS_POLICER(rate2), &pir, sizeof(uint32_t));
+    memcpy(DDOS_POLICER(burst2), &pbr, sizeof(uint32_t));
+    
+    ret = dm->insert(&d, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("ddos policer table write failure, tbl_id: {} err : {}",
+                       tbl_id, ret);
+        return ret;
+    }
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Program HW
+// ----------------------------------------------------------------------------
+hal_ret_t
+dos_pd_program_hw(pd_dos_policy_t *pd_nw, bool create)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+
+    // Program DDoS service table
+    // Program DDoS src_vrf table
+    // Program DDoS src-dst table
+
+    // Program DDoS service policer
+    // Program DDoS src_vrf policer
+    // Program DDoS src-dst policer
+
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // DeProgram HW
 // ----------------------------------------------------------------------------
@@ -198,25 +427,6 @@ dos_pd_cleanup(pd_dos_policy_t *dos_pd)
     // Freeing PD
     dos_pd_free(dos_pd);
 end:
-    return ret;
-}
-
-// ----------------------------------------------------------------------------
-// Program HW
-// ----------------------------------------------------------------------------
-hal_ret_t
-dos_pd_program_hw(pd_dos_policy_t *pd_nw, bool create)
-{
-    hal_ret_t            ret = HAL_RET_OK;
-
-    // Program DDoS service table
-    // Program DDoS src_vrf table
-    // Program DDoS src-dst table
-
-    // Program DDoS service policer
-    // Program DDoS src_vrf policer
-    // Program DDoS src-dst policer
-
     return ret;
 }
 

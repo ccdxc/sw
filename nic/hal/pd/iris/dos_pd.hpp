@@ -13,6 +13,12 @@ namespace pd {
 
 typedef uint32_t    dos_policy_hw_id_t;
 
+typedef enum pd_ddos_policer_type_e_ {
+    DDOS_POLICER_TYPE_SRC_VF = 0,
+    DDOS_POLICER_TYPE_SRC_DST,
+    DDOS_POLICER_TYPE_SERVICE,
+} pd_ddos_policer_type_e;
+
 // security profile pd state
 struct pd_dos_policy_s {
     // PI DoS policy
