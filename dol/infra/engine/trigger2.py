@@ -124,6 +124,7 @@ class TriggerEngineObject:
                       defs.status.str(vfstatus),
                       defs.status.str(cbstatus)))
         tc.TeardownCallback()
+        tc.info("TESTCASE FINAL STATUS = PASS")
         return status
 
     def Trigger(self, tc):

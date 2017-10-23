@@ -1,11 +1,11 @@
 feature:
     id      : fte2
-    sub     : rxl3
+    sub     : txl3
     package : test.eth
     module  : eth
     enable  : True
     ignore  : False
-    spec    : rx_l3.testspec
+    spec    : tx_l3.testspec
     args:
         maxflows: 4
 

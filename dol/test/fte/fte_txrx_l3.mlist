@@ -1,0 +1,39 @@
+feature:
+    id      : fte2
+    sub     : txrxl3
+    package : test.eth
+    module  : eth
+    enable  : True
+    ignore  : False
+    spec    : tx_rx_l3.testspec
+    args:
+        maxflows: 4
+
+modules:
+    - module:
+        name    : IPV4_QTAG
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
+            - flow      : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
+            - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
+
+    - module:
+        name    : IPV6_QTAG
+        iterate:
+            - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
+            - flow      : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
+
+    - module:
+        name    : IPV4_UTAG
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
+            - flow      : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
+            - flow      : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
+
+    - module:
+        name    : IPV6_UTAG
+        iterate:
+            - flow      : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
+            - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
