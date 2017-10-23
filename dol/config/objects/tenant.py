@@ -94,10 +94,10 @@ class TenantObject(base.ConfigObjectBase):
    
     def Show(self):
         cfglogger.info("Tenant  : %s" % self.GID())
-        cfglogger.info("- Type      : %s" % self.type)
-        cfglogger.info("- HostPinned: %s" % self.hostpinned)
+        cfglogger.info("- Type          : %s" % self.type)
+        cfglogger.info("- HostPinned    : %s" % self.hostpinned)
         if self.IsInfra():
-            cfglogger.info("- LocalTep  : %s" % self.local_tep.get())
+            cfglogger.info("- LocalTep      : %s" % self.local_tep.get())
         if GlobalOptions.classic:
             cfglogger.info("- ClassicNicMode: True")
             cfglogger.info("- Pinned IF     : %s" % self.pinif.GID())
@@ -205,6 +205,9 @@ class TenantObject(base.ConfigObjectBase):
 
     def GetLocalEps(self, backend = False):
         return self.obj_helper_segment.GetLocalEps(backend)
+
+    def GetPinIf(self):
+        return self.pinif
 
     def PrepareHALRequestSpec(self, reqspec):
         reqspec.meta.tenant_id          = self.id

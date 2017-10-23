@@ -49,15 +49,26 @@ class EnicObject(base.ConfigObjectBase):
         self.__init_qos()
         return
 
-    def __pin_interface(self):
-        if self.tenant.IsHostPinned() is False:
-            return
+    def __pin_interface_for_hostpin_mode(self):
         trunks = Store.GetTrunkingUplinks()
         global gl_pinif_iter
         gl_pinif_iter += 1
         gl_pinif_iter %= len(trunks)
         self.pinnedif = trunks[gl_pinif_iter]
         self.macaddr.update(self.pinnedif.id << 16)
+        return
+        
+    def __pin_interface_for_classic(self):
+        self.pinnedif = self.tenant.GetPinIf()
+        return
+
+    def __pin_interface(self):
+        if self.tenant.IsHostPinned():
+            self.__pin_interface_for_hostpin_mode()
+        elif self.IsClassic():
+            self.__pin_interface_for_classic()
+        else:
+            return
         cfglogger.info("- %s: Pinning to Interface: %s" %\
                        (self.GID(), self.pinnedif))
         return
@@ -161,20 +172,25 @@ class EnicObject(base.ConfigObjectBase):
         req_spec.type           = haldefs.interface.IF_TYPE_ENIC
         req_spec.admin_status   = haldefs.interface.IF_STATUS_UP
         req_spec.key_or_handle.interface_id = self.id
+
         req_spec.if_enic_info.lif_key_or_handle.lif_id = self.lif.id
-        req_spec.if_enic_info.enic_info.mac_address = self.macaddr.getnum()
-        req_spec.if_enic_info.enic_info.encap_vlan_id = self.encap_vlan_id
-        req_spec.if_enic_info.enic_info.l2segment_id = self.ep.segment.id
-        if self.IsDirect():
-            req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_DIRECT
-        elif self.IsUseg():
-            req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_USEG
-        elif self.IsPvlan():
-            req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_PVLAN
-        elif self.IsClassic():
-            req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_PVLAN
+        if self.IsClassic():
+            req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_CLASSIC
+            req_spec.if_enic_info.classic_enic_info.l2segment_handle.append(self.segment.hal_handle)
+            req_spec.if_enic_info.classic_enic_info.pinned_uplink_if_handle = self.pinnedif.hal_handle
         else:
-            assert(0)
+            req_spec.if_enic_info.enic_info.mac_address = self.macaddr.getnum()
+            req_spec.if_enic_info.enic_info.encap_vlan_id = self.encap_vlan_id
+            req_spec.if_enic_info.enic_info.l2segment_id = self.ep.segment.id
+            if self.IsDirect():
+                req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_DIRECT
+            elif self.IsUseg():
+                req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_USEG
+            elif self.IsPvlan():
+                req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_PVLAN
+            else:
+                assert(0)
+
         # QOS stuff
         if self.txqos.cos is not None:
             req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True

@@ -23,6 +23,7 @@ targets:
   multicast:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo multicast --feature multicast" ]
   l4lb:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo l4lb --feature l4lb" ]
   recirc:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo recirc --feature recirc" ]
+  classic:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo classic --feature classic --classic" ]
 cache:
   name: "sw"
   mount_dir: "/root/.cache"
