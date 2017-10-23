@@ -3,7 +3,7 @@
 #include "nic/include/tcp_common.h"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/hal/src/tlscb.hpp"
-
+#include "nic/hal/lkl/lklshim_tls.hpp"
 namespace hal {
 namespace tls {
 
@@ -64,6 +64,15 @@ hal_ret_t tls_api_send_data_cb(uint32_t id, uint8_t* data, size_t len)
                                 TCP_SCHED_RING_ASESQ);
 }
 
+hal_ret_t
+tls_api_handshake_done_cb(uint32_t qid, int err)
+{
+  HAL_TRACE_DEBUG("SSL Handshake completed for qid = {} error = {}", qid, err);
+  if (err == 0) { 
+      lklshim_release_client_syn(qid);
+  }
+  return HAL_RET_OK;
+}
 /*************************
  * APIs
  ************************/
@@ -85,6 +94,7 @@ tls_api_init(void)
     }
 
     g_ssl_helper.set_send_cb(&tls_api_send_data_cb);
+    g_ssl_helper.set_hs_done_cb(&tls_api_handshake_done_cb);
 
     //tcpfd = create_socket();
     //tls_api_start_handshake(100);

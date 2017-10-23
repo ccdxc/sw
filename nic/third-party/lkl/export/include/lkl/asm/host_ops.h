@@ -157,6 +157,9 @@ void lkl_skb_copy_to_linear_data(void* skb, char* pkt, unsigned int len);
 void lkl_skb_set_mac_header(void* skb, signed short offset);
 void lkl_skb_set_network_header(void* skb, signed short offset);
 void lkl_skb_set_transport_header(void* skb, signed short offset);
+void lkl_skb_set_qid(void *skb, unsigned short qid);
+void lkl_skb_set_src_lif(void *skb, unsigned short src_lif);
+
 int lkl_tcp_v4_rcv(void* skb);
 void* lkl_create_net_ns(void);
 void* lkl_dev_get_by_name(const char* name);
@@ -166,6 +169,7 @@ void* lkl_get_network_start(void* skb);
 void* lkl_get_transport_start(void* skb);
 char* lkl_get_skb_dev(void *skb);
 void lkl_register_tx_func(void* fn);
+void lkl_register_tcpcb_update_func(void* fn);
 unsigned int lkl_tcpcb_rcv_nxt(void *tcpcb);
 unsigned int lkl_tcpcb_snd_nxt(void *tcpcb);
 unsigned int lkl_tcpcb_snd_una(void *tcpcb);

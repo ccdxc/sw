@@ -426,14 +426,28 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
 fte::pipeline_action_t
 tcp_exec_tcp_lif(fte::ctx_t& ctx)
 {
-    HAL_TRACE_DEBUG("tcp_exec_tcp_lif: LKL return {}",
-                     hal::pd::lkl_handle_flow_hit_pkt(
-                                 hal::pd::lkl_alloc_skbuff(ctx.cpu_rxhdr(),
-                                                           ctx.pkt(),
-                                                           ctx.pkt_len(),
-                                                           (hal::flow_direction_t)FLOW_DIR_FROM_UPLINK),//ctx.direction()),
-                                 ctx.direction(),
-                                 ctx.cpu_rxhdr()));
+    const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr = ctx.cpu_rxhdr();
+
+
+    if (ctx.pkt_len() == 0) {
+        HAL_TRACE_DEBUG("tcp_exec_tcp_lif: LKL return {}",
+                        hal::pd::lkl_handle_flow_hit_hdr(
+                                                         hal::pd::lkl_alloc_skbuff(rxhdr,
+                                                                                   ctx.pkt(),
+                                                                                   ctx.pkt_len(),
+                                                                                   ctx.direction()),
+                                                         ctx.direction(),
+                                                         rxhdr));
+    } else {
+        HAL_TRACE_DEBUG("tcp_exec_tcp_lif: LKL return {}",
+                        hal::pd::lkl_handle_flow_hit_pkt(
+                                                         hal::pd::lkl_alloc_skbuff(rxhdr,
+                                                                                   ctx.pkt(),
+                                                                                   ctx.pkt_len(),
+                                                                                   ctx.direction()),
+                                                         ctx.direction(),
+                                                         rxhdr));
+    }
 
     return fte::PIPELINE_CONTINUE;
 }

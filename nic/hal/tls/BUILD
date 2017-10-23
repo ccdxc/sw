@@ -9,6 +9,7 @@ cc_library(
     deps = [
             "//nic:openssl",
             "//nic/hal:hal_includes",
+            "//nic/hal/lkl:lklshim_tls",
             "//nic/include:base_includes",
             "//nic/third-party/spdlog",
             "//nic/hal/pd/common:pdcommon",

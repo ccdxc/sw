@@ -28,10 +28,12 @@
 #define SSL_in_init pen_SSL_in_init
 #define SSL_free pen_SSL_free
 #define BIO_free pen_BIO_free
+#define SSL_is_init_finished pen_SSL_is_init_finished
 #include "nic/third-party/openssl/include/openssl/ssl.h"
 #include "nic/third-party/openssl/include/openssl/bio.h"
 #include "nic/third-party/openssl/include/openssl/err.h"
 
+#undef SSL_is_init_finished
 #undef BIO_free
 #undef SSL_free
 #undef SSL_in_init

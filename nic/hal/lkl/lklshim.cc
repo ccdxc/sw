@@ -14,6 +14,7 @@ extern "C" {
 #include "nic/third-party/lkl/export/include/lkl_host.h"
 }
 
+
 namespace hal {
 
 ht                       *lklshim_flow_db;
@@ -22,6 +23,7 @@ ht                       *lklshim_net_lsock_db;
 slab                     *lklshim_flowdb_slab;
 slab                     *lklshim_lsockdb_slab;
 int                      lklshim_max_lfd = 0;
+lklshim_flow_t           *lklshim_flow_by_qid[MAX_PROXY_FLOWS];
 
 void *
 lklshim_flow_get_key_func(void *entry)
@@ -375,21 +377,124 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
         return false;
     }
     
-    if (flow->hostns.skbuff != NULL) {
-        void *pkt_skb = flow->hostns.skbuff;
-        ether_header_t *eth = (ether_header_t*)lkl_get_mac_start(pkt_skb);
-        ipv4_header_t *ip = (ipv4_header_t*)lkl_get_network_start(pkt_skb);
-        tcp_header_t *tcp = (tcp_header_t*)lkl_get_transport_start(pkt_skb);
+    hal::tls::tls_api_start_handshake(rxhdr->qid);
 
-        HAL_TRACE_DEBUG("lklshim: flow miss rx eth={}", hex_dump((uint8_t*)eth, 18));
-        HAL_TRACE_DEBUG("lklshim: flow miss rx ip={}", hex_dump((uint8_t*)ip, sizeof(ipv4_header_t)));
-        HAL_TRACE_DEBUG("lklshim: flow miss rx tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
-        
-        lkl_tcp_v4_rcv(pkt_skb);
+    return true;
+}
+bool
+lklshim_process_flow_hit_rx_header (void *pkt_skb,
+                                    hal::flow_direction_t dir,
+                                    const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr)
+{
+    lklshim_flow_t     *flow;
+    union tcp_word_hdr {                                            
+      tcp_header_t  hdr;                                          
+      __be32        words[5];                                     
+    } *tp = (union tcp_word_hdr*)lkl_get_transport_start(pkt_skb);                                                              
+
+    ipv4_header_t *ip = (ipv4_header_t*)lkl_get_network_start(pkt_skb);
+
+
+    HAL_TRACE_DEBUG("lklshim: dir={} lif={} qid ={} lkp_vrf={} "
+                    "tcp_flags={} tcp_seq_num={} tcp_ack_num={} tcp_window={} tcp_mss={} tcp_ws={}",
+                    rxhdr->lkp_dir,rxhdr->lif, rxhdr->qid, rxhdr->lkp_vrf, 
+                    rxhdr->tcp_flags, rxhdr->tcp_seq_num, rxhdr->tcp_ack_num, 
+                    rxhdr->tcp_window, rxhdr->tcp_mss, rxhdr->tcp_ws);
+
+    flow = lklshim_flow_by_qid[rxhdr->qid];
+    if (flow == NULL) {
+        HAL_TRACE_ERR("No lklshim flow found for qid={}", rxhdr->qid);
+        return false;
+    }
+    lkl_skb_set_qid(pkt_skb, rxhdr->qid);
+    lkl_skb_set_src_lif(pkt_skb, 0);
+    HAL_TRACE_DEBUG("Key : [dir={}, sa={}, da={}, sp={}, dp={}]", 
+                    flow->itor_dir,
+                    flow->key.src_ip, flow->key.dst_ip, flow->key.src_port, flow->key.dst_port);
+
+    HAL_TRACE_DEBUG("pkt={} iph={} tcp={}", pkt_skb, (void*)ip, (void *)tp);
+    if (rxhdr->lkp_dir == 0) {
+      ip->saddr = flow->key.src_ip;
+      ip->daddr = flow->key.dst_ip;
+      ip->version = 4;
+      ip->ihl = 5;
+      ip->protocol = 6;
+      ip->tos = 0;
+      ip->tot_len = htons(40);
+      ip->id = 0;
+      ip->frag_off = 0;
+      ip->check = 0;
+      tp->words[3] = 0;
+      tp->hdr.sport = htons(flow->key.src_port);
+      tp->hdr.dport = htons(flow->key.dst_port);
+      tp->hdr.doff = 5;
+      tp->hdr.ack = 1;
+      tp->hdr.window = htons(rxhdr->tcp_window);
+      tp->hdr.seq = htonl(rxhdr->tcp_seq_num);
+      tp->hdr.ack_seq = htonl(rxhdr->tcp_ack_num);
+    } else {
+      ip->saddr = flow->key.dst_ip;
+      ip->daddr = flow->key.src_ip;
+      ip->version = 4;
+      ip->ihl = 5;
+      ip->protocol = 6;
+      ip->tos = 0;
+      ip->tot_len = htons(40);
+      ip->id = 0;
+      ip->frag_off = 0;
+      ip->check = 0;
+      tp->words[3] = 0;
+      tp->hdr.sport = htons(flow->key.dst_port);
+      tp->hdr.dport = htons(flow->key.src_port);
+      tp->hdr.doff = 5;
+      tp->hdr.ack = 1;
+      tp->hdr.window = htons(rxhdr->tcp_window);
+      tp->hdr.seq = htonl(rxhdr->tcp_seq_num);
+      tp->hdr.ack_seq = htonl(rxhdr->tcp_ack_num);
     }
 
+    HAL_TRACE_DEBUG("lklshim: ip={} tcp={} daddr={}, saddr={}, dport={}, sport={}, seqno={}, ackseqno={} ", 
+                    (void*)ip, (void*)tp,
+                    ip->daddr, ip->saddr, 
+                    ntohs(tp->hdr.dport), ntohs(tp->hdr.sport), ntohl(tp->hdr.seq), ntohl(tp->hdr.ack_seq));
 
-    hal::tls::tls_api_start_handshake(rxhdr->qid);
+    if (flow->itor_dir != dir) {
+        flow->dst_lif = rxhdr->src_lif;
+        HAL_TRACE_DEBUG("lklshim: updating flow dst lif = {}", flow->dst_lif);
+    }
+
+    if (lkl_tcp_v4_rcv(pkt_skb)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool 
+lklshim_release_client_syn(uint16_t qid) 
+{
+    lklshim_flow_t *flow = lklshim_flow_by_qid[qid];
+
+    
+    if (flow == NULL) {
+      HAL_TRACE_ERR("lklshim: flow does't exist to release client syn for qid = {}", qid);
+      return false;
+    }
+    
+    HAL_TRACE_DEBUG("lklshim: trying to release client syn for qid = {}", qid);
+
+    if (flow->hostns.skbuff != NULL) {
+      void *pkt_skb = flow->hostns.skbuff;
+      ether_header_t *eth = (ether_header_t*)lkl_get_mac_start(pkt_skb);
+      ipv4_header_t *ip = (ipv4_header_t*)lkl_get_network_start(pkt_skb);
+      tcp_header_t *tcp = (tcp_header_t*)lkl_get_transport_start(pkt_skb);
+
+      HAL_TRACE_DEBUG("lklshim: flow miss rx eth={}", hex_dump((uint8_t*)eth, 18));
+      HAL_TRACE_DEBUG("lklshim: flow miss rx ip={}", hex_dump((uint8_t*)ip, sizeof(ipv4_header_t)));
+      HAL_TRACE_DEBUG("lklshim: flow miss rx tcp={}", hex_dump((uint8_t*)tcp, sizeof(tcp_header_t)));
+
+      lkl_tcp_v4_rcv(pkt_skb);
+    }
 
     return true;
 }
@@ -422,7 +527,9 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
     flow->itor_dir = dir;
     flow->hw_vlan_id = hw_vlan_id;
     flow->iqid = iqid;
+    lklshim_flow_by_qid[iqid] = flow;
     flow->rqid = rqid;
+    lklshim_flow_by_qid[rqid] = flow;
     flow->src_lif = src_lif;
     proxy::tcp_create_cb(flow->iqid, flow->src_lif, eth, vlan, ip, tcp, true);
     proxy::tcp_create_cb(flow->rqid, flow->src_lif, eth, vlan, ip, tcp, false);
@@ -475,7 +582,7 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
     return true;
 }
 
-  void lklshim_update_tcpcb(void *tcpcb, uint32_t qid, uint32_t src_lif)
+void lklshim_update_tcpcb(void *tcpcb, uint32_t qid, uint32_t src_lif)
 {
     if (tcpcb == NULL) 
         return;

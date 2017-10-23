@@ -91,7 +91,8 @@
     modify_field(common_global_scratch.pingpong, common_phv.pingpong); \
     modify_field(common_global_scratch.rnmdr_full, common_phv.rnmdr_full); \
     modify_field(common_global_scratch.rnmpr_full, common_phv.rnmpr_full); \
-    modify_field(common_global_scratch.write_arq, common_phv.write_arq);
+    modify_field(common_global_scratch.write_arq, common_phv.write_arq); \
+    modify_field(common_global_scratch.write_tcp_app_hdr, common_phv.write_tcp_app_hdr);
 
 /******************************************************************************
  * D-vectors
@@ -292,9 +293,10 @@ header_type write_serq_d_t {
 header_type to_stage_1_phv_t {
     // tcp-rx
     fields {
+        flags                   : 8;
+        rcv_tsval               : 24;
         seq                     : 32;
         ack_seq                 : 32;
-        rcv_tsval               : 32;
         snd_nxt                 : 32;
     }
 }
@@ -302,15 +304,19 @@ header_type to_stage_1_phv_t {
 header_type to_stage_2_phv_t {
     // tcp-rtt, read-rnmdr, read-rnmpr, read-serq
     fields {
+        pad1                    : 48;
         snd_nxt                 : 32;
         rcv_tsecr               : 32;
+        pad2                    : 16;
     }
 }
 
 header_type to_stage_3_phv_t {
     // tcp-fra
     fields {
-        packets_out             : 32;
+        pad1                    : 8;
+        packets_out             : 16;
+        pad2                    : 8;
         srtt_us                 : 32;
         undo_retrans            : 32;
         sacked_out              : 16;
@@ -373,7 +379,7 @@ header_type common_global_phv_t {
         snd_una                 : 32;
         pkts_acked              : 8;
         debug_dol               : 8;
-        quick                   : 4;
+        quick                   : 3;
         ca_event                : 4;
         ecn_flags               : 2;
         process_ack_flag        : 1;
@@ -390,6 +396,7 @@ header_type common_global_phv_t {
         rnmdr_full              : 1;
         rnmpr_full              : 1;
         write_arq               : 1;
+        write_tcp_app_hdr       : 1;
     }
 }
 
@@ -495,8 +502,10 @@ metadata to_stage_2_phv_t to_s2;
 @pragma dont_trim
 metadata p4_to_p4plus_cpu_pkt_2_t cpu_hdr2;
 
-@pragma pa_header_union ingress to_stage_3
+@pragma pa_header_union ingress to_stage_3 cpu_hdr3
 metadata to_stage_3_phv_t to_s3;
+@pragma dont_trim
+metadata p4_to_p4plus_cpu_pkt_3_t cpu_hdr3;
 
 
 @pragma pa_header_union ingress to_stage_4
@@ -513,9 +522,15 @@ metadata common_global_phv_t common_phv;
 @pragma scratch_metadata
 metadata to_stage_1_phv_t to_s1_scratch;
 @pragma scratch_metadata
+metadata p4_to_p4plus_cpu_pkt_1_t to_cpu1_scratch;
+@pragma scratch_metadata
 metadata to_stage_2_phv_t to_s2_scratch;
 @pragma scratch_metadata
+metadata p4_to_p4plus_cpu_pkt_2_t to_cpu2_scratch;
+@pragma scratch_metadata
 metadata to_stage_3_phv_t to_s3_scratch;
+@pragma scratch_metadata
+metadata p4_to_p4plus_cpu_pkt_3_t to_cpu3_scratch;
 @pragma scratch_metadata
 metadata to_stage_4_phv_t to_s4_scratch;
 @pragma scratch_metadata
@@ -658,11 +673,31 @@ action tcp_rx(serq_base, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time, s
         pending_txdma, fastopen_rsk, pingpong, pad) {
     // k + i for stage 1
 
+
     // from to_stage 1
-    modify_field(to_s1_scratch.seq, to_s1.seq);
-    modify_field(to_s1_scratch.ack_seq, to_s1.ack_seq);
-    modify_field(to_s1_scratch.rcv_tsval, to_s1.rcv_tsval);
-    modify_field(to_s1_scratch.snd_nxt, to_s1.snd_nxt);
+    if (write_serq == 1) {
+        modify_field(to_s1_scratch.flags, to_s1.flags);
+        modify_field(to_s1_scratch.rcv_tsval, to_s1.rcv_tsval);
+        modify_field(to_s1_scratch.seq, to_s1.seq);
+        modify_field(to_s1_scratch.ack_seq, to_s1.ack_seq);
+
+        modify_field(to_s1_scratch.snd_nxt, to_s1.snd_nxt);
+    }
+
+    if (write_serq == 0) {
+        modify_field(to_cpu1_scratch.src_lif, cpu_hdr1.src_lif);
+        modify_field(to_cpu1_scratch.lif, cpu_hdr1.lif);
+        modify_field(to_cpu1_scratch.qtype, cpu_hdr1.qtype);
+        modify_field(to_cpu1_scratch.qid, cpu_hdr1.qid);
+        modify_field(to_cpu1_scratch.lkp_vrf, cpu_hdr1.lkp_vrf);
+        modify_field(to_cpu1_scratch.pad, cpu_hdr1.pad);
+        modify_field(to_cpu1_scratch.lkp_dir, cpu_hdr1.lkp_dir);
+        modify_field(to_cpu1_scratch.lkp_inst, cpu_hdr1.lkp_inst);
+        modify_field(to_cpu1_scratch.lkp_type, cpu_hdr1.lkp_type);
+        modify_field(to_cpu1_scratch.flags, cpu_hdr1.flags);
+        modify_field(to_cpu1_scratch.l2_offset, cpu_hdr1.l2_offset);
+        modify_field(to_cpu1_scratch.l3_offset_1, cpu_hdr1.l3_offset_1);
+    }
 
 
     // from ki global
@@ -721,7 +756,18 @@ action tcp_rtt(srtt_us, rto, backoff, seq_rtt_us, ca_rtt_us,
     // k + i for stage 2
 
     // from to_stage 2
-    modify_field(to_s2_scratch.snd_nxt, to_s2.snd_nxt);
+    if (backoff == 0) {
+        modify_field(to_s2_scratch.snd_nxt, to_s2.snd_nxt);
+    }
+    if (backoff == 1) {
+        modify_field(to_cpu2_scratch.l3_offset_2, cpu_hdr2.l3_offset_2);
+        modify_field(to_cpu2_scratch.l4_offset, cpu_hdr2.l4_offset);
+        modify_field(to_cpu2_scratch.payload_offset, cpu_hdr2.payload_offset);
+        modify_field(to_cpu2_scratch.tcp_flags, cpu_hdr2.tcp_flags);
+        modify_field(to_cpu2_scratch.tcp_seqNo, cpu_hdr2.tcp_seqNo);
+        modify_field(to_cpu2_scratch.tcp_AckNo, cpu_hdr2.tcp_AckNo);
+        modify_field(to_cpu2_scratch.tcp_window, cpu_hdr2.tcp_window);
+    }
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -777,11 +823,20 @@ action tcp_fra(curr_ts, reordering, retx_head_ts, high_seq, undo_marker,
     // k + i for stage 3
 
     // from to_stage 3
-    modify_field(to_s3_scratch.packets_out, to_s3.packets_out);
-    modify_field(to_s3_scratch.srtt_us, to_s3.srtt_us);
-    modify_field(to_s3_scratch.undo_retrans, to_s3.undo_retrans);
-    modify_field(to_s3_scratch.sacked_out, to_s3.sacked_out);
-    modify_field(to_s3_scratch.lost_out, to_s3.lost_out);
+    if (reordering == 0) {
+        modify_field(to_s3_scratch.pad1, to_s3.pad1);
+        modify_field(to_s3_scratch.packets_out, to_s3.packets_out);
+        modify_field(to_s3_scratch.pad2, to_s3.pad2);
+        modify_field(to_s3_scratch.srtt_us, to_s3.srtt_us);
+        modify_field(to_s3_scratch.undo_retrans, to_s3.undo_retrans);
+        modify_field(to_s3_scratch.sacked_out, to_s3.sacked_out);
+        modify_field(to_s3_scratch.lost_out, to_s3.lost_out);
+    }
+    if (reordering == 1) {
+        modify_field(to_cpu3_scratch.tcp_options, cpu_hdr3.tcp_options);
+        modify_field(to_cpu3_scratch.tcp_mss, cpu_hdr3.tcp_mss);
+        modify_field(to_cpu3_scratch.tcp_ws, cpu_hdr3.tcp_ws);
+    }
 
     // from ki global
     GENERATE_GLOBAL_K

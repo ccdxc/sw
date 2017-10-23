@@ -106,6 +106,7 @@ tcp_tx_launch_asesq:
 
 tcp_tx_pending_rx2tx:
     // TODO check pi against ci
+    phvwr           p.to_s1_pending_cidx, d.{ci_1}.hx
     phvwri          p.common_phv_pending_rx2tx, 1
     smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_DONT_SEND_ACK, TCP_TX_DDOL_DONT_SEND_ACK
     phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1

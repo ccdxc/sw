@@ -89,10 +89,13 @@ typedef struct lklshim_listen_sockets_t_ {
     ht_ctxt_t ht_ctxt;
 } PACKED lklshim_listen_sockets_t;
 
+#define MAX_PROXY_FLOWS 32768
+
 /*
  * Extern definitions.
  */
 extern ht *lklshim_flow_db;
+extern lklshim_flow_t           *lklshim_flow_by_qid[MAX_PROXY_FLOWS];
 
 static inline void
 lklshim_make_flow_v4key (lklshim_flow_key_t *key, in_addr_t src, in_addr_t dst,
@@ -115,11 +118,14 @@ lklshim_flow_entry_lookup (lklshim_flow_key_t *key)
     return(lklshim_flow);
 }
 
-  bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id);
+bool lklshim_process_flow_miss_rx_packet (void *pkt_skb, hal::flow_direction_t dir, uint32_t iqid, uint32_t rqid, uint16_t src_lif, uint16_t hw_vlan_id);
 bool lklshim_process_flow_hit_rx_packet (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
+bool lklshim_process_flow_hit_rx_header (void *pkt_skb, hal::flow_direction_t dir, const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr);
 void lklshim_process_tx_packet(unsigned char* pkt, unsigned int len, void* flow, bool is_connect_req, void *tcpcb, bool tx_pkt);
 
 void lklshim_flowdb_init(void);
+void lklshim_update_tcpcb(void *tcpcb, uint32_t qid, uint32_t src_lif);
+
 } //namespace hal
 
 #endif // _LKLSHIM_HPP_

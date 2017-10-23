@@ -50,3 +50,40 @@ cc_library(
             "-DCONFIG_AUTO_LKL_POSIX_HOST",
             ],
 )
+
+cc_library(
+    name = "lklshim_tls",
+    srcs = [
+        "lklshim_tls.cc",
+    ],
+    hdrs = [
+        "lklshim_tls.hpp",
+        "lklshim.hpp",
+    ],
+    deps = ["//nic/include:base_includes",
+            "//nic/hal:hal_includes",
+            "//nic/utils/list:list_includes",
+            "//nic/utils/bm_allocator:bm_allocator",
+            "//nic/utils/thread:thread",
+            "//nic/utils/print:print",
+            "//nic/utils/slab:slab",
+            "//nic/utils/indexer:indexer",
+            "//nic/utils/ht:ht",
+            "//nic:gen_includes",
+            "//nic:gen_proto_includes",
+            "//nic/hal/pd/capri:capri_includes",
+            "//nic/hal/pd/iris:iris_includes",
+            "//nic/utils/host_mem:host_mem_includes",
+            # "//nic/utils/host_mem:host_mem",
+            "//nic/third-party/spdlog:spdlog",
+            "//nic:lkl_includes",
+        "//nic/hal/periodic",
+        "//nic:asic_includes",
+            ],
+    includes = [
+            "nic/third-party/lkl/export/include",
+            ],
+    copts = [
+            "-DCONFIG_AUTO_LKL_POSIX_HOST",
+            ],
+    )

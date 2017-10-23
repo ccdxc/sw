@@ -15,6 +15,9 @@ struct phv_ p;
 struct tcp_rx_tcp_rx_k k;
 struct tcp_rx_tcp_rx_d d;
 
+#define To_s1_seq {to_s1_seq_sbit0_ebit7...to_s1_seq_sbit8_ebit31}
+#define To_s1_ack_seq {to_s1_ack_seq_sbit0_ebit7...to_s1_ack_seq_sbit24_ebit31}
+#define To_s1_snd_nxt {to_s1_snd_nxt_sbit0_ebit7...to_s1_snd_nxt_sbit24_ebit31}
 %%
     .param          tcp_rx_rtt_stage2_start
     .param          tcp_rx_read_rnmdr_stage2_start
@@ -31,6 +34,15 @@ tcp_rx_process_stage1_start:
     addi            r1, r0, TCP_ESTABLISHED
     seq             c1, d.u.tcp_rx_d.state, r1
     phvwri.!c1      p.common_phv_write_arq, 1
+    addi            r1, r0, TCP_LISTEN
+
+    seq             c2, d.u.tcp_rx_d.state, r1
+
+    phvwri.c2       p.common_phv_write_tcp_app_hdr,1
+    phvwr.c2        p.cpu_hdr2_tcp_seqNo, k.To_s1_seq.wx
+    phvwr.c2        p.cpu_hdr2_tcp_AckNo, k.To_s1_ack_seq.wx
+    phvwr.c2        p.cpu_hdr2_tcp_flags, k.to_s1_flags
+
     bcf             [!c1], flow_rx_process_done
     setcf           c7, [!c0]
     /* Setup the to-stage/stage-to-stage variables */
@@ -44,14 +56,14 @@ tcp_rx_process_stage1_start:
     tblwr           d.u.tcp_rx_d.quick_acks_decr, k.s1_s2s_quick_acks_decr
 
     /* if (cp->seq != tp->rx.rcv_nxt) { */
-    sne             c7, k.to_s1_seq, d.u.tcp_rx_d.rcv_nxt
+    sne             c7, k.To_s1_seq, d.u.tcp_rx_d.rcv_nxt
     phvwri.c7       p.common_phv_ooo_rcv, 1
     phvwri.c7       p.p4_intr_global_drop, 1
     bcf             [c7], flow_rx_process_done
     nop
 
     /*   if (!(before(cp->ack_seq, tp->tx.snd_nxt))) { */
-    slt             c1, k.to_s1_ack_seq, k.to_s1_snd_nxt
+    sle             c1, k.To_s1_ack_seq, k.To_s1_snd_nxt
     bcf             [!c1], slow_path
     nop
 
@@ -79,7 +91,7 @@ tcp_rx_process_stage1_start:
     add             r6,r6,r0
 
     /* r2 contains tcp_data_len */
-    sub             r2, k.s1_s2s_end_seq, k.to_s1_seq
+    sub             r2, k.s1_s2s_end_seq, k.To_s1_seq
     seq             c1, r2, r0
     phvwr.c1        p.common_phv_process_ack_flag, r0
     bcf             [c1],tcp_ack
@@ -222,7 +234,7 @@ delack_engine_init_done:
 
 tcp_event_data_rcv_done:
     /* c1 = (ack_seq == snd_una) */
-    seq             c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    seq             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
     /* clear process_ack_flag if ack_seq != snd_una */
     phvwr.!c1       p.common_phv_process_ack_flag, r0
     bcf             [c1], tcp_ack_snd_check
@@ -244,9 +256,9 @@ tcp_ack:
     }
     *
     */
-    slt             c1,k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    slt             c1,k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
     sub.c1          r1, d.u.tcp_rx_d.snd_una, d.u.tcp_rx_d.max_window
-    slt.c1          c2, k.to_s1_ack_seq, r1
+    slt.c1          c2, k.To_s1_ack_seq, r1
     phvwr.c2        p.rx2tx_extra_pending_challenge_ack_send, 1
     bcf             [c2], flow_rx_process_done
     nop
@@ -260,7 +272,7 @@ tcp_ack:
         goto invalid_ack;
      *
      */
-    slt             c1, k.to_s1_snd_nxt, k.to_s1_ack_seq
+    slt             c1, k.To_s1_snd_nxt, k.To_s1_ack_seq
     bcf             [c1],invalid_ack
     nop
 
@@ -285,7 +297,7 @@ no_rearm_rto:
         }
      *
      */
-    slt             c1, d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
+    slt             c1, d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
     add             r5, k.common_phv_process_ack_flag, r0
     ori.c1          r5, r5, FLAG_SND_UNA_ADVANCED
     phvwr.c1        p.common_phv_process_ack_flag, r5
@@ -319,14 +331,14 @@ no_rearm_rto:
     add             r5, k.common_phv_process_ack_flag, r0
     smneh           c2, r5, FLAG_SLOWPATH, FLAG_SLOWPATH
 tcp_update_wl:
-    tblwr.c2        d.u.tcp_rx_d.snd_wl1, k.to_s1_ack_seq
+    tblwr.c2        d.u.tcp_rx_d.snd_wl1, k.To_s1_ack_seq
 tcp_snd_una_update:
     /* Increment bytes acked by the delta between ack_seq and snd_una */
-    sub.c2          r1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    sub.c2          r1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
     tbladd.c2       d.u.tcp_rx_d.bytes_acked, r1
     /* Update snd_una */
-    tblwr.c2        d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
-    phvwr.c2        p.rx2tx_snd_una, k.to_s1_ack_seq
+    tblwr.c2        d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
+    phvwr.c2        p.rx2tx_snd_una, k.To_s1_ack_seq
 
     add.c2          r5, k.common_phv_process_ack_flag, r0
     ori.c2          r5, r5, FLAG_WIN_UPDATE
@@ -358,7 +370,7 @@ tcp_snd_una_update:
     /* u32 ack_ev_flags = CA_ACK_SLOWPATH; */
     ori             r1, r0, CA_ACK_SLOWPATH
     /* if (ack_seq != cp->end_seq) */
-    sne             c3, k.to_s1_seq, k.s1_s2s_end_seq
+    sne             c3, k.To_s1_seq, k.s1_s2s_end_seq
     /*     md->process_ack_flag |= FLAG_DATA; */
     add             r5, k.common_phv_process_ack_flag, r0
     ori             r5, r5, FLAG_DATA
@@ -379,11 +391,11 @@ tcp_ack_update_window:
     sllv.c1         r2, r2, r5
 tcp_may_update_window:
     /* after(ack, snd_una) */
-    slt             c1, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    slt             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
     /* after(ack_seq, snd_wl1) */
-    slt             c2, k.to_s1_seq, d.u.tcp_rx_d.snd_wl1
+    slt             c2, k.To_s1_seq, d.u.tcp_rx_d.snd_wl1
     /* ack_seq == snd_wl1 */
-    slt             c3, k.to_s1_seq, d.u.tcp_rx_d.snd_wl1
+    slt             c3, k.To_s1_seq, d.u.tcp_rx_d.snd_wl1
     /* nwin > snd_wnd */
     slt             c4, d.u.tcp_rx_d.snd_wnd, r2
     setcf           c5, [!c3 | !c4]
@@ -399,7 +411,7 @@ tcp_update_window:
     /* ack_ev_flags |= CA_ACK_WIN_UPDATE */
     ori             r1, r1, CA_ACK_WIN_UPDATE
     /* tcp_update_wl */
-    tblwr           d.u.tcp_rx_d.snd_wl1, k.to_s1_seq
+    tblwr           d.u.tcp_rx_d.snd_wl1, k.To_s1_seq
     /*
         if (tp->tx.snd_wnd != nwin) {
         tp->tx.snd_wnd = nwin;
@@ -437,11 +449,11 @@ tcp_update_window:
 tcp_update_window_bypass:
     /* tcp_snd_una_update */
     /* Increment bytes acked by the delta between ack_seq and snd_una */
-    sub             r3, k.to_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    sub             r3, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
     tbladd          d.u.tcp_rx_d.bytes_acked, r3
     /* Update snd_una */
-    tblwr           d.u.tcp_rx_d.snd_una, k.to_s1_ack_seq
-    phvwr.c2        p.rx2tx_snd_una, k.to_s1_ack_seq
+    tblwr           d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
+    phvwr.c2        p.rx2tx_snd_una, k.To_s1_ack_seq
 
 tcp_ecn_rcv_ecn_echo:
     /* ecn_flags & TCP_ECN_OK */

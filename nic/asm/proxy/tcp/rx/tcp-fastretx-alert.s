@@ -100,6 +100,7 @@ struct phv_ p;
 struct tcp_rx_tcp_fra_k k;
 struct tcp_rx_tcp_fra_tcp_fra_d d;
 
+#define Common_phv_ecn_flags {common_phv_ecn_flags_sbit0_ebit0...common_phv_ecn_flags_sbit1_ebit1}        
 %%
     .param          tcp_rx_cc_stage4_start
     .align
@@ -356,7 +357,7 @@ tcp_undo_cwnd_reduction:
          tp->rx_opt.ecn_flags &= ~TCP_ECN_DEMAND_CWR ;
            }
      */
-    add         r1, k.common_phv_ecn_flags, r0
+    add         r1, k.Common_phv_ecn_flags, r0
     andi        r1, r1, ~TCP_ECN_DEMAND_CWR
     phvwr       p.common_phv_ecn_flags, r1
 clear_undo_marker:  
