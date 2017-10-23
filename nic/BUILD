@@ -315,3 +315,11 @@ cc_library(
         "-Lthird-party/snort3/export/bin"
         ],
 )
+
+cc_library(
+    name = "libtirpc",
+    hdrs = glob(["third-party/libtirpc/export/*.h"]),
+    includes = [
+        "third-party/libtirpc/export"
+        ],
+)

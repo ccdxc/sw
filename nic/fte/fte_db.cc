@@ -52,12 +52,11 @@ build_wildcard_key(hal::flow_key_t& key, hal::flow_key_t key_)
     return HAL_RET_OK;
 }
 
-
 /*-----------------------------------------------------------------------
 - Performs lookup on ALG hash table with the given flow key and a wildcard
   key on a flow miss.
 -------------------------------------------------------------------------*/
-alg_entry_t *
+void *
 lookup_alg_db(ctx_t *ctx)
 {
     uint8_t         i=0, num_keys=0;
@@ -78,54 +77,72 @@ lookup_alg_db(ctx_t *ctx)
             break;
         }
     }
+
     g_fte_db->runlock();
 
     return (entry);
 }
 
-/*-----------------------------------------------------------------------
-- This API can be used to insert a new entry into the ALG wildcard table
-  when the firewall has indicated ALG action on the flow.
--------------------------------------------------------------------------*/
-alg_entry_t *
-insert_alg_entry(ctx_t *ctx, hal::session_t *sess)
+void
+insert_alg_entry(alg_entry_t *entry)
 {
-    alg_entry_t     *entry = NULL;
-    hal::flow_key_t  key = ctx->key();
-    hal::flow_role_t role = hal::FLOW_ROLE_INITIATOR;
-
-    entry = (alg_entry_t *)HAL_CALLOC(alg_entry_t, sizeof(alg_entry_t));
-    if (!entry) {
-        return NULL;
-    }
-
-    switch (ctx->alg_proto()) {
-        case nwsec::APP_SVC_TFTP:
-            role = hal::FLOW_ROLE_RESPONDER;
-            key = ctx->get_key(role);
-            key.sport = 0;
-            break;
-
-        case nwsec::APP_SVC_SUN_RPC:
-            break;
-
-        default:
-            return NULL;
-    }
-
-    entry->key = key;
-    entry->role = role;
-    entry->session = sess;
-    entry->alg_proto_state = ctx->alg_proto_state();
-
-    HAL_TRACE_DEBUG("Inserting Key: {} in ALG table", key);
-
-    entry->flow_key_ht_ctxt.reset();
     g_fte_db->wlock();
     g_fte_db->alg_flow_key_ht()->insert(entry, &entry->flow_key_ht_ctxt);
     g_fte_db->wunlock();
+}
+
+/*-----------------------------------------------------------------------
+- This API can be used to remove an entry from ALG hash table when either
+  there was an error processing the reverse flow or the Iflow/Rflow has been
+  successfully installed and we do not need to keep this software entry
+  around.
+-------------------------------------------------------------------------*/
+void *
+remove_alg_entry(hal::flow_key_t key)
+{
+    alg_entry_t   *entry = NULL;
+
+    g_fte_db->wlock();
+    entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->remove((void *)std::addressof(key));
+    g_fte_db->wunlock();
 
     return entry;
+}
+
+/*-----------------------------------------------------------------------
+- This API can be used to lookup an entry from ALG hash table.
+-------------------------------------------------------------------------*/
+const void *
+lookup_alg_entry(hal::flow_key_t key)
+{
+    alg_entry_t   *entry = NULL;
+
+    g_fte_db->rlock();
+    entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->lookup((void *)std::addressof(key));
+    g_fte_db->runlock();
+
+    return entry;
+}
+
+/*-----------------------------------------------------------------------
+- This API can be used to update an entry in ALG hash table.
+-------------------------------------------------------------------------*/
+hal_ret_t
+update_alg_entry(hal::flow_key_t key, void *new_entry, size_t sz)
+{
+    void   *entry = NULL;
+
+    g_fte_db->wlock();
+    entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->lookup((void *)std::addressof(key));
+    if (entry == NULL) {
+        HAL_TRACE_ERR("Entry not found in ALG table");
+        return HAL_RET_ERR;
+    }
+
+    memcpy(entry, new_entry, sz);
+    g_fte_db->wunlock();
+
+    return HAL_RET_OK;
 }
 
 }

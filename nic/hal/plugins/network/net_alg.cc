@@ -24,36 +24,39 @@ alg_exec(fte::ctx_t& ctx)
     }
    
     HAL_TRACE_DEBUG("ALG Proto: {}", ctx.alg_proto());
- 
     if (ctx.alg_proto() != nwsec::APP_SVC_NONE) {
         switch(ctx.alg_proto()) {
-        case nwsec::APP_SVC_TFTP:
-            ret = process_tftp_first_packet(ctx);
-            break;
+            case nwsec::APP_SVC_TFTP:
+                ret = process_tftp_first_packet(ctx);
+                break;
 
-        case nwsec::APP_SVC_SUN_RPC:
-            ret = process_rpc_control_flow(ctx); 
-            break;
+            case nwsec::APP_SVC_SUN_RPC:
+                ret = process_rpc_control_flow(ctx); 
+                break;
  
-        case nwsec::APP_SVC_FTP:
-            break;
+            case nwsec::APP_SVC_FTP:
+                break;
 
-        case nwsec::APP_SVC_DNS:
-            break;
+            case nwsec::APP_SVC_DNS:
+                break;
 
-        default:
-            break;
+            default:
+                break;
         };
-
     } else if (IsAlgExistingFlow(ctx)) {
         switch(ctx.alg_proto_state()) {
-        case fte::ALG_PROTO_STATE_TFTP_RRQ:
-        case fte::ALG_PROTO_STATE_TFTP_WRQ:
-            ret = process_tftp(ctx);
-            break;
+            case fte::ALG_PROTO_STATE_TFTP_RRQ:
+            case fte::ALG_PROTO_STATE_TFTP_WRQ:
+                ret = process_tftp(ctx);
+                break;
 
-        default:
-            break;
+            case fte::ALG_PROTO_STATE_RPC_INIT:
+            case fte::ALG_PROTO_STATE_RPC_GETPORT:
+                ret = parse_rpc_control_flow(ctx);
+                break;
+
+            default:
+                break;
         };
     }
 

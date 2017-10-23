@@ -27,25 +27,6 @@ std::ostream& operator<<(std::ostream& os, session::FlowAction val)
 
 namespace fte {
 
-/*-----------------------------------------------------------------------
-- This API can be used to remove an entry from ALG hash table when either
-  there was an error processing the reverse flow or the Iflow/Rflow has been
-  successfully installed and we do not need to keep this software entry 
-  around.
--------------------------------------------------------------------------*/
-alg_entry_t *
-remove_alg_entry(hal::flow_key_t key)
-{
-    alg_entry_t   *entry = NULL;
-
-    g_fte_db->wlock();
-    entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->remove((void *)std::addressof(key));
-    g_fte_db->wunlock();
-
-    return entry;
-}
-
-
 // extract flow key from packet
 hal_ret_t
 ctx_t::extract_flow_key()
@@ -224,7 +205,7 @@ ctx_t::lookup_session()
         return HAL_RET_SESSION_NOT_FOUND; 
     }
 
-    entry = lookup_alg_db(this);
+    entry = (alg_entry_t *)lookup_alg_db(this);
     if (entry) {
         // ALG Entry found
         session_ = entry->session;
@@ -239,6 +220,7 @@ ctx_t::lookup_session()
 
         set_role(entry->role);  
         set_flow_miss(true);
+        set_alg_entry(*entry);
     }
 
     if (!session_) {
@@ -489,9 +471,7 @@ ctx_t::update_flow_table()
     } else {
         // Create a new HAL session
         ret = hal::session_create(&session_args, &session_handle, &session);
-        if (alg_proto() != nwsec::APP_SVC_NONE) {
-            insert_alg_entry(this, session); 
-        }
+        session_ = session;
     }
 
     if (ret != HAL_RET_OK) {

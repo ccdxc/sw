@@ -271,6 +271,7 @@ struct lifqid_s {
 const lifqid_t FLOW_MISS_LIFQ = {hal::SERVICE_LIF_CPU, 0, 0};
 const lifqid_t TCP_PROXY_LIFQ = {hal::SERVICE_LIF_TCP_PROXY, 0, 0};
 const lifqid_t TLS_PROXY_LIFQ = {hal::SERVICE_LIF_TLS_PROXY, 0, 0};
+const lifqid_t ALG_CFLOW_LIFQ = {hal::SERVICE_LIF_CPU, 3, 0};
 
 inline std::ostream& operator<<(std::ostream& os, const lifqid_t& lifq)
 {
@@ -400,6 +401,9 @@ public:
     nwsec::ALGName alg_proto() const { return alg_proto_; }
     void set_alg_proto(nwsec::ALGName proto) { alg_proto_ = proto; }
 
+    alg_entry_t alg_entry() const { return alg_entry_; }
+    void set_alg_entry(const alg_entry_t entry) { alg_entry_ = entry; }
+
     bool hal_cleanup() const { return cleanup_hal_; }
     void set_hal_cleanup(bool val) { cleanup_hal_ = val; }
     void swap_flow_objs();
@@ -448,6 +452,7 @@ private:
     hal::ep_t             *dep_;
     nwsec::ALGName        alg_proto_;         // ALG Proto to be applied
     alg_proto_state_t     alg_proto_state_;   // ALG Proto state machine state
+    alg_entry_t           alg_entry_;         // ALG entry in the wildcard table
 
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
     hal_ret_t update_flow_table();

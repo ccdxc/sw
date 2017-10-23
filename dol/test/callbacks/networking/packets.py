@@ -179,13 +179,8 @@ def GetCpuPacket(testcase, args = None):
 
 def GetCpuPacketbyIflow(testcase, args = None):
     root = getattr(testcase.config, 'flow', None)
-    src = getattr(testcase.config, 'src', None)
     if root is None:
         root = getattr(testcase.config.session.iconfig, 'flow', None)
-        src = getattr(testcase.config.session.rconfig, 'src', None)
-
-    if not src.tenant.IsHostPinned():
-       return None
 
     if root.IsFteEnabled():
         return testcase.packets.Get(args.expktid)
@@ -196,7 +191,6 @@ def GetCpuPacketbyRflow(testcase, args = None):
     root = getattr(testcase.config, 'flow', None)
     if root is None:
         root = getattr(testcase.config.session.rconfig, 'flow', None)
-        src = getattr(testcase.config.session.rconfig, 'src', None)
 
     if root.IsFteEnabled():
         return testcase.packets.Get(args.expktid)

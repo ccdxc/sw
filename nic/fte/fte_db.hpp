@@ -15,17 +15,43 @@ namespace fte {
     ENTRY(ALG_PROTO_STATE_RPC_INIT,    5,  "ALG_PROTO_STATE_RPC_INIT")  \
     ENTRY(ALG_PROTO_STATE_RPC_GETPORT, 6,  "ALG_PROTO_STATE_RPC_GETPORT") \
     ENTRY(ALG_PROTO_STATE_RPC_CALLIT,  7,  "ALG_PROTO_STATE_RPC_CALLIT") \
+    ENTRY(ALG_PROTO_STATE_RPC_DUMP,    8,  "ALG_PROTO_STATE_RPC_DUMP") \
+    ENTRY(ALG_PROTO_STATE_RPC_DATA,    9,  "ALG_PROTO_STATE_RPC_DATA") \
 
 DEFINE_ENUM(alg_proto_state_t, ALG_PROTO_STATE)
 #undef ALG_PROTO_STATE
 
+// Address Family
+#define ALG_ADDRESS_FAMILY(ENTRY)                                      \
+    ENTRY(ALG_ADDRESS_FAMILY_IPV4,     0,  "ALG_ADDRESS_FAMILY_IPV4")  \
+    ENTRY(ALG_ADDRESS_FAMILY_IPV6,     1,  "ALG_ADDRESS_FAMILY_IPV6")  \
+
+DEFINE_ENUM(alg_addr_family_t, ALG_ADDRESS_FAMILY)
+#undef ALG_ADDRESS_FAMILY
+
 #define FTE_MAX_ALG_KEYS 524288
+#define MAX_RPC          1000     // Revisit this
+
+typedef struct map {
+    uint32_t             xid;
+    uint32_t             prog_num;
+    alg_addr_family_t    addr_family;
+    uint32_t             prot;
+    uint32_t             vers;
+    uint32_t             dport;
+} RPCMap;
+
+typedef struct maplist {
+    uint32_t  num_map;
+    RPCMap    maps[MAX_RPC];
+} RPCMaplist;
 
 typedef struct alg_entry_s {
     hal::flow_key_t         key;
     hal::session_t         *session;
     alg_proto_state_t       alg_proto_state;
     hal::flow_role_t        role;
+    RPCMaplist              rpc_map;
 
     // meta data maintained for flow
     hal::utils::ht_ctxt_t   flow_key_ht_ctxt;  // Flow key based hash table

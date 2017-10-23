@@ -10,7 +10,9 @@ cc_library(
         "//nic:gen_includes",
         "//nic/fte",
         "//nic/include:base_includes",
+        "//nic/model_sim/include:modelsim_includes",
         "//nic/third-party/spdlog",
+        "//nic:libtirpc",
     ],
     alwayslink = 1,
 )
