@@ -50,7 +50,6 @@ def process(topospec):
         SwDscrRingHelper.main("NMPR")
         BRQHelper.main()
         SwDscrRingHelper.main("ARQ")
-        SwDscrRingHelper.main("RAWCCBQ")
 
     # Generate all sessions
     SessionHelper.main()
