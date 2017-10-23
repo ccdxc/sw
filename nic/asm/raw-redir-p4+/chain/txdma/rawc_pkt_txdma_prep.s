@@ -182,7 +182,7 @@ aol_error:
      * Either none of the AOLs contained any data, or cpu_to_p4_header_t
      * spanned across multiple AOLs!
      */
-    RAWC_TXDMA_INVALID_AOL_TRAP()
+    RAWR_TXDMA_INVALID_AOL_TRAP()
     nop.e
     nop
 

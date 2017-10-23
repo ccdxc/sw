@@ -132,14 +132,29 @@
 /*
  * TxDMA invalid AOLs trap
  */
-#if RAWC_TXDMA_INVALID_AOL_DEBUG
-#define RAWC_TXDMA_INVALID_AOL_TRAP()                                           \
+#if RAWR_TXDMA_INVALID_AOL_DEBUG
+#define RAWR_TXDMA_INVALID_AOL_TRAP()                                           \
         illegal;                                                                \
         nop;
 #else
-#define RAWC_TXDMA_INVALID_AOL_TRAP()                                           \
+#define RAWR_TXDMA_INVALID_AOL_TRAP()                                           \
         nop;
 #endif
+
+
+/*
+ * Doorbell setup
+ */
+#define RAWR_SETUP_DB_ADDR(db_base, op, sched, lif, qtype, addr_r)              \
+        add         addr_r, sched, op, DB_RING_UPD_SHIFT;                       \
+        sll         addr_r, addr_r, DB_UPD_SHIFT;                               \
+        add         addr_r, addr_r, lif, DB_LIF_SHIFT;                          \
+        add         addr_r, addr_r, qtype, DB_QTYPE_SHIFT;                      \
+        addi        addr_r, addr_r, db_base;
+
+#define RAWR_SETUP_DB_DATA(qid, ring, ring_id, data_r)                          \
+        add       data_r, ring_id, ring, DB_RING_SHIFT;                         \
+        add       data_r, data_r, qid, DB_QID_SHIFT;
 
 
 #endif //__RAW_REDIR_COMMON_H

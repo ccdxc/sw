@@ -58,19 +58,19 @@ rawc_s2_chain_txq_desc_enqueue:
     /*
      * Set up DMA to increment PI and ring doorbell
      */
-    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE,
-                        DB_INC_PINDEX,
-                        DB_SCHED_WR_EVAL_RING,
-                        k.{common_phv_chain_txq_lif_sbit0_ebit7...\
-                           common_phv_chain_txq_lif_sbit8_ebit10},
-                        k.common_phv_chain_txq_qtype,
-                        DB_ADDR_SCRATCH_R);
-    CAPRI_SETUP_DB_DATA(k.{common_phv_chain_txq_qid_sbit0_ebit1...\
-                           common_phv_chain_txq_qid_sbit18_ebit23},
-                        k.{common_phv_chain_txq_ring_sbit0_ebit1...\
-                           common_phv_chain_txq_ring_sbit2_ebit2},
-                        r0,     // current PI is actually dontcare for DB_INC_PINDEX
-                        DB_DATA_SCRATCH_R)
+    RAWR_SETUP_DB_ADDR(DB_ADDR_BASE,
+                       DB_INC_PINDEX,
+                       DB_SCHED_WR_EVAL_RING,
+                       k.{common_phv_chain_txq_lif_sbit0_ebit7...\
+                          common_phv_chain_txq_lif_sbit8_ebit10},
+                       k.common_phv_chain_txq_qtype,
+                       DB_ADDR_SCRATCH_R);
+    RAWR_SETUP_DB_DATA(k.{common_phv_chain_txq_qid_sbit0_ebit1...\
+                          common_phv_chain_txq_qid_sbit18_ebit23},
+                       k.{common_phv_chain_txq_ring_sbit0_ebit1...\
+                          common_phv_chain_txq_ring_sbit2_ebit2},
+                       r0,      // current PI is actually dontcare for DB_INC_PINDEX
+                       DB_DATA_SCRATCH_R)
                         
     phvwr       p.chain_txq_db_data_data, DB_DATA_SCRATCH_R
     phvwr       p.dma_doorbell_dma_cmd_addr, DB_ADDR_SCRATCH_R

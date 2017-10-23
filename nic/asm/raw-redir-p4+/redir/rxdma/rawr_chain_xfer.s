@@ -122,18 +122,18 @@ rawr_s6_chain_xfer:
     sne         c1, r3, r0
     cmov        r3, c1, DB_NO_SCHED_WR, DB_SCHED_WR_EVAL_RING
     
-    CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE,
-                        DB_INC_PINDEX,
-                        r3,
-                        k.{common_phv_chain_lif_sbit0_ebit7...\
-                           common_phv_chain_lif_sbit8_ebit10},
-                        k.common_phv_chain_qtype,
-                        r5)
-    CAPRI_SETUP_DB_DATA(k.{common_phv_chain_qid_sbit0_ebit1...\
-                           common_phv_chain_qid_sbit18_ebit23},
-                        k.common_phv_chain_ring_index_select,
-                        r0,     // current PI is actually dontcare for DB_INC_PINDEX
-                        r6)
+    RAWR_SETUP_DB_ADDR(DB_ADDR_BASE,
+                       DB_INC_PINDEX,
+                       r3,
+                       k.{common_phv_chain_lif_sbit0_ebit7...\
+                          common_phv_chain_lif_sbit8_ebit10},
+                       k.common_phv_chain_qtype,
+                       r5)
+    RAWR_SETUP_DB_DATA(k.{common_phv_chain_qid_sbit0_ebit1...\
+                          common_phv_chain_qid_sbit18_ebit23},
+                       k.common_phv_chain_ring_index_select,
+                       r0,      // current PI is actually dontcare for DB_INC_PINDEX
+                       r6)
                         
     phvwr       p.chain_txq_db_data_data, r6
     phvwr       p.dma_doorbell_dma_cmd_addr, r5
