@@ -471,6 +471,23 @@ modules:
             - flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
 
     - module:
+        name    : TX_VXLAN_L3UC_IPV4_GFT_DROP
+        spec    : tx_vxlan_l3.testspec
+        iterate:
+            - flow: filter://type=IPV4,proto=UDP,label=GFT_DROP
+            - flow: filter://type=IPV4,proto=TCP,label=GFT_DROP
+            - flow: filter://type=IPV4,proto=ICMP,label=GFT_DROP
+
+    - module:
+        name    : TX_VXLAN_L3UC_IPV6_GFT_DROP
+        spec    : tx_vxlan_l3.testspec
+        iterate:
+            - flow: filter://type=IPV6,proto=UDP,label=GFT_DROP
+            - flow: filter://type=IPV6,proto=TCP,label=GFT_DROP
+            - flow: filter://type=IPV6,proto=ICMPV6,label=GFT_DROP
+
+
+    - module:
         name    : TX_RX_L3UC
         spec    : tx_rx_l3.testspec
         iterate:
