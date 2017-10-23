@@ -127,10 +127,10 @@ def TestCaseVerify(tc):
     print("pre-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
     brq_cur.Configure()
     print("post-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
-    if (brq_cur.pi != (brq.pi+1) or brq_cur.ci != (brq.ci+1)):
+    if (brq_cur.pi != (brq.pi+1)):
         print("brq pi/ci not as expected")
         #needs fix in HAL and support in model/p4+ for this check to work/pass
-        #return False
+        return False
 
     print("BRQ:")
     print("ilist_addr 0x%x" % brq_cur.ring_entries[brq.pi].ilist_addr)
@@ -144,17 +144,21 @@ def TestCaseVerify(tc):
     #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
     # 7. Verify brq input desc and rnmdr
     print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
+    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].ilist_addr - 0x40)):
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
+        return False
 
     # 5. Verify descriptor
-    if rnmdr.ringentries[rnmdr.pi].handle != ipseccbqq_cur.ringentries[0].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[0].handle))
-        #return False
-    print("Descriptor handle expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[0].handle))
+    if rnmdr.ringentries[rnmdr.pi].handle != ipseccbqq_cur.ringentries[ipseccb_cur.pi-1].handle:
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[ipseccb_cur.pi-1].handle))
+        return False
+    print("Descriptor handle expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[ipseccb_cur.pi-1].handle))
 
-    if rnmdr.swdre_list[rnmdr.pi].DescAddr != ipseccbqq_cur.swdre_list[0].DescAddr:
-        print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[0].DescAddr))
-        #return False
-    print("Descriptor handle expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[0].DescAddr))
+    if rnmdr.swdre_list[rnmdr.pi].DescAddr != ipseccbqq_cur.swdre_list[ipseccb_cur.pi-1].DescAddr:
+        print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[ipseccb_cur.pi-1].DescAddr))
+        return False
+    print("Descriptor handle expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[ipseccb_cur.pi-1].DescAddr))
+
 
     # 8. Verify PI for TNMDR got incremented by 1
     if (tnmdr_cur.pi - tnmdr.pi > 1):
