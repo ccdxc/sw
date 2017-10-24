@@ -141,12 +141,8 @@ req_tx_add_headers_process:
         .csend
 
     .brcase OP_TYPE_READ
-        //inc_rrq_pindex = TRUE
-        setcf          c7, [c0]
-        // inc_lsn = TRUE
-        setcf          c4, [c0]
-        // adjust_psn = TRUE
-        setcf          c6, [c0]
+        // inc_rrq_pindex = TRUE; adjust_psn = TRUE; inc_lsn = TRUE
+        crestore       [c7, c6, c4], 0xd0, 0xd0
         
         // dma_cmd[5] - add READ Req reth hdr
         DMA_PHV2PKT_SETUP(r6, reth, reth) 
@@ -175,10 +171,8 @@ req_tx_add_headers_process:
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
         .brcase RDMA_PKT_LAST
-            // check_credits = TRUE
-            setcf          c5, [c0]
-            // inc_lsn = TRUE
-            setcf          c4, [c0]
+            // check_credits = TRUE; inc_lsn = TRUE
+            crestore       [c5, c4], 0x30, 0x30
 
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
@@ -191,10 +185,8 @@ req_tx_add_headers_process:
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
         
         .brcase RDMA_PKT_ONLY
-            // check_credits = TRUE
-            setcf          c5, [c0]
-            // inc_lsn = TRUE
-            setcf          c4, [c0]
+            // check_credits = TRUE; inc_lsn = TRUE
+            crestore       [c5, c4], 0x30, 0x30
 
             // dma_cmd[5] - add reth hdr
             DMA_PHV2PKT_SETUP(r6, reth, reth) 
@@ -245,11 +237,8 @@ req_tx_add_headers_process:
         .csend
 
     .brcase OP_TYPE_CMP_N_SWAP
-        // inc_lsn = TRUE
-        setcf          c4, [c0]
-        
-        //inc_rrq_pindex = TRUE
-        setcf          c7, [c0]
+        // inc_rrq_pindex = TRUE; inc_lsn = TRUE;
+        crestore       [c7, c4], 0x90, 0x90
         
         // add atomiceth hdr
         DMA_PHV2PKT_SETUP(r6, atomiceth, atomiceth)
@@ -268,11 +257,8 @@ req_tx_add_headers_process:
         add            r2, RDMA_PKT_OPC_CMP_SWAP, d.service, RDMA_OPC_SERV_TYPE_SHIFT
    
     .brcase OP_TYPE_FETCH_N_ADD
-        // inc_lsn = TRUE
-        setcf          c4, [c0]
-
-        //inc_rrq_pindex = TRUE
-        setcf          c7, [c0]
+        // inc_rrq_pindex = TRUE; inc_lsn = TRUE;
+        crestore       [c7, c4], 0x90, 0x90
 
         // add atomiceth hdr
         DMA_PHV2PKT_SETUP(r6, atomiceth, atomiceth)

@@ -20,20 +20,16 @@ req_tx_add_headers_2_process:
     phvwri          p.common.p4_intr_global_tm_oport, TM_PORT_INGRESS
     phvwri          p.common.p4_intr_global_tm_oq, 0
 
+    // No need to fill p4_txdma_intr fields as they are already filled before stage0
     // dma_cmd[1] - p4_txdma_intr
     DMA_NEXT_CMD_I_BASE_GET(r6, 1)
     DMA_PHV2PKT_SETUP(r6, common.p4_txdma_intr_qid, common.p4_txdma_intr_txdma_rsv)
-    phvwr           p.common.p4_txdma_intr_qid, k.global.qid
-    SQCB0_ADDR_GET(r1)
-    phvwr           p.common.p4_txdma_intr_qstate_addr, r1
-    phvwr           p.common.p4_txdma_intr_qtype, k.global.qtype
 
     // dma_cmd[2] - p4plus_to_p4_header
     DMA_NEXT_CMD_I_BASE_GET(r6, 1)
     DMA_PHV2PKT_SETUP(r6, p4plus_to_p4, p4plus_to_p4);
     phvwr          P4PLUS_TO_P4_APP_ID, P4PLUS_APPTYPE_RDMA
     phvwr          P4PLUS_TO_P4_FLAGS, d.p4plus_to_p4_flags
-    phvwr          P4PLUS_TO_P4_VLAN_TAG, 0
 
     #c3 - UD service. Needed only for send & send_imm
     seq            c3, d.service, RDMA_SERV_TYPE_UD

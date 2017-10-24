@@ -32,7 +32,6 @@ req_tx_sqwqe_process:
         b               set_sge_arg
         nop             //Branch Delay slot
         
- 
     .brcase OP_TYPE_SEND_IMM
         b               set_sge_arg
         nop             //Branch Delay slot
@@ -95,8 +94,7 @@ check_inline_data:
     //CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, wqe_addr, k.args.wqe_addr)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, dma_cmd_start_index, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, op_type, d.base.op_type)
-    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, imm_data, d.send.imm_data)
-    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, inv_key, d.send.inv_key)
+    CAPRI_SET_FIELD_RANGE(r7, WQE_TO_SGE_T, imm_data, inv_key, d.{send.imm_data...send.inv_key})
     // if UD copy ah_handle
     CAPRI_SET_FIELD_C(r7, WQE_TO_SGE_T, ah_handle, d.ud_send.ah_handle, c1)
 
@@ -217,8 +215,7 @@ inline_data:
     CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op_type, r1)
     CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, log_pmtu, k.args.log_pmtu)
     // should work for both send/write as imm_data is located at same offset in wqe for both operations
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op.send_wr.imm_data, d.send.imm_data)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op.send_wr.inv_key, d.send.inv_key)
+    CAPRI_SET_FIELD_RANGE(r7, RRQWQE_TO_HDR_T, op.send_wr.imm_data, op.send_wr.inv_key, d.{send.imm_data...send.inv_key})
     CAPRI_SET_FIELD_C(r7, RRQWQE_TO_HDR_T, op.send_wr.ah_handle, r2, c1)
 
     CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
