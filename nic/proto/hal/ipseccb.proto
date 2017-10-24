@@ -44,6 +44,9 @@ message IpsecCbSpec {
   uint32                spi                   = 15;
   uint32                expected_seq_no       = 16;
   fixed64               seq_no_bmp            = 17;
+  types.IPAddress       sip6                  = 18;
+  types.IPAddress       dip6                  = 19;
+  uint32                is_v6                 = 20;
 }
 
 // IpsecCbRequestMsg is batched add or modify ipseccb request

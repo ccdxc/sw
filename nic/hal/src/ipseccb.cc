@@ -5,6 +5,7 @@
 #include "nic/hal/src/ipseccb.hpp"
 #include "nic/hal/src/tenant.hpp"
 #include "nic/include/pd_api.hpp"
+#include "utils.hpp"
 
 namespace hal {
 void *
@@ -154,7 +155,10 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
         HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
     }
     
-
+    ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6()); 
+    ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
+     
+    HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {} \n", ipaddr2str(&ipseccb->sip6), ipaddr2str(&ipseccb->dip6)); 
      
     ipseccb->hal_handle = hal_alloc_handle();
 
@@ -228,6 +232,10 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     ipseccb->tunnel_sip4 = spec.tunnel_sip4();
     ipseccb->tunnel_dip4 = spec.tunnel_dip4();
     
+    ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6()); 
+    ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
+     
+    HAL_TRACE_DEBUG("SIP6 : {}  DIP6: {}\n", ipaddr2str(&ipseccb->sip6), ipaddr2str(&ipseccb->dip6)); 
     infra_seg = l2seg_get_infra_l2seg();
     if (infra_seg) {
         tid = hal::tenant_lookup_by_handle(infra_seg->tenant_handle)->tenant_id;

@@ -221,7 +221,7 @@ action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,
                              ipsec_cb_index, block_size,
                              cb_pindex, cb_cindex, barco_pindex, barco_cindex, 
                              cb_ring_base_addr, barco_ring_base_addr, 
-                             iv_salt, ipsec_cb_pad)
+                             iv_salt, is_v6)
 {
     IPSEC_CB_SCRATCH_WITH_PC
     //table write cb_cindex++
@@ -305,7 +305,7 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
                                        ipsec_cb_index, block_size,
                                        cb_pindex, cb_cindex, barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr,
-                                       iv_salt, ipsec_cb_pad)
+                                       iv_salt, is_v6)
 {
 
     //IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT

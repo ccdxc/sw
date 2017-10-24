@@ -10,6 +10,8 @@ from config.store               import Store
 from infra.common.logging       import cfglogger
 from config.objects.swdr        import SwDscrRingHelper
 from config.objects.crypto_keys        import CryptoKeyHelper
+import config.objects.endpoint  as endpoint
+import config.objects.segment   as segment 
 
 import config.hal.defs          as haldefs
 import config.hal.api           as halapi
@@ -27,6 +29,8 @@ class IpsecCbObject(base.ConfigObjectBase):
         self.ipseccbq_base = SwDscrRingHelper.main("IPSECCBQ", gid, self.id)
         cfglogger.info("  - %s" % self)
         self.crypto_key = CryptoKeyHelper.main() 
+        self.sip6 = resmgr.TepIpv6SubnetAllocator.get()
+        self.dip6 = resmgr.TepIpv6SubnetAllocator.get()
         return
 
 
@@ -47,6 +51,10 @@ class IpsecCbObject(base.ConfigObjectBase):
             req_spec.key_index                 = self.crypto_key_idx
             req_spec.expected_seq_no           = self.expected_seq_no
             req_spec.seq_no_bmp                = self.seq_no_bmp
+            req_spec.sip6.ip_af                = haldefs.common.IP_AF_INET6
+            req_spec.sip6.v6_addr              = self.sip6.getnum().to_bytes(16, 'big')
+            req_spec.dip6.ip_af                = haldefs.common.IP_AF_INET6
+            req_spec.dip6.v6_addr              = self.dip6.getnum().to_bytes(16, 'big')
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

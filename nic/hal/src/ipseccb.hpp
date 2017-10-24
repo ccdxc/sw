@@ -51,6 +51,9 @@ typedef struct ipseccb_s {
     hal_handle_t          hal_handle;              // HAL allocated handle
     mac_addr_t            smac;
     mac_addr_t            dmac; 
+    ip_addr_t             sip6;
+    ip_addr_t             dip6;
+    uint8_t               is_v6; 
     // PD state
     void                  *pd;                     // all PD specific state
     void                  *pd_decrypt;                     // all PD specific state

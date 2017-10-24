@@ -63,6 +63,18 @@ typedef struct pd_ipseccb_eth_ip4_hdr_s {
     uint32_t   daddr;
 } __PACK__ pd_ipseccb_eth_ip4_hdr_t;
 
+typedef struct pd_ipseccb_eth_ip6_hdr_s {
+    mac_addr_t dmac;
+    mac_addr_t smac;
+    uint16_t   ethertype; 
+    uint32_t   ver_tc_flowlabel;
+    uint16_t   payload_length;
+    uint8_t    next_hdr;
+    uint8_t    hop_limit;
+    uint8_t    src[16];
+    uint8_t    dst[16];
+} __PACK__ pd_ipseccb_eth_ip6_hdr_t;
+
 // allocate a ipseccb pd instance
 static inline pd_ipseccb_encrypt_t *
 ipseccb_pd_alloc (void)

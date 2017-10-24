@@ -119,6 +119,10 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr = htonl(ipsec_barco_ring_addr);
         data.u.ipsec_encap_rxdma_initial_table_d.barco_cindex = 0;
         data.u.ipsec_encap_rxdma_initial_table_d.barco_pindex = 0;
+
+        if (ipseccb_pd->ipseccb->is_v6) {
+            data.u.ipsec_encap_rxdma_initial_table_d.is_v6 = 1;
+        }
     }
     HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: 0x{0:x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
@@ -132,6 +136,7 @@ hal_ret_t
 p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del)
 {
     pd_ipseccb_eth_ip4_hdr_t eth_ip_hdr = {0};
+    pd_ipseccb_eth_ip6_hdr_t eth_ip6_hdr = {0};
     hal_ret_t                                   ret = HAL_RET_OK;
 
     // hardware index for this entry
@@ -139,25 +144,45 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_IP_HDR);
 
     if (!del) {
-        memcpy(eth_ip_hdr.smac, ipseccb_pd->ipseccb->smac, ETH_ADDR_LEN);
-        memcpy(eth_ip_hdr.dmac, ipseccb_pd->ipseccb->dmac, ETH_ADDR_LEN);
-        eth_ip_hdr.ethertype = htons(0x800);
-        eth_ip_hdr.version_ihl = 0x45;
-        eth_ip_hdr.tos = 0;
-        //p4 will update/correct this part - fixed for now.
-        eth_ip_hdr.tot_len = htons(64); 
-        eth_ip_hdr.id = 0;
-        eth_ip_hdr.frag_off = 0;
-        eth_ip_hdr.ttl = 255;
-        eth_ip_hdr.protocol = 50; // ESP - will hash define it.
-        eth_ip_hdr.check = 0; // P4 to fill the right checksum
-        eth_ip_hdr.saddr = htonl(ipseccb_pd->ipseccb->tunnel_sip4);
-        eth_ip_hdr.daddr = htonl(ipseccb_pd->ipseccb->tunnel_dip4);
+        if (ipseccb_pd->ipseccb->is_v6 == 0) {
+            memcpy(eth_ip_hdr.smac, ipseccb_pd->ipseccb->smac, ETH_ADDR_LEN);
+            memcpy(eth_ip_hdr.dmac, ipseccb_pd->ipseccb->dmac, ETH_ADDR_LEN);
+            eth_ip_hdr.ethertype = htons(0x800);
+            eth_ip_hdr.version_ihl = 0x45;
+            eth_ip_hdr.tos = 0;
+            //p4 will update/correct this part - fixed for now.
+            eth_ip_hdr.tot_len = htons(64); 
+            eth_ip_hdr.id = 0;
+            eth_ip_hdr.frag_off = 0;
+            eth_ip_hdr.ttl = 255;
+            eth_ip_hdr.protocol = 50; // ESP - will hash define it.
+            eth_ip_hdr.check = 0; // P4 to fill the right checksum
+            eth_ip_hdr.saddr = htonl(ipseccb_pd->ipseccb->tunnel_sip4);
+            eth_ip_hdr.daddr = htonl(ipseccb_pd->ipseccb->tunnel_dip4);
+        } else {
+            memcpy(eth_ip6_hdr.smac, ipseccb_pd->ipseccb->smac, ETH_ADDR_LEN);
+            memcpy(eth_ip6_hdr.dmac, ipseccb_pd->ipseccb->dmac, ETH_ADDR_LEN);
+            eth_ip6_hdr.ethertype = htons(0x86dd);
+            eth_ip6_hdr.ver_tc_flowlabel = htonl(0x06000000);
+            eth_ip6_hdr.payload_length = 128;
+            eth_ip6_hdr.next_hdr = 50;
+            eth_ip6_hdr.hop_limit = 255;
+            memcpy(eth_ip6_hdr.src, ipseccb_pd->ipseccb->sip6.addr.v6_addr.addr8, IP6_ADDR8_LEN);
+            memcpy(eth_ip6_hdr.dst, ipseccb_pd->ipseccb->dip6.addr.v6_addr.addr8, IP6_ADDR8_LEN);
+        
+        }
     }
     HAL_TRACE_DEBUG("Programming stage0 at hw-id: 0x{0:x}", hwid); 
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&eth_ip_hdr, sizeof(eth_ip_hdr))){
-        HAL_TRACE_ERR("Failed to create ip_hdr entry for IPSECCB");
-        ret = HAL_RET_HW_FAIL;
+    if (ipseccb_pd->ipseccb->is_v6 == 0) {
+        if(!p4plus_hbm_write(hwid,  (uint8_t *)&eth_ip_hdr, sizeof(eth_ip_hdr))){
+            HAL_TRACE_ERR("Failed to create ip_hdr entry for IPSECCB");
+            ret = HAL_RET_HW_FAIL;
+        }
+    } else {
+        if(!p4plus_hbm_write(hwid,  (uint8_t *)&eth_ip6_hdr, sizeof(eth_ip6_hdr))){
+            HAL_TRACE_ERR("Failed to create ipv6_hdr entry for IPSECCB");
+            ret = HAL_RET_HW_FAIL;
+        }
     }
     return ret;
 }
@@ -212,6 +237,7 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
     ipsec_cb_ring_addr = ntohll(data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr);
     ipseccb_pd->ipseccb->pi = data.u.ipsec_encap_rxdma_initial_table_d.cb_pindex;
     ipseccb_pd->ipseccb->ci = data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex;
+    ipseccb_pd->ipseccb->is_v6 = data.u.ipsec_encap_rxdma_initial_table_d.is_v6;
     HAL_TRACE_DEBUG("CB Ring Addr {:#x} Pindex {} CIndex {}", ipsec_cb_ring_addr, ipseccb_pd->ipseccb->pi, ipseccb_pd->ipseccb->ci);
      
     return HAL_RET_OK;

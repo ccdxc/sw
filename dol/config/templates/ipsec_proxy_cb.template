@@ -4,6 +4,8 @@ meta:
 
 id               : None # IPSEC Proxy CB Local ID
 spec             : None # (REF) IPSEC Proxy CB Spec from Base Config.
+sip6             : None
+dip6             : None
 ipseccbq_base    : 0
 pi               : 0
 ci               : 0
@@ -22,3 +24,5 @@ spi              : 0
 crypto_key_idx   : 0
 expected_seq_no  : 0
 seq_no_bmp       : 0
+is_v6            : 0
+
