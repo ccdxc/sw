@@ -30,12 +30,15 @@ tcp_state_NEW_SYN_RECV = 12
 ETH_IP_HDR_SZE = 34
 ETH_IP_VLAN_HDR_SZE = 38
 
+TCP_OOO_CELL_SIZE = 128
+
 def SetupProxyArgs(tc):
     tc.module.logger.info("Testcase Args:")
     same_flow = 0
     bypass_barco = 0
     send_ack = 0
     test_timer = 0
+    ooo_seq_delta = 0
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         tc.module.logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -48,6 +51,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'test_timer'):
         test_timer = tc.module.args.test_timer
         tc.module.logger.info("- test_timer %s" % tc.module.args.test_timer)
+    if hasattr(tc.module.args, 'ooo_seq_delta'):
+        ooo_seq_delta = tc.module.args.ooo_seq_delta
+        tc.module.logger.info("- ooo_seq_delta %s" % tc.module.args.ooo_seq_delta)
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -64,10 +70,14 @@ def SetupProxyArgs(tc):
         if 'test_timer' in iterelem.__dict__:
             test_timer = iterelem.test_timer
             tc.module.logger.info("- test_timer %s" % iterelem.test_timer)
+        if 'ooo_seq_delta' in iterelem.__dict__:
+            ooo_seq_delta = iterelem.ooo_seq_delta
+            tc.module.logger.info("- ooo_seq_delta %s" % iterelem.ooo_seq_delta)
     tc.pvtdata.same_flow = same_flow
     tc.pvtdata.bypass_barco = bypass_barco
     tc.pvtdata.send_ack = send_ack
     tc.pvtdata.test_timer = test_timer
+    tc.pvtdata.ooo_seq_delta = ooo_seq_delta
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA
@@ -83,10 +93,10 @@ def init_tcb_inorder(tc, tcb):
     tcb.rcv_mss = 9216
     tcb.debug_dol = 0
     if tc.pvtdata.send_ack:
-        tcb.debug_dol_tx = 0 
+        tcb.debug_dol_tx = 0
     else:
         tcb.debug_dol = tcp_debug_dol_dont_ring_tx_doorbell
-        tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack 
+        tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
     if tc.pvtdata.test_timer:
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
     if tc.pvtdata.same_flow:
@@ -162,10 +172,10 @@ def init_tcb_inorder2(tc, tcb):
     tcb.rcv_mss = 9216
     tcb.debug_dol = 0
     if tc.pvtdata.send_ack:
-        tcb.debug_dol_tx = 0 
+        tcb.debug_dol_tx = 0
     else:
         tcb.debug_dol = tcp_debug_dol_dont_ring_tx_doorbell
-        tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack 
+        tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
     if tc.pvtdata.test_timer:
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
     tcb.source_port = tc.config.flow.sport

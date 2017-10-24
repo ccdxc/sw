@@ -16,6 +16,7 @@ struct tcp_rx_tcp_rx_k k;
 struct tcp_rx_tcp_rx_d d;
 
 #define To_s1_seq {to_s1_seq_sbit0_ebit7...to_s1_seq_sbit8_ebit31}
+#define To_s1_end_seq {s1_s2s_end_seq_sbit0_ebit15...s1_s2s_end_seq_sbit16_ebit31}
 #define To_s1_ack_seq {to_s1_ack_seq_sbit0_ebit7...to_s1_ack_seq_sbit24_ebit31}
 #define To_s1_snd_nxt {to_s1_snd_nxt_sbit0_ebit7...to_s1_snd_nxt_sbit24_ebit31}
 %%
@@ -24,8 +25,16 @@ struct tcp_rx_tcp_rx_d d;
     .param          tcp_rx_read_rnmpr_stage2_start
     .param          tcp_rx_sack_stage2_start
     .align
+
+    /*
+     * Global conditional variables
+     *
+     * c6 = ooo in Rx Queue, skip some stages
+     * c7 = Drop packet
+     */
 tcp_rx_process_stage1_start:
     CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
+    sne             c6, d.u.tcp_rx_d.ooo_in_rx_q, r0
     add             r7,r0, r0
     phvwr           p.common_phv_debug_dol, d.u.tcp_rx_d.debug_dol
     /* r4 is loaded at the beginning of the stage with current timestamp value */
@@ -56,11 +65,13 @@ tcp_rx_process_stage1_start:
     tblwr           d.u.tcp_rx_d.quick_acks_decr, k.s1_s2s_quick_acks_decr
 
     /* if (cp->seq != tp->rx.rcv_nxt) { */
-    sne             c7, k.To_s1_seq, d.u.tcp_rx_d.rcv_nxt
-    phvwri.c7       p.common_phv_ooo_rcv, 1
+    /* if pkt->seq > rcv_nxt, do ooo (SACK) processing */
+    slt             c7, d.u.tcp_rx_d.rcv_nxt, k.To_s1_seq
+    bcf             [c7], ooo_received
+    /* if rcv_nxt > pkt->seq, retransmission, drop the packet */
+    slt             c7, k.To_s1_seq, d.u.tcp_rx_d.rcv_nxt
     phvwri.c7       p.p4_intr_global_drop, 1
     bcf             [c7], flow_rx_process_done
-    nop
 
     /*   if (!(before(cp->ack_seq, tp->tx.snd_nxt))) { */
     sle             c1, k.To_s1_ack_seq, k.To_s1_snd_nxt
@@ -91,21 +102,59 @@ tcp_rx_process_stage1_start:
     add             r6,r6,r0
 
     /* r2 contains tcp_data_len */
-    sub             r2, k.s1_s2s_end_seq, k.To_s1_seq
+    sub             r2, k.To_s1_end_seq, k.To_s1_seq
     seq             c1, r2, r0
     phvwr.c1        p.common_phv_process_ack_flag, r0
     bcf             [c1],tcp_ack
     nop
 
 tcp_queue_rcv:
-#if MODEL_BUG_FIX
-    phvwri          p.common_phv_write_serq, 1
-#endif
+    phvwr           p.s6_s2s_ooo_offset, r0
+    /*
+     * c6 is global conditional variable indicating OOO pkt in Rx Q
+     */
+    bcf             [!c6], tcp_rcv_nxt_update
+
+    /*
+     * We have prior OOO packets, see if we have more data we can send
+     *
+     * r1 = end_seq - rcv_nxt
+     *
+     * r0 (0) is the rightmost (lowest) bit set
+     * r2 is the leftmost (highest) bit set
+     */
+    sub             r1, k.To_s1_end_seq, d.u.tcp_rx_d.rcv_nxt
+    srl             r2, r1, TCP_OOO_CELL_SIZE_SHIFT
+    and             r3, r1, TCP_OOO_CELL_SIZE_MASK
+    seq             c3, r3, r0
+    sub.!c3         r2, r2, 1
+
+    fsetv           r4, d.u.tcp_rx_d.ooo_rcv_bitmap, r2, r0
+    tblwr           d.u.tcp_rx_d.ooo_rcv_bitmap, r4
+    /*
+     * Get number of consecutive 1s in ooo_rcv_bitmap
+     * Multiply that by TCP_OOO_CELL_SIZE to get DMA len
+     * Add it to rcv_nxt to get new rcv_nxt
+     *
+     * r1 = end_seq - rcv_nxt
+     * r2 = len based on consecutive 1s
+     * Set r1 (bytes_rcvd) based on max(r1, r2)
+     */
+    ffcv            r2, d.u.tcp_rx_d.ooo_rcv_bitmap, r0
+    sll             r2, r2, TCP_OOO_CELL_SIZE_SHIFT
+    slt             c1, r1, r2
+    add.c1          r1, r2, r0
+    phvwr           p.to_s6_payload_len, r1
+    tbladd          d.u.tcp_rx_d.rcv_nxt, r1
+    phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
+    phvwr           p.common_phv_ooo_in_rx_q, 1
+    b               bytes_rcvd_stats_update_start
+    setcf           c6, [c0]
 
 tcp_rcv_nxt_update:
-    sub             r1, k.s1_s2s_end_seq, d.u.tcp_rx_d.rcv_nxt
-    tblwr           d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_end_seq
-    phvwr           p.rx2tx_rcv_nxt, k.s1_s2s_end_seq
+    sub             r1, k.To_s1_end_seq, d.u.tcp_rx_d.rcv_nxt
+    tblwr           d.u.tcp_rx_d.rcv_nxt, k.To_s1_end_seq
+    phvwr           p.rx2tx_rcv_nxt, k.To_s1_end_seq
 
 bytes_rcvd_stats_update_start:
     CAPRI_STATS_INC(bytes_rcvd, 16, r1, d.u.tcp_rx_d.bytes_rcvd)
@@ -370,7 +419,7 @@ tcp_snd_una_update:
     /* u32 ack_ev_flags = CA_ACK_SLOWPATH; */
     ori             r1, r0, CA_ACK_SLOWPATH
     /* if (ack_seq != cp->end_seq) */
-    sne             c3, k.To_s1_seq, k.s1_s2s_end_seq
+    sne             c3, k.To_s1_seq, k.To_s1_end_seq
     /*     md->process_ack_flag |= FLAG_DATA; */
     add             r5, k.common_phv_process_ack_flag, r0
     ori             r5, r5, FLAG_DATA
@@ -443,7 +492,7 @@ tcp_update_window:
     /*        tcp_sync_mss(tp, tp->rx_opt.pmtu);
      *        tcp_sync_mss will be triggered in tx stage based on pending bit
      */
-    phvwr.c2        p.common_phv_pending_sync_mss, 1
+    //phvwr.c2        p.common_phv_pending_sync_mss, 1
 
 
 tcp_update_window_bypass:
@@ -482,7 +531,7 @@ tcp_in_ack_event:
      *     goto no_queue;
      */
      tblwr          d.u.tcp_rx_d.rcv_tstamp, r6
-     seq            c3, k.s1_s2s_packets_out, r0
+     seq            c3, k.{s1_s2s_packets_out_sbit0_ebit7...s1_s2s_packets_out_sbit8_ebit15}, r0
      bcf            [!c3], no_queue
      nop
 
@@ -554,7 +603,7 @@ tcp_rearm_rto:
     sne             c1, d.u.tcp_rx_d.fastopen_rsk, r0
     bcf             [c1 & c4], tcp_rearm_rto_done
     nop
-    seq             c1, k.s1_s2s_packets_out, r0
+    seq             c1, k.{s1_s2s_packets_out_sbit0_ebit7...s1_s2s_packets_out_sbit8_ebit15}, r0
     phvwr.c1        p.rx2tx_pending_ft_clear,1
     phvwr.c1        p.common_phv_pending_txdma, 1
     bcf             [c1], tcp_rearm_rto_done
@@ -616,9 +665,9 @@ tcp_ack_snd_check:
     sne             c2, r0, r0 // TODO
     /* c3 = in quick ack mode */
     /* quick && !pingpong */
-    sne             c5, d.u.tcp_rx_d.quick, r0
-    sne             c6, d.u.tcp_rx_d.pingpong, r0
-    setcf           c3, [c5 & !c6]
+    sne             c4, d.u.tcp_rx_d.quick, r0
+    sne             c5, d.u.tcp_rx_d.pingpong, r0
+    setcf           c3, [c4 & !c5]
     /* c4 = we have out of order data */
     //sne             c4, k.to_s3_ooo_datalen, r0 TODO
     sne             c4, r0, r0 // TODO
@@ -626,7 +675,6 @@ tcp_ack_snd_check:
 
     phvwr.!c1        p.common_phv_pending_del_ack_send, 1
     phvwr.c1         p.common_phv_pending_ack_send, 1
-
 
 slow_path:
 old_ack:
@@ -636,12 +684,20 @@ flow_rx_process_done:
 table_read_setup_next:
     phvwr           p.rx2tx_snd_wnd, d.u.tcp_rx_d.snd_wnd
     phvwr           p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
-    bcf             [c7], table_read_SACK
+    /*
+     * c7 = drop
+     */
+    bcf             [c7], flow_rx_drop
     nop
+
 table_read_RTT:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tcp_rx_rtt_stage2_start,
                         k.common_phv_qstate_addr, TCP_TCB_RTT_OFFSET,
                         TABLE_SIZE_512_BITS)
+    /*
+     * c6 = OOO in Rx queue, do not allocate buffers
+     */
+    bcf             [c6], table_read_SERQ_PRODUCER_IDX
 table_read_RNMDR_ALLOC_IDX:
     addi            r3, r0, RNMDR_ALLOC_IDX
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
@@ -652,15 +708,6 @@ table_read_RNMPR_ALLOC_IDX:
                         r3, TABLE_SIZE_64_BITS)
 table_read_SERQ_PRODUCER_IDX:
     phvwri          p.common_phv_write_serq, 1
-    phvwr           p.to_s6_xrq_base, d.u.tcp_rx_d.serq_base
-    nop.e
-    nop
-table_read_SACK:
-#if 0
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tcp_rx_sack_stage2_start,
-                        k.common_phv_qstate_addr, TCP_TCB_SACK_OFFSET,
-                        TABLE_SIZE_512_BITS)
-#endif
     nop.e
     nop
 flow_rx_drop:
@@ -668,3 +715,43 @@ flow_rx_drop:
     nop.e
     nop
 
+ooo_received:
+    /*
+     * We can receive upto window of rcv_nxt to rcv_nxt + CELL_SIZE *
+     * NUM_CELLS into the future.  If we receive an end sequence number beyond
+     * that, drop the packet Else set the ooo_rcv_bitmap accordingly
+     * r1 = seq - rcv_nxt
+     * r2 = end_seq - rcv_nxt
+     * r3 = max end_seq
+     *
+     * c7 = drop packet
+     */
+    sub             r1, k.To_s1_seq, d.u.tcp_rx_d.rcv_nxt
+    sub             r2, k.To_s1_end_seq, d.u.tcp_rx_d.rcv_nxt
+    add             r3, d.u.tcp_rx_d.rcv_nxt, TCP_OOO_NUM_CELLS * TCP_OOO_CELL_SIZE
+    slt             c7, r3, k.To_s1_end_seq
+    phvwri.c7       p.p4_intr_global_drop, 1
+    bcf             [c7], flow_rx_process_done
+
+    /*
+     * r3 is the rightmost (lowest) bit set
+     */
+    srl             r3, r1, TCP_OOO_CELL_SIZE_SHIFT
+    and             r5, r1, TCP_OOO_CELL_SIZE_MASK
+    seq             c3, r5, r0
+    add.!c3         r3, r3, 1
+
+    /*
+     * r4 is the leftmost (highest) bit set
+     */
+    srl             r4, r2, TCP_OOO_CELL_SIZE_SHIFT
+    and             r5, r2, TCP_OOO_CELL_SIZE_MASK
+    seq             c3, r5, r0
+    sub.!c3         r4, r4, 1
+
+    fsetv           r5, d.u.tcp_rx_d.ooo_rcv_bitmap, r4, r3
+    tblwr           d.u.tcp_rx_d.ooo_rcv_bitmap, r5
+    phvwr           p.s6_s2s_ooo_offset, r1
+    tblwr           d.u.tcp_rx_d.ooo_in_rx_q, 1
+    b               flow_rx_process_done
+    phvwr           p.common_phv_ooo_rcv, 1

@@ -56,3 +56,7 @@ def GetReverseFlowAckPktAckNum (tc, pkt):
 
 def GetDstIp (tc, pkt):
     return "54.0.0.2"
+
+def GetOOOSeqNum (tc, pkt):
+    return tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.ooo_seq_delta
+

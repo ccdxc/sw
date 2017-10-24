@@ -24,8 +24,26 @@ tcp_rx_fc_stage5_start:
     CAPRI_SET_DEBUG_STAGE4_7(p.s6_s2s_debug_stage4_7_thread, CAPRI_MPU_STAGE_5, CAPRI_MPU_TABLE_0)
     sne         c1, k.common_phv_write_arq, r0
     bcf         [c1], tcp_cpu_rx
-    nop
+    phvwr       p.to_s6_xrq_base, d.serq_base
         // TODO : FC stage has to be implemented
+
+    
+    /*
+     * c1 = ooo received, store allocated page and descr in d
+     *
+     * c2 = pkt received with ooo buffer allocated, use stored
+     * page and descr
+     */
+    sne         c1, k.common_phv_ooo_rcv, r0
+    sne         c2, k.common_phv_ooo_in_rx_q, r0
+    bcf         [!c1 & !c2], flow_fc_process_done
+
+    tblwr.c1    d.page, k.to_s5_page
+    tblwr.c1    d.descr, k.to_s5_descr
+
+    phvwr.c2    p.to_s6_descr, d.descr
+    phvwr.c2    p.to_s6_page, d.page
+
 flow_fc_process_done:   
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                 tcp_rx_write_serq_stage6_start, k.common_phv_qstate_addr,

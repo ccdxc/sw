@@ -16,6 +16,7 @@
 #define COUNTER8                        8
 #define WINDOW_WIDTH                    16
 #define MTU_WIDTH                       8
+#define TCP_OOO_NUM_CELLS               64 // needs to match entry in tcp-constants.h
 
 #define TX2RX_SHARED_STATE \
         prr_out                         : SEQ_NUMBER_WIDTH      ;\

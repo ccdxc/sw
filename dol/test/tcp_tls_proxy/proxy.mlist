@@ -87,10 +87,30 @@ modules:
 
     - module:
         name    : PKT_TO_SERQ_V4
-        spec    : one_pkt.testspec 
+        spec    : one_pkt.testspec
         module  : pkt_to_serq
         args    :
             maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : OOO_PKT_TO_SERQ_V4
+        spec    : ooo_pkt.testspec
+        module  : pkt_to_serq
+        args    :
+            maxflows: 1
+            ooo_seq_delta: 1000
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : OOO_PKT_IN_ORDER_PKT_TO_SERQ_V4
+        spec    : ooo_pkt_in_order_pkt.testspec
+        module  : pkt_to_serq_ooo_in_order
+        args    :
+            maxflows: 1
+            ooo_seq_delta: 1000
         iterate :
             - flow: filter://type=IPV4
 

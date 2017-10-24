@@ -58,7 +58,7 @@ def TestCaseSetup(tc):
     tlscb.GetObjValPd()
     tcpcb = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[tcbid])
     tcpcb.GetObjValPd()
-
+    
     tc.pvtdata.Add(tlscb)
     tc.pvtdata.Add(rnmdr)
     tc.pvtdata.Add(rnmpr)
@@ -70,16 +70,13 @@ def TestCaseVerify(tc):
     if GlobalOptions.dryrun:
         return True
 
-    num_pkts = 1
-    ooo = False
+    num_pages = 1
+    num_pkts = 2
     pkt_len = tc.packets.Get('PKT1').payloadsize
-    rcv_next_delta = pkt_len * num_pkts
-    if hasattr(tc.module.args, 'num_pkts'):
-        num_pkts = int(tc.module.args.num_pkts)
-        rcv_next_delta = num_pkts * pkt_len
-    if tc.pvtdata.ooo_seq_delta:
-        ooo = True
-        rcv_next_delta = 0
+    pkt_len += tc.packets.Get('PKT1').payloadsize
+    # rcv_nxt will get incremented by (2000 / 128) * 128
+    pkt_len = (pkt_len // tcp_proxy.TCP_OOO_CELL_SIZE) * tcp_proxy.TCP_OOO_CELL_SIZE
+
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     tcbid = "TcpCb%04d" % id
     # 1. Verify rcv_nxt got updated
@@ -88,7 +85,7 @@ def TestCaseVerify(tc):
     print("rcv_nxt value pre-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
     tcb_cur.GetObjValPd()
     print("rcv_nxt value post-sync from HBM 0x%x" % tcb_cur.rcv_nxt)
-    if tcb_cur.rcv_nxt != tc.pvtdata.flow1_rcv_nxt + rcv_next_delta:
+    if tcb_cur.rcv_nxt != tc.pvtdata.flow1_rcv_nxt + pkt_len:
         print("rcv_nxt not as expected")
         return False
     print("rcv_nxt as expected")
@@ -116,26 +113,26 @@ def TestCaseVerify(tc):
     serq_cur = tc.infra_data.ConfigStore.objects.db[serqid]
     serq_cur.Configure()
 
-    # 4. Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
+    # 4. Verify PI for RNMDR got incremented by 1 
+    if (rnmdr_cur.pi != rnmdr.pi+num_pages):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 
-    # 5. Verify descriptor
-    if not ooo and rnmdr.ringentries[rnmdr.pi].handle != serq_cur.ringentries[tlscb.serq_pi].handle and \
+    # 5. Verify descriptor 
+    if rnmdr.ringentries[rnmdr.pi].handle != serq_cur.ringentries[tlscb.serq_pi].handle and \
             rnmdr.ringentries[rnmdr.pi+1].handle != serq_cur.ringentries[tlscb.serq_pi].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % \
-                (rnmdr.ringentries[rnmdr.pi].handle, serq_cur.ringentries[tlscb.serq_pi].handle))
+                (rnmdr.ringentries[rnmdr.pi].handle, serq_cur.ringentries[tlscb.serq_pi].handle)) 
         return False
 
-    if not ooo and rnmdr.swdre_list[rnmdr.pi].DescAddr != serq_cur.swdre_list[tlscb.serq_pi].DescAddr and \
+    if rnmdr.swdre_list[rnmdr.pi].DescAddr != serq_cur.swdre_list[tlscb.serq_pi].DescAddr and \
             rnmdr.swdre_list[rnmdr.pi+1].DescAddr != serq_cur.swdre_list[tlscb.serq_pi].DescAddr:
         print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % \
                 (rnmdr.swdre_list[rnmdr.pi].DescAddr, serq_cur.swdre_list[tlscb.serq_pi].DescAddr))
         return False
 
     # 6. Verify page
-    if not ooo and rnmpr.ringentries[0].handle != serq_cur.swdre_list[0].Addr1:
+    if rnmpr.ringentries[0].handle != serq_cur.swdre_list[0].Addr1:
         print("Page handle not as expected in serq_cur.swdre_list")
         #return False
 
@@ -151,33 +148,26 @@ def TestCaseVerify(tc):
                 (tcpcb.pkts_rcvd + num_pkts, tcb_cur.pkts_rcvd))
         return False
     print("%d %d" %(tcb_cur.bytes_rcvd, tcpcb.bytes_rcvd))
-    if not ooo and tcb_cur.bytes_rcvd != tcpcb.bytes_rcvd + num_pkts * pkt_len:
-        print("Warning! pkt rx byte stats not as expected")
-        return False
-    elif ooo and tcb_cur.bytes_rcvd != tcpcb.bytes_rcvd:
+    if tcb_cur.bytes_rcvd != tcpcb.bytes_rcvd + pkt_len:
         print("Warning! pkt rx byte stats not as expected")
         return False
 
     #8 Verify page stats
-    if tcb_cur.pages_alloced != tcpcb.pages_alloced + num_pkts:
+    if tcb_cur.pages_alloced != tcpcb.pages_alloced + num_pages:
         print("pages alloced stats not as expected, %d vs received %d" %
-                (tcpcb.pages_alloced + num_pkts, tcb_cur.pages_alloced))
+                (tcpcb.pages_alloced + num_pages, tcb_cur.pages_alloced))
         return False
-
+    
     #9 Verify descr stats
-    if tcb_cur.desc_alloced != tcpcb.desc_alloced + num_pkts:
+    if tcb_cur.desc_alloced != tcpcb.desc_alloced + num_pages:
         print("desc alloced stats not as expected, %d vs received %d" %
-                (tcpcb.desc_alloced + num_pkts, tcb_cur.desc_alloced))
+                (tcpcb.desc_alloced + num_pages, tcb_cur.desc_alloced))
         return False
 
     # 10. Verify phv2mem counter
-    if (not ooo and tcb_cur.debug_num_phv_to_mem != tcpcb.debug_num_phv_to_mem+4*num_pkts):
+    if tcb_cur.debug_num_phv_to_mem != tcpcb.debug_num_phv_to_mem+4:
         print("phv2mem not as expected, %d vs received %d" %
-                (tcpcb.debug_num_phv_to_mem + 4*num_pkts, tcb_cur.debug_num_phv_to_mem))
-        return False
-    elif ooo and tcb_cur.debug_num_phv_to_mem != tcpcb.debug_num_phv_to_mem:
-        print("phv2mem not as expected, %d vs received %d" %
-                (tcpcb.debug_num_phv_to_mem, tcb_cur.debug_num_phv_to_mem))
+                (tcpcb.debug_num_phv_to_mem + 4, tcb_cur.debug_num_phv_to_mem))
         return False
 
     return True

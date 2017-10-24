@@ -1,6 +1,7 @@
 
 TOPDIR = ../..
 CUSTOM = my_all
+CUSTOM_CLEAN = my_clean
 include $(TOPDIR)/make/Makefile.inc
 
 NCC = ../../tools/ncc/capri-ncc.py
@@ -22,7 +23,7 @@ $(TCP_RX_GEN_FILE): $(TCP_RX_PROJ).p4 tcp_proxy_common.p4 ../common-p4+/common_r
 $(TCP_TX_GEN_FILE): $(TCP_TX_PROJ).p4 tcp_proxy_common.p4 ../common-p4+/common_txdma.p4 ../common-p4+/common_headers.p4 $(ncc_deps)
 	$(NCC) $(NCC_OPTIONS) $(TCP_TX_PROJ).p4 --gen-dir $(GEN_DIR)
 
-clean:
+my_clean:
 	rm -rf $(GEN_DIR)/$(TCP_RX_PROJ)
 	rm -rf $(GEN_DIR)/$(TCP_TX_PROJ)
 	rm -rf $(OBJ_DIR)/pgm_bin/$(TCP_RX_PROJ)*.bin

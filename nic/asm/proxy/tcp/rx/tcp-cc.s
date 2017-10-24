@@ -47,7 +47,7 @@ tcp_cwnd_reduction:
     /* r2 = flag */
     add         r2, k.common_phv_process_ack_flag, r0
 
-    add         r3, k.s4_s2s_packets_out, k.to_s4_retrans_out
+    add         r3, k.{s4_s2s_packets_out_sbit0_ebit15...s4_s2s_packets_out_sbit16_ebit31}, k.to_s4_retrans_out
     add         r4, k.s4_s2s_sacked_out, k.s4_s2s_lost_out
     /* r6 = tcp_packets_in_flight = packets_out + retrans_out - (sacked_out + lost_out) */
     sub         r6, r3, r4

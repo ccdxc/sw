@@ -15,6 +15,11 @@
 #define IP_LEN_OFFSET 16
 #define TCP_SEQ_OFFSET 40
 
+#define TCP_OOO_NUM_CELLS                   64 // needs to match entry in tcp_proxy_common.p4
+#define TCP_OOO_CELL_SIZE                   128
+#define TCP_OOO_CELL_SIZE_MASK              0x7f
+#define TCP_OOO_CELL_SIZE_SHIFT             7
+
 #define MAX_ENTRIES_PER_DESC 16
 #define MAX_ENTRIES_PER_DESC_MASK 0xF
 
