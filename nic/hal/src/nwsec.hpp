@@ -293,6 +293,7 @@ typedef struct nwsec_policy_cfg_s {
     dllist_ctxt_t                ingress_rules_head; // List of rules - nwsec_policy_rules_cfg_t
     dllist_ctxt_t                egress_rules_head;  // List of rules - nwsec_policy_rules_cfg_t
     dllist_ctxt_t                ep_list_head;
+    dllist_ctxt_t                nw_list_head;
     
     // operational state of security group
     hal_handle_t                 hal_handle;         // HAL allocated handle
@@ -558,6 +559,7 @@ nwsec_policy_cfg_init (nwsec_policy_cfg_t *nwsec_plcy_cfg)
     dllist_reset(&nwsec_plcy_cfg->ingress_rules_head);
     dllist_reset(&nwsec_plcy_cfg->egress_rules_head);
     dllist_reset(&nwsec_plcy_cfg->ep_list_head);
+    dllist_reset(&nwsec_plcy_cfg->nw_list_head);
     return nwsec_plcy_cfg;
 }
 

@@ -1546,6 +1546,50 @@ security_group_get(nwsec::SecurityGroupGetRequest& spec,
     return HAL_RET_OK;
 }
 
+// Security Policy nw handle get
+// ToDo: Check should we usedd sg_handle to get nwsec_policy_cfg instead of sg_id??
+dllist_ctxt_t *
+get_nw_list_for_security_group(uint32_t sg_id)
+{
+    nwsec_policy_cfg_t     *nwsec_policy_cfg = NULL;
+
+    nwsec_policy_cfg = nwsec_policy_cfg_lookup_by_key(sg_id);
+    if (nwsec_policy_cfg == NULL) {
+        HAL_TRACE_DEBUG("seg_id {} not found", sg_id);
+        return NULL;
+    }
+    return &nwsec_policy_cfg->nw_list_head;
+}
+
+//Security Policy nw_handle add
+hal_ret_t
+add_nw_to_security_group(uint32_t sg_id, hal_handle_t nw_handle_id)
+{
+    nwsec_policy_cfg_t          *nwsec_policy_cfg = NULL;
+    hal_handle_id_list_entry_t  *nwsec_policy_nw_info = NULL;
+
+    nwsec_policy_cfg = nwsec_policy_cfg_lookup_by_key(sg_id);
+    if (nwsec_policy_cfg == NULL) {
+        HAL_TRACE_DEBUG("seg_id {} not found");
+        return HAL_RET_SG_NOT_FOUND;
+    }
+
+    nwsec_policy_nw_info = (hal_handle_id_list_entry_t *)g_hal_state->
+    hal_handle_id_list_entry_slab()->alloc();
+    if (nwsec_policy_nw_info == NULL) {
+        HAL_TRACE_DEBUG("Unable to alloc and store nw_info for nw_handle:{}",
+                        nw_handle_id);
+        return HAL_RET_OOM;
+    }
+    nwsec_policy_nw_info->handle_id = nw_handle_id;
+
+    HAL_SPINLOCK_LOCK(&nwsec_policy_cfg->slock);
+    dllist_add(&nwsec_policy_cfg->nw_list_head, &nwsec_policy_nw_info->dllist_ctxt);
+    HAL_SPINLOCK_UNLOCK(&nwsec_policy_cfg->slock);
+
+    return HAL_RET_OK;
+}
+
 // Security Policy ep_info get
 // ToDo: Check should we use sg_handle to get nwsec_policy_cfg instead of sg_id??
 dllist_ctxt_t *
@@ -1563,29 +1607,30 @@ get_ep_list_for_security_group(uint32_t sg_id)
 
 //Security Policy ep_info add
 hal_ret_t
-add_ep_to_security_group(uint32_t sg_id, hal_handle_t ep_handle)
+add_ep_to_security_group(uint32_t sg_id, hal_handle_t ep_handle_id)
 {
-    nwsec_policy_cfg_t     *nwsec_policy_cfg = NULL;
-    nwsec_policy_ep_info_t *nwsec_policy_ep_info = NULL;
+    nwsec_policy_cfg_t          *nwsec_policy_cfg = NULL;
+    hal_handle_id_list_entry_t  *nwsec_policy_ep_info = NULL;
+
     nwsec_policy_cfg = nwsec_policy_cfg_lookup_by_key(sg_id);
     if (nwsec_policy_cfg == NULL) {
         HAL_TRACE_DEBUG("seg_id {} not found");
         return HAL_RET_SG_NOT_FOUND;
     }
 
-    nwsec_policy_ep_info = nwsec_policy_ep_info_alloc_and_init();
+    nwsec_policy_ep_info = (hal_handle_id_list_entry_t *)
+                            g_hal_state->hal_handle_id_list_entry_slab()->alloc();
     if (nwsec_policy_ep_info == NULL) {
         HAL_TRACE_DEBUG("Unable to alloc and store ep_info for ep_handle:{}",
-                        ep_handle);
+                        ep_handle_id);
         return HAL_RET_OOM;
     }
+    nwsec_policy_ep_info->handle_id = ep_handle_id;
 
     HAL_SPINLOCK_LOCK(&nwsec_policy_cfg->slock);
-    dllist_add(&nwsec_policy_cfg->ep_list_head, &nwsec_policy_ep_info->lentry);
+    dllist_add(&nwsec_policy_cfg->ep_list_head, &nwsec_policy_ep_info->dllist_ctxt);
     HAL_SPINLOCK_UNLOCK(&nwsec_policy_cfg->slock);
 
     return HAL_RET_OK;
 }
-
-
 }    // namespace hal
