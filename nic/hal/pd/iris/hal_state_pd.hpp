@@ -13,11 +13,13 @@
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
+#include "nic/utils/bm_allocator/bm_allocator.hpp"
 
 
 using hal::utils::indexer;
 using hal::utils::slab;
 using hal::utils::ht;
+using hal::BMAllocator;
 using hal::pd::utils::DirectMap;
 using hal::pd::utils::Hash;
 using hal::pd::utils::Tcam;
@@ -186,7 +188,10 @@ public:
     slab *cpupkt_qinst_info_slab(void) const {return cpupkt_qinst_info_slab_; }
     indexer *cpupkt_descr_hw_id_idxr(void) {return cpupkt_descr_hwid_idxr_; }
     indexer *cpupkt_page_hw_id_idxr(void) {return cpupkt_page_hwid_idxr_; }
-    
+
+    // get APIs for TXS scheduler related state
+    BMAllocator *txs_scheduler_map_idxr(void) { return txs_scheduler_map_idxr_; }    
+
     hal_ret_t init_tables(void);
     hal_ret_t p4plus_rxdma_init_tables(void);
     hal_ret_t p4plus_txdma_init_tables(void);
@@ -418,6 +423,11 @@ private:
     struct {
         slab       *rawrcb_slab_;
         ht         *rawrcb_hwid_ht_;
+    } __PACK__;
+
+    // TXS scheduler related state
+    struct {
+        BMAllocator    *txs_scheduler_map_idxr_;
     } __PACK__;
 
     DirectMap    **dm_tables_;

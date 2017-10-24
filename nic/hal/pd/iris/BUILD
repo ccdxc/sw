@@ -43,5 +43,6 @@ cc_library(
             "//nic/hal/pd/utils/flow:flow_includes",
             "//nic/hal/pd/utils/hash:hash_includes",
             "//nic:gen_includes",
+            "//nic/utils/bitmap",
             ],
 )

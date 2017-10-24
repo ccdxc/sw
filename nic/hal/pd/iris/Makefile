@@ -80,6 +80,7 @@ SOURCES = \
 		  cpupkt_api.cc \
 		  rawrcb_pd.cc \
 		  system_pd.cc \
+		  scheduler_pd.cc \
 		  $(NULL)
 
 include $(TOPDIR)/make/Makefile.inc

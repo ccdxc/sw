@@ -9,6 +9,9 @@
 #include "nic/include/bitmap.hpp"
 #include "nic/hal/src/tenant.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
+#include "nic/hal/src/qos.hpp"
+
+#define NUM_MAX_COSES 16
 
 using intf::LifSpec;
 using intf::LifResponse;
@@ -40,6 +43,7 @@ typedef struct lif_s {
     uint32_t            rdma_max_keys;
     uint32_t            rdma_max_pt_entries;
     uint8_t             qtypes[intf::LifQPurpose_MAX+1]; // purpose to qtype mapping
+    uint16_t            cos_bmp;                   // Bitmap of COS values supported by this LIF.
 
     // operational state of interface
     hal_handle_t        hal_handle;                  // HAL allocated handle

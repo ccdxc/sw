@@ -205,6 +205,14 @@ validate_lif_create(LifSpec& spec, LifResponse *rsp)
         return HAL_RET_ENTRY_EXISTS;
     }
 
+    // Check if all cos values are below 16.
+    for (int c = 0; c < spec.tcs_size(); c++) {
+        if (spec.tcs(c).cos() >= NUM_MAX_COSES) {
+            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+            return HAL_RET_INVALID_ARG;
+        }
+    }
+
 end:
     return ret;
 }
@@ -457,6 +465,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif_create_app_ctxt_t       app_ctxt = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
+    uint32_t                    cos = 0;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("pi-lif:{}:lif create for id {}", __FUNCTION__, 
@@ -490,6 +499,11 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->enable_rdma = spec.enable_rdma();
     lif->rdma_max_keys = spec.rdma_max_keys();
     lif->rdma_max_pt_entries = spec.rdma_max_pt_entries();
+
+    for (int c = 0; c < spec.tcs_size(); c++) {
+        cos = spec.tcs(c).cos();
+        lif->cos_bmp |= (1 << cos);
+    }
 
     // allocate hal handle id
     hal_handle = hal_handle_alloc(HAL_OBJ_ID_LIF);

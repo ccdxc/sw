@@ -34,6 +34,7 @@
 #include "nic/hal/pd/iris/rawrcb_pd.hpp"
 #include "nic/hal/pd/capri/capri_repl.hpp"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
+#include "nic/hal/pd/iris/scheduler_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -354,6 +355,10 @@ hal_state_pd::init(void)
                                  hal::pd::rawrcb_pd_compute_hw_hash_func,
                                  hal::pd::rawrcb_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((rawrcb_hwid_ht_ != NULL), false);
+
+    // BMAllocator based bmp range allocator to manage txs scheduler mapping
+    txs_scheduler_map_idxr_ = new hal::BMAllocator(TXS_SCHEDULER_MAP_MAX_ENTRIES);
+    HAL_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
 
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;

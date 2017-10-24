@@ -6,7 +6,6 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
 
-
 namespace hal {
 namespace pd {
 
@@ -14,6 +13,8 @@ struct pd_lif_s {
     uint32_t    hw_lif_id;
     uint32_t    dummy;
     uint32_t    lif_lport_id;
+    uint32_t    tx_sched_table_offset;
+    uint32_t    tx_sched_num_table_entries; 
 
     // pi ptr
     void        *pi_lif;

@@ -1,6 +1,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/lif_pd.hpp"
+#include "nic/hal/pd/iris/scheduler_pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
@@ -106,7 +107,7 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_args_t *args)
 {
     hal_ret_t            ret = HAL_RET_OK;
     indexer::status      rs = indexer::SUCCESS;
-
+    
 #if 0
     if (args->with_hw_lif_id) {
         pd_lif->hw_lif_id = args->hw_lif_id;
@@ -143,6 +144,16 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_args_t *args)
         ret = HAL_RET_NO_RESOURCE;
         goto end;
     }
+
+    //Allocate tx scheduler resource for this lif.
+    ret = scheduler_tx_pd_alloc(pd_lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},failed to scheduler resource",
+                      __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif),
+                      rs);
+        goto end;
+    }
+
     HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{},allocated lport_id:{}", 
                     __FUNCTION__, 
                     lif_get_lif_id((lif_t *)pd_lif->pi_lif),
@@ -172,6 +183,16 @@ lif_pd_dealloc_res(pd_lif_t *lif_pd)
 
         HAL_TRACE_DEBUG("pd-lif:{}:freed lport: {}", 
                         __FUNCTION__, lif_pd->lif_lport_id);
+    }
+   
+    if (lif_pd->tx_sched_table_offset != INVALID_INDEXER_INDEX) {
+        ret = scheduler_tx_pd_dealloc(lif_pd);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-lif:{}:failed to free sched table res at offset: {}",
+                          __FUNCTION__, lif_pd->tx_sched_table_offset);
+            ret = HAL_RET_INVALID_OP;
+            goto end;
+        }
     }
 
 end:
@@ -250,8 +271,8 @@ lif_pd_init (pd_lif_t *lif)
     if (!lif) {
         return NULL;
     }
-
     // Set here if you want to initialize any fields
+    lif->tx_sched_table_offset = INVALID_INDEXER_INDEX;
 
     return lif;
 }
@@ -268,8 +289,16 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
     ret = lif_pd_pgm_output_mapping_tbl(pd_lif, NULL, TABLE_OPER_INSERT);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-lif:{}:unable to program hw", __FUNCTION__);
+        goto end;
     }
 
+    ret = scheduler_tx_pd_program_hw(pd_lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:unable to program hw for tx scheduler", __FUNCTION__);
+        goto end;
+    }
+
+end:
     return ret;
 }
 
