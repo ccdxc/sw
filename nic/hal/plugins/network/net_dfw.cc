@@ -105,7 +105,7 @@ dfw_exec(fte::ctx_t& ctx)
             flowupd.flow_state.syn_ack_delta = ctx.sess_spec()->iflow_syn_ack_delta();
         } else {
             const fte::cpu_rxhdr_t *rxhdr = ctx.cpu_rxhdr();
-            flowupd.flow_state.state = session::FLOW_TCP_STATE_SYN_RCVD;
+            flowupd.flow_state.state = session::FLOW_TCP_STATE_INIT;
             // Expectation is to program the next expected seq num.
             flowupd.flow_state.tcp_seq_num = ntohl(rxhdr->tcp_seq_num) + 1;
             flowupd.flow_state.tcp_ack_num = ntohl(rxhdr->tcp_ack_num);

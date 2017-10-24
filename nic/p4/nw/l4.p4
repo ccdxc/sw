@@ -259,7 +259,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
        if (syn_cookie_delta != 0) {
            modify_field(scratch_metadata.adjusted_ack_num, (tcp.ackNo + syn_cookie_delta));
        }
-       modify_field(scratch_metadata.tcp_seq_num_hi, (tcp.seqNo + l4_metadata.tcp_data_len));
+       modify_field(scratch_metadata.tcp_seq_num_hi, (tcp.seqNo + l4_metadata.tcp_data_len -1));
        if (iflow_tcp_state == FLOW_STATE_ESTABLISHED and
            rflow_tcp_state == FLOW_STATE_ESTABLISHED and
            (tcp.flags == TCP_FLAG_ACK or
@@ -267,7 +267,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
            (l4_metadata.tcp_rcvr_win_sz != 0) and
            (((l4_metadata.tcp_data_len != 0) and
              (tcp.seqNo == iflow_tcp_seq_num) and
-             (scratch_metadata.tcp_seq_num_hi <= (rflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) or
+             (scratch_metadata.tcp_seq_num_hi < (rflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) or
             ((l4_metadata.tcp_data_len == 0) and
              (rflow_tcp_ack_num -1 <= tcp.seqNo) and
              (tcp.seqNo < rflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz)))) {
@@ -279,7 +279,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
             }
             if (scratch_metadata.tcp_seq_num_hi >  iflow_tcp_seq_num) {
                 // Only if we are seeing a new high sequence number than we saved already
-                modify_field(scratch_metadata.iflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi);
+                modify_field(scratch_metadata.iflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi + 1);
             }
             // Now Update the PHV Fields to accomodate the adjusted seq and ack number in case
             if (scratch_metadata.syn_cookie_delta != 0) {
@@ -297,18 +297,18 @@ action tcp_session_state_info(iflow_tcp_seq_num,
             l4_metadata.tcp_rcvr_win_sz != 0) {
 
             if (tcp.seqNo == iflow_tcp_seq_num and
-                (scratch_metadata.tcp_seq_num_hi <= (rflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) {
+                (scratch_metadata.tcp_seq_num_hi < (rflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) {
                 // goto INITIATOR_TCP_STATE_TRANSITION:
             }
             if ((tcp.seqNo >= rflow_tcp_ack_num) and
-                (scratch_metadata.tcp_seq_num_hi <= (rflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) {
+                (scratch_metadata.tcp_seq_num_hi < (rflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) {
                 // non-overlapping within the window but not the next one we are
                 // expecting, possible re-ordering of segments happens in between
                 bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_PACKET_REORDER);
                 // goto INITIATOR_TCP_STATE_TRANSITION:
             }
             if (tcp.seqNo < rflow_tcp_ack_num and
-                (scratch_metadata.tcp_seq_num_hi <= rflow_tcp_ack_num)) {
+                (scratch_metadata.tcp_seq_num_hi < rflow_tcp_ack_num)) {
                 // full retransmit of packet we have seen before, still acceptable
                 // We shouldn't drop this packet.
                 // We will have to update the ack # and window fromt the packet.
@@ -318,7 +318,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
             }
 
             if ((tcp.seqNo < rflow_tcp_ack_num) and
-                (scratch_metadata.tcp_seq_num_hi <= (rflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) {
+                (scratch_metadata.tcp_seq_num_hi < (rflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) {
                 // left side overlap, still acceptable
                 bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_PARTIAL_OVERLAP);
                 // goto INITIATOR_TCP_STATE_TRANSITION:
@@ -337,6 +337,14 @@ action tcp_session_state_info(iflow_tcp_seq_num,
        // This case is also handled in best packet case but it assumed that no flags
        // other than ACK+PSH were set.
        if ((l4_metadata.tcp_data_len == 0) and (l4_metadata.tcp_rcvr_win_sz != 0)) {
+           // Initiator flow can also be installed in INIT state after the flow 
+           // miss is sent to ARM CPU which will reinject the packet and this time
+           // we will hit the flow that is installed. This is to avoid tcp session
+           // tracking to see the ARM injected packet as a SYN REXMIT.
+           if (iflow_tcp_state == FLOW_STATE_INIT and tcp.flags == TCP_FLAG_SYN) {
+               modify_field(scratch_metadata.iflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD);
+               // goto INITIATOR_TCP_SESSION_STATE_INFO_EXIT
+           }
            if (iflow_tcp_state == FLOW_STATE_TCP_SYN_RCVD and
                (tcp.flags & (TCP_FLAG_SYN|TCP_FLAG_ACK) == TCP_FLAG_SYN) and
                (tcp.seqNo + 1 == iflow_tcp_seq_num)) {
@@ -448,7 +456,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                (tcp.ackNo == scratch_metadata.rflow_tcp_seq_num)) {
                modify_field(scratch_metadata.iflow_tcp_state, FLOW_STATE_ESTABLISHED);
                modify_field(scratch_metadata.rflow_tcp_state, FLOW_STATE_ESTABLISHED);
-               modify_field(scratch_metadata.iflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi);
+               modify_field(scratch_metadata.iflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi + 1);
                modify_field(scratch_metadata.iflow_tcp_ack_num, tcp.ackNo);
                modify_field(scratch_metadata.iflow_tcp_win_sz, tcp.window);
                modify_field(tcp.ackNo, scratch_metadata.adjusted_ack_num);
@@ -506,7 +514,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
            // Below check cannot be >= as all the subsequent packets after FIN
            // which can be ACK only packets will have a sequence number of
            // FIN sequence + 1 which is what we saved in rflow_tcp_seq_num
-           if (scratch_metadata.tcp_seq_num_hi > scratch_metadata.iflow_tcp_seq_num) {
+           if (scratch_metadata.tcp_seq_num_hi >= scratch_metadata.iflow_tcp_seq_num) {
                bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_DATA_AFTER_FIN);
                modify_field(control_metadata.drop_reason, DROP_TCP_DATA_AFTER_FIN);
                drop_packet();
@@ -536,9 +544,9 @@ action tcp_session_state_info(iflow_tcp_seq_num,
             modify_field(scratch_metadata.iflow_tcp_ack_num, tcp.ackNo);
             modify_field(scratch_metadata.iflow_tcp_win_sz, tcp.window);
         }
-        if (scratch_metadata.tcp_seq_num_hi >  iflow_tcp_seq_num) {
+        if (scratch_metadata.tcp_seq_num_hi >= iflow_tcp_seq_num) {
             // Only if we are seeing a new high sequence number than we saved already
-            modify_field(scratch_metadata.iflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi);
+            modify_field(scratch_metadata.iflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi + 1);
         }
         // Now Update the PHV Fields to accomodate the adjusted seq and ack number in case
         if (scratch_metadata.syn_cookie_delta != 0) {
@@ -566,7 +574,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
        if (syn_cookie_delta != 0) {
            modify_field(scratch_metadata.adjusted_seq_num, (tcp.seqNo - syn_cookie_delta));
        }
-       modify_field(scratch_metadata.tcp_seq_num_hi, (scratch_metadata.adjusted_seq_num + l4_metadata.tcp_data_len));
+       modify_field(scratch_metadata.tcp_seq_num_hi, (scratch_metadata.adjusted_seq_num + l4_metadata.tcp_data_len - 1));
        if (iflow_tcp_state == FLOW_STATE_ESTABLISHED and
            rflow_tcp_state == FLOW_STATE_ESTABLISHED and
            (tcp.flags == TCP_FLAG_ACK or
@@ -574,7 +582,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
            (l4_metadata.tcp_rcvr_win_sz != 0) and
            (((l4_metadata.tcp_data_len != 0) and
              (scratch_metadata.adjusted_seq_num == scratch_metadata.rflow_tcp_seq_num) and
-             (scratch_metadata.tcp_seq_num_hi <= (scratch_metadata.iflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) or
+             (scratch_metadata.tcp_seq_num_hi < (scratch_metadata.iflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) or
             ((l4_metadata.tcp_data_len == 0) and
              (scratch_metadata.iflow_tcp_ack_num -1 <= scratch_metadata.adjusted_seq_num) and
              (scratch_metadata.adjusted_seq_num < scratch_metadata.iflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz)))) {
@@ -586,7 +594,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
             }
             if (scratch_metadata.tcp_seq_num_hi >  scratch_metadata.rflow_tcp_seq_num) {
                 // Only if we are seeing a new high sequence number than we saved already
-                modify_field(scratch_metadata.rflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi);
+                modify_field(scratch_metadata.rflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi + 1);
             }
             // Now Update the PHV Fields to accomodate the adjusted seq and ack number in case
             if (scratch_metadata.syn_cookie_delta != 0) {
@@ -607,11 +615,11 @@ action tcp_session_state_info(iflow_tcp_seq_num,
             l4_metadata.tcp_rcvr_win_sz != 0) {
 
             if (scratch_metadata.adjusted_seq_num == rflow_tcp_seq_num and
-                (scratch_metadata.tcp_seq_num_hi <= (iflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) {
+                (scratch_metadata.tcp_seq_num_hi < (iflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) {
                 // goto RESPONDER_TCP_STATE_TRANSITION:
             }
             if (scratch_metadata.adjusted_seq_num < iflow_tcp_ack_num and
-                (scratch_metadata.tcp_seq_num_hi <= iflow_tcp_ack_num)) {
+                (scratch_metadata.tcp_seq_num_hi < iflow_tcp_ack_num)) {
                 // full retransmit of packet we have seen before, still acceptable
                 // We shouldn't drop this packet.
                 // We will have to update the ack # and window fromt the packet.
@@ -621,14 +629,14 @@ action tcp_session_state_info(iflow_tcp_seq_num,
             }
 
             if ((scratch_metadata.adjusted_seq_num < iflow_tcp_ack_num) and
-                (scratch_metadata.tcp_seq_num_hi <= (iflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) {
+                (scratch_metadata.tcp_seq_num_hi < (iflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) {
                 // left side overlap, still acceptable
                 bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_PARTIAL_OVERLAP);
                 // goto RESPONDER_TCP_STATE_TRANSITION:
             }
 
             if ((scratch_metadata.adjusted_seq_num >= iflow_tcp_ack_num) and
-                (scratch_metadata.tcp_seq_num_hi <= (iflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) {
+                (scratch_metadata.tcp_seq_num_hi < (iflow_tcp_ack_num + l4_metadata.tcp_rcvr_win_sz))) {
                 // non-overlapping within the window but not the next one we are
                 // expecting, possible re-ordering of segments happens in between
                 bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_PACKET_REORDER);
@@ -779,7 +787,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                 // We will have to update the responder flows seq and ack directly here as the
                 // commmon code will check for greater than and it might not do the right stuff
                 // as the initial values are zero when the session entry is programmed.
-                modify_field(scratch_metadata.rflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi);
+                modify_field(scratch_metadata.rflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi + 1);
                 modify_field(scratch_metadata.rflow_tcp_ack_num, tcp.ackNo);
                 modify_field(scratch_metadata.rflow_tcp_win_sz, tcp.window);
                 // goto RESPONDER_TCP_SESSION_STATE_INFO_EXIT
@@ -824,7 +832,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                     // commmon code will check for greater than and it might not do the right stuff
                     // as the initial values are zero when the session entry is programmed.
                     // Not updating window as ACK bit is not set.
-                    modify_field(scratch_metadata.rflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi);
+                    modify_field(scratch_metadata.rflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi + 1);
                     // goto RESPONDER_TCP_SESSION_STATE_INFO_EXIT
                 }
             }
@@ -877,7 +885,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                 // commmon code will check for greater than and it might not do the right stuff
                 // as the initial values are zero when the session entry is programmed.
                 // Not updating window as ACK bit is not set.
-                modify_field(scratch_metadata.rflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi);
+                modify_field(scratch_metadata.rflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi + 1);
                 // goto RESPONDER_TCP_SESSION_STATE_INFO_EXIT
            }
            // We are not dropping the packet as there could be ACKs Retransmit
@@ -919,7 +927,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
            // Below check cannot be >= as all the subsequent packets after FIN
            // which can be ACK only packets will have a sequence number of
            // FIN sequence + 1 which is what we saved in rflow_tcp_seq_num
-           if (scratch_metadata.tcp_seq_num_hi > scratch_metadata.rflow_tcp_seq_num) {
+           if (scratch_metadata.tcp_seq_num_hi >= scratch_metadata.rflow_tcp_seq_num) {
                bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_DATA_AFTER_FIN);
                modify_field(control_metadata.drop_reason, DROP_TCP_DATA_AFTER_FIN);
                drop_packet();
@@ -948,9 +956,9 @@ action tcp_session_state_info(iflow_tcp_seq_num,
             modify_field(scratch_metadata.rflow_tcp_ack_num, tcp.ackNo);
             modify_field(scratch_metadata.rflow_tcp_win_sz, tcp.window);
         }
-        if (scratch_metadata.tcp_seq_num_hi >  scratch_metadata.rflow_tcp_seq_num) {
+        if (scratch_metadata.tcp_seq_num_hi >=  scratch_metadata.rflow_tcp_seq_num) {
             // Only if we are seeing a new high sequence number than we saved already
-            modify_field(scratch_metadata.rflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi);
+            modify_field(scratch_metadata.rflow_tcp_seq_num, scratch_metadata.tcp_seq_num_hi + 1);
         }
         // Now Update the PHV Fields to accomodate the adjusted seq and ack number in case
         if (scratch_metadata.syn_cookie_delta != 0) {

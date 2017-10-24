@@ -48,6 +48,7 @@ lb_tcp_session_state_initiator:
   bal.c1       r3, f_tcp_session_normalization
   add          r7, k.tcp_ackNo, d.u.tcp_session_state_info_d.syn_cookie_delta // r7 = adjusted_ack_num
   add          r5, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, k.l4_metadata_tcp_data_len  // tcp_seq_num_hi
+  sub          r5, r5, 1
   add          r4, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, r6 // rflow_tcp_ack_num + rcvr_win_sz
   seq          c1, k.tcp_flags, TCP_FLAG_ACK
   seq          c2, k.tcp_flags, (TCP_FLAG_ACK | TCP_FLAG_PSH)
@@ -56,7 +57,7 @@ lb_tcp_session_state_initiator:
   seq          c3, d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_ESTABLISHED
   sne          c5, k.l4_metadata_tcp_data_len, r0 // tcp_data_len != 0
   sne          c6, r6, r0 // tcp_rcvr_win_sz != 0
-  scwle        c7, r5, r4 // tcp_seq_num_hi <= rflow_tcp_ack_num + rcvr_win_sz
+  scwlt        c7, r5, r4 // tcp_seq_num_hi < rflow_tcp_ack_num + rcvr_win_sz
   setcf        c1, [c1 & c2 & c3 & c6]
   seq          c2, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   setcf        c2, [c5 & c2 & c7]
@@ -73,14 +74,16 @@ lb_tcp_session_state_initiator:
   tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_win_sz, k.tcp_window
 #if 0 /* RTT_NOT_CONSIDERED */
   phvwr        p.tcp_ackNo, r7
+  add          r1, r5, 1 // tcp_seq_num_hi + 1
   scwlt.e      c1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
-  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
+  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r1
 #else /* RTT_NOT_CONSIDERED */
   seq          c2, d.u.tcp_session_state_info_d.flow_rtt_seq_check_enabled, 1
   bal.c2       r3, f_tcp_session_initiator_rtt_calculate
   phvwr        p.tcp_ackNo, r7
+  add          r1, r5, 1 // tcp_seq_num_hi + 1
   scwlt.e      c1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
-  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
+  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r1
 #endif /* RTT_NOT_CONSIDERED */
 
 lb_tcp_session_state_initiator_non_best:
@@ -95,7 +98,7 @@ lb_tcp_session_state_initiator_non_best:
   b.c1         lb_tss_i_tcp_state_transition
   ori.c1       r2, r2, TCP_PACKET_REORDER
   scwlt        c1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
-  scwle        c2, r5, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
+  scwlt        c2, r5, d.u.tcp_session_state_info_d.rflow_tcp_ack_num
   setcf        c1, [c1 & c2]
   b.c1         lb_tss_i_tcp_session_update
   ori.c1       r2, r2, TCP_FULL_REXMIT
@@ -110,9 +113,13 @@ lb_tcp_session_state_initiator_non_best:
 
 lb_tss_i_1:
   bcf          ![!c5 & c6], lb_tss_i_2
+  seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_INIT
+  smeqb        c2, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_ACK, TCP_FLAG_SYN
+  setcf        c1, [c1 & c2]
+  b.c1         lb_tss_i_exit
+  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD
   // SYN Retransmit
   seq          c1, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_TCP_SYN_RCVD
-  smeqb        c2, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_ACK, TCP_FLAG_SYN
   add          r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, 1
   seq          c3, r1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   setcf        c1, [c1 & c2 & c3]
@@ -213,7 +220,8 @@ lb_tss_i_6:
   tblwr        d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_ESTABLISHED
   tblwr        d.u.tcp_session_state_info_d.iflow_tcp_ack_num, k.tcp_ackNo
   tblwr        d.u.tcp_session_state_info_d.iflow_tcp_win_sz, k.tcp_window
-  tblwr        d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
+  add          r1, r5, 1 // tcp_seq_num_hi + 1
+  tblwr        d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r1
   b            lb_tss_i_exit
   phvwr        p.tcp_ackNo, r7
 
@@ -251,7 +259,7 @@ lb_tss_i_syn_rcvd_1:
   nop
 
   .brcase      FLOW_STATE_FIN_RCVD
-  scwlt        c1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
+  scwle        c1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
   b.!c1        lb_tss_i_tcp_session_update
   ori.c1       r2, r2, TCP_DATA_AFTER_FIN
   phvwr        p.control_metadata_drop_reason[DROP_TCP_DATA_AFTER_FIN], 1
@@ -259,7 +267,7 @@ lb_tss_i_syn_rcvd_1:
   phvwr        p.capri_intrinsic_drop, 1
 
   .brcase      FLOW_STATE_BIDIR_FIN_RCVD
-  scwlt        c1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
+  scwle        c1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
   b.!c1        lb_tss_i_tcp_session_update
   ori.c1       r2, r2, TCP_DATA_AFTER_FIN
   phvwr        p.control_metadata_drop_reason[DROP_TCP_DATA_AFTER_FIN], 1
@@ -280,8 +288,9 @@ lb_tss_i_tcp_session_update:
   tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_ack_num, k.tcp_ackNo
   tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_win_sz, k.tcp_window
   phvwr        p.tcp_ackNo, r7
-  scwlt       c1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
-  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
+  scwle        c1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
+  add          r1, r5, 1 // tcp_seq_num_hi + 1
+  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r1
 
 lb_tss_i_exit:
   phvwrm.e     p.l4_metadata_exceptions_seen, r2, 0xffff
@@ -299,6 +308,7 @@ lb_tcp_session_state_responder:
   bal.c1       r3, f_tcp_session_normalization
   sub          r7, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.syn_cookie_delta // r7 = adjusted_seq_num
   add          r5, r7, k.l4_metadata_tcp_data_len  // tcp_seq_num_hi
+  sub          r5, r5, 1
   add          r4, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, r6 // iflow_tcp_ack_num + rcvr_win_sz
   seq          c1, k.tcp_flags, TCP_FLAG_ACK
   seq          c2, k.tcp_flags, (TCP_FLAG_ACK | TCP_FLAG_PSH)
@@ -307,7 +317,7 @@ lb_tcp_session_state_responder:
   seq          c3, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_ESTABLISHED
   sne          c5, k.l4_metadata_tcp_data_len, r0 // tcp_data_len != 0
   sne          c6, r6, r0 // tcp_rcvr_win_sz != 0
-  scwle        c7, r5, r4 // tcp_seq_num_hi <= iflow_tcp_ack_num + rcvr_win_sz
+  scwle        c7, r5, r4 // tcp_seq_num_hi < iflow_tcp_ack_num + rcvr_win_sz
   setcf        c1, [c1 & c2 & c3 & c6]
   seq          c2, r7, d.u.tcp_session_state_info_d.rflow_tcp_seq_num
   setcf        c2, [c5 & c2 & c7]
@@ -324,14 +334,16 @@ lb_tcp_session_state_responder:
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_win_sz, k.tcp_window
 #if 0 /* RTT_NOT_CONSIDERED */
   phvwr        p.tcp_seqNo, r7
+  add          r1, r5, 1 // tcp_seq_num_hi + 1
   scwlt.e      c1, d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
-  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
+  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r1
 #else /* RTT_NOT_CONSIDERED */
   seq          c2, d.u.tcp_session_state_info_d.flow_rtt_seq_check_enabled, 1
   bal.c2       r3, f_tcp_session_initiator_rtt_calculate
   phvwr        p.tcp_seqNo, r7
+  add          r1, r5, 1 // tcp_seq_num_hi + 1
   scwlt.e      c1, d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
-  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
+  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r1
 #endif /* RTT_NOT_CONSIDERED */
 
 lb_tcp_session_state_responder_non_best:
@@ -346,7 +358,7 @@ lb_tcp_session_state_responder_non_best:
   b.c1         lb_tss_r_tcp_state_transition
   ori.c1       r2, r2, TCP_PACKET_REORDER
   scwlt        c1, r7, d.u.tcp_session_state_info_d.iflow_tcp_ack_num
-  scwle        c2, r5, d.u.tcp_session_state_info_d.iflow_tcp_ack_num
+  scwlt        c2, r5, d.u.tcp_session_state_info_d.iflow_tcp_ack_num
   setcf        c1, [c1 & c2]
   b.c1         lb_tss_r_tcp_session_update
   ori.c1       r2, r2, TCP_FULL_REXMIT
@@ -471,7 +483,8 @@ lb_tss_r_6:
   tblwr.c1     d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, 1
   seq          c1, k.tcp_option_mss_valid, 1
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_mss, k.tcp_option_mss_value
-  tblwr        d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
+  add          r1, r5, 1 // tcp_seq_num_hi + 1
+  tblwr        d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r1
   tblwr        d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_ackNo
   b            lb_tss_r_exit
   tblwr        d.u.tcp_session_state_info_d.rflow_tcp_win_sz, k.tcp_window
@@ -518,8 +531,9 @@ lb_tss_r_init_2_1:
   tblwr.c1     d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, 1
   seq          c1, k.tcp_option_mss_valid, 1
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_mss, k.tcp_option_mss_value
+  add          r1, r5, 1 // tcp_seq_num_hi + 1
   b            lb_tss_r_exit
-  tblwr        d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
+  tblwr        d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r1
 
 lb_tss_r_init_3:
   ori          r2, r2, TCP_INVALID_RESPONDER_FIRST_PKT
@@ -560,8 +574,9 @@ lb_tss_r_init_3:
   tblwr.c1     d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, 1
   seq          c1, k.tcp_option_mss_valid, 1
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_mss, k.tcp_option_mss_value
+  add          r1, r5, 1 // tcp_seq_num_hi + 1
   b            lb_tss_r_exit
-  tblwr        d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
+  tblwr        d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r1
 
   .brcase      FLOW_STATE_TCP_SYN_ACK_RCVD
   b            lb_tss_r_exit
@@ -585,7 +600,7 @@ lb_tss_r_init_3:
   nop
 
   .brcase      FLOW_STATE_FIN_RCVD
-  scwlt        c1, d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
+  scwle        c1, d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
   b.!c1        lb_tss_r_tcp_session_update
   ori.c1       r2, r2, TCP_DATA_AFTER_FIN
   phvwr        p.control_metadata_drop_reason[DROP_TCP_DATA_AFTER_FIN], 1
@@ -593,7 +608,7 @@ lb_tss_r_init_3:
   phvwr        p.capri_intrinsic_drop, 1
 
   .brcase      FLOW_STATE_BIDIR_FIN_RCVD
-  scwlt        c1, d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
+  scwle        c1, d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
   b.!c1        lb_tss_r_tcp_session_update
   ori.c1       r2, r2, TCP_DATA_AFTER_FIN
   phvwr        p.control_metadata_drop_reason[DROP_TCP_DATA_AFTER_FIN], 1
@@ -614,8 +629,9 @@ lb_tss_r_tcp_session_update:
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_ackNo
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_win_sz, k.tcp_window
   phvwr        p.tcp_seqNo, r7
-  scwlt       c1, d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
-  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
+  scwle        c1, d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
+  add          r1, r5, 1 // tcp_seq_num_hi + 1
+  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r1
 
 lb_tss_r_exit:
   phvwrm.e     p.l4_metadata_exceptions_seen, r2, 0xffff

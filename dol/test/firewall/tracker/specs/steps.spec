@@ -25,6 +25,14 @@ steps:
             flags   : syn
 
     - step:
+        id          : IFLOW_SYN_RETRANSMIT
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        advance     : False
+        fields      :
+            flags   : syn
+            seq     : callback://firewall/alu/Sub/val=1
+
+    - step:
         id          : IFLOW_SYN_WS
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
@@ -113,7 +121,7 @@ steps:
             flags   : syn,ack
             options :
                 timestamp       : 0x23456789
-                nop             : none
+                nop             : 0
 
     - step:
         id          : IFLOW_ACK
@@ -344,6 +352,24 @@ steps:
             flags   : ack
 
     - step:
+        id          : IFLOW_DATA_RCV_NEXT_MINUS_1_DROP
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 1000
+        permit      : false
+        fields      :
+            flags   : ack
+            seq     : callback://firewall/alu/Sub/val=1
+
+    - step:
+        id          : RFLOW_DATA_RCV_NEXT_MINUS_1_DROP
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 1000
+        permit      : false
+        fields      :
+            flags   : ack
+            seq     : callback://firewall/alu/Sub/val=1
+
+    - step:
         id          : IFLOW_ZERO_DATA_RCV_NEXT_MINUS_1
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 0
@@ -390,6 +416,24 @@ steps:
         id          : RFLOW_ZERO_DATA_RCV_NEXT_PLUS_1
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         payloadsize : 0
+        permit      : False
+        fields      :
+            flags   : ack
+            seq     : callback://firewall/alu/Add/val=1
+
+    - step:
+        id          : IFLOW_DATA_RCV_NEXT_PLUS_1_DROP
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 1000
+        permit      : False
+        fields      :
+            flags   : ack
+            seq     : callback://firewall/alu/Add/val=1
+
+    - step:
+        id          : RFLOW_DATA_RCV_NEXT_PLUS_1_DROP
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 1000
         permit      : False
         fields      :
             flags   : ack

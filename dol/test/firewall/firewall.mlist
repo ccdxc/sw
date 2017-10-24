@@ -22,6 +22,19 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
 
     - module:
+        name    : CONN_SETUP_SYN_RETRANSMIT
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_RETRANSMIT
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+
+    - module:
         name    : CONN_SETUP_IFLOW_WS_RFLOW_NO_WS
         tracker : True
         args    :
@@ -108,7 +121,6 @@ modules:
     - module:
         name    : CONN_SETUP_IFLOW_TS_RFLOW_NO_TS
         tracker : True
-        ignore  : True
         args    :
             connspec: ref://trackerstore/connections/id=WINDOW_SCALE
         iterate :
@@ -121,7 +133,6 @@ modules:
     - module:
         name    : CONN_SETUP_IFLOW_TS_RFLOW_TS
         tracker : True
-        ignore  : True
         args    :
             connspec: ref://trackerstore/connections/id=WINDOW_SCALE
         iterate :
@@ -134,7 +145,6 @@ modules:
     - module:
         name    : CONN_SETUP_IFLOW_NO_TS_RFLOW_TS
         tracker : True
-        ignore  : True
         args    :
             connspec: ref://trackerstore/connections/id=WINDOW_SCALE
         iterate :
@@ -803,7 +813,55 @@ modules:
 
     # TCP Data Len != 0, rcvr_win_sz = 0, send packet
     - module:
-        name    : INIT_TDL_NZ_W_0
+        name    : INIT_TDL_NZ_W_0_RCV_NXT_MINUS_1
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # we need to send some iflow data so that when
+            # rflow data with win zero is sent it will advance
+            # the ack, otherwise we won't update the new window
+            # of zero in HW.
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            # Send updated window from Responder side
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_WIN_ZERO
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_RCV_NEXT_MINUS_1_DROP
+
+    # TCP Data Len != 0, rcvr_win_sz = 0, send packet
+    - module:
+        name    : RES_TDL_NZ_W_0_RCV_NXT_MINUS_1
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # we need to send some rflow data so that when
+            # iflow data with win zero is sent it will advance
+            # the ack, otherwise we won't update the new window
+            # of zero in HW.
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Send updated window from Responder side
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_WIN_ZERO
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_RCV_NEXT_MINUS_1_DROP
+
+    # TCP Data Len != 0, rcvr_win_sz = 0, send packet
+    - module:
+        name    : INIT_TDL_NZ_W_0_RCV_NXT
         tracker : True
         args    :
             connspec: ref://trackerstore/connections/id=DEFAULT
@@ -827,7 +885,7 @@ modules:
 
     # TCP Data Len != 0, rcvr_win_sz = 0, send packet
     - module:
-        name    : RES_TDL_NZ_W_0
+        name    : RES_TDL_NZ_W_0_RCV_NXT
         tracker : True
         args    :
             connspec: ref://trackerstore/connections/id=DEFAULT
@@ -848,6 +906,54 @@ modules:
             # Send updated window from Responder side
             - step  : ref://trackerstore/steps/id=IFLOW_DATA_WIN_ZERO
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+
+    # TCP Data Len != 0, rcvr_win_sz = 0, send packet
+    - module:
+        name    : INIT_TDL_NZ_W_0_RCV_NXT_PLUS_1
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # we need to send some iflow data so that when
+            # rflow data with win zero is sent it will advance
+            # the ack, otherwise we won't update the new window
+            # of zero in HW.
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            # Send updated window from Responder side
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_WIN_ZERO
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_RCV_NEXT_PLUS_1_DROP
+
+    # TCP Data Len != 0, rcvr_win_sz = 0, send packet
+    - module:
+        name    : RES_TDL_NZ_W_0_RCV_NXT_PLUS_1
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # we need to send some rflow data so that when
+            # iflow data with win zero is sent it will advance
+            # the ack, otherwise we won't update the new window
+            # of zero in HW.
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Send updated window from Responder side
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_WIN_ZERO
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_RCV_NEXT_PLUS_1_DROP
 
 
     # Test targetting state machine trasnsition related code.
