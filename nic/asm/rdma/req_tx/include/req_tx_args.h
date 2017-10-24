@@ -49,12 +49,11 @@ struct req_tx_wqe_to_sge_info_t {
 struct req_tx_sge_to_lkey_info_t {
     sge_va                        : 64;
     key_id                        : 8;
-    log_page_size                 : 5;
     sge_bytes                     : 16;
     dma_cmd_start_index           : 8;
     sge_index                     : 8;
     dma_cmd_eop                   : 1;
-    pad                           : 50; 
+    pad                           : 55; 
 };
 
 struct req_tx_lkey_to_ptseg_info_t {

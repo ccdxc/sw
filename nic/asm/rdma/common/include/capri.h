@@ -168,6 +168,12 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_SET_TABLE_3_VALID(_vld) \
     phvwri   p.common.app_header_table3_valid, _vld;
     
+#define CAPRI_SET_TABLE_0_1_VALID(_vld0, _vld1) \
+    phvwri   p.{common.app_header_table0_valid...common.app_header_table1_valid}, ((_vld0 << 1) | (_vld1));
+
+#define CAPRI_SET_TABLE_2_3_VALID(_vld2, _vld3) \
+    phvwri   p.{common.app_header_table2_valid...common.app_header_table3_valid}, ((_vld2 << 1) | (_vld3));
+
 #define CAPRI_SET_TABLE_0_VALID_C(_c, _vld) \
     phvwri._c    p.common.app_header_table0_valid, _vld;
 #define CAPRI_SET_TABLE_1_VALID_C(_c, _vld) \
@@ -275,22 +281,34 @@ _next:;
         CAPRI_SET_TABLE_3_VALID(1);  \
     .brend; \
 _next2:;
-    
+     
+#define CAPRI_GET_TABLE_0_K_NO_VALID(_phv_name, _k_base_r) \
+    add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te0_phv_table_addr);
+
+#define CAPRI_GET_TABLE_1_K_NO_VALID(_phv_name, _k_base_r) \
+    add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te1_phv_table_addr);
+
+#define CAPRI_GET_TABLE_2_K_NO_VALID(_phv_name, _k_base_r) \
+    add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te2_phv_table_addr);
+
+#define CAPRI_GET_TABLE_3_K_NO_VALID(_phv_name, _k_base_r) \
+    add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te3_phv_table_addr);
+   
 #define CAPRI_GET_TABLE_0_K(_phv_name, _k_base_r) \
-    add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te0_phv_table_addr); \
+    CAPRI_GET_TABLE_0_K_NO_VALID(_phv_name, _k_base_r) \
     CAPRI_SET_TABLE_0_VALID(1); 
 
 #define CAPRI_GET_TABLE_1_K(_phv_name, _k_base_r) \
-    add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te1_phv_table_addr); \
-    CAPRI_SET_TABLE_1_VALID(1);
+    CAPRI_GET_TABLE_1_K_NO_VALID(_phv_name, _k_base_r) \
+    CAPRI_SET_TABLE_1_VALID(1); 
 
 #define CAPRI_GET_TABLE_2_K(_phv_name, _k_base_r) \
-    add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te2_phv_table_addr); \
-    CAPRI_SET_TABLE_2_VALID(1);
+    CAPRI_GET_TABLE_2_K_NO_VALID(_phv_name, _k_base_r) \
+    CAPRI_SET_TABLE_2_VALID(1); 
 
 #define CAPRI_GET_TABLE_3_K(_phv_name, _k_base_r) \
-    add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te3_phv_table_addr); \
-    CAPRI_SET_TABLE_3_VALID(1);
+    CAPRI_GET_TABLE_3_K_NO_VALID(_phv_name, _k_base_r) \
+    CAPRI_SET_TABLE_3_VALID(1); 
 
 #define CAPRI_GET_TABLE_0_OR_1_K(_phv_name, _k_base_r, _cf) \
     cmov    _k_base_r, _cf, offsetof(struct _phv_name, common.common_te0_phv_table_addr), offsetof(struct _phv_name, common.common_te1_phv_table_addr); \

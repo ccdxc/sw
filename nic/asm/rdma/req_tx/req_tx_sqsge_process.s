@@ -61,7 +61,6 @@ sge_loop:
     add            r5, r5, k.args.dma_cmd_start_index
     CAPRI_SET_FIELD(r7, INFO_OUT1_T, dma_cmd_start_index, r5)
 
-    CAPRI_SET_FIELD(r7, INFO_OUT1_T, log_page_size, LOG_PAGE_SIZE) // TODO page_size ???
     // To start with, set dma_cmd_eop to 0
     //CAPRI_SET_FIELD(r7, INFO_OUT1_T, dma_cmd_eop, 0)
 
@@ -195,6 +194,7 @@ sge_loop:
     //CAPRI_SET_FIELD(r7, INFO_OUT3_T, release_cb1_busy, 0)
     // rest of the fields are initialized to default
 
+#if 0 //moved this piece code to previous stage sqwqe process
     SQCB1_ADDR_GET(r1)
     CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
@@ -204,6 +204,9 @@ sge_loop:
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+#endif
+    //only set the valid bits here
+    CAPRI_SET_TABLE_2_3_VALID(1, 1)
 
     nop.e
     nop

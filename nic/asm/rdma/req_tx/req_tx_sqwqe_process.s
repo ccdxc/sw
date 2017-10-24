@@ -102,6 +102,17 @@ check_inline_data:
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r3)
 
+    #doing these steps to aid sqsge process next stage
+    SQCB1_ADDR_GET(r1)
+    CAPRI_GET_TABLE_2_K_NO_VALID(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+
+    SQCB0_ADDR_GET(r1)
+    CAPRI_GET_TABLE_3_K_NO_VALID(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+
     nop.e
     nop
 
@@ -144,8 +155,9 @@ read:
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     SQCB0_ADDR_GET(r2)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
-    CAPRI_SET_TABLE_0_VALID(0);     
-    CAPRI_SET_TABLE_1_VALID(0);     
+    //CAPRI_SET_TABLE_0_VALID(0);     
+    //CAPRI_SET_TABLE_1_VALID(0);     
+    CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e
     nop
@@ -190,8 +202,9 @@ atomic:
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     SQCB0_ADDR_GET(r2)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
-    CAPRI_SET_TABLE_0_VALID(0);     
-    CAPRI_SET_TABLE_1_VALID(0);     
+    //CAPRI_SET_TABLE_0_VALID(0);     
+    //CAPRI_SET_TABLE_1_VALID(0);     
+    CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e
     nop
@@ -233,8 +246,9 @@ inline_data:
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     SQCB0_ADDR_GET(r2)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
-    CAPRI_SET_TABLE_0_VALID(0);     
-    CAPRI_SET_TABLE_1_VALID(0);     
+    //CAPRI_SET_TABLE_0_VALID(0);     
+    //CAPRI_SET_TABLE_1_VALID(0);     
+    CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e
     nop
