@@ -2,6 +2,7 @@
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/p4/nw/include/defines.h"
+#include "app_redir.hpp"
 
 namespace hal {
 namespace proxy {
@@ -9,7 +10,7 @@ namespace proxy {
 hal::pd::cpupkt_ctxt_t* app_chain_ctx = NULL;
 
 static inline hal_ret_t
-app_redir_init(void)
+app_redir_init(app_redir_ctx_t& redir_ctx)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -23,8 +24,11 @@ app_redir_init(void)
     return ret;
 }
 
-static inline hal_ret_t
-app_redir_pkt_send(fte::ctx_t& ctx)
+/*
+ * Exported application packet send function
+ */
+hal_ret_t
+app_redir_pkt_send(app_redir_ctx_t *redir_ctx)
 {
     uint8_t                         *pkt;
     const fte::cpu_rxhdr_t          *cpu_rxhdr;
@@ -37,30 +41,34 @@ app_redir_pkt_send(fte::ctx_t& ctx)
      * Register current ctx chain queue ID with cpupkt API
      * for sending packet.
      */
-    cpu_rxhdr = ctx.cpu_rxhdr();
+    cpu_rxhdr = redir_ctx->fte_ctx.cpu_rxhdr();
     ret = hal::pd::cpupkt_register_tx_queue(app_chain_ctx, 
-                                            types::WRING_TYPE_APP_REDIR_RAWC,
+                                            redir_ctx->chain_wring_type,
                                             cpu_rxhdr->qid);
     if (ret == HAL_RET_OK) {
-        pkt = ctx.pkt();
-        pkt_len = ctx.pkt_len();
         memset(&cpu_header, 0, sizeof(cpu_header)); 
         memset(&p4_header, 0, sizeof(p4_header)); 
+        cpu_header.flags = redir_ctx->flags;
         cpu_header.src_lif = cpu_rxhdr->src_lif;
         p4_header.flags |= P4PLUS_TO_P4_FLAGS_LKP_INST;
 
+        /*
+         * Send packet without app redirect headers
+         */
+        pkt = redir_ctx->fte_ctx.pkt() + redir_ctx->hdr_len_total;
+        pkt_len = redir_ctx->fte_ctx.pkt_len() - redir_ctx->hdr_len_total;
         HAL_TRACE_DEBUG("{} pkt_len {} src_lif {}", __FUNCTION__,
                         pkt_len, cpu_header.src_lif);
 
         ret = hal::pd::cpupkt_send(app_chain_ctx,
-                                   types::WRING_TYPE_APP_REDIR_RAWC,
+                                   redir_ctx->chain_wring_type,
                                    cpu_rxhdr->qid,
                                    &cpu_header,
                                    &p4_header,
                                    pkt,
                                    pkt_len,
                                    SERVICE_LIF_APP_REDIR,
-                                   APP_REDIR_RAWC_QTYPE,
+                                   redir_ctx->chain_qtype,
                                    cpu_rxhdr->qid,
                                    0);
     }
@@ -68,15 +76,127 @@ app_redir_pkt_send(fte::ctx_t& ctx)
     return ret;
 }
 
+/*
+ * Validate Pensando app header in redirected packet.
+ */
 static inline hal_ret_t
-app_redir_flow_fwding_update(fte::ctx_t&ctx,
+app_redir_app_hdr_validate(app_redir_ctx_t& redir_ctx)
+{
+    pen_app_redir_header_v1_full_t      *app_hdr;
+    const fte::cpu_rxhdr_t              *cpu_rxhdr;
+    size_t                              pkt_len;
+    size_t                              hdr_len;
+    uint16_t                            h_proto;
+    hal_ret_t                           ret = HAL_RET_OK;
+
+    pkt_len = redir_ctx.fte_ctx.pkt_len();
+    if (pkt_len < (PEN_APP_REDIR_HEADER_SIZE +
+                   PEN_APP_REDIR_VERSION_HEADER_SIZE)) {
+        HAL_TRACE_ERR("{} pkt_len {} too small", __FUNCTION__, pkt_len);
+        goto done;
+    }
+
+    cpu_rxhdr = redir_ctx.fte_ctx.cpu_rxhdr();
+    app_hdr = (pen_app_redir_header_v1_full_t *)redir_ctx.fte_ctx.pkt();
+    h_proto = ntohs(app_hdr->app.h_proto);
+    hdr_len = ntohs(app_hdr->ver.hdr_len);
+    HAL_TRACE_DEBUG("{} pkt_len {} h_proto {:#x} hdr_len {} format {}",
+                    __FUNCTION__, pkt_len, h_proto, hdr_len, app_hdr->ver.format);
+    if (h_proto != PEN_APP_REDIR_ETHERTYPE) {
+        HAL_TRACE_ERR("{} unexpected h_proto {:#x}", __FUNCTION__, h_proto);
+        ret = HAL_RET_APP_REDIR_HDR_ERR;
+        goto done;
+    }
+
+    switch (app_hdr->ver.format) {
+
+    case PEN_RAW_REDIR_V1_FORMAT:
+
+        /*
+         * Raw vrf not accessible from P4+ so have to set it here
+         */
+        redir_ctx.flags = ntohs(app_hdr->raw.flags);
+        app_hdr->raw.vrf = cpu_rxhdr->lkp_vrf;
+        HAL_TRACE_DEBUG("{} flow_id {:#x} flags {:#x} vrf {}", __FUNCTION__,
+                        ntohl(app_hdr->raw.flow_id), redir_ctx.flags,
+                        app_hdr->raw.vrf);
+        if (hdr_len != (PEN_APP_REDIR_VERSION_HEADER_SIZE +
+                        PEN_RAW_REDIR_HEADER_V1_SIZE)) {
+            HAL_TRACE_ERR("{} format {} invalid hdr_len {}", __FUNCTION__,
+                          app_hdr->ver.format, hdr_len);
+            ret = HAL_RET_APP_REDIR_HDR_LEN_ERR;
+            goto done;
+        }
+
+        redir_ctx.chain_qtype = APP_REDIR_RAWC_QTYPE;
+        redir_ctx.chain_wring_type = types::WRING_TYPE_APP_REDIR_RAWC;
+        break;
+
+    case PEN_PROXY_REDIR_V1_FORMAT:
+        redir_ctx.flags = ntohs(app_hdr->proxy.flags);
+        HAL_TRACE_DEBUG("{} flow_id {:#x} flags {:#x} vrf {}", __FUNCTION__,
+                        ntohl(app_hdr->proxy.flow_id), redir_ctx.flags,
+                        app_hdr->proxy.vrf);
+        if (hdr_len != (PEN_APP_REDIR_VERSION_HEADER_SIZE +
+                        PEN_PROXY_REDIR_HEADER_V1_SIZE)) {
+            HAL_TRACE_ERR("{} format {} invalid hdr_len {}", __FUNCTION__,
+                          app_hdr->ver.format, hdr_len);
+            ret = HAL_RET_APP_REDIR_HDR_LEN_ERR;
+            goto done;
+        }
+
+        redir_ctx.chain_qtype = APP_REDIR_PROXYC_QTYPE;
+        redir_ctx.chain_wring_type =  types::WRING_TYPE_APP_REDIR_PROXYC;
+        break;
+
+    default:
+        HAL_TRACE_ERR("{} unknown format {}", __FUNCTION__,
+                      app_hdr->ver.format);
+        ret = HAL_RET_APP_REDIR_FORMAT_UNKNOWN;
+        goto done;
+    }
+
+    redir_ctx.hdr_len_total = hdr_len + PEN_APP_REDIR_HEADER_SIZE;
+
+done:    
+    return ret;
+}
+
+/*
+ * Forward redirected packet to application or simply loop it back (DOL case).
+ */
+static inline hal_ret_t
+app_redir_pkt_fwd(app_redir_ctx_t& redir_ctx)
+{
+    hal_ret_t       ret;
+
+    ret = app_redir_app_hdr_validate(redir_ctx);
+    if (ret == HAL_RET_OK) {
+
+        if (redir_ctx.flags & PEN_APP_REDIR_PIPELINE_LOOPBK_EN) {
+            ret = app_redir_pkt_send(&redir_ctx);
+
+        } else {
+
+            /*
+             * Forward packet to application...
+             */
+        }
+    }
+
+    return ret;
+}
+
+
+static inline hal_ret_t
+app_redir_flow_fwding_update(app_redir_ctx_t& redir_ctx,
                              flow_key_t &flow_key,
                              proxy_flow_info_t* pfi)
 {
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
 
     HAL_TRACE_DEBUG("app_redir flow forwarding role: {} qid1: {} qid2: {}",
-                    ctx.role(), pfi->qid1, pfi->qid2);
+                    redir_ctx.fte_ctx.role(), pfi->qid1, pfi->qid2);
     HAL_TRACE_DEBUG("app_redir updating lport = {} for sport = {} dport = {}",
                     pfi->proxy->meta->lif_info[0].lport_id,
                     flow_key.sport, flow_key.dport);
@@ -84,21 +204,22 @@ app_redir_flow_fwding_update(fte::ctx_t&ctx,
     // update fwding info
     flowupd.fwding.lport = pfi->proxy->meta->lif_info[0].lport_id;
     flowupd.fwding.qid_en = true;
-    flowupd.fwding.qtype = RAWR_REDIR_QTYPE;
-    flowupd.fwding.qid = ctx.role() ==  hal::FLOW_ROLE_INITIATOR ?
+    flowupd.fwding.qtype = APP_REDIR_RAWR_QTYPE;
+    flowupd.fwding.qid = redir_ctx.fte_ctx.role() ==  hal::FLOW_ROLE_INITIATOR ?
                          pfi->qid1 : pfi->qid2;
-    return ctx.update_flow(flowupd);
+    return redir_ctx.fte_ctx.update_flow(flowupd);
 }
 
 
 fte::pipeline_action_t
 app_redir_miss_exec(fte::ctx_t& ctx)
 {
+    app_redir_ctx_t         redir_ctx(ctx);
     proxy_flow_info_t       *pfi;
     hal_ret_t               ret = HAL_RET_OK;
     flow_key_t              flow_key = ctx.key();
 
-    ret = app_redir_init();
+    ret = app_redir_init(redir_ctx);
     if (ret != HAL_RET_OK) {
         goto error;
     }
@@ -118,7 +239,7 @@ app_redir_miss_exec(fte::ctx_t& ctx)
         /*
          * Update flow
          */
-        ret = app_redir_flow_fwding_update(ctx, flow_key, pfi);
+        ret = app_redir_flow_fwding_update(redir_ctx, flow_key, pfi);
         if (ret != HAL_RET_OK) {
             goto error;
         }
@@ -136,14 +257,15 @@ error:
 fte::pipeline_action_t
 app_redir_exec(fte::ctx_t& ctx)
 {
-    hal_ret_t   ret;
+    app_redir_ctx_t     redir_ctx(ctx);
+    hal_ret_t           ret;
 
-    ret = app_redir_init();
+    ret = app_redir_init(redir_ctx);
     if (ret != HAL_RET_OK) {
         goto error;
     }
 
-    ret = app_redir_pkt_send(ctx);
+    ret = app_redir_pkt_fwd(redir_ctx);
     if (ret != HAL_RET_OK) {
         goto error;
     }

@@ -99,6 +99,8 @@
     modify_field(common_global_scratch.chain_qtype, common_phv.chain_qtype); \
     modify_field(common_global_scratch.chain_qid, common_phv.chain_qid); \
     modify_field(common_global_scratch.desc_valid_bit_req, common_phv.desc_valid_bit_req); \
+    modify_field(common_global_scratch.redir_pipeline_lpbk_enable, common_phv.redir_pipeline_lpbk_enable); \
+    modify_field(common_global_scratch.redir_span_instance, common_phv.redir_span_instance); \
 
 
 
@@ -160,6 +162,7 @@ header_type rawrcb_t {
         
         chain_txq_doorbell_no_sched     : 8;    // set to update DB but skip scheduler bit
         desc_valid_bit_req              : 8;
+        redir_pipeline_lpbk_enable      : 8;    // redir pipeline loopback indicator
     }
 }
 
@@ -248,6 +251,8 @@ header_type common_global_phv_t {
         chain_ring_size_shift           : 5;
         chain_entry_size_shift          : 5;
         chain_ring_index_select         : 3;
+        redir_pipeline_lpbk_enable      : 1;
+        redir_span_instance             : 1;
     }
 }
 
@@ -257,15 +262,15 @@ header_type dma_phv_pad_448_t {
     }    
 }
 
-header_type dma_phv_pad_384_t {
+header_type dma_phv_pad_64_t {
     fields {
-        dma_pad                         : 384;
+        dma_pad                         : 64;
     }    
 }
     
-header_type dma_phv_pad_16_t {
+header_type dma_phv_pad_256_t {
     fields {
-        dma_pad                         : 16;    
+        dma_pad                         : 256;
     }    
 }
 
@@ -362,21 +367,32 @@ metadata to_stage_7_phv_t               to_s7_scratch;
  * PHV following k (for app DMA etc.)
  */
 @pragma dont_trim
+metadata pen_app_redir_header_t         pen_app_redir_hdr;
+
+@pragma dont_trim
+metadata pen_app_redir_version_header_t pen_app_redir_version_hdr;
+
+@pragma dont_trim
+metadata pen_raw_redir_header_v1_t      pen_raw_redir_hdr_v1;
+
+@pragma dont_trim
 metadata ring_entry_t                   ring_entry; 
 
 @pragma dont_trim
 metadata doorbell_data_raw_t            chain_txq_db_data; 
 
 @pragma dont_trim
-metadata dma_phv_pad_384_t              dma_phv_pad_384_t;
+metadata dma_phv_pad_64_t               dma_phv_pad_64;
 
 @pragma dont_trim
 metadata pkt_descr_t                    aol; 
 
 @pragma dont_trim
-metadata dma_cmd_pkt2mem_t              dma_pkt0;
+metadata dma_cmd_pkt2mem_t              dma_cpu_pkt;
 @pragma dont_trim
-metadata dma_cmd_pkt2mem_t              dma_pkt1;
+metadata dma_cmd_phv2mem_t              dma_meta;
+@pragma dont_trim
+metadata dma_cmd_pkt2mem_t              dma_pkt_content;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t              dma_desc;
 @pragma dont_trim
@@ -385,7 +401,7 @@ metadata dma_cmd_phv2mem_t              dma_chain;
 metadata dma_cmd_phv2mem_t              dma_doorbell;
 
 @pragma dont_trim
-metadata dma_phv_pad_16_t               dma_pad_16;
+metadata dma_phv_pad_256_t              dma_pad_256;
 
 
 /*
@@ -408,12 +424,14 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
                      chain_txq_lif, chain_txq_qtype, chain_txq_qid,
                      chain_txq_ring_index_select,
                      chain_txq_doorbell_no_sched, 
-                     desc_valid_bit_req) {
+                     desc_valid_bit_req,
+                     redir_pipeline_lpbk_enable) {
     // k + i for stage 0
 
     // from intrinsic
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
+    modify_field(p4_intr_global_scratch.tm_instance_type, p4_intr_global.tm_instance_type);
     modify_field(p4_rxdma_intr_scratch.qid, p4_rxdma_intr.qid);
     modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
     modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
@@ -460,6 +478,7 @@ action rawr_rx_start(rsvd, cosA, cosB, cos_sel,
     modify_field(rawrcb_d.chain_txq_ring_index_select, chain_txq_ring_index_select);
     modify_field(rawrcb_d.chain_txq_doorbell_no_sched, chain_txq_doorbell_no_sched);
     modify_field(rawrcb_d.desc_valid_bit_req, desc_valid_bit_req);
+    modify_field(rawrcb_d.redir_pipeline_lpbk_enable, redir_pipeline_lpbk_enable);
 }
 
 /*

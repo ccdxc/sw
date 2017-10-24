@@ -11,14 +11,7 @@ namespace hal {
 namespace pd {
 
 #define HAL_MAX_HW_RAWRCBS                        4
-
-#define P4PD_RAWRCB_STAGE_ENTRY_OFFSET            64
 #define P4PD_HBM_RAWR_CB_ENTRY_SIZE               128
-
-typedef enum rawrcb_hwid_order_ {
-    P4PD_HWID_RAWR_TX_STAGE0 = 0,
-    P4PD_HWID_RAWR_RX_STAGE0,
-} rawrcb_hwid_order_t;
 
 typedef uint64_t    rawrcb_hw_id_t;
 

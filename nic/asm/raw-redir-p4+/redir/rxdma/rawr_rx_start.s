@@ -31,7 +31,13 @@ rawr_s0_rx_start:
     
     /*
      * qid is our flow ID context:
-     *
+     */
+    add         r3, r0, CAPRI_RXDMA_INTRINSIC_QID
+    phvwr       p.pen_raw_redir_hdr_v1_flow_id, r3
+    seq         c1, CAPRI_INTRINSIC_TM_INSTANCE_TYPE, TM_INSTANCE_TYPE_SPAN
+    phvwr.c1    p.common_phv_redir_span_instance, TRUE
+
+    /*
      * For a given flow, one of 2 types of redirection applies:
      *   1) Redirect to ARM CPU RxQ, or
      *   2) Redirect to a P4+ TxQ
@@ -61,14 +67,17 @@ rawr_s0_rx_start:
     
     phvwr       p.common_phv_chain_doorbell_no_sched, d.u.rawr_rx_start_d.chain_txq_doorbell_no_sched
     phvwr       p.common_phv_desc_valid_bit_req, d.u.rawr_rx_start_d.desc_valid_bit_req
+    phvwr       p.common_phv_redir_pipeline_lpbk_enable, d.u.rawr_rx_start_d.redir_pipeline_lpbk_enable
     
     /*
      * Packet_len field contains
      *   sizeof(p4_to_p4plus_cpu_pkt_t) + complete packet length
+     * to which we will add an app header of size P4PLUS_RAW_REDIR_HDR_SZ
      */
     add         r3, r0, k.rawr_app_header_packet_len
     ble.s       r3, r0, packet_len_err_discard
-    phvwr       p.common_phv_packet_len, r3             // delay slot
+    addi        r3, r3, P4PLUS_RAW_REDIR_HDR_SZ         // delay slot
+    phvwr       p.common_phv_packet_len, r3
 
     /*
      * Allocate either one meta page, or one packet page, or both.

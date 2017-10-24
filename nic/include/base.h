@@ -209,6 +209,9 @@ do {                                                       \
     ENTRY(HAL_RET_SG_NOT_FOUND,               51, "seg id not found")          \
     ENTRY(HAL_RET_NOOP,                       52, "Hal No operation")          \
     ENTRY(HAL_RET_RAWC_CB_NOT_FOUND,          53, "Raw redirect CB not found") \
+    ENTRY(HAL_RET_APP_REDIR_FORMAT_UNKNOWN,   54, "App redir hdr fmt unknown") \
+    ENTRY(HAL_RET_APP_REDIR_HDR_LEN_ERR,      55, "App redir hdr_len error")   \
+    ENTRY(HAL_RET_APP_REDIR_HDR_ERR,          56, "App redir hdr error")       \
                                                                                \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

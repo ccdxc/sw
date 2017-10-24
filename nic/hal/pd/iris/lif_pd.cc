@@ -6,6 +6,7 @@
 #include "nic/include/interface_api.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/p4/nw/include/defines.h"
+#include "nic/hal/src/proxy.hpp"
 
 namespace hal {
 namespace pd {
@@ -347,7 +348,12 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args,
 
     memset(&data, 0, sizeof(data));
 
-    if ((((lif_t *)pd_lif->pi_lif)->lif_id != 1001) && 
+    if (((lif_t *)pd_lif->pi_lif)->lif_id == SERVICE_LIF_APP_REDIR) {
+        tm_oport = TM_PORT_DMA;
+        p4plus_app_id = P4PLUS_APPTYPE_RAW_REDIR;
+        HAL_TRACE_ERR("pd-lif:{}:setting P4PLUS_APPTYPE_RAW_REDIR",
+                      __FUNCTION__);
+    } else if ((((lif_t *)pd_lif->pi_lif)->lif_id != 1001) && 
         (((lif_t *)pd_lif->pi_lif)->lif_id != 1004)) {
         tm_oport = lif_get_port_num((lif_t *)(pd_lif->pi_lif));
         tm_oport = TM_PORT_DMA;
@@ -374,18 +380,6 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args,
     om_tmoport.dst_lif = pd_lif->hw_lif_id;
     om_tmoport.vlan_strip = pd_lif_get_vlan_strip_en((lif_t *)pd_lif->pi_lif, args);
 
-
-    /*
-     * Raw Redirect (for L7 phase 1) goes to CPU, but through
-     * its own lif.
-     */
-    if (((lif_t *)pd_lif->pi_lif)->lif_id == 1006) {
-        data.actionid = OUTPUT_MAPPING_REDIRECT_TO_CPU_ID;
-        memset(&data.output_mapping_action_u, 0, sizeof(data.output_mapping_action_u));
-        om_cpu.dst_lif = pd_lif->hw_lif_id;
-        om_cpu.egress_mirror_en = 0;
-        om_cpu.tm_oqueue = 0;
-    }
 
     // Program OutputMapping table
     //  - Get tmoport from PI
