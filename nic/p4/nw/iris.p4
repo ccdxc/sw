@@ -20,6 +20,7 @@
 #include "policer.p4"
 #include "replica.p4"
 #include "rewrite.p4"
+#include "checksum.p4"
 #include "validate.p4"
 #include "input_mapping.p4"
 #include "output_mapping.p4"
@@ -71,7 +72,6 @@ header_type control_metadata_t {
         lkp_flags_egress               : 8;
         vlan_strip                     : 1;
         span_copy                      : 1;
-        lif_filter                     : 5;
         nic_mode                       : 1;
 
         egress_ddos_src_vf_policer_drop   : 1;
@@ -93,6 +93,7 @@ header_type entry_inactive_t {
         ddos_src_vf      : 1;
         ddos_src_dst     : 1;
         ddos_service     : 1;
+        compute_checksum : 1;
     }
 }
 
@@ -306,7 +307,7 @@ control egress {
         process_rewrites();
         process_egress_policer();
         process_ddos_egress();
-        process_copp();
     }
     process_tx_stats();
+    process_checksum_computation();
 }

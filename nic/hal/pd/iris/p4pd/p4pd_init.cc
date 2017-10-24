@@ -469,12 +469,12 @@ p4pd_get_tunnel_decap_copy_inner_tbl_idx (bool inner_udp_valid,
                                           bool inner_ethernet_valid)
 {
     tunnel_decap_copy_inner_key_t key = {0};
-    
+
     key.inner_udp_valid = inner_udp_valid;
     key.inner_ipv4_valid = inner_ipv4_valid;
     key.inner_ipv6_valid = inner_ipv6_valid;
     key.inner_ethernet_valid = inner_ethernet_valid;
-    
+
     uint32_t ret_val = key.val;
     return (ret_val);
 }
@@ -489,7 +489,7 @@ p4pd_tunnel_decap_copy_inner_init (void)
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_DECAP_COPY_INNER);
     HAL_ASSERT(dm != NULL);
-    
+
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, true, false, false);
     data.actionid = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_UDP_ID;
     ret = dm->insert_withid(&data, idx);
@@ -664,13 +664,13 @@ p4pd_get_tunnel_encap_update_inner_tbl_idx (bool ipv6_valid,
                                           bool icmp_valid)
 {
     tunnel_encap_update_inner_key_t key = {0};
-    
+
     key.ipv6_valid = ipv6_valid;
     key.ipv4_valid = ipv4_valid;
     key.udp_valid = udp_valid;
     key.tcp_valid = tcp_valid;
     key.icmp_valid = icmp_valid;
-    
+
     uint32_t ret_val = key.val;
     return (ret_val);
 }
@@ -685,7 +685,7 @@ p4pd_tunnel_encap_update_inner (void)
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_ENCAP_UPDATE_INNER);
     HAL_ASSERT(dm != NULL);
-    
+
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, true, false, false);
     data.actionid = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_UDP_REWRITE_ID;
     ret = dm->insert_withid(&data, idx);
@@ -757,7 +757,7 @@ p4pd_tunnel_encap_update_inner (void)
                       "idx {}, err : {}", idx, ret);
         return ret;
     }
-    
+
     return ret;
 }
 
@@ -973,6 +973,93 @@ p4pd_decode_roce_opcode_init (void)
     return HAL_RET_OK;
 }
 
+typedef struct compute_checksum_table_ {
+    uint16_t ipv4_valid       : 1;
+    uint16_t ipv6_valid       : 1;
+    uint16_t inner_ipv4_valid : 1;
+    uint16_t inner_ipv6_valid : 1;
+    uint16_t tcp_valid        : 1;
+    uint16_t udp_valid        : 1;
+    uint16_t inner_udp_valid  : 1;
+    uint8_t  actionid;
+} compute_checksum_table_t;
+
+compute_checksum_table_t compute_checksum_table[] = {
+    /*****************************************
+     v4, v6, iv4, iv6, tcp, udp, iudp, action
+     *****************************************/
+    { 1,  0,   0,   0,   1,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM1_ID},
+    { 1,  0,   0,   0,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM2_ID},
+    { 1,  0,   0,   1,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM2_ID},
+    { 1,  0,   0,   0,   0,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM3_ID},
+    { 1,  0,   1,   0,   1,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM4_ID},
+    { 1,  0,   1,   0,   0,   0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM5_ID},
+    { 1,  0,   1,   0,   0,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM6_ID},
+    { 1,  0,   1,   0,   1,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM7_ID},
+    { 1,  0,   1,   0,   0,   1,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM8_ID},
+    { 1,  0,   1,   0,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM9_ID},
+    { 1,  0,   0,   1,   1,   0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM10_ID},
+    { 1,  0,   0,   1,   0,   0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM11_ID},
+    { 1,  0,   0,   1,   1,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM12_ID},
+    { 1,  0,   0,   1,   0,   1,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM13_ID},
+    { 0,  1,   0,   0,   1,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM14_ID},
+    { 0,  1,   0,   0,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM15_ID},
+    { 0,  1,   0,   1,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM15_ID},
+    { 0,  1,   1,   0,   1,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM16_ID},
+    { 0,  1,   1,   0,   0,   0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM17_ID},
+    { 0,  1,   1,   0,   0,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM18_ID},
+    { 0,  1,   1,   0,   1,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM19_ID},
+    { 0,  1,   1,   0,   0,   1,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM20_ID},
+    { 0,  1,   1,   0,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM21_ID},
+    { 0,  1,   0,   1,   1,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM22_ID},
+    { 0,  1,   0,   1,   0,   1,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM23_ID},
+    { 0,  1,   0,   1,   1,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM24_ID},
+    { 0,  1,   0,   1,   0,   0,    1, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM25_ID},
+};
+
+static hal_ret_t
+p4pd_compute_checksum_init(void) {
+    uint32_t                        idx;
+    compute_checksum_swkey_t        key;
+    compute_checksum_swkey_mask_t   mask;
+    compute_checksum_actiondata     data;
+    hal_ret_t                       ret;
+    Tcam                            *tcam;
+
+    tcam = g_hal_state_pd->tcam_table(P4TBL_ID_COMPUTE_CHECKSUM);
+    HAL_ASSERT(tcam != NULL);
+
+    memset(&mask, 0xFF, sizeof(mask));
+    for (idx = 0;
+         idx < sizeof(compute_checksum_table)/sizeof(compute_checksum_table_t);
+         idx++) {
+        memset(&key, 0, sizeof(key));
+        memset(&data, 0, sizeof(data));
+
+        // key
+        key.entry_inactive_compute_checksum = 0;
+        key.ipv4_valid = compute_checksum_table[idx].ipv4_valid;
+        key.ipv6_valid = compute_checksum_table[idx].ipv6_valid;
+        key.inner_ipv4_valid = compute_checksum_table[idx].inner_ipv4_valid;
+        key.inner_ipv6_valid = compute_checksum_table[idx].inner_ipv6_valid;
+        key.tcp_valid = compute_checksum_table[idx].tcp_valid;
+        key.udp_valid = compute_checksum_table[idx].udp_valid;
+        key.inner_udp_valid = compute_checksum_table[idx].inner_udp_valid;
+
+        // action
+        data.actionid = compute_checksum_table[idx].actionid;
+
+        // insert into TCAM at idx
+        ret = tcam->insert_withid(&key, &mask, &data, idx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Compute checksum tcam write failure, "
+                          "idx : {}, err : {}", idx, ret);
+            return ret;
+        }
+    }
+    return HAL_RET_OK;
+}
+
 // We need these to be defined by FTE and we need access to those in this function
 // We need changes from P4PLUS side to take non-zero qid. Goli will take care of it.
 #define HAL_FTE_FIN_QID               0
@@ -1084,6 +1171,7 @@ p4pd_table_defaults_init (void)
     HAL_ASSERT(p4pd_decode_roce_opcode_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_p4plus_app_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_mirror_table_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_compute_checksum_init() == HAL_RET_OK);
 
     // initialize all PB/TM tables with default entries, if any
     // Even though this is not really a P4 Table it is very

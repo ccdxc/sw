@@ -141,6 +141,11 @@ table egress_policer_action {
 }
 
 control process_egress_policer {
-    apply(egress_policer);
-    apply(egress_policer_action);
+    if (control_metadata.cpu_copy == TRUE) {
+        apply(copp);
+        apply(copp_action);
+    } else {
+        apply(egress_policer);
+        apply(egress_policer_action);
+    }
 }

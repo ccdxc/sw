@@ -13,28 +13,19 @@ action registered_macs(dst_lport, multicast_en) {
     }
 
     // miss action
-    if ((flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) and
-        ((control_metadata.lif_filter & LIF_FILTER_ALL_MULTICAST) ==
-         LIF_FILTER_ALL_MULTICAST)) {
+    if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
         modify_field(capri_intrinsic.tm_replicate_en, TRUE);
         modify_field(capri_intrinsic.tm_replicate_ptr,
                      control_metadata.flow_miss_idx);
     } else {
-        if ((flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST) and
-            ((control_metadata.lif_filter & LIF_FILTER_BROADCAST) ==
-             LIF_FILTER_BROADCAST)) {
+        if (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST) {
             modify_field(capri_intrinsic.tm_replicate_en, TRUE);
             add(capri_intrinsic.tm_replicate_ptr,
                 control_metadata.flow_miss_idx, 1);
         } else {
-            if ((control_metadata.lif_filter & LIF_FILTER_PROMISCUOUS) ==
-                LIF_FILTER_PROMISCUOUS) {
-                modify_field(capri_intrinsic.tm_replicate_en, TRUE);
-                add(capri_intrinsic.tm_replicate_ptr,
-                    control_metadata.flow_miss_idx, 2);
-            } else {
-                drop_packet();
-            }
+            modify_field(capri_intrinsic.tm_replicate_en, TRUE);
+            add(capri_intrinsic.tm_replicate_ptr,
+                control_metadata.flow_miss_idx, 2);
         }
     }
 }

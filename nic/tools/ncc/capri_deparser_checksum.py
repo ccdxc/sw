@@ -360,7 +360,7 @@ class DeParserCsumObj:
         if self.phdr_only:
             csum_hdr_cfg['csum_vld']['value']=str(0)
         else:
-            csum_hdr_cfg['csum_vld']['value']=str(1)
+            csum_hdr_cfg['csum_vld']['value']=str(0)
         csum_hdr_cfg['csum_unit']   ['value']=str(self.unit)\
                                               if self.unit != -1 else str(0)
         csum_hdr_cfg['csum_profile']['value']=str(self.profile)\

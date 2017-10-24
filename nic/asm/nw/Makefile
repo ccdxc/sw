@@ -16,6 +16,7 @@ SRC_DIR = .
 CAPSIM_BIN = ../../asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
+    $(SRC_DIR)/compute_checksum.asm \
     $(SRC_DIR)/copp_action.asm \
     $(SRC_DIR)/copp.asm \
     $(SRC_DIR)/ddos_service.asm \
@@ -84,15 +85,10 @@ $(OBJ_DIR)/%.bin: %.asm $(DEPS) $(CAPAS_BIN)
 	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $@
 	@#$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
 
-
-
 #$(BIN_FILES): %.bin: %.asm
 #	@echo $@
 #	@mkdir -p $(OBJ_DIR)
 #	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
-
-
-
 
 TEST_FILES := $(patsubst %.asm, %.ctl, $(SRC_FILES))
 TMP_FILES  := $(patsubst %.ctl, %.x, $(TEST_FILES))

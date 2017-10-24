@@ -29,6 +29,7 @@
 #define EGRESS_POLICER_TABLE_SIZE                          2048
 #define MIRROR_SESSION_TABLE_SIZE                          256
 #define P4PLUS_APP_TABLE_SIZE                              256
+#define CHECKSUM_COMPUTE_TABLE_SIZE                        64
 
 #define DDOS_SRC_VF_POLICER_TABLE_SIZE                     1024
 #define DDOS_SERVICE_POLICER_TABLE_SIZE                    1024

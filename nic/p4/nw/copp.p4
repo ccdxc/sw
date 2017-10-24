@@ -74,10 +74,3 @@ table copp_action {
     }
     size : COPP_TABLE_SIZE;
 }
-
-control process_copp {
-    if (control_metadata.cpu_copy == TRUE) {
-        apply(copp);
-        apply(copp_action);
-    }
-}
