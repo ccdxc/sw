@@ -32,7 +32,6 @@ modules:
         name    : IN_ORDER_PKT_NOT_TO_SERQ_V4_DEL_ACK_TIMER
         spec    : one_pkt_ack.testspec
         module  : in_order
-        enable  : False
         args    :
             maxflows : 1
             send_ack : 1
@@ -268,7 +267,6 @@ modules:
         name    : UL_TO_UL_BYPASS_BARCO_DEL_ACK_TIMER
         spec    : uplink_to_uplink_ack.testspec
         module  : pkt_to_p4
-        enable  : False
         args    :
             bypass_barco : 1
             send_ack : 1
@@ -278,7 +276,6 @@ modules:
         name    : UL_TO_UL_BYPASS_BARCO_CANCEL_DEL_ACK_TIMER
         spec    : uplink_to_uplink_cancel_ack.testspec
         module  : pkt_to_p4
-        enable  : False
         args    :
             bypass_barco : 1
             send_ack : 1

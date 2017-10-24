@@ -49,7 +49,7 @@ def GetAckPktAckNum (tc, pkt):
     return tc.pvtdata.flow1_rcv_nxt + tc.packets.Get('PKT1').payloadsize
 
 def GetReverseFlowAckPktSeqNum (tc, pkt):
-    return tc.pvtdata.flow2_snd_nxt
+    return tc.pvtdata.flow2_snd_nxt + tc.packets.Get('PKT1').payloadsize
 
 def GetReverseFlowAckPktAckNum (tc, pkt):
     return tc.pvtdata.flow2_rcv_nxt + tc.packets.Get('PKT2').payloadsize

@@ -97,6 +97,8 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseTrigger(tc):
+    if GlobalOptions.dryrun:
+        return True
     if tc.pvtdata.test_timer:
         timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
         timer.Step(41)
@@ -231,6 +233,8 @@ def TestCaseVerify(tc):
     return True
 
 def TestCaseTeardown(tc):
+    if GlobalOptions.dryrun:
+        return True
     if tc.pvtdata.test_timer:
         timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
         timer.Step(0)
