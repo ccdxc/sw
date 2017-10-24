@@ -17,5 +17,22 @@ void dpi_sv_get_sim_time_ns(char* ts);
 
 
 }
+
+
+#define DPI_SV_SCOPE_BEGIN(X) \
+    svScope _tmp_old_sv_scope = svGetScope(); \
+    svScope _tmp_nxt_sv_scope = svGetScopeFromName(X); \
+    svSetScope(_tmp_nxt_sv_scope);
+
+#define DPI_SV_SCOPE_END \
+    svSetScope(_tmp_old_sv_scope);
+
+#define DPI_SV_TOP_SCOPE_BEGIN \
+    svScope _tmp_old_sv_scope = svGetScope(); \
+
+#define DPI_SV_TOP_SCOPE_END \
+    svSetScope(_tmp_old_sv_scope);
+
+
 #endif //_CSV_INCLUDED_
 #endif //__CAP_COMMON_DPI_HH__
