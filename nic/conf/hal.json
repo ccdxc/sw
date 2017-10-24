@@ -6,7 +6,6 @@
   },
   "sw" : {
     "grpc_port": "50054",
-    "feature_set": "iris",
-    "forwarding_mode": "default"
+    "feature_set": "iris"
   }
 }

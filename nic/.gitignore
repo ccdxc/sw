@@ -24,3 +24,4 @@ dol.log*
 *.cacov
 sample_client.log
 tags
+conf/hal.ini

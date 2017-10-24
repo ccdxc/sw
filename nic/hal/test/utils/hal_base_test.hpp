@@ -10,13 +10,15 @@ hal_initialize()
 {
     char 			cfg_file[] = "hal.json";
 	char 			*cfg_path;
-    std::string     full_path;
+    std::string     full_path, ini_full_path, ini_file = "hal.ini";
     hal::hal_cfg_t  hal_cfg = { 0 };
 
     cfg_path = std::getenv("HAL_CONFIG_PATH");
     if (cfg_path) {
         full_path =  std::string(cfg_path) + "/" + std::string(cfg_file);
         std::cerr << "full path " << full_path << std::endl;
+        ini_full_path = std::string(cfg_path) + "/" + ini_file;
+        std::cerr << "ini file full path " << ini_full_path << std::endl;
     } else {
         full_path = std::string(cfg_file);
     }
@@ -35,6 +37,12 @@ hal_initialize()
         ASSERT_TRUE(0);
     }
     printf("Parsed cfg json file \n");
+
+    // parse the ini
+    if (hal::hal_parse_ini(ini_full_path.c_str(), &hal_cfg) != HAL_RET_OK) {
+        fprintf(stderr, "HAL ini file parsing failed, quitting ...\n");
+        exit(1);
+    }
 
     // initialize HAL
     if (hal::hal_init(&hal_cfg) != HAL_RET_OK) {

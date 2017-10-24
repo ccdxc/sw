@@ -143,7 +143,7 @@ main (int argc, char **argv)
 {
     int              oc;
     char             *cfg_file = NULL, *cfg_path;
-    std::string      full_path;
+    std::string      full_path, ini_full_path, ini_file = "hal.ini";
     hal::hal_cfg_t    hal_cfg = { 0 };
 	struct option longopts[] = {
 	   { "config",  required_argument, NULL, 'c' },
@@ -190,6 +190,8 @@ main (int argc, char **argv)
     if (cfg_path) {
         full_path =  std::string(cfg_path) + "/" + std::string(cfg_file);
         std::cerr << "full path " << full_path << std::endl;
+        ini_full_path = std::string(cfg_path) + "/" + ini_file;
+        std::cerr << "ini file full path " << ini_full_path << std::endl;
     } else {
         full_path = std::string(cfg_file);
     }
@@ -204,6 +206,12 @@ main (int argc, char **argv)
     // parse the config
     if (hal::hal_parse_cfg(full_path.c_str(), &hal_cfg) != HAL_RET_OK) {
         fprintf(stderr, "HAL config file parsing failed, quitting ...\n");
+        exit(1);
+    }
+
+    // parse the ini
+    if (hal::hal_parse_ini(ini_full_path.c_str(), &hal_cfg) != HAL_RET_OK) {
+        fprintf(stderr, "HAL ini file parsing failed, quitting ...\n");
         exit(1);
     }
 

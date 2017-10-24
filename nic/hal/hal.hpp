@@ -44,6 +44,12 @@ extern hal_ret_t hal_parse_cfg(const char *cfgfile __IN__,
                                hal_cfg_t *hal_cfg __OUT__);
 
 //------------------------------------------------------------------------------
+// parse HAL initialization
+//------------------------------------------------------------------------------
+extern hal_ret_t hal_parse_ini(const char *inifile __IN__,
+                               hal_cfg_t *hal_cfg __OUT__);
+
+//------------------------------------------------------------------------------
 // hal initialization main routine
 //------------------------------------------------------------------------------
 extern hal_ret_t hal_init(hal_cfg_t *cfg __IN__);

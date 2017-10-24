@@ -1,5 +1,4 @@
 -I ../../../..
--I ../../../../bazel-genfiles
 -I ../../../hal/svc
 -I ../../../hal/pd
 -I ../../../gen/iris/include

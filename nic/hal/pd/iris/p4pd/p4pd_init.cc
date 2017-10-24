@@ -1,4 +1,5 @@
 #include "nic/include/base.h"
+#include "nic/include/hal_state.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/hal/pd/utils/tcam/tcam.hpp"
@@ -10,6 +11,7 @@
 #include "nic/hal/pd/iris/rw_pd.hpp"
 #include "nic/hal/pd/iris/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/p4pd/p4pd_defaults.hpp"
+#include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 
 using hal::pd::utils::Tcam;
 
@@ -1030,6 +1032,38 @@ capri_repl_pgm_def_entries (void)
 }
 
 hal_ret_t
+p4pd_forwarding_mode_init (void) 
+{
+    return HAL_RET_OK;
+    if (getenv("CAPRI_MOCK_MODE")) {
+        return HAL_RET_OK;
+    }
+    uint64_t val, nic_mode = NIC_MODE_SMART;
+    capri_table_constant_read(P4TBL_ID_INPUT_PROPERTIES, &val);
+    val = be64toh(val);
+    
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        nic_mode = NIC_MODE_CLASSIC;
+    } else {
+        // host-pinned & default
+        nic_mode = NIC_MODE_SMART;
+    }
+
+    if (nic_mode == NIC_MODE_CLASSIC) {
+        val &= (uint64_t)~0x1;
+        HAL_TRACE_DEBUG("{}:setting forwarding mode CLASSIC", __FUNCTION__);
+    } else {
+        val |= (uint64_t)0x1;
+        HAL_TRACE_DEBUG("{}:setting forwarding mode SMART", __FUNCTION__);
+    }
+    val = htobe64(val);
+    capri_table_constant_write(P4TBL_ID_INPUT_PROPERTIES, val);
+
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 p4pd_table_defaults_init (void)
 {
     // initialize all P4 ingress tables with default entries, if any
@@ -1056,6 +1090,9 @@ p4pd_table_defaults_init (void)
     // tightly coupled with our P4 Program and after discussing
     // we put this call here conciously.
     HAL_ASSERT(capri_repl_pgm_def_entries() == HAL_RET_OK);
+
+    // Setting NIC's forwarding mode
+    HAL_ASSERT(p4pd_forwarding_mode_init() == HAL_RET_OK);
     return HAL_RET_OK;
 }
 

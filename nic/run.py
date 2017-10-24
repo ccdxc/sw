@@ -85,7 +85,7 @@ def run_model(args):
         model_cmd.append("+mpu_cov_dump_file=" + dump_file)
         dump_dir= nic_dir + "/coverage/asm_out_all"
         model_cmd.append("+mpu_pc_cov_dump_dir=" + dump_dir)
-    
+
     p = Popen(model_cmd, stdout=log, stderr=log)
     print "* Starting ASIC model pid (" + str(p.pid) + ")"
     print "- Log file: " + model_log + "\n"
@@ -121,10 +121,13 @@ def run_hal(args):
 
     log = open(hal_log, "w")
     jsonfile = 'hal.json'
+    os.system("cp " + nic_dir + "/conf/hal_default.ini " + nic_dir + "/conf/hal.ini");
     if args.hostpin:
-        jsonfile = 'hal_hostpin.json'
+        #jsonfile = 'hal_hostpin.json'
+        os.system("cp " + nic_dir + "/conf/hal_hostpin.ini " + nic_dir + "/conf/hal.ini");
     if args.classic:
-        jsonfile = 'hal_classic.json'
+        #jsonfile = 'hal_classic.json'
+        os.system("cp " + nic_dir + "/conf/hal_classic.ini " + nic_dir + "/conf/hal.ini");
     p = Popen(["./hal", "--config", jsonfile], stdout=log, stderr=log)
     global hal_process
     hal_process = p

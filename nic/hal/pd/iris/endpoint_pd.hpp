@@ -3,12 +3,14 @@
 
 #include "nic/include/base.h"
 #include "nic/include/pd.hpp"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
 
 namespace hal {
 namespace pd {
 
 struct pd_ep_s {
     uint32_t    rw_tbl_idx[REWRITE_MAX_ID];
+    uint32_t    reg_mac_tbl_idx;        // Only in classic mode
 
     // pi ptr
     void        *pi_ep;
@@ -146,6 +148,7 @@ hal_ret_t pd_ep_upd_iplist_change (pd_ep_upd_args_t *pd_ep_upd_args);
 hal_ret_t ep_pd_alloc_pd_ip_entries (dllist_ctxt_t *pi_ep_list);
 hal_ret_t ep_pd_pgm_ipsg_tbl_ip_entries(ep_t *pi_ep, 
                                         dllist_ctxt_t *pi_ep_list);
+hal_ret_t pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper);
 
 hal_ret_t ep_pd_depgm_ipsg_tbl_ip_entries(ep_t *pi_ep, 
                                           dllist_ctxt_t *pi_ep_list);

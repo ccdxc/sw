@@ -17,6 +17,7 @@ cc_library(
             "//nic/third-party/spdlog:spdlog",
             "//nic/hal/pd:hal_pd_includes",
             "//nic/hal/pd/iris:iris_includes",
+            "//nic/hal/pd/capri:capri_includes",
             "//nic/hal/pd/utils/tcam:tcam",
             "//nic/hal/pd/utils/acl_tcam:acl_tcam",
             "//nic/utils/slab:slab",

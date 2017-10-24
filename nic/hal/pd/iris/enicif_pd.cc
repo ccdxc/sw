@@ -655,7 +655,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
     memset(&data, 0, sizeof(data));
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    HAL_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
 
     l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
     if (args && args->pinned_uplink_clsc_change) {
@@ -1002,11 +1002,11 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, nwsec_profile_t *nws
     //          lif on uplink if.
     memset(&data, 0, sizeof(data));
     
-    // TODO: Set the direction bit in the key. 
-    // Handles Encap Vlan vs User Vlan conflicts
 
     pi_l2seg = if_enicif_get_pi_l2seg((if_t*)pd_enicif->pi_if);
     enc_type = l2seg_get_fab_encap_type((l2seg_t*)pi_l2seg);
+    // Direction bit: Handles Encap Vlan vs User Vlan conflicts
+    key.control_metadata_uplink = 1;
     if (enc_type == types::ENCAP_TYPE_DOT1Q) {
         key.vlan_tag_valid = 1;
         key.vlan_tag_vid = l2seg_get_fab_encap_val((l2seg_t *)pi_l2seg);

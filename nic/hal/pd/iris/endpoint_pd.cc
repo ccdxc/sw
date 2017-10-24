@@ -12,7 +12,6 @@
 #include "nic/hal/src/network.hpp"
 #include "nic/hal/pd/iris/l2seg_pd.hpp"
 #include "nic/p4/nw/include/defines.h"
-#include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include "nic/hal/src/utils.hpp"
 
 using namespace hal;
@@ -400,6 +399,11 @@ ep_pd_program_hw(pd_ep_t *pd_ep)
     // Program IPSG Table
     ret = ep_pd_pgm_ipsg_tbl(pd_ep);
 
+    // Classic mode: 
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        ret = pd_ep_pgm_registered_mac(pd_ep, TABLE_OPER_INSERT);
+    }
+
     return ret;
 }
 
@@ -620,6 +624,70 @@ end:
     return ret;
 }
 
+hal_ret_t
+pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    registered_macs_swkey_t         key;
+    registered_macs_actiondata      data;
+    Hash                            *reg_mac_tbl = NULL;
+    ep_t                            *pi_ep = (ep_t *)pd_ep->pi_ep;
+    l2seg_t                         *l2seg = NULL;
+    mac_addr_t                      *mac = NULL;
+    if_t                            *pi_if = NULL;
+    uint32_t                        hash_idx = INVALID_INDEXER_INDEX;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    reg_mac_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
+    HAL_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
+
+    // lkp_vrf
+    l2seg = find_l2seg_by_handle(pi_ep->l2seg_handle);
+    HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
+    key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->l2seg_ten_hw_id;
+
+    // lkp_mac
+    mac = ep_get_mac_addr(pi_ep);
+    memcpy(key.flow_lkp_metadata_lkp_dstMacAddr, *mac, 6);
+    memrev(key.flow_lkp_metadata_lkp_dstMacAddr, 6);
+
+    // dst_lport
+    pi_if = find_if_by_handle(pi_ep->if_handle);
+    data.actionid = REGISTERED_MACS_REGISTERED_MACS_ID;
+    data.registered_macs_action_u.registered_macs_registered_macs.dst_lport = 
+        if_get_lport_id(pi_if);
+
+    if (oper == TABLE_OPER_INSERT) {
+        // Insert
+        ret = reg_mac_tbl->insert(&key, &data, &hash_idx);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-ep:{}:classic: unable to program for ep:{}",
+                          __FUNCTION__, ep_l2_key_to_str(pi_ep));
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("pd-ep:{}:classic: programmed for ep:{} at hash_idx:{}",
+                            __FUNCTION__, ep_l2_key_to_str(pi_ep), hash_idx);
+        }
+
+        pd_ep->reg_mac_tbl_idx = hash_idx;
+    } else {
+        hash_idx = pd_ep->reg_mac_tbl_idx;
+        // Update
+        ret = reg_mac_tbl->update(hash_idx, &data);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-ep:{}:classic: unable to reprogram for ep:{} at: {}",
+                          __FUNCTION__, ep_l2_key_to_str(pi_ep), hash_idx);
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("pd-ep:{}:classic: reprogrammed for ep:{} at: {}",
+                            __FUNCTION__, ep_l2_key_to_str(pi_ep), hash_idx);
+        }
+    }
+end:
+    return ret;
+}
 
 
 // ----------------------------------------------------------------------------

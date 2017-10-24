@@ -8,13 +8,13 @@ cc_library(
     hdrs = [
         "capri_hbm.hpp",
         "capri_loader.h",
-        "capri_barco_rings.hpp"
+        "capri_barco_rings.hpp",
+        "capri_tbl_rw.hpp",
     ],
 )
 
 cc_library(
     name = "capri",
-    #srcs = glob(["!(capri_tm_rw.template).cc"]),
     srcs = [
             "capri_tbl_rw.cc",
             "capri_loader.cc",
@@ -31,14 +31,6 @@ cc_library(
             "capri_barco_res.cc"
             ],
     hdrs = [
-        #"capri_hbm.hpp",
-        #"capri_loader.h",
-        #"capri_barco_crypto.hpp",
-        #"capri_config.hpp",
-        #"capri.hpp",
-        #"capri_tbl_rw.hpp",
-        #"capri_tm_rw.hpp",
-        #"capri_txs_scheduler.hpp"
     ] + glob(["*.hpp"]) + glob(["*.h"]),
     deps = [
         "//nic:asic_includes",

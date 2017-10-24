@@ -865,6 +865,44 @@ hal_wait (void)
 }
 
 //------------------------------------------------------------------------------
+// parse HAL .ini file
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg) 
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    std::string         line;
+    std::ifstream       in(inifile);     
+
+    if (!in) {
+        HAL_TRACE_ERR("unable to open ini file ... "
+                      "setting default forwarding mode");
+        hal_cfg->forwarding_mode = "default";
+        return HAL_RET_OK;
+    }
+
+    while (std::getline(in, line)) {
+        std::string key = line.substr(0, line.find("="));
+        std::string val = line.substr(line.find("=")+1, line.length()-1);
+        // HAL_TRACE_DEBUG("key:{}, val:{}", key, val);
+
+        if (key == "forwarding_mode") {
+            if (val != "default" && val != "host-pinned" && val != "classic") {
+                HAL_TRACE_ERR("Invalid forwarding mode: aborting ...");
+                HAL_ABORT(0);
+            }
+            hal_cfg->forwarding_mode = val;
+            HAL_TRACE_DEBUG("NIC forwarding mode: {}", val);
+        }
+    }
+
+    in.close();
+
+    return ret;
+}
+
+
+//------------------------------------------------------------------------------
 // parse HAL configuration
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -900,6 +938,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
         sparam = pt.get<std::string>("sw.feature_set");
         strncpy(hal_cfg->feature_set, sparam.c_str(), HAL_MAX_NAME_STR);
 
+#if 0
         hal_cfg->forwarding_mode = pt.get<std::string>("sw.forwarding_mode");
         HAL_TRACE_INFO("HAL Forwarding Mode: {}", hal_cfg->forwarding_mode);
         if (hal_cfg->forwarding_mode != "default" &&
@@ -908,6 +947,7 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
             HAL_TRACE_ERR("Invalid Forwarding Mode: aborting...");
             HAL_ABORT(0);
         }
+#endif
     } catch (std::exception const& e) {
         std::cerr << e.what() << std::endl;
         return HAL_RET_INVALID_ARG;
