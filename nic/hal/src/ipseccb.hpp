@@ -46,6 +46,8 @@ typedef struct ipseccb_s {
     uint32_t              esn_hi;
     uint32_t              esn_lo;
     uint32_t              spi;
+    uint32_t              expected_seq_no;
+    uint64_t              seq_no_bmp;
     hal_handle_t          hal_handle;              // HAL allocated handle
     mac_addr_t            smac;
     mac_addr_t            dmac; 

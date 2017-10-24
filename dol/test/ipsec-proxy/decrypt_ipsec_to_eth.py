@@ -15,6 +15,7 @@ from infra.common.glopts import GlobalOptions
 rnmdr = 0
 ipseccbq = 0
 ipseccb = 0
+expected_seq_no = 0
 
 def Setup(infra, module):
     print("Setup(): Sample Implementation")
@@ -29,6 +30,7 @@ def TestCaseSetup(tc):
     global rnmdr
     global ipseccbq
     global ipseccb
+    global expected_seq_no
 
     tc.pvtdata = ObjectDatabase(logger)
     print("TestCaseSetup(): Sample Implementation.")
@@ -52,10 +54,12 @@ def TestCaseSetup(tc):
     ipseccb.esn_lo                    = 0
     ipseccb.spi                       = 0
     ipseccb.key_index                 = ipseccb.crypto_key.keyindex
+    ipseccb.expected_seq_no           = 0
+    ipseccb.seq_no_bmp                = 0
     ipseccb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-
+    expected_seq_no = ipseccb.expected_seq_no
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
     ipseccbq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["IPSECCB0000_IPSECCBQ"])
     ipseccb = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
@@ -109,6 +113,11 @@ def TestCaseVerify(tc):
     print("post-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
     if (ipseccb_cur.pi != ipseccb.pi or ipseccb_cur.ci != ipseccb.ci):
         print("serq pi/ci not as expected")
+        return False
+
+    print("Expected seq no 0x%x seq_no_bmp 0x%x" % (ipseccb_cur.expected_seq_no, ipseccb_cur.seq_no_bmp))
+    # 2. Verify seq no
+    if (ipseccb_cur.expected_seq_no != expected_seq_no+1):
         return False
 
     # 3. Fetch current values from Platform

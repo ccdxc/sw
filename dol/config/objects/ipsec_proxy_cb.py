@@ -45,6 +45,8 @@ class IpsecCbObject(base.ConfigObjectBase):
             req_spec.esn_lo                    = self.esn_lo
             req_spec.spi                       = self.spi
             req_spec.key_index                 = self.crypto_key_idx
+            req_spec.expected_seq_no           = self.expected_seq_no
+            req_spec.seq_no_bmp                = self.seq_no_bmp
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -65,7 +67,8 @@ class IpsecCbObject(base.ConfigObjectBase):
             self.spi               = resp_spec.spec.spi 
             self.pi                = resp_spec.spec.pi
             self.ci                = resp_spec.spec.ci
-
+            self.expected_seq_no   = resp_spec.spec.expected_seq_no
+            self.seq_no_bmp        = resp_spec.spec.seq_no_bmp
         return
 
     def GetObjValPd(self):

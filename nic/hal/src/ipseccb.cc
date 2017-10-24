@@ -326,12 +326,19 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
 
     rsp->mutable_spec()->set_pi(ripseccb.pi);
     rsp->mutable_spec()->set_ci(ripseccb.ci);
-
     // fill operational state of this IPSEC CB
     rsp->mutable_status()->set_ipseccb_handle(ipseccb->hal_handle);
 
     // fill stats of this IPSEC CB
     rsp->set_api_status(types::API_STATUS_OK);
+    ret = pd::pd_ipseccb_decrypt_get(&pd_ipseccb_args);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD Decrypt IPSECCB: Failed to get, err: {}", ret);
+        rsp->set_api_status(types::API_STATUS_IPSEC_CB_NOT_FOUND);
+        return HAL_RET_HW_FAIL;
+    }
+    rsp->mutable_spec()->set_expected_seq_no(ripseccb.expected_seq_no);
+    rsp->mutable_spec()->set_seq_no_bmp(ripseccb.seq_no_bmp);
     return HAL_RET_OK;
 }
 

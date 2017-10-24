@@ -42,6 +42,8 @@ message IpsecCbSpec {
   uint32                esn_hi                = 13;
   uint32                esn_lo                = 14;
   uint32                spi                   = 15;
+  uint32                expected_seq_no       = 16;
+  fixed64               seq_no_bmp            = 17;
 }
 
 // IpsecCbRequestMsg is batched add or modify ipseccb request

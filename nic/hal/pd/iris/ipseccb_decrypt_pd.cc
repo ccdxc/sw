@@ -178,6 +178,9 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
     replay_seq_no_bmp = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.replay_seq_no_bmp;
     HAL_TRACE_DEBUG("expected_seq_no: 0x{0:x} last_replay_seq_no: 0x{0:x} replay_seq_no_bmp: 0x{0:x}", 
                     expected_seq_no, last_replay_seq_no, replay_seq_no_bmp); 
+    ipseccb_pd->ipseccb->expected_seq_no = ntohl(expected_seq_no);
+    ipseccb_pd->ipseccb->seq_no_bmp = ntohll(replay_seq_no_bmp);
+
     return HAL_RET_OK;
 }
 
