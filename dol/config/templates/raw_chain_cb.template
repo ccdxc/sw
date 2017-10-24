@@ -1,0 +1,30 @@
+# RAWC CB Object Template File.
+meta:
+    id: RAWCCB
+    grpc:
+        package                       : rawccb
+        service                       : RawcCb
+        apis:
+            create:
+                name                  : RawcCbCreate
+                message               : RawcCbRequestMsg
+            get:
+                name                  : RawcCbGet
+                message               : RawcCbGetRequestMsg
+
+id                              : 0 # RAWC CB Local ID
+spec                            : None # (REF) RAWC CB Spec from Base Config.
+pi                              : 0
+ci                              : 0
+my_txq_base                     : 0
+my_txq_ring_size_shift          : 0
+my_txq_entry_size_shift         : 0
+chain_txq_base                  : 0
+chain_txq_ring_indices_addr     : 0
+chain_txq_ring_size_shift       : 0
+chain_txq_entry_size_shift      : 0
+chain_txq_lif                   : 0
+chain_txq_qtype                 : 0
+chain_txq_qid                   : 0
+chain_txq_ring                  : 0
+

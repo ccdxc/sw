@@ -1,0 +1,103 @@
+#ifndef __HAL_PD_RAWCCB_HPP__
+#define __HAL_PD_RAWCCB_HPP__
+
+#include "nic/include/base.h"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+
+using hal::utils::ht_ctxt_t;
+
+namespace hal {
+namespace pd {
+
+#define HAL_MAX_HW_RAWCCBS                        4
+#define P4PD_HBM_RAWC_CB_ENTRY_SIZE               128
+
+typedef uint64_t    rawccb_hw_id_t;
+
+// rawccb pd state
+struct pd_rawccb_s {
+    rawccb_t           *rawccb;             // PI RAWC CB
+
+    // operational state of rawccb pd
+    rawccb_hw_id_t     hw_id;               // hw id for this rawccb
+
+    // meta data maintained for RAWC CB pd
+    ht_ctxt_t          hw_ht_ctxt;          // h/w id based hash table ctxt
+} __PACK__;
+
+// allocate a rawccb pd instance
+static inline pd_rawccb_t *
+rawccb_pd_alloc (void)
+{
+    pd_rawccb_t    *rawccb_pd;
+
+    rawccb_pd = (pd_rawccb_t *)g_hal_state_pd->rawccb_slab()->alloc();
+    if (rawccb_pd == NULL) {
+        return NULL;
+    }
+
+    return rawccb_pd;
+}
+
+// initialize a rawccb pd instance
+static inline pd_rawccb_t *
+rawccb_pd_init (pd_rawccb_t *rawccb_pd)
+{
+    if (!rawccb_pd) {
+        return NULL;
+    }
+    rawccb_pd->rawccb = NULL;
+
+    // initialize meta information
+    rawccb_pd->hw_ht_ctxt.reset();
+
+    return rawccb_pd;
+}
+
+// allocate and initialize a rawccb pd instance
+static inline pd_rawccb_t *
+rawccb_pd_alloc_init (void)
+{
+    return rawccb_pd_init(rawccb_pd_alloc());
+}
+
+// free rawccb pd instance
+static inline hal_ret_t
+rawccb_pd_free (pd_rawccb_t *rawccb_pd)
+{
+    g_hal_state_pd->rawccb_slab()->free(rawccb_pd);
+    return HAL_RET_OK;
+}
+
+// insert rawccb pd state in all meta data structures
+static inline hal_ret_t
+add_rawccb_pd_to_db (pd_rawccb_t *rawccb_pd)
+{
+    g_hal_state_pd->rawccb_hwid_ht()->insert(rawccb_pd, &rawccb_pd->hw_ht_ctxt);
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+del_rawccb_pd_from_db(pd_rawccb_t *rawccb_pd)
+{
+    g_hal_state_pd->rawccb_hwid_ht()->remove(&rawccb_pd->hw_ht_ctxt);
+    return HAL_RET_OK;
+}
+
+// find a rawccb pd instance given its hw id
+static inline pd_rawccb_t *
+find_rawccb_by_hwid (rawccb_hw_id_t hwid)
+{
+    return (pd_rawccb_t *)g_hal_state_pd->rawccb_hwid_ht()->lookup(&hwid);
+}
+
+extern void *rawccb_pd_get_hw_key_func(void *entry);
+extern uint32_t rawccb_pd_compute_hw_hash_func(void *key, uint32_t ht_size);
+extern bool rawccb_pd_compare_hw_key_func(void *key1, void *key2);
+
+}   // namespace pd
+}   // namespace hal
+
+#endif    // __HAL_PD_RAWCCB_HPP__
+

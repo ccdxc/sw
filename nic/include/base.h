@@ -208,6 +208,7 @@ do {                                                       \
     ENTRY(HAL_RET_SG_ID_INVALID,              50, "seg id invalid")            \
     ENTRY(HAL_RET_SG_NOT_FOUND,               51, "seg id not found")          \
     ENTRY(HAL_RET_NOOP,                       52, "Hal No operation")          \
+    ENTRY(HAL_RET_RAWC_CB_NOT_FOUND,          53, "Raw redirect CB not found") \
                                                                                \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 

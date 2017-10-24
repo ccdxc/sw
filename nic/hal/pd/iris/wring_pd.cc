@@ -12,7 +12,7 @@
 namespace hal {
 namespace pd {
 
-static pd_wring_meta_t g_meta[types::WRingType_MAX];
+static pd_wring_meta_t g_meta[types::WRingType_MAX + 1];
 
 hal_ret_t brq_gcm_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
 hal_ret_t arqrx_get_hw_meta(pd_wring_t* wring_pd);
@@ -80,8 +80,8 @@ wring_pd_meta_init() {
     g_meta[types::WRING_TYPE_ASQ] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_ASQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};
 
-    g_meta[types::WRING_TYPE_RAWRCB] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_RAWRCB, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
+    g_meta[types::WRING_TYPE_APP_REDIR_RAWC] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_RAWC, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
 
     g_meta[types::WRING_TYPE_ASESQ] = 
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASESQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL};

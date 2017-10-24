@@ -35,6 +35,7 @@
 #include "nic/hal/pd/capri/capri_repl.hpp"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
 #include "nic/hal/pd/iris/scheduler_pd.hpp"
+#include "nic/hal/pd/iris/rawccb_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -360,6 +361,18 @@ hal_state_pd::init(void)
     txs_scheduler_map_idxr_ = new hal::BMAllocator(TXS_SCHEDULER_MAP_MAX_ENTRIES);
     HAL_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
 
+    // initialize RAWCCB related data structures
+    rawccb_slab_ = slab::factory("RAWCCB PD", HAL_SLAB_RAWCCB_PD,
+                                 sizeof(hal::pd::pd_rawccb_t), 128,
+                                 true, true, true, true);
+    HAL_ASSERT_RETURN((rawccb_slab_ != NULL), false);
+
+    rawccb_hwid_ht_ = ht::factory(HAL_MAX_HW_RAWCCBS,
+                                 hal::pd::rawccb_pd_get_hw_key_func,
+                                 hal::pd::rawccb_pd_compute_hw_hash_func,
+                                 hal::pd::rawccb_pd_compare_hw_key_func);
+    HAL_ASSERT_RETURN((rawccb_hwid_ht_ != NULL), false);
+
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
     tcam_tables_ = NULL;
@@ -461,6 +474,9 @@ hal_state_pd::hal_state_pd()
 
     rawrcb_slab_ = NULL;
     rawrcb_hwid_ht_ = NULL;
+
+    rawccb_slab_ = NULL;
+    rawccb_hwid_ht_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -542,6 +558,9 @@ hal_state_pd::~hal_state_pd()
 
     rawrcb_slab_ ? delete rawrcb_slab_ : HAL_NOP;
     rawrcb_hwid_ht_ ? delete rawrcb_hwid_ht_ : HAL_NOP;
+
+    rawccb_slab_ ? delete rawccb_slab_ : HAL_NOP;
+    rawccb_hwid_ht_ ? delete rawccb_hwid_ht_ : HAL_NOP;
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -1249,6 +1268,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_RAWRCB_PD:
         g_hal_state_pd->rawrcb_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_RAWCCB_PD:
+        g_hal_state_pd->rawccb_slab()->free_(elem);
         break;
 
     case HAL_SLAB_CPUPKT_QINST_INFO_PD:

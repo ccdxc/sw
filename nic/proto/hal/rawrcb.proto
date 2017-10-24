@@ -28,15 +28,22 @@ message RawrCbKeyHandle {
 message RawrCbSpec {
   types.ObjectMeta      meta                       = 1;    // common object meta
   RawrCbKeyHandle       key_or_handle              = 2;    // rawrcb being created/updated
-  uint32                chain_rxq_base             = 3;    // next service chain queue base
-  uint32                chain_rxq_sem_alloc_idx    = 4;    //   "  " pindex alloc semaphore
-  uint32                chain_rxq_qidxr_base       = 5;
-  uint32                chain_qidxr_entry_size_shift= 6;
-  uint32                chain_rxq_ring_size_shift  = 7;
-  uint32                chain_rxq_entry_size_shift = 8;
-  uint32       		chain_qidxr_pi             = 9;
-  uint32       		desc_valid_bit_upd         = 10;
-  uint32       		desc_valid_bit_req         = 11;
+  uint32                chain_rxq_base             = 3;    // next service chain RxQ base
+  uint32                chain_rxq_ring_indices_addr = 4;
+  uint32                chain_rxq_ring_size_shift  = 5;
+  uint32                chain_rxq_entry_size_shift = 6;
+  uint32                chain_rxq_ring_index_select= 7;
+  uint32                chain_txq_base             = 8;    // next service chain TxQ base
+  uint32                chain_txq_ring_indices_addr= 9;
+  uint32                chain_txq_ring_size_shift  = 10;
+  uint32                chain_txq_entry_size_shift = 11;
+  uint32                chain_txq_ring_index_select= 12;
+  uint32                chain_txq_lif              = 13;
+  uint32                chain_txq_qtype            = 14;
+  uint32                chain_txq_qid              = 15;
+  uint32                chain_txq_doorbell_no_sched= 16;
+  uint32                desc_valid_bit_upd         = 17;
+  uint32                desc_valid_bit_req         = 18;
 }
 
 // RawrCbRequestMsg is batched add or modify rawrcb request

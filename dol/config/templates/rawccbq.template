@@ -1,0 +1,8 @@
+# App Redir Raw Chain CB Object Template File.
+meta:
+    id: RAWCCBQ
+
+id                    : None
+pi                    : 0
+ci                    : 0
+count                 : 0

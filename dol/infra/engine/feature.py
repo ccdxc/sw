@@ -28,7 +28,8 @@ BaseTopoExcludeFeatureList = [
     'l4lb',
     'recirc',
     'admin',
-    'classic'
+    'classic',
+    'app_redir'
 ]
 
 class FeatureObject:

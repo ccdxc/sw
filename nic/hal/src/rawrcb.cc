@@ -112,12 +112,21 @@ rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
 
     rawrcb->cb_id = spec.key_or_handle().rawrcb_id();
     rawrcb->chain_rxq_base = spec.chain_rxq_base(); 
-    rawrcb->chain_rxq_sem_alloc_idx = spec.chain_rxq_sem_alloc_idx(); 
-    rawrcb->chain_rxq_qidxr_base = spec.chain_rxq_qidxr_base(); 
-    rawrcb->chain_qidxr_entry_size_shift = spec.chain_qidxr_entry_size_shift(); 
+    rawrcb->chain_rxq_ring_indices_addr = spec.chain_rxq_ring_indices_addr(); 
     rawrcb->chain_rxq_ring_size_shift = spec.chain_rxq_ring_size_shift();
     rawrcb->chain_rxq_entry_size_shift = spec.chain_rxq_entry_size_shift();
-    rawrcb->chain_qidxr_pi = spec.chain_qidxr_pi();
+    rawrcb->chain_rxq_ring_index_select = spec.chain_rxq_ring_index_select();
+
+    rawrcb->chain_txq_base = spec.chain_txq_base(); 
+    rawrcb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr(); 
+    rawrcb->chain_txq_ring_size_shift = spec.chain_txq_ring_size_shift();
+    rawrcb->chain_txq_entry_size_shift = spec.chain_txq_entry_size_shift();
+    rawrcb->chain_txq_ring_index_select = spec.chain_txq_ring_index_select();
+    rawrcb->chain_txq_lif = spec.chain_txq_lif();
+    rawrcb->chain_txq_qtype = spec.chain_txq_qtype();
+    rawrcb->chain_txq_qid = spec.chain_txq_qid();
+    rawrcb->chain_txq_doorbell_no_sched = spec.chain_txq_doorbell_no_sched();
+
     rawrcb->desc_valid_bit_upd = spec.desc_valid_bit_upd();
     rawrcb->desc_valid_bit_req = spec.desc_valid_bit_req();
 
@@ -167,12 +176,21 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
     }
     
     rawrcb->chain_rxq_base = spec.chain_rxq_base(); 
-    rawrcb->chain_rxq_sem_alloc_idx = spec.chain_rxq_sem_alloc_idx(); 
-    rawrcb->chain_rxq_qidxr_base = spec.chain_rxq_qidxr_base(); 
-    rawrcb->chain_qidxr_entry_size_shift = spec.chain_qidxr_entry_size_shift(); 
+    rawrcb->chain_rxq_ring_indices_addr = spec.chain_rxq_ring_indices_addr(); 
     rawrcb->chain_rxq_ring_size_shift = spec.chain_rxq_ring_size_shift();
     rawrcb->chain_rxq_entry_size_shift = spec.chain_rxq_entry_size_shift();
-    rawrcb->chain_qidxr_pi = spec.chain_qidxr_pi();
+    rawrcb->chain_rxq_ring_index_select = spec.chain_rxq_ring_index_select();
+
+    rawrcb->chain_txq_base = spec.chain_txq_base(); 
+    rawrcb->chain_txq_ring_indices_addr = spec.chain_txq_ring_indices_addr(); 
+    rawrcb->chain_txq_ring_size_shift = spec.chain_txq_ring_size_shift();
+    rawrcb->chain_txq_entry_size_shift = spec.chain_txq_entry_size_shift();
+    rawrcb->chain_txq_ring_index_select = spec.chain_txq_ring_index_select();
+    rawrcb->chain_txq_lif = spec.chain_txq_lif();
+    rawrcb->chain_txq_qtype = spec.chain_txq_qtype();
+    rawrcb->chain_txq_qid = spec.chain_txq_qid();
+    rawrcb->chain_txq_doorbell_no_sched = spec.chain_txq_doorbell_no_sched();
+
     rawrcb->desc_valid_bit_upd = spec.desc_valid_bit_upd();
     rawrcb->desc_valid_bit_req = spec.desc_valid_bit_req();
 
@@ -227,12 +245,21 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
     rsp->mutable_spec()->mutable_key_or_handle()->set_rawrcb_id(rrawrcb.cb_id);
     
     rsp->mutable_spec()->set_chain_rxq_base(rrawrcb.chain_rxq_base);
-    rsp->mutable_spec()->set_chain_rxq_sem_alloc_idx(rrawrcb.chain_rxq_sem_alloc_idx);
-    rsp->mutable_spec()->set_chain_rxq_qidxr_base(rrawrcb.chain_rxq_qidxr_base);
-    rsp->mutable_spec()->set_chain_qidxr_entry_size_shift(rrawrcb.chain_qidxr_entry_size_shift);
+    rsp->mutable_spec()->set_chain_rxq_ring_indices_addr(rrawrcb.chain_rxq_ring_indices_addr);
     rsp->mutable_spec()->set_chain_rxq_ring_size_shift(rrawrcb.chain_rxq_ring_size_shift);
     rsp->mutable_spec()->set_chain_rxq_entry_size_shift(rrawrcb.chain_rxq_entry_size_shift);
-    rsp->mutable_spec()->set_chain_qidxr_pi(rrawrcb.chain_qidxr_pi);
+    rsp->mutable_spec()->set_chain_rxq_ring_index_select(rrawrcb.chain_rxq_ring_index_select);
+
+    rsp->mutable_spec()->set_chain_txq_base(rrawrcb.chain_txq_base);
+    rsp->mutable_spec()->set_chain_txq_ring_indices_addr(rrawrcb.chain_txq_ring_indices_addr);
+    rsp->mutable_spec()->set_chain_txq_ring_size_shift(rrawrcb.chain_txq_ring_size_shift);
+    rsp->mutable_spec()->set_chain_txq_entry_size_shift(rrawrcb.chain_txq_entry_size_shift);
+    rsp->mutable_spec()->set_chain_txq_ring_index_select(rrawrcb.chain_txq_ring_index_select);
+    rsp->mutable_spec()->set_chain_txq_lif(rrawrcb.chain_txq_lif);
+    rsp->mutable_spec()->set_chain_txq_qtype(rrawrcb.chain_txq_qtype);
+    rsp->mutable_spec()->set_chain_txq_qid(rrawrcb.chain_txq_qid);
+    rsp->mutable_spec()->set_chain_txq_doorbell_no_sched(rrawrcb.chain_txq_doorbell_no_sched);
+
     rsp->mutable_spec()->set_desc_valid_bit_upd(rrawrcb.desc_valid_bit_upd);
     rsp->mutable_spec()->set_desc_valid_bit_req(rrawrcb.desc_valid_bit_req);
 

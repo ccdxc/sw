@@ -36,6 +36,7 @@ SOURCES = \
  		rdma_svc.cc \
 		cpucb_svc.cc \
 		rawrcb_svc.cc \
+		rawccb_svc.cc \
 		system_svc.cc \
 		$(NULL)
 

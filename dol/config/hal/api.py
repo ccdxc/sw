@@ -31,6 +31,7 @@ import crypto_keys_pb2      as crypto_keys_pb2
 import rdma_pb2             as rdma_pb2
 import cpucb_pb2            as cpucb_pb2
 import rawrcb_pb2           as rawrcb_pb2
+import rawccb_pb2           as rawccb_pb2
 
 #import endpoint_pb2_grpc        as endpoint_pb2_grpc
 #import l2segment_pb2_grpc       as l2segment_pb2_grpc
@@ -52,6 +53,7 @@ import rawrcb_pb2           as rawrcb_pb2
 #import rdma_pb2_grpc            as rdma_pb2_grpc
 #import cpucb_pb2_grpc           as cpucb_pb2_grpc
 #import rawrcb_pb2_grpc          as rawrcb_pb2_grpc
+#import rawccb_pb2_grpc          as rawccb_pb2_grpc
 
 HAL_MAX_BATCH_SIZE = 64
 
@@ -278,6 +280,27 @@ def GetRawrCbs(objlist):
     stub = rawrcb_pb2.RawrCbStub(HalChannel)
     __config(objlist, rawrcb_pb2.RawrCbGetRequestMsg,
              stub.RawrCbGet)
+    return
+
+def ConfigureRawcCbs(objlist):
+    if IsHalDisabled(): return
+    stub = rawccb_pb2.RawcCbStub(HalChannel)
+    __config(objlist, rawccb_pb2.RawcCbRequestMsg,
+             stub.RawcCbCreate)
+    return
+
+def UpdateRawcCbs(objlist):
+    if IsHalDisabled(): return
+    stub = rawccb_pb2.RawcCbStub(HalChannel)
+    __config(objlist, rawccb_pb2.RawcCbRequestMsg,
+             stub.RawcCbUpdate)
+    return
+
+def GetRawcCbs(objlist):
+    if IsHalDisabled(): return
+    stub = rawccb_pb2.RawcCbStub(HalChannel)
+    __config(objlist, rawccb_pb2.RawcCbGetRequestMsg,
+             stub.RawcCbGet)
     return
 
 def GetTcpCbs(objlist):

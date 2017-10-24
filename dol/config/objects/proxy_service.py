@@ -41,9 +41,9 @@ class ProxyServiceObject(base.ConfigObjectBase):
             reqspec.key_or_handle.proxy_id = 3
             reqspec.proxy_type = 4
 
-        if self.type == "RAW_REDIR":
+        if self.type == "APP_REDIR":
             reqspec.key_or_handle.proxy_id = 4
-            reqspec.proxy_type = 5
+            reqspec.proxy_type = 6
 
         return
 

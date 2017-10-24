@@ -41,6 +41,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_L4LB,
     HAL_SLAB_CPUCB,
     HAL_SLAB_RAWRCB,
+    HAL_SLAB_RAWCCB,
     HAL_SLAB_NWSEC_POLICY,
     HAL_SLAB_NWSEC_POLICY_RULES,
     HAL_SLAB_NWSEC_POLICY_CFG,
@@ -80,6 +81,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_CPUCB_PD,
     HAL_SLAB_CPUPKT_PD,
     HAL_SLAB_RAWRCB_PD,
+    HAL_SLAB_RAWCCB_PD,
     HAL_SLAB_CPUPKT_QINST_INFO_PD,
     HAL_SLAB_PD_MAX,                 // NOTE: MUST be last PD slab id
 

@@ -10,6 +10,7 @@
 #include "nic/hal/src/lif_manager.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/cpucb.hpp"
+#include "nic/hal/src/rawrcb.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include "nic/hal/tls/tls_api.hpp"
@@ -43,8 +44,10 @@ proxy_meta_init() {
     g_meta[types::PROXY_TYPE_IPFIX] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 1}}};
 
-    g_meta[types::PROXY_TYPE_RAW_REDIR] = 
-        (proxy_meta_t) {true, 1, { SERVICE_LIF_RAW_REDIR, 1, {0, 2, 10}}};
+    g_meta[types::PROXY_TYPE_APP_REDIR] = 
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_APP_REDIR, APP_REDIR_NUM_QTYPES_MAX, 
+            {{APP_REDIR_RAWR_QTYPE, 2, 10}, {APP_REDIR_RAWC_QTYPE, 2, 10},
+             {APP_REDIR_PROXYR_QTYPE, 2, 10}, {APP_REDIR_PROXYC_QTYPE, 2, 10}}}};
 
     return HAL_RET_OK;
 }

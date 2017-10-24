@@ -128,6 +128,8 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/cpucb.o \
 				$(OBJ_DIR)/rawrcb.pb.o \
 				$(OBJ_DIR)/rawrcb.o \
+				$(OBJ_DIR)/rawccb.pb.o \
+				$(OBJ_DIR)/rawccb.o \
 				$(OBJ_DIR)/system.o \
 
 

@@ -26,10 +26,18 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         print("Configuring proxy for the flow with label: " + self.session.iflow.label)
-        if self.session.iflow.label == 'TCP-PROXY' or self.session.iflow.label == 'RAW-REDIR':
+        if self.session.iflow.label == 'TCP-PROXY':
             req_spec.meta.tenant_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 0
             req_spec.spec.proxy_type = 1
+            if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
+                req_spec.proxy_en = True
+                req_spec.alloc_qid = True
+            self.session.iflow.PrepareHALRequestSpec(req_spec)
+        elif self.session.iflow.label == 'RAW-REDIR':
+            req_spec.meta.tenant_id = self.session.initiator.ep.tenant.id
+            req_spec.spec.key_or_handle.proxy_id = 4
+            req_spec.spec.proxy_type = 6
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
                 req_spec.proxy_en = True
                 req_spec.alloc_qid = True

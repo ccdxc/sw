@@ -1,5 +1,6 @@
 LIBDIRS = \
-		  rx \
+	  redir \
+	  chain \
           $(NULL)
 PGMDIRS = $(NULL)
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)
