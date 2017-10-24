@@ -2,9 +2,8 @@
 
 EXCLUDE_DIRS := "bazel-cache|vendor|generated|model_sim|bin|Godeps|scripts"
 TO_BUILD := ./venice/utils/... ./nic/agent/... ./venice/cmd/... ./venice/apigw/... ./venice/orch/... \
-./venice/apiserver/... ./venice/globals/... ./venice/ctrler/... ./test/... ./api/ ./api/hooks/... \
-./api/listerwatcher/... ./api/cache/... ./api/integration/... ./venice/exe/venice/... ./venice/collector/... \
-./venice/cli/...
+./venice/apiserver/... ./venice/globals/... ./venice/ctrler/... ./test/... ./api/... \
+./venice/exe/venice/... ./venice/collector/... ./venice/cli/...
 
 TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent
 TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
@@ -142,7 +141,7 @@ cover:
 	@scripts/test-coverage.sh $(TO_BUILD)
 
 report:
-	$(GOCMD) run scripts/report.go $(TO_BUILD)
+	$(GOCMD) run scripts/report/report.go /meta/coverage.json $(TO_BUILD)
 
 ci-testrun:
 	tools/scripts/CI.sh

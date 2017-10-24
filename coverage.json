@@ -1,0 +1,83 @@
+{
+  "Kind": "coverage",
+  "Records": {
+    "./api/...": {
+      "CoveragePercent": 0,
+      "TestDuration": 21876154184,
+      "Passed": 1,
+      "Failed": 0
+    },
+    "./nic/agent/...": {
+      "CoveragePercent": 71.4875,
+      "TestDuration": 68256792699,
+      "Passed": 27,
+      "Failed": 0
+    },
+    "./test/...": {
+      "CoveragePercent": 0,
+      "TestDuration": 62839411038,
+      "Passed": 4,
+      "Failed": 0
+    },
+    "./venice/apigw/...": {
+      "CoveragePercent": 79,
+      "TestDuration": 21129149973,
+      "Passed": 7,
+      "Failed": 0
+    },
+    "./venice/apiserver/...": {
+      "CoveragePercent": 75.9,
+      "TestDuration": 13160993262,
+      "Passed": 14,
+      "Failed": 0
+    },
+    "./venice/cli/...": {
+      "CoveragePercent": 0,
+      "TestDuration": 15892310314,
+      "Passed": 52,
+      "Failed": 0
+    },
+    "./venice/cmd/...": {
+      "CoveragePercent": 81.02000000000001,
+      "TestDuration": 48772963523,
+      "Passed": 21,
+      "Failed": 0
+    },
+    "./venice/collector/...": {
+      "CoveragePercent": 0,
+      "TestDuration": 1777216891,
+      "Passed": 2,
+      "Failed": 0
+    },
+    "./venice/ctrler/...": {
+      "CoveragePercent": 79.61666666666667,
+      "TestDuration": 45159318640,
+      "Passed": 29,
+      "Failed": 0
+    },
+    "./venice/exe/venice/...": {
+      "CoveragePercent": 0,
+      "TestDuration": 11951120020,
+      "Passed": 0,
+      "Failed": 0
+    },
+    "./venice/globals/...": {
+      "CoveragePercent": 0,
+      "TestDuration": 73846369,
+      "Passed": 0,
+      "Failed": 0
+    },
+    "./venice/orch/...": {
+      "CoveragePercent": 87.86666666666667,
+      "TestDuration": 40823384919,
+      "Passed": 13,
+      "Failed": 0
+    },
+    "./venice/utils/...": {
+      "CoveragePercent": 77.68749999999999,
+      "TestDuration": 161784819232,
+      "Passed": 137,
+      "Failed": 0
+    }
+  }
+}
