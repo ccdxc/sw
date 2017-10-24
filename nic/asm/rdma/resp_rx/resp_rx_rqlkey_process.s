@@ -14,8 +14,8 @@ struct resp_rx_key_process_k_t k;
 #define MY_PT_BASE_ADDR r2
 #define LOG_PT_SEG_SIZE r1
 #define PT_SEG_P r5
-#define PT_OFFSET r6
-#define RAW_TABLE_PC r3
+#define PT_OFFSET r3
+#define RAW_TABLE_PC r2
 
 #define DMA_CMD_BASE r1
 #define TMP r3
@@ -62,8 +62,9 @@ resp_rx_rqlkey_process:
     CAPRI_TABLE_GET_FIELD(LOG_PAGE_SIZE, KEY_P, KEY_ENTRY_T, log_page_size)
     slt         c1, k.args.va, BASE_VA 
     add         r1, BASE_VA, LEN 
-    add         r2, k.args.va, k.args.len
-    slt         c2, r1, r2
+    //add         r2, k.args.va, k.args.len
+    //slt         c2, r1, r2
+    sslt        c2, r1, k.args.va, k.args.len
     bcf         [c1 | c2], error_completion
     CAPRI_TABLE_GET_FIELD(r1, KEY_P, KEY_ENTRY_T, pt_base) //BD Slot
     
@@ -94,14 +95,15 @@ resp_rx_rqlkey_process:
     // transfer_offset % pt_seg_size
     add         r7, r0, r3
     mincr       r7, LOG_PT_SEG_SIZE, r0
-    // (transfer_offset % pt_seg_size) + transfer_bytes
-    add         r7, r7, k.args.len
     // get absolute pt_seg_size
     sllv        r6, 1, LOG_PT_SEG_SIZE
+    // (transfer_offset % pt_seg_size) + transfer_bytes
+    //add         r7, r7, k.args.len
     // pt_seg_size <= ((transfer_offset % pt_seg_size) + transfer_bytes)
-    sle         c1, r6, r7
+    //sle         c1, r6, r7
+    ssle        c1, r6, r7, k.args.len
     bcf         [!c1], aligned_pt
-    nop
+    seq         c2, k.args.tbl_id, 0    //BD Slot
 
 unaligned_pt:
     // pt_offset = transfer_offset % lkey_info_p->page_size;
@@ -110,27 +112,25 @@ unaligned_pt:
     // x = transfer_offset/log_page_size
     srlv        r5, r3, LOG_PAGE_SIZE
     // transfer_offset%log_page_size 
-    add         r6, r0, r3
+    //add         r6, r0, r3
     mincr       PT_OFFSET, LOG_PAGE_SIZE, r0
     // now r6 has pt_offset
-    add         PT_SEG_P, MY_PT_BASE_ADDR, r5, CAPRI_LOG_SIZEOF_U64
-    // now r5 has pt_seg_p
     b           invoke_pt
-    nop
+    add         PT_SEG_P, MY_PT_BASE_ADDR, r5, CAPRI_LOG_SIZEOF_U64 //BD Slot
+    // now r5 has pt_seg_p
 aligned_pt:
     // pt_offset = transfer_offset % pt_seg_size;
     // pt_seg_p = (u64 *)my_pt_base_addr + ((transfer_offset / phv_p->page_size) / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE);
     srlv        r5, r3, LOG_PT_SEG_SIZE
-    add         r6, r0, r3
+    //add         r6, r0, r3
     mincr       PT_OFFSET, LOG_PT_SEG_SIZE, r0
     add         PT_SEG_P, MY_PT_BASE_ADDR, r5, CAPRI_LOG_SIZEOF_U64
 
 invoke_pt:
-    seq         c1, k.args.tbl_id, 0
-    SEL_T0_OR_T1_K(r7, c1)
+    SEL_T0_OR_T1_K(r7, c2)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_ptseg_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, PT_SEG_P)
-    SEL_T0_OR_T1_S2S_DATA(r7, c1)
+    SEL_T0_OR_T1_S2S_DATA(r7, c2)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_offset, PT_OFFSET)
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_bytes, k.args.len)
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
@@ -152,8 +152,10 @@ invoke_pt:
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
 
     CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, r_key, k.args.inv_r_key)
-    CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
-    CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
+    //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
+    //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
+    
+    CAPRI_SET_FIELD_RANGE(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, tbl_id, ((RESP_RX_DMA_CMD_CQ << 3) | TABLE_2))
 
     RQCB1_ADDR_GET(RQCB1_ADDR)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_compl_or_inv_rkey_process)
@@ -200,8 +202,9 @@ error_completion:
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
 
-    CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
-    CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
+    //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
+    //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
+    CAPRI_SET_FIELD_RANGE(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, tbl_id, ((RESP_RX_DMA_CMD_CQ << 3) | TABLE_2))
 
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_compl_or_inv_rkey_process)
     CAPRI_NEXT_TABLE_I_READ(T2_KEY, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
