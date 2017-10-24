@@ -83,18 +83,18 @@ class EnicObject(base.ConfigObjectBase):
         return
 
     def Show(self):
-        cfglogger.info("- Enic = %s(%d)" % (self.GID(), self.id))
-        cfglogger.info("  - Tenant     = %s" % self.tenant.GID())
-        cfglogger.info("  - Ep         = %s" % self.ep.GID())
-        cfglogger.info("  - EnicType   = %s" % self.type)
-        cfglogger.info("  - EncapVlan  = %d" % self.encap_vlan_id)
-        cfglogger.info("  - Lif        = %s" % self.lif.GID())
-        cfglogger.info("  - txqos: Cos:%s/Dscp:%s" %\
+        cfglogger.info("Enic = %s(%d)" % (self.GID(), self.id))
+        cfglogger.info("- Tenant     = %s" % self.tenant.GID())
+        cfglogger.info("- Ep         = %s" % self.ep.GID())
+        cfglogger.info("- EnicType   = %s" % self.type)
+        cfglogger.info("- EncapVlan  = %d" % self.encap_vlan_id)
+        cfglogger.info("- Lif        = %s" % self.lif.GID())
+        cfglogger.info("- TxQos      = Cos:%s/Dscp:%s" %\
                        (str(self.txqos.cos), str(self.txqos.dscp)))
-        cfglogger.info("  - rxqos: Cos:%s/Dscp:%s" %\
+        cfglogger.info("- RxQos      = Cos:%s/Dscp:%s" %\
                        (str(self.rxqos.cos), str(self.rxqos.dscp)))
         if self.pinnedif:
-            cfglogger.info("  - PinnedIF   = %s" % self.pinnedif.GID())
+            cfglogger.info("- PinnedIF   = %s" % self.pinnedif.GID())
         return
 
     def Summary(self):

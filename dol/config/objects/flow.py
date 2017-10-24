@@ -566,9 +566,13 @@ class FlowObject(base.ConfigObjectBase):
         obj.src.segment = self.__sseg
         obj.dst.segment = self.__dseg
         obj.src.endpoint = self.__sep
+        if self.__sep:
+            obj.src.intf = self.__sep.GetInterface()
         obj.src.l4lb_backend = self.__sfep.l4lb_backend
         obj.src.l4lb_service = self.__sfep.l4lb_service
         obj.dst.endpoint = self.__dep
+        if self.__dep:
+            obj.dst.intf = self.__dep.GetInterface()
         obj.dst.l4lb_service = self.__dfep.l4lb_service
         obj.dst.l4lb_backend = self.__dfep.l4lb_backend
         obj.ingress_mirror.session1 = self.GetIngressMirrorSession(idx = 1)

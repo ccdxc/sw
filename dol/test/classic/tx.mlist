@@ -1,0 +1,28 @@
+# Feature Test Modules List
+feature:
+    id          : classic
+    sub         : tx
+    package     : test.classic
+    module      : classic
+    spec        : tx.testspec
+    enable      : True
+    ignore      : True
+
+modules:
+    - module:
+        name    : IPV4
+        iterate:
+            - flow  : filter://type=IPV4,proto=UDP
+            - flow  : filter://type=IPV4,proto=TCP
+            - flow  : filter://type=IPV4,proto=ICMP
+
+    - module:
+        name    : IPV6
+        iterate:
+            - flow  : filter://type=IPV6,proto=UDP
+            - flow  : filter://type=IPV6,proto=TCP
+            - flow  : filter://type=IPV6,proto=ICMPV6
+
+    - module:
+        name    : NONIP
+        spec    : tx_nonip.testspec

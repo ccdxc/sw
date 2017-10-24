@@ -46,18 +46,18 @@ class SegmentObject(base.ConfigObjectBase):
             self.vlan_id    = resmgr.SegVlanAllocator.get()
             self.vxlan_id   = resmgr.SegVxlanAllocator.get()
 
-        if GlobalOptions.classic is False:
-            self.macaddr    = resmgr.RouterMacAllocator.get()
-            if self.IsInfraSegment():
-                self.subnet     = resmgr.TepIpSubnetAllocator.get()
-                self.subnet6    = resmgr.TepIpv6SubnetAllocator.get()
-            else:
-                self.subnet     = resmgr.IpSubnetAllocator.get()
-                self.subnet6    = resmgr.Ipv6SubnetAllocator.get()
+        self.macaddr    = resmgr.RouterMacAllocator.get()
+        if self.IsInfraSegment():
+            self.subnet     = resmgr.TepIpSubnetAllocator.get()
+            self.subnet6    = resmgr.TepIpv6SubnetAllocator.get()
+        else:
+            self.subnet     = resmgr.IpSubnetAllocator.get()
+            self.subnet6    = resmgr.Ipv6SubnetAllocator.get()
 
-            self.ipv4_pool  = resmgr.CreateIpv4AddrPool(self.subnet.get())
-            self.ipv6_pool  = resmgr.CreateIpv6AddrPool(self.subnet6.get())
+        self.ipv4_pool  = resmgr.CreateIpv4AddrPool(self.subnet.get())
+        self.ipv6_pool  = resmgr.CreateIpv6AddrPool(self.subnet6.get())
         
+        if GlobalOptions.classic is False:
             if self.l4lb:
                 self.bend_subnet = resmgr.L4LbBackendIpSubnetAllocator.get()
                 self.bend_subnet6 = resmgr.L4LbBackendIpv6SubnetAllocator.get()
@@ -192,8 +192,7 @@ class SegmentObject(base.ConfigObjectBase):
             return self.obj_helper_enic.backend_useg
         return self.obj_helper_enic.useg
     def GetClassicEnics(self, backend = False):
-        if backend:
-            assert(0)
+        if backend: assert(0)
         return self.obj_helper_enic.classic
     def GetEps(self, backend = False):
         if backend:

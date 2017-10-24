@@ -6,6 +6,7 @@ proto: None
 entries:
     - entry:
         label: classic
+        fte: True
         initiator:
             ethertype: 0xCCC0
         responder:

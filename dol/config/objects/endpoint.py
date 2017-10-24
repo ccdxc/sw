@@ -44,21 +44,20 @@ class EndpointObject(base.ConfigObjectBase):
         self.l4lb_backend = None
 
 
-        if GlobalOptions.classic is False:
-            num_ip_addrs = defs.HAL_NUM_IPADDRS_PER_ENDPOINT
-            num_ipv6_addrs = defs.HAL_NUM_IPV6ADDRS_PER_ENDPOINT
-            if segment.IsInfraSegment():
-                num_ip_addrs = 1
-                num_ipv6_addrs = 1
+        num_ip_addrs = defs.HAL_NUM_IPADDRS_PER_ENDPOINT
+        num_ipv6_addrs = defs.HAL_NUM_IPV6ADDRS_PER_ENDPOINT
+        if segment.IsInfraSegment():
+            num_ip_addrs = 1
+            num_ipv6_addrs = 1
 
-            for ipidx in range(num_ip_addrs):
-                ipaddr = segment.AllocIpv4Address(self.IsL4LbBackend())
-                self.SetIpAddress(ipaddr)
+        for ipidx in range(num_ip_addrs):
+            ipaddr = segment.AllocIpv4Address(self.IsL4LbBackend())
+            self.SetIpAddress(ipaddr)
 
-            for ipidx in range(num_ipv6_addrs):
-                ipv6addr = segment.AllocIpv6Address(self.IsL4LbBackend())
-                self.SetIpv6Address(ipv6addr)
-            self.useg_vlan_id = 0
+        for ipidx in range(num_ipv6_addrs):
+            ipv6addr = segment.AllocIpv6Address(self.IsL4LbBackend())
+            self.SetIpv6Address(ipv6addr)
+        self.useg_vlan_id = 0
         return
 
     def IsL4LbBackend(self):
@@ -144,15 +143,15 @@ class EndpointObject(base.ConfigObjectBase):
         return True
         
     def Show(self):
-        cfglogger.info("- Endpoint = %s(%d)" % (self.GID(), self.id))
-        cfglogger.info("  - IsBackend = %s" % self.IsL4LbBackend())
-        cfglogger.info("  - Tenant    = %s" % self.tenant)
-        cfglogger.info("  - Macaddr   = %s" % self.macaddr.get())
-        cfglogger.info("  - Interface = %s" % self.intf.GID())
+        cfglogger.info("Endpoint = %s(%d)" % (self.GID(), self.id))
+        cfglogger.info("- IsBackend = %s" % self.IsL4LbBackend())
+        cfglogger.info("- Tenant    = %s" % self.tenant)
+        cfglogger.info("- Macaddr   = %s" % self.macaddr.get())
+        cfglogger.info("- Interface = %s" % self.intf.GID())
         for ipaddr in self.ipaddrs:
-            cfglogger.info("  - Ipaddr    = %s" % ipaddr.get())
+            cfglogger.info("- Ipaddr    = %s" % ipaddr.get())
         for ipv6addr in self.ipv6addrs:
-            cfglogger.info("  - Ipv6addr  = %s" % ipv6addr.get())
+            cfglogger.info("- Ipv6addr  = %s" % ipv6addr.get())
         return
 
     def Summary(self):
@@ -172,15 +171,16 @@ class EndpointObject(base.ConfigObjectBase):
         self.segment_hal_handle     = self.segment.hal_handle
         self.intf_hal_handle        = self.intf.hal_handle
 
-        for ipaddr in self.ipaddrs:
-            ip = req_spec.ip_address.add()
-            ip.ip_af = haldefs.common.IP_AF_INET
-            ip.v4_addr = ipaddr.getnum()
+        if GlobalOptions.classic is False:
+            for ipaddr in self.ipaddrs:
+                ip = req_spec.ip_address.add()
+                ip.ip_af = haldefs.common.IP_AF_INET
+                ip.v4_addr = ipaddr.getnum()
 
-        for ipv6addr in self.ipv6addrs:
-            ip = req_spec.ip_address.add()
-            ip.ip_af = haldefs.common.IP_AF_INET6
-            ip.v6_addr = ipv6addr.getnum().to_bytes(16, 'big')
+            for ipv6addr in self.ipv6addrs:
+                ip = req_spec.ip_address.add()
+                ip.ip_af = haldefs.common.IP_AF_INET6
+                ip.v6_addr = ipv6addr.getnum().to_bytes(16, 'big')
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
