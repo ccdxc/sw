@@ -31,6 +31,8 @@ class IpsecCbObject(base.ConfigObjectBase):
         self.crypto_key = CryptoKeyHelper.main() 
         self.sip6 = resmgr.TepIpv6SubnetAllocator.get()
         self.dip6 = resmgr.TepIpv6SubnetAllocator.get()
+        self.sip6.v6_addr = self.sip6.getnum().to_bytes(16, 'big')
+        self.dip6.v6_addr = self.dip6.getnum().to_bytes(16, 'big')
         return
 
 
@@ -52,9 +54,10 @@ class IpsecCbObject(base.ConfigObjectBase):
             req_spec.expected_seq_no           = self.expected_seq_no
             req_spec.seq_no_bmp                = self.seq_no_bmp
             req_spec.sip6.ip_af                = haldefs.common.IP_AF_INET6
-            req_spec.sip6.v6_addr              = self.sip6.getnum().to_bytes(16, 'big')
+            req_spec.sip6.v6_addr              = self.sip6.v6_addr
             req_spec.dip6.ip_af                = haldefs.common.IP_AF_INET6
-            req_spec.dip6.v6_addr              = self.dip6.getnum().to_bytes(16, 'big')
+            req_spec.dip6.v6_addr              = self.dip6.v6_addr
+            req_spec.is_v6                     = self.is_v6
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

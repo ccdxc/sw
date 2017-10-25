@@ -414,6 +414,7 @@
 #define P4PLUS_CPU_PKT_SZ              36
 #define P4PLUS_IPSEC_HDR_SZ            14
 #define P4PLUS_RAW_REDIR_HDR_SZ        40
+#define IPV6_BASE_HDR_SIZE             40
 
 /*****************************************************************************/
 /* P4+ to P4 header size constants (in bytes)                                */

@@ -45,9 +45,9 @@ modules:
             - flow: filter://type=IPV4
     - module:
         name    : TCP_IPV6_PKT_TO_IPSECCBQ
-        enable  : False 
+        enable  : True 
         package : test.ipsec-proxy
-        module  : pkt_to_ipseccbq
+        module  : tcp_ipv6_pkt_to_ipseccbq
         spec    : tcp_ipv6_pkt_to_ipseccbq.testspec
         ignore  : True 
         iterate :

@@ -155,6 +155,8 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
         HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
     }
     
+
+    ipseccb->is_v6 = spec.is_v6();
     ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6()); 
     ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
      
@@ -232,6 +234,7 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     ipseccb->tunnel_sip4 = spec.tunnel_sip4();
     ipseccb->tunnel_dip4 = spec.tunnel_dip4();
     
+    ipseccb->is_v6 = spec.is_v6();
     ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6()); 
     ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
      

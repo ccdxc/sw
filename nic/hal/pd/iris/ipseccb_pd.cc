@@ -123,6 +123,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         if (ipseccb_pd->ipseccb->is_v6) {
             data.u.ipsec_encap_rxdma_initial_table_d.is_v6 = 1;
         }
+        HAL_TRACE_DEBUG("is_v6 {}", ipseccb_pd->ipseccb->is_v6);
     }
     HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: 0x{0:x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
@@ -163,13 +164,13 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
             memcpy(eth_ip6_hdr.smac, ipseccb_pd->ipseccb->smac, ETH_ADDR_LEN);
             memcpy(eth_ip6_hdr.dmac, ipseccb_pd->ipseccb->dmac, ETH_ADDR_LEN);
             eth_ip6_hdr.ethertype = htons(0x86dd);
-            eth_ip6_hdr.ver_tc_flowlabel = htonl(0x06000000);
+            eth_ip6_hdr.ver_tc_flowlabel = htonl(0x60000000);
             eth_ip6_hdr.payload_length = 128;
             eth_ip6_hdr.next_hdr = 50;
             eth_ip6_hdr.hop_limit = 255;
             memcpy(eth_ip6_hdr.src, ipseccb_pd->ipseccb->sip6.addr.v6_addr.addr8, IP6_ADDR8_LEN);
             memcpy(eth_ip6_hdr.dst, ipseccb_pd->ipseccb->dip6.addr.v6_addr.addr8, IP6_ADDR8_LEN);
-        
+            HAL_TRACE_DEBUG("Adding IPV6 header"); 
         }
     }
     HAL_TRACE_DEBUG("Programming stage0 at hw-id: 0x{0:x}", hwid); 
@@ -211,7 +212,8 @@ hal_ret_t
 p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
 {
     common_p4plus_stage0_app_header_table_d data = {0};
-    uint64_t                                    ipsec_cb_ring_addr;
+    uint32_t                                    ipsec_cb_ring_addr;
+    uint32_t                                    ipsec_barco_ring_addr;
 
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
@@ -223,9 +225,7 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
     }
     ipseccb_pd->ipseccb->iv = ntohll(data.u.ipsec_encap_rxdma_initial_table_d.iv);
     ipseccb_pd->ipseccb->iv_salt = data.u.ipsec_encap_rxdma_initial_table_d.iv_salt;
-    HAL_TRACE_DEBUG("Got salt {}", ipseccb_pd->ipseccb->iv_salt);
     ipseccb_pd->ipseccb->iv_size = data.u.ipsec_encap_rxdma_initial_table_d.iv_size;
-    HAL_TRACE_DEBUG("Got iv_size {}", ipseccb_pd->ipseccb->iv_size);
     ipseccb_pd->ipseccb->block_size = data.u.ipsec_encap_rxdma_initial_table_d.block_size;
     ipseccb_pd->ipseccb->icv_size = data.u.ipsec_encap_rxdma_initial_table_d.icv_size;
     ipseccb_pd->ipseccb->barco_enc_cmd = data.u.ipsec_encap_rxdma_initial_table_d.barco_enc_cmd;
@@ -234,11 +234,15 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
     ipseccb_pd->ipseccb->spi = data.u.ipsec_encap_rxdma_initial_table_d.spi;
     ipseccb_pd->ipseccb->key_index = data.u.ipsec_encap_rxdma_initial_table_d.key_index;
    
-    ipsec_cb_ring_addr = ntohll(data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr);
+    ipsec_cb_ring_addr = ntohl(data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr);
+    ipsec_barco_ring_addr = ntohl(data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr);
     ipseccb_pd->ipseccb->pi = data.u.ipsec_encap_rxdma_initial_table_d.cb_pindex;
     ipseccb_pd->ipseccb->ci = data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex;
     ipseccb_pd->ipseccb->is_v6 = data.u.ipsec_encap_rxdma_initial_table_d.is_v6;
     HAL_TRACE_DEBUG("CB Ring Addr {:#x} Pindex {} CIndex {}", ipsec_cb_ring_addr, ipseccb_pd->ipseccb->pi, ipseccb_pd->ipseccb->ci);
+    HAL_TRACE_DEBUG("Barco Ring Addr {:#x} Pindex {} CIndex {}", ipsec_barco_ring_addr, 
+                   data.u.ipsec_encap_rxdma_initial_table_d.barco_pindex, 
+                   data.u.ipsec_encap_rxdma_initial_table_d.barco_cindex);
      
     return HAL_RET_OK;
 }

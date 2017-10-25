@@ -2,8 +2,6 @@
 
 #define tx_table_s0_t0_action ipsec_encap_txdma2_initial_table 
 
-//#define tx_table_s1_t0_action ipsec_encap_txdma2_load_barco_req_ptr
-
 #define tx_table_s1_t0_action ipsec_encap_txdma2_load_barco_req 
 
 #define tx_table_s2_t0_action ipsec_encap_txdma2_load_in_desc 
@@ -77,7 +75,8 @@ header_type ipsec_to_stage2_t {
 header_type ipsec_to_stage3_t {
     fields {
         ipsec_cb_addr : ADDRESS_WIDTH;
-        stage3_pad1     : ADDRESS_WIDTH;
+        is_v6         : 8;
+        stage3_pad1     : 56;
     }
 }
 
@@ -197,6 +196,7 @@ action ipsec_build_encap_packet()
     TXDMA2_T0_S2S_SCRATCH
 
     modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr);
+    modify_field(ipsec_to_stage3_scratch.is_v6, ipsec_to_stage3.is_v6);
     // Add intrinsic and app header
     DMA_COMMAND_PHV2PKT_FILL(intrinsic_app_hdr, 0, 32, 0)
 

@@ -47,7 +47,9 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     addi r1, r1, IPSEC_IP_HDR_OFFSET
     addi r1, r1, 14
     phvwr  p.ip_hdr_dma_cmd_addr, r1 
-    phvwri  p.ip_hdr_dma_cmd_size, IPV4_HDR_SIZE 
+    seq c1, k.ipsec_to_stage3_is_v6, 1
+    cmov r6, c1, IPV6_HDR_SIZE, IPV4_HDR_SIZE 
+    phvwr  p.ip_hdr_dma_cmd_size, r6 
 
     //ESP Header with IV 
     phvwri p.esp_iv_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT

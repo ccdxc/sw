@@ -573,7 +573,17 @@ parser parse_v6_generic_ext_hdr {
 
 // if AH or ESP are hit - done - no more parsing as these are supposed to
 // be last in v6 ext-header sequence.
-parser parse_v6_ipsec_hdr {
+parser parse_v6_ipsec_esp_hdr {
+    extract(esp);
+    set_metadata(parser_metadata.ipv6_payloadLen, parser_metadata.ipv6_payloadLen - 8);
+    set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
+    set_metadata(flow_lkp_metadata.lkp_dport, latest.spi_lo);
+    set_metadata(ipsec_metadata.seq_no, latest.seqNo);
+    set_metadata(ipsec_metadata.ipsec_type, IPSEC_HEADER_ESP);
+    return ingress;
+}
+
+parser parse_v6_ipsec_ah_hdr {
     extract(v6_ah_esp);
     set_metadata(parser_metadata.ipv6_payloadLen, parser_metadata.ipv6_payloadLen - 12);
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
@@ -601,8 +611,8 @@ parser parse_ipv6_extn_hdrs {
         0x00: ingress; // hop-by-hop option, not supported
         0x2b: parse_v6_generic_ext_hdr;
         0x2c: parse_fragment_hdr;
-        0x32: parse_v6_ipsec_hdr;
-        0x33: parse_v6_ipsec_hdr;
+        0x32: parse_v6_ipsec_esp_hdr;
+        0x33: parse_v6_ipsec_ah_hdr;
         0x3c: parse_v6_generic_ext_hdr;
         0x87: parse_v6_generic_ext_hdr;
         0x3b: ingress;
@@ -1262,11 +1272,12 @@ parser parse_dummy {
     // hdr unions and same set_metadata from multiple states while computing topo-graph
     return select (inner_udp.srcPort) {
         default: ingress;
-        0x1 mask 0x0000 : parse_v6_ipsec_hdr;
+        0x1 mask 0x0000 : parse_v6_ipsec_esp_hdr;
         0x2 mask 0x0000 : parse_ipsec_ah;
         0x3 mask 0x0000 : parse_ipsec_esp;
         0x4 mask 0x0000 : parse_icmp;
         0x5 mask 0x0000 : parse_tcp;
+        0x6 mask 0x0000 : parse_v6_ipsec_ah_hdr;
     }
 }
 

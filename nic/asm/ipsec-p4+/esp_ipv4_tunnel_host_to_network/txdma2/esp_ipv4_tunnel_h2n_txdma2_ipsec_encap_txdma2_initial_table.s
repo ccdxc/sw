@@ -28,6 +28,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwr  p.common_te0_phv_table_addr, r1
 
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+    phvwr p.ipsec_to_stage3_is_v6, d.is_v6
 
     addi r1, r0, 1
     add r1, r1, d.barco_ring_cindex  

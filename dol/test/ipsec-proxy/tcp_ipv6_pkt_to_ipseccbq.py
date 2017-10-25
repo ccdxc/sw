@@ -41,8 +41,8 @@ def TestCaseSetup(tc):
     key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
     key_size = 16
     key = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-    sip6 = b'\x20\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xaa\xaa'
-    dip6 = b'\x20\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xbb\xbb'
+    sip6 = b'\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01'
+    dip6 = b'\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02'
     ipseccb.crypto_key.Update(key_type, key_size, key)
 
     ipseccb.tunnel_sip4               = 0x0A010001
@@ -62,6 +62,7 @@ def TestCaseSetup(tc):
     ipseccb.sip6.v6_addr              = sip6 
     ipseccb.dip6.ip_af                = 2
     ipseccb.dip6.v6_addr              = dip6 
+    ipseccb.is_v6                     = 1
     ipseccb.SetObjValPd()
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])

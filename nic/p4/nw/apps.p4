@@ -176,10 +176,27 @@ action p4plus_app_ipsec() {
         modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv4.totalLen+18);
     } else {
         modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 14);
-        modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv4.totalLen+18);
+        modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv4.totalLen+14);
     }
-    modify_field(p4_to_p4plus_ipsec.l4_protocol, ipv4.protocol);
-    modify_field(p4_to_p4plus_ipsec.ip_hdr_size, ipv4.ihl << 2);
+
+    if (ipv4.valid == TRUE) {
+        modify_field(p4_to_p4plus_ipsec.ip_hdr_size, ipv4.ihl << 2);
+        modify_field(p4_to_p4plus_ipsec.l4_protocol, ipv4.protocol);
+    } 
+    if (ipv6.valid == TRUE) {
+        // Remove all extension headers before sending it to p4+
+        modify_field(p4_to_p4plus_ipsec.ip_hdr_size, 40);
+        modify_field(p4_to_p4plus_ipsec.l4_protocol, ipv6.nextHdr);
+        modify_field(v6_generic.valid, 0);
+    }
+
+    if ((vlan_tag.valid == TRUE) and (ipv6.valid == TRUE)) {
+        modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv6.payloadLen+18);
+    } 
+    if ((vlan_tag.valid ==  FALSE) and (ipv6.valid == TRUE)) {
+        modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv6.payloadLen+14);
+    }
+    
 
     modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);

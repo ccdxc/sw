@@ -121,22 +121,32 @@ p4plus_app_ipsec:
   phvwr       p.p4_to_p4plus_ipsec_valid, TRUE
   phvwr       p.p4_to_p4plus_ipsec_p4plus_app_id, k.control_metadata_p4plus_app_id
   phvwr       p.p4_to_p4plus_ipsec_seq_no, k.ipsec_metadata_seq_no
-  phvwr       p.p4_to_p4plus_ipsec_l4_protocol, k.ipv4_protocol
-  sll         r2, k.ipv4_ihl, 2
-  phvwr       p.p4_to_p4plus_ipsec_ip_hdr_size, r2
-  seq         c1, k.vlan_tag_valid, TRUE
-  cmov        r6, c1, 18, 14
-  phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_start, r6
-  or          r1, k.ipv4_totalLen, k.ipv4_totalLen, 0
-  add         r3, r6, r1
-  phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_end, r3
   phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
               (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
               P4PLUS_IPSEC_HDR_SZ)
-  phvwr.e     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
+  phvwr      p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
   phvwr       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype
+  seq         c1, k.vlan_tag_valid, TRUE
+  cmov        r6, c1, 18, 14
+  phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_start, r6
+  seq         c2, k.ipv6_valid, TRUE
+  bcf         [c2], p4plus_app_ipsec_ipv6
+  phvwr       p.p4_to_p4plus_ipsec_l4_protocol, k.ipv4_protocol
+  sll         r2, k.ipv4_ihl, 2
+  phvwr       p.p4_to_p4plus_ipsec_ip_hdr_size, r2
+  or          r1, k.ipv4_totalLen, k.ipv4_totalLen, 0
+  add.e       r3, r6, r1
+  phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_end, r3
+
+.align
+p4plus_app_ipsec_ipv6:
+  phvwri      p.v6_generic_valid, 0
+  phvwri      p.p4_to_p4plus_ipsec_ip_hdr_size, IPV6_BASE_HDR_SIZE 
+  phvwr       p.p4_to_p4plus_ipsec_l4_protocol, k.ipv6_nextHdr
+  add.e       r5, r6, k.ipv6_payloadLen
+  phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_end, r5
 
 .align
 p4plus_app_raw_redir:
