@@ -89,26 +89,8 @@ sge_loop:
 
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+
     //                     ((sge_p->lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
-    //andi           r4, r4, KEY_INDEX_MASK
-    //sll            r4, r4, LOG_SIZEOF_KEY_ENTRY_T
-    //add            r4, r4, r6
-
-    KEY_ENTRY_ADDR_GET(r4, r6, r4)
+    KEY_ENTRY_ADDR_GET(r6, r6, r4)
     
-    // aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK
-    //and            r6, r4, HBM_CACHE_LINE_SIZE_MASK // HBM_CACHE_LINE
-    //sub            r6, r4, r6
-
-    KEY_ENTRY_ALIGNED_ADDR_GET(r6, r4)
-
-    // (key_addr % HBM_CACHE_LINE_SIZE) is computed as (key_addr - aligned_key_addr)
-    // key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
-    //sub            r4, r4, r6
-    //srl            r4, r4, LOG_SIZEOF_KEY_ENTRY_T
-
-    KEY_ID_GET(r4, r4)
-
-    CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, key_id, r4)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, is_atomic, k.args.is_atomic)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, cq_dma_cmd_index, REQ_RX_DMA_CMD_CQ)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, cq_id, k.args.cq_id)

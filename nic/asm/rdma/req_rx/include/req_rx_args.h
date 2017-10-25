@@ -58,11 +58,10 @@ struct req_rx_rrqsge_to_lkey_info_t {
     is_atomic               : 1;
     dma_cmd_eop             : 1;
     dma_cmd_start_index     : 8;
-    key_id                  : 8;
     sge_index               : 8;
     cq_dma_cmd_index        : 8;
     cq_id                   : 24;
-    pad                     : 17;
+    pad                     : 25;
 };
 
 struct req_rx_sqcb1_write_back_info_t {

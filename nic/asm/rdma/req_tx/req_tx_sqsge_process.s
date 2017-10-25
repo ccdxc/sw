@@ -91,26 +91,7 @@ sge_loop:
 
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+
     //                     ((sge_p->lkey & KEY_INDEX_MASK) * sizeof(key_entry_t));
-    //andi           r4, r4, KEY_INDEX_MASK
-    //sll            r4, r4, LOG_SIZEOF_KEY_ENTRY_T
-    //add            r4, r4, r6
-
-    KEY_ENTRY_ADDR_GET(r4, r6, r4)
-
-    // aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK
-    //and            r6, r4, HBM_CACHE_LINE_SIZE_MASK // HBM_CACHE_LINE
-    //sub            r6, r4, r6
-    
-    KEY_ENTRY_ALIGNED_ADDR_GET(r6, r4)
-
-    // (key_addr % HBM_CACHE_LINE_SIZE) is computed as (key_addr - aligned_key_addr)
-    // key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
-    //sub            r4, r4, r6
-    //srl            r4, r4, LOG_SIZEOF_KEY_ENTRY_T
-
-    KEY_ID_GET(r4, r4)
-
-    CAPRI_SET_FIELD(r7, INFO_OUT1_T, key_id, r4)
+    KEY_ENTRY_ADDR_GET(r6, r6, r4)
 
     // r4 = sge_p->len
     CAPRI_TABLE_GET_FIELD(r4, r1, SGE_T, len)
@@ -123,7 +104,7 @@ sge_loop:
     CAPRI_GET_TABLE_0_OR_1_K(req_tx_phv_t, r7, c7)
     CAPRI_SET_RAW_TABLE_PC(r4, req_tx_sqlkey_process)
     // aligned_key_addr and key_id sent to next stage to load lkey
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r4, r6)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, r4, r6)
 
     // big-endian - subtract sizeof(sge_t) as sges are read from bottom to top in big-endian format
     // sge_p[1]
