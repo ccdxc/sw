@@ -1,0 +1,140 @@
+//------------------------------------------------------------------------------
+// protobuf specification for Port HAL APIs
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package port;
+option go_package="halproto";
+// port service definition
+service Port {
+  rpc PortCreate (PortRequestMsg)       returns (PortResponseMsg)       {}
+  rpc PortUpdate (PortRequestMsg)       returns (PortResponseMsg)       {}
+  rpc PortDelete (PortDeleteRequestMsg) returns (PortDeleteResponseMsg) {}
+  rpc PortGet    (PortGetRequestMsg)    returns (PortGetResponseMsg)    {}
+}
+
+// PortOperStatus reflects the current status of the port
+enum PortOperStatus {
+  PORT_OPER_STATUS_NONE  = 0;
+  PORT_OPER_STATUS_UP    = 1;    // port is linked up
+  PORT_OPER_STATUS_DOWN  = 2;    // port link status is down
+}
+
+// PortAdminState specifies if the port is enabled (admin up) or disabled (admin down)
+enum PortAdminState {
+    PORT_ADMIN_STATE_NONE = 0;   // port admin state not configured
+    PORT_ADMIN_STATE_DOWN = 1;   // port is admin disabled
+    PORT_ADMIN_STATE_UP   = 2;   // port is admin enabled
+}
+
+// PortType specifies the type of port
+enum PortType {
+    PORT_TYPE_NONE = 0;  // port type not configured
+    PORT_TYPE_ETH  = 1;  // port carries ethernet traffic
+}
+
+// PortSpeed specifies the speed of the port
+enum PortSpeed {
+    PORT_SPEED_NONE = 0;     // port speed not configured
+    PORT_SPEED_10G  = 1;     // port speed is 10Gbps
+    PORT_SPEED_25G  = 2;     // port speed is 25Gbps
+    PORT_SPEED_100G = 3;     // port speed is 100Gbps
+}
+
+// PortKeyHandle uniquely identifies a Port
+message PortKeyHandle {
+  oneof key_or_handle {
+    fixed32   port_id       = 1;     // app allocated unique (across all ports) port id
+    fixed64   port_handle   = 2;     // id of port returned by HAL
+  }
+}
+
+// PortSpec message is used to do add/mod properties of a port
+message PortSpec {
+  types.ObjectMeta  meta            = 1;    // common object meta
+
+  // key_or_handle is the port number
+  PortKeyHandle     key_or_handle   = 2 [(gogoproto.moretags) = "venice:\"key\""];
+
+  PortType          port_type       = 3;    // port type
+  PortAdminState    admin_state      = 4;    // admin status of the port
+  PortSpeed         port_speed      = 6;    // speed of the port
+  uint32            mac_id          = 7;    // mac associated with the port
+  uint32            mac_ch          = 8;    // mac channel associated with the port
+  uint32            num_lanes       = 9;    // number of lanes for the port
+}
+
+//------------------------------------------------------------------------------
+// PortRequestMsg is batched add or modify port request
+//------------------------------------------------------------------------------
+message PortRequestMsg {
+  repeated PortSpec  request = 1;    // batched request
+}
+
+// PortResponse is response to PortSpec
+message PortResponse {
+  types.ApiStatus  api_status = 1;    // API status code
+}
+
+//------------------------------------------------------------------------------
+// PortResponseMsg is batched response to PortRequestMsg
+//------------------------------------------------------------------------------
+message PortResponseMsg {
+  repeated PortResponse  response = 1;    // batched response
+}
+
+// PortDeleteRequest is used to delete a port
+message PortDeleteRequest {
+  types.ObjectMeta  meta          = 1;    // object meta
+
+  // key_or_handle is the port number
+  PortKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+//------------------------------------------------------------------------------
+// PortDeleteRequestMsg is used to delete a batch of ports
+//------------------------------------------------------------------------------
+message PortDeleteRequestMsg {
+  repeated PortDeleteRequest request = 1;    // batched delete request
+}
+
+//------------------------------------------------------------------------------
+// PortDeleteResponseMsg is batched response to PortDeleteRequestMsg
+//------------------------------------------------------------------------------
+message PortDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// PortGetRequest is used to get information about a port
+message PortGetRequest {
+  types.ObjectMeta  meta          = 1;    // object meta
+
+  // key_or_handle is the port number
+  PortKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+}
+
+//------------------------------------------------------------------------------
+// PortGetRequestMsg is batched GET request for ports
+//------------------------------------------------------------------------------
+message PortGetRequestMsg {
+  repeated PortGetRequest  request = 1;    // batched get request
+}
+
+// PortGetResponse captures all the information about a port
+// only if api_status indicates success, other fields are valid
+message PortGetResponse {
+  types.ApiStatus  api_status = 1;    // API status code
+  PortSpec         spec       = 2;    // port configuration
+  PortOperStatus   status     = 3;    // operational state of port
+}
+
+//------------------------------------------------------------------------------
+// PortGetResponseMsg is the batched response to PortGetRequestMsg
+//------------------------------------------------------------------------------
+message PortGetResponseMsg {
+  repeated PortGetResponse  response = 1;    // batched get response
+}
+

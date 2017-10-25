@@ -22,6 +22,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_LIF,
     HAL_SLAB_IF,
     HAL_SLAB_ENIC_L2SEG_ENTRY,
+    HAL_SLAB_PORT,
     HAL_SLAB_EP,
     HAL_SLAB_EP_IP_ENTRY,
     HAL_SLAB_EP_L3_ENTRY,

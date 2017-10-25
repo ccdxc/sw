@@ -37,8 +37,10 @@ hal_control_loop (void)
             cindx = g_hal_ctrl_workq[qid].cindx;
             rw_entry = &g_hal_ctrl_workq[qid].entries[cindx];
             switch (rw_entry->opn) {
-                case HAL_CONTROL_OPERATION_PORT:
-                    port::port_event_notify(rw_entry->data);
+                case HAL_CONTROL_OPERATION_PORT_TIMER:
+                case HAL_CONTROL_OPERATION_PORT_ENABLE:
+                case HAL_CONTROL_OPERATION_PORT_DISABLE:
+                    port::port_event_notify(rw_entry->opn, rw_entry->data);
                     break;
 
                 default:
@@ -66,6 +68,49 @@ hal_control_loop (void)
             pthread_yield();
         }
     }
+}
+
+//------------------------------------------------------------------------------
+// hal-control thread notification by other threads
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_control_notify (uint8_t operation, void *ctxt)
+{
+    uint16_t           pindx;
+    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
+    uint32_t           curr_tid = curr_thread->thread_id();
+    hal_ctrl_entry_t   *rw_entry;
+
+    if (g_hal_ctrl_workq[curr_tid].nentries >= HAL_CONTROL_Q_SIZE) {
+        HAL_TRACE_ERR("Error: operation {} for thread {}, tid {} full",
+                      operation, curr_thread->name(), curr_tid);
+        return HAL_RET_HW_PROG_ERR;
+    }
+    pindx = g_hal_ctrl_workq[curr_tid].pindx;
+
+    rw_entry = &g_hal_ctrl_workq[curr_tid].entries[pindx];
+    rw_entry->opn = operation;
+    rw_entry->status = HAL_RET_ERR;
+    rw_entry->data = ctxt;
+    rw_entry->done.store(false);
+
+    g_hal_ctrl_workq[curr_tid].nentries++;
+
+    while (rw_entry->done.load() == false) {
+        if (curr_thread->can_yield()) {
+            pthread_yield();
+        }
+    }
+
+    // move the producer index to next slot.
+    // consumer is unaware of the blocking/non-blocking call and always
+    // moves to the next slot.
+    g_hal_ctrl_workq[curr_tid].pindx++;
+    if (g_hal_ctrl_workq[curr_tid].pindx >= HAL_CONTROL_Q_SIZE) {
+        g_hal_ctrl_workq[curr_tid].pindx = 0;
+    }
+
+    return rw_entry->status;
 }
 
 //------------------------------------------------------------------------------

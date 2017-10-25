@@ -9,6 +9,7 @@
 #include "hal_control.hpp"
 #include "nic/include/periodic.hpp"
 #include "port_mac.hpp"
+#include "hal_control.hpp"
 
 namespace hal {
 
@@ -18,11 +19,23 @@ mac_fn_t port::mac_fn;
 
 // Invoked in control thread context
 hal_ret_t
-port::port_event_notify(void *ctxt)
+port::port_event_notify(uint8_t opn, void *ctxt)
 {
-    port *port_p = (port*)ctxt;
+    port *pd_p = (port*)ctxt;
 
-    port_p->port_link_sm_process();
+    switch (opn) {
+        case HAL_CONTROL_OPERATION_PORT_TIMER:
+            return pd_p->port_link_sm_process();
+
+        case HAL_CONTROL_OPERATION_PORT_ENABLE:
+            return pd_p->port_enable();
+
+        case HAL_CONTROL_OPERATION_PORT_DISABLE:
+            return pd_p->port_disable();
+
+        default:
+            break;
+    }
 
     return HAL_RET_OK;
 }
@@ -31,42 +44,15 @@ port::port_event_notify(void *ctxt)
 hal_ret_t
 port::link_bring_up_timer_cb(uint32_t timer_id, void *ctxt)
 {
+    hal_ret_t ret = HAL_RET_OK;
+
     // wake up the hal control thread to process port event
-    uint16_t           pindx;
-    hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
-    uint32_t           curr_tid = curr_thread->thread_id();
-    hal_ctrl_entry_t   *rw_entry;
-
-    if (g_hal_ctrl_workq[curr_tid].nentries >= HAL_CONTROL_Q_SIZE) {
-        HAL_TRACE_ERR("port control operation for thread {}, tid {} full",
-                curr_thread->name(), curr_tid);
-        return HAL_RET_HW_PROG_ERR;
-    }
-    pindx = g_hal_ctrl_workq[curr_tid].pindx;
-
-    rw_entry = &g_hal_ctrl_workq[curr_tid].entries[pindx];
-    rw_entry->opn = HAL_CONTROL_OPERATION_PORT;
-    rw_entry->status = HAL_RET_ERR;
-    rw_entry->data = ctxt;
-    rw_entry->done.store(false);
-
-    g_hal_ctrl_workq[curr_tid].nentries++;
-
-    while (rw_entry->done.load() == false) {
-        if (curr_thread->can_yield()) {
-            pthread_yield();
-        }
+    ret = hal_control_notify (HAL_CONTROL_OPERATION_PORT_TIMER, ctxt);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error notifying control-thread for port timer");
     }
 
-    // move the producer index to next slot.
-    // consumer is unaware of the blocking/non-blocking call and always
-    // moves to the next slot.
-    g_hal_ctrl_workq[curr_tid].pindx++;
-    if (g_hal_ctrl_workq[curr_tid].pindx >= HAL_CONTROL_Q_SIZE) {
-        g_hal_ctrl_workq[curr_tid].pindx = 0;
-    }
-
-    return rw_entry->status;
+    return ret;
 }
 
 hal_ret_t
@@ -330,7 +316,7 @@ hal_ret_t
 port::port_enable()
 {
     /* check if already enabled */
-    if (this->admin_state_ == true) {
+    if (this->admin_state_ == ::port::PORT_ADMIN_STATE_UP) {
         return HAL_RET_OK;
     }
 
@@ -339,7 +325,7 @@ port::port_enable()
 
     port_link_sm_process();
 
-    this->admin_state_ = true;
+    this->admin_state_ = ::port::PORT_ADMIN_STATE_UP;
 
     return HAL_RET_OK;
 }
@@ -348,7 +334,7 @@ hal_ret_t
 port::port_disable()
 {
     /* check if already disabled */
-    if (this->admin_state_ == false) {
+    if (this->admin_state_ == ::port::PORT_ADMIN_STATE_DOWN) {
         return HAL_RET_OK;
     }
 
@@ -357,7 +343,7 @@ port::port_disable()
 
     port_link_sm_process();
 
-    this->admin_state_ = false;
+    this->admin_state_ = ::port::PORT_ADMIN_STATE_DOWN;
 
     return HAL_RET_OK;;
 }

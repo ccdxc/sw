@@ -88,6 +88,9 @@ public:
     ht *if_id_ht(void) const { return if_id_ht_; }
     // ht *if_hal_handle_ht(void) const { return if_hal_handle_ht_; }
 
+    ht *port_id_ht(void) const { return port_id_ht_; }
+    // ht *port_hal_handle_ht(void) const { return port_hal_handle_ht_; }
+
     // TODO: may have to create L2 and L3 HTs here !!
     ht *ep_hal_handle_ht(void) const { return ep_hal_handle_ht_; }
 
@@ -219,6 +222,12 @@ private:
     struct {
         ht         *if_id_ht_;
         // ht         *if_hal_handle_ht_;
+    } __PACK__;
+
+    // port related config
+    struct {
+        ht         *port_id_ht_;
+        // ht         *port_hal_handle_ht_;
     } __PACK__;
 
     // endpoint related config
@@ -410,6 +419,7 @@ public:
     slab *lif_slab(void) const { return lif_slab_; }
     slab *if_slab(void) const { return if_slab_; }
     slab *enic_l2seg_entry_slab(void) { return enic_l2seg_entry_slab_; }
+    slab *port_slab(void) const { return port_slab_; }
     slab *ep_slab(void) const { return ep_slab_; }
     slab *ep_ip_entry_slab(void) const { return ep_ip_entry_slab_; }
     slab *ep_l3_entry_slab(void) const { return ep_l3_entry_slab_; }
@@ -451,6 +461,7 @@ private:
     slab    *lif_slab_;
     slab    *if_slab_;
     slab    *enic_l2seg_entry_slab_;
+    slab    *port_slab_;
     slab    *ep_slab_;
     slab    *ep_ip_entry_slab_;
     slab    *ep_l3_entry_slab_;
@@ -545,6 +556,10 @@ public:
     // ht *if_hal_handle_ht(void) const { return cfg_db_->if_hal_handle_ht(); }
     // ht *if_hwid_ht(void) const { return oper_db_->if_hwid_ht(); }
     slab *enic_l2seg_entry_slab(void) const { return mem_db_->enic_l2seg_entry_slab(); }
+
+    // get APIs for port state
+    slab *port_slab(void) const { return mem_db_->port_slab(); }
+    ht *port_id_ht(void) const { return cfg_db_->port_id_ht(); }
 
     // get APIs for endpoint state
     slab *ep_slab(void) const { return mem_db_->ep_slab(); }

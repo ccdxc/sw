@@ -2,7 +2,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "nic/include/asic_pd.hpp"
-#include "nic/include/port.hpp"
+#include "nic/include/hal_control.hpp"
 
 namespace hal {
 namespace pd {

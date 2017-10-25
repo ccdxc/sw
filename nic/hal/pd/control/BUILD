@@ -12,6 +12,8 @@ cc_library(
         "//nic/hal:hal_includes",
         "//nic:asic_includes",
         "//nic/include:base_includes",
+        "//nic:gen_proto_includes",
+        "//nic/utils/indexer:indexer",
         "//nic/model_sim/include:modelsim_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/thread",

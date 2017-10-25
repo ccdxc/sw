@@ -9,14 +9,25 @@ namespace hal {
 namespace pd {
 
 #define HAL_CONTROL_Q_SIZE                           128
-#define HAL_CONTROL_OPERATION_PORT                   0
+#define HAL_CONTROL_OPERATION_PORT_TIMER             0
+#define HAL_CONTROL_OPERATION_PORT_ENABLE            1
+#define HAL_CONTROL_OPERATION_PORT_DISABLE           2
+
+// starting point for control thread
+void *hal_control_start(void *ctxt);
+
+//------------------------------------------------------------------------------
+// hal-control thread notification by other threads
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_control_notify (uint8_t operation, void *ctxt);
 
 //------------------------------------------------------------------------------
 // hal control thread operation entry.
 // one such entry is added to the queue for every operation
 //------------------------------------------------------------------------------
 typedef struct hal_ctrl_entry_ {
-    uint8_t           opn:2;   // operation requested to perform
+    uint8_t           opn;     // operation requested to perform
     std::atomic<bool> done;    // TRUE if thread performed operation
     hal_ret_t         status;  // result status of operation requested
     void              *data;   // data passed by called

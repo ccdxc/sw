@@ -1,31 +1,16 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#ifndef __PORT_HPP__
-#define __PORT_HPP__
+#ifndef __NIC_HAL_PD_CONTROL_PORT_HPP__
+#define __NIC_HAL_PD_CONTROL_PORT_HPP__
 
 #include "nic/include/base.h"
+#include "nic/gen/proto/hal/port.pb.h"
+#include "nic/hal/src/port.hpp"
 
 namespace hal {
 namespace pd {
 
 #define PORT_LANES_MAX 4
-
-// starting point for control thread
-void *hal_control_start(void *ctxt);
-
-enum class port_speed_t {
-    PORT_SPEED_25G,
-    PORT_SPEED_10G
-};
-
-enum class port_type_t {
-    PORT_TYPE_ETH
-};
-
-enum class port_oper_status_t {
-    PORT_OPER_STATUS_DOWN,
-    PORT_OPER_STATUS_UP
-};
 
 enum class port_link_sm_t {
     PORT_LINK_SM_DISABLED,
@@ -58,45 +43,46 @@ typedef struct mac_fn_s_ {
                             uint32_t num_lanes, bool enable);
 } mac_fn_t;
 
-typedef uint32_t port_num_t;
-
 class port {
 public:
-    port(port_num_t port_num_) {
-        this->port_num_ = port_num_;
-    }
-
-    port_num_t port_num() {
-        return this->port_num_;
-    }
-
-    bool admin_state() {
-        return this->admin_state_;
-    }
-
-    port_oper_status_t oper_status() {
+    ::port::PortOperStatus oper_status() {
         return this->oper_status_;
     }
 
-    void set_oper_status(port_oper_status_t oper_status) {
+    void set_oper_status(::port::PortOperStatus oper_status) {
         this->oper_status_ = oper_status;
     }
 
-    port_speed_t port_speed() {
+    ::port::PortSpeed port_speed() {
         return this->port_speed_;
     }
 
-    void set_port_speed(port_speed_t port_speed) {
+    void set_port_speed(::port::PortSpeed port_speed) {
         this->port_speed_ = port_speed;
     }
 
-    port_type_t port_type() {
+    ::port::PortType port_type() {
         return this->port_type_;
     }
 
-    void set_port_type(port_type_t port_type) {
+    void set_port_type(::port::PortType port_type) {
         this->port_type_ = port_type;
     }
+
+    ::port::PortAdminState admin_state() {
+        return this->admin_state_;
+    }
+
+    uint32_t mac_ch() { return this->mac_ch_; }
+    void set_mac_ch(uint32_t mac_ch) { this->mac_ch_ = mac_ch; }
+
+    uint32_t mac_id() { return this->mac_id_; }
+    void set_mac_id(uint32_t mac_id) { this->mac_id_ = mac_id; }
+
+    uint32_t num_lanes() { return this->num_lanes_; }
+    void set_num_lanes(uint32_t num_lanes) { this->num_lanes_ = num_lanes; }
+
+    void set_pi_p(hal::port_t *pi_p) { this->pi_p_ = pi_p; }
 
     port_link_sm_t port_link_sm() {
         return this->link_sm_;
@@ -156,7 +142,7 @@ public:
     static hal_ret_t
         link_bring_up_timer_cb(uint32_t timer_id, void *ctxt);
 
-    static hal_ret_t port_event_notify(void *ctxt);
+    static hal_ret_t port_event_notify(uint8_t opn, void *ctxt);
 
     static hal_ret_t port_init(bool is_sim);
 
@@ -165,17 +151,19 @@ public:
     static mac_fn_t mac_fn;
 
 private:
-    port_num_t          port_num_;       // port number
-    port_oper_status_t  oper_status_;    // port operational status
-    bool                admin_state_;    // port admin state
-    port_speed_t        port_speed_;     // port speed
-    port_type_t         port_type_;      // port type
-    port_link_sm_t      link_sm_;        // port link state machine
-    void                *link_bring_up_timer_;   // port link bring up timer
+    hal::port_t             *pi_p_;          // PI structure
 
-    uint32_t            mac_id_;          // mac instance for this port
-    uint32_t            mac_ch_;          // mac channel within mac instance
-    uint32_t            num_lanes_;       // number of lanes for this port
+    ::port::PortOperStatus  oper_status_;    // port operational status
+    ::port::PortSpeed       port_speed_;     // port speed
+    ::port::PortType        port_type_;      // port type
+    ::port::PortAdminState  admin_state_;    // port admin state
+
+    port_link_sm_t        link_sm_;        // port link state machine
+    void                  *link_bring_up_timer_;   // port link bring up timer
+
+    uint32_t              mac_id_;          // mac instance for this port
+    uint32_t              mac_ch_;          // mac channel within mac instance
+    uint32_t              num_lanes_;       // number of lanes for this port
 
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc();
@@ -184,4 +172,4 @@ private:
 }    // namespace pd
 }    // namespace hal
 
-#endif  // __PORT_HPP__
+#endif  // __NIC_HAL_PD_CONTROL_PORT_HPP__

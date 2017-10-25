@@ -24,6 +24,7 @@
 #include "nic/include/oif_list_api.hpp"
 #include "nic/hal/src/rawrcb.hpp"
 #include "nic/hal/src/rawccb.hpp"
+#include "nic/hal/src/port.hpp"
 
 namespace hal {
 namespace pd {
@@ -34,6 +35,7 @@ using hal::network_t;
 using hal::nwsec_profile_t;
 using hal::dos_policy_t;
 using hal::if_t;
+using hal::port_t;
 using hal::lif_t;
 using hal::session_t;
 using hal::flow_key_t;
@@ -86,6 +88,17 @@ typedef struct pd_lif_upd_args_s {
     bool    vlan_strip_en_changed;
     bool    vlan_strip_en;
 } pd_lif_upd_args_t;
+
+typedef struct pd_port_args_s {
+    port_t  *pi_p;
+
+    PortType         port_type;               // port type
+    PortSpeed        port_speed;              // port speed
+    PortAdminState   admin_state;             // admin state of the port
+    uint32_t         mac_id;                  // mac id associated with the port
+    uint32_t         mac_ch;                  // mac channel associated with the port
+    uint32_t         num_lanes;               // number of lanes for the port
+} pd_port_args_t;
 
 typedef struct pd_if_args_s {
     if_t    *intf;
@@ -282,6 +295,13 @@ pd_if_args_init (pd_if_args_t *args)
 }
 
 static inline void
+pd_port_args_init (pd_port_args_t *args)
+{
+    args->pi_p = NULL;
+    return;
+}
+
+static inline void
 pd_if_nwsec_upd_args_init (pd_if_nwsec_upd_args_t *args)
 {
     args->intf = NULL;
@@ -437,6 +457,14 @@ hal_ret_t pd_if_nwsec_update(pd_if_nwsec_upd_args_t *args);
 hal_ret_t pd_if_lif_update(pd_if_lif_upd_args_t *args);
 hal_ret_t pd_if_mem_free(pd_if_args_t *intf);
 hal_ret_t pd_if_make_clone(if_t *hal_if, if_t *clone);
+
+hal_ret_t pd_port_create     (pd_port_args_t *hal_port);
+hal_ret_t pd_port_update     (pd_port_args_t *hal_port);
+hal_ret_t pd_port_delete     (pd_port_args_t *hal_port);
+hal_ret_t pd_port_mem_free   (pd_port_args_t *hal_port);
+hal_ret_t pd_port_make_clone (port_t *pi_p, port_t *clone);
+bool      pd_port_has_speed_changed
+                             (pd_port_args_t *hal_port);
 
 uint32_t if_get_hw_lif_id(if_t *pi_if);
 uint32_t if_get_lport_id(if_t *pi_if);
