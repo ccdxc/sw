@@ -28,7 +28,7 @@ void lif_set_pd_lif(lif_t *pi_lif, void *pd_lif);
 void *lif_get_pd_lif(lif_t *pi_lif);
 bool lif_get_enable_rdma(lif_t *pi_lif);
 void lif_set_enable_rdma(lif_t *pi_lif, bool enable_rdma);
-uint32_t lif_get_total_qcount (uint32_t lif_id);
+uint32_t lif_get_total_qcount (uint32_t hw_lif_id);
 
 // Interface APIs
 intf::IfType intf_get_if_type(if_t *pi_if);

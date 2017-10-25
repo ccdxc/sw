@@ -195,3 +195,10 @@ cc_test(
     deps = [] + gl_deps,
     linkopts = [] + gl_linkopts,
 )
+
+cc_test(
+    name = "scheduler_tx_test",
+    srcs = ["scheduler_tx_test.cc"],
+    deps = [] + gl_deps,
+    linkopts = [] + gl_linkopts,
+)

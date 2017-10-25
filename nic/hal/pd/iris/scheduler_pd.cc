@@ -34,8 +34,7 @@ hal_ret_t scheduler_tx_pd_alloc (pd_lif_t *lif_pd)
 
     // Allocate txs scheduler resource for this lif.
     // Sched table can hold 8K queues per index and mandates new index for each cos.
-    total_qcount = lif_get_total_qcount(lif_get_lif_id(pi_lif));
-    
+    total_qcount = lif_get_total_qcount(lif_pd->hw_lif_id);
     alloc_units  =  (total_qcount / TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY);
     alloc_units += ((total_qcount % TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY) ? 1 : 0);
     alloc_units *=   num_set_bits(pi_lif->cos_bmp);

@@ -383,18 +383,19 @@ lif_set_enable_rdma(lif_t *pi_lif, bool enable_rdma)
 // LIF API: Get total number of LIF queues across all qtypes.
 // ----------------------------------------------------------------------------
 uint32_t
-lif_get_total_qcount (uint32_t lif_id) 
+lif_get_total_qcount (uint32_t hw_lif_id) 
 {
     uint32_t total_qcount = 0, i = 0;
 
-    LIFQState *qstate = g_lif_manager->GetLIFQState(lif_id);
+    LIFQState *qstate = g_lif_manager->GetLIFQState(hw_lif_id);
 
-    if (qstate == NULL)
+    if (qstate == NULL) 
         goto end;
 
     for (i = 0; i < kNumQTypes; i++) {
         total_qcount += qstate->type[i].num_queues;
     }
+
 end:
     return total_qcount;
 }

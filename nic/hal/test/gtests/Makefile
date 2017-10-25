@@ -28,7 +28,8 @@ LDFLAGS = -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib -L/usr/local/lib 
 LCLEANFILES = $(OBJ_DIR)/lif_test $(OBJ_DIR)/internal_test $(OBJ_DIR)/uplinkif_test $(OBJ_DIR)/uplinkpc_test $(OBJ_DIR)/enicif_test \
 			  $(OBJ_DIR)/cpuif_test $(OBJ_DIR)/buf_pool_test $(OBJ_DIR)/queue_test $(OBJ_DIR)/policer_test \
 			  $(OBJ_DIR)/session_test $(OBJ_DIR)/acl_test $(OBJ_DIR)/bm_allocator_test $(OBJ_DIR)/lif_manager_test \
-			  $(OBJ_DIR)/tcpcb_test $(OBJ_DIR)/tlscb_test $(OBJ_DIR)/endpoint_test $(OBJ_DIR)/tenant_test  $(OBJ_DIR)/l2seg_test
+			  $(OBJ_DIR)/tcpcb_test $(OBJ_DIR)/tlscb_test $(OBJ_DIR)/endpoint_test $(OBJ_DIR)/tenant_test  $(OBJ_DIR)/l2seg_test \
+			  $(OBJ_DIR)/scheduler_tx_test
 
 CUS_SOURCES = $(wildcard *.cc)
 CUS_PFXES := $(basename $(CUS_SOURCES))
@@ -63,3 +64,4 @@ gtest:
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(LD_PATH) WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/endpoint_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/endpoint_test.xml"
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(LD_PATH) WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/tenant_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/tenant_test.xml"
 	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(LD_PATH) WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/l2seg_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/l2seg_test.xml"
+	CAPRI_MOCK_MODE=1 LD_LIBRARY_PATH=$(LD_PATH) WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(TOPDIR)/conf $(TOPDIR)/obj/scheduler_tx_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/scheduler_tx_test.xml
