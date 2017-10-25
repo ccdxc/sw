@@ -331,3 +331,6 @@ profiles:
       fields:
          tcp_nonsyn_noack_drop: 0
 
+    - id: SEC_PROF_FIREWALL
+      fields:
+        cnxn_tracking_en: True
