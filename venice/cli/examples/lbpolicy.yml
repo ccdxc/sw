@@ -1,13 +1,15 @@
-kind: lbpolicy 			# kind of this object
+kind: lbPolicy 			# kind of this object
 meta:
   name: basic-lb-policy 	# name of this object
-  # tenant: default		# override tenant value (applicable only for super user)
+  # tenant: default		# override tenant value (applicable only for super admin user)
 spec:				# configuration specification intent
-  type: L4			# type of load balancing 'l4', or 'l7'
+  type: l4			# type of load balancing 'l4', or 'l7'
   algorithm: round-robin	# load balancing algorithm, can be 'round-robin', 'random', or 'latency-based'
-  sessionAffinity: "true"	# 'true' or 'false' indicating if affinity to the backend must be maintained
-  healthCheck:			# health check parameters for a given backend
+  session-affinity: true	# 'true' or 'false' indicating if affinity to the backend must be maintained
+  health-check:		        # health check parameters for a given backend
     interval: 30                # time interval within which to send a probe
-    maxtimeouts: 3              # maximum number of timeouts before declaing a backend dead
-    probesPerInterval: 1        # how many probes are sent within healthCheck interval
+    max-timeouts: 3             # maximum number of timeouts before declaing a backend dead
+    probes-per-interval: 1      # how many probes are sent within healthCheck interval
+    probe-port-or-url: /ping    # REST endpoint or protocol/port to check backend health
+    declare-healthy-count: 3    # minimum number of healthy probes before backend is declared back to be healthy
 

@@ -3,13 +3,14 @@ meta:
   name: flow-monitoring-policy                          # name of this object
   # tenant: default		                        # override tenant value (applicable only for super user)
 spec:
-  applyToWorkloads:                                     # selection (ORed list) of workloads to which this policy is applied
-  - matchlabels: io.pensando.network.sg:dmz-web-sg      # match applications tagged as labels defined here
-  - matchNames: prod*                                   # match names of the workloads
-    matchDestPorts: udp/4404                            # match only traffic going to udp/4404
-  - matchDestPrefix: 172.15.0.0/16                      # match a set of destination prefixes
-    matchDestPorts: tcp/4090                            # match flows on to specific ports in addition
-  - matchSrcPrefix: 10.33.2.0/24                        # match a set of source IP address prefixes
-  collectionpolicy: flow-collector
-  exportpolicy: tsdb-slow-exporter
+  area: 
+  object-selector:                                      # selection (ORed list) of workloads to which this policy is applied
+  - match-labels: io.pensando.network.sg:dmz-web-sg     # match applications tagged as labels defined here
+  - match-names: prod*                                  # match names of the workloads
+    match-dest-port: udp/4404                           # match only traffic going to udp/4404
+  - match-dest-prefix: 172.15.0.0/16                    # match a set of destination prefixes
+    match-src-port: tcp/4090                            # match flows on to specific ports in addition
+  - match-src-prefix: 10.33.2.0/24                      # match a set of source IP address prefixes
+  export-policy: external-flow-exporter                 # export parameters for selected metrics
+  retention-policy: local-retention-policy              # retention parameters describes for how long to keep the metrics
 

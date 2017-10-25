@@ -1025,3 +1025,42 @@ func getLineData(ctx *context, specIdx *int, objmKvs, specKvs map[string]ref.FIn
 	*specIdx++
 	return []byte(objLine + "\n"), more
 }
+
+// configCommandCompletion configures a linux bash command completion
+func configCommandCompletion(c *cli.Context) {
+
+	fi, err := os.Lstat("/etc/bash_completion.d")
+	if err != nil {
+		fmt.Printf("Unable to stat /etc/bash_completion.d ... quitting")
+		return
+	}
+
+	if fi.Mode().IsDir() {
+		err = ioutil.WriteFile("/etc/bash_completion.d/venice", []byte(autoCompletionScript), 0755)
+	} else {
+		err = ioutil.WriteFile("/usr/local/etc/bash_completion.d/venice", []byte(autoCompletionScript), 0755)
+	}
+	if err != nil {
+		fmt.Printf("error creating a file: %s\n", err)
+		return
+	}
+	fmt.Printf("Almost there... please also execute following in your bash: \"source /etc/bash_completion.d/venice\"\n")
+}
+
+var autoCompletionScript = `#! /bin/bash
+
+: ${PROG:=$(basename ${BASH_SOURCE})}
+
+_cli_bash_autocomplete() {
+    local cur opts base
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    opts=$( ${COMP_WORDS[@]:0:$COMP_CWORD} --gbc )
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    return 0
+}
+
+complete -F _cli_bash_autocomplete $PROG
+
+unset PROG
+`

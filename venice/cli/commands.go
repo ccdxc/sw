@@ -174,4 +174,10 @@ var Commands = []cli.Command{
 		BashComplete: bashDefinitionCompleter,
 		Subcommands:  definitionCommands,
 	},
+	{
+		Name:      "auto-completion",
+		ArgsUsage: " ",
+		Usage:     "Run \"sudo `which venice` auto-completion\" on a linux system to enable bash autocompletion",
+		Action:    configCommandCompletion,
+	},
 }

@@ -2,7 +2,7 @@
 	"kind": "network",
 	"meta": {
 		"name": "sjc-lab2-net10.14",
-		"labels" : { "dmz":"yes", "dns":"auto", "ipam":"dhcp" }
+		"labels" : { "dmz":"yes", "ipam":"dhcp" }
 	},
 	"spec": {
 		"type" : "l2",

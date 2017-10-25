@@ -20,8 +20,14 @@ using the following top level make target.
 make pregen
 ```
 
-### 4. Add unit test cases for your cli
-Unit test cases are found in `venice/cli/cli_test.go`. Without this, coverage test cases will fail,
-and you will not be able to verify if anyone else is breaking your module's CLI.
+### 4. Add yml examples for an object
+Create an example configuration (with description) file in `venice/cli/examples/<objKind.>yml`, where
+objKind is the new kind of object for which you are adding a new CLI command
 
-### 5. Run unit tests, integration tests and sanity runs as usual
+### 5. Add unit test cases for newly added commands
+First test the cli by firing up a cluster, or by running a mock server by `testserver&`. Once you know
+the syntax/commands and know the familiarity, proceed to adding unit test cases in
+`venice/cli/cli_test.go`. Without this, coverage test cases will fail,
+and you will not be able to verify if anyone else is breaking your newly added CLI.
+
+### 6. Run unit tests, integration tests and sanity runs as usual

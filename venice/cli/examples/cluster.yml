@@ -6,13 +6,14 @@ meta:
     dc: sjc-lab22
     type: vcenter
 spec:                                 # user configuration (desired intent)
-  quorumNodes:                        # quorum nodes implement leadership election and state store
+  quorum-nodes:                       # quorum nodes implement leadership election and state store
   - mgmt1
   - mgmt2
   - mgmt3
-  virtualIp: 10.1.1.1                 # virtual IP on which cluster API is accessible
-  ntpServers:                         # list of NTP servers IP address for clock synchronization
+  virtual-ip: 10.1.1.1                # virtual IP on which cluster API is accessible
+  ntp-servers:                        # list of NTP servers IP address for clock synchronization
   - 12.1.1.3
   - 12.1.1.54
-  dnsSubdomain: internal.myco.com     # dns addressable subdomain for the cluster
+  dns-subdomain: internal.myco.com    # dns addressable subdomain for the cluster
+  auto-admit-nics: true               # automatically admin NICs as they are discovered
 

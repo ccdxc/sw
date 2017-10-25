@@ -9,29 +9,42 @@ meta:
     dc: sjc-lab22
     type: vcenter
 spec:                                 # user configuration (desired intent)
-  quorumNodes:                        # quorum nodes implement leadership election and state store
+  quorum-nodes:                       # quorum nodes implement leadership election and state store
   - mgmt1
   - mgmt2
   - mgmt3
-  virtualIp: 10.1.1.1                 # virtual IP on which cluster API is accessible
-  ntpServers:                         # list of NTP servers IP address for clock synchronization
+  virtual-ip: 10.1.1.1                # virtual IP on which cluster API is accessible
+  ntp-servers:                        # list of NTP servers IP address for clock synchronization
   - 12.1.1.3
   - 12.1.1.54
-  dnsSubdomain: internal.myco.com     # dns addressable subdomain for the cluster
+  dns-subdomain: internal.myco.com    # dns addressable subdomain for the cluster
+  auto-admit-nics: true               # automatically admin NICs as they are discovered
 
 `,
-	`lbpolicy`: `kind: lbpolicy 			# kind of this object
+	`endpoint`: `# please edit and/or delete the lines in this sample
+kind: endpoint                                  # kind of this object
+meta:
+  name: dev-app-1                               # name of this object
+  # tenant: default		                # override tenant value (applicable only for super user)
+  labels:			                # arbitrary user defined tags 'key: value' 
+    io.pensando.network.prio: best-effort       # arbitrary label to identify traffic priority
+    io.pensando.network.sg: dev-sg              # arbitrary label to allow security group selection for the workload
+    io.pensando.network.svc: dev-app            # arbitrary label to allow 'service' to select the endpoint
+`,
+	`lbPolicy`: `kind: lbPolicy 			# kind of this object
 meta:
   name: basic-lb-policy 	# name of this object
-  # tenant: default		# override tenant value (applicable only for super user)
+  # tenant: default		# override tenant value (applicable only for super admin user)
 spec:				# configuration specification intent
-  type: L4			# type of load balancing 'l4', or 'l7'
+  type: l4			# type of load balancing 'l4', or 'l7'
   algorithm: round-robin	# load balancing algorithm, can be 'round-robin', 'random', or 'latency-based'
-  sessionAffinity: "true"	# 'true' or 'false' indicating if affinity to the backend must be maintained
-  healthCheck:			# health check parameters for a given backend
+  session-affinity: true	# 'true' or 'false' indicating if affinity to the backend must be maintained
+  health-check:		        # health check parameters for a given backend
     interval: 30                # time interval within which to send a probe
-    maxtimeouts: 3              # maximum number of timeouts before declaing a backend dead
-    probesPerInterval: 1        # how many probes are sent within healthCheck interval
+    max-timeouts: 3             # maximum number of timeouts before declaing a backend dead
+    probes-per-interval: 1      # how many probes are sent within healthCheck interval
+    probe-port-or-url: /ping    # REST endpoint or protocol/port to check backend health
+    declare-healthy-count: 3    # minimum number of healthy probes before backend is declared back to be healthy
 
 `,
 	`mirror`: `# please edit and/or delete the lines in this sample
@@ -43,12 +56,12 @@ meta:
   #  area: network
 spec:                                                   # configuration specification intent
   applyToWorkloads:                                     # selection (ORed list) of workloads to which this policy is applied
-  - matchlabels: io.pensando.network.sg:dmz-web-sg      # match applications tagged as labels defined here
-  - matchNames: dev-app*                                # match names of the workloads
-    matchDestPorts: udp/4404                            # match only traffic going to udp/4404
-  - matchDestPrefix: 172.15.0.0/16                      # match a set of destination prefixes
-    matchDestPorts: tcp/4090                            # match flows on to specific ports in addition
-  - matchSrcPrefix: 10.33.2.0/24                        # match a set of source IP address prefixes
+    match-labels: io.pensando.network.sg:dmz-web-sg     # match applications tagged as labels defined here
+    match-names: dev-app*                               # match names of the workloads
+    match-dest-ports: udp/4404                          # match only traffic going to udp/4404
+    match-dest-prefix: 172.15.0.0/16                    # match a set of destination prefixes
+    match-src-ports: tcp/4090                           # match flows on to specific ports in addition
+    match-src-prefix: 10.33.2.0/24                      # match a set of source IP address prefixes
   destinationIp: 192.131.4.54                           # destination IP address to which mirroed packets are to be sent to
   encap: erspan                                         # erspan encapsulate frames, other options are netflow, tsdb
 
@@ -58,15 +71,16 @@ meta:
   name: flow-monitoring-policy                          # name of this object
   # tenant: default		                        # override tenant value (applicable only for super user)
 spec:
-  applyToWorkloads:                                     # selection (ORed list) of workloads to which this policy is applied
-  - matchlabels: io.pensando.network.sg:dmz-web-sg      # match applications tagged as labels defined here
-  - matchNames: prod*                                   # match names of the workloads
-    matchDestPorts: udp/4404                            # match only traffic going to udp/4404
-  - matchDestPrefix: 172.15.0.0/16                      # match a set of destination prefixes
-    matchDestPorts: tcp/4090                            # match flows on to specific ports in addition
-  - matchSrcPrefix: 10.33.2.0/24                        # match a set of source IP address prefixes
-  collectionpolicy: flow-collector
-  exportpolicy: tsdb-slow-exporter
+  area: 
+  object-selector:                                      # selection (ORed list) of workloads to which this policy is applied
+  - match-labels: io.pensando.network.sg:dmz-web-sg     # match applications tagged as labels defined here
+  - match-names: prod*                                  # match names of the workloads
+    match-dest-port: udp/4404                           # match only traffic going to udp/4404
+  - match-dest-prefix: 172.15.0.0/16                    # match a set of destination prefixes
+    match-src-port: tcp/4090                            # match flows on to specific ports in addition
+  - match-src-prefix: 10.33.2.0/24                      # match a set of source IP address prefixes
+  export-policy: external-flow-exporter                 # export parameters for selected metrics
+  retention-policy: local-retention-policy              # retention parameters describes for how long to keep the metrics
 
 `,
 	`network`: `# please edit and/or delete the lines in this sample
@@ -93,27 +107,9 @@ meta:
     area: network
 spec:                           # configuration specification intent
   action: read,write            # type of permission to a specified object
-  matchFields:                  # field names (e.g. kind of an object) to match 
+  match-fields:                 # field names (e.g. kind of an object) to match 
     kind: network               # apply to objects with kind = network
 
-`,
-	`qos`: `# please edit and/or delete the lines in this sample
-kind: qos                                               # kind of this object
-meta:
-  name: qos-critical-priority                           # unique name of this object
-  # tenant: default		                        # override tenant value (applicable only for super user)
-  labels:			                        # arbitrary user defined tags 'key: value' 
-    class: elite
-spec:                                                   # configuration specification intent
-  applyToWorkloads:
-  - matchlabels: io.pensando.network.prio:critical      # apply policy to workloads tagged with this label
-  - matchNames: dev-app*                                # apply policy to workloads with this name/regex
-    matchDestPorts: udp/4404                            # and match only traffic going to udp/4404 
-  - matchDestPrefix: 172.15.0.0/16                      # match a set of destination prefixes
-    matchDestPorts: tcp/4090                            # match flows on to specific ports in addition
-  - matchSrcPrefix: 10.33.2.0/24                        # match a set of source IP address prefixes
-  priority: critical                                    # define queuing/buffering priority: critical, high or best-effort
-  setDscp: 7                                            # also set DSCP in IP header to '7' (value from 0-7)
 `,
 	`role`: `# please edit and/or delete the lines in this sample
 kind: role                      # kind of this object
@@ -125,6 +121,22 @@ spec:                           # configuration specification intent
   permissions:                  # permissions this role is entitled to
   - network-rw
 `,
+	`securityGroup`: `# please edit and/or delete the lines in this sample
+kind: securityGroup                                     # kind of this object
+meta:
+  name: dev-sg                                          # name of this object
+  # tenant: default		                        # override tenant value (applicable only for super user)
+  # labels:			                        # arbitrary user defined tags 'key: value' 
+  #  tier: db
+spec:
+  workload-labels:                                      # workloads selection that are part of this group
+  - "io.pensando.network.sg: dev-sg"                    # match applications tagged as labels
+  service-labels:                                       # match all services with specified labels
+  - "io.pensando.network.sg: prod"                      # match services tagged with specific label(s)
+  match-prefixes:                                       # match specified IP prefixes
+  - 123.99.8.0/24                                       # match all workloads with ip address in the specified prefix
+
+`,
 	`service`: `# please edit and/or delete the lines in this sample
 kind: service
 meta:
@@ -135,27 +147,11 @@ meta:
     monitor: "yes"                              # yml convention requires bools to be quoted if value (i.e. string)
     policy: auto-compute
 spec:                                           # configuration specification intent
-  lbPolicy: basic-lb-policy                     # load balancing policy used by the service
+  lb-policy: basic-lb-policy                    # load balancing policy used by the service
   ports: tcp/80                                 # port(s) this service is served on
-  virtualIp: 141.34.55.12                       # VIP of the service
-  workloadLabels:                               # workloads that this service represents the backend
-    io.pensando.network.svc: prod-web           # match all workloads that match a specific label
-
-`,
-	`sg`: `# please edit and/or delete the lines in this sample
-kind: sg                                                # kind of this object
-meta:
-  name: dev-sg                                          # name of this object
-  # tenant: default		                        # override tenant value (applicable only for super user)
-  # labels:			                        # arbitrary user defined tags 'key: value' 
-  #  area: network
-spec:
-  workloadLabels:                                       # workloads selection that are part of this group
-    io.pensando.network.sg: dev-sg                      # match applications tagged as labels
-  serviceLabels:                                        # match all services with specified labels
-    io.pensando.network.sg: prod                        # match services tagged with specific label(s)
-  matchPrefixs:                                         # match specified IP prefixes
-  - 123.99.8.0/24                                       # match all workloads with ip address in the specified prefix
+  virtual-ip: 141.34.55.12                      # VIP of the service
+  workload-labels:                              # workloads that this service represents the backend
+  - "io.pensando.network.svc: prod-web"         # match all workloads that match a specific label
 
 `,
 	`sgpolicy`: `# please edit and/or delete the lines in this sample
@@ -165,17 +161,17 @@ meta:
   # labels:			        # arbitrary user defined tags 'key: value' 
   #  area: network
 spec:
-  attachGroup: dev-sg                   # apply security policy to this group
-  inRules:                              # apply a list of inbound rules
+  attach-group: dev-sg                  # apply security policy to this group
+  in-rules:                             # apply a list of inbound rules
   - action: permit,log                  #  permit and log new incoming connections
-    peerGroup: dev-sg                   #   only permit from the specified peer group
+    peer-group: dev-sg                  #   only permit from the specified peer group
     ports: '*/*'                        #   allow all ports, yml requires '*' be specified in quotes
   - action: permit,log                  #  another rule that permits traffic
-    peerGroup: '*'                      #   from any group
+    peer-group: '*'                     #   from any group
     ports: tcp/22,icmp,tcp/23           #   but ports '22' and '23'
-  outRules:                             # apply a list of outbound rules
+  out-rules:                            # apply a list of outbound rules
   - action: permit,log                  #  permit and log new incoming connections
-    peerGroup: '*'                      #   only permit from the specified peer group
+    peer-group: '*'                     #   only permit from the specified peer group
     ports: tcp/80,tcp/8080              #   allow all ports
 
 `,
@@ -201,11 +197,10 @@ meta:
   tenant: default
 spec:
   encap: udp
-  exportInterval: 3s
-  formatScheme: statsd
-  targetIpAddress: 192.54.23.21
-  targetPort: "66590"
-Status: 
+  export-interval: 3s
+  format-scheme: statsd
+  target-ip-address: 192.54.23.21
+  target-port: 66590
 
 `,
 	`tenant`: `# please edit and/or delete the lines in this sample
@@ -215,7 +210,7 @@ meta:
   labels:	        # arbitrary user defined tags 'key: value' 
     tier: bronze
 spec:
-  adminUser: joe        # administrator (user name ) of this tenant
+  admin-user: joe        # administrator (user name ) of this tenant
 
 `,
 	`user`: `# please edit and/or delete the lines in this sample
@@ -229,20 +224,5 @@ meta:
 spec:                   # configuration specification intent
   roles:                # roles this user has
   - dev-admin
-`,
-	`workload`: `# please edit and/or delete the lines in this sample
-kind: workload                                  # kind of this object
-meta:
-  name: dev-app-1                               # name of this object
-  # tenant: default		                # override tenant value (applicable only for super user)
-  labels:			                # arbitrary user defined tags 'key: value' 
-    io.pensando.network.prio: best-effort       # indicates the priority to be best-effort
-    io.pensando.network.sg: dev-sg              # indicates security group for the network is dev-sg
-    io.pensando.network.svc: dev-app            # this workload is backend of service 'dev-app'
-spec:                                           # configuration specification intent
-  dns: auto                                     # automatically publish dns information against the app
-  network: dev-network                          # workload's network association
-  node: node4                                   # node on which workload is scheduled
-
 `,
 }

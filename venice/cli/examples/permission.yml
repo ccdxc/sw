@@ -7,6 +7,6 @@ meta:
     area: network
 spec:                           # configuration specification intent
   action: read,write            # type of permission to a specified object
-  matchFields:                  # field names (e.g. kind of an object) to match 
+  match-fields:                 # field names (e.g. kind of an object) to match 
     kind: network               # apply to objects with kind = network
 

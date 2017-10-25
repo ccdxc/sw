@@ -1,0 +1,9 @@
+# please edit and/or delete the lines in this sample
+kind: endpoint                                  # kind of this object
+meta:
+  name: dev-app-1                               # name of this object
+  # tenant: default		                # override tenant value (applicable only for super user)
+  labels:			                # arbitrary user defined tags 'key: value' 
+    io.pensando.network.prio: best-effort       # arbitrary label to identify traffic priority
+    io.pensando.network.sg: dev-sg              # arbitrary label to allow security group selection for the workload
+    io.pensando.network.svc: dev-app            # arbitrary label to allow 'service' to select the endpoint

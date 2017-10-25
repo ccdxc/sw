@@ -5,5 +5,5 @@ meta:
   labels:	        # arbitrary user defined tags 'key: value' 
     tier: bronze
 spec:
-  adminUser: joe        # administrator (user name ) of this tenant
+  admin-user: joe        # administrator (user name ) of this tenant
 

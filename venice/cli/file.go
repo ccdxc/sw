@@ -30,7 +30,7 @@ func createFromFile(c *cli.Context) {
 		return
 	}
 	if len(c.Args()) == 0 {
-		fmt.Printf("A list of files, a directory path or URL path is required")
+		fmt.Println("A list of files, a directory path or URL path is required")
 		return
 	}
 

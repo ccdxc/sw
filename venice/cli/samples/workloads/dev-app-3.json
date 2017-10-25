@@ -1,5 +1,5 @@
 {
-	"kind": "workload",
+	"kind": "endpoint",
 	"meta": {
 		"name": "dev-app-3",
 		"labels" : { "io.pensando.network.prio":"best-effort", "io.pensando.network.sg":"dev-sg", "io.pensando.network.svc" : "dev-app" }

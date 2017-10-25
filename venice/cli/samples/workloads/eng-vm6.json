@@ -1,5 +1,5 @@
 {
-	"kind": "workload",
+	"kind": "endpoint",
 	"meta": {
 		"name": "eng-vm6",
 		"labels" : { "io.pensando.network.sg":"eng-sg" }

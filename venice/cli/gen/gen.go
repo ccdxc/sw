@@ -184,7 +184,7 @@ var exampleYmls = map[string]string{
 `
 
 // genYMLExamples generates the code from yml example files
-// TODO: this nees to be udpated based on latest example definitions
+// TODO: write test runs to ensure they always work
 func genYmlExamples() {
 	dirname := "../examples"
 	fstat, err := os.Stat(dirname)
@@ -208,7 +208,7 @@ func genYmlExamples() {
 		os.Exit(1)
 	}
 
-	wf, err := os.OpenFile("../exampleYml.go", os.O_RDWR|os.O_CREATE, 0755)
+	wf, err := os.OpenFile("../exampleYml.go", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		fmt.Printf("%s", err)
 		os.Exit(1)

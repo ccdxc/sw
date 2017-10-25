@@ -1,5 +1,5 @@
 {
-	"kind": "workload",
+	"kind": "endpoint",
 	"meta": {
 		"name": "prod-db",
 		"labels" : { "io.pensando.network.prio":"high", "io.pensando.network.sg":"prod-db-sg" }

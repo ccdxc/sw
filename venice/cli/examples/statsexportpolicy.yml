@@ -4,9 +4,8 @@ meta:
   tenant: default
 spec:
   encap: udp
-  exportInterval: 3s
-  formatScheme: statsd
-  targetIpAddress: 192.54.23.21
-  targetPort: "66590"
-Status: 
+  export-interval: 3s
+  format-scheme: statsd
+  target-ip-address: 192.54.23.21
+  target-port: 66590
 
