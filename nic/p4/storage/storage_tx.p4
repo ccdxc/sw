@@ -1150,8 +1150,8 @@ action seq_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
  *                           part of the push operation in the next stage.
  *****************************************************************************/
 
-action seq_barco_entry_handler(xts_desc_addr, xts_desc_size, xts_db_addr,
-                               xts_db_data, xts_ring_load_size, xts_ring_addr) {
+action seq_barco_entry_handler(xts_desc_addr, xts_desc_size, xts_pndx_size,
+                               xts_pndx_addr, xts_ring_addr) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
@@ -1160,14 +1160,14 @@ action seq_barco_entry_handler(xts_desc_addr, xts_desc_size, xts_db_addr,
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_barco_entry.xts_desc_addr, xts_desc_addr);
   modify_field(seq_barco_entry.xts_desc_size, xts_desc_size);
-  modify_field(seq_barco_entry.xts_db_addr, xts_db_addr);
-  modify_field(seq_barco_entry.xts_db_data, xts_db_data);
-  modify_field(seq_barco_entry.xts_ring_load_size, xts_ring_load_size);
+  modify_field(seq_barco_entry.xts_pndx_size, xts_pndx_size);
+  modify_field(seq_barco_entry.xts_pndx_addr, xts_pndx_addr);
   modify_field(seq_barco_entry.xts_ring_addr, xts_ring_addr);
 
   // Update the K+I vector with the barco descriptor size to be used 
   // when calculating the offset for the push operation 
-  modify_field(storage_kivec1.xts_desc_size, xts_desc_size);
+  modify_field(storage_kivec1.xts_desc_size, seq_barco_entry.xts_desc_size);
+  modify_field(storage_kivec1.ssd_ci_addr, seq_barco_entry.xts_ring_addr);
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
@@ -1178,14 +1178,11 @@ action seq_barco_entry_handler(xts_desc_addr, xts_desc_size, xts_db_addr,
   DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, seq_barco_entry.xts_desc_addr, 0,
                            0, 0, seq_barco_entry.xts_desc_size, 0, 0, 0)
 
-  // Copy the doorbell data to PHV
-  modify_field(qpush_doorbell_data.data, seq_barco_entry.xts_db_data);
-
   // Setup the doorbell to be rung based on a fence with the previous mem2mem 
   // DMA. Form the doorbell DMA command in this stage as opposed the push 
   // stage (as is the norm) to avoid carrying the doorbell address in K+I
   // vector.
-  modify_field(doorbell_addr.addr, seq_pdma_entry.next_db_addr);
+  modify_field(doorbell_addr.addr, seq_barco_entry.xts_pndx_addr);
   DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
                            0,
                            PHV_FIELD_OFFSET(qpush_doorbell_data.data),
@@ -1194,8 +1191,8 @@ action seq_barco_entry_handler(xts_desc_addr, xts_desc_size, xts_db_addr,
 
   // Load the Barco ring for the next stage to push the Barco XTS descriptor
   CAPRI_LOAD_TABLE_ADDR(common_te0_phv, 
-                        seq_barco_entry.xts_ring_addr,
-                        seq_barco_entry.xts_ring_load_size, 
+                        seq_barco_entry.xts_pndx_addr,
+                        seq_barco_entry.xts_pndx_size, 
                         seq_barco_ring_push_start)
 }
 
@@ -1206,46 +1203,30 @@ action seq_barco_entry_handler(xts_desc_addr, xts_desc_size, xts_db_addr,
  *                       source in DMA cmd 1 and destination in DMA cmd 2.
  *****************************************************************************/
 
-action seq_barco_ring_push(base_addr, num_entries, p_ndx, opa_tag, c_ndx, 
-                           status) {
+action seq_barco_ring_push(p_ndx) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
   STORAGE_KIVEC1_USE(storage_kivec1_scratch, storage_kivec1)
 
   // For D vector generation (type inference). No need to translate this to ASM.
-  modify_field(barco_xts_ring_scratch.base_addr, base_addr);
-  modify_field(barco_xts_ring_scratch.num_entries, num_entries);
   modify_field(barco_xts_ring_scratch.p_ndx, p_ndx);
-  modify_field(barco_xts_ring_scratch.opa_tag, opa_tag);
-  modify_field(barco_xts_ring_scratch.c_ndx, c_ndx);
-  modify_field(barco_xts_ring_scratch.status, status);
 
-  // Check for ring full condition before pushing 
-  if (QUEUE_FULL(barco_xts_ring_scratch)) {
+  // Copy the doorbell data to PHV
+  modify_field(qpush_doorbell_data.data, barco_xts_ring_scratch.p_ndx);
 
-    // Exit pipeline here without error handling for now. This event of 
-    // destination queue being full should never happen with constraints 
-    // imposed by the control path programming.
-    exit();
+  // Modify the DMA command 2 to fill the destination address based on p_ndx 
+  // NOTE: This API in P4 land will not work, but in ASM we can selectively
+  // overwrite the fields
+  DMA_COMMAND_PHV2MEM_FILL(dma_m2m_2, 
+                           storage_kivec1.ssd_ci_addr +
+                           (barco_xts_ring_scratch.p_ndx * 
+                            storage_kivec1.xts_desc_size),
+                           0, 0,
+                           0, 0, 0, 0)
 
-  } else {
 
-    // Modify the DMA command 2 to fill the destination address based on p_ndx 
-    // NOTE: This API in P4 land will not work, but in ASM we can selectively
-    // overwrite the fields
-    DMA_COMMAND_PHV2MEM_FILL(dma_m2m_2, 
-                             barco_xts_ring_scratch.base_addr +
-                             (barco_xts_ring_scratch.p_ndx * 
-                              storage_kivec1.xts_desc_size),
-                             0, 0,
-                             0, 0, 0, 0)
+  // Doorbell has already been setup
 
-    // Push the entry to the Barco ring
-    QUEUE_PUSH(barco_xts_ring_scratch)
-
-    // Doorbell has already been setup
-
-    // Exit the pipeline here 
-  }
+  // Exit the pipeline here 
 }

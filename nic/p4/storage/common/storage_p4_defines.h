@@ -171,12 +171,7 @@ header_type pci_q_state_t {
 // Barco XTS ring 
 header_type barco_xts_ring_t {
   fields {
-    base_addr	: 64;	// Base address of queue entries
-    num_entries	: 32;	// Number of entries in the barco ring
     p_ndx	: 32;	// Producer Index
-    opa_tag	: 64;	// Operation tag
-    c_ndx	: 32;	// Consumer Index
-    status	: 32;	// Status from barco
   }
 }
 
@@ -693,9 +688,8 @@ header_type seq_barco_entry_t {
   fields {
     xts_desc_addr	: 64;	// Address of the XTS descriptor to push
     xts_desc_size	: 32;	// Size of the XTS descriptor to push
-    xts_db_addr		: 64;	// 64 bit address of the XTS doorbell to ring
-    xts_db_data		: 64;	// 64 bit data of the XTS doorbell to ring
-    xts_ring_load_size	: 16;	// Size of the XTS ring state to be loaded
+    xts_pndx_size	: 16;	// Size of the XTS ring state to be loaded
+    xts_pndx_addr	: 34;	// 64 bit address of the XTS doorbell to ring
     xts_ring_addr	: 34;	// Address of the XTS ring
   }
 }

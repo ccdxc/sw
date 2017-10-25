@@ -24,6 +24,7 @@ storage_tx_seq_barco_entry_handler_start:
    // Update the K+I vector with the barco descriptor size to be used
    // when calculating the offset for the push operation
    phvwr	p.storage_kivec1_xts_desc_size, d.xts_desc_size
+   phvwr	p.storage_kivec1_ssd_ci_addr, d.xts_ring_addr
   
 
    // Setup the source of the mem2mem DMA into DMA cmd 1.
@@ -40,13 +41,12 @@ storage_tx_seq_barco_entry_handler_start:
    // to ring it. Form the doorbell DMA command in this stage as opposed 
    // the push stage (as is the norm) to avoid carrying the doorbell address 
    // in K+I vector.
-   phvwr	p.qpush_doorbell_data_data, d.xts_db_data
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,
-                     d.xts_db_addr, dma_m2m_3)
+                     d.xts_pndx_addr, dma_m2m_3)
 
    // Set the fence bit for the doorbell 
    DMA_PHV2MEM_FENCE(dma_m2m_3)
 
    // Set the table and program address 
-   LOAD_TABLE_FOR_ADDR_SIZE_PARAM(d.xts_ring_addr, d.xts_ring_load_size,
+   LOAD_TABLE_FOR_ADDR_SIZE_PARAM(d.xts_pndx_addr, d.xts_pndx_size,
                                   storage_tx_seq_barco_ring_push_start)
