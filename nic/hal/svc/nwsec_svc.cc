@@ -99,7 +99,89 @@ NwSecurityServiceImpl::SecurityProfileGet(ServerContext *context,
     return Status::OK;
 }
 
+/*  Security Group Policy Implementation
+ */
+Status
+NwSecurityServiceImpl::SecurityGroupPolicyCreate(ServerContext                       *context,
+                                                 const SecurityGroupPolicyRequestMsg *req,
+                                                 SecurityGroupPolicyResponseMsg      *rsp)
+{
+    uint32_t                           i, nreqs = req->request_size();
+    SecurityGroupPolicyResponse       *response;
 
+    HAL_TRACE_DEBUG("Rcvd SecurityGroupPolicy Create Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::security_group_policy_create(spec, response);
+    }
+    hal::hal_cfg_db_close();
+    return Status::OK;
+}
+
+Status
+NwSecurityServiceImpl::SecurityGroupPolicyUpdate(ServerContext                       *context,
+                                                 const SecurityGroupPolicyRequestMsg *req,
+                                                 SecurityGroupPolicyResponseMsg      *rsp)
+{
+    uint32_t                          i, nreqs = req->request_size();
+    SecurityGroupPolicyResponse       *response;
+
+    HAL_TRACE_DEBUG("Rcvd SecurityGroupPolicy Update Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::security_group_policy_update(spec, response);
+    }
+    hal::hal_cfg_db_close();
+    return Status::OK;
+}
+
+
+Status
+NwSecurityServiceImpl::SecurityGroupPolicyDelete(ServerContext                             *context,
+                                                 const SecurityGroupPolicyDeleteRequestMsg *req,
+                                                 SecurityGroupPolicyDeleteResponseMsg      *rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd SecuritygroupPolicy Delete Request");
+    return Status::OK;
+}
+
+Status
+NwSecurityServiceImpl::SecurityGroupPolicyGet(ServerContext                          *context,
+                                              const SecurityGroupPolicyGetRequestMsg *req,
+                                              SecurityGroupPolicyGetResponseMsg      *rsp)
+{
+    uint32_t                          i, nreqs = req->request_size();
+    SecurityGroupPolicyGetResponse    *response;
+
+    HAL_TRACE_DEBUG("Rcvd SecurityGroupPolicy Get Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_READ);
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto request = req->request(i);
+        hal::security_group_policy_get(request, response);
+    }
+    hal::hal_cfg_db_close();
+    return Status::OK;
+}
+
+/* Security Group create
+*/
 Status
 NwSecurityServiceImpl::SecurityGroupCreate(ServerContext *context,
                                            const SecurityGroupRequestMsg *req,
@@ -108,7 +190,7 @@ NwSecurityServiceImpl::SecurityGroupCreate(ServerContext *context,
     uint32_t                    i, nreqs = req->request_size();
     SecurityGroupResponse       *response;
 
-    HAL_TRACE_DEBUG("Rcvd SecurityProfile Create Request");
+    HAL_TRACE_DEBUG("Rcvd SecurityGroup Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }

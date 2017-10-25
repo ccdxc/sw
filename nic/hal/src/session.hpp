@@ -114,7 +114,7 @@ typedef struct flow_key_s {
             tenant_id_t            tenant_id;    // tenant id
             ipvx_addr_t            sip;          // source IP address
             ipvx_addr_t            dip;          // destination IP address
-            uint8_t                proto;        // IP protocol
+            IPProtocol             proto;        // IP protocol
             union {
                 struct {
                     uint8_t        icmp_type;    // ICMP type

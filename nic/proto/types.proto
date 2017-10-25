@@ -93,14 +93,15 @@ enum ApiStatus {
   API_STATUS_PROXY_FLOW_NOT_FOUND         = 57;    // proxy service not found for a flow
   API_STATUS_CFG_DB_ERR                   = 58;    // config database inconsistency
   API_STATUS_SECURITY_GROUP_ID_INVALID    = 59;    // Security group id invalid
-  API_STATUS_ENDPOINT_UPD_KEY_HDL_INVALID = 60;    // ep update with no key and hdl
-  API_STATUS_DOS_POLICY_ID_INVALID        = 61;    // dos policy id invalid
-  API_STATUS_DOS_POLICY_NOT_FOUND         = 62;    // dos policy not found
-  API_STATUS_RAWR_CB_ID_INVALID           = 63;    // invalid Raw Redirect CB id
-  API_STATUS_RAWR_CB_NOT_FOUND            = 64;    // invalid Raw Redirect CB
-  API_STATUS_OBJECT_IN_USE                = 65;    // object is in use
-  API_STATUS_RAWC_CB_ID_INVALID           = 66;    // invalid Raw Chain CB id
-  API_STATUS_RAWC_CB_NOT_FOUND            = 67;    // invalid Raw Chain CB
+  API_STATUS_SECURITY_POLICY_ID_INVALID   = 60;    // Security Group id invalid
+  API_STATUS_ENDPOINT_UPD_KEY_HDL_INVALID = 61;    // ep update with no key and hdl
+  API_STATUS_DOS_POLICY_ID_INVALID        = 62;    // dos policy id invalid
+  API_STATUS_DOS_POLICY_NOT_FOUND         = 63;    // dos policy not found
+  API_STATUS_RAWR_CB_ID_INVALID           = 64;    // invalid Raw Redirect CB id
+  API_STATUS_RAWR_CB_NOT_FOUND            = 65;    // invalid Raw Redirect CB
+  API_STATUS_OBJECT_IN_USE                = 66;    // object is in use
+  API_STATUS_RAWC_CB_ID_INVALID           = 67;    // invalid Raw Chain CB id
+  API_STATUS_RAWC_CB_NOT_FOUND            = 68;    // invalid Raw Chain CB
 }
 
 // common meta object that is part of all other top level objects

@@ -212,7 +212,7 @@ insert_rpc_entry(fte::ctx_t& ctx, fte::RPCMap *map)
     memset(&key, 0, sizeof(hal::flow_key_t));
     key.dip = ctx.key().dip;
     key.dport = map->dport;
-    key.proto = map->prot;
+    key.proto = (types::IPProtocol)map->prot;
     key.flow_type = (map->addr_family == fte::ALG_ADDRESS_FAMILY_IPV6)?FLOW_TYPE_V6:FLOW_TYPE_V4;    
     entry->key = key;
     entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_DATA;

@@ -6,6 +6,7 @@
 #include "nic/gen/proto/hal/tenant.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/hal/hal.hpp"
+#include "nic/gen/proto/hal/types.pb.h"
 #include <gtest/gtest.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,8 +27,12 @@ using intf::LifResponse;
 using intf::LifKeyHandle;
 using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileResponse;
+using nwsec::Service;
+using nwsec::SecurityGroupPolicyDeleteResponseMsg;
+using nwsec::SecurityGroupPolicyDeleteRequest;
 using nw::NetworkSpec;
 using nw::NetworkResponse;
+using types::IPProtocol;
 
 
 class nwsec_test : public hal_base_test {
@@ -103,6 +108,86 @@ TEST_F(nwsec_test, test1)
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
 }
+
+
+// ----------------------------------------------------------------------------
+// Create a SecurityGroupPolicySpec
+// ----------------------------------------------------------------------------
+TEST_F(nwsec_test, test2) 
+{
+    hal_ret_t                                   ret;
+    SecurityGroupPolicySpec                     sp_spec;
+    SecurityGroupPolicyResponse                 sp_rsp;
+    SecurityGroupPolicyDeleteRequest            del_req;
+    SecurityGroupPolicyDeleteResponseMsg        del_rsp;    
+    //slab_stats_t                               *pre = NULL, *post = NULL;
+    //bool                                        is_leak = false;
+
+    //pre = hal_test_utils_collect_slab_stats();
+
+    // Create SecurityGroupPolicySpec
+    sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_security_group_id(1);
+    sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_peer_security_group_id(2);
+    
+    nwsec::FirewallRuleSpec *fw_rule = sp_spec.mutable_policy_rules()->add_fw_rules();
+    Service *svc =  fw_rule->add_svc();
+    svc->set_ip_protocol(IPProtocol::IPPROTO_IPV4);
+    svc->set_dst_port(1000);
+    svc->set_alg(ALGName::APP_SVC_TFTP);
+   
+    /*fw_rule = sp_spec.mutable_egress_policy()->add_fw_rules();
+    svc = fw_rule->add_svc(); 
+    svc->set_ip_protocol(IPProtocol::IPPROTO_IPV4);
+    svc->set_dst_port(2000);
+    svc->set_alg(ALGName::APP_SVC_TFTP);*/
+    
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_group_policy_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update nwsec
+    sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_security_group_id(1);
+    sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_peer_security_group_id(2);
+
+    //sp_spec.set_ipsg_en(true);
+    //sp_spec.set_ip_normalization_en(false);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_group_policy_update(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding 
+    //post = hal_test_utils_collect_slab_stats();
+    //hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    //ASSERT_TRUE(is_leak == false);
+}
+
+TEST_F(nwsec_test, test3) 
+{
+    hal_ret_t                               ret;
+    SecurityGroupSpec                       sp_spec;
+    SecurityGroupResponse                   sp_rsp;
+    //slab_stats_t                            *pre = NULL, *post = NULL;
+    //bool                                    is_leak = false;
+
+    //pre = hal_test_utils_collect_slab_stats();
+
+    // Create SecurityGroupSpec
+    sp_spec.mutable_key_or_handle()->set_security_group_id(1);
+    
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::security_group_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding 
+    //post = hal_test_utils_collect_slab_stats();
+    //hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    //ASSERT_TRUE(is_leak == false);
+}
+
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

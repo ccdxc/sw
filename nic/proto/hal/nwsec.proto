@@ -14,6 +14,12 @@ service NwSecurity {
     rpc SecurityProfileUpdate (SecurityProfileRequestMsg) returns (SecurityProfileResponseMsg) {}
     rpc SecurityProfileDelete (SecurityProfileDeleteRequestMsg) returns (SecurityProfileDeleteResponseMsg) {}
     rpc SecurityProfileGet (SecurityProfileGetRequestMsg) returns (SecurityProfileGetResponseMsg) {}
+    
+    
+    rpc SecurityGroupPolicyCreate (SecurityGroupPolicyRequestMsg) returns (SecurityGroupPolicyResponseMsg) {}
+    rpc SecurityGroupPolicyUpdate (SecurityGroupPolicyRequestMsg) returns (SecurityGroupPolicyResponseMsg) {}
+    rpc SecurityGroupPolicyDelete (SecurityGroupPolicyDeleteRequestMsg) returns (SecurityGroupPolicyDeleteResponseMsg) {}
+    rpc SecurityGroupPolicyGet (SecurityGroupPolicyGetRequestMsg) returns (SecurityGroupPolicyGetResponseMsg) {}
 
     rpc SecurityGroupCreate (SecurityGroupRequestMsg) returns (SecurityGroupResponseMsg) {}
     rpc SecurityGroupUpdate (SecurityGroupRequestMsg) returns (SecurityGroupResponseMsg) {}
@@ -188,15 +194,6 @@ message Service {
     ALGName                    alg           = 4;                //  Identifies ALG name
 }
 
-message DoSService {
-    types.IPProtocol           ip_protocol   = 1;    // IP protocol
-    oneof l4_info {
-        uint32                 dst_port      = 2;    // TCP or UDP port, 
-                                                     // 0 for other protocols
-        types.ICMPMsgType      icmp_msg_type = 3;
-    }
-}
-
 // Applicaion Layer Gateway (ALG) names for invoking appropriate ALG
 enum ALGName {
    APP_SVC_NONE       = 0;
@@ -211,46 +208,132 @@ enum ALGName {
 // FirewallRuleSpec defines a stateful firewall rule that is part of a
 // SecurityGroupSpec
 message FirewallRuleSpec {
-    uint32              peer_security_group = 1;    // TO security group for
-                                                   // egress rules, FROM
-                                                   // security group for ingress
-                                                   // rules
     repeated  Service   svc                = 2;    // application service
     FirewallAction      action             = 3;    // action to take
     bool                log                = 4;    // log if this rule is hit
 }
 
 // ingress policy for the security group
-message IngressSGPolicy {
+message SGPolicy {
   repeated FirewallRuleSpec    fw_rules       = 1;    // ingress firewall rules
 }
 
 // egress policy for the security group
-message EgressSGPolicy {
-  repeated FirewallRuleSpec    fw_rules       = 1;    // egress firewall rules
+//message EgressSGPolicy {
+  //repeated FirewallRuleSpec    fw_rules       = 1;    // egress firewall rules
+//}
+
+
+message SecurityGroupPolicyId {
+    uint32     security_group_id         = 1;    // security group id or label
+    uint32     peer_security_group_id    = 2;    // peer security group id
 }
 
-// SecurityGroupKeyHandle uniquely identifies a security group and is used
-// to create/update/delete/get security groups
-message SecurityGroupKeyHandle {
-  oneof key_or_handle {
-    uint32     security_group_id     = 1;    // security group id or label
-    fixed64    security_group_handle = 2;    // id of security group returned by HAL
+// SecurityGroupKeyPolicyHandle uniquely identifies a security group and is used
+// to create/update/delete/get security group Policy
+message SecurityGroupPolicyKeyHandle {
+  oneof policy_key_or_handle {
+    SecurityGroupPolicyId   security_group_policy_id = 1;
+    fixed64                 security_group_policy_handle  = 2;// handle for security group policy 
   }
 }
 
-// SecurityGroupSpec captures the policy for a security group (aka. group of
+// SecurityGroupPolicySpec captures the policy for a security group pair (aka. group of
 // endpoints or enic interfaces) in both directions from workload's perspective.
 // This policy will be attached to enic interface or an endpoint so it applies
 // to the traffic from/to that workload. If no match is found for the new
 // session in the slow path, either a drop flow will be installed or packet will
 // be dropped without creating drop flow
-message SecurityGroupSpec {
-  types.ObjectMeta          meta           = 1;    // object meta
+message SecurityGroupPolicySpec {
+  types.ObjectMeta                meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
-  SecurityGroupKeyHandle    key_or_handle  = 2 [(gogoproto.jsontag) = "key"];
-  IngressSGPolicy           ingress_policy = 3;    // ingress policy
-  EgressSGPolicy            egress_policy  = 4;    // egress policy
+  SecurityGroupPolicyKeyHandle    key_or_handle  = 2 [(gogoproto.jsontag) = "key"];
+  SGPolicy                        policy_rules = 3;    // ingress policy
+}
+
+// SecurityGroupPolicyRequestMsg is batched add or modify security group policy request
+message SecurityGroupPolicyRequestMsg {
+  repeated SecurityGroupPolicySpec    request = 1;    // batched request
+}
+
+// security group operational status
+message SecurityGroupPolicyStatus {
+  fixed64    sg_handle = 1;    // id of the security group returned by HAL
+}
+
+// SecurityGroupResponse is the response to SecurityGroupPolicySpec
+message SecurityGroupPolicyResponse {
+  types.ApiStatus              api_status  = 1;    // API status code
+  SecurityGroupPolicyStatus    status      = 2;    // operational status
+}
+
+// SecurityGroupResponseMsg is batched response to SecurityGroupPolicyRequestMsg
+message SecurityGroupPolicyResponseMsg {
+  repeated SecurityGroupPolicyResponse    response = 1;    // batched response
+}
+
+// SecurityGroupPolicyDeleteRequest is used to delete a security group policy
+message SecurityGroupPolicyDeleteRequest {
+  types.ObjectMeta                meta           = 1;    // object meta
+  // key_or_handle is the security group's unique identifier
+  SecurityGroupPolicyKeyHandle    key_or_handle  = 2 [(gogoproto.jsontag) = "key"];
+}
+
+// SecurityGroupDeleteRequestMsg is used to delete a batch of security group policies.
+message SecurityGroupPolicyDeleteRequestMsg {
+  repeated SecurityGroupPolicyDeleteRequest    request = 1;
+}
+
+// SecurityGroupPolicyDeleteResponseMsg is batched response to
+// SecurityGroupPolicyDeleteRequestMsg
+message SecurityGroupPolicyDeleteResponseMsg {
+  repeated types.ApiStatus    api_status = 1;    // API status code
+}
+
+// SecurityGroupPolicyGetRequest is used to get information about a security group policy
+message SecurityGroupPolicyGetRequest {
+  types.ObjectMeta                meta           = 1;    // object meta
+  // key_or_handle is the security group's unique identifier
+  SecurityGroupPolicyKeyHandle    key_or_handle  = 2 [(gogoproto.jsontag) = "key"];
+}
+
+// SecurityGroupGetRequestMsg is batched GET request for security group policies
+message SecurityGroupPolicyGetRequestMsg {
+  repeated SecurityGroupPolicyGetRequest    request = 1;    // batched get request
+}
+
+
+// SecurityGroupStats is the statistics object for a security group
+message SecurityGroupPolicyStats {
+}
+
+// SecurityGroupGetResponse captures all the information about a security group
+message SecurityGroupPolicyGetResponse {
+  types.ApiStatus              api_status = 1;    // API status code
+  SecurityGroupPolicySpec      spec       = 2;    // configuration of security policy
+  SecurityGroupPolicyStatus    status     = 3;    // operational state of security policy
+  SecurityGroupPolicyStats     stats      = 4;    // debug status of security policy
+}
+
+// SecurityGroupPolicyGetResponseMsg is batched response to SecurityGroupGetRequestMsg
+message SecurityGroupPolicyGetResponseMsg {
+  repeated SecurityGroupPolicyGetResponse    response = 1;    // batched get response
+}
+
+// security_group obj definition
+// SecurityGroupKeyHandle uniquely identifies a security group and is used
+// to create/update/delete/get security groups
+message SecurityGroupKeyHandle {
+  oneof key_or_handle {
+    uint32     security_group_id      = 1;    // security group id or label
+    fixed64    security_group_handle  = 2;    // id of security group returned by HAL
+  }
+}
+
+message SecurityGroupSpec {
+    types.ObjectMeta              meta     = 1; // object meta
+    // Key_or_handle is the security group's unique identifier
+    SecurityGroupKeyHandle        key_or_handle = 2 [(gogoproto.jsontag) = "key"];
 }
 
 // SecurityGroupRequestMsg is batched add or modify security group policy request
@@ -321,6 +404,15 @@ message SecurityGroupGetResponseMsg {
   repeated SecurityGroupGetResponse    response = 1;    // batched get response
 }
 
+message DoSService {
+    types.IPProtocol           ip_protocol   = 1;    // IP protocol
+    oneof l4_info {
+        uint32                 dst_port      = 2;    // TCP or UDP port, 
+                                                     // 0 for other protocols
+        types.ICMPMsgType      icmp_msg_type = 3;
+    }
+}
+
 // DoSSessionLimits captures the session limits to be enforced on a security
 // group
 message DoSSessionLimits {
@@ -370,7 +462,6 @@ message DoSProtectionSpec {
                                                    // traffic (IP and non-IP)
   uint32              peer_security_group  = 9;    // TO security group
 }
-
 
 // ingress policy for DoS
 message IngressDoSPolicy {

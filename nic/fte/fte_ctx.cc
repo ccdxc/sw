@@ -68,7 +68,7 @@ ctx_t::extract_flow_key()
         key_.tenant_id = hal::tenant_lookup_by_handle(l2seg->tenant_handle)->tenant_id; 
         key_.sip.v4_addr = ntohl(iphdr->saddr);
         key_.dip.v4_addr = ntohl(iphdr->daddr);
-        key_.proto = iphdr->protocol;
+        key_.proto = (types::IPProtocol) iphdr->protocol;
         break;
 
     case FLOW_KEY_LOOKUP_TYPE_IPV6: 
@@ -77,7 +77,7 @@ ctx_t::extract_flow_key()
         key_.tenant_id = hal::tenant_lookup_by_handle(l2seg->tenant_handle)->tenant_id;
         memcpy(key_.sip.v6_addr.addr8, iphdr6->saddr, sizeof(key_.sip.v6_addr.addr8));
         memcpy(key_.dip.v6_addr.addr8, iphdr6->daddr, sizeof(key_.dip.v6_addr.addr8));
-        key_.proto = iphdr6->nexthdr;
+        key_.proto = (types::IPProtocol) iphdr6->nexthdr;
         break;
 
     default:
