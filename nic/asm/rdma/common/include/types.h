@@ -676,6 +676,23 @@ struct key_entry_t {
     qp: 24; //qp which bound the MW ?
 };
 
+struct key_entry_aligned_t {
+    user_key: 8;
+    state: 4;
+    type: 4;
+    acc_ctrl: 8;
+    log_page_size: 8;
+    len: 32;
+    base_va: 64;
+    pt_base: 32;
+    pd: 32;
+    pt_size: 32; // looks like we are not using this field ?
+    flags: 8;
+    qp: 24; //qp which bound the MW ?
+    // pad added for easy access of d[] in mpu program
+    pad                : 256; 
+};
+
 #define GET_NUM_PAGES(_va_r, _bytes_r, _page_size_imm, _num_pages_r, _scratch_r)  \
      add    _num_pages_r, _va_r, _bytes_r;                                        \
      srl    _num_pages_r, _num_pages_r, _page_size_imm;                           \

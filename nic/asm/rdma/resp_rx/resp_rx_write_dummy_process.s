@@ -13,8 +13,6 @@ struct resp_rx_write_dummy_process_k_t k;
 #define R_KEY r2
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r2
-#define ALIGNED_KEY_ADDR r6
-#define KEY_ID r2
 #define RQCB0_ADDR r2
 #define RAW_TABLE_PC r3
 #define GLOBAL_FLAGS r7
@@ -55,20 +53,6 @@ resp_rx_write_dummy_process:
 
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, R_KEY)
 
-    //aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK;
-    //and         r6, KEY_ADDR, HBM_CACHE_LINE_SIZE_MASK
-    //sub         ALIGNED_KEY_ADDR, KEY_ADDR, r6
-
-    KEY_ENTRY_ALIGNED_ADDR_GET(ALIGNED_KEY_ADDR, KEY_ADDR)
-
-    //key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
-    // compute (key_addr - aligned_key_addr) >> log_key_entry_t
-    //sub         KEY_ID, KEY_ADDR, ALIGNED_KEY_ADDR
-    //srl         KEY_ID, KEY_ID, LOG_SIZEOF_KEY_ENTRY_T
-
-    KEY_ID_GET(KEY_ID, KEY_ADDR)
-
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, key_id, KEY_ID)
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, dma_cmd_start_index, RESP_RX_DMA_CMD_PYLD_BASE)
 
     CAPRI_SET_FIELD(r4, RKEY_INFO_T, tbl_id, TABLE_1)
@@ -78,7 +62,8 @@ resp_rx_write_dummy_process:
 
     CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqlkey_process)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, ALIGNED_KEY_ADDR)
+    // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, KEY_ADDR)
 
     IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
     tblwr.c1    d.va, 0

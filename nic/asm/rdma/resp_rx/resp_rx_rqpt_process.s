@@ -12,6 +12,7 @@ struct resp_rx_rqpt_process_k_t k;
 #define TBL_ARG_P   r5
 #define TBL_ID      r6
 #define RAW_TABLE_PC r1
+#define GLOBAL_FLAGS r7
 
 %%
     .param  resp_rx_rqwqe_wrid_process
@@ -19,6 +20,8 @@ struct resp_rx_rqpt_process_k_t k;
 
 .align
 resp_rx_rqpt_process:
+
+    add         GLOBAL_FLAGS, r0, k.global.flags
 
     //page_addr_p = (u64 *) (d_p + sizeof(u64) * rqcb_to_pt_info_p->page_seg_offset);
 
@@ -47,7 +50,7 @@ resp_rx_rqpt_process:
 
     // if write_with_imm, load resp_rx_rqwqe_wrid_process, 
     // else load resp_rx_rqwqe_process
-    ARE_ALL_FLAGS_SET(c1, r7, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
+    ARE_ALL_FLAGS_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
     CAPRI_SET_RAW_TABLE_PC_C(c1, RAW_TABLE_PC, resp_rx_rqwqe_wrid_process)
     CAPRI_SET_RAW_TABLE_PC_C(!c1, RAW_TABLE_PC, resp_rx_rqwqe_process)
 

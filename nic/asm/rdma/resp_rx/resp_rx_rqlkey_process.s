@@ -5,11 +5,8 @@
 
 struct resp_rx_phv_t p;
 struct resp_rx_key_process_k_t k;
-#struct key_entry_t d;
+struct key_entry_aligned_t d;
 
-#define KEY_P r7
-#define BASE_VA r6
-#define LEN r5
 #define LOG_PAGE_SIZE r4
 #define MY_PT_BASE_ADDR r2
 #define LOG_PT_SEG_SIZE r1
@@ -43,53 +40,42 @@ struct resp_rx_key_process_k_t k;
 .align
 resp_rx_rqlkey_process:
 
-    // lkey_p = lkey_p + lkey_info_p->key_id;
-    //big-endian
-    sub         KEY_P, (HBM_NUM_KEY_ENTRIES_PER_CACHE_LINE - 1), k.args.key_id
-    add         KEY_P, r0, KEY_P, LOG_SIZEOF_KEY_ENTRY_T_BITS
-
-    // if (!(lkey_p->acc_ctrl & ACC_CTRL_LOCAL_WRITE)) {
-    CAPRI_TABLE_GET_FIELD(r1, KEY_P, KEY_ENTRY_T, acc_ctrl)
     //ARE_ALL_FLAGS_SET_B(c1, r1, ACC_CTRL_LOCAL_WRITE)
-    and         r1, r1, k.args.acc_ctrl
+    and         r1, d.acc_ctrl, k.args.acc_ctrl
     seq         c1, r1, k.args.acc_ctrl
     bcf         [!c1], error_completion
-    CAPRI_TABLE_GET_FIELD(BASE_VA, KEY_P, KEY_ENTRY_T, base_va) //BD Slot
 
     //  if ((lkey_info_p->sge_va < lkey_p->base_va) ||
     //  ((lkey_info_p->sge_va + lkey_info_p->sge_bytes) > (lkey_p->base_va + lkey_p->len))) {
-    CAPRI_TABLE_GET_FIELD(LEN, KEY_P, KEY_ENTRY_T, len)
-    CAPRI_TABLE_GET_FIELD(LOG_PAGE_SIZE, KEY_P, KEY_ENTRY_T, log_page_size)
-    slt         c1, k.args.va, BASE_VA 
-    add         r1, BASE_VA, LEN 
+    slt         c1, k.args.va, d.base_va  // BD Slot
+    add         r1, d.base_va, d.len
     //add         r2, k.args.va, k.args.len
     //slt         c2, r1, r2
     sslt        c2, r1, k.args.va, k.args.len
     bcf         [c1 | c2], error_completion
-    CAPRI_TABLE_GET_FIELD(r1, KEY_P, KEY_ENTRY_T, pt_base) //BD Slot
     
     // my_pt_base_addr = (void *)
     //     (hbm_addr_get(PHV_GLOBAL_PT_BASE_ADDR_GET()) +
     //         (lkey_p->pt_base * sizeof(u64)));
 
-    PT_BASE_ADDR_GET(r2)
-    add         MY_PT_BASE_ADDR, r2, r1, CAPRI_LOG_SIZEOF_U64
+    PT_BASE_ADDR_GET(r2) //BD Slot
+    add         MY_PT_BASE_ADDR, r2, d.pt_base, CAPRI_LOG_SIZEOF_U64
     // now r2 has my_pt_base_addr
     
 
     // pt_seg_size = HBM_NUM_PT_ENTRIES_PER_CACHE_LINE * phv_p->page_size;
     // i.e., log_pt_seg_size = LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE + LOG_PAGE_SIZE
-    add         LOG_PT_SEG_SIZE, LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE, LOG_PAGE_SIZE
+    add         LOG_PT_SEG_SIZE, LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE, d.log_page_size
     // now r1 has log_pt_seg_size
 
     // transfer_offset = lkey_info_p->sge_va - lkey_p->base_va + lkey_p->base_va % pt_seg_size;
-    add         r3, r0, BASE_VA
+    add         r3, r0, d.base_va
     // base_va % pt_seg_size
     mincr       r3, LOG_PT_SEG_SIZE, r0
     // add sge_va
     add         r3, r3, k.args.va
     // subtract base_va
-    sub         r3, r3, BASE_VA
+    sub         r3, r3, d.base_va
     // now r3 has transfer_offset
 
     // transfer_offset % pt_seg_size
@@ -110,10 +96,11 @@ unaligned_pt:
     // pt_seg_p = (u64 *)my_pt_base_addr + (transfer_offset / lkey_info_p->page_size);
 
     // x = transfer_offset/log_page_size
+    add         LOG_PAGE_SIZE, r0, d.log_page_size
     srlv        r5, r3, LOG_PAGE_SIZE
     // transfer_offset%log_page_size 
     //add         r6, r0, r3
-    mincr       PT_OFFSET, LOG_PAGE_SIZE, r0
+    mincr       PT_OFFSET, d.log_page_size, r0
     // now r6 has pt_offset
     b           invoke_pt
     add         PT_SEG_P, MY_PT_BASE_ADDR, r5, CAPRI_LOG_SIZEOF_U64 //BD Slot
@@ -136,7 +123,7 @@ invoke_pt:
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, sge_index, k.args.tbl_id)
     CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, pt_bytes, sge_index, k.{args.len...args.tbl_id})
-    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, log_page_size, LOG_PAGE_SIZE)
+    CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, log_page_size, d.log_page_size)
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 0)
     
     seq         c3, k.args.dma_cmdeop, 1

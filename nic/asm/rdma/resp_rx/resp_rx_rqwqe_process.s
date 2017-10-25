@@ -140,23 +140,14 @@ loop:
     //sge_p++;
     sub.c2      SGE_P, SGE_P, 1, LOG_SIZEOF_SGE_T_BITS
 
-    KEY_ENTRY_ADDR_GET(r2, r6, r2)
-    // now r2 has key_addr
+    KEY_ENTRY_ADDR_GET(r6, r6, r2)
+    // now r6 has key_addr
 
-    KEY_ENTRY_ALIGNED_ADDR_GET(r6, r2)
-    // r6 now has aligned_key_addr
-
-
-    //key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
-    // compute (key_addr - aligned_key_addr) >> log_key_entry_t
-    KEY_ID_GET(r2, r2)
-    // r2 now has key_id
-    
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, key_id, r2)
+    // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
 
     SEL_T0_OR_T1_K(r7, F_FIRST_PASS)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqlkey_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r6)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, r6)
     CAPRI_SET_TABLE_0_VALID_C(F_FIRST_PASS, 1)
     CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1)
 

@@ -151,12 +151,11 @@ struct resp_rx_key_info_t {
     dma_cmd_start_index: 8;
     tbl_id: 8;
     acc_ctrl: 8;
-    key_id: 8;
     dma_cmdeop: 1;
     cq_dma_cmd_index: 7;
     inv_r_key: 32;
     nak_code: 8;
-    //tightly packed for 160 bits
+    pad:8;
 };
 
 struct resp_rx_key_process_k_t {

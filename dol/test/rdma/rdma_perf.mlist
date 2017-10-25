@@ -1,4 +1,5 @@
 # Feature Test Modules List
+# For RDMA perf tests
 feature:
     id          : rdma_perf
     sub         : rdma
