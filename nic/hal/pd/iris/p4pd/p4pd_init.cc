@@ -1121,10 +1121,11 @@ capri_repl_pgm_def_entries (void)
 hal_ret_t
 p4pd_forwarding_mode_init (void) 
 {
-    return HAL_RET_OK;
+#if 0
     if (getenv("CAPRI_MOCK_MODE")) {
         return HAL_RET_OK;
     }
+#endif
     uint64_t val, nic_mode = NIC_MODE_SMART;
     capri_table_constant_read(P4TBL_ID_INPUT_PROPERTIES, &val);
     val = be64toh(val);

@@ -1812,7 +1812,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     oif_t                       oif;
     pd::pd_l2seg_uplink_args_t  pd_l2seg_uplink_args;
 
-    hal_api_trace(" API Begin: add l2seg on uplink ");
+    hal_api_trace(" API Begin: addl2seguplink ");
     // Validate if l2seg and uplink exists
     ret = validate_l2seg_on_uplink(spec, rsp);
     if (ret != HAL_RET_OK) {

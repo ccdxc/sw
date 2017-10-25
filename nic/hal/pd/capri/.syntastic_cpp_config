@@ -2,4 +2,5 @@
 -I ../../../capsim/lib/libmpuobj/include
 -I ../../../third-party/spdlog/include
 -I ../../../include
+-I ../../../..
 -std=c++11

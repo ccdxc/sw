@@ -114,6 +114,14 @@ asic_do_read (uint8_t opn, uint64_t addr, uint8_t *data, uint32_t len)
         }
     }
 
+    // move the producer index to next slot.
+    // consumer is unaware of the blocking/non-blocking call and always
+    // moves to the next slot.
+    g_asic_rw_workq[curr_tid].pindx++;
+    if (g_asic_rw_workq[curr_tid].pindx >= HAL_ASIC_RW_Q_SIZE) {
+        g_asic_rw_workq[curr_tid].pindx = 0;
+    }
+
     return rw_entry->status;
 }
 
