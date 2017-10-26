@@ -35,7 +35,10 @@ struct rqcb0_t {
 
     pt_base_addr: 32;
 
-    rsq_base_addr: 32;
+    union {
+        rsq_base_addr: 32;
+        q_key: 32;
+    };
 
     immdt_as_dbell: 1;
     rsvd0: 2;

@@ -39,6 +39,8 @@ class RdmaSessionObject(base.ConfigObjectBase):
         self.lqp.ConfigureHeaderTemplate(self, True)
         #self.rqp.ConfigureHeaderTemplate(self, False)
         self.lqp.set_dst_qp(self.rqp.id)
+        if self.lqp.svc == 3:
+            self.lqp.set_q_key(self.lqp.id) #we are using q_id as q_key
         #self.lqp.rq.set_dst_qp(self.rqp.id)
         #cfglogger.info('RDMA Session: %s  Setting SQCB Local QID: %d Remote QID: %d ' % 
         #               (self.GID(), self.lqp.id, self.rqp.id))

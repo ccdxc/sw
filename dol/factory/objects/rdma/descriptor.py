@@ -163,20 +163,14 @@ class RdmaCqDescriptor(Packet):
         BitField("rkey_inv_vld", 0, 1),
         BitField("imm_data_vld", 0, 1),
         BitField("color", 0, 1),
-        BitField("rsvd0", 0, 5),
+        BitField("ipv4", 0, 1),
+        BitField("rsvd1", 0, 4),
+        ByteField("rsvd2", 0),
         X3BytesField("qp", 0),
+        X3BytesField("src_qp", 0),
+        MACField("smac", ETHER_ANY),
         IntField("imm_data", 0),
         IntField("r_key", 0),
-        ByteField("rsvd1", 0),
-        ByteField("rsvd2", 0),
-        ByteField("rsvd3", 0),
-        ByteField("rsvd4", 0),
-        ByteField("rsvd5", 0),
-        ByteField("rsvd6", 0),
-        ByteField("rsvd7", 0),
-        ByteField("rsvd8", 0),
-        ByteField("rsvd9", 0),
-        ByteField("rsvd10", 0),
     ]
 
 class RdmaSqDescriptorObject(base.FactoryObjectBase):
@@ -460,20 +454,32 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
             self.imm_data = spec.fields.imm_data
         if hasattr(spec.fields, 'r_key'):
             self.r_key = spec.fields.r_key
+        if hasattr(spec.fields, 'ipv4'):
+            self.ipv4 = spec.fields.ipv4
+        if hasattr(spec.fields, 'src_qp'):
+            self.src_qp = spec.fields.src_qp
+        if hasattr(spec.fields, 'smac'):
+            self.smac = bytes(
+                spec.fields.smac)
+            
 
         self.__create_desc()
 
     def __create_desc(self):
         self.desc = RdmaCqDescriptor(
-                            wrid=self.wrid,
-                            op_type=self.op_type,
-                            status=self.status,
-                            rkey_inv_vld=self.rkey_inv_vld,
-                            imm_data_vld=self.imm_data_vld,
-                            color=self.color,
-                            qp=self.qp,
-                            imm_data=self.imm_data,
-                            r_key=self.r_key)
+            wrid=self.wrid,
+            op_type=self.op_type,
+            status=self.status,
+            rkey_inv_vld=self.rkey_inv_vld,
+            imm_data_vld=self.imm_data_vld,
+            color=self.color,
+            qp=self.qp,
+            imm_data=self.imm_data,
+            r_key=self.r_key,
+            ipv4=self.ipv4,
+            src_qp=self.src_qp,
+            smac=self.smac)
+        
     def __set_desc(self, desc):
         self.desc = desc
     

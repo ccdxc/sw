@@ -918,6 +918,13 @@ rdma_qp_update (RdmaQpUpdateSpec& spec, RdmaQpUpdateResponse *rsp)
                     spec.dst_qp_num());
         break;
         
+        case rdma::RDMA_UPDATE_QP_OPER_SET_Q_KEY:
+            rqcb_p->rqcb0.q_key = spec.q_key();
+            sqcb_p->sqcb1.q_key = spec.q_key();
+            HAL_TRACE_DEBUG("{}: Update: Setting q_key to: {}", __FUNCTION__,
+                            spec.q_key());
+            break;
+        
         case rdma::RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
             header_template_addr = sqcb_p->sqcb1.header_template_addr;
             header_template_t header_template;

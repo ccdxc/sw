@@ -83,6 +83,7 @@ message RdmaQpResponseMsg {
 enum RdmaQpUpdateOper {
     RDMA_UPDATE_QP_OPER_SET_DEST_QP    = 0;  // Dest QP
     RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE = 1;  // L2/L3 Header Params
+    RDMA_UPDATE_QP_OPER_SET_Q_KEY = 2; // Q_KEY
 }
  
 //****************   Update Queue Pair  ********************************//
@@ -94,6 +95,7 @@ message RdmaQpUpdateSpec {
   RdmaQpUpdateOper         oper            = 4;    // type of Update operation
   uint32                   dst_qp_num      = 5;    // Dest QP value
   bytes                    header_template = 6;    // Header Vector Params
+  uint32                   q_key           = 7;    // Q_KEY
 }
 
 // RdmaQpRequestMsg is batched request used to create/update of Rdma QPs

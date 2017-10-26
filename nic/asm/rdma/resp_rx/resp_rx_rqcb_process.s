@@ -75,15 +75,21 @@ resp_rx_rqcb_process:
     phvwr   p.ack_info.psn, d.e_psn
     phvwr   p.ack_info.aeth.msn, d.msn
 
+    IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_UD)
+    
     // is service type correct ?
     srl         r1, CAPRI_APP_DATA_BTH_OPCODE, BTH_OPC_SVC_SHIFT
     seq         c1, r1, d.serv_type
     bcf         [!c1], nak
     phvwr.!c1   p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ) //BD Slot
+    phvwr.!c1   p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ) 
 
+    //For UD we dont need PSN checks and MSN updates.
+    bcf     [c2], need_checkout_ud
+    
     // check for seq_err (e_psn < bth.psn)
     //slt     c1, d.e_psn, CAPRI_APP_DATA_BTH_PSN
-    scwlt24     c1, d.e_psn, CAPRI_APP_DATA_BTH_PSN
+    scwlt24     c1, d.e_psn, CAPRI_APP_DATA_BTH_PSN  //BD slot.
     bcf         [c1], nak
     phvwr.c1    p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_SEQ_ERR) //BD Slot
 
@@ -309,6 +315,43 @@ exit:
     nop.e
     nop
 
+need_checkout_ud:
+
+    //UD_TODO: I need to do length check to make sure it is less than PMTU.
+    ARE_ALL_FLAGS_SET(c6, r7, RESP_RX_FLAG_IMMDT|RESP_RX_FLAG_SEND)
+
+    add     r1, r0, d.log_pmtu
+    sllv    r1, 1, r1
+    blt     r1, REM_PYLD_BYTES, ud_drop
+    
+    //Need to check q_key comparision
+    add    r1, r0, CAPRI_RXDMA_DETH_Q_KEY   //BD Slot
+    add    r2, r0, d.q_key
+    bne    r1, r2, ud_drop
+    
+    // don't need to set status field explicitly to 0
+    //phvwr    p.cqwqe.status, CQ_STATUS_SUCCESS
+    phvwr    p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID //BD Slot
+
+    // populate cq op_type
+    phvwr       p.cqwqe.op_type, OP_TYPE_SEND_RCVD
+
+    // populate src_qp
+    phvwr       p.cqwqe.src_qp, CAPRI_RXDMA_DETH_SRC_QP
+
+    //populate ipv4 or ipv6
+    phvwr       p.cqwqe.ipv4, 1
+
+    //populate smac
+    phvwr.!c6       p.cqwqe.smac, CAPRI_RXDMA_DETH_SMAC
+    phvwr.c6       p.cqwqe.smac, CAPRI_RXDMA_DETH_IMMETH_SMAC
+    
+    // populate immediate data. 
+    phvwr.c6    p.cqwqe.imm_data_vld, 1
+    phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_DETH_IMMETH_DATA
+
+    CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4) 
+
 checkout:
     // checkout a descriptor
     add     r1, r0, PROXY_RQ_C_INDEX
@@ -467,6 +510,10 @@ recirc:
     nop
 
 nak:
+    // If this is UD packet, silently drop
+    bcf [c2], ud_drop
+    nop
+    
     add     RQCB1_ADDR, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
 
@@ -481,3 +528,10 @@ nak:
     tbladd  d.nxt_to_go_token_id, 1  
     nop.e
     nop
+
+ud_drop:
+
+    phvwr   p.common.p4_intr_global_drop, 1
+    nop.e
+    nop
+    

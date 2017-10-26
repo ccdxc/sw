@@ -925,7 +925,10 @@ typedef struct sqcb1_s {
     uint32_t e_rsp_psn:24;
     uint8_t  token_id;
     uint8_t  nxt_to_go_token_id;
-    uint32_t header_template_addr;
+    union {
+        uint32_t header_template_addr;
+        uint32_t q_key;
+    };
     uint32_t rrqwqe_cur_sge_offset;
     uint8_t  rrqwqe_cur_sge_id;
     uint8_t  rrqwqe_num_sges;
@@ -999,7 +1002,10 @@ typedef struct rqcb0_s {
 
     uint8_t immdt_as_dbell:1;
 
-    uint32_t rsq_base_addr;
+    union {
+        uint32_t rsq_base_addr;
+        uint32_t q_key;
+    };
 
     uint32_t pt_base_addr;
 
@@ -1029,7 +1035,7 @@ typedef struct rqcb1_s {
     uint32_t cq_id:24;
     uint64_t wrid;
     //cached {va, len, r_key} from first packet of write req
-    uint32_t r_key;   
+    uint32_t r_key;
     uint32_t len;
     uint64_t va; 
 } PACKED rqcb1_t;

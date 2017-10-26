@@ -122,7 +122,7 @@ descriptors:
             op_type: 17 #OP_TYPE_SEND_RCVD
             status : 7  #CQ_STATUS_LOCAL_ACC_ERR
             color  : callback://rdma/rdma/GetCQExpColor
-
+            smac: callback://rdma/rdma/GetUDSMAC
 
 trigger:
     descriptors:

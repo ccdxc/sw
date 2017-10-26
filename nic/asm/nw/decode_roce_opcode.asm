@@ -32,10 +32,18 @@ decode_roce_opcode:
   add         r1, d.u.decode_roce_opcode_d.len, \
                   (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                    CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_ROCE_HDR_SZ)
+
+  smeqb       c1, k.roce_bth_opCode, 0xE0, 0x60    
+  //increment splitter offset to conditionally skip eth header for UD RDMA
+  add.c1      r1, r1, 14
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, r1
-  smeqb       c1, k.roce_bth_opCode, 0xE0, 0x60
+
   phvwr.c1    p.p4_to_p4plus_roce_ip_valid, TRUE
   phvwr.c1    p.p4_to_p4plus_roce_eth_valid, TRUE
+
+  //substract udp header length 8
   sub         r1, k.udp_len, 8
+  //Add conditionally the ip header length for UD RDMA  
+  add.c1      r1, r1, 20
   sub.e       r1, r1, d.u.decode_roce_opcode_d.len
   phvwr       p.p4_to_p4plus_roce_payload_len, r1

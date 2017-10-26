@@ -7,7 +7,8 @@ import infra.api.api as infra_api
 from infra.common.logging       import logger
 import infra.common.defs as defs
 from infra.common.glopts import GlobalOptions
-
+from test.callbacks.common.pktslicer import *
+import binascii
 
 def GetRqPreEpsn (tc, pkt):
     return tc.pvtdata.rq_pre_qstate.e_psn
@@ -71,3 +72,18 @@ def GetNakSyndrome(tc, pkt, args):
     # AETH_CODE_NAK << AETH_SYNDROME_CODE_SHIFT | nak_code
     syndrome = ((3 << 5) | args.nak_code) 
     return syndrome
+
+def GetUDPacketPayload(tc, packet, args):
+    srcpacket = tc.packets.Get(args.pktid) 
+    slicer = PacketSlicer(srcpacket, args)
+    slc = slicer.GetSlice()
+    payload_size = getattr(args, 'pl_size', 64)
+    payload = bytes([0x0]*payload_size)
+    print('GetUDPacketPayload: %s ' % (binascii.hexlify(bytes(slc+payload))))
+    return list(slc+payload)
+    
+def GetUDSMAC(tc, desc):
+    if tc.config.rdmasession.lqp.svc == 3:
+        return bytes(tc.config.rdmasession.session.initiator.ep.macaddr.getnum().to_bytes(6, 'big'))
+    else:
+        return bytes([0x0]*6)

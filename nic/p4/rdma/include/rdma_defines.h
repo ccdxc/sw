@@ -98,6 +98,7 @@ typedef struct rdma_xrceth_s {
 #define RESP_RX_FLAG_IMMDT              0x0400
 #define RESP_RX_FLAG_INV_RKEY           0x0800
 #define RESP_RX_FLAG_COMPLETION         0x1000
+#define RESP_RX_FLAG_UD                 0x8000
 
 #define ARE_ALL_FLAGS_SET(_c, _flags_r, _flags_test) \
     smeqh   _c, _flags_r, _flags_test, _flags_test

@@ -99,6 +99,7 @@ header_type p4_to_p4plus_roce_bth_deth_header_t {
         deth_q_key          : 32;
         deth_rsvd           : 8;
         deth_src_qp         : 24;
+        smac                : 48;
     }
 }
 
@@ -108,6 +109,7 @@ header_type p4_to_p4plus_roce_bth_deth_immeth_header_t {
         bth_header_bits     : 96;
         deth_header_bits    : 64;
         immeth_data         : 32;
+        smac                : 48;
     }
 }
 

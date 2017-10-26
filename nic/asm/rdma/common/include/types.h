@@ -142,6 +142,12 @@ struct rdma_xrceth_t {
     xrcsrq  : 24;
 };
 
+struct ethhdr_t {
+dmac       : 48;
+sma        : 48;
+ethertype  : 16;
+};
+
 union rdma_ext_t {
 
     struct rdma_immeth_t immeth;
@@ -204,12 +210,16 @@ union rdma_ext_t {
         struct rdma_atomiceth_t atomiceth;
     } rdeth_atomiceth;
 
-    struct rdma_deth_t       deth;
+    struct {
+        struct rdma_deth_t       deth;
+        struct ethhdr_t         eth;
+    } deth_eth;
 
     struct {
         struct rdma_deth_t   deth;
         struct rdma_immeth_t immeth;
-    } deth_immeth;
+        struct ethhdr_t     eth;
+    } deth_immeth_eth;
 };
 
 struct rdma_hdr_t {
@@ -300,6 +310,7 @@ struct resp_rx_flags_t {
 #define RESP_RX_FLAG_COMPLETION         0x1000
 #define RESP_RX_FLAG_ACK_REQ            0x2000
 #define RESP_RX_FLAG_RING_DBELL         0x4000
+#define RESP_RX_FLAG_UD                 0x8000
 
 struct req_tx_flags_t {
     error_disable_qp: 1;
@@ -555,11 +566,14 @@ struct cqwqe_t {
     rkey_inv_vld: 1;
     imm_data_vld: 1;
     color: 1;
-    rsvd1: 5;
+    ipv4: 1;
+    rsvd1: 4;
+    rsvd2: 8;
     qp: 24;
+    src_qp: 24;
+    smac: 48;
     imm_data: 32;
     r_key: 32;
-    rsvd2: 80;
 };
 
 struct eqwqe_t {
@@ -721,12 +735,6 @@ struct iphdr_t {
     saddr       : 32;
     daddr       : 32;
 /*The options start here. */
-};
-
-struct ethhdr_t {
-    dmac       : 48;
-    sma        : 48;
-    ethertype  : 16;
 };
 
 struct vlanhdr_t {

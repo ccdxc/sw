@@ -940,6 +940,22 @@ p4pd_decode_roce_opcode_init (void)
     DirectMap                    *dm;
     decode_roce_opcode_actiondata data = { 0 };
 
+    // C++ compiler did not allow sparse initialization. compiler must be old.
+    // So lets initialize the for UD entries here.
+
+    opc_to_info[100].valid = 1;
+    opc_to_info[100].roce_hdr_length = sizeof(rdma_bth_t)+sizeof(rdma_deth_t);
+    opc_to_info[100].type = Q_TYPE_RDMA_RQ;
+    opc_to_info[100].raw_flags = (RESP_RX_FLAG_ONLY | RESP_RX_FLAG_SEND |
+                                  RESP_RX_FLAG_COMPLETION|RESP_RX_FLAG_UD);
+
+    opc_to_info[101].valid = 1;
+    opc_to_info[101].roce_hdr_length = sizeof(rdma_bth_t)+sizeof(rdma_deth_t)+sizeof(rdma_immeth_t);
+    opc_to_info[101].type = Q_TYPE_RDMA_RQ;
+    opc_to_info[101].raw_flags = (RESP_RX_FLAG_ONLY | RESP_RX_FLAG_SEND |
+                                  RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_COMPLETION |
+                                  RESP_RX_FLAG_UD);
+        
     dm = g_hal_state_pd->dm_table(P4TBL_ID_DECODE_ROCE_OPCODE);
     HAL_ASSERT(dm != NULL);
 

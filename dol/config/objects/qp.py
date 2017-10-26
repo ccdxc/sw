@@ -139,6 +139,11 @@ class QpObject(base.ConfigObjectBase):
         self.dst_qp = value
         halapi.ModifyQps([self])
 
+    def set_q_key(self, value):
+        self.modify_qp_oper = rdma_pb2.RDMA_UPDATE_QP_OPER_SET_Q_KEY
+        self.q_key = value
+        halapi.ModifyQps([self])
+
     def PrepareHALRequestSpec(self, req_spec):
         cfglogger.info("QP: %s PD: %s Remote: %s HW_LIF: %d\n" %\
                         (self.GID(), self.pd.GID(), self.remote, self.pd.ep.intf.lif.hw_lif_id))
@@ -172,6 +177,8 @@ class QpObject(base.ConfigObjectBase):
             req_spec.oper = self.modify_qp_oper
             if req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_DEST_QP:
                req_spec.dst_qp_num = self.dst_qp
+            elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_Q_KEY:
+               req_spec.q_key = self.q_key
             elif req_spec.oper == rdma_pb2.RDMA_UPDATE_QP_OPER_SET_HEADER_TEMPLATE:
                req_spec.header_template = bytes(self.HdrTemplate)
 

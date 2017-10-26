@@ -343,6 +343,7 @@ action rdma_stage0_bth_deth_action () {
     modify_field(rdma_bth_deth_scr.deth_q_key, rdma_bth_deth.deth_q_key);
     modify_field(rdma_bth_deth_scr.deth_rsvd, rdma_bth_deth.deth_rsvd);
     modify_field(rdma_bth_deth_scr.deth_src_qp, rdma_bth_deth.deth_src_qp);
+    modify_field(rdma_bth_deth_scr.smac, rdma_bth_deth.smac);
 }
 
 
@@ -370,6 +371,7 @@ action rdma_stage0_bth_deth_immeth_action () {
 
     // deth_immeth params
     modify_field(rdma_bth_deth_immeth_scr.immeth_data, rdma_bth_deth_immeth.immeth_data);
+    modify_field(rdma_bth_deth_immeth_scr.smac, rdma_bth_deth_immeth.smac);
 }
 
 

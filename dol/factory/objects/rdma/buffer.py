@@ -74,8 +74,8 @@ class RdmaBufferObject(base.FactoryObjectBase):
         if self.size > other.size: 
            return False
 
-        print('Expected: self_data: [size: %d] %s' % (self.size, bytes(self.data)))
-        print('Actual: other_data: [size: %d] %s' % (self.size, bytes(other.data[:self.size])))
+        print('Expected: self_data: [size: %d] %s' % (self.size, binascii.hexlify(bytes(self.data))))
+        print('Actual: other_data: [size: %d] %s' % (self.size, binascii.hexlify(bytes(other.data[:self.size]))))
         cmp = bytes(self.data) == bytes(other.data[:self.size])
         cfglogger.info("comparison: %s" %cmp) 
         #cfglogger.info("Compare data byte by byte:") 
