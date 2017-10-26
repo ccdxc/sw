@@ -148,8 +148,10 @@ tenant_pd_cleanup(pd_tenant_t *tenant_pd)
     }
 
     // Check if l2segs have been removed before tenant cleanup
-    if (!tenant_pd->l2seg_hw_id_idxr_->usage()) {
-        HAL_TRACE_ERR("pd-tenant:{}:l2seg idxr still in use", __FUNCTION__);
+    // index 0 is reserved.
+    if (tenant_pd->l2seg_hw_id_idxr_->usage() > 1) {
+        HAL_TRACE_ERR("pd-tenant:{}:l2seg idxr still in use. usage:{}", 
+                      __FUNCTION__, tenant_pd->l2seg_hw_id_idxr_->usage());
         ret = HAL_RET_INVALID_OP;
         goto end;
     }
@@ -217,7 +219,7 @@ tenant_pd_free_l2seg_hw_id(pd_tenant_t *tenant_pd, uint32_t l2seg_hw_id)
         goto end;
     }
 
-    if (tenant_pd->ten_hw_id != INVALID_INDEXER_INDEX) { 
+    if (l2seg_hw_id != INVALID_INDEXER_INDEX) { 
         rs = tenant_pd->l2seg_hw_id_idxr_->free(l2seg_hw_id);
         if (rs != indexer::SUCCESS) {
             HAL_TRACE_ERR("pd-tenant:{}:Failed to free l2seg_hw_id:{} "

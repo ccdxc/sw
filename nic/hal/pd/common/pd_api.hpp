@@ -54,7 +54,7 @@ using hal::cpucb_t;
 using hal::rawrcb_t;
 using hal::rawccb_t;
 
-typedef uint16_t    l2seg_hw_id_t;
+typedef uint32_t    l2seg_hw_id_t;
 
 typedef struct pd_tenant_args_s {
     tenant_t           *tenant;

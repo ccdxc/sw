@@ -471,6 +471,8 @@ hal_handle::del_obj(cfg_op_ctxt_t *ctxt, hal_cfg_op_cb_t del_cb,
                     hal_cfg_commit_cb_t commit_cb, hal_cfg_abort_cb_t abort_cb,
                     hal_cfg_cleanup_cb_t cleanup_cb)
 {
+    hal_ret_t      ret = HAL_RET_OK;
+
     // release the read lock
     g_hal_state->cfg_db()->runlock();
 
@@ -478,7 +480,7 @@ hal_handle::del_obj(cfg_op_ctxt_t *ctxt, hal_cfg_op_cb_t del_cb,
     g_hal_state->cfg_db()->wlock();
 
     // invoke the callbacks passed
-    act_on_obj_(ctxt, del_cb, commit_cb, abort_cb);
+    ret = act_on_obj_(ctxt, del_cb, commit_cb, abort_cb);
 
     // call cleanup callback to either free the software state of original
     // object of cloned object (based on whether modify was successful or not)
@@ -490,7 +492,7 @@ hal_handle::del_obj(cfg_op_ctxt_t *ctxt, hal_cfg_op_cb_t del_cb,
     // reacquire the read lock again
     g_hal_state->cfg_db()->rlock();
 
-    return HAL_RET_OK;
+    return ret;
 }
 
 //------------------------------------------------------------------------------

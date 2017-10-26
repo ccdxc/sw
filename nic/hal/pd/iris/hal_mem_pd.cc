@@ -85,7 +85,9 @@ hal_state_pd::init(void)
     HAL_ASSERT_RETURN((l2seg_cpu_idxr_ != NULL), false);
 
     // initialize lport indexer
-    lport_idxr_ = new hal::utils::indexer(HAL_MAX_LPORTS);
+    lport_idxr_ = new hal::utils::indexer(HAL_MAX_LPORTS, 
+                                          true,     /* thread safe */
+                                          true);    /* skip zero */
     HAL_ASSERT_RETURN((lport_idxr_ != NULL), false);
 
     // initialize LIF PD related data structures

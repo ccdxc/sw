@@ -3,6 +3,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/utils.hpp"
+#include "nic/hal/src/if_utils.hpp"
 #include "nic/hal/src/network.hpp"
 #include "nic/include/pd_api.hpp"
 
@@ -263,18 +264,17 @@ network_prepare_rsp (NetworkResponse *rsp, hal_ret_t ret,
     return HAL_RET_OK;
 }
 
-// TODO: Uncomment once security group code is in
-#if 0
 //------------------------------------------------------------------------------
 // Reads security groups from spec
 //------------------------------------------------------------------------------
 hal_ret_t
 network_read_security_groups (network_t *nw, NetworkSpec& spec)
 {
-    hal_ret_t               ret = HAL_RET_OK;
-    uint32_t                num_sgs = 0, i = 0;
-    uint32_t                sg_id = 0;
-    security_group_t        *sg = NULL;
+    hal_ret_t               ret        = HAL_RET_OK;
+    uint32_t                num_sgs    = 0, i        = 0;
+    uint32_t                sg_id      = 0;
+    nwsec_group_t           *sg        = NULL;
+    hal_handle_t             sg_handle = 0;
 
     num_sgs = spec.security_group_size();
 
@@ -283,16 +283,16 @@ network_read_security_groups (network_t *nw, NetworkSpec& spec)
 
     for (i = 0; i < num_sgs; i++) {
         sg_id = spec.security_group(i);
-        sg = find_security_group_by_id(sg_id);
+        sg = nwsec_group_lookup_by_key(sg_id);
         HAL_ASSERT_RETURN(sg != NULL, HAL_RET_INVALID_ARG);
 
         // Add to aggregated list
         sg_handle = sg->hal_handle;
         hal_add_to_handle_list(&nw->sg_list_head, sg_handle);
     }
+
     return ret;
 }
-#endif
 
 //------------------------------------------------------------------------------
 // process a tenant create request
@@ -377,8 +377,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     nw->gw_ep_handle = spec.gateway_ep_handle();
     MAC_UINT64_TO_ADDR(nw->rmac_addr, spec.rmac());
     ip_pfx_spec_to_pfx_spec(&nw->nw_key.ip_pfx, nw_pfx);
-    // TODO: Uncomment once security groups code is in
-    // network_read_security_groups(nw, spec);
+    network_read_security_groups(nw, spec);
 
     HAL_TRACE_DEBUG("pi-network:{}:nw: {}, rmac: {}", 
                     __FUNCTION__,
@@ -510,22 +509,21 @@ end:
     return ret;
 }
 
-// TODO: Uncomment once security group code is in
-#if 0
 // ----------------------------------------------------------------------------
 // Add/Del relation sg -> network for all sgs in the list
 // ----------------------------------------------------------------------------
 hal_ret_t
 network_update_sg_relation (dllist_ctxt_t *sg_list, network_t *nw, bool add)
 {
-    hal_ret_t                   ret = HAL_RET_OK;
+    hal_ret_t                   ret           = HAL_RET_OK;
     dllist_ctxt_t               *curr, *next;
-    hal_handle_id_list_entry_t  *entry = NULL;
-    security_group_t            *sg = NULL;
+    hal_handle_id_list_entry_t  *entry        = NULL;
+    nwsec_group_t               *sg           = NULL;
 
     dllist_for_each_safe(curr, next, sg_list) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        sg = find_security_group_by_handle(entry->handle_id);
+        // TODO: security_group
+        // sg = find_security_group_by_handle(entry->handle_id);
         if (!sg) {
             HAL_TRACE_ERR("{}:unable to find sg with handle:{}",
                           __FUNCTION__, entry->handle_id);
@@ -533,9 +531,10 @@ network_update_sg_relation (dllist_ctxt_t *sg_list, network_t *nw, bool add)
             goto end;
         }
         if (add) {
-            ret = security_group_add_network(up_if, uppc);
+            ret = add_nw_to_security_group(sg->sg_id, nw->hal_handle);
         } else {
-            ret = security_group_del_network(up_if, uppc);
+            // TODO: security_group
+            // ret = security_group_del_network(sg->sg_id, nw->hal_handle);
         }
     }
 
@@ -591,7 +590,6 @@ end:
 
     return ret;
 }
-#endif
 
 //------------------------------------------------------------------------------
 // network update main CB
@@ -674,12 +672,9 @@ network_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         nw_clone->gw_ep_handle = app_ctxt->new_gw_ep_handle;
     }
 
-    // TODO: Uncomment once security group code is in
-#if 0
     if (app_ctxt->sglist_changed) {
         ret = network_update_pi_with_sg_list(nw_clone, app_ctxt);
     }
-#endif
 
     // Free PI
     network_free(nw);
@@ -738,8 +733,6 @@ network_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     return ret;
 }
-// Uncomment when security group coding is done in HAL
-#if 0
 
 //------------------------------------------------------------------------------
 // checks if sg in network
@@ -749,11 +742,11 @@ sg_in_network (network_t *nw, uint32_t sg_id, hal_handle_id_list_entry_t **handl
 {
     dllist_ctxt_t                   *lnode = NULL;
     hal_handle_id_list_entry_t      *entry = NULL;
-    security_group_t                *sg = NULL;
+    nwsec_group_t                   *sg    = NULL;
 
     dllist_for_each(lnode, &(nw->sg_list_head)) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
-        sg = find_security_group_by_id(sg_id);
+        sg = nwsec_group_lookup_by_key(sg_id);
         if (entry->handle_id == sg->hal_handle) {
             if (handle_entry) {
                 *handle_entry = entry;
@@ -775,14 +768,14 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
                             dllist_ctxt_t **del_sglist,
                             dllist_ctxt_t **aggr_sglist)
 {
-    hal_ret_t                       ret = HAL_RET_OK;
-    uint16_t                        num_sgs = 0, i = 0;
-    dllist_ctxt_t                   *lnode = NULL;
+    hal_ret_t                       ret       = HAL_RET_OK;
+    uint16_t                        num_sgs   = 0, i          = 0;
+    dllist_ctxt_t                   *lnode    = NULL;
     bool                            sg_exists = false;
     uint64_t                        sg_handle = 0;
-    // uint32_t                        sg_id = 0;
-    security_group_t                *sg = NULL;
-    hal_handle_id_list_entry_t      *entry = NULL, *lentry = NULL;
+    uint32_t                        sg_id     = 0;
+    nwsec_group_t                   *sg       = NULL;
+    hal_handle_id_list_entry_t      *entry    = NULL, *lentry = NULL;
 
     *sglist_change = false;
 
@@ -805,7 +798,7 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
                     __FUNCTION__, num_sgs);
     for (i = 0; i < num_sgs; i++) {
         sg_id = spec.security_group(i);
-        sg = find_security_group_by_id(sg_id);
+        sg = nwsec_group_lookup_by_key(sg_id);
         HAL_ASSERT_RETURN(sg != NULL, HAL_RET_INVALID_ARG);
 
         // Add to aggregated list
@@ -835,7 +828,8 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
         HAL_TRACE_DEBUG("pi-network:{}: Checking for sg: {}", 
                 __FUNCTION__, entry->handle_id);
         for (i = 0; i < num_sgs; i++) {
-            sg = find_security_group_by_handle(entry->handle_id);
+            // TODO: security_group
+            // sg = find_security_group_by_handle(entry->handle_id);
             sg_id = spec.security_group(i);
             HAL_TRACE_DEBUG("{}:grpc sg id: {}", __FUNCTION__, sg_id);
             // if (entry->handle_id == sg_handle)
@@ -847,7 +841,7 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
             }
         }
         if (!sg_exists) {
-            // Have to delet the mbr
+            // Have to delet the sg
             lentry = (hal_handle_id_list_entry_t *)g_hal_state->
                 hal_handle_id_list_entry_slab()->alloc();
             if (lentry == NULL) {
@@ -865,11 +859,11 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
         sg_exists = false;
     }
 
-    HAL_TRACE_DEBUG("{}:deleted mbrs:", __FUNCTION__);
+    HAL_TRACE_DEBUG("{}:deleted sgs:", __FUNCTION__);
     hal_print_handles_list(*del_sglist);
 
     if (!*sglist_change) {
-        // Got same mbrs as existing
+        // Got same sgs as existing
         interface_cleanup_handle_list(add_sglist);
         interface_cleanup_handle_list(del_sglist);
         interface_cleanup_handle_list(aggr_sglist);
@@ -877,7 +871,6 @@ network_check_sglist_update(NetworkSpec& spec, network_t *nw,
 end:
     return ret;
 }
-#endif
 
 //------------------------------------------------------------------------------
 // check what changes in the network update
@@ -894,9 +887,7 @@ network_check_update (NetworkSpec& spec, network_t *nw,
         app_ctxt->new_gw_ep_handle = spec.gateway_ep_handle();
     }
     
-    // TODO: uncomment this when security group has  PI structure
     // check for sg list change
-#if 0
     ret = network_check_sglist_update(spec, nw, &app_ctxt->sglist_changed,
                                       &app_ctxt->add_sglist,
                                       &app_ctxt->del_sglist,
@@ -906,13 +897,12 @@ network_check_update (NetworkSpec& spec, network_t *nw,
                       __FUNCTION__, ret);
         goto end;
     }
-#endif
 
     if (app_ctxt->gw_ep_changed || app_ctxt->sglist_changed) {
         app_ctxt->network_changed = true;
     }
 
-// end:
+end:
     return ret;
 }
 
@@ -1100,9 +1090,6 @@ network_detach_from_security_groups (network_t *nw)
 {
     hal_ret_t                   ret = HAL_RET_OK;
 
-    // TODO: Uncomment once sg code is in
-
-#if 0
     ret = network_update_sg_relation(&nw->sg_list_head, nw, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-network:{}:failed to del sg -/-> network"
@@ -1115,7 +1102,6 @@ network_detach_from_security_groups (network_t *nw)
     HAL_TRACE_DEBUG("{}:cleaning up sg list", __FUNCTION__);
     hal_free_handles_list(&nw->sg_list_head);
 end:
-#endif
 
     return ret;
 }
@@ -1152,7 +1138,7 @@ network_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, network_to_str(nw));
 
     
-    // remove back refs from security groups
+    // remove back refs from security groups and free up list
     ret = network_detach_from_security_groups(nw);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-network:{}:failed to detach from security groups, "
@@ -1177,6 +1163,11 @@ network_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // TODO: Decrement the ref counts of dependent objects
 
 end:
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-network:{}:commit CBs can't fail: ret:{}",
+                      __FUNCTION__, ret);
+        HAL_ASSERT(0);
+    }
     return ret;
 }
 
@@ -1289,8 +1280,9 @@ network_add_l2seg (network_t *nw, l2seg_t *l2seg)
     network_unlock(nw, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-network:{}:add network => l2seg, {} => {}, ret:{}",
-                    __FUNCTION__, network_to_str(nw), l2seg->seg_id, ret);
+    HAL_TRACE_DEBUG("pi-network:{}:add network => l2seg(id:hdl), {} => {}:{}, ret:{}",
+                    __FUNCTION__, network_to_str(nw), 
+                    l2seg->seg_id, l2seg->hal_handle, ret);
     return ret;
 }
 
@@ -1308,6 +1300,7 @@ network_del_l2seg (network_t *nw, l2seg_t *l2seg)
     network_lock(nw, __FILENAME__, __LINE__, __func__);      // lock
     dllist_for_each_safe(curr, next, &nw->l2seg_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        HAL_TRACE_DEBUG("pi-nw:{}:checking l2seg_hdl:{}", entry->handle_id);
         if (entry->handle_id == l2seg->hal_handle) {
             // Remove from list
             utils::dllist_del(&entry->dllist_ctxt);
@@ -1319,8 +1312,10 @@ network_del_l2seg (network_t *nw, l2seg_t *l2seg)
     }
     network_unlock(nw, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-network:{}:del network =/=> l2seg, {} =/=> {}, ret:{}",
-                    __FUNCTION__, network_to_str(nw), l2seg->seg_id, ret);
+    HAL_TRACE_DEBUG("pi-network:{}:del network =/=> l2seg(id:hdl), "
+                    "{} =/=> {}:{}, ret:{}",
+                    __FUNCTION__, network_to_str(nw), l2seg->seg_id, 
+                    l2seg->hal_handle, ret);
     return ret;
 }
 

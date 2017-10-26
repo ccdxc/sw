@@ -435,12 +435,12 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
     hal_ret_t                   ret;
     tenant_t                    *tenant;
-    l2seg_t                     *l2seg = NULL;
+    l2seg_t                     *l2seg    = NULL;
     tenant_id_t                 tid;
-    // network_t                   *nw = NULL;
-    l2seg_create_app_ctxt_t     app_ctxt = { 0 };
+    // network_t                   *nw    = NULL;
+    l2seg_create_app_ctxt_t     app_ctxt  = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
-    cfg_op_ctxt_t               cfg_ctxt = { 0 };
+    cfg_op_ctxt_t               cfg_ctxt  = { 0 };
 
 
     hal_api_trace(" API Begin: l2segment create ");
@@ -512,6 +512,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2seg:{}:error in reading networks",
                       __FUNCTION__);
+        l2seg_free(l2seg);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -570,6 +571,15 @@ hal_ret_t
 validate_l2seg_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
+
+    // if tenant is set, it has to be right
+    if (spec.has_meta() &&
+        spec.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
+        HAL_TRACE_ERR("pi-l2seg:{}:no meta or invalid tenant id",
+                      __FUNCTION__);
+        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
@@ -990,6 +1000,41 @@ end:
 }
 
 
+//------------------------------------------------------------------------------
+// Match the tenant during create and update/delete
+//------------------------------------------------------------------------------
+hal_ret_t
+l2seg_validate_tenant (tenant_id_t tenant_id, l2seg_t *l2seg)
+{
+    hal_ret_t   ret  = HAL_RET_OK;
+    tenant_t    *ten = NULL;
+
+    if (tenant_id == HAL_TENANT_ID_INVALID) {
+        HAL_TRACE_ERR("pi-l2seg:{}:invalid tenant_id:{}",
+                      __FUNCTION__, tenant_id);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    ten = tenant_lookup_by_id(tenant_id);
+    if (ten == NULL) {
+        HAL_TRACE_ERR("pi-l2seg:{}:unable to find tenant_id:{}",
+                      __FUNCTION__, tenant_id);
+        ret = HAL_RET_TENANT_NOT_FOUND;
+        goto end;
+    }
+
+    if (ten->hal_handle != l2seg->tenant_handle) {
+        HAL_TRACE_ERR("pi-l2seg:{}:unable to match cr_ten_hdl:{}, "
+                      "up_ten_hdl:{}",
+                      __FUNCTION__, l2seg->tenant_handle, ten->hal_handle);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+end:
+    return ret;
+}
 
 
 //------------------------------------------------------------------------------
@@ -1022,6 +1067,17 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         ret = HAL_RET_L2SEG_NOT_FOUND;
         goto end;
     }
+
+    if (spec.has_meta()) {
+        ret = l2seg_validate_tenant(spec.meta().tenant_id(), l2seg);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pi-l2seg:{}:mismatch of tenants for l2seg, "
+                          "id:{}, handle:{}",
+                          __FUNCTION__, kh.segment_id(), kh.l2segment_handle());
+            goto end;
+        }
+    }
+
     HAL_TRACE_DEBUG("pi-l2seg:{}:update l2seg {}", __FUNCTION__, 
                     l2seg->seg_id);
 
@@ -1057,7 +1113,7 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                              l2seg_update_cleanup_cb);
 
 end:
-    l2seg_prepare_rsp(rsp, ret, l2seg->hal_handle);
+    l2seg_prepare_rsp(rsp, ret, l2seg ? l2seg->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: l2segment update ");
     return ret;
 }
@@ -1127,7 +1183,7 @@ l2seg_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_t                     *l2seg = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-tenant:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("pi-l2seg:{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1223,7 +1279,7 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    // remove back refs from networks
+    // remove back refs from networks and free up list
     ret = l2seg_detach_from_networks(l2seg);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2seg:{}:failed to detach from networks, "
@@ -1249,6 +1305,11 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     //  - tenant
 
 end:
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-l2seg:{}:commit CBs can't fail: ret:{}",
+                      __FUNCTION__, ret);
+        HAL_ASSERT(0);
+    }
     return ret;
 }
 

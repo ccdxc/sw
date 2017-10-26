@@ -116,6 +116,7 @@ network_init (network_t *network)
     }
     HAL_SPINLOCK_INIT(&network->slock, PTHREAD_PROCESS_PRIVATE);
 
+    utils::dllist_reset(&network->sg_list_head);
     utils::dllist_reset(&network->l2seg_list_head);
     utils::dllist_reset(&network->session_list_head);
 

@@ -1565,7 +1565,7 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
                              if_update_cleanup_cb);
 
 end:
-    if_prepare_rsp(rsp, ret, hal_if->hal_handle);
+    if_prepare_rsp(rsp, ret, hal_if ? hal_if->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: interface update ");
     return ret;
 
