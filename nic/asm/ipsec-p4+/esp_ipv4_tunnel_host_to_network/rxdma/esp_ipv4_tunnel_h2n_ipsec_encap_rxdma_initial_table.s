@@ -16,13 +16,16 @@ struct phv_ p;
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.ipsec_int_header_payload_start, k.p42p4plus_hdr_ipsec_payload_start
-    addi r1, r0, IPV4_HDR_SIZE
+    seq c1, d.is_v6, 1
+    cmov r1, c1, IPV6_HDR_SIZE, IPV4_HDR_SIZE
+    //addi r1, r0, IPV4_HDR_SIZE
     addi r1, r1, ESP_FIXED_HDR_SIZE
     add r2, r1, d.iv_size
     add r2, r2, k.p42p4plus_hdr_ipsec_payload_end
     phvwr p.ipsec_int_header_tailroom_offset, r2
     phvwr p.ipsec_int_header_headroom_offset, k.p42p4plus_hdr_ipsec_payload_start 
     sub r3, k.p42p4plus_hdr_ipsec_payload_end, k.p42p4plus_hdr_ipsec_payload_start
+    add.c1 r3, r3, IPV6_HDR_SIZE
     phvwr p.ipsec_int_header_payload_size, r3
     phvwr p.t0_s2s_payload_size, r3
     phvwr p.t1_s2s_payload_size, r3
@@ -42,7 +45,9 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_global_lif, k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
     phvwr p.ipsec_global_qtype, k.p4_rxdma_intr_qtype
     phvwr p.ipsec_global_qid, k.p4_rxdma_intr_qid
-    phvwr p.ipsec_to_stage3_packet_len, k.p42p4plus_hdr_ipsec_payload_end
+    add  r1, r0, k.p42p4plus_hdr_ipsec_payload_end
+    add.c1 r1, r1, IPV6_HDR_SIZE 
+    phvwr p.ipsec_to_stage3_packet_len, r1 
     phvwr p.ipsec_to_stage3_iv_size, d.iv_size
     phvwr p.ipsec_to_stage3_iv_salt, d.iv_salt
 

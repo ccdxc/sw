@@ -46,8 +46,8 @@ packets:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
     - packet:
         id          : PKT2
-        template    : ref://factory/packets/id=ETH_IPV4_ESP
-        payloadsize : ref://factory/payloads/id=ESP_PAYLOAD/size
+        template    : ref://factory/packets/id=ETH_IPV6_ESP
+        payloadsize : ref://factory/payloads/id=ESP_V6_TCP_PAYLOAD/size
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             eth:
@@ -56,43 +56,43 @@ packets:
             qtag:
                 vlan    : callback://ipsec/ipsec/GetEncapVlan
                 prio    : 0
-            ipv4:
-                src     : callback://ipsec/ipsec/GetSIp
-                dst     : callback://ipsec/ipsec/GetDIp 
-                ttl     : 255
-                len     : 164
-                id      : 0
-                tos     : 0
-                chksum  : 0
+            ipv6:
+                src     : callback://ipsec/ipsec/GetSIp6
+                dst     : callback://ipsec/ipsec/GetDIp6 
+                hlim    : 255
+                plen    : 160 
+                tc      : 0
+                fl      : 0
+                nh      : 50
             esp:
                 spi     : callback://ipsec/ipsec/GetSpi
                 seq     : callback://ipsec/ipsec/GetSeqNo
                 iv      : callback://ipsec/ipsec/GetIv
             payload:
-                data    : ref://factory/payloads/id=ESP_PAYLOAD/data 
+                data    : ref://factory/payloads/id=ESP_V6_TCP_PAYLOAD/data 
     - packet:
         id          : PKT3
-        template    : ref://factory/packets/id=ETH_IPV4_ESP
-        payloadsize : ref://factory/payloads/id=ESP_PAYLOAD/size
+        template    : ref://factory/packets/id=ETH_IPV6_ESP
+        payloadsize : ref://factory/payloads/id=ESP_V6_TCP_PAYLOAD/size
         encaps      : None
         headers     :
             eth:
                 src     : callback://ipsec/ipsec/GetSMac 
                 dst     : callback://ipsec/ipsec/GetDMac 
-            ipv4:
-                src     : callback://ipsec/ipsec/GetSIp
-                dst     : callback://ipsec/ipsec/GetDIp 
-                ttl     : 255
-                len     : 164
-                id      : 0
-                tos     : 0
-                chksum  : 0
+            ipv6:
+                src     : callback://ipsec/ipsec/GetSIp6
+                dst     : callback://ipsec/ipsec/GetDIp6 
+                hlim    : 255
+                plen    : 160 
+                tc      : 0
+                fl      : 0
+                nh      : 50
             esp:
                 spi     : callback://ipsec/ipsec/GetSpi
                 seq     : callback://ipsec/ipsec/GetSeqNo
                 iv      : callback://ipsec/ipsec/GetIv
             payload:
-                data    : ref://factory/payloads/id=ESP_PAYLOAD/data 
+                data    : ref://factory/payloads/id=ESP_V6_TCP_PAYLOAD/data 
 
 trigger:
     packets:

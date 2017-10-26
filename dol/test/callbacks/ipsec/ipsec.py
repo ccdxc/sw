@@ -50,3 +50,9 @@ def GetSIp (tc, pkt):
 
 def GetDIp (tc, pkt):
     return "10.1.0.2"
+
+def GetSIp6 (tc, pkt):
+    return "1000::1"
+
+def GetDIp6 (tc, pkt):
+    return "1000::2"
