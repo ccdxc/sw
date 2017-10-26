@@ -367,23 +367,10 @@
 #define IP_FLAGS_MF_MASK               1
 
 // Different types of DDoS attacks that can be configured.
-#define DDOS_TYPE_ANY                  1
-#define DDOS_TYPE_SYN                  2
-#define DDOS_TYPE_SYN_ACK              3
-#define DDOS_TYPE_RST                  4
-#define DDOS_TYPE_FIN                  5
-#define DDOS_TYPE_ICMP                 6
-#define DDOS_TYPE_UDP                  7
-#define DDOS_TYPE_IP_FRAG              8
-
-#define DDOS_TYPE_MASK_ANY             (1 << (DDOS_TYPE_ANY - 1))
-#define DDOS_TYPE_MASK_SYN             (1 << (DDOS_TYPE_SYN - 1))
-#define DDOS_TYPE_MASK_SYN_ACK         (1 << (DDOS_TYPE_SYN_ACK - 1))
-#define DDOS_TYPE_MASK_RST             (1 << (DDOS_TYPE_RST - 1))
-#define DDOS_TYPE_MASK_FIN             (1 << (DDOS_TYPE_FIN - 1))
-#define DDOS_TYPE_MASK_ICMP            (1 << (DDOS_TYPE_ICMP - 1))
-#define DDOS_TYPE_MASK_UDP             (1 << (DDOS_TYPE_UDP - 1))
-#define DDOS_TYPE_MASK_IP_FRAG         (1 << (DDOS_TYPE_IP_FRAG - 1))
+#define DDOS_TYPE_ANY                  0
+#define DDOS_TYPE_SYN                  1
+#define DDOS_TYPE_ICMP                 2
+#define DDOS_TYPE_UDP                  3
 
 /*****************************************************************************/
 /* P4+ app types                                                             */

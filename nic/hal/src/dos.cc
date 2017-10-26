@@ -118,31 +118,33 @@ static inline void
 dos_policy_init_from_spec (dos_policy_t *dosp,
                            nwsec::DoSPolicySpec& spec)
 {
-    /* TODO: Uncomment after SG apis are ready */
-#if 0
-    int num_sgs;
-    security_group_t *sg = NULL;
+    int                         num_sgs, sg_id;
+    dos_policy_sg_list_entry_t  *entry = NULL;
 
     /*
      * Populate the list of security groups that this DoS policy
      * is attached to
      */
+    utils::dllist_reset(&dosp->sg_list_head);
     num_sgs = spec.security_group_id_size();
     for (int i = 0; i < num_sgs; i++) {
         sg_id = spec.security_group_id(i);
-        sg = find_security_group_by_id(sg_id);
-        HAL_ASSERT_RETURN(sg != NULL, HAL_RET_INVALID_ARG);
         /* Add to the security group list */
-        sg_handle = sg->hal_handle;
-        hal_add_to_handle_list(&dosp->sg_list_head, sg_handle);
+        entry = (dos_policy_sg_list_entry_t *)g_hal_state->
+                 dos_policy_sg_list_entry_slab()->alloc();
+        entry->sg_id = sg_id;
+        // Insert into the list
+        utils::dllist_add(&dosp->sg_list_head, &entry->dllist_ctxt);
     }
-#endif
+
     /* Populate Ingress and Egress policy params if present in the config */
     if (spec.has_ingress_policy()) {
+        dosp->ingr_pol_valid = TRUE;
         dos_policy_props_init_from_spec(&dosp->ingress,
                             spec.ingress_policy().dos_protection());
     }
     if (spec.has_egress_policy()) {
+        dosp->egr_pol_valid = TRUE;
         dos_policy_props_init_from_spec(&dosp->egress,
                             spec.egress_policy().dos_protection());
     }

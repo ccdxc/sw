@@ -26,6 +26,8 @@ if_t *ep_find_if_by_handle(ep_t *pi_ep);
 void *ep_get_pd_ep(ep_t *pi_ep);
 network_t *ep_get_nw(ep_t *pi_ep, l2seg_t *l2seg);
 mac_addr_t *ep_get_rmac(ep_t *pi_ep, l2seg_t *l2seg);
+if_t *ep_get_if(ep_t *pi_ep);
+tenant_t *ep_get_tenant(ep_t *pi_ep);
 
 } // namespace hal
 #endif // __ENDPOINT_API_HPP__

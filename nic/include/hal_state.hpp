@@ -406,6 +406,7 @@ public:
     slab *hal_handle_list_entry_slab(void) const { return hal_handle_list_entry_slab_; }
     slab *hal_handle_id_ht_entry_slab(void) const { return hal_handle_id_ht_entry_slab_; }
     slab *hal_handle_id_list_entry_slab(void) const { return hal_handle_id_list_entry_slab_; }
+    slab *dos_policy_sg_list_entry_slab(void) const { return dos_policy_sg_list_entry_slab_; }
     //slab *hal_del_cache_entry_slab(void) const { return hal_del_cache_entry_slab_; }
     slab *tenant_slab(void) const { return tenant_slab_; }
     slab *network_slab(void) const { return network_slab_; }
@@ -448,6 +449,7 @@ private:
     slab    *hal_handle_list_entry_slab_;
     slab    *hal_handle_id_ht_entry_slab_;
     slab    *hal_handle_id_list_entry_slab_;
+    slab    *dos_policy_sg_list_entry_slab_;
     //slab    *hal_del_cache_entry_slab_;
     slab    *tenant_slab_;
     slab    *network_slab_;
@@ -506,6 +508,7 @@ public:
     slab *hal_handle_list_entry_slab(void) const { return mem_db_->hal_handle_list_entry_slab(); }
     slab *hal_handle_id_ht_entry_slab(void) const { return mem_db_->hal_handle_id_ht_entry_slab(); }
     slab *hal_handle_id_list_entry_slab(void) const { return mem_db_->hal_handle_id_list_entry_slab(); }
+    slab *dos_policy_sg_list_entry_slab(void) const { return mem_db_->dos_policy_sg_list_entry_slab(); }
     ht *hal_handle_id_ht(void) const { return oper_db_->hal_handle_id_ht(); }
 
      hal_ret_t register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz) {

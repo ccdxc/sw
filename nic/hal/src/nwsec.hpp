@@ -563,6 +563,8 @@ nwsec_group_lookup_by_key(uint32_t sg_id)
 
 dllist_ctxt_t *
 get_ep_list_for_security_group(uint32_t sg_id);
+dllist_ctxt_t *
+get_nw_list_for_security_group(uint32_t sg_id);
 hal_ret_t
 add_ep_to_security_group(uint32_t sg_id, hal_handle_t ep_handle);
 

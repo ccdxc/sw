@@ -30,6 +30,18 @@ ep_get_rmac(ep_t *pi_ep, l2seg_t *l2seg)
     return (&nw->rmac_addr);
 }
 
+if_t *
+ep_get_if(ep_t *pi_ep) 
+{
+    return (find_if_by_handle(pi_ep->if_handle));
+}
+
+tenant_t *
+ep_get_tenant(ep_t *pi_ep) 
+{
+    return (tenant_lookup_by_handle(pi_ep->tenant_handle));
+}
+
 network_t *
 ep_get_nw(ep_t *pi_ep, l2seg_t *l2seg) 
 {

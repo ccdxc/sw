@@ -5,11 +5,13 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/common/pd_api.hpp"
+#include "nic/include/endpoint_api.hpp"
 
 namespace hal {
 namespace pd {
 
 #define HAL_MAX_HW_DOS_PROFILES        256
+#define HAL_NWSEC_INVALID_SG_ID        uint32_t (~0)
 
 typedef uint32_t    dos_policy_hw_id_t;
 

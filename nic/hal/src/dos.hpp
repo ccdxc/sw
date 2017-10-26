@@ -80,6 +80,9 @@ typedef struct dos_policy_s {
     hal_spinlock_t        slock;                  // lock to protect this structure
     hal_handle_t          hal_handle;             // HAL allocated handle
     
+    bool                  ingr_pol_valid;
+    bool                  egr_pol_valid;
+    
     dos_policy_prop_t     ingress;
     dos_policy_prop_t     egress;
 
@@ -88,6 +91,11 @@ typedef struct dos_policy_s {
     // Security group list
     dllist_ctxt_t         sg_list_head;           // List of security groups
 } __PACK__ dos_policy_t;
+
+typedef struct dos_policy_sg_list_entry_s {
+    int              sg_id;
+    dllist_ctxt_t    dllist_ctxt;
+} __PACK__ dos_policy_sg_list_entry_t;
 
 typedef struct dos_policy_create_app_ctx_s {
 } __PACK__ dos_policy_create_app_ctx_t;
