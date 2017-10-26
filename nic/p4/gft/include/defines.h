@@ -1,0 +1,316 @@
+#define TRUE                           1
+#define FALSE                          0
+
+#define EXCEPTION_VPORT                0x3FF
+
+/*****************************************************************************/
+/* Ether types                                                               */
+/*****************************************************************************/
+#define ETHERTYPE_STAG                 0x88a8
+#define ETHERTYPE_CTAG                 0x8100
+#define ETHERTYPE_QINQ                 0x9100
+#define ETHERTYPE_MPLS                 0x8847
+#define ETHERTYPE_IPV4                 0x0800
+#define ETHERTYPE_IPV6                 0x86dd
+#define ETHERTYPE_ARP                  0x0806
+#define ETHERTYPE_RARP                 0x8035
+#define ETHERTYPE_ETHERNET             0x6558
+
+/*****************************************************************************/
+/* Tunnel types                                                              */
+/*****************************************************************************/
+#define INGRESS_TUNNEL_TYPE_NONE       0
+#define INGRESS_TUNNEL_TYPE_VXLAN      1
+#define INGRESS_TUNNEL_TYPE_GRE        2
+#define INGRESS_TUNNEL_TYPE_IP_IN_IP   3
+#define INGRESS_TUNNEL_TYPE_GENEVE     4
+#define INGRESS_TUNNEL_TYPE_NVGRE      5
+#define INGRESS_TUNNEL_TYPE_MPLS_L2VPN 6
+#define INGRESS_TUNNEL_TYPE_MPLS_L3VPN 7
+#define INGRESS_TUNNEL_TYPE_VXLAN_GPE  8
+
+/*****************************************************************************/
+/* IP protocol types                                                         */
+/*****************************************************************************/
+#define IP_PROTO_ICMP                  1
+#define IP_PROTO_IGMP                  2
+#define IP_PROTO_IPV4                  4
+#define IP_PROTO_TCP                   6
+#define IP_PROTO_UDP                   17
+#define IP_PROTO_IPV6                  41
+#define IP_PROTO_GRE                   47
+#define IP_PROTO_IPSEC_ESP             50
+#define IP_PROTO_IPSEC_AH              51
+#define IP_PROTO_ICMPV6                58
+#define IP_PROTO_EIGRP                 88
+#define IP_PROTO_OSPF                  89
+#define IP_PROTO_PIM                   103
+#define IP_PROTO_VRRP                  112
+
+/*****************************************************************************/
+/* UDP services                                                              */
+/*****************************************************************************/
+#define UDP_PORT_VXLAN                 4789
+#define UDP_PORT_VXLAN_GPE             4790
+#define UDP_PORT_ROCE_V2               4791
+#define UDP_PORT_GENV                  6081
+
+/*****************************************************************************/
+/* GRE services                                                              */
+/*****************************************************************************/
+#define GRE_PROTO_NVGRE                0x20006558
+#define GRE_PROTO_ERSPAN_T3            0x22EB   /* Type III version 2 */
+
+/*****************************************************************************/
+/* TM port values                                                            */
+/*****************************************************************************/
+#define TM_PORT_UPLINK_0               0
+#define TM_PORT_UPLINK_1               1
+#define TM_PORT_UPLINK_2               2
+#define TM_PORT_UPLINK_3               3
+#define TM_PORT_UPLINK_4               4
+#define TM_PORT_UPLINK_5               5
+#define TM_PORT_UPLINK_6               6
+#define TM_PORT_UPLINK_7               7
+#define TM_PORT_NCSI                   8
+#define TM_PORT_DMA                    9
+#define TM_PORT_EGRESS                 10
+#define TM_PORT_INGRESS                11
+
+/*****************************************************************************/
+/* TCP flags                                                                 */
+/*****************************************************************************/
+#define TCP_FLAG_CWR                   0x80
+#define TCP_FLAG_ECE                   0x40
+#define TCP_FLAG_URG                   0x20
+#define TCP_FLAG_ACK                   0x10
+#define TCP_FLAG_PSH                   0x08
+#define TCP_FLAG_RST                   0x04
+#define TCP_FLAG_SYN                   0x02
+#define TCP_FLAG_FIN                   0x01
+
+/*****************************************************************************/
+/* Policer color                                                             */
+/*****************************************************************************/
+#define POLICER_COLOR_GREEN            0
+#define POLICER_COLOR_YELLOW           1
+#define POLICER_COLOR_RED              2
+
+/*****************************************************************************/
+/* Match types                                                               */
+/*****************************************************************************/
+#define MATCH_ETHERNET_DST_1           0x00000001
+#define MATCH_ETHERNET_SRC_1           0x00000001
+#define MATCH_ETHERNET_TYPE_1          0x00000001
+#define MATCH_CUSTOMER_VLAN_ID_1       0x00000001
+#define MATCH_SERVICE_VLAN_ID_1        0x00000001
+#define MATCH_IP_SRC_1                 0x00000001
+#define MATCH_IP_DST_1                 0x00000001
+#define MATCH_IP_DSCP_1                0x00000001
+#define MATCH_IP_PROTO_1               0x00000001
+#define MATCH_IP_TTL_1                 0x00000001
+#define MATCH_TRANSPORT_SRC_PORT_1     0x00000001
+#define MATCH_TRANSPORT_DST_PORT_1     0x00000001
+#define MATCH_TCP_FLAGS_1              0x00000001
+#define MATCH_ICMP_TYPE_1              0x00000001
+#define MATCH_ICMP_CODE_1              0x00000001
+#define MATCH_TENANT_ID_1              0x00000001
+#define MATCH_GRE_PROTO_1              0x00000001
+#define MATCH_ETHERNET_DST_2           0x00000001
+#define MATCH_ETHERNET_SRC_2           0x00000001
+#define MATCH_ETHERNET_TYPE_2          0x00000001
+#define MATCH_CUSTOMER_VLAN_ID_2       0x00000001
+#define MATCH_SERVICE_VLAN_ID_2        0x00000001
+#define MATCH_IP_SRC_2                 0x00000001
+#define MATCH_IP_DST_2                 0x00000001
+#define MATCH_IP_DSCP_2                0x00000001
+#define MATCH_IP_PROTO_2               0x00000001
+#define MATCH_IP_TTL_2                 0x00000001
+#define MATCH_TRANSPORT_SRC_PORT_2     0x00000001
+#define MATCH_TRANSPORT_DST_PORT_2     0x00000001
+#define MATCH_TCP_FLAGS_2              0x00000001
+#define MATCH_ICMP_TYPE_2              0x00000001
+#define MATCH_ICMP_CODE_2              0x00000001
+#define MATCH_TENANT_ID_2              0x00000001
+#define MATCH_GRE_PROTO_2              0x00000001
+#define MATCH_ETHERNET_DST_3           0x00000001
+#define MATCH_ETHERNET_SRC_3           0x00000001
+#define MATCH_ETHERNET_TYPE_3          0x00000001
+#define MATCH_CUSTOMER_VLAN_ID_3       0x00000001
+#define MATCH_SERVICE_VLAN_ID_3        0x00000001
+#define MATCH_IP_SRC_3                 0x00000001
+#define MATCH_IP_DST_3                 0x00000001
+#define MATCH_IP_DSCP_3                0x00000001
+#define MATCH_IP_PROTO_3               0x00000001
+#define MATCH_IP_TTL_3                 0x00000001
+#define MATCH_TRANSPORT_SRC_PORT_3     0x00000001
+#define MATCH_TRANSPORT_DST_PORT_3     0x00000001
+#define MATCH_TCP_FLAGS_3              0x00000001
+#define MATCH_ICMP_TYPE_3              0x00000001
+#define MATCH_ICMP_CODE_3              0x00000001
+#define MATCH_TENANT_ID_3              0x00000001
+#define MATCH_GRE_PROTO_3              0x00000001
+
+/*****************************************************************************/
+/* Transposition types                                                       */
+/*****************************************************************************/
+#define TRANSPOSITIONS_PUSH_ETHERNET_00            0x00000001
+#define TRANSPOSITIONS_PUSH_IPV4_00                0x00000001
+#define TRANSPOSITIONS_PUSH_IPV6_00                0x00000001
+#define TRANSPOSITIONS_PUSH_VXLAN_00               0x00000001
+#define TRANSPOSITIONS_PUSH_UDP_00                 0x00000001
+#define TRANSPOSITIONS_POP_ETHERNET_00             0x00000001
+#define TRANSPOSITIONS_POP_IPV4_00                 0x00000001
+#define TRANSPOSITIONS_POP_IPV6_00                 0x00000001
+#define TRANSPOSITIONS_POP_VXLAN_00                0x00000001
+#define TRANSPOSITIONS_POP_UDP_00                  0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_SRC_00      0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_DST_00      0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_TYPE_00     0x00000001
+#define TRANSPOSITIONS_MODIFY_CTAG_00              0x00000001
+#define TRANSPOSITIONS_MODIFY_STAG_00              0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_SRC_00          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_DST_00          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_DSCP_00         0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_PROTO_00        0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_TTL_00          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_SRC_00          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_DST_00          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_DSCP_00         0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_PROTO_00        0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_TTL_00          0x00000001
+#define TRANSPOSITIONS_MODIFY_UDP_SPORT_00         0x00000001
+#define TRANSPOSITIONS_MODIFY_UDP_DPORT_00         0x00000001
+#define TRANSPOSITIONS_MODIFY_TCP_SPORT_00         0x00000001
+#define TRANSPOSITIONS_MODIFY_TCP_DPORT_00         0x00000001
+#define TRANSPOSITIONS_MODIFY_ICMP_TYPE_00         0x00000001
+#define TRANSPOSITIONS_MODIFY_ICMP_CODE_00         0x00000001
+#define TRANSPOSITIONS_MODIFY_TENANT_ID_00         0x00000001
+#define TRANSPOSITIONS_PUSH_ETHERNET_01            0x00000001
+#define TRANSPOSITIONS_PUSH_IPV4_01                0x00000001
+#define TRANSPOSITIONS_PUSH_IPV6_01                0x00000001
+#define TRANSPOSITIONS_PUSH_VXLAN_01               0x00000001
+#define TRANSPOSITIONS_PUSH_UDP_01                 0x00000001
+#define TRANSPOSITIONS_POP_ETHERNET_01             0x00000001
+#define TRANSPOSITIONS_POP_IPV4_01                 0x00000001
+#define TRANSPOSITIONS_POP_IPV6_01                 0x00000001
+#define TRANSPOSITIONS_POP_VXLAN_01                0x00000001
+#define TRANSPOSITIONS_POP_UDP_01                  0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_SRC_01      0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_DST_01      0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_TYPE_01     0x00000001
+#define TRANSPOSITIONS_MODIFY_CTAG_01              0x00000001
+#define TRANSPOSITIONS_MODIFY_STAG_01              0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_SRC_01          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_DST_01          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_DSCP_01         0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_PROTO_01        0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_TTL_01          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_SRC_01          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_DST_01          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_DSCP_01         0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_PROTO_01        0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_TTL_01          0x00000001
+#define TRANSPOSITIONS_MODIFY_UDP_SPORT_01         0x00000001
+#define TRANSPOSITIONS_MODIFY_UDP_DPORT_01         0x00000001
+#define TRANSPOSITIONS_MODIFY_TCP_SPORT_01         0x00000001
+#define TRANSPOSITIONS_MODIFY_TCP_DPORT_01         0x00000001
+#define TRANSPOSITIONS_MODIFY_ICMP_TYPE_01         0x00000001
+#define TRANSPOSITIONS_MODIFY_ICMP_CODE_01         0x00000001
+#define TRANSPOSITIONS_MODIFY_TENANT_ID_01         0x00000001
+#define TRANSPOSITIONS_PUSH_ETHERNET_1             0x00000001
+#define TRANSPOSITIONS_PUSH_IPV4_1                 0x00000001
+#define TRANSPOSITIONS_PUSH_IPV6_1                 0x00000001
+#define TRANSPOSITIONS_PUSH_VXLAN_1                0x00000001
+#define TRANSPOSITIONS_PUSH_UDP_1                  0x00000001
+#define TRANSPOSITIONS_POP_ETHERNET_1              0x00000001
+#define TRANSPOSITIONS_POP_IPV4_1                  0x00000001
+#define TRANSPOSITIONS_POP_IPV6_1                  0x00000001
+#define TRANSPOSITIONS_POP_VXLAN_1                 0x00000001
+#define TRANSPOSITIONS_POP_UDP_1                   0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_SRC_1       0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_DST_1       0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_TYPE_1      0x00000001
+#define TRANSPOSITIONS_MODIFY_CTAG_1               0x00000001
+#define TRANSPOSITIONS_MODIFY_STAG_1               0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_SRC_1           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_DST_1           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_DSCP_1          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_PROTO_1         0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_TTL_1           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_SRC_1           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_DST_1           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_DSCP_1          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_PROTO_1         0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_TTL_1           0x00000001
+#define TRANSPOSITIONS_MODIFY_UDP_SPORT_1          0x00000001
+#define TRANSPOSITIONS_MODIFY_UDP_DPORT_1          0x00000001
+#define TRANSPOSITIONS_MODIFY_TCP_SPORT_1          0x00000001
+#define TRANSPOSITIONS_MODIFY_TCP_DPORT_1          0x00000001
+#define TRANSPOSITIONS_MODIFY_ICMP_TYPE_1          0x00000001
+#define TRANSPOSITIONS_MODIFY_ICMP_CODE_1          0x00000001
+#define TRANSPOSITIONS_MODIFY_TENANT_ID_1          0x00000001
+#define TRANSPOSITIONS_PUSH_ETHERNET_2             0x00000001
+#define TRANSPOSITIONS_PUSH_IPV4_2                 0x00000001
+#define TRANSPOSITIONS_PUSH_IPV6_2                 0x00000001
+#define TRANSPOSITIONS_PUSH_VXLAN_2                0x00000001
+#define TRANSPOSITIONS_PUSH_UDP_2                  0x00000001
+#define TRANSPOSITIONS_POP_ETHERNET_2              0x00000001
+#define TRANSPOSITIONS_POP_IPV4_2                  0x00000001
+#define TRANSPOSITIONS_POP_IPV6_2                  0x00000001
+#define TRANSPOSITIONS_POP_VXLAN_2                 0x00000001
+#define TRANSPOSITIONS_POP_UDP_2                   0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_SRC_2       0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_DST_2       0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_TYPE_2      0x00000001
+#define TRANSPOSITIONS_MODIFY_CTAG_2               0x00000001
+#define TRANSPOSITIONS_MODIFY_STAG_2               0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_SRC_2           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_DST_2           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_DSCP_2          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_PROTO_2         0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_TTL_2           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_SRC_2           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_DST_2           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_DSCP_2          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_PROTO_2         0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_TTL_2           0x00000001
+#define TRANSPOSITIONS_MODIFY_UDP_SPORT_2          0x00000001
+#define TRANSPOSITIONS_MODIFY_UDP_DPORT_2          0x00000001
+#define TRANSPOSITIONS_MODIFY_TCP_SPORT_2          0x00000001
+#define TRANSPOSITIONS_MODIFY_TCP_DPORT_2          0x00000001
+#define TRANSPOSITIONS_MODIFY_ICMP_TYPE_2          0x00000001
+#define TRANSPOSITIONS_MODIFY_ICMP_CODE_2          0x00000001
+#define TRANSPOSITIONS_MODIFY_TENANT_ID_2          0x00000001
+#define TRANSPOSITIONS_PUSH_ETHERNET_3             0x00000001
+#define TRANSPOSITIONS_PUSH_IPV4_3                 0x00000001
+#define TRANSPOSITIONS_PUSH_IPV6_3                 0x00000001
+#define TRANSPOSITIONS_PUSH_VXLAN_3                0x00000001
+#define TRANSPOSITIONS_PUSH_UDP_3                  0x00000001
+#define TRANSPOSITIONS_POP_ETHERNET_3              0x00000001
+#define TRANSPOSITIONS_POP_IPV4_3                  0x00000001
+#define TRANSPOSITIONS_POP_IPV6_3                  0x00000001
+#define TRANSPOSITIONS_POP_VXLAN_3                 0x00000001
+#define TRANSPOSITIONS_POP_UDP_3                   0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_SRC_3       0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_DST_3       0x00000001
+#define TRANSPOSITIONS_MODIFY_ETHERNET_TYPE_3      0x00000001
+#define TRANSPOSITIONS_MODIFY_CTAG_3               0x00000001
+#define TRANSPOSITIONS_MODIFY_STAG_3               0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_SRC_3           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_DST_3           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_DSCP_3          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_PROTO_3         0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV4_TTL_3           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_SRC_3           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_DST_3           0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_DSCP_3          0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_PROTO_3         0x00000001
+#define TRANSPOSITIONS_MODIFY_IPV6_TTL_3           0x00000001
+#define TRANSPOSITIONS_MODIFY_UDP_SPORT_3          0x00000001
+#define TRANSPOSITIONS_MODIFY_UDP_DPORT_3          0x00000001
+#define TRANSPOSITIONS_MODIFY_TCP_SPORT_3          0x00000001
+#define TRANSPOSITIONS_MODIFY_TCP_DPORT_3          0x00000001
+#define TRANSPOSITIONS_MODIFY_ICMP_TYPE_3          0x00000001
+#define TRANSPOSITIONS_MODIFY_ICMP_CODE_3          0x00000001
+#define TRANSPOSITIONS_MODIFY_TENANT_ID_3          0x00000001

@@ -73,6 +73,7 @@
                                         * 9bits, change it to 2 bytes.
                                         */
 #define P4PD_TCAM_WORD_CHUNK_LEN (16)  /* Tcam word chunk */
+#define P4PD_MAX_PHV_LEN         (6*1024) /* Used to build wide table entry */
 
 char ${prefix}_tbl_names[P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];
 uint16_t ${prefix}_tbl_swkey_size[P4${caps_p4prog}TBL_ID_TBLMAX];
@@ -352,12 +353,84 @@ p4pd_swizzle_bytes(uint8_t *hwentry, uint16_t hwentry_bit_len)
     }
 }
 
+static uint32_t
+p4pd_widekey_hash_table_entry_prepare(uint8_t *hwentry,
+                                      uint8_t action_pc,
+                                      uint8_t match_key_start_bit,
+                                      uint8_t *hwkey,
+                                      uint16_t keylen,
+                                      uint8_t *packed_actiondata_before_matchkey,
+                                      uint16_t actiondata_before_matchkey_len,
+                                      uint8_t *packed_actiondata_after_matchkey,
+                                      uint16_t actiondata_after_matchkey_len,
+                                      uint16_t *axi_shift_bytes)
+{
+    (void)p4pd_widekey_hash_table_entry_prepare;
+    uint16_t dest_start_bit = (keylen - (keylen % 512)), delta_bits = 0;
+
+    if (action_pc != 0xff) {
+        if (match_key_start_bit > (actiondata_before_matchkey_len + P4PD_ACTIONPC_BITS)){
+            delta_bits = (match_key_start_bit - (actiondata_before_matchkey_len 
+                                                     + P4PD_ACTIONPC_BITS));
+        }
+    } else {
+        if (match_key_start_bit > actiondata_before_matchkey_len) {
+            delta_bits = match_key_start_bit - actiondata_before_matchkey_len;
+        }
+    }
+    *axi_shift_bytes = ((delta_bits >> 4) << 1);
+    dest_start_bit = (*axi_shift_bytes  * 8);
+
+    // For wide key table, axi_shift will not make sense.
+    assert(*axi_shift_bytes == 0);
+
+    if (action_pc != 0xff) {
+        *(hwentry + (dest_start_bit >> 3)) = action_pc; // ActionPC is a byte
+        dest_start_bit += P4PD_ACTIONPC_BITS;
+    }
+
+    p4pd_copy_byte_aligned_src_and_dest(hwentry,
+                   dest_start_bit,
+                   packed_actiondata_before_matchkey,
+                   0, /* Starting from 0th bit in source */
+                   actiondata_before_matchkey_len);
+    dest_start_bit += actiondata_before_matchkey_len;
+
+    //For hash tables, match-key-start position has to align.
+    dest_start_bit = match_key_start_bit;
+
+    p4pd_copy_be_src_to_be_dest(hwentry,
+                   dest_start_bit,
+                   hwkey,
+                   match_key_start_bit, /* Starting key bit in hwkey*/
+                   keylen);
+    dest_start_bit += keylen;
+
+    int actiondata_startbit = 0;
+    int key_byte_shared_bits = 0;
+
+    p4pd_copy_be_src_to_be_dest(hwentry,
+                                dest_start_bit,
+                                packed_actiondata_after_matchkey,
+                                actiondata_startbit,
+                                (actiondata_after_matchkey_len - key_byte_shared_bits));
+
+    dest_start_bit += (actiondata_after_matchkey_len - key_byte_shared_bits);
+
+    /* when computing size of entry, drop axi shift bit len */
+    dest_start_bit -= (*axi_shift_bytes * 8);
+    if (dest_start_bit % 16) {
+        return (dest_start_bit + 16 - (dest_start_bit % 16));
+    } else {
+        return (dest_start_bit);
+    }
+}
 
 static uint32_t
-p4pd_hash_table_entry_prepare(uint8_t *hwentry, 
-                              uint8_t action_pc, 
+p4pd_hash_table_entry_prepare(uint8_t *hwentry,
+                              uint8_t action_pc,
                               uint8_t match_key_start_bit,
-                              uint8_t *hwkey, 
+                              uint8_t *hwkey,
                               uint16_t keylen,
                               uint8_t *packed_actiondata_before_matchkey,
                               uint16_t actiondata_before_matchkey_len,
@@ -580,8 +653,12 @@ ${table}_hwentry_query(uint32_t tableid,
                        uint32_t *hwkey_len, 
                        uint32_t *hwactiondata_len)
 {
+//::            if pddict['tables'][table]['is_wide_key']:
+    *hwkey_len = ${keylen};
+//::            else:
     // For hash case always return key length as 512 bits.
     *hwkey_len = 512;
+//::            #endif
 
     *hwactiondata_len = ${max_actionfld_len};
 
@@ -634,6 +711,9 @@ ${table}_pack_action_data(uint32_t tableid,
 //::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::            mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
 //::            mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
+//::            if pddict['tables'][table]['is_wide_key']:
+//::                mat_key_bit_length = pddict['tables'][table]['wide_key_len']
+//::            #endif
 //::            spilled_adata_bits = 0
 //::            max_adata_bits_before_key = max_actionfld_len
 //::            if max_actionfld_len < mat_key_start_bit and (mat_key_start_bit - max_actionfld_len ) > 16:
@@ -1872,7 +1952,11 @@ ${table}_entry_write(uint32_t tableid,
     uint8_t  action_pc;
     uint8_t  packed_actiondata_after_key[P4PD_MAX_ACTION_DATA_LEN] = {0};
     uint8_t  packed_actiondata_before_key[P4PD_MAX_ACTION_DATA_LEN] = {0};
+//::            if pddict['tables'][table]['is_wide_key']:
+    uint8_t  hwentry[P4PD_MAX_PHV_LEN] = {0};
+//::            else:
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
+//::            #endif
     uint16_t entry_size, actiondatalen, key_len, axi_shift_len;
     uint16_t actiondata_len_before_key, actiondata_len_after_key;
     uint8_t  *_hwentry = &hwentry[0];
@@ -1885,7 +1969,6 @@ ${table}_entry_write(uint32_t tableid,
 
     ${table}_hwentry_query(tableid, &hwkey_len, &hwactiondata_len);
     hash_${table}_key_len(tableid, &key_len);
-                          
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                add_action_pc = True
 //::            else:
@@ -1906,6 +1989,24 @@ ${table}_entry_write(uint32_t tableid,
                                      packed_actiondata_after_key,
                                      &actiondata_len_after_key);
 
+//::            if pddict['tables'][table]['is_wide_key']:
+    entry_size = p4pd_widekey_hash_table_entry_prepare(hwentry,
+                                             action_pc,
+                                             ${pddict['tables'][table]['match_key_start_bit']},/*MatchKeyStartBit */
+                                             hwkey,
+                                             key_len,
+                                             packed_actiondata_before_key,
+                                             actiondata_len_before_key,
+                                             packed_actiondata_after_key,
+                                             actiondata_len_after_key,
+                                             &axi_shift_len);
+    if (axi_shift_len) {
+        /* Due to leading axi_shift space, actual entry line
+         * does not start at byte zero.
+         */
+        _hwentry += axi_shift_len;
+    }
+//::            else:
     entry_size = p4pd_hash_table_entry_prepare(hwentry,
                                              action_pc,
                                              ${pddict['tables'][table]['match_key_start_bit']},/*MatchKeyStartBit */
@@ -1922,6 +2023,7 @@ ${table}_entry_write(uint32_t tableid,
          */
         _hwentry += axi_shift_len;
     }
+//::            #endif
 
 //::            if pddict['tables'][table]['location'] == 'HBM':
     capri_hbm_table_entry_write(tableid, hashindex, _hwentry, entry_size);
@@ -1975,6 +2077,9 @@ hash_${table}_unpack_action_data(uint32_t tableid,
 //::                mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::                mat_key_start_bit = pddict['tables'][table]['match_key_start_bit']
 //::                mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
+//::                if pddict['tables'][table]['is_wide_key']:
+//::                    mat_key_bit_length = pddict['tables'][table]['wide_key_len']
+//::                #endif
             if (actiondata_len_before_key) {
                 copy_before_key = true;
                 packed_action_data = packed_actiondata_before_key;
@@ -2868,7 +2973,11 @@ ${table}_entry_read(uint32_t tableid,
                     ${table}_swkey_t *swkey, 
                     ${table}_actiondata *actiondata)
 {
+//::            if pddict['tables'][table]['is_wide_key']:
+    uint8_t  hwentry[P4PD_MAX_PHV_LEN] = {0};
+//::            else:
     uint8_t  hwentry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
+//::            #endif
     uint16_t hwentry_bit_len;
     uint8_t  *packed_actiondata_before_key;
     uint8_t *packed_actiondata_after_key;
@@ -2895,6 +3004,11 @@ ${table}_entry_read(uint32_t tableid,
     ${table}_hwkey_unbuild(tableid, hwentry, 
                            ${mat_key_bit_length}, swkey);
 
+//::            if pddict['tables'][table]['is_wide_key']:
+//::                mat_key_start_byte = (keylen - (keylen % 512)) / 8
+//::                mat_key_bit_length = pddict['tables'][table]['wide_key_len']
+//::            #endif
+//
 //::            if len(pddict['tables'][table]['actions']) > 1:
 //::                action_pc_added = True
 //::            else:
@@ -3010,6 +3124,10 @@ ${table}_entry_decode(uint32_t tableid,
 //::            #endif
 //::            mat_key_start_byte = pddict['tables'][table]['match_key_start_byte']
 //::            mat_key_bit_length = pddict['tables'][table]['match_key_bit_length']
+//::            if pddict['tables'][table]['is_wide_key']:
+//::                mat_key_start_byte = (keylen - (keylen % 512)) / 8
+//::                mat_key_bit_length = pddict['tables'][table]['wide_key_len']
+//::            #endif
     uint8_t *packed_actiondata_before_key;
     uint8_t *packed_actiondata_after_key;
     uint16_t actiondata_len_before_key;

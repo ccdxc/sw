@@ -274,6 +274,9 @@ class capri_p4pd:
         km_width = self.be.hw_model['match_action']['key_maker_width']
         match_key_start_byte = ctable.start_key_off / 8
         match_key_start_bit = ctable.start_key_off
+        if ctable.is_wide_key:
+            match_key_start_byte = ctable.last_flit_start_key_off / 8
+            match_key_start_bit = ctable.last_flit_start_key_off
 
         for km_inst, km in enumerate(ctable.key_makers):
             km_start_byte = km_inst * (km_width/8) #Each Key maker has 256bits
@@ -493,6 +496,9 @@ class capri_p4pd:
         kdict['not_my_key_bits']        = not_my_key_bits
         kdict['km_byte_to_cf']          = km_byte_to_cf_map
         kdict['km_bit_to_cf']           = km_bit_to_cf_map
+        kdict['wide_key_len']           = 0
+        if ctable.is_wide_key:
+            kdict['wide_key_len']       = ctable.last_flit_end_key_off - ctable.last_flit_start_key_off
     
         return kdict
 
@@ -582,7 +588,8 @@ class capri_p4pd:
             kdict['fld_u_keys']             = [] 
             kdict['hdr_u_keys']             = [] 
             kdict['keys']                   = []
-            kdict['keysize'] = 0
+            kdict['keysize']                = 0
+            kdict['wide_key_len']           = 0
         
         # Build all table action data fields
         tblactions = []
@@ -722,7 +729,15 @@ class capri_p4pd:
             is_tcam = 0
         bit_extractors = []
 
+        start_km_inst = 0
+        wide_key_width = 0
+        if ctable.is_wide_key:
+            #In case of wide key table build KI using only last two KM.
+            start_km_inst = len(ctable.key_makers) - 2
+
         for km_inst, km in enumerate(ctable.key_makers):
+            if km_inst < start_km_inst:
+                continue
             km_start_byte = km_inst * (km_width/8)
             if not km.combined_profile:
                 continue # key-less table
@@ -1182,6 +1197,8 @@ class capri_p4pd:
             tdict['match_key_start_byte'] = keydict['match_key_start_byte']
             tdict['match_key_start_bit'] = keydict['match_key_start_bit']
             tdict['match_key_bit_length'] = keydict['match_key_len']
+            tdict['is_wide_key'] = 1 if ctable.is_wide_key else 0
+            tdict['wide_key_len'] = keydict['wide_key_len']
             # Not my key bytes and bits will NOT be NULL when
             # KeyMaker is shared by 2 TCAM tables. KM logic
             # can interperse Key bytes/bits to adhere to Banyan
@@ -1295,7 +1312,8 @@ class capri_p4pd:
                             found = True
                             break
                 if not found:
-                    notfound_cfk.append((ctable.d, table_name, cfkname))
+                    if not ctable.is_wide_key:
+                        notfound_cfk.append((ctable.d, table_name, cfkname))
                 else:
                     verified_cfk.append(cfkname)
 
@@ -1322,7 +1340,8 @@ class capri_p4pd:
                             found = True
                             break
                 if not found:
-                    notfound_cfi.append((ctable.d, table_name, cfiname))
+                    if not ctable.is_wide_key:
+                        notfound_cfi.append((ctable.d, table_name, cfiname))
                 else:
                     verified_cfi.append(cfiname)
 

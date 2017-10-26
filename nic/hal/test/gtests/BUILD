@@ -202,3 +202,10 @@ cc_test(
     deps = [] + gl_deps,
     linkopts = [] + gl_linkopts,
 )
+
+cc_test(
+    name = "gft_test",
+    srcs = ["gft_test.cc"],
+    deps = [] + gl_deps,
+    linkopts = [] + gl_linkopts,
+)

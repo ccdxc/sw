@@ -1,0 +1,109 @@
+header_type flow_lkp_metadata_t {
+    fields {
+        ethernet_dst_1           : 48;
+        ethernet_src_1           : 48;
+        ethernet_type_1          : 16;
+        ctag_1                   : 12;
+        stag_1                   : 12;
+        ip_dscp_1                : 8;
+        ip_proto_1               : 8;
+        ip_ttl_1                 : 8;
+        ip_src_1                 : 128;
+        ip_dst_1                 : 128;
+        l4_sport_1               : 16;
+        l4_dport_1               : 16;
+        tcp_flags_1              : 8;
+        tenant_id_1              : 24;
+        gre_proto_1              : 16;
+
+        ethernet_dst_2           : 48;
+        ethernet_src_2           : 48;
+        ethernet_type_2          : 16;
+        ctag_2                   : 12;
+        stag_2                   : 12;
+        ip_dscp_2                : 8;
+        ip_proto_2               : 8;
+        ip_ttl_2                 : 8;
+        ip_src_2                 : 128;
+        ip_dst_2                 : 128;
+        l4_sport_2               : 16;
+        l4_dport_2               : 16;
+        tcp_flags_2              : 8;
+        tenant_id_2              : 24;
+        gre_proto_2              : 16;
+
+        ethernet_dst_3           : 48;
+        ethernet_src_3           : 48;
+        ethernet_type_3          : 16;
+        ctag_3                   : 12;
+        stag_3                   : 12;
+        ip_dscp_3                : 8;
+        ip_proto_3               : 8;
+        ip_ttl_3                 : 8;
+        ip_src_3                 : 128;
+        ip_dst_3                 : 128;
+        l4_sport_3               : 16;
+        l4_dport_3               : 16;
+        tcp_flags_3              : 8;
+        tenant_id_3              : 24;
+        gre_proto_3              : 16;
+
+        overflow_hash            : 32;
+    }
+}
+
+header_type tunnel_metadata_t {
+    fields {
+        tunnel_type_1 : 8;
+        tunnel_vni_1  : 24;
+        tunnel_type_2 : 8;
+        tunnel_vni_2  : 24;
+        tunnel_type_3 : 8;
+        tunnel_vni_3  : 24;
+    }
+}
+
+header_type l4_metadata_t {
+    fields {
+        l4_sport_1     : 16;
+        l4_dport_1     : 16;
+        l4_sport_2     : 16;
+        l4_dport_2     : 16;
+        l4_sport_3     : 16;
+        l4_dport_3     : 16;
+    }
+}
+
+header_type flow_act_metadata_t {
+    fields {
+        flow_index          : 20;
+        policer_index       : 14;
+        overflow_lkp        : 1;
+    }
+}
+
+header_type scratch_metadata_t {
+    fields {
+        last_seen_timestamp : 48;
+        flow_packets        : 64;
+        flow_bytes          : 64;
+        rewrite_fields      : 8;
+        payload_len         : 16;
+        flag                : 1;
+        match_fields        : 32;
+        hdr_bits            : 32;
+        num_packets         : 64;
+        num_bytes           : 64;
+        hash                : 12;
+        hint                : 16;
+    }
+}
+
+metadata cap_phv_intr_p4_t     capri_p4_intrinsic;
+metadata tunnel_metadata_t     tunnel_metadata;
+metadata l4_metadata_t         l4_metadata;
+metadata flow_lkp_metadata_t   flow_lkp_metadata;
+metadata flow_act_metadata_t   flow_action_metadata;
+
+@pragma scratch_metadata
+metadata scratch_metadata_t    scratch_metadata;
