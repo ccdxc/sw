@@ -411,6 +411,7 @@ message InterfaceKeyHandle {
 enum IfTunnelEncapType {
   IF_TUNNEL_ENCAP_TYPE_NONE     = 0;
   IF_TUNNEL_ENCAP_TYPE_VXLAN    = 1;
+  IF_TUNNEL_ENCAP_TYPE_GRE      = 2;
 }
 
 message IfTunnelVxlanInfo {
@@ -418,10 +419,18 @@ message IfTunnelVxlanInfo {
   types.IPAddress   remote_tep          = 2;
 }
 
+message IfTunnelGREInfo {
+  types.IPAddress   source          = 1;
+  types.IPAddress   destination     = 2;
+  uint32            mtu             = 3;
+  uint32            ttl             = 4;
+}
+
 message IfTunnelInfo {
   IfTunnelEncapType     encap_type      = 1;
   oneof encap_info {
     IfTunnelVxlanInfo   vxlan_info      = 2;
+    IfTunnelGREInfo     gre_info        = 3;
   }
 }
 
