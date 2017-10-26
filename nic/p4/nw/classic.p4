@@ -13,6 +13,10 @@ action registered_macs(dst_lport, multicast_en) {
     }
 
     // miss action
+    if (control_metadata.uplink == FALSE) {
+        // return
+    }
+
     if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
         modify_field(capri_intrinsic.tm_replicate_en, TRUE);
         modify_field(capri_intrinsic.tm_replicate_ptr,

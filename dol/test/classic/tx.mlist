@@ -12,17 +12,25 @@ modules:
     - module:
         name    : IPV4
         iterate:
-            - flow  : filter://type=IPV4,proto=UDP
-            - flow  : filter://type=IPV4,proto=TCP
-            - flow  : filter://type=IPV4,proto=ICMP
+            - flow      : filter://type=IPV4,proto=UDP
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP
+              segment   : filter://native=False
 
     - module:
         name    : IPV6
         iterate:
-            - flow  : filter://type=IPV6,proto=UDP
-            - flow  : filter://type=IPV6,proto=TCP
-            - flow  : filter://type=IPV6,proto=ICMPV6
+            - flow      : filter://type=IPV6,proto=UDP
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=TCP
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6
+              segment   : filter://native=False
 
     - module:
         name    : NONIP
         spec    : tx_nonip.testspec
+        iterate :
+            - segment   : filter://native=False

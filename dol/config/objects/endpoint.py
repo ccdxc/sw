@@ -279,8 +279,11 @@ class EndpointObjectHelper:
 
     def Configure(self):
         cfglogger.info("Configuring %d Endpoints." % len(self.eps))
-        halapi.ConfigureEndpoints(self.eps)
-        halapi.ConfigureEndpoints(self.backend_eps)
+        if GlobalOptions.classic:
+            halapi.ConfigureEndpoints(self.local)
+        else:
+            halapi.ConfigureEndpoints(self.eps)
+            halapi.ConfigureEndpoints(self.backend_eps)
 
         if self.rdma:
             for ep in self.local:

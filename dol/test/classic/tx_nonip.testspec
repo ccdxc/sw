@@ -2,14 +2,14 @@
 selectors:
     src:
         tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://native=False
+        segment : filter://any
         endpoint: filter://remote=False
     dst:
         tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://native=False
+        segment : filter://any
         endpoint: filter://remote=True
     flow        : filter://fwtype=L2,type=MAC
-    maxflows    : 4
+    maxflows    : None
 
 packets:
     - packet:

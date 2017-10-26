@@ -11,6 +11,8 @@ struct phv_              p;
 registered_macs:
   bcf         [c1], registered_macs_hit
   phvwr       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
+  seq         c1, k.control_metadata_uplink, FALSE
+  nop.c1.e
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
   bcf         [c1], registered_macs_all_multicast
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_BROADCAST
