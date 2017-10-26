@@ -172,24 +172,26 @@ message Empty {}
 
 // Types of Work Ring
 enum WRingType {
-  WRING_TYPE_NONE           = 0;    
-  WRING_TYPE_SERQ           = 1;    
-  WRING_TYPE_NMDR_TX        = 2;    
-  WRING_TYPE_NMDR_RX        = 3;    
-  WRING_TYPE_NMPR_SMALL_TX  = 4;    
-  WRING_TYPE_NMPR_SMALL_RX  = 5;    
-  WRING_TYPE_NMPR_BIG_TX    = 6;    
-  WRING_TYPE_NMPR_BIG_RX    = 7;    
-  WRING_TYPE_BSQ            = 8;
-  WRING_TYPE_BRQ            = 9;
-  WRING_TYPE_SESQ           = 10;    
-  WRING_TYPE_IPSECCBQ       = 11;
-  WRING_TYPE_ARQRX          = 12;
-  WRING_TYPE_ASQ            = 13;
-  WRING_TYPE_ASESQ          = 14;    
-  WRING_TYPE_RAWRCB         = 15;
-  WRING_TYPE_IPSECCBQ_BARCO = 16;
-  WRING_TYPE_APP_REDIR_RAWC = 17;
+  WRING_TYPE_NONE             = 0;    
+  WRING_TYPE_SERQ             = 1;    
+  WRING_TYPE_NMDR_TX          = 2;    
+  WRING_TYPE_NMDR_RX          = 3;    
+  WRING_TYPE_NMPR_SMALL_TX    = 4;    
+  WRING_TYPE_NMPR_SMALL_RX    = 5;    
+  WRING_TYPE_NMPR_BIG_TX      = 6;    
+  WRING_TYPE_NMPR_BIG_RX      = 7;    
+  WRING_TYPE_BSQ              = 8;
+  WRING_TYPE_BRQ              = 9;
+  WRING_TYPE_SESQ             = 10;    
+  WRING_TYPE_IPSECCBQ         = 11;
+  WRING_TYPE_ARQRX            = 12;
+  WRING_TYPE_ASQ              = 13;
+  WRING_TYPE_ASESQ            = 14;    
+  WRING_TYPE_RAWRCB           = 15;
+  WRING_TYPE_IPSECCBQ_BARCO   = 16;
+  WRING_TYPE_APP_REDIR_RAWC   = 17;
+  WRING_TYPE_APP_REDIR_PROXYR = 18;
+  WRING_TYPE_APP_REDIR_PROXYC = 19;
 }
 
 // Types of Proxy Service

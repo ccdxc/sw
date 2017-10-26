@@ -34,7 +34,8 @@ bool is_cpu_rx_queue(types::WRingType type)
 bool is_cpu_tx_queue(types::WRingType type)
 {
     return ((type == types::WRING_TYPE_ASQ) || (type == types::WRING_TYPE_ASESQ) ||
-            (type == types::WRING_TYPE_APP_REDIR_RAWC));
+            (type == types::WRING_TYPE_APP_REDIR_RAWC) ||
+            (type == types::WRING_TYPE_APP_REDIR_PROXYC));
 }
 
 

@@ -185,6 +185,14 @@
             "size_kb": 16384
         },
         {
+            "name": "app-redir-proxyr",
+            "size_kb": 16384
+        },
+        {
+            "name": "app-redir-proxyc",
+            "size_kb": 16384
+        },
+        {
             "_comment": "space = N/2 + 2N/3, N = Num timers",
             "_comment2": "Num timers = 128K",
             "name": "timers",

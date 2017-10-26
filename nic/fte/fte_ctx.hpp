@@ -273,13 +273,48 @@ const lifqid_t FLOW_MISS_LIFQ = {hal::SERVICE_LIF_CPU, 0, 0};
 const lifqid_t TCP_PROXY_LIFQ = {hal::SERVICE_LIF_TCP_PROXY, 0, 0};
 const lifqid_t TLS_PROXY_LIFQ = {hal::SERVICE_LIF_TLS_PROXY, 0, 0};
 const lifqid_t ALG_CFLOW_LIFQ = {hal::SERVICE_LIF_CPU, 3, 0};
-const lifqid_t APP_REDIR_LIFQ = {hal::SERVICE_LIF_APP_REDIR, hal::APP_REDIR_RAWR_QTYPE, 0};
+const lifqid_t APP_REDIR_LIFQ = {hal::SERVICE_LIF_APP_REDIR, 0, 0};
 
 inline std::ostream& operator<<(std::ostream& os, const lifqid_t& lifq)
 {
     return os << fmt::format("{{lif={}, qtype={}, qid={}}}",
                              lifq.lif, lifq.qtype, lifq.qid);
 }
+
+// Application redirect context
+class app_redir_ctx_t {
+public:
+    void init()
+    {
+        redir_flags_      = 0;
+        hdr_len_total_    = 0;
+        chain_qtype_      = 0;
+        chain_pkt_sent_   = 0;
+        chain_wring_type_ = types::WRING_TYPE_NONE;
+    };
+
+    uint16_t redir_flags() const { return redir_flags_; }
+    void set_redir_flags(uint16_t flags) { redir_flags_ = flags; }
+
+    uint16_t hdr_len_total() const { return hdr_len_total_; }
+    void set_hdr_len_total(uint16_t hdr_len_total) { hdr_len_total_ = hdr_len_total; }
+
+    uint16_t chain_pkt_sent() const { return chain_pkt_sent_; }
+    void set_chain_pkt_sent(bool yesno) { chain_pkt_sent_ = yesno; }
+
+    uint16_t chain_qtype() const { return chain_qtype_; }
+    void set_chain_qtype(uint8_t chain_qtype) { chain_qtype_ = chain_qtype; }
+
+    types::WRingType chain_wring_type() const { return chain_wring_type_; }
+    void set_chain_wring_type(types::WRingType chain_wring_type) { chain_wring_type_ = chain_wring_type; }
+
+private:
+    uint16_t            redir_flags_;
+    uint16_t            hdr_len_total_;
+    types::WRingType    chain_wring_type_;
+    uint8_t             chain_qtype_;
+    uint8_t             chain_pkt_sent_;
+};
 
 // pkt info for queued tx packets
 typedef struct txpkt_info_s txpkt_info_t;
@@ -410,6 +445,8 @@ public:
     void set_hal_cleanup(bool val) { cleanup_hal_ = val; }
     void swap_flow_objs();
 
+    const app_redir_ctx_t& app_redir() const { return app_redir_; }
+
 private:
     lifqid_t              arm_lifq_;
     hal::flow_key_t       key_;
@@ -455,6 +492,7 @@ private:
     nwsec::ALGName        alg_proto_;         // ALG Proto to be applied
     alg_proto_state_t     alg_proto_state_;   // ALG Proto state machine state
     alg_entry_t           alg_entry_;         // ALG entry in the wildcard table
+    app_redir_ctx_t       app_redir_;
 
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);
     hal_ret_t update_flow_table();

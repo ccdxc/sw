@@ -29,6 +29,7 @@ def TestCaseSetup(tc):
     rawrcb = tc.infra_data.ConfigStore.objects.db[rawrcbid]
     # let HAL fill in defaults for chain_rxq_base, etc.
     rawrcb.chain_rxq_base = 0
+    rawrcb.redir_pipeline_lpbk_enable = 1
     rawrcb.SetObjValPd()
 
     RawcCbHelper.main(id)
