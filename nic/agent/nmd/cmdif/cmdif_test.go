@@ -10,6 +10,8 @@ import (
 
 	"sync"
 
+	"github.com/pkg/errors"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/nic/agent/nmd/state"
@@ -83,6 +85,7 @@ func (ag *mockAgent) SetSmartNIC(nic *cmd.SmartNIC) error {
 type mockRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	nicdb      map[string]*cmd.SmartNIC
+	stop       chan bool
 }
 
 const testSrvURL = "localhost:8585"
@@ -98,6 +101,7 @@ func createRPCServer(t *testing.T) *mockRPCServer {
 	srv := mockRPCServer{
 		grpcServer: grpcServer,
 		nicdb:      make(map[string]*cmd.SmartNIC),
+		stop:       make(chan bool),
 	}
 
 	// register self as rpc handler
@@ -107,10 +111,16 @@ func createRPCServer(t *testing.T) *mockRPCServer {
 }
 
 func (srv *mockRPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICRequest) (*grpc.RegisterNICResponse, error) {
+	if req.Nic.Name == "invalid-mac" {
+		return nil, errors.New("Invalid request")
+	}
 	return &grpc.RegisterNICResponse{Phase: cmd.SmartNICSpec_ADMITTED.String()}, nil
 }
 
 func (srv *mockRPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequest) (*grpc.UpdateNICResponse, error) {
+	if req.Nic.Name == "invalid-mac" {
+		return nil, errors.New("Invalid request")
+	}
 	return &grpc.UpdateNICResponse{Nic: &req.Nic}, nil
 }
 
@@ -147,13 +157,32 @@ func (srv *mockRPCServer) WatchNICs(meta *api.ObjectMeta, stream grpc.SmartNIC_W
 		}
 	}
 
+	<-srv.stop
+
+	log.Infof("### Exiting server side watch")
 	return nil
+}
+
+func (srv *mockRPCServer) Stop() {
+	close(srv.stop)
+	srv.grpcServer.Stop()
 }
 
 func TestCmdClient(t *testing.T) {
 	// create a mock rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
+	defer srv.Stop()
+
+	// create a nic
+	nic := cmd.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "1111.1111.1111",
+		},
+	}
+	srv.nicdb["1111.1111.1111"] = &nic
 
 	// create a mock agent
 	ag := createMockAgent()
@@ -162,14 +191,9 @@ func TestCmdClient(t *testing.T) {
 	cl, err := NewCmdClient(ag, testSrvURL, "")
 	AssertOk(t, err, "Error creating cmd client")
 	log.Infof("Cmd client name: %s", cl.getAgentName())
+	defer cl.Stop()
 
-	nic := cmd.SmartNIC{
-		TypeMeta: api.TypeMeta{Kind: "SmartNIc"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant: "default",
-			Name:   "1111.1111.1111",
-		},
-	}
+	cl.nmd.SetSmartNIC(&nic)
 
 	// verify register rpc call from client to server
 	_, err = cl.RegisterSmartNICReq(&nic)
@@ -186,18 +210,14 @@ func TestCmdClient(t *testing.T) {
 	}
 	_, err = cl.UpdateSmartNICReq(&nic)
 	AssertOk(t, err, "Error making smartNIC update request")
-
-	// stop the server
-	srv.grpcServer.Stop()
-
-	// stop the client
-	cl.Stop()
 }
 
 func TestCmdClientWatch(t *testing.T) {
+
 	// create a fake rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
+	defer srv.Stop()
 
 	// create a nic
 	nic := cmd.SmartNIC{
@@ -216,6 +236,7 @@ func TestCmdClientWatch(t *testing.T) {
 	cl, err := NewCmdClient(ag, testSrvURL, "")
 	AssertOk(t, err, "Error creating CMD client")
 	Assert(t, (cl != nil), "Error creating CMD client")
+	defer cl.Stop()
 
 	cl.nmd.SetSmartNIC(&nic)
 
@@ -232,7 +253,7 @@ func TestCmdClientWatch(t *testing.T) {
 		defer ag.Unlock()
 		n := ag.nicUpdated[objectKey(nic.ObjectMeta)]
 		return (n != nil && n.Name == nic.Name), nil
-	}, "NI update not found in agent")
+	}, "NIC update not found in agent")
 
 	AssertEventually(t, func() (bool, []interface{}) {
 		ag.Lock()
@@ -240,8 +261,84 @@ func TestCmdClientWatch(t *testing.T) {
 		n := ag.nicDeleted[objectKey(nic.ObjectMeta)]
 		return (n != nil && n.Name == nic.Name), nil
 	}, "NIC delete not found in agent")
+}
 
-	// stop the server and client
-	cl.Stop()
-	srv.grpcServer.Stop()
+func TestCmdClientErrorHandling(t *testing.T) {
+
+	// create a mock rpc server
+	srv := createRPCServer(t)
+	Assert(t, (srv != nil), "Error creating rpc server", srv)
+	defer srv.Stop()
+
+	// create a nic
+	nic := cmd.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "1111.1111.1111",
+		},
+	}
+	srv.nicdb["1111.1111.1111"] = &nic
+
+	// create a mock agent
+	ag := createMockAgent()
+
+	// Test failure with invalid server URL
+	_, err := NewCmdClient(ag, "remotehost:4444", "")
+	Assert(t, err != nil, "Should have failed with incorrect srv URL")
+
+	// create cmd client
+	cl, err := NewCmdClient(ag, testSrvURL, "")
+	AssertOk(t, err, "Error creating cmd client")
+	log.Infof("Cmd client name: %s", cl.getAgentName())
+	defer cl.Stop()
+
+	cl.nmd.SetSmartNIC(&nic)
+
+	// Test register nic failure
+	nic.Name = "invalid-mac"
+	_, err = cl.RegisterSmartNICReq(&nic)
+	Assert(t, err != nil, "Register NIC should have failed")
+
+	// Test update nic failure
+	_, err = cl.UpdateSmartNICReq(&nic)
+	Assert(t, err != nil, "Update NIC should have failed")
+
+	nic.Name = "1111.1111.1111"
+	// verify register rpc call from client to server
+	_, err = cl.RegisterSmartNICReq(&nic)
+	AssertOk(t, err, "Error making smartNIC register request")
+
+	// close rpcClient, to force error
+	cl.closeRPC()
+
+	nic.Name = "2222.2222.2222"
+	srv.nicdb["2222.2222.2222"] = &nic
+	cl.nmd.SetSmartNIC(&nic)
+
+	go func() {
+		cl.runSmartNICWatcher(cl.watchCtx)
+	}()
+
+	// verify client got the nic
+	AssertEventually(t, func() (bool, []interface{}) {
+		ag.Lock()
+		defer ag.Unlock()
+		n := ag.nicAdded[objectKey(nic.ObjectMeta)]
+		return (n != nil && n.Name == nic.Name), nil
+	}, "NIC add not found in agent")
+
+	AssertEventually(t, func() (bool, []interface{}) {
+		ag.Lock()
+		defer ag.Unlock()
+		n := ag.nicUpdated[objectKey(nic.ObjectMeta)]
+		return (n != nil && n.Name == nic.Name), nil
+	}, "NIC update not found in agent")
+
+	AssertEventually(t, func() (bool, []interface{}) {
+		ag.Lock()
+		defer ag.Unlock()
+		n := ag.nicDeleted[objectKey(nic.ObjectMeta)]
+		return (n != nil && n.Name == nic.Name), nil
+	}, "NIC delete not found in agent")
 }

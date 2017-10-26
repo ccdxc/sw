@@ -85,6 +85,13 @@ func New(c *Config) Interface {
 // runUntilCancel implements the business logic of the resolver client.
 func (r *resolverClient) runUntilCancel() {
 	s := rand.NewSource(time.Now().UnixNano())
+	var conn *grpc.ClientConn
+	var err error
+	defer func() {
+		if conn != nil {
+			conn.Close()
+		}
+	}()
 	for {
 		// Check if cancelled.
 		r.Lock()
@@ -101,7 +108,12 @@ func (r *resolverClient) runUntilCancel() {
 		if len(opts) == 0 {
 			opts = append(opts, grpc.WithInsecure())
 		}
-		conn, err := grpc.Dial(r.config.Servers[i], opts...)
+
+		if conn != nil {
+			conn.Close()
+		}
+
+		conn, err = grpc.Dial(r.config.Servers[i], opts...)
 		if err != nil {
 			time.Sleep(time.Millisecond * 100)
 			continue

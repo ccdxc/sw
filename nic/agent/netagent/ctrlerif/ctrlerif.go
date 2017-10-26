@@ -327,6 +327,7 @@ func (client *NpmClient) Stop() {
 	if client.epGrpcClient != nil {
 		client.epGrpcClient.Close()
 	}
+	client.resolverClient.Stop()
 	client.waitGrp.Wait()
 }
 

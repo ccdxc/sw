@@ -54,7 +54,16 @@ func NewAgent(platform state.PlatformAPI, nmdDbPath, nodeUUID, cmdURL, resolverU
 // Stop stops the agent
 func (ag *Agent) Stop() {
 
+	log.Infof("NMD Stop")
 	// Stop NMD and CmdClient
 	ag.cmdClient.Stop()
 	ag.nmd.Stop()
+}
+
+// GetNMD return the naples manager instance
+func (ag *Agent) GetNMD() *state.NMD {
+	if ag != nil {
+		return ag.nmd
+	}
+	return nil
 }

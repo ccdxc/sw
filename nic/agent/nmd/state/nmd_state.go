@@ -194,7 +194,7 @@ func (n *NMD) Stop() error {
 
 	n.StopClassicMode(true)
 
-	if n.getConfigMode() == nmd.NaplesMode_MANAGED_MODE {
+	if n.GetConfigMode() == nmd.NaplesMode_MANAGED_MODE {
 
 		// Cleanup Managed mode tasks, if any
 		n.StopManagedMode()
@@ -216,7 +216,7 @@ func unknownAction(w http.ResponseWriter, r *http.Request) {
 func (n *NMD) StartRestServer() error {
 
 	// If RestServer is already running, return
-	if n.getRestServerStatus() == true {
+	if n.GetRestServerStatus() == true {
 		log.Warnf("REST server is already running")
 		return errors.New("REST server already running")
 	}
@@ -243,14 +243,14 @@ func (n *NMD) StartRestServer() error {
 		return err
 	}
 
-	// Init listener & create a http server
+	// Init & create a http server
 	n.Lock()
 	n.listener = listener
 	n.httpServer = &http.Server{Addr: n.listenURL, Handler: router}
 	n.isRestSrvRunning = true
 	n.Unlock()
 
-	log.Infof("Starting NMD Rest server at %s", n.getListenURL())
+	log.Infof("Starting NMD Rest server at %s", n.GetListenURL())
 
 	// Launch the server
 	go n.httpServer.Serve(listener)
@@ -276,4 +276,9 @@ func (n *NMD) StopRestServer(shutdown bool) error {
 	n.isRestSrvRunning = false
 
 	return nil
+}
+
+// GetNMDUrl returns the REST URL
+func (n *NMD) GetNMDUrl() string {
+	return "http://" + n.GetListenURL() + ConfigURL
 }

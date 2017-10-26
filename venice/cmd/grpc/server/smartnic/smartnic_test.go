@@ -477,7 +477,6 @@ func testSetup(m *testing.M) {
 		fmt.Printf("Error creating Cluster object, %v", err)
 		os.Exit(-1)
 	}
-
 }
 
 func testTeardown(m *testing.M) {

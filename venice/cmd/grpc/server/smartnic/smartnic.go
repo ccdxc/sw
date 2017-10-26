@@ -232,6 +232,8 @@ func (s *RPCServer) RegisterNIC(ctx context.Context, req *grpc.RegisterNICReques
 		phase = cmd.SmartNICSpec_PENDING.String()
 	}
 
+	log.Infof("Validated NIC: %s, phase: %s", mac, phase)
+
 	// Create SmartNIC object, if the status is either admitted or pending.
 	if phase == cmd.SmartNICSpec_ADMITTED.String() || phase == cmd.SmartNICSpec_PENDING.String() {
 		nic := req.GetNic()

@@ -28,7 +28,7 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 
 	// Detect if there is a mode change
 	var modeChanged bool
-	config := n.getNaplesConfig()
+	config := n.GetNaplesConfig()
 	if config.Spec.Mode != cfg.Spec.Mode {
 		modeChanged = true
 	}
@@ -69,6 +69,7 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 func (n *NMD) StartManagedMode() error {
 
 	// Set Registration in progress flag
+	log.Infof("NIC in managed mode, mac: %v", n.config.Spec.PrimaryMac)
 	n.setRegStatus(true)
 	for {
 		select {
@@ -238,6 +239,8 @@ func (n *NMD) StopManagedMode() error {
 func (n *NMD) StartClassicMode() error {
 
 	// Start RestServer
+	log.Infof("NIC in classic mode, mac: %v", n.config.Spec.PrimaryMac)
+
 	return n.StartRestServer()
 }
 

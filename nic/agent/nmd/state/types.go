@@ -51,7 +51,8 @@ type NaplesConfigResp struct {
 // Note: Locks are in place for these setter and getters
 // to prevent data races reported by go race detector.
 
-func (n *NMD) getRegStatus() bool {
+// GetRegStatus returns the current status of NIC registration task
+func (n *NMD) GetRegStatus() bool {
 	n.Lock()
 	defer n.Unlock()
 	return n.isRegOngoing
@@ -63,7 +64,8 @@ func (n *NMD) setRegStatus(value bool) {
 	n.isRegOngoing = value
 }
 
-func (n *NMD) getUpdStatus() bool {
+// GetUpdStatus returns the current running status of NIC update task
+func (n *NMD) GetUpdStatus() bool {
 	n.Lock()
 	defer n.Unlock()
 	return n.isUpdOngoing
@@ -75,7 +77,8 @@ func (n *NMD) setUpdStatus(value bool) {
 	n.isUpdOngoing = value
 }
 
-func (n *NMD) getRestServerStatus() bool {
+// GetRestServerStatus returns the current running status of REST server
+func (n *NMD) GetRestServerStatus() bool {
 	n.Lock()
 	defer n.Unlock()
 	return n.isRestSrvRunning
@@ -87,7 +90,8 @@ func (n *NMD) setRestServerStatus(value bool) {
 	n.isRestSrvRunning = value
 }
 
-func (n *NMD) getConfigMode() nmd.NaplesMode {
+// GetConfigMode returns the configured Naples Mode
+func (n *NMD) GetConfigMode() nmd.NaplesMode {
 	n.Lock()
 	defer n.Unlock()
 	return n.config.Spec.Mode
@@ -100,7 +104,8 @@ func (n *NMD) setNaplesConfig(cfg nmd.Naples) {
 	n.config = cfg
 }
 
-func (n *NMD) getNaplesConfig() nmd.Naples {
+// GetNaplesConfig returns the current naples config received via REST
+func (n *NMD) GetNaplesConfig() nmd.Naples {
 	n.Lock()
 	defer n.Unlock()
 
@@ -124,8 +129,8 @@ func (n *NMD) GetSmartNIC() (*cmd.SmartNIC, error) {
 	return n.nic, nil
 }
 
-// getListenURL returns the listen URL of the http server
-func (n *NMD) getListenURL() string {
+// GetListenURL returns the listen URL of the http server
+func (n *NMD) GetListenURL() string {
 	n.Lock()
 	defer n.Unlock()
 

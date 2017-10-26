@@ -139,11 +139,10 @@ func stopNMD(t *testing.T, nm *NMD, cleanupDB bool) {
 	}
 }
 
-func getNMDUrl(nm *NMD) string {
-	return "http://" + nm.getListenURL() + ConfigURL
-}
-
 func TestSmartNICCreateUpdateDelete(t *testing.T) {
+
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
 
 	// create nmd
 	nm, _, _ := createNMD(t, "", "classic", nicKey1)
@@ -189,6 +188,10 @@ func TestSmartNICCreateUpdateDelete(t *testing.T) {
 }
 
 func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
+
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
+
 	// create nmd
 	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
@@ -224,6 +227,9 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 
 func TestNaplesDefaultClassicMode(t *testing.T) {
 
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
+
 	// create nmd
 	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
@@ -231,19 +237,19 @@ func TestNaplesDefaultClassicMode(t *testing.T) {
 
 	f1 := func() (bool, []interface{}) {
 
-		cfg := nm.getNaplesConfig()
-		if cfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE && nm.getListenURL() != "" &&
-			nm.getUpdStatus() == false && nm.getRegStatus() == false && nm.getRestServerStatus() == true {
+		cfg := nm.GetNaplesConfig()
+		if cfg.Spec.Mode == nmd.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
+			nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 			return true, nil
 		}
-		return true, nil
+		return false, nil
 	}
 	AssertEventually(t, f1, "Failed to verify mode is in Classic")
 
 	var naplesCfg nmd.Naples
 
 	f2 := func() (bool, []interface{}) {
-		err := netutils.HTTPGet(getNMDUrl(nm)+"/", &naplesCfg)
+		err := netutils.HTTPGet(nm.GetNMDUrl()+"/", &naplesCfg)
 		if err != nil {
 			log.Errorf("Failed to get naples config, err:%+v", err)
 			return false, nil
@@ -263,15 +269,18 @@ func TestNaplesDefaultClassicMode(t *testing.T) {
 
 func TestNaplesRestartClassicMode(t *testing.T) {
 
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
+
 	// create nmd
 	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
 
 	f1 := func() (bool, []interface{}) {
 
-		cfg := nm.getNaplesConfig()
-		if cfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE && nm.getListenURL() != "" &&
-			nm.getUpdStatus() == false && nm.getRegStatus() == false && nm.getRestServerStatus() == true {
+		cfg := nm.GetNaplesConfig()
+		if cfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
+			nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 			return true, nil
 		}
 		return true, nil
@@ -291,6 +300,9 @@ func TestNaplesRestartClassicMode(t *testing.T) {
 
 func TestNaplesManagedMode(t *testing.T) {
 
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
+
 	// Start NMD in managed mode
 	nm, _, _ := createNMD(t, emDBPath, "managed", nicKey1)
 	defer stopNMD(t, nm, true)
@@ -299,7 +311,7 @@ func TestNaplesManagedMode(t *testing.T) {
 	f1 := func() (bool, []interface{}) {
 
 		// Verify mode
-		cfg := nm.getNaplesConfig()
+		cfg := nm.GetNaplesConfig()
 		log.Infof("NaplesConfig: %v", cfg)
 		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
 			log.Errorf("Mode is not managed")
@@ -320,13 +332,13 @@ func TestNaplesManagedMode(t *testing.T) {
 		}
 
 		// Verify update task
-		if nm.getUpdStatus() == false {
+		if nm.GetUpdStatus() == false {
 			log.Errorf("Update NIC is not in progress")
 			return false, nil
 		}
 
 		// Verify rest server status
-		if nm.getRestServerStatus() == true {
+		if nm.GetRestServerStatus() == true {
 			log.Errorf("REST server is still up")
 			return false, nil
 		}
@@ -340,6 +352,9 @@ func TestNaplesManagedMode(t *testing.T) {
 // Classic -> Managed -> Classic
 func TestNaplesModeTransitions(t *testing.T) {
 
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
+
 	// create nmd
 	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
 	Assert(t, (nm != nil), "Failed to create nmd", nm)
@@ -347,8 +362,8 @@ func TestNaplesModeTransitions(t *testing.T) {
 
 	f1 := func() (bool, []interface{}) {
 
-		cfg := nm.getNaplesConfig()
-		if cfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE && nm.getUpdStatus() == false && nm.getRegStatus() == false && nm.getRestServerStatus() == true {
+		cfg := nm.GetNaplesConfig()
+		if cfg.Spec.Mode != nmd.NaplesMode_CLASSIC_MODE && nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 			return true, nil
 		}
 		return true, nil
@@ -372,7 +387,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 	var resp NaplesConfigResp
 
 	f2 := func() (bool, []interface{}) {
-		err = netutils.HTTPPost(getNMDUrl(nm), naplesCfg, &resp)
+		err = netutils.HTTPPost(nm.GetNMDUrl(), naplesCfg, &resp)
 		if err != nil {
 			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
 			return false, nil
@@ -383,7 +398,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 
 	f3 := func() (bool, []interface{}) {
 
-		cfg := nm.getNaplesConfig()
+		cfg := nm.GetNaplesConfig()
 		log.Infof("NaplesConfig: %v", cfg)
 		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
 			log.Errorf("Failed to switch to managed mode")
@@ -401,12 +416,12 @@ func TestNaplesModeTransitions(t *testing.T) {
 			return false, nil
 		}
 
-		if nm.getUpdStatus() == false {
+		if nm.GetUpdStatus() == false {
 			log.Errorf("Update NIC is not in progress")
 			return false, nil
 		}
 
-		if nm.getRestServerStatus() == true {
+		if nm.GetRestServerStatus() == true {
 			log.Errorf("REST server is still up")
 			return false, nil
 		}
@@ -424,6 +439,9 @@ func TestNaplesModeTransitions(t *testing.T) {
 }
 
 func TestNaplesManagedModeManualApproval(t *testing.T) {
+
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
 
 	// create nmd
 	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey2)
@@ -444,7 +462,7 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 	}
 
 	f1 := func() (bool, []interface{}) {
-		err = netutils.HTTPPost(getNMDUrl(nm), naplesCfg, &resp)
+		err = netutils.HTTPPost(nm.GetNMDUrl(), naplesCfg, &resp)
 		if err != nil {
 			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
 			return false, nil
@@ -455,7 +473,7 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 
 	f2 := func() (bool, []interface{}) {
 
-		cfg := nm.getNaplesConfig()
+		cfg := nm.GetNaplesConfig()
 		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
 			log.Errorf("Failed to switch to managed mode")
 			return false, nil
@@ -472,12 +490,12 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 			return false, nil
 		}
 
-		if nm.getRegStatus() == false {
+		if nm.GetRegStatus() == false {
 			log.Errorf("Registration is not in progress")
 			return false, nil
 		}
 
-		if nm.getRestServerStatus() == true {
+		if nm.GetRestServerStatus() == true {
 			log.Errorf("REST server is still up")
 			return false, nil
 		}
@@ -488,6 +506,9 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 }
 
 func TestNaplesManagedModeInvalidNIC(t *testing.T) {
+
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
 
 	// create nmd
 	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey3)
@@ -508,7 +529,7 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 	}
 
 	f1 := func() (bool, []interface{}) {
-		err = netutils.HTTPPost(getNMDUrl(nm), naplesCfg, &resp)
+		err = netutils.HTTPPost(nm.GetNMDUrl(), naplesCfg, &resp)
 		if err != nil {
 			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
 		}
@@ -518,7 +539,7 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 
 	f2 := func() (bool, []interface{}) {
 
-		cfg := nm.getNaplesConfig()
+		cfg := nm.GetNaplesConfig()
 		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
 		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
 			log.Errorf("Failed to switch to managed mode")
@@ -536,17 +557,17 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 			return false, nil
 		}
 
-		if nm.getRegStatus() == true {
+		if nm.GetRegStatus() == true {
 			log.Errorf("Registration is still in progress")
 			return false, nil
 		}
 
-		if nm.getUpdStatus() == true {
+		if nm.GetUpdStatus() == true {
 			log.Errorf("UpdateNIC is still in progress")
 			return false, nil
 		}
 
-		if nm.getRegStatus() == true {
+		if nm.GetRegStatus() == true {
 			log.Errorf("REST server is still up")
 			return false, nil
 		}
@@ -557,6 +578,9 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 }
 
 func TestNaplesRestartManagedMode(t *testing.T) {
+
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
 
 	// create nmd
 	nm, _, _ := createNMD(t, emDBPath, "classic", nicKey1)
@@ -576,7 +600,7 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 	}
 
 	f1 := func() (bool, []interface{}) {
-		err = netutils.HTTPPost(getNMDUrl(nm), naplesCfg, &resp)
+		err = netutils.HTTPPost(nm.GetNMDUrl(), naplesCfg, &resp)
 		if err != nil {
 			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
 			return false, nil
@@ -587,7 +611,7 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 
 	f2 := func() (bool, []interface{}) {
 
-		cfg := nm.getNaplesConfig()
+		cfg := nm.GetNaplesConfig()
 		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
 		if cfg.Spec.Mode != nmd.NaplesMode_MANAGED_MODE {
 			log.Errorf("Failed to switch to managed mode")
@@ -609,6 +633,9 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 
 // Test invalid mode
 func TestNaplesInvalidMode(t *testing.T) {
+
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
 
 	// Negative test case, invalid mode
 	nm, _, _ := createNMD(t, emDBPath, "unknown", nicKey1)
