@@ -54,8 +54,16 @@ tls_dec_read_header_process:
 
     phvwr       p.crypto_iv_explicit_iv, d.u.tls_read_tls_header_d.tls_iv
 
-    sub         r1, k.s3_s4_t0_phv_idesc_aol0_len, k.tls_global_phv_next_tls_hdr_offset
-    phvwr       p.to_s6_cur_tls_data_len, r1
+    sub.c1      r1, k.s3_s4_t0_phv_idesc_aol0_len, k.tls_global_phv_next_tls_hdr_offset
+    phvwr.c1    p.to_s6_cur_tls_data_len, r1
+
+    add.!c1     r6, k.s3_s4_t0_phv_idesc_aol0_len, r0
+    subi.!c1    r2, r6, (NTLS_NONCE_SIZE + TLS_AES_GCM_AUTH_TAG_SIZE + NTLS_TLS_HEADER_SIZE)
+    setcf       c2, [!c0]
+    slt.!c1     c2, r1, r2
+    sub.c2      r2, r2, r1
+    phvwr.c2    p.tls_global_phv_next_tls_hdr_offset, r2
+    phvwr.!c1   p.to_s6_cur_tls_data_len, d.u.tls_read_tls_header_d.tls_hdr_len
 
 	
 #if 0

@@ -87,7 +87,7 @@ tls_api_program_crypto_key(char* key, uint32_t* key_index)
         HAL_TRACE_DEBUG("KEY IS NULL");
         return HAL_RET_INVALID_ARG;
     }
-    HAL_TRACE_DEBUG("Updating cypto key with value: {}", *key);
+
     CryptoKeySpec* spec = update_req.mutable_key();
     spec->set_keyindex(*key_index);
     spec->set_key_type(types::CRYPTO_KEY_TYPE_AES128);
@@ -107,19 +107,33 @@ tls_api_update_cb(uint32_t id,
                   uint32_t command,
                   uint32_t salt,
                   uint64_t explicit_iv,
-                  bool     is_decrypt_flow
+                  bool     is_decrypt_flow,
+                  uint32_t other_fid
                   )
 {
     hal_ret_t           ret = HAL_RET_OK;
     TlsCbSpec           spec;
     TlsCbResponse       resp;
+    TlsCbGetRequest     get_req;
+    TlsCbGetResponse    get_resp;
 
+    // get existing values from the hw
+    get_req.mutable_key_or_handle()->set_tlscb_id(id);
+    ret = tlscb_get(get_req, &get_resp);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get tlscb for id: {}", id);
+        return ret;
+    }
     spec.mutable_key_or_handle()->set_tlscb_id(id);
     spec.set_crypto_key_idx(key_index);
     spec.set_command(command);
     spec.set_salt(salt);
     spec.set_explicit_iv(explicit_iv);
     spec.set_is_decrypt_flow(is_decrypt_flow);
+    spec.set_other_fid(other_fid);
+    HAL_TRACE_DEBUG("tls: got serq ci {}", get_resp.spec().serq_ci());
+    spec.set_serq_ci(get_resp.spec().serq_ci());
+    spec.set_serq_pi(get_resp.spec().serq_pi());
 
     HAL_TRACE_DEBUG("tls: updating TCPCB: id: {}, key_index: {}, command: {}, salt: {}, iv: {}, is_decrypt: {}",
                      id, key_index, command, salt, explicit_iv, is_decrypt_flow);
@@ -142,13 +156,6 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* 
         return ret;
     }
 
-    // Program enc key
-    ret = tls_api_program_crypto_key((char*)args->write_key, &enc_key_index);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to program enc crypto key, ret {}", ret);
-        return ret;
-    }
-
     // Program dec key
     ret = tls_api_program_crypto_key((char*)args->read_key, &dec_key_index);
     if(ret != HAL_RET_OK) {
@@ -156,13 +163,32 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* 
         return ret;
     }
 
+    for (int i =0; i < 16; i++) {
+      char buf[16] = {0};
+      uint32_t dummy_key_index;
+      // Program dec key
+      ret = tls_api_program_crypto_key((char*)buf, &dummy_key_index);
+      if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program dec crypto key, ret {}", ret);
+        return ret;
+      }
+    }      
+    // Program enc key
+    ret = tls_api_program_crypto_key((char*)args->write_key, &enc_key_index);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program enc crypto key, ret {}", ret);
+        return ret;
+    }
+
+
     // program tlscb for decr
     ret = tls_api_update_cb(id,
                             dec_key_index,
                             0x30100000,
-                            (uint32_t) *(args->read_iv),
-                            (uint64_t)*(args->read_seq_num),
-                            false);
+                            *((uint32_t*)args->read_iv),
+                            *((uint64_t*)args->read_seq_num),
+                            true,
+                            oflowid);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls: Failed to program decrypt TLSCB for id: {}, ret: {}", id, ret);
         return ret;
@@ -172,9 +198,10 @@ tls_api_hs_done_cb(uint32_t id, uint32_t oflowid, hal_ret_t ret, hs_out_args_t* 
     ret = tls_api_update_cb(oflowid,
                             enc_key_index,
                             0x30000000,
-                            (uint32_t) *(args->write_iv),
-                            (uint64_t)*(args->write_seq_num),
-                            false);
+                            *((uint32_t*)args->write_iv),
+                            *((uint64_t*)args->write_seq_num),
+                            false,
+                            id);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls: Failed to program TLSCB for id: {}, ret: {}", oflowid, ret);
         return ret;

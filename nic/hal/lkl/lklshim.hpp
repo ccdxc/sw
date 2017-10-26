@@ -125,6 +125,7 @@ void lklshim_process_tx_packet(unsigned char* pkt, unsigned int len, void* flow,
 
 void lklshim_flowdb_init(void);
 void lklshim_update_tcpcb(void *tcpcb, uint32_t qid, uint32_t src_lif);
+hal::flow_direction_t lklshim_get_flow_hit_pkt_direction(uint16_t qid);
 
 } //namespace hal
 

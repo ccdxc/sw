@@ -11,6 +11,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/endpoint_pd.hpp"
 #include "nic/hal/lkl/lkl_api.hpp"
+#include "nic/hal/lkl/lklshim.hpp"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
@@ -57,7 +58,8 @@ proxy_create_hdr_template(TcpCbSpec &spec,
                           vlan_header_t* vlan,
                           ipv4_header_t *ip,
                           tcp_header_t *tcp,
-                          bool is_itor_dir)
+                          bool is_itor_dir,
+                          uint16_t hw_vlan_id)
 {
     hal_ret_t       ret = HAL_RET_OK;
     uint8_t         buf[64];
@@ -78,7 +80,7 @@ proxy_create_hdr_template(TcpCbSpec &spec,
         memcpy(&dip, &ip->daddr, sizeof(ip->daddr));
         memcpy(&smac, eth->smac, ETH_ADDR_LEN);
         memcpy(&dmac, eth->dmac, ETH_ADDR_LEN);
-        vlan_id = vlan->vlan_tag;
+        vlan_id = htons(hw_vlan_id);
         //spec.set_source_lif(hal::pd::ep_pd_get_hw_lif_id(ctx.dep()));
     } else {
         sport = tcp->dport;
@@ -87,6 +89,7 @@ proxy_create_hdr_template(TcpCbSpec &spec,
         memcpy(&dip, &ip->saddr, sizeof(ip->saddr));
         memcpy(&smac, eth->dmac, ETH_ADDR_LEN);
         memcpy(&dmac, eth->smac, ETH_ADDR_LEN);
+
         vlan_id = vlan->vlan_tag;
         //spec.set_source_lif(hal::pd::ep_pd_get_hw_lif_id(ctx.sep()));
      }
@@ -132,7 +135,7 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
 }
 
 hal_ret_t
-tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* vlan, ipv4_header_t *ip, tcp_header_t *tcp, bool is_itor_dir)
+tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* vlan, ipv4_header_t *ip, tcp_header_t *tcp, bool is_itor_dir, uint16_t hw_vlan_id)
 {
     hal_ret_t       ret = HAL_RET_OK;
     TcpCbSpec       spec;
@@ -145,14 +148,18 @@ tcp_create_cb(qid_t qid, uint16_t src_lif, ether_header_t *eth, vlan_header_t* v
 
     HAL_TRACE_DEBUG("Create TCPCB for qid: {}", qid);
     spec.mutable_key_or_handle()->set_tcpcb_id(qid);
-    spec.set_source_lif(src_lif);
+    if (is_itor_dir) {
+        spec.set_source_lif(hal::SERVICE_LIF_CPU);
+    } else {
+        spec.set_source_lif(src_lif);
+    }
     ret = proxy_tcp_cb_init_def_params(spec);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize CB");
         return ret;
     }
 
-    ret = proxy_create_hdr_template(spec, eth, vlan, ip, tcp, is_itor_dir);
+    ret = proxy_create_hdr_template(spec, eth, vlan, ip, tcp, is_itor_dir, hw_vlan_id);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize header templates");
         return ret;
@@ -190,6 +197,9 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     tcpcb_get(*get_req, &get_rsp);
     HAL_TRACE_DEBUG("Get response: {}", get_rsp.api_status());
     spec->set_allocated_key_or_handle(&kh);
+    HAL_TRACE_DEBUG("tcp-proxy: tcpcb={}\n", tcpcb);
+    HAL_TRACE_DEBUG("tcp-proxy: tcpcb={}", hex_dump((uint8_t*)tcpcb, 2048));
+
     if (tcpcb) {
         HAL_TRACE_DEBUG("lkl rcv_nxt={}, snd_nxt={}, snd_una={}, rcv_tsval={}, ts_recent={}",
                         hal::pd::lkl_get_tcpcb_rcv_nxt(tcpcb),
@@ -223,9 +233,7 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_header_template(data, sizeof(data));
 
     spec->set_state(hal::pd::lkl_get_tcpcb_state(tcpcb));
-    if (src_lif == 0) {
-      src_lif = get_rsp.mutable_spec()->source_lif();
-    }
+    src_lif = get_rsp.mutable_spec()->source_lif();
     HAL_TRACE_DEBUG("Calling TCPCB Update with src_lif: {}", src_lif);
     spec->set_source_lif(src_lif);
     spec->set_asesq_base(get_rsp.mutable_spec()->asesq_base());
@@ -427,7 +435,7 @@ fte::pipeline_action_t
 tcp_exec_tcp_lif(fte::ctx_t& ctx)
 {
     const hal::pd::p4_to_p4plus_cpu_pkt_t* rxhdr = ctx.cpu_rxhdr();
-
+    hal::flow_direction_t dir = hal::lklshim_get_flow_hit_pkt_direction(rxhdr->qid);
 
     if (ctx.pkt_len() == 0) {
         HAL_TRACE_DEBUG("tcp_exec_tcp_lif: LKL return {}",
@@ -435,8 +443,8 @@ tcp_exec_tcp_lif(fte::ctx_t& ctx)
                                                          hal::pd::lkl_alloc_skbuff(rxhdr,
                                                                                    ctx.pkt(),
                                                                                    ctx.pkt_len(),
-                                                                                   ctx.direction()),
-                                                         ctx.direction(),
+                                                                                   dir),
+                                                         dir,
                                                          rxhdr));
     } else {
         HAL_TRACE_DEBUG("tcp_exec_tcp_lif: LKL return {}",
@@ -444,8 +452,8 @@ tcp_exec_tcp_lif(fte::ctx_t& ctx)
                                                          hal::pd::lkl_alloc_skbuff(rxhdr,
                                                                                    ctx.pkt(),
                                                                                    ctx.pkt_len(),
-                                                                                   ctx.direction()),
-                                                         ctx.direction(),
+                                                                                   dir),
+                                                         dir,
                                                          rxhdr));
     }
 

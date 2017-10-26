@@ -280,6 +280,10 @@ lklshim_create_listen_sockets (hal::flow_direction_t dir, lklshim_flow_t *flow)
         vlan = (char*)flow->hostns.vlan;
     }
 
+    HAL_TRACE_DEBUG("tcp_portnum={} flow dp={} flow sp={}",
+                    lsock->tcp_portnum,
+                    flow->key.dst_port,
+                    flow->key.src_port);
     if (!lklshim_setsockopt_and_bind(fd,
                                      src_mac,
                                      dst_mac,
@@ -376,7 +380,7 @@ lklshim_process_flow_hit_rx_packet (void *pkt_skb,
     if (lkl_tcp_v4_rcv(pkt_skb)) {
         return false;
     }
-    
+
     if(flow->itor_dir == hal::FLOW_DIR_FROM_ENIC){
         hal::tls::tls_api_start_handshake(flow->iqid, flow->rqid);
     } else {
@@ -535,8 +539,8 @@ lklshim_process_flow_miss_rx_packet (void *pkt_skb,
     flow->rqid = rqid;
     lklshim_flow_by_qid[rqid] = flow;
     flow->src_lif = src_lif;
-    proxy::tcp_create_cb(flow->iqid, flow->src_lif, eth, vlan, ip, tcp, true);
-    proxy::tcp_create_cb(flow->rqid, flow->src_lif, eth, vlan, ip, tcp, false);
+    proxy::tcp_create_cb(flow->iqid, flow->src_lif, eth, vlan, ip, tcp, true, hw_vlan_id);
+    proxy::tcp_create_cb(flow->rqid, flow->src_lif, eth, vlan, ip, tcp, false, hw_vlan_id);
     // create tlscb
     hal::tls::tls_api_init_flow(flow->iqid, false);
     hal::tls::tls_api_init_flow(flow->rqid, true);
@@ -635,6 +639,18 @@ void lklshim_process_tx_packet(unsigned char* pkt,
             HAL_TRACE_DEBUG("Calling tcp_ring_doorbell");
             proxy::tcp_ring_doorbell(qid);
         }
+    }
+}
+ 
+hal::flow_direction_t
+lklshim_get_flow_hit_pkt_direction(uint16_t qid) {
+    lklshim_flow_t *flow = lklshim_flow_by_qid[qid];
+    if (qid == flow->iqid) {
+        HAL_TRACE_DEBUG("itor returning direction={}", flow->itor_dir);
+        return flow->itor_dir;
+    } else {
+        HAL_TRACE_DEBUG("rtor returning direction={}", ((flow->itor_dir==hal::FLOW_DIR_FROM_ENIC)?"hal::FLOW_DIR_FROM_UPLINK":"hal::FLOW_DIR_FROM_ENIC"));
+        return ((flow->itor_dir==hal::FLOW_DIR_FROM_ENIC)?hal::FLOW_DIR_FROM_UPLINK:hal::FLOW_DIR_FROM_ENIC);
     }
 }
 

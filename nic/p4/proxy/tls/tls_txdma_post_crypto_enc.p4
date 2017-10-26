@@ -101,7 +101,7 @@ header_type to_stage_7_phv_t {
 
 header_type doorbell_data_pad_t {
     fields {
-        pad                             : 384;
+        pad                             : 24;
     }
 }
 
@@ -165,6 +165,8 @@ metadata ring_entry_t ring_entry;
 @pragma dont_trim
 metadata doorbell_data_raw_t db_data;
 @pragma dont_trim
+metadata tls_header_t tls_hdr;
+@pragma dont_trim
 metadata doorbell_data_pad_t db_pad;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd0;
@@ -183,8 +185,6 @@ metadata dma_cmd_phv2mem_t dma_cmd6;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd7;
 
-@pragma dont_trim
-metadata tls_header_t tls_hdr;
 
 
 /* Stage 1 table 0 action */

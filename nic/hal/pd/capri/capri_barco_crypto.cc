@@ -1,3 +1,8 @@
+#include <unistd.h>
+#include <string>
+#include <sstream>
+#include <ostream>
+#include <iomanip>
 /* Barco Crypto initialization support */
 #include "nic/hal/hal.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
@@ -15,6 +20,21 @@ uint64_t    ring_base = 0;
 uint32_t    ring_size = 0;
 uint64_t    key_desc_array_base = 0;
 uint32_t    key_desc_array_size = 0;
+
+// byte array to hex string for logging
+std::string barco_hex_dump(const uint8_t *buf, size_t sz)
+{
+    std::ostringstream result;
+
+    for(size_t i = 0; i < sz; i+=8) {
+        result << " 0x";
+        for (size_t j = i ; j < sz && j < i+8; j++) {
+            result << std::setw(2) << std::setfill('0') << std::hex << (int)buf[j];
+        }
+    }
+
+    return result.str();
+}
 
 
 
@@ -120,6 +140,7 @@ hal_ret_t capri_barco_setup_key(uint32_t key_idx, types::CryptoKeyType key_type,
     uint32_t                cbkey_type;
 
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
+    HAL_TRACE_DEBUG("capri_barco_setup_key: key_desc_addr={} key_idx={}", key_desc_addr, key_idx);
     if (capri_hbm_read_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
         HAL_TRACE_ERR("Failed to read Barco descriptor @ {:x}", (uint64_t) key_desc_addr); 
         return HAL_RET_INVALID_ARG;
@@ -153,13 +174,13 @@ hal_ret_t capri_barco_setup_key(uint32_t key_idx, types::CryptoKeyType key_type,
 
     key_desc.key_type = cbkey_type;
     key_addr = key_desc.key_address;
-
+    HAL_TRACE_DEBUG("capri_barco_setup_key key_addr={:x}", (uint64_t)key_addr);
     /* Write back key descriptor */
     if (capri_hbm_write_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
         HAL_TRACE_ERR("Failed to write Barco descriptor @ {:x}", (uint64_t) key_desc_addr); 
         return HAL_RET_INVALID_ARG;
     }
-
+    HAL_TRACE_DEBUG("capri_barco_setup_key key={}", barco_hex_dump(key,key_size));
     /* Write key memory */
     if (capri_hbm_write_mem(key_addr, key, key_size)) {
         HAL_TRACE_ERR("Failed to write key @ {:x}", (uint64_t) key_addr); 

@@ -1,3 +1,8 @@
+#include <unistd.h>
+#include <string>
+#include <sstream>
+#include <ostream>
+#include <iomanip>
 #include "nic/hal/tls/ssl_helper.hpp"
 
 
@@ -43,6 +48,20 @@ void ssl_msg_callback(int writep,
 
 namespace hal {
 namespace tls {
+// byte array to hex string for logging
+std::string hex_dump(const uint8_t *buf, size_t sz)
+{
+    std::ostringstream result;
+
+    for(size_t i = 0; i < sz; i+=8) {
+        result << " 0x";
+        for (size_t j = i ; j < sz && j < i+8; j++) {
+            result << std::setw(2) << std::setfill('0') << std::hex << (int)buf[j];
+        }
+    }
+
+    return result.str();
+}
 /*-----------------------------
  * SSL Connection
  ------------------------------*/
@@ -86,15 +105,16 @@ SSLConnection::get_hs_args(hs_out_args_t& args)
 
     args.write_key = (unsigned char*)(gcm_write->gcm.key);
     args.read_key = (unsigned char*)(gcm_read->gcm.key);
-    HAL_TRACE_DEBUG("Key, write: {}, read: {}", args.write_key, args.read_key);
+
+    HAL_TRACE_DEBUG("Key, write: {}, read: {}", hex_dump(args.write_key, 16), hex_dump(args.read_key,16));
 
     args.write_iv = gcm_write->iv;
     args.read_iv = gcm_read->iv;
-    HAL_TRACE_DEBUG("IV, write: {}, read: {}", args.write_iv, args.read_iv);
+    HAL_TRACE_DEBUG("IV, write: {}, read: {}", hex_dump(args.write_iv,4), hex_dump(args.read_iv,4));
 
     args.write_seq_num = ssl->s3->write_sequence;
     args.read_seq_num = ssl->s3->read_sequence;
-    HAL_TRACE_DEBUG("SeqNum, write: {}, read: {}", args.write_seq_num, args.read_seq_num);
+    HAL_TRACE_DEBUG("SeqNum, write: {}, read: {}", hex_dump(args.write_seq_num,8), hex_dump(args.read_seq_num,8));
 }
 
 hal_ret_t

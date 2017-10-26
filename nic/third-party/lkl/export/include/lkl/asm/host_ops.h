@@ -150,7 +150,7 @@ int lkl_printf(const char *, ...);
 void lkl_bug(const char *, ...);
 
 void lkl_skb_init(void);
-void* lkl_alloc_skb(int len, void* dev);
+void* lkl_alloc_skb(int len, void* dev, unsigned char is_pkt_src_uplink);
 void lkl_kfree_skb(void* skb);
 void lkl_skb_reserve(void* skb);
 void lkl_skb_copy_to_linear_data(void* skb, char* pkt, unsigned int len);
@@ -175,6 +175,6 @@ unsigned int lkl_tcpcb_snd_nxt(void *tcpcb);
 unsigned int lkl_tcpcb_snd_una(void *tcpcb);
 unsigned int lkl_tcpcb_rcv_tsval(void *tcpcb);
 unsigned int lkl_tcpcb_ts_recent(void *tcpcb);
-unsigned int lkl_tcpcb_state(void *tcpcb);
+unsigned char lkl_tcpcb_state(void *tcpcb);
 
 #endif

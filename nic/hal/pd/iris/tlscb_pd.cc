@@ -63,7 +63,7 @@ p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd)
     tlscb_pd->tlscb->bsq_ci = data.u.read_tls_stg0_d.ci_1;
     tlscb_pd->tlscb->debug_dol = data.u.read_tls_stg0_d.debug_dol;
     tlscb_pd->tlscb->command = data.u.read_tls_stg0_d.barco_command;
-    tlscb_pd->tlscb->crypto_key_idx = data.u.read_tls_stg0_d.barco_key_desc_index;
+    tlscb_pd->tlscb->crypto_key_idx = ntohl(data.u.read_tls_stg0_d.barco_key_desc_index);
     tlscb_pd->tlscb->salt = ntohl(data.u.read_tls_stg0_d.salt);
     tlscb_pd->tlscb->explicit_iv = data.u.read_tls_stg0_d.explicit_iv;
     tlscb_pd->tlscb->is_decrypt_flow = data.u.read_tls_stg0_d.dec_flow;
@@ -235,7 +235,7 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
         data.u.read_tls_stg0_d.barco_command = tlscb_pd->tlscb->command;
         HAL_TRACE_DEBUG("Barco Command = 0x{0:x}", data.u.read_tls_stg0_d.barco_command);
 
-        data.u.read_tls_stg0_d.barco_key_desc_index = tlscb_pd->tlscb->crypto_key_idx;
+        data.u.read_tls_stg0_d.barco_key_desc_index = htonl(tlscb_pd->tlscb->crypto_key_idx);
         HAL_TRACE_DEBUG("Barco Key Desc Index = 0x{0:x}", data.u.read_tls_stg0_d.barco_key_desc_index);
 
         data.u.read_tls_stg0_d.salt = (tlscb_pd->tlscb->salt);
@@ -244,10 +244,10 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
         data.u.read_tls_stg0_d.explicit_iv = (tlscb_pd->tlscb->explicit_iv);
         HAL_TRACE_DEBUG("Explicit IV = 0x{0:x}", data.u.read_tls_stg0_d.explicit_iv);
 
-        data.u.read_tls_stg0_d.pi_0 = htonl(tlscb_pd->tlscb->serq_pi);
+        data.u.read_tls_stg0_d.pi_0 = tlscb_pd->tlscb->serq_pi;
         HAL_TRACE_DEBUG("SERQ PI = 0x{0:x}", data.u.read_tls_stg0_d.pi_0);
 
-        data.u.read_tls_stg0_d.ci_0 = htonl(tlscb_pd->tlscb->serq_ci);
+        data.u.read_tls_stg0_d.ci_0 = tlscb_pd->tlscb->serq_ci;
         HAL_TRACE_DEBUG("SERQ CI = 0x{0:x}", data.u.read_tls_stg0_d.ci_0);
 
         data.u.read_tls_stg0_d.dec_flow = tlscb_pd->tlscb->is_decrypt_flow;

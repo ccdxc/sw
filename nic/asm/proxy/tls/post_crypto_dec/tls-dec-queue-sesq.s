@@ -49,8 +49,6 @@ dma_cmd_sesq_slot:
 #else
     phvwr       p.ring_entry_descr_addr, r3.dx
 #endif
-    CAPRI_OPERAND_DEBUG(k.to_s5_odesc)
-    CAPRI_OPERAND_DEBUG(k.to_s5_other_fid)
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd, r1, ring_entry_descr_addr,ring_entry_descr_addr)
 

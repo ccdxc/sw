@@ -52,18 +52,20 @@ void* lkl_alloc_skbuff(const p4_to_p4plus_cpu_pkt_t* rxhdr, const uint8_t* pkt, 
     HAL_TRACE_DEBUG("Allocating SKBUFF direction {}\n",
                            (direction==hal::FLOW_DIR_FROM_ENIC)?"from host":"from net");
     void *dev = NULL;
+    bool is_pkt_src_uplink = FALSE;
     if (direction == hal::FLOW_DIR_FROM_ENIC) {
         dev = host_dev;
     } else {
         dev = net_dev;
+        is_pkt_src_uplink = TRUE;
     }
     void* skb;
 
     if (pkt_len == 0) {
-        skb = lkl_alloc_skb(40, dev);
+        skb = lkl_alloc_skb(40, dev, is_pkt_src_uplink);
         HAL_TRACE_DEBUG("lkl_alloc_skbuff: Setting skb len to 40");
     } else {
-        skb = lkl_alloc_skb(pkt_len, dev);
+        skb = lkl_alloc_skb(pkt_len, dev, is_pkt_src_uplink);
         HAL_TRACE_DEBUG("lkl_alloc_skbuff: Setting skb len={}", pkt_len);
     }
     if (skb) {
@@ -107,36 +109,37 @@ bool lkl_handle_flow_hit_hdr(void* skb, hal::flow_direction_t dir, const p4_to_p
 
 uint32_t lkl_get_tcpcb_rcv_nxt(void *tcpcb)
 {
+    HAL_TRACE_DEBUG("lkl_get_tcpcb_rcv_nxt : tcpcb = {}", tcpcb);
     return lkl_tcpcb_rcv_nxt(tcpcb);
 }
 
 uint32_t lkl_get_tcpcb_snd_nxt(void *tcpcb)
 {
+    HAL_TRACE_DEBUG("lkl_get_tcpcb_snd_nxt : tcpcb = {}", tcpcb);
     return lkl_tcpcb_snd_nxt(tcpcb);
 }
 
 uint32_t lkl_get_tcpcb_snd_una(void *tcpcb)
 {
+    HAL_TRACE_DEBUG("lkl_get_tcpcb_snd_una : tcpcb = {}", tcpcb);
     return lkl_tcpcb_snd_una(tcpcb);
 }
 
 uint32_t lkl_get_tcpcb_rcv_tsval(void *tcpcb) 
 {
+    HAL_TRACE_DEBUG("lkl_get_tcpcb_rcv_tsval : tcpcb = {}", tcpcb);
     return lkl_tcpcb_rcv_tsval(tcpcb);
 }
 
 uint32_t lkl_get_tcpcb_ts_recent(void *tcpcb)
 {
+    HAL_TRACE_DEBUG("lkl_get_tcpcb_ts_recent : tcpcb = {}", tcpcb);
     return lkl_tcpcb_ts_recent(tcpcb);
 }
 
 uint32_t lkl_get_tcpcb_state(void *tcpcb)
 {
-#if 0
     return lkl_tcpcb_state(tcpcb);
-#else
-    return 0;
-#endif
 }
 
 }
