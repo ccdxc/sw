@@ -415,13 +415,14 @@ control process_flow_table {
     // NCC-predication (currently) does not allow sourcing condition bits from headers
     // If a header can be placed in first flit, this problem can be fixed XXX
     if (control_metadata.nic_mode == NIC_MODE_SMART) {
-        if (valid(recirc_header)) {
-            if (control_metadata.recirc_reason == RECIRC_FLOW_HASH_OVERFLOW) {
-                apply(flow_hash_overflow);
-            }
+        if (valid(recirc_header) and
+            (control_metadata.recirc_reason == RECIRC_FLOW_HASH_OVERFLOW)) {
+            apply(flow_hash_overflow);
         } else {
             apply(flow_hash);
         }
+    }
+    if (control_metadata.nic_mode == NIC_MODE_SMART) {
         apply(flow_info);
     }
 }

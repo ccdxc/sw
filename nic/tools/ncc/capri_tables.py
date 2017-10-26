@@ -974,22 +974,33 @@ class capri_table:
             k_phv_chunks = new_phv_chunks
             if len(k_phv_chunks):
                 k_start = k_phv_chunks[0][0]
+                k_end = k_phv_chunks[-1][0] + k_phv_chunks[-1][1]
             else:
                 k_start = -1
+                k_end = -1
             new_i_phv_chunks = []
             # move non-byte aligned flds from the i vector to a separate list
+            i_in_key = 0
             for c, (cs, cw) in enumerate(i_phv_chunks):
                 part_start = cs % 8
                 part_end = (cs+cw) % 8
+                if cs >= k_start and cs < k_end:
+                    in_key = True
+                else:
+                    in_key = False
                 if part_start:
                     part_len = cw if cw < (8-part_start) else (8-part_start)
-                    kf.i_bit_ext.append((cs, part_len, cs < k_start))
+                    kf.i_bit_ext.append((cs, part_len, in_key))
+                    if in_key:
+                        i_in_key += part_len
                     cw -= part_len
                     cs += part_len
                     if not cw:
                         continue
                 if part_end:
-                    kf.i_bit_ext.append((cs+cw-part_end, part_end, (cs+cw-part_end) < k_start))
+                    kf.i_bit_ext.append((cs+cw-part_end, part_end, in_key))
+                    if in_key:
+                        i_in_key += part_end
                     cw -= part_end
                     if not cw:
                         continue
@@ -1001,7 +1012,7 @@ class capri_table:
             else:
                 i_phv_chunks = new_i_phv_chunks
 
-            i_in_key = 0
+            # convert any bytes that fall within k chunks to bits for now (move them to bytes later)
             for cs, cw in i_phv_chunks:
                 part_start = cs % 8
                 part_end = (cs+cw) % 8

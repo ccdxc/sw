@@ -70,11 +70,6 @@ action ddos_src_vf_hit(ddos_src_vf_base_policer_idx) {
 }
 
 action ddos_service_hit(ddos_service_base_policer_idx) {
-
-    if (control_metadata.flow_miss_ingress == FALSE) {
-        // return
-    }
-
     // Sample write so that compiler knows the size of this field.
     modify_field(scratch_metadata.ddos_service_base_policer_idx,
                  ddos_service_base_policer_idx);
@@ -129,16 +124,6 @@ action ddos_service_hit(ddos_service_base_policer_idx) {
 }
 
 action ddos_src_dst_hit(ddos_src_dst_base_policer_idx) {
-
-    if ((icmp.valid == TRUE) and
-        (l4_metadata.icmp_normalization_en == TRUE)) {
-        icmp_normalization_checks ();
-    }
-
-    if (control_metadata.flow_miss_ingress == FALSE) {
-        //return;
-    }
-
     // Sample write so that compiler knows the size of this field.
     modify_field(scratch_metadata.ddos_src_dst_base_policer_idx,
                  ddos_src_dst_base_policer_idx);
@@ -210,7 +195,7 @@ table ddos_src_vf {
     size : DDOS_SRC_VF_TABLE_SIZE;
 }
 
-@pragma stage 3
+@pragma stage 4
 table ddos_src_dst {
     reads {
         entry_inactive.ddos_src_dst : ternary;
@@ -228,7 +213,7 @@ table ddos_src_dst {
 }
 
 
-@pragma stage 3
+@pragma stage 4
 table ddos_service {
     reads {
         entry_inactive.ddos_service : ternary;
@@ -534,8 +519,10 @@ table ddos_src_dst_policer_action {
 }
 
 control process_ddos_ingress {
-    apply(ddos_src_dst);
-    apply(ddos_service);
+    if (control_metadata.flow_miss_ingress == TRUE) {
+        apply(ddos_src_dst);
+        apply(ddos_service);
+    }
 }
 
 control process_ddos_egress {

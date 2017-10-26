@@ -97,7 +97,6 @@ header_type l4_metadata_t {
 metadata l4_metadata_t l4_metadata;
 
 action l4_profile(ip_normalization_en,
-                  icmp_normalization_en,
                   ip_rsvd_flags_action,
                   ip_df_action,
                   ip_options_action,
@@ -125,11 +124,10 @@ action l4_profile(ip_normalization_en,
                   tcp_non_syn_first_pkt_drop,
                   tcp_split_handshake_detect_en,
                   tcp_split_handshake_drop,
+                  icmp_normalization_en,
                   tcp_normalization_en) {
 
     modify_field(l4_metadata.ip_normalization_en, ip_normalization_en);
-    modify_field(l4_metadata.icmp_normalization_en, icmp_normalization_en);
-    modify_field(l4_metadata.tcp_normalization_en, tcp_normalization_en);
     modify_field(l4_metadata.ip_rsvd_flags_action, ip_rsvd_flags_action);
     modify_field(l4_metadata.ip_df_action, ip_df_action);
     modify_field(l4_metadata.ip_options_action, ip_options_action);
@@ -157,6 +155,13 @@ action l4_profile(ip_normalization_en,
     modify_field(l4_metadata.tcp_split_handshake_detect_en, tcp_split_handshake_detect_en);
     modify_field(l4_metadata.tcp_split_handshake_drop, tcp_split_handshake_drop);
     modify_field(l4_metadata.ip_ttl_change_detect_en, ip_ttl_change_detect_en);
+
+    if (icmp.valid == TRUE) {
+        modify_field(l4_metadata.icmp_normalization_en, icmp_normalization_en);
+    }
+    if (tcp.valid == TRUE) {
+        modify_field(l4_metadata.tcp_normalization_en, tcp_normalization_en);
+    }
 
     ip_normalization_checks();
 }
@@ -1154,15 +1159,10 @@ action ip_normalization_checks() {
     //
 }
 
-action icmp_normalization_checks() {
-
+action icmp_normalization() {
     modify_field(scratch_metadata.icmp_code, icmp.typeCode & 0xff);
     modify_field(scratch_metadata.icmp_type, (icmp.typeCode >> 8) & 0xff);
 
-    if (icmp.valid == FALSE or
-        l4_metadata.icmp_normalization_en == FALSE) {
-        // no action needed, exit the routine.
-    }
     // ICMP bad request types to be dropped
     if ((l4_metadata.icmp_deprecated_msgs_drop == NORMALIZATION_ACTION_DROP) and
         (((scratch_metadata.icmp_type == 4) or   // information(deprecated)
@@ -1413,10 +1413,20 @@ table tcp_stateless_normalization {
     default_action : tcp_stateless_normalization;
 }
 
-control process_normalization {
-    if (tcp.valid == TRUE) {
-        if (l4_metadata.tcp_normalization_en == TRUE) {
-            apply(tcp_stateless_normalization);
-        }
+@pragma stage 2
+table icmp_normalization {
+    actions {
+        icmp_normalization;
     }
+    default_action : icmp_normalization;
+}
+
+control process_normalization {
+    if (l4_metadata.tcp_normalization_en == TRUE) {
+        apply(tcp_stateless_normalization);
+    }
+    if (l4_metadata.icmp_normalization_en == TRUE) {
+        apply(icmp_normalization);
+    }
+    apply(validate_packet);
 }

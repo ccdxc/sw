@@ -38,6 +38,7 @@ SRC_FILES := \
     $(SRC_DIR)/registered_macs.asm \
     $(SRC_DIR)/session_state.asm \
     $(SRC_DIR)/flow_stats.asm \
+    $(SRC_DIR)/icmp_normalization.asm \
     $(SRC_DIR)/ingress_policer_action.asm \
     $(SRC_DIR)/ingress_policer.asm \
     $(SRC_DIR)/ingress_tx_stats.asm \
@@ -62,7 +63,8 @@ SRC_FILES := \
     $(SRC_DIR)/tunnel_encap_update_inner.asm \
     $(SRC_DIR)/tunnel_rewrite.asm \
     $(SRC_DIR)/twice_nat.asm \
-    $(SRC_DIR)/tx_stats.asm
+    $(SRC_DIR)/tx_stats.asm \
+    $(SRC_DIR)/validate_packet.asm \
 
 BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))
 

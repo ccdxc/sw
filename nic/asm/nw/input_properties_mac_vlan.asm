@@ -24,10 +24,10 @@ input_properties_mac_vlan:
   sub.c3      r1, r1, P4_RECIRC_HDR_SZ
 
   phvwr       p.control_metadata_packet_len, r1
-  phvwr       p.capri_p4_intrinsic_packet_len, r1
-
   // if table lookup is miss, return
   nop.!c1.e
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+
   seq         c1, d.input_properties_mac_vlan_d.src_lif_check_en, 1
   or          r1, k.capri_intrinsic_lif_sbit3_ebit10, k.capri_intrinsic_lif_sbit0_ebit2, 8
   seq         c2, d.input_properties_mac_vlan_d.src_lif, r1

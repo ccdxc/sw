@@ -127,3 +127,19 @@ action validate_tunneled_packet() {
         malformed_packet();
     }
 }
+
+action validate_packet() {
+    if (tunnel_metadata.tunnel_terminate == TRUE) {
+        validate_tunneled_packet();
+    } else {
+        validate_native_packet();
+    }
+}
+
+@pragma stage 3
+table validate_packet {
+    actions {
+        validate_packet;
+    }
+    default_action : validate_packet;
+}

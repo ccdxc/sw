@@ -13,22 +13,15 @@ nop:
 
 .align
 tunneled_ipv4_packet:
-  seq         c1, k.inner_ethernet_srcAddr, r0
-  seq         c2, k.inner_ethernet_dstAddr, r0
-  seq         c3, k.inner_ethernet_srcAddr[40], 1
-  bcf         [c1|c2|c3], malformed_tunneled_packet
-
-  sne         c1, k.inner_ipv4_version, 4
-  seq         c2, k.inner_ipv4_ttl, 0
-  bcf         [c1|c2], malformed_tunneled_packet
-
   seq         c1, k.inner_ethernet_dstAddr[40], 0
-  add.c1      r7, r0, PACKET_TYPE_UNICAST
+  bcf         [c1], tunneled_ipv4_packet_common
+  phvwr.c1    p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor         r6, -1, r0
   seq         c2, k.inner_ethernet_dstAddr, r6[47:0]
   cmov.!c1    r7, c2, PACKET_TYPE_BROADCAST, PACKET_TYPE_MULTICAST
   phvwr       p.flow_lkp_metadata_pkt_type, r7
 
+tunneled_ipv4_packet_common:
   add         r6, k.inner_ipv4_ihl, k.tcp_dataOffset
   sub         r7, k.inner_ipv4_totalLen, r6, 2
   phvwr       p.l4_metadata_tcp_data_len, r7
@@ -50,22 +43,15 @@ tunneled_ipv4_packet:
 
 .align
 tunneled_ipv6_packet:
-  seq         c1, k.inner_ethernet_srcAddr, r0
-  seq         c2, k.inner_ethernet_dstAddr, r0
-  seq         c3, k.inner_ethernet_srcAddr[40], 1
-  bcf         [c1|c2|c3], malformed_tunneled_packet
-
-  sne        c1, k.inner_ipv6_version, 6
-  seq        c2, k.inner_ipv6_hopLimit, 0
-  bcf        [c1|c2], malformed_tunneled_packet
-
   seq         c1, k.inner_ethernet_dstAddr[40], 0
-  add.c1      r7, r0, PACKET_TYPE_UNICAST
+  bcf         [c1], tunneled_ipv6_packet_common
+  phvwr.c1    p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor         r6, -1, r0
   seq         c2, k.inner_ethernet_dstAddr, r6[47:0]
   cmov.!c1    r7, c2, PACKET_TYPE_BROADCAST, PACKET_TYPE_MULTICAST
   phvwr       p.flow_lkp_metadata_pkt_type, r7
 
+tunneled_ipv6_packet_common:
   or          r7, k.inner_ipv6_payloadLen, \
                   k.inner_ipv6_payloadLen, 0
   sub         r6, r7, k.tcp_dataOffset, 2
@@ -83,30 +69,25 @@ tunneled_ipv6_packet:
 
 .align
 tunneled_non_ip_packet:
-  seq         c1, k.inner_ethernet_srcAddr, r0
-  seq         c2, k.inner_ethernet_dstAddr, r0
-  seq         c3, k.inner_ethernet_srcAddr[40], 1
-  bcf         [c1|c2|c3], malformed_tunneled_packet
-
   seq         c1, k.inner_ethernet_dstAddr[40], 0
-  add.c1      r7, r0, PACKET_TYPE_UNICAST
+  bcf         [c1], tunneled_non_ip_packet_common
+  phvwr.c1    p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor         r6, -1, r0
   seq         c2, k.inner_ethernet_dstAddr, r6[47:0]
   cmov.!c1    r7, c2, PACKET_TYPE_BROADCAST, PACKET_TYPE_MULTICAST
   phvwr       p.flow_lkp_metadata_pkt_type, r7
 
+tunneled_non_ip_packet_common:
   phvwr       p.tunnel_metadata_tunnel_terminate, 1
   phvwr       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_MAC
   phvwr       p.flow_lkp_metadata_lkp_dst, k.inner_ethernet_dstAddr
-  phvwr.e     p.flow_lkp_metadata_lkp_src, k.inner_ethernet_srcAddr
+  phvwr       p.flow_lkp_metadata_lkp_src, k.inner_ethernet_srcAddr
   phvwr       p.flow_lkp_metadata_lkp_sport, k.inner_ethernet_etherType
+  phvwr.e     p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
+  phvwr       p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr
 
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 tunneled_vm_bounce_packet:
   nop.e
   nop
-
-malformed_tunneled_packet:
-  phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
-  phvwr       p.capri_intrinsic_drop, 1

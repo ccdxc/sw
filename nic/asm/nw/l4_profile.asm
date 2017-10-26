@@ -17,7 +17,10 @@ l4_profile:
               d.{u.l4_profile_d.ip_normalization_en ...\
                  u.l4_profile_d.ip_invalid_len_action}
 
-  phvwr       p.l4_metadata_tcp_normalization_en, d.u.l4_profile_d.tcp_normalization_en
+  seq         c1, k.tcp_valid, TRUE
+  phvwr.c1    p.l4_metadata_tcp_normalization_en, d.u.l4_profile_d.tcp_normalization_en
+  seq         c1, k.icmp_valid, TRUE
+  phvwr.c1    p.l4_metadata_icmp_normalization_en, d.u.l4_profile_d.icmp_normalization_en
   phvwr       p.l4_metadata_ip_normalize_ttl, d.u.l4_profile_d.ip_normalize_ttl
   phvwr       p.l4_metadata_ip_fragment_drop, d.u.l4_profile_d.ip_fragment_drop
 

@@ -34,7 +34,7 @@ action registered_macs(dst_lport, multicast_en) {
     }
 }
 
-@pragma stage 4
+@pragma stage 3
 table registered_macs {
     reads {
         entry_inactive.registered_macs   : exact;
@@ -47,7 +47,7 @@ table registered_macs {
     size : REGISTERED_MACS_TABLE_SIZE;
 }
 
-@pragma stage 4
+@pragma stage 3
 @pragma overflow_table registered_macs
 table registered_macs_otcam {
     reads {
