@@ -1,0 +1,248 @@
+diff -uprN pciutils-3.5.5-orig/lib/configure pciutils-3.5.5/lib/configure
+--- pciutils-3.5.5-orig/lib/configure	2015-09-14 08:47:08.000000000 -0700
++++ pciutils-3.5.5/lib/configure	2017-09-18 18:56:15.737022000 -0700
+@@ -68,6 +68,7 @@ case $sys in
+ 		echo >>$c '#define PCI_HAVE_LINUX_BYTEORDER_H'
+ 		echo >>$c '#define PCI_PATH_PROC_BUS_PCI "/proc/bus/pci"'
+ 		echo >>$c '#define PCI_PATH_SYS_BUS_PCI "/sys/bus/pci"'
++		echo >>$c '#define PCI_HAVE_PM_PEN_LIBPCIEHOST'
+ 		case $cpu in
+ 				i?86|x86_64)	echo_n " i386-ports"
+ 						echo >>$c '#define PCI_HAVE_PM_INTEL_CONF'
+@@ -107,6 +108,7 @@ case $sys in
+ 		echo >>$c '#define PCI_HAVE_PM_DARWIN_DEVICE'
+ 		echo >>$m 'WITH_LIBS+=-lresolv -framework CoreFoundation -framework IOKit'
+ 		echo >>$c '#define PCI_HAVE_64BIT_ADDRESS'
++		echo >>$c '#define PCI_HAVE_PM_PEN_LIBPCIEHOST'
+ 		LIBRESOLV=
+ 		LIBEXT=dylib
+ 		;;
+diff -uprN pciutils-3.5.5-orig/lib/init.c pciutils-3.5.5/lib/init.c
+--- pciutils-3.5.5-orig/lib/init.c	2016-05-22 00:52:52.000000000 -0700
++++ pciutils-3.5.5/lib/init.c	2017-09-21 18:53:06.694660000 -0700
+@@ -15,17 +15,21 @@
+ 
+ static struct pci_methods *pci_methods[PCI_ACCESS_MAX] = {
+   NULL,
+-#ifdef PCI_HAVE_PM_LINUX_SYSFS
++  // Don't want default Linux stuff if Pensando libpciehost available.
++#if defined PCI_HAVE_PM_LINUX_SYSFS && \
++    !defined(PCI_HAVE_PM_PEN_LIBPCIEHOST)
+   &pm_linux_sysfs,
+ #else
+   NULL,
+ #endif
+-#ifdef PCI_HAVE_PM_LINUX_PROC
++#if defined PCI_HAVE_PM_LINUX_PROC && \
++    !defined(PCI_HAVE_PM_PEN_LIBPCIEHOST)
+   &pm_linux_proc,
+ #else
+   NULL,
+ #endif
+-#ifdef PCI_HAVE_PM_INTEL_CONF
++#if defined PCI_HAVE_PM_INTEL_CONF && \
++    !defined(PCI_HAVE_PM_PEN_LIBPCIEHOST)
+   &pm_intel_conf1,
+   &pm_intel_conf2,
+ #else
+@@ -57,11 +61,18 @@ static struct pci_methods *pci_methods[P
+ #else
+   NULL,
+ #endif
+-#ifdef PCI_HAVE_PM_DARWIN_DEVICE
++  // Don't want default Darwin stuff if Pensando libpciehost available.
++#if defined(PCI_HAVE_PM_DARWIN_DEVICE) && \
++    !defined(PCI_HAVE_PM_PEN_LIBPCIEHOST)
+   &pm_darwin,
+ #else
+   NULL,
+ #endif
++#ifdef PCI_HAVE_PM_PEN_LIBPCIEHOST
++  &pm_pen_libpciehost,
++#else
++  NULL,
++#endif
+ };
+ 
+ void *
+diff -uprN pciutils-3.5.5-orig/lib/internal.h pciutils-3.5.5/lib/internal.h
+--- pciutils-3.5.5-orig/lib/internal.h	2016-05-22 00:53:07.000000000 -0700
++++ pciutils-3.5.5/lib/internal.h	2017-09-18 18:56:16.131017000 -0700
+@@ -86,4 +86,4 @@ void pci_free_caps(struct pci_dev *);
+ 
+ extern struct pci_methods pm_intel_conf1, pm_intel_conf2, pm_linux_proc,
+ 	pm_fbsd_device, pm_aix_device, pm_nbsd_libpci, pm_obsd_device,
+-	pm_dump, pm_linux_sysfs, pm_darwin;
++        pm_dump, pm_linux_sysfs, pm_darwin, pm_pen_libpciehost;
+diff -uprN pciutils-3.5.5-orig/lib/Makefile pciutils-3.5.5/lib/Makefile
+--- pciutils-3.5.5-orig/lib/Makefile	2014-11-01 10:04:20.000000000 -0700
++++ pciutils-3.5.5/lib/Makefile	2017-09-18 18:56:15.643019000 -0700
+@@ -46,6 +46,17 @@ ifdef PCI_HAVE_PM_DARWIN_DEVICE
+ OBJS += darwin
+ endif
+ 
++ifdef PCI_HAVE_PM_PEN_LIBPCIEHOST
++# expect PEN_TOP passed in
++# PEN_TOP is relative to parent dir, prepend ../ because we are
++# building in lib/ subdir.
++PEN_TOP ?= path-to-pensando-topdir
++PEN_PCIE = ../$(PEN_TOP)/src/lib
++OBJS += pen-libpciehost
++pen-libpciehost.o: CFLAGS += -I$(PEN_PCIE)/pciehost/include \
++                             -I$(PEN_PCIE)/pciehsvc/include
++endif
++
+ all: $(PCILIB) $(PCILIBPC)
+ 
+ ifeq ($(SHARED),no)
+diff -uprN pciutils-3.5.5-orig/lib/pci.h pciutils-3.5.5/lib/pci.h
+--- pciutils-3.5.5-orig/lib/pci.h	2017-07-05 06:21:38.000000000 -0700
++++ pciutils-3.5.5/lib/pci.h	2017-09-18 18:56:16.231016000 -0700
+@@ -41,6 +41,7 @@ enum pci_access_type {
+   PCI_ACCESS_OBSD_DEVICE,		/* OpenBSD /dev/pci */
+   PCI_ACCESS_DUMP,			/* Dump file */
+   PCI_ACCESS_DARWIN,			/* Darwin */
++  PCI_ACCESS_PEN_PCIEHOST,              /* Pensando libpciehost */
+   PCI_ACCESS_MAX
+ };
+ 
+diff -uprN pciutils-3.5.5-orig/lib/pen-libpciehost.c pciutils-3.5.5/lib/pen-libpciehost.c
+--- pciutils-3.5.5-orig/lib/pen-libpciehost.c	1969-12-31 16:00:00.000000000 -0800
++++ pciutils-3.5.5/lib/pen-libpciehost.c	2017-09-18 18:56:16.302018000 -0700
+@@ -0,0 +1,111 @@
++/*
++ *	The PCI Library -- NetBSD libpci access
++ *         (based on FreeBSD /dev/pci access)
++ *
++ *	Copyright (c) 1999 Jari Kirma <kirma@cs.hut.fi>
++ *      Copyright (c) 2002 Quentin Garnier <cube@cubidou.net>
++ *	Copyright (c) 2002 Martin Mares <mj@ucw.cz>
++ *
++ *	Can be freely distributed and used under the terms of the GNU GPL.
++ */
++
++/*
++ *      Read functionality of this driver is briefly tested, and seems
++ *      to supply basic information correctly, but I promise no more.
++ */
++
++#include <fcntl.h>
++#include <string.h>
++#include <unistd.h>
++#include <sys/types.h>
++
++#include "pciehost.h"
++#include "pciehsvc.h"
++
++#include "internal.h"
++
++static void
++pen_config(struct pci_access *a)
++{
++}
++
++static int
++pen_detect(struct pci_access *a)
++{
++  return 1;
++}
++
++static void
++pen_init(struct pci_access *a)
++{
++    pciehsvc_open(NULL);
++}
++
++static void
++pen_cleanup(struct pci_access *a)
++{
++    pciehsvc_close();
++}
++
++static int
++pen_read(struct pci_dev *d, int pos, byte *buf, int len)
++{
++  u_int16_t bdf;
++  u_int32_t val;
++
++  if (!(len == 1 || len == 2 || len == 4))
++    return pci_generic_block_read(d, pos, buf, len);
++
++  if (pos >= 4096)
++    return 0;
++
++  bdf = (d->bus << 8) | (d->dev << 3) | (d->func);
++  if (pciehsvc_cfgrd(bdf, pos, len, &val) < 0) {
++    return 0;
++  }
++
++  switch (len) {
++  case 1: *buf = val; break;
++  case 2: *(u_int16_t *)buf = cpu_to_le16(val); break;
++  case 4: *(u_int32_t *)buf = cpu_to_le32(val); break;
++  }
++  return 1;
++}
++
++static int
++pen_write(struct pci_dev *d, int pos, byte *buf, int len)
++{
++  u_int16_t bdf;
++  u_int32_t val = 0;
++
++  if (!(len == 1 || len == 2 || len == 4))
++    return pci_generic_block_write(d, pos, buf, len);
++
++  switch (len) {
++  case 1: val = *buf; break;
++  case 2: val = *(u_int16_t *)buf; break;
++  case 4: val = *(u_int32_t *)buf; break;
++  }
++  bdf = (d->bus << 8) | (d->dev << 3) | (d->func);
++  if (pciehsvc_cfgwr(bdf, pos, len, val) < 0) {
++    return 0;
++  }
++
++  return 1;
++}
++
++struct pci_methods pm_pen_libpciehost = {
++  "pen-libpciehost",
++  "Pensando libpciehost",
++  pen_config,
++  pen_detect,
++  pen_init,
++  pen_cleanup,
++  pci_generic_scan,
++  pci_generic_fill_info,
++  pen_read,
++  pen_write,
++  NULL,                                 /* read_vpd */
++  NULL,                                 /* dev_init */
++  NULL                                  /* dev_cleanup */
++};
+diff -uprN pciutils-3.5.5-orig/Makefile pciutils-3.5.5/Makefile
+--- pciutils-3.5.5-orig/Makefile	2017-07-05 06:21:29.000000000 -0700
++++ pciutils-3.5.5/Makefile	2017-09-18 18:56:15.547020000 -0700
+@@ -87,6 +87,21 @@ common.o: common.c pciutils.h $(PCIINC)
+ lspci: LDLIBS+=$(LIBKMOD_LIBS)
+ ls-kernel.o: CFLAGS+=$(LIBKMOD_CFLAGS)
+ 
++ifdef PCI_HAVE_PM_PEN_LIBPCIEHOST
++# expect PEN_TOP, BUILD_ARCH passed in
++PEN_TOP ?= path-to-pensando-topdir
++LIBPCIEDIR = $(PEN_TOP)/gen/$(BUILD_ARCH)/lib
++LIBPCIE = $(LIBPCIEDIR)/libpciehsvc.a $(LIBPCIEDIR)/libpciehw.a \
++	  $(LIBPCIEDIR)/libpciehost.a $(LIBPCIEDIR)/libcfgspace.a \
++	  $(LIBPCIEDIR)/libmisc.a
++lspci: LDLIBS+=$(LIBPCIE)
++lspci: $(LIBPCIE)
++setpci: LDLIBS+=$(LIBPCIE)
++setpci: $(LIBPCIE)
++example: LDLIBS+=$(LIBPCIE)
++example: $(LIBPCIE)
++endif
++
+ update-pciids: update-pciids.sh
+ 	sed <$< >$@ "s@^DEST=.*@DEST=$(IDSDIR)/$(PCI_IDS)@;s@^PCI_COMPRESSED_IDS=.*@PCI_COMPRESSED_IDS=$(PCI_COMPRESSED_IDS)@"
+ 	chmod +x $@
