@@ -1396,9 +1396,10 @@ action tcp_session_normalization() {
 }
 
 control process_session_state {
-    if ((capri_intrinsic.drop == FALSE) and
-        (l4_metadata.flow_conn_track == TRUE)) {
-        apply(session_state);
+    if (capri_intrinsic.drop == FALSE) {
+        if (l4_metadata.flow_conn_track == TRUE) {
+            apply(session_state);
+        }
     }
 }
 

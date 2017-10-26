@@ -1,10 +1,10 @@
 # Feature Test Modules List
 feature:
     id          : classic
-    sub         : tx
+    sub         : rx
     package     : test.classic
     module      : classic
-    spec        : tx.testspec
+    spec        : rx.testspec
     enable      : True
     ignore      : False
 
@@ -25,4 +25,4 @@ modules:
 
     - module:
         name    : NONIP
-        spec    : tx_nonip.testspec
+        spec    : rx_nonip.testspec

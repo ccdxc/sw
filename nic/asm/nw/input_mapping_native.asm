@@ -117,8 +117,10 @@ native_non_ip_packet:
   seq         c1, k.vlan_tag_valid, 1
   phvwr.c1    p.flow_lkp_metadata_lkp_sport, k.vlan_tag_etherType
   phvwr.!c1   p.flow_lkp_metadata_lkp_sport, k.ethernet_etherType
-  phvwr.e     p.flow_lkp_metadata_lkp_dst, k.ethernet_dstAddr
+  phvwr       p.flow_lkp_metadata_lkp_dst, k.ethernet_dstAddr
   phvwr       p.flow_lkp_metadata_lkp_src, r1
+  phvwr.e     p.flow_lkp_metadata_lkp_srcMacAddr, r1
+  phvwr       p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
 
 malformed_native_packet:
   phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1

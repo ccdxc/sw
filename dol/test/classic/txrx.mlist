@@ -1,12 +1,12 @@
 # Feature Test Modules List
 feature:
     id          : classic
-    sub         : tx
+    sub         : txrx
     package     : test.classic
     module      : classic
-    spec        : tx.testspec
+    spec        : txrx.testspec
     enable      : True
-    ignore      : False
+    ignore      : True
 
 modules:
     - module:
@@ -25,4 +25,4 @@ modules:
 
     - module:
         name    : NONIP
-        spec    : tx_nonip.testspec
+        spec    : txrx_nonip.testspec

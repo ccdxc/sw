@@ -134,10 +134,6 @@ action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
         modify_field(control_metadata.qtype, qtype);
     }
 
-    if (control_metadata.nic_mode == NIC_MODE_CLASSIC) {
-        /* return */
-    }
-
     /* mirror session id */
     modify_field(capri_intrinsic.tm_span_session, ingress_mirror_session_id);
     modify_field(control_metadata.egress_mirror_session_id,
@@ -418,11 +414,14 @@ table flow_hash_overflow {
 control process_flow_table {
     // NCC-predication (currently) does not allow sourcing condition bits from headers
     // If a header can be placed in first flit, this problem can be fixed XXX
-    if (valid(recirc_header) and
-        (control_metadata.recirc_reason == RECIRC_FLOW_HASH_OVERFLOW)) {
-        apply(flow_hash_overflow);
-    } else {
-        apply(flow_hash);
+    if (control_metadata.nic_mode == NIC_MODE_SMART) {
+        if (valid(recirc_header)) {
+            if (control_metadata.recirc_reason == RECIRC_FLOW_HASH_OVERFLOW) {
+                apply(flow_hash_overflow);
+            }
+        } else {
+            apply(flow_hash);
+        }
+        apply(flow_info);
     }
-    apply(flow_info);
 }

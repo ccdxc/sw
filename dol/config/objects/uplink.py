@@ -6,6 +6,7 @@ import infra.config.base        as base
 
 import config.resmgr            as resmgr
 import config.objects.segment   as segment
+import config.objects.tenant    as tenant
 
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
@@ -186,6 +187,16 @@ class UplinkObjectHelper:
         return
 
     def __configure_all_segments_classic_nic(self):
+        tens = Store.objects.GetAllByClass(tenant.TenantObject)
+        for ten in tens:
+            intf = ten.GetPinIf() 
+            segs = ten.GetSegments()
+            for seg in segs:
+                if seg.native == False: continue
+                intf.SetNativeSegment(seg)
+                break
+            halapi.ConfigureInterfaces([intf], update = True)
+            halapi.ConfigureInterfaceSegmentAssociations([intf], segs)
         return
 
     def ConfigureAllSegments(self):

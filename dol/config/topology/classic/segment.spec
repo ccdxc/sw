@@ -8,5 +8,5 @@ broadcast   : flood
 multicast   : flood
 l4lb        : False
 endpoints   :
-    classic : 5
+    classic : 2
     remote  : 1

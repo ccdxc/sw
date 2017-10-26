@@ -311,7 +311,9 @@ class EndpointObjectHelper:
         if spec.remote:
             cfglogger.info("Creating %d REMOTE EPs in Segment = %s" %\
                            (spec.remote, segment.GID()))
-            if segment.IsFabEncapVlan():
+            if GlobalOptions.classic:
+                remote_intfs = [ segment.tenant.GetPinIf() ]
+            elif segment.IsFabEncapVlan():
                 remote_intfs = Store.GetTrunkingUplinks()
             elif segment.IsFabEncapVxlan():
                 remote_intfs = Store.GetTunnelsVxlan()
@@ -377,7 +379,7 @@ class EndpointObjectHelper:
                                                   backend = True)
                 self.backend_local += self.backend_useg
 
-        if getattr(spec, 'classic', None):
+        if GlobalOptions.classic:
             cfglogger.info("Creating %d CLASSIC EPs in Segment = %s" %\
                            (spec.classic, segment.GID()))
             classic_enics = segment.GetClassicEnics()

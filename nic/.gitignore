@@ -25,3 +25,5 @@ dol.log*
 sample_client.log
 tags
 conf/hal.ini
+third-party/snort3/export/bin/
+conf/hal.ini

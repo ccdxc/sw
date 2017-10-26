@@ -9,6 +9,11 @@ struct phv_                     p;
 
 %%
 
+nop:
+  nop.e
+  nop
+
+.align
 ingress_policer_action:
   seq         c1, k.control_metadata_drop_reason[DROP_INGRESS_POLICER], 1
   bcf         [c1], ingress_policer_deny

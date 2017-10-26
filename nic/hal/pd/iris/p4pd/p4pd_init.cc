@@ -1154,10 +1154,12 @@ p4pd_forwarding_mode_init (void)
     }
 
     if (nic_mode == NIC_MODE_CLASSIC) {
-        val &= (uint64_t)~0x1;
+        //val &= (uint64_t)0x1;
+        val |= (uint64_t)~0;
         HAL_TRACE_DEBUG("{}:setting forwarding mode CLASSIC", __FUNCTION__);
     } else {
-        val |= (uint64_t)0x1;
+        //val |= (uint64_t)~0x1;
+        val = 0; 
         HAL_TRACE_DEBUG("{}:setting forwarding mode SMART", __FUNCTION__);
     }
     val = htobe64(val);
