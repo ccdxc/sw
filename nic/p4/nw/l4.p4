@@ -310,7 +310,8 @@ action tcp_session_state_info(iflow_tcp_seq_num,
             if (tcp.seqNo < rflow_tcp_ack_num and
                 (scratch_metadata.tcp_seq_num_hi < rflow_tcp_ack_num)) {
                 // full retransmit of packet we have seen before, still acceptable
-                // We shouldn't drop this packet.
+                // We shouldn't drop this packet as we might have seen the ack but
+                // sender might not have rcvd the ack as it could be dropped after us.
                 // We will have to update the ack # and window fromt the packet.
                 bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_FULL_REXMIT);
                 // Update state (ack and window) and exit.
@@ -621,7 +622,8 @@ action tcp_session_state_info(iflow_tcp_seq_num,
             if (scratch_metadata.adjusted_seq_num < iflow_tcp_ack_num and
                 (scratch_metadata.tcp_seq_num_hi < iflow_tcp_ack_num)) {
                 // full retransmit of packet we have seen before, still acceptable
-                // We shouldn't drop this packet.
+                // We shouldn't drop this packet as we might have seen the ack but
+                // sender might not have rcvd the ack as it could be dropped after us.
                 // We will have to update the ack # and window fromt the packet.
                 bit_or(l4_metadata.exceptions_seen, l4_metadata.exceptions_seen, TCP_FULL_REXMIT);
                 // Update state (ack and window) and exit.

@@ -36,9 +36,24 @@ def _get_p4_virtual_headers(s):
             vhdrs.append(h)
     return vhdrs
 
-def _get_header_order_node_list(node, node_list):
-    # TBD (see recent fix in hlir for this)
-    return node_list
+def _get_header_order_node_list(parser, node, node_list):
+    # TBD (see recent fix in hlir for this) - done it here in a different way
+    # need to do this as egress header order is not the same as specified
+    hdr_order = get_pragma_param_list(node.p4_state._parsed_pragmas['header_ordering'])
+    p4h_hdr_order = []
+    ordered_node_list = []
+    for h in hdr_order:
+        if h not in parser.be.h.p4_header_instances:
+            continue
+        p4h = parser.be.h.p4_header_instances[h]
+        for cs in node_list:
+            if not isinstance(cs, capri_parse_state):
+                continue
+            if _find_header(node, cs, p4h):
+                if cs not in ordered_node_list:
+                    ordered_node_list.insert(0,cs)
+
+    return ordered_node_list
 
 def _resolve_len_expr(parser, hdr, l_exp, hlen_fld_name, hlen_dummy):
     # change all variable names to corresponding p4_field objects
@@ -64,7 +79,7 @@ def _resolve_len_expr(parser, hdr, l_exp, hlen_fld_name, hlen_dummy):
 # XXX what is really needed is topological header ordering (not just states)
 # and un-rolling of any loops to handle header-stacks
 # we can support only one header-stack per loop
-def _parser_topo_sort(d, parse_states, node, marker, sorted_list, depth=0):
+def _parser_topo_sort(parser, d, parse_states, node, marker, sorted_list, depth=0):
     # Toposort algorithm from wikipedia
     #print "Check node %s" % str(node)
     if node in marker:
@@ -80,7 +95,11 @@ def _parser_topo_sort(d, parse_states, node, marker, sorted_list, depth=0):
             # handle header ordering pragma to enforce the specified order
             # create a state list in the reverse order so that topo-sort will
             # build the header order correctly by visiting last header state first
-            node_list = _get_header_order_node_list(node, node_list)
+            extracted_hdrs = parser._prune_next_states(node, node_list)
+            looping_branches = [nxt for nxt in node.branch_to.values() if nxt not in node_list]
+            traversed_nodes = parser._traverse_loops(node, looping_branches)
+            ordered_node_list = _get_header_order_node_list(parser, node, traversed_nodes)
+            node_list += ordered_node_list
 
         for next_node in node_list:
             if not next_node:
@@ -90,7 +109,7 @@ def _parser_topo_sort(d, parse_states, node, marker, sorted_list, depth=0):
             if 'xgress' in next_node.p4_state._parsed_pragmas:
                 if next_node.p4_state._parsed_pragmas['xgress'].keys()[0].upper() != d.name:
                     continue # skip - specified only for parser in other direction
-            if _parser_topo_sort(d, parse_states, next_node, marker, sorted_list, depth+1):
+            if _parser_topo_sort(parser, d, parse_states, next_node, marker, sorted_list, depth+1):
                 if 'header_ordering' in next_node.p4_state._parsed_pragmas:
                     continue # allow looping
                 vhdr = _get_p4_virtual_headers(next_node.p4_state)
@@ -108,14 +127,24 @@ def _parser_topo_sort(d, parse_states, node, marker, sorted_list, depth=0):
 
         return False
 
-def _find_header(parent, state, hdr):
+def _find_header(parent, _state, hdr):
+    # This function is used at differnet times, it can be called with parent and _state as
+    # p4_parse_state objects or capri_parse_state objects
+    state = _state
+    if not isinstance(state, capri_parse_state):
+        if not isinstance(state, p4.p4_parse_state):
+            return False
+    else:
+        state = _state.p4_state
+
+    if isinstance(parent, capri_parse_state):
+        parent = parent.p4_state
+
     if state == parent:
         return False
-    if not isinstance(state, capri_parse_state):
-        return False
-    if hdr in state.headers:
+    if hdr in _get_p4_headers(state):
         return True
-    if 'header_ordering' in state.p4_state._parsed_pragmas:
+    if 'header_ordering' in state._parsed_pragmas:
         # terminate search if we find another pragma.. Need to find a better soln
         return False
     #print "looking for %s in state %s" % (hdr.name, state.name)
@@ -754,7 +783,7 @@ class capri_parser:
         # create topo-sorted list of parser states
         marker = {} # {state: mark}
         sorted_states = []
-        if _parser_topo_sort(self.d, capri_parse_states, self.start_state, \
+        if _parser_topo_sort(self, self.d, capri_parse_states, self.start_state, \
                                 marker, sorted_states):
             self.logger.critical("Loops in parse graph are not supported")
             assert(0)
@@ -1501,16 +1530,7 @@ class capri_parser:
 
     def _prune_next_states(self, state, next_states):
         # find and remove all the states that extract headers in a given header_ordering
-        nxt_hdr_list = []
-        hdr_ordering = state.p4_state._parsed_pragmas['header_ordering']
-        nxt_hdr = hdr_ordering.keys()[0]
-        tmp_hdr_ord = hdr_ordering[nxt_hdr]
-        nxt_hdr_list.append(nxt_hdr)
-        while len(tmp_hdr_ord) != 0:
-            nxt_hdr = tmp_hdr_ord.keys()[0]
-            nxt_hdr_list.append(nxt_hdr)
-            tmp_hdr_ord = tmp_hdr_ord[nxt_hdr]
-
+        nxt_hdr_list = get_pragma_param_list(state.p4_state._parsed_pragmas['header_ordering'])
         #print "prune states from %s Headers %s" % (state.name, nxt_hdr_list)
         p4_hdr_list = []
         for hname in nxt_hdr_list:

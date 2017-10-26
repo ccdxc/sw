@@ -29,6 +29,18 @@ class StepTcpOptions:
         self.spec_mss       = None
         return
 
+    def __init_sackok(self, spec):
+        self.sackok_v = 'SAckOK'
+        self.sackok = str(spec.sackok)
+        self.spec_sackok = spec.sackok
+        return
+
+    def __init_sack(self, spec):
+        self.sack_v = 'SAck'
+        self.sack = spec.sack
+        self.spec_sack = spec.sack
+        return
+
     def __init_timestamp(self, spec):
         self.timestamp_v = 'Timestamp'
         self.spec_timestamp = spec.timestamp
@@ -67,6 +79,12 @@ class StepTcpOptions:
 
         if getattr(spec, 'nop', None) is not None:
             self.__init_nop(spec)
+
+        if getattr(spec, 'sackok', None) is not None:
+            self.__init_sackok(spec)
+        
+        if getattr(spec, 'sack', None) is not None:
+            self.__init_sack(spec)
         return
 
     def Show(self, lg):

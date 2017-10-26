@@ -67,6 +67,22 @@ steps:
                 nop         : 0
 
     - step:
+        id          : IFLOW_SYN_WS_MSS_TS
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            options :
+                scale     : ref://step/ifstate/scale
+                mss       : ref://step/ifstate/mss
+                timestamp : 0x12345678
+                # We are adding sackok so that we get two extra
+                # bytes of option so that there will be only one
+                # EOL instead of 3 EOLs (need parser changes
+                # to support multiple EOLs) once that is fied we
+                # have to add extra test cases
+                sackok    : 0
+
+    - step:
         id          : IFLOW_SYN_DROP
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         permit      : False
@@ -124,6 +140,17 @@ steps:
                 nop             : 0
 
     - step:
+        id          : RFLOW_SYN_ACK_WS_MSS_TS
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            options :
+                scale     : ref://step/rfstate/scale
+                mss       : ref://step/rfstate/mss
+                timestamp : 0x23456789
+                sackok    : 0
+
+    - step:
         id          : IFLOW_ACK
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
@@ -150,11 +177,35 @@ steps:
             flags   : syn
 
     - step:
+        id          : RFLOW_INVALID_FIRST_PKT
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        permit      : False
+        fields      :
+            flags   : 
+            # Making seq zero so that the seq number check passes as
+            # the iflow ack number should be zero to start with.
+            seq     : 0
+
+    - step:
         id          : IFLOW_DATA
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 1000
         fields      :
             flags   : ack
+
+    - step:
+        id          : IFLOW_URG_DATA
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 1000
+        fields      :
+            flags   : ack, urg
+
+    - step:
+        id          : IFLOW_URG_NO_ACK_DATA
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 1000
+        fields      :
+            flags   : urg
 
     - step:
         id          : IFLOW_DATA_DROP
@@ -170,6 +221,20 @@ steps:
         payloadsize : 1000
         fields      :
             flags   : ack
+
+    - step:
+        id          : RFLOW_URG_DATA
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 1000
+        fields      :
+            flags   : ack, urg
+
+    - step:
+        id          : RFLOW_URG_NO_ACK_DATA
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 1000
+        fields      :
+            flags   : urg
 
     - step:
         id          : RFLOW_DATA_DROP
@@ -256,7 +321,29 @@ steps:
         fields      :
             seq     : callback://firewall/alu/Add/val=1000
             flags   : ack
- 
+
+      # This is data which is partially in window and partially
+      # out of window to the right. 
+    - step:
+        id          : IFLOW_DATA_OVERLAP_RIGHT
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 1000
+        advance     : False
+        permit      : False
+        fields      :
+            seq     : callback://firewall/alu/SubWithWindow/val=100
+            flags   : ack
+
+    - step:
+        id          : RFLOW_DATA_OVERLAP_RIGHT
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 1000
+        advance     : False
+        permit      : False
+        fields      :
+            seq     : callback://firewall/alu/SubWithWindow/val=100
+            flags   : ack
+
     - step:
         id          : IFLOW_DATA_FULL_OUT_OF_WINDOW
         base        : ref://trackerstore/steps/id=IFLOW_BASE
@@ -275,6 +362,28 @@ steps:
         permit      : False
         fields      :
             seq     : callback://firewall/alu/AddWithWindow/val=1000
+            flags   : ack
+
+    # This assumes the window advertized is 1000.
+    - step:
+        id          : IFLOW_DATA_LEFT_OVERLAP_RIGHT_OVERLAP
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 1400
+        advance     : False
+        permit      : False
+        fields      :
+            seq     : callback://firewall/alu/Sub/val=100
+            flags   : ack
+
+    # This assumes the window advertized is 1000.
+    - step:
+        id          : RFLOW_DATA_LEFT_OVERLAP_RIGHT_OVERLAP
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 1400
+        advance     : False
+        permit      : False
+        fields      :
+            seq     : callback://firewall/alu/Sub/val=100
             flags   : ack
 
     - step:
@@ -481,7 +590,9 @@ steps:
                 scale       : ref://step/ifstate/scale
                 mss         : ref://step/ifstate/mss
                 timestamp   : 12345678
-                #nop         : 0
+                nop         : 0
+                sackok      : 0
+                sack        : 12345678 98765432 33445566 22334455
                 
         state       :
             iflow   :
