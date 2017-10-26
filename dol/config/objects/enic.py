@@ -176,7 +176,10 @@ class EnicObject(base.ConfigObjectBase):
         req_spec.if_enic_info.lif_key_or_handle.lif_id = self.lif.id
         if self.IsClassic():
             req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_CLASSIC
-            req_spec.if_enic_info.classic_enic_info.l2segment_handle.append(self.segment.hal_handle)
+            if self.segment.native:
+                req_spec.if_enic_info.classic_enic_info.native_l2segment_handle = self.segment.hal_handle
+            else:
+                req_spec.if_enic_info.classic_enic_info.l2segment_handle.append(self.segment.hal_handle)
             req_spec.if_enic_info.classic_enic_info.pinned_uplink_if_handle = self.pinnedif.hal_handle
         else:
             req_spec.if_enic_info.enic_info.mac_address = self.macaddr.getnum()

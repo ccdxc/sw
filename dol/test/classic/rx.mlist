@@ -10,19 +10,53 @@ feature:
 
 modules:
     - module:
-        name    : IPV4
+        name    : IPV4_QTAG
         iterate:
-            - flow  : filter://type=IPV4,proto=UDP
-            - flow  : filter://type=IPV4,proto=TCP
-            - flow  : filter://type=IPV4,proto=ICMP
+            - flow      : filter://type=IPV4,proto=UDP
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP
+              segment   : filter://native=False
 
     - module:
-        name    : IPV6
+        name    : IPV6_QTAG
         iterate:
-            - flow  : filter://type=IPV6,proto=UDP
-            - flow  : filter://type=IPV6,proto=TCP
-            - flow  : filter://type=IPV6,proto=ICMPV6
+            - flow      : filter://type=IPV6,proto=UDP
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=TCP
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6
+              segment   : filter://native=False
 
     - module:
-        name    : NONIP
+        name    : NONIP_QTAG
         spec    : rx_nonip.testspec
+        iterate:
+            - segment   : filter://native=False
+
+    - module:
+        name    : IPV4_UTAG
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP
+              segment   : filter://native=True
+
+    - module:
+        name    : IPV6_UTAG
+        iterate:
+            - flow      : filter://type=IPV6,proto=UDP
+              segment   : filter://native=True
+            - flow      : filter://type=IPV6,proto=TCP
+              segment   : filter://native=True
+            - flow      : filter://type=IPV6,proto=ICMPV6
+              segment   : filter://native=True
+
+    - module:
+        name    : NONIP_UTAG
+        spec    : rx_nonip.testspec
+        iterate:
+            - segment   : filter://native=True
