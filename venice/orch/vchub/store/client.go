@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogo/protobuf/types"
+
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	ks "github.com/pensando/sw/venice/utils/kvstore/store"
@@ -51,9 +53,18 @@ func Close() {
 
 // kvCreate is a wrapper that retries on transient kv errors
 func kvCreate(ctx context.Context, key string, obj runtime.Object) error {
+	// creation ts
+	meta, err := runtime.GetObjectMeta(obj)
+	if err != nil {
+		return err
+	}
+	ts, _ := types.TimestampProto(time.Now())
+	meta.CreationTime.Timestamp = *ts
+	meta.ModTime.Timestamp = *ts
 	log.Infof("kvCreate key: %s, obj: %+v", key, obj)
 	for i := 0; i < maxRetries; i++ {
-		err := kvStore.Create(ctx, key, obj)
+
+		err = kvStore.Create(ctx, key, obj)
 		if err == nil || kvstore.IsKeyExistsError(err) || ctx.Err() != nil {
 			return err
 		}
@@ -66,6 +77,13 @@ func kvCreate(ctx context.Context, key string, obj runtime.Object) error {
 
 // kvUpdate is a wrapper that retries on transient kv errors
 func kvUpdate(ctx context.Context, key string, obj runtime.Object) error {
+	// modification ts
+	meta, err := runtime.GetObjectMeta(obj)
+	if err != nil {
+		return err
+	}
+	ts, _ := types.TimestampProto(time.Now())
+	meta.ModTime.Timestamp = *ts
 	log.Infof("kvUpdate key: %s, obj: %+v", key, obj)
 	for i := 0; i < maxRetries; i++ {
 		err := kvStore.Update(ctx, key, obj)

@@ -12,7 +12,7 @@ func (t *Timestamp) UnmarshalJSON(b []byte) error {
 	var str string
 	json.Unmarshal(b, &str)
 
-	pt, err := time.Parse(time.RFC3339, str)
+	pt, err := time.Parse(time.RFC3339Nano, str)
 	if err != nil {
 		return err
 	}
@@ -30,7 +30,7 @@ func (t Timestamp) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return []byte("null"), err
 	}
-	return json.Marshal(stdTime.Format(time.RFC3339))
+	return json.Marshal(stdTime.Format(time.RFC3339Nano))
 }
 
 // Time returns go Time from api.Timestamp. This enables us to change the implementation later

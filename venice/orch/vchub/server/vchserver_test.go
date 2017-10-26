@@ -226,6 +226,8 @@ func checkSmartNICList(expected map[string]*orch.SmartNIC) error {
 		if n2 != nil {
 			// ignore resource version for now
 			n1.ObjectMeta.ResourceVersion = n2.ObjectMeta.ResourceVersion
+			n1.ObjectMeta.CreationTime = n2.ObjectMeta.CreationTime
+			n1.ObjectMeta.ModTime = n2.ObjectMeta.ModTime
 			n1.Status.Switch = n2.Status.Switch
 			if !reflect.DeepEqual(n1, n2) {
 				return fmt.Errorf("Expected %+v, got %+v", n2, n1)
@@ -562,6 +564,8 @@ func checkNwIFList(expected map[string]*orch.NwIF) error {
 			continue
 		}
 		n1.ObjectMeta.ResourceVersion = n2.ObjectMeta.ResourceVersion
+		n1.ObjectMeta.CreationTime = n2.ObjectMeta.CreationTime
+		n1.ObjectMeta.ModTime = n2.ObjectMeta.ModTime
 		if !reflect.DeepEqual(n1, n2) {
 			return fmt.Errorf("Expected %+v, got %+v", n2, n1)
 		}
