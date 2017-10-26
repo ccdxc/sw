@@ -5,6 +5,7 @@ import (
 	k8sclient "k8s.io/client-go/kubernetes"
 
 	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
 // LeaderEvtType indicates what happened regarding the leadership
@@ -40,6 +41,7 @@ type LeaderService interface {
 	Stop()
 	Leader() string
 	IsLeader() bool
+	ID() string
 
 	// Register registers for Observer. The Observers are called in the Order of registration
 	// NOTE: In the future if we need a different order to be called for Start and Stop routines, then
@@ -241,12 +243,30 @@ type ResolverService interface {
 	ListInstances() *ServiceInstanceList
 }
 
+// NodeEventHandler handles watch events for Node object
+type NodeEventHandler func(et kvstore.WatchEventType, node *cmd.Node)
+
+// ClusterEventHandler handles watch events for Cluster object
+type ClusterEventHandler func(et kvstore.WatchEventType, cluster *cmd.Cluster)
+
+// SmartNICventHandler handles watch events for SmartNIC object
+type SmartNICventHandler func(et kvstore.WatchEventType, nic *cmd.SmartNIC)
+
 // CfgWatcherService watches for changes to config from API Server
 type CfgWatcherService interface {
 	// Start the service
 	Start()
 	// Stop the service
 	Stop()
+
+	// SetNodeEventHandler sets the handler to handle events related to Node object
+	SetNodeEventHandler(NodeEventHandler)
+
+	// SetClusterEventHandler sets the handler to handle events related to Cluster object
+	SetClusterEventHandler(ClusterEventHandler)
+
+	// SetSmartNICEventHandler sets the handler to handle events related to SmartNIC object
+	SetSmartNICEventHandler(SmartNICventHandler)
 
 	// APIClient returns a valid interface once the APIServer is good and
 	// accepting requests

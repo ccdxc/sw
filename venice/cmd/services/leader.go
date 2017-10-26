@@ -177,3 +177,7 @@ func (l *leaderService) Leader() string {
 	defer l.Unlock()
 	return l.leader
 }
+
+func (l *leaderService) ID() string {
+	return l.id
+}

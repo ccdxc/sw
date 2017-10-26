@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/quorum"
 	"github.com/pensando/sw/venice/utils/quorum/store"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -79,6 +81,16 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		for _, member := range req.QuorumConfig.QuorumMembers {
 			if hostname == member.Name {
 				found = true
+			}
+			if !found && net.ParseIP(member.Name) != nil {
+				var err error
+				found, err = netutils.IsAConfiguredIP(member.Name)
+				if err != nil {
+					found = false
+				}
+				if found {
+					hostname = member.Name
+				}
 			}
 			members = append(members, quorum.Member{
 				Name:       member.Name,
@@ -154,10 +166,10 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.VipService = services.NewVIPService()
 		env.K8sService = services.NewK8sService()
 		env.ResolverService = services.NewResolverService(env.K8sService)
+		env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger)
 		env.MasterService = services.NewMasterService(req.VirtualIp, services.WithK8sSvcMasterOption(env.K8sService),
 			services.WithResolverSvcMasterOption(env.ResolverService))
 		env.NtpService = services.NewNtpService(req.NTPServers)
-		env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger)
 
 		env.SystemdService.Start() // must be called before dependent services
 		env.VipService.AddVirtualIPs(req.VirtualIp)

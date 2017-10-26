@@ -4,5 +4,6 @@
     "NumQuorumNodes" : 3,
     "SSHUser":        "vagrant",
     "SSHPasswd":      "vagrant",
-    "SSHAuthMethod":  "password"
+    "SSHAuthMethod":  "password",
+    "FirstVeniceIP":  "192.168.30.11"
 }

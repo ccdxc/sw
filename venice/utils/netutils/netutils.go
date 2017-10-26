@@ -103,6 +103,34 @@ func HasIP(ipAddr string) (bool, error) {
 	return found, err
 }
 
+// IsAConfiguredIP returns true if one of the interfaces on this machine has this IP
+func IsAConfiguredIP(ipAddr string) (bool, error) {
+	ip := net.ParseIP(ipAddr)
+	if ip == nil {
+		return false, fmt.Errorf("%v is not an IP address", ipAddr)
+	}
+	intfs, err := net.Interfaces()
+	if err != nil {
+		return false, err
+	}
+	for ii := range intfs {
+		addrs, err := intfs[ii].Addrs()
+		if err != nil {
+			return false, err
+		}
+		for jj := range addrs {
+			addr, _, err := net.ParseCIDR(addrs[jj].String())
+			if err != nil {
+				return false, err
+			}
+			if string(addr) == string(ip) {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
 // AddSecondaryIP adds the provided ip address as a secondary IP to an interface
 // that can have it. If no interface can have it, it returns an error.
 func AddSecondaryIP(ipAddr string) error {

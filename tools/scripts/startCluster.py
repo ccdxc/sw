@@ -26,13 +26,14 @@ def ssh_exec_thread(ssh_object, command):
 
 # This class represents a vagrant node
 class Node:
-    def __init__(self, ipaddr, username='vagrant', password='vagrant', gopath='/import/'):
+    def __init__(self, ipaddr, username='vagrant', password='vagrant', gopath='/import/', tarpath='/import/bin/tars'):
         self.debug = False
         self.addr = ipaddr
         self.username = username
         self.password = password
         self.gopath = gopath
         self.ssh = self.sshConnect(username, password)
+        self.tarpath = tarpath
         if not dryRun:
             out, _, _ = self.runCmd("hostname")
             self.hostname = out[0].split('\n')[0]
@@ -89,7 +90,7 @@ class Node:
     def startCluster(self):
         print "#### Loading container images on " + self.addr
         self.runCmd("""sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches" """)
-        self.runCmd("""bash -c 'for i in /import/bin/tars/* ; do  docker load -i $i; sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches";  done;' """)
+        self.runCmd("""bash -c 'for i in """ + self.tarpath + """/* ; do  docker load -i $i; sync; sudo bash -c "echo 3 > /proc/sys/vm/drop_caches";  done;' """)
         self.runCmd("docker system prune -f")
         self.runCmd("docker run --rm --name pen-cmd -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-cmd -c /initscript")
         self.runCmd("sudo systemctl daemon-reload")
@@ -119,7 +120,7 @@ class Node:
         self.runCmd("""bash -c 'if [ "$(docker ps -qa)" != "" ] ; then docker stop $(docker ps -qa); docker rm $(docker ps -qa); fi' """)
 
         self.runCmd("sudo rm -fr /etc/pensando/* /etc/kubernetes/* /usr/pensando/bin/* /var/lib/pensando/* /var/log/pensando/*  /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ")
-        self.runCmd("sudo ip addr flush dev eth1 label *pens")
+        self.runCmd("sudo ip addr flush label *pens")
         self.runCmd("docker rm -f `docker ps -aq`")
 
 
@@ -158,6 +159,7 @@ parser.add_argument("-user", default='vagrant', help="User id for ssh")
 parser.add_argument("-password", default='vagrant', help="password for ssh")
 parser.add_argument("-gopath", default='/import', help="GOPATH directory path")
 parser.add_argument("-stop", dest='stop', action='store_true')
+parser.add_argument("-tarpath", default='/import/bin/tars', help='location of tar files for container images')
 
 # Parse the args
 args = parser.parse_args()
@@ -193,7 +195,7 @@ print "################### Stopping all cluster services ###################"
 
 # Connect to nodes
 for addr in addrList:
-    node = Node(addr, args.user, args.password, args.gopath)
+    node = Node(addr, args.user, args.password, args.gopath, tarpath=args.tarpath)
     nodes.append(node)
 
 quorumNames = []

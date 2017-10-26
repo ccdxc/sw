@@ -179,6 +179,7 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 					el.Unlock()
 					break
 				}
+				log.Infof("Election(%v:%v): observed event:%v from channel. ok: %v. ", el.id, el.name, resp, ok)
 
 				leader := string(resp.Kvs[0].Value)
 				// If election is won with old lease, ignore it
@@ -195,6 +196,7 @@ func (el *election) run(ctx context.Context, leaseID clientv3.LeaseID) {
 
 				// If previously leader but lost election (unexpectedly), send a Lost event and start a new Campaign.
 				if wasLeader && changed {
+					log.Infof("Election(%v:%v): lost election unexpectedly. ", el.id, el.name)
 					el.sendEvent(kvstore.Lost, "")
 					go el.attempt(errCh)
 				}

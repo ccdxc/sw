@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/cmd"
 	grpcclient "github.com/pensando/sw/api/generated/cmd/grpc/client"
 	"github.com/pensando/sw/venice/cmd/env"
-	"github.com/pensando/sw/venice/cmd/ops"
+	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -38,6 +38,25 @@ type CfgWatcherService struct {
 	clusterWatcher  kvstore.Watcher // Cluster object watcher
 	nodeWatcher     kvstore.Watcher // Node endpoint watcher
 	smartNICWatcher kvstore.Watcher // SmartNIC object watcher
+
+	nodeEventHandler    types.NodeEventHandler
+	clusterEventHandler types.ClusterEventHandler
+	smartNICventHandler types.SmartNICventHandler
+}
+
+// SetNodeEventHandler sets handler for Node events
+func (k *CfgWatcherService) SetNodeEventHandler(nh types.NodeEventHandler) {
+	k.nodeEventHandler = nh
+}
+
+// SetClusterEventHandler sets handler for Cluster events
+func (k *CfgWatcherService) SetClusterEventHandler(ch types.ClusterEventHandler) {
+	k.clusterEventHandler = ch
+}
+
+// SetSmartNICEventHandler sets handler for SmartNIC events
+func (k *CfgWatcherService) SetSmartNICEventHandler(snicHandler types.SmartNICventHandler) {
+	k.smartNICventHandler = snicHandler
 }
 
 // apiClientConn creates a gRPC client Connection to API server
@@ -129,52 +148,6 @@ func (k *CfgWatcherService) waitForAPIServerOrCancel() {
 	}
 }
 
-// handleNodeEvent handles Node update
-func (k *CfgWatcherService) handleNodeEvent(et kvstore.WatchEventType, node *cmd.Node) {
-	switch et {
-	case kvstore.Created:
-		op := ops.NewNodeJoinOp(node)
-		_, err := ops.Run(op)
-		if err != nil {
-			k.logger.Infof("Error %v while joining Node %v to cluster", err, node.Name)
-		}
-	case kvstore.Updated:
-	case kvstore.Deleted:
-		op := ops.NewNodeDisjoinOp(node)
-		_, err := ops.Run(op)
-		if err != nil {
-			k.logger.Infof("Error %v while disjoin Node %v from cluster", err, node.Name)
-		}
-	}
-}
-
-// handleClusterEvent handles Cluster update
-func (k *CfgWatcherService) handleClusterEvent(et kvstore.WatchEventType, node *cmd.Cluster) {
-	switch et {
-	case kvstore.Created:
-		return
-	case kvstore.Updated:
-		// TODO: process updates to ApprovedNIC list
-		// Walk the ApprovedList to admit the NICs and remove them from
-		// pendingNIC status
-		return
-	case kvstore.Deleted:
-		return
-	}
-}
-
-// handleSmartNIC handles SmartNIC updates
-func (k *CfgWatcherService) handleSmartNICEvent(et kvstore.WatchEventType, node *cmd.SmartNIC) {
-	switch et {
-	case kvstore.Created:
-		return
-	case kvstore.Updated:
-		return
-	case kvstore.Deleted:
-		return
-	}
-}
-
 // stopWatchers stops all watchers
 func (k *CfgWatcherService) stopWatchers() {
 	k.clusterWatcher.Stop()
@@ -257,7 +230,9 @@ func (k *CfgWatcherService) runUntilCancel() {
 				k.logger.Infof("Cluster Watcher failed to get Cluster Object")
 				break
 			}
-			go k.handleClusterEvent(event.Type, cluster)
+			if k.clusterEventHandler != nil {
+				go k.clusterEventHandler(event.Type, cluster)
+			}
 
 		case event, ok := <-k.nodeWatcher.EventChan():
 			if !ok {
@@ -272,7 +247,9 @@ func (k *CfgWatcherService) runUntilCancel() {
 				k.logger.Infof("Node Watcher failed to get Node Object")
 				break
 			}
-			go k.handleNodeEvent(event.Type, node)
+			if k.nodeEventHandler != nil {
+				go k.nodeEventHandler(event.Type, node)
+			}
 
 		case event, ok := <-k.smartNICWatcher.EventChan():
 			if !ok {
@@ -287,8 +264,9 @@ func (k *CfgWatcherService) runUntilCancel() {
 				k.logger.Infof("SmartNIC Watcher failed to get SmartNIC Object")
 				break
 			}
-			go k.handleSmartNICEvent(event.Type, snic)
-
+			if k.smartNICventHandler != nil {
+				go k.smartNICventHandler(event.Type, snic)
+			}
 		case <-k.ctx.Done():
 			k.stopWatchers()
 			return

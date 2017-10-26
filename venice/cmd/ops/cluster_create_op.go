@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"path"
-
-	"github.com/satori/go.uuid"
+	"time"
 
 	cmd "github.com/pensando/sw/api/generated/cmd"
+
+	"github.com/gogo/protobuf/types"
+	"github.com/satori/go.uuid"
+
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/utils"
@@ -95,6 +98,12 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 	if err != nil {
 		return nil, errors.NewInternalError(err)
 	}
+	ts, err := types.TimestampProto(time.Now())
+	if err != nil {
+		return nil, errors.NewInternalError(err)
+	}
+	o.cluster.CreationTime.Timestamp = *ts
+	o.cluster.ModTime.Timestamp = *ts
 
 	// Store Cluster and Node objects in kv store.
 	txn := env.KVStore.NewTxn()
@@ -121,6 +130,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 		sendDisjoins(nil, o.cluster.Spec.QuorumNodes)
 		return nil, errors.NewInternalError(err)
 	}
+	log.Debugf("Wrote cluster %#v to kvstore", o.cluster)
 
 	return o.cluster, nil
 }

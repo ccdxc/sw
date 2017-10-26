@@ -1,18 +1,23 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
 	k8sclient "k8s.io/client-go/kubernetes"
 	k8srest "k8s.io/client-go/rest"
 
-	"github.com/pensando/sw/venice/utils/log"
-
-	"github.com/pensando/sw/venice/cmd/env"
+	api "github.com/pensando/sw/api"
 	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
+
+	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/venice/cmd/env"
+	"github.com/pensando/sw/venice/cmd/ops"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // Services that run on node that wins the Leader election.
@@ -28,18 +33,26 @@ var (
 
 type masterService struct {
 	sync.Mutex
-	sysSvc      types.SystemdService
-	leaderSvc   types.LeaderService
-	k8sSvc      types.K8sService
-	resolverSvc types.ResolverService
-	isLeader    bool
-	enabled     bool
-	virtualIP   string // virtualIP for services which can listed on only one VIP
-	configs     configs.Interface
+	sysSvc        types.SystemdService
+	leaderSvc     types.LeaderService
+	k8sSvc        types.K8sService
+	resolverSvc   types.ResolverService
+	cfgWatcherSvc types.CfgWatcherService
+	isLeader      bool
+	enabled       bool
+	virtualIP     string // virtualIP for services which can listed on only one VIP
+	configs       configs.Interface
 }
 
 // MasterOption fills the optional params
 type MasterOption func(service *masterService)
+
+// WithCfgWatcherMasterOption to pass a specifc types.CfgWatcherService implementation
+func WithCfgWatcherMasterOption(cfgWatcher types.CfgWatcherService) MasterOption {
+	return func(o *masterService) {
+		o.cfgWatcherSvc = cfgWatcher
+	}
+}
 
 // WithConfigsMasterOption to pass a specifc types.SystemdService implementation
 func WithConfigsMasterOption(configs configs.Interface) MasterOption {
@@ -79,10 +92,11 @@ func WithResolverSvcMasterOption(resolverSvc types.ResolverService) MasterOption
 // NewMasterService returns a Master Service
 func NewMasterService(virtualIP string, options ...MasterOption) types.MasterService {
 	m := masterService{
-		leaderSvc: env.LeaderService,
-		sysSvc:    env.SystemdService,
-		virtualIP: virtualIP,
-		configs:   configs.New(),
+		leaderSvc:     env.LeaderService,
+		sysSvc:        env.SystemdService,
+		cfgWatcherSvc: env.CfgWatcherService,
+		virtualIP:     virtualIP,
+		configs:       configs.New(),
 	}
 	for _, o := range options {
 		if o != nil {
@@ -103,6 +117,9 @@ func NewMasterService(virtualIP string, options ...MasterOption) types.MasterSer
 	}
 	m.leaderSvc.Register(&m)
 	m.sysSvc.Register(&m)
+	m.cfgWatcherSvc.SetNodeEventHandler(m.handleNodeEvent)
+	m.cfgWatcherSvc.SetClusterEventHandler(m.handleClusterEvent)
+	m.cfgWatcherSvc.SetSmartNICEventHandler(m.handleSmartNICEvent)
 
 	return &m
 }
@@ -122,6 +139,7 @@ func (m *masterService) Start() error {
 	}
 	m.enabled = true
 	if m.isLeader {
+		m.updateLeaderInClusterStatus()
 		return m.startLeaderServices(m.virtualIP)
 	}
 	m.resolverSvc.Start()
@@ -173,6 +191,36 @@ func (m *masterService) AreLeaderServicesRunning() bool {
 	// TODO: Need systemd API for this
 	return true
 }
+func (m *masterService) updateLeaderInClusterStatus() {
+	if !m.isLeader {
+		// Only leader should write the status
+		return
+	}
+	ac := m.cfgWatcherSvc.APIClient()
+	if ac == nil {
+		log.Debugf("APIClient not ready yet")
+		return
+	}
+	cl := ac.Cluster()
+	if cl == nil {
+		log.Debugf("APIClient retured nil while creating Cluster client")
+		return
+	}
+	var options api.ListWatchOptions
+	hostname := m.leaderSvc.ID()
+	clList, err := cl.List(context.Background(), &options)
+	if err != nil {
+		log.Debugf("error %s getting Cluster from APIServer", err)
+		return
+	}
+	if len(clList) > 0 && clList[0].Status.Leader != hostname {
+		clList[0].Status.Leader = hostname
+		_, err = cl.Update(context.Background(), clList[0])
+		if err != nil {
+			log.Errorf("Cluster %#v update on Leadership win returned %#v", clList[0], err)
+		}
+	}
+}
 
 func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 	var err error
@@ -183,6 +231,7 @@ func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 		defer m.Unlock()
 		m.isLeader = true
 		if m.enabled {
+			m.updateLeaderInClusterStatus()
 			m.startLeaderServices(m.virtualIP)
 		}
 	case types.LeaderEventLost:
@@ -215,4 +264,59 @@ func (m *masterService) OnNotifySystemdEvent(e types.SystemdEvent) error {
 
 	// TODO: Need leader election Restart APIs to handle failure
 	return nil
+}
+
+// handleNodeEvent handles Node update
+func (m *masterService) handleNodeEvent(et kvstore.WatchEventType, node *cmd.Node) {
+	if !m.isLeader {
+		return
+	}
+	switch et {
+	case kvstore.Created:
+		op := ops.NewNodeJoinOp(node)
+		_, err := ops.Run(op)
+		if err != nil {
+			log.Infof("Error %v while joining Node %v to cluster", err, node.Name)
+		}
+	case kvstore.Updated:
+	case kvstore.Deleted:
+		op := ops.NewNodeDisjoinOp(node)
+		_, err := ops.Run(op)
+		if err != nil {
+			log.Infof("Error %v while disjoin Node %v from cluster", err, node.Name)
+		}
+	}
+}
+
+// handleClusterEvent handles Cluster update
+func (m *masterService) handleClusterEvent(et kvstore.WatchEventType, cluster *cmd.Cluster) {
+	switch et {
+	case kvstore.Created:
+		if cluster.Status.Leader == "" {
+			m.updateLeaderInClusterStatus()
+		}
+		return
+	case kvstore.Updated:
+		// TODO: process updates to ApprovedNIC list
+		// Walk the ApprovedList to admit the NICs and remove them from
+		// pendingNIC statusupdateLeaderInClusterStatus
+		if cluster.Status.Leader == "" {
+			m.updateLeaderInClusterStatus()
+		}
+		return
+	case kvstore.Deleted:
+		return
+	}
+}
+
+// handleSmartNIC handles SmartNIC updates
+func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, node *cmd.SmartNIC) {
+	switch et {
+	case kvstore.Created:
+		return
+	case kvstore.Updated:
+		return
+	case kvstore.Deleted:
+		return
+	}
 }

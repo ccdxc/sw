@@ -169,9 +169,9 @@ func StartQuorumServices(c utils.Cluster) {
 	env.VipService = services.NewVIPService()
 	env.K8sService = services.NewK8sService()
 	env.ResolverService = services.NewResolverService(env.K8sService)
+	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger)
 	env.MasterService = services.NewMasterService(c.VirtualIP, services.WithK8sSvcMasterOption(env.K8sService),
 		services.WithResolverSvcMasterOption(env.ResolverService))
-	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger)
 
 	env.SystemdService.Start() // must be called before dependent services
 	env.VipService.AddVirtualIPs(c.VirtualIP)

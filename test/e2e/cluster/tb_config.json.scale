@@ -2,8 +2,8 @@
     "ClusterVIP": "10.100.0.10",
     "NumVeniceNodes" : 3,
     "NumQuorumNodes" : 3,
-    "SSHUser":        "vagrant",
-    "SSHPasswd":      "vagrant",
+    "SSHUser":        "admin",
+    "SSHPasswd":      "noisystems",
     "SSHAuthMethod":  "password",
-    "FirstVeniceIP":  "10.100.0.11"
+    "FirstVeniceIP":  "10.100.0.3"
 }

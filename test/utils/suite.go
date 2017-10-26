@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -12,6 +14,9 @@ import (
 	"github.com/onsi/ginkgo"
 	"golang.org/x/crypto/ssh"
 
+	"github.com/pensando/sw/api"
+
+	cmdclient "github.com/pensando/sw/api/generated/cmd/grpc/client"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -25,6 +30,7 @@ type TestBedConfig struct {
 	SSHUser        string `json:",omitempty"`
 	SSHPasswd      string `json:",omitempty"`
 	SSHAuthMethod  string `json:",omitempty"` // Only password is implemented now. Cert will come later.
+	FirstVeniceIP  string `json:",omitempty"`
 }
 
 var defaultTestBedConfig = TestBedConfig{
@@ -34,6 +40,7 @@ var defaultTestBedConfig = TestBedConfig{
 	SSHUser:        "vagrant",
 	SSHPasswd:      "vagrant",
 	SSHAuthMethod:  "password",
+	FirstVeniceIP:  "192.168.30.11",
 }
 
 // TestUtils holds test config, state and any helper caches .
@@ -107,15 +114,14 @@ func (tu *TestUtils) Init() {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	// TODO: Get this from Cluster Object instead of creating it locally
-	for i := 0; i < tu.NumQuorumNodes; i++ {
-		tu.QuorumNodes = append(tu.QuorumNodes, "node"+strconv.Itoa(1+i))
+	ip := net.ParseIP(tu.FirstVeniceIP).To4()
+	if ip == nil {
+		ginkgo.Fail(fmt.Sprintf("invalid value %s for FirstVeniceIP", tu.FirstVeniceIP))
 	}
-	clusterIPPrefix := tu.ClusterVIP[0 : strings.LastIndex(tu.ClusterVIP, ".")+1]
 	for i := 0; i < tu.NumVeniceNodes; i++ {
-		tu.VeniceNodeIPs = append(tu.VeniceNodeIPs, clusterIPPrefix+strconv.Itoa(11+i))
+		tu.VeniceNodeIPs = append(tu.VeniceNodeIPs, ip.String())
+		ip[3]++
 	}
-	ginkgo.By(fmt.Sprintf("QuorumNodes: %+v ", tu.QuorumNodes))
 	ginkgo.By(fmt.Sprintf("VeniceNodeIPs: %+v ", tu.VeniceNodeIPs))
 
 	for _, ip := range tu.VeniceNodeIPs {
@@ -159,6 +165,20 @@ func (tu *TestUtils) Init() {
 	if tu.resolver == nil {
 		ginkgo.Fail(fmt.Sprintf("resolver is nil"))
 	}
+
+	apiGwAddr := tu.ClusterVIP + ":" + globals.APIGwRESTPort
+	cmdClient := cmdclient.NewRestCrudClientCmdV1(apiGwAddr)
+	clusterIf := cmdClient.Cluster()
+	obj := api.ObjectMeta{Name: "testCluster"}
+	cl, err := clusterIf.Get(context.Background(), &obj)
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("cluster Get err : %s", err))
+	}
+	for _, qn := range cl.Spec.QuorumNodes {
+		tu.QuorumNodes = append(tu.QuorumNodes, qn)
+		//tu.QuorumNodes = append(tu.QuorumNodes, "node"+strconv.Itoa(1+i))
+	}
+	ginkgo.By(fmt.Sprintf("QuorumNodes: %+v ", tu.QuorumNodes))
 
 }
 

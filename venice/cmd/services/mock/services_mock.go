@@ -1,6 +1,8 @@
 package mock
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -8,7 +10,10 @@ import (
 	k8sclient "k8s.io/client-go/kubernetes"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cmd"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/systemd"
 )
 
@@ -82,6 +87,7 @@ type LeaderService struct {
 	id        string
 	observers []types.LeadershipObserver
 	LeaderID  string
+	started   bool
 }
 
 // NewLeaderService creates a mock leader Service
@@ -90,10 +96,16 @@ func NewLeaderService(id string) *LeaderService {
 		id: id,
 	}
 }
+func (l *LeaderService) ID() string {
+	return l.id
+}
 
 // Start starts leader election on quorum nodes.
 func (l *LeaderService) Start() error {
-	l.BecomeLeader()
+	if l.started == false {
+		l.BecomeLeader()
+	}
+	l.started = true
 	return nil
 }
 
@@ -503,3 +515,97 @@ func (m *ResolverService) DeleteServiceInstance(si *types.ServiceInstance) error
 	}
 	return nil
 }
+
+// Cluster mocks Dummy cluster
+type Cluster struct {
+	DummyCluster cmd.Cluster
+}
+
+// Create mocks cluster Create
+func (c *Cluster) Create(ctx context.Context, in *cmd.Cluster) (*cmd.Cluster, error) {
+	c.DummyCluster = *in
+	return &c.DummyCluster, nil
+}
+
+// Update mocks cluster Update
+func (c *Cluster) Update(ctx context.Context, in *cmd.Cluster) (*cmd.Cluster, error) {
+	c.DummyCluster = *in
+	return &c.DummyCluster, nil
+}
+
+// Get mocks cluster Get
+func (c *Cluster) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cmd.Cluster, error) {
+	if objMeta.Name == c.DummyCluster.Name && objMeta.Tenant == c.DummyCluster.Tenant {
+		return &c.DummyCluster, nil
+	}
+	return nil, nil
+}
+
+// Delete mocks cluster Delete
+func (c *Cluster) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cmd.Cluster, error) {
+	return nil, errors.New("not implemented")
+}
+
+// List mocks cluster List
+func (c *Cluster) List(ctx context.Context, options *api.ListWatchOptions) ([]*cmd.Cluster, error) {
+	rv := make([]*cmd.Cluster, 1)
+	rv[0] = &c.DummyCluster
+	return rv, nil
+}
+
+// Watch mocks cluster Watch - not implemented till we need this
+func (c *Cluster) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("not implemented")
+}
+
+// Allowed mocks cluster Allowed
+func (c *Cluster) Allowed(oper apiserver.APIOperType) bool {
+	return false
+}
+
+// APIClient mocks APIClient interface
+type APIClient struct {
+	DummyCluster Cluster
+}
+
+// Cluster returns mock ClusterInterface
+func (ma *APIClient) Cluster() cmd.ClusterInterface {
+	return &ma.DummyCluster
+}
+
+// Node return mock NodeInterface - nil till we need this functionality
+func (ma *APIClient) Node() cmd.NodeInterface {
+	return nil
+}
+
+// SmartNIC returns mock SmartNICInterface - nill till we need this functionality
+func (ma *APIClient) SmartNIC() cmd.SmartNICInterface {
+	return nil
+}
+
+// CfgWatcherService mocks CFGWatcher
+type CfgWatcherService struct {
+	DummyAPIClient APIClient
+	ClusterHandler types.ClusterEventHandler
+}
+
+// Start is a dummy Start
+func (c *CfgWatcherService) Start() {}
+
+// Stop is a dummy stop
+func (c *CfgWatcherService) Stop() {}
+
+// SetNodeEventHandler sets the handler to handle events related to Node object
+func (c *CfgWatcherService) SetNodeEventHandler(types.NodeEventHandler) {}
+
+// SetClusterEventHandler sets the handler to handle events related to Cluster object
+func (c *CfgWatcherService) SetClusterEventHandler(hdlr types.ClusterEventHandler) {
+	c.ClusterHandler = hdlr
+}
+
+// SetSmartNICEventHandler sets the handler to handle events related to SmartNIC object
+func (c *CfgWatcherService) SetSmartNICEventHandler(types.SmartNICventHandler) {}
+
+// APIClient returns a valid interface once the APIServer is good and
+// accepting requests
+func (c *CfgWatcherService) APIClient() cmd.CmdV1Interface { return &c.DummyAPIClient }
