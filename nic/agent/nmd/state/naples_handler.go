@@ -88,15 +88,15 @@ func (n *NMD) StartManagedMode() error {
 
 			// For the NIC in Naples Config, start the registration
 			mac := n.config.Spec.PrimaryMac
-			// TODO
-			// mac = n.nodeUUID
 
 			// Construct smartNIC object
 			nicObj := cmd.SmartNIC{
 				TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
 				ObjectMeta: api.ObjectMeta{Name: mac},
 				Spec:       cmd.SmartNICSpec{},
-				Status:     cmd.SmartNICStatus{},
+				Status: cmd.SmartNICStatus{
+					NodeName: n.config.Spec.NodeName,
+				},
 			}
 
 			// Send NIC register request to CMD

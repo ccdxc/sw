@@ -237,8 +237,25 @@ func TestRegisterSmartNIC(t *testing.T) {
 				}
 				AssertEventually(t, f1, fmt.Sprintf("Failed to verify presence of smartNIC object"))
 
-				// verify watch api is invoked
+				// verify Node object is created
 				f2 := func() (bool, []interface{}) {
+					ometa := api.ObjectMeta{Name: tc.nodeName}
+					nodeObj, err := tInfo.smartNICServer.GetNode(ometa)
+					if err != nil {
+						t.Errorf("Error getting Node object for node:%s", tc.nodeName)
+						return false, nil
+					}
+					if nodeObj.ObjectMeta.Name != tc.nodeName {
+						t.Errorf("Got incorrect Node object, expected: %s obtained: %s",
+							nodeObj.ObjectMeta.Name, tc.nodeName)
+						return false, nil
+					}
+					return true, nil
+				}
+				AssertEventually(t, f2, fmt.Sprintf("Failed to verify presence of Node object"))
+
+				// verify watch api is invoked
+				f3 := func() (bool, []interface{}) {
 					stream, err := smartNICRPCClient.WatchNICs(context.Background(), &ometa)
 					if err != nil {
 						t.Errorf("Error watching smartNIC, mac: %s, err: %v", tc.mac, err)
@@ -256,10 +273,10 @@ func TestRegisterSmartNIC(t *testing.T) {
 
 					return true, nil
 				}
-				AssertEventually(t, f2, fmt.Sprintf("Failed to verify watch for smartNIC event"))
+				AssertEventually(t, f3, fmt.Sprintf("Failed to verify watch for smartNIC event"))
 
 				// Verify UpdateNIC RPC
-				f3 := func() (bool, []interface{}) {
+				f4 := func() (bool, []interface{}) {
 					var phase string
 					if nic.ObjectMeta.Name == tc.approvedNIC {
 						phase = cmd.SmartNICSpec_ADMITTED.String()
@@ -302,10 +319,10 @@ func TestRegisterSmartNIC(t *testing.T) {
 
 					return true, nil
 				}
-				AssertEventually(t, f3, fmt.Sprintf("Failed to verify update for smartNIC"))
+				AssertEventually(t, f4, fmt.Sprintf("Failed to verify update for smartNIC"))
 
 				// Verify Node object has its status updated with list of registered NICs
-				f4 := func() (bool, []interface{}) {
+				f5 := func() (bool, []interface{}) {
 					ometa = api.ObjectMeta{Name: tc.nodeName}
 					nodeObj, err := tInfo.smartNICServer.GetNode(ometa)
 					if err != nil {
@@ -323,10 +340,10 @@ func TestRegisterSmartNIC(t *testing.T) {
 					}
 					return false, nil
 				}
-				AssertEventually(t, f4, fmt.Sprintf("Failed to verify that Node object is updated with registered nic"))
+				AssertEventually(t, f5, fmt.Sprintf("Failed to verify that Node object is updated with registered nic"))
 
 				// Verify Deletion of SmartNIC object
-				f5 := func() (bool, []interface{}) {
+				f6 := func() (bool, []interface{}) {
 					ometa = api.ObjectMeta{Name: tc.mac}
 					err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
 					if err != nil {
@@ -334,14 +351,14 @@ func TestRegisterSmartNIC(t *testing.T) {
 					}
 					return true, nil
 				}
-				AssertEventually(t, f5, fmt.Sprintf("Failed to verify deletion of smartNIC object"))
+				AssertEventually(t, f6, fmt.Sprintf("Failed to verify deletion of smartNIC object"))
 
 				if err != nil {
 					t.Fatalf("Error deleteing SmartNIC object mac:%s err: %v", tc.mac, err)
 				}
 
 				// Verify Deletion of Node object
-				f6 := func() (bool, []interface{}) {
+				f7 := func() (bool, []interface{}) {
 					ometa = api.ObjectMeta{Name: tc.nodeName}
 					err = tInfo.smartNICServer.DeleteNode(ometa)
 					if err != nil {
@@ -349,7 +366,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 					}
 					return true, nil
 				}
-				AssertEventually(t, f6, fmt.Sprintf("Failed to verify deletion of Node object"))
+				AssertEventually(t, f7, fmt.Sprintf("Failed to verify deletion of Node object"))
 
 			} else {
 

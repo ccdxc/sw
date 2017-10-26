@@ -48,6 +48,10 @@ message NaplesSpec {
     // PrimaryMac of the NIC adapter
     string PrimaryMac               = 3 [(gogoproto.nullable) = true,
                                         (gogoproto.jsontag) = "primaryMac,omitempty"];
+
+    // Name of the Host
+    string NodeName                 = 4 [(gogoproto.nullable) = true,
+                                        (gogoproto.jsontag) = "nodeName,omitempty"];
 }
 
 // NaplesStatus contains current status of a Naples I/O subsystem

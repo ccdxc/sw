@@ -378,6 +378,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 			Mode:           nmd.NaplesMode_MANAGED_MODE,
 			PrimaryMac:     nicKey1,
 			ClusterAddress: []string{"192.168.30.10:9200"},
+			NodeName:       "esx-001",
 		},
 	}
 
@@ -458,6 +459,7 @@ func TestNaplesManagedModeManualApproval(t *testing.T) {
 		Spec: nmd.NaplesSpec{
 			Mode:       nmd.NaplesMode_MANAGED_MODE,
 			PrimaryMac: nicKey2,
+			NodeName:   "esx-001",
 		},
 	}
 
@@ -525,6 +527,7 @@ func TestNaplesManagedModeInvalidNIC(t *testing.T) {
 		Spec: nmd.NaplesSpec{
 			Mode:       nmd.NaplesMode_MANAGED_MODE,
 			PrimaryMac: nicKey3,
+			NodeName:   "esx-001",
 		},
 	}
 
@@ -596,6 +599,7 @@ func TestNaplesRestartManagedMode(t *testing.T) {
 		Spec: nmd.NaplesSpec{
 			Mode:       nmd.NaplesMode_MANAGED_MODE,
 			PrimaryMac: nicKey1,
+			NodeName:   "esx-001",
 		},
 	}
 
