@@ -204,7 +204,6 @@ action flow_hit_from_vm_bounce(src_lif) {
     remove_header(ipv4);
     remove_header(udp);
     remove_header(vxlan_gpe);
-    add_header(capri_p4_intrinsic);
     add_header(recirc_header);
     modify_field(recirc_header.reason, RECIRC_VM_BOUNCE);
     modify_field(capri_intrinsic.lif, src_lif);
@@ -326,7 +325,6 @@ action flow_hash_overflow(lkp_inst, lkp_dir, lkp_type, lkp_vrf, lkp_src,
                           hash4, hint4, hash5, hint5, hash6, hint6,
                           more_hashs, more_hints) {
     // remove the recirc header
-    remove_header(capri_p4_intrinsic);
     remove_header(recirc_header);
 
     // check if the key matches the entry data

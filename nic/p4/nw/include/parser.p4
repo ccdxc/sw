@@ -57,15 +57,6 @@ header cap_phv_intr_txdma_t capri_txdma_intrinsic;
 
 header cap_phv_intr_p4_t    capri_p4_intrinsic;
 
-@pragma synthetic_header
-@pragma pa_field_union egress capri_rxdma_p4_intrisic.no_data       capri_p4_intrinsic.no_data
-@pragma pa_field_union egress capri_rxdma_p4_intrisic.recirc        capri_p4_intrinsic.recirc
-@pragma pa_field_union egress capri_rxdma_p4_intrisic.frame_size    capri_p4_intrinsic.frame_size
-@pragma pa_field_union egress capri_rxdma_p4_intrisic.packet_len    capri_p4_intrinsic.packet_len
-@pragma pa_field_union egress capri_rxdma_p4_intrisic.recirc_count  capri_p4_intrinsic.recirc_count
-@pragma pa_field_union egress capri_rxdma_p4_intrisic.p4_pad        capri_p4_intrinsic.p4_pad
-header cap_phv_intr_p4_t  capri_rxdma_p4_intrinsic;
-
 @pragma pa_header_union egress p4_to_p4plus_roce_eth
 header ethernet_t ethernet;
 header recirc_header_t recirc_header;
@@ -260,6 +251,7 @@ parser parse_i2e_metadata1 {
 }
 @pragma xgress egress
 parser parse_i2e_metadata {
+    extract(capri_p4_intrinsic);
     extract(capri_i2e_metadata);
     return select(capri_intrinsic.tm_instance_type) {
         TM_INSTANCE_TYPE_SPAN : parse_span_copy;
@@ -281,9 +273,10 @@ parser parse_ethernet_span_copy {
     return ingress;
 }
 
+@pragma xgress egress
 @pragma deparse_only
 parser deparse_rxdma {
-    extract(capri_rxdma_p4_intrinsic);
+    extract(capri_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
     extract(p4_to_p4plus_cpu);
     extract(p4_to_p4plus_cpu_ip);

@@ -20,9 +20,9 @@
 #include "nic/hal/pd/capri/capri_tm_rw.hpp"
 
 #ifndef HAL_GTEST
-#include <cap_blk_reg_model.h>
-#include <cap_top_csr.h>
-#include <cap_pbc_csr.h>
+#include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
+#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "nic/asic/capri/model/cap_pb/cap_pbc_csr.h"
 #endif
 
 //:: from collections import OrderedDict
@@ -307,6 +307,30 @@ capri_tm_uplink_lif_set(uint32_t port,
 
     HAL_TRACE_DEBUG("CAPRI-TM::{}: Set the lif {} on port {}",
                     __func__, lif, port);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+capri_tm_init(void)
+{
+#ifndef HAL_GTEST
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+    // ${pinfo["enum"]}
+    pbc_csr.cfg_oq_${p}.num_hdr_bytes(
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+    pbc_csr.cfg_oq_${p}.write();
+
+//::    #endif
+//:: #endfor
+#endif
+    HAL_TRACE_DEBUG("CAPRI-TM::{}: Init completed",
+                    __func__);
 
     return HAL_RET_OK;
 }

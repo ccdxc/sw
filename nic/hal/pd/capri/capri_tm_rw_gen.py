@@ -2,6 +2,7 @@
 #
 # Capri Debug Shell (debug_shell.py)
 # Ajeer Pudiyapura (Pensando Systems)
+# Run it as PYTHONPATH=../../../tools/ncc/ python capri_tm_rw_gen.py
 
 import os
 import re

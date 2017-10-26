@@ -43,7 +43,7 @@ table ingress_policer {
     size : INGRESS_POLICER_TABLE_SIZE;
 }
 
-action ingress_policer_action(cos_en, cos, dscp_en, dscp,
+action ingress_policer_action(marking_overwrite, cos_en, cos, dscp_en, dscp,
                               permitted_packets, permitted_bytes,
                               denied_packets, denied_bytes) {
     if (control_metadata.drop_reason == DROP_INGRESS_POLICER) {
@@ -54,10 +54,13 @@ action ingress_policer_action(cos_en, cos, dscp_en, dscp,
         add(scratch_metadata.policer_packets, permitted_packets, 1);
         add(scratch_metadata.policer_bytes, permitted_bytes,
             control_metadata.packet_len);
-        modify_field(qos_metadata.cos_en, cos_en);
-        modify_field(qos_metadata.dscp_en, dscp_en);
-        modify_field(qos_metadata.cos, cos);
-        modify_field(qos_metadata.dscp, dscp);
+        modify_field(scratch_metadata.marking_overwrite, marking_overwrite);
+        if (marking_overwrite == TRUE) {
+            modify_field(qos_metadata.cos_en, cos_en);
+            modify_field(qos_metadata.dscp_en, dscp_en);
+            modify_field(qos_metadata.cos, cos);
+            modify_field(qos_metadata.dscp, dscp);
+        }
     }
 }
 

@@ -3413,6 +3413,65 @@ capri_tm_uplink_lif_set(uint32_t port,
     return HAL_RET_OK;
 }
 
+hal_ret_t 
+capri_tm_init(void)
+{
+#ifndef HAL_GTEST
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    // TM_PORT_UPLINK_0
+    pbc_csr.cfg_oq_0.num_hdr_bytes(
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+    pbc_csr.cfg_oq_0.write();
+
+    // TM_PORT_UPLINK_1
+    pbc_csr.cfg_oq_1.num_hdr_bytes(
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+    pbc_csr.cfg_oq_1.write();
+
+    // TM_PORT_UPLINK_2
+    pbc_csr.cfg_oq_2.num_hdr_bytes(
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+    pbc_csr.cfg_oq_2.write();
+
+    // TM_PORT_UPLINK_3
+    pbc_csr.cfg_oq_3.num_hdr_bytes(
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+    pbc_csr.cfg_oq_3.write();
+
+    // TM_PORT_UPLINK_4
+    pbc_csr.cfg_oq_4.num_hdr_bytes(
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+    pbc_csr.cfg_oq_4.write();
+
+    // TM_PORT_UPLINK_5
+    pbc_csr.cfg_oq_5.num_hdr_bytes(
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+    pbc_csr.cfg_oq_5.write();
+
+    // TM_PORT_UPLINK_6
+    pbc_csr.cfg_oq_6.num_hdr_bytes(
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+    pbc_csr.cfg_oq_6.write();
+
+    // TM_PORT_UPLINK_7
+    pbc_csr.cfg_oq_7.num_hdr_bytes(
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+    pbc_csr.cfg_oq_7.write();
+
+    // TM_PORT_NCSI
+    pbc_csr.cfg_oq_8.num_hdr_bytes(
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+    pbc_csr.cfg_oq_8.write();
+
+#endif
+    HAL_TRACE_DEBUG("CAPRI-TM::{}: Init completed",
+                    __func__);
+
+    return HAL_RET_OK;
+}
+
 /* Programs the base address in HBM for the replication table */
 hal_ret_t
 capri_tm_repl_table_base_addr_set(uint32_t addr)

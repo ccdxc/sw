@@ -117,6 +117,7 @@ header_type scratch_metadata_t {
         egress_mirror_en           : 1;
         rewrite_en                 : 1;
         tunnel_rewrite_en          : 1;
+        marking_overwrite          : 1;
         dst_lport_en               : 1;
         egress_policer_en          : 1;
         entry_valid                : 1;

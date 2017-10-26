@@ -11,7 +11,6 @@ action decode_roce_opcode(raw_flags, len, qtype) {
         modify_field(p4_to_p4plus_roce.payload_len, (udp.len - 8 - len));
 
         add_header(capri_rxdma_intrinsic);
-        add_header(capri_rxdma_p4_intrinsic);
         modify_field(capri_rxdma_intrinsic.qid, roce_bth.destQP);
         modify_field(capri_rxdma_intrinsic.qtype, qtype);
         add(capri_rxdma_intrinsic.rx_splitter_offset, len,

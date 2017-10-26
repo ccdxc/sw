@@ -4,6 +4,7 @@
 #include "nic/hal/pd/capri/capri_config.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "nic/hal/pd/capri/capri_tm_rw.hpp"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
@@ -36,6 +37,10 @@ capri_init (capri_cfg_t *cfg = NULL)
         return HAL_RET_ERR;
     }
  
+    if (ret == HAL_RET_OK) {
+        ret = capri_tm_init();
+    }
+
     if (ret == HAL_RET_OK) {
         ret = capri_repl_init();
     }

@@ -28,7 +28,6 @@ p4plus_app_classic_nic:
 p4plus_app_classic_nic_no_vlan_strip:
   phvwr       p.p4_to_p4plus_classic_nic_packet_len, r7
   phvwr       p.p4_to_p4plus_classic_nic_valid, TRUE
-  phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.p4_to_p4plus_classic_nic_p4plus_app_id, k.control_metadata_p4plus_app_id
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
@@ -62,7 +61,6 @@ p4plus_app_tcp_proxy:
   indexn      r2, r1, [0xF, 0x7, 0x3, 0x1, 0x0], 0
   phvwr       p.p4_to_p4plus_tcp_proxy_num_sack_blocks, r2
 
-  phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
               (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
@@ -108,7 +106,6 @@ p4plus_app_cpu_common:
   bal         r7, f_p4plus_cpu_pkt
   phvwr       p.p4_to_p4plus_cpu_valid, TRUE
   phvwr       p.p4_to_p4plus_cpu_ip_valid, TRUE
-  phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
               (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
@@ -121,7 +118,6 @@ p4plus_app_ipsec:
   phvwr       p.p4_to_p4plus_ipsec_valid, TRUE
   phvwr       p.p4_to_p4plus_ipsec_p4plus_app_id, k.control_metadata_p4plus_app_id
   phvwr       p.p4_to_p4plus_ipsec_seq_no, k.ipsec_metadata_seq_no
-  phvwr       p.capri_rxdma_p4_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
               (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \

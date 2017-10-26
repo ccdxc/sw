@@ -29,14 +29,12 @@ flow_hash_info:
   bcf         [c1&c2], flow_hash_hint6
   seq         c1, d.flow_hash_info_d.more_hashs, 1
   bcf         [c1&c2], flow_hash_more_hashs
-  phvwr       p.capri_p4_intrinsic_valid, 0
   phvwr       p.recirc_header_valid, 0
   phvwr       p.control_metadata_flow_miss, 1
   phvwr.e     p.control_metadata_flow_miss_ingress, 1
   phvwr       p.flow_info_metadata_flow_index, 0
 
 flow_hash_hit:
-  phvwr       p.capri_p4_intrinsic_valid, 0
   phvwr       p.recirc_header_valid, 0
   phvwr.e     p.flow_info_metadata_flow_index, d.flow_hash_info_d.flow_index
   phvwr       p.rewrite_metadata_entropy_hash, r1
@@ -72,7 +70,7 @@ flow_hash_more_hashs:
 flow_hash_recirc:
   phvwr       p.control_metadata_ingress_bypass, 1
   phvwr       p.capri_i2e_metadata_valid, 0
-  phvwr       p.capri_p4_intrinsic_valid, 1 
+  phvwr       p.capri_p4_intrinsic_valid, TRUE 
   phvwr       p.recirc_header_valid, 1
   phvwr       p.recirc_header_reason, RECIRC_FLOW_HASH_OVERFLOW
   ori         r2, r2, 0x80000000

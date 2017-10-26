@@ -9,19 +9,17 @@ struct phv_                     p;
 
 %%
 
-nop:
-  nop.e
-  nop
-
-.align
 ingress_policer_action:
+  seq         c1, k.policer_metadata_ingress_policer_index, 0
+  nop.c1.e
   seq         c1, k.control_metadata_drop_reason[DROP_INGRESS_POLICER], 1
   bcf         [c1], ingress_policer_deny
   add         r7, d.ingress_policer_action_d.permitted_packets, 1
-  phvwr       p.qos_metadata_cos_en, d.ingress_policer_action_d.cos_en
-  phvwr       p.qos_metadata_cos, d.ingress_policer_action_d.cos
-  phvwr       p.qos_metadata_dscp_en, d.ingress_policer_action_d.dscp_en
-  phvwr       p.qos_metadata_dscp, d.ingress_policer_action_d.dscp
+  seq         c1, d.ingress_policer_action_d.marking_overwrite, TRUE 
+  phvwr.c1    p.qos_metadata_cos_en, d.ingress_policer_action_d.cos_en
+  phvwr.c1    p.qos_metadata_cos, d.ingress_policer_action_d.cos
+  phvwr.c1    p.qos_metadata_dscp_en, d.ingress_policer_action_d.dscp_en
+  phvwr.c1    p.qos_metadata_dscp, d.ingress_policer_action_d.dscp
   bgti        r7, 0xF, ingress_policer_permitted_stats_overflow
   tblwr       d.ingress_policer_action_d.permitted_packets, r6[3:0]
   tbladd.e    d.ingress_policer_action_d.permitted_bytes, k.control_metadata_packet_len

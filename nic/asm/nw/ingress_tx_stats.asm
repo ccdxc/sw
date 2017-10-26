@@ -1,6 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "../../include/capri_common.h"
+#include "../../p4/nw/include/defines.h"
 
 struct ingress_tx_stats_k k;
 struct ingress_tx_stats_d d;
@@ -9,6 +10,7 @@ struct phv_               p;
 %%
 
 ingress_tx_stats:
+  phvwr       p.capri_p4_intrinsic_valid, TRUE
   seq         c2, k.capri_intrinsic_drop, 0
   nop.c2.e
   add         r7, d.ingress_tx_stats_d.tx_ingress_drops, k.capri_intrinsic_drop
