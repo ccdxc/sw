@@ -73,6 +73,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_ARQRX_QIDXR        "arqrx-qidxr"
 #define CAPRI_HBM_REG_TXS_SCHEDULER      "tx-scheduler"
 #define CAPRI_HBM_REG_APP_REDIR_RAWC     "app-redir-rawc"
+#define CAPRI_HBM_REG_APP_REDIR_PROXYR   "app-redir-proxyr"
+#define CAPRI_HBM_REG_APP_REDIR_PROXYC   "app-redir-proxyc"
 #define CAPRI_NUM_SEMAPHORES            512
 
 #define PAGE_SCRATCH_SIZE               512

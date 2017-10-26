@@ -71,8 +71,7 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd, bool del)
     wring_hw_id_t                               arq_base;
 
     // hardware index for this entry
-    rawrcb_hw_id_t hwid = rawrcb_pd->hw_id + 
-        (P4PD_RAWRCB_STAGE_ENTRY_OFFSET * P4PD_HWID_RAWR_RX_STAGE0);
+    rawrcb_hw_id_t hwid = rawrcb_pd->hw_id;
 
     if(!del) {
         // get pc address
@@ -102,12 +101,17 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd, bool del)
                 HAL_TRACE_DEBUG("RAWRCB {} arq_base: {:#x}",
                                 rawrcb->cb_id, arq_base);
                 data.u.rawr_rx_start_d.chain_rxq_base = arq_base;
-                data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr = get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
-                data.u.rawr_rx_start_d.chain_rxq_ring_size_shift = log2(pd_wring_meta->num_slots);
-                data.u.rawr_rx_start_d.chain_rxq_entry_size_shift = log2(pd_wring_meta->slot_size_in_bytes);
+                data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr =
+                                       get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
+                data.u.rawr_rx_start_d.chain_rxq_ring_size_shift =
+                                       log2(pd_wring_meta->num_slots);
+                data.u.rawr_rx_start_d.chain_rxq_entry_size_shift =
+                                       log2(pd_wring_meta->slot_size_in_bytes);
                 data.u.rawr_rx_start_d.chain_rxq_ring_index_select = 0;
-                HAL_TRACE_DEBUG("RAWRCB chain_rxq_ring_indices_addr: {:#x} chain_rxq_ring_size_shift: {} "
-                                "chain_rxq_entry_size_shift: {} chain_rxq_ring_index_select: {}",
+                HAL_TRACE_DEBUG("RAWRCB chain_rxq_ring_indices_addr: {:#x} "
+                                "chain_rxq_ring_size_shift: {} "
+                                "chain_rxq_entry_size_shift: {} "
+                                "chain_rxq_ring_index_select: {}",
                                 data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr,
                                 data.u.rawr_rx_start_d.chain_rxq_ring_size_shift,
                                 data.u.rawr_rx_start_d.chain_rxq_entry_size_shift,
@@ -117,6 +121,8 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd, bool del)
             }
         }
 
+        data.u.rawr_rx_start_d.redir_pipeline_lpbk_enable = 
+                               rawrcb->redir_pipeline_lpbk_enable;
         data.u.rawr_rx_start_d.desc_valid_bit_req = TRUE;
         if (rawrcb->desc_valid_bit_upd) {
             data.u.rawr_rx_start_d.desc_valid_bit_req = rawrcb->desc_valid_bit_req;
@@ -153,8 +159,7 @@ p4pd_get_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd)
     rawrcb_t                                *rawrcb;
 
     // hardware index for this entry
-    rawrcb_hw_id_t hwid = rawrcb_pd->hw_id + 
-        (P4PD_RAWRCB_STAGE_ENTRY_OFFSET * P4PD_HWID_RAWR_RX_STAGE0);
+    rawrcb_hw_id_t hwid = rawrcb_pd->hw_id;
 
     if(!p4plus_hbm_read(hwid,  (uint8_t *)&data, sizeof(data))){
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for RAWRCB");
@@ -179,6 +184,7 @@ p4pd_get_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd)
 
     rawrcb->desc_valid_bit_upd = FALSE;
     rawrcb->desc_valid_bit_req = data.u.rawr_rx_start_d.desc_valid_bit_req;
+    rawrcb->redir_pipeline_lpbk_enable = data.u.rawr_rx_start_d.redir_pipeline_lpbk_enable;
 
     return HAL_RET_OK;
 }
@@ -199,23 +205,6 @@ cleanup:
     return ret;
 }
 
-/********************************************
- * TxDMA
- * ******************************************/
-
-hal_ret_t 
-p4pd_add_or_del_rawrcb_txdma_entry(pd_rawrcb_t* rawrcb_pd, bool del)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t 
-p4pd_get_rawrcb_txdma_entry(pd_rawrcb_t* rawrcb_pd)
-{
-    /* TODO */
-    return HAL_RET_OK;
-}
-
 /**************************/
 
 rawrcb_hw_id_t
@@ -226,7 +215,8 @@ pd_rawrcb_get_base_hw_index(pd_rawrcb_t* rawrcb_pd)
     
     // Get the base address of RAWR CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset. 
-    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR, APP_REDIR_RAWR_QTYPE, 0);
+    uint64_t offset = g_lif_manager->GetLIFQStateAddr(SERVICE_LIF_APP_REDIR,
+                                                      APP_REDIR_RAWR_QTYPE, 0);
     HAL_TRACE_DEBUG("RAWRCB received offset 0x{0:x}", offset);
     return offset + \
         (rawrcb_pd->rawrcb->cb_id * P4PD_HBM_RAWR_CB_ENTRY_SIZE);
@@ -241,12 +231,6 @@ p4pd_add_or_del_rawrcb_entry(pd_rawrcb_t* rawrcb_pd, bool del)
     if(ret != HAL_RET_OK) {
         goto err;    
     }
-   
-    ret = p4pd_add_or_del_rawrcb_txdma_entry(rawrcb_pd, del);
-    if(ret != HAL_RET_OK) {
-        goto err;    
-    }
-
 err:
     return ret;
 }
@@ -263,12 +247,6 @@ p4pd_get_rawrcb_entry(pd_rawrcb_t* rawrcb_pd)
         goto err;    
     }
    
-    ret = p4pd_get_rawrcb_txdma_entry(rawrcb_pd);
-    if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to get txdma entry for rawrcb");
-        goto err;    
-    }
-
 err:
     /*TODO: cleanup */
     return ret;

@@ -83,6 +83,12 @@ wring_pd_meta_init() {
     g_meta[types::WRING_TYPE_APP_REDIR_RAWC] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_RAWC, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
 
+    g_meta[types::WRING_TYPE_APP_REDIR_PROXYR] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_PROXYR, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
+
+    g_meta[types::WRING_TYPE_APP_REDIR_PROXYC] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_PROXYC, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0};
+
     g_meta[types::WRING_TYPE_ASESQ] = 
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASESQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL};
     return HAL_RET_OK;

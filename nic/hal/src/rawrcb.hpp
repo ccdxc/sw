@@ -28,11 +28,6 @@ using rawrcb::RawrCbGetResponseMsg;
 namespace hal {
 
 
-enum {
-    RAWR_REDIR_QTYPE        = 0,
-    RAWR_CHAIN_QTYPE,
-};
-
 typedef uint32_t          rawrcb_id_t;
 
 typedef struct rawrcb_s {
@@ -63,6 +58,7 @@ typedef struct rawrcb_s {
 
     uint8_t               desc_valid_bit_upd;       // descriptor valid bit update
     uint8_t               desc_valid_bit_req;       // descriptor valid bit required
+    uint8_t               redir_pipeline_lpbk_enable; // redir pipeline loopback indicator
 
     hal_handle_t          hal_handle;               // HAL allocated handle
 

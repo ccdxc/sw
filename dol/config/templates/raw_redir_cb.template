@@ -30,4 +30,5 @@ chain_txq_qid                   : 0
 chain_txq_doorbell_no_sched     : 0
 desc_valid_bit_upd              : 0
 desc_valid_bit_req              : 0
+redir_pipeline_lpbk_enable      : 0
 

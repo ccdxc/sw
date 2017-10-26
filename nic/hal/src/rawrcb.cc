@@ -129,6 +129,7 @@ rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
 
     rawrcb->desc_valid_bit_upd = spec.desc_valid_bit_upd();
     rawrcb->desc_valid_bit_req = spec.desc_valid_bit_req();
+    rawrcb->redir_pipeline_lpbk_enable = spec.redir_pipeline_lpbk_enable();
 
     rawrcb->hal_handle = hal_alloc_handle();
 
@@ -193,6 +194,7 @@ rawrcb_update (RawrCbSpec& spec, RawrCbResponse *rsp)
 
     rawrcb->desc_valid_bit_upd = spec.desc_valid_bit_upd();
     rawrcb->desc_valid_bit_req = spec.desc_valid_bit_req();
+    rawrcb->redir_pipeline_lpbk_enable = spec.redir_pipeline_lpbk_enable();
 
     pd::pd_rawrcb_args_init(&pd_rawrcb_args);
     pd_rawrcb_args.rawrcb = rawrcb;
@@ -262,6 +264,7 @@ rawrcb_get (RawrCbGetRequest& req, RawrCbGetResponse *rsp)
 
     rsp->mutable_spec()->set_desc_valid_bit_upd(rrawrcb.desc_valid_bit_upd);
     rsp->mutable_spec()->set_desc_valid_bit_req(rrawrcb.desc_valid_bit_req);
+    rsp->mutable_spec()->set_redir_pipeline_lpbk_enable(rrawrcb.redir_pipeline_lpbk_enable);
 
     // fill operational state of this RAWR CB
     rsp->mutable_status()->set_rawrcb_handle(rawrcb->hal_handle);

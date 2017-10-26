@@ -61,6 +61,7 @@ class RawrCbObject(base.ConfigObjectBase):
 
            req_spec.desc_valid_bit_upd           = self.desc_valid_bit_upd
            req_spec.desc_valid_bit_req           = self.desc_valid_bit_req
+           req_spec.redir_pipeline_lpbk_enable   = self.redir_pipeline_lpbk_enable
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -86,6 +87,7 @@ class RawrCbObject(base.ConfigObjectBase):
 
             self.desc_valid_bit_upd           = resp_spec.spec.desc_valid_bit_upd
             self.desc_valid_bit_req           = resp_spec.spec.desc_valid_bit_req
+            self.redir_pipeline_lpbk_enable   = resp_spec.spec.redir_pipeline_lpbk_enable
 
         return
 
