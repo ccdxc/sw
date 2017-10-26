@@ -12,8 +12,8 @@ hal::pd::cpupkt_ctxt_t* app_chain_ctx = NULL;
 static inline hal_ret_t
 app_redir_init(fte::ctx_t& ctx)
 {
-    const fte::app_redir_ctx_t& redir_ctx = ctx.app_redir();
-    hal_ret_t                   ret = HAL_RET_OK;
+    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    hal_ret_t               ret = HAL_RET_OK;
 
     redir_ctx.init();
     if (app_chain_ctx == NULL)   {
@@ -32,7 +32,7 @@ app_redir_init(fte::ctx_t& ctx)
 hal_ret_t
 app_redir_pkt_send(fte::ctx_t& ctx)
 {
-    const fte::app_redir_ctx_t&     redir_ctx = ctx.app_redir();
+    fte::app_redir_ctx_t&           redir_ctx = ctx.app_redir();
     uint8_t                         *pkt;
     const fte::cpu_rxhdr_t          *cpu_rxhdr;
     size_t                          pkt_len;
@@ -89,14 +89,14 @@ app_redir_pkt_send(fte::ctx_t& ctx)
 static inline hal_ret_t
 app_redir_app_hdr_validate(fte::ctx_t& ctx)
 {
-    const fte::app_redir_ctx_t&         redir_ctx = ctx.app_redir();
-    pen_app_redir_header_v1_full_t      *app_hdr;
-    const fte::cpu_rxhdr_t              *cpu_rxhdr;
-    size_t                              pkt_len;
-    size_t                              hdr_len;
-    uint16_t                            h_proto;
-    uint16_t                            flags = 0;
-    hal_ret_t                           ret = HAL_RET_OK;
+    fte::app_redir_ctx_t&           redir_ctx = ctx.app_redir();
+    pen_app_redir_header_v1_full_t  *app_hdr;
+    const fte::cpu_rxhdr_t          *cpu_rxhdr;
+    size_t                          pkt_len;
+    size_t                          hdr_len;
+    uint16_t                        h_proto;
+    uint16_t                        flags = 0;
+    hal_ret_t                       ret = HAL_RET_OK;
 
     pkt_len = ctx.pkt_len();
     if (pkt_len < (PEN_APP_REDIR_HEADER_SIZE +
@@ -142,10 +142,9 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
         break;
 
     case PEN_PROXY_REDIR_V1_FORMAT:
-        redir_ctx.flags = ntohs(app_hdr->proxy.flags);
+        flags = ntohs(app_hdr->proxy.flags);
         HAL_TRACE_DEBUG("{} flow_id {:#x} flags {:#x} vrf {}", __FUNCTION__,
-                        ntohl(app_hdr->proxy.flow_id), redir_ctx.flags,
-                        app_hdr->proxy.vrf);
+                        ntohl(app_hdr->proxy.flow_id), flags, app_hdr->proxy.vrf);
         if (hdr_len != (PEN_APP_REDIR_VERSION_HEADER_SIZE +
                         PEN_PROXY_REDIR_HEADER_V1_SIZE)) {
             HAL_TRACE_ERR("{} format {} invalid hdr_len {}", __FUNCTION__,
@@ -178,8 +177,8 @@ done:
 static inline hal_ret_t
 app_redir_pkt_fwd(fte::ctx_t& ctx)
 {
-    const fte::app_redir_ctx_t& redir_ctx = ctx.app_redir();
-    hal_ret_t                   ret;
+    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    hal_ret_t               ret;
 
     ret = app_redir_app_hdr_validate(ctx);
     if (ret == HAL_RET_OK) {
@@ -191,7 +190,7 @@ app_redir_pkt_fwd(fte::ctx_t& ctx)
              * DOL has sent the packet so don't let the remainder
              * of the pipeline send it again.
              */
-            redir_ctx.set_chain_pkt_sent(TRUE);
+            redir_ctx.set_chain_pkt_sent(true);
         }
     }
 

@@ -299,7 +299,7 @@ public:
     uint16_t hdr_len_total() const { return hdr_len_total_; }
     void set_hdr_len_total(uint16_t hdr_len_total) { hdr_len_total_ = hdr_len_total; }
 
-    uint16_t chain_pkt_sent() const { return chain_pkt_sent_; }
+    bool chain_pkt_sent() const { return chain_pkt_sent_; }
     void set_chain_pkt_sent(bool yesno) { chain_pkt_sent_ = yesno; }
 
     uint16_t chain_qtype() const { return chain_qtype_; }
@@ -445,7 +445,7 @@ public:
     void set_hal_cleanup(bool val) { cleanup_hal_ = val; }
     void swap_flow_objs();
 
-    const app_redir_ctx_t& app_redir() const { return app_redir_; }
+    app_redir_ctx_t& app_redir() { return app_redir_; }
 
 private:
     lifqid_t              arm_lifq_;
