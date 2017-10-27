@@ -19,7 +19,6 @@ struct rqcb1_t d;
 #define ARG_P               r4
 #define CQCB_ADDR           r3
 #define KEY_ADDR            r3
-#define KEY_ID              r2
 #define RAW_TABLE_PC        r2
 
 #define CQ_INFO_T   struct resp_rx_rqcb_to_cq_info_t
@@ -60,32 +59,14 @@ inv_rkey:
     //sll         r2, r2, LOG_SIZEOF_KEY_ENTRY_T
     //add         r2, r2, r3
 
-    KEY_ENTRY_ADDR_GET(r2, r3, r2)
+    KEY_ENTRY_ADDR_GET(KEY_ADDR, r3, r2)
+    // now r3 has key_addr
 
-    // now r2 has key_addr
-
-    //aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK;
-    //and         r3, r2, HBM_CACHE_LINE_SIZE_MASK
-    //sub         KEY_ADDR, r2, r3
-
-    KEY_ENTRY_ALIGNED_ADDR_GET(KEY_ADDR, r2)
-
-    // r3 now has aligned_key_addr
-
-    //key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
-    // compute (key_addr - aligned_key_addr) >> log_key_entry_t
-    //sub         r2, r2, r3
-    //srl         KEY_ID, r2, LOG_SIZEOF_KEY_ENTRY_T
-
-    KEY_ID_GET(KEY_ID, r2)
-
-    // r2 now has key_id
 
     CAPRI_GET_TABLE_I_K_AND_ARG(resp_rx_phv_t, TBL_ID, KEY_P, ARG_P)
     CAPRI_SET_FIELD(ARG_P, INV_RKEY_T, tbl_id, TBL_ID)
-    CAPRI_SET_FIELD(ARG_P, INV_RKEY_T, key_id, KEY_ID)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_inv_rkey_process)
-    CAPRI_NEXT_TABLE_I_READ(KEY_P, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, KEY_ADDR)
+    CAPRI_NEXT_TABLE_I_READ(KEY_P, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, KEY_ADDR)
 
     //TODO
     add                     TBL_ID, TBL_ID, 1

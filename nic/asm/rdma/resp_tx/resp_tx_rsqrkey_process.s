@@ -7,16 +7,15 @@
 
 struct resp_tx_phv_t p;
 struct resp_tx_rsqrkey_process_k_t k;
+struct key_entry_aligned_t d;
 
 #define KEY_P r7
-#define BASE_VA r6
-#define LEN r5
 #define LOG_PAGE_SIZE r4
 #define MY_PT_BASE_ADDR r2
 #define LOG_PT_SEG_SIZE r1
 #define PT_SEG_P r5
-#define PT_OFFSET r6
-#define RAW_TABLE_PC r3
+#define PT_OFFSET r3
+#define RAW_TABLE_PC r2
 #define RQCB1_ADDR r5
 #define DMA_CMD_BASE r1
 #define IN_PROGRESS r2
@@ -37,20 +36,15 @@ resp_tx_rsqrkey_process:
     add         KEY_P, r0, KEY_P, LOG_SIZEOF_KEY_ENTRY_T_BITS
 
     // if (!(lkey_p->acc_ctrl & ACC_CTRL_LOCAL_WRITE)) {
-    CAPRI_TABLE_GET_FIELD(r1, KEY_P, KEY_ENTRY_T, acc_ctrl)
-    ARE_ALL_FLAGS_SET_B(c1, r1, ACC_CTRL_REMOTE_READ)
+    ARE_ALL_FLAGS_SET_B(c1, d.acc_ctrl, ACC_CTRL_REMOTE_READ)
     bcf         [!c1], error_completion
     nop         //BD slot
 
     //  if ((lkey_info_p->sge_va < lkey_p->base_va) ||
     //  ((lkey_info_p->sge_va + lkey_info_p->sge_bytes) > (lkey_p->base_va + lkey_p->len))) {
-    CAPRI_TABLE_GET_FIELD(BASE_VA, KEY_P, KEY_ENTRY_T, base_va)
-    CAPRI_TABLE_GET_FIELD(LEN, KEY_P, KEY_ENTRY_T, len)
-    CAPRI_TABLE_GET_FIELD(LOG_PAGE_SIZE, KEY_P, KEY_ENTRY_T, log_page_size)
-    slt         c1, k.args.transfer_va, BASE_VA 
-    add         r1, BASE_VA, LEN 
-    add         r2, k.args.transfer_va, k.args.transfer_bytes
-    slt         c2, r1, r2
+    slt         c1, k.args.transfer_va, d.base_va
+    add         r1, d.base_va, d.len
+    sslt        c2, r1, k.args.transfer_va, k.args.transfer_bytes
     bcf         [c1 | c2], error_completion
     nop         //BD slot
 
@@ -58,25 +52,24 @@ resp_tx_rsqrkey_process:
     //     (hbm_addr_get(PHV_GLOBAL_PT_BASE_ADDR_GET()) +
     //         (lkey_p->pt_base * sizeof(u64)));
 
-    CAPRI_TABLE_GET_FIELD(r1, KEY_P, KEY_ENTRY_T, pt_base)
     PT_BASE_ADDR_GET(r2)
-    add         MY_PT_BASE_ADDR, r2, r1, CAPRI_LOG_SIZEOF_U64
+    add         MY_PT_BASE_ADDR, r2, d.pt_base, CAPRI_LOG_SIZEOF_U64
     // now r2 has my_pt_base_addr
     
     // pt_seg_size = HBM_NUM_PT_ENTRIES_PER_CACHE_LINE * phv_p->page_size;
-    // i.e., log_pt_seg_size = LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE + LOG_PAGE_SIZE
-    add         LOG_PT_SEG_SIZE, LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE, LOG_PAGE_SIZE
+    // i.e., log_pt_seg_size = LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE + log_page_size
+    add         LOG_PT_SEG_SIZE, LOG_HBM_NUM_PT_ENTRIES_PER_CACHELINE, d.log_page_size
     // now r1 has log_pt_seg_size
     
     
     // transfer_offset = lkey_info_p->sge_va - lkey_p->base_va + lkey_p->base_va % pt_seg_size;
-    add         r3, r0, BASE_VA
+    add         r3, r0, d.base_va
     // base_va % pt_seg_size
     mincr       r3, LOG_PT_SEG_SIZE, r0
     // add sge_va
     add         r3, r3, k.args.transfer_va
     // subtract base_va
-    sub         r3, r3, BASE_VA
+    sub         r3, r3, d.base_va
     // now r3 has transfer_offset
 
     // transfer_offset % pt_seg_size
@@ -96,10 +89,11 @@ unaligned_pt:
     // pt_seg_p = (u64 *)my_pt_base_addr + (transfer_offset / lkey_info_p->page_size);
 
     // x = transfer_offset/log_page_size
+    add         LOG_PAGE_SIZE, r0, d.log_page_size
     srlv        r5, r3, LOG_PAGE_SIZE
     // transfer_offset%log_page_size 
-    add         r6, r0, r3
-    mincr       PT_OFFSET, LOG_PAGE_SIZE, r0
+    //add         r6, r0, r3
+    mincr       PT_OFFSET, d.log_page_size, r0
     // now r6 has pt_offset
     add         PT_SEG_P, MY_PT_BASE_ADDR, r5, CAPRI_LOG_SIZEOF_U64
     // now r5 has pt_seg_p
@@ -109,7 +103,7 @@ aligned_pt:
     // pt_offset = transfer_offset % pt_seg_size;
     // pt_seg_p = (u64 *)my_pt_base_addr + ((transfer_offset / phv_p->page_size) / HBM_NUM_PT_ENTRIES_PER_CACHE_LINE);
     srlv        r5, r3, LOG_PT_SEG_SIZE
-    add         r6, r0, r3
+    //add         r6, r0, r3
     mincr       PT_OFFSET, LOG_PT_SEG_SIZE, r0
     add         PT_SEG_P, MY_PT_BASE_ADDR, r5, CAPRI_LOG_SIZEOF_U64
 
@@ -123,7 +117,7 @@ invoke_pt:
     CAPRI_SET_FIELD(r7, PTSEG_INFO_T, pt_seg_offset, PT_OFFSET)
     CAPRI_SET_FIELD(r7, PTSEG_INFO_T, pt_seg_bytes, k.args.transfer_bytes)
     CAPRI_SET_FIELD(r7, PTSEG_INFO_T, dma_cmd_start_index, RESP_TX_DMA_CMD_PYLD_BASE)
-    CAPRI_SET_FIELD(r7, PTSEG_INFO_T, log_page_size, LOG_PAGE_SIZE)
+    CAPRI_SET_FIELD(r7, PTSEG_INFO_T, log_page_size, d.log_page_size)
     //CAPRI_SET_FIELD(r7, PTSEG_INFO_T, tbl_id, TABLE_0)
     CAPRI_SET_FIELD(r7, PTSEG_INFO_T, dma_cmdeop, 1)
 

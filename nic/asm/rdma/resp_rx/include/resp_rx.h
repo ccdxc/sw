@@ -327,8 +327,7 @@ struct resp_rx_write_dummy_process_k_t {
 //20
 struct resp_rx_inv_rkey_info_t {
     tbl_id: 8;
-    key_id: 8;
-    pad: 144;
+    pad: 152;
 };
 
 struct resp_rx_inv_rkey_process_k_t {

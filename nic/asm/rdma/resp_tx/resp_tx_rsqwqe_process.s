@@ -22,8 +22,6 @@ struct resp_tx_rsqwqe_process_k_t k;
 
 #define KT_BASE_ADDR        r6
 #define KEY_ADDR            r2
-#define ALIGNED_KEY_ADDR    r6
-#define KEY_ID              r2
 
 #define RAW_TABLE_PC        r7
 
@@ -132,24 +130,9 @@ next:
 
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, r2)
 
-    //aligned_key_addr = key_addr & ~HBM_CACHE_LINE_MASK;
-    //and         r6, KEY_ADDR, HBM_CACHE_LINE_SIZE_MASK
-    //sub         ALIGNED_KEY_ADDR, KEY_ADDR, r6
-
-    KEY_ENTRY_ALIGNED_ADDR_GET(ALIGNED_KEY_ADDR, KEY_ADDR)
-
-    //key_id = (key_addr % HBM_CACHE_LINE_SIZE) / sizeof(key_entry_t);
-    // compute (key_addr - aligned_key_addr) >> log_key_entry_t
-    //sub         KEY_ID, KEY_ADDR, ALIGNED_KEY_ADDR
-    //srl         KEY_ID, KEY_ID, LOG_SIZEOF_KEY_ENTRY_T
-
-    KEY_ID_GET(KEY_ID, KEY_ADDR)
-
-    CAPRI_SET_FIELD(r4, RKEY_INFO_T, key_id, KEY_ID)
-
     CAPRI_GET_TABLE_0_K(resp_tx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_tx_rsqrkey_process)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, ALIGNED_KEY_ADDR)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, KEY_ADDR)
 
 exit:
     nop.e

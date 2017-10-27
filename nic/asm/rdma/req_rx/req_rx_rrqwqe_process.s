@@ -162,7 +162,7 @@ atomic:
 
     CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_rx_rrqlkey_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, r6, r1)
 
     // Hardcode table id 2 for write_back process
     // to keep it consistent with read process where
