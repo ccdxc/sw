@@ -1,0 +1,32 @@
+#!/bin/sh
+
+TOPDIR=../../../../..
+GENLIB=${1-$TOPDIR/gen/x86_64/lib}
+PROG=${2-$TOPDIR/gen/x86_64/bin/devparams}
+
+export LD_LIBRARY_PATH=$GENLIB
+
+set -x
+
+$PROG type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 type
+$PROG type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 bdf
+$PROG type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 mac
+$PROG type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 lif
+$PROG type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 ma
+$PROG type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 bd
+$PROG type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 macc
+$PROG type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 bdff
+
+$PROG -b type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 bdf
+$PROG -b type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 bdf-not-found
+$PROG -b type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 not-found-bdf
+
+$PROG -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 mac
+$PROG -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 mac-not-found
+$PROG -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 not-mac-found
+$PROG -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 not-found-mac
+$PROG -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 ma
+$PROG -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 bdf
+
+$PROG -i type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 lif
+$PROG -i type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 lif-not-found

@@ -1,0 +1,25 @@
+/*
+ * Copyright (c) 2017, Pensando Systems Inc.
+ */
+
+#ifndef __DEV_UTILS_H__
+#define __DEV_UTILS_H__
+
+u_int64_t lif_qstate_map_addr(const int lif);
+u_int64_t intr_msixcfg_addr(const int intr);
+u_int64_t intr_fwcfg_addr(const int intr);
+u_int64_t intr_drvcfg_addr(const int intr);
+u_int64_t intr_pba_addr(const int lif);
+u_int64_t intr_pba_cfg_addr(const int lif);
+u_int64_t db_host_addr(const int lif);
+void intr_pba_cfg(const int lif,
+                  const int intr_start, const size_t intr_count);
+void intr_drvcfg(const int intr);
+void intr_pba_clear(const int intr);
+void intr_msixcfg(const int intr,
+                  const u_int64_t msgaddr,
+                  const u_int32_t msgdata,
+                  const int vctrl);
+void intr_fwcfg_msi(const int intr, const int lif, const int port_id);
+
+#endif /* __DEV_UTILS_H__ */

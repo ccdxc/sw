@@ -1,0 +1,17 @@
+This qemu patch adds a new "simbridge" device to qemu that acts as
+a bridge to a simulator.  The simulator communicates over a Unix Domain
+Socket (by default /tmp/simsock-$USER).
+
+To build, first be sure to build libsimlib.so used by the simbridge device.
+
+    make -C ../libsimlib
+
+Then "make" in this directory.  This will download the correct version
+of the qemu sources, extract, apply the patch, then build.
+
+    make
+
+Then run using the qemu-run script.  qemu-run sets $LD_LIBRARY_PATH
+to pick up libsimlib.so built in the first step.
+
+    qemu-run
