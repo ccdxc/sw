@@ -14,6 +14,9 @@ int main(int argv, char* argc[]) {
 
   int opt = 0;
 
+  setlinebuf(stdout);
+  setlinebuf(stderr);
+
   if (argv != 7) {
     fprintf(stderr, "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net \n");
     exit(-1);
@@ -47,7 +50,8 @@ int main(int argv, char* argc[]) {
 
   }
 
-  fprintf(stderr, "Connecting to port %i, test-data file %s\n", port, test_data);
+  fprintf(stderr, "Connecting to port %i, test-data file %s, %s\n", port, test_data,
+	  from_localhost ? "from host" : "from network");
 
   main_tcp_client();
   return 0;
@@ -91,7 +95,7 @@ int create_socket() {
 
   if ( connect(sockfd, (struct sockaddr *) &dest_addr,
                sizeof(struct sockaddr_in)) == -1 ) {
-    perror("Connect: ");
+    perror("Client: Connect: ");
     exit(-1);
   }
 
@@ -111,6 +115,16 @@ void test_tcp(int transport_fd)
 
   int res = 0;
   int total_recv = 0;
+  struct timeval tv;
+  int do_nb_recv = 0;
+
+  tv.tv_sec = 300;
+  tv.tv_usec = 0;
+  res = setsockopt(transport_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(struct timeval));
+  if (res < 0) {
+      fprintf(stderr, "Error setting timeout for recv() %s, will do non-blocking\n", strerror(errno));
+      do_nb_recv = 1;
+  }
 
   start = clock();
 
@@ -121,20 +135,36 @@ void test_tcp(int transport_fd)
   total_recv = 0;
 
   do {
+    memset(buf, 0, sizeof(buf));
     bytes = read(filefd, buf, sizeof(buf));
     totalbytes += bytes;
     if (bytes > 0) {
       send(transport_fd, buf, bytes, 0);
-      fprintf(stderr, "Sent bytes so far %i\n", totalbytes);
+      fprintf(stderr, "Client: Sent bytes so far %i - %s\n", totalbytes, buf);
     } else {
       break;
     }
-    res = recv(transport_fd, buf, sizeof(buf), 0);
+
+    do {
+        memset(buf, 0, sizeof(buf));
+        res = recv(transport_fd, buf, sizeof(buf), do_nb_recv ? MSG_DONTWAIT : 0);
+	if (res < 0) {
+	    if (do_nb_recv && (errno == EWOULDBLOCK || errno == EAGAIN)) {
+	        sleep(5);
+	    } else {
+                fprintf(stderr, "Client: TCP Read error: %i (%s)\n", res, strerror(errno));
+		exit(-1);
+		break;
+	    }
+	}
+    } while (do_nb_recv--);
+
+    //res = recv(transport_fd, buf, sizeof(buf), 0);
     total_recv += res;
     if (res < 0) {
-      fprintf(stderr, "TCP Read error: %i\n", res);
+      fprintf(stderr, "Client: TCP Read error: %i\n", res);
     } else {
-      fprintf(stderr, "Received tcp test data: %i %i, %s\n", res, total_recv, buf);
+      fprintf(stderr, "Client: Received tcp test data: %i %i, %s\n", res, total_recv, buf);
     }
 	
   } while(bytes > 0);
@@ -145,7 +175,7 @@ void test_tcp(int transport_fd)
   end = clock();
   cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-  fprintf(stderr, "TCP talk time: %.02f\n", cpu_time_used);
+  fprintf(stderr, "Client: TCP talk time: %.02f\n", cpu_time_used);
 }
 
 int main_tcp_client() 
@@ -155,17 +185,17 @@ int main_tcp_client()
 
   transport_fd = create_socket();
 
-  fprintf(stderr, "Connected ! - transport fd %d\n", transport_fd);
+  fprintf(stderr, "Client: Connected ! - transport fd %d\n", transport_fd);
   do {
-    sleep(5);
+    sleep(2);
   } while(0);
 
   // Start tests
   test_tcp(transport_fd);
 
-  while(1) {
-   sleep(5);
-  }
+  //while(1) {
+   sleep(2);
+   //}
 
   close(transport_fd);
 

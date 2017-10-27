@@ -46,12 +46,13 @@
 #define HNTAP_IOMEM_BASE  0xb39d2000
 
 int host_tap_fd, net_tap_fd;
+
 void hntap_dump_pkt(char *pkt, int len);
 void hntap_nat(char *pkt, int len);
 
-extern int tcp_server_main(int argv, char *argc[]);
+extern int tls_server_main(int argv, char *argc[]);
 
-bool hntap_go_thru_model = false; // Go thru model for host<->nw talk
+bool hntap_go_thru_model = true; // Go thru model for host<->nw talk
 
 #define ETH_ADDR_LEN 6
 
@@ -399,7 +400,7 @@ hntap_host_ether_header_add(char *pkt)
   vlan->smac[5] = 0x04;
 
   vlan->tpid    = htons(0x8100);
-  vlan->vlan_tag= htons(103);
+  vlan->vlan_tag= htons(3003);
   vlan->etype   = htons(0x0800);
 }
 
@@ -761,7 +762,9 @@ hntap_net_rx_to_model (char *pktbuf, int size)
   std::cout << "Sending packet to model! size: " << ipkt.size() << " on port: " << port << std::endl;
   step_network_pkt(ipkt, port);
 
-  if (poll_queue(lif_id, RX, 0, 3, &prev_cindex)) {
+#define POLL_RETRIES 3
+
+  if (poll_queue(lif_id, RX, 0, POLL_RETRIES, &prev_cindex)) {
     std::cout << "Got some packet" << std::endl;
     // Receive Packet
     consume_buffer(lif_id, RX, 0, buf, &rsize);
@@ -797,7 +800,7 @@ hntap_net_rx_to_model (char *pktbuf, int size)
     }
   }
 
-  if (poll_queue(lif_id, RX, 0, 100, &prev_cindex)) {
+  if (poll_queue(lif_id, RX, 0, POLL_RETRIES, &prev_cindex)) {
     std::cout << "Got some packet" << std::endl;
     // Receive Packet                                                                                                                                            
     consume_buffer(lif_id, RX, 0, buf, &rsize);
@@ -1023,7 +1026,6 @@ hntap_do_select_loop (void)
 
 int main(int argv, char *argc[])
 {
-
   /* Create tap interface for Host-tap */
   if ((host_tap_fd = hntap_create_tundev(HNTAP_HOST_TAPIF,
                                          HNTAP_HOST_TAPIF_IP,
@@ -1047,7 +1049,7 @@ int main(int argv, char *argc[])
   /*
    * Setup a tcp server on the specified port.
    */
-  tcp_server_main(argv, argc);
+  //tls_server_main(argv, argc);
 
   hntap_do_select_loop();
 

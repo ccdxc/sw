@@ -48,7 +48,14 @@ map<tuple<uint64_t, uint32_t, uint32_t>, queue_info_t> queue_map;
 
 uint64_t
 get_qstate_addr(uint64_t lif, uint32_t qtype, uint32_t qid) {
-  shared_ptr<Channel> channel = CreateChannel("localhost:50054", InsecureChannelCredentials());
+  char *grpc_port_env;
+  std::string grpc_ep = "localhost:";
+  if ((grpc_port_env = getenv("HAL_GRPC_PORT")) != NULL) {
+      grpc_ep.append(grpc_port_env);
+  } else {
+      grpc_ep.append("50054");
+  }
+  shared_ptr<Channel> channel = CreateChannel(grpc_ep, InsecureChannelCredentials());
   StubOptions options;
 
   unique_ptr<Interface::Stub> svc = Interface::NewStub(channel, options);

@@ -13,15 +13,15 @@
 // INFO CALLBACK
 void dummy_ssl_info_callback(const SSL* ssl, int where, int ret) {
   if(ret == 0) {
-    printf("ssl error occured.\n");
+    printf("Server: ssl error occured.\n");
     return;
   }
   WHERE_INFO(ssl, where, SSL_CB_LOOP, "LOOP");
-  WHERE_INFO(ssl, where, SSL_CB_EXIT, "EXIT");
+  WHERE_INFO(ssl, where, SSL_CB_EXIT, "Server: EXIT");
   WHERE_INFO(ssl, where, SSL_CB_READ, "READ");
   WHERE_INFO(ssl, where, SSL_CB_WRITE, "WRITE");
   WHERE_INFO(ssl, where, SSL_CB_ALERT, "ALERT");
-  WHERE_INFO(ssl, where, SSL_CB_HANDSHAKE_DONE, "HANDSHAKE DONE");
+  WHERE_INFO(ssl, where, SSL_CB_HANDSHAKE_DONE, "Server: HANDSHAKE DONE");
 }
 
 // MSG CALLBACK
@@ -52,8 +52,12 @@ int main(int argv, char* argc[]) {
     printf("usage: ./tls port\n");
     exit(-1);
   }
+
+  setlinebuf(stdout);
+  setlinebuf(stderr);
+
   port = atoi(argc[1]);
-  printf("Serving port %i\n", port);
+  fprintf(stderr, "Serving port %i\n", port);
 
   SSL_library_init();
   OpenSSL_add_all_algorithms();
@@ -91,7 +95,7 @@ int OpenListener(int port)
     }
   if ( listen(sd, 10) != 0 )
     {
-      perror("Can't configure listening port");
+      perror("Server: Can't configure listening port");
       abort();
     }
   return sd;
@@ -143,21 +147,22 @@ void test_tls(SSL *ssl)
   int i;
   do {
 
+    memset(buf, 0, sizeof(buf));
     bytes = SSL_read(ssl, buf, sizeof(buf));/* get request */
     if ( bytes > 0 ) {
       bytes_recv += bytes;
-      printf("Bytes recv: %i\n", bytes_recv);
+      printf("Server: Bytes recv: %i: ", bytes_recv);
     }
     else {
       ERR_print_errors_fp(stderr);
       break;
     }
     for (i = 0; i < bytes; i++) {
-      printf(" %02x", buf[i]);
+      printf("%c", buf[i]);
     }
     printf("\n");
     send_bytes = SSL_write(ssl, buf, bytes);
-    printf("Bytes sent: %i\n", send_bytes);
+	   printf("Server: Bytes sent: %i - %s\n", send_bytes, buf);
     bytes_sent += send_bytes; 
   } while (bytes > 0 );
 
