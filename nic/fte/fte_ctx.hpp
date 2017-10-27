@@ -234,6 +234,8 @@ typedef struct fwding_info_s {
     uint64_t qid_en:1;
     uint64_t qtype:3;
     uint64_t qid:24;
+    hal::if_t *dif;
+    hal::l2seg_t *dl2seg;
 } fwding_info_t;
 
 std::ostream& operator<<(std::ostream& os, const fwding_info_t& val);

@@ -11,6 +11,7 @@ gl_deps = [
         "//nic/utils/trace",
         "//nic/utils/print",
         "//nic/hal/plugins/network:network",
+        "//nic/hal/plugins/classic:classic",
         "//nic/hal/plugins/proxy:proxyplugin",
         "//nic/utils/host_mem:host_mem",
         "//nic/hal/test/utils:haltestutils",

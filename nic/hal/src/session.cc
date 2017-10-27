@@ -602,7 +602,7 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
     pd::pd_session_args_t    pd_session_args;
     session_t               *session;
 
-    HAL_ASSERT(args->tenant && args->iflow && args->iflow_attrs &&args->sep && args->dep &&
+    HAL_ASSERT(args->tenant && args->iflow && args->iflow_attrs &&
                args->sif && args->dif && args->sl2seg && args->dl2seg);
 
     // allocate a session

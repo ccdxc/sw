@@ -5,6 +5,7 @@
 #include "nic/hal/src/tenant.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/p4/nw/include/defines.h"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include "nic/hal/pd/common/cpupkt_headers.hpp"
 #include "nic/hal/pd/common/cpupkt_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
@@ -145,33 +146,41 @@ ctx_t::lookup_flow_objs()
 
     //Lookup src and dest EPs
     hal::ep_get_from_flow_key(&key_, &sep_, &dep_);
-
-    if (sep_ == NULL) {
-        HAL_TRACE_ERR("fte: src ep unknown, key={}", key_);
+    if (sep_ == NULL && dep_ == NULL) {
+        HAL_TRACE_ERR("fte: both src and dst ep unknown, key={}", key_);
         return HAL_RET_EP_NOT_FOUND;
     }
 
+    if (sep_) {
+        if (protobuf_request()) {
+            key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL)? FLOW_DIR_FROM_DMA :
+                FLOW_DIR_FROM_UPLINK;
+        }
+        sl2seg_ = hal::find_l2seg_by_handle(sep_->l2seg_handle);
+        HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
+        sif_ = hal::find_if_by_handle(sep_->if_handle);
+        HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
+    } else {
+        HAL_TRACE_ERR("fte: src ep unknown, key={}", key_);
+        if (!cpu_rxhdr_) {
+            return HAL_RET_EP_NOT_FOUND;            
+        }
 
-    if (dep_ == NULL) {
-        HAL_TRACE_INFO("fte: dest ep unknown, key={}", key_);
-        // TODO(goli) handle VIP
+        // lookup l2seg from cpuheader lkp_vrf
+        sl2seg_ =  hal::pd::find_l2seg_by_hwid(cpu_rxhdr_->lkp_vrf);
+        HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
+
+        //sif_ = hal::find_if_by_hwid(cpu_rxhdr_->src_lif);
+        //HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
     }
-
-    if (protobuf_request()) {
-        key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL)? FLOW_DIR_FROM_DMA :
-           FLOW_DIR_FROM_UPLINK;
-    }
-
-    sl2seg_ = hal::find_l2seg_by_handle(sep_->l2seg_handle);
-    HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
-    sif_ = hal::find_if_by_handle(sep_->if_handle);
-    HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
 
     if (dep_) {
         dl2seg_ = hal::find_l2seg_by_handle(dep_->l2seg_handle);
         HAL_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         dif_ = hal::find_if_by_handle(dep_->if_handle);
         HAL_ASSERT_RETURN(dif_, HAL_RET_IF_NOT_FOUND);
+    } else {
+        HAL_TRACE_INFO("fte: dest ep unknown, key={}", key_);
     }
 
     return HAL_RET_OK;
@@ -360,11 +369,6 @@ ctx_t::update_flow_table()
     if (!flow_miss()) {
       return HAL_RET_OK;
     }
-    // by this time dep should be known
-    if (dep_ == NULL) {
-        HAL_TRACE_ERR("fte::{} dep not found", __func__);
-        return HAL_RET_EP_NOT_FOUND;
-    }
 
     for (uint8_t stage = 0; stage <= istage_; stage++) {
         flow_t *iflow = iflow_[stage];
@@ -382,9 +386,13 @@ ctx_t::update_flow_table()
         iflow_attrs.tenant_hwid = hal::pd::pd_l2seg_get_ten_hwid(sl2seg_);
 
         // TODO(goli) fix tnnl_rw_idx lookup
-        iflow_attrs.tnnl_rw_idx =
-            hal::pd::ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(dep_, iflow_attrs.tnnl_rw_act);
-
+        if (iflow_attrs.tnnl_rw_act == TUNNEL_REWRITE_NOP_ID) {
+            iflow_attrs.tnnl_rw_idx = 0;
+        } else if (iflow_attrs.tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VLAN_ID) {
+            iflow_attrs.tnnl_rw_idx = 1;
+        } else if (dif_ && dif_->if_type == intf::IF_TYPE_TUNNEL) {
+            iflow_attrs.tnnl_rw_idx = hal::pd::pd_tunnelif_get_rw_idx((hal::pd::pd_tunnelif_t *)dif_->pd_if);
+        }
 
         session_args.iflow[stage] = &iflow_cfg;
         session_args.iflow_attrs[stage] = &iflow_attrs;
@@ -422,12 +430,22 @@ ctx_t::update_flow_table()
             rflow_attrs.lkp_inst = 1;
         }
 
+        if (dl2seg_ == NULL) {
+            HAL_TRACE_DEBUG("fte: dest l2seg not known");
+            return HAL_RET_L2SEG_NOT_FOUND;
+        }
+
         rflow_attrs.tenant_hwid = hal::pd::pd_l2seg_get_ten_hwid(dl2seg_);
 
         // TODO(goli) fix tnnl w_idx lookup
-        rflow_attrs.tnnl_rw_idx =
-            hal::pd::ep_pd_get_tnnl_rw_tbl_idx_from_pi_ep(sep_, rflow_attrs.tnnl_rw_act);
-            
+        if (rflow_attrs.tnnl_rw_act == TUNNEL_REWRITE_NOP_ID) {
+            rflow_attrs.tnnl_rw_idx = 0;
+        } else if (rflow_attrs.tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VLAN_ID) {
+            rflow_attrs.tnnl_rw_idx = 1;
+        } else if (sif_ && sif_->if_type == intf::IF_TYPE_TUNNEL) {
+            rflow_attrs.tnnl_rw_idx = hal::pd::pd_tunnelif_get_rw_idx((hal::pd::pd_tunnelif_t *)sif_->pd_if);
+        }
+
         session_args.rflow[stage] = &rflow_cfg;
         session_args.rflow_attrs[stage] = &rflow_attrs;
             
@@ -491,50 +509,36 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
 {
     hal_ret_t ret;
 
-    hal::ep_t *dep;
-    hal::if_t *dif;
-    hal::l2seg_t *dl2seg;
-
     if (!header.valid_flds.dip) {
         return HAL_RET_OK;
     }
 
     if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
-        dep = hal::find_ep_by_v4_key(tenant_->tenant_id, header.ipv4.dip);
+        dep_ = hal::find_ep_by_v4_key(tenant_->tenant_id, header.ipv4.dip);
     } else {
         ip_addr_t addr;
         addr.af = IP_AF_IPV6;
         addr.addr.v6_addr = header.ipv6.dip;
-        dep = hal::find_ep_by_v6_key(tenant_->tenant_id, &addr);
+        dep_ = hal::find_ep_by_v6_key(tenant_->tenant_id, &addr);
     }
 
-    if (dep == NULL) {
+    if (dep_ == NULL) {
         return HAL_RET_EP_NOT_FOUND;
     }
 
     // rewrite dest mac
     flow_update_t flowupd = {type: FLOWUPD_HEADER_REWRITE};
     HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, 
-                   *(struct ether_addr *)hal::ep_get_mac_addr(dep));
+                   *(struct ether_addr *)hal::ep_get_mac_addr(dep_));
     ret = update_flow(flowupd);
     if (ret != HAL_RET_OK) {
         return ret;
     }
 
-    dl2seg = hal::find_l2seg_by_handle(dep->l2seg_handle);
+    dl2seg_ = hal::find_l2seg_by_handle(dep_->l2seg_handle);
 
-    dif = hal::find_if_by_handle(dep->if_handle);
-    HAL_ASSERT(dif != NULL);
-
-    if (role == hal::FLOW_ROLE_INITIATOR){
-        dep_ = dep; 
-        dif_ = dif;
-        dl2seg_ = dl2seg;
-    } else {
-        sep_ = dep;
-        sif_ = dif;
-        sl2seg_ = dl2seg;
-    }
+    dif_ = hal::find_if_by_handle(dep_->if_handle);
+    HAL_ASSERT(dif_ != NULL);
 
     return  HAL_RET_OK;
 }
@@ -695,6 +699,12 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         ret = flow->set_fwding(flowupd.fwding);
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} fwding_info={}",
                         role, feature_name_, ret, flowupd.fwding);
+        if (flowupd.fwding.dif) {
+            dif_ = flowupd.fwding.dif;
+        }
+        if (flowupd.fwding.dl2seg) {
+            dl2seg_ =  flowupd.fwding.dl2seg;
+        }
         break;
 
     case FLOWUPD_KEY:
@@ -998,6 +1008,14 @@ std::ostream& operator<<(std::ostream& os, const fwding_info_t& val)
         os << " ,qtype=" << val.qtype;
         os << ", qid=" << val.qid;
     }
+    if (val.dif) {
+        os << " ,dif=" << val.dif->if_id;
+    }
+    
+    if (val.dl2seg) {
+        os << " ,dl2seg=" << val.dl2seg->seg_id;
+    }
+
     return os << "}";
 }
 

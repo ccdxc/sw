@@ -57,6 +57,7 @@ cc_test(
         "//nic/utils/trace",
         "//nic/fte",
         "//nic/hal/plugins/network",
+        "//nic/hal/plugins/classic",
         "//nic/hal/plugins/proxy:proxyplugin",
         "//nic/utils/host_mem:host_mem",
         "//nic/hal/test/utils:haltestutils",

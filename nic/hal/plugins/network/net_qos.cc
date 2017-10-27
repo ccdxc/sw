@@ -35,7 +35,7 @@ qos_exec(fte::ctx_t& ctx)
     hal_ret_t ret = HAL_RET_OK;
 
     HAL_TRACE_DEBUG("Initiator flow");
-    if (ctx.sif()->if_type == intf::IF_TYPE_ENIC) {
+    if (ctx.sif() && ctx.sif()->if_type == intf::IF_TYPE_ENIC) {
         HAL_TRACE_DEBUG("Enic interface:Update Qos");
         ret = update_flow_from_qos_spec(ctx);
     }

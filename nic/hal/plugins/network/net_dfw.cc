@@ -6,6 +6,7 @@ namespace hal {
 namespace net {
 
 #define DEFAULT_MSS 536 // RFC6691
+#define DEFAULT_WINDOW_SIZE 512
 
 static inline session::FlowAction
 pol_check_sg_policy(fte::ctx_t &ctx)
@@ -139,7 +140,8 @@ dfw_exec(fte::ctx_t& ctx)
                                             ctx.sess_spec()->responder_flow().flow_data());
         } else {
             flowupd.flow_state.state = session::FLOW_TCP_STATE_INIT;
-            flowupd.flow_state.tcp_win_sz = 512; //This is to allow the SYN Packet to go through.
+            flowupd.flow_state.tcp_mss = DEFAULT_MSS;
+            flowupd.flow_state.tcp_win_sz = DEFAULT_WINDOW_SIZE; //This is to allow the SYN Packet to go through.
         }
     }
 
