@@ -56,7 +56,7 @@ const static uint32_t	kNvmeBeTotalRings	 = 3;
 
 const static uint32_t	kDbAddrHost		 = 0x400000;
 const static uint32_t	kDbAddrNvme		 = 0xC00000;
-const static uint32_t	kDbAddrCapri		 = 0x68800000;
+const static uint32_t	kDbAddrCapri		 = 0x8800000;
 const static uint32_t	kDbAddrUpdate		 = 0xB;
 const static uint32_t	kDbQidShift		 = 24;
 const static uint32_t	kDbRingShift		 = 16;

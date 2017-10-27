@@ -26,7 +26,7 @@ namespace pd {
 
 
 #define DB_ADDR_BASE                   0x800000 
-#define DB_ADDR_BASE_HOST              0x68400000
+#define DB_ADDR_BASE_HOST              0x8400000
 #define DB_UPD_SHFT                    17
 #define DB_LIF_SHFT                    6
 #define DB_TYPE_SHFT                   3

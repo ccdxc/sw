@@ -27,6 +27,10 @@ protected:
 
     // Push the network packet to capri
     virtual void step_network_pkt(const std::vector<uint8_t> & pkt, uint32_t port);
+
+    // Push DMA packet into capri, not implemented in base class
+    virtual void step_host_pkt(const std::vector<uint8_t> & pkt, uint32_t lif, uint32_t qtype, uint32_t qid, uint32_t ring) {};
+
     // Get next packet from one of the ethernet ports. It returns the
     // port number and COS.
     virtual bool get_next_pkt(std::vector<uint8_t> &pkt, uint32_t &port, uint32_t& cos);
@@ -50,7 +54,7 @@ protected:
     virtual bool read_mem(uint64_t addr, uint8_t * data, uint32_t size);
     virtual bool write_mem(uint64_t addr, uint8_t * data, uint32_t size);
     // Doorbell
-    virtual void step_doorbell(uint64_t addr, uint64_t data);
+    virtual void step_doorbell(uint64_t addr, uint64_t data, bool model=true, bool rtl=true);
     // Timer update
     virtual void step_tmr_wheel_update(unsigned slowfas, unsigned ctime);
 

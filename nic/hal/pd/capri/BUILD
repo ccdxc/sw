@@ -50,5 +50,8 @@ cc_library(
         "//nic/p4/nw/include:p4_nw_includes",
         "//nic/third-party/spdlog",
     ],
+    copts = [ 
+            "-DCAPRI_HAL" 
+            ],
     alwayslink = 1,
 )

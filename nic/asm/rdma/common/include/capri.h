@@ -729,7 +729,7 @@ addi _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PER_FL
 #define DMA_SET_WR_FENCE_FENCE(_cmd_t, _base_r) \
     phvwrp     _base_r, offsetof(_cmd_t, wr_fence_fence), sizeof(_cmd_t.wr_fence_fence), 1
 
-#define DB_ADDR_BASE           0x68800000
+#define DB_ADDR_BASE           0x8800000
 
 #define DB_RING_UPD_SHIFT      2
 #define DB_UPD_SHIFT          17

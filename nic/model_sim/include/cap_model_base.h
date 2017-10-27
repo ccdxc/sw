@@ -15,7 +15,7 @@ public:
     // Push the network packet to capri.
     virtual void step_network_pkt(const std::vector<uint8_t> & pkt, uint32_t port) = 0;
     // Write doorbell location. Address is the capri address after BAR mapping.
-    virtual void step_doorbell(uint64_t addr, uint64_t data) = 0;
+    virtual void step_doorbell(uint64_t addr, uint64_t data, bool model=true, bool rtl=true) = 0;
 
     // Get next packet from one of the ethernet ports. It returns the
     // port number and COS.
