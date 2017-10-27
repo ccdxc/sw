@@ -7,7 +7,8 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/utils/kvstore/memkv"
+	apisrv "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -36,10 +37,23 @@ func TestMain(m *testing.M) {
 	singletonAPISrv.Logger = l
 	s := runtime.NewScheme()
 	s.AddKnownTypes(&TestType1{}, &TestType2{})
-	var err error
-	singletonAPISrv.kv, err = memkv.NewMemKv(nil, runtime.NewJSONCodec(s))
-	if err != nil {
-		panic("Failed to intialize KV store")
+	// Add a few KV connections in the pool
+	config := apisrv.Config{
+		GrpcServerPort: ":0",
+		DebugMode:      true,
+		Logger:         l,
+		Version:        "v1",
+		Scheme:         s,
+		Kvstore: store.Config{
+			Type:  store.KVStoreTypeMemkv,
+			Codec: runtime.NewJSONCodec(runtime.NewScheme()),
+		},
+		KVPoolSize: 1,
+	}
+	singletonAPISrv.config = config
+
+	for i := 0; i < 5; i++ {
+		singletonAPISrv.addKvConnToPool()
 	}
 	rcode := m.Run()
 	//fmt.Printf("Test Logs == \n %v\n", buf.String())

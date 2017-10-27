@@ -35,6 +35,8 @@ type APIGateway interface {
 	// GetAddr returns the address at which the API gateway is listening
 	//   returns error if the API gateway is not initialized
 	GetAddr() (net.Addr, error)
+	//GetDevMode returns true if running in dev mode
+	GetDevMode() bool
 }
 
 // Config is all config used to start the API Gateway
@@ -49,4 +51,6 @@ type Config struct {
 	Logger log.Logger
 	// List of resolvers to use
 	Resolvers []string
+	// DevMode is set if the API Gateway is running in Dev mode
+	DevMode bool
 }

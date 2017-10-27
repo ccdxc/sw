@@ -247,7 +247,8 @@
 			"checksumSHA1": "7gK+lSShSu1NRw83/A95BcgMqsI=",
 			"path": "github.com/codahale/hdrhistogram",
 			"revision": "3a0bb77429bd3a61596f5e8a3172445844342120",
-			"revisionTime": "2016-10-10T02:54:55Z"
+			"revisionTime": "2016-10-10T02:54:55Z",
+			"tree": true
 		},
 		{
 			"comment": "v1.0-rc1-10-g33e0aa1",

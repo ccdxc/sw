@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"runtime"
@@ -264,6 +265,8 @@ func newLogger(config *Config) *kitLogger {
 		wr = kitlog.NewSyncWriter(stdoutWr)
 	} else if config.LogToFile {
 		wr = kitlog.NewSyncWriter(fileWr)
+	} else {
+		wr = kitlog.NewSyncWriter(ioutil.Discard)
 	}
 
 	// Instantiate logger based on format

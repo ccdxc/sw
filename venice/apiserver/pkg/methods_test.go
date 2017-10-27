@@ -60,6 +60,8 @@ func (m *fakeMethod) respWriterFunc(ctx context.Context, kvs kvstore.Interface, 
 // Check all precommit and post commit functions are called and skipping
 // KV operation feedback from hook is honored
 func TestMethodWiths(t *testing.T) {
+	MustGetAPIServer()
+	singletonAPISrv.runstate.running = true
 	req := newFakeMessage("TestType1", true).(*fakeMessage)
 	resp := newFakeMessage("TestType2", true).(*fakeMessage)
 	f := newFakeMethod(true).(*fakeMethod)
@@ -120,6 +122,8 @@ func TestMethodWiths(t *testing.T) {
 func TestMethodKvWrite(t *testing.T) {
 	req := newFakeMessage("/requestmsg/A", true).(*fakeMessage)
 	resp := newFakeMessage("/responsmsg/A", true).(*fakeMessage)
+	MustGetAPIServer()
+	singletonAPISrv.runstate.running = true
 
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
@@ -169,6 +173,8 @@ func TestMethodKvList(t *testing.T) {
 	req := newFakeMessage("/requestmsg/A", true).(*fakeMessage)
 	resp := newFakeMessage("/responsmsg/A", true).(*fakeMessage)
 
+	MustGetAPIServer()
+	singletonAPISrv.runstate.running = true
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
 	reqmsg := api.ListWatchOptions{}
 
@@ -188,6 +194,8 @@ func TestMapOper(t *testing.T) {
 	req := newFakeMessage("/requestmsg/A", true).(*fakeMessage)
 	resp := newFakeMessage("/responsmsg/A", true).(*fakeMessage)
 
+	MustGetAPIServer()
+	singletonAPISrv.runstate.running = true
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite")
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "GET")
@@ -231,6 +239,8 @@ func testTxnPreCommithook(ctx context.Context,
 func TestTxn(t *testing.T) {
 	req := newFakeMessage("/requestmsg/A", true).(*fakeMessage)
 	resp := newFakeMessage("/responsmsg/A", true).(*fakeMessage)
+	MustGetAPIServer()
+	singletonAPISrv.runstate.running = true
 
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(req, resp, "testm", "TestMethodKvWrite").WithPreCommitHook(testTxnPreCommithook)

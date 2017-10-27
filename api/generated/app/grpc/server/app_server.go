@@ -467,6 +467,9 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			wstream := stream.(app.AppV1_AutoWatchAppServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "App")
@@ -518,6 +521,9 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			wstream := stream.(app.AppV1_AutoWatchAppUserServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "AppUser")
@@ -569,6 +575,9 @@ func (s *sappAppBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			wstream := stream.(app.AppV1_AutoWatchAppUserGrpServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "AppUserGrp")

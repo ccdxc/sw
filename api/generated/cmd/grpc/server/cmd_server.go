@@ -472,6 +472,9 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			wstream := stream.(cmd.CmdV1_AutoWatchClusterServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Cluster")
@@ -523,6 +526,9 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			wstream := stream.(cmd.CmdV1_AutoWatchNodeServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Node")
@@ -574,6 +580,9 @@ func (s *scmdCmdBackend) CompleteRegistration(ctx context.Context, logger log.Lo
 			wstream := stream.(cmd.CmdV1_AutoWatchSmartNICServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "SmartNIC")

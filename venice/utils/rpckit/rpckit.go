@@ -40,6 +40,7 @@ type options struct {
 	middlewares  []Middleware      // list of middlewares
 	enableTracer bool              // option to enable tracer middleware
 	enableLogger bool              // option to enable logging middleware
+	enableStats  bool              // option to enable Stats middleware
 	tlsProvider  TLSProvider       // provides TLS parameters for all RPC clients and servers
 	balancer     grpc.Balancer     // Load balance RPCs between available servers (client option)
 	deferStart   bool              // Defers starting the listen on the gRPC server if set
@@ -88,6 +89,13 @@ func WithLoggerEnabled(enabled bool) Option {
 	}
 }
 
+// WithStatsEnabled specifies whether stats collection should be enabled
+func WithStatsEnabled(enabled bool) Option {
+	return func(o *options) {
+		o.enableStats = enabled
+	}
+}
+
 // WithMiddleware passes a provider for gRPC TLS options
 func WithMiddleware(m Middleware) Option {
 	return func(o *options) {
@@ -116,6 +124,7 @@ func defaultOptions(mysvcName, role string) *options {
 		tracer:       newTracerMiddleware(mysvcName),
 		enableTracer: false,
 		enableLogger: true,
+		enableStats:  true,
 		deferStart:   false,
 	}
 }
@@ -172,8 +181,12 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 	}
 
 	// add default middlewares
-	rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.stats)    // stats
-	rpcServer.middlewares = append(rpcServer.middlewares, newLogMiddleware()) // logging
+	if rpcServer.enableStats {
+		rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.stats) // stats
+	}
+	if rpcServer.enableLogger {
+		rpcServer.middlewares = append(rpcServer.middlewares, newLogMiddleware()) // logging
+	}
 	if rpcServer.enableTracer {
 		rpcServer.middlewares = append(rpcServer.middlewares, rpcServer.tracer) // tracing
 	}
@@ -284,8 +297,12 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 	}
 
 	// add default middlewares
-	rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.stats)    //stats
-	rpcClient.middlewares = append(rpcClient.middlewares, newLogMiddleware()) // logging
+	if rpcClient.enableStats {
+		rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.stats) //stats
+	}
+	if rpcClient.enableLogger {
+		rpcClient.middlewares = append(rpcClient.middlewares, newLogMiddleware()) // logging
+	}
 	if rpcClient.enableTracer {
 		rpcClient.middlewares = append(rpcClient.middlewares, rpcClient.tracer) // tracing
 	}

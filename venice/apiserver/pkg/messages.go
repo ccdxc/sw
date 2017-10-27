@@ -19,6 +19,7 @@ import (
 
 var (
 	errNotImplemented = grpc.Errorf(codes.Unimplemented, "Operation not implemented")
+	errShuttingDown   = grpc.Errorf(codes.Unavailable, "Server is shutting down")
 )
 
 // MessageHdlr is an representation of the message object.
@@ -159,27 +160,27 @@ func (m *MessageHdlr) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i inter
 }
 
 // WriteToKv is a wrapper around kvUpdateFunc to update the object in the KV store.
-func (m *MessageHdlr) WriteToKv(ctx context.Context, i interface{}, prefix string, create, replaceStatus bool) (interface{}, error) {
+func (m *MessageHdlr) WriteToKv(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create, replaceStatus bool) (interface{}, error) {
 	if m.kvUpdateFunc != nil {
-		return m.kvUpdateFunc(ctx, singletonAPISrv.kv, i, prefix, create, replaceStatus)
+		return m.kvUpdateFunc(ctx, kvs, i, prefix, create, replaceStatus)
 	}
 	return nil, errNotImplemented
 }
 
 // GetFromKv is a wrapper around kvGetFunc to get the object in the KV store.
-func (m *MessageHdlr) GetFromKv(ctx context.Context, key string) (interface{}, error) {
+func (m *MessageHdlr) GetFromKv(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 	if m.kvGetFunc != nil {
-		return m.kvGetFunc(ctx, singletonAPISrv.kv, key)
+		return m.kvGetFunc(ctx, kvs, key)
 	}
 	return nil, errNotImplemented
 }
 
 // DelFromKv is a wrapper around kvDelFunc to delete the object in the KV store.
-func (m *MessageHdlr) DelFromKv(ctx context.Context, key string) (interface{}, error) {
+func (m *MessageHdlr) DelFromKv(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
 	if m.kvDelFunc != nil {
-		return m.kvDelFunc(ctx, singletonAPISrv.kv, key)
+		return m.kvDelFunc(ctx, kvs, key)
 	}
-	return nil, singletonAPISrv.kv.Delete(ctx, key, nil)
+	return nil, kvs.Delete(ctx, key, nil)
 }
 
 // DelFromKvTxn is a wrapper around kvDelFunc to delete the object in the KV store.
@@ -191,9 +192,9 @@ func (m *MessageHdlr) DelFromKvTxn(ctx context.Context, txn kvstore.Txn, key str
 }
 
 // ListFromKv lists all objects of this kind.
-func (m *MessageHdlr) ListFromKv(ctx context.Context, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+func (m *MessageHdlr) ListFromKv(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 	if m.kvListFunc != nil {
-		return m.kvListFunc(ctx, singletonAPISrv.kv, options, prefix)
+		return m.kvListFunc(ctx, kvs, options, prefix)
 	}
 	return nil, errNotImplemented
 }
@@ -292,6 +293,9 @@ func (m *MessageHdlr) WriteModTime(i interface{}) (interface{}, error) {
 
 // WatchFromKv implements the watch function from KV store and bridges it to the grpc stream
 func (m *MessageHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error {
+	if !singletonAPISrv.getRunState() {
+		return errShuttingDown
+	}
 	if m.kvWatchFunc != nil {
 		var ver string
 		l := singletonAPISrv.Logger
@@ -319,7 +323,10 @@ func (m *MessageHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.Ser
 			}
 			span.LogFields(log.String("event", "calling watch"))
 		}
-		return m.kvWatchFunc(l, options, singletonAPISrv.kv, stream, m.PrepareMsg, ver, svcprefix)
+		kv := singletonAPISrv.getKvConn()
+		handle := singletonAPISrv.insertWatcher(stream.Context())
+		defer singletonAPISrv.removeWatcher(handle)
+		return m.kvWatchFunc(l, options, kv, stream, m.PrepareMsg, ver, svcprefix)
 	}
 	return errNotImplemented
 }

@@ -54,7 +54,7 @@ func (m *fakeMessage) WithCreationTimeWriter(fn apisrv.SetCreationTimeFunc) apis
 func (m *fakeMessage) WithModTimeWriter(fn apisrv.SetModTimeFunc) apisrv.Message             { return m }
 func (m *fakeMessage) GetKind() string                                                       { return "" }
 func (m *fakeMessage) WriteObjVersion(i interface{}, version string) interface{}             { return i }
-func (m *fakeMessage) ListFromKv(ctx context.Context, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+func (m *fakeMessage) ListFromKv(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 	m.kvlists++
 	return nil, nil
 }
@@ -62,7 +62,7 @@ func (m *fakeMessage) WatchFromKv(options *api.ListWatchOptions, stream grpc.Ser
 	m.kvwatch++
 	return nil
 }
-func (m *fakeMessage) DelFromKv(ctx context.Context, key string) (interface{}, error) {
+func (m *fakeMessage) DelFromKv(ctx context.Context, kv kvstore.Interface, key string) (interface{}, error) {
 	m.kvdels++
 	return nil, nil
 }
@@ -84,11 +84,11 @@ func (m *fakeMessage) WriteToKvTxn(ctx context.Context, txn kvstore.Txn, i inter
 func (m *fakeMessage) GetKVKey(i interface{}, prefix string) (string, error) {
 	return m.kvpath, nil
 }
-func (m *fakeMessage) WriteToKv(ctx context.Context, i interface{}, prerfix string, create, ignStatus bool) (interface{}, error) {
+func (m *fakeMessage) WriteToKv(ctx context.Context, kv kvstore.Interface, i interface{}, prerfix string, create, ignStatus bool) (interface{}, error) {
 	m.kvwrites++
 	return i, nil
 }
-func (m *fakeMessage) GetFromKv(ctx context.Context, key string) (interface{}, error) {
+func (m *fakeMessage) GetFromKv(ctx context.Context, kv kvstore.Interface, key string) (interface{}, error) {
 	m.kvreads++
 	return nil, nil
 }
@@ -225,13 +225,16 @@ func (s fakeGrpcStream) SetTrailer(_ metadata.MD) {
 // TestMessageWith
 // Tests the various Hooks for the message
 func TestMessageWith(t *testing.T) {
+	MustGetAPIServer()
 	f := newFakeMessage("/test", true).(*fakeMessage)
 	m := NewMessage("TestType1").WithValidate(f.validateFunc).WithDefaulter(f.defaultFunc)
 	m = m.WithKvUpdater(f.kvUpdateFunc).WithKvGetter(f.kvGetFunc).WithKvDelFunc(f.kvDelFunc).WithObjectVersionWriter(f.objVerWrite)
 	m = m.WithKvTxnUpdater(f.txnUpdateFunc).WithKvTxnDelFunc(f.delFromKvTxnFunc)
 	m = m.WithKvWatchFunc(f.kvWatchFunc).WithKvListFunc(f.kvListFunc)
 	m = m.WithUUIDWriter(f.CreateUUID)
+	singletonAPISrv.runstate.running = true
 	m.Validate(nil, "", true)
+	var kv kvstore.Interface
 	if f.validateCalled != 1 {
 		t.Errorf("Expecting validation count of %v found", f.validateCalled)
 	}
@@ -240,12 +243,12 @@ func TestMessageWith(t *testing.T) {
 		t.Errorf("Expecting 1 call to Defaulter function found %d", f.defaultCalled)
 	}
 
-	m.GetFromKv(context.TODO(), "testkey")
+	m.GetFromKv(context.TODO(), kv, "testkey")
 	if f.kvreads != 1 {
 		t.Errorf("Expecting 1 call to KV read found %d", f.kvreads)
 	}
 
-	m.WriteToKv(context.TODO(), nil, "testprefix", true, true)
+	m.WriteToKv(context.TODO(), kv, nil, "testprefix", true, true)
 	if f.kvwrites != 1 {
 		t.Errorf("Expecting 1 call to KV Write found %d", f.kvwrites)
 	}
@@ -254,7 +257,7 @@ func TestMessageWith(t *testing.T) {
 	if f.txnwrites != 1 {
 		t.Errorf("Expecting 1 call to Txn write found %d", f.kvdels)
 	}
-	m.DelFromKv(context.TODO(), "testKey")
+	m.DelFromKv(context.TODO(), kv, "testKey")
 	if f.kvdels != 1 {
 		t.Errorf("Expecting 1 call to KV Del found %d", f.kvdels)
 	}

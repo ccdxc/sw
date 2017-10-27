@@ -923,6 +923,9 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			wstream := stream.(network.EndpointV1_AutoWatchEndpointServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Endpoint")
@@ -1007,6 +1010,9 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			wstream := stream.(network.LbPolicyV1_AutoWatchLbPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "LbPolicy")
@@ -1091,6 +1097,9 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			wstream := stream.(network.NetworkV1_AutoWatchNetworkServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Network")
@@ -1175,6 +1184,9 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			wstream := stream.(network.SecurityGroupV1_AutoWatchSecurityGroupServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "SecurityGroup")
@@ -1259,6 +1271,9 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			wstream := stream.(network.ServiceV1_AutoWatchServiceServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Service")
@@ -1343,6 +1358,9 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			wstream := stream.(network.SgpolicyV1_AutoWatchSgpolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Sgpolicy")
@@ -1427,6 +1445,9 @@ func (s *snetworkNetworkBackend) CompleteRegistration(ctx context.Context, logge
 			wstream := stream.(network.TenantV1_AutoWatchTenantServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Tenant")

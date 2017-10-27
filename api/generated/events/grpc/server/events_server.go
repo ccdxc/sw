@@ -327,6 +327,9 @@ func (s *seventsEventsBackend) CompleteRegistration(ctx context.Context, logger 
 			wstream := stream.(events.EventPolicyV1_AutoWatchEventPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "EventPolicy")
@@ -411,6 +414,9 @@ func (s *seventsEventsBackend) CompleteRegistration(ctx context.Context, logger 
 			wstream := stream.(events.EventV1_AutoWatchEventServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Event")

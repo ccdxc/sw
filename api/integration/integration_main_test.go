@@ -45,6 +45,7 @@ func TestMain(m *testing.M) {
 			Type:  store.KVStoreTypeMemkv,
 			Codec: runtime.NewJSONCodec(scheme),
 		},
+		KVPoolSize: 1,
 	}
 	grpclog.SetLogger(l)
 	trace.Init("ApiServer")

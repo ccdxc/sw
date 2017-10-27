@@ -151,7 +151,7 @@ func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, rslvr)
+	cl, err := e.newClient(ctx, grpcaddr, rslvr, apigw.GetDevMode())
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -176,11 +176,18 @@ func (e *sCmdV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sCmdV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface) (cmd.CmdV1Client, error) {
+func (e *sCmdV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (cmd.CmdV1Client, error) {
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	}
+
+	if !devmode {
+		opts = append(opts, rpckit.WithTracerEnabled(false))
+		opts = append(opts, rpckit.WithLoggerEnabled(false))
+		opts = append(opts, rpckit.WithStatsEnabled(false))
+	}
+
 	client, err := rpckit.NewRPCClient("CmdV1GwService", grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")

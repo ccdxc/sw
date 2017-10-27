@@ -209,6 +209,9 @@ func (s *snetworkencryptionNetworkencryptionBackend) CompleteRegistration(ctx co
 			wstream := stream.(networkencryption.TrafficEncryptionPolicyV1_AutoWatchTrafficEncryptionPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "TrafficEncryptionPolicy")

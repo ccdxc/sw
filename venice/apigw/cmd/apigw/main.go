@@ -24,6 +24,7 @@ func main() {
 		logToStdoutFlag = flag.Bool("logtostdout", true, "enable logging to stdout")
 		logToFile       = flag.String("logtofile", "/var/log/pensando/apigw.log", "redirect logs to file")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDGRPCPort, "comma separated list of resolver URLs <IP:port>")
+		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")
 	)
 
 	flag.Parse()
@@ -61,6 +62,7 @@ func main() {
 		config.DebugMode = *debugflag
 		config.Logger = pl
 		config.Resolvers = strings.Split(*resolverURLs, ",")
+		config.DevMode = *devmode
 	}
 	trace.Init("ApiGateway")
 	pl.Log("msg", "Starting Run")

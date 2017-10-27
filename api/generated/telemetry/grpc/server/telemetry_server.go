@@ -207,6 +207,9 @@ func (s *stelemetryTelemetryBackend) CompleteRegistration(ctx context.Context, l
 			wstream := stream.(telemetry.MonitoringPolicyV1_AutoWatchMonitoringPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "MonitoringPolicy")

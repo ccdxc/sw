@@ -454,6 +454,9 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchOrderServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Order")
@@ -505,6 +508,9 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchBookServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Book")
@@ -556,6 +562,9 @@ func (s *sbookstoreExampleBackend) CompleteRegistration(ctx context.Context, log
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchPublisherServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "Publisher")

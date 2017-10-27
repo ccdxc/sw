@@ -3,6 +3,7 @@ package apisrvpkg
 import (
 	"bytes"
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -44,7 +45,7 @@ func TestRegistration(t *testing.T) {
 	// Parallel is not needed since init happens in a single thread.
 	// Make sure to initialize the singleton.
 	_ = MustGetAPIServer()
-	a := singletonAPISrv
+	a := &singletonAPISrv
 	s := testAPISrvBackend{}
 	s1 := testAPISrvBackend{}
 	a.Register("register-test1", &s)
@@ -81,7 +82,7 @@ func TestRegistration(t *testing.T) {
 func TestDupRegistration(t *testing.T) {
 	// Make sure to initialize the singleton.
 	_ = MustGetAPIServer()
-	a := singletonAPISrv
+	a := &singletonAPISrv
 	s := testAPISrvBackend{}
 	defer func() {
 		if r := recover(); r == nil {
@@ -95,7 +96,7 @@ func TestDupRegistration(t *testing.T) {
 func TestDupPathRegistration(t *testing.T) {
 	// Make sure to initialize the singleton.
 	_ = MustGetAPIServer()
-	a := singletonAPISrv
+	a := &singletonAPISrv
 	s := testAPISrvBackend{}
 
 	// This is allowed and should not panic
@@ -138,7 +139,8 @@ func TestRunApiSrv(t *testing.T) {
 	}
 
 	_ = MustGetAPIServer()
-	a := singletonAPISrv
+	a := &singletonAPISrv
+	a.runstate.running = false
 	s1 := testAPISrvService{}
 	a.RegisterService("test-service1", &s1)
 	a.RegisterService("test-service2", &s1)
@@ -172,6 +174,17 @@ func TestRunApiSrv(t *testing.T) {
 		t.Fatal("Timeout waiting on lock")
 	}
 
+	c := a.getKvConn()
+	if c == nil {
+		t.Fatalf("Connction is nil")
+	}
+	// Add a few more connections
+	err = a.addKvConnToPool()
+	if err != nil {
+		t.Errorf("Got error adding connection to pool")
+	}
+
+	err = errors.New("Testing Exit for Api Server")
 	a.Stop()
 	time.Sleep(100 * time.Millisecond)
 	if !strings.Contains(buf.String(), "Stop called by user") {

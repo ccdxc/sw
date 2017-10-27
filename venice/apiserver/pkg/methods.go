@@ -130,7 +130,10 @@ func (m *MethodHdlr) getMethDbKey(in interface{}, oper apiserver.APIOperType) (s
 }
 
 // updateKvStore handles updating the KV store either via a transaction or without as needed.
-func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apiserver.APIOperType, txn kvstore.Txn, replaceStatus bool) (interface{}, error) {
+func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apiserver.APIOperType, kvs kvstore.Interface, txn kvstore.Txn, replaceStatus bool) (interface{}, error) {
+	if !singletonAPISrv.getRunState() {
+		return nil, errShuttingDown
+	}
 	l := singletonAPISrv.Logger
 	key, err := m.getMethDbKey(i, oper)
 	if err != nil {
@@ -146,7 +149,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 	switch oper {
 	case apiserver.CreateOper:
 		if nonTxn {
-			resp, err = m.requestType.WriteToKv(ctx, i, m.svcPrefix, true, replaceStatus)
+			resp, err = m.requestType.WriteToKv(ctx, kvs, i, m.svcPrefix, true, replaceStatus)
 			err = errors.Wrap(err, "oper: POST")
 		} else {
 			err = m.requestType.WriteToKvTxn(ctx, txn, i, m.svcPrefix, true)
@@ -156,7 +159,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 		kvOp = kvstore.OperUpdate
 	case apiserver.UpdateOper:
 		if nonTxn {
-			resp, err = m.requestType.WriteToKv(ctx, i, m.svcPrefix, false, replaceStatus)
+			resp, err = m.requestType.WriteToKv(ctx, kvs, i, m.svcPrefix, false, replaceStatus)
 			err = errors.Wrap(err, "oper: PUT")
 		} else {
 			err = m.requestType.WriteToKvTxn(ctx, txn, i, m.svcPrefix, false)
@@ -166,7 +169,7 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 		kvOp = kvstore.OperUpdate
 	case apiserver.DeleteOper:
 		if nonTxn {
-			resp, err = m.requestType.DelFromKv(ctx, key)
+			resp, err = m.requestType.DelFromKv(ctx, kvs, key)
 			err = errors.Wrap(err, "oper: DELETE")
 		} else {
 			err = m.requestType.DelFromKvTxn(ctx, txn, key)
@@ -175,12 +178,12 @@ func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apis
 		kvOp = kvstore.OperDelete
 	case apiserver.GetOper:
 		// Transactions are not supported for a GET operation.
-		resp, err = m.requestType.GetFromKv(ctx, key)
+		resp, err = m.requestType.GetFromKv(ctx, kvs, key)
 		err = errors.Wrap(err, "oper: GET")
 		kvOp = kvstore.OperGet
 	case apiserver.ListOper:
 		options := i.(api.ListWatchOptions)
-		resp, err = m.responseType.ListFromKv(ctx, &options, m.svcPrefix)
+		resp, err = m.responseType.ListFromKv(ctx, kvs, &options, m.svcPrefix)
 		err = errors.Wrap(err, "oper: LIST")
 	default:
 		err = errors.Wrap(errUnknownOperation, fmt.Sprintf("oper: [%s]", oper))
@@ -326,8 +329,8 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	if span != nil {
 		span.LogFields(log.String("event", "calling precommit hooks"))
 	}
-
-	txn := singletonAPISrv.kv.NewTxn()
+	kv := singletonAPISrv.getKvConn()
+	txn := kv.NewTxn()
 	// Invoke registered precommit hooks
 	kvwrite := true
 	for _, v := range m.precommitFunc {
@@ -337,7 +340,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 			return nil, errInternalError
 		}
 		kvold := kvwrite
-		i, kvwrite, err = v(ctx, singletonAPISrv.kv, txn, key, oper, i)
+		i, kvwrite, err = v(ctx, kv, txn, key, oper, i)
 		if err != nil {
 			l.ErrorLog("msg", "precommit hook failed", "error", err)
 			return nil, errPreOpChecksFailed
@@ -349,7 +352,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	}
 
 	if kvwrite {
-		resp, err = m.updateKvStore(ctx, i, oper, txn, replaceStatus)
+		resp, err = m.updateKvStore(ctx, i, oper, kv, txn, replaceStatus)
 		if err != nil {
 			return nil, err
 		}
@@ -372,7 +375,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	//Generate response
 	if m.responseWriter != nil {
 		l.DebugLog("msg", "response overide is enabled")
-		resp, err = m.responseWriter(ctx, singletonAPISrv.kv, m.svcPrefix, i, old, oper)
+		resp, err = m.responseWriter(ctx, kv, m.svcPrefix, i, old, oper)
 		if err != nil {
 			l.ErrorLog("msg", "response writer returned", "error", err)
 			return nil, errResponseWriter

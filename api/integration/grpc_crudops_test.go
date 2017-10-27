@@ -34,7 +34,6 @@ func addToWatchList(eventslist *[]kvstore.WatchEvent, obj interface{}, evtype kv
 		Object: evp.(runtime.Object),
 	}
 	return append(*eventslist, ev)
-
 }
 
 func TestCrudOps(t *testing.T) {

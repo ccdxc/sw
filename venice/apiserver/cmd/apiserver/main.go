@@ -27,6 +27,8 @@ func main() {
 		version         = flag.String("version", "v1", "Version string for native version")
 		logToStdoutFlag = flag.Bool("logtostdout", true, "enable logging to stdout")
 		logToFile       = flag.String("logtofile", "/var/log/pensando/apiserver.log", "redirect logs to file")
+		poolsize        = flag.Int("kvpoolsize", apisrv.DefaultKvPoolSize, "size of KV Store connection pool")
+		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")
 	)
 
 	flag.Parse()
@@ -60,6 +62,7 @@ func main() {
 	{
 		config.GrpcServerPort = *grpcaddr
 		config.DebugMode = *debugflag
+		config.DevMode = *devmode
 		config.Logger = pl
 		config.Version = *version
 		config.Scheme = runtime.NewScheme()
@@ -68,8 +71,12 @@ func main() {
 			Servers: strings.Split(*kvstore, ","),
 			Codec:   runtime.NewJSONCodec(config.Scheme),
 		}
+		config.KVPoolSize = *poolsize
 	}
 	trace.Init("ApiServer")
+	if *devmode {
+		trace.DisableOpenTrace()
+	}
 	grpclog.SetLogger(pl)
 	pl.InfoLog("msg", "Starting Run", "KVStore", config.Kvstore, "GRPCServer", config.GrpcServerPort, "version", config.Version)
 	srv := apisrvpkg.MustGetAPIServer()

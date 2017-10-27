@@ -2,15 +2,17 @@ package apisrvpkg
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
+
+	"github.com/pkg/errors"
 
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/safelist"
 )
 
 // apiSrv is the container type for the Api Server.
@@ -28,9 +30,15 @@ type apiSrv struct {
 	version string
 	// Logger is used by the API server for all logging.
 	Logger log.Logger
-	// kv is the kv store interface where the API server performs all KV
+	// kvPool is a pool of kv store interfaces which the API server uses for all KV
 	//  store operations.
-	kv kvstore.Interface
+	kvPool []kvstore.Interface
+	// nextKv tracks the next pool item to be used from the KV Pool
+	nextKv int
+	// nextKvMutex protects nextKv
+	nextKvMutex sync.Mutex
+	// activeWatches is a slice of active KVs used by Watches.
+	activeWatches *safelist.SafeList
 	// doneCh is a error chan used to signal the apiSrv about async errors and exit
 	doneCh chan error
 	// runstate is set when the API server is ready to serve requests
@@ -39,6 +47,26 @@ type apiSrv struct {
 		running bool
 		addr    string
 	}
+	// config is the passed in config at Run.
+	config apiserver.Config
+}
+
+// addKvConnToPool is adds connections to the pool if there is space in the pool.
+func (a *apiSrv) addKvConnToPool() error {
+	k, err := store.New(a.config.Kvstore)
+	if err != nil {
+		errors.Wrap(err, "could not create KV conn pool")
+		return err
+	}
+	a.kvPool = append(a.kvPool, k)
+	return nil
+}
+
+func (a *apiSrv) getKvConn() kvstore.Interface {
+	a.nextKvMutex.Lock()
+	defer a.nextKvMutex.Unlock()
+	a.nextKv = (a.nextKv + 1) % a.config.KVPoolSize
+	return a.kvPool[a.nextKv]
 }
 
 // singletonAPISrv is the singleton instance of the API server. This is
@@ -54,7 +82,7 @@ func initAPIServer() {
 	singletonAPISrv.hookregs = make(map[string]apiserver.ServiceHookCb)
 	singletonAPISrv.doneCh = make(chan error)
 	singletonAPISrv.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
-
+	singletonAPISrv.activeWatches = safelist.New()
 }
 
 // MustGetAPIServer returns the singleton instance. If it is not already
@@ -62,6 +90,17 @@ func initAPIServer() {
 func MustGetAPIServer() apiserver.Server {
 	once.Do(initAPIServer)
 	return &singletonAPISrv
+}
+
+// insertWatcher adds a new watcher context to the list of active Watchers
+func (a *apiSrv) insertWatcher(ctx context.Context) (handle interface{}) {
+	handle = a.activeWatches.Insert(ctx)
+	return
+}
+
+// removeWatcher removes a active Watcher from the list of active Watchers
+func (a *apiSrv) removeWatcher(handle interface{}) {
+	a.activeWatches.Remove(handle)
 }
 
 // Register is the registration entrypoint used by the service backends/Modules. Each registration
@@ -114,16 +153,30 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	}
 	a.Logger = config.Logger
 	a.version = config.Version
+	a.config = config
 
 	a.doneCh = make(chan error)
 	if config.DebugMode {
 		log.SetTraceDebug()
 	}
 
+	if config.KVPoolSize < 1 {
+		a.config.KVPoolSize = apiserver.DefaultKvPoolSize
+	}
+	poolSize := a.config.KVPoolSize
+
+	opts := []rpckit.Option{
+		rpckit.WithDeferredStart(true),
+	}
+	if !config.DevMode {
+		opts = append(opts, rpckit.WithTracerEnabled(false))
+		opts = append(opts, rpckit.WithLoggerEnabled(false))
+		opts = append(opts, rpckit.WithStatsEnabled(false))
+	}
 	// Create the GRPC connection for the server.
 	var s *rpckit.RPCServer
 	{
-		s, err = rpckit.NewRPCServer("APIServer", config.GrpcServerPort, rpckit.WithDeferredStart(true))
+		s, err = rpckit.NewRPCServer("APIServer", config.GrpcServerPort, opts...)
 		if err != nil {
 			panic(fmt.Sprintf("Could not start Server on port %v err(%s)", config.GrpcServerPort, err))
 		}
@@ -150,11 +203,12 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	}
 
 	// Connect to the KV Store
-	a.kv, err = store.New(config.Kvstore)
-	if err != nil {
-		panic(fmt.Sprintf("Could not connect to KV Store (%s)", err))
+	for i := 0; i < poolSize; i++ {
+		if err = a.addKvConnToPool(); err != nil {
+			panic(fmt.Sprintf("could not create KV conn pool entry %d (%s)", i, err))
+		}
 	}
-
+	a.Logger.Log("msg", "added Kvstore connections to pool", "count", poolSize, "len", len(a.kvPool))
 	a.runstate.cond.L.Lock()
 	a.Logger.Log("Grpc Listen Start", a.runstate.addr)
 	s.Start()
@@ -174,6 +228,9 @@ func (a *apiSrv) Run(config apiserver.Config) {
 
 func (a *apiSrv) Stop() {
 	a.Logger.Log("msg", "STOP Called")
+	a.runstate.cond.L.Lock()
+	a.runstate.running = false
+	a.runstate.cond.L.Unlock()
 	a.doneCh <- errors.New("Stop called by user")
 	for {
 		if _, ok := <-a.doneCh; !ok {
@@ -181,6 +238,20 @@ func (a *apiSrv) Stop() {
 			break
 		}
 	}
+	// Cleanup any remaining Watchers
+	fn := func(i interface{}) {
+		ctx := i.(context.Context)
+		_, cancel := context.WithCancel(ctx)
+		cancel()
+	}
+	a.activeWatches.RemoveAll(fn)
+
+	a.nextKvMutex.Lock()
+	for i := range a.kvPool {
+		a.kvPool[i].Close()
+	}
+	a.kvPool = []kvstore.Interface{}
+	a.nextKvMutex.Unlock()
 }
 
 func (a *apiSrv) WaitRunning() {
@@ -198,4 +269,10 @@ func (a *apiSrv) GetAddr() (string, error) {
 		return a.runstate.addr, nil
 	}
 	return "", fmt.Errorf("not running")
+}
+
+func (a *apiSrv) getRunState() bool {
+	a.runstate.cond.L.Lock()
+	defer a.runstate.cond.L.Unlock()
+	return a.runstate.running
 }

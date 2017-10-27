@@ -68,7 +68,7 @@ func TestApiWatcher(t *testing.T) {
 	Assert(t, (apiSrv != nil), "Error creating api server", apiSrv)
 
 	// create memkvstore
-	kvs, err := vchstore.Init("", kvs.KVStoreTypeMemkv)
+	kvs, err := vchstore.Init("vchub", kvs.KVStoreTypeMemkv)
 	AssertOk(t, err, "Error initing kvstore")
 	Assert(t, (kvs != nil), "Error creating kvstore")
 

@@ -12,6 +12,7 @@ import (
 const zipkinHTTPEndpoint = "http://192.168.30.11:9411/api/v1/spans"
 
 var srvName string
+var enable bool
 
 // Init tracing with the caller (service) name
 func Init(serviceName string) {
@@ -27,6 +28,7 @@ func DisableOpenTraceHdlr(w http.ResponseWriter, r *http.Request) {
 // DisableOpenTrace disables opentracing compatible tracer for the caller service
 func DisableOpenTrace() {
 	opentracing.SetGlobalTracer(opentracing.NoopTracer{})
+	enable = false
 }
 
 // EnableOpenTraceHdlr enables opentracing compatible tracer for the caller service
@@ -52,5 +54,11 @@ func EnableOpenTrace() {
 			return
 		}
 	}
+	enable = true
 	opentracing.SetGlobalTracer(tr)
+}
+
+// IsEnabled returns true if opentracing is enabled, false otherwise
+func IsEnabled() bool {
+	return enable
 }

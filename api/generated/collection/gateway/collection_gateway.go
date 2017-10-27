@@ -81,7 +81,7 @@ func (e *sCollectionPolicyV1GwService) CompleteRegistration(ctx context.Context,
 	grpcaddr := "pen-apiserver"
 	grpcaddr = apigw.GetAPIServerAddr(grpcaddr)
 	e.logger = logger
-	cl, err := e.newClient(ctx, grpcaddr, rslvr)
+	cl, err := e.newClient(ctx, grpcaddr, rslvr, apigw.GetDevMode())
 	if cl == nil || err != nil {
 		err = errors.Wrap(err, "could not create client")
 		return err
@@ -106,11 +106,18 @@ func (e *sCollectionPolicyV1GwService) CompleteRegistration(ctx context.Context,
 	return err
 }
 
-func (e *sCollectionPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface) (collection.CollectionPolicyV1Client, error) {
+func (e *sCollectionPolicyV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (collection.CollectionPolicyV1Client, error) {
 	var opts []rpckit.Option
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	}
+
+	if !devmode {
+		opts = append(opts, rpckit.WithTracerEnabled(false))
+		opts = append(opts, rpckit.WithLoggerEnabled(false))
+		opts = append(opts, rpckit.WithStatsEnabled(false))
+	}
+
 	client, err := rpckit.NewRPCClient("CollectionPolicyV1GwService", grpcAddr, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "create rpc client")

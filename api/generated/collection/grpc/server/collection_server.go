@@ -208,6 +208,9 @@ func (s *scollectionCollectionBackend) CompleteRegistration(ctx context.Context,
 			wstream := stream.(collection.CollectionPolicyV1_AutoWatchCollectionPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
 			watcher, err := kvs.PrefixWatch(nctx, key, options.ResourceVersion)
 			if err != nil {
 				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "object", "CollectionPolicy")

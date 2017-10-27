@@ -32,6 +32,7 @@ type apiGw struct {
 		addr    net.Addr
 	}
 	apiSrvOverride string
+	devmode        bool
 }
 
 // Singleton API Gateway Object with init gaurded by the Once.
@@ -152,6 +153,7 @@ func (a *apiGw) Run(config apigw.Config) {
 
 	a.logger = config.Logger
 	a.apiSrvOverride = config.APIServerOverride
+	a.devmode = config.DevMode
 
 	// Http Connection
 	m := http.NewServeMux()
@@ -239,4 +241,9 @@ func (a *apiGw) GetAPIServerAddr(addr string) string {
 		return a.apiSrvOverride
 	}
 	return addr
+}
+
+// GetDevMode returns true if running in dev mode
+func (a *apiGw) GetDevMode() bool {
+	return a.devmode
 }

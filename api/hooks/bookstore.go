@@ -35,14 +35,14 @@ func (s *bookstoreHooks) createNeworderID(ctx context.Context, kv kvstore.Interf
 		// Here we are just using a local ID. This might more typically be calling a distributed
 		// ID generator to reserve an ID.
 		s.orderID++
-		r.Spec.Id = fmt.Sprintf("order-%x", s.orderID)
+		r.Spec.Id = fmt.Sprintf("order-%d", s.orderID)
 		r.Name = r.Spec.Id
 		s.logger.InfoLog("msg", "Created new order ID", "order", r.Spec.Id)
 		r.Status.Status = "PROCESSING"
 		return r, true, nil
 	} else if oper == apiserver.UpdateOper {
 		// Verify that the current order is actually editable.
-		obj, err := s.svc.GetCrudService("Order", apiserver.UpdateOper).GetRequestType().GetFromKv(ctx, key)
+		obj, err := s.svc.GetCrudService("Order", apiserver.UpdateOper).GetRequestType().GetFromKv(ctx, kv, key)
 		if err != nil {
 			return bookstore.Order{}, false, errors.Wrap(err, "precommit hook get key failed")
 		}
