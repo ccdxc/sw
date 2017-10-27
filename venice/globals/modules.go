@@ -9,4 +9,5 @@ const (
 	VCHub     = "pen-vchub"
 	Npm       = "pen-npm"
 	Influx    = "pen-influx"
+	Collector = "pen-collector"
 )

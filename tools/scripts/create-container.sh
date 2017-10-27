@@ -28,6 +28,10 @@ function createVCSimContainer() {
     docker build --rm --no-cache -t pen-vcsim:latest -f tools/docker-files/vcsim/Dockerfile tools/docker-files/vcsim
 }
 
+function createCollectorContainer() {
+    docker build --rm --no-cache -t pen-collector:latest -f tools/docker-files/collector/Dockerfile tools/docker-files/collector
+}
+
 function createBinContainerTarBall() {
     staticimages="registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6 \
         registry.test.pensando.io:5000/google_containers/kube-scheduler-amd64:v1.6.6 \
@@ -68,6 +72,7 @@ case $1 in
     npm) createNPMContainer;;
     vcsim) createVCSimContainer;;
     n4sagent) createN4sContainer;;
+    collector) createCollectorContainer;;
     createBinContainerTarBall) createBinContainerTarBall;;
     startCluster) startCluster;;
     stopCluster) stopCluster ;;

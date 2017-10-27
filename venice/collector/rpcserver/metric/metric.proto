@@ -1,0 +1,41 @@
+// metric
+
+syntax = "proto3";
+package metric;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/pensando/sw/api/common.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// Metric API service definition.
+service MetricApi {
+	rpc WriteMetrics(MetricBundle) returns (api.Empty) {}
+}
+
+// Field is one of (uint64, float64, string, bool)
+message Field {
+	oneof f {
+		uint64 Counter = 1;
+		double Gauge = 2;
+		string String = 3;
+		bool Bool = 4;
+	}
+}
+
+// MetricPoint contains a set of tags and fields, and a timestamp
+message MetricPoint {
+	string name = 1;
+	map <string, string> tags = 2;
+	map <string, Field> fields = 3;
+	api.Timestamp when = 4;
+}
+
+// MetricBundle is a set of metric points to be written to the same db.
+message MetricBundle {
+	string dbName = 1;
+	string reporter = 2;
+	repeated MetricPoint metrics = 3;
+}
