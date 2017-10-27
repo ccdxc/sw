@@ -7,20 +7,36 @@
 #include "nic/gen/proto/hal/port.pb.h"
 #include "nic/hal/src/port.hpp"
 
+extern uint32_t read_reg_base (uint32_t chip, uint64_t addr);
+extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
+
 namespace hal {
 namespace pd {
 
 #define PORT_LANES_MAX 4
 
+#define MXP_BASE_HAPS           0x01020000
+#define MXP_PORT_STRIDE_HAPS    0x2000
+#define TEMAC_BASE_OFFSET_HAPS  0x1000
+
+#define PHY_RESET_OFFSET_HAPS    0x8000
+#define SGMII_RESET_OFFSET_HAPS  0x0
+#define TEMAC_RESET_OFFSET_HAPS  0x8
+#define DATAPATH_RESET_OFFSET    0xc
+
+#define MDIO_SETUP_OFFSET_HAPS   0x500
+#define MDIO_CTRL_OFFSET_HAPS    0x504
+#define MDIO_DATA_WR_OFFSET_HAPS 0x508
+#define MDIO_DATA_RD_OFFSET_HAPS 0x50c
+
 enum class port_link_sm_t {
     PORT_LINK_SM_DISABLED,
     PORT_LINK_SM_ENABLED,
     PORT_LINK_SM_SERDES_CFG,
+    PORT_LINK_SM_WAIT_SERDES_RDY,
     PORT_LINK_SM_MAC_CFG,
     PORT_LINK_SM_SIGNAL_DETECT,
-    PORT_LINK_SM_WAIT_SERDES_RDY,
-    PORT_LINK_SM_MAC_ENABLE,
-    PORT_LINK_SM_WAIT_MAC_CLEAR_FAULTS,
+    PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR,
     PORT_LINK_SM_UP
 };
 
@@ -41,7 +57,24 @@ typedef struct mac_fn_s_ {
 
     int (*mac_intr_enable) (uint32_t port_num, uint32_t speed,
                             uint32_t num_lanes, bool enable);
+
+    bool (*mac_faults_get) (uint32_t port_num);
+
 } mac_fn_t;
+
+typedef struct serdes_fn_s_ {
+    int (*serdes_cfg) (uint32_t sbus_addr);
+
+    int (*serdes_tx_rx_enable) (uint32_t sbus_addr, bool enable);
+
+    int (*serdes_output_enable) (uint32_t sbus_addr, bool enable);
+
+    int (*serdes_reset) (uint32_t sbus_addr, bool reset);
+
+    bool (*serdes_signal_detect) (uint32_t sbus_addr);
+
+    bool (*serdes_rdy) (uint32_t sbus_addr);
+} serdes_fn_t;
 
 class port {
 public:
@@ -95,7 +128,10 @@ public:
     hal_ret_t port_enable();
     hal_ret_t port_disable();
     hal_ret_t port_link_sm_process();
-    hal_ret_t port_serdes_cfg();
+
+    // ----------------------------------------------------
+    // mac methods
+    // ----------------------------------------------------
 
     // MAC CFG
     hal_ret_t port_mac_cfg();
@@ -139,6 +175,35 @@ public:
     //mac channel mode config
     hal_ret_t port_mac_ch_mode_cfg();
 
+    // mac faults
+    bool port_mac_faults_get();
+
+    // ----------------------------------------------------
+    // serdes methods
+    // ----------------------------------------------------
+
+    // serdes config
+    hal_ret_t port_serdes_cfg();
+
+    // enable serdes tx and rx
+    hal_ret_t port_serdes_tx_rx_enable(bool enable);
+
+    // enable serdes output
+    hal_ret_t port_serdes_output_enable(bool enable);
+
+    // serdes spico reset
+    hal_ret_t port_serdes_reset(bool reset);
+
+    // serdes signal detect
+    bool port_serdes_signal_detect();
+
+    // check for serdes ready
+    bool port_serdes_rdy();
+
+    // ----------------------------------------------------
+    // static methods
+    // ----------------------------------------------------
+
     static hal_ret_t
         link_bring_up_timer_cb(uint32_t timer_id, void *ctxt);
 
@@ -147,8 +212,11 @@ public:
     static hal_ret_t port_init(bool is_sim);
 
     static hal_ret_t port_mac_init(bool is_sim);
+    static hal_ret_t port_serdes_init(bool is_sim);
 
     static mac_fn_t mac_fn;
+
+    static serdes_fn_t serdes_fn;
 
 private:
     hal::port_t             *pi_p_;          // PI structure

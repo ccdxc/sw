@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #ifndef __NIC_HAL_SRC_PORT_HPP__
 #define __NIC_HAL_SRC_PORT_HPP__
 

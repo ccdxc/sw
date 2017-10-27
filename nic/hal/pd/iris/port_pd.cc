@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/interface_api.hpp"

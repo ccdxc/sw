@@ -97,9 +97,9 @@ hal_cfg_db::init(void)
 
     // initialize port related data structures
     port_id_ht_ = ht::factory(HAL_MAX_PORTS,
-                            hal::port_id_get_key_func,
-                            hal::port_id_compute_hash_func,
-                            hal::port_id_compare_key_func);
+                              hal::port_id_get_key_func,
+                              hal::port_id_compute_hash_func,
+                              hal::port_id_compare_key_func);
     HAL_ASSERT_RETURN((port_id_ht_ != NULL), false);
 
 #if 0
@@ -1172,8 +1172,8 @@ hal_mem_db::init(void)
 
     // initialize port related data structures
     port_slab_ = slab::factory("port", HAL_SLAB_PORT,
-                             sizeof(hal::port_t), 8,
-                             false, true, true, true);
+                               sizeof(hal::port_t), 8,
+                               false, true, true, true);
     HAL_ASSERT_RETURN((port_slab_ != NULL), false);
 
     // initialize endpoint related data structures

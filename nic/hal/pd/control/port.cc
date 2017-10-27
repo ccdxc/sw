@@ -1,3 +1,5 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
 #include <unistd.h>
 #include <errno.h>
 #include <netinet/in.h>
@@ -16,6 +18,7 @@ namespace hal {
 namespace pd {
 
 mac_fn_t port::mac_fn;
+serdes_fn_t port::serdes_fn;
 
 // Invoked in control thread context
 hal_ret_t
@@ -53,12 +56,6 @@ port::link_bring_up_timer_cb(uint32_t timer_id, void *ctxt)
     }
 
     return ret;
-}
-
-hal_ret_t
-port::port_serdes_cfg()
-{
-    return HAL_RET_OK;
 }
 
 hal_ret_t
@@ -191,6 +188,64 @@ port::port_mac_intr_clr()
     return HAL_RET_OK;
 }
 
+bool
+port::port_mac_faults_get()
+{
+    uint32_t mac_port_num = port_mac_port_num_calc();
+
+    return port::mac_fn.mac_faults_get(mac_port_num);
+}
+
+hal_ret_t
+port::port_serdes_cfg()
+{
+    port::serdes_fn.serdes_cfg(0x0 /* sbus */);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+port::port_serdes_tx_rx_enable(bool enable)
+{
+    port::serdes_fn.serdes_tx_rx_enable(
+            0x0 /* sbus */,
+            enable);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+port::port_serdes_output_enable(bool enable)
+{
+    port::serdes_fn.serdes_output_enable(
+            0x0 /* sbus */,
+            enable);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+port::port_serdes_reset(bool reset)
+{
+    port::serdes_fn.serdes_reset(
+            0x0 /* sbus */,
+            reset);
+
+    return HAL_RET_OK;
+}
+
+bool
+port::port_serdes_signal_detect()
+{
+    return port::serdes_fn.serdes_signal_detect(0x0 /* sbus */);
+}
+
+bool
+port::port_serdes_rdy()
+{
+    return port::serdes_fn.serdes_rdy(0x0 /* sbus */);
+}
+
 hal_ret_t
 port::port_link_sm_process()
 {
@@ -205,19 +260,16 @@ port::port_link_sm_process()
             hal::periodic::periodic_timer_delete (this->link_bring_up_timer_);
             this->link_bring_up_timer_ = NULL;  // sanity
 
-            // disable and claer mac interrupts
+            // disable and clear mac interrupts
             port_mac_intr_en(false);
             port_mac_intr_clr();
 
             // disable serdes
+            port_serdes_output_enable(false);
 
-            // mac reset
+            // disable and put mac in reset
             port_mac_soft_reset(true);
-
-            // mac disable
             port_mac_enable(false);
-
-            // mac stats reset
             port_mac_stats_reset(true);
 
             break;
@@ -229,6 +281,28 @@ port::port_link_sm_process()
 
         case port_link_sm_t::PORT_LINK_SM_SERDES_CFG:
 
+            // configure the serdes
+            port_serdes_cfg();
+
+            // enable serdes tx and rx
+            port_serdes_tx_rx_enable(true);
+
+            // transition to wait for serdes rdy state
+            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY);
+
+        case port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY:
+
+            serdes_rdy = port_serdes_rdy();
+
+            if(serdes_rdy == false) {
+                this->link_bring_up_timer_ =
+                    hal::periodic::periodic_timer_schedule(
+                        0, timeout, this,
+                        (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
+                        false);
+                break;
+            }
+
             // transition to mac cfg state
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_MAC_CFG);
 
@@ -237,12 +311,22 @@ port::port_link_sm_process()
             // configure the mac
             port_mac_cfg();
 
+            // bring MAC out of reset and enable
+            port_mac_stats_reset(false);
+            port_mac_enable(true);
+            port_mac_soft_reset(false);
+
+            // TODO wait for mac to initialize?
+
+            // enable serdes
+            port_serdes_output_enable(true);
+
             // transition to serdes signal detect state
             this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT);
 
         case port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT:
 
-            sig_detect = true;
+            sig_detect = port_serdes_signal_detect();
 
             if(sig_detect == false) {
                 this->link_bring_up_timer_ =
@@ -254,36 +338,11 @@ port::port_link_sm_process()
             }
 
             // transition to wait for serdes rdy state
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY);
+            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR);
 
-        case port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY:
+        case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR:
 
-            serdes_rdy = true;
-
-            if(serdes_rdy == false) {
-                this->link_bring_up_timer_ =
-                    hal::periodic::periodic_timer_schedule(
-                        0, timeout, this,
-                        (hal::utils::twheel_cb_t)port::link_bring_up_timer_cb,
-                        false);
-                break;
-            }
-
-            // transition to mac enable state
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_MAC_ENABLE);
-
-        case port_link_sm_t::PORT_LINK_SM_MAC_ENABLE:
-
-            port_mac_stats_reset(false);
-            port_mac_enable(true);
-            port_mac_soft_reset(false);
-
-            // transition to wait for clear mac faults
-            this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_MAC_CLEAR_FAULTS);
-
-        case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_CLEAR_FAULTS:
-
-            mac_faults = false;
+            mac_faults = port_mac_faults_get();
 
             if(mac_faults == true) {
                 this->link_bring_up_timer_ =
@@ -354,6 +413,11 @@ port::port_init(bool is_sim)
     hal_ret_t rc = HAL_RET_OK;
 
     rc = port::port_mac_init(is_sim);
+    if (rc != HAL_RET_OK) {
+        HAL_TRACE_ERR("port mac init failed");
+    }
+
+    rc = port::port_serdes_init(is_sim);
     if (rc != HAL_RET_OK) {
         HAL_TRACE_ERR("port mac init failed");
     }

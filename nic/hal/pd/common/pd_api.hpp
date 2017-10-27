@@ -98,7 +98,7 @@ typedef struct pd_port_args_s {
     uint32_t         mac_id;                  // mac id associated with the port
     uint32_t         mac_ch;                  // mac channel associated with the port
     uint32_t         num_lanes;               // number of lanes for the port
-} pd_port_args_t;
+} __PACK__ pd_port_args_t;
 
 typedef struct pd_if_args_s {
     if_t    *intf;
