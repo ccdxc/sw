@@ -13,7 +13,7 @@ typedef struct capri_barco_resources_s {
     uint16_t                    obj_size;
     uint16_t                    obj_alignment;
     uint64_t                    hbm_region;
-    uint16_t                    hbm_region_size;
+    uint32_t                    hbm_region_size;
     indexer                     *idxer;
 } capri_barco_resources_t;
 

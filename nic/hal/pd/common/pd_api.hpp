@@ -622,6 +622,11 @@ hal_ret_t pd_crypto_free_key(int32_t key_idx);
 hal_ret_t pd_crypto_write_key(int32_t key_idx, crypto_key_t *key);
 hal_ret_t pd_crypto_read_key(int32_t key_idx, crypto_key_t *key);
 
+hal_ret_t pd_crypto_asym_alloc_key(int32_t *key_idx);
+hal_ret_t pd_crypto_asym_free_key(int32_t key_idx);
+hal_ret_t pd_crypto_asym_write_key(int32_t key_idx, crypto_asym_key_t *key);
+hal_ret_t pd_crypto_asym_read_key(int32_t key_idx, crypto_asym_key_t *key);
+
 hal_ret_t pd_drop_stats_get(pd_system_args_t *pd_sys_args);
 
 // OIF List related PD APIs

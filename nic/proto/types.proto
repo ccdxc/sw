@@ -221,11 +221,11 @@ enum CryptoKeyType {
 
 // Types of Barco Rings
 enum BarcoRings {
-    BARCO_RING_XTS0             = 0;
-    BARCO_RING_XTS1             = 1;
-    BARCO_RING_GCM0             = 2;
-    BARCO_RING_GCM1             = 3;
-    BARCO_RING_ASYM             = 4;
+    BARCO_RING_ASYM             = 0;
+    BARCO_RING_GCM0             = 1;
+    BARCO_RING_GCM1             = 2;
+    BARCO_RING_XTS0             = 3;
+    BARCO_RING_XTS1             = 4;
     BARCO_RING_MPP0             = 5;
     BARCO_RING_MPP1             = 6;
     BARCO_RING_MPP2             = 7;

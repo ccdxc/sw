@@ -53,6 +53,18 @@ hal_ret_t   crypto_key_update(cryptokey::CryptoKeyUpdateRequest &request,
 hal_ret_t   crypto_key_delete(cryptokey::CryptoKeyDeleteRequest &request,
         cryptokey::CryptoKeyDeleteResponse *response);
 
+
+
+typedef struct crypto_asym_key_s {
+    uint64_t                key_param_list;     /* Address to the DMA 
+                                                   descriptor that contains the
+                                                   key/param */
+    uint32_t                command_reg;        /* Command associated with this
+                                                   key descriptor */
+
+
+} __PACK__ crypto_asym_key_t;
+
 }    // namespace hal
 #endif  /* __CRYPTO_SESSION_KEYS_HPP__ */
 

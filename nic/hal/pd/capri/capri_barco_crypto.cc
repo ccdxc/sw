@@ -111,8 +111,18 @@ hal_ret_t capri_barco_crypto_init(void)
         return ret;
     }
 
-    return capri_barco_crypto_setup(ring_base, ring_size,
+    ret = capri_barco_crypto_setup(ring_base, ring_size,
         key_desc_array_base, key_desc_array_size);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+#if 0
+    hal_ret_t capri_barco_asym_run_tests(void);
+    ret = capri_barco_asym_run_tests();
+#endif
+
+    return ret;
 }
 
 hal_ret_t capri_barco_init_key(uint32_t key_idx, uint64_t key_addr)

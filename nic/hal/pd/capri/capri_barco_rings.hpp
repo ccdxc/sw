@@ -29,8 +29,11 @@ typedef struct barco_asym_descriptor_s {
 
 typedef struct barco_asym_dma_descriptor_s {
     uint64_t                address;
-    uint64_t                next_or_stop;
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    uint64_t                stop:1;
+    uint64_t                rsvd0:1;
+    uint64_t                next:62;
+
     uint32_t                int_en:1;
     uint32_t                discard:1;
     uint32_t                realign:1;
@@ -42,6 +45,10 @@ typedef struct barco_asym_dma_descriptor_s {
     uint32_t                realign:1;
     uint32_t                discard:1;
     uint32_t                int_en:1;
+
+    uint64_t                next:62;
+    uint64_t                rsvd0:1;
+    uint64_t                stop:1;
 #endif
     uint32_t                tag;
 } __attribute__((__packed__)) barco_asym_dma_descriptor_t;
@@ -56,6 +63,7 @@ hal_ret_t pd_crypto_asym_dma_descr_init(void);
 
 typedef hal_ret_t (*barco_ring_init_t) (struct capri_barco_ring_s *);
 typedef bool (*barco_ring_poller_t) (struct capri_barco_ring_s *);
+typedef hal_ret_t (*barco_ring_queue_request) (struct capri_barco_ring_s *, void *);
 
 typedef struct capri_barco_ring_s {
     char                ring_name[32];      /*  Friendly name for logging       */
@@ -66,16 +74,20 @@ typedef struct capri_barco_ring_s {
     uint16_t            descriptor_size;    /*  in bytes                        */
     uint16_t            producer_idx;       /*  S/W Write Ptr                   */
     uint16_t            consumer_idx;       /*  S/W Read ptr                    */
+    /* TBD lock/spinlock for ring access */
     barco_ring_init_t   init;               /* Ring initialization fn           */
-    barco_ring_poller_t poller;             /* Ring initialization fn           */
+    barco_ring_poller_t poller;             /* Ring poller fn                   */
+    barco_ring_queue_request    queue_request;  /* Request queue support        */
 } capri_barco_ring_t;
 
-#define BARCO_RING_XTS(id)  "Barco XTS" ## #id
-#define BARCO_RING_GCM(id)  "Barco GCM" ## #id
-#define BARCO_RING_MPP(id)  "Barco MPP" ## #id
-#define BARCO_RING_ASYM     "Barco Asym"
+#define BARCO_RING_XTS_STR(id)  "Barco XTS" ## #id
+#define BARCO_RING_GCM_STR(id)  "Barco GCM" ## #id
+#define BARCO_RING_MPP_STR(id)  "Barco MPP" ## #id
+#define BARCO_RING_ASYM_STR     "Barco Asym"
 
 
+hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req);
+bool capri_barco_ring_poll(types::BarcoRings barco_ring_type);
 
 
 }    // namespace pd

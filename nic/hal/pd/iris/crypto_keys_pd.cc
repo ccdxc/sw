@@ -3,6 +3,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/hal/pd/capri/capri_barco_res.hpp"
 
 #define MAX_IPSEC_PAD_SIZE 256
 
@@ -62,9 +63,7 @@ hal_ret_t pd_crypto_write_key(int32_t key_idx, crypto_key_t *key)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
-    if (ret == HAL_RET_OK) {
-        ret = capri_barco_setup_key(key_idx, key->key_type, key->key, key->key_size);
-    }
+    ret = capri_barco_setup_key(key_idx, key->key_type, key->key, key->key_size);
 
     return ret;
 }
@@ -74,6 +73,85 @@ hal_ret_t pd_crypto_read_key(int32_t key_idx, crypto_key_t *key)
     hal_ret_t           ret = HAL_RET_OK;
 
     ret = capri_barco_read_key(key_idx, &key->key_type, key->key, &key->key_size);
+
+    return ret;
+}
+
+hal_ret_t pd_crypto_asym_alloc_key(int32_t *key_idx)
+{
+    uint64_t        key_desc;
+    hal_ret_t       ret = HAL_RET_OK;
+
+    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, key_idx, &key_desc);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("SessKey: Failed to allocate key memory");
+        *key_idx = -1;
+        return HAL_RET_NO_RESOURCE;
+    }
+    return ret;
+}
+
+hal_ret_t pd_crypto_asym_free_key(int32_t key_idx)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+
+    /* TODO: Also free up the DMA descriptor and corresponding memory regions 
+     * if any referenced by the key descriptor 
+     */
+
+    ret = capri_barco_res_free_by_id(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, key_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("AsymKey: Failed to free key memory: {}", key_idx);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    return ret;
+}
+
+hal_ret_t pd_crypto_asym_write_key(int32_t key_idx, crypto_asym_key_t *key)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    capri_barco_asym_key_desc_t     key_desc;
+    uint64_t                        key_desc_addr = 0;
+
+
+    ret = capri_barco_res_get_by_id(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, key_idx, &key_desc_addr);
+    if (ret  != HAL_RET_OK) {
+        HAL_TRACE_ERR("AsymKey Write: Failed to retrieve the address from key index: {}", key_idx);
+        return ret;
+    }
+
+    key_desc.key_param_list = key->key_param_list;
+    key_desc.command_reg = key->command_reg;
+
+    if (capri_hbm_write_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+        HAL_TRACE_ERR("Failed to write Barco Asym key descriptor @ {:x}", (uint64_t) key_desc_addr); 
+        return HAL_RET_INVALID_ARG;
+    }
+    HAL_TRACE_DEBUG("AsymKey Write: Setup key @ {:x}", key_desc_addr); 
+
+    return ret;
+}
+
+hal_ret_t pd_crypto_asym_read_key(int32_t key_idx, crypto_asym_key_t *key)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    capri_barco_asym_key_desc_t     key_desc;
+    uint64_t                        key_desc_addr = 0;
+
+    ret = capri_barco_res_get_by_id(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, key_idx, &key_desc_addr);
+    if (ret  != HAL_RET_OK) {
+        HAL_TRACE_ERR("AsymKey Read: Failed to retrieve the address from key index: {}", key_idx);
+        return ret;
+    }
+
+    if (capri_hbm_read_mem(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+        HAL_TRACE_ERR("Failed to read Barco Asym key descriptor from {:x}", (uint64_t) key_desc_addr); 
+        return HAL_RET_INVALID_ARG;
+    }
+
+    key->key_param_list = key_desc.key_param_list;
+    key->command_reg = key_desc.command_reg;
 
     return ret;
 }

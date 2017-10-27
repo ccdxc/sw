@@ -28,7 +28,9 @@ cc_library(
             "capri_repl.cc",
             "capri_txs_scheduler.cc",
 		    "capri_barco_rings.cc",
-            "capri_barco_res.cc"
+            "capri_barco_res.cc",
+            "capri_barco_asym_apis.cc",
+            "capri_barco_asym_tests.cc"
             ],
     hdrs = [
     ] + glob(["*.hpp"]) + glob(["*.h"]),

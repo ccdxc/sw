@@ -72,9 +72,18 @@ hal_ret_t capri_barco_obj_alloc(capri_barco_resources_t *capri_barco_res,
 {
     uint32_t            idx = 0;
     indexer::status     is = indexer::SUCCESS;
+    uint64_t            lres = 0;
+
+    /* At least one of res_id or res needs to be valid */
+    if (!res_id && !res) {
+        return HAL_RET_INVALID_ARG;
+    }
 
     if (res_id)
         *res_id = -1;
+
+    if (res)
+        *res = 0;
 
     is = capri_barco_res->idxer->alloc((uint32_t*)&idx);
     if (is != indexer::SUCCESS) {
@@ -85,10 +94,12 @@ hal_ret_t capri_barco_obj_alloc(capri_barco_resources_t *capri_barco_res,
     if (res_id)
         *res_id = idx;
     
-    *res = (capri_barco_res->hbm_region + (idx * capri_barco_res->obj_size));
+    lres = (capri_barco_res->hbm_region + (idx * capri_barco_res->obj_size));
+    if (res)
+        *res = lres;
 
-    HAL_TRACE_DEBUG("{}: Allocated {} @ index:{}",
-            capri_barco_res->allocator_name, *res, idx);
+    HAL_TRACE_DEBUG("{}: Allocated {:x} @ index:{}",
+            capri_barco_res->allocator_name, lres, idx);
     
     return HAL_RET_OK;
 
@@ -129,7 +140,9 @@ hal_ret_t capri_barco_obj_free(capri_barco_resources_t *capri_barco_res, uint64_
     if ((res < capri_barco_res->hbm_region) ||
         (res > (capri_barco_res->hbm_region + capri_barco_res->hbm_region_size -
                         capri_barco_res->obj_size))) {
-        HAL_TRACE_ERR("{}: Invalid descriptor address: {}", capri_barco_res->allocator_name, res);
+        HAL_TRACE_ERR("{}: Invalid descriptor address: {:x}", capri_barco_res->allocator_name, res);
+        HAL_TRACE_ERR("HBM Region: {:x}, Region Size: {}, Obj Size: {}", capri_barco_res->hbm_region,
+                capri_barco_res->hbm_region_size, capri_barco_res->obj_size);
         return HAL_RET_INVALID_ARG;
         
     }
