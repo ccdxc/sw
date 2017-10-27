@@ -43,8 +43,8 @@ rawr_s6_chain_xfer:
      * Assume that HW would have dropped the packet if there had been
      * any L3/L4 checksum errors
      */
-    addi        RAWR_HDR_FLAGS_R, r0, PEN_APP_REDIR_L3_CHECKSUM_OK + \
-                                      PEN_APP_REDIR_L4_CHECKSUM_OK
+    addi        RAWR_HDR_FLAGS_R, r0, PEN_APP_REDIR_L3_CSUM_CHECKED + \
+                                      PEN_APP_REDIR_L4_CSUM_CHECKED
     /*
      * Continue to fill out meta headers
      */

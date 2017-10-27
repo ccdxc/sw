@@ -73,6 +73,22 @@ inline hal_ret_t register_pipelines() {
                       tls_proxy_outbound, sizeof(tls_proxy_outbound)/sizeof(fte::feature_id_t),
                       {}, 0, {0x7FF, 0, 0});
     
+    // L7 App Redirect Pipeline
+    fte::feature_id_t app_redir_inbound[] = {
+    	fte::FTE_FEATURE_APP_REDIR,
+    	fte::FTE_FEATURE_APP_REDIR_FINI,
+    };
+
+    fte::feature_id_t app_redir_outbound[] = {
+    	fte::FTE_FEATURE_APP_REDIR,
+    	fte::FTE_FEATURE_APP_REDIR_FINI,
+    };
+
+    register_pipeline("app-redir", fte::APP_REDIR_LIFQ,
+                      app_redir_outbound, sizeof(app_redir_outbound)/sizeof(fte::feature_id_t),
+                      app_redir_inbound, sizeof(app_redir_inbound)/sizeof(fte::feature_id_t),
+                      {0x7FF, 0, 0});
+
     return HAL_RET_OK;
 }
 
@@ -111,20 +127,6 @@ inline hal_ret_t register_classic_nic_pipelines() {
     register_pipeline("alg-cflow", fte::ALG_CFLOW_LIFQ,
                        alg_cflow_outbound, sizeof(alg_cflow_outbound)/sizeof(fte::feature_id_t),
                        alg_cflow_inbound, sizeof(alg_cflow_inbound)/sizeof(fte::feature_id_t));
-
-    // L7 App Redirect Pipeline
-    fte::feature_id_t app_redir_inbound[] = {
-    	fte::FTE_FEATURE_APP_REDIR,
-    };
-
-    fte::feature_id_t app_redir_outbound[] = {
-    	fte::FTE_FEATURE_APP_REDIR,
-    };
-
-    register_pipeline("app-redir", fte::APP_REDIR_LIFQ,
-                      app_redir_outbound, sizeof(app_redir_outbound)/sizeof(fte::feature_id_t),
-                      app_redir_inbound, sizeof(app_redir_inbound)/sizeof(fte::feature_id_t),
-                      {0x7FF, 0, 0});
 
     return HAL_RET_OK;
 }

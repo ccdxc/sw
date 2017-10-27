@@ -127,8 +127,8 @@ struct pen_raw_redir_header_v1_t {
 /*
  * Meta header flags
  */
-#define PEN_APP_REDIR_L3_CHECKSUM_OK        0x0001
-#define PEN_APP_REDIR_L4_CHECKSUM_OK        0x0002
+#define PEN_APP_REDIR_L3_CSUM_CHECKED       0x0001
+#define PEN_APP_REDIR_L4_CSUM_CHECKED       0x0002
 #define PEN_APP_REDIR_SPAN_INSTANCE         0x0004
 #define PEN_APP_REDIR_PIPELINE_LOOPBK_EN    0x0008
 #define PEN_APP_REDIR_A0_RNMPR_SMALL        0x0010
@@ -147,7 +147,7 @@ struct pen_proxy_redir_header_v1_t {
     ip_da               : 128;
     sport               : 16;
     dport               : 16;
-    ip_ver              : 8;
+    af                  : 8;
     ip_proto            : 8;
     src_lif             : 16;
     tcp_flags           : 8;

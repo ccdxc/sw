@@ -597,6 +597,7 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, flow_t iflow[]
     hal_ret_t ret;
 
     *this = {};
+    app_redir().init();
 
     cpu_rxhdr_ = cpu_rxhdr;
     pkt_ = pkt;
@@ -621,6 +622,7 @@ ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflo
     hal_ret_t ret;
 
     *this = {};
+    app_redir().init();
 
     sess_spec_ = spec;
     sess_resp_ = rsp;

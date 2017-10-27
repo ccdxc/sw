@@ -30,7 +30,7 @@ SO_PUBLIC int init_pkt_thread(int thread_num);
 // A non-zero return status indicates that packet thread is exiting and
 // cleanup_pkt_thread needs to be called
 // thread_num is a zero-based number
-SO_PUBLIC struct App run_pkt_thread_loop(int thread_num, void* pkt);
+SO_PUBLIC struct App run_pkt_thread_loop(int thread_num, void* pkt, uint32_t pkt_len, void *priv_ptr=NULL);
 // Cleans up the thread.
 // thread_num is a zero-based number
 SO_PUBLIC int cleanup_pkt_thread(int thread_num);

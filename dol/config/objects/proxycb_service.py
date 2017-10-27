@@ -37,7 +37,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
         elif self.session.iflow.label == 'RAW-REDIR':
             req_spec.meta.tenant_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 4
-            req_spec.spec.proxy_type = 6
+            req_spec.spec.proxy_type = 7
             if req_spec.__class__.__name__ == 'ProxyFlowConfigRequest':
                 req_spec.proxy_en = True
                 req_spec.alloc_qid = True
