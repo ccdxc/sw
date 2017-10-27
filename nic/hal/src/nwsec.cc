@@ -81,7 +81,7 @@ nwsec_add_to_db (nwsec_profile_t *nwsec, hal_handle_t handle)
 
     HAL_TRACE_DEBUG("pi-sec-prof:{}:adding to nwsec profile id hash table", 
                     __FUNCTION__);
-    // allocate an entry to establish mapping from tenant id to its handle
+    // allocate an entry to establish mapping from security profile id to its handle
     entry =
         (hal_handle_id_ht_entry_t *)g_hal_state->
         hal_handle_id_ht_entry_slab()->alloc();
@@ -89,7 +89,7 @@ nwsec_add_to_db (nwsec_profile_t *nwsec, hal_handle_t handle)
         return HAL_RET_OOM;
     }
 
-    // add mapping from tenant id to its handle
+    // add mapping from security profile id to its handle
     entry->handle_id = handle;
     ret = g_hal_state->nwsec_profile_id_ht()->
         insert_with_key(&nwsec->profile_id, entry, &entry->ht_ctxt);
@@ -1183,10 +1183,7 @@ nwsec_prof_del_tenant (nwsec_profile_t *nwsec, tenant_t *tenant)
 /// TODO: Move to a separate file
 // ----------------------------------------------------------------------------
 
-/** 
-  * 
-  * Security Group Policy Related
-**/
+// Security Group Policy Related
 void *
 nwsec_policy_cfg_get_key_func (void *entry)
 {
@@ -1346,7 +1343,7 @@ nwsec_policy_cfg_prepare_rsp(SecurityGroupPolicyResponse *rsp, hal_ret_t ret,
                              hal_handle_t hal_handle)
 {
     if (ret == HAL_RET_OK) {
-        rsp->mutable_status()->set_sg_handle(hal_handle);
+        rsp->mutable_status()->set_policy_handle(hal_handle);
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
     return HAL_RET_OK;
@@ -1517,9 +1514,7 @@ security_group_policy_get(nwsec::SecurityGroupPolicyGetRequest& spec,
     return HAL_RET_OK;
 }
 
-/**
-  * Security group create
-**/
+// Security Group create
 void *
 nwsec_group_get_key_func (void *entry)
 {
@@ -1544,11 +1539,11 @@ nwsec_group_compare_key_func (void *key1, void *key2)
     return false;
 }
 
-static hal_ret_t 
+static hal_ret_t
 validate_nwsec_group_create(nwsec::SecurityGroupSpec& spec,
                             nwsec::SecurityGroupResponse *rsp)
 {
-    
+
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
         HAL_TRACE_ERR("{}: security group id or handle not set in request",
@@ -1556,9 +1551,9 @@ validate_nwsec_group_create(nwsec::SecurityGroupSpec& spec,
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
-    
+
     auto kh = spec.key_or_handle();
-    if (kh.key_or_handle_case() != 
+    if (kh.key_or_handle_case() !=
             SecurityGroupKeyHandle::kSecurityGroupId) {
         // key-handle field set, but securityGroup id not provided
         HAL_TRACE_ERR("{}: security group id not set in"
@@ -1569,7 +1564,7 @@ validate_nwsec_group_create(nwsec::SecurityGroupSpec& spec,
 
     return HAL_RET_OK;
 }
-    
+
 hal_ret_t
 nwsec_group_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
@@ -1583,14 +1578,14 @@ nwsec_group_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    
+
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    
+
     nwsec_grp = (nwsec_group_t *) dhl_entry->obj;
-    
+
     HAL_TRACE_DEBUG("{}: policy_id {}",
-                   __FUNCTION__, 
+                   __FUNCTION__,
                    nwsec_grp->sg_id);
     // No PD calls for security group objects
 
@@ -1606,7 +1601,7 @@ nwsec_group_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t           *dhl_entry  = NULL;
     nwsec_group_t         *nwsec_grp;
     hal_handle_t          hal_handle = 0;
-    
+
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("{}: invalid cfg_ctxt",
                       __FUNCTION__);
@@ -1620,8 +1615,8 @@ nwsec_group_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle = dhl_entry->handle;
 
     HAL_TRACE_DEBUG("{}:sg_id {} handle {}",
-                    __FUNCTION__, 
-                    nwsec_grp->sg_id, 
+                    __FUNCTION__,
+                    nwsec_grp->sg_id,
                     hal_handle);
     ret = add_nwsec_group_to_db(nwsec_grp);
     if (ret != HAL_RET_OK) {
@@ -1643,7 +1638,7 @@ nwsec_group_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_ret_t               ret = HAL_RET_OK;
 
     return ret;
-    
+
 }
 
 //------------------------------------------------------------------------
@@ -1660,7 +1655,7 @@ nwsec_group_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // Converts hal_ret_t to API status
 //------------------------------------------------------------------------------
 hal_ret_t
-nwsec_group_prepare_rsp(SecurityGroupResponse  *rsp, 
+nwsec_group_prepare_rsp(SecurityGroupResponse  *rsp,
                         hal_ret_t              ret,
                         hal_handle_t           hal_handle)
 {
@@ -1686,7 +1681,7 @@ security_group_create(nwsec::SecurityGroupSpec&     spec,
                     spec.key_or_handle().security_group_id());
 
     ret = validate_nwsec_group_create(spec, res);
-    
+
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}: validation failed, sg_id {} ret: {}",
                       __FUNCTION__,  spec.key_or_handle().security_group_id(),
@@ -1694,7 +1689,7 @@ security_group_create(nwsec::SecurityGroupSpec&     spec,
         goto end;
     }
     // Check of the sgid is already present
-    
+
     // instanstiate the security_policy
     nwsec_grp  = nwsec_group_alloc_init();
     if (nwsec_grp == NULL) {
@@ -1704,8 +1699,7 @@ security_group_create(nwsec::SecurityGroupSpec&     spec,
         goto end;
     }
 
-    //nwsec_grp->sg_id = 
-    
+    nwsec_grp->sg_id =  spec.key_or_handle().security_group_id();
     nwsec_grp->hal_handle = hal_handle_alloc(HAL_OBJ_ID_SECURITY_POLICY);
     if (nwsec_grp->hal_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("{}: failed to alloc handle for policy_id: {}",
@@ -1721,7 +1715,7 @@ security_group_create(nwsec::SecurityGroupSpec&     spec,
     dhl_entry.handle = nwsec_grp->hal_handle;
     dhl_entry.obj  = nwsec_grp;
     cfg_ctxt.app_ctxt = &app_ctxt;
-    
+
     utils::dllist_reset(&cfg_ctxt.dhl);
     utils::dllist_reset(&dhl_entry.dllist_ctxt);
     utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
@@ -1732,7 +1726,7 @@ security_group_create(nwsec::SecurityGroupSpec&     spec,
                              nwsec_group_create_cleanup_cb);
 end:
     nwsec_group_prepare_rsp(res, ret, nwsec_grp->hal_handle);
-     
+
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return HAL_RET_OK;
 }
@@ -1747,7 +1741,7 @@ security_group_update(nwsec::SecurityGroupSpec& spec,
                     spec.key_or_handle().security_group_handle());
     return HAL_RET_OK;
 
-}  
+}
 
 hal_ret_t
 security_group_delete(nwsec::SecurityGroupSpec& spec,
@@ -1757,7 +1751,7 @@ security_group_delete(nwsec::SecurityGroupSpec& spec,
     HAL_TRACE_DEBUG("{}: Deleting nwsec group, sg_id {}", __FUNCTION__,
                     spec.key_or_handle().security_group_id());
     return HAL_RET_OK;
-}    
+}
 
 hal_ret_t
 security_group_get(nwsec::SecurityGroupGetRequest& spec,

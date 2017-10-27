@@ -169,7 +169,7 @@ message SecurityProfileGetResponse {
 
 // SecurityProfileGetResponseMsg is the batched response to SecurityProfileGetRequestMsg
 message SecurityProfileGetResponseMsg {
-  types.ApiStatus     		          api_status = 1;    // API status code
+  types.ApiStatus                         api_status = 1;    // API status code
   repeated SecurityProfileGetResponse     response   = 2;    // batched get response
 }
 
@@ -233,7 +233,7 @@ message SecurityGroupPolicyId {
 // to create/update/delete/get security group Policy
 message SecurityGroupPolicyKeyHandle {
   oneof policy_key_or_handle {
-    SecurityGroupPolicyId   security_group_policy_id = 1;
+    SecurityGroupPolicyId   security_group_policy_id      = 1;
     fixed64                 security_group_policy_handle  = 2;// handle for security group policy 
   }
 }
@@ -248,7 +248,7 @@ message SecurityGroupPolicySpec {
   types.ObjectMeta                meta           = 1;    // object meta
   // key_or_handle is the security group's unique identifier
   SecurityGroupPolicyKeyHandle    key_or_handle  = 2 [(gogoproto.jsontag) = "key"];
-  SGPolicy                        policy_rules = 3;    // ingress policy
+  SGPolicy                        policy_rules   = 3;    // ingress policy
 }
 
 // SecurityGroupPolicyRequestMsg is batched add or modify security group policy request
@@ -258,7 +258,7 @@ message SecurityGroupPolicyRequestMsg {
 
 // security group operational status
 message SecurityGroupPolicyStatus {
-  fixed64    sg_handle = 1;    // id of the security group returned by HAL
+  fixed64    policy_handle = 1;    // id of the security group returned by HAL
 }
 
 // SecurityGroupResponse is the response to SecurityGroupPolicySpec
@@ -317,7 +317,8 @@ message SecurityGroupPolicyGetResponse {
 
 // SecurityGroupPolicyGetResponseMsg is batched response to SecurityGroupGetRequestMsg
 message SecurityGroupPolicyGetResponseMsg {
-  repeated SecurityGroupPolicyGetResponse    response = 1;    // batched get response
+  types.ApiStatus                            api_status = 1;    // Batch API Statu code
+  repeated SecurityGroupPolicyGetResponse    response   = 2;    // batched get response
 }
 
 // security_group obj definition
@@ -331,7 +332,7 @@ message SecurityGroupKeyHandle {
 }
 
 message SecurityGroupSpec {
-    types.ObjectMeta              meta     = 1; // object meta
+    types.ObjectMeta              meta          = 1; // object meta
     // Key_or_handle is the security group's unique identifier
     SecurityGroupKeyHandle        key_or_handle = 2 [(gogoproto.jsontag) = "key"];
 }
@@ -401,7 +402,8 @@ message SecurityGroupGetResponse {
 
 // SecurityGroupGetResponseMsg is batched response to SecurityGroupGetRequestMsg
 message SecurityGroupGetResponseMsg {
-  repeated SecurityGroupGetResponse    response = 1;    // batched get response
+  types.ApiStatus                      api_status = 1;    // batch status
+  repeated SecurityGroupGetResponse    response   = 2;    // batched get response
 }
 
 message DoSService {

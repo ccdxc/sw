@@ -59,7 +59,7 @@ typedef struct qos_actions_s {
     uint32_t            pcp;
     bool                dscp_write_en;
     uint32_t            dscp;
-} qos_actions_t;
+} __PACK__ qos_actions_t;
 
 // l2seg entry used for classic enic if
 typedef struct if_l2seg_entry_s {

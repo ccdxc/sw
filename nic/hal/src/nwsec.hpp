@@ -278,7 +278,7 @@ typedef struct nwsec_policy_svc_s {
 } __PACK__ nwsec_policy_svc_t;
 
 typedef  struct nwsec_policy_rules_s {
-    hal_spinlock_t         slock; 
+    hal_spinlock_t         slock;
     dllist_ctxt_t          fw_svc_list_head;
     bool                   log;
     FirewallAction         action;
@@ -290,7 +290,7 @@ typedef struct nwsec_policy_cfg_s {
     hal_spinlock_t               slock;      // lock to protect this strucuture
     nwsec_policy_key_t           plcy_key;
     dllist_ctxt_t                rules_head; // List of rules - nwsec_policy_rules_cfg_t
-    
+
     // operational state of security group policy
     hal_handle_t                 hal_handle;         // HAL allocated handle
     ht_ctxt_t                    ht_ctxt;
@@ -301,11 +301,10 @@ typedef struct nwsec_group_s {
     uint32_t           sg_id;
     dllist_ctxt_t      ep_list_head;
     dllist_ctxt_t      nw_list_head;
-    
     // Operational state of Security Group
     hal_handle_t       hal_handle;
     ht_ctxt_t          ht_ctxt;
-}nwsec_group_t;
+}__PACK__ nwsec_group_t;
 
 
 // Empty context for now
@@ -546,17 +545,62 @@ nwsec_group_free(nwsec_group_t *nwsec_grp)
 static inline hal_ret_t
 add_nwsec_group_to_db (nwsec_group_t *nwsec_grp)
 {
-    g_hal_state->nwsec_group_ht()->insert(nwsec_grp,
-                                               &nwsec_grp->ht_ctxt);
+    hal_ret_t                       ret;
+    hal_handle_id_ht_entry_t        *entry;
+
+    HAL_TRACE_DEBUG("Adding to security group hash table");
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->
+            hal_handle_id_ht_entry_slab()->alloc();
+    if (entry == NULL) {
+        return HAL_RET_OOM;
+    }
+    // add mapping from security group id to its handle
+    entry->handle_id   = nwsec_grp->hal_handle;
+
+    ret = g_hal_state->nwsec_group_ht()->insert(entry,
+                                                &nwsec_grp->ht_ctxt);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to add security group {} to handle mapping, "
+                      "err : {}", nwsec_grp->sg_id, ret);
+        g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+    }
+    //nwsec_grp->hal_handle = handle_id;
     return HAL_RET_OK;
 }
 
-// find a security policy by sg
+// find a security group by key
 static inline nwsec_group_t *
 nwsec_group_lookup_by_key(uint32_t sg_id)
 {
-    return (nwsec_group_t *)
-         g_hal_state->nwsec_group_ht()->lookup(&sg_id);
+    hal_handle_id_ht_entry_t     *entry;
+    nwsec_group_t                *nwsec_group;
+
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->nwsec_group_ht()->lookup(&sg_id);
+    if (entry) {
+        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+                   HAL_OBJ_ID_SECURITY_GROUP);
+        nwsec_group = (nwsec_group_t *) hal_handle_get_obj(entry->handle_id);
+        return nwsec_group;
+    }
+    return NULL;
+}
+
+// find a security group by handle
+static inline nwsec_group_t *
+nwsec_group_lookup_by_handle (hal_handle_t handle)
+{
+    auto hal_handle = hal_handle_get_from_handle_id(handle);
+    if (!hal_handle) {
+        HAL_TRACE_DEBUG("failed to find hal object with handle:{}",
+                        handle);
+        return NULL;
+    }
+    if (hal_handle->obj_id() != HAL_OBJ_ID_SECURITY_GROUP) {
+        HAL_TRACE_DEBUG("failed to find security_group  with handle:{}",
+                        handle);
+        return NULL;
+    }
+    return (nwsec_group_t *)hal_handle->get_obj();
 }
 
 //APIs to be consumed by other features

@@ -329,14 +329,14 @@ hal_cfg_db::init(void)
 
     nwsec_policy_cfg_ht_ = ht::factory(HAL_MAX_NW_SEC_POLICY_CFG,
                                        hal::nwsec_policy_cfg_get_key_func,
-                                       hal::nwsec_policy_cfg_compute_hash_func, 
+                                       hal::nwsec_policy_cfg_compute_hash_func,
                                        hal::nwsec_policy_cfg_compare_key_func);
     HAL_ASSERT_RETURN((nwsec_policy_cfg_ht_ != NULL), false);
 
     nwsec_group_ht_ = ht::factory(HAL_MAX_NW_SEC_GROUP_CFG,
-                                       hal::nwsec_group_get_key_func,
-                                       hal::nwsec_group_compute_hash_func, 
-                                       hal::nwsec_group_compare_key_func);
+                                  hal::nwsec_group_get_key_func,
+                                  hal::nwsec_group_compute_hash_func,
+                                  hal::nwsec_group_compare_key_func);
     HAL_ASSERT_RETURN((nwsec_policy_cfg_ht_ != NULL), false);
     return true;
 }
@@ -395,7 +395,7 @@ hal_cfg_db::hal_cfg_db()
 
     acl_id_ht_ = NULL;
     acl_hal_handle_ht_ = NULL;
-    
+ 
     tlscb_id_ht_ = NULL;
     tlscb_hal_handle_ht_ = NULL;
  
