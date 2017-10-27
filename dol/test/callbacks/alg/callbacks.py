@@ -23,6 +23,44 @@ def GetExpectedTFTPRflowOp(testcase, packet):
 
     return None
 
+def GetExpectedSUNRPCPortmapvers(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'VERS2' in profile_name:
+        return 2
+    elif 'VERS4' in profile_name:
+        return 4
+
+    return None
+
+def GetExpectedSUNRPCProc(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'GETPORT' in profile_name:
+       return 3
+    elif 'DUMP' in profile_name:
+       return 4
+    elif 'CALLIT' in profile_name:
+       return 5
+
+    return None
+
+def GetExpectedSUNRPCReplyState(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'SUCCESS' in profile_name:
+       return 0
+    else: 
+       return 1
+
+def GetExpectedSUNRPCAccState(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    profile_name = iterelem.profile
+    if 'ACCEPT' in profile_name:
+       return 0
+    else:
+       return 1
+
 def GetCpuPacketbyIflow(testcase, args = None):
     root = getattr(testcase.config, 'flow', None)
     if root is None:

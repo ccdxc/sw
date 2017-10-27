@@ -5,6 +5,7 @@ namespace net {
 
 hal_ret_t parse_rpc_control_flow(fte::ctx_t& ctx);
 hal_ret_t process_rpc_control_flow(fte::ctx_t& ctx);
+hal_ret_t process_rpc_data_flow(fte::ctx_t& ctx);
 
 }
 }

@@ -4,6 +4,14 @@
 
 namespace fte {
 
+enum key_fields_t {
+    SIP=1,
+    SPORT=2,
+    DIR=3,
+    TID=4,
+    MAX_KEY_FIELDS,
+};
+
 /*-----------------------------------------------------
     Begin Hash Utility APIs
 ------------------------------------------------------*/
@@ -41,12 +49,30 @@ alg_flow_compare_key_func (void *key1, void *key2)
   the flow.
 -------------------------------------------------------------------------*/
 static hal_ret_t
-build_wildcard_key(hal::flow_key_t& key, hal::flow_key_t key_)
+build_wildcard_key(hal::flow_key_t& key, hal::flow_key_t key_, 
+                   key_fields_t *fields, uint8_t num_mask)
 {
     memcpy(std::addressof(key), &key_, sizeof(hal::flow_key_t));
 
-    if (key.flow_type != hal::FLOW_TYPE_L2 && key.proto == IP_PROTO_UDP) {
-        key.sport = 0;
+    if (key.flow_type != hal::FLOW_TYPE_L2) {
+        for (int i=0; i<num_mask; i++) {
+            switch(fields[i]) {
+                case SPORT:
+                    key.sport = 0;
+                    break;
+
+                case SIP:
+                    memset(&key.sip, 0, sizeof(ipvx_addr_t));
+                    break;
+ 
+                case DIR:
+                    key.dir = 0;
+                    break;
+
+                default:
+                    break;           
+            };
+        }
     }
 
     return HAL_RET_OK;
@@ -59,12 +85,23 @@ build_wildcard_key(hal::flow_key_t& key, hal::flow_key_t key_)
 void *
 lookup_alg_db(ctx_t *ctx)
 {
-    uint8_t         i=0, num_keys=0;
-    hal::flow_key_t keys[MAX_FLOW_KEYS];
+    uint8_t          i=0, num_keys=0, num_fields=0;
+    hal::flow_key_t  keys[MAX_FLOW_KEYS];
     alg_entry_t     *entry = NULL;
+    key_fields_t     fields[MAX_KEY_FIELDS];
+
+    keys[num_keys++] = ctx->key();
 
     //ALG Variations
-    build_wildcard_key(keys[num_keys++], ctx->key());
+ 
+    // TFTP response
+    fields[num_fields++] = SPORT;
+    build_wildcard_key(keys[num_keys++], ctx->key(), fields, 1);
+
+    // For RPC Data session
+    fields[num_fields++] = SIP;
+    fields[num_fields++] = DIR;
+    build_wildcard_key(keys[num_keys++], ctx->key(), fields, 3);
 
     g_fte_db->rlock();
     while (i < num_keys) {
@@ -136,6 +173,7 @@ update_alg_entry(hal::flow_key_t key, void *new_entry, size_t sz)
     entry = (alg_entry_t *)g_fte_db->alg_flow_key_ht()->lookup((void *)std::addressof(key));
     if (entry == NULL) {
         HAL_TRACE_ERR("Entry not found in ALG table");
+        g_fte_db->wunlock();
         return HAL_RET_ERR;
     }
 

@@ -1,0 +1,8 @@
+meta:    
+    id      : SUNRPC
+    scapy   : SUNRPC
+    size    : 0
+
+fields:
+    xid       : const/0
+    msg_type  : const/0

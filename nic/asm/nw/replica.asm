@@ -19,14 +19,17 @@ set_replica_rewrites:
 
   seq         c1, k.tm_replication_data_valid, TRUE
   nop.!c1.e
-  seq         c1, k.control_metadata_src_lport, k.{tm_replication_data_lport_sbit0_ebit4, \
-                                                   tm_replication_data_lport_sbit5_ebit10}
-  phvwr.c1.e  p.capri_intrinsic_drop, TRUE
+  nop
 
   seq         c1, k.tm_replication_data_repl_type, TM_REPL_TYPE_DEFAULT
   seq         c2, k.tm_replication_data_repl_type, TM_REPL_TYPE_TO_CPU_REL_COPY
   bcf         ![c1 | c2], lb_replica_honor_ingress
   phvwr       p.tm_replication_data_valid, FALSE
+
+  seq         c1, k.control_metadata_src_lport, k.{tm_replication_data_lport_sbit0_ebit4, \
+                                                   tm_replication_data_lport_sbit5_ebit10}
+  phvwr.c1.e  p.capri_intrinsic_drop, TRUE
+  nop
 
   phvwr       p.control_metadata_dst_lport, k.{tm_replication_data_lport_sbit0_ebit4, \
                                                tm_replication_data_lport_sbit5_ebit10}

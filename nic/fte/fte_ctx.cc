@@ -228,8 +228,9 @@ ctx_t::lookup_session()
         }
 
         set_role(entry->role);  
-        set_flow_miss(true);
+        set_flow_miss((arm_lifq_==FLOW_MISS_LIFQ));
         set_alg_entry(*entry);
+        if (!flow_miss()) key_ = entry->key;
     }
 
     if (!session_) {
@@ -276,6 +277,7 @@ ctx_t::create_session()
     }
  
     cleanup_hal_ = false;
+    num_handlers_ = 0;
    
     // read rkey from spec
     if (protobuf_request()) {
@@ -714,9 +716,9 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         break;
 
     case FLOWUPD_MCAST_COPY:
-        ret = flow->set_mcast_copy(flowupd.mcast_copy_en);
-        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} mcast_copy_en={}",
-                        role, feature_name_, ret, flowupd.mcast_copy_en);
+        ret = flow->set_mcast_copy(flowupd.mcast_info);
+        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} mcast_info={} mcast_ptr={}",
+                        role, feature_name_, ret, flowupd.mcast_info);
         break;
     }
 
@@ -1016,6 +1018,15 @@ std::ostream& operator<<(std::ostream& os, const fwding_info_t& val)
         os << " ,dl2seg=" << val.dl2seg->seg_id;
     }
 
+    return os << "}";
+}
+
+std::ostream& operator<<(std::ostream& os, const mcast_info_t& val)
+{
+    os << "{mcast_en=" << val.mcast_en;
+    if (val.mcast_en) {
+        os << " ,mcast_ptr=" << val.mcast_ptr;
+    }
     return os << "}";
 }
 

@@ -1,0 +1,10 @@
+meta:    
+    id      : SUNRPC_REPLY_HDR
+    scapy   : SUNRPC_REPLY_HDR
+    size    : 0
+
+fields:
+    reply_state  : const/0
+    verif_len    : const/0
+    verif        : const/0
+    accept_state : const/0

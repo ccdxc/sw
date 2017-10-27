@@ -46,7 +46,7 @@ def __get_packet_template_impl(flow, args):
         template += "_%s_%s" % (flow.type, flow.proto)
     else:
         assert(0)
-  
+ 
     if args is not None:
         template += "_%s" % (args.proto)
 

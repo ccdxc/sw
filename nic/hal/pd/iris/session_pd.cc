@@ -285,6 +285,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     
     d.flow_info_action_u.flow_info_flow_info.dst_lport = flow_attrs->lport;
     d.flow_info_action_u.flow_info_flow_info.multicast_en = flow_attrs->mcast_en;
+    d.flow_info_action_u.flow_info_flow_info.multicast_ptr = flow_attrs->mcast_ptr;
 
     // TBD: where do these come from ?
     // TBD: the following come when QoS model is defined

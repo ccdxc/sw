@@ -1,0 +1,14 @@
+meta:    
+    id      : SUNRPC_CALL_HDR
+    scapy   : SUNRPC_CALL_HDR
+    size    : 0
+
+fields:
+    rpcvers   : const/0
+    pgm       : const/0
+    pgmvers   : const/0
+    proc      : const/0
+    cred_len  : const/0
+    cred      : const/0
+    verif_len : const/0
+    verif     : const/0

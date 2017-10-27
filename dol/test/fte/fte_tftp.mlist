@@ -3,7 +3,7 @@ feature:
     id          : fte
     sub         : tftp 
     package     : test.fte
-    module      : tftp
+    module      : alg
     spec        : tftp.testspec
     enable      : True
     ignore      : False

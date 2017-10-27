@@ -396,7 +396,8 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
     }
 
     if (valid_.mcast_copy) {
-        attrs.mcast_en = mcast_copy_en_;
+        attrs.mcast_en = mcast_info_.mcast_en;
+        attrs.mcast_ptr = mcast_info_.mcast_ptr;
     }
 
     if (valid_.fwding) {

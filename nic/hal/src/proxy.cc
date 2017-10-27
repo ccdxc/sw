@@ -45,7 +45,7 @@ proxy_meta_init() {
         (proxy_meta_t) {true, 1, {SERVICE_LIF_GC, 1, {0, 1, 1}}};
 
     g_meta[types::PROXY_TYPE_CPU] = 
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 1, 1}}};
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 2, (uint8_t)round(log2(CPUCB_ID_MAX))}}};
 
     g_meta[types::PROXY_TYPE_IPFIX] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 1}}};
@@ -206,7 +206,6 @@ proxy_program_lif(proxy_t* proxy)
             qstate_params.dont_zero_memory = true;
             qstate_params.type[meta_qtype_info->qtype_val].entries = meta_qtype_info->qstate_entries;
             qstate_params.type[meta_qtype_info->qtype_val].size = meta_qtype_info->qstate_size;
-
             int32_t rs = g_lif_manager->InitLIFQState(meta_lif_info->lif_id, &qstate_params);
             if(rs != 0) {
                 HAL_TRACE_ERR("Failed to program lif qstate for Lif {}, qtype {}: err: 0x{0:x}",
@@ -232,13 +231,13 @@ proxy_program_lif(proxy_t* proxy)
 // match though)
 //------------------------------------------------------------------------------
 hal_ret_t
-proxy_create_cpucb(void)
+proxy_create_cpucb(uint8_t cpucb_id)
 {
     hal_ret_t               ret = HAL_RET_OK;
     cpucb::CpuCbSpec        spec;
     cpucb::CpuCbResponse   rsp;
 
-    spec.mutable_key_or_handle()->set_cpucb_id(0);
+    spec.mutable_key_or_handle()->set_cpucb_id(cpucb_id);
     ret = cpucb_create(spec, &rsp);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create cpucb: {}", ret);
@@ -246,6 +245,22 @@ proxy_create_cpucb(void)
 
     return ret;
 }
+
+hal_ret_t
+proxy_create_cpucb(void) 
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    for(int i = 0; i < CPUCB_ID_MAX; i++) {
+        ret = proxy_create_cpucb(i);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to create cpucb for id: {}, ret: {}", i, ret);
+            return ret;
+        }
+    }
+
+    return ret;
+}
+
 
 hal_ret_t 
 proxy_init_default_params(proxy_t* proxy)

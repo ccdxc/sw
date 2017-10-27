@@ -13,17 +13,18 @@ alloc_and_insert_alg_entry(fte::ctx_t& ctx, hal::flow_role_t role)
 {
     alg_entry_t     *entryp = NULL;
     hal::flow_key_t  key = ctx.key();
+    alg_entry_t      alg_entry = ctx.alg_entry();
 
     entryp = (alg_entry_t *)HAL_CALLOC(alg_entry_t, sizeof(alg_entry_t));
     if (!entryp) {
         return NULL;
     }
 
+    memcpy(entryp, &alg_entry, sizeof(alg_entry_t));
     switch (ctx.alg_proto()) {
         case nwsec::APP_SVC_TFTP:
-            role = hal::FLOW_ROLE_RESPONDER;
-            key = ctx.get_key(role);
-            key.sport = 0;
+            entryp->role = hal::FLOW_ROLE_RESPONDER;
+            entryp->key.sport = 0;
             break;
 
         case nwsec::APP_SVC_SUN_RPC:
@@ -33,6 +34,8 @@ alloc_and_insert_alg_entry(fte::ctx_t& ctx, hal::flow_role_t role)
                 alloc_and_insert_alg_entry(ctx, hal::FLOW_ROLE_RESPONDER);
             } else {
                 key = ctx.get_key(role);
+                entryp->key = key;
+                entryp->role = role;
             }
             break;
 
@@ -40,8 +43,6 @@ alloc_and_insert_alg_entry(fte::ctx_t& ctx, hal::flow_role_t role)
             return NULL;
     }
 
-    entryp->key = key;
-    entryp->role = ctx.role();
     entryp->session = ctx.session();
     entryp->alg_proto_state = ctx.alg_proto_state();
 
@@ -57,7 +58,7 @@ alloc_and_insert_alg_entry(fte::ctx_t& ctx, hal::flow_role_t role)
 alg_entry_t *
 alloc_and_insert_alg_entry(fte::ctx_t& ctx)
 {
-    return (alloc_and_insert_alg_entry(ctx, ctx.role()));
+    return (alloc_and_insert_alg_entry(ctx, hal::FLOW_ROLE_INITIATOR));
 }
 
 
@@ -68,6 +69,8 @@ alloc_and_insert_alg_entry(fte::ctx_t& ctx)
 void
 alg_completion_hdlr (fte::ctx_t& ctx, bool status)
 {
+    HAL_TRACE_DEBUG("Invoked ALG Completion Handler status: {}", status);
+
     // Insert ALG entry on completion
     if (status)
         alloc_and_insert_alg_entry(ctx);

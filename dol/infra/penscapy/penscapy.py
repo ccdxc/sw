@@ -272,5 +272,98 @@ bind_layers(UDP, BTH, dport=4791)
 
 bind_layers(UDP, TFTP, dport=65530)
 
+class SUNRPC_2_PORTMAP_GETPORT_CALL(Packet):
+    name = "SUNRPC_2_PORTMAP_GETPORT_CALL"
+    fields_desc = [
+        BitField("pgm",      0,      32),
+        BitField("vers",     0,      32),
+        BitField("proto",    0,      32),
+        BitField("port",     0,      32),
+    ]
 
+class SUNRPC_2_PORTMAP_GETPORT_REPLY(Packet):
+   name = "SUNRPC_2_PORTMAP_GETPORT_REPLY"
+   fields_desc = [
+        BitField("port",      0,      32),
+   ]
+ 
+class SUNRPC_REPLY_HDR(Packet):
+    name = "SUNRPC_REPLY_HDR"
+    fields_desc = [
+        BitField("reply_state",   0,      32),
+        BitField("verif_len",     0,      32),
+        BitField("verif",         0,      32),
+        BitField("acc_state",     0,      32),
+    ]
 
+    next_hdr = {
+                (100000, 2, 3): SUNRPC_2_PORTMAP_GETPORT_REPLY, #RPC Portmapper GETPORT
+    }
+
+    def guess_payload_class(self, payload):
+        if (self.next_hdr[(self.pgm, self.pgmvers, self.proc)]):
+            return self.next_hdr[(self.pgm, self.pgmvers, self.proc)]
+        else:
+            assert(0);
+            return super().guess_payload_class()
+
+class SUNRPC_CALL_HDR(Packet):
+    name = "SUNRPC_CALL_HDR"
+    fields_desc = [
+        BitField("rpcvers",       0,      32),
+        BitField("pgm",           0,      32),
+        BitField("pgmvers",       0,      32),
+        BitField("proc",          0,      32),
+        #FieldLenField("cred_len", None, length_of="cred"),
+        #StrLenField("cred", "0", length_from=lambda pkt:pkt.cred_len),
+        #FieldLenField("verif_len", None, length_of="verif"),
+        #StrLenField("verif", "0", length_from=lambda pkt:pkt.verif_len),
+        BitField("cred_len",       0,      32),
+        BitField("cred",          0,      32),
+        BitField("verif_len",       0,      32),
+        BitField("verif",          0,      32),
+    ]
+
+    next_hdr = { 
+                (100000, 2, 3): SUNRPC_2_PORTMAP_GETPORT_CALL, #RPC Portmapper GETPORT
+    }
+
+    def guess_payload_class(self, payload):
+        if (self.next_hdr[(self.pgm, self.pgmvers, self.proc)]):
+            return self.next_hdr[(self.pgm, self.pgmvers, self.proc)]
+        else:
+            assert(0);
+            return super().guess_payload_class()
+
+class SUNRPC(Packet):
+    name = "SUNRPC"
+    fields_desc = [
+        BitField("xid",           0,      32),
+        BitField("msg_type",      0,      32),
+    ]
+
+    next_hdr = { 0: SUNRPC_CALL_HDR,  #Call-hdr
+                 1: SUNRPC_REPLY_HDR, #Reply-hdr
+    }
+
+    def guess_payload_class(self, payload):
+        if (self.next_hdr[self.msg_type]):
+            return self.next_hdr[self.msg_type]
+        else:
+            assert(0);
+            return super().guess_payload_class()
+
+class SUNRPC_RCRD_MARKING(Packet):
+    name = "SUNRPC_RCRD_MARKING"
+    fields_desc = [
+        BitField("frag_hdr",           0,      32),
+    ]
+
+bind_layers(UDP, SUNRPC, dport=111)
+bind_layers(UDP, SUNRPC, dport=65529)
+bind_layers(TCP, SUNRPC_RCRD_MARKING, dport=111)
+bind_layers(SUNRPC_RCRD_MARKING, SUNRPC)
+bind_layers(SUNRPC, SUNRPC_CALL_HDR, msg_type=0)
+bind_layers(SUNRPC, SUNRPC_REPLY_HDR, msg_type=1)
+bind_layers(SUNRPC_CALL_HDR, SUNRPC_2_PORTMAP_GETPORT_CALL, proc=3)
+bind_layers(SUNRPC_REPLY_HDR, SUNRPC_2_PORTMAP_GETPORT_REPLY, proc=3)

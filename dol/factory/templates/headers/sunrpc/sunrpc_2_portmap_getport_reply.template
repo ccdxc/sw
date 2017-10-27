@@ -1,0 +1,7 @@
+meta:    
+    id      : SUNRPC_2_PORTMAP_GETPORT_REPLY
+    scapy   : SUNRPC_2_PORTMAP_GETPORT_REPLY
+    size    : 0
+
+fields:
+    port   : const/0

@@ -103,9 +103,14 @@ inline hal_ret_t register_classic_nic_pipelines() {
         fte::FTE_FEATURE_ALG,
     };
 
+    fte::feature_id_t alg_cflow_inbound[] = {
+        fte::FTE_FEATURE_ALG,
+    };
+
     register_pipeline("alg-cflow", fte::ALG_CFLOW_LIFQ,
-                                    alg_cflow_outbound, sizeof(alg_cflow_outbound)/sizeof(fte::feature_id_t),
-                                    {}, 0, {0x7FF, 0, 0}); 
+                       alg_cflow_outbound, sizeof(alg_cflow_outbound)/sizeof(fte::feature_id_t),
+                       alg_cflow_inbound, sizeof(alg_cflow_inbound)/sizeof(fte::feature_id_t));
+
     // L7 App Redirect Pipeline
     fte::feature_id_t app_redir_inbound[] = {
     	fte::FTE_FEATURE_APP_REDIR,

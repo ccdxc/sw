@@ -25,6 +25,8 @@ pol_check_sg_policy(fte::ctx_t &ctx)
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR && 
         ctx.key().dport == 69) {
         ctx.set_alg_proto(nwsec::APP_SVC_TFTP);
+    } else if (ctx.key().dport == 111) {
+        ctx.set_alg_proto(nwsec::APP_SVC_SUN_RPC);
     } else {
         ctx.set_alg_proto(nwsec::APP_SVC_NONE);
     }

@@ -187,6 +187,7 @@ typedef struct flow_pgm_attrs_s {
     uint16_t                  nat_l4_port;         // NAT L4 port
     uint8_t                   dot1p;               // Cos value
     uint8_t                   dscp;                // dscp value
+    uint16_t                  mcast_ptr;           // Mcast Pointer
 } __PACK__ flow_pgm_attrs_t;
 
 // flow state

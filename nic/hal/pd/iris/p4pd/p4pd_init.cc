@@ -12,6 +12,7 @@
 #include "nic/hal/pd/iris/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/p4pd/p4pd_defaults.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
+#include "nic/include/fte_common.hpp"
 
 using hal::pd::utils::Tcam;
 
@@ -1075,12 +1076,6 @@ p4pd_compute_checksum_init(void) {
     }
     return HAL_RET_OK;
 }
-
-// We need these to be defined by FTE and we need access to those in this function
-// We need changes from P4PLUS side to take non-zero qid. Goli will take care of it.
-#define HAL_FTE_FIN_QID               0
-#define HAL_FTE_RST_QID               0
-#define HAL_FTE_FLOW_REL_COPY_QID     0
 
 hal_ret_t
 capri_repl_pgm_def_entries (void)

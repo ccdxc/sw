@@ -8,6 +8,7 @@
 #include "nic/include/cpupkt_api.hpp"
 #include <netinet/ether.h>
 #include "nic/include/fte_db.hpp"
+#include "nic/include/fte_common.hpp"
 
 namespace fte {
 
@@ -240,6 +241,13 @@ typedef struct fwding_info_s {
 
 std::ostream& operator<<(std::ostream& os, const fwding_info_t& val);
 
+typedef struct mcast_info_s {
+    uint8_t  mcast_en;
+    uint16_t mcast_ptr;
+} mcast_info_t;
+
+std::ostream& operator<<(std::ostream& os, const mcast_info_t& val);
+
 typedef struct flow_update_s {
     flow_update_type_t type;
     union {
@@ -250,7 +258,7 @@ typedef struct flow_update_s {
         flow_state_t flow_state;
         fwding_info_t fwding;
         hal::flow_key_t key;
-        uint8_t   mcast_copy_en;
+        mcast_info_t mcast_info;
     };
 }__PACK__ flow_update_t;
 
@@ -274,13 +282,19 @@ struct lifqid_s {
 const lifqid_t FLOW_MISS_LIFQ = {hal::SERVICE_LIF_CPU, 0, 0};
 const lifqid_t TCP_PROXY_LIFQ = {hal::SERVICE_LIF_TCP_PROXY, 0, 0};
 const lifqid_t TLS_PROXY_LIFQ = {hal::SERVICE_LIF_TLS_PROXY, 0, 0};
-const lifqid_t ALG_CFLOW_LIFQ = {hal::SERVICE_LIF_CPU, 3, 0};
-const lifqid_t APP_REDIR_LIFQ = {hal::SERVICE_LIF_APP_REDIR, 0, 0};
+const lifqid_t ALG_CFLOW_LIFQ = {hal::SERVICE_LIF_CPU, 0, HAL_FTE_FLOW_REL_COPY_QID};
+const lifqid_t APP_REDIR_LIFQ = {hal::SERVICE_LIF_APP_REDIR, hal::APP_REDIR_RAWR_QTYPE, 0};
 
 inline std::ostream& operator<<(std::ostream& os, const lifqid_t& lifq)
 {
     return os << fmt::format("{{lif={}, qtype={}, qid={}}}",
                              lifq.lif, lifq.qtype, lifq.qid);
+}
+
+inline bool operator==(const lifqid_t& lifq1, const lifqid_t& lifq2)
+{
+    return (((lifq1.lif == lifq2.lif) && (lifq1.qtype == lifq2.qtype) && \
+            (lifq1.qid == lifq2.qid)));
 }
 
 // Application redirect context
@@ -335,7 +349,7 @@ class ctx_t;
 
 typedef void (*completion_handler_t) (ctx_t &ctx, bool fail);
 
-static const uint8_t MAX_FLOW_KEYS = 2;
+static const uint8_t MAX_FLOW_KEYS = 3;
 
 // FTE context passed between features in a pipeline
 class ctx_t {
@@ -413,8 +427,9 @@ public:
     // flow is not getting installed.
     hal_ret_t register_completion_handler(completion_handler_t handler) {
         HAL_ASSERT_RETURN(num_handlers_ + 1 < MAX_QUEUED_HANDLERS, HAL_RET_INVALID_OP);
-        HAL_TRACE_DEBUG("fte: feature={} queued completion handler {:p}", feature_name_, (void*)handler);
         completion_handlers_[num_handlers_++] = handler;
+        HAL_TRACE_DEBUG("fte: feature={} queued completion handler {:p} num_handlers: {}", 
+                         feature_name_, (void*)handler, num_handlers_);
         return HAL_RET_OK;
     }
 

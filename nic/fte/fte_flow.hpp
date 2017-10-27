@@ -66,13 +66,13 @@ public:
         return valid_.fwding;
     };
 
-    hal_ret_t set_mcast_copy(const uint8_t& copy_en) {
-        mcast_copy_en_ = copy_en;
+    hal_ret_t set_mcast_copy(const mcast_info_t& mcast_info) {
+        mcast_info_ = mcast_info;
         valid_.mcast_copy = true;
         return HAL_RET_OK;
     }
-    const uint8_t& mcast_copy() const {
-        return mcast_copy_en_;
+    const mcast_info_t& mcast_copy() const {
+        return mcast_info_;
     } 
     bool valid_mcast_copy() const {
         return valid_.mcast_copy;
@@ -97,7 +97,7 @@ private:
     session::FlowAction       action_;              // firwall action
     flow_state_t              flow_state_;          // connection tracking 
     fwding_info_t             fwding_;              // Fwding info
-    uint8_t                   mcast_copy_en_;             // Flow copy Enable 
+    mcast_info_t              mcast_info_;          // Mulitcast Enable 
 
     uint8_t                   num_header_updates_; // no.of valid updates
     header_update_t           header_updates_[MAX_HEADER_UPDATES];

@@ -52,6 +52,7 @@ typedef struct alg_entry_s {
     alg_proto_state_t       alg_proto_state;
     hal::flow_role_t        role;
     RPCMaplist              rpc_map;
+    uint8_t                 sunrpc_frag_cont;
 
     // meta data maintained for flow
     hal::utils::ht_ctxt_t   flow_key_ht_ctxt;  // Flow key based hash table

@@ -1,0 +1,181 @@
+# Test Spec
+selectors:
+    src:
+        tenant    : filter://overlay=VLAN,type=TENANT
+        segment   : filter://any
+        endpoint  : filter://remote=True
+    dst:
+        tenant    : filter://overlay=VLAN,type=TENANT
+        segment   : filter://any
+        endpoint  : filter://remote=True
+    #flow          : filter://fwtype=L3
+    session       :
+        base      : filter://proto=UDP
+        iflow     : filter://any
+        rflow     : filter://any
+    maxsessions   : 2
+
+packets:
+    - packet:
+        id          : IFLOW_BASE  # IFlow Base Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateBySessionIflow/proto=SUNRPC_CALL_2_GETPORT
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            ipv4:
+                src          : ref://testcase/config/session/iconfig/flow/sip
+                dst          : ref://testcase/config/session/iconfig/flow/dip
+                ttl          : 64
+            ipv6:
+                src          : ref://testcase/config/session/iconfig/flow/sip
+                dst          : ref://testcase/config/session/iconfig/flow/dip
+                hlim         : 64
+            udp:
+                sport        : 65529 
+                dport        : 111 
+            sunrpc:
+                xid          : 1122334455
+                msg_type     : 0
+            sunrpc_call_hdr:
+                rpcvers      : 2
+                pgm          : 100000
+                pgmvers      : 2
+                proc         : 3
+                cred_len     : 0
+                verif_len    : 0
+                verif        : 0 
+            sunrpc_2_portmap_getport_call:
+                pgm          : 100000
+                vers         : 2
+                proto        : 17
+                port         : 0
+
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : RFLOW_BASE  # RFlow Base Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateBySessionRflow/proto=SUNRPC_REPLY_2_GETPORT
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            ipv4:
+                src     : ref://testcase/config/session/rconfig/flow/sip
+                dst     : ref://testcase/config/session/rconfig/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/session/rconfig/flow/sip
+                dst     : ref://testcase/config/session/rconfig/flow/dip
+                hlim    : 64
+            udp:
+                sport   : 111
+                dport   : 65529 
+            sunrpc:
+                xid      : 1122334455
+                msg_type : 1
+            sunrpc_reply_hdr:
+                reply_state : 0
+                verif_len   : 0
+                acc_state   : 0
+            sunrpc_2_portmap_getport_reply:
+                port     : 0
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : IFLOW_DATA_BASE  # IFlow Data Base Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateBySessionIflow
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            ipv4:
+                src          : ref://testcase/config/session/iconfig/flow/sip
+                dst          : ref://testcase/config/session/iconfig/flow/dip
+                ttl          : 64
+            ipv6:
+                src          : ref://testcase/config/session/iconfig/flow/sip
+                dst          : ref://testcase/config/session/iconfig/flow/dip
+                hlim         : 64
+            udp:
+                sport        : ref://testcase/config/session/iconfig/flow/sport
+                dport        : ref://testcase/config/session/iconfig/flow/dport
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id                    : IFLOW_PKT1     # IFlow Packet
+        clone                 : ref://testcase/packets/id=IFLOW_BASE
+        headers               :
+            sunrpc_call_hdr   : 
+                pgmvers       : callback://alg/callbacks/GetExpectedSUNRPCPortmapvers
+                proc          : callback://alg/callbacks/GetExpectedSUNRPCProc
+
+    - packet:
+        id            : RFLOW_PKT1     # RFlow packet
+        clone         : ref://testcase/packets/id=RFLOW_BASE
+        headers       :
+            sunrpc_reply_hdr  :
+                reply_state   : callback://alg/callbacks/GetExpectedSUNRPCReplyState
+                acc_state     : callback://alg/callbacks/GetExpectedSUNRPCAccState
+            sunrpc_2_portmap_getport_reply:
+                port          : 0xd66b
+
+    - packet:
+        id                    : IFLOW_DATA_PKT1     # IFlow Packet
+        clone                 : ref://testcase/packets/id=IFLOW_DATA_BASE
+        headers               :
+            udp               :
+                dport         : 0xd66b
+
+session:
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IFLOW_PKT1
+                    port    : ref://testcase/config/session/iconfig/src/endpoint/intf/ports
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            packets:
+                - packet:
+                    object  : callback://alg/callbacks/GetL3UcExpectedPacketbyIflow/expktid=IFLOW_PKT1
+                    port    : ref://testcase/config/session/iconfig/dst/endpoint/intf/ports
+ 
+                - packet:
+                    object  : callback://alg/callbacks/GetCpuPacketbyIflow/expktid=IFLOW_PKT1
+                    port    : 128
+
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=RFLOW_PKT1
+                    port    : ref://testcase/config/session/rconfig/src/endpoint/intf/ports
+
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            packets:
+                - packet:
+                    object  : callback://alg/callbacks/GetL3UcExpectedPacketbyRflow/expktid=RFLOW_PKT1 
+                    port    : ref://testcase/config/session/rconfig/dst/endpoint/intf/ports
+
+    - step:
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=IFLOW_DATA_PKT1
+                    port    : ref://testcase/config/session/iconfig/src/endpoint/intf/ports
+
+        expect:
+            delay   : callback://networking/packets/GetExpectDelay
+            packets:
+                - packet:
+                    object  : callback://alg/callbacks/GetL3UcExpectedPacketbyIflow/expktid=IFLOW_DATA_PKT1
+                    port    : ref://testcase/config/session/iconfig/dst/endpoint/intf/ports
+
+                - packet:
+                    object  : callback://alg/callbacks/GetCpuPacketbyIflow/expktid=IFLOW_DATA_PKT1
+                    port    : 128
