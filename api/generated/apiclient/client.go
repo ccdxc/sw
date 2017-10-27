@@ -9,10 +9,18 @@ import (
 	bookstoreClient "github.com/pensando/sw/api/generated/bookstore/grpc/client"
 	cmd "github.com/pensando/sw/api/generated/cmd"
 	cmdClient "github.com/pensando/sw/api/generated/cmd/grpc/client"
+	collection "github.com/pensando/sw/api/generated/collection"
+	collectionClient "github.com/pensando/sw/api/generated/collection/grpc/client"
+	events "github.com/pensando/sw/api/generated/events"
+	eventsClient "github.com/pensando/sw/api/generated/events/grpc/client"
+	export "github.com/pensando/sw/api/generated/export"
+	exportClient "github.com/pensando/sw/api/generated/export/grpc/client"
 	network "github.com/pensando/sw/api/generated/network"
 	networkClient "github.com/pensando/sw/api/generated/network/grpc/client"
 	networkencryption "github.com/pensando/sw/api/generated/networkencryption"
 	networkencryptionClient "github.com/pensando/sw/api/generated/networkencryption/grpc/client"
+	retention "github.com/pensando/sw/api/generated/retention"
+	retentionClient "github.com/pensando/sw/api/generated/retention/grpc/client"
 	telemetry "github.com/pensando/sw/api/generated/telemetry"
 	telemetryClient "github.com/pensando/sw/api/generated/telemetry/grpc/client"
 	"github.com/pensando/sw/venice/utils/log"
@@ -29,6 +37,14 @@ type Services interface {
 	BookstoreV1() bookstore.BookstoreV1Interface
 	// Package is cmd and len of messages is 3
 	CmdV1() cmd.CmdV1Interface
+	// Package is collection and len of messages is 1
+	CollectionPolicyV1() collection.CollectionPolicyV1Interface
+	// Package is events and len of messages is 1
+	EventPolicyV1() events.EventPolicyV1Interface
+	// Package is events and len of messages is 1
+	EventV1() events.EventV1Interface
+	// Package is export and len of messages is 1
+	ExportPolicyV1() export.ExportPolicyV1Interface
 	// Package is network and len of messages is 1
 	EndpointV1() network.EndpointV1Interface
 	// Package is network and len of messages is 1
@@ -45,14 +61,10 @@ type Services interface {
 	TenantV1() network.TenantV1Interface
 	// Package is networkencryption and len of messages is 1
 	TrafficEncryptionPolicyV1() networkencryption.TrafficEncryptionPolicyV1Interface
-	// Package is telemetry and len of messages is 1
-	CollectionPolicyV1() telemetry.CollectionPolicyV1Interface
-	// Package is telemetry and len of messages is 1
-	ExportPolicyV1() telemetry.ExportPolicyV1Interface
+	// Package is retention and len of messages is 1
+	RetentionPolicyV1() retention.RetentionPolicyV1Interface
 	// Package is telemetry and len of messages is 1
 	MonitoringPolicyV1() telemetry.MonitoringPolicyV1Interface
-	// Package is telemetry and len of messages is 1
-	RetentionPolicyV1() telemetry.RetentionPolicyV1Interface
 }
 
 type apiGrpcServerClient struct {
@@ -63,6 +75,10 @@ type apiGrpcServerClient struct {
 	aAppV1                     app.AppV1Interface
 	aBookstoreV1               bookstore.BookstoreV1Interface
 	aCmdV1                     cmd.CmdV1Interface
+	aCollectionPolicyV1        collection.CollectionPolicyV1Interface
+	aEventPolicyV1             events.EventPolicyV1Interface
+	aEventV1                   events.EventV1Interface
+	aExportPolicyV1            export.ExportPolicyV1Interface
 	aEndpointV1                network.EndpointV1Interface
 	aLbPolicyV1                network.LbPolicyV1Interface
 	aNetworkV1                 network.NetworkV1Interface
@@ -71,10 +87,8 @@ type apiGrpcServerClient struct {
 	aSgpolicyV1                network.SgpolicyV1Interface
 	aTenantV1                  network.TenantV1Interface
 	aTrafficEncryptionPolicyV1 networkencryption.TrafficEncryptionPolicyV1Interface
-	aCollectionPolicyV1        telemetry.CollectionPolicyV1Interface
-	aExportPolicyV1            telemetry.ExportPolicyV1Interface
+	aRetentionPolicyV1         retention.RetentionPolicyV1Interface
 	aMonitoringPolicyV1        telemetry.MonitoringPolicyV1Interface
-	aRetentionPolicyV1         telemetry.RetentionPolicyV1Interface
 }
 
 // Close closes the client
@@ -92,6 +106,22 @@ func (a *apiGrpcServerClient) BookstoreV1() bookstore.BookstoreV1Interface {
 
 func (a *apiGrpcServerClient) CmdV1() cmd.CmdV1Interface {
 	return a.aCmdV1
+}
+
+func (a *apiGrpcServerClient) CollectionPolicyV1() collection.CollectionPolicyV1Interface {
+	return a.aCollectionPolicyV1
+}
+
+func (a *apiGrpcServerClient) EventPolicyV1() events.EventPolicyV1Interface {
+	return a.aEventPolicyV1
+}
+
+func (a *apiGrpcServerClient) EventV1() events.EventV1Interface {
+	return a.aEventV1
+}
+
+func (a *apiGrpcServerClient) ExportPolicyV1() export.ExportPolicyV1Interface {
+	return a.aExportPolicyV1
 }
 
 func (a *apiGrpcServerClient) EndpointV1() network.EndpointV1Interface {
@@ -126,20 +156,12 @@ func (a *apiGrpcServerClient) TrafficEncryptionPolicyV1() networkencryption.Traf
 	return a.aTrafficEncryptionPolicyV1
 }
 
-func (a *apiGrpcServerClient) CollectionPolicyV1() telemetry.CollectionPolicyV1Interface {
-	return a.aCollectionPolicyV1
-}
-
-func (a *apiGrpcServerClient) ExportPolicyV1() telemetry.ExportPolicyV1Interface {
-	return a.aExportPolicyV1
+func (a *apiGrpcServerClient) RetentionPolicyV1() retention.RetentionPolicyV1Interface {
+	return a.aRetentionPolicyV1
 }
 
 func (a *apiGrpcServerClient) MonitoringPolicyV1() telemetry.MonitoringPolicyV1Interface {
 	return a.aMonitoringPolicyV1
-}
-
-func (a *apiGrpcServerClient) RetentionPolicyV1() telemetry.RetentionPolicyV1Interface {
-	return a.aRetentionPolicyV1
 }
 
 // NewGrpcAPIClient returns a gRPC client
@@ -157,6 +179,10 @@ func NewGrpcAPIClient(url string, logger log.Logger, opts ...rpckit.Option) (Ser
 		aAppV1:                     appClient.NewGrpcCrudClientAppV1(client.ClientConn, logger),
 		aBookstoreV1:               bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
 		aCmdV1:                     cmdClient.NewGrpcCrudClientCmdV1(client.ClientConn, logger),
+		aCollectionPolicyV1:        collectionClient.NewGrpcCrudClientCollectionPolicyV1(client.ClientConn, logger),
+		aEventPolicyV1:             eventsClient.NewGrpcCrudClientEventPolicyV1(client.ClientConn, logger),
+		aEventV1:                   eventsClient.NewGrpcCrudClientEventV1(client.ClientConn, logger),
+		aExportPolicyV1:            exportClient.NewGrpcCrudClientExportPolicyV1(client.ClientConn, logger),
 		aEndpointV1:                networkClient.NewGrpcCrudClientEndpointV1(client.ClientConn, logger),
 		aLbPolicyV1:                networkClient.NewGrpcCrudClientLbPolicyV1(client.ClientConn, logger),
 		aNetworkV1:                 networkClient.NewGrpcCrudClientNetworkV1(client.ClientConn, logger),
@@ -165,10 +191,8 @@ func NewGrpcAPIClient(url string, logger log.Logger, opts ...rpckit.Option) (Ser
 		aSgpolicyV1:                networkClient.NewGrpcCrudClientSgpolicyV1(client.ClientConn, logger),
 		aTenantV1:                  networkClient.NewGrpcCrudClientTenantV1(client.ClientConn, logger),
 		aTrafficEncryptionPolicyV1: networkencryptionClient.NewGrpcCrudClientTrafficEncryptionPolicyV1(client.ClientConn, logger),
-		aCollectionPolicyV1:        telemetryClient.NewGrpcCrudClientCollectionPolicyV1(client.ClientConn, logger),
-		aExportPolicyV1:            telemetryClient.NewGrpcCrudClientExportPolicyV1(client.ClientConn, logger),
+		aRetentionPolicyV1:         retentionClient.NewGrpcCrudClientRetentionPolicyV1(client.ClientConn, logger),
 		aMonitoringPolicyV1:        telemetryClient.NewGrpcCrudClientMonitoringPolicyV1(client.ClientConn, logger),
-		aRetentionPolicyV1:         telemetryClient.NewGrpcCrudClientRetentionPolicyV1(client.ClientConn, logger),
 	}, nil
 }
 
@@ -178,6 +202,10 @@ type apiRestServerClient struct {
 	aAppV1                     app.AppV1Interface
 	aBookstoreV1               bookstore.BookstoreV1Interface
 	aCmdV1                     cmd.CmdV1Interface
+	aCollectionPolicyV1        collection.CollectionPolicyV1Interface
+	aEventPolicyV1             events.EventPolicyV1Interface
+	aEventV1                   events.EventV1Interface
+	aExportPolicyV1            export.ExportPolicyV1Interface
 	aEndpointV1                network.EndpointV1Interface
 	aLbPolicyV1                network.LbPolicyV1Interface
 	aNetworkV1                 network.NetworkV1Interface
@@ -186,10 +214,8 @@ type apiRestServerClient struct {
 	aSgpolicyV1                network.SgpolicyV1Interface
 	aTenantV1                  network.TenantV1Interface
 	aTrafficEncryptionPolicyV1 networkencryption.TrafficEncryptionPolicyV1Interface
-	aCollectionPolicyV1        telemetry.CollectionPolicyV1Interface
-	aExportPolicyV1            telemetry.ExportPolicyV1Interface
+	aRetentionPolicyV1         retention.RetentionPolicyV1Interface
 	aMonitoringPolicyV1        telemetry.MonitoringPolicyV1Interface
-	aRetentionPolicyV1         telemetry.RetentionPolicyV1Interface
 }
 
 // Close closes the client
@@ -207,6 +233,22 @@ func (a *apiRestServerClient) BookstoreV1() bookstore.BookstoreV1Interface {
 
 func (a *apiRestServerClient) CmdV1() cmd.CmdV1Interface {
 	return a.aCmdV1
+}
+
+func (a *apiRestServerClient) CollectionPolicyV1() collection.CollectionPolicyV1Interface {
+	return a.aCollectionPolicyV1
+}
+
+func (a *apiRestServerClient) EventPolicyV1() events.EventPolicyV1Interface {
+	return a.aEventPolicyV1
+}
+
+func (a *apiRestServerClient) EventV1() events.EventV1Interface {
+	return a.aEventV1
+}
+
+func (a *apiRestServerClient) ExportPolicyV1() export.ExportPolicyV1Interface {
+	return a.aExportPolicyV1
 }
 
 func (a *apiRestServerClient) EndpointV1() network.EndpointV1Interface {
@@ -241,20 +283,12 @@ func (a *apiRestServerClient) TrafficEncryptionPolicyV1() networkencryption.Traf
 	return a.aTrafficEncryptionPolicyV1
 }
 
-func (a *apiRestServerClient) CollectionPolicyV1() telemetry.CollectionPolicyV1Interface {
-	return a.aCollectionPolicyV1
-}
-
-func (a *apiRestServerClient) ExportPolicyV1() telemetry.ExportPolicyV1Interface {
-	return a.aExportPolicyV1
+func (a *apiRestServerClient) RetentionPolicyV1() retention.RetentionPolicyV1Interface {
+	return a.aRetentionPolicyV1
 }
 
 func (a *apiRestServerClient) MonitoringPolicyV1() telemetry.MonitoringPolicyV1Interface {
 	return a.aMonitoringPolicyV1
-}
-
-func (a *apiRestServerClient) RetentionPolicyV1() telemetry.RetentionPolicyV1Interface {
-	return a.aRetentionPolicyV1
 }
 
 // NewRestAPIClient returns a REST client
@@ -265,6 +299,10 @@ func NewRestAPIClient(url string) (Services, error) {
 		aAppV1:                     appClient.NewRestCrudClientAppV1(url),
 		aBookstoreV1:               bookstoreClient.NewRestCrudClientBookstoreV1(url),
 		aCmdV1:                     cmdClient.NewRestCrudClientCmdV1(url),
+		aCollectionPolicyV1:        collectionClient.NewRestCrudClientCollectionPolicyV1(url),
+		aEventPolicyV1:             eventsClient.NewRestCrudClientEventPolicyV1(url),
+		aEventV1:                   eventsClient.NewRestCrudClientEventV1(url),
+		aExportPolicyV1:            exportClient.NewRestCrudClientExportPolicyV1(url),
 		aEndpointV1:                networkClient.NewRestCrudClientEndpointV1(url),
 		aLbPolicyV1:                networkClient.NewRestCrudClientLbPolicyV1(url),
 		aNetworkV1:                 networkClient.NewRestCrudClientNetworkV1(url),
@@ -273,9 +311,7 @@ func NewRestAPIClient(url string) (Services, error) {
 		aSgpolicyV1:                networkClient.NewRestCrudClientSgpolicyV1(url),
 		aTenantV1:                  networkClient.NewRestCrudClientTenantV1(url),
 		aTrafficEncryptionPolicyV1: networkencryptionClient.NewRestCrudClientTrafficEncryptionPolicyV1(url),
-		aCollectionPolicyV1:        telemetryClient.NewRestCrudClientCollectionPolicyV1(url),
-		aExportPolicyV1:            telemetryClient.NewRestCrudClientExportPolicyV1(url),
+		aRetentionPolicyV1:         retentionClient.NewRestCrudClientRetentionPolicyV1(url),
 		aMonitoringPolicyV1:        telemetryClient.NewRestCrudClientMonitoringPolicyV1(url),
-		aRetentionPolicyV1:         telemetryClient.NewRestCrudClientRetentionPolicyV1(url),
 	}, nil
 }

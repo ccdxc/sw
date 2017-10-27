@@ -15,28 +15,6 @@ var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
 
-// CollectionPolicyInterface exposes the CRUD methods for CollectionPolicy
-type CollectionPolicyInterface interface {
-	Create(ctx context.Context, in *CollectionPolicy) (*CollectionPolicy, error)
-	Update(ctx context.Context, in *CollectionPolicy) (*CollectionPolicy, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*CollectionPolicy, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*CollectionPolicy, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*CollectionPolicy, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
-// ExportPolicyInterface exposes the CRUD methods for ExportPolicy
-type ExportPolicyInterface interface {
-	Create(ctx context.Context, in *ExportPolicy) (*ExportPolicy, error)
-	Update(ctx context.Context, in *ExportPolicy) (*ExportPolicy, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*ExportPolicy, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*ExportPolicy, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*ExportPolicy, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
 // MonitoringPolicyInterface exposes the CRUD methods for MonitoringPolicy
 type MonitoringPolicyInterface interface {
 	Create(ctx context.Context, in *MonitoringPolicy) (*MonitoringPolicy, error)
@@ -48,33 +26,7 @@ type MonitoringPolicyInterface interface {
 	Allowed(oper apiserver.APIOperType) bool
 }
 
-// RetentionPolicyInterface exposes the CRUD methods for RetentionPolicy
-type RetentionPolicyInterface interface {
-	Create(ctx context.Context, in *RetentionPolicy) (*RetentionPolicy, error)
-	Update(ctx context.Context, in *RetentionPolicy) (*RetentionPolicy, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*RetentionPolicy, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*RetentionPolicy, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*RetentionPolicy, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
-}
-
-// CollectionPolicyV1Interface exposes objects with CRUD operations allowed by the service
-type CollectionPolicyV1Interface interface {
-	CollectionPolicy() CollectionPolicyInterface
-}
-
-// ExportPolicyV1Interface exposes objects with CRUD operations allowed by the service
-type ExportPolicyV1Interface interface {
-	ExportPolicy() ExportPolicyInterface
-}
-
 // MonitoringPolicyV1Interface exposes objects with CRUD operations allowed by the service
 type MonitoringPolicyV1Interface interface {
 	MonitoringPolicy() MonitoringPolicyInterface
-}
-
-// RetentionPolicyV1Interface exposes objects with CRUD operations allowed by the service
-type RetentionPolicyV1Interface interface {
-	RetentionPolicy() RetentionPolicyInterface
 }

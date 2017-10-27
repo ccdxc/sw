@@ -1,7 +1,11 @@
 
 app.proto app
 cmd.proto cmd
+collection.proto collection
+events.proto events
 example.proto bookstore
+export.proto export
 network.proto network
 networkencryption.proto networkencryption
+retention.proto retention
 telemetry.proto telemetry

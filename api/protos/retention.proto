@@ -1,0 +1,71 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package retention;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// ----------------------------- Retention Policy -----------------------------
+// Retention Policy specifies data retention policy for specific workloads
+
+message RetentionPolicySpec {
+    // Compaction Interval is the time in minutes, hours or days before compaction starts on the data
+    // Compaction results into data granularity loss, therefore this period is kept to be as high as space permits
+    // for how much data is being collected
+    string CompactionInterval  = 1 [(gogoproto.jsontag) = "compaction-interval ,omitempty"];
+
+    // Compaction Method specifies the method to be used for aggregation i.e. 'linear', 'exponential'
+    // When compaction method is is unspecified system defaults to exponential aggregation over the period of time
+    string CompactionMethod  = 2 [(gogoproto.jsontag) = "compaction-method,omitempty"];
+
+    // MaxRetentionTime defines for how long to keep the data before it is deleted
+    // The value is specified as a string format to be hours, days, or hours etc.
+    // e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
+    string MaxRetentionTime = 3 [(gogoproto.jsontag) = "max-retention-time,omitempty"];
+}
+
+message RetentionPolicyStatus {
+    // list of monitoring policies that refer to this collection policy
+    repeated string MonitoringPolicies  = 1 [(gogoproto.jsontag) = "monitoring-policies,omitempty"];
+
+    // list of event policies that refer to this collection policy
+    repeated string EventPolicies       = 2 [(gogoproto.jsontag) = "event-policies,omitempty"];
+}
+
+message RetentionPolicy {
+    option (venice.objectPrefix) = "retentionPolicy";
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the retention policy.
+    RetentionPolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the retention policy.
+    RetentionPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// RetentionPolicy REST API
+service RetentionPolicyV1 {
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "retentionPolicy";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    option (venice.apiGrpcCrudService) = "RetentionPolicy";
+
+    option (venice.apiRestService) = {
+        Object: "RetentionPolicy"
+        Method: [ "get", "put", "delete" ]
+        Pattern: "/{O.Tenant}/retentionPolicy/{O.Name}"
+    };
+    option (venice.apiRestService) = {
+        Object: "RetentionPolicy"
+        Method: [ "post" ]
+        Pattern: "/{O.Tenant}/retentionPolicy"
+    };
+}

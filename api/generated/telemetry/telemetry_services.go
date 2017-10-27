@@ -14,28 +14,6 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
-// ServiceCollectionPolicyV1Client  is the client interface for the service.
-type ServiceCollectionPolicyV1Client interface {
-	AutoAddCollectionPolicy(ctx context.Context, t *CollectionPolicy) (*CollectionPolicy, error)
-	AutoDeleteCollectionPolicy(ctx context.Context, t *CollectionPolicy) (*CollectionPolicy, error)
-	AutoGetCollectionPolicy(ctx context.Context, t *CollectionPolicy) (*CollectionPolicy, error)
-	AutoListCollectionPolicy(ctx context.Context, t *api.ListWatchOptions) (*CollectionPolicyList, error)
-	AutoUpdateCollectionPolicy(ctx context.Context, t *CollectionPolicy) (*CollectionPolicy, error)
-
-	AutoWatchCollectionPolicy(ctx context.Context, in *api.ListWatchOptions) (CollectionPolicyV1_AutoWatchCollectionPolicyClient, error)
-}
-
-// ServiceExportPolicyV1Client  is the client interface for the service.
-type ServiceExportPolicyV1Client interface {
-	AutoAddExportPolicy(ctx context.Context, t *ExportPolicy) (*ExportPolicy, error)
-	AutoDeleteExportPolicy(ctx context.Context, t *ExportPolicy) (*ExportPolicy, error)
-	AutoGetExportPolicy(ctx context.Context, t *ExportPolicy) (*ExportPolicy, error)
-	AutoListExportPolicy(ctx context.Context, t *api.ListWatchOptions) (*ExportPolicyList, error)
-	AutoUpdateExportPolicy(ctx context.Context, t *ExportPolicy) (*ExportPolicy, error)
-
-	AutoWatchExportPolicy(ctx context.Context, in *api.ListWatchOptions) (ExportPolicyV1_AutoWatchExportPolicyClient, error)
-}
-
 // ServiceMonitoringPolicyV1Client  is the client interface for the service.
 type ServiceMonitoringPolicyV1Client interface {
 	AutoAddMonitoringPolicy(ctx context.Context, t *MonitoringPolicy) (*MonitoringPolicy, error)
@@ -47,39 +25,6 @@ type ServiceMonitoringPolicyV1Client interface {
 	AutoWatchMonitoringPolicy(ctx context.Context, in *api.ListWatchOptions) (MonitoringPolicyV1_AutoWatchMonitoringPolicyClient, error)
 }
 
-// ServiceRetentionPolicyV1Client  is the client interface for the service.
-type ServiceRetentionPolicyV1Client interface {
-	AutoAddRetentionPolicy(ctx context.Context, t *RetentionPolicy) (*RetentionPolicy, error)
-	AutoDeleteRetentionPolicy(ctx context.Context, t *RetentionPolicy) (*RetentionPolicy, error)
-	AutoGetRetentionPolicy(ctx context.Context, t *RetentionPolicy) (*RetentionPolicy, error)
-	AutoListRetentionPolicy(ctx context.Context, t *api.ListWatchOptions) (*RetentionPolicyList, error)
-	AutoUpdateRetentionPolicy(ctx context.Context, t *RetentionPolicy) (*RetentionPolicy, error)
-
-	AutoWatchRetentionPolicy(ctx context.Context, in *api.ListWatchOptions) (RetentionPolicyV1_AutoWatchRetentionPolicyClient, error)
-}
-
-// ServiceCollectionPolicyV1Server is the server interface for the service.
-type ServiceCollectionPolicyV1Server interface {
-	AutoAddCollectionPolicy(ctx context.Context, t CollectionPolicy) (CollectionPolicy, error)
-	AutoDeleteCollectionPolicy(ctx context.Context, t CollectionPolicy) (CollectionPolicy, error)
-	AutoGetCollectionPolicy(ctx context.Context, t CollectionPolicy) (CollectionPolicy, error)
-	AutoListCollectionPolicy(ctx context.Context, t api.ListWatchOptions) (CollectionPolicyList, error)
-	AutoUpdateCollectionPolicy(ctx context.Context, t CollectionPolicy) (CollectionPolicy, error)
-
-	AutoWatchCollectionPolicy(in *api.ListWatchOptions, stream CollectionPolicyV1_AutoWatchCollectionPolicyServer) error
-}
-
-// ServiceExportPolicyV1Server is the server interface for the service.
-type ServiceExportPolicyV1Server interface {
-	AutoAddExportPolicy(ctx context.Context, t ExportPolicy) (ExportPolicy, error)
-	AutoDeleteExportPolicy(ctx context.Context, t ExportPolicy) (ExportPolicy, error)
-	AutoGetExportPolicy(ctx context.Context, t ExportPolicy) (ExportPolicy, error)
-	AutoListExportPolicy(ctx context.Context, t api.ListWatchOptions) (ExportPolicyList, error)
-	AutoUpdateExportPolicy(ctx context.Context, t ExportPolicy) (ExportPolicy, error)
-
-	AutoWatchExportPolicy(in *api.ListWatchOptions, stream ExportPolicyV1_AutoWatchExportPolicyServer) error
-}
-
 // ServiceMonitoringPolicyV1Server is the server interface for the service.
 type ServiceMonitoringPolicyV1Server interface {
 	AutoAddMonitoringPolicy(ctx context.Context, t MonitoringPolicy) (MonitoringPolicy, error)
@@ -89,15 +34,4 @@ type ServiceMonitoringPolicyV1Server interface {
 	AutoUpdateMonitoringPolicy(ctx context.Context, t MonitoringPolicy) (MonitoringPolicy, error)
 
 	AutoWatchMonitoringPolicy(in *api.ListWatchOptions, stream MonitoringPolicyV1_AutoWatchMonitoringPolicyServer) error
-}
-
-// ServiceRetentionPolicyV1Server is the server interface for the service.
-type ServiceRetentionPolicyV1Server interface {
-	AutoAddRetentionPolicy(ctx context.Context, t RetentionPolicy) (RetentionPolicy, error)
-	AutoDeleteRetentionPolicy(ctx context.Context, t RetentionPolicy) (RetentionPolicy, error)
-	AutoGetRetentionPolicy(ctx context.Context, t RetentionPolicy) (RetentionPolicy, error)
-	AutoListRetentionPolicy(ctx context.Context, t api.ListWatchOptions) (RetentionPolicyList, error)
-	AutoUpdateRetentionPolicy(ctx context.Context, t RetentionPolicy) (RetentionPolicy, error)
-
-	AutoWatchRetentionPolicy(in *api.ListWatchOptions, stream RetentionPolicyV1_AutoWatchRetentionPolicyServer) error
 }

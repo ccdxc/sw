@@ -1,0 +1,405 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Service name",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/{O.Tenant}/retentionPolicy": {
+      "post": {
+        "operationId": "AutoAddRetentionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/retentionRetentionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/retentionRetentionPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "RetentionPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/retentionPolicy/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetRetentionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/retentionRetentionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "Spec.CompactionInterval",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.CompactionMethod",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.MaxRetentionTime",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.MonitoringPolicies",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Status.EventPolicies",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "RetentionPolicyV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteRetentionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/retentionRetentionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "RetentionPolicyV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateRetentionPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/retentionRetentionPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/retentionRetentionPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "RetentionPolicyV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiListMeta": {
+      "type": "object",
+      "properties": {
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version of object store at the time of list generation."
+        }
+      },
+      "description": "ListMeta contains the metadata for list of objects."
+    },
+    "apiListWatchOptions": {
+      "type": "object",
+      "properties": {
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "LabelSelector": {
+          "type": "string"
+        },
+        "FieldSelector": {
+          "type": "string"
+        },
+        "PrefixWatch": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "Tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "Namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "UUID": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+        },
+        "CreationTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "CreationTime is the creation time of Object"
+        },
+        "ModTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "ModTime is the Last Modification time of Object"
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiTimestamp": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "APIVersion": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "retentionAutoMsgRetentionPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "title": "Compaction Interval is the time in minutes, hours or days before compaction starts on the data\nCompaction results into data granularity loss, therefore this period is kept to be as high as space permits\nfor how much data is being collected"
+        },
+        "Object": {
+          "$ref": "#/definitions/retentionRetentionPolicy",
+          "title": "Compaction Method specifies the method to be used for aggregation i.e. 'linear', 'exponential'\nWhen compaction method is is unspecified system defaults to exponential aggregation over the period of time"
+        }
+      }
+    },
+    "retentionRetentionPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "list of monitoring policies that refer to this collection policy"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta",
+          "title": "list of event policies that refer to this collection policy"
+        },
+        "Spec": {
+          "$ref": "#/definitions/retentionRetentionPolicySpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/retentionRetentionPolicyStatus"
+        }
+      }
+    },
+    "retentionRetentionPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/retentionRetentionPolicy"
+          },
+          "description": "Spec contains the configuration of the retention policy."
+        }
+      }
+    },
+    "retentionRetentionPolicySpec": {
+      "type": "object",
+      "properties": {
+        "CompactionInterval": {
+          "type": "string"
+        },
+        "CompactionMethod": {
+          "type": "string"
+        },
+        "MaxRetentionTime": {
+          "type": "string"
+        }
+      }
+    },
+    "retentionRetentionPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "MonitoringPolicies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "EventPolicies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

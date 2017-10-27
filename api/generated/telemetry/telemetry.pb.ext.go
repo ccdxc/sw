@@ -24,35 +24,8 @@ var _ validators.DummyVar
 var funcMapTelemetry = make(map[string]map[string][]func(interface{}) bool)
 
 // MakeKey generates a KV store key for the object
-func (m *CollectionPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "collectionPolicy/", m.Name)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *ExportPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "exportPolicy/", m.Name)
-}
-
-// MakeKey generates a KV store key for the object
 func (m *MonitoringPolicy) MakeKey(prefix string) string {
 	return fmt.Sprint("/venice/", prefix, "/", "monitoringPolicy/", m.Name)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *RetentionPolicy) MakeKey(prefix string) string {
-	return fmt.Sprint("/venice/", prefix, "/", "retentionPolicy/", m.Name)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *CollectionPolicyList) MakeKey(prefix string) string {
-	obj := CollectionPolicy{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *ExportPolicyList) MakeKey(prefix string) string {
-	obj := ExportPolicy{}
-	return obj.MakeKey(prefix)
 }
 
 // MakeKey generates a KV store key for the object
@@ -62,103 +35,14 @@ func (m *MonitoringPolicyList) MakeKey(prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *RetentionPolicyList) MakeKey(prefix string) string {
-	obj := RetentionPolicy{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgCollectionPolicyWatchHelper) MakeKey(prefix string) string {
-	obj := CollectionPolicy{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgExportPolicyWatchHelper) MakeKey(prefix string) string {
-	obj := ExportPolicy{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
 func (m *AutoMsgMonitoringPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := MonitoringPolicy{}
 	return obj.MakeKey(prefix)
 }
 
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgRetentionPolicyWatchHelper) MakeKey(prefix string) string {
-	obj := RetentionPolicy{}
-	return obj.MakeKey(prefix)
-}
-
 // Validators
 
-func (m *AutoMsgCollectionPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *AutoMsgExportPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
 func (m *AutoMsgMonitoringPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *AutoMsgRetentionPolicyWatchHelper) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *CollectionPolicy) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *CollectionPolicyList) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *CollectionPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *CollectionPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *CollectionTrigger) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *ExportPolicy) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *ExportPolicyList) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *ExportPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	if vs, ok := funcMapTelemetry["ExportPolicySpec"][ver]; ok {
-		for _, v := range vs {
-			if !v(m) {
-				return false
-			}
-		}
-	} else if vs, ok := funcMapTelemetry["ExportPolicySpec"]["all"]; ok {
-		for _, v := range vs {
-			if !v(m) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func (m *ExportPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *ExternalCred) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
@@ -191,34 +75,8 @@ func (m *MonitoringPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
 	return true
 }
 
-func (m *RetentionPolicy) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *RetentionPolicyList) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *RetentionPolicySpec) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
-func (m *RetentionPolicyStatus) Validate(ver string, ignoreStatus bool) bool {
-	return true
-}
-
 func init() {
 	funcMapTelemetry = make(map[string]map[string][]func(interface{}) bool)
-
-	funcMapTelemetry["ExportPolicySpec"] = make(map[string][]func(interface{}) bool)
-	funcMapTelemetry["ExportPolicySpec"]["all"] = append(funcMapTelemetry["ExportPolicySpec"]["all"], func(i interface{}) bool {
-		m := i.(*ExportPolicySpec)
-
-		if _, ok := ExportPolicySpec_Formats_value[m.Format]; !ok {
-			return false
-		}
-		return true
-	})
 
 	funcMapTelemetry["MonitoringPolicySpec"] = make(map[string][]func(interface{}) bool)
 	funcMapTelemetry["MonitoringPolicySpec"]["all"] = append(funcMapTelemetry["MonitoringPolicySpec"]["all"], func(i interface{}) bool {

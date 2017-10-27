@@ -1,0 +1,111 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package export;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// ----------------------------- Export Policy -----------------------------
+// Export Policy specifies where to export, how often to export and the export format
+
+message ExportPolicySpec {
+    // Export Interval defines how often to push the records to an external or internal collector
+    // The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
+    string ExportInterval = 1 [(gogoproto.jsontag) = "export-interval,omitempty"];
+
+    enum Formats {
+        Netflow = 0;
+        Kafka = 1;
+        // TBD: Collectd, Elastic?
+    }
+    // Area describes an area for which the monitoring policy is specified
+    string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(ExportPolicySpec.Formats)"];
+
+    // IP address or DNS address of the collector/entity to which the data is to be exported
+    // When unspecified this is assumed tobe Venice
+    string CollectorIpAddress = 3 [(gogoproto.jsontag) = "collector-ip-address,omitempty"];
+
+    // Protocol and Port number where an external collector is gathering the data
+    string CollectorPort = 4 [(gogoproto.jsontag) = "collector-port,omitempty"];
+
+    // Credentials provide secure access to the collector
+    ExternalCred Credentials = 5 [(gogoproto.jsontag) = "credentials,omitempty"];
+}
+
+message ExportPolicyStatus {
+
+    // list of monitoring policies that refer to this collection policy
+    repeated string MonitoringPolicies  = 1 [(gogoproto.jsontag) = "monitoring-policies,omitempty"];
+
+    // list of event policies that refer to this collection policy
+    repeated string EventPolicies       = 2 [(gogoproto.jsontag) = "event-policies,omitempty"];
+}
+
+message ExportPolicy {
+    option (venice.objectPrefix) = "exportPolicy";
+    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of the export policy.
+    ExportPolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of the export policy.
+    ExportPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// ExportPolicy REST API
+service ExportPolicyV1 {
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "exportPolicy";
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    option (venice.apiGrpcCrudService) = "ExportPolicy";
+
+    option (venice.apiRestService) = {
+        Object: "ExportPolicy"
+        Method: [ "get", "put", "delete" ]
+        Pattern: "/{O.Tenant}/exportPolicy/{O.Name}"
+    };
+    option (venice.apiRestService) = {
+        Object: "ExportPolicy"
+        Method: [ "post" ]
+        Pattern: "/{O.Tenant}/exportPolicy"
+    };
+}
+
+// ------------------------ ExternalCred Object ----------------------------
+// ExternalCred defines credentails required to access an external entity, such as
+// a stats collector, compute orchestration entity, or a syslog server.
+// External entity may support a variety of methods, like username/password,
+// TLS Client authentication, or Bearer Token based authentication. User is
+// expected to configure one of the methods
+message ExternalCred {
+    // UserName is the login id to be used towards the external entity
+    string UserName = 1 [(gogoproto.jsontag) = "username,omitempty"];
+
+    // Password is one time specified, not visibile on read operations
+    // Only valid when UserName is defined
+    // TBD: need to add (venice.secret) = "true" support for this
+    string Password = 2 [(gogoproto.jsontag) = "password,omitempty"];
+
+    // External entity supports bearer tokens for authentication and authorization
+    // Token refresh is not supported using OAuth2
+    // TBD: need to add (venice.secret) = "true" support for this
+    string BearerToken = 3 [(gogoproto.jsontag) = "bearer-token,omitempty"];
+
+    // CertData holds PEM-encoded bytes (typically read from a client certificate file).
+    bytes CertData = 4 [(gogoproto.jsontag) = "cert-data,omitempty"];
+
+    // KeyData holds PEM-encoded bytes (typically read from a client certificate key file).
+    // TBD: need to add (venice.secret) = "true" support for this
+    bytes KeyData = 5 [(gogoproto.jsontag) = "key-data,omitempty"];
+
+    // CaData holds PEM-encoded bytes (typically read from a root certificates bundle).
+    bytes CaData = 6 [(gogoproto.jsontag) = "ca-data,omitempty"];
+}

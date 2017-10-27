@@ -9,12 +9,20 @@ import (
 	_ "github.com/pensando/sw/api/generated/app/gateway"
 	// blank import to pull in cmd service into api gateway
 	_ "github.com/pensando/sw/api/generated/cmd/gateway"
+	// blank import to pull in collection service into api gateway
+	_ "github.com/pensando/sw/api/generated/collection/gateway"
+	// blank import to pull in events service into api gateway
+	_ "github.com/pensando/sw/api/generated/events/gateway"
 	// blank import to pull in bookstore service into api gateway
 	_ "github.com/pensando/sw/api/generated/bookstore/gateway"
+	// blank import to pull in export service into api gateway
+	_ "github.com/pensando/sw/api/generated/export/gateway"
 	// blank import to pull in network service into api gateway
 	_ "github.com/pensando/sw/api/generated/network/gateway"
 	// blank import to pull in networkencryption service into api gateway
 	_ "github.com/pensando/sw/api/generated/networkencryption/gateway"
+	// blank import to pull in retention service into api gateway
+	_ "github.com/pensando/sw/api/generated/retention/gateway"
 	// blank import to pull in telemetry service into api gateway
 	_ "github.com/pensando/sw/api/generated/telemetry/gateway"
 )

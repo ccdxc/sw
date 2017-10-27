@@ -7,46 +7,13 @@ Input file: protos/telemetry.proto
 
 The following Messages are defined.
 
-  AutoMsgCollectionPolicyWatchHelper
-  AutoMsgExportPolicyWatchHelper
   AutoMsgMonitoringPolicyWatchHelper
-  AutoMsgRetentionPolicyWatchHelper
-  CollectionPolicy
-  CollectionPolicyList
-  CollectionPolicySpec
-  CollectionPolicyStatus
-  CollectionTrigger
-  ExportPolicy
-  ExportPolicyList
-  ExportPolicySpec
-  ExportPolicyStatus
-  ExternalCred
   MonitoringPolicy
   MonitoringPolicyList
   MonitoringPolicySpec
   MonitoringPolicyStatus
-  RetentionPolicy
-  RetentionPolicyList
-  RetentionPolicySpec
-  RetentionPolicyStatus
 
 The following Services and Methods are defined.
-
- Service: CollectionPolicyV1
-   AutoAddCollectionPolicy
-   AutoDeleteCollectionPolicy
-   AutoGetCollectionPolicy
-   AutoListCollectionPolicy
-   AutoUpdateCollectionPolicy
-   AutoWatchCollectionPolicy
-
- Service: ExportPolicyV1
-   AutoAddExportPolicy
-   AutoDeleteExportPolicy
-   AutoGetExportPolicy
-   AutoListExportPolicy
-   AutoUpdateExportPolicy
-   AutoWatchExportPolicy
 
  Service: MonitoringPolicyV1
    AutoAddMonitoringPolicy
@@ -55,14 +22,6 @@ The following Services and Methods are defined.
    AutoListMonitoringPolicy
    AutoUpdateMonitoringPolicy
    AutoWatchMonitoringPolicy
-
- Service: RetentionPolicyV1
-   AutoAddRetentionPolicy
-   AutoDeleteRetentionPolicy
-   AutoGetRetentionPolicy
-   AutoListRetentionPolicy
-   AutoUpdateRetentionPolicy
-   AutoWatchRetentionPolicy
 
 */
 package telemetry

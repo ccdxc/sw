@@ -1,0 +1,719 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Service name",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/{O.Tenant}/eventPolicy": {
+      "post": {
+        "operationId": "AutoAddEventPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/eventsEventPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/eventsEventPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "EventPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/eventPolicy/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetEventPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/eventsEventPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "Spec.Levels",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Spec.RetentionPolicy",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Spec.ExportPolicies",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "EventPolicyV1"
+        ]
+      },
+      "delete": {
+        "operationId": "AutoDeleteEventPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/eventsEventPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EventPolicyV1"
+        ]
+      },
+      "put": {
+        "operationId": "AutoUpdateEventPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/eventsEventPolicy"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/eventsEventPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "EventPolicyV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/events": {
+      "get": {
+        "operationId": "AutoListEvent",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/eventsEventList"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "LabelSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "FieldSelector",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "PrefixWatch",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "EventV1"
+        ]
+      }
+    },
+    "/{O.Tenant}/events/{O.Name}": {
+      "get": {
+        "operationId": "AutoGetEvent",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/eventsEvent"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.APIVersion",
+            "description": "APIVersion defines the version of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.Namespace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.ResourceVersion",
+            "description": "Resource version in the object store. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.UUID",
+            "description": "UUID is the unique identifier for the object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.CreationTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.ModTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "Status.Severity",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Description",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.ObjectRef.Kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.ObjectRef.NameSpace",
+            "description": "Namespace of the object, for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.ObjectRef.Name",
+            "description": "Name of the object, unique within a Namespace for scoped objects.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Source.Component",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.Source.Node",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.CreatedTime",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.EventPolicy",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EventV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiListMeta": {
+      "type": "object",
+      "properties": {
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version of object store at the time of list generation."
+        }
+      },
+      "description": "ListMeta contains the metadata for list of objects."
+    },
+    "apiListWatchOptions": {
+      "type": "object",
+      "properties": {
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "LabelSelector": {
+          "type": "string"
+        },
+        "FieldSelector": {
+          "type": "string"
+        },
+        "PrefixWatch": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "apiObjectMeta": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        },
+        "Tenant": {
+          "type": "string",
+          "description": "Tenant is global namespace isolation for various objects. This can be automatically\nfilled in many cases based on the tenant a user, who created the object, belongs go."
+        },
+        "Namespace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "ResourceVersion": {
+          "type": "string",
+          "description": "Resource version in the object store. This can only be set by the server."
+        },
+        "UUID": {
+          "type": "string",
+          "description": "UUID is the unique identifier for the object. This can only be set by the server."
+        },
+        "Labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+        },
+        "CreationTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "CreationTime is the creation time of Object"
+        },
+        "ModTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "ModTime is the Last Modification time of Object"
+        }
+      },
+      "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
+    },
+    "apiObjectRef": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "NameSpace": {
+          "type": "string",
+          "description": "Namespace of the object, for scoped objects."
+        },
+        "Name": {
+          "type": "string",
+          "description": "Name of the object, unique within a Namespace for scoped objects."
+        }
+      },
+      "description": "ObjectRef contains identifying information about an object."
+    },
+    "apiTimestamp": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "Kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "APIVersion": {
+          "type": "string",
+          "description": "APIVersion defines the version of the API object."
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
+    "eventsAutoMsgEventPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/eventsEventPolicy",
+          "title": "ObjectMeta.Name will be an UUID for an Event object.\nObjectMeta.Labels will be used to tag an events\nwith Reason, UserInfo etc that will provide more\ncontext for an event.\neg: Reason: NodeJoined, NetworkDeleted, NicRejected\n    User: user-foo\nTBD: Should there be predefined list of labels for\n     Reason or keep it free form ?"
+        }
+      },
+      "description": "-------------------------- Event Object -----------------------------\nEvent is a system notification of a fault, condition or configuration\nthat should be user visible. These objects are created internally by\nEvent client and persisted in EventDB."
+    },
+    "eventsAutoMsgEventWatchHelper": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Object": {
+          "$ref": "#/definitions/eventsEvent"
+        }
+      },
+      "title": "EventSpec is empty for Event Object"
+    },
+    "eventsEvent": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "description": "Component from which the event is generated."
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta",
+          "description": "Node name on which the event is generated."
+        },
+        "Spec": {
+          "$ref": "#/definitions/eventsEventSpec"
+        },
+        "Status": {
+          "$ref": "#/definitions/eventsEventStatus"
+        }
+      },
+      "title": "EventSource has info about the component and\nhost/node that generated the event"
+    },
+    "eventsEventList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "Severity represents the criticality level of an Event"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta",
+          "title": "Description represents the human readable description of an Event"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/eventsEvent"
+          },
+          "title": "ObjectRef is the reference to the object associated with an event"
+        }
+      },
+      "title": "EventStatus is status of the Event object"
+    },
+    "eventsEventPolicy": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta"
+        },
+        "O": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "Spec": {
+          "$ref": "#/definitions/eventsEventPolicySpec",
+          "description": "Spec contains the configuration of the event policy."
+        },
+        "Status": {
+          "$ref": "#/definitions/eventsEventPolicyStatus",
+          "description": "Status contains the current state of the event policy."
+        }
+      },
+      "description": "-------------------------- Event Policy -----------------------------\nEvent Policy represents the policy definition for Events.\nEvent Client module will be consumer of this policy."
+    },
+    "eventsEventPolicyList": {
+      "type": "object",
+      "properties": {
+        "T": {
+          "$ref": "#/definitions/apiTypeMeta",
+          "title": "Levels is a match list of levels permitted for event generation"
+        },
+        "ListMeta": {
+          "$ref": "#/definitions/apiListMeta",
+          "title": "RetentionPolicy specifies for how long the data is kept"
+        },
+        "Items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/eventsEventPolicy"
+          },
+          "title": "ExportPolicies defines the location, frequency and format of data to an external collector"
+        }
+      },
+      "description": "EventPolicySpec is the specification of an Event Policy,\nIt consists of the Object Selector, Level selector,\nRetention and Export policies.\n\nTBD: Decide if we need event specific collection policy"
+    },
+    "eventsEventPolicySpec": {
+      "type": "object",
+      "properties": {
+        "Levels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "RetentionPolicy": {
+          "type": "string"
+        },
+        "ExportPolicies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "EventPolicyStatus"
+    },
+    "eventsEventPolicyStatus": {
+      "type": "object"
+    },
+    "eventsEventSource": {
+      "type": "object",
+      "properties": {
+        "Component": {
+          "type": "string"
+        },
+        "Node": {
+          "type": "string"
+        }
+      }
+    },
+    "eventsEventSpec": {
+      "type": "object"
+    },
+    "eventsEventStatus": {
+      "type": "object",
+      "properties": {
+        "Severity": {
+          "type": "string"
+        },
+        "Description": {
+          "type": "string"
+        },
+        "ObjectRef": {
+          "$ref": "#/definitions/apiObjectRef"
+        },
+        "Source": {
+          "$ref": "#/definitions/eventsEventSource"
+        },
+        "CreatedTime": {
+          "type": "string"
+        },
+        "EventPolicy": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
