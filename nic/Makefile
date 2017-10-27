@@ -78,6 +78,7 @@ bazel-build:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //dol/test/storage:storage_test
 	$(MAKE) capmodel
 	$(MAKE) go-proto
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proxy-e2etest:all 
 
 bazel-gtests:
 	# PI gtests
