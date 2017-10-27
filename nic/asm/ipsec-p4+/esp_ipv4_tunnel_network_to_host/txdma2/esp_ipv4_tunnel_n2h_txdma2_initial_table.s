@@ -11,6 +11,7 @@ struct phv_ p;
         .param BRQ_BASE
         .align
 esp_ipv4_tunnel_n2h_txdma2_initial_table:
+    seq c1, d.is_v6, 1
     phvwr p.txdma2_global_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.txdma2_global_iv_size, d.iv_size
     phvwr p.txdma2_global_icv_size, d.icv_size
@@ -38,6 +39,10 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     memwr.dx  r4, r3
 
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+    phvwri p.ipsec_to_stage4_dot1q_etype, DOT1Q_ETYPE
+    phvwr p.ipsec_to_stage4_vrf_vlan, d.vrf_vlan
+    cmov r6, c1, IPV6_ETYPE, IPV4_ETYPE
+    phvwr p.ipsec_to_stage4_ip_etype, r6
 
     add r3, r0, d.barco_cindex
     addi r3, r3, 1

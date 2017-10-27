@@ -116,7 +116,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_cindex = 0;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_pindex = 0;
         
-        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.vrf_vlan = ipseccb_pd->ipseccb->vrf_vlan; 
+        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.vrf_vlan = htons(ipseccb_pd->ipseccb->vrf_vlan); 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.is_v6 = ipseccb_pd->ipseccb->is_v6; 
     }
     HAL_TRACE_DEBUG("Programming Decrypt stage0 at hw-id: 0x{0:x}", hwid); 
@@ -189,7 +189,7 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
                     expected_seq_no, last_replay_seq_no, replay_seq_no_bmp); 
     ipseccb_pd->ipseccb->expected_seq_no = ntohl(expected_seq_no);
     ipseccb_pd->ipseccb->seq_no_bmp = ntohll(replay_seq_no_bmp);
-    ipseccb_pd->ipseccb->vrf_vlan = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.vrf_vlan;
+    ipseccb_pd->ipseccb->vrf_vlan = ntohs(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.vrf_vlan);
     ipseccb_pd->ipseccb->is_v6 = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.is_v6;
 
     return HAL_RET_OK;

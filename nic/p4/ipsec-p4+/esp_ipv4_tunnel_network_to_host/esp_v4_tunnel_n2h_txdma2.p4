@@ -92,7 +92,9 @@ header_type ipsec_to_stage4_t {
     fields {
         in_page        : ADDRESS_WIDTH;
         headroom       : 16;
-        stage4_pad1     : 48;
+        dot1q_etype    : 16;
+        vrf_vlan       : 16;
+        ip_etype       : 16;
     }
 }
 
@@ -136,6 +138,8 @@ metadata dma_cmd_phv2pkt_t intrinsic_app_hdr;
 metadata dma_cmd_phv2pkt_t ipsec_app_hdr;
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t eth_hdr;
+@pragma dont_trim
+metadata dma_cmd_phv2pkt_t vrf_vlan_hdr;
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t dec_pay_load;
 
@@ -207,6 +211,9 @@ action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
     IPSEC_DECRYPT_TXDMA2_T0_S2S_SCRATCH
     modify_field(ipsec_to_stage4_scratch.in_page, ipsec_to_stage4.in_page);
     modify_field(ipsec_to_stage4_scratch.headroom, ipsec_to_stage4.headroom);
+    modify_field(ipsec_to_stage4_scratch.vrf_vlan, ipsec_to_stage4.vrf_vlan);
+    modify_field(ipsec_to_stage4_scratch.dot1q_etype, ipsec_to_stage4.dot1q_etype);
+    modify_field(ipsec_to_stage4_scratch.ip_etype, ipsec_to_stage4.ip_etype);
     // Add intrinsic and app header
     DMA_COMMAND_PHV2PKT_FILL(intrinsic_app_hdr, 0, 32, 0)
 

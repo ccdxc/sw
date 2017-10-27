@@ -56,6 +56,7 @@ def TestCaseSetup(tc):
     ipseccb.key_index                 = ipseccb.crypto_key.keyindex
     ipseccb.expected_seq_no           = 0
     ipseccb.seq_no_bmp                = 0
+    ipseccb.vrf_vlan                  = 0x0005
     ipseccb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification

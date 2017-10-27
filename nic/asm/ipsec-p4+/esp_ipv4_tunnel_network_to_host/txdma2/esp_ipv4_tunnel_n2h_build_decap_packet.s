@@ -11,19 +11,31 @@ struct phv_ p;
         .align
 esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     phvwri p.p4plus2p4_hdr_flags, P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN
-
+    
+    // Intrinsic
     phvwri p.intrinsic_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwri p.intrinsic_app_hdr_dma_cmd_phv_start_addr, 0
     phvwri p.intrinsic_app_hdr_dma_cmd_phv_end_addr, 16
- 
+
+    // App Header 
     phvwri p.ipsec_app_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
     phvwri p.ipsec_app_hdr_dma_cmd_phv_start_addr, IPSEC_TXDMA2_APP_HEADER_START
     phvwri p.ipsec_app_hdr_dma_cmd_phv_end_addr, IPSEC_TXDMA2_APP_HEADER_END 
-    
+   
+    // Ethernet Hdr 
     phvwri p.eth_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     phvwr  p.eth_hdr_dma_cmd_addr, k.ipsec_to_stage4_in_page
-    phvwr  p.eth_hdr_dma_cmd_size, k.ipsec_to_stage4_headroom
-    
+    add r1, r0, k.ipsec_to_stage4_headroom
+    // take only MAC addresses, etype will come from next DMA command based on v4 or v6
+    subi r1, r1, 2
+    phvwr  p.eth_hdr_dma_cmd_size, r1 
+   
+    // Vlan Header
+    phvwri p.vrf_vlan_hdr_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
+    phvwri p.vrf_vlan_hdr_dma_cmd_phv_start_addr, IPSEC_TXDMA2_VRF_VLAN_HEADER_START
+    phvwri p.vrf_vlan_hdr_dma_cmd_phv_end_addr, IPSEC_TXDMA2_VRF_VLAN_HEADER_END
+
+    // Decrypted payload 
     phvwri p.dec_pay_load_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     add r4, r0, k.t0_s2s_out_page_addr
     addi r4, r4, ESP_FIXED_HDR_SIZE

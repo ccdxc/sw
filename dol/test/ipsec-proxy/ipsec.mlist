@@ -49,6 +49,6 @@ modules:
         package : test.ipsec-proxy
         module  : tcp_ipv6_pkt_to_ipseccbq
         spec    : tcp_ipv6_pkt_to_ipseccbq.testspec
-        ignore  : True 
+        ignore  : False 
         iterate :
             - flow: filter://type=IPV6,proto=TCP
