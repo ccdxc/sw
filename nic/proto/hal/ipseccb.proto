@@ -47,6 +47,7 @@ message IpsecCbSpec {
   types.IPAddress       sip6                  = 18;
   types.IPAddress       dip6                  = 19;
   uint32                is_v6                 = 20;
+  uint32                vrf_vlan              = 21;
 }
 
 // IpsecCbRequestMsg is batched add or modify ipseccb request

@@ -149,10 +149,10 @@ def TestCaseVerify(tc):
     # this when this offset is removed.
     #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
     # 7. Verify brq input desc and rnmdr
-    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[0].ilist_addr - 0x40)):
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
+    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].ilist_addr - 0x40)):
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
         return False
-    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[0].ilist_addr))
+    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
 
     # 5. Verify descriptor
     if rnmdr.ringentries[rnmdr.pi].handle != ipseccbqq_cur.ringentries[ipseccb_cur.pi-1].handle:

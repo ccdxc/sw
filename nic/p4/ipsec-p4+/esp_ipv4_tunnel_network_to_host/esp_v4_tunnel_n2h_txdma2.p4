@@ -201,7 +201,7 @@ action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
                                        cb_pindex, cb_cindex, 
                                        barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr, 
-                                       iv_salt, ipsec_cb_pad)
+                                       iv_salt, vrf_vlan, is_v6)
 {
     IPSEC_DECRYPT_GLOBAL_SCRATCH
     IPSEC_DECRYPT_TXDMA2_T0_S2S_SCRATCH
@@ -341,7 +341,7 @@ action esp_v4_tunnel_n2h_txdma2_initial_table(rsvd, cosA, cosB,
                                        cb_pindex, cb_cindex, 
                                        barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr, 
-                                       iv_salt, ipsec_cb_pad)
+                                       iv_salt, vrf_vlan, is_v6)
 {
     IPSEC_CB_SCRATCH
 

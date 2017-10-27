@@ -225,7 +225,7 @@ action esp_v4_tunnel_n2h_txdma1_update_cb(pc, rsvd, cosA, cosB,
                                        cb_pindex, cb_cindex, 
                                        barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr, 
-                                       iv_salt, ipsec_cb_pad)
+                                       iv_salt, vrf_vlan, is_v6)
 {
     modify_field(p4plus2p4_hdr.table0_valid, 0);
     IPSEC_CB_SCRATCH_WITH_PC
@@ -244,7 +244,7 @@ action esp_v4_tunnel_n2h_txdma1_write_barco_req(pc, rsvd, cosA, cosB,
                                        cb_pindex, cb_cindex, 
                                        barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr, 
-                                       iv_salt, ipsec_cb_pad)
+                                       iv_salt, vrf_vlan, is_v6)
 {
     IPSEC_CB_SCRATCH_WITH_PC
 
@@ -325,7 +325,7 @@ action esp_v4_tunnel_n2h_txdma1_initial_table(pc, rsvd, cosA, cosB,
                                        cb_pindex, cb_cindex, 
                                        barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr, 
-                                       iv_salt, ipsec_cb_pad)
+                                       iv_salt, vrf_vlan, is_v6)
 {
     IPSEC_CB_SCRATCH 
 

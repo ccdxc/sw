@@ -54,6 +54,7 @@ typedef struct ipseccb_s {
     ip_addr_t             sip6;
     ip_addr_t             dip6;
     uint8_t               is_v6; 
+    uint16_t              vrf_vlan;
     // PD state
     void                  *pd;                     // all PD specific state
     void                  *pd_decrypt;                     // all PD specific state

@@ -155,7 +155,7 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
         HAL_TRACE_DEBUG("Dest EP Lookup failed\n");
     }
     
-
+    ipseccb->vrf_vlan = (int16_t)spec.vrf_vlan();
     ipseccb->is_v6 = spec.is_v6();
     ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6()); 
     ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
@@ -233,7 +233,8 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 
     ipseccb->tunnel_sip4 = spec.tunnel_sip4();
     ipseccb->tunnel_dip4 = spec.tunnel_dip4();
-    
+   
+    ipseccb->vrf_vlan = (uint16_t)spec.vrf_vlan(); 
     ipseccb->is_v6 = spec.is_v6();
     ip_addr_spec_to_ip_addr(&ipseccb->sip6, spec.sip6()); 
     ip_addr_spec_to_ip_addr(&ipseccb->dip6, spec.dip6());
@@ -337,6 +338,9 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
 
     rsp->mutable_spec()->set_pi(ripseccb.pi);
     rsp->mutable_spec()->set_ci(ripseccb.ci);
+    rsp->mutable_spec()->set_is_v6(ripseccb.is_v6);
+    rsp->mutable_spec()->set_vrf_vlan(ripseccb.vrf_vlan);
+
     // fill operational state of this IPSEC CB
     rsp->mutable_status()->set_ipseccb_handle(ipseccb->hal_handle);
 
