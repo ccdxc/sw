@@ -1,0 +1,16 @@
+# Feature Test Modules List
+feature:
+    id          : hostpin
+    sub         : rx
+    package     : test.hostpin
+    module      : hostpin
+    enable      : False
+    ignore      : False
+
+modules:
+    - module:
+        name    : UNK_UC
+        spec    : rx.testspec
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP
+              segment   : filter://native=False
