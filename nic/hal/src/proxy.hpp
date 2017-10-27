@@ -27,7 +27,7 @@ using proxy::ProxyGetResponseMsg;
 
 namespace hal {
 
-#define HAL_MAX_PROXY                           6
+#define HAL_MAX_PROXY                           7
 #define HAL_MAX_PROXY_FLOWS                     16000
 #define HAL_MAX_QID                             16777215
 #define SERVICE_LIF_START                       1001
@@ -41,6 +41,7 @@ enum {
     SERVICE_LIF_IPSEC_ESP,
     SERVICE_LIF_IPFIX,
     SERVICE_LIF_APP_REDIR,
+    SERVICE_LIF_GC,
     SERVICE_LIF_END
 };
 

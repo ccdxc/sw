@@ -30,7 +30,7 @@ tcp_rx_read_rnmdr_stage2_start:
 
 table_read_RNMDR_DESC:
     addui           r3, r0, hiword(RNMDR_TABLE_BASE)
-    addi            r3, r0, loword(RNMDR_TABLE_BASE)
+    addi            r3, r3, loword(RNMDR_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ_INDEX(1, r4, TABLE_LOCK_DIS,
                         tcp_rx_rdesc_alloc_stage_3_start,
                         r3, RNMDR_TABLE_ENTRY_SIZE_SHFT,

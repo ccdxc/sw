@@ -37,7 +37,13 @@ proxy_meta_init() {
 
     g_meta[types::PROXY_TYPE_IPSEC] = 
         (proxy_meta_t) {false, 1, {SERVICE_LIF_IPSEC_ESP, 2, {{0, 2, 4}, {1, 2, 4}}}};
-    
+ 
+    // CB size 64 bytes, num_entries = 2
+    //  QID 0 : RNMDR
+    //  QID 1 : TNMDR
+    g_meta[types::PROXY_TYPE_GC] = 
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_GC, 1, {0, 1, 1}}};
+
     g_meta[types::PROXY_TYPE_CPU] = 
         (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 1, 1}}};
 

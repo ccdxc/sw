@@ -24,8 +24,6 @@
 #define MAX_ENTRIES_PER_DESC_MASK 0xF
 
 #define NIC_PAGE_HDR_SIZE                    52         /* sizeof(nic_page_hdr_t) */
-#define NIC_DESC_ENTRY_0_OFFSET              64         /* &((nic_desc_t *)0)->entry[0]*/
-#define NIC_DESC_ENTRY_L_OFFSET              96         /* &((nic_desc_t *)0)->entry[1]*/
 
 #define NIC_DESC_ENTRY_ADDR_OFFSET           8          /* &((nic_desc_entry_t *)0)->addr */
 #define NIC_DESC_ENTRY_OFF_OFFSET            0xc        /* &((nic_desc_entry_t *)0)->offset */

@@ -28,6 +28,7 @@ LCXXFLAGS = \
 			-I../../../gen/esp_v4_tunnel_n2h_rxdma/include \
 			-I../../../gen/cpu_rxdma/include \
 			-I../../../gen/cpu_txdma/include \
+			-I../../../gen/gc_txdma/include \
 			-I../../../gen/rawr_rxdma/include \
 			-I../../../gen/rawc_txdma/include \
             -I../../../gen/common_rxdma_actions/include \

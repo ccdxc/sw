@@ -41,6 +41,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 
 #define CAPRI_HBM_REG_NMDR_RX            "nmdr-rx"
 #define CAPRI_HBM_REG_NMDR_TX            "nmdr-tx"
+#define CAPRI_HBM_REG_NMDR_RX_GC         "nmdr-rx-gc"
+#define CAPRI_HBM_REG_NMDR_TX_GC         "nmdr-tx-gc"
 #define CAPRI_HBM_REG_DESCRIPTOR_RX      "descriptor-rx"
 #define CAPRI_HBM_REG_DESCRIPTOR_TX      "descriptor-tx"
 #define CAPRI_HBM_REG_NMPR_BIG_RX        "nmpr-big-rx"
@@ -91,6 +93,8 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define TNMPR_SMALL_TABLE_BASE  "hbm_tnmpr_small_table_base"
 #define BRQ_BASE                "hbm_brq_base"
 #define TCP_RX_STATS_TABLE_BASE "hbm_tcp_rx_stats_table_base"
+#define RNMDR_GC_TABLE_BASE     "hbm_rnmdr_gc_table_base"
+#define TNMDR_GC_TABLE_BASE     "hbm_tnmdr_gc_table_base"
 
 #define IPSEC_CB_BASE "ipsec_cb_base"
 #define IPSEC_PAD_BYTES_HBM_TABLE_BASE "ipsec_pad_table_base"

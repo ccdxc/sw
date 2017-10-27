@@ -31,6 +31,13 @@
         phvwr       p.common_te##_num##_phv_table_addr, _table_base; \
         phvwri      p.app_header_table##_num##_valid, 1;
 
+#define CAPRI_NEXT_TABLE_READ_i(_num, _lock_en, _stage_entry, _table_base, _table_read_size) \
+        phvwri      p.common_te##_num##_phv_table_lock_en, _lock_en; \
+        phvwri      p.common_te##_num##_phv_table_raw_table_size, _table_read_size; \
+        phvwri      p.common_te##_num##_phv_table_pc, _stage_entry[33:6]; \
+        phvwri      p.common_te##_num##_phv_table_addr, _table_base; \
+        phvwri      p.app_header_table##_num##_valid, 1;
+
 #define CAPRI_NEXT_TABLE_READ_OFFSET(_num, _lock_en, _stage_entry, _table_base, _table_state_offset, _table_read_size) \
         phvwri      p.common_te##_num##_phv_table_lock_en, _lock_en; \
         phvwri      p.common_te##_num##_phv_table_raw_table_size, _table_read_size; \
@@ -135,6 +142,7 @@
 #define LIF_TCP                        1001
 #define LIF_TLS                        1002
 #define LIF_CPU                        1003
+#define LIF_GC                         1007
 
 #define SERQ_QID                       0
 #define SESQ_QID                       1
@@ -300,6 +308,14 @@
 #define TNMPR_TABLE_SIZE                255
 #define TNMPR_TABLE_SIZE_SHFT           8
 
+#define RNMDR_GC_TABLE_BASE             hbm_rnmdr_gc_table_base
+#define TNMDR_GC_TABLE_BASE             hbm_tnmdr_gc_table_base
+
+#define RNMDR_GC_PRODUCER_TCP           CAPRI_RNMDR_GC_TCP_RING_PRODUCER
+#define RNMDR_GC_PER_PRODUCER_SHIFT     CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT
+
+#define TNMDR_GC_PRODUCER_TCP           CAPRI_TNMDR_GC_TCP_RING_PRODUCER
+#define TNMDR_GC_PER_PRODUCER_SHIFT     CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT
 
 /* Semaphores */
 #define SERQ_PRODUCER_IDX              0xba00ba00

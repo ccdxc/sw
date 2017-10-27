@@ -6,6 +6,7 @@ LIBDIRS = \
           ipsec-p4+ \
           storage \
           cpu-p4plus \
+          gc \
           raw-redir-p4+ \
           eth \
           ipfix \

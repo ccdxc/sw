@@ -53,6 +53,14 @@
             "size_kb": 128
         },
         {
+            "name": "nmdr-tx-gc",
+            "size_kb": 128
+        },
+        {
+            "name": "nmdr-rx-gc",
+            "size_kb": 128
+        },
+        {
             "name": "nmpr-small-tx",
             "size_kb": 128
         },

@@ -29,6 +29,8 @@
     .param      esp_ipv4_tunnel_n2h_txdma_stage0
     .param      adminq_fetch_desc
     .param      rawc_s0_tx_start
+    .param      gc_tx_rnmdr_s0_start
+    .param      gc_tx_tnmdr_s0_start
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -106,4 +108,14 @@ adminq_stage0:
 .align
 rawc_tx_stage0:
     j   rawc_s0_tx_start
+    nop
+
+.align
+gc_tx_rnmdr_stage0:
+    j   gc_tx_rnmdr_s0_start
+    nop
+
+.align
+gc_tx_tnmdr_stage0:
+    j   gc_tx_tnmdr_s0_start
     nop

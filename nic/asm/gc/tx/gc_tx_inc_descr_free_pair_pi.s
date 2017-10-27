@@ -1,0 +1,74 @@
+#include "INGRESS_p.h"
+#include "ingress.h"
+#include "capri-macros.h"
+
+struct phv_ p;
+struct gc_tx_read_descr_free_pair_pi_read_descr_free_pair_pi_d d;
+
+%%
+    .param          RNMDR_TABLE_BASE
+    .param          TNMDR_TABLE_BASE
+    .param          gc_tx_inc_rnmpr_free_pair_pi
+    .param          gc_tx_inc_tnmpr_free_pair_pi
+
+.align
+gc_tx_inc_rnmdr_free_pair_pi:
+    CAPRI_OPERAND_DEBUG(d.index)
+    /*
+     * Read page FP.PI, to get index to write the freed descr address to
+     */
+    CAPRI_NEXT_TABLE_READ_i(0, TABLE_LOCK_DIS, gc_tx_inc_rnmpr_free_pair_pi,
+                    RNMPR_FREE_IDX, TABLE_SIZE_64_BITS)
+dma_cmd_rnmdr:
+    /*
+     * Write descriptor address to descr[FP.PI]
+     */
+    phvwri          p.p4_txdma_intr_dma_cmd_ptr, CAPRI_PHV_START_OFFSET(ringentry1_dma_dma_cmd_type)
+
+    addui           r3, r0, hiword(RNMDR_TABLE_BASE)
+    addi            r3, r3, loword(RNMDR_TABLE_BASE)
+    and             r2, d.{index}.wx, ((1 << CAPRI_RNMDR_RING_SHIFT) - 1)
+    add             r3, r3, r2, RNMDR_TABLE_ENTRY_SIZE_SHFT
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(ringentry1_dma_dma_cmd, r3, common_phv_desc_addr, common_phv_desc_addr)
+dma_rnmdr_alloc_pair_ci:
+    /*
+     * Set AP.CI = FP.PI
+     */
+    add             r2, d.{index}.wx, 1
+    phvwr           p.ci_1_index, r2
+    addi            r3, r0, CAPRI_SEM_TNMDR_ALLOC_CI_RAW_ADDR
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(ci_1_dma_dma_cmd, r3, ci_1_index, ci_1_index)
+    CAPRI_DMA_CMD_STOP(ci_1_dma_dma_cmd)
+    nop.e
+    nop
+
+
+
+.align
+gc_tx_inc_tnmdr_free_pair_pi:
+    CAPRI_OPERAND_DEBUG(d.index)
+    /*
+     * Read page FP.PI, to get index to write the freed descr address to
+     */
+    CAPRI_NEXT_TABLE_READ_i(0, TABLE_LOCK_DIS, gc_tx_inc_tnmpr_free_pair_pi,
+                    TNMPR_FREE_IDX, TABLE_SIZE_64_BITS)
+dma_cmd_tnmdr:
+    /*
+     * Write descriptor address to descr[FP.PI]
+     */
+    addui           r3, r0, hiword(TNMDR_TABLE_BASE)
+    addi            r3, r3, loword(TNMDR_TABLE_BASE)
+    and             r2, d.{index}.wx, ((1 << CAPRI_TNMDR_RING_SHIFT) - 1)
+    add             r3, r3, r2, TNMDR_TABLE_ENTRY_SIZE_SHFT
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(ringentry1_dma_dma_cmd, r3, common_phv_desc_addr, common_phv_desc_addr)
+dma_tnmdr_alloc_pair_ci:
+    /*
+     * Set AP.CI = FP.PI
+     */
+    add             r2, d.{index}.wx, 1
+    phvwr           p.ci_1_index, r2
+    addi            r3, r0, CAPRI_SEM_TNMDR_ALLOC_CI_RAW_ADDR
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(ci_1_dma_dma_cmd, r3, ci_1_index, ci_1_index)
+    CAPRI_DMA_CMD_STOP(ci_1_dma_dma_cmd)
+    nop.e
+    nop

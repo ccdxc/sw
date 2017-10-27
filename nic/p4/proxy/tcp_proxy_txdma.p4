@@ -287,9 +287,13 @@ header_type txdma_max_options_t {
 }
 @pragma dont_trim
 metadata txdma_max_options_t tcp_header_options;
+@pragma dont_trim
+metadata ring_entry_t ring_entry;
+@pragma dont_trim
+metadata doorbell_data_t db_data;
 header_type txdma_pad_before_dma_t {
     fields {
-        pad            : 160;
+        pad            : 32;
     }
 }
 @pragma dont_trim
@@ -307,13 +311,13 @@ metadata dma_cmd_mem2pkt_t l2l3_header_dma;  // dma cmd 3
 @pragma dont_trim
 metadata dma_cmd_phv2pkt_t tcp_header_dma;   // dma cmd 4
 @pragma dont_trim
-metadata dma_cmd_mem2pkt_t data_dma;         // dma cmd 5
+metadata dma_cmd_phv2mem_t ringentry_dma;    // dma cmd 5
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 6
+metadata dma_cmd_phv2mem_t doorbell_dma;     // dma cmd 6
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd7_dma;     // dma cmd 7
+metadata dma_cmd_mem2pkt_t data_dma;         // dma cmd 7
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd8_dma;     // dma cmd 8
+metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 8
 
 /******************************************************************************
  * Action functions to generate k_struct and d_struct

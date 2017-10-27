@@ -2,7 +2,7 @@
 TOPDIR = ../../../..
 GEN_DIR = $(TOPDIR)/gen
 CUSTOM = $(GEN_DIR)/.tcp_tx_asm
-CUSTOM_CLEAN = clean
+CUSTOM_CLEAN = my_clean
 
 
 include $(TOPDIR)/make/Makefile.inc
@@ -106,6 +106,6 @@ run: $(BIN_FILES)
 	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-tso.ctl $(OBJ_DIR)/tcp-tso.bin > $(SRC_DIR)/run/tcp-tso.run
 	$(CAPSIM_BIN) -c $(INC_DIRS) $(SRC_DIR)/ctl/tcp-tx.ctl $(OBJ_DIR)/tcp-tx.bin > $(SRC_DIR)/run/tcp-tx.run
 
-clean:
+my_clean:
 	@rm -fR $(OBJ_DIR)/*.bin
 	@rm -fR $(GEN_DIR)/.tcp_tx_asm

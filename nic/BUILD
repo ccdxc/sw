@@ -195,6 +195,7 @@ cc_library(
             "gen/tls_txdma_post_crypto_enc/include/tls_txdma_post_crypto_enc_p4plus_ingress.h",
             "gen/cpu_rxdma/include/cpu_rxdma_p4plus_ingress.h",
             "gen/cpu_txdma/include/cpu_txdma_p4plus_ingress.h",
+            "gen/gc_txdma/include/gc_txdma_p4plus_ingress.h",
             "gen/rawr_rxdma/include/rawr_rxdma_p4plus_ingress.h",
             "gen/rawc_txdma/include/rawc_txdma_p4plus_ingress.h",
             "gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h",

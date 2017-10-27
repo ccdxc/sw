@@ -447,6 +447,18 @@ header_type ring_entry_t {
     }
 }
 
+header_type semaphore_ci_t {
+    fields {
+        index : 32;
+    }
+}
+
+header_type semaphore_pi_t {
+    fields {
+        index : 32;
+    }
+}
+
 #define CAPRI_QSTATE_HEADER_COMMON \
         rsvd                : 8;\
         cosA                : 4;\

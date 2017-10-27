@@ -91,6 +91,15 @@ wring_pd_meta_init() {
 
     g_meta[types::WRING_TYPE_ASESQ] = 
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASESQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL};
+
+    g_meta[types::WRING_TYPE_NMDR_TX_GC] = 
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX_GC, 1024, DEFAULT_WRING_SLOT_SIZE,
+                           "", 0, 0, 0, NULL, NULL};
+ 
+    g_meta[types::WRING_TYPE_NMDR_RX_GC] = 
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX_GC, 1024, DEFAULT_WRING_SLOT_SIZE,
+                           "", 0, 0, 0, NULL, NULL};
+
     return HAL_RET_OK;
 }
 
@@ -226,29 +235,36 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         get_default_slot_value(type, index, value);
         p4plus_hbm_write(slot_addr, value, meta->slot_size_in_bytes);
     }
-    if (meta->alloc_semaphore_addr) {
+    if (meta->alloc_semaphore_addr &&
+                    CAPRI_SEM_RAW_IS_PI_CI(meta->alloc_semaphore_addr)) {
         // Initialize CI to ring size
-        uint32_t val32;
         // HW full condition is PI + 1 == CI, so for a ring size of N,
         // need to set CI to N + 1
-        val32 = htonl(meta->num_slots + 1);
-        HAL_TRACE_DEBUG("writing {0} {1} to 0x{2:x}\n", meta->num_slots,
+        uint32_t val32 = meta->num_slots + 1;
+        HAL_TRACE_DEBUG("writing {0} to semaphore 0x{1:x}\n",
                                 val32, meta->alloc_semaphore_addr +
                                 CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
         p4plus_hbm_write(meta->alloc_semaphore_addr + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET,
                                         (uint8_t *)&val32, sizeof (uint32_t));
     }
-    if (meta->free_semaphore_addr) {
-        // Initialize CI to ring size
-        uint32_t val32;
-        // HW full condition is PI + 1 == CI, so for a ring size of N,
-        // need to set CI to N + 1
-        val32 = htonl(meta->num_slots + 1);
-        HAL_TRACE_DEBUG("writing {0} {1} to 0x{2:x}\n", meta->num_slots,
-                                val32, meta->free_semaphore_addr +
-                                CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
+    if (meta->free_semaphore_addr &&
+                    CAPRI_SEM_RAW_IS_PI_CI(meta->free_semaphore_addr)) {
+        // Initialize this ring as
+        // FP.PI = AP.CI - 1 = meta->num_slots
+        // FP.CI = FP.PI + 1 (this queue is initially full, until one object is
+        // inserted)
+        uint32_t val32 = meta->num_slots;
+        p4plus_hbm_write(meta->free_semaphore_addr,
+                                        (uint8_t *)&val32, sizeof (uint32_t));
+        HAL_TRACE_DEBUG("writing {0} to semaphore 0x{1:x}\n",
+                                val32, meta->free_semaphore_addr);
+
+        val32++;
         p4plus_hbm_write(meta->free_semaphore_addr + CAPRI_SEM_INC_NOT_FULL_CI_OFFSET,
                                         (uint8_t *)&val32, sizeof (uint32_t));
+        HAL_TRACE_DEBUG("writing {0} to semaphore 0x{1:x}\n",
+                                val32, meta->free_semaphore_addr +
+                                CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
     }
     return HAL_RET_OK;
 }

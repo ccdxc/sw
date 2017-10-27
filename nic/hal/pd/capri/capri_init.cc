@@ -9,7 +9,7 @@
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 46
+#define CAPRI_P4PLUS_NUM_SYMBOLS 49
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
@@ -427,6 +427,27 @@ capri_p4p_asm_init()
     symbols[45].num_params = 1;
     symbols[45].params[0].name = RNMPR_SMALL_TABLE_BASE;
     symbols[45].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_SMALL_RX);
+
+    symbols[46].name = "tcp-tx.bin";
+    symbols[46].num_params = 2;
+    symbols[46].params[0].name = RNMDR_GC_TABLE_BASE;
+    symbols[46].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX_GC);
+    symbols[46].params[1].name = TNMDR_GC_TABLE_BASE;
+    symbols[46].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX_GC);
+
+    symbols[47].name = "gc_tx_inc_descr_free_pair_pi.bin";
+    symbols[47].num_params = 2;
+    symbols[47].params[0].name = RNMDR_TABLE_BASE;
+    symbols[47].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+    symbols[47].params[1].name = TNMDR_TABLE_BASE;
+    symbols[47].params[1].val = get_start_offset(CAPRI_HBM_REG_NMDR_TX);
+
+    symbols[48].name = "gc_tx_inc_page_free_pair_pi.bin";
+    symbols[48].num_params = 2;
+    symbols[48].params[0].name = RNMPR_TABLE_BASE;
+    symbols[48].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[48].params[1].name = TNMPR_TABLE_BASE;
+    symbols[48].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 
