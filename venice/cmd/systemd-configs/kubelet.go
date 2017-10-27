@@ -2,6 +2,7 @@ package configs
 
 import (
 	"fmt"
+	"net"
 	"path"
 
 	"k8s.io/client-go/tools/clientcmd"
@@ -24,6 +25,8 @@ const (
 	kubeConfigVar        = "KUBE_CONFIG"
 	requireKubeConfigVar = "REQUIRE_KUBE_CONFIG"
 	cgroupDriverVar      = "CGROUP_DRIVER"
+	nodeIPVar            = "NODEIP"
+	hostNameOverrideVar  = "HOSTNAME_OVERRIDE"
 
 	// Parameters
 	kubeletAddressParam    = "--address"
@@ -31,15 +34,17 @@ const (
 	kubeConfigParam        = "--kubeconfig"
 	requireKubeConfigParam = "--require-kubeconfig"
 	cgroupDriverParam      = "--cgroup-driver"
+	nodeIPParam            = "--node-ip"
+	hostNameOverrideParam  = "--hostname-override"
 )
 
 // GenerateKubeletConfig generates kubelet configuration file and systemd
 // configuration file.
-func GenerateKubeletConfig(virtualIP string) error {
+func GenerateKubeletConfig(nodeID, virtualIP string) error {
 	if err := generateKubeletConfig(virtualIP); err != nil {
 		return err
 	}
-	return generateSystemdKubeletConfig()
+	return generateSystemdKubeletConfig(nodeID)
 }
 
 // generateKubeletConfig generates the kubelet configuration file with
@@ -63,7 +68,7 @@ func generateKubeletConfig(virtualIP string) error {
 
 // generateSystemdKubeletConfig generates the systemd configuration file for
 // starting kubelet with the right arguments.
-func generateSystemdKubeletConfig() error {
+func generateSystemdKubeletConfig(nodeID string) error {
 	cfgMap := make(map[string]string)
 	// TODO: Bind to node IP.
 	cfgMap[kubeletAddressVar] = fmt.Sprintf("%s 0.0.0.0", kubeletAddressParam)
@@ -71,6 +76,11 @@ func generateSystemdKubeletConfig() error {
 	cfgMap[kubeConfigVar] = fmt.Sprintf("%s %s", kubeConfigParam, kubeletCfgFile)
 	cfgMap[requireKubeConfigVar] = requireKubeConfigParam
 	cfgMap[cgroupDriverVar] = fmt.Sprintf("%s %s", cgroupDriverParam, kubeletCgroupDriver)
+	cfgMap[hostNameOverrideVar] = fmt.Sprintf("%s %s", hostNameOverrideParam, nodeID)
+	ip := net.ParseIP(nodeID)
+	if ip != nil {
+		cfgMap[nodeIPVar] = fmt.Sprintf("%s %s", nodeIPParam, nodeID)
+	}
 	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.ConfigDir, kubeletSystemdCfgFile))
 }
 

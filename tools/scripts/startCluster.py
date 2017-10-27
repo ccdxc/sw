@@ -160,6 +160,7 @@ parser.add_argument("-password", default='vagrant', help="password for ssh")
 parser.add_argument("-gopath", default='/import', help="GOPATH directory path")
 parser.add_argument("-stop", dest='stop', action='store_true')
 parser.add_argument("-tarpath", default='/import/bin/tars', help='location of tar files for container images')
+parser.add_argument("-noinit", dest='noinit', action='store_true')
 
 # Parse the args
 args = parser.parse_args()
@@ -224,8 +225,9 @@ pool.map(lambda x: x.startCluster(), nodes)
 print "################### Waiting for pen-cmd container to come up ###################"
 time.sleep(5)
 
-# init the cluster
-initCluster(addrList[0])
+# init the cluster unless explicitly asked not to
+if not args.noinit:
+    initCluster(addrList[0])
 
 print "################### Created Pensando Cluster #####################"
 sys.exit(0)

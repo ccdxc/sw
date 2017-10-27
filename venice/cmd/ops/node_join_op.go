@@ -68,6 +68,7 @@ func (o *NodeJoinOp) Run() (interface{}, error) {
 		Uuid:       o.cluster.UUID,
 		VirtualIp:  o.cluster.Spec.VirtualIP,
 		NTPServers: o.cluster.Spec.NTPServers,
+		NodeId:     o.node.Name,
 	}
 
 	err = sendJoins(nil, joinReq, []string{o.node.Name})

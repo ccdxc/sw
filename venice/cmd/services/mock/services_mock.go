@@ -245,7 +245,7 @@ type Configs struct {
 }
 
 // GenerateKubeletConfig is a mock implementation of kubelet config generation.
-func (c *Configs) GenerateKubeletConfig(virtualIP string) error {
+func (c *Configs) GenerateKubeletConfig(nodeId, virtualIP string) error {
 	return nil
 }
 

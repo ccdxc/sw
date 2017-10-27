@@ -2,7 +2,7 @@ package configs
 
 // Interface for the configs package
 type Interface interface {
-	GenerateKubeletConfig(virtualIP string) error
+	GenerateKubeletConfig(nodeid, virtualIP string) error
 	RemoveKubeletConfig()
 	GenerateAPIServerConfig() error
 	RemoveAPIServerConfig()
@@ -14,8 +14,8 @@ type Interface interface {
 
 type configs struct{}
 
-func (c *configs) GenerateKubeletConfig(virtualIP string) error {
-	return GenerateKubeletConfig(virtualIP)
+func (c *configs) GenerateKubeletConfig(nodeID, virtualIP string) error {
+	return GenerateKubeletConfig(nodeID, virtualIP)
 }
 func (c *configs) RemoveKubeletConfig() {
 	RemoveKubeletConfig()

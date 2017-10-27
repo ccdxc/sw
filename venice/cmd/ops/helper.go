@@ -178,6 +178,7 @@ func sendJoins(cFn clusterClientFn, req *grpc.ClusterJoinReq, nodes []string) er
 				}
 			}
 		}
+		newReq.NodeId = host
 		if !found {
 			newReq.QuorumConfig = nil
 		}

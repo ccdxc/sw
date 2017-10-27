@@ -18,6 +18,7 @@ type Cluster struct {
 	UUID        string
 	VirtualIP   string
 	QuorumNodes []string
+	NodeID      string
 }
 
 // GetCluster retrieves information about the current cluster, returns nil if

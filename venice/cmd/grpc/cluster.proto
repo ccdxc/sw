@@ -49,6 +49,7 @@ message ClusterJoinReq {
 	repeated string quorum_nodes = 4;
 	QuorumConfig quorum_config = 5;
 	repeated string NTPServers = 6;
+	string node_id = 7;
 }
 
 // Cluster Join response

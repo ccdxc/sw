@@ -21,6 +21,7 @@ type nodeService struct {
 	virtualIP string
 	enabled   bool
 	configs   configs.Interface
+	nodeID    string
 }
 
 // NodeOption fills the optional params
@@ -41,11 +42,12 @@ func WithSystemdSvcNodeOption(sysSvc types.SystemdService) NodeOption {
 }
 
 // NewNodeService returns a NodeService
-func NewNodeService(virtualIP string, options ...NodeOption) types.NodeService {
+func NewNodeService(nodeID, virtualIP string, options ...NodeOption) types.NodeService {
 	s := nodeService{
 		virtualIP: virtualIP,
 		sysSvc:    env.SystemdService,
 		configs:   configs.New(),
+		nodeID:    nodeID,
 	}
 
 	for _, o := range options {
@@ -66,7 +68,7 @@ func (s *nodeService) Start() error {
 	s.Lock()
 	defer s.Unlock()
 	s.enabled = true
-	if err := s.configs.GenerateKubeletConfig(s.virtualIP); err != nil {
+	if err := s.configs.GenerateKubeletConfig(s.nodeID, s.virtualIP); err != nil {
 		return err
 	}
 

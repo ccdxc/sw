@@ -181,7 +181,7 @@ func StartQuorumServices(c utils.Cluster) {
 
 	go waitForAPIAndStartServices()
 
-	env.NodeService = services.NewNodeService(c.VirtualIP)
+	env.NodeService = services.NewNodeService(c.NodeID, c.VirtualIP)
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)
 	}
@@ -191,14 +191,14 @@ func StartQuorumServices(c utils.Cluster) {
 }
 
 // StartNodeServices starts services running on non-quorum node
-func StartNodeServices(VirtualIP string) {
+func StartNodeServices(nodeID, VirtualIP string) {
 	log.Debugf("Starting node services on startup")
 	env.NtpService = services.NewNtpService(nil)
 	env.NtpService.NtpConfigFile([]string{VirtualIP})
 	env.SystemdService = services.NewSystemdService()
 	env.SystemdService.Start()
 
-	env.NodeService = services.NewNodeService(VirtualIP)
+	env.NodeService = services.NewNodeService(nodeID, VirtualIP)
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)
 	}
@@ -214,7 +214,7 @@ func OnStart() {
 	}
 
 	if cluster.QuorumNodes == nil {
-		StartNodeServices(cluster.VirtualIP)
+		StartNodeServices(cluster.NodeID, cluster.VirtualIP)
 		return
 	}
 

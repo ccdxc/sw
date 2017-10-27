@@ -11,7 +11,7 @@ func setupNode(testName string) (types.SystemdService, types.NodeService) {
 	testIP := "11.1.1.1"
 
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
-	n := NewNodeService(testIP, WithSystemdSvcNodeOption(s), WithConfigsNodeOption(&mock.Configs{}))
+	n := NewNodeService(testName, testIP, WithSystemdSvcNodeOption(s), WithConfigsNodeOption(&mock.Configs{}))
 	return s, n
 }
 

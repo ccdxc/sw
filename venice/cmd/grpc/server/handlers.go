@@ -65,6 +65,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		UUID:        req.Uuid,
 		VirtualIP:   req.VirtualIp,
 		QuorumNodes: req.QuorumNodes,
+		NodeID:      req.NodeId,
 	}
 
 	// Record cluster membership on local FS.
@@ -193,7 +194,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 		env.SystemdService.Start() // must be called before dependent services
 	}
 
-	env.NodeService = services.NewNodeService(req.VirtualIp)
+	env.NodeService = services.NewNodeService(req.NodeId, req.VirtualIp)
 	// Start node services. Currently we are running Node services on Quorum nodes also
 	if err := env.NodeService.Start(); err != nil {
 		log.Errorf("Failed to start node services with error: %v", err)

@@ -176,7 +176,6 @@ func (tu *TestUtils) Init() {
 	}
 	for _, qn := range cl.Spec.QuorumNodes {
 		tu.QuorumNodes = append(tu.QuorumNodes, qn)
-		//tu.QuorumNodes = append(tu.QuorumNodes, "node"+strconv.Itoa(1+i))
 	}
 	ginkgo.By(fmt.Sprintf("QuorumNodes: %+v ", tu.QuorumNodes))
 
