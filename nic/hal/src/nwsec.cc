@@ -1518,8 +1518,15 @@ security_group_policy_get(nwsec::SecurityGroupPolicyGetRequest& spec,
 void *
 nwsec_group_get_key_func (void *entry)
 {
+    hal_handle_id_ht_entry_t   *ht_entry;
+    nwsec_group_t              *nwsec_grp = NULL;
     HAL_ASSERT(entry != NULL);
-    return (void *)&(((nwsec_group_t *)entry)->sg_id);
+    ht_entry = (hal_handle_id_ht_entry_t *) entry;
+    if (ht_entry == NULL) {
+        return NULL;
+    }
+    nwsec_grp = (nwsec_group_t *)hal_handle_get_obj(ht_entry->handle_id);
+    return (void *)&(nwsec_grp->sg_id);
 }
 
 uint32_t
@@ -1700,7 +1707,7 @@ security_group_create(nwsec::SecurityGroupSpec&     spec,
     }
 
     nwsec_grp->sg_id =  spec.key_or_handle().security_group_id();
-    nwsec_grp->hal_handle = hal_handle_alloc(HAL_OBJ_ID_SECURITY_POLICY);
+    nwsec_grp->hal_handle = hal_handle_alloc(HAL_OBJ_ID_SECURITY_GROUP);
     if (nwsec_grp->hal_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("{}: failed to alloc handle for policy_id: {}",
                      __FUNCTION__, nwsec_grp->sg_id);

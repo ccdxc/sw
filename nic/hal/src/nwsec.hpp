@@ -548,7 +548,7 @@ add_nwsec_group_to_db (nwsec_group_t *nwsec_grp)
     hal_ret_t                       ret;
     hal_handle_id_ht_entry_t        *entry;
 
-    HAL_TRACE_DEBUG("Adding to security group hash table");
+    HAL_TRACE_DEBUG("Adding to security group hash table sg_id {}", nwsec_grp->sg_id);
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->
             hal_handle_id_ht_entry_slab()->alloc();
     if (entry == NULL) {
@@ -557,8 +557,8 @@ add_nwsec_group_to_db (nwsec_group_t *nwsec_grp)
     // add mapping from security group id to its handle
     entry->handle_id   = nwsec_grp->hal_handle;
 
-    ret = g_hal_state->nwsec_group_ht()->insert(entry,
-                                                &nwsec_grp->ht_ctxt);
+    ret = g_hal_state->nwsec_group_ht()->insert_with_key(&nwsec_grp->sg_id, entry,
+                                                         &entry->ht_ctxt);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to add security group {} to handle mapping, "
                       "err : {}", nwsec_grp->sg_id, ret);
@@ -575,13 +575,17 @@ nwsec_group_lookup_by_key(uint32_t sg_id)
     hal_handle_id_ht_entry_t     *entry;
     nwsec_group_t                *nwsec_group;
 
+    HAL_TRACE_DEBUG("Lookup sg_id {}", sg_id);
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->nwsec_group_ht()->lookup(&sg_id);
     if (entry) {
         HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_SECURITY_GROUP);
         nwsec_group = (nwsec_group_t *) hal_handle_get_obj(entry->handle_id);
         return nwsec_group;
+    } else {
+        HAL_TRACE_DEBUG("security group id:{} entry not found", sg_id);
     }
+     
     return NULL;
 }
 
