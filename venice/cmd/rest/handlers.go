@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"encoding/json"
+	"expvar"
 	"net/http"
 	"path"
 
@@ -19,12 +20,11 @@ import (
 
 // constants used by REST interface
 const (
-	uRLPrefix         = "/api/v1"
-	clusterURL        = "/cluster"
-	servicesURL       = "/services"
-	debugPrefix       = "/debug"
-	rpcStatsURL       = "/rpcstats"
-	rpcClientStatsURL = "/rpcclientstats"
+	uRLPrefix   = "/api/v1"
+	clusterURL  = "/cluster"
+	servicesURL = "/services"
+	debugPrefix = "/debug"
+	expvarURL   = "/vars"
 )
 
 // NewRESTServer creates REST server endpoints for cluster create/get. These ops
@@ -36,8 +36,7 @@ func NewRESTServer() *martini.ClassicMartini {
 	m.Post(uRLPrefix+clusterURL, ClusterCreateHandler)
 	m.Get(uRLPrefix+clusterURL+"/:id", ClusterGetHandler)
 	m.Get(uRLPrefix+servicesURL, ServiceListHandler)
-	m.Get(debugPrefix+rpcStatsURL, RPCStatsGetHandler)
-	m.Get(debugPrefix+rpcClientStatsURL, RPCClientStatsGetHandler)
+	m.Get(debugPrefix+expvarURL, expvar.Handler())
 	return m
 }
 
@@ -103,34 +102,6 @@ func ServiceListHandler(w http.ResponseWriter, req *http.Request) {
 	encoder := json.NewEncoder(w)
 
 	if err := encoder.Encode(env.ResolverService.List()); err != nil {
-		log.Errorf("Failed to encode with error: %v", err)
-	}
-}
-
-// RPCStatsGetHandler returns the statistics for the RPC server.
-func RPCStatsGetHandler(w http.ResponseWriter, req *http.Request) {
-	if env.RPCServer == nil {
-		errors.SendNotFound(w, "RPCStats", "")
-		return
-	}
-
-	encoder := json.NewEncoder(w)
-
-	if err := encoder.Encode(env.RPCServer.GetRPCStats()); err != nil {
-		log.Errorf("Failed to encode with error: %v", err)
-	}
-}
-
-// RPCClientStatsGetHandler returns the statistics for the RPC server by client.
-func RPCClientStatsGetHandler(w http.ResponseWriter, req *http.Request) {
-	if env.RPCServer == nil {
-		errors.SendNotFound(w, "RPCStatsByClient", "")
-		return
-	}
-
-	encoder := json.NewEncoder(w)
-
-	if err := encoder.Encode(env.RPCServer.GetRPCStatsByClient()); err != nil {
 		log.Errorf("Failed to encode with error: %v", err)
 	}
 }

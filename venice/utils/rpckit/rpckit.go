@@ -7,6 +7,7 @@ package rpckit
 
 import (
 	"errors"
+	"expvar"
 	"fmt"
 	"net"
 	"sync"
@@ -16,6 +17,21 @@ import (
 
 	"github.com/pensando/sw/venice/utils/log"
 )
+
+// Singleton stats
+var once sync.Once
+var singletonMap *expvar.Map
+
+func init() {
+	once.Do(func() {
+		singletonMap = expvar.NewMap("rpcstats")
+	})
+}
+
+// Stats returns the map that keeps track of rpcstats.
+func Stats() *expvar.Map {
+	return singletonMap
+}
 
 // These are options that are common to both client and server
 type options struct {
@@ -94,9 +110,9 @@ func WithDeferredStart(enabled bool) Option {
 	}
 }
 
-func defaultOptions(mysvcName string) *options {
+func defaultOptions(mysvcName, role string) *options {
 	return &options{
-		stats:        newStatsMiddleware(mysvcName),
+		stats:        newStatsMiddleware(mysvcName, role),
 		tracer:       newTracerMiddleware(mysvcName),
 		enableTracer: false,
 		enableLogger: true,
@@ -145,7 +161,7 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 		listenURL: listenURL,
 		listener:  ListenWrapper(lis),
 		DoneCh:    make(chan error),
-		options:   *defaultOptions(mysvcName),
+		options:   *defaultOptions(mysvcName, RoleServer),
 	}
 
 	// add custom options
@@ -192,11 +208,6 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 	log.Infof("gRpc server %s Listening on %s", mysvcName, listenURL)
 
 	return rpcServer, nil
-}
-
-// GetRPCStats returns RPC stats for the server
-func (srv *RPCServer) GetRPCStats() map[string]int64 {
-	return srv.stats.rpcStats
 }
 
 // GetListenURL returns the listen URL for the server (for testing).
@@ -251,7 +262,7 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 	rpcClient := &RPCClient{
 		mysvcName: mysvcName,
 		remoteURL: remoteURL,
-		options:   *defaultOptions(mysvcName),
+		options:   *defaultOptions(mysvcName, RoleClient),
 	}
 
 	// add custom options
@@ -352,16 +363,6 @@ func (c *RPCClient) Reconnect() error {
 	c.ClientConn = conn
 
 	return nil
-}
-
-// GetRPCStats returns RPC stats for the client
-func (c *RPCClient) GetRPCStats() map[string]int64 {
-	return c.stats.rpcStats
-}
-
-// GetRPCStatsByClient returns RPC stats for the server by client
-func (srv *RPCServer) GetRPCStatsByClient() map[string]map[string]int64 {
-	return srv.stats.rpcClientStats
 }
 
 // Close closes client connection

@@ -4,7 +4,6 @@ package rpckit
 
 import (
 	"fmt"
-	"sync"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -118,25 +117,15 @@ func (l *logMiddleware) RespInterceptor(ctx context.Context, role, mysvcName, me
 
 // Stats middleware
 type statsMiddleware struct {
-	lock           sync.Mutex                  // RW lock for stats object
-	rpcStats       map[string]int64            // stats for each RPC call
-	rpcClientStats map[string]map[string]int64 // stats for each RPC call, by client (valid only on server)
 }
 
 // newStatsMiddleware returns a new stats middleware
-func newStatsMiddleware(svcName string) *statsMiddleware {
-	return &statsMiddleware{
-		rpcStats:       make(map[string]int64),
-		rpcClientStats: make(map[string]map[string]int64),
-	}
+func newStatsMiddleware(svcName, role string) *statsMiddleware {
+	return &statsMiddleware{}
 }
 
 // ReqInterceptor implements request interception
 func (s *statsMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, method string, req interface{}) context.Context {
-	// lock the object
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
 	switch role {
 	case RoleClient:
 		// get existing metadata
@@ -148,7 +137,12 @@ func (s *statsMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, m
 		}
 		newMd := metadata.Join(md, metadata.Pairs("cname", mysvcName))
 		ctx = metadata.NewContext(ctx, newMd)
+		// increment request stats
+		singletonMap.Add(fmt.Sprintf("%v/client/requests%v", mysvcName, method), 1)
 	case RoleServer:
+		// increment total request stats
+		singletonMap.Add(fmt.Sprintf("%v/server/requests%v", mysvcName, method), 1)
+
 		// get grpc metadata
 		md, ok := metadata.FromContext(ctx)
 		if !ok {
@@ -158,32 +152,42 @@ func (s *statsMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, m
 		if !ok {
 			break
 		}
-		methodStats, ok := s.rpcClientStats[method]
-		if !ok {
-			methodStats = make(map[string]int64)
-			s.rpcClientStats[method] = methodStats
-		}
-		methodStats[clientNames[0]]++
+		singletonMap.Add(fmt.Sprintf("%v/server/requests%v/client/%v", mysvcName, method, clientNames[0]), 1)
 	}
-
-	// increment stats
-	s.rpcStats[fmt.Sprintf("%s-%s:Req", role, method)]++
 
 	return ctx
 }
 
 // RespInterceptor handles responses
 func (s *statsMiddleware) RespInterceptor(ctx context.Context, role, mysvcName, method string, req, reply interface{}, err error) context.Context {
-	// lock the object
-	s.lock.Lock()
-	defer s.lock.Unlock()
 
-	// increment response stats
-	s.rpcStats[fmt.Sprintf("%s-%s:Resp", role, method)]++
+	switch role {
+	case RoleClient:
+		// increment response and error stats
+		singletonMap.Add(fmt.Sprintf("%v/client/responses%v", mysvcName, method), 1)
+		if err != nil {
+			singletonMap.Add(fmt.Sprintf("%v/client/errors%v", mysvcName, method), 1)
+		}
+	case RoleServer:
+		// increment total response and error stats
+		singletonMap.Add(fmt.Sprintf("%v/server/responses%v", mysvcName, method), 1)
+		if err != nil {
+			singletonMap.Add(fmt.Sprintf("%v/server/errors%v", mysvcName, method), 1)
+		}
 
-	// count RPC error responses
-	if err != nil {
-		s.rpcStats[fmt.Sprintf("%s-%s:Resp:Error", role, method)]++
+		// increment per client response and error stats
+		md, ok := metadata.FromContext(ctx)
+		if !ok {
+			break
+		}
+		clientNames, ok := md["cname"]
+		if !ok {
+			break
+		}
+		singletonMap.Add(fmt.Sprintf("%v/server/responses%v/client/%v", mysvcName, method, clientNames[0]), 1)
+		if err != nil {
+			singletonMap.Add(fmt.Sprintf("%v/server/errors%v/client/%v", mysvcName, method, clientNames[0]), 1)
+		}
 	}
 
 	return ctx

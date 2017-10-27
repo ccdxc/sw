@@ -25,15 +25,15 @@ import (
 )
 
 // newRPCServerClient create an RPC server and client
-func newRPCServerClient(t *testing.T) (*RPCServer, *RPCClient) {
+func newRPCServerClient(t *testing.T, instance int) (*RPCServer, *RPCClient) {
 	// create an RPC server
-	rpcServer, err := NewRPCServer("testServer", "localhost:0", WithTracerEnabled(true))
+	rpcServer, err := NewRPCServer(fmt.Sprintf("testServer-%v", instance), "localhost:0", WithTracerEnabled(true))
 	if err != nil {
 		t.Fatalf("Failed to create listener, error: %v", err)
 	}
 
 	// create an RPC client
-	rpcClient, err := NewRPCClient("testServer", rpcServer.GetListenURL(), WithTracerEnabled(true))
+	rpcClient, err := NewRPCClient(fmt.Sprintf("testClient-%v", instance), rpcServer.GetListenURL(), WithTracerEnabled(true))
 	if err != nil {
 		t.Fatalf("Failed to create client with error: %v", err)
 	}
@@ -48,13 +48,38 @@ func stopRPCServerClient(rpcServer *RPCServer, rpcClient *RPCClient) {
 	time.Sleep(4 * time.Millisecond)
 }
 
+// getStat extracts a uint64 value from a key in expvar.Map. Panics if it fails to parse.
+func getStat(t *testing.T, key string) uint64 {
+	v := Stats().Get(key)
+	if v == nil {
+		return 0
+	}
+	vstr := fmt.Sprintf("%v", v)
+	val, err := strconv.ParseUint(vstr, 10, 64)
+	if err != nil {
+		t.Fatalf("Failed to parse var %v with err: %v", v, err)
+	}
+	return val
+}
+
+// validateMethodStats validates that the stats for a method match expected counts.
+func validateStats(t *testing.T, svc, prefix, method, suffix string, reqs, resps, errs uint64) {
+	reqsKey := fmt.Sprintf("%v/%v/requests%v%v", svc, prefix, method, suffix)
+	respsKey := fmt.Sprintf("%v/%v/responses%v%v", svc, prefix, method, suffix)
+	errsKey := fmt.Sprintf("%v/%v/errors%v%v", svc, prefix, method, suffix)
+
+	Assert(t, getStat(t, reqsKey) == reqs, "Unexpected rpc requests", getStat(t, reqsKey), reqs)
+	Assert(t, getStat(t, respsKey) == resps, "Unexpected rpc responses", getStat(t, respsKey), resps)
+	Assert(t, getStat(t, errsKey) == errs, "Unexpected rpc errors", getStat(t, errsKey), errs)
+}
+
 // test basic RPC
 func TestRPCBasic(t *testing.T) {
 	// create an rpc handler object
 	testHandler := NewTestRPCHandler("dummy message", "test response")
 
 	// create an RPC server and client
-	rpcServer, rpcClient := newRPCServerClient(t)
+	rpcServer, rpcClient := newRPCServerClient(t, 1)
 
 	// close client connection and stop the server
 	defer stopRPCServerClient(rpcServer, rpcClient)
@@ -64,11 +89,11 @@ func TestRPCBasic(t *testing.T) {
 	testClient := NewTestClient(rpcClient.ClientConn)
 
 	// make sure server with no URL or client with no URL fails
-	_, err := NewRPCServer("testServer", "")
+	_, err := NewRPCServer("testServer-foo", "")
 	Assert(t, (err != nil), "server with no URL succeded while expecting it to fail")
-	_, err = NewRPCClient("testServer", "")
+	_, err = NewRPCClient("testClient-foo", "")
 	Assert(t, (err != nil), "client with no URL succeded while expecting it to fail")
-	_, err = NewRPCServer("testServer", "google.com")
+	_, err = NewRPCServer("testServer-bar", "google.com")
 	Assert(t, (err != nil), "server with no URL succeded while expecting it to fail")
 
 	// make an RPC call
@@ -82,15 +107,14 @@ func TestRPCBasic(t *testing.T) {
 	Assert(t, (err != nil), "TestRPCErr succeded while expecting it to fail")
 
 	// verify RPC stats got incremented
-	serverStats := rpcServer.GetRPCStats()
-	Assert(t, (serverStats["Server-/rpckit.Test/TestRPC:Req"] == 1), "Unexpected RPC stats", serverStats)
-	Assert(t, (serverStats["Server-/rpckit.Test/TestRPC:Resp"] == 1), "Unexpected RPC stats", serverStats)
-	Assert(t, (serverStats["Server-/rpckit.Test/TestRPCErr:Resp:Error"] == 1), "Unexpected RPC stats", serverStats)
-
-	clientStats := rpcClient.GetRPCStats()
-	Assert(t, (clientStats["Client-/rpckit.Test/TestRPC:Req"] == 1), "Unexpected RPC stats", clientStats)
-	Assert(t, (clientStats["Client-/rpckit.Test/TestRPC:Resp"] == 1), "Unexpected RPC stats", clientStats)
-	Assert(t, (clientStats["Client-/rpckit.Test/TestRPCErr:Resp:Error"] == 1), "Unexpected RPC stats", clientStats)
+	method1 := "/rpckit.Test/TestRPC"
+	method2 := "/rpckit.Test/TestRPCErr"
+	validateStats(t, "testServer-1", "server", method1, "", 1, 1, 0)
+	validateStats(t, "testServer-1", "server", method2, "", 1, 1, 1)
+	validateStats(t, "testServer-1", "server", method1, "/client/testClient-1", 1, 1, 0)
+	validateStats(t, "testServer-1", "server", method2, "/client/testClient-1", 1, 1, 1)
+	validateStats(t, "testClient-1", "client", method1, "", 1, 1, 0)
+	validateStats(t, "testClient-1", "client", method2, "", 1, 1, 1)
 }
 
 // test rpc client connection closing and reconnecting
@@ -99,7 +123,7 @@ func TestRPCClientReconnect(t *testing.T) {
 	testHandler := NewTestRPCHandler("dummy message", "test response")
 
 	// create an RPC server and
-	rpcServer, rpcClient := newRPCServerClient(t)
+	rpcServer, rpcClient := newRPCServerClient(t, 2)
 
 	// close client connection and stop the server
 	defer stopRPCServerClient(rpcServer, rpcClient)
@@ -131,15 +155,10 @@ func TestRPCClientReconnect(t *testing.T) {
 	AssertOk(t, err, "RPC error")
 
 	// verify RPC stats got incremented
-	serverStats := rpcServer.GetRPCStats()
-	Assert(t, (serverStats["Server-/rpckit.Test/TestRPC:Req"] == 2), "Unexpected RPC stats", serverStats)
-	Assert(t, (serverStats["Server-/rpckit.Test/TestRPC:Resp"] == 2), "Unexpected RPC stats", serverStats)
-	Assert(t, (serverStats["Server-/rpckit.Test/TestRPC:Resp:Error"] == 0), "Unexpected RPC stats", serverStats)
-
-	clientStats := rpcClient.GetRPCStats()
-	Assert(t, (clientStats["Client-/rpckit.Test/TestRPC:Req"] == 3), "Unexpected RPC stats", clientStats)
-	Assert(t, (clientStats["Client-/rpckit.Test/TestRPC:Resp"] == 3), "Unexpected RPC stats", clientStats)
-	Assert(t, (clientStats["Client-/rpckit.Test/TestRPC:Resp:Error"] == 1), "Unexpected RPC stats", clientStats)
+	method := "/rpckit.Test/TestRPC"
+	validateStats(t, "testServer-2", "server", method, "", 2, 2, 0)
+	validateStats(t, "testServer-2", "server", method, "/client/testClient-2", 2, 2, 0)
+	validateStats(t, "testClient-2", "client", method, "", 3, 3, 1)
 }
 
 // test RPC server restart
@@ -148,7 +167,7 @@ func TestRPCServerRestart(t *testing.T) {
 	testHandler := NewTestRPCHandler("dummy message", "test response")
 
 	// create an RPC server and
-	rpcServer, rpcClient := newRPCServerClient(t)
+	rpcServer, rpcClient := newRPCServerClient(t, 3)
 
 	// close client connection and stop the server
 	defer stopRPCServerClient(rpcServer, rpcClient)
@@ -185,15 +204,10 @@ func TestRPCServerRestart(t *testing.T) {
 	AssertOk(t, err, "RPC error")
 
 	// verify RPC stats got incremented
-	serverStats := rpcServer.GetRPCStats()
-	Assert(t, (serverStats["Server-/rpckit.Test/TestRPC:Req"] == 1), "Unexpected RPC stats", serverStats)
-	Assert(t, (serverStats["Server-/rpckit.Test/TestRPC:Resp"] == 1), "Unexpected RPC stats", serverStats)
-	Assert(t, (serverStats["Server-/rpckit.Test/TestRPC:Resp:Error"] == 0), "Unexpected RPC stats", serverStats)
-
-	clientStats := rpcClient.GetRPCStats()
-	Assert(t, (clientStats["Client-/rpckit.Test/TestRPC:Req"] == 3), "Unexpected RPC stats", clientStats)
-	Assert(t, (clientStats["Client-/rpckit.Test/TestRPC:Resp"] == 3), "Unexpected RPC stats", clientStats)
-	Assert(t, (clientStats["Client-/rpckit.Test/TestRPC:Resp:Error"] == 1), "Unexpected RPC stats", clientStats)
+	method := "/rpckit.Test/TestRPC"
+	validateStats(t, "testServer-3", "server", method, "", 1, 1, 0)
+	validateStats(t, "testServer-3", "server", method, "/client/testClient-3", 1, 1, 0)
+	validateStats(t, "testClient-3", "client", method, "", 3, 3, 1)
 }
 
 // test multiple RPC handlers on same server
@@ -205,7 +219,7 @@ func TestRPCMultipleHandlers(t *testing.T) {
 	test2Handler := NewTestRPCHandler("dummy message", "test2 response")
 
 	// create an RPC server and
-	rpcServer, rpcClient := newRPCServerClient(t)
+	rpcServer, rpcClient := newRPCServerClient(t, 4)
 
 	// close client connection and stop the server
 	defer stopRPCServerClient(rpcServer, rpcClient)
@@ -258,11 +272,11 @@ func TestRPCMiddlewares(t *testing.T) {
 	}
 
 	// create an RPC server
-	rpcServer, err := NewRPCServer("testServer", ":0", WithMiddleware(tstmdl))
+	rpcServer, err := NewRPCServer("testServer-mw", ":0", WithMiddleware(tstmdl))
 	AssertOk(t, err, "Error creating RPC server")
 
 	// create an RPC client
-	rpcClient, err := NewRPCClient("testServer", rpcServer.GetListenURL(), WithMiddleware(tstmdl))
+	rpcClient, err := NewRPCClient("testClient-mw", rpcServer.GetListenURL(), WithMiddleware(tstmdl))
 	AssertOk(t, err, "Error creating RPC client")
 
 	// close client connection and stop the server
@@ -318,7 +332,7 @@ func TestRPCTlsConnections(t *testing.T) {
 	// Note: grpc non-tls clients dont block till certification validation is done.
 	//       So, we need to make a dummy rpc call and confirm we are not able to connect
 	t.Logf("non-TLS client trying to connect to TLS server")
-	nontlsRPCClient, err := NewRPCClient("testServer", tlsURL)
+	nontlsRPCClient, err := NewRPCClient("testClient", tlsURL)
 	AssertOk(t, err, "Error creating non-TLS RPC client")
 	nontlsTestClient := NewTestClient(nontlsRPCClient.ClientConn)
 	_, err = nontlsTestClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})

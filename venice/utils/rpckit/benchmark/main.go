@@ -103,7 +103,7 @@ func runClient(url string, length, count, concurrency int, tlsProvider rpckit.TL
 
 			}
 
-			log.Infof("RPC stats: %+v", rpcClient.GetRPCStats())
+			log.Infof("RPC stats: %+v", rpckit.Stats())
 
 			// close client connection and stop the server
 			rpcClient.Close()
