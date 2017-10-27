@@ -9,6 +9,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -91,7 +92,7 @@ func TestK8sService(t *testing.T) {
 	verifyK8sServices(t, client)
 
 	// Create a dummy DaemonSet.
-	createDaemonSet(client, &types.Module{
+	err := createDaemonSet(client, &types.Module{
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",
 		},
@@ -112,10 +113,35 @@ func TestK8sService(t *testing.T) {
 		},
 	})
 
+	if err != nil {
+		log.Errorf("DaemonSet creation failed: %v", err)
+	}
+
+	// Create a dummy DaemonSet.
+	createDaemonSet(client, &types.Module{
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "dummy",
+		},
+		Spec: &types.ModuleSpec{
+			Type: types.ModuleSpec_DaemonSet,
+			Submodules: []*types.ModuleSpec_Submodule{
+				{
+					Image: "pen-apigw",
+				},
+			},
+			Volumes: []*types.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+			},
+		},
+	})
 	verifyK8sServices(t, client)
 
 	// Create a dummy Deployment.
-	createDeployment(client, &types.Module{
+	err = createDeployment(client, &types.Module{
 		TypeMeta: api.TypeMeta{
 			Kind: deployment,
 		},
@@ -142,9 +168,132 @@ func TestK8sService(t *testing.T) {
 			},
 		},
 	})
+	if err != nil {
+		log.Errorf("Deployment creation failed: %v", err)
+	}
 
 	verifyK8sServices(t, client)
 
 	k8sSvc.UnRegister(po)
 	k8sSvc.Stop()
+}
+
+func TestK8sReduntantDaemonSetCreate(t *testing.T) {
+	client := k8sclient.NewSimpleClientset()
+	// Create a dummy DaemonSet.
+	err := createDaemonSet(client, &types.Module{
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "dummy",
+		},
+		Spec: &types.ModuleSpec{
+			Type: types.ModuleSpec_DaemonSet,
+			Submodules: []*types.ModuleSpec_Submodule{
+				{
+					Image: "pen-apigw",
+				},
+			},
+			Volumes: []*types.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+			},
+		},
+	})
+
+	if err != nil {
+		log.Errorf("DaemonSet creation failed: %v", err)
+	}
+
+	// Try creating the same daemonset again.
+	err = createDaemonSet(client, &types.Module{
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "dummy",
+		},
+		Spec: &types.ModuleSpec{
+			Type: types.ModuleSpec_DaemonSet,
+			Submodules: []*types.ModuleSpec_Submodule{
+				{
+					Image: "pen-apigw",
+				},
+			},
+			Volumes: []*types.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+			},
+		},
+	})
+
+	if err == nil {
+		t.Errorf("Duplicate DaemonSet creation succeeded, while expecting it to fail. %v", err)
+	}
+
+	// Create a dummy Deployment.
+	err = createDeployment(client, &types.Module{
+		TypeMeta: api.TypeMeta{
+			Kind: deployment,
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "dummy",
+		},
+		Spec: &types.ModuleSpec{
+			Type: types.ModuleSpec_Deployment,
+			Submodules: []*types.ModuleSpec_Submodule{
+				{
+					Image: "pen-npm",
+					Services: []*types.ModuleSpec_Submodule_Service{
+						{
+							Name: "pen-npm",
+							Port: runtime.MustUint32(globals.NpmRPCPort),
+						},
+					},
+					Args: []string{"-vcenter-list http://user:pass@127.0.0.1:8989/sdk"},
+				},
+			},
+			Volumes: []*types.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+			},
+		},
+	})
+	if err != nil {
+		log.Errorf("Deployment creation failed: %v", err)
+	}
+
+	// Try creating the same deployment again.
+	err = createDeployment(client, &types.Module{
+		TypeMeta: api.TypeMeta{
+			Kind: deployment,
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "dummy",
+		},
+		Spec: &types.ModuleSpec{
+			Type: types.ModuleSpec_Deployment,
+			Submodules: []*types.ModuleSpec_Submodule{
+				{
+					Image: "pen-npm",
+					Services: []*types.ModuleSpec_Submodule_Service{
+						{
+							Name: "pen-npm",
+							Port: runtime.MustUint32(globals.NpmRPCPort),
+						},
+					},
+					Args: []string{"-vcenter-list http://user:pass@127.0.0.1:8989/sdk"},
+				},
+			},
+			Volumes: []*types.ModuleSpec_Volume{
+				&configVolume,
+				&logVolume,
+			},
+		},
+	})
+	if err == nil {
+		t.Errorf("Duplicate Deployment creation succeeded, while expecting it to fail. %v", err)
+	}
+
 }

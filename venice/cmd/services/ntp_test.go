@@ -44,6 +44,7 @@ func setupNtp(t *testing.T) *ntpTest {
 }
 
 func cleanupNtp(ntpT *ntpTest) {
+	ntpT.n.Stop()
 	os.Remove(ntpT.f.tmpFileName)
 }
 

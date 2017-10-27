@@ -143,6 +143,7 @@ func TestResolverService(t *testing.T) {
 	if svc2 != nil && len(svc2.Instances) != 0 {
 		t.Fatalf("Found deleted containers with ports in service")
 	}
+	r.UnRegister(mo)
 	r.Stop()
 
 	if mo.addedCount != 4 || mo.deletedCount != 4 {

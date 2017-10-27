@@ -547,7 +547,7 @@ func makeContainers(module *types.Module, volumeMounts []v1.VolumeMount) []v1.Co
 }
 
 // createDaemonSet creates a DaemonSet object.
-func createDaemonSet(client k8sclient.Interface, module *types.Module) {
+func createDaemonSet(client k8sclient.Interface, module *types.Module) (err error) {
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
 
@@ -570,7 +570,7 @@ func createDaemonSet(client k8sclient.Interface, module *types.Module) {
 			},
 		},
 	}
-	d, err := client.Extensions().DaemonSets(defaultNS).Create(d)
+	d, err = client.Extensions().DaemonSets(defaultNS).Create(d)
 	if err == nil {
 		log.Infof("Created DaemonSet %+v", d)
 		return
@@ -579,11 +579,12 @@ func createDaemonSet(client k8sclient.Interface, module *types.Module) {
 		return
 	} else {
 		log.Errorf("Failed to create DaemonSet %+v with error: %v", d, err)
+		return
 	}
 }
 
 // createDeployment creates a Deployment object.
-func createDeployment(client k8sclient.Interface, module *types.Module) {
+func createDeployment(client k8sclient.Interface, module *types.Module) (err error) {
 	volumes, volumeMounts := makeVolumes(module)
 	containers := makeContainers(module, volumeMounts)
 
@@ -606,7 +607,7 @@ func createDeployment(client k8sclient.Interface, module *types.Module) {
 			},
 		},
 	}
-	d, err := client.Extensions().Deployments(defaultNS).Create(d)
+	d, err = client.Extensions().Deployments(defaultNS).Create(d)
 	if err == nil {
 		log.Infof("Created Deployment %+v", d)
 		return
@@ -615,6 +616,7 @@ func createDeployment(client k8sclient.Interface, module *types.Module) {
 		return
 	} else {
 		log.Errorf("Failed to create Deployment %+v with error: %v", d, err)
+		return
 	}
 }
 
@@ -631,8 +633,8 @@ func (k *k8sService) deleteModules(modules map[string]types.Module) {
 }
 
 // deleteDaemonSet deletes a DaemonSet object.
-func (k *k8sService) deleteDaemonSet(name string) {
-	err := k.client.Extensions().DaemonSets(defaultNS).Delete(name, nil)
+func (k *k8sService) deleteDaemonSet(name string) (err error) {
+	err = k.client.Extensions().DaemonSets(defaultNS).Delete(name, nil)
 	if err == nil {
 		log.Infof("Deleted DaemonSet %v", name)
 		return
@@ -641,12 +643,13 @@ func (k *k8sService) deleteDaemonSet(name string) {
 		return
 	} else {
 		log.Errorf("Failed to delete DaemonSet %v with error: %v", name, err)
+		return
 	}
 }
 
 // deleteDeployment deletes a Deployment object.
-func (k *k8sService) deleteDeployment(name string) {
-	err := k.client.Extensions().Deployments(defaultNS).Delete(name, nil)
+func (k *k8sService) deleteDeployment(name string) (err error) {
+	err = k.client.Extensions().Deployments(defaultNS).Delete(name, nil)
 	if err == nil {
 		log.Infof("Deleted Deployment %v", name)
 		return
@@ -655,6 +658,7 @@ func (k *k8sService) deleteDeployment(name string) {
 		return
 	} else {
 		log.Errorf("Failed to delete Deployment %v with error: %v", name, err)
+		return
 	}
 }
 
