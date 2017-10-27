@@ -348,6 +348,15 @@ header_type tcp_t {
     }
 }
 
+header_type tcp_options_blob_t {
+    fields {
+        hdr_len : 8;
+        data : *;
+    }
+    length : hdr_len;
+    max_length : 40;
+}
+
 header_type udp_t {
     fields {
         srcPort : 16;

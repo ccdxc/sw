@@ -459,6 +459,12 @@ class capri_parse_state:
         assert 0, pdb.set_trace()
         return -1
 
+    def dont_advance_packet(self):
+        if self.p4_state and 'dont_advance_packet' in self.p4_state._parsed_pragmas:
+            return True
+        else:
+            return False
+
     def __repr__(self):
         return self.name
 
@@ -1271,13 +1277,18 @@ class capri_parser:
                     hfname = v_size_exp
                     cf = self.be.pa.get_field(hfname, self.d)
                     assert cf, pdb.set_trace()
-                    vl.src1 = cf
-                    vl.op1 = '<<'
-                    vl.shft = 0
+                    if cf.is_meta:
+                        vl.src_reg = cf
+                        vl.op2 = '+'
+                    else:
+                        vl.src1 = cf
+                        vl.op1 = '<<'
+                        vl.shft = 0
 
                 # Adjust expr for fixed portion of the header
                 fixed_size = get_header_fixed_size(hdr) * (-1)  # subtract fixed portion
-                vl.add_signed_const(fixed_size)
+                if fixed_size:
+                    vl.add_signed_const(fixed_size)
 
             for i, cf in enumerate(fld_ohi[hdr]):
                 if ohi_bits == 0:
@@ -2422,9 +2433,13 @@ class capri_parser:
                     if not cf:
                         p4_fld = cs.parser.be.h.p4_fields[hfname]
                         cf = self.be.pa.allocate_field(p4_fld, cs.parser.d)
-                    capri_expr.src1 = cf
-                    capri_expr.op1 = '<<'
-                    capri_expr.shft = 0
+                    if cf.is_meta:
+                        capri_expr.src_reg = cf
+                        capri_expr.op2 = '+'
+                    else:
+                        capri_expr.src1 = cf
+                        capri_expr.op1 = '<<'
+                        capri_expr.shft = 0
                     cs.extract_len = capri_expr
 
                 if fixed_size:

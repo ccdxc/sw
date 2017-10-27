@@ -18,8 +18,8 @@ from capri_utils import *
 
 def _get_output_name(s):
     # XXX use regex or something better
-    s1 = s.replace('].','_') 
-    s1 = s1.replace('.','_') 
+    s1 = s.replace('].','_')
+    s1 = s1.replace('.','_')
     s1 = s1.replace('[', '_')
     s1 = s1.replace(']', '_')
     return s1
@@ -103,7 +103,7 @@ def _parser_sram_print(parser, se):
                     meta_inst['val']['value'])
         elif meta_inst['sel']['value'] == meta_ops['set_hv']:
             pstr += 'meta_inst[%d]: hv_en %s |= %s\n' % \
-                (e, 
+                (e,
                 meta_inst['phv_idx']['value'],
                 meta_inst['val']['value'])
         else:
@@ -318,14 +318,14 @@ def capri_asm_output_pa(gress_pa):
                 bottom_pad = self.end_phv - phv_bit
                 if bottom_pad > 0:
                     pstr += indent3 + '%s_bottom_pad_ : %d; // FLE[%d:%d]\n' % \
-                        (_get_output_name(strm), bottom_pad, 
+                        (_get_output_name(strm), bottom_pad,
                         _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(self.end_phv-1))
 
                 pstr += indent2 + '};\n'
             pstr += indent + '};\n'
             #pdb.set_trace()
             return pstr
-            
+
 
     gen_dir = gress_pa.pa.be.args.gen_dir
     cur_path = gen_dir + '/%s/asm_out' % gress_pa.pa.be.prog_name
@@ -362,11 +362,11 @@ def capri_asm_output_pa(gress_pa):
             assert flit_pad >= 0, pdb.set_trace()
             if flit_pad > 0:
                 pstr += indent + '_flit_%d_pad_%d_ : %d; // FLE[%d:%d]\n' % \
-                    (fid, phv_bit, flit_pad, 
+                    (fid, phv_bit, flit_pad,
                     _phv_bit_flit_le_bit(phv_bit), _phv_bit_flit_le_bit(cf.phv_bit-1))
             phv_bit = cf.phv_bit
             pstr_flit[fid] = copy.copy(pstr)
-            fid += 1 
+            fid += 1
             #pdb.set_trace()
             pstr = indent + '//----- Flit %d -----\n' % fid
 
@@ -387,7 +387,7 @@ def capri_asm_output_pa(gress_pa):
                     _phv_bit_flit_le_bit(cf.phv_bit), _phv_bit_flit_le_bit(cf.phv_bit+cf.width-1))
             phv_bit = cf.phv_bit + cf.storage_size()
             continue
-        
+
         # union-ed fld or header
         # skip union-ed synthetic header flds (they should be accessed using it src field
         # (otherwise it can be a nested union)
@@ -449,7 +449,7 @@ def capri_asm_output_pa(gress_pa):
     hfile.close()
 
     # create a test asm file with phvwr to all flds
-    # This can be used for a quick validation that phv_ struct generated can be used 
+    # This can be used for a quick validation that phv_ struct generated can be used
     # by capas
     fname = cur_path + '/%s_phv_test.asm' % gress_pa.d.name
     hfile = open(fname, 'w')
@@ -466,7 +466,7 @@ def capri_asm_output_pa(gress_pa):
     pstr += indent + 'nop\n'
     hfile.write(pstr)
     hfile.close()
-    
+
 def _capri_asm_output_pa(gress_pa):
     gen_dir = gress_pa.pa.be.args.gen_dir
     cur_path = gen_dir + '/%s/asm_out' % gress_pa.pa.be.prog_name
@@ -596,9 +596,9 @@ def _capri_asm_output_pa(gress_pa):
                                 if (ucf.phv_bit + ucf.width) > (flit_inst+1) * flit_sz:
                                     continue
                                 total_field_size_in_this_flit += ucf.width
-                    
-                            if total_field_size_in_this_flit > max_size_in_union: 
-                                max_size_in_union = total_field_size_in_this_flit 
+
+                            if total_field_size_in_this_flit > max_size_in_union:
+                                max_size_in_union = total_field_size_in_this_flit
 
                         for uh in uh_list:
                             if gress_pa.get_header_phv_size(uh) == 0:
@@ -830,13 +830,13 @@ def _close_active_cfs(new_cfs, active_cfs, fld_map):
     for cf in close_cfs:
         #pdb.set_trace()
         del active_cfs[cf]
-            
+
 def capri_asm_output_table(be, ctable):
 
     # Table KI, KD asm code is now generated
     # using tenjin template. This code is not
     # used any more. For now putting a return
-    # here. This code is potential candidate 
+    # here. This code is potential candidate
     # for cleanup -- TBD done once asm code
     # stabilizes.
     # return
@@ -932,7 +932,7 @@ def capri_asm_output_table(be, ctable):
                             bit_sel.append(km_prof.bit_sel[b])
                         else:
                             bit_sel.append(-1)
-                else: 
+                else:
                     assert i == km_prof.bit_loc1
                     for b in range(8, 16):
                         if b < len(km_prof.bit_sel):
@@ -983,7 +983,7 @@ def capri_asm_output_table(be, ctable):
             km_off += pad_sz
 
     #}
-                    
+
     if len(active_cfs):
         new_cfs = []
         _close_active_cfs(new_cfs, active_cfs, fld_map)
@@ -1019,7 +1019,7 @@ def capri_asm_output_table(be, ctable):
             active_union = _ki_union(km_off, flist)
         else:
             ki_flds.append(flist[0])
-        
+
     #pdb.set_trace()
     if active_union:
         ki_flds.append(copy.copy(active_union))
@@ -1127,7 +1127,7 @@ def capri_deparser_logical_output(deparser):
                                  " not set or left as default value.!!!!")
         pstr += "\n !!!! capri p4 instrinsic header in the p4 program. "\
                 "Payload len Position Offset not set or left as default value.!!!!\n"
-        
+
     for hvb in range(deparser.be.hw_model['parser']['max_hv_bits']-1, -1, -1):
         h = deparser.be.parsers[deparser.d].hv_bit_header[hvb]
 
@@ -1201,7 +1201,7 @@ def capri_deparser_cfg_output(deparser):
     pkt_sel = deparser.be.hw_model['deparser']['dpa_src_pkt']
     max_hv_bit_idx = deparser.be.hw_model['parser']['max_hv_bits'] - 1
 
-    # Last header field slot is reserved for payload len. 
+    # Last header field slot is reserved for payload len.
     # Hence max available hdr-field slot is one less.
 
     # Fill in payload len related information.
@@ -1241,8 +1241,8 @@ def capri_deparser_cfg_output(deparser):
 
         dp_hdr_fields = deparser.topo_ordered_phv_ohi_chunks[h]
 
-        phvchunks = 0 
-        ohis = 0 
+        phvchunks = 0
+        ohis = 0
 
         first_ohi = False
         start_fld = used_hdr_fld_info_slots
@@ -1261,7 +1261,7 @@ def capri_deparser_cfg_output(deparser):
                 if csum_allocated_hv == hvb:
                     csum_hvb = True
                     break
-        
+
         for i, chunks in enumerate(dp_hdr_fields):
             assert used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble"
             dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
@@ -1383,7 +1383,7 @@ def _expand_decoder(decoder_json, dname):
         #tmplt['fields'].append(tfield)
         tmplt[fname] = tfield[fname]
     return tmplt
-    
+
 def _create_template(reg_json, decoder_json, ename):
     assert ename in reg_json
     elem = reg_json[ename]
@@ -1412,7 +1412,7 @@ def mux_inst_alloc(mux_inst_allocator, expr, adjust_const=False):
             #if constant value can be adjusted (only in the case if
             # mux_instr is used in offset_instr), try to share
             # mux_instr by looking for another expression that was
-            # already allocated mux-instr 
+            # already allocated mux-instr
             for i, value in enumerate(mux_inst_allocator):
                 _flat_expr_str, _flat_expr_wo_const_str, _expr = value
                 if _flat_expr_wo_const_str == flat_expr_wo_const_str:
@@ -1436,7 +1436,7 @@ def mux_inst_alloc(mux_inst_allocator, expr, adjust_const=False):
         flat_expr_wo_const_str = 'Not shared'
 
     #Instruction need to be allocated because either expr has never been
-    # allocated instruction or expr = '' 
+    # allocated instruction or expr = ''
     for i, value in enumerate(mux_inst_allocator):
         _flat_expr_str, _flat_expr_wo_const_str, _expr = value
         if _flat_expr_str == None:
@@ -1463,13 +1463,11 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     mux_inst_allocator = [(None, None, None) for _ in sram['mux_inst']]
 
     nxt_cs = bi.nxt_state
-
     sram['action']['value'] = str(1) if nxt_cs.is_end else str(0)
     sram['nxt_state']['value'] = str(nxt_cs.id)
 
     current_flit = None
 
-    
     # As there is instruction pressure in entering into ipv4 or
     # inner_ipv4 state. For CSUM try to reuse instructions.
     option_len_expr_found = 0
@@ -1537,11 +1535,11 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     mux_id = 0    # NA
 
                 mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, lkp_reg.capri_expr)
-                _build_mux_inst(parser, nxt_cs, r, sram['mux_inst'][mux_inst_id], 
+                _build_mux_inst(parser, nxt_cs, r, sram['mux_inst'][mux_inst_id],
                     mux_id, lkp_reg.capri_expr)
                 sram['lkp_val_inst'][r]['sel']['value'] = str(1)
                 sram['lkp_val_inst'][r]['muxsel']['value'] = str(mux_inst_id)
-                
+
                 if reuse_instr_of_lkp_reg == r:
                     reuse_mux_instr_id = mux_inst_id
                     reuse_mux_idx_id = mux_id
@@ -1558,11 +1556,11 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     sram['lkp_val_inst'][r]['sel']['value'] = str(0)
                     sram['lkp_val_inst'][r]['muxsel']['value'] = str(mux_id)
 
-            
+
         if lkp_reg.store_en:
             sram['lkp_val_inst'][r]['store_en']['value'] = str(1)
-        elif add_cs != None and add_cs.lkp_regs[r].store_en:                                   
-            sram['lkp_val_inst'][r]['store_en']['value'] = str(1)        
+        elif add_cs != None and add_cs.lkp_regs[r].store_en:
+            sram['lkp_val_inst'][r]['store_en']['value'] = str(1)
         else:
             sram['lkp_val_inst'][r]['store_en']['value'] = str(0)
 
@@ -1656,7 +1654,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     #When option hdr len expression is specified in parse-state,
                     #lets reuse same instructions allocated to evaluate the expr
                     #to specify option len in OHI
-                    mux_inst_id = reuse_mux_instr_id 
+                    mux_inst_id = reuse_mux_instr_id
                     reuse_option_len_ohi_id = ohi.var_id
                 else:
                     #need to allocate mux_idx and inst
@@ -1664,20 +1662,31 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                     reuse_option_len_ohi_id = -1
 
                 #pdb.set_trace()
-                assert ohi.length.src1, "No oprand for ohi.length expression %s" % ohi.length
-
                 # special case for option_blob where ohi len comes from another header field
-                if ohi.length.src1.get_p4_hdr() != hdr:
+                if ohi.length.src1:
+                    '''
+                    if ohi.length.src1.get_p4_hdr() != hdr:
+                        ohi_len_fld_off = (cs.fld_off[ohi.length.src1]/8) + add_off
+                    else:
+                        ohi_len_fld_off = hdr_off + (ohi.length.src1.p4_fld.offset / 8)
+                    '''
                     ohi_len_fld_off = (cs.fld_off[ohi.length.src1]/8) + add_off
+                    # pkt_mux provides correct pkt field for calculation
+                    mux_id = mux_idx_alloc(mux_idx_allocator, ohi_len_fld_off)
+                    sram['mux_idx'][mux_id]['sel']['value'] = str(0)
+                    sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
+                    sram['mux_idx'][mux_id]['idx']['value'] = str(ohi_len_fld_off)
+                    reg_id = -1
+                elif ohi.length.src_reg:
+                    assert ohi.length.src_reg.hfname in nxt_cs.lkp_flds, \
+                        "%s:%s:ohi len fld %s is not available" % \
+                        (parser.d.name, nxt_cs.name, ohi.length.src_reg.hfname)
+                    reg_id = nxt_cs.lkp_flds[ohi.length.src_reg.hfname].reg_id
+                    mux_id = -1
                 else:
-                    ohi_len_fld_off = hdr_off + (ohi.length.src1.p4_fld.offset / 8)
-                
-                # pkt_mux provides correct pkt field for calculation
-                mux_id = mux_idx_alloc(mux_idx_allocator, ohi_len_fld_off)
-                sram['mux_idx'][mux_id]['sel']['value'] = str(0)
-                sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
-                sram['mux_idx'][mux_id]['idx']['value'] = str(ohi_len_fld_off)
-                _build_mux_inst(parser, cs, -1, 
+                    assert 0, pdb.set_trace()
+
+                _build_mux_inst(parser, cs, reg_id,
                     sram['mux_inst'][mux_inst_id], mux_id, ohi.length)
                 # slot[1] : ohi_len
                 sram['ohi_inst'][s]['sel']['value'] = str(3)  # len using mux_inst_data
@@ -1688,7 +1697,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             else:
                 # for fixed size ohi, deparser is programmed with fixed length
                 pass
-                
+
             parser.logger.debug('OHI instruction[%d]: off %d, len %s' % \
                 (ohi.id, ohi.start + hdr_off, ohi.length))
 
@@ -1698,37 +1707,57 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
     # for pre extraction, use info from next state for offset
     # offset_inst
     offset_inst = sram['offset_inst']
-    if isinstance(nxt_cs.extract_len, int):
+    if nxt_cs.dont_advance_packet():
+        # to be able to extract same header over and over (e.g. tcp_options_blob and individual
+        # tcp options), state may be marked with dont_advance_packet
         offset_inst['sel']['value'] = str(0)
         offset_inst['muxsel']['value'] = str(0)
-        offset_inst['val']['value'] = str(nxt_cs.extract_len + add_off)
-    else: 
-        #assert isinstance(nxt_cs.extract_len, capri_parser_expr)
-        expr_const = nxt_cs.extract_len.const
-        mux_inst_id, adjusted_const = mux_inst_alloc(mux_inst_allocator,\
-                                                     nxt_cs.extract_len,\
-                                                     adjust_const=True)
-        off = 0
-        if nxt_cs.extract_len.src1:
-            off = nxt_cs.fld_off[nxt_cs.extract_len.src1]
+        offset_inst['val']['value'] = str(0)
+    else:
+        if isinstance(nxt_cs.extract_len, int):
+            offset_inst['sel']['value'] = str(0)
+            offset_inst['muxsel']['value'] = str(0)
+            offset_inst['val']['value'] = str(nxt_cs.extract_len + add_off)
+        else:
+            #assert isinstance(nxt_cs.extract_len, capri_parser_expr)
+            expr_const = nxt_cs.extract_len.const
+            mux_inst_id, adjusted_const = mux_inst_alloc(mux_inst_allocator,\
+                                                         nxt_cs.extract_len,\
+                                                         adjust_const=True)
+            off = 0
+            if nxt_cs.extract_len.src1:
+                off = nxt_cs.fld_off[nxt_cs.extract_len.src1]
+                # use add_off to access pkt field from nxt_cs
+                mux_id = mux_idx_alloc(mux_idx_allocator, (off/8)+add_off)
+                sram['mux_idx'][mux_id]['sel']['value'] = str(0)
+                sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
+                sram['mux_idx'][mux_id]['idx']['value'] = str((off/8)+add_off)
+                reg_id = -1
+            elif nxt_cs.extract_len.src_reg:
+                assert ohi.length.src_reg.hfname in nxt_cs.lkp_flds, \
+                    "%s:%s:ohi len fld %s is not available" % \
+                    (parser.d.name, nxt_cs.name, ohi.length.src_reg.hfname)
+                reg_id = nxt_cs.lkp_flds[ohi.length.src_reg.hfname].reg_id
+                mux_id = -1
+            else:
+                assert 0, pdb.set_trace()
+            _build_mux_inst(parser, nxt_cs, reg_id,
+                sram['mux_inst'][mux_inst_id], mux_id, nxt_cs.extract_len)
 
-        # use add_off to access pkt field from nxt_cs
-        mux_id = mux_idx_alloc(mux_idx_allocator, (off/8)+add_off)
-        sram['mux_idx'][mux_id]['sel']['value'] = str(0)
-        sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
-        sram['mux_idx'][mux_id]['idx']['value'] = str((off/8)+add_off)
-        _build_mux_inst(parser, nxt_cs, -1, 
-            sram['mux_inst'][mux_inst_id], mux_id, nxt_cs.extract_len)
-        offset_inst['sel']['value'] = str(1)
-        offset_inst['muxsel']['value'] = str(mux_inst_id)
-        # add_off is not added into expr, instead it is added by h/w using 'value'
-        offset_inst['val']['value'] = str(add_off + adjusted_const)
+            offset_inst['sel']['value'] = str(1)
+            offset_inst['muxsel']['value'] = str(mux_inst_id)
+            # add_off is not added into expr, instead it is added by h/w using 'value'
+            offset_inst['val']['value'] = str(add_off + adjusted_const)
 
-        if adjusted_const:
-            #Reset constant value back to original so that when processing
-            #all parser branches from parse-state, original
-            #expression is used.
-            nxt_cs.extract_len.const = expr_const
+            if adjusted_const:
+                #Reset constant value back to original so that when processing
+                #all parser branches from parse-state, original
+                #expression is used.
+                nxt_cs.extract_len.const = expr_const
+
+    # offset junp check is always eanbled, hw does not check this on the last state that is marked
+    # as 'stop'
+    sram['offset_jump_chk_en']['value'] = str(1)
 
     #Generate Checksum related Configuration in parser.
     if len(nxt_cs.verify_cal_field_objs) > 0:
@@ -1743,7 +1772,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
         # needed. Check if that many ohi inst are available in this state.
         assert(s + 2) < hw_max_ohi_per_state, pdb.set_trace()
         '''
-        
+
         if reuse_instr_of_lkp_reg != -1:
             #Use same instrucstions that were used for
             assert(reuse_mux_instr_id != -1), pdb.set_trace()
@@ -1779,7 +1808,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                                                mux_inst_allocator, reuse_mux_idx_id)
     if nxt_cs.csum_payloadlen_ohi_instr_gen[0]:
         #In case of option parsing, parse states where l4_verify_len is updated,
-        #store the expression result back into OHI. 
+        #store the expression result back into OHI.
         s = parser.be.checksum.CsumParserPayloadLenUpdateInstrGenerate(\
                                                         nxt_cs, sram, s, mux_inst_allocator,\
                                                         mux_idx_allocator)
@@ -1795,7 +1824,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             sram['ohi_inst'][s]['muxsel']['value'] = str(0) # NA
             sram['ohi_inst'][s]['idx_val']['value'] = offset_inst['val']['value']
             sram['ohi_inst'][s]['slot_num']['value'] = str((ohi_payload_slot))
-        else: 
+        else:
             assert add_off == 0, "XXX add_off and exit is not a common case, need to support this"
             offset_inst['val']['value'] = str(add_off)
             sram['ohi_inst'][s]['sel']['value'] = str(3)    # use mux inst
@@ -1863,7 +1892,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             #pdb.set_trace() # un-tested so far
             assert op.rid
             mux_inst_id, _ = mux_inst_alloc(mux_inst_allocator, op.capri_expr)
-            _build_mux_inst(parser, op.cstate, op.rid, sram['mux_inst'][mux_inst_id], 
+            _build_mux_inst(parser, op.cstate, op.rid, sram['mux_inst'][mux_inst_id],
                 0, op.capri_expr)
             dst_phv = op.dst.phv_bit
         elif op.op_type == meta_op.EXTRACT_META:
@@ -1875,12 +1904,12 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                 fld_off = (op_off/8) + add_off
             else:
                 fld_off = (op_off/8)
-                
+
             mux_id = mux_idx_alloc(mux_idx_allocator, fld_off)
             sram['mux_idx'][mux_id]['sel']['value'] = str(0)
             sram['mux_idx'][mux_id]['lkpsel']['value'] = str(0)   # NA
             sram['mux_idx'][mux_id]['idx']['value'] = str(fld_off)
-            _build_mux_inst(parser, op.cstate, None, sram['mux_inst'][mux_inst_id], 
+            _build_mux_inst(parser, op.cstate, None, sram['mux_inst'][mux_inst_id],
                 mux_id, op.capri_expr)
             dst_phv = op.dst.phv_bit
         elif op.op_type == meta_op.EXTRACT_CONST:
@@ -1976,7 +2005,7 @@ def _fill_parser_tcam_entry(tcam_t, parser, cs, bi):
     # convert mask per lkp_reg (lkp regs are only used to get the sizes here)
     boff = 0
     # convert the hardware val and mask to integer
-    
+
     r_mask = [0 for i in cs.lkp_regs]
     r_key = [0 for i in cs.lkp_regs]
     for r, reg in enumerate(cs.lkp_regs):
@@ -2000,7 +2029,7 @@ def _fill_parser_tcam_entry(tcam_t, parser, cs, bi):
     te['valid']['value'] = str(1)
 
     return te
-    
+
 def capri_parser_output_decoders(parser):
     # read the register spec json
     cur_path = os.path.abspath(__file__)
@@ -2284,7 +2313,7 @@ def capri_te_cfg_output(stage):
                 json_km_profile['bit_sel']['value'] = "0x%x" % int(_phv_bit_flit_le_bit(b))
             bit_sel_id -= 1
             bits_left -= 1
-        
+
         for b in range(bits_left):
             json_km_profile = json_regs['cap_te_csr_cfg_km_profile_bit_sel[%d]' % bit_sel_id]
             json_km_profile['bit_sel']['value'] = no_load_bit
@@ -2338,7 +2367,7 @@ def capri_te_cfg_output(stage):
     max_tbl_profiles = stage.gtm.tm.be.hw_model['match_action']['num_table_profiles']
     max_hw_flits = stage.gtm.tm.be.hw_model['phv']['max_hw_flits']
     json_tbl_prof_key = json_regs['cap_te_csr_cfg_table_profile_key']
-    
+
     # XXX TCAM programming can be handled in a loop for all predicate values
     # need to set unused entries to map to DO-NOTHING
     run_all_tables = False
@@ -2372,7 +2401,7 @@ def capri_te_cfg_output(stage):
         for k in range(len(key_sel_bits)):
             json_tbl_prof_key['sel%d' % k]['value'] = "0x%x" % \
                 int(_phv_bit_flit_le_bit(key_sel_bits[k]))
-            
+
         for k in range(k+1, max_key_sel):
             json_tbl_prof_key['sel%d' % k]['value'] = str(0)
 
@@ -2415,7 +2444,7 @@ def capri_te_cfg_output(stage):
 
         stage.gtm.tm.logger.debug( \
             "%s:Stage %d:Table profile TCAM[%d]:(val %s, mask %s): prof_val %d, %s, mpu_res %d" % \
-                (stage.gtm.d.name, stage.id, prof_idx, te['value']['value'], 
+                (stage.gtm.d.name, stage.id, prof_idx, te['value']['value'],
                 te['mask']['value'], prof_val, active_ctg, len(active_ctg)))
 
         # h/w allows a flexible partitioning of the total (192) ctrl_sram entries per profile
@@ -2463,7 +2492,7 @@ def capri_te_cfg_output(stage):
                 se['km_mode%d' % kmid]['value'] = str(prof_mode)
 
             if not stage.table_sequencer[prof_val][cyc].is_used:
-                # no need to do much, key-maker values can be modified only if they are not 
+                # no need to do much, key-maker values can be modified only if they are not
                 # used anymore
                 pass
             else:
@@ -2565,7 +2594,7 @@ def capri_te_cfg_output(stage):
         _fill_te_tcam_catch_all(te)
 
         json_tbl_prof = json_regs['cap_te_csr_cfg_table_profile[%d]' % prof_idx]
-        json_tbl_prof['mpu_results']['value'] = str(0)        
+        json_tbl_prof['mpu_results']['value'] = str(0)
         json_tbl_prof['seq_base']['value'] = str(sidx)
 
         json_sram_ext = json_regs['cap_te_csr_cfg_table_profile_ctrl_sram_ext[%d]' % sidx]
@@ -2582,13 +2611,13 @@ def capri_te_cfg_output(stage):
 
         stage.gtm.tm.logger.debug( \
             "%s:Stage %d:Table profile (catch-all)TCAM[%d]:(val %s, mask %s): prof_val %d, %s, mpu_res %d" % \
-                (stage.gtm.d.name, stage.id, prof_idx, te['value']['value'], 
+                (stage.gtm.d.name, stage.id, prof_idx, te['value']['value'],
                 te['mask']['value'], 0, [], 0))
         stage.gtm.tm.logger.debug(\
                     "%s:Stage[%d]:cap_te_csr_dhs_table_profile_ctrl_sram_entry[%d]:\n%s" % \
                     (stage.gtm.d.name, stage.id, sidx,
                     te_ctrl_sram_print(se, json_sram_ext)))
-        
+
     for ct in stage.ct_list:
         if ct.is_otcam:
             continue
@@ -2600,12 +2629,12 @@ def capri_te_cfg_output(stage):
             json_tbl_['axi']['value'] = str(1)
 
         if ct.is_hash_table() and ct.d_size < ct.start_key_off:
-            # Program APC location. APC location is always first byte 
+            # Program APC location. APC location is always first byte
             # in the hash table entry. However when axi-shift is programmed,
             # APC byte location moves right by axi-shift number of bytes.
             json_tbl_['mpu_pc_loc']['value'] = (((ct.start_key_off - ct.d_size) >> 4) << 1)
 
-        # key mask programming - 
+        # key mask programming -
         # hw bit numbering is 511:0 - little endian like
         # which is opposite on ncc ordering
         # ncc creates end_key_off such that it points to a bit after the key
@@ -2643,7 +2672,7 @@ def capri_te_cfg_output(stage):
             else:
                 lg2_size = log2size(ct.num_entries)
                 json_tbl_['addr_sz']['value'] = str(lg2_size)
-            
+
 
         # XXX Check w/ asic km0=>lo, km1=>hi (from te.cc)
         # ncc uses km0 as high key and km1 as lo key bytes, so flip it
@@ -2655,7 +2684,7 @@ def capri_te_cfg_output(stage):
                 km = _km.shared_km
             else:
                 km = _km
-            
+
             json_tbl_['fullkey_km_sel%d' % k]['value'] = str(km.hw_id)
             k -= 1
 
@@ -2710,11 +2739,12 @@ def capri_te_cfg_output(stage):
             json_tbl_['addr_shift']['value'] = str(0)
             json_tbl_['lg2_entry_size']['value'] = str(0)
 
+        # XXXX need to program chain shift for wide-key table - for toeplitz leave it as 0??
         json_tbl_['chain_shift']['value'] = str(0)
         stage.gtm.tm.logger.debug("%s:Stage[%d]:Table %s:cap_te_csr_cfg_table_property[%d]:\n%s" % \
             (stage.gtm.d.name, stage.id, ct.p4_table.name, ct.tbl_id,
             te_tbl_property_print(json_tbl_)))
-        
+
     #pdb.set_trace()
     json.dump(te_json['cap_te']['registers'],
                 te_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
@@ -2780,7 +2810,7 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
             if m == None:
                 m = re.search('(\w+)_profile\[(\d+)\]', name)
             if m == None:
-                continue 
+                continue
             decoder = m.group(1)
             idx = int(m.group(2))
             if decoder in mems:
@@ -3205,13 +3235,13 @@ extern int capri_init(void);
         setenv("HAL_CONFIG_PATH", "./conf", 1);
 
         lib_model_connect();
-        
+
         if (ret = p4pd_init())
         {
             printf("Error! p4pd_init() returned %d\\n", ret);
             return ret;
         }
-        
+
         if (ret = p4pluspd_rxdma_init())
         {
             printf("Error! p4pluspd_rxdma_init() returned %d\\n", ret);
@@ -3309,43 +3339,43 @@ int main()
 
     p4pd_table_properties_get(tableid, &tbl_ctx);
     printf("%s\\n", tbl_ctx.tablename);
-    
+
     p4pd_hwentry_query(tableid, &hwkey_len, &hwkeymask_len, &hwactiondata_len);
-    
+
     hwkey_p = (uint8_t *)malloc(((hwkey_len)+7)/8);
     hwkeymask_p = (uint8_t *)malloc(((hwkeymask_len)+7)/8);
-    
+
     ret = p4pd_hwkey_hwmask_build(tableid, swkeyp, swkey_maskp, hwkey_p, hwkeymask_p);
-    
+
     if (ret < 0)
     {
         printf("p4pd_hwkey_hwmask_build() returned %d!\\n", (ret));
         return 1;
     }
-    
+
     actiondata.actionid = INPUT_PROPERTIES_OTCAM_INPUT_PROPERTIES_ID;
     actiondata.input_properties_otcam_action_u.input_properties_otcam_input_properties.vrf = 80;
-    
+
     ret = p4pd_entry_write(tableid, index, hwkey_p, hwkeymask_p, &actiondata);
-    
+
     if (ret < 0)
     {
         printf("p4pd_entry_write() returned %d!\\n", (ret));
         return 1;
     }
-    
+
     printf("Entry was written successfully at index %d\\n", (index));
-    
+
     ret = p4pd_entry_read(tableid, index, swkeyp, swkey_maskp, &actiondata);
-    
+
     if (ret < 0)
     {
         printf("Error: p4pd_entry_read() returned %d!\\n", (ret));
         return 0;
     }
-    
+
     printf("Entry was read successfully at index %d\\n", (index));
-    
+
     lib_model_conn_close();
     p4pd_cleanup();
     p4pluspd_rxdma_cleanup();
@@ -3353,7 +3383,7 @@ int main()
     free(hwkeymask_p);
     free(hwkey_p);
     return 0;
-}    
+}
 """
 
     out_file = out_dir + 'main.cc'

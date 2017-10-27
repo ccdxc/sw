@@ -743,6 +743,8 @@ calculated_field tcp.checksum {
     update ipv6_tcp_checksum if (valid(ipv6));
 }
 
+@pragma hdr_len parser_metadata.parse_tcp_counter
+header tcp_options_blob_t tcp_options_blob;
 parser parse_tcp {
     extract(tcp);
     set_metadata(flow_lkp_metadata.lkp_sport, latest.srcPort);
@@ -754,6 +756,14 @@ parser parse_tcp {
     }
 }
 
+#if 0
+@pragma dont_advance_packet
+parser parse_tcp_options_blob {
+    set_metadata(parser_metadata.parse_tcp_counter, parser_metadata.parse_tcp_counter + 0);
+    extract(tcp_options_blob);
+    return parse_tcp_options;
+}
+#endif
 parser parse_tcp_option_one_sack {
     extract(tcp_option_one_sack);
     set_metadata(parser_metadata.parse_tcp_counter,
@@ -1113,6 +1123,7 @@ parser parse_inner_ipv4_options {
 
 @pragma hdr_len inner_ipv4.ihl
 header ipv4_options_blob_t inner_ipv4_options_blob;
+
 parser parse_inner_ipv4_options_blob {
     // Separate state is created to set options_seen flag 
     // Otherwise options can be extracted blindly.. if they happen to be 0 len
