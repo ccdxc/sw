@@ -347,8 +347,9 @@ def main():
           status = run_storage_dol(port)
           if status != 0:
             print "- Storage dol failed, status=", status
-            sys.exit(status)
-        status = run_dol(args)
+          sys.exit(status)
+        else:
+          status = run_dol(args)
         if args.coveragerun:
             dump_coverage_data()
         cleanup(keep_logs=True)

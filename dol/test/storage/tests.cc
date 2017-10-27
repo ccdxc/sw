@@ -1008,7 +1008,7 @@ int test_run_nvme_e2e_io(uint16_t io_priority, uint16_t is_read) {
 #endif
 
   // Wait for a bit as SSD backend runs in a different thread
-  sleep(2);
+  sleep(4);
 
   //printf("Recv status \n");
   //utils::dump(status_buf);
@@ -1190,7 +1190,7 @@ int test_seq_write_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
   
   // Wait for a bit as SSD backend runs in a different thread
-  sleep(2);
+  sleep(4);
 
   //printf("Recv status \n");
   //utils::dump(status_buf);
@@ -1271,7 +1271,7 @@ int test_seq_read_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
   
   // Wait for a bit as SSD backend runs in a different thread
-  sleep(2);
+  sleep(4);
 
   //printf("Recv status \n");
   //utils::dump(status_buf);
