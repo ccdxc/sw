@@ -17,8 +17,8 @@ struct phv_ p;
 storage_tx_nvme_be_wqe_prep_start:
 
    // Save the NVME backend command header into R2N WQE in the PHV
-   phvwr	p.{r2n_wqe_src_queue_id...r2n_wqe_is_local},	\
-		d.{src_queue_id...is_local}
+   phvwr	p.{r2n_wqe_src_queue_id...r2n_wqe_r2n_buf_handle},	\
+		d.{src_queue_id...r2n_buf_handle}
 
    // Save the SSD handle and priority into the K+I vector
    phvwr	p.storage_kivec0_ssd_handle, d.ssd_handle
@@ -27,7 +27,7 @@ storage_tx_nvme_be_wqe_prep_start:
    // Setup the DMA command to push the NVME backend status entry. For now keep 
    // the destination address to be 0 (in GPR r0). Set this correctly in the
    // next stage.
-   DMA_PHV2MEM_SETUP(r2n_wqe_handle, r2n_wqe_pri_qaddr, r0, 
+   DMA_PHV2MEM_SETUP(r2n_wqe_handle, r2n_wqe_pad, r0, 
                      dma_p2m_1)
 
    // Calculate the priority queue state address based on SSD handle

@@ -37,7 +37,7 @@ uint8_t *r2n_nvme_cmd_ptr(void *r2n_buf) {
                                 sizeof(nvme_be_sta_t) + sizeof(r2n_sta_req_t));
   return((uint8_t *) &nvme_be_cmd->s.nvme_cmd); 
 }
-void r2n_wqe_init(void *r2n_wqe_buf, void *r2n_buf) {
+void r2n_wqe_init(void *r2n_wqe_buf, void *r2n_buf, uint16_t opcode) {
   if (!r2n_wqe_buf) return;
   r2n_wqe_t *r2n_wqe = (r2n_wqe_t *) r2n_wqe_buf;
   bzero(r2n_wqe_buf, sizeof(*r2n_wqe));
@@ -46,17 +46,21 @@ void r2n_wqe_init(void *r2n_wqe_buf, void *r2n_buf) {
   r2n_wqe->handle = bswap_64(host_mem_v2p((void *)(((uint8_t *) r2n_buf) + size)));
   size += sizeof(nvme_be_cmd_t) + sizeof(r2n_write_req_t);
   r2n_wqe->data_size = bswap_32(size);
+  r2n_wqe->opcode = bswap_16(opcode);
+
+  // is_remote, db_enable fields are initialized to their default values with the 
+  // bzero above
 }
 
 void r2n_wqe_db_update(void *r2n_wqe_buf, uint16_t lif, uint8_t qtype, 
                        uint32_t qid, uint16_t index) {
   if (!r2n_wqe_buf) return;
   
-  utils::write_bit_fields(r2n_wqe_buf, 128, 1, 1);
-  utils::write_bit_fields(r2n_wqe_buf, 129, 11, lif);
-  utils::write_bit_fields(r2n_wqe_buf, 140, 3, qtype);
-  utils::write_bit_fields(r2n_wqe_buf, 143, 24, qid);
-  utils::write_bit_fields(r2n_wqe_buf, 167, 16, index);
+  utils::write_bit_fields(r2n_wqe_buf, 128, 2, 1);
+  utils::write_bit_fields(r2n_wqe_buf, 130, 11, lif);
+  utils::write_bit_fields(r2n_wqe_buf, 141, 3, qtype);
+  utils::write_bit_fields(r2n_wqe_buf, 144, 24, qid);
+  utils::write_bit_fields(r2n_wqe_buf, 168, 16, index);
   
 }
 

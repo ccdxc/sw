@@ -40,7 +40,7 @@ storage_tx_nvme_be_wqe_save_start:
    // calculated by SSD_CMD_ENTRY_ADDR_CALC and stored in GRP r7.
    // Note: pri_q_push uses dma_p2m_3 for push because dma_p2m_2 is needed here
    //       to save the SSD bitmap
-   DMA_PHV2MEM_SETUP(r2n_wqe_handle, r2n_wqe_pri_qaddr, r7, dma_p2m_2)
+   DMA_PHV2MEM_SETUP(r2n_wqe_handle, r2n_wqe_pad, r7, dma_p2m_2)
 
    // Setup the DMA command to push the NVME command entry. For now keep the 
    // destination address to be 0 (in GPR r0). Set this correctly in the

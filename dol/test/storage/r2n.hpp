@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include "dol/test/storage/nvme.hpp"
 
+#define R2N_OPCODE_PROCESS_WQE                  1
+#define R2N_OPCODE_BUF_POST                     2
+
+
 namespace r2n {
 
 typedef struct r2n_buf_post_ {
@@ -55,8 +59,8 @@ typedef struct r2n_write_req_ {
 typedef struct r2n_wqe_ {
   uint64_t handle;
   uint32_t data_size;
-  uint32_t opcode;
-  uint32_t status;
+  uint16_t opcode;
+  uint16_t status;
 } r2n_wqe_t;
 
 void *r2n_buf_alloc();
@@ -66,7 +70,7 @@ void r2n_nvme_be_cmd_init(void *r2n_buf, uint32_t src_queue_id, uint16_t ssd_han
 
 uint8_t *r2n_nvme_cmd_ptr(void *r2n_buf);
 
-void r2n_wqe_init(void *r2n_wqe_buf, void *r2n_buf);
+void r2n_wqe_init(void *r2n_wqe_buf, void *r2n_buf, uint16_t opcode);
 
 void r2n_wqe_db_update(void *r2n_wqe_buf, uint16_t lif, uint8_t qtype, 
                        uint32_t qid, uint16_t index);

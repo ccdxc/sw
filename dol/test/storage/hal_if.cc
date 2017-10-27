@@ -17,6 +17,8 @@ using grpc::Status;
 using internal::Internal;
 using intf::Interface;
 
+std::shared_ptr<Channel> hal_channel;
+
 namespace {
 
 std::unique_ptr<Internal::Stub> internal_stub;
@@ -32,14 +34,15 @@ void init_hal_if() {
 
   char host_addr[32];
   sprintf(host_addr, "localhost:%lu", hal_port);
+  hal_channel = std::move(grpc::CreateChannel(
+      host_addr, grpc::InsecureChannelCredentials()));
+
   std::unique_ptr<Internal::Stub> int_stub(
-      Internal::NewStub(grpc::CreateChannel(
-      host_addr, grpc::InsecureChannelCredentials())));
+      Internal::NewStub(hal_channel));
   internal_stub = std::move(int_stub);
 
   std::unique_ptr<Interface::Stub> if_stub(
-      Interface::NewStub(grpc::CreateChannel(
-      host_addr, grpc::InsecureChannelCredentials())));
+      Interface::NewStub(hal_channel));
   interface_stub = std::move(if_stub);
 }
 
@@ -56,8 +59,12 @@ int create_lif(lif_params_t *params, uint64_t *lif_id) {
     return -1;
 
   auto req = req_msg.add_request();
-  req->mutable_key_or_handle()->set_lif_id(curr_lif_id);
-  curr_lif_id++;
+  if (params->sw_lif_id != 0) {
+    req->mutable_key_or_handle()->set_lif_id(params->sw_lif_id);
+  } else {
+    req->mutable_key_or_handle()->set_lif_id(curr_lif_id);
+    curr_lif_id++;
+  }
 
   for (int i = 0; i < LIF_MAX_TYPES; i++) {
     if (params->type[i].valid) {
@@ -67,12 +74,22 @@ int create_lif(lif_params_t *params, uint64_t *lif_id) {
       map->set_type_num(i);
       map->set_size(params->type[i].queue_size - LIF_BASE_QUEUE_SIZE);
       map->set_entries(params->type[i].num_queues);
+      map->set_purpose(
+          static_cast<::intf::LifQPurpose>(params->type[i].queue_purpose));
     }
+  }
+  req->set_port_type(intf::LIF_PORT_TYPE_DMA);
+  if (params->rdma_enable) {
+    req->set_enable_rdma(true);
+    req->set_rdma_max_keys(params->rdma_max_keys);
+    req->set_rdma_max_pt_entries(params->rdma_max_pt_entries);
   }
 
   auto status = interface_stub->LifCreate(&context, req_msg, &resp_msg);
-  if (!status.ok())
+  if (!status.ok()) {
+    printf("LIF create failed: %s\n", status.error_message().c_str());
     return -1;
+  }
 
   // TODO: Check number of responses ? 
   // TODO: Check status
