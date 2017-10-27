@@ -24,6 +24,8 @@
 
 #define RSQ_P_INDEX_PRIME d.{rsq_pindex_prime}.hx
 
+#define SPEC_RQ_C_INDEX d.{spec_cindex}.hx
+
 struct rqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
     struct capri_intrinsic_ring_t ring0;
@@ -72,7 +74,7 @@ struct rqcb0_t {
 
     proxy_cindex: 16; // place holder for a copy of c_index to avoid
                        // scheduler ringing RQ all the time.
-    rsvd2: 16;
+    spec_cindex: 16;  // cindex used for speculation
 };
 
 struct rqcb1_t {

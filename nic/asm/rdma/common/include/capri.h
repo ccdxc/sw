@@ -13,6 +13,7 @@
 #define CAPRI_RXDMA_INTRINSIC_QTYPE k.p4_rxdma_intr_qtype
 #define CAPRI_RXDMA_INTRINSIC_QID k.p4_rxdma_intr_qid
 #define CAPRI_RXDMA_INTRINSIC_QID_QTYPE k.{p4_rxdma_intr_qid...p4_rxdma_intr_qtype}
+#define CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT k.p4_intr_recirc_count
 
 #define CAPRI_RXDMA_RETH_VA(_r) \
     add _r, k.{rdma_bth_reth_reth_va_sbit56_ebit63}, k.{rdma_bth_reth_reth_va_sbit0_ebit7...rdma_bth_reth_reth_va_sbit40_ebit55}, 8

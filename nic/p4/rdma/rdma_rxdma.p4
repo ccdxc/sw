@@ -21,6 +21,7 @@
 #define common_p4plus_stage0_app_header_table_action_dummy13 rdma_stage0_bth_xrceth_reth_immeth_action
 #define common_p4plus_stage0_app_header_table_action_dummy14 rdma_stage0_bth_xrceth_atomiceth_action
 #define common_p4plus_stage0_app_header_table_action_dummy15 rdma_stage0_bth_xrceth_ieth_action
+#define common_p4plus_stage0_app_header_table_action_dummy16 rdma_stage0_recirc_action
 
 #include "../common-p4+/common_rxdma.p4"
 
@@ -41,8 +42,9 @@
  * Header unions for PHV layout
  *****************************************************************************/
 
-@pragma pa_header_union ingress app_header rdma_bth rdma_bth_immeth rdma_bth_reth rdma_bth_reth_immeth rdma_bth_aeth rdma_bth_aeth_atomicaeth rdma_bth_atomiceth rdma_bth_ieth rdma_bth_deth rdma_bth_deth_immeth rdma_bth_xrceth rdma_bth_xrceth_immeth rdma_bth_xrceth_reth rdma_bth_xrceth_reth_immeth rdma_bth_xrceth_atomiceth rdma_bth_xrceth_ieth
+@pragma pa_header_union ingress app_header rdma_recirc rdma_bth rdma_bth_immeth rdma_bth_reth rdma_bth_reth_immeth rdma_bth_aeth rdma_bth_aeth_atomicaeth rdma_bth_atomiceth rdma_bth_ieth rdma_bth_deth rdma_bth_deth_immeth rdma_bth_xrceth rdma_bth_xrceth_immeth rdma_bth_xrceth_reth rdma_bth_xrceth_reth_immeth rdma_bth_xrceth_atomiceth rdma_bth_xrceth_ieth
 
+metadata roce_recirc_header_t rdma_recirc;
 metadata p4_to_p4plus_roce_bth_header_t rdma_bth;
 metadata p4_to_p4plus_roce_bth_immeth_header_t rdma_bth_immeth;
 metadata p4_to_p4plus_roce_bth_reth_header_t rdma_bth_reth;
@@ -62,6 +64,8 @@ metadata p4_to_p4plus_roce_bth_xrceth_ieth_header_t rdma_bth_xrceth_ieth;
 
 
 
+@pragma scratch_metadata
+metadata roce_recirc_header_t rdma_recirc_scr;
 @pragma scratch_metadata
 metadata p4_to_p4plus_roce_bth_header_t rdma_bth_scr;
 @pragma scratch_metadata
@@ -104,6 +108,30 @@ metadata p4_to_p4plus_roce_bth_xrceth_ieth_header_t rdma_bth_xrceth_ieth_scr;
  *****************************************************************************/
 
 /*
+ * Stage 0 table 0 recirc action
+ */
+action rdma_stage0_recirc_action () {
+    // k + i for stage 0
+
+    // from intrinsic
+    modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
+    modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
+    modify_field(p4_rxdma_intr_scratch.qid, p4_rxdma_intr.qid);
+    modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
+    modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
+
+    // from app header
+    modify_field(rdma_recirc_scr.app_data0, rdma_recirc.app_data0);
+    modify_field(rdma_recirc_scr.app_data1, rdma_recirc.app_data1);
+    modify_field(rdma_recirc_scr.app_data2, rdma_recirc.app_data2);
+
+    // recirc header bits
+    modify_field(rdma_recirc_scr.token_id, rdma_recirc.token_id);
+    modify_field(rdma_recirc_scr.recirc_reason, rdma_recirc.recirc_reason);
+    modify_field(rdma_recirc_scr.rsvd, rdma_recirc.rsvd);
+}
+
+/*
  * Stage 0 table 0 bth action
  */
 action rdma_stage0_bth_action () {
@@ -118,7 +146,10 @@ action rdma_stage0_bth_action () {
 
     // from p4-to-p4plus-rdma-hdr
     modify_field(rdma_bth_scr.p4plus_app_id, rdma_bth.p4plus_app_id);
-    modify_field(rdma_bth_scr.flags, rdma_bth.flags);
+    modify_field(rdma_bth_scr.table0_valid, rdma_bth.table0_valid);
+    modify_field(rdma_bth_scr.table1_valid, rdma_bth.table1_valid);
+    modify_field(rdma_bth_scr.table2_valid, rdma_bth.table2_valid);
+    modify_field(rdma_bth_scr.table3_valid, rdma_bth.table3_valid);
     modify_field(rdma_bth_scr.rdma_hdr_len, rdma_bth.rdma_hdr_len);
     modify_field(rdma_bth_scr.raw_flags, rdma_bth.raw_flags);
     modify_field(rdma_bth_scr.payload_len, rdma_bth.payload_len);

@@ -77,8 +77,7 @@ class RdmaRQstate(Packet):
         IntField("pd", 0),
 
         LEShortField("proxy_cindex", 0),
-        ByteField("rsvd3", 0),
-        ByteField("rsvd4", 0),
+        LEShortField("spec_cindex", 0),
 
         # RQCB1 
         LongField("va", 0),

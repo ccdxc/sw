@@ -62,7 +62,8 @@ struct resp_rx_phv_t {
 
     // scratch (flit 7):
 
-    // size: 38 =  2 + 8 + 8 + 2 + 5 + 4 + 1 + 8
+    // size: 40 =  2 + 2 + 8 + 8 + 2 + 5 + 4 + 1 + 8
+    spec_cindex: 16;
     eq_int_num: 16;
     db_data1: 64;
     db_data2: 64;

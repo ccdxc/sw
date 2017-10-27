@@ -5,11 +5,15 @@ header_type p4_to_p4plus_roce_bth_header_t {
         //these fields should match with that of 
         //intrinsic.p4's p4_to_p4plus_roce_header_t
         p4plus_app_id       : 4;
-        flags               : 4;
+        table0_valid        : 1;
+        table1_valid        : 1;
+        table2_valid        : 1;
+        table3_valid        : 1;
         rdma_hdr_len        : 8;
         raw_flags           : 16;
         payload_len         : 16;
 
+        // BTH header
         bth_opcode          : 8;
         bth_se              : 1;
         bth_m               : 1;
@@ -23,6 +27,17 @@ header_type p4_to_p4plus_roce_bth_header_t {
         bth_a               : 1;
         bth_rsvd2           : 7;
         bth_psn             : 24;
+    }
+}
+
+header_type roce_recirc_header_t {
+    fields {
+        app_data0           : 256;
+        app_data1           : 88;
+        app_data2           : 56;
+        token_id            : 8;
+        recirc_reason       : 4;
+        rsvd                : 4;
     }
 }
 

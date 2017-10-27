@@ -971,7 +971,7 @@ typedef struct header_template_s {
 #define MAX_RQ_RINGS          6
 
 typedef struct rqcb0_s {
-    uint8_t  rsvd2[2];
+    uint16_t spec_cindex;
 
     uint16_t proxy_cindex;
     uint32_t pd;

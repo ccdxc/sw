@@ -1084,7 +1084,8 @@ action common_p4plus_stage0_app_header_table_action(data0, data1,
         common_p4plus_stage0_app_header_table_action_dummy12; \
         common_p4plus_stage0_app_header_table_action_dummy13; \
         common_p4plus_stage0_app_header_table_action_dummy14; \
-        common_p4plus_stage0_app_header_table_action_dummy15;
+        common_p4plus_stage0_app_header_table_action_dummy15; \
+        common_p4plus_stage0_app_header_table_action_dummy16;
 
 @pragma stage 0
 @pragma raw_index_table
