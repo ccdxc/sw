@@ -15,7 +15,7 @@ selectors:
         lqp         : filter://svc=0
         rqp         : filter://svc=0
 #    maxflows    : 1
-#    maxrdmasessions     : 1
+    maxrdmasessions     : 1
 
 packets:
     - packet:
@@ -100,15 +100,23 @@ packets:
 
 buffers:
     - buffer:
-        id      : HOST_MEM
+        id      : HOST_MEM1
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 0
            segments:
-               - size    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/size
+               - size    : 40
                  data    : None
-
+    - buffer:
+        id      : HOST_MEM2
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           offset  : 40
+           segments:
+               - size    : 24
+                 data    : None
     - buffer:
         id      : EXP_HOST_MEM
         template: ref://factory/templates/id=RDMA_BUFFER
@@ -126,7 +134,7 @@ descriptors:
         fields:
             op_type : 3  # OP_TYPE_READ
             wrid    : 6
-            num_sges: 1
+            num_sges: 2
 
             read    :
                 va    : ref://testcase/pvtdata/va
@@ -134,9 +142,12 @@ descriptors:
                 r_key : ref://testcase/pvtdata/r_key
 
             sges:
-                - va  : ref://testcase/buffers/id=HOST_MEM/address
-                  len : ref://testcase/buffers/id=HOST_MEM/size
+                - va  : ref://testcase/buffers/id=HOST_MEM1/address
+                  len : ref://testcase/buffers/id=HOST_MEM1/size
                   l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                - va  : ref://testcase/buffers/id=HOST_MEM2/address
+                  len : ref://testcase/buffers/id=HOST_MEM2/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
 
     - descriptor:
         id      : EXP_SQ_WQE
@@ -145,7 +156,7 @@ descriptors:
             buff: ref://testcase/buffers/id=EXP_HOST_MEM
             op_type : 3  # OP_TYPE_READ
             wrid    : 6
-            num_sges: 1
+            num_sges: 2
 
             read    :
                 va    : ref://testcase/pvtdata/va
@@ -153,6 +164,7 @@ descriptors:
                 r_key : ref://testcase/pvtdata/r_key
 
             sges:
+            #no need to list sges, as buff is used
 
     - descriptor:
         id      : EXP_CQ_WQE
@@ -163,8 +175,8 @@ descriptors:
             op_type: 3 #OP_TYPE_READ
             status : 0  #CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetReqRxCQExpColor
-            smac: callback://rdma/rdma/GetUDSMAC
-            
+            smac   : callback://rdma/rdma/GetUDSMAC
+
 session:
 
     - step: # READ Request Transmit

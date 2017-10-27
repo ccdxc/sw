@@ -55,15 +55,58 @@ packets:
                 data    : None
 
     - packet:
-         id          : READ_RESP_ONLY_PYLD # Receive payload
+         id          : READ_RESP_FIRST_PYLD # Receive payload
+         payloadsize : 1024
+         template    : ref://factory/packets/id=PAYLOAD
+         headers     :
+             payload:
+                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+ 
+    - packet:
+         id          : READ_RESP_LAST_PYLD # Receive payload
          payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
          template    : ref://factory/packets/id=PAYLOAD
          headers     :
              payload:
                  data    : ref://factory/payloads/id=PAYLOAD_FF64/data
-    
+   
     - packet:
-         id          : READ_RESP_ONLY    # Receive packet 
+         id          : READ_RESP_FIRST    # Receive packet 
+         payloadsize : 1024
+         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_AETH
+         encaps      :
+             - ref://factory/packets/id=ENCAP_QTAG
+         headers     :
+             # Add all possible headers, the final headers will be selected
+             # based on the Flow.
+             eth:
+                 src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                 dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+             qtag:
+                 vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+             ipv4:
+                 src     : ref://testcase/config/rdmasession/session/responder/addr
+                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                 ttl     : 64
+             #ipv6:
+             #    src     : ref://testcase/config/flow/sip
+             #    dst     : ref://testcase/config/flow/dip
+             #    hlim    : 64
+             udp:
+                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
+             bth:
+                 opcode  : 13
+                 destqp  : ref://testcase/config/rdmasession/lqp/id
+                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=0
+             aeth:
+                syndrome : 14 # TODO - credits
+                msn      : ref://testcase/pvtdata/msn
+             payload:
+                 data    : ref://testcase/packets/id=READ_RESP_FIRST_PYLD/rawbytes
+   
+    - packet:
+         id          : READ_RESP_LAST     # Receive packet 
          payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
          template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_AETH
          encaps      :
@@ -88,15 +131,14 @@ packets:
                  sport   : ref://testcase/config/rdmasession/session/iflow/sport
                  dport   : ref://testcase/config/rdmasession/session/iflow/dport
              bth:
-                 opcode  : 16
+                 opcode  : 15
                  destqp  : ref://testcase/config/rdmasession/lqp/id
-                 psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+                 psn     : callback://rdma/rdma/GetPktTxPsn/pkt_num=1
              aeth:
                 syndrome : 14 # TODO - credits
                 msn      : ref://testcase/pvtdata/msn
              payload:
-                 data    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/rawbytes
-
+                 data    : ref://testcase/packets/id=READ_RESP_FIRST_PYLD/rawbytes
 
 buffers:
     - buffer:
@@ -106,7 +148,9 @@ buffers:
            slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 0
            segments:
-               - size    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/size
+               - size    : ref://testcase/packets/id=READ_RESP_FIRST_PYLD/size
+                 data    : None
+               - size    : ref://testcase/packets/id=READ_RESP_LAST_PYLD/size
                  data    : None
 
     - buffer:
@@ -116,8 +160,10 @@ buffers:
            slab    : None
            offset  : 0
            segments:
-               - size    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/size
-                 data    : ref://testcase/packets/id=READ_RESP_ONLY_PYLD/rawbytes
+               - size    : ref://testcase/packets/id=READ_RESP_FIRST_PYLD/size
+                 data    : ref://testcase/packets/id=READ_RESP_FIRST_PYLD/rawbytes
+               - size    : ref://testcase/packets/id=READ_RESP_LAST_PYLD/size
+                 data    : ref://testcase/packets/id=READ_RESP_LAST_PYLD/rawbytes
 
 descriptors:
     - descriptor:
@@ -125,7 +171,7 @@ descriptors:
         template: ref://factory/templates/id=DESC_RDMA_SQ
         fields:
             op_type : 3  # OP_TYPE_READ
-            wrid    : 6
+            wrid    : 0x1234
             num_sges: 1
 
             read    :
@@ -144,7 +190,7 @@ descriptors:
         fields:
             buff: ref://testcase/buffers/id=EXP_HOST_MEM
             op_type : 3  # OP_TYPE_READ
-            wrid    : 6
+            wrid    : 0x1234
             num_sges: 1
 
             read    :
@@ -163,8 +209,8 @@ descriptors:
             op_type: 3 #OP_TYPE_READ
             status : 0  #CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetReqRxCQExpColor
-            smac: callback://rdma/rdma/GetUDSMAC
-            
+            smac   : callback://rdma/rdma/GetUDSMAC
+
 session:
 
     - step: # READ Request Transmit
@@ -189,7 +235,10 @@ session:
         trigger:
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=READ_RESP_ONLY
+                    object  : ref://testcase/packets/id=READ_RESP_FIRST
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+                - packet:
+                    object  : ref://testcase/packets/id=READ_RESP_LAST
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
         expect:
@@ -200,5 +249,4 @@ session:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_CQ_WQE
                     ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
-
 

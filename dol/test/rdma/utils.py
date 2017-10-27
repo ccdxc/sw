@@ -26,6 +26,16 @@ def VerifyFieldAbsolute(tc, state, field_name, exp_val):
     tc.info('    Match: %s ' %cmp)
     return cmp
 
+def VerifyFieldsEqual(tc, state1, field_name1, state2, field_name2):
+    val = getattr(state1, field_name1)
+    exp_val = getattr(state2, field_name2)
+    tc.info("%s actual: %d %s expected: %d" \
+             %(field_name1, val, field_name2, exp_val))
+    cmp = (val == exp_val)
+    tc.info('    Match: %s ' %cmp)
+    return cmp
+
+
 ############     CQ VALIDATIONS #################
 def ValidateRespRxCQChecks(tc):
     rs = tc.config.rdmasession

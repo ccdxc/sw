@@ -122,6 +122,11 @@ sge_loop:
     // sge_index = 1
     setcf.c1       c7, [!c0] // branch delay slot
 
+    srl            r1, r1, LOG_SIZEOF_SGE_T_BITS
+    sub            r1, (HBM_NUM_SGES_PER_CACHELINE-1), r1
+    seq            c1, r1, k.args.num_valid_sges
+    add.!c1        r1, r1, k.args.cur_sge_id
+
     // TODO Set Phv recirc if remaining_payload_bytes is non-zero (cf - c2 set to False)
 
     //if (REQ_RX_FLAG_IS_SET(last) || (REQ_RX_FLAG_ONLY(only)))

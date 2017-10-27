@@ -213,7 +213,31 @@ modules:
         module  : req_rx_read_only
         spec    : req_rx_read_only.testspec
         ignore  : False
- 
+
+    - module:
+        name    : RDMA_RX_READ_ONLY_2SGES
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_only
+        spec    : req_rx_read_only_2sges.testspec
+        ignore  : False
+  
+    - module:
+        name    : RDMA_RX_READ_FIRST_LAST
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_first_last
+        spec    : req_rx_read_first_last.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_READ_FML
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_fml
+        spec    : req_rx_read_fml.testspec
+        ignore  : False
+
     #- module:
     #    name    : RDMA_TX_READ
     #    enable  : True

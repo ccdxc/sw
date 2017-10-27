@@ -315,6 +315,7 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
 
         #if hasattr(self.spec.fields, 'buff'):
         if not hasattr(self, 'address'):
+            cfglogger.info("Reading from buff")
             return self.spec.fields.buff
 
         rdmabuff = rdmabuffer.RdmaBufferObject()

@@ -20,13 +20,9 @@ req_rx_sqcb_process:
     add            r1, r0, offsetof(struct phv_, common_global_global_data)
 
     // qstate addr is available as instrinsic data
-    add            r2, r0, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR
-    srl            r2, r2, SQCB_ADDR_SHIFT
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cb_addr, r2)
-
+    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, cb_addr, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(RQCB_ADDR_SHIFT))
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qtype, CAPRI_RXDMA_INTRINSIC_QTYPE)
-    CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_RXDMA_INTRINSIC_QID)
+    CAPRI_SET_FIELD_RANGE(r1, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, flags, CAPRI_APP_DATA_RAW_FLAGS)
 
     // set DMA CMD ptr
@@ -71,8 +67,8 @@ read:
     // remaining_payload_bytes != pmtu
     add            r3, r0, d.log_pmtu
     sllv           r3, 1, r3
-    sne            c1, r3, r1
-    ARE_ALL_FLAGS_SET(c2, r1, REQ_RX_FLAG_MIDDLE|REQ_RX_FLAG_FIRST)     
+    sne            c1, r3, r2
+    IS_ANY_FLAG_SET(c2, r1, REQ_RX_FLAG_MIDDLE|REQ_RX_FLAG_FIRST)     
     bcf            [c1 & c2], invalid_pyld_len
 
     // remaining_payload_bytes > pmtu

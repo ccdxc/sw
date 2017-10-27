@@ -18,7 +18,7 @@ def TestCaseSetup(tc):
     rs.lqp.sq.qstate.Read()
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.va = 0x0102030405060708
-    tc.pvtdata.dma_len = 64
+    tc.pvtdata.dma_len = 1024 + 64
     tc.pvtdata.r_key = 2
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
 
@@ -46,8 +46,8 @@ def TestCaseStepVerify(tc, step):
     tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
         
     if step.step_id == 0:
-        # verify that tx_psn is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 1):
+        # verify that tx_psn is incremented by 2
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 2):
             return False
 
         # verify that p_index sq is incremented by 1
@@ -99,16 +99,16 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
             return False
 
-        # verify that tx_psn is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 1):
+        # verify that tx_psn is incremented by 2
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_psn', 2):
             return False
 
-        # verify that token_id is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'token_id', 1):
+        # verify that token_id is incremented by 2
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'token_id', 2):
             return False
 
         # verify that nxt_to_go_token_id is incremented by 1
-        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 2):
             return False
 
     return True
