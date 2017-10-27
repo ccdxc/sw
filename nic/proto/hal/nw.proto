@@ -33,7 +33,7 @@ message NetworkSpec {
   NetworkKeyHandle    key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""];
   uint64              rmac              = 3;    // router mac for this network
   fixed64             gateway_ep_handle = 4;    // gateway ep handle
-  repeated uint32     security_group    = 5;    // security group list(s) of this network
+  repeated uint64     sg_handle         = 5;    // list of security group handles
 }
 
 // NetworkRequestMsg is batched request message used to create/update network

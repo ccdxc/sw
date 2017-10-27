@@ -462,7 +462,7 @@ message DoSProtectionSpec {
   DoSFloodLimits      icmp_flood_limits    = 7;    // ICMP flood limits
   DoSFloodLimits      other_flood_limits   = 8;    // flood limits for all other
                                                    // traffic (IP and non-IP)
-  uint32              peer_security_group  = 9;    // TO security group
+  uint64              peer_sg_handle       = 9;    // TO security group handle
 }
 
 // ingress policy for DoS
@@ -484,7 +484,7 @@ message DoSPolicySpec {
    IngressDoSPolicy           ingress_policy    = 2;    // ingress policy
    EgressDoSPolicy            egress_policy     = 3;    // egress policy
    fixed64                    dos_handle        = 4;    // dos policy handle
-   repeated uint32            security_group_id = 5;    // List of security groups
+   repeated uint64            sg_handle         = 5;    // list of security group handles
 }
 
 // DoSPolicyRequestMsg is batched add or modify DoS request

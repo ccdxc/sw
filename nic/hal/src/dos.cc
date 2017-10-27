@@ -41,6 +41,8 @@ static inline void
 dos_policy_props_init_from_spec (dos_policy_prop_t *dosp,
                                  const nwsec::DoSProtectionSpec& spec)
 {
+    nwsec_group_t *nwsec_group = NULL;
+
     dosp->service.ip_proto = spec.svc().ip_protocol();
     if (spec.svc().l4_info_case() == DoSService::kIcmpMsgType) {
         dosp->service.icmp_msg_type = spec.svc().icmp_msg_type();
@@ -109,7 +111,10 @@ dos_policy_props_init_from_spec (dos_policy_prop_t *dosp,
     dosp->other_flood_limits.protect_duration =
         spec.other_flood_limits().protect_limits().duration();
 
-    dosp->peer_sg_id = spec.peer_security_group();
+    /* Lookup the SG by handle and then get the SG-id */
+    nwsec_group = nwsec_group_lookup_by_handle(spec.peer_sg_handle());
+    HAL_ASSERT(nwsec_group);
+    dosp->peer_sg_id = nwsec_group->sg_id;
 
     return;
 }
@@ -120,15 +125,19 @@ dos_policy_init_from_spec (dos_policy_t *dosp,
 {
     int                         num_sgs, sg_id;
     dos_policy_sg_list_entry_t  *entry = NULL;
+    nwsec_group_t               *nwsec_group = NULL;
 
     /*
      * Populate the list of security groups that this DoS policy
      * is attached to
      */
     utils::dllist_reset(&dosp->sg_list_head);
-    num_sgs = spec.security_group_id_size();
+    num_sgs = spec.sg_handle_size();
     for (int i = 0; i < num_sgs; i++) {
-        sg_id = spec.security_group_id(i);
+        /* Lookup the SG by handle and then get the SG-id */
+        nwsec_group = nwsec_group_lookup_by_handle(spec.sg_handle(i));
+        HAL_ASSERT(nwsec_group);
+        sg_id = nwsec_group->sg_id;
         /* Add to the security group list */
         entry = (dos_policy_sg_list_entry_t *)g_hal_state->
                  dos_policy_sg_list_entry_slab()->alloc();

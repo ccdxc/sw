@@ -32,7 +32,7 @@ message EndpointSpec {
     fixed64                     interface_handle     = 5;    // interface endpoint is reachable on
     uint32                      useg_vlan            = 6;    // microseg vlan assigned to this EP
     repeated types.IPAddress    ip_address           = 7;    // IP address(es) of endpoint
-    repeated uint32             security_group       = 8;    // security group list(s) endpoint is in
+    repeated uint64             sg_handle            = 8;    // list of security group handles
 }
 
 // EndpointRequestMsg is batched add or modify endpoint request

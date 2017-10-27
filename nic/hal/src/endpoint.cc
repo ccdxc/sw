@@ -558,6 +558,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     ep_create_app_ctxt_t            app_ctxt;
     dhl_entry_t                     dhl_entry = { 0 };
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
+    nwsec_group_t                   *nwsec_group = NULL;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("pi-ep:{}: ep create for id {}", __FUNCTION__, 
@@ -666,11 +667,14 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         utils::dllist_add(&ep->ip_list_head, &ip_entry[i]->ep_ip_lentry);
     }
 
-    num_sgs = spec.security_group_size();
+    num_sgs = spec.sg_handle_size();
     if (num_sgs) {
         //To Do:Handle cases where the num_sgs greater that MAX_SG_PER_ARRAY
         for (i = 0; i < num_sgs; i++) {
-            ep->sgs.arr_sg_id[i] = spec.security_group(i);
+            /* Lookup the SG by handle and then get the SG-id */
+            nwsec_group = nwsec_group_lookup_by_handle(spec.sg_handle(i));
+            HAL_ASSERT(nwsec_group);
+            ep->sgs.arr_sg_id[i] = nwsec_group->sg_id;
             ep->sgs.sg_id_cnt++;
             ep->sgs.next_sg_p = NULL;
         }
