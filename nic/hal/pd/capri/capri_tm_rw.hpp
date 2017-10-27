@@ -94,6 +94,13 @@ hal_ret_t
 capri_tm_uplink_lif_set(uint32_t port,
                         uint32_t lif);
 
+/** capri_tm_hw_config_load_poll
+ * API to poll the config load completion
+ *
+ */
+hal_ret_t 
+capri_tm_hw_config_load_poll(int phase);
+
 /** capri_tm_init
  * API to initialize the PBC block in hardware 
  *

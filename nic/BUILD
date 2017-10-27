@@ -51,6 +51,8 @@ cc_library(
         "asic/capri/model/cap_pb/cap_pbm_csr.h",
         "asic/capri/model/cap_pb/cap_pbchbm_csr.cc",
         "asic/capri/model/cap_pb/cap_pbchbm_csr.h",
+        "asic/capri/model/cap_pb/cap_pbc_decoders.h",
+        "asic/capri/model/cap_pb/cap_pbc_decoders.cc",
         "asic/capri/model/cap_wa/cap_wa_csr.cc",
         "asic/capri/model/cap_wa/cap_wa_csr.h",
         "asic/capri/model/cap_he/readonly/cap_hens_csr.cc",
@@ -75,6 +77,8 @@ cc_library(
         "asic/capri/model/utils/LogMsg.cc",
         "asic/capri/model/utils/LogMsg.h",
         "asic/capri/model/utils/common_dpi.h",
+        "asic/capri/model/utils/msg_man.h",
+        "asic/capri/model/utils/msg_stream.h",
         #"asic/capri/model/utils/cap_blk_env_top.cc",
         #"asic/capri/model/utils/cap_test_factory.h",
         #"asic/capri/model/utils/cap_blk_env_top.h",
@@ -84,12 +88,15 @@ cc_library(
         "asic/ip/verif/pcpp/cpu_bus_base.h",
         "asic/ip/verif/pcpp/cpu_bus_stub.h",
         #"asic/ip/verif/pcpp/pen_mem.h",
-        #"asic/ip/verif/pcpp/pknobs.h",
+        "asic/ip/verif/pcpp/pknobs.h",
         #"asic/ip/verif/pcpp/pen_mem_base.h",
+        "asic/ip/verif/pcpp/pknobs_holder.h",
+        "asic/capri/verif/apis/cap_pb_api.cc",
         "asic/capri/design/common/gen/cap_phv_intr_decoders.cc",
         "asic/capri/design/common/gen/cap_phv_intr_decoders.h",
         #"asic/capri/design/common/gen/cap_axi_decoders.h",
-    ] + glob(["asic/capri/model/cap_dpa/*.cc", "asic/capri/model/cap_dpa/*.h"]),
+    ] + glob(["asic/capri/model/cap_dpa/*.cc", "asic/capri/model/cap_dpa/*.h",
+              "asic/capri/verif/apis/*.h"]),
     includes = [
         "asic/capri/model/cap_top",
         "asic/capri/model/utils",
@@ -127,6 +134,9 @@ cc_library(
             "-Wno-maybe-uninitialized",
             "-Wno-unused-but-set-variable",
             ],
+    hdrs =  [
+            "asic/capri/design/common/gen/cap_pb_port_def.gh",
+            ]
 )
 
 cc_library(

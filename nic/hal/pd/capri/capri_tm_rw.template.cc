@@ -23,6 +23,7 @@
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_pb/cap_pbc_csr.h"
+#include "nic/asic/capri/verif/apis/cap_pb_api.h"
 #endif
 
 //:: from collections import OrderedDict
@@ -308,6 +309,15 @@ capri_tm_uplink_lif_set(uint32_t port,
     HAL_TRACE_DEBUG("CAPRI-TM::{}: Set the lif {} on port {}",
                     __func__, lif, port);
 
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+capri_tm_hw_config_load_poll (int phase)
+{
+    if (phase == 0) {
+        cap_pb_init_done(0,0);
+    }
     return HAL_RET_OK;
 }
 

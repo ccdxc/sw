@@ -11,6 +11,49 @@
 
 #define CAPRI_P4PLUS_NUM_SYMBOLS 49
 
+/* capri_default_config_init
+ * Load any bin files needed for initializing default configs
+ */
+static hal_ret_t
+capri_default_config_init (void)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    char        *cfg_path;
+    std::string full_path;
+    int         num_phases = 2;
+    int         i;
+
+    cfg_path = getenv("HAL_CONFIG_PATH");
+    if (!cfg_path) {
+        HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
+        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+    }
+
+    for (i = 0; i < num_phases; i++) {
+        full_path =  std::string(cfg_path) + "/" + "init_" + 
+                                        std::to_string(i) + "_bin";
+
+        // Check if directory is present
+        if (access(full_path.c_str(), R_OK) < 0) {
+            HAL_TRACE_DEBUG("Skipping init binaries");
+            return HAL_RET_OK;
+        }
+
+        HAL_TRACE_DEBUG("Init phase {} Binaries dir: {}", i, full_path.c_str());
+
+        ret = capri_load_config((char *)full_path.c_str());
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error loading init phase {} binaries ret {}", i, ret);
+            HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+        }
+
+        // Now do any polling for init complete for this phase
+        capri_tm_hw_config_load_poll(i);
+    }
+
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
 // - link all the P4 programs, by resolving symbols, labels etc.
@@ -33,6 +76,10 @@ capri_init (capri_cfg_t *cfg = NULL)
         return HAL_RET_ERR;
     }
  
+    if (ret == HAL_RET_OK) {
+        ret = capri_default_config_init();
+    }
+
     if (capri_txs_scheduler_init()) {
         return HAL_RET_ERR;
     }
