@@ -1,0 +1,38 @@
++ ../../../../../gen/x86_64/bin/devparams type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 type
+eth
++ ../../../../../gen/x86_64/bin/devparams type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 bdf
+ff:12.5
++ ../../../../../gen/x86_64/bin/devparams type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 mac
+02:01:02:03:04:05
++ ../../../../../gen/x86_64/bin/devparams type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 lif
+4
++ ../../../../../gen/x86_64/bin/devparams type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 ma
+<not found>
++ ../../../../../gen/x86_64/bin/devparams type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 bd
+<not found>
++ ../../../../../gen/x86_64/bin/devparams type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 macc
+<not found>
++ ../../../../../gen/x86_64/bin/devparams type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 bdff
+<not found>
++ ../../../../../gen/x86_64/bin/devparams -b type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 bdf
+ff:12.5
++ ../../../../../gen/x86_64/bin/devparams -b type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 bdf-not-found
+<not found>
++ ../../../../../gen/x86_64/bin/devparams -b type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 not-found-bdf
+<not found>
++ ../../../../../gen/x86_64/bin/devparams -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 mac
+<not found>
++ ../../../../../gen/x86_64/bin/devparams -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 mac-not-found
+<not found>
++ ../../../../../gen/x86_64/bin/devparams -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 not-mac-found
+<not found>
++ ../../../../../gen/x86_64/bin/devparams -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 not-found-mac
+<not found>
++ ../../../../../gen/x86_64/bin/devparams -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 ma
+<not found>
++ ../../../../../gen/x86_64/bin/devparams -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 bdf
+<not found>
++ ../../../../../gen/x86_64/bin/devparams -i type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 lif
+4
++ ../../../../../gen/x86_64/bin/devparams -i type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 lif-not-found
+<not found>

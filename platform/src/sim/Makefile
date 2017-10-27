@@ -2,9 +2,9 @@
 # Copyright (c) 2017, Pensando Systems Inc.
 #
 
-LIBDIRS = lib
-PGMDIRS = app third-party sim
+LIBDIRS = libsimlib libsimdev
+PGMDIRS = simd tests
 SUBDIRS = $(LIBDIRS) $(PGMDIRS)
 
-TOPDIR = ..
+TOPDIR = ../..
 include $(TOPDIR)/make/Makefile.inc

@@ -1,0 +1,38 @@
+/*
+ * Copyright (c) 2017, Pensando Systems Inc.
+ */
+
+#ifndef __SIMDEVICES_H__
+#define __SIMDEVICES_H__
+
+#include "src/sim/libsimlib/include/simmsg.h"
+
+#ifdef __cplusplus
+extern "C" {
+#if 0
+} /* close to calm emacs autoindent */
+#endif
+#endif
+
+void simdev_msg_handler(int fd, simmsg_t *m);
+
+typedef struct simdev_api_s {
+    void (*set_user)(const char *user);
+    void (*log)(const char *fmt, va_list ap);
+    void (*error)(const char *fmt, va_list ap);
+    int (*doorbell)(u_int64_t addr, u_int64_t data);
+    int (*read_reg)(u_int64_t addr, u_int32_t *data);
+    int (*write_reg)(u_int64_t addr, u_int32_t data);
+    int (*read_mem)(u_int64_t addr, void *buf, size_t size);
+    int (*write_mem)(u_int64_t addr, void *buf, size_t size);
+} simdev_api_t;
+
+int simdev_open(simdev_api_t *api);
+void simdev_close(void);
+int simdev_add_dev(const char *devparams);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __SIMDEVICES_H__ */

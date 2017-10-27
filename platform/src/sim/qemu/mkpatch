@@ -1,0 +1,18 @@
+#!/bin/sh
+
+#
+# Generate a diff using the same file list,
+# Saves having to "make distclean" in qemu dir.
+#
+
+files="
+    Makefile.target
+    hw/pci-bridge/Makefile.objs
+    default-configs/x86_64-softmmu.mak
+    hw/pci-bridge/simbridge.c
+"
+
+for f in $files; do
+    echo diff -uprN a/$f b/$f
+         diff -uprN a/$f b/$f
+done

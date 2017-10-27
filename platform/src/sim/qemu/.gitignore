@@ -1,0 +1,3 @@
+qemu-[0-9.]*
+.patched
+.configured

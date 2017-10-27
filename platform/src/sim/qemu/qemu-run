@@ -1,0 +1,29 @@
+#!/bin/sh
+
+DRIVE_IMG=${1:-$HOME/VMs/ubuntu-16.04.img}
+
+SCRIPT_DIR=`dirname $0`
+SCRIPT_PATH=`cd $SCRIPT_DIR; echo $PWD`
+TOP_PATH=`cd $SCRIPT_DIR/../..; echo $PWD`
+GEN=$TOP_PATH/gen/x86_64
+GENBIN=$GEN/bin
+GENLIB=$GEN/lib
+
+# New LD_LIBRARY_PATH
+N=$GENLIB
+# append original LD_LIBRARY_PATH, if any
+[ -n "$LD_LIBRARY_PATH" ] && N=${N}:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=${N}
+
+QEMU_VERSION=2.9.0
+QEMU_DIR=$SCRIPT_PATH/qemu-$QEMU_VERSION
+$QEMU_DIR/x86_64-softmmu/qemu-system-x86_64 \
+    -machine q35 -m 256 -vnc :11 \
+    -serial telnet::1034,server,nowait \
+    -monitor telnet::1035,server,nowait \
+    -netdev user,id=net0,hostfwd=tcp::1037-:22 \
+    -device e1000,netdev=net0 \
+    -device ioh3420,id=pcie_bus1 \
+    -device simbridge,bus=pcie_bus1 \
+    -drive file=$DRIVE_IMG,if=virtio \
+    $*
