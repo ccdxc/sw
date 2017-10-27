@@ -1114,9 +1114,10 @@ control common_p4plus_stage0 {
     } else {
         apply(common_p4plus_stage0_app_header_table);
     }
-    if (app_header.app_type == P4PLUS_APPTYPE_CLASSIC_NIC) {
-        apply(common_p4plus_stage0_lif_table0);
-    }
+// According to Neel this is no longer used.
+//    if (app_header.app_type == P4PLUS_APPTYPE_CLASSIC_NIC) {
+//        apply(common_p4plus_stage0_lif_table0);
+//    }
     if (app_header.app_type == P4PLUS_APPTYPE_RDMA) {
         if (p4_intr.recirc == 0) {
             apply(rx_stage0_load_rdma_params);

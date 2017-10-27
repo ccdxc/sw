@@ -8,6 +8,9 @@
 #include <vector>
 #include "string.h"
 #include "sknobs.h"
+#ifdef _CSV_INCLUDED_
+#include "vpi_user.h"
+#endif
 
 using namespace std;
 class LogMsg {
@@ -69,5 +72,11 @@ class LogMsg {
 #define PLOG_API_MSG(SRC, MSG) { PLOG_MSG(SRC << "_API : " << MSG)  }
 
 #define PLOG_CHECK_MSG_LEVEL(LEVEL) LogMsg::Instance().get()->checkMsgLevel(LEVEL)
+
+#ifdef _CSV_INCLUDED_
+#define PEN_ASSERT(c) if (!(c)) {PLOG_MSG("Assertion failed: " << __FILE__ << ":" << __LINE__ << " function: " << __PRETTY_FUNCTION__ << " " << #c << endl); vpi_control(vpiFinish,0);}
+#else
+#define PEN_ASSERT(c) assert(c)
+#endif
 
 #endif // _LOG_MSG_H_

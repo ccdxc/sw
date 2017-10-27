@@ -49,6 +49,8 @@ cc_library(
         "asic/capri/model/cap_pb/cap_pbc_csr.h",
         "asic/capri/model/cap_pb/cap_pbm_csr.cc",
         "asic/capri/model/cap_pb/cap_pbm_csr.h",
+        "asic/capri/model/cap_pb/cap_pbchbm_csr.cc",
+        "asic/capri/model/cap_pb/cap_pbchbm_csr.h",
         "asic/capri/model/cap_wa/cap_wa_csr.cc",
         "asic/capri/model/cap_wa/cap_wa_csr.h",
         "asic/capri/model/cap_he/readonly/cap_hens_csr.cc",
