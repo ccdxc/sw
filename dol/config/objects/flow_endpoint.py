@@ -15,11 +15,60 @@ from infra.common.logging       import cfglogger
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
+class FlowEndpointL4LbObject:
+    def __init__(self, service):
+        self.service = service
+        if service is None:
+            return
+        self.__select_backend()
+        return
+
+    def GID(self):
+        if self.service is not None:
+            return self.service.GID()
+        return None
+
+    def __select_backend(self):
+        self.backend = self.service.SelectBackend()
+        if self.backend is None:
+            assert(0)
+        return defs.status.SUCCESS
+      
+    def IsEnabled(self):
+        return self.service is not None
+    
+    def GetServicePort(self):
+        self.port = self.service.port.get()
+        return self.port
+
+    def GetBackendPort(self):
+        return self.backend.port.get()
+
+    def GetIpAddress(self):
+        return self.backend.GetIpAddress()
+            
+    def GetIpv6Address(self):
+        return self.backend.GetIpv6Address()
+
+    def GetEp(self):
+        return self.backend.ep
+
+    def GetProto(self):
+        return self.service.proto
+
+    def GetServiceIpAddress(self):
+        return self.service.vip
+
+    def GetServiceIpv6Address(self):
+        return self.service.vip6
+
+    def GetBackendGID(self):
+        return self.backend.GID()
+
 class FlowEndpointObject(base.ConfigObjectBase):
     def __init__(self, ep = None, srcobj = None, l4lbsvc = None):
         super().__init__()
         self.Clone(Store.templates.Get('FLOW_ENDPOINT'))
-        self.ep         = ep
         self.type       = None
         self.dom        = None
         self.addr       = None
@@ -29,38 +78,34 @@ class FlowEndpointObject(base.ConfigObjectBase):
         self.icmp_code  = None
         self.icmp_id    = None
         self.esp_spi    = None
-        self.l4lb_service = l4lbsvc
-        self.l4lb_backend = None
         self.__flow     = None
+        self.l4lb       = FlowEndpointL4LbObject(l4lbsvc)
+        if self.IsL4Lb():
+            self.ep     = self.l4lb.GetEp()
+        else:
+            self.ep     = ep
+
         if srcobj:
             self.__copy(srcobj)
 
-    def SelectL4LbBackend(self):
-        if self.IsL4LbServiceFlowEp():
-            self.l4lb_backend = self.l4lb_service.SelectBackend()
-            if self.l4lb_backend == None:
-                return defs.status.ERROR
-        return defs.status.SUCCESS
-
     def __copy(self, src):
-        self.ep     = src.ep
-        self.type   = src.type
-        self.dom    = src.dom
-        self.addr   = src.addr
-        self.proto  = src.proto
-        self.port   = src.port
+        self.ep         = src.ep
+        self.type       = src.type
+        self.dom        = src.dom
+        self.addr       = src.addr
+        self.proto      = src.proto
+        self.port       = src.port
         self.icmp_type  = src.icmp_type
         self.icmp_code  = src.icmp_code
         self.icmp_id    = src.icmp_id
         self.esp_spi    = src.esp_spi
-        self.l4lb_service = src.l4lb_service
-        self.l4lb_backend = src.l4lb_backend
-        self.flowhash     = src.flowhash.get()
+        self.l4lb       = copy.copy(src.l4lb)
+        self.flowhash       = src.flowhash.get()
         return
 
     def __set_tcpudp_info(self, entry):
-        if self.IsL4LbServiceFlowEp():
-            self.port = self.l4lb_service.port.get()
+        if self.IsL4Lb():
+            self.port = self.l4lb.GetServicePort()
         else:
             self.port = entry.port.get()
         if 'tracking_info' in entry.__dict__:
@@ -124,17 +169,17 @@ class FlowEndpointObject(base.ConfigObjectBase):
         return self.type == 'IPV6'
     def IsMAC(self):
         return self.type == 'MAC'
-    def IsL4LbServiceFlowEp(self):
-        return self.l4lb_service != None
+    def IsL4Lb(self):
+        return self.l4lb.IsEnabled()
     def IsESP(self):
         return self.proto == 'ESP'
 
     def GetFlowSip(self):
-        if self.IsL4LbServiceFlowEp():
+        if self.IsL4Lb():
             if self.IsIPV4():
-                return self.l4lb_backend.GetIpAddress()
+                return self.l4lb.GetIpAddress()
             elif self.IsIPV6():
-                return self.l4lb_backend.GetIpv6Address()
+                return self.l4lb.GetIpv6Address()
         return self.addr
 
     def GetFlowDip(self):
@@ -150,8 +195,8 @@ class FlowEndpointObject(base.ConfigObjectBase):
         hashgen = self.__flow.GetHashGen()
         if hashgen:
             self.port = hashgen.GetSport()
-        if self.IsL4LbServiceFlowEp():
-            return self.l4lb_backend.port.get()
+        if self.IsL4Lb():
+            return self.l4lb.GetBackendPort()
         return self.port
 
     def GetFlowDport(self):
@@ -167,40 +212,35 @@ class FlowEndpointObject(base.ConfigObjectBase):
         return self.GetFlowSport()
 
     def IsProtoMatch(self, proto):
-        if self.IsL4LbServiceFlowEp():
-            return self.l4lb_service.proto == proto
+        if self.IsL4Lb():
+            return self.l4lb.GetProto() == proto
         return True
 
     def GetTenant(self):
-        if self.IsL4LbServiceFlowEp():
+        if self.IsL4Lb():
             return self.l4lb_service.tenant
         return self.ep.tenant
 
     def GetTenantId(self):
-        if self.IsL4LbServiceFlowEp():
-            return self.l4lb_service.tenant.id
         return self.ep.tenant.id
 
     def GetIpAddrs(self):
-        if self.IsL4LbServiceFlowEp():
-            return [ self.l4lb_service.vip ]
+        if self.IsL4Lb():
+            return [ self.l4lb.GetServiceIpAddress() ]
         return self.ep.ipaddrs
 
     def GetIpv6Addrs(self):
-        if self.IsL4LbServiceFlowEp():
-            return [ self.l4lb_service.vip6 ]
+        if self.IsL4Lb():
+            return [ self.l4lb.GetServiceIpv6Address() ]
         return self.ep.ipv6addrs
 
     def GetGID(self):
-        if self.IsL4LbServiceFlowEp():
-            return self.l4lb_service.GID()
+        if self.IsL4Lb():
+            return self.l4lb.GID()
         return self.ep.GID()
 
     def __get_ep(self):
-        if self.IsL4LbServiceFlowEp():
-            return self.l4lb_backend.ep
         return self.ep
-       
 
     def GetSegment(self):
         ep = self.__get_ep()
@@ -239,13 +279,13 @@ class FlowEndpointObject(base.ConfigObjectBase):
             string += "%04x" % self.ethertype
         cfglogger.info("- %s: %s" % (prefix, string))
         
-        if self.IsL4LbServiceFlowEp() == False: return
+        if self.IsL4Lb() == False: return
         
-        string = self.l4lb_backend.GID() + ':' + self.type + '/'
-        string += "%d/%s/" % (self.dom, self.l4lb_backend.GetIpAddress().get())
+        string = self.l4lb.GetBackendGID() + ':' + self.type + '/'
+        string += "%d/%s/" % (self.dom, self.l4lb.GetIpAddress().get())
         if self.IsTCP() or self.IsUDP():
             string += "%s/" % self.proto
-            string += "%d" % (self.l4lb_backend.port.get())
+            string += "%d" % (self.l4lb.GetBackendPort())
 
         cfglogger.info("  - Backend: %s" % string)
         return

@@ -5,27 +5,27 @@ import infra.api.api as infra_api
 
 def GetL2FlowL4LbPreNatSmac(testcase, packet):
     if testcase.config.flow.IsSnat():
-        return testcase.config.src.l4lb_backend.ep.macaddr
+        return testcase.config.src.l4lb.backend.ep.macaddr
     return testcase.config.src.endpoint.macaddr
 
 def GetL2FlowL4LbPreNatDmac(testcase, packet):
     if testcase.config.flow.IsDnat():
-        return testcase.config.dst.l4lb_service.macaddr
+        return testcase.config.dst.l4lb.service.macaddr
     return testcase.config.dst.endpoint.macaddr
 
 def GetL2FlowL4LbPostNatSmac(testcase, packet):
     if testcase.config.flow.IsSnat():
-        return testcase.config.src.l4lb_service.ep.macaddr
+        return testcase.config.src.l4lb.service.ep.macaddr
     return testcase.config.src.endpoint.macaddr
 
 def GetL2FlowL4LbPostNatDmac(testcase, packet):
     if testcase.config.flow.IsDnat():
-        return testcase.config.dst.l4lb_backend.ep.macaddr
+        return testcase.config.dst.l4lb.backend.ep.macaddr
     return testcase.config.dst.endpoint.macaddr
 
 def GetL3FlowL4LbPreNatSmac(testcase, packet):
     if testcase.config.flow.IsSnat():
-        return testcase.config.src.l4lb_backend.ep.macaddr
+        return testcase.config.src.l4lb.backend.ep.macaddr
     return testcase.config.src.endpoint.macaddr
 
 def GetL3FlowL4LbPreNatDmac(testcase, packet):
@@ -36,15 +36,15 @@ def GetL3FlowL4LbPostNatSmac(testcase, packet):
 
 def GetL3FlowL4LbPostNatDmac(testcase, packet):
     if testcase.config.flow.IsDnat():
-        return testcase.config.dst.l4lb_backend.ep.macaddr
+        return testcase.config.dst.l4lb.backend.ep.macaddr
     return testcase.config.dst.endpoint.macaddr
 
 def GetL4LbFlowDestPorts(testcase):
     if testcase.config.flow.IsDnat():
-        return testcase.config.dst.l4lb_backend.ep.intf.ports
+        return testcase.config.dst.l4lb.backend.ep.intf.ports
     return testcase.config.dst.endpoint.intf.ports
 
 def GetL4LbFlowSrcPorts(testcase):
     if testcase.config.flow.IsSnat():
-        return testcase.config.src.l4lb_backend.ep.intf.ports
+        return testcase.config.src.l4lb.backend.ep.intf.ports
     return testcase.config.src.endpoint.intf.ports

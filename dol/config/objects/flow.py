@@ -102,9 +102,9 @@ class FlowObject(base.ConfigObjectBase):
         return
 
     def __init_nat(self):
-        if self.__sfep.IsL4LbServiceFlowEp():
+        if self.__sfep.IsL4Lb():
             self.nat_type = 'SNAT'
-        elif self.__dfep.IsL4LbServiceFlowEp():
+        elif self.__dfep.IsL4Lb():
             self.nat_type = 'DNAT'
         else:
             self.nat_type = 'NONE'
@@ -568,13 +568,11 @@ class FlowObject(base.ConfigObjectBase):
         obj.src.endpoint = self.__sep
         if self.__sep:
             obj.src.intf = self.__sep.GetInterface()
-        obj.src.l4lb_backend = self.__sfep.l4lb_backend
-        obj.src.l4lb_service = self.__sfep.l4lb_service
+        obj.src.l4lb = self.__sfep.l4lb
         obj.dst.endpoint = self.__dep
         if self.__dep:
             obj.dst.intf = self.__dep.GetInterface()
-        obj.dst.l4lb_service = self.__dfep.l4lb_service
-        obj.dst.l4lb_backend = self.__dfep.l4lb_backend
+        obj.dst.l4lb = self.__dfep.l4lb
         obj.ingress_mirror.session1 = self.GetIngressMirrorSession(idx = 1)
         obj.ingress_mirror.session2 = self.GetIngressMirrorSession(idx = 2)
         obj.ingress_mirror.session3 = self.GetIngressMirrorSession(idx = 3)
@@ -589,10 +587,9 @@ class FlowObject(base.ConfigObjectBase):
         if obj.endpoint:
             lg.info("  - EP  : %s" % obj.endpoint.Summary())
             lg.info("  - Intf: %s" % obj.endpoint.intf.Summary())
-        if obj.l4lb_service:
-            lg.info("  - Srvc: %s" % obj.l4lb_service.Summary())
-        if obj.l4lb_backend:
-            lg.info("  - Bknd: %s" % obj.l4lb_backend.Summary())
+        if obj.l4lb.IsEnabled():
+            lg.info("  - Srvc: %s" % obj.l4lb.service.Summary())
+            lg.info("  - Bknd: %s" % obj.l4lb.backend.Summary())
         return
 
     def ShowTestcaseConfig(self, obj, lg):

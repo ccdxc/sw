@@ -15,3 +15,7 @@ modules:
         name    : ROUTED
         spec    : l4lb_l3.testspec
 
+    - module:
+        name    : BRIDGED_TX
+        spec    : tx.testspec
+        ignore  : True

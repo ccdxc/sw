@@ -57,6 +57,6 @@ security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 tenants:
     -   spec    : ref://store/specs/id=TENANT_L4LB
         count   : 1
-        lifns   : range/101/101
+        lifns   : range/101/116
 
 cpu: None

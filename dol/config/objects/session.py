@@ -39,13 +39,13 @@ class SessionObject(base.ConfigObjectBase):
         self.fte = getattr(spec, 'fte', False)
         self.initiator = flowep.FlowEndpointObject(srcobj = initiator)
         self.initiator.SetInfo(spec.initiator)
-        status = self.initiator.SelectL4LbBackend()
-        if status != defs.status.SUCCESS: return status
+        #status = self.initiator.SelectL4LbBackend()
+        #if status != defs.status.SUCCESS: return status
         
         self.responder = flowep.FlowEndpointObject(srcobj = responder)
         self.responder.SetInfo(spec.responder)
-        status = self.responder.SelectL4LbBackend()
-        if status != defs.status.SUCCESS: return status
+        #status = self.responder.SelectL4LbBackend()
+        #if status != defs.status.SUCCESS: return status
 
         
         self.type = self.initiator.type	
