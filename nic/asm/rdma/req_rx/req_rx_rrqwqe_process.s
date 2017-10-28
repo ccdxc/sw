@@ -153,7 +153,7 @@ atomic:
     CAPRI_GET_TABLE_0_ARG(req_rx_phv_t, r7)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, sge_va, d.atomic.sge.va)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, sge_bytes, d.atomic.sge.len)
-    CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, dma_cmd_eop, 1)
+    CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, dma_cmd_eop, 0)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
     //CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, sge_index, 0)
     CAPRI_SET_FIELD(r7, RRQSGE_TO_LKEY_T, cq_dma_cmd_index, REQ_RX_DMA_CMD_CQ)
@@ -178,7 +178,7 @@ atomic:
 
     SQCB0_ADDR_GET(r1)
     add            r6, r1, RRQ_C_INDEX_OFFSET
-    memwr.h        r6, k.args.rrq_cindex
+    memwr.hx       r6, k.args.rrq_cindex
 
     SQCB1_ADDR_GET(r1)
     CAPRI_GET_TABLE_2_K(req_rx_phv_t, r7)

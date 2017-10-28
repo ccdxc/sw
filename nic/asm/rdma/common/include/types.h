@@ -455,8 +455,8 @@ struct sqwqe_atomic_t {
     va                : 64;
     swap_or_add_data  : 64;
     cmp_data          : 64;
-    struct sge_t sge;
     pad               : 64;
+    struct sge_t sge;
 };
 
 // Read

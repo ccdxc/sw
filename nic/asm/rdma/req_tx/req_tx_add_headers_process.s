@@ -248,7 +248,10 @@ req_tx_add_headers_process:
         add            r3, d.rrq_base_addr, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
         
         phvwr          RRQWQE_PSN, d.tx_psn
-
+        phvwr          RRQWQE_ATOMIC_OP_TYPE, k.args.op_type
+        add            r1, d.msn, 1
+        phvwr          RRQWQE_MSN, r1 
+        
         // dma_cmd[6]
         DMA_NEXT_CMD_I_BASE_GET(r6, 1)
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
@@ -268,6 +271,9 @@ req_tx_add_headers_process:
         add            r3, d.rrq_base_addr, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
         
         phvwr          RRQWQE_PSN, d.tx_psn
+        phvwr          RRQWQE_ATOMIC_OP_TYPE, k.args.op_type
+        add            r1, d.msn, 1
+        phvwr          RRQWQE_MSN, r1 
         
         // dma_cmd[6]
         DMA_NEXT_CMD_I_BASE_GET(r6, 1)

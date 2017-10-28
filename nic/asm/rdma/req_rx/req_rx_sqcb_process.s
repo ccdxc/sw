@@ -50,7 +50,7 @@ ack:
     b              next_stage_arg
 
 atomic:
-    ARE_ALL_FLAGS_SET(c1, r1, REQ_RX_FLAG_ATOMIC_ACK)
+    ARE_ALL_FLAGS_SET(c1, r1, REQ_RX_FLAG_ATOMIC_AETH)
     bcf            [!c1], read
     nop
 

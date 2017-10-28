@@ -40,6 +40,7 @@
 #define RRQWQE_ATOMIC_SGE_VA              p.rrqwqe.atomic.sge.va
 #define RRQWQE_ATOMIC_SGE_LEN             p.rrqwqe.atomic.sge.len
 #define RRQWQE_ATOMIC_SGE_LKEY            p.rrqwqe.atomic.sge.l_key
+#define RRQWQE_ATOMIC_OP_TYPE             p.rrqwqe.atomic.op_type
 
 // phv 
 struct req_tx_phv_t {

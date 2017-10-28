@@ -207,7 +207,7 @@ modules:
         ignore  : False
 
     - module:
-        name    : RDMA_RX_READ_ONLY
+        name    : RDMA_REQ_RX_READ_ONLY
         enable  : True
         package : test.rdma
         module  : req_rx_read_only
@@ -215,7 +215,7 @@ modules:
         ignore  : False
 
     - module:
-        name    : RDMA_RX_READ_ONLY_2SGES
+        name    : RDMA_REQ_RX_READ_ONLY_2SGES
         enable  : True
         package : test.rdma
         module  : req_rx_read_only
@@ -223,7 +223,7 @@ modules:
         ignore  : False
   
     - module:
-        name    : RDMA_RX_READ_FIRST_LAST
+        name    : RDMA_REQ_RX_READ_FIRST_LAST
         enable  : True
         package : test.rdma
         module  : req_rx_read_first_last
@@ -231,11 +231,19 @@ modules:
         ignore  : False
 
     - module:
-        name    : RDMA_RX_READ_FML
+        name    : RDMA_REQ_RX_READ_FML
         enable  : True
         package : test.rdma
         module  : req_rx_read_fml
         spec    : req_rx_read_fml.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_READ_FML_EXACT
+        enable  : True
+        package : test.rdma
+        module  : req_rx_read_fml_exact
+        spec    : req_rx_read_fml_exact.testspec
         ignore  : False
 
     #- module:
@@ -261,6 +269,14 @@ modules:
     #    module  : req_tx_atomic_cmpswap
     #    spec    : req_tx_atomic_cmpswap.testspec
     #    ignore  : False
+
+    - module:
+        name    : RDMA_REQ_RX_ATOMIC_CMPSWAP
+        enable  : True
+        package : test.rdma
+        module  : req_rx_atomic_cmpswap
+        spec    : req_rx_atomic_cmpswap.testspec
+        ignore  : False
 
     - module:
         name    : RDMA_TX_UD_SEND_ONLY

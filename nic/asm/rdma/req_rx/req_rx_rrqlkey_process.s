@@ -72,6 +72,7 @@ set_arg:
      CAPRI_GET_TABLE_I_ARG(req_rx_phv_t, r2, r7)
      CAPRI_SET_FIELD(r7, LKEY_TO_PTSEG_T, pt_offset, r5)
      CAPRI_SET_FIELD(r7, LKEY_TO_PTSEG_T, pt_bytes, k.args.sge_bytes)
+     CAPRI_SET_FIELD(r7, LKEY_TO_PTSEG_T, is_atomic, k.args.is_atomic)
      CAPRI_SET_FIELD(r7, LKEY_TO_PTSEG_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
      CAPRI_SET_FIELD(r7, LKEY_TO_PTSEG_T, log_page_size, d.log_page_size)
      CAPRI_SET_FIELD(r7, LKEY_TO_PTSEG_T, dma_cmd_eop, k.args.dma_cmd_eop)

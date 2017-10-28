@@ -1,0 +1,220 @@
+# Test Spec
+selectors:
+#    src:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=False
+#        interface   : filter://any
+#    dst:
+#        tenant      : filter://overlay=VLAN,type=TENANT
+#        segment     : filter://any
+#        endpoint    : filter://remote=True
+#        interface   : filter://any
+#    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+    rdmasession     :
+        lqp         : filter://svc=0
+        rqp         : filter://svc=0
+#    maxflows    : 1
+    maxrdmasessions     : 1
+
+packets:
+    - packet:
+        id          : ATOMIC_REQ # Transmit packet
+        payloadsize : 0
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_ATOMICETH
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+            qtag:
+                vlan    : ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/initiator/addr
+                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                ttl     : 64
+            #ipv6:
+            #    src     : ref://testcase/config/flow/sip
+            #    dst     : ref://testcase/config/flow/dip
+            #    hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 19 # RDMA CmpSwap
+                destqp  : ref://testcase/config/rdmasession/rqp/id
+                psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+            atomiceth:
+                va      : ref://testcase/pvtdata/va
+                r_key   : ref://testcase/pvtdata/r_key
+                swapdt  : ref://testcase/pvtdata/swap_data
+                cmpdt   : ref://testcase/pvtdata/cmp_data
+            payload:
+                data    : None
+    
+    - packet:
+         id          : ATOMIC_RESP       # Receive packet 
+         payloadsize : 0
+         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_ATOMIC_AETH_ACKETH
+         encaps      :
+             - ref://factory/packets/id=ENCAP_QTAG
+         headers     :
+             # Add all possible headers, the final headers will be selected
+             # based on the Flow.
+             eth:
+                 src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
+                 dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+             qtag:
+                 vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+             ipv4:
+                 src     : ref://testcase/config/rdmasession/session/responder/addr
+                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
+                 ttl     : 64
+             #ipv6:
+             #    src     : ref://testcase/config/flow/sip
+             #    dst     : ref://testcase/config/flow/dip
+             #    hlim    : 64
+             udp:
+                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
+             bth:
+                 opcode  : 18
+                 destqp  : ref://testcase/config/rdmasession/lqp/id
+                 psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
+             aeth:
+                syndrome : 14 # TODO - credits
+                msn      : ref://testcase/pvtdata/msn
+             atomic_acketh:
+                orig_remdt : ref://testcase/pvtdata/cmp_data
+             payload:
+                 data    : None
+
+    - packet:
+         id          : ATOMIC_RESP_ONLY_PYLD # Receive payload
+         payloadsize : 8
+         template    : ref://factory/packets/id=PAYLOAD
+         headers     :
+             payload:
+                 data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
+buffers:
+    - buffer:
+        id      : HOST_MEM
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           offset  : 0
+           segments:
+               - size    : 8
+                 data    : None
+    - buffer:
+        id      : EXP_HOST_MEM
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : None
+           offset  : 0
+           segments:
+               - size    : 8
+                 data    : ref://testcase/packets/id=ATOMIC_RESP_ONLY_PYLD/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : SQ_WQE
+        template: ref://factory/templates/id=DESC_RDMA_SQ
+        fields:
+            op_type : 6  # OP_TYPE_CMP_N_SWAP
+            wrid    : 6543
+            num_sges: 1
+
+            atomic    :
+                va      : ref://testcase/pvtdata/va
+                r_key   : ref://testcase/pvtdata/r_key
+                swapdt  : ref://testcase/pvtdata/swap_data
+                cmpdt   : ref://testcase/pvtdata/cmp_data
+
+            sges:
+                - va  : ref://testcase/buffers/id=HOST_MEM/address
+                  len : ref://testcase/buffers/id=HOST_MEM/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+
+
+    - descriptor:
+        id      : EXP_SQ_WQE
+        template: ref://factory/templates/id=DESC_RDMA_SQ
+        fields:
+            buff: ref://testcase/buffers/id=EXP_HOST_MEM
+            op_type : 6  # OP_TYPE_CMP_N_SWAP
+            wrid    : 6543
+            num_sges: 1
+
+            atomic  :
+                va      : ref://testcase/pvtdata/va
+                r_key   : ref://testcase/pvtdata/r_key
+                swapdt  : ref://testcase/pvtdata/swap_data
+                cmpdt   : ref://testcase/pvtdata/cmp_data
+
+            sges:
+
+    - descriptor:
+        id      : EXP_CQ_WQE
+        template: ref://factory/templates/id=DESC_RDMA_CQ
+        fields:
+            wrid:  ref://testcase/pvtdata/msn
+            qp: ref://testcase/config/rdmasession/lqp/id
+            op_type: 6 #OP_TYPE_CMP_N_SWAP
+            status : 0  #CQ_STATUS_SUCCESS
+            color  : callback://rdma/rdma/GetReqRxCQExpColor
+            smac: callback://rdma/rdma/GetUDSMAC
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=SQ_WQE
+            ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+
+    doorbell:
+        object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
+        fields:
+            upd : 0x3 # DB_SCHED_WR(1)
+ 
+session:
+
+    - step: # ATOMIC Request Transmit
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=SQ_WQE
+                    ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+            
+            doorbell:
+                object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
+                fields:
+                    upd : 0x3 # DB_SCHED_WR(1)
+        
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=ATOMIC_REQ
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+    - step: # ATOMIC Response Receive
+        trigger:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=ATOMIC_RESP
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+
+        expect:
+            descriptors:
+                #this is verify the data and not the SQ descriptor per say
+               #- descriptor:
+               #    object  : ref://testcase/descriptors/id=EXP_SQ_WQE
+               #    ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_CQ_WQE
+                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
+
+
