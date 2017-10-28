@@ -49,7 +49,6 @@ def __get_packet_template_impl(flow, args):
  
     if args is not None:
         template += "_%s" % (args.proto)
-
     return infra_api.GetPacketTemplate(template)
 
 def GetPacketTemplateByFlow(testcase, packet, args=None):

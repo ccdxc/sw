@@ -161,3 +161,17 @@ __ref_roots = [
     'STEP',
 ]
 ref_roots = List2Enum(__ref_roots)
+
+__ip_protos = {
+    0   : 'NONE',
+    1   : 'ICMP',
+    4   : 'IPV4',
+    6   : 'TCP',
+    17  : 'UDP',
+    47  : 'GRE',
+    50  : 'ESP',
+    51  : 'AH',
+    58  : 'ICMPV6',
+    255 : 'PROTO255',
+}
+ipprotos = Dict2Enum(__ip_protos)

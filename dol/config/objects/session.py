@@ -137,6 +137,20 @@ class SessionObject(base.ConfigObjectBase):
 
     def IsTCP(self):
         return self.initiator.IsTCP()
+    def IsUDP(self):
+        return self.initiator.IsUDP()
+    def IsICMP(self):
+        return self.initiator.IsICMP()
+    def IsICMPV6(self):
+        return self.initiator.IsICMPV6()
+    def IsIP(self):
+        return self.initiator.IsIP()
+    def IsIPV4(self):
+        return self.initiator.IsIPV4()
+    def IsIPV6(self):
+        return self.initiator.IsIPV6()
+    def IsMAC(self):
+        return self.initiator.IsMAC()
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.tenant_id = self.initiator.ep.tenant.id
@@ -225,18 +239,34 @@ class SessionObjectHelper:
         self.objs = []
         self.ftessns = []
         self.ssns = []
-        self.gid_pairs = {}
+        self.fep_pairs = {}
         return
 
-    def __add_gid_pair(self, gid1, gid2):
-        key = "%s__TO__%s" % (gid1, gid2)
-        self.gid_pairs[key] = True
+    def __get_fep_pair_key(self, fep1, fep2):
+        gid1 = fep1.ep.GID()
+        gid2 = fep2.ep.GID()
+        key = "%s__%s__TO__%s__%s" % (fep1.type, gid1, gid2, fep1.proto)
+        return key
+
+    def __add_fep_pair(self, fep1, fep2):
+        key = self.__get_fep_pair_key(fep1, fep2)
+        self.fep_pairs[key] = True
         return
 
-    def __is_gid_pair_done(self, gid1, gid2):
-        key1 = "%s__TO__%s" % (gid1, gid2)
-        key2 = "%s__TO__%s" % (gid2, gid1)
-        if key1 in self.gid_pairs or key2 in self.gid_pairs:
+    def __is_fep_pair_done(self, fep1, fep2):
+        key1 = self.__get_fep_pair_key(fep1, fep2)
+        key2 = self.__get_fep_pair_key(fep2, fep1)
+        if key1 in self.fep_pairs or key2 in self.fep_pairs:
+            return True
+        return False
+
+    def __skip_fep_pair(self, flowep1, flowep2):
+        if flowep1.IsTCP() or flowep1.IsUDP() or\
+           flowep1.IsICMP() or flowep1.IsICMPV6() or\
+           flowep1.IsESP():
+           return False
+           
+        if self.__is_fep_pair_done(flowep1, flowep2):
             return True
         return False
 
@@ -261,7 +291,10 @@ class SessionObjectHelper:
             
             flowep1.proto = proto
             flowep2.proto = proto
+            if self.__skip_fep_pair(flowep1, flowep2):
+                return
 
+            self.__add_fep_pair(flowep1, flowep2)
             for t in spec.entries:
                 self.__pre_process_spec_entry(t.entry)
                 session = SessionObject()
@@ -311,7 +344,6 @@ class SessionObjectHelper:
         seg2 = flowep2.ep.segment
 
         if seg1 != seg2: return
-        if self.__is_gid_pair_done(flowep1.ep.GID(), flowep2.ep.GID()): return
 
         flowep1.dom = flowep1.ep.segment.id
         flowep2.dom = flowep2.ep.segment.id
@@ -319,7 +351,6 @@ class SessionObjectHelper:
         flowep1.addr = flowep1.ep.macaddr
         flowep2.addr = flowep2.ep.macaddr
         self.__process_session_specs(flowep1, flowep2, entries)
-        self.__add_gid_pair(flowep1.ep.GID(), flowep2.ep.GID())
         return
 
     def __process_unidest(self, ep1, ep2):

@@ -245,14 +245,12 @@ class FlowObject(base.ConfigObjectBase):
             l4_info.icmp.id = self.icmpid
         elif self.IsESP():
             l4_info.esp.spi = self.espspi
-        else:
-            assert(0)
         return
 
     def __get_hal_ipproto(self):
-        hal_ipproto_str = 'IPPROTO_' + self.proto
-        hal_ipproto = haldefs.common.IPProtocol.Value(hal_ipproto_str)
-        return hal_ipproto
+        #hal_ipproto_str = 'IPPROTO_' + self.proto
+        #hal_ipproto = haldefs.common.IPProtocol.Value(hal_ipproto_str)
+        return defs.ipprotos.id(self.proto)
 
     def __getStringValue(self, field, val):
         return field.Name(val).split("_")[-1]
