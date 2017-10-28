@@ -76,6 +76,8 @@ write_phv:
 tcp_tx_launch_sesq:
     // TODO check pi != ci
     phvwr           p.to_s2_sesq_cidx, d.{ci_0}.hx
+    smeqb           c1, d.debug_dol_tx, TCP_TX_DDOL_FREE_RNMDR, TCP_TX_DDOL_FREE_RNMDR
+    phvwri.c1       p.common_phv_debug_dol_free_rnmdr, 1
     add             r3, d.{sesq_base}.wx, d.{ci_0}.hx, NIC_SESQ_ENTRY_SIZE_SHIFT
     phvwr           p.to_s1_sesq_ci_addr, r3
     tbladd          d.{ci_0}.hx, 1

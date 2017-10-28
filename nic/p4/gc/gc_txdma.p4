@@ -110,6 +110,10 @@ metadata common_t0_s2s_phv_t t0_s2s_scratch;
  * PHV following k (for app DMA etc.)
  *****************************************************************************/
 @pragma dont_trim
+metadata ring_entry_t ring_entry1;
+@pragma dont_trim
+metadata ring_entry_t ring_entry2;
+@pragma dont_trim
 metadata semaphore_ci_t ci_1;
 @pragma dont_trim
 metadata semaphore_ci_t ci_2;

@@ -41,6 +41,7 @@ table_read_bsq_consume:
 
 table_read_RNMDR_FREE_IDX:
 
+#if 0
     addi    r3, r0, RNMDR_FREE_IDX
 	CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tls_dec_free_rnmdr,
 	                    r3, TABLE_SIZE_16_BITS)
@@ -49,6 +50,7 @@ table_read_RNMPR_FREE_IDX:
 	addi 	r3, r0, RNMPR_FREE_IDX
 	CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, tls_dec_free_rnmpr,
 	                    r3, TABLE_SIZE_16_BITS)
+#endif
 	
 tls_read_desc_process_done:
 	nop.e

@@ -18,9 +18,6 @@
 #define MAX_ENTRIES_PER_DESC_MASK 0xF
 
 #define NIC_PAGE_HDR_SIZE                    52         /* sizeof(nic_page_hdr_t) */
-#define NIC_DESC_ENTRY_0_OFFSET              0x20       /* &((nic_desc_t *)0)->entry[0]*/
-#define NIC_DESC_ENTRY_L_OFFSET              0x30       /* &((nic_desc_t *)0)->entry[1]*/
-
 
 #define NIC_BRQ_ENTRY_SIZE                   128
 #define NIC_BRQ_ENTRY_SIZE_SHIFT             7          /* for 128B */

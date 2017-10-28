@@ -67,6 +67,9 @@
 #define CAPRI_RNMDR_RING_SHIFT              10
 #define CAPRI_SEM_RNMDR_ALLOC_RAW_ADDR \
                             (CAPRI_SEM_RNMDR_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET)
+#define CAPRI_SEM_RNMDR_ALLOC_CI_RAW_ADDR \
+                            (CAPRI_SEM_RNMDR_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET + \
+                             CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
 #define CAPRI_SEM_RNMDR_ALLOC_INF_ADDR \
                             (CAPRI_SEM_RNMDR_ALLOC_ADDR + CAPRI_SEM_INF_OFFSET)
 
@@ -74,6 +77,8 @@
                             (CAPRI_SEM_RNMDR_FREE_ADDR + CAPRI_SEM_RAW_OFFSET)
 #define CAPRI_SEM_RNMDR_FREE_INF_ADDR \
                             (CAPRI_SEM_RNMDR_FREE_ADDR + CAPRI_SEM_INF_OFFSET)
+#define CAPRI_SEM_RNMDR_FREE_INC_ADDR \
+                            (CAPRI_SEM_RNMDR_FREE_ADDR + CAPRI_SEM_INC_OFFSET)
 
 //#define CAPRI_RNMPR_RING_SIZE               16384
 //#define CAPRI_RNMPR_RING_SHIFT              14
@@ -94,6 +99,8 @@
                              CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
 #define CAPRI_SEM_RNMPR_FREE_INF_ADDR \
                             (CAPRI_SEM_RNMPR_FREE_ADDR + CAPRI_SEM_INF_OFFSET)
+#define CAPRI_SEM_RNMPR_FREE_INC_ADDR \
+                            (CAPRI_SEM_RNMPR_FREE_ADDR + CAPRI_SEM_INC_OFFSET)
 
 
 //#define CAPRI_TNMDR_RING_SIZE               16384
@@ -115,6 +122,8 @@
                              CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
 #define CAPRI_SEM_TNMDR_FREE_INF_ADDR \
                             (CAPRI_SEM_TNMDR_FREE_ADDR + CAPRI_SEM_INF_OFFSET)
+#define CAPRI_SEM_TNMDR_FREE_INC_ADDR \
+                            (CAPRI_SEM_TNMDR_FREE_ADDR + CAPRI_SEM_INC_OFFSET)
 
 
 //#define CAPRI_TNMPR_RING_SIZE               16384
@@ -128,6 +137,7 @@
                              CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
 #define CAPRI_SEM_TNMPR_ALLOC_INF_ADDR \
                             (CAPRI_SEM_TNMPR_ALLOC_ADDR + CAPRI_SEM_INF_OFFSET)
+
 #define CAPRI_SEM_TNMPR_FREE_RAW_ADDR \
                             (CAPRI_SEM_TNMPR_FREE_ADDR + CAPRI_SEM_RAW_OFFSET)
 #define CAPRI_SEM_TNMPR_FREE_CI_RAW_ADDR \
@@ -135,6 +145,8 @@
                              CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
 #define CAPRI_SEM_TNMPR_FREE_INF_ADDR \
                             (CAPRI_SEM_TNMPR_FREE_ADDR + CAPRI_SEM_INF_OFFSET)
+#define CAPRI_SEM_TNMPR_FREE_INC_ADDR \
+                            (CAPRI_SEM_TNMPR_FREE_ADDR + CAPRI_SEM_INC_OFFSET)
 
 
 #define CAPRI_RNMPR_SMALL_RING_SIZE         16384
@@ -163,6 +175,9 @@
 /*
  * Garbage collector queueu and ring defines
  */
+#define CAPRI_RNMDR_GC_RING_SIZE                1024
+#define CAPRI_TNMDR_GC_RING_SIZE                1024
+
 #define CAPRI_HBM_GC_RNMDR_QID                  0
 #define CAPRI_HBM_GC_TNMDR_QID                  1
 #define CAPRI_HBM_GC_NUM_QID                    2

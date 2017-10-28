@@ -13,6 +13,7 @@ tcp_debug_dol_del_ack_timer = 0x20
 
 tcp_tx_debug_dol_dont_send_ack = 0x1
 tcp_tx_debug_dol_dont_tx = 0x2
+tcp_tx_debug_dol_free_rnmdr = 0x4
 
 tcp_state_ESTABLISHED = 1
 tcp_state_SYN_SENT = 2
@@ -39,6 +40,7 @@ def SetupProxyArgs(tc):
     send_ack = 0
     test_timer = 0
     ooo_seq_delta = 0
+    free_rnmdr = 0
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         tc.module.logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -54,6 +56,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'ooo_seq_delta'):
         ooo_seq_delta = tc.module.args.ooo_seq_delta
         tc.module.logger.info("- ooo_seq_delta %s" % tc.module.args.ooo_seq_delta)
+    if hasattr(tc.module.args, 'free_rnmdr'):
+        free_rnmdr = tc.module.args.free_rnmdr
+        tc.module.logger.info("- free_rnmdr %s" % tc.module.args.free_rnmdr)
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -73,11 +78,15 @@ def SetupProxyArgs(tc):
         if 'ooo_seq_delta' in iterelem.__dict__:
             ooo_seq_delta = iterelem.ooo_seq_delta
             tc.module.logger.info("- ooo_seq_delta %s" % iterelem.ooo_seq_delta)
+        if 'free_rnmdr' in iterelem.__dict__:
+            free_rnmdr = iterelem.free_rnmdr
+            tc.module.logger.info("- free_rnmdr %s" % iterelem.free_rnmdr)
     tc.pvtdata.same_flow = same_flow
     tc.pvtdata.bypass_barco = bypass_barco
     tc.pvtdata.send_ack = send_ack
     tc.pvtdata.test_timer = test_timer
     tc.pvtdata.ooo_seq_delta = ooo_seq_delta
+    tc.pvtdata.free_rnmdr = free_rnmdr
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA
@@ -99,6 +108,8 @@ def init_tcb_inorder(tc, tcb):
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
     if tc.pvtdata.test_timer:
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
+    if tc.pvtdata.free_rnmdr:
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_free_rnmdr
     if tc.pvtdata.same_flow:
         tcb.source_port = tc.config.flow.sport
         tcb.dest_port = tc.config.flow.dport
@@ -178,6 +189,8 @@ def init_tcb_inorder2(tc, tcb):
         tcb.debug_dol_tx = tcp_tx_debug_dol_dont_send_ack
     if tc.pvtdata.test_timer:
         tcb.debug_dol |= tcp_debug_dol_del_ack_timer
+    if tc.pvtdata.free_rnmdr:
+        tcb.debug_dol_tx |= tcp_tx_debug_dol_free_rnmdr
     tcb.source_port = tc.config.flow.sport
     tcb.dest_port = tc.config.flow.dport
     vlan_id = 0

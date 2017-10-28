@@ -11,9 +11,9 @@ struct gc_tx_read_descr_read_descr_d d;
 
 .align
 gc_tx_read_rnmdr_descr:
-    phvwr           p.t0_s2s_a0, d.A0
-    phvwr           p.t0_s2s_a1, d.A1
-    phvwr           p.t0_s2s_a2, d.A2
+    phvwr           p.t0_s2s_a0, d.{A0}.dx
+    phvwr           p.t0_s2s_a1, d.{A1}.dx
+    phvwr           p.t0_s2s_a2, d.{A2}.dx
     /*
      * Read descriptor FP.PI, to get index to write the freed descr address to
      */
@@ -24,9 +24,9 @@ gc_tx_read_rnmdr_descr:
 
 .align
 gc_tx_read_tnmdr_descr:
-    phvwr           p.t0_s2s_a0, d.A0
-    phvwr           p.t0_s2s_a1, d.A1
-    phvwr           p.t0_s2s_a2, d.A2
+    phvwr           p.t0_s2s_a0, d.{A0}.dx
+    phvwr           p.t0_s2s_a1, d.{A1}.dx
+    phvwr           p.t0_s2s_a2, d.{A2}.dx
     /*
      * Read descriptor FP.PI, to get index to write the freed descr address to
      */

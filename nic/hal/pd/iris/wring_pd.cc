@@ -30,34 +30,40 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_SERQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};
  
     g_meta[types::WRING_TYPE_NMDR_TX] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX, 1024, DEFAULT_WRING_SLOT_SIZE,
-                                        CAPRI_HBM_REG_DESCRIPTOR_TX, 128,
-                           CAPRI_SEM_TNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMDR_FREE_RAW_ADDR, NULL, NULL};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX, CAPRI_TNMDR_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_DESCRIPTOR_TX, 128,
+                           CAPRI_SEM_TNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMDR_FREE_RAW_ADDR,
+                           NULL, NULL};
  
     g_meta[types::WRING_TYPE_NMDR_RX] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX, 1024, DEFAULT_WRING_SLOT_SIZE,
-                                        CAPRI_HBM_REG_DESCRIPTOR_RX, 128,
-                           CAPRI_SEM_RNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMDR_FREE_RAW_ADDR, NULL, NULL};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX, CAPRI_RNMDR_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_DESCRIPTOR_RX, 128,
+                           CAPRI_SEM_RNMDR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMDR_FREE_RAW_ADDR,
+                           NULL, NULL};
     
     g_meta[types::WRING_TYPE_NMPR_SMALL_TX] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_TX, 1024, DEFAULT_WRING_SLOT_SIZE,
-                                        CAPRI_HBM_REG_PAGE_SMALL_TX, 2048,
-                           CAPRI_SEM_TNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_SMALL_FREE_RAW_ADDR, NULL, NULL};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_TX, CAPRI_TNMPR_SMALL_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_SMALL_TX, 2048,
+                           CAPRI_SEM_TNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_SMALL_FREE_RAW_ADDR,
+                           NULL, NULL};
 
     g_meta[types::WRING_TYPE_NMPR_SMALL_RX] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_RX, 1024, DEFAULT_WRING_SLOT_SIZE,
-                                        CAPRI_HBM_REG_PAGE_SMALL_RX, 2048,
-                           CAPRI_SEM_RNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_SMALL_FREE_RAW_ADDR, NULL, NULL};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_SMALL_RX, CAPRI_RNMPR_SMALL_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_SMALL_RX, 2048,
+                           CAPRI_SEM_RNMPR_SMALL_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_SMALL_FREE_RAW_ADDR,
+                           NULL, NULL};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_TX] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_TX, 1024, DEFAULT_WRING_SLOT_SIZE,
-                                        CAPRI_HBM_REG_PAGE_BIG_TX, 9216,
-                           CAPRI_SEM_TNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_FREE_RAW_ADDR, NULL, NULL};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_TX, CAPRI_TNMPR_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_TX, 9216,
+                           CAPRI_SEM_TNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_TNMPR_FREE_RAW_ADDR,
+                           NULL, NULL};
 
     g_meta[types::WRING_TYPE_NMPR_BIG_RX] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_RX, 1024, DEFAULT_WRING_SLOT_SIZE,
-                                        CAPRI_HBM_REG_PAGE_BIG_RX, 9216,
-                           CAPRI_SEM_RNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_FREE_RAW_ADDR,NULL, NULL};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMPR_BIG_RX, CAPRI_RNMPR_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_PAGE_BIG_RX, 9216,
+                           CAPRI_SEM_RNMPR_ALLOC_RAW_ADDR, CAPRI_SEM_RNMPR_FREE_RAW_ADDR,
+                           NULL, NULL};
 
     g_meta[types::WRING_TYPE_BSQ] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_BSQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};
@@ -93,12 +99,12 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASESQ, 64, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL};
 
     g_meta[types::WRING_TYPE_NMDR_TX_GC] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX_GC, 1024, DEFAULT_WRING_SLOT_SIZE,
-                           "", 0, 0, 0, NULL, NULL};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_TX_GC, CAPRI_TNMDR_GC_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};
  
     g_meta[types::WRING_TYPE_NMDR_RX_GC] = 
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX_GC, 1024, DEFAULT_WRING_SLOT_SIZE,
-                           "", 0, 0, 0, NULL, NULL};
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_NMDR_RX_GC, CAPRI_RNMDR_GC_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};
 
     return HAL_RET_OK;
 }
@@ -251,8 +257,12 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
                     CAPRI_SEM_RAW_IS_PI_CI(meta->free_semaphore_addr)) {
         // Initialize this ring as
         // FP.PI = AP.CI - 1 = meta->num_slots
+        //
         // FP.CI = FP.PI + 1 (this queue is initially full, until one object is
-        // inserted)
+        // inserted). Note CI is currently unused, since FP is incremented using
+        // INC view instead of INF view. This is ok since the only way FP.PI
+        // INC can be FULL is if we are trying to free a page, before it
+        // has been allocated. Keeping this semaphore here for future need
         uint32_t val32 = meta->num_slots;
         p4plus_hbm_write(meta->free_semaphore_addr,
                                         (uint8_t *)&val32, sizeof (uint32_t));

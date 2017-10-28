@@ -19,6 +19,7 @@ struct tcp_tx_tcp_tx_tcp_tx_d d;
     .align
     .param          tcp_tso_process_start
     .param          TNMDR_GC_TABLE_BASE
+    .param          RNMDR_GC_TABLE_BASE
 
 tcp_tx_process_stage3_start:
     phvwr           p.t0_s2s_snd_nxt, d.snd_nxt
@@ -180,8 +181,28 @@ tcp_retx_enqueue:
     tblwr           d.retx_snd_una, k.common_phv_snd_una
     phvwr           p.t0_s2s_snd_nxt, d.snd_nxt
     tbladd          d.snd_nxt, k.to_s3_len
-#if 0
-free_descriptor:
+    sne             c1, k.common_phv_debug_dol_free_rnmdr, r0
+    bcf             [c1], free_rnmdr
+    sne             c4, r7, r0
+    jr.c4           r7
+    nop
+
+free_rnmdr:
+    // TODO: just for testing, fix this once retx is implemented
+    sub             r3, k.to_s3_sesq_desc_addr, NIC_DESC_ENTRY_0_OFFSET
+    phvwr           p.ring_entry_descr_addr, r3
+    addui           r1, r0, hiword(RNMDR_GC_TABLE_BASE)
+    addi            r1, r0, loword(RNMDR_GC_TABLE_BASE)
+    add             r1, r1, RNMDR_GC_PRODUCER_TCP, RNMDR_GC_PER_PRODUCER_SHIFT
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(ringentry_dma_dma_cmd, r1, ring_entry_descr_addr, ring_entry_descr_addr)
+    CAPRI_DMA_CMD_RING_DOORBELL2(doorbell_dma_dma_cmd, LIF_GC, 0,
+                    CAPRI_HBM_GC_RNMDR_QID, CAPRI_RNMDR_GC_TCP_RING_PRODUCER,
+                    0, db_data_pid, db_data_index)
+    sne             c4, r7, r0
+    jr.c4           r7
+    nop
+
+free_tnmdr:
     // TODO: just for testing, fix this once retx is implemented
     sub             r3, k.to_s3_sesq_desc_addr, NIC_DESC_ENTRY_0_OFFSET
     phvwr           p.ring_entry_descr_addr, r3
@@ -192,8 +213,6 @@ free_descriptor:
     CAPRI_DMA_CMD_RING_DOORBELL2(doorbell_dma_dma_cmd, LIF_GC, 0,
                     CAPRI_HBM_GC_TNMDR_QID, CAPRI_TNMDR_GC_TCP_RING_PRODUCER,
                     0, db_data_pid, db_data_index)
-#endif
-
     sne             c4, r7, r0
     jr.c4           r7
     nop

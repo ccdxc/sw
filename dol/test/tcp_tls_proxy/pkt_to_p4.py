@@ -94,6 +94,14 @@ def TestCaseSetup(tc):
     other_tlscb.GetObjValPd()
     tc.pvtdata.Add(other_tlscb)
 
+    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
+    rnmdr.Configure()
+    tc.pvtdata.Add(rnmdr)
+
+    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
+    rnmpr.Configure()
+    tc.pvtdata.Add(rnmpr)
+        
     return
 
 def TestCaseTrigger(tc):
@@ -102,7 +110,7 @@ def TestCaseTrigger(tc):
     if tc.pvtdata.test_timer:
         timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
         timer.Step(41)
-        
+
     return
 
 def TestCaseVerify(tc):
@@ -146,6 +154,13 @@ def TestCaseVerify(tc):
     other_tlscb = tc.pvtdata.db[other_tlscbid]
     other_tlscb_cur = tc.infra_data.ConfigStore.objects.db[other_tlscbid]
     other_tlscb_cur.GetObjValPd()
+
+    rnmdr = tc.pvtdata.db["RNMDR"]
+    rnmpr = tc.pvtdata.db["RNMPR"]
+    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
+    rnmdr_cur.Configure()
+    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
+    rnmpr_cur.Configure()
 
     # Print stats
     if same_flow:
@@ -229,6 +244,15 @@ def TestCaseVerify(tc):
         print("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)
 
     # 10. Verify pkt tx (in testspec)
+
+    # 11.
+    print("RNMDR old pi=%d,ci=%d / new pi=%d,ci=%d" %
+            (rnmdr.pi, rnmdr.ci, rnmdr_cur.pi, rnmdr_cur.ci))
+    print("RNMPR old pi=%d,ci=%d / new pi=%d,ci=%d" %
+            (rnmpr.pi, rnmpr.ci, rnmpr_cur.pi, rnmpr_cur.ci))
+    if tc.pvtdata.free_rnmdr and rnmdr_cur.ci != rnmdr.ci + 1:
+        print("free rnmdr verification failed")
+        return False
 
     return True
 

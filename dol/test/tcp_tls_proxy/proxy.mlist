@@ -282,6 +282,15 @@ modules:
             test_timer : 1
 
     - module:
+        name    : UL_TO_UL_BYPASS_BARCO_FREE_RNMDR
+        spec    : uplink_to_uplink.testspec
+        module  : pkt_to_p4
+        args    :
+            free_rnmdr : 1
+            bypass_barco : 1
+            maxflows : 1
+
+    - module:
         name    : UL_TO_HOST_BYPASS_BARCO_SAME_FLOW
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4
