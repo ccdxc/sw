@@ -219,12 +219,13 @@ write:
     // IMM & LAST
     add.c6      r2, r0, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
     CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(r2, c7)
-    phvwr.c5    p.cqwqe.imm_data, r2
+    //move this instruction down to the BD slot
+    //phvwr.c5    p.cqwqe.imm_data, r2
 
     // If immdt_as_dbell flag is set, adjust the flags
     seq     c1, d.immdt_as_dbell, 1
     bcf     [!c1], skip_immdt_as_dbell
-    nop     //BD Slot
+    phvwr.c5    p.cqwqe.imm_data, r2 //BD Slot
     and     r7, r7, ~(RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_COMPLETION)
     or      r7, r7, RESP_RX_FLAG_RING_DBELL
     setcf   c5, [!c0]

@@ -16,6 +16,8 @@ struct resp_rx_ptseg_process_k_t k;
 #define GLOBAL_FLAGS r6
 
 #define F_FIRST_PASS c7
+#define OVERRIDE_LIF_VLD c3
+#define DISABLE_QP c1
 
 %%
 
@@ -27,8 +29,8 @@ resp_rx_ptseg_process:
     add     GLOBAL_FLAGS, r0, k.global.flags.flags
 
     // do not perform any payload xfers if qp was err disabled
-    IS_ANY_FLAG_SET(c1, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP)
-    bcf     [c1], exit
+    IS_ANY_FLAG_SET(DISABLE_QP, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP)
+    bcf     [DISABLE_QP], exit
 
     add         r1, r0, k.args.log_page_size
 
@@ -66,7 +68,9 @@ transfer_loop:
     // r2 has page ptr, add page offset for DMA addr
     add                 DMA_ADDR, DMA_ADDR, PAGE_OFFSET
     
-    DMA_PKT2MEM_SETUP(DMA_CMD_BASE, c1, DMA_BYTES, DMA_ADDR)
+    //STORAGE_USE_CASE
+    seq                 OVERRIDE_LIF_VLD, k.args.override_lif_vld, 1
+    DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c1, DMA_BYTES, DMA_ADDR, OVERRIDE_LIF_VLD, k.args.override_lif)
     
     add                 PAGE_OFFSET, r0, r0
     sub                 TRANSFER_BYTES, TRANSFER_BYTES, DMA_BYTES

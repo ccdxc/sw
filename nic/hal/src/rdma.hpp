@@ -187,7 +187,9 @@ typedef struct p4_to_p4plus_rdma_hdr_s {
 typedef struct key_entry_s {
     uint32_t         qp: 24; //qp which bound the MW ?
     uint8_t          flags;
-    uint32_t         pt_size; // looks like we are not using this field ?
+    uint32_t         rsvd: 19;
+    uint32_t         override_lif: 12;
+    uint32_t         override_lif_vld: 1;
     uint32_t         pd;
     uint32_t         pt_base;
     uint64_t         base_va;
@@ -199,7 +201,7 @@ typedef struct key_entry_s {
     uint8_t          user_key;
 } PACKED key_entry_t;
 
-
+   
 /*====================  TYPES.H ===================*/
 
 

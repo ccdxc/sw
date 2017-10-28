@@ -192,7 +192,9 @@ struct resp_rx_rqcb1_write_back_info_t {
     update_num_sges: 1;
     update_wqe_ptr: 1;
     num_sges: 8;
-    pad: 46;
+    override_lif_vld: 1;
+    override_lif: 12;
+    pad: 33;
 };
 
 struct resp_rx_rqcb1_write_back_process_k_t {
@@ -213,7 +215,9 @@ struct resp_rx_lkey_to_pt_info_t {
     log_page_size: 5;
     dma_cmdeop: 1;
     rsvd: 2;
-    pad: 88;
+    override_lif_vld: 1;
+    override_lif: 12;
+    pad: 75;
 };
 
 struct resp_rx_ptseg_process_k_t {

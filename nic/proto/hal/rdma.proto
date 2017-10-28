@@ -193,10 +193,12 @@ message RdmaMemRegSpec {
   bool                     ac_remote_wr    = 7;    // Acc control/permissions
   bool                     ac_remote_rd    = 8;    // Acc control/permissions
   bool                     ac_remote_atomic= 9;    // Acc control/permissions
-  uint32                   lkey            = 10;    // Lkey for this memory
-  uint32                   rkey            = 11;    // Rkey for this memory
-  uint32                   hostmem_pg_size  = 12;  // Rkey for this memory
-  repeated uint64          va_pages_phy_addr = 13;  // Virtual memory pages's phy addr     
+  uint32                   lkey            = 10;   // Lkey for this memory
+  uint32                   rkey            = 11;   // Rkey for this memory
+  uint32                   hostmem_pg_size = 12;   // Host Memory Page Size
+  uint32                   override_lif    = 13;   // Override LIF value
+  bool                     override_lif_vld  = 14; // Override LIF valid
+  repeated uint64          va_pages_phy_addr = 15;  // Virtual memory pages's phy addr     
 }
 
 // RdmaMemRegRequestMsg is batched request used to create/update of Rdma QPs

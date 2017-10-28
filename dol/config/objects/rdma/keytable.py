@@ -19,7 +19,9 @@ class RdmaKeyTableEntry(Packet):
         LongField("base_va", 0),
         IntField("pt_base", 0),
         IntField("pd", 0),
-        IntField("pt_size", 0),
+        BitField("rsvd", 0, 19),
+        BitField("override_lif_vld", 0, 1),
+        BitField("override_lif", 0, 12),
         ByteField("flags", 0),
         X3BytesField("qp", 0),
     ]

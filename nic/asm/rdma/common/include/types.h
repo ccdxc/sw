@@ -685,7 +685,9 @@ struct key_entry_t {
     base_va: 64;
     pt_base: 32;
     pd: 32;
-    pt_size: 32; // looks like we are not using this field ?
+    override_lif_vld: 1;
+    override_lif: 12;
+    rsvd: 19;
     flags: 8;
     qp: 24; //qp which bound the MW ?
 };
@@ -700,7 +702,9 @@ struct key_entry_aligned_t {
     base_va: 64;
     pt_base: 32;
     pd: 32;
-    pt_size: 32; // looks like we are not using this field ?
+    override_lif_vld: 1;
+    override_lif: 12;
+    rsvd: 19;
     flags: 8;
     qp: 24; //qp which bound the MW ?
     // pad added for easy access of d[] in mpu program

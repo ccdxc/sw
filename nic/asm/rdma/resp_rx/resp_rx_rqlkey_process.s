@@ -125,7 +125,8 @@ invoke_pt:
     CAPRI_SET_FIELD_RANGE(r7, LKEY_TO_PT_INFO_T, pt_bytes, sge_index, k.{args.len...args.tbl_id})
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, log_page_size, d.log_page_size)
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 0)
-    
+    CAPRI_SET_FIELD_RANGE(T2_ARG, LKEY_TO_PT_INFO_T, override_lif_vld, override_lif, d.{override_lif_vld...override_lif})
+
     seq         c3, k.args.dma_cmdeop, 1
     bcf         [!c3], exit
     add         GLOBAL_FLAGS, r0, k.global.flags // BD Slot

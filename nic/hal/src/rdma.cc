@@ -488,10 +488,16 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     lkey_entry_p->pd = spec.pd();
     // disable user key
     lkey_entry_p->flags = (MR_FLAG_INV_EN | MR_FLAG_UKEY_EN);
+    if (spec.override_lif_vld()) {
+        lkey_entry_p->override_lif_vld = 1;
+        lkey_entry_p->override_lif = spec.override_lif();
+    }
+
     lkey_entry_p->type = MR_TYPE_MR;
     rdma_key_entry_write(lif, lkey, lkey_entry_p);
-    HAL_TRACE_DEBUG("{}: lif_id: {} lkey: {}  acc_ctrl: {:#x}", 
-                    __FUNCTION__, lif, lkey, lkey_entry_p->acc_ctrl);
+    HAL_TRACE_DEBUG("{}: lif_id: {} lkey: {}  acc_ctrl: {:#x}, flags: {:#x}, override_lif: {}", 
+                    __FUNCTION__, lif, lkey, lkey_entry_p->acc_ctrl, 
+                    lkey_entry_p->flags, lkey_entry_p->override_lif);
 
     if (spec.ac_remote_rd() || spec.ac_remote_wr() || spec.ac_remote_atomic()) {
         // rkey requested
@@ -566,10 +572,12 @@ rdma_memory_register (RdmaMemRegSpec& spec, RdmaMemRegResponse *rsp)
     g_pt_base[lif] += num_pt_entries;
     HAL_TRACE_DEBUG("{}: Enf of MR PT index: {}", __FUNCTION__, g_pt_base[lif]);
 
+#if 0
     lkey_entry_p->pt_size = num_pt_entries;
     if (rkey != INVALID_KEY) {
         rkey_entry_p->pt_size = num_pt_entries;
     }
+#endif
 
     rsp->set_api_status(types::API_STATUS_OK);
     HAL_TRACE_DEBUG("--------------------- API End ------------------------");
