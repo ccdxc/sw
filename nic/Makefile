@@ -69,7 +69,7 @@ bazel-build:
 	$(MAKE) -C p4
 	$(MAKE) -C asm
 	$(MAKE) -C proto
-	$(MAKE) -j4 -C gen/proto/hal
+	$(MAKE) -j8 -C gen/proto/hal
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal:hal
 	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //nic/proto:all
 	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) //protos:all

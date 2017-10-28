@@ -443,9 +443,13 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         // Update global mytep ip. 
         // Assumption: There is only one mytep ip. So for all tunnel ifs,
         //             my tep ip have to be same.
-        memcpy(g_hal_state->oper_db()->mytep(), &hal_if->vxlan_ltep, 
-               sizeof(ip_addr_t));
-        
+        if (hal_if->encap_type == intf::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
+            memcpy(g_hal_state->oper_db()->mytep(), &hal_if->vxlan_ltep,
+                   sizeof(ip_addr_t));
+        } else if (hal_if->encap_type == intf::IF_TUNNEL_ENCAP_TYPE_GRE) {
+            memcpy(g_hal_state->oper_db()->mytep(), &hal_if->gre_source,
+                   sizeof(ip_addr_t));
+        }
     }
 
     // TODO: Increment the ref counts of dependent objects
@@ -1691,6 +1695,12 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
                             &hal_if->vxlan_ltep);
             ip_addr_to_spec(vxlan_info->mutable_remote_tep(),
                             &hal_if->vxlan_rtep);
+        } else if (hal_if->encap_type == intf::IF_TUNNEL_ENCAP_TYPE_GRE) {
+            auto gre_info = tunnel_if_info->mutable_gre_info();
+            ip_addr_to_spec(gre_info->mutable_source(),
+                            &hal_if->gre_source);
+            ip_addr_to_spec(gre_info->mutable_destination(),
+                            &hal_if->gre_dest);
         }
     }
         break;
@@ -2342,7 +2352,7 @@ tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
     hal_if->tid = spec.meta().tenant_id();
     auto if_tunnel_info = spec.if_tunnel_info();
     hal_if->encap_type = if_tunnel_info.encap_type();
-    /* Both Local TEP And remote TEP have to v4 or v6 */
+    /* Both source addr and dest addr have to v4 or v6 */
     if ((if_tunnel_info.vxlan_info().local_tep().v4_addr() &&
         !if_tunnel_info.vxlan_info().remote_tep().v4_addr()) || 
         (!if_tunnel_info.vxlan_info().local_tep().v4_addr() &&
@@ -2351,6 +2361,12 @@ tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
         // rsp->mutable_status()->set_if_status(hal_if->if_admin_status);
         // rsp->set_api_status(types::API_STATUS_IF_INFO_INVALID);
         goto end;
+    } else if ((if_tunnel_info.gre_info().source().v4_addr() &&
+        !if_tunnel_info.gre_info().destination().v4_addr()) || 
+        (!if_tunnel_info.gre_info().source().v4_addr() &&
+          if_tunnel_info.gre_info().destination().v4_addr())) {
+        ret = HAL_RET_IF_INFO_INVALID;
+        goto end;
     }
     if (hal_if->encap_type ==
             intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
@@ -2358,6 +2374,14 @@ tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
                                 if_tunnel_info.vxlan_info().local_tep());
         ip_addr_spec_to_ip_addr(&hal_if->vxlan_rtep,
                                 if_tunnel_info.vxlan_info().remote_tep());
+    } else if (hal_if->encap_type ==
+            intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_GRE) {
+        ip_addr_spec_to_ip_addr(&hal_if->gre_source,
+                                if_tunnel_info.gre_info().source());
+        ip_addr_spec_to_ip_addr(&hal_if->gre_dest,
+                                if_tunnel_info.gre_info().destination());
+        hal_if->gre_mtu = if_tunnel_info.gre_info().mtu();
+        hal_if->gre_ttl = if_tunnel_info.gre_info().ttl();
     } else {
         ret = HAL_RET_IF_INFO_INVALID;
         HAL_TRACE_ERR("pi-tunnelif:{}:unsupported encap type:{}",

@@ -121,6 +121,13 @@ typedef struct if_s {
                     ip_addr_t vxlan_ltep; // Local TEP
                     ip_addr_t vxlan_rtep; // Remote TEP
                 } __PACK__;
+                /* GRE tunnel info */
+                struct {
+                    ip_addr_t gre_source;   // Tunnel source
+                    ip_addr_t gre_dest;     // Tunnel destination
+                    uint32_t  gre_mtu;
+                    uint32_t  gre_ttl;
+                } __PACK__;
                 /* Add structs for other tunnel types */
             } __PACK__;
         } __PACK__;

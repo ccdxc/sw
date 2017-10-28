@@ -14,8 +14,8 @@ namespace pd {
 #define HAL_MAX_TNNL_RW_TBL_ENTRIES                        1 * 1024    // size of tnnl rw table in P4. 
 
 typedef struct pd_tnnl_rw_entry_info_s {
-	bool 		with_id;
-	uint32_t 	tnnl_rw_idx;
+    bool         with_id;
+    uint32_t     tnnl_rw_idx;
 } pd_tnnl_rw_entry_info_t;
 
 typedef struct pd_tnnl_rw_entry_key_s {
@@ -26,7 +26,6 @@ typedef struct pd_tnnl_rw_entry_key_s {
     uint8_t                     ip_type;
     uint8_t                     vlan_valid;
     uint16_t                    vlan_id;
-
     tunnel_rewrite_actions_en   tnnl_rw_act;
 } __PACK__ pd_tnnl_rw_entry_key_t;
 
@@ -112,7 +111,9 @@ extern uint32_t tnnl_rw_entry_pd_compute_hash_func(void *key, uint32_t ht_size);
 extern bool tnnl_rw_entry_pd_compare_key_func(void *key1, void *key2);
 
 // Private APIs
-hal_ret_t tnnl_rw_pd_pgm_tnnl_rw_tbl(pd_tnnl_rw_entry_t *tnnl_rwe);
+hal_ret_t tnnl_rw_pd_pgm_tnnl_rw_tbl_vlan(pd_tnnl_rw_entry_t *tnnl_rwe);
+hal_ret_t tnnl_rw_pd_pgm_tnnl_rw_tbl_vxlan(pd_tnnl_rw_entry_t *tnnl_rwe);
+hal_ret_t tnnl_rw_pd_pgm_tnnl_rw_tbl_erspan(pd_tnnl_rw_entry_t *tnnl_rwe);
 hal_ret_t tnnl_rw_pd_depgm_tnnl_rw_tbl(pd_tnnl_rw_entry_t *tnnl_rwe);
 hal_ret_t tnnl_rw_entry_find(pd_tnnl_rw_entry_key_t *tnnl_rw_key, pd_tnnl_rw_entry_t **tnnl_rwe);
 

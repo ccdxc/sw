@@ -167,17 +167,27 @@ hal_ret_t
 pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif)
 {
     hal_ret_t            ret;
-
-    // Program Input mapping native table
+    if_t                 *hal_if;
+    
+    hal_if = (if_t *) pd_tunnelif->pi_if;
+    HAL_ASSERT(hal_if != NULL);
+    
     ret = pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif);
     if (ret != HAL_RET_OK)
         goto fail_flag;
-    ret = pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif);
-    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
-        goto fail_flag;
-    ret = pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif);
-    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
-        goto fail_flag;
+    
+    /* Tunnel termination required only for vxlan */
+    if (hal_if->encap_type ==
+            intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
+        // Program Input mapping native table
+        ret = pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif);
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+            goto fail_flag;
+        // Program Input mapping tunneled table
+        ret = pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif);
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+            goto fail_flag;
+    }
     
     return HAL_RET_OK;
 
@@ -466,6 +476,8 @@ pd_tunnelif_get_p4pd_encap_action_id (intf::IfTunnelEncapType encap_type)
     switch (encap_type) {
         case intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_VXLAN:
             return TUNNEL_REWRITE_ENCAP_VXLAN_ID;
+        case intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_GRE:
+            return TUNNEL_REWRITE_ENCAP_ERSPAN_ID;
         default:
             return TUNNEL_REWRITE_NOP_ID;
     }
@@ -505,10 +517,10 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     ret = if_l2seg_get_encap(ep_if, l2seg, &vlan_v, &vlan_id);
     HAL_ASSERT(ret == HAL_RET_OK);
 
-    tnnl_rw_key->tnnl_rw_act = (tunnel_rewrite_actions_en)actionid;
+    tnnl_rw_key->tnnl_rw_act = (tunnel_rewrite_actions_en) actionid;
 
-    if (actionid == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {
-        /* Populate vxlan encap params */
+    if ((actionid == TUNNEL_REWRITE_ENCAP_VXLAN_ID) ||
+        (actionid == TUNNEL_REWRITE_ENCAP_ERSPAN_ID)) {
         /* MAC DA */
         mac = ep_get_mac_addr(remote_tep_ep);
         memcpy(tnnl_rw_key->mac_da, mac, sizeof(mac_addr_t));
@@ -517,10 +529,18 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
         mac = ep_get_rmac(remote_tep_ep, l2seg);
         memcpy(tnnl_rw_key->mac_sa, mac, sizeof(mac_addr_t));
 
-        memcpy(&tnnl_rw_key->ip_sa, &pi_if->vxlan_ltep,
-               sizeof(ip_addr_t));
-        memcpy(&tnnl_rw_key->ip_da, &pi_if->vxlan_rtep,
-               sizeof(ip_addr_t));
+        /* Populate vxlan encap params */
+        if (actionid == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {
+            memcpy(&tnnl_rw_key->ip_sa, &pi_if->vxlan_ltep,
+                   sizeof(ip_addr_t));
+            memcpy(&tnnl_rw_key->ip_da, &pi_if->vxlan_rtep,
+                   sizeof(ip_addr_t));
+        } else if (actionid == TUNNEL_REWRITE_ENCAP_ERSPAN_ID) {
+            memcpy(&tnnl_rw_key->ip_sa, &pi_if->gre_source,
+                   sizeof(ip_addr_t));
+            memcpy(&tnnl_rw_key->ip_da, &pi_if->gre_dest,
+                   sizeof(ip_addr_t));
+        }
 
         tnnl_rw_key->ip_type = IP_HEADER_TYPE_IPV4;
 

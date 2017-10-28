@@ -189,14 +189,29 @@ ep_t *
 if_get_tunnelif_remote_tep_ep(if_t *pi_if, bool *v4_valid)
 {
     ep_t *remote_tep_ep;
-    if (pi_if->vxlan_rtep.af == IP_AF_IPV4) {
-        remote_tep_ep = find_ep_by_v4_key(pi_if->tid,
-                                      pi_if->vxlan_rtep.addr.v4_addr);
-        *v4_valid = TRUE;
-    } else {
-        remote_tep_ep = find_ep_by_v6_key(pi_if->tid, &pi_if->vxlan_rtep);
-        *v4_valid = FALSE;
+
+    if (pi_if->encap_type == 
+            intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
+        if (pi_if->vxlan_rtep.af == IP_AF_IPV4) {
+            remote_tep_ep = find_ep_by_v4_key(pi_if->tid,
+                                          pi_if->vxlan_rtep.addr.v4_addr);
+            *v4_valid = TRUE;
+        } else {
+            remote_tep_ep = find_ep_by_v6_key(pi_if->tid, &pi_if->vxlan_rtep);
+            *v4_valid = FALSE;
+        }
+    } else if (pi_if->encap_type == 
+            intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_GRE) {
+        if (pi_if->gre_dest.af == IP_AF_IPV4) {
+            remote_tep_ep = find_ep_by_v4_key(pi_if->tid,
+                                          pi_if->gre_dest.addr.v4_addr);
+            *v4_valid = TRUE;
+        } else {
+            remote_tep_ep = find_ep_by_v6_key(pi_if->tid, &pi_if->gre_dest);
+            *v4_valid = FALSE;
+        }
     }
+
     return remote_tep_ep;
 }
 

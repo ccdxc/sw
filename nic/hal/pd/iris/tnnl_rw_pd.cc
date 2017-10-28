@@ -34,9 +34,9 @@ bool
 tnnl_rw_entry_pd_compare_key_func(void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-	if (!memcmp(key1, key2, sizeof(pd_tnnl_rw_entry_key_t))) {
-		return true;
-	}
+    if (!memcmp(key1, key2, sizeof(pd_tnnl_rw_entry_key_t))) {
+        return true;
+    }
     return false;
 }
 
@@ -68,17 +68,17 @@ tnnl_rw_entry_key_trace(pd_tnnl_rw_entry_key_t *tnnl_rw_key)
 hal_ret_t
 tnnl_rw_entry_find(pd_tnnl_rw_entry_key_t *tnnl_rw_key, pd_tnnl_rw_entry_t **tnnl_rwe)
 {
-	hal_ret_t 		    ret = HAL_RET_OK;
+    hal_ret_t             ret = HAL_RET_OK;
 
-	if (!tnnl_rw_key || !tnnl_rwe) {
-		ret = HAL_RET_ENTRY_NOT_FOUND;
-		goto end;
-	}
+    if (!tnnl_rw_key || !tnnl_rwe) {
+        ret = HAL_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
 
-	*tnnl_rwe = find_tnnl_rw_entry_by_key(tnnl_rw_key);
-	if ((*tnnl_rwe) == NULL) {
-		ret = HAL_RET_ENTRY_NOT_FOUND;
-	} else {
+    *tnnl_rwe = find_tnnl_rw_entry_by_key(tnnl_rw_key);
+    if ((*tnnl_rwe) == NULL) {
+        ret = HAL_RET_ENTRY_NOT_FOUND;
+    } else {
         HAL_TRACE_DEBUG("pd-tnnl_rw: Found tnnl_rw_id: {} ",
                         (*tnnl_rwe)->tnnl_rw_idx);
         tnnl_rw_entry_key_trace(tnnl_rw_key);
@@ -96,40 +96,40 @@ tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
                     pd_tnnl_rw_entry_info_t *tnnl_rw_info, 
                     uint32_t *tnnl_rw_idx)
 {
-	hal_ret_t 			ret = HAL_RET_OK;
-	uint32_t			tmp_tnnl_rw_idx = 0;
+    hal_ret_t             ret = HAL_RET_OK;
+    uint32_t            tmp_tnnl_rw_idx = 0;
     indexer::status     rs = indexer::SUCCESS;
     pd_tnnl_rw_entry_t  *tnnl_rwe = NULL;
     fmt::MemoryWriter   buf;
-	
-	if (!tnnl_rw_key || !tnnl_rw_idx) {
-		ret = HAL_RET_INVALID_ARG;
-		goto end;
-	}
+    
+    if (!tnnl_rw_key || !tnnl_rw_idx) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
 
-	ret = tnnl_rw_entry_find(tnnl_rw_key, &tnnl_rwe);
-	if (ret == HAL_RET_OK) {
-		ret = HAL_RET_ENTRY_EXISTS;
-		goto end;
-	}
+    ret = tnnl_rw_entry_find(tnnl_rw_key, &tnnl_rwe);
+    if (ret == HAL_RET_OK) {
+        ret = HAL_RET_ENTRY_EXISTS;
+        goto end;
+    }
     ret = HAL_RET_OK;
-	
+    
     // TODO: Revisit if we have to maintain an indexer at all. Why can't we use the 
     //       direct map's indexer. May be do the insert into hash table and ref count
     //       increments after the directmap API goes through.
 
-	// Allocate an id for this entry
-	if (tnnl_rw_info && tnnl_rw_info->with_id) {
+    // Allocate an id for this entry
+    if (tnnl_rw_info && tnnl_rw_info->with_id) {
         // Set the id
-		tmp_tnnl_rw_idx = tnnl_rw_info->tnnl_rw_idx;
+        tmp_tnnl_rw_idx = tnnl_rw_info->tnnl_rw_idx;
         rs = g_hal_state_pd->tnnl_rw_tbl_idxr()->
             alloc_withid(tmp_tnnl_rw_idx);
         if (rs != indexer::SUCCESS) {
             HAL_TRACE_ERR("pd-tnnl_rw: Indexer err: {}", rs);
             goto end;
         }
-	} else {
-		rs = g_hal_state_pd->tnnl_rw_tbl_idxr()->alloc(&tmp_tnnl_rw_idx);
+    } else {
+        rs = g_hal_state_pd->tnnl_rw_tbl_idxr()->alloc(&tmp_tnnl_rw_idx);
         if (rs != indexer::SUCCESS) {
             HAL_TRACE_ERR("pd-tnnl_rw: Resource Exhaustion Usage: {} for ",
                           g_hal_state_pd->tnnl_rw_tbl_idxr()->usage());
@@ -154,15 +154,20 @@ tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     // Increment the ref count
     tnnl_rwe->ref_cnt++;
 
-	HAL_TRACE_DEBUG("pd-tnnl_rw: Usage: {} ref_cnt: {} Allocated tnnl_rw_id: {} for ",
-					g_hal_state_pd->tnnl_rw_tbl_idxr()->usage(),
+    HAL_TRACE_DEBUG("pd-tnnl_rw: Usage: {} ref_cnt: {} Allocated tnnl_rw_id: {} for ",
+                    g_hal_state_pd->tnnl_rw_tbl_idxr()->usage(),
                     tnnl_rwe->ref_cnt,
-				    tmp_tnnl_rw_idx);
+                    tmp_tnnl_rw_idx);
     tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
 
     // Program HW
-    ret = tnnl_rw_pd_pgm_tnnl_rw_tbl(tnnl_rwe);
-
+    if (tnnl_rwe->tnnl_rw_key.tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {
+        ret = tnnl_rw_pd_pgm_tnnl_rw_tbl_vxlan(tnnl_rwe);
+    } else if (tnnl_rwe->tnnl_rw_key.tnnl_rw_act == TUNNEL_REWRITE_ENCAP_ERSPAN_ID) {
+        ret = tnnl_rw_pd_pgm_tnnl_rw_tbl_erspan(tnnl_rwe);
+    } else if (tnnl_rwe->tnnl_rw_key.tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VLAN_ID) {
+        ret = tnnl_rw_pd_pgm_tnnl_rw_tbl_vlan(tnnl_rwe);
+    }
     if (ret != HAL_RET_OK) {
         del_tnnl_rw_entry_pd_from_db(tnnl_rwe);
         tnnl_rw_entry_pd_free(tnnl_rwe);
@@ -171,7 +176,7 @@ tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     }
 
 end:
-	return ret;
+    return ret;
 } 
 
 //-----------------------------------------------------------------------------
@@ -183,7 +188,7 @@ end:
 hal_ret_t
 tnnl_rw_entry_find_or_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key, uint32_t *tnnl_rw_idx)
 {
-    hal_ret_t 		ret = HAL_RET_OK;
+    hal_ret_t         ret = HAL_RET_OK;
     pd_tnnl_rw_entry_t       *tnnl_rwe = NULL;
     fmt::MemoryWriter   buf;
 
@@ -239,11 +244,11 @@ tnnl_rw_entry_delete(pd_tnnl_rw_entry_key_t *tnnl_rw_key)
     indexer::status     rs = indexer::SUCCESS;
 
     if (!tnnl_rw_key) {
-		ret = HAL_RET_INVALID_ARG;
-		goto end;
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
     }
 
-	ret = tnnl_rw_entry_find(tnnl_rw_key, &tnnl_rwe);
+    ret = tnnl_rw_entry_find(tnnl_rw_key, &tnnl_rwe);
     if (ret != HAL_RET_OK) {
         // entry not found
         ret = HAL_RET_ENTRY_NOT_FOUND;
@@ -316,9 +321,46 @@ tnnl_rw_pd_depgm_tnnl_rw_tbl(pd_tnnl_rw_entry_t *tnnl_rwe)
 //-----------------------------------------------------------------------------
 // Programming the hw entry
 //-----------------------------------------------------------------------------
+#define data_erspan data.tunnel_rewrite_action_u.tunnel_rewrite_encap_erspan
+hal_ret_t
+tnnl_rw_pd_pgm_tnnl_rw_tbl_erspan (pd_tnnl_rw_entry_t *tnnl_rwe)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    tunnel_rewrite_actiondata   data;
+    DirectMap                   *tnnl_rw_tbl = NULL;
+
+    memset(&data, 0, sizeof(data));
+
+    tnnl_rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
+    HAL_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
+
+    memcpy(data_erspan.mac_sa, tnnl_rwe->tnnl_rw_key.mac_sa, ETH_ADDR_LEN);
+    memrev(data_erspan.mac_sa, ETH_ADDR_LEN);
+    memcpy(data_erspan.mac_da, tnnl_rwe->tnnl_rw_key.mac_da, ETH_ADDR_LEN);
+    memrev(data_erspan.mac_da, ETH_ADDR_LEN);
+    memcpy(&data_erspan.ip_sa, &tnnl_rwe->tnnl_rw_key.ip_sa.addr, sizeof(uint32_t));
+    memcpy(&data_erspan.ip_da, &tnnl_rwe->tnnl_rw_key.ip_da.addr, sizeof(uint32_t));
+    data_erspan.ip_type = tnnl_rwe->tnnl_rw_key.ip_type;
+    data_erspan.vlan_valid = tnnl_rwe->tnnl_rw_key.vlan_valid;
+    data_erspan.vlan_id = tnnl_rwe->tnnl_rw_key.vlan_id;
+    data.actionid = tnnl_rwe->tnnl_rw_key.tnnl_rw_act;
+    ret = tnnl_rw_tbl->insert_withid(&data, tnnl_rwe->tnnl_rw_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-tnnl_rw: Unable to program at tnnl_rw_id: {} for ",
+                      tnnl_rwe->tnnl_rw_idx);
+        tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
+    } else {
+        HAL_TRACE_DEBUG("pd-tnnl_rw: Programmed at tnnl_rw_id: {} for ",
+                        tnnl_rwe->tnnl_rw_idx);
+        tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
+    }
+
+    return ret;
+}
+
 #define data_vxlan data.tunnel_rewrite_action_u.tunnel_rewrite_encap_vxlan
 hal_ret_t
-tnnl_rw_pd_pgm_tnnl_rw_tbl(pd_tnnl_rw_entry_t *tnnl_rwe)
+tnnl_rw_pd_pgm_tnnl_rw_tbl_vxlan (pd_tnnl_rw_entry_t *tnnl_rwe)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     tunnel_rewrite_actiondata   data;
@@ -338,6 +380,33 @@ tnnl_rw_pd_pgm_tnnl_rw_tbl(pd_tnnl_rw_entry_t *tnnl_rwe)
     data_vxlan.ip_type = tnnl_rwe->tnnl_rw_key.ip_type;
     data_vxlan.vlan_valid = tnnl_rwe->tnnl_rw_key.vlan_valid;
     data_vxlan.vlan_id = tnnl_rwe->tnnl_rw_key.vlan_id;
+    data.actionid = tnnl_rwe->tnnl_rw_key.tnnl_rw_act;
+    ret = tnnl_rw_tbl->insert_withid(&data, tnnl_rwe->tnnl_rw_idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-tnnl_rw: Unable to program at tnnl_rw_id: {} for ",
+                      tnnl_rwe->tnnl_rw_idx);
+        tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
+    } else {
+        HAL_TRACE_DEBUG("pd-tnnl_rw: Programmed at tnnl_rw_id: {} for ",
+                        tnnl_rwe->tnnl_rw_idx);
+        tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
+    }
+
+    return ret;
+}
+
+hal_ret_t
+tnnl_rw_pd_pgm_tnnl_rw_tbl_vlan (pd_tnnl_rw_entry_t *tnnl_rwe)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    tunnel_rewrite_actiondata   data;
+    DirectMap                   *tnnl_rw_tbl = NULL;
+
+    memset(&data, 0, sizeof(data));
+
+    tnnl_rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
+    HAL_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
+
     data.actionid = tnnl_rwe->tnnl_rw_key.tnnl_rw_act;
     ret = tnnl_rw_tbl->insert_withid(&data, tnnl_rwe->tnnl_rw_idx);
     if (ret != HAL_RET_OK) {
