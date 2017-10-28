@@ -125,7 +125,7 @@ expect:
             object  : callback://networking/packets/GetCpuPacket/expktid=PKT1
             port    : 128
 
-    descriptors:
-        - descriptor:
-            object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+#    descriptors:
+#        - descriptor:
+#            object  : ref://testcase/descriptors/id=DESC2
+#            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1

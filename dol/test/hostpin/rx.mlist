@@ -4,7 +4,7 @@ feature:
     sub         : rx
     package     : test.hostpin
     module      : hostpin
-    enable      : False
+    enable      : True
     ignore      : False
 
 modules:

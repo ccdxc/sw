@@ -16,8 +16,8 @@ pol_check_sg_policy(fte::ctx_t &ctx)
     }
 
     if (hal::is_forwarding_mode_host_pinned() &&
-        ctx.sep()->ep_flags & EP_FLAGS_REMOTE &&
-        ctx.dep()->ep_flags & EP_FLAGS_REMOTE) {
+        (ctx.sep() == NULL || ctx.sep()->ep_flags & EP_FLAGS_REMOTE) &&
+        (ctx.dep() == NULL || ctx.dep()->ep_flags & EP_FLAGS_REMOTE)) {
         return session::FLOW_ACTION_DROP;
     }
 

@@ -34,6 +34,7 @@ inline hal_ret_t register_pipelines() {
     //   - iflow pkts of remote host intiated sessions and
     //   - rflow pkts of local host initiated sessions
     fte::feature_id_t flow_miss_inbound[] = {
+        fte::FTE_FEATURE_DOL_TEST_ONLY,
         fte::FTE_FEATURE_LB,
         fte::FTE_FEATURE_TCP_PROXY,
         fte::FTE_FEATURE_IPSEC,
