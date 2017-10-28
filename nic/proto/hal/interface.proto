@@ -106,6 +106,17 @@ message LifQStateMapEntry {
   // Queue purpose is not needed by the hardware. It is used
   // internally by the HAL/FTE.
   LifQPurpose purpose       = 4;
+
+  // Primary COS for this queue type. All queues in this type
+  // will use this cos for scheduling/rate-limiting of data-traffic.
+  // Rings within a queue can select between two coses based on
+  // cos-sel in Qstate structure. By default cosA is set to 0.
+  qos.TrafficClass cos_a    = 5;
+
+  // Admin COS for this queue type. Mapping a ring to this cos
+  // will exempt that ring from scheduler rate-limiting and gives
+  // higher scheduling priority. By default cosB is set to 0.
+  qos.TrafficClass cos_b    = 6;
 }
 
 // LifKeyHandle uniquely identifies a LIF
@@ -134,7 +145,6 @@ message LifSpec {
   uint32                     rdma_max_keys       = 12;   // RDMA: max key entries
   uint32                     rdma_max_pt_entries = 13;    // RDMA: max pt entries
   repeated QStateSetReq      lif_qstate          = 14;   // Initialize Qstate
-  repeated qos.TrafficClass  tcs                 = 15;   // Traffic classes supported by this LIF
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

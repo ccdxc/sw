@@ -18,6 +18,8 @@ struct LIFQStateParams {
   struct {
     uint8_t entries:5,
             size:3;
+    uint8_t cosA:4,
+            cosB:4;
   } type[kNumQTypes];
   bool dont_zero_memory;
 };
@@ -33,6 +35,7 @@ struct LIFQState {
     uint32_t qsize;
     uint32_t rsvd;
     uint32_t num_queues;
+    uint8_t  coses;            // stores cosA in bits 0-3, cosB in bits 4-7
   } type[kNumQTypes];
 };
 
@@ -87,7 +90,7 @@ class LIFManagerBase {
   //   0     - success.
   //   -errno- failure.
   int32_t WriteQState(uint32_t lif_id, uint32_t type, uint32_t qid,
-                      const uint8_t *buf, uint32_t bufsize);
+                      uint8_t *buf, uint32_t bufsize);
 
   // GetPCOffset for a specific P4+ program.
   virtual int32_t GetPCOffset(

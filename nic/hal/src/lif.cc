@@ -122,14 +122,24 @@ lif_qstate_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
                           ent.size(), ent.entries());
             return HAL_RET_INVALID_ARG;
         }
+        if ((ent.cos_a().cos() >= NUM_MAX_COSES) || (ent.cos_b().cos() >= NUM_MAX_COSES)) {
+            HAL_TRACE_ERR("Invalid cos value  in LifSpec : cosA={} cosB={}",
+                           ent.cos_a().cos(), ent.cos_b().cos());
+            return HAL_RET_INVALID_ARG;
+        }
+
         qs_params.type[ent.type_num()].size = ent.size();
         qs_params.type[ent.type_num()].entries = ent.entries();
+        qs_params.type[ent.type_num()].cosA = ent.cos_a().cos();
+        qs_params.type[ent.type_num()].cosB = ent.cos_b().cos();
 
         if (ent.purpose() > intf::LifQPurpose_MAX) {
             HAL_TRACE_ERR("Invalid entry in LifSpec : purpose={}", ent.purpose());
             return HAL_RET_INVALID_ARG;
         }
         lif->qtypes[ent.purpose()] = ent.type_num();
+        lif->cos_bmp |= (1 << ent.cos_a().cos());
+        lif->cos_bmp |= (1 << ent.cos_b().cos());
     }
 
     // make sure that when you are creating with hw_lif_id the lif is alloced
@@ -203,14 +213,6 @@ validate_lif_create(LifSpec& spec, LifResponse *rsp)
                       spec.key_or_handle().lif_id());
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
         return HAL_RET_ENTRY_EXISTS;
-    }
-
-    // Check if all cos values are below 16.
-    for (int c = 0; c < spec.tcs_size(); c++) {
-        if (spec.tcs(c).cos() >= NUM_MAX_COSES) {
-            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-            return HAL_RET_INVALID_ARG;
-        }
     }
 
 end:
@@ -287,7 +289,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     for (int i = 0; i < spec->lif_qstate_size(); i++) {
         const auto &req = spec->lif_qstate(i);
 
-        const uint8_t *state = (const uint8_t *)req.queue_state().c_str();
+        uint8_t *state = (uint8_t *)req.queue_state().c_str();
         if (req.has_label()) {
             uint8_t off;
             int ret = g_lif_manager->GetPCOffset(req.label().handle().c_str(),
@@ -465,7 +467,6 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif_create_app_ctxt_t       app_ctxt = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
-    uint32_t                    cos = 0;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("pi-lif:{}:lif create for id {}", __FUNCTION__, 
@@ -499,11 +500,6 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->enable_rdma = spec.enable_rdma();
     lif->rdma_max_keys = spec.rdma_max_keys();
     lif->rdma_max_pt_entries = spec.rdma_max_pt_entries();
-
-    for (int c = 0; c < spec.tcs_size(); c++) {
-        cos = spec.tcs(c).cos();
-        lif->cos_bmp |= (1 << cos);
-    }
 
     // allocate hal handle id
     hal_handle = hal_handle_alloc(HAL_OBJ_ID_LIF);
@@ -1099,7 +1095,7 @@ LifSetQState (const intf::QStateSetReq &req, intf::QStateSetResp *rsp)
         return;
     }
     std::unique_ptr<uint8_t[]> buf;
-    const uint8_t *state = (const uint8_t *)req.queue_state().c_str();
+    uint8_t *state = (uint8_t *)req.queue_state().c_str();
     if (req.has_label()) {
         uint8_t off;
         int ret = g_lif_manager->GetPCOffset(req.label().handle().c_str(),
