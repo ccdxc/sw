@@ -209,6 +209,10 @@
         {
             "name": "tx-scheduler",
             "size_kb": 2048
+        },
+        {
+            "name": "brq-ring-xts",
+            "size_kb": 128
         }
     ]
 }

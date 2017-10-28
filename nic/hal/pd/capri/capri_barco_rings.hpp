@@ -80,10 +80,11 @@ typedef struct capri_barco_ring_s {
     barco_ring_queue_request    queue_request;  /* Request queue support        */
 } capri_barco_ring_t;
 
-#define BARCO_RING_XTS_STR(id)  "Barco XTS" ## #id
+//#define BARCO_RING_XTS_STR(id)  "Barco XTS" ## #id
 #define BARCO_RING_GCM_STR(id)  "Barco GCM" ## #id
 #define BARCO_RING_MPP_STR(id)  "Barco MPP" ## #id
 #define BARCO_RING_ASYM_STR     "Barco Asym"
+#define BARCO_RING_XTS_STR      "Barco XTS"
 
 
 hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req);

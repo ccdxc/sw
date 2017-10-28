@@ -2,7 +2,7 @@
 #define __CAPRI_HBM_HPP__
 
 #define CAPRI_HBM_MEM_REG_NAME_MAX_LEN 80
-#define CARPI_HBM_MEM_NUM_MEM_REGS 54
+#define CARPI_HBM_MEM_NUM_MEM_REGS 55
 
 #define JP4_ATOMIC_STATS         "atomic_stats" 
 
@@ -55,6 +55,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_PAGE_SMALL_TX      "page-small-tx"
 #define CAPRI_HBM_REG_BRQ                "brq"
 #define CAPRI_HBM_REG_BARCO_RING_ASYM    "brq-ring-asym"
+#define CAPRI_HBM_REG_BARCO_RING_XTS     "brq-ring-xts"
 #define CAPRI_HBM_REG_CRYPTO_ASYM_DMA_DESCR "crypto-asym-dma-descr"
 #define CAPRI_HBM_REG_CRYPTO_HBM_MEM     "crypto-hbm-mem"
 #define CAPRI_BARCO_KEY_DESC             "key-desc-array"

@@ -5,6 +5,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
+#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
 namespace hal {
 
@@ -13,6 +14,8 @@ namespace pd {
 hal_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring);
 hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring, void *req);
+hal_ret_t capri_barco_xts_init(capri_barco_ring_t *barco_ring);
+bool capri_barco_xts_poller(capri_barco_ring_t *barco_ring);
 
 capri_barco_ring_t  barco_rings[] = {
     {   /* types::BARCO_RING_ASYM */
@@ -29,13 +32,26 @@ capri_barco_ring_t  barco_rings[] = {
         capri_barco_asym_queue_request,
     },
     {
+        BARCO_RING_XTS_STR,
+        CAPRI_HBM_REG_BARCO_RING_XTS,
+        0,
+        32,
+        1024,
+        BARCO_CRYPTO_DESC_SZ,
+        0,
+        0,
+        capri_barco_xts_init,
+        capri_barco_xts_poller,
+        NULL,
+    },
+    {
     },
 };
 
 hal_ret_t capri_barco_ring_common_init(capri_barco_ring_t *barco_ring)
 {
     uint64_t                            ring_base = 0;
-    uint16_t                            ring_size = 0;
+    uint32_t                            ring_size = 0;
 
     ring_base = get_start_offset(barco_ring->hbm_region);
     if (!ring_base) {
@@ -49,7 +65,7 @@ hal_ret_t capri_barco_ring_common_init(capri_barco_ring_t *barco_ring)
     }
     
     ring_size = get_size_kb(barco_ring->hbm_region) * 1024;
-    if (ring_size < (barco_ring->ring_size * barco_ring->descriptor_size)) {
+    if (ring_size < (uint32_t)(barco_ring->ring_size * barco_ring->descriptor_size)) {
         HAL_TRACE_ERR("Not enough memory for Barco Ring memory region {}", barco_ring->ring_name);
         return HAL_RET_ERR;
     }
@@ -176,6 +192,81 @@ bool capri_barco_ring_poll(types::BarcoRings barco_ring_type)
     
     return FALSE;
 }
+/*
+ * TODO: Decryption currently does not work on xts0. Only initializing and using xts1 for now
+ */
+hal_ret_t capri_barco_xts_key_array_init(void)
+{
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hese_csr_t &                    hese = cap0.md.hese;
+    hal_ret_t                           ret = HAL_RET_OK;
+    uint64_t                            key_array_base;
+    uint32_t                            key_array_key_count;
+    char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    uint32_t                            region_sz = 0;
+
+    // Currently sharing the same key descriptor array as GCM
+    // Eventually all symmetric protocols will share one large key array
+    key_array_base = get_start_offset(key_desc_array);
+    /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
+     * but confirm
+     */
+    assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
+    region_sz = get_size_kb(key_desc_array) * 1024;
+    key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
+
+    hese.dhs_crypto_ctl.xts_key_array_base_w0.fld(key_array_base & 0xffffffff);
+    hese.dhs_crypto_ctl.xts_key_array_base_w0.write();
+    hese.dhs_crypto_ctl.xts_key_array_base_w1.fld(key_array_base >> 32);
+    hese.dhs_crypto_ctl.xts_key_array_base_w1.write();
+
+    hese.dhs_crypto_ctl.xts_key_array_size.fld(key_array_key_count);
+    hese.dhs_crypto_ctl.xts_key_array_size.write();
+    HAL_TRACE_DEBUG("Barco xts Key Descriptor Array of count {} setup @ {:x}",
+            key_array_key_count, key_array_base);
+
+    return ret;
+}
+
+
+hal_ret_t capri_barco_xts_init(capri_barco_ring_t *barco_ring)
+{
+    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &                    hens = cap0.md.hens;
+    //cap_hese_csr_t &                    hese = cap0.md.hese;
+    hal_ret_t                           ret = HAL_RET_OK;
+
+    ret = capri_barco_ring_common_init(barco_ring);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    hens.dhs_crypto_ctl.xts_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.xts_ring_base_w0.write();
+    hens.dhs_crypto_ctl.xts_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    hens.dhs_crypto_ctl.xts_ring_base_w1.write();
+
+    hens.dhs_crypto_ctl.xts_ring_size.fld(barco_ring->ring_size);
+    hens.dhs_crypto_ctl.xts_ring_size.write();
+
+    hens.dhs_crypto_ctl.xts_producer_idx.fld(barco_ring->producer_idx);
+    hens.dhs_crypto_ctl.xts_producer_idx.write();
+
+    hens.dhs_crypto_ctl.xts_consumer_idx.fld(barco_ring->consumer_idx);
+    hens.dhs_crypto_ctl.xts_consumer_idx.write();
+
+    HAL_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
+            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+
+    return capri_barco_xts_key_array_init();
+}
+
+bool capri_barco_xts_poller(capri_barco_ring_t *barco_ring)
+{
+    /* TBD */
+    return FALSE;
+}
+
 
 hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req)
 {
