@@ -260,6 +260,9 @@ port::port_link_sm_process()
             hal::periodic::periodic_timer_delete (this->link_bring_up_timer_);
             this->link_bring_up_timer_ = NULL;  // sanity
 
+            // set operational status as down
+            this->set_oper_status(::port::PORT_OPER_STATUS_DOWN);
+
             // disable and clear mac interrupts
             port_mac_intr_en(false);
             port_mac_intr_clr();
@@ -359,6 +362,9 @@ port::port_link_sm_process()
         case port_link_sm_t::PORT_LINK_SM_UP:
             // enable mac interrupts
             port_mac_intr_en(true);
+
+            // set operational status as up
+            this->set_oper_status(::port::PORT_OPER_STATUS_UP);
 
             // enable pCal
             // notify others that link is up

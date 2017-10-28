@@ -1,8 +1,9 @@
 #include <iostream>
 #include <grpc++/grpc++.h>
-#include <types.grpc.pb.h>
-#include <tenant.grpc.pb.h>
-#include <l2segment.grpc.pb.h>
+#include "nic/gen/proto/hal/types.grpc.pb.h"
+#include "nic/gen/proto/hal/tenant.grpc.pb.h"
+#include "nic/gen/proto/hal/l2segment.grpc.pb.h"
+#include "nic/gen/proto/hal/port.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -25,12 +26,198 @@ using l2segment::L2SegmentRequestMsg;
 using l2segment::L2SegmentResponse;
 using l2segment::L2SegmentResponseMsg;
 
+using port::Port;
+using port::PortSpec;
+using port::PortRequestMsg;
+using port::PortResponse;
+using port::PortResponseMsg;
+using port::PortGetRequest;
+using port::PortGetRequestMsg;
+using port::PortGetResponse;
+using port::PortGetResponseMsg;
+using port::PortDeleteRequest;
+using port::PortDeleteRequestMsg;
+using port::PortDeleteResponseMsg;
+
 const std::string&    hal_svc_endpoint_("localhost:50054");
 
 class hal_client {
 public:
     hal_client(std::shared_ptr<Channel> channel) : tenant_stub_(Tenant::NewStub(channel)),
-    l2seg_stub_(L2Segment::NewStub(channel)) {}
+    l2seg_stub_(L2Segment::NewStub(channel)), port_stub_(Port::NewStub(channel)) {}
+
+    bool port_handle_api_status(types::ApiStatus api_status,
+                                uint32_t port_id) {
+        switch(api_status) {
+            case types::API_STATUS_OK:
+                return true;
+
+            case types::API_STATUS_PORT_NOT_FOUND:
+                std::cout << "Port "
+                          << port_id
+                          << " not found"
+                          << std::endl;
+                return false;
+
+            case types::API_STATUS_EXISTS_ALREADY:
+                std::cout << "Port "
+                          << port_id
+                          << " exists already"
+                          << std::endl;
+                return false;
+
+            default:
+                assert(0);
+        }
+
+        return true;
+    }
+
+    int port_create(uint32_t tenant_id, uint32_t port_id) {
+        PortSpec            *spec;
+        PortRequestMsg      req_msg;
+        PortResponseMsg     rsp_msg;
+        ClientContext       context;
+        Status               status;
+
+        spec = req_msg.add_request();
+        spec->mutable_key_or_handle()->set_port_id(port_id);
+        spec->mutable_meta()->set_tenant_id(tenant_id);
+        spec->set_port_speed(::port::PORT_SPEED_25G);
+        spec->set_num_lanes(1);
+        spec->set_port_type(::port::PORT_TYPE_ETH);
+        spec->set_admin_state(::port::PORT_ADMIN_STATE_UP);
+
+        status = port_stub_->PortCreate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            if (port_handle_api_status(
+                    rsp_msg.response(0).api_status(), port_id) == true) {
+                std::cout << "Port create succeeded for port "
+                          << port_id
+                          << std::endl;
+            }
+
+            return 0;
+        }
+
+        std::cout << "Port create failed for port "
+                  << port_id
+                  << " , error = " << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return -1;
+    }
+
+    int port_update(uint32_t tenant_id,
+                    uint32_t port_id,
+                    ::port::PortSpeed speed,
+                    ::port::PortAdminState admin_state) {
+        PortSpec            *spec;
+        PortRequestMsg      req_msg;
+        PortResponseMsg     rsp_msg;
+        ClientContext       context;
+        Status               status;
+
+        spec = req_msg.add_request();
+        spec->mutable_key_or_handle()->set_port_id(port_id);
+        spec->mutable_meta()->set_tenant_id(tenant_id);
+        spec->set_port_speed(speed);
+        spec->set_admin_state(admin_state);
+
+        status = port_stub_->PortUpdate(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            if (port_handle_api_status(
+                    rsp_msg.response(0).api_status(), port_id) == true) {
+                std::cout << "Port update succeeded for port "
+                          << port_id
+                          << std::endl;
+            }
+
+            return 0;
+        }
+
+        std::cout << "Port update failed for port "
+                  << port_id
+                  << " , error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return -1;
+    }
+
+    int port_get(uint32_t tenant_id, uint32_t port_id) {
+        PortGetRequest      *req;
+        PortGetRequestMsg   req_msg;
+        PortGetResponseMsg  rsp_msg;
+        ClientContext       context;
+        Status              status;
+
+        req = req_msg.add_request();
+        req->mutable_key_or_handle()->set_port_id(port_id);
+        req->mutable_meta()->set_tenant_id(tenant_id);
+
+        // port get
+        status = port_stub_->PortGet(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            if (port_handle_api_status(
+                    rsp_msg.response(0).api_status(), port_id) == true) {
+                std::cout << "Port Get succeeded for port "
+                          << port_id << std::endl
+                          << " Port oper status: "
+                          << rsp_msg.response(0).status() << std::endl
+                          << " Port type: "
+                          << rsp_msg.response(0).spec().port_type() << std::endl
+                          << " Admin state: "
+                          << rsp_msg.response(0).spec().admin_state() << std::endl
+                          << " Port speed: "
+                          << rsp_msg.response(0).spec().port_speed() << std::endl
+                          << " MAC ID: "
+                          << rsp_msg.response(0).spec().mac_id() << std::endl
+                          << " MAC channel: "
+                          << rsp_msg.response(0).spec().mac_ch() << std::endl
+                          << " Num lanes: "
+                          << rsp_msg.response(0).spec().num_lanes() << std::endl;
+            }
+
+            return 0;
+        }
+
+        std::cout << "Port Get failed for port "
+                  << port_id
+                  << " , error = "
+                  << rsp_msg.response(0).api_status()
+                  << std::endl;
+        return -1;
+    }
+
+    int port_delete(uint32_t tenant_id, uint32_t port_id) {
+        PortDeleteRequest      *req;
+        PortDeleteRequestMsg   req_msg;
+        PortDeleteResponseMsg  rsp_msg;
+        ClientContext          context;
+        Status                 status;
+
+        req = req_msg.add_request();
+        req->mutable_key_or_handle()->set_port_id(port_id);
+        req->mutable_meta()->set_tenant_id(tenant_id);
+
+        // port get
+        status = port_stub_->PortDelete(&context, req_msg, &rsp_msg);
+        if (status.ok()) {
+            if (port_handle_api_status(
+                    rsp_msg.api_status(0), port_id) == true) {
+                std::cout << "Port Delete succeeded for port "
+                          << port_id << std::endl;
+            }
+
+            return 0;
+        }
+
+        std::cout << "Port Delete failed for port"
+                  << port_id
+                  << " , error = "
+                  << rsp_msg.api_status(0)
+                  << std::endl;
+        return -1;
+    }
 
     uint64_t tenant_create(uint32_t tenant_id) {
         TenantSpec           *spec;
@@ -178,7 +365,124 @@ public:
 private:
     std::unique_ptr<Tenant::Stub> tenant_stub_;
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
+    std::unique_ptr<Port::Stub> port_stub_;
 };
+
+int port_test(hal_client *hclient)
+{
+    int port = 1;
+    int tenant_id = 1;
+
+    // port 1: create and get
+    std::cout <<  "*********** Port "
+              << port
+              << " create, enable and get"
+              << " **********"
+              << std::endl;
+    hclient->port_create(tenant_id, port);
+    hclient->port_get(tenant_id, port);
+
+    // port 1: update speed and get
+    std::cout <<  "*********** Port "
+              << port
+              << " update speed and get"
+              << " **********"
+              << std::endl;
+    hclient->port_update(tenant_id, port,
+                     ::port::PORT_SPEED_10G, ::port::PORT_ADMIN_STATE_NONE);
+    hclient->port_get(tenant_id, port);
+
+    // port 1: delete
+    std::cout <<  "*********** Port "
+              << port
+              << " delete"
+              << " **********"
+              << std::endl;
+    hclient->port_delete(tenant_id, port);
+
+    port = 2;
+
+    // port 2: create and get
+    std::cout <<  "*********** Port "
+              << port
+              << " create, enable and get"
+              << " **********"
+              << std::endl;
+    hclient->port_create(tenant_id, port);
+    hclient->port_get(tenant_id, port);
+
+    // port 2: update speed and get
+    std::cout <<  "*********** Port "
+              << port
+              << " update speed and get"
+              << " **********"
+              << std::endl;
+    hclient->port_update(tenant_id, port,
+                     ::port::PORT_SPEED_10G, ::port::PORT_ADMIN_STATE_NONE);
+    hclient->port_get(tenant_id, port);
+
+    port = 1;
+
+    // port 1: create and get
+    std::cout <<  "*********** Port "
+              << port
+              << " create, enable and get"
+              << " **********"
+              << std::endl;
+    hclient->port_create(tenant_id, port);
+    hclient->port_get(tenant_id, port);
+
+    // port 1: update speed and get
+    std::cout <<  "*********** Port "
+              << port
+              << " update speed and get"
+              << " **********"
+              << std::endl;
+    hclient->port_update(tenant_id, port,
+                     ::port::PORT_SPEED_10G, ::port::PORT_ADMIN_STATE_NONE);
+    hclient->port_get(tenant_id, port);
+
+    // port 1: delete and get
+    std::cout <<  "*********** Port "
+              << port
+              << " delete and get"
+              << " **********"
+              << std::endl;
+    hclient->port_delete(tenant_id, port);
+    hclient->port_get(tenant_id, port);
+
+    port = 2;
+
+    // port 2: disable and get
+    std::cout <<  "*********** Port "
+              << port
+              << " disable and get"
+              << " **********"
+              << std::endl;
+    hclient->port_update(tenant_id, port,
+                     ::port::PORT_SPEED_NONE, ::port::PORT_ADMIN_STATE_DOWN);
+    hclient->port_get(tenant_id, port);
+
+    // port 2: create and get
+    std::cout <<  "*********** Port "
+              << port
+              << " create, enable and get"
+              << " **********"
+              << std::endl;
+    hclient->port_create(tenant_id, port);
+    hclient->port_get(tenant_id, port);
+
+    // port 2: delete and get
+    std::cout <<  "*********** Port "
+              << port
+              << " delete and get"
+              << " **********"
+              << std::endl;
+    hclient->port_delete(tenant_id, port);
+    hclient->port_get(tenant_id, port);
+
+    return 0;
+}
 
 // main test driver
 int
@@ -187,6 +491,9 @@ main (int argc, char** argv)
     uint64_t    hal_handle;
     hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
                                            grpc::InsecureChannelCredentials()));
+
+    port_test(&hclient);
+    return 0;
 
     hclient.tenant_delete_by_id(1);
     // create a tenant

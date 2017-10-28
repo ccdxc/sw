@@ -102,7 +102,7 @@ hal::pd::port::port_serdes_init(bool is_sim)
     serdes_fn->serdes_tx_rx_enable = &serdes_tx_rx_enable_default;
     serdes_fn->serdes_reset = &serdes_reset_default;
 
-    if (is_sim == true) {
+    if (is_sim == false) {
         serdes_fn->serdes_cfg = &serdes_cfg_haps;
         serdes_fn->serdes_signal_detect = &serdes_signal_detect_haps;
         serdes_fn->serdes_rdy = &serdes_rdy_haps;

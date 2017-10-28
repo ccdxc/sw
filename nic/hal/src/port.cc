@@ -177,7 +177,7 @@ port_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ret = pd::pd_port_create(&pd_port_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to create if pd, err : {}",
+        HAL_TRACE_ERR("{}:failed to create port pd, err : {}",
                 __FUNCTION__, ret);
     }
 
@@ -216,7 +216,7 @@ port_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Add to port id hash table
     ret = port_add_to_db(pi_p, hal_handle_id);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}:failed to add if {} to db, err : {}",
+        HAL_TRACE_ERR("{}:failed to add port {} to db, err : {}",
                 __FUNCTION__, pi_p->port_num, ret);
         goto end;
     }
@@ -265,7 +265,7 @@ port_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
         pd_port_args.pi_p = pi_p;
         ret = pd::pd_port_delete(&pd_port_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}:failed to delete if pd, err : {}",
+            HAL_TRACE_ERR("{}:failed to delete port pd, err : {}",
                           __FUNCTION__, ret);
         }
     }
@@ -273,7 +273,7 @@ port_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // remove the object
     hal_handle_free(hal_handle_id);
 
-    // free PI if
+    // free PI port
     port_free(pi_p);
 end:
     return ret;
@@ -384,12 +384,15 @@ port_create (PortSpec& spec, PortResponse *rsp)
                              port_create_abort_cb,
                              port_create_cleanup_cb);
 
-    pi_p1 = find_port_by_handle(pi_p->hal_handle_id);
-    HAL_ASSERT(pi_p == pi_p1);
+    // TODO needed?
+    if (ret == HAL_RET_OK) {
+        pi_p1 = find_port_by_handle(pi_p->hal_handle_id);
+        HAL_ASSERT(pi_p == pi_p1);
+    }
 
 end:
     if (ret != HAL_RET_OK && pi_p != NULL) {
-        // if there is an error, if will be freed in abort CB
+        // if there is an error, port will be freed in abort CB
         pi_p = NULL;
     }
 
@@ -475,10 +478,16 @@ port_update_check_for_change (PortSpec& spec,
     pd::pd_port_args_init(&pd_port_args);
     pd_port_args.pi_p = pi_p;
 
-    // check only if port speed is set in update request
+    // check if port speed is set in update request
     if (spec.port_speed() != ::port::PORT_SPEED_NONE) {
         pd_port_args.port_speed  = spec.port_speed();
         *has_changed = pd::pd_port_has_speed_changed(&pd_port_args);
+    }
+
+    // check if admin state is set in update request
+    if (spec.admin_state() != ::port::PORT_ADMIN_STATE_NONE) {
+        pd_port_args.admin_state  = spec.admin_state();
+        *has_changed = pd::pd_port_has_admin_state_changed(&pd_port_args);
     }
 
     return ret;
@@ -655,14 +664,13 @@ port_update (PortSpec& spec, PortResponse *rsp)
     hal_ret_t   ret = HAL_RET_OK;
 
     port_t                     *pi_p = NULL;
-    port_t                     *pi_clone_p = NULL;
     const port::PortKeyHandle  &kh = spec.key_or_handle();
     cfg_op_ctxt_t              cfg_ctxt = { 0 };
     dhl_entry_t                dhl_entry = { 0 };
     bool                       has_changed = false;
     port_update_app_ctxt_t     app_ctxt;
 
-    hal_api_trace(" API Begin: interface update ");
+    hal_api_trace(" API Begin: port update ");
 
     memset (&app_ctxt, 0, sizeof(port_create_app_ctxt_t));
 
@@ -678,7 +686,7 @@ port_update (PortSpec& spec, PortResponse *rsp)
     if (!pi_p) {
         HAL_TRACE_ERR("{}:failed to find port id {}, handle {}",
                       __FUNCTION__, kh.port_id(), kh.port_handle());
-        ret = HAL_RET_IF_NOT_FOUND;
+        ret = HAL_RET_PORT_NOT_FOUND;
         goto end;
     }
 
@@ -705,7 +713,6 @@ port_update (PortSpec& spec, PortResponse *rsp)
     // form ctxt and call infra update object
     dhl_entry.handle = pi_p->hal_handle_id;
     dhl_entry.obj = pi_p;
-    dhl_entry.cloned_obj = pi_clone_p;
     utils::dllist_reset(&dhl_entry.dllist_ctxt);
 
     cfg_ctxt.app_ctxt = &app_ctxt;
@@ -725,8 +732,150 @@ port_update (PortSpec& spec, PortResponse *rsp)
 end:
     port_prepare_rsp(rsp, ret, pi_p->hal_handle_id);
 
-    hal_api_trace(" API End: interface update ");
+    hal_api_trace(" API End: port update ");
     return ret;
+}
+
+//------------------------------------------------------------------------------
+// validate port delete request
+//------------------------------------------------------------------------------
+hal_ret_t
+validate_port_delete_req (PortDeleteRequest& req, PortDeleteResponseMsg *rsp)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+
+    // key-handle field must be set
+    if (!req.has_key_or_handle()) {
+        HAL_TRACE_ERR("{}:spec has no key or handle", __FUNCTION__);
+        ret =  HAL_RET_INVALID_ARG;
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// delete a port from the config database
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+port_del_from_db (port_t *pi_p)
+{
+    hal_handle_id_ht_entry_t    *entry;
+
+    HAL_TRACE_DEBUG("{}:removing from port id hash table", __FUNCTION__);
+
+    // remove from hash table
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->port_id_ht()->
+                                            remove(&pi_p->port_num);
+    // free up
+    g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// 1. PD Call to delete PD and free up resources and deprogram HW
+//------------------------------------------------------------------------------
+hal_ret_t
+port_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    pd::pd_port_args_t   pd_port_args = { 0 };
+    dllist_ctxt_t        *lnode = NULL;
+    dhl_entry_t          *dhl_entry = NULL;
+    port_t               *pi_p = NULL;
+
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    pi_p = (port_t *)dhl_entry->obj;
+
+    HAL_TRACE_DEBUG("{}:delete del CB {}",
+                    __FUNCTION__, pi_p->port_num);
+
+    // 1. PD Call to allocate PD resources and HW programming
+    pd::pd_port_args_init(&pd_port_args);
+    pd_port_args.pi_p = pi_p;
+
+    ret = pd::pd_port_delete(&pd_port_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:failed to delete port pd, err : {}", 
+                      __FUNCTION__, ret);
+    }
+
+end:
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// Update PI DBs as port_delete_del_cb() was a succcess
+//      a. Delete from port id hash table
+//      b. Remove object from handle id based hash table
+//      c. Free PI port
+//------------------------------------------------------------------------------
+hal_ret_t
+port_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    dllist_ctxt_t   *lnode = NULL;
+    dhl_entry_t     *dhl_entry = NULL;
+    port_t          *pi_p = NULL;
+    hal_handle_t    hal_handle = 0;
+
+    if (cfg_ctxt == NULL) {
+        HAL_TRACE_ERR("{}:invalid cfg_ctxt", __FUNCTION__);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    lnode = cfg_ctxt->dhl.next;
+    dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
+
+    pi_p = (port_t *)dhl_entry->obj;
+    hal_handle = dhl_entry->handle;
+
+    HAL_TRACE_DEBUG("{}:delete commit CB {}",
+                    __FUNCTION__, pi_p->port_num);
+
+    // a. Remove from port id hash table
+    ret = port_del_from_db(pi_p);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:failed to del port {} from db, err : {}", 
+                      __FUNCTION__, pi_p->port_num, ret);
+        goto end;
+    }
+
+    // b. Remove object from handle id based hash table
+    hal_handle_free(hal_handle);
+
+    // c. Free PI port
+    port_free(pi_p);
+
+end:
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// If delete fails, nothing to do
+//------------------------------------------------------------------------------
+hal_ret_t
+port_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// If delete fails, nothing to do
+//------------------------------------------------------------------------------
+hal_ret_t
+port_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+{
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -735,7 +884,51 @@ end:
 hal_ret_t
 port_delete (PortDeleteRequest& req, PortDeleteResponseMsg *rsp)
 {
-    hal_ret_t   ret = HAL_RET_OK;
+    hal_ret_t                  ret = HAL_RET_OK;
+    port_t                     *pi_p = NULL;
+    cfg_op_ctxt_t              cfg_ctxt = { 0 };
+    dhl_entry_t                dhl_entry = { 0 };
+    const port::PortKeyHandle  &kh = req.key_or_handle();
+
+    hal_api_trace(" API Begin: port delete ");
+
+    // validate the request message
+    ret = validate_port_delete_req(req, rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:port delete request validation failed, ret : {}",
+                      __FUNCTION__, ret);
+        goto end;
+    }
+
+    pi_p = port_lookup_key_or_handle(kh);
+    if (pi_p == NULL) {
+        HAL_TRACE_ERR("{}:failed to find port, id {}, handle {}",
+                      __FUNCTION__, kh.port_id(), kh.port_handle());
+        ret = HAL_RET_PORT_NOT_FOUND;
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("{}: port delete for id {}",
+                    __FUNCTION__, pi_p->port_num);
+
+    // form ctxt and call infra add
+    dhl_entry.handle = pi_p->hal_handle_id;
+    dhl_entry.obj = pi_p;
+    cfg_ctxt.app_ctxt = NULL;
+    utils::dllist_reset(&cfg_ctxt.dhl);
+    utils::dllist_reset(&dhl_entry.dllist_ctxt);
+    utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+
+    ret = hal_handle_del_obj(pi_p->hal_handle_id,
+                             &cfg_ctxt,
+                             port_delete_del_cb,
+                             port_delete_commit_cb,
+                             port_delete_abort_cb,
+                             port_delete_cleanup_cb);
+end:
+    rsp->add_api_status(hal_prepare_rsp(ret));
+
+    hal_api_trace(" API End: port delete ");
     return ret;
 }
 
@@ -745,6 +938,53 @@ port_delete (PortDeleteRequest& req, PortDeleteResponseMsg *rsp)
 hal_ret_t
 port_get (PortGetRequest& req, PortGetResponse *rsp)
 {
+    port_t              *pi_p = NULL;
+    PortSpec            *spec = NULL;
+    hal_ret_t           ret = HAL_RET_OK;
+    pd::pd_port_args_t  pd_port_args = { 0 };
+
+    hal_api_trace(" API Begin: port get ");
+
+    if (!req.has_key_or_handle()) {
+        rsp->set_api_status(types::API_STATUS_PORT_ID_INVALID);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    pi_p = port_lookup_key_or_handle(req.key_or_handle());
+    if (!pi_p) {
+        rsp->set_api_status(types::API_STATUS_PORT_NOT_FOUND);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // fill in the config spec of this port
+    spec = rsp->mutable_spec();
+    spec->mutable_key_or_handle()->set_port_id(pi_p->port_num);
+
+    // 1. PD Call to get PD resources
+    pd::pd_port_args_init(&pd_port_args);
+    pd_port_args.pi_p = pi_p;
+
+    ret = pd::pd_port_get(&pd_port_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}:failed to get port pd, err : {}",
+                      __FUNCTION__, ret);
+    }
+
+    if (ret == HAL_RET_OK) {
+        spec->set_port_type   (pd_port_args.port_type);
+        spec->set_port_speed  (pd_port_args.port_speed);
+        spec->set_admin_state (pd_port_args.admin_state);
+        spec->set_mac_id      (pd_port_args.mac_id);
+        spec->set_mac_ch      (pd_port_args.mac_ch);
+        spec->set_num_lanes   (pd_port_args.num_lanes);
+
+        rsp->set_status       (pd_port_args.oper_status);
+    }
+
+    rsp->set_api_status(hal_prepare_rsp(ret));
+
+    hal_api_trace(" API End: port get ");
+
     return HAL_RET_OK;
 }
 

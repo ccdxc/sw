@@ -102,6 +102,10 @@ public:
         this->port_type_ = port_type;
     }
 
+    void set_admin_state(::port::PortAdminState admin_state) {
+        this->admin_state_ = admin_state;
+    }
+
     ::port::PortAdminState admin_state() {
         return this->admin_state_;
     }
@@ -123,6 +127,14 @@ public:
 
     void set_port_link_sm(port_link_sm_t link_sm) {
         this->link_sm_ = link_sm;
+    }
+
+    void* link_bring_up_timer() {
+        return this->link_bring_up_timer_;
+    }
+
+    void set_link_bring_up_timer(void *link_bring_up_timer) {
+        this->link_bring_up_timer_ = link_bring_up_timer;
     }
 
     hal_ret_t port_enable();

@@ -106,6 +106,7 @@ enum ApiStatus {
   API_STATUS_PORT_TYPE_INVALID            = 70;    // invalid port type
   API_STATUS_PORT_SPEED_INVALID           = 71;    // invalid port speed
   API_STATUS_PORT_NUM_LANES_INVALID       = 72;    // invalid num lanes for port
+  API_STATUS_PORT_NOT_FOUND               = 73;    // port not found
 }
 
 // common meta object that is part of all other top level objects

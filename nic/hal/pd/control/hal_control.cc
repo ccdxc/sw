@@ -24,7 +24,8 @@ hal_control_loop (void)
 {
     uint32_t           qid;
     uint16_t           cindx;
-    bool               work_done, rv;
+    bool               work_done = false;
+    bool               rv = true;
     hal_ctrl_entry_t   *rw_entry;
 
     while (TRUE) {
@@ -150,6 +151,9 @@ hal_control_start (void *ctxt)
     while (!is_asic_rw_ready()) {
         pthread_yield();
     }
+
+    // initialize the port mac and serdes functions
+    hal::pd::port::port_init(true /* is_sim */);
 
     // keep polling the queue and serve requests
     hal_control_loop();

@@ -95,6 +95,7 @@ typedef struct pd_port_args_s {
     PortType         port_type;               // port type
     PortSpeed        port_speed;              // port speed
     PortAdminState   admin_state;             // admin state of the port
+    PortOperStatus   oper_status;             // oper status of the port
     uint32_t         mac_id;                  // mac id associated with the port
     uint32_t         mac_ch;                  // mac channel associated with the port
     uint32_t         num_lanes;               // number of lanes for the port
@@ -461,9 +462,12 @@ hal_ret_t pd_if_make_clone(if_t *hal_if, if_t *clone);
 hal_ret_t pd_port_create     (pd_port_args_t *hal_port);
 hal_ret_t pd_port_update     (pd_port_args_t *hal_port);
 hal_ret_t pd_port_delete     (pd_port_args_t *hal_port);
+hal_ret_t pd_port_get        (pd_port_args_t *hal_port);
 hal_ret_t pd_port_mem_free   (pd_port_args_t *hal_port);
 hal_ret_t pd_port_make_clone (port_t *pi_p, port_t *clone);
 bool      pd_port_has_speed_changed
+                             (pd_port_args_t *hal_port);
+bool      pd_port_has_admin_state_changed
                              (pd_port_args_t *hal_port);
 
 uint32_t if_get_hw_lif_id(if_t *pi_if);

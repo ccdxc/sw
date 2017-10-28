@@ -213,6 +213,7 @@ do {                                                       \
     ENTRY(HAL_RET_APP_REDIR_FORMAT_UNKNOWN,   55, "App redir hdr fmt unknown") \
     ENTRY(HAL_RET_APP_REDIR_HDR_LEN_ERR,      56, "App redir hdr_len error")   \
     ENTRY(HAL_RET_APP_REDIR_HDR_ERR,          57, "App redir hdr error")       \
+    ENTRY(HAL_RET_PORT_NOT_FOUND,             58, "port not found ")           \
                                                                                \
     ENTRY(HAL_RET_ERR,                        255, "catch all generic error")
 
