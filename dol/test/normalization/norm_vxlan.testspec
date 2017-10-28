@@ -1,32 +1,25 @@
 # Test Spec
 selectors:
     src:
-        tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://native=False
+        tenant  : filter://type=TENANT
+        segment : filter://fabencap=VXLAN
         endpoint: filter://remote=True
     dst:
-        tenant  : filter://overlay=VLAN,type=TENANT
-        segment : filter://native=False
+        tenant  : filter://type=TENANT
         endpoint: filter://remote=True
+        segment : filter://fabencap=VXLAN
     flow        : filter://fwtype=L2
     maxflows    : 1
 
 packets:
     - packet:
         id          : BASE_PKT  # Input packet 1
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : callback://normalization/callbacks/GetInputPayloadSize
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        #pendol      : True
-        encaps      : 
-            - ref://factory/packets/id=ENCAP_QTAG
         headers     :
-            # Add all possible headers, the final headers will be selected
-            # based on the Flow.
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -53,9 +46,8 @@ packets:
             #    data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : PKT1     # Input packet 1
+        id          : BASE2     # Input packet 1
         payloadsize : callback://normalization/callbacks/GetInputPayloadSize
-        #pendol      : True
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             ipv4    :
@@ -75,14 +67,52 @@ packets:
                 window   : ref://testcase/config/flow/tracking/tcp_win_sz
                 seq      : ref://testcase/config/flow/tracking/tcp_seq_num
 
+
+    - packet:
+        id          : PKT1     # Input packet 1
+        payloadsize : callback://normalization/callbacks/GetInputPayloadSize
+        clone       : ref://testcase/packets/id=BASE2
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+            - ref://factory/packets/id=ENCAP_VXLAN
+        headers     :
+            outereth    :
+                src     : ref://testcase/config/src/endpoint/intf/rmacaddr
+                dst     : ref://testcase/config/src/endpoint/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/src/endpoint/intf/rtep
+                dst     : ref://testcase/config/src/endpoint/intf/ltep
+                tos     : 0
+                id      : 0
+            vxlan       :
+                vni     : ref://testcase/config/src/segment/vxlan_id
+            qtag:
+                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
+                prio    : 0
+
     - packet:
         id          : PKT2     # Expected packet 2
         payloadsize : callback://normalization/callbacks/GetExpectedPayloadSize
-        #pendol      : True
         clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+            - ref://factory/packets/id=ENCAP_VXLAN
         headers     :
-            #qtag    :
-            #    prio    : ref://testcase/config/flow/txqos/cos
+            outereth    :
+                src     : ref://testcase/config/dst/endpoint/intf/macaddr
+                dst     : ref://testcase/config/dst/endpoint/intf/rmacaddr
+            outeripv4   :
+                src     : ref://testcase/config/dst/endpoint/intf/ltep
+                dst     : ref://testcase/config/dst/endpoint/intf/rtep
+                tos     : 0
+                id      : 0
+            qtag:
+                vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
+                prio    : 0
+            outerudp:
+                chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/dst/segment/vxlan_id
             ipv4    :
                 flags   : callback://normalization/callbacks/GetExpectedIpv4Flags
                 options : callback://normalization/callbacks/GetExpectedIpv4Options
@@ -115,5 +145,5 @@ session:
                     object  : callback://normalization/callbacks/GetExpectedPacket
                     port    : ref://testcase/config/dst/endpoint/intf/ports
                 - packet:
-                    object  : callback://normalization/callbacks/GetExpectedCpuPacket/pktid=PKT1
+                    object  : callback://normalization/callbacks/GetExpectedCpuPacket/pktid=BASE2
                     port    : 128

@@ -1,10 +1,10 @@
 # For Usage details: Refer <ws>/dol/examples/sample.mlist.example
 feature:
     id      : norm
-    sub     : native
+    sub     : vxlan
     package : test.normalization
     module  : normalization
-    spec    : normalization.testspec
+    spec    : norm_vxlan.testspec
     enable  : True
     ignore  : False
 
@@ -88,13 +88,13 @@ modules:
               flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_OPTIONS_ACTION_DROP
               flow: filter://type=IPV4
-            - profile    : SEC_PROF_IP_OPTIONS_ACTION_EDIT
-              flow: filter://type=IPV4
 
     - module:
         name    : IP_IGNORE
         ignore  : True
         iterate :
+            - profile    : SEC_PROF_IP_OPTIONS_ACTION_EDIT
+              flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_INVALID_LEN_ACTION_ALLOW
               flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_INVALID_LEN_ACTION_DROP

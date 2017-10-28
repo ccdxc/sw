@@ -58,6 +58,9 @@ class ScapyHeaderBuilder_TCP(ScapyHeaderBuilder_BASE):
         scapy_options = []
         for opt in hdr.fields.options:
             scapy_opt = None
+            if isinstance(opt, tuple):
+                scapy_options.append(opt)
+                continue
             if opt.kind == None: continue
             if opt.data == None:
                 scapy_opt = (opt.kind, None)

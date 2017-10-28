@@ -519,11 +519,14 @@ def GetExpectedTcpAck(testcase, packet):
         return 0
     return 0
 
-def GetExpectedCpuPacket(testcase):
+def GetExpectedCpuPacket(testcase, args):
+    pktid = getattr(args, 'pktid', None)
+    if pktid is None:
+        pktid = 'PKT2'
     iterelem = testcase.module.iterator.Get()
     profile_name = iterelem.profile
     if 'SEC_PROF_TCP_NON_SYN_FIRST_PKT_DROP_ENABLE' in profile_name:
         return None
     elif 'SEC_PROF_TCP_NON_SYN_FIRST_PKT_DROP_DISABLE' in profile_name:
-        return testcase.packets.Get('PKT2')
+        return testcase.packets.Get(pktid)
     return None
