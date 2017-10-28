@@ -380,6 +380,52 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
 
     - module:
+        name    : INIT_RETRANSMIT_CLOSE_TO_OOW
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # IFLOW Retransmit
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_RETRANSMIT_CLOSE_TO_OOW
+            # Send some more data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+
+    - module:
+        name    : RES_RETRANSMIT_CLOSE_TO_OOW
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            # First sending rflow data so that the iflow_data
+            # when sent will ack it and then we can send a
+            # retransmit from responder side.
+            # If we reverse this order then since rflow data
+            # is still not acked yet it is not considered as
+            # a retransmit
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            # RFLOW Retransmit
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_RETRANSMIT_CLOSE_TO_OOW
+            # Send some more data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+
+    - module:
         name    : INIT_LEFT_OVERLAP
         tracker : True
         args    :
@@ -555,6 +601,52 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_DATA
             # RFLOW overlap to left and right of window
             - step  : ref://trackerstore/steps/id=RFLOW_DATA_LEFT_OVERLAP_RIGHT_OVERLAP
+
+    - module:
+        name    : INIT_OOW_CLOSE_TO_RETRANSMIT
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # IFLOW Retransmit
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_OOW_CLOSE_TO_RETRANSMIT
+            # Send some more data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+
+    - module:
+        name    : RES_OOW_CLOSE_TO_RETRANSMIT
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            # First sending rflow data so that the iflow_data
+            # when sent will ack it and then we can send a
+            # retransmit from responder side.
+            # If we reverse this order then since rflow data
+            # is still not acked yet it is not considered as
+            # a retransmit
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            # RFLOW Retransmit
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_OOW_CLOSE_TO_RETRANSMIT
+            # Send some more data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
 
     # TCP Data Len = 0, rcvr_win_sz = 0, send packet with rcv_nxt -2
     # Drop case
@@ -1459,6 +1551,42 @@ modules:
             # Reset from the Initator Side
             - step  : ref://trackerstore/steps/id=RFLOW_RST
               cpu   : True
+
+    - module:
+        name    : INIT_RST_ON_ESTAB_CONN_WITH_RETRAMIT_DATA
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            # Reset from the Initator Side
+            - step  : ref://trackerstore/steps/id=IFLOW_RST_WITH_RETRANSMIT_DATA
+              cpu   : False
+
+    - module:
+        name    : RES_RST_ON_ESTAB_CONN_WITH_RETRANSMIT_DATA
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            # Reset from the Initator Side
+            - step  : ref://trackerstore/steps/id=RFLOW_RST_WITH_RETRANSMIT_DATA
+              cpu   : False
 
     - module:
         name    : INIT_DATA_ON_INIT_RST_CONN

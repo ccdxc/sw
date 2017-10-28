@@ -304,6 +304,28 @@ steps:
             seq     : callback://firewall/alu/Sub/val=100
             flags   : ack
 
+      # Packet with a seq of 2**31 to the left of rcv_nxt
+      # Should be treated as retransmitted and permitted
+    - step:
+        id          : IFLOW_DATA_RETRANSMIT_CLOSE_TO_OOW
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        advance     : False
+        payloadsize : 100
+        fields      :
+            seq     : callback://firewall/alu/Sub/val=2147483648
+            flags   : ack
+
+      # Packet with a seq of 2**31 to the left of rcv_nxt
+      # Should be treated as retransmitted and permitted
+    - step:
+        id          : RFLOW_DATA_RETRANSMIT_CLOSE_TO_OOW
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        advance     : False
+        payloadsize : 100
+        fields      :
+            seq     : callback://firewall/alu/Sub/val=2147483648
+            flags   : ack
+
     - step:
         id          : IFLOW_DATA_OOO_IN_WINDOW
         base        : ref://trackerstore/steps/id=IFLOW_BASE
@@ -384,6 +406,34 @@ steps:
         permit      : False
         fields      :
             seq     : callback://firewall/alu/Sub/val=100
+            flags   : ack
+
+      # Packet with a seq of (2**31 + 1) to the left of rcv_nxt
+      # Should be treated as Out of Window and dropped as
+      # the seg.seq will be Out of Window but the (seq.seq + tcp_data_len)
+      # seq number will be retramsmitted seq number.
+    - step:
+        id          : IFLOW_DATA_OOW_CLOSE_TO_RETRANSMIT
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        advance     : False
+        permit      : False
+        payloadsize : 100
+        fields      :
+            seq     : callback://firewall/alu/Sub/val=2147483649
+            flags   : ack
+
+      # Packet with a seq of (2**31 + 1) to the left of rcv_nxt
+      # Should be treated as Out of Window and dropped as
+      # the seg.seq will be Out of Window but the (seq.seq + tcp_data_len)
+      # seq number will be retramsmitted seq number.
+    - step:
+        id          : RFLOW_DATA_OOW_CLOSE_TO_RETRANSMIT
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        advance     : False
+        permit      : False
+        payloadsize : 100
+        fields      :
+            seq     : callback://firewall/alu/Sub/val=2147483649
             flags   : ack
 
     - step:
@@ -561,6 +611,24 @@ steps:
         payloadsize : 0
         fields      :
             flags   : rst
+
+    - step:
+        id          : IFLOW_RST_WITH_RETRANSMIT_DATA
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        advance     : False
+        payloadsize : 100
+        fields      :
+            seq     : callback://firewall/alu/Sub/val=100
+            flags   : ack, rst
+
+    - step:
+        id          : RFLOW_RST_WITH_RETRANSMIT_DATA
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        advance     : False
+        payloadsize : 100
+        fields      :
+            seq     : callback://firewall/alu/Sub/val=100
+            flags   : ack, rst
 
     - step:
         id          : RFLOW_RST_FOR_SYN

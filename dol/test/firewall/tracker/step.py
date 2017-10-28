@@ -167,6 +167,7 @@ class StepObject(objects.FrameworkTemplateObject):
             value = curr.Get(self)
         elif objects.IsCallback(curr):
             value = self.__resolve_by_callback(curr, default)
+            value = value & 0xffffffff
         setattr(obj, attr, value)
         return
 

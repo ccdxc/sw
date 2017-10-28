@@ -31,13 +31,13 @@ validate_native_packet:
   sne         c1, k.ipv4_version, 4
   seq.!c1     c1, k.ipv4_ttl, 0
   nop.!c1.e
-  phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
+  phvwr.c1.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
   .cscase 2
   sne         c1, k.ipv6_version, 6
   seq.!c1     c1, k.ipv6_hopLimit, 0
   nop.!c1.e
-  phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
+  phvwr.c1.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
   .cscase 3
   nop.e
@@ -65,13 +65,13 @@ validate_tunneled_packet:
   sne         c1, k.inner_ipv4_version, 4
   seq.!c1     c1, k.inner_ipv4_ttl, 0
   nop.!c1.e
-  phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
+  phvwr.c1.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
   .cscase 2
   sne        c1, k.inner_ipv6_version, 6
   seq.!c1    c1, k.inner_ipv6_hopLimit, 0
   nop.!c1.e
-  phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
+  phvwr.c1.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
   .cscase 3
   nop.e
