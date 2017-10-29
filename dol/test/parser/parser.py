@@ -11,8 +11,8 @@ def Setup(infra, module):
 
 def TestCaseSetup(tc):
     iterelem = tc.module.iterator.Get()
-    tc.pvtdata.opttype = getattr(iterelem, 'opttype', None)
-    tc.pvtdata.optcount = getattr(iterelem, 'optcount', None)
+    tc.pvtdata.type = getattr(iterelem, 'type', None)
+    tc.pvtdata.count = getattr(iterelem, 'count', 1)
     modcbs.TestCaseSetup(tc)
     return
 

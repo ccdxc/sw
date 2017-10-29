@@ -1,0 +1,75 @@
+# Feature Test Modules List
+feature:
+    id      : parser
+    sub     : tcp
+    package : test.parser
+    module  : parser
+    enable  : True
+    ignore  : False
+
+modules:
+    - module:
+        name    : SACK
+        ignore  : True
+        spec    : tcpopts.testspec
+        iterate :
+            - type   : TCP_SACK
+            - type   : TCP_SACK
+              count  : 2
+            - type   : TCP_SACK
+              count  : 3
+            - type   : TCP_SACK
+              count  : 4
+
+    - module:
+        name    : NOP
+        ignore  : True
+        spec    : tcpopts.testspec
+        iterate :
+            - type   : TCP_NOP
+            - type   : TCP_NOP
+              count  : 2
+            - type   : TCP_NOP
+              count  : 3
+            - type   : TCP_NOP
+              count  : 4
+
+    - module:
+        name    : MSS
+        spec    : tcpopts.testspec
+        iterate :
+            - type   : TCP_MSS
+
+    - module:
+        name    : WSCALE
+        spec    : tcpopts.testspec
+        iterate :
+            - type   : TCP_WSCALE
+
+    - module:
+        name    : SACKOK
+        spec    : tcpopts.testspec
+        ignore  : True
+        iterate :
+            - type   : TCP_SACKOK
+
+    - module:
+        name    : TIMESTAMP
+        spec    : tcpopts.testspec
+        ignore  : True
+        iterate :
+            - type   : TCP_TIMESTAMP
+
+    - module:
+        name    : MSS_NOP_WSCALE
+        spec    : tcpopts.testspec
+        ignore  : True
+        iterate :
+            - type   : TCP_MSS_NOP_WSCALE
+
+    - module:
+        name    : MSS_EOL_WSCALE
+        spec    : tcpopts.testspec
+        ignore  : True
+        iterate :
+            - type   : TCP_MSS_EOL_WSCALE

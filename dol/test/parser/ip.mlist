@@ -1,0 +1,17 @@
+# Feature Test Modules List
+feature:
+    id      : parser
+    sub     : ip
+    package : test.parser
+    module  : parser
+    enable  : True
+    ignore  : False
+
+modules:
+    - module:
+        name    : PROTO255
+        spec    : proto255.testspec
+        iterate :
+            - flow : filter://type=IPV4,proto=PROTO255,label=NETWORKING
+            - flow : filter://type=IPV6,proto=PROTO255,label=NETWORKING
+
