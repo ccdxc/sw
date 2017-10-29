@@ -6,15 +6,13 @@ PROGRAM = model_server
 SOURCES = model_server.cc sim_server.c zmq_wait.c
 LBUILD_ARCHES = x86_64
 
-ASIC_TOOLS = /home/asic/tools/src/0.25
-NIC = ../../../pensando/sw/nic
+NIC = ../../../../nic
 
 # cancel -Wall -Werror
 CCWARN_FLAGS = $(NULL)
 LCFLAGS = \
-	-I $(ASIC_TOOLS)/include \
-	-I $(NIC)/model_sim/include \
 	-I /usr/include/python2.7 \
+	-I $(NIC)/model_sim/include \
 	-I ../../lib/misc/include \
 	-I ../../lib/pciehsvc/include \
 	-I ../libsimlib/include \
@@ -22,7 +20,6 @@ LCFLAGS = \
 	$(NULL)
 LCXXFLAGS = $(LCFLAGS)
 LLDFLAGS = \
-	-L $(ASIC_TOOLS)/x86_64/lib64 \
 	-L $(NIC)/model_sim/libs \
 	$(NULL)
 
@@ -44,6 +41,7 @@ SYSTEM_LIBRARIES = \
 	-lpython2.7 \
 	-lmodel_cc \
 	-lcommon_cc \
+	-lmpuobj \
 	-lJudy \
 	-lsknobs \
 	-ltop_csr_compile \

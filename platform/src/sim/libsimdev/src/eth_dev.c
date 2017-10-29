@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <stdarg.h>
 #include <inttypes.h>
 #include <unistd.h>
@@ -14,6 +15,7 @@
 #include <signal.h>
 #include <assert.h>
 #include <sys/types.h>
+#include <sys/param.h>
 
 #include "src/lib/misc/include/maclib.h"
 #include "src/lib/misc/include/bdf.h"
@@ -21,12 +23,43 @@
 #include "src/sim/libsimdev/src/dev_utils.h"
 #include "src/sim/libsimdev/src/simdev_impl.h"
 
+/* Supply these for ionic_if.h */
+#define __packed __attribute__((packed))
+typedef u_int8_t u8;
+typedef u_int16_t u16;
+typedef u_int32_t u32;
+typedef u_int64_t u64;
+typedef u_int64_t dma_addr_t;
+
+#include "src/sim/libsimdev/src/ionic_if.h"
+
 typedef struct ethparams_s {
     int lif;
+    int adq_type;
+    int adq_count;
+    int adq_qidbase;
+    int txq_type;
+    int txq_count;
+    int txq_qidbase;
+    int rxq_type;
+    int rxq_count;
+    int rxq_qidbase;
     int intr_base;
     int intr_count;
+    int qidbase[8];
+    u_int64_t qstate_addr;
     mac_t mac;
 } ethparams_t;
+
+typedef struct qstate_app_eth {
+    uint8_t     enable;
+    uint64_t    ring_base;
+    uint16_t    ring_size;
+    uint64_t    cq_ring_base;
+} __attribute__((packed)) qstate_app_eth_t;
+
+typedef qstate_app_eth_t qstate_app_ethtx_t;
+typedef qstate_app_eth_t qstate_app_ethrx_t;
 
 static simdev_t *current_sd;
 
@@ -49,6 +82,60 @@ eth_intrc(simdev_t *sd)
 {
     ethparams_t *ep = sd->priv;
     return ep->intr_count;
+}
+
+static u_int64_t
+eth_qstate_addr(simdev_t *sd, const int type, const int qid)
+{
+    ethparams_t *ep = sd->priv;
+    /* XXX assumes all qstate entries are 64B */
+    return (ep->qstate_addr + ((ep->qidbase[type] + qid) * sizeof(qstate_t)));
+}
+
+static int
+eth_read_qstate(simdev_t *sd, const int type, const int qid, qstate_t *qs)
+{
+    const u_int64_t addr = eth_qstate_addr(sd, type, qid);
+    return simdev_read_mem(addr, qs, sizeof(qstate_t));
+}
+
+static int
+eth_write_qstate(simdev_t *sd, const int type, const int qid, qstate_t *qs)
+{
+    const u_int64_t addr = eth_qstate_addr(sd, type, qid);
+    return simdev_write_mem(addr, qs, sizeof(qstate_t));
+}
+
+static int
+eth_read_txqstate(simdev_t *sd, const int txqid, qstate_t *qs)
+{
+    ethparams_t *ep = sd->priv;
+    const int qid = ep->txq_qidbase + txqid;
+    return eth_read_qstate(sd, ep->txq_type, qid, qs);
+}
+
+static int
+eth_write_txqstate(simdev_t *sd, const int txqid, qstate_t *qs)
+{
+    ethparams_t *ep = sd->priv;
+    const int qid = ep->txq_qidbase + txqid;
+    return eth_write_qstate(sd, ep->txq_type, qid, qs);
+}
+
+static int
+eth_read_rxqstate(simdev_t *sd, const int rxqid, qstate_t *qs)
+{
+    ethparams_t *ep = sd->priv;
+    const int qid = ep->rxq_qidbase + rxqid;
+    return eth_read_qstate(sd, ep->rxq_type, qid, qs);
+}
+
+static int
+eth_write_rxqstate(simdev_t *sd, const int rxqid, qstate_t *qs)
+{
+    ethparams_t *ep = sd->priv;
+    const int qid = ep->rxq_qidbase + rxqid;
+    return eth_write_qstate(sd, ep->rxq_type, qid, qs);
 }
 
 static u_int64_t
@@ -97,195 +184,291 @@ struct dev_cmd_regs {
 } PACKED;
 
 static struct dev_cmd_regs dev_cmd_regs = {
-    .signature = 0x44455643,
+    .signature = DEV_CMD_SIGNATURE,
 };
-
-#define DEV_CMD_NOP             0
-#define DEV_CMD_RESET           1
-#define DEV_CMD_IDENTIFY        2
-#define DEV_CMD_LIF_INIT        3
-#define DEV_CMD_ADMINQ_INIT     4
-#define DEV_CMD_TXQ_INIT        5
-
-struct admin_cmd {
-    u_int16_t opcode;
-    u_int16_t cmd_data[31];
-} PACKED;
-
-struct admin_comp {
-    u_int32_t status:8;
-    u_int32_t comp_index:24;
-    u_int8_t cmd_data[11];
-    u_int8_t color:1;
-} PACKED;
-
-typedef u_int8_t u8;
-typedef u_int16_t u16;
-typedef u_int32_t u32;
-typedef u_int64_t u64;
-typedef u_int64_t dma_addr_t;
-
-union dev_identify {
-    struct {
-        u8 asic_type;
-        u8 asic_rev;
-        u8 rsvd[2];
-        char serial_num[20];
-        char fw_version[20];
-        u32 nlifs;
-        u32 ndbpgs_per_lif;
-        u32 ntxqs_per_lif;
-        u32 nrxqs_per_lif;
-        u32 ncqs_per_lif;
-        u32 nrdmasqs_per_lif;
-        u32 nrdmarqs_per_lif;
-        u32 neqs_per_lif;
-        u32 nintrs;
-    } PACKED;
-    u32 words[1024];
-};
-
-struct identify_cmd {
-    u16 opcode;
-    u16 rsvd;
-    dma_addr_t addr;
-    u32 rsvd2[13];
-} PACKED;
-
-struct lif_init_cmd {
-    u16 opcode;
-    u16 rsrv;
-    u32 index:24;
-    u32 rsrv2[16];
-} PACKED;
-
-struct adminq_init_cmd {
-    u16 opcode;
-    u16 pid;
-    u16 index;
-    u16 intr_index;
-    u32 lif_index:24;
-    u32 ring_size:8;
-    dma_addr_t ring_base;
-    u32 rsvd2[11];
-} PACKED;
-
-struct adminq_init_comp {
-    u32 status:8;
-    u32 rsvd:24;
-    u32 qid:24;
-    u32 db_type:8;
-    u32 rsvd2[2];
-} PACKED;
-
-struct txq_init_cmd {
-    u16 opcode;
-    u8 I:1;
-    u8 E:1;
-    u8 rsvd;
-    u16 pid;
-    u16 intr_index;
-    u32 type:8;
-    u32 index:16;
-    u32 rsvd2:8;
-    u32 cos:3;
-    u32 ring_size:8;
-    u32 rsvd3:21;
-    dma_addr_t ring_base;
-    u32 rsvd4[10];
-} PACKED;
-
-struct txq_init_comp {
-    u32 status:8;
-    u32 comp_index:24;
-    u32 qid:24;
-    u32 db_type:8;
-    u32 rsvd;
-    u32 rsrv2:24;
-    u32 color:1;
-    u32 rsvd3:7;
-} PACKED;
 
 static void
-devcmd_nop(struct admin_cmd *cmd, struct admin_comp *comp)
+devcmd_nop(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
     simdev_log("devcmd_nop:\n");
 }
 
 static void
-devcmd_reset(struct admin_cmd *cmd, struct admin_comp *comp)
+devcmd_reset(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
     simdev_log("devcmd_reset:\n");
 }
 
 static void
-devcmd_identify(struct admin_cmd *cmd, struct admin_comp *comp)
+devcmd_identify(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
+    struct identify_cmd *cmd = (void *)acmd;
+    struct identify_comp *comp = (void *)acomp;
     simdev_t *sd = current_sd;
-    struct identify_cmd *icmd = (void *)cmd;
-    union dev_identify devid = {
+    ethparams_t *ep = sd->priv;
+    union identity ident = {
         .asic_type = 0x00,
         .asic_rev = 0xa0,
         .serial_num = "serial_num0001",
         .fw_version = "fwvers0002",
         .nlifs = 1,
         .ndbpgs_per_lif = 1,
-        .ntxqs_per_lif = 1,
-        .nrxqs_per_lif = 1,
-        .ncqs_per_lif = 2,
+        .ntxqs_per_lif = ep->txq_count,
+        .nrxqs_per_lif = ep->rxq_count,
+        .ncqs_per_lif = 0,
         .nrdmasqs_per_lif = 0,
         .nrdmarqs_per_lif = 0,
         .neqs_per_lif = 0,
-        .nintrs = 4,
+        .nintrs = ep->intr_count,
     };
 
     simdev_log("devcmd_identify: addr 0x%"PRIx64" size %ld\n", 
-               icmd->addr, sizeof(devid));
+               cmd->addr, sizeof(ident));
     if (sims_memwr(sd->fd, sd->bdf,
-                   icmd->addr, sizeof(devid), &devid) < 0) {
+                   cmd->addr, sizeof(ident), &ident) < 0) {
         simdev_error("devcmd_identify: sims_memwr failed\n");
         comp->status = 1;
     }
 }
 
 static void
-devcmd_lif_init(struct admin_cmd *cmd, struct admin_comp *comp)
+devcmd_lif_init(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
-    struct lif_init_cmd *lcmd = (void *)cmd;
+    struct lif_init_cmd *cmd = (void *)acmd;
 
-    simdev_log("devcmd_lif_init: lif %d\n", lcmd->index);
+    simdev_log("devcmd_lif_init: lif %d\n", cmd->index);
 }
 
 static void
-devcmd_adminq_init(struct admin_cmd *cmd, struct admin_comp *comp)
+devcmd_adminq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
-    struct adminq_init_cmd *acmd = (void *)cmd;
-    struct adminq_init_comp *acomp = (void *)comp;
+    struct adminq_init_cmd *cmd = (void *)acmd;
+    struct adminq_init_comp *comp = (void *)acomp;
+    ethparams_t *ep = current_sd->priv;
 
     simdev_log("devcmd_adminq_init: "
                "pid %d index %d intr_index %d lif_index %d\n"
                "    ring_size 0x%x ring_base 0x%"PRIx64"\n",
-               acmd->pid,
-               acmd->index,
-               acmd->intr_index,
-               acmd->lif_index,
-               acmd->ring_size,
-               acmd->ring_base);
+               cmd->pid,
+               cmd->index,
+               cmd->intr_index,
+               cmd->lif_index,
+               cmd->ring_size,
+               cmd->ring_base);
 
-    acomp->status = 0;
-    acomp->qid = 3;
-    acomp->db_type = 2;
+    comp->status = 0;
+    comp->qid = ep->adq_qidbase + cmd->index;
+    comp->db_type = ep->adq_type;
 }
 
 static void
-devcmd_txq_init(struct admin_cmd *cmd, struct admin_comp *comp)
+devcmd_txq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
-    struct txq_init_cmd *tcmd = (void *)cmd;
+    struct txq_init_cmd *cmd = (void *)acmd;
+    struct txq_init_comp *comp = (void *)acomp;
+    simdev_t *sd = current_sd;
+    ethparams_t *ep = sd->priv;
+    qstate_t qs;
+    qstate_app_ethtx_t *qsethtx;
 
-    simdev_log("devcmd_txq_init: type %d index %d ring_size %d\n",
-               tcmd->type,
-               tcmd->index,
-               tcmd->ring_size);
+    simdev_log("devcmd_txq_init: type %d index %d "
+               "ring_base 0x%"PRIx64" ring_size %d %c%c\n",
+               cmd->type,
+               cmd->index,
+               cmd->ring_base,
+               cmd->ring_size,
+               cmd->I ? 'I' : '-',
+               cmd->E ? 'E' : '-');
+
+    if (cmd->ring_size < 2 || cmd->ring_size > 16) {
+        simdev_error("devcmd_txq_init: bad ring_size %d\n", cmd->ring_size);
+        comp->status = 1;
+        return;
+    }
+    if (cmd->index >= ep->txq_count) {
+        simdev_error("devcmd_txq_init: bad qid %d\n", cmd->index);
+        comp->status = 1;
+        return;
+    }
+
+    memset(&qs, 0, sizeof(qs));
+    qs.host = 2;
+    qs.total = 2;
+    qs.pid = cmd->pid;
+    qsethtx = (qstate_app_ethtx_t *)qs.app_data;
+    qsethtx->ring_base = cmd->ring_base;
+    qsethtx->ring_size = cmd->ring_size;
+    qsethtx->cq_ring_base = roundup(cmd->ring_base + (1<<cmd->ring_size),4096);
+    qsethtx->enable = cmd->E;
+
+    if (eth_write_txqstate(sd, cmd->index, &qs) < 0) {
+        simdev_error("devcmd_txq_init: write_txqstate %d failed\n",
+                     cmd->index);
+        comp->status = 1;
+        return;
+    }
+
+    comp->status = 0;
+    comp->qid = ep->txq_qidbase + cmd->index;
+    comp->db_type = ep->txq_type;
+}
+
+static void
+devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    struct rxq_init_cmd *cmd = (void *)acmd;
+    struct rxq_init_comp *comp = (void *)acomp;
+    simdev_t *sd = current_sd;
+    ethparams_t *ep = sd->priv;
+    qstate_t qs;
+    qstate_app_ethrx_t *qsethrx;
+
+    simdev_log("devcmd_rxq_init: type %d index %d "
+               "ring_base 0x%"PRIx64" ring_size %d %c%c\n",
+               cmd->type,
+               cmd->index,
+               cmd->ring_base,
+               cmd->ring_size,
+               cmd->I ? 'I' : '-',
+               cmd->E ? 'E' : '-');
+
+    if (cmd->ring_size < 2 || cmd->ring_size > 16) {
+        simdev_error("devcmd_rxq_init: bad ring_size %d\n", cmd->ring_size);
+        comp->status = 1;
+        return;
+    }
+    if (cmd->index >= ep->rxq_count) {
+        simdev_error("devcmd_rxq_init: bad qid %d\n", cmd->index);
+        comp->status = 1;
+        return;
+    }
+
+    memset(&qs, 0, sizeof(qs));
+    qs.host = 2;
+    qs.total = 2;
+    qs.pid = cmd->pid;
+    qsethrx = (qstate_app_ethrx_t *)qs.app_data;
+    qsethrx->ring_base = cmd->ring_base;
+    qsethrx->ring_size = cmd->ring_size;
+    qsethrx->cq_ring_base = roundup(cmd->ring_base + (1<<cmd->ring_size),4096);
+    qsethrx->enable = 1;
+
+    if (eth_write_rxqstate(sd, cmd->index, &qs) < 0) {
+        simdev_error("devcmd_rxq_init: write_rxqstate %d failed\n",
+                     cmd->index);
+        comp->status = 1;
+        return;
+    }
+
+    comp->status = 0;
+    comp->qid = ep->rxq_qidbase + cmd->index;
+    comp->db_type = ep->rxq_type;
+}
+
+static void
+devcmd_q_enable(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    struct q_enable_cmd *cmd = (void *)acmd;
+    struct q_enable_comp *comp = (void *)acomp;
+    simdev_t *sd = current_sd;
+    const int type = cmd->db_type;
+    const int qid = cmd->qid;
+    qstate_t qs;
+    qstate_app_ethtx_t *qsethtx;
+
+    simdev_log("devcmd_q_enable: type %d qid %d\n", type, qid);
+
+    if (eth_read_qstate(sd, type, qid, &qs) < 0) {
+        simdev_error("devcmd_q_enable: read_qstate %d failed\n", qid);
+        comp->status = 1;
+        return;
+    }
+
+    qsethtx = (qstate_app_ethtx_t *)qs.app_data;
+    qsethtx->enable = 1;
+
+    assert(offsetof(qstate_app_ethtx_t, enable) == 
+           offsetof(qstate_app_ethrx_t, enable));
+
+    if (eth_write_qstate(sd, type, qid, &qs) < 0) {
+        simdev_error("devcmd_q_enable: write_qstate %d failed\n", qid);
+        comp->status = 1;
+        return;
+    }
+}
+
+static void
+devcmd_q_disable(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    struct q_disable_cmd *cmd = (void *)acmd;
+    struct q_disable_comp *comp = (void *)acomp;
+    simdev_t *sd = current_sd;
+    const int type = cmd->db_type;
+    const int qid = cmd->qid;
+    qstate_t qs;
+    qstate_app_ethtx_t *qsethtx;
+
+    simdev_log("devcmd_q_disable: type %d qid %d\n", type, qid);
+
+    if (eth_read_qstate(sd, type, qid, &qs) < 0) {
+        simdev_error("devcmd_q_enable: read_qstate %d,%d failed\n", type, qid);
+        comp->status = 1;
+        return;
+    }
+
+    qsethtx = (qstate_app_ethtx_t *)qs.app_data;
+    qsethtx->enable = 0;
+
+    assert(offsetof(qstate_app_ethtx_t, enable) == 
+           offsetof(qstate_app_ethrx_t, enable));
+
+    if (eth_write_qstate(sd, type, qid, &qs) < 0) {
+        simdev_error("devcmd_q_enable: write_qstate %d failed\n", qid);
+        comp->status = 1;
+        return;
+    }
+}
+
+static void
+devcmd_station_mac_addr_get(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    struct station_mac_addr_get_comp *comp = (void *)acomp;
+    simdev_t *sd = current_sd;
+    ethparams_t *ep = sd->priv;
+
+    simdev_log("devcmd_station_mac_addr_get: %s\n", mac_to_str(&ep->mac));
+    memcpy(&comp->addr, &ep->mac, 6);
+}
+
+static void
+devcmd_debug_q_dump(struct admin_cmd *acmd, struct admin_comp *acomp)
+{
+    struct debug_q_dump_cmd *cmd = (void *)acmd;
+    struct debug_q_dump_comp *comp = (void *)acomp;
+    simdev_t *sd = current_sd;
+    const int type = cmd->qtype;
+    const int qid = cmd->qid;
+    qstate_t qs;
+
+    simdev_log("devcmd_debug_q_dump: type %d qid %d\n", type, qid);
+
+    if (type >= 8) {
+        simdev_error("devcmd_debug_q_dump: bad qtype %d\n", type);
+        comp->status = 1;
+        return;
+    }
+
+    if (eth_read_qstate(sd, type, qid, &qs) < 0) {
+        simdev_error("devcmd_debug_q_dump: read_qstate %d,%d failed\n", 
+                     type, qid);
+        comp->status = 1;
+        return;
+    }
+
+    comp->p_index0 = qs.p_index0;
+    comp->c_index0 = qs.c_index0;
+    comp->p_index1 = qs.p_index1;
+    comp->c_index1 = qs.c_index1;
 }
 
 static void
@@ -303,23 +486,38 @@ devcmd(struct dev_cmd_regs *dc)
     memset(comp, 0, sizeof(*comp));
 
     switch (cmd->opcode) {
-    case DEV_CMD_NOP:
+    case CMD_OPCODE_NOP:
         devcmd_nop(cmd, comp);
         break;
-    case DEV_CMD_RESET:
+    case CMD_OPCODE_RESET:
         devcmd_reset(cmd, comp);
         break;
-    case DEV_CMD_IDENTIFY:
+    case CMD_OPCODE_IDENTIFY:
         devcmd_identify(cmd, comp);
         break;
-    case DEV_CMD_LIF_INIT:
+    case CMD_OPCODE_LIF_INIT:
         devcmd_lif_init(cmd, comp);
         break;
-    case DEV_CMD_ADMINQ_INIT:
+    case CMD_OPCODE_ADMINQ_INIT:
         devcmd_adminq_init(cmd, comp);
         break;
-    case DEV_CMD_TXQ_INIT:
+    case CMD_OPCODE_TXQ_INIT:
         devcmd_txq_init(cmd, comp);
+        break;
+    case CMD_OPCODE_RXQ_INIT:
+        devcmd_rxq_init(cmd, comp);
+        break;
+    case CMD_OPCODE_Q_ENABLE:
+        devcmd_q_enable(cmd, comp);
+        break;
+    case CMD_OPCODE_Q_DISABLE:
+        devcmd_q_disable(cmd, comp);
+        break;
+    case CMD_OPCODE_STATION_MAC_ADDR_GET:
+        devcmd_station_mac_addr_get(cmd, comp);
+        break;
+    case CMD_OPCODE_DEBUG_Q_DUMP:
+        devcmd_debug_q_dump(cmd, comp);
         break;
     default:
         simdev_error("devcmd: unknown opcode %d\n", cmd->opcode);
@@ -892,6 +1090,27 @@ static int
 eth_init(simdev_t *sd, const char *devparams)
 {
     ethparams_t *ep;
+    char qidbase[80];
+
+    if (0) eth_read_txqstate(NULL, 0, NULL);
+    if (0) eth_read_rxqstate(NULL, 0, NULL);
+
+    if (devparam_str(devparams, "help", NULL, 0) == 0) {
+        simdev_error("eth params:\n"
+                     "    lif=<lif>\n"
+                     "    adq_type=<adq_type>\n"
+                     "    adq_count=<adq_count>\n"
+                     "    adq_qidbase=<adq_qidbase>\n"
+                     "    txq_type=<txq_type>\n"
+                     "    txq_count=<txq_count>\n"
+                     "    txq_qidbase=<txq_qidbase>\n"
+                     "    rxq_type=<rxq_type>\n"
+                     "    rxq_count=<rxq_count>\n"
+                     "    rxq_qidbase=<rxq_qidbase>\n"
+                     "    intr_base=<intr_base>\n"
+                     "    intr_count=<intr_count>\n");
+        return -1;
+    }
 
     ep = calloc(1, sizeof(ethparams_t));
     if (ep == NULL) {
@@ -900,13 +1119,39 @@ eth_init(simdev_t *sd, const char *devparams)
     }
     sd->priv = ep;
 
-    devparam_int(devparams, "lif", &ep->lif);
-    devparam_int(devparams, "intr_base", &ep->intr_base);
-    devparam_int(devparams, "intr_count", &ep->intr_count);
-    devparam_mac(devparams, "mac", &ep->mac);
+#define GET_PARAM(P, TYP) \
+    devparam_##TYP(devparams, #P, &ep->P)
+
+    GET_PARAM(lif, int);
+    GET_PARAM(adq_type, int);
+    GET_PARAM(adq_count, int);
+    GET_PARAM(adq_qidbase, int);
+    GET_PARAM(txq_type, int);
+    GET_PARAM(txq_count, int);
+    GET_PARAM(txq_qidbase, int);
+    GET_PARAM(rxq_type, int);
+    GET_PARAM(rxq_count, int);
+    GET_PARAM(rxq_qidbase, int);
+    GET_PARAM(intr_base, int);
+    GET_PARAM(intr_count, int);
+    GET_PARAM(qstate_addr, u64);
+    GET_PARAM(mac, mac);
+
+    /*
+     * qidbase=0:1:2:3:4:5:6:7
+     */
+    if (devparam_str(devparams, "qidbase", qidbase, sizeof(qidbase)) == 0) {
+        char *p, *q, *sp;
+        int i;
+
+        q = qidbase;
+        for (i = 0; i < 8 && (p = strtok_r(q, ":", &sp)) != NULL; i++) {
+            ep->qidbase[i] = strtoul(p, NULL, 0);
+            if (q != NULL) q = NULL;
+        }
+    }
 
     eth_init_device(sd);
-
     return 0;
 }
 

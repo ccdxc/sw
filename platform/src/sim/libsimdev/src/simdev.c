@@ -12,7 +12,9 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/queue.h>
+#include <sys/param.h>
 
+#include "src/lib/misc/include/misc.h"
 #include "src/lib/misc/include/bdf.h"
 #include "src/lib/misc/include/maclib.h"
 #include "src/sim/libsimdev/src/simdev_impl.h"
@@ -86,6 +88,7 @@ simdev_doorbell(u_int64_t addr, u_int64_t data)
 {
     simdev_api_t *api = simdevinfo_api();
 
+    simdev_log("doorbell addr 0x%"PRIx64" data 0x%"PRIx64"\n", addr, data);
     if (api && api->doorbell) {
         return api->doorbell(addr, data);
     }
@@ -98,7 +101,13 @@ simdev_read_reg(u_int64_t addr, u_int32_t *data)
     simdev_api_t *api = simdevinfo_api();
 
     if (api && api->read_reg) {
-        return api->read_reg(addr, data);
+        int r = api->read_reg(addr, data); 
+        if (r == 0) {
+            simdev_log("read_reg 0x08%"PRIx64" = 0x%x\n", addr, *data);
+        } else {
+            simdev_log("read_reg addr 0x%08"PRIx64" failed\n", addr);
+        }
+        return r;
     }
     return 0;
 }
@@ -122,6 +131,7 @@ simdev_write_reg(u_int64_t addr, u_int32_t data)
     simdev_api_t *api = simdevinfo_api();
 
     if (api && api->write_reg) {
+        simdev_log("write_reg 0x08%"PRIx64" = 0x%x\n", addr, data);
         return api->write_reg(addr, data);
     }
     return 0;
@@ -140,13 +150,36 @@ simdev_write_regs(u_int64_t addr, u_int32_t *data, int nw)
     return 0;
 }
 
+static void
+simdev_log_buf(u_int64_t addr, unsigned char *buf, size_t size)
+{
+    char fmtbuf[80];
+    int offset, limited_size;
+
+    limited_size = MIN(size, 256);
+    for (offset = 0; offset < limited_size; offset += 16) {
+        const int seglen = MIN(16, limited_size - offset);
+        hex_format(fmtbuf, sizeof(fmtbuf), &buf[offset], seglen);
+        simdev_log("    %08"PRIx64": %s\n", addr + offset, fmtbuf);
+    }
+    if (size > limited_size) {
+        simdev_log("    %08"PRIx64": ...\n", addr + offset);
+    }
+}
+
 int
 simdev_read_mem(u_int64_t addr, void *buf, size_t size)
 {
     simdev_api_t *api = simdevinfo_api();
 
     if (api && api->read_mem) {
-        return api->read_mem(addr, buf, size);
+        int r = api->read_mem(addr, buf, size);
+
+        if (r == 0) {
+            simdev_log("read_mem addr 0x%"PRIx64" size %ld\n", addr, size);
+            simdev_log_buf(addr, buf, size);
+        }
+        return r;
     }
     return 0;
 }
@@ -157,6 +190,8 @@ simdev_write_mem(u_int64_t addr, void *buf, size_t size)
     simdev_api_t *api = simdevinfo_api();
 
     if (api && api->write_mem) {
+        simdev_log("write_mem addr 0x%"PRIx64" size %ld\n", addr, size);
+        simdev_log_buf(addr, buf, size);
         return api->write_mem(addr, buf, size);
     }
     return 0;
@@ -168,7 +203,7 @@ simdev_initialize(simdev_t *sd, const char *devparams)
     char type[32];
     u_int16_t bdf;
 
-    if (devparam_value(devparams, "type", type, sizeof(type)) < 0) {
+    if (devparam_str(devparams, "type", type, sizeof(type)) < 0) {
         simdev_error("missing device type\n");
         return -1;
     }

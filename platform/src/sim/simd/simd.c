@@ -75,21 +75,30 @@ simd_error(const char *fmt, va_list ap)
 static int
 simd_doorbell(u_int64_t addr, u_int64_t data)
 {
-    verbose("doorbell addr 0x%"PRIx64" data 0x%"PRIx64"\n", addr, data);
     return 0;
 }
 
 static int
 simd_read_reg(u_int64_t addr, u_int32_t *data)
 {
-    verbose("read_reg addr 0x%"PRIx64"\n", addr);
     return 0;
 }
 
 static int
 simd_write_reg(u_int64_t addr, u_int32_t data)
 {
-    verbose("write_reg addr 0x%"PRIx64" data 0x%x\n", addr, data);
+    return 0;
+}
+
+static int
+simd_read_mem(u_int64_t addr, void *buf, size_t size)
+{
+    return 0;
+}
+
+static int
+simd_write_mem(u_int64_t addr, void *buf, size_t size)
+{
     return 0;
 }
 
@@ -100,10 +109,8 @@ static simdev_api_t simd_api = {
     .doorbell  = simd_doorbell,
     .read_reg  = simd_read_reg,
     .write_reg = simd_write_reg,
-#if 0
     .read_mem  = simd_read_mem,
     .write_mem = simd_write_mem,
-#endif
 };
 
 static void
