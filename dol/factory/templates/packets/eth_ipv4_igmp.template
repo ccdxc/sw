@@ -1,0 +1,25 @@
+meta:
+    id: ETH_IPV4_IGMP
+
+headers:
+    - header:
+        id      : eth
+        template: ref://store/headers/id=ETHERNET
+        fields:
+            type: ethertype/0x800
+    
+    - header:
+        id      : ipv4
+        template: ref://store/headers/id=IPV4
+        fields:
+            proto: ipproto/2
+    
+    - header:
+        id      : igmp
+        template: ref://store/headers/id=IGMP
+        fields:
+
+    - header:
+        id      : payload
+        template: ref://store/headers/id=PAYLOAD
+        fields:

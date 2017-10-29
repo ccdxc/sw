@@ -44,6 +44,7 @@ uint32_t nwsec_get_nwsec_prof_hw_id(nwsec_profile_t *pi_nwsec);
 
 // Utils
 uint8_t *memrev(uint8_t *block, size_t elnum);
+
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_IF_PD_UTILS_HPP__

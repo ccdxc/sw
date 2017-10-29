@@ -59,6 +59,8 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
 
     if (dst_lport_en == TRUE) {
         modify_field(control_metadata.dst_lport, dst_lport);
+        modify_field(capri_intrinsic.tm_replicate_en, FALSE);
+        modify_field(capri_intrinsic.tm_replicate_ptr, 0);
     }
 
     if (egress_policer_en == TRUE) {

@@ -23,7 +23,9 @@ action set_replica_rewrites() {
             // Only in these cases we need to do source port suppression check.
             // For the case where we will honor ingress we will never have the
             // FTE Programming where src_lport and dst_lport are same.
-            if (control_metadata.src_lport == tm_replication_data.lport) {
+            if ((control_metadata.src_lport == tm_replication_data.lport) or
+                ((tm_replication_data.is_tunnel == TRUE) and
+                 (tunnel_metadata.tunnel_terminate == TRUE))) {
                 modify_field(capri_intrinsic.drop, TRUE);
             }
             modify_field(control_metadata.dst_lport, tm_replication_data.lport);

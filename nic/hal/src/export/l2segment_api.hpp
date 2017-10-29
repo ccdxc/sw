@@ -23,6 +23,8 @@ uint32_t l2seg_get_ipsg_en(l2seg_t *pi_l2seg);
 l2seg_t *l2seg_get_infra_l2seg();
 uint32_t l2seg_get_bcast_fwd_policy(l2seg_t *pi_l2seg);
 oif_list_id_t l2seg_get_bcast_oif_list(l2seg_t *pi_l2seg);
+ip_addr_t *l2seg_get_gipo(l2seg_t *pi_l2seg);
+mac_addr_t *l2seg_get_rtr_mac(l2seg_t *pi_l2seg);
 
 } // namespace hal
 

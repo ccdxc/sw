@@ -417,6 +417,5 @@ uint8_t *memrev(uint8_t *block, size_t elnum)
      return block;
 }
 
-
 }   // namespace pd
 }   // namespace hal

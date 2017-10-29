@@ -1,0 +1,65 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow        : filter://label=NETWORKING
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : IN_PKT # Input packet
+        payloadsize : 0
+        template    : ref://store/packets/id=ETH_IPV4_IGMP
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : 01:00:5E:00:00:01
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : 224.0.0.1
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                flags   : callback://acl/packets/GetTCPFlags
+            igmp:
+                type    : 0x11 # Query
+                gaddr   : 239.1.1.1
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : ref://testcase/config/src/segment/floodlist/oifs/id=UplinkPc1/ports
+
+expect:
+    delay   : 3
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : 128

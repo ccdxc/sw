@@ -57,6 +57,7 @@ AclICMPTypeCodeAllocator = objects.TemplateFieldObject("range/10/100")
 
 IpSubnetAllocator               = objects.TemplateFieldObject("ipstep/64.0.0.0/0.1.0.0")
 Ipv6SubnetAllocator             = objects.TemplateFieldObject("ipv6step/2000::0:0/0::1:0:0")
+GIPoAddressAllocator            = objects.TemplateFieldObject("ipstep/239.200.0.0/0.0.0.1")
 TepIpSubnetAllocator            = objects.TemplateFieldObject("ipstep/10.0.0.0/0.1.0.0")
 TepIpv6SubnetAllocator          = objects.TemplateFieldObject("ipv6step/1000::0:0/0::1:0:0")
 L4LbServiceIpAllocator          = objects.TemplateFieldObject("ipstep/200.0.0.1/0.0.0.1")
@@ -72,7 +73,6 @@ def CreateIpv4AddrPool(subnet):
     # Dont use the Subnet/32 address
     allocator.get()
     return allocator
-
 
 def CreateIpv6AddrPool(subnet):
     allocator = objects.TemplateFieldObject("ipv6step/" + subnet + "/::1")

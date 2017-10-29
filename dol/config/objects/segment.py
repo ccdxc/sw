@@ -54,6 +54,8 @@ class SegmentObject(base.ConfigObjectBase):
             self.subnet     = resmgr.IpSubnetAllocator.get()
             self.subnet6    = resmgr.Ipv6SubnetAllocator.get()
 
+        self.gipo = resmgr.GIPoAddressAllocator.get()
+
         self.ipv4_pool  = resmgr.CreateIpv4AddrPool(self.subnet.get())
         self.ipv6_pool  = resmgr.CreateIpv6AddrPool(self.subnet6.get())
         
@@ -150,6 +152,7 @@ class SegmentObject(base.ConfigObjectBase):
         if GlobalOptions.classic is False:
             if not self.IsInfraSegment():
                 cfglogger.info("- VXLAN      = %s" % self.vxlan_id)
+                cfglogger.info("- GIPo       = %s" % self.gipo.get())
             cfglogger.info("- Native     = %s" % self.native)
             if self.blackhole:
                 cfglogger.info("- BlackHole  = %s" % self.blackhole)
@@ -175,6 +178,7 @@ class SegmentObject(base.ConfigObjectBase):
         summary += '/AccEnc:%d' % (self.vlan_id)
         if self.IsFabEncapVxlan():
             summary += '/FabEnc:0x%x' % self.vxlan_id
+            summary += '/GIPo:%s' % self.gipo.get()
         else:
             summary += '/FabEnc:%d' % self.vlan_id
         return summary
@@ -235,6 +239,8 @@ class SegmentObject(base.ConfigObjectBase):
         if self.IsFabEncapVxlan():
             req_spec.fabric_encap.encap_type    = haldefs.common.ENCAP_TYPE_VXLAN
             req_spec.fabric_encap.encap_value   = self.vxlan_id
+            req_spec.gipo.ip_af                 = haldefs.common.IP_AF_INET
+            req_spec.gipo.v4_addr               = self.gipo.getnum()
         else:
             req_spec.fabric_encap.encap_type    = haldefs.common.ENCAP_TYPE_DOT1Q
             req_spec.fabric_encap.encap_value   = self.vlan_id
@@ -272,6 +278,7 @@ class SegmentObject(base.ConfigObjectBase):
             if get_resp_spec.spec.fabric_encap.encap_type ==  haldefs.common.ENCAP_TYPE_VXLAN:
                 self.fabencap = 'VXLAN'
                 self.vxlan_id = get_resp_spec.spec.fabric_encap.encap_value
+                self.gipo     = get_resp_spec.spec.gipo
             elif get_resp_spec.spec.fabric_encap.encap_type ==  haldefs.common.ENCAP_TYPE_DOT1Q:
                 self.fabencap = 'VLAN'
                 self.vlan_id = get_resp_spec.spec.fabric_encap.encap_value

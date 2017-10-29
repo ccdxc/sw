@@ -444,6 +444,20 @@ entries:
             intf: cpu
 
     - entry:
+        id: ACL_IPV4_IGMP_ACTION_SUP_REDIRECT
+        config_flow_miss: False
+        match:
+            type: ip
+            ip:
+                type : v4
+            l4:
+                type : proto
+                proto : const/2
+        action:
+            action: redirect
+            intf: cpu
+
+    - entry:
         id: ACL_IPV6_DIP_ACTION_SUP_REDIRECT
         match:
             type: ip

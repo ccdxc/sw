@@ -24,6 +24,8 @@ struct pd_tenant_s {
     void               *tenant;              // PI tenant
 
     // operational state of tenant pd
+    uint32_t           gipo_imn_idx[3];      // Input mapping native table idx
+    uint32_t           gipo_imt_idx[3];      // Input mapping tunneled table idx
     tenant_hw_id_t     ten_hw_id;            // hw id for this VRF
     indexer            *l2seg_hw_id_idxr_;   // indexer for l2segs in this ten
 } __PACK__;
@@ -58,6 +60,11 @@ tenant_pd_init (pd_tenant_t *tenant_pd)
 
     // Prevention of usage of 0
     tenant_pd->l2seg_hw_id_idxr_->alloc_withid(0);
+
+    for (int i = 0; i < 3; i++) {
+        tenant_pd->gipo_imn_idx[i] = INVALID_INDEXER_INDEX;
+        tenant_pd->gipo_imt_idx[i] = INVALID_INDEXER_INDEX;
+    }
 
     return tenant_pd;
 }

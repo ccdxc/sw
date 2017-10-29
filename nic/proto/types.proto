@@ -115,6 +115,13 @@ message ObjectMeta {
   fixed32        tenant_id = 1;     // tenant identifier
 }
 
+// Types of Tenants
+enum TenantType {
+  TENANT_TYPE_NONE          = 0;
+  TENANT_TYPE_INFRA         = 1;    // infra Tenant
+  TENANT_TYPE_CUSTOMER      = 2;    // customer Tenant
+}
+
 // Types of L2 segments
 enum L2SegmentType {
   L2_SEGMENT_TYPE_NONE          = 0;

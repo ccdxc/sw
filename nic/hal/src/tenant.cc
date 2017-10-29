@@ -362,6 +362,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
         ret = HAL_RET_OOM;
         goto end;
     }
+    tenant->tenant_type = spec.tenant_type();
     tenant->tenant_id = spec.key_or_handle().tenant_id();
     tenant->nwsec_profile_handle = spec.security_profile_handle();
     if (tenant->nwsec_profile_handle == HAL_HANDLE_INVALID) {
@@ -379,6 +380,19 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
             ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
             goto end;
         }
+    }
+
+    if ( tenant->tenant_type == types::TENANT_TYPE_INFRA) {
+        // Update global mytep ip.
+        // Assumption: There is only one mytep ip. So for all tunnel ifs,
+        //             my tep ip have to be same.
+        ip_addr_spec_to_ip_addr(g_hal_state->oper_db()->mytep(), spec.mytep_ip());
+        ip_pfx_spec_to_pfx_spec(&tenant->gipo_prefix, spec.gipo_prefix());
+        HAL_TRACE_DEBUG("pi-tenant: {} Local VTEP: {}; GIPo Prefix: {}/{}",
+                        __FUNCTION__,
+                        ipaddr2str(g_hal_state->oper_db()->mytep()),
+                        ipaddr2str(&tenant->gipo_prefix.addr),
+                        tenant->gipo_prefix.len);
     }
 
     // allocate hal handle id

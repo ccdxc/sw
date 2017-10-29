@@ -82,12 +82,33 @@ PENDOL_LENGTH = len(PENDOL())
 
 class IGMP(Packet):
     name = "IGMP"
+
+    igmptypes = {0x11: "Group Membership Query",
+                 0x12: "Version 1 - Membership Report",
+                 0x16: "Version 2 - Membership Report",
+                 0x17: "Leave Group"}
+
     fields_desc = [
-        BitField("type", 0, 8),
-        BitField("maxresptime", 0, 8),
-        BitField("checksum", 0, 16),
-        BitField("groupaddress", 0, 32),
-    ]
+        ByteEnumField("type", 0x11, igmptypes),
+        ByteField("mrtime", 20),
+        XShortField("chksum", None),
+        IPField("gaddr", "0.0.0.0")]
+
+    def post_build(self, p, pay):
+        """Called implicitly before a packet is sent to compute and place IGMP checksum.
+
+        Parameters:
+          self    The instantiation of an IGMP class
+          p       The IGMP message in hex in network byte order
+          pay     Additional payload for the IGMP message
+        """
+        p += pay
+        if self.chksum is None:
+            ck = checksum(p[:2] + p[4:])
+            p = p[:2] + ck.to_bytes(2, 'big') + p[4:]
+        return p
+
+bind_layers(IP, IGMP, frag=0, proto=2)
 
 class GRH(Packet):
     name = "GRH"

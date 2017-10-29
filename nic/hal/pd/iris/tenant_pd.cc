@@ -1,6 +1,8 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/tenant_pd.hpp"
+#include "nic/p4/nw/include/defines.h"
+#include "if_pd_utils.hpp"
 
 namespace hal {
 namespace pd {
@@ -74,6 +76,203 @@ pd_tenant_delete (pd_tenant_args_t *args)
     return ret;
 }
 
+hal_ret_t
+pd_tenant_program_input_mapping_table(ip_prefix_t *ip_prefix,
+                                      uint8_t tunnel_type,
+                                      bool inner_v4_vld,
+                                      bool inner_v6_vld,
+                                      uint8_t actionid,
+                                      p4pd_table_id tbl_id, uint32_t *idx)
+{
+    hal_ret_t                           ret = HAL_RET_OK;
+    input_mapping_native_swkey_t        key = {0};
+    input_mapping_native_swkey_mask_t   mask = {0};
+    input_mapping_native_actiondata     data = {0};
+    Tcam                                *tcam;
+    uint32_t                            ret_idx;
+
+    tcam = g_hal_state_pd->tcam_table(tbl_id);
+    HAL_ASSERT(tcam != NULL);
+    /* Input mapping native and tunneled tables have the same key, mask and data
+     * So, we can populate the structs and typecast accordingly */
+    memset(&key, 0, sizeof(input_mapping_native_swkey_t));
+    memset(&mask, 0, sizeof(input_mapping_native_swkey_mask_t));
+    key.inner_ipv4_valid = (uint8_t)inner_v4_vld;
+    key.inner_ipv6_valid = (uint8_t)inner_v6_vld;
+    key.tunnel_metadata_tunnel_type = tunnel_type;
+    mask.inner_ipv4_valid_mask = 0xFF;
+    mask.inner_ipv6_valid_mask = 0xFF;
+    mask.tunnel_metadata_tunnel_type_mask = 0xFF;
+
+    if (ip_prefix->addr.af == IP_AF_IPV4) {
+        key.ipv4_valid = 1;
+        key.input_mapping_native_u1.ipv4_dstAddr = ip_prefix->addr.addr.v4_addr;
+        mask.ipv4_valid_mask = 0xFF;
+        mask.input_mapping_native_mask_u1.ipv4_dstAddr_mask =
+                ipv4_prefix_len_to_mask(ip_prefix->len);
+    } else {
+        key.ipv6_valid = 1;
+        memcpy(key.input_mapping_native_u1.ipv6_dstAddr,
+               ip_prefix->addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
+        memrev(key.input_mapping_native_u1.ipv6_dstAddr, IP6_ADDR8_LEN);
+        mask.ipv6_valid_mask = 0xFF;
+        ipv6_prefix_len_to_mask(
+                (ipv6_addr_t*)(mask.input_mapping_native_mask_u1.ipv6_dstAddr_mask),
+                ip_prefix->len);
+        memrev(mask.input_mapping_native_mask_u1.ipv6_dstAddr_mask, IP6_ADDR8_LEN);
+    }
+    data.actionid = actionid;
+    ret = tcam->insert(&key, &mask, &data, &ret_idx);
+    if (ret == HAL_RET_DUP_INS_FAIL) {
+        /* Entry already exists. Can be skipped */
+        *idx = INVALID_INDEXER_INDEX;
+    } else {
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Input mapping table tcam write failure, idx : {}, err : {}",
+                          ret_idx, ret);
+            return ret;
+        }
+    }
+    HAL_TRACE_DEBUG("Input mapping table tcam write, idx : {}, ret: {}",
+                    ret_idx, ret);
+    *idx = (int) ret_idx;
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Program input mapping table to terminate GIPo tunnels
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_tenant_del_gipo_termination_prefix(pd_tenant_t *tenant_pd,
+                                      p4pd_table_id tbl_id)
+{
+    Tcam         *tcam;
+    uint32_t     *arr;
+    hal_ret_t    ret = HAL_RET_OK;
+
+    tcam = g_hal_state_pd->tcam_table(tbl_id);
+    HAL_ASSERT(tcam != NULL);
+
+    if (tbl_id == P4TBL_ID_INPUT_MAPPING_NATIVE) {
+        arr = tenant_pd->gipo_imn_idx;
+    } else {
+        arr = tenant_pd->gipo_imt_idx;
+    }
+
+    for (int i = 0; i < 3; i++) {
+        if (arr[i] != INVALID_INDEXER_INDEX) {
+            ret = tcam->remove((uint32_t)arr[i]);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Input mapping native tcam remove failure, "
+                              "idx : {}, err : {}", arr[i], ret);
+            }
+            arr[i] = INVALID_INDEXER_INDEX;
+        }
+    }
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// De-Program HW
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_tenant_deprogram_gipo_termination_prefix(pd_tenant_t *tenant_pd)
+{
+    hal_ret_t ret;
+    /* Deprogram input mapping native */
+    ret = pd_tenant_del_gipo_termination_prefix(tenant_pd,
+                                                P4TBL_ID_INPUT_MAPPING_NATIVE);
+    /* Deprogram input mapping tunneled */
+    ret = pd_tenant_del_gipo_termination_prefix(tenant_pd,
+                                                P4TBL_ID_INPUT_MAPPING_TUNNELED);
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
+// Program input mapping table to terminate GIPo tunnels
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_tenant_program_gipo_termination_prefix(pd_tenant_t *tenant_pd)
+{
+    uint32_t     idx;
+    hal_ret_t    ret = HAL_RET_OK;
+    ip_prefix_t  *gipo_prefix = &((tenant_t*)(tenant_pd->tenant))->gipo_prefix;
+
+    if (gipo_prefix->len == 0) {
+        return ret; // GIPo not specified. Nothing to program.
+    }
+
+    /* We program 3 entries in the INPUT_MAPPING_NATIVE Table for the GIPo Entry */
+    /* Entry 1 */
+    ret = pd_tenant_program_input_mapping_table(gipo_prefix,
+                                                INGRESS_TUNNEL_TYPE_VXLAN,
+                                                true, false,
+                                                INPUT_MAPPING_NATIVE_NOP_ID,
+                                                P4TBL_ID_INPUT_MAPPING_NATIVE,
+                                                &idx);
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+        goto fail_flag;
+    tenant_pd->gipo_imn_idx[0] = idx;
+    /* Entry 2 */
+    ret = pd_tenant_program_input_mapping_table(gipo_prefix,
+                                                INGRESS_TUNNEL_TYPE_VXLAN,
+                                                false, true,
+                                                INPUT_MAPPING_NATIVE_NOP_ID,
+                                                P4TBL_ID_INPUT_MAPPING_NATIVE,
+                                                &idx);
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+        goto fail_flag;
+    tenant_pd->gipo_imn_idx[1] = idx;
+    /* Entry 3 */
+    ret = pd_tenant_program_input_mapping_table(gipo_prefix,
+                                                INGRESS_TUNNEL_TYPE_VXLAN,
+                                                false, false,
+                                                INPUT_MAPPING_NATIVE_NOP_ID,
+                                                P4TBL_ID_INPUT_MAPPING_NATIVE,
+                                                &idx);
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+        goto fail_flag;
+    tenant_pd->gipo_imn_idx[2] = idx;
+
+    /* We program 3 entries in the INPUT_MAPPING_TUNNELED Table for the GIPo Entry */
+    /* Entry 1 */
+    ret = pd_tenant_program_input_mapping_table(gipo_prefix,
+                                    INGRESS_TUNNEL_TYPE_VXLAN,
+                                    true, false,
+                                    INPUT_MAPPING_TUNNELED_TUNNELED_IPV4_PACKET_ID,
+                                    P4TBL_ID_INPUT_MAPPING_TUNNELED,
+                                    &idx);
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+        goto fail_flag;
+    tenant_pd->gipo_imt_idx[0] = idx;
+    /* Entry 2 */
+    ret = pd_tenant_program_input_mapping_table(gipo_prefix,
+                                    INGRESS_TUNNEL_TYPE_VXLAN,
+                                    false, true,
+                                    INPUT_MAPPING_TUNNELED_TUNNELED_IPV6_PACKET_ID,
+                                    P4TBL_ID_INPUT_MAPPING_TUNNELED,
+                                    &idx);
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+        goto fail_flag;
+    tenant_pd->gipo_imt_idx[1] = idx;
+    /* Entry 3 */
+    ret = pd_tenant_program_input_mapping_table(gipo_prefix,
+                                    INGRESS_TUNNEL_TYPE_VXLAN,
+                                    false, false,
+                                    INPUT_MAPPING_TUNNELED_TUNNELED_NON_IP_PACKET_ID,
+                                    P4TBL_ID_INPUT_MAPPING_TUNNELED,
+                                    &idx);
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
+        goto fail_flag;
+    tenant_pd->gipo_imt_idx[2] = idx;
+
+    return HAL_RET_OK;
+
+fail_flag:
+    pd_tenant_deprogram_gipo_termination_prefix(tenant_pd);
+    return ret;
+}
+
 //-----------------------------------------------------------------------------
 // Allocate resources. 
 //-----------------------------------------------------------------------------
@@ -96,6 +295,10 @@ tenant_pd_alloc_res(pd_tenant_t *tenant_pd)
 
     HAL_TRACE_DEBUG("pd-tenant:{}:allocated ten_hw_id: {}", 
                     __FUNCTION__, tenant_pd->ten_hw_id);
+
+    if (((tenant_t *)(tenant_pd->tenant))->tenant_type == types::TENANT_TYPE_INFRA) {
+        ret = pd_tenant_program_gipo_termination_prefix(tenant_pd);
+    }
 
 end:
     return ret;
@@ -121,6 +324,10 @@ tenant_pd_dealloc_res(pd_tenant_t *tenant_pd)
 
         HAL_TRACE_DEBUG("pd-tenant:{}:freed ten_hw_id: {}", 
                         __FUNCTION__, tenant_pd->ten_hw_id);
+    }
+
+    if (((tenant_t *)(tenant_pd->tenant))->tenant_type == types::TENANT_TYPE_INFRA) {
+        ret = pd_tenant_deprogram_gipo_termination_prefix(tenant_pd);
     }
 
 end:

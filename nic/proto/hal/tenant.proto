@@ -33,6 +33,9 @@ message TenantSpec {
   // key_or_handle is tenant's unique identifier
   TenantKeyHandle     key_or_handle              = 2 [(gogoproto.moretags) = "venice:\"key\""];
   fixed64             security_profile_handle    = 3;    // security profile, if any
+  types.TenantType    tenant_type                = 4;
+  types.IPAddress     mytep_ip                   = 5;    // Local VTEP IP address for vxlan tunnels
+  types.IPPrefix      gipo_prefix                = 6;    // GIPo prefix
 }
 
 // TenantRequestMsg is batched add or modify tenant request

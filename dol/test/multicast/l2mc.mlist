@@ -8,17 +8,68 @@ feature:
 
 modules:
     - module:
+        name    : L2MC-ENIC
+        spec    : l2mc-enic.testspec
+        iterate :
+            - id  : L2MC-ENIC
+              flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+    - module:
         name    : L2MC-UPLINK
         spec    : l2mc-uplink.testspec
-        iterate :
-            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+        iterate:
+            - id  : L2MC-UPLINK
+              flow: filter://type=IPV4,proto=UDP,label=NETWORKING
     - module:
         name    : L2MC-UPLINKPC
         spec    : l2mc-uplinkpc.testspec
         iterate :
-            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+             - id  : L2MC-UPLINKPC
+               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
     - module:
-        name    : L2MC-ENIC
-        spec    : l2mc-enic.testspec
+        name    : L2MC-IGMP-TO-CPU-ENIC
+        spec    : l2mc-igmp-to-cpu-enic.testspec
         iterate :
-            - flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+            - id  : IGMP-TO-CPU
+              flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+    - module:
+        name    : L2MC-IGMP-TO_CPU-UPLINK
+        spec    : l2mc-igmp-to-cpu-uplink.testspec
+        iterate :
+            - id  : IGMP-TO-CPU
+              flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+    - module:
+        name    : L2MC-IGMP-TO_CPU-UPLINKPC
+        spec    : l2mc-igmp-to-cpu-uplinkpc.testspec
+        iterate :
+            - id  : IGMP-TO-CPU
+              flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+    - module:
+        name    : L2MC-VXLAN-ENIC
+        spec    : l2mc-vxlan-enic.testspec
+        iterate :
+            - id  : L2MC-VXLAN-ENIC
+              flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+    - module:
+        name    : L2MC-VXLAN-UPLINK
+        spec    : l2mc-vxlan-uplink.testspec
+        iterate :
+            - id  : L2MC-VXLAN-UPLINK
+              flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+    - module:
+        name    : L2MC-VXLAN-UPLINKPC
+        spec    : l2mc-vxlan-uplinkpc.testspec
+        iterate :
+            - id  : L2MC-VXLAN-UPLINKPC
+              flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+    - module:
+        name    : L2MC-VXLAN-IGMP-UPLINK
+        spec    : l2mc-vxlan-igmp-uplink.testspec
+        iterate :
+            - id  : IGMP-TO-CPU
+              flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+    - module:
+        name    : L2MC-VXLAN-IGMP-UPLINKPC
+        spec    : l2mc-vxlan-igmp-uplinkpc.testspec
+        iterate :
+            - id  : IGMP-TO-CPU
+              flow: filter://type=IPV4,proto=UDP,label=NETWORKING

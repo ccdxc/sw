@@ -46,7 +46,9 @@ class TenantObject(base.ConfigObjectBase):
             self.subnet     = resmgr.TepIpSubnetAllocator.get()
             self.ipv4_pool  = resmgr.CreateIpv4AddrPool(self.subnet.get())
             self.local_tep  = self.ipv4_pool.get()
-        
+            self.gipo_prefix= resmgr.GIPoAddressAllocator.get()
+            self.gipo_len   = 16; # Hardcoding the GIPo Prefix Length
+
         # ClassicNicMode Specific Stuff
         if GlobalOptions.classic:
             # Process Pinned Uplinks
@@ -97,7 +99,8 @@ class TenantObject(base.ConfigObjectBase):
         cfglogger.info("- Type          : %s" % self.type)
         cfglogger.info("- HostPinned    : %s" % self.hostpinned)
         if self.IsInfra():
-            cfglogger.info("- LocalTep      : %s" % self.local_tep.get())
+            cfglogger.info("- LocalTep  : %s" % self.local_tep.get())
+            cfglogger.info("- GIPo      : %s/%d" % (self.gipo_prefix.get(), self.gipo_len))
         if GlobalOptions.classic:
             cfglogger.info("- ClassicNicMode: True")
             cfglogger.info("- Pinned IF     : %s" % self.pinif.GID())
@@ -109,6 +112,7 @@ class TenantObject(base.ConfigObjectBase):
         summary += '/Type:%s' % self.type
         if self.IsInfra():
             summary += '/LocTep:%s' % self.local_tep.get()
+            summary += '/GIPo:%s/%d' % (self.gipo_prefix.get(), self.gipo_len)
         return summary
 
     def IsInfra(self):
@@ -215,6 +219,16 @@ class TenantObject(base.ConfigObjectBase):
         if self.security_profile:
             reqspec.security_profile_handle = self.security_profile.hal_handle
             self.security_profile_handle = self.security_profile.hal_handle
+        if self.IsInfra():
+            reqspec.tenant_type = haldefs.common.TENANT_TYPE_INFRA
+            reqspec.mytep_ip.ip_af = haldefs.common.IP_AF_INET
+            reqspec.mytep_ip.v4_addr = self.local_tep.getnum()
+            reqspec.gipo_prefix.address.ip_af = haldefs.common.IP_AF_INET
+            reqspec.gipo_prefix.address.v4_addr = self.gipo_prefix.getnum()
+            reqspec.gipo_prefix.prefix_len = self.gipo_len
+        else:
+            reqspec.tenant_type = haldefs.common.TENANT_TYPE_CUSTOMER
+
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

@@ -1,7 +1,11 @@
 # /usr/bin/python3
 import pdb
 from infra.api.objects import PacketHeader
+from infra.common.objects import MacAddressBase
 import infra.api.api as infra_api
+from config.store import Store
+import config.objects.tenant as Tenant
+import config.objects.segment as Segment
 
 def GetTtl(testcase, packet):
     return 129
@@ -205,6 +209,30 @@ def GetVlanId(testcase, packet):
     elif testcase.config.src.segment.IsFabEncapVxlan():
         return testcase.config.src.endpoint.intf.vlan_id
     return testcase.config.src.segment.vlan_id
+
+def GetInfraVlanId(testcase, packet):
+    segs = Store.objects.GetAllByClass(Segment.SegmentObject)
+    for seg in segs:
+        if seg.IsInfraSegment():
+            return seg.vlan_id
+    return None
+
+def GetInfraRtrMac(testcase, packet):
+    segs = Store.objects.GetAllByClass(Segment.SegmentObject)
+    for seg in segs:
+        if seg.IsInfraSegment():
+            return seg.macaddr
+    return None
+
+def GetMyTep(testcase, packet):
+    tenants = Store.objects.GetAllByClass(Tenant.TenantObject)
+    for tenant in tenants:
+        if tenant.IsInfra():
+            return tenant.local_tep
+    return None
+
+def GetGIPoMac(testcase, packet):
+    return MacAddressBase(integer=(0x01005E000000 | (testcase.config.src.segment.gipo.getnum() & 0x007FFFFF)))
 
 def GetPacketRawBytes(testcase, packet):
     packet.Build(testcase)

@@ -1,0 +1,11 @@
+meta:
+    id      : IGMP
+    scapy   : IGMP
+    size    : 0
+
+fields:
+    type    : 0
+    mrtime  : 20
+    chksum  : None
+    gaddr   : 0.0.0.0
+

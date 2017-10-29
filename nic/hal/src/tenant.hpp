@@ -36,8 +36,11 @@ typedef uint32_t tenant_id_t;
 
 typedef struct tenant_s {
     hal_spinlock_t     slock;                // lock to protect this structure
+    types::TenantType  tenant_type;          // type of the tenant
     tenant_id_t        tenant_id;            // app provided tenant id
     hal_handle_t       nwsec_profile_handle; // security profile handle
+    ip_prefix_t        gipo_prefix;          // the prefix to terminate gipo
+    // tenant?
 
     // operational state of tenant
     hal_handle_t       hal_handle;           // HAL allocated handle

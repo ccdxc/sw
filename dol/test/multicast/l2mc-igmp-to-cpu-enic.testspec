@@ -1,0 +1,116 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://broadcast_policy=2
+        endpoint    : filter://remote=False
+        interface   : filter://any
+    flow        : filter://label=NETWORKING
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : TX_PKT # Input packet
+        payloadsize : 0
+        template    : ref://store/packets/id=ETH_IPV4_IGMP
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : 01:00:5E:00:00:01
+            qtag:
+                vlan    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic15/encap_vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : 224.0.0.1
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                flags   : callback://acl/packets/GetTCPFlags
+            igmp:
+                type    : 0x11 # Query
+                gaddr   : 239.1.1.1
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+buffers:
+    - buffer:
+        id      : TX_BUF # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=TX_PKT/size
+           data : ref://testcase/packets/id=TX_PKT/rawbytes
+    - buffer:
+        id      : RX_BUF_ENIC16  # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+    - buffer:
+        id      : EXP_BUF_ENIC16  # Expected Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : ref://testcase/packets/id=TX_PKT/size
+            data  : ref://testcase/packets/id=TX_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : TX_DESC # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=TX_BUF
+            addr  : ref://testcase/buffers/id=TX_BUF/addr
+            len   : ref://testcase/buffers/id=TX_BUF/size
+    - descriptor:
+        id      : RX_DESC_ENIC16 # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=RX_BUF_ENIC16
+            addr  : ref://testcase/buffers/id=RX_BUF_ENIC16/addr
+            len   : ref://testcase/buffers/id=RX_BUF_ENIC16/size
+    - descriptor:
+        id      : EXP_DESC_ENIC16 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=EXP_BUF_ENIC16
+            bytes_written : ref://testcase/buffers/id=EXP_BUF_ENIC16/size
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=TX_DESC
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+        - descriptor:
+            object  : ref://testcase/descriptors/id=RX_DESC_ENIC16
+            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic15/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+
+    doorbell:
+        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+
+expect:
+    delay   : 3
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=TX_PKT
+            port    : 128

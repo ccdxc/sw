@@ -79,10 +79,10 @@ tenants:
         lifns   : range/101/104
     -   spec    : ref://store/specs/id=TENANT_MULTICAST_INFRA
         count   : 1
-        lifns   : range/200/204
+        lifns   : range/201/204
     -   spec    : ref://store/specs/id=TENANT_MULTICAST_VXLAN
         count   : 1
-        lifns   : range/300/304
+        lifns   : range/301/304
     -   spec    : ref://store/specs/id=TENANT_SPAN_VLAN
         count   : 1
         lifns   : range/401/401

@@ -3,6 +3,7 @@
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/include/l2segment_api.hpp"
 #include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/src/network.hpp"
 
 namespace hal {
 
@@ -121,6 +122,33 @@ oif_list_id_t
 l2seg_get_bcast_oif_list(l2seg_t *pi_l2seg)
 {
     return pi_l2seg->bcast_oif_list;
+}
+
+// ----------------------------------------------------------------------------
+// Returns bcast_oif_list
+// ----------------------------------------------------------------------------
+ip_addr_t
+*l2seg_get_gipo(l2seg_t *pi_l2seg)
+{
+    return &(pi_l2seg->gipo);
+}
+
+// ----------------------------------------------------------------------------
+// Returns router mac
+// ----------------------------------------------------------------------------
+mac_addr_t *l2seg_get_rtr_mac(l2seg_t *pi_l2seg)
+{
+    network_t                   *nw = NULL;
+    dllist_ctxt_t               *curr, *next;
+    hal_handle_id_list_entry_t  *entry = NULL;
+
+    dllist_for_each_safe(curr, next, &pi_l2seg->nw_list_head) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        nw = find_network_by_handle(entry->handle_id);
+        return &nw->rmac_addr;
+    }
+
+    return NULL;
 }
 
 }

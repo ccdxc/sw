@@ -19,7 +19,6 @@ set_replica_rewrites:
 
   seq         c1, k.tm_replication_data_valid, TRUE
   nop.!c1.e
-  nop
 
   seq         c1, k.tm_replication_data_repl_type, TM_REPL_TYPE_DEFAULT
   seq         c2, k.tm_replication_data_repl_type, TM_REPL_TYPE_TO_CPU_REL_COPY
@@ -28,10 +27,11 @@ set_replica_rewrites:
 
   seq         c1, k.control_metadata_src_lport, k.{tm_replication_data_lport_sbit0_ebit4, \
                                                    tm_replication_data_lport_sbit5_ebit10}
+  and         r1, k.tunnel_metadata_tunnel_terminate, k.tm_replication_data_is_tunnel
+  seq.!c1     c1, r1[0], 1
   phvwr.c1.e  p.capri_intrinsic_drop, TRUE
-  nop
 
-  phvwr       p.control_metadata_dst_lport, k.{tm_replication_data_lport_sbit0_ebit4, \
+  phvwr.!c1   p.control_metadata_dst_lport, k.{tm_replication_data_lport_sbit0_ebit4, \
                                                tm_replication_data_lport_sbit5_ebit10}
   phvwr       p.control_metadata_qtype, k.tm_replication_data_qtype
   phvwr       p.rewrite_metadata_rewrite_index, \
