@@ -67,7 +67,7 @@ steps:
                 nop         : 0
 
     - step:
-        id          : IFLOW_SYN_WS_MSS_TS
+        id          : IFLOW_SYN_WS_MSS_TS_SACK
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         fields      :
             flags   : syn
@@ -81,6 +81,17 @@ steps:
                 # to support multiple EOLs) once that is fied we
                 # have to add extra test cases
                 sackok    : 0
+
+      # This packet will have 3 EOLs
+    - step:
+        id          : IFLOW_SYN_WS_MSS_TS
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            options :
+                scale     : ref://step/ifstate/scale
+                mss       : ref://step/ifstate/mss
+                timestamp : 0x12345678
 
     - step:
         id          : IFLOW_SYN_DROP
@@ -139,6 +150,7 @@ steps:
                 timestamp       : 0x23456789
                 nop             : 0
 
+      # This packet will have 3 EOLs
     - step:
         id          : RFLOW_SYN_ACK_WS_MSS_TS
         base        : ref://trackerstore/steps/id=RFLOW_BASE
@@ -148,6 +160,21 @@ steps:
                 scale     : ref://step/rfstate/scale
                 mss       : ref://step/rfstate/mss
                 timestamp : 0x23456789
+
+    - step:
+        id          : RFLOW_SYN_ACK_WS_MSS_TS_SACK
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn,ack
+            options :
+                scale     : ref://step/rfstate/scale
+                mss       : ref://step/rfstate/mss
+                timestamp : 0x23456789
+                # We are adding sackok so that we get two extra
+                # bytes of option so that there will be only one
+                # EOL instead of 3 EOLs (need parser changes
+                # to support multiple EOLs) once that is fied we
+                # have to add extra test cases
                 sackok    : 0
 
     - step:

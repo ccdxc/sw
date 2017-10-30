@@ -65,6 +65,7 @@ SRC_FILES := \
     $(SRC_DIR)/twice_nat.asm \
     $(SRC_DIR)/tx_stats.asm \
     $(SRC_DIR)/validate_packet.asm \
+    $(SRC_DIR)/tcp_options_fixup.asm \
 
 BIN_FILES := $(patsubst %.asm, %.bin, $(SRC_FILES))
 

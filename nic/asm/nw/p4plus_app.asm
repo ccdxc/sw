@@ -7,9 +7,13 @@ struct phv_         p;
 
 %%
 
-nop:
-  nop.e
-  nop
+.align
+p4plus_app_default:
+  seq         c1, k.tcp_valid, TRUE
+  sle         c2, k.tcp_dataOffset, 5 
+  setcf.e     c1, [c1 & !c2]
+  .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 9)
+  phvwr.c1    p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
 
 .align
 p4plus_app_classic_nic:
@@ -46,7 +50,7 @@ p4plus_app_tcp_proxy:
   phvwr.!c1   p.vlan_tag_valid, FALSE
   phvwr.!c1   p.ipv4_valid, FALSE
   phvwr.!c1   p.ipv6_valid, FALSE
-  .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_valid) == 10)
+  .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_valid) == 11)
   phvwr.!c1   p.{tcp_option_eol_valid...tcp_valid}, r0
 
   phvwr       p.p4_to_p4plus_tcp_proxy_valid, TRUE
@@ -224,5 +228,7 @@ lb_cpu_pkt_tcp:
   or.c1       r2, r2, CPU_TCP_OPTIONS_MSS
   seq         c1, k.tcp_option_timestamp_valid, TRUE
   or.c1       r2, r2, CPU_TCP_OPTIONS_TIMESTAMP
-  jr          r7
   phvwr       p.p4_to_p4plus_cpu_pkt_tcp_options, r2
+  jr          r7
+  .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 9)
+  phvwr.!c3    p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0

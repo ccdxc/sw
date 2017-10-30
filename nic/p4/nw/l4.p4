@@ -1397,6 +1397,41 @@ action tcp_session_normalization() {
     }
 }
 
+// In this action routine we will fixup the tcp options which includes
+// 1. Logic in this action routine should only be invoked if the 
+//    tcp data offset is > 5.
+// 2. If there were no modificaitons to options in the pipeline then
+//    reset all the tcp option header valid bits and only leave the 
+//    tcp_option_blob valid bit to be set. 
+// 3. If there are any modifcation done to tcp options then the 
+//    pipleline would have reset the tcp_options_blob header valid
+//    bit, In such case this routine will have to go through all
+//    the individual tcp option valid bits and compute the new
+//    length and round it off to 4 byte boundary and add/remove
+//    NOP or EOL options  If the new option legnth is different
+//    from incoming option lenght then we have to update
+//    1. IP Total Length
+//    2. Control_metadata.packet len (TBD Update)
+action tcp_options_fixup() {
+    if (tcp_options_blob.valid == TRUE) {
+        remove_header(tcp_option_eol);
+        remove_header(tcp_option_nop);
+        remove_header(tcp_option_mss);
+        remove_header(tcp_option_ws);
+        remove_header(tcp_option_sack_perm);
+        remove_header(tcp_option_timestamp);
+        remove_header(tcp_option_one_sack);
+        remove_header(tcp_option_two_sack);
+        remove_header(tcp_option_three_sack);
+        remove_header(tcp_option_four_sack);
+    }
+    if (tcp.valid == TRUE and
+        tcp.dataOffset > 5 and
+        tcp_options_blob.valid == FALSE) {
+        // TBD
+    }
+}
+
 control process_session_state {
     if (capri_intrinsic.drop == FALSE) {
         if (l4_metadata.flow_conn_track == TRUE) {
@@ -1421,6 +1456,14 @@ table icmp_normalization {
     default_action : icmp_normalization;
 }
 
+@pragma stage 5
+table tcp_options_fixup {
+    actions {
+        tcp_options_fixup;
+    }
+    default_action : tcp_options_fixup;
+}
+
 control process_normalization {
     if (l4_metadata.tcp_normalization_en == TRUE) {
         apply(tcp_stateless_normalization);
@@ -1429,4 +1472,6 @@ control process_normalization {
         apply(icmp_normalization);
     }
     apply(validate_packet);
+
+    apply(tcp_options_fixup);
 }

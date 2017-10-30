@@ -154,8 +154,21 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK_TS
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
 
+    # Added SACK here so that scapy adds only one EOL.
     - module:
-        name    : CONN_SETUP_WS_MSS_AND_TS
+        name    : CONN_SETUP_WS_MSS_AND_TS_AND_SACK_EN
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=WINDOW_SCALE
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_WS_MSS_TS_SACK
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK_WS_MSS_TS_SACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+
+    - module:
+        name    : CONN_SETUP_WS_MSS_AND_TS_NO_SACK_EN
         tracker : True
         args    :
             connspec: ref://trackerstore/connections/id=WINDOW_SCALE

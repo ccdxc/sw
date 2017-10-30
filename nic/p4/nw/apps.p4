@@ -1,15 +1,22 @@
 /*****************************************************************************/
 /* P4+ APP related processing                                                */
 /*****************************************************************************/
+
+action p4plus_app_default () {
+    f_egress_tcp_options_fixup();
+}
+
 action p4plus_app_tcp_proxy() {
     if ((tcp.flags & TCP_FLAG_SYN) == TCP_FLAG_SYN) {
         f_p4plus_cpu_pkt(0);
+        f_egress_tcp_options_fixup();
     } else {
         remove_header(ethernet);
         remove_header(vlan_tag);
         remove_header(ipv4);
         remove_header(ipv6);
         remove_header(tcp);
+        //remove_header(tcp_options_blob);
         remove_header(tcp_option_eol);
         remove_header(tcp_option_nop);
         remove_header(tcp_option_mss);
@@ -156,6 +163,8 @@ action p4plus_app_classic_nic() {
                   P4PLUS_CLASSIC_NIC_HDR_SZ));
     modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
+
+    f_egress_tcp_options_fixup();
 }
 
 action p4plus_app_ipsec() {
@@ -207,6 +216,23 @@ action p4plus_app_rdma() {
     remove_header(ipv4);
     remove_header(ipv6);
     remove_header(udp);
+}
+
+
+action f_egress_tcp_options_fixup () {
+    // if(tcp_options_blob.valid == TRUE) {
+    if (tcp.valid == TRUE and tcp.dataOffset > 5) {
+        remove_header(tcp_option_eol);
+        remove_header(tcp_option_nop);
+        remove_header(tcp_option_mss);
+        remove_header(tcp_option_ws);
+        remove_header(tcp_option_sack_perm);
+        remove_header(tcp_option_timestamp);
+        remove_header(tcp_option_one_sack);
+        remove_header(tcp_option_two_sack);
+        remove_header(tcp_option_three_sack);
+        remove_header(tcp_option_four_sack);
+    }
 }
 
 action f_p4plus_cpu_pkt(offset) {
@@ -329,6 +355,8 @@ action p4plus_app_cpu() {
                   P4PLUS_CPU_HDR_SZ));
     modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
+
+    f_egress_tcp_options_fixup();
 }
 
 action p4plus_app_raw_redir() {
@@ -383,8 +411,9 @@ table p4plus_app {
         p4plus_app_rdma;
         p4plus_app_cpu;
         p4plus_app_raw_redir;
-        nop;
+        p4plus_app_default;
     }
+    default_action : p4plus_app_default;
     size : P4PLUS_APP_TABLE_SIZE;
 }
 

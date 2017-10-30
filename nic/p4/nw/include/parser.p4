@@ -752,18 +752,17 @@ parser parse_tcp {
     set_metadata(parser_metadata.parse_tcp_counter, (tcp.dataOffset << 2) - 20);
     return select(parser_metadata.parse_tcp_counter) {
         0 : ingress;
-        default : parse_tcp_options;
+        default : parse_tcp_options_blob;
     }
 }
 
-#if 0
 @pragma dont_advance_packet
 parser parse_tcp_options_blob {
     set_metadata(parser_metadata.parse_tcp_counter, parser_metadata.parse_tcp_counter + 0);
     extract(tcp_options_blob);
     return parse_tcp_options;
 }
-#endif
+
 parser parse_tcp_option_one_sack {
     extract(tcp_option_one_sack);
     set_metadata(parser_metadata.parse_tcp_counter,

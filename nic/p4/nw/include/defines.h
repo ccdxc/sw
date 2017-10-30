@@ -375,6 +375,7 @@
 /*****************************************************************************/
 /* P4+ app types                                                             */
 /*****************************************************************************/
+#define P4PLUS_APPTYPE_DEFAULT         0
 #define P4PLUS_APPTYPE_CLASSIC_NIC     1
 #define P4PLUS_APPTYPE_RDMA            2
 #define P4PLUS_APPTYPE_TCPTLS          3
@@ -384,7 +385,7 @@
 #define P4PLUS_APPTYPE_TELEMETRY       7
 #define P4PLUS_APPTYPE_CPU             8
 #define P4PLUS_APPTYPE_RAW_REDIR       9
-#define P4PLUS_APP_TYPE_MIN            P4PLUS_APPTYPE_CLASSIC_NIC
+#define P4PLUS_APP_TYPE_MIN            P4PLUS_APPTYPE_DEFAULT
 #define P4PLUS_APP_TYPE_MAX            P4PLUS_APPTYPE_RAW_REDIR
 
 #define CAPRI_GLOBAL_INTRINSIC_HDR_SZ  17
