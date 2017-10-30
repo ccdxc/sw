@@ -51,8 +51,8 @@ resp_rx_rqcb_process:
     add     r7, r0, CAPRI_APP_DATA_RAW_FLAGS
 
     // TODO: Migrate ACK_REQ flag to P4 table
-    seq     c1, CAPRI_APP_DATA_BTH_ACK_REQ, 1
-    or.c1   r7, r7, RESP_RX_FLAG_ACK_REQ
+    seq     c5, CAPRI_APP_DATA_BTH_ACK_REQ, 1
+    or.c5   r7, r7, RESP_RX_FLAG_ACK_REQ
 
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, r7)
 
@@ -83,7 +83,6 @@ resp_rx_rqcb_process:
     seq         c1, r1, d.serv_type
     bcf         [!c1], nak
     phvwr.!c1   p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ) //BD Slot
-    phvwr.!c1   p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ) 
 
     //For UD we dont need PSN checks and MSN updates.
     bcf     [c2], need_checkout_ud
@@ -98,11 +97,15 @@ resp_rx_rqcb_process:
     seq     c1, CAPRI_APP_DATA_BTH_PSN, d.e_psn
     bcf     [!c1], duplicate
     IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_READ_REQ) //BD slot
-    bcf     [!c1], check_read
-    
+
+    // if not last or only, check for ack request bit case
+    bcf     [!c1 & c5], skip_msn_incr
     add         r1, r0, d.msn #BD Slot
-    mincr       r1, 24, 1
+    bcf     [!c1], check_read
+    mincr       r1, 24, 1 #BD slot
     tblwr       d.msn, r1
+
+skip_msn_incr:
     phvwr       p.ack_info.aeth.msn, r1
     // Don't need to do below instruction as it is already done above
     //phvwr       p.ack_info.psn, d.e_psn
@@ -192,9 +195,10 @@ check_write:
     sllv    r1, 1, r1
     sub     r1, REM_PYLD_BYTES, r1
     // first/middle packets should be of pmtu size
-    seq         c2, r1, r0
-    bcf.c1      [!c2], nak
-    phvwr.c1    p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ) //BD Slot
+    sne         c2, r1, r0
+    setcf       c4, [c1 & c2]  // (FIRST OR MIDDLE) & PMTU error
+    bcf         [c4], nak
+    phvwr.c4    p.ack_info.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ) //BD Slot
      
     crestore [c5,c4,c3,c2,c1], r7, (RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_WRITE | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_LAST | RESP_RX_FLAG_FIRST)
     bcf     [!c4], need_checkout
@@ -522,6 +526,7 @@ recirc:
 
 nak:
     // If this is UD packet, silently drop
+    IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_UD)
     bcf [c2], ud_drop
     nop
     

@@ -160,7 +160,7 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
             aeth:
-                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
+                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=8
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
@@ -311,10 +311,10 @@ session:
                     port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
         expect:
-#           packets:
-#               - packet:
-#                   object  : ref://testcase/packets/id=EXP_FIRST_ACK_PKT
-#                   port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_FIRST_ACK_PKT
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
     - step:
                 
         trigger:

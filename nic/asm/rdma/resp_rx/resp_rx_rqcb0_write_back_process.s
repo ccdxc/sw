@@ -35,6 +35,10 @@ incr_c_index_exit:
     CAPRI_SET_TABLE_2_VALID_C(!c3, 0)
 
 
+    // Skip ACK generation for UD
+    crestore    [c3], k.global.flags, (RESP_RX_FLAG_UD)
+    bcf         [c3], exit
+
     // RQCB0 writeback is called for SEND/WRITE/ATOMIC as well.
     // also this stage has very few instructions.
     // Since it is a common routine and also has less instructions, 
@@ -49,7 +53,7 @@ incr_c_index_exit:
     // TODO: for now, generate ack only when it is a last/only packet AND 
     // ack req bit is also set. This will help in controlling DOL test cases
     // to generate ACK only when needed. Remove ACK_REQ bit check later ?
-    bcf         [!c7 | !c4], exit
+    bcf         [!c7 & !c4], exit
     RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
 
