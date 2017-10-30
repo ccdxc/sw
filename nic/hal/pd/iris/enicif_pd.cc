@@ -1007,6 +1007,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, nwsec_profile_t *nws
     enc_type = l2seg_get_fab_encap_type((l2seg_t*)pi_l2seg);
     // Direction bit: Handles Encap Vlan vs User Vlan conflicts
     key.control_metadata_uplink = 1;
+    mask.control_metadata_uplink_mask = ~(mask.control_metadata_uplink_mask & 0);
     if (enc_type == types::ENCAP_TYPE_DOT1Q) {
         key.vlan_tag_valid = 1;
         key.vlan_tag_vid = l2seg_get_fab_encap_val((l2seg_t *)pi_l2seg);

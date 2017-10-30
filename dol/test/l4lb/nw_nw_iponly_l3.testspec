@@ -1,0 +1,92 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://any
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow        : filter://label=L4LB,fwtype=L3
+    maxflows    : None
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : IN_PKT     # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : callback://l4lb/callbacks/GetL3FlowL4LbPreNatSmac
+                dst     : callback://l4lb/callbacks/GetL3FlowL4LbPreNatDmac
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                ttl     : callback://networking/packets/GetTtl
+            ipv6:
+                hlim    : callback://networking/packets/GetTtl
+
+    - packet:
+        id          : EXP_PKT     # Expected packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            eth:
+                src     : callback://l4lb/callbacks/GetL3FlowL4LbPostNatSmac
+                dst     : callback://l4lb/callbacks/GetL3FlowL4LbPostNatDmac
+            qtag:
+                prio    : ref://testcase/config/flow/txqos/cos
+                vlan    : ref://testcase/config/dst/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/flow/nat_sip
+                dst     : ref://testcase/config/flow/nat_dip
+                ttl     : callback://networking/packets/GetRoutedTtl
+                tos     : ref://testcase/config/flow/txqos/dscp
+            ipv6:
+                src     : ref://testcase/config/flow/nat_sip
+                dst     : ref://testcase/config/flow/nat_dip
+                hlim    : callback://networking/packets/GetRoutedTtl
+                tc      : ref://testcase/config/flow/txqos/dscp
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : callback://l4lb/callbacks/GetL4LbFlowSrcPorts
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT
+            port    : callback://l4lb/callbacks/GetL4LbFlowDestPorts

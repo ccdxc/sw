@@ -33,6 +33,7 @@ class L4LbBackendObject(base.ConfigObjectBase):
 
     def GetIpAddress(self):
         return self.ep.GetIpAddress()
+
     def GetIpv6Address(self):
         return self.ep.GetIpv6Address()
 

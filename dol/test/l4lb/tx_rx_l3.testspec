@@ -8,9 +8,9 @@ selectors:
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=True
+        endpoint    : filter://remote=False
         interface   : filter://any
-    flow            : filter://label=L4LB,fwtype=L2
+    flow            : filter://label=L4LB,fwtype=L3
     maxflows        : 4
 
 packets:
@@ -60,7 +60,7 @@ packets:
                 src     : callback://l4lb/callbacks/GetL2FlowL4LbPostNatSmac
                 dst     : callback://l4lb/callbacks/GetL2FlowL4LbPostNatDmac
             qtag:
-                vlan    : ref://testcase/config/dst/segment/vlan_id
+                vlan    : ref://testcase/config/dst/endpoint/intf/encap_vlan_id
                 prio    : ref://testcase/config/flow/txqos/cos
             ipv4:
                 src     : ref://testcase/config/flow/nat_sip
@@ -81,51 +81,87 @@ packets:
 
 buffers:
     - buffer:
-        id      : BUF1 # Input Buffer
+        id      : TXBUF
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
            bind : True
            size : ref://testcase/packets/id=PKT1/size
            data : ref://testcase/packets/id=PKT1/rawbytes
 
+    - buffer:
+        id      : RXBUF
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+
+    - buffer:
+        id      : EXBUF
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : ref://testcase/packets/id=EXP_PKT/size
+            data  : ref://testcase/packets/id=EXP_PKT/rawbytes
+
+
 descriptors:
     - descriptor:
-        id      : DESC1 # Input Descriptor
+        id      : TXDESCR
         template: ref://factory/templates/id=DESCR_ETH_TX
         fields:
-            _buf  : ref://testcase/buffers/id=BUF1
-            addr  : ref://testcase/buffers/id=BUF1/addr
-            len   : ref://testcase/buffers/id=BUF1/size
+            _buf  : ref://testcase/buffers/id=TXBUF
+            addr  : ref://testcase/buffers/id=TXBUF/addr
+            len   : ref://testcase/buffers/id=TXBUF/size
 
     - descriptor:
-        id      : DESC2 # Expected Descriptor
+        id      : RXDESCR
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=RXBUF
+            addr  : ref://testcase/buffers/id=RXBUF/addr
+            len   : ref://testcase/buffers/id=RXBUF/size
+
+    - descriptor:
+        id      : EX_TXDESCR
         template: ref://factory/templates/id=DESCR_ETH_TX_CQ
         fields:
             err_code : 0x0
 
+    - descriptor:
+        id      : EX_RXDESCR
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=EXBUF
+            bytes_written : ref://testcase/buffers/id=EXBUF/size
+
+
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=DESC1
+            object  : ref://testcase/descriptors/id=TXDESCR
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=RXDESCR
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
 
     doorbell:
         object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
 
+
 expect:
     delay   : callback://networking/packets/GetExpectDelay
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EX_TXDESCR
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EX_RXDESCR
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+
     packets:
-        # Uplink Expect
-        - packet:
-            object  : callback://networking/packets/GetL2UcExpectedPacket
-            port    : callback://networking/fwmode/GetTxExpectedPorts
-        # CPU Expect: Since FTE is not enable this is NO-OP
         - packet:
             object  : callback://networking/packets/GetCpuPacket/expktid=PKT1
             port    : 128
-
-    # CQ Expect. P4+ removes from TX and puts in CQ
-    descriptors:
-        - descriptor:
-            object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1

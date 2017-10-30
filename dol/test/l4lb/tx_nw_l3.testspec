@@ -10,7 +10,7 @@ selectors:
         segment     : filter://any
         endpoint    : filter://remote=True
         interface   : filter://any
-    flow            : filter://label=L4LB,fwtype=L2
+    flow            : filter://label=L4LB,fwtype=L3
     maxflows        : 4
 
 packets:
@@ -29,11 +29,11 @@ packets:
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                ttl     : 64
+                ttl     : callback://networking/packets/GetTtl
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                hlim    : 64
+                hlim    : callback://networking/packets/GetTtl
             udp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
@@ -57,20 +57,20 @@ packets:
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             eth:
-                src     : callback://l4lb/callbacks/GetL2FlowL4LbPostNatSmac
-                dst     : callback://l4lb/callbacks/GetL2FlowL4LbPostNatDmac
+                src     : callback://l4lb/callbacks/GetL3FlowL4LbPostNatSmac
+                dst     : callback://l4lb/callbacks/GetL3FlowL4LbPostNatDmac
             qtag:
                 vlan    : ref://testcase/config/dst/segment/vlan_id
                 prio    : ref://testcase/config/flow/txqos/cos
             ipv4:
                 src     : ref://testcase/config/flow/nat_sip
                 dst     : ref://testcase/config/flow/nat_dip
-                ttl     : 64
+                ttl     : callback://networking/packets/GetRoutedTtl
                 tos     : ref://testcase/config/flow/txqos/dscp
             ipv6:
                 src     : ref://testcase/config/flow/nat_sip
                 dst     : ref://testcase/config/flow/nat_dip
-                hlim    : 64
+                hlim    : callback://networking/packets/GetRoutedTtl
                 tc      : ref://testcase/config/flow/txqos/dscp
             udp:
                 sport   : ref://testcase/config/flow/nat_sport
@@ -117,7 +117,7 @@ expect:
     packets:
         # Uplink Expect
         - packet:
-            object  : callback://networking/packets/GetL2UcExpectedPacket
+            object  : callback://networking/packets/GetL3UcExpectedPacket
             port    : callback://networking/fwmode/GetTxExpectedPorts
         # CPU Expect: Since FTE is not enable this is NO-OP
         - packet:

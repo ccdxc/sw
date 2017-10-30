@@ -7,15 +7,104 @@ feature:
     ignore      : False
 
 modules:   
+    # IP + Port
     - module:
-        name    : BRIDGED
-        spec    : l4lb_l2.testspec
+        # Uplink <-> Uplink
+        name    : BRIDGED_NW_NW
+        spec    : nw_nw_l2.testspec
 
     - module:
-        name    : ROUTED
-        spec    : l4lb_l3.testspec
+        # Uplink <-> Uplink
+        name    : ROUTED_NW_NW
+        spec    : nw_nw_l3.testspec
 
     - module:
-        name    : BRIDGED_TX
-        spec    : tx.testspec
+        # Host -> Uplink
+        name    : BRIDGED_TX_NW
+        spec    : tx_nw_l2.testspec
+
+    - module:
+        # Host -> Uplink
+        name    : ROUTED_TX_NW
+        spec    : tx_nw_l3.testspec
+       
+    - module:
+        # Uplink -> Host
+        name    : BRIDGED_NW_RX
+        spec    : nw_rx_l2.testspec
+
+    - module:
+        # Uplink -> Host
+        name    : ROUTED_NW_RX
+        spec    : nw_rx_l3.testspec
+
+    - module:
+        # Host -> Host
+        name    : BRIDGED_TX_RX
+        spec    : tx_rx_l2.testspec
+        ignore  : True
+
+    - module:
+        # Host -> Host
+        name    : ROUTED_TX_RX
+        spec    : tx_rx_l3.testspec
+        ignore  : True
+
+    # IP Only
+    - module:
+        # Uplink <-> Uplink
+        name    : BRIDGED_NW_NW_IP_ONLY
+        spec    : nw_nw_iponly_l2.testspec
+        iterate :
+            - flow  : filter://label=L4LB,fwtype=L2,nat_rw=IP_ONLY
+
+    - module:
+        # Uplink <-> Uplink
+        name    : ROUTED_NW_NW_IP_ONLY
+        spec    : nw_nw_iponly_l3.testspec
+        iterate :
+            - flow  : filter://label=L4LB,fwtype=L3,nat_rw=IP_ONLY
+
+    - module:
+        # Host -> Uplink
+        name    : BRIDGED_TX_NW_IP_ONLY
+        spec    : tx_nw_iponly_l2.testspec
+        iterate :
+            - flow  : filter://label=L4LB,fwtype=L2,nat_rw=IP_ONLY
+
+    - module:
+        # Host -> Uplink
+        name    : ROUTED_TX_NW_IP_ONLY
+        spec    : tx_nw_iponly_l3.testspec
+        iterate :
+            - flow  : filter://label=L4LB,fwtype=L3,nat_rw=IP_ONLY
+
+    - module:
+        # Uplink -> Host
+        name    : BRIDGED_NW_RX_IP_ONLY
+        spec    : nw_rx_iponly_l2.testspec
+        iterate :
+            - flow  : filter://label=L4LB,fwtype=L2,nat_rw=IP_ONLY
+
+    - module:
+        # Uplink -> Host
+        name    : ROUTED_NW_RX_IP_ONLY
+        spec    : nw_rx_iponly_l3.testspec
+        iterate :
+            - flow  : filter://label=L4LB,fwtype=L3,nat_rw=IP_ONLY
+
+    - module:
+        # Host -> Host
+        name    : BRIDGED_TX_RX_IP_ONLY
+        spec    : tx_rx_iponly_l2.testspec
+        iterate :
+            - flow  : filter://label=L4LB,fwtype=L2,nat_rw=IP_ONLY
+        ignore  : True
+
+    - module:
+        # Host -> Host
+        name    : ROUTED_TX_RX_IP_ONLY
+        spec    : tx_rx_iponly_l3.testspec
+        iterate :
+            - flow  : filter://label=L4LB,fwtype=L3,nat_rw=IP_ONLY
         ignore  : True

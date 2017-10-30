@@ -1,6 +1,6 @@
 # Flow generation configuration template.
 meta:
-    id: L4LB
+    id: L4LB_IPONLY
 
 entries:
     - entry:
@@ -9,10 +9,10 @@ entries:
         port        : const/80
         mode        : nat
         backends:
-            - port  : const/8080
+            - port  : const/0
               count : const/2
               remote: False
-            - port  : const/8080
+            - port  : const/0
               count : const/2
               remote: True
 
@@ -24,10 +24,10 @@ entries:
         snat_ips    : ipstep/201.0.0.1/0.0.0.1/16
         snat_ports  : range/49152/65535
         backends:
-            - port  : const/8443
+            - port  : const/0
               count : const/2
               remote: False
-            - port  : const/8443
+            - port  : const/0
               count : const/2
               remote: True
 
@@ -37,10 +37,10 @@ entries:
         port        : const/21
         mode        : nat
         backends:
-            - port  : const/2021
+            - port  : const/0
               count : const/2
               remote: False
-            - port  : const/2021
+            - port  : const/0
               count : const/2
               remote: True
 
@@ -51,33 +51,6 @@ entries:
         mode        : twice_nat
         snat_ips    : ipstep/201.1.0.1/0.0.0.1/16
         snat_ports  : range/49152/65535
-        backends:
-            - port  : const/2022
-              count : const/2
-              remote: False
-            - port  : const/2022
-              count : const/2
-              remote: True
-
-    # IP Only Backends
-    - entry:
-        label       : nat
-        proto       : tcp
-        port        : const/81
-        mode        : nat
-        backends:
-            - port  : const/0
-              count : const/2
-              remote: False
-            - port  : const/0
-              count : const/2
-              remote: True
-
-    - entry:
-        label       : nat
-        proto       : udp
-        port        : const/23
-        mode        : nat
         backends:
             - port  : const/0
               count : const/2

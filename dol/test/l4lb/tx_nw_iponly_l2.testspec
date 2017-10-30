@@ -73,11 +73,11 @@ packets:
                 hlim    : 64
                 tc      : ref://testcase/config/flow/txqos/dscp
             udp:
-                sport   : ref://testcase/config/flow/nat_sport
-                dport   : ref://testcase/config/flow/nat_dport
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
             tcp:
-                sport   : ref://testcase/config/flow/nat_sport
-                dport   : ref://testcase/config/flow/nat_dport
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
 
 buffers:
     - buffer:

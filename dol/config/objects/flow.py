@@ -85,8 +85,8 @@ class FlowObject(base.ConfigObjectBase):
         if self.__flowhash:
             if self.IsTCP() or self.IsUDP():
                 self.__hashgen = hashgen.TcpUdpHashGen(self.sip.getnum(),
-                                                       self.dip.getnum(), 
-                                                       self.proto, 
+                                                       self.dip.getnum(),
+                                                       self.proto,
                                                        self.type)
                 self.__hashgen.Process(self.__flowhash)
             else:
@@ -104,10 +104,19 @@ class FlowObject(base.ConfigObjectBase):
     def __init_nat(self):
         if self.__sfep.IsL4Lb():
             self.nat_type = 'SNAT'
+            if self.__sfep.l4lb.IsBackendPortValid():
+                self.nat_rw = 'IP_PORT'
+            else:
+                self.nat_rw = 'IP_ONLY'
         elif self.__dfep.IsL4Lb():
             self.nat_type = 'DNAT'
+            if self.__dfep.l4lb.IsBackendPortValid():
+                self.nat_rw = 'IP_PORT'
+            else:
+                self.nat_rw = 'IP_ONLY'
         else:
             self.nat_type = 'NONE'
+            self.nat_rw = 'NONE'
 
         self.nat_sip    = self.__sfep.GetNatSip()
         self.nat_sport  = self.__sfep.GetNatSport()
@@ -219,7 +228,7 @@ class FlowObject(base.ConfigObjectBase):
         if idx > len(self.egr_mirror_sessions):
             return None
         return self.egr_mirror_sessions[idx - 1]
-    
+
     def GetHashGen(self):
         return self.__hashgen
 
@@ -274,21 +283,21 @@ class FlowObject(base.ConfigObjectBase):
     def Equals(self, other, lgh):
         if not isinstance(other, self.__class__):
             return False
-       
+
         fields = ["type"]
         if not self.CompareObjectFields(other, fields, lgh):
             return False
-        
+
         if self.IsMAC():
             fields.extend(["smac", "dmac", "ethertype"])
         elif self.IsIP():
             fields.extend(["sip", "dip", "proto"])
         else:
             assert 0
-            
+
         if not self.CompareObjectFields(other, fields, lgh):
             return False
-        
+
         if self.IsTCP() or self.IsUDP():
             fields.extend(["sport", "dport"])
         elif self.IsICMP():
@@ -296,19 +305,19 @@ class FlowObject(base.ConfigObjectBase):
         elif self.IsESP():
             #TODO
             pass
-               
+
         if self.IsNat():
             fields.extend(["nat_sip", "nat_dip", "nat_sport", "nat_dport"])
-        
+
         #This has to be generalized.
         #if not utils.CompareObjectFields(self.txqos, other.txqos, ["cos", "dscp"], lgh):
         #    return False
 
         #if not utils.CompareObjectFields(self.rxqos, other.rxqos, ["cos", "dscp"], lgh):
         #    return False
-        
+
         return True
-    
+
     def PrepareHALRequestSpec(self, req_spec):
         if self.IsMAC():
             req_spec.flow_key.l2_key.smac = self.smac.getnum()
@@ -346,8 +355,11 @@ class FlowObject(base.ConfigObjectBase):
                 req_spec.flow_data.flow_info.nat_sip.v6_addr = self.nat_sip.getnum().to_bytes(16, 'big')
                 req_spec.flow_data.flow_info.nat_dip.ip_af = haldefs.common.IP_AF_INET6
                 req_spec.flow_data.flow_info.nat_dip.v6_addr = self.nat_dip.getnum().to_bytes(16, 'big')
-            req_spec.flow_data.flow_info.nat_sport = self.nat_sport
-            req_spec.flow_data.flow_info.nat_dport = self.nat_dport
+
+            # Send NAT ports to HAL, only if port rewrite is required.
+            if self.__sfep.IsNatPortValid() or self.__dfep.IsNatPortValid():
+                req_spec.flow_data.flow_info.nat_sport = self.nat_sport
+                req_spec.flow_data.flow_info.nat_dport = self.nat_dport
 
         if self.IsTCP():
             tcp_state = "FLOW_TCP_STATE_" + self.state
@@ -409,9 +421,13 @@ class FlowObject(base.ConfigObjectBase):
             cfglogger.info("  - flowhash : 0x%08x" % self.__flowhash)
         cfglogger.info("  - label  : %s" % self.label)
         if self.IsSnat():
-            string += '/%s/%s/%d' % (self.nat_type, self.nat_sip.get(), self.nat_sport)
+            string += '/%s/%s/%d/%s' %\
+                      (self.nat_type, self.nat_sip.get(),
+                       self.nat_sport, self.nat_rw)
         if self.IsDnat():
-            string += '/%s/%s/%d' % (self.nat_type, self.nat_dip.get(), self.nat_dport)
+            string += '/%s/%s/%d/%s' %\
+                      (self.nat_type, self.nat_dip.get(),
+                       self.nat_dport, self.nat_rw)
         cfglogger.info("  - info   : %s" % string)
 
         cfglogger.info('  - txqos: Cos:%s/Dscp:%s' %\
@@ -452,8 +468,8 @@ class FlowObject(base.ConfigObjectBase):
 
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp):
-       
-        def set_flow_l4_info(flow_key): 
+
+        def set_flow_l4_info(flow_key):
             if flow_key.HasField("tcp_udp"):
                 self.sport = flow_key.tcp_udp.sport
                 self.dport = flow_key.tcp_udp.dport
@@ -463,7 +479,7 @@ class FlowObject(base.ConfigObjectBase):
                 self.icmpid = flow_key.icmp.id
             else:
                 self.sport = self.dport = self.icmpcode = self.icmptype = self.icmpid = None
-        
+
         if get_resp.flow_key.HasField("l2_key"):
             self.smac = objects.MacAddressBase(integer=get_resp.flow_key.l2_key.smac)
             self.dmac = objects.MacAddressBase(integer=get_resp.flow_key.l2_key.dmac)
@@ -478,21 +494,21 @@ class FlowObject(base.ConfigObjectBase):
             self.type = 'IPV4'
             set_flow_l4_info(get_resp.flow_key.v4_key)
         elif get_resp.flow_key.HasField("v6_key"):
-           self.sip = objects.Ipv6Address(integer=get_resp.flow_key.v6_key.sip.v6_addr) 
-           self.dip = objects.Ipv6Address(integer=get_resp.flow_key.v6_key.dip.v6_addr) 
+           self.sip = objects.Ipv6Address(integer=get_resp.flow_key.v6_key.sip.v6_addr)
+           self.dip = objects.Ipv6Address(integer=get_resp.flow_key.v6_key.dip.v6_addr)
            self.proto = self.__getStringValue(haldefs.common.IPProtocol,
                get_resp.flow_key.v6_key.ip_proto)
            self.type = 'IPV6'
            set_flow_l4_info(get_resp.flow_key.v6_key)
         else:
             assert 0
-            
+
         flow_info = get_resp.flow_data.flow_info
         self.action = self.__getStringValue(haldefs.session.FlowAction,
                                             flow_info.flow_action)
         self.nat_type = self.__getStringValue(haldefs.session.NatType,
                                               flow_info.nat_type)
-            
+
         if self.IsNat():
             if self.IsIPV4():
                 self.nat_sip = objects.IpAddress(integer=flow_info.nat_sip.v4_addr)

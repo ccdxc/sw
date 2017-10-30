@@ -42,7 +42,14 @@ class FlowEndpointL4LbObject:
         return self.port
 
     def GetBackendPort(self):
-        return self.backend.port.get()
+        bport = self.backend.port.get()
+        if bport == 0:
+            return self.GetServicePort()
+        return bport
+
+    def IsBackendPortValid(self):
+        bport = self.backend.port.get()
+        return bport != 0
 
     def GetIpAddress(self):
         return self.backend.GetIpAddress()
@@ -207,6 +214,11 @@ class FlowEndpointObject(base.ConfigObjectBase):
 
     def GetNatSport(self):
         return self.GetFlowDport()
+
+    def IsNatPortValid(self):
+        if self.IsL4Lb():
+            return self.l4lb.IsBackendPortValid()
+        return False
 
     def GetNatDport(self):
         return self.GetFlowSport()
