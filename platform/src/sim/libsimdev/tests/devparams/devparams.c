@@ -7,12 +7,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
+#include <inttypes.h>
 
 #include "src/lib/misc/include/bdf.h"
 #include "src/lib/misc/include/maclib.h"
 #include "src/sim/libsimdev/src/simdev_impl.h"
 
-enum { BDF, MAC, INT, STR };
+enum { BDF, MAC, INT, U64, STR };
 
 static void
 usage(void)
@@ -28,11 +29,12 @@ main(int argc, char *argv[])
     int opt, mode;
 
     mode = STR;
-    while ((opt = getopt(argc, argv, "bmis")) != -1) {
+    while ((opt = getopt(argc, argv, "bmisL")) != -1) {
         switch (opt) {
         case 'b': mode = BDF; break;
         case 'm': mode = MAC; break;
         case 'i': mode = INT; break;
+        case 'L': mode = U64; break;
         case 's': mode = STR; break;
         default:
             usage();
@@ -79,11 +81,21 @@ main(int argc, char *argv[])
         }
         break;
     }
-    case STR: {
-        char value[32];
+    case U64: {
+        u_int64_t i;
 
-        if (devparam_value(devparams, key, value, sizeof(value)) >= 0) {
-            puts(value);
+        if (devparam_u64(devparams, key, &i) >= 0) {
+            printf("0x%"PRIx64"\n", i);
+        } else {
+            puts("<not found>");
+        }
+        break;
+    }
+    case STR: {
+        char str[32];
+
+        if (devparam_str(devparams, key, str, sizeof(str)) >= 0) {
+            puts(str);
         } else {
             puts("<not found>");
         }

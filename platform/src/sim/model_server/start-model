@@ -2,22 +2,27 @@
 
 SCRIPT_DIR=`dirname $0`
 SCRIPT_PATH=`cd $SCRIPT_DIR; echo $PWD`
-ASIC_TOOLS=/home/asic/tools/src/0.25
-NIC_DIR=$SCRIPT_PATH/../../../pensando/sw/nic
-GEN=$SCRIPT_PATH/../../gen/x86_64
+NIC_DIR=$SCRIPT_PATH/../../../../nic
+GEN=$SCRIPT_PATH/../../../gen/x86_64
 GENBIN=$GEN/bin
 GENLIB=$GEN/lib
 MODEL_SERVER=$GENBIN/model_server
 
 # New LD_LIBRARY_PATH
 N=$NIC_DIR/model_sim/libs
-N=${N}:$ASIC_TOOLS/x86_64/lib64
 N=${N}:$GENLIB
 # append original LD_LIBRARY_PATH, if any
 [ -n "$LD_LIBRARY_PATH" ] && N=${N}:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=${N}
 
 cd $NIC_DIR
-#$GDB $MODEL_SERVER +plog=info +model_debug=$NIC_DIR/gen/iris/dbg_out/model_debug.json 2>&1 | tee model.log
-echo $GDB $MODEL_SERVER +plog=info +model_debug=$NIC_DIR/gen/iris/dbg_out/model_debug.json $*
-$GDB $MODEL_SERVER +plog=info +model_debug=$NIC_DIR/gen/iris/dbg_out/model_debug.json $*
+echo $GDB $MODEL_SERVER \
+    +PLOG_MAX_QUIT_COUNT=0 \
+    +plog=info \
+    +model_debug=$NIC_DIR/gen/iris/dbg_out/model_debug.json \
+    $*
+$GDB $MODEL_SERVER \
+    +PLOG_MAX_QUIT_COUNT=0 \
+    +plog=info \
+    +model_debug=$NIC_DIR/gen/iris/dbg_out/model_debug.json \
+    $*

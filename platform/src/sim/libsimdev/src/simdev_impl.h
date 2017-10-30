@@ -53,14 +53,15 @@ void simdev_set_user(const char *user);
 
 simdev_t *simdev_by_bdf(const u_int16_t bdf);
 
-int devparam_value(const char *devparams,
-                   const char *key, char *buf, const size_t bufsz);
+int devparam_str(const char *devparams, const char *key,
+                 char *buf, const size_t bufsz);
 int devparam_mac(const char *devparams, const char *key, mac_t *m);
 int devparam_int(const char *devparams, const char *key, int *val);
+int devparam_u64(const char *devparams, const char *key, u_int64_t *val);
 int devparam_bdf(const char *devparams, const char *key, u_int16_t *bdf);
 
-void devparam_get_value(const char *devparams, const char *key,
-                        char *buf, const size_t bufsz, char *dval);
+void devparam_get_str(const char *devparams, const char *key,
+                      char *buf, const size_t bufsz, char *dval);
 void devparam_get_int(const char *devparams, const char *key,
                       int *val, int dval);
 void devparam_get_bdf(const char *devparams, const char *key,

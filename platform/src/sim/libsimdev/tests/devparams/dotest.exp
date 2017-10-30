@@ -36,3 +36,11 @@ ff:12.5
 4
 + ../../../../../gen/x86_64/bin/devparams -i type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 lif-not-found
 <not found>
++ ../../../../../gen/x86_64/bin/devparams -L type=eth,bdf=ff:12.5,lif=4,longval=0x123456789abcdef lif
+0x4
++ ../../../../../gen/x86_64/bin/devparams -L type=eth,bdf=ff:12.5,lif=4,longval=0x123456789abcdef longval
+0x123456789abcdef
++ ../../../../../gen/x86_64/bin/devparams -L type=eth,bdf=ff:12.5,lif=4,longval=0x123456789abcdef longva
+<not found>
++ ../../../../../gen/x86_64/bin/devparams -L type=eth,bdf=ff:12.5,lif=4,longval=0x123456789abcdef longval-not
+<not found>
