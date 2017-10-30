@@ -38,6 +38,9 @@ class MockLIFManager : public LIFManagerBase {
       return -EIO;
     return 0;
   }
+
+  virtual void DeleteLIFQStateImpl(LIFQState *qstate) {}
+
 };
 
 }  // namespace hal
@@ -48,6 +51,10 @@ TEST(LIFManagerTest, TestALL)
   hal::LIFQStateParams params;
 
   bzero(&params, sizeof(params));
+  ASSERT_TRUE(lm.LIFRangeAlloc(1, 1) == 1);
+  ASSERT_TRUE(lm.InitLIFQState(1, &params) == 0);
+  lm.DeleteLIF(1);
+  ASSERT_TRUE(lm.GetLIFQState(1) == nullptr);
   ASSERT_TRUE(lm.InitLIFQState(0, &params) < 0);
   ASSERT_TRUE(lm.InitLIFQState(30000, &params) < 0);
   ASSERT_TRUE(lm.LIFRangeAlloc(1, 10) == 1);

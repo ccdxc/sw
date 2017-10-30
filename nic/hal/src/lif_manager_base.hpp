@@ -51,10 +51,9 @@ class LIFManagerBase {
   //    - -errno in case of failure.
   int32_t LIFRangeAlloc(int32_t start, uint32_t count);
 
-  // Deletes a range of LIFs. Also deletes any associated
-  // qstates with each LIF.
-  // void LIFRangeDelete(uint32_t start, uint32_t count);
-
+  // Delete a LIF. Also deletes any associated QState and disables LIF->QState
+  // map entries. Also frees internal states.
+  void DeleteLIF(int32_t hw_lif_id);
 
   // Initialize the LIF to Qstate Map in hw and allocate any
   // metadata.
@@ -63,7 +62,6 @@ class LIFManagerBase {
   //   -errno - In case of failure.
   int32_t InitLIFQState(uint32_t lif_id, LIFQStateParams *params);
 
-  //
   int32_t GetLIFQStateBaseAddr(uint32_t, uint32_t);
 
   // Get the qstate address for a LIF, type and qid.
@@ -114,6 +112,7 @@ class LIFManagerBase {
       uint64_t q_addr, uint8_t *buf, uint32_t q_size) = 0;
   virtual int32_t WriteQStateImpl(
       uint64_t q_addr, const uint8_t *buf, uint32_t q_size) = 0;
+  virtual void DeleteLIFQStateImpl(LIFQState *qstate) = 0;
 
  private:
   const uint32_t kNumMaxLIFs = 2048;

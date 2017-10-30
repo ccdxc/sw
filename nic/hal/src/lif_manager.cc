@@ -2,6 +2,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 
 void push_qstate_to_capri(hal::LIFQState *qstate);
+void clear_qstate(hal::LIFQState *qstate);
 int32_t read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size);
 int32_t write_qstate(uint64_t q_addr, const uint8_t *buf, uint32_t q_size);
 int32_t get_pc_offset(const char *handle, const char *prog_name,
@@ -42,6 +43,15 @@ int32_t LIFManager::InitLIFQStateImpl(LIFQState *qstate) {
   push_qstate_to_capri(qstate);
 
   return 0;
+}
+
+void LIFManager::DeleteLIFQStateImpl(LIFQState *qstate) {
+  clear_qstate(qstate);
+  int alloc_offset = qstate->hbm_address - hbm_base_;
+  if (allocation_sizes_.find(alloc_offset) != allocation_sizes_.end()) {
+    hbm_allocator_->Free(alloc_offset, allocation_sizes_[alloc_offset]);
+    allocation_sizes_.erase(alloc_offset);
+  }
 }
 
 int32_t LIFManager::ReadQStateImpl(
