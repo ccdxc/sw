@@ -1,6 +1,7 @@
 #include "nic/hal/test/utils/hal_test_utils.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include <gtest/gtest.h>
 
 using hal::g_hal_state;
 using hal::pd::g_hal_state_pd;

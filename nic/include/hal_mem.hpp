@@ -52,7 +52,9 @@ typedef enum hal_slab_e {
     HAL_SLAB_LKLSHIM_FLOWDB,
     HAL_SLAB_LKLSHIM_LSOCKDB,
     HAL_SLAB_LKLSHIM_LSOCKS,
-    HAL_SLAB_PI_MAX,                 // NOTE: MUST be last PI slab id
+    HAL_SLAB_ARP_LEARN,
+    HAL_SLAB_DHCP_LEARN,
+    HAL_SLAB_PI_MAX,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_TENANT_PD,
@@ -87,7 +89,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_CPUPKT_QINST_INFO_PD,
     HAL_SLAB_PD_MAX,                 // NOTE: MUST be last PD slab id
 
-    HAL_SLAB_RSVD,    // all non-delay delete slabs can use this
+    HAL_SLAB_RSVD,  // all non-delay delete slabs can use this
 
     HAL_SLAB_MAX,
 } hal_slab_t;

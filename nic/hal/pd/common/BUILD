@@ -10,12 +10,12 @@ cc_library(
         "pd.hpp",
         "pd_api.hpp",
     ],
-    hdrs = [
-        "cpupkt_api.hpp",
-        "pd.hpp",
-        "pd_api.hpp",
-        "cpupkt_headers.hpp",
-    ],
+     hdrs = [
+               "cpupkt_api.hpp",
+               "pd.hpp",
+               "pd_api.hpp",
+               "cpupkt_headers.hpp",
+            ],
     deps = [
         "//nic/hal/pd:hal_pd_includes",
         "//nic/include:base_includes",

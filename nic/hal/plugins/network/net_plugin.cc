@@ -12,6 +12,7 @@ void init() {
     fte::register_feature(fte::FTE_FEATURE_QOS, "net.qos", qos_exec);
     fte::register_feature(fte::FTE_FEATURE_ALG, "net.app-layer-gw", alg_exec);
     fte::register_feature(fte::FTE_FEATURE_DOL_TEST_ONLY, "net.doltest", dol_test_exec);
+    fte::register_feature(fte::FTE_FEATURE_LB, "net.ep_learn", ep_learn_exec);
 }
 
 }

@@ -20,6 +20,11 @@ cc_library(
     alwayslink = 1,
 )
 
+cc_library(
+    name = "fte_includes",
+    hdrs = ["fte.hpp"],
+)
+
 cc_test(
     name = "fte_test",
     srcs = [

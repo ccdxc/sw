@@ -6,7 +6,7 @@ namespace hal {
 namespace utils {
 
 //------------------------------------------------------------------------------
-// init function for the timer wheel 
+// init function for the timer wheel
 //------------------------------------------------------------------------------
 hal_ret_t
 twheel::init(uint64_t slice_intvl, uint32_t wheel_duration, bool thread_safe)

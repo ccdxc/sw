@@ -4,6 +4,7 @@ LIBDIRS = \
           trace \
           slab \
           twheel \
+          fsm \
           shm \
           ht \
           pt \

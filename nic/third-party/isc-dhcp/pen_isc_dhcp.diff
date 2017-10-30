@@ -1,0 +1,2518 @@
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/common/alloc.c third-party/isc-dhcp/common/alloc.c
+--- /home/sudhi/workspace/sw.old/dhcp/common/alloc.c	2017-08-09 01:01:03.962550000 +0100
++++ third-party/isc-dhcp/common/alloc.c	2017-10-17 04:08:48.000000000 +0100
+@@ -27,17 +27,15 @@
+  *
+  */
+ 
+-#include "dhcpd.h"
+-#include <omapip/omapip_p.h>
++#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++//#include <omapip/omapip_p.h>
+ 
+ struct dhcp_packet *dhcp_free_list;
+ struct packet *packet_free_list;
+ 
+-int option_chain_head_allocate (ptr, file, line)
+-	struct option_chain_head **ptr;
+-	const char *file;
+-	int line;
+-{
++int option_chain_head_allocate(struct option_chain_head **ptr, const char *file,
++                               int line) {
+ 	struct option_chain_head *h;
+ 
+ 	if (!ptr) {
+@@ -57,7 +55,7 @@
+ #endif
+ 	}
+ 
+-	h = dmalloc (sizeof *h, file, line);
++        h = (struct option_chain_head *)dmalloc(sizeof *h, file, line);
+ 	if (h) {
+ 		memset (h, 0, sizeof *h);
+ 		return option_chain_head_reference (ptr, h, file, line);
+@@ -65,12 +63,9 @@
+ 	return 0;
+ }
+ 
+-int option_chain_head_reference (ptr, bp, file, line)
+-	struct option_chain_head **ptr;
+-	struct option_chain_head *bp;
+-	const char *file;
+-	int line;
+-{
++int option_chain_head_reference(struct option_chain_head **ptr,
++                                struct option_chain_head *bp, const char *file,
++                                int line) {
+ 	if (!ptr) {
+ 		log_error ("%s(%d): null pointer", file, line);
+ #if defined (POINTER_DEBUG)
+@@ -93,11 +88,8 @@
+ 	return 1;
+ }
+ 
+-int option_chain_head_dereference (ptr, file, line)
+-	struct option_chain_head **ptr;
+-	const char *file;
+-	int line;
+-{
++int option_chain_head_dereference(struct option_chain_head **ptr,
++                                  const char *file, int line) {
+ 	struct option_chain_head *option_chain_head;
+ 	pair car, cdr;
+ 
+@@ -143,6 +135,7 @@
+ 	return 1;
+ }
+ 
++#if 0
+ int group_allocate (ptr, file, line)
+ 	struct group **ptr;
+ 	const char *file;
+@@ -259,58 +252,42 @@
+ 	int line;
+ {
+ 	struct dhcp_packet *rval;
+-	rval = (struct dhcp_packet *)dmalloc (sizeof (struct dhcp_packet),
+-					      file, line);
++    rval =
++        (struct dhcp_packet *)dmalloc(sizeof(struct dhcp_packet), file, line);
+ 	return rval;
+ }
+ 
+-struct protocol *new_protocol (file, line)
+-	const char *file;
+-	int line;
+-{
+-	struct protocol *rval = dmalloc (sizeof (struct protocol), file, line);
++struct protocol *new_protocol(const char *file, int line) {
++    struct protocol *rval = dmalloc(sizeof(struct protocol), file, line);
+ 	return rval;
+ }
+ 
+-struct domain_search_list *new_domain_search_list (file, line)
+-	const char *file;
+-	int line;
+-{
++struct domain_search_list *new_domain_search_list(const char *file, int line) {
+ 	struct domain_search_list *rval =
+-		dmalloc (sizeof (struct domain_search_list), file, line);
++        dmalloc(sizeof(struct domain_search_list), file, line);
+ 	return rval;
+ }
+ 
+-struct name_server *new_name_server (file, line)
+-	const char *file;
+-	int line;
+-{
+-	struct name_server *rval =
+-		dmalloc (sizeof (struct name_server), file, line);
++struct name_server *new_name_server(const char *file, int line) {
++    struct name_server *rval = dmalloc(sizeof(struct name_server), file, line);
+ 	return rval;
+ }
+ 
+-void free_name_server (ptr, file, line)
+-	struct name_server *ptr;
+-	const char *file;
+-	int line;
+-{
+-	dfree ((void *)ptr, file, line);
++void free_name_server(struct name_server *ptr, const char *file, int line) {
++    dfree((void *)ptr, file, line);
+ }
++#endif
+ 
+-struct option *new_option (name, file, line)
+-	const char *name;
+-	const char *file;
+-	int line;
+-{
++struct option *new_option(const char *name, const char *file, int line) {
+ 	struct option *rval;
+ 	int len;
+ 
+ 	len = strlen(name);
+ 
+-	rval = dmalloc(sizeof(struct option) + len + 1, file, line);
++    rval =
++        (struct option *)dmalloc(sizeof(struct option) + len + 1, file, line);
+ 
+-	if(rval) {
++    if (rval) {
+ 		memcpy(rval + 1, name, len);
+ 		rval->name = (char *)(rval + 1);
+ 	}
+@@ -318,69 +295,44 @@
+ 	return rval;
+ }
+ 
+-struct universe *new_universe (file, line)
+-	const char *file;
+-	int line;
+-{
++struct universe *new_universe(const char *file, int line) {
+ 	struct universe *rval =
+-		dmalloc (sizeof (struct universe), file, line);
++        (struct universe *)dmalloc(sizeof(struct universe), file, line);
+ 	return rval;
+ }
+ 
+-void free_universe (ptr, file, line)
+-	struct universe *ptr;
+-	const char *file;
+-	int line;
+-{
+-	dfree ((void *)ptr, file, line);
++void free_universe(struct universe *ptr, const char *file, int line) {
++    dfree((void *)ptr, file, line);
+ }
+ 
+-void free_domain_search_list (ptr, file, line)
+-	struct domain_search_list *ptr;
+-	const char *file;
+-	int line;
+-{
+-	dfree ((void *)ptr, file, line);
++void free_domain_search_list(struct domain_search_list *ptr, const char *file,
++                             int line) {
++    dfree((void *)ptr, file, line);
+ }
+ 
+-void free_protocol (ptr, file, line)
+-	struct protocol *ptr;
+-	const char *file;
+-	int line;
+-{
+-	dfree ((void *)ptr, file, line);
++void free_protocol(struct protocol *ptr, const char *file, int line) {
++    dfree((void *)ptr, file, line);
+ }
+ 
+-void free_dhcp_packet (ptr, file, line)
+-	struct dhcp_packet *ptr;
+-	const char *file;
+-	int line;
+-{
+-	dfree ((void *)ptr, file, line);
++void free_dhcp_packet(struct dhcp_packet *ptr, const char *file, int line) {
++    dfree((void *)ptr, file, line);
+ }
+ 
+-struct client_lease *new_client_lease (file, line)
+-	const char *file;
+-	int line;
+-{
+-	return (struct client_lease *)dmalloc (sizeof (struct client_lease),
+-					       file, line);
++#if 0
++struct client_lease *new_client_lease(const char *file, int line) {
++    return (struct client_lease *)dmalloc(sizeof(struct client_lease), file,
++                                          line);
+ }
+ 
+-void free_client_lease (lease, file, line)
+-	struct client_lease *lease;
+-	const char *file;
+-	int line;
+-{
+-	dfree (lease, file, line);
++void free_client_lease(struct client_lease *lease, const char *file, int line) {
++    dfree(lease, file, line);
+ }
+ 
++#endif
++
+ pair free_pairs;
+ 
+-pair new_pair (file, line)
+-	const char *file;
+-	int line;
+-{
++pair foo_new_pair(const char *file, int line) {
+ 	pair foo;
+ 
+ 	if (free_pairs) {
+@@ -391,18 +343,13 @@
+ 		return foo;
+ 	}
+ 
+-	foo = dmalloc (sizeof *foo, file, line);
+-	if (!foo)
+-		return foo;
+-	memset (foo, 0, sizeof *foo);
++    foo = (pair)dmalloc(sizeof *foo, file, line);
++    if (!foo) return foo;
++    memset(foo, 0, sizeof *foo);
+ 	return foo;
+ }
+ 
+-void free_pair (foo, file, line)
+-	pair foo;
+-	const char *file;
+-	int line;
+-{
++void free_pair(pair foo, const char *file, int line) {
+ 	foo -> cdr = free_pairs;
+ 	free_pairs = foo;
+ 	dmalloc_reuse (free_pairs, __FILE__, __LINE__, 0);
+@@ -424,32 +371,26 @@
+ 
+ struct expression *free_expressions;
+ 
+-int expression_allocate (cptr, file, line)
+-	struct expression **cptr;
+-	const char *file;
+-	int line;
+-{
++int expression_reference(struct expression **ptr, struct expression *src,
++                         const char *file, int line);
++int expression_allocate(struct expression **cptr, const char *file, int line) {
+ 	struct expression *rval;
+ 
+ 	if (free_expressions) {
+ 		rval = free_expressions;
+-		free_expressions = rval -> data.not;
+-		dmalloc_reuse (rval, file, line, 1);
++        free_expressions = rval->data.not_;
++        dmalloc_reuse(rval, file, line, 1);
+ 	} else {
+-		rval = dmalloc (sizeof (struct expression), file, line);
+-		if (!rval)
+-			return 0;
++        rval =
++            (struct expression *)dmalloc(sizeof(struct expression), file, line);
++        if (!rval) return 0;
+ 	}
+-	memset (rval, 0, sizeof *rval);
+-	return expression_reference (cptr, rval, file, line);
++    memset(rval, 0, sizeof *rval);
++    return expression_reference(cptr, rval, file, line);
+ }
+ 
+-int expression_reference (ptr, src, file, line)
+-	struct expression **ptr;
+-	struct expression *src;
+-	const char *file;
+-	int line;
+-{
++int expression_reference(struct expression **ptr, struct expression *src,
++                         const char *file, int line) {
+ 	if (!ptr) {
+ 		log_error ("%s(%d): null pointer", file, line);
+ #if defined (POINTER_DEBUG)
+@@ -472,12 +413,8 @@
+ 	return 1;
+ }
+ 
+-void free_expression (expr, file, line)
+-	struct expression *expr;
+-	const char *file;
+-	int line;
+-{
+-	expr -> data.not = free_expressions;
++void free_expression(struct expression *expr, const char *file, int line) {
++    expr->data.not_ = free_expressions;
+ 	free_expressions = expr;
+ 	dmalloc_reuse (free_expressions, __FILE__, __LINE__, 0);
+ }
+@@ -496,34 +433,28 @@
+ }
+ #endif
+ 
++#if 0
+ struct binding_value *free_binding_values;
+ 				
+-int binding_value_allocate (cptr, file, line)
+-	struct binding_value **cptr;
+-	const char *file;
+-	int line;
+-{
++int binding_value_allocate(struct binding_value **cptr, const char *file,
++                           int line) {
+ 	struct binding_value *rval;
+ 
+ 	if (free_binding_values) {
+ 		rval = free_binding_values;
+-		free_binding_values = rval -> value.bv;
+-		dmalloc_reuse (rval, file, line, 1);
++        free_binding_values = rval->value.bv;
++        dmalloc_reuse(rval, file, line, 1);
+ 	} else {
+-		rval = dmalloc (sizeof (struct binding_value), file, line);
+-		if (!rval)
+-			return 0;
++        rval = dmalloc(sizeof(struct binding_value), file, line);
++        if (!rval) return 0;
+ 	}
+-	memset (rval, 0, sizeof *rval);
+-	return binding_value_reference (cptr, rval, file, line);
++    memset(rval, 0, sizeof *rval);
++    return binding_value_reference(cptr, rval, file, line);
+ }
+ 
+-int binding_value_reference (ptr, src, file, line)
+-	struct binding_value **ptr;
+-	struct binding_value *src;
+-	const char *file;
+-	int line;
+-{
++int binding_value_reference(struct binding_value **ptr,
++                            struct binding_value *src, const char *file,
++                            int line) {
+ 	if (!ptr) {
+ 		log_error ("%s(%d): null pointer", file, line);
+ #if defined (POINTER_DEBUG)
+@@ -546,11 +477,7 @@
+ 	return 1;
+ }
+ 
+-void free_binding_value (bv, file, line)
+-	struct binding_value *bv;
+-	const char *file;
+-	int line;
+-{
++void free_binding_value(struct binding_value *bv, const char *file, int line) {
+ 	bv -> value.bv = free_binding_values;
+ 	free_binding_values = bv;
+ 	dmalloc_reuse (free_binding_values, (char *)0, 0, 0);
+@@ -570,11 +497,10 @@
+ }
+ #endif
+ 
+-int fundef_allocate (cptr, file, line)
+-	struct fundef **cptr;
+-	const char *file;
+-	int line;
+-{
++#endif
++
++#if 0
++int fundef_allocate(struct fundef **cptr, const char *file, int line) {
+ 	struct fundef *rval;
+ 
+ 	rval = dmalloc (sizeof (struct fundef), file, line);
+@@ -584,12 +510,8 @@
+ 	return fundef_reference (cptr, rval, file, line);
+ }
+ 
+-int fundef_reference (ptr, src, file, line)
+-	struct fundef **ptr;
+-	struct fundef *src;
+-	const char *file;
+-	int line;
+-{
++int fundef_reference(struct fundef **ptr, struct fundef *src, const char *file,
++                     int line) {
+ 	if (!ptr) {
+ 		log_error ("%s(%d): null pointer", file, line);
+ #if defined (POINTER_DEBUG)
+@@ -612,6 +534,8 @@
+ 	return 1;
+ }
+ 
++#endif
++
+ struct option_cache *free_option_caches;
+ 
+ #if defined (DEBUG_MEMORY_LEAKAGE) || \
+@@ -628,33 +552,25 @@
+ }
+ #endif
+ 
+-int option_cache_allocate (cptr, file, line)
+-	struct option_cache **cptr;
+-	const char *file;
+-	int line;
+-{
++int option_cache_allocate(struct option_cache **cptr, const char *file,
++                          int line) {
+ 	struct option_cache *rval;
+ 
+ 	if (free_option_caches) {
+ 		rval = free_option_caches;
+-		free_option_caches =
+-			(struct option_cache *)(rval -> expression);
+-		dmalloc_reuse (rval, file, line, 0);
++        free_option_caches = (struct option_cache *)(rval->expression);
++        dmalloc_reuse(rval, file, line, 0);
+ 	} else {
+-		rval = dmalloc (sizeof (struct option_cache), file, line);
+-		if (!rval)
+-			return 0;
++        rval = (struct option_cache *)dmalloc(sizeof(struct option_cache), file,
++                                              line);
++        if (!rval) return 0;
+ 	}
+-	memset (rval, 0, sizeof *rval);
+-	return option_cache_reference (cptr, rval, file, line);
++    memset(rval, 0, sizeof *rval);
++    return option_cache_reference(cptr, rval, file, line);
+ }
+ 
+-int option_cache_reference (ptr, src, file, line)
+-	struct option_cache **ptr;
+-	struct option_cache *src;
+-	const char *file;
+-	int line;
+-{
++int option_cache_reference(struct option_cache **ptr, struct option_cache *src,
++                           const char *file, int line) {
+ 	if (!ptr) {
+ 		log_error ("%s(%d): null pointer", file, line);
+ #if defined (POINTER_DEBUG)
+@@ -677,31 +593,22 @@
+ 	return 1;
+ }
+ 
+-int buffer_allocate (ptr, len, file, line)
+-	struct buffer **ptr;
+-	unsigned len;
+-	const char *file;
+-	int line;
+-{
++int buffer_allocate(struct buffer **ptr, unsigned len, const char *file,
++                    int line) {
+ 	struct buffer *bp;
+ 
+ 	/* XXXSK: should check for bad ptr values, otherwise we 
+ 		  leak memory if they are wrong */
+-	bp = dmalloc (len + sizeof *bp, file, line);
+-	if (!bp)
+-		return 0;
++    bp = (struct buffer *)dmalloc(len + sizeof *bp, file, line);
++    if (!bp) return 0;
+ 	/* XXXSK: both of these initializations are unnecessary */
+ 	memset (bp, 0, sizeof *bp);
+ 	bp -> refcnt = 0;
+ 	return buffer_reference (ptr, bp, file, line);
+ }
+ 
+-int buffer_reference (ptr, bp, file, line)
+-	struct buffer **ptr;
+-	struct buffer *bp;
+-	const char *file;
+-	int line;
+-{
++int buffer_reference(struct buffer **ptr, struct buffer *bp, const char *file,
++                     int line) {
+ 	if (!ptr) {
+ 		log_error ("%s(%d): null pointer", file, line);
+ #if defined (POINTER_DEBUG)
+@@ -724,11 +631,7 @@
+ 	return 1;
+ }
+ 
+-int buffer_dereference (ptr, file, line)
+-	struct buffer **ptr;
+-	const char *file;
+-	int line;
+-{
++int buffer_dereference(struct buffer **ptr, const char *file, int line) {
+ 	if (!ptr) {
+ 		log_error ("%s(%d): null pointer", file, line);
+ #if defined (POINTER_DEBUG)
+@@ -766,29 +669,23 @@
+ 	return 1;
+ }
+ 
+-int dns_host_entry_allocate (ptr, hostname, file, line)
+-	struct dns_host_entry **ptr;
+-	const char *hostname;
+-	const char *file;
+-	int line;
+-{
++
++int dns_host_entry_allocate(struct dns_host_entry **ptr, const char *hostname,
++                            const char *file, int line) {
+ 	struct dns_host_entry *bp;
+ 
+-	bp = dmalloc (strlen (hostname) + sizeof *bp, file, line);
+-	if (!bp)
+-		return 0;
++    bp = (struct dns_host_entry *)dmalloc(strlen(hostname) + sizeof *bp, file,
++                                          line);
++    if (!bp) return 0;
+ 	memset (bp, 0, sizeof *bp);
+ 	bp -> refcnt = 0;
+ 	strcpy (bp -> hostname, hostname);
+ 	return dns_host_entry_reference (ptr, bp, file, line);
+ }
+ 
+-int dns_host_entry_reference (ptr, bp, file, line)
+-	struct dns_host_entry **ptr;
+-	struct dns_host_entry *bp;
+-	const char *file;
+-	int line;
+-{
++int dns_host_entry_reference(struct dns_host_entry **ptr,
++                             struct dns_host_entry *bp, const char *file,
++                             int line) {
+ 	if (!ptr) {
+ 		log_error ("%s(%d): null pointer", file, line);
+ #if defined (POINTER_DEBUG)
+@@ -811,11 +708,8 @@
+ 	return 1;
+ }
+ 
+-int dns_host_entry_dereference (ptr, file, line)
+-	struct dns_host_entry **ptr;
+-	const char *file;
+-	int line;
+-{
++int dns_host_entry_dereference(struct dns_host_entry **ptr, const char *file,
++                               int line) {
+ 	if (!ptr || !*ptr) {
+ 		log_error ("%s(%d): null pointer", file, line);
+ #if defined (POINTER_DEBUG)
+@@ -844,11 +738,9 @@
+ 	return 1;
+ }
+ 
+-int option_state_allocate (ptr, file, line)
+-	struct option_state **ptr;
+-	const char *file;
+-	int line;
+-{
++
++int option_state_allocate(struct option_state **ptr, const char *file,
++                          int line) {
+ 	unsigned size;
+ 
+ 	if (!ptr) {
+@@ -869,7 +761,7 @@
+ 	}
+ 
+ 	size = sizeof **ptr + (universe_count - 1) * sizeof (void *);
+-	*ptr = dmalloc (size, file, line);
++        *ptr = (struct option_state *)dmalloc(size, file, line);
+ 	if (*ptr) {
+ 		memset (*ptr, 0, size);
+ 		(*ptr) -> universe_count = universe_count;
+@@ -881,12 +773,8 @@
+ 	return 0;
+ }
+ 
+-int option_state_reference (ptr, bp, file, line)
+-	struct option_state **ptr;
+-	struct option_state *bp;
+-	const char *file;
+-	int line;
+-{
++int option_state_reference(struct option_state **ptr, struct option_state *bp,
++                           const char *file, int line) {
+ 	if (!ptr) {
+ 		log_error ("%s(%d): null pointer", file, line);
+ #if defined (POINTER_DEBUG)
+@@ -909,11 +797,8 @@
+ 	return 1;
+ }
+ 
+-int option_state_dereference (ptr, file, line)
+-	struct option_state **ptr;
+-	const char *file;
+-	int line;
+-{
++int option_state_dereference(struct option_state **ptr, const char *file,
++                             int line) {
+ 	int i;
+ 	struct option_state *options;
+ 
+@@ -956,11 +841,9 @@
+ 	return 1;
+ }
+ 
+-int executable_statement_allocate (ptr, file, line)
+-	struct executable_statement **ptr;
+-	const char *file;
+-	int line;
+-{
++#if 0
++int executable_statement_allocate(struct executable_statement **ptr,
++                                  const char *file, int line) {
+ 	struct executable_statement *bp;
+ 
+ 	bp = dmalloc (sizeof *bp, file, line);
+@@ -970,12 +853,9 @@
+ 	return executable_statement_reference (ptr, bp, file, line);
+ }
+ 
+-int executable_statement_reference (ptr, bp, file, line)
+-	struct executable_statement **ptr;
+-	struct executable_statement *bp;
+-	const char *file;
+-	int line;
+-{
++int executable_statement_reference(struct executable_statement **ptr,
++                                   struct executable_statement *bp,
++                                   const char *file, int line) {
+ 	if (!ptr) {
+ 		log_error ("%s(%d): null pointer", file, line);
+ #if defined (POINTER_DEBUG)
+@@ -998,6 +878,8 @@
+ 	return 1;
+ }
+ 
++#endif
++
+ static struct packet *free_packets;
+ 
+ #if defined (DEBUG_MEMORY_LEAKAGE) || \
+@@ -1013,11 +895,7 @@
+ }
+ #endif
+ 
+-int packet_allocate (ptr, file, line)
+-	struct packet **ptr;
+-	const char *file;
+-	int line;
+-{
++int packet_allocate(struct packet **ptr, const char *file, int line) {
+ 	struct packet *p;
+ 
+ 	if (!ptr) {
+@@ -1042,7 +920,7 @@
+ 		free_packets = (struct packet *)(p -> raw);
+ 		dmalloc_reuse (p, file, line, 1);
+ 	} else {
+-		p = dmalloc (sizeof *p, file, line);
++            p = (struct packet *)(dmalloc(sizeof *p, file, line));
+ 	}
+ 	if (p) {
+ 		memset (p, 0, sizeof *p);
+@@ -1051,12 +929,8 @@
+ 	return 0;
+ }
+ 
+-int packet_reference (ptr, bp, file, line)
+-	struct packet **ptr;
+-	struct packet *bp;
+-	const char *file;
+-	int line;
+-{
++int packet_reference(struct packet **ptr, struct packet *bp, const char *file,
++                     int line) {
+ 	if (!ptr) {
+ 		log_error ("%s(%d): null pointer", file, line);
+ #if defined (POINTER_DEBUG)
+@@ -1079,12 +953,8 @@
+ 	return 1;
+ }
+ 
+-int packet_dereference (ptr, file, line)
+-	struct packet **ptr;
+-	const char *file;
+-	int line;
+-{
+-	int i;
++int packet_dereference(struct packet **ptr, const char *file, int line) {
++    // int i;
+ 	struct packet *packet;
+ 
+ 	if (!ptr || !*ptr) {
+@@ -1117,21 +987,23 @@
+ 
+ 	if (packet -> options)
+ 		option_state_dereference (&packet -> options, file, line);
+-	if (packet -> interface)
++	/*if (packet -> interface)
+ 		interface_dereference (&packet -> interface, MDL);
+ 	if (packet -> shared_network)
+-		shared_network_dereference (&packet -> shared_network, MDL);
++                        shared_network_dereference (&packet -> shared_network,
++           MDL)
+ 	for (i = 0; i < packet -> class_count && i < PACKET_MAX_CLASSES; i++) {
+ 		if (packet -> classes [i])
+ 			omapi_object_dereference ((omapi_object_t **)
+ 						  &packet -> classes [i], MDL);
+-	}
++	} */
+ 	packet -> raw = (struct dhcp_packet *)free_packets;
+ 	free_packets = packet;
+ 	dmalloc_reuse (free_packets, __FILE__, __LINE__, 0);
+ 	return 1;
+ }
+ 
++#if 0
+ int dns_zone_allocate (ptr, file, line)
+ 	struct dns_zone **ptr;
+ 	const char *file;
+@@ -1253,6 +1125,7 @@
+ 	return 1;
+ }
+ 
++#endif
+ /*!
+  * \brief  Constructs a null-terminated data_string from a char* and length.
+  *
+@@ -1337,11 +1210,7 @@
+ /* Release the reference count to a data string's buffer (if any) and
+    zero out the other information, yielding the null data string. */
+ 
+-void data_string_forget (data, file, line)
+-	struct data_string *data;
+-	const char *file;
+-	int line;
+-{
++void data_string_forget(struct data_string *data, const char *file, int line) {
+ 	if (data -> buffer)
+ 		buffer_dereference (&data -> buffer, file, line);
+ 	memset (data, 0, sizeof *data);
+@@ -1350,13 +1219,11 @@
+ /* If the data_string is larger than the specified length, reduce 
+    the data_string to the specified size. */
+ 
+-void data_string_truncate (dp, len)
+-	struct data_string *dp;
+-	int len;
+-{
++void data_string_truncate(struct data_string *dp, int len) {
+ 	/* XXX: do we need to consider the "terminated" flag in the check? */
+-	if (len < dp -> len) {
++    if (((unsigned int)len) < dp->len) {
+ 		dp -> terminated = 0;
+ 		dp -> len = len;
+ 	}
+ }
++
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/common/options.c third-party/isc-dhcp/common/options.c
+--- /home/sudhi/workspace/sw.old/dhcp/common/options.c	2017-08-09 01:01:03.966552000 +0100
++++ third-party/isc-dhcp/common/options.c	2017-10-17 20:08:10.776550000 +0100
+@@ -27,26 +27,36 @@
+  */
+ 
+ #define DHCP_OPTION_DATA
+-#include "dhcpd.h"
+-#include <omapip/omapip_p.h>
++#include <isc/types.h>
++#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++//#include <omapip/omapip_p.h>
+ #include <limits.h>
+ 
+ struct option *vendor_cfg_option;
+ 
++#if 0
+ static int pretty_text(char **, char *, const unsigned char **,
+ 			 const unsigned char *, int);
+ static int pretty_domain(char **, char *, const unsigned char **,
+ 			 const unsigned char *);
++#endif
+ static int prepare_option_buffer(struct universe *universe, struct buffer *bp,
+ 				 unsigned char *buffer, unsigned length,
+ 				 unsigned code, int terminatep,
+ 				 struct option_cache **opp);
++int save_option_buffer(struct universe *universe, struct option_state *options,
++                       struct buffer *bp, unsigned char *buffer,
++                       unsigned length, unsigned code, int terminatep);
++void save_option(struct universe *universe, struct option_state *options,
++                 struct option_cache *oc);
++void also_save_option(struct universe *universe, struct option_state *options,
++                      struct option_cache *oc);
++
+ 
+ /* Parse all available options out of the specified packet. */
+ /* Note, the caller is responsible for allocating packet->options. */
+-int parse_options (packet)
+-	struct packet *packet;
+-{
++int parse_options(struct packet *packet) {
+ 	struct option_cache *op = NULL;
+ 
+ 	/* If we don't see the magic cookie, there's nothing to parse. */
+@@ -114,18 +124,15 @@
+ /* Parse options out of the specified buffer, storing addresses of option
+  * values in packet->options.
+  */
+-int parse_option_buffer (options, buffer, length, universe)
+-	struct option_state *options;
+-	const unsigned char *buffer;
+-	unsigned length;
+-	struct universe *universe;
+-{
++int parse_option_buffer(struct option_state *options,
++                        const unsigned char *buffer, unsigned length,
++                        struct universe *universe) {
+ 	unsigned len, offset;
+ 	unsigned code;
+ 	struct option_cache *op = NULL, *nop = NULL;
+ 	struct buffer *bp = (struct buffer *)0;
+ 	struct option *option = NULL;
+-	char *reason = "general failure";
++    const char *reason = "general failure";
+ 
+ 	if (!buffer_allocate (&bp, length, MDL)) {
+ 		log_error ("no memory for option buffer.");
+@@ -200,10 +207,9 @@
+ 			op = lookup_option(universe, options, code);
+ 
+ 			if (op != NULL && universe->concat_duplicates) {
+-				struct data_string new;
+-				memset(&new, 0, sizeof new);
+-				if (!buffer_allocate(&new.buffer,
+-						     op->data.len + len,
++                struct data_string new_string;
++                memset(&new_string, 0, sizeof new_string);
++                if (!buffer_allocate(&new_string.buffer, op->data.len + len,
+ 						     MDL)) {
+ 					log_error("parse_option_buffer: "
+ 						  "No memory.");
+@@ -211,17 +217,16 @@
+ 					return 0;
+ 				}
+ 				/* Copy old option to new data object. */
+-				memcpy(new.buffer->data, op->data.data,
+-					op->data.len);
++                memcpy(new_string.buffer->data, op->data.data, op->data.len);
+ 				/* Concat new option behind old. */
+-				memcpy(new.buffer->data + op->data.len,
++                memcpy(new_string.buffer->data + op->data.len,
+ 					bp->data + offset, len);
+-				new.len = op->data.len + len;
+-				new.data = new.buffer->data;
++                new_string.len = op->data.len + len;
++                new_string.data = new_string.buffer->data;
+ 				/* Save new concat'd object. */
+ 				data_string_forget(&op->data, MDL);
+-				data_string_copy(&op->data, &new, MDL);
+-				data_string_forget(&new, MDL);
++                data_string_copy(&op->data, &new_string, MDL);
++                data_string_forget(&new_string, MDL);
+ 			} else if (op != NULL) {
+ 				/* We must append this statement onto the
+ 				 * end of the list.
+@@ -259,7 +264,7 @@
+ 		option_dereference(&option, MDL);
+ 		offset += len;
+ 	}
+-	buffer_dereference (&bp, MDL);
++    buffer_dereference(&bp, MDL);
+ 	return 1;
+ }
+ 
+@@ -271,7 +276,7 @@
+ struct universe *find_option_universe (struct option *eopt, const char *uname)
+ {
+ 	int i;
+-	char *s, *t;
++        const char *s, *t;
+ 	struct universe *universe = (struct universe *)0;
+ 
+ 	/* Look for the E option in the option format. */
+@@ -297,10 +302,9 @@
+ 		}
+ 	} else if (t != s) {
+ 		for (i = 0; i < universe_count; i++) {
+-			if (strlen (universes [i] -> name) == t - s &&
+-			    !memcmp (universes [i] -> name,
+-				     s, (unsigned)(t - s))) {
+-				universe = universes [i];
++                    if ((unsigned int)strlen(universes[i]->name) == t - s &&
++                        !memcmp(universes[i]->name, s, (unsigned)(t - s))) {
++                        universe = universes[i];
+ 				break;
+ 			}
+ 		}
+@@ -342,6 +346,7 @@
+ 	return i;
+ }
+ 
++#if 0
+ int fqdn_universe_decode (struct option_state *options,
+ 			  const unsigned char *buffer,
+ 			  unsigned length, struct universe *u)
+@@ -1497,11 +1502,8 @@
+ /* Return true if the format string has a variable length text option
+  * ("t"), return false otherwise.
+  */
+-
+-int
+-format_has_text(format)
+-	const char *format;
+-{
++#endif
++int format_has_text(const char *format) {
+ 	const char *p;
+ 
+ 	p = format;
+@@ -1560,11 +1562,7 @@
+  * length format symbols).
+  */
+ 
+-int
+-format_min_length(format, oc)
+-	const char *format;
+-	struct option_cache *oc;
+-{
++int format_min_length(const char *format, struct option_cache *oc) {
+ 	const char *p, *name;
+ 	int min_len = 0;
+ 	int last_size = 0;
+@@ -1657,7 +1655,7 @@
+ 	return min_len;
+ }
+ 
+-
++#if 0
+ /* Format the specified option so that a human can easily read it. */
+ 
+ const char *pretty_print_option (option, data, len, emit_commas, emit_quotes)
+@@ -2238,11 +2236,11 @@
+ 	}
+ }
+ 
+-struct option_cache *lookup_option (universe, options, code)
+-	struct universe *universe;
+-	struct option_state *options;
+-	unsigned code;
+-{
++#endif
++
++struct option_cache *lookup_option(struct universe *universe,
++                                   struct option_state *options,
++                                   unsigned code) {
+ 	if (!options)
+ 		return (struct option_cache *)0;
+ 	if (universe -> lookup_func)
+@@ -2253,11 +2251,21 @@
+ 	return (struct option_cache *)0;
+ }
+ 
+-struct option_cache *lookup_hashed_option (universe, options, code)
+-	struct universe *universe;
+-	struct option_state *options;
+-	unsigned code;
+-{
++/* How many options are likely to appear in a single packet? */
++#if !defined(OPTION_HASH_SIZE)
++#define OPTION_HASH_SIZE 17
++#define OPTION_HASH_PTWO 32 /* Next power of two above option hash. */
++#define OPTION_HASH_EXP 5   /* The exponent for that power of two. */
++#endif
++
++#define compute_option_hash(x)                              \
++    (((x) & (OPTION_HASH_PTWO - 1)) +                       \
++     (((x) >> OPTION_HASH_EXP) & (OPTION_HASH_PTWO - 1))) % \
++        OPTION_HASH_SIZE;
++
++struct option_cache *lookup_hashed_option(struct universe *universe,
++                                          struct option_state *options,
++                                          unsigned code) {
+ 	int hashix;
+ 	pair bptr;
+ 	pair *hash;
+@@ -2267,7 +2275,7 @@
+ 	    !(options -> universes [universe -> index]))
+ 		return (struct option_cache *)0;
+ 
+-	hash = options -> universes [universe -> index];
++    hash = (pair *)(options->universes[universe->index]);
+ 
+ 	hashix = compute_option_hash (code);
+ 	for (bptr = hash [hashix]; bptr; bptr = bptr -> cdr) {
+@@ -2436,8 +2444,8 @@
+ 	if (format_has_text(option->format)) {
+ 		int min_len = format_min_length(option->format, op);
+ 
+-		while ((op->data.len > min_len) &&
+-		       (op->data.data[op->data.len-1] == '\0')) {
++                while ((op->data.len > (unsigned int)(min_len)) &&
++                       (op->data.data[op->data.len - 1] == '\0')) {
+ 			op->data.len--;
+ 			op->flags |= OPTION_HAD_NULLS;
+ 		}
+@@ -2452,6 +2460,7 @@
+ 	return status;
+ }
+ 
++#if 0
+ static void
+ count_options(struct option_cache *dummy_oc,
+ 	      struct packet *dummy_packet,
+@@ -2551,6 +2560,7 @@
+ 	}
+ }
+ 
++#endif
+ /* Wrapper function to put an option cache into an option state. */
+ void
+ save_option(struct universe *universe, struct option_state *options,
+@@ -2579,7 +2589,7 @@
+ {
+ 	int hashix;
+ 	pair bptr;
+-	pair *hash = options -> universes [universe -> index];
++        pair *hash = (pair *)(options->universes[universe->index]);
+ 	struct option_cache **ocloc;
+ 
+ 	if (oc -> refcnt == 0)
+@@ -2630,7 +2640,7 @@
+ 	}
+ 
+ 	/* Otherwise, just put the new one at the head of the list. */
+-	bptr = new_pair (MDL);
++        bptr = foo_new_pair(__FILE__, __LINE__);
+ 	if (!bptr) {
+ 		log_error ("No memory for option_cache reference.");
+ 		return;
+@@ -2641,11 +2651,8 @@
+ 	hash [hashix] = bptr;
+ }
+ 
+-void delete_option (universe, options, code)
+-	struct universe *universe;
+-	struct option_state *options;
+-	int code;
+-{
++void delete_option(struct universe *universe, struct option_state *options,
++                   int code) {
+ 	if (universe -> delete_func)
+ 		(*universe -> delete_func) (universe, options, code);
+ 	else
+@@ -2653,14 +2660,11 @@
+ 			   universe -> name);
+ }
+ 
+-void delete_hashed_option (universe, options, code)
+-	struct universe *universe;
+-	struct option_state *options;
+-	int code;
+-{
++void delete_hashed_option(struct universe *universe,
++                          struct option_state *options, int code) {
+ 	int hashix;
+ 	pair bptr, prev = (pair)0;
+-	pair *hash = options -> universes [universe -> index];
++    pair *hash = (pair *)(options->universes[universe->index]);
+ 
+ 	/* There may not be any options in this space. */
+ 	if (!hash)
+@@ -2669,8 +2673,8 @@
+ 	/* Try to find an existing option matching the new one. */
+ 	hashix = compute_option_hash (code);
+ 	for (bptr = hash [hashix]; bptr; bptr = bptr -> cdr) {
+-		if (((struct option_cache *)(bptr -> car)) -> option -> code
+-		    == code)
++        if (((struct option_cache *)(bptr->car))->option->code ==
++            (unsigned)code)
+ 			break;
+ 		prev = bptr;
+ 	}
+@@ -2688,11 +2692,8 @@
+ 
+ extern struct option_cache *free_option_caches; /* XXX */
+ 
+-int option_cache_dereference (ptr, file, line)
+-	struct option_cache **ptr;
+-	const char *file;
+-	int line;
+-{
++int option_cache_dereference(struct option_cache **ptr, const char *file,
++                             int line) {
+ 	if (!ptr || !*ptr) {
+ 		log_error ("Null pointer in option_cache_dereference: %s(%d)",
+ 			   file, line);
+@@ -2719,7 +2720,7 @@
+ 		/* Put it back on the free list... */
+ 		(*ptr) -> expression = (struct expression *)free_option_caches;
+ 		free_option_caches = *ptr;
+-		dmalloc_reuse (free_option_caches, (char *)0, 0, 0);
++                // dmalloc_reuse (free_option_caches, (char *)0, 0, 0);
+ 	}
+ 	if ((*ptr) -> refcnt < 0) {
+ 		log_error ("%s(%d): negative refcnt!", file, line);
+@@ -2738,12 +2739,9 @@
+ 
+ }
+ 
+-int hashed_option_state_dereference (universe, state, file, line)
+-	struct universe *universe;
+-	struct option_state *state;
+-	const char *file;
+-	int line;
+-{
++int hashed_option_state_dereference(struct universe *universe,
++                                    struct option_state *state,
++                                    const char *file, int line) {
+ 	pair *heads;
+ 	pair cp, next;
+ 	int i;
+@@ -2825,6 +2823,7 @@
+ 	return 1;
+ }
+ 
++#if 0
+ int
+ store_option(struct data_string *result, struct universe *universe,
+ 	     struct packet *packet, struct lease *lease,
+@@ -4181,6 +4180,7 @@
+ 	return 1;
+ }
+ 
++#endif
+ /**
+  *  Checks if received BOOTP/DHCPv4 packet is sane
+  *
+@@ -4225,3 +4225,4 @@
+ 
+ 	return (1);
+ }
++
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/common/parse.c third-party/isc-dhcp/common/parse.c
+--- /home/sudhi/workspace/sw.old/dhcp/common/parse.c	2017-08-09 01:01:03.966552000 +0100
++++ third-party/isc-dhcp/common/parse.c	2017-10-17 04:19:12.000000000 +0100
+@@ -26,8 +26,12 @@
+  *
+  */
+ 
+-#include "dhcpd.h"
+-#include <syslog.h>
++#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++
++void putUChar(unsigned char *obuf, u_int32_t val) { *obuf = val; }
++
++u_int32_t getUChar(const unsigned char *obuf) { return obuf[0]; }
+ 
+ /* Enumerations can be specified in option formats, and are used for
+    parsing, so we define the routines that manage them here. */
+@@ -44,9 +48,9 @@
+ {
+ 	struct enumeration *e;
+ 
+-	for (e = enumerations; e; e = e -> next)
+-		if (strlen (e -> name) == length &&
+-		    !memcmp (e -> name, name, (unsigned)length))
++    for (e = enumerations; e; e = e->next)
++        if (strlen(e->name) == ((unsigned int)length) &&
++            !memcmp(e->name, name, (unsigned)length))
+ 			return e;
+ 	return (struct enumeration *)0;
+ }
+@@ -71,6 +75,7 @@
+ 	return (struct enumeration_value *)0;
+ }
+ 
++#if 0
+ /* Skip to the semicolon ending the current statement.   If we encounter
+    braces, the matching closing brace terminates the statement.
+ */
+@@ -6004,4 +6009,4 @@
+ 
+ 	return t;
+ }
+-
++#endif
+\ No newline at end of file
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/common/tables.c third-party/isc-dhcp/common/tables.c
+--- /home/sudhi/workspace/sw.old/dhcp/common/tables.c	2017-08-09 01:01:03.970554000 +0100
++++ third-party/isc-dhcp/common/tables.c	2017-10-17 04:22:28.000000000 +0100
+@@ -27,12 +27,15 @@
+  *
+  */
+ 
+-#include "dhcpd.h"
++#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++
++#define DHCP_R_INVALIDARG (ISC_RESULTCLASS_DHCP + 3)
+ 
+ /* XXXDPN: Moved here from hash.c, when it moved to libomapi.  Not sure
+    where these really belong. */
+-HASH_FUNCTIONS (group, const char *, struct group_object, group_hash_t,
+-		group_reference, group_dereference, do_string_hash)
++// HASH_FUNCTIONS (group, const char *, struct group_object, group_hash_t,
++// group_reference, group_dereference, do_string_hash)
+ HASH_FUNCTIONS (universe, const char *, struct universe, universe_hash_t, 0, 0,
+ 		do_case_hash)
+ HASH_FUNCTIONS (option_name, const char *, struct option, option_name_hash_t,
+@@ -238,6 +241,7 @@
+ 	{ NULL, NULL, NULL, 0, 0 }
+ };
+ 
++#ifdef PENSANDO_DHCP
+ struct universe nwip_universe;
+ static struct option nwip_options[] = {
+ 	{ "illegal-1", "",			&nwip_universe,   1, 1 },
+@@ -822,6 +826,7 @@
+ 	"unknown-254",
+ 	"unknown-255" };
+ 
++#endif
+ universe_hash_t *universe_hash;
+ struct universe **universes;
+ int universe_count, universe_max;
+@@ -911,7 +916,7 @@
+ 
+ void initialize_common_option_spaces()
+ {
+-	unsigned code;
++    // unsigned code;
+ 	int i;
+ 
+ 	/* The 'universes' table is dynamically grown to contain
+@@ -941,7 +946,7 @@
+ 	i = universe_max * sizeof(struct universe *);
+ 	if (i <= 0)
+ 		log_fatal("Ludicrous initial size option space table.");
+-	universes = dmalloc(i, MDL);
++    universes = (struct universe **)dmalloc(i, MDL);
+ 	if (universes == NULL)
+ 		log_fatal("Can't allocate option space table.");
+ 	memset(universes, 0, i);
+@@ -954,8 +959,13 @@
+ 		hashed_option_state_dereference;
+ 	dhcp_universe.save_func = save_hashed_option;
+ 	dhcp_universe.delete_func = delete_hashed_option;
++#ifdef PENSANDO_DHCP
++    /* PENSANDO : This is not required as we are just parsing the packet.
++     * Uncommenting this would require compliation of unwanted parts in tree.c
++     *  */
+ 	dhcp_universe.encapsulate = hashed_option_space_encapsulate;
+ 	dhcp_universe.foreach = hashed_option_space_foreach;
++#endif
+ 	dhcp_universe.decode = parse_option_buffer;
+ 	dhcp_universe.length_size = 1;
+ 	dhcp_universe.tag_size = 1;
+@@ -972,7 +982,7 @@
+ 	    !option_code_new_hash(&dhcp_universe.code_hash,
+ 				  BYTE_CODE_HASH_SIZE, MDL))
+ 		log_fatal ("Can't allocate dhcp option hash table.");
+-	for (i = 0 ; dhcp_options[i].name ; i++) {
++    for (i = 0; dhcp_options[i].name; i++) {
+ 		option_code_hash_add(dhcp_universe.code_hash,
+ 				     &dhcp_options[i].code, 0,
+ 				     &dhcp_options[i], MDL);
+@@ -986,7 +996,7 @@
+ 	log_info("DHCP code hash: %s",
+ 		 option_code_hash_report(dhcp_universe.code_hash));
+ #endif
+-
++#ifdef PENSANDO_DHCP
+ 	/* Set up the Novell option universe (for option 63)... */
+ 	nwip_universe.name = "nwip";
+ 	nwip_universe.concat_duplicates = 0; /* XXX: reference? */
+@@ -1407,4 +1417,5 @@
+  *	universe_hash_add(universe_hash, fqdn6_universe.name, 0,
+  *			  &fqdn6_universe, MDL);
+  */
++#endif
+ }
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/common/tree.c third-party/isc-dhcp/common/tree.c
+--- /home/sudhi/workspace/sw.old/dhcp/common/tree.c	2017-08-09 01:01:03.970554000 +0100
++++ third-party/isc-dhcp/common/tree.c	2017-10-17 20:07:29.435890001 +0100
+@@ -27,15 +27,18 @@
+  *
+  */
+ 
+-#include "dhcpd.h"
+-#include <omapip/omapip_p.h>
+-#include <ctype.h>
+-#include <sys/wait.h>
++#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++//#include "dhcpd.h"
++//#include <omapip/omapip_p.h>
++//#include <ctype.h>
++//#include <sys/wait.h>
+ 
+ #ifdef HAVE_REGEX_H
+ # include <regex.h>
+ #endif
+ 
++#if 0
+ struct binding_scope *global_scope;
+ 
+ static int do_host_lookup (struct data_string *, struct dns_host_entry *);
+@@ -3063,13 +3066,10 @@
+ }
+ 		
+ 
+-/* Dereference an expression node, and if the reference count goes to zero,
+-   dereference any data it refers to, and then free it. */
+-void expression_dereference (eptr, file, line)
+-	struct expression **eptr;
+-	const char *file;
+-	int line;
+-{
++#endif
++
++void expression_dereference(struct expression **eptr, const char *file,
++                            int line) {
+ 	struct expression *expr = *eptr;
+ 
+ 	/* Zero the pointer. */
+@@ -3077,12 +3077,11 @@
+ 
+ 	/* Decrement the reference count.   If it's nonzero, we're
+ 	   done. */
+-	--(expr -> refcnt);
+-	rc_register (file, line, eptr, expr, expr -> refcnt, 1, RC_MISC);
+-	if (expr -> refcnt > 0)
+-		return;
+-	if (expr -> refcnt < 0) {
+-		log_error ("%s(%d): negative refcnt!", file, line);
++    --(expr->refcnt);
++    rc_register(file, line, eptr, expr, expr->refcnt, 1, RC_MISC);
++    if (expr->refcnt > 0) return;
++    if (expr->refcnt < 0) {
++        log_error("%s(%d): negative refcnt!", file, line);
+ #if defined (DEBUG_RC_HISTORY)
+ 		dump_rc_history (expr);
+ #endif
+@@ -3152,8 +3151,8 @@
+ 		break;
+ 
+ 	      case expr_not:
+-		if (expr -> data.not)
+-			expression_dereference (&expr -> data.not, file, line);
++                  if (expr->data.not_)
++                      expression_dereference(&expr->data.not_, file, line);
+ 		break;
+ 
+ 	      case expr_packet:
+@@ -3281,7 +3280,7 @@
+ 		break;
+ 
+ 	      case expr_function:
+-		fundef_dereference (&expr -> data.func, file, line);
++                  // fundef_dereference (&expr -> data.func, file, line);
+ 		break;
+ 
+ 		/* No subexpressions. */
+@@ -3305,6 +3304,8 @@
+ 	free_expression (expr, MDL);
+ }
+ 
++#if 0
++
+ int is_dns_expression (expr)
+ 	struct expression *expr;
+ {
+@@ -4640,4 +4641,5 @@
+ 	return (list_len);
+ }
+ 
++#endif
+ /* vim: set tabstop=8: */
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/includes/dhcp6.h third-party/isc-dhcp/includes/dhcp6.h
+--- /home/sudhi/workspace/sw.old/dhcp/includes/dhcp6.h	2017-08-09 01:01:03.990564000 +0100
++++ third-party/isc-dhcp/includes/dhcp6.h	2017-10-14 04:02:35.743226423 +0100
+@@ -177,7 +177,7 @@
+ struct dhcpv6_packet {
+ 	unsigned char msg_type;
+ 	unsigned char transaction_id[3];
+-	unsigned char options[FLEXIBLE_ARRAY_MEMBER];
++	unsigned char options[];
+ };
+ 
+ /* Offset into DHCPV6 Reply packets where Options spaces commence. */
+@@ -191,7 +191,7 @@
+ 	unsigned char hop_count;
+ 	unsigned char link_address[16];
+ 	unsigned char peer_address[16];
+-	unsigned char options[FLEXIBLE_ARRAY_MEMBER];
++	unsigned char options[];
+ };
+ 
+ /* Leasequery query-types (RFC 5007) */
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/includes/dhcp.h third-party/isc-dhcp/includes/dhcp.h
+--- /home/sudhi/workspace/sw.old/dhcp/includes/dhcp.h	2017-08-09 01:01:03.990564000 +0100
++++ third-party/isc-dhcp/includes/dhcp.h	2017-10-14 04:02:35.743226423 +0100
+@@ -29,14 +29,21 @@
+ 
+ #ifndef DHCP_H
+ #define DHCP_H
+-
+-#define DHCP_UDP_OVERHEAD	(20 + /* IP header */			\
++#include <netinet/if_ether.h>
++#include <netinet/in.h>
++#include <time.h>
++#include <isc/result.h>
++#include "nic/include/base.h"
++
++#define MDL __FILE__, __LINE__
++#define DHCP_UDP_OVERHEAD \
++    (20 + /* IP header */ \
+ 			        8)   /* UDP header */
+ #define DHCP_SNAME_LEN		64
+ #define DHCP_FILE_LEN		128
+ #define DHCP_FIXED_NON_UDP	236
+ #define DHCP_FIXED_LEN		(DHCP_FIXED_NON_UDP + DHCP_UDP_OVERHEAD)
+-						/* Everything but options. */
++/* Everything but options. */
+ #define BOOTP_MIN_LEN		300
+ 
+ #define DHCP_MTU_MAX		1500
+@@ -45,6 +52,31 @@
+ #define DHCP_MAX_OPTION_LEN	(DHCP_MTU_MAX - DHCP_FIXED_LEN)
+ #define DHCP_MIN_OPTION_LEN     (DHCP_MTU_MIN - DHCP_FIXED_LEN)
+ 
++#define HARDWARE_ADDR_LEN 20
++
++
++
++struct hardware {
++    u_int8_t hlen;
++    u_int8_t hbuf[HARDWARE_ADDR_LEN + 1];
++};
++
++
++
++struct option_state {
++	int refcnt;
++	int universe_count;
++	int site_universe;
++	int site_code_min;
++	void *universes [1];
++};
++
++
++struct option_data {
++    const unsigned char *data;
++    unsigned len; /* Does not include NUL terminator, if any. */
++};
++
+ struct dhcp_packet {
+  u_int8_t  op;		/* 0: Message opcode/type */
+ 	u_int8_t  htype;	/* 1: Hardware addr type (net/if_types.h) */
+@@ -57,17 +89,82 @@
+ 	struct in_addr yiaddr;	/* 16: Client IP address */
+ 	struct in_addr siaddr;	/* 18: IP address of next server to talk to */
+ 	struct in_addr giaddr;	/* 20: DHCP relay agent IP address */
+-	unsigned char chaddr [16];	/* 24: Client hardware address */
+-	char sname [DHCP_SNAME_LEN];	/* 40: Server name */
+-	char file [DHCP_FILE_LEN];	/* 104: Boot filename */
+-	unsigned char options [DHCP_MAX_OPTION_LEN];
++    unsigned char chaddr[16];   /* 24: Client hardware address */
++    char sname[DHCP_SNAME_LEN]; /* 40: Server name */
++    char file[DHCP_FILE_LEN];   /* 104: Boot filename */
++    unsigned char options[DHCP_MAX_OPTION_LEN];
+ 				/* 212: Optional parameters
+-			  (actual length dependent on MTU). */
++(actual length dependent on MTU). */
+ };
+ 
+-/* BOOTP (rfc951) message types */
+-#define	BOOTREQUEST	1
+-#define BOOTREPLY	2
++
++
++struct iaddr {
++    unsigned len;
++    unsigned char iabuf[16];
++};
++/* A dhcp packet and the pointers to its option values. */
++struct packet {
++	struct dhcp_packet *raw;
++	int refcnt;
++	unsigned packet_length;
++	int packet_type;
++
++	unsigned char dhcpv6_msg_type;		/* DHCPv6 message type */
++
++	/* DHCPv6 transaction ID */
++	unsigned char dhcpv6_transaction_id[3];
++
++	/* DHCPv6 relay information */
++	unsigned char dhcpv6_hop_count;
++	struct in6_addr dhcpv6_link_address;
++	struct in6_addr dhcpv6_peer_address;
++
++	/* DHCPv6 packet containing this one, or NULL if none */
++	struct packet *dhcpv6_container_packet;
++
++	int options_valid;
++	int client_port;
++	struct iaddr client_addr;
++	struct interface_info *interface;	/* Interface on which packet
++						   was received. */
++	struct hardware *haddr;		/* Physical link address
++					   of local sender (maybe gateway). */
++
++	/* Information for relay agent options (see
++	   draft-ietf-dhc-agent-options-xx.txt). */
++	u_int8_t *circuit_id;		/* Circuit ID of client connection. */
++	int circuit_id_len;
++	u_int8_t *remote_id;		/* Remote ID of client. */
++	int remote_id_len;
++
++	int got_requested_address;	/* True if client sent the
++					   dhcp-requested-address option. */
++
++	//struct shared_network *shared_network;
++	struct option_state *options;
++
++#if !defined (PACKET_MAX_CLASSES)
++# define PACKET_MAX_CLASSES 5
++#endif
++	//int class_count;
++	//struct class *classes [PACKET_MAX_CLASSES];
++
++	int known;
++	int authenticated;
++
++	/* If we stash agent options onto the packet option state, to pretend
++	 * options we got in a previous exchange were still there, we need
++	 * to signal this in a reliable way.
++	 */
++	isc_boolean_t agent_options_stashed;
++
++	/*
++	 * ISC_TRUE if packet received unicast (as opposed to multicast).
++	 * Only used in DHCPv6.
++	 */
++	isc_boolean_t unicast;
++};
+ 
+ /* Possible values for flags field... */
+ #define BOOTP_BROADCAST 32768L
+@@ -77,8 +174,9 @@
+ #define HTYPE_IEEE802	6               /* IEEE 802.2 Token Ring...	*/
+ #define HTYPE_FDDI	8		/* FDDI...			*/
+ #define HTYPE_INFINIBAND  32		/* IP over Infiniband		*/
+-#define HTYPE_IPMP       255            /* IPMP - random hw address - there
+-					 * is no standard for this so we
++#define HTYPE_IPMP                          \
++    255 /* IPMP - random hw address - there \
++         * is no standard for this so we    \
+ 					 * just steal a type            */
+ 
+ /* Magic cookie validating dhcp options field (and bootp vendor
+@@ -199,5 +297,14 @@
+ /* Enterprise Suboptions: */
+ #define VENDOR_ISC_SUBOPTIONS		2495
+ 
++hal_ret_t dhcp_lookup_option(const struct packet *decoded_packet, unsigned code,
++                        struct option_data *data);
++hal_ret_t decode_dhcp_packet(struct dhcp_packet *packet, uint32_t pkt_len,
++                              struct packet **decoded_packet);
++ssize_t extract_dhcp_payload_offset(uint8_t *buf, uint32_t len,
++                                     uint32_t *pkt_len);
++void free_packet(struct packet **packet);
++void dhcp_lib_init();
++
+ #endif /* DHCP_H */
+ 
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/includes/omapip/alloc.h third-party/isc-dhcp/includes/omapip/alloc.h
+--- /home/sudhi/workspace/sw.old/dhcp/includes/omapip/alloc.h	2017-08-09 01:01:03.994566000 +0100
++++ third-party/isc-dhcp/includes/omapip/alloc.h	2017-10-14 04:02:35.743226423 +0100
+@@ -26,10 +26,12 @@
+  *
+  */
+ 
++#if 0
+ isc_result_t omapi_buffer_new (omapi_buffer_t **, const char *, int);
+ isc_result_t omapi_buffer_reference (omapi_buffer_t **,
+ 				     omapi_buffer_t *, const char *, int);
+ isc_result_t omapi_buffer_dereference (omapi_buffer_t **, const char *, int);
++#endif
+ 
+ #if defined (DEBUG_MEMORY_LEAKAGE) || defined (DEBUG_MALLOC_POOL) || \
+ 		defined (DEBUG_MEMORY_LEAKAGE_ON_EXIT)
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/includes/omapip/omapip_p.h third-party/isc-dhcp/includes/omapip/omapip_p.h
+--- /home/sudhi/workspace/sw.old/dhcp/includes/omapip/omapip_p.h	2017-08-09 01:01:03.994566000 +0100
++++ third-party/isc-dhcp/includes/omapip/omapip_p.h	2017-10-17 03:05:56.901021000 +0100
+@@ -59,7 +59,7 @@
+  */
+ 
+ #include <dst/dst.h>
+-#include "result.h"
++#include <isc/result.h>
+ 
+ #include <omapip/convert.h>
+ #include <omapip/hash.h>
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/includes/tree.h third-party/isc-dhcp/includes/tree.h
+--- /home/sudhi/workspace/sw.old/dhcp/includes/tree.h	2017-08-09 01:01:03.994566000 +0100
++++ third-party/isc-dhcp/includes/tree.h	2017-10-14 04:02:35.743226423 +0100
+@@ -27,6 +27,9 @@
+  *
+  */
+ 
++#ifndef TREE_H
++#define TREE_H
++typedef time_t TIME;
+ /* A pair of pointers, suitable for making a linked list. */
+ typedef struct _pair {
+ 	caddr_t car;
+@@ -207,9 +210,9 @@
+ 			struct expression *len;
+ 		} substring;
+ 		struct expression *equal [2];
+-		struct expression *and [2];
+-		struct expression *or [2];
+-		struct expression *not;
++                struct expression *and_[2];
++                struct expression *or_[2];
++                struct expression *not_;
+ 		struct expression *add;
+ 		struct expression *subtract;
+ 		struct expression *multiply;
+@@ -302,6 +305,7 @@
+ 	struct option_cache *(*lookup_func) (struct universe *,
+ 					     struct option_state *,
+ 					     unsigned);
++
+ 	void (*save_func) (struct universe *, struct option_state *,
+ 			   struct option_cache *, isc_boolean_t);
+ 	void (*foreach) (struct packet *,
+@@ -348,3 +352,5 @@
+ 	unsigned code;
+ 	int refcnt;
+ };
++
++#endif
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/omapip/alloc.c third-party/isc-dhcp/omapip/alloc.c
+--- /home/sudhi/workspace/sw.old/dhcp/omapip/alloc.c	2017-08-09 01:01:03.998568000 +0100
++++ third-party/isc-dhcp/omapip/alloc.c	2017-10-17 18:58:46.635519999 +0100
+@@ -29,9 +29,9 @@
+  *
+  */
+ 
+-#include "dhcpd.h"
+-
+-#include <omapip/omapip_p.h>
++//#include <omapip/omapip_p.h>
++#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/third-party/isc-dhcp/includes/dhcp.h"
+ 
+ #if defined (DEBUG_MEMORY_LEAKAGE) || defined (DEBUG_MALLOC_POOL) || \
+ 		defined (DEBUG_MEMORY_LEAKAGE_ON_EXIT)
+@@ -56,7 +56,7 @@
+ dmalloc(unsigned size, const char *file, int line) {
+ 	unsigned char *foo;
+ 	unsigned len;
+-	void **bar;
++	void *bar;
+ #if defined (DEBUG_MEMORY_LEAKAGE) || defined (DEBUG_MALLOC_POOL) || \
+ 		defined (DEBUG_MEMORY_LEAKAGE_ON_EXIT)
+ 	int i;
+@@ -67,7 +67,7 @@
+ 	if (len < size)
+ 		return NULL;
+ 
+-	foo = malloc(len);
++	foo = (unsigned char*)malloc(len);
+ 
+ 	if (!foo)
+ 		return NULL;
+@@ -443,6 +443,7 @@
+ 		return dmalloc_find_entry (dp, array, 0, middle);
+ }
+ 
++#if 0
+ void omapi_print_dmalloc_usage_by_caller ()
+ {
+ 	struct dmalloc_preamble *dp;
+@@ -1162,4 +1163,4 @@
+ 	*h = 0;
+ 	return ISC_R_SUCCESS;
+ }
+-
++#endif
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/omapip/errwarn.c third-party/isc-dhcp/omapip/errwarn.c
+--- /home/sudhi/workspace/sw.old/dhcp/omapip/errwarn.c	2017-08-09 01:01:03.998568000 +0100
++++ third-party/isc-dhcp/omapip/errwarn.c	2017-10-17 19:41:27.907515999 +0100
+@@ -31,8 +31,11 @@
+  * with Vixie Laboratories.
+  */
+ 
+-#include "dhcpd.h"
+ 
++#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++
++#if 0
+ #include <omapip/omapip_p.h>
+ #include <errno.h>
+ #include <syslog.h>
+@@ -148,6 +151,7 @@
+ 	  IGNORE_RET (write (STDERR_FILENO, "\n", 1));
+   }
+ 
++
+   return 0;
+ }
+ 
+@@ -155,6 +159,7 @@
+ 
+ int log_debug (const char *fmt, ...)
+ {
++
+   va_list list;
+ 
+   do_percentm (fbuf, fmt);
+@@ -360,4 +365,6 @@
+     }
+   return "Unknown WinSock error";
+ }
++
++#endif
+ #endif /* _WIN32 */
+diff -u -r --ignore-space-change /home/sudhi/workspace/sw.old/dhcp/omapip/hash.c third-party/isc-dhcp/omapip/hash.c
+--- /home/sudhi/workspace/sw.old/dhcp/omapip/hash.c	2017-08-09 01:01:03.998568000 +0100
++++ third-party/isc-dhcp/omapip/hash.c	2017-10-17 20:01:55.000000000 +0100
+@@ -27,11 +27,10 @@
+  *
+  */
+ 
+-#include "dhcpd.h"
+-
+-#include <omapip/omapip_p.h>
+ #include <limits.h>
+ #include <ctype.h>
++#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/third-party/isc-dhcp/includes/dhcp.h"
+ 
+ static unsigned
+ find_length(const void *key,
+@@ -53,12 +52,8 @@
+ 	return 0;
+ }
+ 
+-int new_hash_table (tp, count, file, line)
+-	struct hash_table **tp;
+-	unsigned count;
+-	const char *file;
+-	int line;
+-{
++int new_hash_table(struct hash_table **tp, unsigned count, const char *file,
++                   int line) {
+ 	struct hash_table *rval;
+ 	unsigned extra;
+ 
+@@ -87,8 +82,9 @@
+ 	else
+ 		extra = count - 1;
+ 
+-	rval = dmalloc(sizeof(struct hash_table) +
+-		       (extra * sizeof(struct hash_bucket *)), file, line);
++        rval = (struct hash_table *)dmalloc(
++            sizeof(struct hash_table) + (extra * sizeof(struct hash_bucket *)),
++            file, line);
+ 	if (!rval)
+ 		return 0;
+ 	rval -> hash_count = count;
+@@ -96,11 +92,7 @@
+ 	return 1;
+ }
+ 
+-void free_hash_table (tp, file, line)
+-	struct hash_table **tp;
+-	const char *file;
+-	int line;
+-{
++void free_hash_table(struct hash_table **tp, const char *file, int line) {
+ 	struct hash_table *ptr = *tp;
+ 
+ #if defined (DEBUG_MEMORY_LEAKAGE) || \
+@@ -162,14 +154,11 @@
+ }
+ #endif
+ 
+-struct hash_bucket *new_hash_bucket (file, line)
+-	const char *file;
+-	int line;
+-{
++struct hash_bucket *new_hash_bucket(const char *file, int line) {
+ 	struct hash_bucket *rval;
+ 	int i = 0;
+ 	if (!free_hash_buckets) {
+-		rval = dmalloc (127 * sizeof (struct hash_bucket),
++        rval = (struct hash_bucket *)dmalloc(127 * sizeof(struct hash_bucket),
+ 				file, line);
+ 		if (!rval)
+ 			return rval;
+@@ -191,11 +180,7 @@
+ 	return rval;
+ }
+ 
+-void free_hash_bucket (ptr, file, line)
+-	struct hash_bucket *ptr;
+-	const char *file;
+-	int line;
+-{
++void free_hash_bucket(struct hash_bucket *ptr, const char *file, int line) {
+ #if defined (DEBUG_MALLOC_POOL)
+ 	struct hash_bucket *hp;
+ 
+@@ -241,7 +226,7 @@
+ do_case_hash(const void *name, unsigned len, unsigned size)
+ {
+ 	register unsigned accum = 0;
+-	register const unsigned char *s = name;
++        register const unsigned char *s = (const unsigned char *)name;
+ 	int i = len;
+ 	register unsigned c;
+ 
+@@ -394,14 +379,8 @@
+ 	return retbuf;
+ }
+ 
+-void add_hash (table, key, len, pointer, file, line)
+-	struct hash_table *table;
+-	unsigned len;
+-	const void *key;
+-	hashed_object_t *pointer;
+-	const char *file;
+-	int line;
+-{
++void add_hash(struct hash_table *table, const void *key, unsigned len,
++              hashed_object_t *pointer, const char *file, int line) {
+ 	int hashno;
+ 	struct hash_bucket *bp;
+ 	void *foo;
+@@ -419,10 +398,10 @@
+ 		log_error ("Can't add entry to hash table: no memory.");
+ 		return;
+ 	}
+-	bp -> name = key;
+-	if (table -> referencer) {
+-		foo = &bp -> value;
+-		(*(table -> referencer)) (foo, pointer, file, line);
++    bp->name = (const unsigned char *)key;
++    if (table->referencer) {
++        foo = &bp->value;
++        (*(table->referencer))(((hashed_object_t **)foo), pointer, file, line);
+ 	} else
+ 		bp -> value = pointer;
+ 	bp -> next = table -> buckets [hashno];
+@@ -430,13 +409,8 @@
+ 	table -> buckets [hashno] = bp;
+ }
+ 
+-void delete_hash_entry (table, key, len, file, line)
+-	struct hash_table *table;
+-	unsigned len;
+-	const void *key;
+-	const char *file;
+-	int line;
+-{
++void delete_hash_entry(struct hash_table *table, const void *key, unsigned len,
++                       const char *file, int line) {
+ 	int hashno;
+ 	struct hash_bucket *bp, *pbp = (struct hash_bucket *)0;
+ 	void *foo;
+@@ -451,35 +425,27 @@
+ 
+ 	/* Go through the list looking for an entry that matches;
+ 	   if we find it, delete it. */
+-	for (bp = table -> buckets [hashno]; bp; bp = bp -> next) {
+-		if ((!bp -> len &&
+-		     !strcmp ((const char *)bp->name, key)) ||
+-		    (bp -> len == len &&
+-		     !(table -> cmp)(bp->name, key, len))) {
++    for (bp = table->buckets[hashno]; bp; bp = bp->next) {
++        if ((!bp->len && !strcmp((const char *)bp->name, (const char *)key)) ||
++            (bp->len == len && !(table->cmp)(bp->name, key, len))) {
+ 			if (pbp) {
+-				pbp -> next = bp -> next;
++                pbp->next = bp->next;
+ 			} else {
+-				table -> buckets [hashno] = bp -> next;
++                table->buckets[hashno] = bp->next;
+ 			}
+-			if (bp -> value && table -> dereferencer) {
+-				foo = &bp -> value;
+-				(*(table -> dereferencer)) (foo, file, line);
++            if (bp->value && table->dereferencer) {
++                foo = &bp->value;
++                (*(table->dereferencer))(((hashed_object_t **)foo), file, line);
+ 			}
+-			free_hash_bucket (bp, file, line);
++            free_hash_bucket(bp, file, line);
+ 			break;
+ 		}
+ 		pbp = bp;	/* jwg, 9/6/96 - nice catch! */
+ 	}
+ }
+ 
+-int hash_lookup (vp, table, key, len, file, line)
+-	hashed_object_t **vp;
+-	struct hash_table *table;
+-	const void *key;
+-	unsigned len;
+-	const char *file;
+-	int line;
+-{
++int hash_lookup(hashed_object_t **vp, struct hash_table *table, const void *key,
++                unsigned len, const char *file, int line) {
+ 	int hashno;
+ 	struct hash_bucket *bp;
+ 
+@@ -511,7 +477,7 @@
+ 
+ int hash_foreach (struct hash_table *table, hash_foreach_func func)
+ {
+-	int i;
++    unsigned int i;
+ 	struct hash_bucket *bp, *next;
+ 	int count = 0;
+ 
+@@ -535,8 +501,8 @@
+ int casecmp (const void *v1, const void *v2, size_t len)
+ {
+ 	size_t i;
+-	const unsigned char *s = v1;
+-	const unsigned char *t = v2;
++        const unsigned char *s = (const unsigned char *)v1;
++        const unsigned char *t = (const unsigned char *)v2;
+ 	
+ 	for (i = 0; i < len; i++)
+ 	{
+--- /home/sudhi/workspace/sw.old/dhcp/includes/dhcp_internal.h	1970-01-01 01:00:00.000000000 +0100
++++ third-party/isc-dhcp/includes/dhcp_internal.h	2017-10-17 20:09:48.509392000 +0100
+@@ -0,0 +1,232 @@
++/* dhcp.h
++
++   Protocol structures... */
++
++/*
++ * Copyright (c) 2011-2012,2014 by Internet Systems Consortium, Inc. ("ISC")
++ * Copyright (c) 2004-2009 by Internet Systems Consortium, Inc. ("ISC")
++ * Copyright (c) 1995-2003 by Internet Software Consortium
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
++ * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ *   Internet Systems Consortium, Inc.
++ *   950 Charter Street
++ *   Redwood City, CA 94063
++ *   <info@isc.org>
++ *   https://www.isc.org/
++ *
++ */
++
++#ifndef DHCP_INTERNAL_H
++#define DHCP_INTERNAL_H
++#include <isc/result.h>
++#include <isc/resultclass.h>
++#include <netinet/if_ether.h>
++#include <netinet/in.h>
++#include <netinet/ip_icmp.h>
++#include <time.h>
++
++#define log_error HAL_TRACE_ERR
++#define log_info HAL_TRACE_INFO
++#define log_debug HAL_TRACE_DEBUG
++#define log_fatal HAL_TRACE_ERR
++
++struct hash_table;
++#include "nic/third-party/isc-dhcp/includes/omapip/hash.h"
++typedef struct hash_table group_hash_t;
++typedef struct hash_table universe_hash_t;
++typedef struct hash_table option_name_hash_t;
++typedef struct hash_table option_code_hash_t;
++#include "nic/third-party/isc-dhcp/includes/omapip/alloc.h"
++#include "nic/third-party/isc-dhcp/includes/tree.h"
++
++#define DHCP_UDP_OVERHEAD \
++    (20 + /* IP header */ \
++     8)   /* UDP header */
++#define DHCP_SNAME_LEN 64
++#define DHCP_FILE_LEN 128
++#define DHCP_FIXED_NON_UDP 236
++#define DHCP_FIXED_LEN (DHCP_FIXED_NON_UDP + DHCP_UDP_OVERHEAD)
++/* Everything but options. */
++#define BOOTP_MIN_LEN 300
++
++#define DHCP_MTU_MAX 1500
++#define DHCP_MTU_MIN            576
++
++#define DHCP_MAX_OPTION_LEN (DHCP_MTU_MAX - DHCP_FIXED_LEN)
++#define DHCP_MIN_OPTION_LEN     (DHCP_MTU_MIN - DHCP_FIXED_LEN)
++
++#define HARDWARE_ADDR_LEN 20
++#if !defined (BYTE_NAME_HASH_SIZE)
++# define BYTE_NAME_HASH_SIZE	401	/* Default would be ridiculous. */
++#endif
++#if !defined (BYTE_CODE_HASH_SIZE)
++# define BYTE_CODE_HASH_SIZE	254	/* Default would be ridiculous. */
++#endif
++
++#define dmalloc_reuse(x, y, l, z)
++
++struct hash_table;
++typedef struct hash_table group_hash_t;
++typedef struct hash_table universe_hash_t;
++typedef struct hash_table option_name_hash_t;
++typedef struct hash_table option_code_hash_t;
++typedef struct hash_table dns_zone_hash_t;
++typedef struct hash_table lease_ip_hash_t;
++typedef struct hash_table lease_id_hash_t;
++typedef struct hash_table host_hash_t;
++typedef struct hash_table class_hash_t;
++
++struct option_cache {
++    int refcnt;
++    struct option_cache *next;
++    struct expression *expression;
++    struct option *option;
++    struct data_string data;
++
++#define OPTION_HAD_NULLS 0x00000001
++    u_int32_t flags;
++};
++
++int packet_allocate (struct packet **, const char *, int);
++int packet_reference (struct packet **,
++		      struct packet *, const char *, int);
++int packet_dereference (struct packet **, const char *, int);
++int option_state_allocate (struct option_state **, const char *, int);
++int option_state_reference (struct option_state **,
++			    struct option_state *, const char *, int);
++int option_state_dereference (struct option_state **,
++			      const char *, int);
++int parse_option_buffer(struct option_state *, const unsigned char *, unsigned,
++                        struct universe *);
++struct universe *find_option_universe(struct option *, const char *);
++int parse_encapsulated_suboptions(struct option_state *, struct option *,
++                                  const unsigned char *, unsigned,
++                                  struct universe *, const char *);
++
++
++int data_string_new(struct data_string *, const char *, unsigned int,
++		    const char *, int);
++void data_string_copy(struct data_string *, const struct data_string *,
++		      const char *, int);
++void data_string_forget (struct data_string *, const char *, int);
++void data_string_truncate (struct data_string *, int);
++int option_cache_allocate (struct option_cache **, const char *, int);
++int option_cache_reference (struct option_cache **,
++			    struct option_cache *, const char *, int);
++void * dmalloc (unsigned, const char *, int);
++//void  dmalloc_reuse (void *, const char*, int, int);
++void dfree (void *, const char *, int);
++#if defined (DEBUG_MEMORY_LEAKAGE) || defined (DEBUG_MALLOC_POOL) || \
++		defined (DEBUG_MEMORY_LEAKAGE_ON_EXIT)
++void dmalloc_reuse (void *, const char *, int, int);
++int option_chain_head_allocate (struct option_chain_head **,
++				const char *, int);
++#endif
++int option_chain_head_reference (struct option_chain_head **,
++				 struct option_chain_head *,
++				 const char *, int);
++int option_chain_head_dereference (struct option_chain_head **,
++				   const char *, int);
++int option_cache_reference(struct option_cache **ptr, struct option_cache *src,
++                           const char *file, int line);
++int option_cache_dereference (struct option_cache **,
++			      const char *, int);
++
++struct option *new_option (const char *, const char *, int);
++int option_reference(struct option **dest, struct option *src,
++		     const char * file, int line);
++int option_dereference(struct option **dest, const char *file, int line);
++
++struct option_cache *lookup_option (struct universe *,
++				    struct option_state *, unsigned);
++struct option_cache *lookup_hashed_option (struct universe *,
++					   struct option_state *,
++					   unsigned);
++
++void expression_dereference (struct expression **, const char *, int);
++void save_hashed_option(struct universe *, struct option_state *,
++			struct option_cache *, isc_boolean_t appendp);
++void delete_option (struct universe *, struct option_state *, int);
++void delete_hashed_option (struct universe *,
++			   struct option_state *, int);
++void hashed_option_space_foreach (struct packet *, struct lease *,
++				  struct client_state *,
++				  struct option_state *,
++				  struct option_state *,
++				  struct binding_scope **,
++				  struct universe *, void *,
++				  void (*) (struct option_cache *,
++					    struct packet *,
++					    struct lease *,
++					    struct client_state *,
++					    struct option_state *,
++					    struct option_state *,
++					    struct binding_scope **,
++					    struct universe *, void *));
++int hashed_option_state_dereference (struct universe *,
++				     struct option_state *,
++				     const char *, int);
++int hashed_option_space_encapsulate (struct data_string *,
++				     struct packet *, struct lease *,
++				     struct client_state *,
++				     struct option_state *,
++				     struct option_state *,
++				     struct binding_scope **,
++				     struct universe *);
++u_int32_t getUChar (const unsigned char *);
++void putUChar (unsigned char *, u_int32_t);
++int buffer_allocate(struct buffer **ptr, unsigned len, const char *file,
++                    int line);
++int buffer_reference(struct buffer **ptr, struct buffer *bp, const char *file,
++                     int line);
++int buffer_dereference(struct buffer **ptr, const char *file, int line);
++HASH_FUNCTIONS_DECL (option_code, const unsigned *, struct option,
++		     option_code_hash_t)
++extern int universe_count, universe_max;
++extern struct universe **universes;
++extern struct universe dhcp_universe;
++extern char *default_option_format;
++
++
++void add_enumeration (struct enumeration *);
++struct enumeration *find_enumeration (const char *, int);
++struct enumeration_value *find_enumeration_value (const char *, int,
++						  unsigned *,
++						  const char *);
++pair foo_new_pair (const char *, int);
++void free_pair (pair, const char *, int);
++int dns_host_entry_allocate (struct dns_host_entry **,
++			     const char *, const char *, int);
++int dns_host_entry_reference (struct dns_host_entry **,
++			      struct dns_host_entry *,
++			      const char *, int);
++int dns_host_entry_dereference (struct dns_host_entry **,
++				const char *, int);
++void free_expression (struct expression *, const char *, int);
++
++ssize_t decode_ethernet_header(unsigned char *buf, unsigned bufix,
++                               struct hardware *from);
++
++ssize_t decode_udp_ip_header(struct interface_info *interface,
++                             unsigned char *buf, unsigned bufix,
++                             struct sockaddr_in *from, unsigned buflen,
++                             unsigned *rbuflen, int csum_ready);
++
++int parse_options(struct packet *);
++
++void initialize_common_option_spaces(void);
++
++
++#endif /* DHCP_H */
++
+--- /home/sudhi/workspace/sw.old/dhcp/dhcp_pen_api.c	1970-01-01 01:00:00.000000000 +0100
++++ third-party/isc-dhcp/dhcp_pen_api.c	2017-10-14 04:03:47.671244424 +0100
+@@ -0,0 +1,284 @@
++/* dhcp_packet.cc*/
++
++// clang-format off
++#include "nic/third-party/isc-dhcp/includes/dhcp_internal.h"
++#include "nic/third-party/isc-dhcp/includes/dhcp.h"
++
++#include <netinet/if_ether.h>
++#include <netinet/udp.h>
++
++// clang-format on
++
++/* Compute the easy part of the checksum on a range of bytes. */
++
++bool dhcp_lib_init_done;
++
++u_int32_t checksum(unsigned char *buf, unsigned nbytes, u_int32_t sum) {
++    unsigned i;
++
++    /* Checksum all the pairs of bytes first... */
++    for (i = 0; i < (nbytes & ~1U); i += 2) {
++        sum += (u_int16_t)ntohs(*((u_int16_t *)(buf + i)));
++        /* Add carry. */
++        if (sum > 0xFFFF) sum -= 0xFFFF;
++    }
++
++    /* If there's a single byte left over, checksum it, too.   Network
++       byte order is big-endian, so the remaining byte is the high byte. */
++    if (i < nbytes) {
++        sum += buf[i] << 8;
++        /* Add carry. */
++        if (sum > 0xFFFF) sum -= 0xFFFF;
++    }
++
++    return sum;
++}
++
++/* Finish computing the checksum, and then put it into network byte order. */
++
++u_int32_t wrapsum(u_int32_t sum) {
++    sum = ~sum & 0xFFFF;
++
++    return htons(sum);
++}
++/* Decode a hardware header... */
++
++ssize_t decode_ethernet_header(unsigned char *buf, unsigned bufix,
++                               struct hardware *from) {
++    struct ether_header eh;
++
++    memcpy(&eh, buf + bufix, ETHER_HDR_LEN);
++
++    memcpy(&from->hbuf[1], eh.ether_shost, sizeof(eh.ether_shost));
++    from->hbuf[0] = ARPHRD_ETHER;
++    from->hlen = (sizeof eh.ether_shost) + 1;
++
++    return ETHER_HDR_LEN;
++}
++
++/* UDP header and IP header decoded together for convenience. */
++
++ssize_t
++decode_udp_ip_header(struct interface_info *interface,
++             unsigned char *buf, unsigned bufix,
++             struct sockaddr_in *from, unsigned buflen,
++             unsigned *rbuflen, int csum_ready)
++{
++  unsigned char *data;
++  struct ip ip;
++  struct udphdr udp;
++  unsigned char *upp, *endbuf;
++  u_int32_t ip_len, ulen, pkt_len;
++  static unsigned int ip_packets_seen = 0;
++  static unsigned int ip_packets_bad_checksum = 0;
++  static unsigned int udp_packets_seen = 0;
++  static unsigned int udp_packets_bad_checksum = 0;
++  static unsigned int udp_packets_length_checked = 0;
++  static unsigned int udp_packets_length_overflow = 0;
++  unsigned len;
++
++  /* Designate the end of the input buffer for bounds checks. */
++  endbuf = buf + bufix + buflen;
++
++  /* Assure there is at least an IP header there. */
++  if ((buf + bufix + sizeof(ip)) > endbuf)
++      return -1;
++
++  /* Copy the IP header into a stack aligned structure for inspection.
++   * There may be bits in the IP header that we're not decoding, so we
++   * copy out the bits we grok and skip ahead by ip.ip_hl * 4.
++   */
++  upp = buf + bufix;
++  memcpy(&ip, upp, sizeof(ip));
++  ip_len = (*upp & 0x0f) << 2;
++  upp += ip_len;
++
++  /* Check the IP packet length. */
++  pkt_len = ntohs(ip.ip_len);
++  if (pkt_len > buflen)
++    return -1;
++
++  /* Assure after ip_len bytes that there is enough room for a UDP header. */
++  if ((upp + sizeof(udp)) > endbuf)
++      return -1;
++
++  /* Copy the UDP header into a stack aligned structure for inspection. */
++  memcpy(&udp, upp, sizeof(udp));
++
++#ifdef USERLAND_FILTER
++  /* Is it a UDP packet? */
++  if (ip.ip_p != IPPROTO_UDP)
++      return -1;
++
++  /* Is it to the port we're serving? */
++  if (udp.dest != local_port)
++      return -1;
++#endif /* USERLAND_FILTER */
++
++  ulen = ntohs(udp.len);
++  if (ulen < sizeof(udp))
++    return -1;
++
++  udp_packets_length_checked++;
++  if ((upp + ulen) > endbuf) {
++    udp_packets_length_overflow++;
++    if (((udp_packets_length_checked > 4) &&
++         (udp_packets_length_overflow != 0)) &&
++        ((udp_packets_length_checked / udp_packets_length_overflow) < 2)) {
++        HAL_TRACE_INFO("%u udp packets in %u too long - dropped",
++                       udp_packets_length_overflow, udp_packets_length_checked);
++        udp_packets_length_overflow = 0;
++        udp_packets_length_checked = 0;
++    }
++    return -1;
++  }
++
++  /* Check the IP header checksum - it should be zero. */
++  ip_packets_seen++;
++  if (wrapsum (checksum (buf + bufix, ip_len, 0))) {
++      ++ip_packets_bad_checksum;
++      if (((ip_packets_seen > 4) && (ip_packets_bad_checksum != 0)) &&
++          ((ip_packets_seen / ip_packets_bad_checksum) < 2)) {
++          HAL_TRACE_INFO("%u bad IP checksums seen in %u packets",
++                         ip_packets_bad_checksum, ip_packets_seen);
++          ip_packets_seen = ip_packets_bad_checksum = 0;
++      }
++      return -1;
++  }
++
++  /* Copy out the IP source address... */
++  memcpy(&from->sin_addr, &ip.ip_src, 4);
++
++  data = upp + sizeof(udp);
++  len = ulen - sizeof(udp);
++
++  /* UDP check sum may be optional (udp.uh_sum == 0) or not ready if checksum
++   * offloading is in use */
++  udp_packets_seen++;
++  if (udp.check && csum_ready) {
++    /* Check the UDP header checksum - since the received packet header
++     * contains the UDP checksum calculated by the transmitter, calculating
++     * it now should come out to zero. */
++    if (wrapsum(checksum((unsigned char *)&udp, sizeof(udp),
++                         checksum(data, len,
++                                  checksum((unsigned char *)&ip.ip_src, 8,
++                                           IPPROTO_UDP + ulen))))) {
++        udp_packets_bad_checksum++;
++        if (((udp_packets_seen > 4) && (udp_packets_bad_checksum != 0))
++            && ((udp_packets_seen / udp_packets_bad_checksum) < 2)) {
++            HAL_TRACE_INFO("%u bad udp checksums in %u packets",
++                           udp_packets_bad_checksum, udp_packets_seen);
++            udp_packets_seen = udp_packets_bad_checksum = 0;
++        }
++
++        return -1;
++    }
++  }
++
++  /* If at least 5 with less than 50% bad, start over */
++  if (udp_packets_seen > 4) {
++    udp_packets_bad_checksum = 0;
++    udp_packets_seen = 0;
++  }
++
++  /* Copy out the port... */
++  memcpy (&from -> sin_port, &udp.source, sizeof udp.source);
++
++  /* Save the length of the UDP payload. */
++  if (rbuflen != NULL)
++    *rbuflen = len;
++
++  /* Return the index to the UDP payload. */
++  return ip_len + sizeof udp;
++}
++
++ssize_t extract_dhcp_payload_offset(uint8_t *buf, uint32_t len,
++                                     uint32_t *pkt_len) {
++    struct hardware from;
++    ssize_t offset;
++    uint32_t bufix = 0;
++    uint32_t paylen;
++    struct sockaddr_in in_from;
++
++    offset = decode_ethernet_header((unsigned char*)buf, bufix, &from);
++
++    if (offset < 0) {
++        return offset;
++    }
++
++    bufix += offset;
++    len -= offset;
++
++    offset = decode_udp_ip_header(NULL, buf, bufix, &in_from,
++                        len, &paylen, 1);
++
++    if (offset < 0) {
++        return offset;
++    }
++
++    bufix += offset;
++    len -= offset;
++
++    *pkt_len = paylen;
++
++    return bufix;
++}
++
++hal_ret_t decode_dhcp_packet(struct dhcp_packet *packet, uint32_t pkt_len,
++                              struct packet **decoded_packet) {
++    struct packet *temp_packet;
++
++     if (!packet_allocate(&temp_packet, MDL)) {
++            return HAL_RET_NO_RESOURCE;
++        }
++
++        temp_packet->raw = packet;
++        temp_packet->packet_length = pkt_len;
++
++        /* Allocate packet->options now so it is non-null for all packets */
++        temp_packet->options_valid = 0;
++        if (!option_state_allocate(&temp_packet->options, MDL)) {
++            return HAL_RET_ERR;
++        }
++
++        if (temp_packet->packet_length >= DHCP_FIXED_NON_UDP + 4) {
++            if (!parse_options(temp_packet)) {
++                packet_dereference(&temp_packet, MDL);
++                return HAL_RET_ERR;
++            }
++   }
++
++   *decoded_packet = temp_packet;
++   return HAL_RET_OK;
++}
++
++hal_ret_t dhcp_lookup_option(const struct packet *decoded_packet, unsigned code,
++                        struct option_data *data) {
++    if (data == NULL || decoded_packet == NULL) {
++        return HAL_RET_INVALID_ARG;
++    }
++
++    struct option_cache *cache =
++        lookup_hashed_option(&dhcp_universe, decoded_packet->options, code);
++
++    if (cache == NULL) {
++        return HAL_RET_ENTRY_NOT_FOUND;
++    }
++
++    data->len = cache->data.len;
++    data->data = cache->data.data;
++
++    return HAL_RET_OK;
++}
++
++void free_packet(struct packet **packet)
++{
++    packet_dereference(packet, MDL);
++}
++
++void dhcp_lib_init() {
++    if (!dhcp_lib_init_done) {
++        initialize_common_option_spaces();
++        dhcp_lib_init_done = true;
++    }
++}
+--- /home/sudhi/workspace/sw.old/dhcp/BUILD	1970-01-01 01:00:00.000000000 +0100
++++ third-party/isc-dhcp/BUILD	2017-10-17 20:00:19.549054000 +0100
+@@ -0,0 +1,29 @@
++package(default_visibility = ["//visibility:public"])
++
++licenses(["notice"])  # MIT license
++
++cc_library(
++    name = "isc-dhcp",
++    srcs = ["dhcp_pen_api.c",
++	    "common/alloc.c",
++	    "common/options.c",
++	    "common/parse.c",
++	    "common/tables.c",
++	    "common/tree.c",
++            "omapip/alloc.c",
++            "omapip/errwarn.c",
++	    "omapip/hash.c"],
++
++    hdrs = ["includes/omapip/alloc.h",
++            "includes/omapip/hash.h",
++            "includes/dhcp.h",
++            "includes/dhcp6.h",
++            "includes/dhcp_internal.h",
++            "includes/tree.h",
++	   ],
++    copts = ["-x c++", "--std=c++11"],
++    deps = [
++        "//nic/include:base_includes",
++        "//nic/third-party/spdlog",
++    ],
++)

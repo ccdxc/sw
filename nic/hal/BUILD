@@ -53,6 +53,13 @@ cc_binary(
 )
 
 cc_library(
+    name = "hal_hdrs",
+    hdrs = [
+        "hal.hpp",
+    ] + glob(["src/*.hpp"]),
+)
+
+cc_library(
     name = "hal_src",
     srcs = [
         "hal.cc",
@@ -89,6 +96,8 @@ cc_library(
         # "//nic/utils/host_mem:host_mem",
         "//nic/third-party/spdlog",
         "//nic/hal/tls:tls_api",
+        "//nic/utils/fsm:fsm",
+        "//nic/fte:fte_includes",
     ],
 )
 

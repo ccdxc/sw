@@ -3,18 +3,24 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
-    name = "haltestutils",
+    name = "fsm",
     srcs = glob(["*.cc"]),
     hdrs = glob(["*.hpp"]),
     deps = [
         "//nic/include:base_includes",
         "//nic/third-party/spdlog",
-        "//nic/utils/slab:slab",
-        "//nic/utils/indexer:indexer",
-        "//nic/utils/ht:ht",
-        "//nic/utils/thread:thread",
-        "//nic/hal/pd/iris:iris_includes",
-        "//nic/utils/bm_allocator:bm_allocator",
+        "//nic/utils/list:list_includes",
+    ],
+)
+
+cc_test(
+    name = "fsm_test",
+    srcs = ["test/fsm_test.cc"],
+    deps = [
+        # Utils
+        ":fsm",
+        "//nic/utils/trace",
+        # External
         "//:gtest",
     ],
 )

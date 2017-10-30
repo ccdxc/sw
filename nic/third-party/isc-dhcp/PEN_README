@@ -1,0 +1,21 @@
+ISC code is being used from https://www.isc.org/git
+
+Code is modified to compile and also comment out the unecessary code, minimal code required for DHCP packet parsing is being used.
+
+Following steps are done to get the source code.
+ 1.git clone https://source.isc.org/git/dhcp.git.
+ 2.git checkout v4_2.
+ 3.In the source tree only files that are being used by Pensando is being checked in.
+ 4.pen_isc_dhcp.diff is the diff between ISC branch and Pensando branch.
+ 
+If need comes in to upgrade or update the code, following steps should be followed.
+
+1. Checkout the required repositry and branch.
+2. Copy it to nic/third-party/isc-dhcp
+3. Apply the diff with command
+    patch  -p0  < third-party/isc-dhcp/pen_isc_dhcp.diff 
+
+
+
+
+ 
