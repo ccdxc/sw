@@ -31,6 +31,7 @@ BaseTopoExcludeFeatureList = [
     'classic',
     'app_redir',
     'parser',
+    'hpvxlan',
 ]
 
 class FeatureObject:

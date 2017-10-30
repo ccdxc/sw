@@ -1,0 +1,17 @@
+# Feature Test Modules List
+feature:
+    id          : hpvxlan
+    sub         : txvxlan
+    package     : test.hostpin
+    module      : hostpin
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : UNK_UC
+        spec    : tx_vxlan.testspec
+        ignore  : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP
+              segment   : filter://native=False
