@@ -1,11 +1,12 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_PARSER
+    id: PARSER_SEGMENT_VXLAN
 
 type        : tenant
+fabencap    : vxlan
 native      : False
-broadcast   : drop
-multicast   : drop
+broadcast   : flood
+multicast   : replicate
 l4lb        : False
 endpoints   :
     useg    : 0

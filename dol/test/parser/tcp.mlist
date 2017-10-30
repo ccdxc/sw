@@ -73,3 +73,33 @@ modules:
         ignore  : True
         iterate :
             - type   : TCP_MSS_EOL_WSCALE
+
+    - module:
+        name    : AO
+        spec    : tcpopts.testspec
+        ignore  : True
+        iterate :
+            - type  : TCP_AO
+
+    - module:
+        name    : EXP1
+        spec    : tcpopts.testspec
+        ignore  : True
+        iterate :
+            - type  : TCP_EXP1
+
+    - module:
+        name    : OPT_BAD_LEN
+        ignore  : True
+        spec    : tcpopt_invalid1.testspec
+
+    - module:
+        name    : OPT_BAD_LEN2
+        ignore  : True
+        spec    : tcpopt_invalid2.testspec
+
+    - module:
+        name    : OPT_AFTER_EOL
+        ignore  : True
+        spec    : tcpopt_after_eol.testspec
+

@@ -15,3 +15,10 @@ modules:
             - flow : filter://type=IPV4,proto=PROTO255,label=NETWORKING
             - flow : filter://type=IPV6,proto=PROTO255,label=NETWORKING
 
+    - module:
+        name    : PROTO255_VXLAN
+        spec    : proto255_vxlan.testspec
+        iterate :
+            - flow : filter://type=IPV4,proto=PROTO255,label=NETWORKING
+            - flow : filter://type=IPV6,proto=PROTO255,label=NETWORKING
+

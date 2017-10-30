@@ -10,21 +10,8 @@ SACK_NAME       = 'SAck'
 SACKOK_NAME     = 'SAckOK'
 TIMESTAMP_NAME  = 'Timestamp'
 MSS_NAME        = 'MSS'
-
-'''
-TCPOptions = (
-    {0: ("EOL", None),
-     1: ("NOP", None),
-     2: ("MSS", "!H"),
-     3: ("WScale", "!B"),
-     4: ("SAckOK", None),
-     5: ("SAck", "!"),
-     8: ("Timestamp", "!II"),
-     14: ("AltChkSum", "!BH"),
-     15: ("AltChkSumOpt", None),
-     25: ("Mood", "!p")
-'''
-
+AO_NAME         = 'AO'
+EXP1_NAME       = 'EXP1'
 
 class TestspecTcpOption:
     def __init__(self, k, d):
@@ -56,16 +43,31 @@ def TcpOptionSackok():
 def TcpOptionTimestamp():
     return TestspecTcpOption(TIMESTAMP_NAME, '1234 1234')
 
+def TcpOptionAO():
+    return TestspecTcpOption(AO_NAME,
+                             '12 34 12345678 12345678 12345678 12345678')
+
+def TcpOptionExp1():
+    a = '12345678'
+    datastr = ''
+    for i in range(9):
+        datastr = a + ' ' + datastr
+    datastr = datastr[:-1]
+    return TestspecTcpOption(EXP1_NAME, datastr)
+
+
 TcpOption2ObjectList = {
-    'TCP_EOL'      : [ TcpOptionEol ],
-    'TCP_SACK'      : [ TcpOptionSack ],
-    'TCP_NOP'       : [ TcpOptionNop ],
-    'TCP_MSS'       : [ TcpOptionMss ],
-    'TCP_WSCALE'    : [ TcpOptionWscale ],
-    'TCP_SACKOK'    : [ TcpOptionSackok ],
+    'TCP_EOL'               : [ TcpOptionEol ],
+    'TCP_SACK'              : [ TcpOptionSack ],
+    'TCP_NOP'               : [ TcpOptionNop ],
+    'TCP_MSS'               : [ TcpOptionMss ],
+    'TCP_WSCALE'            : [ TcpOptionWscale ],
+    'TCP_SACKOK'            : [ TcpOptionSackok ],
     'TCP_TIMESTAMP'         : [ TcpOptionTimestamp ],
     'TCP_MSS_NOP_WSCALE'    : [ TcpOptionMss, TcpOptionNop, TcpOptionWscale ],
     'TCP_MSS_EOL_WSCALE'    : [ TcpOptionMss, TcpOptionEol, TcpOptionWscale ],
+    'TCP_AO'                : [ TcpOptionAO ],
+    'TCP_EXP1'              : [ TcpOptionExp1 ],
 }
 
 def GetTcpOptions(tc, pkt):

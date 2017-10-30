@@ -288,7 +288,9 @@ TCPOptions = (
      8: ("Timestamp", "!II"),
      14: ("AltChkSum", "!BH"),
      15: ("AltChkSumOpt", None),
-     25: ("Mood", "!p")
+     25: ("Mood", "!p"),
+     29: ("AO", "!BBIIII"),
+     252:("EXP1", "!IIIIIIIII"),
      },
     {"EOL": 0,
      "NOP": 1,
@@ -299,7 +301,9 @@ TCPOptions = (
      "Timestamp": 8,
      "AltChkSum": 14,
      "AltChkSumOpt": 15,
-     "Mood": 25
+     "Mood": 25,
+     "AO": 29,
+     "EXP1": 252,
      })
 
 
