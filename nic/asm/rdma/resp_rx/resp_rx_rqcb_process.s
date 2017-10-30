@@ -20,6 +20,7 @@ struct rdma_stage0_table_k k;
 #define RSQWQE_P r2
 #define DMA_CMD_BASE r1
 #define TMP r3
+#define IMM_DATA r3
 #define DB_ADDR r4
 #define DB_DATA r5
 #define NEW_RSQ_P_INDEX r6
@@ -212,38 +213,21 @@ write:
     // in case of WRITE_ONLY_WITH_IMM, we will have immeth hdr after bth and reth
     
     // populate cq op_type
+    bcf     [!c5], skip_write_immdt
     phvwr.c5    p.cqwqe.op_type, OP_TYPE_RDMA_OPER_WITH_IMM
     
     // populate immediate data. 
     phvwr.c5    p.cqwqe.imm_data_vld, 1
     // IMM & LAST
-    add.c6      r2, r0, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
-    CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(r2, c7)
-    //move this instruction down to the BD slot
-    //phvwr.c5    p.cqwqe.imm_data, r2
+    add.c6      IMM_DATA, r0, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
+    CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(IMM_DATA, c7)
+    phvwr.c5    p.cqwqe.imm_data, IMM_DATA
 
-    // If immdt_as_dbell flag is set, adjust the flags
-    seq     c1, d.immdt_as_dbell, 1
-    bcf     [!c1], skip_immdt_as_dbell
-    phvwr.c5    p.cqwqe.imm_data, r2 //BD Slot
-    and     r7, r7, ~(RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_COMPLETION)
-    or      r7, r7, RESP_RX_FLAG_RING_DBELL
-    setcf   c5, [!c0]
-    CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, flags, r7)
+    //overwrite c5, if immdt_as_dbell is 1
+    seq.c5 c5, d.immdt_as_dbell, 0
 
-    //r4 has imm_data
-    //format: <lif(11), qtype(3), qid(18)>
+skip_write_immdt:
 
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_IMMDT_AS_DBELL)
-    RESP_RX_POST_IMMDT_AS_DOORBELL(DMA_CMD_BASE, TMP, \
-                                   r2[31:21], \
-                                   r2[20:18], \
-                                   r2[17:0], \
-                                   DB_ADDR, DB_DATA)
-    DMA_SET_END_OF_CMDS(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE)
-
-skip_immdt_as_dbell:
-   
     CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
 
     //CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, load_reth, 0, c4)
@@ -254,8 +238,6 @@ skip_immdt_as_dbell:
 
     CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, len, CAPRI_RXDMA_RETH_DMA_LEN, c4)
     CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, r_key, CAPRI_RXDMA_RETH_R_KEY, c4)
-    // TODO: DANGER: do we need to set incr_c_index to 0 otherwise ? 
-    // If not, would it accidentally carry previous s2s data and increment c_index ?
     CAPRI_SET_FIELD_C(r4, RQCB_TO_WRITE_T, incr_c_index, 1, c5)
     CAPRI_SET_FIELD(r4, RQCB_TO_WRITE_T, remaining_payload_bytes, REM_PYLD_BYTES)
 
@@ -265,15 +247,14 @@ skip_immdt_as_dbell:
     // a bubble and wait till the next stage
     CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_write_dummy_process)
-    add     r3, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5)
 
     //TODO: tbl_id management
 
 need_checkout:
 
-    crestore [c7, c5, c1], r7, (RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_SEND) 
-    ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
+    crestore [c7, c5, c2, c1], r7, (RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_SEND) 
     seq     c3, d.in_progress, 1
     setcf   c4, [c1 & !c3]
 
@@ -285,16 +266,45 @@ need_checkout:
     setcf       c6, [c1 & c7]
     phvwr.c6    p.cqwqe.op_type, OP_TYPE_SEND_RCVD
 
+    phvwr.c5    p.cqwqe.rkey_inv_vld, 1 
+    phvwr.c5    p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
+    
+    bcf     [!c2], skip_immdt
+
     // populate immediate data. 
     ARE_ALL_FLAGS_SET(c6, r7, RESP_RX_FLAG_IMMDT|RESP_RX_FLAG_SEND)
     phvwr.c6    p.cqwqe.imm_data_vld, 1
     phvwr.c6    p.cqwqe.imm_data, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
 
-    phvwr.c5    p.cqwqe.rkey_inv_vld, 1 
-    phvwr.c5    p.cqwqe.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
-    
+    // If immdt_as_dbell flag is set, adjust the flags
+    seq     c6, d.immdt_as_dbell, 1
+    bcf     [!c6], skip_immdt_as_dbell
+    add.c1  IMM_DATA, r0, CAPRI_RXDMA_BTH_IMMETH_IMMDATA
+    and     r7, r7, ~(RESP_RX_FLAG_IMMDT)
+    and.!c1 r7, r7, ~(RESP_RX_FLAG_COMPLETION)
+    or      r7, r7, RESP_RX_FLAG_RING_DBELL
+    add r2, r0, offsetof(struct phv_, common_global_global_data)
+    CAPRI_SET_FIELD(r2, PHV_GLOBAL_COMMON_T, flags, r7)
+    phvwr       p.cqwqe.imm_data_vld, 0
+    phvwr       p.cqwqe.imm_data, 0 
+
+    //IMM_DATA has imm_data
+    //format: <lif(11), qtype(3), qid(18)>
+
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_IMMDT_AS_DBELL)
+    RESP_RX_POST_IMMDT_AS_DOORBELL(DMA_CMD_BASE, \
+                                   IMM_DATA[31:21], \
+                                   IMM_DATA[20:18], \
+                                   IMM_DATA[17:0], \
+                                   DB_ADDR, DB_DATA)
+    DMA_SET_END_OF_CMDS_C(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE, !c1)
+
+skip_immdt:
+skip_immdt_as_dbell:
+
     // checkout a RQ descriptor if it is a send AND in_progress is FALSE
     // OR write_with_imm
+    ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
     bcf     [c2|c4], checkout
     CAPRI_GET_TABLE_0_ARG(resp_rx_phv_t, r4) //BD Slot
 

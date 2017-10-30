@@ -13,8 +13,9 @@
 
 #define RESP_RX_DMA_CMD_START       0
 #define RESP_RX_DMA_CMD_ACK         0
+#define RESP_RX_DMA_CMD_IMMDT_AS_DBELL (RESP_RX_MAX_DMA_CMDS - 4)
 #define RESP_RX_DMA_CMD_CQ          (RESP_RX_MAX_DMA_CMDS - 3)
-#define RESP_RX_DMA_CMD_IMMDT_AS_DBELL RESP_RX_DMA_CMD_CQ //mutually exclusive
+#define RESP_RX_DMA_CMD_EQ          (RESP_RX_MAX_DMA_CMDS - 2)
 
 #define RESP_RX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
 
@@ -36,10 +37,11 @@
     add         _tmp_r, _rqcb1_addr_r, FIELD_OFFSET(rqcb1_t, ack_nak_psn); \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, ack_info.psn, ack_info.aeth.msn, _tmp_r); \
 
-#define RESP_RX_POST_IMMDT_AS_DOORBELL(_dma_base_r, _tmp_r, \
+#ring-id assumed as 0
+#define RESP_RX_POST_IMMDT_AS_DOORBELL(_dma_base_r, \
                                        _lif, _qtype, _qid, \
                                        _db_addr_r, _db_data_r) \
-    PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, 0, _db_addr_r, _db_data_r);\
+    PREPARE_DOORBELL_INC_PINDEX(_lif, _qtype, _qid, 0 /*ring-id*/, _db_addr_r, _db_data_r);\
     phvwr       p.immdt_as_dbell_data, _db_data_r.dx; \
     DMA_HBM_PHV2MEM_SETUP(_dma_base_r, immdt_as_dbell_data, immdt_as_dbell_data, _db_addr_r); \
     DMA_SET_WR_FENCE(DMA_CMD_PHV2MEM_T, _dma_base_r); \
