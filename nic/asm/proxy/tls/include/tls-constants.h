@@ -373,7 +373,8 @@
 
 #define TLS_DDOL_BYPASS_PROXY           4    /* Don't queue to other flow , keep in same flow */
 #define TLS_DDOL_LEAVE_IN_ARQ           8    /* Don't queue to ARQ (arm) */
-
+/* MAKE SURE that this is in sync with the define in hal/plugin/proxy/proxy_tls.cc*/
+#define TLS_DDOL_ARM_LOOP_CTRL_PKTS     16   /* Loopback control packets in ARM */
 /* HACK used until the issue with payload generation is fixed in DoL framework */
 #define TLS_DDOL_FAKE_HANDSHAKE_MSG     0x80
 

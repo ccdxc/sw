@@ -11,6 +11,7 @@ tls_debug_dol_bypass_barco = 1
 tls_debug_dol_sesq_stop = 0x2
 tls_debug_dol_bypass_proxy = 0x4
 tls_debug_dol_leave_in_arq = 0x8
+tls_debug_dol_arm_loop_ctlr_pkts = 0x10
 
 #  HACK: used until the issue with payload generation is fixed in DoL framework
 tls_debug_dol_fake_handshake_msg = 0x80

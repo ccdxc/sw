@@ -61,7 +61,7 @@ p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd)
     tlscb_pd->tlscb->serq_ci = data.u.read_tls_stg0_d.ci_0;
     tlscb_pd->tlscb->bsq_pi = data.u.read_tls_stg0_d.pi_1;
     tlscb_pd->tlscb->bsq_ci = data.u.read_tls_stg0_d.ci_1;
-    tlscb_pd->tlscb->debug_dol = data.u.read_tls_stg0_d.debug_dol;
+    tlscb_pd->tlscb->debug_dol = ntohl(data.u.read_tls_stg0_d.debug_dol);
     tlscb_pd->tlscb->command = data.u.read_tls_stg0_d.barco_command;
     tlscb_pd->tlscb->crypto_key_idx = ntohl(data.u.read_tls_stg0_d.barco_key_desc_index);
     tlscb_pd->tlscb->salt = ntohl(data.u.read_tls_stg0_d.salt);

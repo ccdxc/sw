@@ -32,3 +32,12 @@ entries:
         initiator: 
             port : const/23768
 
+    - entry:
+        label: tcp-proxy-e2e
+        tracking: False
+        timestamp: False
+        fte: True
+        responder: 
+            port : const/80
+        initiator: 
+            port : const/47802
