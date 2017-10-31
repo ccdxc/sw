@@ -1,0 +1,25 @@
+# TCP Proxy RX Inorder Sample TestSpec file.
+selectors:
+    # Update: Vikasd
+    # Choose the config, that only selects flows matching below packet
+    # templates.
+    src:
+        tenant      : filter://any
+        segment     : filter://any
+        endpoint    : filter://any
+        qpair       : filter://any # Local QPair
+    dst:
+        tenant      : filter://any
+        segment     : filter://any
+        endpoint    : filter://any
+        qpair       : filter://any 
+    flow        : filter://any
+    maxflows    : 1
+
+# Packet section defines the set of input and output packets. Input packets
+# will be used in triggers and output packets will be used in expect
+packets:
+
+trigger:
+
+expect:

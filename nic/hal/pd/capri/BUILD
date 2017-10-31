@@ -10,6 +10,7 @@ cc_library(
         "capri_loader.h",
         "capri_barco_rings.hpp",
         "capri_tbl_rw.hpp",
+        "capri_barco_asym_apis.hpp",
     ],
 )
 

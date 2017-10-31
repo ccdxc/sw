@@ -10,6 +10,47 @@
 namespace hal {
 namespace pd {
 
+
+
+#define _API_PARAM_DEBUG_
+
+#ifdef _API_PARAM_DEBUG_
+
+
+#define MAX_LINE_SZ 128
+static void hex_dump_trace(char *label, char *buf, uint16_t len)
+{
+    char            line[MAX_LINE_SZ];
+    char            *lineptr;
+    uint16_t        idx = 0;
+    uint16_t        lineoffset = 0;
+
+    lineptr = &line[0];
+    HAL_TRACE_DEBUG("{}:", label);
+    for (idx = 0; idx < len; idx++) {
+
+        lineoffset += snprintf(lineptr + lineoffset, (MAX_LINE_SZ - lineoffset - 1),
+                "%02hhx ", buf[idx]);
+
+        if (((idx + 1) % 16) == 0) {
+            HAL_TRACE_DEBUG("{}", line);
+            lineoffset = 0;
+        }
+    }
+    if (lineoffset) {
+        HAL_TRACE_DEBUG("{}", line);
+    }
+}
+
+#define CAPRI_BARCO_API_PARAM_HEXDUMP(label, buf, len) hex_dump_trace(label, buf, len)
+
+#else
+
+#define CAPRI_BARCO_API_PARAM_HEXDUMP(label, buf, len)
+
+#endif /* _API_PARAM_DEBUG_ */
+
+
 hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
         uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *x1, uint8_t *y1,
         uint8_t *k, uint8_t *x3, uint8_t *y3)
@@ -22,6 +63,17 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     barco_asym_dma_descriptor_t ilist_dma_descr, olist_dma_descr;
     int32_t                     ecc_pm_p256_key_idx = -1;
     crypto_asym_key_t           asym_key;
+    uint32_t                    req_tag = 0;
+
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"p", (char *)p, 32);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"a", (char *)a, 32);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"b", (char *)b, 32);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"n", (char *)n, 32);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"xg", (char *)xg, 32);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"yg", (char *)yg, 32);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"x1", (char *)x1, 32);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"y1", (char *)y1, 32);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"k", (char *)k, 32);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &key_param);
@@ -196,13 +248,16 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
     asym_req_descr.flag_a = 0;
     asym_req_descr.flag_b = 0;
 
-    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr);
+    ret = capri_barco_ring_queue_request(types::BARCO_RING_ASYM, (void *)&asym_req_descr, &req_tag);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("ECC Point Mul P256: Failed to enqueue request");
         ret = HAL_RET_ERR;
         goto cleanup;
     }
     /* Poll for completion */
+    while (capri_barco_ring_poll(types::BARCO_RING_ASYM, req_tag) != TRUE) {
+        //HAL_TRACE_DEBUG("ECC Point Mul P256: Waiting for Barco completion...");
+    }
 
 
     /* Copy out the results */
@@ -219,6 +274,8 @@ hal_ret_t capri_barco_asym_ecc_point_mul_p256(uint8_t *p, uint8_t *n,
         goto cleanup;
     }
     
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"x3", (char *)x3, 32);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"y3", (char *)y3, 32);
 
 
 cleanup:

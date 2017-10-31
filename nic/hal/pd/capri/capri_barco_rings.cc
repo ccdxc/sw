@@ -12,10 +12,11 @@ namespace hal {
 namespace pd {
 
 hal_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring);
-bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring);
-hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring, void *req);
+bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
+hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
+        void *req, uint32_t *req_tag);
 hal_ret_t capri_barco_xts_init(capri_barco_ring_t *barco_ring);
-bool capri_barco_xts_poller(capri_barco_ring_t *barco_ring);
+bool capri_barco_xts_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 
 capri_barco_ring_t  barco_rings[] = {
     {   /* types::BARCO_RING_ASYM */
@@ -25,6 +26,8 @@ capri_barco_ring_t  barco_rings[] = {
         32,
         1024,
         32,
+        0,
+        0,
         0,
         0,
         capri_barco_asym_init,
@@ -38,6 +41,8 @@ capri_barco_ring_t  barco_rings[] = {
         32,
         1024,
         BARCO_CRYPTO_DESC_SZ,
+        0,
+        0,
         0,
         0,
         capri_barco_xts_init,
@@ -129,6 +134,11 @@ hal_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.pk_ring_size.fld(barco_ring->ring_size);
     hens.dhs_crypto_ctl.pk_ring_size.write();
 
+    hens.dhs_crypto_ctl.pk_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    hens.dhs_crypto_ctl.pk_opa_tag_addr_w0.write();
+    hens.dhs_crypto_ctl.pk_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    hens.dhs_crypto_ctl.pk_opa_tag_addr_w1.write();
+
     hens.dhs_crypto_ctl.pk_producer_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.pk_producer_idx.write();
 
@@ -141,26 +151,39 @@ hal_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring)
     return capri_barco_asym_key_array_init();
 }
 
-bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring)
+bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
+    bool                                ret = FALSE;
+    uint32_t                            curr_opaque_tag = 0;
 
-    /* TBD - use the opaque tag to track the request completions */
-    if (hens.dhs_crypto_ctl.pk_consumer_idx.fld() != barco_ring->consumer_idx) {
-        /* New responses available */
-        return TRUE;
+    if (capri_hbm_read_mem(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag, sizeof(curr_opaque_tag))) {
+        HAL_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
+                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr); 
+        return FALSE;
+    }
+    else {
+        HAL_TRACE_DEBUG("Poll:{}: Retrievd opaque tag value: {}", barco_ring->ring_name, curr_opaque_tag);
+        /* TODO: Handle wraparounds */
+        if (curr_opaque_tag >= req_tag)
+            ret = TRUE;
     }
 
-    return FALSE;
+    return ret;
 }
 
-hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring, void *req)
+hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
+        void *req, uint32_t *req_tag)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
     uint64_t                            slot_addr = 0;
     hal_ret_t                           ret = HAL_RET_OK;
+    barco_asym_descriptor_t             *asym_req_descr = NULL;
+
+    asym_req_descr = (barco_asym_descriptor_t*) req;
+
+    asym_req_descr->opaque_tag_value = barco_ring->opaqe_tag_value;
+    asym_req_descr->opage_tag_wr_en = 1;
 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
     
@@ -176,18 +199,20 @@ hal_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring, 
         /* Barco doorbell */
         hens.dhs_crypto_ctl.pk_producer_idx.fld(barco_ring->producer_idx);
         hens.dhs_crypto_ctl.pk_producer_idx.write();
+
+        *req_tag = barco_ring->opaqe_tag_value++;
     }
 
     return ret;
 }
 
-bool capri_barco_ring_poll(types::BarcoRings barco_ring_type)
+bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag)
 {
     capri_barco_ring_t          *barco_ring;
 
     barco_ring = &barco_rings[barco_ring_type];
     if (barco_ring->poller) {
-        return barco_ring->poller(barco_ring);
+        return barco_ring->poller(barco_ring, req_tag);
     }
     
     return FALSE;
@@ -261,14 +286,14 @@ hal_ret_t capri_barco_xts_init(capri_barco_ring_t *barco_ring)
     return capri_barco_xts_key_array_init();
 }
 
-bool capri_barco_xts_poller(capri_barco_ring_t *barco_ring)
+bool capri_barco_xts_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
     /* TBD */
     return FALSE;
 }
 
 
-hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req)
+hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req, uint32_t *req_tag)
 {
     capri_barco_ring_t          *barco_ring;
 
@@ -277,7 +302,7 @@ hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void
      *  - Queue full check in the common API
      */
     barco_ring = &barco_rings[barco_ring_type];
-    return barco_ring->queue_request(barco_ring, req);
+    return barco_ring->queue_request(barco_ring, req, req_tag);
 }
 
 hal_ret_t capri_barco_ring_consume(types::BarcoRings barco_ring_type)
@@ -293,11 +318,22 @@ hal_ret_t capri_barco_ring_consume(types::BarcoRings barco_ring_type)
 hal_ret_t capri_barco_rings_init(void)
 {
     uint16_t        idx;
+    uint64_t        opa_tag_addr = 0;
     hal_ret_t       ret = HAL_RET_OK;
 
     for (idx = 0; idx < types::BarcoRings_MAX; idx++) {
         barco_rings[idx].producer_idx = 0;
         barco_rings[idx].consumer_idx = 0;
+        barco_rings[idx].opaqe_tag_value = 0x1;
+        /* FIXME: 512 byte is an overkill, on the real target use storage in the ring structure */
+        ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B, NULL, &opa_tag_addr);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to allocate opaque tag storage for ring {}", barco_rings[idx].ring_name);
+            return ret;
+        }
+        HAL_TRACE_DEBUG("Ring: {}: Allocated opaque tag @ {:x}",
+                barco_rings[idx].ring_name, opa_tag_addr);
+        barco_rings[idx].opaque_tag_addr = opa_tag_addr;
         if (barco_rings[idx].init) {
             ret = barco_rings[idx].init(&barco_rings[idx]);
             if (ret != HAL_RET_OK) {

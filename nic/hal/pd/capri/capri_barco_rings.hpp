@@ -62,8 +62,8 @@ hal_ret_t pd_crypto_asym_dma_descr_init(void);
 
 
 typedef hal_ret_t (*barco_ring_init_t) (struct capri_barco_ring_s *);
-typedef bool (*barco_ring_poller_t) (struct capri_barco_ring_s *);
-typedef hal_ret_t (*barco_ring_queue_request) (struct capri_barco_ring_s *, void *);
+typedef bool (*barco_ring_poller_t) (struct capri_barco_ring_s *, uint32_t);
+typedef hal_ret_t (*barco_ring_queue_request) (struct capri_barco_ring_s *, void *, uint32_t *);
 
 typedef struct capri_barco_ring_s {
     char                ring_name[32];      /*  Friendly name for logging       */
@@ -74,6 +74,8 @@ typedef struct capri_barco_ring_s {
     uint16_t            descriptor_size;    /*  in bytes                        */
     uint16_t            producer_idx;       /*  S/W Write Ptr                   */
     uint16_t            consumer_idx;       /*  S/W Read ptr                    */
+    uint64_t            opaque_tag_addr;    /*  Location of opa tag             */
+    uint32_t            opaqe_tag_value;    /*  Running counter for the opa tag */
     /* TBD lock/spinlock for ring access */
     barco_ring_init_t   init;               /* Ring initialization fn           */
     barco_ring_poller_t poller;             /* Ring poller fn                   */
@@ -87,8 +89,8 @@ typedef struct capri_barco_ring_s {
 #define BARCO_RING_XTS_STR      "Barco XTS"
 
 
-hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req);
-bool capri_barco_ring_poll(types::BarcoRings barco_ring_type);
+hal_ret_t capri_barco_ring_queue_request(types::BarcoRings barco_ring_type, void *req, uint32_t *req_tag);
+bool capri_barco_ring_poll(types::BarcoRings barco_ring_type, uint32_t req_tag);
 
 
 }    // namespace pd

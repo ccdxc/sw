@@ -1,0 +1,65 @@
+//------------------------------------------------------------------------------
+// protobuf specification for Crypto Asym APIs
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package cryptoapis;
+option go_package="halproto";
+
+service CryptoApis {
+    rpc CryptoApiInvoke (CryptoApiRequestMsg) returns (CryptoApiResponseMsg) {}
+}
+
+enum CryptoApiType {
+  ASYMAPI_ECC_POINT_MUL_FP              = 0;
+}
+
+message ECCPoint {
+  bytes         x                       = 1;
+  bytes         y                       = 2;
+}
+
+message CryptoAsymApiECCDomainParamsFp {
+  uint32        KeySize                 = 1;
+  bytes         p                       = 2;
+  bytes         a                       = 3;
+  bytes         b                       = 4;
+  ECCPoint      G                       = 5;
+  bytes         n                       = 6;
+//  bytes         h                       = 7;
+}
+
+
+message CryptoAsymApiReqECCPointMulFp {
+  CryptoAsymApiECCDomainParamsFp    ecc_domain_params   = 1;
+  bytes                             k                   = 2;
+}
+
+message CryptoAsymApiRespECCPointMulFp {
+  ECCPoint          Q                   = 1;
+}
+
+message CryptoApiRequest {
+  CryptoApiType                 api_type                = 1;
+  oneof CryptoApiReq {
+    CryptoAsymApiReqECCPointMulFp   ecc_point_mul_fp    = 2;
+  }
+}
+
+message CryptoApiResponse {
+  types.ApiStatus   api_status                          = 1;
+  oneof CryptoApiResp {
+    CryptoAsymApiRespECCPointMulFp  ecc_point_mul_fp    = 2;
+  }
+}
+
+message CryptoApiRequestMsg {
+    repeated CryptoApiRequest request       = 1;
+}
+
+message CryptoApiResponseMsg {
+    repeated CryptoApiResponse response     = 1;
+}
