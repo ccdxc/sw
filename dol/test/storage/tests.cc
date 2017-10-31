@@ -247,7 +247,7 @@ int consume_r2n_entry(uint16_t r2n_q, uint16_t ssd_handle, uint8_t io_priority,
     return -1;
   }
 
-  r2n::r2n_wqe_init(*r2n_wqe_buf, *r2n_buf);
+  r2n::r2n_wqe_init(*r2n_wqe_buf, *r2n_buf, R2N_OPCODE_PROCESS_WQE);
   r2n::r2n_nvme_be_cmd_init(*r2n_buf, r2n_q, ssd_handle, io_priority, is_read, 1);
 
   *nvme_cmd = r2n::r2n_nvme_cmd_ptr(*r2n_buf);
@@ -278,7 +278,7 @@ int form_r2n_seq_wqe(uint16_t ssd_handle, uint8_t io_priority, uint8_t is_read,
     return -1;
   }
 
-  r2n::r2n_wqe_init(*r2n_wqe_buf, *r2n_buf);
+  r2n::r2n_wqe_init(*r2n_wqe_buf, *r2n_buf, R2N_OPCODE_PROCESS_WQE);
   r2n::r2n_nvme_be_cmd_init(*r2n_buf, r2n_q, ssd_handle, io_priority, is_read, 1);
 
   *nvme_cmd = r2n::r2n_nvme_cmd_ptr(*r2n_buf);

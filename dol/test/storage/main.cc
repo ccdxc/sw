@@ -9,6 +9,8 @@
 
 #include "dol/test/storage/tests.hpp"
 
+void rdma_init();
+
 namespace queues {
 void queues_shutdown();
 }
@@ -92,6 +94,9 @@ int main(int argc, char**argv) {
     return 1;
   }
   printf("Setup completed\n");
+
+  //rdma_init();
+  //exit(0);
 
   for (int i = 0; test_suite[i].test_fn != nullptr; i++) {
     if (test_suite[i].test_fn() < 0)

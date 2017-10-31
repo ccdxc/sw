@@ -15,9 +15,26 @@ cc_library(
         "hal_if.cc",
         "hal_if.hpp",
     ],
+    hdrs = [
+        "hal_if.hpp",
+    ],
     deps = [
         "//nic:halproto",
         "//nic:gen_proto_includes",
+    ]
+)
+
+cc_library(
+    name = "rdma",
+    srcs = [
+        "rdma.cc",
+        "utils.hpp",
+    ],
+    deps = [
+        ":hal_if",
+        "//nic:halproto",
+        "//nic:gen_proto_includes",
+        "//nic/utils/host_mem",
     ]
 )
 
@@ -116,6 +133,7 @@ cc_binary(
         ":hal_if",
         ":qstate_if",
         ":tests",
+        ":rdma",
         "//nic:grpc",
     ],
     linkopts = [

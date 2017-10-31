@@ -1,7 +1,8 @@
 /*****************************************************************************
- *  q_state_push: Push to a queue by issuing the DMA commands and incrementing
- *                the p_ndx via ringing the doorbell. Assumes that data to be
- *                pushed is in DMA command 1.
+ *  roce_rq_push: Push a ROCE RQ WQE by issuing the DMA commands to write
+ *                the ROCE RQ WQE and incrementing the p_ndx via ringing the
+ *                doorbell. Assumes RQ WQE to be pushed is in DMA command 1.
+ *                This is used to post the R2N buffer to ROCE RQ.
  *****************************************************************************/
 
 #include "storage_asm_defines.h"
@@ -10,12 +11,12 @@
 
 
 struct s2_tbl_k k;
-struct s2_tbl_q_state_push_d d;
+struct s2_tbl_roce_rq_push_d d;
 struct phv_ p;
 
 %%
 
-storage_tx_q_state_push_start:
+storage_tx_roce_rq_push_start:
    // Check queue full condition and exit
    // TODO: Push error handling
    QUEUE_FULL(d.p_ndx, d.c_ndx, d.num_entries, tbl_load)
@@ -25,10 +26,8 @@ storage_tx_q_state_push_start:
    QUEUE_PUSH_ADDR(d.base_addr, d.p_ndx, d.entry_size)
 
    // DMA command address update
-   DMA_ADDR_UPDATE(r7, dma_p2m_1)
+   DMA_ADDR_UPDATE(r7, dma_m2m_2)
    
-   // DMA entry #3 is used for ringing additional doorbells (default NOP)
-
    // Push the entry to the queue (this increments p_ndx and writes to table)
    QUEUE_PUSH(d.p_ndx, d.num_entries)
 

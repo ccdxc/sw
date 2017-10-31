@@ -37,6 +37,10 @@
 	k.{storage_kivec0_ssd_handle_sbit0_ebit3...storage_kivec0_ssd_handle_sbit12_ebit15}
 #define STORAGE_KIVEC0_DST_REWRITE	\
 	k.storage_kivec0_dst_rewrite
+#define STORAGE_KIVEC0_IS_REMOTE	\
+	k.storage_kivec0_is_remote
+#define STORAGE_KIVEC0_IS_READ		\
+	k.storage_kivec0_is_read
 
 #define STORAGE_KIVEC1_SRC_LIF		\
 	k.{storage_kivec1_src_lif_sbit0_ebit7...storage_kivec1_src_lif_sbit8_ebit10}
@@ -50,11 +54,16 @@
 	k.storage_kivec1_xts_desc_size
 #define STORAGE_KIVEC1_SSD_CI_ADDR	\
 	k.{storage_kivec1_ssd_ci_addr_sbit0_ebit31...storage_kivec1_ssd_ci_addr_sbit32_ebit33}
+#define STORAGE_KIVEC1_ROCE_CQ_NEW_CMD	\
+	k.storage_kivec1_roce_cq_new_cmd
 
 #define STORAGE_KIVEC2_SSD_Q_NUM	\
 	k.storage_kivec2_ssd_q_num
 #define STORAGE_KIVEC2_SSD_Q_SIZE	\
 	k.storage_kivec2_ssd_q_size
+
+#define STORAGE_KIVEC3_ROCE_MSN		\
+	k.storage_kivec3_roce_msn
 
 #define STAGE0_KIVEC_LIF		\
 	k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
@@ -114,6 +123,16 @@
                              _load_size, _pc)				\
   TABLE_ADDR_FOR_INDEX(_table_base, _entry_index, _entry_size)		\
   LOAD_TABLE_FOR_ADDR(r7, _load_size, _pc)				\
+
+// Load a table based with a calculation based on index
+// If index is passed as param it should be in GPR r7
+// PC input is a .param resolved by the loader (34-bit value)
+#define LOAD_TABLE_FOR_INDEX_PARAM(_table_base, _entry_index,		\
+                                   _entry_size,	_load_size, _pc)	\
+  addi		r4, r0, _pc;						\
+  srl		r4, r4, 6;						\
+  LOAD_TABLE_FOR_INDEX(_table_base, _entry_index, _entry_size,		\
+                       _load_size, r4)					\
 
 // Load a table based with a calculation based on index and priority
 // addr = _table_base + ((_entry_index + ( _pri * (2 ^ _num_entries))) 
@@ -260,20 +279,22 @@
 
 // Setup the lif, type, qid, pindex for the doorbell push.  Set the fence 
 // bit for the doorbell 
-#define _QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, _sched)		\
-   DOORBELL_DATA_SETUP(qpush_doorbell_data_data, d.p_ndx, r0,		\
+#define _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, _sched, _upd, _p_ndx)	\
+   DOORBELL_DATA_SETUP(qpush_doorbell_data_data, _p_ndx, r0,		\
                        STORAGE_KIVEC0_DST_QID, r0)			\
    DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
-                       _sched, DOORBELL_UPDATE_NONE)			\
+                       _sched, _upd)					\
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
                      r7, _dma_cmd_ptr)					\
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 
 #define QUEUE_PUSH_DOORBELL_RING(_dma_cmd_ptr)				\
-   _QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET)	\
+   _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,	\
+                             DOORBELL_UPDATE_NONE, d.p_ndx)		\
 
-#define QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr)			\
-   _QUEUE_PUSH_DOORBELL_UPDATE(_dma_cmd_ptr, DOORBELL_SCHED_WR_NONE)	\
+#define QUEUE_PUSH_DOORBELL_UPDATE_RING(_dma_cmd_ptr, _p_ndx)		\
+   _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,	\
+                             DOORBELL_UPDATE_P_NDX, _p_ndx)		\
 
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O
 // priority is used to select the ring. Set the fence bit for the doorbell.
@@ -318,12 +339,18 @@
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 
 // Queue full check based on an increment value
-#define QUEUE_FULL(_p_ndx, _c_ndx, _num_entries, _branch_instr)		\
+#define _QUEUE_FULL(_p_ndx, _c_ndx, _num_entries, _incr, _branch_instr)	\
    add		r1, r0, _p_ndx;						\
-   mincr	r1, _num_entries, 1;					\
+   mincr	r1, _num_entries, _incr;				\
    seq		c1, r1, _c_ndx;						\
    bcf		[c1], _branch_instr;					\
    nop;									\
+
+#define QUEUE_FULL(_p_ndx, _c_ndx, _num_entries, _branch_instr)		\
+   _QUEUE_FULL(_p_ndx, _c_ndx, _num_entries, 1, _branch_instr)
+
+#define QUEUE_FULL2(_p_ndx, _c_ndx, _num_entries, _branch_instr)	\
+   _QUEUE_FULL(_p_ndx, _c_ndx, _num_entries, 2, _branch_instr)
 
 // Queue empty check
 #define QUEUE_EMPTY(_p_ndx, _c_ndx, _branch_instr)			\
@@ -406,9 +433,9 @@
                        _entry_size)					\
    DMA_ADDR_UPDATE(r7, dma_p2m_1)					\
    QUEUE_PUSH(_p_ndx, _num_entries)					\
-   add		r6, STORAGE_KIVEC0_DST_QID, STORAGE_KIVEC0_SSD_HANDLE;	\
+   add		r5, STORAGE_KIVEC0_DST_QID, STORAGE_KIVEC0_SSD_HANDLE;	\
    _PRI_QUEUE_PUSH_DOORBELL_UPDATE(dma_p2m_3, _p_ndx,			\
-                                   DOORBELL_SCHED_WR_SET, r6, _pri_vec)	\
+                                   DOORBELL_SCHED_WR_SET, r5, _pri_vec)	\
 
 
 // Increment the priority running counter and the total running counter.
@@ -462,8 +489,10 @@
 		d.{handle...db_index};					\
 
 #define R2N_WQE_FULL_COPY						\
-   phvwr 	p.{r2n_wqe_handle...r2n_wqe_pri_qaddr},			\
-		d.{handle...pri_qaddr};					\
+   phvwr 	p.{r2n_wqe_handle...r2n_wqe_nvme_cmd_cid},		\
+		d.{handle...nvme_cmd_cid};				\
+   phvwr 	p.{r2n_wqe_pri_qaddr...r2n_wqe_pad},			\
+		d.{pri_qaddr...pad};					\
 
 // Calculate the table address based on the command index offset into
 // the SSD's list of outstanding commands
@@ -475,4 +504,20 @@
    muli		r2, r6, SSD_CMDS_ENTRY_SIZE;				\
    add		r7, r1, r2;						\
 
+// Setup the source of the mem2mem DMA into DMA cmd 1:
+//   Src Addr:  ROCE RQ WQE address calculated based on the R2N buffer 
+//              passed in the R2N WQE.  
+//   Length:     Fixed length of ROCE RQ WQE
+//   For now, not using any override LIF parameters.
+//
+// Setup the destination of the mem2mem DMA into DMA cmd 2 (just fill
+// the size, address will be filled by the push operation). 
+//
+#define R2N_BUF_POST_SETUP(_addr)					\
+   add		r4, r0, _addr;						\
+   subi		r4, r4, R2N_BUF_NVME_BE_CMD_OFFSET;			\
+   addi		r5, r0, ROCE_RQ_WQE_SIZE;				\
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, r4, r5, r0, r0, dma_m2m_1)	\
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, r5, r0, r0, dma_m2m_2)	\
+   
 #endif     // STORAGE_ASM_DEFINES_H

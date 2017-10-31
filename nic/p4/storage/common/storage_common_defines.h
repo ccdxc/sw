@@ -72,4 +72,27 @@
 #define NVME_BE_PRIORITY_LO			2
 #define NVME_BE_MAX_PRIORITIES			3
 
+#define ROCE_OP_TYPE_SEND			0
+#define ROCE_OP_TYPE_SEND_INV			1
+#define ROCE_OP_TYPE_SEND_IMM			2
+#define ROCE_OP_TYPE_READ			3
+#define ROCE_OP_TYPE_WRITE			4
+#define ROCE_OP_TYPE_WRITE_IMM			5
+#define ROCE_OP_TYPE_SEND_INV_IMM		11
+#define ROCE_OP_TYPE_SEND_RCVD			17
+
+#define ROCE_CQ_STATUS_SUCCESS			0
+
+#define R2N_OPCODE_PROCESS_WQE			1
+#define R2N_OPCODE_BUF_POST			2
+
+// Offsets into the R2N buffer in bytes
+#define R2N_BUF_STATUS_BUF_OFFSET		24
+#define R2N_BUF_STATUS_REQ_OFFSET		32
+#define R2N_BUF_NVME_BE_CMD_OFFSET		40
+#define R2N_BUF_WRITE_REQ_OFFSET		48
+
+// ROCE WQE sizes in bytes
+#define ROCE_RQ_WQE_SIZE			64
+#define ROCE_SQ_WQE_SIZE			64
 #endif     // STORAGE_COMMON_DEFINES_H

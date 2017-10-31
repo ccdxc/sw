@@ -9,11 +9,18 @@
 namespace hal_if {
 
 typedef struct lif_params_ {
+  uint32_t sw_lif_id;
   struct {
     bool valid;
     uint16_t queue_size; // Log2 value 
     uint16_t num_queues; // Log2 value
+    int queue_purpose;
   } type[LIF_MAX_TYPES];
+
+  // RDMA parameters
+  bool rdma_enable;
+  uint32_t rdma_max_keys;
+  uint32_t rdma_max_pt_entries;
 } lif_params_t;
 
 void init_hal_if();
