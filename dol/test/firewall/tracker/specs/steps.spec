@@ -64,7 +64,6 @@ steps:
             flags   : syn
             options :
                 timestamp   : 0x12345678
-                nop         : 0
 
     - step:
         id          : IFLOW_SYN_WS_MSS_TS_SACK
@@ -93,6 +92,18 @@ steps:
                 mss       : ref://step/ifstate/mss
                 timestamp : 0x12345678
 
+      # This packet will have 3 EOLs
+    - step:
+        id          : IFLOW_SYN_WS_MSS_TS_NOP
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        fields      :
+            flags   : syn
+            options :
+                scale     : ref://step/ifstate/scale
+                mss       : ref://step/ifstate/mss
+                timestamp : 0x12345678
+                nop       : 0
+ 
     - step:
         id          : IFLOW_SYN_DROP
         base        : ref://trackerstore/steps/id=IFLOW_BASE
@@ -148,7 +159,6 @@ steps:
             flags   : syn,ack
             options :
                 timestamp       : 0x23456789
-                nop             : 0
 
       # This packet will have 3 EOLs
     - step:
@@ -197,6 +207,17 @@ steps:
             ack     : callback://firewall/alu/Mul/val=0
 
     - step:
+        id          : RFLOW_SYN_ONLY_WS_MSS_TS
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        fields      :
+            flags   : syn
+            ack     : callback://firewall/alu/Mul/val=0
+            options :
+                scale     : ref://step/ifstate/scale
+                mss       : ref://step/ifstate/mss
+                timestamp : 0x12345678
+
+    - step:
         id          : RFLOW_SYN_DROP
         base        : ref://trackerstore/steps/id=RFLOW_BASE
         permit      : False
@@ -217,6 +238,13 @@ steps:
         id          : IFLOW_DATA
         base        : ref://trackerstore/steps/id=IFLOW_BASE
         payloadsize : 1000
+        fields      :
+            flags   : ack
+
+    - step:
+        id          : IFLOW_DATA_SMALL_PKT
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 100
         fields      :
             flags   : ack
 
@@ -249,6 +277,14 @@ steps:
         fields      :
             flags   : ack
 
+    - step:
+        id          : RFLOW_DATA_SMALL_PKT
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 100
+        fields      :
+            flags   : ack
+
+    - step:
     - step:
         id          : RFLOW_URG_DATA
         base        : ref://trackerstore/steps/id=RFLOW_BASE
@@ -535,6 +571,22 @@ steps:
         payloadsize : 1000
         fields      :
             window  : 0
+            flags   : ack
+
+    - step:
+        id          : IFLOW_DATA_SHRINK_WINDOW
+        base        : ref://trackerstore/steps/id=IFLOW_BASE
+        payloadsize : 1000
+        fields      :
+            window  : 100
+            flags   : ack
+
+    - step:
+        id          : RFLOW_DATA_SHRINK_WINDOW
+        base        : ref://trackerstore/steps/id=RFLOW_BASE
+        payloadsize : 1000
+        fields      :
+            window  : 100
             flags   : ack
 
     - step:

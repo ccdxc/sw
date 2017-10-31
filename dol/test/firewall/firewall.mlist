@@ -180,6 +180,18 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
 
     - module:
+        name    : CONN_SETUP_WS_MSS_AND_TS_NOP
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=WINDOW_SCALE
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_WS_MSS_TS_NOP
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK_WS_MSS_TS
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+
+    - module:
         name    : CONN_SETUP_SIMUL_OPEN
         tracker : True
         args    :
@@ -206,6 +218,19 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
 
     - module:
+        name    : CONN_SETUP_SIMUL_OPEN_W_OPTIONS
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 4-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_WS_MSS_TS
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ONLY_WS_MSS_TS
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            - step  : ref://trackerstore/steps/id=RFLOW_ACK
+
+    - module:
         name    : CONN_SETUP_5_WAY
         tracker : True
         args    :
@@ -216,6 +241,20 @@ modules:
               cpu   : True
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
             - step  : ref://trackerstore/steps/id=RFLOW_SYN_ONLY
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=RFLOW_ACK
+
+    - module:
+        name    : CONN_SETUP_5_WAY_W_OPTIONS
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN_WS_MSS_TS
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_ACK
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ONLY_WS_MSS_TS
             - step  : ref://trackerstore/steps/id=IFLOW_SYN_ACK
             - step  : ref://trackerstore/steps/id=RFLOW_ACK
 
@@ -241,6 +280,76 @@ modules:
             - step  : ref://trackerstore/steps/id=RFLOW_FIN
               cpu   : True
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
+
+    - module:
+        name    : INIT_WINDOW_SHRINK_DROP_PKT
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_SHRINK_WINDOW
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
+
+    - module:
+        name    : RES_WINDOW_SHRINK_DROP_PKT
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_SHRINK_WINDOW
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+
+    - module:
+        name    : INIT_WINDOW_SHRINK_AND_GROW
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_SHRINK_WINDOW
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_DROP
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_SMALL_PKT
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+
+    - module:
+        name    : RES_WINDOW_SHRINK_AND_GROW
+        tracker : True
+        args    :
+            connspec: ref://trackerstore/connections/id=DEFAULT
+        iterate :
+            # 3-way handshake
+            - step  : ref://trackerstore/steps/id=IFLOW_SYN
+              cpu   : True
+            - step  : ref://trackerstore/steps/id=RFLOW_SYN_ACK
+            - step  : ref://trackerstore/steps/id=IFLOW_ACK
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA_SHRINK_WINDOW
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_DROP
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA_SMALL_PKT
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
 
     - module:
         name    : INIT_TCP_SYN_RES_INVALID_PKT
