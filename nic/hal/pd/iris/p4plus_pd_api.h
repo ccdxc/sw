@@ -37,4 +37,10 @@ p4plus_reg_read(uint64_t addr, uint32_t& data)
     return read_reg(addr, data);
 }
 
+static inline bool
+p4plus_reg_write(uint64_t addr, uint32_t data)
+{
+    return write_reg(addr, data);
+}
+
 #endif
