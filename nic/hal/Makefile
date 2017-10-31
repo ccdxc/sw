@@ -89,6 +89,7 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/session.o \
 				$(OBJ_DIR)/nwsec.pb.o \
 				$(OBJ_DIR)/nwsec.o \
+				$(OBJ_DIR)/nwsec_group.o \
 				$(OBJ_DIR)/qos.pb.o \
 				$(OBJ_DIR)/qos.o \
 				$(OBJ_DIR)/acl.pb.o \

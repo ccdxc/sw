@@ -129,7 +129,7 @@ TEST_F(nwsec_test, test2)
     sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_security_group_id(1);
     sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_peer_security_group_id(2);
     
-    nwsec::FirewallRuleSpec *fw_rule = sp_spec.mutable_policy_rules()->add_fw_rules();
+    nwsec::FirewallRuleSpec *fw_rule = sp_spec.mutable_policy_rules()->add_in_fw_rules();
     Service *svc =  fw_rule->add_svc();
     svc->set_ip_protocol(IPProtocol::IPPROTO_IPV4);
     svc->set_dst_port(1000);

@@ -215,7 +215,8 @@ message FirewallRuleSpec {
 
 // ingress policy for the security group
 message SGPolicy {
-  repeated FirewallRuleSpec    fw_rules       = 1;    // ingress firewall rules
+  repeated FirewallRuleSpec    in_fw_rules       = 1;    // ingress firewall rules
+  repeated FirewallRuleSpec    eg_fw_rules    = 2;    // egress firewall rules
 }
 
 // egress policy for the security group
