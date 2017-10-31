@@ -286,15 +286,17 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNIC_WatchNIC
 
 	// watch for changes
 	opts := api.ListWatchOptions{}
-	watcher, err := s.SmartNICAPI.Watch(context.Background(), &opts)
+	var watcher kvstore.Watcher
+	watcher, err := s.SmartNICAPI.Watch(stream.Context(), &opts)
 	if err != nil {
 		log.Errorf("Failed to start watch, err: %v", err)
 		return err
 	}
+	defer watcher.Stop()
 
 	// first get a list of all existing smartNICs
 	opts = api.ListWatchOptions{}
-	nics, err := s.SmartNICAPI.List(context.Background(), &opts)
+	nics, err := s.SmartNICAPI.List(stream.Context(), &opts)
 	if err != nil {
 		log.Errorf("Error getting a list of nics, err: %v", err)
 		return err

@@ -10,11 +10,14 @@ import (
 	"net/http"
 	"os"
 	gorun "runtime"
+	"strings"
 	"testing"
 
 	trace "golang.org/x/net/trace"
 	rpc "google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
+
+	"time"
 
 	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
@@ -30,23 +33,25 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/kvstore/etcd/integration"
 	store "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	ventrace "github.com/pensando/sw/venice/utils/trace"
 )
 
 const (
 	smartNICServerURL = "localhost:9199"
 	resolverURLs      = ":" + globals.CMDGRPCPort
-	minAgents         = 0
-	maxAgents         = 1000
+	minAgents         = 1
+	maxAgents         = 5000
 )
 
 var (
-	numNaples   = flag.Int("num-naples", 10, fmt.Sprintf("Number of Naples instances [%d..%d]", minAgents, maxAgents))
+	numNaples   = flag.Int("num-naples", 100, fmt.Sprintf("Number of Naples instances [%d..%d]", minAgents, maxAgents))
 	cmdURL      = flag.String("cmd-url", smartNICServerURL, "CMD URL")
 	resolverURL = flag.String("resolver-url", resolverURLs, "Resolver URLs")
 	mode        = flag.String("mode", "classic", "Naples mode, classic or managed")
@@ -137,158 +142,194 @@ func stopNMD(t *testing.T, ag *nmd.Agent, dbPath string) {
 
 func TestCreateNMDs(t *testing.T) {
 
-	for i := 1; i <= *numNaples; i++ {
+	for i := 1; i <= *numNaples; {
 
-		tcName := fmt.Sprintf("TestNMD-%d", i)
-		nodeID := getNodeID(i)
-		dbPath := getDBPath(i)
-		restURL := getRESTUrl(i)
+		// Testgroup to run sub-tests in parallel, bounded by runtime.NumCPU
+		t.Run("testgroup", func(t *testing.T) {
 
-		t.Run(tcName, func(t *testing.T) {
+			batchSize := gorun.NumCPU()
 
-			// Execute Agent/NMD creation and registration tests in parallel
-			t.Parallel()
-			log.Infof("#### Started TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d",
-				tcName, nodeID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
+			log.Infof("#### Staring Tests [%d..%d]", i, i+batchSize-1)
+			for j := 0; j < batchSize && i <= *numNaples; i, j = i+1, j+1 {
 
-			// Cleanup any prior DB files
-			os.Remove(dbPath)
+				tcName := fmt.Sprintf("TestNMD-%d", i)
+				nodeID := getNodeID(i)
+				dbPath := getDBPath(i)
+				restURL := getRESTUrl(i)
 
-			// create Agent and NMD
-			ag, err := createNMD(t, dbPath, nodeID, restURL)
-			defer stopNMD(t, ag, dbPath)
-			Assert(t, (err == nil && ag != nil), "Failed to create agent", err)
+				// Sub-Test for a single NMD agent
+				t.Run(tcName, func(t *testing.T) {
 
-			nm := ag.GetNMD()
+					// Execute Agent/NMD creation and registration tests in parallel
+					t.Parallel()
+					log.Infof("#### Started TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d",
+						tcName, nodeID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
 
-			if *mode == "classic" {
-				// Validate default classic mode
-				f1 := func() (bool, []interface{}) {
+					// Cleanup any prior DB files
+					os.Remove(dbPath)
 
-					cfg := nm.GetNaplesConfig()
-					if cfg.Spec.Mode == proto.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
-						nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
+					// create Agent and NMD
+					ag, err := createNMD(t, dbPath, nodeID, restURL)
+					defer stopNMD(t, ag, dbPath)
+					Assert(t, (err == nil && ag != nil), "Failed to create agent", err)
+
+					nm := ag.GetNMD()
+
+					if *mode == "classic" {
+						// Validate default classic mode
+						f1 := func() (bool, []interface{}) {
+
+							cfg := nm.GetNaplesConfig()
+							if cfg.Spec.Mode == proto.NaplesMode_CLASSIC_MODE && nm.GetListenURL() != "" &&
+								nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
+								return true, nil
+							}
+							return false, nil
+						}
+						AssertEventually(t, f1, "Failed to verify mode is in Classic")
+
+						var naplesCfg proto.Naples
+
+						// Validate REST endpoint
+						f2 := func() (bool, []interface{}) {
+
+							err := netutils.HTTPGet(nm.GetNMDUrl()+"/", &naplesCfg)
+							if err != nil {
+								log.Errorf("Failed to get naples config via REST, err:%+v", err)
+								return false, nil
+							}
+
+							if naplesCfg.Spec.Mode != proto.NaplesMode_CLASSIC_MODE {
+								return false, nil
+							}
+							return true, nil
+						}
+						AssertEventually(t, f2, "Failed to get the default naples config via REST")
+
+						// Switch to Managed mode
+						naplesCfg = proto.Naples{
+							ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
+							TypeMeta:   api.TypeMeta{Kind: "Naples"},
+							Spec: proto.NaplesSpec{
+								Mode:           proto.NaplesMode_MANAGED_MODE,
+								PrimaryMac:     nodeID,
+								ClusterAddress: []string{*cmdURL},
+								NodeName:       nodeID,
+							},
+						}
+
+						log.Infof("Naples config: %+v", naplesCfg)
+
+						var resp nmdstate.NaplesConfigResp
+
+						// Post the mode change config
+						f3 := func() (bool, []interface{}) {
+							err = netutils.HTTPPost(nm.GetNMDUrl(), &naplesCfg, &resp)
+							if err != nil {
+								log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
+								return false, nil
+							}
+							return true, nil
+						}
+						AssertEventually(t, f3, "Failed to post the naples config")
+					}
+
+					// Validate Managed Mode
+					f4 := func() (bool, []interface{}) {
+
+						// validate the mode is managed
+						cfg := nm.GetNaplesConfig()
+						log.Infof("NaplesConfig: %v", cfg)
+						if cfg.Spec.Mode != proto.NaplesMode_MANAGED_MODE {
+							log.Errorf("Failed to switch to managed mode")
+							return false, nil
+						}
+
+						// Fetch smartnic object
+						nic, err := nm.GetSmartNIC()
+						if nic == nil || err != nil {
+							log.Errorf("NIC not found in nicDB, mac:%s", nodeID)
+							return false, nil
+						}
+
+						// Verify NIC is admitted
+						if nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
+							log.Errorf("NIC is not admitted")
+							return false, nil
+						}
+
+						// Verify Update NIC task is running
+						if nm.GetUpdStatus() == false {
+							log.Errorf("Update NIC is not in progress")
+							return false, nil
+						}
+
+						// Verify REST server is not up
+						if nm.GetRestServerStatus() == true {
+							log.Errorf("REST server is still up")
+							return false, nil
+						}
 						return true, nil
 					}
-					return false, nil
-				}
-				AssertEventually(t, f1, "Failed to verify mode is in Classic")
+					AssertEventually(t, f4, "Failed to verify mode is in Managed Mode", string("10ms"), string("60s"))
 
-				var naplesCfg proto.Naples
+					// Validate SmartNIC object is created
+					f5 := func() (bool, []interface{}) {
 
-				// Validate REST endpoint
-				f2 := func() (bool, []interface{}) {
+						meta := api.ObjectMeta{
+							Name: nodeID,
+						}
+						nicObj, err := tInfo.apiClient.CmdV1().SmartNIC().Get(context.Background(), &meta)
+						if err != nil || nicObj == nil {
+							log.Errorf("Failed to GET SmartNIC object, mac:%s, %v", nodeID, err)
+							return false, nil
+						}
 
-					err := netutils.HTTPGet(nm.GetNMDUrl()+"/", &naplesCfg)
-					if err != nil {
-						log.Errorf("Failed to get naples config via REST, err:%+v", err)
-						return false, nil
+						return true, nil
 					}
+					AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object", string("10ms"), string("30s"))
 
-					if naplesCfg.Spec.Mode != proto.NaplesMode_CLASSIC_MODE {
-						return false, nil
+					// Validate Workload Node object is created
+					f6 := func() (bool, []interface{}) {
+
+						meta := api.ObjectMeta{
+							Name: nodeID,
+						}
+						nodeObj, err := tInfo.apiClient.CmdV1().Node().Get(context.Background(), &meta)
+						if err != nil || nodeObj == nil {
+							log.Errorf("Failed to GET Node object, mac:%s, %v", nodeID, err)
+							return false, nil
+						}
+
+						return true, nil
 					}
-					return true, nil
-				}
-				AssertEventually(t, f2, "Failed to get the default naples config via REST")
+					AssertEventually(t, f6, "Failed to verify creation of required Node object", string("10ms"), string("30s"))
 
-				// Switch to Managed mode
-				naplesCfg = proto.Naples{
-					ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
-					TypeMeta:   api.TypeMeta{Kind: "Naples"},
-					Spec: proto.NaplesSpec{
-						Mode:           proto.NaplesMode_MANAGED_MODE,
-						PrimaryMac:     nodeID,
-						ClusterAddress: []string{*cmdURL},
-					},
-				}
+					log.Infof("#### Completed TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d ",
+						tcName, nodeID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
 
-				log.Infof("Naples config: %+v", naplesCfg)
-
-				var resp nmdstate.NaplesConfigResp
-
-				// Post the mode change config
-				f3 := func() (bool, []interface{}) {
-					err = netutils.HTTPPost(nm.GetNMDUrl(), &naplesCfg, &resp)
-					if err != nil {
-						log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
-						return false, nil
-					}
-					return true, nil
-				}
-				AssertEventually(t, f3, "Failed to post the naples config")
+				})
 			}
-
-			// Validate Managed Mode
-			f4 := func() (bool, []interface{}) {
-
-				// validate the mode is managed
-				cfg := nm.GetNaplesConfig()
-				log.Infof("NaplesConfig: %v", cfg)
-				if cfg.Spec.Mode != proto.NaplesMode_MANAGED_MODE {
-					log.Errorf("Failed to switch to managed mode")
-					return false, nil
-				}
-
-				// Fetch smartnic object
-				nic, err := nm.GetSmartNIC()
-				if nic == nil || err != nil {
-					log.Errorf("NIC not found in nicDB, mac:%s", nodeID)
-					return false, nil
-				}
-
-				// Verify NIC is admitted
-				if nic.Spec.Phase != cmd.SmartNICSpec_ADMITTED.String() {
-					log.Errorf("NIC is not admitted")
-					return false, nil
-				}
-
-				// Verify Update NIC task is running
-				if nm.GetUpdStatus() == false {
-					log.Errorf("Update NIC is not in progress")
-					return false, nil
-				}
-
-				// Verify REST server is not up
-				if nm.GetRestServerStatus() == true {
-					log.Errorf("REST server is still up")
-					return false, nil
-				}
-				return true, nil
-			}
-			AssertEventually(t, f4, "Failed to verify mode is in Managed Mode", string("10ms"), string("30s"))
-
-			// Validate SmartNIC object is created
-			f5 := func() (bool, []interface{}) {
-
-				meta := api.ObjectMeta{
-					Name: nodeID,
-				}
-				nicObj, err := tInfo.apiClient.CmdV1().SmartNIC().Get(context.Background(), &meta)
-				if err != nil || nicObj == nil {
-					log.Errorf("Failed to GET SmartNIC objec, mac:%s, %v", nodeID, err)
-					return false, nil
-				}
-
-				return true, nil
-			}
-			AssertEventually(t, f5, "Failed to verify creation of required SmartNIC object")
-
-			log.Infof("#### Completed TC: %s NodeID: %s DB: %s GoRoutines: %d CGoCalls: %d ",
-				tcName, nodeID, dbPath, gorun.NumGoroutine(), gorun.NumCgoCall())
-
 		})
+		log.Infof("#### Completed TestGroup")
 
 	}
 }
 
 func Setup(m *testing.M) {
 
+	// Init etcd cluster
+	var t testing.T
+	cluster := integration.NewClusterV3(&t)
+
+	// Disable open trace
+	ventrace.DisableOpenTrace()
+
 	// Fill logger config params
 	logConfig := &log.Config{
 		Module:      "Nic-Admission",
 		Format:      log.LogFmt,
-		Filter:      log.AllowInfoFilter,
+		Filter:      log.AllowAllFilter,
 		Debug:       false,
 		CtxSelector: log.ContextAll,
 		LogToStdout: true,
@@ -309,8 +350,9 @@ func Setup(m *testing.M) {
 		Version:        "v1",
 		Scheme:         scheme,
 		Kvstore: store.Config{
-			Type:  store.KVStoreTypeMemkv,
-			Codec: runtime.NewJSONCodec(scheme),
+			Type:    store.KVStoreTypeEtcd,
+			Servers: strings.Split(cluster.ClientURL(), ","),
+			Codec:   runtime.NewJSONCodec(scheme),
 		},
 	}
 	grpclog.SetLogger(pl)
@@ -380,6 +422,13 @@ func Teardown(m *testing.M) {
 	log.Infof("#### ApiServer and CMD smartnic server is STOPPED")
 }
 
+func waitForTracer() {
+	for {
+		log.Infof("#### Sleep,  GoRoutines: %d CGoCalls: %d", gorun.NumGoroutine(), gorun.NumCgoCall())
+		time.Sleep(1 * time.Second)
+	}
+}
+
 // Here are some examples to run this testcase :
 //
 // $ go test ./test/integ/nic_admission/
@@ -439,11 +488,9 @@ func TestMain(m *testing.M) {
 
 	log.Infof("#### TestMain End GoRoutines: %d CGoCalls: %d", gorun.NumGoroutine(), gorun.NumCgoCall())
 
-	// Loop for debugging
-	//	for {
-	//		log.Infof("#### Sleeping GoRoutines: %d CGoCalls: %d", gorun.NumGoroutine(), gorun.NumCgoCall())
-	//		time.Sleep(1 * time.Second)
-	//	}
+	if *rpcTrace == true {
+		waitForTracer()
+	}
 
 	os.Exit(rcode)
 }
