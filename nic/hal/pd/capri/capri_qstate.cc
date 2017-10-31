@@ -30,6 +30,12 @@ void set_qstate_entry(hal::LIFQState *qstate, T *entry) {
   entry->write();
 }
 
+template <typename T>
+void clear_qstate_entry(T *entry) {
+  entry->vld(1);
+  entry->write();
+}
+
 int clear_qstate_mem(uint64_t base_addr, uint32_t size) {
   // qstate is a multiple for 4K So it is safe to assume
   // 256 byte boundary.
@@ -61,6 +67,20 @@ void push_qstate_to_capri(hal::LIFQState *qstate) {
   set_qstate_entry(qstate, pr_entry);
 #endif
 }
+
+void clear_qstate(hal::LIFQState *qstate) {
+#ifndef HAL_GTEST
+  cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+  auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[qstate->lif_id];
+  clear_qstate_entry(wa_entry);
+  auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
+  clear_qstate_entry(psp_entry);
+  auto *pr_entry = &cap0.pr.pr.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
+  clear_qstate_entry(pr_entry);
+#endif
+}
+
 
 int32_t read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size) {
 #ifndef HAL_GTEST

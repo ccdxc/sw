@@ -20,6 +20,7 @@ class LIFManager : public LIFManagerBase {
       uint64_t q_addr, uint8_t *buf, uint32_t q_size);
   virtual int32_t WriteQStateImpl(
       uint64_t q_addr, const uint8_t *buf, uint32_t q_size);
+  virtual void DeleteLIFQStateImpl(LIFQState *qstate);
 
  private:
   uint64_t hbm_base_;
