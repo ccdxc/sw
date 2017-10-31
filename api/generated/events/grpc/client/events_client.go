@@ -8,9 +8,7 @@ import (
 	oldlog "log"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	api "github.com/pensando/sw/api"
@@ -19,6 +17,7 @@ import (
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy vars to suppress import errors
@@ -38,10 +37,10 @@ func NewEventPolicyV1(conn *grpc.ClientConn, logger log.Logger) events.ServiceEv
 			events.EncodeGrpcReqEventPolicy,
 			events.DecodeGrpcRespEventPolicy,
 			&events.EventPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddEventPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EventPolicyV1:AutoAddEventPolicy")(lAutoAddEventPolicyEndpoint)
+		lAutoAddEventPolicyEndpoint = trace.ClientEndPoint("EventPolicyV1:AutoAddEventPolicy")(lAutoAddEventPolicyEndpoint)
 	}
 	var lAutoDeleteEventPolicyEndpoint endpoint.Endpoint
 	{
@@ -52,10 +51,10 @@ func NewEventPolicyV1(conn *grpc.ClientConn, logger log.Logger) events.ServiceEv
 			events.EncodeGrpcReqEventPolicy,
 			events.DecodeGrpcRespEventPolicy,
 			&events.EventPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteEventPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EventPolicyV1:AutoDeleteEventPolicy")(lAutoDeleteEventPolicyEndpoint)
+		lAutoDeleteEventPolicyEndpoint = trace.ClientEndPoint("EventPolicyV1:AutoDeleteEventPolicy")(lAutoDeleteEventPolicyEndpoint)
 	}
 	var lAutoGetEventPolicyEndpoint endpoint.Endpoint
 	{
@@ -66,10 +65,10 @@ func NewEventPolicyV1(conn *grpc.ClientConn, logger log.Logger) events.ServiceEv
 			events.EncodeGrpcReqEventPolicy,
 			events.DecodeGrpcRespEventPolicy,
 			&events.EventPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetEventPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EventPolicyV1:AutoGetEventPolicy")(lAutoGetEventPolicyEndpoint)
+		lAutoGetEventPolicyEndpoint = trace.ClientEndPoint("EventPolicyV1:AutoGetEventPolicy")(lAutoGetEventPolicyEndpoint)
 	}
 	var lAutoListEventPolicyEndpoint endpoint.Endpoint
 	{
@@ -80,10 +79,10 @@ func NewEventPolicyV1(conn *grpc.ClientConn, logger log.Logger) events.ServiceEv
 			events.EncodeGrpcReqListWatchOptions,
 			events.DecodeGrpcRespEventPolicyList,
 			&events.EventPolicyList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListEventPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EventPolicyV1:AutoListEventPolicy")(lAutoListEventPolicyEndpoint)
+		lAutoListEventPolicyEndpoint = trace.ClientEndPoint("EventPolicyV1:AutoListEventPolicy")(lAutoListEventPolicyEndpoint)
 	}
 	var lAutoUpdateEventPolicyEndpoint endpoint.Endpoint
 	{
@@ -94,10 +93,10 @@ func NewEventPolicyV1(conn *grpc.ClientConn, logger log.Logger) events.ServiceEv
 			events.EncodeGrpcReqEventPolicy,
 			events.DecodeGrpcRespEventPolicy,
 			&events.EventPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateEventPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EventPolicyV1:AutoUpdateEventPolicy")(lAutoUpdateEventPolicyEndpoint)
+		lAutoUpdateEventPolicyEndpoint = trace.ClientEndPoint("EventPolicyV1:AutoUpdateEventPolicy")(lAutoUpdateEventPolicyEndpoint)
 	}
 	return events.EndpointsEventPolicyV1Client{
 		Client: events.NewEventPolicyV1Client(conn),
@@ -129,10 +128,10 @@ func NewEventV1(conn *grpc.ClientConn, logger log.Logger) events.ServiceEventV1C
 			events.EncodeGrpcReqEvent,
 			events.DecodeGrpcRespEvent,
 			&events.Event{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddEventEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EventV1:AutoAddEvent")(lAutoAddEventEndpoint)
+		lAutoAddEventEndpoint = trace.ClientEndPoint("EventV1:AutoAddEvent")(lAutoAddEventEndpoint)
 	}
 	var lAutoDeleteEventEndpoint endpoint.Endpoint
 	{
@@ -143,10 +142,10 @@ func NewEventV1(conn *grpc.ClientConn, logger log.Logger) events.ServiceEventV1C
 			events.EncodeGrpcReqEvent,
 			events.DecodeGrpcRespEvent,
 			&events.Event{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteEventEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EventV1:AutoDeleteEvent")(lAutoDeleteEventEndpoint)
+		lAutoDeleteEventEndpoint = trace.ClientEndPoint("EventV1:AutoDeleteEvent")(lAutoDeleteEventEndpoint)
 	}
 	var lAutoGetEventEndpoint endpoint.Endpoint
 	{
@@ -157,10 +156,10 @@ func NewEventV1(conn *grpc.ClientConn, logger log.Logger) events.ServiceEventV1C
 			events.EncodeGrpcReqEvent,
 			events.DecodeGrpcRespEvent,
 			&events.Event{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetEventEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EventV1:AutoGetEvent")(lAutoGetEventEndpoint)
+		lAutoGetEventEndpoint = trace.ClientEndPoint("EventV1:AutoGetEvent")(lAutoGetEventEndpoint)
 	}
 	var lAutoListEventEndpoint endpoint.Endpoint
 	{
@@ -171,10 +170,10 @@ func NewEventV1(conn *grpc.ClientConn, logger log.Logger) events.ServiceEventV1C
 			events.EncodeGrpcReqListWatchOptions,
 			events.DecodeGrpcRespEventList,
 			&events.EventList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListEventEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EventV1:AutoListEvent")(lAutoListEventEndpoint)
+		lAutoListEventEndpoint = trace.ClientEndPoint("EventV1:AutoListEvent")(lAutoListEventEndpoint)
 	}
 	var lAutoUpdateEventEndpoint endpoint.Endpoint
 	{
@@ -185,10 +184,10 @@ func NewEventV1(conn *grpc.ClientConn, logger log.Logger) events.ServiceEventV1C
 			events.EncodeGrpcReqEvent,
 			events.DecodeGrpcRespEvent,
 			&events.Event{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateEventEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EventV1:AutoUpdateEvent")(lAutoUpdateEventEndpoint)
+		lAutoUpdateEventEndpoint = trace.ClientEndPoint("EventV1:AutoUpdateEvent")(lAutoUpdateEventEndpoint)
 	}
 	return events.EndpointsEventV1Client{
 		Client: events.NewEventV1Client(conn),

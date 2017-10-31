@@ -11,14 +11,10 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
-	zipkin "github.com/openzipkin/zipkin-go-opentracing"
 
 	logger "github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
-
-// trace export backend URL
-// FIXME: This is hard coded for now
-const zipkinHTTPEndpoint = "http://node1:9411/api/v1/spans"
 
 // open tracing tag for gRPC
 var gRPCComponentTag = opentracing.Tag{Key: string(ext.Component), Value: "gRPC"}
@@ -69,6 +65,11 @@ type tracerCtx struct {
 
 // ReqInterceptor implements request interception
 func (t *tracerMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, method string, req interface{}) context.Context {
+	if !trace.IsEnabled() {
+		return ctx
+	}
+	tracer := opentracing.GlobalTracer()
+
 	switch role {
 	case RoleClient:
 		var parentCtx opentracing.SpanContext
@@ -79,7 +80,7 @@ func (t *tracerMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, 
 		}
 
 		// create child span
-		clientSpan := t.tracer.StartSpan(method, opentracing.ChildOf(parentCtx),
+		clientSpan := tracer.StartSpan(method, opentracing.ChildOf(parentCtx),
 			ext.SpanKindRPCClient, gRPCComponentTag)
 
 		// get existing metadata
@@ -92,14 +93,14 @@ func (t *tracerMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, 
 		mdWriter := metadataReaderWriter{md}
 
 		// Add custom HTTP2 headers with trace info
-		err := t.tracer.Inject(clientSpan.Context(), opentracing.HTTPHeaders, mdWriter)
+		err := tracer.Inject(clientSpan.Context(), opentracing.HTTPHeaders, mdWriter)
 		if err != nil {
 			clientSpan.LogFields(log.String("event", "Tracer.Inject() failed"), log.Error(err))
 			logger.Errorf("Tracer.Inject() failed. Err: %v", err)
 		}
 
 		// log request event
-		clientSpan.LogFields(log.Object("gRPC request", req))
+		clientSpan.LogFields(log.Object("gRPC request sent", req))
 
 		// save trace context
 		ctx = metadata.NewContext(ctx, md)
@@ -114,17 +115,17 @@ func (t *tracerMiddleware) ReqInterceptor(ctx context.Context, role, mysvcName, 
 		}
 
 		// get parent span
-		spanContext, err := t.tracer.Extract(opentracing.HTTPHeaders, metadataReaderWriter{md})
+		spanContext, err := tracer.Extract(opentracing.HTTPHeaders, metadataReaderWriter{md})
 		if err != nil && err != opentracing.ErrSpanContextNotFound {
 			logger.Errorf("Error getting span context")
 			return ctx
 		}
 
 		// create new child span
-		serverSpan := t.tracer.StartSpan(method, ext.RPCServerOption(spanContext), gRPCComponentTag)
+		serverSpan := tracer.StartSpan(method, ext.RPCServerOption(spanContext), gRPCComponentTag)
 
 		// log server request event
-		serverSpan.LogFields(log.Object("gRPC request", req))
+		serverSpan.LogFields(log.Object("gRPC request received", req))
 
 		// save tracer context
 		ctx = opentracing.ContextWithSpan(ctx, serverSpan)
@@ -168,22 +169,5 @@ func (t *tracerMiddleware) RespInterceptor(ctx context.Context, role, mysvcName,
 
 // create a new tracer middleware
 func newTracerMiddleware(svcName string) *tracerMiddleware {
-	// create collector.
-	collector, err := zipkin.NewHTTPCollector(zipkinHTTPEndpoint)
-	if err != nil {
-		logger.Errorf("unable to create Zipkin HTTP collector: %v", err)
-		return &tracerMiddleware{}
-	}
-
-	// create recorder.
-	recorder := zipkin.NewRecorder(collector, true, "", svcName, zipkin.WithJSONMaterializer())
-
-	// create tracer.
-	tracer, err := zipkin.NewTracer(recorder, zipkin.ClientServerSameSpan(false), zipkin.TraceID128Bit(true))
-	if err != nil {
-		logger.Errorf("unable to create Zipkin tracer: %v", err)
-		return &tracerMiddleware{}
-	}
-
-	return &tracerMiddleware{tracer: tracer}
+	return &tracerMiddleware{}
 }

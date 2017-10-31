@@ -8,9 +8,7 @@ import (
 	oldlog "log"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	api "github.com/pensando/sw/api"
@@ -19,6 +17,7 @@ import (
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy vars to suppress import errors
@@ -38,10 +37,10 @@ func NewRetentionPolicyV1(conn *grpc.ClientConn, logger log.Logger) retention.Se
 			retention.EncodeGrpcReqRetentionPolicy,
 			retention.DecodeGrpcRespRetentionPolicy,
 			&retention.RetentionPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddRetentionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "RetentionPolicyV1:AutoAddRetentionPolicy")(lAutoAddRetentionPolicyEndpoint)
+		lAutoAddRetentionPolicyEndpoint = trace.ClientEndPoint("RetentionPolicyV1:AutoAddRetentionPolicy")(lAutoAddRetentionPolicyEndpoint)
 	}
 	var lAutoDeleteRetentionPolicyEndpoint endpoint.Endpoint
 	{
@@ -52,10 +51,10 @@ func NewRetentionPolicyV1(conn *grpc.ClientConn, logger log.Logger) retention.Se
 			retention.EncodeGrpcReqRetentionPolicy,
 			retention.DecodeGrpcRespRetentionPolicy,
 			&retention.RetentionPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteRetentionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "RetentionPolicyV1:AutoDeleteRetentionPolicy")(lAutoDeleteRetentionPolicyEndpoint)
+		lAutoDeleteRetentionPolicyEndpoint = trace.ClientEndPoint("RetentionPolicyV1:AutoDeleteRetentionPolicy")(lAutoDeleteRetentionPolicyEndpoint)
 	}
 	var lAutoGetRetentionPolicyEndpoint endpoint.Endpoint
 	{
@@ -66,10 +65,10 @@ func NewRetentionPolicyV1(conn *grpc.ClientConn, logger log.Logger) retention.Se
 			retention.EncodeGrpcReqRetentionPolicy,
 			retention.DecodeGrpcRespRetentionPolicy,
 			&retention.RetentionPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetRetentionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "RetentionPolicyV1:AutoGetRetentionPolicy")(lAutoGetRetentionPolicyEndpoint)
+		lAutoGetRetentionPolicyEndpoint = trace.ClientEndPoint("RetentionPolicyV1:AutoGetRetentionPolicy")(lAutoGetRetentionPolicyEndpoint)
 	}
 	var lAutoListRetentionPolicyEndpoint endpoint.Endpoint
 	{
@@ -80,10 +79,10 @@ func NewRetentionPolicyV1(conn *grpc.ClientConn, logger log.Logger) retention.Se
 			retention.EncodeGrpcReqListWatchOptions,
 			retention.DecodeGrpcRespRetentionPolicyList,
 			&retention.RetentionPolicyList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListRetentionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "RetentionPolicyV1:AutoListRetentionPolicy")(lAutoListRetentionPolicyEndpoint)
+		lAutoListRetentionPolicyEndpoint = trace.ClientEndPoint("RetentionPolicyV1:AutoListRetentionPolicy")(lAutoListRetentionPolicyEndpoint)
 	}
 	var lAutoUpdateRetentionPolicyEndpoint endpoint.Endpoint
 	{
@@ -94,10 +93,10 @@ func NewRetentionPolicyV1(conn *grpc.ClientConn, logger log.Logger) retention.Se
 			retention.EncodeGrpcReqRetentionPolicy,
 			retention.DecodeGrpcRespRetentionPolicy,
 			&retention.RetentionPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateRetentionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "RetentionPolicyV1:AutoUpdateRetentionPolicy")(lAutoUpdateRetentionPolicyEndpoint)
+		lAutoUpdateRetentionPolicyEndpoint = trace.ClientEndPoint("RetentionPolicyV1:AutoUpdateRetentionPolicy")(lAutoUpdateRetentionPolicyEndpoint)
 	}
 	return retention.EndpointsRetentionPolicyV1Client{
 		Client: retention.NewRetentionPolicyV1Client(conn),

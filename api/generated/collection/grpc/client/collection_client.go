@@ -8,9 +8,7 @@ import (
 	oldlog "log"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	api "github.com/pensando/sw/api"
@@ -19,6 +17,7 @@ import (
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy vars to suppress import errors
@@ -38,10 +37,10 @@ func NewCollectionPolicyV1(conn *grpc.ClientConn, logger log.Logger) collection.
 			collection.EncodeGrpcReqCollectionPolicy,
 			collection.DecodeGrpcRespCollectionPolicy,
 			&collection.CollectionPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddCollectionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CollectionPolicyV1:AutoAddCollectionPolicy")(lAutoAddCollectionPolicyEndpoint)
+		lAutoAddCollectionPolicyEndpoint = trace.ClientEndPoint("CollectionPolicyV1:AutoAddCollectionPolicy")(lAutoAddCollectionPolicyEndpoint)
 	}
 	var lAutoDeleteCollectionPolicyEndpoint endpoint.Endpoint
 	{
@@ -52,10 +51,10 @@ func NewCollectionPolicyV1(conn *grpc.ClientConn, logger log.Logger) collection.
 			collection.EncodeGrpcReqCollectionPolicy,
 			collection.DecodeGrpcRespCollectionPolicy,
 			&collection.CollectionPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteCollectionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CollectionPolicyV1:AutoDeleteCollectionPolicy")(lAutoDeleteCollectionPolicyEndpoint)
+		lAutoDeleteCollectionPolicyEndpoint = trace.ClientEndPoint("CollectionPolicyV1:AutoDeleteCollectionPolicy")(lAutoDeleteCollectionPolicyEndpoint)
 	}
 	var lAutoGetCollectionPolicyEndpoint endpoint.Endpoint
 	{
@@ -66,10 +65,10 @@ func NewCollectionPolicyV1(conn *grpc.ClientConn, logger log.Logger) collection.
 			collection.EncodeGrpcReqCollectionPolicy,
 			collection.DecodeGrpcRespCollectionPolicy,
 			&collection.CollectionPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetCollectionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CollectionPolicyV1:AutoGetCollectionPolicy")(lAutoGetCollectionPolicyEndpoint)
+		lAutoGetCollectionPolicyEndpoint = trace.ClientEndPoint("CollectionPolicyV1:AutoGetCollectionPolicy")(lAutoGetCollectionPolicyEndpoint)
 	}
 	var lAutoListCollectionPolicyEndpoint endpoint.Endpoint
 	{
@@ -80,10 +79,10 @@ func NewCollectionPolicyV1(conn *grpc.ClientConn, logger log.Logger) collection.
 			collection.EncodeGrpcReqListWatchOptions,
 			collection.DecodeGrpcRespCollectionPolicyList,
 			&collection.CollectionPolicyList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListCollectionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CollectionPolicyV1:AutoListCollectionPolicy")(lAutoListCollectionPolicyEndpoint)
+		lAutoListCollectionPolicyEndpoint = trace.ClientEndPoint("CollectionPolicyV1:AutoListCollectionPolicy")(lAutoListCollectionPolicyEndpoint)
 	}
 	var lAutoUpdateCollectionPolicyEndpoint endpoint.Endpoint
 	{
@@ -94,10 +93,10 @@ func NewCollectionPolicyV1(conn *grpc.ClientConn, logger log.Logger) collection.
 			collection.EncodeGrpcReqCollectionPolicy,
 			collection.DecodeGrpcRespCollectionPolicy,
 			&collection.CollectionPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateCollectionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "CollectionPolicyV1:AutoUpdateCollectionPolicy")(lAutoUpdateCollectionPolicyEndpoint)
+		lAutoUpdateCollectionPolicyEndpoint = trace.ClientEndPoint("CollectionPolicyV1:AutoUpdateCollectionPolicy")(lAutoUpdateCollectionPolicyEndpoint)
 	}
 	return collection.EndpointsCollectionPolicyV1Client{
 		Client: collection.NewCollectionPolicyV1Client(conn),

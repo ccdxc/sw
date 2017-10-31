@@ -11,13 +11,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	oldcontext "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -55,105 +54,105 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 			endpoints.AutoAddBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddBook", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddBook", logger)))...,
 		),
 
 		AutoAddOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoAddOrderEndpoint,
 			DecodeGrpcReqOrder,
 			EncodeGrpcRespOrder,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddOrder", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddOrder", logger)))...,
 		),
 
 		AutoAddPublisherHdlr: grpctransport.NewServer(
 			endpoints.AutoAddPublisherEndpoint,
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddPublisher", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddPublisher", logger)))...,
 		),
 
 		AutoDeleteBookHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteBook", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteBook", logger)))...,
 		),
 
 		AutoDeleteOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteOrderEndpoint,
 			DecodeGrpcReqOrder,
 			EncodeGrpcRespOrder,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteOrder", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteOrder", logger)))...,
 		),
 
 		AutoDeletePublisherHdlr: grpctransport.NewServer(
 			endpoints.AutoDeletePublisherEndpoint,
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeletePublisher", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeletePublisher", logger)))...,
 		),
 
 		AutoGetBookHdlr: grpctransport.NewServer(
 			endpoints.AutoGetBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetBook", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetBook", logger)))...,
 		),
 
 		AutoGetOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoGetOrderEndpoint,
 			DecodeGrpcReqOrder,
 			EncodeGrpcRespOrder,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetOrder", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetOrder", logger)))...,
 		),
 
 		AutoGetPublisherHdlr: grpctransport.NewServer(
 			endpoints.AutoGetPublisherEndpoint,
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetPublisher", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetPublisher", logger)))...,
 		),
 
 		AutoListBookHdlr: grpctransport.NewServer(
 			endpoints.AutoListBookEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespBookList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListBook", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListBook", logger)))...,
 		),
 
 		AutoListOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoListOrderEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespOrderList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListOrder", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListOrder", logger)))...,
 		),
 
 		AutoListPublisherHdlr: grpctransport.NewServer(
 			endpoints.AutoListPublisherEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespPublisherList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListPublisher", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListPublisher", logger)))...,
 		),
 
 		AutoUpdateBookHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateBook", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateBook", logger)))...,
 		),
 
 		AutoUpdateOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateOrderEndpoint,
 			DecodeGrpcReqOrder,
 			EncodeGrpcRespOrder,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateOrder", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateOrder", logger)))...,
 		),
 
 		AutoUpdatePublisherHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdatePublisherEndpoint,
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdatePublisher", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdatePublisher", logger)))...,
 		),
 	}
 }

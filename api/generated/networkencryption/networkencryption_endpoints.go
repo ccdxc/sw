@@ -16,12 +16,11 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -165,7 +164,7 @@ func MakeTrafficEncryptionPolicyV1AutoAddTrafficEncryptionPolicyEndpoint(s Servi
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TrafficEncryptionPolicyV1:AutoAddTrafficEncryptionPolicy")(f)
+	return trace.ServerEndpoint("TrafficEncryptionPolicyV1:AutoAddTrafficEncryptionPolicy")(f)
 }
 
 // AutoDeleteTrafficEncryptionPolicy implementation on server Endpoint
@@ -187,7 +186,7 @@ func MakeTrafficEncryptionPolicyV1AutoDeleteTrafficEncryptionPolicyEndpoint(s Se
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TrafficEncryptionPolicyV1:AutoDeleteTrafficEncryptionPolicy")(f)
+	return trace.ServerEndpoint("TrafficEncryptionPolicyV1:AutoDeleteTrafficEncryptionPolicy")(f)
 }
 
 // AutoGetTrafficEncryptionPolicy implementation on server Endpoint
@@ -209,7 +208,7 @@ func MakeTrafficEncryptionPolicyV1AutoGetTrafficEncryptionPolicyEndpoint(s Servi
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TrafficEncryptionPolicyV1:AutoGetTrafficEncryptionPolicy")(f)
+	return trace.ServerEndpoint("TrafficEncryptionPolicyV1:AutoGetTrafficEncryptionPolicy")(f)
 }
 
 // AutoListTrafficEncryptionPolicy implementation on server Endpoint
@@ -231,7 +230,7 @@ func MakeTrafficEncryptionPolicyV1AutoListTrafficEncryptionPolicyEndpoint(s Serv
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TrafficEncryptionPolicyV1:AutoListTrafficEncryptionPolicy")(f)
+	return trace.ServerEndpoint("TrafficEncryptionPolicyV1:AutoListTrafficEncryptionPolicy")(f)
 }
 
 // AutoUpdateTrafficEncryptionPolicy implementation on server Endpoint
@@ -253,7 +252,7 @@ func MakeTrafficEncryptionPolicyV1AutoUpdateTrafficEncryptionPolicyEndpoint(s Se
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TrafficEncryptionPolicyV1:AutoUpdateTrafficEncryptionPolicy")(f)
+	return trace.ServerEndpoint("TrafficEncryptionPolicyV1:AutoUpdateTrafficEncryptionPolicy")(f)
 }
 
 // AutoWatchTrafficEncryptionPolicy is the watch handler for TrafficEncryptionPolicy on the server side.

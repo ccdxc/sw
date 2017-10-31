@@ -16,12 +16,11 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -165,7 +164,7 @@ func MakeExportPolicyV1AutoAddExportPolicyEndpoint(s ServiceExportPolicyV1Server
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ExportPolicyV1:AutoAddExportPolicy")(f)
+	return trace.ServerEndpoint("ExportPolicyV1:AutoAddExportPolicy")(f)
 }
 
 // AutoDeleteExportPolicy implementation on server Endpoint
@@ -187,7 +186,7 @@ func MakeExportPolicyV1AutoDeleteExportPolicyEndpoint(s ServiceExportPolicyV1Ser
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ExportPolicyV1:AutoDeleteExportPolicy")(f)
+	return trace.ServerEndpoint("ExportPolicyV1:AutoDeleteExportPolicy")(f)
 }
 
 // AutoGetExportPolicy implementation on server Endpoint
@@ -209,7 +208,7 @@ func MakeExportPolicyV1AutoGetExportPolicyEndpoint(s ServiceExportPolicyV1Server
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ExportPolicyV1:AutoGetExportPolicy")(f)
+	return trace.ServerEndpoint("ExportPolicyV1:AutoGetExportPolicy")(f)
 }
 
 // AutoListExportPolicy implementation on server Endpoint
@@ -231,7 +230,7 @@ func MakeExportPolicyV1AutoListExportPolicyEndpoint(s ServiceExportPolicyV1Serve
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ExportPolicyV1:AutoListExportPolicy")(f)
+	return trace.ServerEndpoint("ExportPolicyV1:AutoListExportPolicy")(f)
 }
 
 // AutoUpdateExportPolicy implementation on server Endpoint
@@ -253,7 +252,7 @@ func MakeExportPolicyV1AutoUpdateExportPolicyEndpoint(s ServiceExportPolicyV1Ser
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ExportPolicyV1:AutoUpdateExportPolicy")(f)
+	return trace.ServerEndpoint("ExportPolicyV1:AutoUpdateExportPolicy")(f)
 }
 
 // AutoWatchExportPolicy is the watch handler for ExportPolicy on the server side.

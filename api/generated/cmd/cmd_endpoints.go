@@ -16,12 +16,11 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -349,7 +348,7 @@ func MakeCmdV1AutoAddClusterEndpoint(s ServiceCmdV1Server, logger log.Logger) en
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoAddCluster")(f)
+	return trace.ServerEndpoint("CmdV1:AutoAddCluster")(f)
 }
 
 // AutoAddNode implementation on server Endpoint
@@ -371,7 +370,7 @@ func MakeCmdV1AutoAddNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endpo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoAddNode")(f)
+	return trace.ServerEndpoint("CmdV1:AutoAddNode")(f)
 }
 
 // AutoAddSmartNIC implementation on server Endpoint
@@ -393,7 +392,7 @@ func MakeCmdV1AutoAddSmartNICEndpoint(s ServiceCmdV1Server, logger log.Logger) e
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoAddSmartNIC")(f)
+	return trace.ServerEndpoint("CmdV1:AutoAddSmartNIC")(f)
 }
 
 // AutoDeleteCluster implementation on server Endpoint
@@ -415,7 +414,7 @@ func MakeCmdV1AutoDeleteClusterEndpoint(s ServiceCmdV1Server, logger log.Logger)
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoDeleteCluster")(f)
+	return trace.ServerEndpoint("CmdV1:AutoDeleteCluster")(f)
 }
 
 // AutoDeleteNode implementation on server Endpoint
@@ -437,7 +436,7 @@ func MakeCmdV1AutoDeleteNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) en
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoDeleteNode")(f)
+	return trace.ServerEndpoint("CmdV1:AutoDeleteNode")(f)
 }
 
 // AutoDeleteSmartNIC implementation on server Endpoint
@@ -459,7 +458,7 @@ func MakeCmdV1AutoDeleteSmartNICEndpoint(s ServiceCmdV1Server, logger log.Logger
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoDeleteSmartNIC")(f)
+	return trace.ServerEndpoint("CmdV1:AutoDeleteSmartNIC")(f)
 }
 
 // AutoGetCluster implementation on server Endpoint
@@ -481,7 +480,7 @@ func MakeCmdV1AutoGetClusterEndpoint(s ServiceCmdV1Server, logger log.Logger) en
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoGetCluster")(f)
+	return trace.ServerEndpoint("CmdV1:AutoGetCluster")(f)
 }
 
 // AutoGetNode implementation on server Endpoint
@@ -503,7 +502,7 @@ func MakeCmdV1AutoGetNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endpo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoGetNode")(f)
+	return trace.ServerEndpoint("CmdV1:AutoGetNode")(f)
 }
 
 // AutoGetSmartNIC implementation on server Endpoint
@@ -525,7 +524,7 @@ func MakeCmdV1AutoGetSmartNICEndpoint(s ServiceCmdV1Server, logger log.Logger) e
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoGetSmartNIC")(f)
+	return trace.ServerEndpoint("CmdV1:AutoGetSmartNIC")(f)
 }
 
 // AutoListCluster implementation on server Endpoint
@@ -547,7 +546,7 @@ func MakeCmdV1AutoListClusterEndpoint(s ServiceCmdV1Server, logger log.Logger) e
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoListCluster")(f)
+	return trace.ServerEndpoint("CmdV1:AutoListCluster")(f)
 }
 
 // AutoListNode implementation on server Endpoint
@@ -569,7 +568,7 @@ func MakeCmdV1AutoListNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) endp
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoListNode")(f)
+	return trace.ServerEndpoint("CmdV1:AutoListNode")(f)
 }
 
 // AutoListSmartNIC implementation on server Endpoint
@@ -591,7 +590,7 @@ func MakeCmdV1AutoListSmartNICEndpoint(s ServiceCmdV1Server, logger log.Logger) 
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoListSmartNIC")(f)
+	return trace.ServerEndpoint("CmdV1:AutoListSmartNIC")(f)
 }
 
 // AutoUpdateCluster implementation on server Endpoint
@@ -613,7 +612,7 @@ func MakeCmdV1AutoUpdateClusterEndpoint(s ServiceCmdV1Server, logger log.Logger)
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoUpdateCluster")(f)
+	return trace.ServerEndpoint("CmdV1:AutoUpdateCluster")(f)
 }
 
 // AutoUpdateNode implementation on server Endpoint
@@ -635,7 +634,7 @@ func MakeCmdV1AutoUpdateNodeEndpoint(s ServiceCmdV1Server, logger log.Logger) en
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoUpdateNode")(f)
+	return trace.ServerEndpoint("CmdV1:AutoUpdateNode")(f)
 }
 
 // AutoUpdateSmartNIC implementation on server Endpoint
@@ -657,7 +656,7 @@ func MakeCmdV1AutoUpdateSmartNICEndpoint(s ServiceCmdV1Server, logger log.Logger
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CmdV1:AutoUpdateSmartNIC")(f)
+	return trace.ServerEndpoint("CmdV1:AutoUpdateSmartNIC")(f)
 }
 
 // AutoWatchCluster is the watch handler for Cluster on the server side.

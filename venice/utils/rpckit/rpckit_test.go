@@ -22,12 +22,16 @@ import (
 	. "github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/trace"
+
+	zipkin "github.com/openzipkin/zipkin-go-opentracing"
+	"github.com/openzipkin/zipkin-go-opentracing/_thrift/gen-go/zipkincore"
 )
 
 // newRPCServerClient create an RPC server and client
 func newRPCServerClient(t *testing.T, instance int) (*RPCServer, *RPCClient) {
 	// create an RPC server
-	rpcServer, err := NewRPCServer(fmt.Sprintf("testServer-%v", instance), "localhost:0", WithTracerEnabled(true))
+	rpcServer, err := NewRPCServer(fmt.Sprintf("testServer-%v", instance), "localhost:0", WithTracerEnabled(true), WithDeferredStart(false))
 	if err != nil {
 		t.Fatalf("Failed to create listener, error: %v", err)
 	}
@@ -469,4 +473,63 @@ func TestRPCBalancing(t *testing.T) {
 	if respMap["t1"] != 50 || respMap["t2"] != 50 {
 		t.Fatalf("Load balancing of RPCs failed, got %v and %v", respMap["t1"], respMap["t2"])
 	}
+}
+
+// DummyCollector implements Collector but performs no work.
+type DummyCollector struct {
+	AnnotationsSeen map[string]interface{}
+}
+
+// Collect implements Collector.
+func (c *DummyCollector) Collect(s *zipkincore.Span) error {
+	for _, a := range s.Annotations {
+		if a != nil {
+			c.AnnotationsSeen[a.Value] = nil
+		}
+	}
+	return nil
+}
+
+// Close implements Collector.
+func (c *DummyCollector) Close() error { return nil }
+
+// test tracing middleware
+func TestRPCTraceMiddlewares(t *testing.T) {
+	collector := &DummyCollector{
+		AnnotationsSeen: make(map[string]interface{}),
+	}
+	recorder := zipkin.NewRecorder(collector, true, "", t.Name(), zipkin.WithJSONMaterializer())
+	tracer, err := zipkin.NewTracer(recorder, zipkin.ClientServerSameSpan(false), zipkin.TraceID128Bit(true))
+	trace.SetGlobalTracer(tracer)
+
+	// create an rpc handler object
+	testHandler := NewTestRPCHandler("dummy message", "test response")
+
+	// create an RPC server
+	rpcServer, err := NewRPCServer("testServer-trace", ":0", WithTracerEnabled(true))
+	AssertOk(t, err, "Error creating RPC server")
+
+	// create an RPC client
+	rpcClient, err := NewRPCClient("testClient-trace", rpcServer.GetListenURL(), WithTracerEnabled(true))
+	AssertOk(t, err, "Error creating RPC client")
+
+	// close client connection and stop the server
+	defer stopRPCServerClient(rpcServer, rpcClient)
+
+	// register the handlers
+	RegisterTestServer(rpcServer.GrpcServer, testHandler)
+	testClient := NewTestClient(rpcClient.ClientConn)
+
+	// make an RPC call
+	_, err = testClient.TestRPC(context.Background(), &TestReq{ReqMsg: "test request"})
+	AssertOk(t, err, "RPC error")
+
+	_, ok := collector.AnnotationsSeen["{\"gRPC request sent\":\"reqMsg:\\\"test request\\\" \"}"]
+	Assert(t, ok, "RPC request sent not found in annotations")
+	_, ok = collector.AnnotationsSeen["{\"gRPC request received\":\"reqMsg:\\\"test request\\\" \"}"]
+	Assert(t, ok, "RPC request received not found in annotations")
+	_, ok = collector.AnnotationsSeen["{\"gRPC response sent\":\"respMsg:\\\"test response\\\" \"}"]
+	Assert(t, ok, "RPC response sent not found in annotations")
+	_, ok = collector.AnnotationsSeen["{\"gRPC response received\":\"respMsg:\\\"test response\\\" \"}"]
+	Assert(t, ok, "RPC response received not found in annotations")
 }

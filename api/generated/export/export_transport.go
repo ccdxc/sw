@@ -11,13 +11,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	oldcontext "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -45,35 +44,35 @@ func MakeGRPCServerExportPolicyV1(ctx context.Context, endpoints EndpointsExport
 			endpoints.AutoAddExportPolicyEndpoint,
 			DecodeGrpcReqExportPolicy,
 			EncodeGrpcRespExportPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddExportPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddExportPolicy", logger)))...,
 		),
 
 		AutoDeleteExportPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteExportPolicyEndpoint,
 			DecodeGrpcReqExportPolicy,
 			EncodeGrpcRespExportPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteExportPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteExportPolicy", logger)))...,
 		),
 
 		AutoGetExportPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetExportPolicyEndpoint,
 			DecodeGrpcReqExportPolicy,
 			EncodeGrpcRespExportPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetExportPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetExportPolicy", logger)))...,
 		),
 
 		AutoListExportPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListExportPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespExportPolicyList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListExportPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListExportPolicy", logger)))...,
 		),
 
 		AutoUpdateExportPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateExportPolicyEndpoint,
 			DecodeGrpcReqExportPolicy,
 			EncodeGrpcRespExportPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateExportPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateExportPolicy", logger)))...,
 		),
 	}
 }

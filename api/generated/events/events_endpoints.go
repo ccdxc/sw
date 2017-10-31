@@ -16,12 +16,11 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -165,7 +164,7 @@ func MakeEventPolicyV1AutoAddEventPolicyEndpoint(s ServiceEventPolicyV1Server, l
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EventPolicyV1:AutoAddEventPolicy")(f)
+	return trace.ServerEndpoint("EventPolicyV1:AutoAddEventPolicy")(f)
 }
 
 // AutoDeleteEventPolicy implementation on server Endpoint
@@ -187,7 +186,7 @@ func MakeEventPolicyV1AutoDeleteEventPolicyEndpoint(s ServiceEventPolicyV1Server
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EventPolicyV1:AutoDeleteEventPolicy")(f)
+	return trace.ServerEndpoint("EventPolicyV1:AutoDeleteEventPolicy")(f)
 }
 
 // AutoGetEventPolicy implementation on server Endpoint
@@ -209,7 +208,7 @@ func MakeEventPolicyV1AutoGetEventPolicyEndpoint(s ServiceEventPolicyV1Server, l
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EventPolicyV1:AutoGetEventPolicy")(f)
+	return trace.ServerEndpoint("EventPolicyV1:AutoGetEventPolicy")(f)
 }
 
 // AutoListEventPolicy implementation on server Endpoint
@@ -231,7 +230,7 @@ func MakeEventPolicyV1AutoListEventPolicyEndpoint(s ServiceEventPolicyV1Server, 
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EventPolicyV1:AutoListEventPolicy")(f)
+	return trace.ServerEndpoint("EventPolicyV1:AutoListEventPolicy")(f)
 }
 
 // AutoUpdateEventPolicy implementation on server Endpoint
@@ -253,7 +252,7 @@ func MakeEventPolicyV1AutoUpdateEventPolicyEndpoint(s ServiceEventPolicyV1Server
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EventPolicyV1:AutoUpdateEventPolicy")(f)
+	return trace.ServerEndpoint("EventPolicyV1:AutoUpdateEventPolicy")(f)
 }
 
 // AutoWatchEventPolicy is the watch handler for EventPolicy on the server side.
@@ -739,7 +738,7 @@ func MakeEventV1AutoAddEventEndpoint(s ServiceEventV1Server, logger log.Logger) 
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EventV1:AutoAddEvent")(f)
+	return trace.ServerEndpoint("EventV1:AutoAddEvent")(f)
 }
 
 // AutoDeleteEvent implementation on server Endpoint
@@ -761,7 +760,7 @@ func MakeEventV1AutoDeleteEventEndpoint(s ServiceEventV1Server, logger log.Logge
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EventV1:AutoDeleteEvent")(f)
+	return trace.ServerEndpoint("EventV1:AutoDeleteEvent")(f)
 }
 
 // AutoGetEvent implementation on server Endpoint
@@ -783,7 +782,7 @@ func MakeEventV1AutoGetEventEndpoint(s ServiceEventV1Server, logger log.Logger) 
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EventV1:AutoGetEvent")(f)
+	return trace.ServerEndpoint("EventV1:AutoGetEvent")(f)
 }
 
 // AutoListEvent implementation on server Endpoint
@@ -805,7 +804,7 @@ func MakeEventV1AutoListEventEndpoint(s ServiceEventV1Server, logger log.Logger)
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EventV1:AutoListEvent")(f)
+	return trace.ServerEndpoint("EventV1:AutoListEvent")(f)
 }
 
 // AutoUpdateEvent implementation on server Endpoint
@@ -827,7 +826,7 @@ func MakeEventV1AutoUpdateEventEndpoint(s ServiceEventV1Server, logger log.Logge
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EventV1:AutoUpdateEvent")(f)
+	return trace.ServerEndpoint("EventV1:AutoUpdateEvent")(f)
 }
 
 // AutoWatchEvent is the watch handler for Event on the server side.

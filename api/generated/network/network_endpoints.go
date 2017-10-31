@@ -16,12 +16,11 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -165,7 +164,7 @@ func MakeEndpointV1AutoAddEndpointEndpoint(s ServiceEndpointV1Server, logger log
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoAddEndpoint")(f)
+	return trace.ServerEndpoint("EndpointV1:AutoAddEndpoint")(f)
 }
 
 // AutoDeleteEndpoint implementation on server Endpoint
@@ -187,7 +186,7 @@ func MakeEndpointV1AutoDeleteEndpointEndpoint(s ServiceEndpointV1Server, logger 
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoDeleteEndpoint")(f)
+	return trace.ServerEndpoint("EndpointV1:AutoDeleteEndpoint")(f)
 }
 
 // AutoGetEndpoint implementation on server Endpoint
@@ -209,7 +208,7 @@ func MakeEndpointV1AutoGetEndpointEndpoint(s ServiceEndpointV1Server, logger log
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoGetEndpoint")(f)
+	return trace.ServerEndpoint("EndpointV1:AutoGetEndpoint")(f)
 }
 
 // AutoListEndpoint implementation on server Endpoint
@@ -231,7 +230,7 @@ func MakeEndpointV1AutoListEndpointEndpoint(s ServiceEndpointV1Server, logger lo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoListEndpoint")(f)
+	return trace.ServerEndpoint("EndpointV1:AutoListEndpoint")(f)
 }
 
 // AutoUpdateEndpoint implementation on server Endpoint
@@ -253,7 +252,7 @@ func MakeEndpointV1AutoUpdateEndpointEndpoint(s ServiceEndpointV1Server, logger 
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "EndpointV1:AutoUpdateEndpoint")(f)
+	return trace.ServerEndpoint("EndpointV1:AutoUpdateEndpoint")(f)
 }
 
 // AutoWatchEndpoint is the watch handler for Endpoint on the server side.
@@ -757,7 +756,7 @@ func MakeLbPolicyV1AutoAddLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoAddLbPolicy")(f)
+	return trace.ServerEndpoint("LbPolicyV1:AutoAddLbPolicy")(f)
 }
 
 // AutoDeleteLbPolicy implementation on server Endpoint
@@ -779,7 +778,7 @@ func MakeLbPolicyV1AutoDeleteLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger 
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoDeleteLbPolicy")(f)
+	return trace.ServerEndpoint("LbPolicyV1:AutoDeleteLbPolicy")(f)
 }
 
 // AutoGetLbPolicy implementation on server Endpoint
@@ -801,7 +800,7 @@ func MakeLbPolicyV1AutoGetLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger log
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoGetLbPolicy")(f)
+	return trace.ServerEndpoint("LbPolicyV1:AutoGetLbPolicy")(f)
 }
 
 // AutoListLbPolicy implementation on server Endpoint
@@ -823,7 +822,7 @@ func MakeLbPolicyV1AutoListLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger lo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoListLbPolicy")(f)
+	return trace.ServerEndpoint("LbPolicyV1:AutoListLbPolicy")(f)
 }
 
 // AutoUpdateLbPolicy implementation on server Endpoint
@@ -845,7 +844,7 @@ func MakeLbPolicyV1AutoUpdateLbPolicyEndpoint(s ServiceLbPolicyV1Server, logger 
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoUpdateLbPolicy")(f)
+	return trace.ServerEndpoint("LbPolicyV1:AutoUpdateLbPolicy")(f)
 }
 
 // AutoWatchLbPolicy is the watch handler for LbPolicy on the server side.
@@ -1349,7 +1348,7 @@ func MakeNetworkV1AutoAddNetworkEndpoint(s ServiceNetworkV1Server, logger log.Lo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "NetworkV1:AutoAddNetwork")(f)
+	return trace.ServerEndpoint("NetworkV1:AutoAddNetwork")(f)
 }
 
 // AutoDeleteNetwork implementation on server Endpoint
@@ -1371,7 +1370,7 @@ func MakeNetworkV1AutoDeleteNetworkEndpoint(s ServiceNetworkV1Server, logger log
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "NetworkV1:AutoDeleteNetwork")(f)
+	return trace.ServerEndpoint("NetworkV1:AutoDeleteNetwork")(f)
 }
 
 // AutoGetNetwork implementation on server Endpoint
@@ -1393,7 +1392,7 @@ func MakeNetworkV1AutoGetNetworkEndpoint(s ServiceNetworkV1Server, logger log.Lo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "NetworkV1:AutoGetNetwork")(f)
+	return trace.ServerEndpoint("NetworkV1:AutoGetNetwork")(f)
 }
 
 // AutoListNetwork implementation on server Endpoint
@@ -1415,7 +1414,7 @@ func MakeNetworkV1AutoListNetworkEndpoint(s ServiceNetworkV1Server, logger log.L
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "NetworkV1:AutoListNetwork")(f)
+	return trace.ServerEndpoint("NetworkV1:AutoListNetwork")(f)
 }
 
 // AutoUpdateNetwork implementation on server Endpoint
@@ -1437,7 +1436,7 @@ func MakeNetworkV1AutoUpdateNetworkEndpoint(s ServiceNetworkV1Server, logger log
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "NetworkV1:AutoUpdateNetwork")(f)
+	return trace.ServerEndpoint("NetworkV1:AutoUpdateNetwork")(f)
 }
 
 // AutoWatchNetwork is the watch handler for Network on the server side.
@@ -1941,7 +1940,7 @@ func MakeSecurityGroupV1AutoAddSecurityGroupEndpoint(s ServiceSecurityGroupV1Ser
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoAddSecurityGroup")(f)
+	return trace.ServerEndpoint("SecurityGroupV1:AutoAddSecurityGroup")(f)
 }
 
 // AutoDeleteSecurityGroup implementation on server Endpoint
@@ -1963,7 +1962,7 @@ func MakeSecurityGroupV1AutoDeleteSecurityGroupEndpoint(s ServiceSecurityGroupV1
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoDeleteSecurityGroup")(f)
+	return trace.ServerEndpoint("SecurityGroupV1:AutoDeleteSecurityGroup")(f)
 }
 
 // AutoGetSecurityGroup implementation on server Endpoint
@@ -1985,7 +1984,7 @@ func MakeSecurityGroupV1AutoGetSecurityGroupEndpoint(s ServiceSecurityGroupV1Ser
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoGetSecurityGroup")(f)
+	return trace.ServerEndpoint("SecurityGroupV1:AutoGetSecurityGroup")(f)
 }
 
 // AutoListSecurityGroup implementation on server Endpoint
@@ -2007,7 +2006,7 @@ func MakeSecurityGroupV1AutoListSecurityGroupEndpoint(s ServiceSecurityGroupV1Se
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoListSecurityGroup")(f)
+	return trace.ServerEndpoint("SecurityGroupV1:AutoListSecurityGroup")(f)
 }
 
 // AutoUpdateSecurityGroup implementation on server Endpoint
@@ -2029,7 +2028,7 @@ func MakeSecurityGroupV1AutoUpdateSecurityGroupEndpoint(s ServiceSecurityGroupV1
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoUpdateSecurityGroup")(f)
+	return trace.ServerEndpoint("SecurityGroupV1:AutoUpdateSecurityGroup")(f)
 }
 
 // AutoWatchSecurityGroup is the watch handler for SecurityGroup on the server side.
@@ -2533,7 +2532,7 @@ func MakeServiceV1AutoAddServiceEndpoint(s ServiceServiceV1Server, logger log.Lo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ServiceV1:AutoAddService")(f)
+	return trace.ServerEndpoint("ServiceV1:AutoAddService")(f)
 }
 
 // AutoDeleteService implementation on server Endpoint
@@ -2555,7 +2554,7 @@ func MakeServiceV1AutoDeleteServiceEndpoint(s ServiceServiceV1Server, logger log
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ServiceV1:AutoDeleteService")(f)
+	return trace.ServerEndpoint("ServiceV1:AutoDeleteService")(f)
 }
 
 // AutoGetService implementation on server Endpoint
@@ -2577,7 +2576,7 @@ func MakeServiceV1AutoGetServiceEndpoint(s ServiceServiceV1Server, logger log.Lo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ServiceV1:AutoGetService")(f)
+	return trace.ServerEndpoint("ServiceV1:AutoGetService")(f)
 }
 
 // AutoListService implementation on server Endpoint
@@ -2599,7 +2598,7 @@ func MakeServiceV1AutoListServiceEndpoint(s ServiceServiceV1Server, logger log.L
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ServiceV1:AutoListService")(f)
+	return trace.ServerEndpoint("ServiceV1:AutoListService")(f)
 }
 
 // AutoUpdateService implementation on server Endpoint
@@ -2621,7 +2620,7 @@ func MakeServiceV1AutoUpdateServiceEndpoint(s ServiceServiceV1Server, logger log
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "ServiceV1:AutoUpdateService")(f)
+	return trace.ServerEndpoint("ServiceV1:AutoUpdateService")(f)
 }
 
 // AutoWatchService is the watch handler for Service on the server side.
@@ -3125,7 +3124,7 @@ func MakeSgpolicyV1AutoAddSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoAddSgpolicy")(f)
+	return trace.ServerEndpoint("SgpolicyV1:AutoAddSgpolicy")(f)
 }
 
 // AutoDeleteSgpolicy implementation on server Endpoint
@@ -3147,7 +3146,7 @@ func MakeSgpolicyV1AutoDeleteSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger 
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoDeleteSgpolicy")(f)
+	return trace.ServerEndpoint("SgpolicyV1:AutoDeleteSgpolicy")(f)
 }
 
 // AutoGetSgpolicy implementation on server Endpoint
@@ -3169,7 +3168,7 @@ func MakeSgpolicyV1AutoGetSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger log
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoGetSgpolicy")(f)
+	return trace.ServerEndpoint("SgpolicyV1:AutoGetSgpolicy")(f)
 }
 
 // AutoListSgpolicy implementation on server Endpoint
@@ -3191,7 +3190,7 @@ func MakeSgpolicyV1AutoListSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger lo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoListSgpolicy")(f)
+	return trace.ServerEndpoint("SgpolicyV1:AutoListSgpolicy")(f)
 }
 
 // AutoUpdateSgpolicy implementation on server Endpoint
@@ -3213,7 +3212,7 @@ func MakeSgpolicyV1AutoUpdateSgpolicyEndpoint(s ServiceSgpolicyV1Server, logger 
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoUpdateSgpolicy")(f)
+	return trace.ServerEndpoint("SgpolicyV1:AutoUpdateSgpolicy")(f)
 }
 
 // AutoWatchSgpolicy is the watch handler for Sgpolicy on the server side.
@@ -3717,7 +3716,7 @@ func MakeTenantV1AutoAddTenantEndpoint(s ServiceTenantV1Server, logger log.Logge
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoAddTenant")(f)
+	return trace.ServerEndpoint("TenantV1:AutoAddTenant")(f)
 }
 
 // AutoDeleteTenant implementation on server Endpoint
@@ -3739,7 +3738,7 @@ func MakeTenantV1AutoDeleteTenantEndpoint(s ServiceTenantV1Server, logger log.Lo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoDeleteTenant")(f)
+	return trace.ServerEndpoint("TenantV1:AutoDeleteTenant")(f)
 }
 
 // AutoGetTenant implementation on server Endpoint
@@ -3761,7 +3760,7 @@ func MakeTenantV1AutoGetTenantEndpoint(s ServiceTenantV1Server, logger log.Logge
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoGetTenant")(f)
+	return trace.ServerEndpoint("TenantV1:AutoGetTenant")(f)
 }
 
 // AutoListTenant implementation on server Endpoint
@@ -3783,7 +3782,7 @@ func MakeTenantV1AutoListTenantEndpoint(s ServiceTenantV1Server, logger log.Logg
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoListTenant")(f)
+	return trace.ServerEndpoint("TenantV1:AutoListTenant")(f)
 }
 
 // AutoUpdateTenant implementation on server Endpoint
@@ -3805,7 +3804,7 @@ func MakeTenantV1AutoUpdateTenantEndpoint(s ServiceTenantV1Server, logger log.Lo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "TenantV1:AutoUpdateTenant")(f)
+	return trace.ServerEndpoint("TenantV1:AutoUpdateTenant")(f)
 }
 
 // AutoWatchTenant is the watch handler for Tenant on the server side.

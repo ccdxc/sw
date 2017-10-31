@@ -16,12 +16,11 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -349,7 +348,7 @@ func MakeBookstoreV1AutoAddBookEndpoint(s ServiceBookstoreV1Server, logger log.L
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoAddBook")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoAddBook")(f)
 }
 
 // AutoAddOrder implementation on server Endpoint
@@ -371,7 +370,7 @@ func MakeBookstoreV1AutoAddOrderEndpoint(s ServiceBookstoreV1Server, logger log.
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoAddOrder")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoAddOrder")(f)
 }
 
 // AutoAddPublisher implementation on server Endpoint
@@ -393,7 +392,7 @@ func MakeBookstoreV1AutoAddPublisherEndpoint(s ServiceBookstoreV1Server, logger 
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoAddPublisher")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoAddPublisher")(f)
 }
 
 // AutoDeleteBook implementation on server Endpoint
@@ -415,7 +414,7 @@ func MakeBookstoreV1AutoDeleteBookEndpoint(s ServiceBookstoreV1Server, logger lo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoDeleteBook")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoDeleteBook")(f)
 }
 
 // AutoDeleteOrder implementation on server Endpoint
@@ -437,7 +436,7 @@ func MakeBookstoreV1AutoDeleteOrderEndpoint(s ServiceBookstoreV1Server, logger l
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoDeleteOrder")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoDeleteOrder")(f)
 }
 
 // AutoDeletePublisher implementation on server Endpoint
@@ -459,7 +458,7 @@ func MakeBookstoreV1AutoDeletePublisherEndpoint(s ServiceBookstoreV1Server, logg
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoDeletePublisher")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoDeletePublisher")(f)
 }
 
 // AutoGetBook implementation on server Endpoint
@@ -481,7 +480,7 @@ func MakeBookstoreV1AutoGetBookEndpoint(s ServiceBookstoreV1Server, logger log.L
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoGetBook")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoGetBook")(f)
 }
 
 // AutoGetOrder implementation on server Endpoint
@@ -503,7 +502,7 @@ func MakeBookstoreV1AutoGetOrderEndpoint(s ServiceBookstoreV1Server, logger log.
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoGetOrder")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoGetOrder")(f)
 }
 
 // AutoGetPublisher implementation on server Endpoint
@@ -525,7 +524,7 @@ func MakeBookstoreV1AutoGetPublisherEndpoint(s ServiceBookstoreV1Server, logger 
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoGetPublisher")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoGetPublisher")(f)
 }
 
 // AutoListBook implementation on server Endpoint
@@ -547,7 +546,7 @@ func MakeBookstoreV1AutoListBookEndpoint(s ServiceBookstoreV1Server, logger log.
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoListBook")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoListBook")(f)
 }
 
 // AutoListOrder implementation on server Endpoint
@@ -569,7 +568,7 @@ func MakeBookstoreV1AutoListOrderEndpoint(s ServiceBookstoreV1Server, logger log
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoListOrder")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoListOrder")(f)
 }
 
 // AutoListPublisher implementation on server Endpoint
@@ -591,7 +590,7 @@ func MakeBookstoreV1AutoListPublisherEndpoint(s ServiceBookstoreV1Server, logger
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoListPublisher")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoListPublisher")(f)
 }
 
 // AutoUpdateBook implementation on server Endpoint
@@ -613,7 +612,7 @@ func MakeBookstoreV1AutoUpdateBookEndpoint(s ServiceBookstoreV1Server, logger lo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoUpdateBook")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoUpdateBook")(f)
 }
 
 // AutoUpdateOrder implementation on server Endpoint
@@ -635,7 +634,7 @@ func MakeBookstoreV1AutoUpdateOrderEndpoint(s ServiceBookstoreV1Server, logger l
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoUpdateOrder")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoUpdateOrder")(f)
 }
 
 // AutoUpdatePublisher implementation on server Endpoint
@@ -657,7 +656,7 @@ func MakeBookstoreV1AutoUpdatePublisherEndpoint(s ServiceBookstoreV1Server, logg
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "BookstoreV1:AutoUpdatePublisher")(f)
+	return trace.ServerEndpoint("BookstoreV1:AutoUpdatePublisher")(f)
 }
 
 // AutoWatchOrder is the watch handler for Order on the server side.

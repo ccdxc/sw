@@ -13,10 +13,9 @@ import (
 
 	oldcontext "golang.org/x/net/context"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
-	"github.com/go-kit/kit/tracing/opentracing"
 
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 	"github.com/pensando/sw/api"
 )
 
@@ -42,7 +41,7 @@ func MakeGRPCServer{{.Name}}(ctx context.Context, endpoints Endpoints{{.Name}}Se
 			endpoints.{{.Name}}Endpoint,
 			DecodeGrpcReq{{.RequestType.Name}},
 			EncodeGrpcResp{{.ResponseType.Name}},
-            append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "{{.Name}}", logger)))...,
+            append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("{{.Name}}", logger)))...,
 		),
 		{{end}}{{end}}
 	}

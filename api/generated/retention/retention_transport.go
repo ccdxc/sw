@@ -11,13 +11,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	oldcontext "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -45,35 +44,35 @@ func MakeGRPCServerRetentionPolicyV1(ctx context.Context, endpoints EndpointsRet
 			endpoints.AutoAddRetentionPolicyEndpoint,
 			DecodeGrpcReqRetentionPolicy,
 			EncodeGrpcRespRetentionPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddRetentionPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRetentionPolicy", logger)))...,
 		),
 
 		AutoDeleteRetentionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteRetentionPolicyEndpoint,
 			DecodeGrpcReqRetentionPolicy,
 			EncodeGrpcRespRetentionPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteRetentionPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRetentionPolicy", logger)))...,
 		),
 
 		AutoGetRetentionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetRetentionPolicyEndpoint,
 			DecodeGrpcReqRetentionPolicy,
 			EncodeGrpcRespRetentionPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetRetentionPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRetentionPolicy", logger)))...,
 		),
 
 		AutoListRetentionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListRetentionPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespRetentionPolicyList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListRetentionPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRetentionPolicy", logger)))...,
 		),
 
 		AutoUpdateRetentionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateRetentionPolicyEndpoint,
 			DecodeGrpcReqRetentionPolicy,
 			EncodeGrpcRespRetentionPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateRetentionPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRetentionPolicy", logger)))...,
 		),
 	}
 }

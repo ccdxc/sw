@@ -10,11 +10,10 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
-	"github.com/go-kit/kit/tracing/opentracing"
 
 	{{.GoPkg.Name}} "{{.GoPkg.RelPath}}/generated/{{.GoPkg.Name}}"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	api "github.com/pensando/sw/api"
 	apiserver "github.com/pensando/sw/venice/apiserver"
@@ -41,10 +40,10 @@ func New{{$srvname}}(conn *grpc.ClientConn, logger log.Logger) {{$pkgname}}.Serv
 			{{$pkgname}}.EncodeGrpcReq{{.RequestType.Name}},
 			{{$pkgname}}.DecodeGrpcResp{{.ResponseType.Name}},
 			&{{getOutputType $pkgname . true}}{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-        l{{.Name}}Endpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "{{$srvname}}:{{.Name}}")(l{{.Name}}Endpoint)
+        l{{.Name}}Endpoint = trace.ClientEndPoint("{{$srvname}}:{{.Name}}")(l{{.Name}}Endpoint)
 	} {{end}}{{end}}
 	return {{$pkgname}}.Endpoints{{$srvname}}Client{
 		Client: {{$pkgname}}.New{{$srvname}}Client(conn),

@@ -11,13 +11,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	oldcontext "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -45,35 +44,35 @@ func MakeGRPCServerEventPolicyV1(ctx context.Context, endpoints EndpointsEventPo
 			endpoints.AutoAddEventPolicyEndpoint,
 			DecodeGrpcReqEventPolicy,
 			EncodeGrpcRespEventPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddEventPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddEventPolicy", logger)))...,
 		),
 
 		AutoDeleteEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteEventPolicyEndpoint,
 			DecodeGrpcReqEventPolicy,
 			EncodeGrpcRespEventPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteEventPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteEventPolicy", logger)))...,
 		),
 
 		AutoGetEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetEventPolicyEndpoint,
 			DecodeGrpcReqEventPolicy,
 			EncodeGrpcRespEventPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetEventPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetEventPolicy", logger)))...,
 		),
 
 		AutoListEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListEventPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespEventPolicyList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListEventPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListEventPolicy", logger)))...,
 		),
 
 		AutoUpdateEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateEventPolicyEndpoint,
 			DecodeGrpcReqEventPolicy,
 			EncodeGrpcRespEventPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateEventPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateEventPolicy", logger)))...,
 		),
 	}
 }
@@ -194,35 +193,35 @@ func MakeGRPCServerEventV1(ctx context.Context, endpoints EndpointsEventV1Server
 			endpoints.AutoAddEventEndpoint,
 			DecodeGrpcReqEvent,
 			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddEvent", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddEvent", logger)))...,
 		),
 
 		AutoDeleteEventHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteEventEndpoint,
 			DecodeGrpcReqEvent,
 			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteEvent", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteEvent", logger)))...,
 		),
 
 		AutoGetEventHdlr: grpctransport.NewServer(
 			endpoints.AutoGetEventEndpoint,
 			DecodeGrpcReqEvent,
 			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetEvent", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetEvent", logger)))...,
 		),
 
 		AutoListEventHdlr: grpctransport.NewServer(
 			endpoints.AutoListEventEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespEventList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListEvent", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListEvent", logger)))...,
 		),
 
 		AutoUpdateEventHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateEventEndpoint,
 			DecodeGrpcReqEvent,
 			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateEvent", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateEvent", logger)))...,
 		),
 	}
 }

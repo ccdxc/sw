@@ -11,13 +11,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	oldcontext "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -45,35 +44,35 @@ func MakeGRPCServerMonitoringPolicyV1(ctx context.Context, endpoints EndpointsMo
 			endpoints.AutoAddMonitoringPolicyEndpoint,
 			DecodeGrpcReqMonitoringPolicy,
 			EncodeGrpcRespMonitoringPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddMonitoringPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddMonitoringPolicy", logger)))...,
 		),
 
 		AutoDeleteMonitoringPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteMonitoringPolicyEndpoint,
 			DecodeGrpcReqMonitoringPolicy,
 			EncodeGrpcRespMonitoringPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteMonitoringPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteMonitoringPolicy", logger)))...,
 		),
 
 		AutoGetMonitoringPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetMonitoringPolicyEndpoint,
 			DecodeGrpcReqMonitoringPolicy,
 			EncodeGrpcRespMonitoringPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetMonitoringPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetMonitoringPolicy", logger)))...,
 		),
 
 		AutoListMonitoringPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListMonitoringPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespMonitoringPolicyList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListMonitoringPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListMonitoringPolicy", logger)))...,
 		),
 
 		AutoUpdateMonitoringPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateMonitoringPolicyEndpoint,
 			DecodeGrpcReqMonitoringPolicy,
 			EncodeGrpcRespMonitoringPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateMonitoringPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateMonitoringPolicy", logger)))...,
 		),
 	}
 }

@@ -11,13 +11,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	oldcontext "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -55,105 +54,105 @@ func MakeGRPCServerAppV1(ctx context.Context, endpoints EndpointsAppV1Server, lo
 			endpoints.AutoAddAppEndpoint,
 			DecodeGrpcReqApp,
 			EncodeGrpcRespApp,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddApp", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddApp", logger)))...,
 		),
 
 		AutoAddAppUserHdlr: grpctransport.NewServer(
 			endpoints.AutoAddAppUserEndpoint,
 			DecodeGrpcReqAppUser,
 			EncodeGrpcRespAppUser,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddAppUser", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAppUser", logger)))...,
 		),
 
 		AutoAddAppUserGrpHdlr: grpctransport.NewServer(
 			endpoints.AutoAddAppUserGrpEndpoint,
 			DecodeGrpcReqAppUserGrp,
 			EncodeGrpcRespAppUserGrp,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddAppUserGrp", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAppUserGrp", logger)))...,
 		),
 
 		AutoDeleteAppHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteAppEndpoint,
 			DecodeGrpcReqApp,
 			EncodeGrpcRespApp,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteApp", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteApp", logger)))...,
 		),
 
 		AutoDeleteAppUserHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteAppUserEndpoint,
 			DecodeGrpcReqAppUser,
 			EncodeGrpcRespAppUser,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteAppUser", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAppUser", logger)))...,
 		),
 
 		AutoDeleteAppUserGrpHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteAppUserGrpEndpoint,
 			DecodeGrpcReqAppUserGrp,
 			EncodeGrpcRespAppUserGrp,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteAppUserGrp", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAppUserGrp", logger)))...,
 		),
 
 		AutoGetAppHdlr: grpctransport.NewServer(
 			endpoints.AutoGetAppEndpoint,
 			DecodeGrpcReqApp,
 			EncodeGrpcRespApp,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetApp", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetApp", logger)))...,
 		),
 
 		AutoGetAppUserHdlr: grpctransport.NewServer(
 			endpoints.AutoGetAppUserEndpoint,
 			DecodeGrpcReqAppUser,
 			EncodeGrpcRespAppUser,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetAppUser", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAppUser", logger)))...,
 		),
 
 		AutoGetAppUserGrpHdlr: grpctransport.NewServer(
 			endpoints.AutoGetAppUserGrpEndpoint,
 			DecodeGrpcReqAppUserGrp,
 			EncodeGrpcRespAppUserGrp,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetAppUserGrp", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAppUserGrp", logger)))...,
 		),
 
 		AutoListAppHdlr: grpctransport.NewServer(
 			endpoints.AutoListAppEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespAppList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListApp", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListApp", logger)))...,
 		),
 
 		AutoListAppUserHdlr: grpctransport.NewServer(
 			endpoints.AutoListAppUserEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespAppUserList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListAppUser", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAppUser", logger)))...,
 		),
 
 		AutoListAppUserGrpHdlr: grpctransport.NewServer(
 			endpoints.AutoListAppUserGrpEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespAppUserGrpList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListAppUserGrp", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAppUserGrp", logger)))...,
 		),
 
 		AutoUpdateAppHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateAppEndpoint,
 			DecodeGrpcReqApp,
 			EncodeGrpcRespApp,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateApp", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateApp", logger)))...,
 		),
 
 		AutoUpdateAppUserHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateAppUserEndpoint,
 			DecodeGrpcReqAppUser,
 			EncodeGrpcRespAppUser,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateAppUser", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAppUser", logger)))...,
 		),
 
 		AutoUpdateAppUserGrpHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateAppUserGrpEndpoint,
 			DecodeGrpcReqAppUserGrp,
 			EncodeGrpcRespAppUserGrp,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateAppUserGrp", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAppUserGrp", logger)))...,
 		),
 	}
 }

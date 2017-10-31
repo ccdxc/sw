@@ -8,9 +8,7 @@ import (
 	oldlog "log"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	api "github.com/pensando/sw/api"
@@ -19,6 +17,7 @@ import (
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy vars to suppress import errors
@@ -38,10 +37,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqBook,
 			bookstore.DecodeGrpcRespBook,
 			&bookstore.Book{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddBookEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoAddBook")(lAutoAddBookEndpoint)
+		lAutoAddBookEndpoint = trace.ClientEndPoint("BookstoreV1:AutoAddBook")(lAutoAddBookEndpoint)
 	}
 	var lAutoAddOrderEndpoint endpoint.Endpoint
 	{
@@ -52,10 +51,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqOrder,
 			bookstore.DecodeGrpcRespOrder,
 			&bookstore.Order{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddOrderEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoAddOrder")(lAutoAddOrderEndpoint)
+		lAutoAddOrderEndpoint = trace.ClientEndPoint("BookstoreV1:AutoAddOrder")(lAutoAddOrderEndpoint)
 	}
 	var lAutoAddPublisherEndpoint endpoint.Endpoint
 	{
@@ -66,10 +65,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqPublisher,
 			bookstore.DecodeGrpcRespPublisher,
 			&bookstore.Publisher{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddPublisherEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoAddPublisher")(lAutoAddPublisherEndpoint)
+		lAutoAddPublisherEndpoint = trace.ClientEndPoint("BookstoreV1:AutoAddPublisher")(lAutoAddPublisherEndpoint)
 	}
 	var lAutoDeleteBookEndpoint endpoint.Endpoint
 	{
@@ -80,10 +79,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqBook,
 			bookstore.DecodeGrpcRespBook,
 			&bookstore.Book{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteBookEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoDeleteBook")(lAutoDeleteBookEndpoint)
+		lAutoDeleteBookEndpoint = trace.ClientEndPoint("BookstoreV1:AutoDeleteBook")(lAutoDeleteBookEndpoint)
 	}
 	var lAutoDeleteOrderEndpoint endpoint.Endpoint
 	{
@@ -94,10 +93,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqOrder,
 			bookstore.DecodeGrpcRespOrder,
 			&bookstore.Order{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteOrderEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoDeleteOrder")(lAutoDeleteOrderEndpoint)
+		lAutoDeleteOrderEndpoint = trace.ClientEndPoint("BookstoreV1:AutoDeleteOrder")(lAutoDeleteOrderEndpoint)
 	}
 	var lAutoDeletePublisherEndpoint endpoint.Endpoint
 	{
@@ -108,10 +107,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqPublisher,
 			bookstore.DecodeGrpcRespPublisher,
 			&bookstore.Publisher{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeletePublisherEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoDeletePublisher")(lAutoDeletePublisherEndpoint)
+		lAutoDeletePublisherEndpoint = trace.ClientEndPoint("BookstoreV1:AutoDeletePublisher")(lAutoDeletePublisherEndpoint)
 	}
 	var lAutoGetBookEndpoint endpoint.Endpoint
 	{
@@ -122,10 +121,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqBook,
 			bookstore.DecodeGrpcRespBook,
 			&bookstore.Book{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetBookEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoGetBook")(lAutoGetBookEndpoint)
+		lAutoGetBookEndpoint = trace.ClientEndPoint("BookstoreV1:AutoGetBook")(lAutoGetBookEndpoint)
 	}
 	var lAutoGetOrderEndpoint endpoint.Endpoint
 	{
@@ -136,10 +135,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqOrder,
 			bookstore.DecodeGrpcRespOrder,
 			&bookstore.Order{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetOrderEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoGetOrder")(lAutoGetOrderEndpoint)
+		lAutoGetOrderEndpoint = trace.ClientEndPoint("BookstoreV1:AutoGetOrder")(lAutoGetOrderEndpoint)
 	}
 	var lAutoGetPublisherEndpoint endpoint.Endpoint
 	{
@@ -150,10 +149,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqPublisher,
 			bookstore.DecodeGrpcRespPublisher,
 			&bookstore.Publisher{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetPublisherEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoGetPublisher")(lAutoGetPublisherEndpoint)
+		lAutoGetPublisherEndpoint = trace.ClientEndPoint("BookstoreV1:AutoGetPublisher")(lAutoGetPublisherEndpoint)
 	}
 	var lAutoListBookEndpoint endpoint.Endpoint
 	{
@@ -164,10 +163,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqListWatchOptions,
 			bookstore.DecodeGrpcRespBookList,
 			&bookstore.BookList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListBookEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoListBook")(lAutoListBookEndpoint)
+		lAutoListBookEndpoint = trace.ClientEndPoint("BookstoreV1:AutoListBook")(lAutoListBookEndpoint)
 	}
 	var lAutoListOrderEndpoint endpoint.Endpoint
 	{
@@ -178,10 +177,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqListWatchOptions,
 			bookstore.DecodeGrpcRespOrderList,
 			&bookstore.OrderList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListOrderEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoListOrder")(lAutoListOrderEndpoint)
+		lAutoListOrderEndpoint = trace.ClientEndPoint("BookstoreV1:AutoListOrder")(lAutoListOrderEndpoint)
 	}
 	var lAutoListPublisherEndpoint endpoint.Endpoint
 	{
@@ -192,10 +191,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqListWatchOptions,
 			bookstore.DecodeGrpcRespPublisherList,
 			&bookstore.PublisherList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListPublisherEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoListPublisher")(lAutoListPublisherEndpoint)
+		lAutoListPublisherEndpoint = trace.ClientEndPoint("BookstoreV1:AutoListPublisher")(lAutoListPublisherEndpoint)
 	}
 	var lAutoUpdateBookEndpoint endpoint.Endpoint
 	{
@@ -206,10 +205,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqBook,
 			bookstore.DecodeGrpcRespBook,
 			&bookstore.Book{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateBookEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoUpdateBook")(lAutoUpdateBookEndpoint)
+		lAutoUpdateBookEndpoint = trace.ClientEndPoint("BookstoreV1:AutoUpdateBook")(lAutoUpdateBookEndpoint)
 	}
 	var lAutoUpdateOrderEndpoint endpoint.Endpoint
 	{
@@ -220,10 +219,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqOrder,
 			bookstore.DecodeGrpcRespOrder,
 			&bookstore.Order{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateOrderEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoUpdateOrder")(lAutoUpdateOrderEndpoint)
+		lAutoUpdateOrderEndpoint = trace.ClientEndPoint("BookstoreV1:AutoUpdateOrder")(lAutoUpdateOrderEndpoint)
 	}
 	var lAutoUpdatePublisherEndpoint endpoint.Endpoint
 	{
@@ -234,10 +233,10 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 			bookstore.EncodeGrpcReqPublisher,
 			bookstore.DecodeGrpcRespPublisher,
 			&bookstore.Publisher{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdatePublisherEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "BookstoreV1:AutoUpdatePublisher")(lAutoUpdatePublisherEndpoint)
+		lAutoUpdatePublisherEndpoint = trace.ClientEndPoint("BookstoreV1:AutoUpdatePublisher")(lAutoUpdatePublisherEndpoint)
 	}
 	return bookstore.EndpointsBookstoreV1Client{
 		Client: bookstore.NewBookstoreV1Client(conn),

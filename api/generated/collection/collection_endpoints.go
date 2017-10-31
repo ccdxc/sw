@@ -16,12 +16,11 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -165,7 +164,7 @@ func MakeCollectionPolicyV1AutoAddCollectionPolicyEndpoint(s ServiceCollectionPo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CollectionPolicyV1:AutoAddCollectionPolicy")(f)
+	return trace.ServerEndpoint("CollectionPolicyV1:AutoAddCollectionPolicy")(f)
 }
 
 // AutoDeleteCollectionPolicy implementation on server Endpoint
@@ -187,7 +186,7 @@ func MakeCollectionPolicyV1AutoDeleteCollectionPolicyEndpoint(s ServiceCollectio
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CollectionPolicyV1:AutoDeleteCollectionPolicy")(f)
+	return trace.ServerEndpoint("CollectionPolicyV1:AutoDeleteCollectionPolicy")(f)
 }
 
 // AutoGetCollectionPolicy implementation on server Endpoint
@@ -209,7 +208,7 @@ func MakeCollectionPolicyV1AutoGetCollectionPolicyEndpoint(s ServiceCollectionPo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CollectionPolicyV1:AutoGetCollectionPolicy")(f)
+	return trace.ServerEndpoint("CollectionPolicyV1:AutoGetCollectionPolicy")(f)
 }
 
 // AutoListCollectionPolicy implementation on server Endpoint
@@ -231,7 +230,7 @@ func MakeCollectionPolicyV1AutoListCollectionPolicyEndpoint(s ServiceCollectionP
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CollectionPolicyV1:AutoListCollectionPolicy")(f)
+	return trace.ServerEndpoint("CollectionPolicyV1:AutoListCollectionPolicy")(f)
 }
 
 // AutoUpdateCollectionPolicy implementation on server Endpoint
@@ -253,7 +252,7 @@ func MakeCollectionPolicyV1AutoUpdateCollectionPolicyEndpoint(s ServiceCollectio
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "CollectionPolicyV1:AutoUpdateCollectionPolicy")(f)
+	return trace.ServerEndpoint("CollectionPolicyV1:AutoUpdateCollectionPolicy")(f)
 }
 
 // AutoWatchCollectionPolicy is the watch handler for CollectionPolicy on the server side.

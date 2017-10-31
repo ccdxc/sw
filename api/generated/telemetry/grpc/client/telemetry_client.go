@@ -8,9 +8,7 @@ import (
 	oldlog "log"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	api "github.com/pensando/sw/api"
@@ -19,6 +17,7 @@ import (
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy vars to suppress import errors
@@ -38,10 +37,10 @@ func NewMonitoringPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.S
 			telemetry.EncodeGrpcReqMonitoringPolicy,
 			telemetry.DecodeGrpcRespMonitoringPolicy,
 			&telemetry.MonitoringPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddMonitoringPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "MonitoringPolicyV1:AutoAddMonitoringPolicy")(lAutoAddMonitoringPolicyEndpoint)
+		lAutoAddMonitoringPolicyEndpoint = trace.ClientEndPoint("MonitoringPolicyV1:AutoAddMonitoringPolicy")(lAutoAddMonitoringPolicyEndpoint)
 	}
 	var lAutoDeleteMonitoringPolicyEndpoint endpoint.Endpoint
 	{
@@ -52,10 +51,10 @@ func NewMonitoringPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.S
 			telemetry.EncodeGrpcReqMonitoringPolicy,
 			telemetry.DecodeGrpcRespMonitoringPolicy,
 			&telemetry.MonitoringPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteMonitoringPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "MonitoringPolicyV1:AutoDeleteMonitoringPolicy")(lAutoDeleteMonitoringPolicyEndpoint)
+		lAutoDeleteMonitoringPolicyEndpoint = trace.ClientEndPoint("MonitoringPolicyV1:AutoDeleteMonitoringPolicy")(lAutoDeleteMonitoringPolicyEndpoint)
 	}
 	var lAutoGetMonitoringPolicyEndpoint endpoint.Endpoint
 	{
@@ -66,10 +65,10 @@ func NewMonitoringPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.S
 			telemetry.EncodeGrpcReqMonitoringPolicy,
 			telemetry.DecodeGrpcRespMonitoringPolicy,
 			&telemetry.MonitoringPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetMonitoringPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "MonitoringPolicyV1:AutoGetMonitoringPolicy")(lAutoGetMonitoringPolicyEndpoint)
+		lAutoGetMonitoringPolicyEndpoint = trace.ClientEndPoint("MonitoringPolicyV1:AutoGetMonitoringPolicy")(lAutoGetMonitoringPolicyEndpoint)
 	}
 	var lAutoListMonitoringPolicyEndpoint endpoint.Endpoint
 	{
@@ -80,10 +79,10 @@ func NewMonitoringPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.S
 			telemetry.EncodeGrpcReqListWatchOptions,
 			telemetry.DecodeGrpcRespMonitoringPolicyList,
 			&telemetry.MonitoringPolicyList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListMonitoringPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "MonitoringPolicyV1:AutoListMonitoringPolicy")(lAutoListMonitoringPolicyEndpoint)
+		lAutoListMonitoringPolicyEndpoint = trace.ClientEndPoint("MonitoringPolicyV1:AutoListMonitoringPolicy")(lAutoListMonitoringPolicyEndpoint)
 	}
 	var lAutoUpdateMonitoringPolicyEndpoint endpoint.Endpoint
 	{
@@ -94,10 +93,10 @@ func NewMonitoringPolicyV1(conn *grpc.ClientConn, logger log.Logger) telemetry.S
 			telemetry.EncodeGrpcReqMonitoringPolicy,
 			telemetry.DecodeGrpcRespMonitoringPolicy,
 			&telemetry.MonitoringPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateMonitoringPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "MonitoringPolicyV1:AutoUpdateMonitoringPolicy")(lAutoUpdateMonitoringPolicyEndpoint)
+		lAutoUpdateMonitoringPolicyEndpoint = trace.ClientEndPoint("MonitoringPolicyV1:AutoUpdateMonitoringPolicy")(lAutoUpdateMonitoringPolicyEndpoint)
 	}
 	return telemetry.EndpointsMonitoringPolicyV1Client{
 		Client: telemetry.NewMonitoringPolicyV1Client(conn),

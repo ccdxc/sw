@@ -16,12 +16,11 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -165,7 +164,7 @@ func MakeRetentionPolicyV1AutoAddRetentionPolicyEndpoint(s ServiceRetentionPolic
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "RetentionPolicyV1:AutoAddRetentionPolicy")(f)
+	return trace.ServerEndpoint("RetentionPolicyV1:AutoAddRetentionPolicy")(f)
 }
 
 // AutoDeleteRetentionPolicy implementation on server Endpoint
@@ -187,7 +186,7 @@ func MakeRetentionPolicyV1AutoDeleteRetentionPolicyEndpoint(s ServiceRetentionPo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "RetentionPolicyV1:AutoDeleteRetentionPolicy")(f)
+	return trace.ServerEndpoint("RetentionPolicyV1:AutoDeleteRetentionPolicy")(f)
 }
 
 // AutoGetRetentionPolicy implementation on server Endpoint
@@ -209,7 +208,7 @@ func MakeRetentionPolicyV1AutoGetRetentionPolicyEndpoint(s ServiceRetentionPolic
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "RetentionPolicyV1:AutoGetRetentionPolicy")(f)
+	return trace.ServerEndpoint("RetentionPolicyV1:AutoGetRetentionPolicy")(f)
 }
 
 // AutoListRetentionPolicy implementation on server Endpoint
@@ -231,7 +230,7 @@ func MakeRetentionPolicyV1AutoListRetentionPolicyEndpoint(s ServiceRetentionPoli
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "RetentionPolicyV1:AutoListRetentionPolicy")(f)
+	return trace.ServerEndpoint("RetentionPolicyV1:AutoListRetentionPolicy")(f)
 }
 
 // AutoUpdateRetentionPolicy implementation on server Endpoint
@@ -253,7 +252,7 @@ func MakeRetentionPolicyV1AutoUpdateRetentionPolicyEndpoint(s ServiceRetentionPo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "RetentionPolicyV1:AutoUpdateRetentionPolicy")(f)
+	return trace.ServerEndpoint("RetentionPolicyV1:AutoUpdateRetentionPolicy")(f)
 }
 
 // AutoWatchRetentionPolicy is the watch handler for RetentionPolicy on the server side.

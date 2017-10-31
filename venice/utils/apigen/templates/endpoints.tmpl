@@ -15,12 +15,11 @@ import (
 	"fmt"
 	"errors"
 
-	"github.com/go-kit/kit/tracing/opentracing"
-    stdopentracing "github.com/opentracing/opentracing-go"
 	"github.com/go-kit/kit/endpoint"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 	"github.com/pensando/sw/api"
 )
 
@@ -99,7 +98,7 @@ func Make{{$svcname}}{{.Name}}Endpoint(s Service{{$svcname}}Server, logger log.L
 			Err: err,
 		}, nil
 	}
-    return opentracing.TraceServer(stdopentracing.GlobalTracer(), "{{$svcname}}:{{.Name}}")(f) 
+    return trace.ServerEndpoint("{{$svcname}}:{{.Name}}")(f)
 }{{end}}{{end}}
 {{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$prefix := (getExtension "venice.apiPrefix" .)}}{{range $cruds}}
 // AutoWatch{{.}} is the watch handler for {{.}} on the server side.

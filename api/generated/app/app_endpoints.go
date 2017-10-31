@@ -16,12 +16,11 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -349,7 +348,7 @@ func MakeAppV1AutoAddAppEndpoint(s ServiceAppV1Server, logger log.Logger) endpoi
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoAddApp")(f)
+	return trace.ServerEndpoint("AppV1:AutoAddApp")(f)
 }
 
 // AutoAddAppUser implementation on server Endpoint
@@ -371,7 +370,7 @@ func MakeAppV1AutoAddAppUserEndpoint(s ServiceAppV1Server, logger log.Logger) en
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoAddAppUser")(f)
+	return trace.ServerEndpoint("AppV1:AutoAddAppUser")(f)
 }
 
 // AutoAddAppUserGrp implementation on server Endpoint
@@ -393,7 +392,7 @@ func MakeAppV1AutoAddAppUserGrpEndpoint(s ServiceAppV1Server, logger log.Logger)
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoAddAppUserGrp")(f)
+	return trace.ServerEndpoint("AppV1:AutoAddAppUserGrp")(f)
 }
 
 // AutoDeleteApp implementation on server Endpoint
@@ -415,7 +414,7 @@ func MakeAppV1AutoDeleteAppEndpoint(s ServiceAppV1Server, logger log.Logger) end
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoDeleteApp")(f)
+	return trace.ServerEndpoint("AppV1:AutoDeleteApp")(f)
 }
 
 // AutoDeleteAppUser implementation on server Endpoint
@@ -437,7 +436,7 @@ func MakeAppV1AutoDeleteAppUserEndpoint(s ServiceAppV1Server, logger log.Logger)
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoDeleteAppUser")(f)
+	return trace.ServerEndpoint("AppV1:AutoDeleteAppUser")(f)
 }
 
 // AutoDeleteAppUserGrp implementation on server Endpoint
@@ -459,7 +458,7 @@ func MakeAppV1AutoDeleteAppUserGrpEndpoint(s ServiceAppV1Server, logger log.Logg
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoDeleteAppUserGrp")(f)
+	return trace.ServerEndpoint("AppV1:AutoDeleteAppUserGrp")(f)
 }
 
 // AutoGetApp implementation on server Endpoint
@@ -481,7 +480,7 @@ func MakeAppV1AutoGetAppEndpoint(s ServiceAppV1Server, logger log.Logger) endpoi
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoGetApp")(f)
+	return trace.ServerEndpoint("AppV1:AutoGetApp")(f)
 }
 
 // AutoGetAppUser implementation on server Endpoint
@@ -503,7 +502,7 @@ func MakeAppV1AutoGetAppUserEndpoint(s ServiceAppV1Server, logger log.Logger) en
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoGetAppUser")(f)
+	return trace.ServerEndpoint("AppV1:AutoGetAppUser")(f)
 }
 
 // AutoGetAppUserGrp implementation on server Endpoint
@@ -525,7 +524,7 @@ func MakeAppV1AutoGetAppUserGrpEndpoint(s ServiceAppV1Server, logger log.Logger)
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoGetAppUserGrp")(f)
+	return trace.ServerEndpoint("AppV1:AutoGetAppUserGrp")(f)
 }
 
 // AutoListApp implementation on server Endpoint
@@ -547,7 +546,7 @@ func MakeAppV1AutoListAppEndpoint(s ServiceAppV1Server, logger log.Logger) endpo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoListApp")(f)
+	return trace.ServerEndpoint("AppV1:AutoListApp")(f)
 }
 
 // AutoListAppUser implementation on server Endpoint
@@ -569,7 +568,7 @@ func MakeAppV1AutoListAppUserEndpoint(s ServiceAppV1Server, logger log.Logger) e
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoListAppUser")(f)
+	return trace.ServerEndpoint("AppV1:AutoListAppUser")(f)
 }
 
 // AutoListAppUserGrp implementation on server Endpoint
@@ -591,7 +590,7 @@ func MakeAppV1AutoListAppUserGrpEndpoint(s ServiceAppV1Server, logger log.Logger
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoListAppUserGrp")(f)
+	return trace.ServerEndpoint("AppV1:AutoListAppUserGrp")(f)
 }
 
 // AutoUpdateApp implementation on server Endpoint
@@ -613,7 +612,7 @@ func MakeAppV1AutoUpdateAppEndpoint(s ServiceAppV1Server, logger log.Logger) end
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoUpdateApp")(f)
+	return trace.ServerEndpoint("AppV1:AutoUpdateApp")(f)
 }
 
 // AutoUpdateAppUser implementation on server Endpoint
@@ -635,7 +634,7 @@ func MakeAppV1AutoUpdateAppUserEndpoint(s ServiceAppV1Server, logger log.Logger)
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoUpdateAppUser")(f)
+	return trace.ServerEndpoint("AppV1:AutoUpdateAppUser")(f)
 }
 
 // AutoUpdateAppUserGrp implementation on server Endpoint
@@ -657,7 +656,7 @@ func MakeAppV1AutoUpdateAppUserGrpEndpoint(s ServiceAppV1Server, logger log.Logg
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "AppV1:AutoUpdateAppUserGrp")(f)
+	return trace.ServerEndpoint("AppV1:AutoUpdateAppUserGrp")(f)
 }
 
 // AutoWatchApp is the watch handler for App on the server side.

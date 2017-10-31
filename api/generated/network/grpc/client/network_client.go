@@ -8,9 +8,7 @@ import (
 	oldlog "log"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	api "github.com/pensando/sw/api"
@@ -19,6 +17,7 @@ import (
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy vars to suppress import errors
@@ -38,10 +37,10 @@ func NewEndpointV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceEndp
 			network.EncodeGrpcReqEndpoint,
 			network.DecodeGrpcRespEndpoint,
 			&network.Endpoint{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoAddEndpoint")(lAutoAddEndpointEndpoint)
+		lAutoAddEndpointEndpoint = trace.ClientEndPoint("EndpointV1:AutoAddEndpoint")(lAutoAddEndpointEndpoint)
 	}
 	var lAutoDeleteEndpointEndpoint endpoint.Endpoint
 	{
@@ -52,10 +51,10 @@ func NewEndpointV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceEndp
 			network.EncodeGrpcReqEndpoint,
 			network.DecodeGrpcRespEndpoint,
 			&network.Endpoint{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoDeleteEndpoint")(lAutoDeleteEndpointEndpoint)
+		lAutoDeleteEndpointEndpoint = trace.ClientEndPoint("EndpointV1:AutoDeleteEndpoint")(lAutoDeleteEndpointEndpoint)
 	}
 	var lAutoGetEndpointEndpoint endpoint.Endpoint
 	{
@@ -66,10 +65,10 @@ func NewEndpointV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceEndp
 			network.EncodeGrpcReqEndpoint,
 			network.DecodeGrpcRespEndpoint,
 			&network.Endpoint{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoGetEndpoint")(lAutoGetEndpointEndpoint)
+		lAutoGetEndpointEndpoint = trace.ClientEndPoint("EndpointV1:AutoGetEndpoint")(lAutoGetEndpointEndpoint)
 	}
 	var lAutoListEndpointEndpoint endpoint.Endpoint
 	{
@@ -80,10 +79,10 @@ func NewEndpointV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceEndp
 			network.EncodeGrpcReqListWatchOptions,
 			network.DecodeGrpcRespEndpointList,
 			&network.EndpointList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoListEndpoint")(lAutoListEndpointEndpoint)
+		lAutoListEndpointEndpoint = trace.ClientEndPoint("EndpointV1:AutoListEndpoint")(lAutoListEndpointEndpoint)
 	}
 	var lAutoUpdateEndpointEndpoint endpoint.Endpoint
 	{
@@ -94,10 +93,10 @@ func NewEndpointV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceEndp
 			network.EncodeGrpcReqEndpoint,
 			network.DecodeGrpcRespEndpoint,
 			&network.Endpoint{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateEndpointEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "EndpointV1:AutoUpdateEndpoint")(lAutoUpdateEndpointEndpoint)
+		lAutoUpdateEndpointEndpoint = trace.ClientEndPoint("EndpointV1:AutoUpdateEndpoint")(lAutoUpdateEndpointEndpoint)
 	}
 	return network.EndpointsEndpointV1Client{
 		Client: network.NewEndpointV1Client(conn),
@@ -129,10 +128,10 @@ func NewLbPolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceLbPo
 			network.EncodeGrpcReqLbPolicy,
 			network.DecodeGrpcRespLbPolicy,
 			&network.LbPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoAddLbPolicy")(lAutoAddLbPolicyEndpoint)
+		lAutoAddLbPolicyEndpoint = trace.ClientEndPoint("LbPolicyV1:AutoAddLbPolicy")(lAutoAddLbPolicyEndpoint)
 	}
 	var lAutoDeleteLbPolicyEndpoint endpoint.Endpoint
 	{
@@ -143,10 +142,10 @@ func NewLbPolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceLbPo
 			network.EncodeGrpcReqLbPolicy,
 			network.DecodeGrpcRespLbPolicy,
 			&network.LbPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoDeleteLbPolicy")(lAutoDeleteLbPolicyEndpoint)
+		lAutoDeleteLbPolicyEndpoint = trace.ClientEndPoint("LbPolicyV1:AutoDeleteLbPolicy")(lAutoDeleteLbPolicyEndpoint)
 	}
 	var lAutoGetLbPolicyEndpoint endpoint.Endpoint
 	{
@@ -157,10 +156,10 @@ func NewLbPolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceLbPo
 			network.EncodeGrpcReqLbPolicy,
 			network.DecodeGrpcRespLbPolicy,
 			&network.LbPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoGetLbPolicy")(lAutoGetLbPolicyEndpoint)
+		lAutoGetLbPolicyEndpoint = trace.ClientEndPoint("LbPolicyV1:AutoGetLbPolicy")(lAutoGetLbPolicyEndpoint)
 	}
 	var lAutoListLbPolicyEndpoint endpoint.Endpoint
 	{
@@ -171,10 +170,10 @@ func NewLbPolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceLbPo
 			network.EncodeGrpcReqListWatchOptions,
 			network.DecodeGrpcRespLbPolicyList,
 			&network.LbPolicyList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoListLbPolicy")(lAutoListLbPolicyEndpoint)
+		lAutoListLbPolicyEndpoint = trace.ClientEndPoint("LbPolicyV1:AutoListLbPolicy")(lAutoListLbPolicyEndpoint)
 	}
 	var lAutoUpdateLbPolicyEndpoint endpoint.Endpoint
 	{
@@ -185,10 +184,10 @@ func NewLbPolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceLbPo
 			network.EncodeGrpcReqLbPolicy,
 			network.DecodeGrpcRespLbPolicy,
 			&network.LbPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateLbPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "LbPolicyV1:AutoUpdateLbPolicy")(lAutoUpdateLbPolicyEndpoint)
+		lAutoUpdateLbPolicyEndpoint = trace.ClientEndPoint("LbPolicyV1:AutoUpdateLbPolicy")(lAutoUpdateLbPolicyEndpoint)
 	}
 	return network.EndpointsLbPolicyV1Client{
 		Client: network.NewLbPolicyV1Client(conn),
@@ -220,10 +219,10 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 			network.EncodeGrpcReqNetwork,
 			network.DecodeGrpcRespNetwork,
 			&network.Network{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddNetworkEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "NetworkV1:AutoAddNetwork")(lAutoAddNetworkEndpoint)
+		lAutoAddNetworkEndpoint = trace.ClientEndPoint("NetworkV1:AutoAddNetwork")(lAutoAddNetworkEndpoint)
 	}
 	var lAutoDeleteNetworkEndpoint endpoint.Endpoint
 	{
@@ -234,10 +233,10 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 			network.EncodeGrpcReqNetwork,
 			network.DecodeGrpcRespNetwork,
 			&network.Network{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteNetworkEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "NetworkV1:AutoDeleteNetwork")(lAutoDeleteNetworkEndpoint)
+		lAutoDeleteNetworkEndpoint = trace.ClientEndPoint("NetworkV1:AutoDeleteNetwork")(lAutoDeleteNetworkEndpoint)
 	}
 	var lAutoGetNetworkEndpoint endpoint.Endpoint
 	{
@@ -248,10 +247,10 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 			network.EncodeGrpcReqNetwork,
 			network.DecodeGrpcRespNetwork,
 			&network.Network{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetNetworkEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "NetworkV1:AutoGetNetwork")(lAutoGetNetworkEndpoint)
+		lAutoGetNetworkEndpoint = trace.ClientEndPoint("NetworkV1:AutoGetNetwork")(lAutoGetNetworkEndpoint)
 	}
 	var lAutoListNetworkEndpoint endpoint.Endpoint
 	{
@@ -262,10 +261,10 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 			network.EncodeGrpcReqListWatchOptions,
 			network.DecodeGrpcRespNetworkList,
 			&network.NetworkList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListNetworkEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "NetworkV1:AutoListNetwork")(lAutoListNetworkEndpoint)
+		lAutoListNetworkEndpoint = trace.ClientEndPoint("NetworkV1:AutoListNetwork")(lAutoListNetworkEndpoint)
 	}
 	var lAutoUpdateNetworkEndpoint endpoint.Endpoint
 	{
@@ -276,10 +275,10 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 			network.EncodeGrpcReqNetwork,
 			network.DecodeGrpcRespNetwork,
 			&network.Network{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateNetworkEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "NetworkV1:AutoUpdateNetwork")(lAutoUpdateNetworkEndpoint)
+		lAutoUpdateNetworkEndpoint = trace.ClientEndPoint("NetworkV1:AutoUpdateNetwork")(lAutoUpdateNetworkEndpoint)
 	}
 	return network.EndpointsNetworkV1Client{
 		Client: network.NewNetworkV1Client(conn),
@@ -311,10 +310,10 @@ func NewSecurityGroupV1(conn *grpc.ClientConn, logger log.Logger) network.Servic
 			network.EncodeGrpcReqSecurityGroup,
 			network.DecodeGrpcRespSecurityGroup,
 			&network.SecurityGroup{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddSecurityGroupEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoAddSecurityGroup")(lAutoAddSecurityGroupEndpoint)
+		lAutoAddSecurityGroupEndpoint = trace.ClientEndPoint("SecurityGroupV1:AutoAddSecurityGroup")(lAutoAddSecurityGroupEndpoint)
 	}
 	var lAutoDeleteSecurityGroupEndpoint endpoint.Endpoint
 	{
@@ -325,10 +324,10 @@ func NewSecurityGroupV1(conn *grpc.ClientConn, logger log.Logger) network.Servic
 			network.EncodeGrpcReqSecurityGroup,
 			network.DecodeGrpcRespSecurityGroup,
 			&network.SecurityGroup{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteSecurityGroupEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoDeleteSecurityGroup")(lAutoDeleteSecurityGroupEndpoint)
+		lAutoDeleteSecurityGroupEndpoint = trace.ClientEndPoint("SecurityGroupV1:AutoDeleteSecurityGroup")(lAutoDeleteSecurityGroupEndpoint)
 	}
 	var lAutoGetSecurityGroupEndpoint endpoint.Endpoint
 	{
@@ -339,10 +338,10 @@ func NewSecurityGroupV1(conn *grpc.ClientConn, logger log.Logger) network.Servic
 			network.EncodeGrpcReqSecurityGroup,
 			network.DecodeGrpcRespSecurityGroup,
 			&network.SecurityGroup{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetSecurityGroupEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoGetSecurityGroup")(lAutoGetSecurityGroupEndpoint)
+		lAutoGetSecurityGroupEndpoint = trace.ClientEndPoint("SecurityGroupV1:AutoGetSecurityGroup")(lAutoGetSecurityGroupEndpoint)
 	}
 	var lAutoListSecurityGroupEndpoint endpoint.Endpoint
 	{
@@ -353,10 +352,10 @@ func NewSecurityGroupV1(conn *grpc.ClientConn, logger log.Logger) network.Servic
 			network.EncodeGrpcReqListWatchOptions,
 			network.DecodeGrpcRespSecurityGroupList,
 			&network.SecurityGroupList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListSecurityGroupEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoListSecurityGroup")(lAutoListSecurityGroupEndpoint)
+		lAutoListSecurityGroupEndpoint = trace.ClientEndPoint("SecurityGroupV1:AutoListSecurityGroup")(lAutoListSecurityGroupEndpoint)
 	}
 	var lAutoUpdateSecurityGroupEndpoint endpoint.Endpoint
 	{
@@ -367,10 +366,10 @@ func NewSecurityGroupV1(conn *grpc.ClientConn, logger log.Logger) network.Servic
 			network.EncodeGrpcReqSecurityGroup,
 			network.DecodeGrpcRespSecurityGroup,
 			&network.SecurityGroup{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateSecurityGroupEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SecurityGroupV1:AutoUpdateSecurityGroup")(lAutoUpdateSecurityGroupEndpoint)
+		lAutoUpdateSecurityGroupEndpoint = trace.ClientEndPoint("SecurityGroupV1:AutoUpdateSecurityGroup")(lAutoUpdateSecurityGroupEndpoint)
 	}
 	return network.EndpointsSecurityGroupV1Client{
 		Client: network.NewSecurityGroupV1Client(conn),
@@ -402,10 +401,10 @@ func NewServiceV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceServi
 			network.EncodeGrpcReqService,
 			network.DecodeGrpcRespService,
 			&network.Service{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddServiceEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ServiceV1:AutoAddService")(lAutoAddServiceEndpoint)
+		lAutoAddServiceEndpoint = trace.ClientEndPoint("ServiceV1:AutoAddService")(lAutoAddServiceEndpoint)
 	}
 	var lAutoDeleteServiceEndpoint endpoint.Endpoint
 	{
@@ -416,10 +415,10 @@ func NewServiceV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceServi
 			network.EncodeGrpcReqService,
 			network.DecodeGrpcRespService,
 			&network.Service{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteServiceEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ServiceV1:AutoDeleteService")(lAutoDeleteServiceEndpoint)
+		lAutoDeleteServiceEndpoint = trace.ClientEndPoint("ServiceV1:AutoDeleteService")(lAutoDeleteServiceEndpoint)
 	}
 	var lAutoGetServiceEndpoint endpoint.Endpoint
 	{
@@ -430,10 +429,10 @@ func NewServiceV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceServi
 			network.EncodeGrpcReqService,
 			network.DecodeGrpcRespService,
 			&network.Service{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetServiceEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ServiceV1:AutoGetService")(lAutoGetServiceEndpoint)
+		lAutoGetServiceEndpoint = trace.ClientEndPoint("ServiceV1:AutoGetService")(lAutoGetServiceEndpoint)
 	}
 	var lAutoListServiceEndpoint endpoint.Endpoint
 	{
@@ -444,10 +443,10 @@ func NewServiceV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceServi
 			network.EncodeGrpcReqListWatchOptions,
 			network.DecodeGrpcRespServiceList,
 			&network.ServiceList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListServiceEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ServiceV1:AutoListService")(lAutoListServiceEndpoint)
+		lAutoListServiceEndpoint = trace.ClientEndPoint("ServiceV1:AutoListService")(lAutoListServiceEndpoint)
 	}
 	var lAutoUpdateServiceEndpoint endpoint.Endpoint
 	{
@@ -458,10 +457,10 @@ func NewServiceV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceServi
 			network.EncodeGrpcReqService,
 			network.DecodeGrpcRespService,
 			&network.Service{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateServiceEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ServiceV1:AutoUpdateService")(lAutoUpdateServiceEndpoint)
+		lAutoUpdateServiceEndpoint = trace.ClientEndPoint("ServiceV1:AutoUpdateService")(lAutoUpdateServiceEndpoint)
 	}
 	return network.EndpointsServiceV1Client{
 		Client: network.NewServiceV1Client(conn),
@@ -493,10 +492,10 @@ func NewSgpolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceSgpo
 			network.EncodeGrpcReqSgpolicy,
 			network.DecodeGrpcRespSgpolicy,
 			&network.Sgpolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoAddSgpolicy")(lAutoAddSgpolicyEndpoint)
+		lAutoAddSgpolicyEndpoint = trace.ClientEndPoint("SgpolicyV1:AutoAddSgpolicy")(lAutoAddSgpolicyEndpoint)
 	}
 	var lAutoDeleteSgpolicyEndpoint endpoint.Endpoint
 	{
@@ -507,10 +506,10 @@ func NewSgpolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceSgpo
 			network.EncodeGrpcReqSgpolicy,
 			network.DecodeGrpcRespSgpolicy,
 			&network.Sgpolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoDeleteSgpolicy")(lAutoDeleteSgpolicyEndpoint)
+		lAutoDeleteSgpolicyEndpoint = trace.ClientEndPoint("SgpolicyV1:AutoDeleteSgpolicy")(lAutoDeleteSgpolicyEndpoint)
 	}
 	var lAutoGetSgpolicyEndpoint endpoint.Endpoint
 	{
@@ -521,10 +520,10 @@ func NewSgpolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceSgpo
 			network.EncodeGrpcReqSgpolicy,
 			network.DecodeGrpcRespSgpolicy,
 			&network.Sgpolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoGetSgpolicy")(lAutoGetSgpolicyEndpoint)
+		lAutoGetSgpolicyEndpoint = trace.ClientEndPoint("SgpolicyV1:AutoGetSgpolicy")(lAutoGetSgpolicyEndpoint)
 	}
 	var lAutoListSgpolicyEndpoint endpoint.Endpoint
 	{
@@ -535,10 +534,10 @@ func NewSgpolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceSgpo
 			network.EncodeGrpcReqListWatchOptions,
 			network.DecodeGrpcRespSgpolicyList,
 			&network.SgpolicyList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoListSgpolicy")(lAutoListSgpolicyEndpoint)
+		lAutoListSgpolicyEndpoint = trace.ClientEndPoint("SgpolicyV1:AutoListSgpolicy")(lAutoListSgpolicyEndpoint)
 	}
 	var lAutoUpdateSgpolicyEndpoint endpoint.Endpoint
 	{
@@ -549,10 +548,10 @@ func NewSgpolicyV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceSgpo
 			network.EncodeGrpcReqSgpolicy,
 			network.DecodeGrpcRespSgpolicy,
 			&network.Sgpolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateSgpolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "SgpolicyV1:AutoUpdateSgpolicy")(lAutoUpdateSgpolicyEndpoint)
+		lAutoUpdateSgpolicyEndpoint = trace.ClientEndPoint("SgpolicyV1:AutoUpdateSgpolicy")(lAutoUpdateSgpolicyEndpoint)
 	}
 	return network.EndpointsSgpolicyV1Client{
 		Client: network.NewSgpolicyV1Client(conn),
@@ -584,10 +583,10 @@ func NewTenantV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceTenant
 			network.EncodeGrpcReqTenant,
 			network.DecodeGrpcRespTenant,
 			&network.Tenant{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoAddTenant")(lAutoAddTenantEndpoint)
+		lAutoAddTenantEndpoint = trace.ClientEndPoint("TenantV1:AutoAddTenant")(lAutoAddTenantEndpoint)
 	}
 	var lAutoDeleteTenantEndpoint endpoint.Endpoint
 	{
@@ -598,10 +597,10 @@ func NewTenantV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceTenant
 			network.EncodeGrpcReqTenant,
 			network.DecodeGrpcRespTenant,
 			&network.Tenant{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoDeleteTenant")(lAutoDeleteTenantEndpoint)
+		lAutoDeleteTenantEndpoint = trace.ClientEndPoint("TenantV1:AutoDeleteTenant")(lAutoDeleteTenantEndpoint)
 	}
 	var lAutoGetTenantEndpoint endpoint.Endpoint
 	{
@@ -612,10 +611,10 @@ func NewTenantV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceTenant
 			network.EncodeGrpcReqTenant,
 			network.DecodeGrpcRespTenant,
 			&network.Tenant{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoGetTenant")(lAutoGetTenantEndpoint)
+		lAutoGetTenantEndpoint = trace.ClientEndPoint("TenantV1:AutoGetTenant")(lAutoGetTenantEndpoint)
 	}
 	var lAutoListTenantEndpoint endpoint.Endpoint
 	{
@@ -626,10 +625,10 @@ func NewTenantV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceTenant
 			network.EncodeGrpcReqListWatchOptions,
 			network.DecodeGrpcRespTenantList,
 			&network.TenantList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoListTenant")(lAutoListTenantEndpoint)
+		lAutoListTenantEndpoint = trace.ClientEndPoint("TenantV1:AutoListTenant")(lAutoListTenantEndpoint)
 	}
 	var lAutoUpdateTenantEndpoint endpoint.Endpoint
 	{
@@ -640,10 +639,10 @@ func NewTenantV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceTenant
 			network.EncodeGrpcReqTenant,
 			network.DecodeGrpcRespTenant,
 			&network.Tenant{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateTenantEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TenantV1:AutoUpdateTenant")(lAutoUpdateTenantEndpoint)
+		lAutoUpdateTenantEndpoint = trace.ClientEndPoint("TenantV1:AutoUpdateTenant")(lAutoUpdateTenantEndpoint)
 	}
 	return network.EndpointsTenantV1Client{
 		Client: network.NewTenantV1Client(conn),

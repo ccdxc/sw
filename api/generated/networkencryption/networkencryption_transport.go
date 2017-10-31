@@ -11,13 +11,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	oldcontext "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -45,35 +44,35 @@ func MakeGRPCServerTrafficEncryptionPolicyV1(ctx context.Context, endpoints Endp
 			endpoints.AutoAddTrafficEncryptionPolicyEndpoint,
 			DecodeGrpcReqTrafficEncryptionPolicy,
 			EncodeGrpcRespTrafficEncryptionPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddTrafficEncryptionPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddTrafficEncryptionPolicy", logger)))...,
 		),
 
 		AutoDeleteTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteTrafficEncryptionPolicyEndpoint,
 			DecodeGrpcReqTrafficEncryptionPolicy,
 			EncodeGrpcRespTrafficEncryptionPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteTrafficEncryptionPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteTrafficEncryptionPolicy", logger)))...,
 		),
 
 		AutoGetTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetTrafficEncryptionPolicyEndpoint,
 			DecodeGrpcReqTrafficEncryptionPolicy,
 			EncodeGrpcRespTrafficEncryptionPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetTrafficEncryptionPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTrafficEncryptionPolicy", logger)))...,
 		),
 
 		AutoListTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListTrafficEncryptionPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespTrafficEncryptionPolicyList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListTrafficEncryptionPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListTrafficEncryptionPolicy", logger)))...,
 		),
 
 		AutoUpdateTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateTrafficEncryptionPolicyEndpoint,
 			DecodeGrpcReqTrafficEncryptionPolicy,
 			EncodeGrpcRespTrafficEncryptionPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateTrafficEncryptionPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTrafficEncryptionPolicy", logger)))...,
 		),
 	}
 }

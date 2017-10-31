@@ -8,9 +8,7 @@ import (
 	oldlog "log"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	api "github.com/pensando/sw/api"
@@ -19,6 +17,7 @@ import (
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy vars to suppress import errors
@@ -38,10 +37,10 @@ func NewTrafficEncryptionPolicyV1(conn *grpc.ClientConn, logger log.Logger) netw
 			networkencryption.EncodeGrpcReqTrafficEncryptionPolicy,
 			networkencryption.DecodeGrpcRespTrafficEncryptionPolicy,
 			&networkencryption.TrafficEncryptionPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddTrafficEncryptionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TrafficEncryptionPolicyV1:AutoAddTrafficEncryptionPolicy")(lAutoAddTrafficEncryptionPolicyEndpoint)
+		lAutoAddTrafficEncryptionPolicyEndpoint = trace.ClientEndPoint("TrafficEncryptionPolicyV1:AutoAddTrafficEncryptionPolicy")(lAutoAddTrafficEncryptionPolicyEndpoint)
 	}
 	var lAutoDeleteTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	{
@@ -52,10 +51,10 @@ func NewTrafficEncryptionPolicyV1(conn *grpc.ClientConn, logger log.Logger) netw
 			networkencryption.EncodeGrpcReqTrafficEncryptionPolicy,
 			networkencryption.DecodeGrpcRespTrafficEncryptionPolicy,
 			&networkencryption.TrafficEncryptionPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteTrafficEncryptionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TrafficEncryptionPolicyV1:AutoDeleteTrafficEncryptionPolicy")(lAutoDeleteTrafficEncryptionPolicyEndpoint)
+		lAutoDeleteTrafficEncryptionPolicyEndpoint = trace.ClientEndPoint("TrafficEncryptionPolicyV1:AutoDeleteTrafficEncryptionPolicy")(lAutoDeleteTrafficEncryptionPolicyEndpoint)
 	}
 	var lAutoGetTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	{
@@ -66,10 +65,10 @@ func NewTrafficEncryptionPolicyV1(conn *grpc.ClientConn, logger log.Logger) netw
 			networkencryption.EncodeGrpcReqTrafficEncryptionPolicy,
 			networkencryption.DecodeGrpcRespTrafficEncryptionPolicy,
 			&networkencryption.TrafficEncryptionPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetTrafficEncryptionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TrafficEncryptionPolicyV1:AutoGetTrafficEncryptionPolicy")(lAutoGetTrafficEncryptionPolicyEndpoint)
+		lAutoGetTrafficEncryptionPolicyEndpoint = trace.ClientEndPoint("TrafficEncryptionPolicyV1:AutoGetTrafficEncryptionPolicy")(lAutoGetTrafficEncryptionPolicyEndpoint)
 	}
 	var lAutoListTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	{
@@ -80,10 +79,10 @@ func NewTrafficEncryptionPolicyV1(conn *grpc.ClientConn, logger log.Logger) netw
 			networkencryption.EncodeGrpcReqListWatchOptions,
 			networkencryption.DecodeGrpcRespTrafficEncryptionPolicyList,
 			&networkencryption.TrafficEncryptionPolicyList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListTrafficEncryptionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TrafficEncryptionPolicyV1:AutoListTrafficEncryptionPolicy")(lAutoListTrafficEncryptionPolicyEndpoint)
+		lAutoListTrafficEncryptionPolicyEndpoint = trace.ClientEndPoint("TrafficEncryptionPolicyV1:AutoListTrafficEncryptionPolicy")(lAutoListTrafficEncryptionPolicyEndpoint)
 	}
 	var lAutoUpdateTrafficEncryptionPolicyEndpoint endpoint.Endpoint
 	{
@@ -94,10 +93,10 @@ func NewTrafficEncryptionPolicyV1(conn *grpc.ClientConn, logger log.Logger) netw
 			networkencryption.EncodeGrpcReqTrafficEncryptionPolicy,
 			networkencryption.DecodeGrpcRespTrafficEncryptionPolicy,
 			&networkencryption.TrafficEncryptionPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateTrafficEncryptionPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "TrafficEncryptionPolicyV1:AutoUpdateTrafficEncryptionPolicy")(lAutoUpdateTrafficEncryptionPolicyEndpoint)
+		lAutoUpdateTrafficEncryptionPolicyEndpoint = trace.ClientEndPoint("TrafficEncryptionPolicyV1:AutoUpdateTrafficEncryptionPolicy")(lAutoUpdateTrafficEncryptionPolicyEndpoint)
 	}
 	return networkencryption.EndpointsTrafficEncryptionPolicyV1Client{
 		Client: networkencryption.NewTrafficEncryptionPolicyV1Client(conn),

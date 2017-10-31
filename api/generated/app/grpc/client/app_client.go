@@ -8,9 +8,7 @@ import (
 	oldlog "log"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	api "github.com/pensando/sw/api"
@@ -19,6 +17,7 @@ import (
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy vars to suppress import errors
@@ -38,10 +37,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqApp,
 			app.DecodeGrpcRespApp,
 			&app.App{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddAppEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoAddApp")(lAutoAddAppEndpoint)
+		lAutoAddAppEndpoint = trace.ClientEndPoint("AppV1:AutoAddApp")(lAutoAddAppEndpoint)
 	}
 	var lAutoAddAppUserEndpoint endpoint.Endpoint
 	{
@@ -52,10 +51,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqAppUser,
 			app.DecodeGrpcRespAppUser,
 			&app.AppUser{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddAppUserEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoAddAppUser")(lAutoAddAppUserEndpoint)
+		lAutoAddAppUserEndpoint = trace.ClientEndPoint("AppV1:AutoAddAppUser")(lAutoAddAppUserEndpoint)
 	}
 	var lAutoAddAppUserGrpEndpoint endpoint.Endpoint
 	{
@@ -66,10 +65,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqAppUserGrp,
 			app.DecodeGrpcRespAppUserGrp,
 			&app.AppUserGrp{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddAppUserGrpEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoAddAppUserGrp")(lAutoAddAppUserGrpEndpoint)
+		lAutoAddAppUserGrpEndpoint = trace.ClientEndPoint("AppV1:AutoAddAppUserGrp")(lAutoAddAppUserGrpEndpoint)
 	}
 	var lAutoDeleteAppEndpoint endpoint.Endpoint
 	{
@@ -80,10 +79,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqApp,
 			app.DecodeGrpcRespApp,
 			&app.App{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteAppEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoDeleteApp")(lAutoDeleteAppEndpoint)
+		lAutoDeleteAppEndpoint = trace.ClientEndPoint("AppV1:AutoDeleteApp")(lAutoDeleteAppEndpoint)
 	}
 	var lAutoDeleteAppUserEndpoint endpoint.Endpoint
 	{
@@ -94,10 +93,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqAppUser,
 			app.DecodeGrpcRespAppUser,
 			&app.AppUser{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteAppUserEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoDeleteAppUser")(lAutoDeleteAppUserEndpoint)
+		lAutoDeleteAppUserEndpoint = trace.ClientEndPoint("AppV1:AutoDeleteAppUser")(lAutoDeleteAppUserEndpoint)
 	}
 	var lAutoDeleteAppUserGrpEndpoint endpoint.Endpoint
 	{
@@ -108,10 +107,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqAppUserGrp,
 			app.DecodeGrpcRespAppUserGrp,
 			&app.AppUserGrp{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteAppUserGrpEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoDeleteAppUserGrp")(lAutoDeleteAppUserGrpEndpoint)
+		lAutoDeleteAppUserGrpEndpoint = trace.ClientEndPoint("AppV1:AutoDeleteAppUserGrp")(lAutoDeleteAppUserGrpEndpoint)
 	}
 	var lAutoGetAppEndpoint endpoint.Endpoint
 	{
@@ -122,10 +121,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqApp,
 			app.DecodeGrpcRespApp,
 			&app.App{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetAppEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoGetApp")(lAutoGetAppEndpoint)
+		lAutoGetAppEndpoint = trace.ClientEndPoint("AppV1:AutoGetApp")(lAutoGetAppEndpoint)
 	}
 	var lAutoGetAppUserEndpoint endpoint.Endpoint
 	{
@@ -136,10 +135,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqAppUser,
 			app.DecodeGrpcRespAppUser,
 			&app.AppUser{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetAppUserEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoGetAppUser")(lAutoGetAppUserEndpoint)
+		lAutoGetAppUserEndpoint = trace.ClientEndPoint("AppV1:AutoGetAppUser")(lAutoGetAppUserEndpoint)
 	}
 	var lAutoGetAppUserGrpEndpoint endpoint.Endpoint
 	{
@@ -150,10 +149,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqAppUserGrp,
 			app.DecodeGrpcRespAppUserGrp,
 			&app.AppUserGrp{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetAppUserGrpEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoGetAppUserGrp")(lAutoGetAppUserGrpEndpoint)
+		lAutoGetAppUserGrpEndpoint = trace.ClientEndPoint("AppV1:AutoGetAppUserGrp")(lAutoGetAppUserGrpEndpoint)
 	}
 	var lAutoListAppEndpoint endpoint.Endpoint
 	{
@@ -164,10 +163,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqListWatchOptions,
 			app.DecodeGrpcRespAppList,
 			&app.AppList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListAppEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoListApp")(lAutoListAppEndpoint)
+		lAutoListAppEndpoint = trace.ClientEndPoint("AppV1:AutoListApp")(lAutoListAppEndpoint)
 	}
 	var lAutoListAppUserEndpoint endpoint.Endpoint
 	{
@@ -178,10 +177,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqListWatchOptions,
 			app.DecodeGrpcRespAppUserList,
 			&app.AppUserList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListAppUserEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoListAppUser")(lAutoListAppUserEndpoint)
+		lAutoListAppUserEndpoint = trace.ClientEndPoint("AppV1:AutoListAppUser")(lAutoListAppUserEndpoint)
 	}
 	var lAutoListAppUserGrpEndpoint endpoint.Endpoint
 	{
@@ -192,10 +191,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqListWatchOptions,
 			app.DecodeGrpcRespAppUserGrpList,
 			&app.AppUserGrpList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListAppUserGrpEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoListAppUserGrp")(lAutoListAppUserGrpEndpoint)
+		lAutoListAppUserGrpEndpoint = trace.ClientEndPoint("AppV1:AutoListAppUserGrp")(lAutoListAppUserGrpEndpoint)
 	}
 	var lAutoUpdateAppEndpoint endpoint.Endpoint
 	{
@@ -206,10 +205,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqApp,
 			app.DecodeGrpcRespApp,
 			&app.App{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateAppEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoUpdateApp")(lAutoUpdateAppEndpoint)
+		lAutoUpdateAppEndpoint = trace.ClientEndPoint("AppV1:AutoUpdateApp")(lAutoUpdateAppEndpoint)
 	}
 	var lAutoUpdateAppUserEndpoint endpoint.Endpoint
 	{
@@ -220,10 +219,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqAppUser,
 			app.DecodeGrpcRespAppUser,
 			&app.AppUser{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateAppUserEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoUpdateAppUser")(lAutoUpdateAppUserEndpoint)
+		lAutoUpdateAppUserEndpoint = trace.ClientEndPoint("AppV1:AutoUpdateAppUser")(lAutoUpdateAppUserEndpoint)
 	}
 	var lAutoUpdateAppUserGrpEndpoint endpoint.Endpoint
 	{
@@ -234,10 +233,10 @@ func NewAppV1(conn *grpc.ClientConn, logger log.Logger) app.ServiceAppV1Client {
 			app.EncodeGrpcReqAppUserGrp,
 			app.DecodeGrpcRespAppUserGrp,
 			&app.AppUserGrp{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateAppUserGrpEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "AppV1:AutoUpdateAppUserGrp")(lAutoUpdateAppUserGrpEndpoint)
+		lAutoUpdateAppUserGrpEndpoint = trace.ClientEndPoint("AppV1:AutoUpdateAppUserGrp")(lAutoUpdateAppUserGrpEndpoint)
 	}
 	return app.EndpointsAppV1Client{
 		Client: app.NewAppV1Client(conn),

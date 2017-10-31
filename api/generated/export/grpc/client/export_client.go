@@ -8,9 +8,7 @@ import (
 	oldlog "log"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	api "github.com/pensando/sw/api"
@@ -19,6 +17,7 @@ import (
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy vars to suppress import errors
@@ -38,10 +37,10 @@ func NewExportPolicyV1(conn *grpc.ClientConn, logger log.Logger) export.ServiceE
 			export.EncodeGrpcReqExportPolicy,
 			export.DecodeGrpcRespExportPolicy,
 			&export.ExportPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoAddExportPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ExportPolicyV1:AutoAddExportPolicy")(lAutoAddExportPolicyEndpoint)
+		lAutoAddExportPolicyEndpoint = trace.ClientEndPoint("ExportPolicyV1:AutoAddExportPolicy")(lAutoAddExportPolicyEndpoint)
 	}
 	var lAutoDeleteExportPolicyEndpoint endpoint.Endpoint
 	{
@@ -52,10 +51,10 @@ func NewExportPolicyV1(conn *grpc.ClientConn, logger log.Logger) export.ServiceE
 			export.EncodeGrpcReqExportPolicy,
 			export.DecodeGrpcRespExportPolicy,
 			&export.ExportPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoDeleteExportPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ExportPolicyV1:AutoDeleteExportPolicy")(lAutoDeleteExportPolicyEndpoint)
+		lAutoDeleteExportPolicyEndpoint = trace.ClientEndPoint("ExportPolicyV1:AutoDeleteExportPolicy")(lAutoDeleteExportPolicyEndpoint)
 	}
 	var lAutoGetExportPolicyEndpoint endpoint.Endpoint
 	{
@@ -66,10 +65,10 @@ func NewExportPolicyV1(conn *grpc.ClientConn, logger log.Logger) export.ServiceE
 			export.EncodeGrpcReqExportPolicy,
 			export.DecodeGrpcRespExportPolicy,
 			&export.ExportPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoGetExportPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ExportPolicyV1:AutoGetExportPolicy")(lAutoGetExportPolicyEndpoint)
+		lAutoGetExportPolicyEndpoint = trace.ClientEndPoint("ExportPolicyV1:AutoGetExportPolicy")(lAutoGetExportPolicyEndpoint)
 	}
 	var lAutoListExportPolicyEndpoint endpoint.Endpoint
 	{
@@ -80,10 +79,10 @@ func NewExportPolicyV1(conn *grpc.ClientConn, logger log.Logger) export.ServiceE
 			export.EncodeGrpcReqListWatchOptions,
 			export.DecodeGrpcRespExportPolicyList,
 			&export.ExportPolicyList{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoListExportPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ExportPolicyV1:AutoListExportPolicy")(lAutoListExportPolicyEndpoint)
+		lAutoListExportPolicyEndpoint = trace.ClientEndPoint("ExportPolicyV1:AutoListExportPolicy")(lAutoListExportPolicyEndpoint)
 	}
 	var lAutoUpdateExportPolicyEndpoint endpoint.Endpoint
 	{
@@ -94,10 +93,10 @@ func NewExportPolicyV1(conn *grpc.ClientConn, logger log.Logger) export.ServiceE
 			export.EncodeGrpcReqExportPolicy,
 			export.DecodeGrpcRespExportPolicy,
 			&export.ExportPolicy{},
-			grpctransport.ClientBefore(opentracing.ToGRPCRequest(stdopentracing.GlobalTracer(), logger)),
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
-		lAutoUpdateExportPolicyEndpoint = opentracing.TraceClient(stdopentracing.GlobalTracer(), "ExportPolicyV1:AutoUpdateExportPolicy")(lAutoUpdateExportPolicyEndpoint)
+		lAutoUpdateExportPolicyEndpoint = trace.ClientEndPoint("ExportPolicyV1:AutoUpdateExportPolicy")(lAutoUpdateExportPolicyEndpoint)
 	}
 	return export.EndpointsExportPolicyV1Client{
 		Client: export.NewExportPolicyV1Client(conn),

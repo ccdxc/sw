@@ -11,13 +11,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	oldcontext "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -55,105 +54,105 @@ func MakeGRPCServerCmdV1(ctx context.Context, endpoints EndpointsCmdV1Server, lo
 			endpoints.AutoAddClusterEndpoint,
 			DecodeGrpcReqCluster,
 			EncodeGrpcRespCluster,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddCluster", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCluster", logger)))...,
 		),
 
 		AutoAddNodeHdlr: grpctransport.NewServer(
 			endpoints.AutoAddNodeEndpoint,
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddNode", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNode", logger)))...,
 		),
 
 		AutoAddSmartNICHdlr: grpctransport.NewServer(
 			endpoints.AutoAddSmartNICEndpoint,
 			DecodeGrpcReqSmartNIC,
 			EncodeGrpcRespSmartNIC,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddSmartNIC", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddSmartNIC", logger)))...,
 		),
 
 		AutoDeleteClusterHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteClusterEndpoint,
 			DecodeGrpcReqCluster,
 			EncodeGrpcRespCluster,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteCluster", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCluster", logger)))...,
 		),
 
 		AutoDeleteNodeHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteNodeEndpoint,
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteNode", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNode", logger)))...,
 		),
 
 		AutoDeleteSmartNICHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteSmartNICEndpoint,
 			DecodeGrpcReqSmartNIC,
 			EncodeGrpcRespSmartNIC,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteSmartNIC", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteSmartNIC", logger)))...,
 		),
 
 		AutoGetClusterHdlr: grpctransport.NewServer(
 			endpoints.AutoGetClusterEndpoint,
 			DecodeGrpcReqCluster,
 			EncodeGrpcRespCluster,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetCluster", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCluster", logger)))...,
 		),
 
 		AutoGetNodeHdlr: grpctransport.NewServer(
 			endpoints.AutoGetNodeEndpoint,
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetNode", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNode", logger)))...,
 		),
 
 		AutoGetSmartNICHdlr: grpctransport.NewServer(
 			endpoints.AutoGetSmartNICEndpoint,
 			DecodeGrpcReqSmartNIC,
 			EncodeGrpcRespSmartNIC,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetSmartNIC", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetSmartNIC", logger)))...,
 		),
 
 		AutoListClusterHdlr: grpctransport.NewServer(
 			endpoints.AutoListClusterEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespClusterList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListCluster", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCluster", logger)))...,
 		),
 
 		AutoListNodeHdlr: grpctransport.NewServer(
 			endpoints.AutoListNodeEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespNodeList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListNode", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNode", logger)))...,
 		),
 
 		AutoListSmartNICHdlr: grpctransport.NewServer(
 			endpoints.AutoListSmartNICEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespSmartNICList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListSmartNIC", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListSmartNIC", logger)))...,
 		),
 
 		AutoUpdateClusterHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateClusterEndpoint,
 			DecodeGrpcReqCluster,
 			EncodeGrpcRespCluster,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateCluster", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCluster", logger)))...,
 		),
 
 		AutoUpdateNodeHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateNodeEndpoint,
 			DecodeGrpcReqNode,
 			EncodeGrpcRespNode,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateNode", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNode", logger)))...,
 		),
 
 		AutoUpdateSmartNICHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateSmartNICEndpoint,
 			DecodeGrpcReqSmartNIC,
 			EncodeGrpcRespSmartNIC,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateSmartNIC", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateSmartNIC", logger)))...,
 		),
 	}
 }

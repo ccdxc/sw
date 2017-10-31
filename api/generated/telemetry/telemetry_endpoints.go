@@ -16,12 +16,11 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -165,7 +164,7 @@ func MakeMonitoringPolicyV1AutoAddMonitoringPolicyEndpoint(s ServiceMonitoringPo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "MonitoringPolicyV1:AutoAddMonitoringPolicy")(f)
+	return trace.ServerEndpoint("MonitoringPolicyV1:AutoAddMonitoringPolicy")(f)
 }
 
 // AutoDeleteMonitoringPolicy implementation on server Endpoint
@@ -187,7 +186,7 @@ func MakeMonitoringPolicyV1AutoDeleteMonitoringPolicyEndpoint(s ServiceMonitorin
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "MonitoringPolicyV1:AutoDeleteMonitoringPolicy")(f)
+	return trace.ServerEndpoint("MonitoringPolicyV1:AutoDeleteMonitoringPolicy")(f)
 }
 
 // AutoGetMonitoringPolicy implementation on server Endpoint
@@ -209,7 +208,7 @@ func MakeMonitoringPolicyV1AutoGetMonitoringPolicyEndpoint(s ServiceMonitoringPo
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "MonitoringPolicyV1:AutoGetMonitoringPolicy")(f)
+	return trace.ServerEndpoint("MonitoringPolicyV1:AutoGetMonitoringPolicy")(f)
 }
 
 // AutoListMonitoringPolicy implementation on server Endpoint
@@ -231,7 +230,7 @@ func MakeMonitoringPolicyV1AutoListMonitoringPolicyEndpoint(s ServiceMonitoringP
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "MonitoringPolicyV1:AutoListMonitoringPolicy")(f)
+	return trace.ServerEndpoint("MonitoringPolicyV1:AutoListMonitoringPolicy")(f)
 }
 
 // AutoUpdateMonitoringPolicy implementation on server Endpoint
@@ -253,7 +252,7 @@ func MakeMonitoringPolicyV1AutoUpdateMonitoringPolicyEndpoint(s ServiceMonitorin
 			Err: err,
 		}, nil
 	}
-	return opentracing.TraceServer(stdopentracing.GlobalTracer(), "MonitoringPolicyV1:AutoUpdateMonitoringPolicy")(f)
+	return trace.ServerEndpoint("MonitoringPolicyV1:AutoUpdateMonitoringPolicy")(f)
 }
 
 // AutoWatchMonitoringPolicy is the watch handler for MonitoringPolicy on the server side.

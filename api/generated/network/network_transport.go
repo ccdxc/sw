@@ -11,13 +11,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
 	oldcontext "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/trace"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -45,35 +44,35 @@ func MakeGRPCServerEndpointV1(ctx context.Context, endpoints EndpointsEndpointV1
 			endpoints.AutoAddEndpointEndpoint,
 			DecodeGrpcReqEndpoint,
 			EncodeGrpcRespEndpoint,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddEndpoint", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddEndpoint", logger)))...,
 		),
 
 		AutoDeleteEndpointHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteEndpointEndpoint,
 			DecodeGrpcReqEndpoint,
 			EncodeGrpcRespEndpoint,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteEndpoint", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteEndpoint", logger)))...,
 		),
 
 		AutoGetEndpointHdlr: grpctransport.NewServer(
 			endpoints.AutoGetEndpointEndpoint,
 			DecodeGrpcReqEndpoint,
 			EncodeGrpcRespEndpoint,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetEndpoint", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetEndpoint", logger)))...,
 		),
 
 		AutoListEndpointHdlr: grpctransport.NewServer(
 			endpoints.AutoListEndpointEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespEndpointList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListEndpoint", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListEndpoint", logger)))...,
 		),
 
 		AutoUpdateEndpointHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateEndpointEndpoint,
 			DecodeGrpcReqEndpoint,
 			EncodeGrpcRespEndpoint,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateEndpoint", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateEndpoint", logger)))...,
 		),
 	}
 }
@@ -194,35 +193,35 @@ func MakeGRPCServerLbPolicyV1(ctx context.Context, endpoints EndpointsLbPolicyV1
 			endpoints.AutoAddLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
 			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddLbPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddLbPolicy", logger)))...,
 		),
 
 		AutoDeleteLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
 			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteLbPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteLbPolicy", logger)))...,
 		),
 
 		AutoGetLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
 			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetLbPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetLbPolicy", logger)))...,
 		),
 
 		AutoListLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListLbPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespLbPolicyList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListLbPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListLbPolicy", logger)))...,
 		),
 
 		AutoUpdateLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
 			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateLbPolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateLbPolicy", logger)))...,
 		),
 	}
 }
@@ -343,35 +342,35 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			endpoints.AutoAddNetworkEndpoint,
 			DecodeGrpcReqNetwork,
 			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddNetwork", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNetwork", logger)))...,
 		),
 
 		AutoDeleteNetworkHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteNetworkEndpoint,
 			DecodeGrpcReqNetwork,
 			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteNetwork", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNetwork", logger)))...,
 		),
 
 		AutoGetNetworkHdlr: grpctransport.NewServer(
 			endpoints.AutoGetNetworkEndpoint,
 			DecodeGrpcReqNetwork,
 			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetNetwork", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNetwork", logger)))...,
 		),
 
 		AutoListNetworkHdlr: grpctransport.NewServer(
 			endpoints.AutoListNetworkEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespNetworkList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListNetwork", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNetwork", logger)))...,
 		),
 
 		AutoUpdateNetworkHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateNetworkEndpoint,
 			DecodeGrpcReqNetwork,
 			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateNetwork", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNetwork", logger)))...,
 		),
 	}
 }
@@ -492,35 +491,35 @@ func MakeGRPCServerSecurityGroupV1(ctx context.Context, endpoints EndpointsSecur
 			endpoints.AutoAddSecurityGroupEndpoint,
 			DecodeGrpcReqSecurityGroup,
 			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddSecurityGroup", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddSecurityGroup", logger)))...,
 		),
 
 		AutoDeleteSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteSecurityGroupEndpoint,
 			DecodeGrpcReqSecurityGroup,
 			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteSecurityGroup", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteSecurityGroup", logger)))...,
 		),
 
 		AutoGetSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoGetSecurityGroupEndpoint,
 			DecodeGrpcReqSecurityGroup,
 			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetSecurityGroup", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetSecurityGroup", logger)))...,
 		),
 
 		AutoListSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoListSecurityGroupEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespSecurityGroupList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListSecurityGroup", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListSecurityGroup", logger)))...,
 		),
 
 		AutoUpdateSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateSecurityGroupEndpoint,
 			DecodeGrpcReqSecurityGroup,
 			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateSecurityGroup", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateSecurityGroup", logger)))...,
 		),
 	}
 }
@@ -641,35 +640,35 @@ func MakeGRPCServerServiceV1(ctx context.Context, endpoints EndpointsServiceV1Se
 			endpoints.AutoAddServiceEndpoint,
 			DecodeGrpcReqService,
 			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddService", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddService", logger)))...,
 		),
 
 		AutoDeleteServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteServiceEndpoint,
 			DecodeGrpcReqService,
 			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteService", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteService", logger)))...,
 		),
 
 		AutoGetServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoGetServiceEndpoint,
 			DecodeGrpcReqService,
 			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetService", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetService", logger)))...,
 		),
 
 		AutoListServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoListServiceEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespServiceList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListService", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListService", logger)))...,
 		),
 
 		AutoUpdateServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateServiceEndpoint,
 			DecodeGrpcReqService,
 			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateService", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateService", logger)))...,
 		),
 	}
 }
@@ -790,35 +789,35 @@ func MakeGRPCServerSgpolicyV1(ctx context.Context, endpoints EndpointsSgpolicyV1
 			endpoints.AutoAddSgpolicyEndpoint,
 			DecodeGrpcReqSgpolicy,
 			EncodeGrpcRespSgpolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddSgpolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddSgpolicy", logger)))...,
 		),
 
 		AutoDeleteSgpolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteSgpolicyEndpoint,
 			DecodeGrpcReqSgpolicy,
 			EncodeGrpcRespSgpolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteSgpolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteSgpolicy", logger)))...,
 		),
 
 		AutoGetSgpolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetSgpolicyEndpoint,
 			DecodeGrpcReqSgpolicy,
 			EncodeGrpcRespSgpolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetSgpolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetSgpolicy", logger)))...,
 		),
 
 		AutoListSgpolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListSgpolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespSgpolicyList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListSgpolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListSgpolicy", logger)))...,
 		),
 
 		AutoUpdateSgpolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateSgpolicyEndpoint,
 			DecodeGrpcReqSgpolicy,
 			EncodeGrpcRespSgpolicy,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateSgpolicy", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateSgpolicy", logger)))...,
 		),
 	}
 }
@@ -939,35 +938,35 @@ func MakeGRPCServerTenantV1(ctx context.Context, endpoints EndpointsTenantV1Serv
 			endpoints.AutoAddTenantEndpoint,
 			DecodeGrpcReqTenant,
 			EncodeGrpcRespTenant,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoAddTenant", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddTenant", logger)))...,
 		),
 
 		AutoDeleteTenantHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteTenantEndpoint,
 			DecodeGrpcReqTenant,
 			EncodeGrpcRespTenant,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoDeleteTenant", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteTenant", logger)))...,
 		),
 
 		AutoGetTenantHdlr: grpctransport.NewServer(
 			endpoints.AutoGetTenantEndpoint,
 			DecodeGrpcReqTenant,
 			EncodeGrpcRespTenant,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoGetTenant", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTenant", logger)))...,
 		),
 
 		AutoListTenantHdlr: grpctransport.NewServer(
 			endpoints.AutoListTenantEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespTenantList,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoListTenant", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListTenant", logger)))...,
 		),
 
 		AutoUpdateTenantHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateTenantEndpoint,
 			DecodeGrpcReqTenant,
 			EncodeGrpcRespTenant,
-			append(options, grpctransport.ServerBefore(opentracing.FromGRPCRequest(stdopentracing.GlobalTracer(), "AutoUpdateTenant", logger)))...,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTenant", logger)))...,
 		),
 	}
 }
