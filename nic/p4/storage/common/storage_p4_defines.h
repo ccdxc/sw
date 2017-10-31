@@ -70,6 +70,7 @@
 #define pvm_roce_sq_cb_update_start	0x8000E000
 #define roce_rq_push_start		0x8000F000
 #define pvm_roce_sq_cb_push_start	0x80010000
+#define seq_pvm_roce_sq_cb_push_start	0x80020000
 
 // Generic Queue State. Total size can be 64 bytes at most.
 header_type q_state_t {
@@ -904,6 +905,7 @@ header_type seq_r2n_entry_t {
     dst_qtype		: 3;	// Destination LIF type (within the LIF)
     dst_qid		: 24;	// Destination queue number (within the LIF)
     dst_qaddr		: 34;	// Destination queue state address
+    is_remote		: 8;	// Is the command from local or remote PVM	
   }
 }
 
