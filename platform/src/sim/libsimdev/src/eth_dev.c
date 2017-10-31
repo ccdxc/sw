@@ -24,12 +24,13 @@
 #include "src/sim/libsimdev/src/simdev_impl.h"
 
 /* Supply these for ionic_if.h */
-#define __packed __attribute__((packed))
 typedef u_int8_t u8;
 typedef u_int16_t u16;
 typedef u_int32_t u32;
 typedef u_int64_t u64;
 typedef u_int64_t dma_addr_t;
+#define __packed __attribute__((packed))
+#define BIT(n)  (1 << (n))
 
 #include "src/sim/libsimdev/src/ionic_if.h"
 
@@ -258,7 +259,7 @@ devcmd_adminq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
 
     comp->status = 0;
     comp->qid = ep->adq_qidbase + cmd->index;
-    comp->db_type = ep->adq_type;
+    comp->qtype = ep->adq_type;
 }
 
 static void
@@ -310,7 +311,7 @@ devcmd_txq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
 
     comp->status = 0;
     comp->qid = ep->txq_qidbase + cmd->index;
-    comp->db_type = ep->txq_type;
+    comp->qtype = ep->txq_type;
 }
 
 static void
@@ -362,16 +363,16 @@ devcmd_rxq_init(struct admin_cmd *acmd, struct admin_comp *acomp)
 
     comp->status = 0;
     comp->qid = ep->rxq_qidbase + cmd->index;
-    comp->db_type = ep->rxq_type;
+    comp->qtype = ep->rxq_type;
 }
 
 static void
 devcmd_q_enable(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
     struct q_enable_cmd *cmd = (void *)acmd;
-    struct q_enable_comp *comp = (void *)acomp;
+    q_enable_comp *comp = (void *)acomp;
     simdev_t *sd = current_sd;
-    const int type = cmd->db_type;
+    const int type = cmd->qtype;
     const int qid = cmd->qid;
     qstate_t qs;
     qstate_app_ethtx_t *qsethtx;
@@ -401,9 +402,9 @@ static void
 devcmd_q_disable(struct admin_cmd *acmd, struct admin_comp *acomp)
 {
     struct q_disable_cmd *cmd = (void *)acmd;
-    struct q_disable_comp *comp = (void *)acomp;
+    q_disable_comp *comp = (void *)acomp;
     simdev_t *sd = current_sd;
-    const int type = cmd->db_type;
+    const int type = cmd->qtype;
     const int qid = cmd->qid;
     qstate_t qs;
     qstate_app_ethtx_t *qsethtx;

@@ -103,7 +103,7 @@ devparam_mac(const char *devparams, const char *key, mac_t *m)
     char macstr[32];
     mac_t lmac;
 
-    if (devparam_str(devparams, key, macstr, sizeof(macstr) >= 0) &&
+    if (devparam_str(devparams, key, macstr, sizeof(macstr)) >= 0 &&
         mac_from_str(&lmac, macstr) >= 0) {
         if (m != NULL) {
             memcpy(m, &lmac, sizeof(mac_t));

@@ -1,5 +1,19 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright 2017 Pensando Systems, Inc.  All rights reserved.
+ *
+ * This program is free software; you may redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; version 2 of the License.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
  */
 
 #ifndef _IONIC_IF_H_
@@ -7,18 +21,26 @@
 
 #define DEV_CMD_SIGNATURE               0x44455643      /* 'DEVC' */
 
-#define CMD_OPCODE_NOP			0x0
-#define CMD_OPCODE_RESET		0x1
-#define CMD_OPCODE_IDENTIFY		0x2
-#define CMD_OPCODE_LIF_INIT		0x3
-#define CMD_OPCODE_ADMINQ_INIT		0x4
-#define CMD_OPCODE_TXQ_INIT		0x5
-#define CMD_OPCODE_RXQ_INIT		0x6
-#define CMD_OPCODE_Q_ENABLE		0x9
-#define CMD_OPCODE_Q_DISABLE		0xa
-#define CMD_OPCODE_STATION_MAC_ADDR_GET 0xf
+enum cmd_opcode {
+	CMD_OPCODE_NOP				= 0,
+	CMD_OPCODE_RESET			= 1,
+	CMD_OPCODE_IDENTIFY			= 2,
+	CMD_OPCODE_LIF_INIT			= 3,
+	CMD_OPCODE_ADMINQ_INIT			= 4,
+	CMD_OPCODE_TXQ_INIT			= 5,
+	CMD_OPCODE_RXQ_INIT			= 6,
 
-#define CMD_OPCODE_DEBUG_Q_DUMP         0xf0
+	CMD_OPCODE_Q_ENABLE			= 9,
+	CMD_OPCODE_Q_DISABLE			= 10,
+
+	CMD_OPCODE_STATION_MAC_ADDR_GET		= 15,
+	CMD_OPCODE_MTU_SET			= 16,
+	CMD_OPCODE_RX_MODE_SET			= 17,
+	CMD_OPCODE_RX_FILTER_ADD		= 18,
+	CMD_OPCODE_RX_FILTER_DEL		= 19,
+
+	CMD_OPCODE_DEBUG_Q_DUMP			= 0xf0,
+};
 
 /**
  * struct cmd - General admin command format
@@ -44,7 +66,8 @@ struct admin_cmd {
  */
 struct admin_comp {
 	u32 status:8;
-	u32 comp_index:24;
+	u32 rsvd:8;
+	u32 comp_index:16;
 	u8 cmd_data[11];
 	u8 color:1;
 } __packed;
@@ -155,6 +178,8 @@ union identity {
 		u32 nrdmarqs_per_lif;
 		u32 neqs_per_lif;
 		u32 nintrs;
+		u32 nucasts_per_lif;
+		u32 nmcasts_per_lif;
 	};
 	u32 words[1024];
 } __packed;
@@ -216,18 +241,20 @@ struct adminq_init_cmd {
  * struct adminq_init_comp - Admin queue init command completion
  * @status:  The status of the command.  Values for status are:
  *              0 = Successful completion
- * @qid:     Doorbell queue ID
- * @db_type: Doorbell type to use for this queue
+ * @qid:     Queue ID
+ * @qtype:   Queue type
  */
 struct adminq_init_comp {
 	u32 status:8;
 	u32 rsvd:24;
 	u32 qid:24;
-	u32 db_type:8;
+	u32 qtype:8;
 	u32 rsvd2[2];
 } __packed;
 
-#define TXQ_TYPE_ETHERNET		0x0
+enum txq_type {
+	TXQ_TYPE_ETHERNET = 0,
+};
 
 /**
  * struct txq_init_cmd - Transmit queue init command
@@ -278,26 +305,29 @@ struct txq_init_cmd {
  *                 0 = Successful completion
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
- * @qid:        Doorbell queue ID
- * @db_type:    Doorbell type to use for this queue
+ * @qid:        Queue ID
+ * @qtype:      Queue type
  * @color:      Color bit.
  */
 struct txq_init_comp {
 	u32 status:8;
-	u32 comp_index:24;
+	u32 rsvd:8;
+	u32 comp_index:16;
 	u32 qid:24;
-	u32 db_type:8;
-	u32 rsvd;
-	u32 rsvd2:24;
+	u32 qtype:8;
+	u32 rsvd2;
+	u32 rsvd3:24;
 	u32 color:1;
-	u32 rsvd3:7;
+	u32 rsvd4:7;
 } __packed;
 
-#define TXQ_DESC_OPCODE_NOP		0x0
-#define TXQ_DESC_OPCODE_CALC_NO_CSUM	0x1
-#define TXQ_DESC_OPCODE_CALC_CSUM	0x2
-#define TXQ_DESC_OPCODE_CALC_CRC32_CSUM	0x3
-#define TXQ_DESC_OPCODE_TSO		0x4
+enum txq_desc_opcode {
+	TXQ_DESC_OPCODE_NOP = 0,
+	TXQ_DESC_OPCODE_CALC_NO_CSUM,
+	TXQ_DESC_OPCODE_CALC_CSUM,
+	TXQ_DESC_OPCODE_CALC_CRC32_CSUM,
+	TXQ_DESC_OPCODE_TSO,
+};
 
 /**
  * struct txq_desc - Ethernet Tx queue descriptor format
@@ -307,7 +337,7 @@ struct txq_init_comp {
  * @num_sg_elems: Number of scatter-gather elements in SG
  *                descriptor
  * @opcode:       Tx operation, see TXQ_DESC_OPCODE_*:
- * 
+ *
  *                   TXQ_DESC_OPCODE_NOP:
  *
  *                      No packet sent; used to pad out end of
@@ -469,16 +499,19 @@ struct txq_sg_desc {
  * @color:      Color bit.
 */
 struct txq_comp {
-	u32 status:8;
-	u32 comp_index:16;
-	u32 rsvd:8;
-	u32 rsvd2[2];
-	u32 rsvd3:24;
-	u32 color:1;
-	u32 rsvd4:7;
+        u32 status:8;
+        u32 rsvd:8;
+        u32 comp_index:16;
+        u32 rsvd2[2];
+        u32 rsvd3:24;
+        u32 color:1;
+        u32 rsvd4:7;
 } __packed;
 
-#define RXQ_TYPE_ETHERNET		0x0
+
+enum rxq_type {
+	RXQ_TYPE_ETHERNET = 0,
+};
 
 /**
  * struct rxq_init_cmd - Receive queue init command
@@ -527,23 +560,26 @@ struct rxq_init_cmd {
  *                 0 = Successful completion
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
- * @qid:        Doorbell queue ID
- * @db_type:    Doorbell type to use for this queue
+ * @qid:        Queue ID
+ * @qtype:      Queue type
  * @color:      Color bit.
  */
 struct rxq_init_comp {
 	u32 status:8;
-	u32 comp_index:24;
+	u32 rsvd:8;
+	u32 comp_index:16;
 	u32 qid:24;
-	u32 db_type:8;
-	u32 rsvd;
-	u32 rsvd2:24;
+	u32 qtype:8;
+	u32 rsvd2;
+	u32 rsvd3:24;
 	u32 color:1;
-	u32 rsvd3:7;
+	u32 rsvd4:7;
 } __packed;
 
-#define RXQ_DESC_OPCODE_NOP		0x0
-#define RXQ_DESC_OPCODE_SIMPLE		0x1
+enum rxq_desc_opcode {
+	RXQ_DESC_OPCODE_NOP = 0,
+	RXQ_DESC_OPCODE_SIMPLE,
+};
 
 /**
  * struct rxq_desc - Ethernet Rx queue descriptor format
@@ -551,7 +587,7 @@ struct rxq_init_comp {
  * @addr_hi:      Data buffer's DMA address, upper 20 bits
  * @len:          Data buffer's length, in bytes.
  * @opcode:       Rx operation, see RXQ_DESC_OPCODE_*:
- * 
+ *
  *                   RXQ_DESC_OPCODE_NOP:
  *
  *                      No packet received; used to pad out end
@@ -575,16 +611,18 @@ struct rxq_desc {
 	u32 rsvd3;
 } __packed;
 
-#define RXQ_COMP_RSS_TYPE_NONE		0x0
-#define RXQ_COMP_RSS_TYPE_IPV4		0x1
-#define RXQ_COMP_RSS_TYPE_IPV6		0x2
-#define RXQ_COMP_RSS_TYPE_IPV6_EX	0x3
-#define RXQ_COMP_RSS_TYPE_IPV4_TCP	0x4
-#define RXQ_COMP_RSS_TYPE_IPV6_TCP	0x5
-#define RXQ_COMP_RSS_TYPE_IPV6_TCP_EX	0x6
-#define RXQ_COMP_RSS_TYPE_IPV4_UDP	0x7
-#define RXQ_COMP_RSS_TYPE_IPV6_UDP	0x8
-#define RXQ_COMP_RSS_TYPE_IPV6_UDP_EX	0x9
+enum rxq_comp_rss_type {
+	RXQ_COMP_RSS_TYPE_NONE = 0,
+	RXQ_COMP_RSS_TYPE_IPV4,
+	RXQ_COMP_RSS_TYPE_IPV6,
+	RXQ_COMP_RSS_TYPE_IPV6_EX,
+	RXQ_COMP_RSS_TYPE_IPV4_TCP,
+	RXQ_COMP_RSS_TYPE_IPV6_TCP,
+	RXQ_COMP_RSS_TYPE_IPV6_TCP_EX,
+	RXQ_COMP_RSS_TYPE_IPV4_UDP,
+	RXQ_COMP_RSS_TYPE_IPV6_UDP,
+	RXQ_COMP_RSS_TYPE_IPV6_UDP_EX,
+};
 
 /** struct rxq_comp - Ethernet receive queue completion descriptor
  * @status:     The status of the command.  Values for status are:
@@ -633,8 +671,8 @@ struct rxq_desc {
 */
 struct rxq_comp {
 	u32 status:8;
-	u32 comp_index:16;
 	u32 rsvd:8;
+	u32 comp_index:16;
 	u32 rss_hash;
 	u16 csum;
 	u16 vlan_tci;
@@ -651,61 +689,33 @@ struct rxq_comp {
  * struct q_enable_cmd - Queue enable command
  * @opcode:     opcode = 9
  * @qid:        Queue ID
+ * @qtype:      Queue type
  */
 struct q_enable_cmd {
 	u16 opcode;
 	u16 rsvd;
 	u32 qid:24;
-	u32 db_type:8;
+	u32 qtype:8;
 	u32 rsvd2[14];
 } __packed;
 
-/**
- * struct q_enable_comp - Queue enable command completion
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
- * @comp_index: The index in the descriptor ring for which this
- *              is the completion.
- * @color:      Color bit.
- */
-struct q_enable_comp {
-	u32 status:8;
-	u32 comp_index:24;
-	u32 rsvd[2];
-	u32 rsvd2:24;
-	u32 color:1;
-	u32 rsvd3:7;
-} __packed;
+typedef struct admin_comp q_enable_comp;
 
 /**
  * struct q_disable_cmd - Queue disable command
- * @opcode:     opcode = 10 
+ * @opcode:     opcode = 10
  * @qid:        Queue ID
+ * @qtype:      Queue type
  */
 struct q_disable_cmd {
 	u16 opcode;
 	u16 rsvd;
 	u32 qid:24;
-	u32 db_type:8;
+	u32 qtype:8;
 	u32 rsvd2[14];
 } __packed;
 
-/**
- * struct q_disable_comp - Queue disable command completion
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
- * @comp_index: The index in the descriptor ring for which this
- *              is the completion.
- * @color:      Color bit.
- */
-struct q_disable_comp {
-	u32 status:8;
-	u32 comp_index:24;
-	u32 rsvd[2];
-	u32 rsvd2:24;
-	u32 color:1;
-	u32 rsvd3:7;
-} __packed;
+typedef struct admin_comp q_disable_comp;
 
 /**
  * struct station_mac_addr_get_cmd - Get LIF's station MAC address
@@ -713,8 +723,8 @@ struct q_disable_comp {
  * @opcode:     opcode = 15
  */
 struct station_mac_addr_get_cmd {
-    u16 opcode;
-    u16 rsvd[31];
+	u16 opcode;
+	u16 rsvd[31];
 } __packed;
 
 /**
@@ -728,28 +738,115 @@ struct station_mac_addr_get_cmd {
  * @color:      Color bit.
  */
 struct station_mac_addr_get_comp {
-    u32 status:8;
-    u32 rsvd:8;
-    u32 comp_index:16;
-    u8 addr[6];
-    u16 rsvd2;
-    u32 rsvd3:24;
-    u32 color:1;
-    u32 rsvd4:7;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u8 addr[6];
+	u16 rsvd2;
+	u32 rsvd3:24;
+	u32 color:1;
+	u32 rsvd4:7;
 } __packed;
+
+/**
+ * struct mtu_set_cmd - Set LIF's MTU command
+ * @opcode:     opcode = 16
+ * @mtu:        MTU
+ */
+struct mtu_set_cmd {
+	u16 opcode;
+	u16 mtu;
+	u16 rsvd[30];
+} __packed;
+
+typedef struct admin_comp mtu_set_comp;
+
+enum rx_mode {
+	RX_MODE_F_UNICAST		= BIT(0),
+	RX_MODE_F_MULTICAST		= BIT(1),
+	RX_MODE_F_BROADCAST		= BIT(2),
+	RX_MODE_F_PROMISC		= BIT(3),
+	RX_MODE_F_ALLMULTI		= BIT(4),
+};
+
+/**
+ * struct rx_mode_set_cmd - Set LIF's Rx mode command
+ * @opcode:     opcode = 17
+ * @rx_mode:    Rx mode flags:
+ *                  RX_MODE_F_UNICAST: Accept known unicast
+ *                  packets.
+ *                  RX_MODE_F_MULTICAST: Accept known
+ *                  multicast packets.
+ *                  RX_MODE_F_BROADCAST: Accept broadcast
+ *                  packets.
+ *                  RX_MODE_F_PROMISC: Accept any packets.
+ *                  RX_MODE_F_ALLMULTI: Accept any multicast
+ *                  packets.
+ */
+struct rx_mode_set_cmd {
+	u16 opcode;
+	u16 rx_mode;
+	u16 rsvd[30];
+} __packed;
+
+typedef struct admin_comp rx_mode_set_comp;
+
+enum rx_filter_match_type {
+	RX_FILTER_MATCH_VLAN = 0,
+	RX_FILTER_MATCH_MAC,
+	RX_FILTER_MATCH_MAC_VLAN,
+};
+
+/**
+ * struct rx_filter_cmd - Add/delete LIF's Rx filter command
+ * @opcode:     opcode = 18 (add), 19 (delete)
+ * @match:      Rx filter match type.  (See RX_FILTER_MATCH_xxx)
+ * @vlan:       VLAN ID
+ * @addr:       MAC Address
+ */
+struct rx_filter_cmd {
+	u16 opcode;
+	u16 match;
+	u16 vlan;
+	u8 addr[6];
+	u8 rsvd[2];
+	u16 rsvd2[25];
+} __packed;
+
+/**
+ * struct rx_filter_comp - Add/delete LIF's Rx filter command
+ *                         completion
+ * @status:     The status of the command.  Values for status are:
+ *                 0 = Successful completion
+ * @comp_index: The index in the descriptor ring for which this
+ *              is the completion.
+ * @filter_id:  Filter ID
+ * @color:      Color bit.
+ */
+struct rx_filter_comp {
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u32 filter_id;
+	u32 rsvd2;
+	u32 rsvd3:24;
+	u32 color:1;
+	u32 rsvd4:7;
+} __packed;
+
 
 /**
  * struct debug_q_dump_cmd - Debug queue dump command
  * @opcode:     opcode = 0xf0
  * @qid:        Queue ID
- * @qtype:      Queue type (see QUEUE_TYPE_xxx)
+ * @qtype:      Queue type
  */
 struct debug_q_dump_cmd {
-    u16 opcode;
-    u16 rsvd;
-    u32 qid:24;
-    u32 qtype:8;
-    u32 rsvd2[14];
+	u16 opcode;
+	u16 rsvd;
+	u32 qid:24;
+	u32 qtype:8;
+	u32 rsvd2[14];
 } __packed;
 
 /**
@@ -758,22 +855,23 @@ struct debug_q_dump_cmd {
  *                 0 = Successful completion
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
- * @p_index:    Queue producer index
- * @c_index:    Queue consumer index
+ * @p_index0:   Queue 0 producer index
+ * @c_index0:   Queue 0 consumer index
+ * @p_index1:   Queue 1 producer index
+ * @c_index1:   Queue 1 consumer index
  * @color:      Color bit.
  */
 struct debug_q_dump_comp {
-    u32 status:8;
-    u32 rsvd:8;
-    u32 comp_index:16;
-    u16 p_index0;
-    u16 c_index0;
-    u16 p_index1;
-    u16 c_index1;
-    u32 rsvd2;
-    u32 rsvd3:24;
-    u32 color:1;
-    u32 rsvd4:7;
+	u32 status:8;
+	u32 rsvd:8;
+	u32 comp_index:16;
+	u16 p_index0;
+	u16 c_index0;
+	u16 p_index1;
+	u16 c_index1;
+	u32 rsvd2:24;
+	u32 color:1;
+	u32 rsvd3:7;
 } __packed;
 
 #endif /* _IONIC_IF_H_ */

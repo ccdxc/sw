@@ -27,6 +27,7 @@ test: dotest.out
 		$(RM) dotest.out; \
 	else \
 		echo Test FAILED; \
+		exit 1; \
 	fi
 
 dotest.out: $(GENLIB) $(GENBIN)/$(PROGRAM)

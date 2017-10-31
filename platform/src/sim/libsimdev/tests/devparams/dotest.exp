@@ -21,7 +21,7 @@ ff:12.5
 + ../../../../../gen/x86_64/bin/devparams -b type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 not-found-bdf
 <not found>
 + ../../../../../gen/x86_64/bin/devparams -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 mac
-<not found>
+02:01:02:03:04:05
 + ../../../../../gen/x86_64/bin/devparams -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 mac-not-found
 <not found>
 + ../../../../../gen/x86_64/bin/devparams -m type=eth,bdf=ff:12.5,mac=02:01:02:03:04:05,lif=4 not-mac-found
