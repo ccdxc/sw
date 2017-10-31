@@ -209,6 +209,14 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 		}
 	}
 
+	var intervals []string
+	// Slightly relax AssertEventually timeouts when agent is using the hal datapath.
+	if it.datapathKind == "hal" {
+		intervals = []string{"30ms", "30s"}
+	} else {
+		intervals = []string{"10ms", "10s"}
+	}
+
 	// create a network using REST api
 	nw, err := it.createNetwork("default", "test", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(c, err, "Error creating network")
@@ -217,7 +225,7 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 	AssertEventually(c, func() (bool, []interface{}) {
 		_, cerr := it.agents[0].NetworkAgent.FindNetwork(nw.ObjectMeta)
 		return (cerr == nil), nil
-	}, "Network not found in agent")
+	}, "Network not found in agent", intervals...)
 
 	// delete the network
 	_, err = it.deleteNetwork("default", "test")
@@ -227,7 +235,7 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 	AssertEventually(c, func() (bool, []interface{}) {
 		_, cerr := it.agents[0].NetworkAgent.FindNetwork(nw.ObjectMeta)
 		return (cerr != nil), nil
-	}, "Network still found in agent")
+	}, "Network still found in agent", intervals...)
 }
 
 // Verify basic vchub functionality
