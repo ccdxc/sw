@@ -1,0 +1,90 @@
+# Security Group Object Template.
+meta:
+    id      : DOS_POLICY
+    package : config.objects
+    module  : dos_policy
+
+ingress :
+    service:
+        proto       : 
+        port        : 
+        icmp_msg_type:
+    tcp_syn_flood_limits:
+        restrict:
+            pps     :
+            burst   :
+            duration:
+        protect:
+            pps     :
+            burst   :
+            duration:
+    udp_flood_limits:
+        restrict:
+            pps     :
+            burst   :
+            duration:
+        protect:
+            pps     :
+            burst   :
+            duration:
+    icmp_flood_limits:
+        restrict:
+            pps     :
+            burst   :
+            duration:
+        protect:
+            pps     :
+            burst   :
+            duration:
+    other_flood_limits:
+        restrict:
+            pps     :
+            burst   :
+            duration:
+        protect:
+            pps     :
+            burst   :
+            duration:
+
+egress  :
+    service:
+        proto       :
+        port        :
+        icmp_msg_type:
+    tcp_syn_flood_limits:
+        restrict:
+            pps     :
+            burst   :
+            duration:
+        protect:
+            pps     :
+            burst   :
+            duration:
+    udp_flood_limits:
+        restrict:
+            pps     :
+            burst   :
+            duration:
+        protect:
+            pps     :
+            burst   :
+            duration:
+    icmp_flood_limits:
+        restrict:
+            pps     :
+            burst   :
+            duration:
+        protect:
+            pps     :
+            burst   :
+            duration:
+    other_flood_limits:
+        restrict:
+            pps     :
+            burst   :
+            duration:
+        protect:
+            pps     :
+            burst   :
+            duration:
+

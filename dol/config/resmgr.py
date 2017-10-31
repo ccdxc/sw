@@ -68,6 +68,9 @@ L4LbBackendIpv6SubnetAllocator  = objects.TemplateFieldObject("ipv6step/4444::0/
 QosCosAllocator     = objects.TemplateFieldObject("range/1/6")
 QosDscpAllocator    = objects.TemplateFieldObject("range/32/48")
 
+SecurityGroupAllocator  = objects.TemplateFieldObject("range/1/128")
+DosPolicyAllocator      = objects.TemplateFieldObject("range/1/128")
+
 def CreateIpv4AddrPool(subnet):
     allocator = objects.TemplateFieldObject("ipstep/" + subnet + "/0.0.0.1")
     # Dont use the Subnet/32 address

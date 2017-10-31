@@ -407,6 +407,30 @@ def GetSecurityProfiles(objlist):
           stub.SecurityProfileGet)
     return
 
+def ConfigureSecurityGroups(objlist, update = False):
+    if IsHalDisabled(): return
+    stub = nwsec_pb2.NwSecurityStub(HalChannel)
+    api = stub.SecurityGroupCreate
+    if update: api = stub.SecurityGroupUpdate
+    __config(objlist, nwsec_pb2.SecurityGroupRequestMsg, api)
+    return
+
+def ConfigureDosPolicies(objlist, update = False):
+    if IsHalDisabled(): return
+    stub = nwsec_pb2.NwSecurityStub(HalChannel)
+    api = stub.DoSPolicyCreate
+    if update: api = stub.DoSPolicyUpdate
+    __config(objlist, nwsec_pb2.DoSPolicyRequestMsg, api)
+    return
+
+def GetSecurityGroups(objlist):
+    if IsHalDisabled():
+        return
+    stub = nwsec_pb2.NwSecurityStub(HalChannel)
+    __get(objlist, nwsec_pb2.SecurityGroupGetRequestMsg,
+          stub.SecurityGroupGet)
+    return
+
 def ConfigureSpanSessions(objlist):
     if IsHalDisabled(): return
     stub = telemetry_pb2.TelemetryStub(HalChannel)

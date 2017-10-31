@@ -13,6 +13,9 @@ import config.objects.tunnel    as tunnel
 import config.objects.span      as span
 import config.objects.l4lb      as l4lb
 
+import config.objects.security_group    as security_group
+import config.objects.dos_policy        as dos_policy
+
 from config.store               import Store
 from infra.common.logging       import cfglogger
 from infra.common.glopts        import GlobalOptions
@@ -75,6 +78,11 @@ class TenantObject(base.ConfigObjectBase):
         if self.IsSpan():
             self.obj_helper_span = span.SpanSessionObjectHelper()
             self.__create_span_sessions()
+
+        self.obj_helper_sg = security_group.SecurityGroupObjectHelper()
+        self.obj_helper_sg.main(self)
+        self.obj_helper_dosp = dos_policy.DosPolicyObjectHelper()
+        self.obj_helper_dosp.main(self)
         return
 
 
@@ -212,6 +220,13 @@ class TenantObject(base.ConfigObjectBase):
 
     def GetPinIf(self):
         return self.pinif
+
+    def GetSecurityGroups(self):
+        return self.obj_helper_sg.sgs
+    def GetLocalSecurityGroups(self):
+        return self.obj_helper_sg.GetLocal()
+    def GetRemoteSecurityGroups(self):
+        return self.obj_helper_sg.GetRemote()
 
     def PrepareHALRequestSpec(self, reqspec):
         reqspec.meta.tenant_id          = self.id

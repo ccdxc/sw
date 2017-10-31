@@ -36,6 +36,7 @@
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
 #include "nic/hal/pd/iris/scheduler_pd.hpp"
 #include "nic/hal/pd/iris/rawccb_pd.hpp"
+#include "nic/hal/pd/iris/dos_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -156,6 +157,12 @@ hal_state_pd::init(void)
     rw_table_idxr_ = new hal::utils::indexer(HAL_RW_TABLE_SIZE);
     HAL_ASSERT_RETURN((rw_table_idxr_ != NULL), false);
 #endif
+
+    // initialize dos-policy PD related data structures
+    dos_pd_slab_ = slab::factory("NWSEC_PD", HAL_SLAB_DOS_POLICY_PD,
+                                 sizeof(hal::pd::pd_dos_policy_t), 8,
+                                 false, true, true, true);
+    HAL_ASSERT_RETURN((dos_pd_slab_ != NULL), false);
 
     // initialize nwsec PD related data structures
     nwsec_pd_slab_ = slab::factory("NWSEC_PD", HAL_SLAB_SECURITY_PROFILE_PD,
@@ -424,6 +431,7 @@ hal_state_pd::hal_state_pd()
     ep_pd_ip_entry_slab_ = NULL;
 
     nwsec_pd_slab_ = NULL;
+    dos_pd_slab_ = NULL;
 
     session_slab_ = NULL;
 
@@ -510,6 +518,7 @@ hal_state_pd::~hal_state_pd()
     tunnelif_pd_slab_ ? delete tunnelif_pd_slab_ : HAL_NOP;
 
     nwsec_pd_slab_ ? delete nwsec_pd_slab_ : HAL_NOP;
+    dos_pd_slab_ ? delete dos_pd_slab_ : HAL_NOP;
 
     session_slab_ ? delete session_slab_ : HAL_NOP;
     
@@ -664,6 +673,7 @@ hal_state_pd::get_slab(hal_slab_t slab_id)
     GET_SLAB(ep_pd_slab_);
     GET_SLAB(ep_pd_ip_entry_slab_);
     GET_SLAB(nwsec_pd_slab_);
+    GET_SLAB(dos_pd_slab_);
     GET_SLAB(session_slab_);
     GET_SLAB(tlscb_slab_);
     GET_SLAB(tcpcb_slab_);

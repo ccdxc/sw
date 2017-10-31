@@ -43,6 +43,7 @@ class EndpointObject(base.ConfigObjectBase):
         self.is_l4lb_service = False
         self.l4lb_backend = None
 
+        self.sgs = []
 
         num_ip_addrs = defs.HAL_NUM_IPADDRS_PER_ENDPOINT
         num_ipv6_addrs = defs.HAL_NUM_IPV6ADDRS_PER_ENDPOINT
@@ -72,6 +73,10 @@ class EndpointObject(base.ConfigObjectBase):
 
     def AttachL4LbBackend(self, backend):
         self.l4lb_backend = backend
+        return
+
+    def AddSecurityGroup(self, sg):
+        self.sgs.append(sg)
         return
 
     def SetRemote(self):
@@ -181,6 +186,9 @@ class EndpointObject(base.ConfigObjectBase):
                 ip = req_spec.ip_address.add()
                 ip.ip_af = haldefs.common.IP_AF_INET6
                 ip.v6_addr = ipv6addr.getnum().to_bytes(16, 'big')
+
+            for sg in self.sgs:
+                req_spec.sg_handle.append(sg.hal_handle)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

@@ -93,8 +93,9 @@ bazel-gtests:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/slab:slab_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/twheel:twheel_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) fte:fte_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/network:dhcp_test
-	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/network:arp_test
+	# TODO: Revisit
+	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/network:dhcp_test
+	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/network:arp_test
 	# PD Utils
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/acl_tcam:acl_tcam_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/directmap:directmap_test

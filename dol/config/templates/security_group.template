@@ -1,0 +1,6 @@
+# Security Group Object Template.
+meta:
+    id      : SECURITY_GROUP
+    package : config.objects
+    module  : security_group
+

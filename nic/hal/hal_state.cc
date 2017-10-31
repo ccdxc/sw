@@ -21,6 +21,7 @@
 #include "nic/hal/src/cpucb.hpp"
 #include "nic/hal/src/rawrcb.hpp"
 #include "nic/hal/src/rawccb.hpp"
+#include "nic/hal/src/dos.hpp"
 #include "nic/hal/plugins/network/ep_learn/arp/arp_trans.hpp"
 #include "nic/hal/plugins/network/ep_learn/dhcp/dhcp_trans.hpp"
  
@@ -1177,6 +1178,13 @@ hal_mem_db::init(void)
                                         sizeof(hal::nwsec_profile_t), 8,
                                         false, true, true, true);
     HAL_ASSERT_RETURN((nwsec_profile_slab_ != NULL), false);
+    
+    // initialize dos policy related data structures
+    dos_policy_slab_ = slab::factory("dos-policy",
+                                      HAL_SLAB_DOS_POLICY,
+                                      sizeof(hal::dos_policy_t), 8,
+                                      false, true, true, true);
+    HAL_ASSERT_RETURN((dos_policy_slab_ != NULL), false);
 
     // initialize L2 segment related data structures
     l2seg_slab_ = slab::factory("l2seg", HAL_SLAB_L2SEG,
@@ -1352,6 +1360,7 @@ hal_mem_db::hal_mem_db()
     tenant_slab_ = NULL;
     network_slab_ = NULL;
     nwsec_profile_slab_ = NULL;
+    dos_policy_slab_ = NULL;
     nwsec_group_slab_  = NULL;
     nwsec_policy_rules_slab_ = NULL;
     nwsec_policy_cfg_slab_ = NULL;
@@ -1416,6 +1425,7 @@ hal_mem_db::~hal_mem_db()
     tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
     network_slab_ ? delete network_slab_ : HAL_NOP;
     nwsec_profile_slab_ ? delete nwsec_profile_slab_ : HAL_NOP;
+    dos_policy_slab_ ? delete dos_policy_slab_ : HAL_NOP;
     nwsec_group_slab_ ? delete nwsec_group_slab_ : HAL_NOP;
     nwsec_policy_rules_slab_ ? delete nwsec_policy_rules_slab_ : HAL_NOP;
     nwsec_policy_cfg_slab_ ? delete nwsec_policy_cfg_slab_ : HAL_NOP;
@@ -1463,6 +1473,7 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     GET_SLAB(hal_handle_id_list_entry_slab_);
     GET_SLAB(tenant_slab_);
     GET_SLAB(network_slab_);
+    GET_SLAB(dos_policy_slab_);
     GET_SLAB(nwsec_profile_slab_);
     GET_SLAB(nwsec_group_slab_);
     GET_SLAB(nwsec_policy_rules_slab_);
