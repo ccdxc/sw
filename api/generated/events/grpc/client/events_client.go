@@ -289,7 +289,12 @@ func (a *grpcObjEventPolicyV1EventPolicy) Watch(ctx context.Context, options *ap
 				Type:   kvstore.WatchEventType(r.Type),
 				Object: r.Object,
 			}
-			lw.OutCh <- &ev
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
 		}
 	}
 	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
@@ -453,7 +458,12 @@ func (a *grpcObjEventV1Event) Watch(ctx context.Context, options *api.ListWatchO
 				Type:   kvstore.WatchEventType(r.Type),
 				Object: r.Object,
 			}
-			lw.OutCh <- &ev
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
 		}
 	}
 	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)

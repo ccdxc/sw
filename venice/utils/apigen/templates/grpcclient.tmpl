@@ -143,7 +143,12 @@ func (a *grpcObj{{$srvname}}{{.}}) Watch(ctx context.Context, options *api.ListW
 				Type:   kvstore.WatchEventType(r.Type),
 				Object: r.Object,
 			}
-			lw.OutCh <- &ev
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
 		}
 	}
 	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)

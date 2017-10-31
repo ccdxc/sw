@@ -198,7 +198,12 @@ func (a *grpcObjMonitoringPolicyV1MonitoringPolicy) Watch(ctx context.Context, o
 				Type:   kvstore.WatchEventType(r.Type),
 				Object: r.Object,
 			}
-			lw.OutCh <- &ev
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
 		}
 	}
 	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)

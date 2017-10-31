@@ -744,7 +744,12 @@ func (a *grpcObjEndpointV1Endpoint) Watch(ctx context.Context, options *api.List
 				Type:   kvstore.WatchEventType(r.Type),
 				Object: r.Object,
 			}
-			lw.OutCh <- &ev
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
 		}
 	}
 	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
@@ -908,7 +913,12 @@ func (a *grpcObjLbPolicyV1LbPolicy) Watch(ctx context.Context, options *api.List
 				Type:   kvstore.WatchEventType(r.Type),
 				Object: r.Object,
 			}
-			lw.OutCh <- &ev
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
 		}
 	}
 	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
@@ -1072,7 +1082,12 @@ func (a *grpcObjNetworkV1Network) Watch(ctx context.Context, options *api.ListWa
 				Type:   kvstore.WatchEventType(r.Type),
 				Object: r.Object,
 			}
-			lw.OutCh <- &ev
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
 		}
 	}
 	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
@@ -1236,7 +1251,12 @@ func (a *grpcObjSecurityGroupV1SecurityGroup) Watch(ctx context.Context, options
 				Type:   kvstore.WatchEventType(r.Type),
 				Object: r.Object,
 			}
-			lw.OutCh <- &ev
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
 		}
 	}
 	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
@@ -1400,7 +1420,12 @@ func (a *grpcObjServiceV1Service) Watch(ctx context.Context, options *api.ListWa
 				Type:   kvstore.WatchEventType(r.Type),
 				Object: r.Object,
 			}
-			lw.OutCh <- &ev
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
 		}
 	}
 	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
@@ -1564,7 +1589,12 @@ func (a *grpcObjSgpolicyV1Sgpolicy) Watch(ctx context.Context, options *api.List
 				Type:   kvstore.WatchEventType(r.Type),
 				Object: r.Object,
 			}
-			lw.OutCh <- &ev
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
 		}
 	}
 	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
@@ -1728,7 +1758,12 @@ func (a *grpcObjTenantV1Tenant) Watch(ctx context.Context, options *api.ListWatc
 				Type:   kvstore.WatchEventType(r.Type),
 				Object: r.Object,
 			}
-			lw.OutCh <- &ev
+			select {
+			case lw.OutCh <- &ev:
+			case <-wstream.Context().Done():
+				close(lw.OutCh)
+				return
+			}
 		}
 	}
 	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
