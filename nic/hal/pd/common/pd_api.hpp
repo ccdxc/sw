@@ -232,6 +232,13 @@ typedef struct pd_rw_entry_args_s {
     rewrite_actions_en  rw_act;
 } __PACK__ pd_rw_entry_args_t;
 
+typedef struct pd_twice_nat_entry_args_s {
+    ip_addr_t               nat_ip;
+    uint16_t                nat_l4_port;
+    twice_nat_actions_en    twice_nat_act;
+} __PACK__ pd_twice_nat_entry_args_t;
+
+
 
 typedef struct pd_system_args_s {
     SystemResponse *rsp;
@@ -520,6 +527,10 @@ hal_ret_t pd_cpucb_delete(pd_cpucb_args_t *cpucb);
 hal_ret_t pd_cpucb_get(pd_cpucb_args_t *cpucb);
 hal_ret_t pd_rw_entry_find_or_alloc(pd_rw_entry_args_t *rw_key, 
                                     uint32_t *rw_idx);
+
+hal_ret_t pd_twice_nat_add(pd_twice_nat_entry_args_t *args,
+                           uint32_t *twice_nat_idx);
+hal_ret_t pd_twice_nat_del(pd_twice_nat_entry_args_t *args);
 hal_ret_t pd_rawrcb_create(pd_rawrcb_args_t *rawrcb);
 hal_ret_t pd_rawrcb_update(pd_rawrcb_args_t *rawrcb);
 hal_ret_t pd_rawrcb_delete(pd_rawrcb_args_t *rawrcb);

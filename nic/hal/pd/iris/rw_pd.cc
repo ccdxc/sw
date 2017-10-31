@@ -150,7 +150,7 @@ rw_entry_alloc(pd_rw_entry_key_t *rw_key, pd_rw_entry_info_t *rw_info,
         del_rw_entry_pd_from_db(rwe);
         rw_entry_pd_free(rwe);
     } else {
-	*rw_idx = tmp_rw_idx;
+        *rw_idx = tmp_rw_idx;
     }
 
 end:

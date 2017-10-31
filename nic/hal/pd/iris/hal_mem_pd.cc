@@ -37,6 +37,7 @@
 #include "nic/hal/pd/iris/scheduler_pd.hpp"
 #include "nic/hal/pd/iris/rawccb_pd.hpp"
 #include "nic/hal/pd/iris/dos_pd.hpp"
+#include "nic/hal/pd/utils/directmap/directmap_entry.hpp"
 
 namespace hal {
 namespace pd {
@@ -382,6 +383,11 @@ hal_state_pd::init(void)
                                  hal::pd::rawccb_pd_compare_hw_key_func);
     HAL_ASSERT_RETURN((rawccb_hwid_ht_ != NULL), false);
 
+    directmap_entry_slab_ = slab::factory("DIRECTMAP ENTRY", HAL_SLAB_DIRECTMAP_ENTRY,
+                                          sizeof(hal::pd::utils::directmap_entry_t), 128,
+                                          true, true, true, true);
+    HAL_ASSERT_RETURN((directmap_entry_slab_ != NULL), false);
+
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
     tcam_tables_ = NULL;
@@ -487,6 +493,8 @@ hal_state_pd::hal_state_pd()
 
     rawccb_slab_ = NULL;
     rawccb_hwid_ht_ = NULL;
+
+    directmap_entry_slab_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -572,6 +580,8 @@ hal_state_pd::~hal_state_pd()
 
     rawccb_slab_ ? delete rawccb_slab_ : HAL_NOP;
     rawccb_hwid_ht_ ? delete rawccb_hwid_ht_ : HAL_NOP;
+
+    directmap_entry_slab_ ? delete directmap_entry_slab_ : HAL_NOP;
 
     if (dm_tables_) {
         for (tid = P4TBL_ID_INDEX_MIN; tid < P4TBL_ID_INDEX_MAX; tid++) {
@@ -873,9 +883,16 @@ hal_state_pd::init_tables(void)
             break;
 
         case P4_TBL_TYPE_INDEX:
-            dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
-                new DirectMap(tinfo.tablename, tid, tinfo.tabledepth, 
-                              tinfo.actiondata_struct_size);
+            if (tid == P4TBL_ID_TWICE_NAT) {
+                dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
+                    new DirectMap(tinfo.tablename, tid, tinfo.tabledepth,
+                                  tinfo.actiondata_struct_size, true, true);
+
+            } else {
+                dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
+                    new DirectMap(tinfo.tablename, tid, tinfo.tabledepth, 
+                                  tinfo.actiondata_struct_size);
+            }
             HAL_ASSERT(dm_tables_[tid - P4TBL_ID_INDEX_MIN] != NULL);
             break;
 

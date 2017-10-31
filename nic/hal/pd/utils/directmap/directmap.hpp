@@ -16,8 +16,12 @@
 #include "nic/include/base.h"
 #include "nic/utils/indexer/indexer.hpp"
 #include "nic/include/hal_lock.hpp"
+#include "nic/utils/ht/ht.hpp"
+#include "nic/hal/pd/utils/directmap/directmap_entry.hpp"
 
+using hal::pd::utils::directmap_entry_t;
 using hal::utils::indexer;
+using hal::utils::ht;
 
 namespace hal {
 namespace pd {
@@ -72,9 +76,12 @@ private:
     uint32_t        swdata_len_;    // SW Entry Len
     uint32_t        hwdata_len_;    // HW Entry Len
 
-    uint64_t        *stats_;         // Statistics
+    ht              *entry_ht_;     // entry hash table
 
-    bool            thread_safe_;    // Makes it thread safe
+    uint64_t        *stats_;        // Statistics
+
+    bool            thread_safe_;   // Makes it thread safe
+    bool            sharing_en_;
 
     hal_ret_t alloc_index_(uint32_t *idx);  
     hal_ret_t alloc_index_withid_(uint32_t idx);    
@@ -93,9 +100,17 @@ private:
     // Entry Trace
     hal_ret_t entry_trace_(void *data, uint32_t index);
 
+    static void * dm_entry_get_key_func(void *entry);
+    static uint32_t dm_entry_compute_hash_func(void *key, uint32_t ht_size);
+    static bool dm_entry_compare_key_func(void *key1, void *key2);
+
+    hal_ret_t add_directmap_entry_to_db(directmap_entry_t *dme);
+    void *del_directmap_entry_from_db(directmap_entry_t *dme);
+    directmap_entry_t *find_directmap_entry(directmap_entry_t *key);
+
 public:
     DirectMap(std::string table_name, uint32_t table_id, uint32_t num_entries, uint32_t swdata_len,
-              bool thread_safe = true);
+              bool thread_safe = true, bool sharing_en = false);
     ~DirectMap();
 
     // Methods
@@ -103,10 +118,10 @@ public:
     hal_ret_t insert(void *data, uint32_t *index);
     // Inserts Entry in HW at index
     hal_ret_t insert_withid(void *data, uint32_t index);
-    // Updates Entry in HW
+    // Updates Entry in HW. Not valid if sharing is enabled
     hal_ret_t update(uint32_t index, void *data);
-    // Removes Entry from HW
-    hal_ret_t remove(uint32_t index);
+    // Removes Entry from HW. For sharing_en:1, only through data.
+    hal_ret_t remove(uint32_t index, void *data = NULL);
     // Retrieves Entry from HW
     hal_ret_t retrieve(uint32_t index, void *data);
     // Iterates every entry and gives a call back

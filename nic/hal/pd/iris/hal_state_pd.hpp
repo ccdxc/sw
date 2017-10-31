@@ -187,6 +187,9 @@ public:
     ht *tnnl_rw_table_ht(void) const { return tnnl_rw_table_ht_; }
     indexer *tnnl_rw_tbl_idxr(void) { return tnnl_rw_tbl_idxr_; }
 
+    // get APIs for utils slabs
+    slab *directmap_entry_slab(void) const { return directmap_entry_slab_; }
+
     // get APIs for CPU PKT related state
     slab *cpupkt_slab(void) const { return cpupkt_slab_; }
     slab *cpupkt_qinst_info_slab(void) const {return cpupkt_qinst_info_slab_; }
@@ -438,6 +441,11 @@ private:
     struct {
         slab       *rawccb_slab_;
         ht         *rawccb_hwid_ht_;
+    } __PACK__;
+
+    // utils slabs
+    struct {
+        slab       *directmap_entry_slab_;
     } __PACK__;
 
     DirectMap    **dm_tables_;
