@@ -181,7 +181,7 @@ def generate_pipeline_summary_page(output_dir, page_name="instructions_summary.h
                 line = "<br><a href=%s>%s</a></br>" % (os.path.relpath(html_file, os.getcwd()), module_name)
                 index_page_html.write(line)
         close_html_page(index_page_html)
-        line = "<br><a href=%s>%s</a></br>" % (index_page, feature)
+        line = "<br><a href=%s>%s</a></br>" % (feature + "/index.html", feature)
         summary_page.write(line + "\n")
         os.chdir(output_dir)
         

@@ -15,6 +15,7 @@ import utils
 parser = argparse.ArgumentParser(description='Coverage generator')
 parser.add_argument('--config', dest='conf_file',
                     default='coverage.json', help='Coverage config file')
+parser.add_argument('--ignore-errors', dest='ignore_errors', action='store_true', help='Ignore Dol errors and continue coverage.)')
 args = parser.parse_args()
 
 
@@ -363,9 +364,9 @@ class CapcovCoverage(CoverageBase):
     def remove_files(self, lcov_out_file, remove_files):
         pass
  
-def run(cmd, exit_on_error=True):
+def run(cmd):
     ret = subprocess.call(cmd, shell=True)
-    if ret and exit_on_error:
+    if ret and not args.ignore_errors:
         print("Cmd failed.: ", cmd)
         sys.exit(1)
 
@@ -488,7 +489,6 @@ if __name__ == '__main__':
 
     with open(config_file) as data_file:
         data = json.load(data_file)
-
 
     os.chdir(env.nic_dir)
     build_modules(data)
