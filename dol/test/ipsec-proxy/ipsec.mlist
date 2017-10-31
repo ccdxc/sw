@@ -52,3 +52,12 @@ modules:
         ignore  : False 
         iterate :
             - flow: filter://type=IPV6,proto=TCP
+    - module:
+        name    : DECRYPT_PKT_TO_IPV6_TCP_IPSECCBQ
+        enable  : False 
+        package : test.ipsec-proxy
+        module  : decrypt_ipsec_ipv6_to_eth 
+        spec    : decrypt_ipsec_ipv6_to_eth.testspec 
+        ignore  : True 
+        iterate :
+            - flow: filter://type=IPV6

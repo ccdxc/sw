@@ -14,7 +14,7 @@ struct phv_ p;
         .align 
 esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
-
+    seq c1, d.is_v6, 1
     phvwri p.p4_intr_global_tm_oport, TM_OPORT_P4INGRESS
     phvwri p.p4_intr_global_tm_iport, TM_OPORT_DMA
     phvwri p.p4_intr_global_lif, 1003
@@ -24,7 +24,9 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_int_header_payload_start, k.p42p4plus_hdr_ipsec_payload_start 
 
     // p4 sends payload_end as end of the packet including 2+icv
+    
     add r2, r0, k.p42p4plus_hdr_ipsec_payload_end
+    addi.c1 r2, r2, IPV6_HDR_SIZE
     sub r2, r2, d.icv_size
     addi r2, r2, IPSEC_SALT_HEADROOM
     phvwr p.ipsec_int_header_tailroom_offset, r2
@@ -52,7 +54,9 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_global_lif, k.{p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10}
     phvwr p.ipsec_global_qtype, k.p4_rxdma_intr_qtype
     phvwr p.ipsec_global_qid, k.p4_rxdma_intr_qid
-    phvwr p.ipsec_global_packet_length, k.p42p4plus_hdr_ipsec_payload_end 
+    add r2, r0, k.p42p4plus_hdr_ipsec_payload_end 
+    addi.c1 r2, r2, IPV6_HDR_SIZE
+    phvwr p.ipsec_global_packet_length, r2 
      
     add r6, r0, k.p42p4plus_hdr_ipsec_payload_start
     add r6, r6, k.p42p4plus_hdr_ip_hdr_size

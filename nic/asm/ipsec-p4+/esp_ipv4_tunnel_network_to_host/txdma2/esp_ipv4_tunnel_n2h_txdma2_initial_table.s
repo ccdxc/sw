@@ -39,6 +39,7 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     memwr.dx  r4, r3
 
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
+    phvwr p.ipsec_to_stage3_block_size, d.block_size
     phvwri p.ipsec_to_stage4_dot1q_etype, DOT1Q_ETYPE
     phvwr p.ipsec_to_stage4_vrf_vlan, d.vrf_vlan
     cmov r6, c1, IPV6_ETYPE, IPV4_ETYPE

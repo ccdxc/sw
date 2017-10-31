@@ -84,7 +84,8 @@ header_type ipsec_to_stage2_t {
 header_type ipsec_to_stage3_t {
     fields {
         ipsec_cb_addr : ADDRESS_WIDTH;
-        stage3_pad : 64;
+        block_size : 8;
+        stage3_pad : 56;
     }
 }
 
@@ -235,6 +236,7 @@ action esp_v4_tunnel_n2h_txdma2_load_pad_size_and_l4_proto(pad_size, l4_proto)
     IPSEC_DECRYPT_TXDMA2_T0_S2S_SCRATCH
     modify_field(txdma2_global.pad_size, pad_size);
     modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr);
+    modify_field(ipsec_to_stage3_scratch.block_size, ipsec_to_stage3.block_size);
 }
  
 

@@ -19,7 +19,8 @@ sessions:
         ipv4:
             - ref://store/specs/id=SESSION_UDP_SERVICES_PROXY
             - ref://store/specs/id=SESSION_ESP_PROXY
-        ipv6: None
+        ipv6: 
+            - ref://store/specs/id=SESSION_ESP_PROXY
         mac: None
 
 lif: ref://store/specs/id=LIF_ETH

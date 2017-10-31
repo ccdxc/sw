@@ -22,6 +22,7 @@ sessions:
     unidest:
         ipv6:
             - ref://store/specs/id=SESSION_TCP_PROXY
+            - ref://store/specs/id=SESSION_ESP_PROXY
         ipv4:
             - ref://store/specs/id=SESSION_TCP_PROXY
             - ref://store/specs/id=SESSION_ESP_PROXY
