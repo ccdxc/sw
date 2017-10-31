@@ -129,6 +129,7 @@ def TestCaseVerify(tc):
     print("ARQ pi old %d new %d" % (arq.pi, arq_cur.pi))
 
     # Tx: verify PI for RAWCCB got incremented
+    rawccb_cur.GetObjValPd()
     if (rawccb_cur.pi == rawccb.pi):
         print("RAWCCB pi check failed old %d new %d" % (rawccb.pi, rawccb_cur.pi))
         return False

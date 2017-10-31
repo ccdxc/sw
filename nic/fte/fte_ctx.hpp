@@ -283,7 +283,7 @@ const lifqid_t FLOW_MISS_LIFQ = {hal::SERVICE_LIF_CPU, 0, 0};
 const lifqid_t TCP_PROXY_LIFQ = {hal::SERVICE_LIF_TCP_PROXY, 0, 0};
 const lifqid_t TLS_PROXY_LIFQ = {hal::SERVICE_LIF_TLS_PROXY, 0, 0};
 const lifqid_t ALG_CFLOW_LIFQ = {hal::SERVICE_LIF_CPU, 0, HAL_FTE_FLOW_REL_COPY_QID};
-const lifqid_t APP_REDIR_LIFQ = {hal::SERVICE_LIF_APP_REDIR, hal::APP_REDIR_RAWR_QTYPE, 0};
+const lifqid_t APP_REDIR_LIFQ = {hal::SERVICE_LIF_APP_REDIR, 0, 0};
 
 inline std::ostream& operator<<(std::ostream& os, const lifqid_t& lifq)
 {
@@ -298,15 +298,22 @@ inline bool operator==(const lifqid_t& lifq1, const lifqid_t& lifq2)
 }
 
 // Application redirect context
+typedef enum {
+    APP_REDIR_VERDICT_PASS,     // pass the packet
+    APP_REDIR_VERDICT_BLOCK,    // block the packet
+} app_redir_verdict_t;
+
 class app_redir_ctx_t {
 public:
     void init()
     {
-        redir_flags_      = 0;
-        hdr_len_total_    = 0;
-        chain_qtype_      = 0;
-        chain_pkt_sent_   = 0;
-        chain_wring_type_ = types::WRING_TYPE_NONE;
+        redir_flags_        = 0;
+        hdr_len_total_      = 0;
+        chain_qtype_        = hal::APP_REDIR_RAWC_QTYPE;
+        chain_wring_type_   = types::WRING_TYPE_APP_REDIR_RAWC;
+        chain_pkt_verdict_  = APP_REDIR_VERDICT_PASS;
+        pipeline_end_       = false;
+        chain_pkt_sent_     = false;
     };
 
     uint16_t redir_flags() const { return redir_flags_; }
@@ -318,6 +325,13 @@ public:
     bool chain_pkt_sent() const { return chain_pkt_sent_; }
     void set_chain_pkt_sent(bool yesno) { chain_pkt_sent_ = yesno; }
 
+    app_redir_verdict_t chain_pkt_verdict() const { return chain_pkt_verdict_; }
+    void set_chain_pkt_verdict(app_redir_verdict_t verdict) { chain_pkt_verdict_ = verdict; }
+    bool chain_pkt_verdict_pass(void);
+
+    bool pipeline_end() const { return pipeline_end_; }
+    void set_pipeline_end(bool yesno) { pipeline_end_ = yesno; }
+
     uint16_t chain_qtype() const { return chain_qtype_; }
     void set_chain_qtype(uint8_t chain_qtype) { chain_qtype_ = chain_qtype; }
 
@@ -328,8 +342,10 @@ private:
     uint16_t            redir_flags_;
     uint16_t            hdr_len_total_;
     types::WRingType    chain_wring_type_;
+    bool                chain_pkt_sent_;
+    bool                pipeline_end_;
+    app_redir_verdict_t chain_pkt_verdict_;
     uint8_t             chain_qtype_;
-    uint8_t             chain_pkt_sent_;
 };
 
 // pkt info for queued tx packets

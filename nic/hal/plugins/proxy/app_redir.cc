@@ -4,18 +4,23 @@
 #include "nic/p4/nw/include/defines.h"
 #include "app_redir.hpp"
 
+bool
+fte::app_redir_ctx_t::chain_pkt_verdict_pass(void) {
+
+    return !(redir_flags_ & PEN_APP_REDIR_SPAN_INSTANCE) &&
+           (chain_pkt_verdict_ != fte::APP_REDIR_VERDICT_BLOCK);
+}
+
 namespace hal {
 namespace proxy {
 
-hal::pd::cpupkt_ctxt_t* app_chain_ctx = NULL;
+static thread_local hal::pd::cpupkt_ctxt_t* app_chain_ctx;
 
 static inline hal_ret_t
 app_redir_init(fte::ctx_t& ctx)
 {
-    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
-    hal_ret_t               ret = HAL_RET_OK;
+    hal_ret_t   ret = HAL_RET_OK;
 
-    redir_ctx.init();
     if (app_chain_ctx == NULL)   {
         app_chain_ctx = hal::pd::cpupkt_ctxt_alloc_init();
         if (app_chain_ctx == NULL)   {
@@ -27,9 +32,37 @@ app_redir_init(fte::ctx_t& ctx)
 }
 
 /*
+ * Set pipeline action
+ * (pipeline_action_t not available in fte_ctx.hpp which necessitates
+ * using a bool to maintain state).
+ */
+static inline void
+app_redir_pipeline_action_set(fte::ctx_t& ctx,
+                              fte::pipeline_action_t action)
+{
+    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+
+    redir_ctx.set_pipeline_end(action == fte::PIPELINE_END);
+}
+
+
+/*
+ * Return pipeline action continue or end
+ */
+static inline fte::pipeline_action_t
+app_redir_pipeline_action(fte::ctx_t& ctx)
+{
+    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+
+    return redir_ctx.pipeline_end() ?
+           fte::PIPELINE_END : fte::PIPELINE_CONTINUE;
+}
+
+
+/*
  * Exported application packet send function
  */
-hal_ret_t
+static hal_ret_t
 app_redir_pkt_send(fte::ctx_t& ctx)
 {
     fte::app_redir_ctx_t&           redir_ctx = ctx.app_redir();
@@ -66,7 +99,6 @@ app_redir_pkt_send(fte::ctx_t& ctx)
         pkt_len = ctx.pkt_len() - redir_ctx.hdr_len_total();
         HAL_TRACE_DEBUG("{} pkt_len {} src_lif {}", __FUNCTION__,
                         pkt_len, cpu_header.src_lif);
-
         ret = hal::pd::cpupkt_send(app_chain_ctx,
                                    redir_ctx.chain_wring_type(),
                                    cpu_rxhdr->qid,
@@ -78,6 +110,7 @@ app_redir_pkt_send(fte::ctx_t& ctx)
                                    redir_ctx.chain_qtype(),
                                    cpu_rxhdr->qid,
                                    0);
+        redir_ctx.set_chain_pkt_sent(true);
     }
 
     return ret;
@@ -99,8 +132,7 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
     hal_ret_t                       ret = HAL_RET_OK;
 
     pkt_len = ctx.pkt_len();
-    if (pkt_len < (PEN_APP_REDIR_HEADER_SIZE +
-                   PEN_APP_REDIR_VERSION_HEADER_SIZE)) {
+    if (pkt_len < PEN_APP_REDIR_HEADER_MIN_SIZE) {
         HAL_TRACE_ERR("{} pkt_len {} too small", __FUNCTION__, pkt_len);
         ret = HAL_RET_APP_REDIR_HDR_LEN_ERR;
         goto done;
@@ -129,10 +161,11 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
         app_hdr->raw.vrf = cpu_rxhdr->lkp_vrf;
         HAL_TRACE_DEBUG("{} flow_id {:#x} flags {:#x} vrf {}", __FUNCTION__,
                         ntohl(app_hdr->raw.flow_id), flags, app_hdr->raw.vrf);
-        if (hdr_len != (PEN_APP_REDIR_VERSION_HEADER_SIZE +
+        if ((pkt_len < PEN_RAW_REDIR_HEADER_V1_FULL_SIZE) ||
+            ((hdr_len - PEN_APP_REDIR_VERSION_HEADER_SIZE) != 
                         PEN_RAW_REDIR_HEADER_V1_SIZE)) {
-            HAL_TRACE_ERR("{} format {} invalid hdr_len {}", __FUNCTION__,
-                          app_hdr->ver.format, hdr_len);
+            HAL_TRACE_ERR("{} format {} invalid pkt_len {} or hdr_len {}",
+                          __FUNCTION__, pkt_len, app_hdr->ver.format, hdr_len);
             ret = HAL_RET_APP_REDIR_HDR_LEN_ERR;
             goto done;
         }
@@ -145,10 +178,11 @@ app_redir_app_hdr_validate(fte::ctx_t& ctx)
         flags = ntohs(app_hdr->proxy.flags);
         HAL_TRACE_DEBUG("{} flow_id {:#x} flags {:#x} vrf {}", __FUNCTION__,
                         ntohl(app_hdr->proxy.flow_id), flags, app_hdr->proxy.vrf);
-        if (hdr_len != (PEN_APP_REDIR_VERSION_HEADER_SIZE +
+        if ((pkt_len < PEN_PROXY_REDIR_HEADER_V1_FULL_SIZE) ||
+            ((hdr_len - PEN_APP_REDIR_VERSION_HEADER_SIZE) != 
                         PEN_PROXY_REDIR_HEADER_V1_SIZE)) {
-            HAL_TRACE_ERR("{} format {} invalid hdr_len {}", __FUNCTION__,
-                          app_hdr->ver.format, hdr_len);
+            HAL_TRACE_ERR("{} format {} invalid pkt_len {} or hdr_len {}",
+                          __FUNCTION__, pkt_len, app_hdr->ver.format, hdr_len);
             ret = HAL_RET_APP_REDIR_HDR_LEN_ERR;
             goto done;
         }
@@ -175,7 +209,7 @@ done:
  * Forward redirected packet to application or simply loop it back (DOL case).
  */
 static inline hal_ret_t
-app_redir_pkt_fwd(fte::ctx_t& ctx)
+app_redir_pkt_process(fte::ctx_t& ctx)
 {
     fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
     hal_ret_t               ret;
@@ -183,14 +217,12 @@ app_redir_pkt_fwd(fte::ctx_t& ctx)
     ret = app_redir_app_hdr_validate(ctx);
     if (ret == HAL_RET_OK) {
 
+        /*
+         * DOL can force an immediate packet send
+         */
         if (redir_ctx.redir_flags() & PEN_APP_REDIR_PIPELINE_LOOPBK_EN) {
             ret = app_redir_pkt_send(ctx);
-
-            /*
-             * DOL has sent the packet so don't let the remainder
-             * of the pipeline send it again.
-             */
-            redir_ctx.set_chain_pkt_sent(true);
+            app_redir_pipeline_action_set(ctx, fte::PIPELINE_END);
         }
     }
 
@@ -220,13 +252,29 @@ app_redir_flow_fwding_update(fte::ctx_t& ctx,
     return ctx.update_flow(flowupd);
 }
 
+/*
+ * Set app redirct verdict for the current packet, independent of any 
+ * FTE drop decision made in other pipelines/features.
+ */
+void
+app_redir_pkt_verdict_set(fte::ctx_t& ctx,
+                          fte::app_redir_verdict_t verdict)
+{
+    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
 
+    HAL_TRACE_DEBUG("{} verdict {}", __FUNCTION__, verdict);
+    redir_ctx.set_chain_pkt_verdict(verdict);
+}
+
+/*
+ * App redirect pipeline flow miss exec handler
+ */
 fte::pipeline_action_t
 app_redir_miss_exec(fte::ctx_t& ctx)
 {
-    proxy_flow_info_t           *pfi;
-    hal_ret_t                   ret = HAL_RET_OK;
-    flow_key_t                  flow_key = ctx.key();
+    proxy_flow_info_t       *pfi;
+    hal_ret_t               ret = HAL_RET_OK;
+    flow_key_t              flow_key = ctx.key();
 
     ret = app_redir_init(ctx);
     if (ret != HAL_RET_OK) {
@@ -256,32 +304,64 @@ app_redir_miss_exec(fte::ctx_t& ctx)
         HAL_TRACE_DEBUG("app_redir is not enabled for the flow");
     } 
 
-    return fte::PIPELINE_CONTINUE;
+exit:
+    return app_redir_pipeline_action(ctx);
 
 error:
     ctx.set_feature_status(ret);
-    return fte::PIPELINE_CONTINUE;
+    app_redir_pipeline_action_set(ctx, fte::PIPELINE_END);
+    goto exit;
 }
 
+/*
+ * App redirect pipeline flow hit exec handler
+ */
 fte::pipeline_action_t
 app_redir_exec(fte::ctx_t& ctx)
 {
-    hal_ret_t           ret;
+    hal_ret_t               ret;
 
     ret = app_redir_init(ctx);
     if (ret != HAL_RET_OK) {
         goto error;
     }
 
-    ret = app_redir_pkt_fwd(ctx);
+    ret = app_redir_pkt_process(ctx);
     if (ret != HAL_RET_OK) {
         goto error;
     }
-    return fte::PIPELINE_CONTINUE;
+
+exit:
+    return app_redir_pipeline_action(ctx);
 
 error:
     ctx.set_feature_status(ret);
-    return fte::PIPELINE_CONTINUE;
+    app_redir_pipeline_action_set(ctx, fte::PIPELINE_END);
+    goto exit;
+}
+
+/*
+ * Presumably executed as last feature in the redirect pipeline:
+ * send or block the current packet based on the type of redirect
+ * and packet verdict.
+ */
+fte::pipeline_action_t
+app_redir_exec_fini(fte::ctx_t& ctx)
+{
+    fte::app_redir_ctx_t&   redir_ctx = ctx.app_redir();
+    hal_ret_t               ret;
+
+    /*
+     * Presumably executed as last feature in the pipeline
+     */
+    app_redir_pipeline_action_set(ctx, fte::PIPELINE_END);
+
+    if (!ctx.drop() && redir_ctx.chain_pkt_verdict_pass()) {
+        ret = app_redir_pkt_send(ctx);
+        ctx.set_feature_status(ret);
+    }
+
+    return app_redir_pipeline_action(ctx);
 }
 
 } // namespace hal

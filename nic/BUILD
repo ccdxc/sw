@@ -322,6 +322,7 @@ cc_library(
 
 cc_library(
     name = "snort3",
+    hdrs = glob(["third-party/snort3/export/include/*.h"]),
     srcs = [
             "third-party/snort3/export/bin/libsnort.so",
             ],
