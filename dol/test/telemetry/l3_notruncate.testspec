@@ -10,7 +10,7 @@ selectors:
         segment     : filter://native=False
         endpoint    : filter://remote=True
         interface   : filter://any
-    flow        : filter://fwtype=L2,label=SPAN
+    flow        : filter://fwtype=L3,label=SPAN
     maxflows    : 1
 
 packets:
@@ -18,7 +18,6 @@ packets:
         id          : BASE     # BASE Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        encaps      : None
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
@@ -49,14 +48,41 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : PKT1     # Input packet 1
+        id          : PKT1 # Input Packet
         clone       : ref://testcase/packets/id=BASE
-        encaps      : 
-            - ref://factory/packets/id=ENCAP_QTAG
+        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/src/segment/macaddr
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : callback://networking/packets/GetVlanId
+            ipv4:
+                ttl     : callback://networking/packets/GetTtl
+            ipv6:
+                hlim    : callback://networking/packets/GetTtl
+            tcp:
+                flags: ack
 
+    - packet:
+        id          : PKT2 # Expected Packet
+        clone       : ref://testcase/packets/id=BASE
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/dst/segment/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                prio    : callback://networking/packets/GetExpectedPacketCos
+                vlan    : ref://testcase/config/dst/segment/vlan_id
+            ipv4:
+                tos     : ref://testcase/config/flow/txqos/dscp
+                ttl     : callback://networking/packets/GetRoutedTtl
+            ipv6:
+                tc      : ref://testcase/config/flow/txqos/dscp
+                hlim    : callback://networking/packets/GetRoutedTtl
+            tcp:
+                flags: ack
 
     - packet:
         id          : SPAN_PKT1     # Span packet 1
@@ -69,16 +95,61 @@ packets:
             #    vlan: ref://testcase/config/ingress_mirror/session1/segment/vlan_id
 
     - packet:
-        id          : RSPAN_PKT1     # Span packet 1
+        id          : EG_SPAN_PKT1    
+        clone       : ref://testcase/packets/id=PKT2
+        #encaps      : None
+            #- ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            ipv4:
+            #qtag:
+            #    vlan: ref://testcase/config/ingress_mirror/session1/segment/vlan_id
+
+    - packet:
+        id          : RSPAN_PKT1  
         clone       : ref://testcase/packets/id=BASE
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
         headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/src/segment/macaddr
             outerqtag:
                 prio: 0
                 vlan: callback://telemetry/callbacks/GetRspanVlan 
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                prio    : callback://networking/packets/GetExpectedPacketCos
+                vlan    : callback://networking/packets/GetVlanId
+            ipv4:
+                ttl     : callback://networking/packets/GetTtl
+            ipv6:
+                hlim    : callback://networking/packets/GetTtl
+            tcp:
+                flags: ack
+ 
+    - packet:
+        id          : EG_RSPAN_PKT1  
+        clone       : ref://testcase/packets/id=BASE
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QINQ
+        headers     :
+            eth:
+                src     : ref://testcase/config/dst/segment/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetRspanVlan 
+            qtag:
+                prio    : callback://networking/packets/GetExpectedPacketCos
+                vlan    : ref://testcase/config/dst/segment/vlan_id 
+            ipv4:
+                tos     : ref://testcase/config/flow/txqos/dscp
+                ttl     : callback://networking/packets/GetRoutedTtl
+            ipv6:
+                tc      : ref://testcase/config/flow/txqos/dscp
+                hlim    : callback://networking/packets/GetRoutedTtl
+            tcp:
+                flags: ack
+
 
 trigger:
     packets:
@@ -89,7 +160,7 @@ trigger:
 expect:
     packets:
         - packet:
-            object  : ref://testcase/packets/id=PKT1
+            object  : ref://testcase/packets/id=PKT2
             port    : ref://testcase/config/dst/endpoint/intf/ports
 
         - packet:

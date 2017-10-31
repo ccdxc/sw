@@ -6,7 +6,6 @@
 """
 Packet class. Binding mechanism. fuzz() method.
 """
-
 import time,itertools,os,random,pdb
 import sys,traceback
 import copy
@@ -603,19 +602,23 @@ Creates an EPS file describing a packet. If filename is not provided a temporary
     def do_dissect_payload(self, s):
         if s:
             cls = self.guess_payload_class(s)
-            try:
-                p = cls(s, _internal=1, _underlayer=self)
-            except KeyboardInterrupt:
-                raise
-            except:
-                if conf.debug_dissector:
-                    if isinstance(cls,type) and issubclass(cls,Packet):
-                        log_runtime.error("%s dissector failed" % cls.name)
-                    else:
-                        log_runtime.error("%s.guess_payload_class() returned [%s]" % (self.__class__.__name__,repr(cls)))
-                    if cls is not None:
-                        raise
+            if cls is not None and len(cls()) > len(s):
+                # Not enough bytes to parse this header.
                 p = conf.raw_layer(s, _internal=1, _underlayer=self)
+            else:
+                try:
+                    p = cls(s, _internal=1, _underlayer=self)
+                except KeyboardInterrupt:
+                    raise
+                except:
+                    if conf.debug_dissector:
+                        if isinstance(cls,type) and issubclass(cls,Packet):
+                            log_runtime.error("%s dissector failed" % cls.name)
+                        else:
+                            log_runtime.error("%s.guess_payload_class() returned [%s]" % (self.__class__.__name__,repr(cls)))
+                        if cls is not None:
+                            raise
+                    p = conf.raw_layer(s, _internal=1, _underlayer=self)
             self.add_payload(p)
 
     def dissect(self, s):

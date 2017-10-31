@@ -8,8 +8,8 @@ feature:
 
 modules:
     - module:
-        name    : TELEMETRY_FP
-        spec    : firstpacket.testspec
+        name    : TELEMETRY_L2
+        spec    : l2_notruncate.testspec
         iterate:
             - SPAN_LOCAL_INGRESS_UPLINK
             - SPAN_LOCAL_INGRESS_PC
@@ -36,3 +36,13 @@ modules:
             - RSPAN_SPAN_LOCAL_INGRESS_EGRESS_UPLINK_PC
             - SPAN_RSPAN_LOCAL_INGRESS_EGRESS_UPLINK_PC
 
+    - module:
+        name    : TELEMETRY_L3
+        spec    : l3_notruncate.testspec
+        iterate:
+            - L3_SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
+            - L3_SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
+            - L3_RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK
+            - L3_RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC
+            - L3_SPAN_RSPAN_LOCAL_INGRESS_UPLINK
+            - L3_SPAN_RSPAN_LOCAL_INGRESS_PC

@@ -9,94 +9,150 @@ import config.objects.span as span
 class spanSessionData:
     localSpanSsns = {
             "SPAN_LOCAL_INGRESS_UPLINK": [
-                (1, "LOCAL", "Uplink1")
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0)
                 ],
             "SPAN_LOCAL_INGRESS_PC": [
-                (3, "LOCAL", "UplinkPc1")
+                (3, "ingress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 0)
                 ],
             "SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK": [
-                (1, "LOCAL", "Uplink1"),
-                (2, "LOCAL", "Uplink2")
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (2, "ingress", "LOCAL", "SPAN_PKT1", "Uplink2", 0)
                 ],
             "SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC": [
-                (1, "LOCAL", "Uplink1"),
-                (3, "LOCAL", "UplinkPc1")
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (3, "ingress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 0)
                 ],
             "RSPAN_LOCAL_INGRESS_UPLINK": [
-                (1, "RSPAN", "Uplink1")
+                (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0)
                 ],
             "RSPAN_LOCAL_INGRESS_PC": [
-                (3, "RSPAN", "UplinkPc1")
+                (3, "ingress", "RSPAN", "RSPAN_PKT1", "UplinkPc1", 0)
                 ],
             "RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK": [
-                (1, "RSPAN", "Uplink1"),
-                (2, "RSPAN", "Uplink2")
+                (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0),
+                (2, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink2", 0)
                 ],
             "RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC": [
-                (1, "RSPAN", "Uplink1"),
-                (3, "RSPAN", "UplinkPc1")
+                (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0),
+                (3, "ingress", "RSPAN", "RSPAN_PKT1", "UplinkPc1", 0)
                 ],
             "SPAN_RSPAN_LOCAL_INGRESS_UPLINK": [
-                (1, "LOCAL", "Uplink1"),
-                (2, "RSPAN", "Uplink2")
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (2, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink2", 0)
                 ],
             "SPAN_RSPAN_LOCAL_INGRESS_PC": [
-                (1, "LOCAL", "Uplink1"),
-                (3, "RSPAN", "UplinkPc1")
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (3, "ingress", "RSPAN", "RSPAN_PKT1", "UplinkPc1", 0)
                 ],
             "RSPAN_SPAN_LOCAL_INGRESS_PC": [
-                (1, "RSPAN", "Uplink1"),
-                (3, "LOCAL", "UplinkPc1")
+                (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0),
+                (3, "ingress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 0)
                 ],
             "SPAN_LOCAL_EGRESS_UPLINK": [
-                (1, "LOCAL", "Uplink1")
+                (1, "egress", "LOCAL", "SPAN_PKT1", "Uplink1", 0)
                 ],
             "SPAN_LOCAL_EGRESS_PC": [
-                (3, "LOCAL", "UplinkPc1")
+                (3, "egress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 0)
                 ],
             "SPAN_LOCAL_EGRESS_MULTIPLE_UPLINK": [
-                (1, "LOCAL", "Uplink1"),
-                (2, "LOCAL", "Uplink2")
+                (1, "egress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (2, "egress", "LOCAL", "SPAN_PKT1", "Uplink2", 0)
                 ],
             "SPAN_LOCAL_EGRESS_MULTIPLE_UPLINK_PC": [
-                (1, "LOCAL", "Uplink1"),
-                (3, "LOCAL", "UplinkPc1")
+                (1, "egress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (3, "egress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 0)
                 ],
             "RSPAN_LOCAL_EGRESS_UPLINK": [
-                (1, "RSPAN", "Uplink1")
+                (1, "egress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0)
                 ],
             "RSPAN_LOCAL_EGRESS_PC": [
-                (3, "RSPAN", "UplinkPc1")
+                (3, "egress", "RSPAN", "RSPAN_PKT1", "UplinkPc1", 0)
                 ],
             "RSPAN_LOCAL_EGRESS_MULTIPLE_UPLINK": [
-                (1, "RSPAN", "Uplink1"),
-                (2, "RSPAN", "Uplink2")
+                (1, "egress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0),
+                (2, "egress", "RSPAN", "RSPAN_PKT1", "Uplink2", 0)
                 ],
             "RSPAN_LOCAL_EGRESS_MULTIPLE_UPLINK_PC": [
-                (1, "RSPAN", "Uplink1"),
-                (3, "RSPAN", "UplinkPc1")
+                (1, "egress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0),
+                (3, "egress", "RSPAN", "RSPAN_PKT1", "UplinkPc1", 0)
                 ],
             "SPAN_RSPAN_LOCAL_EGRESS_UPLINK": [
-                (1, "LOCAL", "Uplink1"),
-                (2, "RSPAN", "Uplink2")
+                (1, "egress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (2, "egress", "RSPAN", "RSPAN_PKT1", "Uplink2", 0)
                 ],
             "SPAN_RSPAN_LOCAL_EGRESS_PC": [
-                (1, "LOCAL", "Uplink1"),
-                (3, "RSPAN", "UplinkPc1")
+                (1, "egress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (3, "egress", "RSPAN", "RSPAN_PKT1", "UplinkPc1", 0)
                 ],
             "RSPAN_SPAN_LOCAL_EGRESS_PC": [
-                (1, "RSPAN", "Uplink1"),
-                (3, "LOCAL", "UplinkPc1")
+                (1, "egress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0),
+                (3, "egress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 0)
                 ],
             "RSPAN_SPAN_LOCAL_INGRESS_EGRESS_UPLINK_PC": [
-                (1, "RSPAN", "Uplink1"),
-                (3, "LOCAL", "UplinkPc1")
+                (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0),
+                (3, "egress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 0)
                 ],
             "SPAN_RSPAN_LOCAL_INGRESS_EGRESS_UPLINK_PC": [
-                (1, "LOCAL", "Uplink1"),
-                (3, "RSPAN", "UplinkPc1")
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (3, "egress", "RSPAN", "RSPAN_PKT1", "UplinkPc1", 0)
+                ],
+            "SPAN_LOCAL_INGRESS_LOCAL_EP": [
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "AnyLocalEP", 0),
+            ],
+            "SPAN_LOCAL_INGRESS_UPLINK_SNAP100": [
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 100),
+                ],
+            "L3_SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK": [
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (2, "ingress", "LOCAL", "SPAN_PKT1", "Uplink2", 0)
+                ],
+            "L3_SPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC": [
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (3, "ingress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 0)
+                ],
+            "L3_RSPAN_LOCAL_INGRESS_UPLINK": [
+                (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0)
+                ],
+            "L3_RSPAN_LOCAL_INGRESS_PC": [
+                (3, "ingress", "RSPAN", "RSPAN_PKT1", "UplinkPc1", 0)
+                ],
+            "L3_RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK": [
+                (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0),
+                (2, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink2", 0)
+                ],
+            "L3_RSPAN_LOCAL_INGRESS_MULTIPLE_UPLINK_PC": [
+                (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0),
+                (3, "ingress", "RSPAN", "RSPAN_PKT1", "UplinkPc1", 0)
+                ],
+            "L3_RSPAN_LOCAL_EGRESS_UPLINK": [
+                (1, "egress", "RSPAN", "EG_RSPAN_PKT1", "Uplink1", 0)
+                ],
+            "L3_RSPAN_LOCAL_EGRESS_PC": [
+                (3, "egress", "RSPAN", "EG_RSPAN_PKT1", "UplinkPc1", 0)
+                ],
+            "L3_RSPAN_LOCAL_EGRESS_MULTIPLE_UPLINK": [
+                (1, "egress", "RSPAN", "EG_RSPAN_PKT1", "Uplink1", 0),
+                (2, "egress", "RSPAN", "EG_RSPAN_PKT1", "Uplink2", 0)
+                ],
+            "L3_SPAN_RSPAN_LOCAL_INGRESS_UPLINK": [
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (2, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink2", 0)
+                ],
+            "L3_SPAN_RSPAN_LOCAL_INGRESS_PC": [
+                (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
+                (3, "ingress", "RSPAN", "RSPAN_PKT1", "UplinkPc1", 0)
+                ],
+            "L3_SPAN_LOCAL_EGRESS_PC": [
+                (3, "egress", "LOCAL", "EG_SPAN_PKT1", "UplinkPc1", 0)
+                ],
+            "L3_SPAN_LOCAL_EGRESS_MULTIPLE_UPLINK": [
+                (1, "egress", "LOCAL", "EG_SPAN_PKT1", "Uplink1", 0),
+                (2, "egress", "LOCAL", "EG_SPAN_PKT1", "Uplink2", 0)
+                ],
+            "L3_RSPAN_LOCAL_EGRESS_MULTIPLE_UPLINK_PC": [
+                (1, "egress", "RSPAN", "EG_RSPAN_PKT1", "Uplink1", 0),
+                (3, "egress", "RSPAN", "EG_RSPAN_PKT1", "UplinkPc1", 0)
                 ]
-
     }
 
     @staticmethod
@@ -112,12 +168,23 @@ def clearAllSessions():
 def setup_span(infra, module, case):
     clearAllSessions()
     ssns = spanSessionData.getSessions(case)
-    for (id, spantype, intf) in ssns:
+    for (id, direc, spantype, pkt, intf, pktlen) in ssns:
         sessname = "SpanSession000" + str(id)
         sess = infra.ConfigStore.objects.Get(sessname)
-        dintf = infra.ConfigStore.objects.Get(intf)
+        if intf == "AnyLocalEP":
+            ten = infra.ConfigStore.objects.Get("Ten0001")
+            eps = ten.GetLocalEps()
+            dintf = eps[0].intf 
+            #pdb.set_trace()
+        else:
+            dintf = infra.ConfigStore.objects.Get(intf)
         module.logger.info("Updating Span Session %s on interface %s with type %s", sessname, intf, spantype)
-        sess.Update(0, spantype, dintf)
+        snaplen = 0
+        if pktlen != 0:
+            snaplen = pktlen - 14
+            if pktlen < 14:
+                snaplen = 1
+        sess.Update(snaplen, spantype, dintf)
     return
 
 def Setup(infra, module):

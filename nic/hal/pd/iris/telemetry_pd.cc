@@ -54,10 +54,10 @@ pd_mirror_session_create(pd_mirror_session_args_t *args)
     HAL_ASSERT((args->session->id >= 0) && (args->session->id < 7));
 
     switch (args->session->dest_if.if_type) {
-        case intf::IF_TYPE_ENIC:
         case intf::IF_TYPE_TUNNEL:
             // Not supported yet.
             return HAL_RET_INVALID_OP;
+        case intf::IF_TYPE_ENIC:
         case intf::IF_TYPE_UPLINK_PC:
         case intf::IF_TYPE_UPLINK:
             dst_lport = if_get_lport_id(&(args->session->dest_if));

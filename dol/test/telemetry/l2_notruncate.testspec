@@ -1,0 +1,124 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        interface   : filter://any
+    flow        : filter://fwtype=L2,label=SPAN
+    maxflows    : 1
+
+packets:
+    - packet:
+        id          : BASE     # BASE Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        encaps      : None
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
+                #code    : ref://testcase/config/flow/icmpcode
+                #type    : ref://testcase/config/flow/icmptype
+                #id      : ref://testcase/config/flow/icmpid
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+    - packet:
+        id          : RAW_PKT1
+        payloadsize : 1500
+        template    : ref://factory/packets/id=RAW
+        headers     :
+            payload :
+            data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : PKT1     # Input packet 1
+        clone       : ref://testcase/packets/id=BASE
+        encaps      : 
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+
+
+    - packet:
+        id          : SPAN_PKT1     # Span packet 1
+        clone       : ref://testcase/packets/id=PKT1
+        #encaps      : None
+            #- ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            ipv4:
+            #qtag:
+            #    vlan: ref://testcase/config/ingress_mirror/session1/segment/vlan_id
+
+    - packet:
+        id          : RSPAN_PKT1     # Span packet 1
+        clone       : ref://testcase/packets/id=BASE
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QINQ
+        headers     :
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetRspanVlan 
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/dst/endpoint/intf/ports
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=1
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=1
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=2
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=2
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=3
+            port    : callback://telemetry/callbacks/GetExpectedPort3/sessionid=3
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=4
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=4
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=5
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=5
+
+        - packet:
+            object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=6
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=6
