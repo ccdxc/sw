@@ -65,6 +65,7 @@ class RdmaSqDescriptorAtomic(Packet):
         LongField("va", 0),
         LongField("swapdt", 0),
         LongField("cmpdt", 0),
+        LongField("pad", 0),
     ]
 
 class RdmaRrqDescriptorBase(Packet):
@@ -286,6 +287,9 @@ class RdmaSqDescriptorObject(base.FactoryObjectBase):
                        (self.address, self.wrid, self.num_sges, self.op_type))
         self.sges = []
         mem_handle.va += 32
+        #for atomic descriptor, skip 16 bytes to access SGE
+        if self.op_type in [6, 7]:
+            mem_handle.va += 16
         for i in range(self.num_sges):
             
             self.sges.append(RdmaSge(resmgr.HostMemoryAllocator.read(mem_handle, 16)))

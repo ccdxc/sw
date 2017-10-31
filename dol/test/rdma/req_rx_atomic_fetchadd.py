@@ -19,9 +19,9 @@ def TestCaseSetup(tc):
     tc.pvtdata.sq_pre_qstate = copy.deepcopy(rs.lqp.sq.qstate.data)
     tc.pvtdata.va = 0x0304050607080102
     tc.pvtdata.r_key = 2
-    tc.pvtdata.cmp_data = 0x1122334455667788
-    tc.pvtdata.cmp_data_list = [0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88]
-    tc.pvtdata.swap_data = 0x5678
+    tc.pvtdata.orig_data = 0x5566778811223344
+    tc.pvtdata.orig_data_list = [0x55, 0x66, 0x77, 0x88, 0x11, 0x22, 0x33, 0x44]
+    tc.pvtdata.swap_data = 0x5 #add data
     tc.pvtdata.msn = (tc.pvtdata.sq_pre_qstate.msn + 1)
     tc.pvtdata.begin_psn = tc.pvtdata.sq_pre_qstate.tx_psn
     tc.pvtdata.num_resp_pkts = 1

@@ -44,14 +44,14 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 19 # RDMA CmpSwap
+                opcode  : 20 # RDMA FetchNAdd
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : ref://testcase/pvtdata/sq_pre_qstate/tx_psn
             atomiceth:
                 va      : ref://testcase/pvtdata/va
                 r_key   : ref://testcase/pvtdata/r_key
                 swapdt  : ref://testcase/pvtdata/swap_data
-                cmpdt   : ref://testcase/pvtdata/cmp_data
+                #cmpdt   : ref://testcase/pvtdata/cmp_data
             payload:
                 data    : None
     
@@ -88,7 +88,7 @@ packets:
                 syndrome : 14 # TODO - credits
                 msn      : ref://testcase/pvtdata/msn
              atomic_acketh:
-                orig_remdt : ref://testcase/pvtdata/cmp_data
+                orig_remdt : ref://testcase/pvtdata/orig_data
              payload:
                  data    : None
 
@@ -98,7 +98,7 @@ packets:
          template    : ref://factory/packets/id=PAYLOAD
          headers     :
              payload:
-                 data    : ref://testcase/pvtdata/cmp_data_list
+                 data    : ref://testcase/pvtdata/orig_data_list
 #ref://factory/payloads/id=PAYLOAD_FF64/data
 
 buffers:
@@ -126,7 +126,7 @@ descriptors:
         id      : SQ_WQE
         template: ref://factory/templates/id=DESC_RDMA_SQ
         fields:
-            op_type : 6  # OP_TYPE_CMP_N_SWAP
+            op_type : 7  # OP_TYPE_FETCH_N_ADD
             wrid    : 6543
             num_sges: 1
 
@@ -134,7 +134,7 @@ descriptors:
                 va      : ref://testcase/pvtdata/va
                 r_key   : ref://testcase/pvtdata/r_key
                 swapdt  : ref://testcase/pvtdata/swap_data
-                cmpdt   : ref://testcase/pvtdata/cmp_data
+                #cmpdt   : ref://testcase/pvtdata/cmp_data
 
             sges:
                 - va  : ref://testcase/buffers/id=HOST_MEM/address
@@ -147,7 +147,7 @@ descriptors:
         template: ref://factory/templates/id=DESC_RDMA_SQ
         fields:
             buff: ref://testcase/buffers/id=EXP_HOST_MEM
-            op_type : 6  # OP_TYPE_CMP_N_SWAP
+            op_type : 7  # OP_TYPE_FETCH_N_ADD
             wrid    : 6543
             num_sges: 1
 
@@ -155,7 +155,7 @@ descriptors:
                 va      : ref://testcase/pvtdata/va
                 r_key   : ref://testcase/pvtdata/r_key
                 swapdt  : ref://testcase/pvtdata/swap_data
-                cmpdt   : ref://testcase/pvtdata/cmp_data
+                #cmpdt   : ref://testcase/pvtdata/cmp_data
 
             sges:
 
@@ -165,10 +165,11 @@ descriptors:
         fields:
             wrid:  ref://testcase/pvtdata/msn
             qp: ref://testcase/config/rdmasession/lqp/id
-            op_type: 6 #OP_TYPE_CMP_N_SWAP
+            op_type: 7 #OP_TYPE_FETCH_N_ADD
             status : 0  #CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetReqRxCQExpColor
             smac: callback://rdma/rdma/GetUDSMAC
+
 session:
 
     - step: # ATOMIC Request Transmit

@@ -279,6 +279,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_REQ_RX_ATOMIC_FETCH_N_ADD
+        enable  : True
+        package : test.rdma
+        module  : req_rx_atomic_fetchadd
+        spec    : req_rx_atomic_fetchadd.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_UD_SEND_ONLY
         enable  : True
         package : test.rdma
