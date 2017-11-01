@@ -38,6 +38,14 @@
 #define CAPRI_APP_DATA_RAW_FLAGS k.rdma_bth_raw_flags
 #define CAPRI_APP_DATA_PAYLOAD_LEN k.rdma_bth_payload_len
 
+#define CAPRI_RECIRC_REASON_NONE                    0
+#define CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE   1
+#define CAPRI_RECIRC_REASON_INORDER_WORK_DONE       2
+#define CAPRI_RECIRC_REASON_WORK_PENDING            3
+
+#define CAPRI_APP_DATA_RECIRC_REASON k.rdma_recirc_recirc_reason
+#define CAPRI_APP_DATA_RECIRC_TOKEN_ID k.rdma_recirc_token_id
+
 //BTH header fields
 #define CAPRI_APP_DATA_BTH_OPCODE k.rdma_bth_bth_opcode
 #define CAPRI_APP_DATA_BTH_PSN k.rdma_bth_bth_psn
@@ -102,6 +110,14 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_FLIT_SIZE_BITS    (CAPRI_FLIT_SIZE * BITS_PER_BYTE)     
 
 
+#define STAGE_0     0
+#define STAGE_1     1
+#define STAGE_2     2
+#define STAGE_3     3
+#define STAGE_4     4
+#define STAGE_5     5
+#define STAGE_6     6
+#define STAGE_7     7
 
 // Table related defines
 #define TABLE_0     0

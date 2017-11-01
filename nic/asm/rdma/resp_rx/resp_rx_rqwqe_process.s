@@ -22,9 +22,7 @@ struct rqwqe_base_t d;
 #define CURR_SGE_OFFSET r1[31:0]
 
 #define T2_ARG          r5
-#define T3_ARG          r6
 #define T2_K            r5
-#define T3_K            r6
 
 #define RAW_TABLE_PC    r2
 #define RAW_TABLE_PC2   r1
@@ -39,7 +37,6 @@ struct rqwqe_base_t d;
 %%
     .param  resp_rx_rqlkey_process
     .param  resp_rx_rqcb0_write_back_process
-    .param  resp_rx_rqcb1_write_back_process
 
 .align
 resp_rx_rqwqe_process:
@@ -111,7 +108,6 @@ loop:
     //CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmdeop, 0)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, acc_ctrl, ACC_CTRL_LOCAL_WRITE)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, nak_code, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR))
-    CAPRI_SET_FIELD(r7, INFO_LKEY_T, inv_r_key, k.args.inv_r_key)
 
     //remaining_payload_bytes -= transfer_bytes;
     sub         REM_PYLD_BYTES, REM_PYLD_BYTES, r6
@@ -176,7 +172,7 @@ exit:
     IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
 
     CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
-    CAPRI_GET_TABLE_3_ARG(resp_rx_phv_t, T3_ARG)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, inv_r_key, k.args.inv_r_key)
 
     .csbegin
     cswitch     [c1]
@@ -197,9 +193,9 @@ exit:
 
 
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_FIRST)
-    CAPRI_SET_FIELD_C(T3_ARG, INFO_WBCB1_T, update_num_sges, 1, c2)
-    CAPRI_SET_FIELD_C(T3_ARG, INFO_WBCB1_T, num_sges, NUM_VALID_SGES, c2)
-    CAPRI_SET_FIELD_C(T3_ARG, INFO_WBCB1_T, update_num_sges, 0, !c2)
+    CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, update_num_sges, 1, c2)
+    CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, num_sges, NUM_VALID_SGES, c2)
+    CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, update_num_sges, 0, !c2)
 
     // middle/first
     //  rqcb_write_back_info_p->in_progress = TRUE;
@@ -217,13 +213,12 @@ exit:
     //  rqcb1_write_back_info_p->current_sge_offset = current_sge_offset;
     //  rqcb1_write_back_info_p->curr_wqe_ptr = rqcb_to_wqe_info_p->curr_wqe_ptr;
     srl         r4, r1, SGE_OFFSET_SHIFT
-    CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, current_sge_id, r4)
-    CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, current_sge_offset, CURR_SGE_OFFSET)
-    CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
-    CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, update_wqe_ptr, 1)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, current_sge_id, r4)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, current_sge_offset, CURR_SGE_OFFSET)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, update_wqe_ptr, 1)
     // TODO: migrate to below register and decommision curr_wqe_ptr from s2s args
     //mfspr r3, spr_tbladdr	
-    //CAPRI_SET_FIELD_C(T3_ARG, INFO_WBCB1_T, curr_wqe_ptr, r3, c2)
 
     b       cb0_cb1_wb_exit
     nop
@@ -249,17 +244,13 @@ exit:
     //  rqcb1_write_back_info_p->curr_wqe_ptr = rqcb_to_wqe_info_p->curr_wqe_ptr;
     //  rqcb1_write_back_info_p->num_sges = 0;
     //  rqcb1_write_back_info_p->update_num_sges = 1;
-    //CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, current_sge_id, 0)
-    //CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, current_sge_offset, 0)
-    CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
-    CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, update_wqe_ptr, 1)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, update_wqe_ptr, 1)
     // do we need to even set the curr_wqe_ptr for this case ?
     // TODO: cross check with C code and think recirc path etc.
     // TODO: migrate to below register and decommision curr_wqe_ptr from s2s args
     //mfspr r3, spr_tbladdr	
-    //CAPRI_SET_FIELD_C(T3_ARG, INFO_WBCB1_T, curr_wqe_ptr, r3, c2)
-    //CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, num_sges, 0)
-    //CAPRI_SET_FIELD(T3_ARG, INFO_WBCB1_T, update_num_sges, 0)
+    //CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, curr_wqe_ptr, r3, c2)
 
     b       cb0_cb1_wb_exit
     nop
@@ -277,18 +268,13 @@ cb0_cb1_wb_exit:
     // Hence putting a hack here to pass a clue to T2-WB0 program NOT to 
     // invalidate T2 in case completion is involved.
 
-    IS_ANY_FLAG_SET(c3, r7, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION)
-    CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, do_not_invalidate_tbl, 1, c3)
+    //IS_ANY_FLAG_SET(c3, r7, RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_COMPLETION)
+    //CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, do_not_invalidate_tbl, 1, c3)
 
     RQCB0_ADDR_GET(r2)
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_K)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC2, resp_rx_rqcb0_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(T2_K, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC2, r2)
-
-    RQCB1_ADDR_GET(r2)
-    CAPRI_GET_TABLE_3_K(resp_rx_phv_t, T3_K)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC2, resp_rx_rqcb1_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(T3_K, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC2, r2)
+    CAPRI_NEXT_TABLE_I_READ(T2_K, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC2, r2)
 
     nop.e
     nop

@@ -59,7 +59,8 @@ struct rqcb0_t {
     srq_enabled: 1;
     busy: 1;
     in_progress: 1;
-    rsvd1: 3; 
+    disable_speculation: 1;
+    rsvd1: 2; 
     adjust_rsq_c_index_in_progress: 1;
     rsq_quiesce: 1;
     cache: 1;

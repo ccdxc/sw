@@ -13,6 +13,7 @@ struct rdma_stage0_table_k k;
 #define INFO_OUT1_T struct resp_rx_rqcb_to_pt_info_t
 #define RSQ_BT_S2S_INFO_T struct resp_rx_rsq_backtrack_info_t 
 #define RSQ_BT_TO_S_INFO_T struct resp_rx_to_stage_backtrack_info_t
+#define TO_S_FWD_INFO_T struct resp_rx_to_stage_forward_info_t
 #define RQCB_TO_RQCB1_T struct resp_rx_rqcb_to_rqcb1_info_t
 #define RAW_TABLE_PC r2
 
@@ -34,6 +35,20 @@ struct rdma_stage0_table_k k;
 
 .align
 resp_rx_rqcb_process:
+    //add     r1, r0, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT
+    //b       recirc_wait_for_turn
+    //nop
+
+    // MPU GLOBAL
+    // take a copy of raw_flags in r7 and keep it for further checks
+    add     r7, r0, CAPRI_APP_DATA_RAW_FLAGS
+
+    // is this a fresh packet ?
+    seq     c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
+    bcf     [!c1], recirc_pkt
+    crestore [c7, c6, c5], r7, (RESP_RX_FLAG_ONLY| RESP_RX_FLAG_LAST|RESP_RX_FLAG_FIRST)    //BD Slot
+
+    //fresh packet
 
     // populate global fields
     add r3, r0, offsetof(struct phv_, common_global_global_data)
@@ -46,10 +61,6 @@ resp_rx_rqcb_process:
     CAPRI_SET_FIELD(r3, PHV_GLOBAL_COMMON_T, lif, CAPRI_RXDMA_INTRINSIC_LIF)
     CAPRI_SET_FIELD_RANGE(r3, PHV_GLOBAL_COMMON_T, qid, qtype, CAPRI_RXDMA_INTRINSIC_QID_QTYPE)
 
-    // MPU GLOBAL
-    // take a copy of raw_flags in r7 and keep it for further checks
-    add     r7, r0, CAPRI_APP_DATA_RAW_FLAGS
-
     // TODO: Migrate ACK_REQ flag to P4 table
     seq     c5, CAPRI_APP_DATA_BTH_ACK_REQ, 1
     or.c5   r7, r7, RESP_RX_FLAG_ACK_REQ
@@ -59,17 +70,39 @@ resp_rx_rqcb_process:
     //set DMA cmd ptr
     RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_START_FLIT_ID)
 
-    add     REM_PYLD_BYTES, r0, CAPRI_APP_DATA_PAYLOAD_LEN
+    // get a tokenid for the fresh packet
+    phvwr   p.common.rdma_recirc_token_id, d.token_id
 
-    // get a tokenid
-    phvwr   p.my_token_id, d.token_id
+    // for now copy to both stage_2 and stage_3 to_stage info
+    // as write is using stage_2 for write_back and send is using stage_3.
+    // TODO: fix it
+    CAPRI_GET_STAGE_2_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, TO_S_FWD_INFO_T, my_token_id, d.token_id)
+    CAPRI_GET_STAGE_3_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, TO_S_FWD_INFO_T, my_token_id, d.token_id)
 
+    // if it is a first packet, disable further speculation
+    tblwr.c5    d.disable_speculation, 1
+
+    // if it is the only packet, skip nxt_to_go_token_id check
+    // if speculation is enabled
+    seq         c4, d.disable_speculation, 0
+    bcf.c7      [c4], skip_token_id_check
     // check if it is my turn. if not, recirc.
-    seq     c1, d.token_id, d.nxt_to_go_token_id
-    bcf     [!c1], recirc
-    tbladd  d.token_id, 1   //BD Slot
+    seq         c1, d.token_id, d.nxt_to_go_token_id    //BD Slot
+
+    bcf         [!c1], recirc_wait_for_turn
+    tbladd.!c1  d.token_id, 1   //BD Slot
 
     //got my turn, do sanity checks
+
+    // if it is the last packet, enable speculation again
+    tblwr.c6    d.disable_speculation, 0
+
+skip_token_id_check:
+    tbladd  d.token_id, 1
+
+    add     REM_PYLD_BYTES, r0, CAPRI_APP_DATA_PAYLOAD_LEN
 
     // populate some fields on ack_info so that in case we need to 
     // send NAK from anywhere, this info is already populated.
@@ -252,7 +285,7 @@ skip_write_immdt:
     CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_write_dummy_process)
     add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r5)
 
     //TODO: tbl_id management
 
@@ -323,7 +356,7 @@ skip_immdt_as_dbell:
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_in_progress_process)
     add     r3, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
 
 
 exit:
@@ -369,7 +402,8 @@ need_checkout_ud:
 
 checkout:
     // checkout a descriptor
-    add     r1, r0, PROXY_RQ_C_INDEX
+    add         r1, r0, SPEC_RQ_C_INDEX
+    tblmincri   SPEC_RQ_C_INDEX, d.log_num_wqes, 1
     sub     r2, d.log_rq_page_size, d.log_wqe_size
     // page_index = c_index >> (log_rq_page_size - log_wqe_size)
     srlv    r3, r1, r2
@@ -416,7 +450,7 @@ duplicate_rd_atomic:
 
     // recirc if threre is already another duplicate req in progress
     seq             c1, d.adjust_rsq_c_index_in_progress, 1
-    bcf             [c1], recirc
+    bcf             [c1], recirc_wait_for_turn
     nop             //BD Slot
 
     ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_READ_REQ)
@@ -518,9 +552,10 @@ duplicate_wr_send:
     nop.e
     nop
 
-recirc:
+recirc_wait_for_turn:
     phvwr   p.common.p4_intr_recirc, 1
-    phvwr   p.common.p4_intr_global_drop, 1
+    //phvwr   p.common.p4_intr_global_drop, 1
+    phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE
     nop.e
     nop
 
@@ -551,3 +586,6 @@ ud_drop:
     nop.e
     nop
     
+
+recirc_pkt:
+

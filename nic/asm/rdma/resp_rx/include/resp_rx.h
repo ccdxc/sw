@@ -94,10 +94,15 @@ struct resp_rx_to_stage_backtrack_info_t {
     len: 32;
 };
 
+struct resp_rx_to_stage_forward_info_t {
+    my_token_id: 8;
+    pad: 120;
+};
+
 struct resp_rx_to_stage_t {
     union {
         struct resp_rx_to_stage_backtrack_info_t backtrack;
-        pad: TO_STAGE_DATA_WIDTH;
+        struct resp_rx_to_stage_forward_info_t forward;
     };
 };
 
@@ -156,9 +161,9 @@ struct resp_rx_key_info_t {
     acc_ctrl: 8;
     dma_cmdeop: 1;
     cq_dma_cmd_index: 7;
-    inv_r_key: 32;
+    //inv_r_key: 32;
     nak_code: 8;
-    pad:8;
+    pad:40;
 };
 
 struct resp_rx_key_process_k_t {
@@ -170,13 +175,22 @@ struct resp_rx_key_process_k_t {
 
 //20
 struct resp_rx_rqcb0_write_back_info_t {
-    in_progress: 8;
+    in_progress: 1;
     incr_nxt_to_go_token_id: 1;
     incr_c_index: 1;
     tbl_id: 3;
     cache: 1;
-    do_not_invalidate_tbl: 1;
-    pad: 145;
+    rsvd: 1;
+    //do_not_invalidate_tbl: 1;
+    // wb1 info
+    curr_wqe_ptr: 64;
+    current_sge_offset: 32;
+    current_sge_id: 8;
+    update_num_sges: 1;
+    update_wqe_ptr: 1;
+    num_sges: 8;
+    inv_r_key: 32;
+    pad: 6;
 };
 
 struct resp_rx_rqcb0_write_back_process_k_t {
@@ -194,9 +208,8 @@ struct resp_rx_rqcb1_write_back_info_t {
     update_num_sges: 1;
     update_wqe_ptr: 1;
     num_sges: 8;
-    override_lif_vld: 1;
-    override_lif: 12;
-    pad: 33;
+    inv_r_key: 32;
+    pad: 14;
 };
 
 struct resp_rx_rqcb1_write_back_process_k_t {

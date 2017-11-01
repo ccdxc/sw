@@ -136,18 +136,18 @@ invoke_pt:
     bcf         [!c2], exit
     CAPRI_SET_FIELD_C(r7, LKEY_TO_PT_INFO_T, dma_cmdeop, 1, !c2) //BD Slot
     
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
-    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
+    //CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
+    //CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
 
-    CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, r_key, k.args.inv_r_key)
+    //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, r_key, k.args.inv_r_key)
     //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
     //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
     
-    CAPRI_SET_FIELD_RANGE(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, tbl_id, ((RESP_RX_DMA_CMD_CQ << 3) | TABLE_2))
+    //CAPRI_SET_FIELD_RANGE(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, tbl_id, ((RESP_RX_DMA_CMD_CQ << 3) | TABLE_2))
 
-    RQCB1_ADDR_GET(RQCB1_ADDR)
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_compl_or_inv_rkey_process)
-    CAPRI_NEXT_TABLE_I_READ(T2_KEY, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
+    //RQCB1_ADDR_GET(RQCB1_ADDR)
+    //CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_compl_or_inv_rkey_process)
+    //CAPRI_NEXT_TABLE_I_READ(T2_KEY, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
 
 exit:
     nop.e
@@ -187,15 +187,15 @@ error_completion:
     DMA_SET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, DMA_CMD_BASE, !c1) //BD Slot
 
     
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
-    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
+    //CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
+    //CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
 
     //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
     //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
-    CAPRI_SET_FIELD_RANGE(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, tbl_id, ((RESP_RX_DMA_CMD_CQ << 3) | TABLE_2))
+    //CAPRI_SET_FIELD_RANGE(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, tbl_id, ((RESP_RX_DMA_CMD_CQ << 3) | TABLE_2))
 
-    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_compl_or_inv_rkey_process)
-    CAPRI_NEXT_TABLE_I_READ(T2_KEY, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
+    //CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_compl_or_inv_rkey_process)
+    //CAPRI_NEXT_TABLE_I_READ(T2_KEY, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
 
     //clear both lkey0 and lkey1 table valid bits
     CAPRI_SET_TABLE_0_VALID(0)

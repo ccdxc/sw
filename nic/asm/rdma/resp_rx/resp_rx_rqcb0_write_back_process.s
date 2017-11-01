@@ -7,16 +7,28 @@ struct resp_rx_phv_t p;
 struct resp_rx_rqcb0_write_back_process_k_t k;
 struct rqcb0_t d;
 
+#define INFO_WBCB1_T struct resp_rx_rqcb1_write_back_info_t
+
 #define DMA_CMD_BASE r1
 #define TMP r3
 #define DB_ADDR r4
 #define DB_DATA r5
 #define RQCB1_ADDR r6
+#define T2_ARG r7
+#define T2_K r7
+#define RAW_TABLE_PC r2
 
 %%
+    .param  resp_rx_rqcb1_write_back_process
 
 .align
 resp_rx_rqcb0_write_back_process:
+    //mfspr           r1, spr_mpuid
+    //seq             c1, r1[6:2], STAGE_3
+    //bcf             [!c1], exit
+    
+    seq             c1, k.to_stage.forward.my_token_id, d.nxt_to_go_token_id
+    bcf             [!c1], recirc
     
     crestore        [c7, c6, c5], k.global.flags, (RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_LAST)
 
@@ -30,14 +42,10 @@ resp_rx_rqcb0_write_back_process:
 
 incr_c_index_exit:
 
-    //assumption is that write back is called with table 2
-    seq         c3, k.args.do_not_invalidate_tbl, 1
-    CAPRI_SET_TABLE_2_VALID_C(!c3, 0)
-
-
     // Skip ACK generation for UD
     crestore    [c3], k.global.flags, (RESP_RX_FLAG_UD)
-    bcf         [c3], exit
+    bcf         [c3], invoke_wb1
+    RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
 
     // RQCB0 writeback is called for SEND/WRITE/ATOMIC as well.
     // also this stage has very few instructions.
@@ -53,8 +61,8 @@ incr_c_index_exit:
     // TODO: for now, generate ack only when it is a last/only packet AND 
     // ack req bit is also set. This will help in controlling DOL test cases
     // to generate ACK only when needed. Remove ACK_REQ bit check later ?
-    bcf         [!c7 & !c4], exit
-    RQCB1_ADDR_GET(RQCB1_ADDR)      //BD Slot
+    bcf         [!c7 & !c4], invoke_wb1
+    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)    //BD Slot
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_ACK)
 
     // prepare for acknowledgement
@@ -63,6 +71,24 @@ incr_c_index_exit:
                                    k.global.qtype,
                                    k.global.qid,
                                    DB_ADDR, DB_DATA)
+
+
+invoke_wb1:
+    // invoke rqcb1 write back from rqcb0 write back
+    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB1_T, curr_wqe_ptr, inv_r_key, k.{args.curr_wqe_ptr...args.inv_r_key})
+    CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_K)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_write_back_process)
+    CAPRI_NEXT_TABLE_I_READ(T2_K, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)
+
+    nop.e
+    nop
+
+recirc:
+    phvwr   p.common.p4_intr_recirc, 1
+    phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_INORDER_WORK_DONE
+    // invalidate table ?
+    CAPRI_SET_TABLE_2_VALID(0)
+
 exit:
     nop.e
     nop

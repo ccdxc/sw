@@ -76,13 +76,10 @@ resp_rx_write_dummy_process:
     CAPRI_SET_FIELD(r4, RQCB0_WB_T, incr_nxt_to_go_token_id, 1)
     CAPRI_SET_FIELD(r4, RQCB0_WB_T, incr_c_index, k.args.incr_c_index)
 
-    IS_ANY_FLAG_SET(c3, r7, RESP_RX_FLAG_COMPLETION)
-    CAPRI_SET_FIELD_C(r4, RQCB0_WB_T, do_not_invalidate_tbl, 1, c3)
-
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb0_write_back_process)   
     RQCB0_ADDR_GET(RQCB0_ADDR)
-    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB0_ADDR)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB0_ADDR)
 
     nop.e
     nop
