@@ -20,10 +20,12 @@
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/asic/capri/model/cap_txs/cap_txs_csr.h"
+#include "nic/asic/capri/verif/apis/cap_txs_api.h"
 #endif
 
 #define NUM_MAX_COSES 16
 #define CHECK_BIT(var,pos) ((var) & (1 << (pos)))
+#define DTDM_CALENDAR_SIZE 64
 
 hal_ret_t
 capri_txs_scheduler_init ()
@@ -31,20 +33,41 @@ capri_txs_scheduler_init ()
 
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_txs_csr_t &txs_csr = cap0.txs.txs;
-    uint64_t       txs_sched_hbm_base_addr;
+    uint64_t      txs_sched_hbm_base_addr;
+    uint16_t      dtdm_lo_map, dtdm_hi_map;
 
     txs_sched_hbm_base_addr = (uint64_t) get_start_offset(CAPRI_HBM_REG_TXS_SCHEDULER);
 
     // Update HBM base addr.  
     txs_csr.cfw_scheduler_static.hbm_base(txs_sched_hbm_base_addr);
 
-    // Init the txs scheduler.
-    txs_csr.cfw_scheduler_glb.enable(1);    
+    // Init txs hbm/sram.
     txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
     txs_csr.cfw_scheduler_glb.sram_hw_init(1);
 
     txs_csr.cfw_scheduler_static.write();
     txs_csr.cfw_scheduler_glb.write();
+
+    // Init scheduler calendar with equal weights for all cos.
+    for (int i = 0; i < DTDM_CALENDAR_SIZE ; i++) {
+        txs_csr.dhs_dtdmlo_calendar.entry[i].dtdm_calendar(i % 16);
+        txs_csr.dhs_dtdmhi_calendar.entry[i].dtdm_calendar(i % 16);
+        txs_csr.dhs_dtdmlo_calendar.entry[i].write();
+        txs_csr.dhs_dtdmlo_calendar.entry[i].write();
+    }
+
+    // Init all cos to be part of lo-calendar (DWRR with equal weights).
+    dtdm_lo_map = 0xffff;
+    dtdm_hi_map = 0;
+    txs_csr.cfg_sch.dtdm_lo_map(dtdm_lo_map);
+    txs_csr.cfg_sch.dtdm_hi_map(dtdm_hi_map);
+    txs_csr.cfg_sch.timeout(0);
+    txs_csr.cfg_sch.pause(0);
+    txs_csr.cfg_sch.enable(1);
+    txs_csr.cfg_sch.write();
+
+    // Asic polling routine to check if init is done and kickstart scheduler.
+    cap_txs_init_done(0, 0);
 
     HAL_TRACE_DEBUG("CAPRI-TXS::{}: Set hbm base addr for TXS sched to {:#x}",
                     __func__, txs_sched_hbm_base_addr);
