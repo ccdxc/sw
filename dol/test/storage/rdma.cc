@@ -601,7 +601,7 @@ int StartRoceSeq() {
   utils::write_bit_fields(sqwqe, 256+64+32, 32, kR2NBufLKey);
 
   // Now kickstart the sequencer
-  tests::test_seq_write_roce(35, 52, g_rdma_pvm_roce_q, r2n_buf_pa, 
+  tests::test_seq_write_roce(35, 60, g_rdma_pvm_roce_q, r2n_buf_pa, 
 		             r2n_hbm_buf_pa, data_len, 
                              host_mem_v2p((void *) sqwqe), 64);
   return 0;
