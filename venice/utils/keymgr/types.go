@@ -11,9 +11,10 @@ import (
 // KeyType encodes the algorithm and key size of the key pair
 type KeyType int
 
-// Known types for asymmetric keys
+// Known types keys
 const (
 	Unknown KeyType = iota
+	// asymmetric keys
 	RSA1024
 	RSA2048
 	RSA4096
@@ -21,6 +22,10 @@ const (
 	ECDSA256
 	ECDSA384
 	ECDSA521
+	// symmetric keys
+	AES128
+	AES192
+	AES256
 )
 
 // ObjectType represents the type of the objects that can be handled by KeyMgr
@@ -29,6 +34,7 @@ type ObjectType int
 // ObjectType values
 const (
 	ObjectTypeKeyPair ObjectType = iota
+	ObjectTypeSymmetricKey
 	ObjectTypeCertificate
 	ObjectTypeCertificateBundle
 )
@@ -90,8 +96,27 @@ func NewKeyPairObject(id string, signer crypto.Signer) *KeyPair {
 			id:      id,
 			objType: ObjectTypeKeyPair,
 		},
-		KeyType: getKeyType(signer.Public()),
+		KeyType: getPublicKeyType(signer.Public()),
 		Signer:  signer,
+	}
+}
+
+// SymmetricKey is a KeyMgr object representing a symmetric key.
+type SymmetricKey struct {
+	object
+	KeyType KeyType
+	Key     interface{}
+}
+
+// NewSymmetricKeyObject creates a SymmetricKey object with the supplied key and type
+func NewSymmetricKeyObject(id string, kt KeyType, key interface{}) *SymmetricKey {
+	return &SymmetricKey{
+		object: object{
+			id:      id,
+			objType: ObjectTypeSymmetricKey,
+		},
+		KeyType: kt,
+		Key:     key,
 	}
 }
 
@@ -138,9 +163,6 @@ func NewCertificateBundleObject(id string, certs []*x509.Certificate) *Certifica
 // Backend is the interface that needs to be implemented by KeyMgr backends
 // Initialization functions are backend-specific and so are not part of the interface
 type Backend interface {
-	// Creates a key pair, with the private key confined inside the backend
-	CreateKeyPair(id string, kt KeyType) (*KeyPair, error)
-
 	// Store an object of type ObjectType, indexed with the supplied id.
 	// If object already exists, an error is returned.
 	StoreObject(obj Object) error
@@ -152,6 +174,24 @@ type Backend interface {
 	// Destroy the object with the given id and type. If object is not found, return nil
 	// Error is set only if there was an error in accessing the backend
 	DestroyObject(ID string, Type ObjectType) error
+
+	// Creates a key pair, with the private key confined inside the backend
+	CreateKeyPair(id string, kt KeyType) (*KeyPair, error)
+
+	// DeriveKey derives a symmetric key using Diffie-Hellman key agreement.
+	// Backend is expected to follow ANSI X9.63 for the derivation with NULL KDF
+	// See http://www.secg.org/sec1-v2.pdf Sec. 3.3.1 and 6.1
+	DeriveKey(derivedKeyID string, derivedKeyType KeyType, baseKeyPairID string, peerPublicKey crypto.PublicKey) (*SymmetricKey, error)
+
+	// WrapKeyPair encrypts a KeyPair with an existing symmetric wrapping key.
+	// The wrapped key is returned as byte array and is not stored in the backend.
+	// NOTE: only the private key is wrapped. Client is responsible for holding on to the
+	// public key, as backend may not offer the capability to reconstruct it from the private key.
+	WrapKeyPair(keyPairID, wrappingKeyID string) ([]byte, error)
+
+	// UnwrapKeyPair takes a wrapped KeyPair and decrypts it with an unwrapping key stored in the backend.
+	// The unwrapped private key is stored in the backend together with the public key supplied by the caller.
+	UnwrapKeyPair(unwrappedKeyPairID string, wrappedKey []byte, publicKey crypto.PublicKey, unwrappingKeyID string) (*KeyPair, error)
 
 	// Frees up the resources held by the backend
 	Close() error

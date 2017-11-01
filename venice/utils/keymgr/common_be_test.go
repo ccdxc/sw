@@ -246,9 +246,149 @@ func testParallelAccess(t *testing.T, be Backend) {
 	wg.Wait()
 }
 
+func testDeriveKeyNegativeCases(t *testing.T, be Backend) {
+	km, err := NewKeyMgr(be)
+	AssertOk(t, err, "Error instantiating backend")
+	key, err := km.CreateKeyPair("baseKey", ECDSA384)
+	defer km.DestroyObject("baseKey", ObjectTypeKeyPair)
+	AssertOk(t, err, "Error generating key")
+	// empty base key id
+	_, err = km.DeriveKey("derivedKey", AES256, "", key.Signer.Public())
+	Assert(t, err != nil, "Key derivation succeeded without an ID for the base key")
+	// empty derived key id
+	_, err = km.DeriveKey("", AES256, "baseKey", key.Signer.Public())
+	Assert(t, err != nil, "Key derivation succeeded without an ID for the derived key")
+	// empty public key
+	_, err = km.DeriveKey("derivedKey", AES256, "baseKey", nil)
+	Assert(t, err != nil, "Key derivation succeeded without the public part of the base key")
+	// unsupported base key type -- it must be ECDSA
+	unsupportedKey, err := km.CreateKeyPair("unsupportedKey", RSA1024)
+	defer km.DestroyObject("baseKey", ObjectTypeKeyPair)
+	AssertOk(t, err, "Error generating key")
+	_, err = km.DeriveKey("derivedKey", AES256, "baseKey", unsupportedKey.Signer.Public())
+	Assert(t, err != nil, "Key derivation succeeded with unsupported base key")
+	// unsupported derived key type -- it must be AES
+	_, err = km.DeriveKey("derivedKey", ECDSA256, "baseKey", key.Signer.Public())
+	Assert(t, err != nil, "Key derivation succeeded without the public part of the base key")
+}
+
+func testWrapKeyPairNegativeCases(t *testing.T, be Backend) {
+	km, err := NewKeyMgr(be)
+	AssertOk(t, err, "Error instantiating backend")
+	baseKey, err := km.CreateKeyPair("baseKey", ECDSA384)
+	defer km.DestroyObject("baseKey", ObjectTypeKeyPair)
+	AssertOk(t, err, "Error generating key")
+	_, err = km.DeriveKey("kek", AES256, "baseKey", baseKey.Signer.Public())
+	AssertOk(t, err, "Error deriving key")
+	defer km.DestroyObject("kek", ObjectTypeSymmetricKey)
+	// Empty key pair ID
+	_, err = km.WrapKeyPair("", "kek")
+	Assert(t, err != nil, "WrapKeyPair succeeded with empty key pair ID")
+	// Empty wrapping key ID
+	_, err = km.WrapKeyPair("baseKey", "")
+	Assert(t, err != nil, "WrapKeyPair succeeded with empty wrapping key ID")
+	// Non-existant key pair ID
+	_, err = km.WrapKeyPair("nonExistant", "kek")
+	Assert(t, err != nil, "WrapKeyPair succeeded with nonExistant key pair ID")
+	// Non-existant wrapping key ID
+	_, err = km.WrapKeyPair("baseKey", "nonExistant")
+	Assert(t, err != nil, "WrapKeyPair succeeded with nonExistant wrapping key ID")
+}
+
+func testUnwrapKeyPairNegativeCases(t *testing.T, be Backend) {
+	km, err := NewKeyMgr(be)
+	AssertOk(t, err, "Error instantiating backend")
+	baseKey, err := km.CreateKeyPair("baseKey", ECDSA384)
+	defer km.DestroyObject("baseKey", ObjectTypeKeyPair)
+	AssertOk(t, err, "Error generating key")
+	_, err = km.DeriveKey("kek", AES256, "baseKey", baseKey.Signer.Public())
+	AssertOk(t, err, "Error deriving key")
+	defer km.DestroyObject("kek", ObjectTypeSymmetricKey)
+	wrappedKey, err := km.WrapKeyPair("baseKey", "kek")
+	AssertOk(t, err, "Error wrapping key")
+	// Empty target key ID
+	_, err = km.UnwrapKeyPair("", wrappedKey, baseKey.Public(), "kek")
+	Assert(t, err != nil, "UnwrapKeyPair succeeded with empty target key ID")
+	// Empty unwrapping key ID
+	_, err = km.UnwrapKeyPair("unwrappedKey", wrappedKey, baseKey.Public(), "")
+	Assert(t, err != nil, "UnwrapKeyPair succeeded with empty unwrapping key ID")
+	// Non-existant unwrapping key ID
+	_, err = km.UnwrapKeyPair("unwrappedKey", wrappedKey, baseKey.Public(), "nonExistant")
+	Assert(t, err != nil, "UnwrapKeyPair succeeded with nonExistant wrapping key ID")
+	// Empty wrapped key
+	_, err = km.UnwrapKeyPair("unwrappedKey", nil, baseKey.Public(), "kek")
+	Assert(t, err != nil, "UnwrapKeyPair succeeded with nil public key")
+	// Empty public key
+	_, err = km.UnwrapKeyPair("unwrappedKey", wrappedKey, nil, "kek")
+	Assert(t, err != nil, "UnwrapKeyPair succeeded with nil public key")
+}
+
+// Test end-to-end ECDH key transport (derivation + AES wrapping) between with two backends
+func testECDHKeyTransport(t *testing.T, be1, be2 Backend) {
+	// Create independent KeyMgr instances for the two backends
+	km1, err := NewKeyMgr(be1)
+	AssertOk(t, err, "Error instantiating backend 1")
+	km2, err := NewKeyMgr(be2)
+	AssertOk(t, err, "Error instantiating backend 2")
+	// Create EC keys on the two backends. The keys are completely independent
+	// but they have to be the same size (and use the same curve)
+	key1, err := km1.CreateKeyPair("ECKey1", ECDSA384)
+	AssertOk(t, err, "Error creating key pair in backend 1")
+	defer km1.DestroyObject("ECKey1", ObjectTypeKeyPair)
+	key2, err := km2.CreateKeyPair("ECKey2", ECDSA384)
+	AssertOk(t, err, "Error creating key pair in backend 2")
+	defer km2.DestroyObject("ECKey2", ObjectTypeKeyPair)
+	// Perform ECDH key derivation on the two backends.
+	// Backend1 uses private key key1 + public key key2, Backend2 uses private key key2 + public key key1
+	// Both backends end up with identical AES key-encryption-key ("kek1" on Backend1, "kek2" on Backend2)
+	_, err = km1.DeriveKey("kek1", AES256, "ECKey1", key2.Signer.Public())
+	AssertOk(t, err, "Error deriving key on backend 1")
+	defer km1.DestroyObject("kek1", ObjectTypeSymmetricKey)
+	_, err = km2.DeriveKey("kek2", AES256, "ECKey2", key1.Signer.Public())
+	AssertOk(t, err, "Error deriving key on backend 1")
+	defer km2.DestroyObject("kek2", ObjectTypeSymmetricKey)
+	// Generate an RSA key in Backend1 and wrap it with the AES key
+	transpKeyRSA, err := km1.CreateKeyPair("TranspKeyRSA", RSA4096)
+	defer km1.DestroyObject("TranspKeyRSA", ObjectTypeKeyPair)
+	AssertOk(t, err, "Error generating key to transport")
+	wrappedKeyRSA, err := km1.WrapKeyPair("TranspKeyRSA", "kek1")
+	AssertOk(t, err, "Error wrapping key")
+	// Unwrap the RSA key on backend 2. The public part needs to be supplied separately.
+	unwrappedKeyPairRSA, err := km2.UnwrapKeyPair("UnwrappedKeyRSA", wrappedKeyRSA, transpKeyRSA.Public(), "kek2")
+	AssertOk(t, err, "Error unwrapping key")
+	defer km2.DestroyObject("UnwrappedKeyRSA", ObjectTypeKeyPair)
+	// Now, to verify that what was unwrapped on be2 matches what what was wrapped in be1
+	// We sign something in be2 and verify the signature in be1
+	msg := []byte("0123456789ABCDEF0123456789ABCDEF")
+	signerOpts := crypto.SHA256
+	signatureRSA, err := unwrappedKeyPairRSA.Signer.Sign(rand.Reader, msg, signerOpts)
+	AssertOk(t, err, "Error signing msg")
+	valid, err := VerifySignature(transpKeyRSA.Public(), signatureRSA, msg, signerOpts)
+	AssertOk(t, err, "Error verifying signature")
+	Assert(t, valid, "Signature not valid")
+	// Now transport an ECDSA key from backend2 to backend1
+	transpKeyECDSA, err := km2.CreateKeyPair("TranspKeyECDSA", ECDSA256)
+	AssertOk(t, err, "Error generating key to transport")
+	defer km2.DestroyObject("TranspKeyECDSA", ObjectTypeKeyPair)
+	wrappedKeyECDSA, err := km2.WrapKeyPair("TranspKeyECDSA", "kek2")
+	AssertOk(t, err, "Error wrapping key")
+	// Unwrap the ECDSA key on backend 1. The public part needs to be supplied separately.
+	unwrappedKeyPairECDSA, err := km1.UnwrapKeyPair("UnwrappedKeyECDSA", wrappedKeyECDSA, transpKeyECDSA.Public(), "kek1")
+	defer km1.DestroyObject("UnwrappedKeyECDSA", ObjectTypeKeyPair)
+	AssertOk(t, err, "Error unwrapping key")
+	// Now, to verify that what was unwrapped on be1 matches what what was wrapped in be2
+	// We sign msg in be1 and verify the signature in be2
+	signatureECDSA, err := unwrappedKeyPairECDSA.Signer.Sign(rand.Reader, msg, signerOpts)
+	AssertOk(t, err, "Error signing msg")
+	valid, err = VerifySignature(transpKeyECDSA.Public(), signatureECDSA, msg, signerOpts)
+	AssertOk(t, err, "Error verifying signature")
+	Assert(t, valid, "Signature not valid")
+}
+
 // ---------------------------------------------------------------------------------------//
 // "main" function. Execute all tests for all backends.                                   //
 // ---------------------------------------------------------------------------------------//
+
 func testAll(t *testing.T, backends []Backend) {
 	// Tests for individual backends
 	for _, be := range backends {
@@ -257,5 +397,17 @@ func testAll(t *testing.T, backends []Backend) {
 		testKeyImport(t, be)
 		testWarmStart(t, be)
 		testParallelAccess(t, be)
+		testDeriveKeyNegativeCases(t, be)
+		testWrapKeyPairNegativeCases(t, be)
+		testECDHKeyTransport(t, be, be)
+	}
+
+	numBackends := len(backends)
+	if numBackends >= 2 {
+		for i := 0; i < numBackends; i++ {
+			// Cross-backend tests
+			j := (i + 1) % numBackends
+			testECDHKeyTransport(t, backends[i], backends[j])
+		}
 	}
 }

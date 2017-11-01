@@ -30,20 +30,10 @@ const (
 	invalidObjectHandle  = pkcs11.ObjectHandle(0)
 )
 
-// A PKCS#11 device has a number of independent "tokens", which can be accessed independently.
-// A process gains access to a PKCS#11 device by loading the .so library exactly one and
-// logging in to tokens. Once logged into a token, user can create multiple sessions.
-
-// In this backend implementation, we ask client to specify a module path, a token label and
-// a PIN. If the module is not loaded yet, we load it. Then we look for a token with the given
-// label and if we find it, we open a session to it. If we don't find it, we look for an
-// unitialized token, we try to initialize it and then we set the label.
-// So one Pkcs11Backend corresponds to a session to a token that can be shared by multiple
-// backends. The context for the same module is shared among all backends that use that module.
-// We assume that modules support serial access only, so the context for a module includes
-// a handle and a mutex.
-
-// The context for a module
+// A process gains access to a PKCS#11 device by loading the .so library exactly once and
+// logging in to specific "tokens" (which are basically isolated partitions).
+// ctx is the context for a module. It contains the path of the module to load and a mutex
+// to synchronize access from multiple clients.
 type ctx struct {
 	sync.Mutex
 	modulePath string
@@ -64,8 +54,31 @@ type pkcs11Signer struct {
 	publicKey        crypto.PublicKey
 }
 
+type pkcs11SymmetricKey struct {
+	backend   *Pkcs11Backend
+	keyHandle pkcs11.ObjectHandle
+}
+
 // Pkcs11Backend is a KeyMgr backend that stores keys and performs crypto ops inside
 // a device that provides PKCS#11 interface, like an HSM or a smartcard
+//
+// A PKCS#11 device has a number of (physical or virtual) "slots", which can be empty or
+// contain a single "token". If a slot contains a token, the token can be initialized or not.
+// A token that is initialized is ready to be used: it can hold keys and perform operations.
+// In order to use a token, the PKCS#11 client logs into the device, initializes it if
+// it is not yet initialized and then opens a "session" to it. Command issued during
+// That session can only manipulate objects stored on that particular token.
+// Tokens, like most other PKCS#11 objects, have a label that can be set by the user.
+// There is no set limit on the number of tokens or slots that a device can have.
+// Some implementations, like SoftHSM, simply create new slots with uninitialized tokens
+// as user uses existing ones.
+//
+// When creating a new instance of this backend, we look for a token with the given
+// label and if we find it, we open a session to it. If we don't find it, we look for an
+// unitialized token, we try to initialize it and then we set the label.
+//
+// Node that context (ctx) corresponds to an entire module (.so library), not a particular
+// token or session. So a single ctx object is shared across all backends that use that module.
 type Pkcs11Backend struct {
 	tokenLabel    string
 	pin           string
@@ -141,6 +154,8 @@ func (be *Pkcs11Backend) initialize() error {
 		}
 		if (availableToken < 0) && ((tokenInfo.Flags & pkcs11.CKF_TOKEN_INITIALIZED) == 0) {
 			// Found the first slot with an unitialized token
+			// We do not break out of the loop because we still need to see if we can find
+			// an initialized token with the desired label. If not we will initialize this one.
 			availableToken = int(slot)
 		}
 	}
@@ -215,46 +230,45 @@ func (be *Pkcs11Backend) newRsaPair(ID string, size int, extractable bool) (pkcs
 		pkcs11.NewAttribute(pkcs11.CKA_KEY_TYPE, pkcs11.CKK_RSA),
 		pkcs11.NewAttribute(pkcs11.CKA_TOKEN, true), // persistent
 		pkcs11.NewAttribute(pkcs11.CKA_SIGN, true),
+		pkcs11.NewAttribute(pkcs11.CKA_DERIVE, true),
 		pkcs11.NewAttribute(pkcs11.CKA_LABEL, ID),
 		pkcs11.NewAttribute(pkcs11.CKA_SENSITIVE, true),
 		pkcs11.NewAttribute(pkcs11.CKA_EXTRACTABLE, extractable),
 	}
-
 	publicKeyHandle, privateKeyHandle, err := be.ctx.GenerateKeyPair(be.sessionHandle,
 		[]*pkcs11.Mechanism{pkcs11.NewMechanism(pkcs11.CKM_RSA_PKCS_KEY_PAIR_GEN, nil)},
 		publicKeyTemplate,
 		privateKeyTemplate)
-
 	return publicKeyHandle, privateKeyHandle, err
 }
 
-// take a Go crypto RSA key and store it inside the device.
-// TODO: change this function to accept only wrapped keys
-func (be *Pkcs11Backend) storeRsaPair(ID string, key *rsa.PrivateKey, extractable bool) (pkcs11.ObjectHandle, pkcs11.ObjectHandle, error) {
-	// public key
+func (be *Pkcs11Backend) storeRsaPublicKey(ID string, key *rsa.PublicKey) (pkcs11.ObjectHandle, error) {
 	publicKeyTemplate := []*pkcs11.Attribute{
 		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_PUBLIC_KEY),
 		pkcs11.NewAttribute(pkcs11.CKA_KEY_TYPE, pkcs11.CKK_RSA),
 		pkcs11.NewAttribute(pkcs11.CKA_TOKEN, true), // persistent
 		pkcs11.NewAttribute(pkcs11.CKA_VERIFY, true),
-		pkcs11.NewAttribute(pkcs11.CKA_PUBLIC_EXPONENT, key.PublicKey.E),
-		pkcs11.NewAttribute(pkcs11.CKA_MODULUS, key.PublicKey.N.Bytes()),
+		pkcs11.NewAttribute(pkcs11.CKA_PUBLIC_EXPONENT, key.E),
+		pkcs11.NewAttribute(pkcs11.CKA_MODULUS, key.N.Bytes()),
 		pkcs11.NewAttribute(pkcs11.CKA_LABEL, ID),
 	}
 	publicKeyHandle, err := be.ctx.CreateObject(be.sessionHandle, publicKeyTemplate)
 	if err != nil {
-		return invalidObjectHandle, invalidObjectHandle, errors.Wrapf(err, "Error storing public key")
+		return invalidObjectHandle, errors.Wrapf(err, "Error storing RSA public key")
 	}
+	return publicKeyHandle, nil
+}
 
-	// private key
+func (be *Pkcs11Backend) storeRsaPrivateKey(ID string, key *rsa.PrivateKey, extractable bool) (pkcs11.ObjectHandle, error) {
 	if len(key.Primes) != 2 {
-		return invalidObjectHandle, invalidObjectHandle, fmt.Errorf("RSA key not supported, primes: %d", len(key.Primes))
+		return invalidObjectHandle, fmt.Errorf("RSA key not supported, primes: %d", len(key.Primes))
 	}
 	privateKeyTemplate := []*pkcs11.Attribute{
 		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_PRIVATE_KEY),
 		pkcs11.NewAttribute(pkcs11.CKA_KEY_TYPE, pkcs11.CKK_RSA),
 		pkcs11.NewAttribute(pkcs11.CKA_TOKEN, true), // persistent
 		pkcs11.NewAttribute(pkcs11.CKA_SIGN, true),
+		pkcs11.NewAttribute(pkcs11.CKA_DERIVE, true),
 		pkcs11.NewAttribute(pkcs11.CKA_LABEL, ID),
 		pkcs11.NewAttribute(pkcs11.CKA_SENSITIVE, true),
 		pkcs11.NewAttribute(pkcs11.CKA_EXTRACTABLE, extractable),
@@ -264,13 +278,24 @@ func (be *Pkcs11Backend) storeRsaPair(ID string, key *rsa.PrivateKey, extractabl
 		pkcs11.NewAttribute(pkcs11.CKA_PRIME_2, key.Primes[1].Bytes()),
 		pkcs11.NewAttribute(pkcs11.CKA_PUBLIC_EXPONENT, key.PublicKey.E),
 	}
-
 	privateKeyHandle, err := be.ctx.CreateObject(be.sessionHandle, privateKeyTemplate)
 	if err != nil {
-		be.ctx.DestroyObject(be.sessionHandle, publicKeyHandle)
-		return invalidObjectHandle, invalidObjectHandle, errors.Wrapf(err, "Error storing private key")
+		return invalidObjectHandle, errors.Wrapf(err, "Error storing RSA private key")
 	}
+	return privateKeyHandle, err
+}
 
+// take a Go crypto RSA key and store it inside the device.
+func (be *Pkcs11Backend) storeRsaPair(ID string, key *rsa.PrivateKey, extractable bool) (pkcs11.ObjectHandle, pkcs11.ObjectHandle, error) {
+	publicKeyHandle, err := be.storeRsaPublicKey(ID, key.Public().(*rsa.PublicKey))
+	if err != nil || publicKeyHandle == invalidObjectHandle {
+		return invalidObjectHandle, invalidObjectHandle, nil
+	}
+	privateKeyHandle, err := be.storeRsaPrivateKey(ID, key, extractable)
+	if err != nil || privateKeyHandle == invalidObjectHandle {
+		be.ctx.DestroyObject(be.sessionHandle, publicKeyHandle)
+		return invalidObjectHandle, invalidObjectHandle, nil
+	}
 	return publicKeyHandle, privateKeyHandle, err
 }
 
@@ -278,10 +303,8 @@ func (be *Pkcs11Backend) storeRsaPair(ID string, key *rsa.PrivateKey, extractabl
 func (be *Pkcs11Backend) newEcdsaPair(ID string, curve elliptic.Curve, extractable bool) (pkcs11.ObjectHandle, pkcs11.ObjectHandle, error) {
 	ecParam, err := asn1.Marshal(curveOIDs[curve.Params().Name])
 	if err != nil {
-		err = errors.Wrapf(err, "Error marshaling curve OID")
 		return invalidObjectHandle, invalidObjectHandle, errors.Wrapf(err, "Error marshaling curve parameters, curve: %s", curve.Params().Name)
 	}
-
 	publicKeyTemplate := []*pkcs11.Attribute{
 		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_PUBLIC_KEY),
 		pkcs11.NewAttribute(pkcs11.CKA_KEY_TYPE, pkcs11.CKK_EC),
@@ -294,33 +317,28 @@ func (be *Pkcs11Backend) newEcdsaPair(ID string, curve elliptic.Curve, extractab
 		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_PRIVATE_KEY),
 		pkcs11.NewAttribute(pkcs11.CKA_TOKEN, true), // persistent
 		pkcs11.NewAttribute(pkcs11.CKA_SIGN, true),
+		pkcs11.NewAttribute(pkcs11.CKA_DERIVE, true),
 		pkcs11.NewAttribute(pkcs11.CKA_LABEL, ID),
 		pkcs11.NewAttribute(pkcs11.CKA_SENSITIVE, true),
 		pkcs11.NewAttribute(pkcs11.CKA_EXTRACTABLE, extractable),
 	}
-
 	publicKeyHandle, privateKeyHandle, err := be.ctx.GenerateKeyPair(be.sessionHandle,
 		[]*pkcs11.Mechanism{pkcs11.NewMechanism(pkcs11.CKM_EC_KEY_PAIR_GEN, nil)},
 		publicKeyTemplate, privateKeyTemplate)
-
 	return publicKeyHandle, privateKeyHandle, err
 }
 
-// take a Go crypto ECDSA key and store it inside the device.
-// TODO: change this function to accept only wrapped keys.
-func (be *Pkcs11Backend) storeEcdsaPair(ID string, key *ecdsa.PrivateKey, extractable bool) (pkcs11.ObjectHandle, pkcs11.ObjectHandle, error) {
-	curve := key.PublicKey.Curve
+func (be *Pkcs11Backend) storeEcdsaPublicKey(ID string, key *ecdsa.PublicKey) (pkcs11.ObjectHandle, error) {
+	curve := key.Curve
 	ecParam, err := asn1.Marshal(curveOIDs[curve.Params().Name])
 	if err != nil {
-		return invalidObjectHandle, invalidObjectHandle, errors.Wrapf(err, "Error marshaling curve parameters, curve: %s", curve.Params().Name)
+		return invalidObjectHandle, errors.Wrapf(err, "Error marshaling curve parameters, curve: %s", curve.Params().Name)
 	}
-
 	point := elliptic.Marshal(curve, key.X, key.Y)
 	asn1Point, err := asn1.Marshal(point)
 	if err != nil {
-		return invalidObjectHandle, invalidObjectHandle, errors.Wrap(err, "Error marshaling point coordinates")
+		return invalidObjectHandle, errors.Wrap(err, "Error marshaling point coordinates")
 	}
-
 	publicKeyTemplate := []*pkcs11.Attribute{
 		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_PUBLIC_KEY),
 		pkcs11.NewAttribute(pkcs11.CKA_KEY_TYPE, pkcs11.CKK_EC),
@@ -332,9 +350,17 @@ func (be *Pkcs11Backend) storeEcdsaPair(ID string, key *ecdsa.PrivateKey, extrac
 	}
 	publicKeyHandle, err := be.ctx.CreateObject(be.sessionHandle, publicKeyTemplate)
 	if err != nil {
-		return invalidObjectHandle, invalidObjectHandle, errors.Wrapf(err, "Error storing public key")
+		return invalidObjectHandle, errors.Wrapf(err, "Error storing ECDSA public key")
 	}
+	return publicKeyHandle, nil
+}
 
+func (be *Pkcs11Backend) storeEcdsaPrivateKey(ID string, key *ecdsa.PrivateKey, extractable bool) (pkcs11.ObjectHandle, error) {
+	curve := key.Public().(*ecdsa.PublicKey).Curve
+	ecParam, err := asn1.Marshal(curveOIDs[curve.Params().Name])
+	if err != nil {
+		return invalidObjectHandle, errors.Wrapf(err, "Error marshaling curve parameters, curve: %s", curve.Params().Name)
+	}
 	privateKeyTemplate := []*pkcs11.Attribute{
 		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_PRIVATE_KEY),
 		pkcs11.NewAttribute(pkcs11.CKA_KEY_TYPE, pkcs11.CKK_EC),
@@ -342,16 +368,29 @@ func (be *Pkcs11Backend) storeEcdsaPair(ID string, key *ecdsa.PrivateKey, extrac
 		pkcs11.NewAttribute(pkcs11.CKA_VALUE, key.D.Bytes()),
 		pkcs11.NewAttribute(pkcs11.CKA_TOKEN, true), // persistent
 		pkcs11.NewAttribute(pkcs11.CKA_SIGN, true),
+		pkcs11.NewAttribute(pkcs11.CKA_DERIVE, true),
 		pkcs11.NewAttribute(pkcs11.CKA_LABEL, ID),
 		pkcs11.NewAttribute(pkcs11.CKA_SENSITIVE, true),
 		pkcs11.NewAttribute(pkcs11.CKA_EXTRACTABLE, extractable),
 	}
 	privateKeyHandle, err := be.ctx.CreateObject(be.sessionHandle, privateKeyTemplate)
 	if err != nil {
-		be.ctx.DestroyObject(be.sessionHandle, publicKeyHandle)
-		return invalidObjectHandle, invalidObjectHandle, errors.Wrapf(err, "Error storing private key")
+		return invalidObjectHandle, errors.Wrapf(err, "Error storing ECDSA private key")
 	}
+	return privateKeyHandle, nil
+}
 
+// take a Go crypto ECDSA key and store it inside the device.
+func (be *Pkcs11Backend) storeEcdsaPair(ID string, key *ecdsa.PrivateKey, extractable bool) (pkcs11.ObjectHandle, pkcs11.ObjectHandle, error) {
+	publicKeyHandle, err := be.storeEcdsaPublicKey(ID, key.Public().(*ecdsa.PublicKey))
+	if err != nil || publicKeyHandle == invalidObjectHandle {
+		return invalidObjectHandle, invalidObjectHandle, nil
+	}
+	privateKeyHandle, err := be.storeEcdsaPrivateKey(ID, key, extractable)
+	if err != nil || privateKeyHandle == invalidObjectHandle {
+		be.ctx.DestroyObject(be.sessionHandle, publicKeyHandle)
+		return invalidObjectHandle, invalidObjectHandle, nil
+	}
 	return publicKeyHandle, privateKeyHandle, err
 }
 
@@ -373,18 +412,18 @@ func (be *Pkcs11Backend) readEcdsaPublicKey(handle pkcs11.ObjectHandle) (*ecdsa.
 		if a.Type == pkcs11.CKA_EC_POINT {
 			rest, err := asn1.Unmarshal(a.Value, &point)
 			if err != nil {
-				log.Errorf("Error unmarshaling point: %v", err)
+				return nil, errors.Wrapf(err, "Error unmarshaling point coordinates. Value: %v", a.Value)
 			}
 			if len(rest) > 0 {
-				log.Errorf("Error unmarshaling point: %d bytes left", len(rest))
+				return nil, fmt.Errorf("Error unmarshaling point coordinates. Value: %v, Bytes left: %d", a.Value, len(rest))
 			}
 		} else if a.Type == pkcs11.CKA_EC_PARAMS {
 			rest, err := asn1.Unmarshal(a.Value, &curveOID)
 			if err != nil {
-				log.Errorf("Error unmarshaling point: %v", err)
+				return nil, errors.Wrapf(err, "Error unmarshaling curve parameters. Value: %v", a.Value)
 			}
 			if len(rest) > 0 {
-				log.Errorf("Error unmarshaling point: %d bytes left", len(rest))
+				return nil, fmt.Errorf("Error unmarshaling curve parameters.Value: %v, Bytes left: %d", a.Value, len(rest))
 			}
 		}
 	}
@@ -401,13 +440,24 @@ func (be *Pkcs11Backend) readEcdsaPublicKey(handle pkcs11.ObjectHandle) (*ecdsa.
 	return publicKey, nil
 }
 
+func (be *Pkcs11Backend) storePublicKey(ID string, key crypto.PublicKey) (pkcs11.ObjectHandle, error) {
+	keyType := getPublicKeyType(key)
+	switch {
+	case isRSAKey(keyType):
+		return be.storeRsaPublicKey(ID, key.(*rsa.PublicKey))
+	case isECDSAKey(keyType):
+		return be.storeEcdsaPublicKey(ID, key.(*ecdsa.PublicKey))
+	default:
+		return invalidObjectHandle, fmt.Errorf("Unsupported KeyType: %v", keyType)
+	}
+}
+
 // takes a KeyPair containing a Go crypto key (RSA or ECDSA) and stores it inside the device.
-// TODO: change this function to accept only wrapped keys
 func (be *Pkcs11Backend) storeKeyPair(kp *KeyPair, extractable bool) (pkcs11.ObjectHandle, pkcs11.ObjectHandle, error) {
-	switch kp.KeyType {
-	case RSA1024, RSA2048, RSA4096:
+	switch {
+	case isRSAKey(kp.KeyType):
 		return be.storeRsaPair(kp.ID(), kp.Signer.(*rsa.PrivateKey), extractable)
-	case ECDSA224, ECDSA256, ECDSA384, ECDSA521:
+	case isECDSAKey(kp.KeyType):
 		return be.storeEcdsaPair(kp.ID(), kp.Signer.(*ecdsa.PrivateKey), extractable)
 	default:
 		return invalidObjectHandle, invalidObjectHandle, fmt.Errorf("Unsupported KeyType: %v", kp.KeyType)
@@ -422,11 +472,11 @@ func (be *Pkcs11Backend) CreateKeyPair(ID string, keyType KeyType) (*KeyPair, er
 	publicKeyHandle := invalidObjectHandle
 
 	var err error
-	extractable := false
 	var publicKey crypto.PublicKey
+	extractable := true
 
-	switch keyType {
-	case RSA1024, RSA2048, RSA4096:
+	switch {
+	case isRSAKey(keyType):
 		publicKeyHandle, privateKeyHandle, err = be.newRsaPair(ID, rsaKeyTypeToBitSize[keyType], extractable)
 		if err != nil {
 			return nil, errors.Wrapf(err, "Error creating RSA key pair. Backend: %+v", be)
@@ -435,7 +485,7 @@ func (be *Pkcs11Backend) CreateKeyPair(ID string, keyType KeyType) (*KeyPair, er
 		if err != nil {
 			return nil, errors.Wrapf(err, "Error retrieving RSA public key. Backend: %+v", be)
 		}
-	case ECDSA224, ECDSA256, ECDSA384, ECDSA521:
+	case isECDSAKey(keyType):
 		publicKeyHandle, privateKeyHandle, err = be.newEcdsaPair(ID, ecdsaKeyTypeToCurve[keyType], extractable)
 		if err != nil {
 			return nil, errors.Wrapf(err, "Error creating ECDSA key pair. Backend: %+v", be)
@@ -503,10 +553,14 @@ func (signer *pkcs11Signer) Sign(rand io.Reader, msg []byte, opts crypto.SignerO
 }
 
 // Find a single object based on a set of attributes. It fails if multiple objects are found.
-func (be *Pkcs11Backend) findObject(template []*pkcs11.Attribute) (pkcs11.ObjectHandle, error) {
+func (be *Pkcs11Backend) findObject(ID string, Type uint) (pkcs11.ObjectHandle, error) {
+	template := []*pkcs11.Attribute{
+		pkcs11.NewAttribute(pkcs11.CKA_CLASS, Type),
+		pkcs11.NewAttribute(pkcs11.CKA_LABEL, ID),
+	}
 	err := be.ctx.FindObjectsInit(be.sessionHandle, template)
 	if err != nil {
-		return invalidObjectHandle, errors.Wrapf(err, "Error initializing find function for certificate, template: %+v", template)
+		return invalidObjectHandle, errors.Wrapf(err, "Error initializing find function for object, template: %+v", template)
 	}
 	handles, more, err := be.ctx.FindObjects(be.sessionHandle, 1)
 	if err != nil {
@@ -541,11 +595,7 @@ func (be *Pkcs11Backend) storeCertificate(ID string, cert *x509.Certificate) (pk
 
 // read a certificate from the device
 func (be *Pkcs11Backend) readCertificate(ID string) (*x509.Certificate, error) {
-	template := []*pkcs11.Attribute{
-		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_CERTIFICATE),
-		pkcs11.NewAttribute(pkcs11.CKA_LABEL, ID),
-	}
-	objHandle, err := be.findObject(template)
+	objHandle, err := be.findObject(ID, pkcs11.CKO_CERTIFICATE)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error getting certificate handle, ID: %v", ID)
 	}
@@ -563,19 +613,11 @@ func (be *Pkcs11Backend) readCertificate(ID string) (*x509.Certificate, error) {
 // find the private and public key handles for the supplied ID
 // return invalidObjectHandle (but no error) if not found
 func (be *Pkcs11Backend) getKeyPairHandles(ID string) (pkcs11.ObjectHandle, pkcs11.ObjectHandle, error) {
-	privateKeyTemplate := []*pkcs11.Attribute{
-		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_PRIVATE_KEY),
-		pkcs11.NewAttribute(pkcs11.CKA_LABEL, ID),
-	}
-	privateKeyHandle, err := be.findObject(privateKeyTemplate)
+	privateKeyHandle, err := be.findObject(ID, pkcs11.CKO_PRIVATE_KEY)
 	if err != nil {
 		return invalidObjectHandle, invalidObjectHandle, errors.Wrapf(err, "Error retrieving private key handle, ID:", ID)
 	}
-	publicKeyTemplate := []*pkcs11.Attribute{
-		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_PUBLIC_KEY),
-		pkcs11.NewAttribute(pkcs11.CKA_LABEL, ID),
-	}
-	publicKeyHandle, err := be.findObject(publicKeyTemplate)
+	publicKeyHandle, err := be.findObject(ID, pkcs11.CKO_PUBLIC_KEY)
 	if err != nil {
 		return invalidObjectHandle, invalidObjectHandle, errors.Wrapf(err, "Error retrieving public key handle, ID:", ID)
 	}
@@ -679,13 +721,21 @@ func (be *Pkcs11Backend) destroyKeyPair(ID string) error {
 	return nil
 }
 
+// destroy a symmetric key stored in the device
+func (be *Pkcs11Backend) destroySymmetricKey(ID string) error {
+	objHandle, err := be.findObject(ID, pkcs11.CKO_SECRET_KEY)
+	if err != nil {
+		return errors.Wrapf(err, "Error destroying key, ID: %v", ID)
+	}
+	if objHandle == invalidObjectHandle {
+		return fmt.Errorf("Error destroying key, ID: %v. Object not found", ID)
+	}
+	return be.ctx.DestroyObject(be.sessionHandle, objHandle)
+}
+
 // destroy a certificate stored in the device
 func (be *Pkcs11Backend) destroyCertificate(ID string) error {
-	template := []*pkcs11.Attribute{
-		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_CERTIFICATE),
-		pkcs11.NewAttribute(pkcs11.CKA_LABEL, ID),
-	}
-	objHandle, err := be.findObject(template)
+	objHandle, err := be.findObject(ID, pkcs11.CKO_CERTIFICATE)
 	if err != nil {
 		return errors.Wrapf(err, "Error destroying certificate, ID: %v", ID)
 	}
@@ -702,6 +752,8 @@ func (be *Pkcs11Backend) DestroyObject(ID string, objType ObjectType) error {
 	switch objType {
 	case ObjectTypeKeyPair:
 		return be.destroyKeyPair(ID)
+	case ObjectTypeSymmetricKey:
+		return be.destroySymmetricKey(ID)
 	case ObjectTypeCertificate:
 		return be.destroyCertificate(ID)
 	default:
@@ -709,7 +761,129 @@ func (be *Pkcs11Backend) DestroyObject(ID string, objType ObjectType) error {
 	}
 }
 
-// GetInfo returns info about the pkcs11 module
+func (be *Pkcs11Backend) ecdhDeriveKey(derivedKeyID string, derivedKeyLen uint, privateKeyHandle pkcs11.ObjectHandle, peerPublicKey *ecdsa.PublicKey) (pkcs11.ObjectHandle, error) {
+	point := elliptic.Marshal(peerPublicKey.Curve, peerPublicKey.X, peerPublicKey.Y)
+	// According to PKCS#11, tokens that support CKM_ECDH1_DERIVE mechanism MUST accept
+	// raw encoding (Sec. A.5.2 of ANSI X9.62) of public key for CKM_ECDH1_DERIVE mechanism,
+	// and may optionally accept DER encoding.
+	// Older versions of SoftHSM, however, accept DER-encoding but not raw encoding, so we use DER
+	// https://github.com/opendnssec/SoftHSMv2/pull/288
+	asn1Point, _ := asn1.Marshal(point)
+	params, free := ecdh1DeriveParamBytes(asn1Point)
+	defer free()
+	mechanism := []*pkcs11.Mechanism{pkcs11.NewMechanism(pkcs11.CKM_ECDH1_DERIVE, params)}
+	keyTemplate := []*pkcs11.Attribute{
+		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_SECRET_KEY),
+		pkcs11.NewAttribute(pkcs11.CKA_KEY_TYPE, pkcs11.CKK_AES),
+		pkcs11.NewAttribute(pkcs11.CKA_VALUE_LEN, derivedKeyLen/8),
+		pkcs11.NewAttribute(pkcs11.CKA_LABEL, derivedKeyID),
+		pkcs11.NewAttribute(pkcs11.CKA_TOKEN, true), // persistent
+	}
+	key, err := be.ctx.DeriveKey(be.sessionHandle, mechanism, privateKeyHandle, keyTemplate)
+	if err != nil {
+		return invalidObjectHandle, errors.Wrapf(err, "Error deriving AES key using ECDH, base key handle: %v, derived key id: %v", privateKeyHandle, derivedKeyLen)
+	}
+	return key, nil
+}
+
+// DeriveKey derives a symmetric key using Diffie-Hellman key agreement.
+// Right now only ECDH-based derivation of an AES key is supported
+// The derived key is stored in the backend.
+func (be *Pkcs11Backend) DeriveKey(derivedKeyID string, derivedKeyType KeyType, baseKeyPairID string, peerPublicKey crypto.PublicKey) (*SymmetricKey, error) {
+	be.ctx.Lock()
+	defer be.ctx.Unlock()
+	derivedKeyLen := symmetricKeyTypeToBitSize[derivedKeyType]
+	baseKeySigner, err := be.readKeyPair(baseKeyPairID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error reading key pair, ID: %v", baseKeyPairID)
+	}
+	if baseKeySigner == nil {
+		return nil, fmt.Errorf("Key pair does not exist, ID: %v", baseKeyPairID)
+	}
+	baseKeyPair := baseKeySigner.(*pkcs11Signer)
+	baseKeyType := getPublicKeyType(baseKeyPair.publicKey)
+	if !isECDSAKey(baseKeyType) {
+		return nil, fmt.Errorf("Unsupported base key type: %v", baseKeyType)
+	}
+	handle, err := be.ecdhDeriveKey(derivedKeyID, derivedKeyLen, baseKeyPair.privateKeyHandle, peerPublicKey.(*ecdsa.PublicKey))
+	if err != nil || handle == invalidObjectHandle {
+		return nil, err
+	}
+	key := &pkcs11SymmetricKey{
+		backend:   be,
+		keyHandle: handle,
+	}
+	return NewSymmetricKeyObject(derivedKeyID, derivedKeyType, key), nil
+}
+
+// WrapKeyPair encrypts a target key stored in the device with a supplied key-encrypting-key (KEK)
+// The target key can be any, the kek must be AES.
+// The wrapped key is returned as []byte and is not stored in the device
+func (be *Pkcs11Backend) WrapKeyPair(keyPairID, kekID string) ([]byte, error) {
+	be.ctx.Lock()
+	defer be.ctx.Unlock()
+	targetKeyHandle, err := be.findObject(keyPairID, pkcs11.CKO_PRIVATE_KEY)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error getting key pair handle, ID: %v", keyPairID)
+	}
+	if targetKeyHandle == invalidObjectHandle {
+		return nil, fmt.Errorf("Key pair, ID: %v does not exist", keyPairID)
+	}
+	kekHandle, err := be.findObject(kekID, pkcs11.CKO_SECRET_KEY)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error getting wrapping key handle, ID: %v", kekID)
+	}
+	if kekHandle == invalidObjectHandle {
+		return nil, fmt.Errorf("Wrapping key, ID: %v does not exist", kekID)
+	}
+	mechanism := []*pkcs11.Mechanism{pkcs11.NewMechanism(pkcs11.CKM_AES_KEY_WRAP_PAD, nil)}
+	// WrapKey call will fail if the key is not extractable
+	return be.ctx.WrapKey(be.sessionHandle, mechanism, kekHandle, targetKeyHandle)
+}
+
+// UnwrapKeyPair takes an encrypted key and decrypts it with an AES wrapping key stored in the device
+func (be *Pkcs11Backend) UnwrapKeyPair(targetKeyID string, wrappedKey []byte, publicKey crypto.PublicKey, kekID string) (*KeyPair, error) {
+	be.ctx.Lock()
+	defer be.ctx.Unlock()
+	extractable := false
+	// retrieve unwrapping key handle
+	kekHandle, err := be.findObject(kekID, pkcs11.CKO_SECRET_KEY)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error getting unwrapping key handle, ID: %v", kekID)
+	}
+	if kekHandle == invalidObjectHandle {
+		return nil, fmt.Errorf("Error getting unwrapping key handle, ID: %v", kekID)
+	}
+	// store public key first
+	publicKeyHandle, err := be.storePublicKey(targetKeyID, publicKey)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error storing public key with ID: %v", targetKeyID)
+	}
+	// form template for unwrapped private key
+	keyTemplate := []*pkcs11.Attribute{
+		pkcs11.NewAttribute(pkcs11.CKA_CLASS, pkcs11.CKO_PRIVATE_KEY),
+		pkcs11.NewAttribute(pkcs11.CKA_KEY_TYPE, getKeyTypeAttributeValue(getPublicKeyType(publicKey))),
+		pkcs11.NewAttribute(pkcs11.CKA_TOKEN, true), // persistent
+		pkcs11.NewAttribute(pkcs11.CKA_SIGN, true),
+		pkcs11.NewAttribute(pkcs11.CKA_LABEL, targetKeyID),
+		pkcs11.NewAttribute(pkcs11.CKA_SENSITIVE, true),
+		pkcs11.NewAttribute(pkcs11.CKA_EXTRACTABLE, extractable),
+	}
+	mechanism := []*pkcs11.Mechanism{pkcs11.NewMechanism(pkcs11.CKM_AES_KEY_WRAP_PAD, nil)}
+	privateKeyHandle, err := be.ctx.UnwrapKey(be.sessionHandle, mechanism, kekHandle, wrappedKey, keyTemplate)
+	if err != nil || publicKeyHandle == invalidObjectHandle {
+		be.ctx.DestroyObject(be.sessionHandle, publicKeyHandle)
+		return nil, errors.Wrapf(err, "Error storing public key with ID: %v", targetKeyID)
+	}
+	signer := &pkcs11Signer{
+		backend:          be,
+		privateKeyHandle: privateKeyHandle,
+		publicKey:        publicKey,
+	}
+	return NewKeyPairObject(targetKeyID, signer), nil
+}
+
+// GetInfo returns library and device info
 func (be *Pkcs11Backend) GetInfo() (pkcs11.Info, error) {
 	return be.ctx.GetInfo()
 }
@@ -726,11 +900,10 @@ func (be *Pkcs11Backend) Close() error {
 // one that has a label matching tokenLabel and tries to login with the given PIN.
 // If not found, it tries to initialize an uninitialized token and set label and PIN.
 func NewPkcs11Backend(modulePath, tokenLabel, pin string) (*Pkcs11Backend, error) {
+	// empty token label and pin can be ok, depending on the PKCS#11 device
 	if modulePath == "" {
 		return nil, fmt.Errorf("modulePath cannot be empty")
 	}
-	// empty token label and pin can be ok, depending on the PKCS#11 device
-
 	// load the module if needed
 	modulesMutex.Lock()
 	defer modulesMutex.Unlock()
@@ -751,7 +924,6 @@ func NewPkcs11Backend(modulePath, tokenLabel, pin string) (*Pkcs11Backend, error
 		}
 		modules[modulePath] = module
 	}
-
 	// create and initialize the backend instance
 	newInstance := &Pkcs11Backend{
 		tokenLabel:    tokenLabel,

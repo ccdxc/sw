@@ -7,11 +7,14 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rsa"
+	"crypto/x509"
 	"encoding/asn1"
 	"fmt"
 	"math/big"
 
 	"github.com/pkg/errors"
+
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // from src/pkg/crypto/rsa/pkcs1v15.go
@@ -25,6 +28,13 @@ var hashPrefixes = map[crypto.Hash][]byte{
 	crypto.MD5SHA1:   {}, // A special TLS case which doesn't use an ASN1 prefix.
 	crypto.RIPEMD160: {0x30, 0x20, 0x30, 0x08, 0x06, 0x06, 0x28, 0xcf, 0x06, 0x03, 0x00, 0x31, 0x04, 0x14},
 }
+
+// from src/pkg/crypto/x509/x509.go
+var (
+	oidPublicKeyRSA   = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 1}
+	oidPublicKeyDSA   = asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 1}
+	oidPublicKeyECDSA = asn1.ObjectIdentifier{1, 2, 840, 10045, 2, 1}
+)
 
 // from src/pkg/crypto/x509/x509.go
 var (
@@ -69,6 +79,10 @@ var rsaBitSizeToKeyType = map[int]KeyType{
 	4096: RSA4096,
 }
 
+func isRSAKey(kt KeyType) bool {
+	return kt >= RSA1024 && kt <= RSA4096
+}
+
 var ecdsaKeyTypeToCurve = map[KeyType]elliptic.Curve{
 	ECDSA224: elliptic.P224(),
 	ECDSA256: elliptic.P256(),
@@ -81,6 +95,26 @@ var ecdsaCurveToKeyType = map[elliptic.Curve]KeyType{
 	elliptic.P256(): ECDSA256,
 	elliptic.P384(): ECDSA384,
 	elliptic.P521(): ECDSA521,
+}
+
+func isECDSAKey(kt KeyType) bool {
+	return kt >= ECDSA224 && kt <= ECDSA521
+}
+
+var symmetricKeyTypeToBitSize = map[KeyType]uint{
+	AES128: 128,
+	AES192: 192,
+	AES256: 256,
+}
+
+var bitSizeToSymmetricKeyType = map[uint]KeyType{
+	128: AES128,
+	192: AES192,
+	256: AES256,
+}
+
+func isAESKey(kt KeyType) bool {
+	return kt >= AES128 && kt <= AES256
 }
 
 type ecdsaSignature struct {
@@ -119,13 +153,14 @@ func rawToSignerSignature(rawSignature []byte, signer crypto.Signer) ([]byte, er
 }
 
 // return KeyMgr's KeyType from a crypto.PublicKey
-func getKeyType(key crypto.PublicKey) KeyType {
-	switch key.(type) {
+func getPublicKeyType(key crypto.PublicKey) KeyType {
+	switch keyType := key.(type) {
 	case *rsa.PublicKey:
 		return rsaBitSizeToKeyType[key.(*rsa.PublicKey).N.BitLen()]
 	case *ecdsa.PublicKey:
 		return ecdsaCurveToKeyType[key.(*ecdsa.PublicKey).Curve]
 	default:
+		log.Fatalf("unsupported key type %T", keyType)
 		return Unknown
 	}
 }
@@ -163,4 +198,43 @@ func VerifySignature(publicKey crypto.PublicKey, signature, msg []byte, opts cry
 	default:
 		return false, fmt.Errorf("Unknown keypair type: %T", keyType)
 	}
+}
+
+type pkcs8KeyInfo struct {
+	Version    int
+	Algo       []asn1.ObjectIdentifier
+	PrivateKey []byte
+}
+
+// Pkcs8MarshalPrivateKey marshals an RSA/ECDSA private key using PKCS#8 format
+// Unmarshaling can be done with Go's crypto.ParsePKCS8PrivateKey()
+// See RFC 5208
+func Pkcs8MarshalPrivateKey(privateKey crypto.PrivateKey) ([]byte, error) {
+	var keyInfo pkcs8KeyInfo
+	switch keyType := privateKey.(type) {
+	case *ecdsa.PrivateKey:
+		ecdsaKey := privateKey.(*ecdsa.PrivateKey)
+		key, err := x509.MarshalECPrivateKey(ecdsaKey)
+		if err != nil {
+			return nil, err
+		}
+		oidNamedCurve := curveOIDs[ecdsaKey.PublicKey.Curve.Params().Name]
+		if oidNamedCurve == nil {
+			return nil, fmt.Errorf("Unknown elliptic curve %+v", ecdsaKey.PublicKey.Curve)
+		}
+		keyInfo.Version = 0
+		keyInfo.Algo = make([]asn1.ObjectIdentifier, 2)
+		keyInfo.Algo[0] = oidPublicKeyECDSA
+		keyInfo.Algo[1] = oidNamedCurve
+		keyInfo.PrivateKey = key
+	case *rsa.PrivateKey:
+		rsaKey := privateKey.(*rsa.PrivateKey)
+		keyInfo.Version = 0
+		keyInfo.Algo = make([]asn1.ObjectIdentifier, 1)
+		keyInfo.Algo[0] = oidPublicKeyRSA
+		keyInfo.PrivateKey = x509.MarshalPKCS1PrivateKey(rsaKey)
+	default:
+		return nil, fmt.Errorf("Unknown key type %T", keyType)
+	}
+	return asn1.Marshal(keyInfo)
 }

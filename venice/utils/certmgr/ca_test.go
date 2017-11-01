@@ -81,10 +81,10 @@ func TestSelfSignedFlow(t *testing.T) {
 	defer be.Close()
 
 	// test the bootstrap case where we start with no keys and certs
-	cs, err := NewCertificateAuthority(km)
+	ca, err := NewCertificateAuthority(km)
 	AssertOk(t, err, "Error instantiating new CA")
 	defer cleanupCAKeys(t, km)
-	Assert(t, cs.IsReady(), "Certificates service failed to start")
+	Assert(t, ca.IsReady(), "Certificates service failed to start")
 
 	// Check that CA key and certificates have been generated properly
 	caKeyPairObj, err := km.GetObject(caKeyID, keymgr.ObjectTypeKeyPair)
@@ -102,21 +102,21 @@ func TestSelfSignedFlow(t *testing.T) {
 	Assert(t, valid && (err == nil), fmt.Sprintf("Public and private key do not match, error: %v", err))
 
 	// check that the self-signed certificate is the only trust root
-	Assert(t, len(cs.TrustRoots()) == 1, "Found unexpected number of trust roots, want: 1, have: %d", len(cs.TrustRoots()))
-	Assert(t, caCertificate.Equal(&cs.TrustRoots()[0]), "CA certificate not found in trusted roots")
+	Assert(t, len(ca.TrustRoots()) == 1, "Found unexpected number of trust roots, want: 1, have: %d", len(ca.TrustRoots()))
+	Assert(t, caCertificate.Equal(&ca.TrustRoots()[0]), "CA certificate not found in trusted roots")
 
 	// check that the ca trust chain contains only the self-signed cert
-	Assert(t, caCertificate.Equal(&cs.TrustChain()[0]), "CA certificate not found in CA trust chain")
-	Assert(t, len(cs.TrustChain()) == 1, "Found unexpected certificate in trust chain")
+	Assert(t, caCertificate.Equal(&ca.TrustChain()[0]), "CA certificate not found in CA trust chain")
+	Assert(t, len(ca.TrustChain()) == 1, "Found unexpected certificate in trust chain")
 
 	// Now instantiate a new CA with the same KeyManager
 	// It should read the exact same keys and certificates
-	cs2, err := NewCertificateAuthority(km)
+	ca2, err := NewCertificateAuthority(km)
 	AssertOk(t, err, "Error instantiating new CA")
 
-	if !reflect.DeepEqual(cs, cs2) {
+	if !reflect.DeepEqual(ca, ca2) {
 		t.Fatalf("New instance of certificates service does not match reference\n"+
-			"Expected: %+v\n\nFound: %+v\n", cs, cs2)
+			"Expected: %+v\n\nFound: %+v\n", ca, ca2)
 	}
 }
 
@@ -131,6 +131,7 @@ func TestExternalCAFlow(t *testing.T) {
 	// Instantiate CA
 	ca, err := NewCertificateAuthority(km)
 	AssertOk(t, err, "Error instantiating certificate authority")
+	Assert(t, ca.IsReady(), "Certificate authority not ready")
 	defer cleanupCAKeys(t, km)
 
 	// compare against a reference instance
@@ -157,8 +158,9 @@ func TestCertificateVerification(t *testing.T) {
 	// Pre-load keys and certificates in key manager from files
 	_, _, _ = preloadCAKeys(t, km)
 
-	cs, err := NewCertificateAuthority(km)
-	AssertOk(t, err, "Error starting certificates service")
+	ca, err := NewCertificateAuthority(km)
+	AssertOk(t, err, "Error instantiating certificate authority")
+	Assert(t, ca.IsReady(), "Certificate authority not ready")
 	defer cleanupCAKeys(t, km)
 
 	// Open a certificate that was signed by this CA and check that it passes verification
@@ -166,12 +168,12 @@ func TestCertificateVerification(t *testing.T) {
 	testCert, err := certs.ReadCertificate(testCertPath)
 	AssertOk(t, err, "Error reading test certificate")
 
-	valid, err := cs.Verify(testCert)
+	valid, err := ca.Verify(testCert)
 	Assert(t, valid && (err == nil), "Error verifying certificate")
 
 	// Now tamper with the certificate and check that validation fails
 	testCert.RawSubject[0] = testCert.RawSubject[0] + 1
-	valid, err = cs.Verify(testCert)
+	valid, err = ca.Verify(testCert)
 	Assert(t, !valid, "Certificate verification did not fail as expected")
 }
 
@@ -181,9 +183,9 @@ func TestCertificatesApi(t *testing.T) {
 	defer be.Close()
 
 	// Instantiate a new CA with self-signed certificate
-	cs, err := NewCertificateAuthority(km)
+	ca, err := NewCertificateAuthority(km)
 	AssertOk(t, err, "Error instantiating certificate authority")
-	Assert(t, cs.IsReady(), "CA not ready")
+	Assert(t, ca.IsReady(), "CA not ready")
 	defer cleanupCAKeys(t, km)
 
 	key, err := km.CreateKeyPair("testkey", keymgr.ECDSA256)
@@ -192,9 +194,9 @@ func TestCertificatesApi(t *testing.T) {
 	csr, err := certs.CreateCSR(key, nil, nil)
 	AssertOk(t, err, "Error generating CSR")
 
-	cert, err := cs.Sign(csr)
+	cert, err := ca.Sign(csr)
 	AssertOk(t, err, "Error signing CSR")
 
-	valid, err := cs.Verify(cert)
+	valid, err := ca.Verify(cert)
 	Assert(t, valid && (err == nil), "Error verifying certificate")
 }

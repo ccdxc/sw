@@ -3,6 +3,7 @@
 package keymgr
 
 import (
+	"crypto"
 	"crypto/x509"
 	"fmt"
 	"strings"
@@ -192,6 +193,78 @@ func (km *KeyMgr) CreateKeyPair(id string, keytype KeyType) (*KeyPair, error) {
 		return nil, errors.Wrapf(err, "Error generating KeyPair with ID %s", id)
 	}
 	km.objects[id] = kp
+	return kp, nil
+}
+
+// DeriveKey derives a symmetric key using Diffie-Hellman key agreement.
+// Requires a base private key and a peer public key.
+// Peer will be able to derive the same key with peer private key and base public key
+func (km *KeyMgr) DeriveKey(derivedKeyID string, derivedKeyType KeyType, baseKeyPairID string, peerPublicKey crypto.PublicKey) (*SymmetricKey, error) {
+	if baseKeyPairID == "" {
+		return nil, fmt.Errorf("Base key ID not specified")
+	}
+	if derivedKeyID == "" {
+		return nil, fmt.Errorf("Derived key ID not specified")
+	}
+	if peerPublicKey == nil {
+		return nil, fmt.Errorf("Peer public key not provided")
+	}
+	// Right now only ECDH (Elliptic Curve Diffie-Hellman) derivation of AES keys
+	// is supported for all backends, so we can do all checks here
+	peerKeyType := getPublicKeyType(peerPublicKey)
+	if !isECDSAKey(peerKeyType) {
+		return nil, fmt.Errorf("Unsupported peer key type: %v", peerKeyType)
+	}
+	if !isAESKey(derivedKeyType) {
+		return nil, fmt.Errorf("Unsupported derived key type: %v", derivedKeyType)
+	}
+	km.Lock()
+	defer km.Unlock()
+	if km.objects[derivedKeyID] != nil {
+		return nil, fmt.Errorf("Object with ID: %v already exists", derivedKeyID)
+	}
+	key, err := km.be.DeriveKey(derivedKeyID, derivedKeyType, baseKeyPairID, peerPublicKey)
+	if err == nil {
+		km.objects[derivedKeyID] = key
+	}
+	return key, err
+}
+
+// WrapKeyPair encrypts a KeyPair with an existing symmetric wrapping key.
+// The wrapped key is returned as byte array and is not stored.
+func (km *KeyMgr) WrapKeyPair(keyPairID, wrappingKeyID string) ([]byte, error) {
+	if keyPairID == "" {
+		return nil, fmt.Errorf("WrapKeyPair cannot be invoked with empty KeyPairID")
+	}
+	if wrappingKeyID == "" {
+		return nil, fmt.Errorf("WrapKeyPair cannot be invoked with empty wrapping key ID")
+	}
+	km.Lock()
+	defer km.Unlock()
+	return km.be.WrapKeyPair(keyPairID, wrappingKeyID)
+}
+
+// UnwrapKeyPair takes a wrapped KeyPair and decrypts it with an unwrapping key.
+func (km *KeyMgr) UnwrapKeyPair(targetKeyPairID string, wrappedKey []byte, publicKey crypto.PublicKey, unwrappingKeyID string) (*KeyPair, error) {
+	if targetKeyPairID == "" {
+		return nil, fmt.Errorf("UnwrapKeyPair cannot be invoked with empty target KeyPair ID")
+	}
+	if wrappedKey == nil {
+		return nil, fmt.Errorf("UnwrapKeyPair cannot be invoked with nil wrapped key")
+	}
+	if publicKey == nil {
+		return nil, fmt.Errorf("UnwrapKeyPair cannot be invoked with nil public key")
+	}
+	if unwrappingKeyID == "" {
+		return nil, fmt.Errorf("UnwrapKeyPair cannot be invoked with empty unwrapping key ID")
+	}
+	km.Lock()
+	defer km.Unlock()
+	kp, err := km.be.UnwrapKeyPair(targetKeyPairID, wrappedKey, publicKey, unwrappingKeyID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error unwrapping key pair, targetKeyPairID: %v, unwrappingKeyID: %v", targetKeyPairID, unwrappingKeyID)
+	}
+	km.objects[targetKeyPairID] = kp
 	return kp, nil
 }
 
