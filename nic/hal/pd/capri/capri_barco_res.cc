@@ -43,6 +43,17 @@ capri_barco_resources_t capri_barco_resources[] = {
         0,
         NULL
     },
+    /* 3 - CRYPTO_BARCO_RES_SYM_MSG_DESCR */
+    {
+        "Crypto Sym Message Descriptors",
+        CAPRI_HBM_REG_CRYPTO_SYM_MSG_DESCR,
+        CRYPTO_SYM_MSG_DESCR_COUNT_MAX,
+        64,
+        64,
+        0,
+        0,
+        NULL
+    },
 };
 
 static inline indexer * capri_barco_indexer_get(capri_barco_res_type_t res)
@@ -58,6 +69,9 @@ static inline indexer * capri_barco_indexer_get(capri_barco_res_type_t res)
             break;
         case CRYPTO_BARCO_RES_ASYM_KEY_DESCR:
             idxer = g_hal_state_pd->crypto_asym_key_descr_idxr();
+            break;
+        case CRYPTO_BARCO_RES_SYM_MSG_DESCR:
+            idxer = g_hal_state_pd->crypto_sym_msg_descr_idxr();
             break;
         default:
             HAL_TRACE_ERR("Invalid resource: {}", res);

@@ -118,33 +118,6 @@ uint8_t yq[] = {
 #endif
 
 
-#define MAX_LINE_SZ 128
-void hex_dump_trace(char *str, char *buf, uint16_t len)
-{
-    char            line[MAX_LINE_SZ];
-    char            *lineptr;
-    uint16_t        idx = 0;
-    uint16_t        lineoffset = 0;
-
-    lineptr = &line[0];
-    HAL_TRACE_DEBUG("{}:", str);
-    for (idx = 0; idx < len; idx++) {
-
-        lineoffset += snprintf(lineptr + lineoffset, (MAX_LINE_SZ - lineoffset - 1),
-                "%02hhx ", buf[idx]);
-
-        if (((idx + 1) % 16) == 0) {
-            HAL_TRACE_DEBUG("{}", line);
-            lineoffset = 0;
-        }
-    }
-    if (lineoffset) {
-        HAL_TRACE_DEBUG("{}", line);
-    }
-
-}
-
-
 hal_ret_t capri_barco_asym_ecc_point_mul_p256_test(void)
 {
     hal_ret_t           ret = HAL_RET_OK;

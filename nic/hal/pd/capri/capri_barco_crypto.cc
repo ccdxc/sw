@@ -122,6 +122,11 @@ hal_ret_t capri_barco_crypto_init(void)
     ret = capri_barco_asym_run_tests();
 #endif
 
+#if 0
+    hal_ret_t capri_barco_sym_hash_run_tests(void);
+    ret = capri_barco_sym_hash_run_tests();
+#endif
+
     return ret;
 }
 

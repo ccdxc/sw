@@ -97,6 +97,14 @@
             "size_kb": 24
         },
         {
+            "name": "brq-ring-mpp0",
+            "size_kb": 128
+        },
+        {
+            "name": "crypto-sym-msg-descr",
+            "size_kb": 64
+        },
+        {
             "name": "crypto-hbm-mem",
             "size_kb": 512
         },

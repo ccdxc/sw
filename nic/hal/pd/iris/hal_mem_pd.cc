@@ -263,6 +263,9 @@ hal_state_pd::init(void)
     crypto_asym_dma_descr_idxr_ = new hal::utils::indexer(CRYPTO_ASYM_DMA_DESCR_COUNT_MAX);
     HAL_ASSERT_RETURN((crypto_asym_dma_descr_idxr_ != NULL), false);
 
+    crypto_sym_msg_descr_idxr_ = new hal::utils::indexer(CRYPTO_SYM_MSG_DESCR_COUNT_MAX);
+    HAL_ASSERT_RETURN((crypto_sym_msg_descr_idxr_ != NULL), false);
+
     hbm_mem_idxr_ = new hal::utils::indexer(CRYPTO_HBM_MEM_COUNT_MAX);
     HAL_ASSERT_RETURN((hbm_mem_idxr_!= NULL), false);
 

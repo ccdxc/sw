@@ -28,10 +28,12 @@ cc_library(
             "capri_init.cc",
             "capri_repl.cc",
             "capri_txs_scheduler.cc",
-		    "capri_barco_rings.cc",
+	    "capri_barco_rings.cc",
             "capri_barco_res.cc",
             "capri_barco_asym_apis.cc",
-            "capri_barco_asym_tests.cc"
+            "capri_barco_asym_tests.cc",
+	    "capri_barco_sym_apis.cc",
+	    "capri_barco_sym_tests.cc"
             ],
     hdrs = [
     ] + glob(["*.hpp"]) + glob(["*.h"]),
