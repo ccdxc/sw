@@ -6,13 +6,13 @@ struct req_tx_bktrack_sqsge_process_k_t k;
 
 #define SQ_BKTRACK_T struct req_tx_sq_bktrack_info_t
 #define SQCB0_WRITE_BACK_T struct req_tx_sqcb_write_back_info_t
-#define SQCB1_WRITE_BACK_T struct req_tx_sqcb1_write_back_info_t
+#define SQCB1_WRITE_BACK_T struct req_tx_bktrack_sqcb1_write_back_info_t
 #define TO_STAGE_T struct req_tx_to_stage_t
 
 %%
 
-    .param    req_tx_write_back_process
-    .param    req_tx_sqcb1_write_back_process
+    .param    req_tx_bktrack_write_back_process
+    .param    req_tx_bktrack_sqcb1_write_back_process
 
 .align
 req_tx_bktrack_sqsge_process:
@@ -22,7 +22,7 @@ req_tx_bktrack_sqsge_process:
     add            r1, r0, (HBM_NUM_SGES_PER_CACHELINE - 1), LOG_SIZEOF_SGE_T_BITS
     add            r2, k.args.current_sge_offset, r0
     add            r3, k.args.tx_psn, r0
-    add            r4, k.to_stage.log_pmtu, r0
+    add            r4, k.to_stage.bktrack.log_pmtu, r0
     // To start with, set empty_rrq_backtrack to false
     setcf          c7, [!c0]
 
@@ -93,7 +93,7 @@ next_sge_start:
     CAPRI_SET_FIELD(r7, SQ_BKTRACK_T, op_type, k.args.op_type)
 
     // sge_addr = wqe_addr + TXWQE_SGE_OFFSET + (sizeof(sge_t) * current_sge_id)
-    add          r5,  k.to_stage.wqe_addr, r1, LOG_SIZEOF_SGE_T
+    add          r5,  k.to_stage.bktrack.wqe_addr, r1, LOG_SIZEOF_SGE_T
     add          r5, r5, TXWQE_SGE_OFFSET
 
     // label and pc cannot be same, so calculate cur pc using bal 
@@ -123,12 +123,11 @@ sqcb_writeback:
     add            r2, k.args.num_sges, r1
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, num_sges, r2)
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, op_type, k.args.op_type)
-    CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, set_bktrack, 1)
     CAPRI_SET_FIELD(r7, SQCB0_WRITE_BACK_T, sq_c_index, k.args.sq_c_index)
     CAPRI_SET_FIELD_C(r7, SQCB0_WRITE_BACK_T, empty_rrq_bktrack, 1, c7)
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_bktrack_write_back_process)
     SQCB0_ADDR_GET(r5)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
 
@@ -138,7 +137,7 @@ sqcb_writeback:
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 1)
 
     CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqcb1_write_back_process)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_bktrack_sqcb1_write_back_process)
     SQCB1_ADDR_GET(r5)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r5)
 

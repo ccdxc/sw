@@ -12,7 +12,7 @@
     #c7 - incr_rrq_pindex
 
 struct req_tx_phv_t p;
-struct req_tx_add_headers_process_k_t k;
+struct req_tx_write_back_process_k_t k;
 struct sqcb1_t d;
 
 #define RDMA_PKT_MIDDLE      0
@@ -292,13 +292,13 @@ op_type_end:
 
     // if (adjust_psn)
     // tx_psn = read_len >> log_pmtu
-    add            r3, k.args.log_pmtu, r0
+    add            r3, k.args.op.rd.log_pmtu, r0
     srlv           r3, k.args.op.rd.read_len, r3
     tblmincr       d.tx_psn, 24, r3
 
     // tx_psn += (read_len & ((1 << log_pmtu) -1)) ? 1 : 0
     add            r3, k.args.op.rd.read_len, r0
-    mincr          r3, k.args.log_pmtu, r0
+    mincr          r3, k.args.op.rd.log_pmtu, r0
     sle            c6, r3, r0
 
 inc_psn:
@@ -343,7 +343,7 @@ cb1_byte_update:
     memwr.b        r3, r5
 
     SQCB1_ADDR_GET(r1)
-    CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
+    CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_2_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 

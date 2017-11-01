@@ -887,13 +887,14 @@ typedef enum rdma_pkt_opc_e {
 #define RRQ_RING_ID     (MAX_SQ_RINGS - 1)
 
 typedef struct sqcb0_s {
-    uint8_t  rsvd1[3];
+    uint8_t  rsvd2;
+    uint16_t spec_sq_cindex;
     uint8_t  cb1_byte;
     uint8_t  busy: 1;        //tx
-    uint8_t  rsvd: 7;
+    uint8_t  rsvd0: 7;
     uint32_t pd;
     uint8_t  bktrack_in_progress:1;
-    uint8_t  need_credits:1;
+    uint8_t  rsvd1:1;
     uint8_t  li_fence:1;
     uint8_t  fence:1;
     uint8_t  fast_reg_enable: 1; //tx

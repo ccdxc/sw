@@ -4,7 +4,7 @@
 #include "defines.h"
 
 struct req_tx_phv_t p;
-struct req_tx_add_headers_process_k_t k;
+struct req_tx_write_back_process_k_t k;
 struct sqcb1_t d;
 
 %%
@@ -52,7 +52,7 @@ req_tx_add_headers_2_process:
     // phv_p->bth.dst_qp = sqcb1_p->dst_qp if it is not UD service
     phvwr.!c3      BTH_DST_QP, d.dst_qp
 
-    CAPRI_SET_TABLE_2_VALID(0)
+    CAPRI_SET_TABLE_3_VALID(0)
 
     nop.e
     nop

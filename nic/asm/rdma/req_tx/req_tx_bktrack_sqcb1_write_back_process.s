@@ -2,13 +2,13 @@
 #include "sqcb.h"
 
 struct req_tx_phv_t p;
-struct req_tx_sqcb1_write_back_process_k_t k;
+struct req_tx_bktrack_sqcb1_write_back_process_k_t k;
 struct sqcb1_t d;
 
 %%
 
 .align
-req_tx_sqcb1_write_back_process:
+req_tx_bktrack_sqcb1_write_back_process:
      tblwr         d.tx_psn, k.args.tx_psn
      seq           c1, k.args.skip_wqe_start_psn, 1
      tblwr.!c1     d.wqe_start_psn, k.args.wqe_start_psn

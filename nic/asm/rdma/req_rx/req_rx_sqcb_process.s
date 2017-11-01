@@ -68,12 +68,12 @@ read:
     add            r3, r0, d.log_pmtu
     sllv           r3, 1, r3
     sne            c1, r3, r2
-    IS_ANY_FLAG_SET(c2, r1, REQ_RX_FLAG_MIDDLE|REQ_RX_FLAG_FIRST)     
+    IS_ANY_FLAG_SET(c2, r1, REQ_RX_FLAG_MIDDLE|REQ_RX_FLAG_FIRST)
     bcf            [c1 & c2], invalid_pyld_len
 
     // remaining_payload_bytes > pmtu
     slt            c1, r3, r2 // Branch Delay Slot
-    ARE_ALL_FLAGS_SET(c2, r1, REQ_RX_FLAG_ONLY)
+    IS_ANY_FLAG_SET(c2, r1, REQ_RX_FLAG_ONLY|REQ_RX_FLAG_LAST)
     bcf            [c1 & c2], invalid_pyld_len
 
     // remaining_payload_bytes < 1

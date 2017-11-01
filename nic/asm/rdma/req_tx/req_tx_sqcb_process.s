@@ -19,7 +19,8 @@ struct rdma_stage0_table_k k;
     .param    req_tx_sqwqe_process
     .param    req_tx_sqsge_process
     .param    req_tx_sqcb1_process
-    .param    req_tx_add_headers_process
+    .param    req_tx_bktrack_sqcb1_process
+    //.param    req_tx_add_headers_process
     .param    req_tx_write_back_process
 
 .align
@@ -39,18 +40,22 @@ req_tx_sqcb_process:
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qtype, CAPRI_TXDMA_INTRINSIC_QTYPE)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
 
-    // if either of the busy flags are set, give up the scheduler opportunity
-    crestore [c2,c1], d.{busy...cb1_busy}, 0x3
-    bcf            [c1 | c2], exit
     //set dma_cmd_ptr in phv
     TXDMA_DMA_CMD_PTR_SET(REQ_TX_DMA_CMD_START_FLIT_ID) // Branch Delay Slot
+
+    seq            c1, r7[MAX_SQ_HOST_RINGS-1:1], r0
+    bcf            [c1], process_sq
+
+    // if either of the busy flags are set, give up the scheduler opportunity
+    crestore [c2,c1], d.{busy...cb1_busy}, 0x3 // Branch Delay Slot
+    bcf            [c1 | c2], exit
     
     ARE_ALL_RINGS_EMPTY(c1, r7[MAX_SQ_HOST_RINGS-1:0], FC_RING_ID_BITMAP)
-    bcf          [c1], sq_bktrack1
+    bcf          [c1], process_sq_or_sq_bktrack
     // take both the busy flags
     tblwr          d.{busy...cb1_busy}, 0x3 //Branch Delay Slot
 
-update_credits:
+process_credits:
     // set cindex same as pindex without ringing doorbell, as stage0
     // can get scheduled again while doorbell memwr is still in the queue
     // to be processed. This will cause credits to get updated again. Instead,
@@ -72,20 +77,20 @@ update_credits:
     nop.e
     nop
 
-sq_bktrack1:
+process_sq_or_sq_bktrack:
     ARE_ALL_RINGS_EMPTY(c1, r7[MAX_SQ_HOST_RINGS-1:0], SQ_BKTRACK_RING_ID_BITMAP|TIMER_RING_ID_BITMAP)
-    bcf          [c1], chk_credits 
+    bcf          [c1], process_sq 
     nop          // Branch Delay Slot 
 
     // Check for fence in the starting wqe and go past it for backtracking
     ssle           c1, r0, d.fence, d.li_fence
-    bcf            [c1], sq_bktrack2
+    bcf            [c1], process_sq_bktrack
     add            r1, r0, SQ_C_INDEX
     mincr          r1, d.log_num_wqes, -1
     seq            c1, r1, SQ_P_INDEX
     bcf            [c1], invalid_bktrack
 
-sq_bktrack2:
+process_sq_bktrack:
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
 
     CAPRI_SET_FIELD(r7, SQCB0_TO_SQCB1_T, sq_c_index, r1)
@@ -98,7 +103,7 @@ sq_bktrack2:
 
     add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqcb1_process)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_bktrack_sqcb1_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 
     // if (sqcb0_p->in_progress || sqcb0_p->bktracking)
@@ -107,49 +112,56 @@ sq_bktrack2:
     cmov           r1, c1, r0, d.curr_wqe_ptr
 
     CAPRI_GET_STAGE_1_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
-    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, pt_base_addr, log_num_wqes, d.{pt_base_addr...log_num_wqes})
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, bktrack.pt_base_addr, bktrack.log_num_wqes, d.{pt_base_addr...log_num_wqes})
 
     CAPRI_GET_STAGE_2_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
-    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, pt_base_addr, log_num_wqes, d.{pt_base_addr...log_num_wqes})
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, bktrack.pt_base_addr, bktrack.log_num_wqes, d.{pt_base_addr...log_num_wqes})
 
     CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
-    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, pt_base_addr, log_num_wqes, d.{pt_base_addr...log_num_wqes})
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, bktrack.pt_base_addr, bktrack.log_num_wqes, d.{pt_base_addr...log_num_wqes})
  
     CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
-    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, pt_base_addr, log_num_wqes, d.{pt_base_addr...log_num_wqes})
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, bktrack.pt_base_addr, bktrack.log_num_wqes, d.{pt_base_addr...log_num_wqes})
 
     CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
-    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, pt_base_addr, log_num_wqes, d.{pt_base_addr...log_num_wqes})
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, bktrack.pt_base_addr, bktrack.log_num_wqes, d.{pt_base_addr...log_num_wqes})
 
     CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
-    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, pt_base_addr, log_num_wqes, d.{pt_base_addr...log_num_wqes})
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
+    CAPRI_SET_FIELD_RANGE(r7, TO_STAGE_T, bktrack.pt_base_addr, bktrack.log_num_wqes, d.{pt_base_addr...log_num_wqes})
 
     nop.e
     nop
 
-chk_credits:
-    seq            c1, d.need_credits, 1
-    bcf            [c1], exit
-    nop
+process_sq:
+    seq            c3, d.need_credits, 1
+    bcf            [c3], exit
                           
     // if (sqcb0_p->fence) goto fence
-    seq            c1, d.fence, 1
-    bcf            [c1], fence
-    nop
+    seq            c3, d.fence, 1 // Branch Delay Slot
+    bcf            [c3], fence
 
     // if (sqcb0_p->in_progress) goto in_progress
-    seq            c1, 1, d.in_progress
-    bcf            [c1], in_progress
+    seq            c3, 1, d.in_progress // Branch Delay Slot
+    bcf            [c3], in_progress
+
+    // Check if spec cindex is pointing to yet to be filled wqe
+    seq            c3, SPEC_SQ_C_INDEX, SQ_P_INDEX
+    bcf            [c3], exit
+
+    // Use speculative cindex to checkout wqe and start processing if SQCB
+    // is not in in_progress state. Before state update at the end of pipeline,
+    // check if speculative cindex is matching current cindex. If so,
+    // update state, otherwise discard and redo in the next scheduler slot
+    add            r1, r0, SPEC_SQ_C_INDEX // Branch Delay Slot
 
     // log_num_wqe_per_page = (log_sq_page_size - log_wqe_size)
     // page_index = sq_c_index >> (log_num_wqe_per_page)
-    add            r1, r0, SQ_C_INDEX
     sub            r2, d.log_sq_page_size, d.log_wqe_size
     srlv           r3, r1, r2
 
@@ -168,77 +180,7 @@ chk_credits:
 
     // remaining_payload_bytes = (1 << sqcb0_p->log_pmtu), to start with
     add            r4, r0, d.log_pmtu
-    b              in_progress_end
-    sllv           r4, 1, r4 // Branch Delay Slot
-
-in_progress:
-    // load wqe using sqcb_p->wqe_addr
-
-    // sge_offset = TXWQE_SGE_OFFSET + sqcb0_p->current_sge_id * sizeof(sge_t);
-    add            r1, TXWQE_SGE_OFFSET, d.current_sge_id, LOG_SIZEOF_SGE_T
-    // sge_p = sqcb0_p->curr_wqe_ptr + sge_offset
-    add            r1, r1, d.curr_wqe_ptr
-
-    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, in_progress, d.in_progress)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, current_sge_id, d.current_sge_id)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, current_sge_offset, d.current_sge_offset)
-    // num_valid_sges = sqcb0_p->num_sges = sqcb0_p->current_sge_id
-    sub            r2, d.num_sges, d.current_sge_id 
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, num_valid_sges, r2)
-    // remaining_payload_bytes = (1 >> sqcb0_p->log_pmtu)
-    add            r4, r0, d.log_pmtu
     sllv           r4, 1, r4
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, remaining_payload_bytes, r4)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, dma_cmd_start_index, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
-    //CAPRI_SET_FIELD(r7, INFO_OUT3_T, wqe_addr, d.curr_wqe_ptr)
-    //CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, d.curr_op_type)
-
-    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
-    
-    //for now, use to_stage_args to pass the wqe_addr
-    //until we organize better, copy to all stages
-    //CAPRI_GET_STAGE_0_ARG(req_tx_phv_t, r7)
-    //CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
-
-    CAPRI_GET_STAGE_1_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
-
-    CAPRI_GET_STAGE_2_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
-
-    CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
-
-    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
-
-    CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
-
-    //CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
-    //CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
-
-    //CAPRI_GET_STAGE_7_ARG(req_tx_phv_t, r7)
-    //CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, d.curr_wqe_ptr)
-
-    #doing these steps to aid sqsge process next stage
-    add    r1, CB_UNIT_SIZE_BYTES, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, 0;
-    CAPRI_GET_TABLE_2_K_NO_VALID(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
-
-    CAPRI_GET_TABLE_3_K_NO_VALID(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR)
-
-    nop.e
-    nop
-
-in_progress_end:
 
     // Is it UD service?
     seq            c7, d.service, RDMA_SERV_TYPE_UD
@@ -260,6 +202,92 @@ in_progress_end:
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqpt_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r3)
+
+    CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
+
+    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, SPEC_SQ_C_INDEX)
+
+    tblmincri      SPEC_SQ_C_INDEX, d.log_num_wqes, 1 
+
+    nop.e
+    nop
+
+in_progress:
+    // do not speculate for in_progress processing
+    bcf            [c1 | c2], exit
+    add            r1, r0, SQ_C_INDEX // Branch Delay Slot
+    // Assert busy for multi-packet message as each packet has to continue
+    // from where the previous packet has left off 
+    tblwr          d.{busy...cb1_busy}, 0x3 //Branch Delay Slot
+
+    // load wqe using sqcb_p->wqe_addr
+
+    // sge_offset = TXWQE_SGE_OFFSET + sqcb0_p->current_sge_id * sizeof(sge_t);
+    add            r2, TXWQE_SGE_OFFSET, d.current_sge_id, LOG_SIZEOF_SGE_T
+    // sge_p = sqcb0_p->curr_wqe_ptr + sge_offset
+    add            r2, r2, d.curr_wqe_ptr
+
+    CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, in_progress, d.in_progress)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, current_sge_id, d.current_sge_id)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, current_sge_offset, d.current_sge_offset)
+    // num_valid_sges = sqcb0_p->num_sges = sqcb0_p->current_sge_id
+    sub            r3, d.num_sges, d.current_sge_id 
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, num_valid_sges, r3)
+    // remaining_payload_bytes = (1 >> sqcb0_p->log_pmtu)
+    add            r4, r0, d.log_pmtu
+    sllv           r4, 1, r4
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, remaining_payload_bytes, r4)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, dma_cmd_start_index, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
+    //CAPRI_SET_FIELD(r7, INFO_OUT3_T, wqe_addr, d.curr_wqe_ptr)
+    //CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, 0)
+    CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, d.curr_op_type)
+
+    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    
+    //for now, use to_stage_args to pass the wqe_addr
+    //until we organize better, copy to all stages
+    //CAPRI_GET_STAGE_0_ARG(req_tx_phv_t, r7)
+    //CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
+
+    //CAPRI_GET_STAGE_1_ARG(req_tx_phv_t, r7)
+    //CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
+    //CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, r1)
+
+    CAPRI_GET_STAGE_2_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, r1)
+
+    CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, r1)
+
+    CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.spec_cindex, r1)
+
+    //CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
+    //CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
+
+    //CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
+    //CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
+
+    //CAPRI_GET_STAGE_7_ARG(req_tx_phv_t, r7)
+    //CAPRI_SET_FIELD(r7, TO_STAGE_T, sq.wqe_addr, d.curr_wqe_ptr)
+
+    #doing these steps to aid sqsge process next stage
+    //add    r1, CB_UNIT_SIZE_BYTES, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, 0
+    //CAPRI_GET_TABLE_2_K_NO_VALID(req_tx_phv_t, r7)
+    //CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
+    //CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+
+    CAPRI_GET_TABLE_3_K_NO_VALID(req_tx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR)
 
     nop.e
     nop

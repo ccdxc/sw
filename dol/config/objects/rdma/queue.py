@@ -152,9 +152,8 @@ class RdmaSQstate(Packet):
         BitField("rsvd0", 0, 7),
         BitField("busy", 0, 1),
         ByteField("cb1_byte", 0),
+        ShortField("spec_sq_cindex", 0),
         ByteField("rsvd2", 0),
-        ByteField("rsvd3", 0),
-        ByteField("rsvd4", 0),
 
         # SQCB1 
         IntField("rrq_base_addr", 0),

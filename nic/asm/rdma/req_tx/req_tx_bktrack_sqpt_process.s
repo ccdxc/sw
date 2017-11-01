@@ -16,12 +16,12 @@ req_tx_bktrack_sqpt_process:
      // log_num_wqe_per_page = (log_sq_page_size - log_wqe_size)
     // page_index = (info_p->sq_c_index >> log_num_wqe_per_page)
     add            r1, r0, k.args.sq_c_index
-    sub            r2, k.to_stage.log_sq_page_size, k.to_stage.log_wqe_size
+    sub            r2, k.to_stage.bktrack.log_sq_page_size, k.to_stage.bktrack.log_wqe_size
     srlv           r3, r1, r2
 
     // page_offset = (info_p->sq_c_index & ((1 << log_num_wqe_per_page) - 1)) << info_p->log_wqe_size
     mincr          r1, r2, r0
-    add            r2, r0, k.to_stage.log_wqe_size
+    add            r2, r0, k.to_stage.bktrack.log_wqe_size
     sllv           r1, r1, r2
     
     // page_seg_offset = page_index & 0x7
@@ -52,19 +52,19 @@ req_tx_bktrack_sqpt_process:
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages
     CAPRI_GET_STAGE_3_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
 
     CAPRI_GET_STAGE_4_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
 
     CAPRI_GET_STAGE_5_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
 
     CAPRI_GET_STAGE_6_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
 
     CAPRI_GET_STAGE_7_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, TO_STAGE_T, wqe_addr, r1)
+    CAPRI_SET_FIELD(r7, TO_STAGE_T, bktrack.wqe_addr, r1)
 
     // populate t0 PC and table address
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)

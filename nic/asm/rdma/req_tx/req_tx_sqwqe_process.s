@@ -12,7 +12,6 @@ struct req_tx_sqwqe_process_k_t k;
 
 %%
     .param    req_tx_sqsge_process
-    .param    req_tx_add_headers_process
     .param    req_tx_write_back_process
 
 .align
@@ -25,15 +24,15 @@ req_tx_sqwqe_process:
     nop            // Branch Delay Slot
 
     .brcase OP_TYPE_SEND
-        b               set_sge_arg
+        b               send_or_write
         nop             //Branch Delay slot
 
     .brcase OP_TYPE_SEND_INV
-        b               set_sge_arg
+        b               send_or_write
         nop             //Branch Delay slot
         
     .brcase OP_TYPE_SEND_IMM
-        b               set_sge_arg
+        b               send_or_write
         nop             //Branch Delay slot
 
     .brcase OP_TYPE_READ
@@ -63,10 +62,10 @@ set_write_reth:
     phvwr RETH_RKEY, d.write.r_key
     phvwr RETH_LEN, d.write.length
 
-set_sge_arg:
+send_or_write:
     // If UD, add DETH hdr
     seq            c1, k.args.ud, 1
-    bcf            [!c1], check_inline_data
+    bcf            [!c1], set_sge_arg
     seq            c2, d.base.inline_data_vld, 1 // Branch Delay Slot
 
     phvwr DETH_Q_KEY, d.ud_send.q_key
@@ -80,10 +79,10 @@ set_sge_arg:
     blt            r4, r5, ud_error
     add            r2, d.ud_send.ah_handle, r0 // Branch Delay Slot
 
-check_inline_data:
+set_sge_arg:
     bcf            [c2], inline_data
     // sge_list_addr = wqe_addr + TX_SGE_OFFSET
-    add            r3, k.to_stage.wqe_addr, TXWQE_SGE_OFFSET // Branch Delay Slot
+    add            r3, k.to_stage.sq.wqe_addr, TXWQE_SGE_OFFSET // Branch Delay Slot
 
     // populate stage-2-stage data req_tx_wqe_to_sge_info_t for next stage
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
@@ -91,7 +90,6 @@ check_inline_data:
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, first, 1)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, num_valid_sges, d.base.num_sges)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
-    //CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, wqe_addr, k.args.wqe_addr)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, dma_cmd_start_index, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, op_type, d.base.op_type)
     CAPRI_SET_FIELD_RANGE(r7, WQE_TO_SGE_T, imm_data, inv_key, d.{send.imm_data...send.inv_key})
@@ -103,15 +101,15 @@ check_inline_data:
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r3)
 
     #doing these steps to aid sqsge process next stage
-    SQCB1_ADDR_GET(r1)
-    CAPRI_GET_TABLE_2_K_NO_VALID(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    //SQCB1_ADDR_GET(r1)
+    //CAPRI_GET_TABLE_2_K_NO_VALID(req_tx_phv_t, r7)
+    //CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
+    //CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 
     SQCB0_ADDR_GET(r1)
     CAPRI_GET_TABLE_3_K_NO_VALID(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
 
     nop.e
     nop
@@ -127,36 +125,37 @@ read:
     phvwr          RRQWQE_READ_RSP_OR_ATOMIC, RRQ_OP_TYPE_READ
     phvwr          RRQWQE_NUM_SGES, d.base.num_sges
     phvwr          RRQWQE_READ_LEN, d.read.length
-    add            r2, k.to_stage.wqe_addr, TXWQE_SGE_OFFSET
+    add            r2, k.to_stage.sq.wqe_addr, TXWQE_SGE_OFFSET
     phvwr          RRQWQE_READ_WQE_SGE_LIST_ADDR, r2
 
-    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, first, 1)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, last, 1)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op_type, r1)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op.rd.read_len, d.read.length)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op.rd.num_sges, d.base.num_sges)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, log_pmtu, k.args.log_pmtu)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, rrq_p_index, k.args.rrq_p_index)
+    //CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, first, 1)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, last, 1)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op_type, r1)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op.rd.read_len, d.read.length)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op.rd.num_sges, d.base.num_sges)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, log_pmtu, k.args.log_pmtu)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, rrq_p_index, k.args.rrq_p_index)
 
-    CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
-    SQCB1_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    //CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
+    //CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
+    //SQCB1_ADDR_GET(r2)
+    //CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
 
     CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, first, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, last, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op_type, r1)
-    CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, tbl_id, 1)
+    CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op.rd.read_len, d.read.length)
+    //CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op.rd.num_sges, d.base.num_sges)
+    CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op.rd.log_pmtu, k.args.log_pmtu)
+    CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, rrq_p_index, k.args.rrq_p_index)
     // leave rest of variables to FALSE
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
-    //CAPRI_SET_TABLE_0_VALID(0);     
-    //CAPRI_SET_TABLE_1_VALID(0);     
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e
@@ -176,34 +175,32 @@ atomic:
     phvwr          RRQWQE_ATOMIC_SGE_LEN, d.atomic.sge.len
     phvwr          RRQWQE_ATOMIC_SGE_LKEY, d.atomic.sge.l_key
  
-    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, first, 1)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, last, 1)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op_type, r1)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op.atomic.sge.va, d.atomic.sge.va)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op.atomic.sge.len, d.atomic.sge.len)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op.atomic.sge.l_key, d.atomic.sge.l_key)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, log_pmtu, k.args.log_pmtu)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, rrq_p_index, k.args.rrq_p_index)
+    //CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, first, 1)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, last, 1)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op_type, r1)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op.atomic.sge.va, d.atomic.sge.va)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op.atomic.sge.len, d.atomic.sge.len)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op.atomic.sge.l_key, d.atomic.sge.l_key)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, log_pmtu, k.args.log_pmtu)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, rrq_p_index, k.args.rrq_p_index)
 
-    CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
-    SQCB1_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    //CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
+    //CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
+    //SQCB1_ADDR_GET(r2)
+    //CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
 
     CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, first, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, last, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op_type, r1)
-    CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, tbl_id, 1)
+    CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, rrq_p_index, k.args.rrq_p_index)
     // leave rest of variables to FALSE
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
-    //CAPRI_SET_TABLE_0_VALID(0);     
-    //CAPRI_SET_TABLE_1_VALID(0);     
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e
@@ -222,32 +219,33 @@ inline_data:
     // at same offset. So, though argument passing code is passing read.length, 
     // it should work for inline data as well.
 
-    CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, first, 1)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, last, 1)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op_type, r1)
-    CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, log_pmtu, k.args.log_pmtu)
+    //CAPRI_GET_TABLE_2_ARG(req_tx_phv_t, r7)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, first, 1)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, last, 1)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, op_type, r1)
+    //CAPRI_SET_FIELD(r7, RRQWQE_TO_HDR_T, log_pmtu, k.args.log_pmtu)
     // should work for both send/write as imm_data is located at same offset in wqe for both operations
-    CAPRI_SET_FIELD_RANGE(r7, RRQWQE_TO_HDR_T, op.send_wr.imm_data, op.send_wr.inv_key, d.{send.imm_data...send.inv_key})
-    CAPRI_SET_FIELD_C(r7, RRQWQE_TO_HDR_T, op.send_wr.ah_handle, r2, c1)
+    //CAPRI_SET_FIELD_RANGE(r7, RRQWQE_TO_HDR_T, op.send_wr.imm_data, op.send_wr.inv_key, d.{send.imm_data...send.inv_key})
+    //CAPRI_SET_FIELD_C(r7, RRQWQE_TO_HDR_T, op.send_wr.ah_handle, r2, c1)
 
-    CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
-    CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
-    SQCB1_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
+    //CAPRI_GET_TABLE_2_K(req_tx_phv_t, r7)
+    //CAPRI_SET_RAW_TABLE_PC(r6, req_tx_add_headers_process)
+    //SQCB1_ADDR_GET(r2)
+    //CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
 
     CAPRI_GET_TABLE_3_ARG(req_tx_phv_t, r7)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, first, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, last, 1)
     CAPRI_SET_FIELD(r7, SQCB_WRITE_BACK_T, op_type, r1)
+    // should work for both send/write as imm_data is located at same offset in wqe for both operations
+    CAPRI_SET_FIELD_RANGE(r7, RRQWQE_TO_HDR_T, op.send_wr.imm_data, op.send_wr.inv_key, d.{send.imm_data...send.inv_key})
+    CAPRI_SET_FIELD_C(r7, RRQWQE_TO_HDR_T, op.send_wr.ah_handle, r2, c1)
     // leave rest of variables to FALSE
 
     CAPRI_GET_TABLE_3_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_write_back_process)
     SQCB0_ADDR_GET(r2)
-    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
-    //CAPRI_SET_TABLE_0_VALID(0);     
-    //CAPRI_SET_TABLE_1_VALID(0);     
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, r6, r2)
     CAPRI_SET_TABLE_0_1_VALID(0, 0);     
 
     nop.e

@@ -116,6 +116,7 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_TABLE_SIZE_128_BITS      4
 #define CAPRI_TABLE_SIZE_256_BITS      5
 #define CAPRI_TABLE_SIZE_512_BITS      6
+#define CAPRI_TABLE_SIZE_0_BITS        7
 
 #define CAPRI_TABLE_LOCK_EN    1
 #define CAPRI_TABLE_LOCK_DIS   0

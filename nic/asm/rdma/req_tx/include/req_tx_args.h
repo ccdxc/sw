@@ -65,33 +65,25 @@ struct req_tx_lkey_to_ptseg_info_t {
     pad                          : 90;
 };
 
-struct atomic_t {
-    struct sge_t sge;
-    pad                           : 8;
-};
-
 struct rd_t {
     read_len                      : 32;
-    num_sges                      : 8;
-    pad                           : 96;
+//    num_sges                      : 8;
+    log_pmtu                      : 5;
+//    pad                           : 19;
+    pad                           : 27;
 };
 
 struct send_wr_t {
-    current_sge_offset            : 32;
-    current_sge_id                : 8;
-    num_sges                      : 8;
     imm_data                      : 32;
     union {
         inv_key                       : 32;
         ah_handle                     : 32;
     };
-    pad                           : 24;
 };
 
 union op_t {
     struct rd_t rd;
     struct send_wr_t send_wr;
-    struct atomic_t atomic;
 };
 
 struct req_tx_rrqwqe_to_hdr_info_t {
@@ -113,17 +105,16 @@ struct req_tx_sqcb_write_back_info_t {
     op_type                      : 8;
     first                        : 1;
     last                         : 1;
-    tbl_id                       : 3;
     set_fence                    : 1;
     set_li_fence                 : 1;
-    set_bktrack                  : 1;
     empty_rrq_bktrack            : 1;
     release_cb1_busy             : 1;
     num_sges                     : 8;
     current_sge_id               : 8;
-    sq_c_index                   : 16;
     current_sge_offset           : 32;
-    pad                          : 76;
+    sq_c_index                   : 16;
+    rrq_p_index                  : 16;
+    union op_t op;
 };
 
 // Note: Do not change the order of log_pmtu to num_sges as
@@ -165,7 +156,7 @@ struct req_tx_sq_bktrack_info_t {
     pad                           : 23;
 };
 
-struct req_tx_sqcb1_write_back_info_t {
+struct req_tx_bktrack_sqcb1_write_back_info_t {
     wqe_start_psn                 : 24;
     tx_psn                        : 24;
     skip_wqe_start_psn            : 1;
@@ -173,7 +164,13 @@ struct req_tx_sqcb1_write_back_info_t {
     pad                           : 108;
 };
 
-struct req_tx_to_stage_t {
+struct req_tx_sq_to_stage_t {
+    wqe_addr                     : 64;
+    spec_cindex                  : 16; 
+    pad                          : 48;
+};
+
+struct req_tx_bktrack_to_stage_t {
     wqe_addr                     : 64;
     pt_base_addr                 : 32;
     log_pmtu                     : 5;
@@ -181,6 +178,13 @@ struct req_tx_to_stage_t {
     log_wqe_size                 : 5;
     log_num_wqes                 : 5;
     pad                          : 12;
+};
+
+struct req_tx_to_stage_t {
+    union {
+        struct req_tx_sq_to_stage_t sq;
+        struct req_tx_bktrack_to_stage_t bktrack;
+    };
 };
 
 /*
