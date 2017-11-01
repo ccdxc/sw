@@ -38,6 +38,9 @@ req_rx_sqcb_process:
     seq            c1, r3, d.service
     bcf            [!c1], invalid_serv_type
 
+    // initialize cqwqe to success intially
+    phvwr          p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID // Branch Delay Slot
+    phvwr          p.cqwqe.status, CQ_STATUS_SUCCESS
 
     ARE_ALL_FLAGS_SET(c3, r1, REQ_RX_FLAG_ACK)
     bcf            [!c3], atomic
@@ -48,6 +51,7 @@ ack:
     bne            r2, r0, invalid_pyld_len
     nop
     b              next_stage_arg
+    nop            // Branch Delay Slot
 
 atomic:
     ARE_ALL_FLAGS_SET(c1, r1, REQ_RX_FLAG_ATOMIC_AETH)
@@ -58,7 +62,11 @@ atomic:
     bne            r2, r0, invalid_pyld_len
     nop
 
-    b              ring_not_empty
+    bcf            [c4], rrq_empty
+    nop            // Branch Delay Slot
+
+    b              next_stage_arg
+    nop            // Branch Delay Slot
 
 read:
     ARE_ALL_FLAGS_SET(c1, r1, REQ_RX_FLAG_READ_RESP)
@@ -83,11 +91,8 @@ read:
 
     phvwr          p.cqwqe.op_type, OP_TYPE_READ // Branch Delay Slot
 
-ring_not_empty:
-    bcf            [c4 & !c3], rrq_empty
-
-    phvwr          p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID // Branch Delay Slot
-    phvwr          p.cqwqe.status, CQ_STATUS_SUCCESS
+    bcf            [c4], rrq_empty
+    nop            // Branch Delay Slot
 
 next_stage_arg:
 

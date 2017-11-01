@@ -38,6 +38,9 @@ ack:
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_id, k.args.cur_sge_id)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, cur_sge_offset, k.args.cur_sge_offset)
     CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, in_progress, k.args.in_progress)
+    CAPRI_SET_FIELD(r7, SQCB1_WRITE_BACK_T, tbl_id, 2)
+
+    CAPRI_SET_TABLE_0_VALID(0);
 
     // r1 = aeth_syndrome
     add            r1, k.to_stage.syndrome, r0
@@ -60,10 +63,11 @@ p_ack:
     bcf            [c3], n_ack
     nop            // Branch Delay Slot
   
+    bcf            [c2], set_cqcb_arg
     // if (pkt_psn >= rrqwqe_p->psn)
     // implicit nak, ring bktrack ring setting rexmit_psn to rrqwqe_p->psn
-    scwle24.!c2        c1, d.psn, k.to_stage.bth_psn
-    phvwr.c1           p.rexmit_psn, d.psn
+    scwle24        c1, d.psn, k.to_stage.bth_psn // Branch Delay Slot
+    phvwr.c1       p.rexmit_psn, d.psn
     CAPRI_SET_FIELD_C(r7, SQCB1_WRITE_BACK_T, post_bktrack, 1, c1)
 
     b              set_cqcb_arg
