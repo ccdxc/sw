@@ -47,7 +47,7 @@ function createBinContainerTarBall() {
     done
     mkdir -p bin/tars
     dynamicimages="pen-cmd:latest pen-apiserver:latest pen-apigw:latest pen-vchub:latest pen-npm:latest \
-        pen-vcsim:latest pen-n4sagent:latest"
+        pen-vcsim:latest pen-n4sagent:latest pen-collector:latest"
     for i in $staticimages $dynamicimages
     do
         # i is registry.test.pensando.io:5000/google_containers/kube-controller-manager-amd64:v1.6.6
