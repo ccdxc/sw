@@ -142,6 +142,10 @@ tcp_serq_produce:
     smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_RING_TX_DOORBELL, TCP_DDOL_DONT_RING_TX_DOORBELL
     setcf       c3, [!c1 & c2]
     phvwri.c3   p.dma_cmd4_dma_cmd_eop, 1
+    nop
+    sne         c1, k.common_phv_l7_proxy_en, r0
+    bcf         [c1], flow_write_serq_process_done
+    nop
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd5_dma_cmd)
     b           flow_write_serq_process_done
     nop
@@ -150,7 +154,9 @@ ring_doorbell:
 
     CAPRI_DMA_CMD_RING_DOORBELL2(dma_cmd6_dma_cmd, LIF_TLS, 0, k.common_phv_fid, 0,
                                  k.to_s6_xrq_pidx, db_data_pid, db_data_index)
-
+    sne         c1, k.common_phv_l7_proxy_en, r0
+    bcf         [c1], flow_write_serq_process_done
+    nop
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd6_dma_cmd)
     addi        r7, r7, 1
 

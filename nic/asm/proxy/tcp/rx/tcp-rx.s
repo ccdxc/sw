@@ -24,6 +24,7 @@ struct tcp_rx_tcp_rx_d d;
     .param          tcp_rx_read_rnmdr_stage2_start
     .param          tcp_rx_read_rnmpr_stage2_start
     .param          tcp_rx_sack_stage2_start
+    .param          tcp_rx_l7_read_rnmdr_stage2_start
     .align
 
     /*
@@ -560,21 +561,21 @@ tcp_ecn_check_ce:
     setcf           c1,[c0]
     smeqb.c4        c1, d.u.tcp_rx_d.ca_flags, TCP_CONG_NEEDS_ECN, TCP_CONG_NEEDS_ECN
     addi.c1         r2, r0, CA_EVENT_ECN_NO_CE
-    phvwr.c1        p.common_phv_ca_event, r2
+    //phvwr.c1        p.common_phv_ca_event, r2
     tblor.c4        d.u.tcp_rx_d.ecn_flags, TCP_ECN_SEEN
 
     //.cscase INET_ECN_ECT_0
     setcf           c1, [c0]
     smeqb.c3        c1, d.u.tcp_rx_d.ca_flags, TCP_CONG_NEEDS_ECN, TCP_CONG_NEEDS_ECN
     addi.c1         r2, r0, CA_EVENT_ECN_NO_CE
-    phvwr.c1        p.common_phv_ca_event, r2
+    //phvwr.c1        p.common_phv_ca_event, r2
     tblor.c3        d.u.tcp_rx_d.ecn_flags, TCP_ECN_SEEN
 
     //.cscase INET_ECN_CE
     setcf           c1, [c0]
     smeqb.c2        c1, d.u.tcp_rx_d.ca_flags, TCP_CONG_NEEDS_ECN, TCP_CONG_NEEDS_ECN
     addi.c1         r2, r0, CA_EVENT_ECN_IS_CE
-    phvwr.c1        p.common_phv_ca_event, r2
+    //phvwr.c1        p.common_phv_ca_event, r2
     setcf           c1, [c0]
     smeqb.c2        c1, d.u.tcp_rx_d.ecn_flags, TCP_ECN_DEMAND_CWR, TCP_ECN_DEMAND_CWR
     bal.!c1         r7, tcp_enter_quickack_mode
@@ -699,6 +700,13 @@ table_read_RTT:
      */
     bcf             [c6], table_read_SERQ_PRODUCER_IDX
 table_read_RNMDR_ALLOC_IDX:
+    // Skip Serq descr alloc for L7 IPS case
+    seq             c1, k.common_phv_l7_proxy_en, 1
+    seq             c2, k.common_phv_l7_proxy_type_span, 1
+
+    bcf             [c1 & !c2], table_read_RNMPR_ALLOC_IDX
+    nop
+
     addi            r3, r0, RNMDR_ALLOC_IDX
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
                         r3, TABLE_SIZE_64_BITS)
@@ -706,8 +714,19 @@ table_read_RNMPR_ALLOC_IDX:
     addi            r3, r0, RNMPR_ALLOC_IDX
     CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, tcp_rx_read_rnmpr_stage2_start,
                         r3, TABLE_SIZE_64_BITS)
+table_read_L7_RNDMR_ALLOC_IDX:
+    bcf             [!c1], table_read_SERQ_PRODUCER_IDX
+    nop
+    addi            r3, r0, RNMDR_ALLOC_IDX
+    CAPRI_NEXT_TABLE_READ(3, TABLE_LOCK_DIS, tcp_rx_l7_read_rnmdr_stage2_start,
+                        r3, TABLE_SIZE_64_BITS)
+
 table_read_SERQ_PRODUCER_IDX:
-    phvwri          p.common_phv_write_serq, 1
+    seq             c1, k.common_phv_l7_proxy_en, 1
+    seq             c2, k.common_phv_l7_proxy_type_span, 1
+    // Skip write serq for L7 Proxy with redirect
+    andcf           c1, [!c2] 
+    phvwri.!c1      p.common_phv_write_serq, 1
     nop.e
     nop
 flow_rx_drop:

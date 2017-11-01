@@ -142,6 +142,7 @@
 #define LIF_TCP                        1001
 #define LIF_TLS                        1002
 #define LIF_CPU                        1003
+#define LIF_APP_REDIR                  1006
 #define LIF_GC                         1007
 
 #define SERQ_QID                       0

@@ -395,7 +395,6 @@ modules:
         iterate :
             - flow: filter://type=IPV4
 
-
     - module:
         name    : PKT_TO_ARQ
         package : test.tcp_tls_proxy
@@ -485,3 +484,58 @@ modules:
             api:    CRYPTO_API_ASYM_ECDSA_P256_SIG_VERIFY
         iterate :
             - flow: filter://type=IPV4
+
+    - module:
+        name    : TCP_PKT_TO_L7Q_IDS_V4
+        spec    : one_pkt.testspec
+        module  : tcp_pkt_to_l7q_ids
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : TCP_PKT_TO_L7Q_IDS_V6 
+        spec    : one_pkt.testspec
+        module  : tcp_pkt_to_l7q_ids
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV6
+    
+    - module:
+        name    : TCP_FLOWS_TO_L7Q_IDS_V4
+        spec    : one_pkt.testspec
+        module  : tcp_pkt_to_l7q_ids
+        args    :
+            maxflows: 2
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : TCP_PKT_TO_L7Q_IPS_V4
+        spec    : one_pkt.testspec
+        module  : tcp_pkt_to_l7q_ips
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : TCP_PKT_TO_L7Q_IPS_V6 
+        spec    : one_pkt.testspec
+        module  : tcp_pkt_to_l7q_ips
+        args    :
+            maxflows: 1
+        iterate :
+            - flow: filter://type=IPV6
+
+    - module:
+        name    : TCP_FLOWS_TO_L7Q_IPS_V4
+        spec    : one_pkt.testspec
+        module  : tcp_pkt_to_l7q_ips
+        args    :
+            maxflows: 2
+        iterate :
+            - flow: filter://type=IPV4
+

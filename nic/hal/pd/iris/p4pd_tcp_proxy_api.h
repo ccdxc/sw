@@ -35,6 +35,7 @@ typedef enum tcpcb_hwid_order_ {
     P4PD_HWID_TCP_TX_STATS = 14,
     P4PD_HWID_TCP_TX_STATS1 = 14,
     P4PD_HWID_TCP_TX_STATS2 = 15,
+    P4PD_HWID_TCP_RX_WRITE_L7Q = 15,
 } tcpcb_hwid_order_t;
 
 typedef struct __attribute__((__packed__)) __tcp_rx_read_tx2rx_actiondata_d {

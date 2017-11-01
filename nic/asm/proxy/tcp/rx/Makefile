@@ -34,8 +34,10 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-read-idx.s \
     $(SRC_DIR)/tcp-read-rnmdr-alloc-idx.s \
     $(SRC_DIR)/tcp-read-rnmpr-alloc-idx.s \
+    $(SRC_DIR)/tcp-l7-read-rnmdr-alloc-idx.s \
     $(SRC_DIR)/tcp-read-tx2rx-shared.s \
     $(SRC_DIR)/tcp-rpage-alloc.s \
+    $(SRC_DIR)/tcp-l7-rdesc-alloc.s \
     $(SRC_DIR)/tcp-rtt.s \
     $(SRC_DIR)/tcp-rx.s \
     $(SRC_DIR)/tcp-sack2.s \
@@ -43,7 +45,8 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-fc.s \
     $(SRC_DIR)/tcp-rx-stats.s \
     $(SRC_DIR)/tcp-write-serq.s \
-    $(SRC_DIR)/tcp-write-arq.s
+    $(SRC_DIR)/tcp-write-arq.s \
+    $(SRC_DIR)/tcp-write-l7q.s
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

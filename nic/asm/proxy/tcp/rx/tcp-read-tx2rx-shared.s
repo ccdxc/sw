@@ -69,6 +69,12 @@ tcp_rx_read_shared_stage0_start:
 	phvwr		p.to_s6_payload_len, k.tcp_app_header_payload_len
     CAPRI_OPERAND_DEBUG(k.tcp_app_header_payload_len)
 
+read_l7_proxy_cfg:
+    sne         c1, d.l7_proxy_type, TCP_L7_PROXY_TYPE_NONE
+    phvwri.c1   p.common_phv_l7_proxy_en, 1
+    seq         c2, d.l7_proxy_type, TCP_L7_PROXY_TYPE_SPAN
+    phvwri.c2   p.common_phv_l7_proxy_type_span, 1
+
 table_read_RX:	
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                 tcp_rx_process_stage1_start, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33},

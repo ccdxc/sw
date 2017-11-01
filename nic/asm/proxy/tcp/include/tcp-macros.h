@@ -14,7 +14,7 @@
 	slt		c3, r1, d.snd_ssthresh;				\
 	setcf		c4, [c1 & c2 & c3];                             \
 	phvwr.!c4	p.rx2tx_snd_wnd, d.snd_ssthresh;	        \
-        phvwri		p.common_phv_ca_event, CA_EVENT_COMPLETE_CWR;
+    //phvwri		p.common_phv_ca_event, CA_EVENT_COMPLETE_CWR;
 
 
 

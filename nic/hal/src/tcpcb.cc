@@ -129,6 +129,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->pending_ack_send = spec.pending_ack_send();
     tcpcb->state = spec.state();
     tcpcb->source_lif = spec.source_lif();
+    tcpcb->l7_proxy_type = spec.l7_proxy_type();
     
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -195,6 +196,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->source_lif = spec.source_lif();
     tcpcb->pending_ack_send = spec.pending_ack_send();
     tcpcb->header_len = spec.header_len();
+    tcpcb->l7_proxy_type = spec.l7_proxy_type();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     pd_tcpcb_args.tcpcb = tcpcb;
@@ -274,6 +276,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     rsp->mutable_spec()->set_source_lif(rtcpcb.source_lif);
     rsp->mutable_spec()->set_debug_dol_tx(rtcpcb.debug_dol_tx);
     rsp->mutable_spec()->set_pending_ack_send(rtcpcb.pending_ack_send);
+    rsp->mutable_spec()->set_l7_proxy_type(rtcpcb.l7_proxy_type);
 
 
     // fill operational state of this TCP CB

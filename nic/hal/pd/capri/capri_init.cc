@@ -9,7 +9,7 @@
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 49
+#define CAPRI_P4PLUS_NUM_SYMBOLS 50
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -495,6 +495,11 @@ capri_p4p_asm_init()
     symbols[48].params[0].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_RX);
     symbols[48].params[1].name = TNMPR_TABLE_BASE;
     symbols[48].params[1].val = get_start_offset(CAPRI_HBM_REG_NMPR_BIG_TX);
+
+    symbols[49].name = "tcp-l7-read-rnmdr-alloc-idx.bin";
+    symbols[49].num_params = 1;
+    symbols[49].params[0].name = RNMDR_TABLE_BASE;
+    symbols[49].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

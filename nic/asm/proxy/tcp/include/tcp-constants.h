@@ -302,9 +302,15 @@
 #define TCP_DDOL_LEAVE_IN_ARQ           0x8
 #define TCP_DDOL_DONT_RING_TX_DOORBELL  0x10
 #define TCP_DDOL_DEL_ACK_TIMER          0x20
+#define TCP_DDOL_PKT_TO_L7Q             0x40
 // Tx encodings
 #define TCP_TX_DDOL_DONT_SEND_ACK       0x1
 #define TCP_TX_DDOL_DONT_TX             0x2
 #define TCP_TX_DDOL_FREE_RNMDR          0x4
+
+// L7 Redirect Type
+#define TCP_L7_PROXY_TYPE_NONE          0x0
+#define TCP_L7_PROXY_TYPE_REDIR         0x1
+#define TCP_L7_PROXY_TYPE_SPAN          0x2
 
 #endif /* #ifndef CONSTANTS_H */

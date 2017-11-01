@@ -83,15 +83,15 @@ struct d_struct d	;
 %%
 	
 flow_sack2_process_start:
-	tblwr		d.aol_scratch, k.aol_scratch
+	//tblwr		d.aol_scratch, k.aol_scratch
 	tblwr		d.aol_free_pending, k.aol_free_pending
 	tblwr		d.aol_valid, k.aol_valid
 	tblwr		d.aol_addr, k.aol_addr
 	tblwr           d.aol_offset, k.aol_offset
 	tblwr		d.aol_len, k.aol_len
 
-	sne		c1, k.aol_zero_scratch, r0
-	tblwr.c1	d.aol_scratch, 0
+	//sne		c1, k.aol_zero_scratch, r0
+	//tblwr.c1	d.aol_scratch, 0
 	sne		c2, k.aol_page_alloc, r0
 	tblwr.c2	d.aol_page, k.page
 	/*
@@ -161,11 +161,11 @@ flow_sack2_process_start:
 	add		r6, r6, d.l_aol_start_seq
 	sub		r5, k.end_seq, r6
 	tblwr		d.r_chop, r5
-	add		r6, d.aol_scratch, r0
+	//add		r6, d.aol_scratch, r0
 	add		r3, d.r_cell, r0
 	add		r4, d.l_cell, r0
 	fsetv		r5, r6, r3, r4
-	tblwr		d.aol_scratch, r5
+	//tblwr		d.aol_scratch, r5
 
 dma_cmd_ooo_data:	
 	addi		r5, r0, TCP_PHV_RXDMA_COMMANDS_START
@@ -189,7 +189,7 @@ dma_cmd_ooo_data:
 	bcf		[!c2], flow_sack2_process_done
 	nop
 dma_cmd_aol_entry:
-	phvwr		p.aol_scratch, d.aol_scratch
+	//phvwr		p.aol_scratch, d.aol_scratch
         // TODO fix this
 #if 0
 	phvwr		p.aol_free_pending, d.aol_free_pending

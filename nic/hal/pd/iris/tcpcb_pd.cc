@@ -101,8 +101,10 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_tx2rx_d.snd_nxt = htonl(tcpcb_pd->tcpcb->snd_nxt);
         data.u.read_tx2rx_d.prr_out = 0xFEEDBABA;
         data.u.read_tx2rx_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_nxt);
+        data.u.read_tx2rx_d.l7_proxy_type = tcpcb_pd->tcpcb->l7_proxy_type;
         HAL_TRACE_DEBUG("TCPCB snd_nxt: 0x{0:x}", data.u.read_tx2rx_d.snd_nxt);
         HAL_TRACE_DEBUG("TCPCB rcv_wup: 0x{0:x}", data.u.read_tx2rx_d.rcv_wup);
+        HAL_TRACE_DEBUG("TCPCB l7_proxy_type: {:#x}", data.u.read_tx2rx_d.l7_proxy_type);
     }
     HAL_TRACE_DEBUG("Programming tx2rx at hw-id: 0x{0:x}", hwid); 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){
@@ -281,7 +283,35 @@ p4pd_add_or_del_tcpcb_write_serq(pd_tcpcb_t* tcpcb_pd, bool del)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+p4pd_add_or_del_tcpcb_write_l7q_entry(pd_tcpcb_t* tcpcb_pd, bool del)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    tcp_rx_write_l7q_d data = { 0 };
 
+    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_WRITE_L7Q);
+
+    if(!del) {
+        // Get L7Q address
+        wring_hw_id_t  q_base;
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_APP_REDIR_PROXYC,
+                                     tcpcb_pd->tcpcb->cb_id,
+                                     &q_base);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to receive l7q base for tcp cb: {}",
+                    tcpcb_pd->tcpcb->cb_id);
+        } else {
+            HAL_TRACE_DEBUG("l7q id: {:#x}, base: {:#x}", tcpcb_pd->tcpcb->cb_id, q_base);
+            data.u.write_l7q_d.l7q_base = q_base;
+        }
+    }
+    if(!p4plus_hbm_write(hwid, (uint8_t *)&data, sizeof(tcp_rx_write_l7q_d))) {
+        HAL_TRACE_ERR("Failed to create rx: write_serq entry for TCP CB");
+        return HAL_RET_HW_FAIL;
+    }
+    return HAL_RET_OK;
+}
 
 hal_ret_t 
 p4pd_add_or_del_tcpcb_rxdma_entry(pd_tcpcb_t* tcpcb_pd, bool del)
@@ -323,6 +353,11 @@ p4pd_add_or_del_tcpcb_rxdma_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         goto cleanup;
     }
  
+    ret = p4pd_add_or_del_tcpcb_write_l7q_entry(tcpcb_pd, del);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+
     return HAL_RET_OK;
 cleanup:
     /* TODO: CLEANUP */
@@ -342,6 +377,7 @@ p4pd_get_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
     tcpcb_pd->tcpcb->snd_nxt = ntohl(data.u.read_tx2rx_d.snd_nxt);
+    tcpcb_pd->tcpcb->l7_proxy_type = types::AppRedirType(data.u.read_tx2rx_d.l7_proxy_type);
 
     HAL_TRACE_DEBUG("Received snd_nxt: 0x{0:x}", tcpcb_pd->tcpcb->snd_nxt);
 

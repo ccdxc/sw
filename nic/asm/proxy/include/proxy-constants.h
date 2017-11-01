@@ -10,5 +10,7 @@
 #define NIC_SERQ_ENTRY_SIZE_SHIFT            3          /* for 8B */
 #define NIC_SESQ_ENTRY_SIZE                  8
 #define NIC_SESQ_ENTRY_SIZE_SHIFT            3          /* for 8B */
+#define NIC_L7Q_ENTRY_SIZE                   8
+#define NIC_L7Q_ENTRY_SIZE_SHIFT             3          /* for 8B */
 
 #endif // __PROXY_CONSTANTS_H

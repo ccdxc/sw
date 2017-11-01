@@ -58,6 +58,7 @@ typedef struct tcpcb_s {
     uint32_t              debug_dol_tx;
     uint32_t              header_len;
     uint32_t              pending_ack_send;
+    types::AppRedirType   l7_proxy_type;
     // operational state of TCP Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
 

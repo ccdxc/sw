@@ -10,6 +10,7 @@ tcp_debug_dol_dont_queue_to_serq = 0x4
 tcp_debug_dol_leave_in_arq = 0x8
 tcp_debug_dol_dont_ring_tx_doorbell = 0x10
 tcp_debug_dol_del_ack_timer = 0x20
+tcp_debug_dol_pkt_to_l7q = 0x40
 
 tcp_tx_debug_dol_dont_send_ack = 0x1
 tcp_tx_debug_dol_dont_tx = 0x2
@@ -32,6 +33,10 @@ ETH_IP_HDR_SZE = 34
 ETH_IP_VLAN_HDR_SZE = 38
 
 TCP_OOO_CELL_SIZE = 128
+
+l7_proxy_type_NONE = 0
+l7_proxy_type_REDIR = 1
+l7_proxy_type_SPAN = 2
 
 def SetupProxyArgs(tc):
     tc.module.logger.info("Testcase Args:")

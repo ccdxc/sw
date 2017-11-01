@@ -52,6 +52,7 @@ message TcpCbSpec {
   uint32                debug_dol_tx               = 23;
   uint32                header_len                 = 24;
   bool                  pending_ack_send           = 25;
+  types.AppRedirType    l7_proxy_type              = 26;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

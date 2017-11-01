@@ -243,3 +243,9 @@ enum BarcoRings {
     BARCO_RING_MPP6             = 11;
     BARCO_RING_MPP7             = 12;
 }
+
+enum AppRedirType {
+    APP_REDIR_TYPE_NONE         = 0;
+    APP_REDIR_TYPE_REDIRECT     = 1;
+    APP_REDIR_TYPE_SPAN         = 2;
+}

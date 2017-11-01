@@ -33,6 +33,7 @@ source_port : 47273
 source_lif  : 0
 dest_port   : 80
 header_len  : 0
+l7_proxy_type : 0
 
 bytes_rcvd  : 0
 pkts_rcvd   : 0

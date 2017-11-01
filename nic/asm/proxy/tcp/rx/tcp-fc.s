@@ -17,6 +17,7 @@ struct tcp_rx_tcp_fc_tcp_fc_d d;       // TODO : define own k for s5
 %%
     .param          tcp_rx_write_serq_stage6_start
     .param          tcp_rx_write_arq_stage6_start
+    .param          tcp_rx_write_l7q_stage6_start
     .param          ARQRX_QIDXR_BASE
     .param          ARQRX_BASE
     .align  
@@ -40,14 +41,20 @@ tcp_rx_fc_stage5_start:
 
     tblwr.c1    d.page, k.to_s5_page
     tblwr.c1    d.descr, k.to_s5_descr
+    tblwr.c1    d.l7_descr, k.to_s5_l7_descr
 
     phvwr.c2    p.to_s6_descr, d.descr
     phvwr.c2    p.to_s6_page, d.page
+    phvwr.c2    p.s6_t2_s2s_l7_descr, d.l7_descr
 
 flow_fc_process_done:   
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                 tcp_rx_write_serq_stage6_start, k.common_phv_qstate_addr,
                 TCP_TCB_WRITE_SERQ_OFFSET, TABLE_SIZE_512_BITS)
+   
+    sne     c1, k.common_phv_l7_proxy_en, r0
+    bcf     [c1], tcp_l7_rx
+    nop
     nop.e
     nop
 
@@ -67,3 +74,13 @@ tcp_cpu_rx:
     b           flow_fc_process_done
     nop
 
+tcp_l7_rx:
+    CAPRI_NEXT_TABLE_READ_OFFSET(2,
+                                 TABLE_LOCK_EN,
+                                 tcp_rx_write_l7q_stage6_start,
+                                 k.common_phv_qstate_addr,
+                                 TCP_TCB_WRITE_L7Q_OFFSET, 
+                                 TABLE_SIZE_512_BITS)
+    nop.e
+    nop
+   

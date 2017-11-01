@@ -15,11 +15,12 @@
 
 #define rx_table_s2_t2 tcp_rx_read_rnmpr
 
-#define rx_table_s2_t3 tcp_rx_read_serq
+#define rx_table_s2_t3 tcp_rx_l7_read_rnmdr
 
 #define rx_table_s3_t0 tcp_rx_tcp_fra
 #define rx_table_s3_t1 tcp_rx_rdesc_alloc
 #define rx_table_s3_t2 tcp_rx_rpage_alloc
+#define rx_table_s3_t3 tcp_rx_l7_rdesc_alloc
 
 #define rx_table_s4_t0 tcp_rx_tcp_cc
 
@@ -27,6 +28,7 @@
 
 #define rx_table_s6_t0 tcp_rx_write_serq
 #define rx_table_s6_t1 tcp_rx_write_arq
+#define rx_table_s6_t2 tcp_rx_write_l7q
 
 #define rx_table_s7_t0 tcp_rx_stats
 
@@ -44,11 +46,12 @@
 
 #define rx_table_s2_t2_action read_rnmpr
 
-#define rx_table_s2_t3_action read_serq
+#define rx_table_s2_t3_action l7_read_rnmdr
 
 #define rx_table_s3_t0_action tcp_fra
 #define rx_table_s3_t1_action rdesc_alloc
 #define rx_table_s3_t2_action rpage_alloc
+#define rx_table_s3_t3_action l7_rdesc_alloc
 
 #define rx_table_s4_t0_action tcp_cc
 
@@ -56,6 +59,7 @@
 
 #define rx_table_s6_t0_action write_serq
 #define rx_table_s6_t1_action write_arq
+#define rx_table_s6_t2_action write_l7q
 
 #define rx_table_s7_t0_action stats
 
@@ -75,7 +79,6 @@
     modify_field(common_global_scratch.pkts_acked, common_phv.pkts_acked); \
     modify_field(common_global_scratch.debug_dol, common_phv.debug_dol); \
     modify_field(common_global_scratch.quick, common_phv.quick); \
-    modify_field(common_global_scratch.ca_event, common_phv.ca_event); \
     modify_field(common_global_scratch.ecn_flags, common_phv.ecn_flags); \
     modify_field(common_global_scratch.process_ack_flag, \
                             common_phv.process_ack_flag); \
@@ -92,7 +95,9 @@
     modify_field(common_global_scratch.rnmdr_full, common_phv.rnmdr_full); \
     modify_field(common_global_scratch.rnmpr_full, common_phv.rnmpr_full); \
     modify_field(common_global_scratch.write_arq, common_phv.write_arq); \
-    modify_field(common_global_scratch.write_tcp_app_hdr, common_phv.write_tcp_app_hdr);
+    modify_field(common_global_scratch.write_tcp_app_hdr, common_phv.write_tcp_app_hdr); \
+    modify_field(common_global_scratch.l7_proxy_en, common_phv.l7_proxy_en); \
+    modify_field(common_global_scratch.l7_proxy_type_span, common_phv.l7_proxy_type_span);
 
 /******************************************************************************
  * D-vectors
@@ -111,7 +116,8 @@ header_type read_tx2rxd_t {
         pid                     : 16; // 8 bytes
 
         serq_ring_size          : 16;
-        pad2                    : 48; // 8 bytes
+        l7_proxy_type           : 8;
+        pad2                    : 40; // 5 bytes
 
         // written by TLS P4+ program
         serq_cidx               : 16;
@@ -266,6 +272,7 @@ header_type tcp_fc_d_t {
         descr                   : 32;
         page_cnt                : 16;
         dummy                   : 16;
+        l7_descr                : 32;
     }
 }
 
@@ -290,6 +297,13 @@ header_type write_serq_d_t {
     }
 }
 
+// d for stage 6 table 2
+header_type write_l7q_d_t {
+    fields {
+        l7q_base                : 32; 
+        l7q_pidx                : 16;    
+    }   
+} 
 /******************************************************************************
  * Global PHV definitions
  *****************************************************************************/
@@ -345,6 +359,7 @@ header_type to_stage_5_phv_t {
         page_count              : 32;
         page                    : 32;
         descr                   : 32;
+        l7_descr                : 32;
     }
 }
 
@@ -385,7 +400,6 @@ header_type common_global_phv_t {
         pkts_acked              : 8;
         debug_dol               : 8;
         quick                   : 3;
-        ca_event                : 4;
         ecn_flags               : 2;
         process_ack_flag        : 1;
         syn                     : 1;
@@ -402,6 +416,8 @@ header_type common_global_phv_t {
         rnmpr_full              : 1;
         write_arq               : 1;
         write_tcp_app_hdr       : 1;
+        l7_proxy_en             : 1;
+        l7_proxy_type_span      : 1;
     }
 }
 
@@ -459,6 +475,11 @@ header_type s6_s2s_phv_t {
     }
 }
 
+header_type s6_t2_s2s_phv_t {
+    fields {
+        l7_descr                : 32;
+    }    
+}
 /******************************************************************************
  * Header unions for d-vector
  *****************************************************************************/
@@ -472,6 +493,8 @@ metadata tcp_rtt_d_t tcp_rtt_d;
 metadata read_rnmdr_d_t read_rnmdr_d;
 @pragma scratch_metadata
 metadata read_rnmpr_d_t read_rnmpr_d;
+@pragma scratch_metadata
+metadata read_rnmdr_d_t l7_read_rnmdr_d;
 @pragma scratch_metadata
 metadata read_serq_d_t read_serq_d;
 @pragma scratch_metadata
@@ -487,7 +510,11 @@ metadata rdesc_alloc_d_t rdesc_alloc_d;
 @pragma scratch_metadata
 metadata rpage_alloc_d_t rpage_alloc_d;
 @pragma scratch_metadata
+metadata rdesc_alloc_d_t l7_rdesc_alloc_d;
+@pragma scratch_metadata
 metadata arq_rx_pi_d_t arq_rx_pi_d;
+@pragma scratch_metadata
+metadata write_l7q_d_t write_l7q_d;
 
 /******************************************************************************
  * Header unions for PHV layout
@@ -555,6 +582,8 @@ metadata s4_s2s_phv_t s4_s2s_scratch;
 @pragma scratch_metadata
 metadata s6_s2s_phv_t s6_s2s_scratch;
 @pragma scratch_metadata
+metadata s6_t2_s2s_phv_t s6_t2_s2s_scratch;
+@pragma scratch_metadata
 metadata common_global_phv_t common_global_scratch;
 
 @pragma pa_header_union ingress common_t0_s2s s4_s2s s6_s2s
@@ -565,8 +594,9 @@ metadata s6_s2s_phv_t s6_s2s;
 @pragma pa_header_union ingress common_t1_s2s
 metadata s3_t1_s2s_phv_t s3_t1_s2s;
 
-@pragma pa_header_union ingress common_t2_s2s
+@pragma pa_header_union ingress common_t2_s2s s6_t2_s2s
 metadata s3_t2_s2s_phv_t s3_t2_s2s;
+metadata s6_t2_s2s_phv_t s6_t2_s2s;
 
 /******************************************************************************
  * PHV following k (for app DMA etc.)
@@ -578,11 +608,22 @@ metadata rx2tx_extra_t rx2tx_extra;
 @pragma dont_trim
 metadata ring_entry_t ring_entry; 
 @pragma dont_trim
+metadata ring_entry_t l7_ring_entry; 
+@pragma dont_trim
 metadata doorbell_data_t db_data;
 @pragma dont_trim
 metadata doorbell_data_t db_data2;
 @pragma dont_trim
-metadata pkt_descr_t aol; 
+metadata pkt_descr_aol_t aol;
+
+header_type dma_phv_pad_t {
+    fields {
+        dma_pad           : 64;
+    }    
+}
+@pragma dont_trim
+metadata dma_phv_pad_t  dma_pad;
+
 @pragma dont_trim
 metadata dma_cmd_pkt2mem_t dma_cmd0;
 @pragma dont_trim
@@ -599,6 +640,10 @@ metadata dma_cmd_phv2mem_t dma_cmd5;
 metadata dma_cmd_phv2mem_t dma_cmd6;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd7;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd8;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd9;
 
 /******************************************************************************
  * Action functions to generate k_struct and d_struct
@@ -611,7 +656,7 @@ metadata dma_cmd_phv2mem_t dma_cmd7;
  * Stage 0 table 0 action
  */
 action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-                  serq_ring_size, pad2, serq_cidx, pad1, prr_out,
+                  serq_ring_size, l7_proxy_type, pad2, serq_cidx, pad1, prr_out,
                   snd_nxt, rcv_wup, packets_out, ecn_flags_tx, quick_acks_decr,
                   pad1_tx2rx) {
     // k + i for stage 0
@@ -656,6 +701,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     modify_field(read_tx2rxd.total, total);
     modify_field(read_tx2rxd.pid, pid);
     modify_field(read_tx2rxd.serq_ring_size, serq_ring_size);
+    modify_field(read_tx2rxd.l7_proxy_type, l7_proxy_type);
     modify_field(read_tx2rxd.pad2, pad2);
     modify_field(read_tx2rxd.serq_cidx, serq_cidx);
     modify_field(read_tx2rxd.pad1, pad1);
@@ -814,9 +860,11 @@ action read_rnmpr(rnmpr_pidx, rnmpr_pidx_full) {
 /*
  * Stage 2 table 3 action
  */
-action read_serq(serq_pidx) {
+action l7_read_rnmdr(rnmdr_pidx, rnmdr_pidx_full) {
     // d for stage 2 table 3 read-serq-idx
-    modify_field(read_serq_d.serq_pidx, serq_pidx);
+    modify_field(l7_read_rnmdr_d.rnmdr_pidx, rnmdr_pidx);
+    modify_field(l7_read_rnmdr_d.rnmdr_pidx_full, rnmdr_pidx_full);
+
 }
 
 /*
@@ -905,6 +953,26 @@ action rpage_alloc(page, pad) {
 }
 
 /*
+ * Stage 3 table 3 action
+ */
+action l7_rdesc_alloc(desc, pad) {
+    // k + i for stage 3 table 1
+
+    // from to_stage 3
+
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // from stage 2 to stage 3
+    //modify_field(s3_t1_s2s_scratch.rnmdr_pidx, s3_t1_s2s.rnmdr_pidx);
+
+    // d for stage 3 table 1
+    modify_field(l7_rdesc_alloc_d.desc, desc);
+    modify_field(l7_rdesc_alloc_d.pad, pad);
+}
+
+
+/*
  * Stage 4 table 0 action
  */
 action tcp_cc(curr_ts, prr_delivered, last_time, epoch_start, cnt,
@@ -955,12 +1023,13 @@ action tcp_cc(curr_ts, prr_delivered, last_time, epoch_start, cnt,
 /*
  * Stage 5 table 0 action
  */
-action tcp_fc(serq_base, page, descr, page_cnt) {
+action tcp_fc(serq_base, page, descr, page_cnt, l7_descr) {
     // k + i for stage 5
 
     // from to_stage 5
     modify_field(to_s5_scratch.page, to_s5.page);
     modify_field(to_s5_scratch.descr, to_s5.descr);
+    modify_field(to_s5_scratch.l7_descr, to_s5.l7_descr);
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -972,6 +1041,7 @@ action tcp_fc(serq_base, page, descr, page_cnt) {
     modify_field(tcp_fc_d.page, page);
     modify_field(tcp_fc_d.descr, descr);
     modify_field(tcp_fc_d.page_cnt, page_cnt);
+    modify_field(tcp_fc_d.l7_descr, l7_descr);
 }
 
 /*
@@ -1038,6 +1108,30 @@ action write_arq(ARQ_RX_PI_PARAMS) {
     // d for stage 6 table 1
     GENERATE_ARQ_RX_PI_D
 }
+
+/*
+ * Stage 6 table 2 action
+ */
+action write_l7q(l7q_base, l7q_pidx) {
+    
+    // from to_stage 6
+    modify_field(to_s6_scratch.page, to_s6.page);
+    modify_field(to_s6_scratch.descr, to_s6.descr);
+    modify_field(to_s6_scratch.xrq_pidx, to_s6.xrq_pidx);
+    modify_field(to_s6_scratch.xrq_base, to_s6.xrq_base);
+    modify_field(to_s6_scratch.payload_len, to_s6.payload_len);
+
+    // from ki global
+    GENERATE_GLOBAL_K
+    
+    // from stage to stage
+    modify_field(s6_t2_s2s_scratch.l7_descr, s6_t2_s2s.l7_descr);
+
+    // d for stage 6 table 2
+    modify_field(write_l7q_d.l7q_base, l7q_base);
+    modify_field(write_l7q_d.l7q_pidx, l7q_pidx);
+}
+
 
 /*
  * Stage 7 table 0 action
