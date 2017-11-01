@@ -498,6 +498,23 @@ capri_program_p4plus_table_mpu_pc(void)
 }
 
 static void
+capri_p4plus_recirc_init() {
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    // RxDMA
+    cap0.pr.pr.psp.cfg_profile.read();
+    cap0.pr.pr.psp.cfg_profile.recirc_max_enable(1);
+    cap0.pr.pr.psp.cfg_profile.recirc_max(7);
+    cap0.pr.pr.psp.cfg_profile.write();
+
+    // TxDMA
+    cap0.pt.pt.psp.cfg_profile.read();
+    cap0.pt.pt.psp.cfg_profile.recirc_max_enable(1);
+    cap0.pt.pt.psp.cfg_profile.recirc_max(7);
+    cap0.pt.pt.psp.cfg_profile.write();
+}
+
+static void
 capri_timer_init(void)
 {
     uint64_t timer_key_hbm_base_addr;
@@ -620,6 +637,9 @@ int capri_table_rw_init()
     /* Program all P4 table base MPU address in all stages. */
     capri_program_table_mpu_pc();
     capri_program_p4plus_table_mpu_pc();
+
+    /* Program p4plus recirc parameters. */
+    capri_p4plus_recirc_init();
 
     /* Timers */
     capri_timer_init();

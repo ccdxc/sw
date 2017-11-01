@@ -999,18 +999,22 @@ action rx_stage0_load_rdma_params(rdma_en_qtype_mask,
                                   prefetch_pool_base_addr_page_id,
                                   log_num_prefetch_pool_entries, 
                                   reserved) {
-    if (((1 << p4_rxdma_intr.qtype) & rdma_en_qtype_mask)  != 0) {
 
-        modify_field(scratch_rdma.rdma_en_qtype_mask, rdma_en_qtype_mask);
-        modify_field(scratch_rdma.pt_base_addr_page_id, pt_base_addr_page_id);
-        modify_field(scratch_rdma.log_num_pt_entries, log_num_pt_entries);
-        modify_field(scratch_rdma.cqcb_base_addr_page_id, cqcb_base_addr_page_id);
-        modify_field(scratch_rdma.log_num_cq_entries, log_num_cq_entries);
-        modify_field(scratch_rdma.prefetch_pool_base_addr_page_id, 
-                     prefetch_pool_base_addr_page_id);
-        modify_field(scratch_rdma.log_num_prefetch_pool_entries, 
-                     log_num_prefetch_pool_entries);
-        modify_field(scratch_rdma.reserved, reserved);
+    if (p4_intr.recirc == 0) {
+
+        if (((1 << p4_rxdma_intr.qtype) & rdma_en_qtype_mask)  != 0) {
+
+            modify_field(scratch_rdma.rdma_en_qtype_mask, rdma_en_qtype_mask);
+            modify_field(scratch_rdma.pt_base_addr_page_id, pt_base_addr_page_id);
+            modify_field(scratch_rdma.log_num_pt_entries, log_num_pt_entries);
+            modify_field(scratch_rdma.cqcb_base_addr_page_id, cqcb_base_addr_page_id);
+            modify_field(scratch_rdma.log_num_cq_entries, log_num_cq_entries);
+            modify_field(scratch_rdma.prefetch_pool_base_addr_page_id, 
+                         prefetch_pool_base_addr_page_id);
+            modify_field(scratch_rdma.log_num_prefetch_pool_entries, 
+                         log_num_prefetch_pool_entries);
+            modify_field(scratch_rdma.reserved, reserved);
+        }
     }
 }
 
@@ -1119,14 +1123,15 @@ control common_p4plus_stage0 {
 //        apply(common_p4plus_stage0_lif_table0);
 //    }
     if (app_header.app_type == P4PLUS_APPTYPE_RDMA) {
-        if (p4_intr.recirc == 0) {
-            apply(rx_stage0_load_rdma_params);
-        } else {
-            // apply(rx_table_s0_t0);
-            // apply(rx_table_s0_t1); 
+        apply(rx_stage0_load_rdma_params);
+        // apply(rx_table_s0_t0);
+        // apply(rx_table_s0_t1); 
+        if (app_header.table2_valid == 1) {
             apply(rx_table_s0_t2); 
+        }
+        if (app_header.table3_valid == 1) {
             apply(rx_table_s0_t3);
-       } 
+        }
     }
 }   
 
