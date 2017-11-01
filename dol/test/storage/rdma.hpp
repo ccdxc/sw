@@ -21,4 +21,10 @@ typedef struct __attribute__((packed)) sqwqe {
   uint8_t inline_data[32];     // 256
 } sqwqe_t;
 
+int rdma_init();
+
+void rdma_uspace_test();
+
+void rdma_seq_test();
+
 #endif  // _RDMA_HPP_

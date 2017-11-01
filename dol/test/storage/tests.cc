@@ -1645,6 +1645,12 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   uint64_t db_data;
   uint64_t db_addr;
 
+  printf("pdma_q %u, roce_q %u, roce_sq %u, pdma_src_addr %lx, "
+         "pdma_dst_addr %lx, pdma_data_size %u, "
+         "roce_wqe_addr %lx, roce_wqe_size %u \n",
+         seq_pdma_q, seq_roce_q, pvm_roce_sq, pdma_src_addr, 
+         pdma_dst_addr, pdma_data_size, roce_wqe_addr, roce_wqe_size);
+
   // Sequencer #1: PDMA descriptor
   seq_pdma_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
   memset(seq_pdma_desc, 0, kSeqDescSize);
@@ -1674,6 +1680,7 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   utils::write_bit_fields(seq_roce_desc, 107, 3, SQ_TYPE);
   utils::write_bit_fields(seq_roce_desc, 110, 24, pvm_roce_sq);
   utils::write_bit_fields(seq_roce_desc, 134, 34, qaddr);
+  utils::write_bit_fields(seq_roce_desc, 168, 8, 1);
 
   // Kickstart the sequencer 
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);

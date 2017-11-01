@@ -26,6 +26,7 @@ const static uint32_t	kPvmNumSsdSQs	 	 = 4;
 const static uint32_t	kPvmNumSeqPdmaSQs	 = 3;
 const static uint32_t	kPvmNumSeqR2nSQs	 = 3;
 const static uint32_t	kPvmNumSeqXtsSQs	 = 3;
+const static uint32_t	kPvmNumSeqRoceSQs	 = 3;
 const static uint32_t	kPvmNumNvmeCQs		 = 1;
 const static uint32_t	kPvmNumR2nCQs		 = 0; // 2^0 => 1 queue
 const static uint32_t	kPvmNumNvmeBeCQs	 = 4;
@@ -45,6 +46,7 @@ const static char	*kNvmeBeCqHandler	 = "storage_tx_nvme_be_cq_handler.bin";
 const static char	*kSeqPdmaSqHandler	 = "storage_tx_seq_pdma_entry_handler.bin";
 const static char	*kSeqR2nSqHandler	 = "storage_tx_seq_r2n_entry_handler.bin";
 const static char	*kSeqXtsSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
+const static char	*kSeqPvmRoceSqHandler	 = "storage_tx_pvm_roce_sq_wqe_process.bin";
 
 const static uint32_t	kDefaultTotalRings	 = 1;
 const static uint32_t	kDefaultHostRings	 = 1;
@@ -491,6 +493,19 @@ int queues_setup() {
     printf("Setup PVM Seq Xts queue %d \n", i);
   }
 
+  // Initialize PVM SQs for processing Sequencer commands for ROCE
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqRoceSQs); j++, i++) {
+    if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqR2nSqHandler,
+                        kDefaultTotalRings, kDefaultNoHostRings) < 0) {
+      printf("Failed to setup PVM Seq ROCE queue %d \n", i);
+      return -1;
+    }
+    printf("Setup PVM Seq ROCE queue %d \n", i);
+  }
+
+  pvm_last_sq = i;
+  printf("PVM's last saved SQ %lu \n", pvm_last_sq);
+
   // Initialize PVM CQs for processing commands from NVME VF only
   // Note: i is overall index across PVM CQs, j iterates the loop
   for (j = 0, i = 0; j < (int) NUM_TO_VAL(kPvmNumNvmeCQs); j++, i++) {
@@ -539,7 +554,6 @@ int queues_setup() {
       return -1;
     }
   }
-  pvm_last_sq = i;
 
   // Initialize PVM CQs for processing NVME backend commands 
   // Note: Incrementing ssd_q in the for loop as the NVME backend corresponds 1:1 
@@ -590,16 +604,15 @@ pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
       printf("Unable to pre init PVM ROCE SQ for Seq %d\n", i);
       return -1;
     }
-    printf("Initialized PVM ROCE SQ %d for Seq \n", i);
+    printf("Initialized PVM ROCE SQ %d \n", i);
 
     // Setup the queue state in Capri:
-    if (qstate_if::setup_q_state(pvm_lif, SQ_TYPE, i, (char *) kR2nSqHandler, 
-                                 kDefaultTotalRings, kDefaultHostRings, 
-                                 num_entries, pvm_sqs[i].paddr,
-                                 entry_size, true, roce_lif, roce_qtype,
-                                 roce_qid, 0, 0, storage_hbm_ssd_bm_addr, 
-                                 0, 0, 0) < 0) {
-      printf("Failed to setup PVM ROCE SQ %d state for Seq \n", i);
+    if (qstate_if::setup_roce_q_state(pvm_lif, SQ_TYPE, i, (char *) kSeqPvmRoceSqHandler, 
+                                      kDefaultTotalRings, kDefaultHostRings, 
+                                      num_entries, pvm_sqs[i].paddr,
+                                      entry_size, false, 0, 0, 0, 
+                                      roce_lif, roce_qtype, roce_qid) < 0) {
+      printf("Failed to setup PVM ROCE SQ %d state \n", i);
       return -1;
     }
     pvm_last_sq++;

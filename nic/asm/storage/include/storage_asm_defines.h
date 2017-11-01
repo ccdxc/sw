@@ -279,22 +279,36 @@
 
 // Setup the lif, type, qid, pindex for the doorbell push.  Set the fence 
 // bit for the doorbell 
-#define _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, _sched, _upd, _p_ndx)	\
-   DOORBELL_DATA_SETUP(qpush_doorbell_data_data, _p_ndx, r0,		\
-                       STORAGE_KIVEC0_DST_QID, r0)			\
-   DOORBELL_ADDR_SETUP(STORAGE_KIVEC0_DST_LIF, STORAGE_KIVEC0_DST_QTYPE,\
-                       _sched, _upd)					\
+#define _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, _sched, _upd, _p_ndx,	\
+                                  _lif, _qtype, _qid)			\
+   DOORBELL_DATA_SETUP(qpush_doorbell_data_data, _p_ndx, r0, _qid, r0)	\
+   DOORBELL_ADDR_SETUP(_lif, _qtype, _sched, _upd)			\
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,\
                      r7, _dma_cmd_ptr)					\
    DMA_PHV2MEM_FENCE(_dma_cmd_ptr)					\
 
 #define QUEUE_PUSH_DOORBELL_RING(_dma_cmd_ptr)				\
    _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,	\
-                             DOORBELL_UPDATE_NONE, d.p_ndx)		\
+                             DOORBELL_UPDATE_NONE, d.p_ndx,		\
+                             STORAGE_KIVEC0_DST_LIF,			\
+                             STORAGE_KIVEC0_DST_QTYPE,			\
+                             STORAGE_KIVEC0_DST_QID)			\
 
 #define QUEUE_PUSH_DOORBELL_UPDATE_RING(_dma_cmd_ptr, _p_ndx)		\
    _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,	\
-                             DOORBELL_UPDATE_P_NDX, _p_ndx)		\
+                             DOORBELL_UPDATE_P_NDX, _p_ndx,		\
+                             STORAGE_KIVEC0_DST_LIF,			\
+                             STORAGE_KIVEC0_DST_QTYPE,			\
+                             STORAGE_KIVEC0_DST_QID)			\
+
+// TODO: Remove the hack of .hx once all endian issues are fixed
+//       At that time replace r1 with d.p_ndx
+#define ROCE_QUEUE_PUSH_DOORBELL_RING(_dma_cmd_ptr)			\
+   add		r1, r0, d.p_ndx;					\
+   add		r1, r0, r1.hx;						\
+   _QUEUE_PUSH_DOORBELL_FORM(_dma_cmd_ptr, DOORBELL_SCHED_WR_SET,	\
+                             DOORBELL_UPDATE_P_NDX, r1,			\
+                             d.rsq_lif,	d.rsq_qtype, d.rsq_qid)		\
 
 // Setup the lif, type, qid, ring, pindex for the doorbell push. The I/O
 // priority is used to select the ring. Set the fence bit for the doorbell.

@@ -12,6 +12,10 @@ namespace queues {
 
 int queues_setup();
 
+int pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, 
+                     uint32_t roce_qid, uint64_t base_addr, 
+                     uint32_t num_entries, uint32_t entry_size);
+
 void *nvme_sq_consume_entry(uint16_t qid, uint16_t *index);
 
 void *pvm_sq_consume_entry(uint16_t qid, uint16_t *index);

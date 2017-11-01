@@ -31,7 +31,10 @@ cc_library(
     name = "rdma",
     srcs = [
         "rdma.cc",
+        "rdma.hpp",
         "utils.hpp",
+	"queues.hpp",
+        "tests.hpp",
     ],
     deps = [
         ":hal_if",

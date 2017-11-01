@@ -8,8 +8,8 @@
 #include <unistd.h>
 
 #include "dol/test/storage/tests.hpp"
+#include "dol/test/storage/rdma.hpp"
 
-void rdma_init();
 
 namespace queues {
 void queues_shutdown();
@@ -97,8 +97,13 @@ int main(int argc, char**argv) {
   }
   printf("Setup completed\n");
 
-  //rdma_init();
-  //exit(0);
+  if (rdma_init() < 0) {
+    printf("RDMA Setup failed\n");
+    return 1;
+  }
+
+  rdma_seq_test();
+  exit(0);
 
   for (int i = 0; test_suite[i].test_fn != nullptr; i++) {
     if (test_suite[i].test_fn() < 0)

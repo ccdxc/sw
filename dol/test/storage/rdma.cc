@@ -6,6 +6,8 @@
 #include <memory>
 #include "dol/test/storage/hal_if.hpp"
 #include "dol/test/storage/utils.hpp"
+#include "dol/test/storage/queues.hpp"
+#include "dol/test/storage/tests.hpp"
 #include "nic/gen/proto/hal/internal.grpc.pb.h"
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
 #include "nic/gen/proto/hal/l2segment.grpc.pb.h"
@@ -41,6 +43,9 @@ std::unique_ptr<Endpoint::Stub> endpoint_stub;
 std::unique_ptr<Session::Stub> session_stub;
 std::unique_ptr<Rdma::Stub> rdma_stub;
 
+const uint32_t	kRoceEntrySize	 = 6; // Default is 64 bytes
+const uint32_t	kRoceNumEntries	 = 6; // Default is 64 entries
+
 const uint32_t kMaxRDMAKeys = 64;
 const uint32_t kMaxRDMAPTEntries = 64;
 const uint32_t kSQType = 0;
@@ -63,6 +68,7 @@ const uint32_t kVlanId = 2;
 uint64_t g_rdma_hw_lif_id;
 uint64_t g_l2seg_handle;
 uint64_t g_enic1_handle, g_enic2_handle;
+uint32_t g_rdma_pvm_roce_q;
 
 }  // anonymous namespace
 
@@ -260,6 +266,8 @@ const uint32_t kTargetRQLKey = 6;
 // Target side recv buffers
 const uint32_t kTargetRcvBuf1LKey = 7;
 const uint32_t kTargetRcvBuf1RKey = 8;
+// R2N Buf
+const uint32_t kR2NBufLKey = 9;
 
 const uint16_t kSQWQESize = 64;
 const uint16_t kRQWQESize = 64;
@@ -295,16 +303,16 @@ void AllocHostMem() {
   assert((target_rcv_buf1_va = alloc_page_aligned_host_mem(4096)) != nullptr);
 }
 
-void RdmaMemRegister(void *va, uint32_t lkey, uint32_t rkey, bool remote) {
+void RdmaMemRegister(void *va, uint64_t pa, uint32_t len, uint32_t lkey,
+                     uint32_t rkey, bool remote) {
   rdma::RdmaMemRegRequestMsg req;
   rdma::RdmaMemRegResponseMsg resp;
   rdma::RdmaMemRegSpec *mr = req.add_request();
-  uint64_t pa = host_mem_v2p(va);
 
   mr->set_hw_lif_id(g_rdma_hw_lif_id);
   mr->set_pd(kRdmaPD);
   mr->set_va((uint64_t)va);
-  mr->set_len(4096);
+  mr->set_len(len);
   mr->set_ac_local_wr(true);
   mr->set_lkey(lkey);
   if (remote) {
@@ -318,6 +326,10 @@ void RdmaMemRegister(void *va, uint32_t lkey, uint32_t rkey, bool remote) {
   grpc::ClientContext context;
   auto status = rdma_stub->RdmaMemReg(&context, req, &resp);
   assert(status.ok());
+}
+
+void RdmaMemRegister(void *va, uint32_t lkey, uint32_t rkey, bool remote) {
+  RdmaMemRegister(va, host_mem_v2p(va), 4096, lkey, rkey, remote);
 }
 
 void CreateCQ(uint32_t cq_num, uint32_t lkey) {
@@ -492,16 +504,35 @@ bool PullCQEntry(void *cq_va, uint16_t *cq_cindex, uint32_t ent_size,
   return false;
 }
 
+void GetR2NUspaceBuf(void **va, uint64_t *pa, uint32_t *size) {
+  *va = alloc_page_aligned_host_mem(4096);
+  *pa = host_mem_v2p(*va);
+  *size = 4096;
+}
 
-void SendSmallBuf() {
+
+void SendSmallUspaceBuf() {
   uint8_t sqwqe[64];
   bzero(sqwqe, 64);
   utils::write_bit_fields(sqwqe, 0, 64, 0x10);  // wrid = 1
   utils::write_bit_fields(sqwqe, 64, 4, 0);  // op_type = OP_TYPE_SEND
-  utils::write_bit_fields(sqwqe, 71, 1, 1);  // inline data valid
-  utils::write_bit_fields(sqwqe, 192, 32, 20);  // inline data len = 20
-  for (uint8_t i = 0; i < 20; i++)
-    sqwqe[32+i] = i;
+  //utils::write_bit_fields(sqwqe, 71, 1, 1);  // inline data valid
+  utils::write_bit_fields(sqwqe, 72, 8, 1);  // Num SGEs = 1
+
+  // Add the buffer to WQE.
+  void *r2n_buf_va;
+  uint64_t r2n_buf_pa;
+  uint32_t r2n_buf_size;
+  GetR2NUspaceBuf(&r2n_buf_va, &r2n_buf_pa, &r2n_buf_size);
+  // Register R2N buf memory. Only LKey, no remote access.
+  RdmaMemRegister(r2n_buf_va, r2n_buf_pa, r2n_buf_size, kR2NBufLKey, 0, false);
+  utils::write_bit_fields(sqwqe, 192, 32, (uint64_t)r2n_buf_size);  // data len
+  // write the SGE
+  utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)r2n_buf_va);  // SGE-va, same as pa
+  utils::write_bit_fields(sqwqe, 256+64, 32, r2n_buf_size);
+  utils::write_bit_fields(sqwqe, 256+64+32, 32, kR2NBufLKey);
+
+  // Now post the WQE.
   uint32_t offset = initiator_sq_pindex;
   offset *= kSQWQESize;
   uint8_t *p = (uint8_t *)initiator_sq_va;
@@ -510,6 +541,54 @@ void SendSmallBuf() {
   if (initiator_sq_pindex >= kNumSQWQEs)
     initiator_sq_pindex = 0;
   tests::test_ring_doorbell(g_rdma_hw_lif_id, kSQType, 0, 0, bswap_16(initiator_sq_pindex));
+}
+
+int GetR2NHbmBuf(uint64_t *pa, uint32_t *size) {
+  *size = 4096;
+  if (utils::hbm_addr_alloc(2*(*size), pa) < 0) {
+    printf("Can't alloc R2N buffer in HBM \n");
+    return -1;
+  }
+  // Align it to a 4K page
+  *pa = (*pa + 4095) & 0xFFFFFFFFFFFFF000L;
+
+  return 0;
+}
+
+
+int StartRoceSeq() {
+  uint8_t *sqwqe = (uint8_t *) alloc_host_mem(64);
+  bzero(sqwqe, 64);
+  utils::write_bit_fields(sqwqe, 0, 64, 0x10);  // wrid = 1
+  utils::write_bit_fields(sqwqe, 64, 4, 0);  // op_type = OP_TYPE_SEND
+  //utils::write_bit_fields(sqwqe, 71, 1, 1);  // inline data valid
+  utils::write_bit_fields(sqwqe, 72, 8, 1);  // Num SGEs = 1
+
+  // Add the buffer to WQE.
+  void *r2n_buf_va;
+  uint64_t r2n_buf_pa;
+  uint32_t r2n_buf_size;
+  GetR2NUspaceBuf(&r2n_buf_va, &r2n_buf_pa, &r2n_buf_size);
+
+  uint64_t r2n_hbm_buf_pa;
+  uint32_t r2n_hbm_buf_size;
+  if (GetR2NHbmBuf(&r2n_hbm_buf_pa, &r2n_hbm_buf_size) < 0) {
+    return -1;
+  }
+
+  // Register R2N buf memory. Only LKey, no remote access.
+  RdmaMemRegister((void *) r2n_hbm_buf_pa, r2n_hbm_buf_pa, r2n_hbm_buf_size, kR2NBufLKey, 0, false);
+  utils::write_bit_fields(sqwqe, 192, 32, (uint64_t)r2n_hbm_buf_size);  // data len
+  // write the SGE
+  utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)r2n_hbm_buf_pa);  // SGE-va, same as pa
+  utils::write_bit_fields(sqwqe, 256+64, 32, r2n_hbm_buf_size);
+  utils::write_bit_fields(sqwqe, 256+64+32, 32, kR2NBufLKey);
+
+  // Now kickstart the sequencer
+  tests::test_seq_write_roce(35, 52, g_rdma_pvm_roce_q, r2n_buf_pa, 
+		             r2n_hbm_buf_pa, r2n_hbm_buf_size, 
+                             host_mem_v2p((void *) sqwqe), 64);
+  return 0;
 }
 
 void rdma_queues_init() {
@@ -522,12 +601,12 @@ void rdma_queues_init() {
   ConnectInitiatorAndTarget(1, 0, kMACAddr2, kMACAddr1, kIPAddr2, kIPAddr1);
 }
 
-void rdma_init() {
+int rdma_init() {
   uint8_t ent[64];
   printf("RDMA init start\n");
   if (rdma_p4_init() < 0) {
     printf("RDMA P4 init failed\n");
-    return;
+    return -1;
   }
   printf("RDMA P4 Init success\n");
   rdma_queues_init();
@@ -536,8 +615,44 @@ void rdma_init() {
   assert(PullCQEntry(target_cq_va, &target_cq_cindex, 64, 1, &ent) == false);
   RegisterTargetRcvBufs();
   printf("Registered recv buf\n");
-  SendSmallBuf();
+  int rc;
+  if ((rc = queues::pvm_roce_sq_init(g_rdma_hw_lif_id, 
+                                     kSQType, 0, // 0 - initiator; 1 - target
+                                     host_mem_v2p(initiator_sq_va), 
+                                     kRoceNumEntries, kRoceEntrySize)) < 0) {
+    printf("RDMA PVM ROCE SQ init failure\n");
+    return -1;
+  } else {
+    g_rdma_pvm_roce_q = (uint32_t) rc;
+  }
+  printf("RDMA PVM ROCE SQ init success\n");
+  return 0;
+}
+
+void rdma_uspace_test() {
+  uint8_t ent[64];
+  SendSmallUspaceBuf();
   printf("Sent small buffer\n");
+  if (!PullCQEntry(target_cq_va, &target_cq_cindex, 64, 1, &ent)) {
+    printf("Failed to pull CQ entry from target\n");
+    return;
+  }
+  target_cq_cindex++;
+  printf("Got CQ entry at the target\n");
+  utils::dump(ent);
+  printf("Dumping buf1\n");
+  utils::dump((uint8_t *)target_rcv_buf1_va);
+  if (PullCQEntry(initiator_cq_va, &initiator_cq_cindex, 64, 1, &ent)) {
+    initiator_cq_cindex++;
+    printf("Got CQ entry at the initiator\n");
+    utils::dump(ent);
+  }
+}
+
+void rdma_seq_test() {
+  uint8_t ent[64];
+  StartRoceSeq();
+  printf("Sent roce sequencer \n");
   if (!PullCQEntry(target_cq_va, &target_cq_cindex, 64, 1, &ent)) {
     printf("Failed to pull CQ entry from target\n");
     return;

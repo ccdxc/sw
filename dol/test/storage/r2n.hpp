@@ -10,27 +10,82 @@
 
 namespace r2n {
 
+typedef struct {
+  uint64_t wrid;               // 0
+  uint32_t op_type:4,          // 64
+           complete_notify:1,  // 68
+           fence:1,            // 69
+           solicited_event:1,  // 70
+           inline_data_valid:1,// 71
+           num_sges:8,         // 72
+           rsvd1:16;           // 80
+
+  uint32_t imm_data;           // 96
+  uint32_t inv_key;            // 128
+  uint32_t rsvd2;              // 160
+  uint32_t length;             // 192
+  uint32_t rsvd3;              // 224
+
+  // SGE 0
+  uint64_t va0;                // 256
+  uint32_t len0;               // 320
+  uint32_t l_key0;             // 352
+
+  // SGE 1
+  uint64_t va1;                // 384
+  uint32_t len1;               // 448
+  uint32_t l_key1;             // 480
+} __attribute__((packed)) roce_sq_wqe_t;
+
+typedef struct {
+  uint64_t wrid;               // 0
+  uint8_t  num_sges;           // 64
+  uint8_t  rsvd[23];           // 72
+
+  // SGE 0
+  uint64_t va0;                // 256
+  uint32_t len0;               // 320
+  uint32_t l_key0;             // 352
+
+  // SGE 1
+  uint64_t va1;                // 384
+  uint32_t len1;               // 448
+  uint32_t l_key1;             // 480
+} __attribute__((packed)) roce_rq_wqe_t;
+
 typedef struct r2n_buf_post_ {
   union {
     uint8_t bytes[64];
+    roce_sq_wqe_t s;
   };
 } r2n_buf_post_t;
 
 typedef struct r2n_prp_list_ {
   union {
     uint8_t bytes[128];
+    struct {
+      uint64_t prps[16];
+    } __attribute__((packed)) s;
   };
 } r2n_prp_list_t;
 
 typedef struct nvme_be_sta_ {
   union {
     uint8_t bytes[64];
+    struct {
+      uint32_t time_us;
+      uint8_t be_status;
+      uint8_t is_q0;
+      uint16_t rsvd;
+      uint64_t r2n_buf_handle;
+    } __attribute__((packed)) s;
   };
 } nvme_be_sta_t;
 
 typedef struct r2n_sta_req_ {
   union {
     uint8_t bytes[64];
+    roce_sq_wqe_t s;
   };
 } r2n_sta_req_t;
 
@@ -53,6 +108,7 @@ typedef struct nvme_be_cmd_ {
 typedef struct r2n_write_req_ {
   union {
     uint8_t bytes[64];
+    roce_sq_wqe_t s;
   };
 } r2n_write_req_t;
 
