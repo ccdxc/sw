@@ -6,7 +6,7 @@ from infra.common.glopts    import GlobalOptions
 def Init(module):
     #Prepare the directory so that model data can be moved to this directory.
     if GlobalOptions.coveragerun:
-        os.makedirs("/".join([os.environ["MODEL_DATA_DEST_DIR"], module.feature, module.name]),
+        os.makedirs("/".join([os.environ["MODEL_DATA_DEST_DIR"], "_".join(module.feature.split("/")), module.name]),
                       exist_ok=True)
 
 class TestCaseCoverageHelper(object):
@@ -18,7 +18,7 @@ class TestCaseCoverageHelper(object):
             try:
                 os.rename(os.environ["MODEL_DATA_OUT_DIR"],
                            "/".join([os.environ["MODEL_DATA_DEST_DIR"],
-                                    self._tc.module.feature,
+                                    "_".join(self._tc.module.feature.split("/")),
                                     self._tc.module.name,
                                     str(self._tc.ID())]))
             except:
