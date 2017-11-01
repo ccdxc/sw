@@ -112,6 +112,15 @@ typedef struct r2n_write_req_ {
   };
 } r2n_write_req_t;
 
+typedef struct r2n_buf_ {
+  r2n_buf_post_t  buf_post_desc;
+  r2n_prp_list_t  prp_buf;
+  nvme_be_sta_t   sta_buf;
+  r2n_sta_req_t   sta_req;
+  nvme_be_cmd_t   cmd_buf;
+  r2n_write_req_t write_desc;
+} r2n_buf_t;
+
 typedef struct r2n_wqe_ {
   uint64_t handle;
   uint32_t data_size;

@@ -97,6 +97,7 @@ int main(int argc, char**argv) {
   }
   printf("Setup completed\n");
 
+#if 0
   if (rdma_init() < 0) {
     printf("RDMA Setup failed\n");
     return 1;
@@ -104,6 +105,7 @@ int main(int argc, char**argv) {
 
   rdma_seq_test();
   exit(0);
+#endif
 
   for (int i = 0; test_suite[i].test_fn != nullptr; i++) {
     if (test_suite[i].test_fn() < 0)

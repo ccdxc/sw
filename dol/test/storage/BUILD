@@ -35,6 +35,8 @@ cc_library(
         "utils.hpp",
 	"queues.hpp",
         "tests.hpp",
+        "r2n.hpp",
+        "nvme.hpp",
     ],
     deps = [
         ":hal_if",

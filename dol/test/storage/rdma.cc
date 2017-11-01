@@ -8,6 +8,7 @@
 #include "dol/test/storage/utils.hpp"
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/tests.hpp"
+#include "dol/test/storage/r2n.hpp"
 #include "nic/gen/proto/hal/internal.grpc.pb.h"
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
 #include "nic/gen/proto/hal/l2segment.grpc.pb.h"
@@ -269,6 +270,9 @@ const uint32_t kTargetRcvBuf1RKey = 8;
 // R2N Buf
 const uint32_t kR2NBufLKey = 9;
 
+// TODO: Fix this to at least 8K
+const uint32_t kR2NBufSize = (1 * 4096);
+
 const uint16_t kSQWQESize = 64;
 const uint16_t kRQWQESize = 64;
 const uint16_t kCQWQESize = 64;
@@ -280,6 +284,7 @@ void *initiator_sq_va;
 void *initiator_rq_va;
 uint16_t initiator_cq_cindex = 0;
 uint16_t initiator_sq_pindex = 0;
+
 
 void *target_cq_va;
 void *target_sq_va;
@@ -300,7 +305,7 @@ void AllocHostMem() {
   bzero(target_cq_va, 4096);
   assert((target_sq_va = alloc_page_aligned_host_mem(4096)) != nullptr);
   assert((target_rq_va = alloc_page_aligned_host_mem(4096)) != nullptr);
-  assert((target_rcv_buf1_va = alloc_page_aligned_host_mem(4096)) != nullptr);
+  assert((target_rcv_buf1_va = alloc_page_aligned_host_mem(kR2NBufSize)) != nullptr);
 }
 
 void RdmaMemRegister(void *va, uint64_t pa, uint32_t len, uint32_t lkey,
@@ -471,8 +476,13 @@ void PostTargetRcvBuf1() {
   utils::write_bit_fields(rqwqe, 64, 8, 1);  // num_sges = 1
 
   // sge0->va
-  utils::write_bit_fields(rqwqe, 256, 64, (uint64_t)target_rcv_buf1_va);
-  utils::write_bit_fields(rqwqe, 256+64, 32, 4096);  // sge0->len
+  r2n::r2n_buf_t *r2n_buf = (r2n::r2n_buf_t *) target_rcv_buf1_va;
+  //uint32_t size = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
+  uint32_t size = kR2NBufSize;
+  printf("Posting buffer of size %d \n", size);
+  //utils::write_bit_fields(rqwqe, 256, 64, (uint64_t) &r2n_buf->cmd_buf);
+  utils::write_bit_fields(rqwqe, 256, 64, (uint64_t) r2n_buf);
+  utils::write_bit_fields(rqwqe, 256+64, 32, size);  // sge0->len
   utils::write_bit_fields(rqwqe, 256+64+32, 32, kTargetRcvBuf1LKey);  // sge0->l_key
 
   uint32_t offset = target_rq_pindex;
@@ -505,9 +515,9 @@ bool PullCQEntry(void *cq_va, uint16_t *cq_cindex, uint32_t ent_size,
 }
 
 void GetR2NUspaceBuf(void **va, uint64_t *pa, uint32_t *size) {
-  *va = alloc_page_aligned_host_mem(4096);
+  *size = kR2NBufSize;
+  *va = alloc_page_aligned_host_mem(*size);
   *pa = host_mem_v2p(*va);
-  *size = 4096;
 }
 
 
@@ -524,12 +534,14 @@ void SendSmallUspaceBuf() {
   uint64_t r2n_buf_pa;
   uint32_t r2n_buf_size;
   GetR2NUspaceBuf(&r2n_buf_va, &r2n_buf_pa, &r2n_buf_size);
+  //uint32_t data_len = r2n_buf_size - offsetof(r2n::r2n_buf_t, cmd_buf);
+  uint32_t data_len = r2n_buf_size;
   // Register R2N buf memory. Only LKey, no remote access.
   RdmaMemRegister(r2n_buf_va, r2n_buf_pa, r2n_buf_size, kR2NBufLKey, 0, false);
-  utils::write_bit_fields(sqwqe, 192, 32, (uint64_t)r2n_buf_size);  // data len
+  utils::write_bit_fields(sqwqe, 192, 32, (uint64_t)data_len);  // data len
   // write the SGE
   utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)r2n_buf_va);  // SGE-va, same as pa
-  utils::write_bit_fields(sqwqe, 256+64, 32, r2n_buf_size);
+  utils::write_bit_fields(sqwqe, 256+64, 32, data_len);
   utils::write_bit_fields(sqwqe, 256+64+32, 32, kR2NBufLKey);
 
   // Now post the WQE.
@@ -544,8 +556,9 @@ void SendSmallUspaceBuf() {
 }
 
 int GetR2NHbmBuf(uint64_t *pa, uint32_t *size) {
-  *size = 4096;
-  if (utils::hbm_addr_alloc(2*(*size), pa) < 0) {
+  *size = kR2NBufSize;
+  // size + 4096 is done to get extra room for page alignment
+  if (utils::hbm_addr_alloc((*size) + 4096, pa) < 0) {
     printf("Can't alloc R2N buffer in HBM \n");
     return -1;
   }
@@ -576,17 +589,20 @@ int StartRoceSeq() {
     return -1;
   }
 
+  assert(r2n_hbm_buf_size == r2n_buf_size);
+  //uint32_t data_len = r2n_hbm_buf_size - offsetof(r2n::r2n_buf_t, cmd_buf);
+  uint32_t data_len = r2n_hbm_buf_size;
   // Register R2N buf memory. Only LKey, no remote access.
   RdmaMemRegister((void *) r2n_hbm_buf_pa, r2n_hbm_buf_pa, r2n_hbm_buf_size, kR2NBufLKey, 0, false);
-  utils::write_bit_fields(sqwqe, 192, 32, (uint64_t)r2n_hbm_buf_size);  // data len
+  utils::write_bit_fields(sqwqe, 192, 32, (uint64_t)data_len);  // data len
   // write the SGE
   utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)r2n_hbm_buf_pa);  // SGE-va, same as pa
-  utils::write_bit_fields(sqwqe, 256+64, 32, r2n_hbm_buf_size);
+  utils::write_bit_fields(sqwqe, 256+64, 32, data_len);
   utils::write_bit_fields(sqwqe, 256+64+32, 32, kR2NBufLKey);
 
   // Now kickstart the sequencer
   tests::test_seq_write_roce(35, 52, g_rdma_pvm_roce_q, r2n_buf_pa, 
-		             r2n_hbm_buf_pa, r2n_hbm_buf_size, 
+		             r2n_hbm_buf_pa, data_len, 
                              host_mem_v2p((void *) sqwqe), 64);
   return 0;
 }
