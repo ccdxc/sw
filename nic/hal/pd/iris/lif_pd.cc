@@ -355,7 +355,6 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args,
                       __FUNCTION__);
     } else if ((((lif_t *)pd_lif->pi_lif)->lif_id != 1001) && 
         (((lif_t *)pd_lif->pi_lif)->lif_id != 1004)) {
-        tm_oport = lif_get_port_num((lif_t *)(pd_lif->pi_lif));
         tm_oport = TM_PORT_DMA;
     } else if (((lif_t *)pd_lif->pi_lif)->lif_id == 1001) {
         tm_oport = 9;

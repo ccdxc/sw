@@ -47,7 +47,6 @@ TEST_F(scheduler_tx_test, test1)
     LifResponse lif_rsp;
 
     // Create a lif with two queue types and 3 coses
-    lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(1);
 
     lif_spec.add_lif_qstate_map();
@@ -81,7 +80,6 @@ TEST_F(scheduler_tx_test, test2)
     LifResponse          lif_rsp;
    
     //First LIF 
-    lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(2);
     lif_spec.add_lif_qstate_map();
     lif_spec.mutable_lif_qstate_map(0)->set_type_num(0);
@@ -104,7 +102,6 @@ TEST_F(scheduler_tx_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     //Second LIF
-    lif_spec.set_port_num(20);
     lif_spec.mutable_key_or_handle()->set_lif_id(3);
     lif_spec.add_lif_qstate_map();
     lif_spec.mutable_lif_qstate_map(0)->set_type_num(0);
@@ -135,7 +132,6 @@ TEST_F(scheduler_tx_test, test3)
     pre = hal_test_utils_collect_slab_stats();
 
     // Create lif
-    spec.set_port_num(10);
     spec.set_vlan_strip_en(1);
     spec.mutable_key_or_handle()->set_lif_id(400);
     spec.add_lif_qstate_map();

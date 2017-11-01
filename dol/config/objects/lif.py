@@ -34,7 +34,6 @@ class LifObject(base.ConfigObjectBase):
         else:
             self.id = resmgr.LifIdAllocator.get()
         self.GID("Lif%d" % self.id)
-        self.mac_addr   = resmgr.LifMacAllocator.get()
         self.status     = haldefs.interface.IF_STATUS_UP
         self.hw_lif_id = -1
         self.qstate_base = {}
@@ -116,7 +115,6 @@ class LifObject(base.ConfigObjectBase):
     def __copy__(self):
         lif = LifObject(self.tenant, self.spec)
         lif.id = self.id
-        lif.mac_addr = self.mac_addr
         lif.status = self.status
         lif.enable_rdma = self.enable_rdma
         lif.rdma_max_pt_entries = self.rdma_max_pt_entries
@@ -134,7 +132,7 @@ class LifObject(base.ConfigObjectBase):
     def Equals(self, other, lgh):
         if not isinstance(other, self.__class__):
             return False
-        fields = ["id", "mac_addr", "status", "enable_rdma", "rdma_max_pt_entries",
+        fields = ["id", "status", "enable_rdma", "rdma_max_pt_entries",
                    "rdma_max_keys"]
         if not self.CompareObjectFields(other, fields, lgh):
             return False
@@ -153,7 +151,6 @@ class LifObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.key_or_handle.lif_id = self.id
-        req_spec.mac_addr = self.mac_addr.getnum()
         req_spec.admin_status = self.status
         req_spec.enable_rdma = self.enable_rdma
         req_spec.rdma_max_keys = self.rdma_max_keys
@@ -193,7 +190,6 @@ class LifObject(base.ConfigObjectBase):
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp):
         if get_resp.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):
-            self.mac_addr = objects.MacAddressBase(integer=get_resp.spec.mac_addr)
             self.status = get_resp.spec.admin_status
             self.enable_rdma = get_resp.spec.enable_rdma
             self.rdma_max_keys = get_resp.spec.rdma_max_keys
@@ -204,7 +200,6 @@ class LifObject(base.ConfigObjectBase):
             #for q_spec, queue in zip(get_resp.spec.lif_qstate, self.queue_list):
             #    queue.ProcessHALGetResponse(q_spec)                
         else:
-            self.mac_addr = None
             self.status = None
             self.enable_rdma = None
             self.rdma_max_keys = None

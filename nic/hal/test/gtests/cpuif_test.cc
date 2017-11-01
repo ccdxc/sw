@@ -107,7 +107,6 @@ TEST_F(cpuif_test, test1)
     // uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     // Create a lif
-    lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
@@ -115,7 +114,6 @@ TEST_F(cpuif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create a lif
-    lif_spec.set_port_num(11);
     lif_spec.mutable_key_or_handle()->set_lif_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);

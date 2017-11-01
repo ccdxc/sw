@@ -462,7 +462,6 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif_t                       *lif = NULL;
     uint32_t                    hw_lif_id = 0;
     std::unique_ptr<uint8_t[]>  buf;
-    // lif_hal_info_t              lif_info;
     hal_handle_t                hal_handle = HAL_HANDLE_INVALID;
     lif_create_app_ctxt_t       app_ctxt = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
@@ -491,9 +490,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 
     // consume the config
     lif->lif_id = spec.key_or_handle().lif_id();
-    MAC_UINT64_TO_ADDR(lif->mac_addr, spec.mac_addr());
     lif->admin_status = spec.admin_status();
-    lif->port_num = spec.port_num();
     lif->hal_handle = hal_alloc_handle();
     lif->vlan_strip_en = spec.vlan_strip_en();
     //lif->allmulti = spec.allmulti();
@@ -1137,8 +1134,6 @@ hal_ret_t lif_get(LifGetRequest& req,
     // fill in the config spec of this lif.
     spec = rsp->mutable_spec();
     spec->mutable_key_or_handle()->set_lif_id(lif->lif_id);
-    spec->set_mac_addr(MAC_TO_UINT64(lif->mac_addr));
-    spec->set_port_num(lif->port_num);
     spec->set_admin_status(lif->admin_status);
     spec->set_enable_rdma(lif->enable_rdma);
     spec->set_rdma_max_keys(lif->rdma_max_keys);

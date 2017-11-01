@@ -129,7 +129,6 @@ TEST_F(l2seg_test, test1)
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     // Create a lif
-    lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
@@ -395,7 +394,6 @@ TEST_F(l2seg_test, test3)
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     // Create a lif
-    lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(31);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);

@@ -45,7 +45,6 @@ TEST_F(lif_test, test1)
     LifSpec spec;
     LifResponse rsp;
 
-    spec.set_port_num(10);
     spec.set_vlan_strip_en(1);
     //spec.set_allmulti(1);
     spec.mutable_key_or_handle()->set_lif_id(1);
@@ -83,7 +82,6 @@ TEST_F(lif_test, test2)
 
     uint32_t            hw_lif_id = 100;
     for (int i = 0; i < 10; i++) {
-        spec.set_port_num(i);
         spec.set_vlan_strip_en(i & 1);
         //spec.set_allmulti(i & 1);
         spec.mutable_key_or_handle()->set_lif_id(200 + i);
@@ -108,7 +106,6 @@ TEST_F(lif_test, test3)
     LifResponse rsp;
 
     for (int i = 0; i < 10; i++) {
-        spec.set_port_num(i);
         spec.set_vlan_strip_en(i & 1);
         //spec.set_allmulti(i & 1);
         spec.mutable_key_or_handle()->set_lif_id(300 + i);
@@ -137,7 +134,6 @@ TEST_F(lif_test, test4)
     pre = hal_test_utils_collect_slab_stats();
 
     // Create lif
-    spec.set_port_num(10);
     spec.set_vlan_strip_en(1);
     //spec.set_allmulti(1);
     spec.mutable_key_or_handle()->set_lif_id(400);

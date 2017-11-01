@@ -876,7 +876,6 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
 
     pd_lif = pd_enicif_get_pd_lif(pd_enicif);
 
-    tm_oport = lif_get_port_num((lif_t *)(pd_lif->pi_lif));
     tm_oport = TM_PORT_DMA;
     p4plus_app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
 

@@ -78,7 +78,6 @@ int create_lif(lif_params_t *params, uint64_t *lif_id) {
           static_cast<::intf::LifQPurpose>(params->type[i].queue_purpose));
     }
   }
-  req->set_port_type(intf::LIF_PORT_TYPE_DMA);
   if (params->rdma_enable) {
     req->set_enable_rdma(true);
     req->set_rdma_max_keys(params->rdma_max_keys);

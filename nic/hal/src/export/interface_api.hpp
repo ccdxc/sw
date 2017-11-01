@@ -21,7 +21,6 @@ using hal::if_t;
 using hal::l2seg_t;
 
 // LIF APIs
-uint32_t lif_get_port_num(lif_t *pi_lif);
 uint32_t lif_get_lif_id(lif_t *pi_lif);
 uint8_t lif_get_qtype(lif_t *pi_lif, intf::LifQPurpose purpose);
 void lif_set_pd_lif(lif_t *pi_lif, void *pd_lif);

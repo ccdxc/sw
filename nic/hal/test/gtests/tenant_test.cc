@@ -176,7 +176,6 @@ TEST_F(tenant_test, test2)
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     // Create a lif
-    lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
@@ -395,7 +394,6 @@ TEST_F(tenant_test, test4)
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     // Create a lif
-    lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(41);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
@@ -506,7 +504,6 @@ TEST_F(tenant_test, test5)
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     // Create a lif
-    lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(51);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
@@ -718,7 +715,6 @@ TEST_F(tenant_test, test8)
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     // Create a lif
-    lif_spec.set_port_num(10);
     lif_spec.mutable_key_or_handle()->set_lif_id(81);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
@@ -858,7 +854,6 @@ TEST_F(tenant_test, test9)
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     // Create a lif
-    lif_spec.set_port_num(9);
     lif_spec.mutable_key_or_handle()->set_lif_id(91);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);

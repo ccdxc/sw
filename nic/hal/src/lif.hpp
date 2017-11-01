@@ -34,8 +34,6 @@ typedef uint32_t lif_id_t;
 typedef struct lif_s {
     hal_spinlock_t      slock;                       // lock to protect this structure
     lif_id_t            lif_id;                      // lif id assigned
-    mac_addr_t          mac_addr;                    // LIF's MAC address, if any
-    uint32_t            port_num;                    // LIF's port number
     intf::IfStatus      admin_status;                // admin status
     bool                vlan_strip_en;               // vlan strip enable
     //bool                allmulti;                    // All multicast enable
