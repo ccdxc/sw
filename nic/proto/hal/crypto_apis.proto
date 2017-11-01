@@ -15,6 +15,8 @@ service CryptoApis {
 
 enum CryptoApiType {
   ASYMAPI_ECC_POINT_MUL_FP              = 0;
+  ASYMAPI_ECDSA_SIG_GEN_FP              = 1;
+  ASYMAPI_ECDSA_SIG_VERIFY_FP           = 2;
 }
 
 message ECCPoint {
@@ -32,34 +34,63 @@ message CryptoAsymApiECCDomainParamsFp {
 //  bytes         h                       = 7;
 }
 
+//  ECC Point Multiplication 
 
 message CryptoAsymApiReqECCPointMulFp {
   CryptoAsymApiECCDomainParamsFp    ecc_domain_params   = 1;
-  bytes                             k                   = 2;
+  ECCPoint                          ecc_point           = 2;
+  bytes                             k                   = 3;
+}
+message CryptoAsymApiRespECCPointMulFp {
+  ECCPoint                          Q                   = 1;
 }
 
-message CryptoAsymApiRespECCPointMulFp {
-  ECCPoint          Q                   = 1;
+
+// ESCDA Signature Generation
+message CryptoAsymApiReqECDSASignatureGenFp {
+  CryptoAsymApiECCDomainParamsFp    ecc_domain_params   = 1;
+  bytes                             da                  = 2;
+  bytes                             k                   = 3;
+  bytes                             h                   = 4;
 }
+message CryptoAsymApiRespECDSASignatureGenFp {
+  bytes                             r                   = 1;
+  bytes                             s                   = 2;
+}
+
+// ECDSA Signature Verification
+message CryptoAsymApiReqECDSASignatureVerifyFp {
+  CryptoAsymApiECCDomainParamsFp    ecc_domain_params   = 1;
+  ECCPoint                          Q                   = 2;
+  bytes                             r                   = 3;
+  bytes                             s                   = 4;
+  bytes                             h                   = 5;
+}
+
+
+// Top Level Request and Response message definition
 
 message CryptoApiRequest {
-  CryptoApiType                 api_type                = 1;
+  CryptoApiType                     api_type            = 1;
   oneof CryptoApiReq {
     CryptoAsymApiReqECCPointMulFp   ecc_point_mul_fp    = 2;
+    CryptoAsymApiReqECDSASignatureGenFp     ecdsa_sig_gen_fp        = 3;
+    CryptoAsymApiReqECDSASignatureVerifyFp  ecdsa_sig_verify_fp     = 4;
   }
 }
 
 message CryptoApiResponse {
-  types.ApiStatus   api_status                          = 1;
+  types.ApiStatus                   api_status          = 1;
   oneof CryptoApiResp {
     CryptoAsymApiRespECCPointMulFp  ecc_point_mul_fp    = 2;
+    CryptoAsymApiRespECDSASignatureGenFp    ecdsa_sig_gen_fp        = 3;
   }
 }
 
 message CryptoApiRequestMsg {
-    repeated CryptoApiRequest request       = 1;
+    repeated CryptoApiRequest       request             = 1;
 }
 
 message CryptoApiResponseMsg {
-    repeated CryptoApiResponse response     = 1;
+    repeated CryptoApiResponse      response            = 1;
 }
