@@ -42,10 +42,10 @@ storage_tx_seq_barco_entry_handler_start:
    // the push stage (as is the norm) to avoid carrying the doorbell address 
    // in K+I vector.
    DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,
-                     d.xts_pndx_addr, dma_m2m_3)
+                     d.xts_pndx_addr, dma_p2m_3)
 
    // Set the fence bit for the doorbell 
-   DMA_PHV2MEM_FENCE(dma_m2m_3)
+   DMA_PHV2MEM_FENCE(dma_p2m_3)
 
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR_SIZE_PARAM(d.xts_pndx_addr, d.xts_pndx_size,

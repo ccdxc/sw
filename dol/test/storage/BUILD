@@ -112,6 +112,7 @@ cc_library(
         "queues.cc",
         "queues.hpp",
         "nvme.hpp",
+        "xts.hpp",
     ],
     deps = [
         ":hal_if",

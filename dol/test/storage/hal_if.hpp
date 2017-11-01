@@ -2,6 +2,7 @@
 #define _HAL_IF_HPP_
 
 #include <stdint.h>
+#include "nic/gen/proto/hal/types.pb.h"
 
 #define LIF_MAX_TYPES		8
 #define LIF_BASE_QUEUE_SIZE	5
@@ -34,6 +35,8 @@ int get_lif_qstate_addr(uint32_t lif, uint32_t qtype, uint32_t qid,
                         uint64_t *qaddr);
 int get_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate);
 int alloc_hbm_address(uint64_t *addr, uint32_t *size);
+int get_xts_ring_base_address(uint64_t *addr);
+int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, uint32_t* key_index);
 
 }  // namespace hal_if
 

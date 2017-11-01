@@ -89,6 +89,8 @@ int test_run_seq_e2e3();
 
 int test_run_seq_e2e4();
 
+int test_run_seq_encr();
+
 }  // namespace tests
 
 #endif   // _TESTS_HPP_

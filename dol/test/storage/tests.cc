@@ -2,6 +2,9 @@
 #include <strings.h>
 #include <unistd.h>
 #include <byteswap.h>
+#include <assert.h>
+#include <functional>
+#include <ctime>
 
 #include "dol/test/storage/utils.hpp"
 #include "dol/test/storage/hal_if.hpp"
@@ -9,6 +12,7 @@
 #include "dol/test/storage/nvme.hpp"
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/r2n.hpp"
+#include "dol/test/storage/xts.hpp"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
 
@@ -27,6 +31,8 @@ const static uint32_t	kSeqDescSize	 = 64;
 const static uint32_t	kSeqDbDataSize	 = 8;
 const static uint64_t	kSeqDbDataMagic	 = 0xAAAAAAAAAAAAAAAAULL;
 
+const static uint32_t	kAolSize	 = 64;
+const static uint32_t	kXtsDescSize	 = 128;
 
 namespace tests {
 
@@ -42,6 +48,24 @@ static uint16_t global_cid = 0x1;
 static uint64_t global_slba = 0x0000;
 static uint64_t global_byte = 0xA0;
 
+class Poller {
+public:
+  int operator()(std::function<int(void)> poll_func) {
+	  std::time_t start = std::time(nullptr);
+	  std::time_t end;
+	  int rv;
+	  do {
+		  rv = poll_func();
+		  if(0 == rv)
+			  return rv;
+		  usleep(10000); //Sleep 10msec
+		  end = std::time(nullptr);
+	  } while(end - start < timeout);
+	  printf("Polling timeout %d exceeded - Giving up! \n", timeout);
+	  return -1;
+  }
+  int timeout = 10; //Default overall timeout
+};
 
 int test_setup() {
   // Initialize hal interface
@@ -1320,6 +1344,7 @@ int test_seq_e2e_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
   return rc;
 }
 
+
 int test_run_seq_write1() {
   return test_seq_write_r2n(35, 43,  // seq_pdma_q, seq_r2n_q
                             2, 0);   // ssd_handle, io_priority
@@ -1378,6 +1403,123 @@ int test_run_seq_e2e3() {
 int test_run_seq_e2e4() {
   return test_seq_e2e_r2n(40, 48,  // seq_pdma_q, seq_r2n_q
                           2, 0);   // ssd_handle, io_priority
+}
+
+int test_seq_encr(uint16_t seq_xts_q) {
+  uint16_t seq_xts_index;
+  uint8_t *seq_xts_desc;
+  uint16_t pvm_status_q = 2;
+  uint16_t pvm_status_index;
+  uint8_t *status_buf;
+
+  // Reset the SLBA and sequencer doorbell data for this test
+  reset_slba();
+  reset_seq_db_data();
+
+  // Consume status entry from PVM CQ
+  status_buf = (uint8_t *) queues::pvm_cq_consume_entry(pvm_status_q, &pvm_status_index);
+  if (status_buf == nullptr) {
+    printf("can't consume status entries \n");
+    return -1;
+  }
+  bzero(status_buf, kR2nStatusSize);
+
+  memset(write_buf, 0, kDefaultBufSize);
+  memset(read_buf, 0, kDefaultBufSize);
+
+  // Sequencer #1: XTS descriptor
+  seq_xts_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_xts_q, &seq_xts_index);
+  memset(seq_xts_desc, 0, kSeqDescSize);
+
+  assert(sizeof(xts::xts_desc_t) == kXtsDescSize);
+  xts::xts_desc_t* xts_desc_addr = (xts::xts_desc_t*)alloc_host_mem(sizeof(xts::xts_desc_t));
+
+  assert(sizeof(xts::xts_aol_t) == kAolSize);
+  xts::xts_aol_t* in_aol =  (xts::xts_aol_t*)alloc_host_mem(sizeof(xts::xts_aol_t));
+  memset(in_aol, 0, sizeof(*in_aol));
+  xts::xts_aol_t* out_aol = (xts::xts_aol_t*)alloc_host_mem(sizeof(xts::xts_aol_t));
+  memset(out_aol, 0, sizeof(*out_aol));
+
+  // Fill the XTS Msg descriptor
+  in_aol->a0 = (uint64_t) host_mem_v2p(write_buf);
+  in_aol->l0 = kDefaultBufSize/8;
+  out_aol->a0 = (uint64_t) host_mem_v2p(read_buf);
+  out_aol->l0 = kDefaultBufSize/8;
+
+#define IV_SIZE 64
+  unsigned char iv_src[IV_SIZE] = {0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e};
+  unsigned char* iv = (unsigned char*)alloc_host_mem(IV_SIZE);
+  memcpy(iv, iv_src, IV_SIZE);
+  uint64_t* xts_db = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
+  *xts_db = 0;
+  uint64_t exp_db_data = 0xdeadbeefdeadbeef;
+  uint16_t app_tag = 0xbeef;
+  uint64_t* status = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
+  *status = 0;
+  xts::xts_cmd_t cmd;
+  memset(&cmd, 0, sizeof(cmd));
+  cmd.enable_crc = 0x0; // Bypass CRC
+  cmd.is_decrypt = 0x0; // Encrypt
+  cmd.token3 = 0x0;     // xts
+  cmd.token4 = 0x4;     // xts
+
+  // Fill the XTS ring descriptor
+  xts_desc_addr->in_aol = host_mem_v2p(in_aol);
+  xts_desc_addr->out_aol = host_mem_v2p(out_aol);
+  xts_desc_addr->iv_addr = host_mem_v2p(iv);
+  xts_desc_addr->db_addr = host_mem_v2p(xts_db);
+  xts_desc_addr->db_data = exp_db_data;
+  xts_desc_addr->opaque_tag_en = 0;
+  xts_desc_addr->sector_num = 5;
+  xts_desc_addr->sector_size = 512;
+  xts_desc_addr->app_tag = app_tag;
+  xts_desc_addr->cmd = cmd;
+  xts_desc_addr->status = host_mem_v2p(status);
+
+  types::CryptoKeyType key_type = types::CRYPTO_KEY_TYPE_AES128;
+  uint32_t key_size = 32;
+  unsigned char key[64] = {0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e,
+		        0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e};
+  if(hal_if::get_key_index((char*)key, key_type, key_size, &xts_desc_addr->key_desc_idx)) {
+    printf("can't create or update xts key index \n");
+	return -1;
+  }
+
+  // Fill the XTS Seq descriptor
+  utils::write_bit_fields(seq_xts_desc, 0, 64, host_mem_v2p(xts_desc_addr));
+  utils::write_bit_fields(seq_xts_desc, 64, 32, kXtsDescSize);
+  utils::write_bit_fields(seq_xts_desc, 96, 16, 2);  //2^2 which will be 4
+
+  //Fill xts producer index addr
+  utils::write_bit_fields(seq_xts_desc, 112, 34, CAPRI_BARCO_MD_HENS_REG_XTS_PRODUCER_IDX);
+
+  uint64_t xts_ring_base_addr;
+
+  if(hal_if::get_xts_ring_base_address(&xts_ring_base_addr) < 0) {
+    printf("can't get xts ring base address \n");
+    return -1;
+  }
+  //Fill xts ring base addr
+  utils::write_bit_fields(seq_xts_desc, 146, 34, xts_ring_base_addr);
+
+  // Kickstart the sequencer
+  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_xts_q, 0, seq_xts_index);
+
+  // Poll for doorbell data as XTS which runs in a different thread
+  auto func = [xts_db, exp_db_data] () {
+    if(*xts_db != exp_db_data) {
+      printf("Doorbell data not yet there - try again \n");
+      return -1;
+    }
+    return 0;
+  };
+
+  Poller poll;
+  return poll(func);
+}
+
+int test_run_seq_encr() {
+  return test_seq_encr(52);   // seq_xts_q
 }
 
 }  // namespace tests

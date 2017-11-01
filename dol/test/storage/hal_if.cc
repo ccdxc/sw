@@ -5,17 +5,20 @@
 #include "nic/gen/proto/hal/internal.grpc.pb.h"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
+#include "nic/gen/proto/hal/crypto_keys.pb.h"
+#include "nic/gen/proto/hal/crypto_keys.grpc.pb.h"
 #include "dol/test/storage/hal_if.hpp"
 
 extern uint64_t hal_port;
 
-const static uint32_t	kDefaultQStateSize	 = 64;
+const static uint32_t  kDefaultQStateSize   = 64;
 
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 using internal::Internal;
 using intf::Interface;
+using cryptokey::CryptoKey;
 
 std::shared_ptr<Channel> hal_channel;
 
@@ -23,6 +26,7 @@ namespace {
 
 std::unique_ptr<Internal::Stub> internal_stub;
 std::unique_ptr<Interface::Stub> interface_stub;
+std::unique_ptr<CryptoKey::Stub> crypto_stub;
 
 }  // anonymous namespace
 
@@ -44,6 +48,11 @@ void init_hal_if() {
   std::unique_ptr<Interface::Stub> if_stub(
       Interface::NewStub(hal_channel));
   interface_stub = std::move(if_stub);
+
+  std::unique_ptr<CryptoKey::Stub> crypt_stub(
+    CryptoKey::NewStub(grpc::CreateChannel(
+      host_addr, grpc::InsecureChannelCredentials())));
+  crypto_stub = std::move(crypt_stub);
 }
 
 // Start with a base lif id and count up
@@ -238,4 +247,67 @@ int alloc_hbm_address(uint64_t *addr, uint32_t *size) {
   *size = resp_msg.resps(0).size();
   return 0;
 }
+
+int get_xts_ring_base_address(uint64_t *addr) {
+  grpc::ClientContext context;
+
+  internal::AllocHbmAddressRequestMsg req_msg;
+  internal::AllocHbmAddressResponseMsg resp_msg;
+
+  if (!addr)
+    return -1;
+
+  auto req = req_msg.add_reqs();
+  req->set_handle("brq-ring-xts");
+
+  auto status = internal_stub->AllocHbmAddress(&context, req_msg, &resp_msg);
+  if (!status.ok())
+    return -1;
+
+  // TODO: Check number of responses ?
+  *addr = resp_msg.resps(0).addr();
+
+  return 0;
+}
+
+int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, uint32_t* key_index) {
+  grpc::ClientContext context, context2;
+  *key_index = 0xffffffff;
+  cryptokey::CryptoKeyCreateRequestMsg cr_req_msg;
+  cryptokey::CryptoKeyCreateResponseMsg cr_resp_msg;
+  cr_req_msg.add_request();
+
+  auto status = crypto_stub->CryptoKeyCreate(&context, cr_req_msg, &cr_resp_msg);
+  if (!status.ok()) {
+    printf("Create request failed \n");
+    return -1;
+  }
+  if(cr_resp_msg.response(0).keyindex() == *key_index) {
+    printf("Create request failed \n");
+	return -1;
+  }
+  *key_index = cr_resp_msg.response(0).keyindex();
+
+  cryptokey::CryptoKeyUpdateRequestMsg upd_req_msg;
+  cryptokey::CryptoKeyUpdateResponseMsg upd_resp_msg;
+  auto upd_req = upd_req_msg.add_request();
+  cryptokey::CryptoKeySpec* spec =   upd_req->mutable_key();
+  spec->set_key(key);
+  spec->set_keyindex(*key_index);
+  spec->set_key_size(key_size);
+  spec->set_key_type(key_type);
+
+  status = crypto_stub->CryptoKeyUpdate(&context2, upd_req_msg, &upd_resp_msg);
+  if (!status.ok()) {
+    printf("Update request failed \n");
+    return -1;
+  }
+  if(upd_resp_msg.response(0).keyindex() != *key_index) {
+    printf("Update request failed \n");
+	return -1;
+  }
+
+  return 0;
+}
+
 }  // namespace hal_if

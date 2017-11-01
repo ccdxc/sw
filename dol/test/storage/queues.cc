@@ -24,15 +24,18 @@ const static uint32_t	kPvmNumNvmeBeSQs	 = 4;
 const static uint32_t	kPvmNumSsdSQs	 	 = 4;
 const static uint32_t	kPvmNumSeqPdmaSQs	 = 3;
 const static uint32_t	kPvmNumSeqR2nSQs	 = 3;
+const static uint32_t	kPvmNumSeqXtsSQs	 = 3;
 const static uint32_t	kPvmNumNvmeCQs		 = 1;
 const static uint32_t	kPvmNumR2nCQs		 = 0; // 2^0 => 1 queue
 const static uint32_t	kPvmNumNvmeBeCQs	 = 4;
+
 const static uint32_t	kDefaultEntrySize	 = 6; // Default is 64 bytes
 const static uint32_t	kPvmNvmeSQEntrySize	 = 7; // PVM SQ is 128 bytes (NVME command + PVM header)
 const static uint32_t	kNvmeCQEntrySize	 = 4; // NVME CQ is 16 bytes
 const static uint32_t	kNvmeNumEntries		 = 6;
 const static uint32_t	kPvmNumEntries		 = 6;
 const static uint32_t	kPvmNumSeqEntries	 = 1;
+
 const static char	*kNvmeSqHandler		 = "storage_tx_nvme_sq_handler.bin";
 const static char	*kPvmCqHandler		 = "storage_tx_pvm_cq_handler.bin";
 const static char	*kR2nSqHandler		 = "storage_tx_r2n_sq_handler.bin";
@@ -40,6 +43,8 @@ const static char	*kNvmeBeSqHandler	 = "storage_tx_nvme_be_sq_handler.bin";
 const static char	*kNvmeBeCqHandler	 = "storage_tx_nvme_be_cq_handler.bin";
 const static char	*kSeqPdmaSqHandler	 = "storage_tx_seq_pdma_entry_handler.bin";
 const static char	*kSeqR2nSqHandler	 = "storage_tx_seq_r2n_entry_handler.bin";
+const static char	*kSeqXtsSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
+
 const static uint32_t	kDefaultTotalRings	 = 1;
 const static uint32_t	kDefaultHostRings	 = 1;
 const static uint32_t	kDefaultNoHostRings	 = 0;
@@ -461,6 +466,16 @@ int queues_setup() {
       printf("Failed to setup PVM R2N SQ %d state for Seq \n", i);
       return -1;
     }
+  }
+
+  // Initialize PVM SQs for processing Sequencer commands for XTS
+  for (j = 0; j < (int) NUM_TO_VAL(kPvmNumSeqXtsSQs); j++, i++) {
+    if (seq_queue_setup(&pvm_sqs[i], i, (char *) kSeqXtsSqHandler,
+                        kDefaultTotalRings, kDefaultHostRings) < 0) {
+      printf("Failed to setup PVM Seq Xts queue %d \n", i);
+      return -1;
+    }
+    printf("Setup PVM Seq Xts queue %d \n", i);
   }
 
   // Initialize PVM CQs for processing commands from NVME VF only
