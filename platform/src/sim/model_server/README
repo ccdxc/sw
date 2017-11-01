@@ -1,0 +1,100 @@
+================
+checkout software repo
+----------------
+
+# checkout git repo
+git checkout ...
+
+# pull-assets
+cd $WS
+make pull-assets
+
+================
+build software
+----------------
+
+# build nic sw
+cd $WS/nic
+make
+
+# build platform sw
+cd $WS/platform
+make
+
+# build qemu with simbridge patch
+cd $WS/platform
+make -C src/sim/qemu
+
+# build model server
+cd $WS/platform
+make -C src/sim/model_server
+
+================
+config simulated pcie bus with 1 ethernet device
+(config written to $HOME/.pciehwmem)
+----------------
+# pciemgrd used to config device
+cd $WS/platform
+gen/x86_64/bin/pciemgrd
+pciemgrd> add enet
+enet0
+pciemgrd> finalize
+pciemgrd> exit
+
+# verify with lspci to display
+gen/x86_64/bin/lspci
+00:00.0 Class 0604: Device 1dd8:1000
+01:00.0 Class 0604: Device 1dd8:1001
+02:00.0 Class 0200: Device 1dd8:1002
+
+# configure bridge to match qemu bus scan
+setpci -s 01:00.0 secondary_bus=3
+setpci -s 01:00.0 subordinate_bus=3
+
+# verify eth device 1dd8:1002 is bdf 03:00.0
+gen/x86_64/bin/lspci
+00:00.0 Class 0604: Device 1dd8:1000
+01:00.0 Class 0604: Device 1dd8:1001
+03:00.0 Class 0200: Device 1dd8:1002
+
+================
+start up software
+----------------
+
+# pick a unique port for HAL GRPC
+setenv HAL_GRPC_PORT 50123
+
+# start model, note no spaces in "-d <devparams>" args list
+cd $WS/platform/
+sim/model_server/start-model -v \
+-d type=eth,bdf=03:00.0,lif=4,qstate_addr=0x1000,txq_count=1,rxq_count=1,intr_count=4,qidbase=10:20,mac=02:03:04:05:06:07
+
+# start hal
+cd $WS/nic
+tools/start-hal.sh
+
+# start dol for config
+cd $WS/nic
+../dol/main.py --topo eth --feature eth --config-only
+
+================
+start up qemu
+----------------
+
+cd $WS/platform
+sim/qemu/qemu-run <path-to-qemu.img>
+
+# telnet to serial console
+telnet 127.0.0.1 1034
+
+# lspci shows devices
+qemu@simhost:~$ lspci -d 1dd8:
+01:00.0 PCI bridge: Pensando Systems, Inc Capri Upsteam Port
+02:00.0 PCI bridge: Pensando Systems, Inc Downstream Port
+03:00.0 Ethernet controller: Pensando Systems, Inc Ethernet NIC
+
+# scp to qemu vm
+scp -P 1037 drivers/net/ethernet/pensando/ionic/ionic.ko qemu@127.0.0.1:
+
+# ssh to qemu vm
+ssh 127.0.0.1 -p 5555 -l qemu
