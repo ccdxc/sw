@@ -71,13 +71,6 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     addi r3, r3, 2
     phvwr p.enc_pay_load_dma_cmd_size, r3
 
-#if 0
-    // padsize and l4 protocol
-    phvwri p.tail_2_bytes_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_PKT
-    phvwri p.tail_2_bytes_dma_cmd_phv_start_addr, IPSEC_TAIL_2_BYTES_PHV_START
-    phvwri p.tail_2_bytes_dma_cmd_phv_end_addr, IPSEC_TAIL_2_BYTES_PHV_END
-#endif
-
     //ICV
     phvwri p.icv_header_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     phvwr p.icv_header_dma_cmd_size, k.txdma2_global_icv_size
