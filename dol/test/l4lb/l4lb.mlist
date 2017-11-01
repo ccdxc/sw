@@ -12,31 +12,37 @@ modules:
         # Uplink <-> Uplink
         name    : BRIDGED_NW_NW
         spec    : nw_nw_l2.testspec
+        ignore  : True
 
     - module:
         # Uplink <-> Uplink
         name    : ROUTED_NW_NW
         spec    : nw_nw_l3.testspec
+        ignore  : True
 
     - module:
         # Host -> Uplink
         name    : BRIDGED_TX_NW
         spec    : tx_nw_l2.testspec
+        ignore  : True
 
     - module:
         # Host -> Uplink
         name    : ROUTED_TX_NW
         spec    : tx_nw_l3.testspec
+        ignore  : True
        
     - module:
         # Uplink -> Host
         name    : BRIDGED_NW_RX
         spec    : nw_rx_l2.testspec
+        ignore  : True
 
     - module:
         # Uplink -> Host
         name    : ROUTED_NW_RX
         spec    : nw_rx_l3.testspec
+        ignore  : True
 
     - module:
         # Host -> Host
@@ -57,6 +63,7 @@ modules:
         spec    : nw_nw_iponly_l2.testspec
         iterate :
             - flow  : filter://label=L4LB,fwtype=L2,nat_rw=IP_ONLY
+        ignore  : True
 
     - module:
         # Uplink <-> Uplink
@@ -64,6 +71,7 @@ modules:
         spec    : nw_nw_iponly_l3.testspec
         iterate :
             - flow  : filter://label=L4LB,fwtype=L3,nat_rw=IP_ONLY
+        ignore  : True
 
     - module:
         # Host -> Uplink
@@ -71,6 +79,7 @@ modules:
         spec    : tx_nw_iponly_l2.testspec
         iterate :
             - flow  : filter://label=L4LB,fwtype=L2,nat_rw=IP_ONLY
+        ignore  : True
 
     - module:
         # Host -> Uplink
@@ -78,6 +87,7 @@ modules:
         spec    : tx_nw_iponly_l3.testspec
         iterate :
             - flow  : filter://label=L4LB,fwtype=L3,nat_rw=IP_ONLY
+        ignore  : True
 
     - module:
         # Uplink -> Host
@@ -85,6 +95,7 @@ modules:
         spec    : nw_rx_iponly_l2.testspec
         iterate :
             - flow  : filter://label=L4LB,fwtype=L2,nat_rw=IP_ONLY
+        ignore  : True
 
     - module:
         # Uplink -> Host
@@ -92,6 +103,7 @@ modules:
         spec    : nw_rx_iponly_l3.testspec
         iterate :
             - flow  : filter://label=L4LB,fwtype=L3,nat_rw=IP_ONLY
+        ignore  : True
 
     - module:
         # Host -> Host

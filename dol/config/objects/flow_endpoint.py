@@ -21,6 +21,7 @@ class FlowEndpointL4LbObject:
         if service is None:
             return
         self.__select_backend()
+        self.__select_service_snat()
         return
 
     def GID(self):
@@ -33,10 +34,35 @@ class FlowEndpointL4LbObject:
         if self.backend is None:
             assert(0)
         return defs.status.SUCCESS
-      
+
+    def IsTwiceNAT(self):
+        if self.service is None:
+            return False
+        return self.service.IsTwiceNAT()
+
+    def __select_service_snat(self):
+        if self.IsTwiceNAT():
+            self.service_snat_ip, self.service_snat_ipv6, self.service_snat_port = \
+                self.service.SelectServiceSNat()
+            print("flowepl4obj: snat_ip:%s, snat_ipv6:%s, snat_port:%d" %\
+                  (self.service_snat_ip, self.service_snat_ipv6, self.service_snat_port))
+            #pdb.set_trace()
+
+    def GetServiceSNatIpAddress(self):
+        return self.service_snat_ip
+
+    def GetServiceSNatIpv6Address(self):
+        return self.service_snat_ipv6
+
+    def GetServiceSNatPort(self):
+        return self.service_snat_port
+
+    def IsServiceSNatPortValid(self):
+        return self.service_snat_port != 0
+
     def IsEnabled(self):
         return self.service is not None
-    
+
     def GetServicePort(self):
         self.port = self.service.port.get()
         return self.port
@@ -53,7 +79,7 @@ class FlowEndpointL4LbObject:
 
     def GetIpAddress(self):
         return self.backend.GetIpAddress()
-            
+
     def GetIpv6Address(self):
         return self.backend.GetIpv6Address()
 
@@ -107,7 +133,7 @@ class FlowEndpointObject(base.ConfigObjectBase):
         self.icmp_id    = src.icmp_id
         self.esp_spi    = src.esp_spi
         self.l4lb       = copy.copy(src.l4lb)
-        self.flowhash       = src.flowhash.get()
+        self.flowhash   = src.flowhash.get()
         return
 
     def __set_tcpudp_info(self, entry):
@@ -290,9 +316,9 @@ class FlowEndpointObject(base.ConfigObjectBase):
         elif self.IsMAC():
             string += "%04x" % self.ethertype
         cfglogger.info("- %s: %s" % (prefix, string))
-        
+
         if self.IsL4Lb() == False: return
-        
+
         string = self.l4lb.GetBackendGID() + ':' + self.type + '/'
         string += "%d/%s/" % (self.dom, self.l4lb.GetIpAddress().get())
         if self.IsTCP() or self.IsUDP():

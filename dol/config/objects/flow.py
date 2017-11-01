@@ -103,31 +103,79 @@ class FlowObject(base.ConfigObjectBase):
 
     def __init_nat(self):
         if self.__sfep.IsL4Lb():
-            self.nat_type = 'SNAT'
-            if self.__sfep.l4lb.IsBackendPortValid():
-                self.nat_rw = 'IP_PORT'
+            if self.__sfep.l4lb.IsTwiceNAT():
+                # Twice NAT
+                self.nat_type = 'TWICE_NAT'
+                if self.__sfep.l4lb.IsServiceSNatPortValid():
+                    self.nat_rw = 'IP_PORT'
+                else:
+                    self.nat_rw = 'IP_ONLY'
             else:
-                self.nat_rw = 'IP_ONLY'
+                # SNAT
+                self.nat_type = 'SNAT'
+                if self.__sfep.l4lb.IsBackendPortValid():
+                    self.nat_rw = 'IP_PORT'
+                else:
+                    self.nat_rw = 'IP_ONLY'
         elif self.__dfep.IsL4Lb():
-            self.nat_type = 'DNAT'
-            if self.__dfep.l4lb.IsBackendPortValid():
-                self.nat_rw = 'IP_PORT'
+            if self.__dfep.l4lb.IsTwiceNAT():
+                # Twice NAT
+                self.nat_type = 'TWICE_NAT'
+                if self.__dfep.l4lb.IsServiceSNatPortValid():
+                    self.nat_rw = 'IP_PORT'
+                else:
+                    self.nat_rw = 'IP_ONLY'
             else:
-                self.nat_rw = 'IP_ONLY'
+                self.nat_type = 'DNAT'
+                if self.__dfep.l4lb.IsBackendPortValid():
+                    self.nat_rw = 'IP_PORT'
+                else:
+                    self.nat_rw = 'IP_ONLY'
         else:
             self.nat_type = 'NONE'
             self.nat_rw = 'NONE'
 
-        self.nat_sip    = self.__sfep.GetNatSip()
-        self.nat_sport  = self.__sfep.GetNatSport()
-        self.nat_dip    = self.__dfep.GetNatDip()
-        self.nat_dport  = self.__dfep.GetNatDport()
+        if self.IsIflow() and self.__dfep.l4lb.IsTwiceNAT():
+            if self.IsIPV4():
+                self.nat_sip   = self.__dfep.l4lb.GetServiceSNatIpAddress()
+            else:
+                self.nat_sip   = self.__dfep.l4lb.GetServiceSNatIpv6Address()
+            if self.nat_rw == 'IP_ONLY':
+                self.nat_sport = 0
+            else:
+                self.nat_sport = self.__dfep.l4lb.GetServiceSNatPort()
+        else:
+            self.nat_sip   = self.__sfep.GetNatSip()
+            if self.nat_rw == 'IP_ONLY':
+                self.nat_sport = 0
+            else:
+                self.nat_sport = self.__sfep.GetNatSport()
+
+        if not self.IsIflow() and self.__sfep.l4lb.IsTwiceNAT():
+            self.nat_dip   = self.__dfep.GetFlowSip()
+            if self.nat_rw == 'IP_ONLY':
+                self.nat_dport = 0
+            else:
+                self.nat_dport = self.__dfep.GetFlowSport()
+        else:
+            self.nat_dip   = self.__dfep.GetNatDip()
+            if self.nat_rw == 'IP_ONLY':
+                self.nat_dport = 0
+            else:
+                self.nat_dport = self.__dfep.GetNatDport()
         return
 
 
     def __init_ip_flow_key(self):
         self.sip = self.__sfep.GetFlowSip()
-        self.dip = self.__dfep.GetFlowDip()
+        # Twice NAT - Rflow
+        if not self.IsIflow() and self.__sfep.l4lb.IsTwiceNAT():
+            if self.IsIPV4():
+                self.dip = self.__sfep.l4lb.GetServiceSNatIpAddress()
+            else:
+                self.dip = self.__sfep.l4lb.GetServiceSNatIpv6Address()
+        else:
+            self.dip = self.__dfep.GetFlowDip()
         assert(self.__sfep.proto == self.__dfep.proto)
         self.proto = self.__sfep.proto
         self.__flowhash = self.__sfep.flowhash
@@ -136,7 +184,11 @@ class FlowObject(base.ConfigObjectBase):
 
         if self.IsTCP() or self.IsUDP():
             self.sport = self.__sfep.GetFlowSport()
-            self.dport = self.__dfep.GetFlowDport()
+            # Twice NAT - Rflow
+            if not self.IsIflow() and self.__sfep.l4lb.IsTwiceNAT():
+                self.dport = self.__sfep.l4lb.GetServiceSNatPort()
+            else:
+                self.dport = self.__dfep.GetFlowDport()
         elif self.IsICMP():
             self.icmpid     = self.__sfep.icmp_id
             self.icmptype   = self.__sfep.icmp_type
@@ -237,6 +289,9 @@ class FlowObject(base.ConfigObjectBase):
 
     def IsDnat(self):
         return self.nat_type == 'DNAT'
+
+    def IsTwiceNAT(self):
+        return self.nat_type == 'TWICE_NAT'
 
     def IsNat(self):
         return self.nat_type != 'NONE'
@@ -427,6 +482,12 @@ class FlowObject(base.ConfigObjectBase):
         if self.IsDnat():
             string += '/%s/%s/%d/%s' %\
                       (self.nat_type, self.nat_dip.get(),
+                       self.nat_dport, self.nat_rw)
+
+        if self.IsTwiceNAT():
+            string += '/%s/%s/%d/%s/%d/%s' %\
+                      (self.nat_type, self.nat_sip.get(),
+                       self.nat_sport, self.nat_dip.get(),
                        self.nat_dport, self.nat_rw)
         cfglogger.info("  - info   : %s" % string)
 

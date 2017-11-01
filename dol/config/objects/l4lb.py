@@ -45,7 +45,7 @@ class L4LbBackendObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.tenant_id = self.service.tenant.id
         req_spec.backend_key_or_handle.backend_key.backend_ip_address.ip_af = haldefs.common.IP_AF_INET
-        req_spec.backend_key_or_handle.backend_key.backend_ip_address.v4_addr = self.GetIpAddress.getnum() 
+        req_spec.backend_key_or_handle.backend_key.backend_ip_address.v4_addr = self.GetIpAddress.getnum()
         req_spec.backend_key_or_handle.backend_key.backend_port = self.port.get()
         return
 
@@ -93,26 +93,32 @@ class L4LbServiceObject(base.ConfigObjectBase):
         self.spec       = spec
         self.label      = spec.label.upper()
         self.proto      = spec.proto.upper()
-        
+
         self.vip        = resmgr.L4LbServiceIpAllocator.get()
         self.vip6       = resmgr.L4LbServiceIpv6Allocator.get()
         self.macaddr    = resmgr.L4LbVMacAllocator.get()
-        
+
         self.port       = spec.port
         self.mode       = spec.mode.upper()
         self.snat_ips   = []
+        self.snat_ipv6s = []
         self.snat_ports = []
         if self.IsTwiceNAT():
             for c in range(spec.snat_ips.GetCount()):
                 sip = spec.snat_ips.get()
+                sipv6 = spec.snat_ipv6s.get()
                 self.snat_ips.append(sip)
-                sport = spec.snat_ports.get()
-                self.snat_ports.append(sport)
+                self.snat_ipv6s.append(sipv6)
+                # Handle for ports 0 for IP only Twice NAT
+                if spec.snat_ports is not None:
+                    sport = spec.snat_ports.get()
+                    self.snat_ports.append(sport)
 
         self.bend_idx = 0
+        self.snat_idx = 0
         self.obj_helper_bend = L4LbBackendObjectHelper()
         self.obj_helper_bend.Generate(self, spec.backends)
-       
+
         self.__create_ep()
         self.Show()
         return
@@ -126,6 +132,18 @@ class L4LbServiceObject(base.ConfigObjectBase):
         bend = self.obj_helper_bend.bends[self.bend_idx]
         self.bend_idx = (self.bend_idx + 1) % len(self.obj_helper_bend.bends)
         return bend
+
+    def SelectServiceSNat(self):
+        # Valid only for twice NAT
+        snat_ip   = self.snat_ips[self.snat_idx]
+        snat_ipv6 = self.snat_ipv6s[self.snat_idx]
+
+        # Handle if no elements in snat_ports. IP Only twice NAT
+        snat_port = 0
+        if len(self.snat_ports) != 0:
+            snat_port = self.snat_ports[self.snat_idx]
+        self.snat_idx = (self.snat_idx + 1) % len(self.snat_ips)
+        return snat_ip, snat_ipv6, snat_port
 
     def __create_ep(self):
         # Create a dummy endpoint for the service
@@ -148,8 +166,13 @@ class L4LbServiceObject(base.ConfigObjectBase):
         cfglogger.info("- VMac    = %s" % self.macaddr.get())
         cfglogger.info("- Port    = %s" % self.port.get())
         for s in range(len(self.snat_ips)):
-            cfglogger.info("- SNAT Ipaddr:Port = %s:%d" %\
-                           (self.snat_ips[s].get(), self.snat_ports[s]))
+            if len(self.snat_ports) != 0:
+                cfglogger.info("- SNAT Ipaddr:Ipv6addr:Port = %s:%s:%d" %\
+                              (self.snat_ips[s].get(), self.snat_ipv6s[s].get(),\
+                              self.snat_ports[s]))
+            else:
+                cfglogger.info("- SNAT Ipaddr:Port = %s:%s:%d" %\
+                              (self.snat_ips[s].get(), self.snat_ipv6s[s].get(), 0))
         for bend in self.obj_helper_bend.bends:
             bend.Show()
 
@@ -173,13 +196,13 @@ class L4LbServiceObject(base.ConfigObjectBase):
             cfglogger.info("Configuring IPv4 L4LbService: %s" % self.GID())
 
         req_spec.meta.tenant_id = self.tenant.id
-        
+
         hal_ipproto_str = 'IPPROTO_' + self.proto
         hal_ipproto = haldefs.common.IPProtocol.Value(hal_ipproto_str)
         req_spec.key_or_handle.service_key.ip_protocol = hal_ipproto
         req_spec.key_or_handle.service_key.service_port = self.port.get()
         req_spec.service_mac = self.macaddr.getnum()
-        
+
         if gl_l4lb_config_ipv4:
             req_spec.key_or_handle.service_key.service_ip_address.ip_af = haldefs.common.IP_AF_INET
             req_spec.key_or_handle.service_key.service_ip_address.v4_addr = self.vip.getnum()
@@ -208,7 +231,7 @@ class L4LbServiceObjectHelper:
     def __init__(self):
         self.svcs = []
         return
-    
+
     def Generate(self, tenant, spec):
         for espec in spec.entries:
             svc = L4LbServiceObject()

@@ -41,16 +41,16 @@ class SessionObject(base.ConfigObjectBase):
         self.initiator.SetInfo(spec.initiator)
         #status = self.initiator.SelectL4LbBackend()
         #if status != defs.status.SUCCESS: return status
-        
+
         self.responder = flowep.FlowEndpointObject(srcobj = responder)
         self.responder.SetInfo(spec.responder)
         #status = self.responder.SelectL4LbBackend()
         #if status != defs.status.SUCCESS: return status
 
-        
-        self.type = self.initiator.type	
+
+        self.type = self.initiator.type
         self.label = self.spec.label.upper()
-        
+
         assert(initiator.proto == responder.proto)
         self.proto = initiator.proto
 
@@ -84,7 +84,7 @@ class SessionObject(base.ConfigObjectBase):
             if tr: string = 'Tracking'
             ts = getattr(self.spec, 'timestamp', False)
             if ts: string += '/Timestamp'
-        
+
         if string:
            cfglogger.info("- Info     : %s" % string)
 
@@ -116,20 +116,20 @@ class SessionObject(base.ConfigObjectBase):
         session.tcp_ts_option = self.tcp_ts_option
         session.iflow = copy.copy(self.iflow)
         session.rflow = copy.copy(self.rflow)
-        
+
         return session
-  
+
     def Equals(self, other, lgh):
         if not isinstance(other, self.__class__):
             return False
-        
+
         fields = ["id", "hal_handle", "tcp_ts_option", "conn_track_en"]
         if not self.CompareObjectFields(other, fields, lgh):
             return False
-               
+
         if not self.iflow.Equals(other.iflow, lgh) or not self.rflow.Equals(other.rflow, lgh):
             return False
-        
+
         return True
 
     def Get(self):
@@ -204,7 +204,7 @@ class SessionObject(base.ConfigObjectBase):
         self.iflow.ProcessHALGetResponse(get_req_spec, get_resp.spec.initiator_flow)
         self.rflow.ProcessHALGetResponse(get_req_spec, get_resp.spec.responder_flow)
         return
-    
+
     def IsFilterMatch(self, selectors):
         cfglogger.debug("Matching Session %s" % self.GID())
         # Match on Initiator Flow
@@ -265,7 +265,7 @@ class SessionObjectHelper:
            flowep1.IsICMP() or flowep1.IsICMPV6() or\
            flowep1.IsESP():
            return False
-           
+
         if self.__is_fep_pair_done(flowep1, flowep2):
             return True
         return False
@@ -283,12 +283,12 @@ class SessionObjectHelper:
     def __process_session_specs(self, flowep1, flowep2, refs):
         for ref in refs:
             spec = ref.Get(Store)
-            
+
             proto = spec.proto.upper() if spec.proto else None
 
             if flowep1.IsProtoMatch(proto) == False: return
             if flowep2.IsProtoMatch(proto) == False: return
-            
+
             flowep1.proto = proto
             flowep2.proto = proto
             if self.__skip_fep_pair(flowep1, flowep2):
@@ -309,7 +309,7 @@ class SessionObjectHelper:
                     cfglogger.info("Adding Session:%s to NON-FTE Session List" % session.GID())
                     self.ssns.append(session)
         return
-            
+
     def __process_ipv6(self, flowep1, flowep2, entries):
         flowep1.type = 'IPV6'
         flowep2.type = 'IPV6'
@@ -347,7 +347,7 @@ class SessionObjectHelper:
 
         flowep1.dom = flowep1.ep.segment.id
         flowep2.dom = flowep2.ep.segment.id
-        
+
         flowep1.addr = flowep1.ep.macaddr
         flowep2.addr = flowep2.ep.macaddr
         self.__process_session_specs(flowep1, flowep2, entries)
@@ -397,10 +397,10 @@ class SessionObjectHelper:
         tenant = ep.tenant
         if tenant.IsL4LbEnabled() == False:
             return
-        
+
         # Twice NAT disabled for now.
-        if svc.IsTwiceNAT():
-            return
+        #if svc.IsTwiceNAT():
+        #    return
 
         l4lbspec = getattr(tenant.spec.sessions, 'l4lb', None)
         if l4lbspec is None:
@@ -424,7 +424,7 @@ class SessionObjectHelper:
 
     def Generate(self):
         ep_list = self.__get_eps()
-        
+
         # Generate L4LbService Flows for each EP.
         self.__process_l4lb(ep_list)
 
@@ -436,7 +436,7 @@ class SessionObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d NON-FTE Sessions." % len(self.ssns)) 
+        cfglogger.info("Configuring %d NON-FTE Sessions." % len(self.ssns))
         if len(self.ssns):
             halapi.ConfigureSessions(self.ssns)
         return
