@@ -110,17 +110,17 @@ class DeParserPhdrProfile:
         if phdr_type == 'v4':
             self.fld0_en       = 1
             self.fld0_start    = 12 # SA offset from the start of phdr
-            self.fld0_end      = 16 # Size of IPSA 
+            self.fld0_end      = 15 # Size of IPSA 
             self.fld0_align    = 0
 
             self.fld1_en       = 1
             self.fld1_start    = 16 # DA offset from the start of phdr
-            self.fld1_end      = 20 # end offset IPDA 
+            self.fld1_end      = 19 # end offset IPDA 
             self.fld1_align    = 0
             
             self.fld2_en       = 1
             self.fld2_start    = 9 # start of zeros/protocol
-            self.fld2_end      = 10 
+            self.fld2_end      = 9
             self.fld2_align    = 1 # Aligns protocol 8b value as bottom
             self.add_len       = add_len# Add 16b payload len to computed checksum
                                         # only in case of TCP payload csum (TCP hdr
@@ -128,7 +128,7 @@ class DeParserPhdrProfile:
         elif phdr_type == 'v6':
             self.fld0_en       = 1
             self.fld0_start    = 8  # SA offset from the start of phdr
-            self.fld0_end      = 24 # Size of IPSA 
+            self.fld0_end      = 23 # Size of IPSA 
             self.fld0_add_len  = add_len# Add 16b payload len to computed checksum
                                         # only in case of TCP payload csum (TCP hdr
                                         # has no payload len field)
@@ -136,13 +136,13 @@ class DeParserPhdrProfile:
 
             self.fld1_en       = 1
             self.fld1_start    = 24 # DA offset from the start of phdr
-            self.fld1_end      = 40 # end offset IPDA 
+            self.fld1_end      = 39 # end offset IPDA 
             self.fld1_add_len  = 0 
             self.fld1_align    = 0
             
             self.fld2_en       = 1
             self.fld2_start    = 6 # start of next_header
-            self.fld2_end      = 7 # 
+            self.fld2_end      = 6 # 
             self.fld2_add_len  = 0 
             self.fld2_align    = 1 # Aligns next_header
                                    # 8b value as bottom
@@ -321,8 +321,13 @@ class DeParserCsumObj:
         return self.profile
 
     def PhdrValidSet(self, v):
+        #Before setting obj as phdr valid, make sure its invalid with assert check.
         assert self.phdr_vld == 0, pdb.set_trace()
         self.phdr_vld = v
+        if self.phdr_vld:
+            self.phdr_only = True
+        else:
+            self.phdr_only = False
 
     def PhdrValidGet(self):
         return self.phdr_vld
@@ -360,7 +365,7 @@ class DeParserCsumObj:
         if self.phdr_only:
             csum_hdr_cfg['csum_vld']['value']=str(0)
         else:
-            csum_hdr_cfg['csum_vld']['value']=str(0)
+            csum_hdr_cfg['csum_vld']['value']=str(1)
         csum_hdr_cfg['csum_unit']   ['value']=str(self.unit)\
                                               if self.unit != -1 else str(0)
         csum_hdr_cfg['csum_profile']['value']=str(self.profile)\
@@ -497,10 +502,11 @@ class DeParserCalField:
 
     def DeparserCsumConfigMatrixRowLog(self, is_phdr):
         if not is_phdr:
-            pstr = '{:12s}{:5d}{:5d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6d}{:5d}'\
+            pstr = '{:12s}{:5d}{:7d}{:7d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6d}{:5d}'\
                    '{:5d}{:5d}{:5d}\n'.format(self.dstField.split(".")[0],
                                        self.csum_hdr_obj.CsumUnitNumGet(),
                                        self.csum_hdr_obj.CsumHvBitNumGet(),
+                                       384 + (127 - self.csum_hdr_obj.CsumHvBitNumGet()),
                                        self.csum_hdr_obj.HvBitNumGet(),
                                        self.csum_hdr_obj.profile,
                                        self.csum_hdr_obj.phdr_vld,
@@ -514,10 +520,11 @@ class DeParserCalField:
                                        self.csum_profile_obj.csum_loc_adj,
                                        self.csum_profile_obj.add_len)
         if is_phdr:
-            pstr = '{:12s}{:5d}{:5d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6d}'\
+            pstr = '{:12s}{:5d}{:7d}{:7d}{:5d}{:8d}{:6d}{:5d}{:8d}{:7d}{:7d}{:6d}'\
                     '\n'.format(self.phdr_name,
                                 self.phdr_csum_hdr_obj.CsumUnitNumGet(),
                                 self.phdr_csum_hdr_obj.CsumHvBitNumGet(),
+                                384 + (127 - self.phdr_csum_hdr_obj.CsumHvBitNumGet()),
                                 self.phdr_csum_hdr_obj.HvBitNumGet(),
                                 self.phdr_csum_hdr_obj.profile,
                                 self.phdr_csum_hdr_obj.phdr_vld,

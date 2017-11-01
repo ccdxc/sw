@@ -346,76 +346,107 @@ class Checksum:
                                 assert(phdr_name != ''), pdb.set_trace()
                                 assert(phdr_name in self.be.h.p4_header_instances),\
                                              pdb.set_trace()
-                                #Using phdr_name, assert there is parser
-                                #state where the phdr hdr is extracted. In
-                                #working case it will be either ipv4 or
-                                #ipv6 parser state.
-                                phdr_parse_states = parser.get_ext_cstates(\
-                                   self.be.h.p4_header_instances[phdr_name])
-                                calfldobj.CsumPhdrParseStateSet(phdr_parse_states)
                                 #Also allocate phdr profile obj
                                 calfldobj.ParserPhdrProfileSet(ParserPhdrProfile())
-                                #Check if phdr is also a calculated fld obj.
-                                #ipv4 hdr checksum will create ipv4 hdr calfld
-                                #object that is also used for building phdr.
-                                #However in ipv6 case there will be no calfldobj
-                                #for ipv6.
-                                phdr_offset_ohi_id = -1
-                                csum_unit = calfldobj.ParserCsumObjGet().\
-                                                            CsumUnitNumGet()
-                                for phdr_parse_state in phdr_parse_states:
-                                    if not len(phdr_parse_state.\
-                                                verify_cal_field_objs):
-                                        phdr_parse_state.phdr_type = \
-                                            calfldobj.CsumPhdrTypeGet()
-                                        if phdr_offset_ohi_id == -1:
-                                            phdr_offset_ohi_id = \
-                                                parser.assign_ohi_slots_for_checksum(\
-                                                                        csum_unit, -1)
-                                        phdr_parse_state.phdr_offset_ohi_id = \
-                                                                phdr_offset_ohi_id
-                                        phdr_parse_state.totalLen_ohi_id = \
-                                                parser.assign_ohi_slots_for_checksum(\
-                                                                    csum_unit, 1)
-                                    else:
-                                        #phdr is also cal fld obj (hdr checksum case).
-                                        #Use same ohi_slot that is used for storing
-                                        #hdr offset star to calculate hdr checksum.
-                                        phdr_parse_state.phdr_type = \
-                                            calfldobj.CsumPhdrTypeGet()
 
-                                #Handle v6 option parsing case.
+        # Ensure/CrossCheck that every calculated field that needs to
+        # be verified has been allocated checksum unit and checksumprofile.
+        for calfldobj in self.verify_cal_fieldlist:
+            if calfldobj.ParserCsumObjGet() == None:
+                assert(0), pdb.set_trace()
+
+    def InsertCsumObjReferenceInParseState(self, parser):
+        '''
+            In parse states where csum related hdrs are extracted,
+            insert reference to calculated fld objects so that
+            Parser block can be programmed to trigger csum verification.
+        '''
+        for calfldobj in self.verify_cal_fieldlist:
+            calfldhdr = calfldobj.CalculatedFieldHdrGet()
+            for parsepath in parser.paths:
+                for hdr in parsepath:
+                    if hdr.name == calfldhdr:
+
+                        if calfldobj.payload_checksum:
+                            phdr_name = calfldobj.CsumPhdrNameGet()
+                            assert(phdr_name != ''), pdb.set_trace()
+                            assert(phdr_name in self.be.h.p4_header_instances),\
+                                         pdb.set_trace()
+                            #Using phdr_name, assert there is parser
+                            #state where the phdr hdr is extracted. In
+                            #working case it will be either ipv4 or
+                            #ipv6 parser state.
+                            phdr_parse_states = parser.get_ext_cstates(\
+                               self.be.h.p4_header_instances[phdr_name])
+                            calfldobj.CsumPhdrParseStateSet(phdr_parse_states)
+                            #Check if phdr is also a calculated fld obj.
+                            #ipv4 hdr checksum will create ipv4 hdr calfld
+                            #object that is also used for building phdr.
+                            #However in ipv6 case there will be no calfldobj
+                            #for ipv6.
+                            phdr_offset_ohi_id = -1
+                            total_len_ohi_id = -1
+
+                            csum_unit = calfldobj.ParserCsumObjGet().\
+                                                        CsumUnitNumGet()
+                            for phdr_parse_state in phdr_parse_states:
+                                #if not len(phdr_parse_state.\
+                                #            verify_cal_field_objs):
                                 if phdr_parse_state.phdr_type == 'v6':
-                                    # Find all parse states where option len is
-                                    # decremented from payload Len
-                                    # In those parse states, since there is need
-                                    # store the new payload len in OHI, indicate
-                                    # the need for generating OHI instruction to
-                                    # store result of l4_verify_len parser local.
-                                    # variable into OHI
-                                    #pdb.set_trace()
-                                    
-                                    l4hdr_parse_states = parser.get_ext_cstates(\
-                                        self.be.h.p4_header_instances[hdr.name])
+                                    phdr_parse_state.phdr_type = \
+                                        calfldobj.CsumPhdrTypeGet()
+                                    if phdr_offset_ohi_id == -1 and \
+                                       phdr_parse_state.phdr_offset_ohi_id == -1:
+                                        phdr_offset_ohi_id = \
+                                            parser.assign_ohi_slots_for_checksum(\
+                                                                    csum_unit, -1)
+                                    if total_len_ohi_id == -1 and \
+                                       phdr_parse_state.totalLen_ohi_id == -1:
+                                        total_len_ohi_id = \
+                                            parser.assign_ohi_slots_for_checksum(\
+                                                                     csum_unit, 1)
+                                    if phdr_parse_state.phdr_offset_ohi_id == -1:
+                                        phdr_parse_state.phdr_offset_ohi_id = \
+                                                            phdr_offset_ohi_id
+                                    if phdr_parse_state.totalLen_ohi_id == -1:
+                                        phdr_parse_state.totalLen_ohi_id = \
+                                                                total_len_ohi_id
+                                else:
+                                    #phdr is also cal fld obj (hdr checksum case).
+                                    #Use same ohi_slot that is used for storing
+                                    #hdr offset star to calculate hdr checksum.
+                                    phdr_parse_state.phdr_type = \
+                                        calfldobj.CsumPhdrTypeGet()
 
-                                    l4_verify_len_adjusted_last_parse_states =  \
-                                    self.ProcessVerifyLenFieldComputedParseStates(
-                                                                       parser, \
-                                                            l4hdr_parse_states,\
-                                                 calfldobj.l4_verify_len_field,\
-                                              phdr_parse_state.totalLen_ohi_id,\
-                                                                      calfldobj)
+                            #Handle v6 option parsing case.
+                            if phdr_parse_state.phdr_type == 'v6':
+                                # Find all parse states where option len is
+                                # decremented from payload Len
+                                # In those parse states, since there is need
+                                # store the new payload len in OHI, indicate
+                                # the need for generating OHI instruction to
+                                # store result of l4_verify_len parser local.
+                                # variable into OHI
+                                #pdb.set_trace()
+                                
+                                l4hdr_parse_states = parser.get_ext_cstates(\
+                                    self.be.h.p4_header_instances[hdr.name])
+
+                                l4_verify_len_adjusted_last_parse_states =  \
+                                self.ProcessVerifyLenFieldComputedParseStates(
+                                                                   parser, \
+                                                        l4hdr_parse_states,\
+                                             calfldobj.l4_verify_len_field,\
+                                          phdr_parse_state.totalLen_ohi_id,\
+                                                                  calfldobj)
 
                         #In the parse states where the header is extracted,
                         #put reference to verify checksum obj
                         for parsestate in parser.get_ext_cstates(hdr):
                             if calfldobj not in parsestate.verify_cal_field_objs:
                                 parsestate.verify_cal_field_objs.append(calfldobj)
-        # Ensure/CrossCheck that every calculated field that needs to
-        # be verified has been allocated checksum unit and checksumprofile.
-        for calfldobj in self.verify_cal_fieldlist:
-            if calfldobj.ParserCsumObjGet() == None:
-                assert(0), pdb.set_trace()
+
+
 
     def AllocateParserCsumResources(self, parser):
         '''
@@ -608,6 +639,12 @@ class Checksum:
                     break
         #Assert if all calfld objects are allocated resources
         assert(len(csum_objects) == 0), pdb.set_trace()
+
+        #In parse states where csum related hdrs are extracted,
+        #insert reference to calculated fld objects so that
+        #Parser block can be programmed to trigger csum verification.
+        self.InsertCsumObjReferenceInParseState(parser)
+
  
     def CsumParserPayloadLenUpdateInstrGenerate(self, parse_state, sram,\
                                                 ohi_instr_inst,         \
@@ -1020,12 +1057,6 @@ class Checksum:
         p = -1
         phdr_in_path = False
 
-        #HW/Model changes so that cap_ppa_csr.json has decoder and
-        #new mux instruction needed is yet to be released. For now
-        #do not generate configuration.
-        #TODO: Remove next line of code when model changes are in master.
-        return profile, p
-
         # Since this function is called on parse state where
         # calculated field may not be extracted, check for
         # existence of calfld obj
@@ -1058,11 +1089,6 @@ class Checksum:
         p = -1
         phdr_in_path = False
 
-        #HW/Model changes so that cap_ppa_csr.json has decoder and
-        #new mux instruction needed is yet to be released. For now
-        #do not generate configuration.
-        #TODO: Remove next line of code when model changes are in master.
-        return phdr_profile, p
 
 
         if not len(parse_state.verify_cal_field_objs):
@@ -1454,6 +1480,13 @@ class Checksum:
         '''
             Configure HdrFldStart,End and also generate JSON config output.
         '''
+        self.csum_compute_logger.debug('%s' % "HVB, StartFld, EndFld  HdrName:")
+        self.csum_compute_logger.debug('%s' % "-------------------------------")
+        for hvb, hv_info in hv_fld_slots.items():
+            self.csum_compute_logger.debug('%d %d %d %s' % \
+            (deparser.be.hw_model['parser']['max_hv_bits'] - 1 - hvb, \
+             hv_info[0], hv_info[1], hv_info[2]))
+            
         csum_hdrs = []
         hw_csum_obj = [] # list of csumobj that need to be programmed in HW
                          # without repeatation and maintaining Banyan contrainst.
@@ -1548,23 +1581,23 @@ class Checksum:
         ofile.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n")
 
         
-        pstr = '{:12s}{:5s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
-               '{:5s}{:5s}{:5s}\n'.format("Hdr", "csum#", "  csum", "  HV", \
+        pstr = '{:12s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
+               '{:5s}{:5s}{:5s}\n'.format("Hdr", "csum#", "  csum", "  csum", "  HV", \
                                                "Csum", "Phdr", "Phdr", "Phdr",\
                                                "HdrFld", "HdrFld", "Csum", "use",\
                                                "phv", "loc", "add")
-        pstr += '{:12s}{:5s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
-               '{:5s}{:5s}{:5s}\n'.format("   ", "    ", "  Hv", "   ", \
+        pstr += '{:12s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
+               '{:5s}{:5s}{:5s}\n'.format("   ", "    ", "  Hv", "Flit", "   ", \
                                                "Profile", "Valid", "Unit", "Profile",\
                                                "Start", "End", "incl", "phv",\
                                                "len", "adj", "len")
-        pstr += '{:12s}{:5s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
-               '{:5s}{:5s}{:5s}\n'.format("   ", "    ", " ", " ", \
+        pstr += '{:12s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
+               '{:5s}{:5s}{:5s}\n'.format("   ", "    ", " ", "bit", " ", \
                                                "       ", "     ", "    ", "       ",\
                                                "     ", "   ", "BM", "len",\
                                                "sel", "   ", "   ")
-        pstr += '{:12s}{:5s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
-               '{:5s}{:5s}{:5s}\n'.format("   ", "    ", " ", " ", \
+        pstr += '{:12s}{:5s}{:7s}{:7s}{:7s}{:8s}{:6s}{:5s}{:8s}{:7s}{:7s}{:6s}{:5s}'\
+               '{:5s}{:5s}{:5s}\n'.format("   ", "    ", " ", " ", " ", \
                                                "       ", "     ", "    ", "       ",\
                                                "     ", "   ", "  ", "   ",\
                                                "   ", "   ", "   ")

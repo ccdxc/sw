@@ -167,29 +167,29 @@ class ParserPhdrProfile:
         self.phdr_profile = phdr_profile
 
     def ConfigGenerate(self, phdr_profile):
-        phdr_profile['fld'][0]['fld_en']    = str(self.fld0_en)
-        phdr_profile['fld'][0]['fld_align'] = str(self.fld0_align)
-        phdr_profile['fld'][0]['fld_start'] = str(self.fld0_start)
-        phdr_profile['fld'][0]['fld_end']   = str(self.fld0_end)
-        phdr_profile['fld'][0]['add_len']   = str(self.fld0_add_len)
+        phdr_profile['fld0_fld_en']['value']    = str(1 if self.fld0_en else 0)
+        phdr_profile['fld0_fld_align']['value'] = str(self.fld0_align)
+        phdr_profile['fld0_fld_start']['value'] = str(self.fld0_start)
+        phdr_profile['fld0_fld_end']['value']   = str(self.fld0_end)
+        phdr_profile['fld0_add_len']['value']   = str(self.fld0_add_len)
 
-        phdr_profile['fld'][1]['fld_en']    = str(self.fld1_en)
-        phdr_profile['fld'][1]['fld_align'] = str(self.fld1_align)
-        phdr_profile['fld'][1]['fld_start'] = str(self.fld1_start)
-        phdr_profile['fld'][1]['fld_end']   = str(self.fld1_end)
-        phdr_profile['fld'][1]['add_len']   = str(self.fld1_add_len)
+        phdr_profile['fld1_fld_en']['value']    = str(1 if self.fld1_en else 0)
+        phdr_profile['fld1_fld_align']['value'] = str(self.fld1_align)
+        phdr_profile['fld1_fld_start']['value'] = str(self.fld1_start)
+        phdr_profile['fld1_fld_end']['value']   = str(self.fld1_end)
+        phdr_profile['fld1_add_len']['value']   = str(self.fld1_add_len)
 
-        phdr_profile['fld'][2]['fld_en']    = str(self.fld2_en)
-        phdr_profile['fld'][2]['fld_align'] = str(self.fld2_align)
-        phdr_profile['fld'][2]['fld_start'] = str(self.fld2_start)
-        phdr_profile['fld'][2]['fld_end']   = str(self.fld2_end)
-        phdr_profile['fld'][2]['add_len']   = str(self.fld2_add_len)
+        phdr_profile['fld2_fld_en']['value']    = str(1 if self.fld2_en else 0)
+        phdr_profile['fld2_fld_align']['value'] = str(self.fld2_align)
+        phdr_profile['fld2_fld_start']['value'] = str(self.fld2_start)
+        phdr_profile['fld2_fld_end']['value']   = str(self.fld2_end)
+        phdr_profile['fld2_add_len']['value']   = str(self.fld2_add_len)
 
-        phdr_profile['fld'][3]['fld_en']    = str(self.fld3_en)
-        phdr_profile['fld'][3]['fld_align'] = str(self.fld3_align)
-        phdr_profile['fld'][3]['fld_start'] = str(self.fld3_start)
-        phdr_profile['fld'][3]['fld_end']   = str(self.fld3_end)
-        phdr_profile['fld'][3]['add_len']   = str(self.fld3_add_len)
+        phdr_profile['fld3_fld_en']['value']    = str(1 if self.fld3_en else 0)
+        phdr_profile['fld3_fld_align']['value'] = str(self.fld3_align)
+        phdr_profile['fld3_fld_start']['value'] = str(self.fld3_start)
+        phdr_profile['fld3_fld_end']['value']   = str(self.fld3_end)
+        phdr_profile['fld3_add_len']['value']   = str(self.fld3_add_len)
 
 
 class ParserCsumProfile:
@@ -570,7 +570,7 @@ class ParserCalField:
             phdr_profile_obj.fld0_en       = 1
             phdr_profile_obj.fld0_start    = 12 # SA offset from
                                                 # the start of phdr
-            phdr_profile_obj.fld0_end      = 16 # Size of IPSA 
+            phdr_profile_obj.fld0_end      = 15 # Size of IPSA 
             phdr_profile_obj.fld0_add_len  = add_len  # Adds 16b len field
                                                       # to phdr only in case of TCP
                                                       # (TCP hdr no payload len field)
@@ -579,14 +579,14 @@ class ParserCalField:
             phdr_profile_obj.fld1_en       = 1
             phdr_profile_obj.fld1_start    = 16 # DA offset from
                                                 # the start of phdr
-            phdr_profile_obj.fld1_end      = 20 # end offset IPDA 
+            phdr_profile_obj.fld1_end      = 19 # end offset IPDA 
             phdr_profile_obj.fld1_add_len  = 0 
             phdr_profile_obj.fld1_align    = 0
             
             phdr_profile_obj.fld2_en       = 1
             phdr_profile_obj.fld2_start    = 9 # start of
                                                # zeros/protocol
-            phdr_profile_obj.fld2_end      = 10# 
+            phdr_profile_obj.fld2_end      = 9# 
             phdr_profile_obj.fld2_add_len  = 0 
             phdr_profile_obj.fld2_align    = 1 # Aligns protocol
                                                # 8b value as bottom
@@ -595,7 +595,7 @@ class ParserCalField:
             phdr_profile_obj.fld0_en       = 1
             phdr_profile_obj.fld0_start    = 8  # SA offset from
                                                 # the start of phdr
-            phdr_profile_obj.fld0_end      = 24 # Size of IPSA 
+            phdr_profile_obj.fld0_end      = 23 # Size of IPSA 
             phdr_profile_obj.fld0_add_len  = add_len  # Adds 16b len field
                                                       # to phdr only in case of TCP
                                                       # (TCP hdr no payload len field)
@@ -604,14 +604,14 @@ class ParserCalField:
             phdr_profile_obj.fld1_en       = 1
             phdr_profile_obj.fld1_start    = 24 # DA offset from
                                                 # the start of phdr
-            phdr_profile_obj.fld1_end      = 40 # end offset IPDA 
+            phdr_profile_obj.fld1_end      = 39 # end offset IPDA 
             phdr_profile_obj.fld1_add_len  = 0 
             phdr_profile_obj.fld1_align    = 0
             
             phdr_profile_obj.fld2_en       = 1
             phdr_profile_obj.fld2_start    = 6 # start of
                                                # next_header
-            phdr_profile_obj.fld2_end      = 7 # 
+            phdr_profile_obj.fld2_end      = 6 # 
             phdr_profile_obj.fld2_add_len  = 0 
             phdr_profile_obj.fld2_align    = 1 # Aligns next_header
                                                # 8b value as bottom

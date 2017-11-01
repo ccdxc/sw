@@ -742,7 +742,7 @@ class capri_parser:
         self.saved_lkp_fld = OrderedDict() # {cf : saved_lkp_reg} XXX multiple regs per field
 
         self.free_chksum_ohi_slots = [True for i in \
-                range(self.be.hw_model['parser']['ohi_threshold'] \
+                range(self.be.hw_model['parser']['ohi_threshold']\
                 + self.be.hw_model['parser']['max_csum_engines'] * 2, \
                 self.be.hw_model['parser']['num_ohi'])]
 
@@ -1379,13 +1379,13 @@ class capri_parser:
         tcp offset, tcp len.
         '''
         if instance != -1:
-            ohid = self.be.hw_model['parser']['ohi_threshold'] + \
+            ohid = self.be.hw_model['parser']['ohi_threshold'] + 1 + \
                    (csum_unit * 2) + instance
         else:
             try:
                 ohid = self.free_chksum_ohi_slots.index(True)
                 self.free_chksum_ohi_slots[ohid] = False
-                ohid += self.be.hw_model['parser']['ohi_threshold'] \
+                ohid += self.be.hw_model['parser']['ohi_threshold'] + 1 +\
                         + (self.be.hw_model['parser']['max_csum_engines'] * 2)
             except:
                 assert(0), pdb.set_trace()
@@ -1611,24 +1611,13 @@ class capri_parser:
         hidx = 0
         for _hidx in range(len(hv_headers)):
             h = hv_headers[_hidx]
-            hf_name = h.name + '.valid'
-            cf = self.be.pa.get_field(hf_name, self.d)
-            assert cf and cf.is_hv, pdb.set_trace()
-            # point to copy of hv_bits in flit0
-            cf.phv_bit = hv_bit
-            self.be.pa.replace_hv_field(hv_bit, cf, self.d)
-            self.hdr_hv_bit[h] = hv_bit
-            self.hv_bit_header[max_hv_bits - hidx - 1] = h
-            hv_bit -= 1
-            hidx += 1
 
-        #Avoid moving HV bits and allocate all HV bits needed for csum
-        #after allocating HV bits for hdrs.
-        for _hidx in range(len(hv_headers)):
-            h = hv_headers[_hidx]
+            #For Deparser Csum to work correctly, CSUM HV bits should be co-located
+            #with hdr valid bit.  Also HV bit for csum should be allocated before
+            #header valid bit.
             if self.d == xgress.EGRESS and \
-                (self.be.checksum.IsHdrInCsumCompute(h.name) or
-                 self.be.checksum.IsHdrInCsumComputePhdr(h.name)):
+               (self.be.checksum.IsHdrInCsumCompute(h.name) or
+                self.be.checksum.IsHdrInCsumComputePhdr(h.name)):
                 csum_hv_names = []
                 if self.be.checksum.IsHdrInCsumCompute(h.name):
                     hfname = h.name + '.csum'
@@ -1638,7 +1627,6 @@ class capri_parser:
                     csum_hv_names.append(hfname)
                     hfname = h.name + '.udp_csum'
                     csum_hv_names.append(hfname)
-
                 #CSUM: Build csum hv bit dict
                 csum_hv_bit_and_hf = []
                 for hf_name in csum_hv_names:
@@ -1651,6 +1639,18 @@ class capri_parser:
                     hv_bit -= 1
                     hidx += 1
                 self.csum_hdr_hv_bit[h] = csum_hv_bit_and_hf
+
+            #Allocate HV for header.valid
+            hf_name = h.name + '.valid'
+            cf = self.be.pa.get_field(hf_name, self.d)
+            assert cf and cf.is_hv, pdb.set_trace()
+            # point to copy of hv_bits in flit0
+            cf.phv_bit = hv_bit
+            self.be.pa.replace_hv_field(hv_bit, cf, self.d)
+            self.hdr_hv_bit[h] = hv_bit
+            self.hv_bit_header[max_hv_bits - hidx - 1] = h
+            hv_bit -= 1
+            hidx += 1
 
     def assign_state_ids(self):
         # for now just assign sequential ids

@@ -540,6 +540,8 @@ parser parse_ipv4_options_blob {
 parser parse_ipv4 {
     return select(current(0,8)) {
         0x45    : parse_base_ipv4;
+        0x44    : ingress;
+        0x40 mask 0x4C    : ingress;
         default : parse_ipv4_options_blob;
     }
 }
@@ -1168,6 +1170,8 @@ parser parse_inner_ipv4_options_blob {
 parser parse_inner_ipv4 {
     return select(current(0,8)) {
         0x45    : parse_base_inner_ipv4;
+        0x44    : ingress;
+        0x40 mask 0x4C    : ingress;
         default : parse_inner_ipv4_options_blob;
     }
 }

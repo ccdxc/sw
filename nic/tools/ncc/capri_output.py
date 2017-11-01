@@ -1164,7 +1164,7 @@ def capri_deparser_logical_output(deparser):
 
 
 def capri_deparser_cfg_output(deparser):
-    hv_fld_slots = {} # Key = HVbit, Value = (fld_start, fld_end)
+    hv_fld_slots = OrderedDict() # Key = HVbit, Value = (fld_start, fld_end)
     # read the register spec json
     cur_path = os.path.abspath(__file__)
     cur_path = os.path.split(cur_path)[0]
@@ -1261,44 +1261,88 @@ def capri_deparser_cfg_output(deparser):
                 if csum_allocated_hv == hvb:
                     csum_hvb = True
                     break
+        end_fld_info_adjust = False
+        if not csum_hvb:
+            for i, chunks in enumerate(dp_hdr_fields):
+                assert used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble"
+                dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
+                dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
+                dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
+                dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
+                (phv_ohi, chunk_type, _) = chunks
+                if (chunk_type == deparser.field_type_phv):
+                    dpp_rstr['size_sel']['value'] = str(fixed_sel)
+                    dpp_rstr['size_val']['value'] = str(phv_ohi[1]/8) if not csum_hvb else str(0) # in bytes
 
-        for i, chunks in enumerate(dp_hdr_fields):
+                    dpr_rstr['source_sel']['value'] = str(phv_sel)
+                    dpr_rstr['source_oft']['value'] = str(phv_ohi[0]/8) # in bytes
+                else:
+                    if not first_ohi:
+                        first_ohi = True
+                        fohi = phv_ohi
+
+                    dpr_rstr['source_sel']['value'] = str(ohi_sel)
+                    dpr_rstr['source_oft']['value'] = \
+                        str((phv_ohi.start - fohi.start) << 6 | fohi.id)
+                    if (isinstance(phv_ohi.length, int)):
+                        dpp_rstr['size_sel']['value'] = str(fixed_sel)
+                        dpp_rstr['size_val']['value'] = str(phv_ohi.length) if not csum_hvb else str(0)
+                    else:
+                        dpp_rstr['size_sel']['value'] = str(ohi_sel)
+                        dpp_rstr['size_val']['value'] = str(phv_ohi.var_id) if not csum_hvb else str(0)
+                used_hdr_fld_info_slots += 1
+
+            #Check if the header has csum hv bits; if so, allocate dummy  end fld slots
+            #and adjust end_fld slot associated with csum hv bits.
+            if h in deparser.be.parsers[deparser.d].csum_hdr_hv_bit.keys():
+                end_fld_info_adjust = True
+        else:
             assert used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble"
             dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
             dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
             dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
             dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
-            (phv_ohi, chunk_type, _) = chunks
-            if (chunk_type == deparser.field_type_phv):
-                dpp_rstr['size_sel']['value'] = str(fixed_sel)
-                dpp_rstr['size_val']['value'] = str(phv_ohi[1]/8) if not csum_hvb else str(0) # in bytes
-
-                dpr_rstr['source_sel']['value'] = str(phv_sel)
-                dpr_rstr['source_oft']['value'] = str(phv_ohi[0]/8) # in bytes
-            else:
-                if not first_ohi:
-                    first_ohi = True
-                    fohi = phv_ohi
-
-                dpr_rstr['source_sel']['value'] = str(ohi_sel)
-                dpr_rstr['source_oft']['value'] = \
-                    str((phv_ohi.start - fohi.start) << 6 | fohi.id)
-                if (isinstance(phv_ohi.length, int)):
-                    dpp_rstr['size_sel']['value'] = str(fixed_sel)
-                    dpp_rstr['size_val']['value'] = str(phv_ohi.length) if not csum_hvb else str(0)
-                else:
-                    dpp_rstr['size_sel']['value'] = str(ohi_sel)
-                    dpp_rstr['size_val']['value'] = str(phv_ohi.var_id) if not csum_hvb else str(0)
+            dpp_rstr['size_val']['value'] = str(0)
             used_hdr_fld_info_slots += 1
 
         dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(start_fld)
-        dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = \
-            str(max_hdr_flds - used_hdr_fld_info_slots)
+        if not end_fld_info_adjust:
+            dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = \
+                str(max_hdr_flds - used_hdr_fld_info_slots)
+            if csum_hvb:
+                #Collect startfld, endfld, hv to program deparser csum
+                #endfld will get adjusted once associated hdr.valid is allocated
+                #for now start_fld and end_fld will be single slot.
+                #Also csum hdrfld configuration to specify fld_start and fld_end
+                #is different from hdrfld configuration to build pkt. (In case
+                #csum, provide fld_start and fld_end zero based. In case of pkt
+                #build, provide fld_start and 255-fld_end.
+                hv_fld_slots[hvb] = \
+                    (start_fld, used_hdr_fld_info_slots, h.name)
+        else:
+            csum_bits_assigned_for_hdr = len(deparser.be.parsers[deparser.d].csum_hdr_hv_bit[h])
+            assert csum_bits_assigned_for_hdr > 0, pdb.set_trace()
+            #Adjust end slot for hdr.valid
+            dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = \
+                str(max_hdr_flds - (used_hdr_fld_info_slots + csum_bits_assigned_for_hdr))
+            #Adjust end slot for all csum related HV
+            for csum_h in \
+                deparser.be.parsers[deparser.d].csum_hdr_hv_bit[h]:
+                csum_allocated_hv, _, _ = csum_h
+                start_fld = hv_fld_slots[csum_allocated_hv][0]
+                end_fld = used_hdr_fld_info_slots
+                dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
+                dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
+                dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
+                dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
+                dpp_rstr['size_val']['value'] = str(0)
+                rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx - csum_allocated_hv)
+                dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = \
+                    str(max_hdr_flds - end_fld)
+                used_hdr_fld_info_slots += 1 #Dummy slot after actual hdr slot
+                hv_fld_slots[csum_allocated_hv] = \
+                    (start_fld, end_fld - 1, h.name)
 
-        if csum_hvb:
-            #Collect startfld,endfld, hv to program deparser csum
-            hv_fld_slots[hvb] = \
-                (start_fld, (max_hdr_flds - used_hdr_fld_info_slots), h.name)
 
     if deparser.d == xgress.EGRESS:
         deparser.be.checksum.CsumDeParserConfigGenerate(deparser, \
@@ -2128,21 +2172,23 @@ def capri_parser_output_decoders(parser):
                                                          csum_phdr_t)
                 if csum_prof != None:
                     #csum_prof_list[cprof_inst] = csum_prof
+                    #ppa_json['cap_ppa']['registers']\
+                    #    ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
+                    #        ['cap_ppa_csr_cfg_csum'] = {}
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
-                            ['cap_ppa_csr_cfg_csum'] = {}
-                    ppa_json['cap_ppa']['registers']\
-                        ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
-                            ['cap_ppa_csr_cfg_csum']['entries'] = csum_prof
+                            = csum_prof
+                            #['cap_ppa_csr_cfg_csum']['entries'] = csum_prof
                 if csum_phdr_prof != None:
                     #csum_phdr_prof_list[phdr_inst] = csum_phdr_prof
+                    #ppa_json['cap_ppa']['registers']\
+                    #    ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
+                    #        ['cap_ppa_csr_cfg_csum_phdr'] = {}
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
-                            ['cap_ppa_csr_cfg_csum_phdr'] = {}
-                    ppa_json['cap_ppa']['registers']\
-                        ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
-                            ['cap_ppa_csr_cfg_csum_phdr']['entries'] = \
-                                                         csum_phdr_prof['fld']
+                                                          = csum_phdr_prof
+                            #['cap_ppa_csr_cfg_csum_phdr']['entries'] = \
+                                                         #csum_phdr_prof['fld']
 
 
     # XXX add a catch-all end state
@@ -2846,7 +2892,10 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
                     (field == 'addr_offset') or (field == 'decoder') or
                     (field == 'is_array')):
                     continue
-                lsb  = int(attrib['field_lsb'])
+                try:
+                    lsb  = int(attrib['field_lsb'])
+                except:
+                    pdb.set_trace()
                 msb  = int(attrib['field_msb'])
                 mask = int(attrib['field_mask'], 16)
                 val  = int(attrib['value'], 0)

@@ -12,6 +12,164 @@ nop:
   nop.e
   nop
 
+// Since p4plus_app and compute checksum table run in same stage
+// pkt bound towards host (RDMA/Proxy case) without L3/L4 Hdr
+// should be handle correctly such that csum bits are NOT set
+// before deparser reconstructs packet.
+// Disabling TCAM table population for now. John to fix it later.
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum1:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum2:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum3:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum4:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum5:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum6:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum7:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum8:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum9:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum10:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum11:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum12:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum13:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum14:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum15:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum16:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum17:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum18:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum19:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum20:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum21:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum22:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum23:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum24:
+  nop.e
+  nop
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+compute_checksum25:
+  nop.e
+  nop
+
+
+/*
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 compute_checksum1:
@@ -199,3 +357,4 @@ compute_checksum25:
   phvwr.e     p.inner_ipv6_udp_csum, TRUE
   phvwr       p.inner_udp_csum, TRUE
 
+*/
