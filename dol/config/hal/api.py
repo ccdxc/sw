@@ -89,6 +89,7 @@ def __process_response(resp_msg, req_msg, req_objs, respcb):
         req_obj = req_objs[idx]
         getattr(req_obj, respcb)(req_spec, resp_spec)
         if resp_spec.api_status != types_pb2.API_STATUS_OK:
+            cfglogger.error(" HAL Returned API Status:%d" % (resp_spec.api_status))
             assert(0)
     return
 

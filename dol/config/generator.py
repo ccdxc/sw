@@ -33,8 +33,6 @@ def process(topospec):
     UplinkPcHelper.main(topospec)
     # Generate and Configure Tenants
     TenantHelper.main(topospec)
-    # Generate ACLs
-    AclHelper.main(topospec)
 
     # Enable all segments on Uplinks and UplinkPcs
     UplinkHelper.ConfigureAllSegments()
@@ -63,6 +61,8 @@ def process(topospec):
         IpsecCbHelper.main()    
 
     CpuHelper.main(topospec)
+    # Generate ACLs
+    AclHelper.main(topospec)
     TimerHelper.main(topospec)
     return
 

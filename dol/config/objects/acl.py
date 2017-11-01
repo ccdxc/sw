@@ -42,6 +42,8 @@ class AclObject(base.ConfigObjectBase):
             espan   = s.Get(Store)
             self.egr_mirror_sessions.append(espan)
             
+        if self.ActionSupRedirect():
+            self.fields.action.redirect_if = Store.objects.Get('Cpu1')
         #self.Show()
         return
 

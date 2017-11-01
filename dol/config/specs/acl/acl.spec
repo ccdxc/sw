@@ -458,6 +458,111 @@ entries:
             intf: cpu
 
     - entry:
+        id: ACL_ICMPV6_MLD_REQ_ACTION_SUP_REDIRECT
+        match:
+            type : ip
+            ip:
+                type: v6
+            l4:
+                type : icmp
+                icmp :
+                    type        : const/130
+                    code_mask   : const/0xff
+        action:
+            action: redirect
+            intf: cpu
+
+    - entry:
+        id: ACL_ICMPV6_MLD_RES_ACTION_SUP_REDIRECT
+        match:
+            type : ip
+            ip:
+                type: v6
+            l4:
+                type : icmp
+                icmp :
+                    type        : const/131
+                    code_mask   : const/0xff
+        action:
+            action: redirect
+            intf: cpu
+
+    - entry:
+        id: ACL_ICMPV6_MLD_DONE_ACTION_SUP_REDIRECT
+        match:
+            type : ip
+            ip:
+                type: v6
+            l4:
+                type : icmp
+                icmp :
+                    type        : const/132
+                    code_mask   : const/0xff
+        action:
+            action: redirect
+            intf: cpu
+
+    - entry:
+        id: ACL_ICMPV6_RS_ACTION_SUP_REDIRECT
+        match:
+            type : ip
+            ip:
+                type: v6
+            l4:
+                type : icmp
+                icmp :
+                    type        : const/133
+                    code_mask   : const/0xff
+        action:
+            action: redirect
+            intf: cpu
+
+    - entry:
+        id: ACL_ICMPV6_RA_ACTION_SUP_REDIRECT
+        match:
+            type : ip
+            ip:
+                type: v6
+            l4:
+                type : icmp
+                icmp :
+                    type        : const/134
+                    code_mask   : const/0xff
+        action:
+            action: redirect
+            intf: cpu
+
+    - entry:
+        id: ACL_ICMPV6_NS_ACTION_SUP_REDIRECT
+        match:
+            type : ip
+            ip:
+                type: v6
+            l4:
+                type : icmp
+                icmp :
+                    type        : const/135
+                    code_mask   : const/0xff
+        action:
+            action: redirect
+            intf: cpu
+
+    - entry:
+        id: ACL_ICMPV6_NA_ACTION_SUP_REDIRECT
+        match:
+            type : ip
+            ip:
+                type: v6
+            l4:
+                type : icmp
+                icmp :
+                    type        : const/136
+                    code_mask   : const/0xff
+        action:
+            action: redirect
+            intf: cpu
+
+    - entry:
         id: ACL_IPV6_DIP_ACTION_SUP_REDIRECT
         match:
             type: ip

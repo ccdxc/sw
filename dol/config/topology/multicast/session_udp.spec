@@ -1,7 +1,7 @@
 # Flow generation configuration template.
 
 meta:
-    id: MULTICAST_TOPO_SESSION_DUMMY
+    id: MULTICAST_SESSION_UDP
 
 proto: udp
 

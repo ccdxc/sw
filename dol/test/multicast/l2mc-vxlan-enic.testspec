@@ -21,46 +21,46 @@ packets:
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : 01:00:5E:01:01:01
+                dst     : callback://networking/packets/GetMulticastMacFromIP
             ipv4:
                 src     : ref://testcase/config/flow/sip
-                dst     : 239.1.1.1
+                dst     : callback://networking/packets/GetMulticastIP
                 ttl     : 64
             ipv6:
                 src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
+                dst     : callback://networking/packets/GetMulticastIP
                 hlim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
-            tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
+            igmp:
+                type    : 0x11 # Query
+                gaddr   : 239.1.1.1
             icmp:
                 code    : ref://testcase/config/flow/icmpcode
                 type    : ref://testcase/config/flow/icmptype
                 id      : ref://testcase/config/flow/icmpid
             icmpv6:
-                #code    : ref://testcase/config/flow/icmpcode
-                #type    : ref://testcase/config/flow/icmptype
-                #id      : ref://testcase/config/flow/icmpid
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : TX_PKT_ENIC22     # Input packet
+        id          : TX_PKT_ENIC24     # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             qtag    :
-                vlan: ref://testcase/config/src/segment/floodlist/oifs/id=Enic22/encap_vlan_id
+                vlan: ref://testcase/config/src/segment/floodlist/oifs/id=Enic24/encap_vlan_id
     - packet:
-        id          : EXP_PKT_ENIC23     # Expected packet on Enic23
+        id          : EXP_PKT_ENIC25     # Expected packet on Enic25
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             qtag:
-                vlan: ref://testcase/config/src/segment/floodlist/oifs/id=Enic23/encap_vlan_id
+                vlan: ref://testcase/config/src/segment/floodlist/oifs/id=Enic25/encap_vlan_id
     - packet:
         id          : EXP_PKT_VXLAN1 # Base packet
         clone       : ref://testcase/packets/id=BASE_PKT
@@ -88,57 +88,57 @@ packets:
 
 buffers:
     - buffer:
-        id      : TX_BUF_ENIC22 # Input Buffer
+        id      : TX_BUF_ENIC24 # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
            bind : True
-           size : ref://testcase/packets/id=TX_PKT_ENIC22/size
-           data : ref://testcase/packets/id=TX_PKT_ENIC22/rawbytes
+           size : ref://testcase/packets/id=TX_PKT_ENIC24/size
+           data : ref://testcase/packets/id=TX_PKT_ENIC24/rawbytes
     - buffer:
-        id      : RX_BUF_ENIC23  # Input Buffer
+        id      : RX_BUF_ENIC25  # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: True
             size: 1518
             data: None
     - buffer:
-        id      : EXP_BUF_ENIC23  # Expected Buffer
+        id      : EXP_BUF_ENIC25  # Expected Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind  : False
-            size  : ref://testcase/packets/id=EXP_PKT_ENIC23/size
-            data  : ref://testcase/packets/id=EXP_PKT_ENIC23/rawbytes
+            size  : ref://testcase/packets/id=EXP_PKT_ENIC25/size
+            data  : ref://testcase/packets/id=EXP_PKT_ENIC25/rawbytes
 
 descriptors:
     - descriptor:
-        id      : TX_DESC_ENIC22 # Input Descriptor
+        id      : TX_DESC_ENIC24 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX
         fields:
-            _buf  : ref://testcase/buffers/id=TX_BUF_ENIC22
-            addr  : ref://testcase/buffers/id=TX_BUF_ENIC22/addr
-            len   : ref://testcase/buffers/id=TX_BUF_ENIC22/size
+            _buf  : ref://testcase/buffers/id=TX_BUF_ENIC24
+            addr  : ref://testcase/buffers/id=TX_BUF_ENIC24/addr
+            len   : ref://testcase/buffers/id=TX_BUF_ENIC24/size
     - descriptor:
-        id      : RX_DESC_ENIC23 # Input Descriptor
+        id      : RX_DESC_ENIC25 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
-            _buf  : ref://testcase/buffers/id=RX_BUF_ENIC23
-            addr  : ref://testcase/buffers/id=RX_BUF_ENIC23/addr
-            len   : ref://testcase/buffers/id=RX_BUF_ENIC23/size
+            _buf  : ref://testcase/buffers/id=RX_BUF_ENIC25
+            addr  : ref://testcase/buffers/id=RX_BUF_ENIC25/addr
+            len   : ref://testcase/buffers/id=RX_BUF_ENIC25/size
     - descriptor:
-        id      : EXP_DESC_ENIC23 # Expected Descriptor
+        id      : EXP_DESC_ENIC25 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            _buf          : ref://testcase/buffers/id=EXP_BUF_ENIC23
-            bytes_written : ref://testcase/buffers/id=EXP_BUF_ENIC23/size
+            _buf          : ref://testcase/buffers/id=EXP_BUF_ENIC25
+            bytes_written : ref://testcase/buffers/id=EXP_BUF_ENIC25/size
 
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=TX_DESC_ENIC22
+            object  : ref://testcase/descriptors/id=TX_DESC_ENIC24
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
         - descriptor:
-            object  : ref://testcase/descriptors/id=RX_DESC_ENIC23
-            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic23/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
+            object  : ref://testcase/descriptors/id=RX_DESC_ENIC25
+            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic25/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
 
     doorbell:
         object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
@@ -147,14 +147,6 @@ expect:
     delay   : callback://networking/packets/GetExpectDelay
 
     packets:
-        - packet:
-            object  : ref://testcase/packets/id=EXP_PKT_VXLAN1
-            port    : ref://testcase/config/src/segment/floodlist/oifs/id=Tunnel17/ports
-
-        - packet:
-            object  : ref://testcase/packets/id=EXP_PKT_VXLAN1
-            port    : ref://testcase/config/src/segment/floodlist/oifs/id=Tunnel18/ports
-
         - packet:
             object  : ref://testcase/packets/id=EXP_PKT_VXLAN1
             port    : ref://testcase/config/src/segment/floodlist/oifs/id=Tunnel19/ports
@@ -167,7 +159,15 @@ expect:
             object  : ref://testcase/packets/id=EXP_PKT_VXLAN1
             port    : ref://testcase/config/src/segment/floodlist/oifs/id=Tunnel21/ports
 
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT_VXLAN1
+            port    : ref://testcase/config/src/segment/floodlist/oifs/id=Tunnel22/ports
+
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT_VXLAN1
+            port    : ref://testcase/config/src/segment/floodlist/oifs/id=Tunnel23/ports
+
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=EXP_DESC_ENIC23
-            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic23/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+            object  : ref://testcase/descriptors/id=EXP_DESC_ENIC25
+            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic25/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1

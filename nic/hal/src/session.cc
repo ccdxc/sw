@@ -300,7 +300,7 @@ extract_flow_key_from_spec(tenant_id_t tid,
             key->icmp_code = flow_spec_key.v6_key().icmp().code();
             key->icmp_id = flow_spec_key.v6_key().icmp().id();
             // only echo request and reply
-            if(key->icmp_type != 128 && key->icmp_type != 129) {
+            if(key->icmp_type < 128 || key->icmp_type > 136) {
                 HAL_TRACE_DEBUG("fte: invalid icmp type {}", key->icmp_type);
                 return HAL_RET_INVALID_ARG;
             }

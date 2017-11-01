@@ -15,20 +15,18 @@ packets:
         template    : ref://store/packets/id=ETH_IPV4_IGMP
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
-            # Add all possible headers, the final headers will be selected
-            # based on the Flow.
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : 01:00:5E:00:00:01
+                dst     : callback://networking/packets/GetMulticastMacFromIP
             qtag:
                 vlan    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic15/encap_vlan_id
             ipv4:
                 src     : ref://testcase/config/flow/sip
-                dst     : 224.0.0.1
+                dst     : callback://networking/packets/GetMulticastIP
                 ttl     : 64
             ipv6:
                 src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
+                dst     : callback://networking/packets/GetMulticastIP
                 hlim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport

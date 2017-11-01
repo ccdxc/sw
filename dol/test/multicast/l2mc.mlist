@@ -13,18 +13,24 @@ modules:
         iterate :
             - id  : L2MC-ENIC
               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+            - id  : L2MCV6-ENIC
+              flow: filter://type=IPV6,proto=UDP,label=NETWORKING
     - module:
         name    : L2MC-UPLINK
         spec    : l2mc-uplink.testspec
         iterate:
             - id  : L2MC-UPLINK
               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+            - id  : L2MCV6-UPLINK
+              flow: filter://type=IPV6,proto=UDP,label=NETWORKING
     - module:
         name    : L2MC-UPLINKPC
         spec    : l2mc-uplinkpc.testspec
         iterate :
              - id  : L2MC-UPLINKPC
                flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+             - id  : L2MCV6-UPLINKPC
+               flow: filter://type=IPV6,proto=UDP,label=NETWORKING
     - module:
         name    : L2MC-IGMP-TO-CPU-ENIC
         spec    : l2mc-igmp-to-cpu-enic.testspec
@@ -49,27 +55,123 @@ modules:
         iterate :
             - id  : L2MC-VXLAN-ENIC
               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+            - id  : L2MCV6-VXLAN-ENIC
+              flow: filter://type=IPV6,proto=UDP,label=NETWORKING
     - module:
         name    : L2MC-VXLAN-UPLINK
         spec    : l2mc-vxlan-uplink.testspec
         iterate :
             - id  : L2MC-VXLAN-UPLINK
               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+            - id  : L2MCV6-VXLAN-UPLINK
+              flow: filter://type=IPV6,proto=UDP,label=NETWORKING
     - module:
         name    : L2MC-VXLAN-UPLINKPC
         spec    : l2mc-vxlan-uplinkpc.testspec
         iterate :
             - id  : L2MC-VXLAN-UPLINKPC
               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+            - id  : L2MCV6-VXLAN-UPLINKPC
+              flow: filter://type=IPV6,proto=UDP,label=NETWORKING
     - module:
-        name    : L2MC-VXLAN-IGMP-UPLINK
-        spec    : l2mc-vxlan-igmp-uplink.testspec
+        name    : L2MC-VXLAN-IGMP-TO-CPU-UPLINK
+        spec    : l2mc-vxlan-igmp-to-cpu-uplink.testspec
         iterate :
             - id  : IGMP-TO-CPU
               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
     - module:
-        name    : L2MC-VXLAN-IGMP-UPLINKPC
-        spec    : l2mc-vxlan-igmp-uplinkpc.testspec
+        name    : L2MC-VXLAN-IGMP-TO_CPU-UPLINKPC
+        spec    : l2mc-vxlan-igmp-to-cpu-uplinkpc.testspec
         iterate :
             - id  : IGMP-TO-CPU
               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+    - module:
+        name    : L2MC-ICMPV6-TO-CPU-ENIC
+        spec    : l2mc-icmpv6-to-cpu-enic.testspec
+        iterate :
+            - id  : MLD_QUERY
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : MLD_RESPONSE
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : MLD_DONE
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : ROUTER_SOLICITATION
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : ROUTER_ADVERTISEMENT
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : NEIGHBOR_SOLICITATION
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : NEIGHBOR_ADVERTISEMENT
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+    - module:
+        name    : L2MC-ICMPV6-TO-CPU-UPLINK
+        spec    : l2mc-icmpv6-to-cpu-uplink.testspec
+        iterate :
+            - id  : MLD_QUERY
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : MLD_RESPONSE
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : MLD_DONE
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : ROUTER_SOLICITATION
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : ROUTER_ADVERTISEMENT
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : NEIGHBOR_SOLICITATION
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : NEIGHBOR_ADVERTISEMENT
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+    - module:
+        name    : L2MC-ICMPV6-TO-CPU-UPLINKPC
+        spec    : l2mc-icmpv6-to-cpu-uplinkpc.testspec
+        iterate :
+            - id  : MLD_QUERY
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : MLD_RESPONSE
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : MLD_DONE
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : ROUTER_SOLICITATION
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : ROUTER_ADVERTISEMENT
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : NEIGHBOR_SOLICITATION
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : NEIGHBOR_ADVERTISEMENT
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+    - module:
+        name    : L2MC-VXLAN-ICMPV6-TO-CPU-UPLINK
+        spec    : l2mc-vxlan-icmpv6-to-cpu-uplink.testspec
+        iterate :
+            - id  : MLD_QUERY
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : MLD_RESPONSE
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : MLD_DONE
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : ROUTER_SOLICITATION
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : ROUTER_ADVERTISEMENT
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : NEIGHBOR_SOLICITATION
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : NEIGHBOR_ADVERTISEMENT
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+    - module:
+        name    : L2MC-VXLAN-ICMPV6-TO-CPU-UPLINKPC
+        spec    : l2mc-vxlan-icmpv6-to-cpu-uplinkpc.testspec
+        iterate :
+            - id  : MLD_QUERY
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : MLD_RESPONSE
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : MLD_DONE
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : ROUTER_SOLICITATION
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : ROUTER_ADVERTISEMENT
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : NEIGHBOR_SOLICITATION
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+            - id  : NEIGHBOR_ADVERTISEMENT
+              flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING

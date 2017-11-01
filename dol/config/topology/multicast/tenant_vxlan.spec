@@ -19,8 +19,10 @@ security_profile: None
 sessions:
     unidest:
         ipv4:
-            - ref://store/specs/id=MULTICAST_TOPO_SESSION_DUMMY
-        ipv6: None
+            - ref://store/specs/id=MULTICAST_SESSION_UDP
+        ipv6:
+            - ref://store/specs/id=MULTICAST_SESSION_UDP
+            - ref://store/specs/id=MULTICAST_SESSION_ICMPV6
         mac: None
 
 lif: ref://store/specs/id=LIF_ETH

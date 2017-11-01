@@ -1,6 +1,8 @@
 # /usr/bin/python3
 import pdb
 from infra.api.objects import PacketHeader
+from infra.common.objects import IpAddress
+from infra.common.objects import Ipv6Address
 from infra.common.objects import MacAddressBase
 import infra.api.api as infra_api
 from config.store import Store
@@ -231,8 +233,67 @@ def GetMyTep(testcase, packet):
             return tenant.local_tep
     return None
 
+def GetICMPv6Type(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    if iterelem.id == 'MLD_QUERY':
+        return 130
+    elif iterelem.id == 'MLD_RESPONSE':
+        return 131
+    elif iterelem.id == 'MLD_DONE':
+        return 132
+    elif iterelem.id == 'ROUTER_SOLICITATION':
+        return 133
+    elif iterelem.id == 'ROUTER_ADVERTISEMENT':
+        return 134
+    elif iterelem.id == 'NEIGHBOR_SOLICITATION':
+        return 135
+    elif iterelem.id == 'NEIGHBOR_ADVERTISEMENT':
+        return 136
+
+def GetMulticastIP(testcase, packet):
+    iterelem = testcase.module.iterator.Get()
+    if testcase.config.flow.IsIPV4():
+        if iterelem.id == 'IGMP-TO-CPU':
+            return IpAddress(string='224.0.0.1')
+        else:
+            return IpAddress(string='239.1.1.1')
+    elif testcase.config.flow.IsIPV6():
+        if iterelem.id == 'MLD_QUERY':
+            return Ipv6Address(string='FF02::1')
+        elif iterelem.id == 'MLD_RESPONSE':
+            return Ipv6Address(string='FF02::16')
+        elif iterelem.id == 'MLD_DONE':
+            return Ipv6Address(string='FF02::2')
+        elif iterelem.id == 'ROUTER_SOLICITATION':
+            return Ipv6Address(string='FF02::2')
+        elif iterelem.id == 'ROUTER_ADVERTISEMENT':
+            return Ipv6Address(string='FF02::1')
+        elif iterelem.id == 'NEIGHBOR_SOLICITATION':
+            return Ipv6Address(string='ff08::1')
+        elif iterelem.id == 'NEIGHBOR_ADVERTISEMENT':
+            return Ipv6Address(string='FF02::1')
+        else:
+            return Ipv6Address(string='ff08::1')
+    else:
+        assert(0)
+
+def GetMulticastMacFromIPv4(ip):
+    return MacAddressBase(integer=(0x01005E000000 | (ip.getnum() & 0x007FFFFF)))
+
+def GetMulticastMacFromIPv6(ip):
+    return MacAddressBase(integer=(0x333300000000 | (ip.getnum() & 0xFFFFFFFF)))
+
+def GetMulticastMacFromIP(testcase, packet):
+    ip = GetMulticastIP(testcase, packet)
+    if testcase.config.flow.IsIPV4():
+        return GetMulticastMacFromIPv4(ip)
+    elif testcase.config.flow.IsIPV6():
+        return GetMulticastMacFromIPv6(ip)
+    else:
+        assert(0)
+
 def GetGIPoMac(testcase, packet):
-    return MacAddressBase(integer=(0x01005E000000 | (testcase.config.src.segment.gipo.getnum() & 0x007FFFFF)))
+    return GetMulticastMacFromIPv4(testcase.config.src.segment.gipo)
 
 def GetPacketRawBytes(testcase, packet):
     packet.Build(testcase)
