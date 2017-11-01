@@ -333,6 +333,16 @@ header_type tcp_option_four_sack_t {
     }
 }
 
+header_type tcp_option_unknown_t {
+    fields {
+        optType : 8;
+        optLength : 8;
+        data : *;
+    }
+    length : optLength;
+    max_length : 40;
+}
+
 header_type tcp_t {
     fields {
         srcPort : 16;

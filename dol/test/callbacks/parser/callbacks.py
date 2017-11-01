@@ -68,6 +68,7 @@ TcpOption2ObjectList = {
     'TCP_MSS_EOL_WSCALE'    : [ TcpOptionMss, TcpOptionEol, TcpOptionWscale ],
     'TCP_AO'                : [ TcpOptionAO ],
     'TCP_EXP1'              : [ TcpOptionExp1 ],
+    'TCP_AO_NOP'            : [ TcpOptionAO, TcpOptionNop ],
 }
 
 def GetTcpOptions(tc, pkt):

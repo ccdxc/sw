@@ -73,6 +73,7 @@ header_type control_metadata_t {
         vlan_strip                     : 1;
         span_copy                      : 1;
         nic_mode                       : 1;
+        parse_tcp_option_error         : 1;
 
         egress_ddos_src_vf_policer_drop   : 1;
         egress_ddos_service_policer_drop  : 1;
