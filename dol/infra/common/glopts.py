@@ -44,7 +44,8 @@ parser.add_argument('--tcscale', dest='tcscale', default=None,
 #                    help='Configuration Scale Factor.')
 GlobalOptions = parser.parse_args()
 
-if GlobalOptions.topology is None or GlobalOptions.feature is None:
-    print("Error: Manadatory args 'topo' and 'feature' are missing.")
-    print("Usage: ./main.py --topo <topology-name> --feature <feature1,feature2...>")
-    sys.exit(1)
+def ValidateGlopts():
+    if GlobalOptions.topology is None or GlobalOptions.feature is None:
+        print("Error: Manadatory args 'topo' and 'feature' are missing.")
+        print("Usage: ./main.py --topo <topology-name> --feature <feature1,feature2...>")
+        sys.exit(1)

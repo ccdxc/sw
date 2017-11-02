@@ -4,6 +4,7 @@
 #include "nic/include/base.h"
 #include "grpc++/grpc++.h"
 #include "nic/gen/proto/hal/types.pb.h"
+#include "nic/gen/proto/hal/key_handles.pb.h"
 #include "nic/gen/proto/hal/tenant.grpc.pb.h"
 
 using grpc::ServerContext;
@@ -13,7 +14,7 @@ using tenant::Tenant;
 using tenant::TenantSpec;
 using tenant::TenantStatus;
 using tenant::TenantResponse;
-using tenant::TenantKeyHandle;
+using key_handles::TenantKeyHandle;
 using tenant::TenantRequestMsg;
 using tenant::TenantResponseMsg;
 using tenant::TenantDeleteRequest;

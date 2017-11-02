@@ -3,7 +3,7 @@ targets:
   main: ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && make bazel-gtests && make run-gtests" ]
   storage:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --storage" ]
   rdma:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo rdma --feature rdma,rdma_perf" ]
-  #config:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo eth --feature config" ]
+  config:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --configtest" ]
   fte:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo fte --feature fte" ]
   fte2:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo fte --feature fte2" ]
   ftevxlan:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo fte --feature ftevxlan" ]

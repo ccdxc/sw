@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "key_handles.proto";
 
 package nwsec;
 option go_package="halproto";
@@ -40,14 +41,6 @@ enum NormalizationAction {
   NORM_ACTION_EDIT    = 3;    // reset/trim/fix invalid fields/flags
 }
 
-// SecurityProfileKeyHandle is used to operate on a security profile
-// either by its id or HAL allocated handle
-message SecurityProfileKeyHandle {
-  oneof key_or_handle {
-    uint32     profile_id     = 1;     // App allocated unique security profile id
-    fixed64    profile_handle = 2;     // id of the SecurityProfile returned by HAL
-  }
-}
 
 // SecurityProfileSpec object captures feature knobs that are most likely
 // shareable across L2 segments, tenants, or even interfaces and most of the
@@ -58,7 +51,7 @@ message SecurityProfileKeyHandle {
 //       in the defaults when interacting with HAL.
 message SecurityProfileSpec {
   types.ObjectMeta             meta                            = 1;    // common object meta
-  SecurityProfileKeyHandle     key_or_handle                   = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  key_handles.SecurityProfileKeyHandle     key_or_handle       = 2 [(gogoproto.moretags) = "venice:\"key\""];
   bool                         cnxn_tracking_en                = 3;
   bool                         ipsg_en                         = 4;
   bool                         tcp_rtt_estimate_en             = 5;
@@ -77,7 +70,7 @@ message SecurityProfileSpec {
   NormalizationAction          ip_df_action                    = 22;
   NormalizationAction          ip_options_action               = 23;
   NormalizationAction          ip_invalid_len_action           = 24;
-  uint32                       ip_normalize_ttl                = 25;
+  uint32                       ip_normalize_ttl                = 25 [(gogoproto.moretags) = "range:0-255"];
 
   // ICMP/ICMPv6 normalization knobs
   NormalizationAction          icmp_invalid_code_action        = 30;
@@ -117,7 +110,7 @@ message SecurityProfileStatus {
 
 // SecurityProfileResponse is response to SecurityProfileSpec
 message SecurityProfileResponse {
-  types.ApiStatus          api_status     = 1;    // API status code
+  types.ApiStatus          api_status     = 1	[(gogoproto.jsontag) = "api_status"]; // API status code
   SecurityProfileStatus    profile_status = 2;    // SecurityProfile profile operational status
 }
 
@@ -128,9 +121,9 @@ message SecurityProfileResponseMsg {
 
 // SecurityProfileDeleteRequest is used to delete a SecurityProfile profile
 message SecurityProfileDeleteRequest {
-  types.ObjectMeta            meta          = 1;    // object meta
+  types.ObjectMeta            meta        			    = 1;    // object meta
   // key_or_handle is to identify SecurityProfile being deleted
-  SecurityProfileKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  key_handles.SecurityProfileKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // SecurityProfileDeleteRequestMsg is used to delete a batch of SecurityProfile profiles
@@ -138,16 +131,22 @@ message SecurityProfileDeleteRequestMsg {
   repeated SecurityProfileDeleteRequest request = 1;    // batched delete request
 }
 
+// SecurityProfileResponse is response to SecurityProfileSpec
+message SecurityProfileDeleteResponse {
+  types.ApiStatus          api_status     = 1 [(gogoproto.jsontag) = "api_status"]; // API status code
+  SecurityProfileStatus    profile_status = 2;    // SecurityProfile profile operational status
+}
+
 // SecurityProfileDeleteResponseMsg is batched response to SecurityProfileDeleteRequestMsg
 message SecurityProfileDeleteResponseMsg {
-  repeated types.ApiStatus    api_status = 1;    // API status code
+  repeated SecurityProfileDeleteResponse    response = 1;    // batched response
 }
 
 // SecurityProfileGetRequest is used to get information about a L2 Segment
 message SecurityProfileGetRequest {
-  types.ObjectMeta            meta          = 1;    // object meta
+  types.ObjectMeta                         meta          = 1;    // object meta
   // key_or_handle is the security profile's identifier for retrieval
-  SecurityProfileKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+   key_handles.SecurityProfileKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // SecurityProfileGetRequestMsg is batched GET request for SecurityProfile profiles
@@ -161,7 +160,7 @@ message SecurityProfileStats {
 
 // SecurityProfileGetResponse captures all the information about a SecurityProfile profile
 message SecurityProfileGetResponse {
-  types.ApiStatus          api_status = 1;    // API status code
+  types.ApiStatus          api_status = 1    [(gogoproto.jsontag) = "api_status"];// API status code
   SecurityProfileSpec      spec       = 2;    // config spec
   SecurityProfileStatus    status     = 3;    // operational status
   SecurityProfileStats     stats      = 4;    // stats, if any
@@ -169,8 +168,7 @@ message SecurityProfileGetResponse {
 
 // SecurityProfileGetResponseMsg is the batched response to SecurityProfileGetRequestMsg
 message SecurityProfileGetResponseMsg {
-  types.ApiStatus                         api_status = 1;    // API status code
-  repeated SecurityProfileGetResponse     response   = 2;    // batched get response
+  repeated SecurityProfileGetResponse     response   = 1;    // batched get response
 }
 
 // Firewall policy actions

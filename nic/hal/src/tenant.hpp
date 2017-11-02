@@ -7,21 +7,22 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/gen/proto/hal/tenant.pb.h"
+#include "nic/gen/proto/hal/key_handles.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/hal/src/nwsec.hpp"
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
-using tenant::TenantKeyHandle;
+using key_handles::TenantKeyHandle;
 
 using tenant::TenantSpec;
 using tenant::TenantStatus;
 using tenant::TenantResponse;
-using tenant::TenantKeyHandle;
 using tenant::TenantRequestMsg;
 using tenant::TenantResponseMsg;
 using tenant::TenantDeleteRequest;
+using tenant::TenantDeleteResponse;
 using tenant::TenantDeleteRequestMsg;
 using tenant::TenantDeleteResponseMsg;
 using tenant::TenantGetRequest;
@@ -207,7 +208,7 @@ hal_ret_t tenant_create_v2(tenant::TenantSpec& spec,
 hal_ret_t tenant_update(tenant::TenantSpec& spec,
                         tenant::TenantResponse *rsp);
 hal_ret_t tenant_delete(tenant::TenantDeleteRequest& req,
-                        tenant::TenantDeleteResponseMsg *rsp);
+                        tenant::TenantDeleteResponse *rsp);
 hal_ret_t tenant_get(tenant::TenantGetRequest& req,
                      tenant::TenantGetResponse *rsp);
 #if 0

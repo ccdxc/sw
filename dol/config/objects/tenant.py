@@ -237,7 +237,7 @@ class TenantObject(base.ConfigObjectBase):
         reqspec.meta.tenant_id          = self.id
         reqspec.key_or_handle.tenant_id = self.id
         if self.security_profile:
-            reqspec.security_profile_handle = self.security_profile.hal_handle
+            reqspec.security_key_handle.profile_handle = self.security_profile.hal_handle
             self.security_profile_handle = self.security_profile.hal_handle
         if self.IsInfra():
             reqspec.tenant_type = haldefs.common.TENANT_TYPE_INFRA

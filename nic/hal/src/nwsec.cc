@@ -683,7 +683,7 @@ nwsec_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     // update clone with new values
     if (app_ctxt->nwsec_changed) {
-        nwsec_profile_init_from_spec(nwsec, *app_ctxt->spec);
+        nwsec_profile_init_from_spec(nwsec_clone, *app_ctxt->spec);
     }
 
     // Free PD
@@ -828,7 +828,7 @@ end:
 //------------------------------------------------------------------------------
 static hal_ret_t
 validate_nwsec_delete_req (SecurityProfileDeleteRequest& req, 
-                       SecurityProfileDeleteResponseMsg *rsp)
+                       SecurityProfileDeleteResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -968,7 +968,7 @@ validate_nwsec_delete (nwsec_profile_t *nwsec)
 //------------------------------------------------------------------------------
 hal_ret_t
 security_profile_delete (SecurityProfileDeleteRequest& req, 
-                         SecurityProfileDeleteResponseMsg *rsp)
+                         SecurityProfileDeleteResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     nwsec_profile_t                 *nwsec = NULL;
@@ -1020,7 +1020,7 @@ security_profile_delete (SecurityProfileDeleteRequest& req,
                              nwsec_delete_cleanup_cb);
 
 end:
-    rsp->add_api_status(hal_prepare_rsp(ret));
+    rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: security profile delete ");
     return ret;
 }
@@ -1041,7 +1041,7 @@ security_profile_get (nwsec::SecurityProfileGetRequest& req,
     // lookup this security profile
     sec_prof = nwsec_lookup_key_or_handle(req.key_or_handle());
     if (!sec_prof) {
-        rsp->set_api_status(types::API_STATUS_NWSEC_PROFILE_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_INVALID_ARG;
     }
 

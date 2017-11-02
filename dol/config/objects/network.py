@@ -79,6 +79,7 @@ class NetworkObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.tenant_id = self.segment.tenant.id
+        req_spec.tenant_key_handle.tenant_id = self.segment.tenant.id
         req_spec.rmac = self.rmac.getnum()
         if self.IsIpv4():
             req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET

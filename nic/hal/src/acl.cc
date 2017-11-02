@@ -572,7 +572,7 @@ extract_match_spec (acl_match_spec_t *ms,
         ms->tenant_match = true;
 
         auto tenant_kh = sel.tenant_key_handle();
-        if (tenant_kh.key_or_handle_case() == tenant::TenantKeyHandle::kTenantId) {
+        if (tenant_kh.key_or_handle_case() == key_handles::TenantKeyHandle::kTenantId) {
             tenant_id = tenant_kh.tenant_id();
             tenant = tenant_lookup_by_id(tenant_id);
         } else {
@@ -593,7 +593,7 @@ extract_match_spec (acl_match_spec_t *ms,
         ms->l2seg_match = true;
 
         auto l2seg_kh = sel.l2segment_key_handle();
-        if (l2seg_kh.key_or_handle_case() == l2segment::L2SegmentKeyHandle::kSegmentId) {
+        if (l2seg_kh.key_or_handle_case() == key_handles::L2SegmentKeyHandle::kSegmentId) {
             l2seg_id = l2seg_kh.segment_id();
             l2seg = find_l2seg_by_id(l2seg_id);
         } else {

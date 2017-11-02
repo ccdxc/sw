@@ -78,7 +78,7 @@ TEST_F(nw_test, test1)
     NetworkSpec                     nw_spec, nw_spec_v6;
     NetworkResponse                 nw_rsp, nw_rsp_v6;
     NetworkDeleteRequest            nw_del_req;
-    NetworkDeleteResponseMsg        nw_del_rsp;
+    NetworkDeleteResponse           nw_del_rsp;
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
     hal_handle_t                    nw_v4handles[100], nw_v6handles[100];
@@ -107,7 +107,7 @@ TEST_F(nw_test, test1)
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(1);
-    ten_spec.set_security_profile_handle(nwsec_hdl);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();

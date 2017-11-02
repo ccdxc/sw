@@ -18,12 +18,11 @@ using types::L2SegmentType;
 
 using hal::utils::ht_ctxt_t;
 using hal::utils::dllist_ctxt_t;
-using l2segment::L2SegmentKeyHandle;
 
+using key_handles::L2SegmentKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentStatus;
 using l2segment::L2SegmentResponse;
-using l2segment::L2SegmentKeyHandle;
 using l2segment::L2SegmentRequestMsg;
 using l2segment::L2SegmentResponseMsg;
 using l2segment::L2SegmentDeleteRequestMsg;

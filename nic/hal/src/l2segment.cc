@@ -1412,9 +1412,9 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
     }
     auto kh = req.key_or_handle();
 
-    if (kh.key_or_handle_case() == l2segment::L2SegmentKeyHandle::kSegmentId) {
+    if (kh.key_or_handle_case() == key_handles::L2SegmentKeyHandle::kSegmentId) {
         l2seg = find_l2seg_by_id(kh.segment_id());
-    } else if (kh.key_or_handle_case() == l2segment::L2SegmentKeyHandle::kL2SegmentHandle) {
+    } else if (kh.key_or_handle_case() == key_handles::L2SegmentKeyHandle::kL2SegmentHandle) {
         l2seg = find_l2seg_by_handle(kh.l2segment_handle());
     } else {
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);

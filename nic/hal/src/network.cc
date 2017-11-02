@@ -136,8 +136,8 @@ validate_network_create (NetworkSpec& spec, NetworkResponse *rsp)
         return HAL_RET_INVALID_ARG;
     }
 
-    if (!spec.has_meta() ||
-        spec.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
+    if (!spec.has_tenant_key_handle() ||
+        spec.tenant_key_handle().tenant_id() == HAL_TENANT_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
@@ -322,7 +322,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
     }
 
     // fetch the tenant information
-    tid = spec.meta().tenant_id();
+    tid = spec.tenant_key_handle().tenant_id();
     tenant = tenant_lookup_by_id(tid);
     if (tenant == NULL) {
         HAL_TRACE_ERR("pi-network:{}: unable to retrieve tenant_id:{}",
@@ -980,14 +980,12 @@ end:
 // process a tenant get request
 //------------------------------------------------------------------------------
 hal_ret_t
-network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
+network_get (NetworkGetRequest& req, NetworkGetResponse *rsp)
 {
     network_key_t         nw_key = { 0 };
     ip_prefix_t           ip_pfx = { 0 };
     network_t             *nw;
-    NetworkGetResponse    *response;
 
-    response = rsp->add_response();
     if (!req.has_meta() ||
         req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
@@ -999,7 +997,7 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
         if (kh.key_or_handle_case() == NetworkKeyHandle::kIpPrefix) {
             auto nw_pfx = kh.ip_prefix();
 
-            nw_key.tenant_id = req.meta().tenant_id();
+            nw_key.tenant_id = req.tenant_key_handle().tenant_id();
             ip_pfx_spec_to_pfx_spec(&ip_pfx, nw_pfx);
 
             nw = find_network_by_key(nw_key.tenant_id, &ip_pfx);
@@ -1017,15 +1015,13 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
     }
 
     if (nw == NULL) {
-        rsp->set_api_status(types::API_STATUS_ENDPOINT_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_EP_NOT_FOUND;
     }
 
     // fill config spec of this tenant
-    response->mutable_spec()->mutable_meta()->set_tenant_id(nw->nw_key.tenant_id);
-    response->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
-
-    response->set_api_status(types::API_STATUS_OK);
+    rsp->mutable_spec()->mutable_meta()->set_tenant_id(nw->nw_key.tenant_id);
+    rsp->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
@@ -1033,7 +1029,7 @@ network_get (NetworkGetRequest& req, NetworkGetResponseMsg *rsp)
 
 hal_ret_t
 validate_network_delete_req (NetworkDeleteRequest& req, 
-                         NetworkDeleteResponseMsg* rsp)
+                         NetworkDeleteResponse* rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -1187,7 +1183,7 @@ network_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // process a tenant delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-network_delete (NetworkDeleteRequest& req, NetworkDeleteResponseMsg *rsp)
+network_delete (NetworkDeleteRequest& req, NetworkDeleteResponse *rsp)
 {
     hal_ret_t           ret = HAL_RET_OK;
     network_t           *nw = NULL;
@@ -1207,7 +1203,7 @@ network_delete (NetworkDeleteRequest& req, NetworkDeleteResponseMsg *rsp)
         goto end;
     }
 
-    nw = network_lookup_key_or_handle(kh, req.meta().tenant_id());
+    nw = network_lookup_key_or_handle(kh, req.tenant_key_handle().tenant_id());
     if (nw == NULL) {
         HAL_TRACE_ERR("pi-network:{}:failed to find nw handle {}",
                       __FUNCTION__, kh.nw_handle());
@@ -1240,7 +1236,7 @@ network_delete (NetworkDeleteRequest& req, NetworkDeleteResponseMsg *rsp)
                              network_delete_cleanup_cb);
 
 end:
-    rsp->add_api_status(hal_prepare_rsp(ret));
+    rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: network delete ");
     return ret;
 }

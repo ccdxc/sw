@@ -13,7 +13,7 @@ using nw::Network;
 using nw::NetworkSpec;
 using nw::NetworkStatus;
 using nw::NetworkResponse;
-using nw::NetworkKeyHandle;
+using key_handles::NetworkKeyHandle;
 using nw::NetworkRequestMsg;
 using nw::NetworkResponseMsg;
 using nw::NetworkDeleteRequest;

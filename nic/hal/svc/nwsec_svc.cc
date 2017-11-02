@@ -61,6 +61,7 @@ NwSecurityServiceImpl::SecurityProfileDelete(ServerContext *context,
                                              SecurityProfileDeleteResponseMsg *rsp)
 {
     uint32_t     i, nreqs = req->request_size();
+    SecurityProfileDeleteResponse    *response;
 
     HAL_TRACE_DEBUG("Rcvd SecurityProfile Delete Request");
     if (nreqs == 0) {
@@ -69,8 +70,9 @@ NwSecurityServiceImpl::SecurityProfileDelete(ServerContext *context,
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
         auto spec = req->request(i);
-        hal::security_profile_delete(spec, rsp);
+        hal::security_profile_delete(spec, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;

@@ -1,0 +1,54 @@
+//------------------------------------------------------------------------------
+// protobuf specification for global objects. HAL's static global configuration
+// comes from hal.json that HAL uses when it comes up. However, there are few
+// knobs that are global to the NIC and can be changed after init time. Those
+// are captured here. For example, NIC can boot in classic mode and then connect
+// to Pensando controller that can make it trasition to flow mode.
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+package key_handles;
+option go_package="halproto";
+
+// import public "protos/github/gogo/protobuf/gogoproto/gogo.proto";
+import "types.proto";
+import public "gogo.proto";
+
+// SecurityProfileKeyHandle is used to operate on a security profile
+// either by its id or HAL allocated handle
+message SecurityProfileKeyHandle {
+  oneof key_or_handle {
+    uint32     profile_id     = 1 [(gogoproto.jsontag) = "unique"];     // App allocated unique security profile id
+    fixed64    profile_handle = 2 [(gogoproto.jsontag) = "handle"];     // id of the SecurityProfile returned by HAL
+  }
+}
+
+
+// TenantKeyHandle is used to operate on a tenant either by its key or handle
+message TenantKeyHandle {
+  oneof key_or_handle {
+    uint32     tenant_id     = 1  [(gogoproto.jsontag) = "unique"];   // unique tenant id allocated by app
+    fixed64    tenant_handle = 2 [(gogoproto.jsontag) = "handle"];    // tenant handle returned by HAL
+  }
+}
+
+// NetworkKeyHandle uniquely identifies a Network
+message NetworkKeyHandle {
+  oneof key_or_handle {
+    types.IPPrefix     ip_prefix    = 1;    // IP prefix
+    fixed64            nw_handle    = 2  [(gogoproto.jsontag) = "handle"];    // network's handle returned by HAL
+  }
+}
+
+// L2SegmentKeyHandle is used to operate on a L2 segment either by its
+// segment id or HAL allocated handle
+message L2SegmentKeyHandle {
+  oneof key_or_handle {
+    uint32     segment_id        = 1 [(gogoproto.jsontag) = "unique"];   // App allocated unique L2 segment id
+                                         // NOTE:
+                                         // 1. this is unique across all types of L2 segments
+                                         // 2. this is allocated by the HAL app
+    fixed64    l2segment_handle  = 2 [(gogoproto.jsontag) = "handle"];     // id of the L2 segment returned by HAL
+  }
+}

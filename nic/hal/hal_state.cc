@@ -1655,6 +1655,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->tenant_slab()->free_(elem);
         break;
 
+    case HAL_SLAB_NETWORK:
+        g_hal_state->network_slab()->free_(elem);
+        break;
+
     case HAL_SLAB_L2SEG:
         g_hal_state->l2seg_slab()->free_(elem);
         break;

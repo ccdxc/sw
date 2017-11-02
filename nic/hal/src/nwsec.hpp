@@ -7,17 +7,19 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/utils/ht/ht.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"
+#include "nic/gen/proto/hal/key_handles.pb.h"
 #include "nic/include/pd.hpp"
 
 using hal::utils::ht_ctxt_t;
 
-using nwsec::SecurityProfileKeyHandle;
+using key_handles::SecurityProfileKeyHandle;
 using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileRequestMsg;
 using nwsec::SecurityProfileStatus;
 using nwsec::SecurityProfileResponse;
 using nwsec::SecurityProfileResponseMsg;
 using nwsec::SecurityProfileDeleteRequest;
+using nwsec::SecurityProfileDeleteResponse;
 using nwsec::SecurityProfileDeleteRequestMsg;
 using nwsec::SecurityProfileDeleteResponseMsg;
 using nwsec::SecurityProfileGetRequest;
@@ -626,7 +628,7 @@ hal_ret_t security_profile_update(nwsec::SecurityProfileSpec& spec,
                                   nwsec::SecurityProfileResponse *rsp);
 
 hal_ret_t security_profile_delete(nwsec::SecurityProfileDeleteRequest& req,
-                                  nwsec::SecurityProfileDeleteResponseMsg *rsp);
+                                  nwsec::SecurityProfileDeleteResponse *rsp);
 
 hal_ret_t security_profile_get(nwsec::SecurityProfileGetRequest& req,
                                nwsec::SecurityProfileGetResponse *rsp);

@@ -1727,7 +1727,7 @@ fetch_l2seg_ifl2seg (InterfaceL2SegmentSpec& spec)
 {
 
     if (spec.l2segment_key_or_handle().key_or_handle_case() ==
-            l2segment::L2SegmentKeyHandle::kSegmentId) {
+            key_handles::L2SegmentKeyHandle::kSegmentId) {
         return find_l2seg_by_id(spec.l2segment_key_or_handle().segment_id());
     } else {
         return find_l2seg_by_handle(spec.l2segment_key_or_handle().l2segment_handle());
@@ -1751,7 +1751,7 @@ validate_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
 
     // L2 segment has to exist
     if (spec.l2segment_key_or_handle().key_or_handle_case() == 
-            l2segment::L2SegmentKeyHandle::kSegmentId && 
+            key_handles::L2SegmentKeyHandle::kSegmentId &&
             !find_l2seg_by_id(spec.l2segment_key_or_handle().segment_id())) {
         HAL_TRACE_ERR("{}:failed to find l2seg with id:{}", 
                       __FUNCTION__, 
@@ -1759,7 +1759,7 @@ validate_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         return HAL_RET_L2SEG_NOT_FOUND;
     }
     if (spec.l2segment_key_or_handle().key_or_handle_case() == 
-            l2segment::L2SegmentKeyHandle::kL2SegmentHandle &&
+            key_handles::L2SegmentKeyHandle::kL2SegmentHandle &&
             !find_l2seg_by_handle(spec.l2segment_key_or_handle().l2segment_handle())) {
         HAL_TRACE_ERR("{}:failed to find l2seg with handle:{}", 
                       __FUNCTION__, 

@@ -364,7 +364,7 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     }
     tenant->tenant_type = spec.tenant_type();
     tenant->tenant_id = spec.key_or_handle().tenant_id();
-    tenant->nwsec_profile_handle = spec.security_profile_handle();
+    tenant->nwsec_profile_handle = spec.security_key_handle().profile_handle();
     if (tenant->nwsec_profile_handle == HAL_HANDLE_INVALID) {
         HAL_TRACE_DEBUG("pi-tenant:{}: No nwsec prof passed, "
                         "using default security profile", __FUNCTION__);
@@ -494,10 +494,10 @@ tenant_nwsec_update (TenantSpec& spec, tenant_t *tenant, bool *nwsec_change,
                      hal_handle_t *new_nwsec_handle)
 {
     *nwsec_change = false;
-    if (tenant->nwsec_profile_handle != spec.security_profile_handle()) {
+    if (tenant->nwsec_profile_handle != spec.security_key_handle().profile_handle()) {
         HAL_TRACE_DEBUG("pi-tenant:{}:nwSec profile updated", __FUNCTION__);
         *nwsec_change = true;
-        *new_nwsec_handle = spec.security_profile_handle();
+        *new_nwsec_handle = spec.security_key_handle().profile_handle();
     }
 
     return HAL_RET_OK;
@@ -803,7 +803,8 @@ end:
 hal_ret_t
 tenant_get (TenantGetRequest& req, TenantGetResponse *rsp)
 {
-    tenant_t     *tenant;
+    tenant_t        *tenant;
+    nwsec_profile_t *sec_prof = NULL;
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
@@ -822,14 +823,17 @@ tenant_get (TenantGetRequest& req, TenantGetResponse *rsp)
     }
 
     if (tenant == NULL) {
-        rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
         return HAL_RET_TENANT_NOT_FOUND;
     }
 
     // fill config spec of this tenant
     rsp->mutable_spec()->mutable_meta()->set_tenant_id(tenant->tenant_id);
     rsp->mutable_spec()->mutable_key_or_handle()->set_tenant_id(tenant->tenant_id);
-    rsp->mutable_spec()->set_security_profile_handle(tenant->nwsec_profile_handle);
+    sec_prof = find_nwsec_profile_by_handle(tenant->nwsec_profile_handle);
+    if (sec_prof != NULL) {
+        rsp->mutable_spec()->mutable_security_key_handle()->set_profile_id(sec_prof->profile_id);
+    }
 
     // fill operational state of this tenant
     rsp->mutable_status()->set_tenant_handle(tenant->hal_handle);
@@ -839,6 +843,7 @@ tenant_get (TenantGetRequest& req, TenantGetResponse *rsp)
     rsp->mutable_stats()->set_num_security_groups(tenant->num_sg);
     rsp->mutable_stats()->set_num_l4lb_services(tenant->num_l4lb_svc);
     rsp->mutable_stats()->set_num_endpoints(tenant->num_ep);
+    rsp->mutable_spec()->set_tenant_type(tenant->tenant_type);
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
@@ -848,7 +853,7 @@ tenant_get (TenantGetRequest& req, TenantGetResponse *rsp)
 // validate tenant delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_tenant_delete_req (TenantDeleteRequest& req, TenantDeleteResponseMsg *rsp)
+validate_tenant_delete_req (TenantDeleteRequest& req, TenantDeleteResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -1022,7 +1027,7 @@ validate_tenant_delete (tenant_t *tenant)
 // process a tenant delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_delete (TenantDeleteRequest& req, TenantDeleteResponseMsg *rsp)
+tenant_delete (TenantDeleteRequest& req, TenantDeleteResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     tenant_t                    *tenant = NULL;
@@ -1074,7 +1079,7 @@ tenant_delete (TenantDeleteRequest& req, TenantDeleteResponseMsg *rsp)
                              tenant_delete_cleanup_cb);
 
 end:
-    rsp->add_api_status(hal_prepare_rsp(ret));
+    rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: tenant delete ");
     return ret;
 }

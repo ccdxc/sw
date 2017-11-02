@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "key_handles.proto";
 import "l2segment.proto";
 import "qos.proto";
 
@@ -541,7 +542,7 @@ message InterfaceGetResponseMsg {
 // on an uplink interface or uplink PC
 message InterfaceL2SegmentSpec {
   types.ObjectMeta                meta                       = 1;    // object meta
-  l2segment.L2SegmentKeyHandle    l2segment_key_or_handle    = 2;    // L2 segment Id corresponding to the vlan
+  key_handles.L2SegmentKeyHandle    l2segment_key_or_handle  = 2;    // L2 segment Id corresponding to the vlan
   InterfaceKeyHandle              if_key_handle              = 3;    // Uplink/Uplink PC key or handle
 }
 

@@ -70,7 +70,7 @@ TEST_F(nwsec_test, test1)
     SecurityProfileSpec                     sp_spec;
     SecurityProfileResponse                 sp_rsp;
     SecurityProfileDeleteRequest            del_req;
-    SecurityProfileDeleteResponseMsg        del_rsp;    
+    SecurityProfileDeleteResponse           del_rsp;
     slab_stats_t                            *pre = NULL, *post = NULL;
     bool                                    is_leak = false;
 

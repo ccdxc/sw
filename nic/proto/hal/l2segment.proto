@@ -9,6 +9,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "key_handles.proto";
 
 package l2segment;
 option go_package="halproto";
@@ -20,17 +21,6 @@ service L2Segment {
   rpc L2SegmentGet (L2SegmentGetRequestMsg) returns (L2SegmentGetResponseMsg) {}
 }
 
-// L2SegmentKeyHandle is used to operate on a L2 segment either by its
-// segment id or HAL allocated handle
-message L2SegmentKeyHandle {
-  oneof key_or_handle {
-    uint32     segment_id      = 1;      // App allocated unique L2 segment id
-                                         // NOTE:
-                                         // 1. this is unique across all types of L2 segments
-                                         // 2. this is allocated by the HAL app
-    fixed64    l2segment_handle = 2;     // id of the L2 segment returned by HAL
-  }
-}
 
 // BroadcastFwdPolicy defines various forwarding options to deal with
 // broadcast traffic
@@ -53,7 +43,7 @@ enum MulticastFwdPolicy {
 message L2SegmentSpec {
   types.ObjectMeta       meta                       = 1;    // common object meta
   // key_or_handle is L2 segment's unique identifier
-  L2SegmentKeyHandle     key_or_handle              = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  key_handles.L2SegmentKeyHandle     key_or_handle  = 2 [(gogoproto.moretags) = "venice:\"key\""];
   repeated fixed64       network_handle             = 3;    // network handle
   types.L2SegmentType    segment_type               = 4;    // L2 segment type
   MulticastFwdPolicy     mcast_fwd_policy           = 5;    // multicast forwarding policy
@@ -89,7 +79,7 @@ message L2SegmentResponseMsg {
 message L2SegmentDeleteRequest {
   types.ObjectMeta      meta          = 1;    // object meta
   // key_or_handle is L2 segment's unique identifier
-  L2SegmentKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  key_handles.L2SegmentKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // L2SegmentDeleteRequestMsg is used to delete a batch of L2 segments
@@ -106,7 +96,7 @@ message L2SegmentDeleteResponseMsg {
 message L2SegmentGetRequest {
   types.ObjectMeta      meta          = 1;    // object meta
   // key_or_handle is L2 segment's unique identifier
-  L2SegmentKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
+  key_handles.L2SegmentKeyHandle    key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
 }
 
 // L2SegmentGetRequestMsg is batched GET request for L2 segments

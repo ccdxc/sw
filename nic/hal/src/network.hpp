@@ -8,10 +8,11 @@
 using nw::NetworkSpec;
 using nw::NetworkStatus;
 using nw::NetworkResponse;
-using nw::NetworkKeyHandle;
+using key_handles::NetworkKeyHandle;
 using nw::NetworkRequestMsg;
 using nw::NetworkResponseMsg;
 using nw::NetworkDeleteRequest;
+using nw::NetworkDeleteResponse;
 using nw::NetworkDeleteRequestMsg;
 using nw::NetworkDeleteResponseMsg;
 using nw::NetworkGetRequest;
@@ -206,9 +207,9 @@ hal_ret_t network_create(nw::NetworkSpec& spec,
 hal_ret_t network_update(nw::NetworkSpec& spec,
                          nw::NetworkResponse *rsp);
 hal_ret_t network_delete(nw::NetworkDeleteRequest& req,
-                         nw::NetworkDeleteResponseMsg *rsp);
+                         nw::NetworkDeleteResponse *rsp);
 hal_ret_t network_get(nw::NetworkGetRequest& req,
-                      nw::NetworkGetResponseMsg *rsp);
+                      nw::NetworkGetResponse *rsp);
 
 }    // namespace hal
 

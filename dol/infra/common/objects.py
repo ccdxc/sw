@@ -524,6 +524,11 @@ class CallbackField(FrameworkFieldObject):
         self.__process_package()
         return
 
+    __package_path = None
+    @staticmethod
+    def SetPackagePath(path):
+        CallbackField.__package_path = path
+        
     def __process_args(self):
         argstr = self.valobj.params[self.pidx]
         if '=' not in argstr:
@@ -544,7 +549,7 @@ class CallbackField(FrameworkFieldObject):
 
     def __process_package(self):
         pkg_str_list = self.valobj.params[:self.pidx+1]
-        self.pkg = 'test.callbacks'
+        self.pkg = 'test.callbacks' if not self.__package_path else self.__package_path
         for s in pkg_str_list:
             self.pkg += ".%s" % s
         self.pidx = None # All params are consumed.

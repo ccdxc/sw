@@ -59,7 +59,21 @@ NetworkServiceImpl::NetworkDelete(ServerContext *context,
                                 const NetworkDeleteRequestMsg *req,
                                 NetworkDeleteResponseMsg *rsp)
 {
+    uint32_t     i, nreqs = req->request_size();
+    NetworkDeleteResponse    *response;
+
     HAL_TRACE_DEBUG("Rcvd Network Delete Request");
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
+        auto spec = req->request(i);
+        hal::network_delete(spec, response);
+    }
+    hal::hal_cfg_db_close();
     return Status::OK;
 }
 
@@ -69,6 +83,7 @@ NetworkServiceImpl::NetworkGet(ServerContext *context,
                              NetworkGetResponseMsg *rsp)
 {
     uint32_t             i, nreqs = req->request_size();
+    NetworkGetResponse   *response;
 
     HAL_TRACE_DEBUG("Rcvd Network Get Request");
     if (nreqs == 0) {
@@ -77,8 +92,9 @@ NetworkServiceImpl::NetworkGet(ServerContext *context,
 
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
     for (i = 0; i < nreqs; i++) {
+        response = rsp->add_response();
         auto request = req->request(i);
-        hal::network_get(request, rsp);
+        hal::network_get(request, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;

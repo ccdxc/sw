@@ -31,6 +31,7 @@ build_log = nic_dir + "/build.log"
 model_log = nic_dir + "/model.log"
 hal_log = nic_dir + "/hal.log"
 dol_log = nic_dir + "/dol.log"
+config_log = nic_dir + "/config.log"
 storage_dol_log = nic_dir + "/storage_dol.log"
 sample_client_log = nic_dir + "/sample_client.log"
 
@@ -227,6 +228,24 @@ def run_dol(args):
 
 #    log.close()
 
+def run_config_validation(args):
+    dol_dir = nic_dir + "/../dol"
+    os.chdir(dol_dir)
+
+    log = open(config_log, "w")
+    cmd = ['./config_validator/main.py']
+    p = Popen(cmd)
+    print "* Starting Config validator with  pid (" + str(p.pid) + ")"
+    print "- Log file: " + config_log + "\n"
+
+    lock = open(lock_file, "a+")
+    lock.write(str(p.pid) + "\n")
+    lock.close()
+    p.communicate()
+    log.close()
+
+    print "* Validator exit code " + str(p.returncode)
+    return p.returncode    
 
 # Sample Client
 '''
@@ -342,6 +361,8 @@ def main():
 #                        help='Configuration Scale Factor.')
     parser.add_argument('--dryrun', dest='dryrun', action='store_true',
                         help='Dry-Run mode. (No communication with HAL & Model)')
+    parser.add_argument("--configtest", action="store_true",
+                        help="Run Config tests.")    
     args = parser.parse_args()
 
     if args.cleanup:
@@ -371,6 +392,10 @@ def main():
           if status != 0:
             print "- Storage dol failed, status=", status
           sys.exit(status)
+        elif args.configtest:
+            status = run_config_validation(args)
+            if status != 0:
+                print "- Config validaton failed, status=", status
         else:
           status = run_dol(args)
         if args.coveragerun:

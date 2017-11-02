@@ -33,6 +33,7 @@ import config.resmgr            as resmgr
 
 # This import will parse all the command line options.
 import infra.common.glopts as glopts
+glopts.ValidateGlopts()
 
 from infra.common.logging import logger
 

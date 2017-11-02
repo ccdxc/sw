@@ -4,13 +4,14 @@
 #include "nic/include/base.h"
 #include "grpc++/grpc++.h"
 #include "nic/gen/proto/hal/types.pb.h"
+#include "nic/gen/proto/hal/key_handles.pb.h"
 #include "nic/gen/proto/hal/nwsec.grpc.pb.h"
 
 using grpc::ServerContext;
 using grpc::Status;
 
 using nwsec::NwSecurity;
-using nwsec::SecurityProfileKeyHandle;
+using key_handles::SecurityProfileKeyHandle;
 using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileRequestMsg;
 using nwsec::SecurityProfileStatus;

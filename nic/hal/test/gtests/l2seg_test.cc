@@ -100,7 +100,7 @@ TEST_F(l2seg_test, test1)
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(2);
-    ten_spec.set_security_profile_handle(nwsec_hdl);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
@@ -122,6 +122,7 @@ TEST_F(l2seg_test, test1)
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    nw_spec.mutable_tenant_key_handle()->set_tenant_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
@@ -210,7 +211,7 @@ TEST_F(l2seg_test, test1)
 #if 0
     // Update tenant
     ten_spec1.mutable_key_or_handle()->set_tenant_id(2);
-    ten_spec1.set_security_profile_handle(nwsec_hdl1);
+    ten_spec1.mutable_security_key_handle()->set_profile_handle(nwsec_hdl1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_update(ten_spec1, &ten_rsp1);
     hal::hal_cfg_db_close();
@@ -261,7 +262,7 @@ TEST_F(l2seg_test, test2)
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(1);
-    ten_spec.set_security_profile_handle(nwsec_hdl);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
@@ -283,6 +284,7 @@ TEST_F(l2seg_test, test2)
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    nw_spec.mutable_tenant_key_handle()->set_tenant_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
@@ -365,7 +367,7 @@ TEST_F(l2seg_test, test3)
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(3);
-    ten_spec.set_security_profile_handle(nwsec_hdl);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
@@ -387,6 +389,7 @@ TEST_F(l2seg_test, test3)
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    nw_spec.mutable_tenant_key_handle()->set_tenant_id(3);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
@@ -452,7 +455,7 @@ TEST_F(l2seg_test, test4)
     NetworkSpec                     nw_spec, nw_spec_v6;
     NetworkResponse                 nw_rsp, nw_rsp_v6;
     NetworkDeleteRequest            nw_del_req;
-    NetworkDeleteResponseMsg        nw_del_rsp;
+    NetworkDeleteResponse           nw_del_rsp;
     slab_stats_t                    *pre = NULL, *post = NULL;
     bool                            is_leak = false;
     hal_handle_t                    nw_v4handles[100], nw_v6handles[100];
@@ -471,7 +474,7 @@ TEST_F(l2seg_test, test4)
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(4);
-    ten_spec.set_security_profile_handle(nwsec_hdl);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
@@ -487,6 +490,7 @@ TEST_F(l2seg_test, test4)
         nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
         nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
         nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000 + i);
+        nw_spec.mutable_tenant_key_handle()->set_tenant_id(4);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_create(nw_spec, &nw_rsp);
         hal::hal_cfg_db_close();
@@ -499,6 +503,7 @@ TEST_F(l2seg_test, test4)
         nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
         nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
         nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr(ipv6_ip1);
+        nw_spec_v6.mutable_tenant_key_handle()->set_tenant_id(4);
         ipv6_ip1.replace(i, 5, v6_pattern);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_create(nw_spec_v6, &nw_rsp_v6);
@@ -607,15 +612,15 @@ TEST_F(l2seg_test, test5)
     SecurityProfileSpec                 sp_spec;
     SecurityProfileResponse             sp_rsp;
     SecurityProfileDeleteRequest        sp_del_req;
-    SecurityProfileDeleteResponseMsg    sp_del_rsp;   
+    SecurityProfileDeleteResponse       sp_del_rsp;
     TenantSpec                          ten_spec;
     TenantResponse                      ten_rsp;
     TenantDeleteRequest                 ten_del_req;
-    TenantDeleteResponseMsg             ten_del_rsp;
+    TenantDeleteResponse                ten_del_rsp;
     NetworkSpec                         nw_spec;
     NetworkResponse                     nw_rsp;
     NetworkDeleteRequest                nw_del_req;
-    NetworkDeleteResponseMsg            nw_del_rsp;
+    NetworkDeleteResponse               nw_del_rsp;
     L2SegmentDeleteRequest              l2seg_del_req;
     L2SegmentDeleteResponseMsg          l2seg_del_rsp;
     L2SegmentGetRequest                 l2seg_get_req;
@@ -661,7 +666,7 @@ TEST_F(l2seg_test, test5)
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(5);
-    ten_spec.set_security_profile_handle(nwsec_hdl);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
@@ -669,7 +674,7 @@ TEST_F(l2seg_test, test5)
 
     // Create tenant
     ten_spec.mutable_key_or_handle()->set_tenant_id(51);
-    ten_spec.set_security_profile_handle(nwsec_hdl);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::tenant_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
@@ -681,6 +686,7 @@ TEST_F(l2seg_test, test5)
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
+    nw_spec.mutable_tenant_key_handle()->set_tenant_id(5);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
