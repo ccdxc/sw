@@ -121,13 +121,13 @@ def run_hal(args):
 
     log = open(hal_log, "w")
     jsonfile = 'hal.json'
-    os.system("cp " + nic_dir + "/conf/hal_default.ini " + nic_dir + "/conf/hal.ini");
+    os.system("cp " + nic_dir + "/conf/hal_default.ini " + nic_dir + "/conf/hal.ini")
     if args.hostpin:
         #jsonfile = 'hal_hostpin.json'
-        os.system("cp " + nic_dir + "/conf/hal_hostpin.ini " + nic_dir + "/conf/hal.ini");
+        os.system("cp " + nic_dir + "/conf/hal_hostpin.ini " + nic_dir + "/conf/hal.ini")
     if args.classic:
         #jsonfile = 'hal_classic.json'
-        os.system("cp " + nic_dir + "/conf/hal_classic.ini " + nic_dir + "/conf/hal.ini");
+        os.system("cp " + nic_dir + "/conf/hal_classic.ini " + nic_dir + "/conf/hal.ini")
     p = Popen(["./hal", "--config", jsonfile], stdout=log, stderr=log)
     global hal_process
     hal_process = p
@@ -150,6 +150,7 @@ def run_hal(args):
             if "listening on" in line:
                 loop = 0
     log2.close()
+    os.system("rm " + nic_dir + "/conf/hal.ini")
     return
 
 
