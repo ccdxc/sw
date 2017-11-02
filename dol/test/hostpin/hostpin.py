@@ -8,6 +8,11 @@ def Setup(infra, module):
 
 def TestCaseSetup(tc):
     modcbs.TestCaseSetup(tc)
+    oiflist = tc.config.src.segment.floodlist.enic_list
+    tc.pvtdata.pruned_oiflist = []
+    for oif in oiflist:
+        if oif == tc.config.src.endpoint.intf: continue
+        tc.pvtdata.pruned_oiflist.append(oif)
     return
 
 def TestCaseTeardown(tc):

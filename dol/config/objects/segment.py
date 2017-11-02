@@ -17,6 +17,9 @@ from infra.common.logging       import cfglogger
 from infra.common.glopts        import GlobalOptions
 from config.store               import Store
 
+global gl_pinif_iter
+gl_pinif_iter = 0
+
 class SegmentObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
@@ -36,6 +39,9 @@ class SegmentObject(base.ConfigObjectBase):
         self.fabencap   = getattr(spec, 'fabencap', 'vlan')
         self.fabencap   = self.fabencap.upper()
         self.floodlist  = None
+
+        self.pinnedif = None
+        self.__pin_interface()
         
         self.nw_hal_handles = []
 
@@ -113,7 +119,30 @@ class SegmentObject(base.ConfigObjectBase):
         return self.fabencap == 'VLAN'
     def IsFabEncapVxlan(self):
         return self.fabencap == 'VXLAN'
-    
+
+    def __pin_interface_for_hostpin_mode(self):
+        trunks = Store.GetTrunkingUplinks()
+        global gl_pinif_iter
+        gl_pinif_iter += 1
+        gl_pinif_iter %= len(trunks)
+        self.pinnedif = trunks[gl_pinif_iter]
+        return
+
+    def __pin_interface_for_classic(self):
+        self.pinnedif = self.tenant.GetPinIf()
+        return
+
+    def __pin_interface(self):
+        if self.tenant.IsHostPinned():
+            self.__pin_interface_for_hostpin_mode()
+        elif GlobalOptions.classic:
+            self.__pin_interface_for_classic()
+        else:
+            return
+        cfglogger.info("- %s: Pinning to Interface: %s" %\
+                       (self.GID(), self.pinnedif))
+        return
+
     def __copy__(self):
         seg = SegmentObject()
         seg.id = self.id
@@ -252,6 +281,8 @@ class SegmentObject(base.ConfigObjectBase):
             req_spec.fabric_encap.encap_value   = self.vlan_id
         req_spec.mcast_fwd_policy = self.multicast_policy
         req_spec.bcast_fwd_policy = self.broadcast_policy
+
+        #req_spec.pinned_uplink = self.pinnedif.hal_handle
 
         for nw in self.obj_helper_nw.nws:
             if nw.hal_handle:

@@ -19,6 +19,8 @@ class OifListObject(base.ConfigObjectBase):
         gid = "OifList%04d" % self.id
         self.GID(gid)
         self.oifs = objects.ObjectDatabase(cfglogger)
+        self.enic_list = []
+        self.uplink_list = []
         self.Show()
         return
 
@@ -29,11 +31,15 @@ class OifListObject(base.ConfigObjectBase):
             cfglogger.info("  - Oif: %s" % (intf.Summary()))
         return
 
-    def addOif(self, oif):
+    def addOif(self, oif, remote):
         for int in self.oifs.GetAllInList():
             if int == oif:
                 return
         self.oifs.Add(oif)
+        if remote:
+            self.uplink_list.append(oif)
+        else:
+            self.enic_list.append(oif)
         return
 
 # Helper Class to Generate/Configure/Manage OifList Objects.
@@ -46,7 +52,11 @@ class OifListObjectHelper:
         oiflist = OifListObject()
         oiflist.Init()
         for endpoint in segment.GetEps():
-            oiflist.addOif(endpoint.GetInterface())
+            if endpoint.remote:
+                if segment.pinnedif is not None and\
+                   segment.pinnedif != endpoint.GetInterface():
+                    continue
+            oiflist.addOif(endpoint.GetInterface(), endpoint.remote)
         self.oiflist = oiflist
         return
 

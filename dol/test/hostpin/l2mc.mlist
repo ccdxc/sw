@@ -1,0 +1,25 @@
+# Feature Test Modules List
+feature:
+    id          : pinl2mc
+    package     : test.hostpin
+    module      : hostpin
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : L2MC-ENIC
+        spec    : l2mc_enic.testspec
+        ignore  : True
+        iterate :
+            - id  : L2MC-ENIC
+              flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : L2MC-UPLINK
+        spec    : l2mc_uplink.testspec
+        ignore  : True
+        iterate :
+            - id  : L2MC-UPLINK
+              flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+

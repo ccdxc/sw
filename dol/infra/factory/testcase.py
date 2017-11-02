@@ -269,7 +269,11 @@ class TestCase(objects.FrameworkObject):
             if spec_desc_entry.descriptor.object == None: continue
             tc_desc_spec = TestCaseTrigExpDescriptorSpec()
             tc_desc_spec.descriptor.object = spec_desc_entry.descriptor.object.Get(self)
-            tc_desc_spec.descriptor.ring   = spec_desc_entry.descriptor.ring.Get(self)
+            if objects.IsCallback(spec_desc_entry.descriptor.ring):
+                tc_desc_spec.descriptor.ring = spec_desc_entry.descriptor.ring.call(self)
+            else:
+                tc_desc_spec.descriptor.ring   = spec_desc_entry.descriptor.ring.Get(self)
+            if tc_desc_spec.descriptor.ring == None: continue
             self.info("- Adding Descriptor: %s, Ring: %s" %\
                       (tc_desc_spec.descriptor.object.GID(), tc_desc_spec.descriptor.ring.GID()))
             buff = getattr(spec_desc_entry.descriptor, 'buffer', None)
