@@ -91,6 +91,10 @@ int test_run_seq_e2e4();
 
 int test_run_seq_encr();
 
+int test_run_seq_prot_info();
+
+int test_run_seq_encr_n_prot_info();
+
 }  // namespace tests
 
 #endif   // _TESTS_HPP_

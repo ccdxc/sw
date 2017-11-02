@@ -26,15 +26,19 @@ storage_tx_seq_barco_entry_handler_start:
    phvwr	p.storage_kivec1_xts_desc_size, d.xts_desc_size
    phvwr	p.storage_kivec1_ssd_ci_addr, d.xts_ring_addr
   
+   // Save the descriptor size in bytes in r7
+   addi     r7, r0, 1
+   add      r1, r0, d.xts_desc_size
+   sllv     r7, r7, r1
 
    // Setup the source of the mem2mem DMA into DMA cmd 1.
    // For now, not using any override LIF parameters.
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.xts_desc_addr, d.xts_desc_size,
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_SRC, d.xts_desc_addr, r7,
                      r0, r0, dma_m2m_1)
 
    // Setup the destination of the mem2mem DMA into DMA cmd 2 (just fill
    // the size). For now, not using any override LIF parameters.
-   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, d.xts_desc_size,
+   DMA_MEM2MEM_SETUP(CAPRI_DMA_M2M_TYPE_DST, r0, r7,
                      r0, r0, dma_m2m_2)
 
    // Copy the data for the doorbell into the PHV and setup a DMA command
@@ -50,3 +54,4 @@ storage_tx_seq_barco_entry_handler_start:
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR_SIZE_PARAM(d.xts_pndx_addr, d.xts_pndx_size,
                                   storage_tx_seq_barco_ring_push_start)
+
