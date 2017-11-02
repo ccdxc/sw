@@ -150,7 +150,8 @@ dos_pd_program_ddos_src_vf_tcam (uint16_t slport, int actionid,
     
     data.actionid = actionid;
     data.ddos_src_vf_action_u.ddos_src_vf_ddos_src_vf_hit.ddos_src_vf_base_policer_idx = policer_idx;
-    
+    HAL_TRACE_DEBUG("pd-dos:{}: act_id: {} pol_index: {} slport: {}",
+                     __FUNCTION__, actionid, policer_idx, slport);
     ret = tcam->insert(&key, &mask, &data, &ret_idx);
     if (ret == HAL_RET_DUP_INS_FAIL) {
         /* Entry already exists. Can be skipped */
@@ -163,7 +164,7 @@ dos_pd_program_ddos_src_vf_tcam (uint16_t slport, int actionid,
         }
     }
     HAL_TRACE_DEBUG("DDoS src-vf tcam write, "
-                    "idx : {}, ret: {}", ret_idx, ret);
+                    "return-idx : {}, ret: {}", ret_idx, ret);
     *idx = (int) ret_idx;
     return ret;
 }
@@ -210,6 +211,8 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr,
      
     data.actionid = actionid;
     data.ddos_service_action_u.ddos_service_ddos_service_hit.ddos_service_base_policer_idx = policer_idx;
+    HAL_TRACE_DEBUG("pd-dos:{} ip-addr: {} dport: {} proto: {} vrf: {} act_id: {} pol_idx: {}",
+                     __FUNCTION__, *ip_addr, dport, proto, vrf, actionid, policer_idx);
 
     ret = tcam->insert(&key, &mask, &data, &ret_idx);
     if (ret == HAL_RET_DUP_INS_FAIL) {
@@ -222,8 +225,8 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr,
             return ret;
         }
     }
-    HAL_TRACE_DEBUG("DDoS service tcam write, "
-                    "idx : {}, ret: {}", ret_idx, ret);
+    HAL_TRACE_DEBUG("pd-dos:{} ret-idx : {}, ret: {}",
+                    __FUNCTION__, ret_idx, ret);
     *idx = (int) ret_idx;
     return ret;
 }
@@ -285,6 +288,10 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
     data.actionid = actionid;
     data.ddos_src_dst_action_u.ddos_src_dst_ddos_src_dst_hit.ddos_src_dst_base_policer_idx = policer_idx;
 
+    HAL_TRACE_DEBUG("pd-dos:{} src-ip: {} src-pfxlen: {} dst-ip: {} dst-pfxlen: {} "
+                    "dport: {} proto: {} vrf: {} act_id: {} pol_idx: {}",
+                     __FUNCTION__, *src_ip_addr, src_pfxlen, *dst_ip_addr,
+                     dst_pfxlen, dport, proto, vrf, actionid, policer_idx);
     ret = tcam->insert(&key, &mask, &data, &ret_idx);
     if (ret == HAL_RET_DUP_INS_FAIL) {
         /* Entry already exists. Can be skipped */
@@ -297,14 +304,40 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
         }
     }
 
-    HAL_TRACE_DEBUG("DDoS service tcam write, "
-                    "idx : {}, ret: {}", ret_idx, ret);
+    HAL_TRACE_DEBUG("pd-dos:{} ret-idx: {}, ret: {}",
+                    __FUNCTION__, ret_idx, ret);
     *idx = (int) ret_idx;
     return ret;
 }
 
-#define DDOS_POLICER(_arg) d.ddos_service_policer_action_u.ddos_service_policer_execute_ddos_service_policer._arg
+#define DDOS_POLICER_ACTION(_arg) d.ddos_service_policer_action_action_u.ddos_service_policer_action_ddos_service_policer_action._arg
+hal_ret_t
+dos_pd_program_ddos_policer_action (uint8_t actionid, uint8_t saved_color,
+                                    uint32_t dropped_pkts, p4pd_table_id tbl_id,
+                                    uint32_t *idx)
+{
+    hal_ret_t                           ret = HAL_RET_OK;
+    DirectMap                           *dm;
+    ddos_service_policer_action_actiondata d = { 0 };
+    
+    dm = g_hal_state_pd->dm_table(tbl_id);
+    HAL_ASSERT(dm != NULL);
+    
+    d.actionid = actionid;
+    DDOS_POLICER_ACTION(ddos_service_policer_saved_color) = saved_color;
+    DDOS_POLICER_ACTION(ddos_service_policer_dropped_packets) = dropped_pkts;
+    ret = dm->insert(&d, idx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("ddos policer action table write failure, "
+                      "tbl_id: {} err : {}", tbl_id, ret);
+        return ret;
+    }
+    HAL_TRACE_DEBUG("pd-dos:{} saved_color: {} dropped_pkts: {} idx: {}",
+                    __FUNCTION__, saved_color, dropped_pkts, *idx);
+    return ret;
+}
 
+#define DDOS_POLICER(_arg) d.ddos_service_policer_action_u.ddos_service_policer_execute_ddos_service_policer._arg
 hal_ret_t
 dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
                              bool color_aware, uint32_t cir, uint32_t cbr,
@@ -314,22 +347,31 @@ dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
     hal_ret_t                           ret = HAL_RET_OK;
     DirectMap                           *dm;
     ddos_service_policer_actiondata     d = { 0 };
+    uint32_t                            tbkt;
     
     dm = g_hal_state_pd->dm_table(tbl_id);
     HAL_ASSERT(dm != NULL);
     
+    /* TODO: Hardcode number of tokens. Only for model testing 
+     * Token bucket value should be zero since we want to allow one packet
+     * The second packet will get dropped when the token bucket goes negative
+     * Token bucket setting will be removed for real hw/emulator
+     * */
+    tbkt = 0;
     d.actionid = actionid;
     DDOS_POLICER(entry_valid) = 1;
     DDOS_POLICER(pkt_rate) = (pps) ? 1 : 0;
     DDOS_POLICER(color_aware) = (color_aware) ? 1 : 0;
     memcpy(DDOS_POLICER(rate), &cir, sizeof(uint32_t));
     memcpy(DDOS_POLICER(burst), &cbr, sizeof(uint32_t));
+    memcpy(DDOS_POLICER(tbkt), &tbkt, sizeof(uint32_t));
 
     DDOS_POLICER(entry_valid2) = 1;
     DDOS_POLICER(pkt_rate2) = (pps) ? 1 : 0;
     DDOS_POLICER(color_aware2) = (color_aware) ? 1 : 0;
     memcpy(DDOS_POLICER(rate2), &pir, sizeof(uint32_t));
     memcpy(DDOS_POLICER(burst2), &pbr, sizeof(uint32_t));
+    memcpy(DDOS_POLICER(tbkt2), &tbkt, sizeof(uint32_t));
     
     ret = dm->insert(&d, idx);
     if (ret != HAL_RET_OK) {
@@ -337,7 +379,9 @@ dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
                        tbl_id, ret);
         return ret;
     }
-
+    HAL_TRACE_DEBUG("pd-dos:{} pps: {} color_aware: {} cir: {} cbr: {}"
+                    "pir: {} pbr: {} ret-pol-idx: {}", __FUNCTION__, pps,
+                    color_aware, cir, cbr, pir, pbr, *idx);
     return ret;
 }
 
@@ -345,9 +389,12 @@ dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
  * program the ddos tcam table result */
 hal_ret_t
 dos_pd_program_ddos_policers (dos_policy_prop_t *dospp, uint8_t actionid,
-                              p4pd_table_id tbl_id, uint32_t *base_pol_idx)
+                              uint8_t pol_actionid, p4pd_table_id tbl_id,
+                              p4pd_table_id pol_action_tbl_id,
+                              uint32_t *base_pol_idx)
 {
     uint32_t    ret_idx;
+    uint32_t    ret_idx_action;
     hal_ret_t   ret;
 
     /* Program 4 policers */
@@ -364,6 +411,11 @@ dos_pd_program_ddos_policers (dos_policy_prop_t *dospp, uint8_t actionid,
      * policer index is used in the ddos tcam action
      */
     *base_pol_idx = ret_idx / 4;
+    /* DDOS TCP Policer Action */
+    ret = dos_pd_program_ddos_policer_action(pol_actionid, 0, 0,
+                                             pol_action_tbl_id,
+                                             &ret_idx_action);
+    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     /* DDOS UDP Policer */
     ret = dos_pd_program_ddos_policer(actionid, TRUE, TRUE,
@@ -372,6 +424,11 @@ dos_pd_program_ddos_policers (dos_policy_prop_t *dospp, uint8_t actionid,
                                dospp->udp_flood_limits.restrict_pps,
                                dospp->udp_flood_limits.restrict_burst_pps,
                                tbl_id, &ret_idx);
+    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    /* DDOS UDP Policer Action */
+    ret = dos_pd_program_ddos_policer_action(pol_actionid, 0, 0,
+                                             pol_action_tbl_id,
+                                             &ret_idx_action);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     /* DDOS ICMP Policer */
@@ -382,6 +439,11 @@ dos_pd_program_ddos_policers (dos_policy_prop_t *dospp, uint8_t actionid,
                                dospp->icmp_flood_limits.restrict_burst_pps,
                                tbl_id, &ret_idx);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    /* DDOS ICMP Policer Action */
+    ret = dos_pd_program_ddos_policer_action(pol_actionid, 0, 0,
+                                             pol_action_tbl_id,
+                                             &ret_idx_action);
+    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     /* DDOS ANY Policer */
     ret = dos_pd_program_ddos_policer(actionid, TRUE, TRUE,
@@ -390,6 +452,11 @@ dos_pd_program_ddos_policers (dos_policy_prop_t *dospp, uint8_t actionid,
                                dospp->other_flood_limits.restrict_pps,
                                dospp->other_flood_limits.restrict_burst_pps,
                                tbl_id, &ret_idx);
+    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    /* DDOS ICMP Policer Action */
+    ret = dos_pd_program_ddos_policer_action(pol_actionid, 0, 0,
+                                             pol_action_tbl_id,
+                                             &ret_idx_action);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     return ret;
@@ -416,10 +483,10 @@ dos_pd_program_ddos_src_vf_table (pd_dos_policy_t *pd_dosp, ep_t *ep, if_t *intf
     /* Program the policers */
     ret = dos_pd_program_ddos_policers(&dosp->egress,
                            DDOS_SRC_VF_POLICER_EXECUTE_DDOS_SRC_VF_POLICER_ID,
-                           P4TBL_ID_DDOS_SRC_VF_POLICER, &base_pol_idx);
+                           DDOS_SRC_VF_POLICER_ACTION_DDOS_SRC_VF_POLICER_ACTION_ID,
+                           P4TBL_ID_DDOS_SRC_VF_POLICER,
+                           P4TBL_ID_DDOS_SRC_VF_POLICER_ACTION, &base_pol_idx);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-    HAL_TRACE_DEBUG("pd-dos:{}: base_policer_index: {}",
-                     base_pol_idx, __FUNCTION__);
 
     ret = dos_pd_program_ddos_src_vf_tcam(srclport, DDOS_SRC_VF_DDOS_SRC_VF_HIT_ID,
                                           base_pol_idx,
@@ -461,27 +528,36 @@ dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
         /* Program the policers */
         ret = dos_pd_program_ddos_policers(&dosp->ingress,
                         DDOS_SRC_DST_POLICER_EXECUTE_DDOS_SRC_DST_POLICER_ID,
-                        P4TBL_ID_DDOS_SRC_DST_POLICER, &base_pol_idx);
+                        DDOS_SRC_DST_POLICER_ACTION_DDOS_SRC_DST_POLICER_ACTION_ID,
+                        P4TBL_ID_DDOS_SRC_DST_POLICER,
+                        P4TBL_ID_DDOS_SRC_DST_POLICER_ACTION, &base_pol_idx);
         HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
         HAL_TRACE_DEBUG("pd-dos:{}: base_policer_index: {}",
                          base_pol_idx, __FUNCTION__);
         sg_list = &dosp->sg_list_head;
         /* Go through all the security groups */
+        HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all SG", __FUNCTION__);
         dllist_for_each_safe(curr, next, sg_list) {
             ent = dllist_entry(curr, dos_policy_sg_list_entry_t, dllist_ctxt);
             nw_list = get_nw_list_for_security_group(ent->sg_id);
+            HAL_TRACE_DEBUG("pd-dos:{}: SG-id: {}", __FUNCTION__, ent->sg_id);
+            HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all NWs", __FUNCTION__);
             /* For each security group, go through the associated Networks */
             dllist_for_each_safe(nwcurr, nwnext, nw_list) {
                 nw_ent = dllist_entry(nwcurr, hal_handle_id_list_entry_t, dllist_ctxt);
                 nw = find_network_by_handle(nw_ent->handle_id);
                 HAL_ASSERT(nw != NULL);
+                HAL_TRACE_DEBUG("pd-dos:{}: NW pfx: {}/{}", __FUNCTION__, nw->nw_key.ip_pfx.addr, nw->nw_key.ip_pfx.len);
                 /* Get the peer Security Group */
                 pnw_list = get_nw_list_for_security_group(dosp->ingress.peer_sg_id);
+                HAL_TRACE_DEBUG("pd-dos:{}: Ingress peer sg-id: {}", __FUNCTION__, dosp->ingress.peer_sg_id);
+                HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all peer NWs", __FUNCTION__);
                 /* Go through the associated peer networks */
                 dllist_for_each_safe(pnwcurr, pnwnext, pnw_list) {
                     pnw_ent = dllist_entry(pnwcurr, hal_handle_id_list_entry_t, dllist_ctxt);
                     pnw = find_network_by_handle(pnw_ent->handle_id);
                     HAL_ASSERT(pnw != NULL);
+                    HAL_TRACE_DEBUG("pd-dos:{}: Peer-NW pfx: {}/{}", __FUNCTION__, pnw->nw_key.ip_pfx.addr, pnw->nw_key.ip_pfx.len);
                     ret = dos_pd_program_ddos_src_dst_tcam(&pnw->nw_key.ip_pfx.addr,
                                   pnw->nw_key.ip_pfx.len, &nw->nw_key.ip_pfx.addr,
                                   nw->nw_key.ip_pfx.len,
@@ -506,27 +582,36 @@ dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
         /* Program the policers */
         ret = dos_pd_program_ddos_policers(&dosp->egress,
                         DDOS_SRC_DST_POLICER_EXECUTE_DDOS_SRC_DST_POLICER_ID,
-                        P4TBL_ID_DDOS_SRC_DST_POLICER, &base_pol_idx);
+                        DDOS_SRC_DST_POLICER_ACTION_DDOS_SRC_DST_POLICER_ACTION_ID,
+                        P4TBL_ID_DDOS_SRC_DST_POLICER,
+                        P4TBL_ID_DDOS_SRC_DST_POLICER_ACTION, &base_pol_idx);
         HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
         HAL_TRACE_DEBUG("pd-dos:{}: base_policer_index: {}",
                          base_pol_idx, __FUNCTION__);
         sg_list = &dosp->sg_list_head;
         /* Go through all the security groups */
+        HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all SG", __FUNCTION__);
         dllist_for_each_safe(curr, next, sg_list) {
             ent = dllist_entry(curr, dos_policy_sg_list_entry_t, dllist_ctxt);
             nw_list = get_nw_list_for_security_group(ent->sg_id);
+            HAL_TRACE_DEBUG("pd-dos:{}: SG-id: {}", __FUNCTION__, ent->sg_id);
+            HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all NWs", __FUNCTION__);
             /* For each security group, go through the associated Networks */
             dllist_for_each_safe(nwcurr, nwnext, nw_list) {
                 nw_ent = dllist_entry(nwcurr, hal_handle_id_list_entry_t, dllist_ctxt);
                 nw = find_network_by_handle(nw_ent->handle_id);
                 HAL_ASSERT(nw != NULL);
+                HAL_TRACE_DEBUG("pd-dos:{}: NW pfx: {}/{}", __FUNCTION__, nw->nw_key.ip_pfx.addr, nw->nw_key.ip_pfx.len);
                 /* Get the peer Security Group */
                 pnw_list = get_nw_list_for_security_group(dosp->egress.peer_sg_id);
+                HAL_TRACE_DEBUG("pd-dos:{}: Egress peer sg-id: {}", __FUNCTION__, dosp->ingress.peer_sg_id);
+                HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all peer NWs", __FUNCTION__);
                 /* Go through the associated peer networks */
                 dllist_for_each_safe(pnwcurr, pnwnext, pnw_list) {
                     pnw_ent = dllist_entry(pnwcurr, hal_handle_id_list_entry_t, dllist_ctxt);
                     pnw = find_network_by_handle(nw_ent->handle_id);
                     HAL_ASSERT(pnw != NULL);
+                    HAL_TRACE_DEBUG("pd-dos:{}: Peer-NW pfx: {}/{}", __FUNCTION__, pnw->nw_key.ip_pfx.addr, pnw->nw_key.ip_pfx.len);
                     ret = dos_pd_program_ddos_src_dst_tcam(&nw->nw_key.ip_pfx.addr,
                                   nw->nw_key.ip_pfx.len, &pnw->nw_key.ip_pfx.addr,
                                   pnw->nw_key.ip_pfx.len,
@@ -569,9 +654,11 @@ dos_pd_program_ddos_service_table (pd_dos_policy_t *pd_dosp,
     /* Program the policers */
     ret = dos_pd_program_ddos_policers(&dosp->ingress,
                            DDOS_SERVICE_POLICER_EXECUTE_DDOS_SERVICE_POLICER_ID,
-                           P4TBL_ID_DDOS_SERVICE_POLICER, &base_pol_idx);
+                           DDOS_SERVICE_POLICER_ACTION_DDOS_SERVICE_POLICER_ACTION_ID,
+                           P4TBL_ID_DDOS_SERVICE_POLICER,
+                           P4TBL_ID_DDOS_SERVICE_POLICER_ACTION, &base_pol_idx);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-    HAL_TRACE_DEBUG("pd-dos:{}: base_policer_index: {}",
+    HAL_TRACE_DEBUG("pd-dos:{}: service_tbl. base_policer_index: {}",
                      base_pol_idx, __FUNCTION__);
     ip_list = &ep->ip_list_head;
     /* Iterate over all the IP addresses for this endpoint */
@@ -580,13 +667,14 @@ dos_pd_program_ddos_service_table (pd_dos_policy_t *pd_dosp,
         ten = ep_get_tenant(ep);
         HAL_ASSERT(ten != NULL);
         *ret_ten = ten;
+        HAL_TRACE_DEBUG("pd-dos:{}: ep_ip_addr: {}",
+                         __FUNCTION__, pi_ip_ent->ip_addr);
         ret = dos_pd_program_ddos_service_tcam(&pi_ip_ent->ip_addr,
                 dosp->ingress.service.dport,
                 dosp->ingress.service.ip_proto,
                 ten->tenant_id, DDOS_SERVICE_DDOS_SERVICE_HIT_ID,
                 base_pol_idx, P4TBL_ID_DDOS_SERVICE, &tcam_idx);
         HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-
     }
     HAL_TRACE_DEBUG("pd-dos:{}: tcam_index: {}",
                      tcam_idx, __FUNCTION__);
@@ -616,22 +704,30 @@ dos_pd_program_hw (pd_dos_policy_t *pd_dosp, bool create)
 
     dp = (dos_policy_t *) pd_dosp->pi_dos_policy;
     sg_list = &dp->sg_list_head;
+    HAL_TRACE_DEBUG("pd-dos:{}: Going through the linked security groups",
+                     __FUNCTION__);
     /* Get the security groups linked to this dos policy */
     dllist_for_each_safe(curr, next, sg_list) {
         ent = dllist_entry(curr, dos_policy_sg_list_entry_t, dllist_ctxt);
+        HAL_TRACE_DEBUG("pd-dos:{}: SG-id: {}", __FUNCTION__, ent->sg_id);
         /* For each security group, go through the associated EPs */
         ep_list = get_ep_list_for_security_group(ent->sg_id);
         dllist_for_each_safe(epcurr, epnext, ep_list) {
             ep_ent = dllist_entry(epcurr, hal_handle_id_list_entry_t, dllist_ctxt);
             ep = find_ep_by_handle(ep_ent->handle_id);
             HAL_ASSERT(ep != NULL);
+            HAL_TRACE_DEBUG("pd-dos:{}: Got EP handle {}", __FUNCTION__,
+                             ep_ent->handle_id);
             intf = ep_get_if(ep);
             HAL_ASSERT(intf != NULL);
+            HAL_TRACE_DEBUG("pd-dos:{}: Intf-id: {}", __FUNCTION__, intf->if_id);
             
+            HAL_TRACE_DEBUG("pd-dos:{}: Program src-vf table", __FUNCTION__);
             /* Program the DDoS Src VF table */
             ret = dos_pd_program_ddos_src_vf_table (pd_dosp, ep, intf);
             HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
             
+            HAL_TRACE_DEBUG("pd-dos:{}: Program service table", __FUNCTION__);
             /* Program the DDoS service table */
             ret = dos_pd_program_ddos_service_table (pd_dosp, ep, &ten);
             HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);

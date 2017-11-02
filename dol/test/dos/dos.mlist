@@ -2,29 +2,27 @@
 feature:
     id      : dos
     sub     : l2uc
-    package : test.networking
-    module  : networking
+    package : test.dos
+    module  : dos
     enable  : True
     ignore  : False
     args    :
-        maxflows: 4
+        maxflows: 1
 
 modules:
     - module:
-        name    : IP_QTAG
-        spec    : l2uc.testspec
-        iterate :
-            # Tagged Cases
-            - flow    : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
-              segment : filter://native=False
-            - flow    : filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
-              segment : filter://native=False
-            - flow    : filter://type=IPV4,proto=ICMP,label=FTE,direction=IFLOW
-              segment : filter://native=False
-            - flow    : filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
-              segment : filter://native=False
-            - flow    : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
-              segment : filter://native=False
-            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=IFLOW
-              segment : filter://native=False
-
+        name    : FROM_WORKLOAD
+        spec    : dos_tx.testspec
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=FTE
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=UDP,label=FTE
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=FTE
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=TCP,label=FTE
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=FTE
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE
+              segment   : filter://native=False

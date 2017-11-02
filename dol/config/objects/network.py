@@ -41,6 +41,10 @@ class NetworkObject(base.ConfigObjectBase):
     def IsIpv6(self):
         return self.af == 'IPV6'
 
+    def AddSecurityGroup(self, sg):
+        self.security_groups.append(sg)
+        return
+
     def __copy__(self):
         nw = NetworkObject()
         nw.tenant = self.tenant
@@ -122,6 +126,11 @@ class NetworkObject(base.ConfigObjectBase):
 class NetworkObjectHelper:
     def __init__(self):
         self.nws = []
+        return
+
+    def AddSecurityGroup(self, sg):
+        for nw in self.nws:
+            nw.AddSecurityGroup(sg)
         return
 
     def Configure(self):

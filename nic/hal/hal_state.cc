@@ -1186,6 +1186,13 @@ hal_mem_db::init(void)
                                       false, true, true, true);
     HAL_ASSERT_RETURN((dos_policy_slab_ != NULL), false);
 
+    // initialize dos policy sg list related data structures
+    dos_policy_sg_list_entry_slab_ = slab::factory("dos-policy-sg-list",
+                                      HAL_SLAB_DOS_POLICY_SG_LIST,
+                                      sizeof(hal::dos_policy_sg_list_entry_t), 8,
+                                      false, true, true, true);
+    HAL_ASSERT_RETURN((dos_policy_sg_list_entry_slab_ != NULL), false);
+
     // initialize L2 segment related data structures
     l2seg_slab_ = slab::factory("l2seg", HAL_SLAB_L2SEG,
                                 sizeof(hal::l2seg_t), 16,
@@ -1361,6 +1368,7 @@ hal_mem_db::hal_mem_db()
     network_slab_ = NULL;
     nwsec_profile_slab_ = NULL;
     dos_policy_slab_ = NULL;
+    dos_policy_sg_list_entry_slab_ = NULL;
     nwsec_group_slab_  = NULL;
     nwsec_policy_rules_slab_ = NULL;
     nwsec_policy_cfg_slab_ = NULL;
@@ -1426,6 +1434,7 @@ hal_mem_db::~hal_mem_db()
     network_slab_ ? delete network_slab_ : HAL_NOP;
     nwsec_profile_slab_ ? delete nwsec_profile_slab_ : HAL_NOP;
     dos_policy_slab_ ? delete dos_policy_slab_ : HAL_NOP;
+    dos_policy_sg_list_entry_slab_ ? delete dos_policy_sg_list_entry_slab_ : HAL_NOP;
     nwsec_group_slab_ ? delete nwsec_group_slab_ : HAL_NOP;
     nwsec_policy_rules_slab_ ? delete nwsec_policy_rules_slab_ : HAL_NOP;
     nwsec_policy_cfg_slab_ ? delete nwsec_policy_cfg_slab_ : HAL_NOP;
@@ -1474,6 +1483,7 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     GET_SLAB(tenant_slab_);
     GET_SLAB(network_slab_);
     GET_SLAB(dos_policy_slab_);
+    GET_SLAB(dos_policy_sg_list_entry_slab_);
     GET_SLAB(nwsec_profile_slab_);
     GET_SLAB(nwsec_group_slab_);
     GET_SLAB(nwsec_policy_rules_slab_);

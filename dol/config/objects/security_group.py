@@ -116,9 +116,20 @@ class SecurityGroupObjectHelper:
         self.__create(tenant, False, reps)
         return
 
+    def AddToSegments(self, tenant):
+        if len(self.sgs) == 0: return
+        segs = tenant.GetSegments()
+        sgidx = 0
+        for seg in segs:
+            sg = self.sgs[sgidx]
+            seg.AddSecurityGroup(sg)
+            sgidx = (sgidx + 1) % len(self.sgs)
+        return
+
     def main(self, tenant):
         self.Generate(tenant)
         self.Configure()
+        self.AddToSegments(tenant)
         return
 
 def GetMatchingObjects(selectors):

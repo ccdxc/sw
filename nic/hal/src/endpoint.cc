@@ -667,6 +667,15 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         utils::dllist_add(&ep->ip_list_head, &ip_entry[i]->ep_ip_lentry);
     }
 
+    // allocate hal handle id
+    ep->hal_handle = hal_handle_alloc(HAL_OBJ_ID_ENDPOINT);
+    if (ep->hal_handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_ERR("pi-ep:{}: failed to alloc handle", 
+                      __FUNCTION__);
+        ret =HAL_RET_HANDLE_INVALID;
+        goto end;
+    }
+
     num_sgs = spec.sg_handle_size();
     if (num_sgs) {
         //To Do:Handle cases where the num_sgs greater that MAX_SG_PER_ARRAY
@@ -677,16 +686,9 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
             ep->sgs.arr_sg_id[i] = nwsec_group->sg_id;
             ep->sgs.sg_id_cnt++;
             ep->sgs.next_sg_p = NULL;
+            ret = add_ep_to_security_group(nwsec_group->sg_id, ep->hal_handle);
+            HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
         }
-    }
-
-    // allocate hal handle id
-    ep->hal_handle = hal_handle_alloc(HAL_OBJ_ID_ENDPOINT);
-    if (ep->hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("pi-ep:{}: failed to alloc handle", 
-                      __FUNCTION__);
-        ret =HAL_RET_HANDLE_INVALID;
-        goto end;
     }
 
     // form ctxt and call infra add

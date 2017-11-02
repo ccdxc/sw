@@ -227,6 +227,16 @@ capri_program_table_mpu_pc(void)
                     .mpu_pc(((capri_table_asm_base[i]) >> 6));
             te_csr.cfg_table_property[tbl_ctx.stage_tableid].write();
         }
+        if ((i == P4TBL_ID_DDOS_SRC_VF_POLICER) ||
+            (i == P4TBL_ID_DDOS_SERVICE_POLICER) ||
+            (i == P4TBL_ID_DDOS_SRC_DST_POLICER)) {
+            cap_pics_csr_t &pics_csr = cap0.sse.pics;
+            HAL_TRACE_DEBUG("===========Tbl id: {}, cfg_table_profile index: {}=========",
+                            i, ((tbl_ctx.stage << 4) | (tbl_ctx.stage_tableid)));
+            pics_csr.cfg_table_profile[(tbl_ctx.stage << 4) | (tbl_ctx.stage_tableid)].read();
+            pics_csr.cfg_table_profile[(tbl_ctx.stage << 4) | (tbl_ctx.stage_tableid)].opcode(0x722);
+            pics_csr.cfg_table_profile[(tbl_ctx.stage << 4) | (tbl_ctx.stage_tableid)].write();
+        }
     }
 #endif
 }

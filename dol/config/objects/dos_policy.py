@@ -207,7 +207,7 @@ class DosPolicyObject(base.ConfigObjectBase):
     def ProcessHALResponse(self, req_spec, resp_spec):
         cfglogger.info("- DosPolicy %s = %s" %\
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
-        self.hal_handle = resp_spec.status.nw_handle
+        self.hal_handle = resp_spec.status.dos_handle
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):

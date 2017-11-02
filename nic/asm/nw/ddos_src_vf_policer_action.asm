@@ -27,3 +27,4 @@ ddos_src_vf_policer_action:
 set_drop:
   tbladd.e      d.u.ddos_src_vf_policer_action_d.ddos_src_vf_policer_dropped_packets, 1
   phvwr         p.control_metadata_egress_ddos_src_vf_policer_drop, TRUE
+  phvwr         p.capri_intrinsic_drop, 1

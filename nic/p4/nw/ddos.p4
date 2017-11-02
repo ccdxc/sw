@@ -182,7 +182,7 @@ action ddos_src_dst_hit(ddos_src_dst_base_policer_idx) {
 // Key will be only lif and it can be a index table so
 // no overflow tcam needed.
 //
-@pragma stage 0
+@pragma stage 2
 table ddos_src_vf {
     reads {
         entry_inactive.ddos_src_vf : ternary;
@@ -266,7 +266,7 @@ action execute_ddos_src_vf_policer(entry_valid, pkt_rate, rlimit_en,
     modify_field(scratch_metadata.policer_tbkt, tbkt2);
 }
 
-@pragma stage 2
+@pragma stage 3
 @pragma policer_table three_color
 table ddos_src_vf_policer {
     reads {
@@ -314,7 +314,7 @@ action ddos_src_vf_policer_action(ddos_src_vf_policer_idx,
     }
 }
 
-@pragma stage 3
+@pragma stage 4
 table ddos_src_vf_policer_action {
     reads {
         ddos_metadata.ddos_src_vf_policer_idx : exact;

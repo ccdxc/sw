@@ -523,6 +523,7 @@ nwsec_group_init (nwsec_group_t *nwsec_grp)
     nwsec_grp->hal_handle = HAL_HANDLE_INVALID;
     dllist_reset(&nwsec_grp->nw_list_head);
     dllist_reset(&nwsec_grp->ep_list_head);
+    HAL_SPINLOCK_INIT(&nwsec_grp->slock, PTHREAD_PROCESS_PRIVATE);
     return nwsec_grp;
 }
 
@@ -537,6 +538,7 @@ nwsec_group_alloc_init (void)
 static inline hal_ret_t
 nwsec_group_free(nwsec_group_t *nwsec_grp)
 {
+    HAL_SPINLOCK_DESTROY(&nwsec_grp->slock);
     g_hal_state->nwsec_group_slab()->free(nwsec_grp);
     return HAL_RET_OK;
 }

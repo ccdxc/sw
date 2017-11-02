@@ -265,7 +265,7 @@ network_prepare_rsp (NetworkResponse *rsp, hal_ret_t ret,
 }
 
 //------------------------------------------------------------------------------
-// Reads security groups from spec
+// Reads security groups from spec and populate SG object
 //------------------------------------------------------------------------------
 hal_ret_t
 network_read_security_groups (network_t *nw, NetworkSpec& spec)
@@ -286,6 +286,8 @@ network_read_security_groups (network_t *nw, NetworkSpec& spec)
         // Add to aggregated list
         sg_handle = sg->hal_handle;
         hal_add_to_handle_list(&nw->sg_list_head, sg_handle);
+        ret = add_nw_to_security_group(sg->sg_id, nw->hal_handle);
+        HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
     }
 
     return ret;

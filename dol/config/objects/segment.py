@@ -225,6 +225,12 @@ class SegmentObject(base.ConfigObjectBase):
         self.ConfigureEndpoints()
         return
 
+    def AddSecurityGroup(self, sg):
+        cfglogger.info("- Adding SecurityGroup:%s to Segment:%s" %\
+                       (sg.GID(), self.GID()))
+        self.obj_helper_nw.AddSecurityGroup(sg)
+        return
+
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.tenant_id = self.tenant.id
         req_spec.key_or_handle.segment_id = self.id

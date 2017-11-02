@@ -82,7 +82,8 @@ class TenantObject(base.ConfigObjectBase):
         self.obj_helper_sg = security_group.SecurityGroupObjectHelper()
         self.obj_helper_sg.main(self)
         self.obj_helper_dosp = dos_policy.DosPolicyObjectHelper()
-        self.obj_helper_dosp.main(self)
+        #self.obj_helper_dosp.main(self)
+        self.obj_helper_dosp.Generate(self)
         return
 
 
@@ -194,6 +195,10 @@ class TenantObject(base.ConfigObjectBase):
             self.obj_helper_tunnel.Configure()
         return
     
+    def ConfigureDosPolicies(self):
+        self.obj_helper_dosp.Configure()
+        return
+    
     def ConfigureL4LbServices(self):
         return self.obj_helper_l4lb.Configure()
 
@@ -289,6 +294,7 @@ class TenantObjectHelper:
         for ten in self.tens:
             ten.ConfigureSegmentsPhase2()
             ten.ConfigureTunnels()
+            ten.ConfigureDosPolicies()
         return
 
     def Generate(self, topospec):
