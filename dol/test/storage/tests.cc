@@ -83,6 +83,13 @@ int test_setup() {
   }
   printf("Host mem initialized\n");
 
+  // Initialize storage hbm memory
+  if (utils::hbm_buf_init() < 0) {
+    printf("HBM buf init failed is \n");
+    return -1;
+  }
+  printf("HBM buf initialized\n");
+
   // Initialize model client
   if (lib_model_connect() < 0) {
     printf("Failed to connect with model (is model running?)\n");
@@ -90,7 +97,6 @@ int test_setup() {
   }
   printf("Model client initialized\n");
 
- 
   // Initialize queues
   if (queues::queues_setup() < 0) {
     printf("Failed to setup lif and queues \n");
@@ -105,13 +111,24 @@ int test_setup() {
   if (read_buf == nullptr || write_buf == nullptr) return -1;
   printf("read_buf address %p write_buf address %p\n", read_buf, write_buf);
 
-  // Allocate the read and write buffer in HBM for the sequencer
-  read_hbm_buf = queues::get_storage_hbm_addr() + kHbmSsdBitmapSize;
+  // Allocate the read buffer in HBM for the sequencer
+  if (utils::hbm_addr_alloc(kHbmRWBufSize, &read_hbm_buf) < 0) {
+    printf("Can't allocate Read HBM buffer \n");
+    return -1;
+  }
   // Align it to a 4K page for PRP usage
   read_hbm_buf = (read_hbm_buf + 4095) & 0xFFFFFFFFFFFFF000L;
-  // Naturally aligned  a 4K page as kHbmRWBufSize is aligned
-  write_hbm_buf = read_hbm_buf + kHbmRWBufSize;
-  printf("HBM read_buf address %lx write_buf address %lx\n", read_hbm_buf, write_hbm_buf);
+
+  // Allocate the write buffer in HBM for the sequencer
+  if (utils::hbm_addr_alloc(kHbmRWBufSize, &write_hbm_buf) < 0) {
+    printf("Can't allocate Write HBM buffer \n");
+    return -1;
+  }
+  // Align it to a 4K page for PRP usage
+  write_hbm_buf = (write_hbm_buf + 4095) & 0xFFFFFFFFFFFFF000L;
+
+  printf("HBM read_buf address %lx write_buf address %lx\n",
+         read_hbm_buf, write_hbm_buf);
 
   // Allocate sequencer doorbell data that will be updated by sequencer and read by PVM
   if ((seq_db_data = alloc_host_mem(kSeqDbDataSize)) == nullptr) return -1;
@@ -1615,5 +1632,61 @@ int test_run_seq_prot_info() {
 int test_run_seq_encr_n_prot_info() {
   return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_N_T10, AES128_KEY_SIZE);
 }
+
+int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, 
+			uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
+			uint64_t pdma_dst_addr, uint32_t pdma_data_size,
+			uint64_t roce_wqe_addr, uint32_t roce_wqe_size) {
+
+  uint16_t seq_pdma_index;
+  uint8_t *seq_pdma_desc;
+  uint16_t seq_roce_index;
+  uint8_t *seq_roce_desc;
+  uint64_t db_data;
+  uint64_t db_addr;
+
+  printf("pdma_q %u, roce_q %u, roce_sq %u, pdma_src_addr %lx, "
+         "pdma_dst_addr %lx, pdma_data_size %u, "
+         "roce_wqe_addr %lx, roce_wqe_size %u \n",
+         seq_pdma_q, seq_roce_q, pvm_roce_sq, pdma_src_addr, 
+         pdma_dst_addr, pdma_data_size, roce_wqe_addr, roce_wqe_size);
+
+  // Sequencer #1: PDMA descriptor
+  seq_pdma_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  memset(seq_pdma_desc, 0, kSeqDescSize);
+
+  // Sequencer #2: R2N descriptor
+  seq_roce_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_roce_q, &seq_roce_index);
+  memset(seq_roce_desc, 0, kSeqDescSize);
+
+  // Fill the PDMA descriptor
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_roce_q, 0, 
+			     seq_roce_index, &db_addr, &db_data);
+  utils::write_bit_fields(seq_pdma_desc, 0, 64, db_addr);
+  utils::write_bit_fields(seq_pdma_desc, 64, 64, bswap_64(db_data));
+  utils::write_bit_fields(seq_pdma_desc, 128, 64, pdma_src_addr);
+  utils::write_bit_fields(seq_pdma_desc, 192, 64, pdma_dst_addr);
+  utils::write_bit_fields(seq_pdma_desc, 256, 32, pdma_data_size);
+
+  // Fill the Sequencer ROCE descriptor
+  uint64_t qaddr;
+  if (qstate_if::get_qstate_addr(queues::get_pvm_lif(), SQ_TYPE, pvm_roce_sq, &qaddr) < 0) {
+    printf("Can't get PVM's ROCE SQ qaddr \n");
+    return -1;
+  }
+  utils::write_bit_fields(seq_roce_desc, 0, 64, roce_wqe_addr);
+  utils::write_bit_fields(seq_roce_desc, 64, 32, roce_wqe_size);
+  utils::write_bit_fields(seq_roce_desc, 96, 11, queues::get_pvm_lif());
+  utils::write_bit_fields(seq_roce_desc, 107, 3, SQ_TYPE);
+  utils::write_bit_fields(seq_roce_desc, 110, 24, pvm_roce_sq);
+  utils::write_bit_fields(seq_roce_desc, 134, 34, qaddr);
+  utils::write_bit_fields(seq_roce_desc, 168, 8, 1);
+
+  // Kickstart the sequencer 
+  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
+  
+  return 0;
+}
+
 
 }  // namespace tests

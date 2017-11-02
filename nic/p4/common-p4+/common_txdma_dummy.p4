@@ -67,4 +67,5 @@
 #define tx_table_s2_t0_action8	tx_table_dummy_action
 #define tx_table_s1_t0_action8	tx_table_dummy_action
 
+#define tx_table_s2_t0_action9	tx_table_dummy_action
 #define tx_table_s1_t0_action9	tx_table_dummy_action

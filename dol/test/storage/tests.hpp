@@ -95,6 +95,11 @@ int test_run_seq_prot_info();
 
 int test_run_seq_encr_n_prot_info();
 
+int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, 
+			uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
+			uint64_t pdma_dst_addr, uint32_t pdma_data_size,
+			uint64_t roce_wqe_addr, uint32_t roce_wqe_size);
+
 }  // namespace tests
 
 #endif   // _TESTS_HPP_

@@ -1,4 +1,5 @@
 #include "dol/test/storage/utils.hpp"
+#include "dol/test/storage/hal_if.hpp"
 
 namespace utils {
 
@@ -34,6 +35,39 @@ void dump(uint8_t *buf) {
       printf("\n");
     }
   }
+}
+
+uint64_t storage_hbm_addr;
+uint32_t storage_hbm_size;
+uint32_t storage_hbm_running_size;
+
+int
+hbm_buf_init()
+{
+  // Allocatge HBM address for storage
+  if (hal_if::alloc_hbm_address(&storage_hbm_addr, &storage_hbm_size) < 0) {
+    printf("can't allocate HBM address for storage \n");
+    return -1;
+  }
+  printf("Storage HBM address %lx size %d KB\n", storage_hbm_addr, storage_hbm_size);
+  storage_hbm_size = storage_hbm_size * 1024;
+  printf("Storage HBM address %lx (byte) size %d \n", storage_hbm_addr, storage_hbm_size);
+  storage_hbm_running_size = 0;
+  return 0;
+}
+
+int
+hbm_addr_alloc(uint32_t size, uint64_t *alloc_ptr)
+{
+  if (!alloc_ptr) return -1;
+  if ((size + storage_hbm_running_size) >= storage_hbm_size) {
+    printf("total size %u running size %u requested size %u can't fit \n",
+           storage_hbm_size, storage_hbm_running_size, size);
+    return -1;
+  }
+  *alloc_ptr = storage_hbm_addr + storage_hbm_running_size;
+  storage_hbm_running_size += size;
+  return 0;
 }
 
 }  // namespace utils

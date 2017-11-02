@@ -34,6 +34,7 @@
 #define tx_table_s2_t0_action6	nvme_be_wqe_handler
 #define tx_table_s2_t0_action7	roce_sq_xlate
 #define tx_table_s2_t0_action8	roce_rq_push
+#define tx_table_s2_t0_action9	seq_pvm_roce_sq_cb_push
 
 #define tx_table_s3_t0_action	pri_q_state_push
 #define tx_table_s3_t0_action1	pri_q_state_incr
@@ -1438,7 +1439,7 @@ action seq_pdma_entry_handler(next_db_addr, next_db_data, src_addr, dst_addr,
  *****************************************************************************/
 
 action seq_r2n_entry_handler(r2n_wqe_addr, r2n_wqe_size, dst_lif, dst_qtype,
-                             dst_qid, dst_qaddr) {
+                             dst_qid, dst_qaddr, is_remote) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_r2n_entry.r2n_wqe_addr, r2n_wqe_addr);
@@ -1447,6 +1448,7 @@ action seq_r2n_entry_handler(r2n_wqe_addr, r2n_wqe_size, dst_lif, dst_qtype,
   modify_field(seq_r2n_entry.dst_qtype, dst_qtype);
   modify_field(seq_r2n_entry.dst_qid, dst_qid);
   modify_field(seq_r2n_entry.dst_qaddr, dst_qaddr);
+  modify_field(seq_r2n_entry.is_remote, is_remote);
 
   // Form the doorbell and setup the DMA command to pop the entry by writing 
   // w_ndx to c_ndx
@@ -1464,9 +1466,15 @@ action seq_r2n_entry_handler(r2n_wqe_addr, r2n_wqe_size, dst_lif, dst_qtype,
   DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, seq_r2n_entry.r2n_wqe_addr, 0,
                            0, 0, seq_r2n_entry.r2n_wqe_size, 0, 0, 0)
 
-  // Load the Serivce SQ context for the next stage to push the NVME command
-  CAPRI_LOAD_TABLE_ADDR(common_te0_phv, storage_kivec0.dst_qaddr,
-                        Q_STATE_SIZE, seq_q_state_push_start)
+  if (seq_r2n_entry.is_remote == 1) {
+    // Load the Serivce SQ context for the next stage to push the NVME command
+    CAPRI_LOAD_TABLE_ADDR(common_te0_phv, storage_kivec0.dst_qaddr,
+                          Q_STATE_SIZE, seq_pvm_roce_sq_cb_push_start)
+  } else {
+    // Load the Serivce SQ context for the next stage to push the NVME command
+    CAPRI_LOAD_TABLE_ADDR(common_te0_phv, storage_kivec0.dst_qaddr,
+                          Q_STATE_SIZE, seq_q_state_push_start)
+  }
 }
 
 /*****************************************************************************
@@ -1502,14 +1510,76 @@ action seq_q_state_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
     // Modify the DMA command 2 to fill the destination address based on p_ndx 
     // NOTE: This API in P4 land will not work, but in ASM we can selectively
     // overwrite the fields
-    DMA_COMMAND_PHV2MEM_FILL(dma_m2m_2, 
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, 
                              q_state_scratch.base_addr +
                              (q_state_scratch.p_ndx * q_state_scratch.entry_size),
-                             0, 0,
-                             0, 0, 0, 0)
+                             0, 0, 0, 0, 0, 0, 0)
 
     // Push the entry to the queue.  
     QUEUE_PUSH(q_state_scratch)
+
+    // Form the doorbell and setup the DMA command to push the entry by
+    // incrementing p_ndx
+    modify_field(doorbell_addr.addr,
+                 STORAGE_DOORBELL_ADDRESS(storage_kivec0.dst_qtype, 
+                                          storage_kivec0.dst_lif,
+                                          DOORBELL_SCHED_WR_SET, 
+                                          DOORBELL_UPDATE_NONE));
+    modify_field(qpush_doorbell_data.data, STORAGE_DOORBELL_DATA(0, 0, 0, 0));
+
+    DMA_COMMAND_PHV2MEM_FILL(dma_p2m_3, 
+                             0,
+                             PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                             PHV_FIELD_OFFSET(qpush_doorbell_data.data),
+                             0, 0, 0, 0)
+
+    // Exit the pipeline here 
+  }
+}
+
+/*****************************************************************************
+ *  seq_pvm_roce_sq_cb_push: Push to a ROCE SQ (using PVM's SQ CB context) by 
+ *                           issuing the mem2mem DMA commands and incrementing 
+ *                           the p_ndx via ringing the doorbell. Assumes that 
+ *                           data to be pushed has its source in DMA cmd 1 
+ *                           and destination in DMA cmd 2.
+ *****************************************************************************/
+
+action seq_pvm_roce_sq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel, 
+                               eval_last, total_rings, host_rings, pid, 
+                               p_ndx, c_ndx, base_addr, page_size, entry_size, 
+                               num_entries, rsvd0, roce_msn, w_ndx, next_pc, 
+                               rrq_qaddr, rrq_lif, rrq_qtype, rrq_qid, rsq_lif, 
+                               rsq_qtype, rsq_qid, pad) {
+
+
+  // Store the K+I vector into scratch to get the K+I generated correctly
+  STORAGE_KIVEC0_USE(storage_kivec0_scratch, storage_kivec0)
+  STORAGE_KIVEC1_USE(storage_kivec1_scratch, storage_kivec1)
+
+  // For D vector generation (type inference). No need to translate this to ASM.
+  PVM_ROCE_SQ_CB_COPY(pvm_roce_sq_cb_scratch)
+
+  // Check for queue full condition before pushing
+  if (QUEUE_FULL(pvm_roce_sq_cb_scratch)) {
+
+    // Exit pipeline here without error handling for now. This event of 
+    // destination queue being full should never happen with constraints 
+    // imposed by the control path programming.
+    exit();
+
+  } else {
+
+    // Modify the DMA command 2 to fill the destination address based on p_ndx 
+    // NOTE: This API in P4 land will not work, but in ASM we can selectively
+    // overwrite the fields
+    DMA_COMMAND_MEM2MEM_FILL(dma_m2m_1, dma_m2m_2, 
+                             pvm_roce_sq_cb_scratch.base_addr +
+                             (pvm_roce_sq_cb_scratch.p_ndx * q_state_scratch.entry_size),
+                             0, 0, 0, 0, 0, 0, 0)
+
+    // Push the entry to the queue.  
+    QUEUE_PUSH(pvm_roce_sq_cb_scratch)
 
     // Form the doorbell and setup the DMA command to push the entry by
     // incrementing p_ndx

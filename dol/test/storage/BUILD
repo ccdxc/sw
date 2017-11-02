@@ -2,14 +2,6 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])  # MIT license
 
 cc_library(
-    name= "utils",
-    srcs = [
-        "utils.cc",
-        "utils.hpp",
-    ],
-)
-
-cc_library(
     name= "hal_if",
     srcs = [
         "hal_if.cc",
@@ -25,10 +17,26 @@ cc_library(
 )
 
 cc_library(
+    name= "utils",
+    srcs = [
+        "utils.cc",
+        "utils.hpp",
+    ],
+    deps = [
+        ":hal_if",
+    ]
+)
+
+cc_library(
     name = "rdma",
     srcs = [
         "rdma.cc",
+        "rdma.hpp",
         "utils.hpp",
+	"queues.hpp",
+        "tests.hpp",
+        "r2n.hpp",
+        "nvme.hpp",
     ],
     deps = [
         ":hal_if",

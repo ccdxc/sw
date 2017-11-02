@@ -13,7 +13,6 @@
  *                      table config engine.
  *****************************************************************************/
 
-
 %%
 
     .param      req_tx_sqcb_process
@@ -31,6 +30,8 @@
     .param      rawc_s0_tx_start
     .param      gc_tx_rnmdr_s0_start
     .param      gc_tx_tnmdr_s0_start
+    .param      storage_tx_pvm_roce_sq_cb_pop_start
+    .param      storage_tx_roce_cq_cb_pop_start
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -88,6 +89,16 @@ storage_tx_stage0:
 .align
 storage_tx_pri_stage0:
    j    storage_tx_pri_q_state_pop_start
+   nop
+
+.align
+storage_tx_rsq_stage0:
+   j    storage_tx_pvm_roce_sq_cb_pop_start
+   nop
+
+.align
+storage_tx_rcq_stage0:
+   j    storage_tx_roce_cq_cb_pop_start
    nop
 
 .align

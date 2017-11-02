@@ -855,6 +855,7 @@ table tx_table_s2_t0 {
         tx_table_s2_t0_action6;
         tx_table_s2_t0_action7;
         tx_table_s2_t0_action8;
+        tx_table_s2_t0_action9;
     }
 }
 
