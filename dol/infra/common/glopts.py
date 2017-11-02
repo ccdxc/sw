@@ -34,6 +34,14 @@ parser.add_argument('--classic', dest='classic',
                     action='store_true', help='Run tests in classic nic mode.')
 parser.add_argument('--coveragerun', dest='coveragerun',
                     action='store_true', help='Move asm data if coverage run enabled')
+parser.add_argument('--regression', dest='regression',
+                    action='store_true', help='Run tests in regression mode.')
+parser.add_argument('--skipverify', dest='skipverify',
+                    action='store_true', help='Skip Verification all tests.')
+parser.add_argument('--tcscale', dest='tcscale', default=None,
+                    help='Testcase Scale Factor.')
+#parser.add_argument('--cfgscale', dest='cfgscale', default=None,
+#                    help='Configuration Scale Factor.')
 GlobalOptions = parser.parse_args()
 
 if GlobalOptions.topology is None or GlobalOptions.feature is None:

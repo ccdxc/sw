@@ -96,6 +96,9 @@ class Module(objects.FrameworkObject):
                 objs = RdmaSessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
             else:
                 objs = SessionHelper.GetMatchingConfigObjects(self.testspec.selectors)
+
+        if GlobalOptions.tcscale is not None:
+            objs = objs * int(GlobalOptions.tcscale)
         self.testspec.selectors.roots = objs
         self.logger.info("- Selected %d Matching Objects" % len(objs))
         utils.LogFunctionEnd(self.logger)

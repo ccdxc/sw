@@ -8,6 +8,8 @@ import infra.common.parser  as parser
 import infra.common.objects as objects
 import infra.common.utils   as utils
 
+from infra.common.glopts import GlobalOptions as GlobalOptions
+
 from infra.factory.store import FactoryStore as FactoryStore
 
 class TestSpecConfigSelectors(objects.FrameworkObject):
@@ -15,6 +17,14 @@ class TestSpecConfigSelectors(objects.FrameworkObject):
         super().__init__()
         self.Clone(spec)
         self.spec = spec
+        self.__init_regression()
+        return
+
+    def __init_regression(self):
+        if GlobalOptions.regression:
+            self.maxflows = None
+            self.maxsessions = None
+            self.maxrdmasessions = None
         return
 
     def IsFlowBased(self):

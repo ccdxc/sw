@@ -201,6 +201,16 @@ def run_dol(args):
         cmd.append('--classic')
     if args.coveragerun is True:
         cmd.append('--coveragerun')
+    if args.regression is True:
+        cmd.append('--regression')
+    if args.skipverify is True:
+        cmd.append('--skipverify')
+    if args.tcscale is not None:
+        cmd.append('--tcscale')
+        cmd.append(args.tcscale)
+    if args.dryrun is True:
+        cmd.append('--dryrun')
+
     p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
     print "- Log file: " + dol_log + "\n"
@@ -321,6 +331,16 @@ def main():
                         help='Run storage dol as well.')
     parser.add_argument("--asmcov", action="store_true",
                         help="Generate ASM coverage for this run")
+    parser.add_argument('--regression', dest='regression',
+                        action='store_true', help='Run tests in regression mode.')
+    parser.add_argument('--skipverify', dest='skipverify',
+                        action='store_true', help='Skip Verification all tests.')
+    parser.add_argument('--tcscale', dest='tcscale', default=None,
+                        help='Testcase Scale Factor.')
+#    parser.add_argument('--cfgscale', dest='cfgscale', default=None,
+#                        help='Configuration Scale Factor.')
+    parser.add_argument('--dryrun', dest='dryrun', action='store_true',
+                        help='Dry-Run mode. (No communication with HAL & Model)')
     args = parser.parse_args()
 
     if args.cleanup:
@@ -341,8 +361,10 @@ def main():
         print "* Using port (" + str(port) + ") for HAL\n"
         os.environ["HAL_GRPC_PORT"] = str(port)
 
-        run_model(args)
-        run_hal(args)
+        if args.dryrun is False:
+            run_model(args)
+            run_hal(args)
+
         if (args.storage):
           status = run_storage_dol(port)
           if status != 0:

@@ -240,6 +240,9 @@ class VerifEngineObject:
         return
 
     def Verify(self, step, lgh):
+        if GlobalOptions.skipverify:
+            lgh.info("Run with skipverify=True: SKIPPING VERIFICATION")
+            return defs.status.SUCCESS
         self.__verify_delay(step, lgh)
         return self.__verify(step, lgh)
 

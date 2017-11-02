@@ -12,6 +12,7 @@ from config.store import Store  as ConfigStore
 from infra.factory.store import FactoryStore as FactoryStore
 from infra.common.logging import logger
 from infra.misc.coverage import TestCaseCoverageHelper
+from infra.common.glopts import GlobalOptions as GlobalOptions
 
 class TestCaseParser(parser.ParserBase):
     def __init__(self, path, filename):
@@ -380,6 +381,7 @@ class TestCase(objects.FrameworkObject):
         return status
 
     def VerifyCallback(self):
+        if GlobalOptions.skipverify: return defs.status.SUCCESS
         self.info("Invoking TestCaseVerify.")
         ret = self.module.RunModuleCallback('TestCaseVerify', self)
         return self.__process_verify_callback_retval(ret)
@@ -406,6 +408,7 @@ class TestCase(objects.FrameworkObject):
         return
 
     def StepVerifyCallback(self, step):
+        if GlobalOptions.skipverify: return defs.status.SUCCESS
         self.info("Invoking TestCaseStepVerify.")
         ret = self.module.RunModuleCallback('TestCaseStepVerify', self, step)
         return self.__process_verify_callback_retval(ret)
