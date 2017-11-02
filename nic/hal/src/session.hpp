@@ -165,11 +165,10 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  ttl_dec:1;           // decrement ttl
     uint64_t                  mcast_en:1;          // mcast enable
     uint64_t                  tunnel_orig:1;       // tunnel originate
-    uint64_t                  lport:11;            // dest lport
+    uint64_t                  lport:11;            // dest lport 
     uint64_t                  qid_en:1;            // qid enabled
     uint64_t                  qtype:3;             // Qtype
     uint64_t                  qid:24;              // Qid
-    uint64_t                  nat_type:3;          // type of NAT
     uint64_t                  lkp_inst:1;          // Flow instance
     uint64_t                  dot1p_en:1;          //enable dot1p rewrite
     uint64_t                  dscp_en:1;           //enable dscp rewrite
@@ -181,11 +180,9 @@ typedef struct flow_pgm_attrs_s {
     tunnel_rewrite_actions_en tnnl_rw_act;         // tunnel rewrite action
     uint32_t                  tnnl_rw_idx;         // tunnel rewrite index
     uint32_t                  tnnl_vnid;           // tunnel vnid / encap vlan
-    ip_addr_t                 nat_sip;             // source NAT IP, if any
-    ip_addr_t                 nat_dip;             // destination NAT IP, if any
-    uint16_t                  nat_sport;           // NAT source port
-    uint16_t                  nat_dport;           // NAT destination port
+    ip_addr_t                 nat_ip;              // NAT IP, (dip for dnat/twice_nat, sip for snat)
     uint16_t                  nat_l4_port;         // NAT L4 port
+    uint32_t                  twice_nat_idx;       // Twice nat index
     uint8_t                   dot1p;               // Cos value
     uint8_t                   dscp;                // dscp value
     uint16_t                  mcast_ptr;           // Mcast Pointer

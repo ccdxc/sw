@@ -206,14 +206,12 @@ flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type,
     }
 }
 
-hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
+hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
+                                       hal::flow_pgm_attrs_t &attrs,
                                        const header_rewrite_info_t &rewrite)
 {
     hal_ret_t ret = HAL_RET_OK;
     bool snat, dnat;
-    session::NatType nat_type;
-    ip_addr_t nat_sip{}, nat_dip{};
-    uint16_t nat_sport{}, nat_dport{};
     hal::pd::pd_rw_entry_args_t rw_key{};
 
     attrs.rw_act = REWRITE_NOP_ID;
@@ -248,12 +246,12 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
     switch(rewrite.valid_hdrs&FTE_L3_HEADERS) {
     case FTE_HEADER_ipv4:
         if (rewrite.valid_flds.sip) {
-            nat_sip.af = IP_AF_IPV4;
-            nat_sip.addr.v4_addr = rewrite.ipv4.sip;
+            config.nat_sip.af = IP_AF_IPV4;
+            config.nat_sip.addr.v4_addr = rewrite.ipv4.sip;
         }
         if (rewrite.valid_flds.dip) {
-            nat_dip.af = IP_AF_IPV4;
-            nat_dip.addr.v4_addr = rewrite.ipv4.dip;
+            config.nat_dip.af = IP_AF_IPV4;
+            config.nat_dip.addr.v4_addr = rewrite.ipv4.dip;
         }
         if (rewrite.valid_flds.dscp) {
             attrs.dscp_en = true;
@@ -262,12 +260,12 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
         break;
     case FTE_HEADER_ipv6:
         if (rewrite.valid_flds.sip) {
-            nat_sip.af = IP_AF_IPV6;
-            nat_sip.addr.v6_addr = rewrite.ipv6.sip;
+            config.nat_sip.af = IP_AF_IPV6;
+            config.nat_sip.addr.v6_addr = rewrite.ipv6.sip;
         }
         if (rewrite.valid_flds.dip) {
-            nat_dip.af = IP_AF_IPV6;
-            nat_dip.addr.v6_addr = rewrite.ipv6.dip;
+            config.nat_dip.af = IP_AF_IPV6;
+            config.nat_dip.addr.v6_addr = rewrite.ipv6.dip;
         }
         if (rewrite.valid_flds.dscp) {
             attrs.dscp_en = true;
@@ -280,18 +278,18 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
     switch(rewrite.valid_hdrs&FTE_L4_HEADERS) {
     case FTE_HEADER_tcp:
         if (rewrite.valid_flds.sport) {
-            nat_sport = rewrite.tcp.sport;
+            config.nat_sport = rewrite.tcp.sport;
         }
         if (rewrite.valid_flds.dport) {
-            nat_dport = rewrite.tcp.dport;
+            config.nat_dport = rewrite.tcp.dport;
         }
         break;
     case FTE_HEADER_udp:
         if (rewrite.valid_flds.sport) {
-            nat_sport = rewrite.udp.sport;
+            config.nat_sport = rewrite.udp.sport;
         }
         if (rewrite.valid_flds.dport) {
-            nat_dport = rewrite.udp.dport;
+            config.nat_dport = rewrite.udp.dport;
         }
         break;
     }
@@ -299,35 +297,44 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_pgm_attrs_t &attrs,
     snat = (rewrite.valid_flds.sip || rewrite.valid_flds.sport);
     dnat = (rewrite.valid_flds.dip || rewrite.valid_flds.dport);
     if (snat && dnat){
-        // TODO(goli)we need to flip these if role is responder
-        attrs.nat_dip = nat_dip;
-        attrs.nat_dport = attrs.nat_l4_port = nat_dport;
-        attrs.nat_sip = nat_sip;
-        attrs.nat_sport = nat_sport;
-        nat_type = session::NAT_TYPE_TWICE_NAT;
+        attrs.nat_ip = config.nat_dip;
+        attrs.nat_l4_port = config.nat_dport;
+        config.nat_type = session::NAT_TYPE_TWICE_NAT;
     } else if (snat){
-        attrs.nat_sip = nat_sip;
-        attrs.nat_sport = attrs.nat_l4_port = nat_sport;
-        nat_type = session::NAT_TYPE_SNAT;
+        attrs.nat_ip = config.nat_sip;
+        attrs.nat_l4_port = config.nat_sport;
+        config.nat_type = session::NAT_TYPE_SNAT;
     } else if (dnat){
-        attrs.nat_dip = nat_dip;
-        attrs.nat_dport = attrs.nat_l4_port = nat_dport;
-        nat_type = session::NAT_TYPE_DNAT;
+        attrs.nat_ip = config.nat_dip;
+        attrs.nat_l4_port = config.nat_dport;
+        config.nat_type = session::NAT_TYPE_DNAT;
     } else {
-        nat_type = session::NAT_TYPE_NONE;
+        config.nat_type = session::NAT_TYPE_NONE;
     }
-
-    attrs.nat_type = nat_type;
 
     // rewrite action/index
     attrs.rw_act = nat_rewrite_action(rewrite.valid_hdrs&FTE_L3_HEADERS,
                                       rewrite.valid_hdrs&FTE_L4_HEADERS,
-                                      nat_type);
+                                      (session::NatType)config.nat_type);
     rw_key.rw_act = attrs.rw_act;
 
     ret = hal::pd::pd_rw_entry_find_or_alloc(&rw_key, &attrs.rw_idx);
     if (ret != HAL_RET_OK) {
         return ret;
+    }
+
+
+    //twice-nat idx
+    // TODO(goli) delete the idx on freeing flow
+    if (config.nat_type == session::NAT_TYPE_TWICE_NAT){
+        hal::pd::pd_twice_nat_entry_args_t args;
+        args.twice_nat_act = TWICE_NAT_TWICE_NAT_REWRITE_INFO_ID;
+        args.nat_ip = config.nat_sip;
+        args.nat_l4_port = config.nat_sport;
+        ret = pd_twice_nat_add(&args, &attrs.twice_nat_idx);
+        if (ret != HAL_RET_OK) {
+            return ret;
+        }
     }
 
     // tunnel rewrite action
@@ -384,6 +391,8 @@ hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
     return HAL_RET_OK;
 }
 
+
+
 hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attrs) const
 {
     hal_ret_t ret;
@@ -428,7 +437,7 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
             break;
 
         case HEADER_REWRITE:
-            ret = build_rewrite_config(attrs, entry->header_rewrite);
+            ret = build_rewrite_config(config, attrs, entry->header_rewrite);
             break;
         }
 
@@ -438,11 +447,6 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
     }
 
     // Fill the config
-    config.nat_type = attrs.nat_type;
-    config.nat_sip = attrs.nat_sip;
-    config.nat_dip = attrs.nat_dip;
-    config.nat_sport = attrs.nat_sport;
-    config.nat_dport = attrs.nat_dport;
     config.eg_qos_action.marking_action.pcp_rewrite_en = attrs.dot1p_en;
     config.eg_qos_action.marking_action.pcp = attrs.dot1p;
     config.eg_qos_action.marking_action.dscp_rewrite_en = attrs.dscp_en;

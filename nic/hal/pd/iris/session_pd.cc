@@ -301,32 +301,14 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd, flow
     d.flow_info_action_u.flow_info_flow_info.tunnel_originate = 
                                                     flow_attrs->tunnel_orig;
     // L4 LB (NAT) Info
-    // TODO: Replace these with nat_l4_port and nat_ip 
     d.flow_info_action_u.flow_info_flow_info.nat_l4_port = flow_attrs->nat_l4_port;
-    switch (flow_attrs->nat_type) {
-        case NAT_TYPE_SNAT:
-            memcpy(d.flow_info_action_u.flow_info_flow_info.nat_ip, &flow_attrs->nat_sip.addr,
-                    sizeof(ipvx_addr_t));
-            if (flow_cfg->key.flow_type == FLOW_TYPE_V6) {
-                memrev(d.flow_info_action_u.flow_info_flow_info.nat_ip, 
-                        sizeof(d.flow_info_action_u.flow_info_flow_info.nat_ip));
-            }
-            // d.flow_info_action_u.flow_info_flow_info.nat_l4_port = flow_attrs->nat_sport;
-            break;
-        case NAT_TYPE_DNAT:
-            memcpy(d.flow_info_action_u.flow_info_flow_info.nat_ip, &flow_attrs->nat_dip.addr,
-                    sizeof(ipvx_addr_t));
-            if (flow_cfg->key.flow_type == FLOW_TYPE_V6) {
-                memrev(d.flow_info_action_u.flow_info_flow_info.nat_ip, 
-                        sizeof(d.flow_info_action_u.flow_info_flow_info.nat_ip));
-            }
-            // d.flow_info_action_u.flow_info_flow_info.nat_l4_port = flow_attrs->nat_dport;
-            break;
-        case NAT_TYPE_TWICE_NAT:
-            break;
-        default:
-            break;
+    memcpy(d.flow_info_action_u.flow_info_flow_info.nat_ip, &flow_attrs->nat_ip.addr,
+           sizeof(ipvx_addr_t));
+    if (flow_cfg->key.flow_type == FLOW_TYPE_V6) {
+        memrev(d.flow_info_action_u.flow_info_flow_info.nat_ip, 
+               sizeof(d.flow_info_action_u.flow_info_flow_info.nat_ip));
     }
+    d.flow_info_action_u.flow_info_flow_info.twice_nat_idx = flow_attrs->twice_nat_idx;
 
     d.flow_info_action_u.flow_info_flow_info.cos_en = flow_attrs->dot1p_en;
     d.flow_info_action_u.flow_info_flow_info.cos = flow_attrs->dot1p;

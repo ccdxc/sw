@@ -414,9 +414,9 @@ ctx_t::update_flow_table()
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
                         iflow_attrs.lport, iflow_attrs.qid_en, iflow_attrs.qtype, iflow_attrs.qid,
                         iflow_attrs.rw_act, iflow_attrs.rw_idx, iflow_attrs.tnnl_rw_act,
-                        iflow_attrs.tnnl_rw_idx, iflow_attrs.tnnl_vnid, iflow_attrs.nat_sip,
-                        iflow_attrs.nat_dip, iflow_attrs.nat_sport, iflow_attrs.nat_dport,
-                        iflow_attrs.nat_type, iflow_attrs.expected_src_lif_en, iflow_attrs.expected_src_lif);
+                        iflow_attrs.tnnl_rw_idx, iflow_attrs.tnnl_vnid, iflow_cfg.nat_sip,
+                        iflow_cfg.nat_dip, iflow_cfg.nat_sport, iflow_cfg.nat_dport,
+                        iflow_cfg.nat_type, iflow_attrs.expected_src_lif_en, iflow_attrs.expected_src_lif);
     }
 
     for (uint8_t stage = 0; valid_rflow_ && stage <= rstage_; stage++) {
@@ -464,9 +464,9 @@ ctx_t::update_flow_table()
                         rflow_attrs.mac_da_rewrite, rflow_attrs.ttl_dec, rflow_attrs.mcast_en,
                         rflow_attrs.lport, rflow_attrs.qid_en, rflow_attrs.qtype, rflow_attrs.qid,
                         rflow_attrs.rw_act, rflow_attrs.rw_idx, rflow_attrs.tnnl_rw_act,
-                        rflow_attrs.tnnl_rw_idx, rflow_attrs.tnnl_vnid, rflow_attrs.nat_sip,
-                        rflow_attrs.nat_dip, rflow_attrs.nat_sport, rflow_attrs.nat_dport,
-                        rflow_attrs.nat_type, rflow_attrs.expected_src_lif_en, rflow_attrs.expected_src_lif);
+                        rflow_attrs.tnnl_rw_idx, rflow_attrs.tnnl_vnid, rflow_cfg.nat_sip,
+                        rflow_cfg.nat_dip, rflow_cfg.nat_sport, rflow_cfg.nat_dport,
+                        rflow_cfg.nat_type, rflow_attrs.expected_src_lif_en, rflow_attrs.expected_src_lif);
     }
 
     session_args.tenant = tenant_;
