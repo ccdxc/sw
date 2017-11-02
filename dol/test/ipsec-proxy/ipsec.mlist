@@ -58,6 +58,15 @@ modules:
         package : test.ipsec-proxy
         module  : decrypt_ipsec_ipv6_to_eth 
         spec    : decrypt_ipsec_ipv6_to_eth.testspec 
-        ignore  : True 
+        ignore  : False 
         iterate :
             - flow: filter://type=IPV6
+    - module:
+        name    : HOST_TCP_PKT_TO_IPSECCBQ
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : host_pkt_to_uplink 
+        spec    : host_to_network_tcp.testspec
+        ignore  : True 
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
