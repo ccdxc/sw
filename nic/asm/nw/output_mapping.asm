@@ -8,8 +8,8 @@ struct phv_             p;
 
 %%
 
-nop:
-  nop.e
+output_mapping_drop:
+  phvwr.e       p.capri_intrinsic_drop, TRUE
   nop
 
 .align

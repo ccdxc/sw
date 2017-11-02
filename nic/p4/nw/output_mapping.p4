@@ -74,17 +74,22 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
     modify_field(scratch_metadata.flag, encap_vlan_id_valid);
 }
 
+action output_mapping_drop () {
+    drop_packet();
+}
+
 @pragma stage 1
 table output_mapping {
     reads {
         control_metadata.dst_lport : exact;
     }
     actions {
-        nop;
+        output_mapping_drop;
         set_tm_oport;
         redirect_to_cpu;
         redirect_to_remote;
     }
+    default_action : output_mapping_drop;
     size : OUTPUT_MAPPING_TABLE_SIZE;
 }
 
