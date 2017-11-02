@@ -17,6 +17,42 @@ modules:
         iterate :
             - flow: filter://type=IPV4,proto=TCP
     - module:
+        name    : PKT70_TO_IPSECCBQ
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : pkt_to_ipseccbq
+        spec    : tcp_ipv4_pkt_payload70.testspec 
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
+    - module:
+        name    : PKT71_TO_IPSECCBQ
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : pkt_to_ipseccbq
+        spec    : tcp_ipv4_pkt_payload71.testspec 
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
+    - module:
+        name    : PKT72_TO_IPSECCBQ
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : pkt_to_ipseccbq
+        spec    : tcp_ipv4_pkt_payload72.testspec 
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
+    - module:
+        name    : PKT73_TO_IPSECCBQ
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : pkt_to_ipseccbq
+        spec    : tcp_ipv4_pkt_payload73.testspec 
+        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4,proto=TCP
+    - module:
         name    : ICMP_PKT_TO_IPSECCBQ
         enable  : True 
         package : test.ipsec-proxy

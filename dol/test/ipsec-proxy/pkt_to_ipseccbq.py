@@ -122,7 +122,7 @@ def TestCaseVerify(tc):
     tnmpr_cur.Configure()
 
     # 4. Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi+2):
+    if ((rnmdr_cur.pi != rnmdr.pi+2) and (rnmdr_cur.pi != rnmdr.pi+1)):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 

@@ -1,0 +1,109 @@
+# TCP Proxy RX Inorder Sample TestSpec file.
+selectors:
+    # Update: Vikasd
+    # Choose the config, that only selects flows matching below packet
+    # templates.
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        qpair       : filter://any # Local QPair
+    dst:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://native=False
+        endpoint    : filter://remote=True
+        qpair       : filter://any 
+    flow        : filter://proto=TCP,label=IPSEC-PROXY,fwtype=L2,direction=IFLOW
+    maxflows    : 1
+
+# Packet section defines the set of input and output packets. Input packets
+# will be used in triggers and output packets will be used in expect
+packets:
+    - packet:
+        id          : PKT1
+        template    : callback://networking/packets/GetPacketTemplateByFlow
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO72/size
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            qtag:
+                vlan    : ref://testcase/config/src/segment/vlan_id
+                prio    : 0
+            ipv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+            payload:
+                data: ref://factory/payloads/id=PAYLOAD_ZERO72/data 
+    - packet:
+        id          : PKT2
+        template    : ref://factory/packets/id=ETH_IPV4_ESP
+        payloadsize : ref://factory/payloads/id=ESP_PAYLOAD2/size
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            eth:
+                src     : callback://ipsec/ipsec/GetSMac 
+                dst     : callback://ipsec/ipsec/GetDMac 
+            qtag:
+                vlan    : callback://ipsec/ipsec/GetEncapVlan
+                prio    : 0
+            ipv4:
+                src     : callback://ipsec/ipsec/GetSIp
+                dst     : callback://ipsec/ipsec/GetDIp 
+                ttl     : 255
+                len     : 180
+                id      : 0
+                tos     : 0
+                chksum  : 0
+            esp:
+                spi     : callback://ipsec/ipsec/GetSpi
+                seq     : callback://ipsec/ipsec/GetSeqNo
+                iv      : callback://ipsec/ipsec/GetIv
+            payload:
+                data    : ref://factory/payloads/id=ESP_PAYLOAD2/data 
+    - packet:
+        id          : PKT3
+        template    : ref://factory/packets/id=ETH_IPV4_ESP
+        payloadsize : ref://factory/payloads/id=ESP_PAYLOAD2/size
+        encaps      : None
+        headers     :
+            eth:
+                src     : callback://ipsec/ipsec/GetSMac 
+                dst     : callback://ipsec/ipsec/GetDMac 
+            ipv4:
+                src     : callback://ipsec/ipsec/GetSIp
+                dst     : callback://ipsec/ipsec/GetDIp 
+                ttl     : 255
+                len     : 180
+                id      : 0
+                tos     : 0
+                chksum  : 0
+            esp:
+                spi     : callback://ipsec/ipsec/GetSpi
+                seq     : callback://ipsec/ipsec/GetSeqNo
+                iv      : callback://ipsec/ipsec/GetIv
+            payload:
+                data    : ref://factory/payloads/id=ESP_PAYLOAD2/data 
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/src/endpoint/intf/ports
+
+expect:
+    delay : 2
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT2
+            port    : 2 
+
