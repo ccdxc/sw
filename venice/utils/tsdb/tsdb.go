@@ -17,7 +17,20 @@ const (
 	channelBuffer = 4000
 )
 
-var gInit sync.Once
+// Options define configurable/operational parameters for transmitter interaction
+type Options struct {
+	// TBD: backend service name (for gRPC)
+	// TBD: reconnection period
+	// TBD: should any parameters be promoted up to global level from a table?
+}
+
+// Transmitter interface allows sending points (push) to a transmitter
+// (or a set of transmitter)
+type Transmitter interface {
+	SendPoints(dbName string, points []Point) error
+	Init(opts Options) error
+	Update(opts Options) error
+}
 
 // Table interface allows adding points in the table and deletion of the table
 type Table interface {
@@ -64,7 +77,7 @@ type Point struct {
 type Counter uint64
 
 // Increment is an unsigned integer metric that is reported in increments
-// Using this time is dependent on how data collection is happening
+// Using this time is dependent on how data transmission is happening
 type Increment uint64
 
 // Gauge is an integer value that can go up and down on a scale
@@ -76,7 +89,7 @@ type Flag bool
 // String is an arbitrary sized string that is measured against a field
 type String string
 
-// table represents a collection of records (aka set of Points)
+// table represents a transmission of records (aka set of Points)
 // All records within a table have same tag-keys and field names, while their values differ
 // Each record represents a time series with multiple entries sampled at different times
 type table struct {
@@ -111,19 +124,38 @@ type tableObj struct {
 	tbl *table
 }
 
+// Init initializes the transmitter interface
+func Init(tsmt Transmitter, options Options) error {
+	if gctx != nil {
+		return fmt.Errorf("client already initialized")
+	}
+
+	if err := tsmt.Init(options); err != nil {
+		return err
+	}
+	gctx = &globalContext{tsmt: tsmt,
+		txChan: make(chan interface{}, channelBuffer),
+		tables: make(map[string]*table)}
+	go startTransmitter()
+
+	return nil
+}
+
 // NewTable returns a table to the user, on which Points would be added
 func NewTable(name string, config Config) (Table, error) {
 
 	if name == "" {
 		return nil, fmt.Errorf("invalid configuration params")
 	}
-	gInit.Do(startTransmitter)
+	if gctx == nil {
+		return nil, fmt.Errorf("Uninitialized client")
+	}
 
 	if _, ok := gctx.tables[name]; ok {
 		return nil, fmt.Errorf("table '%s' already exists", name)
 	}
 
-	tbl := &table{Mutex: sync.Mutex{}, name: name, config: config}
+	tbl := &table{name: name, config: config}
 
 	gctx.Lock()
 	defer gctx.Unlock()
@@ -154,6 +186,7 @@ func (tbl *table) AddPoints(name string, points []Point) error {
 	}
 
 	// TBD: do we make a copy of the objects; copying decreases performances but can be thread-safe
+	gctx.txChan <- tbl.name
 	gctx.txChan <- points
 
 	return nil
@@ -240,6 +273,9 @@ func (tblObj *tableObj) AddObjPoint(obj interface{}) error {
 type globalContext struct {
 	sync.Mutex
 
+	// Transmitter is an interface to communicate with a transmitter entity
+	tsmt Transmitter
+
 	// txChan is the channel where all message from caller are sent to the sender thread
 	txChan chan interface{}
 
@@ -250,37 +286,39 @@ type globalContext struct {
 var gctx *globalContext
 
 // startTransmitter function receives the objects over tx channel and sends the data over the
-// network to collector(s)
+// network to transmitter(s)
 func startTransmitter() {
-	gctx = &globalContext{Mutex: sync.Mutex{},
-		txChan: make(chan interface{}, 4000),
-		tables: make(map[string]*table)}
-	go func() {
-		for {
-			select {
-			case v, ok := <-gctx.txChan:
-				if !ok {
-					log.Errorf("Error reading from channel. Closing watch")
-					close(gctx.txChan)
-					return
-				}
-				points, ok := v.([]Point)
-				if !ok {
-					log.Errorf("Invalid objects received over the channel")
-					continue
-				}
-				if err := sendPoints(points); err != nil {
-					log.Errorf("error posting points")
-				}
+	for {
+		select {
+		case v, ok := <-gctx.txChan:
+			if !ok {
+				log.Errorf("Error reading table name, closing channel")
+				return
+			}
+			// first comes the table name, then points
+			tblName, ok := v.(string)
+			if !ok {
+				log.Errorf("Invalid objects received over the channel")
+				continue
+			}
+
+			// next read the points for the table
+			v, ok = <-gctx.txChan
+			if !ok {
+				log.Errorf("Error reading points, closing channel")
+				return
+			}
+
+			points, ok := v.([]Point)
+			if !ok {
+				log.Errorf("Invalid objects received over the channel")
+				continue
+			}
+			if err := gctx.tsmt.SendPoints(tblName, points); err != nil {
+				log.Errorf("error posting points")
 			}
 		}
-	}()
-}
-
-func sendPoints(points []Point) error {
-	log.Infof("received following points to be sent over network: %+v", points)
-
-	return nil
+	}
 }
 
 func fillKeys(kvs map[string]ref.FInfo, tags map[string]string) error {
@@ -303,7 +341,7 @@ func fillKeys(kvs map[string]ref.FInfo, tags map[string]string) error {
 
 func fillFields(kvs map[string]ref.FInfo, fields map[string]interface{}) error {
 	// TBD: deletion of skipNames can be avoided if caller passes just the spec
-	skipNames := []string{"Kind", "UUID", "ResourceVersion", "Name", "Namespace", "Tenant", "Labels", "CTime", "MTime"}
+	skipNames := []string{"Kind", "UUID", "ResourceVersion", "Name", "Namespace", "Tenant", "Labels", "Nanos", "Seconds"}
 	for _, key := range skipNames {
 		delete(kvs, key)
 	}
