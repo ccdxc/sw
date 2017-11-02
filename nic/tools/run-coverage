@@ -11,8 +11,8 @@ if [[ $? -ne 4 ]]; then
     exit 1
 fi
 
-OPTIONS="kic:"
-LONGOPTIONS="keep-data,configfile:,ignore-errors"
+OPTIONS="kilc:"
+LONGOPTIONS="keep-data,configfile:,ignore-errors,modellogs"
 
 PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
 if [[ $? -ne 0 ]]; then
@@ -28,6 +28,7 @@ eval set -- "$PARSED"
 config_file="coverage.json"
 keep_data=0
 ignore_errors=0
+enable_model_logs=0
 while true; do
     case "$1" in
         -k |--keep-data)
@@ -40,6 +41,10 @@ while true; do
             ;;
         -i|--ignore-errors)
             ignore_errors=1
+            shift
+            ;;
+        -l|--modellogs)
+            enable_model_logs=1
             shift
             ;;
         --)
@@ -64,6 +69,10 @@ fi
 
 if [ $ignore_errors -eq 1 ];then
     export IGNORE_ERRORS=--ignore-errors
+fi
+
+if [ $enable_model_logs -eq 1 ];then
+    export MODEL_LOGGING_ENABLED=1
 fi
 
 export MPU_COV_DUMP_FILE=$NIC_DIR/coverage/asm_cov.dump
