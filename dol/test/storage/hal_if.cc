@@ -284,7 +284,7 @@ int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, u
   }
   if(cr_resp_msg.response(0).keyindex() == *key_index) {
     printf("Create request failed \n");
-	return -1;
+    return -1;
   }
   *key_index = cr_resp_msg.response(0).keyindex();
 
@@ -304,9 +304,27 @@ int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, u
   }
   if(upd_resp_msg.response(0).keyindex() != *key_index) {
     printf("Update request failed \n");
-	return -1;
+    return -1;
   }
 
+  return 0;
+}
+
+int delete_key(uint32_t key_index) {
+  grpc::ClientContext context;
+  cryptokey::CryptoKeyDeleteRequestMsg del_req_msg;
+  cryptokey::CryptoKeyDeleteResponseMsg del_resp_msg;
+  auto req = del_req_msg.add_request();
+  req->set_keyindex(key_index);
+  auto status = crypto_stub->CryptoKeyDelete(&context, del_req_msg, &del_resp_msg);
+  if (!status.ok()) {
+    printf("Delete request failed \n");
+    return -1;
+  }
+  if(del_resp_msg.response(0).keyindex() != key_index) {
+    printf("Delete request failed with bad keyindex \n");
+    return -1;
+  }
   return 0;
 }
 

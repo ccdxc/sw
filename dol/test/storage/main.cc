@@ -63,8 +63,9 @@ struct {
   {&tests::test_run_seq_e2e2, "Seq Local Tgt E2E 2", false},
   {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
   {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
-  {&tests::test_run_seq_encr, "Seq Encryption", false},
-
+  {&tests::test_run_seq_encr, "Seq XTS Encryption", false},
+  {&tests::test_run_seq_prot_info, "Seq XTS T10", false},
+  {&tests::test_run_seq_encr_n_prot_info, "Seq XTS Encr & T10", false},
   // Always last entry
   {0}
 };

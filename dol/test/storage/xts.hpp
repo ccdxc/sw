@@ -10,6 +10,12 @@
 
 namespace xts {
 
+#define XTS_SEQ_Q 52
+#define PROT_INFO_SIZE 8
+#define AES128_KEY_SIZE 16
+#define AES256_KEY_SIZE 32
+#define IV_SIZE 64
+
 typedef struct xts_aol_ {
   uint64_t a0;
   uint32_t o0;
@@ -56,6 +62,23 @@ typedef struct xts_desc_ {
   char         resv_pad[XTS_REQ_DESC_PADDING];
 } __attribute__((packed)) xts_desc_t;
 
+typedef struct xts_prot_info_ {
+  uint16_t crc;
+  uint16_t app_tag;
+  uint32_t sector_num;
+} __attribute__((packed)) xts_prot_info_t;
+
+uint32_t get_output_size(uint32_t ip_size, uint32_t sector_size) {
+	return (ip_size + (ip_size/sector_size) * PROT_INFO_SIZE);
+}
+
+typedef enum {
+  AES_ENCR_ONLY,
+  T10_ONLY,
+  AES_ENCR_N_T10,
+  AES_ENCR_N_DECR,
+  AES_ENCR_N_DECR_N_T10,
+}CMD;
 
 
 }  // namespace xts
