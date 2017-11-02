@@ -138,7 +138,10 @@ tcp_serq_produce:
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_PKT_TO_SERQ, TCP_DDOL_PKT_TO_SERQ
     smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
     bcf         [!c1 & !c2], ring_doorbell
-    nop
+    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DEL_ACK_TIMER, TCP_DDOL_DEL_ACK_TIMER
+    smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_RING_TX_DOORBELL, TCP_DDOL_DONT_RING_TX_DOORBELL
+    setcf       c3, [!c1 & c2]
+    phvwri.c3   p.dma_cmd4_dma_cmd_eop, 1
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd5_dma_cmd)
     b           flow_write_serq_process_done
     nop
