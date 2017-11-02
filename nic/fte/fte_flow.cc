@@ -395,9 +395,16 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
         attrs.drop =  (action_ == session::FLOW_ACTION_DROP);
     }
 
-    if (valid_.mcast_copy) {
+    if (valid_.mcast_info) {
         attrs.mcast_en = mcast_info_.mcast_en;
         attrs.mcast_ptr = mcast_info_.mcast_ptr;
+    }
+
+    if (valid_.ingress_info) {
+        if (ingress_info_.expected_sif) {
+            attrs.expected_src_lif_en = 1;
+            attrs.expected_src_lif = hal::pd::if_get_hw_lif_id(ingress_info_.expected_sif);
+        }
     }
 
     if (valid_.fwding) {

@@ -24,6 +24,7 @@ const feature_id_t FTE_FEATURE_APP_REDIR_MISS= 12;
 const feature_id_t FTE_FEATURE_APP_REDIR     = 13;
 const feature_id_t FTE_FEATURE_CLASSIC_FWDING= 14;
 const feature_id_t FTE_FEATURE_APP_REDIR_FINI= 15;
+const feature_id_t FTE_FEATURE_INGRESS_CHECKS= 16;
 
 // FTE pipeline progress action codes
 //  continue - continue the pipeline

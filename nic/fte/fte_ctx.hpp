@@ -18,10 +18,11 @@ namespace fte {
     ENTRY(FLOWUPD_HEADER_REWRITE,1, "modify the header")                \
     ENTRY(FLOWUPD_HEADER_PUSH,   2, "push header")                      \
     ENTRY(FLOWUPD_HEADER_POP,    3, "pop header")                       \
-    ENTRY(FLOWUPD_FLOW_STATE,    4,  "connection tracking state")        \
+    ENTRY(FLOWUPD_FLOW_STATE,    4,  "connection tracking state")       \
     ENTRY(FLOWUPD_FWDING_INFO,   5, "fwding info")                      \
     ENTRY(FLOWUPD_KEY,           6, "flow key update")                  \
     ENTRY(FLOWUPD_MCAST_COPY,    7, "flow mcast copy update")           \
+    ENTRY(FLOWUPD_INGRESS_INFO,  8, "ingress info")            \
 
 DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
 #undef FTE_FLOW_UPDATE_CODES
@@ -248,6 +249,13 @@ typedef struct mcast_info_s {
 
 std::ostream& operator<<(std::ostream& os, const mcast_info_t& val);
 
+typedef struct ingress_info_s {
+    // Expected source interface for host pinning mode
+    hal::if_t *expected_sif;
+} ingress_info_t;
+
+std::ostream& operator<<(std::ostream& os, const ingress_info_t& val);
+
 typedef struct flow_update_s {
     flow_update_type_t type;
     union {
@@ -257,6 +265,7 @@ typedef struct flow_update_s {
         header_pop_info_t header_pop;
         flow_state_t flow_state;
         fwding_info_t fwding;
+        ingress_info_t ingress_info;
         hal::flow_key_t key;
         mcast_info_t mcast_info;
     };
@@ -387,8 +396,15 @@ public:
     // Get key based on role
     const hal::flow_key_t& get_key(hal::flow_role_t role);
 
-    // Firewall action
+    // Flow has drop action set (installs flow with drop action)
+    bool drop_flow() { return drop_flow_; }
+
+    // Drop packet
     bool drop() const { return drop_; }
+    void set_drop() {
+        drop_ = true;
+        HAL_TRACE_DEBUG("fte::set_drop feature={}", feature_name_);
+    }
 
     // direction of the current pkt
     hal::flow_direction_t direction() {return (hal::flow_direction_t)(key_.dir); };
@@ -503,7 +519,8 @@ private:
     uint8_t               num_handlers_;
     completion_handler_t  completion_handlers_[MAX_QUEUED_HANDLERS];
 
-    bool                  drop_;           // Drop the packeto
+    bool                  drop_;           // Drop the packet
+    bool                  drop_flow_;   // fw action is drop, installs drop flow
     bool                  existing_session_;// Existing or new session ?
     hal::session_t        *session_;
     bool                  cleanup_hal_;    // Cleanup hal session

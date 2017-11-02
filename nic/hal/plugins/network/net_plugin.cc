@@ -12,7 +12,8 @@ void init() {
     fte::register_feature(fte::FTE_FEATURE_QOS, "net.qos", qos_exec);
     fte::register_feature(fte::FTE_FEATURE_ALG, "net.app-layer-gw", alg_exec);
     fte::register_feature(fte::FTE_FEATURE_DOL_TEST_ONLY, "net.doltest", dol_test_exec);
-    fte::register_feature(fte::FTE_FEATURE_LB, "net.ep_learn", ep_learn_exec);
+    fte::register_feature(fte::FTE_FEATURE_LB, "net.ep-learn", ep_learn_exec);
+    fte::register_feature(fte::FTE_FEATURE_INGRESS_CHECKS, "net.ingress-checks", ingress_checks_exec);
 }
 
 }

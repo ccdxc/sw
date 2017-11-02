@@ -408,7 +408,7 @@ ctx_t::update_flow_table()
         HAL_TRACE_DEBUG("fte::update_flow_table: iflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
-                        "nat_dip={} nat_sport={} nat_dport={} nat_type={}",
+                        "nat_dip={} nat_sport={} nat_dport={} nat_type={} slif_en={} slif={}",
                         stage, iflow_cfg.key, iflow_attrs.lkp_inst, iflow_cfg.action,
                         iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
@@ -416,7 +416,7 @@ ctx_t::update_flow_table()
                         iflow_attrs.rw_act, iflow_attrs.rw_idx, iflow_attrs.tnnl_rw_act,
                         iflow_attrs.tnnl_rw_idx, iflow_attrs.tnnl_vnid, iflow_attrs.nat_sip,
                         iflow_attrs.nat_dip, iflow_attrs.nat_sport, iflow_attrs.nat_dport,
-                        iflow_attrs.nat_type);
+                        iflow_attrs.nat_type, iflow_attrs.expected_src_lif_en, iflow_attrs.expected_src_lif);
     }
 
     for (uint8_t stage = 0; valid_rflow_ && stage <= rstage_; stage++) {
@@ -458,7 +458,7 @@ ctx_t::update_flow_table()
         HAL_TRACE_DEBUG("fte::update_flow_table: rflow.{} key={} lkp_inst={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
-                        "nat_dip={} nat_sport={} nat_dport={} nat_type={}",
+                        "nat_dip={} nat_sport={} nat_dport={} nat_type={} slif_en={} slif={}",
                         stage, rflow_cfg.key, rflow_attrs.lkp_inst, rflow_cfg.action,
                         rflow_attrs.mac_sa_rewrite,
                         rflow_attrs.mac_da_rewrite, rflow_attrs.ttl_dec, rflow_attrs.mcast_en,
@@ -466,7 +466,7 @@ ctx_t::update_flow_table()
                         rflow_attrs.rw_act, rflow_attrs.rw_idx, rflow_attrs.tnnl_rw_act,
                         rflow_attrs.tnnl_rw_idx, rflow_attrs.tnnl_vnid, rflow_attrs.nat_sip,
                         rflow_attrs.nat_dip, rflow_attrs.nat_sport, rflow_attrs.nat_dport,
-                        rflow_attrs.nat_type);
+                        rflow_attrs.nat_type, rflow_attrs.expected_src_lif_en, rflow_attrs.expected_src_lif);
     }
 
     session_args.tenant = tenant_;
@@ -510,6 +510,7 @@ hal_ret_t
 ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& header)
 {
     hal_ret_t ret;
+    ipvx_addr_t dip;
 
     if (!header.valid_flds.dip) {
         return HAL_RET_OK;
@@ -517,11 +518,13 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
 
     if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
         dep_ = hal::find_ep_by_v4_key(tenant_->tenant_id, header.ipv4.dip);
+        dip.v4_addr = header.ipv4.dip;
     } else {
         ip_addr_t addr;
         addr.af = IP_AF_IPV6;
         addr.addr.v6_addr = header.ipv6.dip;
         dep_ = hal::find_ep_by_v6_key(tenant_->tenant_id, &addr);
+        dip.v6_addr = header.ipv6.dip;
     }
 
     if (dep_ == NULL) {
@@ -538,9 +541,22 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
     }
 
     dl2seg_ = hal::find_l2seg_by_handle(dep_->l2seg_handle);
-
     dif_ = hal::find_if_by_handle(dep_->if_handle);
     HAL_ASSERT(dif_ != NULL);
+
+    // If we are doing dnat on iflow, update the rflow's key
+    if (role == hal::FLOW_ROLE_INITIATOR && valid_rflow_ ) {
+        hal::flow_key_t rkey = {};
+        for (int i = 0; i < MAX_STAGES; i++) {
+            rkey = rflow_[i]->key();
+            if (!this->protobuf_request()) {
+                rkey.sip = dip;
+            }
+            rkey.dir = (dep_->ep_flags & EP_FLAGS_LOCAL) ?
+                FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
+            rflow_[i]->set_key(rkey);
+        }  
+    }
 
     return  HAL_RET_OK;
 }
@@ -666,6 +682,11 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         ret = flow->set_action(flowupd.action);
         if (flowupd.action == session::FLOW_ACTION_DROP) {
             drop_ = true;
+            drop_flow_ = true;
+            // TODO(goli) - need to invalidate rflow - but dol is failing
+            // if (role == hal::FLOW_ROLE_INITIATOR) {
+            //    valid_rflow_ = false;
+            //}
         }
         HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} action={}",
                         role, feature_name_, ret, flowupd.action);
@@ -718,9 +739,14 @@ ctx_t::update_flow(const flow_update_t& flowupd,
         break;
 
     case FLOWUPD_MCAST_COPY:
-        ret = flow->set_mcast_copy(flowupd.mcast_info);
-        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} mcast_info={} mcast_ptr={}",
+        ret = flow->set_mcast_info(flowupd.mcast_info);
+        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} mcast_info={}",
                         role, feature_name_, ret, flowupd.mcast_info);
+        break;
+    case FLOWUPD_INGRESS_INFO:
+        ret = flow->set_ingress_info(flowupd.ingress_info);
+        HAL_TRACE_DEBUG("fte::update_flow {} feature={} ret={} ingress_info={}",
+                        role, feature_name_, ret, flowupd.ingress_info);
         break;
     }
 
@@ -837,9 +863,6 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
     return HAL_RET_OK;
 }
 
-/*-----------------------------------------------------------------------
-- Swap the derived flow objects for reverse flow processing.
--------------------------------------------------------------------------*/
 void
 ctx_t::invoke_completion_handlers(bool fail)
 {
@@ -878,6 +901,9 @@ ctx_t::process()
     return ret;
 }
 
+/*-----------------------------------------------------------------------
+  - Swap the derived flow objects for reverse flow processing.
+  -------------------------------------------------------------------------*/
 void
 ctx_t::swap_flow_objs()
 {
@@ -1023,9 +1049,15 @@ std::ostream& operator<<(std::ostream& os, const fwding_info_t& val)
     return os << "}";
 }
 
+std::ostream& operator<<(std::ostream& os, const ingress_info_t& val)
+{
+    os << "{expected_sif=" << val.expected_sif->if_id;
+    return os << "}";
+}
+
 std::ostream& operator<<(std::ostream& os, const mcast_info_t& val)
 {
-    os << "{mcast_en=" << val.mcast_en;
+    os << "{mcast_en=" << (bool)val.mcast_en;
     if (val.mcast_en) {
         os << " ,mcast_ptr=" << val.mcast_ptr;
     }

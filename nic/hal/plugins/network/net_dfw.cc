@@ -15,9 +15,7 @@ pol_check_sg_policy(fte::ctx_t &ctx)
         return ctx.sess_spec()->initiator_flow().flow_data().flow_info().flow_action();
     }
 
-    if (hal::is_forwarding_mode_host_pinned() &&
-        (ctx.sep() == NULL || ctx.sep()->ep_flags & EP_FLAGS_REMOTE) &&
-        (ctx.dep() == NULL || ctx.dep()->ep_flags & EP_FLAGS_REMOTE)) {
+    if (ctx.drop_flow()) {
         return session::FLOW_ACTION_DROP;
     }
 
@@ -86,7 +84,6 @@ fte::pipeline_action_t
 dfw_exec(fte::ctx_t& ctx)
 {
     hal_ret_t ret;
-
 
     // security policy action
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};

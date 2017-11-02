@@ -173,6 +173,7 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  lkp_inst:1;          // Flow instance
     uint64_t                  dot1p_en:1;          //enable dot1p rewrite
     uint64_t                  dscp_en:1;           //enable dscp rewrite
+    uint64_t                  expected_src_lif_en:1;  // src lif check for host pinning
 
     uint32_t                  tenant_hwid;         // source l2seg tenant hwid (lkp_vrf)
     rewrite_actions_en        rw_act;              // rewrite action
@@ -188,6 +189,7 @@ typedef struct flow_pgm_attrs_s {
     uint8_t                   dot1p;               // Cos value
     uint8_t                   dscp;                // dscp value
     uint16_t                  mcast_ptr;           // Mcast Pointer
+    uint32_t                  expected_src_lif;    // src lif for host pinning check
 } __PACK__ flow_pgm_attrs_t;
 
 // flow state
