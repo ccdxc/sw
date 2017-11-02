@@ -548,6 +548,7 @@ class capri_table:
             # convert extra k-bits to k-byte if there is space
             if self.is_tcam_table() and self.key_size < key_maker_width and \
                 n_k_bits > bit_extractors:
+
                 extra_k_bits = n_k_bits - bit_extractors
                 k_bit2byte = []
                 # start with largest chunk
@@ -555,9 +556,11 @@ class capri_table:
                 rm_chunks = []
                 k = 0
                 removed_bits = 0
+
                 while extra_k_bits > 0:
                     kB = sorted_k_bit_ext[k][0] / 8
                     endkB = (sorted_k_bit_ext[k][0]+sorted_k_bit_ext[k][1]-1)/8
+
                     extra_k_bits -= sorted_k_bit_ext[k][1]
                     removed_bits += sorted_k_bit_ext[k][1]
                     for b in range(kB, endkB+1):
@@ -569,13 +572,69 @@ class capri_table:
                 # into account 'covered' k bits due to bit2byte conversion - XXX
                 new_ki_size = ki_size - removed_bits + (len(k_bit2byte) * 8)
                 if new_ki_size < max_ki:
+                    # XXXX fix i1 and i2 designation due to added k-byte
+                    # this can be complex if newly added kbyte falls in-between i1 or i2 bytes
+                    # which is avoided while selecting bit2byte chunk 
                     # accept changes
                     for b in k_bit2byte:
                         fid = (b*8)/flit_size
                         self.km_flits[fid].k_phv_chunks.append((b*8,8))
-                    for kf in self.km_flits:
                         self.km_flits[fid].k_phv_chunks = sorted(self.km_flits[fid].k_phv_chunks,
                             key=lambda k:k[0])
+                        k_start = self.km_flits[fid].k_phv_chunks[0][0]
+                        k_end = self.km_flits[fid].k_phv_chunks[-1][0] + \
+                                self.km_flits[fid].k_phv_chunks[-1][1] - 1
+
+                        i1_to_i2 = []
+                        i1_to_k = []
+                        for (cs,cw) in self.km_flits[fid].i1_phv_chunks:
+                            if (cs+cw) < k_start:
+                                # still i1
+                                continue
+                            if cs > k_end:
+                                i1_to_i2.append((cs,cw))
+                                continue
+                            i1_to_k.append((cs,cw))
+
+                        i2_to_i1 = []
+                        i2_to_k = []
+                        for (cs,cw) in self.km_flits[fid].i2_phv_chunks:
+                            if cs > k_end:
+                                # still i2
+                                continue
+                            if (cs+cw) < k_start:
+                                i2_to_i1.append((cs,cw))
+                                continue
+                            i2_to_k.append((cs,cw))
+
+                        for cscw in i1_to_i2:
+                            self.km_flits[fid].i2_phv_chunks.append(cscw)
+                            self.km_flits[fid].i1_phv_chunks.remove(cscw)
+
+                        if len(i1_to_i2):
+                            self.km_flits[fid].i2_phv_chunks = \
+                                sorted(self.km_flits[fid].i2_phv_chunks, key=lambda k:k[0])
+
+                        for cscw in i1_to_k:
+                            self.km_flits[fid].k_phv_chunks.append(cscw)
+                            self.km_flits[fid].i1_phv_chunks.remove(cscw)
+
+                        for cscw in i2_to_i1:
+                            self.km_flits[fid].i1_phv_chunks.append(cscw)
+                            self.km_flits[fid].i2_phv_chunks.remove(cscw)
+
+                        if len(i2_to_i1):
+                            self.km_flits[fid].i1_phv_chunks = \
+                                sorted(self.km_flits[fid].i1_phv_chunks, key=lambda k:k[0])
+
+                        for cscw in i2_to_k:
+                            self.km_flits[fid].k_phv_chunks.append(cscw)
+                            self.km_flits[fid].i2_phv_chunks.remove(cscw)
+
+                        if len(i1_to_k) or len(i2_to_k):
+                            self.km_flits[fid].k_phv_chunks = \
+                                sorted(self.km_flits[fid].k_phv_chunks, key=lambda k:k[0])
+
                     # adjust/removed any overlapping bit chunks that got covered by bytes
                     for c,rc in enumerate(self.k_bit_ext):
                         if rc in rm_chunks:
@@ -878,8 +937,9 @@ class capri_table:
 
                 self.gtm.tm.logger.debug("%s:%s:%s:bit2byte changes to K,I" % \
                     (self.gtm.d.name, self.p4_table.name, self.match_type.name))
-                self.gtm.tm.logger.debug("%s:%s:(k,I) new:(%d, %d) old:(%d,%d)" % \
-                    (self.gtm.d.name, self.p4_table.name, new_k_size, new_i_size, k_size, i_size))
+                self.gtm.tm.logger.debug("%s:%s:(k,I) new:(%d, %d) old:(%d,%d) k_delta(%d, %d)" % \
+                    (self.gtm.d.name, self.p4_table.name, new_k_size, new_i_size, k_size, i_size,
+                     k_start_delta, k_end_delta))
                 self.start_key_off_delta = k_start_delta
                 self.end_key_off_delta = k_end_delta
             elif new_num_km_k <= num_km and k_delta > 0 and \
@@ -979,33 +1039,39 @@ class capri_table:
                 k_start = -1
                 k_end = -1
             new_i_phv_chunks = []
+
             # move non-byte aligned flds from the i vector to a separate list
+            # for toeplitz table, key is split between two key-makers as key and seed
+            # so i-bytes will apprear to be within key, for now just ignore it, there will
+            # an assert later.
+            # XXX check portions of seed/key separately to find i_in_key
             i_in_key = 0
-            for c, (cs, cw) in enumerate(i_phv_chunks):
-                part_start = cs % 8
-                part_end = (cs+cw) % 8
-                if cs >= k_start and cs < k_end:
-                    in_key = True
-                else:
-                    in_key = False
-                if part_start:
-                    part_len = cw if cw < (8-part_start) else (8-part_start)
-                    kf.i_bit_ext.append((cs, part_len, in_key))
-                    if in_key:
-                        i_in_key += part_len
-                    cw -= part_len
-                    cs += part_len
-                    if not cw:
-                        continue
-                if part_end:
-                    kf.i_bit_ext.append((cs+cw-part_end, part_end, in_key))
-                    if in_key:
-                        i_in_key += part_end
-                    cw -= part_end
-                    if not cw:
-                        continue
-                if cw:
-                    new_i_phv_chunks.append((cs, cw))
+            if not self.is_toeplitz_hash():
+                for c, (cs, cw) in enumerate(i_phv_chunks):
+                    part_start = cs % 8
+                    part_end = (cs+cw) % 8
+                    if cs >= k_start and cs < k_end:
+                        in_key = True
+                    else:
+                        in_key = False
+                    if part_start:
+                        part_len = cw if cw < (8-part_start) else (8-part_start)
+                        kf.i_bit_ext.append((cs, part_len, in_key))
+                        if in_key:
+                            i_in_key += part_len
+                        cw -= part_len
+                        cs += part_len
+                        if not cw:
+                            continue
+                    if part_end:
+                        kf.i_bit_ext.append((cs+cw-part_end, part_end, in_key))
+                        if in_key:
+                            i_in_key += part_end
+                        cw -= part_end
+                        if not cw:
+                            continue
+                    if cw:
+                        new_i_phv_chunks.append((cs, cw))
 
             if len(new_i_phv_chunks) and len(k_phv_chunks):
                 i_phv_chunks = _remove_duplicate_chunks(new_i_phv_chunks, k_phv_chunks)
@@ -1019,13 +1085,15 @@ class capri_table:
                 is_i1 = False   # default is i2
                 is_i_bits = False
                 if len(k_phv_chunks):
-                    if cs < k_phv_chunks[0][0]:
-                        is_i1 = True
-                    elif cs < k_phv_chunks[-1][0]:
-                        is_i_bits = True
-                        i_in_key += cw
-                    else:
-                        pass
+                    # for toeplitz table treat all i bytes as i2
+                    if not self.is_toeplitz_hash():
+                        if cs < k_phv_chunks[0][0]:
+                            is_i1 = True
+                        elif cs < k_phv_chunks[-1][0]:
+                            is_i_bits = True
+                            i_in_key += cw
+                        else:
+                            pass
                 if is_i_bits:
                     kf.i_bit_ext.append((cs, cw, True if i_in_key else False))
                     continue
@@ -1773,7 +1841,8 @@ class capri_table:
         assert self.start_key_off == 0, pdb.set_trace()
 
         # final key_size is computed as (n-1)*512 + end_key_off, where n=flits used
-        self.final_key_size = ((len(self.flits_used)-1) * wide_key_km_width) + self.end_key_off
+        self.final_key_size = ((len(self.flits_used)-1) * wide_key_km_width) + \
+                        self.last_flit_end_key_off - self.last_flit_start_key_off
         assert self.final_key_size >= self.key_size
 
     def ct_tcam_get_key_end_bytes(self):
@@ -2080,6 +2149,12 @@ class capri_table:
         # hw need tcam key to start at 2B boundary to use AXI shift for aligning the key
         k_start = self.start_key_off / 8
         key_szB = (self.final_key_size + 7)/8
+        # for tcam do not use start key_off_delta, just include non-k bits into k and mask them
+        # this is for axi shift adjustment
+        if self.start_key_off_delta:
+            self.gtm.tm.logger.debug("%s:Reset start_key_off_delta(%d) for tcam table" % \
+                (self.p4_table.name, self.start_key_off_delta))
+            self.start_key_off_delta = 0
 
         if self.is_otcam:
             # This needs to be fixed by fixing its parent hash table key - XXX
@@ -4296,6 +4371,28 @@ class capri_gress_tm:
         self.tm.logger.debug("----- Table KM Information (%s) -----" % self.d.name)
         for ct in self.tables.values():
             ct.ct_print_km_profiles()
+            km_str = '%s: [flit]:(km0,1):' % ct.p4_table.name
+            # km_usage 0:not used, 1=in-use, 2=done(cannot use it again)
+            km_usage = [0 for _ in range(len(ct.key_makers))] 
+            for f in range(num_flits):
+                km_str += "[%d]:(" % f
+                for k,km in enumerate(ct.key_makers):
+                    if f in km.flits_used:
+                        km_str += "Y,"
+                        if km_usage[k] == 2:
+                            self.tm.logger.critical("Error - %s:km %d reused at %d" %\
+                                (ct.p4_table.name, k, f))
+                            #assert(0), pdb.set_trace()
+                        else:
+                            km_usage[k] = 1
+                    else:
+                        km_str += "N,"
+                        if km_usage[k] == 1:
+                            km_usage[k] = 2
+                        else:
+                            pass
+                km_str += ")"
+            self.tm.logger.debug("%s" % km_str)
 
     def init_tables(self, stage_tables):
         action_id_size = self.tm.be.hw_model['match_action']['action_id_size']
@@ -4804,6 +4901,17 @@ class capri_gress_tm:
                             km.km_id = k
                             ct.key_makers.append(km)
                     ct.num_km = len(ct.key_makers)
+                    # fix km flits_used flags
+                    tbls = [ct, ct.hash_ct]
+                    for xct in tbls:
+                        for km in xct.key_makers:
+                            start_flit = km.flits_used[0]
+                            end_flit = km.flits_used[-1]
+                            for _f in range(start_flit, end_flit+1):
+                                if _f not in km.flits_used:
+                                    km.flits_used.append(_f)
+                            km.flits_used = sorted(km.flits_used, key=lambda k: k)
+                    
 
     def program_tables(self):
         for stg in self.stages.keys():

@@ -1857,13 +1857,14 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                                                         nxt_cs, sram, s, mux_inst_allocator,\
                                                         mux_idx_allocator)
 
-    if nxt_cs.is_end:
+    if nxt_cs.capture_payload_offset():
         # need to capture current_offset where parser stops parsing. This is needed for the
         # deparser, use offset instruction for computing ohi. When explicit END state
         # is used, offset_instruction will be 0
         ohi_payload_slot = parser.be.hw_model['parser']['ohi_threshold']
         assert s < hw_max_ohi_per_state, pdb.set_trace()# 'No OHI instr available in end state %s' % cs.name
-        if isinstance(nxt_cs.extract_len, int):
+        if isinstance(nxt_cs.extract_len, int) or nxt_cs.dont_advance_packet():
+            # when don't advance is set, offset_inst is programmed as 0
             sram['ohi_inst'][s]['sel']['value'] = str(1)    # integer extraction
             sram['ohi_inst'][s]['muxsel']['value'] = str(0) # NA
             sram['ohi_inst'][s]['idx_val']['value'] = offset_inst['val']['value']
@@ -1875,8 +1876,9 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
             sram['ohi_inst'][s]['muxsel']['value'] = offset_inst['muxsel']['value']
             sram['ohi_inst'][s]['idx_val']['value'] = str(0)
             sram['ohi_inst'][s]['slot_num']['value'] = str((ohi_payload_slot))
-        parser.logger.debug('%s:%s:End State: OHI instruction[%d] %d len %d' % \
-                            (parser.d.name, nxt_cs.name, s, ohi_payload_slot, nxt_cs.extract_len))
+
+        parser.logger.debug('%s:%s:Payload Offset: OHI instruction[%d] slot %d' % \
+                            (parser.d.name, nxt_cs.name, s, ohi_payload_slot))
     # meta_inst
     # meta inst for hv bits -
     # use all headers from add_cs and nxt_cs
@@ -2785,8 +2787,13 @@ def capri_te_cfg_output(stage):
             json_tbl_['addr_shift']['value'] = str(0)
             json_tbl_['lg2_entry_size']['value'] = str(0)
 
-        # XXXX need to program chain shift for wide-key table - for toeplitz leave it as 0??
-        json_tbl_['chain_shift']['value'] = str(0)
+        # need to program chain shift for wide-key table - for toeplitz leave it as 0??
+        if ct.is_wide_key and not ct.is_toeplitz_hash():
+            json_tbl_['chain_shift']['value'] = str(6)
+            json_tbl_['lg2_entry_size']['value'] = str(6)
+        else:
+            json_tbl_['chain_shift']['value'] = str(0)
+
         stage.gtm.tm.logger.debug("%s:Stage[%d]:Table %s:cap_te_csr_cfg_table_property[%d]:\n%s" % \
             (stage.gtm.d.name, stage.id, ct.p4_table.name, ct.tbl_id,
             te_tbl_property_print(json_tbl_)))

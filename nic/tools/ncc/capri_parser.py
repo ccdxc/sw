@@ -465,6 +465,15 @@ class capri_parse_state:
         else:
             return False
 
+    def capture_payload_offset(self):
+        if self.p4_state and 'capture_payload_offset' in self.p4_state._parsed_pragmas:
+            return True
+        if self.p4_state and 'dont_capture_payload_offset' in self.p4_state._parsed_pragmas:
+            return False
+        if self.is_end:
+            return True
+        return False
+
     def __repr__(self):
         return self.name
 
