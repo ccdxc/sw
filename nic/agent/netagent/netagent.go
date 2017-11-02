@@ -4,6 +4,7 @@ package netagent
 
 import (
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -41,7 +42,7 @@ type Agent struct {
 	datapath     state.NetDatapathAPI
 	NetworkAgent *state.NetAgent
 	npmClient    *ctrlerif.NpmClient
-	restServer   *ctrlerif.RestServer
+	RestServer   *restapi.RestServer
 }
 
 // NewAgent creates an agent instance
@@ -64,7 +65,7 @@ func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverURLs
 	log.Infof("NPM client {%+v} is running", npmClient)
 
 	// create REST api server
-	restServer, err := ctrlerif.NewRestServer(nagent, restListenURL)
+	restServer, err := restapi.NewRestServer(nagent, restListenURL)
 	if err != nil {
 		log.Errorf("Error creating the rest API server. Err: %v", err)
 		return nil, err
@@ -75,7 +76,7 @@ func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverURLs
 		datapath:     dp,
 		NetworkAgent: nagent,
 		npmClient:    npmClient,
-		restServer:   restServer,
+		RestServer:   restServer,
 	}
 
 	return &ag, nil
@@ -85,5 +86,5 @@ func NewAgent(dp state.NetDatapathAPI, dbPath, nodeUUID, ctrlerURL, resolverURLs
 func (ag *Agent) Stop() {
 	ag.npmClient.Stop()
 	ag.NetworkAgent.Stop()
-	ag.restServer.Stop()
+	ag.RestServer.Stop()
 }

@@ -8,6 +8,7 @@ import (
 	context "golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/ctrler/npm/rpcserver/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -388,7 +389,7 @@ func TestNpmClientWatch(t *testing.T) {
 	Assert(t, (cl != nil), "Error creating npm client")
 
 	// create http REST server
-	restSrv, err := NewRestServer(ag, ":0")
+	restSrv, err := restapi.NewRestServer(ag, ":0")
 	AssertOk(t, err, "Error creating the rest server")
 
 	// verify client got the network & ep

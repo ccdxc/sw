@@ -113,12 +113,27 @@ func parseGoogleAPIHTTP(val interface{}) (interface{}, error) {
 	return c, nil
 }
 
+func parseNaplesRestService(val interface{}) (interface{}, error) {
+	c, ok := val.([]*venice.RestEndpoint)
+	if !ok {
+		return nil, errInvalidOption
+	}
+	return c, nil
+}
+
 // ServiceParams is the parameters related to the Service used by templates
 type ServiceParams struct {
 	// Version is the version of the Service
 	Version string
 	// Prefix is the prefix for all the resources served by the service.
 	Prefix string
+}
+
+// RestServiceOptions holds raw REST options data from .proto files
+type RestServiceOptions struct {
+	CrudObject string
+	Methods    []string
+	Pattern    string
 }
 
 // MethodParams is the parameters related to a method used by templates
@@ -289,6 +304,24 @@ func getSvcParams(s *descriptor.Service) (ServiceParams, error) {
 		params.Prefix = ""
 	}
 	return params, nil
+}
+
+// getRestSvcOptions returns the ServiceOptions for the service. This call will ensure that the raw venice.naplesRestService
+// is passed to the templating logic for customization. This will also avoid generating the *.pb.gw files if we don't
+// want them.
+func getRestSvcOptions(s *descriptor.Service) ([]RestServiceOptions, error) {
+	var restOptions []RestServiceOptions
+	//var ok bool
+	i, _ := reg.GetExtension("venice.naplesRestService", s)
+	for _, r := range i.([]*venice.RestEndpoint) {
+		var restService RestServiceOptions
+		restService.CrudObject = r.Object
+		restService.Methods = r.Method
+		restService.Pattern = r.Pattern
+		restOptions = append(restOptions, restService)
+	}
+	glog.V(1).Infof("RestAPIParsing yielded : %#v", restOptions)
+	return restOptions, nil
 }
 
 // getMethodParams returns params for the method in a MethodParams object.
@@ -966,11 +999,13 @@ func init() {
 	reg.RegisterOptionParser("google.api.http", parseGoogleAPIHTTP)
 	reg.RegisterOptionParser("venice.check", parseStringSliceOptions)
 	reg.RegisterOptionParser("gogoproto.nullable", parseBoolOptions)
+	reg.RegisterOptionParser("venice.naplesRestService", parseNaplesRestService)
 
 	// Register Functions
 	reg.RegisterFunc("getDbKey", getDbKey)
 	reg.RegisterFunc("getURIKey", getURIKey)
 	reg.RegisterFunc("getSvcParams", getSvcParams)
+	reg.RegisterFunc("getRestSvcOptions", getRestSvcOptions)
 	reg.RegisterFunc("getMethodParams", getMethodParams)
 	reg.RegisterFunc("getCWD2", getCWD2)
 	reg.RegisterFunc("getSwaggerFileName", getSwaggerFileName)

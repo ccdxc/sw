@@ -62,6 +62,13 @@ message SecurityGroupEvent {
 
 // security group rpc service
 service SecurityApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "SecurityGroup",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+    };
+
     rpc GetSecurityGroup (api.ObjectMeta) returns (SecurityGroup) {};
     rpc ListSecurityGroups (api.ObjectMeta) returns (SecurityGroupList) {};
     rpc WatchSecurityGroups (api.ObjectMeta) returns (stream SecurityGroupEvent) {};

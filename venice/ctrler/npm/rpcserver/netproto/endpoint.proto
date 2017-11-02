@@ -55,6 +55,13 @@ message EndpointEvent {
 
 // endpoint controller api
 service EndpointApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "Endpoint",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+    };
+
     rpc CreateEndpoint (Endpoint) returns (Endpoint) {};
 	rpc GetEndpoint (api.ObjectMeta) returns (Endpoint) {};
     rpc ListEndpoints (api.ObjectMeta) returns (EndpointList) {};

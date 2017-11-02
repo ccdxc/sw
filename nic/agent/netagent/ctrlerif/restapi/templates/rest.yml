@@ -1,0 +1,6 @@
+ basepath: "github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi/templates"
+ templates:
+   - template: "restgen.tmpl"
+     outputpath: "{FILE}_api.go"
+   - template: "restgen_test.tmpl"
+     outputpath: "{FILE}_api_test.go"

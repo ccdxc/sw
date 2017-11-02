@@ -49,6 +49,13 @@ message NetworkEvent {
 
 // network controller api
 service NetworkApi {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "Network",
+        Method: ["list", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}"
+    };
+
 	rpc GetNetwork (api.ObjectMeta) returns (Network) {};
     rpc ListNetworks (api.ObjectMeta) returns (NetworkList) {};
     rpc WatchNetworks (api.ObjectMeta) returns (stream NetworkEvent) {};

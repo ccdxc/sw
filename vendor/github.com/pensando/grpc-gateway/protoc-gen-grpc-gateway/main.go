@@ -10,6 +10,7 @@ package main
 
 import (
 	"flag"
+	"go/format"
 	"io"
 	"io/ioutil"
 	"os"
@@ -183,11 +184,24 @@ func main() {
 }
 
 func emitFiles(out []*plugin.CodeGeneratorResponse_File) {
+	for _, genOut := range out {
+		fmtContent, err := goFormatContent([]byte(*genOut.Content))
+		if err != nil {
+			glog.Errorf("Could not auto format generated source. Please run go fmt on: ", *genOut.Name)
+		}
+		genOut.Content = &fmtContent
+	}
 	emitResp(&plugin.CodeGeneratorResponse{File: out})
 }
 
 func emitError(err error) {
 	emitResp(&plugin.CodeGeneratorResponse{Error: proto.String(err.Error())})
+}
+
+func goFormatContent(ufmt []byte) (fmtSrc string, err error) {
+	f, err := format.Source(ufmt)
+	fmtSrc = string(f)
+	return
 }
 
 func emitResp(resp *plugin.CodeGeneratorResponse) {

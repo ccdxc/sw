@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package ctrlerif
+package restapi
 
 import (
 	"net"
@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -23,11 +22,7 @@ type RestServer struct {
 	httpServer *http.Server     // HTTP server
 }
 
-// Catchall http handler
-func unknownAction(w http.ResponseWriter, r *http.Request) {
-	log.Infof("Unknown REST URL %q", r.URL.Path)
-	w.WriteHeader(503)
-}
+type routeAddFunc func(*mux.Router, *RestServer)
 
 // NewRestServer creates a new HTTP server servicg REST api
 func NewRestServer(agent state.CtrlerIntf, listenURL string) (*RestServer, error) {
@@ -42,14 +37,18 @@ func NewRestServer(agent state.CtrlerIntf, listenURL string) (*RestServer, error
 		return &srv, nil
 	}
 
-	// setup the routes
+	// setup the top level routes
 	router := mux.NewRouter()
-	t := router.Methods("GET").Subrouter()
-	t.HandleFunc("/api/networks/", httputils.MakeHTTPHandler(srv.networkListHandler))
-	t.HandleFunc("/api/endpoints/", httputils.MakeHTTPHandler(srv.endpointListHandler))
-	t.HandleFunc("/api/sgs/{*}", httputils.MakeHTTPHandler(srv.sgListHandler))
+	prefixRoutes := map[string]routeAddFunc{
+		"/api/networks/":  addNetworkAPIRoutes,
+		"/api/endpoints/": addEndpointAPIRoutes,
+		"/api/sgs/":       addSecurityGroupAPIRoutes,
+	}
 
-	t.HandleFunc("/api/{*}", unknownAction)
+	for prefix, subRouter := range prefixRoutes {
+		sub := router.PathPrefix(prefix).Subrouter().StrictSlash(true)
+		subRouter(sub, &srv)
+	}
 
 	log.Infof("Starting server at %s", listenURL)
 
@@ -84,19 +83,4 @@ func (s *RestServer) Stop() error {
 	}
 
 	return nil
-}
-
-func (s *RestServer) networkListHandler(r *http.Request) (interface{}, error) {
-	// return the list of all networks
-	return s.agent.ListNetwork(), nil
-}
-
-func (s *RestServer) endpointListHandler(r *http.Request) (interface{}, error) {
-	// return the list of all endpoints
-	return s.agent.ListEndpoint(), nil
-}
-
-func (s *RestServer) sgListHandler(r *http.Request) (interface{}, error) {
-	// return the list of all sgs
-	return s.agent.ListSecurityGroup(), nil
 }

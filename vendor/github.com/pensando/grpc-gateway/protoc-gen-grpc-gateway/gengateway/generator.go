@@ -118,6 +118,17 @@ func (g *generator) generate(file *descriptor.File) (string, error) {
 func testEqualStr(a, b string) bool {
 	return a == b
 }
+func contains(str, substr string) bool {
+	return strings.Contains(str, substr)
+}
+
+func toUpper(str string) string {
+	return strings.ToUpper(str)
+}
+
+func toLower(str string) string {
+	return strings.ToLower(str)
+}
 
 func getFieldName(in string) string {
 	s := []byte(in)
@@ -139,9 +150,12 @@ func (g *generator) GenerateFromTemplates(target *descriptor.File, paths []gen.T
 
 	funcMap := template.FuncMap{
 		"strEq":        testEqualStr,
+		"subStr":       contains,
 		"getFieldName": getFieldName,
 		"getExtension": ext.GetExtension,
 		"hasExtension": ext.HasExtension,
+		"upper":        toUpper,
+		"lower":        toLower,
 	}
 
 	for k, v := range ext.FuncMap {

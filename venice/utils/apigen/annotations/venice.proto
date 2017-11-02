@@ -38,6 +38,8 @@ extend google.protobuf.ServiceOptions {
   repeated string apiGrpcCrudService = 51252;
   // apiRestService is used to specify the REST services offered by the service.
   repeated RestEndpoint apiRestService = 51253;
+  // naplesRestService is used to specify the REST services for auto-generating rest endpoints and their corresponding tests in naples
+  repeated RestEndpoint naplesRestService = 51254;
 };
 
 // Venice Option extensions applicable to rpc Methods.

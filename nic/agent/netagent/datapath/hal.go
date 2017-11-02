@@ -212,8 +212,10 @@ func (hd *HalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.N
 	var macStripRegexp = regexp.MustCompile(`[^a-fA-F0-9]`)
 	hex := macStripRegexp.ReplaceAllLiteralString(ep.Status.MacAddress, "")
 	macaddr, _ := strconv.ParseUint(hex, 16, 64)
-	ipaddr, _, _ := net.ParseCIDR(ep.Status.IPv4Address)
-
+	ipaddr, _, err := net.ParseCIDR(ep.Status.IPv4Address)
+	if err != nil {
+		log.Errorf("CIDR Parsing failed: %v. Error: %v", ep.Status.IPv4Address, err)
+	}
 	// convert v4 address
 	v4Addr := halproto.IPAddress{
 		IpAf: halproto.IPAddressFamily_IP_AF_INET,
@@ -252,7 +254,7 @@ func (hd *HalDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.N
 
 	// call hal to create the endpoint
 	// FIXME: handle response
-	_, err := hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
+	_, err = hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
 	if err != nil {
 		log.Errorf("Error creating endpoint. Err: %v", err)
 		return nil, err
