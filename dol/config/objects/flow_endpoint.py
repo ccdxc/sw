@@ -44,9 +44,8 @@ class FlowEndpointL4LbObject:
         if self.IsTwiceNAT():
             self.service_snat_ip, self.service_snat_ipv6, self.service_snat_port = \
                 self.service.SelectServiceSNat()
-            print("flowepl4obj: snat_ip:%s, snat_ipv6:%s, snat_port:%d" %\
+            cfglogger.info("flowepl4obj: snat_ip:%s, snat_ipv6:%s, snat_port:%d" %\
                   (self.service_snat_ip, self.service_snat_ipv6, self.service_snat_port))
-            #pdb.set_trace()
 
     def GetServiceSNatIpAddress(self):
         return self.service_snat_ip

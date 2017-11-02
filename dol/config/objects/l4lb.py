@@ -27,9 +27,16 @@ class L4LbBackendObject(base.ConfigObjectBase):
         self.service    = service
         self.port       = spec.port
         self.remote     = spec.remote
-        self.ep         = service.tenant.AllocL4LbBackend(self.remote)
+        if hasattr(spec, 'tnnled'):
+            self.tnnled = spec.tnnled
+        else:
+            self.tnnled  = False
+        self.ep         = service.tenant.AllocL4LbBackend(self.remote, self.tnnled)
         self.ep.AttachL4LbBackend(self)
         return
+
+    def IsTunneled(self):
+        return self.tnnled
 
     def GetIpAddress(self):
         return self.ep.GetIpAddress()

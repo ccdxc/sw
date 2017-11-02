@@ -48,3 +48,17 @@ def GetL4LbFlowSrcPorts(testcase):
     if testcase.config.flow.IsSnat():
         return testcase.config.src.l4lb.backend.ep.intf.ports
     return testcase.config.src.endpoint.intf.ports
+
+def GetL4LbFlowPostNatL4SPort(testcase, packet):
+    if testcase.config.flow.nat_sport == 0:
+        # IP Only NAT
+        return testcase.config.flow.sport
+    else:
+        return testcase.config.flow.nat_sport
+
+def GetL4LbFlowPostNatL4DPort(testcase, packet):
+    if testcase.config.flow.nat_dport == 0:
+        # IP Only NAT
+        return testcase.config.flow.dport
+    else:
+        return testcase.config.flow.nat_dport

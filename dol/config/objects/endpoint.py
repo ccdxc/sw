@@ -61,6 +61,10 @@ class EndpointObject(base.ConfigObjectBase):
         self.useg_vlan_id = 0
         return
 
+    def IsBehindTunnel(self):
+        # EP is remote & segment's fabencap is vxlan
+        return self.remote and self.segment.IsFabEncapVxlan()
+
     def IsL4LbBackend(self):
         return self.is_l4lb_backend
 
@@ -123,7 +127,7 @@ class EndpointObject(base.ConfigObjectBase):
 
     def GetRxQosDscp(self):
         return self.intf.GetRxQosDscp()
-    
+
     def __copy__(self):
         endpoint = EndpointObject()
         endpoint.id = self.id
@@ -135,7 +139,7 @@ class EndpointObject(base.ConfigObjectBase):
         endpoint.ipaddrs = self.ipaddrs[:]
         endpoint.ipv6addrs = self.ipv6addrs[:]
         return endpoint
-    
+
     def Equals(self, other, lgh):
         if not isinstance(other, self.__class__):
             return False
@@ -144,9 +148,9 @@ class EndpointObject(base.ConfigObjectBase):
                   "macaddr", "ipaddrs", "ipv6addrs"]
         if not self.CompareObjectFields(other, fields, lgh):
             return False
-            
+
         return True
-        
+
     def Show(self):
         cfglogger.info("Endpoint = %s(%d)" % (self.GID(), self.id))
         cfglogger.info("- IsBackend = %s" % self.IsL4LbBackend())
@@ -209,7 +213,7 @@ class EndpointObject(base.ConfigObjectBase):
         self.segment_hal_handle = get_resp.spec.l2_segment_handle
         self.intf_hal_handle = get_resp.spec.interface_handle
         self.macaddr = objects.MacAddressBase(integer=get_resp.spec.mac_address)
-       
+
         self.ipaddrs = []
         self.ipv6addrs = []
         for ipaddr in get_resp.spec.ip_address:
@@ -227,7 +231,7 @@ class EndpointObject(base.ConfigObjectBase):
     def CreatePds(self, spec):
         self.pds = objects.ObjectDatabase(cfglogger)
         self.obj_helper_pd = pd.PdObjectHelper()
-        self.obj_helper_pd.Generate(self, spec) 
+        self.obj_helper_pd.Generate(self, spec)
         self.pds.SetAll(self.obj_helper_pd.pds)
 
     def ConfigurePds(self):
@@ -245,8 +249,8 @@ class EndpointObject(base.ConfigObjectBase):
         self.slabs.Add(slab)
 
     def ConfigureSlabs(self):
-        self.obj_helper_slab.Configure() 
-        
+        self.obj_helper_slab.Configure()
+
     def GetSlabid(self):
         return self.slab_allocator.get()
 
@@ -401,12 +405,12 @@ class EndpointObjectHelper:
     def __create_pds(self, spec):
         for ep in self.eps:
             ep.CreatePds(spec)
-    
+
     def __create_slabs(self, spec):
         # create slabs only on local eps
         for ep in self.local:
             ep.CreateSlabs(spec)
-    
+
     def Generate(self, segment, spec):
         self.__create_remote(segment, spec)
         self.__create_local(segment, spec)
@@ -432,7 +436,7 @@ class EndpointObjectHelper:
                 self.__create_pds(pd_spec)
 
         return
-    
+
 def GetMatchingObjects(selectors):
     endpoints =  Store.objects.GetAllByClass(EndpointObject)
     return [ep for ep in endpoints if ep.IsFilterMatch(selectors.endpoint)]

@@ -28,7 +28,7 @@ class TenantObject(base.ConfigObjectBase):
         super().__init__()
         self.Clone(Store.templates.Get('TENANT'))
         return
-        
+
     def Init(self, spec, entryspec, topospec):
         self.id = resmgr.TenIdAllocator.get()
         gid = "Ten%04d" % self.id
@@ -60,10 +60,10 @@ class TenantObject(base.ConfigObjectBase):
         self.Show()
 
         # Process LIFs
-        self.lifns = entryspec.lifns  
+        self.lifns = entryspec.lifns
         self.obj_helper_lif = lif.LifObjectHelper()
         self.__create_lifs()
-        # Process Segments 
+        # Process Segments
         self.obj_helper_segment = segment.SegmentObjectHelper()
         self.__create_segments()
         # Process L4LbServices
@@ -100,9 +100,9 @@ class TenantObject(base.ConfigObjectBase):
             return False
         fields = ["id", "security_profile_handle"]
         if not self.CompareObjectFields(other, fields, lgh):
-            return False        
+            return False
         return True
-   
+
     def Show(self):
         cfglogger.info("Tenant  : %s" % self.GID())
         cfglogger.info("- Type          : %s" % self.type)
@@ -143,9 +143,9 @@ class TenantObject(base.ConfigObjectBase):
 
     def IsL4LbEnabled(self):
         return self.l4lb_enable == True
-    def AllocL4LbBackend(self, remote):
-        return self.obj_helper_segment.AllocL4LbBackend(remote)
-   
+    def AllocL4LbBackend(self, remote, tnnled):
+        return self.obj_helper_segment.AllocL4LbBackend(remote, tnnled)
+
     def __create_l4lb_services(self):
         if 'l4lb' not in self.spec.__dict__:
             self.l4lb_enable = False
@@ -179,7 +179,7 @@ class TenantObject(base.ConfigObjectBase):
 
     def __create_span_sessions(self):
         self.obj_helper_span.main(self, self.spec)
-        return 
+        return
 
     def AllocLif(self):
         return self.obj_helper_lif.Alloc()
@@ -194,11 +194,11 @@ class TenantObject(base.ConfigObjectBase):
         if self.IsInfra():
             self.obj_helper_tunnel.Configure()
         return
-    
+
     def ConfigureDosPolicies(self):
         self.obj_helper_dosp.Configure()
         return
-    
+
     def ConfigureL4LbServices(self):
         return self.obj_helper_l4lb.Configure()
 
@@ -283,13 +283,13 @@ class TenantObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Tenants." % len(self.tens)) 
+        cfglogger.info("Configuring %d Tenants." % len(self.tens))
         halapi.ConfigureTenants(self.tens)
         for ten in self.tens:
             ten.ConfigureSegments()
             ten.ConfigureL4LbServices()
         return
-        
+
     def ConfigurePhase2(self):
         for ten in self.tens:
             ten.ConfigureSegmentsPhase2()

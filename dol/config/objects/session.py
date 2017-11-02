@@ -286,8 +286,8 @@ class SessionObjectHelper:
 
             proto = spec.proto.upper() if spec.proto else None
 
-            if flowep1.IsProtoMatch(proto) == False: return
-            if flowep2.IsProtoMatch(proto) == False: return
+            if flowep1.IsProtoMatch(proto) == False: continue
+            if flowep2.IsProtoMatch(proto) == False: continue
 
             flowep1.proto = proto
             flowep2.proto = proto

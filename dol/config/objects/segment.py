@@ -42,7 +42,7 @@ class SegmentObject(base.ConfigObjectBase):
 
         self.pinnedif = None
         self.__pin_interface()
-        
+
         self.nw_hal_handles = []
 
         if self.blackhole:
@@ -64,7 +64,7 @@ class SegmentObject(base.ConfigObjectBase):
 
         self.ipv4_pool  = resmgr.CreateIpv4AddrPool(self.subnet.get())
         self.ipv6_pool  = resmgr.CreateIpv6AddrPool(self.subnet6.get())
-        
+
         if GlobalOptions.classic is False:
             if self.l4lb:
                 self.bend_subnet = resmgr.L4LbBackendIpSubnetAllocator.get()
@@ -77,7 +77,7 @@ class SegmentObject(base.ConfigObjectBase):
 
         policy = "MULTICAST_FWD_POLICY_" + spec.multicast.upper()
         self.multicast_policy = haldefs.segment.MulticastFwdPolicy.Value(policy)
-        
+
         self.obj_helper_ep = endpoint.EndpointObjectHelper()
         self.obj_helper_enic = enic.EnicObjectHelper()
         self.obj_helper_nw = nw.NetworkObjectHelper()
@@ -164,13 +164,13 @@ class SegmentObject(base.ConfigObjectBase):
                   "multicast_policy", "broadcast_policy"]
         if not self.CompareObjectFields(other, fields, lgh):
             return False
-        
+
         if set(self.nw_hal_handles) != set(other.nw_hal_handles):
             pdb.set_trace()
             lgh.error("Network handles don't match Expected : %s, actual : %s"
                       %(set(self.nw_hal_handles), set(other.nw_hal_handles)))
             return False
-            
+
         return True
 
     def Show(self, detail = False):
@@ -310,7 +310,7 @@ class SegmentObject(base.ConfigObjectBase):
                 self.type = 'INFRA'
             else:
                 self.type = None
-          
+
             self.vlan_id = get_resp_spec.spec.access_encap.encap_value
             if get_resp_spec.spec.fabric_encap.encap_type ==  haldefs.common.ENCAP_TYPE_VXLAN:
                 self.fabencap = 'VXLAN'
@@ -321,14 +321,14 @@ class SegmentObject(base.ConfigObjectBase):
                 self.vlan_id = get_resp_spec.spec.fabric_encap.encap_value
             else:
                 self.fabencap = None
-                
+
             self.multicast_policy = get_resp_spec.spec.mcast_fwd_policy
             self.broadcast_policy = get_resp_spec.spec.bcast_fwd_policy
-           
+
             self.nw_hal_handles = []
             for nw_handle in get_resp_spec.spec.network_handle:
                 self.nw_hal_handles.append(nw_handle)
-            
+
         else:
             cfglogger.error("- Segment %s = %s is missing." %\
                        (self.GID(), haldefs.common.ApiStatus.Name(get_resp_spec.api_status)))
@@ -337,7 +337,7 @@ class SegmentObject(base.ConfigObjectBase):
 
     def Get(self):
         halapi.GetSegments([self])
-    
+
     def IsFilterMatch(self, spec):
         return super().IsFilterMatch(spec.filters)
 
@@ -348,10 +348,11 @@ class SegmentObjectHelper:
         self.bhseg = None
         self.backend_eps = None
         self.backend_remote_eps = None
+        self.backend_remote_eps_tunneled = None
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Segments." % len(self.segs)) 
+        cfglogger.info("Configuring %d Segments." % len(self.segs))
         for seg in self.segs:
             seg.ConfigureNetworks()
         halapi.ConfigureSegments(self.segs)
@@ -398,10 +399,21 @@ class SegmentObjectHelper:
 
     def __get_backend_eps(self, remote):
         if self.backend_remote_eps: return
-        self.backend_remote_eps = self.GetRemoteEps(backend = True)
+        remote_eps = self.GetRemoteEps(backend = True)
+        self.backend_remote_eps_tunneled = []
+        self.backend_remote_eps = []
+        for ep in remote_eps:
+            if ep.IsBehindTunnel():
+                self.backend_remote_eps_tunneled.append(ep)
+            else:
+                self.backend_remote_eps.append(ep)
+        #self.backend_remote_eps = self.GetRemoteEps(backend = True)
         cfglogger.info("Remote L4LB Backend Pool:")
         for bend in self.backend_remote_eps:
             cfglogger.info("- Backend: %s" % bend.GID())
+        cfglogger.info("Remote L4LB Backend Tunneled Pool:")
+        for bend in self.backend_remote_eps_tunneled:
+            cfglogger.info("- Tunneled Backend: %s" % bend.GID())
 
         self.backend_eps = self.GetLocalEps(backend = True)
         cfglogger.info("L4LB Backend Pool:")
@@ -409,10 +421,13 @@ class SegmentObjectHelper:
             cfglogger.info("- Backend: %s" % bend.GID())
         return
 
-    def AllocL4LbBackend(self, remote):
+    def AllocL4LbBackend(self, remote, tnnled):
         self.__get_backend_eps(remote)
         if remote:
-            eplist = self.backend_remote_eps
+            if tnnled:
+                eplist = self.backend_remote_eps_tunneled
+            else:
+                eplist = self.backend_remote_eps
         else:
             eplist = self.backend_eps
 

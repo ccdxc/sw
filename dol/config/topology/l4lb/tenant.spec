@@ -3,10 +3,14 @@ meta:
     id: TENANT_L4LB
 
 type    : tenant
-overlay : vlan
+overlay : vxlan
 
 segments:
+    # Native L2seg
     - spec  : ref://store/specs/id=SEGMENT_L4LB
+      count : 2
+    # Vxlan L2seg
+    - spec  : ref://store/specs/id=SEGMENT_VXLAN_L4LB
       count : 2
 
 # NFV Endpoints:

@@ -444,7 +444,7 @@ class FlowObject(base.ConfigObjectBase):
         return
 
     def Summary(self):
-        string = "%s:%s:" % (self.__session.GID(), self.direction)
+        string = "%s:%s:%s:" % (self.__session.GID(), self.direction, self.fwtype)
         string += self.type + '/'
         if self.IsIP():
             string += "%d/%s/%s/" % (self.__domid, self.sip.get(), self.dip.get())
