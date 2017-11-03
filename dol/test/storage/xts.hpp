@@ -15,6 +15,11 @@ namespace xts {
 #define AES128_KEY_SIZE 16
 #define AES256_KEY_SIZE 32
 #define IV_SIZE 64
+#define MSG_DESC_ALIGN 512
+#define MAX_AOLS 2
+#define MAX_SUB_AOLS 2
+#define SECTOR_SIZE 256
+#define INTER_SUB_AOL_GAP SECTOR_SIZE
 
 typedef struct xts_aol_ {
   uint64_t a0;
@@ -28,7 +33,10 @@ typedef struct xts_aol_ {
   uint32_t l2;
   uint64_t next;
   uint64_t resv;
-} __attribute__((packed)) xts_aol_t;
+}xts_aol_t;
+// C++ does not let packed struct feilds to be passed as references
+// Commenting out for now - it doesnt affect functionality
+// } __attribute__((packed)) xts_aol_t;
 
 typedef struct xts_cmd_ {
   uint32_t enable_crc :1,

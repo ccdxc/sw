@@ -162,7 +162,7 @@
         },
         {
             "name": "key-mem",
-            "size_kb": 2048
+            "size_kb": 4096
         },
         {
             "name": "crypto-asym-key-desc-array",

@@ -32,8 +32,8 @@ using cryptokey::CryptoKeyDeleteResponseMsg;
 
 namespace hal {
 
-
-#define CRYPTO_KEY_SIZE_MAX     32  /* 256 bit key */
+// TODO: Needs a flexible allocation based on key sizes
+#define CRYPTO_KEY_SIZE_MAX     64  /* 2 * 256 bit key */
 
 typedef struct crypto_key_s {
     types::CryptoKeyType    key_type;
