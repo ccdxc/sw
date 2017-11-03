@@ -55,6 +55,15 @@ EXTERNAL_NET = 'any'
 dofile(conf_dir .. '/snort_defaults.lua')
 dofile(conf_dir .. '/file_magic.lua')
 
+daq =
+{
+    module_dirs =
+    {
+        '/snort3/daqs/.libs'
+    },
+    module = 'fte',
+}
+
 ---------------------------------------------------------------------------
 -- 3. configure inspection
 ---------------------------------------------------------------------------

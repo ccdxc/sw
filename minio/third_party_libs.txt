@@ -18,4 +18,5 @@ nic/third-party/crchack/bin/crchack
 nic/third-party/snort3/export/bin/libsnort.so
 nic/third-party/snort3/export/bin/libsnort.so.0
 nic/third-party/snort3/export/bin/libsnort.so.0.0.0
+nic/third-party/snort3/export/daqs/daq_fte.so
 nic/third-party/grpc/*.a
