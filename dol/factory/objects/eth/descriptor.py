@@ -133,7 +133,7 @@ class EthDescriptorObject(base.FactoryObjectBase):
         assert(all(name in field_names for name in spec.fields.keys()))
 
         self.fields = {k: getattr(spec.fields, k) for k in spec.fields.keys()}
-        self._buf = getattr(spec, '_buf', None)
+        self._buf = getattr(spec.fields, '_buf', None)
 
         self.logger.info("Init %s" % self)
 
