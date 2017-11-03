@@ -212,6 +212,8 @@ def run_dol(args):
         cmd.append(args.tcscale)
     if args.dryrun is True:
         cmd.append('--dryrun')
+    if args.configonly is True:
+        cmd.append('--config-only')
 
     p = Popen(cmd)
     print "* Starting DOL pid (" + str(p.pid) + ")"
@@ -319,6 +321,19 @@ def cleanup(keep_logs=True):
         else:
             print "- " + log + " - not found"
 
+def run_e2e_tlsproxy_dol():
+    os.chdir(nic_dir)
+    cmd = ['./tools/run_e2e_tlsproxy_test.py']
+    p = Popen(cmd)
+    print "* Starting E2E TLS Proxy DOL, pid (" + str(p.pid) + ")"
+    lock = open(lock_file, "a+")
+    lock.write(str(p.pid) + "\n")
+    lock.close()
+    p.communicate()
+    if p.returncode != 0:
+        print "* FAIL: E2E TLS Proxy DOL, exit code ", p.returncode
+    return p.returncode
+
 # main()
 
 
@@ -363,6 +378,10 @@ def main():
                         help='Dry-Run mode. (No communication with HAL & Model)')
     parser.add_argument("--configtest", action="store_true",
                         help="Run Config tests.")    
+    parser.add_argument("--config-only", dest='configonly', action="store_true",
+                        help="Generate ASM coverage for this run")
+    parser.add_argument("--e2e-tls-dol", dest='e2etls', action="store_true",
+                        default=None, help="Run E2E TLS DOL")
     args = parser.parse_args()
 
     if args.cleanup:
@@ -397,6 +416,9 @@ def main():
                 print "- Config validaton failed, status=", status
         else:
           status = run_dol(args)
+          if status == 0:
+             if (args.e2etls):
+                status = run_e2e_tlsproxy_dol()
         if args.coveragerun:
             dump_coverage_data()
         cleanup(keep_logs=True)

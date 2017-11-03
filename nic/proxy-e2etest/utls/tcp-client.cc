@@ -18,7 +18,7 @@ int main(int argv, char* argc[]) {
   setlinebuf(stderr);
 
   if (argv != 7) {
-    fprintf(stderr, "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net \n");
+    TLOG( "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net \n");
     exit(-1);
   }
 
@@ -26,7 +26,7 @@ int main(int argv, char* argc[]) {
     switch (opt) {
     case 'p':
         port = atoi(optarg);
-	fprintf(stderr, "port=%d\n", port);
+	TLOG( "port=%d\n", port);
 	break;
     case 'd':
         test_data = optarg;
@@ -37,20 +37,20 @@ int main(int argv, char* argc[]) {
         } else if (!strncmp(optarg, "from-net", 10)) {
 	    from_localhost = false;
 	} else {
-            fprintf(stderr, "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net \n");
+            TLOG( "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net \n");
 	    exit(-1);
 	}
         break;
     case '?':
     default:
-        fprintf(stderr, "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net \n");
+        TLOG( "usage: ./tcp-client -p <tcp-port> -d <test_data_file> -m from-host|from-net \n");
 	exit(-1);
         break;
     }
 
   }
 
-  fprintf(stderr, "Connecting to port %i, test-data file %s, %s\n", port, test_data,
+  TLOG("Connecting to port %i, test-data file %s, %s\n", port, test_data,
 	  from_localhost ? "from host" : "from network");
 
   main_tcp_client();
@@ -79,8 +79,8 @@ int create_socket() {
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval, sizeof(optval));
 
   if ( bind(sockfd, (const struct sockaddr*)&src_addr, sizeof(src_addr)) != 0 ) {
-    perror("can't bind port");
-    exit(-1);
+      TLOG("can't bind port - %s", strerror(errno));
+      exit(-1);
   }
 
   memset(&(dest_addr), '\0', sizeof(dest_addr));
@@ -95,8 +95,8 @@ int create_socket() {
 
   if ( connect(sockfd, (struct sockaddr *) &dest_addr,
                sizeof(struct sockaddr_in)) == -1 ) {
-    perror("Client: Connect: ");
-    exit(-1);
+      TLOG("Client: Connect failed: %s", strerror(errno));
+      exit(-1);
   }
 
   return sockfd;
@@ -122,7 +122,7 @@ void test_tcp(int transport_fd)
   tv.tv_usec = 0;
   res = setsockopt(transport_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(struct timeval));
   if (res < 0) {
-      fprintf(stderr, "Error setting timeout for recv() %s, will do non-blocking\n", strerror(errno));
+      TLOG("Error setting timeout for recv() %s, will do non-blocking\n", strerror(errno));
       do_nb_recv = 1;
   }
 
@@ -140,7 +140,7 @@ void test_tcp(int transport_fd)
     totalbytes += bytes;
     if (bytes > 0) {
       send(transport_fd, buf, bytes, 0);
-      fprintf(stderr, "Client: Sent bytes so far %i - %s\n", totalbytes, buf);
+      TLOG("Client: Sent bytes so far %i - %s\n", totalbytes, buf);
     } else {
       break;
     }
@@ -152,7 +152,7 @@ void test_tcp(int transport_fd)
 	    if (do_nb_recv && (errno == EWOULDBLOCK || errno == EAGAIN)) {
 	        sleep(5);
 	    } else {
-                fprintf(stderr, "Client: TCP Read error: %i (%s)\n", res, strerror(errno));
+                TLOG("Client: TCP Read error: %i (%s)\n", res, strerror(errno));
 		exit(-1);
 		break;
 	    }
@@ -162,9 +162,9 @@ void test_tcp(int transport_fd)
     //res = recv(transport_fd, buf, sizeof(buf), 0);
     total_recv += res;
     if (res < 0) {
-      fprintf(stderr, "Client: TCP Read error: %i\n", res);
+      TLOG("Client: TCP Read error: %i\n", res);
     } else {
-      fprintf(stderr, "Client: Received tcp test data: %i %i, %s\n", res, total_recv, buf);
+      TLOG("Client: Received tcp test data: %i %i, %s\n", res, total_recv, buf);
     }
 	
   } while(bytes > 0);
@@ -175,7 +175,7 @@ void test_tcp(int transport_fd)
   end = clock();
   cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-  fprintf(stderr, "Client: TCP talk time: %.02f\n", cpu_time_used);
+  TLOG("Client: TCP talk time: %.02f\n", cpu_time_used);
 }
 
 int main_tcp_client() 
@@ -185,16 +185,16 @@ int main_tcp_client()
 
   transport_fd = create_socket();
 
-  fprintf(stderr, "Client: Connected ! - transport fd %d\n", transport_fd);
+  TLOG("Client: Connected ! - transport fd %d\n", transport_fd);
   do {
-    sleep(2);
+    sleep(1);
   } while(0);
 
   // Start tests
   test_tcp(transport_fd);
 
   //while(1) {
-   sleep(2);
+   sleep(1);
    //}
 
   close(transport_fd);

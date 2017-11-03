@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <sys/times.h>
+#include <sys/time.h>
 #include <sys/sendfile.h>
 
 #include <sys/types.h>
@@ -221,6 +222,24 @@ int ntls_attach(SSL *ssl, int transport_fd)
     exit(-1);
   }
 #endif
+}
+
+/*
+ * Log with timestamp.
+ */
+static inline void
+TLOG(const char *fmt, ...) {
+  char   timestr[24];
+  struct timeval tv;
+  va_list args;
+
+  gettimeofday(&tv, NULL);
+  strftime(timestr, 24, "%H:%M:%S", gmtime(&tv.tv_sec));
+  printf("[%s.%03ld] ", timestr, tv.tv_usec / 1000);
+
+  va_start(args, fmt);
+  vprintf(fmt, args);
+  va_end(args);
 }
 
 #endif /* #ifndef NTLS_H */

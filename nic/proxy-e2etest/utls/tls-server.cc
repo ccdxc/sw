@@ -2,7 +2,7 @@
 
 #define WHERE_INFO(ssl, w, flag, msg) { \
     if(w & flag) { \
-      printf("\t"); \
+      TLOG("\t"); \
       printf(msg); \
       printf(" - %s ", SSL_state_string(ssl)); \
       printf(" - %s ", SSL_state_string_long(ssl)); \
@@ -13,7 +13,7 @@
 // INFO CALLBACK
 void dummy_ssl_info_callback(const SSL* ssl, int where, int ret) {
   if(ret == 0) {
-    printf("Server: ssl error occured.\n");
+    TLOG("Server: ssl error occured.\n");
     return;
   }
   WHERE_INFO(ssl, where, SSL_CB_LOOP, "LOOP");
@@ -35,7 +35,7 @@ void dummy_ssl_msg_callback(
                             ,void *arg
                             )
 {
-  printf("\tMessage callback with length: %zu\n", len);
+  TLOG("\tMessage callback with length: %zu\n", len);
 }
 
 int bytes_recv,bytes_sent;
@@ -49,7 +49,7 @@ void *main_server(void*);
 int main(int argv, char* argc[]) {
 
   if (argv != 2) {
-    printf("usage: ./tls port\n");
+    TLOG("usage: ./tls port\n");
     exit(-1);
   }
 
@@ -57,7 +57,7 @@ int main(int argv, char* argc[]) {
   setlinebuf(stderr);
 
   port = atoi(argc[1]);
-  fprintf(stderr, "Serving port %i\n", port);
+  TLOG("Serving port %i\n", port);
 
   SSL_library_init();
   OpenSSL_add_all_algorithms();
@@ -67,7 +67,7 @@ int main(int argv, char* argc[]) {
 
   int rc = pthread_create(&server_thread, NULL, main_server, NULL);
   if (rc) {
-    printf("Error creating server %i\n", rc);
+    TLOG("Error creating server %i\n", rc);
     exit(-1);
   }
   while (1) { 
@@ -88,14 +88,17 @@ int OpenListener(int port)
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+  int optval = 1;
+  setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval, sizeof(optval));
+
   if ( bind(sd, (const struct sockaddr*)&addr, sizeof(addr)) != 0 )
     {
-      perror("can't bind port");
+      TLOG("can't bind port - %s", strerror(errno));
       abort();
     }
   if ( listen(sd, 10) != 0 )
     {
-      perror("Server: Can't configure listening port");
+      TLOG("Server: Can't configure listening port - %s", strerror(errno));
       abort();
     }
   return sd;
@@ -135,7 +138,7 @@ void LoadCertificates(SSL_CTX* ctx, const char* CertFile, const char* KeyFile)
   /* verify private key */
   if ( !SSL_CTX_check_private_key(ctx) )
     {
-      fprintf(stderr, "Private key does not match the public certificate\n");
+      TLOG("Private key does not match the public certificate\n");
       abort();
     }
 }
@@ -151,7 +154,7 @@ void test_tls(SSL *ssl)
     bytes = SSL_read(ssl, buf, sizeof(buf));/* get request */
     if ( bytes > 0 ) {
       bytes_recv += bytes;
-      printf("Server: Bytes recv: %i: ", bytes_recv);
+      TLOG("Server: Bytes recv: %i: ", bytes_recv);
     }
     else {
       ERR_print_errors_fp(stderr);
@@ -162,7 +165,7 @@ void test_tls(SSL *ssl)
     }
     printf("\n");
     send_bytes = SSL_write(ssl, buf, bytes);
-	   printf("Server: Bytes sent: %i - %s\n", send_bytes, buf);
+	   TLOG("Server: Bytes sent: %i - %s\n", send_bytes, buf);
     bytes_sent += send_bytes; 
   } while (bytes > 0 );
 

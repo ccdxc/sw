@@ -26,6 +26,7 @@
 #include "nic/model_sim/include/lib_model_client.h"
 #include "nic/model_sim/include/buf_hdr.h"
 #include "nic/proxy-e2etest/lib_driver.hpp"
+#include "nic/proxy-e2etest/ntls.hpp"
 
 #define HNTAP_HOST_TAPIF        "hntap_host0"
 #define HNTAP_HOST_TAPIF_IP     "64.1.0.4"
@@ -214,7 +215,7 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, uint32_t orig_addr, uint32_
   eth = (struct ether_header_t *)pkt;
   if (ntohs(eth->etype) == ETHERTYPE_VLAN) {
     vlan = (struct vlan_header_t*)pkt;
-    printf(" ETH-VLAN: DMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x SMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x vlan=%d proto=0x%x\n",
+    TLOG(" ETH-VLAN: DMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x SMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x vlan=%d proto=0x%x\n",
            vlan->dmac[0], vlan->dmac[1], vlan->dmac[2], vlan->dmac[3], vlan->dmac[4], vlan->dmac[5],
            vlan->smac[0], vlan->smac[1], vlan->smac[2], vlan->smac[3], vlan->smac[4], vlan->smac[5],
            ntohs(vlan->vlan_tag),
@@ -222,7 +223,7 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, uint32_t orig_addr, uint32_
     etype = ntohs(vlan->etype);
     ip = (ipv4_header_t *)(vlan+1);
   } else {
-    printf(" ETH: DMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x SMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x proto=0x%x\n",
+    TLOG(" ETH: DMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x SMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x proto=0x%x\n",
            eth->dmac[0], eth->dmac[1], eth->dmac[2], eth->dmac[3], eth->dmac[4], eth->dmac[5],
            eth->smac[0], eth->smac[1], eth->smac[2], eth->smac[3], eth->smac[4], eth->smac[5],
            ntohs(eth->etype));
@@ -231,7 +232,7 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, uint32_t orig_addr, uint32_
   }
 
   if (etype == ETHERTYPE_IP) {
-    printf (" IP BEFORE1: tos=%d tot_len=%d id=0x%x frag_off=0x%x ttl=%d protocol=%d check=0x%x saddr=0x%x daddr=0x%x\n",
+    TLOG(" IP BEFORE1: tos=%d tot_len=%d id=0x%x frag_off=0x%x ttl=%d protocol=%d check=0x%x saddr=0x%x daddr=0x%x\n",
             ip->tos, ntohs(ip->tot_len), ntohs(ip->id), ntohs(ip->frag_off), 
             ip->ttl, ip->protocol, ntohs(ip->check), ntohl(ip->saddr), ntohl(ip->daddr));
 
@@ -239,13 +240,13 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, uint32_t orig_addr, uint32_
     ip->check = checksum((unsigned short *)ip, 20);
 
 
-    printf (" IP BEFORE2: tos=%d tot_len=%d id=0x%x frag_off=0x%x ttl=%d protocol=%d check=0x%x saddr=0x%x daddr=0x%x\n",
+    TLOG(" IP BEFORE2: tos=%d tot_len=%d id=0x%x frag_off=0x%x ttl=%d protocol=%d check=0x%x saddr=0x%x daddr=0x%x\n",
             ip->tos, ntohs(ip->tot_len), ntohs(ip->id), ntohs(ip->frag_off), 
             ip->ttl, ip->protocol, ntohs(ip->check), ntohl(ip->saddr), ntohl(ip->daddr));
 
     if (ip->protocol == IPPROTO_TCP) {
       tcp = (struct tcp_header_t*)(ip+1);
-      printf (" TCP BEFORE1: sp=0x%x dp=0x%x seq=0x%x ack_seq=0x%x doff=%d res1=%d %s%s%s%s%s%s%s%s wnd=0x%x check=0x%x urg_ptr=0x%x\n",
+      TLOG(" TCP BEFORE1: sp=0x%x dp=0x%x seq=0x%x ack_seq=0x%x doff=%d res1=%d %s%s%s%s%s%s%s%s wnd=0x%x check=0x%x urg_ptr=0x%x\n",
               ntohs(tcp->sport), ntohs(tcp->dport), ntohl(tcp->seq), ntohl(tcp->ack_seq),
               tcp->doff, tcp->res1,
               tcp->fin ? "F" : "",
@@ -266,7 +267,7 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, uint32_t orig_addr, uint32_
       tcp->check = 0;
       tcp->check = get_tcp_checksum(ip, tcp);
 
-      printf (" TCP BEFORE2: sp=0x%x dp=0x%x seq=0x%x ack_seq=0x%x doff=%d res1=%d %s%s%s%s%s%s%s%s wnd=0x%x check=0x%x urg_ptr=0x%x\n",
+      TLOG(" TCP BEFORE2: sp=0x%x dp=0x%x seq=0x%x ack_seq=0x%x doff=%d res1=%d %s%s%s%s%s%s%s%s wnd=0x%x check=0x%x urg_ptr=0x%x\n",
               ntohs(tcp->sport), ntohs(tcp->dport), ntohl(tcp->seq), ntohl(tcp->ack_seq),
               tcp->doff, tcp->res1,
               tcp->fin ? "F" : "",
@@ -284,41 +285,41 @@ hntap_nat_worker(char *pkt, int len, bool source_ip, uint32_t orig_addr, uint32_
 
     if (source_ip) {
       if (ntohl(ip->saddr) == orig_addr) {
-        printf("NAT IPSA: 0x%x -> 0x%x\n", orig_addr, to_addr);
+        TLOG("NAT IPSA: 0x%x -> 0x%x\n", orig_addr, to_addr);
         
         ip->saddr = htonl(to_addr);
         ip->check = 0;
         ip->check = checksum((unsigned short *)ip, 20);
       } else {
-        printf("No NAT\n");
+        TLOG("No NAT\n");
       }
     } else {
 
       if (ntohl(ip->daddr) == orig_addr) {
-        printf("NAT IPDA: 0x%x -> 0x%x\n", orig_addr, to_addr);
+        TLOG("NAT IPDA: 0x%x -> 0x%x\n", orig_addr, to_addr);
         
         ip->daddr = htonl(to_addr);
         ip->check = 0;
         ip->check = checksum((unsigned short *)ip, 20);
 
       } else {
-        printf("No NAT\n");
+        TLOG("No NAT\n");
       }
     }
-    printf (" IP AFTER: tos=%d tot_len=%d id=0x%x frag_off=0x%x ttl=%d protocol=%d check=0x%x saddr=0x%x daddr=0x%x\n",
+    TLOG(" IP AFTER: tos=%d tot_len=%d id=0x%x frag_off=0x%x ttl=%d protocol=%d check=0x%x saddr=0x%x daddr=0x%x\n",
             ip->tos, ntohs(ip->tot_len), ntohs(ip->id), ntohs(ip->frag_off), 
             ip->ttl, ip->protocol, ntohs(ip->check), ntohl(ip->saddr), ntohl(ip->daddr));
 
     if (ip->protocol == IPPROTO_TCP) {
       tcp = (struct tcp_header_t*)(ip+1);
 #if 0
-      printf("NAT DP: 80 -> 10080\n");
+      TLOG("NAT DP: 80 -> 10080\n");
       tcp->dport = htons(10080);
 #endif
       tcp->check = 0;
       tcp->check = get_tcp_checksum(ip, tcp);
 
-      printf (" TCP AFTER: sp=0x%x dp=0x%x seq=0x%x ack_seq=0x%x doff=%d res1=%d %s%s%s%s%s%s%s%s wnd=0x%x check=0x%x urg_ptr=0x%x\n",
+      TLOG(" TCP AFTER: sp=0x%x dp=0x%x seq=0x%x ack_seq=0x%x doff=%d res1=%d %s%s%s%s%s%s%s%s wnd=0x%x check=0x%x urg_ptr=0x%x\n",
               ntohs(tcp->sport), ntohs(tcp->dport), ntohl(tcp->seq), ntohl(tcp->ack_seq),
               tcp->doff, tcp->res1,
               tcp->fin ? "F" : "",
@@ -436,8 +437,9 @@ int hntap_create_tundev (const char *dev, const char *dev_ip, const char *dev_ip
   const char *tapdev = "/dev/net/tun";
 
   if ((fd = open(tapdev, O_RDWR)) < 0 ) {
-    printf("1\n");
-    return fd;
+      TLOG("Failed to open Tap device %s\n", strerror(errno));
+      abort();
+      return fd;
   }
 
   memset(&ifr, 0, sizeof(ifr));
@@ -446,16 +448,18 @@ int hntap_create_tundev (const char *dev, const char *dev_ip, const char *dev_ip
 
   /* create the device */
   if ((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
-    close(fd);
-    perror("2\n");
-    return err;
+      TLOG("Failed to set Tap device property %s\n", strerror(errno));
+      close(fd);
+      abort();
+      return err;
   }
 
   sock = socket(PF_PACKET,SOCK_DGRAM,0);
   if (sock < 0) {
-    close(fd);
-    perror("3\n");
-    return err;
+      TLOG("Failed to open socket %s\n", strerror(errno));
+      close(fd);
+      abort();
+      return sock;
   }
 
   memset(&ifr, 0, sizeof(ifr));
@@ -464,9 +468,10 @@ int hntap_create_tundev (const char *dev, const char *dev_ip, const char *dev_ip
 	
   /* Set the device UP */
   if ((err = ioctl(sock, SIOCSIFFLAGS, (void *) &ifr)) < 0 ) {
+    TLOG("Failed to bring up Tap device %s\n", strerror(errno));
     close(sock);
     close(fd);
-    printf("4\n");
+    abort();
     return err;
   }
 
@@ -482,7 +487,7 @@ int hntap_create_tundev (const char *dev, const char *dev_ip, const char *dev_ip
     perror("IP address config failed");
     close(sock);
     close(fd);
-    printf("5\n");
+    abort();
     return err;
   }
 
@@ -498,7 +503,7 @@ int hntap_create_tundev (const char *dev, const char *dev_ip, const char *dev_ip
     perror("IP address mask config failed");
     close(sock);
     close(fd);
-    printf("5\n");
+    abort();
     return err;
   }
 
@@ -509,7 +514,7 @@ int hntap_create_tundev (const char *dev, const char *dev_ip, const char *dev_ip
       perror("IP Route add failed");
       close(sock);
       close(fd);
-      printf("5\n");
+      abort();
       return err;
   }
 
@@ -524,7 +529,7 @@ int hntap_create_tapdev (const char *dev, const char *dev_ip, const char *dev_ip
   const char *tapdev = "/dev/net/tun";
 
   if ((fd = open(tapdev, O_RDWR)) < 0 ) {
-    printf("1\n");
+    abort();
     return fd;
   }
 
@@ -554,7 +559,7 @@ int hntap_create_tapdev (const char *dev, const char *dev_ip, const char *dev_ip
   if ((err = ioctl(sock, SIOCSIFFLAGS, (void *) &ifr)) < 0 ) {
     close(sock);
     close(fd);
-    printf("4\n");
+    abort();
     return err;
   }
 
@@ -570,7 +575,7 @@ int hntap_create_tapdev (const char *dev, const char *dev_ip, const char *dev_ip
     perror("IP address config failed");
     close(sock);
     close(fd);
-    printf("5\n");
+    abort();
     return err;
   }
 
@@ -583,7 +588,7 @@ int hntap_create_tapdev (const char *dev, const char *dev_ip, const char *dev_ip
     perror("IP address mask config failed");
     close(sock);
     close(fd);
-    printf("5\n");
+    abort();
     return err;
   }
    
@@ -611,9 +616,8 @@ hntap_host_tx_to_model (char *pktbuf, int size)
        * Bypass the model and send packet to Network-tap directly. Test only
        */
       memcpy(opkt.data(), pkt, size);
-      std::cout << "Host-Tx: Bypassing model, packet size: " << opkt.size() << ", "
-	      << size << " on port: " << port << " cos " << cos
-              << std::endl;
+      TLOG("Host-Tx: Bypassing model, packet size: %d (%d), on port: %d cos %d\n",
+	  opkt.size(), size, port, cos);
       goto send_to_nettap;
   }
 
@@ -631,14 +635,14 @@ hntap_host_tx_to_model (char *pktbuf, int size)
   buf = alloc_buffer(ipkt.size());
   assert(buf != NULL);
   memcpy(buf, ipkt.data(), ipkt.size());
-  printf("buf %p size %lu\n", buf, ipkt.size());
+  TLOG("buf %p size %lu\n", buf, ipkt.size());
   hntap_dump_pkt((char *)buf, ipkt.size());
   post_buffer(lif_id, TX, 0, buf, ipkt.size());
 
   // Transmit Packet
-  std::cout << "Writing packet to model! size: " << ipkt.size() << " on port: " << port << std::endl;
+  TLOG("Writing packet to model! size: %d on port: %d\n", ipkt.size(), port);
 
-  printf("\nDOORBELL\n");
+  TLOG("\nDOORBELL\n");
   db = make_doorbell(0x3 /* upd */, lif_id /* lif */, TX /* type */,
 		     0 /* pid */, 0 /* qid */, 0 /* ring */, 0 /* p_index */);
   step_doorbell(db.first, db.second);
@@ -646,10 +650,9 @@ hntap_host_tx_to_model (char *pktbuf, int size)
   // Wait for packet to come out of port
   get_next_pkt(opkt, port, cos);
   if (!opkt.size()) {
-    std::cout << "NO packet back from model! size: " << opkt.size() << std::endl;
+      TLOG("NO packet back from model! size: %d\n", opkt.size());
   } else {
-    std::cout << "Got packet back from model! size: " << opkt.size() << " on port: " << port << " cos " << cos
-              << std::endl;
+      TLOG("Got packet back from model! size: %d on port: %d cos %d\n", opkt.size(), port, cos);
   }
 
   lib_model_conn_close();
@@ -675,7 +678,7 @@ hntap_host_tx_to_model (char *pktbuf, int size)
     if (nwrite < 0) {
         perror("Host-Tx: Writing data to net-tap");
     } else {
-        printf("Wrote packet with %lu bytes (%d) to Network Tap (Tx)\n", opkt.size() - sizeof(struct ether_header_t), nwrite);
+        TLOG("Wrote packet with %lu bytes (%d) to Network Tap (Tx)\n", opkt.size() - sizeof(struct ether_header_t), nwrite);
     }
   }
 }
@@ -696,18 +699,18 @@ hntap_handle_host_tx (char *pktbuf, int nread)
 {
   struct ether_header_t *eth_header;
 
-  std::cout << "Host-Tx to Model: packet sent with " << nread << " bytes" << std::endl;
+  TLOG("Host-Tx to Model: packet sent with %d bytes\n", nread);
   if (nread < (int) sizeof(struct ether_header)) return;
 
   hntap_dump_pkt(pktbuf, nread);
   eth_header = (struct ether_header_t *) pktbuf;
 
   if (hntap_get_etype(eth_header) == ETHERTYPE_IP) {
-    std::cout << "Ether-type IP, sending to Model" << std::endl;
+    TLOG("Ether-type IP, sending to Model\n");
     hntap_host_client_to_server_nat(pktbuf, nread);
     hntap_host_tx_to_model(pktbuf, nread);
   } else {
-    printf("Ether-type 0x%x IGNORED\n", ntohs(eth_header->etype));
+    TLOG("Ether-type 0x%x IGNORED\n", ntohs(eth_header->etype));
   }
 
 }
@@ -737,7 +740,7 @@ hntap_net_rx_to_model (char *pktbuf, int size)
        */
       buf = (uint8_t *) pktbuf;
       rsize = size;
-      std::cout << "Net-Rx: Bypassing model, packet size!" << rsize << std::endl;
+      TLOG("Net-Rx: Bypassing model, packet size %d!\n", rsize);
       goto send_to_hosttap;
 
   }
@@ -759,28 +762,27 @@ hntap_net_rx_to_model (char *pktbuf, int size)
   post_buffer(lif_id, RX, 0, buf, 9126);
 
   // Send packet to Model
-  std::cout << "Sending packet to model! size: " << ipkt.size() << " on port: " << port << std::endl;
+  TLOG("Sending packet to model! size: %d on port: %d\n", ipkt.size(), port);
   step_network_pkt(ipkt, port);
 
 #define POLL_RETRIES 3
 
   if (poll_queue(lif_id, RX, 0, POLL_RETRIES, &prev_cindex)) {
-    std::cout << "Got some packet" << std::endl;
+    TLOG("Got some packet\n");
     // Receive Packet
     consume_buffer(lif_id, RX, 0, buf, &rsize);
     if (!rsize) {
-      std::cout << "Did not get packet back from host side of model!" << std::endl;
+        TLOG("Did not get packet back from host side of model!\n");
     } else {
-      std::cout << "Got packet of size " << rsize << " bytes back from host side of model!" << std::endl;
+        TLOG("Got packet of size %d bytes back from host side of model!\n", rsize);
     }
   } else {
     uint32_t port = 0, cos = 0;
     get_next_pkt(opkt, port, cos);
     if (!opkt.size()) {
-      std::cout << "NO packet back from nw side of model! size: " << opkt.size() << std::endl;
+        TLOG("NO packet back from nw side of model! size: %d\n", opkt.size());
     } else {
-      std::cout << "Got packet back from nw side of model! size: " << opkt.size() << " on port: " << port << " cos " << cos
-              << std::endl;
+        TLOG("Got packet back from nw side of model! size: %d on port: %d cos %d\n", opkt.size(), port, cos);
     }
     
   }
@@ -796,18 +798,18 @@ hntap_net_rx_to_model (char *pktbuf, int size)
     if ((nwrite = write(net_tap_fd, opkt.data()+sizeof(struct ether_header_t), opkt.size()-sizeof(struct ether_header_t))) < 0){
       perror("Net-Rx: Writing data to net-tap");
     } else {
-      printf("Wrote packet with %lu bytes to Network Tap (Rx)\n", opkt.size() - sizeof(struct ether_header_t));
+      TLOG("Wrote packet with %lu bytes to Network Tap (Rx)\n", opkt.size() - sizeof(struct ether_header_t));
     }
   }
 
   if (poll_queue(lif_id, RX, 0, POLL_RETRIES, &prev_cindex)) {
-    std::cout << "Got some packet" << std::endl;
+      TLOG("Got some packet\n");
     // Receive Packet                                                                                                                                            
     consume_buffer(lif_id, RX, 0, buf, &rsize);
     if (!rsize) {
-      std::cout << "Did not get packet back from host side of model!" << std::endl;
+        TLOG("Did not get packet back from host side of model!\n");
     } else {
-      std::cout << "Got packet of size " << rsize << " bytes back from host side of model!" << std::endl;
+        TLOG("Got packet of size %d bytes back from host side of model!\n", rsize);
     }
   }
 
@@ -837,7 +839,7 @@ hntap_net_rx_to_model (char *pktbuf, int size)
     if (nwrite < 0) {
       perror("Net-Rx: Writing data to host-tap");
     } else {
-      printf("Wrote packet with %lu bytes to Host Tap (Tx)\n", rsize - sizeof(struct vlan_header_t));
+      TLOG("Wrote packet with %lu bytes to Host Tap (Tx)\n", rsize - sizeof(struct vlan_header_t));
     }
   }
 
@@ -849,18 +851,18 @@ hntap_handle_net_rx (char *pktbuf, int nread)
 {
   struct ether_header_t *eth_header;
 
-  std::cout << "Net-Rx to Model: packet sent with " << nread << " bytes" << std::endl;
+  TLOG("Net-Rx to Model: packet sent with %d bytes\n", nread);
   if (nread < (int) sizeof(struct ether_header)) return;
 
   hntap_dump_pkt(pktbuf, nread);
   eth_header = (struct ether_header_t *) pktbuf;
   if ((ntohs(eth_header->etype) == ETHERTYPE_IP) ||
       (ntohs(eth_header->etype) == ETHERTYPE_VLAN)) {
-    std::cout << "Ether-type IP, sending to Model" << std::endl;
-    hntap_net_server_to_client_nat(pktbuf, nread);
-    hntap_net_rx_to_model(pktbuf, nread);
+      TLOG("Ether-type IP, sending to Model\n");
+      hntap_net_server_to_client_nat(pktbuf, nread);
+      hntap_net_rx_to_model(pktbuf, nread);
   } else {
-    printf("Ether-type 0x%x IGNORED\n", ntohs(eth_header->etype));
+    TLOG("Ether-type 0x%x IGNORED\n", ntohs(eth_header->etype));
   }
 
 }
@@ -885,7 +887,7 @@ hntap_dump_pkt(char *pkt, int len)
   eth = (struct ether_header_t *)pkt;
   if (ntohs(eth->etype) == ETHERTYPE_VLAN) {
     vlan = (struct vlan_header_t*)pkt;
-    printf(" ETH-VLAN: DMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x SMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x vlan=%d proto=0x%x\n",
+    TLOG(" ETH-VLAN: DMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x SMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x vlan=%d proto=0x%x\n",
            vlan->dmac[0], vlan->dmac[1], vlan->dmac[2], vlan->dmac[3], vlan->dmac[4], vlan->dmac[5],
            vlan->smac[0], vlan->smac[1], vlan->smac[2], vlan->smac[3], vlan->smac[4], vlan->smac[5],
            ntohs(vlan->vlan_tag),
@@ -893,7 +895,7 @@ hntap_dump_pkt(char *pkt, int len)
     etype = ntohs(vlan->etype);
     ip = (ipv4_header_t *)(vlan+1);
   } else {
-    printf(" ETH: DMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x SMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x proto=0x%x\n",
+    TLOG(" ETH: DMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x SMAC=0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x proto=0x%x\n",
            eth->dmac[0], eth->dmac[1], eth->dmac[2], eth->dmac[3], eth->dmac[4], eth->dmac[5],
            eth->smac[0], eth->smac[1], eth->smac[2], eth->smac[3], eth->smac[4], eth->smac[5],
            ntohs(eth->etype));
@@ -903,13 +905,13 @@ hntap_dump_pkt(char *pkt, int len)
 
   if (etype == ETHERTYPE_IP) {
 
-    printf (" IP: tos=%d tot_len=%d id=0x%x frag_off=0x%x ttl=%d protocol=%d check=0x%x saddr=0x%x daddr=0x%x\n",
+    TLOG(" IP: tos=%d tot_len=%d id=0x%x frag_off=0x%x ttl=%d protocol=%d check=0x%x saddr=0x%x daddr=0x%x\n",
             ip->tos, ntohs(ip->tot_len), ntohs(ip->id), ntohs(ip->frag_off), 
             ip->ttl, ip->protocol, ntohs(ip->check), ntohl(ip->saddr), ntohl(ip->daddr));
 
     if (ip->protocol == IPPROTO_TCP) {
       tcp = (struct tcp_header_t*)(ip+1);
-      printf (" TCP: sp=0x%x dp=0x%x seq=0x%x ack_seq=0x%x doff=%d res1=%d %s%s%s%s%s%s%s%s wnd=0x%x check=0x%x urg_ptr=0x%x\n",
+      TLOG(" TCP: sp=0x%x dp=0x%x seq=0x%x ack_seq=0x%x doff=%d res1=%d %s%s%s%s%s%s%s%s wnd=0x%x check=0x%x urg_ptr=0x%x\n",
               ntohs(tcp->sport), ntohs(tcp->dport), ntohl(tcp->seq), ntohl(tcp->ack_seq),
               tcp->doff, tcp->res1,
               tcp->fin ? "F" : "",
@@ -952,58 +954,58 @@ hntap_do_select_loop (void)
 	FD_SET(host_tap_fd, &rd_set);
 	FD_SET(net_tap_fd, &rd_set);
 
-    std::cout << "Select on host_tap_fd " << host_tap_fd << " net_tap_fd " <<  net_tap_fd << std::endl;
+	TLOG("Select on host_tap_fd %d, net_tap_fd %d\n", host_tap_fd, net_tap_fd);
 	ret = select(maxfd + 1, &rd_set, NULL, NULL, NULL);
 
 	if (ret < 0 && errno == EINTR){
-      std::cout << "Ret = " << ret << "errno " <<  errno << std::endl;
-      continue;
+            TLOG("Ret = %d, errno %d\n", ret, errno);
+            continue;
 	}
 
 	if (ret < 0) {
-      perror("select() failed:");
-      exit(1);
+	  TLOG("select() failed: %s\n", strerror(errno));
+	  abort();
 	}
     
-    std::cout << "Got something" << std::endl;
+        TLOG("Got something\n");
 	if (FD_ISSET(host_tap_fd, &rd_set)) {
-      std::cout << "Got stuff on host_tap_fd" << std::endl;
+            TLOG("Got stuff on host_tap_fd\n");
 
-      /*
-       *	Data received from host-tap. We'll read it and write to the Host-mem for model to read (Host-Tx path).
-       */
-      if ((nread = read(host_tap_fd, p+sizeof(struct vlan_header_t), PKTBUF_LEN)) < 0) {
-        perror("Read from host-tap failed!");
-        exit(1);
-      }
+	    /*
+	     *	Data received from host-tap. We'll read it and write to the Host-mem for model to read (Host-Tx path).
+	     */
+	    if ((nread = read(host_tap_fd, p+sizeof(struct vlan_header_t), PKTBUF_LEN)) < 0) {
+	      TLOG("Read from host-tap failed - %s\n", strerror(errno));
+	      abort();
+	    }
 
-      if (p[sizeof(struct vlan_header_t)] != 0x45) {
-        printf("Not an IP packet 0x%x\n", p[sizeof(struct vlan_header_t)]);
-        continue;
-      }
+	    if (p[sizeof(struct vlan_header_t)] != 0x45) {
+	      TLOG("Not an IP packet 0x%x\n", p[sizeof(struct vlan_header_t)]);
+	      continue;
+	    }
 
-      num_hosttap_pkts++;
-      std::cout << "Host-Tap " << num_hosttap_pkts << " : Read " << nread << " bytes from host tap interface" << std::endl;
-      hntap_host_ether_header_add(pktbuf);
-      hntap_dump_pkt(pktbuf, nread + sizeof(struct vlan_header_t));
-      /*
-       * Setup and write to the Host-memory interface for model to read.
-       */
-      hntap_handle_host_tx(pktbuf, nread + sizeof(struct vlan_header_t));
+	    num_hosttap_pkts++;
+	    TLOG("Host-Tap %d: Read %d bytes from host tap interface\n", num_hosttap_pkts, nread);
+	    hntap_host_ether_header_add(pktbuf);
+	    hntap_dump_pkt(pktbuf, nread + sizeof(struct vlan_header_t));
+	    /*
+	     * Setup and write to the Host-memory interface for model to read.
+	     */
+	    hntap_handle_host_tx(pktbuf, nread + sizeof(struct vlan_header_t));
 	}
 
 	if (FD_ISSET(net_tap_fd, &rd_set)) {
-      std::cout << "Got stuff on net_tap_fd" << std::endl;
+            TLOG("Got stuff on net_tap_fd\n");
       /*
        * Data received from net-tap. We'll read it and write to the ZMQ to teh model (Net Rx path).
        */
       if ((nread = read(net_tap_fd, p+sizeof(struct ether_header_t), PKTBUF_LEN)) < 0) {
         perror("Read from net-tap failed!");
-		exit(1);
+	abort();
       }
 
       if (p[sizeof(struct ether_header_t)] != 0x45) {
-        printf("Not an IP packet 0x%x\n", p[sizeof(struct ether_header_t)]);
+        TLOG("Not an IP packet 0x%x\n", p[sizeof(struct ether_header_t)]);
         continue;
       }
 
@@ -1011,9 +1013,9 @@ hntap_do_select_loop (void)
 	   
 
 
-      std::cout << "Net-Tap " << num_nettap_pkts << " : Read " << nread << " bytes from network tap interface" << std::endl;
+      TLOG("Net-Tap %d: Read %d bytes from network tap interface\n", num_nettap_pkts, nread);
       hntap_net_ether_header_add(pktbuf);
-      std::cout << "Added ether header";
+      TLOG("Added ether header\n");
       hntap_dump_pkt(pktbuf, nread + sizeof(struct ether_header_t));
 
       /*
@@ -1026,14 +1028,19 @@ hntap_do_select_loop (void)
 
 int main(int argv, char *argc[])
 {
+  setlinebuf(stdout);
+  setlinebuf(stderr);
+
+  TLOG("Starting Host/network Tapper..\n");
+
   /* Create tap interface for Host-tap */
   if ((host_tap_fd = hntap_create_tundev(HNTAP_HOST_TAPIF,
                                          HNTAP_HOST_TAPIF_IP,
                                          HNTAP_HOST_TAPIF_IPMASK,
 					 HNTAP_HOST_ROUTE_DESTIP,
 					 HNTAP_HOST_ROUTE_GWIP)) < 0 ) {
-    std::cout << "Error creating tap interface %s!" << HNTAP_HOST_TAPIF << std::endl;
-	exit(1);
+    TLOG("Error creating tap interface %s!\n", HNTAP_HOST_TAPIF);
+    abort();
   }
 
   /* Create tap interface for Network-tap */
@@ -1042,8 +1049,8 @@ int main(int argv, char *argc[])
                                         HNTAP_NET_TAPIF_IPMASK,
 					HNTAP_NET_ROUTE_DESTIP,
 					HNTAP_NET_ROUTE_GWIP)) < 0 ) {
-    std::cout << "Error creating tap interface %s!" << HNTAP_NET_TAPIF << std::endl;
-	exit(1);
+    TLOG("Error creating tap interface %s!\n", HNTAP_NET_TAPIF);
+    abort();
   }
 
   /*
@@ -1051,6 +1058,7 @@ int main(int argv, char *argc[])
    */
   //tls_server_main(argv, argc);
 
+  TLOG("  Setup done, listening on tap devices..\n");
   hntap_do_select_loop();
 
   return(0);

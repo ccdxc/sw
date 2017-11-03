@@ -13,11 +13,11 @@ int main_tls_client(void);
 int main(int argv, char* argc[]) {
 
   if (argv != 3) {
-    printf("usage: ./tls port test_data_file\n");
+    TLOG("usage: ./tls port test_data_file\n");
     exit(-1);
   }
   port = atoi(argc[1]);
-  printf("Connecting to port %i\n", port);
+  TLOG("Connecting to port %i\n", port);
   test_data = argc[2];
 
   SSL_library_init();
@@ -44,7 +44,7 @@ int create_socket() {
 
   if ( connect(sockfd, (struct sockaddr *) &dest_addr,
                sizeof(struct sockaddr_in)) == -1 ) {
-    perror("Connect: ");
+    TLOG("Client: Connect failed - %s", strerror(errno));
     exit(-1);
   }
 
@@ -78,16 +78,16 @@ void test_tls(SSL *ssl)
     totalbytes += bytes;
     if (bytes > 0) {
       SSL_write(ssl, buf, bytes);
-      printf("Sent bytes so far %i\n", totalbytes);
+      TLOG("Sent bytes so far %i\n", totalbytes);
     } else {
       break;
     }
     res = SSL_read(ssl, buf, 1);
     total_recv += res;
     if (res < 0) {
-      printf("SSL Read error: %i\n", res);
+      TLOG("SSL Read error: %i\n", res);
     } else {
-      printf("Received openssl test data: %i %i\n", res, total_recv);
+      TLOG("Received openssl test data: %i %i\n", res, total_recv);
     }
 	
   } while(bytes > 0);
@@ -98,7 +98,7 @@ void test_tls(SSL *ssl)
   end = clock();
   cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
-  printf("OpenSSL talk time: %.02f\n", cpu_time_used);
+  TLOG("OpenSSL talk time: %.02f\n", cpu_time_used);
 }
 
 int main_tls_client() 
@@ -109,7 +109,7 @@ int main_tls_client()
 
 
   if ( (ctx = SSL_CTX_new(SSLv23_client_method())) == NULL)
-    printf("Unable to create a new SSL context structure.\n");
+    TLOG("Unable to create a new SSL context structure.\n");
 
   SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2);
   // Force gcm(aes) mode
@@ -122,7 +122,7 @@ int main_tls_client()
   SSL_set_fd(ssl, transport_fd);
 
   if ( SSL_connect(ssl) != 1 ) {
-    printf("Error: Could not build a SSL session\n");
+    TLOG("Error: Could not build a SSL session\n");
     exit(-1);
   }
 

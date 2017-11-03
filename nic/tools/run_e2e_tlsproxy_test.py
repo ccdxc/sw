@@ -39,6 +39,19 @@ def run_hntap():
     print "* Starting Host-Network tapper, pid (" + str(p.pid) + ")"
     print "    - Log file: " + hntap_log + "\n"
 
+    log2 = open(hntap_log, "r")
+    loop = 1
+    time.sleep(2)
+
+    # Wait until tap devices setup is complete
+
+    while loop == 1:
+        for line in log2.readlines():
+            if "listening on" in line:
+                loop = 0
+    log2.close()
+    return
+
 
 def run_tls_server():
     log = open(tls_svr_log, "w")
@@ -48,6 +61,8 @@ def run_tls_server():
     tls_svr_process = p
     print "* Starting TLS Server on port 80, pid (" + str(p.pid) + ")"
     print "    - Log file: " + tls_svr_log + "\n"
+    time.sleep(2)
+    return
 
 
 def run_tcp_client():
@@ -120,6 +135,8 @@ def print_logs():
 
 
 def main():
+    start_time = time.time()
+    #os.chdir(nic_dir)
     run_hntap()
     run_tls_server()
 
@@ -133,17 +150,21 @@ def main():
         stop_thread = True
         t.join()
         print_logs()
-        print "FAIL - E2E TLS proxy test, status = ", status
+        print("\n- Total run time: %s seconds\n" % round(time.time() - start_time, 1))
+        print "FAILED - E2E TLS proxy DOL, status = ", status
+        #We'll ignore the result of the test to monitor stability
+        #status = 0
         sys.exit(status)
     
     cleanup(keep_logs=True)
-
-    print_logs()
-    print "SUCCESS - E2E TLS proxy test, status = ", status
-
-# cleanup(keep_logs=False)
     stop_thread = True
     t.join()
+
+    print_logs()
+    print("\n- Total run time: %s seconds\n" % round(time.time() - start_time, 1))
+    print "PASSED - E2E TLS proxy DOL, status = ", status
+
+# cleanup(keep_logs=False)
     sys.exit(0)
 
 if __name__ == "__main__":
