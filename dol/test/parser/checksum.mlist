@@ -1,0 +1,136 @@
+# Feature Test Modules List
+feature:
+    id      : parser
+    sub     : checksum
+    package : test.parser
+    module  : parser
+    enable  : True
+    ignore  : True
+
+modules:
+    - module:
+        name    : IPV4
+        spec    : checksum.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,IPV4
+
+    - module:
+        name    : UDP(IPV4)
+        spec    : checksum.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,UDP
+
+    - module:
+        name    : TCP(IPV4)
+        spec    : checksum.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,TCP
+
+    - module:
+        name    : UDP(IPV6)
+        spec    : checksum.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,UDP
+
+    - module:
+        name    : TCP(IPV6)
+        spec    : checksum.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,TCP
+
+    - module:
+        name    : VXLAN_INNER_IPV4
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,IPV4
+
+    - module:
+        name    : VXLAN_INNER_UDP(IPV4)
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,UDP
+
+    - module:
+        name    : VXLAN_INNER_TCP(IPV4)
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,TCP
+
+    - module:
+        name    : VXLAN_INNER_UDP(IPV6)
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,UDP
+
+    - module:
+        name    : VXLAN_INNER_TCP(IPV6)
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=TCP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,TCP
+
+    - module:
+        name    : VXLAN_OUTER_IPV4
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,OUTER_IPV4
+
+    - module:
+        name    : VXLAN_OUTER_UDP
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,OUTER_UDP
+
+    - module:
+        name    : VXLAN_INNER_UDP_ZERO
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : ZERO_CHECKSUM,INNER_UDP
+
+    - module:
+        name    : VXLAN_OUTER_IPV4_UDP
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,OUTER_IPV4,OUTER_UDP
+
+    - module:
+        name    : VXLAN_OUTER_IPV4(v6inner)
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,OUTER_IPV4
+
+    - module:
+        name    : VXLAN_OUTER_UDP(v6inner)
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,OUTER_UDP
+
+    - module:
+        name    : VXLAN_OUTER_IPV4_UDP(v6inner)
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,OUTER_IPV4,OUTER_UDP
+
+    - module:
+        name    : VXLAN_ALL
+        spec    : checksum_vxlan.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : BAD_CHECKSUM,OUTER_IPV4,OUTER_UDP,IPV4,UDP
+

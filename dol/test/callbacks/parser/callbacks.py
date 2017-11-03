@@ -78,3 +78,35 @@ def GetTcpOptions(tc, pkt):
         for c in range(tc.pvtdata.count):
             opts.append(obj())
     return opts
+
+def __get_checksum_value(tc):
+    if 'BAD_CHECKSUM' in tc.pvtdata.scenario:
+        return 0xFFFF
+    elif 'ZERO_CHECKSUM' in tc.pvtdata.scenario:
+        return 0
+    return None
+
+def GetIpv4Checksum(tc, pkt):
+    if 'IPV4' in tc.pvtdata.scenario:
+        return __get_checksum_value(tc)
+    return None
+
+def GetTcpChecksum(tc, pkt):
+    if 'TCP' in tc.pvtdata.scenario:
+        return __get_checksum_value(tc)
+    return None
+
+def GetUdpChecksum(tc, pkt):
+    if 'UDP' in tc.pvtdata.scenario:
+        return __get_checksum_value(tc)
+    return None
+
+def GetOuterIpv4Checksum(tc, pkt):
+    if 'OUTER_IPV4' in tc.pvtdata.scenario:
+        return __get_checksum_value(tc)
+    return None
+
+def GetOuterUdpChecksum(tc, pkt):
+    if 'OUTER_UDP' in tc.pvtdata.scenario:
+        return __get_checksum_value(tc)
+    return None

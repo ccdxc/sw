@@ -90,9 +90,13 @@ modules:
         name    : OPT_BAD_LEN
         spec    : tcpopt_invalid1.testspec
 
+#    - module:
+#        name    : OPT_BAD_LEN2
+#        spec    : tcpopt_invalid2.testspec
+
     - module:
-        name    : OPT_BAD_LEN2
-        spec    : tcpopt_invalid2.testspec
+        name    : OPT_LEN_GT_PKT
+        spec    : tcpopt_len_gt_pkt.testspec
 
     - module:
         name    : OPT_AFTER_EOL

@@ -21,4 +21,3 @@ modules:
         iterate :
             - flow : filter://type=IPV4,proto=PROTO255,label=NETWORKING
             - flow : filter://type=IPV6,proto=PROTO255,label=NETWORKING
-
