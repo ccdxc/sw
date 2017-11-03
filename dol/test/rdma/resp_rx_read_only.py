@@ -69,6 +69,18 @@ def TestCaseVerify(tc):
     if not VerifyFieldMaskModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'c_index1', ring1_mask,  1):
         return False
 
+    ############     RQ STATS VALIDATIONS #################
+    # verify that num_pkts is incremented by 1
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_pkts', 1):
+        return False
+
+    # verify that num_bytes is incremented by 0
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_bytes', 0):
+        return False
+
+    # verify that num_read_req_msgs is incremented by 1
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_read_req_msgs', 1):
+        return False
 
    ############     CQ VALIDATIONS #################
     if not ValidateNoCQChanges(tc):

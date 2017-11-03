@@ -11,6 +11,9 @@ struct rqcb4_t d;
 
 #define GLOBAL_FLAGS r7
 
+#define MASK_16 16
+#define MASK_32 32
+
 %%
 
 .align
@@ -21,39 +24,43 @@ resp_rx_stats_process:
     
     add              GLOBAL_FLAGS, r0, k.global.flags //BD slot
 
-    tblsadd          d.num_bytes, k.to_stage.s5.stats.bytes
-    tblsadd          d.num_pkts, 1
+    //Release the PHV while updating the stats
+    CAPRI_SET_TABLE_1_VALID(0)
+    phvwrm.f         p[0], r0, 0
+
+    tbladd           d.num_bytes, k.to_stage.s5.stats.bytes
+    tblmincri        d.num_pkts, MASK_32, 1
 
     crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_RX_FLAG_RING_DBELL | RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_ATOMIC_FNA | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_READ_REQ)
 
-    tblsadd.c6       d.num_ring_dbell, 1
-    tblsadd.c5       d.num_ack_requested, 1
-    tblsadd.c4       d.num_send_msgs_inv_rkey, 1
-    tblsadd.c3       d.num_atomic_fna_msgs, 1
-    tblsadd.c2       d.num_atomic_cswap_msgs, 1
-    tblsadd.c1       d.num_read_req_msgs, 1
+    tblmincri.c6     d.num_ring_dbell, MASK_16, 1
+    tblmincri.c5     d.num_ack_requested, MASK_16, 1
+    tblmincri.c4     d.num_send_msgs_inv_rkey, MASK_16, 1
+    tblmincri.c3     d.num_atomic_fna_msgs, MASK_16, 1
+    tblmincri.c2     d.num_atomic_cswap_msgs, MASK_16, 1
+    tblmincri.c1     d.num_read_req_msgs, MASK_16, 1
 
     bcf              [c6 | c4 | c3 | c2 | c1], done
 
     ARE_ALL_FLAGS_SET(c6, GLOBAL_FLAGS, RESP_RX_FLAG_IMMDT|RESP_RX_FLAG_SEND) //BDF
-    tblsadd.c6       d.num_send_msgs_imm_data, 1
+    tblmincri.c6     d.num_send_msgs_imm_data, MASK_16, 1
     ARE_ALL_FLAGS_SET(c6, GLOBAL_FLAGS, RESP_RX_FLAG_IMMDT|RESP_RX_FLAG_WRITE)
-    tblsadd.c6       d.num_write_msgs_imm_data, 1
+    tblmincri.c6     d.num_write_msgs_imm_data, MASK_16, 1
 
     //send messages without inv_rkey and imm_data
     crestore         [c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT | RESP_RX_FLAG_WRITE | RESP_RX_FLAG_SEND | RESP_RX_FLAG_MIDDLE | RESP_RX_FLAG_FIRST)
     //send & & !inv_rkey !imm_data & !middle & !first 
     setcf            c7, [!c6 & !c5 & c3 & !c2 & !c1]
-    tblsadd.c7       d.num_send_msgs, 1
+    tblmincri.c7     d.num_send_msgs, MASK_16, 1
 
     //write messages without imm_data
     //write & !imm_data & !middle & !first 
     setcf            c7, [!c5 & c4 & !c2 & !c1]
-    tblsadd.c7       d.num_write_msgs, 1
+    tblmincri.c7     d.num_write_msgs, MASK_16, 1
 
     IS_ANY_FLAG_SET(c6, GLOBAL_FLAGS, RESP_RX_FLAG_ONLY | RESP_RX_FLAG_FIRST | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA)
     tblwr.c6         d.num_pkts_in_cur_msg, 1
-    tblsadd.!c6      d.num_pkts_in_cur_msg, 1
+    tblmincri.!c6    d.num_pkts_in_cur_msg, MASK_16, 1
 
     //peak
     add              r4, r0, d.max_pkts_in_any_msg
@@ -62,7 +69,6 @@ resp_rx_stats_process:
 
 done:
 
-    CAPRI_SET_TABLE_1_VALID(0)
     nop.e
     nop
 
