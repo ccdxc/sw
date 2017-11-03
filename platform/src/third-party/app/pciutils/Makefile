@@ -2,6 +2,9 @@
 # Copyright (c) 2017, Pensando Systems Inc.
 #
 
+# XXX fix build for aarch64
+LBUILD_ARCHES = x86_64
+
 PCIUTILS_VERSION ?= 3.5.5
 PCIUTILS = pciutils-$(PCIUTILS_VERSION)
 PCIUTILS_TARBALL = $(PCIUTILS).tar.gz
