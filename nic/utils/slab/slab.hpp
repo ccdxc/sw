@@ -76,8 +76,8 @@ private:
     void print_free_elem_ptrs_(slab_block_t *block);
 };
 
-}    // namespace hal
 }    // namespace utils
+}    // namespace hal
 
 #endif  // __SLAB_HPP__
 

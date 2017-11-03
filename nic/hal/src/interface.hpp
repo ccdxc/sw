@@ -79,7 +79,6 @@ typedef struct if_s {
     qos_actions_t       tx_qos_actions;              // qos actions for packets from this if
     qos_actions_t       rx_qos_actions;              // qos actions for packets to this if
 
-
     union {
         // enic interface info
         struct {
@@ -90,7 +89,7 @@ typedef struct if_s {
             vlan_id_t           encap_vlan;          // vlan enabled on this if
             // classic mode fields
             hal_handle_t        native_l2seg_clsc;   // native l2seg
-            hal_handle_t        pinned_up_clsc;      // pinned uplink
+            hal_handle_t        pinned_uplink;       // pinned uplink
         } __PACK__;
 
         // uplink interface info
@@ -148,8 +147,6 @@ typedef struct if_s {
     dllist_ctxt_t       l2seg_list_head;        // l2segments, add_l2seg_on_uplink
     dllist_ctxt_t       enicif_list_head;       // enicifs, Classic enics 
 
-
-
     // dllist_ctxt_t       ep_list_head;       // endpoints behind this interface
     // dllist_ctxt_t       session_list_head;  // session from this
 
@@ -184,8 +181,8 @@ typedef struct if_update_app_ctxt_s {
             hal_handle_t    new_native_l2seg_clsc;
 
             // classic: pinned uplink change
-            bool            pinned_up_clsc_change;
-            hal_handle_t    new_pinned_uplink_clsc;
+            bool            pinned_uplink_change;
+            hal_handle_t    new_pinned_uplink;
 
             // classic: l2seg list change
             bool            l2segclsclist_change;
@@ -201,7 +198,7 @@ typedef struct if_update_app_ctxt_s {
 #define HAL_MAX_INTERFACES                           2048
 
 static inline void 
-if_lock(if_t *hal_if, const char *fname, int lineno, const char *fxname)
+if_lock (if_t *hal_if, const char *fname, int lineno, const char *fxname)
 {
     HAL_TRACE_DEBUG("{}:operlock:locking if:{} from {}:{}:{}", 
                     __FUNCTION__, hal_if->if_id,
@@ -210,7 +207,7 @@ if_lock(if_t *hal_if, const char *fname, int lineno, const char *fxname)
 }
 
 static inline void 
-if_unlock(if_t *hal_if, const char *fname, int lineno, const char *fxname)
+if_unlock (if_t *hal_if, const char *fname, int lineno, const char *fxname)
 {
     HAL_TRACE_DEBUG("{}:operlock:unlocking if:{} from {}:{}:{}", 
                     __FUNCTION__, hal_if->if_id,
@@ -414,7 +411,7 @@ hal_ret_t tunnel_if_create(intf::InterfaceSpec& spec,
 hal_ret_t get_lif_handle_for_enic_if(intf::InterfaceSpec& spec, 
                                      intf::InterfaceResponse *rsp,
                                      if_t *hal_if);
-hal_ret_t get_lif_handle_for_cpu_if(intf::InterfaceSpec& spec, 
+hal_ret_t get_lif_handle_for_cpu_if(intf::InterfaceSpec& spec,
                                     intf::InterfaceResponse *rsp,
                                     if_t *hal_if);
 if_t *if_get_from_id_handle(const intf::InterfaceKeyHandle *key_handle);

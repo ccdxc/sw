@@ -123,8 +123,8 @@ typedef struct pd_if_args_s {
                 lif_t *lif;
 
                 // Classic mode fields
-                bool            pinned_uplink_clsc_change;
-                hal_handle_t    new_pinned_uplink_clsc;
+                bool            pinned_uplink_change;
+                hal_handle_t    new_pinned_uplink;
                 bool            native_l2seg_clsc_change;
                 hal_handle_t    new_native_l2seg_clsc;
                 bool            l2seg_clsc_change;

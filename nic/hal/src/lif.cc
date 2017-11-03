@@ -179,7 +179,6 @@ lif_fwd_create (LifSpec& spec, LifResponse *rsp, lif_t *lif,
 end:
 
     return ret;
-
 }
 
 hal_ret_t
@@ -268,7 +267,6 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         lif_info.with_hw_lif_id = 1;
         lif_info.hw_lif_id = hw_lif_id;
     }
-
     app_ctxt->hw_lif_id = hw_lif_id;
 
     // init queues
@@ -285,7 +283,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    // Initialize QState
+    // initialize QState
     for (int i = 0; i < spec->lif_qstate_size(); i++) {
         const auto &req = spec->lif_qstate(i);
 
@@ -493,6 +491,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->admin_status = spec.admin_status();
     lif->hal_handle = hal_alloc_handle();
     lif->vlan_strip_en = spec.vlan_strip_en();
+    lif->pinned_uplink = spec.pinned_uplink_if_handle();
     //lif->allmulti = spec.allmulti();
     lif->enable_rdma = spec.enable_rdma();
     lif->rdma_max_keys = spec.rdma_max_keys();

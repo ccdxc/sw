@@ -75,8 +75,6 @@ extern hal_ret_t hal_mem_init(void);
 extern hal_ret_t hal_cfg_init(hal_cfg_t *hal_cfg);
 
 class hal_handle {
-    //friend class hal_cfg_db;
-
 public:
     hal_handle_t    handle_id_;     // TODO: make this private
 
@@ -85,30 +83,6 @@ public:
     ~hal_handle();
     hal_obj_id_t obj_id(void) const { return obj_id_; }
     void set_handle_id(hal_handle_t handle) { handle_id_ = handle; }
-    //hal_handle_t handle_id(void) const { return handle_id_; }
-
-#if 0
-    // add an object to this handle
-    // NOTE:
-    // once an object is added to the handle, you waive all your rights on that
-    // object and handle ... it can't be freed by the app anymore
-    // and the only way to free such object (and allocated handle) is by calling
-    // hal_handle_free() on that handle and infra will free both the object and
-    // handle (when its appropriate)
-    hal_ret_t add_obj(void *obj);
-
-    // delete this object
-    hal_ret_t del_obj(void *obj, hal_cfg_del_cb_t del_cb);
-
-    // get an object that has the highes version that is <= read-version
-    // acquired by this thread
-    void *get_obj(void);
-
-    // get any valid object that is non-NULL from this handle (note that there
-    // could be a valid entry but obj is NULL for objects that are deleted)
-    void *get_any_obj(void);
-    void *get_any_obj_safe(void);    // thread safe version of get_any_obj()
-#endif
 
     // start adding object(s) to cfg db and drive h/w programming, if any
     // NOTE: add can block the caller until all the readers of the cfg database
@@ -149,21 +123,10 @@ private:
     void replace_(void *obj, void *cloned_obj);
 
 private:
-    //hal_handle_t    handle_id_;
     hal_obj_id_t    obj_id_;
     void            *obj_;
-#if 0
-    hal_spinlock_t    slock_;
-    // max. number of objects per handle
-    static const uint32_t k_max_objs_ = 4;
-    // TODO: revisit and see if valid bit is needed !!
-    struct {
-        cfg_version_t    ver;        // version of this object
-        void             *obj;       // object itself
-        uint8_t          valid:1;    // TRUE if valid
-    } __PACK__ objs_[k_max_objs_];
-#endif
 };
+
 #define HAL_MAX_HANDLES                              8192
 extern hal_handle_t hal_handle_alloc(void);
 extern hal_handle_t hal_handle_alloc(hal_obj_id_t obj_id);
@@ -236,6 +199,7 @@ typedef struct hal_handle_id_ht_entry_s {
     hal_handle_t     handle_id;
     ht_ctxt_t        ht_ctxt;
 } __PACK__ hal_handle_id_ht_entry_t;
+
 // TODO: deprecate these APIs eventually !!!
 //------------------------------------------------------------------------------
 // HAL internal api to allocate handle for an object

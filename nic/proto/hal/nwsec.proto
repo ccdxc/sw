@@ -42,6 +42,7 @@ enum NormalizationAction {
 }
 
 
+//------------------------------------------------------------------------------
 // SecurityProfileSpec object captures feature knobs that are most likely
 // shareable across L2 segments, tenants, or even interfaces and most of the
 // time operates on defaults. It is possible that there is only object of this
@@ -49,6 +50,55 @@ enum NormalizationAction {
 // NOTE: user is not expected to fill in all the fields explicitly, that job is
 //       done by the agent. Agent will be exposing user visible knobs and fill
 //       in the defaults when interacting with HAL.
+//
+// Expected defaults:
+//
+// 1. Any abnormal behavior w.r.t flags (IP or TCP), default action is drop
+// 2. Anything to do with options, default behavior is to reset/trim
+// 3. Any length related errors, default is truncate the pkt
+//
+// {
+//     cnxn_tracking_en                    = true
+//     tcp_non_syn_first_pkt_drop          = true
+//
+//     ip_normalization_en                 = true
+//     {
+//         ip_ttl_change_detect_en         = false
+//         ip_rsvd_flags_action            = drop
+//         ip_df_action                    = allow
+//         ip_options_action               = allow
+//         ip_invalid_len_action           = trim
+//         ip_normalize_ttl                = 0 (applicable only for workload
+//                                              generated traffic)
+//     }
+//
+//     icmp_normalization_en               = true
+//     {
+//         icmp_invalid_code_action        = drop
+//         icmp_deprecated_msgs_drop       = true
+//         icmp_redirect_msg_drop          = true
+//     }
+//
+//     tcp_normalization_en                = true
+//     {
+//         tcp_split_handshake_drop        = false
+//         tcp_rsvd_flags_action           = drop
+//         tcp_unexpected_mss_action       = strip
+//         tcp_unexpected_win_scale_action = strip
+//         tcp_urg_ptr_not_set_action      = reset
+//         tcp_urg_flag_not_set_action     = reset
+//         tcp_urg_payload_missing_action  = reset
+//         tcp_rst_with_data_action        = drop
+//         tcp_data_len_gt_mss_action      = trim  (if conntrack is enabled)
+//         tcp_data_len_gt_win_size_action = trim  (if conntrack is enabled)
+//         tcp_unexpected_ts_option_action = reset (if conntrack is enabled)
+//         tcp_unexpected_echo_ts_action   = drop
+//         tcp_ts_not_present_drop         = true  (if conntrack is enabled)
+//         tcp_invalid_flags_drop          = true
+//         tcp_nonsyn_noack_drop           = true
+//     }
+// }
+//------------------------------------------------------------------------------
 message SecurityProfileSpec {
   types.ObjectMeta             meta                            = 1;    // common object meta
   key_handles.SecurityProfileKeyHandle     key_or_handle       = 2 [(gogoproto.moretags) = "venice:\"key\""];
@@ -59,13 +109,14 @@ message SecurityProfileSpec {
   uint32                       tcp_cnxn_setup_timeout          = 7;
   uint32                       tcp_close_timeout               = 8;
   uint32                       tcp_close_wait_timeout          = 9;
+  bool                         tcp_non_syn_first_pkt_drop      = 10;
 
-  bool                              ip_normalization_en             = 10;
-  bool                              tcp_normalization_en            = 11;
-  bool                              icmp_normalization_en           = 12;
+  bool                         ip_normalization_en             = 11;
+  bool                         tcp_normalization_en            = 12;
+  bool                         icmp_normalization_en           = 13;
 
   // IP normalization knobs
-  bool                              ip_ttl_change_detect_en         = 20;
+  bool                         ip_ttl_change_detect_en         = 20;
   NormalizationAction          ip_rsvd_flags_action            = 21;
   NormalizationAction          ip_df_action                    = 22;
   NormalizationAction          ip_options_action               = 23;
@@ -78,24 +129,21 @@ message SecurityProfileSpec {
   bool                         icmp_redirect_msg_drop          = 32;
 
   // TCP normalization knobs
-  bool                              tcp_non_syn_first_pkt_drop      = 40;
-  bool                         tcp_syncookie_en                = 41;
-  bool                              tcp_split_handshake_detect_en   = 42;
-  bool                              tcp_split_handshake_drop        = 43;
-  NormalizationAction          tcp_rsvd_flags_action           = 44;
-  NormalizationAction          tcp_unexpected_mss_action       = 45;
-  NormalizationAction          tcp_unexpected_win_scale_action = 46;
-  NormalizationAction          tcp_urg_ptr_not_set_action      = 47;
-  NormalizationAction          tcp_urg_flag_not_set_action     = 48;
-  NormalizationAction          tcp_urg_payload_missing_action  = 49;
-  NormalizationAction          tcp_rst_with_data_action        = 50;
-  NormalizationAction          tcp_data_len_gt_mss_action      = 51;
-  NormalizationAction          tcp_data_len_gt_win_size_action = 52;
-  NormalizationAction          tcp_unexpected_ts_option_action = 53;
-  NormalizationAction          tcp_unexpected_echo_ts_action   = 54;
-  bool                         tcp_ts_not_present_drop         = 55;
-  bool                         tcp_invalid_flags_drop          = 56;
-  bool                         tcp_nonsyn_noack_drop           = 57;
+  bool                         tcp_split_handshake_drop        = 41;
+  NormalizationAction          tcp_rsvd_flags_action           = 42;
+  NormalizationAction          tcp_unexpected_mss_action       = 43;
+  NormalizationAction          tcp_unexpected_win_scale_action = 44;
+  NormalizationAction          tcp_urg_ptr_not_set_action      = 45;
+  NormalizationAction          tcp_urg_flag_not_set_action     = 46;
+  NormalizationAction          tcp_urg_payload_missing_action  = 47;
+  NormalizationAction          tcp_rst_with_data_action        = 48;
+  NormalizationAction          tcp_data_len_gt_mss_action      = 49;
+  NormalizationAction          tcp_data_len_gt_win_size_action = 50;
+  NormalizationAction          tcp_unexpected_ts_option_action = 51;
+  NormalizationAction          tcp_unexpected_echo_ts_action   = 52;
+  bool                         tcp_ts_not_present_drop         = 53;
+  bool                         tcp_invalid_flags_drop          = 54;
+  bool                         tcp_nonsyn_noack_drop           = 55;
 }
 
 // SecurityProfileRequestMsg is batched add or modify profile request

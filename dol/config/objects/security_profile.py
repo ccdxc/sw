@@ -93,8 +93,6 @@ class SecurityProfileObject(base.ConfigObjectBase):
         req_spec.icmp_deprecated_msgs_drop = self.fields.icmp_deprecated_msgs_drop
         req_spec.icmp_redirect_msg_drop = self.fields.icmp_redirect_msg_drop
         req_spec.tcp_non_syn_first_pkt_drop = self.fields.tcp_non_syn_first_pkt_drop
-        req_spec.tcp_syncookie_en = self.fields.tcp_syncookie_en
-        req_spec.tcp_split_handshake_detect_en = self.fields.tcp_split_handshake_detect_en
         req_spec.tcp_split_handshake_drop = self.fields.tcp_split_handshake_drop
         req_spec.tcp_rsvd_flags_action = self.__getEnumValue(self.fields.tcp_rsvd_flags_action)
         req_spec.tcp_unexpected_mss_action = self.__getEnumValue(self.fields.tcp_unexpected_mss_action)
@@ -147,8 +145,6 @@ class SecurityProfileObject(base.ConfigObjectBase):
             self.fields.icmp_deprecated_msgs_drop = get_resp.spec.icmp_deprecated_msgs_drop
             self.fields.icmp_redirect_msg_drop = get_resp.spec.icmp_redirect_msg_drop
             self.fields.tcp_non_syn_first_pkt_drop = get_resp.spec.tcp_non_syn_first_pkt_drop
-            self.fields.tcp_syncookie_en = get_resp.spec.tcp_syncookie_en
-            self.fields.tcp_split_handshake_detect_en = get_resp.spec.tcp_split_handshake_detect_en
             self.fields.tcp_split_handshake_drop = get_resp.spec.tcp_split_handshake_drop
             self.fields.tcp_rsvd_flags_action = self.__getStringValue(get_resp.spec.tcp_rsvd_flags_action)
             self.fields.tcp_unexpected_mss_action = self.__getStringValue(get_resp.spec.tcp_unexpected_mss_action)

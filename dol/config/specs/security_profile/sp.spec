@@ -139,22 +139,6 @@ profiles:
       fields:
          tcp_non_syn_first_pkt_drop: 0
 
-    - id: SEC_PROF_TCP_SYNCOOKIE_EN_ENABLE
-      fields:
-         tcp_syncookie_en: 1
-
-    - id: SEC_PROF_TCP_SYNCOOKIE_EN_DISABLE
-      fields:
-         tcp_syncookie_en: 0
-
-    - id: SEC_PROF_TCP_SPLIT_HANDSHAKE_DETECT_EN_ENABLE
-      fields:
-         tcp_split_handshake_detect_en: 1
-
-    - id: SEC_PROF_TCP_SPLIT_HANDSHAKE_DETECT_EN_DISABLE
-      fields:
-         tcp_split_handshake_detect_en: 0
-
     - id: SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE
       fields:
          tcp_split_handshake_drop: 1

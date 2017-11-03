@@ -7,6 +7,7 @@
 #include "nic/utils/slab/slab.hpp"
 #include "nic/utils/indexer/indexer.hpp"
 #include "nic/utils/ht/ht.hpp"
+#include "nic/include/eventmgr.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
@@ -18,6 +19,7 @@ using hal::utils::slab;
 using hal::utils::indexer;
 using hal::utils::ht;
 using hal::utils::bitmap;
+using hal::utils::eventmgr;
 using hal::utils::dllist_ctxt_t;
 
 typedef enum hal_forwarding_mode_s {
@@ -48,6 +50,7 @@ public:
 
     // API to call before processing any packet by FTE, any operation by config
     hal_ret_t db_open(cfg_op_t cfg_op);
+
     // API to call after processing any packet by FTE, any operation by config
     // thread or periodic thread etc.
     hal_ret_t db_close(void);
@@ -56,17 +59,7 @@ public:
     hal_ret_t register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz);
     uint32_t object_size(hal_obj_id_t obj_id) const;
 
-#if 0
-    bool is_cfg_ver_in_use(cfg_version_t ver);
-    // TODO: make this a private function and make hal_handle class friend of
-    // this
-    hal_ret_t add_obj_to_del_cache(hal_handle *handle, void *obj,
-                                   hal_cfg_del_cb_t del_cb);
-
-#endif
-
     ht *tenant_id_ht(void) const { return tenant_id_ht_; }
-    // ht *tenant_hal_handle_ht(void) const { return tenant_hal_handle_ht_; }
 
     ht *network_key_ht(void) const { return network_key_ht_; }
     ht *network_hal_handle_ht(void) const { return network_hal_handle_ht_; }
@@ -80,16 +73,12 @@ public:
     ht *dos_policy_hal_handle_ht(void) const { return dos_policy_hal_handle_ht_ ; }
 
     ht *l2seg_id_ht(void) const { return l2seg_id_ht_; }
-    // ht *l2seg_hal_handle_ht(void) const { return l2seg_hal_handle_ht_; }
 
     ht *lif_id_ht(void) const { return lif_id_ht_; }
-    // ht *lif_hal_handle_ht(void) const { return lif_hal_handle_ht_; }
 
     ht *if_id_ht(void) const { return if_id_ht_; }
-    // ht *if_hal_handle_ht(void) const { return if_hal_handle_ht_; }
 
     ht *port_id_ht(void) const { return port_id_ht_; }
-    // ht *port_hal_handle_ht(void) const { return port_hal_handle_ht_; }
 
     // TODO: may have to create L2 and L3 HTs here !!
     ht *ep_hal_handle_ht(void) const { return ep_hal_handle_ht_; }
@@ -157,30 +146,9 @@ public:
     ht *dhcplearn_key_ht(void) const { return dhcplearn_key_ht_; }
     ht *dhcplearn_ip_entry_ht(void) const { return dhcplearn_ip_entry_ht_; }
 
-#if 0
-public:
-    // TODO: move to hal_cfg.h and rename to cfg_del_cache_entry_t
-    typedef struct del_cache_entry_s {
-        hal_handle          *handle;
-        void                *obj;
-        hal_cfg_del_cb_t    del_cb;
-        dllist_ctxt_t       dllist_ctxt;
-    } __PACK__ del_cache_entry_t;
-#endif
-
 private:
     bool init(void);
     hal_cfg_db();
-
-#if 0
-    cfg_version_t db_get_current_version(void);
-    cfg_version_t db_reserve_version(void);
-    hal_ret_t db_release_reserved_version(cfg_version_t ver);
-    hal_ret_t db_update_version(cfg_version_t ver);
-    hal_ret_t db_release_version_in_use(cfg_version_t ver);
-    hal_ret_t process_del_cache_entry(del_cache_entry_t *entry);
-    void process_del_cache(void);
-#endif
 
 private:
     // tenant/vrf related config
@@ -351,28 +319,6 @@ private:
         hal_forwarding_mode_t   forwarding_mode_;
     } __PACK__;
 
-#if 0
-    // meta information about the config db
-    typedef struct cfg_ver_in_use_info_s {
-        cfg_version_t    ver;          // version number
-        uint16_t         usecnt:15;    // number of users of this version
-        uint16_t         valid:1;      // entry valid or not
-    } __PACK__ cfg_ver_in_use_info_t;
-
-    typedef struct cfg_version_rsvd_info_s {
-        cfg_version_t    ver;          // version number
-        uint8_t          valid:1;      // entry valid or not
-    } __PACK__ cfg_version_rsvd_info_t;
-
-    hal_spinlock_t             slock_;                                 // lock to protect cfg db meta
-    cfg_version_t              cfg_db_ver_;                            // cfg db current version
-    cfg_version_t              max_rsvd_ver_;                          // max. reserved version
-    cfg_ver_in_use_info_t      cfg_ver_in_use_[HAL_THREAD_ID_MAX];     // versions in use for read
-    cfg_version_rsvd_info_t    cfg_ver_rsvd_[HAL_THREAD_ID_MAX];       // versions reserved for write
-    dllist_ctxt_t              del_cache_list_head_;                   // delete obj cache
-    hal_spinlock_t             del_cache_slock_;                       // lock to protect the delete cache
-#endif
-
     wp_rwlock    rwlock_;
     typedef struct obj_meta_s {
         uint32_t        obj_sz;
@@ -389,7 +335,6 @@ public:
     ht *hal_handle_id_ht(void) const { return hal_handle_id_ht_; };
     void *infra_l2seg(void) { return infra_l2seg_; }
     void set_infra_l2seg(void *infra_l2seg) { infra_l2seg_ = infra_l2seg; }
-    // ht *if_hwid_ht(void) const { return if_hwid_ht_; }
     ht *ep_l2_ht(void) const { return ep_l2_ht_; }
     ht *ep_l3_entry_ht(void) const { return ep_l3_entry_ht_; }
     ht *flow_ht(void) const { return flow_ht_; }
@@ -397,18 +342,19 @@ public:
         return cos_in_use_bmp_[port_num];
     }
     ip_addr_t *mytep(void) { return &mytep_ip; }
+    eventmgr *event_mgr(void) const { return event_mgr_; }
 
 private:
     bool init(void);
     hal_oper_db();
 
 private:
-    void      *infra_l2seg_;  // l2seg_t *
-    ht        *hal_handle_id_ht_;
-    // ht        *if_hwid_ht_;
-    ht        *ep_l2_ht_;
-    ht        *ep_l3_entry_ht_;
-    ht        *flow_ht_;
+    void        *infra_l2seg_;  // l2seg_t *
+    eventmgr    *event_mgr_;
+    ht          *hal_handle_id_ht_;
+    ht          *ep_l2_ht_;
+    ht          *ep_l3_entry_ht_;
+    ht          *flow_ht_;
     // bitmap indicating if the cos is already assigned to a buffer pool
     bitmap    *cos_in_use_bmp_[HAL_MAX_TM_PORTS];
     ip_addr_t mytep_ip;
@@ -428,7 +374,6 @@ public:
     slab *hal_handle_id_ht_entry_slab(void) const { return hal_handle_id_ht_entry_slab_; }
     slab *hal_handle_id_list_entry_slab(void) const { return hal_handle_id_list_entry_slab_; }
     slab *dos_policy_sg_list_entry_slab(void) const { return dos_policy_sg_list_entry_slab_; }
-    //slab *hal_del_cache_entry_slab(void) const { return hal_del_cache_entry_slab_; }
     slab *tenant_slab(void) const { return tenant_slab_; }
     slab *network_slab(void) const { return network_slab_; }
     slab *nwsec_profile_slab(void) const { return nwsec_profile_slab_; }
@@ -473,7 +418,6 @@ private:
     slab    *hal_handle_id_ht_entry_slab_;
     slab    *hal_handle_id_list_entry_slab_;
     slab    *dos_policy_sg_list_entry_slab_;
-    //slab    *hal_del_cache_entry_slab_;
     slab    *tenant_slab_;
     slab    *network_slab_;
     slab    *nwsec_profile_slab_;
@@ -527,7 +471,6 @@ public:
     slab *get_slab(hal_slab_t slab_id) const { return mem_db_->get_slab(slab_id); }
 
     // get APIs for HAL handle related state
-    //slab *hal_del_cache_entry_slab(void) const { return mem_db_->hal_del_cache_entry_slab(); }
     slab *hal_handle_slab(void) const { return mem_db_->hal_handle_slab(); }
     slab *hal_handle_ht_entry_slab(void) const { return mem_db_->hal_handle_ht_entry_slab(); }
     slab *hal_handle_list_entry_slab(void) const { return mem_db_->hal_handle_list_entry_slab(); }
@@ -544,7 +487,6 @@ public:
     // get APIs for tenant related state
     slab *tenant_slab(void) const { return mem_db_->tenant_slab(); }
     ht *tenant_id_ht(void) const { return cfg_db_->tenant_id_ht(); }
-    // ht *tenant_hal_handle_ht(void) const { return cfg_db_->tenant_hal_handle_ht(); }
 
     // get APIs for network related state
     slab *network_slab(void) const { return mem_db_->network_slab(); }
@@ -571,18 +513,14 @@ public:
     // get APIs for L2 segment state
     slab *l2seg_slab(void) const { return mem_db_->l2seg_slab(); }
     ht *l2seg_id_ht(void) const { return cfg_db_->l2seg_id_ht(); }
-    // ht *l2seg_hal_handle_ht(void) const { return cfg_db_->l2seg_hal_handle_ht(); }
 
     // get APIs for LIF state
     slab *lif_slab(void) const { return mem_db_->lif_slab(); }
     ht *lif_id_ht(void) const { return cfg_db_->lif_id_ht(); }
-    // ht *lif_hal_handle_ht(void) const { return cfg_db_->lif_hal_handle_ht(); }
 
     // get APIs for interface state
     slab *if_slab(void) const { return mem_db_->if_slab(); }
     ht *if_id_ht(void) const { return cfg_db_->if_id_ht(); }
-    // ht *if_hal_handle_ht(void) const { return cfg_db_->if_hal_handle_ht(); }
-    // ht *if_hwid_ht(void) const { return oper_db_->if_hwid_ht(); }
     slab *enic_l2seg_entry_slab(void) const { return mem_db_->enic_l2seg_entry_slab(); }
 
     // get APIs for port state
@@ -690,11 +628,13 @@ public:
     ht *dhcplearn_key_ht(void) const { return cfg_db_->dhcplearn_key_ht(); }
     ht *dhcplearn_ip_entry_ht(void) const { return cfg_db_->dhcplearn_ip_entry_ht(); }
 
-    //Forwarding mode APIs
+    // forwarding mode APIs
     void set_forwarding_mode(std::string modestr) { 
         cfg_db_->set_forwarding_mode(modestr);
     }
-    hal_forwarding_mode_t forwarding_mode() { return cfg_db_->forwarding_mode(); }
+    hal_forwarding_mode_t forwarding_mode(void) const { return cfg_db_->forwarding_mode(); }
+
+    eventmgr *event_mgr(void) const { return oper_db_->event_mgr(); }
 
 private:
     bool init(void);

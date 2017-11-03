@@ -93,11 +93,11 @@ cc_library(
         "//nic/hal/pd/capri:capri_includes",
         "//nic/hal/pd/iris:iris_includes",
         "//nic/utils/host_mem:host_mem_includes",
-        # "//nic/utils/host_mem:host_mem",
         "//nic/third-party/spdlog",
         "//nic/hal/tls:tls_api",
         "//nic/utils/fsm:fsm",
         "//nic/fte:fte_includes",
+        "//nic/utils/eventmgr:eventmgr",
     ],
 )
 

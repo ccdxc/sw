@@ -56,6 +56,8 @@ typedef enum hal_slab_e {
     HAL_SLAB_LKLSHIM_LSOCKS,
     HAL_SLAB_ARP_LEARN,
     HAL_SLAB_DHCP_LEARN,
+    HAL_SLAB_EVENT_MAP,
+    HAL_SLAB_EVENT_MAP_LISTENER,
     HAL_SLAB_PI_MAX,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
@@ -117,6 +119,7 @@ typedef enum hal_mem_alloc_e {
     HAL_MEM_ALLOC_QOS,
     HAL_MEM_ALLOC_LIB_ACL_TCAM,
     HAL_MEM_ALLOC_DLLIST,
+    HAL_MEM_ALLOC_EVENT_MGR,
     HAL_MEM_ALLOC_OTHER,
 } hal_mem_alloc_t;
 

@@ -1,9 +1,11 @@
 #include <iostream>
+#include <thread>
 #include <grpc++/grpc++.h>
 #include "nic/gen/proto/hal/types.grpc.pb.h"
 #include "nic/gen/proto/hal/tenant.grpc.pb.h"
 #include "nic/gen/proto/hal/l2segment.grpc.pb.h"
 #include "nic/gen/proto/hal/port.grpc.pb.h"
+#include "nic/gen/proto/hal/event.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -39,12 +41,17 @@ using port::PortDeleteRequest;
 using port::PortDeleteRequestMsg;
 using port::PortDeleteResponseMsg;
 
+using event::Event;
+using event::EventRequest;
+using event::EventResponse;
+
 const std::string&    hal_svc_endpoint_("localhost:50054");
 
 class hal_client {
 public:
     hal_client(std::shared_ptr<Channel> channel) : tenant_stub_(Tenant::NewStub(channel)),
-    l2seg_stub_(L2Segment::NewStub(channel)), port_stub_(Port::NewStub(channel)) {}
+    l2seg_stub_(L2Segment::NewStub(channel)), port_stub_(Port::NewStub(channel)),
+    event_stub_(Event::NewStub(channel)) {}
 
     bool port_handle_api_status(types::ApiStatus api_status,
                                 uint32_t port_id) {
@@ -299,16 +306,11 @@ public:
 
         status = tenant_stub_->TenantDelete(&context, req_msg, &rsp_msg);
         if (status.ok()) {
-            if (rsp_msg.api_status(0) == types::API_STATUS_OK) {
-                std::cout << "Tenant delete succeeded" << std::endl;
-            } else {
-                std::cout << "Tenant delete failed, error = "
-                          << rsp_msg.api_status(0) << std::endl;
-            }
+            std::cout << "Tenant delete succeeded" << std::endl;
             return;
+        } else {
+            std::cout << "Tenant delete failed" << std::endl;
         }
-        std::cout << "Tenant delete failed, error = "
-                  << rsp_msg.api_status(0) << std::endl;
         return;
     }
 
@@ -324,12 +326,10 @@ public:
 
         status = tenant_stub_->TenantDelete(&context, req_msg, &rsp_msg);
         if (status.ok()) {
-            assert(rsp_msg.api_status(0) == types::API_STATUS_OK);
             std::cout << "Tenant delete succeeded" << std::endl;
             return;
         }
-        std::cout << "Tenant delete failed, error = "
-                  << rsp_msg.api_status(0) << std::endl;
+        std::cout << "Tenant delete failed" << std::endl;
         return;
     }
 
@@ -362,10 +362,45 @@ public:
         return 0;
     }
 
+    void event_test(void) {
+        ClientContext context;
+        std::shared_ptr<grpc::ClientReaderWriter<EventRequest, EventResponse> > stream(
+            event_stub_->EventListen(&context));
+
+        std::thread writer([stream]() {
+            std::vector<EventRequest>    events(2);
+
+            events[0].set_event_id(event::EVENT_ID_ENDPOINT);
+            events[0].set_event_operation(event::EVENT_OP_SUBSCRIBE);
+            events[1].set_event_id(event::EVENT_ID_PORT);
+            events[1].set_event_operation(event::EVENT_OP_SUBSCRIBE);
+            //events[2].set_event_id(event::EVENT_ID_PORT);
+            //events[2].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
+            //events[3].set_event_id(event::EVENT_ID_ENDPOINT);
+            //events[3].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
+            for (const EventRequest& event : events) {
+                std::cout << "Subscribing to event " << event.event_id() << std::endl;
+                stream->Write(event);
+            }
+            stream->WritesDone();
+        });
+
+        EventResponse event_response;
+        while (stream->Read(&event_response)) {
+            std::cout << "Got event " << event_response.event_id() << std::endl;
+        }
+        writer.join();
+        Status status = stream->Finish();
+        if (!status.ok()) {
+            std::cout << "Event test failed" << std::endl;
+        }
+    }
+
 private:
     std::unique_ptr<Tenant::Stub> tenant_stub_;
     std::unique_ptr<L2Segment::Stub> l2seg_stub_;
     std::unique_ptr<Port::Stub> port_stub_;
+    std::unique_ptr<Event::Stub> event_stub_;
 };
 
 int port_test(hal_client *hclient)
@@ -493,7 +528,6 @@ main (int argc, char** argv)
                                            grpc::InsecureChannelCredentials()));
 
     port_test(&hclient);
-    return 0;
 
     hclient.tenant_delete_by_id(1);
     // create a tenant
@@ -512,5 +546,7 @@ main (int argc, char** argv)
     assert(hclient.l2segment_create(1, 1, 1) != 0);
     hclient.tenant_delete_by_id(1);
 
+    // subscribe and listen to HAL events
+    hclient.event_test();
     return 0;
 }

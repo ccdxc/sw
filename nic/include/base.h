@@ -183,7 +183,7 @@ do {                                                       \
     ENTRY(HAL_RET_HANDLE_INVALID,             25,"invalid hal handle")         \
     ENTRY(HAL_RET_LIF_NOT_FOUND,              26,"LIF not found")              \
     ENTRY(HAL_RET_HW_PROG_ERR,                27,"h/w programming error")      \
-    ENTRY(HAL_RET_SECURITY_PROFILE_NOT_FOUND, 28, "qsecurity profile not found") \
+    ENTRY(HAL_RET_SECURITY_PROFILE_NOT_FOUND, 28, "security profile not found") \
     ENTRY(HAL_RET_TLS_CB_NOT_FOUND,           29, "TLS CB not found")          \
     ENTRY(HAL_RET_TCP_CB_NOT_FOUND,           30, "TCP CB not found")          \
     ENTRY(HAL_RET_QUEUE_NOT_FOUND,            31,"interface not found")        \

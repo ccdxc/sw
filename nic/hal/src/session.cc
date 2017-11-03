@@ -3,7 +3,6 @@
 #include "nic/include/base.h"
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-// #include "nic/hal/svc/session_svc.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/endpoint.hpp"
 #include "nic/include/endpoint_api.hpp"

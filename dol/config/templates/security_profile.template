@@ -25,8 +25,6 @@ fields:
     icmp_deprecated_msgs_drop: 0
     icmp_redirect_msg_drop: 0
     tcp_non_syn_first_pkt_drop: 0
-    tcp_syncookie_en: 1
-    tcp_split_handshake_detect_en: 1
     tcp_split_handshake_drop: 0
     tcp_rsvd_flags_action: ALLOW
     tcp_unexpected_mss_action: ALLOW

@@ -82,6 +82,7 @@ bazel-build:
 
 bazel-gtests:
 	# PI gtests
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/test:hal_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/test/gtests:all
 	# PI Utils
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/bitmap:bitmap_test

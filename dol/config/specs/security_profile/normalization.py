@@ -16,10 +16,11 @@ knobs_list = [
 #    ('uint32', 'tcp_cnxn_setup_timeout', '7'),
 #    ('uint32', 'tcp_close_timeout', '8'),
 #    ('uint32', 'tcp_close_wait_timeout', '9'),
+    ('bool', 'tcp_non_syn_first_pkt_drop', '10'),
 ####
-#    ('bool', 'ip_normalization_en', '10'),
-#    ('bool', 'tcp_normalization_en', '11'),
-#    ('bool', 'icmp_normalization_en', '12'),
+#    ('bool', 'ip_normalization_en', '11'),
+#    ('bool', 'tcp_normalization_en', '12'),
+#    ('bool', 'icmp_normalization_en', '13'),
 # IP normalization knobs
     # TBD: TTL change detect
     #('bool', 'ip_ttl_change_detect_en', '20'),
@@ -33,24 +34,21 @@ knobs_list = [
     ('bool', 'icmp_deprecated_msgs_drop', '31'),
     ('bool', 'icmp_redirect_msg_drop', '32'),
 # TCP normalization knobs
-    ('bool', 'tcp_non_syn_first_pkt_drop', '40'),
-    ('bool', 'tcp_syncookie_en', '41'),
-    ('bool', 'tcp_split_handshake_detect_en', '42'),
-    ('bool', 'tcp_split_handshake_drop', '43'),
-    ('NormalizationAction', 'tcp_rsvd_flags_action', '44'),
-    ('NormalizationAction', 'tcp_unexpected_mss_action', '45'),
-    ('NormalizationAction', 'tcp_unexpected_win_scale_action', '46'),
-    ('NormalizationAction', 'tcp_urg_ptr_not_set_action', '47'),
-    ('NormalizationAction', 'tcp_urg_flag_not_set_action', '48'),
-    ('NormalizationAction', 'tcp_urg_payload_missing_action', '49'),
-    ('NormalizationAction', 'tcp_rst_with_data_action', '50'),
-    ('NormalizationAction', 'tcp_data_len_gt_mss_action', '51'),
-    ('NormalizationAction', 'tcp_data_len_gt_win_size_action', '52'),
-    ('NormalizationAction', 'tcp_unexpected_ts_option_action', '53'),
-    ('NormalizationAction', 'tcp_unexpected_echo_ts_action', '54'),
-    ('bool', 'tcp_ts_not_present_drop', '55'),
-    ('bool', 'tcp_invalid_flags_drop', '56'),
-    ('bool', 'tcp_nonsyn_noack_drop', '57')]
+    ('bool', 'tcp_split_handshake_drop', '41'),
+    ('NormalizationAction', 'tcp_rsvd_flags_action', '42'),
+    ('NormalizationAction', 'tcp_unexpected_mss_action', '43'),
+    ('NormalizationAction', 'tcp_unexpected_win_scale_action', '44'),
+    ('NormalizationAction', 'tcp_urg_ptr_not_set_action', '45'),
+    ('NormalizationAction', 'tcp_urg_flag_not_set_action', '46'),
+    ('NormalizationAction', 'tcp_urg_payload_missing_action', '47'),
+    ('NormalizationAction', 'tcp_rst_with_data_action', '48'),
+    ('NormalizationAction', 'tcp_data_len_gt_mss_action', '49'),
+    ('NormalizationAction', 'tcp_data_len_gt_win_size_action', '50'),
+    ('NormalizationAction', 'tcp_unexpected_ts_option_action', '51'),
+    ('NormalizationAction', 'tcp_unexpected_echo_ts_action', '52'),
+    ('bool', 'tcp_ts_not_present_drop', '53'),
+    ('bool', 'tcp_invalid_flags_drop', '54'),
+    ('bool', 'tcp_nonsyn_noack_drop', '55')]
 
 print 'meta:'
 print '    id: SECURITY_PROFILES'

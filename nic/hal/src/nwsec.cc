@@ -155,8 +155,6 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
             NWSEC_SPEC_CHECK(icmp_deprecated_msgs_drop) ||
             NWSEC_SPEC_CHECK(icmp_redirect_msg_drop) ||
             NWSEC_SPEC_CHECK(tcp_non_syn_first_pkt_drop) ||
-            NWSEC_SPEC_CHECK(tcp_syncookie_en) ||
-            NWSEC_SPEC_CHECK(tcp_split_handshake_detect_en) ||
             NWSEC_SPEC_CHECK(tcp_split_handshake_drop) ||
             NWSEC_SPEC_CHECK(tcp_rsvd_flags_action) ||
             NWSEC_SPEC_CHECK(tcp_unexpected_mss_action) ||
@@ -216,8 +214,6 @@ nwsec_profile_init_from_spec (nwsec_profile_t *sec_prof,
     NWSEC_SPEC_ASSIGN(icmp_deprecated_msgs_drop);
     NWSEC_SPEC_ASSIGN(icmp_redirect_msg_drop);
     NWSEC_SPEC_ASSIGN(tcp_non_syn_first_pkt_drop);
-    NWSEC_SPEC_ASSIGN(tcp_syncookie_en);
-    NWSEC_SPEC_ASSIGN(tcp_split_handshake_detect_en);
     NWSEC_SPEC_ASSIGN(tcp_split_handshake_drop);
     NWSEC_SPEC_ASSIGN(tcp_rsvd_flags_action);
     NWSEC_SPEC_ASSIGN(tcp_unexpected_mss_action);
@@ -1077,8 +1073,6 @@ security_profile_get (nwsec::SecurityProfileGetRequest& req,
     spec->set_icmp_redirect_msg_drop(sec_prof->icmp_redirect_msg_drop);
 
     spec->set_tcp_non_syn_first_pkt_drop(sec_prof->tcp_non_syn_first_pkt_drop);
-    spec->set_tcp_syncookie_en(sec_prof->tcp_syncookie_en);
-    spec->set_tcp_split_handshake_detect_en(sec_prof->tcp_split_handshake_detect_en);
     spec->set_tcp_split_handshake_drop(sec_prof->tcp_split_handshake_drop);
     spec->set_tcp_rsvd_flags_action(
               static_cast<nwsec::NormalizationAction>(sec_prof->tcp_rsvd_flags_action));

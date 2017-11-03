@@ -30,24 +30,24 @@ typedef uint32_t lif_id_t;
 // typedef struct if_s if_t;
 
 // LIF structure
-// TODO: capture Q information etc.
 typedef struct lif_s {
     hal_spinlock_t      slock;                       // lock to protect this structure
     lif_id_t            lif_id;                      // lif id assigned
     intf::IfStatus      admin_status;                // admin status
     bool                vlan_strip_en;               // vlan strip enable
+    hal_handle_t        pinned_uplink;               // uplink this LIF is pinned to
     //bool                allmulti;                    // All multicast enable
     bool                enable_rdma;                 // enable rdma on this LIF
     uint32_t            rdma_max_keys;
     uint32_t            rdma_max_pt_entries;
     uint8_t             qtypes[intf::LifQPurpose_MAX+1]; // purpose to qtype mapping
-    uint16_t            cos_bmp;                   // Bitmap of COS values supported by this LIF.
+    uint16_t            cos_bmp;                     // bitmap of COS values supported by this LIF.
 
     // operational state of interface
     hal_handle_t        hal_handle;                  // HAL allocated handle
 
     // back references to enic ifs
-    dllist_ctxt_t       if_list_head;                // interfaces(enics) behind this lif
+    dllist_ctxt_t       if_list_head;                // interfaces (enics) behind this lif
 
     void                *pd_lif;
 } __PACK__ lif_t;
@@ -67,7 +67,6 @@ typedef struct lif_create_app_ctxt_s {
 typedef struct lif_update_app_ctxt_s {
     LifSpec             *spec;
     LifResponse         *rsp;
-
     bool                vlan_strip_en_changed;
     bool                vlan_strip_en;
 } __PACK__ lif_update_app_ctxt_t;
@@ -75,8 +74,8 @@ typedef struct lif_update_app_ctxt_s {
 #define HAL_MAX_LIFS                                 1024
 
 static inline void 
-lif_lock(lif_t *lif, const char *fname,
-         int lineno, const char *fxname)
+lif_lock (lif_t *lif, const char *fname,
+          int lineno, const char *fxname)
 {
     HAL_TRACE_DEBUG("{}:operlock:locking lif:{} from {}:{}:{}", 
                     __FUNCTION__, lif->lif_id,
@@ -85,8 +84,8 @@ lif_lock(lif_t *lif, const char *fname,
 }
 
 static inline void 
-lif_unlock(lif_t *lif, const char *fname,
-           int lineno, const char *fxname)
+lif_unlock (lif_t *lif, const char *fname,
+            int lineno, const char *fxname)
 {
     HAL_TRACE_DEBUG("{}:operlock:unlocking lif:{} from {}:{}:{}", 
                     __FUNCTION__, lif->lif_id,
@@ -172,12 +171,6 @@ find_lif_by_handle (hal_handle_t handle)
         return NULL;
     }
     return (lif_t *)hal_handle->get_obj();
-#if 0
-    // check for object type
-    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
-               HAL_OBJ_ID_LIF);
-    return (lif_t *)hal_handle_get_obj(handle);
-#endif
 }
 
 extern void *lif_id_get_key_func(void *entry);
@@ -195,8 +188,8 @@ hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp,
 hal_ret_t lif_update(LifSpec& spec, LifResponse *rsp);
 hal_ret_t lif_delete(LifDeleteRequest& req,
                      LifDeleteResponseMsg *rsp);
-hal_ret_t lif_get(LifGetRequest& req,
-                  LifGetResponse *rsp);
+hal_ret_t lif_get(LifGetRequest& req, LifGetResponse *rsp);
+
 }    // namespace hal
 
 #endif    // __LIF_HPP__

@@ -285,5 +285,49 @@ ht::remove_entry(void *entry, ht_ctxt_t *ht_ctxt)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+ht::walk(ht_walk_cb_t walk_cb, void *ctxt)
+{
+    uint32_t     i;
+    ht_ctxt_t    *curr, *next;
+
+    HAL_ASSERT_RETURN((walk_cb != NULL), HAL_RET_INVALID_ARG);
+    for (i = 0; i < num_buckets_; i++) {
+        curr = ht_buckets_[i].ht_ctxt;
+        while (curr) {
+            // cache the next entry so it is delete-safe
+            next = curr->next;
+            walk_cb(curr->entry, ctxt);
+            curr = next;
+        }
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+ht::walk_safe(ht_walk_cb_t walk_cb, void *ctxt)
+{
+    uint32_t     i;
+    ht_ctxt_t    *curr, *next;
+
+    HAL_ASSERT_RETURN((walk_cb != NULL), HAL_RET_INVALID_ARG);
+    for (i = 0; i < num_buckets_; i++) {
+        curr = ht_buckets_[i].ht_ctxt;
+        if (thread_safe_) {
+            HAL_SPINLOCK_LOCK(&ht_buckets_[i].slock_);
+        }
+        while (curr) {
+            // cache the next entry so it is delete-safe
+            next = curr->next;
+            walk_cb(curr->entry, ctxt);
+            curr = next;
+        }
+        if (thread_safe_) {
+            HAL_SPINLOCK_UNLOCK(&ht_buckets_[i].slock_);
+        }
+    }
+    return HAL_RET_OK;
+}
+
 }    // namespace utils
 }    // namespace hal

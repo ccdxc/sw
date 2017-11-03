@@ -274,7 +274,6 @@ typedef struct session_args_s {
     SessionResponse    *rsp;                      // session response
 } __PACK__ session_args_t;
 
-
 //------------------------------------------------------------------------------
 // A session consists of a initiator flow and responder flow
 //   - initiator flow is the flow on which the first packet arrived
@@ -325,7 +324,6 @@ struct app_session_s {
 // max. number of session supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_SESSIONS                             524288
 #define HAL_MAX_FLOWS                                (HAL_MAX_SESSIONS << 1)
-
 
 static inline session_t *
 find_session_by_handle (hal_handle_t handle)

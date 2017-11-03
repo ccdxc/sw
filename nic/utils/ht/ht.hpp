@@ -82,6 +82,7 @@ typedef struct ht_bucket_ {
 typedef void *(*ht_get_key_func_t)(void *entry);
 typedef uint32_t (*ht_compute_hash_func_t)(void *key, uint32_t ht_size);
 typedef bool (*ht_compare_key_func_t)(void *key1, void *key2);
+typedef bool (ht_walk_cb_t)(void *entry, void *ctxt);
 
 class ht {
 public:
@@ -104,6 +105,15 @@ public:
     // remove_entry() will remove entry from table given it's hash context and
     // return the entry
     hal_ret_t remove_entry(void *entry, ht_ctxt_t *ht_ctxt);
+
+    // walk the whole hash table (without taking any locks, not thread safe if
+    // ht instance is shared), if the callback function returns true, walk is
+    // stopped
+    hal_ret_t walk(ht_walk_cb_t walk_cb, void *ctxt);
+
+    // walk the whole hash table in thread safe manner (i.e., locking at each
+    // bucket level), if the callback function returns true, walk is stopped
+    hal_ret_t walk_safe(ht_walk_cb_t walk_cb, void *ctxt);
 
     uint32_t size(void) const { return num_buckets_; }
     bool is_thread_safe(void) const { return thread_safe_; }

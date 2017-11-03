@@ -77,8 +77,6 @@ typedef struct nwsec_profile_s {
     uint32_t              icmp_invalid_code_action:2;
 
     uint32_t              tcp_non_syn_first_pkt_drop:1;
-    uint32_t              tcp_syncookie_en:1;
-    uint32_t              tcp_split_handshake_detect_en:1;
     uint32_t              tcp_split_handshake_drop:1;
     uint32_t              tcp_rsvd_flags_action:2;
     uint32_t              tcp_unexpected_mss_action:2;

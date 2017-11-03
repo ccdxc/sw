@@ -1,0 +1,58 @@
+//------------------------------------------------------------------------------
+// protobuf specification for HAL events
+// This is modeled as client side streaming gRPC (with HAL being the client) and
+// app being the server
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+import "port.proto";
+
+package event;
+option go_package="halproto";
+
+// Event service definition
+service Event {
+  // TODO: rename this API - with bidir streaming, this name doesn't make sense
+  rpc EventListen (stream EventRequest) returns (stream EventResponse) {}
+}
+
+// events that HAL generates and app(s) can listen to
+enum EventId {
+  EVENT_ID_NONE     = 0;
+  EVENT_ID_ENDPOINT = 1;
+  EVENT_ID_PORT     = 2;
+}
+
+enum EventOp {
+  EVENT_OP_NONE        = 0;
+  EVENT_OP_SUBSCRIBE   = 1;
+  EVENT_OP_UNSUBSCRIBE = 2;
+}
+
+// EventSpec captures the event of interest to the app
+message EventRequest {
+    types.ObjectMeta    meta            = 1;    // common object meta
+    EventId             event_id        = 2;    // event of interest
+    EventOp             event_operation = 3;    // subscribe or unsubscribe
+}
+
+message EndpointEvent {
+  fixed64    l2_segment_handle = 1;
+  uint64     mac_address       = 2;
+}
+
+message PortEvent {
+  fixed32               port_id = 1;
+  port.PortOperStatus   status  = 2;    // operational state of port
+}
+
+message EventResponse {
+  types.ApiStatus      api_status = 1;    // API status code
+  EventId              event_id   = 2;
+  oneof event_info {
+      EndpointEvent    ep_event   = 3;    // Endpoint event
+      PortEvent        port_event = 4;    // Port event
+  }
+}

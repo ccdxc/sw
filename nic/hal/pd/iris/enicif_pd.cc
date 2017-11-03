@@ -79,7 +79,7 @@ pd_enicif_update (pd_if_args_t *args)
         if (args->native_l2seg_clsc_change) {
             ret = pd_enicif_upd_native_l2seg_clsc_change(args);
         }
-        if (args->pinned_uplink_clsc_change) {
+        if (args->pinned_uplink_change) {
         }
     }
 
@@ -122,7 +122,7 @@ pd_enicif_delete (pd_if_args_t *args)
 // Enicif Update: Handling pinned uplink change
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_enicif_upd_pinned_uplink_clsc_change(pd_if_args_t *args)
+pd_enicif_upd_pinned_uplink_change(pd_if_args_t *args)
 {
     hal_ret_t       ret = HAL_RET_OK;
     pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
@@ -658,10 +658,10 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
     HAL_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
 
     l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
-    if (args && args->pinned_uplink_clsc_change) {
-        uplink = find_if_by_handle(args->new_pinned_uplink_clsc);
+    if (args && args->pinned_uplink_change) {
+        uplink = find_if_by_handle(args->new_pinned_uplink);
     } else {
-        uplink = find_if_by_handle(hal_if->pinned_up_clsc);
+        uplink = find_if_by_handle(hal_if->pinned_uplink);
     }
 
 

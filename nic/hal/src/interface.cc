@@ -391,11 +391,11 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             }
         } else {
             // Add to uplink's back refs
-            if (hal_if->pinned_up_clsc != HAL_HANDLE_INVALID) {
-                uplink = find_if_by_handle(hal_if->pinned_up_clsc);
+            if (hal_if->pinned_uplink != HAL_HANDLE_INVALID) {
+                uplink = find_if_by_handle(hal_if->pinned_uplink);
                 if (uplink == NULL) {
                     HAL_TRACE_ERR("pi-enicif:{}:unable to find uplink_hdl:{}",
-                                  __FUNCTION__, hal_if->pinned_up_clsc);
+                                  __FUNCTION__, hal_if->pinned_uplink);
                     goto end;
                 }
                 ret = uplink_add_enicif(uplink, hal_if);
@@ -534,9 +534,9 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Dummy create cleanup callback
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 hal_ret_t
 if_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
@@ -652,7 +652,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     // check if intf exists already, and reject if one is found
     if (find_if_by_id(spec.key_or_handle().interface_id())) {
         HAL_TRACE_ERR("pi-if:{}:failed to create an if, "
-                      "if {} exists already", __FUNCTION__, 
+                      "if {} exists already", __FUNCTION__,
                       spec.key_or_handle().interface_id());
         rsp->set_api_status(types::API_STATUS_EXISTS_ALREADY);
         return HAL_RET_ENTRY_EXISTS;
@@ -684,11 +684,8 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         if (ret != HAL_RET_OK) {
             goto end;
         }
-
         lif = find_lif_by_handle(hal_if->lif_handle);
         HAL_ASSERT(lif != NULL);
-        // l2seg = find_l2seg_by_handle(hal_if->l2seg_handle);
-        // HAL_ASSERT(l2seg != NULL);
         break;
 
     case intf::IF_TYPE_UPLINK:
@@ -696,8 +693,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         if (ret != HAL_RET_OK) {
             goto end;
         }
-
-        // Will be added to broadcast list through add_l2seg_on_uplink() call
+        // will be added to broadcast list through add_l2seg_on_uplink() call
         break;
 
     case intf::IF_TYPE_UPLINK_PC:
@@ -821,11 +817,10 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
                                    bool *has_changed)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    // l2seg_id_t  new_seg_id = 0;
 
     auto if_enic_info = spec.if_enic_info();
 
-    HAL_TRACE_DEBUG("pi-enicif:{}: update for if_id:{}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("pi-enicif:{}: update for if_id:{}", __FUNCTION__,
                     spec.key_or_handle().interface_id());
 
     HAL_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
@@ -863,25 +858,20 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
         }
 
         // check of pinned uplink change
-        if (hal_if->pinned_up_clsc != 
-                clsc_enic_info->pinned_uplink_if_handle()) {
+        if (hal_if->pinned_uplink != if_enic_info.pinned_uplink_if_handle()) {
+            app_ctxt->new_pinned_uplink = if_enic_info.pinned_uplink_if_handle();
+            HAL_TRACE_DEBUG("pi-enicif:{}: updating pinned uplink hdl {} => {}",
+                            __FUNCTION__, hal_if->pinned_uplink,
+                            app_ctxt->new_pinned_uplink);
 
-            app_ctxt->new_pinned_uplink_clsc = 
-                clsc_enic_info->pinned_uplink_if_handle();
-
-            HAL_TRACE_DEBUG("pi-enicif:{}: updating pinned uplink hdl {} => {}", 
-                            __FUNCTION__, hal_if->pinned_up_clsc, 
-                            app_ctxt->new_pinned_uplink_clsc);
-
-
-            if (find_if_by_handle(app_ctxt->new_pinned_uplink_clsc) == NULL) {
+            if (find_if_by_handle(app_ctxt->new_pinned_uplink) == NULL) {
                 HAL_TRACE_ERR("pi-enicif:{}:unable to find new uplinkif_hdl:{}",
-                              __FUNCTION__, app_ctxt->new_pinned_uplink_clsc);
+                              __FUNCTION__, app_ctxt->new_pinned_uplink);
                 ret = HAL_RET_IF_NOT_FOUND;
                 goto end;
             }
 
-            app_ctxt->pinned_up_clsc_change = true;
+            app_ctxt->pinned_uplink_change = true;
             *has_changed = true;
         }
 
@@ -1116,8 +1106,8 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
             pd_if_args.intf = hal_if;
             pd_if_args.native_l2seg_clsc_change = app_ctxt->native_l2seg_clsc_change;
             pd_if_args.new_native_l2seg_clsc = app_ctxt->new_native_l2seg_clsc;
-            pd_if_args.pinned_uplink_clsc_change= app_ctxt->pinned_up_clsc_change;
-            pd_if_args.new_pinned_uplink_clsc = app_ctxt->new_pinned_uplink_clsc;
+            pd_if_args.pinned_uplink_change = app_ctxt->pinned_uplink_change;
+            pd_if_args.new_pinned_uplink = app_ctxt->new_pinned_uplink;
             pd_if_args.l2seg_clsc_change = app_ctxt->l2segclsclist_change;
             pd_if_args.add_l2seg_clsclist = app_ctxt->add_l2segclsclist;
             pd_if_args.del_l2seg_clsclist = app_ctxt->del_l2segclsclist;
@@ -1155,9 +1145,9 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Update l2segs with classic enic PI
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 hal_ret_t
 enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
 {
@@ -1225,9 +1215,9 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Updates Uplink PC's Pi with member list
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 hal_ret_t
 if_update_pi_with_mbr_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
 {
@@ -1283,7 +1273,7 @@ end:
 // Note: Infra make clone as original by replacing original pointer by clone.
 //------------------------------------------------------------------------------
 hal_ret_t
-if_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
+if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     pd::pd_if_args_t            pd_if_args = { 0 };
@@ -1328,14 +1318,14 @@ if_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
                 intf_clone->native_l2seg_clsc = app_ctxt->new_native_l2seg_clsc;
             }
 
-            if (app_ctxt->pinned_up_clsc_change) {
+            if (app_ctxt->pinned_uplink_change) {
                 HAL_TRACE_DEBUG("Setting the classic enicif clone to new "
                                 "pinned uplink_hdl: {}", 
-                                app_ctxt->new_pinned_uplink_clsc);
-                intf_clone->pinned_up_clsc = app_ctxt->new_pinned_uplink_clsc;
+                                app_ctxt->new_pinned_uplink);
+                intf_clone->pinned_uplink = app_ctxt->new_pinned_uplink;
                 // Update uplink's relation
-                old_uplink = find_if_by_handle(intf->pinned_up_clsc);
-                new_uplink = find_if_by_handle(app_ctxt->new_pinned_uplink_clsc);
+                old_uplink = find_if_by_handle(intf->pinned_uplink);
+                new_uplink = find_if_by_handle(app_ctxt->new_pinned_uplink);
                 HAL_ASSERT(old_uplink != NULL && new_uplink != NULL);
 
                 // Remove from older uplink
@@ -1348,8 +1338,8 @@ if_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
             if (app_ctxt->native_l2seg_clsc_change) {
                 HAL_TRACE_DEBUG("Setting the classic enicif clone to new "
-                                "pinned uplink_hdl: {}", 
-                                app_ctxt->new_pinned_uplink_clsc);
+                                "l2seg : {}",
+                                app_ctxt->new_native_l2seg_clsc);
                 intf_clone->native_l2seg_clsc = app_ctxt->new_native_l2seg_clsc;
                 // Update native l2seg's relation
                 if (intf->native_l2seg_clsc != HAL_HANDLE_INVALID) {
@@ -1372,6 +1362,7 @@ if_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
                 ret = enicif_update_pi_with_l2seg_list(intf_clone, app_ctxt);
             }
             break;
+
         case intf::IF_TYPE_UPLINK:
         case intf::IF_TYPE_UPLINK_PC:
             // move lists
@@ -1412,15 +1403,16 @@ if_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     // Free PI
     if_free(intf);
+
 end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Clean up list
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 hal_ret_t
-interface_cleanup_handle_list(dllist_ctxt_t **list)
+interface_cleanup_handle_list (dllist_ctxt_t **list)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -2006,9 +1998,9 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Checks if l2seg is present in classic enicif
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 bool 
 l2seg_in_classic_enicif(if_t *hal_if, hal_handle_t l2seg_handle, 
                         if_l2seg_entry_t **l2seg_entry)
@@ -2029,9 +2021,9 @@ l2seg_in_classic_enicif(if_t *hal_if, hal_handle_t l2seg_handle,
     return false;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Prints l2seg entries handles from the list
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 void
 enicif_print_l2seg_entry_list(dllist_ctxt_t  *list)
 {
@@ -2044,9 +2036,9 @@ enicif_print_l2seg_entry_list(dllist_ctxt_t  *list)
     }
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Adds l2seg handle to if_l2seg list
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 hal_ret_t
 enicif_add_to_l2seg_entry_list(dllist_ctxt_t *handle_list, hal_handle_t handle)
 {
@@ -2068,10 +2060,10 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Free l2seg handle entries in a list. 
 // - Please take locks if necessary outside this call.
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 void
 enicif_free_l2seg_entry_list(dllist_ctxt_t *list)
 {
@@ -2108,15 +2100,15 @@ enicif_cleanup_l2seg_entry_list(dllist_ctxt_t **list)
 // Enic If Create 
 //------------------------------------------------------------------------------
 hal_ret_t
-enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, 
-                if_t *hal_if)
+enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
 {
     hal_ret_t           ret = HAL_RET_OK;
     l2seg_t             *l2seg;
     lif_t               *lif;
     hal_handle_t        l2seg_clsc_handle;
 
-    HAL_TRACE_DEBUG("pi-enicif:{}:enicif create for id {} type:{}", __FUNCTION__, 
+    HAL_TRACE_DEBUG("pi-enicif:{}:enicif create for id {} type:{}",
+                    __FUNCTION__, 
                     spec.key_or_handle().interface_id(),
                     spec.if_enic_info().enic_type());
 
@@ -2131,6 +2123,7 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
     auto if_enic_info = spec.if_enic_info();
     hal_if->enic_type = if_enic_info.enic_type();
     hal_if->tid = spec.meta().tenant_id();
+    hal_if->pinned_uplink = if_enic_info.pinned_uplink_if_handle();
     lif = find_lif_by_handle(hal_if->lif_handle);
 
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_USEG || 
@@ -2157,8 +2150,6 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     } else if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
         auto clsc_enic_info = if_enic_info.mutable_classic_enic_info();
-        // Read pinned uplink
-        hal_if->pinned_up_clsc = clsc_enic_info->pinned_uplink_if_handle();
         if (if_enic_info.mutable_classic_enic_info()->
                 native_l2segment_handle() != HAL_HANDLE_INVALID) {
             // Processing native l2seg
@@ -2579,11 +2570,11 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             }
         } else {
             // Del to uplink's back refs
-            if (intf->pinned_up_clsc != HAL_HANDLE_INVALID) {
-                uplink = find_if_by_handle(intf->pinned_up_clsc);
+            if (intf->pinned_uplink != HAL_HANDLE_INVALID) {
+                uplink = find_if_by_handle(intf->pinned_uplink);
                 if (uplink == NULL) {
                     HAL_TRACE_ERR("pi-enicif:{}:unable to find uplink_hdl:{}",
-                                  __FUNCTION__, intf->pinned_up_clsc);
+                                  __FUNCTION__, intf->pinned_uplink);
                     goto end;
                 }
                 ret = uplink_del_enicif(uplink, intf);
@@ -2773,8 +2764,8 @@ get_lif_handle_for_enic_if (InterfaceSpec& spec, InterfaceResponse *rsp,
         HAL_TRACE_ERR("pi-enicif:{}: lif handle not found for id:{} hdl:{}",
                       __FUNCTION__, lif_id, lif_handle);
         rsp->set_api_status(types::API_STATUS_LIF_NOT_FOUND);
-         ret = HAL_RET_LIF_NOT_FOUND;
-         goto end;
+        ret = HAL_RET_LIF_NOT_FOUND;
+        goto end;
     } else {
         hal_if->lif_handle = lif->hal_handle;
     }
@@ -2886,9 +2877,9 @@ mbrif_in_pc (if_t *up_pc, hal_handle_t mbr_handle, hal_handle_id_list_entry_t **
     return false;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Handle classic enicif l2seg list change
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 hal_ret_t
 enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
                               bool *l2seglist_change,
@@ -2989,9 +2980,9 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Handle uplink pc mbr list update
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 hal_ret_t
 uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
                          bool *mbrlist_change,
@@ -3104,9 +3095,9 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Add/Del relation l2seg -> enicif for all l2segs in the list
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 hal_ret_t
 enicif_update_l2segs_relation (dllist_ctxt_t *l2segs_list, if_t *hal_if, bool add)
 {
@@ -3135,9 +3126,9 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Add/Del relation uplinkif -> uplinkpc for all mbrs in the list
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 hal_ret_t
 uplinkpc_update_mbrs_relation (dllist_ctxt_t *mbr_list, if_t *uppc, bool add)
 {
@@ -3166,9 +3157,9 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Add relation uplinkif -> uplinkpc
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 hal_ret_t
 uplinkif_add_uplinkpc (if_t *upif, if_t *uppc)
 {
@@ -3187,16 +3178,16 @@ uplinkif_add_uplinkpc (if_t *upif, if_t *uppc)
 
     if_unlock(upif, __FILENAME__, __LINE__, __func__);
 
-
 end:
+
     HAL_TRACE_DEBUG("{}: add uplinkif => uplinkpc , {} => {}",
                     upif->if_id, uppc->if_id);
     return ret;
 }
 
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Del relation uplinkif -/-> uplinkpc
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 hal_ret_t
 uplinkif_del_uplinkpc (if_t *upif, if_t *uppc)
 {

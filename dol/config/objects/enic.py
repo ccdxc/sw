@@ -180,7 +180,7 @@ class EnicObject(base.ConfigObjectBase):
                 req_spec.if_enic_info.classic_enic_info.native_l2segment_handle = self.segment.hal_handle
             else:
                 req_spec.if_enic_info.classic_enic_info.l2segment_handle.append(self.segment.hal_handle)
-            req_spec.if_enic_info.classic_enic_info.pinned_uplink_if_handle = self.pinnedif.hal_handle
+            req_spec.if_enic_info.pinned_uplink_if_handle = self.pinnedif.hal_handle
         else:
             req_spec.if_enic_info.enic_info.mac_address = self.macaddr.getnum()
             req_spec.if_enic_info.enic_info.encap_vlan_id = self.encap_vlan_id

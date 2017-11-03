@@ -10,6 +10,7 @@
 #include "nic/hal/src/endpoint.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/src/event.hpp"
 #include "nic/hal/src/tlscb.hpp"
 #include "nic/hal/src/tcpcb.hpp"
 #include "nic/hal/src/qos.hpp"
@@ -45,9 +46,6 @@ struct cfg_db_dirty_objs_s {
 bool
 hal_cfg_db::init(void)
 {
-    //HAL_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
-    //HAL_SPINLOCK_INIT(&del_cache_slock_, PTHREAD_PROCESS_PRIVATE);
-
     // initialize tenant related data structures
     tenant_id_ht_ = ht::factory(HAL_MAX_VRFS,
                                 hal::tenant_id_get_key_func,
@@ -61,14 +59,6 @@ hal_cfg_db::init(void)
                                   hal::network_compute_hash_func,
                                   hal::network_compare_key_func);
     HAL_ASSERT_RETURN((network_key_ht_ != NULL), false);
-
-#if 0
-    network_hal_handle_ht_ = ht::factory(HAL_MAX_VRFS,
-                                         hal::network_get_handle_key_func,
-                                         hal::network_compute_handle_hash_func,
-                                         hal::network_compare_handle_key_func);
-    HAL_ASSERT_RETURN((network_hal_handle_ht_ != NULL), false);
-#endif
 
     // initialize security profile related data structures
     nwsec_profile_id_ht_ = ht::factory(HAL_MAX_NWSEC_PROFILES,
@@ -104,15 +94,6 @@ hal_cfg_db::init(void)
                               hal::port_id_compute_hash_func,
                               hal::port_id_compare_key_func);
     HAL_ASSERT_RETURN((port_id_ht_ != NULL), false);
-
-#if 0
-    // initialize endpoint related data structures
-    ep_hal_handle_ht_ = ht::factory(HAL_MAX_ENDPOINTS,
-                                    hal::ep_get_handle_key_func,
-                                    hal::ep_compute_handle_hash_func,
-                                    hal::ep_compare_handle_key_func);
-    HAL_ASSERT_RETURN((ep_hal_handle_ht_ != NULL), false);
-#endif
 
     // initialize flow/session related data structures
     session_id_ht_ = ht::factory(HAL_MAX_SESSIONS,
@@ -341,8 +322,8 @@ hal_cfg_db::init(void)
                                   hal::nwsec_group_compute_hash_func,
                                   hal::nwsec_group_compare_key_func);
     HAL_ASSERT_RETURN((nwsec_policy_cfg_ht_ != NULL), false);
-    // initialize arp learning related data structures
 
+    // initialize arp learning related data structures
     arplearn_key_ht_ =
         ht::factory(HAL_MAX_ARP_TRANS, hal::network::arptrans_get_key_func,
                     hal::network::arptrans_compute_hash_func,
@@ -357,7 +338,6 @@ hal_cfg_db::init(void)
     HAL_ASSERT_RETURN((arplearn_ip_entry_ht_ != NULL), false);
 
     // initialize dhcp learning related data structures
-
     dhcplearn_key_ht_ =
         ht::factory(HAL_MAX_DHCP_TRANS, hal::network::dhcptrans_get_key_func,
                     hal::network::dhcptrans_compute_hash_func,
@@ -380,25 +360,17 @@ hal_cfg_db::init(void)
 hal_cfg_db::hal_cfg_db()
 {
     tenant_id_ht_ = NULL;
-    // tenant_hal_handle_ht_ = NULL;
 
     network_key_ht_ = NULL;
-    // network_hal_handle_ht_ = NULL;
 
     nwsec_profile_id_ht_ = NULL;
     nwsec_profile_hal_handle_ht_ = NULL;
 
     l2seg_id_ht_ = NULL;
-    // l2seg_hal_handle_ht_ = NULL;
 
     lif_id_ht_ = NULL;
-    // lif_hal_handle_ht_ = NULL;
-
     if_id_ht_ = NULL;
-    // if_hal_handle_ht_ = NULL;
-
     port_id_ht_ = NULL;
-    // port_hal_handle_ht_ = NULL;
 
     ep_hal_handle_ht_ = NULL;
 
@@ -485,14 +457,9 @@ hal_cfg_db::factory(void)
 //------------------------------------------------------------------------------
 hal_cfg_db::~hal_cfg_db()
 {
-    //HAL_SPINLOCK_DESTROY(&slock_);
-    //HAL_SPINLOCK_DESTROY(&del_cache_slock_);
-
     tenant_id_ht_ ? delete tenant_id_ht_ : HAL_NOP;
-    // tenant_hal_handle_ht_ ? delete tenant_hal_handle_ht_ : HAL_NOP;
 
     network_key_ht_ ? delete network_key_ht_ : HAL_NOP;
-    // network_hal_handle_ht_ ? delete network_hal_handle_ht_ : HAL_NOP;
 
     nwsec_profile_id_ht_ ? delete nwsec_profile_id_ht_ : HAL_NOP;
     nwsec_profile_hal_handle_ht_ ? delete nwsec_profile_hal_handle_ht_ : HAL_NOP;
@@ -501,16 +468,10 @@ hal_cfg_db::~hal_cfg_db()
     nwsec_group_ht_ ? delete nwsec_group_ht_ : HAL_NOP;
 
     l2seg_id_ht_ ? delete l2seg_id_ht_ : HAL_NOP;
-    // l2seg_hal_handle_ht_ ? delete l2seg_hal_handle_ht_ : HAL_NOP;
 
     lif_id_ht_ ? delete lif_id_ht_ : HAL_NOP;
-    // lif_hal_handle_ht_ ? delete lif_hal_handle_ht_ : HAL_NOP;
-
     if_id_ht_ ? delete if_id_ht_ : HAL_NOP;
-    // if_hal_handle_ht_ ? delete if_hal_handle_ht_ : HAL_NOP;
-
     port_id_ht_ ? delete port_id_ht_ : HAL_NOP;
-    // port_hal_handle_ht_ ? delete port_hal_handle_ht_ : HAL_NOP;
 
     ep_hal_handle_ht_ ? delete ep_hal_handle_ht_ : HAL_NOP;
 
@@ -578,134 +539,6 @@ hal_cfg_db::set_forwarding_mode(std::string modestr)
     return;
 }
 
-#if 0
-//------------------------------------------------------------------------------
-// helper function to
-// 1. read the current config db version and
-// 2. mark that version as in-use for current thread
-// NOTE: this has to be done atomically, otherwise in between these two steps
-//       config thread can think that current version is not in use while FTE
-//       is done with step 1 and not 2. All threads (config, FTEs etc.) all must
-//       use this API before accessing the config Db
-//------------------------------------------------------------------------------
-cfg_version_t
-hal_cfg_db::db_get_current_version(void)
-{
-    int              free_slot = -1;
-    uint32_t         i;
-    cfg_version_t    ver;
-
-    HAL_SPINLOCK_LOCK(&slock_);
-    ver = cfg_db_ver_;
-    for (i = 0; i < HAL_ARRAY_SIZE(cfg_ver_in_use_); i++) {
-        if (!cfg_ver_in_use_[i].valid) {
-            free_slot = i;
-        } else if (cfg_ver_in_use_[i].ver == ver) {
-            // version already in use, just bump up the refcount
-            cfg_ver_in_use_[i].usecnt++;
-            goto end;
-        }
-    }
-
-    // mark this version as "in-use" for the 1st time
-    if (free_slot < 0) {
-        // some thread didn't bother to release versions it was using
-        HAL_ASSERT(FALSE);
-    }
-    cfg_ver_in_use_[free_slot].ver = ver;
-    cfg_ver_in_use_[free_slot].usecnt = 1;
-    cfg_ver_in_use_[free_slot].valid = TRUE;
-
-end:
-
-    HAL_SPINLOCK_UNLOCK(&slock_);
-    return ver;
-}
-
-//------------------------------------------------------------------------------
-// helper function to release current config db version that was marked as
-// in-use by this thread earlier
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_cfg_db::db_release_version_in_use(cfg_version_t ver)
-{
-    uint32_t         i;
-
-    HAL_SPINLOCK_LOCK(&slock_);
-    for (i = 0; i < HAL_ARRAY_SIZE(cfg_ver_in_use_); i++) {
-        if (cfg_ver_in_use_[i].valid && (cfg_ver_in_use_[i].ver == ver)) {
-            cfg_ver_in_use_[i].usecnt--;
-            if (cfg_ver_in_use_[i].usecnt == 0) {
-                cfg_ver_in_use_[i].ver = HAL_CFG_VER_NONE;
-                cfg_ver_in_use_[i].valid = FALSE;
-            }
-        }
-    }
-    HAL_SPINLOCK_UNLOCK(&slock_);
-
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// helper function to reserve a version for future config write/commit
-// atomically
-//------------------------------------------------------------------------------
-cfg_version_t
-hal_cfg_db::db_reserve_version(void)
-{
-    uint32_t         i;
-    cfg_version_t    ver = HAL_CFG_VER_NONE;
-
-    HAL_SPINLOCK_LOCK(&slock_);
-    ver = HAL_ATOMIC_INC_UINT32(&max_rsvd_ver_, 1);
-    for (i = 0; i < HAL_ARRAY_SIZE(cfg_ver_rsvd_); i++) {
-        if (!cfg_ver_rsvd_[i].valid) {
-            cfg_ver_rsvd_[i].ver = ver;
-            cfg_ver_rsvd_[i].valid = TRUE;
-            goto end;
-        }
-    }
-    HAL_TRACE_ERR("Failed to reserve cfg version");
-
-end:
-
-    HAL_SPINLOCK_UNLOCK(&slock_);
-    return ver;
-}
-
-//------------------------------------------------------------------------------
-// release a version that was previously reserved
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_cfg_db::db_release_reserved_version(cfg_version_t ver)
-{
-    uint32_t    i;
-
-    HAL_SPINLOCK_LOCK(&slock_);
-    for (i = 0; i < HAL_ARRAY_SIZE(cfg_ver_rsvd_); i++) {
-        if (cfg_ver_rsvd_[i].valid && (cfg_ver_rsvd_[i].ver = ver)) {
-            cfg_ver_rsvd_[i].valid = FALSE;
-            cfg_ver_rsvd_[i].ver = HAL_CFG_VER_NONE;
-            break;
-        }
-    }
-    HAL_SPINLOCK_UNLOCK(&slock_);
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// update the current version of the db to the given version and release the
-// reserved version
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_cfg_db::db_update_version(cfg_version_t ver)
-{
-    HAL_ATOMIC_STORE_UINT32(&cfg_db_ver_, &ver);
-    db_release_reserved_version(ver);
-    return HAL_RET_OK;
-}
-#endif
-
 //------------------------------------------------------------------------------
 // API to call before processing any packet by FTE, any operation by config
 // thread or periodic thread etc.
@@ -731,186 +564,7 @@ hal_cfg_db::db_open(cfg_op_t cfg_op)
     HAL_TRACE_DEBUG("{} acquired rlock, opened cfg db, cfg op : {}",
                     hal_get_current_thread()->name(), cfg_op);
     return HAL_RET_OK;
-
-#if 0
-    // get the current version of the db and mark it as in-use
-    t_cfg_db_ctxt.rversion_ = db_get_current_version();
-    if (cfg_op == CFG_OP_READ) {
-        // get the current max valid version
-        t_cfg_db_ctxt.wversion_ = t_cfg_db_ctxt.rversion_;
-    } else {
-        // reserve a db version for later commit
-        t_cfg_db_ctxt.wversion_ = db_reserve_version();
-    }
-    t_cfg_db_ctxt.cfg_op_ = cfg_op;
-    t_cfg_db_ctxt.cfg_db_open_ = true;
-    HAL_TRACE_DEBUG("{} opened cfg db, cfg op : {}, rsvd version : {}",
-                    hal_get_current_thread()->name(), cfg_op,
-                    t_cfg_db_ctxt.wversion_);
-    return HAL_RET_OK;
-#endif
 }
-
-#if 0
-//------------------------------------------------------------------------------
-// check to see if given config version is in use or not, this API by itself is
-// mainly for debugging and is not intended to make any decisions. For proper
-// use of this API, make sure cfg db is locked so there are no synchronization
-// issues
-//------------------------------------------------------------------------------
-bool
-hal_cfg_db::is_cfg_ver_in_use(cfg_version_t ver)
-{
-    uint32_t         i;
-    cfg_version_t    min_ver = HAL_CFG_VER_NONE;
-
-    for (i = 0; i < HAL_ARRAY_SIZE(cfg_ver_in_use_); i++) {
-        if (cfg_ver_in_use_[i].valid) {
-            if (min_ver != HAL_CFG_VER_NONE) {
-                min_ver = cfg_ver_in_use_[i].ver;
-            } else if (cfg_ver_in_use_[i].ver < min_ver) {
-                min_ver = cfg_ver_in_use_[i].ver;
-            }
-        }
-    }
-
-    if (ver < min_ver) {
-        return true;
-    }
-
-    return false;
-}
-
-//------------------------------------------------------------------------------
-// add given object's handle to delete cache, which will be scanned to purge
-// stale versioned objects
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_cfg_db::add_obj_to_del_cache(hal_handle *handle, void *obj,
-                                 hal_cfg_del_cb_t del_cb)
-{
-    del_cache_entry_t    *entry;
-
-    entry = (del_cache_entry_t *)
-        g_hal_state->hal_del_cache_entry_slab()->alloc();
-    HAL_ASSERT_RETURN((entry != NULL), HAL_RET_OOM);
-    entry->handle = handle;
-    entry->obj = obj;
-    entry->del_cb = del_cb;
-    HAL_SPINLOCK_LOCK(&del_cache_slock_);
-    utils::dllist_add(&del_cache_list_head_, &entry->dllist_ctxt);
-    HAL_SPINLOCK_UNLOCK(&del_cache_slock_);
-
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// given a handle in the deleted object list cache, process the deletion
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_cfg_db::process_del_cache_entry(del_cache_entry_t *entry)
-{
-    hal_ret_t        ret;
-    hal_handle       *handle;
-    uint32_t         i, num_objs = 0, max_ver_idx;
-    cfg_version_t    max_ver = HAL_CFG_VER_NONE;
-    bool             ver_in_use = false, obj_in_use = false;
-
-    HAL_ASSERT_RETURN((entry != NULL), HAL_RET_INVALID_ARG);
-    handle = entry->handle;
-    HAL_ASSERT_RETURN((handle != NULL), HAL_RET_INVALID_ARG);
-
-    HAL_SPINLOCK_LOCK(&handle->slock_);
-    HAL_SPINLOCK_LOCK(&slock_);
-    for (i = 0; i < handle->k_max_objs_; i++) {
-        if (handle->objs_[i].valid) {
-            num_objs++;
-            if (handle->objs_[i].ver > max_ver) {
-                max_ver = handle->objs_[i].ver;
-                max_ver_idx = i;    // NOTE: assuming that only one obj per
-                                    // version exists in one handle
-            }
-        }
-    }
-
-    if (num_objs == 0) {
-        // we didn't find any valid objects in this handle (can happen if we
-        // did a add followed by del after opening cfg db but before closing
-        // it), so this entry in the list is a placeholder entry for cleaning up
-        // such objects
-        ret = entry->del_cb(entry->obj);
-        HAL_ASSERT(ret == HAL_RET_OK);
-        dllist_del(&entry->dllist_ctxt);
-        HAL_SPINLOCK_UNLOCK(&slock_);
-        handle->~hal_handle();
-        g_hal_state->hal_handle_slab()->free(handle);
-        g_hal_state->hal_del_cache_entry_slab()->free(entry);
-        return HAL_RET_OK;
-    }
-
-    for (i = 0; i < handle->k_max_objs_; i++) {
-        if (handle->objs_[i].valid) {
-            ver_in_use = is_cfg_ver_in_use(handle->objs_[i].ver);
-            if (!obj_in_use) {
-                obj_in_use = ver_in_use;
-            }
-            if ((handle->objs_[i].ver != max_ver) && !ver_in_use) {
-                // this instance of the object is delete-able
-                if (handle->objs_[i].obj) {
-                    ret = entry->del_cb(handle->objs_[i].obj);
-                    HAL_ASSERT_GOTO((ret == HAL_RET_OK), end);
-                    num_objs--;
-                    handle->objs_[i].obj = NULL;
-                    handle->objs_[i].ver = HAL_CFG_VER_NONE;
-                    handle->objs_[i].valid = FALSE;
-                } else {
-                    // a deleted and unsed version is seen, as new version
-                    // exists we can free this now
-                    num_objs--;
-                    handle->objs_[i].ver = HAL_CFG_VER_NONE;
-                    handle->objs_[i].valid = FALSE;
-                }
-            }
-        }
-    }
-
-    if (!obj_in_use && (handle->objs_[max_ver_idx].obj == NULL) &&
-        (num_objs == 1)) {
-        // this object was deleted and no users of this version of the object
-        // exist, we can delete this entry altogether
-        dllist_del(&entry->dllist_ctxt);
-        HAL_SPINLOCK_UNLOCK(&slock_);
-        g_hal_state->hal_del_cache_entry_slab()->free(entry);
-        handle->~hal_handle();
-        g_hal_state->hal_handle_slab()->free(handle);
-        return HAL_RET_OK;
-    }
-
-end:
-
-    HAL_SPINLOCK_UNLOCK(&slock_);
-    HAL_SPINLOCK_UNLOCK(&handle->slock_);
-
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// walk the delete object cache and purge any objects that can be purged
-//------------------------------------------------------------------------------
-void
-hal_cfg_db::process_del_cache(void)
-{
-    dllist_ctxt_t        *curr, *next;
-    del_cache_entry_t    *entry;
-
-    HAL_SPINLOCK_LOCK(&del_cache_slock_);
-    dllist_for_each_safe(curr, next, &del_cache_list_head_) {
-        entry = dllist_entry(curr, del_cache_entry_t, dllist_ctxt);
-        process_del_cache_entry(entry);
-    }
-    HAL_SPINLOCK_UNLOCK(&del_cache_slock_);
-}
-#endif
 
 //------------------------------------------------------------------------------
 // API to call after processing any packet by FTE, any operation by config
@@ -931,61 +585,6 @@ hal_cfg_db::db_close(void)
         g_hal_state->cfg_db()->runlock();
     }
     return HAL_RET_OK;
-
-#if 0
-    if (t_cfg_db_ctxt.cfg_db_open_) {
-        db_release_version_in_use(t_cfg_db_ctxt.rversion_);
-        if (t_cfg_db_ctxt.cfg_op_ == CFG_OP_WRITE) {
-            // additionally update the write version
-            // NOTE: not taking multiple writers to config db into account at
-            // this time, if there are multiple writers, we have to check if
-            // cfg db's current version is greater than this version and if so,
-            // backout and retry
-            db_update_version(t_cfg_db_ctxt.wversion_);
-        }
-        t_cfg_db_ctxt.cfg_db_open_ = FALSE;
-        t_cfg_db_ctxt.cfg_op_ = CFG_OP_NONE;
-        t_cfg_db_ctxt.rversion_ = HAL_CFG_VER_NONE;
-        t_cfg_db_ctxt.wversion_ = HAL_CFG_VER_NONE;
-    }
-
-    // TODO: process delete cache (we can't do this before updating the cfg db
-    // version to the write version we reserved, so this is at the end here)
-    // TODO: lock the cfg_db before walking the queue (also
-    // process_del_cache_entry() is locking cfg db internally - how to avoid
-    // self deadlock here ???)
-    process_del_cache();
-    return HAL_RET_OK;
-#endif
-
-#if 0
-    if (t_cfg_db_ctxt.cfg_db_open_) {
-        if (t_cfg_db_ctxt.cfg_op_ == CFG_OP_WRITE) {
-            // TODO: commit this version
-            ret =
-                g_hal_state->cfg_db_version_commit(t_cfg_db_ctxt.wversion_);
-            // TODO: commit reserved version and update the DB version to that
-            ret = cfg_db_versions_.validate_version(t_cfg_db_ctxt.wversion_);
-
-            cfg_db_ver_ = t_cfg_db_ctxt.wversion_;
-
-            if (ret != HAL_RET_OK) {
-                // TODO: mark t_cfg_db_ctxt.wversion_ as invalid
-                g_hal_state->cfg_db_version_invalidate(t_cfg_db_ctxt.wversion_);
-            }
-        } else {
-            // release the read version, indicating that we are done using it
-            g_hal_state->db_release_version_in_use(t_cfg_db_ctxt.rversion_);
-        }
-
-        // successful or not, close the DB so the app can reopen and retry
-        t_cfg_db_ctxt.cfg_db_open_ = FALSE;
-        t_cfg_db_ctxt.cfg_op_ = CFG_OP_NONE;
-        t_cfg_db_ctxt.rversion_ = HAL_CFG_VER_NONE;
-        t_cfg_db_ctxt.wversion_ = 0;
-    }
-    return HAL_RET_OK;
-#endif
 }
 
 //------------------------------------------------------------------------------
@@ -1049,6 +648,9 @@ hal_oper_db::init(void)
         HAL_ASSERT_RETURN((cos_in_use_bmp_[port] != NULL), false);
     }
 
+    event_mgr_ = eventmgr::factory(HAL_MAX_EVENTS);
+    HAL_ASSERT_RETURN((event_mgr_ != NULL), false);
+
     return true;
 }
 
@@ -1061,13 +663,13 @@ hal_oper_db::hal_oper_db()
 
     hal_handle_id_ht_  = NULL;
     infra_l2seg_ = NULL;
-    // if_hwid_ht_ = NULL;
     ep_l2_ht_ = NULL;
     ep_l3_entry_ht_ = NULL;
     flow_ht_ = NULL;
     for (i = 0; i < HAL_ARRAY_SIZE(cos_in_use_bmp_); i++) {
         cos_in_use_bmp_[i] = NULL;
     }
+    event_mgr_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -1115,6 +717,8 @@ hal_oper_db::~hal_oper_db()
             delete cos_in_use_bmp_[i];
         }
     }
+
+    event_mgr_ ? delete event_mgr_ : HAL_NOP;
 }
 
 //------------------------------------------------------------------------------
@@ -1152,13 +756,6 @@ hal_mem_db::init(void)
                                                    sizeof(hal_handle_id_list_entry_t),
                                                    64, true, true, true, true);
     HAL_ASSERT_RETURN((hal_handle_id_list_entry_slab_ != NULL), false);
-
-
-	//hal_del_cache_entry_slab_ = slab::factory("hal-del-cache-entry",
-	//HAL_SLAB_DEL_CACHE_ENTRY,
-	//sizeof(hal_cfg_db::del_cache_entry_t),
-	//64, true, true, true, true);
-	//HAL_ASSERT_RETURN((hal_del_cache_entry_slab_ != NULL), false);
 
 	// initialize tenant related data structures
 	tenant_slab_ = slab::factory("tenant", HAL_SLAB_TENANT,
@@ -1429,7 +1026,6 @@ hal_mem_db::~hal_mem_db()
     hal_handle_list_entry_slab_ ? delete hal_handle_list_entry_slab_ : HAL_NOP;
     hal_handle_id_ht_entry_slab_ ? delete hal_handle_id_ht_entry_slab_ : HAL_NOP;
     hal_handle_id_list_entry_slab_ ? delete hal_handle_id_list_entry_slab_ : HAL_NOP;
-    //hal_del_cache_entry_slab_ ? delete hal_del_cache_entry_slab_ : HAL_NOP;
     tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
     network_slab_ ? delete network_slab_ : HAL_NOP;
     nwsec_profile_slab_ ? delete nwsec_profile_slab_ : HAL_NOP;
@@ -1465,13 +1061,14 @@ hal_mem_db::~hal_mem_db()
     rawccb_slab_ = NULL;
 }
 
-// ----------------------------------------------------------------------------
-// Gives the slab of a slab id
-// ----------------------------------------------------------------------------
-#define GET_SLAB(slab_name) \
+//----------------------------------------------------------------------------
+// gives the slab of a slab id
+//----------------------------------------------------------------------------
+#define GET_SLAB(slab_name)                                 \
     if (slab_name && slab_name->get_slab_id() == slab_id) { \
-        return slab_name; \
+        return slab_name;                                   \
     }
+
 slab *
 hal_mem_db::get_slab(hal_slab_t slab_id)
 {
@@ -1647,10 +1244,6 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->hal_handle_id_list_entry_slab()->free_(elem);
         break;
 
-    //case HAL_SLAB_DEL_CACHE_ENTRY:
-        //g_hal_state->hal_del_cache_entry_slab()->free_(elem);
-        //break;
-
     case HAL_SLAB_TENANT:
         g_hal_state->tenant_slab()->free_(elem);
         break;
@@ -1768,12 +1361,22 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_RAWCCB:
         g_hal_state->rawccb_slab()->free_(elem);
+        break;
+
     case HAL_SLAB_DHCP_LEARN:
         g_hal_state->dhcplearn_slab()->free_(elem);
         break;
 
     case HAL_SLAB_ARP_LEARN:
         g_hal_state->arplearn_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_EVENT_MAP:
+        g_hal_state->event_mgr()->eventmap_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_EVENT_MAP_LISTENER:
+        g_hal_state->event_mgr()->eventmap_listener_slab()->free_(elem);
         break;
 
     default:

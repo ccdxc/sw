@@ -187,8 +187,6 @@ nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create)
     data.l4_profile_action_u.l4_profile_l4_profile.icmp_normalization_en =
         profile->icmp_normalization_en;
 
-    data.l4_profile_action_u.l4_profile_l4_profile.tcp_split_handshake_detect_en =
-        profile->tcp_split_handshake_detect_en;
     data.l4_profile_action_u.l4_profile_l4_profile.tcp_split_handshake_drop =
         profile->tcp_split_handshake_drop;
     data.l4_profile_action_u.l4_profile_l4_profile.ip_ttl_change_detect_en =
