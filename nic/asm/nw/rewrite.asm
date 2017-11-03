@@ -141,13 +141,13 @@ ipv6_nat_dst_tcp_rewrite:
 ipv6_twice_nat_rewrite:
   phvwr       p.ipv6_srcAddr, k.nat_metadata_nat_ip
   b           rewrite
-  phvwr       p.ipv4_dstAddr, k.nat_metadata_twice_nat_ip
+  phvwr       p.ipv6_dstAddr, k.nat_metadata_twice_nat_ip
 
 .align
 ipv6_twice_nat_udp_rewrite:
   phvwr       p.ipv6_srcAddr, k.nat_metadata_nat_ip
   phvwr       p.udp_srcPort, k.nat_metadata_nat_l4_port
-  phvwr       p.ipv4_dstAddr, k.nat_metadata_twice_nat_ip
+  phvwr       p.ipv6_dstAddr, k.nat_metadata_twice_nat_ip
   b           rewrite
   phvwr       p.udp_dstPort, k.nat_metadata_twice_nat_l4_port
 
@@ -156,6 +156,6 @@ ipv6_twice_nat_udp_rewrite:
 ipv6_twice_nat_tcp_rewrite:
   phvwr       p.ipv6_srcAddr, k.nat_metadata_nat_ip
   phvwr       p.tcp_srcPort, k.nat_metadata_nat_l4_port
-  phvwr       p.ipv4_dstAddr, k.nat_metadata_twice_nat_ip
+  phvwr       p.ipv6_dstAddr, k.nat_metadata_twice_nat_ip
   b           rewrite
   phvwr       p.tcp_dstPort, k.nat_metadata_twice_nat_l4_port

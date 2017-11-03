@@ -297,8 +297,8 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
     snat = (rewrite.valid_flds.sip || rewrite.valid_flds.sport);
     dnat = (rewrite.valid_flds.dip || rewrite.valid_flds.dport);
     if (snat && dnat){
-        attrs.nat_ip = config.nat_dip;
-        attrs.nat_l4_port = config.nat_dport;
+        attrs.nat_ip = config.nat_sip;
+        attrs.nat_l4_port = config.nat_sport;
         config.nat_type = session::NAT_TYPE_TWICE_NAT;
     } else if (snat){
         attrs.nat_ip = config.nat_sip;
@@ -329,8 +329,8 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
     if (config.nat_type == session::NAT_TYPE_TWICE_NAT){
         hal::pd::pd_twice_nat_entry_args_t args;
         args.twice_nat_act = TWICE_NAT_TWICE_NAT_REWRITE_INFO_ID;
-        args.nat_ip = config.nat_sip;
-        args.nat_l4_port = config.nat_sport;
+        args.nat_ip = config.nat_dip;
+        args.nat_l4_port = config.nat_dport;
         ret = pd_twice_nat_add(&args, &attrs.twice_nat_idx);
         if (ret != HAL_RET_OK) {
             return ret;
