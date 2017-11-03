@@ -92,33 +92,61 @@
 #     all - build the target
 #     clean - rm all generated files (objects, depends, targets)
 
+#
+# As with Linux kernel builds "make V=1" enables the verbose build output.
+# Default is the quiet form displaying simplified command build output.
+#
+# Use $(Q) as a prefix for commands that are normally hidden but
+# should be displayed with verbose build output.
+#
+# For build rules, if $quiet == "quiet_" echo the short form of the command
+# then execute the full form of the command.  If $quiet == "" echo
+# the full form of the command then execute the full form.  We accomplish
+# this by, e.g. "echo $($(quiet)cmd_cc_o_c) && $(cmd_cc_o_c)" and
+# $quiet selects which form is echo'd.
+#
+ifeq ($(V),1)
+  quiet =
+  Q =
+else
+  quiet=quiet_
+  Q = @
+endif
+
+cmd = @echo "$($(quiet)cmd_$1)" && $(cmd_$1)
+
 # ================
 # BUILD_ARCH
 # ----------------
-# If no BUILD_ARCH, compute default BUILD_ARCHES and build each
+# If no BUILD_ARCH, compute default BUILD_ARCHES and build them
 ifeq ("$(strip $(BUILD_ARCH))","")
 
 #
-# BUILD_ARCHES is set to default list, unless overridden
-# with LBUILD_ARCHES in caller's Makefile
+# BUILD_ARCHES is set to default list
 #
-BUILD_ARCHES_DEFAULT = x86_64
-LBUILD_ARCHES ?= $(BUILD_ARCHES_DEFAULT)
-BUILD_ARCHES ?= $(LBUILD_ARCHES)
+BUILD_ARCHES = x86_64
 
-all clean test:
-	@$(MAKE) T=$@ build_arches
-
-build_arches:
-	@for BUILD_ARCH in $(BUILD_ARCHES); do \
+all clean test .test:
+	$(Q)for BUILD_ARCH in $(BUILD_ARCHES); do \
 		set -e; \
 		echo ================ ; \
 		echo ================ MAKE BUILD_ARCH=$$BUILD_ARCH; \
 		echo ================ ; \
-		$(MAKE) BUILD_ARCH=$$BUILD_ARCH $(T); \
+		$(MAKE) BUILD_ARCH=$$BUILD_ARCH T=$@ build_arch; \
 	done
 
 else
+
+# If caller provides LBUILD_ARCHES, filter BUILD_ARCH.
+ifneq ("$(strip $(LBUILD_ARCHES))","")
+BUILD_ARCH_FILTERED = $(filter $(LBUILD_ARCHES),$(BUILD_ARCH))
+else
+BUILD_ARCH_FILTERED = $(BUILD_ARCH)
+endif
+
+build_arch:
+	$(Q)[ -z "$(BUILD_ARCH_FILTERED)" ] || \
+	$(MAKE) BUILD_ARCH=$(BUILD_ARCH_FILTERED) $(T)
 
 include $(TOPDIR)/make/Makefile-ARCH-$(BUILD_ARCH).inc
 
@@ -176,29 +204,6 @@ LDFLAGS += $(LLDFLAGS)
 
 YACC = bison -y
 
-#
-# As with Linux kernel builds "make V=1" enables the verbose build output.
-# Default is the quiet form displaying simplified command build output.
-#
-# Use $(Q) as a prefix for commands that are normally hidden but
-# should be displayed with verbose build output.
-#
-# For build rules, if $quiet == "quiet_" echo the short form of the command
-# then execute the full form of the command.  If $quiet == "" echo
-# the full form of the command then execute the full form.  We accomplish
-# this by, e.g. "echo $($(quiet)cmd_cc_o_c) && $(cmd_cc_o_c)" and
-# $quiet selects which form is echo'd.
-#
-ifeq ($(V),1)
-  quiet =
-  Q =
-else
-  quiet=quiet_
-  Q = @
-endif
-
-cmd = @echo "$($(quiet)cmd_$1)" && $(cmd_$1)
-
 # ================================================================
 # no PROGRAM, LIBRARY, SUBDIRS, BUILDENV
 # ----------------------------------------------------------------
@@ -213,12 +218,12 @@ else
 ifneq ("$(strip $(SUBDIRS))","")
 
 all clean test:
-	@for d in $(SUBDIRS); do \
+	$(Q)for d in $(SUBDIRS); do \
 		set -e; \
 		subdir=`[ "$(TOPPATH)" = "$(SRCPATH)" ] || \
 			echo $(SRCDIR)/`$$d; \
 		echo ================ SUBDIR $$subdir \($(BUILD_ARCH)\); \
-		$(MAKE) -C $$d $@; \
+		$(MAKE) -C $$d BUILD_ARCH=$(BUILD_ARCH) T=$@ build_arch; \
 	done
 
 else
@@ -372,8 +377,6 @@ endif # PROGRAM, LIBRARY common
 endif # SUBDIRS
 endif # no PROGRAM, LIBRARY, SUBDIRS, BUILDENV
 
-.PHONY: all clean test .test
-
 # ================================================================
 # Makefile debug
 # ----------------------------------------------------------------
@@ -407,3 +410,5 @@ endif # no PROGRAM, LIBRARY, SUBDIRS, BUILDENV
 	@echo PGMLINK = $(PGMLINK)
 
 endif # make BUILD_ARCH
+
+.PHONY: all clean test .test build_arch

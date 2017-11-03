@@ -18,7 +18,8 @@ LIBRARIES = \
 TOPDIR = ../../../../..
 include $(TOPDIR)/make/Makefile.inc
 
-ifneq ("$(strip $(BUILD_ARCH))","")
+# Only run test on x86_64
+ifeq ("$(strip $(BUILD_ARCH))","x86_64")
 LCLEANFILES += dotest.out
 
 test: dotest.out
