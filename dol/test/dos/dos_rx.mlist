@@ -1,0 +1,16 @@
+# Feature Test Modules List
+feature:
+    id      : dos
+    sub     : rx
+    package : test.dos
+    module  : dos
+    enable  : True
+    ignore  : False
+    spec    : dos_rx.testspec
+
+modules:
+    - module:
+        name    : TO_WORKLOAD_UDP_V4
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=FTE
+              segment   : filter://native=False

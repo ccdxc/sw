@@ -1,94 +1,56 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
-        endpoint    : filter://remote=False,label=None
-        interface   : filter://any
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=False
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
-        endpoint    : filter://remote=True,label=None
-        interface   : filter://any
-    flow            : filter://fwtype=L2
-    maxflows        : 1
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
+    flow        : filter://fwtype=L2,type=MAC
+    maxflows    : 1
 
 packets:
     - packet:
-        id          : BASE_PKT # Base packet
+        id          : BASE_PKT    # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateByFlow
+        template    : ref://factory/packets/id=ETH
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
-            ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : 64
-            udp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-            tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-                flags   : syn
-            icmp:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
-            icmpv6:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
+                type    : ref://testcase/config/flow/ethertype
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
+
     - packet:
-        id          : PKT1 # Base packet
+        id          : IN_PKT    # Input packet 
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             qtag    :
                 vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
-            tcp:
-                flags: syn
 
     - packet:
-        id          : PKT2 # Base packet
+        id          : IN_PKT2    # Input packet 2
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
+            eth:
+                dst     : 00:00:11:22:33:44
             qtag    :
                 vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
-            tcp:
-                flags: syn
-                sport: 1000
-            udp:
-                sport: 1000
-            icmp:
-                type    : 3
-            icmpv6:
-                type    : 1
 
     - packet:
-        id          : EXP_PKT # Base packet
+        id          : EXP_PKT    # Expected packet 
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             qtag:
                 vlan: ref://testcase/config/dst/segment/vlan_id
                 prio: ref://testcase/config/flow/txqos/cos
-            ipv4:
-                tos : ref://testcase/config/flow/txqos/dscp
-            ipv6:
-                tc  : ref://testcase/config/flow/txqos/dscp
-            tcp:
-                flags: syn
 
 buffers:
     - buffer:
@@ -96,16 +58,16 @@ buffers:
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
            bind : True
-           size : ref://testcase/packets/id=PKT1/size
-           data : ref://testcase/packets/id=PKT1/rawbytes
+           size : ref://testcase/packets/id=IN_PKT/size
+           data : ref://testcase/packets/id=IN_PKT/rawbytes
 
     - buffer:
         id      : BUF2 # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
            bind : True
-           size : ref://testcase/packets/id=PKT2/size
-           data : ref://testcase/packets/id=PKT2/rawbytes
+           size : ref://testcase/packets/id=IN_PKT2/size
+           data : ref://testcase/packets/id=IN_PKT2/rawbytes
 
 descriptors:
     - descriptor:
@@ -154,14 +116,14 @@ session:
                     object  : callback://networking/packets/GetL2UcExpectedPacket
                     port    : callback://networking/fwmode/GetTxExpectedPorts
                 - packet:
-                    object  : callback://networking/packets/GetCpuPacket/expktid=PKT1
+                    object  : callback://networking/packets/GetCpuPacket/expktid=IN_PKT
                     port    : 128
         
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2
                     ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
-    
+
     - step:
         trigger:
             descriptors:

@@ -324,9 +324,12 @@ dos_policy_create (nwsec::DoSPolicySpec& spec,
     //dos_policy_create_app_ctx_t app_ctx;
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctx = { 0 };
+    tenant_id_t                 tid;
+    tenant_t                    *tenant = NULL;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("pi-dos-policy:{}: creating dos policy", __FUNCTION__);
+    HAL_TRACE_DEBUG("pi-dos-policy:{}: creating dos policy for ten id {}", __FUNCTION__,
+                    spec.meta().tenant_id());
 
     // check if dos policy exists already, and reject if one is found
     if (find_dos_policy_by_handle(spec.dos_handle())) {
@@ -357,6 +360,14 @@ dos_policy_create (nwsec::DoSPolicySpec& spec,
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
+    // fetch the tenant information
+    tid = spec.meta().tenant_id();
+    tenant = tenant_lookup_by_id(tid);
+    if (tenant == NULL) {
+        ret = HAL_RET_TENANT_NOT_FOUND;
+        goto end;
+    }
+    dosp->tenant_handle = tenant->hal_handle;
 
     // form ctxt and call infra add. nothing to populate in app ctxt
     dhl_entry.handle = dosp->hal_handle;
@@ -391,6 +402,13 @@ hal_ret_t
 validate_dos_policy_update (DoSPolicySpec & spec, DoSPolicyResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
+
+    if (!spec.has_meta() ||
+        spec.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
+        HAL_TRACE_ERR("pi-ep:{}:tenant id not valid",
+                      __FUNCTION__);
+        return HAL_RET_TENANT_ID_INVALID;
+    }
 
     // key-handle field must be set
     if (spec.dos_handle() == HAL_HANDLE_INVALID) {

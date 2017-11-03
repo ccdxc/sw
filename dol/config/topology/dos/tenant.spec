@@ -7,9 +7,9 @@ overlay : vlan
 
 segments:
     - spec  : ref://store/specs/id=SEGMENT_FTE
-      count : 2
-    - spec  : ref://store/specs/id=SEGMENT_NATIVE_FTE
       count : 1
+    #- spec  : ref://store/specs/id=SEGMENT_NATIVE_FTE
+    #  count : 1
 
 # NFV Endpoints:
 # - They will attach to a 'TRUNK' Enic.

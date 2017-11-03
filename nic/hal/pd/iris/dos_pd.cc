@@ -3,6 +3,8 @@
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/dos_pd.hpp"
+#include "nic/hal/pd/iris/tenant_pd.hpp"
+#include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/dos_api.hpp"
@@ -189,23 +191,19 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr,
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
     
-    if (ip_addr->af == IP_AF_IPV4) {
-        memcpy(key.flow_lkp_metadata_lkp_dst, &ip_addr->addr.v4_addr,
-               sizeof(ipv4_addr_t));
-        memset(&mask.flow_lkp_metadata_lkp_dst_mask, 0xFF,
-               sizeof(ipv4_addr_t));
-    } else if (ip_addr->af == IP_AF_IPV6) {
-        memcpy(key.flow_lkp_metadata_lkp_dst, &ip_addr->addr.v6_addr,
-               sizeof(ipv6_addr_t));
-        memset(&mask.flow_lkp_metadata_lkp_dst_mask, 0xFF,
-               sizeof(ipv6_addr_t));
+    memcpy(key.flow_lkp_metadata_lkp_dst, &ip_addr->addr.v6_addr.addr8,
+           IP6_ADDR8_LEN);
+    memset(mask.flow_lkp_metadata_lkp_dst_mask, 0xFF, IP6_ADDR8_LEN);
+    if (ip_addr->af == IP_AF_IPV6) {
+        memrev(key.flow_lkp_metadata_lkp_dst, sizeof(key.flow_lkp_metadata_lkp_dst));
     }
     key.flow_lkp_metadata_lkp_dport = dport;
     mask.flow_lkp_metadata_lkp_dport_mask = 0xFFFF;
     key.flow_lkp_metadata_lkp_proto = proto;
     mask.flow_lkp_metadata_lkp_proto_mask = 0xFF;
-    key.flow_lkp_metadata_lkp_vrf = vrf;
-    mask.flow_lkp_metadata_lkp_vrf_mask = 0xFFFF;
+    key.flow_lkp_metadata_lkp_vrf = 0;
+    /* TODO: Temporarily mask off vrf */
+    mask.flow_lkp_metadata_lkp_vrf_mask = 0;
     key.entry_inactive_ddos_service = 0;
     mask.entry_inactive_ddos_service_mask = 0xFF;
      
@@ -398,6 +396,25 @@ dos_pd_program_ddos_policers (dos_policy_prop_t *dospp, uint8_t actionid,
     hal_ret_t   ret;
 
     /* Program 4 policers */
+    /* DDOS ANY Policer */
+    ret = dos_pd_program_ddos_policer(actionid, TRUE, TRUE,
+                               dospp->other_flood_limits.protect_pps,
+                               dospp->other_flood_limits.protect_burst_pps,
+                               dospp->other_flood_limits.restrict_pps,
+                               dospp->other_flood_limits.restrict_burst_pps,
+                               tbl_id, &ret_idx);
+    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    /* DDOS ANY Policer Action */
+    ret = dos_pd_program_ddos_policer_action(pol_actionid, 0, 0,
+                                             pol_action_tbl_id,
+                                             &ret_idx_action);
+    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    /*
+     * DDoS policers are always programmed in groups of four. The base
+     * policer index is used in the ddos tcam action
+     */
+    *base_pol_idx = ret_idx / 4;
+
     /* DDOS TCP Policer */
     ret = dos_pd_program_ddos_policer(actionid, TRUE, TRUE,
                                dospp->tcp_syn_flood_limits.protect_pps,
@@ -406,31 +423,12 @@ dos_pd_program_ddos_policers (dos_policy_prop_t *dospp, uint8_t actionid,
                                dospp->tcp_syn_flood_limits.restrict_burst_pps,
                                tbl_id, &ret_idx);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-    /*
-     * DDoS policers are always programmed in groups of four. The base
-     * policer index is used in the ddos tcam action
-     */
-    *base_pol_idx = ret_idx / 4;
     /* DDOS TCP Policer Action */
     ret = dos_pd_program_ddos_policer_action(pol_actionid, 0, 0,
                                              pol_action_tbl_id,
                                              &ret_idx_action);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-
-    /* DDOS UDP Policer */
-    ret = dos_pd_program_ddos_policer(actionid, TRUE, TRUE,
-                               dospp->udp_flood_limits.protect_pps,
-                               dospp->udp_flood_limits.protect_burst_pps,
-                               dospp->udp_flood_limits.restrict_pps,
-                               dospp->udp_flood_limits.restrict_burst_pps,
-                               tbl_id, &ret_idx);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-    /* DDOS UDP Policer Action */
-    ret = dos_pd_program_ddos_policer_action(pol_actionid, 0, 0,
-                                             pol_action_tbl_id,
-                                             &ret_idx_action);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-
+    
     /* DDOS ICMP Policer */
     ret = dos_pd_program_ddos_policer(actionid, TRUE, TRUE,
                                dospp->icmp_flood_limits.protect_pps,
@@ -445,15 +443,15 @@ dos_pd_program_ddos_policers (dos_policy_prop_t *dospp, uint8_t actionid,
                                              &ret_idx_action);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
-    /* DDOS ANY Policer */
+    /* DDOS UDP Policer */
     ret = dos_pd_program_ddos_policer(actionid, TRUE, TRUE,
-                               dospp->other_flood_limits.protect_pps,
-                               dospp->other_flood_limits.protect_burst_pps,
-                               dospp->other_flood_limits.restrict_pps,
-                               dospp->other_flood_limits.restrict_burst_pps,
+                               dospp->udp_flood_limits.protect_pps,
+                               dospp->udp_flood_limits.protect_burst_pps,
+                               dospp->udp_flood_limits.restrict_pps,
+                               dospp->udp_flood_limits.restrict_burst_pps,
                                tbl_id, &ret_idx);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-    /* DDOS ICMP Policer Action */
+    /* DDOS UDP Policer Action */
     ret = dos_pd_program_ddos_policer_action(pol_actionid, 0, 0,
                                              pol_action_tbl_id,
                                              &ret_idx_action);
@@ -503,7 +501,7 @@ dos_pd_program_ddos_src_vf_table (pd_dos_policy_t *pd_dosp, ep_t *ep, if_t *intf
 hal_ret_t
 dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
                                    dos_policy_t *pi_dosp,
-                                   tenant_t *ten)
+                                   pd_tenant_t *ten_pd)
 {
     int             tcam_idx;
     uint32_t        base_pol_idx;
@@ -563,7 +561,7 @@ dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
                                   nw->nw_key.ip_pfx.len,
                                   dosp->ingress.service.dport,
                                   dosp->ingress.service.ip_proto,
-                                  ten->tenant_id, DDOS_SRC_DST_DDOS_SRC_DST_HIT_ID,
+                                  ten_pd->ten_hw_id, DDOS_SRC_DST_DDOS_SRC_DST_HIT_ID,
                                   base_pol_idx, P4TBL_ID_DDOS_SRC_DST,
                                   &tcam_idx);
                     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
@@ -617,7 +615,7 @@ dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
                                   pnw->nw_key.ip_pfx.len,
                                   dosp->egress.service.dport,
                                   dosp->egress.service.ip_proto,
-                                  ten->tenant_id, DDOS_SRC_DST_DDOS_SRC_DST_HIT_ID,
+                                  ten_pd->ten_hw_id, DDOS_SRC_DST_DDOS_SRC_DST_HIT_ID,
                                   base_pol_idx, P4TBL_ID_DDOS_SRC_DST,
                                   &tcam_idx);
                     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
@@ -632,7 +630,7 @@ dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
 
 hal_ret_t
 dos_pd_program_ddos_service_table (pd_dos_policy_t *pd_dosp,
-                                   ep_t *ep, tenant_t **ret_ten)
+                                   ep_t *ep, pd_tenant_t *ten_pd)
 {
     int                         tcam_idx;
     uint32_t                    base_pol_idx;
@@ -640,7 +638,6 @@ dos_pd_program_ddos_service_table (pd_dos_policy_t *pd_dosp,
     dos_policy_t                *dosp;
     dllist_ctxt_t               *curr, *next, *ip_list;
     ep_ip_entry_t               *pi_ip_ent = NULL;
-    tenant_t                    *ten = NULL;
 
     dosp = (dos_policy_t *) pd_dosp->pi_dos_policy;
     HAL_ASSERT(dosp != NULL);
@@ -664,15 +661,12 @@ dos_pd_program_ddos_service_table (pd_dos_policy_t *pd_dosp,
     /* Iterate over all the IP addresses for this endpoint */
     dllist_for_each_safe(curr, next, ip_list) {
         pi_ip_ent = dllist_entry(curr, ep_ip_entry_t, ep_ip_lentry);
-        ten = ep_get_tenant(ep);
-        HAL_ASSERT(ten != NULL);
-        *ret_ten = ten;
         HAL_TRACE_DEBUG("pd-dos:{}: ep_ip_addr: {}",
                          __FUNCTION__, pi_ip_ent->ip_addr);
         ret = dos_pd_program_ddos_service_tcam(&pi_ip_ent->ip_addr,
                 dosp->ingress.service.dport,
                 dosp->ingress.service.ip_proto,
-                ten->tenant_id, DDOS_SERVICE_DDOS_SERVICE_HIT_ID,
+                ten_pd->ten_hw_id, DDOS_SERVICE_DDOS_SERVICE_HIT_ID,
                 base_pol_idx, P4TBL_ID_DDOS_SERVICE, &tcam_idx);
         HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
     }
@@ -701,8 +695,18 @@ dos_pd_program_hw (pd_dos_policy_t *pd_dosp, bool create)
     hal_handle_id_list_entry_t  *ep_ent = NULL;
     if_t                        *intf = NULL;
     tenant_t                    *ten;
+    pd_tenant_t                 *ten_pd;
 
     dp = (dos_policy_t *) pd_dosp->pi_dos_policy;
+    ten = tenant_lookup_by_handle(dp->tenant_handle);
+    if (ten == NULL) {
+        HAL_TRACE_ERR("pd-dos:{}:unable to find tenant", __FUNCTION__);
+        ret = HAL_RET_TENANT_NOT_FOUND;
+        goto end;
+    }
+    HAL_ASSERT(ten->pd != NULL);
+    ten_pd = (pd_tenant_t *) ten->pd;
+
     sg_list = &dp->sg_list_head;
     HAL_TRACE_DEBUG("pd-dos:{}: Going through the linked security groups",
                      __FUNCTION__);
@@ -726,18 +730,18 @@ dos_pd_program_hw (pd_dos_policy_t *pd_dosp, bool create)
             /* Program the DDoS Src VF table */
             ret = dos_pd_program_ddos_src_vf_table (pd_dosp, ep, intf);
             HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
-            
             HAL_TRACE_DEBUG("pd-dos:{}: Program service table", __FUNCTION__);
             /* Program the DDoS service table */
-            ret = dos_pd_program_ddos_service_table (pd_dosp, ep, &ten);
+            ret = dos_pd_program_ddos_service_table (pd_dosp, ep, ten_pd);
             HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
         }
     }
     
     // Program DDoS src-dst policer
-    ret = dos_pd_program_ddos_src_dst_table (pd_dosp, dp, ten);
+    ret = dos_pd_program_ddos_src_dst_table (pd_dosp, dp, ten_pd);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
+end:
     return ret;
 }
 

@@ -12,4 +12,5 @@ execute_ddos_src_vf_policer:
   phvwr.c1.e    p.ddos_metadata_ddos_src_vf_policer_color, POLICER_COLOR_GREEN
   seq           c2, d.execute_ddos_src_vf_policer_d.tbkt2[39], 0
   phvwr.c2.e    p.ddos_metadata_ddos_src_vf_policer_color, POLICER_COLOR_YELLOW
-  phvwr         p.ddos_metadata_ddos_src_vf_policer_color, POLICER_COLOR_RED
+  phvwr.!c2.e   p.ddos_metadata_ddos_src_vf_policer_color, POLICER_COLOR_RED
+  nop

@@ -3,12 +3,12 @@ selectors:
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=True
+        endpoint    : filter://remote=True,label=None
         interface   : filter://any
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
-        endpoint    : filter://remote=True
+        endpoint    : filter://remote=True,label=None
         interface   : filter://any
     flow        : filter://fwtype=L2
     maxflows    : 4

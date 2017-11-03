@@ -11,7 +11,7 @@ selectors:
         endpoint    : filter://remote=False
         interface   : filter://any
     flow            : filter://fwtype=L2
-    maxflows        : 4
+    maxflows        : 1
 
 packets:
     - packet:
@@ -55,7 +55,7 @@ packets:
             qtag:
                 vlan    : callback://networking/packets/GetVlanId
             tcp:
-                flags: ack
+                flags: syn
 
     - packet:
         id          : PKT2 # Expected Packet
@@ -70,17 +70,24 @@ packets:
             ipv6:
                 tc  : ref://testcase/config/flow/txqos/dscp
             tcp:
-                flags: ack
+                flags: syn
 
     - packet:
         id          : PKT3 # Input Packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
-            udp:
-                sport   : 1000
+            qtag:
+                vlan    : callback://networking/packets/GetVlanId
             tcp:
-                sport   : 1001
+                flags: syn
+                sport: 1000
+            udp:
+                sport: 1000
+            icmp:
+                type    : 3
+            icmpv6:
+                type    : 1
 
 buffers:
     - buffer:
@@ -99,6 +106,22 @@ buffers:
             size  : ref://testcase/packets/id=PKT2/size
             data  : ref://testcase/packets/id=PKT2/rawbytes
 
+    - buffer:
+        id      : BUF3  # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+
+    - buffer:
+        id      : BUF4  # Expected Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : ref://testcase/packets/id=PKT3/size
+            data  : ref://testcase/packets/id=PKT3/rawbytes
+
 descriptors:
     - descriptor:
         id      : DESC1 # Input Descriptor
@@ -114,6 +137,21 @@ descriptors:
         fields:
             _buf          : ref://testcase/buffers/id=BUF2
             bytes_written : ref://testcase/buffers/id=BUF2/size
+
+    - descriptor:
+        id      : DESC3 # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF3
+            addr  : ref://testcase/buffers/id=BUF3/addr
+            len   : ref://testcase/buffers/id=BUF3/size
+
+    - descriptor:
+        id      : DESC4 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=BUF4
+            bytes_written : 0
 
 session:
     - step:
@@ -145,7 +183,7 @@ session:
         trigger:
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC1
+                    object  : ref://testcase/descriptors/id=DESC3
                     ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
         
             packets:
@@ -154,3 +192,9 @@ session:
                     port    : callback://networking/fwmode/GetRxTriggerPorts
         
         expect:
+            delay   : callback://networking/packets/GetExpectDelay
+
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC4
+                    ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1

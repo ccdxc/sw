@@ -15,6 +15,10 @@ def TestCaseSetup(tc):
 
 def TestCaseTeardown(tc):
     modcbs.TestCaseTeardown(tc)
+    if tc.config.src.endpoint.remote == False:
+        tc.config.src.endpoint.SetLabel('DO_NOT_USE')
+    if tc.config.dst.endpoint.remote == False:
+        tc.config.dst.endpoint.SetLabel('DO_NOT_USE')
     return
 
 def TestCaseStepSetup(tc, step):

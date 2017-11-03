@@ -123,8 +123,9 @@ class TriggerEngineObject:
                      ('IGNORE' if tc.IsIgnore() else 'FAIL',
                       defs.status.str(vfstatus),
                       defs.status.str(cbstatus)))
+        else:
+            tc.info("TESTCASE FINAL STATUS = PASS")
         tc.TeardownCallback()
-        tc.info("TESTCASE FINAL STATUS = PASS")
         return status
 
     def Trigger(self, tc):

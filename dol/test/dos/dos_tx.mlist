@@ -1,28 +1,41 @@
 # Feature Test Modules List
 feature:
     id      : dos
-    sub     : l2uc
+    sub     : tx
     package : test.dos
     module  : dos
     enable  : True
     ignore  : False
-    args    :
-        maxflows: 1
+    spec    : dos_tx.testspec
 
 modules:
     - module:
-        name    : FROM_WORKLOAD
-        spec    : dos_tx.testspec
+        name    : FROM_WORKLOAD_UDP_V4
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=FTE
               segment   : filter://native=False
+    - module:
+        name    : FROM_WORKLOAD_UDP_V6
+        iterate:
             - flow      : filter://type=IPV6,proto=UDP,label=FTE
               segment   : filter://native=False
+    - module:
+        name    : FROM_WORKLOAD_TCP_V4
+        iterate:
             - flow      : filter://type=IPV4,proto=TCP,label=FTE
               segment   : filter://native=False
+    - module:
+        name    : FROM_WORKLOAD_TCP_V6
+        iterate:
             - flow      : filter://type=IPV6,proto=TCP,label=FTE
               segment   : filter://native=False
+    - module:
+        name    : FROM_WORKLOAD_ICMP_V4
+        iterate:
             - flow      : filter://type=IPV4,proto=ICMP,label=FTE
               segment   : filter://native=False
+    - module:
+        name    : FROM_WORKLOAD_ICMP_V6
+        iterate:
             - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE
               segment   : filter://native=False

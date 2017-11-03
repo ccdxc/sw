@@ -31,6 +31,7 @@ class EndpointObject(base.ConfigObjectBase):
         return
 
     def Init(self, segment, backend):
+        self.label              = None
         self.segment            = segment
         self.local              = True
         self.tenant             = segment.tenant
@@ -64,6 +65,10 @@ class EndpointObject(base.ConfigObjectBase):
     def IsBehindTunnel(self):
         # EP is remote & segment's fabencap is vxlan
         return self.remote and self.segment.IsFabEncapVxlan()
+
+    def SetLabel(self, label):
+        self.label = label
+        return
 
     def IsL4LbBackend(self):
         return self.is_l4lb_backend

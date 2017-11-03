@@ -62,7 +62,7 @@ tenants:
         lifns   : range/111/120
     -   spec    : ref://store/specs/id=TENANT_FTE
         count   : 1
-        lifns   : range/121/136
+        lifns   : range/121/140
 
 cpu:
     - entry:
