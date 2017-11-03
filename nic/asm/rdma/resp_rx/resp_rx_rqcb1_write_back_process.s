@@ -19,15 +19,18 @@ struct rqcb1_t d;
 #define KEY_P               r5
 #define ARG_P               r4
 #define CQCB_ADDR           r3
+#define RQCB4_ADDR          r3
 #define KEY_ADDR            r3
 #define RAW_TABLE_PC        r2
 
 #define CQ_INFO_T   struct resp_rx_rqcb_to_cq_info_t
 #define INV_RKEY_T  struct resp_rx_inv_rkey_info_t
+#define STATS_INFO_T struct resp_rx_stats_info_t
 
 %%
     .param                  resp_rx_cqcb_process
     .param                  resp_rx_inv_rkey_process
+    .param                  resp_rx_stats_process
 
 .align
 resp_rx_rqcb1_write_back_process:
@@ -41,9 +44,9 @@ resp_rx_rqcb1_write_back_process:
 
     add                     r7, r0, k.global.flags
 
-    // if completion is not set, exit after writeback
+    // if completion is not set, stats after writeback
     IS_ANY_FLAG_SET(F_COMPL, r7, RESP_RX_FLAG_COMPLETION)
-    bcf                     [!F_COMPL], exit
+    bcf                     [!F_COMPL], stats
     //assumption is that write back is called with table 2
     CAPRI_SET_TABLE_2_VALID(0)  //BD Slot
 
@@ -90,6 +93,15 @@ completion:
     CQCB_ADDR_GET(CQCB_ADDR, d.cq_id)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_cqcb_process)
     CAPRI_NEXT_TABLE_I_READ(KEY_P, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, CQCB_ADDR)
+
+stats:
+
+    CAPRI_GET_TABLE_1_K(resp_rx_phv_t, KEY_P)
+    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, ARG_P)
+    CAPRI_SET_FIELD(ARG_P, STATS_INFO_T, bubble_count, 1)
+    RQCB4_ADDR_GET(RQCB4_ADDR)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_stats_process)
+    CAPRI_NEXT_TABLE_I_READ(KEY_P, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB4_ADDR)
 
 exit:
 

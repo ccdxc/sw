@@ -1055,11 +1055,30 @@ typedef struct rqcb2_s {
     uint8_t             rsvd1[6];
 } PACKED rqcb2_t;
 
+typedef struct rqcb4_s {
+    uint8_t  rsvd[28];
+    uint16_t max_pkts_in_any_msg;
+    uint16_t num_pkts_in_cur_msg;
+    uint16_t num_ring_dbell;
+    uint16_t num_ack_requested;
+    uint16_t num_write_msgs_imm_data;
+    uint16_t num_send_msgs_imm_data;
+    uint16_t num_send_msgs_inv_rkey;
+    uint16_t num_atomic_cswap_msgs;
+    uint16_t num_atomic_fna_msgs;
+    uint16_t num_read_req_msgs;
+    uint16_t num_write_msgs;
+    uint16_t num_send_msgs;
+    uint32_t num_pkts;
+    uint64_t num_bytes;
+} rqcb4_t;
+
 typedef struct rqcb_s {
     rqcb0_t  rqcb0; // 0-63 bytes
     rqcb1_t  rqcb1; // 63-127 bytes
     rqcb2_t  rqcb2; // 63-127 bytes
     uint8_t  rsvd[64];
+    rqcb4_t  rqcb4; // RESP_RX stats
 } PACKED rqcb_t;
 
 #define MAX_SRQ_RINGS 6

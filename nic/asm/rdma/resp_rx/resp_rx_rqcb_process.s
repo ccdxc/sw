@@ -16,6 +16,8 @@ struct rdma_stage0_table_k k;
 #define TO_S_FWD_INFO_T struct resp_rx_to_stage_wb0_info_t
 #define RQCB_TO_RQCB1_T struct resp_rx_rqcb_to_rqcb1_info_t
 #define TO_S_WB1_T struct resp_rx_to_stage_wb1_info_t
+#define STATS_INFO_T struct resp_rx_stats_info_t
+#define TO_S_STATS_INFO_T struct resp_rx_to_stage_stats_info_t
 
 #define RAW_TABLE_PC r2
 
@@ -35,6 +37,7 @@ struct rdma_stage0_table_k k;
     .param    resp_rx_write_dummy_process
     .param    resp_rx_rsq_backtrack_process
     .param    resp_rx_rqcb1_recirc_sge_process
+    .param    resp_rx_stats_process
 
 .align
 resp_rx_rqcb_process:
@@ -106,6 +109,9 @@ skip_token_id_check:
     tbladd  d.token_id, 1
 
     add     REM_PYLD_BYTES, r0, CAPRI_APP_DATA_PAYLOAD_LEN
+
+    CAPRI_GET_STAGE_5_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, TO_S_STATS_INFO_T, bytes, CAPRI_APP_DATA_PAYLOAD_LEN)
 
     // populate some fields on ack_info so that in case we need to 
     // send NAK from anywhere, this info is already populated.
@@ -219,6 +225,16 @@ skip_rsq_doorbell:
     mincr          r3, d.log_pmtu, r0
     sle            c6, r3, r0
     tblmincri.!c6  d.e_psn, 24, 1
+
+stats:
+
+    CAPRI_GET_TABLE_1_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, STATS_INFO_T, bubble_count, 5)
+
+    CAPRI_GET_TABLE_1_K(resp_rx_phv_t, r4)
+    add     r5, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, (LOG_CB_UNIT_SIZE_BYTES + 2) #RQCB4 address
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_stats_process)
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_0_BITS, RAW_TABLE_PC, r5)
 
     nop.e
     nop

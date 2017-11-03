@@ -106,7 +106,13 @@ struct resp_rx_to_stage_backtrack_info_t {
 
 struct resp_rx_to_stage_wb0_info_t {
     my_token_id: 8;
-    pad: 120;
+    bytes: 16;
+    pad: 104;
+};
+
+struct resp_rx_to_stage_stats_info_t {
+    bytes: 16;
+    pad: 112;
 };
 
 struct resp_rx_to_stage_wb1_info_t {
@@ -165,6 +171,7 @@ struct resp_rx_s4_info_t {
 struct resp_rx_s5_info_t {
     union {
         struct resp_rx_to_stage_backtrack_info_t backtrack;
+        struct resp_rx_to_stage_stats_info_t stats;
     };
 };
 
@@ -480,5 +487,17 @@ struct resp_rx_rsq_backtrack_adjust_process_k_t {
     struct phv_global_common_t global;
 };
 
+//20
+struct resp_rx_stats_info_t {
+    bubble_count: 3;
+    pad : 157;
+};
+
+struct resp_rx_stats_process_k_t {
+    struct capri_intrinsic_raw_k_t intrinsic;
+    struct resp_rx_stats_info_t args;
+    struct resp_rx_to_stage_t to_stage;
+    struct phv_global_common_t global;
+};
 
 #endif //__RESP_RX_H

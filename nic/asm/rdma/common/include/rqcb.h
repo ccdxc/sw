@@ -101,8 +101,31 @@ struct rqcb1_t {
     rsvd: 8;
 };
 
+
+struct rqcb4_t {
+    num_bytes: 64;
+    num_pkts: 32;
+    num_send_msgs: 16;
+    num_write_msgs: 16;
+    num_read_req_msgs: 16;
+    num_atomic_fna_msgs: 16;
+    num_atomic_cswap_msgs: 16;
+    num_send_msgs_inv_rkey: 16;
+    num_send_msgs_imm_data: 16;
+    num_write_msgs_imm_data: 16;
+    num_ack_requested: 16;
+    num_ring_dbell: 16;
+    num_pkts_in_cur_msg: 16;
+    max_pkts_in_any_msg : 16;
+    pad: 224;
+};
+
 struct rqcb_t {
     struct rqcb0_t rqcb0;
     struct rqcb1_t rqcb1;
+    struct rqcb1_t rqcb2;
+    struct rqcb1_t rqcb3;
+    struct rqcb4_t rqcb4;
 };
+
 #endif // __RQCB_H

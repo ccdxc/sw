@@ -29,12 +29,20 @@
 #define SQCB1_ADDR_GET(_r)                         \
      add    _r, CB_UNIT_SIZE_BYTES, k.global.cb_addr, SQCB_ADDR_SHIFT;
 
-#define RQCB1_ADDR_GET(_r) \
-    add     _r, CB_UNIT_SIZE_BYTES, k.global.cb_addr, RQCB_ADDR_SHIFT;
-    
+//RQCB organization
+//0-256B RQCB0..RQCB3
+//256-320B RESP_RX_STATS
+//320-376B RESP_TX_STATS
 #define RQCB0_ADDR_GET(_r) \
     sll     _r, k.global.cb_addr, RQCB_ADDR_SHIFT;
 
+#define RQCB1_ADDR_GET(_r) \
+    add     _r, CB_UNIT_SIZE_BYTES, k.global.cb_addr, RQCB_ADDR_SHIFT;
+    
+//RESP_RX_STATS
+#define RQCB4_ADDR_GET(_r) \
+    add     _r, (4 * CB_UNIT_SIZE_BYTES), k.global.cb_addr, RQCB_ADDR_SHIFT;
+    
 #define MAX_PYLD_DMA_CMDS_PER_SGE   3
 
 #define BTH_OPC_SVC_SHIFT 5

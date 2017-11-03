@@ -101,6 +101,29 @@ class RdmaRQstate(Packet):
         IntField("current_sge_offset", 0),
         ByteField("p4plus_to_p4_flags", 0),
         ByteField("rsvd", 0),
+
+        #RQCB2
+        BitField("rqcb2", 0, 512),
+
+        #RQCB3
+        BitField("rqcb3", 0, 512),
+
+        #RQCB4 - RESP_RX stats
+        LongField("num_bytes", 0),
+        IntField("num_pkts", 0),
+        ShortField("num_send_msgs", 0),
+        ShortField("num_write_msgs", 0),
+        ShortField("num_read_req_msgs", 0),
+        ShortField("num_atomic_fna_msgs", 0),
+        ShortField("num_atomic_cswap_msgs", 0),
+        ShortField("num_send_msgs_inv_rkey", 0),
+        ShortField("num_send_msgs_imm_data", 0),
+        ShortField("num_write_msgs_imm_data", 0),
+        ShortField("num_ack_requested", 0),
+        ShortField("num_ring_dbell", 0),
+        ShortField("num_pkts_in_cur_msg", 0),
+        ShortField("max_pkts_in_any_msg", 0),
+        BitField("pad", 0, 224),
     ]
 
 class RdmaSQstate(Packet):

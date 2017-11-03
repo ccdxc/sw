@@ -184,6 +184,9 @@ struct capri_intrinsic_ring_t {
     phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_pc), sizeof(INTRINSIC_RAW_K_T.table_pc), _table_pc_r[63:CAPRI_RAW_TABLE_PC_SHIFT]; \
     phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_addr), sizeof(INTRINSIC_RAW_K_T.table_addr), _table_addr_r;
 
+#define CAPRI_NEXT_TABLE_I_READ_SET_SIZE_C(_base_r, _lock_en, _table_read_size, _c) \
+    phvwrpi._c  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size);
+
 #define CAPRI_SET_TABLE_0_VALID(_vld) \
     phvwri   p.common.app_header_table0_valid, _vld;
 #define CAPRI_SET_TABLE_1_VALID(_vld) \
@@ -340,21 +343,34 @@ _next2:;
     CAPRI_SET_TABLE_0_VALID_C(_cf, 1); \
     CAPRI_SET_TABLE_1_VALID_C(!_cf, 1);
 
+#define CAPRI_GET_TABLE_0_ARG_NO_RESET(_phv_name, _arg_base_r) \
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data);
+#define CAPRI_GET_TABLE_1_ARG_NO_RESET(_phv_name, _arg_base_r) \
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data);
+#define CAPRI_GET_TABLE_2_ARG_NO_RESET(_phv_name, _arg_base_r) \
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data);
+#define CAPRI_GET_TABLE_3_ARG_NO_RESET(_phv_name, _arg_base_r) \
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data);
+
+#define CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(_phv_name, _arg_base_r, _cf) \
+    cmov    _arg_base_r, _cf, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data), offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
+
+
 #define CAPRI_GET_TABLE_0_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data); \
+    CAPRI_GET_TABLE_0_ARG_NO_RESET(_phv_name, _arg_base_r) \
     phvwr   p.common.common_t0_s2s_s2s_data, r0
 #define CAPRI_GET_TABLE_1_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
+    CAPRI_GET_TABLE_1_ARG_NO_RESET(_phv_name, _arg_base_r) \
     phvwr   p.common.common_t1_s2s_s2s_data, r0
 #define CAPRI_GET_TABLE_2_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data); \
+    CAPRI_GET_TABLE_2_ARG_NO_RESET(_phv_name, _arg_base_r) \
     phvwr   p.common.common_t2_s2s_s2s_data, r0
 #define CAPRI_GET_TABLE_3_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data); \
+    CAPRI_GET_TABLE_3_ARG_NO_RESET(_phv_name, _arg_base_r) \
     phvwr   p.common.common_t3_s2s_s2s_data, r0
 
 #define CAPRI_GET_TABLE_0_OR_1_ARG(_phv_name, _arg_base_r, _cf) \
-    cmov    _arg_base_r, _cf, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data), offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
+    CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(_phv_name, _arg_base_r, _cf) \
     phvwr._cf   p.common.common_t0_s2s_s2s_data, r0; \
     phvwr.!_cf   p.common.common_t1_s2s_s2s_data, r0
 
