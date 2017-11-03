@@ -139,7 +139,6 @@ invoke_pt:
     //CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
     //CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_KEY)
 
-    //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, r_key, k.args.inv_r_key)
     //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, dma_cmd_index, RESP_RX_DMA_CMD_CQ)
     //CAPRI_SET_FIELD(T2_ARG, COMPL_R_INV_RKEY_INFO_T, tbl_id, TABLE_2)
     

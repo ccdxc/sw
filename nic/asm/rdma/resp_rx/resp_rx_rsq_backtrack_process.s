@@ -44,19 +44,19 @@ req_compare:
 
 compare_read:
     // if r_key mismatch, result = NO_MATCH
-    seq     c4, d.read.r_key, k.to_stage.backtrack.r_key
+    seq     c4, d.read.r_key, k.to_stage.s0.backtrack.r_key
     bcf     [!c4], compare_done
     add     CMP_RESULT, r0, RSQWQE_CMP_NO_MATCH //BD Slot
 
     // if psn, va and len matches, result = FULL_MATCH
-    seq     c5, d.read.va, k.to_stage.backtrack.va
-    seq     c6, d.read.len, k.to_stage.backtrack.len
+    seq     c5, d.read.va, k.to_stage.s0.backtrack.va
+    seq     c6, d.read.len, k.to_stage.s0.backtrack.len
     bcf     [c3 & c5 & c6], compare_done
     add     CMP_RESULT, r0, RSQWQE_CMP_FULL_MATCH //BD Slot
 
     // if received <va,len> is not within original read's range, result = NO_MATCH
-    slt     c1, k.to_stage.backtrack.va, d.read.va
-    add     r2, k.to_stage.backtrack.va, k.to_stage.backtrack.len
+    slt     c1, k.to_stage.s0.backtrack.va, d.read.va
+    add     r2, k.to_stage.s0.backtrack.va, k.to_stage.s0.backtrack.len
     add     r3, d.read.va, d.read.len
     slt     c2, r3, r2
     bcf     [c1 | c2], compare_done
@@ -92,7 +92,7 @@ compare_read:
     // r3 = r3 << log_pmtu
     sllv    r3, r3, r2
     // r4 = search_va - d.va
-    sub     r4, k.to_stage.backtrack.va, d.read.va
+    sub     r4, k.to_stage.s0.backtrack.va, d.read.va
     
     // is r4 same as r3 ? If so, result = SUBSET_MATCH, else NO_MATCH
     seq     c1, r3, r4
@@ -101,8 +101,8 @@ compare_read:
 
 compare_atomic:
     // if  psn, r_key and va matches, result = FULL_MATCH else NO_MATCH
-    seq     c4, d.atomic.r_key, k.to_stage.backtrack.r_key
-    seq     c5, d.atomic.va, k.to_stage.backtrack.va
+    seq     c4, d.atomic.r_key, k.to_stage.s0.backtrack.r_key
+    seq     c5, d.atomic.va, k.to_stage.s0.backtrack.va
     setcf   c6, [c3 & c4 & c5]
     cmov    CMP_RESULT, c6, RSQWQE_CMP_FULL_MATCH, RSQWQE_CMP_NO_MATCH
 

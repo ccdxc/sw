@@ -13,8 +13,10 @@ struct rdma_stage0_table_k k;
 #define INFO_OUT1_T struct resp_rx_rqcb_to_pt_info_t
 #define RSQ_BT_S2S_INFO_T struct resp_rx_rsq_backtrack_info_t 
 #define RSQ_BT_TO_S_INFO_T struct resp_rx_to_stage_backtrack_info_t
-#define TO_S_FWD_INFO_T struct resp_rx_to_stage_forward_info_t
+#define TO_S_FWD_INFO_T struct resp_rx_to_stage_wb0_info_t
 #define RQCB_TO_RQCB1_T struct resp_rx_rqcb_to_rqcb1_info_t
+#define TO_S_WB1_T struct resp_rx_to_stage_wb1_info_t
+
 #define RAW_TABLE_PC r2
 
 #define REM_PYLD_BYTES  r6
@@ -32,6 +34,7 @@ struct rdma_stage0_table_k k;
     .param    resp_rx_rqcb1_in_progress_process
     .param    resp_rx_write_dummy_process
     .param    resp_rx_rsq_backtrack_process
+    .param    resp_rx_rqcb1_recirc_sge_process
 
 .align
 resp_rx_rqcb_process:
@@ -339,6 +342,9 @@ need_checkout:
 skip_immdt:
 skip_immdt_as_dbell:
 
+    CAPRI_GET_STAGE_4_ARG(resp_rx_phv_t, r4)
+    CAPRI_SET_FIELD(r4, TO_S_WB1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
+
     // checkout a RQ descriptor if it is a send AND in_progress is FALSE
     // OR write_with_imm
     ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_WRITE|RESP_RX_FLAG_IMMDT)
@@ -351,12 +357,12 @@ skip_immdt_as_dbell:
 
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, in_progress, d.in_progress)
     CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, remaining_payload_bytes, REM_PYLD_BYTES)
-    CAPRI_SET_FIELD(r4, RQCB_TO_RQCB1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_in_progress_process)
     add     r3, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
     CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+
 
 
 exit:
@@ -432,7 +438,6 @@ checkout:
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, page_seg_offset, r5)
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, page_offset, r1)
     CAPRI_SET_FIELD(r4, INFO_OUT1_T, remaining_payload_bytes, REM_PYLD_BYTES)
-    CAPRI_SET_FIELD(r4, INFO_OUT1_T, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
     CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqpt_process)
@@ -588,4 +593,31 @@ ud_drop:
     
 
 recirc_pkt:
+    // turn off recirc, if this thread needs recirc again, respective
+    // code would enable recirc flag there.
+    phvwr   p.common.p4_intr_recirc, 0
 
+    seq     c1, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_SGE_WORK_PENDING
+    bcf     [c1], recirc_sge_work_pending
+    nop     //BD Slot
+
+    nop.e
+    nop
+
+recirc_sge_work_pending:
+    // when sge work is pending, there is no need to wait for 
+    // token_id to be current, keep proceeding with further 
+    // processing. In this case, stage1 is already setup with
+    // required information to process further sges. If middle
+    // packet is recircing, it may need some info from rqcb1 as
+    // well (such as curr_wqe_ptr, num_sges etc.)
+    // Hence load RQCB1 recirc process code. There are no arguments
+    // to pass as of now
+    
+    CAPRI_GET_TABLE_0_K(resp_rx_phv_t, r4)
+    CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_recirc_sge_process)
+    add     r3, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, 1, LOG_CB_UNIT_SIZE_BYTES
+    CAPRI_NEXT_TABLE_I_READ(r4, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, r3)
+
+    nop.e
+    nop

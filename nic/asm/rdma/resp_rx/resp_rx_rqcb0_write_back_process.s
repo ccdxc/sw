@@ -27,7 +27,7 @@ resp_rx_rqcb0_write_back_process:
     //seq             c1, r1[6:2], STAGE_3
     //bcf             [!c1], exit
     
-    seq             c1, k.to_stage.forward.my_token_id, d.nxt_to_go_token_id
+    seq             c1, k.to_stage.s3.wb0.my_token_id, d.nxt_to_go_token_id
     bcf             [!c1], recirc
     
     crestore        [c7, c6, c5], k.global.flags, (RESP_RX_FLAG_ACK_REQ | RESP_RX_FLAG_ONLY | RESP_RX_FLAG_LAST)
@@ -75,7 +75,7 @@ incr_c_index_exit:
 
 invoke_wb1:
     // invoke rqcb1 write back from rqcb0 write back
-    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB1_T, curr_wqe_ptr, inv_r_key, k.{args.curr_wqe_ptr...args.inv_r_key})
+    CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB1_T, current_sge_offset, current_sge_id, k.{args.current_sge_offset...args.current_sge_id})
     CAPRI_GET_TABLE_2_K(resp_rx_phv_t, T2_K)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqcb1_write_back_process)
     CAPRI_NEXT_TABLE_I_READ(T2_K, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, RQCB1_ADDR)

@@ -7,15 +7,25 @@
 #include "common_phv.h"
 
 #define RESP_RX_MAX_DMA_CMDS        16
-#define RESP_RX_DMA_CMD_PYLD_BASE   3
+
+// currently PYLD_BASE starts at 2, each PTSEG can generate upto 3
+// dma instructions. so, (2,3,4),(5,6,7),(8,9,10),(11,12,13) will
+// accommodate a packet spaning upto 4 SGEs where each SGE can generate
+// upto 3 DMA instructions.
+// NOTE: 13th DMA command is overlapping with IMMDT_AS_DBELL instruction
+// below. We are leaving it that way assuming that IMMDT_AS_DBELL is
+// used only by storage folks, their case wouldn't be needing 4 SGEs
+// anyway.
+#define RESP_RX_DMA_CMD_PYLD_BASE   2
 #define RESP_RX_DMA_CMD_RSQWQE      4
 #define RESP_RX_DMA_CMD_RSQ_DB      5
+#define RESP_RX_DMA_CMD_PYLD_BASE_END 14
 
 #define RESP_RX_DMA_CMD_START       0
 #define RESP_RX_DMA_CMD_ACK         0
-#define RESP_RX_DMA_CMD_IMMDT_AS_DBELL (RESP_RX_MAX_DMA_CMDS - 4)
-#define RESP_RX_DMA_CMD_CQ          (RESP_RX_MAX_DMA_CMDS - 3)
-#define RESP_RX_DMA_CMD_EQ          (RESP_RX_MAX_DMA_CMDS - 2)
+#define RESP_RX_DMA_CMD_IMMDT_AS_DBELL (RESP_RX_MAX_DMA_CMDS - 3)
+#define RESP_RX_DMA_CMD_CQ          (RESP_RX_MAX_DMA_CMDS - 2)
+#define RESP_RX_DMA_CMD_EQ          (RESP_RX_MAX_DMA_CMDS - 1)
 
 #define RESP_RX_DMA_CMD_START_FLIT_ID   8 // flits 8-11 are used for dma cmds
 
@@ -94,15 +104,92 @@ struct resp_rx_to_stage_backtrack_info_t {
     len: 32;
 };
 
-struct resp_rx_to_stage_forward_info_t {
+struct resp_rx_to_stage_wb0_info_t {
     my_token_id: 8;
     pad: 120;
 };
 
-struct resp_rx_to_stage_t {
+struct resp_rx_to_stage_wb1_info_t {
+    update_wqe_ptr: 1;
+    update_num_sges: 1;
+    rsvd: 6;
+    curr_wqe_ptr: 64;
+    num_sges: 8;
+    inv_r_key: 32;
+    pad: 16;
+};
+
+struct resp_rx_to_stage_recirc_info_t {
+    curr_wqe_ptr: 64;
+    current_sge_id: 6;
+    num_sges: 6;
+    dma_cmd_index: 4;
+    remaining_payload_bytes: 16;
+    current_sge_offset: 32;
+};
+
+struct resp_rx_s0_info_t {
     union {
         struct resp_rx_to_stage_backtrack_info_t backtrack;
-        struct resp_rx_to_stage_forward_info_t forward;
+    };
+};
+
+struct resp_rx_s1_info_t {
+    union {
+        struct resp_rx_to_stage_backtrack_info_t backtrack;
+        struct resp_rx_to_stage_recirc_info_t recirc;
+    };
+};
+
+struct resp_rx_s2_info_t {
+    union {
+        struct resp_rx_to_stage_backtrack_info_t backtrack;
+        struct resp_rx_to_stage_wb0_info_t wb0;
+    };
+};
+
+struct resp_rx_s3_info_t {
+    union {
+        struct resp_rx_to_stage_backtrack_info_t backtrack;
+        struct resp_rx_to_stage_wb0_info_t wb0;
+    };
+};
+
+struct resp_rx_s4_info_t {
+    union {
+        struct resp_rx_to_stage_backtrack_info_t backtrack;
+        struct resp_rx_to_stage_wb1_info_t wb1;
+    };
+};
+
+struct resp_rx_s5_info_t {
+    union {
+        struct resp_rx_to_stage_backtrack_info_t backtrack;
+    };
+};
+
+struct resp_rx_s6_info_t {
+    union {
+        struct resp_rx_to_stage_backtrack_info_t backtrack;
+    };
+};
+
+struct resp_rx_s7_info_t {
+    union {
+        struct resp_rx_to_stage_backtrack_info_t backtrack;
+    };
+};
+
+struct resp_rx_to_stage_t {
+    union {
+        struct resp_rx_s0_info_t s0;
+        struct resp_rx_s1_info_t s1;
+        struct resp_rx_s2_info_t s2;
+        struct resp_rx_s3_info_t s3;
+        struct resp_rx_s4_info_t s4;
+        struct resp_rx_s5_info_t s5;
+        struct resp_rx_s6_info_t s6;
+        struct resp_rx_s7_info_t s7;
     };
 };
 
@@ -116,8 +203,7 @@ struct resp_rx_rqcb_to_pt_info_t {
     cache: 1;
     page_offset: 16;
     remaining_payload_bytes: 16;
-    inv_r_key: 32;
-    pad: 88;
+    pad: 120;
 };
 
 struct resp_rx_rqpt_process_k_t {
@@ -136,11 +222,13 @@ struct resp_rx_rqcb_to_wqe_info_t {
     remaining_payload_bytes: 16;
     //rqcb2
     curr_wqe_ptr: 64;
-    inv_r_key: 32;
     current_sge_offset: 32;
     //computed
     num_valid_sges: 6;
     tbl_id: 2;
+    dma_cmd_index: 8;
+    recirc_path:1;
+    pad: 23;
 };
 
 struct resp_rx_rqwqe_process_k_t {
@@ -161,7 +249,6 @@ struct resp_rx_key_info_t {
     acc_ctrl: 8;
     dma_cmdeop: 1;
     cq_dma_cmd_index: 7;
-    //inv_r_key: 32;
     nak_code: 8;
     pad:40;
 };
@@ -183,14 +270,14 @@ struct resp_rx_rqcb0_write_back_info_t {
     rsvd: 1;
     //do_not_invalidate_tbl: 1;
     // wb1 info
-    curr_wqe_ptr: 64;
     current_sge_offset: 32;
     current_sge_id: 8;
-    update_num_sges: 1;
-    update_wqe_ptr: 1;
-    num_sges: 8;
-    inv_r_key: 32;
-    pad: 6;
+
+    //curr_wqe_ptr: 64;
+    //update_num_sges: 1;
+    //update_wqe_ptr: 1;
+    //num_sges: 8;
+    pad: 112;
 };
 
 struct resp_rx_rqcb0_write_back_process_k_t {
@@ -202,14 +289,13 @@ struct resp_rx_rqcb0_write_back_process_k_t {
 
 //20
 struct resp_rx_rqcb1_write_back_info_t {
-    curr_wqe_ptr: 64;
     current_sge_offset: 32;
     current_sge_id: 8;
-    update_num_sges: 1;
-    update_wqe_ptr: 1;
-    num_sges: 8;
-    inv_r_key: 32;
-    pad: 14;
+    //curr_wqe_ptr: 64;
+    //update_num_sges: 1;
+    //update_wqe_ptr: 1;
+    //num_sges: 8;
+    pad: 120;
 };
 
 struct resp_rx_rqcb1_write_back_process_k_t {
@@ -314,8 +400,7 @@ struct resp_rx_rqcb_to_rqcb1_info_t {
     in_progress: 1;
     rsvd: 7;
     remaining_payload_bytes: 32;
-    inv_r_key: 32;
-    pad: 88;
+    pad: 120;
 };
 
 struct resp_rx_rqcb1_in_progress_process_k_t {

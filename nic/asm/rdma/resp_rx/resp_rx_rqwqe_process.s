@@ -11,6 +11,8 @@ struct rqwqe_base_t d;
 #define INFO_LKEY_T struct resp_rx_key_info_t
 #define INFO_WBCB0_T struct resp_rx_rqcb0_write_back_info_t
 #define INFO_WBCB1_T struct resp_rx_rqcb1_write_back_info_t    
+#define TO_S_RECIRC_T struct resp_rx_to_stage_recirc_info_t
+#define TO_S_WB1_T struct resp_rx_to_stage_wb1_info_t
 
 
 #define SGE_OFFSET_SHIFT 32
@@ -23,6 +25,8 @@ struct rqwqe_base_t d;
 
 #define T2_ARG          r5
 #define T2_K            r5
+#define RECIRC_ARG      r6
+#define WB1_ARG         r6
 
 #define RAW_TABLE_PC    r2
 #define RAW_TABLE_PC2   r1
@@ -101,7 +105,9 @@ loop:
     // sge_to_lkey_info_p->sge_bytes = transfer_bytes;
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, len, r6)
     // sge_to_lkey_info_p->dma_cmd_start_index = dma_cmd_index;
-    cmov        r2, F_FIRST_PASS, RESP_RX_DMA_CMD_PYLD_BASE, (RESP_RX_DMA_CMD_PYLD_BASE + MAX_PYLD_DMA_CMDS_PER_SGE)
+    add         r2, r0, k.args.dma_cmd_index
+    add.!F_FIRST_PASS r2, r2, MAX_PYLD_DMA_CMDS_PER_SGE
+    //cmov        r2, F_FIRST_PASS, RESP_RX_DMA_CMD_PYLD_BASE, (RESP_RX_DMA_CMD_PYLD_BASE + MAX_PYLD_DMA_CMDS_PER_SGE)
     CAPRI_SET_FIELD(r7, INFO_LKEY_T, dma_cmd_start_index, r2)
     //sge_to_lkey_info_p->sge_index = index;
     CAPRI_SET_FIELD_C(r7, INFO_LKEY_T, tbl_id, 1, !F_FIRST_PASS)
@@ -169,10 +175,26 @@ exit:
     CAPRI_SET_FIELD_C(r7, INFO_LKEY_T, dma_cmdeop, 1, c5)
 
     add         r7, r0, k.global.flags
-    IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
 
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, inv_r_key, k.args.inv_r_key)
+    IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_FIRST)
+    seq         c3, k.args.recirc_path, 1
+    bcf         [!c2 | c3], non_first_or_recirc_pkt
+    CAPRI_GET_STAGE_4_ARG(resp_rx_phv_t, WB1_ARG) //BD Slot
+
+    // only first packet need to set num_sges and wqe_ptr values into
+    // rqcb1. middle/last packets will simply use these fields from cb
+    CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, update_num_sges, 1, c2)    
+    CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, num_sges, NUM_VALID_SGES, c2)
+    CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, curr_wqe_ptr, k.args.curr_wqe_ptr, c2)
+    CAPRI_SET_FIELD_C(WB1_ARG, TO_S_WB1_T, update_wqe_ptr, 1, c2)
+
+non_first_or_recirc_pkt:
+
+    // if remaining payload bytes are not zero, recirc
+    // to process more sges
+    bcf         [!c5],  recirc
+    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG) // BD Slot
+    IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
 
     .csbegin
     cswitch     [c1]
@@ -180,77 +202,22 @@ exit:
 
     .cscase 0
 
-    // if (RESP_RX_FLAGS_IS_SET(first)) {
-    //      assert(rqcb_to_wqe_info_p->in_progress == FALSE);
-    //      rqcb1_write_back_info_p->update_num_sges = 1;
-    //      rqcb1_write_back_info_p->num_sges =
-    //                                      num_valid_sges;
-    //                              //coming from wqe_p
-    //  } else {
-    //      assert(rqcb_to_wqe_info_p->in_progress == TRUE);
-    //      rqcb1_write_back_info_p->update_num_sges = 0;
-    //  }
-
-
-    IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_FIRST)
-    CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, update_num_sges, 1, c2)
-    CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, num_sges, NUM_VALID_SGES, c2)
-    CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, update_num_sges, 0, !c2)
-
-    // middle/first
-    //  rqcb_write_back_info_p->in_progress = TRUE;
-    //  rqcb_write_back_info_p->incr_nxt_to_go_token_id = 1;
-    //  rqcb_write_back_info_p->incr_c_index = 0;
-    //  rqcb_write_back_info_p->cache = rqcb_to_wqe_info_p->cache;
-    //  rqcb_write_back_info_p->tbl_id = index;
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, in_progress, 1)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, 1)
-    //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, incr_c_index, 0)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, cache, k.args.cache)
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, tbl_id, TABLE_2)
 
-    //  rqcb1_write_back_info_p->current_sge_id = current_sge_id;
-    //  rqcb1_write_back_info_p->current_sge_offset = current_sge_offset;
-    //  rqcb1_write_back_info_p->curr_wqe_ptr = rqcb_to_wqe_info_p->curr_wqe_ptr;
-    srl         r4, r1, SGE_OFFSET_SHIFT
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, current_sge_id, r4)
+    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, current_sge_id, r1[63:32])
     CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, current_sge_offset, CURR_SGE_OFFSET)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, update_wqe_ptr, 1)
-    // TODO: migrate to below register and decommision curr_wqe_ptr from s2s args
-    //mfspr r3, spr_tbladdr	
 
     b       cb0_cb1_wb_exit
     nop
 
     .cscase 1
     
-    //IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_ONLY)
-    //  rqcb_write_back_info_p->in_progress = FALSE;
-    //  rqcb_write_back_info_p->incr_nxt_to_go_token_id = 1;
-    //  rqcb_write_back_info_p->incr_c_index = 1;
-    //  rqcb_write_back_info_p->cache = rqcb_to_wqe_info_p->cache;
-    //  rqcb_write_back_info_p->tbl_id = index;
-
-    // set incr_nxt_to_go_token_id, incr_c_index and tbl_id using
-    // single instruction, in_progress is set to default
+    // incr_nxt_to_go_token_id, incr_c_index, tbl_id
     CAPRI_SET_FIELD_RANGE(T2_ARG, INFO_WBCB0_T, incr_nxt_to_go_token_id, tbl_id, (1<<4 | 1<<3 | TABLE_2)) 
 
-    // ignore cache for now
-    //CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, cache, k.args.cache)
-
-    //  rqcb1_write_back_info_p->current_sge_id = 0;
-    //  rqcb1_write_back_info_p->current_sge_offset = 0;
-    //  rqcb1_write_back_info_p->curr_wqe_ptr = rqcb_to_wqe_info_p->curr_wqe_ptr;
-    //  rqcb1_write_back_info_p->num_sges = 0;
-    //  rqcb1_write_back_info_p->update_num_sges = 1;
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
-    CAPRI_SET_FIELD(T2_ARG, INFO_WBCB0_T, update_wqe_ptr, 1)
-    // do we need to even set the curr_wqe_ptr for this case ?
-    // TODO: cross check with C code and think recirc path etc.
-    // TODO: migrate to below register and decommision curr_wqe_ptr from s2s args
-    //mfspr r3, spr_tbladdr	
-    //CAPRI_SET_FIELD_C(T2_ARG, INFO_WBCB0_T, curr_wqe_ptr, r3, c2)
 
     b       cb0_cb1_wb_exit
     nop
@@ -276,5 +243,42 @@ cb0_cb1_wb_exit:
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC2, resp_rx_rqcb0_write_back_process)
     CAPRI_NEXT_TABLE_I_READ(T2_K, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC2, r2)
 
+    nop.e
+    nop
+
+
+recirc:
+    //TODO: check if there are anymore sges left.
+    //      if not, generate NAK
+
+    // we are recircing means, we would have consumed 2 lkey's worth of DMA commands
+    add     r2, k.args.dma_cmd_index, (MAX_PYLD_DMA_CMDS_PER_SGE * 2)
+
+    // if we reached to the max number of pyld DMA commands and still
+    // pkt transfer is not complete, generate NAK 
+    seq     c1, r2, RESP_RX_DMA_CMD_PYLD_BASE_END
+    bcf     [c1], nak
+    CAPRI_GET_STAGE_1_ARG(resp_rx_phv_t, RECIRC_ARG) //BD Slot
+
+    // store recirc info so that stage 1 program upon recirculation
+    // can access this info
+    
+    CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, dma_cmd_index, r2)
+    CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, curr_wqe_ptr, k.args.curr_wqe_ptr)
+    CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, current_sge_id, r1[63:32])
+    CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, current_sge_offset, CURR_SGE_OFFSET)
+    CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, num_sges, NUM_VALID_SGES)
+    CAPRI_SET_FIELD(RECIRC_ARG, TO_S_RECIRC_T, remaining_payload_bytes, REM_PYLD_BYTES)
+    
+    // set recirc
+    phvwr   p.common.p4_intr_recirc, 1
+    phvwr   p.common.rdma_recirc_recirc_reason, CAPRI_RECIRC_REASON_SGE_WORK_PENDING
+    nop.e
+    nop
+
+nak:
+    //TODO: generate nak. for now, drop
+    phvwr   p.common.p4_intr_global_drop, 1
+    CAPRI_SET_ALL_TABLES_VALID(0) 
     nop.e
     nop
