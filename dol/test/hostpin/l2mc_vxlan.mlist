@@ -1,7 +1,7 @@
 # Feature Test Modules List
 feature:
     id          : pinl2mc
-    sub         : native
+    sub         : vxlan
     package     : test.hostpin
     module      : hostpin
     enable      : True
@@ -10,15 +10,15 @@ feature:
 modules:
     - module:
         name    : ENIC
-        spec    : l2mc_enic.testspec
+        spec    : l2mc_enic_vxlan.testspec
         ignore  : True
         iterate :
-            - id  : L2MC-ENIC
+            - id  : L2MC-UPLINK
               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
 
     - module:
         name    : UPLINK
-        spec    : l2mc_uplink.testspec
+        spec    : l2mc_uplink_vxlan.testspec
         ignore  : True
         iterate :
             - id  : L2MC-UPLINK
@@ -26,7 +26,7 @@ modules:
 
     - module:
         name    : UPLINK_RPF_FAIL
-        spec    : l2mc_uplink.testspec
+        spec    : l2mc_uplink_vxlan.testspec
         ignore  : True
         iterate :
             - id        : L2MC-UPLINK

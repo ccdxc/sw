@@ -61,9 +61,8 @@ def TestCaseSetup(tc):
     iterelem = tc.module.iterator.Get()
     if iterelem is None:
         return
-    tc.pvtdata.priotag = False
-    if 'priotag' in iterelem.__dict__:
-        tc.pvtdata.priotag = iterelem.priotag
+    tc.pvtdata.priotag = getattr(iterelem, 'priotag', False)
+    tc.pvtdata.scenario = getattr(iterelem, 'scenario', None)
     return
 
 def TestCaseVerify(tc):

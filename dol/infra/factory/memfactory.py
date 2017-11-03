@@ -25,6 +25,8 @@ def __resolve_refs_list(v, tc):
     return
 
 def __resolve_refs_obj(obj, tc):
+    if obj is None:
+        return
     for a, v in obj.__dict__.items():
         if objects.IsReference(v):
             val = v.Get(tc)

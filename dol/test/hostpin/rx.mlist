@@ -11,6 +11,17 @@ modules:
     - module:
         name    : UNK_UC
         spec    : rx.testspec
+        ignore  : True
         iterate:
-            - flow      : filter://type=IPV4,proto=UDP
+            - scenario  : UNKNOWN_DEST_EP
+              flow      : filter://type=IPV4,proto=UDP
+              segment   : filter://native=False
+
+    - module:
+        name    : RPF_FAILURE
+        spec    : rx.testspec
+        ignore  : True
+        iterate:
+            - scenario  : RPF_FAILURE
+              flow      : filter://type=IPV4,proto=UDP
               segment   : filter://native=False

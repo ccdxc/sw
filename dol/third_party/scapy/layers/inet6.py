@@ -1273,7 +1273,7 @@ class ICMPv6EchoRequest(_ICMPv6):
                     XShortField("cksum", None),
                     XShortField("id",0),
                     XShortField("seq",0),
-                    IntField("data", "")]
+                    IntField("data", 0)]
     def mysummary(self):
         return self.sprintf("%name% (id: %id% seq: %seq%)")
     def hashret(self):

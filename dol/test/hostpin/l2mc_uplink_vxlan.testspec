@@ -1,8 +1,8 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://broadcast_policy=2,fabencap=VLAN
+        tenant      : filter://type=TENANT
+        segment     : filter://broadcast_policy=2,fabencap=VXLAN
         endpoint    : filter://remote=True
         interface   : filter://any
     flow        : filter://fwtype=L2
@@ -13,7 +13,6 @@ packets:
         id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -48,13 +47,32 @@ packets:
     - packet:
         id          : TX_PKT     # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
-            qtag    :
-                vlan: ref://testcase/config/src/segment/vlan_id
+            outereth    :
+                src     : callback://networking/packets/GetInfraRtrMac
+                dst     : callback://networking/packets/GetGIPoMac
+            outeripv4   :
+                src     : callback://networking/packets/GetMyTep
+                dst     : ref://testcase/config/src/segment/gipo
+                tos     : 0
+                id      : 0
+            qtag:
+                vlan    : callback://networking/packets/GetInfraVlanId
+                prio    : ref://testcase/config/flow/txqos/cos
+            outerudp:
+                chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/src/segment/vxlan_id
+            ipv4:
+                tos     : ref://testcase/config/flow/txqos/dscp
+            ipv6:
+                tc      : ref://testcase/config/flow/txqos/dscp
 
     - packet:
         id          : EXP_PKT_COPY0     # Expected packet on Enics
         clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             qtag:
                 vlan: callback://classic/callbacks/GetEncapVlanIdForMulticastCopy/idx=0
@@ -62,6 +80,7 @@ packets:
     - packet:
         id          : EXP_PKT_COPY1     # Expected packet on Enics
         clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             qtag:
                 vlan: callback://classic/callbacks/GetEncapVlanIdForMulticastCopy/idx=1

@@ -11,7 +11,7 @@ selectors:
         endpoint    : filter://remote=False
         interface   : filter://any
     flow            : filter://fwtype=L2
-    maxflows        : 4
+    maxflows        : 1
 
 packets:
     - packet:
@@ -24,11 +24,11 @@ packets:
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             ipv4:
                 src     : ref://testcase/config/flow/sip
-                dst     : 4.3.2.1 #ref://testcase/config/flow/dip
+                dst     : callback://networking/fwmode/GetRxDstIpAddress
                 ttl     : 64
             ipv6:
                 src     : ref://testcase/config/flow/sip
-                dst     : 4000::1 #ref://testcase/config/flow/dip
+                dst     : callback://networking/fwmode/GetRxDstIpAddress
                 hlim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport
@@ -87,8 +87,8 @@ buffers:
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind  : False
-            size  : ref://testcase/packets/id=PKT2/size
-            data  : ref://testcase/packets/id=PKT2/rawbytes
+            size  : 1518 #ref://testcase/packets/id=PKT2/size
+            data  : None #ref://testcase/packets/id=PKT2/rawbytes
 
 descriptors:
     - descriptor:
@@ -104,7 +104,7 @@ descriptors:
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
             _buf          : ref://testcase/buffers/id=BUF2
-            bytes_written : ref://testcase/buffers/id=BUF2/size
+            bytes_written : 0
 
 trigger:
     descriptors:
@@ -125,7 +125,7 @@ expect:
             object  : callback://networking/packets/GetCpuPacket/expktid=PKT1
             port    : 128
 
-#    descriptors:
-#        - descriptor:
-#            object  : ref://testcase/descriptors/id=DESC2
-#            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC2
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1

@@ -65,3 +65,14 @@ def GetPortsForMulticastCopy(tc, args = None):
     upintf = oiflist[args.idx]
     tc.info("MulticastCopy: Returning Ports for %s" % upintf.GID())
     return oiflist[args.idx].ports
+
+def GetRxUplinkPorts(tc, args = None):
+    assert(tc.config.src.endpoint.remote is True)
+    if tc.pvtdata.scenario != 'RPF_FAILURE':
+        return tc.config.src.segment.pinnedif.ports
+    
+    # RPF Failure testcase.
+    pin_ports = tc.config.src.segment.pinnedif.ports
+    rpf_fail_ports = set([1, 2, 3, 4]) - set(pin_ports)
+    return list(rpf_fail_ports)[:1]
+

@@ -57,6 +57,9 @@ class OifListObjectHelper:
                    segment.pinnedif != endpoint.GetInterface():
                     continue
             oiflist.addOif(endpoint.GetInterface(), endpoint.remote)
+
+            if segment.pinnedif is not None and segment.IsFabEncapVxlan():
+                oiflist.addOif(segment.pinnedif, True)
         self.oiflist = oiflist
         return
 
