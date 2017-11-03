@@ -391,7 +391,6 @@ def main():
           status = run_storage_dol(port)
           if status != 0:
             print "- Storage dol failed, status=", status
-          sys.exit(status)
         elif args.configtest:
             status = run_config_validation(args)
             if status != 0:
