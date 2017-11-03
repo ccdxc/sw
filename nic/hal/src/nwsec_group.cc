@@ -638,7 +638,42 @@ add_nw_to_security_group(uint32_t sg_id, hal_handle_t nw_handle_id)
     dllist_add(&nwsec_grp->nw_list_head, &nwsec_policy_nw_info->dllist_ctxt);
     HAL_SPINLOCK_UNLOCK(&nwsec_grp->slock);
 
+    HAL_TRACE_DEBUG("{}: add sg => nw, handles:{} => {}",
+                    __FUNCTION__, nwsec_grp->hal_handle, nw_handle_id);
     return HAL_RET_OK;
+}
+
+// Security Policy nw_handle del
+hal_ret_t
+del_nw_to_security_group(uint32_t sg_id, hal_handle_t nw_handle_id)
+{
+    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
+    nwsec_group_t               *nwsec_grp = NULL;
+    hal_handle_id_list_entry_t  *nwsec_policy_nw_info = NULL;
+    dllist_ctxt_t               *curr = NULL, *next = NULL;
+
+    nwsec_grp = nwsec_group_lookup_by_key(sg_id);
+    if (nwsec_grp == NULL) {
+        HAL_TRACE_DEBUG("segment id {} not found");
+        return HAL_RET_SG_NOT_FOUND;
+    }
+    HAL_SPINLOCK_LOCK(&nwsec_grp->slock);
+    dllist_for_each_safe(curr, next, &nwsec_grp->nw_list_head) {
+        nwsec_policy_nw_info = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        if (nwsec_policy_nw_info->handle_id == nw_handle_id) {
+            // Remove from list
+            utils::dllist_del(&nwsec_policy_nw_info->dllist_ctxt);
+            // Free the entry
+            g_hal_state->hal_handle_id_list_entry_slab()->free(nwsec_policy_nw_info);
+
+            ret = HAL_RET_OK;
+        }
+    }
+    HAL_SPINLOCK_UNLOCK(&nwsec_grp->slock);
+
+    HAL_TRACE_DEBUG("{}: del sg =/=> nw, handles:{} =/=> {}",
+                    __FUNCTION__, nwsec_grp->hal_handle, nw_handle_id);
+    return ret;
 }
 
 // Security Policy ep_info get

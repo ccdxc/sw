@@ -202,6 +202,9 @@ extern void *network_get_key_func(void *entry);
 extern uint32_t network_compute_hash_func(void *key, uint32_t ht_size);
 extern bool network_compare_key_func(void *key1, void *key2);
 
+hal_ret_t network_update_sg_relation (dllist_ctxt_t *sg_list, 
+                                      network_t *nw, bool add);
+
 hal_ret_t network_create(nw::NetworkSpec& spec,
                          nw::NetworkResponse *rsp);
 hal_ret_t network_update(nw::NetworkSpec& spec,

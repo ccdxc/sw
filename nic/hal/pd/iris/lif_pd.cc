@@ -105,12 +105,22 @@ pd_lif_delete (pd_lif_args_t *args)
                     __FUNCTION__, args->lif->lif_id);
     lif_pd = (pd_lif_t *)args->lif->pd_lif;
 
+    // Deprogram
+    ret = lif_pd_deprogram_hw(lif_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},failed to deprogram hw tables. ret:{}",
+                      __FUNCTION__, args->lif->lif_id, ret);
+        goto end;
+    }
+
+    // Cleanup
     ret = lif_pd_cleanup(lif_pd);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-lif:{}:lif_id:{},failed pd lif delete",
                       __FUNCTION__, args->lif->lif_id);
     }
 
+end:
     return ret;
 }
 
@@ -323,11 +333,11 @@ end:
 // DeProgram HW
 // ----------------------------------------------------------------------------
 hal_ret_t
-l2seg_pd_deprogram_hw (pd_lif_t *pd_lif)
+lif_pd_deprogram_hw (pd_lif_t *pd_lif)
 {
     hal_ret_t            ret = HAL_RET_OK;
 
-    // Program Input properties Table
+    // Deprogram output mapping table
     ret = lif_pd_depgm_output_mapping_tbl(pd_lif);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-lif:{}:unable to deprogram hw", __FUNCTION__);

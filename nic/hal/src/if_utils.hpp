@@ -60,8 +60,7 @@ hal_ret_t uplink_del_enicif (if_t *uplink, if_t *enic_if);
 hal_ret_t if_handle_lif_update (pd::pd_if_lif_upd_args_t *args);
 
 hal_ret_t add_nw_to_security_group(uint32_t sg_id, hal_handle_t nw_handle_id);
-// TODO: Uncomment once security group code is ready
-// hal_ret_t del_nw_from_security_group(uint32_t sg_id, hal_handle_t nw_handle_id);
+hal_ret_t del_nw_from_security_group(uint32_t sg_id, hal_handle_t nw_handle_id);
 
 
 }    // namespace hal

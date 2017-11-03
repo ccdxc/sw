@@ -189,6 +189,14 @@ network_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
+    // Setup backward refs
+    ret = network_update_sg_relation(&nw->sg_list_head, nw, true);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-network:{}:failed to add sg -> network"
+                      " relation ret:{}", __FUNCTION__, ret);
+        goto end;
+    }
+
     HAL_TRACE_ERR("pi-network:{}:added network to DB", 
                   __FUNCTION__);
 end:
@@ -286,8 +294,8 @@ network_read_security_groups (network_t *nw, NetworkSpec& spec)
         // Add to aggregated list
         sg_handle = sg->hal_handle;
         hal_add_to_handle_list(&nw->sg_list_head, sg_handle);
-        ret = add_nw_to_security_group(sg->sg_id, nw->hal_handle);
-        HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+        // ret = add_nw_to_security_group(sg->sg_id, nw->hal_handle);
+        // HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
     }
 
     return ret;
