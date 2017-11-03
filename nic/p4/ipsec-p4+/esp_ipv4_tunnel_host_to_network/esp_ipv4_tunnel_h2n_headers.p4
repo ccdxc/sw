@@ -21,7 +21,8 @@ header_type ipsec_int_header_t {
 
 header_type ipsec_int_pad_t {
     fields {
-        ipsec_int_pad : 128;
+        ipsec_int_pad : 64;
+        status : 64;
     }
 }
 

@@ -76,7 +76,8 @@ header_type ipsec_to_stage3_t {
     fields {
         ipsec_cb_addr : ADDRESS_WIDTH;
         is_v6         : 8;
-        stage3_pad1     : 56;
+        barco_error   : 8;
+        stage3_pad1     : 48;
     }
 }
 
@@ -197,6 +198,7 @@ action ipsec_build_encap_packet()
 
     modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr);
     modify_field(ipsec_to_stage3_scratch.is_v6, ipsec_to_stage3.is_v6);
+    modify_field(ipsec_to_stage3_scratch.barco_error, ipsec_to_stage3.barco_error);
     // Add intrinsic and app header
     DMA_COMMAND_PHV2PKT_FILL(intrinsic_app_hdr, 0, 32, 0)
 
@@ -222,17 +224,19 @@ action ipsec_encap_txdma2_load_ipsec_int(in_desc, out_desc, in_page, out_page,
                                          ipsec_cb_index, headroom, tailroom, 
                                          headroom_offset, tailroom_offset,
                                          payload_start, buf_size,
-                                         payload_size, pad_size, l4_protocol, pad)
+                                         payload_size, pad_size, l4_protocol, pad, status)
 {
     IPSEC_INT_HDR_SCRATCH
     modify_field(ipsec_int_pad_scratch.ipsec_int_pad, pad);
+    modify_field(ipsec_int_pad_scratch.status, status);
 
     modify_field(txdma2_global.pad_size, pad_size);
     modify_field(txdma2_global.l4_protocol, l4_protocol);
     modify_field(txdma2_global.payload_size, payload_size);
     modify_field(t0_s2s.tailroom_offset, tailroom_offset); 
     modify_field(t0_s2s.headroom_offset, headroom_offset);
-
+  
+ 
     modify_field(p4plus2p4_hdr.table2_valid, 0);
 }
 
