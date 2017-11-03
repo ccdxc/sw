@@ -1426,9 +1426,38 @@ int test_run_seq_e2e4() {
                           2, 0);   // ssd_handle, io_priority
 }
 
-int verify_prot_info(char *buf, uint32_t buf_size, uint32_t sector_size, uint32_t sec_num_start, uint16_t app_tag) {
-  assert(buf_size >= sector_size);
-  uint32_t num_sectors = buf_size / sector_size;
+int verify_prot_info(char *out_buf, uint32_t num_aols, xts::xts_aol_t **out_aol,
+  uint32_t sector_size, uint32_t sec_num_start, uint16_t app_tag) {
+  uint32_t data_size = 0;
+  for(uint32_t i = 0; i < num_aols; i++) {
+    data_size += out_aol[i]->l0;
+    assert((uint64_t)out_buf == (uint64_t)host_mem_p2v(out_aol[i]->a0));
+    if(out_aol[i]->a1) {
+      assert((uint64_t)out_buf == (uint64_t)host_mem_p2v(out_aol[i]->a1));
+      data_size += out_aol[i]->l1;
+    }
+    if(out_aol[i]->a2) {
+      assert((uint64_t)out_buf == (uint64_t)host_mem_p2v(out_aol[i]->a2));
+      data_size += out_aol[i]->l2;
+    }
+  }
+  assert(data_size >= sector_size);
+  char* buf = (char *)malloc(data_size);
+  uint32_t offset = 0;
+  //Copy data to be a contiguous block
+  for(uint32_t i = 0; i < num_aols; i++) {
+    memcpy(buf+offset, out_buf + out_aol[i]->o0, out_aol[i]->l0);
+    offset += out_aol[i]->l0;
+    if(out_aol[i]->a1) {
+      memcpy(buf+offset, out_buf + out_aol[i]->o1, out_aol[i]->l1);
+      offset += out_aol[i]->l1;
+    }
+    if(out_aol[i]->a2) {
+      memcpy(buf+offset, out_buf + out_aol[i]->o2, out_aol[i]->l2);
+      offset += out_aol[i]->l2;
+    }
+  }
+  uint32_t num_sectors = data_size / sector_size; // Works roughly as output data_size is more than just data (contains prot_info for all sectors)
   for(uint32_t i = 0; i < num_sectors; i++) {
     xts::xts_prot_info_t* prot_info = (xts::xts_prot_info_t*) &buf[(i+1)*sector_size + i*PROT_INFO_SIZE];
     /*printf(" Sector %u \n", i+1);
@@ -1449,11 +1478,27 @@ int verify_prot_info(char *buf, uint32_t buf_size, uint32_t sector_size, uint32_
   return 0;
 }
 
+bool fill_aol(void* buf, uint64_t& a, uint32_t& o, uint32_t& l, uint32_t& offset,
+    uint32_t& pending_size, uint32_t len)
+{
+  a = (uint64_t) host_mem_v2p(buf);
+  o = offset;
+  l = len;
+  offset += (len + INTER_SUB_AOL_GAP); //Update offset to next data position
+  assert(((int)pending_size - (int)len) >= 0);
+  pending_size -= len;
+  if(pending_size > 0)
+    return true;
+  else
+    return false;
+}
+
 //TODO: Using different keys causes some corruption - so making key initialization global for now
 uint32_t key_desc_idx = 0;
 bool key_desc_inited = false;
 
-int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t key_size) {
+int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t key_size,
+      uint32_t sector_size = SECTOR_SIZE, uint32_t num_aols = 1, uint32_t num_sub_aols = 1) {
   uint16_t seq_xts_index;
   uint8_t *seq_xts_desc;
   uint16_t pvm_status_q = 2;
@@ -1519,27 +1564,64 @@ int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t
   break;
   }
 
+  assert(num_aols <= MAX_AOLS); // Currently we only support upto 2 - min required to validate aol chaining
+  assert(num_sub_aols <= MAX_SUB_AOLS); // Currently we only support upto 4 - min required to validate aol chaining
   assert(sizeof(xts::xts_desc_t) == kXtsDescSize);
   xts::xts_desc_t* xts_desc_addr = (xts::xts_desc_t*)alloc_host_mem(sizeof(xts::xts_desc_t));
 
   assert(sizeof(xts::xts_aol_t) == kAolSize);
-  xts::xts_aol_t* in_aol =  (xts::xts_aol_t*)alloc_host_mem(sizeof(xts::xts_aol_t));
-  memset(in_aol, 0x0, sizeof(*in_aol));
-  xts::xts_aol_t* out_aol = (xts::xts_aol_t*)alloc_host_mem(sizeof(xts::xts_aol_t));
-  memset(out_aol, 0, sizeof(*out_aol));
-
-  uint32_t sector_size = 512;
+  xts::xts_aol_t* in_aol[MAX_AOLS];
+  memset(in_aol, 0x0, sizeof(in_aol));
+  xts::xts_aol_t* out_aol[MAX_AOLS];
+  memset(out_aol, 0x0, sizeof(out_aol));
+  for(uint32_t i = 0; i < num_aols; i++) {
+  // AOLs need to be aligned at 512-bit boundary. For now page aligning them
+    in_aol[i] = (xts::xts_aol_t*)alloc_page_aligned_host_mem(sizeof(xts::xts_aol_t));
+    memset(in_aol[i], 0x0, sizeof(xts::xts_aol_t));
+    out_aol[i] = (xts::xts_aol_t*)alloc_page_aligned_host_mem(sizeof(xts::xts_aol_t));
+    memset(out_aol[i], 0x0, sizeof(xts::xts_aol_t));
+  }
   uint32_t data_size = num_sectors * sector_size;
-  // Fill the XTS Msg descriptor
-  in_aol->a0 = (uint64_t) host_mem_v2p(write_buf);
-  in_aol->l0 = data_size;
-  out_aol->a0 = (uint64_t) host_mem_v2p(read_buf);
-  out_aol->l0 = t10_en ? xts::get_output_size(data_size, sector_size) : data_size;
-  printf("Input size %u Output size %u \n", in_aol->l0, out_aol->l0);
+  assert(data_size % num_sub_aols == 0); // For simplicity
+  uint32_t sub_aol_data_size = data_size / num_sub_aols;
+  uint32_t sub_aol_data_offset = 0;
+  uint32_t out_sub_aol_data_size =
+    t10_en ? (xts::get_output_size(data_size, sector_size) + num_sub_aols - 1) / num_sub_aols : sub_aol_data_size;
+  uint32_t out_sub_aol_data_offset = 0;
+  uint32_t in_pending_size = data_size;
+  uint32_t out_pending_size = t10_en ? xts::get_output_size(data_size, sector_size) : data_size;
+  bool in_cont = true, out_cont = true;
+
+  for(uint32_t i = 0; i < num_aols; i++) {
+    // Fill the XTS Msg descriptor
+    if(in_cont)
+      in_cont = fill_aol(write_buf, in_aol[i]->a0, in_aol[i]->o0, in_aol[i]->l0, sub_aol_data_offset,
+        in_pending_size, sub_aol_data_size);
+    if(in_cont)
+      in_cont = fill_aol(write_buf, in_aol[i]->a1, in_aol[i]->o1, in_aol[i]->l1, sub_aol_data_offset,
+        in_pending_size, sub_aol_data_size);
+    if(in_cont)
+      in_cont = fill_aol(write_buf, in_aol[i]->a2, in_aol[i]->o2, in_aol[i]->l2, sub_aol_data_offset,
+        in_pending_size, sub_aol_data_size);
+    if(out_cont)
+      out_cont = fill_aol(read_buf, out_aol[i]->a0, out_aol[i]->o0, out_aol[i]->l0, out_sub_aol_data_offset,
+        out_pending_size, out_sub_aol_data_size);
+    if(out_cont)
+      out_cont = fill_aol(read_buf, out_aol[i]->a1, out_aol[i]->o1, out_aol[i]->l1, out_sub_aol_data_offset,
+        out_pending_size, out_sub_aol_data_size);
+    if(out_cont)
+      out_cont = fill_aol(read_buf, out_aol[i]->a2, out_aol[i]->o2, out_aol[i]->l2, out_sub_aol_data_offset,
+        out_pending_size, out_sub_aol_data_size);
+
+    if(i + 1 < num_aols) {
+      in_aol[i]->next = (uint64_t) host_mem_v2p(in_aol[i+1]);
+       out_aol[i]->next = (uint64_t) host_mem_v2p(out_aol[i+1]);
+    }
+  }
 
   // Fill the XTS ring descriptor
-  xts_desc_addr->in_aol = host_mem_v2p(in_aol);
-  xts_desc_addr->out_aol = host_mem_v2p(out_aol);
+  xts_desc_addr->in_aol = host_mem_v2p(in_aol[0]);
+  xts_desc_addr->out_aol = host_mem_v2p(out_aol[0]);
   xts_desc_addr->iv_addr = host_mem_v2p(iv);
   xts_desc_addr->db_addr = host_mem_v2p(xts_db);
   xts_desc_addr->db_data = exp_db_data;
@@ -1606,31 +1688,76 @@ int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t
   Poller poll;
   int rv = poll(func);
 
+  if(0 == rv && t10_en)
+    rv = verify_prot_info((char *)read_buf, num_aols, out_aol, sector_size, start_sec_num, app_tag);
+
   free_host_mem(xts_desc_addr);
-  free_host_mem(in_aol);
-  free_host_mem(out_aol);
+  for(uint32_t i = 0; i < num_aols; i++) {
+    free_host_mem(in_aol[i]);
+    free_host_mem(out_aol[i]);
+  }
   free_host_mem(status);
   free_host_mem(xts_db);
   free_host_mem(iv);
 
-  if(0 == rv && t10_en)
-    return verify_prot_info((char *)read_buf, out_aol->l0, sector_size, start_sec_num, app_tag);
-  else
-    return rv;
+  return rv;
 }
 
-int test_run_seq_encr() {
-  // TODO: Currently does not work for larger size like 4K (4 sectors). Can bump it up once model issue is fixed
+int test_run_seq_aes128() {
   return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_ONLY, AES128_KEY_SIZE);
 }
 
+int test_run_seq_aes128_mult_aols() {
+  return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_ONLY, AES128_KEY_SIZE, SECTOR_SIZE, 1, 2);
+}
+
+// TODO: Currently does not work for larger size like 4K (4 sectors). Can bump it up once model issue is fixed
+int test_run_seq_aes128_full_page() {
+  return test_seq_xts(XTS_SEQ_Q, kDefaultBufSize/SECTOR_SIZE, xts::AES_ENCR_ONLY, AES128_KEY_SIZE);
+}
+
 int test_run_seq_prot_info() {
-  // TODO: Currently only works for 1 sector. Can bump it up once model issue is fixed
   return test_seq_xts(XTS_SEQ_Q, 1, xts::T10_ONLY, AES128_KEY_SIZE);
 }
 
-int test_run_seq_encr_n_prot_info() {
+int test_run_seq_prot_info_mult_aols() {
+  return test_seq_xts(XTS_SEQ_Q, 1, xts::T10_ONLY, AES128_KEY_SIZE, SECTOR_SIZE, 1, 2);
+}
+
+// TODO: Currently only works for 1 sector. Can bump it up once model issue is fixed
+int test_run_seq_prot_info_mult_sectors() {
+  return test_seq_xts(XTS_SEQ_Q, 4, xts::T10_ONLY, AES128_KEY_SIZE);
+}
+
+int test_run_seq_aes128_n_prot_info() {
   return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_N_T10, AES128_KEY_SIZE);
+}
+
+// TODO: Currently only works for 1 sector. Can bump it up once model issue is fixed
+int test_run_seq_aes128_n_prot_info_mult_sectors() {
+  return test_seq_xts(XTS_SEQ_Q, 4, xts::AES_ENCR_N_T10, AES128_KEY_SIZE);
+}
+
+int test_run_seq_aes256() {
+  return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_ONLY, AES256_KEY_SIZE);
+}
+
+int test_run_seq_aes256_mult_aols() {
+  return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_ONLY, AES256_KEY_SIZE, SECTOR_SIZE, 1, 2);
+}
+
+// TODO: Currently does not work for larger size like 4K (4 sectors). Can bump it up once model issue is fixed
+int test_run_seq_aes256_full_page() {
+  return test_seq_xts(XTS_SEQ_Q, kDefaultBufSize/SECTOR_SIZE, xts::AES_ENCR_ONLY, AES256_KEY_SIZE);
+}
+
+int test_run_seq_aes256_n_prot_info() {
+  return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_N_T10, AES256_KEY_SIZE);
+}
+
+// TODO: Currently only works for 1 sector. Can bump it up once model issue is fixed
+int test_run_seq_aes256_n_prot_info_mult_sectors() {
+  return test_seq_xts(XTS_SEQ_Q, 4, xts::AES_ENCR_N_T10, AES256_KEY_SIZE);
 }
 
 int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, 
