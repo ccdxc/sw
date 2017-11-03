@@ -34,10 +34,16 @@ def TestCaseVerify(tc):
 
     if tc.module.args.api == "CRYPTO_API_ASYM_ECC_POINT_MUL_P256":
         return crypto_asym_apis.ecc_point_mul_p256_test()
-    if tc.module.args.api == "CRYPTO_API_ASYM_ECDSA_P256_SIG_GEN":
+    elif tc.module.args.api == "CRYPTO_API_ASYM_ECDSA_P256_SIG_GEN":
         return crypto_asym_apis.ecdsa_p256_sig_gen_test()
-    if tc.module.args.api == "CRYPTO_API_ASYM_ECDSA_P256_SIG_VERIFY":
+    elif tc.module.args.api == "CRYPTO_API_ASYM_ECDSA_P256_SIG_VERIFY":
         return crypto_asym_apis.ecdsa_p256_sig_verify_test()
+    elif tc.module.args.api == "CRYPTO_API_ASYM_RSA2K_ENCRYPT":
+        return crypto_asym_apis.rsa2k_encrypt_test()
+    elif tc.module.args.api == "CRYPTO_API_ASYM_RSA2K_DECRYPT":
+        return crypto_asym_apis.rsa2k_decrypt_test()
+    elif tc.module.args.api == "CRYPTO_API_ASYM_RSA2K_CRT_DECRYPT":
+        return crypto_asym_apis.rsa2k_crt_decrypt_test()
     else:
         print("Invalid API in module definition")
         return False

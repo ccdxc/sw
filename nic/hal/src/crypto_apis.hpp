@@ -15,7 +15,8 @@ using cryptoapis::CryptoApiResponseMsg;
 namespace hal {
 
 
-#define MAX_KEY_SIZE 32
+#define ECC_MAX_KEY_SIZE 32
+#define RSA_MAX_KEY_SIZE 256
 
 hal_ret_t crypto_api_invoke(cryptoapis::CryptoApiRequest &req, 
         cryptoapis::CryptoApiResponse *resp);

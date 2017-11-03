@@ -55,6 +55,15 @@ hal_ret_t capri_barco_asym_ecdsa_p256_sig_verify(uint8_t *p, uint8_t *n,
         uint8_t *xg, uint8_t *yg, uint8_t *a, uint8_t *b, uint8_t *xq,
         uint8_t *yq, uint8_t *r, uint8_t *s, uint8_t *h);
 
+hal_ret_t capri_barco_asym_rsa2k_encrypt(uint8_t *n, uint8_t *e,
+        uint8_t *m,  uint8_t *c);
+
+hal_ret_t capri_barco_asym_rsa2k_decrypt(uint8_t *n, uint8_t *d,
+        uint8_t *c,  uint8_t *m);
+
+hal_ret_t capri_barco_asym_rsa2k_crt_decrypt(uint8_t *p, uint8_t *q, uint8_t *dp,
+        uint8_t *dq, uint8_t *qinv, uint8_t *c, uint8_t *m);
+
 }    // namespace pd
 }    // namespace hal
 

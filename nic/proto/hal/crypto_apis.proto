@@ -17,6 +17,9 @@ enum CryptoApiType {
   ASYMAPI_ECC_POINT_MUL_FP              = 0;
   ASYMAPI_ECDSA_SIG_GEN_FP              = 1;
   ASYMAPI_ECDSA_SIG_VERIFY_FP           = 2;
+  ASYMAPI_RSA_ENCRYPT                   = 3;
+  ASYMAPI_RSA_DECRYPT                   = 4;
+  ASYMAPI_RSA_CRT_DECRYPT               = 5;
 }
 
 message ECCPoint {
@@ -67,6 +70,45 @@ message CryptoAsymApiReqECDSASignatureVerifyFp {
   bytes                             h                   = 5;
 }
 
+// RSA Encryption
+message CryptoAsymApiReqRSAEncrypt {
+  uint32                            KeySize             = 1;
+  bytes                             mod_n               = 2;
+  bytes                             e                   = 3;
+  bytes                             plain_text          = 4;
+}
+
+message CryptoAsymApiRespRSAEncrypt {
+  bytes                             cipher_text         = 1;
+}
+
+// RSA Decryption
+message CryptoAsymApiReqRSADecrypt {
+  uint32                            KeySize             = 1;
+  bytes                             mod_n               = 2;
+  bytes                             d                   = 3;
+  bytes                             cipher_text         = 4;
+}
+
+message CryptoAsymApiRespRSADecrypt {
+  bytes                             plain_text         = 1;
+}
+
+// RSA CRT Decryption
+message CryptoAsymApiReqRSACRTDecrypt {
+  uint32                            KeySize             = 1;
+  bytes                             p                   = 2;
+  bytes                             q                   = 3;
+  bytes                             dp                  = 4;
+  bytes                             dq                  = 5;
+  bytes                             qinv                = 6;
+  bytes                             cipher_text         = 7;
+}
+
+message CryptoAsymApiRespRSACRTDecrypt {
+  bytes                             plain_text         = 1;
+}
+
 
 // Top Level Request and Response message definition
 
@@ -76,6 +118,9 @@ message CryptoApiRequest {
     CryptoAsymApiReqECCPointMulFp   ecc_point_mul_fp    = 2;
     CryptoAsymApiReqECDSASignatureGenFp     ecdsa_sig_gen_fp        = 3;
     CryptoAsymApiReqECDSASignatureVerifyFp  ecdsa_sig_verify_fp     = 4;
+    CryptoAsymApiReqRSAEncrypt      rsa_encrypt         = 5;
+    CryptoAsymApiReqRSADecrypt      rsa_decrypt         = 6;
+    CryptoAsymApiReqRSACRTDecrypt   rsa_crt_decrypt     = 7;
   }
 }
 
@@ -84,6 +129,9 @@ message CryptoApiResponse {
   oneof CryptoApiResp {
     CryptoAsymApiRespECCPointMulFp  ecc_point_mul_fp    = 2;
     CryptoAsymApiRespECDSASignatureGenFp    ecdsa_sig_gen_fp        = 3;
+    CryptoAsymApiRespRSAEncrypt     rsa_encrypt         = 4;
+    CryptoAsymApiRespRSADecrypt     rsa_decrypt         = 5;
+    CryptoAsymApiRespRSACRTDecrypt  rsa_crt_decrypt     = 6;
   }
 }
 
