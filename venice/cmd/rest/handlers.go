@@ -13,6 +13,8 @@ import (
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/ops"
 	"github.com/pensando/sw/venice/globals"
+	// Import utils/debug pkg to publish runtime stats as part of its pkg init
+	_ "github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
