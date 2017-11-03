@@ -87,6 +87,7 @@ typedef struct pd_lif_upd_args_s {
 
     bool    vlan_strip_en_changed;
     bool    vlan_strip_en;
+    bool    qstate_map_init_set;
 } pd_lif_upd_args_t;
 
 typedef struct pd_port_args_s {
@@ -457,6 +458,7 @@ hal_ret_t pd_lif_update(pd_lif_upd_args_t *lif);
 hal_ret_t pd_lif_delete(pd_lif_args_t *lif);
 hal_ret_t pd_lif_mem_free(pd_lif_args_t *lif);
 hal_ret_t pd_lif_make_clone(lif_t *lif, lif_t *clone);
+uint32_t  pd_get_hw_lif_id(lif_t *lif);
 
 hal_ret_t pd_if_create(pd_if_args_t *hal_if);
 hal_ret_t pd_if_update(pd_if_args_t *hal_if);

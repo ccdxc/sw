@@ -117,9 +117,47 @@ TEST_F(scheduler_tx_test, test2)
 }
 
 // ----------------------------------------------------------------------------
-// Creating & deleting of a lif with cos values specified
+// Create a lif with no queue-map-info and update with multiple queues and cos values
+// and check programming goes through
 // ----------------------------------------------------------------------------
 TEST_F(scheduler_tx_test, test3)
+{
+    hal_ret_t            ret;
+    LifSpec lif_spec;
+    LifResponse lif_rsp;
+
+    // Create a lif with two queue types and 3 coses
+    lif_spec.mutable_key_or_handle()->set_lif_id(4);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    lif_spec.add_lif_qstate_map();
+    lif_spec.mutable_lif_qstate_map(0)->set_type_num(0);
+    lif_spec.mutable_lif_qstate_map(0)->set_size(1);
+    lif_spec.mutable_lif_qstate_map(0)->set_entries(5);
+    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_a()->set_cos(3);
+    lif_spec.mutable_lif_qstate_map(0)->mutable_cos_b()->set_cos(4);
+
+    lif_spec.add_lif_qstate_map();
+    lif_spec.mutable_lif_qstate_map(1)->set_type_num(1);
+    lif_spec.mutable_lif_qstate_map(1)->set_size(1);
+    lif_spec.mutable_lif_qstate_map(1)->set_entries(4);
+    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_a()->set_cos(1);
+    lif_spec.mutable_lif_qstate_map(1)->mutable_cos_b()->set_cos(2);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_update(lif_spec, &lif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+}
+
+// ----------------------------------------------------------------------------
+// Creating & deleting of a lif with cos values specified
+// ----------------------------------------------------------------------------
+TEST_F(scheduler_tx_test, test4)
 {
     hal_ret_t                       ret;
     LifSpec                         spec;
@@ -154,7 +192,6 @@ TEST_F(scheduler_tx_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     post = hal_test_utils_collect_slab_stats();
-
     hal_test_utils_check_slab_leak(pre, post, &is_leak);
     ASSERT_TRUE(is_leak == false);
 }

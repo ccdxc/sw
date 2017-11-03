@@ -42,6 +42,7 @@ typedef struct lif_s {
     uint32_t            rdma_max_pt_entries;
     uint8_t             qtypes[intf::LifQPurpose_MAX+1]; // purpose to qtype mapping
     uint16_t            cos_bmp;                     // bitmap of COS values supported by this LIF.
+    bool                qstate_init_done;          // qstate map init status.
 
     // operational state of interface
     hal_handle_t        hal_handle;                  // HAL allocated handle
@@ -69,6 +70,7 @@ typedef struct lif_update_app_ctxt_s {
     LifResponse         *rsp;
     bool                vlan_strip_en_changed;
     bool                vlan_strip_en;
+    bool                qstate_map_init_set;
 } __PACK__ lif_update_app_ctxt_t;
 
 #define HAL_MAX_LIFS                                 1024

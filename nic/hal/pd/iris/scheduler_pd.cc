@@ -29,6 +29,16 @@ hal_ret_t scheduler_tx_pd_alloc (pd_lif_t *lif_pd)
     lif_t         *pi_lif;
     uint32_t      alloc_offset = INVALID_INDEXER_INDEX;
     uint32_t      alloc_units = 0, total_qcount = 0;
+
+    if (lif_pd->tx_sched_table_offset != INVALID_INDEXER_INDEX) {
+        HAL_TRACE_DEBUG("pd-lif:{} Scheduler resource already allocated for"
+                        ":lif_id:{},at offset:{} and num-of-entries {}",
+                        __FUNCTION__,
+                        lif_get_lif_id((lif_t *)lif_pd->pi_lif),
+                        lif_pd->tx_sched_num_table_entries,
+                        lif_pd->tx_sched_table_offset);
+        goto end;
+    }
     
     pi_lif = (lif_t *)lif_pd->pi_lif;
 

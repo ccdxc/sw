@@ -71,7 +71,21 @@ pd_lif_update (pd_lif_upd_args_t *args)
         }
 
     }
-
+    if (args->qstate_map_init_set) {
+        HAL_TRACE_DEBUG("pd-lif:{}: qstate map init . ", __FUNCTION__);
+        ret = scheduler_tx_pd_alloc((pd_lif_t *)args->lif->pd_lif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-lif:{}:lif_id:{},failed to scheduler resource",
+                          __FUNCTION__, args->lif->lif_id);
+            goto end;
+        }
+        ret = scheduler_tx_pd_program_hw((pd_lif_t *)args->lif->pd_lif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-lif:{}:unable to program hw for tx scheduler", __FUNCTION__);
+            goto end;
+        }
+    }
+end:
     return ret;
 }
 
@@ -146,13 +160,15 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_args_t *args)
         goto end;
     }
 
-    //Allocate tx scheduler resource for this lif.
-    ret = scheduler_tx_pd_alloc(pd_lif);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},failed to scheduler resource",
-                      __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif),
-                      rs);
-        goto end;
+    //Allocate tx scheduler resource for this lif if qstate-map init is done.
+    if (args->lif->qstate_init_done) {
+        ret = scheduler_tx_pd_alloc(pd_lif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pd-lif:{}:lif_id:{},failed to scheduler resource",
+                          __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif),
+                          rs);
+            goto end;
+        }
     }
 
     HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{},allocated lport_id:{}", 
@@ -526,6 +542,15 @@ pd_lif_mem_free(pd_lif_args_t *args)
 }
 
 
+// ----------------------------------------------------------------------------
+// Get PD hw_lif_id from lif.
+// ------------------------------------------------------------------------
 
+uint32_t pd_get_hw_lif_id(lif_t *lif) {
+
+    pd_lif_t  *lif_pd = (pd_lif_t *)lif->pd_lif;
+
+    return lif_pd->hw_lif_id;
+}
 }    // namespace pd
 }    // namespace hal

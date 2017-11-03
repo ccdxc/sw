@@ -106,7 +106,7 @@ lif_del_from_db (lif_t *lif)
 // init lif specific queue state, if any
 //------------------------------------------------------------------------------
 hal_ret_t
-lif_qstate_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
+lif_qstate_map_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
 {
     LIFQStateParams    qs_params = { 0 };
     int32_t            ec = 0;
@@ -150,6 +150,47 @@ lif_qstate_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
     }
 
     return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// init lif specific queue state, if any
+//------------------------------------------------------------------------------
+hal_ret_t
+lif_qstate_init (LifSpec& spec, uint32_t hw_lif_id, lif_t *lif)
+{
+    std::unique_ptr<uint8_t[]> buf;
+    hal_ret_t ret = HAL_RET_OK;
+
+    for (int i = 0; i < spec.lif_qstate_size(); i++) {
+        const auto &req = spec.lif_qstate(i);
+
+        uint8_t *state = (uint8_t *)req.queue_state().c_str();
+        if (req.has_label()) {
+            uint8_t off;
+            int ret = g_lif_manager->GetPCOffset(req.label().handle().c_str(),
+                req.label().prog_name().c_str(),
+                req.label().label().c_str(), &off);
+            if (ret < 0) {
+                ret = HAL_RET_ERR;
+                goto end;
+            }
+            buf.reset(new uint8_t[req.queue_state().size()]);
+            bcopy(req.queue_state().c_str(), buf.get(), req.queue_state().size());
+            buf.get()[0] = off;
+            state = buf.get();
+        }
+
+        int ret = g_lif_manager->WriteQState(hw_lif_id, req.type_num(),
+                                             req.qid(), state,
+                                             req.queue_state().size());
+        if (ret < 0) {
+            HAL_TRACE_ERR("Failed to set LIFQState : {}", ret);
+            ret = HAL_RET_ERR;
+            goto end;
+        }
+    }
+end:
+    return ret;
 }
 
 static hal_ret_t
@@ -256,6 +297,12 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // allocate a hw lif id
     if (lif_hal_info && lif_hal_info->with_hw_lif_id) {
         hw_lif_id = lif_hal_info->hw_lif_id;
+        // make sure hw_lif_id is already allocated.
+        LIFQState *qstate = g_lif_manager->GetLIFQState(hw_lif_id);
+        if (qstate == nullptr) {
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
         memcpy(&lif_info, lif_hal_info, sizeof(lif_info));
     } else {
         hw_lif_id = g_lif_manager->LIFRangeAlloc(-1, 1);
@@ -269,10 +316,20 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
     app_ctxt->hw_lif_id = hw_lif_id;
 
-    // init queues
-    ret = lif_qstate_init(*spec, hw_lif_id, lif);
-    if (ret != HAL_RET_OK) {
-        goto end;
+    if (spec->lif_qstate_map_size()) {
+        // init queue state map
+        ret = lif_qstate_map_init(*spec, hw_lif_id, lif);
+        if (ret != HAL_RET_OK) {
+            goto end;
+        }
+        if (spec->lif_qstate_size()) {
+            // init queues
+            ret = lif_qstate_init(*spec, hw_lif_id, lif);
+            if (ret != HAL_RET_OK) {
+                goto end;
+            }
+        }
+        lif->qstate_init_done = true;
     }
 
     // create the lif now
@@ -281,36 +338,6 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         HAL_TRACE_ERR("P4 Lif create failure, err : {}", ret);
         ret = HAL_RET_ERR;
         goto end;
-    }
-
-    // initialize QState
-    for (int i = 0; i < spec->lif_qstate_size(); i++) {
-        const auto &req = spec->lif_qstate(i);
-
-        uint8_t *state = (uint8_t *)req.queue_state().c_str();
-        if (req.has_label()) {
-            uint8_t off;
-            int ret = g_lif_manager->GetPCOffset(req.label().handle().c_str(),
-                req.label().prog_name().c_str(),
-                req.label().label().c_str(), &off);
-            if (ret < 0) {
-                ret = HAL_RET_ERR;
-                goto end;
-            }
-            buf.reset(new uint8_t[req.queue_state().size()]);
-            bcopy(req.queue_state().c_str(), buf.get(), req.queue_state().size());
-            buf.get()[0] = off;
-            state = buf.get();
-        }
-
-        int ret = g_lif_manager->WriteQState(hw_lif_id, req.type_num(),
-                                             req.qid(), state,
-                                             req.queue_state().size());
-        if (ret < 0) {
-            HAL_TRACE_ERR("Failed to set LIFQState : {}", ret);
-            ret = HAL_RET_ERR;
-            goto end;
-        }
     }
 
     // For rdma enabled Lifs, call RDMA specific init (allocates KT, PT, etc)
@@ -579,6 +606,7 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     lif_t                       *lif = NULL;
     lif_update_app_ctxt_t       *app_ctxt = NULL;
+    uint32_t                    hw_lif_id;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif{}:invalid cfg_ctxt", __FUNCTION__);
@@ -600,6 +628,25 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     args.lif = lif;
     args.vlan_strip_en_changed = app_ctxt->vlan_strip_en_changed;
     args.vlan_strip_en = app_ctxt->vlan_strip_en;
+    args.qstate_map_init_set = app_ctxt->qstate_map_init_set;
+    hw_lif_id = pd::pd_get_hw_lif_id(lif);
+
+    if (app_ctxt->qstate_map_init_set) {
+        // init queue state map
+        ret = lif_qstate_map_init(*(app_ctxt->spec), hw_lif_id, lif);
+        if (ret != HAL_RET_OK) {
+            goto end;
+        }
+        if (app_ctxt->spec->lif_qstate_size()) {
+            // init queues
+            ret = lif_qstate_init(*(app_ctxt->spec), hw_lif_id, lif);
+            if (ret != HAL_RET_OK) {
+                goto end;
+            }
+        }
+        lif->qstate_init_done = true;
+    }
+
     ret = pd::pd_lif_update(&args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-lif:{}:failed to delete lif pd, err : {}",
@@ -771,6 +818,10 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         app_ctxt->vlan_strip_en = spec->vlan_strip_en();
     }
 
+    if (spec->lif_qstate_map_size() && !lif->qstate_init_done) {
+        app_ctxt->qstate_map_init_set = true;
+    }
+
     return ret;
 }
 
@@ -820,7 +871,7 @@ lif_update (LifSpec& spec, LifResponse *rsp)
         goto end;
     }
 
-    if (!app_ctxt.vlan_strip_en_changed) {
+    if (!app_ctxt.vlan_strip_en_changed && !app_ctxt.qstate_map_init_set) {
         HAL_TRACE_ERR("pi-lif:{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }
