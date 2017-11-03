@@ -24,10 +24,7 @@ int mac_temac_regrd_haps (uint32_t chip, uint32_t port_num,
            TEMAC_BASE_OFFSET_HAPS +
            offset;
 
-    HAL_TRACE_DEBUG("{}: chip {} addr {}",
-                    __FUNCTION__, chip, addr);
-
-    *data = read_reg_base (chip, addr);
+    READ_REG_BASE(chip, addr, data);
 
     return 0;
 }
@@ -42,10 +39,7 @@ int mac_temac_regwr_haps (uint32_t chip, uint32_t port_num,
            TEMAC_BASE_OFFSET_HAPS +
            offset;
 
-    HAL_TRACE_DEBUG("{}: chip {} addr {} data {}",
-                    __FUNCTION__, chip, addr, data);
-
-    write_reg_base (chip, addr, data);
+    WRITE_REG_BASE(chip, addr, data);
 
     return 0;
 }
@@ -76,7 +70,7 @@ int mac_temac_mdio_rd_haps(uint32_t chip, uint32_t port_num, uint32_t phy_addr,
 
     //TODO add MDIO timeouts
     reg_data = 0x0;
-    while (mdio_ready == 0) {
+    while (mdio_ready == 0 && !port_mock_mode) {
         mac_temac_regrd_haps (chip, port_num, MDIO_CTRL_OFFSET_HAPS, &reg_data);
         mdio_ready = (reg_data >> 7) & 0x1;
     }
@@ -104,7 +98,7 @@ int mac_temac_mdio_wr_haps(uint32_t chip, uint32_t port_num, uint32_t phy_addr,
 
     //TODO add MDIO timeouts
     reg_data = 0x0;
-    while (mdio_ready == 0) {
+    while (mdio_ready == 0 && !port_mock_mode) {
         mac_temac_regrd_haps (chip, port_num, MDIO_CTRL_OFFSET_HAPS, &reg_data);
         mdio_ready = (reg_data >> 7) & 0x1;
     }
@@ -131,10 +125,7 @@ int mac_sgmii_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
            (port_num * MXP_PORT_STRIDE_HAPS) +
            SGMII_RESET_OFFSET_HAPS;
 
-    HAL_TRACE_DEBUG("{}: chip {} addr {} data {}",
-                    __FUNCTION__, chip, addr, data);
-
-    write_reg_base (chip, addr, data);
+    WRITE_REG_BASE(chip, addr, data);
 
     return 0;
 }
@@ -152,10 +143,7 @@ int mac_temac_reset_haps(uint32_t chip, uint32_t port_num, bool reset)
            (port_num * MXP_PORT_STRIDE_HAPS) +
            TEMAC_RESET_OFFSET_HAPS;
 
-    HAL_TRACE_DEBUG("{}: chip {} addr {} data {}",
-                    __FUNCTION__, chip, addr, data);
-
-    write_reg_base (chip, addr, data);
+    WRITE_REG_BASE(chip, addr, data);
 
     return 0;
 }
@@ -173,10 +161,7 @@ int mac_datapath_reset_haps (uint32_t chip, uint32_t port_num, bool reset)
            (port_num * MXP_PORT_STRIDE_HAPS) +
            DATAPATH_RESET_OFFSET;
 
-    HAL_TRACE_DEBUG("{}: chip {} addr {} data {}",
-                    __FUNCTION__, chip, addr, data);
-
-    write_reg_base (chip, addr, data);
+    WRITE_REG_BASE(chip, addr, data);
 
     return 0;
 }

@@ -34,7 +34,7 @@ int serdes_output_enable_haps(uint32_t sbus_addr, bool enable)
     }
 
     // For HAPS, serdes enable/disable is un-reset/reset
-    write_reg_base (chip, addr, data);
+    WRITE_REG_BASE(chip, addr, data);
 
     return HAL_RET_OK;
 }

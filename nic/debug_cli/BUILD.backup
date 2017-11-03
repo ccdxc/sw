@@ -1,0 +1,22 @@
+package(default_visibility = ["//visibility:public"])
+
+licenses(["notice"])  # MIT license
+
+# Load the 'packages' function from the 'pip_grpcio' workspace
+load("@pip_grpcio//:requirements.bzl", "requirement")
+
+py_runtime(
+    name = "python-2.7.5",
+    files = [],
+    interpreter_path = "/usr/bin/python",
+)
+
+py_binary(
+    name = "penshell",
+    srcs = [
+    ] + glob(["**/*.py"]),
+    deps = [
+        requirement("grpcio"),
+        "//nic/debug_cli/swig/ccfiles:_p4pd.so",
+    ],
+)

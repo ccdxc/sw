@@ -1,0 +1,30 @@
+{
+
+    "card_index" : "10010",
+
+    "num_asics" : "1"
+    "asics" :
+    [
+        {
+            "name" : "capri",
+            "num" : "0",
+            "max_ports" : "4",
+            "ports" :
+            [
+                "port_num" : "1",
+                "port_num" : "2",
+                "port_num" : "3",
+                "port_num" : "4",
+            ]
+        },
+    ]
+
+    "num_uplink_ports" : "4",
+    "uplink_ports" :
+    [
+        {"port_num" : "1", "asic" : "0", "asic_port" : "1" },
+        {"port_num" : "2", "asic" : "0", "asic_port" : "2" },
+        {"port_num" : "3", "asic" : "0", "asic_port" : "3" },
+        {"port_num" : "4", "asic" : "0", "asic_port" : "4" },
+    ]
+}

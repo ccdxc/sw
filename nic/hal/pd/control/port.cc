@@ -13,6 +13,9 @@
 #include "port_mac.hpp"
 #include "hal_control.hpp"
 
+// flag to control write to HW
+int port_mock_mode = 1;
+
 namespace hal {
 
 namespace pd {
@@ -417,6 +420,9 @@ hal_ret_t
 port::port_init(bool is_sim)
 {
     hal_ret_t rc = HAL_RET_OK;
+
+    // TODO read from some config
+    port_mock_mode = 1;
 
     rc = port::port_mac_init(is_sim);
     if (rc != HAL_RET_OK) {

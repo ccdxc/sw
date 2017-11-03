@@ -1,0 +1,58 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+
+//------------------------------------------------------------------------------
+// protobuf specification for HAL debug package
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package debug;
+option go_package="halproto";
+
+// HAL debug service
+service Debug {
+    rpc DebugInvoke (DebugRequestMsg) returns (DebugResponseMsg) {}
+}
+
+// DebugKeyHandle uniquely identfies the table/register to access
+message DebugKeyHandle {
+    oneof key_or_handle {
+        fixed32  table_id = 1;   // table ID being accessed
+        fixed32  reg_id   = 2;   // register ID being accessed
+    }
+}
+
+// Debug table and register Read/Write operation
+enum DebugOperationType {
+    DEBUG_OP_TYPE_NONE  = 0;    // operation type not specified in request
+    DEBUG_OP_TYPE_READ  = 1;    // read the given table/register
+    DEBUG_OP_TYPE_WRITE = 2;    // write to the given table/register
+}
+
+// DebugSpec msg is used to pass parameters for the Debug
+message DebugSpec {
+    DebugKeyHandle      key_or_handle   =   1;      // table/register ID to be accessed
+    DebugOperationType  opn_type        =   2;      // read/write operation
+    uint64              addr            =   3;      // address to be read/write
+    uint32              reg_data        =   4;      // data to write
+    bytes               str_data        =   5;      // structure typecast to char* and wrapped with string
+}
+
+// Batched DEBUG request message
+message DebugRequestMsg {
+    repeated DebugSpec  request = 1;
+}
+
+// DEBUG response
+message DebugResponse {
+    fixed32     debug_status  =   1;    // DEBUG cmd status
+    uint32      ret_data    =   2;      // return data for read operations
+}
+
+// Batched DEBUG response msg
+message DebugResponseMsg {
+    repeated DebugResponse    response = 1;
+}
+
