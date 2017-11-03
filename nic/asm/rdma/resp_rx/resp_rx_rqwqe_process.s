@@ -33,11 +33,6 @@ struct rqwqe_base_t d;
 
 #define F_FIRST_PASS  c7
 
-#define SEL_T0_OR_T1_S2S_DATA(_dst_r, _cf) \
-    cmov        _dst_r, _cf, offsetof(struct resp_rx_phv_t, common.common_t0_s2s_s2s_data), offsetof(struct resp_rx_phv_t, common.common_t1_s2s_s2s_data);
-#define SEL_T0_OR_T1_K(_dst_r, _cf) \
-    cmov        _dst_r, _cf, offsetof(struct resp_rx_phv_t, common.common_te0_phv_table_addr), offsetof(struct resp_rx_phv_t, common.common_te1_phv_table_addr);
-
 %%
     .param  resp_rx_rqlkey_process
     .param  resp_rx_rqcb0_write_back_process
@@ -94,7 +89,7 @@ loop:
     slt         c2, r6, REM_PYLD_BYTES
     cmov        r6, c2, r6, REM_PYLD_BYTES
 
-    SEL_T0_OR_T1_S2S_DATA(r7, F_FIRST_PASS)
+    CAPRI_GET_TABLE_0_OR_1_ARG(resp_rx_phv_t, r7, F_FIRST_PASS)
     // r2 <- sge_p->va
     CAPRI_TABLE_GET_FIELD(r2, SGE_P, SGE_T, va)
 
@@ -147,7 +142,7 @@ loop:
 
     // Initiate next table lookup with 32 byte Key address (so avoid whether keyid 0 or 1)
 
-    SEL_T0_OR_T1_K(r7, F_FIRST_PASS)
+    CAPRI_GET_TABLE_0_OR_1_K(resp_rx_phv_t, r7, F_FIRST_PASS)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_rqlkey_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, RAW_TABLE_PC, r6)
     CAPRI_SET_TABLE_0_VALID_C(F_FIRST_PASS, 1)
@@ -170,7 +165,8 @@ loop:
     
 exit:
 
-    SEL_T0_OR_T1_S2S_DATA(r7, F_FIRST_PASS)
+    //Get the arg pointer one more time as we couldn't keep r7 intact
+    CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(resp_rx_phv_t, r7, F_FIRST_PASS)
     // set dma_cmdeop for the last table (could be T0 or T1)
     CAPRI_SET_FIELD_C(r7, INFO_LKEY_T, dma_cmdeop, 1, c5)
 

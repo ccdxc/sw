@@ -23,13 +23,6 @@ struct key_entry_aligned_t d;
 #define T2_ARG r5
 #define T2_KEY r6
 
-#define SEL_T0_OR_T1_S2S_DATA(_dst_r, _cf) \
-    cmov        _dst_r, _cf, offsetof(struct resp_rx_phv_t, common.common_t0_s2s_s2s_data), offsetof(struct resp_rx_phv_t, common.common_t1_s2s_s2s_data);
-#define SEL_T0_OR_T1_K(_dst_r, _cf) \
-    cmov        _dst_r, _cf, offsetof(struct resp_rx_phv_t, common.common_te0_phv_table_addr), offsetof(struct resp_rx_phv_t, common.common_te1_phv_table_addr); \
-    CAPRI_SET_TABLE_0_VALID_C(_cf, 1); \
-    CAPRI_SET_TABLE_1_VALID_C(!_cf, 1); \
-
 #define LKEY_TO_PT_INFO_T   struct resp_rx_lkey_to_pt_info_t
 #define COMPL_R_INV_RKEY_INFO_T struct resp_rx_compl_or_inv_rkey_info_t
 
@@ -114,10 +107,10 @@ aligned_pt:
     add         PT_SEG_P, MY_PT_BASE_ADDR, r5, CAPRI_LOG_SIZEOF_U64
 
 invoke_pt:
-    SEL_T0_OR_T1_K(r7, c2)
+    CAPRI_GET_TABLE_0_OR_1_K(resp_rx_phv_t, r7, c2)
     CAPRI_SET_RAW_TABLE_PC(RAW_TABLE_PC, resp_rx_ptseg_process)
     CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, RAW_TABLE_PC, PT_SEG_P)
-    SEL_T0_OR_T1_S2S_DATA(r7, c2)
+    CAPRI_GET_TABLE_0_OR_1_ARG(resp_rx_phv_t, r7, c2)
     CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_offset, PT_OFFSET)
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, pt_bytes, k.args.len)
     //CAPRI_SET_FIELD(r7, LKEY_TO_PT_INFO_T, dma_cmd_start_index, k.args.dma_cmd_start_index)
