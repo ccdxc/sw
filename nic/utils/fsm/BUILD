@@ -1,6 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
+load("//nic/bazel:common_deps.bzl", "gl_deps_list")
+load("//nic/bazel:common_deps.bzl", "gl_linkopts_list")
+
 
 cc_library(
     name = "fsm",
@@ -19,8 +22,6 @@ cc_test(
     deps = [
         # Utils
         ":fsm",
-        "//nic/utils/trace",
-        # External
-        "//:gtest",
-    ],
+    ] + gl_deps_list,
+    linkopts = gl_linkopts_list,
 )

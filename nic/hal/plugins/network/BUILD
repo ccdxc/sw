@@ -1,46 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
-
-gl_deps = [
-        "//nic/hal:hal_src",
-        # PI
-        "//nic/fte:fte",
-        "//nic/hal/periodic",
-        "//nic/hal/svc:hal_svc",
-        "//nic/utils/trace",
-        "//nic/utils/print",
-        "//nic/hal/plugins/network:network",
-        "//nic/hal/plugins/proxy:proxyplugin",
-        "//nic/hal/plugins/classic:classic",
-        "//nic/utils/host_mem:host_mem",
-        "//nic:gen_proto_includes",
-        "//nic/hal/test/utils:haltestutils",
-        "//nic/hal/lkl:lkl_api",
-        "//nic:lkl",
-
-        # PD
-        "//nic/hal/pd/common:pdcommon",
-        "//nic/hal/pd/utils/directmap",
-        "//nic/hal/pd/utils/hash",
-        "//nic/hal/pd/utils/tcam",
-        "//nic/hal/pd/utils/flow",
-        "//nic/hal/pd/utils/met",
-        "//nic/hal/pd/utils/acl_tcam",
-        "//nic/hal/pd/iris/p4pd:p4pdapi",
-        "//nic/hal/pd/iris",
-        "//nic:capricsr_int",
-        "//nic/hal/pd/capri",
-        "//nic/model_sim:model_client",
-        "//nic:p4pd",
-        "//nic:p4pluspd_txdma",
-        "//nic:p4pluspd_rxdma",
-        "//nic:asic_libs",
-
-        # External
-        "//:gtest",
-        ]
-
+load("//nic/bazel:common_deps.bzl", "gl_deps_list")
+load("//nic/bazel:common_deps.bzl", "gl_linkopts_list")
 
 common_deps = [
 		"//nic/hal:hal_hdrs",
@@ -57,14 +19,6 @@ common_deps = [
                 "//nic:gen_proto_includes",
 		"//nic:gen_includes",
 ]
-
-gl_linkopts = [
-    "-lzmq",
-    "-lpthread",
-    "-pthread",
-    "-lz",
-    "-lprotobuf"
-    ]
 
 cc_library(
     name = "network",
@@ -89,6 +43,7 @@ cc_library(
 cc_library(
     name = "network_includes",
     hdrs = ["net_plugin.hpp",
+	    "ep_learn/common/trans.hpp",
 	    "ep_learn/dhcp/dhcp_trans.hpp",
 	    "ep_learn/arp/arp_trans.hpp"],
 )
@@ -96,7 +51,7 @@ cc_library(
 cc_library(
     name = "dhcp_learn",
     srcs = glob(["ep_learn/dhcp/*.cc"]),
-    hdrs = glob(["ep_learn/dhcp/*.hpp"]),
+    hdrs = glob(["ep_learn/dhcp/*.hpp"]) + ["ep_learn/common/trans.hpp"],
     deps = common_deps + ["//nic/third-party/isc-dhcp"],
     alwayslink = 1,
 )
@@ -104,7 +59,7 @@ cc_library(
 cc_library(
     name = "arp_learn",
     srcs = glob(["ep_learn/arp/*.cc"]),
-    hdrs = glob(["ep_learn/arp/*.hpp"]),
+    hdrs = glob(["ep_learn/arp/*.hpp"]) + ["ep_learn/common/trans.hpp"],
     deps = common_deps,
     alwayslink = 1,
 )
@@ -113,14 +68,14 @@ cc_test(
     name = "dhcp_test",
     srcs = glob(["test/ep_learn/dhcp/*.cc"]) +
 		["test/hal_mock.cc"],
-    linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts,
-    deps = gl_deps,
+    linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
+    deps = gl_deps_list,
 )
 
 cc_test(
     name = "arp_test",
     srcs = glob(["test/ep_learn/arp/*.cc"]) +
 		["test/hal_mock.cc"],
-    linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts,
-    deps = gl_deps,
+    linkopts = ["-L/usr/local/lib -ltins"] + gl_linkopts_list,
+    deps = gl_deps_list,
 )

@@ -74,6 +74,7 @@ void arp_topo_setup()
    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
+   nw_spec.mutable_tenant_key_handle()->set_tenant_id(1);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
    ret = hal::network_create(nw_spec, &nw_rsp);
    hal::hal_cfg_db_close();
@@ -85,6 +86,7 @@ void arp_topo_setup()
    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
+   nw_spec1.mutable_tenant_key_handle()->set_tenant_id(1);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
    ret = hal::network_create(nw_spec1, &nw_rsp);
    hal::hal_cfg_db_close();
@@ -148,13 +150,13 @@ void arp_topo_setup()
    hal::hal_cfg_db_close();
    ASSERT_TRUE(ret == HAL_RET_OK);
    dummy_ep = find_ep_by_handle(ep_rsp.endpoint_status().endpoint_handle());
+   strcpy((char *)(dummy_ep->l2_key.mac_addr), "123456");
    ASSERT_TRUE(dummy_ep != NULL);
 }
 
 class arp_fsm_test : public hal_base_test {
    protected:
     arp_fsm_test() {
-        strcpy((char *)(dummy_ep->l2_key.mac_addr), "123456");
     }
 
     virtual ~arp_fsm_test() {}
@@ -170,8 +172,9 @@ class arp_fsm_test : public hal_base_test {
     // Will be called at the beginning of all test cases in this class
     static void SetUpTestCase() {
         hal_base_test::SetUpTestCase();
+        //hal_test_utils_slab_disable_delete();
         /* Override the timer so that we can control  */
-        hal::periodic::g_twheel = twheel::factory(10, 100, false);
+        //hal::periodic::g_twheel = twheel::factory(10, 100, false);
         arp_topo_setup();
     }
 };
@@ -269,13 +272,14 @@ TEST_F(arp_fsm_test, arp_entry_timeout) {
         g_hal_state->arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry != NULL);
 
-    sleep(1);
-    hal::periodic::g_twheel->tick(entry->get_current_state_timeout() + 100);
+    //sleep(1);
+    auto timeout = entry->get_current_state_timeout();
+    hal::periodic::g_twheel->tick(timeout + 100);
+    sleep(3);
     entry = reinterpret_cast<arp_trans_t *>(
         g_hal_state->arplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(entry == NULL);
 }
-
 
 TEST_F(arp_fsm_test, arp_request_response_replace) {
     arp_packet_send(ARP::Flags::REQUEST, "1.1.1.1", (unsigned char *)"123456",

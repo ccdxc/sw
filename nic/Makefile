@@ -92,11 +92,12 @@ bazel-gtests:
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/pt:pt_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/shm:shmseg_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/slab:slab_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/fsm:fsm_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) utils/twheel:twheel_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) fte:fte_test
 	# TODO: Revisit
-	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/network:dhcp_test
-	#bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/network:arp_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/network:dhcp_test
+	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/plugins/network:arp_test
 	# PD Utils
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/acl_tcam:acl_tcam_test
 	bazel $(BZL_OPT) build $(BZL_BLD_OPT) hal/pd/utils/directmap:directmap_test
@@ -140,8 +141,8 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/hal/test/gtests/scheduler_tx_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/scheduler_tx_test.xml"
 
 	# Revisit as its failing intermittently in sanity
-	#$(CMD_OPTS) ./nic/hal/plugins/network/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
-	#$(CMD_OPTS) ./nic/hal/plugins/network/dhcp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/dhcp_test.xml"
+	$(CMD_OPTS) ./nic/hal/plugins/network/arp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/arp_test.xml"
+	$(CMD_OPTS) ./nic/hal/plugins/network/dhcp_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/dhcp_test.xml"
 	# PI Utils gtests
 	cd ../bazel-bin && ./nic/utils/bitmap/bitmap_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/bitmap_test.xml"
 	cd ../bazel-bin && ./nic/utils/host_mem/host_mem_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/host_mem_test.xml"
@@ -150,6 +151,7 @@ run-gtests: $(GEN_TEST_RESULTS_DIR)/.dir
 	cd ../bazel-bin && ./nic/utils/pt/pt_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/pt_test.xml"
 	cd ../bazel-bin && ./nic/utils/shm/shmseg_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/shmseg_test.xml"
 	cd ../bazel-bin && ./nic/utils/slab/slab_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/slab_test.xml"
+	cd ../bazel-bin && ./nic/utils/fsm/fsm_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fsm_test.xml"
 	cd ../bazel-bin && ./nic/utils/twheel/twheel_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/twheel_test.xml"
 	cd ../bazel-bin && ./nic/fte/fte_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/fte_test.xml"
 	# PD Utils gtests

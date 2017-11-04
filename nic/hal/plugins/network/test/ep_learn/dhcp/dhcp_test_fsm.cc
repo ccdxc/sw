@@ -78,6 +78,7 @@ void dhcp_topo_setup()
    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
+   nw_spec.mutable_tenant_key_handle()->set_tenant_id(1);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
    ret = hal::network_create(nw_spec, &nw_rsp);
    hal::hal_cfg_db_close();
@@ -89,6 +90,7 @@ void dhcp_topo_setup()
    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
+   nw_spec1.mutable_tenant_key_handle()->set_tenant_id(1);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
    ret = hal::network_create(nw_spec1, &nw_rsp);
    hal::hal_cfg_db_close();
@@ -176,8 +178,6 @@ class dhcp_fsm_test : public hal_base_test {
     // Will be called at the beginning of all test cases in this class
     static void SetUpTestCase() {
         hal_base_test::SetUpTestCase();
-        /* Override the timer so that we can control  */
-        hal::periodic::g_twheel = twheel::factory(10, 100, false);
         dhcp_lib_init();
         dhcp_topo_setup();
     }
@@ -575,7 +575,8 @@ TEST_F(dhcp_fsm_test, dhcp_basic_bound_timeout) {
     ASSERT_TRUE(trans != NULL);
 
     sleep(1);
-    hal::periodic::g_twheel->tick(trans->get_current_state_timeout());
+    hal::periodic::g_twheel->tick(trans->get_current_state_timeout() + 100);
+    sleep(2.5);
     trans = reinterpret_cast<dhcp_trans_t *>(
         g_hal_state->dhcplearn_key_ht()->lookup(&key));
     ASSERT_TRUE(trans == NULL);

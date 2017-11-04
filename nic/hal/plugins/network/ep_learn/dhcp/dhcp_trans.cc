@@ -58,13 +58,15 @@ void dhcp_ctx::init(struct packet* dhcp_packet) {
 /* Make sure only one instance of State machine is present and all transactions
  * should use the same state machine */
 dhcp_trans_t::dhcp_fsm_t *dhcp_trans_t::dhcp_fsm_ = new dhcp_fsm_t();
-dhcp_trans_t::dhcp_timer_t *dhcp_trans_t::dhcp_timer_ = new dhcp_timer_t();
+dhcp_trans_t::trans_timer_t *dhcp_trans_t::dhcp_timer_ =
+            new trans_timer_t(DHCP_TIMER_ID);
 
-#define INIT_TIMEOUT 120
-#define SELECTING_TIMEOUT 120
-#define REQUESTING_TIMEOUT 120
-#define BOUND_TIMEOUT 120  // This is default, entry func can override this.
-#define RENEWING_TIMEOUT 120
+#define INIT_TIMEOUT        120 * TIME_MSECS_PER_SEC
+#define SELECTING_TIMEOUT   120 * TIME_MSECS_PER_SEC
+#define REQUESTING_TIMEOUT  120 * TIME_MSECS_PER_SEC
+// This is default, entry func can override this.
+#define BOUND_TIMEOUT       120 * TIME_MSECS_PER_SEC
+#define RENEWING_TIMEOUT    120 * TIME_MSECS_PER_SEC
 
 // clang-format off
 void dhcp_trans_t::dhcp_fsm_t::_init_state_machine() {
@@ -256,19 +258,10 @@ void dhcp_trans_t::dhcp_fsm_t::bound_entry_func(fsm_state_ctx ctx) {
 dhcp_trans_t::dhcp_trans_t(struct packet *dhcp_packet, fte::ctx_t &ctx) {
     this->ctx_.init(dhcp_packet);
     this->sm_ = new fsm_state_machine_t(get_sm_def_func, DHCP_INIT, DHCP_DONE,
-                                      (fsm_state_ctx)this, get_timer_func);
-    //this->ep_hal_handle_ = (ctx.sep())->hal_handle;
+                                      DHCP_TIMEOUT, (fsm_state_ctx)this,
+                                      get_timer_func);
     init_dhcp_trans_key(dhcp_packet->raw->chaddr, this->ctx_.xid_,
                         &this->trans_key_);
-}
-
-void dhcp_trans_t::process_transaction(dhcp_trans_t *trans,
-                                          dhcp_fsm_event_t event,
-                                          fsm_event_data data) {
-    trans->sm_->process_event(event, data);
-    if (trans->sm_->state_machine_competed()) {
-        delete trans;
-    }
 }
 
 void dhcp_trans_t::init_dhcp_trans_key(const uint8_t *chaddr, uint32_t xid,
@@ -292,9 +285,6 @@ void dhcp_trans_t::process_event(dhcp_fsm_event_t event, fsm_event_data data) {
     this->sm_->process_event(event, data);
 }
 
-uint32_t dhcp_trans_t::get_current_state_timeout() {
-    return this->sm_->get_current_state_timeout();
-}
 dhcp_trans_t::~dhcp_trans_t() {
     g_hal_state->dhcplearn_key_ht()->remove(&this->trans_key_);
     g_hal_state->dhcplearn_ip_entry_ht()->remove(&this->ip_entry_key_);

@@ -62,12 +62,15 @@ public:
 typedef std::map<fsm_state_t, std::vector<fsm_transition_t>>
     fsm_state_machine_def_t;
 
+class fsm_state_machine_t;//forward declaration.
 class fsm_timer_t {
     uint32_t timer_id_;
 
    public:
     fsm_timer_t(uint32_t id) { this->timer_id_ = id; }
-    virtual fsm_state_timer_ctx add_timer(uint64_t timeout, void* ctx,
+    uint32_t get_timer_id() { return this->timer_id_; }
+    virtual fsm_state_timer_ctx add_timer(uint64_t timeout,
+                                          fsm_state_machine_t* ctx,
                                           bool periodic = false) = 0;
     virtual void delete_timer(fsm_state_timer_ctx) = 0;
 
@@ -83,6 +86,7 @@ class fsm_state_machine_t {
     uint32_t init_state_;
     uint32_t end_state_;
     uint32_t timeout_;
+    uint32_t timeout_event_;
     fsm_state_timer_ctx cur_state_time_ctx_;
     get_timer_func timer_get_func_;
     fsm_state_ctx ctx_;
@@ -104,17 +108,20 @@ class fsm_state_machine_t {
 
  public:
   fsm_state_machine_t(get_sm_func sm_func, uint32_t init_state,
-                    uint32_t end_state, fsm_state_ctx ctx = NULL,
+                    uint32_t end_state, uint32_t timeout_event,
+                    fsm_state_ctx ctx = NULL,
                     get_timer_func timer_func = NULL);
   uint32_t get_state() { return this->current_state_; }
   void set_state(uint32_t state) { this->current_state_ = state; }
   fsm_state_machine_def_t* get_def() { return this->sm_get_func_(); }
   void process_event(uint32_t event, fsm_event_data data);
   void stop_state_timer();
+  void reset_timer();
   // Ability to set dynamic timeout, however this should be called only during
   // entry function of the state.
   void set_current_state_timeout(uint32_t);
   uint32_t get_current_state_timeout();
+  uint32_t get_timeout_event();
   void throw_event(uint32_t event, fsm_event_data data);
   bool state_machine_competed() {
       return this->current_state_ == this->end_state_;

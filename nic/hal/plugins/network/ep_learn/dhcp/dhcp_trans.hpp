@@ -9,6 +9,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/include/ht.hpp"
 #include "nic/include/twheel.hpp"
+#include "nic/hal/plugins/network/ep_learn/common/trans.hpp"
 
 #define HAL_MAX_DHCP_TRANS 512
 #define DHCP_TIMER_ID 255
@@ -89,43 +90,18 @@ struct dhcp_event_data {
     const fte::ctx_t    *fte_ctx;
 };
 
-class dhcp_trans_t {
+class dhcp_trans_t : public trans_t  {
 private:
-    hal_spinlock_t slock_;  // lock to protect this structure
     dhcp_trans_key_t trans_key_;
     class dhcp_fsm_t;  // forward declaration.
     class dhcp_timer_t;  // Forward declaration.
     static dhcp_fsm_t* dhcp_fsm_;
-    static dhcp_timer_t* dhcp_timer_;
+    static trans_timer_t* dhcp_timer_;
     dhcp_ctx ctx_;
-    fsm_state_machine_t* sm_;
 
     dhcp_ip_entry_key_t ip_entry_key_;
     ht_ctxt_t ht_ctxt_;           // id based hash table ctxt
     ht_ctxt_t ip_entry_ht_ctxt_;  // IP based hash table ctxt
-
-    class dhcp_timer_t : public fsm_timer_t {
-       public:
-        dhcp_timer_t() : fsm_timer_t(DHCP_TIMER_ID) {}
-
-        virtual fsm_state_timer_ctx add_timer(uint64_t timeout, void* ctx,
-                                              bool periodic = false) {
-            void* timer = hal::periodic::g_twheel->add_timer(
-                1, timeout, ctx, timeout_handler, periodic);
-            return reinterpret_cast<fsm_state_timer_ctx>(timer);
-        }
-        virtual void delete_timer(fsm_state_timer_ctx timer) {
-            hal::periodic::g_twheel->del_timer(timer);
-        }
-
-        static void timeout_handler(uint32_t timer_id, void* ctxt) {
-            fsm_state_machine_t* sm_ = reinterpret_cast<fsm_state_machine_t*>(ctxt);
-            dhcp_trans_t* trans =
-                reinterpret_cast<dhcp_trans_t*>(sm_->get_ctx());
-            dhcp_trans_t::process_transaction(trans, DHCP_TIMEOUT, NULL);
-        }
-        ~dhcp_timer_t() {}
-    };
 
     class dhcp_fsm_t {
         void _init_state_machine();
@@ -147,7 +123,6 @@ private:
         fsm_state_machine_def_t sm_def;
         dhcp_fsm_t() { this->_init_state_machine(); }
     };
-    bool transaction_completed() { return sm_->state_machine_competed(); }
     static fsm_state_machine_def_t* get_sm_def_func() {
         return &dhcp_fsm_->sm_def;
     }
@@ -166,7 +141,6 @@ private:
         if (!dhcp_trans) {
             return NULL;
         }
-        HAL_SPINLOCK_INIT(&dhcp_trans->slock_, PTHREAD_PROCESS_PRIVATE);
 
         // initialize meta information
         dhcp_trans->ht_ctxt_.reset();
@@ -187,7 +161,6 @@ private:
     void operator delete(void* p) { dhcp_trans_free((dhcp_trans_t*)p); }
 
     static inline hal_ret_t dhcp_trans_free(dhcp_trans_t* dhcp_trans) {
-        HAL_SPINLOCK_DESTROY(&dhcp_trans->slock_);
         g_hal_state->dhcplearn_slab()->free(dhcp_trans);
         return HAL_RET_OK;
     }
@@ -198,8 +171,8 @@ private:
     static void init_dhcp_ip_entry_key(const uint8_t* protocol_address,
                                        tenant_id_t tenant_id,
                                        dhcp_ip_entry_key_t* ip_entry_key_);
-    static void process_transaction(dhcp_trans_t* trans, dhcp_fsm_event_t event,
-                                    fsm_event_data data);
+    //static void process_transaction(dhcp_trans_t* trans, dhcp_fsm_event_t event,
+      //                              fsm_event_data data);
     static dhcp_trans_t* find_dhcptrans_by_id(dhcp_trans_key_t id) {
         return (dhcp_trans_t*)g_hal_state->dhcplearn_key_ht()->lookup(&id);
     }
@@ -213,8 +186,7 @@ private:
     void process_event(dhcp_fsm_event_t event, fsm_event_data data);
     const dhcp_ctx* get_ctx() { return &this->ctx_; }
     dhcp_fsm_state_t get_state() { return (dhcp_fsm_state_t)this->sm_->get_state(); }
-    uint32_t get_current_state_timeout();
-    ~dhcp_trans_t();
+    virtual ~dhcp_trans_t();
 } __PACK__;
 
 void* dhcptrans_get_key_func(void* entry);

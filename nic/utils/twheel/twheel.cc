@@ -90,7 +90,8 @@ twheel::init_twentry_(twentry_t *twentry, uint32_t timer_id, uint64_t timeout,
     twentry->ctxt_ = ctxt;
     twentry->cb_ = cb;
     twentry->nspins_ = timeout/(nslices_ * slice_intvl_);
-    twentry->slice_ = (curr_slice_ + (timeout % slice_intvl_)) % nslices_;
+    uint32_t rem  = timeout%(nslices_ * slice_intvl_);
+    twentry->slice_ = (curr_slice_ +  rem/slice_intvl_) % nslices_;
     twentry->next_ = twentry->prev_ = NULL;
 }
 

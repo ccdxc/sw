@@ -9,6 +9,7 @@
 #include "nic/include/ht.hpp"
 #include "nic/include/twheel.hpp"
 #include "nic/include/periodic.hpp"
+#include "nic/hal/plugins/network/ep_learn/common/trans.hpp"
 
 #define HAL_MAX_ARP_TRANS 512
 #define ARP_TIMER_ID 254
@@ -58,9 +59,8 @@ struct arp_event_data_t {
     const fte::ctx_t    *fte_ctx;
 };
 
-class arp_trans_t {
+class arp_trans_t : public trans_t {
 private:
-    hal_spinlock_t slock_;  // lock to protect this structure
     arp_trans_key_t trans_key_;
     uint8_t hw_addr_[ETHER_ADDR_LEN]; /* hardware address */
     uint8_t protocol_addr_[4];        /* protocol address */
@@ -72,26 +72,7 @@ private:
     class arp_fsm_t;    // forward declaration.
     class arp_timer_t;  // Forward declaration.
     static arp_fsm_t *arp_fsm_;
-    static arp_timer_t *arp_timer_;
-    fsm_state_machine_t *sm_;
-
-    class arp_timer_t : public fsm_timer_t {
-       public:
-        arp_timer_t() : fsm_timer_t(ARP_TIMER_ID) {}
-
-        virtual fsm_state_timer_ctx add_timer(uint64_t timeout, void *ctx,
-                                              bool periodic = false) {
-            void *timer = hal::periodic::periodic_timer_schedule(
-                ARP_TIMER_ID, timeout, ctx, timeout_handler, periodic);
-            return reinterpret_cast<fsm_state_timer_ctx>(timer);
-        }
-        virtual void delete_timer(fsm_state_timer_ctx timer) {
-            hal::periodic::periodic_timer_delete(timer);
-        }
-        static void timeout_handler(uint32_t timer_id, void *ctxt);
-
-        ~arp_timer_t() {}
-    };
+    static trans_timer_t *arp_timer_;
 
     class arp_fsm_t {
         void _init_state_machine();
@@ -121,7 +102,7 @@ private:
         if (!arp_trans) {
             return NULL;
         }
-        HAL_SPINLOCK_INIT(&arp_trans->slock_, PTHREAD_PROCESS_PRIVATE);
+        //HAL_SPINLOCK_INIT(&arp_trans->slock_, PTHREAD_PROCESS_PRIVATE);
 
         // initialize meta information
         arp_trans->ht_ctxt_.reset();
@@ -135,11 +116,11 @@ private:
     }
 
     static hal_ret_t arp_trans_free(arp_trans_t *arp_trans) {
-        HAL_SPINLOCK_DESTROY(&arp_trans->slock_);
+        //HAL_SPINLOCK_DESTROY(&arp_trans->slock_);
         g_hal_state->arplearn_slab()->free(arp_trans);
         return HAL_RET_OK;
     }
-    bool transaction_completed() { return sm_->state_machine_competed(); }
+
     static fsm_state_machine_def_t *get_sm_def_func() {
         return &arp_fsm_->sm_def;
     }
@@ -166,13 +147,12 @@ private:
 
     void *operator new(size_t size);
     void operator delete(void *p);
-    static void process_transaction(arp_trans_t *trans, arp_fsm_event_t event,
-                                    fsm_event_data data);
+    //static void process_transaction(arp_trans_t *trans, arp_fsm_event_t event,
+      //                              fsm_event_data data);
     explicit arp_trans_t(uint8_t *hw_address, uint8_t *protocol_address,
                          fte::ctx_t &ctx);
     arp_fsm_state_t get_state();
-    uint32_t get_current_state_timeout();
-    ~arp_trans_t();
+    virtual ~arp_trans_t();
 
 } __PACK__;
 

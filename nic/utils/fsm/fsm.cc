@@ -17,12 +17,13 @@ fsm_transition_t::fsm_transition_t(uint32_t event, fsm_transition_func function,
  * correctly always get the current state machine by using a function pointer.
  */
 fsm_state_machine_t::fsm_state_machine_t(get_sm_func sm_func, uint32_t init_state,
-                                     uint32_t end_state, fsm_state_ctx ctx,
-                                     get_timer_func timer_func) {
+                                     uint32_t end_state, uint32_t timeout_event,
+                                     fsm_state_ctx ctx, get_timer_func timer_func) {
     this->sm_get_func_ = sm_func;
     this->current_state_ = init_state;
     this->init_state_ = init_state;
     this->end_state_ = end_state;
+    this->timeout_event_ = timeout_event;
     this->timeout_ = 0;
     this->cur_state_time_ctx_ = nullptr;
     this->timer_get_func_ = timer_func;
@@ -115,6 +116,10 @@ void fsm_state_machine_t::stop_state_timer() {
     }
 }
 
+void fsm_state_machine_t::reset_timer() {
+    this->cur_state_time_ctx_ = nullptr;
+}
+
 void fsm_state_machine_t::process_event(uint32_t event, fsm_event_data data) {
     /* TODO: Define max cycles to run! */
     while (true) {
@@ -134,6 +139,8 @@ void fsm_state_machine_t::set_current_state_timeout(uint32_t timeout) {
 }
 
 uint32_t fsm_state_machine_t::get_current_state_timeout() { return this->timeout_; }
+
+uint32_t fsm_state_machine_t::get_timeout_event() { return this->timeout_event_; }
 
 void fsm_state_machine_t::throw_event(uint32_t event, fsm_event_data data) {
     assert(!this->_next_event_set());

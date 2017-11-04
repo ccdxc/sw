@@ -53,13 +53,15 @@ using namespace std::placeholders;
 /* Make sure only one instance of State machine is present and all transactions
  * should use the same state machine */
 arp_trans_t::arp_fsm_t *arp_trans_t::arp_fsm_ = new arp_fsm_t();
-arp_trans_t::arp_timer_t *arp_trans_t::arp_timer_ = new arp_timer_t();
+arp_trans_t::trans_timer_t *arp_trans_t::arp_timer_ =
+        new trans_timer_t(ARP_TIMER_ID);
 
-#define INIT_TIMEOUT 120
-#define SELECTING_TIMEOUT 120
-#define REQUESTING_TIMEOUT 120
-#define BOUND_TIMEOUT 20 * 60  // This is default, entry func can override this.
-#define RENEWING_TIMEOUT 120
+#define INIT_TIMEOUT       120 * TIME_MSECS_PER_SEC
+#define SELECTING_TIMEOUT  120 * TIME_MSECS_PER_SEC
+#define REQUESTING_TIMEOUT 120 * TIME_MSECS_PER_SEC
+// This is default, entry func can override this.
+#define BOUND_TIMEOUT      20  * TIME_MSECS_PER_MIN
+#define RENEWING_TIMEOUT   120 * TIME_MSECS_PER_SEC
 
 // clang-format off
 void arp_trans_t::arp_fsm_t::_init_state_machine() {
@@ -165,17 +167,14 @@ arp_trans_t::arp_trans_t(uint8_t *hw_address, uint8_t *protocol_address,
     init_arp_trans_key(hw_address, ctx.sep(), &this->trans_key_);
     init_arp_ip_entry_key(protocol_address, ctx.tenant()->tenant_id, &this->ip_entry_key_);
     this->sm_ = new fsm_state_machine_t(get_sm_def_func, ARP_INIT, ARP_DONE,
-                                      (fsm_state_ctx)this, get_timer_func);
+                                        ARP_TIMEOUT, (fsm_state_ctx)this,
+                                        get_timer_func);
     this->ht_ctxt_.reset();
     this->ip_entry_ht_ctxt_.reset();
 }
 
 void arp_trans_t::process_event(arp_fsm_event_t event, fsm_event_data data) {
     this->sm_->process_event(event, data);
-}
-
-uint32_t arp_trans_t::get_current_state_timeout() {
-    return this->sm_->get_current_state_timeout();
 }
 
 arp_trans_t::~arp_trans_t() {
@@ -186,14 +185,6 @@ arp_trans_t::~arp_trans_t() {
      */
     delete this->sm_;
     this->sm_->stop_state_timer();
-}
-
-void arp_trans_t::process_transaction(arp_trans_t *trans, arp_fsm_event_t event,
-                                      fsm_event_data data) {
-    trans->sm_->process_event(event, data);
-    if (trans->sm_->state_machine_competed()) {
-        delete trans;
-    }
 }
 
 void arp_trans_t::init_arp_trans_key(const uint8_t *hw_addr, const ep_t *ep,
@@ -215,12 +206,6 @@ void arp_trans_t::init_arp_ip_entry_key(const uint8_t *protocol_address,
 
 arp_fsm_state_t arp_trans_t::get_state() {
     return (arp_fsm_state_t)this->sm_->get_state();
-}
-
-void arp_trans_t::arp_timer_t::timeout_handler(uint32_t timer_id, void *ctxt) {
-    fsm_state_machine_t *sm_ = reinterpret_cast<fsm_state_machine_t *>(ctxt);
-    arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(sm_->get_ctx());
-    arp_trans_t::process_transaction(trans, ARP_TIMEOUT, NULL);
 }
 
 }  // namespace network

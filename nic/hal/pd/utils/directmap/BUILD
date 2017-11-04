@@ -1,6 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # MIT license
+load("//nic/bazel:common_deps.bzl", "gl_deps_list")
+load("//nic/bazel:common_deps.bzl", "gl_linkopts_list")
 
 cc_library(
     name = "directmap",
@@ -30,61 +32,11 @@ cc_library(
             "directmap_entry.hpp"],
 )
 
-
-gl_deps = [
-        "//nic/hal:hal_src",
-        # PI
-        "//nic/fte:fte",
-        "//nic/hal/periodic",
-        "//nic/hal/svc:hal_svc",
-        "//nic/utils/trace",
-        "//nic/utils/print",
-        "//nic/hal/plugins/network:network",
-        "//nic/hal/plugins/classic:classic",
-        "//nic/hal/plugins/proxy:proxyplugin",
-        "//nic/utils/host_mem:host_mem",
-        "//nic/hal/test/utils:haltestutils",
-        "//nic/hal/lkl:lkl_api",
-        "//nic:lkl",
-        "//nic:halproto",
-        "//nic:grpc",
-
-        # PD
-        "//nic/hal/pd/common:pdcommon",
-        "//nic/hal/pd/utils/directmap",
-        "//nic/hal/pd/utils/hash",
-        "//nic/hal/pd/utils/tcam",
-        "//nic/hal/pd/utils/flow",
-        "//nic/hal/pd/utils/met",
-        "//nic/hal/pd/utils/acl_tcam",
-        "//nic/hal/pd/iris/p4pd:p4pdapi",
-        "//nic/hal/pd/iris",
-        "//nic:capricsr_int",
-        "//nic/hal/pd/capri",
-        "//nic/hal/pd/control",
-        "//nic/model_sim:model_client",
-        "//nic:p4pd",
-        "//nic:p4pluspd_txdma",
-        "//nic:p4pluspd_rxdma",
-        "//nic:asic_libs",
-
-        # External
-        "//:gtest",
-        ]
-
-gl_linkopts = [
-        "-lzmq",
-        "-lpthread",
-        "-pthread",
-        "-lz",
-        "-lprotobuf"
-        ]
-
 cc_test(
     name = "directmap_test",
     srcs = ["test/directmap_test.cc"],
-    deps = gl_deps,
-    linkopts = gl_linkopts,
+    deps = gl_deps_list,
+    linkopts = gl_linkopts_list,
 
     #deps = [
     #    ":directmap",
