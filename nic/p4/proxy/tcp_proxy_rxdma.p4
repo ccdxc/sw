@@ -117,7 +117,9 @@ header_type read_tx2rxd_t {
 
         serq_ring_size          : 16;
         l7_proxy_type           : 8;
-        pad2                    : 40; // 5 bytes
+        debug_dol               : 8;
+        quick_acks_decr_old     : 4;
+        pad2                    : 28; // 8 bytes
 
         // written by TLS P4+ program
         serq_cidx               : 16;
@@ -147,14 +149,12 @@ header_type tcp_rx_d_t {
         snd_wnd                 : 16;
         rcv_mss                 : 16;
         ato                     : 16;
-        debug_dol               : 8;
         rto                     : 8;
         pred_flags              : 8;
         ecn_flags               : 8;
         state                   : 8;
         quick                   : 4;
         snd_wscale              : 4;
-        quick_acks_decr         : 4;
         pending                 : 3;
         ca_flags                : 2;
         write_serq              : 1;
@@ -426,9 +426,9 @@ header_type common_global_phv_t {
  *****************************************************************************/
 header_type s1_s2s_phv_t {
     fields {
+        payload_len             : 16;
         debug_stage0_3_thread   : 16;
         rcv_wup                 : 32;
-        end_seq                 : 32;
         rcv_tstamp              : 32;
         packets_out             : 16;
         window                  : 16;
@@ -456,6 +456,7 @@ header_type s3_t2_s2s_phv_t {
 
 header_type s4_s2s_phv_t {
     fields {
+        payload_len             : 16;
         debug_stage0_3_thread   : 16;
         debug_stage4_7_thread   : 16;
         ato                     : 16;
@@ -468,6 +469,7 @@ header_type s4_s2s_phv_t {
 
 header_type s6_s2s_phv_t {
     fields {
+        payload_len             : 16;
         debug_stage0_3_thread   : 16;
         debug_stage4_7_thread   : 16;
         ato                     : 16;
@@ -656,8 +658,8 @@ metadata dma_cmd_phv2mem_t dma_cmd9;
  * Stage 0 table 0 action
  */
 action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-                  serq_ring_size, l7_proxy_type, pad2, serq_cidx, pad1, prr_out,
-                  snd_nxt, rcv_wup, packets_out, ecn_flags_tx, quick_acks_decr,
+                  serq_ring_size, l7_proxy_type, debug_dol, quick_acks_decr_old, pad2, serq_cidx,
+                  pad1, prr_out, snd_nxt, rcv_wup, packets_out, ecn_flags_tx, quick_acks_decr,
                   pad1_tx2rx) {
     // k + i for stage 0
 
@@ -702,6 +704,8 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     modify_field(read_tx2rxd.pid, pid);
     modify_field(read_tx2rxd.serq_ring_size, serq_ring_size);
     modify_field(read_tx2rxd.l7_proxy_type, l7_proxy_type);
+    modify_field(read_tx2rxd.debug_dol, debug_dol);
+    modify_field(read_tx2rxd.quick_acks_decr_old, quick_acks_decr_old);
     modify_field(read_tx2rxd.pad2, pad2);
     modify_field(read_tx2rxd.serq_cidx, serq_cidx);
     modify_field(read_tx2rxd.pad1, pad1);
@@ -719,8 +723,8 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
  */
 action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_time,
         snd_una, snd_wl1, retx_head_ts, rto_deadline, max_window, bytes_rcvd,
-        bytes_acked, snd_wnd, rcv_mss, debug_dol, rto, pred_flags, ecn_flags, state,
-        ato, quick, snd_wscale, quick_acks_decr, pending, ca_flags, write_serq,
+        bytes_acked, snd_wnd, rcv_mss, rto, pred_flags, ecn_flags, state,
+        ato, quick, snd_wscale, pending, ca_flags, write_serq,
         pending_txdma, fastopen_rsk, pingpong, ooo_in_rx_q) {
     // k + i for stage 1
 
@@ -755,8 +759,9 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_ti
     GENERATE_GLOBAL_K
 
     // from stage 0 to stage 1
+    modify_field(s1_s2s_scratch.payload_len, s1_s2s.payload_len);
+    modify_field(s1_s2s_scratch.debug_stage0_3_thread, s1_s2s.debug_stage0_3_thread);
     modify_field(s1_s2s_scratch.rcv_wup, s1_s2s.rcv_wup);
-    modify_field(s1_s2s_scratch.end_seq, s1_s2s.end_seq);
     modify_field(s1_s2s_scratch.packets_out, s1_s2s.packets_out);
     modify_field(s1_s2s_scratch.window, s1_s2s.window);
     modify_field(s1_s2s_scratch.ip_dsfield, s1_s2s.ip_dsfield);
@@ -780,7 +785,6 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_ti
     modify_field(tcp_rx_d.bytes_acked, bytes_acked);
     modify_field(tcp_rx_d.snd_wnd, snd_wnd);
     modify_field(tcp_rx_d.rcv_mss, rcv_mss);
-    modify_field(tcp_rx_d.debug_dol, debug_dol);
     modify_field(tcp_rx_d.rto, rto);
     modify_field(tcp_rx_d.pred_flags, pred_flags);
     modify_field(tcp_rx_d.ecn_flags, ecn_flags);
@@ -788,7 +792,6 @@ action tcp_rx(ooo_rcv_bitmap, rcv_nxt, rcv_tsval, rcv_tstamp, ts_recent, lrcv_ti
     modify_field(tcp_rx_d.ato, ato);
     modify_field(tcp_rx_d.quick, quick);
     modify_field(tcp_rx_d.snd_wscale, snd_wscale);
-    modify_field(tcp_rx_d.quick_acks_decr, quick_acks_decr);
     modify_field(tcp_rx_d.pending, pending);
     modify_field(tcp_rx_d.ca_flags, ca_flags);
     modify_field(tcp_rx_d.write_serq, write_serq);
@@ -993,6 +996,7 @@ action tcp_cc(curr_ts, prr_delivered, last_time, epoch_start, cnt,
     GENERATE_GLOBAL_K
 
     // from stage 3 to stage 4
+    modify_field(s4_s2s_scratch.payload_len, s4_s2s.payload_len);
     modify_field(s4_s2s_scratch.debug_stage0_3_thread, s4_s2s.debug_stage0_3_thread);
     modify_field(s4_s2s_scratch.debug_stage4_7_thread, s4_s2s.debug_stage4_7_thread);
     modify_field(s4_s2s_scratch.ato, s4_s2s.ato);
@@ -1065,6 +1069,7 @@ action write_serq(nde_addr, nde_offset, nde_len, curr_ts,
     GENERATE_GLOBAL_K
 
     // from stage to stage
+    modify_field(s6_s2s_scratch.payload_len, s6_s2s.payload_len);
     modify_field(s6_s2s_scratch.debug_stage0_3_thread, s6_s2s.debug_stage0_3_thread);
     modify_field(s6_s2s_scratch.debug_stage4_7_thread, s6_s2s.debug_stage4_7_thread);
     modify_field(s6_s2s_scratch.ato, s6_s2s.ato);

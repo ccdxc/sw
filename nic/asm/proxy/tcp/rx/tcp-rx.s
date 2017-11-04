@@ -16,7 +16,6 @@ struct tcp_rx_tcp_rx_k k;
 struct tcp_rx_tcp_rx_d d;
 
 #define To_s1_seq {to_s1_seq_sbit0_ebit7...to_s1_seq_sbit8_ebit31}
-#define To_s1_end_seq {s1_s2s_end_seq_sbit0_ebit15...s1_s2s_end_seq_sbit16_ebit31}
 #define To_s1_ack_seq {to_s1_ack_seq_sbit0_ebit7...to_s1_ack_seq_sbit24_ebit31}
 #define To_s1_snd_nxt {to_s1_snd_nxt_sbit0_ebit7...to_s1_snd_nxt_sbit24_ebit31}
 %%
@@ -35,133 +34,43 @@ struct tcp_rx_tcp_rx_d d;
      */
 tcp_rx_process_stage1_start:
     CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_1, CAPRI_MPU_TABLE_0)
+
+    /*
+     * Adjust quick based on acks sent in tx pipeline
+     */
+    tblssub         d.u.tcp_rx_d.quick, k.s1_s2s_quick_acks_decr
+
+    sne             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
+    sne             c2, d.u.tcp_rx_d.rcv_nxt, k.To_s1_seq
+    slt             c3, k.To_s1_snd_nxt, k.To_s1_ack_seq
+    slt             c4, d.u.tcp_rx_d.rcv_tsval, d.u.tcp_rx_d.ts_recent
     sne             c6, d.u.tcp_rx_d.ooo_in_rx_q, r0
-    add             r7,r0, r0
-    phvwr           p.common_phv_debug_dol, d.u.tcp_rx_d.debug_dol
-    /* r4 is loaded at the beginning of the stage with current timestamp value */
-    add             r6, r4,r0
-    /* Check if the state is TCP_ESTABLISHED. If not packet is given to CPU */
-    addi            r1, r0, TCP_ESTABLISHED
-    seq             c1, d.u.tcp_rx_d.state, r1
-    phvwri.!c1      p.common_phv_write_arq, 1
-    addi            r1, r0, TCP_LISTEN
+    bcf             [c1 | c2 | c3 | c4 | c6], tcp_rx_slow_path
 
-    seq             c2, d.u.tcp_rx_d.state, r1
-
-    phvwri.c2       p.common_phv_write_tcp_app_hdr,1
-    phvwr.c2        p.cpu_hdr2_tcp_seqNo, k.To_s1_seq.wx
-    phvwr.c2        p.cpu_hdr2_tcp_AckNo, k.To_s1_ack_seq.wx
-    phvwr.c2        p.cpu_hdr2_tcp_flags, k.to_s1_flags
-
-    bcf             [!c1], flow_rx_process_done
-    setcf           c7, [!c0]
-    /* Setup the to-stage/stage-to-stage variables */
-    phvwr           p.common_phv_snd_una, d.u.tcp_rx_d.snd_una
-
-    /* Adjust quick based on acks sent in tx pipeline */
-    sub             r1, k.s1_s2s_quick_acks_decr, d.u.tcp_rx_d.quick_acks_decr
-    slt             c1, r1, d.u.tcp_rx_d.quick
-    tblsub.c1       d.u.tcp_rx_d.quick, r1
-    tblwr.!c1       d.u.tcp_rx_d.quick, 0
-    tblwr           d.u.tcp_rx_d.quick_acks_decr, k.s1_s2s_quick_acks_decr
-
-    /* if (cp->seq != tp->rx.rcv_nxt) { */
-    /* if pkt->seq > rcv_nxt, do ooo (SACK) processing */
-    slt             c7, d.u.tcp_rx_d.rcv_nxt, k.To_s1_seq
-    bcf             [c7], ooo_received
-    /* if rcv_nxt > pkt->seq, retransmission, drop the packet */
-    slt             c7, k.To_s1_seq, d.u.tcp_rx_d.rcv_nxt
-    phvwri.c7       p.p4_intr_global_drop, 1
-    bcf             [c7], flow_rx_process_done
-
-    /*   if (!(before(cp->ack_seq, tp->tx.snd_nxt))) { */
-    sle             c1, k.To_s1_ack_seq, k.To_s1_snd_nxt
-    bcf             [!c1], slow_path
-    nop
-
-    /*   /* If PAWS failed, check it more carefully in slow path */
-    /* if ((s32)(tp->rx_opt.rcv_tsval - tp->rx_opt.ts_recent) < 0) {
-
-           /* DO NOT update ts_recent here, if checksum fails
-        * and timestamp was corrupted part, it will result
-        * in a hung connection since we will drop all
-                * future packets due to the PAWS test.
-                *
-            goto slow_path  ;
-    }
-    */
-    // XXX: VS - rcv_tsval should come from k
-    sub             r1, d.u.tcp_rx_d.rcv_tsval, d.u.tcp_rx_d.ts_recent
-    slt             c1, r1, r0
-    bcf             [c1],slow_path
-    nop
-
-    /* tcp_store_ts_recent(tp) */
-    // XXX: VS - rcv_tsval should come from k
-    tblwr           d.u.tcp_rx_d.ts_recent, d.u.tcp_rx_d.rcv_tsval
-//  tblwr           d.ts_recent_tstamp, r6
-    add             r6,r6,r0
-
-    /* r2 contains tcp_data_len */
-    sub             r2, k.To_s1_end_seq, k.To_s1_seq
-    seq             c1, r2, r0
-    phvwr.c1        p.common_phv_process_ack_flag, r0
-    bcf             [c1],tcp_ack
-    nop
-
-tcp_queue_rcv:
+    /*
+     * s2s variable that has different meaning in s0-->s1. May not be 0
+     * so overwrite it
+     */
     phvwr           p.s6_s2s_ooo_offset, r0
-    /*
-     * c6 is global conditional variable indicating OOO pkt in Rx Q
-     */
-    bcf             [!c6], tcp_rcv_nxt_update
 
-    /*
-     * We have prior OOO packets, see if we have more data we can send
-     *
-     * r1 = end_seq - rcv_nxt
-     *
-     * r0 (0) is the rightmost (lowest) bit set
-     * r2 is the leftmost (highest) bit set
+tcp_rx_fast_path:
+    /* tcp_store_ts_recent(tp)
+     * TODO: VS - rcv_tsval should come from k
+     * r4 is loaded at the beginning of the stage with current timestamp value
      */
-    sub             r1, k.To_s1_end_seq, d.u.tcp_rx_d.rcv_nxt
-    srl             r2, r1, TCP_OOO_CELL_SIZE_SHIFT
-    and             r3, r1, TCP_OOO_CELL_SIZE_MASK
-    seq             c3, r3, r0
-    sub.!c3         r2, r2, 1
-
-    fsetv           r4, d.u.tcp_rx_d.ooo_rcv_bitmap, r2, r0
-    tblwr           d.u.tcp_rx_d.ooo_rcv_bitmap, r4
-    /*
-     * Get number of consecutive 1s in ooo_rcv_bitmap
-     * Multiply that by TCP_OOO_CELL_SIZE to get DMA len
-     * Add it to rcv_nxt to get new rcv_nxt
-     *
-     * r1 = end_seq - rcv_nxt
-     * r2 = len based on consecutive 1s
-     * Set r1 (bytes_rcvd) based on max(r1, r2)
-     */
-    ffcv            r2, d.u.tcp_rx_d.ooo_rcv_bitmap, r0
-    sll             r2, r2, TCP_OOO_CELL_SIZE_SHIFT
-    slt             c1, r1, r2
-    add.c1          r1, r2, r0
-    phvwr           p.to_s6_payload_len, r1
-    tbladd          d.u.tcp_rx_d.rcv_nxt, r1
-    phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
-    phvwr           p.common_phv_ooo_in_rx_q, 1
-    b               bytes_rcvd_stats_update_start
-    setcf           c6, [c0]
+    tblwr           d.u.tcp_rx_d.ts_recent, d.u.tcp_rx_d.rcv_tsval
+//  tblwr           d.ts_recent_tstamp, r4
 
 tcp_rcv_nxt_update:
-    sub             r1, k.To_s1_end_seq, d.u.tcp_rx_d.rcv_nxt
-    tblwr           d.u.tcp_rx_d.rcv_nxt, k.To_s1_end_seq
-    phvwr           p.rx2tx_rcv_nxt, k.To_s1_end_seq
+    tbladd          d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_payload_len
 
 bytes_rcvd_stats_update_start:
-    CAPRI_STATS_INC(bytes_rcvd, 16, r1, d.u.tcp_rx_d.bytes_rcvd)
+    CAPRI_STATS_INC(bytes_rcvd, 16, k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd)
 bytes_rcvd_stats_update:
-    CAPRI_STATS_INC_UPDATE(r1, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
+    CAPRI_STATS_INC_UPDATE(k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
 bytes_rcvd_stats_update_end:
+
+    phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
 
 tcp_event_data_recv:
     /* SCHEDULE_ACK(tp) */
@@ -175,91 +84,53 @@ tcp_event_data_recv:
      * ack to be sent
      */
     phvwr           p.rx2tx_extra_pending_ack_send, 1
-    /* Initialized the delayed ack engine if first ack */
-    /*
-      if (!tp->fto.ato) {
-        tcp_incr_quickack(tp) ;
-        tp->fto.ato = TCP_ATO_MIN ;                                                                                    }
+
+    /* Initialize the delayed ack engine if first ack
      *
+     * if (!tp->fto.ato) {
+     *   tcp_incr_quickack(tp) ;
+     *   tp->fto.ato = TCP_ATO_MIN ;
+     * }
      */
     seq             c1, d.u.tcp_rx_d.ato, r0
-    bcf             [!c1], delack_engine_init_done
+    bal.c1          r7, tcp_incr_quickack
     nop
-tcp_incr_quickack:
-    /* unsigned int quickacks = tp->fc.rcv_wnd / (2 * tp->rx_opt.rcv_mss); */
-
-    /* rcv_mss_shft = 1 for 1.5k (rounded to 2k), 3 for 9k (rounded to 8k) */
-
-    add             r2, k.s1_s2s_rcv_mss_shft, r0
-    addi            r2, r2, RCV_MSS_SHFT_BASE
-    add             r1, r0, k.s1_s2s_window
-    sllv            r1, r1, r2
-
-    /* r1 = quickacks */
-
-    /*
-       if (quickacks == 0)
-        quickacks = 2;
-     *
-     */
-
-    seq.c1          c2, r1, r0
-    addi.c2         r1, r0, 2
-    /*
-       if (quickacks > tp->tx.quick)
-           /* Maximal number of ACKs sent quickly to accelerate slow-start. *
-       #define TCP_MAX_QUICKACKS       16U
-
-       tp->tx.quick = min(quickacks, TCP_MAX_QUICKACKS);
-     */
-    slt             c2, d.u.tcp_rx_d.quick,r1
-    addi            r2, r0, TCP_MAX_QUICKACKS
-    slt.c2          c3, r2, r1
-    tblwr.c3        d.u.tcp_rx_d.quick, TCP_MAX_QUICKACKS
-    tblwr.!c3       d.u.tcp_rx_d.quick, r1
-#if MODEL_BUG_FIX
-    phvwr           p.common_phv_quick, d.u.tcp_rx_d.quick
-#endif
-    sne             c4, r7, r0
-    jr.c4           r7
-    add             r7, r0, r0
-
-    tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
-    phvwr           p.s6_s2s_ato, TCP_ATO_MIN
-
 
 delack_engine_init_done:
     /*
-       else /* if (!tp->fto.ato) * {
-        int m = tcp_time_stamp - tp->rx.lrcv_time;
-
-        if (m <= TCP_ATO_MIN / 2) {
-            /* The fastest case is the first. *
-            tp->fto.ato = (tp->fto.ato >> 1) + TCP_ATO_MIN / 2;
-        } else if (m < tp->fto.ato) {
-            tp->fto.ato = (tp->fto.ato >> 1) + m;
-            if (tp->fto.ato > tp->fto.rto)
-                tp->fto.ato = tp->fto.rto;
-        } else if (m > tp->fto.rto) {
-            /* Too long gap. Apparently sender failed to
-             * restart window, so that we send ACKs quickly.
-             *
-            tcp_incr_quickack(tp);
-        }
-      }
+     * else /* if (!tp->fto.ato) * {
+     *   int m = tcp_time_stamp - tp->rx.lrcv_time;
+     *
+     *   if (m <= TCP_ATO_MIN / 2) {
+     *       /* The fastest case is the first. *
+     *       tp->fto.ato = (tp->fto.ato >> 1) + TCP_ATO_MIN / 2;
+     *   } else if (m < tp->fto.ato) {
+     *       tp->fto.ato = (tp->fto.ato >> 1) + m;
+     *       if (tp->fto.ato > tp->fto.rto)
+     *           tp->fto.ato = tp->fto.rto;
+     *   } else if (m > tp->fto.rto) {
+     *       /* Too long gap. Apparently sender failed to
+     *        * restart window, so that we send ACKs quickly.
+     *        *
+     *       tcp_incr_quickack(tp);
+     *   }
+     * }
      */
     /* r1 = m */
-    sub             r1, r6, d.u.tcp_rx_d.lrcv_time
-    /* r2 = TCP_ATO_MIN / 2 */
-    addi            r2, r0, TCP_ATO_MIN
-    sll             r2, r2, 1
-    slt             c1, r2, r1
-    /* tp->fto.ato = tp->fto.ato >> 1 */
-    add             r5, d.u.tcp_rx_d.ato, r0
-    srl             r5, r5, 1
-    tblwr           d.u.tcp_rx_d.ato, r5
-    /* tp->fto.ato = tp->fto.ato + TCP_ATO_MIN/2 */
-    tbladd.!c1  d.u.tcp_rx_d.ato, r2
+    sub             r1, r4, d.u.tcp_rx_d.lrcv_time
+
+    /*
+     * if (m <= TCP_ATO_MIN / 2) {
+     *   tp->fto.ato = (tp->fto.ato >>> 1) + TCP_ATO_MIN/2
+     * }
+     */
+    slt             c1, TCP_ATO_MIN / 2, r1
+    srl             r5, d.u.tcp_rx_d.ato, 1
+    add             r5, r5, TCP_ATO_MIN / 2
+    tblwr.!c1       d.u.tcp_rx_d.ato, r5
+    bcf             [!c1], tcp_event_data_rcv_done
+
+    // TODO optimize this
     /* clear c2 */
     setcf           c2, [!c0]
     /*  if (m < tp->fto.ato) */
@@ -276,23 +147,135 @@ delack_engine_init_done:
     bal.c2          r7, tcp_incr_quickack
     nop
     /* tp->rx.lrcv_time = tcp_time_stamp */
-    tblwr           d.u.tcp_rx_d.lrcv_time, r6
-
-    /* tcp_ecn_check_ce (tp, cp) */
-    bal             r7, tcp_ecn_check_ce
-    nop
 
 tcp_event_data_rcv_done:
+    /*
+     * if (tp->rx.ecn_flags & TCP_ECN_OK)
+     */
+    smeqb           c1, d.u.tcp_rx_d.ecn_flags, TCP_ECN_OK, TCP_ECN_OK
+    bcf             [c1], tcp_ecn_check_ce
+
     /* c1 = (ack_seq == snd_una) */
     seq             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
-    /* clear process_ack_flag if ack_seq != snd_una */
-    phvwr.!c1       p.common_phv_process_ack_flag, r0
-    bcf             [c1], tcp_ack_snd_check
+
+    /*
+     * clear process_ack_flag if ack_seq != snd_una
+     * Also branch to tcp_ack processing to update snd_una etc.
+     */
+    bal.!c1         r7, tcp_ack
+    tblwr           d.u.tcp_rx_d.lrcv_time, r4
+
+    /* Fall thru if ack_seq == snd_una */
+
+tcp_ack_snd_check:
+    /* r1 = rcv_nxt - rcv_wup */
+    sub             r1, d.u.tcp_rx_d.rcv_nxt , k.s1_s2s_rcv_wup
+    /* r2 = rcv_mss */
+    /* c1 = ((rcv_nxt - rcv_wup) > rcv_mss) */
+    /* c1 = more than one full frame received */
+    slt             c1, d.u.tcp_rx_d.rcv_mss, r1
+
+    /* xxx: c2 = (new rcv window >= rcv_wnd) */
+    sne             c2, r0, r0 // TODO
+    /* c3 = in quick ack mode */
+    /* quick && !pingpong */
+    sne             c4, d.u.tcp_rx_d.quick, r0
+    sne             c5, d.u.tcp_rx_d.pingpong, r0
+    setcf           c3, [c4 & !c5]
+    /* c4 = we have out of order data */
+    //sne             c4, k.to_s3_ooo_datalen, r0 TODO
+    sne             c4, r0, r0 // TODO
+    setcf           c1, [c1 | c2 | c3 | c4]
+
+    phvwr.!c1        p.common_phv_pending_del_ack_send, 1
+    phvwr.c1         p.common_phv_pending_ack_send, 1
+
+slow_path:
+old_ack:
+invalid_ack:
+no_queue:
+flow_rx_process_done:
+table_read_setup_next:
+    phvwr           p.rx2tx_snd_wnd, d.u.tcp_rx_d.snd_wnd
+    phvwr           p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
+    /*
+     * c7 = drop
+     */
+    bcf             [c7], flow_rx_drop
+    phvwri          p.common_phv_write_serq, 1
+
+table_read_RTT:
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tcp_rx_rtt_stage2_start,
+                        k.common_phv_qstate_addr, TCP_TCB_RTT_OFFSET,
+                        TABLE_SIZE_512_BITS)
+    /*
+     * c6 = OOO in Rx queue, do not allocate buffers
+     */
+    bcf             [c6], tcp_rx_end
+table_read_RNMDR_ALLOC_IDX:
+    CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
+                        RNMDR_ALLOC_IDX, TABLE_SIZE_64_BITS)
+table_read_RNMPR_ALLOC_IDX:
+    CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tcp_rx_read_rnmpr_stage2_start,
+                        RNMPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
+table_read_L7_RNDMR_ALLOC_IDX:
+    seq             c1, k.common_phv_l7_proxy_en, 1
+    b.!c1.e         tcp_rx_end
+    seq             c2, k.common_phv_l7_proxy_type_span, 1
+    phvwri.!c2      p.app_header_table0_valid, 0
+    phvwri.!c2      p.app_header_table1_valid, 0
+    phvwri.!c2      p.common_phv_write_serq, 0
+    CAPRI_NEXT_TABLE_READ_i(3, TABLE_LOCK_DIS, tcp_rx_l7_read_rnmdr_stage2_start,
+                        RNMDR_ALLOC_IDX, TABLE_SIZE_64_BITS)
+
+tcp_rx_end:
+    nop.e
     nop
-    /* Fall thru to tcp_ack if ack_seq != snd_una */
+
 
 
 tcp_ack:
+    phvwr           p.common_phv_process_ack_flag, r0
+
+    slt             c1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    slt             c2, k.To_s1_snd_nxt, k.To_s1_ack_seq
+    seq             c3, d.u.tcp_rx_d.pending, ICSK_TIME_EARLY_RETRANS
+    seq             c4, d.u.tcp_rx_d.pending, ICSK_TIME_LOSS_PROBE
+    bcf             [c1 | c2 | c3 | c4], slow_tcp_ack
+
+    // TODO: process_ack_flag is 1 bit, check how these flags are to be used
+    // and fix code
+fast_no_rearm_rto:
+    add             r5, k.common_phv_process_ack_flag, r0
+    ori.c1          r5, r5, FLAG_SND_UNA_ADVANCED
+
+    /*
+     * if (md->process_ack_flag & FLAG_UPDATE_TS_RECENT)
+     *   tcp_replace_ts_recent(tp, cp->seq);
+     *
+     */
+    add             r5, k.common_phv_process_ack_flag, r0
+    smeqh           c1, r5 , FLAG_UPDATE_TS_RECENT, FLAG_UPDATE_TS_RECENT
+    add.c1          r0, r0, r0 // TODO do fast_tcp_replace_ts_recent
+
+fast_tcp_update_wl:
+    tblwr           d.u.tcp_rx_d.snd_wl1, k.To_s1_ack_seq
+fast_tcp_snd_una_update:
+    sub             r1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
+    tbladd          d.u.tcp_rx_d.bytes_acked, r1
+    /* Update snd_una */
+    tblwr           d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
+    phvwr           p.rx2tx_snd_una, k.To_s1_ack_seq
+
+    add             r5, k.common_phv_process_ack_flag, r0
+    ori             r5, r5, FLAG_WIN_UPDATE
+    phvwr           p.common_phv_process_ack_flag, r5
+fast_tcp_in_ack_event:
+     tblwr          d.u.tcp_rx_d.rcv_tstamp, r4
+     jr             r7
+     nop
+
+slow_tcp_ack:
     /* If the ack is older than previous acks
      * then we can probably ignore it.
          *
@@ -338,6 +321,8 @@ tcp_ack:
     bcf             [c1 & c2], no_rearm_rto
     nop
     bal             r7, tcp_rearm_rto
+    nop
+    b               no_rearm_rto
     nop
 no_rearm_rto:
     /*
@@ -420,7 +405,10 @@ tcp_snd_una_update:
     /* u32 ack_ev_flags = CA_ACK_SLOWPATH; */
     ori             r1, r0, CA_ACK_SLOWPATH
     /* if (ack_seq != cp->end_seq) */
-    sne             c3, k.To_s1_seq, k.To_s1_end_seq
+    // TODO : this doesn't seem right, we need to compare ack_seq and end_seq,
+    // but seem to be comparing seq and end_seq. 
+    setcf           c3, [!c0] // TODO
+    //sne             c3, k.To_s1_seq, k.To_s1_end_seq
     /*     md->process_ack_flag |= FLAG_DATA; */
     add             r5, k.common_phv_process_ack_flag, r0
     ori             r5, r5, FLAG_DATA
@@ -532,17 +520,13 @@ tcp_in_ack_event:
      *     goto no_queue;
      */
      tblwr          d.u.tcp_rx_d.rcv_tstamp, r6
-     seq            c3, k.{s1_s2s_packets_out_sbit0_ebit7...s1_s2s_packets_out_sbit8_ebit15}, r0
+     seq            c3, k.s1_s2s_packets_out, r0
      bcf            [!c3], no_queue
      nop
 
 tcp_ecn_check_ce:
     sne             c4, r7, r0
 
-    /*   if (tp->rx.ecn_flags & TCP_ECN_OK) */
-    smeqb           c1, d.u.tcp_rx_d.ecn_flags, TCP_ECN_OK, TCP_ECN_OK
-    bcf             [!c1], tcp_ecn_check_ce_done
-    nop
     add             r1, k.s1_s2s_ip_dsfield, r0
     andi            r1, r1, INET_ECN_MASK
 
@@ -587,6 +571,47 @@ tcp_ecn_check_ce_done:
     jr.c4           r7
     setcf           c4,[!c0]
 
+tcp_incr_quickack:
+    /* unsigned int quickacks = tp->fc.rcv_wnd / (2 * tp->rx_opt.rcv_mss); */
+
+    /* rcv_mss_shft = 1 for 1.5k (rounded to 2k), 3 for 9k (rounded to 8k) */
+
+    add             r2, k.s1_s2s_rcv_mss_shft, RCV_MSS_SHFT_BASE
+    // TODO : new capas can take gen source as shift
+    //sll             r1, r2, k.s1_s2s_window
+    add             r1, r0, k.s1_s2s_window
+    sllv            r1, r2, r1
+
+    /* r1 = quickacks */
+
+    /*
+       if (quickacks == 0)
+        quickacks = 2;
+     *
+     */
+
+    seq.c1          c2, r1, r0
+    addi.c2         r1, r0, 2
+    /*
+       if (quickacks > tp->tx.quick)
+           /* Maximal number of ACKs sent quickly to accelerate slow-start. *
+       #define TCP_MAX_QUICKACKS       16U
+
+       tp->tx.quick = min(quickacks, TCP_MAX_QUICKACKS);
+     */
+    slt             c2, d.u.tcp_rx_d.quick,r1
+    addi            r2, r0, TCP_MAX_QUICKACKS
+    slt.c2          c3, r2, r1
+    tblwr.c3        d.u.tcp_rx_d.quick, TCP_MAX_QUICKACKS
+    tblwr.!c3       d.u.tcp_rx_d.quick, r1
+#if MODEL_BUG_FIX
+    phvwr           p.common_phv_quick, d.u.tcp_rx_d.quick
+#endif
+
+    tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
+    jr              r7
+    phvwr           p.s6_s2s_ato, TCP_ATO_MIN
+
 /* Restart timer after forward progress on connection.
  * RFC2988 recommends to restart timer to now+rto.
  */
@@ -604,7 +629,7 @@ tcp_rearm_rto:
     sne             c1, d.u.tcp_rx_d.fastopen_rsk, r0
     bcf             [c1 & c4], tcp_rearm_rto_done
     nop
-    seq             c1, k.{s1_s2s_packets_out_sbit0_ebit7...s1_s2s_packets_out_sbit8_ebit15}, r0
+    seq             c1, k.s1_s2s_packets_out, r0
     phvwr.c1        p.rx2tx_pending_ft_clear,1
     phvwr.c1        p.common_phv_pending_txdma, 1
     bcf             [c1], tcp_rearm_rto_done
@@ -654,81 +679,106 @@ tcp_enter_quickack_mode:
     jr.c4           r7
     add             r7, r0, r0
 
-tcp_ack_snd_check:
-    /* r1 = rcv_nxt - rcv_wup */
-    sub             r1, d.u.tcp_rx_d.rcv_nxt , k.s1_s2s_rcv_wup
-    /* r2 = rcv_mss */
-    /* c1 = ((rcv_nxt - rcv_wup) > rcv_mss) */
-    /* c1 = more than one full frame received */
-    slt             c1, d.u.tcp_rx_d.rcv_mss, r1
+tcp_rx_slow_path:
+    /* Check if the state is TCP_ESTABLISHED. If not packet is given to CPU */
+    seq             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
+    phvwri.!c1      p.common_phv_write_arq, 1
 
-    /* xxx: c2 = (new rcv window >= rcv_wnd) */
-    sne             c2, r0, r0 // TODO
-    /* c3 = in quick ack mode */
-    /* quick && !pingpong */
-    sne             c4, d.u.tcp_rx_d.quick, r0
-    sne             c5, d.u.tcp_rx_d.pingpong, r0
-    setcf           c3, [c4 & !c5]
-    /* c4 = we have out of order data */
-    //sne             c4, k.to_s3_ooo_datalen, r0 TODO
-    sne             c4, r0, r0 // TODO
-    setcf           c1, [c1 | c2 | c3 | c4]
+    seq             c2, d.u.tcp_rx_d.state, TCP_LISTEN
 
-    phvwr.!c1        p.common_phv_pending_del_ack_send, 1
-    phvwr.c1         p.common_phv_pending_ack_send, 1
+    phvwri.c2       p.common_phv_write_tcp_app_hdr,1
+    phvwr.c2        p.cpu_hdr2_tcp_seqNo, k.To_s1_seq.wx
+    phvwr.c2        p.cpu_hdr2_tcp_AckNo, k.To_s1_ack_seq.wx
+    phvwr.c2        p.cpu_hdr2_tcp_flags, k.to_s1_flags
 
-slow_path:
-old_ack:
-invalid_ack:
-no_queue:
-flow_rx_process_done:
-table_read_setup_next:
-    phvwr           p.rx2tx_snd_wnd, d.u.tcp_rx_d.snd_wnd
-    phvwr           p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
+    bcf             [!c1], flow_rx_process_done
+    setcf           c7, [!c0]
+    /* Setup the to-stage/stage-to-stage variables */
+    phvwr           p.common_phv_snd_una, d.u.tcp_rx_d.snd_una
+
+    /* if (cp->seq != tp->rx.rcv_nxt) { */
+    /* if pkt->seq > rcv_nxt, do ooo (SACK) processing */
+    slt             c7, d.u.tcp_rx_d.rcv_nxt, k.To_s1_seq
+    bcf             [c7], ooo_received
+    /* if rcv_nxt > pkt->seq, retransmission, drop the packet */
+    slt             c7, k.To_s1_seq, d.u.tcp_rx_d.rcv_nxt
+    phvwri.c7       p.p4_intr_global_drop, 1
+    bcf             [c7], flow_rx_process_done
+
+    /*   if (!(before(cp->ack_seq, tp->tx.snd_nxt))) { */
+    sle             c1, k.To_s1_ack_seq, k.To_s1_snd_nxt
+    bcf             [!c1], slow_path
+    nop
+
+    /*   /* If PAWS failed, check it more carefully in slow path */
+    /* if ((s32)(tp->rx_opt.rcv_tsval - tp->rx_opt.ts_recent) < 0) {
+
+           /* DO NOT update ts_recent here, if checksum fails
+        * and timestamp was corrupted part, it will result
+        * in a hung connection since we will drop all
+                * future packets due to the PAWS test.
+                *
+            goto slow_path  ;
+    }
+    */
+    // XXX: VS - rcv_tsval should come from k
+    sub             r1, d.u.tcp_rx_d.rcv_tsval, d.u.tcp_rx_d.ts_recent
+    slt             c1, r1, r0
+    bcf             [c1],slow_path
+    nop
+
+    seq             c1, k.s1_s2s_payload_len, r0
+    phvwr.c1        p.common_phv_process_ack_flag, r0
+    bcf             [c1], tcp_ack
+    nop
+
+tcp_queue_rcv:
     /*
-     * c7 = drop
+     * c6 is global conditional variable indicating OOO pkt in Rx Q
      */
-    bcf             [c7], flow_rx_drop
-    nop
+    bcf             [!c6], tcp_rcv_nxt_update
 
-table_read_RTT:
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tcp_rx_rtt_stage2_start,
-                        k.common_phv_qstate_addr, TCP_TCB_RTT_OFFSET,
-                        TABLE_SIZE_512_BITS)
     /*
-     * c6 = OOO in Rx queue, do not allocate buffers
+     * We have prior OOO packets, see if we have more data we can send
+     *
+     * r1 = end_seq - rcv_nxt
+     *
+     * r0 (0) is the rightmost (lowest) bit set
+     * r2 is the leftmost (highest) bit set
      */
-    bcf             [c6], table_read_SERQ_PRODUCER_IDX
-table_read_RNMDR_ALLOC_IDX:
-    // Skip Serq descr alloc for L7 IPS case
-    seq             c1, k.common_phv_l7_proxy_en, 1
-    seq             c2, k.common_phv_l7_proxy_type_span, 1
+    add             r1, k.To_s1_seq, k.s1_s2s_payload_len
+    sub             r1, r1, d.u.tcp_rx_d.rcv_nxt
+    srl             r2, r1, TCP_OOO_CELL_SIZE_SHIFT
+    and             r3, r1, TCP_OOO_CELL_SIZE_MASK
+    seq             c3, r3, r0
+    sub.!c3         r2, r2, 1
 
-    bcf             [c1 & !c2], table_read_RNMPR_ALLOC_IDX
-    nop
+    fsetv           r4, d.u.tcp_rx_d.ooo_rcv_bitmap, r2, r0
+    tblwr           d.u.tcp_rx_d.ooo_rcv_bitmap, r4
+    /*
+     * Get number of consecutive 1s in ooo_rcv_bitmap
+     * Multiply that by TCP_OOO_CELL_SIZE to get DMA len
+     * Add it to rcv_nxt to get new rcv_nxt
+     *
+     * r1 = end_seq - rcv_nxt
+     * r2 = len based on consecutive 1s
+     * Set r1 (bytes_rcvd) based on max(r1, r2)
+     */
+    ffcv            r2, d.u.tcp_rx_d.ooo_rcv_bitmap, r0
+    sll             r2, r2, TCP_OOO_CELL_SIZE_SHIFT
+    slt             c1, r1, r2
+    add.c1          r1, r2, r0
+    phvwr           p.to_s6_payload_len, r1
+    tbladd          d.u.tcp_rx_d.rcv_nxt, r1
+    phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
+    phvwr           p.common_phv_ooo_in_rx_q, 1
+ooo_bytes_rcvd_stats_update_start:
+    CAPRI_STATS_INC(bytes_rcvd, 16, r1, d.u.tcp_rx_d.bytes_rcvd)
+ooo_bytes_rcvd_stats_update:
+    CAPRI_STATS_INC_UPDATE(r1, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
+    b               bytes_rcvd_stats_update_end
+    setcf           c6, [c0]
 
-    addi            r3, r0, RNMDR_ALLOC_IDX
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_stage2_start,
-                        r3, TABLE_SIZE_64_BITS)
-table_read_RNMPR_ALLOC_IDX:
-    addi            r3, r0, RNMPR_ALLOC_IDX
-    CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS, tcp_rx_read_rnmpr_stage2_start,
-                        r3, TABLE_SIZE_64_BITS)
-table_read_L7_RNDMR_ALLOC_IDX:
-    bcf             [!c1], table_read_SERQ_PRODUCER_IDX
-    nop
-    addi            r3, r0, RNMDR_ALLOC_IDX
-    CAPRI_NEXT_TABLE_READ(3, TABLE_LOCK_DIS, tcp_rx_l7_read_rnmdr_stage2_start,
-                        r3, TABLE_SIZE_64_BITS)
-
-table_read_SERQ_PRODUCER_IDX:
-    seq             c1, k.common_phv_l7_proxy_en, 1
-    seq             c2, k.common_phv_l7_proxy_type_span, 1
-    // Skip write serq for L7 Proxy with redirect
-    andcf           c1, [!c2] 
-    phvwri.!c1      p.common_phv_write_serq, 1
-    nop.e
-    nop
 flow_rx_drop:
     CAPRI_CLEAR_TABLE0_VALID
     nop.e
@@ -746,9 +796,10 @@ ooo_received:
      * c7 = drop packet
      */
     sub             r1, k.To_s1_seq, d.u.tcp_rx_d.rcv_nxt
-    sub             r2, k.To_s1_end_seq, d.u.tcp_rx_d.rcv_nxt
+    add             r2, r1, k.s1_s2s_payload_len
     add             r3, d.u.tcp_rx_d.rcv_nxt, TCP_OOO_NUM_CELLS * TCP_OOO_CELL_SIZE
-    slt             c7, r3, k.To_s1_end_seq
+    add             r4, k.To_s1_seq, k.s1_s2s_payload_len
+    slt             c7, r3, r4
     phvwri.c7       p.p4_intr_global_drop, 1
     bcf             [c7], flow_rx_process_done
 

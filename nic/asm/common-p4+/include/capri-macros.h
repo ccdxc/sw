@@ -12,9 +12,17 @@
         phvwri      p.table_addr[63], 1                             ;\
         phvwr       p.table_size, 8                                 ;
 
+/*
+    TODO: Once we get phvwrpair instruction, optimize this
+   MR:
+        phvwri      p.common_te##_num##_phv_table_pc, _stage_entry[33:6]; \
+        add         r1, _table_base, _table_state_offset; \
+        phvwrpair   p.common_te##_num##_phv_table_addr, r1 , p.common_te##_num##_phv_table_lock_en, _lock_en | _table_read_size | _stage_entry
+        phvwri      p.app_header_table##_num##_valid, 1;
+*/
 #define CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(_num, _stage_entry) \
-        phvwri  p.common_te##_num##_phv_table_lock_en, 1; \
-        phvwri  p.common_te##_num##_phv_table_raw_table_size, TABLE_SIZE_0_BITS; \
+        phvwri      p.{common_te##_num##_phv_table_lock_en...common_te##_num##_phv_table_raw_table_size}, \
+                    (0 << 3 | TABLE_SIZE_0_BITS); \
         addi    r2, r0, _stage_entry; \
         srl     r1, r2, CAPRI_MPU_PC_SHIFT; \
         phvwr   p.common_te##_num##_phv_table_pc, r1; \
@@ -25,30 +33,30 @@
         CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, _stage_entry)
 
 #define CAPRI_NEXT_TABLE_READ(_num, _lock_en, _stage_entry, _table_base, _table_read_size) \
-        phvwri      p.common_te##_num##_phv_table_lock_en, _lock_en; \
-        phvwri      p.common_te##_num##_phv_table_raw_table_size, _table_read_size; \
+        phvwri      p.{common_te##_num##_phv_table_lock_en...common_te##_num##_phv_table_raw_table_size}, \
+                    (_lock_en << 3 | _table_read_size); \
         phvwri      p.common_te##_num##_phv_table_pc, _stage_entry[33:6]; \
         phvwr       p.common_te##_num##_phv_table_addr, _table_base; \
         phvwri      p.app_header_table##_num##_valid, 1;
 
 #define CAPRI_NEXT_TABLE_READ_i(_num, _lock_en, _stage_entry, _table_base, _table_read_size) \
-        phvwri      p.common_te##_num##_phv_table_lock_en, _lock_en; \
-        phvwri      p.common_te##_num##_phv_table_raw_table_size, _table_read_size; \
+        phvwri      p.{common_te##_num##_phv_table_lock_en...common_te##_num##_phv_table_raw_table_size}, \
+                    (_lock_en << 3 | _table_read_size); \
         phvwri      p.common_te##_num##_phv_table_pc, _stage_entry[33:6]; \
         phvwri      p.common_te##_num##_phv_table_addr, _table_base; \
         phvwri      p.app_header_table##_num##_valid, 1;
 
 #define CAPRI_NEXT_TABLE_READ_OFFSET(_num, _lock_en, _stage_entry, _table_base, _table_state_offset, _table_read_size) \
-        phvwri      p.common_te##_num##_phv_table_lock_en, _lock_en; \
-        phvwri      p.common_te##_num##_phv_table_raw_table_size, _table_read_size; \
+        phvwri      p.{common_te##_num##_phv_table_lock_en...common_te##_num##_phv_table_raw_table_size}, \
+                    (_lock_en << 3 | _table_read_size); \
         phvwri      p.common_te##_num##_phv_table_pc, _stage_entry[33:6]; \
         add         r1, _table_base, _table_state_offset; \
         phvwr       p.common_te##_num##_phv_table_addr, r1; \
         phvwri      p.app_header_table##_num##_valid, 1;
 
 #define CAPRI_NEXT_TABLE_READ_INDEX(_num, _index, _lock_en, _stage_entry, _table_base, _table_entry_size_shft, _table_read_size) \
-        phvwri      p.common_te##_num##_phv_table_lock_en, _lock_en; \
-        phvwri      p.common_te##_num##_phv_table_raw_table_size, _table_read_size; \
+        phvwri      p.{common_te##_num##_phv_table_lock_en...common_te##_num##_phv_table_raw_table_size}, \
+                    (_lock_en << 3 | _table_read_size); \
         phvwri      p.common_te##_num##_phv_table_pc, _stage_entry[33:6]; \
         sll         r2, _index, _table_entry_size_shft; \
         add         r1, _table_base, r2; \
