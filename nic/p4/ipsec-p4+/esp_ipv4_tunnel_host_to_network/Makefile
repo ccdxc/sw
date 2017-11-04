@@ -8,7 +8,7 @@ include $(TOPDIR)/make/Makefile.inc
 NCC = ../../../tools/ncc/capri-ncc.py
 OBJ_DIR = ../../../obj
 GEN_DIR = ../../../gen
-NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi
+NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi --two-byte-profile
 
 IPSEC_RX_PROJ := esp_ipv4_tunnel_h2n_rxdma
 IPSEC_TX1_PROJ := esp_ipv4_tunnel_h2n_txdma1

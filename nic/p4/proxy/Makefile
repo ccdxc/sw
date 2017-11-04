@@ -7,7 +7,7 @@ include $(TOPDIR)/make/Makefile.inc
 NCC = ../../tools/ncc/capri-ncc.py
 OBJ_DIR = ../../obj
 GEN_DIR = ../../gen
-NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi 
+NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi --two-byte-profile
 #TLS_PROJ = proxy
 TCP_RX_PROJ = tcp_proxy_rxdma
 TCP_TX_PROJ = tcp_proxy_txdma

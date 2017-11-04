@@ -6,7 +6,7 @@ include $(TOPDIR)/make/Makefile.inc
 NCC = ../../tools/ncc/capri-ncc.py
 OBJ_DIR = ../../obj
 GEN_DIR = ../../gen
-NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi 
+NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi --two-byte-profile
 PROJ = storage_tx
 GEN_FILE = $(GEN_DIR)/$(PROJ)/asm_out/ingress.h
 ncc_deps = $(shell find $(TOPDIR)/tools/ncc -path $(TOPDIR)/tools/ncc/utest -prune -o -name '*.c' -print -o -name '*.h' -print -o -name '*.py' -print)

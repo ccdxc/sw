@@ -6,7 +6,7 @@ include $(TOPDIR)/make/Makefile.inc
 NCC = ../../tools/ncc/capri-ncc.py
 OBJ_DIR = ../../obj
 GEN_DIR = ../../gen
-NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi 
+NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi --two-byte-profile
 RAWR_RX_PROJ = rawr_rxdma
 RAWC_TX_PROJ = rawc_txdma
 RAWR_RX_GEN_FILE = $(GEN_DIR)/$(RAWR_RX_PROJ)/asm_out/ingress.h

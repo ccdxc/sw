@@ -8,7 +8,7 @@ include $(TOPDIR)/make/Makefile.inc
 NCC = ../../tools/ncc/capri-ncc.py
 OBJ_DIR = ../../obj
 GEN_DIR = ../../gen
-NCC_OPTIONS = --asm-out --p4-plus --no-ohi --pd-gen --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_bin
+NCC_OPTIONS = --asm-out --p4-plus --no-ohi --two-byte-profile --pd-gen --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_bin
 
 p4_src = $(shell find $(SOURCEDIR) -name '*.p4')
 hdr_src = $(shell find $(SOURCEDIR) -name '*.h')

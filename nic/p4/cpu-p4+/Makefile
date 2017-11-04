@@ -7,7 +7,7 @@ include $(TOPDIR)/make/Makefile.inc
 
 NCC = ../../tools/ncc/capri-ncc.py
 OBJ_DIR = ../../obj
-NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi --gen-dir $(GEN_DIR)
+NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi --two-byte-profile --gen-dir $(GEN_DIR)
 
 CPU_RX_PROJ = cpu_rxdma
 CPU_TX_PROJ = cpu_txdma

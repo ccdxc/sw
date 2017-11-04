@@ -6,7 +6,7 @@ include $(TOPDIR)/make/Makefile.inc
 
 NCC = ../../tools/ncc/capri-ncc.py
 OBJ_DIR = ../../obj
-NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi
+NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi --two-byte-profile
 PROJ = ipfix
 GEN_FILE = $(GEN_DIR)/$(PROJ)/asm_out/ingress.h
 

@@ -6,7 +6,7 @@ include $(TOPDIR)/make/Makefile.inc
 NCC = ../../../tools/ncc/capri-ncc.py
 OBJ_DIR = ../../../obj
 GEN_DIR = ../../../gen
-NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi 
+NCC_OPTIONS = --p4-plus --pd-gen --asm-out --no-ohi --two-byte-profile
 #TLS_PROJ = proxy
 TLS_TX_PRE_CRYPTO_ENC_PROJ = tls_txdma_pre_crypto_enc
 TLS_TX_PRE_CRYPTO_ENC_GEN_FILE = $(GEN_DIR)/$(TLS_TX_PRE_CRYPTO_ENC_PROJ)/asm_out/ingress.h
