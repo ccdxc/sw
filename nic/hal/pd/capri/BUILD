@@ -28,6 +28,7 @@ cc_library(
             "capri_init.cc",
             "capri_repl.cc",
             "capri_txs_scheduler.cc",
+            "capri_pxb_pcie.cc",
 	    "capri_barco_rings.cc",
             "capri_barco_res.cc",
             "capri_barco_asym_apis.cc",

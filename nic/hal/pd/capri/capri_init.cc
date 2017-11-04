@@ -8,6 +8,7 @@
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/asic_pd.hpp"
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
+#include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
 #define CAPRI_P4PLUS_NUM_SYMBOLS 50
 
@@ -80,10 +81,14 @@ capri_init (capri_cfg_t *cfg = NULL)
         ret = capri_default_config_init();
     }
 
-    if (capri_txs_scheduler_init()) {
-        return HAL_RET_ERR;
+    if (ret == HAL_RET_OK) {
+        ret = capri_txs_scheduler_init();
     }
  
+    if (ret == HAL_RET_OK) {
+        ret = capri_pxb_pcie_init();
+    }
+
     if (ret == HAL_RET_OK) {
         ret = capri_tm_init();
     }
