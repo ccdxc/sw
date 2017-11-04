@@ -63,6 +63,9 @@ def TestCaseSetup(tc):
         return
     tc.pvtdata.priotag = getattr(iterelem, 'priotag', False)
     tc.pvtdata.scenario = getattr(iterelem, 'scenario', None)
+    tc.pvtdata.ipopts = getattr(iterelem, 'ipopts', None)
+    if tc.pvtdata.ipopts is not None:
+        tc.pvtdata.ipopts = tc.pvtdata.ipopts.split(',')
     return
 
 def TestCaseVerify(tc):

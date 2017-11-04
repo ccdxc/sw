@@ -1,6 +1,8 @@
 #! /usr/bin/python3
 import pdb
 
+import infra.penscapy.penscapy as penscapy
+
 class TcpOptions:
     def __init__(self, kind, data):
         self.kind = kind
@@ -59,20 +61,23 @@ def GetExpectedIpv4Flags(testcase, packet):
         return 0x0
     return 0
 
+def __get_ipv4_option():
+    return penscapy.IPOption(bytes([0x83, 0x03, 0x10]))
+
 def GetInputIpv4Options(testcase, packet):
     iterelem = testcase.module.iterator.Get()
     profile_name = iterelem.profile
     if 'IP_OPTIONS_ACTION' in profile_name:
-        return [0x83, 0x03, 0x10]
+        return __get_ipv4_option()
     return None
 
 def GetExpectedIpv4Options(testcase, packet):
     iterelem = testcase.module.iterator.Get()
     profile_name = iterelem.profile
     if 'IP_OPTIONS_ACTION_ALLOW' in profile_name:
-        return [0x83, 0x03, 0x10]
+        return __get_ipv4_option()
     elif 'IP_OPTIONS_ACTION_DENY' in profile_name:
-        return [0x83, 0x03, 0x10]
+        return __get_ipv4_option()
     elif 'IP_OPTIONS_ACTION_EDIT' in profile_name:
         return None
     return None

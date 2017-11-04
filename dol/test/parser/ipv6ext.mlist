@@ -1,0 +1,35 @@
+# Feature Test Modules List
+feature:
+    id      : parser
+    sub     : ipv6ext
+    package : test.parser
+    module  : parser
+    enable  : True
+    ignore  : True
+    spec    : ip.testspec
+
+modules:
+    - module:
+        name    : HOP_BY_HOP
+        iterate :
+            - ipopts: HOP_BY_HOP
+              flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : DEST_OPT
+        iterate :
+            - ipopts: DEST_OPT
+              flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : ROUTING
+        iterate :
+            - ipopts: ROUTING
+              flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : FRAGMENT
+        iterate :
+            - ipopts: FRAGMENT
+              flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+

@@ -134,3 +134,23 @@ modules:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               scenario  : BAD_CHECKSUM,OUTER_IPV4,OUTER_UDP,IPV4,UDP
 
+    - module:
+        name    : IPV4_FIRST_FRAGMENT_UDP
+        spec    : ip.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : FIRST_FRAGMENT,BAD_CHECKSUM,IPV4,UDP
+
+    - module:
+        name    : IPV4_MIDDLE_FRAGMENT
+        spec    : ip.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : MIDDLE_FRAGMENT,BAD_CHECKSUM,UDP
+
+    - module:
+        name    : IPV4_LAST_FRAGMENT
+        spec    : ip.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : LAST_FRAGMENT,BAD_CHECKSUM,UDP

@@ -8,7 +8,8 @@ fields:
     tc      : const/7
     fl      : const/0
     plen    : None      # Scapy will fill this.
-    nh      : ipproto/255
+    nh      : None
     hlim    : const/64
     src     : ipv6addr/2000::1
     dst     : ipv6addr/2000::2
+    extns   : None

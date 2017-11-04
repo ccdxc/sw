@@ -30,10 +30,21 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
+                flags   : callback://parser/callbacks/GetIpv4Flags
+                frag    : callback://parser/callbacks/GetIpv4FragOffset
+                options : callback://parser/callbacks/GetIpv4Options
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 hlim    : 64
+                extns   : callback://parser/callbacks/GetIpv6ExtHeaders
+            udp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
+                chksum  : callback://parser/callbacks/GetUdpChecksum
+            tcp:
+                sport   : ref://testcase/config/flow/sport
+                dport   : ref://testcase/config/flow/dport
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

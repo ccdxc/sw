@@ -9,15 +9,48 @@ feature:
 
 modules:
     - module:
-        name    : PROTO255
-        spec    : proto255.testspec
+        name    : IPV4_PROTO255
+        spec    : ip.testspec
         iterate :
             - flow : filter://type=IPV4,proto=PROTO255,label=NETWORKING
+
+    - module:
+        name    : IPV6_PROTO255
+        spec    : ip.testspec
+        iterate :
             - flow : filter://type=IPV6,proto=PROTO255,label=NETWORKING
 
     - module:
-        name    : PROTO255_VXLAN
-        spec    : proto255_vxlan.testspec
+        name    : VXLAN_IPV4_PROTO255
+        spec    : ip_vxlan.testspec
         iterate :
             - flow : filter://type=IPV4,proto=PROTO255,label=NETWORKING
+
+    - module:
+        name    : VXLAN_IPV6_PROTO255
+        spec    : ip_vxlan.testspec
+        iterate :
             - flow : filter://type=IPV6,proto=PROTO255,label=NETWORKING
+
+    - module:
+        name    : IPV4_FIRST_FRAGMENT
+        spec    : ip.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : FIRST_FRAGMENT
+
+    - module:
+        name    : IPV4_MIDDLE_FRAGMENT
+        spec    : ip.testspec
+        ignore  : True
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : MIDDLE_FRAGMENT
+
+    - module:
+        name    : IPV4_LAST_FRAGMENT
+        spec    : ip.testspec
+        ignore  : True
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              scenario  : LAST_FRAGMENT

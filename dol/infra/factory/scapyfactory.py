@@ -130,13 +130,26 @@ PADDING_builder = ScapyHeaderBuilder_PADDING()
 
 class ScapyHeaderBuilder_IPV4(ScapyHeaderBuilder_BASE):
     def build(self, hdr):
-        if hdr.fields.options is not None:
-            if len(hdr.fields.options):
-                hdr.fields.options = penscapy.IPOption(bytes(hdr.fields.options))
-        else:
+        if hdr.fields.options is None:
             hdr.fields.options = []
         return super().build(hdr)
 IPV4_builder = ScapyHeaderBuilder_IPV4()
+
+class ScapyHeaderBuilder_IPV6(ScapyHeaderBuilder_BASE):
+    def build(self, hdr):
+        if hdr.fields.extns is None:
+            hdr.fields.extns = []
+        basev6 = super().build(hdr)
+        
+        v6hdr = basev6
+        orig_nh = v6hdr.nh
+        for ext in hdr.fields.extns:
+            v6hdr = v6hdr / ext
+            v6hdr.nh = ext.overload_fields[penscapy.IPv6]['nh']
+            ext.nh = orig_nh
+        return v6hdr
+IPV6_builder = ScapyHeaderBuilder_IPV6()
+
 
 class ScapyHeaderBuilder_TFTP(ScapyHeaderBuilder_BASE):
     opcode_map = [

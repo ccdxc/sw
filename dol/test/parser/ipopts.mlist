@@ -1,0 +1,88 @@
+# Feature Test Modules List
+feature:
+    id      : parser
+    sub     : ipopts
+    package : test.parser
+    module  : parser
+    enable  : True
+    ignore  : False
+    spec    : ip.testspec
+
+modules:
+    - module:
+        name    : EOL
+        iterate :
+            - ipopts: EOL
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : NOP
+        iterate :
+            - ipopts: NOP
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : SECURITY
+        iterate :
+            - ipopts: SECURITY
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : LSRR
+        iterate :
+            - ipopts: LSRR
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : RR
+        iterate :
+            - ipopts: RR
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : SSRR
+        iterate :
+            - ipopts: SSRR
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : STREAMID
+        iterate :
+            - ipopts: STREAMID
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : MTUPROBE
+        iterate :
+            - ipopts: MTUPROBE
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : MTUREPLY
+        iterate :
+            - ipopts: MTUREPLY
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : TRACEROUTE
+        iterate :
+            - ipopts: TRACEROUTE
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : ADDREXT
+        iterate :
+            - ipopts: ADDREXT
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : ROUTERALERT
+        iterate :
+            - ipopts: ROUTERALERT
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+
+    - module:
+        name    : SDBM
+        iterate :
+            - ipopts: SDBM
+              flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
