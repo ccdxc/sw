@@ -8,29 +8,37 @@
 
 namespace hal {
 
-void
-port_event_create (void *lctxt)
-{
 #if 0
+// TEST CODE - BEGIN
+bool
+port_event_create (utils::event_id_t event_id, void *event_ctxt, void *lctxt)
+{
     EventResponse  evrsp;
     grpc::ServerReaderWriter<EventResponse, EventRequest> *stream;
 
+    HAL_TRACE_DEBUG("Generating event {} to listener {}",
+                    event_id, lctxt);
     stream = (grpc::ServerReaderWriter<EventResponse, EventRequest> *)lctxt;
-    evrsp.set_event_id(::event::EVENT_ID_ENDPOINT);
+    evrsp.set_event_id(static_cast<::event::EventId>(event_id));
     evrsp.set_api_status(types::API_STATUS_OK);
     evrsp.mutable_ep_event()->set_l2_segment_handle(0x1111);
     evrsp.mutable_ep_event()->set_mac_address(0x0a0a0a0a0a);
     if (!stream->Write(evrsp)) {
-        HAL_TRACE_ERR("Event ntfn failed, cleaning up stream state ...");
+        HAL_TRACE_ERR("Event ntfn failed");
+        return false;     // indicates that stream should be closed
     }
-#endif
+
+    return true;
 }
 
-#if 0
 void generate_event (void)
 {
-    g_hal_state->event_mgr()->walk_listeners(::event::EVENT_ID_PORT, port_event_create);
+    HAL_TRACE_DEBUG("Generating event {} to all listeners",
+                    ::event::EVENT_ID_ENDPOINT);
+    g_hal_state->event_mgr()->walk_listeners(::event::EVENT_ID_ENDPOINT, NULL,
+                                             port_event_create);
 }
+// TEST CODE - END
 #endif
 
 hal_ret_t
@@ -40,7 +48,7 @@ handle_event_request (EventRequest *req,
 {
     hal_ret_t    ret;
 
-    HAL_TRACE_DEBUG("Handling event operation, event id {}, operation {}, stream {}\n",
+    HAL_TRACE_DEBUG("Handling event operation, event id {}, operation {}, stream {}",
                     req->event_id(), req->event_operation(), (void *)stream);
     if (req->event_operation() == ::event::EVENT_OP_SUBSCRIBE) {
         ret = g_hal_state->event_mgr()->subscribe(static_cast<utils::event_id_t>(req->event_id()),

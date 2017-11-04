@@ -58,6 +58,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_DHCP_LEARN,
     HAL_SLAB_EVENT_MAP,
     HAL_SLAB_EVENT_MAP_LISTENER,
+    HAL_SLAB_EVENT_LISTENER,
     HAL_SLAB_PI_MAX,  // NOTE: MUST be last PI slab id
 
     // PD Slabs

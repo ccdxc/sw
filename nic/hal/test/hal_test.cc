@@ -368,16 +368,20 @@ public:
             event_stub_->EventListen(&context));
 
         std::thread writer([stream]() {
-            std::vector<EventRequest>    events(2);
+            std::vector<EventRequest>    events(6);
 
-            events[0].set_event_id(event::EVENT_ID_ENDPOINT);
-            events[0].set_event_operation(event::EVENT_OP_SUBSCRIBE);
-            events[1].set_event_id(event::EVENT_ID_PORT);
-            events[1].set_event_operation(event::EVENT_OP_SUBSCRIBE);
-            //events[2].set_event_id(event::EVENT_ID_PORT);
-            //events[2].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
-            //events[3].set_event_id(event::EVENT_ID_ENDPOINT);
-            //events[3].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
+            events[0].set_event_id(event::EVENT_ID_PORT);
+            events[0].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
+            events[1].set_event_id(event::EVENT_ID_ENDPOINT);
+            events[1].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
+            events[2].set_event_id(event::EVENT_ID_ENDPOINT);
+            events[2].set_event_operation(event::EVENT_OP_SUBSCRIBE);
+            events[3].set_event_id(event::EVENT_ID_PORT);
+            events[3].set_event_operation(event::EVENT_OP_SUBSCRIBE);
+            events[4].set_event_id(event::EVENT_ID_PORT);
+            events[4].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
+            events[5].set_event_id(event::EVENT_ID_ENDPOINT);
+            events[5].set_event_operation(event::EVENT_OP_UNSUBSCRIBE);
             for (const EventRequest& event : events) {
                 std::cout << "Subscribing to event " << event.event_id() << std::endl;
                 stream->Write(event);
@@ -529,8 +533,10 @@ main (int argc, char** argv)
 
     port_test(&hclient);
 
+    // delete a non-existent tenant
     hclient.tenant_delete_by_id(1);
-    // create a tenant
+
+    // create a tenant and perform GETs
     hal_handle = hclient.tenant_create(1);
     assert(hal_handle != 0);
     assert(hclient.tenant_get_by_handle(hal_handle) != 0);

@@ -6,6 +6,7 @@
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
 #include "nic/hal/svc/event_svc.hpp"
+#include "nic/include/hal_state.hpp"
 #include "nic/hal/src/event.hpp"
 
 Status
@@ -17,16 +18,20 @@ EventServiceImpl::EventListen(ServerContext* context,
 
     do {
         while (stream->Read(&req)) {
-            HAL_TRACE_DEBUG("Processing event request");
             hal::handle_event_request(&req, stream);
         }
-        // TODO: if this stream has no events of interest, we can return from
-        // this function
-        if (false) {
-        } else {
-            pthread_yield();
+
+        // if this stream doesn't have any events of interest, we can close
+        // this stream
+        if (!hal::g_hal_state->event_mgr()->is_listener_active(stream)) {
+            HAL_TRACE_DEBUG("Listener {} is not active, removing ...",
+                            (void *)stream);
+            hal::g_hal_state->event_mgr()->unsubscribe_listener(stream);
+            break;
         }
+        pthread_yield();
     } while (TRUE);
-    
+    HAL_TRACE_DEBUG("Closing the listener stream {}", (void *)stream);
+
     return Status::OK;
 }

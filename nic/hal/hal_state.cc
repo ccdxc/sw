@@ -1372,11 +1372,15 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         break;
 
     case HAL_SLAB_EVENT_MAP:
-        g_hal_state->event_mgr()->eventmap_slab()->free_(elem);
+        g_hal_state->event_mgr()->event_map_slab()->free_(elem);
         break;
 
     case HAL_SLAB_EVENT_MAP_LISTENER:
-        g_hal_state->event_mgr()->eventmap_listener_slab()->free_(elem);
+        g_hal_state->event_mgr()->event_listener_slab()->free_(elem);
+        break;
+
+    case HAL_SLAB_EVENT_LISTENER:
+        g_hal_state->event_mgr()->listener_slab()->free_(elem);
         break;
 
     default:
