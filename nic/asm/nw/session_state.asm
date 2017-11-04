@@ -22,10 +22,10 @@ nop:
 // Some computed values are saved in registers and maintained throughtout the
 // the program so that we can reduce the overall # of instructions
 // R1 - Temporary use
-// R2 - Exceptions seen for the packet
+// R2 - tcp_data_len before calling normalization, after that Exceptions seen for the packet
 // R3 - Used for bal instruction to save the return address. No bal in bal usage.
 // R4 - tcp_mss before calling normalization. After that rflow_tcp_ack_num + tcp_rcvr_win_sz
-// R5 - tcp_seq_num_hi
+// R5 - used in normalization for scratch after it returns its loaded with tcp_seq_num_hi
 // R6 - tcp_rcvr_win_sz
 // R7 - adjusted ack or seq num (taking into account the syn_cookie_delta)
 //
@@ -37,39 +37,38 @@ nop:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 tcp_session_state_info:
+  // New Instruction TBD
   seq          c1, k.flow_info_metadata_flow_role, TCP_FLOW_INITIATOR
   b.!c1        lb_tcp_session_state_responder
   seq          c1, k.l4_metadata_tcp_normalization_en, 1
 
 lb_tcp_session_state_initiator:
+  // New Instruction TBD,
   add          r1, d.u.tcp_session_state_info_d.rflow_tcp_win_scale, r0
   sllv         r6, d.u.tcp_session_state_info_d.rflow_tcp_win_sz, r1   // r6 = rcvr_win_sz
   add          r4, d.u.tcp_session_state_info_d.rflow_tcp_mss, r0
+  add          r2, k.l4_metadata_tcp_data_len, r0 // r2 can  be modified by tcp_session_normalization
   bal.c1       r3, f_tcp_session_normalization
   add          r7, k.tcp_ackNo, d.u.tcp_session_state_info_d.syn_cookie_delta // r7 = adjusted_ack_num
-  add          r5, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, k.l4_metadata_tcp_data_len  // tcp_seq_num_hi
+  add          r5, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, r2  // tcp_seq_num_hi
   sub          r5, r5, 1
   add          r4, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, r6 // rflow_tcp_ack_num + rcvr_win_sz
   seq          c1, k.tcp_flags, TCP_FLAG_ACK
-  seq          c2, k.tcp_flags, (TCP_FLAG_ACK | TCP_FLAG_PSH)
-  setcf        c1, [c1 | c2]
-  seq          c2, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_ESTABLISHED
-  seq          c3, d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_ESTABLISHED
-  sne          c5, k.l4_metadata_tcp_data_len, r0 // tcp_data_len != 0
+  seq.!c1      c1, k.tcp_flags, (TCP_FLAG_ACK | TCP_FLAG_PSH)
+  seq          c2, d.{u.tcp_session_state_info_d.iflow_tcp_state,u.tcp_session_state_info_d.rflow_tcp_state}, (FLOW_STATE_ESTABLISHED << 4 | FLOW_STATE_ESTABLISHED)
+  sne          c5, r2, r0 // tcp_data_len != 0
   sne          c6, r6, r0 // tcp_rcvr_win_sz != 0
   scwlt        c7, r5, r4 // tcp_seq_num_hi < rflow_tcp_ack_num + rcvr_win_sz
-  setcf        c1, [c1 & c2 & c3 & c6]
+  setcf        c1, [c1 & c2 & c6]
   seq          c2, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   setcf        c2, [c5 & c2 & c7]
   sub          r1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, 1 // rflow_tcp_ack_num - 1
   scwle        c3, r1, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}   // rflow_tcp_ack_num -1 <= tcp.seqNo
   scwlt        c4, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, r4
-  setcf        c3, [!c5 & c3 & c4]
-  setcf        c2, [c2 | c3]
+  setcf.!c2    c2, [!c5 & c3 & c4]
   bcf          ![c1 & c2], lb_tcp_session_state_initiator_non_best
   scwlt        c1, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, k.tcp_ackNo
-  scwle        c2, k.tcp_ackNo, d.u.tcp_session_state_info_d.rflow_tcp_seq_num
-  setcf        c1, [c1 & c2]
+  scwle.c1     c1, k.tcp_ackNo, d.u.tcp_session_state_info_d.rflow_tcp_seq_num
   tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_ack_num, k.tcp_ackNo
   tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_win_sz, k.tcp_window
 #if 0 /* RTT_NOT_CONSIDERED */
@@ -302,34 +301,32 @@ f_tcp_session_initiator_rtt_calculate:
   nop
 
 lb_tcp_session_state_responder:
+  // New Instruction TBD,
   add          r1, d.u.tcp_session_state_info_d.iflow_tcp_win_scale, r0
   sllv         r6, d.u.tcp_session_state_info_d.iflow_tcp_win_sz, r1   // r6 = rcvr_win_sz
   add          r4, d.u.tcp_session_state_info_d.iflow_tcp_mss, r0
+  add          r2, k.l4_metadata_tcp_data_len, r0 // r2 can  be modified by tcp_session_normalization
   bal.c1       r3, f_tcp_session_normalization
   sub          r7, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.syn_cookie_delta // r7 = adjusted_seq_num
-  add          r5, r7, k.l4_metadata_tcp_data_len  // tcp_seq_num_hi
+  add          r5, r7, r2  // tcp_seq_num_hi
   sub          r5, r5, 1
   add          r4, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, r6 // iflow_tcp_ack_num + rcvr_win_sz
   seq          c1, k.tcp_flags, TCP_FLAG_ACK
-  seq          c2, k.tcp_flags, (TCP_FLAG_ACK | TCP_FLAG_PSH)
-  setcf        c1, [c1 | c2]
-  seq          c2, d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_ESTABLISHED
-  seq          c3, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_ESTABLISHED
-  sne          c5, k.l4_metadata_tcp_data_len, r0 // tcp_data_len != 0
+  seq.!c1      c1, k.tcp_flags, (TCP_FLAG_ACK | TCP_FLAG_PSH)
+  seq          c2, d.{u.tcp_session_state_info_d.iflow_tcp_state,u.tcp_session_state_info_d.rflow_tcp_state}, (FLOW_STATE_ESTABLISHED << 4 | FLOW_STATE_ESTABLISHED)
+  sne          c5, r2, r0 // tcp_data_len != 0
   sne          c6, r6, r0 // tcp_rcvr_win_sz != 0
   scwle        c7, r5, r4 // tcp_seq_num_hi < iflow_tcp_ack_num + rcvr_win_sz
-  setcf        c1, [c1 & c2 & c3 & c6]
+  setcf        c1, [c1 & c2 & c6]
   seq          c2, r7, d.u.tcp_session_state_info_d.rflow_tcp_seq_num
   setcf        c2, [c5 & c2 & c7]
   sub          r1, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, 1 // iflow_tcp_ack_num - 1
   scwle        c3, r1, r7   // iflow_tcp_ack_num -1 <= adjusted_seq_num
   scwlt        c4, r7, r4
-  setcf        c3, [!c5 & c3 & c4]
-  setcf        c2, [c2 | c3]
+  setcf.!c2    c2, [!c5 & c3 & c4]
   bcf          ![c1 & c2], lb_tcp_session_state_responder_non_best
   scwlt        c1, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_ackNo
-  scwle        c2, k.tcp_ackNo, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
-  setcf        c1, [c1 & c2]
+  scwle.c1     c1, k.tcp_ackNo, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_ack_num, k.tcp_ackNo
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_win_sz, k.tcp_window
 #if 0 /* RTT_NOT_CONSIDERED */
@@ -639,36 +636,43 @@ lb_tss_r_exit:
 
 // R4 - tcp_mss before calling normalization. After that rflow_tcp_ack_num + tcp_rcvr_win_sz
 // R6 - tcp_rcvr_win_sz
-f_tcp_session_normalization:
-  seq          c2, d.u.tcp_session_state_info_d.iflow_tcp_state, FLOW_STATE_ESTABLISHED
-  seq          c3, d.u.tcp_session_state_info_d.rflow_tcp_state, FLOW_STATE_ESTABLISHED
-  // TBD: jrcf
-  setcf        c2, [c2 & c3]
+// R1 - k.l4_metadata_tcp_data_len
+f_tcp_session_normalization: 
+  seq          c2, d.{u.tcp_session_state_info_d.iflow_tcp_state,u.tcp_session_state_info_d.rflow_tcp_state}, (FLOW_STATE_ESTABLISHED << 4 | FLOW_STATE_ESTABLISHED)
   jr.!c2       r3
   seq          c2, k.l4_metadata_tcp_data_len_gt_mss_action, \
                       NORMALIZATION_ACTION_ALLOW
   b.c2         lb_tcp_data_len_gt_win_size
   seq          c2, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_ALLOW
-  slt          c3, r4, k.l4_metadata_tcp_data_len
+  slt          c3, r4, r2
   b.!c3        lb_tcp_data_len_gt_win_size
   seq          c3, k.l4_metadata_tcp_data_len_gt_mss_action, \
                       NORMALIZATION_ACTION_DROP
   phvwr.c3.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3     p.capri_intrinsic_drop, 1
+#if 0
+  add          r2, r4, r0 // Updating tcp_data_len to mss
+  sub          r1, r2, r4 // r1 = tcp_data_len - mss
+  sub          r5, k.control_metadata_packet_len, r1 // r5 = k.control_metadata_packet_len - r1
+  phvwr        p.control_metadata_packet_len, r5
+  sub          r5, k.ipv4_totalLen, r1   // r5 = k.ipv4_totalLen - r1
+  phvwr        p.ipv4_totalLen, r5
+  seq          c1, k.tunnel_metadata_tunnel_terminate, TRUE
+  sub          r5, k.inner_ipv4_totalLen, r1   // r5 = k.inner_ipv4_totalLen - r1
+  phvwr        p.inner_ipv4_totalLen, r5
+#endif /* 0 */ 
+ 
   // Edit option
   // 1. Change the l4_metadata.tcp_data_len to mss
   // 2. Edit the IP Total len based on whether tunnel is terminated or not
   // 3. Update the packet_len which is used by deparser to reconstruct
   //    the packet.
 
-
-
-
 lb_tcp_data_len_gt_win_size:
   b.c2         lb_tcp_unexpected_ts_option
   seq          c2, k.l4_metadata_tcp_unexpected_ts_option_action, \
                       NORMALIZATION_ACTION_ALLOW
-  slt          c3, r6, k.l4_metadata_tcp_data_len
+  slt          c3, r6, r2
   b.!c3        lb_tcp_unexpected_ts_option
   seq          c3, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_DROP
   phvwr.c3.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1

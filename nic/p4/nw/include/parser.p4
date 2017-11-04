@@ -102,6 +102,8 @@ header tcp_option_unknown_t tcp_option_unknown;
 header tcp_option_eol_t tcp_option_eol;
 @pragma no_ohi xgress
 header tcp_option_nop_t tcp_option_nop;
+@pragma no_ohi xgress:
+header tcp_option_nop_t tcp_option_nop_1;
 @pragma no_ohi xgress
 header tcp_option_mss_t tcp_option_mss;
 @pragma no_ohi xgress
@@ -819,6 +821,12 @@ parser parse_tcp_option_NOP {
     return parse_tcp_options;
 }
 
+@pragma deparse_only
+parser parse_tcp_deparse_options {
+    extract(tcp_option_nop_1);
+    return parse_tcp_options;
+}
+
 parser parse_tcp_option_mss {
     extract(tcp_option_mss);
     set_metadata(parser_metadata.parse_tcp_counter,
@@ -871,7 +879,7 @@ parser parse_tcp_option_error {
     return ingress;
 }
 
-@pragma header_ordering tcp_option_mss tcp_option_ws tcp_option_sack_perm tcp_option_one_sack tcp_option_two_sack tcp_option_three_sack tcp_option_four_sack tcp_option_timestamp tcp_option_nop tcp_option_eol tcp_option_unknown
+@pragma header_ordering tcp_option_mss tcp_option_ws tcp_option_sack_perm tcp_option_one_sack tcp_option_two_sack tcp_option_three_sack tcp_option_four_sack tcp_option_timestamp tcp_option_unknown tcp_option_nop tcp_option_nop_1 tcp_option_eol
 parser parse_tcp_options {
     return select(parser_metadata.parse_tcp_counter, current(0, 8)) {
         0x0000 mask 0xff00 : ingress;
@@ -884,6 +892,7 @@ parser parse_tcp_options {
         0x0005 mask 0x00ff: parse_tcp_option_sack;
         0x0008 mask 0x00ff: parse_tcp_timestamp;
         default: parse_tcp_unknown_option;
+        0x0001 mask 0x0000: parse_tcp_deparse_options;
     }
 }
 

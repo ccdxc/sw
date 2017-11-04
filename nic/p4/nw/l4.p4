@@ -202,12 +202,12 @@ action tcp_session_state_info(iflow_tcp_seq_num,
                        iflow_tcp_win_sz, iflow_tcp_win_scale,
                        iflow_tcp_mss,
                        iflow_tcp_state,
+                       rflow_tcp_state,
                        iflow_exceptions_seen,
                        rflow_tcp_seq_num,
                        rflow_tcp_ack_num,
                        rflow_tcp_win_sz, rflow_tcp_win_scale,
                        rflow_tcp_mss,
-                       rflow_tcp_state,
                        syn_cookie_delta,
                        rflow_exceptions_seen,
                        flow_rtt_seq_check_enabled,
@@ -1331,11 +1331,17 @@ action tcp_session_normalization() {
         (l4_metadata.tcp_data_len_gt_mss_action == NORMALIZATION_ACTION_EDIT)) {
         // Update the tcp_data_len and reduce the frame size
         modify_field(l4_metadata.tcp_data_len, l4_metadata.tcp_mss);
+        // dummy ops to keep compiler happy
+        //modify_field(control_metadata.packet_len, control_metadata.packet_len);
         subtract_from_field(control_metadata.packet_len,
                            (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
+        // dummy ops to keep compiler happy
+        // modify_field(ipv4.totalLen, ipv4.totalLen);
         subtract_from_field(ipv4.totalLen,
                            (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
         if (tunnel_metadata.tunnel_terminate == TRUE) {
+            // dummy ops to keep compiler happy
+            //modify_field(inner_ipv4.totalLen, inner_ipv4.totalLen);
             subtract_from_field(inner_ipv4.totalLen,
                                (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
         }
@@ -1378,11 +1384,17 @@ action tcp_session_normalization() {
         (tcp_option_timestamp.valid == TRUE) and
         (tcp.flags & TCP_FLAG_SYN == 0) and
         (l4_metadata.tcp_unexpected_ts_option_action == NORMALIZATION_ACTION_EDIT)) {
-        // Fill them with NOPs
-        modify_field(tcp_option_timestamp.optType, 1);
-        modify_field(tcp_option_timestamp.optLength, 1);
-        modify_field(tcp_option_timestamp.prev_echo_ts, 0x01010101);
-        modify_field(tcp_option_timestamp.ts, 0x01010101);
+        remove_header(tcp_option_timestamp);
+        // Since we are modifying tcp options we have to clear the tcp_option_blob
+        // In a seperate table at the end we will update the pakets with
+        // 1. Reevaluate all the existing options and add NOPs and EOLs
+        // 2. TCP Data offset
+        // If Tunneled packet and Tunnel Terminute == TRUE
+        //    3. Update Inner IP Packet total length
+        //    4. Updte the outer UDP Packet lenght.
+        // 5. Update Outer IP Total length
+        // 6. Update Control_metadata.packet_len
+        
     }
 
     // Timestamp option is negotiated but not present in non-syn packet.
@@ -1414,6 +1426,7 @@ action tcp_session_normalization() {
 //    2. Control_metadata.packet len (TBD Update)
 action tcp_options_fixup() {
     if (tcp_options_blob.valid == TRUE) {
+        //remove_header(tcp_option_unknown);
         remove_header(tcp_option_eol);
         remove_header(tcp_option_nop);
         remove_header(tcp_option_mss);
@@ -1425,10 +1438,93 @@ action tcp_options_fixup() {
         remove_header(tcp_option_three_sack);
         remove_header(tcp_option_four_sack);
     }
+    modify_field(control_metadata.packet_len, control_metadata.packet_len);
+    modify_field(ipv4.totalLen, ipv4.totalLen);
+    modify_field(udp.len, udp.len);
+    modify_field(inner_ipv4.totalLen, inner_ipv4.totalLen);
+    modify_field(tcp.dataOffset, tcp.dataOffset);
+    modify_field(tcp.dataOffset, tcp.dataOffset);
+    modify_field(tunnel_metadata.tunnel_terminate, tunnel_metadata.tunnel_terminate);
+    
+    
     if (tcp.valid == TRUE and
         tcp.dataOffset > 5 and
         tcp_options_blob.valid == FALSE) {
-        // TBD
+        if (tcp_option_unknown.valid == TRUE) {
+            // dummy ops to keep compiler happy
+            //modify_field(tcp_option_unknown.optLength, tcp_option_unknown.optLength);
+            // tcp_option_length += tcp_option_unknown.optLength
+        }  
+        if (tcp_option_four_sack.valid == TRUE) {
+            // tcp_option_length += 34
+        }
+        if (tcp_option_three_sack.valid == TRUE) {
+            // tcp_option_length += 26
+        }
+        if (tcp_option_two_sack.valid == TRUE) {
+            // tcp_option_length += 18
+        }
+        if (tcp_option_one_sack.valid == TRUE) {
+            // tcp_option_length += 10
+        }
+        if (tcp_option_timestamp.valid == TRUE) {
+            // tcp_option_length += 10
+        }
+        if (tcp_option_sack_perm.valid == TRUE) {
+            // tcp_option_length += 2
+        }
+        if (tcp_option_ws.valid == TRUE) {
+            // tcp_option_length += 3
+        }
+        if (tcp_option_mss.valid == TRUE) {
+            // tcp_option_length += 4
+        }
+        remove_header (tcp_option_nop);
+        remove_header (tcp_option_eol);
+
+        // mod = tcp_option_length % 4)
+        // if (mod == 0) : No extra options
+        // if (mod == 1) {
+        //   add_header (tcp_option_nop);   
+        //   add_header (tcp_option_nop_1);   
+        //   add_header (tcp_option_eol);   
+        //   tcp_option_length += 3
+        // }
+        // if (mod == 2) {
+        //   add_header (tcp_option_nop);   
+        //   add_header (tcp_option_eol);   
+        //   tcp_option_length += 2
+        // }
+        //
+        // if (mod == 3) {
+        //   add_header (tcp_option_eol);   
+        //   tcp_option_length += 1
+        // }
+
+        // if (tcp_option_length > 40) 
+        //        drop_packet ();
+        
+        // if (tcp_option_length = ((tcp_dataOffset << 2) - 20) {
+        //     No change to packet lenghts, only checksums need to be updated
+        //  }
+        // if (tcp_option_length > ((tcp_dataOffset << 2) - 20) {
+        //       Add delta to all headers 
+        //       1. Update TCP Data offset
+        //       If Tunneled packet and Tunnel Terminute == TRUE
+        //          2. Update Inner IP Packet total length
+        //          3. Updte the outer UDP Packet lenght.
+        //       4. Update Outer IP Total length
+        //       5. Update Control_metadata.packet_len
+        //  }
+        // if (tcp_option_length < ((tcp_dataOffset << 2) - 20) {
+        //       Subtract delta to all headers 
+        //       1. Update TCP Data offset
+        //       If Tunneled packet and Tunnel Terminute == TRUE
+        //          2. Update Inner IP Packet total length
+        //          3. Updte the outer UDP Packet lenght.
+        //       4. Update Outer IP Total length
+        //       5. Update Control_metadata.packet_len
+        //  }
     }
 }
 

@@ -1,5 +1,9 @@
 This file will list all the issues that we think need to brought up when needed.
 
+Open Issues:
+
+
+Resolved (As of 10/31/2017)
 1. TCP options can be reordered even when we are not doing any normalization or firewall features
 2. Same TCP option like Multiple NOPs or EOLs are overwritten to a single option of that type. Like when a TCP timestamp only option is sent then scapy by default adds two EOLs instead of adding a NOP and EOL and we end up modifying the packet to have only one EOL and its the P4 logic that we need to write to insert the NOP before EOL otherwise the packet is one byte less than received.
 3. We need a option to treat the TCP option as a blob and at the same time be able to interpret each option. The pipline can decide to either add the blob back or add each individual options as marked as valid by pipeline.
