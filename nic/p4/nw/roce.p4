@@ -11,7 +11,11 @@ action decode_roce_opcode(raw_flags, len, qtype) {
         modify_field(p4_to_p4plus_roce.payload_len, (udp.len - 8 - len));
 
         add_header(capri_rxdma_intrinsic);
-        modify_field(capri_rxdma_intrinsic.qid, roce_bth.destQP);
+        if (capri_intrinsic.tm_instance_type == TM_INSTANCE_TYPE_MULTICAST) {
+            modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
+        } else {
+            modify_field(capri_rxdma_intrinsic.qid, roce_bth.destQP);
+        }
         modify_field(capri_rxdma_intrinsic.qtype, qtype);
         add(capri_rxdma_intrinsic.rx_splitter_offset, len,
             (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
