@@ -2,11 +2,17 @@
 checkout software repo
 ----------------
 
+# clone a fork
+git clone .../sw
+
+cd sw
+SW=`pwd`
+
 # checkout git repo
 git checkout ...
 
 # pull-assets
-cd $WS
+cd $SW
 make pull-assets
 
 ================
@@ -14,19 +20,19 @@ build software
 ----------------
 
 # build nic sw
-cd $WS/nic
+cd $SW/nic
 make
 
 # build platform sw
-cd $WS/platform
+cd $SW/platform
 make
 
 # build qemu with simbridge patch
-cd $WS/platform
+cd $SW/platform
 make -C src/sim/qemu
 
 # build model server
-cd $WS/platform
+cd $SW/platform
 make -C src/sim/model_server
 
 ================
@@ -34,7 +40,7 @@ config simulated pcie bus with 1 ethernet device
 (config written to $HOME/.pciehwmem)
 ----------------
 # pciemgrd used to config device
-cd $WS/platform
+cd $SW/platform
 gen/x86_64/bin/pciemgrd
 pciemgrd> add enet
 enet0
@@ -48,8 +54,8 @@ gen/x86_64/bin/lspci
 02:00.0 Class 0200: Device 1dd8:1002
 
 # configure bridge to match qemu bus scan
-setpci -s 01:00.0 secondary_bus=3
-setpci -s 01:00.0 subordinate_bus=3
+gen/x86_64/bin/setpci -s 01:00.0 secondary_bus=3
+gen/x86_64/bin/setpci -s 01:00.0 subordinate_bus=3
 
 # verify eth device 1dd8:1002 is bdf 03:00.0
 gen/x86_64/bin/lspci
@@ -65,29 +71,29 @@ start up software
 setenv HAL_GRPC_PORT 50123
 
 # start model, note no spaces in "-d <devparams>" args list
-cd $WS/platform/
+cd $SW/platform/
 sim/model_server/start-model -v \
 -d type=eth,bdf=03:00.0,lif=4,qstate_addr=0x1000,txq_count=1,rxq_count=1,intr_count=4,qidbase=10:20,mac=02:03:04:05:06:07
 
 # start hal
-cd $WS/nic
+cd $SW/nic
 tools/start-hal.sh
 
 # start dol for config
-cd $WS/nic
+cd $SW/nic
 ../dol/main.py --topo eth --feature eth --config-only
 
 ================
 start up qemu
 ----------------
 
-cd $WS/platform
+cd $SW/platform
 sim/qemu/qemu-run <path-to-qemu.img>
 
 # telnet to serial console
 telnet 127.0.0.1 1034
 
-# lspci shows devices
+# lspci in qemu VM shows devices
 qemu@simhost:~$ lspci -d 1dd8:
 01:00.0 PCI bridge: Pensando Systems, Inc Capri Upsteam Port
 02:00.0 PCI bridge: Pensando Systems, Inc Downstream Port
