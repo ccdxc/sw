@@ -83,26 +83,39 @@ lookup_l4lb_service(const hal::flow_key_t &key)
     return l4lb;
 }
 
+static inline hal_ret_t
+rewrite_vmac(fte::ctx_t& ctx, hal::ep_t *odep, hal::ep_t *osep)
+{
+    l4lb_service_entry_t  *l4lb;
+
+    // Rewrite dmac(iflow)/smac(rflow) for lb
+    fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
+    if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
+        // TODO(goli) - if dep is not known, we need to get the mac from lb spec
+        if (ctx.dep() && odep != ctx.dep()) {
+            // iflow rewrite dmac to pip's mac
+            HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, 
+                           *(ether_addr *)hal::ep_get_mac_addr(ctx.dep()));
+        }
+    } else {
+        l4lb = lookup_l4lb_service(ctx.key());
+        if (osep != ctx.sep() && l4lb) {
+            // rflow rewrite smac to vip's mac
+            HEADER_SET_FLD(flowupd.header_rewrite, ether, smac,
+                           *(ether_addr *)l4lb->serv_mac_addr);
+        }
+    }
+
+    return ctx.update_flow(flowupd);
+}
+
 fte::pipeline_action_t
 lb_exec(fte::ctx_t& ctx)
 {
     hal_ret_t ret;
-    l4lb_service_entry_t  *l4lb;
 
-    // rewrite VIP service mac as rflow smac
-    if (ctx.role() == hal::FLOW_ROLE_RESPONDER) {
-        l4lb = lookup_l4lb_service(ctx.key());
-        if (l4lb) {
-            fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
-            HEADER_SET_FLD(flowupd.header_rewrite, ether, smac,
-                           *(ether_addr *)l4lb->serv_mac_addr);
-            ret = ctx.update_flow(flowupd);
-            if (ret != HAL_RET_OK) {
-                ctx.set_feature_status(ret);
-                return fte::PIPELINE_END; 
-            }
-        }
-    }
+    hal::ep_t *dep = ctx.dep();
+    hal::ep_t *sep = ctx.sep();
 
     if (ctx.protobuf_request()) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR){
@@ -118,6 +131,13 @@ lb_exec(fte::ctx_t& ctx)
         }
     } else {
         // TOTO(goli) pick a pip from l4lb service
+    }
+
+    ret = rewrite_vmac(ctx, dep, sep);
+
+    if (ret != HAL_RET_OK) {
+        ctx.set_feature_status(ret);
+        return fte::PIPELINE_END; 
     }
 
     return fte::PIPELINE_CONTINUE;
