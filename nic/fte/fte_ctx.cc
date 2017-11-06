@@ -400,7 +400,7 @@ ctx_t::update_flow_table()
         session_state.tcp_sack_perm_option = sess_spec_->tcp_sack_perm_option();
     }
 
-    if (!flow_miss() && !app_redir().redir_policy_enable()) {
+    if (!flow_miss() && !app_redir().proxy_flow_info()) {
       return HAL_RET_OK;
     }
 
@@ -659,6 +659,7 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
     pkt_ = pkt;
     pkt_len_ = pkt_len;
     arm_lifq_ = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
+    app_redir().set_redir_policy_applic(cpu_rxhdr->lif==hal::SERVICE_LIF_APP_REDIR);
 
     if ((cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) ||
         (cpu_rxhdr->lif == hal::SERVICE_LIF_APP_REDIR)) {
@@ -826,7 +827,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                    hal::pd::cpu_to_p4plus_header_t *cpu_header,
                    hal::pd::p4plus_to_p4_header_t  *p4plus_header,
                    uint16_t dest_lif, uint8_t  qtype, uint32_t qid,
-                   uint8_t  ring_number)
+                   uint8_t  ring_number, types::WRingType wring_type)
 {
     txpkt_info_t *pkt_info;
     
@@ -861,14 +862,15 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     pkt_info->lifq.qtype = qtype;
     pkt_info->lifq.qid = qid;
     pkt_info->ring_number = ring_number;
+    pkt_info->wring_type = wring_type;
 
     HAL_TRACE_DEBUG("fte: feature={} queued txpkt lkp_inst={} src_lif={} vlan={} "
-                    "dest_lifq={} ring={} pkt={:p} len={}",
+                    "dest_lifq={} ring={} wring={} pkt={:p} len={}",
                     feature_name_,
                     pkt_info->p4plus_header.flags & P4PLUS_TO_P4_FLAGS_LKP_INST,
                     pkt_info->cpu_header.src_lif,
                     pkt_info->cpu_header.hw_vlan_id,
-                    pkt_info->lifq, pkt_info->ring_number,
+                    pkt_info->lifq, pkt_info->ring_number, pkt_info->wring_type,
                     pkt_info->pkt, pkt_info->pkt_len);
 
     return HAL_RET_OK;
@@ -883,7 +885,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
     hal_ret_t ret;
 
     // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
-    if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop() && !app_redir().redir_policy_enable()) {
+    if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop() && !app_redir().redir_policy_applic()) {
         queue_txpkt(pkt_, pkt_len_);
     }
 
@@ -901,8 +903,9 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         pkt_info->p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
 
         ret = hal::pd::cpupkt_send(arm_ctx,
-                                   types::WRING_TYPE_ASQ,
-                                   0,
+                                   pkt_info->wring_type,
+                                   pkt_info->wring_type == types::WRING_TYPE_ASQ ?
+                                   0 : pkt_info->lifq.qid,
                                    &pkt_info->cpu_header,
                                    &pkt_info->p4plus_header,
                                    pkt_info->pkt, pkt_info->pkt_len,

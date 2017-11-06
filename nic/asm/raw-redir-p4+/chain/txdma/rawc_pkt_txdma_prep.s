@@ -13,7 +13,7 @@ struct rawc_desc_aol_pkt_txdma_prep_d   d;
 #define SIZE_R                      r4  // DMA page size
 #define SKIP_R                      r5  // adjustment to ADDR_R/SIZE_R
 #define RETURN_R                    r6  // subroutine return address
-#define CPU_HEADER_ADDR_R           r7  // page address of cpu_to_p4_header_t
+#define CPU_HEADER_ADDR_R           r7  // page address of cpu_to_p4plus_header_t
 
 #define BIT_OFFS_PHV(phv_field)         \
     offsetof(p, phv_field)
@@ -53,7 +53,7 @@ rawc_s2_pkt_txdma_prep:
      * i.e., next_addr and next_pkt are assumed NULL.
      *
      * An AOL can be of zero length, but if non-zero, it is expected
-     * to contain at least a full cpu_to_p4_header_t.
+     * to contain at least a full cpu_to_p4plus_header_t
      */
     add         NUM_DMA_R, r0, r0
     add         DMA_BASE_R, r0, BIT_OFFS_PHV(dma_pkt0_dma_cmd_type)
@@ -98,14 +98,14 @@ rawc_s2_pkt_txdma_prep:
     phvwrpi     DMA_BASE_R, BIT_OFFS_DMA_MEM2PKT(cmdeop),       \
                 BIT_SIZE_DMA_MEM2PKT(cmdeop), TRUE;
     /*
-     * Launch read of cpu_to_p4_header_t to obtain src_lif info plus
+     * Launch read of cpu_to_p4plus_header_t to obtain src_lif info plus
      * page freeing instruction. The header address was calculated
      * by prep_dma_mem2pkt.
      */
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                           rawc_s3_pkt_txdma_post,
                           CPU_HEADER_ADDR_R,
-                          TABLE_SIZE_64_BITS)
+                          TABLE_SIZE_32_BITS)
     nop.e
     nop
 
@@ -132,10 +132,10 @@ dma_mem2pkt_prep:
      * by the caller).
      *
      * This function returns:
-     *    SKIP_R: reset to zero if cpu_to_p4_header_t was skipped
+     *    SKIP_R: reset to zero if cpu_to_p4plus_header_t was skipped
      *    DMA_INDX_R: incremented if current DMA_BASE_R was programmed.
      *
-     * SKIP_R may equal 0 or sizeof(cpu_to_p4_header_t);
+     * SKIP_R may equal 0 or sizeof(cpu_to_p4plus_header_t);
      * Note: when SIZE_R is > 0, it must also be at least >= SKIP_R
      */
     beq         SIZE_R, r0, aol_error   // enforce caller's guarantee
@@ -144,7 +144,7 @@ dma_mem2pkt_prep:
     sne         c4, SKIP_R, r0          // delay slot
 
     /*
-     * Calculate and return the page address of cpu_to_p4_header_t.
+     * Calculate and return the page address of cpu_to_p4plus_header_t
      * It should be the page address of the first AOL that has
      * non-zero length (when SKIP_R > 0).
      */
@@ -169,7 +169,7 @@ dma_mem2pkt_prep:
                 BIT_SIZE_DMA_MEM2PKT(size), SIZE_R;
     /*
      * Update NUM_DMA_R and SKIP_R on return:
-     *    Only need to skip sizeof(cpu_to_p4_header_t) once so the
+     *    Only need to skip sizeof(cpu_to_p4plus_header_t) once so the
      *    next skip would be zero if we had actually done it.
      */
     addi.!c3    NUM_DMA_R, NUM_DMA_R, 1
@@ -179,7 +179,7 @@ dma_mem2pkt_prep:
 aol_error:
 
     /*
-     * Either none of the AOLs contained any data, or cpu_to_p4_header_t
+     * Either none of the AOLs contained any data, or cpu_to_p4plus_header_t
      * spanned across multiple AOLs!
      */
     RAWR_TXDMA_INVALID_AOL_TRAP()

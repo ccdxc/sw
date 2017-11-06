@@ -49,4 +49,8 @@ trigger:
             port    : ref://testcase/config/src/endpoint/intf/ports
 
 expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : ref://testcase/config/dst/endpoint/intf/ports
 

@@ -22,12 +22,13 @@ inline hal_ret_t register_pipelines() {
         fte::FTE_FEATURE_ALG,
         fte::FTE_FEATURE_TCP_PROXY,
         fte::FTE_FEATURE_IPSEC,
+        fte::FTE_FEATURE_APP_REDIR_MISS,
         fte::FTE_FEATURE_STAGE_MARKER,
         fte::FTE_FEATURE_LB,
         fte::FTE_FEATURE_QOS,
         fte::FTE_FEATURE_FWDING,
         fte::FTE_FEATURE_TUNNEL,
-        fte::FTE_FEATURE_APP_REDIR_MISS,
+        fte::FTE_FEATURE_APP_REDIR_FINI,
     };
 
     // inbound features - applied to pkts destined to local host 
@@ -39,13 +40,14 @@ inline hal_ret_t register_pipelines() {
         fte::FTE_FEATURE_LB,
         fte::FTE_FEATURE_TCP_PROXY,
         fte::FTE_FEATURE_IPSEC,
+        fte::FTE_FEATURE_APP_REDIR_MISS,
         fte::FTE_FEATURE_STAGE_MARKER,
         fte::FTE_FEATURE_DFW,
         fte::FTE_FEATURE_ALG,
         fte::FTE_FEATURE_QOS,
         fte::FTE_FEATURE_FWDING,
         fte::FTE_FEATURE_TUNNEL,
-        fte::FTE_FEATURE_APP_REDIR_MISS,
+        fte::FTE_FEATURE_APP_REDIR_FINI,
     };
 
     register_pipeline("flow-miss", fte::FLOW_MISS_LIFQ,
@@ -120,13 +122,11 @@ inline hal_ret_t register_pipelines() {
     //---------------------------------------------------------------------------------------------------------
     fte::feature_id_t app_redir_inbound[] = {
     	fte::FTE_FEATURE_APP_REDIR,
-        fte::FTE_FEATURE_STAGE_MARKER,
     	fte::FTE_FEATURE_APP_REDIR_FINI,
     };
 
     fte::feature_id_t app_redir_outbound[] = {
     	fte::FTE_FEATURE_APP_REDIR,
-        fte::FTE_FEATURE_STAGE_MARKER,
     	fte::FTE_FEATURE_APP_REDIR_FINI,
     };
 

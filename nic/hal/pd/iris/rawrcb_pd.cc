@@ -84,40 +84,62 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd, bool del)
         data.action_id = pc_offset;
         rawrcb = rawrcb_pd->rawrcb;
 
-        if (rawrcb->chain_rxq_base) {
-            data.u.rawr_rx_start_d.chain_rxq_base = rawrcb->chain_rxq_base;
-            data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr = rawrcb->chain_rxq_ring_indices_addr;
-            data.u.rawr_rx_start_d.chain_rxq_ring_size_shift = rawrcb->chain_rxq_ring_size_shift;
-            data.u.rawr_rx_start_d.chain_rxq_entry_size_shift = rawrcb->chain_rxq_entry_size_shift;
-            data.u.rawr_rx_start_d.chain_rxq_ring_index_select = rawrcb->chain_rxq_ring_index_select;
-        } else {
+        /*
+         * For a given flow, one of 2 types of redirection applies:
+         *   1) Redirect to an RxQ, or
+         *   2) Redirect to a P4+ TxQ
+         */
+        if (rawrcb->chain_txq_base) {
+            assert(!rawrcb->chain_rxq_base);
+            data.u.rawr_rx_start_d.chain_txq_base = rawrcb->chain_txq_base;
+            data.u.rawr_rx_start_d.chain_txq_ring_indices_addr = rawrcb->chain_txq_ring_indices_addr;
+            data.u.rawr_rx_start_d.chain_txq_ring_size_shift = rawrcb->chain_txq_ring_size_shift;
+            data.u.rawr_rx_start_d.chain_txq_entry_size_shift = rawrcb->chain_txq_entry_size_shift;
+            data.u.rawr_rx_start_d.chain_txq_ring_index_select = rawrcb->chain_txq_ring_index_select;
+            data.u.rawr_rx_start_d.chain_txq_lif = rawrcb->chain_txq_lif;
+            data.u.rawr_rx_start_d.chain_txq_qtype = rawrcb->chain_txq_qtype;
+            data.u.rawr_rx_start_d.chain_txq_qid = rawrcb->chain_txq_qid;
+            data.u.rawr_rx_start_d.chain_txq_doorbell_no_sched = rawrcb->chain_txq_doorbell_no_sched;
 
-            /*
-             * Provide reasonable defaults for above
-             */
-            pd_wring_meta = wring_pd_get_meta(types::WRING_TYPE_ARQRX);
-            ret = wring_pd_get_base_addr(types::WRING_TYPE_ARQRX, 0, &arq_base);
-            if((ret == HAL_RET_OK) && pd_wring_meta) {
-                HAL_TRACE_DEBUG("RAWRCB {} arq_base: {:#x}",
-                                rawrcb->cb_id, arq_base);
-                data.u.rawr_rx_start_d.chain_rxq_base = arq_base;
-                data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr =
-                                       get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
-                data.u.rawr_rx_start_d.chain_rxq_ring_size_shift =
-                                       log2(pd_wring_meta->num_slots);
-                data.u.rawr_rx_start_d.chain_rxq_entry_size_shift =
-                                       log2(pd_wring_meta->slot_size_in_bytes);
-                data.u.rawr_rx_start_d.chain_rxq_ring_index_select = 0;
-                HAL_TRACE_DEBUG("RAWRCB chain_rxq_ring_indices_addr: {:#x} "
-                                "chain_rxq_ring_size_shift: {} "
-                                "chain_rxq_entry_size_shift: {} "
-                                "chain_rxq_ring_index_select: {}",
-                                data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr,
-                                data.u.rawr_rx_start_d.chain_rxq_ring_size_shift,
-                                data.u.rawr_rx_start_d.chain_rxq_entry_size_shift,
-                                data.u.rawr_rx_start_d.chain_rxq_ring_index_select);
+        } else {
+            if (rawrcb->chain_rxq_base) {
+                data.u.rawr_rx_start_d.chain_rxq_base = rawrcb->chain_rxq_base;
+                data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr = rawrcb->chain_rxq_ring_indices_addr;
+                data.u.rawr_rx_start_d.chain_rxq_ring_size_shift = rawrcb->chain_rxq_ring_size_shift;
+                data.u.rawr_rx_start_d.chain_rxq_entry_size_shift = rawrcb->chain_rxq_entry_size_shift;
+                data.u.rawr_rx_start_d.chain_rxq_ring_index_select = rawrcb->chain_rxq_ring_index_select;
             } else {
-                HAL_TRACE_ERR("Failed to receive ARQRX info for RAWRCB");
+
+                /*
+                 * Provide reasonable defaults for above
+                 */
+                pd_wring_meta = wring_pd_get_meta(types::WRING_TYPE_ARQRX);
+                ret = wring_pd_get_base_addr(types::WRING_TYPE_ARQRX,
+                                             rawrcb->chain_rxq_ring_index_select,
+                                             &arq_base);
+                if((ret == HAL_RET_OK) && pd_wring_meta) {
+                    HAL_TRACE_DEBUG("RAWRCB {} ring: {} arq_base: {:#x}", rawrcb->cb_id,
+                                    rawrcb->chain_rxq_ring_index_select, arq_base);
+                    data.u.rawr_rx_start_d.chain_rxq_base = arq_base;
+                    data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr =
+                                           get_start_offset(CAPRI_HBM_REG_ARQRX_QIDXR);
+                    data.u.rawr_rx_start_d.chain_rxq_ring_size_shift =
+                                           log2(pd_wring_meta->num_slots);
+                    data.u.rawr_rx_start_d.chain_rxq_entry_size_shift =
+                                           log2(pd_wring_meta->slot_size_in_bytes);
+                    data.u.rawr_rx_start_d.chain_rxq_ring_index_select = 0;
+                    HAL_TRACE_DEBUG("RAWRCB chain_rxq_ring_indices_addr: {:#x} "
+                                    "chain_rxq_ring_size_shift: {} "
+                                    "chain_rxq_entry_size_shift: {} "
+                                    "chain_rxq_ring_index_select: {}",
+                                    data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr,
+                                    data.u.rawr_rx_start_d.chain_rxq_ring_size_shift,
+                                    data.u.rawr_rx_start_d.chain_rxq_entry_size_shift,
+                                    data.u.rawr_rx_start_d.chain_rxq_ring_index_select);
+                } else {
+                    HAL_TRACE_ERR("Failed to receive ARQRX ring {} info for RAWRCB",
+                                  rawrcb->chain_rxq_ring_index_select);
+                }
             }
         }
 

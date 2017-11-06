@@ -32,11 +32,11 @@ rawr_s6_chain_qidxr_pindex_post_read:
     /*
      * Pass the obtained pindex to a common DMA transfer function via r1
      */
-    add         r1, r0, d.{pi_0}.wx
+    add         r1, r0, d.pi_0
     tbladd.c1   d.pi_0, 1
-    add.c2      r1, r0, d.{pi_1}.wx
+    add.c2      r1, r0, d.pi_1
     tbladd.c2   d.pi_1, 1
-    add.c3      r1, r0, d.{pi_2}.wx
+    add.c3      r1, r0, d.pi_2
     tbladd.c3   d.pi_2, 1
     
     j           rawr_s6_chain_xfer

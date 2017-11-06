@@ -194,6 +194,18 @@ header_type to_stage_2_phv_t {
 }
 
 /*
+ * cpu_to_p4plus_header_t as defined in HAL cpupkt_headers.hpp
+ */
+header_type cpu_to_p4plus_header_t {
+    fields {
+        flags                   	: 16;
+        src_lif                 	: 16;
+        hw_vlan_id              	: 16;
+        l2_offset               	: 16;
+    }    
+}
+
+/*
  * Header unions for d-vector
  */
 @pragma scratch_metadata
@@ -209,7 +221,7 @@ metadata pkt_descr_aol_t                txq_desc_aol_d;
 metadata chain_txq_ring_indices_d_t     chain_txq_ring_indices_d;
 
 @pragma scratch_metadata
-metadata cpu_to_p4_header_t             cpu_to_p4_header_d;
+metadata cpu_to_p4plus_header_t         cpu_to_p4plus_header_d;
 
 /*
  * Stage to stage PHV definitions
@@ -317,7 +329,6 @@ action start(rsvd, cosA, cosB, cos_sel,
     // from intrinsic
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
-    modify_field(p4_intr_global_scratch.tm_oq, p4_intr_global.tm_oq);
     modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
     modify_field(p4_txdma_intr_scratch.qtype, p4_txdma_intr.qtype);
     modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
@@ -431,7 +442,7 @@ action desc_enqueue(pi_curr, ci_curr) {
 /*
  * Stage 3 table 0 action
  */
-action pkt_txdma_post(src_lif) {
+action pkt_txdma_post(flags, src_lif, hw_vlan_id, l2_offset) {
 
     // from to_stage
     
@@ -441,5 +452,8 @@ action pkt_txdma_post(src_lif) {
     // from stage to stage
     
     // d for stage and table
-    modify_field(cpu_to_p4_header_d.src_lif, src_lif);
+    modify_field(cpu_to_p4plus_header_d.flags, flags);
+    modify_field(cpu_to_p4plus_header_d.src_lif, src_lif);
+    modify_field(cpu_to_p4plus_header_d.hw_vlan_id, hw_vlan_id);
+    modify_field(cpu_to_p4plus_header_d.l2_offset, l2_offset);
 }

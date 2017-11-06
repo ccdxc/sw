@@ -28,11 +28,17 @@ rawc_s0_tx_start:
     CAPRI_CLEAR_TABLE0_VALID
     
     /*
+     * do nothing if my_txq not configured
+     */
+    seq         c1, d.my_txq_base, r0
+    bcf         [c1], my_txq_not_cfg
+     
+    /*
      * qid is our flow ID context
      */
-    phvwr       p.to_s1_my_txq_lif, CAPRI_INTRINSIC_LIF
+    phvwr       p.to_s1_my_txq_lif, CAPRI_INTRINSIC_LIF     // delay slot
     phvwr       p.to_s1_my_txq_qtype, k.p4_txdma_intr_qtype
-    phvwr       p.to_s1_my_txq_qid, k.{p4_txdma_intr_qid}.hx
+    phvwr       p.to_s1_my_txq_qid, k.p4_txdma_intr_qid
 
     phvwr       p.common_phv_chain_txq_base, d.chain_txq_base
     phvwr       p.common_phv_chain_txq_ring_size_shift, d.chain_txq_ring_size_shift
@@ -70,6 +76,15 @@ rawc_s0_tx_start:
     nop.e
     nop    
     
+my_txq_not_cfg:
+
+    /*
+     * Discard packet due to error in qstate configuration
+     * TODO: add stats here
+     */
+    nop.e
+    nop
+
 my_txq_ring_empty:
 
     /*

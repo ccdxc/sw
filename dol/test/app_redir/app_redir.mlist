@@ -19,8 +19,13 @@ modules:
         name    : APP_REDIR_RAW_RX_TX_MULTI_PKTS
         module  : app_redir_raw_rx_tx
         spec    : app_redir_raw_multi_pkts.testspec
-        enable  : False
-        ignore  : False
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : APP_REDIR_RAW_MYSQL
+        module  : app_redir_raw_appid
+        spec    : app_redir_raw_mysql.testspec
         iterate :
             - flow: filter://type=IPV4
 
