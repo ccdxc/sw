@@ -16,6 +16,9 @@ def GetL2FlowL4LbPreNatDmac(testcase, packet):
 def GetL2FlowL4LbPostNatSmac(testcase, packet):
     if testcase.config.flow.IsSnat():
         return testcase.config.src.l4lb.service.ep.macaddr
+    # Twice-NAT and rflow
+    if testcase.config.flow.IsTwiceNAT() and not testcase.config.flow.IsIflow():
+        return testcase.config.src.l4lb.service.ep.macaddr
     return testcase.config.src.endpoint.macaddr
 
 def GetL2FlowL4LbPostNatDmac(testcase, packet):
@@ -38,6 +41,12 @@ def GetL3FlowL4LbPostNatDmac(testcase, packet):
     if testcase.config.flow.IsDnat():
         return testcase.config.dst.l4lb.backend.ep.macaddr
     return testcase.config.dst.endpoint.macaddr
+
+def GetPostNatDIP(testcase, packet):
+    if testcase.config.flow.IsDnat() and\
+        testcase.config.dst.l4lb.IsNATDSR():
+            return testcase.config.flow.dip
+    return testcase.config.flow.nat_dip
 
 def GetL4LbFlowDestPorts(testcase):
     if testcase.config.flow.IsDnat():

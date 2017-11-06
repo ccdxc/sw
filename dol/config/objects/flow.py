@@ -72,6 +72,7 @@ class FlowObject(base.ConfigObjectBase):
         self.smac       = None
         self.dmac       = None
         self.espspi     = None
+        self.nat_dmac   = None
         self.state      = self.__sfep.flow_info.state.upper()
         self.action     = self.__sfep.flow_info.action.upper()
 
@@ -102,6 +103,12 @@ class FlowObject(base.ConfigObjectBase):
         return
 
     def __init_nat(self):
+        # No-OP for DSR backend
+        if self.__sfep.IsL4Lb() and self.__sfep.l4lb.IsNATDSR():
+            self.nat_type = 'NONE'
+            self.nat_rw = 'NONE'
+            return
+
         if self.__sfep.IsL4Lb():
             if self.__sfep.l4lb.IsTwiceNAT():
                 # Twice NAT
@@ -127,10 +134,17 @@ class FlowObject(base.ConfigObjectBase):
                     self.nat_rw = 'IP_ONLY'
             else:
                 self.nat_type = 'DNAT'
-                if self.__dfep.l4lb.IsBackendPortValid():
-                    self.nat_rw = 'IP_PORT'
+                # DSR Case
+                if self.__dfep.IsNATDSR():
+                    if self.__dfep.l4lb.IsBackendPortValid():
+                        self.nat_rw = 'MAC_PORT'
+                    else:
+                        self.nat_rw = 'MAC_ONLY'
                 else:
-                    self.nat_rw = 'IP_ONLY'
+                    if self.__dfep.l4lb.IsBackendPortValid():
+                        self.nat_rw = 'IP_PORT'
+                    else:
+                        self.nat_rw = 'IP_ONLY'
         else:
             self.nat_type = 'NONE'
             self.nat_rw = 'NONE'
@@ -158,11 +172,19 @@ class FlowObject(base.ConfigObjectBase):
             else:
                 self.nat_dport = self.__dfep.GetFlowSport()
         else:
-            self.nat_dip   = self.__dfep.GetNatDip()
-            if self.nat_rw == 'IP_ONLY':
-                self.nat_dport = 0
+            if self.__dfep.l4lb.IsNATDSR():
+                self.nat_dip = objects.IpAddress(integer=0)
+                self.nat_dmac = self.__dfep.ep.macaddr
+                if self.nat_rw == 'MAC_ONLY':
+                    self.nat_dport = 0
+                else:
+                    self.nat_dport = self.__dfep.GetNatDport()
             else:
-                self.nat_dport = self.__dfep.GetNatDport()
+                self.nat_dip   = self.__dfep.GetNatDip()
+                if self.nat_rw == 'IP_ONLY':
+                    self.nat_dport = 0
+                else:
+                    self.nat_dport = self.__dfep.GetNatDport()
         return
 
 
@@ -411,6 +433,9 @@ class FlowObject(base.ConfigObjectBase):
                 req_spec.flow_data.flow_info.nat_dip.ip_af = haldefs.common.IP_AF_INET6
                 req_spec.flow_data.flow_info.nat_dip.v6_addr = self.nat_dip.getnum().to_bytes(16, 'big')
 
+            if self.__dfep.IsNATDSR():
+                req_spec.flow_data.flow_info.nat_dmac = self.nat_dmac.getnum()
+
             # Send NAT ports to HAL, only if port rewrite is required.
             if self.__sfep.IsNatPortValid() or self.__dfep.IsNatPortValid():
                 req_spec.flow_data.flow_info.nat_sport = self.nat_sport
@@ -480,15 +505,23 @@ class FlowObject(base.ConfigObjectBase):
                       (self.nat_type, self.nat_sip.get(),
                        self.nat_sport, self.nat_rw)
         if self.IsDnat():
-            string += '/%s/%s/%d/%s' %\
-                      (self.nat_type, self.nat_dip.get(),
-                       self.nat_dport, self.nat_rw)
+            if self.__dfep.IsNATDSR():
+                string += '/%s/%s/%d/%s/%s' %\
+                          (self.nat_type, self.nat_dip.get(),
+                           self.nat_dport,self.nat_dmac,
+                           self.nat_rw)
+            else:
+                string += '/%s/%s/%d/%s' %\
+                          (self.nat_type, self.nat_dip.get(),
+                           self.nat_dport,
+                           self.nat_rw)
 
         if self.IsTwiceNAT():
             string += '/%s/%s/%d/%s/%d/%s' %\
                       (self.nat_type, self.nat_sip.get(),
                        self.nat_sport, self.nat_dip.get(),
                        self.nat_dport, self.nat_rw)
+
         cfglogger.info("  - info   : %s" % string)
 
         cfglogger.info('  - txqos: Cos:%s/Dscp:%s' %\

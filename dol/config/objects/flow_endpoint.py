@@ -40,6 +40,11 @@ class FlowEndpointL4LbObject:
             return False
         return self.service.IsTwiceNAT()
 
+    def IsNATDSR(self):
+        if self.service is None:
+            return False
+        return self.service.IsNATDSR()
+
     def __select_service_snat(self):
         if self.IsTwiceNAT():
             self.service_snat_ip, self.service_snat_ipv6, self.service_snat_port = \
@@ -239,6 +244,11 @@ class FlowEndpointObject(base.ConfigObjectBase):
 
     def GetNatSport(self):
         return self.GetFlowDport()
+
+    def IsNATDSR(self):
+        if self.IsL4Lb():
+            return self.l4lb.IsNATDSR()
+        return False
 
     def IsNatPortValid(self):
         if self.IsL4Lb():

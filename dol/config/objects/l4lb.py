@@ -132,8 +132,12 @@ class L4LbServiceObject(base.ConfigObjectBase):
 
     def IsNAT(self):
         return self.mode == 'NAT'
+
     def IsTwiceNAT(self):
         return self.mode == 'TWICE_NAT'
+
+    def IsNATDSR(self):
+        return self.mode == 'NAT_DSR'
 
     def SelectBackend(self):
         bend = self.obj_helper_bend.bends[self.bend_idx]

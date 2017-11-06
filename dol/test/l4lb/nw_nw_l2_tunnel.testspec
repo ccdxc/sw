@@ -9,7 +9,7 @@ selectors:
         endpoint    : filter://remote=True
         interface   : filter://any
     flow        : filter://label=L4LB,fwtype=L2
-    maxflows    : None
+    maxflows    : 4
 
 packets:
     - packet:
@@ -98,12 +98,14 @@ packets:
             #    prio    : ref://testcase/config/flow/txqos/cos
             ipv4:
                 src     : ref://testcase/config/flow/nat_sip
-                dst     : ref://testcase/config/flow/nat_dip
+                dst     : callback://l4lb/callbacks/GetPostNatDIP
+                #dst     : ref://testcase/config/flow/nat_dip
                 ttl     : 64
                 tos     : ref://testcase/config/flow/txqos/dscp
             ipv6:
                 src     : ref://testcase/config/flow/nat_sip
-                dst     : ref://testcase/config/flow/nat_dip
+                #dst     : ref://testcase/config/flow/nat_dip
+                dst     : callback://l4lb/callbacks/GetPostNatDIP
                 hlim    : 64
                 tc      : ref://testcase/config/flow/txqos/dscp
             #udp:
