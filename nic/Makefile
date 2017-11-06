@@ -7,6 +7,7 @@ CUSTOM = hal
 
 include $(TOPDIR)/make/Makefile.inc
 include $(TOPDIR)/make/Make.inc
+include $(TOPDIR)/make/Jobs.Makefile
 
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 shell: build-runtime-image
