@@ -308,9 +308,4 @@
 #define TCP_TX_DDOL_DONT_TX             0x2
 #define TCP_TX_DDOL_FREE_RNMDR          0x4
 
-// L7 Redirect Type
-#define TCP_L7_PROXY_TYPE_NONE          0x0
-#define TCP_L7_PROXY_TYPE_REDIR         0x1
-#define TCP_L7_PROXY_TYPE_SPAN          0x2
-
 #endif /* #ifndef CONSTANTS_H */

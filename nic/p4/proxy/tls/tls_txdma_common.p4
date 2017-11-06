@@ -28,14 +28,15 @@ header_type tlscb_0_t {
 
         salt                            : 32;
         explicit_iv                     : 64;
-        // TBD: Total used   : 504 bits, pending: 8
+        l7_proxy_type                   : 8;
+        // TBD: Total used   : 512 bits, pending: 0
     }
 }
 
 #define TLSCB_0_PARAMS                                                                                  \
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, fid, serq_base,         \
 sw_serq_ci, serq_prod_ci_addr, sesq_base, sw_sesq_pi, sw_sesq_ci, sw_bsq_ci, dec_flow, debug_dol,       \
-barco_command, barco_key_desc_index, salt, explicit_iv
+barco_command, barco_key_desc_index, salt, explicit_iv, l7_proxy_type
 
 #define GENERATE_TLSCB_0_D                                                                               \
     modify_field(tlscb_0_d.rsvd, rsvd);                                                                  \
@@ -63,7 +64,8 @@ barco_command, barco_key_desc_index, salt, explicit_iv
     modify_field(tlscb_0_d.barco_command, barco_command);                                                \
     modify_field(tlscb_0_d.barco_key_desc_index, barco_key_desc_index);                                  \
     modify_field(tlscb_0_d.salt, salt);                                                                  \
-    modify_field(tlscb_0_d.explicit_iv, explicit_iv);
+    modify_field(tlscb_0_d.explicit_iv, explicit_iv);                                                    \
+    modify_field(tlscb_0_d.l7_proxy_type, l7_proxy_type);
 
 /* The defintion for access in stages other than 0 */
 #define TLSCB_0_PARAMS_NON_STG0                                                                         \
@@ -94,13 +96,15 @@ header_type tlscb_1_t {
         next_tls_hdr_offset             : 16;
         cur_tls_data_len                : 16;
         other_fid                       : 16;
-        // Total used   : 384 bits, pending: 128
-        pad                             : 128;
+        l7q_base                        : HBM_ADDRESS_WIDTH;
+        sw_l7q_pi                       : 16;
+        // Total used   : 442 bits, pending: 80
+        pad                             : 80;
     }
 }
 
 #define TLSCB_1_PARAMS                                                                                  \
-qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, other_fid
+qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, nxt_desc_idx, nxt_data_offset, nxt_data_len, next_tls_hdr_offset, cur_tls_data_len, other_fid, l7q_base, sw_l7q_pi
 #
 
 #define GENERATE_TLSCB_1_D                                                                              \
@@ -116,7 +120,9 @@ qhead, qtail, una_desc, una_desc_idx, una_data_offset, una_data_len, nxt_desc, n
     modify_field(tlscb_1_d.nxt_data_len, nxt_data_len);                                                 \
     modify_field(tlscb_1_d.next_tls_hdr_offset, next_tls_hdr_offset);                                   \
     modify_field(tlscb_1_d.cur_tls_data_len, cur_tls_data_len);                                         \
-    modify_field(tlscb_1_d.other_fid, other_fid);
+    modify_field(tlscb_1_d.other_fid, other_fid);          \
+    modify_field(tlscb_1_d.l7q_base, l7q_base);          \
+    modify_field(tlscb_1_d.sw_l7q_pi, sw_l7q_pi);          \
 
 
 /* BARCO Descriptor definition */

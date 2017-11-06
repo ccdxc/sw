@@ -1,0 +1,35 @@
+#include "tls-constants.h"
+#include "tls-phv.h"
+#include "tls-shared-state.h"
+#include "tls-macros.h"
+#include "tls-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
+
+struct tx_table_s2_t2_k k;
+struct phv_ p;
+struct tx_table_s2_t2_d d;
+
+%%
+    .param      tls_read_l7_descr_alloc
+    .param      RNMDR_TABLE_BASE
+    .align
+tls_dec_post_read_l7_rnmdr_pidx:
+
+    CAPRI_CLEAR_TABLE2_VALID
+    // TODO : check for semaphore full
+    add         r4, r0, d.{u.tls_read_l7_rnmdr_pidx_d.rnmdr_pidx}.wx
+    andi        r4, r4, ((1 << CAPRI_RNMDR_RING_SHIFT) - 1)
+
+table_read_RNMDR_DESC:
+    addui       r3, r0, hiword(RNMDR_TABLE_BASE)
+    addi        r3, r3, loword(RNMDR_TABLE_BASE)
+    CAPRI_NEXT_TABLE_READ_INDEX(3,
+                                r4, 
+                                TABLE_LOCK_DIS,
+                                tls_read_l7_descr_alloc,
+                                r3, 
+                                RNMDR_TABLE_ENTRY_SIZE_SHFT,
+                                TABLE_SIZE_64_BITS)
+    nop.e
+    nop

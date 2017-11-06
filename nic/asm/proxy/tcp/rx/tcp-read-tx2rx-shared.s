@@ -81,9 +81,9 @@ tcp_rx_read_shared_stage0_start:
     CAPRI_OPERAND_DEBUG(k.tcp_app_header_payload_len)
 
 read_l7_proxy_cfg:
-    sne         c1, d.l7_proxy_type, TCP_L7_PROXY_TYPE_NONE
+    sne         c1, d.l7_proxy_type, L7_PROXY_TYPE_NONE
     phvwri.c1   p.common_phv_l7_proxy_en, 1
-    seq         c2, d.l7_proxy_type, TCP_L7_PROXY_TYPE_SPAN
+    seq         c2, d.l7_proxy_type, L7_PROXY_TYPE_SPAN
     phvwri.c2   p.common_phv_l7_proxy_type_span, 1
 
 table_read_RX:

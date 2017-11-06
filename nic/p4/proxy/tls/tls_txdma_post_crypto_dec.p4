@@ -8,15 +8,18 @@
 #define tx_table_s1_t0_action       tls_rx_bsq
 
 #define tx_table_s2_t0_action       tls_read_desc
+#define tx_table_s2_t2_action       tls_read_l7_rnmdr_pidx
 #define tx_table_s2_t3_action       tls_read_idesc
 
 #define tx_table_s3_t0_action       tls_bsq_consume
 #define tx_table_s3_t1_action       read_rnmdr_free_pi
 #define tx_table_s3_t2_action       read_rnmpr_free_pi
-
+#define tx_table_s3_t3_action       tls_l7_desc_alloc
+#
 #define tx_table_s4_t0_action       tls_read_odesc
 
 #define tx_table_s5_t0_action       tls_queue_sesq
+#define tx_table_s5_t1_action       tls_queue_l7q
 
 #define tx_table_s6_t0_action       tls_post_crypto_stats5
 
@@ -24,6 +27,14 @@
 #include "tls_txdma_common.p4"
 
 /* Per stage D-vector Definitions */
+
+// d for stage 2 table 2 
+header_type rnmdr_pidx_t {
+    fields {
+        rnmdr_pidx                 : 32;
+        rnmdr_pidx_full            : 1;
+    }
+}
 
 // d for stage 3 table 1
 header_type read_rnmdr_free_pi_d_t {
@@ -39,13 +50,21 @@ header_type read_rnmpr_free_pi_d_t {
     }
 }
 
+// d for stage 3 table 3
+header_type l7_desc_alloc_d_t {
+    fields {
+        desc                       : 64;
+    }    
+}
 
 #define GENERATE_GLOBAL_K                                                                               \
         modify_field(tls_global_phv_scratch.fid, tls_global_phv.fid);                                   \
         modify_field(tls_global_phv_scratch.dec_flow, tls_global_phv.dec_flow);                         \
         modify_field(tls_global_phv_scratch.barco_op_failed, tls_global_phv.barco_op_failed);           \
         modify_field(tls_global_phv_scratch.pad, tls_global_phv.pad);                                   \
-        modify_field(tls_global_phv_scratch.qstate_addr, tls_global_phv.qstate_addr);
+        modify_field(tls_global_phv_scratch.qstate_addr, tls_global_phv.qstate_addr);                   \
+        modify_field(tls_global_phv_scratch.l7_proxy_en, tls_global_phv.l7_proxy_en);                   \
+        modify_field(tls_global_phv_scratch.l7_proxy_type_span, tls_global_phv.l7_proxy_type_span);
 
 
 /* Global PHV definition */
@@ -56,6 +75,8 @@ header_type tls_global_phv_t {
         barco_op_failed                 : 1;
         pad                             : 7;
         qstate_addr                     : HBM_ADDRESS_WIDTH;
+        l7_proxy_en                     : 1;
+        l7_proxy_type_span              : 1;
     }
 }
 
@@ -79,6 +100,7 @@ header_type to_stage_5_phv_t {
         odesc                           : ADDRESS_WIDTH;
         debug_dol                       : 8;
         other_fid                       : 16;
+        l7_desc                         : 32;
     }
 }
 
@@ -95,7 +117,7 @@ header_type to_stage_6_phv_t {
 
 header_type doorbell_data_pad_t {
     fields {
-        pad                             : 384;
+        pad                             : 320;
     }
 }
 
@@ -109,6 +131,9 @@ metadata tlscb_1_t tlscb_1_d;
 metadata barco_result_t read_desc_d;
 
 @pragma scratch_metadata
+metadata rnmdr_pidx_t read_l7_rnmdr_pidx_d;
+
+@pragma scratch_metadata
 metadata tls_global_phv_t tls_global_phv_scratch;
 
 @pragma scratch_metadata
@@ -119,6 +144,9 @@ metadata read_rnmdr_free_pi_d_t read_rnmdr_free_d;
 
 @pragma scratch_metadata
 metadata read_rnmpr_free_pi_d_t read_rnmpr_free_d;
+
+@pragma scratch_metadata
+metadata l7_desc_alloc_d_t l7_desc_alloc_d;
 
 @pragma scratch_metadata
 metadata tls_stage_post_crypto_stats_d_t tls_post_crypto_stats_d;
@@ -151,9 +179,13 @@ metadata tls_global_phv_t tls_global_phv;
 @pragma dont_trim
 metadata pkt_descr_aol_t odesc; 
 @pragma dont_trim
+metadata pkt_descr_aol_t l7_desc; 
+@pragma dont_trim
 metadata barco_result_t read_desc;
 @pragma dont_trim
 metadata ring_entry_t ring_entry;
+@pragma dont_trim
+metadata ring_entry_t l7_ring_entry;
 @pragma dont_trim
 metadata doorbell_data_raw_t db_data;
 @pragma dont_trim
@@ -170,12 +202,6 @@ metadata dma_cmd_phv2mem_t dma_cmd3;
 metadata dma_cmd_phv2mem_t dma_cmd4;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd5;
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd6;
-@pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd7;
-
-
 
 /* Stage 1 table 0 action */
 action tls_rx_bsq(TLSCB_1_PARAMS) {
@@ -196,6 +222,14 @@ action tls_read_desc(status, output_list_address, pad) {
     modify_field(read_desc_d.output_list_address, output_list_address);
     modify_field(read_desc_d.pad, pad);
 
+}
+
+/* Stage 2 table 2 action */
+action tls_read_l7_rnmdr_pidx(rnmdr_pidx, rnmdr_pidx_full) {
+    
+    // d for stage 2 table 2
+    modify_field(read_l7_rnmdr_pidx_d.rnmdr_pidx, rnmdr_pidx);
+    modify_field(read_l7_rnmdr_pidx_d.rnmdr_pidx_full, rnmdr_pidx_full);
 }
 
 /* Stage 2 table 3 action */
@@ -244,6 +278,13 @@ action read_rnmpr_free_pi(rnmpr_free_pi) {
     modify_field(read_rnmpr_free_d.rnmpr_free_pi, rnmpr_free_pi);
 }
 
+/* Stage 3 table 3 action */
+action tls_l7_desc_alloc(desc) {
+    
+    // d for stage 3 table 3
+    modify_field(l7_desc_alloc_d.desc, desc);
+}
+
 /* Stage 4 Table 0 action */
 action tls_read_odesc(PKT_DESCR_AOL_ACTION_PARAMS) {
     GENERATE_GLOBAL_K
@@ -262,9 +303,23 @@ action tls_queue_sesq(TLSCB_0_PARAMS_NON_STG0) {
     modify_field(to_s5_scratch.odesc, to_s5.odesc);
     modify_field(to_s5_scratch.debug_dol, to_s5.debug_dol);
     modify_field(to_s5_scratch.other_fid, to_s5.other_fid);
+    modify_field(to_s5_scratch.l7_desc, to_s5.l7_desc);
 
 
     GENERATE_TLSCB_0_D_NON_STG0
+}
+
+/* Stage 5 table 1 action */
+action tls_queue_l7q(TLSCB_1_PARAMS) {
+    GENERATE_GLOBAL_K
+    
+    /* To Stage 5 fields */
+    modify_field(to_s5_scratch.odesc, to_s5.odesc);
+    modify_field(to_s5_scratch.debug_dol, to_s5.debug_dol);
+    modify_field(to_s5_scratch.other_fid, to_s5.other_fid);
+    modify_field(to_s5_scratch.l7_desc, to_s5.l7_desc);
+
+    GENERATE_TLSCB_1_D
 }
 
 /* Stage 6 action */

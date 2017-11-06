@@ -56,6 +56,7 @@ message TlsCbSpec {
   uint32                post_debug_stage0_7_thread = 27;
   bool                  is_decrypt_flow            = 28;
   uint32                other_fid                  = 29;
+  types.AppRedirType    l7_proxy_type              = 30;
 }
 
 // TlsCbRequestMsg is batched add or modify tlscb request

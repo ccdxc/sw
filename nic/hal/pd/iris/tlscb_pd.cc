@@ -67,6 +67,7 @@ p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd)
     tlscb_pd->tlscb->salt = ntohl(data.u.read_tls_stg0_d.salt);
     tlscb_pd->tlscb->explicit_iv = data.u.read_tls_stg0_d.explicit_iv;
     tlscb_pd->tlscb->is_decrypt_flow = data.u.read_tls_stg0_d.dec_flow;
+    tlscb_pd->tlscb->l7_proxy_type = types::AppRedirType(data.u.read_tls_stg0_d.l7_proxy_type);
 
     HAL_TRACE_DEBUG("Received sesq_base: 0x{0:x}", tlscb_pd->tlscb->sesq_base);
     HAL_TRACE_DEBUG("Received serq_base: 0x{0:x}", tlscb_pd->tlscb->serq_base);
@@ -80,6 +81,7 @@ p4pd_get_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd)
     HAL_TRACE_DEBUG("Received salt: 0x{0:x}", tlscb_pd->tlscb->salt);
     HAL_TRACE_DEBUG("Received explicit_iv: 0x{0:x}", tlscb_pd->tlscb->explicit_iv);
     HAL_TRACE_DEBUG("Received dec_flow : 0x{0:x}", tlscb_pd->tlscb->is_decrypt_flow);
+    HAL_TRACE_DEBUG("Received L7 proxy type: {}", tlscb_pd->tlscb->l7_proxy_type);
     return HAL_RET_OK;
 }
 
@@ -129,6 +131,7 @@ p4pd_get_tls_tx_s6_t0_pre_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
     HAL_TRACE_DEBUG("Received enc requests: 0x{0:x}", tlscb_pd->tlscb->enc_requests);
     HAL_TRACE_DEBUG("Received dec requests: 0x{0:x}", tlscb_pd->tlscb->dec_requests);
     HAL_TRACE_DEBUG("Received pre debug stage0_7 thread: 0x{0:x}", tlscb_pd->tlscb->pre_debug_stage0_7_thread);
+    HAL_TRACE_DEBUG("Received l7_proxy_type: {}", tlscb_pd->tlscb->l7_proxy_type);
     return ret;
 }
 
@@ -252,6 +255,9 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
 
         data.u.read_tls_stg0_d.dec_flow = tlscb_pd->tlscb->is_decrypt_flow;
         HAL_TRACE_DEBUG("Is Decrypt Flow = 0x{0:x}", data.u.read_tls_stg0_d.dec_flow);
+
+        data.u.read_tls_stg0_d.l7_proxy_type = tlscb_pd->tlscb->l7_proxy_type;
+        HAL_TRACE_DEBUG("l7_proxy_type = {}", data.u.read_tls_stg0_d.l7_proxy_type);
     }
 
     HAL_TRACE_DEBUG("TLSCB: Programming at hw-id: 0x{0:x}", hwid);
@@ -276,6 +282,18 @@ p4pd_add_or_del_tls_tx_s1_t0_read_tls_stg1_7_entry(pd_tlscb_t* tlscb_pd, bool de
     if(!del) {
         data.u.read_tls_stg1_7_d.other_fid = htons(tlscb_pd->tlscb->other_fid);
         HAL_TRACE_DEBUG("other fid = 0x{0:x}", data.u.read_tls_stg1_7_d.other_fid);
+        // Get L7Q address
+        wring_hw_id_t  q_base;
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_APP_REDIR_PROXYR,
+                                     tlscb_pd->tlscb->cb_id,
+                                     &q_base);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to receive l7q base for tls cb: {}",
+                    tlscb_pd->tlscb->cb_id);
+        } else {
+            HAL_TRACE_DEBUG("l7q id: {:#x}, base: {:#x}", tlscb_pd->tlscb->cb_id, q_base);
+            data.u.read_tls_stg1_7_d.l7q_base = q_base;
+        }
     }
     HAL_TRACE_DEBUG("TLSCB: Programming at hw-id: 0x{0:x}", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){

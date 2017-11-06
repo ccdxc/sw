@@ -569,3 +569,24 @@ modules:
         iterate :
             - flow: filter://type=IPV4
 
+    - module:
+        name    : TLS_AES128_GCM_DECRYPT_L7Q_IDS_V4
+        package : test.tcp_tls_proxy
+        module  : tls_pkt_to_l7q_ids
+        spec    : one_tls_aes128_gcm_record_pkt.testspec
+        args    :
+            maxflows: 1
+            key_size : 16
+        iterate  :
+            - flow: filter://type=IPV4
+    - module:
+        name    : TLS_AES128_GCM_DECRYPT_L7Q_IPS_V4
+        package : test.tcp_tls_proxy
+        module  : tls_pkt_to_l7q_ips
+        spec    : one_tls_aes128_gcm_record_pkt.testspec
+        args    :
+            maxflows: 1
+            key_size : 16
+        iterate  :
+            - flow: filter://type=IPV4
+

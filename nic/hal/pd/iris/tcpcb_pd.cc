@@ -295,7 +295,7 @@ p4pd_add_or_del_tcpcb_write_l7q_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     if(!del) {
         // Get L7Q address
         wring_hw_id_t  q_base;
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_APP_REDIR_PROXYC,
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_APP_REDIR_PROXYR,
                                      tcpcb_pd->tcpcb->cb_id,
                                      &q_base);
         if(ret != HAL_RET_OK) {

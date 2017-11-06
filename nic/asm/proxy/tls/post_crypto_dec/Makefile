@@ -35,7 +35,11 @@ SRC_FILES := \
 	$(SRC_DIR)/tls-dec-read-rnmpr-free-idx.s \
 	$(SRC_DIR)/tls-dec-post-crypto-stats.s	\
 	$(SRC_DIR)/tls-dec-read-idesc.s \
-	$(SRC_DIR)/tls-dec-read-odesc.s
+	$(SRC_DIR)/tls-dec-read-odesc.s \
+	$(SRC_DIR)/tls-dec-read-l7-rnmdr-pidx.s \
+	$(SRC_DIR)/tls-dec-l7-desc-alloc.s \
+	$(SRC_DIR)/tls-dec-queue-l7q.s \
+
 
 BIN_FILES := $(patsubst %.s, %.bin, $(SRC_FILES))
 

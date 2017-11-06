@@ -30,6 +30,10 @@ tls_dec_post_crypto_process:
     add         r3, r0, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 
     phvwr       p.to_s5_debug_dol, d.u.read_tls_stg0_d.debug_dol
+    sne         c1, d.u.read_tls_stg0_d.l7_proxy_type, L7_PROXY_TYPE_NONE
+    phvwri.c1   p.tls_global_phv_l7_proxy_en, 1
+    seq         c2, d.u.read_tls_stg0_d.l7_proxy_type, L7_PROXY_TYPE_SPAN
+    phvwri.c2   p.tls_global_phv_l7_proxy_type_span, 1
 table_read_rx_bsq_dec: 
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tls_dec_rx_bsq_process,
 	                       r3, TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)

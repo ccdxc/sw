@@ -10,7 +10,7 @@
 #include "nic/hal/pd/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/capri/capri_pxb_pcie.hpp"
 
-#define CAPRI_P4PLUS_NUM_SYMBOLS 50
+#define CAPRI_P4PLUS_NUM_SYMBOLS 51
 
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
@@ -505,6 +505,11 @@ capri_p4p_asm_init()
     symbols[49].num_params = 1;
     symbols[49].params[0].name = RNMDR_TABLE_BASE;
     symbols[49].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
+
+    symbols[50].name = "tls-dec-read-l7-rnmdr-pidx.bin";
+    symbols[50].num_params = 1;
+    symbols[50].params[0].name = RNMDR_TABLE_BASE;
+    symbols[50].params[0].val = get_start_offset(CAPRI_HBM_REG_NMDR_RX);
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
 

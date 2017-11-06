@@ -33,3 +33,4 @@ command                     : 0
 crypto_key_idx              : 0
 is_decrypt_flow             : 0
 other_fid                   : 0xFFFF
+l7_proxy_type               : 0

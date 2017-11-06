@@ -28,6 +28,7 @@ tls_dec_queue_sesq_process:
 	add		    r4, r5, r0
 	phvwr		p.p4_txdma_intr_dma_cmd_ptr, r4
 
+
 tls_dec_odesc_write:
     add         r3, r0, k.to_s5_odesc
     addi        r3, r3, PKT_DESC_AOL_OFFSET
@@ -65,12 +66,15 @@ tls_sesq_produce:
     CAPRI_DMA_CMD_RING_DOORBELL(dma_cmd2_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
                                 d.u.tls_queue_sesq_d.sw_sesq_pi, db_data_data)
                               
+    sne         c1, k.tls_global_phv_l7_proxy_en, r0
+    bcf         [c1], tls_queue_sesq_process_done
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd2_dma_cmd)
     b           tls_queue_sesq_process_done
     nop
 tls_sesq_produce_skip:
-    phvwri      p.dma_cmd1_dma_cmd_eop, 1
-    phvwri      p.dma_cmd1_dma_cmd_wr_fence, 1
+    sne         c1, k.tls_global_phv_l7_proxy_en, r0
+    phvwri.!c1  p.dma_cmd1_dma_cmd_eop, 1
+    phvwri.!c1  p.dma_cmd1_dma_cmd_wr_fence, 1
         
 tls_queue_sesq_process_done:
 	CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS, tls_dec_post_crypto_stats_process,

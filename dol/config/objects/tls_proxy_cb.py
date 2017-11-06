@@ -42,6 +42,7 @@ class TlsCbObject(base.ConfigObjectBase):
             req_spec.crypto_key_idx            = self.crypto_key_idx
             req_spec.is_decrypt_flow           = self.is_decrypt_flow
             req_spec.other_fid                 = self.other_fid
+            req_spec.l7_proxy_type             = self.l7_proxy_type
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -66,6 +67,7 @@ class TlsCbObject(base.ConfigObjectBase):
             self.pre_debug_stage0_7_thread = resp_spec.spec.pre_debug_stage0_7_thread
             self.post_debug_stage0_7_thread = resp_spec.spec.post_debug_stage0_7_thread
             self.other_fid = resp_spec.spec.other_fid
+            self.l7_proxy_type = resp_spec.spec.l7_proxy_type
         return
 
     def IsFilterMatch(self, spec):

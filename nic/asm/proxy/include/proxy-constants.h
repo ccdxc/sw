@@ -13,4 +13,9 @@
 #define NIC_L7Q_ENTRY_SIZE                   8
 #define NIC_L7Q_ENTRY_SIZE_SHIFT             3          /* for 8B */
 
+// L7 Redirect Type
+#define L7_PROXY_TYPE_NONE                   0
+#define L7_PROXY_TYPE_REDIR                  1
+#define L7_PROXY_TYPE_SPAN                   2
+
 #endif // __PROXY_CONSTANTS_H
