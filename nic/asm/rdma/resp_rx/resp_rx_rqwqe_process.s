@@ -189,8 +189,8 @@ non_first_or_recirc_pkt:
     // if remaining payload bytes are not zero, recirc
     // to process more sges
     bcf         [!c5],  recirc
-    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG) // BD Slot
-    IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
+    IS_ANY_FLAG_SET(c1, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY) //BD Slot
+    CAPRI_GET_TABLE_2_ARG(resp_rx_phv_t, T2_ARG)
 
     .csbegin
     cswitch     [c1]

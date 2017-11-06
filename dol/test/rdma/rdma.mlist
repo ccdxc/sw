@@ -686,3 +686,60 @@ modules:
         spec    : resp_write_fml_read_fml.testspec
         ignore  : False
  
+    # RQ Recirc testcases
+#    - module:
+#        name    : RDMA_RX_SEND_ONLY_4SGES
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_send_only_4sges
+#        spec    : resp_rx_send_only_4sges.testspec
+#        ignore  : False
+# 
+#    - module:
+#        name    : RDMA_RX_SEND_ONLY_3SGES
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_send_only_3sges
+#        spec    : resp_rx_send_only_3sges.testspec
+#        ignore  : False
+# 
+#    - module:
+#        name    : RDMA_RX_SEND_ONLY_IMM_4SGES
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_send_only_imm_4sges
+#        spec    : resp_rx_send_only_imm_4sges.testspec
+#        ignore  : False
+#
+#    - module:
+#        name    : RDMA_RX_SEND_ONLY_INV_4SGES
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_send_only_inv_4sges
+#        spec    : resp_rx_send_only_inv_4sges.testspec
+#        ignore  : False
+#
+#    - module:
+#        name    : RDMA_RX_SEND_FIRST_MID_LAST_4SGES
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_send_first_mid_last_4sges
+#        spec    : resp_rx_send_first_mid_last_4sges.testspec
+#        ignore  : False
+#
+#    - module:
+#        name    : RDMA_RX_SEND_FIRST_MID_LAST_IMM_4SGES
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_send_first_mid_last_imm_4sges
+#        spec    : resp_rx_send_first_mid_last_imm_4sges.testspec
+#        ignore  : False
+#
+#    - module:
+#        name    : RDMA_RX_SEND_FIRST_MID_LAST_INV_4SGES
+#        enable  : True
+#        package : test.rdma
+#        module  : resp_rx_send_first_mid_last_inv_4sges
+#        spec    : resp_rx_send_first_mid_last_inv_4sges.testspec
+#        ignore  : False
+
