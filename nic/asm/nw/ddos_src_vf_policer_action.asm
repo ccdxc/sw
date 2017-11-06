@@ -25,6 +25,6 @@ ddos_src_vf_policer_action:
   nop
 
 set_drop:
-  tbladd      d.u.ddos_src_vf_policer_action_d.ddos_src_vf_policer_dropped_packets, 1
-  phvwr.e     p.control_metadata_egress_ddos_src_vf_policer_drop, TRUE
-  phvwr       p.capri_intrinsic_drop, 1
+  tbladd        d.u.ddos_src_vf_policer_action_d.ddos_src_vf_policer_dropped_packets, 1
+  phvwr.e       p.control_metadata_egress_ddos_src_vf_policer_drop, TRUE
+  phvwr         p.capri_intrinsic_drop, 1

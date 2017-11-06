@@ -14,3 +14,29 @@ modules:
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=FTE
               segment   : filter://native=False
+    - module:
+        name    : TO_WORKLOAD_UDP_V6
+        iterate:
+            - flow      : filter://type=IPV6,proto=UDP,label=FTE
+              segment   : filter://native=False
+    - module:
+        name    : TO_WORKLOAD_TCP_V4
+        iterate:
+            - flow      : filter://type=IPV4,proto=TCP,label=FTE
+              segment   : filter://native=False
+    - module:
+        name    : TO_WORKLOAD_TCP_V6
+        iterate:
+            - flow      : filter://type=IPV6,proto=TCP,label=FTE
+              segment   : filter://native=False
+    - module:
+        name    : TO_WORKLOAD_ICMP_V4
+        iterate:
+            - flow      : filter://type=IPV4,proto=ICMP,label=FTE
+              segment   : filter://native=False
+    - module:
+        name    : TO_WORKLOAD_ICMP_V6
+        iterate:
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE
+              segment   : filter://native=False
+

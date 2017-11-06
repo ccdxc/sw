@@ -43,6 +43,8 @@ class NetworkObject(base.ConfigObjectBase):
 
     def AddSecurityGroup(self, sg):
         self.security_groups.append(sg)
+        cfglogger.info("- Adding SecurityGroup:%s to Network:%s" %\
+                       (sg.GID(), self.GID()))
         return
 
     def __copy__(self):
@@ -89,6 +91,8 @@ class NetworkObject(base.ConfigObjectBase):
             req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET6
             req_spec.key_or_handle.ip_prefix.address.v6_addr = self.prefix.getnum().to_bytes(16, 'big')
             req_spec.key_or_handle.ip_prefix.prefix_len = self.prefix_len
+        for sg in self.security_groups:
+            req_spec.sg_handle.append(sg.hal_handle)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

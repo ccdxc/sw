@@ -15,7 +15,7 @@ nop:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 ddos_src_dst_hit:
-  smeqb     c1, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_ACK, TCP_FLAG_SYN
+  smeqb     c1, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   bcf       [c1], ddos_type_syn
 
   seq       c1, k.flow_lkp_metadata_lkp_proto, IP_PROTO_ICMP
@@ -42,3 +42,4 @@ ddos_type_udp:
   add       r1, DDOS_TYPE_UDP, d.u.ddos_src_dst_hit_d.ddos_src_dst_base_policer_idx, 2
   phvwr.e   p.ddos_metadata_ddos_src_dst_policer_idx, r1
   nop
+

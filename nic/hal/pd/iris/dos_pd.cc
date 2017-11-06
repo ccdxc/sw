@@ -173,6 +173,7 @@ dos_pd_program_ddos_src_vf_tcam (uint16_t slport, int actionid,
 
 hal_ret_t
 dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr,
+                                  mac_addr_t mac_da, bool l2ep,
                                   uint16_t dport, uint8_t proto,
                                   uint16_t vrf, int actionid,
                                   uint16_t policer_idx,
@@ -191,26 +192,43 @@ dos_pd_program_ddos_service_tcam (ip_addr_t *ip_addr,
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
     
-    memcpy(key.flow_lkp_metadata_lkp_dst, &ip_addr->addr.v6_addr.addr8,
-           IP6_ADDR8_LEN);
-    memset(mask.flow_lkp_metadata_lkp_dst_mask, 0xFF, IP6_ADDR8_LEN);
-    if (ip_addr->af == IP_AF_IPV6) {
-        memrev(key.flow_lkp_metadata_lkp_dst, sizeof(key.flow_lkp_metadata_lkp_dst));
+    if (!l2ep) {
+        if (ip_addr->af == IP_AF_IPV6) {
+            memcpy(key.flow_lkp_metadata_lkp_dst, ip_addr->addr.v6_addr.addr8,
+                   IP6_ADDR8_LEN);
+            memrev(key.flow_lkp_metadata_lkp_dst, sizeof(key.flow_lkp_metadata_lkp_dst));
+            memset(mask.flow_lkp_metadata_lkp_dst_mask, 0xFF, IP6_ADDR8_LEN);
+        } else if (ip_addr->af == IP_AF_IPV4) {
+            memcpy(key.flow_lkp_metadata_lkp_dst, &ip_addr->addr.v4_addr,
+                   sizeof(ipv4_addr_t));
+            memset(mask.flow_lkp_metadata_lkp_dst_mask, 0xFF, sizeof(ipv4_addr_t));
+        }
+    } else {
+        memcpy(key.flow_lkp_metadata_lkp_dst, mac_da, sizeof(mac_addr_t));
+        memrev(key.flow_lkp_metadata_lkp_dst, sizeof(mac_addr_t));
+        memset(mask.flow_lkp_metadata_lkp_dst_mask, 0xFF, sizeof(mac_addr_t));
     }
-    key.flow_lkp_metadata_lkp_dport = dport;
-    mask.flow_lkp_metadata_lkp_dport_mask = 0xFFFF;
-    key.flow_lkp_metadata_lkp_proto = proto;
-    mask.flow_lkp_metadata_lkp_proto_mask = 0xFF;
-    key.flow_lkp_metadata_lkp_vrf = 0;
-    /* TODO: Temporarily mask off vrf */
-    mask.flow_lkp_metadata_lkp_vrf_mask = 0;
+
+    if (dport != 0) {
+        key.flow_lkp_metadata_lkp_dport = dport;
+        mask.flow_lkp_metadata_lkp_dport_mask = 0xFFFF;
+    }
+    if (proto != 0) {
+        key.flow_lkp_metadata_lkp_proto = proto;
+        mask.flow_lkp_metadata_lkp_proto_mask = 0xFF;
+    }
+    /* LSB 12-bits is L2seg hw-id which is masked off */
+    uint16_t vrf_mask = 0xFFFF;
+    key.flow_lkp_metadata_lkp_vrf = (vrf << 12);
+    mask.flow_lkp_metadata_lkp_vrf_mask = (vrf_mask << 12);
     key.entry_inactive_ddos_service = 0;
     mask.entry_inactive_ddos_service_mask = 0xFF;
      
     data.actionid = actionid;
     data.ddos_service_action_u.ddos_service_ddos_service_hit.ddos_service_base_policer_idx = policer_idx;
-    HAL_TRACE_DEBUG("pd-dos:{} ip-addr: {} dport: {} proto: {} vrf: {} act_id: {} pol_idx: {}",
-                     __FUNCTION__, *ip_addr, dport, proto, vrf, actionid, policer_idx);
+    HAL_TRACE_DEBUG("pd-dos:{} mac-addr: {} ip-addr: {} dport: {} proto: {}"
+                    "vrf: {} act_id: {} pol_idx: {}", __FUNCTION__, mac_da,
+                    *ip_addr, dport, proto, vrf, actionid, policer_idx);
 
     ret = tcam->insert(&key, &mask, &data, &ret_idx);
     if (ret == HAL_RET_DUP_INS_FAIL) {
@@ -278,8 +296,10 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
     mask.flow_lkp_metadata_lkp_dport_mask = 0xFFFF;
     key.flow_lkp_metadata_lkp_proto = proto;
     mask.flow_lkp_metadata_lkp_proto_mask = 0xFF;
-    key.flow_lkp_metadata_lkp_vrf = vrf;
-    mask.flow_lkp_metadata_lkp_vrf_mask = 0xFFFF;
+    /* LSB 12-bits is L2seg hw-id which is masked off */
+    uint16_t vrf_mask = 0xFFFF;
+    key.flow_lkp_metadata_lkp_vrf = (vrf << 12);
+    mask.flow_lkp_metadata_lkp_vrf_mask = (vrf_mask << 12);
     key.entry_inactive_ddos_src_dst = 0;
     mask.entry_inactive_ddos_src_dst_mask = 0xFF;
     
@@ -356,17 +376,20 @@ dos_pd_program_ddos_policer (uint8_t actionid, bool pps,
      * Token bucket setting will be removed for real hw/emulator
      * */
     tbkt = 0;
+    /* For color aware policers the commit token bucket update is color blind
+     * and the peak token bucket update is color aware
+     * */
     d.actionid = actionid;
     DDOS_POLICER(entry_valid) = 1;
     DDOS_POLICER(pkt_rate) = (pps) ? 1 : 0;
-    DDOS_POLICER(color_aware) = (color_aware) ? 1 : 0;
+    DDOS_POLICER(color_aware) = 0;
     memcpy(DDOS_POLICER(rate), &cir, sizeof(uint32_t));
     memcpy(DDOS_POLICER(burst), &cbr, sizeof(uint32_t));
     memcpy(DDOS_POLICER(tbkt), &tbkt, sizeof(uint32_t));
 
     DDOS_POLICER(entry_valid2) = 1;
     DDOS_POLICER(pkt_rate2) = (pps) ? 1 : 0;
-    DDOS_POLICER(color_aware2) = (color_aware) ? 1 : 0;
+    DDOS_POLICER(color_aware2) = 1;
     memcpy(DDOS_POLICER(rate2), &pir, sizeof(uint32_t));
     memcpy(DDOS_POLICER(burst2), &pbr, sizeof(uint32_t));
     memcpy(DDOS_POLICER(tbkt2), &tbkt, sizeof(uint32_t));
@@ -602,7 +625,7 @@ dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
                 HAL_TRACE_DEBUG("pd-dos:{}: NW pfx: {}/{}", __FUNCTION__, nw->nw_key.ip_pfx.addr, nw->nw_key.ip_pfx.len);
                 /* Get the peer Security Group */
                 pnw_list = get_nw_list_for_security_group(dosp->egress.peer_sg_id);
-                HAL_TRACE_DEBUG("pd-dos:{}: Egress peer sg-id: {}", __FUNCTION__, dosp->ingress.peer_sg_id);
+                HAL_TRACE_DEBUG("pd-dos:{}: Egress peer sg-id: {}", __FUNCTION__, dosp->egress.peer_sg_id);
                 HAL_TRACE_DEBUG("pd-dos:{}: Iterating through all peer NWs", __FUNCTION__);
                 /* Go through the associated peer networks */
                 dllist_for_each_safe(pnwcurr, pnwnext, pnw_list) {
@@ -664,12 +687,22 @@ dos_pd_program_ddos_service_table (pd_dos_policy_t *pd_dosp,
         HAL_TRACE_DEBUG("pd-dos:{}: ep_ip_addr: {}",
                          __FUNCTION__, pi_ip_ent->ip_addr);
         ret = dos_pd_program_ddos_service_tcam(&pi_ip_ent->ip_addr,
+                ep->l2_key.mac_addr, FALSE,
                 dosp->ingress.service.dport,
                 dosp->ingress.service.ip_proto,
                 ten_pd->ten_hw_id, DDOS_SERVICE_DDOS_SERVICE_HIT_ID,
                 base_pol_idx, P4TBL_ID_DDOS_SERVICE, &tcam_idx);
         HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
     }
+    /* Program the mac EP address also in the service tcam for non-ip pkts */
+    HAL_TRACE_DEBUG("pd-dos:{}: ep_mac_addr: {}",
+                     __FUNCTION__, ep->l2_key.mac_addr);
+    ret = dos_pd_program_ddos_service_tcam(&pi_ip_ent->ip_addr,
+            ep->l2_key.mac_addr, TRUE, 0, 0, ten_pd->ten_hw_id,
+            DDOS_SERVICE_DDOS_SERVICE_HIT_ID,
+            base_pol_idx, P4TBL_ID_DDOS_SERVICE, &tcam_idx);
+    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+
     HAL_TRACE_DEBUG("pd-dos:{}: tcam_index: {}",
                      tcam_idx, __FUNCTION__);
     /* One IP addr per EP for now */

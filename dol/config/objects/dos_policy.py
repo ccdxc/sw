@@ -191,6 +191,7 @@ class DosPolicyObject(base.ConfigObjectBase):
                                         obj.other_flood_limits)
         sgs = self.tenant.GetRemoteSecurityGroups()
         req_spec.peer_sg_handle = sgs[0].hal_handle
+        #req_spec.peer_sg_handle.append(sgs[0].hal_handle)
         return
 
     def PrepareHALRequestSpec(self, req_spec):

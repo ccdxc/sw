@@ -1,0 +1,16 @@
+# Feature Test Modules List
+feature:
+    id      : dos
+    sub     : rx_nonip
+    package : test.dos
+    module  : dos
+    enable  : True
+    ignore  : False
+    spec    : dos_rx_nonip.testspec
+
+modules:
+    - module:
+        name    : TO_WORKLOAD_NON_IP
+        iterate:
+            - flow      : filter://type=MAC,label=FTE
+              segment   : filter://native=False

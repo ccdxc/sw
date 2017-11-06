@@ -2192,6 +2192,7 @@ class capri_table:
                 # since km is shared, don't insert bytes as it can un-align the shared table
                 # increase the key size by 8 bits (hopefully we have space in TCAM)
                 self.start_key_off -= 8
+                self.final_key_size += 8
                 return False
             # add a byte just before the key
             # If this km is shared with index table AND idx table shares key start with tcam
@@ -2218,6 +2219,7 @@ class capri_table:
                 # since km is shared, don't insert bytes as it can un-align the shared table
                 # increase the key size by 8 bits (hopefully we have space in TCAM)
                 self.start_key_off -= 8
+                self.final_key_size += 8
                 return False
             i = km_kstart
             for i in range(km_kstart):
@@ -2234,9 +2236,11 @@ class capri_table:
                 # just move the start key offset back and let p4pd treat the
                 # leading bytes as non-key and mask it
                 self.start_key_off -= 8
+                self.final_key_size += 8
                 # don't change end off unless it is same as start
                 if k_start == k_end:
                     self.end_key_off -= 8
+                    self.final_key_size -= 8
                 if fix_km_prof.bit_loc > i and fix_km_prof.bit_loc < km_kstart:
                     fix_km_prof.bit_loc -= 1
                 if fix_km_prof.bit_loc1 > i and fix_km_prof.bit_loc1 < km_kstart:

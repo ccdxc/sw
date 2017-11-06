@@ -20,6 +20,52 @@ namespace hal {
 namespace pd {
 
 static hal_ret_t
+p4pd_ddos_policers_init (void)
+{
+    hal_ret_t                           ret = HAL_RET_OK;
+    DirectMap                           *dm;
+    ddos_src_vf_policer_actiondata      d_svf = { 0 };
+    ddos_service_policer_actiondata     d_service = { 0 };
+    ddos_src_dst_policer_actiondata     d_srcdst = { 0 };
+    
+    /*
+     * Invalidate the first four policers. Entry valid bit is set to
+     * zero by default
+     */
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SRC_VF_POLICER);
+    HAL_ASSERT(dm != NULL);
+    for (int i = 0; i < 4; i++) {
+        ret = dm->insert_withid(&d_svf, i);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("ddos src_vf policer init failed, err : {}", ret);
+            return ret;
+        }
+    }
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SERVICE_POLICER);
+    HAL_ASSERT(dm != NULL);
+    for (int i = 0; i < 4; i++) {
+        ret = dm->insert_withid(&d_service, i);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("ddos service policer init failed, err : {}", ret);
+            return ret;
+        }
+    }
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SRC_DST_POLICER);
+    HAL_ASSERT(dm != NULL);
+    for (int i = 0; i < 4; i++) {
+        ret = dm->insert_withid(&d_srcdst, i);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("ddos src_dst policer init failed, err : {}", ret);
+            return ret;
+        }
+    }
+
+    return (ret);
+}
+
+static hal_ret_t
 p4pd_input_mapping_native_init (void)
 {
     uint32_t                             idx;
@@ -1178,6 +1224,7 @@ p4pd_table_defaults_init (void)
     HAL_ASSERT(p4pd_session_state_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_flow_stats_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_drop_stats_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_ddos_policers_init() == HAL_RET_OK);
 
     // initialize all P4 egress tables with default entries, if any
     HAL_ASSERT(p4pd_tunnel_decap_copy_inner_init() == HAL_RET_OK);
