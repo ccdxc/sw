@@ -37,3 +37,9 @@ image:
   bind_dir: "/sw"
   work_dir: "/sw/nic"
 rebase: true
+logfiles:
+  - /sw/dol/dol.log
+  - /sw/nic/hal.log
+  - /sw/nic/model.log
+  - /sw/nic/build.log
+  - /sw/nic/storage_dol.log
