@@ -330,8 +330,7 @@ def run_e2e_tlsproxy_dol():
     lock.write(str(p.pid) + "\n")
     lock.close()
     p.communicate()
-    if p.returncode != 0:
-        print "* FAIL: E2E TLS Proxy DOL, exit code ", p.returncode
+    print("* FAIL:" if p.returncode != 0 else "* PASS:") + " E2E TLS Proxy DOL, exit code ", p.returncode
     return p.returncode
 
 # main()

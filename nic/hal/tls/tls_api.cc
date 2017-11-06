@@ -92,7 +92,7 @@ tls_api_program_crypto_key(char* key, uint32_t* key_index)
     spec->set_keyindex(*key_index);
     spec->set_key_type(types::CRYPTO_KEY_TYPE_AES128);
     spec->set_key_size(16);
-    spec->set_key(key);
+    spec->mutable_key()->assign(key, 16);
     ret = crypto_key_update(update_req, &update_resp);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("tls: failed to update key, ret: {}", ret);
