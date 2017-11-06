@@ -2065,6 +2065,11 @@ class capri_table:
             self.start_key_off = 0
             self.last_flit_end_key_off = self.end_key_off
             self.end_key_off = new_key_size + self.last_flit_start_key_off
+            if self.collision_ct:
+                self.collision_ct.last_flit_start_key_off = self.last_flit_start_key_off
+                self.collision_ct.last_flit_end_key_off = self.last_flit_end_key_off
+                self.collision_ct.start_key_off = self.start_key_off
+                self.collision_ct.end_key_off = self.end_key_off
         else:
             new_key_size = self.end_key_off - self.start_key_off
             self.final_key_size = new_key_size
@@ -4886,6 +4891,9 @@ class capri_gress_tm:
                         km.ctables.append(ct)
                         ct.key_makers.append(km)
                         ct.num_km = len(ct.key_makers)
+                        ct.is_wide_key = True
+                        # copy flit used info from parent hash
+                        ct.flits_used = copy.copy(ct.hash_ct.flits_used)
                         continue
 
                     for k,_km in enumerate(ct.hash_ct.key_makers):
@@ -5558,7 +5566,10 @@ class capri_table_manager:
                         profile['log2bkts']['value'] = "0x%x" % capri_get_log2bkts_from_layout(layout, table['width'])
                         profile['start_addr']['value'] = "0x%x" % capri_get_sram_hw_start_address_from_layout(layout)
                         profile['end_addr']['value'] = "0x%x" % capri_get_sram_hw_end_address_from_layout(layout)
-                        if ctable.match_type != match_type.EXACT_IDX and ctable.d_size < ctable.start_key_off:
+                        if (ctable.match_type != match_type.EXACT_IDX and \
+                            ctable.match_type != match_type.TERNARY and \
+                            ctable.match_type != match_type.TERNARY_ONLY) and \
+                            ctable.d_size < ctable.start_key_off:
                             # For hash tables, match key packing has to align with KM. Hence when packing
                             # action data, leading space (before match key) is always filled by p4pd.
                             # If there is more than 16bits of leading space unfilled, then use axi-shift.

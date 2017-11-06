@@ -11,6 +11,7 @@ LIBDIRS = \
           eth \
           ipfix \
           adminq \
+          gft \
           $(NULL)
 
 PGMDIRS = $(NULL)

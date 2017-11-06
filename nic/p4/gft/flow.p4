@@ -1,4 +1,4 @@
-action flow_hash_info(entry_valid, flow_index, policer_index,
+action gft_hash_info(entry_valid, flow_index, policer_index,
                       hash1, hint1, hash2, hint2, hash3, hint3,
                       hash4, hint4, hash5, hint5, hash6, hint6,
                       hash7, hint7, hash8, hint8, hash9, hint9,
@@ -39,7 +39,7 @@ action flow_hash_info(entry_valid, flow_index, policer_index,
 
 @pragma stage 3
 @pragma hbm_table
-table flow_hash {
+table gft_hash {
     reads {
         flow_lkp_metadata.ethernet_dst_1     : exact;
         flow_lkp_metadata.ethernet_src_1     : exact;
@@ -90,29 +90,27 @@ table flow_hash {
         flow_lkp_metadata.gre_proto_3        : exact;
     }
     actions {
-        flow_hash_info;
+        gft_hash_info;
     }
     size : FLOW_HASH_TABLE_SIZE;
 }
 
 @pragma stage 4
 @pragma hbm_table
-@pragma overflow_table flow_hash
-table flow_hash_overflow {
+@pragma overflow_table gft_hash
+table gft_hash_overflow {
     reads {
         flow_lkp_metadata.overflow_hash : exact;
     }
     actions {
-        flow_hash_info;
+        gft_hash_info;
     }
     size : FLOW_HASH_OVERFLOW_TABLE_SIZE;
 }
 
 control ingress_flow_lookup {
-    apply(flow_hash);
-#if 0
+    apply(gft_hash);
     if (flow_action_metadata.overflow_lkp == TRUE) {
-        apply(flow_hash_overflow);
+        apply(gft_hash_overflow);
     }
-#endif
 }

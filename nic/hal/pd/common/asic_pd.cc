@@ -41,7 +41,7 @@ read_reg_base(uint32_t chip, uint64_t addr)
 
     hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
 
-    if (hal::pd::is_asic_rw_thread(
+    if (curr_thread && hal::pd::is_asic_rw_thread(
                         chip, curr_thread->thread_id()) == false) {
         rc = hal::pd::asic_reg_read(addr, &data);
         if (rc != HAL_RET_OK) {
@@ -62,7 +62,7 @@ write_reg_base(uint32_t chip, uint64_t addr, uint32_t data)
 
     hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
 
-    if (hal::pd::is_asic_rw_thread(
+    if (curr_thread && hal::pd::is_asic_rw_thread(
                         chip, curr_thread->thread_id()) == false) {
         rc = hal::pd::asic_reg_write(addr, &data, true);
         if (rc != HAL_RET_OK) {

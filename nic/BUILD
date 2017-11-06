@@ -184,6 +184,16 @@ cc_library(
 )
 
 cc_library(
+    name = "gft_p4pd",
+    srcs = ["gen/gft/src/gft_p4pd.cc"],
+    hdrs = ["gen/gft/include/gft_p4pd.h",
+            ],
+    deps = ["//nic/include:base_includes",
+            "//nic:gen_includes",
+            ],
+)
+
+cc_library(
     name = "p4pluspd_txdma",
     srcs = ["gen/common_txdma_actions/src/common_txdma_actions_p4pd.cc"],
     hdrs = ["gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",
@@ -209,6 +219,7 @@ cc_library(
     hdrs = ["gen/iris/include/p4pd.h",
             "gen/iris/include/p4plus_egress.h",
             "gen/iris/include/p4plus_ingress.h",
+            "gen/gft/include/gft_p4pd.h",
             "gen/tcp_proxy_rxdma/include/tcp_proxy_rxdma_p4plus_ingress.h",
             "gen/tcp_proxy_txdma/include/tcp_proxy_txdma_p4plus_ingress.h",
             "gen/common_txdma_actions/include/common_txdma_actions_p4pd.h",

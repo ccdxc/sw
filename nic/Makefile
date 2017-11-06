@@ -194,6 +194,15 @@ run-gtests-valgrind: $(VAL_TR)/.dir $(VAL_INFO)/.dir
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/nwsec_val.xml ./nic/hal/test/gtests/nwsec_test --gtest_output="xml:$(VAL_TR)/nwsec_test.xml"
 	$(VAL_CMD_OPTS) --xml-file=$(VAL_INFO)/scheduler_tx_test.xml ./nic/hal/test/gtests/scheduler_tx_test --gtest_output="xml:$(VAL_TR)/scheduler_tx_test.xml"
 
+gft-build:
+	$(MAKE) capmodel
+	$(MAKE) -C p4
+	$(MAKE) -C asm
+	$(MAKE) -C proto
+	$(MAKE) -j4 -C gen/proto/hal
+	bazel build --copt=-DGFT hal:hal
+	bazel build --copt=-DGFT hal/test/gtests:gft_test
+
 clean:
 	$(MAKE) -C p4 clean
 	$(MAKE) -C asm clean

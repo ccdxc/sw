@@ -16,7 +16,6 @@
 #include "nic/p4/nw/include/defines.h"
 #include "nic/gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
-#include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/hal/pd/capri/capri_tbl_rw.hpp"
 
@@ -39,6 +38,23 @@
 
 #define CAPRI_OK (0)
 #define CAPRI_FAIL (-1)
+
+#ifdef GFT
+#include "nic/gen/gft/include/gft_p4pd.h"
+static void capri_timer_init() __attribute__((unused));
+static int capri_table_p4plus_init() __attribute__((unused));
+static void capri_program_p4plus_table_mpu_pc() __attribute__((unused));
+static void capri_p4plus_recirc_init() __attribute__((unused));
+#define P4TBL_ID_TBLMIN        P4_GFT_TBL_ID_TBLMIN
+#define P4TBL_ID_TBLMAX        P4_GFT_TBL_ID_TBLMAX
+#define p4pd_tbl_names         p4pd_gft_tbl_names
+#define p4pd_get_max_action_id p4pd_gft_get_max_action_id
+#define p4pd_get_action_name   p4pd_gft_get_action_name
+#define P4_PGM_NAME            "gft"
+#else
+#include "nic/gen/iris/include/p4pd.h"
+#define P4_PGM_NAME            "iris"
+#endif
 
 typedef int capri_error_t;
 
@@ -165,6 +181,15 @@ get_sram_shadow_for_table(uint32_t tableid) {
         HAL_TRACE_DEBUG("{} Working with txdma shadow for tableid {}\n",
                         __FUNCTION__, tableid);
         return (g_shadow_sram_txdma);
+#ifdef GFT
+    } else if ((tableid >= P4_GFT_TBL_ID_TBLMIN) &&
+               (tableid <= P4_GFT_TBL_ID_TBLMAX)) {
+        HAL_TRACE_DEBUG("{} Working with p4 sram shadow for tableid {}\n",
+                        __FUNCTION__, tableid);
+        p4pd_table_properties_t tbl_ctx;
+        p4pd_global_table_properties_get(tableid, &tbl_ctx);
+        return (g_shadow_sram_p4[tbl_ctx.gress]);
+#endif
     } else {
         HAL_ASSERT(0);
     }
@@ -227,6 +252,7 @@ capri_program_table_mpu_pc(void)
                     .mpu_pc(((capri_table_asm_base[i]) >> 6));
             te_csr.cfg_table_property[tbl_ctx.stage_tableid].write();
         }
+#ifndef GFT
         if ((i == P4TBL_ID_DDOS_SRC_VF_POLICER) ||
             (i == P4TBL_ID_DDOS_SERVICE_POLICER) ||
             (i == P4TBL_ID_DDOS_SRC_DST_POLICER)) {
@@ -237,6 +263,7 @@ capri_program_table_mpu_pc(void)
             pics_csr.cfg_table_profile[(tbl_ctx.stage << 4) | (tbl_ctx.stage_tableid)].opcode(0x722);
             pics_csr.cfg_table_profile[(tbl_ctx.stage << 4) | (tbl_ctx.stage_tableid)].write();
         }
+#endif
     }
 #endif
 }
@@ -279,6 +306,7 @@ capri_program_hbm_table_base_addr(void)
 #endif
 }
 
+#ifndef GFT
 static int capri_stats_region_init()
 {
     p4pd_table_properties_t       tbl_ctx;
@@ -325,6 +353,7 @@ static int capri_stats_region_init()
     assert(stats_base_addr <  (stats_region_start +  stats_region_size));
     return CAPRI_OK;
 }
+#endif /* !GFT */
 
 #define CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0            0
 #define CAPRI_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64           64
@@ -421,14 +450,13 @@ capri_table_mpu_base_init()
 {
     char action_name[P4ACTION_NAME_MAX_LEN];
     char progname[P4ACTION_NAME_MAX_LEN];
-    int ret;
 
     for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s", p4pd_tbl_names[i], ".bin");
-        capri_program_to_base_addr("iris", progname, &capri_table_asm_base[i]);
+        capri_program_to_base_addr(P4_PGM_NAME, progname, &capri_table_asm_base[i]);
         for (int j = 0; j < p4pd_get_max_action_id(i); j++) {
             p4pd_get_action_name(i, j, action_name);
-            capri_program_label_to_offset("iris", progname, action_name,
+            capri_program_label_to_offset(P4_PGM_NAME, progname, action_name,
                                           &capri_action_asm_base[i][j]);
             /* Action base is in byte and 64B aligned... */
             HAL_ASSERT((capri_action_asm_base[i][j] & 0x3f) == 0);
@@ -438,6 +466,8 @@ capri_table_mpu_base_init()
         }
     }
 
+#ifndef GFT
+    int ret;
     for (int i = P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN;
          i < P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX; i++) {
         snprintf(progname, P4ACTION_NAME_MAX_LEN, "%s%s",
@@ -477,6 +507,7 @@ capri_table_mpu_base_init()
                             progname, action_name, capri_action_txdma_asm_base[i][j]);
         }
     }
+#endif /* !GFT */
 }
 
 static void
@@ -641,11 +672,14 @@ int capri_table_rw_init()
     /* Program p4 HBM table start addr in table property config. */
     capri_program_hbm_table_base_addr();
 
+#ifndef GFT
     /* Program p4plus table config properties. */
     capri_table_p4plus_init();
+#endif /* !GFT */
 
     /* Program all P4 table base MPU address in all stages. */
     capri_program_table_mpu_pc();
+#ifndef GFT
     capri_program_p4plus_table_mpu_pc();
 
     /* Program p4plus recirc parameters. */
@@ -655,10 +689,9 @@ int capri_table_rw_init()
     capri_timer_init();
 
     capri_stats_region_init();
-    hbm_mem_base_addr = (uint64_t)get_start_offset((char*)JP4_PRGM);
+#endif /* !GFT */
 
-    /* TODO: configure nic mode programmatically */
-    capri_table_constant_write(P4TBL_ID_INPUT_PROPERTIES, 0);
+    hbm_mem_base_addr = (uint64_t)get_start_offset((char*)JP4_PRGM);
 #endif
     return (CAPRI_OK);
 }

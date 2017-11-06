@@ -902,6 +902,24 @@ p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
 p4pd_error_t
 p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
 
+#ifdef GFT
+void p4pd_gft_hwentry_query(uint32_t tableid, uint32_t *hwkey_len,
+                            uint32_t *hwkeymask_len, uint32_t *hwactiondata_len);
+p4pd_error_t p4pd_gft_entry_write(uint32_t tableid, uint32_t index, uint8_t *hwkey,
+                                  uint8_t *hwkey_mask, void  *actiondata);
+p4pd_error_t p4pd_gft_entry_read(uint32_t tableid, uint32_t index, void *swkey,
+                                 void *swkey_mask, void *actiondata);
+p4pd_error_t p4pd_gft_table_entry_decoded_string_get(
+    uint32_t tableid, uint32_t index, uint8_t *hwentry, uint8_t *hwentry_y,
+    uint16_t hwentry_len, char *buffer, uint16_t buf_len);
+p4pd_error_t p4pd_gft_table_ds_decoded_string_get(
+    uint32_t tableid, void *sw_key, void *sw_key_mask, void *action_data,
+    char *buffer, uint16_t buf_len);
+p4pd_error_t p4pd_gft_hwkey_hwmask_build(uint32_t tableid, void *swkey,
+                                         void *swkey_mask, uint8_t *hw_key,
+                                         uint8_t *hw_key_mask);
+#endif
+
 /*======================== P4PD GLOBAL/COMMON TABLE C/R/W routines =============*/
 
 #endif

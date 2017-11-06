@@ -46,6 +46,7 @@ cc_binary(
         "//nic/hal/pd/control",
         "//nic/model_sim:model_client",
         "//nic:p4pd",
+        "//nic:gft_p4pd",
         "//nic:p4pluspd_txdma",
         "//nic:p4pluspd_rxdma",
         "//nic:asic_libs",

@@ -12,7 +12,9 @@
 #include "nic/include/base.h"
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/p4pd_api.hpp"
-
+#ifdef GFT
+#include "nic/gen/gft/include/gft_p4pd.h"
+#endif
 
 /*
  * Based on table id call appropriate table routine.
@@ -35,6 +37,12 @@ void p4pd_global_hwentry_query(uint32_t tableid,
          (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         p4pd_common_txdma_actions_hwentry_query(tableid, hwkey_len,
             hwkeymask_len, hwactiondata_len);
+#ifdef GFT
+    } else if ((tableid >= P4_GFT_TBL_ID_TBLMIN) &&
+               (tableid <= P4_GFT_TBL_ID_TBLMAX)) {
+        p4pd_gft_hwentry_query(tableid, hwkey_len, hwkeymask_len,
+                               hwactiondata_len);
+#endif
     } else {
         HAL_ASSERT(0);
     }
@@ -64,6 +72,12 @@ p4pd_global_entry_write(uint32_t tableid,
          (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         return (p4pd_common_txdma_actions_entry_write(tableid,
                 index, hwkey, hwkey_mask, actiondata));
+#ifdef GFT
+    } else if ((tableid >= P4_GFT_TBL_ID_TBLMIN) &&
+               (tableid <= P4_GFT_TBL_ID_TBLMAX)) {
+        return (p4pd_gft_entry_write(tableid, index, hwkey, hwkey_mask,
+                                     actiondata));
+#endif
     } else {
         HAL_ASSERT(0);
     }
@@ -93,6 +107,12 @@ p4pd_global_entry_read(uint32_t tableid,
          (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         return (p4pd_common_txdma_actions_entry_read(tableid,
                 index, swkey, swkey_mask, actiondata));
+#ifdef GFT
+    } else if ((tableid >= P4_GFT_TBL_ID_TBLMIN) &&
+               (tableid <= P4_GFT_TBL_ID_TBLMAX)) {
+        return (p4pd_gft_entry_read(tableid, index, swkey, swkey_mask,
+                                    actiondata));
+#endif
     } else {
         HAL_ASSERT(0);
     }
@@ -101,18 +121,17 @@ p4pd_global_entry_read(uint32_t tableid,
 
 p4pd_error_t
 p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
-                                        void*      sw_key, 
+                                        void*      sw_key,
                                         /* Valid only in case of TCAM;
-                                         * Otherwise can be NULL)
-                                         */      
+                                         * Otherwise can be NULL) */
                                         void*      sw_key_mask,
                                         void*      action_data,
-                                        char*      buffer, 
+                                        char*      buffer,
                                         uint16_t   buf_len)
 {
     if ((tableid >= P4TBL_ID_TBLMIN) &&
         (tableid <= P4TBL_ID_TBLMAX)) {
-        return (p4pd_table_ds_decoded_string_get(tableid, 
+        return (p4pd_table_ds_decoded_string_get(tableid,
                 sw_key, sw_key_mask, action_data, buffer, buf_len));
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
@@ -122,6 +141,12 @@ p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
          (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         return (p4pd_common_txdma_actions_table_ds_decoded_string_get(tableid,
                 sw_key, sw_key_mask, action_data, buffer, buf_len));
+#ifdef GFT
+    } else if ((tableid >= P4_GFT_TBL_ID_TBLMIN) &&
+               (tableid <= P4_GFT_TBL_ID_TBLMAX)) {
+        return (p4pd_gft_table_ds_decoded_string_get(tableid,
+                sw_key, sw_key_mask, action_data, buffer, buf_len));
+#endif
     } else {
         HAL_ASSERT(0);
     }
@@ -151,7 +176,7 @@ p4pd_global_table_properties_get(uint32_t tableid,
 {
     if ((tableid >= P4TBL_ID_TBLMIN) &&
         (tableid <= P4TBL_ID_TBLMAX)) {
-        return (p4pd_table_properties_get(tableid, 
+        return (p4pd_table_properties_get(tableid,
                 (p4pd_table_properties_t*)tbl_ctx));
     } else if ((tableid >= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMIN) &&
          (tableid <= P4_COMMON_RXDMA_ACTIONS_TBL_ID_TBLMAX)) {
@@ -161,6 +186,12 @@ p4pd_global_table_properties_get(uint32_t tableid,
          (tableid <= P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX)) {
         return (p4pluspd_txdma_table_properties_get(tableid,
                (p4pd_table_properties_t*) tbl_ctx));
+#ifdef GFT
+    } else if ((tableid >= P4_GFT_TBL_ID_TBLMIN) &&
+               (tableid <= P4_GFT_TBL_ID_TBLMAX)) {
+        return (p4pd_table_properties_get(tableid,
+                (p4pd_table_properties_t*)tbl_ctx));
+#endif
     } else {
         HAL_ASSERT(0);
     }

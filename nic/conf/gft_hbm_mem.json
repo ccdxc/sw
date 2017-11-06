@@ -1,0 +1,32 @@
+{
+    "regions": [
+        {
+            "name": "p4_program",
+            "size_kb": 131072
+        },
+        {
+            "name": "gft_hash",
+            "size_kb": 262144
+        },
+        {
+            "name": "gft_hash_overflow",
+            "size_kb": 1024
+        },
+        {
+            "name": "hdr_transpositions0",
+            "size_kb": 65536
+        },
+        {
+            "name": "hdr_transpositions1",
+            "size_kb": 65536
+        },
+        {
+            "name": "hdr_transpositions2",
+            "size_kb": 65536
+        },
+        {
+            "name": "hdr_transpositions3",
+            "size_kb": 65536
+        }
+    ]
+}

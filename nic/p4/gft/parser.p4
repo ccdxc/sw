@@ -1,4 +1,5 @@
 header cap_phv_intr_global_t capri_intrinsic;
+header cap_phv_intr_p4_t capri_p4_intrinsic;
 header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 header capri_i2e_metadata_t capri_i2e_metadata;
 
@@ -96,7 +97,14 @@ parser start {
     return select(current(0, 4)) {
         default : parse_nic;
         0x1 mask 0 : deparse_start;
+        0x2 mask 0 : dummy;
     }
+}
+
+parser dummy {
+    extract(capri_intrinsic);
+    extract(capri_p4_intrinsic);
+    return ingress;
 }
 
 @pragma deparse_only

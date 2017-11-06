@@ -1,52 +1,52 @@
 action ingress_key1(match_fields) {
-    if ((match_fields & MATCH_ETHERNET_DST_1) != 0) {
+    if ((match_fields & MATCH_ETHERNET_DST) != 0) {
         modify_field(flow_lkp_metadata.ethernet_dst_1, ethernet_1.dstAddr);
     }
-    if ((match_fields & MATCH_ETHERNET_SRC_1) != 0) {
+    if ((match_fields & MATCH_ETHERNET_SRC) != 0) {
         modify_field(flow_lkp_metadata.ethernet_src_1, ethernet_1.srcAddr);
     }
-    if ((match_fields & MATCH_ETHERNET_TYPE_1) != 0) {
+    if ((match_fields & MATCH_ETHERNET_TYPE) != 0) {
         modify_field(flow_lkp_metadata.ethernet_type_1, ethernet_1.etherType);
     }
 
-    if ((match_fields & MATCH_CUSTOMER_VLAN_ID_1) != 0) {
+    if ((match_fields & MATCH_CUSTOMER_VLAN_ID) != 0) {
         modify_field(flow_lkp_metadata.ctag_1, ctag_1.vid);
     }
-    if ((match_fields & MATCH_SERVICE_VLAN_ID_1) != 0) {
+    if ((match_fields & MATCH_SERVICE_VLAN_ID) != 0) {
         modify_field(flow_lkp_metadata.stag_1, stag_1.vid);
     }
 
     if (ipv4_1.valid == TRUE) {
-        if ((match_fields & MATCH_IP_SRC_1) != 0) {
+        if ((match_fields & MATCH_IP_SRC) != 0) {
             modify_field(flow_lkp_metadata.ip_src_1, ipv4_1.srcAddr);
         }
-        if ((match_fields & MATCH_IP_DST_1) != 0) {
+        if ((match_fields & MATCH_IP_DST) != 0) {
             modify_field(flow_lkp_metadata.ip_dst_1, ipv4_1.dstAddr);
         }
-        if ((match_fields & MATCH_IP_DSCP_1) != 0) {
+        if ((match_fields & MATCH_IP_DSCP) != 0) {
             modify_field(flow_lkp_metadata.ip_dscp_1, ipv4_1.diffserv);
         }
-        if ((match_fields & MATCH_IP_PROTO_1) != 0) {
+        if ((match_fields & MATCH_IP_PROTO) != 0) {
             modify_field(flow_lkp_metadata.ip_proto_1, ipv4_1.protocol);
         }
-        if ((match_fields & MATCH_IP_TTL_1) != 0) {
+        if ((match_fields & MATCH_IP_TTL) != 0) {
             modify_field(flow_lkp_metadata.ip_ttl_1, ipv4_1.ttl);
         }
     }
     if (ipv6_1.valid == TRUE) {
-        if ((match_fields & MATCH_IP_SRC_1) != 0) {
+        if ((match_fields & MATCH_IP_SRC) != 0) {
             modify_field(flow_lkp_metadata.ip_src_1, ipv6_1.srcAddr);
         }
-        if ((match_fields & MATCH_IP_DST_1) != 0) {
+        if ((match_fields & MATCH_IP_DST) != 0) {
             modify_field(flow_lkp_metadata.ip_dst_1, ipv6_1.dstAddr);
         }
-        if ((match_fields & MATCH_IP_DSCP_1) != 0) {
+        if ((match_fields & MATCH_IP_DSCP) != 0) {
             modify_field(flow_lkp_metadata.ip_dscp_1, ipv6_1.trafficClass);
         }
-        if ((match_fields & MATCH_IP_PROTO_1) != 0) {
+        if ((match_fields & MATCH_IP_PROTO) != 0) {
             modify_field(flow_lkp_metadata.ip_proto_1, ipv6_1.nextHdr);
         }
-        if ((match_fields & MATCH_IP_TTL_1) != 0) {
+        if ((match_fields & MATCH_IP_TTL) != 0) {
             modify_field(flow_lkp_metadata.ip_ttl_1, ipv6_1.hopLimit);
         }
     }
@@ -55,54 +55,54 @@ action ingress_key1(match_fields) {
 }
 
 action ingress_key2(match_fields) {
-    if ((match_fields & MATCH_ETHERNET_DST_2) != 0) {
+    if ((match_fields & MATCH_ETHERNET_DST) != 0) {
         modify_field(flow_lkp_metadata.ethernet_dst_2, ethernet_2.dstAddr);
     }
-    if ((match_fields & MATCH_ETHERNET_SRC_2) != 0) {
+    if ((match_fields & MATCH_ETHERNET_SRC) != 0) {
         modify_field(flow_lkp_metadata.ethernet_src_2, ethernet_2.srcAddr);
     }
-    if ((match_fields & MATCH_ETHERNET_TYPE_2) != 0) {
+    if ((match_fields & MATCH_ETHERNET_TYPE) != 0) {
         modify_field(flow_lkp_metadata.ethernet_type_2, ethernet_2.etherType);
     }
 
-    if ((match_fields & MATCH_CUSTOMER_VLAN_ID_2) != 0) {
+    if ((match_fields & MATCH_CUSTOMER_VLAN_ID) != 0) {
         modify_field(flow_lkp_metadata.ctag_2, ctag_2.vid);
     }
-    if ((match_fields & MATCH_SERVICE_VLAN_ID_2) != 0) {
+    if ((match_fields & MATCH_SERVICE_VLAN_ID) != 0) {
         modify_field(flow_lkp_metadata.stag_2, stag_2.vid);
     }
 
     if (ipv4_2.valid == TRUE) {
-        if ((match_fields & MATCH_IP_SRC_2) != 0) {
+        if ((match_fields & MATCH_IP_SRC) != 0) {
             modify_field(flow_lkp_metadata.ip_src_2, ipv4_2.srcAddr);
         }
-        if ((match_fields & MATCH_IP_DST_2) != 0) {
+        if ((match_fields & MATCH_IP_DST) != 0) {
             modify_field(flow_lkp_metadata.ip_dst_2, ipv4_2.dstAddr);
         }
-        if ((match_fields & MATCH_IP_DSCP_2) != 0) {
+        if ((match_fields & MATCH_IP_DSCP) != 0) {
             modify_field(flow_lkp_metadata.ip_dscp_2, ipv4_2.diffserv);
         }
-        if ((match_fields & MATCH_IP_PROTO_2) != 0) {
+        if ((match_fields & MATCH_IP_PROTO) != 0) {
             modify_field(flow_lkp_metadata.ip_proto_2, ipv4_2.protocol);
         }
-        if ((match_fields & MATCH_IP_TTL_2) != 0) {
+        if ((match_fields & MATCH_IP_TTL) != 0) {
             modify_field(flow_lkp_metadata.ip_ttl_2, ipv4_2.ttl);
         }
     }
     if (ipv6_2.valid == TRUE) {
-        if ((match_fields & MATCH_IP_SRC_2) != 0) {
+        if ((match_fields & MATCH_IP_SRC) != 0) {
             modify_field(flow_lkp_metadata.ip_src_2, ipv6_2.srcAddr);
         }
-        if ((match_fields & MATCH_IP_DST_2) != 0) {
+        if ((match_fields & MATCH_IP_DST) != 0) {
             modify_field(flow_lkp_metadata.ip_dst_2, ipv6_2.dstAddr);
         }
-        if ((match_fields & MATCH_IP_DSCP_2) != 0) {
+        if ((match_fields & MATCH_IP_DSCP) != 0) {
             modify_field(flow_lkp_metadata.ip_dscp_2, ipv6_2.trafficClass);
         }
-        if ((match_fields & MATCH_IP_PROTO_2) != 0) {
+        if ((match_fields & MATCH_IP_PROTO) != 0) {
             modify_field(flow_lkp_metadata.ip_proto_2, ipv6_2.nextHdr);
         }
-        if ((match_fields & MATCH_IP_TTL_2) != 0) {
+        if ((match_fields & MATCH_IP_TTL) != 0) {
             modify_field(flow_lkp_metadata.ip_ttl_2, ipv6_2.hopLimit);
         }
     }
@@ -111,54 +111,54 @@ action ingress_key2(match_fields) {
 }
 
 action ingress_key3(match_fields) {
-    if ((match_fields & MATCH_ETHERNET_DST_3) != 0) {
+    if ((match_fields & MATCH_ETHERNET_DST) != 0) {
         modify_field(flow_lkp_metadata.ethernet_dst_3, ethernet_3.dstAddr);
     }
-    if ((match_fields & MATCH_ETHERNET_SRC_3) != 0) {
+    if ((match_fields & MATCH_ETHERNET_SRC) != 0) {
         modify_field(flow_lkp_metadata.ethernet_src_3, ethernet_3.srcAddr);
     }
-    if ((match_fields & MATCH_ETHERNET_TYPE_3) != 0) {
+    if ((match_fields & MATCH_ETHERNET_TYPE) != 0) {
         modify_field(flow_lkp_metadata.ethernet_type_3, ethernet_3.etherType);
     }
 
-    if ((match_fields & MATCH_CUSTOMER_VLAN_ID_3) != 0) {
+    if ((match_fields & MATCH_CUSTOMER_VLAN_ID) != 0) {
         modify_field(flow_lkp_metadata.ctag_3, ctag_3.vid);
     }
-    if ((match_fields & MATCH_SERVICE_VLAN_ID_3) != 0) {
+    if ((match_fields & MATCH_SERVICE_VLAN_ID) != 0) {
         modify_field(flow_lkp_metadata.stag_3, stag_3.vid);
     }
 
     if (ipv4_3.valid == TRUE) {
-        if ((match_fields & MATCH_IP_SRC_3) != 0) {
+        if ((match_fields & MATCH_IP_SRC) != 0) {
             modify_field(flow_lkp_metadata.ip_src_3, ipv4_3.srcAddr);
         }
-        if ((match_fields & MATCH_IP_DST_3) != 0) {
+        if ((match_fields & MATCH_IP_DST) != 0) {
             modify_field(flow_lkp_metadata.ip_dst_3, ipv4_3.dstAddr);
         }
-        if ((match_fields & MATCH_IP_DSCP_3) != 0) {
+        if ((match_fields & MATCH_IP_DSCP) != 0) {
             modify_field(flow_lkp_metadata.ip_dscp_3, ipv4_3.diffserv);
         }
-        if ((match_fields & MATCH_IP_PROTO_3) != 0) {
+        if ((match_fields & MATCH_IP_PROTO) != 0) {
             modify_field(flow_lkp_metadata.ip_proto_3, ipv4_3.protocol);
         }
-        if ((match_fields & MATCH_IP_TTL_3) != 0) {
+        if ((match_fields & MATCH_IP_TTL) != 0) {
             modify_field(flow_lkp_metadata.ip_ttl_3, ipv4_3.ttl);
         }
     }
     if (ipv6_3.valid == TRUE) {
-        if ((match_fields & MATCH_IP_SRC_3) != 0) {
+        if ((match_fields & MATCH_IP_SRC) != 0) {
             modify_field(flow_lkp_metadata.ip_src_3, ipv6_3.srcAddr);
         }
-        if ((match_fields & MATCH_IP_DST_3) != 0) {
+        if ((match_fields & MATCH_IP_DST) != 0) {
             modify_field(flow_lkp_metadata.ip_dst_3, ipv6_3.dstAddr);
         }
-        if ((match_fields & MATCH_IP_DSCP_3) != 0) {
+        if ((match_fields & MATCH_IP_DSCP) != 0) {
             modify_field(flow_lkp_metadata.ip_dscp_3, ipv6_3.trafficClass);
         }
-        if ((match_fields & MATCH_IP_PROTO_3) != 0) {
+        if ((match_fields & MATCH_IP_PROTO) != 0) {
             modify_field(flow_lkp_metadata.ip_proto_3, ipv6_3.nextHdr);
         }
-        if ((match_fields & MATCH_IP_TTL_3) != 0) {
+        if ((match_fields & MATCH_IP_TTL) != 0) {
             modify_field(flow_lkp_metadata.ip_ttl_3, ipv6_3.hopLimit);
         }
     }
@@ -368,14 +368,14 @@ table ingress_key4 {
     size : 512;
 }
 
-action ingress_vport_miss() {
+action ingress_vport(vport) {
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
-    modify_field(capri_intrinsic.lif, EXCEPTION_VPORT);
-}
 
-action ingress_vport_hit(vport) {
-    modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
+    // if (capri_register.c1)
     modify_field(capri_intrinsic.lif, vport);
+
+    // if (not capri_register.c1)
+    modify_field(capri_intrinsic.lif, EXCEPTION_VPORT);
 }
 
 @pragma stage 0
@@ -387,8 +387,7 @@ table ingress_vport {
         ethernet_2.dstAddr             : ternary;
     }
     actions {
-        ingress_vport_miss;
-        ingress_vport_hit;
+        ingress_vport;
     }
     size : 1024;
 }

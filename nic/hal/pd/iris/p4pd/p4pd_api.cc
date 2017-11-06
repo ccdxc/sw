@@ -7,7 +7,18 @@
 #include <string>
 #include <errno.h>
 #include "nic/hal/pd/p4pd_api.hpp"
+#ifndef GFT
 #include "nic/gen/iris/include/p4pd.h"
+#else
+#include "nic/gen/gft/include/gft_p4pd.h"
+#define P4TBL_ID_TBLMIN                 P4_GFT_TBL_ID_TBLMIN
+#define P4TBL_ID_TBLMAX                 P4_GFT_TBL_ID_TBLMAX
+#define p4pd_tbl_swkey_size             p4pd_gft_tbl_swkey_size
+#define p4pd_tbl_names                  p4pd_gft_tbl_names
+#define p4pd_prep_p4tbl_names           p4pd_gft_prep_p4tbl_names
+#define p4pd_prep_p4tbl_sw_struct_sizes p4pd_gft_prep_p4tbl_sw_struct_sizes
+#define p4pd_tbl_sw_action_data_size    p4pd_gft_tbl_sw_action_data_size
+#endif
 #include <stdlib.h>
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"
@@ -50,9 +61,9 @@ static p4pd_table_properties_t *_p4tbls;
 
 namespace pt = boost::property_tree;
 
-static uint8_t p4pd_get_tableid_from_tablename(const char *tablename)
+static uint16_t p4pd_get_tableid_from_tablename(const char *tablename)
 {
-    for (int i = 0; i < P4TBL_ID_TBLMAX; i++) {
+    for (int i = P4TBL_ID_TBLMIN; i < P4TBL_ID_TBLMAX; i++) {
         if (!strcmp(p4pd_tbl_names[i], tablename)) {
             return i;
         }
@@ -94,7 +105,11 @@ static p4pd_table_type_en p4pd_get_table_type(const char *match_type)
 #ifdef P4PD_CLI
 #define P4PD_TBL_PACKING_JSON  "../../../gen/iris/p4pd/capri_p4_table_map.json"
 #else
+#ifndef GFT
 #define P4PD_TBL_PACKING_JSON  "../gen/iris/p4pd/capri_p4_table_map.json"
+#else
+#define P4PD_TBL_PACKING_JSON  "../gen/gft/p4pd/capri_p4_table_map.json"
+#endif
 #endif
 
 static p4pd_error_t p4pd_tbl_packing_json_parse()

@@ -99,57 +99,74 @@
 /*****************************************************************************/
 /* Match types                                                               */
 /*****************************************************************************/
-#define MATCH_ETHERNET_DST_1           0x00000001
-#define MATCH_ETHERNET_SRC_1           0x00000001
-#define MATCH_ETHERNET_TYPE_1          0x00000001
-#define MATCH_CUSTOMER_VLAN_ID_1       0x00000001
-#define MATCH_SERVICE_VLAN_ID_1        0x00000001
-#define MATCH_IP_SRC_1                 0x00000001
-#define MATCH_IP_DST_1                 0x00000001
-#define MATCH_IP_DSCP_1                0x00000001
-#define MATCH_IP_PROTO_1               0x00000001
-#define MATCH_IP_TTL_1                 0x00000001
+#define MATCH_ETHERNET_DST             0x00000001
+#define MATCH_ETHERNET_SRC             0x00000002
+#define MATCH_ETHERNET_TYPE            0x00000004
+#define MATCH_CUSTOMER_VLAN_ID         0x00000008
+#define MATCH_SERVICE_VLAN_ID          0x00000010
+#define MATCH_IP_SRC                   0x00000020
+#define MATCH_IP_DST                   0x00000040
+#define MATCH_IP_DSCP                  0x00000080
+#define MATCH_IP_PROTO                 0x00000100
+#define MATCH_IP_TTL                   0x00000200
+
 #define MATCH_TRANSPORT_SRC_PORT_1     0x00000001
-#define MATCH_TRANSPORT_DST_PORT_1     0x00000001
-#define MATCH_TCP_FLAGS_1              0x00000001
-#define MATCH_ICMP_TYPE_1              0x00000001
-#define MATCH_ICMP_CODE_1              0x00000001
-#define MATCH_TENANT_ID_1              0x00000001
-#define MATCH_GRE_PROTO_1              0x00000001
-#define MATCH_ETHERNET_DST_2           0x00000001
-#define MATCH_ETHERNET_SRC_2           0x00000001
-#define MATCH_ETHERNET_TYPE_2          0x00000001
-#define MATCH_CUSTOMER_VLAN_ID_2       0x00000001
-#define MATCH_SERVICE_VLAN_ID_2        0x00000001
-#define MATCH_IP_SRC_2                 0x00000001
-#define MATCH_IP_DST_2                 0x00000001
-#define MATCH_IP_DSCP_2                0x00000001
-#define MATCH_IP_PROTO_2               0x00000001
-#define MATCH_IP_TTL_2                 0x00000001
-#define MATCH_TRANSPORT_SRC_PORT_2     0x00000001
-#define MATCH_TRANSPORT_DST_PORT_2     0x00000001
-#define MATCH_TCP_FLAGS_2              0x00000001
-#define MATCH_ICMP_TYPE_2              0x00000001
-#define MATCH_ICMP_CODE_2              0x00000001
-#define MATCH_TENANT_ID_2              0x00000001
-#define MATCH_GRE_PROTO_2              0x00000001
-#define MATCH_ETHERNET_DST_3           0x00000001
-#define MATCH_ETHERNET_SRC_3           0x00000001
-#define MATCH_ETHERNET_TYPE_3          0x00000001
-#define MATCH_CUSTOMER_VLAN_ID_3       0x00000001
-#define MATCH_SERVICE_VLAN_ID_3        0x00000001
-#define MATCH_IP_SRC_3                 0x00000001
-#define MATCH_IP_DST_3                 0x00000001
-#define MATCH_IP_DSCP_3                0x00000001
-#define MATCH_IP_PROTO_3               0x00000001
-#define MATCH_IP_TTL_3                 0x00000001
-#define MATCH_TRANSPORT_SRC_PORT_3     0x00000001
-#define MATCH_TRANSPORT_DST_PORT_3     0x00000001
-#define MATCH_TCP_FLAGS_3              0x00000001
-#define MATCH_ICMP_TYPE_3              0x00000001
-#define MATCH_ICMP_CODE_3              0x00000001
-#define MATCH_TENANT_ID_3              0x00000001
-#define MATCH_GRE_PROTO_3              0x00000001
+#define MATCH_TRANSPORT_DST_PORT_1     0x00000002
+#define MATCH_TCP_FLAGS_1              0x00000004
+#define MATCH_ICMP_TYPE_1              0x00000008
+#define MATCH_ICMP_CODE_1              0x00000010
+#define MATCH_TENANT_ID_1              0x00000020
+#define MATCH_GRE_PROTO_1              0x00000040
+#define MATCH_TRANSPORT_SRC_PORT_2     0x00000080
+#define MATCH_TRANSPORT_DST_PORT_2     0x00000100
+#define MATCH_TCP_FLAGS_2              0x00000200
+#define MATCH_ICMP_TYPE_2              0x00000400
+#define MATCH_ICMP_CODE_2              0x00000800
+#define MATCH_TENANT_ID_2              0x00001000
+#define MATCH_GRE_PROTO_2              0x00002000
+#define MATCH_TRANSPORT_SRC_PORT_3     0x00004000
+#define MATCH_TRANSPORT_DST_PORT_3     0x00008000
+#define MATCH_TCP_FLAGS_3              0x00010000
+#define MATCH_ICMP_TYPE_3              0x00020000
+#define MATCH_ICMP_CODE_3              0x00040000
+#define MATCH_TENANT_ID_3              0x00080000
+#define MATCH_GRE_PROTO_3              0x00100000
+
+/*****************************************************************************/
+/* Match types - bit positions                                               */
+/*****************************************************************************/
+#define MATCH_ETHERNET_DST_BIT_POS              0
+#define MATCH_ETHERNET_SRC_BIT_POS              1
+#define MATCH_ETHERNET_TYPE_BIT_POS             2
+#define MATCH_CUSTOMER_VLAN_ID_BIT_POS          3
+#define MATCH_SERVICE_VLAN_ID_BIT_POS           4
+#define MATCH_IP_SRC_BIT_POS                    5
+#define MATCH_IP_DST_BIT_POS                    6
+#define MATCH_IP_DSCP_BIT_POS                   7
+#define MATCH_IP_PROTO_BIT_POS                  8
+#define MATCH_IP_TTL_BIT_POS                    9
+
+#define MATCH_TRANSPORT_SRC_PORT_1_BIT_POS      0
+#define MATCH_TRANSPORT_DST_PORT_1_BIT_POS      1
+#define MATCH_TCP_FLAGS_1_BIT_POS               2
+#define MATCH_ICMP_TYPE_1_BIT_POS               3
+#define MATCH_ICMP_CODE_1_BIT_POS               4
+#define MATCH_TENANT_ID_1_BIT_POS               5
+#define MATCH_GRE_PROTO_1_BIT_POS               6
+#define MATCH_TRANSPORT_SRC_PORT_2_BIT_POS      7
+#define MATCH_TRANSPORT_DST_PORT_2_BIT_POS      8
+#define MATCH_TCP_FLAGS_2_BIT_POS               9
+#define MATCH_ICMP_TYPE_2_BIT_POS               10
+#define MATCH_ICMP_CODE_2_BIT_POS               11
+#define MATCH_TENANT_ID_2_BIT_POS               12
+#define MATCH_GRE_PROTO_2_BIT_POS               13
+#define MATCH_TRANSPORT_SRC_PORT_3_BIT_POS      14
+#define MATCH_TRANSPORT_DST_PORT_3_BIT_POS      15
+#define MATCH_TCP_FLAGS_3_BIT_POS               16
+#define MATCH_ICMP_TYPE_3_BIT_POS               17
+#define MATCH_ICMP_CODE_3_BIT_POS               18
+#define MATCH_TENANT_ID_3_BIT_POS               19
+#define MATCH_GRE_PROTO_3_BIT_POS               20
 
 /*****************************************************************************/
 /* Transposition types                                                       */

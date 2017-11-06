@@ -1252,6 +1252,7 @@ class capri_p4pd:
             self.pddict['p4program'] = self.be.prog_name
         else:
             self.pddict['p4plus'] = 0
+            self.pddict['p4program'] = self.be.prog_name
 
         self.pddict['cli-name'] = self.be.prog_name
         self.pddict['egr-hdrs'] = self.be.parsers[xgress.EGRESS].headers
@@ -1368,7 +1369,7 @@ class capri_p4pd:
         cur_path = os.path.split(cur_path)[0]
         templatedir = os.path.join(cur_path, 'pd_templates/')
 
-        if self.be.args.p4_plus:
+        if self.be.args.p4_plus or self.be.prog_name == 'gft':
             prog_name = self.be.prog_name
         else:
             prog_name = ''

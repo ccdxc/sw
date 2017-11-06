@@ -1,18 +1,32 @@
-action execute_ingress_policer() {
+action execute_ipolicer(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
+                        color_aware, rsvd, axi_wr_pend, burst, rate, tbkt) {
+    if ((entry_valid == TRUE) and ((tbkt >> 39) == 1)) {
+        drop_packet();
+    }
+    modify_field(scratch_metadata.policer_valid, entry_valid);
+    modify_field(scratch_metadata.policer_pkt_rate, pkt_rate);
+    modify_field(scratch_metadata.policer_rlimit_en, rlimit_en);
+    modify_field(scratch_metadata.policer_rlimit_prof, rlimit_prof);
+    modify_field(scratch_metadata.policer_color_aware, color_aware);
+    modify_field(scratch_metadata.policer_rsvd, rsvd);
+    modify_field(scratch_metadata.policer_axi_wr_pend, axi_wr_pend);
+    modify_field(scratch_metadata.policer_burst, burst);
+    modify_field(scratch_metadata.policer_rate, rate);
+    modify_field(scratch_metadata.policer_tbkt, tbkt);
 }
 
 @pragma stage 5
 @pragma policer_table two_color
-table ingress_policer {
+table ipolicer {
     reads {
         flow_action_metadata.policer_index : exact;
     }
     actions {
-        execute_ingress_policer;
+        execute_ipolicer;
     }
     size : POLICER_TABLE_SIZE;
 }
 
 control ingress_policer {
-    apply(ingress_policer);
+    apply(ipolicer);
 }
