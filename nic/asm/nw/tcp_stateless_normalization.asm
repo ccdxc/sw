@@ -17,7 +17,97 @@ struct phv_ p;
 // 5. If its not drop the only option is Edit, edit the packet and
 //    jump to next knob.
 
+// c7 - smeqb       c7, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
+// c6 - smneb       c6, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
+// c5 - seq         c5, k.tcp_urgentPtr, r0
+// c4 - seq         c4, k.l4_metadata_tcp_data_len, r0
+
 tcp_stateless_normalization:
+  smeqb       c7, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
+  smneb       c6, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
+  seq         c5, k.tcp_urgentPtr, r0
+  seq         c4, k.l4_metadata_tcp_data_len, r0
+
+  sne         c1, k.tcp_res, r0  // Reserved Flag set
+
+  seq         c2, k.tcp_option_mss_valid, TRUE
+  seq         c3, k.tcp_option_ws_valid, TRUE
+  setcf       c2, [c2 | c3]
+
+  setcf.!c1   c1, [c2 & c6]
+
+  // Three checks covered so far and aggregated result in c1
+  // 1. reservred flags, 2. mss with syn 3. ws with syn
+  // c2, c3 free to use.
+  setcf.!c1   c1, [!c7 & !c5]  // urg flag not set and urg ptr not zero
+
+  setcf.!c1   c1, [c7 & !c5 & c4]  // urg payload missing
+
+  setcf.!c1   c1, [c7 & c5]   // urg flag set and urg ptr is zero
+
+  smeqb       c2, k.tcp_flags, TCP_FLAG_RST, TCP_FLAG_RST
+
+  setcf.!c1   c1, [c2 & !c4] // rst flag set and data len is not zero
+
+  smeqb       c2, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_RST, TCP_FLAG_SYN|TCP_FLAG_RST
+  smeqb       c3, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_FIN, TCP_FLAG_SYN|TCP_FLAG_FIN
+ 
+  setcf.!c1   c1, [c2 | c3]  // invalid flags syn+rst or syn+fin
+
+  smeqb       c2, k.tcp_flags, TCP_FLAG_ACK, 0x0
+ 
+  setcf.!c1   c1, [c2 & c6]   // ACK is not set and SYN is not set 
+
+  seq.c2      c2, k.tcp_option_timestamp_valid, TRUE // ACK not set and timestamp valid
+  sne.c2      c2, k.tcp_option_timestamp_prev_echo_ts, r0 // ACK not set and timestamp valid and echo_ts non-zero
+
+  setcf.!c1   c1, [c2] 
+
+  nop.!c1.e   
+  b.c1        lb_tcp_rsvd_flags    // We hit a bad packet.
+ 
+#if 0 
+  sne         c1, k.tcp_res, r0  // Reserved Flag set
+
+  // unexpected mss
+  smneb       c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
+  seq         c4, k.tcp_option_mss_valid, TRUE
+
+  // unexpected win scale
+  smneb       c3, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
+  seq         c4, k.tcp_option_ws_valid, TRUE
+
+  // Urg flag is not set
+  smneb       c3, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
+  sne         c4, k.tcp_urgentPtr, r0
+
+  // urg payload is missing
+  smeqb       c3, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
+  sne         c4, k.tcp_urgentPtr, r0
+  seq         c5, k.l4_metadata_tcp_data_len, r0
+
+  // urg ptr not set
+  smeqb       c3, k.tcp_flags, TCP_FLAG_URG, TCP_FLAG_URG
+  seq         c4, k.tcp_urgentPtr, r0
+
+  // rst with data
+  smeqb       c3, k.tcp_flags, TCP_FLAG_RST, TCP_FLAG_RST
+  sne         c4, k.l4_metadata_tcp_data_len, r0
+
+  // invalid flags
+  smeqb       c3, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_RST, TCP_FLAG_SYN|TCP_FLAG_RST
+  smeqb       c4, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_FIN, TCP_FLAG_SYN|TCP_FLAG_FIN
+
+  // no syn no ack
+  smeqb       c3, k.tcp_flags, TCP_FLAG_SYN, 0x0
+  smeqb       c4, k.tcp_flags, TCP_FLAG_ACK, 0x0
+
+  // unexpected echo_ts
+  smeqb       c3, k.tcp_flags, TCP_FLAG_ACK, 0x0
+  seq.c3      c3, k.tcp_option_timestamp_valid, TRUE
+  sne.c3      c3, k.tcp_option_timestamp_prev_echo_ts, r0
+#endif /* 0 */
+
 lb_tcp_rsvd_flags:
   seq         c2, k.l4_metadata_tcp_rsvd_flags_action, \
                      NORMALIZATION_ACTION_ALLOW

@@ -237,7 +237,7 @@ steps:
     - step:
         id          : IFLOW_DATA
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         fields      :
             flags   : ack
 
@@ -273,7 +273,7 @@ steps:
     - step:
         id          : RFLOW_DATA
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         fields      :
             flags   : ack
 
