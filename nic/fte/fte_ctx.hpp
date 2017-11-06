@@ -9,6 +9,7 @@
 #include <netinet/ether.h>
 #include "nic/include/fte_db.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
+#include "nic/include/app_redir_headers.hpp"
 
 namespace fte {
 
@@ -318,15 +319,23 @@ typedef enum {
 
 class app_redir_ctx_t {
 public:
+    app_redir_ctx_t()
+    {
+        memset(&redir_miss_hdr_, 0, sizeof(redir_miss_hdr_));
+        redir_miss_hdr_.app.h_proto = htons(PEN_APP_REDIR_ETHERTYPE);
+    }
+
     void init()
     {
-        redir_flags_        = 0;
-        hdr_len_total_      = 0;
-        chain_qtype_        = hal::APP_REDIR_RAWC_QTYPE;
-        chain_wring_type_   = types::WRING_TYPE_APP_REDIR_RAWC;
-        chain_pkt_verdict_  = APP_REDIR_VERDICT_PASS;
-        pipeline_end_       = false;
-        chain_pkt_sent_     = false;
+        redir_flags_            = 0;
+        hdr_len_total_          = 0;
+        chain_qtype_            = hal::APP_REDIR_RAWC_QTYPE;
+        chain_wring_type_       = types::WRING_TYPE_APP_REDIR_RAWC;
+        chain_pkt_verdict_      = APP_REDIR_VERDICT_PASS;
+        pipeline_end_           = false;
+        chain_pkt_sent_         = false;
+        redir_policy_enable_    = false;
+        redir_miss_pkt_p_       = nullptr;
     };
 
     uint16_t redir_flags() const { return redir_flags_; }
@@ -345,20 +354,31 @@ public:
     bool pipeline_end() const { return pipeline_end_; }
     void set_pipeline_end(bool yesno) { pipeline_end_ = yesno; }
 
+    bool redir_policy_enable() const { return redir_policy_enable_; }
+    void set_redir_policy_enable(bool yesno) { redir_policy_enable_ = yesno; }
+
     uint16_t chain_qtype() const { return chain_qtype_; }
     void set_chain_qtype(uint8_t chain_qtype) { chain_qtype_ = chain_qtype; }
+
+    uint8_t *redir_miss_pkt_p() const { return redir_miss_pkt_p_; }
+    void set_redir_miss_pkt_p(uint8_t *redir_miss_pkt_p) { redir_miss_pkt_p_ = redir_miss_pkt_p; }
 
     types::WRingType chain_wring_type() const { return chain_wring_type_; }
     void set_chain_wring_type(types::WRingType chain_wring_type) { chain_wring_type_ = chain_wring_type; }
 
+    pen_app_redir_header_v1_full_t& redir_miss_hdr() { return redir_miss_hdr_; }
+
 private:
-    uint16_t            redir_flags_;
-    uint16_t            hdr_len_total_;
-    types::WRingType    chain_wring_type_;
-    bool                chain_pkt_sent_;
-    bool                pipeline_end_;
-    app_redir_verdict_t chain_pkt_verdict_;
-    uint8_t             chain_qtype_;
+    uint16_t                        redir_flags_;
+    uint16_t                        hdr_len_total_;
+    types::WRingType                chain_wring_type_;
+    bool                            chain_pkt_sent_     : 1,
+                                    pipeline_end_       : 1,
+                                    redir_policy_enable_: 1;
+    app_redir_verdict_t             chain_pkt_verdict_;
+    pen_app_redir_header_v1_full_t  redir_miss_hdr_;
+    uint8_t                         *redir_miss_pkt_p_;
+    uint8_t                         chain_qtype_;
 };
 
 // pkt info for queued tx packets
@@ -383,6 +403,7 @@ static const uint8_t MAX_FLOW_KEYS = 3;
 // FTE context passed between features in a pipeline
 class ctx_t {
 public:
+    ctx_t(): app_redir_() {}
     static const uint8_t MAX_STAGES = hal::MAX_SESSION_FLOWS; // max no.of times a pkt enters p4 pipeline
     static const uint8_t MAX_QUEUED_PKTS = 2;  // max queued pkts for tx
     static const uint8_t MAX_QUEUED_HANDLERS = 16; // max queued completion handlers
@@ -422,7 +443,9 @@ public:
     
     // Following are valid only for packets punted to ARM
     const cpu_rxhdr_t* cpu_rxhdr() const { return cpu_rxhdr_; }
+    void set_pkt(uint8_t *pkt) { pkt_ = pkt; }
     uint8_t* pkt() const { return pkt_; }
+    void set_pkt_len(size_t pkt_len) { pkt_len_ = pkt_len; }
     size_t pkt_len() const { return pkt_len_; }
 
     // Queue pkt for tx (in case of flow_miss rx pkt is 

@@ -120,11 +120,13 @@ inline hal_ret_t register_pipelines() {
     //---------------------------------------------------------------------------------------------------------
     fte::feature_id_t app_redir_inbound[] = {
     	fte::FTE_FEATURE_APP_REDIR,
+        fte::FTE_FEATURE_STAGE_MARKER,
     	fte::FTE_FEATURE_APP_REDIR_FINI,
     };
 
     fte::feature_id_t app_redir_outbound[] = {
     	fte::FTE_FEATURE_APP_REDIR,
+        fte::FTE_FEATURE_STAGE_MARKER,
     	fte::FTE_FEATURE_APP_REDIR_FINI,
     };
 

@@ -400,8 +400,8 @@ ctx_t::update_flow_table()
         session_state.tcp_sack_perm_option = sess_spec_->tcp_sack_perm_option();
     }
 
-    if (!flow_miss()) {
-        return HAL_RET_OK;
+    if (!flow_miss() && !app_redir().redir_policy_enable()) {
+      return HAL_RET_OK;
     }
 
     for (uint8_t stage = 0; stage <= istage_; stage++) {
@@ -660,7 +660,8 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
     pkt_len_ = pkt_len;
     arm_lifq_ = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
-    if (cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) {
+    if ((cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) ||
+        (cpu_rxhdr->lif == hal::SERVICE_LIF_APP_REDIR)) {
         ret = init_flows(iflow, rflow);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failed to init flows, err={}", ret);
@@ -882,7 +883,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
     hal_ret_t ret;
 
     // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
-    if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop()) {
+    if(pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss() && !drop() && !app_redir().redir_policy_enable()) {
         queue_txpkt(pkt_, pkt_len_);
     }
 

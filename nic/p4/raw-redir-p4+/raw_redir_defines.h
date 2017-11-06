@@ -58,7 +58,8 @@ header_type pen_raw_redir_header_v1_t {
         flow_id             : 32;
         flags               : 16;
         vrf                 : 16;
-        end_pad             : 112;
+        redir_miss_pkt_p    : 64;
+        end_pad             : 48;
     }
 }
 
