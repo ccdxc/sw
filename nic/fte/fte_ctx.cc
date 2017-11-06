@@ -509,6 +509,7 @@ ctx_t::update_flow_table()
 hal_ret_t
 ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& header)
 {
+    hal_ret_t ret;
     ipvx_addr_t dip;
 
     if (!header.valid_flds.dip) {
@@ -528,6 +529,15 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
 
     if (dep_ == NULL) {
         return HAL_RET_EP_NOT_FOUND;
+    }
+
+    // rewrite dest mac
+    flow_update_t flowupd = {type: FLOWUPD_HEADER_REWRITE};
+    HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, 
+                   *(struct ether_addr *)hal::ep_get_mac_addr(dep_));
+    ret = update_flow(flowupd);
+    if (ret != HAL_RET_OK) {
+        return ret;
     }
 
     dl2seg_ = hal::find_l2seg_by_handle(dep_->l2seg_handle);
