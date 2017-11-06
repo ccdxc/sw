@@ -356,7 +356,7 @@ p4pd_swizzle_bytes(uint8_t *hwentry, uint16_t hwentry_bit_len)
 static uint32_t
 p4pd_widekey_hash_table_entry_prepare(uint8_t *hwentry,
                                       uint8_t action_pc,
-                                      uint8_t match_key_start_bit,
+                                      uint16_t match_key_start_bit,
                                       uint8_t *hwkey,
                                       uint16_t keylen,
                                       uint8_t *packed_actiondata_before_matchkey,
@@ -429,7 +429,7 @@ p4pd_widekey_hash_table_entry_prepare(uint8_t *hwentry,
 static uint32_t
 p4pd_hash_table_entry_prepare(uint8_t *hwentry,
                               uint8_t action_pc,
-                              uint8_t match_key_start_bit,
+                              uint16_t match_key_start_bit,
                               uint8_t *hwkey,
                               uint16_t keylen,
                               uint8_t *packed_actiondata_before_matchkey,
@@ -677,7 +677,8 @@ hash_${table}_key_len(uint32_t tableid,
 
 
 
-//::        if pddict['tables'][table]['type'] != 'Ternary' and pddict['tables'][table]['type'] != 'Index' and pddict['tables'][table]['type'] != 'Mpu':
+//::        if (pddict['tables'][table]['type'] != 'Ternary' and pddict['tables'][table]['type'] != 'Index' and pddict['tables'][table]['type'] != 'Mpu') or pddict['tables'][table]['otcam']:
+            
 static uint32_t
 ${table}_pack_action_data(uint32_t tableid,
                           ${table}_actiondata *actiondata,
@@ -1858,7 +1859,86 @@ ${table}_index_mapper(uint32_t tableid,
  * Return Value: 
  *  pd_error_t                              : P4PD_SUCCESS / P4PD_FAIL
  */
-//::        if pddict['tables'][table]['type'] == 'Ternary':
+//::        if pddict['tables'][table]['type'] == 'Ternary' and pddict['tables'][table]['otcam']:
+static p4pd_error_t
+${table}_entry_write(uint32_t tableid,
+                     uint32_t index,
+                     uint8_t *hwkey, 
+                     uint8_t *hwkey_y,
+                     ${table}_actiondata *actiondata)
+{
+    uint32_t hwkey_len, hwkeymask_len;
+    uint8_t  action_pc;
+    uint8_t  packed_actiondata_after_key[P4PD_MAX_ACTION_DATA_LEN] = {0};
+    uint8_t  packed_actiondata_before_key[P4PD_MAX_ACTION_DATA_LEN] = {0};
+    uint8_t  sram_entry[P4PD_MAX_MATCHKEY_LEN + P4PD_MAX_ACTION_DATA_LEN] = {0};
+    uint16_t entry_size, actiondatalen, axi_shift_len;
+    uint16_t actiondata_len_before_key, actiondata_len_after_key;
+    uint8_t  *_sram_entry = &sram_entry[0];
+
+    (void)packed_actiondata_before_key;
+    (void)actiondata_len_after_key;
+    (void)actiondata_len_before_key;
+    (void)actiondatalen;
+
+    tcam_${table}_hwkey_len(tableid, &hwkey_len, &hwkeymask_len);
+//::            if len(pddict['tables'][table]['actions']) > 1:
+//::                add_action_pc = True
+//::            else:
+//::                add_action_pc = False
+//::            #endif
+//::            if add_action_pc:
+    action_pc = capri_get_action_pc(tableid, actiondata->actionid);
+//::            else:
+    action_pc = 0xff;
+//::            #endif
+
+    /* For hash otcam tables, action data packing in TCAM's SRAM should be
+     * same as how it is packed for regular hash table.
+     */
+    actiondatalen = ${table}_pack_action_data(tableid, actiondata,
+                                     packed_actiondata_before_key,
+                                     &actiondata_len_before_key,
+                                     packed_actiondata_after_key,
+                                     &actiondata_len_after_key);
+    /* For hash otcam tables action data packing in TCAM's SRAM should be
+     * same as how it packed for regular hash table. Hence use hash packing
+     * function to prepare sram entry.
+     */
+    entry_size = p4pd_hash_table_entry_prepare(sram_entry,
+                                             action_pc,
+                                             ${pddict['tables'][table]['match_key_start_bit']},/*MatchKeyStartBit */
+                                             NULL,
+                                             hwkey_len,
+                                             packed_actiondata_before_key,
+                                             actiondata_len_before_key,
+                                             packed_actiondata_after_key,
+                                             actiondata_len_after_key,
+                                             &axi_shift_len);
+    if (axi_shift_len) {
+        /* Due to leading axi_shift space, actual entry line
+         * does not start at byte zero.
+         */
+        _sram_entry += axi_shift_len;
+    }
+    p4pd_swizzle_bytes(_sram_entry, entry_size);
+    // Write to SRAM  area that is associated with TCAM. This SRAM area is
+    // in the bottom portion of hash-table's sram area.
+    // Hence increment index by size of hash table.
+    capri_table_entry_write(tableid, index + ${pddict['tables'][table]['parent_hash_table_size']}, _sram_entry, entry_size);
+
+    // Install Key in TCAM
+    // Swizzle Key installed in TCAM before writing to TCAM memory
+    // because TCAM entry is not built using p4pd_p4table_entry_prepare
+    // function where bytes are swizzled.
+    p4pd_swizzle_bytes(hwkey, hwkey_len);
+    p4pd_swizzle_bytes(hwkey_y, hwkeymask_len);
+    int pad = (hwkey_len % 16) ? (16 - (hwkey_len % 16)) : 0;
+    capri_tcam_table_entry_write(tableid, index, hwkey, hwkey_y, hwkey_len + pad);
+
+    return (P4PD_SUCCESS);
+}
+//::        elif pddict['tables'][table]['type'] == 'Ternary':
 static p4pd_error_t
 ${table}_entry_write(uint32_t tableid,
                      uint32_t index,

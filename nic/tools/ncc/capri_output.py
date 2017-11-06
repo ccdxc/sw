@@ -1230,6 +1230,32 @@ def capri_deparser_cfg_output(deparser):
         dpr_rstr['source_sel']['value'] = str(ohi_sel)
         dpr_rstr['source_oft']['value'] = str(payload_offset_len_ohi_id)
 
+    for name, hdr in deparser.be.h.p4_header_instances.items():
+        if hdr.metadata:
+            if 'deparser_variable_length_header' in hdr._parsed_pragmas:
+                hf_name = hdr.name + '.trunc'
+                cf = deparser.be.pa.get_field(hf_name, deparser.d)
+                assert cf, pdb.set_trace()
+                rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx - 1)
+                dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-2)
+                dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = str(1)
+                dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-2)
+                dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-2)
+                dpp_rstr = dpp_json['cap_dpp']['registers'][dpp_rstr_name]
+                dpr_rstr = dpr_json['cap_dpr']['registers'][dpr_rstr_name]
+                dpp_rstr['size_sel']['value'] = str(phv_sel)
+                hf_name = hdr.name + '.trunc_pkt_len'
+                cf = deparser.be.pa.get_field(hf_name, deparser.d)
+                assert cf, pdb.set_trace()
+                assert cf.phv_bit >= deparser.be.hw_model['deparser']['len_phv_start'] and \
+                       (cf.phv_bit < (deparser.be.hw_model['deparser']['len_phv_start'] + \
+                                      deparser.be.hw_model['phv']['flit_size']))
+                dpr_slot = cf.phv_bit - deparser.be.hw_model['deparser']['len_phv_start']
+                dpr_slot = dpr_slot / 16
+                dpp_rstr['size_val']['value'] = str(dpr_slot)
+                payload_offset_len_ohi_id = deparser.be.hw_model['parser']['ohi_threshold']
+                dpr_rstr['source_sel']['value'] = str(ohi_sel)
+                dpr_rstr['source_oft']['value'] = str(payload_offset_len_ohi_id)
 
     # Fill in all header fields information.
     for hvb in range(max_hv_bit_idx, -1, -1):
@@ -2770,6 +2796,11 @@ def capri_te_cfg_output(stage):
 
         entry_sizeB = (entry_size + 7) / 8   # convert to bytes
         lg2entry_size = log2size(entry_sizeB)
+        if ct.num_entries and ct.otcam_ct:
+            #This value is used by Otcam table to jump to sram area
+            #associated with TCAM but present at end of hash-table's
+            #sram-area.
+            json_tbl_['oflow_base_idx']['value'] = str(ct.num_entries)
 
         if ct.is_hbm and not ct.is_raw and not ct.is_raw_index:
             json_tbl_['addr_shift']['value'] = str(lg2entry_size)

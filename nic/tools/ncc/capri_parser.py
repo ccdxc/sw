@@ -1661,6 +1661,31 @@ class capri_parser:
             hv_bit -= 1
             hidx += 1
 
+        #Assign special HV bits (Headers not seen by Parser)
+        for name, hdr in self.be.h.p4_header_instances.items():
+            if hdr.metadata:
+                if 'deparser_variable_length_header' in hdr._parsed_pragmas:
+                    hf_name = hdr.name + '.trunc'
+                    cf = self.be.pa.get_field(hf_name, self.d)
+                    assert cf and cf.is_hv, pdb.set_trace()
+                    # point to copy of hv_bits in flit0
+                    cf.phv_bit = self.be.hw_model['parser']['phv_pkt_trunc_location']
+                    self.be.pa.replace_hv_field(cf.phv_bit, cf, self.d)
+                    self.hdr_hv_bit[hdr] =  self.be.hw_model['parser']['hv_pkt_trunc_location']
+                    _hvb = max_hv_bits - 1 - self.be.hw_model['parser']['hv_pkt_trunc_location']
+                    self.hv_bit_header[_hvb] = None
+
+        if not self.be.args.p4_plus:
+            #Assign special payload len HV bits
+            hf_name = 'capri_intrinsic' + '.payload'
+            cf = self.be.pa.get_field(hf_name, self.d)
+            assert cf and cf.is_hv, pdb.set_trace()
+            # point to copy of hv_bits in flit0
+            cf.phv_bit = self.be.hw_model['parser']['phv_pkt_len_location']
+            self.be.pa.replace_hv_field(cf.phv_bit, cf, self.d)
+            _hvb = max_hv_bits - 1 - self.be.hw_model['parser']['hv_pkt_len_location']
+            self.hv_bit_header[_hvb] = None
+
     def assign_state_ids(self):
         # for now just assign sequential ids
         # optimization to save parser state can be done by assigning the same logical ids

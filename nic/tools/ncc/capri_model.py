@@ -63,6 +63,10 @@ capri_model = {
                                     # capasm does not allow it
         'max_hv_bits' : 128,
         'hv_location' : 384,        # [511:384]
+        'phv_pkt_len_location' : 384,
+        'phv_pkt_trunc_location' : 385,
+        'hv_pkt_len_location' : 127,
+        'hv_pkt_trunc_location' : 126,
         #'flit_hv_bits' : [40, 40, 24, 16, 4, 4], # total must be 128
         # hv bit logic in hw has changed, so reserving # bits per flit is not needed anymore
         # XXX remove this logic from add_cfield()

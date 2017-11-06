@@ -1185,6 +1185,26 @@ class capri_gress_pa:
         cf.is_hv = True
         return cf
 
+    def allocate_hv_truncate_field(self, hdr_name):
+        hfname = hdr_name + '.trunc'
+        if hfname not in self.fields:
+            cf = capri_field(None, self.d, 1, hfname)
+            self.fields[hfname] = cf
+        else:
+            cf = self.fields[hfname]
+        cf.is_hv = True
+        return cf
+
+    def allocate_hv_payload_len_field(self, hdr_name):
+        hfname = hdr_name + '.payload'
+        if hfname not in self.fields:
+            cf = capri_field(None, self.d, 1, hfname)
+            self.fields[hfname] = cf
+        else:
+            cf = self.fields[hfname]
+        cf.is_hv = True
+        return cf
+
     def allocate_csum_hv_field(self, hdr_name):
         csum_hv_names = []
         if self.pa.be.checksum.IsHdrInCsumCompute(hdr_name):
@@ -2484,6 +2504,12 @@ class capri_pa:
             if hdr.metadata:
                 if 'deparser_variable_length_header' in hdr._parsed_pragmas:
                     self.dprsr_len_hdr = hdr
+                    for d in xgress:
+                        cf = self.allocate_hv_truncate_field(hdr.name, d)
+
+        #Allocate field for payload len.
+        for d in xgress:
+            cf = self.allocate_hv_payload_len_field("capri_intrinsic", d)
 
         # Handle intrinsic_metadata headers
         if 'capri_intrinsic' in self.be.h.p4_header_instances:
@@ -2785,6 +2811,12 @@ class capri_pa:
 
     def allocate_hv_field(self, hdr_name, d):
         return self.gress_pa[d].allocate_hv_field(hdr_name)
+
+    def allocate_hv_truncate_field(self, hdr_name, d):
+        return self.gress_pa[d].allocate_hv_truncate_field(hdr_name)
+
+    def allocate_hv_payload_len_field(self, hdr_name, d):
+        return self.gress_pa[d].allocate_hv_payload_len_field(hdr_name)
 
     def allocate_csum_hv_field(self, hdr_name, d):
         return self.gress_pa[d].allocate_csum_hv_field(hdr_name)

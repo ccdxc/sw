@@ -1234,6 +1234,8 @@ class capri_p4pd:
             else:
                 tdict['hash_overflow'] = False
             tdict['otcam'] = ctable.is_otcam
+            if ctable.is_otcam:
+                tdict['parent_hash_table_size'] = ctable.hash_ct.num_entries
 
             tdict['direction'] = "INGRESS" if ctable.d == xgress.INGRESS else "EGRESS"
             if self.be.args.p4_plus:
