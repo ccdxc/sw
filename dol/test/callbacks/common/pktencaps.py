@@ -26,3 +26,11 @@ def AddPacketEncapQinQ(pkt, encap):
 def AddPacketEncapVxlan(pkt, encap):
     pkt.hdrsorder = ['outereth', 'outeripv4', 'outerudp', 'vxlan'] + pkt.hdrsorder
     return
+
+def AddPacketEncapErspan(pkt, encap):
+    pkt.hdrsorder = ['outereth', 'outerqtag', 'outeripv4', 'outergre', 'erspan'] + pkt.hdrsorder
+    return
+
+def AddPacketEncapGre(pkt, encap):
+    pkt.hdrsorder = ['outereth', 'outeripv4', 'outergre'] + pkt.hdrsorder
+    return

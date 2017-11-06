@@ -31,20 +31,10 @@ class SpanSessionObject(base.ConfigObjectBase):
         self.snaplen = spec.snaplen.get()
         self.type = spec.type.upper()
         self.dscp = None
-
-        if self.IsLocal():
-            eps = tenant.GetRemoteEps()
-            self.ep   = eps[0]
-        elif self.IsRspan():
-            eps = tenant.GetRemoteEps()
-            self.ep = eps[1]
-        elif self.IsErspan():
-            eps = tenant.GetRemoteEps()
-            self.ep = eps[2]
-            self.dscp = spec.dscp.get()
-        else:
-            assert(0)
-       
+        self.erspan_dest = None
+        self.erspan_src = None
+        eps = tenant.GetRemoteEps()
+        self.ep = eps[(self.id -1) % 3]
         self.intf = self.ep.intf
         self.Show()
         return
@@ -89,8 +79,8 @@ class SpanSessionObject(base.ConfigObjectBase):
         halapi.DeleteSpanSessions(objlist)
 
     def PrepareHALRequestSpec(self, reqspec):
-        #pdb.set_trace()
         if isinstance(reqspec, telemetry_pb2.MirrorSessionSpec):
+            reqspec.meta.tenant_id = self.tenant.id
             reqspec.id.session_id = self.id
             reqspec.snaplen = self.snaplen
             if self.IsLocal():
@@ -104,7 +94,10 @@ class SpanSessionObject(base.ConfigObjectBase):
                     reqspec.rspan_spec.rspan_encap.encap_type = haldefs.common.ENCAP_TYPE_DOT1Q 
                     reqspec.rspan_spec.rspan_encap.encap_value = self.segment.vlan_id
             if self.IsErspan():
-                reqspec.local_span_if.if_handle = self.intf.hal_handle
+                reqspec.erspan_spec.src_ip.ip_af = haldefs.common.IP_AF_INET
+                reqspec.erspan_spec.src_ip.v4_addr = self.erspan_src.getnum()
+                reqspec.erspan_spec.dest_ip.ip_af = haldefs.common.IP_AF_INET
+                reqspec.erspan_spec.dest_ip.v4_addr = self.erspan_dest.getnum()
         else:
             reqspec.session_id = self.id
 

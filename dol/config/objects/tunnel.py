@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import pdb
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
@@ -28,7 +29,11 @@ class TunnelObject(base.ConfigObjectBase):
         self.encap_type = spec.encap_type.upper()
         self.remote_ep  = remote_ep
         self.rtep       = remote_ep.GetIpAddress()
-        self.ltep       = self.tenant.local_tep
+        if 'local_tep' in self.tenant.__dict__:
+            self.ltep       = self.tenant.local_tep
+        else:
+            leps = self.tenant.GetLocalEps()
+            self.ltep = leps[0].ipaddrs[0]
         self.ports      = self.remote_ep.GetInterface().ports
         self.vlan_id    = self.remote_ep.segment.vlan_id
         self.macaddr    = self.remote_ep.segment.macaddr
@@ -56,11 +61,18 @@ class TunnelObject(base.ConfigObjectBase):
     def GetRxQosDscp(self):
         return self.rxqos.dscp
 
+    def GetDestIp(self):
+        return self.remote_ep.ipaddrs[0]
+
+    def GetSrcIp(self):
+        return self.ltep
+
     def Show(self):
         cfglogger.info("Tunnel = %s" % self.GID())
         cfglogger.info("- Tenant      = %s" % self.tenant.GID())
         cfglogger.info("- EncapType   = %s" % self.encap_type)
-        cfglogger.info("- LocalTep    = %s" % self.ltep.get())
+        if 'local_tep' in self.tenant.__dict__:
+            cfglogger.info("- LocalTep    = %s" % self.ltep.get())
         cfglogger.info("- RemoteTep   = %s" % self.rtep.get())
         cfglogger.info("- Interface   = %s" % self.remote_ep.GetInterface().GID())
         cfglogger.info("- Ports       =", self.ports)
@@ -74,7 +86,8 @@ class TunnelObject(base.ConfigObjectBase):
         summary = ''
         summary += 'GID:%s' % self.GID()
         summary += '/ID:%d' % self.id
-        summary += '/LocTEP:%s' % self.ltep.get()
+        if 'local_tep' in self.tenant.__dict__:
+            summary += '/LocTEP:%s' % self.ltep.get()
         summary += '/RemTEP:%s' % self.rtep.get()
         summary += '/Intf:%s' % self.remote_ep.GetInterface().GID()
         summary += '/Ports:' + str(self.ports)
@@ -84,12 +97,15 @@ class TunnelObject(base.ConfigObjectBase):
     def IsVxlan(self):
         return self.encap_type == 'VXLAN'
 
+    def IsGRE(self):
+        return self.encap_type == 'GRE'
+
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.tenant_id = self.tenant.id
         req_spec.key_or_handle.interface_id = self.id
         req_spec.type = self.type
         req_spec.admin_status = self.status
-        if self.IsVxlan():
+        if self.encap_type == "VXLAN":
             req_spec.if_tunnel_info.encap_type = haldefs.interface.IF_TUNNEL_ENCAP_TYPE_VXLAN
             # Local TEP
             req_spec.if_tunnel_info.vxlan_info.local_tep.ip_af = haldefs.common.IP_AF_INET 
@@ -97,8 +113,12 @@ class TunnelObject(base.ConfigObjectBase):
             # Remote TEP
             req_spec.if_tunnel_info.vxlan_info.remote_tep.ip_af = haldefs.common.IP_AF_INET
             req_spec.if_tunnel_info.vxlan_info.remote_tep.v4_addr = self.rtep.getnum()
-        else:
-            assert(0)
+        elif self.encap_type == "GRE":
+            req_spec.if_tunnel_info.encap_type = haldefs.interface.IF_TUNNEL_ENCAP_TYPE_GRE
+            req_spec.if_tunnel_info.gre_info.source.ip_af = haldefs.common.IP_AF_INET
+            req_spec.if_tunnel_info.gre_info.source.v4_addr = self.ltep.getnum()
+            req_spec.if_tunnel_info.gre_info.destination.ip_af = haldefs.common.IP_AF_INET
+            req_spec.if_tunnel_info.gre_info.destination.v4_addr = self.remote_ep.ipaddrs[0].getnum()
 
         # QOS stuff
         if self.txqos.cos is not None:

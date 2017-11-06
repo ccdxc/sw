@@ -32,11 +32,10 @@ typedef struct mirror_session_s {
     mirror_session_id_t id;
     mirror_desttype_en type;
     uint32_t truncate_len;
-    if_t dest_if;
+    if_t *dest_if;
     union {
         struct er_span_dest_ {
-            uint32_t tunnel_if_id;
-            // rewrite index
+            if_t *tunnel_if;
         } er_span_dest;
       struct r_span_dest_ {
             vlan_id_t vlan;

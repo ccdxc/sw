@@ -1,0 +1,27 @@
+meta:
+    id      : ENCAP_GRE
+    callback: callback://common/pktencaps/AddPacketEncapGre
+
+headers:
+    - header:
+        id      : outereth
+        template: ref://store/headers/id=ETHERNET
+        fields:
+            type: ethertype/0x8100
+
+    - header:
+        id      : outerqtag
+        template: ref://store/headers/id=QTAG
+        fields:
+            type: ethertype/0x800
+   
+    - header:
+        id      : outeripv4
+        template: ref://store/headers/id=IPV4
+        fields:
+            proto: ipproto/47
+
+    - header:
+        id      : outergre
+        template: ref://store/headers/id=GRE
+        fields:

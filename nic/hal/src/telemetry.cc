@@ -94,7 +94,7 @@ mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp)
             ifid = spec->local_span_if();
             id = get_if_from_key_or_handle(ifid);
             if (id != NULL) {
-                session.dest_if = *id;
+                session.dest_if = id;
             } else {
                 rsp->mutable_status()->set_code(MirrorSessionStatus::PERM_FAILURE);
                 rsp->mutable_status()->set_status("get if from interface id failed");
@@ -107,7 +107,7 @@ mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp)
             HAL_TRACE_DEBUG("PI-MirrorSession:{}: RSpan IF is true", __FUNCTION__);
             auto rspan = spec->rspan_spec();
             ifid = rspan.intf();
-            session.dest_if = *(get_if_from_key_or_handle(ifid));
+            session.dest_if = get_if_from_key_or_handle(ifid);
             auto encap = rspan.rspan_encap();
             if (encap.encap_type() == types::ENCAP_TYPE_DOT1Q) {
                 session.mirror_destination_u.r_span_dest.vlan = encap.encap_value();
@@ -117,11 +117,54 @@ mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp)
         }
         case MirrorSessionSpec::kErspanSpec: {
             HAL_TRACE_DEBUG("PI-MirrorSession:{}: ERSpan IF is true", __FUNCTION__);
-            rsp->mutable_status()->set_code(MirrorSessionStatus::PERM_FAILURE);
-            rsp->mutable_status()->set_status("ERSPAN not implemented yet");
-            HAL_TRACE_DEBUG("PI-MirrorSession:{}: ERSPAN not implemented yet",
-                    __FUNCTION__);
-            return HAL_RET_INVALID_ARG;
+            auto erspan = spec->erspan_spec();
+            ip_addr_t src_addr, dst_addr;
+            ip_addr_spec_to_ip_addr(&src_addr, erspan.src_ip());
+            ip_addr_spec_to_ip_addr(&dst_addr, erspan.dest_ip());
+            ep_t *ep;
+            switch (dst_addr.af) {
+                case IP_AF_IPV4:
+                    ep = find_ep_by_v4_key(spec->meta().tenant_id(), dst_addr.addr.v4_addr);
+                    break;
+                case IP_AF_IPV6:
+                    ep = find_ep_by_v6_key(spec->meta().tenant_id(), &dst_addr);
+                    break;
+                default:
+                    HAL_TRACE_ERR("PI-MirrorSession:{}: unknown ERSPAN dest AF{}",
+                           __FUNCTION__, dst_addr.af);
+                    return HAL_RET_INVALID_ARG;
+            }
+            if (ep == NULL) {
+                HAL_TRACE_ERR("PI-MirrorSession:{}: unknown ERSPAN dest {}, tenantId {}",
+                        __FUNCTION__, ipaddr2str(&dst_addr), spec->meta().tenant_id());
+                return HAL_RET_INVALID_ARG;
+            }
+            auto dest_if = find_if_by_handle(ep->if_handle);
+            if (dest_if == NULL) {
+                HAL_TRACE_ERR("PI-MirrorSession:{}: could not find if ERSPAN dest {}",
+                        __FUNCTION__, ipaddr2str(&dst_addr));
+                return HAL_RET_INVALID_ARG;
+            }
+            session.dest_if = dest_if;
+            auto ift = find_if_by_handle(ep->gre_if_handle);
+            if (ift == NULL) {
+                HAL_TRACE_ERR("PI-MirrorSession:{}: could not find ERSPAN tunnel dest if {}",
+                        __FUNCTION__, ipaddr2str(&dst_addr));
+                return HAL_RET_INVALID_ARG;
+            }
+            if (ift->if_type != intf::IF_TYPE_TUNNEL) {
+                HAL_TRACE_ERR("PI-MirrorSession:{}: no tunnel to ERSPAN dest {}",
+                        __FUNCTION__, ipaddr2str(&dst_addr));
+                return HAL_RET_INVALID_ARG;
+            }
+            if (!is_if_type_tunnel(ift)) {
+                HAL_TRACE_ERR("PI-MirrorSession:{}: not GRE tunnel to ERSPAN dest {}",
+                        __FUNCTION__, ipaddr2str(&dst_addr));
+                return HAL_RET_INVALID_ARG;
+            }
+            session.mirror_destination_u.er_span_dest.tunnel_if = ift; 
+            session.type = hal::MIRROR_DEST_ERSPAN;
+            break;
         }
         default: {
             HAL_TRACE_ERR("PI-MirrorSession:{}: unknown session type{}", __FUNCTION__,

@@ -22,6 +22,15 @@ def GetExpectedPort(testcase, args):
         return None
     (id, direc, spantype, pkt, intf, pktlen) = ssns[args.sessionid -1]
     ssn = "session"+str(id)
+    erspanid = 1
+    if spantype == "ERSPAN":
+        for i in range(0, args.sessionid):
+            (id, direc, spantype, pkt, intf, pktlen) = ssns[args.sessionid -1]
+            if spantype == "ERSPAN":
+                erspanid = erspanid + 1
+        tnl = telemetry.data.getErspanSession(args.sessionid)
+        return tnl.ports
+ 
     if direc == "ingress":
         if 'ports' not in testcase.config.ingress_mirror.__dict__[ssn].intf.__dict__:
             ports = []
@@ -44,7 +53,6 @@ def GetRspanVlan(testcase, packet):
 def GetTruncatePktSize(testcase, pkt, args):
     case = testcase.pvtdata.span_case
     ssns = telemetry.spanSessionData.getSessions(case)
-    #pdb.set_trace()
     if args.sessionid > len(ssns):
         return 0
     (id, direc, spantype, pkt, intf, pktlen) = ssns[args.sessionid -1]
@@ -54,7 +62,6 @@ def GetTruncatePktSize(testcase, pkt, args):
 def GetTruncatePacketPayload(testcase, pkt, args):
     case = testcase.pvtdata.span_case
     ssns = telemetry.spanSessionData.getSessions(case)
-    #pdb.set_trace()
     if args.sessionid > len(ssns):
         args.end = 0
         args.pktid = "TRUNCATE_PKT1"
@@ -63,6 +70,36 @@ def GetTruncatePacketPayload(testcase, pkt, args):
     args.end = pktlen
     retpkt = testcase.packets.Get(pkt)
     args.pktid = pkt
-    #pdb.set_trace()
     return pktslicer.GetPacketSlice(testcase, retpkt, args)
+
+def GetTunnelSrcMac(testcase, pkt, args):
+    tnl = telemetry.data.getErspanSession(args.id)
+    if tnl is not None:
+        return tnl.remote_ep.segment.macaddr
+    return None
+
+
+def GetTunnelDstMac(testcase, pkt, args):
+    tnl = telemetry.data.getErspanSession(args.id)
+    if tnl is not None:
+        return tnl.remote_ep.macaddr
+    return None
+
+def GetTunnelVlanEncap(testcase, pkt, args):
+    tnl = telemetry.data.getErspanSession(args.id)
+    if tnl is not None:
+        return tnl.remote_ep.segment.vlan_id
+    return None
+
+def GetTunnelSourceIP(testcase, pkt, args):
+    tnl = telemetry.data.getErspanSession(args.id)
+    if tnl is not None:
+        return tnl.GetSrcIp()
+    return None
+
+def GetTunnelDestIP(testcase, pkt, args):
+    tnl = telemetry.data.getErspanSession(args.id)
+    if tnl is not None:
+        return tnl.GetDestIp()
+    return None
 

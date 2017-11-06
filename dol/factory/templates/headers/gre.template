@@ -1,0 +1,19 @@
+meta:
+    id      : GRE
+    scapy   : GRE
+    size    : 12
+fields:
+    chksum_present      :
+    routing_present     :
+    key_present         :
+    seqnum_present      :
+    strict_route_source :
+    recursion_control   :
+    flags               :
+    version             :
+    proto               :
+    chksum              :
+    offset              :
+    key                 :
+    seqence_number      :
+

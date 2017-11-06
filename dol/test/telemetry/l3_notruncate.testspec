@@ -48,7 +48,7 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : PKT1 # Input Packet
+        id          : PKT1
         clone       : ref://testcase/packets/id=BASE
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
@@ -150,6 +150,50 @@ packets:
             tcp:
                 flags: ack
 
+    - packet:
+        id          : ERSPAN_PKT1
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            outereth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=1
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=1
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=1
+            outeripv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=1
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=1
+            outergre:
+            erspan:
+                sessionid: const/112
+                ver     : const/2
+
+    - packet:
+        id          : ERSPAN_PKT2
+        clone       : ref://testcase/packets/id=PKT1
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers         :
+            outereth:
+                src    : callback://telemetry/callbacks/GetTunnelSrcMac/id=2
+                dst    : callback://telemetry/callbacks/GetTunnelDstMac/id=2
+            outerqtag:
+                prio: 0
+                vlan: callback://telemetry/callbacks/GetTunnelVlanEncap/id=2
+            outeripv4:
+                tos : 0
+                id  : 0
+                src : callback://telemetry/callbacks/GetTunnelSourceIP/id=2
+                dst : callback://telemetry/callbacks/GetTunnelDestIP/id=2
+            outergre:
+            erspan:
+                sessionid: const/112
+                ver     : const/2
+
 
 trigger:
     packets:
@@ -173,7 +217,7 @@ expect:
 
         - packet:
             object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=3
-            port    : callback://telemetry/callbacks/GetExpectedPort3/sessionid=3
+            port    : callback://telemetry/callbacks/GetExpectedPort/sessionid=3
 
         - packet:
             object  : callback://telemetry/callbacks/GetExpectedPacket/sessionid=4

@@ -72,7 +72,11 @@ class TenantObject(base.ConfigObjectBase):
         # Process Tunnels
         if self.IsInfra():
             self.obj_helper_tunnel = tunnel.TunnelObjectHelper()
-            self.__create_tunnels()
+            self.__create_infra_tunnels()
+        elif 'tunnels' in self.spec.__dict__ and len(self.spec.tunnels) > 0:
+            # this is not infra
+            self.obj_helper_tunnel = tunnel.TunnelObjectHelper()
+            self.__create_tenant_tunnels()
 
         # Process Span Sessions
         if self.IsSpan():
@@ -170,12 +174,26 @@ class TenantObject(base.ConfigObjectBase):
         self.obj_helper_lif.Configure()
         return
 
-    def __create_tunnels(self):
+    def __create_infra_tunnels(self):
         for entry in self.spec.tunnels:
             spec = entry.spec.Get(Store)
             self.obj_helper_tunnel.Generate(self, spec, self.GetEps())
         self.obj_helper_tunnel.AddToStore()
         return
+
+    def __create_tenant_tunnels(self):
+        reps = self.GetRemoteEps()
+        id = 0
+        for entry in self.spec.tunnels:
+            spec = entry.spec.Get(Store)
+            if id >= len(reps):
+                return
+            eps = []
+            eps.append(reps[id])
+            id = id + 1
+            self.obj_helper_tunnel.Generate(self, spec, eps)
+        self.obj_helper_tunnel.AddToStore()
+            
 
     def __create_span_sessions(self):
         self.obj_helper_span.main(self, self.spec)
@@ -191,7 +209,7 @@ class TenantObject(base.ConfigObjectBase):
         return self.obj_helper_segment.ConfigurePhase2()
 
     def ConfigureTunnels(self):
-        if self.IsInfra():
+        if self.IsInfra() or ('tunnels' in self.spec.__dict__ and len(self.spec.tunnels) > 0):
             self.obj_helper_tunnel.Configure()
         return
 

@@ -1,0 +1,48 @@
+meta:
+    id      : ENCAP_ERSPAN
+    callback: callback://common/pktencaps/AddPacketEncapErspan
+
+headers:
+    - header:
+        id      : outereth
+        template: ref://store/headers/id=ETHERNET
+        fields:
+            type: ethertype/0x8100
+
+    - header:
+        id      : outerqtag
+        template: ref://store/headers/id=QTAG
+        fields:
+            type: ethertype/0x800
+
+    - header:
+        id      : outeripv4
+        template: ref://store/headers/id=IPV4
+        fields:
+            proto: ipproto/47
+
+    - header:
+        id      : outergre
+        template: ref://store/headers/id=GRE
+        fields:
+            proto: const/0x22eb
+
+    - header:
+        id      : erspan
+        template: ref://store/headers/id=ERSPAN
+        fields:
+            ver     : const/2
+            vlan    : const/0
+            cos     : const/0
+            bso     : const/0
+            t       : const/0
+            sessionid   : const/112
+            timestamp   : const/0
+            sgt         : const/0
+            p           : const/0
+            ft          : const/0
+            hwid        : const/0
+            d           : const/0
+            gra         : const/0
+            o           : const/0
+            

@@ -740,6 +740,32 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         goto end;
     }
 
+    if ((hal_if->if_type == intf::IF_TYPE_TUNNEL) && 
+            (hal_if->encap_type == intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_GRE)) {
+        ep_t *ep;
+        switch (hal_if->gre_dest.af) {
+            case IP_AF_IPV4:
+                ep = find_ep_by_v4_key(hal_if->tid, hal_if->gre_dest.addr.v4_addr);
+                break;
+            case IP_AF_IPV6:
+                ep = find_ep_by_v6_key(hal_if->tid, &hal_if->gre_dest);
+                break;
+            default:
+                HAL_TRACE_ERR("pi-tunnelif:{}:GRE tunnelif {} create Invalid AF {}", __FUNCTION__,
+                    spec.key_or_handle().interface_id(), hal_if->gre_dest.af);
+                ret = HAL_RET_IF_INFO_INVALID;
+                goto end;
+        }
+        if (ep == NULL) {
+            HAL_TRACE_ERR("pi-tunnelif:{}:GRE tunnelif create did not find EP {}", __FUNCTION__,
+                spec.key_or_handle().interface_id());
+            ret = HAL_RET_IF_INFO_INVALID;
+            goto end;
+        }
+        ep->gre_if_handle = hal_if->hal_handle;
+        HAL_TRACE_DEBUG("pi-tunnelif:{}:GRE tunnelif {} added to EP tenantId {}", __FUNCTION__,
+                spec.key_or_handle().interface_id(), hal_if->tid);
+    }
     // form ctxt and call infra add
     // app_ctxt.l2seg = l2seg;
     app_ctxt.lif = lif;

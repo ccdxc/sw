@@ -1,0 +1,19 @@
+meta:
+    id      : ERSPAN
+    scapy   : ERSPAN
+    size    : 12
+fields:
+    ver         : 2
+    vlan        : 0
+    cos         : 0
+    bso         : 0
+    t           : 0
+    sessionid   : 0
+    timestamp   : 0
+    sgt         : 0
+    p           : 0
+    ft          : 0
+    hwid        : 0
+    d           : 0
+    gra         : 0
+    o           : 0

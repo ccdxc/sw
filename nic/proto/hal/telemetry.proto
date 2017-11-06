@@ -191,8 +191,9 @@ message RSpanSpec {
 // ERSpanSpec is the configuration specification for ERSPAN 
 message ERSpanSpec {
   types.IPAddress dest_ip     = 1; // IP address of the ERSPAN destination
-  string          dscp        = 2; // DSCP value to use
-  uint32          span_id     = 3; // Span ID to use
+  types.IPAddress src_ip      = 2; //  Source IP address to be used for ERSPAN
+  string          dscp        = 3; // DSCP value to use
+  uint32          span_id     = 4; // Span ID to use
 }
 
 // MirrorSessionId is a key for the SPAN session
@@ -202,12 +203,13 @@ message MirrorSessionId {
 
 // MirrorSessionSpec is the configuration specification for mirror config
 message MirrorSessionSpec {
-  MirrorSessionId	id              = 1; // Session ID
-  uint32		snaplen		= 2; // maximum  bytes of packet to mirror.
+  types.ObjectMeta  meta            = 1; // Common object meta
+  MirrorSessionId	id              = 2; // Session ID
+  uint32		snaplen		        = 3; // maximum  bytes of packet to mirror.
   oneof destination {
-    intf.InterfaceKeyHandle	local_span_if  = 3; // Local span destination
-    RSpanSpec   		rspan_spec     = 4; // VLAN encap to use when configuration is for RSPAN
-    ERSpanSpec        		erspan_spec    = 5; // ERSPAN configuration in case of ERSPAN
+    intf.InterfaceKeyHandle	local_span_if  = 4; // Local span destination
+    RSpanSpec   		rspan_spec     = 5; // VLAN encap to use when configuration is for RSPAN
+    ERSpanSpec        		erspan_spec    = 6; // ERSPAN configuration in case of ERSPAN
   }
 }
 

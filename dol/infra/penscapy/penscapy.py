@@ -388,3 +388,25 @@ bind_layers(SUNRPC, SUNRPC_CALL_HDR, msg_type=0)
 bind_layers(SUNRPC, SUNRPC_REPLY_HDR, msg_type=1)
 bind_layers(SUNRPC_CALL_HDR, SUNRPC_2_PORTMAP_GETPORT_CALL, proc=3)
 bind_layers(SUNRPC_REPLY_HDR, SUNRPC_2_PORTMAP_GETPORT_REPLY, proc=3)
+
+class ERSPAN(Packet):
+    name = "ERSPAN"
+    fields_desc = [
+        BitField("ver",         0,      4),
+        BitField("vlan",        0,      12),
+        BitField("cos",         0,      3),
+        BitField("bso",         0,      2),
+        BitField("t",           0,      1),
+        BitField("sessionid",   0,      10),
+        BitField("timestamp",   0,      32),
+        BitField("sgt",         0,      16),
+        BitField("p",           0,      1),
+        BitField("ft",          0,      5),
+        BitField("hwid",        0,      6),
+        BitField("d",           0,      1),
+        BitField("gra",         0,      2),
+        BitField("o",           0,      1),
+    ]
+
+bind_layers(GRE, ERSPAN, proto=0x22eb)
+ 

@@ -53,36 +53,44 @@ pd_mirror_session_create(pd_mirror_session_args_t *args)
     memset(&action_data, 0, sizeof(mirror_actiondata));
     HAL_ASSERT((args->session->id >= 0) && (args->session->id < 7));
 
-    switch (args->session->dest_if.if_type) {
+    switch (args->session->dest_if->if_type) {
         case intf::IF_TYPE_TUNNEL:
-            // Not supported yet.
-            return HAL_RET_INVALID_OP;
         case intf::IF_TYPE_ENIC:
         case intf::IF_TYPE_UPLINK_PC:
         case intf::IF_TYPE_UPLINK:
-            dst_lport = if_get_lport_id(&(args->session->dest_if));
+            dst_lport = if_get_lport_id(args->session->dest_if);
             break;
         default:
             return HAL_RET_INVALID_OP;
     }
 
     switch (args->session->type) {
-        case MIRROR_DEST_LOCAL:
+        case MIRROR_DEST_LOCAL: {
             action_data.actionid = MIRROR_LOCAL_SPAN_ID;
             action_data.mirror_action_u.mirror_local_span.truncate_len = args->session->truncate_len;
             action_data.mirror_action_u.mirror_local_span.dst_lport = dst_lport;
             break;
-        case MIRROR_DEST_RSPAN:
+        }
+        case MIRROR_DEST_RSPAN: {
             action_data.actionid = MIRROR_REMOTE_SPAN_ID;
             action_data.mirror_action_u.mirror_remote_span.truncate_len = args->session->truncate_len;
             action_data.mirror_action_u.mirror_remote_span.dst_lport = dst_lport;
             action_data.mirror_action_u.mirror_remote_span.vlan = args->session->mirror_destination_u.r_span_dest.vlan;
             action_data.mirror_action_u.mirror_remote_span.tunnel_rewrite_index = g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
             break;
-        case MIRROR_DEST_ERSPAN:
-            HAL_TRACE_ERR("PD-MIRROR-SESSION:: session type is ERSPAN (not supported yet)");
-            return HAL_RET_INVALID_OP;
+        }
+        case MIRROR_DEST_ERSPAN: {
+            action_data.actionid = MIRROR_ERSPAN_MIRROR_ID;
+            action_data.mirror_action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
+            action_data.mirror_action_u.mirror_erspan_mirror.dst_lport = dst_lport;
+            pd_tunnelif_t *pd_if = (pd_tunnelif_t*)if_get_pd_if(args->session->mirror_destination_u.er_span_dest.tunnel_if);
+            if (pd_if == NULL) {
+                HAL_TRACE_ERR("PD-MIRROR-SESSION:: cannot recover PD IF {}", args->session->id);
+                return HAL_RET_INVALID_ARG;
+            }
+            action_data.mirror_action_u.mirror_erspan_mirror.tunnel_rewrite_index  = pd_tunnelif_get_rw_idx(pd_if);
             break;
+        }
         default:
             HAL_TRACE_ERR("PD-MIRROR-SESSION:: unknown session type {}", args->session->type);
             return HAL_RET_INVALID_ARG;

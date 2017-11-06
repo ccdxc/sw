@@ -9,15 +9,19 @@ segments:
     - spec  : ref://store/specs/id=SEGMENT_SPAN
       count : 1
 
+tunnels:
+    - spec  : ref://store/specs/id=TUNNEL_GRE
+    - spec  : ref://store/specs/id=TUNNEL_GRE
+
 security_profile: ref://store/objects/id=SEC_PROF_DEFAULT
 
 span_sessions:
     - spec  : ref://store/specs/id=SPAN_TYPE_LOCAL
     - spec  : ref://store/specs/id=SPAN_TYPE_RSPAN
-    - spec  : ref://store/specs/id=SPAN_TYPE_ERSPAN
+    - spec  : ref://store/specs/id=SPAN_TYPE_RSPAN
     - spec  : ref://store/specs/id=SPAN_TYPE_LOCAL
     - spec  : ref://store/specs/id=SPAN_TYPE_RSPAN
-    - spec  : ref://store/specs/id=SPAN_TYPE_ERSPAN
+    - spec  : ref://store/specs/id=SPAN_TYPE_RSPAN
 
 sessions: None
 
