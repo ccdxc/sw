@@ -145,10 +145,10 @@ void dhcp_topo_setup()
 
    // Create 2 Endpoints
    ep_spec.mutable_meta()->set_tenant_id(1);
-   ep_spec.set_l2_segment_handle(l2seg_hdl);
-   ep_spec.set_interface_handle(up_hdl2);
-   ep_spec.set_mac_address(0x00000000ABCD);
-   ep_spec.add_ip_address();
+   ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+   ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+   ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+   ep_spec.mutable_endpoint_attrs()->add_ip_address();
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
    ret = hal::endpoint_create(ep_spec, &ep_rsp);
    hal::hal_cfg_db_close();

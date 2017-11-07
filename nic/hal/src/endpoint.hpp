@@ -132,11 +132,34 @@ typedef struct ep_create_app_ctxt_s {
 
 typedef struct ep_update_app_ctxt_s {
     bool            iplist_change;
+    bool            if_change;
 
     dllist_ctxt_t   *add_iplist;
     dllist_ctxt_t   *del_iplist;
+    hal_handle_t    new_if_handle;    
 } __PACK__ ep_update_app_ctxt_t;
 
+const char *ep_l2_key_to_str(ep_t *ep);
+
+static inline void 
+ep_lock (ep_t *ep, const char *fname,
+          int lineno, const char *fxname)
+{
+    HAL_TRACE_DEBUG("{}:operlock:locking ep:{} from {}:{}:{}", 
+                    __FUNCTION__, ep_l2_key_to_str(ep),
+                    fname, lineno, fxname);
+    HAL_SPINLOCK_LOCK(&ep->slock);
+}
+
+static inline void 
+ep_unlock (ep_t *ep, const char *fname,
+            int lineno, const char *fxname)
+{
+    HAL_TRACE_DEBUG("{}:operlock:unlocking ep:{} from {}:{}:{}", 
+                    __FUNCTION__, ep_l2_key_to_str(ep),
+                    fname, lineno, fxname);
+    HAL_SPINLOCK_UNLOCK(&ep->slock);
+}
 // allocate a ep instance
 static inline ep_t *
 ep_alloc (void)

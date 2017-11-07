@@ -24,45 +24,6 @@ service Endpoint {
   rpc EndpointGetByInterface(EndpointGetByInterfaceRequestMsg) returns (EndpointGetResponseMsg) {}
 }
 
-// EndpointSpec is used to add or update an endpoint
-message EndpointSpec {
-    types.ObjectMeta            meta                 = 1;    // common object meta
-    fixed64                     l2_segment_handle    = 3;    // L2 segment endpoint is in
-    uint64                      mac_address          = 4;    // MAC address of endpoint
-    fixed64                     interface_handle     = 5;    // interface endpoint is reachable on
-    uint32                      useg_vlan            = 6;    // microseg vlan assigned to this EP
-    repeated types.IPAddress    ip_address           = 7;    // IP address(es) of endpoint
-    repeated uint64             sg_handle            = 8;    // list of security group handles
-}
-
-// EndpointRequestMsg is batched add or modify endpoint request
-message EndpointRequestMsg {
-  repeated EndpointSpec    request = 1;    // batched request
-}
-
-// EndpointStatus has the current status of an endpoint
-// TODO: capturing aging information, if any
-message EndpointStatus {
-  fixed64                     endpoint_handle     = 1;    // id of endpoint returned by HAL
-  repeated types.IPAddress    ip_address          = 2;    // IP addresses learnt, if any
-  bool                        learn_source_dhcp   = 3;    // TRUE if learnt via DHCP
-  bool                        learn_source_arp    = 4;    // TRUE if learnt via ARP/GARP
-  bool                        learn_source_rarp   = 5;    // TRUE if learnt via RARP
-  bool                        learn_source_config = 6;    // TRUE if learnt via configuration
-  bool                        is_endpoint_local   = 7;    // TRUE if endpoint is local
-}
-
-// EndpointResponse is response to EndpointSpec
-message EndpointResponse {
-  types.ApiStatus       api_status      = 1;    // API status code
-  EndpointStatus        endpoint_status = 2;    // endpoint status, if api succeeded
-}
-
-// EndpointResponseMsg is batched response to EndpointRequestMsg
-message EndpointResponseMsg {
-  repeated EndpointResponse    response = 1;    // batched response
-}
-
 // EndpointL2Key is L2 key of the endpoint
 // NOTE: An endpoint can have only one L2 key
 message EndpointL2Key {
@@ -93,17 +54,55 @@ message EndpointKeyHandle {
   }
 }
 
+message EndpointAttributes {
+    fixed64                     interface_handle     = 1;    // interface endpoint is reachable on
+    uint32                      useg_vlan            = 2;    // microseg vlan assigned to this EP
+    repeated types.IPAddress    ip_address           = 3;    // IP address(es) of endpoint
+    repeated uint64             sg_handle            = 4;    // list of security group handles
+}
+
+
+// EndpointSpec is used to add or update an endpoint
+message EndpointSpec {
+    types.ObjectMeta            meta                 = 1;    // common object meta
+    EndpointL2Key               l2_key               = 2;    // l2 key
+    EndpointAttributes          endpoint_attrs       = 3;    // endpoint's attributes
+}
+
+// EndpointRequestMsg is batched add or modify endpoint request
+message EndpointRequestMsg {
+  repeated EndpointSpec    request = 1;    // batched request
+}
+
+// EndpointStatus has the current status of an endpoint
+// TODO: capturing aging information, if any
+message EndpointStatus {
+  fixed64                     endpoint_handle     = 1;    // id of endpoint returned by HAL
+  repeated types.IPAddress    ip_address          = 2;    // IP addresses learnt, if any
+  bool                        learn_source_dhcp   = 3;    // TRUE if learnt via DHCP
+  bool                        learn_source_arp    = 4;    // TRUE if learnt via ARP/GARP
+  bool                        learn_source_rarp   = 5;    // TRUE if learnt via RARP
+  bool                        learn_source_config = 6;    // TRUE if learnt via configuration
+  bool                        is_endpoint_local   = 7;    // TRUE if endpoint is local
+}
+
+// EndpointResponse is response to EndpointSpec
+message EndpointResponse {
+  types.ApiStatus       api_status      = 1;    // API status code
+  EndpointStatus        endpoint_status = 2;    // endpoint status, if api succeeded
+}
+
+// EndpointResponseMsg is batched response to EndpointRequestMsg
+message EndpointResponseMsg {
+  repeated EndpointResponse    response = 1;    // batched response
+}
+
 // Endpoint Update message
 message EndpointUpdateRequest {
   types.ObjectMeta            meta                 = 1;    // object meta
   // key_or_handle is used to identify an endpoint uniquely
   EndpointKeyHandle           key_or_handle        = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  fixed64                     l2_segment_handle    = 3;    // L2 segment endpoint is in
-  uint64                      mac_address          = 4;    // MAC address of endpoint
-  fixed64                     interface_handle     = 5;    // interface endpoint is reachable on
-  uint32                      useg_vlan            = 6;    // microseg vlan assigned to this EP
-  repeated types.IPAddress    ip_address           = 7;    // IP address(es) of endpoint
-  repeated uint32             security_group       = 8;    // security group list(s) endpoint is in
+  EndpointAttributes          endpoint_attrs       = 3;    // endpoint's attributes
 }
 
 // EndpointUpdateRequestMsg is batched endpoint update request

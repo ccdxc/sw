@@ -132,12 +132,14 @@ validate_network_create (NetworkSpec& spec, NetworkResponse *rsp)
 {
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
+        HAL_TRACE_ERR("pi-network:{}:spec has no key or handle", __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
 
     if (!spec.has_tenant_key_handle() ||
         spec.tenant_key_handle().tenant_id() == HAL_TENANT_ID_INVALID) {
+        HAL_TRACE_ERR("pi-network:{}:tenant not found", __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }

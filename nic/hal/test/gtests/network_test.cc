@@ -128,6 +128,7 @@ TEST_F(nw_test, test1)
     for (int i = 0; i < 10; i++) {
         // Create network
         nw_spec.mutable_meta()->set_tenant_id(1);
+        nw_spec.mutable_tenant_key_handle()->set_tenant_id(1);
         nw_spec.set_rmac(0x0000DEADBEEF);
         nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
         nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -140,6 +141,7 @@ TEST_F(nw_test, test1)
 
         // Create v6 network
         nw_spec_v6.mutable_meta()->set_tenant_id(1);
+        nw_spec_v6.mutable_tenant_key_handle()->set_tenant_id(1);
         nw_spec_v6.set_rmac(0x0000DEADBEEF);
         nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
         nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
@@ -156,6 +158,7 @@ TEST_F(nw_test, test1)
     // Duplicate create
     // Create network
     nw_spec.mutable_meta()->set_tenant_id(1);
+    nw_spec.mutable_tenant_key_handle()->set_tenant_id(1);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
@@ -167,6 +170,7 @@ TEST_F(nw_test, test1)
 
     // Create v6 network
     nw_spec_v6.mutable_meta()->set_tenant_id(1);
+    nw_spec_v6.mutable_tenant_key_handle()->set_tenant_id(1);
     nw_spec_v6.set_rmac(0x0000DEADBEEF);
     nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);

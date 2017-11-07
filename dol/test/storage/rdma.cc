@@ -186,12 +186,12 @@ int CreateEP(uint32_t ten_id, uint64_t l2seg_handle, uint64_t if_handle,
 
   auto req = req_msg.add_request();
   req->mutable_meta()->set_tenant_id(ten_id);
-  req->set_l2_segment_handle(l2seg_handle);
-  req->set_interface_handle(if_handle);
-  req->set_mac_address(mac_addr);
-  req->add_ip_address();
-  req->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-  req->mutable_ip_address(0)->set_v4_addr(ip_addr);
+  req->mutable_l2_key()->set_l2_segment_handle(l2seg_handle);
+  req->mutable_endpoint_attrs()->set_interface_handle(if_handle);
+  req->mutable_l2_key()->set_mac_address(mac_addr);
+  req->mutable_endpoint_attrs()->add_ip_address();
+  req->mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+  req->mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip_addr);
 
   auto status = endpoint_stub->EndpointCreate(&context, req_msg, &resp_msg);
   if (!status.ok()) return -1;

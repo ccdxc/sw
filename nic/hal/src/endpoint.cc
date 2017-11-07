@@ -4,6 +4,7 @@
 #include "nic/hal/src/utils.hpp"
 #include "nic/hal/src/endpoint.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/include/endpoint_api.hpp"
 // #include <netinet/ether.h>
 
 namespace hal {
@@ -218,13 +219,25 @@ validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         return HAL_RET_TENANT_ID_INVALID;
     }
 
-    if (spec.l2_segment_handle() == HAL_HANDLE_INVALID) {
+    if (!spec.has_l2_key()) {
+        HAL_TRACE_ERR("pi-ep:{}:ep doesnt have l2 key",
+                      __FUNCTION__);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (!spec.has_endpoint_attrs()) {
+        HAL_TRACE_ERR("pi-ep:{}:ep doesnt have attributes",
+                      __FUNCTION__);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    if (spec.l2_key().l2_segment_handle() == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("pi-ep:{}:l2seg handle not valid",
                       __FUNCTION__);
         return HAL_RET_HANDLE_INVALID;
     }
 
-    if (spec.interface_handle() == HAL_HANDLE_INVALID) {
+    if (spec.endpoint_attrs().interface_handle() == HAL_HANDLE_INVALID) {
         HAL_TRACE_ERR("pi-ep:{}:interface handle not valid",
                       __FUNCTION__);
         return HAL_RET_HANDLE_INVALID;
@@ -578,15 +591,17 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     }
 
     // fetch the L2 segment information
-    l2seg_handle = spec.l2_segment_handle();
+    l2seg_handle = spec.l2_key().l2_segment_handle();
     l2seg = find_l2seg_by_handle(l2seg_handle);
     if (l2seg == NULL) {
+        HAL_TRACE_ERR("pi-ep:{}:unable to find l2seg_hdl:{}",
+                      __FUNCTION__, l2seg_handle);
         ret = HAL_RET_L2SEG_NOT_FOUND;
         goto end;
     }
 
     // fetch the interface information
-    if_handle = spec.interface_handle();
+    if_handle = spec.endpoint_attrs().interface_handle();
     hal_if = find_if_by_handle(if_handle);
     if (hal_if == NULL) {
         ret = HAL_RET_IF_NOT_FOUND;
@@ -605,7 +620,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     // initialize the EP record
     HAL_SPINLOCK_INIT(&ep->slock, PTHREAD_PROCESS_PRIVATE);
     ep->l2_key.l2_segid = l2seg->seg_id;
-    MAC_UINT64_TO_ADDR(ep->l2_key.mac_addr, spec.mac_address());
+    MAC_UINT64_TO_ADDR(ep->l2_key.mac_addr, spec.l2_key().mac_address());
     HAL_TRACE_DEBUG("PI-EP:{}: Seg Id:{}, Mac: {} If: {}", __FUNCTION__, 
                     l2seg->seg_id, 
                     ether_ntoa((struct ether_addr*)(ep->l2_key.mac_addr)),
@@ -613,7 +628,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     ep->l2seg_handle = l2seg_handle;
     ep->if_handle = if_handle;
     ep->tenant_handle = tenant->hal_handle;
-    ep->useg_vlan = spec.useg_vlan();
+    ep->useg_vlan = spec.endpoint_attrs().useg_vlan();
     ep->ep_flags = EP_FLAGS_LEARN_SRC_CFG;
     if (hal_if->if_type == intf::IF_TYPE_ENIC) {
         ep->ep_flags |= EP_FLAGS_LOCAL;
@@ -631,7 +646,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     }
 
     // allocate memory for each IP entry in the EP
-    num_ips = spec.ip_address_size();
+    num_ips = spec.endpoint_attrs().ip_address_size();
     if (num_ips) {
         l3_entry = (ep_l3_entry_t **)HAL_CALLOC(HAL_MEM_ALLOC_EP,
                                                 num_ips * sizeof(ep_l3_entry_t *));
@@ -661,7 +676,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     for (i = 0; i < num_ips; i++) {
         // add the IP to EP
         utils::dllist_reset(&ip_entry[i]->ep_ip_lentry);
-        ip_addr_spec_to_ip_addr(&ip_entry[i]->ip_addr, spec.ip_address(i));
+        ip_addr_spec_to_ip_addr(&ip_entry[i]->ip_addr, spec.endpoint_attrs().ip_address(i));
         ip_entry[i]->ip_flags = EP_FLAGS_LEARN_SRC_CFG; 
         ep->ep_flags |= EP_FLAGS_LEARN_SRC_CFG;
         utils::dllist_add(&ep->ip_list_head, &ip_entry[i]->ep_ip_lentry);
@@ -676,12 +691,12 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         goto end;
     }
 
-    num_sgs = spec.sg_handle_size();
+    num_sgs = spec.endpoint_attrs().sg_handle_size();
     if (num_sgs) {
         //To Do:Handle cases where the num_sgs greater that MAX_SG_PER_ARRAY
         for (i = 0; i < num_sgs; i++) {
             /* Lookup the SG by handle and then get the SG-id */
-            nwsec_group = nwsec_group_lookup_by_handle(spec.sg_handle(i));
+            nwsec_group = nwsec_group_lookup_by_handle(spec.endpoint_attrs().sg_handle(i));
             HAL_ASSERT(nwsec_group);
             ep->sgs.arr_sg_id[i] = nwsec_group->sg_id;
             ep->sgs.sg_id_cnt++;
@@ -750,6 +765,35 @@ end:
     return ret;
 }
 
+hal_ret_t
+ep_handle_if_change (ep_t *ep, hal_handle_t new_if_handle)
+{
+    dllist_ctxt_t                   *curr, *next;
+    hal_handle_id_list_entry_t      *entry = NULL;
+    session_t                       *session = NULL;
+    ep_fte_event_t                  fte_event;
+    hal_ret_t                       ret = HAL_RET_OK;
+
+    memset(&fte_event, 0, sizeof(ep_fte_event_t));
+
+    fte_event.type          = EP_FTE_EVENT_IF_CHANGE;
+    fte_event.old_if_handle = ep->if_handle;
+    fte_event.new_if_handle = new_if_handle;
+
+    // Walk though session list and call FTE provided API
+    dllist_for_each_safe(curr, next, &ep->session_list_head) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        session = find_session_by_handle(entry->handle_id);
+
+        HAL_TRACE_DEBUG("pi-ep:{}:Callback for session_id: {}", __FUNCTION__,
+                        session->config.session_id);
+        // TODO: vmotion: Call FTE API to handle 
+        // ret = fte_handle_if_change(session, ep, &fte_event);
+    }
+
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // This is the first call back infra does for update.
 // 1. PD Call to update PD
@@ -790,6 +834,14 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-ep:{}:failed to update ep pd, err : {}",
                       __FUNCTION__, ret);
+    }
+
+    // Make FTE calls to process sessions
+    ret = ep_handle_if_change(ep, app_ctxt->new_if_handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-ep:{}:failed FTE update, err:{}",
+                      __FUNCTION__, ret);
+        goto end;
     }
 
 end:
@@ -955,15 +1007,25 @@ hal_ret_t
 fetch_endpoint(tenant_id_t tid, EndpointKeyHandle kh, ep_t **ep, 
                ::types::ApiStatus *api_status)
 {
-    ep_l3_key_t            l3_key = { 0 };
-    mac_addr_t             mac_addr = { 0 };
+    ep_l3_key_t            l3_key    = { 0 };
+    l2seg_t                *l2seg    = NULL;
+    mac_addr_t             mac_addr;
 
     if (kh.key_or_handle_case() == EndpointKeyHandle::kEndpointKey) {
         auto ep_key = kh.endpoint_key();
         if (ep_key.has_l2_key()) {
             auto ep_l2_key = ep_key.l2_key();
             MAC_UINT64_TO_ADDR(mac_addr, ep_l2_key.mac_address());
-            *ep = find_ep_by_l2_key(ep_l2_key.l2_segment_handle(), mac_addr);
+            HAL_TRACE_DEBUG("pi-ep:{}:l2 key: seg:{}, mac:{}", __FUNCTION__,
+                            ep_l2_key.l2_segment_handle(),
+                            macaddr2str(mac_addr));
+            l2seg = find_l2seg_by_handle(ep_l2_key.l2_segment_handle());
+            if (l2seg == NULL) {
+                HAL_TRACE_ERR("pi-ep:{}:unable to find l2seg_hdl:{}",
+                              __FUNCTION__, ep_l2_key.l2_segment_handle());
+                return HAL_RET_L2SEG_NOT_FOUND;
+            }
+            *ep = find_ep_by_l2_key(l2seg->seg_id, mac_addr);
         } else if (ep_key.has_l3_key()) {
             auto ep_l3_key = ep_key.l3_key();
             l3_key.tenant_id = tid;
@@ -991,9 +1053,10 @@ endpoint_if_update(EndpointUpdateRequest& req, ep_t *ep,
 {
     *if_change = false;
 
-    if (ep->if_handle != req.interface_handle()) {
+    if (req.has_endpoint_attrs() && 
+        ep->if_handle != req.endpoint_attrs().interface_handle()) {
         *if_change = true;
-        *new_if_hdl = req.interface_handle();
+        *new_if_hdl = req.endpoint_attrs().interface_handle();
     }
 
     return HAL_RET_OK;
@@ -1004,11 +1067,12 @@ endpoint_l2seg_update(EndpointUpdateRequest& req, ep_t *ep,
                       bool *l2seg_change, hal_handle_t *new_l2seg_hdl) 
 {
     *l2seg_change = false;
-
+#if 0
     if (ep->l2seg_handle != req.l2_segment_handle()) {
         *l2seg_change = true;
         *new_l2seg_hdl = req.l2_segment_handle();
     }
+#endif
 
     return HAL_RET_OK;
 }
@@ -1058,12 +1122,12 @@ endpoint_ip_list_update(EndpointUpdateRequest& req, ep_t *ep,
     utils::dllist_reset(*add_iplist);
     utils::dllist_reset(*del_iplist);
 
-    num_ips = req.ip_address_size();
+    num_ips = req.endpoint_attrs().ip_address_size();
     HAL_TRACE_DEBUG("pi-ep:{}:Before Checking for added IPs. Num:{}", 
                     __FUNCTION__, num_ips);
     ep_print_ips(ep);
     for (i = 0; i < num_ips; i++) {
-        ip_addr_spec_to_ip_addr(&ip_addr, req.ip_address(i));
+        ip_addr_spec_to_ip_addr(&ip_addr, req.endpoint_attrs().ip_address(i));
         if (ip_in_ep(&ip_addr, ep, NULL)) {
             continue;
         } else {
@@ -1089,7 +1153,7 @@ endpoint_ip_list_update(EndpointUpdateRequest& req, ep_t *ep,
         HAL_TRACE_DEBUG("PI-EP-Update:{}: Checking for ip: {}", 
                 __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
         for (i = 0; i < num_ips; i++) {
-            ip_addr_spec_to_ip_addr(&ip_addr, req.ip_address(i));
+            ip_addr_spec_to_ip_addr(&ip_addr, req.endpoint_attrs().ip_address(i));
             if (!memcmp(&ip_addr, &pi_ip_entry->ip_addr, sizeof(ip_addr_t))) {
                 ip_exists = true;
                 break;
@@ -1345,6 +1409,8 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
 
     if (if_change) {
         // call actions
+        app_ctxt.if_change = true;
+        app_ctxt.new_if_handle = new_if_hdl;
     }
 
     if (l2seg_change) {
@@ -1604,10 +1670,10 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
     ep_ip_entry_t       *pi_ip_entry = NULL;
 
     response->mutable_spec()->mutable_meta()->set_tenant_id(tenant_lookup_by_handle(ep->tenant_handle)->tenant_id);
-    response->mutable_spec()->set_l2_segment_handle(ep->l2seg_handle);
-    response->mutable_spec()->set_mac_address(MAC_TO_UINT64(ep->l2_key.mac_addr));
-    response->mutable_spec()->set_interface_handle(ep->if_handle);
-    response->mutable_spec()->set_useg_vlan(ep->useg_vlan);
+    response->mutable_spec()->mutable_l2_key()->set_l2_segment_handle(ep->l2seg_handle);
+    response->mutable_spec()->mutable_l2_key()->set_mac_address(MAC_TO_UINT64(ep->l2_key.mac_addr));
+    response->mutable_spec()->mutable_endpoint_attrs()->set_interface_handle(ep->if_handle);
+    response->mutable_spec()->mutable_endpoint_attrs()->set_useg_vlan(ep->useg_vlan);
 
     response->mutable_status()->set_endpoint_handle(ep->hal_handle);
     response->mutable_status()->set_learn_source_dhcp(ep->ep_flags & EP_FLAGS_LEARN_SRC_DHCP);
@@ -1620,7 +1686,7 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
     dllist_for_each(lnode, &(ep->ip_list_head)) {
         pi_ip_entry = (ep_ip_entry_t *)((char *)lnode -
                 offsetof(ep_ip_entry_t, ep_ip_lentry));
-        types::IPAddress *ip_addr_spec = response->mutable_spec()->add_ip_address();
+        types::IPAddress *ip_addr_spec = response->mutable_spec()->mutable_endpoint_attrs()->add_ip_address();
         ip_addr_to_spec(ip_addr_spec, &pi_ip_entry->ip_addr);
     }
 }
@@ -1711,6 +1777,74 @@ ep_print_ips(ep_t *ep)
         HAL_TRACE_DEBUG("PI-EP:{}: ip: {}", 
                 __FUNCTION__, ipaddr2str(&(pi_ip_entry->ip_addr)));
     }
+}
+
+//-----------------------------------------------------------------------------
+// Adds session into EP
+//-----------------------------------------------------------------------------
+hal_ret_t
+ep_add_session (ep_t *ep, session_t *session)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    hal_handle_id_list_entry_t  *entry = NULL;
+
+    if (ep == NULL || session == NULL) {
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    // Allocate the entry
+    entry = (hal_handle_id_list_entry_t *)g_hal_state->
+        hal_handle_id_list_entry_slab()->alloc();
+    if (entry == NULL) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+    entry->handle_id = session->hal_handle;
+
+    ep_lock(ep, __FILENAME__, __LINE__, __func__);      // lock
+    // Insert into the list
+    utils::dllist_add(&ep->session_list_head, &entry->dllist_ctxt);
+    ep_unlock(ep, __FILENAME__, __LINE__, __func__);    // unlock
+
+end:
+    HAL_TRACE_DEBUG("pi-ep:{}: add ep => session, ids: {} => {}, "
+                    "hdls: {} => {}, ret:{}",
+                    __FUNCTION__, ep_l2_key_to_str(ep), session->config.session_id, 
+                    ep->hal_handle, session->hal_handle, ret);
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Remove If from lif list
+//-----------------------------------------------------------------------------
+hal_ret_t
+ep_del_session (ep_t *ep, session_t *session)
+{
+    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
+    hal_handle_id_list_entry_t  *entry = NULL;
+    dllist_ctxt_t               *curr = NULL, *next = NULL;
+
+
+    ep_lock(ep, __FILENAME__, __LINE__, __func__);      // lock
+    dllist_for_each_safe(curr, next, &ep->session_list_head) {
+        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        if (entry->handle_id == session->hal_handle) {
+            // Remove from list
+            utils::dllist_del(&entry->dllist_ctxt);
+            // Free the entry
+            g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+
+            ret = HAL_RET_OK;
+        }
+    }
+    ep_unlock(ep, __FILENAME__, __LINE__, __func__);    // unlock
+
+    HAL_TRACE_DEBUG("pi-ep:{}: add ep =/=> session, ids: {} =/=> {}, "
+                    "hdls: {} => {}, ret:{}",
+                    __FUNCTION__, ep_l2_key_to_str(ep), session->config.session_id, 
+                    ep->hal_handle, session->hal_handle, ret);
+    return ret;
 }
 
 

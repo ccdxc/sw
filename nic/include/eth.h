@@ -39,6 +39,9 @@ typedef struct eth_dot1q_hdr_ {
              ((uint64_t)(mac_addr[1] & 0xFF) << 32ul)                   | \
              ((uint64_t)(mac_addr[0] & 0xFF) << 40ul))
 
+// Mac: 0xaabbccddeeff 
+//    mac_uint64: 0xaabbccddeeff
+//    mac_addr_t: [0]:aa, [1]:bb, [2]:cc, [3]:dd, [4]:ee, [5]:ff
 #define MAC_UINT64_TO_ADDR(mac_addr, mac_uint64)                          \
 {                                                                         \
      (mac_addr)[5] = mac_uint64 & 0xFF;                                   \
@@ -49,7 +52,7 @@ typedef struct eth_dot1q_hdr_ {
      (mac_addr)[0] = (mac_uint64 >> 40) & 0xFF;                           \
 }
 
-#define IS_MCAST_MAC_ADDR(mac_addr)            ((mac_addr)[5] & 0x1)
+#define IS_MCAST_MAC_ADDR(mac_addr)            ((mac_addr)[0] & 0x1)
 
 // thread safe helper to stringify MAC address
 extern char *macaddr2str(const mac_addr_t mac_addr);

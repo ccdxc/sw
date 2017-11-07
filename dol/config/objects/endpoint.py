@@ -178,26 +178,26 @@ class EndpointObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.meta.tenant_id     = self.tenant.id
-        req_spec.l2_segment_handle  = self.segment.hal_handle
-        req_spec.interface_handle   = self.intf.hal_handle
-        req_spec.mac_address        = self.macaddr.getnum()
+        req_spec.l2_key.l2_segment_handle  = self.segment.hal_handle
+        req_spec.endpoint_attrs.interface_handle   = self.intf.hal_handle
+        req_spec.l2_key.mac_address        = self.macaddr.getnum()
         #Interface should be created by now.
         self.segment_hal_handle     = self.segment.hal_handle
         self.intf_hal_handle        = self.intf.hal_handle
 
         if GlobalOptions.classic is False:
             for ipaddr in self.ipaddrs:
-                ip = req_spec.ip_address.add()
+                ip = req_spec.endpoint_attrs.ip_address.add()
                 ip.ip_af = haldefs.common.IP_AF_INET
                 ip.v4_addr = ipaddr.getnum()
 
             for ipv6addr in self.ipv6addrs:
-                ip = req_spec.ip_address.add()
+                ip = req_spec.endpoint_attrs.ip_address.add()
                 ip.ip_af = haldefs.common.IP_AF_INET6
                 ip.v6_addr = ipv6addr.getnum().to_bytes(16, 'big')
 
             for sg in self.sgs:
-                req_spec.sg_handle.append(sg.hal_handle)
+                req_spec.endpoint_attrs.sg_handle.append(sg.hal_handle)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -215,13 +215,13 @@ class EndpointObject(base.ConfigObjectBase):
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp):
         self.tenant_id = get_resp.spec.meta.tenant_id
-        self.segment_hal_handle = get_resp.spec.l2_segment_handle
-        self.intf_hal_handle = get_resp.spec.interface_handle
-        self.macaddr = objects.MacAddressBase(integer=get_resp.spec.mac_address)
+        self.segment_hal_handle = get_resp.spec.l2_key.l2_segment_handle
+        self.intf_hal_handle = get_resp.spec.endpoint_attrs.interface_handle
+        self.macaddr = objects.MacAddressBase(integer=get_resp.spec.l2_key.mac_address)
 
         self.ipaddrs = []
         self.ipv6addrs = []
-        for ipaddr in get_resp.spec.ip_address:
+        for ipaddr in get_resp.spec.endpoint_attrs.ip_address:
             if ipaddr.ip_af == haldefs.common.IP_AF_INET:
                 self.ipaddrs.append(objects.IpAddress(integer=ipaddr.v4_addr))
             else:

@@ -169,24 +169,24 @@ TEST_F(session_test, test1)
 
     // Create 2 Endpoints
     ep_spec.mutable_meta()->set_tenant_id(1);
-    ep_spec.set_l2_segment_handle(l2seg_hdl);
-    ep_spec.set_interface_handle(up_hdl2);
-    ep_spec.set_mac_address(0x00000000ABCD);
-    ep_spec.add_ip_address();
-    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec.mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
+    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
     ep_spec1.mutable_meta()->set_tenant_id(1);
-    ep_spec1.set_l2_segment_handle(l2seg_hdl);
-    ep_spec1.set_interface_handle(up_hdl2);
-    ep_spec1.set_mac_address(0x000000001234);
-    ep_spec1.add_ip_address();
-    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec1.mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
+    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
@@ -362,48 +362,48 @@ TEST_F(session_test, test2)
 
     // Create 2 Endpoints
     ep_spec.mutable_meta()->set_tenant_id(2);
-    ep_spec.set_l2_segment_handle(l2seg_hdl2);
-    ep_spec.set_interface_handle(if_hdl1);
-    ep_spec.set_mac_address(0x00000000ABCD);
-    ep_spec.add_ip_address();
-    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec.mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
+    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
+    ep_spec.mutable_endpoint_attrs()->set_interface_handle(if_hdl1);
+    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
     ep_spec1.mutable_meta()->set_tenant_id(2);
-    ep_spec1.set_l2_segment_handle(l2seg_hdl2);
-    ep_spec1.set_interface_handle(if_hdl2);
-    ep_spec1.set_mac_address(0x000000001234);
-    ep_spec1.add_ip_address();
-    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec1.mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
+    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
+    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(if_hdl2);
+    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     ep_spec2.mutable_meta()->set_tenant_id(2);
-    ep_spec2.set_l2_segment_handle(l2seg_hdl2);
-    ep_spec2.set_interface_handle(if_hdl1);
-    ep_spec2.set_mac_address(0x00000001ABCD);
-    ep_spec2.add_ip_address();
-    ep_spec2.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec2.mutable_ip_address(0)->set_v4_addr(ip3);  // 10.0.0.1
+    ep_spec2.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
+    ep_spec2.mutable_endpoint_attrs()->set_interface_handle(if_hdl1);
+    ep_spec2.mutable_l2_key()->set_mac_address(0x00000001ABCD);
+    ep_spec2.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec2.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec2.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip3);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec2, &ep_rsp2);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
     ep_spec3.mutable_meta()->set_tenant_id(2);
-    ep_spec3.set_l2_segment_handle(l2seg_hdl2);
-    ep_spec3.set_interface_handle(if_hdl2);
-    ep_spec3.set_mac_address(0x000000011234);
-    ep_spec3.add_ip_address();
-    ep_spec3.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec3.mutable_ip_address(0)->set_v4_addr(ip4);  // 10.0.0.1
+    ep_spec3.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
+    ep_spec3.mutable_endpoint_attrs()->set_interface_handle(if_hdl2);
+    ep_spec3.mutable_l2_key()->set_mac_address(0x000000011234);
+    ep_spec3.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec3.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec3.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip4);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec3, &ep_rsp3);
     hal::hal_cfg_db_close();
@@ -599,24 +599,24 @@ TEST_F(session_test, test3)
 
     // Create 2 Endpoints
     ep_spec.mutable_meta()->set_tenant_id(3);
-    ep_spec.set_l2_segment_handle(l2seg_hdl);
-    ep_spec.set_interface_handle(if_hdl1);
-    ep_spec.set_mac_address(0x00000000ABCD);
-    ep_spec.add_ip_address();
-    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
-    ep_spec.mutable_ip_address(0)->set_v6_addr(ipv6_ip1);  
+    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->set_interface_handle(if_hdl1);
+    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v6_addr(ipv6_ip1);  
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
     ep_spec1.mutable_meta()->set_tenant_id(3);
-    ep_spec1.set_l2_segment_handle(l2seg_hdl);
-    ep_spec1.set_interface_handle(if_hdl2);
-    ep_spec1.set_mac_address(0x000000001234);
-    ep_spec1.add_ip_address();
-    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
-    ep_spec1.mutable_ip_address(0)->set_v6_addr(ipv6_ip2);
+    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(if_hdl2);
+    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v6_addr(ipv6_ip2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
@@ -758,24 +758,24 @@ TEST_F(session_test, test4)
 
     // Create 2 Endpoints
     ep_spec.mutable_meta()->set_tenant_id(4);
-    ep_spec.set_l2_segment_handle(l2seg_hdl);
-    ep_spec.set_interface_handle(up_hdl2);
-    ep_spec.set_mac_address(0x00000000ABCD);
-    ep_spec.add_ip_address();
-    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec.mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
+    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
     ep_spec1.mutable_meta()->set_tenant_id(4);
-    ep_spec1.set_l2_segment_handle(l2seg_hdl2);
-    ep_spec1.set_interface_handle(up_hdl2);
-    ep_spec1.set_mac_address(0x000000001234);
-    ep_spec1.add_ip_address();
-    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec1.mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
+    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
+    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
@@ -939,24 +939,24 @@ TEST_F(session_test, test5)
 
     // Create 2 Endpoints
     ep_spec.mutable_meta()->set_tenant_id(5);
-    ep_spec.set_l2_segment_handle(l2seg_hdl);
-    ep_spec.set_interface_handle(up_hdl2);
-    ep_spec.set_mac_address(0x00000000ABCD);
-    ep_spec.add_ip_address();
-    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec.mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
+    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
     ep_spec1.mutable_meta()->set_tenant_id(5);
-    ep_spec1.set_l2_segment_handle(l2seg_hdl2);
-    ep_spec1.set_interface_handle(up_hdl2);
-    ep_spec1.set_mac_address(0x000000001234);
-    ep_spec1.add_ip_address();
-    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec1.mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
+    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
+    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
@@ -1096,12 +1096,12 @@ TEST_F(session_test, test6)
     // Create 2 Endpoints
     // CIP
     ep_spec.mutable_meta()->set_tenant_id(6);
-    ep_spec.set_l2_segment_handle(l2seg_hdl);
-    ep_spec.set_interface_handle(up_hdl2);
-    ep_spec.set_mac_address(0x00000000ABCD);
-    ep_spec.add_ip_address();
-    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec.mutable_ip_address(0)->set_v4_addr(ip1);
+    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
@@ -1110,12 +1110,12 @@ TEST_F(session_test, test6)
 #if 0
     // VIP
     ep_spec1.mutable_meta()->set_tenant_id(6);
-    ep_spec1.set_l2_segment_handle(l2seg_hdl2);
-    ep_spec1.set_interface_handle(up_hdl2);
-    ep_spec1.set_mac_address(0x000000001234);
-    ep_spec1.add_ip_address();
-    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec1.mutable_ip_address(0)->set_v4_addr(ip2);
+    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
+    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
@@ -1124,12 +1124,12 @@ TEST_F(session_test, test6)
 
     // PIP
     ep_spec1.mutable_meta()->set_tenant_id(6);
-    ep_spec1.set_l2_segment_handle(l2seg_hdl2);
-    ep_spec1.set_interface_handle(up_hdl2);
-    ep_spec1.set_mac_address(0x000000001235);
-    ep_spec1.add_ip_address();
-    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec1.mutable_ip_address(0)->set_v4_addr(ip3); 
+    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
+    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001235);
+    ep_spec1.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip3); 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
@@ -1280,24 +1280,24 @@ TEST_F(session_test, test7)
 
     // Create 2 Endpoints
     ep_spec.mutable_meta()->set_tenant_id(7);
-    ep_spec.set_l2_segment_handle(l2seg_hdl);
-    ep_spec.set_interface_handle(up_hdl2);
-    ep_spec.set_mac_address(0x00000000ABCD);
-    ep_spec.add_ip_address();
-    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec.mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
+    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
     ep_spec1.mutable_meta()->set_tenant_id(7);
-    ep_spec1.set_l2_segment_handle(l2seg_hdl);
-    ep_spec1.set_interface_handle(up_hdl2);
-    ep_spec1.set_mac_address(0x000000001234);
-    ep_spec1.add_ip_address();
-    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec1.mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
+    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
@@ -1441,12 +1441,12 @@ TEST_F(session_test, test8)
     // Create 2 Endpoints
     // CIP
     ep_spec.mutable_meta()->set_tenant_id(8);
-    ep_spec.set_l2_segment_handle(l2seg_hdl);
-    ep_spec.set_interface_handle(up_hdl2);
-    ep_spec.set_mac_address(0x00000000ABCD);
-    ep_spec.add_ip_address();
-    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec.mutable_ip_address(0)->set_v4_addr(ip1);
+    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
@@ -1455,12 +1455,12 @@ TEST_F(session_test, test8)
 #if 0
     // VIP
     ep_spec1.mutable_meta()->set_tenant_id(6);
-    ep_spec1.set_l2_segment_handle(l2seg_hdl2);
-    ep_spec1.set_interface_handle(up_hdl2);
-    ep_spec1.set_mac_address(0x000000001234);
-    ep_spec1.add_ip_address();
-    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec1.mutable_ip_address(0)->set_v4_addr(ip2);
+    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
+    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
@@ -1469,12 +1469,12 @@ TEST_F(session_test, test8)
 
     // PIP
     ep_spec1.mutable_meta()->set_tenant_id(8);
-    ep_spec1.set_l2_segment_handle(l2seg_hdl);
-    ep_spec1.set_interface_handle(up_hdl2);
-    ep_spec1.set_mac_address(0x000000001235);
-    ep_spec1.add_ip_address();
-    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec1.mutable_ip_address(0)->set_v4_addr(ip3); 
+    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001235);
+    ep_spec1.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip3); 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
@@ -1642,24 +1642,24 @@ TEST_F(session_test, test9)
 
     // Create 2 Endpoints
     ep_spec.mutable_meta()->set_tenant_id(9);
-    ep_spec.set_l2_segment_handle(l2seg_hdl);
-    ep_spec.set_interface_handle(up_hdl2);
-    ep_spec.set_mac_address(0x00000000ABCD);
-    ep_spec.add_ip_address();
-    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec.mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
+    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip1);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
     ep_spec1.mutable_meta()->set_tenant_id(9);
-    ep_spec1.set_l2_segment_handle(l2seg_hdl);
-    ep_spec1.set_interface_handle(up_hdl2);
-    ep_spec1.set_mac_address(0x000000001234);
-    ep_spec1.add_ip_address();
-    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
-    ep_spec1.mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
+    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
+    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET);
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v4_addr(ip2);  // 10.0.0.1
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
@@ -1822,24 +1822,24 @@ TEST_F(session_test, test10)
 
     // Create 2 Endpoints
     ep_spec.mutable_meta()->set_tenant_id(10);
-    ep_spec.set_l2_segment_handle(l2seg_hdl);
-    ep_spec.set_interface_handle(if_hdl1);
-    ep_spec.set_mac_address(0x00000000ABCD);
-    ep_spec.add_ip_address();
-    ep_spec.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
-    ep_spec.mutable_ip_address(0)->set_v6_addr(ipv6_ip1);  
+    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec.mutable_endpoint_attrs()->set_interface_handle(if_hdl1);
+    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
+    ep_spec.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
+    ep_spec.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v6_addr(ipv6_ip1);  
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
     ep_spec1.mutable_meta()->set_tenant_id(10);
-    ep_spec1.set_l2_segment_handle(l2seg_hdl);
-    ep_spec1.set_interface_handle(if_hdl2);
-    ep_spec1.set_mac_address(0x000000001234);
-    ep_spec1.add_ip_address();
-    ep_spec1.mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
-    ep_spec1.mutable_ip_address(0)->set_v6_addr(ipv6_ip2);
+    ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
+    ep_spec1.mutable_endpoint_attrs()->set_interface_handle(if_hdl2);
+    ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
+    ep_spec1.mutable_endpoint_attrs()->add_ip_address();
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_ip_af(types::IP_AF_INET6);
+    ep_spec1.mutable_endpoint_attrs()->mutable_ip_address(0)->set_v6_addr(ipv6_ip2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec1, &ep_rsp1);
     hal::hal_cfg_db_close();
