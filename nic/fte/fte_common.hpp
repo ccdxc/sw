@@ -5,6 +5,7 @@ enum {
     CPUCB_ID_FIN,
     CPUCB_ID_RST,
     CPUCB_ID_ALG,
+    CPUCB_ID_QUIESCE,
     CPUCB_ID_MAX
 };
 

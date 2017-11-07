@@ -65,6 +65,17 @@ inline hal_ret_t register_pipelines() {
                       {}, 0, {0x7FF, 0, 0});
     
     //----------------------------------------------------------------------------------------------------------
+    // QUIESCE Pipeline
+    //----------------------------------------------------------------------------------------------------------
+    fte::feature_id_t quiesce_outbound[] = {
+        fte::FTE_FEATURE_QUIESCE,
+    };
+    
+    register_pipeline("quiesce", fte::QUIESCE_LIFQ,
+                      quiesce_outbound, sizeof(quiesce_outbound)/sizeof(fte::feature_id_t),
+                      {}, 0);
+    
+    //----------------------------------------------------------------------------------------------------------
     // TLS Proxy Pipeline
     //----------------------------------------------------------------------------------------------------------
     fte::feature_id_t tls_proxy_outbound[] = {

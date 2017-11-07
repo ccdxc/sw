@@ -1,0 +1,14 @@
+//------------------------------------------------------------------------------
+// protobuf specification for tcpcb
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+
+package vmotion;
+option go_package="halproto";
+
+service Quiesce {
+  rpc QuiesceMsgSnd (types.Empty) returns (types.Empty) {}
+}

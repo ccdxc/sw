@@ -8,6 +8,7 @@ namespace proxy {
 void init();
 
 fte::pipeline_action_t tcp_exec(fte::ctx_t &ctx);
+fte::pipeline_action_t quiesce_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t tls_exec(fte::ctx_t &ctx);
 fte::pipeline_action_t ipsec_exec(fte::ctx_t &ctx);
 void tcp_transmit_pkt(unsigned char* pkt, unsigned int len, bool is_connect_req, uint16_t dst_lif, uint16_t src_lif, hal::flow_direction_t dir, uint16_t hw_vlan_id);

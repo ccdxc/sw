@@ -6,6 +6,7 @@ namespace proxy {
 
 void init() {
     fte::register_feature(fte::FTE_FEATURE_TCP_PROXY, "proxy.tcp", tcp_exec);
+    fte::register_feature(fte::FTE_FEATURE_QUIESCE, "quiesce", quiesce_exec);
     fte::register_feature(fte::FTE_FEATURE_TLS_PROXY, "proxy.tls", tls_exec);
     fte::register_feature(fte::FTE_FEATURE_IPSEC, "proxy.ipsec", ipsec_exec);
     fte::register_feature(fte::FTE_FEATURE_APP_REDIR_MISS, "app.redirect.miss", app_redir_miss_exec);

@@ -28,6 +28,7 @@ sessions:
             - ref://store/specs/id=SESSION_ESP_PROXY
             - ref://store/specs/id=SESSION_ICMP_IPSEC_ENC
             - ref://store/specs/id=SESSION_UDP_PROXY
-        mac: None
+        mac:
+            - ref://store/specs/id=SESSION_MAC_PROXY
 
 lif: ref://store/specs/id=LIF_ETH

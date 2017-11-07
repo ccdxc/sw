@@ -700,3 +700,14 @@ modules:
         iterate  :
             - flow: filter://type=IPV4
 
+    - module:
+        name    : QUIESCE_FLOWS
+        ignore  : True
+        package : test.tcp_tls_proxy
+        module  : quiesce_flows
+        spec    : quiesce_flows.testspec
+        args    :
+            maxflows: 2
+        iterate :
+            - flow: filter://type=IPV4
+

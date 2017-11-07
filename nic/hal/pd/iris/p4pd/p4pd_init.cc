@@ -3,6 +3,7 @@
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/hal/pd/p4pd_api.hpp"
 #include "nic/hal/pd/utils/tcam/tcam.hpp"
+#include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/p4/include/common_defines.h"
@@ -15,6 +16,8 @@
 #include "nic/include/fte_common.hpp"
 
 using hal::pd::utils::Tcam;
+using hal::pd::utils::acl_tcam_entry_handle_t;
+using hal::pd::utils::priority_t;
 
 namespace hal {
 namespace pd {
@@ -457,6 +460,78 @@ p4pd_drop_stats_init (void)
             return ret;
         }
     }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+p4pd_nacl_init (void)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    acl_tcam                *acl_tbl = NULL;
+    nacl_swkey_t            key;
+    nacl_swkey_mask_t       mask;
+    nacl_actiondata         data;
+    priority_t              priority;
+    acl_tcam_entry_handle_t handle;
+
+    uint8_t mac_sa[6] = {0x04, 0x00, 0x00, 0xff, 0xee, 0x00};
+    uint8_t mac_sa_mask[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    uint8_t mac_da[6] = {0x05, 0x00, 0x00, 0xff, 0xee, 0x00};
+    uint8_t mac_da_mask[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    uint16_t ether_type = 0xaaaa;
+    uint16_t ether_type_mask = 0xffff;
+
+    acl_tbl = g_hal_state_pd->acl_table();
+    HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    priority = 0;
+
+    key.control_metadata_from_cpu = 1;
+    mask.control_metadata_from_cpu_mask = 1;
+
+    data.actionid = NACL_NACL_PERMIT_ID;
+
+    key.flow_lkp_metadata_lkp_type = FLOW_KEY_LOOKUP_TYPE_MAC;
+    mask.flow_lkp_metadata_lkp_type_mask =
+            ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
+
+    memcpy(key.flow_lkp_metadata_lkp_src, mac_sa, 6);
+    memcpy(mask.flow_lkp_metadata_lkp_src_mask, mac_sa_mask, 6);
+
+    memcpy(key.flow_lkp_metadata_lkp_dst, mac_da, 6);
+    memcpy(mask.flow_lkp_metadata_lkp_dst_mask, mac_da_mask, 6);
+
+    key.flow_lkp_metadata_lkp_sport = ether_type;
+    mask.flow_lkp_metadata_lkp_sport_mask = ether_type_mask;
+
+
+    data.nacl_action_u.nacl_nacl_permit.dst_lport = 1023;
+    data.nacl_action_u.nacl_nacl_permit.dst_lport_en = 1;
+
+    data.nacl_action_u.nacl_nacl_permit.qid = 4;
+    data.nacl_action_u.nacl_nacl_permit.qid_en = 1;
+
+    data.nacl_action_u.nacl_nacl_permit.force_flow_hit = 1;
+    data.nacl_action_u.nacl_nacl_permit.rewrite_en = 1;
+    data.nacl_action_u.nacl_nacl_permit.rewrite_index = 0;
+    data.nacl_action_u.nacl_nacl_permit.rewrite_flags = 0;
+    data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_en = 1;
+    data.nacl_action_u.nacl_nacl_permit.tunnel_rewrite_index = 0;
+    data.nacl_action_u.nacl_nacl_permit.tunnel_vnid = 0;
+    data.nacl_action_u.nacl_nacl_permit.tunnel_originate = 0;
+
+    ret = acl_tbl->insert(&key, &mask, &data, priority, &handle);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("ACL tcam write failure, "
+                      "priority : {}, err : {}", priority, ret);
+        return ret;
+    }
+    HAL_TRACE_DEBUG("ACL tcam write, "
+                  "priority : {}, handle : {}, ret: {}", priority, handle, ret);
 
     return HAL_RET_OK;
 }
@@ -1247,6 +1322,7 @@ p4pd_table_defaults_init (void)
     HAL_ASSERT(p4pd_flow_stats_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_drop_stats_init() == HAL_RET_OK);
     HAL_ASSERT(p4pd_ddos_policers_init() == HAL_RET_OK);
+    HAL_ASSERT(p4pd_nacl_init() == HAL_RET_OK);
 
     // initialize all P4 egress tables with default entries, if any
     HAL_ASSERT(p4pd_tunnel_decap_copy_inner_init() == HAL_RET_OK);
