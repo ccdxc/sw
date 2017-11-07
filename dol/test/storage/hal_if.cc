@@ -202,29 +202,39 @@ int get_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate) 
   return 0;
 }
 
-int set_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate) {
+int set_lif_qstate_size(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate, uint32_t size) {
   grpc::ClientContext context;
   intf::SetQStateRequestMsg req_msg;
   intf::SetQStateResponseMsg resp_msg;
 
-  if (!qstate) 
+  if (!qstate) {
+    printf("q state null \n");
     return -1;
+  }
 
   auto req = req_msg.add_reqs();
   req->set_lif_handle(lif);
   req->set_type_num(qtype);
   req->set_qid(qid);
-  req->set_queue_state((const char *) qstate, kDefaultQStateSize);
+  req->set_queue_state((const char *) qstate, size);
 
   auto status = interface_stub->LifSetQState(&context, req_msg, &resp_msg);
-  if (!status.ok())
+  if (!status.ok()) {
+    printf("status %d \n", status.ok());
     return -1;
+  }
 
   // TODO: Check number of responses ?
-  if (resp_msg.resps(0).error_code())
+  if (resp_msg.resps(0).error_code()) {
+    printf("resp error %d \n", resp_msg.resps(0).error_code());
     return -1;
+  }
 
   return 0;
+}
+
+int set_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid, uint8_t *qstate) {
+  return set_lif_qstate_size(lif, qtype, qid, qstate, kDefaultQStateSize);
 }
 
 int alloc_hbm_address(uint64_t *addr, uint32_t *size) {

@@ -89,7 +89,7 @@ int main(int argc, char**argv) {
   }
   printf("Setup completed\n");
 
-#if 0
+#if 1
   if (rdma_init() < 0) {
     printf("RDMA Setup failed\n");
     return 1;

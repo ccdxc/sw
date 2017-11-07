@@ -318,4 +318,69 @@ int setup_roce_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
 
   return 0;
 }
+
+int update_roce_cq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
+                         uint8_t total_rings, uint8_t host_rings) {
+
+  uint8_t q_state[64];
+  uint8_t pc_offset;
+  uint64_t next_pc = 0;
+
+  bzero(q_state, sizeof(q_state));
+
+  // Get the qstate
+  if (hal_if::get_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
+    printf("ROCE CQ state GET FAILED for lif %u type %u, qid %u \n", 
+           src_lif, src_qtype, src_qid);
+    return -1;
+  } else {
+    printf("ROCE CQ state GET SUCCEEDED for lif %u type %u, qid %u \n", 
+           src_lif, src_qtype, src_qid);
+    utils::dump(q_state);
+  }
+
+  // If no program binary name supplied => no need to set next_pc as 
+  // it is a host queue
+  if (pgm_bin) {
+    if (hal_if::get_pgm_base_addr(pgm_bin, &next_pc) < 0) {
+      printf("Failed to get base addr of %s\n", pgm_bin);
+      return -1;
+    }
+    next_pc = next_pc >> 6;
+  } else {
+      printf("No program supplied for next_pc \n");
+      return -1;
+  }
+
+  if (hal_if::get_pgm_label_offset("txdma_stage0.bin", "storage_tx_rcq_stage0", &pc_offset) < 0) {
+    printf("Failed to get pc offset for storage_tx_rcq_stage0\n");
+    return -1;
+  }
+
+  utils::write_bit_fields(q_state, 0, 8, pc_offset);
+  utils::write_bit_fields(q_state, 40, 4, total_rings);
+  utils::write_bit_fields(q_state, 44, 4, host_rings);
+  utils::write_bit_fields(q_state, 400, 28, next_pc);
+
+  // Write the qstate back (ROCE CQ is only 32 bytes so use the size based API)
+  if (hal_if::set_lif_qstate_size(src_lif, src_qtype, src_qid, q_state, 32) < 0) {
+    printf("Failed to set lif_qstate addr \n");
+    return -1;
+  }
+
+  bzero(q_state, sizeof(q_state));
+
+  // Get the qstate
+  if (hal_if::get_lif_qstate(src_lif, src_qtype, src_qid, q_state) < 0) {
+    printf("ROCE CQ state GET FAILED for lif %u type %u, qid %u \n", 
+           src_lif, src_qtype, src_qid);
+    return -1;
+  } else {
+    printf("ROCE CQ state GET SUCCEEDED for lif %u type %u, qid %u \n", 
+           src_lif, src_qtype, src_qid);
+    utils::dump(q_state);
+  }
+  return 0;
+}
+
 }  // namespace qstate_if

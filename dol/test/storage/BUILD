@@ -28,6 +28,18 @@ cc_library(
 )
 
 cc_library(
+    name= "qstate_if",
+    srcs = [
+        "qstate_if.cc",
+        "qstate_if.hpp",
+    ],
+    deps = [
+        ":hal_if",
+        ":utils",
+    ]
+)
+
+cc_library(
     name = "rdma",
     srcs = [
         "rdma.cc",
@@ -37,24 +49,14 @@ cc_library(
         "tests.hpp",
         "r2n.hpp",
         "nvme.hpp",
-    ],
-    deps = [
-        ":hal_if",
-        "//nic:halproto",
-        "//nic:gen_proto_includes",
-        "//nic/utils/host_mem",
-    ]
-)
-
-cc_library(
-    name= "qstate_if",
-    srcs = [
-        "qstate_if.cc",
         "qstate_if.hpp",
     ],
     deps = [
         ":hal_if",
-        ":utils",
+        ":qstate_if",
+        "//nic:halproto",
+        "//nic:gen_proto_includes",
+        "//nic/utils/host_mem",
     ]
 )
 

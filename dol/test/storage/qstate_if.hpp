@@ -40,6 +40,9 @@ int setup_roce_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
                        uint16_t rrq_lif, uint8_t rrq_qtype, uint32_t rrq_qid, 
                        uint16_t rsq_lif, uint8_t rsq_qtype, uint32_t rsq_qid);
 
+int update_roce_cq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
+                         uint8_t total_rings, uint8_t host_rings);
+
 }  // namespace qstate_if
 
 #endif

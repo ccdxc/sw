@@ -9,6 +9,7 @@
 #include "dol/test/storage/queues.hpp"
 #include "dol/test/storage/tests.hpp"
 #include "dol/test/storage/r2n.hpp"
+#include "dol/test/storage/qstate_if.hpp"
 #include "nic/gen/proto/hal/internal.grpc.pb.h"
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
 #include "nic/gen/proto/hal/l2segment.grpc.pb.h"
@@ -46,6 +47,11 @@ std::unique_ptr<Rdma::Stub> rdma_stub;
 
 const uint32_t	kRoceEntrySize	 = 6; // Default is 64 bytes
 const uint32_t	kRoceNumEntries	 = 6; // Default is 64 entries
+
+const static char	*kRoceCqHandler		 = "storage_tx_roce_cq_handler.bin";
+
+const uint32_t	kImmLifShift	 = 21;
+const uint32_t	kImmQtypeShift	 = 18;
 
 const uint32_t kMaxRDMAKeys = 64;
 const uint32_t kMaxRDMAPTEntries = 64;
@@ -385,6 +391,7 @@ void CreateInitiatorQP() {
   rq->set_rq_lkey(kInitiatorRQLKey);
   rq->set_rq_cq_num(0);
   rq->set_sq_cq_num(0);
+  rq->set_immdt_as_dbell(true);
 
   grpc::ClientContext context;
   auto status = rdma_stub->RdmaQpCreate(&context, req, &resp);
@@ -412,10 +419,16 @@ void CreateTargetQP() {
   rq->set_rq_lkey(kTargetRQLKey);
   rq->set_rq_cq_num(1);
   rq->set_sq_cq_num(1);
+  rq->set_immdt_as_dbell(true);
 
   grpc::ClientContext context;
   auto status = rdma_stub->RdmaQpCreate(&context, req, &resp);
   assert(status.ok());
+}
+
+void UpdateTargetCQ() {
+  // Qid: 0 initiator // 1 target
+  qstate_if::update_roce_cq_state(g_rdma_hw_lif_id, kCQType, 1, (char *) kRoceCqHandler, 1, 0);
 }
 
 void mac_to_buf(uint8_t *buf, uint64_t mac) {
@@ -477,11 +490,11 @@ void PostTargetRcvBuf1() {
 
   // sge0->va
   r2n::r2n_buf_t *r2n_buf = (r2n::r2n_buf_t *) target_rcv_buf1_va;
-  //uint32_t size = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
-  uint32_t size = kR2NBufSize;
+  uint32_t size = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
+  //uint32_t size = kR2NBufSize;
   printf("Posting buffer of size %d \n", size);
-  //utils::write_bit_fields(rqwqe, 256, 64, (uint64_t) &r2n_buf->cmd_buf);
-  utils::write_bit_fields(rqwqe, 256, 64, (uint64_t) r2n_buf);
+  utils::write_bit_fields(rqwqe, 256, 64, (uint64_t) &r2n_buf->cmd_buf);
+  //utils::write_bit_fields(rqwqe, 256, 64, (uint64_t) r2n_buf);
   utils::write_bit_fields(rqwqe, 256+64, 32, size);  // sge0->len
   utils::write_bit_fields(rqwqe, 256+64+32, 32, kTargetRcvBuf1LKey);  // sge0->l_key
 
@@ -496,8 +509,12 @@ void PostTargetRcvBuf1() {
 }
 
 void RegisterTargetRcvBufs() {
-  RdmaMemRegister(target_rcv_buf1_va, kTargetRcvBuf1LKey,
-                  kTargetRcvBuf1RKey, true);
+  //RdmaMemRegister(target_rcv_buf1_va, kTargetRcvBuf1LKey,
+  //                kTargetRcvBuf1RKey, true);
+  r2n::r2n_buf_t *r2n_buf = (r2n::r2n_buf_t *) target_rcv_buf1_va;
+  uint32_t size = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
+  RdmaMemRegister((void *) &r2n_buf->cmd_buf, host_mem_v2p((void *) &r2n_buf->cmd_buf),
+                  size, kTargetRcvBuf1LKey, kTargetRcvBuf1RKey, true);
   PostTargetRcvBuf1();
 }
 
@@ -573,9 +590,16 @@ int StartRoceSeq() {
   uint8_t *sqwqe = (uint8_t *) alloc_host_mem(64);
   bzero(sqwqe, 64);
   utils::write_bit_fields(sqwqe, 0, 64, 0x10);  // wrid = 1
-  utils::write_bit_fields(sqwqe, 64, 4, 0);  // op_type = OP_TYPE_SEND
+  //utils::write_bit_fields(sqwqe, 64, 4, 0);  // op_type = OP_TYPE_SEND
+  utils::write_bit_fields(sqwqe, 64, 4, 2);  // op_type = OP_TYPE_SEND_IMM
   //utils::write_bit_fields(sqwqe, 71, 1, 1);  // inline data valid
   utils::write_bit_fields(sqwqe, 72, 8, 1);  // Num SGEs = 1
+
+  // Send immediate with doorbell (qid: 0 initiator // 1 target)
+  //uint32_t send_imm_data = g_rdma_hw_lif_id << kImmLifShift | kCQType << kImmQtypeShift | 1;
+  utils::write_bit_fields(sqwqe, 96, 11, g_rdma_hw_lif_id);
+  utils::write_bit_fields(sqwqe, 107, 3, kCQType);
+  utils::write_bit_fields(sqwqe, 110, 18, 1);
 
   // Add the buffer to WQE.
   void *r2n_buf_va;
@@ -590,10 +614,10 @@ int StartRoceSeq() {
   }
 
   assert(r2n_hbm_buf_size == r2n_buf_size);
-  //uint32_t data_len = r2n_hbm_buf_size - offsetof(r2n::r2n_buf_t, cmd_buf);
-  uint32_t data_len = r2n_hbm_buf_size;
+  uint32_t data_len = r2n_hbm_buf_size - offsetof(r2n::r2n_buf_t, cmd_buf);
+  //uint32_t data_len = r2n_hbm_buf_size;
   // Register R2N buf memory. Only LKey, no remote access.
-  RdmaMemRegister((void *) r2n_hbm_buf_pa, r2n_hbm_buf_pa, r2n_hbm_buf_size, kR2NBufLKey, 0, false);
+  RdmaMemRegister((void *) r2n_hbm_buf_pa, r2n_hbm_buf_pa, data_len, kR2NBufLKey, 0, false);
   utils::write_bit_fields(sqwqe, 192, 32, (uint64_t)data_len);  // data len
   // write the SGE
   utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)r2n_hbm_buf_pa);  // SGE-va, same as pa
@@ -615,6 +639,7 @@ void rdma_queues_init() {
   CreateTargetQP();
   ConnectInitiatorAndTarget(0, 1, kMACAddr1, kMACAddr2, kIPAddr1, kIPAddr2);
   ConnectInitiatorAndTarget(1, 0, kMACAddr2, kMACAddr1, kIPAddr2, kIPAddr1);
+  UpdateTargetCQ();
 }
 
 int rdma_init() {
