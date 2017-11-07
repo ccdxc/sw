@@ -80,6 +80,24 @@ modules:
         iterate :
             - flow: filter://type=IPV4
     - module:
+        name    : DECRYPT_LT_PKT_TO_IPSECCBQ
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : decrypt_ipsec_to_eth_lt63
+        spec    : decrypt_ipsec_to_eth_seq_lt_63.testspec 
+        ignore  : False 
+        iterate :
+            - flow: filter://type=IPV4
+    - module:
+        name    : DECRYPT_GT_PKT_TO_IPSECCBQ
+        enable  : True 
+        package : test.ipsec-proxy
+        module  : decrypt_ipsec_to_eth_gt63 
+        spec    : decrypt_ipsec_to_eth_seq_gt_63.testspec 
+        ignore  : True 
+        iterate :
+            - flow: filter://type=IPV4
+    - module:
         name    : TCP_IPV6_PKT_TO_IPSECCBQ
         enable  : True 
         package : test.ipsec-proxy

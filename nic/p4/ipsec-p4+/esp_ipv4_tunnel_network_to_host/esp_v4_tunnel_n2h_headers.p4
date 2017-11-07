@@ -79,6 +79,16 @@ header_type p4plus_to_p4_ipsec_header_t {
     }
 }
 
+header_type ipsec_cb_encap_header_t {
+    fields {
+        mac_ip_hdr : 432;
+        drop_mask : 16;
+        seq_no_fail : 16;
+        decrypt_fail : 16;
+        decrypt_cb2_pad : 32;
+    }
+}
+ 
 #define IPSEC_INT_HDR_SCRATCH \
     modify_field(ipsec_int_hdr_scratch.in_desc, in_desc); \
     modify_field(ipsec_int_hdr_scratch.out_desc, out_desc); \

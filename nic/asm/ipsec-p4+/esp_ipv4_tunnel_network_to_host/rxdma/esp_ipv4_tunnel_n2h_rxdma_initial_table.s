@@ -112,8 +112,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     nop
  
 ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
-    //ori r4, k.ipsec_int_drop_mask, IPSEC_BAD_SEQ_NO
-    //phvwr.e p.ipsec_int_drop_mask, r4
+    tblwr d.last_replay_seq_no, k.p42p4plus_hdr_seq_no
     nop.e
     nop
 

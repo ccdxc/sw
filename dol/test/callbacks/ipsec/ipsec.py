@@ -12,6 +12,12 @@ def GetSpi (tc, pkt):
 def GetSeqNo (tc, pkt):
     return 1 
 
+def GetLt63SeqNo (tc, pkt):
+    return 35
+
+def GetGt63SeqNo (tc, pkt):
+    return 75
+
 def GetIv (tc, pkt):
     return "0xaaaaaaaaaaaaaaaa"
 
