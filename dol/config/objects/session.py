@@ -406,8 +406,15 @@ class SessionObjectHelper:
         if l4lbspec is None:
             return
 
+
         flowep1 = flowep.FlowEndpointObject(ep = ep)
         flowep2 = flowep.FlowEndpointObject(l4lbsvc = svc)
+
+
+        # L2 DSR: Create only Sessions only in one L2 Segment
+        if svc.IsNATDSR() and (flowep1.GetSegment() != flowep2.GetSegment()):
+            return
+
         if l4lbspec.ipv4:
             self.__process_ipv4(flowep1, flowep2, l4lbspec.ipv4)
         if l4lbspec.ipv6:

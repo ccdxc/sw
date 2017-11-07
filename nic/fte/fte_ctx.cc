@@ -512,40 +512,57 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
     hal_ret_t ret;
     ipvx_addr_t dip;
 
-    if (!header.valid_flds.dip) {
-        return HAL_RET_OK;
-    }
-
-    if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
-        dep_ = hal::find_ep_by_v4_key(tenant_->tenant_id, header.ipv4.dip);
-        dip.v4_addr = header.ipv4.dip;
+    if (header.valid_flds.dip) {
+        if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
+            HAL_TRACE_DEBUG("Looking up v4");
+            dep_ = hal::find_ep_by_v4_key(tenant_->tenant_id, header.ipv4.dip);
+            dip.v4_addr = header.ipv4.dip;
+        } else {
+            HAL_TRACE_DEBUG("Looking up v6");
+            ip_addr_t addr;
+            addr.af = IP_AF_IPV6;
+            addr.addr.v6_addr = header.ipv6.dip;
+            dep_ = hal::find_ep_by_v6_key(tenant_->tenant_id, &addr);
+            dip.v6_addr = header.ipv6.dip;
+        }
+        dl2seg_ = hal::find_l2seg_by_handle(dep_->l2seg_handle);
+        dif_ = hal::find_if_by_handle(dep_->if_handle);
+        HAL_ASSERT(dif_ != NULL);
+    } else if (header.valid_flds.dmac) {
+        HAL_TRACE_DEBUG("Looking up mac");
+        /* L2 DSR lookup EP using mac */
+        if (dl2seg_ == NULL) {
+            dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id,
+                                          header.ether.dmac.ether_addr_octet);
+            dl2seg_ = hal::find_l2seg_by_handle(dep_->l2seg_handle);
+            dif_ = hal::find_if_by_handle(dep_->if_handle);
+            HAL_ASSERT(dif_ != NULL);
+        }
     } else {
-        ip_addr_t addr;
-        addr.af = IP_AF_IPV6;
-        addr.addr.v6_addr = header.ipv6.dip;
-        dep_ = hal::find_ep_by_v6_key(tenant_->tenant_id, &addr);
-        dip.v6_addr = header.ipv6.dip;
+		return HAL_RET_OK;
     }
 
     if (dep_ == NULL) {
         return HAL_RET_EP_NOT_FOUND;
     }
 
-    // rewrite dest mac
-    flow_update_t flowupd = {type: FLOWUPD_HEADER_REWRITE};
-    HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, 
-                   *(struct ether_addr *)hal::ep_get_mac_addr(dep_));
-    ret = update_flow(flowupd);
-    if (ret != HAL_RET_OK) {
-        return ret;
+    if (!header.valid_flds.dmac) {
+        // rewrite dest mac
+        flow_update_t flowupd = {type: FLOWUPD_HEADER_REWRITE};
+        HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, 
+                       *(struct ether_addr *)hal::ep_get_mac_addr(dep_));
+        ret = update_flow(flowupd);
+        if (ret != HAL_RET_OK) {
+            return ret;
+        }
     }
 
-    dl2seg_ = hal::find_l2seg_by_handle(dep_->l2seg_handle);
-    dif_ = hal::find_if_by_handle(dep_->if_handle);
-    HAL_ASSERT(dif_ != NULL);
+    // dl2seg_ = hal::find_l2seg_by_handle(dep_->l2seg_handle);
+    // dif_ = hal::find_if_by_handle(dep_->if_handle);
+    // HAL_ASSERT(dif_ != NULL);
 
     // If we are doing dnat on iflow, update the rflow's key
-    if (role == hal::FLOW_ROLE_INITIATOR && valid_rflow_ ) {
+	if (role == hal::FLOW_ROLE_INITIATOR && valid_rflow_ &&  header.valid_flds.dip) {
         hal::flow_key_t rkey = {};
         for (int i = 0; i < MAX_STAGES; i++) {
             rkey = rflow_[i]->key();

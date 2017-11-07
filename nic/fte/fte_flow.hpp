@@ -125,11 +125,11 @@ private:
     static rewrite_actions_enum nat_rewrite_action(header_type_t l3_type,
                                                    header_type_t l4_type,
                                                    session::NatType nat_type);
-    static hal_ret_t build_rewrite_config(hal::flow_cfg_t &config,
+    hal_ret_t build_rewrite_config(hal::flow_cfg_t &config,
                                           hal::flow_pgm_attrs_t &attrs,
-                                          const header_rewrite_info_t &rewrite);
-    static hal_ret_t build_push_header_config(hal::flow_pgm_attrs_t &attrs,
-                                              const header_push_info_t &header);
+                                          const header_rewrite_info_t &rewrite) const;
+    hal_ret_t build_push_header_config(hal::flow_pgm_attrs_t &attrs,
+                                       const header_push_info_t &header) const;
 };
 
 } // namespace fte

@@ -58,11 +58,16 @@ tenants:
     # Infra VRF
     -   spec    : ref://store/specs/id=TENANT_INFRA_L4LB
         count   : 1
-        lifns   : range/160/160
+        lifns   : range/190/190
 
     # Tenant VRF
     -   spec    : ref://store/specs/id=TENANT_L4LB
         count   : 1
         lifns   : range/101/150
+
+    # Tenant VRF - DSR
+    -   spec    : ref://store/specs/id=TENANT_L4LB_DSR
+        count   : 1
+        lifns   : range/151/185
 
 cpu: None

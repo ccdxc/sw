@@ -52,7 +52,7 @@ def __get_packet_template_impl(flow, args):
         template += "_%s_%s" % (flow.type, flow.proto)
     else:
         assert(0)
- 
+
     if args is not None:
         template += "_%s" % (args.proto)
     return infra_api.GetPacketTemplate(template)
@@ -89,8 +89,10 @@ def __get_packet_encap_vlan(testcase, cfg):
     return None
 
 def __get_packet_encap_vxlan(testcase, cfg):
-    if testcase.config.flow.IsNat() == False and\
-        cfg.endpoint.remote == False:
+    #if testcase.config.flow.IsNat() == False and\
+    #    cfg.endpoint.remote == False:
+    #    return None
+    if cfg.endpoint.remote == False:
         return None
     if cfg.segment.IsFabEncapVxlan():
         return __get_template('ENCAP_VXLAN')
@@ -189,7 +191,7 @@ def GetCpuPacketbyIflow(testcase, args = None):
 
     if root.IsFteEnabled():
         return testcase.packets.Get(args.expktid)
- 
+
     return None
 
 def GetCpuPacketbyRflow(testcase, args = None):

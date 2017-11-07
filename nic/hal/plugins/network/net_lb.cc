@@ -47,6 +47,12 @@ update_flow_from_nat_spec(fte::ctx_t& ctx, const session::FlowInfo& flow_info)
                 HEADER_SET_FLD(flowupd.header_rewrite, udp, dport, flow_info.nat_dport());
             }
         }
+
+        if (flow_info.nat_dmac()) {
+            mac_addr_t dmac;
+            MAC_UINT64_TO_ADDR(dmac, flow_info.nat_dmac());
+            HEADER_SET_FLD(flowupd.header_rewrite, ether, dmac, *(ether_addr *)dmac);
+        }
     }
 
     return ctx.update_flow(flowupd);

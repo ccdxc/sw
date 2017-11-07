@@ -208,7 +208,7 @@ flow_t::nat_rewrite_action(header_type_t l3_type, header_type_t l4_type,
 
 hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
                                        hal::flow_pgm_attrs_t &attrs,
-                                       const header_rewrite_info_t &rewrite)
+                                       const header_rewrite_info_t &rewrite) const
 {
     hal_ret_t ret = HAL_RET_OK;
     bool snat, dnat;
@@ -294,6 +294,17 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
         break;
     }
 
+    // If only l4 port is changed, use the IP from flow key
+    if (!rewrite.valid_flds.sip && rewrite.valid_flds.sport) {
+        config.nat_sip.af = (key_.flow_type == hal::FLOW_TYPE_V4) ? IP_AF_IPV4 : IP_AF_IPV6;
+        config.nat_sip.addr = key_.sip;
+    }
+
+    if (!rewrite.valid_flds.dip && rewrite.valid_flds.dport) {
+        config.nat_dip.af = (key_.flow_type == hal::FLOW_TYPE_V4) ? IP_AF_IPV4 : IP_AF_IPV6;
+        config.nat_dip.addr = key_.dip;
+    }
+
     snat = (rewrite.valid_flds.sip || rewrite.valid_flds.sport);
     dnat = (rewrite.valid_flds.dip || rewrite.valid_flds.dport);
     if (snat && dnat){
@@ -345,7 +356,7 @@ hal_ret_t flow_t::build_rewrite_config(hal::flow_cfg_t &config,
 }
 
 hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
-                                           const header_push_info_t &header)
+                                           const header_push_info_t &header) const
 {
     attrs.tunnel_orig = TRUE;
 

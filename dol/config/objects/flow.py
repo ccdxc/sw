@@ -425,13 +425,15 @@ class FlowObject(base.ConfigObjectBase):
             if self.IsIPV4():
                 req_spec.flow_data.flow_info.nat_sip.ip_af = haldefs.common.IP_AF_INET
                 req_spec.flow_data.flow_info.nat_sip.v4_addr = self.nat_sip.getnum()
-                req_spec.flow_data.flow_info.nat_dip.ip_af = haldefs.common.IP_AF_INET
-                req_spec.flow_data.flow_info.nat_dip.v4_addr = self.nat_dip.getnum()
+                if not self.__dfep.IsNATDSR():
+                    req_spec.flow_data.flow_info.nat_dip.ip_af = haldefs.common.IP_AF_INET
+                    req_spec.flow_data.flow_info.nat_dip.v4_addr = self.nat_dip.getnum()
             elif self.IsIPV6():
                 req_spec.flow_data.flow_info.nat_sip.ip_af = haldefs.common.IP_AF_INET6
                 req_spec.flow_data.flow_info.nat_sip.v6_addr = self.nat_sip.getnum().to_bytes(16, 'big')
-                req_spec.flow_data.flow_info.nat_dip.ip_af = haldefs.common.IP_AF_INET6
-                req_spec.flow_data.flow_info.nat_dip.v6_addr = self.nat_dip.getnum().to_bytes(16, 'big')
+                if not self.__dfep.IsNATDSR():
+                    req_spec.flow_data.flow_info.nat_dip.ip_af = haldefs.common.IP_AF_INET6
+                    req_spec.flow_data.flow_info.nat_dip.v6_addr = self.nat_dip.getnum().to_bytes(16, 'big')
 
             if self.__dfep.IsNATDSR():
                 req_spec.flow_data.flow_info.nat_dmac = self.nat_dmac.getnum()
