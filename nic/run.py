@@ -7,6 +7,7 @@ import socket
 import re
 import time
 import signal
+import atexit
 
 from subprocess import Popen, PIPE, call
 
@@ -80,7 +81,10 @@ def run_model(args):
     model_cmd = [ "./cap_model", "+PLOG_MAX_QUIT_COUNT=0" ]
     if args.modellogs:
         model_cmd.append("+plog=info")
-        model_cmd.append("+model_debug=" + nic_dir + "/gen/iris/dbg_out/model_debug.json")
+        if args.gft:
+            model_cmd.append("+model_debug=" + nic_dir + "/gen/gft/dbg_out/model_debug.json")
+        else:
+            model_cmd.append("+model_debug=" + nic_dir + "/gen/iris/dbg_out/model_debug.json")
     if args.coveragerun or args.asmcov:
         dump_file= nic_dir + "/coverage/asm_cov.dump"
         model_cmd.append("+mpu_cov_dump_file=" + dump_file)
@@ -168,6 +172,15 @@ def run_storage_dol(port):
     bin_dir = nic_dir + "/../bazel-bin/dol/test/storage"
     os.chdir(bin_dir)
     cmd = ['./storage_test', str(port)]
+    p = Popen(cmd)
+    p.communicate()
+    return p.returncode
+
+# Run GFT tests
+def run_gft_test():
+    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
+    os.chdir(nic_dir)
+    cmd = ['../bazel-bin/nic/hal/test/gtests/gft_test']
     p = Popen(cmd)
     p.communicate()
     return p.returncode
@@ -299,6 +312,8 @@ def is_running(pid):
 def cleanup(keep_logs=True):
     # print "* Killing running processes:"
 
+    if not os.path.exists(lock_file):
+        return
     lock = open(lock_file, "r")
     for pid in lock:
         if is_running(int(pid)):
@@ -376,11 +391,13 @@ def main():
     parser.add_argument('--dryrun', dest='dryrun', action='store_true',
                         help='Dry-Run mode. (No communication with HAL & Model)')
     parser.add_argument("--configtest", action="store_true",
-                        help="Run Config tests.")    
+                        help="Run Config tests.")
     parser.add_argument("--config-only", dest='configonly', action="store_true",
                         help="Generate ASM coverage for this run")
     parser.add_argument("--e2e-tls-dol", dest='e2etls', action="store_true",
                         default=None, help="Run E2E TLS DOL")
+    parser.add_argument("--gft", dest='gft', action="store_true",
+                        default=False, help="GFT tests")
     args = parser.parse_args()
 
     if args.cleanup:
@@ -403,12 +420,17 @@ def main():
 
         if args.dryrun is False:
             run_model(args)
-            run_hal(args)
+            if args.gft is False:
+                run_hal(args)
 
-        if (args.storage):
-          status = run_storage_dol(port)
-          if status != 0:
-            print "- Storage dol failed, status=", status
+        if args.storage:
+            status = run_storage_dol(port)
+            if status != 0:
+                print "- Storage dol failed, status=", status
+        elif args.gft:
+            status = run_gft_test()
+            if status != 0:
+                print "- GFT test failed, status=", status
         elif args.configtest:
             status = run_config_validation(args)
             if status != 0:
@@ -431,4 +453,5 @@ def main():
 
 
 if __name__ == "__main__":
+    atexit.register(cleanup)
     main()
