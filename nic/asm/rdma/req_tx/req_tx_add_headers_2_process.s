@@ -54,6 +54,30 @@ req_tx_add_headers_2_process:
 
     CAPRI_SET_TABLE_3_VALID(0)
 
+    bcf            [!c3], exit
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, 15) // Branch Delay Slot
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, p4_intr_global, p4_to_p4plus, 2)
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, rdma_feedback, rdma_feedback, 1)
+    add            r1, r0, offsetof(struct req_tx_phv_t, p4_to_p4plus)
+    phvwrp         r1, 0, CAPRI_SIZEOF_RANGE(struct req_tx_phv_t, p4_intr_global, p4_to_p4plus), r0
+
+    phvwr          p.p4_intr_global.tm_iport, TM_PORT_INGRESS
+    phvwr          p.p4_intr_global.tm_oport, TM_PORT_DMA
+    phvwr          p.p4_intr_global.tm_iq, 0
+    phvwr          p.p4_intr_global.lif, k.global.lif     
+    phvwr          p.p4_intr_rxdma.intr_qid, k.global.qid
+    SQCB0_ADDR_GET(r1)
+    phvwr          p.p4_intr_rxdma.intr_qstate_addr, r1
+    phvwr          p.p4_intr_rxdma.intr_qtype, k.global.qtype
+    phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET 
+
+    phvwr          p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
+    phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
+
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
+
+exit:
     nop.e
     nop
 

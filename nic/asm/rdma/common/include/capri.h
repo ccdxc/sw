@@ -48,7 +48,7 @@
 
 //BTH header fields
 #define CAPRI_APP_DATA_BTH_OPCODE k.rdma_bth_bth_opcode
-#define CAPRI_APP_DATA_BTH_PSN k.rdma_bth_bth_psn
+#define CAPRI_APP_DATA_BTH_PSN k.{rdma_bth_bth_psn_sbit0_ebit7...rdma_bth_bth_psn_sbit16_ebit23}
 #define CAPRI_APP_DATA_AETH_MSN k.rdma_bth_aeth_aeth_msn
 #define CAPRI_APP_DATA_AETH_SYNDROME k.rdma_bth_aeth_aeth_syndrome
 #define CAPRI_APP_DATA_BTH_ACK_REQ  k.rdma_bth_bth_a
@@ -481,6 +481,7 @@ struct capri_dma_cmd_mem2pkt_t {
 #define PHV2PKT_PHV_START_OFFSET          offsetof(DMA_CMD_PHV2PKT_T, phv_start)
 #define PHV2PKT_PHV_END_OFFSET            offsetof(DMA_CMD_PHV2PKT_T, phv_end)
 #define PHV2PKT_CMDTYPE_OFFSET            offsetof(DMA_CMD_PHV2PKT_T, cmdtype)
+#define PHV2PKT_CMDSIZE_OFFSET            offsetof(DMA_CMD_PHV2PKT_T, cmd_size)
 //TX - write to packet      
 struct capri_dma_cmd_phv2pkt_t {
     rsvd: 41;
@@ -651,6 +652,12 @@ addi _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PER_FL
 
 #define DMA_PHV2PKT_SETUP(_base_r, _start, _end)         \
     phvwrpi       _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_PHV2PKT_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end) - 1) << PHV2PKT_PHV_END_OFFSET) | (PHV_FIELD_START_OFFSET(_start) << PHV2PKT_PHV_START_OFFSET) | (DMA_CMD_TYPE_PHV2PKT << PHV2PKT_CMDTYPE_OFFSET); \
+
+#define DMA_PHV2PKT_SETUP_MULTI_ADDR_0(_base_r, _start, _end, _num_addrs) \
+    phvwrpi       _base_r, offsetof(DMA_CMD_PHV2PKT_T, cmdtype), CAPRI_SIZEOF_RANGE(DMA_CMD_PHV2PKT_T, phv_end, cmdtype), ((PHV_FIELD_END_OFFSET(_end) - 1) << PHV2PKT_PHV_END_OFFSET) | (PHV_FIELD_START_OFFSET(_start) << PHV2PKT_PHV_START_OFFSET) | ((_num_addrs - 1) << PHV2PKT_CMDSIZE_OFFSET) | (DMA_CMD_TYPE_PHV2PKT << PHV2PKT_CMDTYPE_OFFSET); \
+
+#define DMA_PHV2PKT_SETUP_MULTI_ADDR_N(_base_r, _start, _end, _addr_num) \
+    phvwrpi       _base_r, offsetof(DMA_CMD_PHV2PKT_T, phv_start##_addr_num), CAPRI_SIZEOF_RANGE(DMA_CMD_PHV2PKT_T, phv_end##_addr_num, phv_start##_addr_num), ((PHV_FIELD_END_OFFSET(_end) - 1) << sizeof(DMA_CMD_PHV2PKT_T.phv_start##_addr_num)) | (PHV_FIELD_START_OFFSET(_start) << 0); \
 
 // length in bytes
 #define DMA_PHV2PKT_START_LEN_SETUP(_base_r, _tmp_r, _start, _len)         \

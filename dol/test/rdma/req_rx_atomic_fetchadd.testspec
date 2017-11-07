@@ -168,7 +168,7 @@ descriptors:
             op_type: 7 #OP_TYPE_FETCH_N_ADD
             status : 0  #CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetReqRxCQExpColor
-            smac: callback://rdma/rdma/GetUDSMAC
+            smac: callback://rdma/rdma/GetZeroMAC
 
 session:
 

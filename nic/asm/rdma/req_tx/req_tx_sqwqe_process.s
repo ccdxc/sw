@@ -64,13 +64,20 @@ set_write_reth:
 
 send_or_write:
     // If UD, add DETH hdr
-    seq            c1, k.args.ud, 1
+    add            r2, k.global.flags, r0
+    ARE_ALL_FLAGS_SET(c1, r2, REQ_TX_FLAG_UD_SERVICE)
     bcf            [!c1], set_sge_arg
     seq            c2, d.base.inline_data_vld, 1 // Branch Delay Slot
 
     phvwr DETH_Q_KEY, d.ud_send.q_key
     phvwr DETH_SRC_QP, k.global.qid
     phvwr BTH_DST_QP, d.ud_send.dst_qp
+
+    // setup cqwqe for UD completion
+    phvwr          p.rdma_feedback.feedback_type, RDMA_UD_FEEDBACK
+    phvwr          p.rdma_feedback.ud.wrid, d.base.wrid
+    phvwr          p.rdma_feedback.ud.optype, d.base.op_type
+    phvwr          p.rdma_feedback.ud.status, 0
 
     // For UD, length should be less than pmtu
     add            r4, r0, k.args.log_pmtu

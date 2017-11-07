@@ -62,8 +62,11 @@ ptseg_loop:
 
     // set cmdeop in the last mem2pkt dma cmd 
     seq        c1, k.args.dma_cmd_eop, 1
-    DMA_SET_END_OF_CMDS_C(DMA_CMD_MEM2PKT_T, r7, c1)
     DMA_SET_END_OF_PKT_C(DMA_CMD_MEM2PKT_T, r7, c1)
+
+    add        r1, k.global.flags, r0  
+    IS_FLAG_NOT_SET_C(c1, r1, REQ_TX_FLAG_UD_SERVICE, c1)
+    DMA_SET_END_OF_CMDS_C(DMA_CMD_MEM2PKT_T, r7, c1)
 
     add          r1, k.args.sge_index, r0
     CAPRI_SET_TABLE_I_VALID(r1, 0)

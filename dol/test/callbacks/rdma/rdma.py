@@ -83,7 +83,9 @@ def GetUDPacketPayload(tc, packet, args):
     return list(slc+payload)
     
 def GetUDSMAC(tc, desc):
-    if tc.config.rdmasession.lqp.svc == 3:
-        return bytes(tc.config.rdmasession.session.initiator.ep.macaddr.getnum().to_bytes(6, 'big'))
-    else:
-        return bytes([0x0]*6)
+    return bytes(tc.config.rdmasession.session.initiator.ep.macaddr.getnum().to_bytes(6, 'big'))
+
+def GetZeroMAC(tc, desc):
+    return bytes([0x0]*6)
+
+

@@ -6,17 +6,22 @@ struct sqcb1_t d;
 struct req_rx_sqcb1_process_k_t k;
 
 #define SQCB1_TO_RRQWQE_T struct req_rx_sqcb1_to_rrqwqe_info_t
+#define RRQWQE_TO_CQ_T struct req_rx_rrqwqe_to_cq_info_t
+
 
 %%
 
     .param    req_rx_rrqwqe_process
+    .param    req_rx_cqcb_process
 
 .align
 req_rx_sqcb1_process:
+    add            r2, r0, k.global.flags
+    beqi           r2, REQ_RX_FLAG_RDMA_FEEDBACK, process_feedback
     // TODO Check valid PSN
 
     // TODO bth.psn < sqcb1_p->rexmit_psn, duplicate ack, drop
-    slt            c1, k.to_stage.bth_psn, d.rexmit_psn
+    slt            c1, k.to_stage.bth_psn, d.rexmit_psn // Branch Delay Slot
     bcf            [c1], duplicate_ack
 
     // TODO Check pending_recirc_pkts_maxk
@@ -31,7 +36,6 @@ req_rx_sqcb1_process:
     bcf            [!c1], recirc
     tbladd         d.token_id, 1 // Branch Delay Slot
 
-    add            r2, r0, k.global.flags
     ARE_ALL_FLAGS_SET(c2, r2, REQ_RX_FLAG_AETH)
     bcf            [!c2], set_arg
     nop            // Branch Delay Slot
@@ -112,3 +116,17 @@ invalid_pkt_msn:
     nop.e
     nop
 
+process_feedback:
+    CAPRI_SET_TABLE_0_VALID(0)
+
+    CAPRI_GET_TABLE_3_ARG(req_rx_phv_t, r7)
+    CAPRI_SET_FIELD(r7, RRQWQE_TO_CQ_T, tbl_id, 3)
+    CAPRI_SET_FIELD(r7, RRQWQE_TO_CQ_T, dma_cmd_index, REQ_RX_DMA_CMD_CQ)
+
+    CAPRI_GET_TABLE_3_K(req_rx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_cqcb_process)
+    CQCB_ADDR_GET(r1, d.cq_id)
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+
+    nop.e
+    nop

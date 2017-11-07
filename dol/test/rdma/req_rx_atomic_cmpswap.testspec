@@ -168,7 +168,7 @@ descriptors:
             op_type: 6 #OP_TYPE_CMP_N_SWAP
             status : 0  #CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetReqRxCQExpColor
-            smac: callback://rdma/rdma/GetUDSMAC
+            smac: callback://rdma/rdma/GetZeroMAC
 session:
 
     - step: # ATOMIC Request Transmit

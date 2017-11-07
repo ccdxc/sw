@@ -30,6 +30,12 @@ req_rx_sqcb_process:
 
     // raw_flags
     add            r1, r0, CAPRI_APP_DATA_RAW_FLAGS
+
+
+    beqi           r1, REQ_RX_FLAG_RDMA_FEEDBACK, process_feedback
+    // initialize cqwqe 
+    phvwr          p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID // Branch Delay Slot
+
     // remaining_payload_bytes = p4_to_p4plus_rdma_hdr_p->payload_size
     add            r2, CAPRI_APP_DATA_PAYLOAD_LEN, r0
     
@@ -38,9 +44,9 @@ req_rx_sqcb_process:
     seq            c1, r3, d.service
     bcf            [!c1], invalid_serv_type
 
-    // initialize cqwqe to success intially
-    phvwr          p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID // Branch Delay Slot
-    phvwr          p.cqwqe.status, CQ_STATUS_SUCCESS
+    // Initialize cqwqe to success initially
+    phvwr          p.cqwqe.status, CQ_STATUS_SUCCESS // Branch Delay Slot
+
 
     ARE_ALL_FLAGS_SET(c3, r1, REQ_RX_FLAG_ACK)
     bcf            [!c3], atomic
@@ -130,3 +136,22 @@ invalid_serv_type:
     
     nop.e
     nop
+
+process_feedback:
+    seq            c1, k.rdma_ud_feedback_feedback_type, RDMA_UD_FEEDBACK   
+    bcf            [!c1], exit
+
+ud_feedback:
+    phvwr          p.cqwqe.op_type, k.rdma_ud_feedback_optype // Branch Delay Slot
+    phvwr          p.cqwqe.id.wrid, k.{rdma_ud_feedback_wrid_sbit0_ebit7...rdma_ud_feedback_wrid_sbit56_ebit63}
+    phvwr          p.cqwqe.status, k.rdma_ud_feedback_status
+
+    CAPRI_GET_TABLE_0_K(req_rx_phv_t, r7)
+    CAPRI_SET_RAW_TABLE_PC(r6, req_rx_sqcb1_process)
+    add            r1, CAPRI_RXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES
+    CAPRI_NEXT_TABLE_I_READ(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r6, r1)
+
+exit:
+    nop.e
+    nop
+

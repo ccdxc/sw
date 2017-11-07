@@ -187,3 +187,13 @@ header_type p4_to_p4plus_roce_bth_xrceth_ieth_header_t {
         ieth_r_key          : 32;
     }
 }
+
+header_type rdma_ud_feedback_header_t {
+    fields {
+        common_header_bits : 48;
+        feedback_type      : 8;
+        wrid               : 64;
+        optype             : 8;
+        status             : 8;
+    }
+}

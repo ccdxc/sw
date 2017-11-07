@@ -84,7 +84,10 @@ struct req_tx_phv_t {
 
     /* flit 6 */
     struct rdma_ieth_t ieth;
-    struct rdma_atomiceth_t atomiceth;
+    union {
+        struct rdma_atomiceth_t atomiceth;
+        struct rdma_feedback_t rdma_feedback;
+    };
     struct rdma_immeth_t immeth;
 
     union {
@@ -94,8 +97,22 @@ struct req_tx_phv_t {
 
     struct rdma_bth_t bth;  // should be from a byte boundary
 
-    // common tx
-    struct phv_ common;
+    union {
+        struct {
+            struct phv_intr_global_t p4_intr_global;
+            struct phv_intr_p4_t p4_intr;
+            struct phv_intr_rxdma_t p4_intr_rxdma;
+            struct p4_to_p4plus_roce_header_t p4_to_p4plus;
+            pad5: 208;
+            pad4: 512;
+            pad3: 512;
+            pad2: 512;
+            pad1: 512;
+            pad0: 512;
+        };
+        // common tx
+        struct phv_ common;
+    };
 };
 
 struct req_tx_phv_global_t {

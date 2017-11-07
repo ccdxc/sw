@@ -205,7 +205,7 @@ descriptors:
             op_type: 16 #OP_TYPE_RDMA_OPER_WITH_IMM
             status : 7  #CQ_STATUS_LOCAL_ACC_ERR
             color  : callback://rdma/rdma/GetCQExpColor
-            smac: callback://rdma/rdma/GetUDSMAC
+            smac: callback://rdma/rdma/GetZeroMAC
             
 session:
 

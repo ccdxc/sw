@@ -31,7 +31,6 @@ req_tx_sqpt_process:
     CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
     CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, rrq_p_index, k.args.rrq_p_index)
     //CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, pd, k.args.pd)
-    CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, ud, k.args.ud)
     
     //for now, use to_stage_args to pass the wqe_addr
     //until we organize better, copy to all stages

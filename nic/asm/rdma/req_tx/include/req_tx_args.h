@@ -11,8 +11,7 @@ struct req_tx_sqcb_to_pt_info_t {
     rrq_p_index                    : 8;
     log_pmtu                       : 5;
     pd                             : 32;
-    ud                             : 1;
-    pad                            : 63; // pad to 160bits for S2S data
+    pad                            : 64; // pad to 160bits for S2S data
 };
 
 struct req_tx_sqcb_to_wqe_info_t {
@@ -25,8 +24,7 @@ struct req_tx_sqcb_to_wqe_info_t {
     remaining_payload_bytes        : 16;
     rrq_p_index                    : 8;
     pd                             : 32;
-    ud                             : 1;
-    pad                            : 48;
+    pad                            : 49;
 };
 
 struct req_tx_wqe_to_sge_info_t {

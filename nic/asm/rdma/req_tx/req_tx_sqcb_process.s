@@ -8,9 +8,9 @@ struct req_tx_phv_t p;
 struct sqcb0_t d;
 struct rdma_stage0_table_k k;
 
-#define INFO_OUT1_T struct req_tx_sqcb_to_pt_info_t
-#define INFO_OUT2_T struct req_tx_sqcb_to_wqe_info_t
-#define INFO_OUT3_T struct req_tx_wqe_to_sge_info_t
+#define SQCB_TO_PT_T struct req_tx_sqcb_to_pt_info_t
+#define SQCB_TO_WQE_T struct req_tx_sqcb_to_wqe_info_t
+#define WQE_TO_SGE_T struct req_tx_wqe_to_sge_info_t
 #define TO_STAGE_T struct req_tx_to_stage_t
 #define SQCB0_TO_SQCB1_T struct req_tx_sqcb0_to_sqcb1_info_t
 
@@ -39,6 +39,9 @@ req_tx_sqcb_process:
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, lif, CAPRI_TXDMA_INTRINSIC_LIF)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qtype, CAPRI_TXDMA_INTRINSIC_QTYPE)
     CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
+    // Is it UD service?
+    seq            c1, d.service, RDMA_SERV_TYPE_UD
+    CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags, REQ_TX_FLAG_UD_SERVICE, c1)
 
     //set dma_cmd_ptr in phv
     TXDMA_DMA_CMD_PTR_SET(REQ_TX_DMA_CMD_START_FLIT_ID) // Branch Delay Slot
@@ -182,21 +185,17 @@ process_sq:
     add            r4, r0, d.log_pmtu
     sllv           r4, 1, r4
 
-    // Is it UD service?
-    seq            c7, d.service, RDMA_SERV_TYPE_UD
-    cmov           r5, c7, 1, 0
-    
     // populate t0 stage to stage data req_tx_sqcb_to_wqe_info_t for next stage
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT1_T, page_offset, r1)
-    CAPRI_SET_FIELD(r7, INFO_OUT1_T, remaining_payload_bytes, r4)
+    CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, page_offset, r1)
+    CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, remaining_payload_bytes, r4)
     // TODO Need to check for room in RRQ ring for Read/Atomic before
     // proceeding further. Otherwise recirc until there is room
-    CAPRI_SET_FIELD(r7, INFO_OUT1_T, rrq_p_index, RRQ_P_INDEX)
-    CAPRI_SET_FIELD(r7, INFO_OUT1_T, log_pmtu, d.log_pmtu)
-    CAPRI_SET_FIELD(r7, INFO_OUT1_T, page_seg_offset, r2)
-    CAPRI_SET_FIELD(r7, INFO_OUT1_T, pd, d.pd)
-    CAPRI_SET_FIELD(r7, INFO_OUT1_T, ud, r5)
+    CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, rrq_p_index, RRQ_P_INDEX)
+    CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, log_pmtu, d.log_pmtu)
+    CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, page_seg_offset, r2)
+    CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, pd, d.pd)
+    //CAPRI_SET_FIELD(r7, SQCB_TO_PT_T, ud, r5)
 
     // populate t0 PC and table address
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
@@ -230,20 +229,20 @@ in_progress:
     add            r2, r2, d.curr_wqe_ptr
 
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, in_progress, d.in_progress)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, current_sge_id, d.current_sge_id)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, current_sge_offset, d.current_sge_offset)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, in_progress, d.in_progress)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, current_sge_id, d.current_sge_id)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, current_sge_offset, d.current_sge_offset)
     // num_valid_sges = sqcb0_p->num_sges = sqcb0_p->current_sge_id
     sub            r3, d.num_sges, d.current_sge_id 
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, num_valid_sges, r3)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, num_valid_sges, r3)
     // remaining_payload_bytes = (1 >> sqcb0_p->log_pmtu)
     add            r4, r0, d.log_pmtu
     sllv           r4, 1, r4
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, remaining_payload_bytes, r4)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, dma_cmd_start_index, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
-    //CAPRI_SET_FIELD(r7, INFO_OUT3_T, wqe_addr, d.curr_wqe_ptr)
-    //CAPRI_SET_FIELD(r7, INFO_OUT3_T, first, 0)
-    CAPRI_SET_FIELD(r7, INFO_OUT3_T, op_type, d.curr_op_type)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, remaining_payload_bytes, r4)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, dma_cmd_start_index, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
+    //CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, wqe_addr, d.curr_wqe_ptr)
+    //CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, first, 0)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, op_type, d.curr_op_type)
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqsge_process)
@@ -294,15 +293,15 @@ in_progress:
 
 fence:
     CAPRI_GET_TABLE_0_ARG(req_tx_phv_t, r7)
-    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, in_progress, 0)
-    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, current_sge_id, 0)
-    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, current_sge_offset, 0)
-    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, num_valid_sges, 0)
-    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, remaining_payload_bytes, 0)
-    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, wqe_ptr, d.curr_wqe_ptr)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, rrq_p_index, RRQ_P_INDEX)
-    CAPRI_SET_FIELD(r7, INFO_OUT2_T, log_pmtu, d.log_pmtu)
-    //CAPRI_SET_FIELD(r7, INFO_OUT2_T, li_fence_cleared, 0)
+    //CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, in_progress, 0)
+    //CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, current_sge_id, 0)
+    //CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, current_sge_offset, 0)
+    //CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, num_valid_sges, 0)
+    //CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, remaining_payload_bytes, 0)
+    //CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, wqe_ptr, d.curr_wqe_ptr)
+    CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, rrq_p_index, RRQ_P_INDEX)
+    CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, log_pmtu, d.log_pmtu)
+    //CAPRI_SET_FIELD(r7, SQCB_TO_WQE_T, li_fence_cleared, 0)
 
     CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7)
     CAPRI_SET_RAW_TABLE_PC(r6, req_tx_sqwqe_process)

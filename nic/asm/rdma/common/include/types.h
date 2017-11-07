@@ -287,6 +287,8 @@ struct req_rx_flags_t {
 #define REQ_RX_FLAG_AETH               0x0200
 #define REQ_RX_FLAG_ATOMIC_AETH        0x0400
 
+#define REQ_RX_FLAG_RDMA_FEEDBACK      0x8000
+
 struct resp_rx_flags_t {
     _error_disable_qp:1;
     _first:1;
@@ -327,7 +329,8 @@ struct req_tx_flags_t {
 };
 
 #define REQ_TX_FLAG_ERR_DIS_QP          0x0001
-#define REQ_TX_FLAG_INCR_LSN            0x0002
+//#define REQ_TX_FLAG_INCR_LSN            0x0002
+#define REQ_TX_FLAG_UD_SERVICE          0x0002
 
 struct resp_tx_flags_t {
     error_disable_qp: 1;
@@ -340,6 +343,10 @@ struct resp_tx_flags_t {
     smeqh   _c, _flags_r, _flags_test, _flags_test
 #define IS_ANY_FLAG_SET(_c, _flags_r, _flags_test) \
     smneh   _c, _flags_r, _flags_test, 0
+#define IS_FLAG_NOT_SET(_c, _flags_r, _flags_test) \
+    smeqh   _c, _flags_r, _flags_test, 0
+#define IS_FLAG_NOT_SET_C(_c1, _flags_r, _flags_test, _c2) \
+    smeqh._c2   _c1, _flags_r, _flags_test, 0
 
 #define ARE_ALL_FLAGS_SET_B(_c, _flags, _flags_test) \
     smeqb   _c, _flags, _flags_test, _flags_test
@@ -779,5 +786,78 @@ struct header_template_t {
     seq            _cf, _syndrome[4:0], r0;                             \
     srl            _credits_r, _syndrome[4:0], 1;                       \
     sllv.!_cf      _credits_r, 1, _credits_r;
+
+
+/* Definitions for RDMA Feedback phv */
+struct phv_intr_global_t {
+    tm_iport : 4;
+    tm_oport : 4;
+    tm_iq : 5;
+    lif : 11;
+    timestamp : 48;
+    tm_span_session : 8;
+    tm_replicate_ptr : 16;
+    tm_replicate_en : 1;
+    tm_cpu : 1;
+    tm_q_depth : 14;
+    drop : 1;
+    bypass : 1;
+    hw_error : 1;
+    tm_oq : 5;
+    debug_trace : 1;
+    csum_err : 5;
+    error_bits : 6;
+    tm_instance_type : 4;
+};
+
+struct phv_intr_p4_t {
+    crc_err : 1;
+    len_err : 4;
+    recirc_count : 3;
+    parser_err : 1;
+    p4_pad : 1;
+    frame_size : 14;
+    no_data : 1;
+    recirc : 1;
+    packet_len : 14;
+};
+
+struct phv_intr_rxdma_t {
+    intr_qid : 24;
+    intr_dma_cmd_ptr : 6;
+    intr_qstate_addr : 34;
+    intr_qtype : 3;
+    intr_rx_splitter_offset : 10;
+    intr_rxdma_rsv : 3;
+};
+
+struct p4_to_p4plus_roce_header_t {
+    p4plus_app_id : 4;
+    table0_valid : 1;
+    table1_valid : 1;
+    table2_valid : 1;
+    table3_valid : 1;
+    rdma_hdr_len : 8;
+    raw_flags : 16;
+    payload_len : 16;
+};
+
+#define RDMA_UD_FEEDBACK          0x1
+#define RDMA_RC_FEEDBACK          0x2
+
+struct rdma_feedback_t {
+    feedback_type:8;
+    union {
+        struct {
+            wrid: 64;
+            optype: 8;
+            status: 8;
+        }ud;
+    }; 
+};
+
+#define RDMA_FEEDBACK_SPLITTER_OFFSET  \
+    ((sizeof(struct phv_intr_global_t) + sizeof(struct phv_intr_p4_t) + sizeof(struct phv_intr_rxdma_t) + sizeof(struct p4_to_p4plus_roce_header_t) + sizeof(struct rdma_feedback_t)) >> 3)
+
 
 #endif //__TYPES_H

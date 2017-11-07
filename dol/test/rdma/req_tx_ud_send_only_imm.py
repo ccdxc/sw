@@ -20,6 +20,11 @@ def TestCaseSetup(tc):
     tc.pvtdata.dst_qp = tc.config.rdmasession.rqp.id
     tc.pvtdata.ah_handle = tc.config.rdmasession.ah_handle
     tc.pvtdata.imm_data = 0x0F0E0D0C;
+    tc.pvtdata.wrid = 0x1122334455667788;
+
+    # Read CQ pre state
+    rs.lqp.sq_cq.qstate.Read()
+    tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
     return
 
 def TestCaseTrigger(tc):
