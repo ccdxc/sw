@@ -21,18 +21,17 @@ struct tcp_tx_tcp_tx_tcp_tx_d d;
     .param          TNMDR_GC_TABLE_BASE
     .param          RNMDR_GC_TABLE_BASE
 
-tcp_tx_process_stage3_start:
+tcp_tx_process_start:
+    seq             c1, k.common_phv_pending_snd_una_update, 1
+    bcf             [c1], tcp_tx_snd_una_update
+
+tcp_tx_enqueue:
     phvwr           p.t0_s2s_snd_nxt, d.snd_nxt
     /* check SESQ for pending data to be transmitted */
     seq             c1, k.common_phv_pending_sesq, 1
-    seq             c5, k.common_phv_pending_asesq, 1
+    seq.!c1         c1, k.common_phv_pending_asesq, 1
 
-    //bal.c1        r7, tcp_retxq_consume
-    //nop
     bal.c1          r7, tcp_retx_enqueue
-    nop
-
-    bal.c5          r7, tcp_retx_enqueue
     nop
 
     /* Check if there is retx q cleanup needed at head due
@@ -67,33 +66,29 @@ tcp_tx_process_stage3_start:
      * send from retx queue
      */
     tblwr           d.pending_tso_data, 1
-    phvwri          p.to_s4_pending_tso_data, 1
+    phvwri          p.to_s5_pending_tso_data, 1
 
 flow_read_xmit_cursor_start:
     /* Get the point where we are supposed to read from */
-    add             r2, d.retx_xmit_cursor, r0
-    add             r1, r2, r0
-    seq             c1, r1, r0
-    /* If the retx was all cleaned up , then reinit the xmit
-     * cursor to snd_una cursor which is the head of data that
-         * can be sent
-     */
-    add             r2, d.retx_snd_una_cursor, r0
-    tblwr.c1        d.retx_xmit_cursor, r2
-    /* This nop is needed to make the above table data
-     * write visibile for the next instruction below
-     */
-    nop
-    /* Even after all this retx_xmit_cursor has no data, then
-     * there is no data to send
-     */
-    seq             c1, d.retx_xmit_cursor, r0
-    bcf             [c1], flow_read_xmit_cursor_done
-    nop
-
     seq             c1, d.xmit_cursor_addr, r0
-    bcf             [c1], table_read_xmit_cursor
-    nop
+    bcf             [c1], flow_read_xmit_cursor_done
+    add             r1, d.xmit_cursor_addr, r0
+
+    // TODO : r1 needs to be capped by the window size
+    add             r1, d.xmit_len, r0
+    phvwr           p.to_s5_xmit_cursor_addr, d.xmit_cursor_addr
+    phvwr           p.to_s5_xmit_cursor_offset, r0
+    phvwr           p.to_s5_xmit_cursor_len, r1
+    tbladd          d.snd_nxt, r1
+
+    // TODO : Lot of stuff to do here:
+    //      if window size is smaller, move xmit_cursor_addr by appropriate amount
+    //      if we have more data than one descriptor, adjust next pointer and
+    //      schedule ourselves again to send more data
+    // TODO : right now code assumes we always send
+    //        whatever is posted to sesq, so set cursor_addr back to 0
+    tblwr           d.xmit_cursor_addr, r0
+
 table_read_TSO:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_tso_process_start, k.common_phv_qstate_addr,
@@ -147,7 +142,7 @@ tcp_snd_wnd_test:
     /* r1 = snd_wnd - bytes_sent */
     sub             r1, k.t0_s2s_snd_wnd, r1
     /* r1 = (snd_wnd - bytes_sent) / mss_cache */
-    add             r5, k.to_s3_rcv_mss_shft, r0
+    add             r5, k.to_s4_rcv_mss_shft, r0
     srlv            r6, r1, r5
     sne             c4, r7, r0
     jr.c4           r7
@@ -156,40 +151,63 @@ tcp_snd_wnd_test:
 
 
 tcp_retx_enqueue:
-    tblwr           d.retx_tail_desc, r0
-    nop 
+    //tblwr           d.retx_tail_desc, r0
+    //nop 
     seq             c1, d.retx_tail_desc, r0
+    bcf             [!c1], queue_to_tail
 
+retx_empty:
     /*
-     * If retx_tail is not NULL, queue to tail, update tail and return
+     * retx empty, update head/tail/xmit desc and cursors
      */
-    add.!c1         r1, d.retx_tail_desc, NIC_DESC_ENTRY_NEXT_ADDR_OFFSET
-    memwr.w.!c1     r1, k.to_s3_sesq_desc_addr
-    tblwr           d.retx_tail_desc, k.to_s3_sesq_desc_addr
-    jr.!c1          r7
+    tblwr           d.retx_head_desc, k.to_s4_sesq_desc_addr
+    tblwr           d.retx_tail_desc, k.to_s4_sesq_desc_addr
+    tblwr           d.xmit_desc, k.to_s4_sesq_desc_addr
+    tblwr           d.retx_next_desc, r0
+    tblwr           d.xmit_next_desc, r0
 
-    /*
-     * retx empty, update head/tail and cursors
-     */
-    add             r2, k.to_s3_addr, k.to_s3_offset
-    tblwr           d.retx_head_desc, k.to_s3_sesq_desc_addr
+    add             r2, k.to_s4_addr, k.to_s4_offset
+
     tblwr           d.retx_xmit_cursor, r2
+    tblwr           d.retx_head_offset, k.to_s4_offset
+    tblwr           d.retx_head_len, k.to_s4_len
+
     tblwr           d.xmit_cursor_addr, r2
-    phvwr           p.to_s4_xmit_cursor_addr, k.to_s3_addr
-    phvwr           p.to_s4_xmit_cursor_offset, k.to_s3_offset
-    phvwr           p.to_s4_xmit_cursor_len, k.to_s3_len
+    tblwr           d.xmit_offset, k.to_s4_offset
+    tblwr           d.xmit_len, k.to_s4_len
     tblwr           d.retx_snd_una, k.common_phv_snd_una
-    phvwr           p.t0_s2s_snd_nxt, d.snd_nxt
-    tbladd          d.snd_nxt, k.to_s3_len
     sne             c1, k.common_phv_debug_dol_free_rnmdr, r0
     bcf             [c1], free_rnmdr
     sne             c4, r7, r0
     jr.c4           r7
     nop
 
+queue_to_tail:
+    /*
+     * If retx_tail is not NULL, queue to tail, update tail and return
+     */
+    add             r1, d.retx_tail_desc, NIC_DESC_ENTRY_NEXT_ADDR_OFFSET
+    memwr.w         r1, k.to_s4_sesq_desc_addr
+    tblwr           d.retx_tail_desc, k.to_s4_sesq_desc_addr
+    seq             c1, d.retx_next_desc, r0
+    tblwr.c1        d.retx_next_desc, k.to_s4_sesq_desc_addr
+
+    /*
+     * If xmit_cursor_addr is NULL, update xmit_cursor_addr
+     */
+    seq             c1, d.xmit_cursor_addr, r0
+    b.!c1           queue_to_tail_end
+    add             r2, k.to_s4_addr, k.to_s4_offset
+    tblwr           d.xmit_desc, k.to_s4_sesq_desc_addr
+    tblwr           d.xmit_cursor_addr, r2
+    tblwr           d.xmit_offset, k.to_s4_offset
+    tblwr           d.xmit_len, k.to_s4_len
+queue_to_tail_end:
+    jr              r7
+
 free_rnmdr:
     // TODO: just for testing, fix this once retx is implemented
-    sub             r3, k.to_s3_sesq_desc_addr, NIC_DESC_ENTRY_0_OFFSET
+    sub             r3, k.to_s4_sesq_desc_addr, NIC_DESC_ENTRY_0_OFFSET
     phvwr           p.ring_entry_descr_addr, r3
     addui           r1, r0, hiword(RNMDR_GC_TABLE_BASE)
     addi            r1, r0, loword(RNMDR_GC_TABLE_BASE)
@@ -204,7 +222,7 @@ free_rnmdr:
 
 free_tnmdr:
     // TODO: just for testing, fix this once retx is implemented
-    sub             r3, k.to_s3_sesq_desc_addr, NIC_DESC_ENTRY_0_OFFSET
+    sub             r3, k.to_s4_sesq_desc_addr, NIC_DESC_ENTRY_0_OFFSET
     phvwr           p.ring_entry_descr_addr, r3
     addui           r1, r0, hiword(TNMDR_GC_TABLE_BASE)
     addi            r1, r0, loword(TNMDR_GC_TABLE_BASE)
@@ -246,18 +264,18 @@ nic_desc_entry_write:
     /* Write A */
     addi            r2, r0, NIC_DESC_ENTRY_ADDR_OFFSET
     add             r1, d.retx_snd_nxt_cursor, r2
-    memwr.w         r1, k.to_s3_addr
-    phvwr           p.to_s4_xmit_cursor_addr, k.to_s3_addr
+    memwr.w         r1, k.to_s4_addr
+    phvwr           p.to_s4_xmit_cursor_addr, k.to_s4_addr
     /* Write O */
     addi            r2, r0,  NIC_DESC_ENTRY_OFF_OFFSET
     add             r1, d.retx_snd_nxt_cursor, r2
-    memwr.h         r1, k.to_s3_offset
-    phvwr           p.to_s4_xmit_cursor_offset, k.to_s3_offset
+    memwr.h         r1, k.to_s4_offset
+    phvwr           p.to_s4_xmit_cursor_offset, k.to_s4_offset
     /* Write L */
     addi            r2, r0, NIC_DESC_ENTRY_LEN_OFFSET
     add             r1, d.retx_snd_nxt_cursor, r2
-    memwr.h         r1, k.to_s3_len
-    phvwr           p.to_s4_xmit_cursor_len, k.to_s3_len
+    memwr.h         r1, k.to_s4_len
+    phvwr           p.to_s4_xmit_cursor_len, k.to_s4_len
     /* Update retx_snd_nxt_cursor */
     tbladd          d.retx_snd_nxt_cursor, NIC_DESC_ENTRY_SIZE
     sne             c4, r7, r0
@@ -288,4 +306,38 @@ tcp_tx_no_window:
     nop.e
     nop
 
+tcp_tx_snd_una_update:
+    CAPRI_CLEAR_TABLE_VALID(0)
+    sub             r1, k.common_phv_snd_una, d.retx_snd_una
+    slt             c1, r1, d.retx_head_len
+    b.!c1           tcp_tx_snd_una_update_free_head
+    tbladd          d.retx_snd_una, r1
+    tbladd.e        d.retx_head_offset, r1
+    tblsub          d.retx_head_len, r1
+    tbladd          d.retx_xmit_cursor, r1
+
+tcp_tx_snd_una_update_free_head:
+    // TODO : free d.retx_head_desc
+
+    // write new descriptor address, offset and length
+    tblwr           d.retx_head_desc, d.retx_next_desc
+    tblwr           d.retx_next_desc, k.t0_s2s_next_addr
+    tblwr           d.retx_head_offset, k.to_s4_offset
+    tblwr           d.retx_head_len, k.to_s4_len
+    add             r2, k.to_s4_addr, k.to_s4_offset
+    tblwr           d.retx_xmit_cursor, r2
+    
+    // If we have completely cleaned up, set tail to NULL
+    seq             c1, d.retx_head_desc, r0
+    tblwr.c1        d.retx_tail_desc, r0
+
+    /*
+     * if we still have more data to be cleaned up,
+     * schedule ourselves again
+     */
+    sub             r1, k.common_phv_snd_una, d.retx_snd_una
+    slt             c1, r1, d.retx_head_len
+    // TODO : schedule again
+    nop.e
+    nop
 

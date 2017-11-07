@@ -44,8 +44,9 @@ tcp_rx_process_stage1_start:
     sne             c2, d.u.tcp_rx_d.rcv_nxt, k.To_s1_seq
     slt             c3, k.To_s1_snd_nxt, k.To_s1_ack_seq
     slt             c4, d.u.tcp_rx_d.rcv_tsval, d.u.tcp_rx_d.ts_recent
+    seq             c5, k.s1_s2s_payload_len, r0
     sne             c6, d.u.tcp_rx_d.ooo_in_rx_q, r0
-    bcf             [c1 | c2 | c3 | c4 | c6], tcp_rx_slow_path
+    bcf             [c1 | c2 | c3 | c4 | c5 | c6], tcp_rx_slow_path
 
     /*
      * s2s variable that has different meaning in s0-->s1. May not be 0
@@ -72,7 +73,6 @@ bytes_rcvd_stats_update_end:
 
     phvwr           p.rx2tx_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
 
-tcp_event_data_recv:
     /* SCHEDULE_ACK(tp) */
     /* Set the pending txdma in phv for subsequent stage to issue dma
      * commands to update rx2tx shared state and ring the doorbell
@@ -85,6 +85,7 @@ tcp_event_data_recv:
      */
     phvwr           p.rx2tx_extra_pending_ack_send, 1
 
+tcp_event_data_recv:
     /* Initialize the delayed ack engine if first ack
      *
      * if (!tp->fto.ato) {
@@ -262,14 +263,18 @@ fast_tcp_update_wl:
     tblwr           d.u.tcp_rx_d.snd_wl1, k.To_s1_ack_seq
 fast_tcp_snd_una_update:
     sub             r1, k.To_s1_ack_seq, d.u.tcp_rx_d.snd_una
-    tbladd          d.u.tcp_rx_d.bytes_acked, r1
+    /*
+     * c1 = 1: we are advancing snd_una (i.e ack_seq > snd_una)
+     */
+    sne             c1, r1, r0
+    tbladd.c1       d.u.tcp_rx_d.bytes_acked, r1
     /* Update snd_una */
-    tblwr           d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
-    phvwr           p.rx2tx_snd_una, k.To_s1_ack_seq
+    tblwr.c1        d.u.tcp_rx_d.snd_una, k.To_s1_ack_seq
+    phvwr.c1        p.rx2tx_snd_una, k.To_s1_ack_seq
 
-    add             r5, k.common_phv_process_ack_flag, r0
-    ori             r5, r5, FLAG_WIN_UPDATE
     phvwr           p.common_phv_process_ack_flag, r5
+    phvwr.c1        p.common_phv_pending_txdma, 1
+    phvwr.c1        p.rx2tx_extra_pending_snd_una_update, 1
 fast_tcp_in_ack_event:
      tblwr          d.u.tcp_rx_d.rcv_tstamp, r4
      jr             r7
@@ -418,6 +423,8 @@ tcp_snd_una_update:
      * Window update algorithm, described in RFC793/RFC1122 (used in linux-2.2
      * and in FreeBSD. NetBSD's one is even worse.) is wrong.
      */
+    phvwr           p.common_phv_pending_txdma, 1
+    phvwr           p.rx2tx_extra_pending_snd_una_update, 1
 tcp_ack_update_window:
     /* r2 contains nwin */
     /* nwin = cp->window */
@@ -729,7 +736,7 @@ tcp_rx_slow_path:
 
     seq             c1, k.s1_s2s_payload_len, r0
     phvwr.c1        p.common_phv_process_ack_flag, r0
-    bcf             [c1], tcp_ack
+    b.c1            tcp_event_data_rcv_done
     nop
 
 tcp_queue_rcv:

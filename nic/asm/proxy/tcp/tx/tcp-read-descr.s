@@ -12,24 +12,25 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct tcp_tx_s2_t0_k k;
-struct tcp_tx_s2_t0_read_sesq_descr_d d;
+struct tcp_tx_read_descr_k k;
+struct tcp_tx_read_descr_read_descr_d d;
 
 %%
     .align
-    .param          tcp_tx_process_stage3_start
+    .param          tcp_tx_process_start
 
-tcp_tx_sesq_read_descr_stage2_start:
+tcp_tx_read_descr_start:
 
     CAPRI_OPERAND_DEBUG(d.A0)
     CAPRI_OPERAND_DEBUG(d.O0)
     CAPRI_OPERAND_DEBUG(d.L0)
-    phvwr           p.to_s3_addr, d.{A0}.dx
-    phvwr           p.to_s3_offset, d.{O0}.wx
-    phvwr           p.to_s3_len, d.{L0}.wx
+    phvwr           p.to_s4_addr, d.{A0}.dx
+    phvwr           p.to_s4_offset, d.{O0}.wx
+    phvwr           p.to_s4_len, d.{L0}.wx
+    phvwr           p.t0_s2s_next_addr, d.{next_addr}.dx
 
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
-                        tcp_tx_process_stage3_start,
+                        tcp_tx_process_start,
                         k.common_phv_qstate_addr,
                         TCP_TCB_TX_OFFSET, TABLE_SIZE_512_BITS)
     nop.e

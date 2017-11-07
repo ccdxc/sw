@@ -10,10 +10,13 @@
 #define TCP_SCHED_FLAG_PENDING_OOO    0x40
 
 #define TCP_SCHED_RING_SESQ           0x0
-#define TCP_SCHED_RING_PENDING        0x1
+#define TCP_SCHED_RING_PENDING_RX2TX  0x1
 #define TCP_SCHED_RING_FT             0x2
 #define TCP_SCHED_RING_ST             0x3
 #define TCP_SCHED_RING_ASESQ          0x4
+#define TCP_SCHED_RING_PENDING_TX     0x5
+
+#define TCP_PROXY_TX_TOTAL_RINGS      6
 
 #define TCP_ESTABLISHED   1
 #define TCP_SYN_SENT      2

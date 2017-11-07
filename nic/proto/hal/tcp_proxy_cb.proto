@@ -53,6 +53,8 @@ message TcpCbSpec {
   uint32                header_len                 = 24;
   bool                  pending_ack_send           = 25;
   types.AppRedirType    l7_proxy_type              = 26;
+  uint64                retx_xmit_cursor           = 27;
+  uint64                retx_snd_una               = 28;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

@@ -20,6 +20,7 @@ struct tcp_rx_write_serq_write_serq_d d;
 
     /*
      * Global conditional variables
+     * c7 drop packet and don't send to arm
      */
 tcp_rx_write_serq_stage6_start:
     CAPRI_CLEAR_TABLE0_VALID
@@ -29,10 +30,10 @@ tcp_rx_write_serq_stage6_start:
     tblwr       d.debug_stage4_7_thread, k.s6_s2s_debug_stage4_7_thread
     sne         c1, k.common_phv_write_arq, r0
     seq         c2, k.to_s6_payload_len, r0
-    setcf       c3, [!c1 & c2]
-    phvwri.c3   p.p4_intr_global_drop, 1
-    phvwri.c3   p.p4_intr_no_data, 0
-    bcf         [c1 | c2], flow_write_serq_process_done
+    setcf       c7, [!c1 & c2]
+    bcf         [c7], flow_write_serq_drop
+    nop
+    bcf         [c1], flow_write_serq_process_done
     nop
 
     /* r4 is loaded at the beginning of the stage with current timestamp value */
@@ -112,12 +113,17 @@ dma_cmd_write_rx2tx_extra_shared:
     nop
 
 dma_cmd_ring_tcp_tx_doorbell:
+    /*
+     * c7 is drop case, we want to ring tx doorbell and exit after that
+     */
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DONT_RING_TX_DOORBELL, TCP_DDOL_DONT_RING_TX_DOORBELL
-    bcf         [c1], tcp_serq_produce
+    bcf         [c1 & !c7], tcp_serq_produce
 
-    CAPRI_DMA_CMD_RING_DOORBELL2(dma_cmd5_dma_cmd, LIF_TCP, 0,k.common_phv_fid, TCP_SCHED_RING_PENDING,
+    CAPRI_DMA_CMD_RING_DOORBELL2(dma_cmd5_dma_cmd, LIF_TCP, 0,k.common_phv_fid, TCP_SCHED_RING_PENDING_RX2TX,
                                  0, db_data2_pid, db_data2_index)
 
+    phvwri.c7   p.dma_cmd5_dma_cmd_eop, 1
+    b.c7        flow_write_serq_process_done
     addi        r7, r7, 1
     b           tcp_serq_produce
     nop
@@ -219,3 +225,13 @@ dma_ooo_process:
     b           stats
     phvwr       p.dma_cmd0_dma_cmd_eop, 1
     // TODO: need to send ack
+
+flow_write_serq_drop:
+    phvwri      p.p4_intr_no_data, 0
+    seq         c1, k.common_phv_pending_txdma, 1
+    phvwri.!c1  p.p4_intr_global_drop, 1
+    b.!c1       flow_write_serq_process_done
+    nop
+    phvwri      p.p4_rxdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(dma_cmd3_dma_cmd_type) / 16)
+    b           dma_cmd_write_rx2tx_shared
+    nop

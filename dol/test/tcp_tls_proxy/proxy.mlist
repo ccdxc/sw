@@ -291,6 +291,26 @@ modules:
             maxflows : 1
 
     - module:
+        name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_PARTIAL
+        spec    : uplink_to_uplink_clean_retx_partial.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 2
+            bypass_barco : 1
+            maxflows : 1
+            test_retx : partial
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_COMPLETE
+        spec    : uplink_to_uplink_clean_retx_complete.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 2
+            bypass_barco : 1
+            maxflows : 1
+            test_retx : complete
+
+    - module:
         name    : UL_TO_HOST_BYPASS_BARCO_SAME_FLOW
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4

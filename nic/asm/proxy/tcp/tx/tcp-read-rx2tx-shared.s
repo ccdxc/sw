@@ -114,7 +114,7 @@ tcp_tx_pending_rx2tx:
     phvwri.c1       p.common_phv_debug_dol_dont_send_ack, 1
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_CIDX_SET, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     /* data will be in r3 */
-    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING, d.{ci_1}.hx)
+    CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, TCP_SCHED_RING_PENDING_RX2TX, d.{ci_1}.hx)
     tbladd          d.{ci_1}.hx, 1
     add             r3, r3, 1
     memwr.dx        r4, r3

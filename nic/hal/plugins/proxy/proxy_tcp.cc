@@ -311,7 +311,7 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
     ret = hal::pd::cpupkt_program_send_ring_doorbell(SERVICE_LIF_TCP_PROXY,
                                                      0,
                                                      qid,
-                                                     TCP_SCHED_RING_PENDING);
+                                                     TCP_SCHED_RING_PENDING_RX2TX);
     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     return ret;
@@ -323,7 +323,7 @@ void tcp_ring_doorbell(uint32_t qid)
     ret = hal::pd::cpupkt_program_send_ring_doorbell(SERVICE_LIF_TCP_PROXY,
                                                      0,
                                                      qid,
-                                                     TCP_SCHED_RING_PENDING);
+                                                     TCP_SCHED_RING_PENDING_RX2TX);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_DEBUG("ring doorbell failed {}", ret);
     }

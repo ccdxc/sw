@@ -46,6 +46,8 @@ def SetupProxyArgs(tc):
     test_timer = 0
     ooo_seq_delta = 0
     free_rnmdr = 0
+    num_pkts = 1
+    test_retx = None
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         tc.module.logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -64,6 +66,11 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'free_rnmdr'):
         free_rnmdr = tc.module.args.free_rnmdr
         tc.module.logger.info("- free_rnmdr %s" % tc.module.args.free_rnmdr)
+    if hasattr(tc.module.args, 'num_pkts'):
+        num_pkts = tc.module.args.num_pkts
+        tc.module.logger.info("- num_pkts %s" % tc.module.args.num_pkts)
+    if hasattr(tc.module.args, 'test_retx'):
+        test_retx = tc.module.args.test_retx
 
     tc.module.logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
@@ -86,12 +93,17 @@ def SetupProxyArgs(tc):
         if 'free_rnmdr' in iterelem.__dict__:
             free_rnmdr = iterelem.free_rnmdr
             tc.module.logger.info("- free_rnmdr %s" % iterelem.free_rnmdr)
+        if 'num_pkts' in iterelem.__dict__:
+            num_pkts = iterelem.num_pkts
+            tc.module.logger.info("- num_pkts %s" % iterelem.num_pkts)
     tc.pvtdata.same_flow = same_flow
     tc.pvtdata.bypass_barco = bypass_barco
     tc.pvtdata.send_ack = send_ack
     tc.pvtdata.test_timer = test_timer
     tc.pvtdata.ooo_seq_delta = ooo_seq_delta
     tc.pvtdata.free_rnmdr = free_rnmdr
+    tc.pvtdata.num_pkts = num_pkts
+    tc.pvtdata.test_retx = test_retx
 
 def init_tcb_inorder(tc, tcb):
     tcb.rcv_nxt = 0x1ABABABA

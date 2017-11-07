@@ -629,7 +629,7 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_rx2tx_d.eval_last |= 1 << TCP_SCHED_RING_ST;
         data.u.read_rx2tx_d.snd_wnd = htonl(tcpcb_pd->tcpcb->snd_wnd);
         data.u.read_rx2tx_d.snd_cwnd = htons((uint16_t)tcpcb_pd->tcpcb->snd_cwnd);
-        data.u.read_rx2tx_d.debug_dol_tx = htonl(tcpcb_pd->tcpcb->debug_dol_tx);
+        data.u.read_rx2tx_d.debug_dol_tx = htons(tcpcb_pd->tcpcb->debug_dol_tx);
         data.u.read_rx2tx_d.rcv_nxt = htonl(tcpcb_pd->tcpcb->rcv_nxt);
         data.u.read_rx2tx_d.snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
         HAL_TRACE_DEBUG("TCPCB rx2tx snd_wnd: 0x{0:x}", data.u.read_rx2tx_d.snd_wnd);
@@ -861,13 +861,16 @@ p4pd_get_tcp_tx_tcp_tx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->source_lif  =  ntohs(data.u.tcp_tx_d.source_lif);
     tcpcb_pd->tcpcb->source_port = ntohs(data.u.tcp_tx_d.source_port);
     tcpcb_pd->tcpcb->dest_port = ntohs(data.u.tcp_tx_d.dest_port);
-
     tcpcb_pd->tcpcb->header_len = data.u.tcp_tx_d.header_len;
     HAL_TRACE_DEBUG("TCPCB source lif: 0x{0:x} snd_nxt: 0x{1:x}",
                     tcpcb_pd->tcpcb->source_lif, tcpcb_pd->tcpcb->snd_nxt);
     HAL_TRACE_DEBUG("TCPCB source port: 0x{0:x} dest port 0x{1:x}",
                     tcpcb_pd->tcpcb->source_port, tcpcb_pd->tcpcb->dest_port);
     HAL_TRACE_DEBUG("TCPCB header len: {}", tcpcb_pd->tcpcb->header_len);
+
+    // The following are used for DOL tests only
+    tcpcb_pd->tcpcb->retx_xmit_cursor = ntohll(data.u.tcp_tx_d.retx_xmit_cursor);
+    tcpcb_pd->tcpcb->retx_snd_una = ntohl(data.u.tcp_tx_d.retx_snd_una);
 
     return HAL_RET_OK;
 

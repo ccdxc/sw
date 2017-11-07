@@ -4,6 +4,7 @@
 #include "nic/include/base.h"
 #include "nic/utils/ht/ht.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/include/tcp_common.h"
 
 using hal::utils::ht_ctxt_t;
 
@@ -11,7 +12,6 @@ namespace hal {
 namespace pd {
 
 #define HAL_MAX_HW_TCPCBS                        2048
-#define TCP_PROXY_TX_TOTAL_RINGS                 5
 
 typedef uint64_t    tcpcb_hw_id_t;
 

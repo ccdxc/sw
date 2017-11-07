@@ -607,6 +607,13 @@ metadata s6_t2_s2s_phv_t s6_t2_s2s;
 metadata rx2tx_t rx2tx;
 @pragma dont_trim
 metadata rx2tx_extra_t rx2tx_extra;
+header_type rx2tx_extra_pad_t {
+    fields {
+        extra_pad           : 24;
+    }
+}
+@pragma dont_trim
+metadata rx2tx_extra_pad_t rx2tx_extra_pad;
 @pragma dont_trim
 metadata ring_entry_t ring_entry; 
 @pragma dont_trim

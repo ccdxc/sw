@@ -68,6 +68,7 @@ tls_sesq_produce:
 
     CAPRI_DMA_CMD_RING_DOORBELL(dma_cmd3_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
                                 d.u.tls_queue_sesq_d.sw_sesq_pi,db_data_data)
+    tbladd      d.u.tls_queue_sesq_d.sw_sesq_pi, 1
 
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd3_dma_cmd)
     b           tls_queue_sesq_process_done

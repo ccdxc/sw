@@ -18,6 +18,13 @@ def GetReverseFlowSeqNum (tc, pkt):
 def GetReverseFlowAckNum (tc, pkt):
     return tc.pvtdata.flow2_snd_una
 
+def GetReverseFlowAckNumAckOnePkt (tc, pkt):
+    return tc.pvtdata.flow2_snd_una + tc.packets.Get('PKT1').payloadsize
+
+def GetReverseFlowAckNumAckTwoPkts (tc, pkt):
+    return tc.pvtdata.flow2_snd_una + tc.packets.Get('PKT1').payloadsize + \
+            tc.packets.Get('PKT2').payloadsize
+
 def GetNxtPktSeqNum (tc, pkt):
     return tc.pvtdata.flow1_rcv_nxt + pkt.payloadsize
 
@@ -35,6 +42,12 @@ def GetPktOutAckNum (tc, pkt):
         return tc.pvtdata.flow1_rcv_nxt + pkt.payloadsize
     else:
         return tc.pvtdata.flow2_rcv_nxt
+
+def GetNxtPktOutSeqNum (tc, pkt):
+    return GetPktOutSeqNum(tc, pkt) + pkt.payloadsize
+
+def GetNxtPktOutAckNum (tc, pkt):
+    return GetPktOutAckNum(tc, pkt)
 
 def GetReverseFlowPktOutSeqNum (tc, pkt):
     return tc.pvtdata.flow1_snd_nxt

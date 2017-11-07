@@ -39,6 +39,13 @@
         phvwr       p.common_te##_num##_phv_table_addr, _table_base; \
         phvwri      p.app_header_table##_num##_valid, 1;
 
+#define CAPRI_NEXT_TABLE_READ_e(_num, _lock_en, _stage_entry, _table_base, _table_read_size) \
+        phvwri      p.{common_te##_num##_phv_table_lock_en...common_te##_num##_phv_table_raw_table_size}, \
+                    (_lock_en << 3 | _table_read_size); \
+        phvwri      p.common_te##_num##_phv_table_pc, _stage_entry[33:6]; \
+        phvwr       p.common_te##_num##_phv_table_addr, _table_base; \
+        phvwri.e     p.app_header_table##_num##_valid, 1;
+
 #define CAPRI_NEXT_TABLE_READ_i(_num, _lock_en, _stage_entry, _table_base, _table_read_size) \
         phvwri      p.{common_te##_num##_phv_table_lock_en...common_te##_num##_phv_table_raw_table_size}, \
                     (_lock_en << 3 | _table_read_size); \

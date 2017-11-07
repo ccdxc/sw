@@ -37,7 +37,7 @@
         rto_deadline                    : TS_WIDTH              ;\
         pending_ft_clear                : 1                     ;\
         pending_ft_reset                : 1                     ;\
-        pad1_rx2tx                      : 30                    ;
+        pad1_rx2tx                      : 14                    ;
 
 
 #define RX2TX_SHARED_EXTRA_STATE \
@@ -64,7 +64,8 @@
         ca_state                        : 8                     ;\
         ecn_flags                       : 8                     ;\
         num_sacks                       : 8                     ;\
-        pending_ack_send                : 8                     ;\
+        pending_ack_send                : 1                     ;\
+        pending_snd_una_update          : 1                     ;\
         pending_challenge_ack_send      : 1                     ;\
         pending_sync_mss                : 1                     ;\
         pending_tso_keepalive           : 1                     ;\
@@ -89,17 +90,20 @@
         source_lif                      : 16                    ;\
         source_port                     : 16                    ;\
         dest_port                       : 16                    ;\
-        retx_ci                         : 16                    ;\
-        retx_pi                         : 16                    ;\
         sched_flag                      : 8                     ;\
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
         retx_head_desc                  : HBM_ADDRESS_WIDTH     ;\
-        retx_snd_una_cursor             : HBM_ADDRESS_WIDTH     ;\
+        xmit_desc                       : HBM_ADDRESS_WIDTH     ;\
         retx_tail_desc                  : HBM_ADDRESS_WIDTH     ;\
-        retx_snd_nxt_cursor             : HBM_ADDRESS_WIDTH     ;\
         retx_xmit_cursor                : HBM_ADDRESS_WIDTH     ;\
         xmit_cursor_addr                : HBM_ADDRESS_WIDTH     ;\
+        retx_next_desc                  : HBM_ADDRESS_WIDTH     ;\
+        xmit_next_desc                  : HBM_ADDRESS_WIDTH     ;\
+        retx_head_offset                : 16                    ;\
+        retx_head_len                   : 16                    ;\
+        xmit_offset                     : 16                    ;\
+        xmit_len                        : 16                    ;\
         prr_out                         : 32                    ;\
         header_len                      : 8                     ;\
         pending_ack_tx                  : 1                     ;\
@@ -113,10 +117,10 @@
         quick_acks_decr                 : 4                     ;\
 
 #define TX_SHARED_PARAMS                                                        \
-source_lif, source_port, dest_port, retx_ci, retx_pi, sched_flag,\
-snd_nxt, retx_snd_una,\
-retx_head_desc, retx_snd_una_cursor, retx_tail_desc, retx_snd_nxt_cursor,\
-retx_xmit_cursor, xmit_cursor_addr, prr_out, header_len,\
+source_lif, source_port, dest_port, sched_flag,\
+snd_nxt, retx_snd_una, retx_head_desc, xmit_desc, retx_tail_desc,\
+retx_xmit_cursor, xmit_cursor_addr, retx_next_desc, xmit_next_desc,\
+retx_head_offset, retx_head_len, xmit_offset, xmit_len, prr_out, header_len,\
 pending_ack_tx,pending_delayed_ack_tx, pending_tso_data, pending_pad,\
 bytes_sent,pkts_sent,debug_num_phv_to_pkt, debug_num_mem_to_pkt,\
 quick_acks_decr
@@ -126,17 +130,20 @@ quick_acks_decr
     modify_field(tcp_tx_d.source_lif, source_lif); \
     modify_field(tcp_tx_d.source_port, source_port); \
     modify_field(tcp_tx_d.dest_port, dest_port); \
-    modify_field(tcp_tx_d.retx_ci, retx_ci); \
-    modify_field(tcp_tx_d.retx_pi, retx_pi); \
     modify_field(tcp_tx_d.sched_flag, sched_flag); \
     modify_field(tcp_tx_d.snd_nxt, snd_nxt); \
     modify_field(tcp_tx_d.retx_snd_una, retx_snd_una); \
     modify_field(tcp_tx_d.retx_head_desc, retx_head_desc); \
-    modify_field(tcp_tx_d.retx_snd_una_cursor, retx_snd_una_cursor); \
+    modify_field(tcp_tx_d.xmit_desc, xmit_desc); \
     modify_field(tcp_tx_d.retx_tail_desc, retx_tail_desc); \
-    modify_field(tcp_tx_d.retx_snd_nxt_cursor, retx_snd_nxt_cursor); \
     modify_field(tcp_tx_d.retx_xmit_cursor, retx_xmit_cursor); \
     modify_field(tcp_tx_d.xmit_cursor_addr, xmit_cursor_addr); \
+    modify_field(tcp_tx_d.retx_next_desc, retx_next_desc); \
+    modify_field(tcp_tx_d.xmit_next_desc, xmit_next_desc); \
+    modify_field(tcp_tx_d.retx_head_offset, retx_head_offset); \
+    modify_field(tcp_tx_d.retx_head_len, retx_head_len); \
+    modify_field(tcp_tx_d.xmit_offset, xmit_offset); \
+    modify_field(tcp_tx_d.xmit_len, xmit_len); \
     modify_field(tcp_tx_d.prr_out, prr_out); \
     modify_field(tcp_tx_d.header_len, header_len); \
     modify_field(tcp_tx_d.pending_ack_tx, pending_ack_tx); \
