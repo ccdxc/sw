@@ -6,7 +6,6 @@ syntax = "proto3";
 
 import "types.proto";
 import "key_handles.proto";
-import "l2segment.proto";
 import "qos.proto";
 
 package intf;

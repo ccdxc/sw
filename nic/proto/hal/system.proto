@@ -1,8 +1,11 @@
 //------------------------------------------------------------------------------
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+//
 // protobuf specification for system level information.
 //  - Status
 //  - Stats
 //      - Drop Stats
+//      - Table Stats
 //      - Proxy Stats
 //------------------------------------------------------------------------------
 
@@ -19,25 +22,6 @@ service System {
   rpc SystemGet(types.Empty) returns (SystemResponse) {}
 }
 
-
-// Global system object
-message SystemResponse {
-  types.ApiStatus    api_status      = 1;                       // API status code
-  Stats              stats           = 2;                       // Statistics
-}
-
-// Stats object
-message Stats {
-  DropStats     drop_stats          = 1;                        // Drop Statistics
-}
-
-// Drop Stats object
-message DropStats {
-  repeated DropStatsEntry drop_entries  = 1;                    // list of drop statistics
-}
-
-// Please revisit. May be we can make this as enum and put an instance of 
-// that enum in this.
 message DropStatsEntry {
   bool      drop_input_mapping                      = 1;        // input mapping table miss
   bool      drop_input_mapping_dejavu               = 2;        // deja-vu drop
@@ -72,3 +56,68 @@ message DropStatsEntry {
   bool      drop_tcp_unexpected_syn                 = 31;       // tcp unexpected syn
   uint64    drop_count                              = 32;       // drop count for multiple drop reasons
 }
+
+// Unique table identifiers
+enum TableId {
+  TABLE_ID_NONE                                     = 0;
+  TABLE_ID_INPUT_PROPERTIES                         = 1;
+  TABLE_ID_REGISTERED_MACS                          = 2;
+  TABLE_ID_NACL                                     = 3;
+  TABLE_ID_DDOS_SRC_DST                             = 4;
+  TABLE_ID_INPUT_PROPERTIES_MAC_VLAN                = 5;
+  TABLE_ID_DROP_STATS                               = 6;
+  TABLE_ID_INPUT_MAPPING_TUNNELED                   = 7;
+}
+
+// Table types
+enum TableType {
+  TABLE_TYPE_NONE                                   = 0;
+  TABLE_TYPE_INDEX                                  = 1;
+  TABLE_TYPE_HASH                                   = 2;
+  TABLE_TYPE_HASH_TCAM                              = 3;
+  TABLE_TYPE_TCAM                                   = 4;
+}
+
+// TableStatsEntry captures table specific stats for h/w table health monitoring
+message TableStatsEntry {
+  TableId      table_id                             = 1;   // table identifier
+  TableType    table_type                           = 2;   // type of the table
+  string       table_name                           = 3;   // table name
+  uint32       table_size                           = 4;   // table size
+  uint32       overflow_table_size                  = 5;   // overflow table size, if applicable
+  uint32       entries_in_use                       = 6;   // number of entries in use
+  uint32       overflow_entries_in_use              = 7;   // number of overflow entries in use, if applicable
+  uint32       num_inserts                          = 8;   // number of insert operations attemtped
+  uint32       num_insert_errors                    = 9;   // number of failed insert operations
+  uint32       num_deletes                          = 10;  // number of delete operations attempted
+  uint32       num_delete_errors                    = 11;  // number of failed delete operations
+}
+
+// TableStats is container for statistics of all tables in the data path
+message TableStats {
+  repeated TableStatsEntry    table_stats           = 1;
+}
+
+// Status captures the operating status of various components in the HAL
+// including "ready" status, thread health etc.
+message Status {
+}
+
+// Global system object
+message SystemResponse {
+  types.ApiStatus    api_status      = 1;                  // API status code
+  Stats              stats           = 2;                  // Statistics
+  Status             status          = 3;                  // System status
+}
+
+// Stats object
+message Stats {
+  DropStats     drop_stats          = 1;                   // Drop statistics
+  TableStats    table_stats         = 2;                   // Table statistics
+}
+
+// Drop Stats object
+message DropStats {
+  repeated DropStatsEntry drop_entries  = 1;               // list of drop statistics
+}
+
