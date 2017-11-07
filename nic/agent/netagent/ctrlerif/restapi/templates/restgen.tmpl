@@ -5,7 +5,9 @@ Package {{.GoPkg.Name}} is a auto generated package.
 Input file: {{.Name}}
 */
 package restapi
-
+import (
+    "github.com/gorilla/mux"
+)
 {{range .Services}}
     {{$svcname := .Name}}
     {{if (hasExtension "venice.naplesRestService" .)}}

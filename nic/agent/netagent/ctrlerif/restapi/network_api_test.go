@@ -78,6 +78,7 @@ func TestNetworkUpdate(t *testing.T) {
 		IPv4Subnet:  "192.168.1.1/24",
 		IPv4Gateway: "192.168.1.254",
 	}
+	var actualNetworkSpec netproto.NetworkSpec
 	putData := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
 		ObjectMeta: api.ObjectMeta{
@@ -91,6 +92,13 @@ func TestNetworkUpdate(t *testing.T) {
 
 	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/networks/", &networkList)
 	AssertOk(t, getErr, "Error getting networks from the REST Server")
+	for _, o := range networkList {
+		if o.Name == "preCreatedNetwork" {
+			actualNetworkSpec = o.Spec
+			break
+		}
+	}
+	AssertEquals(t, updatedNetworkSpec, actualNetworkSpec, "Could not validated updated spec.")
 
 }
 

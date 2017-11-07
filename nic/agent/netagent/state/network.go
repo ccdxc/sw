@@ -82,8 +82,24 @@ func (na *NetAgent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) 
 
 // UpdateNetwork updates a network
 func (na *NetAgent) UpdateNetwork(nt *netproto.Network) error {
-	// FIXME:
-	return nil
+	oldNt, err := na.FindNetwork(nt.ObjectMeta)
+	if err != nil {
+		log.Errorf("Network %v not found", nt.ObjectMeta)
+		return err
+	}
+
+	if proto.Equal(nt, oldNt) {
+		log.Infof("Nothing to update.")
+		return nil
+	}
+
+	err = na.datapath.UpdateNetwork(nt)
+	key := objectKey(nt.ObjectMeta)
+	na.Lock()
+	na.networkDB[key] = nt
+	na.Unlock()
+	err = na.store.Write(nt)
+	return err
 }
 
 // DeleteNetwork deletes a network

@@ -20,12 +20,12 @@ GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 
-default: 
+default:
 	$(MAKE) deps
 	$(MAKE) ws-tools
 	$(MAKE) checks
 	$(MAKE) qbuild
-	$(MAKE) unit-test 
+	$(MAKE) unit-test
 	$(MAKE) cover
 
 deps:
@@ -126,7 +126,8 @@ ws-tools:
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/ && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/pensando/grpc-gateway/protoc-gen-swagger/ && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/gomock/ && go install ) && \
-	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/mockgen/ && go install )
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/mock/mockgen/ && go install ) && \
+	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/golang.org/x/tools/imports && go install)
 
 unit-test:
 	$(info +++ go test $(TO_BUILD))

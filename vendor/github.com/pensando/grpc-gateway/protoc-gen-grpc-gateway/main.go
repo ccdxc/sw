@@ -10,13 +10,13 @@ package main
 
 import (
 	"flag"
-	"go/format"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/tools/imports"
 	"gopkg.in/yaml.v2"
 
 	"github.com/gogo/protobuf/proto"
@@ -185,11 +185,16 @@ func main() {
 
 func emitFiles(out []*plugin.CodeGeneratorResponse_File) {
 	for _, genOut := range out {
-		fmtContent, err := goFormatContent([]byte(*genOut.Content))
-		if err != nil {
-			glog.Errorf("Could not auto format generated source. Please run go fmt on: ", *genOut.Name)
+		filename := *genOut.Name
+		ext := filepath.Ext(filename)
+		if ext == ".go" {
+			importContent, err := goImportContent(filename, []byte(*genOut.Content))
+			if err != nil {
+				glog.Errorf("Could not auto format generated source. Please run go imports on: %v", *genOut.Name)
+				continue
+			}
+			genOut.Content = &importContent
 		}
-		genOut.Content = &fmtContent
 	}
 	emitResp(&plugin.CodeGeneratorResponse{File: out})
 }
@@ -198,10 +203,9 @@ func emitError(err error) {
 	emitResp(&plugin.CodeGeneratorResponse{Error: proto.String(err.Error())})
 }
 
-func goFormatContent(ufmt []byte) (fmtSrc string, err error) {
-	f, err := format.Source(ufmt)
-	fmtSrc = string(f)
-	return
+func goImportContent(filename string, src []byte) (string, error) {
+	importContent, err := imports.Process(filename, src, nil)
+	return string(importContent), err
 }
 
 func emitResp(resp *plugin.CodeGeneratorResponse) {

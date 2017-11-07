@@ -88,6 +88,8 @@ def preamble_script(postamble)
     echo "$5 pen-master" >> /etc/hosts
     # add a friendly alias
     echo 'alias pensw="cd /import/src/github.com/pensando/sw/"' >> /home/vagrant/.bashrc
+    # Increase ulimit for open files to 4K to enable nic_admission tests run smoothly
+    ulimit -n 4096
     #{postamble}
   BASIC_SCRIPT
 end
