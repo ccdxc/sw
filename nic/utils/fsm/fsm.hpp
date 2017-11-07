@@ -6,6 +6,8 @@
 
 using std::string;
 
+namespace fsm_ph = std::placeholders;
+
 namespace hal {
 namespace utils {
 
@@ -141,10 +143,10 @@ class fsm_state_machine_t {
   ,
 
 #define SM_BIND_NON_STATIC(class_name, func) \
-    std::bind(&class_name::func, this, _1, _2)
+    std::bind(&class_name::func, this, fsm_ph::_1, fsm_ph::_2)
 
 #define SM_BIND_NON_STATIC_ARGS_1(class_name, func) \
-    std::bind(&class_name::func, this, _1)
+    std::bind(&class_name::func, this, fsm_ph::_1)
 
 #define FSM_SM_BEGIN(sm_name) fsm_state_machine_def_t sm_name = {
 #define FSM_SM_END \

@@ -9,15 +9,16 @@ common_deps = [
 		"//nic/utils/fsm:fsm",
 		"//nic/fte:fte_includes",
 		"//nic/include:base_includes",
-                "//nic/hal/pd/common:pdcommon",
+        "//nic/hal/pd/common:pdcommon",
 		"//nic/utils/ht:ht",
 		"//nic/utils/slab:slab",
 		"//nic/utils/indexer:indexer",
 		"//nic/utils/thread:thread",
 		"//nic/utils/twheel:twheel",
 		"//nic/third-party/spdlog",
-                "//nic:gen_proto_includes",
+        "//nic:gen_proto_includes",
 		"//nic:gen_includes",
+		"//nic/utils/catalog:catalog",
 ]
 
 cc_library(

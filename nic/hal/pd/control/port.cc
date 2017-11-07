@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <atomic>
 #include "nic/include/port.hpp"
+#include "nic/include/asic_pd.hpp"
 #include "nic/utils/twheel/twheel.hpp"
 #include "nic/utils/thread/thread.hpp"
 #include "hal_control.hpp"
@@ -435,6 +436,48 @@ port::port_init(bool is_sim)
     }
 
     return rc;
+}
+
+hal_ret_t
+port::port_enable(port *pd_p)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    uint32_t  chip = 0;
+
+    if (is_hal_ctrl_thread(chip)) {
+        ret = pd_p->port_enable();
+    } else {
+        // wake up the hal control thread to process port event
+        ret = hal_control_notify (HAL_CONTROL_OPERATION_PORT_ENABLE, pd_p);
+
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("{}: Error notifying control-thread for port enable",
+                          __FUNCTION__);
+        }
+    }
+
+    return ret;
+}
+
+hal_ret_t
+port::port_disable(port *pd_p)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    uint32_t  chip = 0;
+
+    if (is_hal_ctrl_thread(chip)) {
+        ret = pd_p->port_disable();
+    } else {
+        // wake up the hal control thread to process port event
+        ret = hal_control_notify (HAL_CONTROL_OPERATION_PORT_DISABLE, pd_p);
+
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("{}: Error notifying control-thread for port disable",
+                          __FUNCTION__);
+        }
+    }
+
+    return ret;
 }
 
 }    // namespace pd

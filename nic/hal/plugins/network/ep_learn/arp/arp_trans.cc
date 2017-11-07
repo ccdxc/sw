@@ -48,8 +48,6 @@ bool arptrans_compare_ip_entry_key_func(void *key1, void *key2) {
     return false;
 }
 
-using namespace std::placeholders;
-
 /* Make sure only one instance of State machine is present and all transactions
  * should use the same state machine */
 arp_trans_t::arp_fsm_t *arp_trans_t::arp_fsm_ = new arp_fsm_t();

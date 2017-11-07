@@ -5,7 +5,6 @@
 #include "nic/include/interface_api.hpp"
 #include "nic/hal/pd/iris/port_pd.hpp"
 #include "nic/include/port.hpp"
-#include "nic/include/hal_control.hpp"
 
 namespace hal {
 namespace pd {
@@ -32,18 +31,9 @@ pd_port_create (pd_port_args_t *args)
 
     // if admin up is set, enable the port, else disable the port
     if(args->admin_state == ::port::PORT_ADMIN_STATE_UP) {
-        // wake up the hal control thread to process port event
-        ret = hal_control_notify (HAL_CONTROL_OPERATION_PORT_ENABLE, pd_p);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}: Error notifying control-thread for port enable",
-                          __FUNCTION__);
-        }
+        ret = hal::pd::port::port_enable(pd_p);
     } else {
-        ret = hal_control_notify (HAL_CONTROL_OPERATION_PORT_DISABLE, pd_p);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("{}: Error notifying control-thread for disable",
-                          __FUNCTION__);
-        }
+        ret = hal::pd::port::port_disable(pd_p);
     }
 
     HAL_TRACE_DEBUG("{}: port create ", __FUNCTION__);
@@ -65,17 +55,10 @@ pd_port_update (pd_port_args_t *args)
         pd_p->set_port_speed(args->port_speed);
     }
 
-    // wake up the hal control thread to process port event
-    if(args->admin_state == ::port::PORT_ADMIN_STATE_UP) {
-        ret = hal_control_notify (HAL_CONTROL_OPERATION_PORT_ENABLE, pd_p);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error notifying control-thread for enable");
-        }
+    if (args->admin_state == ::port::PORT_ADMIN_STATE_UP) {
+        ret = hal::pd::port::port_enable(pd_p);
     } else if (args->admin_state == ::port::PORT_ADMIN_STATE_DOWN) {
-        ret = hal_control_notify (HAL_CONTROL_OPERATION_PORT_DISABLE, pd_p);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error notifying control-thread for disable");
-        }
+        ret = hal::pd::port::port_disable(pd_p);
     }
 
     HAL_TRACE_DEBUG("{}: port update", __FUNCTION__);
@@ -96,12 +79,7 @@ pd_port_delete (pd_port_args_t *args)
     hal::port_t    *pi_p = args->pi_p;
     hal::pd::port  *pd_p = (hal::pd::port*)pi_p->pd_p;
 
-    // wake up the hal control thread to disable port
-    ret = hal_control_notify (HAL_CONTROL_OPERATION_PORT_DISABLE, pd_p);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: Error notifying control-thread for disable",
-                      __FUNCTION__);
-    }
+    ret = hal::pd::port::port_disable(pd_p);
 
     delete pd_p;
 

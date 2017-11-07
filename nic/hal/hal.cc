@@ -34,6 +34,11 @@ extern "C" void __gcov_flush(void);
 #include "nic/hal/src/tcpcb.hpp"
 #include "nic/hal/src/proxy.hpp"
 
+#include "nic/utils/catalog/catalog.hpp"
+
+using port::PortSpec;
+using port::PortResponse;
+
 namespace hal {
 
 // process globals
@@ -706,13 +711,97 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+hal_uplink_create(uint32_t uplink_port,
+                  hal::utils::catalog *catalog_p)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    PortSpec        spec;
+    PortResponse    response;
+
+    // TODO
+    int tenant_id = catalog_p->tenant_id();
+
+    hal::utils::catalog_uplink_port_t *catalog_uplink_port_p =
+                                      catalog_p->uplink_port(uplink_port);
+
+    spec.mutable_key_or_handle()->set_port_id(uplink_port);
+    spec.mutable_meta()->set_tenant_id(tenant_id);
+    spec.set_port_speed(catalog_uplink_port_p->speed);
+    spec.set_num_lanes(catalog_uplink_port_p->num_lanes);
+    spec.set_port_type(catalog_uplink_port_p->type);
+
+    hal::utils::catalog_asic_port_t *catalog_asic_port_p =
+                                    catalog_p->asic_port(uplink_port);
+
+    spec.set_mac_id(catalog_asic_port_p->mac_id);
+    spec.set_mac_ch(catalog_asic_port_p->mac_ch);
+
+    if (catalog_uplink_port_p->enabled == true) {
+        spec.set_admin_state(::port::PORT_ADMIN_STATE_UP);
+    }
+
+    HAL_TRACE_DEBUG("{}. creating uplink port {}", __FUNCTION__, uplink_port);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+
+    ret = hal::port_create(spec, &response);
+
+    hal::hal_cfg_db_close();
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// create uplink ports in the catalog file
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_uplinks_create(hal::utils::catalog *catalog_p)
+{
+    uint32_t  uplink_port = 0;
+    hal_ret_t ret = HAL_RET_OK;
+
+    if (NULL == catalog_p) {
+        HAL_TRACE_ERR("{}: catalog db NULL", __FUNCTION__);
+        return HAL_RET_ERR;
+    }
+
+    for (uplink_port = 1; uplink_port <= catalog_p->num_uplink_ports();
+                                                      ++uplink_port) {
+        ret = hal_uplink_create(uplink_port, catalog_p);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("{}: Error creating uplink port {}",
+                          __FUNCTION__,  uplink_port);
+        }
+    }
+
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// parse the catalog file and populate catalog DB
+//------------------------------------------------------------------------------
+hal::utils::catalog*
+hal_catalog_init(std::string catalog_file)
+{
+    char  *cfg_path = NULL;
+
+    // makeup the full file path
+    cfg_path = std::getenv("HAL_CONFIG_PATH");
+    if (cfg_path) {
+        catalog_file = std::string(cfg_path) + "/" + catalog_file;
+    }
+
+    return hal::utils::catalog::factory(catalog_file);
+}
 //------------------------------------------------------------------------------
 // init function for HAL
 //------------------------------------------------------------------------------
 hal_ret_t
 hal_init (hal_cfg_t *hal_cfg)
 {
-    char    *user;
+    char         *user = NULL;
+    std::string  catalog_file = "catalog.json";
 
     HAL_TRACE_DEBUG("Initializing HAL ...");
 
@@ -727,7 +816,7 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // do memory related initialization
     HAL_ABORT(hal_mem_init() == HAL_RET_OK);
-    
+
     // Initialize config parameters from the JSON file.
     HAL_ABORT(hal_cfg_init(hal_cfg) == HAL_RET_OK);
 
@@ -738,9 +827,22 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_ABORT(hal_thread_init() == HAL_RET_OK);
     HAL_TRACE_DEBUG("Spawned all HAL threads");
 
+    // parse the hal catalog file
+    hal::utils::catalog *catalog_p = hal_catalog_init(catalog_file);
+    if (NULL == catalog_p) {
+        HAL_TRACE_ERR("{}: Error creating catalog db",
+                      __FUNCTION__);
+    }
+
+    // store the catalog in global hal state
+    g_hal_state->set_catalog(catalog_p);
+
     // do platform dependent init
     HAL_ABORT(hal::pd::hal_pd_init(hal_cfg) == HAL_RET_OK);
     HAL_TRACE_DEBUG("Platform initialization done");
+
+    // create uplink ports after PD init since HW needs to be programmed
+    hal_uplinks_create(catalog_p);
 
     // TODO_CLEANUP: this doesn't belong here, why is this outside
     // hal_state ??? how it this special compared to other global state ??
@@ -756,7 +858,7 @@ hal_init (hal_cfg_t *hal_cfg)
             break; // TODO(goli) only one FTE thread until driver supports multiple ARQs
         }
     }
-    
+
     hal_proxy_svc_init();
     return HAL_RET_OK;
 }

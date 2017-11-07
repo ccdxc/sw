@@ -12,6 +12,7 @@ cc_library(
         "//nic/utils/slab:slab",
         "//nic/utils/indexer:indexer",
         "//nic/utils/ht:ht",
+        "//nic/utils/catalog:catalog",
         "//nic/utils/thread:thread",
         "//nic/hal/pd/iris:iris_includes",
         "//nic/utils/bm_allocator:bm_allocator",

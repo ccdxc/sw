@@ -69,6 +69,7 @@ cc_library(
             "//nic/utils/slab:slab",
             "//nic/utils/indexer:indexer",
             "//nic/utils/ht:ht",
+            "//nic/utils/catalog:catalog",
             "//nic:gen_includes",
             "//nic:gen_proto_includes",
             "//nic/hal/pd/capri:capri_includes",

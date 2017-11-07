@@ -249,6 +249,14 @@ public:
 
     static serdes_fn_t serdes_fn;
 
+    // If current_thread is hal-control thread, invoke method directly
+    // Else trigger hal-control thread to invoke method
+    static hal_ret_t port_enable(port *pd_p);
+
+    // If current_thread is hal-control thread, invoke method directly
+    // Else trigger hal-control thread to invoke method
+    static hal_ret_t port_disable(port *pd_p);
+
 private:
     hal::port_t             *pi_p_;          // PI structure
 

@@ -17,7 +17,8 @@ cc_library(
         "//nic/model_sim/include:modelsim_includes",
         "//nic/third-party/spdlog",
         "//nic/utils/thread",
-        "//nic/utils/twheel"
+        "//nic/utils/twheel",
+        "//nic/utils/catalog"
     ],
     alwayslink = 1,
 )

@@ -22,6 +22,7 @@ cc_library(
             "//nic/hal/pd/utils/acl_tcam:acl_tcam",
             "//nic/utils/slab:slab",
             "//nic/utils/ht:ht",
+            "//nic/utils/catalog:catalog",
             "//nic/utils/bm_allocator",
             ],
     alwayslink = 1,

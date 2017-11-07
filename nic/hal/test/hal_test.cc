@@ -407,10 +407,61 @@ private:
     std::unique_ptr<Event::Stub> event_stub_;
 };
 
-int port_test(hal_client *hclient)
+int port_enable(hal_client *hclient, int tenant_id, int port)
+{
+    std::cout <<  "*********** Port "
+              << port
+              << " enable and get"
+              << " **********"
+              << std::endl;
+
+    hclient->port_update(
+                     tenant_id, port,
+                     ::port::PORT_SPEED_NONE, ::port::PORT_ADMIN_STATE_UP);
+
+    hclient->port_get(tenant_id, port);
+
+    return 0;
+}
+
+int ports_enable(hal_client *hclient, int tenant_id)
+{
+    int port = 0;
+
+    for (port = 1; port <= 4; ++port) {
+        port_enable (hclient, tenant_id, port);
+    }
+
+    return 0;
+}
+
+int port_get(hal_client *hclient, int tenant_id, int port)
+{
+    std::cout <<  "*********** Port "
+              << port
+              << " get"
+              << " **********"
+              << std::endl;
+
+    hclient->port_get(tenant_id, port);
+
+    return 0;
+}
+
+int ports_get(hal_client *hclient, int tenant_id)
+{
+    int port = 0;
+
+    for (port = 1; port <= 4; ++port) {
+        port_get (hclient, tenant_id, port);
+    }
+
+    return 0;
+}
+
+int port_test(hal_client *hclient, int tenant_id)
 {
     int port = 1;
-    int tenant_id = 1;
 
     // port 1: create and get
     std::cout <<  "*********** Port "
@@ -528,10 +579,13 @@ int
 main (int argc, char** argv)
 {
     uint64_t    hal_handle;
+    int         tenant_id = 1;
     hal_client hclient(grpc::CreateChannel(hal_svc_endpoint_,
                                            grpc::InsecureChannelCredentials()));
 
-    port_test(&hclient);
+    //port_test(&hclient, tenant_id);
+    //ports_enable(&hclient, tenant_id);
+    ports_get(&hclient, tenant_id);
 
     // delete a non-existent tenant
     hclient.tenant_delete_by_id(1);

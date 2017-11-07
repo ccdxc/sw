@@ -99,6 +99,7 @@ cc_library(
         "//nic/utils/fsm:fsm",
         "//nic/fte:fte_includes",
         "//nic/utils/eventmgr:eventmgr",
+        "//nic/utils/catalog",
     ],
 )
 

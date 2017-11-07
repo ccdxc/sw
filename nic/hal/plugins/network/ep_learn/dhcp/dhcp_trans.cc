@@ -5,8 +5,6 @@
 namespace hal {
 namespace network {
 
-using namespace std::placeholders;
-
 void *dhcptrans_get_key_func(void *entry) {
     HAL_ASSERT(entry != NULL);
     return (void *)(((dhcp_trans_t *)entry)->trans_key_ptr());

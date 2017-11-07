@@ -56,6 +56,9 @@ asic_port_cfg (uint32_t port_num,
                uint32_t num_lanes,
                uint32_t val);
 
+// check if the current thread is hal-control thread
+bool is_hal_ctrl_thread(uint32_t chip);
+
 }    // namespace pd
 }    // namespace hal
 

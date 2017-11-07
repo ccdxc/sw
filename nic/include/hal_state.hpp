@@ -7,6 +7,7 @@
 #include "nic/utils/slab/slab.hpp"
 #include "nic/utils/indexer/indexer.hpp"
 #include "nic/utils/ht/ht.hpp"
+#include "nic/utils/catalog/catalog.hpp"
 #include "nic/include/eventmgr.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/include/hal.hpp"
@@ -636,14 +637,19 @@ public:
 
     eventmgr *event_mgr(void) const { return oper_db_->event_mgr(); }
 
+    hal::utils::catalog* catalog() { return catalog_; }
+
+    void set_catalog(hal::utils::catalog *catalog) { catalog_ = catalog; }
+
 private:
     bool init(void);
     hal_state();
 
 private:
-    hal_cfg_db     *cfg_db_;
-    hal_oper_db    *oper_db_;
-    hal_mem_db     *mem_db_;
+    hal_cfg_db             *cfg_db_;
+    hal_oper_db            *oper_db_;
+    hal_mem_db             *mem_db_;
+    hal::utils::catalog    *catalog_;
 };
 
 extern class hal_state    *g_hal_state;

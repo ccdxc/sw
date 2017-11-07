@@ -1,6 +1,8 @@
 {
     "card_index" : "10010",
 
+    "tenant_id"  : "1",
+
     "num_asics" : "1",
     "asics" :
     [
@@ -10,10 +12,10 @@
             "max_ports" : "4",
             "ports"     :
             [
-                { "port_num" : "1" },
-                { "port_num" : "2" },
-                { "port_num" : "3" },
-                { "port_num" : "4" }
+                { "port_num" : "1", "mac_id" : "0", "mac_ch" : "0" },
+                { "port_num" : "2", "mac_id" : "0", "mac_ch" : "1" },
+                { "port_num" : "3", "mac_id" : "0", "mac_ch" : "2" },
+                { "port_num" : "4", "mac_id" : "0", "mac_ch" : "3" }
             ]
         }
     ],
