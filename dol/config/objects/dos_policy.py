@@ -83,6 +83,8 @@ class DosPolicyObject(base.ConfigObjectBase):
         return
 
     def __init_common(self, obj, spec):
+        peersg = getattr(spec, 'peersg', None)
+        obj.peersg = peersg
         self.__init_service(obj, spec)
         self.__init_tcp_syn_flood_limits(obj, spec)
         self.__init_udp_flood_limits(obj, spec)
@@ -135,6 +137,10 @@ class DosPolicyObject(base.ConfigObjectBase):
 
     def __show_dir_common(self, obj, direction):
         cfglogger.info("- %s" % direction)
+        if obj.peersg is not None:
+            cfglogger.info("  - PeerSG     = %s" % obj.peersg)
+        else:
+            cfglogger.info("  - PeerSG     = None")
         self.__show_service(obj.service)
         cfglogger.info("- Flood Limits")
         self.__show_flood_limits(obj.tcp_syn_flood_limits, 'TCP')
@@ -190,8 +196,8 @@ class DosPolicyObject(base.ConfigObjectBase):
         self.__phrs_flood_limits_common(req_spec.other_flood_limits,
                                         obj.other_flood_limits)
         sgs = self.tenant.GetRemoteSecurityGroups()
-        req_spec.peer_sg_handle = sgs[0].hal_handle
-        #req_spec.peer_sg_handle.append(sgs[0].hal_handle)
+        if obj.peersg is not None:
+            req_spec.peer_sg_handle = sgs[0].hal_handle
         return
 
     def PrepareHALRequestSpec(self, req_spec):

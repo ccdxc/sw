@@ -25,6 +25,7 @@ targets:
   multicast:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo multicast --feature multicast" ]
   pinl2mc:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo multicast --feature pinl2mc --hostpin" ]
   l4lb:  ["sh", "-c", "make l4lb"]
+  dos:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo dos --feature dos" ]
   recirc:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo recirc --feature recirc" ]
   classic:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo classic --feature classic --classic" ]
   parser:  ["sh", "-c", "cd /sw && make pull-assets && cd nic && make bazel-build && ./run.py --topo parser --feature parser" ]

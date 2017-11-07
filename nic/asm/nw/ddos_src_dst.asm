@@ -21,6 +21,9 @@ ddos_src_dst_hit:
   seq       c1, k.flow_lkp_metadata_lkp_proto, IP_PROTO_ICMP
   bcf       [c1], ddos_type_icmp
 
+  seq       c1, k.flow_lkp_metadata_lkp_proto, IP_PROTO_ICMPV6
+  bcf       [c1], ddos_type_icmp
+
   seq       c1, k.flow_lkp_metadata_lkp_proto, IP_PROTO_UDP
   bcf       [c1], ddos_type_udp
 

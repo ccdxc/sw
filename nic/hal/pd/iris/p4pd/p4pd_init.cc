@@ -22,17 +22,22 @@ namespace pd {
 static hal_ret_t
 p4pd_ddos_policers_init (void)
 {
-    hal_ret_t                           ret = HAL_RET_OK;
-    DirectMap                           *dm;
-    ddos_src_vf_policer_actiondata      d_svf = { 0 };
-    ddos_service_policer_actiondata     d_service = { 0 };
-    ddos_src_dst_policer_actiondata     d_srcdst = { 0 };
+    hal_ret_t                                   ret = HAL_RET_OK;
+    DirectMap                                   *dm;
+    DirectMap                                   *dm_act;
+    ddos_src_vf_policer_actiondata              d_svf = { 0 };
+    ddos_service_policer_actiondata             d_service = { 0 };
+    ddos_src_dst_policer_actiondata             d_srcdst = { 0 };
+    ddos_src_vf_policer_action_actiondata       dact_svf = { 0 };
+    ddos_service_policer_action_actiondata      dact_service = { 0 };
+    ddos_src_dst_policer_action_actiondata      dact_srcdst = { 0 };
     
     /*
      * Invalidate the first four policers. Entry valid bit is set to
      * zero by default
      */
     dm = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SRC_VF_POLICER);
+    dm_act = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SRC_VF_POLICER_ACTION);
     HAL_ASSERT(dm != NULL);
     for (int i = 0; i < 4; i++) {
         ret = dm->insert_withid(&d_svf, i);
@@ -40,9 +45,15 @@ p4pd_ddos_policers_init (void)
             HAL_TRACE_ERR("ddos src_vf policer init failed, err : {}", ret);
             return ret;
         }
+        ret = dm_act->insert_withid(&dact_svf, i);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("ddos src_vf policeract init failed, err : {}", ret);
+            return ret;
+        }
     }
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SERVICE_POLICER);
+    dm_act = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SERVICE_POLICER_ACTION);
     HAL_ASSERT(dm != NULL);
     for (int i = 0; i < 4; i++) {
         ret = dm->insert_withid(&d_service, i);
@@ -50,14 +61,25 @@ p4pd_ddos_policers_init (void)
             HAL_TRACE_ERR("ddos service policer init failed, err : {}", ret);
             return ret;
         }
+        ret = dm_act->insert_withid(&dact_service, i);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("ddos service policeract init failed, err : {}", ret);
+            return ret;
+        }
     }
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SRC_DST_POLICER);
+    dm_act = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SRC_DST_POLICER_ACTION);
     HAL_ASSERT(dm != NULL);
     for (int i = 0; i < 4; i++) {
         ret = dm->insert_withid(&d_srcdst, i);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("ddos src_dst policer init failed, err : {}", ret);
+            return ret;
+        }
+        ret = dm_act->insert_withid(&dact_srcdst, i);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("ddos src_dst policeract init failed, err : {}", ret);
             return ret;
         }
     }

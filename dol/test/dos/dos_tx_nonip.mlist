@@ -5,7 +5,7 @@ feature:
     package : test.dos
     module  : dos
     enable  : True
-    ignore  : False
+    ignore  : True
     spec    : dos_tx_nonip.testspec
 
 modules:

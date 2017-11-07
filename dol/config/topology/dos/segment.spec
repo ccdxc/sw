@@ -9,6 +9,6 @@ multicast   : flood
 l4lb        : False
 endpoints   :
     useg    : 0
-    pvlan   : 8
+    pvlan   : 14
     direct  : 0
     remote  : 2

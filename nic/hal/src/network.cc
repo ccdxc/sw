@@ -529,8 +529,7 @@ network_update_sg_relation (dllist_ctxt_t *sg_list, network_t *nw, bool add)
 
     dllist_for_each_safe(curr, next, sg_list) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        // TODO: security_group
-        // sg = find_security_group_by_handle(entry->handle_id);
+        sg = nwsec_group_lookup_by_handle(entry->handle_id);
         if (!sg) {
             HAL_TRACE_ERR("{}:unable to find sg with handle:{}",
                           __FUNCTION__, entry->handle_id);

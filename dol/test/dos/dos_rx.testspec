@@ -32,17 +32,21 @@ packets:
                 hlim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
+                #dport   : ref://testcase/config/flow/dport
+                dport   : 47274
             tcp:
                 sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
+                #dport   : ref://testcase/config/flow/dport
+                dport   : 47274
             icmp:
                 code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
+                #type    : ref://testcase/config/flow/icmptype
+                type    : 128
                 id      : ref://testcase/config/flow/icmpid
             icmpv6:
                 code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
+                #type    : ref://testcase/config/flow/icmptype
+                type    : 129
                 id      : ref://testcase/config/flow/icmpid
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data

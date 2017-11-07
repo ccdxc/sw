@@ -263,6 +263,8 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
     ddos_src_dst_actiondata     data;
     Tcam                        *tcam = NULL;
     uint32_t                    ret_idx;
+    ipv4_addr_t                 v4_mask = {0};
+    ipv6_addr_t                 v6_mask = {0};
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
     HAL_ASSERT(tcam != NULL);
@@ -270,32 +272,56 @@ dos_pd_program_ddos_src_dst_tcam (ip_addr_t *src_ip_addr,
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
     
+    /* Return if both addresses are not v4/v6 */
+    if (!((src_ip_addr->af == IP_AF_IPV4) && (dst_ip_addr->af == IP_AF_IPV4)) &&
+       (!(src_ip_addr->af == IP_AF_IPV6) && (dst_ip_addr->af == IP_AF_IPV6))) {
+        HAL_TRACE_DEBUG("pd-dos:{} src/dst networks are not same type (v4/v6)",
+                        __FUNCTION__);
+        return (ret);
+    }
+
     if (src_ip_addr->af == IP_AF_IPV4) {
         memcpy(key.flow_lkp_metadata_lkp_src, &src_ip_addr->addr.v4_addr,
                sizeof(ipv4_addr_t));
-        memset(&mask.flow_lkp_metadata_lkp_src_mask, 0xFF,
+        v4_mask = ipv4_prefix_len_to_mask(src_pfxlen);
+        memcpy(mask.flow_lkp_metadata_lkp_src_mask, &v4_mask,
                sizeof(ipv4_addr_t));
     } else if (src_ip_addr->af == IP_AF_IPV6) {
         memcpy(key.flow_lkp_metadata_lkp_src, &src_ip_addr->addr.v6_addr,
-               sizeof(ipv6_addr_t));
-        memset(&mask.flow_lkp_metadata_lkp_src_mask, 0xFF,
-               sizeof(ipv6_addr_t));
+               IP6_ADDR8_LEN);
+        memrev(key.flow_lkp_metadata_lkp_src,
+               sizeof(key.flow_lkp_metadata_lkp_src));
+        ipv6_prefix_len_to_mask(&v6_mask, src_pfxlen);
+        memcpy(mask.flow_lkp_metadata_lkp_src_mask, &src_ip_addr->addr.v6_addr,
+               IP6_ADDR8_LEN);
+        memrev(mask.flow_lkp_metadata_lkp_src_mask,
+               sizeof(mask.flow_lkp_metadata_lkp_src_mask));
     }
     if (dst_ip_addr->af == IP_AF_IPV4) {
         memcpy(key.flow_lkp_metadata_lkp_dst, &dst_ip_addr->addr.v4_addr,
                sizeof(ipv4_addr_t));
-        memset(&mask.flow_lkp_metadata_lkp_dst_mask, 0xFF,
+        v4_mask = ipv4_prefix_len_to_mask(dst_pfxlen);
+        memcpy(mask.flow_lkp_metadata_lkp_dst_mask, &v4_mask,
                sizeof(ipv4_addr_t));
     } else if (dst_ip_addr->af == IP_AF_IPV6) {
         memcpy(key.flow_lkp_metadata_lkp_dst, &dst_ip_addr->addr.v6_addr,
-               sizeof(ipv6_addr_t));
-        memset(&mask.flow_lkp_metadata_lkp_dst_mask, 0xFF,
-               sizeof(ipv6_addr_t));
+               IP6_ADDR8_LEN);
+        memrev(key.flow_lkp_metadata_lkp_dst,
+               sizeof(key.flow_lkp_metadata_lkp_dst));
+        ipv6_prefix_len_to_mask(&v6_mask, dst_pfxlen);
+        memcpy(mask.flow_lkp_metadata_lkp_dst_mask, &dst_ip_addr->addr.v6_addr,
+               IP6_ADDR8_LEN);
+        memrev(mask.flow_lkp_metadata_lkp_dst_mask,
+               sizeof(mask.flow_lkp_metadata_lkp_dst_mask));
     }
-    key.flow_lkp_metadata_lkp_dport = dport;
-    mask.flow_lkp_metadata_lkp_dport_mask = 0xFFFF;
-    key.flow_lkp_metadata_lkp_proto = proto;
-    mask.flow_lkp_metadata_lkp_proto_mask = 0xFF;
+    if (dport != 0) {
+        key.flow_lkp_metadata_lkp_dport = dport;
+        mask.flow_lkp_metadata_lkp_dport_mask = 0xFFFF;
+    }
+    if (proto != 0) {
+        key.flow_lkp_metadata_lkp_proto = proto;
+        mask.flow_lkp_metadata_lkp_proto_mask = 0xFF;
+    }
     /* LSB 12-bits is L2seg hw-id which is masked off */
     uint16_t vrf_mask = 0xFFFF;
     key.flow_lkp_metadata_lkp_vrf = (vrf << 12);
@@ -528,7 +554,7 @@ dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
 {
     int             tcam_idx;
     uint32_t        base_pol_idx;
-    hal_ret_t       ret;
+    hal_ret_t       ret = HAL_RET_OK;
     dos_policy_t    *dosp;
     network_t       *nw, *pnw;
     dllist_ctxt_t   *curr, *next;
@@ -541,6 +567,8 @@ dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
 
     dosp = (dos_policy_t *) pd_dosp->pi_dos_policy;
     HAL_ASSERT(dosp != NULL);
+    HAL_TRACE_DEBUG("pd-dos:{}: ingr_pol_valid: {} ingress.peer_sg_id: {}",
+                    __FUNCTION__, dosp->ingr_pol_valid, dosp->ingress.peer_sg_id);
     /* Program the src-dst subnets if ingress policy is valid */
     if (dosp->ingr_pol_valid && 
             (dosp->ingress.peer_sg_id != HAL_NWSEC_INVALID_SG_ID)) {
@@ -589,12 +617,14 @@ dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
                                   &tcam_idx);
                     HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
                     HAL_TRACE_DEBUG("pd-dos:{}: tcam_index: {}",
-                                    tcam_idx, __FUNCTION__);
+                                                    __FUNCTION__, tcam_idx);
                 }
             }
         }
     }
 
+    HAL_TRACE_DEBUG("pd-dos:{}: egr_pol_valid: {} egress.peer_sg_id: {}",
+                    __FUNCTION__, dosp->egr_pol_valid, dosp->egress.peer_sg_id);
     /* Program the src-dst subnets if egress policy is valid */
     if (dosp->egr_pol_valid && 
             (dosp->egress.peer_sg_id != HAL_NWSEC_INVALID_SG_ID)) {
@@ -758,7 +788,11 @@ dos_pd_program_hw (pd_dos_policy_t *pd_dosp, bool create)
             intf = ep_get_if(ep);
             HAL_ASSERT(intf != NULL);
             HAL_TRACE_DEBUG("pd-dos:{}: Intf-id: {}", __FUNCTION__, intf->if_id);
-            
+            /* 
+             * TODO: Can program a single set of policers for all EPs since the
+             * policer rates are the same. Using different policers for DOL.
+             * Revisit and fix
+             * */
             HAL_TRACE_DEBUG("pd-dos:{}: Program src-vf table", __FUNCTION__);
             /* Program the DDoS Src VF table */
             ret = dos_pd_program_ddos_src_vf_table (pd_dosp, ep, intf);

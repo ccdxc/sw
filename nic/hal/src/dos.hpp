@@ -9,6 +9,7 @@
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/include/pd.hpp"
 
+#define HAL_NWSEC_INVALID_SG_ID        uint32_t (~0)
 using hal::utils::ht_ctxt_t;
 
 using nwsec::DoSPolicySpec;

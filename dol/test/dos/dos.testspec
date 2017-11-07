@@ -11,7 +11,7 @@ selectors:
         endpoint    : filter://remote=True,label=None
         interface   : filter://any
     flow        : filter://fwtype=L2
-    maxflows    : 4
+    maxflows    : 1
 
 packets:
     - packet:
@@ -36,18 +36,22 @@ packets:
                 hlim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
+                #dport   : ref://testcase/config/flow/dport
+                dport   : 47275 
             tcp:
                 sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
+                #dport   : ref://testcase/config/flow/dport
+                dport   : 47275 
             icmp:
                 code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
+                #type    : ref://testcase/config/flow/icmptype
                 id      : ref://testcase/config/flow/icmpid
+                type    : 5
             icmpv6:
                 code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
+                #type    : ref://testcase/config/flow/icmptype
                 id      : ref://testcase/config/flow/icmpid
+                type    : 133
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -55,6 +59,9 @@ packets:
         id          : IN_PKT     # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            tcp:
+                flags: syn
 
     - packet:
         id          : IN_PKT2     # Input packet2
@@ -65,6 +72,11 @@ packets:
                 sport   : 1000
             tcp:
                 sport   : 1001
+                flags: syn
+            icmp:
+                type    : 3
+            icmpv6:
+                type    : 1
 
     - packet:
         id          : EXP_PKT     # Expected packet
@@ -77,6 +89,8 @@ packets:
                 tos     : ref://testcase/config/flow/txqos/dscp
             ipv6:
                 tc      : ref://testcase/config/flow/txqos/dscp
+            tcp:
+                flags: syn
 
 session:
     - step:
@@ -105,3 +119,4 @@ session:
                     port    : ref://testcase/config/src/endpoint/intf/ports
         
         expect:
+            delay   : callback://networking/packets/GetExpectDelay

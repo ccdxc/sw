@@ -11,7 +11,6 @@ namespace hal {
 namespace pd {
 
 #define HAL_MAX_HW_DOS_PROFILES        256
-#define HAL_NWSEC_INVALID_SG_ID        uint32_t (~0)
 
 typedef uint32_t    dos_policy_hw_id_t;
 

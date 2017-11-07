@@ -112,9 +112,13 @@ dos_policy_props_init_from_spec (dos_policy_prop_t *dosp,
         spec.other_flood_limits().protect_limits().duration();
 
     /* Lookup the SG by handle and then get the SG-id */
-    nwsec_group = nwsec_group_lookup_by_handle(spec.peer_sg_handle());
-    HAL_ASSERT(nwsec_group);
-    dosp->peer_sg_id = nwsec_group->sg_id;
+    if (spec.peer_sg_handle() != HAL_HANDLE_INVALID) {
+        nwsec_group = nwsec_group_lookup_by_handle(spec.peer_sg_handle());
+        HAL_ASSERT(nwsec_group);
+        dosp->peer_sg_id = nwsec_group->sg_id;
+    } else {
+        dosp->peer_sg_id = HAL_NWSEC_INVALID_SG_ID;
+    }
 
     return;
 }

@@ -121,9 +121,10 @@ class SecurityGroupObjectHelper:
         segs = tenant.GetSegments()
         sgidx = 0
         for seg in segs:
-            sg = self.sgs[sgidx]
-            seg.AddSecurityGroup(sg)
-            sgidx = (sgidx + 1) % len(self.sgs)
+            for sg in self.sgs:
+                #sg = self.sgs[sgidx]
+                seg.AddSecurityGroup(sg)
+                #sgidx = (sgidx + 1) % len(self.sgs)
         return
 
     def main(self, tenant):

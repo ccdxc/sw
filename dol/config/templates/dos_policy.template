@@ -5,6 +5,7 @@ meta:
     module  : dos_policy
 
 ingress :
+    peersg:
     service:
         proto       : 
         port        : 
@@ -47,6 +48,7 @@ ingress :
             duration:
 
 egress  :
+    peersg:
     service:
         proto       :
         port        :

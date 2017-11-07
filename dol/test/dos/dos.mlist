@@ -1,0 +1,45 @@
+# Feature Test Modules List
+feature:
+    id      : dos
+    sub     : remote
+    package : test.dos
+    module  : dos
+    enable  : True
+    ignore  : True
+    spec    : dos.testspec
+
+modules:
+    - module:
+        name    : REMOTE_SRC_DST_ICMPV4
+        iterate :
+            - flow    : filter://type=IPV4,proto=ICMP,label=FTE,direction=RFLOW
+              segment : filter://native=False
+    - module:
+        name    : REMOTE_SRC_DST_ICMPV6
+        ignore  : True
+        iterate :
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=RFLOW
+              segment : filter://native=False
+    - module:
+        name    : REMOTE_SRC_DST_TCP_V4
+        iterate :
+            - flow    : filter://type=IPV4,proto=TCP,label=FTE,direction=RFLOW
+              segment : filter://native=False
+    - module:
+        name    : REMOTE_SRC_DST_TCP_V6
+        ignore  : True
+        iterate :
+            - flow    : filter://type=IPV6,proto=TCP,label=FTE,direction=RFLOW
+              segment : filter://native=False
+    - module:
+        name    : REMOTE_SRC_DST_UDP_V4
+        iterate :
+            - flow    : filter://type=IPV4,proto=UDP,label=FTE,direction=RFLOW
+              segment : filter://native=False
+    - module:
+        name    : REMOTE_SRC_DST_UDP_V6
+        ignore  : True
+        iterate :
+            - flow    : filter://type=IPV6,proto=UDP,label=FTE,direction=RFLOW
+              segment : filter://native=False
+
