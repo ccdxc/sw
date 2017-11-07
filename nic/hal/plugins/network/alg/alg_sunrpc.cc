@@ -12,25 +12,12 @@
 #define ADDR_NETID_BYTES 128
 #define CALL_HDR_LEN (sizeof(struct call_body) + (2*WORD_BYTES))
 #define REPLY_HDR_LEN (sizeof(struct reply_body) + (2*WORD_BYTES))
+#define LAST_RECORD_FRAG 0x80
 
 typedef struct rp__list rpcblist;
 
 namespace hal {
 namespace net {
-
-static inline uint32_t
-__pack_uint32(const uint8_t *buf, uint8_t idx)
-{
-    int shift = 24;
-    uint32_t val = 0;
- 
-    do {
-       val = val | (buf[idx++]<<shift);
-       shift -= 8;   
-    } while (shift >= 0);    
-
-    return val;
-}
 
 void
 __parse_rpcb_res_hdr(const uint8_t *pkt, uint8_t offset, char *uaddr)
@@ -126,10 +113,6 @@ __parse_reply_hdr(const uint8_t *pkt, uint8_t offset, struct rpc_msg *rmsg)
         offset += (len%WORD_BYTES)?(len+(WORD_BYTES + len%WORD_BYTES)):len;
         rmsg->acpted_rply.ar_stat = (accept_stat)__pack_uint32(pkt, offset);
         offset += WORD_BYTES;
-        if (rmsg->acpted_rply.ar_stat == SUCCESS) {
-            rmsg->acpted_rply.ar_vers.low = (uint16_t)__pack_uint32(pkt, offset);
-        }
-        offset += WORD_BYTES;
     }
  
     return offset;
@@ -217,40 +200,8 @@ done:
     return port;
 }
 
-static void 
-insert_rpc_entry(fte::ctx_t& ctx, fte::RPCMap *map)
-{
-    fte::alg_entry_t *entry = NULL;
-
-    entry = (fte::alg_entry_t *)HAL_CALLOC(alg_entry_t, sizeof(fte::alg_entry_t));
-    if (!entry) {
-        HAL_TRACE_ERR("Could not allocated memory for RPC ALG entry");
-        return;
-    }
-
-    memset(&entry->key, 0, sizeof(hal::flow_key_t));
-    entry->key.tenant_id = ctx.key().tenant_id;
-    entry->key.dip = ctx.key().dip;
-    entry->key.dport = map->dport;
-    entry->key.proto = (types::IPProtocol)map->prot;
-    entry->key.flow_type = (map->addr_family == fte::ALG_ADDRESS_FAMILY_IPV6)?FLOW_TYPE_V6:FLOW_TYPE_V4;    
-    entry->alg_proto_state = fte::ALG_PROTO_STATE_RPC_DATA;
-
-    // Save the program number and SUN RPC control dport (could be user specified)
-    // We would replace this with the incoming one for Firewall lookup.
-    entry->rpc_map.num_map = 1;
-    entry->rpc_map.maps[entry->rpc_map.num_map-1].prog_num = map->prog_num;
-    entry->rpc_map.maps[entry->rpc_map.num_map-1].vers = map->vers;
-    entry->rpc_map.maps[entry->rpc_map.num_map-1].dport = ctx.key().dport;
- 
-    // Need to add the entry with a timer
-    // Todo(Pavithra) add timer to every ALG entry
-    HAL_TRACE_DEBUG("Inserting RPC entry with key: {}", entry->key);
-    insert_alg_entry(entry); 
-}
-
 hal_ret_t
-parse_rpc_control_flow(fte::ctx_t& ctx)
+parse_sunrpc_control_flow(fte::ctx_t& ctx)
 {
     hal_ret_t                ret = HAL_RET_OK;
     const uint8_t           *pkt = ctx.pkt();
@@ -273,15 +224,22 @@ parse_rpc_control_flow(fte::ctx_t& ctx)
         return HAL_RET_OK;
     }
 
-    if (ctx.pkt_len() <= rpc_msg_offset) {
-        // We cannot process this packet
+    if (ctx.pkt_len() <= (unsigned int)(rpc_msg_offset + 3*WORD_BYTES)) {
+        // Packet length is smaller than the RPC common header
+        // Size. We cannot process this packet.
         HAL_TRACE_ERR("Packet len: {} is less than payload offset: {} rpc_msg size: {}", \
                       ctx.pkt_len(),  rpc_msg_offset);
         return HAL_RET_ERR;
     }
 
+    newentry.rpc_frag_cont = 0;
     if (ctx.key().proto == IP_PROTO_TCP) {
         // Do we need to maintain the record tracking state for TCP ?
+        if (!(pkt[rpc_msg_offset] & LAST_RECORD_FRAG)) {
+            HAL_TRACE_DEBUG("Fragmented packet detected");
+            newentry.rpc_frag_cont = 1;
+        } 
+        update_entry = 1;
         rpc_msg_offset += WORD_BYTES;
     }
 
@@ -289,10 +247,11 @@ parse_rpc_control_flow(fte::ctx_t& ctx)
     if (!pgm_offset) {
         return HAL_RET_ERR;
     }
- 
+
     switch (ctx.alg_proto_state())
     {
         case fte::ALG_PROTO_STATE_RPC_INIT:
+            HAL_TRACE_DEBUG("RPC Proc: {}", rpc_msg.rm_call.cb_proc);
             if (rpc_msg.rm_direction == 0 && \
                 rpc_msg.rm_call.cb_prog == PMAPPROG && \
                 (rpc_msg.rm_call.cb_proc == PMAPPROC_GETPORT || \
@@ -322,11 +281,12 @@ parse_rpc_control_flow(fte::ctx_t& ctx)
                         }
 
                         newentry.rpc_map.num_map++;
-                        ctx.set_alg_proto_state(fte::ALG_PROTO_STATE_RPC_GETPORT);
+                        newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_GETPORT;
                         break;
                   
                     case PMAPPROC_DUMP:
-                        ctx.set_alg_proto_state(fte::ALG_PROTO_STATE_RPC_DUMP);
+                        HAL_TRACE_DEBUG("Dump request received");
+                        newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_DUMP;
                         break;
  
                     default:
@@ -347,7 +307,7 @@ parse_rpc_control_flow(fte::ctx_t& ctx)
                     __parse_rpcb_res_hdr(pkt, pgm_offset, &uaddr[0]);
                     dport =  uaddr2dport(uaddr);
                 } else {
-                    dport = (uint32_t)rpc_msg.acpted_rply.ar_vers.low; 
+                    dport = (uint16_t)__pack_uint32(pkt, pgm_offset); 
                 }
 
                 map = ctx.alg_entry().rpc_map.maps; 
@@ -371,11 +331,16 @@ parse_rpc_control_flow(fte::ctx_t& ctx)
                 rpc_msg.acpted_rply.ar_stat == 0) {
            
                 map = newentry.rpc_map.maps;
-            
+           
+                HAL_TRACE_DEBUG("Dump reply detected: offset1: {} offset2: {} offset3: {} offset4: {}", 
+                               pkt[pgm_offset], pkt[pgm_offset+1], pkt[pgm_offset+2], pkt[pgm_offset+3]);
+
                 rpcb_list.rpcb_map.r_netid = &netid[0];
                 rpcb_list.rpcb_map.r_addr = &uaddr[0]; 
                 while (__pack_uint32(pkt, pgm_offset) == 1) {
                     pgm_offset += WORD_BYTES;
+                    // Todo (Pavithra) search if the program already
+                    // exists in the list
                     if (rpc_msg.rm_call.cb_vers == RPCBVERS_3 ||
                         rpc_msg.rm_call.cb_vers == RPCBVERS_4) { 
                         memset(&rpcb_list, 0, sizeof(rpcb_list));
@@ -404,7 +369,9 @@ parse_rpc_control_flow(fte::ctx_t& ctx)
                     insert_rpc_entry(ctx, &map[newentry.rpc_map.num_map]);
                     newentry.rpc_map.num_map++;        
                 };
-                ctx.set_alg_proto_state(fte::ALG_PROTO_STATE_RPC_INIT);
+                if (!newentry.rpc_frag_cont) {
+                    newentry.alg_proto_state = fte::ALG_PROTO_STATE_RPC_INIT;
+                }
             }
             break;
 
@@ -416,9 +383,11 @@ parse_rpc_control_flow(fte::ctx_t& ctx)
     }
 
     if (update_entry) {
+        HAL_TRACE_DEBUG("Updating the existing entry: {}", newentry);
         //Update the existing entry
         ret = fte::update_alg_entry(ctx.key(), (void *)&newentry, sizeof(fte::alg_entry_t));
     } else {
+        HAL_TRACE_DEBUG("Setting a new entry: {}", newentry);
         // Set the entry
         ctx.set_alg_entry(newentry);
     }
@@ -427,7 +396,7 @@ parse_rpc_control_flow(fte::ctx_t& ctx)
 }
 
 hal_ret_t
-process_rpc_control_flow(fte::ctx_t& ctx)
+process_sunrpc_control_flow(fte::ctx_t& ctx)
 {
     hal_ret_t             ret = HAL_RET_OK;
     fte::flow_update_t    flowupd;
@@ -440,7 +409,7 @@ process_rpc_control_flow(fte::ctx_t& ctx)
         // UDP could have the portmapper queries at the 
         // start of the session
         if (ctx.key().proto == IP_PROTO_UDP) {
-            ret = parse_rpc_control_flow(ctx); 
+            ret = parse_sunrpc_control_flow(ctx); 
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("SUN RPC ALG parse for UDP frame failed");
                 return ret;
@@ -462,7 +431,7 @@ process_rpc_control_flow(fte::ctx_t& ctx)
 }
 
 hal_ret_t
-process_rpc_data_flow(fte::ctx_t& ctx)
+process_sunrpc_data_flow(fte::ctx_t& ctx)
 {
     // Get the Firewall data and make sure that the program
     // is still allowed in the config

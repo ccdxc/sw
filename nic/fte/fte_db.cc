@@ -91,7 +91,19 @@ lookup_alg_db(ctx_t *ctx)
     key_fields_t     fields[MAX_KEY_FIELDS];
 
     keys[num_keys++] = ctx->key();
-
+    if (ctx->arm_lifq() == ALG_CFLOW_LIFQ) {
+        // We insert one entry in the DB and get
+        // the info in case we have gotten for reverse flow
+        hal::flow_key_t key;
+   
+        key = ctx->key();
+        key.sport = ctx->key().dport;
+        key.dport = ctx->key().sport;
+        key.sip = ctx->key().dip;
+        key.dip = ctx->key().sip;
+        keys[num_keys++] = key;
+    }
+    
     //ALG Variations
  
     // TFTP response
@@ -181,6 +193,16 @@ update_alg_entry(hal::flow_key_t key, void *new_entry, size_t sz)
     g_fte_db->wunlock();
 
     return HAL_RET_OK;
+}
+
+std::ostream& operator<<(std::ostream& os, const alg_entry_t& val)
+{
+    os << "{key=" << val.key;
+    os << " ,alg_proto_state=" << val.alg_proto_state;
+    os << " ,role=" << val.role;
+    os << " ,rpc_frag_cont=" << val.rpc_frag_cont;
+
+    return os << "}";
 }
 
 }

@@ -49,9 +49,17 @@ alg_exec(fte::ctx_t& ctx)
 
             case nwsec::APP_SVC_SUN_RPC:
                 if (ctx.alg_proto_state() == fte::ALG_PROTO_STATE_RPC_DATA) {
-                    ret = process_rpc_data_flow(ctx);
+                    ret = process_sunrpc_data_flow(ctx);
                 } else {
-                    ret = process_rpc_control_flow(ctx); 
+                    ret = process_sunrpc_control_flow(ctx); 
+                }
+                break;
+  
+            case nwsec::APP_SVC_MSFT_RPC:
+                if (ctx.alg_proto_state() == fte::ALG_PROTO_STATE_RPC_DATA) {
+                    ret = process_msrpc_data_flow(ctx);
+                } else {
+                    ret = process_msrpc_control_flow(ctx);
                 }
                 break;
  
@@ -74,7 +82,7 @@ alg_exec(fte::ctx_t& ctx)
             case fte::ALG_PROTO_STATE_RPC_INIT:
             case fte::ALG_PROTO_STATE_RPC_GETPORT:
             case fte::ALG_PROTO_STATE_RPC_DUMP:
-                ret = parse_rpc_control_flow(ctx);
+                ret = parse_sunrpc_control_flow(ctx);
                 return fte::PIPELINE_END;
 
             default:

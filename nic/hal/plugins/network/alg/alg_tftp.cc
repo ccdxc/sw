@@ -1,6 +1,8 @@
 #include "nic/hal/plugins/network/alg/alg_tftp.hpp"
 #include "nic/hal/plugins/network/alg/alg_utils.hpp"
 
+#define TFTPOP_OFFSET 0x1
+
 namespace hal {
 namespace net {
 
@@ -11,9 +13,14 @@ process_tftp_first_packet(fte::ctx_t& ctx)
     fte::alg_proto_state_t  state = fte::ALG_PROTO_STATE_NONE;
     const uint8_t          *pkt = ctx.pkt();
     uint8_t                 offset = 0;
+    fte::alg_entry_t        newentry = ctx.alg_entry();
 
     // Payload offset from CPU header
     offset = ctx.cpu_rxhdr()->payload_offset;
+
+    // Opcode offset
+    offset += TFTPOP_OFFSET;
+
     if (ctx.pkt_len() < offset) {
         // Should we drop the packet at this point ?
         HAL_TRACE_ERR("Packet len: {} is less than payload offset: {}", \
@@ -26,13 +33,16 @@ process_tftp_first_packet(fte::ctx_t& ctx)
         state = fte::ALG_PROTO_STATE_TFTP_RRQ;
     } else if (pkt[offset] == 2) { /* WRQ */
         state = fte::ALG_PROTO_STATE_TFTP_WRQ;
-    }
+    } 
 
     if (state != fte::ALG_PROTO_STATE_NONE) {
+        HAL_TRACE_DEBUG("Setting alg proto state to : {}", state);
         // Set Rflow to be invalid and ALG proto state
         // We want the flow miss to happen on Rflow
         ctx.set_valid_rflow(false);
-        ctx.set_alg_proto_state(state);
+        newentry.key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
+        newentry.alg_proto_state = state;
+        ctx.set_alg_entry(newentry);
         ctx.register_completion_handler(fte::alg_completion_hdlr);
     }
 
@@ -50,6 +60,16 @@ process_tftp(fte::ctx_t& ctx)
 
     // Payload offset from CPU header
     offset = ctx.cpu_rxhdr()->payload_offset;
+ 
+    // Opcode offset
+    offset += TFTPOP_OFFSET;
+
+    if (ctx.pkt_len() < offset) {
+        // Should we drop the packet at this point ?
+        HAL_TRACE_ERR("Packet len: {} is less than payload offset: {}", \
+                      ctx.pkt_len(),  offset);
+        return ret;
+    }
 
     switch (ctx.alg_proto_state())
     {

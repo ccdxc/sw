@@ -10,7 +10,7 @@ selectors:
         endpoint  : filter://remote=True
     #flow          : filter://fwtype=L3
     session       :
-        base      : filter://proto=UDP
+        base      : filter://any
         iflow     : filter://any
         rflow     : filter://any
     maxsessions   : 2
@@ -19,7 +19,7 @@ packets:
     - packet:
         id          : IFLOW_BASE  # IFlow Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateBySessionIflow/proto=SUNRPC_CALL_2_GETPORT
+        template    : callback://alg/callbacks/GetSRPCTemplatebyIflow/l7proto=SUNRPC_CALL
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -34,30 +34,29 @@ packets:
             udp:
                 sport        : 65529 
                 dport        : 111 
+            tcp: 
+                sport        : 65529
+                dport        : 111
+            sunrpc_rcrd_marking:
             sunrpc:
-                xid          : 1122334455
+                xid          : 0
                 msg_type     : 0
             sunrpc_call_hdr:
                 rpcvers      : 2
                 pgm          : 100000
-                pgmvers      : 2
-                proc         : 3
+                pgmvers      : 0
+                proc         : 0
                 cred_len     : 0
+                cred         : 0
                 verif_len    : 0
                 verif        : 0 
-            sunrpc_2_portmap_getport_call:
-                pgm          : 100000
-                vers         : 2
-                proto        : 17
-                port         : 0
-
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
         id          : RFLOW_BASE  # RFlow Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateBySessionRflow/proto=SUNRPC_REPLY_2_GETPORT
+        template    : callback://alg/callbacks/GetSRPCTemplatebyRflow/l7proto=SUNRPC_REPLY
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -72,15 +71,17 @@ packets:
             udp:
                 sport   : 111
                 dport   : 65529 
+            tcp:
+                sport   : 111
+                dport   : 65529
+            sunrpc_rcrd_marking:
             sunrpc:
-                xid      : 1122334455
+                xid      : 0
                 msg_type : 1
             sunrpc_reply_hdr:
                 reply_state : 0
                 verif_len   : 0
                 acc_state   : 0
-            sunrpc_2_portmap_getport_reply:
-                port     : 0
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -102,6 +103,9 @@ packets:
             udp:
                 sport        : ref://testcase/config/session/iconfig/flow/sport
                 dport        : ref://testcase/config/session/iconfig/flow/dport
+            tcp:
+                sport        : ref://testcase/config/session/iconfig/flow/sport
+                dport        : ref://testcase/config/session/iconfig/flow/dport
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -109,26 +113,45 @@ packets:
         id                    : IFLOW_PKT1     # IFlow Packet
         clone                 : ref://testcase/packets/id=IFLOW_BASE
         headers               :
+            sunrpc:
+                xid           : callback://alg/callbacks/GetExpectedSUNRPCXid 
+            sunrpc_rcrd_marking:
+                frag_hdr      : 0x80000000
             sunrpc_call_hdr   : 
                 pgmvers       : callback://alg/callbacks/GetExpectedSUNRPCPortmapvers
                 proc          : callback://alg/callbacks/GetExpectedSUNRPCProc
+            sunrpc_2_portmap_getport_call:
+                pgm          : 100000
+                vers         : 2
+                proto        : 17
+                port         : 0
 
     - packet:
         id            : RFLOW_PKT1     # RFlow packet
         clone         : ref://testcase/packets/id=RFLOW_BASE
         headers       :
+            sunrpc            :
+                xid           : callback://alg/callbacks/GetExpectedSUNRPCXid
+            sunrpc_rcrd_marking:
+                frag_hdr      : 0x80000000
             sunrpc_reply_hdr  :
                 reply_state   : callback://alg/callbacks/GetExpectedSUNRPCReplyState
                 acc_state     : callback://alg/callbacks/GetExpectedSUNRPCAccState
             sunrpc_2_portmap_getport_reply:
                 port          : 0xd66b
+            sunrpc_4_portmap_dump_reply:
+                ValFollows    : 1
+                data          : callback://alg/callbacks/GetExpectedSUNRPCDumpReplyData
 
     - packet:
         id                    : IFLOW_DATA_PKT1     # IFlow Packet
         clone                 : ref://testcase/packets/id=IFLOW_DATA_BASE
         headers               :
             udp               :
-                dport         : 0xd66b
+                dport         : callback://alg/callbacks/GetUDPDataPort
+            tcp               :
+                dport         : callback://alg/callbacks/GetUDPDataPort
+            
 
 session:
     - step:

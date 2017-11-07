@@ -1,0 +1,7 @@
+meta:
+    id      : SUNRPC_4_PORTMAP_DUMP_REPLY
+    scapy   : SUNRPC_4_PORTMAP_DUMP_REPLY
+    size    : 0
+
+fields:
+    ValFollows: const/0

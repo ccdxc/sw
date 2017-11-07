@@ -1,0 +1,15 @@
+meta:
+    id      : SUNRPC_4_PORTMAP_DUMP_REPLY_DATA
+    scapy   : SUNRPC_4_PORTMAP_DUMP_REPLY_DATA
+    size    : 0
+
+fields:
+    pgm         : const/0
+    vers        : const/0
+    netid_len   : const/0
+    netid       : None 
+    addr_len    : const/0
+    addr        : None 
+    owner_len   : const/0
+    owner       : None
+    ValFollows  : const/0  

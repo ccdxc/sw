@@ -1,0 +1,7 @@
+meta:
+    id      : SUNRPC_RCRD_MARKING
+    scapy   : SUNRPC_RCRD_MARKING
+    size    : 0
+
+fields:
+    frag_hdr   : const/0

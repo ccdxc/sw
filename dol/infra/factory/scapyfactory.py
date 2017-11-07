@@ -103,6 +103,43 @@ class ScapyHeaderBuilder_TCP(ScapyHeaderBuilder_BASE):
         return super().build(hdr)
 TCP_builder = ScapyHeaderBuilder_TCP()
 
+class ScapyHeaderBuilder_SUNRPC_4_PORTMAP_DUMP_REPLY(ScapyHeaderBuilder_BASE):
+    def __translate_data(self, hdr):
+        scapy_data = []
+        for dat in hdr.fields.data:
+            scapy_hdr = penscapy.SUNRPC_4_PORTMAP_DUMP_REPLY_DATA(pgm=hdr.fields.data[0].pgm, 
+                            netid=hdr.fields.data[0].netid, addr=hdr.fields.data[0].addr, 
+                            owner=hdr.fields.data[0].owner, ValFollows=hdr.fields.data[0].ValFollows)
+            l = len(scapy_hdr.netid)%4
+            if l:
+               opq = ''
+               for i in range(0, (4-l)):
+                   opq = opq + '\x00'
+               scapy_hdr.opaque_data1 = opq
+            l = len(scapy_hdr.addr)%4
+            if l:
+               opq = ''
+               for i in range(0, (4-l)):
+                   opq = opq + '\x00'
+               scapy_hdr.opaque_data2 = opq
+            l = len(scapy_hdr.owner)%4
+            if l:
+               opq = ''
+               for i in range(0, (4-l)):
+                   opq = opq + '\x00'
+               scapy_hdr.opaque_data3 = opq
+            scapy_data.append(scapy_hdr)
+        hdr.fields.data = scapy_data
+        return
+
+    def build(self, hdr):
+        if hdr.fields.ValFollows == 1:
+            self.__translate_data(hdr)
+        return super().build(hdr)
+
+SUNRPC_4_PORTMAP_DUMP_REPLY_builder = ScapyHeaderBuilder_SUNRPC_4_PORTMAP_DUMP_REPLY()
+
+
 class ScapyHeaderBuilder_PENDOL(ScapyHeaderBuilder_BASE):
     def build(self, hdr):
         hdr.fields.ts = 0xFF2233FF

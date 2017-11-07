@@ -293,6 +293,30 @@ bind_layers(UDP, BTH, dport=4791)
 
 bind_layers(UDP, TFTP, dport=65530)
 
+class SUNRPC_4_PORTMAP_DUMP_REPLY_DATA(Packet):
+   name = "SUNRPC_4_PORTMAP_DUMP_REPLY_DATA"
+   fields_desc = [
+       BitField("pgm",        0, 32),
+       BitField("vers",       0, 32),
+       FieldLenField("netid_len", 0, length_of="netid"),
+       StrLenField("netid", "0", length_from=lambda pkt:pkt.netid_len),
+       ConditionalField(StrLenField("opaque_data1", []), lambda pkt:len(pkt.netid)%4 != 0),
+       FieldLenField("addr_len", 0, length_of="addr"),
+       StrLenField("addr", "0", length_from=lambda pkt:pkt.addr_len),
+       ConditionalField(StrLenField("opaque_data2", []), lambda pkt:len(pkt.addr)%4 != 0),
+       FieldLenField("owner_len", 0, length_of="owner"),
+       StrLenField("owner", "0", length_from=lambda pkt:pkt.owner_len),
+       ConditionalField(StrLenField("opaque_data3", []), lambda pkt:len(pkt.owner)%4 != 0),
+       BitField("ValFollows", 0, 32),
+   ]
+
+class SUNRPC_4_PORTMAP_DUMP_REPLY(Packet):
+   name = "SUNRPC_4_PORTMAP_DUMP_REPLY"
+   fields_desc = [
+       BitField("ValFollows", 0, 32),
+       ConditionalField(PacketListField("data", [], SUNRPC_4_PORTMAP_DUMP_REPLY_DATA, length_from=lambda x:None), lambda pkt:pkt.ValFollows == 1),
+   ]
+
 class SUNRPC_2_PORTMAP_GETPORT_CALL(Packet):
     name = "SUNRPC_2_PORTMAP_GETPORT_CALL"
     fields_desc = [
@@ -318,12 +342,13 @@ class SUNRPC_REPLY_HDR(Packet):
     ]
 
     next_hdr = {
-                (100000, 2, 3): SUNRPC_2_PORTMAP_GETPORT_REPLY, #RPC Portmapper GETPORT
+                1122334455: SUNRPC_2_PORTMAP_GETPORT_REPLY, #RPC Portmapper GETPORT REPLY
+                1122334466: SUNRPC_4_PORTMAP_DUMP_REPLY, #RPC Portmapper DUMP Reply
     }
 
     def guess_payload_class(self, payload):
-        if (self.next_hdr[(self.pgm, self.pgmvers, self.proc)]):
-            return self.next_hdr[(self.pgm, self.pgmvers, self.proc)]
+        if (self.next_hdr[self.underlayer.xid]):
+            return self.next_hdr[self.underlayer.xid]
         else:
             assert(0);
             return super().guess_payload_class()
@@ -335,26 +360,21 @@ class SUNRPC_CALL_HDR(Packet):
         BitField("pgm",           0,      32),
         BitField("pgmvers",       0,      32),
         BitField("proc",          0,      32),
-        #FieldLenField("cred_len", None, length_of="cred"),
-        #StrLenField("cred", "0", length_from=lambda pkt:pkt.cred_len),
-        #FieldLenField("verif_len", None, length_of="verif"),
-        #StrLenField("verif", "0", length_from=lambda pkt:pkt.verif_len),
-        BitField("cred_len",       0,      32),
+        BitField("cred_len",      0,      32),
         BitField("cred",          0,      32),
-        BitField("verif_len",       0,      32),
-        BitField("verif",          0,      32),
+        BitField("verif_len",     0,      32),
+        BitField("verif",         0,      32),
     ]
 
     next_hdr = { 
                 (100000, 2, 3): SUNRPC_2_PORTMAP_GETPORT_CALL, #RPC Portmapper GETPORT
+                (100000, 4, 4): PAYLOAD,
     }
 
     def guess_payload_class(self, payload):
         if (self.next_hdr[(self.pgm, self.pgmvers, self.proc)]):
             return self.next_hdr[(self.pgm, self.pgmvers, self.proc)]
-        else:
-            assert(0);
-            return super().guess_payload_class()
+
 
 class SUNRPC(Packet):
     name = "SUNRPC"
@@ -383,11 +403,10 @@ class SUNRPC_RCRD_MARKING(Packet):
 bind_layers(UDP, SUNRPC, dport=111)
 bind_layers(UDP, SUNRPC, dport=65529)
 bind_layers(TCP, SUNRPC_RCRD_MARKING, dport=111)
+bind_layers(TCP, SUNRPC_RCRD_MARKING, dport=65529)
 bind_layers(SUNRPC_RCRD_MARKING, SUNRPC)
 bind_layers(SUNRPC, SUNRPC_CALL_HDR, msg_type=0)
 bind_layers(SUNRPC, SUNRPC_REPLY_HDR, msg_type=1)
-bind_layers(SUNRPC_CALL_HDR, SUNRPC_2_PORTMAP_GETPORT_CALL, proc=3)
-bind_layers(SUNRPC_REPLY_HDR, SUNRPC_2_PORTMAP_GETPORT_REPLY, proc=3)
 
 class ERSPAN(Packet):
     name = "ERSPAN"
@@ -409,4 +428,3 @@ class ERSPAN(Packet):
     ]
 
 bind_layers(GRE, ERSPAN, proto=0x22eb)
- 

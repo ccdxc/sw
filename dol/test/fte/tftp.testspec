@@ -19,7 +19,7 @@ packets:
     - packet:
         id          : IFLOW_BASE  # IFlow Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateBySessionIflow/proto=TFTP
+        template    : callback://alg/callbacks/GetPacketTemplateBySessionIflow/l7proto=TFTP
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.
@@ -41,7 +41,7 @@ packets:
     - packet:
         id          : RFLOW_BASE  # RFlow Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateBySessionRflow/proto=TFTP
+        template    : callback://alg/callbacks/GetPacketTemplateBySessionRflow/l7proto=TFTP
         headers     :
             # Add all possible headers, the final headers will be selected
             # based on the Flow.

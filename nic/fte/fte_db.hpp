@@ -17,6 +17,10 @@ namespace fte {
     ENTRY(ALG_PROTO_STATE_RPC_CALLIT,  7,  "ALG_PROTO_STATE_RPC_CALLIT") \
     ENTRY(ALG_PROTO_STATE_RPC_DUMP,    8,  "ALG_PROTO_STATE_RPC_DUMP") \
     ENTRY(ALG_PROTO_STATE_RPC_DATA,    9,  "ALG_PROTO_STATE_RPC_DATA") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_BIND,  10, "ALG_PROTO_STATE_MSRPC_BIND") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_BOUND, 11, "ALG_PROTO_STATE_MSRPC_BOUND") \
+    ENTRY(ALG_PROTO_STATE_MSRPC_EPM,   12, "ALG_PROTO_STATE_MSRPC_EPM") \
+    
 
 DEFINE_ENUM(alg_proto_state_t, ALG_PROTO_STATE)
 #undef ALG_PROTO_STATE
@@ -35,6 +39,8 @@ DEFINE_ENUM(alg_addr_family_t, ALG_ADDRESS_FAMILY)
 typedef struct map {
     uint32_t             xid;
     uint32_t             prog_num;
+    uint8_t              act_id[16];
+    uint8_t              uuid[16];
     alg_addr_family_t    addr_family;
     uint32_t             prot;
     uint32_t             vers;
@@ -52,11 +58,13 @@ typedef struct alg_entry_s {
     alg_proto_state_t       alg_proto_state;
     hal::flow_role_t        role;
     RPCMaplist              rpc_map;
-    uint8_t                 sunrpc_frag_cont;
+    uint8_t                 rpc_frag_cont;
 
     // meta data maintained for flow
     hal::utils::ht_ctxt_t   flow_key_ht_ctxt;  // Flow key based hash table
 } alg_entry_t;
+
+std::ostream& operator<<(std::ostream& os, const alg_entry_t& val);
 
 class fte_db {
 
