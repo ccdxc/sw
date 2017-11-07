@@ -314,7 +314,7 @@ class capri_p4pd:
                             # masked out.
                             if len(km_byte_to_cf_map) > 0 or len(km_bit_to_cf_map) > 0:
                                 not_my_key_bytes.append(km_start_byte + km_byte)
-                            
+
                     else: #if km_phv_byte in table_km_cprofile.k_byte_sel:
                         # Collect all 'k' phv bytes and map each of those
                         # KM byte position to byte location within every key field 
@@ -377,7 +377,7 @@ class capri_p4pd:
                             # masked out.
                             if len(km_byte_to_cf_map) > 0 or len(km_bit_to_cf_map) > 0:
                                 not_my_key_bytes.append(km_start_byte + km_byte)
-                            
+
                     else: #if km_phv_byte in table_km_cprofile.k_byte_sel:
                         # Collect all 'k' phv bytes and map each of those
                         # KM byte position to byte location within every key field 
@@ -485,7 +485,7 @@ class capri_p4pd:
                     tbl_cf_to_km_bit_map[cf] = [(km_bit, cf_bit)]
                 else:
                     tbl_cf_to_km_bit_map[cf].append((km_bit, cf_bit))
-            
+
         kdict = {}
         kdict['cf_to_km_byte']          = tbl_cf_to_km_byte_map
         kdict['cf_to_km_bit']           = tbl_cf_to_km_bit_map
@@ -499,7 +499,6 @@ class capri_p4pd:
         kdict['wide_key_len']           = 0
         if ctable.is_wide_key:
             kdict['wide_key_len']       = ctable.last_flit_end_key_off - ctable.last_flit_start_key_off
-    
         return kdict
 
 
@@ -590,7 +589,6 @@ class capri_p4pd:
             kdict['keys']                   = []
             kdict['keysize']                = 0
             kdict['wide_key_len']           = 0
-        
         # Build all table action data fields
         tblactions = []
         for actionname,adatafields in ctable.action_data.items():
@@ -677,7 +675,6 @@ class capri_p4pd:
                     if cf == cf_:
                         cf_list[idx] = (None, k+cf_startbit_, width_, "P", cf_get_hname(cf))
 
-        
     def purge_duplicate_pad(self, ki_or_kd_to_cf_map):
         covered_bits = 0
         skipped_fields_k = []
@@ -706,9 +703,34 @@ class capri_p4pd:
                         if cf_ == None:
                             del ki_or_kd_to_cf_map[k]
 
+    def spurious_ki_fix(self, ki_or_kd_to_cf_map):
+        ki_names = []
+        spurious_ki_cfs = set()
+        for k, v  in ki_or_kd_to_cf_map.items():
+            for dict_cfs in v:
+                if dict_cfs[0] != None:
+                    (cf_, cf_startbit_ , width_, ftype_)  =  dict_cfs
+                    if (cf_.hfname, cf_startbit_) not in ki_names:
+                        ki_names.append((cf_.hfname, cf_startbit_))
+                    else:
+                        spurious_ki_cfs.add((dict_cfs, k))
+
+        while len(spurious_ki_cfs) > 0:
+            #Need to convert duplicate K/I into spurious_<key/input>
+            elem = spurious_ki_cfs.pop()
+            dict_cfs, index  = elem
+            v = ki_or_kd_to_cf_map[index]
+            new_v = []
+            for dcf in v:
+                if dcf == dict_cfs:
+                    new_v.append((None, dcf[1],  dcf[2], dcf[3], 'spurious_' + dcf[0].hfname.replace('.', '_')))
+                else:
+                    new_v.append(dcf)
+            ki_or_kd_to_cf_map[index] = new_v
+
     def build_table_asm_hwformat(self, ctable, kd=0):
         '''
-            This function builds dictionary of KM byte to
+            This function builds dictionary of KiM byte to
             (action input p4 field, byte position in the field).
         '''
         # +--------------------------------------------------------------+
@@ -841,7 +863,7 @@ class capri_p4pd:
                         # will be used by data.
                         if not kd or is_tcam:
                             ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8 - kbit % 8, "P", "__NoHdr")]
-                        
+
                 elif phv_byte != -1 and len(self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields) == 1:
                     phv_byte_found = False
                     for cf in ctable.input_fields:
@@ -897,8 +919,54 @@ class capri_p4pd:
                     elif not phv_byte_found and not kd:
                         ki_or_kd_to_cf_map[kbit] = [(None, kbit, 8, "P", "__NoHdr")]
                 elif phv_byte != -1:
-                    fields_of_same_header_in_byte = {}
+                    #Check if  single phv byte is sourced from multiple headers and
+                    #fields from different headers are inter mixed...like example below.
+                    # Byte X has following fields {
+                    # Hdr1.field1[1bit]
+                    # Hdr1.field2[1bit]
+                    # Hdr2.field1[1bit]
+                    # Hdr1.field3[1bit]
+                    # Hdr2.field2[1bit]
+                    #   :
+                    # In this case, do not group header fields on per header basis. This will
+                    # result in reordering of fields in final K+I
+                    hdrs_seen = {}
+                    phv_byte_sourced_with_intermixed_multihdr = False
+                    intermixed_multihdr = False
+                    for k, v  in self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields.items():
+                        containerstart, cf_startbit, width = v
+                        if k.split(".")[0] not in hdrs_seen.keys():
+                            hdrs_seen[k.split(".")[0]] = width
+                            hdr = k.split(".")[0]
+                            cur_hdr = hdr
+                        else:
+                            hdrs_seen[k.split(".")[0]] += width
+                            #if same as cur_hdr, then move on
+                            if cur_hdr == k.split(".")[0]:
+                                continue
+                            else:
+                                #headers fields are intermixed.
+                                intermixed_multihdr = True
 
+                    if len(hdrs_seen) > 1 and intermixed_multihdr:
+                        for k, v in hdrs_seen.items():
+                            if v  <  8:
+                                #Phv byte is not completely filled by every header that sources its
+                                #content. Phv byte is filled by eclectic fields from eclectic hdrs.
+                                phv_byte_sourced_with_intermixed_multihdr = True
+                                break
+
+                    if phv_byte_sourced_with_intermixed_multihdr:
+                        for k, v  in self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields.items():
+                            containerstart, cf_startbit, width = v
+                            cf = self.be.pa.get_field(k, ctable.d)
+                            if cf == None:
+                                ki_or_kd_to_cf_map[kbit + containerstart] = [(cf, cf_startbit, width, "D", "__Pad")]
+                            else:
+                                ki_or_kd_to_cf_map[kbit + containerstart] = [(cf, cf_startbit, width, "D")]
+                        continue
+
+                    fields_of_same_header_in_byte = {}
                     total_p4_fld_width = 0
                     for k, v  in self.be.pa.gress_pa[ctable.d].phcs[phv_byte].fields.items():
                         field_found = False
@@ -927,7 +995,7 @@ class capri_p4pd:
                                     if (cf, cf_startbit, width, "I") not in ki_or_kd_to_cf_map[kbit+cs]:
                                         ki_or_kd_to_cf_map[kbit+cs].append((cf, cf_startbit, width, "I"))
                                         total_p4_fld_width += width
-                                    
+
 
                         if field_found:
                             # There can be cases where cf is both key and input. For such cases
@@ -1004,6 +1072,14 @@ class capri_p4pd:
         self.remove_duplicate_cfs(ctable, ki_or_kd_to_cf_map, bit_extractors, is_tcam)
         # purge pad bits that appeared with in a union and outside union
         self.purge_duplicate_pad(ki_or_kd_to_cf_map)
+
+
+        #Before returning ki_kd map, prepend duplicate K or I appearing in different
+        #bit position in KM with "spurious".. This is needed for assembler to not
+        #error out. At the same time, KM logic has freedom to populate same field
+        #more than once in KM if needed to save/share KM etc.
+        self.spurious_ki_fix(ki_or_kd_to_cf_map)
+
         return ki_or_kd_to_cf_map
 
 
@@ -1100,7 +1176,7 @@ class capri_p4pd:
                                  p4f_size, cf.phv_bit, \
                                  cf.phv_bit / flit_sz, cf.phv_bit % flit_sz,\
                                  ftype, cf_get_hname(cf)))
-        
+
     def build_table_ki_asm_fields(self, ctable):
         '''
         '''
@@ -1156,7 +1232,6 @@ class capri_p4pd:
             i += cb
         return kd_field_info
 
-               
     def build_pd_dict(self):
         '''
         For each table in p4 build a dict of

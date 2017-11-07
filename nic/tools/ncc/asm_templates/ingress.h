@@ -77,7 +77,11 @@ struct ${table}_k {
 //::                         flit, flitoffset, typestr, hdrname) = fields
 //::                        if p4fldwidth == max_fld_union_key_len:
         /* FieldType = ${typestr} */
+//::                            if phvbit or flit or flitoffset:
         ${multip4fldname} : ${p4fldwidth}; /* phvbit[${phvbit}], Flit[${flit}], FlitOffset[${flitoffset}] */
+//::                            else:
+        ${multip4fldname} : ${p4fldwidth}; 
+//::                            #endif
 //::                        else:
 //::                            if hdrname not in all_fields_of_header_in_same_byte:
         struct {
@@ -88,7 +92,11 @@ struct ${table}_k {
 //::                                    _flit, _flitoffset, _typestr, _hdrname) = _fields
 //::                                    if _hdrname == hdrname:
             /* K/I = ${_typestr} */
+//::                                        if _phvbit or _flit or _flitoffset:
             ${_multip4fldname} : ${_p4fldwidth}; /* phvbit[${_phvbit}], Flit[${_flit}], FlitOffset[${_flitoffset}] */
+//::                                        else:
+            ${_multip4fldname} : ${_p4fldwidth};
+//::                                        #endif
 //::                                        _total_p4fldwidth += _p4fldwidth
 //::                                    #endif
 //::                                #endfor
@@ -106,7 +114,11 @@ struct ${table}_k {
 //::                    (multip4fldname, p4fldname, p4fldwidth, phvbit, \
 //::                    flit, flitoffset, typestr, hdrname) = fields
     /* FieldType = ${typestr} */
+//::                    if phvbit or flit or flitoffset:
     ${multip4fldname} : ${p4fldwidth}; /* phvbit[${phvbit}], Flit[${flit}], FlitOffset[${flitoffset}] */
+//::                    else:
+    ${multip4fldname} : ${p4fldwidth};
+//::                    #endif
 //::                    pad_to_512 += p4fldwidth
 //::                #endif
 //::            #endfor
@@ -272,7 +284,11 @@ struct ${table}_${actionname}_d {
 //::                                     flit, flitoffset, typestr, hdrname) = fields
 //::                                    if p4fldwidth == max_fld_union_key_len:
         /* Field Type = ${typestr} */
+//::                                        if phvbit or flit or flitoffset:
         ${multip4fldname} : ${p4fldwidth}; /* phvbit[${phvbit}], Flit[${flit}], FlitOffset[${flitoffset}] */
+//::                                        else:
+        ${multip4fldname} : ${p4fldwidth};
+//::                                        #endif
 //::                                    else:
 //::                                        if hdrname not in all_fields_of_header_in_same_byte:
         struct {            
@@ -283,7 +299,11 @@ struct ${table}_${actionname}_d {
 //::                                                _flit, _flitoffset, _typestr, _hdrname) = _fields
 //::                                                if _hdrname == hdrname:
             /* K/I = ${_typestr} */
+//::                                                    if _phvbit or _flit or _flitoffset:
             ${_multip4fldname} : ${_p4fldwidth}; /* phvbit[${_phvbit}], Flit[${_flit}], FlitOffset[${_flitoffset}] */
+//::                                                    else:
+            ${_multip4fldname} : ${_p4fldwidth};
+//::                                                    #endif
 //::                                                    _total_p4fldwidth += _p4fldwidth
 //::                                                #endif
 //::                                            #endfor
@@ -301,7 +321,11 @@ struct ${table}_${actionname}_d {
 //::                                (multip4fldname, p4fldname, p4fldwidth, phvbit, \
 //::                                flit, flitoffset, typestr, hdrname) = fields
     /* FieldType= ${typestr} */
+//::                                if phvbit or flit or flitoffset:
     ${multip4fldname} : ${p4fldwidth}; /* phvbit[${phvbit}], Flit[${flit}], FlitOffset[${flitoffset}] */
+//::                                else:
+    ${multip4fldname} : ${p4fldwidth};
+//::                                #endif
 //::                            #endif
 //::                        #endfor
 //::                    else:
