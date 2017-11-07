@@ -2,18 +2,17 @@
 feature:
     id      : ftevxlan
     sub     : rxl3
-    package : test.eth
-    module  : eth
+    package : test.fte
+    module  : fte
     enable  : True
     ignore  : False
-    spec    : rx_vxlan_l3.testspec
+    spec    : fte_rx_vxlan_l3.testspec
     args    :
         maxflows: 4
 
 modules:
     - module:
         name    : IPV4
-        spec    : rx_vxlan_l3.testspec
         iterate:
             - flow: filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
             - flow: filter://type=IPV4,proto=TCP,label=FTE,direction=IFLOW
@@ -21,7 +20,6 @@ modules:
 
     - module:
         name    : IPV6
-        spec    : rx_vxlan_l3.testspec
         iterate:
             - flow: filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
             - flow: filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW

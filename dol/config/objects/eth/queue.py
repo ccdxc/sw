@@ -53,8 +53,8 @@ class EthQstate(Packet):
         LELongField("ring_base", 0),
         LEShortField("ring_size", 0),
         LELongField("cq_base", 0),
-        X3BytesField("__pad0", 0),
-        LEShortField("__pad1", 0),
+        BitField("color", 0, 1),
+        BitField("__pad0", 0, 39),
     ]
 
 
@@ -118,6 +118,21 @@ class EthQstateObject(object):
         assert(ring < 7)
         return getattr(self.data[EthQstate], 'c_index%d' % ring)
 
+    def get_ring_size(self):
+        return int(math.pow(2, self.data[EthQstate].ring_size))
+
+    def set_pindex(self, ring, value):
+        assert(ring < 7)
+        assert(value < self.get_ring_size())
+        setattr(self.data[EthQstate], 'p_index%d' % ring, value)
+        model_wrap.write_mem(self.addr + 8 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
+
+    def set_cindex(self, ring, value):
+        assert(ring < 7)
+        assert(value < self.get_ring_size())
+        setattr(self.data[EthQstate], 'c_index%d' % ring, value)
+        model_wrap.write_mem(self.addr + 10 + (2 * ring), bytes(ctypes.c_uint16(value)), 2)
+
     def set_enable(self, value):
         self.data[EthQstate].enable = value
         model_wrap.write_mem(self.addr + 40, bytes(ctypes.c_uint8(value)), 1)
@@ -135,8 +150,9 @@ class EthQstateObject(object):
         self.data[EthQstate].cq_base = value
         model_wrap.write_mem(self.addr + 51, bytes(ctypes.c_uint64(value)), 8)
 
-    def get_ring_size(self):
-        return int(math.pow(2, self.data[EthQstate].ring_size))
+    def set_color(self, value):
+        self.data[EthQstate].color = value
+        model_wrap.write_mem(self.addr + 59, bytes(ctypes.c_uint8(value << 7)), 1)
 
     def Show(self, lgh = cfglogger):
         lgh.ShowScapyObject(self.data)
@@ -194,6 +210,9 @@ class AdminQstateObject(object):
     def set_cq_base(self, value):
         pass
 
+    def set_color(self, value):
+        pass
+
     def get_ring_size(self):
         return int(math.pow(2, self.data[AdminQstate].ring_size))
 
@@ -209,7 +228,6 @@ class EthQueueObject(QueueObject):
     def Init(self, queue_type, spec, qid):
         super().Init(queue_type, spec)
         self.id = qid
-        #self.GID(str(self.id))
         self.GID("Q%d" % self.id)
 
     @property
@@ -260,6 +278,7 @@ class EthQueueObject(QueueObject):
                 self.qstate.set_ring_size(ring.size)
             elif ring.id == 'R1':
                 self.qstate.set_cq_base(ring._mem.pa)
+                self.qstate.set_color(1)
             else:
                 raise NotImplementedError
         self.qstate.Read()

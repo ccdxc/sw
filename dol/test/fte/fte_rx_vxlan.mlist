@@ -2,8 +2,8 @@
 feature:
     id      : ftevxlan
     sub     : rx
-    package : test.eth
-    module  : eth
+    package : test.fte
+    module  : fte
     enable  : True
     ignore  : False
     args    :
@@ -12,7 +12,7 @@ feature:
 modules:
     - module:
         name    : IPV4
-        spec    : rx_vxlan.testspec
+        spec    : fte_rx_vxlan.testspec
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW
               segment   : filter://native=False
@@ -23,7 +23,7 @@ modules:
 
     - module:
         name    : IPV6
-        spec    : rx_vxlan.testspec
+        spec    : fte_rx_vxlan.testspec
         iterate:
             - flow: filter://type=IPV6,proto=UDP,label=FTE,direction=IFLOW
             - flow: filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
@@ -31,7 +31,7 @@ modules:
 
     - module:
          name    : ARP
-         spec    : rx_vxlan_arp.testspec
+         spec    : fte_rx_vxlan_arp.testspec
          iterate :
              - type      : ARP_REQ_UC
                flow      : filter://label=ARP,type=MAC
@@ -40,7 +40,7 @@ modules:
 
     - module:
          name    : RARP
-         spec    : rx_vxlan_arp.testspec
+         spec    : fte_rx_vxlan_arp.testspec
          iterate :
              - type      : RARP_REQ_UC
                flow      : filter://type=MAC,label=ARP
@@ -51,7 +51,7 @@ modules:
          name    : NONIP
          enable  : False
          ignore  : True
-         spec    : rx_vxlan_non_ip.testspec
+         spec    : fte_rx_vxlan_non_ip.testspec
          iterate :
              - flow: filter://label=FTE,type=MAC
 

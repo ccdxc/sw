@@ -50,6 +50,7 @@ eth_rx_fetch_desc:
   or              r1, r1, k.p4_to_p4plus_vlan_pcp, 13
   phvwr           p.eth_rx_cq_desc_vlan_tag, r1.hx
   phvwr           p.eth_rx_cq_desc_flags, k.{p4_to_p4plus_flags}.hx
+  phvwr           p.eth_rx_cq_desc_color, d.color
 
   // Claim the descriptor
   //tblmincri       d.{c_index0}.hx, d.{ring_size}.hx, 1
@@ -62,6 +63,9 @@ eth_rx_fetch_desc:
   add             r1, r0, d.{p_index1}.hx
   mincr           r1, d.{ring_size}.hx, 1
   tblwr           d.p_index1, r1.hx
+
+  seq             c1, d.p_index1, 0
+  tblmincri.c1    d.color, 1, 1
 
   nop.e
   nop

@@ -24,6 +24,7 @@ class EthRingObject(ring.RingObject):
         super().Init(queue, spec)
         self.num = int(getattr(spec, 'num', 0))
         self.desc_size = self.descriptor_template.meta.size
+        self.exp_color = 1  # Expect this color until ring wrap, then toggle
 
     def Configure(self):
         # Make sure ring_size is a power of 2
@@ -34,9 +35,10 @@ class EthRingObject(ring.RingObject):
 
     def Post(self, descriptor):
         cfglogger.info("Posting %s @ %s on %s" % (descriptor, self.queue.qstate.get_pindex(self.num), self))
-        #if (self.queue.qstate.get_pindex(self.num) + 1) % math.pow(2, self.size)\
-        #        == self.queue.qstate.get_cindex(self.num):
-        #    return status.RETRY
+
+        # Is Ring Full?
+        if (self.queue.qstate.get_pindex(self.num) + 1) % self.size == self.queue.qstate.get_cindex(self.num):
+            return status.RETRY
 
         # Check descriptor compatibility
         assert(self.desc_size == descriptor.size)
@@ -50,6 +52,7 @@ class EthRingObject(ring.RingObject):
         # Increment posted index
         self.queue.qstate.incr_pindex(self.num)
         self.queue.qstate.Read()
+        return status.SUCCESS
 
     def Consume(self, descriptor):
         cfglogger.info("Consuming %s @ %s on %s" % (descriptor, self.queue.qstate.get_cindex(self.num), self))
@@ -64,15 +67,16 @@ class EthRingObject(ring.RingObject):
         if descriptor._buf is not None and d._buf is not None:
             descriptor._buf.Bind(d._buf._mem)
         descriptor.Read()
-        
-        qstate_ci = self.queue.qstate.get_cindex(self.num)
-        descr_ci = getattr(descriptor._data, 'completion_index', None)
-        if descr_ci is not None and descr_ci != qstate_ci:
-            cfglogger.info("RETRY required: DescrCINDEX:%d QstateCINDEX:%d" %\
-                           (descr_ci, qstate_ci))
+
+        # Have we received a completion?
+        if descriptor._data.color != self.exp_color:
             return status.RETRY
+
         # Increment consumer index
         self.queue.qstate.incr_cindex(self.num)
+        # If we have reached the end of the ring then, toggle the expected color
+        if self.queue.qstate.get_cindex(self.num) + 1 > self.size:
+            self.exp_color = 0 if self.exp_color else 1
         self.queue.qstate.Read()
         return status.SUCCESS
 

@@ -15,7 +15,7 @@ from infra.common.glopts    import GlobalOptions
 from infra.common.logging   import logger as logger
 from infra.asic.model       import ModelConnector
 
-MAX_RETRIES = 4
+MAX_RETRIES = 10
 
 class VerifEngineObject:
     def __init__(self):

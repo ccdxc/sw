@@ -1,13 +1,13 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        tenant      : filter://type=TENANT
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        tenant      : filter://type=TENANT
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=False
         interface   : filter://any
     flow            : filter://fwtype=L3
@@ -25,11 +25,11 @@ packets:
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                ttl     : callback://networking/packets/GetTtl
+                ttl     : 64
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                hlim    : callback://networking/packets/GetTtl
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
@@ -52,11 +52,24 @@ packets:
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
+            outereth    :
+                src     : ref://testcase/config/src/endpoint/intf/rmacaddr
+                dst     : ref://testcase/config/src/endpoint/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/src/endpoint/intf/rtep
+                dst     : ref://testcase/config/src/endpoint/intf/ltep
+                tos     : 0
+                id      : 0
+            qtag:
+                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
+                prio    : callback://networking/packets/GetExpectedPacketCos
+            outerudp:
+                chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/src/segment/vxlan_id
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/src/segment/macaddr
-            qtag:
-                vlan    : callback://networking/packets/GetVlanId
             ipv4:
                 ttl     : callback://networking/packets/GetTtl
             ipv6:
@@ -73,7 +86,7 @@ packets:
                 src     : ref://testcase/config/dst/segment/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             qtag:
-                prio    : callback://networking/packets/GetExpectedPacketCos
+                prio    : 0 #callback://networking/packets/GetExpectedPacketCos
                 vlan    : ref://testcase/config/dst/endpoint/intf/encap_vlan_id
             ipv4:
                 tos     : ref://testcase/config/flow/txqos/dscp
@@ -81,6 +94,21 @@ packets:
             ipv6:
                 tc      : ref://testcase/config/flow/txqos/dscp
                 hlim    : callback://networking/packets/GetRoutedTtl
+            tcp:
+                flags: ack
+
+    - packet:
+        id          : PKT3 # Expected Packet on FTE
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : None
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/src/segment/macaddr
+            ipv4:
+                ttl     : callback://networking/packets/GetTtl
+            ipv6:
+                hlim    : callback://networking/packets/GetTtl
             tcp:
                 flags: ack
 
@@ -136,6 +164,6 @@ expect:
             object  : ref://testcase/descriptors/id=DESC2
             ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
     packets:
-        - packet:
-            object  : callback://networking/packets/GetCpuPacket/expktid=PKT1
-            port    : 128
+         - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=PKT3
+            port    : 128 

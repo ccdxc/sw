@@ -37,10 +37,10 @@ eth_tx_fetch_desc:
   phvwr           p.eth_tx_to_s1_cq_desc_addr, r1
 
   // Completion descriptor
-  phvwr           p.eth_tx_cq_desc_completion_index, d.{c_index0}.hx
+  phvwr           p.eth_tx_cq_desc_completion_index, d.c_index0
   phvwr           p.eth_tx_cq_desc_queue_id, k.{p4_txdma_intr_qid}.hx
   phvwr           p.eth_tx_cq_desc_err_code, 0
-  phvwr           p.eth_tx_cq_desc_color, 0
+  phvwr           p.eth_tx_cq_desc_color, d.color
 
   // Evaluate Scheduler Bit
   or              r1, k.p4_intr_global_lif_sbit3_ebit10, k.p4_intr_global_lif_sbit0_ebit2, 8
@@ -59,6 +59,9 @@ eth_tx_fetch_desc:
   add             r1, r0, d.{p_index1}.hx
   mincr           r1, d.{ring_size}.hx, 1
   tblwr           d.p_index1, r1.hx
+
+  seq             c1, d.p_index1, 0
+  tblmincri.c1    d.color, 1, 1
 
   nop.e
   nop

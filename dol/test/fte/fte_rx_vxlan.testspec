@@ -1,21 +1,21 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
-        endpoint    : filter://remote=False
+        tenant      : filter://overlay=VXLAN,type=TENANT
+        segment     : filter://fabencap=VXLAN
+        endpoint    : filter://remote=True
         interface   : filter://any
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://overlay=VXLAN,type=TENANT
         segment     : filter://any
         endpoint    : filter://remote=False
         interface   : filter://any
-    flow            : filter://fwtype=L3
+    flow            : filter://fwtype=L2
     maxflows        : 4
 
 packets:
     - packet:
-        id          : BASE_PKT # Base packet
+        id          : BASE_PKT # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
         headers     :
@@ -25,18 +25,17 @@ packets:
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                ttl     : callback://networking/packets/GetTtl
+                ttl     : 64
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                hlim    : callback://networking/packets/GetTtl
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
-                flags   : ack
             icmp:
                 code    : ref://testcase/config/flow/icmpcode
                 type    : ref://testcase/config/flow/icmptype
@@ -49,46 +48,54 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : PKT1 # Base packet
+        id          : PKT1 # Input Packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
-            qtag    :
-                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+            outereth    :
+                src     : ref://testcase/config/src/endpoint/intf/rmacaddr
+                dst     : ref://testcase/config/src/endpoint/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/src/endpoint/intf/rtep
+                dst     : ref://testcase/config/src/endpoint/intf/ltep
+                tos     : 0
+                id      : 0
+            vxlan       :
+                vni     : ref://testcase/config/src/segment/vxlan_id
+            qtag:
+                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
             tcp:
                 flags: ack
 
     - packet:
-        id          : EXP_PKT # Base packet
+        id          : PKT2 # Expected Packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
-            eth:
-                src : ref://testcase/config/dst/segment/macaddr
-                dst : ref://testcase/config/dst/endpoint/macaddr
             qtag:
                 vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
-                prio: ref://testcase/config/flow/txqos/cos
+                prio: 0 #ref://testcase/config/flow/txqos/cos
             ipv4:
-                ttl : callback://networking/packets/GetRoutedTtl
                 tos : ref://testcase/config/flow/txqos/dscp
             ipv6:
                 tc  : ref://testcase/config/flow/txqos/dscp
-                hlim: callback://networking/packets/GetRoutedTtl
+            tcp:
+                flags: ack
+    - packet:
+        id          : PKT3 # Expected Packet on FTE
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : None
+        headers     :
+            ipv4:
+                tos : ref://testcase/config/flow/txqos/dscp
+            ipv6:
+                tc  : ref://testcase/config/flow/txqos/dscp
             tcp:
                 flags: ack
 
 buffers:
     - buffer:
-        id      : TXBUF
-        template: ref://factory/templates/id=ETH_BUFFER
-        fields:
-           bind : True
-           size : ref://testcase/packets/id=PKT1/size
-           data : ref://testcase/packets/id=PKT1/rawbytes
-
-    - buffer:
-        id      : RXBUF
+        id      : BUF1 # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: True
@@ -96,72 +103,48 @@ buffers:
             data: None
 
     - buffer:
-        id      : EXBUF
+        id      : BUF2 # Expected Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-            bind  : False
-            size  : ref://testcase/packets/id=EXP_PKT/size
-            data  : ref://testcase/packets/id=EXP_PKT/rawbytes
-
+            bind: False
+            size: ref://testcase/packets/id=PKT2/size
+            data: ref://testcase/packets/id=PKT2/rawbytes
 
 descriptors:
     - descriptor:
-        id      : TXDESCR
-        template: ref://factory/templates/id=DESCR_ETH_TX
-        fields:
-            _buf  : ref://testcase/buffers/id=TXBUF
-            addr  : ref://testcase/buffers/id=TXBUF/addr
-            len   : ref://testcase/buffers/id=TXBUF/size
-
-    - descriptor:
-        id      : RXDESCR
+        id      : DESC1 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
-            _buf  : ref://testcase/buffers/id=RXBUF
-            addr  : ref://testcase/buffers/id=RXBUF/addr
-            len   : ref://testcase/buffers/id=RXBUF/size
+            _buf  : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
 
     - descriptor:
-        id      : EX_TXDESCR
-        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
-        fields:
-            err_code : 0x0
-
-    - descriptor:
-        id      : EX_RXDESCR
+        id      : DESC2 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            _buf          : ref://testcase/buffers/id=EXBUF
-            bytes_written : ref://testcase/buffers/id=EXBUF/size
-
+            _buf          : ref://testcase/buffers/id=BUF2
+            bytes_written : ref://testcase/buffers/id=BUF2/size
 
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=TXDESCR
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
-
-        - descriptor:
-            object  : ref://testcase/descriptors/id=RXDESCR
+            object  : ref://testcase/descriptors/id=DESC1
             ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R0
 
-    doorbell:
-        object: ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
-
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=PKT1
+            port    : callback://networking/fwmode/GetRxTriggerPorts
 
 expect:
     delay   : callback://networking/packets/GetExpectDelay
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=EX_TXDESCR
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX/queues/id=Q0/rings/id=R1
-
-        - descriptor:
-            object  : ref://testcase/descriptors/id=EX_RXDESCR
+            object  : ref://testcase/descriptors/id=DESC2
             ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
-
     packets:
-        - packet:
-            object  : callback://networking/packets/GetCpuPacket/expktid=PKT1
+         - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=PKT3
             port    : 128
 

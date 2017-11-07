@@ -126,7 +126,8 @@ def GetExpectedPacketEncaps(testcase, packet):
     return encaps
 
 def GetExpectedPacketCos(testcase, packet):
-    if testcase.config.flow.txqos.cos is not None:
+    if testcase.config.src.tenant.IsQosEnabled() and\
+       testcase.config.flow.txqos.cos is not None:
         return testcase.config.flow.txqos.cos
 
     # If we sent pkt with a tag, we should receive with same cos we sent with

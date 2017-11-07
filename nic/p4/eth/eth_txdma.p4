@@ -55,6 +55,7 @@ header_type eth_tx_qstate_d {
         ring_base : 64;
         ring_size : 16;
         cq_ring_base : 64;    // 59 B
+        color : 1;
     }
 }
 

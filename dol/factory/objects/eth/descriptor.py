@@ -90,7 +90,7 @@ class AdminDesciptor(Packet):
 class AdminCqDescriptor(Packet):
     fields_desc = [
         LEShortField("cmd_status", 0),
-        LEShortField("cpl_id", 0),
+        LEShortField("completion_index", 0),
         BitField("rsvd", 0, 7),
         BitField("color", 0, 1),
         LEIntField("cmd_data0", 0),
@@ -190,10 +190,15 @@ class EthDescriptorObject(base.FactoryObjectBase):
         obj = super().__copy__()
         obj.GID('ACTUAL_' + obj.GID())
         obj.fields = {}     # Set when self.Read method is called
+        if self._buf:
+            obj._buf = copy.copy(obj._buf)
         return obj
 
     def GetBuffer(self):
         return self._buf
+
+    def GetCompletionIndex(self):
+        return None
 
 
 class EthRxDescriptorObject(EthDescriptorObject):
@@ -211,6 +216,9 @@ class EthRxCqDescriptorObject(EthDescriptorObject):
         # This is a read-only descriptor type
         return
 
+    def GetCompletionIndex(self):
+        return self._data[self.__data_class__]['completion_index']
+
 
 class EthTxDescriptorObject(EthDescriptorObject):
     __data_class__ = EthTxDescriptor
@@ -227,6 +235,9 @@ class EthTxCqDescriptorObject(EthDescriptorObject):
         # This is a read-only descriptor type
         return
 
+    def GetCompletionIndex(self):
+        return self._data[self.__data_class__].completion_index
+
 
 class AdminDescriptorObject(EthDescriptorObject):
     __data_class__ = AdminDesciptor
@@ -242,3 +253,6 @@ class AdminCqDescriptorObject(EthDescriptorObject):
     def Write(self):
         # This is a read-only descriptor type
         return
+
+    def GetCompletionIndex(self):
+        return self._data[self.__data_class__]['completion_index']

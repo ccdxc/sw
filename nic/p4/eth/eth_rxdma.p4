@@ -66,6 +66,7 @@ header_type eth_rx_qstate_d {
         ring_base : 64;
         ring_size : 16;
         cq_ring_base : 64;
+        color : 1;
     }
 }
 

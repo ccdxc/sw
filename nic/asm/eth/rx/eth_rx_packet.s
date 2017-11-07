@@ -48,7 +48,7 @@ eth_rx_packet:
     phvwr       p.dma_cmd1_dma_cmd_addr, k.eth_rx_to_s1_cq_desc_addr
     phvwri      p.dma_cmd1_dma_cmd_wr_fence, 0
     phvwri      p.dma_cmd1_dma_cmd_phv_start_addr, CAPRI_PHV_START_OFFSET(eth_rx_cq_desc_completion_index)
-    phvwri      p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_rx_cq_desc_rsvd0)
+    phvwri      p.dma_cmd1_dma_cmd_phv_end_addr, CAPRI_PHV_END_OFFSET(eth_rx_cq_desc_color)
     phvwri      p.dma_cmd1_dma_cmd_use_override_lif, 0
     phvwri      p.dma_cmd1_dma_cmd_override_lif, 0
     phvwri      p.dma_cmd1_dma_cmd_barrier, 0

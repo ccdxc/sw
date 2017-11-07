@@ -1,54 +1,54 @@
-# TCP Proxy RX Inorder Sample TestSpec file.
+# Test Spec
 selectors:
-    # Choose the config, that only selects flows matching below packet
-    # templates.
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        tenant      : filter://type=TENANT
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
-        qpair       : filter://any # Local QPair
+        interface   : filter://any
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        tenant      : filter://type=TENANT
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=False
-        qpair       : filter://any 
-    flow        : filter://proto=TCP,label=TCP-PROXY,fwtype=L2
-    maxflows    : 1
+        interface   : filter://any
+    flow            : filter://fwtype=L2
+    maxflows        : 4
 
-# Packet section defines the set of input and output packets. Input packets
-# will be used in triggers and output packets will be used in expect
 packets:
     - packet:
-        id          : BASE_PKT
-        template    : callback://networking/packets/GetPacketTemplateByFlow
+        id          : BASE_PKT # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_ARP
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
-            ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : 64
-            tcp:
-                sport   : ref://testcase/config/flow/sport
-                dport   : ref://testcase/config/flow/dport
-                seq     : callback://tcpcb/tcpcb/GetSeqNum
-                ack     : callback://tcpcb/tcpcb/GetAckNum
+                type    : ref://testcase/config/flow/ethertype
+            arp:
+                op      : callback://networking/arp/GetArpOpcode
+                hwsrc   : callback://networking/arp/GetArpSourceMAC
+                psrc    : callback://networking/arp/GetArpSourceIP
+                hwdst   : callback://networking/arp/GetArpDestMAC
+                pdst    : callback://networking/arp/GetArpDestIP
             payload:
-                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : PKT1
+        id          : PKT1 # Input Packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
+            outereth    :
+                src     : ref://testcase/config/src/endpoint/intf/rmacaddr
+                dst     : ref://testcase/config/src/endpoint/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/src/endpoint/intf/rtep
+                dst     : ref://testcase/config/src/endpoint/intf/ltep
+                tos     : 0
+                id      : 0
+            vxlan       :
+                vni     : ref://testcase/config/src/segment/vxlan_id
             qtag:
-                vlan    : ref://testcase/config/src/segment/vlan_id
+                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
 
     - packet:
         id          : PKT2 # Expected Packet
@@ -56,22 +56,17 @@ packets:
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             qtag:
-                vlan    : ref://testcase/config/dst/endpoint/intf/encap_vlan_id
-                prio    : callback://networking/packets/GetExpectedPacketCos
-            ipv4:
-                ttl     : 64
-            tcp:
-                seq     : callback://tcpcb/tcpcb/GetPktOutSeqNum
-                ack     : callback://tcpcb/tcpcb/GetPktOutAckNum
-                window  : 1000
-                flags   : ack
-            payload:
-                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                prio: 0 #ref://testcase/config/flow/txqos/cos
 
+    - packet:
+        id          : PKT3 # Expected Packet on FTE
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : None
 
 buffers:
     - buffer:
-        id      : BUF1  # Input Buffer
+        id      : BUF1 # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: True
@@ -79,7 +74,7 @@ buffers:
             data: None
 
     - buffer:
-        id      : BUF2  # Expected Buffer
+        id      : BUF2 # Expected Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: False
@@ -111,10 +106,15 @@ trigger:
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT1
-            port    : ref://testcase/config/src/endpoint/intf/ports
+            port    : callback://networking/fwmode/GetRxTriggerPorts
 
 expect:
+    delay   : callback://networking/packets/GetExpectDelay
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
             ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX/queues/id=Q0/rings/id=R1
+    packets:
+        - packet:
+            object  : callback://networking/packets/GetCpuPacket/expktid=PKT3
+            port    : 128
