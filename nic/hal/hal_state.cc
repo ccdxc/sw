@@ -11,6 +11,7 @@
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/src/nwsec.hpp"
 #include "nic/hal/src/event.hpp"
+#include "nic/hal/src/nwsec_group.hpp"
 #include "nic/hal/src/tlscb.hpp"
 #include "nic/hal/src/tcpcb.hpp"
 #include "nic/hal/src/qos.hpp"

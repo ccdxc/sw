@@ -4,7 +4,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/src/nwsec_group.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/if_utils.hpp"
 
@@ -47,7 +47,6 @@ validate_nwsec_policy_cfg_create(nwsec::SecurityGroupPolicySpec& spec,
     if (!spec.has_key_or_handle()) {
         HAL_TRACE_ERR("{}: security group id or handle not set in request",
                       __FUNCTION__);
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
     
@@ -57,7 +56,6 @@ validate_nwsec_policy_cfg_create(nwsec::SecurityGroupPolicySpec& spec,
         // key-handle field set, but securityGroup id not provided
         HAL_TRACE_ERR("{}: security group id not set in"
                       "request", __FUNCTION__);
-        rsp->set_api_status(types::API_STATUS_SECURITY_POLICY_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
     
@@ -559,7 +557,7 @@ security_group_create(nwsec::SecurityGroupSpec&     spec,
                              nwsec_group_create_abort_cb,
                              nwsec_group_create_cleanup_cb);
 end:
-    nwsec_group_prepare_rsp(res, ret, nwsec_grp->hal_handle);
+    nwsec_group_prepare_rsp(res, ret, nwsec_grp ? nwsec_grp->hal_handle : HAL_HANDLE_INVALID );
 
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return HAL_RET_OK;
@@ -645,9 +643,9 @@ add_nw_to_security_group(uint32_t sg_id, hal_handle_t nw_handle_id)
 
 // Security Policy nw_handle del
 hal_ret_t
-del_nw_to_security_group(uint32_t sg_id, hal_handle_t nw_handle_id)
+del_nw_from_security_group(uint32_t sg_id, hal_handle_t nw_handle_id)
 {
-    hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
+    hal_ret_t                   ret = HAL_RET_NW_HANDLE_NOT_FOUND;
     nwsec_group_t               *nwsec_grp = NULL;
     hal_handle_id_list_entry_t  *nwsec_policy_nw_info = NULL;
     dllist_ctxt_t               *curr = NULL, *next = NULL;
@@ -718,5 +716,38 @@ add_ep_to_security_group(uint32_t sg_id, hal_handle_t ep_handle_id)
     HAL_SPINLOCK_UNLOCK(&nwsec_grp->slock);
 
     return HAL_RET_OK;
+}
+
+
+// Security Policy ep_handle del
+hal_ret_t
+del_ep_from_security_group(uint32_t sg_id, hal_handle_t ep_handle_id)
+{
+    nwsec_group_t               *nwsec_grp = NULL;
+    hal_handle_id_list_entry_t  *nwsec_policy_ep_info = NULL;
+    dllist_ctxt_t               *curr = NULL, *next = NULL;
+
+    nwsec_grp = nwsec_group_lookup_by_key(sg_id);
+    if (nwsec_grp == NULL) {
+        HAL_TRACE_DEBUG("segment id {} not found");
+        return HAL_RET_SG_NOT_FOUND;
+    }
+
+
+    HAL_SPINLOCK_LOCK(&nwsec_grp->slock);
+    dllist_for_each_safe(curr, next,  &nwsec_grp->ep_list_head) {
+        nwsec_policy_ep_info  = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        if (nwsec_policy_ep_info != NULL) {
+            if (nwsec_policy_ep_info->handle_id == ep_handle_id) {
+                utils::dllist_del(curr);
+                g_hal_state->hal_handle_id_list_entry_slab()->free(nwsec_policy_ep_info);
+                //Unlock and return
+                HAL_SPINLOCK_UNLOCK(&nwsec_grp->slock);
+                return HAL_RET_OK;
+            }
+        }
+    }
+    HAL_SPINLOCK_UNLOCK(&nwsec_grp->slock);
+    return HAL_RET_NW_HANDLE_NOT_FOUND;
 }
 }    // namespace hal

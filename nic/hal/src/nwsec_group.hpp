@@ -7,26 +7,10 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/utils/ht/ht.hpp"
 #include "nic/gen/proto/hal/nwsec.pb.h"
-#include "nic/gen/proto/hal/key_handles.pb.h"
 #include "nic/include/pd.hpp"
 
 using hal::utils::ht_ctxt_t;
 
-using key_handles::SecurityProfileKeyHandle;
-using nwsec::SecurityProfileSpec;
-using nwsec::SecurityProfileRequestMsg;
-using nwsec::SecurityProfileStatus;
-using nwsec::SecurityProfileResponse;
-using nwsec::SecurityProfileResponseMsg;
-using nwsec::SecurityProfileDeleteRequest;
-using nwsec::SecurityProfileDeleteResponse;
-using nwsec::SecurityProfileDeleteRequestMsg;
-using nwsec::SecurityProfileDeleteResponseMsg;
-using nwsec::SecurityProfileGetRequest;
-using nwsec::SecurityProfileGetRequestMsg;
-using nwsec::SecurityProfileStats;
-using nwsec::SecurityProfileGetResponse;
-using nwsec::SecurityProfileGetResponseMsg;
 using nwsec::SecurityGroupSpec;
 using nwsec::SecurityGroupRequestMsg;
 using nwsec::SecurityGroupStatus;
@@ -45,10 +29,7 @@ using types::ICMPMsgType;
 using nwsec::FirewallAction;
 using nwsec::ALGName;
 
-
 namespace hal {
-
-// TODO: Move nwsec policy to a separate file
 
 // extern void *nwsec_profile_get_handle_key_func(void *entry);
 // extern uint32_t nwsec_profile_compute_handle_hash_func(void *key, uint32_t ht_size);
@@ -77,7 +58,7 @@ typedef struct nwsec_policy_key_s {
     uint32_t            sg_id;
     uint32_t            peer_sg_id;
 } __PACK__ nwsec_policy_key_t;
- 
+
 typedef struct nwsec_policy_svc_s {
     hal_spinlock_t      slock;              // Lock to protect this structure
     IPProtocol          ipproto;
@@ -207,7 +188,6 @@ nwsec_policy_rules_free(nwsec_policy_rules_t *nwsec_plcy_rules)
     g_hal_state->nwsec_policy_rules_slab()->free(nwsec_plcy_rules);
     return HAL_RET_OK;
 }
-
 //-----------------------------------------------------------------------------
 //  APIs related to nwsec_policy_cfg_t
 //_____________________________________________________________________________
@@ -336,6 +316,7 @@ nwsec_group_init (nwsec_group_t *nwsec_grp)
     dllist_reset(&nwsec_grp->nw_list_head);
     dllist_reset(&nwsec_grp->ep_list_head);
     HAL_SPINLOCK_INIT(&nwsec_grp->slock, PTHREAD_PROCESS_PRIVATE);
+    
     return nwsec_grp;
 }
 
@@ -425,23 +406,17 @@ nwsec_group_lookup_by_handle (hal_handle_t handle)
 
 dllist_ctxt_t *
 get_ep_list_for_security_group(uint32_t sg_id);
-dllist_ctxt_t *
-get_nw_list_for_security_group(uint32_t sg_id);
 hal_ret_t
 add_ep_to_security_group(uint32_t sg_id, hal_handle_t ep_handle);
+hal_ret_t
+del_ep_from_security_group(uint32_t sg_id, hal_handle_t ep_handle);
 
-// Forward declarations
-hal_ret_t security_profile_create(nwsec::SecurityProfileSpec& spec,
-                                  nwsec::SecurityProfileResponse *rsp);
-
-hal_ret_t security_profile_update(nwsec::SecurityProfileSpec& spec,
-                                  nwsec::SecurityProfileResponse *rsp);
-
-hal_ret_t security_profile_delete(nwsec::SecurityProfileDeleteRequest& req,
-                                  nwsec::SecurityProfileDeleteResponse *rsp);
-
-hal_ret_t security_profile_get(nwsec::SecurityProfileGetRequest& req,
-                               nwsec::SecurityProfileGetResponse *rsp);
+hal_ret_t
+add_nw_to_security_group(uint32_t sg_id, hal_handle_t nw_handle);
+hal_ret_t
+del_nw_from_security_group(uint32_t sg_id, hal_handle_t nw_handle);
+dllist_ctxt_t *
+get_nw_list_for_security_group(uint32_t sg_id);
 
 hal_ret_t security_group_create(nwsec::SecurityGroupSpec& req,
                                nwsec::SecurityGroupResponse *rsp);

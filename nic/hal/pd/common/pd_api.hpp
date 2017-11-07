@@ -4,6 +4,7 @@
 #include "nic/hal/src/tenant.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/src/nwsec_group.hpp"
 #include "nic/hal/src/dos.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/network.hpp"

@@ -35,6 +35,7 @@ using session::SessionGetRequest;
 using session::SessionGetRequestMsg;
 using session::SessionGetResponse;
 using session::SessionGetResponseMsg;
+using types::IPProtocol;
 
 namespace hal {
 

@@ -1,6 +1,9 @@
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/network.hpp"
 #include "nic/hal/src/nwsec.hpp"
+#include "nic/hal/hal.hpp"
+#include "nic/utils/list/list.hpp"
+#include "nic/hal/src/nwsec_group.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/gen/proto/hal/tenant.pb.h"
@@ -33,6 +36,7 @@ using nwsec::SecurityGroupPolicyDeleteRequest;
 using nw::NetworkSpec;
 using nw::NetworkResponse;
 using types::IPProtocol;
+using namespace hal;
 
 
 class nwsec_test : public hal_base_test {
@@ -116,10 +120,12 @@ TEST_F(nwsec_test, test1)
 TEST_F(nwsec_test, test2) 
 {
     hal_ret_t                                   ret;
+    SecurityGroupSpec                           sg_spec;
+    SecurityGroupResponse                       sg_rsp;
     SecurityGroupPolicySpec                     sp_spec;
     SecurityGroupPolicyResponse                 sp_rsp;
     SecurityGroupPolicyDeleteRequest            del_req;
-    SecurityGroupPolicyDeleteResponseMsg        del_rsp;    
+    SecurityGroupPolicyDeleteResponseMsg        del_rsp;
     //slab_stats_t                               *pre = NULL, *post = NULL;
     //bool                                        is_leak = false;
 
@@ -150,8 +156,6 @@ TEST_F(nwsec_test, test2)
     sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_security_group_id(1);
     sp_spec.mutable_key_or_handle()->mutable_security_group_policy_id()->set_peer_security_group_id(2);
 
-    //sp_spec.set_ipsg_en(true);
-    //sp_spec.set_ip_normalization_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::security_group_policy_update(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
@@ -169,6 +173,9 @@ TEST_F(nwsec_test, test3)
     hal_ret_t                               ret;
     SecurityGroupSpec                       sp_spec;
     SecurityGroupResponse                   sp_rsp;
+
+    dllist_ctxt_t                           *curr, *next, *nw_list, *ep_list;
+    hal_handle_id_list_entry_t              *nw_ent = NULL, *ep_ent = NULL; 
     //slab_stats_t                            *pre = NULL, *post = NULL;
     //bool                                    is_leak = false;
 
@@ -181,7 +188,55 @@ TEST_F(nwsec_test, test3)
     ret = hal::security_group_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    
+
+    for (int i = 0; i < 4; i++) {
+        ret = add_nw_to_security_group(1, 0x1000 + i);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    nw_list = get_nw_list_for_security_group(1);
+    if (nw_list != NULL) {
+        dllist_for_each_safe(curr, next, nw_list) {
+            nw_ent = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+            HAL_TRACE_DEBUG("nw handle {}", nw_ent->handle_id);
+        }
+    }
+    ret = del_nw_from_security_group(1, 0x1002);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    nw_list = get_nw_list_for_security_group(1);
+    if (nw_list != NULL) {
+        dllist_for_each_safe(curr, next, nw_list) {
+            nw_ent = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+            HAL_TRACE_DEBUG("nw handle {}", nw_ent->handle_id);
+        }
+    }
+
+    curr = NULL;
+    next = NULL;
+    for (int i = 0; i < 4; i++) {
+        ret = add_ep_to_security_group(1, 0x2000 + i);
+        ASSERT_TRUE(ret == HAL_RET_OK);
+    }
+
+    ep_list = get_ep_list_for_security_group(1);
+    if (ep_list != NULL) {
+        dllist_for_each_safe(curr, next, ep_list) {
+            ep_ent = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+            HAL_TRACE_DEBUG("ep handle {}", ep_ent->handle_id);
+        }
+    }
+    ret = del_ep_from_security_group(1, 0x2002);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    ep_list = get_ep_list_for_security_group(1);
+    if (ep_list != NULL) {
+        dllist_for_each_safe(curr, next, ep_list) {
+            ep_ent = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+            HAL_TRACE_DEBUG("ep handle {}", ep_ent->handle_id);
+        }
+    }
+
     // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding 
     //post = hal_test_utils_collect_slab_stats();
     //hal_test_utils_check_slab_leak(pre, post, &is_leak);
