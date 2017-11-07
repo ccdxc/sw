@@ -20,6 +20,7 @@ namespace xts {
 #define MAX_SUB_AOLS 2
 #define SECTOR_SIZE 256
 #define INTER_SUB_AOL_GAP SECTOR_SIZE
+#define STATUS_DEF_VALUE 0
 
 typedef struct xts_aol_ {
   uint64_t a0;
@@ -84,9 +85,9 @@ typedef enum {
   AES_ENCR_ONLY,
   T10_ONLY,
   AES_ENCR_N_T10,
-  AES_ENCR_N_DECR,
-  AES_ENCR_N_DECR_N_T10,
-}CMD;
+  AES_DECR_ONLY,
+  AES_DECR_N_T10,
+}Op;
 
 
 }  // namespace xts

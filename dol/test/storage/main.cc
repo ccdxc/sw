@@ -71,7 +71,10 @@ struct {
   {&tests::test_run_seq_aes256, "Seq XTS AES256   ", false},
   {&tests::test_run_seq_aes256_mult_aols, "Seq XTS AES256 M-AoLs", false},
   {&tests::test_run_seq_aes256_n_prot_info, "Seq XTS AES256 & T10", false},
-
+  {&tests::test_run_seq_aes128_ed, "Seq XTS AES128 ED ", false},
+  {&tests::test_run_seq_aes128_ed_n_t10, "Seq XTS AES128 ED & T10", false},
+  {&tests::test_run_seq_aes256_ed, "Seq XTS AES256 ED ", false},
+  {&tests::test_run_seq_aes256_ed_n_t10, "Seq XTS AES256 ED & T10", false},
   // Always last entry
   {0}
 };

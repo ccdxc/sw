@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <strings.h>
 #include <unistd.h>
 #include <byteswap.h>
@@ -1460,28 +1462,21 @@ int verify_prot_info(char *out_buf, uint32_t num_aols, xts::xts_aol_t **out_aol,
   uint32_t num_sectors = data_size / sector_size; // Works roughly as output data_size is more than just data (contains prot_info for all sectors)
   for(uint32_t i = 0; i < num_sectors; i++) {
     xts::xts_prot_info_t* prot_info = (xts::xts_prot_info_t*) &buf[(i+1)*sector_size + i*PROT_INFO_SIZE];
-    /*printf(" Sector %u \n", i+1);
-    if(prot_info->app_tag != htons(app_tag)){
-      printf("Verify app_tag failed \n");
-      std::cout << " Expected " << app_tag << " Actual " << ntohs(prot_info->app_tag) << std::endl;
-    }
-    if(prot_info->sector_num != htonl(sec_num_start + i)){
-      printf("Verify sector_num failed \n");
-      std::cout << " Expected " << (sec_num_start + i) << " Actual " << ntohl(prot_info->sector_num) << std::endl;
-    }*/
     if(prot_info->app_tag != htons(app_tag) ||
       prot_info->sector_num != htonl(sec_num_start + i)) {
       printf("Verify prot_info failed \n");
+      free(buf);
       return -1;
     }
   }
+  free(buf);
   return 0;
 }
 
 bool fill_aol(void* buf, uint64_t& a, uint32_t& o, uint32_t& l, uint32_t& offset,
     uint32_t& pending_size, uint32_t len)
 {
-  a = (uint64_t) host_mem_v2p(buf);
+  a = (uint64_t)buf;
   o = offset;
   l = len;
   offset += (len + INTER_SUB_AOL_GAP); //Update offset to next data position
@@ -1493,12 +1488,57 @@ bool fill_aol(void* buf, uint64_t& a, uint32_t& o, uint32_t& l, uint32_t& offset
     return false;
 }
 
-//TODO: Using different keys causes some corruption - so making key initialization global for now
+// TODO: Using different keys causes some corruption - so making key initialization global for now
 uint32_t key_desc_idx = 0;
 bool key_desc_inited = false;
 
-int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t key_size,
-      uint32_t sector_size = SECTOR_SIZE, uint32_t num_aols = 1, uint32_t num_sub_aols = 1) {
+class XtsCtx {
+public:
+  void init_buffers() {
+    if(!is_src_hbm_buf) {
+      srand(time(NULL));
+      for(uint32_t i = 0; i < kDefaultBufSize/sizeof(int); i++) {
+        ((int*)src_buf)[i] = rand();
+      }
+      memset(src_buf, 0x3, kDefaultBufSize);
+      src_buf_phy = (void*)host_mem_v2p(src_buf);
+    } else {
+      src_buf_phy = src_buf;
+    }
+    if(!is_dst_hbm_buf) {
+      memset(dst_buf, 0, kDefaultBufSize);
+      dst_buf_phy = (void*)host_mem_v2p(dst_buf);
+    } else {
+      dst_buf_phy = dst_buf;
+    }
+  }
+  XtsCtx() { init_buffers(); }
+  XtsCtx(void* src_buf, bool is_src_hbm_buf, void* dst_buf,  bool is_dst_hbm_buf) :
+      src_buf(src_buf), is_src_hbm_buf(is_src_hbm_buf),
+      dst_buf(dst_buf), is_dst_hbm_buf(is_dst_hbm_buf) {
+    init_buffers();
+  }
+  int test_seq_xts();
+
+  void* src_buf = write_buf;
+  bool is_src_hbm_buf = false;
+  void* dst_buf = read_buf;
+  bool is_dst_hbm_buf = false;
+  void* src_buf_phy = NULL;
+  void* dst_buf_phy = NULL;
+
+  uint16_t seq_xts_q = XTS_SEQ_Q;
+  uint32_t num_sectors = 1;
+  xts::Op op;
+  uint32_t key_size = AES128_KEY_SIZE;
+  uint32_t sector_size = SECTOR_SIZE;
+  uint32_t num_aols = 1;
+  uint32_t num_sub_aols = 1;
+  uint16_t app_tag = 0xbeef;
+  uint32_t start_sec_num = 5;
+};
+
+int XtsCtx::test_seq_xts() {
   uint16_t seq_xts_index;
   uint8_t *seq_xts_desc;
   uint16_t pvm_status_q = 2;
@@ -1517,9 +1557,6 @@ int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t
   }
   bzero(status_buf, kR2nStatusSize);
 
-  memset(write_buf, 0x3, kDefaultBufSize);
-  memset(read_buf, 0, kDefaultBufSize);
-
   // Sequencer #1: XTS descriptor
   seq_xts_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_xts_q, &seq_xts_index);
   memset(seq_xts_desc, 0, kSeqDescSize);
@@ -1530,21 +1567,26 @@ int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t
   uint64_t* xts_db = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
   *xts_db = 0;
   uint64_t exp_db_data = 0xdeadbeefdeadbeef;
-  uint16_t app_tag = 0xbeef;
   uint64_t* status = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
-  *status = 0;
+  *status = STATUS_DEF_VALUE;
   xts::xts_cmd_t cmd;
   memset(&cmd, 0, sizeof(cmd));
   cmd.token3 = 0x0;     // xts
   cmd.token4 = 0x4;     // xts
 
   bool t10_en = false;
+  bool decr_en = false;
   switch(op) {
   case(xts::AES_ENCR_ONLY):
-  case(xts::AES_ENCR_N_DECR):
     cmd.enable_crc = 0x0; // Disable CRC
     cmd.bypass_aes = 0x0; // Don't Bypass AES
     cmd.is_decrypt = 0x0; // Encrypt
+  break;
+  case(xts::AES_DECR_ONLY):
+    cmd.enable_crc = 0x0; // Disable CRC
+    cmd.bypass_aes = 0x0; // Don't Bypass AES
+    cmd.is_decrypt = 0x1; // Decrypt
+    decr_en = true;
   break;
   case(xts::T10_ONLY):
     cmd.enable_crc = 0x1; // Enable CRC
@@ -1552,14 +1594,21 @@ int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t
     t10_en = true;
   break;
   case(xts::AES_ENCR_N_T10):
-  case(xts::AES_ENCR_N_DECR_N_T10):
     cmd.enable_crc = 0x1; // Enable CRC
     cmd.bypass_aes = 0x0; // Don't Bypass AES
     cmd.is_decrypt = 0x0; // Encrypt
     t10_en = true;
   break;
+  case(xts::AES_DECR_N_T10):
+     cmd.enable_crc = 0x1; // Enable CRC
+    cmd.bypass_aes = 0x0; // Don't Bypass AES
+    cmd.is_decrypt = 0x1; // Decrypt
+    t10_en = true;
+    decr_en = true;
+  break;
   default:
     printf(" Unknown xts operation \n");
+    assert(0);
     return -1;
   break;
   }
@@ -1581,7 +1630,12 @@ int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t
     out_aol[i] = (xts::xts_aol_t*)alloc_page_aligned_host_mem(sizeof(xts::xts_aol_t));
     memset(out_aol[i], 0x0, sizeof(xts::xts_aol_t));
   }
-  uint32_t data_size = num_sectors * sector_size;
+  uint32_t data_size;
+  if(op == xts::AES_DECR_N_T10) {
+    data_size = (num_sectors * sector_size) + (num_sectors * PROT_INFO_SIZE);
+  } else {
+    data_size = num_sectors * sector_size;
+  }
   assert(data_size % num_sub_aols == 0); // For simplicity
   uint32_t sub_aol_data_size = data_size / num_sub_aols;
   uint32_t sub_aol_data_offset = 0;
@@ -1595,22 +1649,22 @@ int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t
   for(uint32_t i = 0; i < num_aols; i++) {
     // Fill the XTS Msg descriptor
     if(in_cont)
-      in_cont = fill_aol(write_buf, in_aol[i]->a0, in_aol[i]->o0, in_aol[i]->l0, sub_aol_data_offset,
+      in_cont = fill_aol(src_buf_phy, in_aol[i]->a0, in_aol[i]->o0, in_aol[i]->l0, sub_aol_data_offset,
         in_pending_size, sub_aol_data_size);
     if(in_cont)
-      in_cont = fill_aol(write_buf, in_aol[i]->a1, in_aol[i]->o1, in_aol[i]->l1, sub_aol_data_offset,
+      in_cont = fill_aol(src_buf_phy, in_aol[i]->a1, in_aol[i]->o1, in_aol[i]->l1, sub_aol_data_offset,
         in_pending_size, sub_aol_data_size);
     if(in_cont)
-      in_cont = fill_aol(write_buf, in_aol[i]->a2, in_aol[i]->o2, in_aol[i]->l2, sub_aol_data_offset,
+      in_cont = fill_aol(src_buf_phy, in_aol[i]->a2, in_aol[i]->o2, in_aol[i]->l2, sub_aol_data_offset,
         in_pending_size, sub_aol_data_size);
     if(out_cont)
-      out_cont = fill_aol(read_buf, out_aol[i]->a0, out_aol[i]->o0, out_aol[i]->l0, out_sub_aol_data_offset,
+      out_cont = fill_aol(dst_buf_phy, out_aol[i]->a0, out_aol[i]->o0, out_aol[i]->l0, out_sub_aol_data_offset,
         out_pending_size, out_sub_aol_data_size);
     if(out_cont)
-      out_cont = fill_aol(read_buf, out_aol[i]->a1, out_aol[i]->o1, out_aol[i]->l1, out_sub_aol_data_offset,
+      out_cont = fill_aol(dst_buf_phy, out_aol[i]->a1, out_aol[i]->o1, out_aol[i]->l1, out_sub_aol_data_offset,
         out_pending_size, out_sub_aol_data_size);
     if(out_cont)
-      out_cont = fill_aol(read_buf, out_aol[i]->a2, out_aol[i]->o2, out_aol[i]->l2, out_sub_aol_data_offset,
+      out_cont = fill_aol(dst_buf_phy, out_aol[i]->a2, out_aol[i]->o2, out_aol[i]->l2, out_sub_aol_data_offset,
         out_pending_size, out_sub_aol_data_size);
 
     if(i + 1 < num_aols) {
@@ -1626,19 +1680,19 @@ int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t
   xts_desc_addr->db_addr = host_mem_v2p(xts_db);
   xts_desc_addr->db_data = exp_db_data;
   xts_desc_addr->opaque_tag_en = 0;
-  uint32_t start_sec_num = 5;
   xts_desc_addr->sector_num = start_sec_num;
   xts_desc_addr->sector_size = sector_size;
   xts_desc_addr->app_tag = app_tag;
   xts_desc_addr->cmd = cmd;
   xts_desc_addr->status = host_mem_v2p(status);
 
-  // TODO: Below key initialization lines need to be commented out if operation is T10 only
+  // Ideally below key initialization lines need to be commented out if operation is T10 only
+  // but barco is not fixing this bug - https://github.com/pensando/asic/issues/669
   if(!key_desc_inited) {
     types::CryptoKeyType key_type;
-    if(key_size == 16)
+    if(key_size == AES128_KEY_SIZE)
       key_type = types::CRYPTO_KEY_TYPE_AES128;
-    else if(key_size == 32)
+    else if(key_size == AES256_KEY_SIZE)
       key_type = types::CRYPTO_KEY_TYPE_AES256;
     else {
       printf(" Unsupported key size \n");
@@ -1688,9 +1742,18 @@ int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t
   Poller poll;
   int rv = poll(func);
 
-  if(0 == rv && t10_en)
-    rv = verify_prot_info((char *)read_buf, num_aols, out_aol, sector_size, start_sec_num, app_tag);
+  if(0 == rv && t10_en && !decr_en && !is_dst_hbm_buf)
+    rv = verify_prot_info((char *)dst_buf, num_aols, out_aol, sector_size, start_sec_num, app_tag);
 
+  if(0 == rv) {
+    if(STATUS_DEF_VALUE != *status) {
+      printf(" status check failed - status value %lu", *status);
+      rv = -1;
+    }
+  }
+
+
+  // TODO: Free resources in failure cases above
   free_host_mem(xts_desc_addr);
   for(uint32_t i = 0; i < num_aols; i++) {
     free_host_mem(in_aol[i]);
@@ -1704,66 +1767,201 @@ int test_seq_xts(uint16_t seq_xts_q, uint32_t num_sectors, xts::CMD op, uint32_t
 }
 
 int test_run_seq_aes128() {
-  return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_ONLY, AES128_KEY_SIZE);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::AES_ENCR_ONLY;
+  return xts_ctx.test_seq_xts();
 }
 
 int test_run_seq_aes128_mult_aols() {
-  return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_ONLY, AES128_KEY_SIZE, SECTOR_SIZE, 1, 2);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::AES_ENCR_ONLY;
+  xts_ctx.num_sub_aols = 2;
+  return xts_ctx.test_seq_xts();
 }
 
 // TODO: Currently does not work for larger size like 4K (4 sectors). Can bump it up once model issue is fixed
 int test_run_seq_aes128_full_page() {
-  return test_seq_xts(XTS_SEQ_Q, kDefaultBufSize/SECTOR_SIZE, xts::AES_ENCR_ONLY, AES128_KEY_SIZE);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::AES_ENCR_ONLY;
+  xts_ctx.sector_size = kDefaultBufSize/SECTOR_SIZE;
+  return xts_ctx.test_seq_xts();
 }
 
 int test_run_seq_prot_info() {
-  return test_seq_xts(XTS_SEQ_Q, 1, xts::T10_ONLY, AES128_KEY_SIZE);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::T10_ONLY;
+  return xts_ctx.test_seq_xts();
 }
 
 int test_run_seq_prot_info_mult_aols() {
-  return test_seq_xts(XTS_SEQ_Q, 1, xts::T10_ONLY, AES128_KEY_SIZE, SECTOR_SIZE, 1, 2);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::T10_ONLY;
+  xts_ctx.num_sub_aols = 2;
+  return xts_ctx.test_seq_xts();
 }
 
 // TODO: Currently only works for 1 sector. Can bump it up once model issue is fixed
 int test_run_seq_prot_info_mult_sectors() {
-  return test_seq_xts(XTS_SEQ_Q, 4, xts::T10_ONLY, AES128_KEY_SIZE);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::T10_ONLY;
+  xts_ctx.num_sectors = 4;
+  return xts_ctx.test_seq_xts();
 }
 
 int test_run_seq_aes128_n_prot_info() {
-  return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_N_T10, AES128_KEY_SIZE);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::AES_ENCR_N_T10;
+  return xts_ctx.test_seq_xts();
 }
 
 // TODO: Currently only works for 1 sector. Can bump it up once model issue is fixed
 int test_run_seq_aes128_n_prot_info_mult_sectors() {
-  return test_seq_xts(XTS_SEQ_Q, 4, xts::AES_ENCR_N_T10, AES128_KEY_SIZE);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::AES_ENCR_N_T10;
+  xts_ctx.num_sectors = 4;
+  return xts_ctx.test_seq_xts();
 }
 
 int test_run_seq_aes256() {
-  return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_ONLY, AES256_KEY_SIZE);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::AES_ENCR_ONLY;
+  xts_ctx.key_size = AES256_KEY_SIZE;
+  return xts_ctx.test_seq_xts();
 }
 
 int test_run_seq_aes256_mult_aols() {
-  return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_ONLY, AES256_KEY_SIZE, SECTOR_SIZE, 1, 2);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::AES_ENCR_ONLY;
+  xts_ctx.key_size = AES256_KEY_SIZE;
+  xts_ctx.num_sub_aols = 2;
+  return xts_ctx.test_seq_xts();
 }
 
 // TODO: Currently does not work for larger size like 4K (4 sectors). Can bump it up once model issue is fixed
 int test_run_seq_aes256_full_page() {
-  return test_seq_xts(XTS_SEQ_Q, kDefaultBufSize/SECTOR_SIZE, xts::AES_ENCR_ONLY, AES256_KEY_SIZE);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::AES_ENCR_ONLY;
+  xts_ctx.key_size = AES256_KEY_SIZE;
+  xts_ctx.num_sectors = kDefaultBufSize/SECTOR_SIZE;
+  return xts_ctx.test_seq_xts();
 }
 
 int test_run_seq_aes256_n_prot_info() {
-  return test_seq_xts(XTS_SEQ_Q, 1, xts::AES_ENCR_N_T10, AES256_KEY_SIZE);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::AES_ENCR_N_T10;
+  xts_ctx.key_size = AES256_KEY_SIZE;
+  return xts_ctx.test_seq_xts();
 }
 
 // TODO: Currently only works for 1 sector. Can bump it up once model issue is fixed
 int test_run_seq_aes256_n_prot_info_mult_sectors() {
-  return test_seq_xts(XTS_SEQ_Q, 4, xts::AES_ENCR_N_T10, AES256_KEY_SIZE);
+  XtsCtx xts_ctx;
+  xts_ctx.op = xts::AES_ENCR_N_T10;
+  xts_ctx.key_size = AES256_KEY_SIZE;
+  xts_ctx.num_sectors = 4;
+  return xts_ctx.test_seq_xts();
+}
+
+int test_run_seq_aes128_ed() {
+  int rv;
+  XtsCtx xts_ctx(write_buf, false, (void*)write_hbm_buf, true);
+  xts_ctx.op = xts::AES_ENCR_ONLY;
+  rv = xts_ctx.test_seq_xts();
+  if(0 == rv) {
+    printf(" Encryption to hbm buf passed \n");
+    memset(read_buf, 0x0, kDefaultBufSize);
+    XtsCtx xts_ctx2((void*)write_hbm_buf, true, (void*)read_buf, false);
+    xts_ctx2.op = xts::AES_DECR_ONLY;
+    rv = xts_ctx2.test_seq_xts();
+    if(0 == rv) {
+      printf(" Decryption to host buf passed \n");
+      rv = memcmp(write_buf, read_buf, SECTOR_SIZE);
+      if(rv != 0) {
+        rv = -1;
+        printf(" Memcmp failed \n");
+      }
+    }
+  }
+  return rv;
+}
+
+int test_run_seq_aes128_ed_n_t10() {
+  int rv;
+  XtsCtx xts_ctx(write_buf, false, (void*)write_hbm_buf, true);
+  xts_ctx.op = xts::AES_ENCR_N_T10;
+  rv = xts_ctx.test_seq_xts();
+  if(0 == rv) {
+    printf(" Encryption to hbm buf passed \n");
+    memset(read_buf, 0x0, kDefaultBufSize);
+    XtsCtx xts_ctx2((void*)write_hbm_buf, true, (void*)read_buf, false);
+    xts_ctx2.op = xts::AES_DECR_N_T10;
+    rv = xts_ctx2.test_seq_xts();
+    if(0 == rv) {
+      printf(" Decryption to host buf passed \n");
+      rv = memcmp(write_buf, read_buf, SECTOR_SIZE);
+      if(rv != 0) {
+        rv = -1;
+        printf(" Memcmp failed \n");
+      }
+    }
+  }
+  return rv;
+}
+
+int test_run_seq_aes256_ed() {
+  int rv;
+  XtsCtx xts_ctx(write_buf, false, (void*)write_hbm_buf, true);
+  xts_ctx.op = xts::AES_ENCR_ONLY;
+  xts_ctx.key_size = AES256_KEY_SIZE;
+  rv = xts_ctx.test_seq_xts();
+  if(0 == rv) {
+    printf(" Encryption to hbm buf passed \n");
+    memset(read_buf, 0x0, kDefaultBufSize);
+    XtsCtx xts_ctx2((void*)write_hbm_buf, true, (void*)read_buf, false);
+    xts_ctx2.op = xts::AES_DECR_ONLY;
+    xts_ctx2.key_size = AES256_KEY_SIZE;
+    rv = xts_ctx2.test_seq_xts();
+    if(0 == rv) {
+      printf(" Decryption to host buf passed \n");
+      rv = memcmp(write_buf, read_buf, SECTOR_SIZE);
+      if(rv != 0) {
+        rv = -1;
+        printf(" Memcmp failed \n");
+      }
+    }
+  }
+  return rv;
+}
+
+int test_run_seq_aes256_ed_n_t10() {
+  int rv;
+  XtsCtx xts_ctx(write_buf, false, (void*)write_hbm_buf, true);
+  xts_ctx.op = xts::AES_ENCR_N_T10;
+  xts_ctx.key_size = AES256_KEY_SIZE;
+  rv = xts_ctx.test_seq_xts();
+  if(0 == rv) {
+    printf(" Encryption to hbm buf passed \n");
+    memset(read_buf, 0x0, kDefaultBufSize);
+    XtsCtx xts_ctx2((void*)write_hbm_buf, true, (void*)read_buf, false);
+    xts_ctx2.op = xts::AES_DECR_N_T10;
+    xts_ctx.key_size = AES256_KEY_SIZE;
+    rv = xts_ctx2.test_seq_xts();
+    if(0 == rv) {
+      printf(" Decryption to host buf passed \n");
+      rv = memcmp(write_buf, read_buf, SECTOR_SIZE);
+      if(rv != 0) {
+        rv = -1;
+        printf(" Memcmp failed \n");
+      }
+    }
+  }
+  return rv;
 }
 
 int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, 
-			uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
-			uint64_t pdma_dst_addr, uint32_t pdma_data_size,
-			uint64_t roce_wqe_addr, uint32_t roce_wqe_size) {
+      uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
+      uint64_t pdma_dst_addr, uint32_t pdma_data_size,
+      uint64_t roce_wqe_addr, uint32_t roce_wqe_size) {
 
   uint16_t seq_pdma_index;
   uint8_t *seq_pdma_desc;
@@ -1788,7 +1986,7 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
 
   // Fill the PDMA descriptor
   queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_roce_q, 0, 
-			     seq_roce_index, &db_addr, &db_data);
+           seq_roce_index, &db_addr, &db_data);
   utils::write_bit_fields(seq_pdma_desc, 0, 64, db_addr);
   utils::write_bit_fields(seq_pdma_desc, 64, 64, bswap_64(db_data));
   utils::write_bit_fields(seq_pdma_desc, 128, 64, pdma_src_addr);
