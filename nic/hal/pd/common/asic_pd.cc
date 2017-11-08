@@ -36,8 +36,12 @@ is_asic_rw_thread(uint32_t chip)
     hal::utils::thread *curr_thread = hal::utils::thread::current_thread();
     hal::utils::thread *asic_rw_thread = g_hal_threads[HAL_THREAD_ID_ASIC_RW];
 
+    if (curr_thread == NULL) {
+        // running in single-threaded mode
+        return true;
+    }
+
     if (asic_rw_thread == NULL ||
-        curr_thread == NULL    ||
         asic_rw_thread->is_running() == false) {
         assert(0);
     }
