@@ -62,6 +62,7 @@ def TestCaseSetup(tc):
     ipseccb.sip6.v6_addr              = sip6 
     ipseccb.dip6.ip_af                = 2
     ipseccb.dip6.v6_addr              = dip6 
+    ipseccb.is_v6                     = 0
     ipseccb.SetObjValPd()
     # 2. Clone objects that are needed for verification
     rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
@@ -122,7 +123,7 @@ def TestCaseVerify(tc):
     tnmpr_cur.Configure()
 
     # 4. Verify PI for RNMDR got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi+2):
+    if (rnmdr_cur.pi != rnmdr.pi+1):
         print("RNMDR pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
         return False
 

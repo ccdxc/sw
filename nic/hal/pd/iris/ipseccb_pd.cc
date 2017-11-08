@@ -122,6 +122,8 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
 
         if (ipseccb_pd->ipseccb->is_v6) {
             data.u.ipsec_encap_rxdma_initial_table_d.is_v6 = 1;
+        } else {
+            data.u.ipsec_encap_rxdma_initial_table_d.is_v6 = 0;
         }
         HAL_TRACE_DEBUG("is_v6 {}", ipseccb_pd->ipseccb->is_v6);
     }

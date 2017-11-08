@@ -121,6 +121,6 @@ modules:
         package : test.ipsec-proxy
         module  : host_pkt_to_uplink 
         spec    : host_to_network_tcp.testspec
-        ignore  : True 
+        ignore  : False 
         iterate :
             - flow: filter://type=IPV4,proto=TCP

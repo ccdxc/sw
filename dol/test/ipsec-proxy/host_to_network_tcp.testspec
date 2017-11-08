@@ -31,10 +31,6 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : 64
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
@@ -114,7 +110,7 @@ descriptors:
         id      : DESC1 # Input Buffer
         template: ref://factory/templates/id=DESCR_ETH_TX
         fields:
-            _buf   : ref://testcase/buffers/id=BUF1
+            _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
 
@@ -130,9 +126,6 @@ trigger:
 expect:
     delay : 2
     packets:
-        - packet:
-            object  : ref://testcase/packets/id=PKT3
-            port    : 128 
         - packet:
             object  : ref://testcase/packets/id=PKT2
             port    : 2 
