@@ -58,6 +58,9 @@ Flow::Flow(std::string table_name, uint32_t table_id,
 
     HAL_TRACE_DEBUG("Flow:{}: in bytes: hwkey_len: {}, hwdata_len: {}",
             __FUNCTION__, hwkey_len_, hwdata_len_);
+
+    // Initialize for Stats
+    stats_ = new uint64_t[STATS_MAX]();
 }
            
 // ---------------------------------------------------------------------------
@@ -234,6 +237,7 @@ end:
     // Uncomment for debugging
 	// print_flow();
     HAL_TRACE_DEBUG("Flow::{} ret:{}", __FUNCTION__, rs);
+    stats_update(INSERT, rs);
     return rs;
 }
 
@@ -263,6 +267,7 @@ Flow::update(uint32_t index, void *data)
     }
 
 	print_flow();
+    stats_update(UPDATE, rs);
     return rs;
 }
 
@@ -315,6 +320,7 @@ Flow::remove(uint32_t index)
     }
 
 	print_flow();
+    stats_update(REMOVE, rs);
     return rs;
 }
 
@@ -553,6 +559,117 @@ Flow::free_fhct_index(uint32_t idx)
     HAL_TRACE_DEBUG("Flow::{}: free_coll_indexer: {}", 
                     __FUNCTION__, idx);
      return rs;
+}
+
+// ----------------------------------------------------------------------------
+// Increment Stats
+// ----------------------------------------------------------------------------
+void
+Flow::stats_incr(stats stat)
+{
+    HAL_ASSERT_RETURN_VOID((stat < STATS_MAX));
+    stats_[stat]++;
+}
+
+// ----------------------------------------------------------------------------
+// Decrement Stats
+// ----------------------------------------------------------------------------
+void
+Flow::stats_decr(stats stat)
+{
+    HAL_ASSERT_RETURN_VOID((stat < STATS_MAX));
+    stats_[stat]--;
+}
+
+// ----------------------------------------------------------------------------
+// Update stats
+// ----------------------------------------------------------------------------
+void
+Flow::stats_update(Flow::api ap, hal_ret_t rs)
+{
+    switch (ap) {
+        case INSERT:
+            if(rs == HAL_RET_OK) stats_incr(STATS_INS_SUCCESS);
+            else if (rs == HAL_RET_FLOW_COLL) stats_incr(STATS_INS_FLOW_COLL);
+            else if (rs == HAL_RET_DUP_INS_FAIL) stats_incr(STATS_INS_FAIL_DUP_INS);
+            else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_INS_FAIL_HW);
+            else if(rs == HAL_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);
+            else HAL_ASSERT(0);
+            break;
+        case UPDATE:
+            if(rs == HAL_RET_OK) stats_incr(STATS_UPD_SUCCESS);
+            else if(rs == HAL_RET_ENTRY_NOT_FOUND) 
+                stats_incr(STATS_UPD_FAIL_ENTRY_NOT_FOUND);
+            else HAL_ASSERT(0);
+            break;
+        case REMOVE:
+            if (rs == HAL_RET_OK) stats_incr(STATS_REM_SUCCESS);
+            else if (rs == HAL_RET_ENTRY_NOT_FOUND) 
+                stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
+            else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_REM_FAIL_HW);
+            else HAL_ASSERT(0);
+            break;
+        default:
+            HAL_ASSERT(0);
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Number of entries in use.
+// ----------------------------------------------------------------------------
+uint32_t
+Flow::table_num_entries_in_use(void)
+{
+    return flow_entry_map_.size();
+}
+
+// ----------------------------------------------------------------------------
+// Number of oflow entries in use.
+// ----------------------------------------------------------------------------
+uint32_t
+Flow::oflow_table_num_entries_in_use(void)
+{
+    return flow_coll_indexer_->usage();
+}
+
+// ----------------------------------------------------------------------------
+// Number of insert operations attempted
+// ----------------------------------------------------------------------------
+uint32_t 
+Flow::table_num_inserts(void)
+{
+    return stats_[STATS_INS_SUCCESS] + stats_[STATS_INS_FLOW_COLL] +
+        stats_[STATS_INS_FAIL_DUP_INS] +
+        stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of failed insert operations
+// ----------------------------------------------------------------------------
+uint32_t 
+Flow::table_num_insert_errors(void)
+{
+    return stats_[STATS_INS_FAIL_DUP_INS] +
+        stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of delete operations attempted
+// ----------------------------------------------------------------------------
+uint32_t 
+Flow::table_num_deletes(void)
+{
+    return stats_[STATS_REM_SUCCESS] + 
+        stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of failed delete operations
+// ----------------------------------------------------------------------------
+uint32_t 
+Flow::table_num_delete_errors(void)
+{
+    return stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
 }
 
 // ---------------------------------------------------------------------------

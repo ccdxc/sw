@@ -240,7 +240,7 @@ TEST_F(flow_test, test6) {
 // Test 7:
 //      - Create flow table
 // ----------------------------------------------------------------------------
-TEST_F(flow_test, test7) {
+TEST_F(flow_test, DISABLED_test7) {
 
     // hal_ret_t rs;
     flow_hash_swkey key = {0};
@@ -1184,18 +1184,28 @@ TEST_F(flow_test, test17) {
 		rs = fl.remove(flow_idx[*it]);
 		ASSERT_TRUE(rs == HAL_RET_OK);
 	}
+
+    HAL_TRACE_DEBUG("tableid:{}, table_name:{}, capacity:{}, oflow_capac:{}, "
+                    "num_in_use:{}, oflow_num_in_use:{}"
+                    "num_inserts:{}, num_insert_errors:{}, "
+                    "num_deletes:{}, num_delete_errors:{}",
+                    fl.table_id(), fl.table_name(),
+                    fl.table_capacity(), fl.oflow_table_capacity(),
+                    fl.table_num_entries_in_use(), fl.oflow_table_num_entries_in_use(),
+                    fl.table_num_inserts(), fl.table_num_insert_errors(),
+                    fl.table_num_deletes(), fl.table_num_delete_errors());
 }
 
 // ----------------------------------------------------------------------------
 // Test 18:
 //      - Create flow table
 // ----------------------------------------------------------------------------
-TEST_F(flow_test, test18) {
+TEST_F(flow_test, DISABLED_test18) {
 
     hal_ret_t rs;
     flow_hash_swkey key = {0};
     flow_hash_actiondata data = {0};
-    uint32_t max = 20, count = 0;
+    uint32_t max = 10, count = 0;
     uint32_t flow_idx[max] = { 0 };
 	unsigned seed = std::time(0);
     std::srand (seed);
@@ -1258,11 +1268,22 @@ TEST_F(flow_test, test18) {
 		rs = fl.remove(flow_idx[*it]);
 		ASSERT_TRUE(rs == HAL_RET_OK);
 	}
+
+    HAL_TRACE_DEBUG("tableid:{}, table_name:{}, capacity:{}, oflow_capac:{}, "
+                    "num_in_use:{}, oflow_num_in_use:{}"
+                    "num_inserts:{}, num_insert_errors:{}, "
+                    "num_deletes:{}, num_delete_errors:{}",
+                    fl.table_id(), fl.table_name(),
+                    fl.table_capacity(), fl.oflow_table_capacity(),
+                    fl.table_num_entries_in_use(), fl.oflow_table_num_entries_in_use(),
+                    fl.table_num_inserts(), fl.table_num_insert_errors(),
+                    fl.table_num_deletes(), fl.table_num_delete_errors());
 }
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
     p4pd_init();
+    // testing::GTEST_FLAG(filter) = "-*test18*";
     int res = RUN_ALL_TESTS();
     p4pd_cleanup();
     return res;

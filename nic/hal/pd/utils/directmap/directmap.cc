@@ -596,12 +596,14 @@ DirectMap::stats_update(DirectMap::api ap, hal_ret_t rs)
             if(rs == HAL_RET_OK) stats_incr(STATS_INS_SUCCESS);
             else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_INS_FAIL_HW);
             else if(rs == HAL_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);
+            else HAL_ASSERT(0);
             break;
         case INSERT_WITHID:
             if(rs == HAL_RET_OK) stats_incr(STATS_INS_WITHID_SUCCESS);
             else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_INS_WITHID_FAIL_HW);
             else if(rs == HAL_RET_DUP_INS_FAIL) stats_incr(STATS_INS_WITHID_FAIL_DUP_INS);
             else if(rs == HAL_RET_OOB) stats_incr(STATS_INS_WITHID_FAIL_OOB);
+            else HAL_ASSERT(0);
             break;
         case UPDATE:
             if(rs == HAL_RET_OK) stats_incr(STATS_UPD_SUCCESS);
@@ -609,6 +611,7 @@ DirectMap::stats_update(DirectMap::api ap, hal_ret_t rs)
                 stats_incr(STATS_UPD_FAIL_ENTRY_NOT_FOUND);
             else if(rs == HAL_RET_INVALID_ARG) stats_incr(STATS_UPD_FAIL_INV_ARG);
             else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_UPD_FAIL_HW);
+            else HAL_ASSERT(0);
             break;
         case REMOVE:
             if (rs == HAL_RET_OK) stats_incr(STATS_REM_SUCCESS);
@@ -616,6 +619,7 @@ DirectMap::stats_update(DirectMap::api ap, hal_ret_t rs)
                 stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
             else if (rs == HAL_RET_INVALID_ARG) stats_incr(STATS_REM_FAIL_INV_ARG);
             else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_REM_FAIL_HW);
+            else HAL_ASSERT(0);
             break;
         case RETRIEVE:
             if (rs == HAL_RET_OK) stats_incr(STATS_RETR_SUCCESS);
@@ -623,10 +627,12 @@ DirectMap::stats_update(DirectMap::api ap, hal_ret_t rs)
                 stats_incr(STATS_RETR_FAIL_ENTRY_NOT_FOUND);
             else if (rs == HAL_RET_INVALID_ARG) stats_incr(STATS_RETR_FAIL_INV_ARG);
             else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_RETR_FAIL_HW);
+            else HAL_ASSERT(0);
             break;
         case ITERATE:
             if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_ITER_FAIL_HW);
             else if (rs == HAL_RET_OK) stats_incr(STATS_ITER_SUCCESS);
+            else HAL_ASSERT(0);
             break;
         default:
             HAL_ASSERT(0);
@@ -660,6 +666,63 @@ DirectMap::find_directmap_entry(directmap_entry_t *key)
     return (directmap_entry_t *)entry_ht_->lookup(key);
 }
 
+// ----------------------------------------------------------------------------
+// Number of entries in use.
+// ----------------------------------------------------------------------------
+uint32_t
+DirectMap::table_num_entries_in_use(void)
+{
+    return dm_indexer_->usage();
+}
+
+// ----------------------------------------------------------------------------
+// Number of insert operations attempted
+// ----------------------------------------------------------------------------
+uint32_t 
+DirectMap::table_num_inserts(void)
+{
+    return stats_[STATS_INS_SUCCESS] + stats_[STATS_INS_FAIL_HW] +
+        stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_WITHID_SUCCESS] +
+        stats_[STATS_INS_WITHID_FAIL_DUP_INS] + 
+        stats_[STATS_INS_WITHID_FAIL_OOB] +
+        stats_[STATS_INS_WITHID_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of failed insert operations
+// ----------------------------------------------------------------------------
+uint32_t 
+DirectMap::table_num_insert_errors(void)
+{
+    return stats_[STATS_INS_FAIL_HW] + stats_[STATS_INS_FAIL_NO_RES] + 
+        stats_[STATS_INS_WITHID_FAIL_DUP_INS] + 
+        stats_[STATS_INS_WITHID_FAIL_OOB] +
+        stats_[STATS_INS_WITHID_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of delete operations attempted
+// ----------------------------------------------------------------------------
+uint32_t 
+DirectMap::table_num_deletes(void)
+{
+    return stats_[STATS_REM_SUCCESS] + stats_[STATS_REM_FAIL_INV_ARG] +
+        stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of failed delete operations
+// ----------------------------------------------------------------------------
+uint32_t 
+DirectMap::table_num_delete_errors(void)
+{
+    return stats_[STATS_REM_FAIL_INV_ARG] + 
+        stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Prints the decoded entry
+// ----------------------------------------------------------------------------
 hal_ret_t
 DirectMap::entry_trace_(void *data, uint32_t index)
 {

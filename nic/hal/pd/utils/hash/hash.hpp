@@ -60,6 +60,8 @@ public:
         BOTH
     };
 
+    // Note: Stats are mutually exclusive for every API. Only one stat will
+    //       be incremented for an API call.
     enum stats {
         STATS_INS_SUCCESS,
         STATS_INS_FAIL_HW,
@@ -146,6 +148,18 @@ public:
          uint32_t otcam_capacity, uint32_t swkey_len, uint32_t swdata_len, 
          Hash::HashPoly hash_poly = HASH_POLY0);
     ~Hash();
+
+    // Debug Info
+    uint32_t table_id(void) { return table_id_; }
+    const char *table_name(void) { return table_name_.c_str(); }
+    uint32_t table_capacity(void) { return dleft_capacity_; }
+    uint32_t oflow_table_capacity(void);
+    uint32_t table_num_entries_in_use(void);
+    uint32_t oflow_table_num_entries_in_use(void);
+    uint32_t table_num_inserts(void);
+    uint32_t table_num_insert_errors(void);
+    uint32_t table_num_deletes(void);
+    uint32_t table_num_delete_errors(void);
 
     hal_ret_t insert(void *key, void *data, uint32_t *index, 
                      bool direct_to_otcam = FALSE);

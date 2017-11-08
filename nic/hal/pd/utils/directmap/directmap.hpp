@@ -43,6 +43,8 @@ typedef bool (*direct_map_iterate_func_t)(uint32_t index, void *data,
 class DirectMap {
 
 public:
+    // Note: Stats are mutually exclusive for every API. Only one stat will
+    //       be incremented for an API call.
     enum stats {
         STATS_INS_SUCCESS,
         STATS_INS_FAIL_HW,
@@ -112,6 +114,17 @@ public:
     DirectMap(std::string table_name, uint32_t table_id, uint32_t num_entries, uint32_t swdata_len,
               bool thread_safe = true, bool sharing_en = false);
     ~DirectMap();
+
+    // Debug Info
+    uint32_t table_id(void) { return table_id_; }
+    const char *table_name(void) { return table_name_.c_str(); }
+    uint32_t table_capacity(void) { return num_entries_; }
+    uint32_t table_num_entries_in_use(void);
+    uint32_t table_num_inserts(void);
+    uint32_t table_num_insert_errors(void);
+    uint32_t table_num_deletes(void);
+    uint32_t table_num_delete_errors(void);
+
 
     // Methods
     // Inserts Entry in HW

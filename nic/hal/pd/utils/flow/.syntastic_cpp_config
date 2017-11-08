@@ -1,6 +1,7 @@
 -I ../../
 -I ../../../../include
 -I ../../../../gen
+-I ../../../../..
 -I ../../../../gen/iris/include
 -I ../../../../third-party/crc32
 -I ../../../../third-party/spdlog/include

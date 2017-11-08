@@ -408,6 +408,14 @@ TEST_F(dm_test, test9) {
     ASSERT_TRUE(stats[DirectMap::STATS_UPD_FAIL_ENTRY_NOT_FOUND] == 1);
     ASSERT_TRUE(stats[DirectMap::STATS_REM_FAIL_INV_ARG] == 1);
     ASSERT_TRUE(stats[DirectMap::STATS_REM_FAIL_ENTRY_NOT_FOUND] == 1);
+
+    HAL_TRACE_DEBUG("tableid:{}, table_name:{}, capacity:{}, num_in_use:{}, "
+                    "num_inserts:{}, num_insert_errors:{}, "
+                    "num_deletes:{}, num_delete_errors:{}",
+                    test_dm.table_id(), test_dm.table_name(),
+                    test_dm.table_capacity(), test_dm.table_num_entries_in_use(),
+                    test_dm.table_num_inserts(), test_dm.table_num_insert_errors(),
+                    test_dm.table_num_deletes(), test_dm.table_num_delete_errors());
 }
 
 /*

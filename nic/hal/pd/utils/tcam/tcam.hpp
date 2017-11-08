@@ -52,6 +52,8 @@ typedef bool (*tcam_iterate_func_t)(const void *key,
 class Tcam {
 
 public:
+    // Note: Stats are mutually exclusive for every API. Only one stat will
+    //       be incremented for an API call.
     enum stats {
         STATS_INS_SUCCESS,
         STATS_INS_FAIL_DUP_INS,
@@ -123,6 +125,17 @@ public:
          uint32_t swkey_len, uint32_t swdata_len, 
          bool allow_dup_insert = false);
     ~Tcam();
+
+    // Debug Info
+    uint32_t table_id(void) { return table_id_; }
+    const char *table_name(void) { return table_name_.c_str(); }
+    uint32_t table_capacity(void) { return tcam_capacity_; }
+    uint32_t table_num_entries_in_use(void);
+    uint32_t table_num_inserts(void);
+    uint32_t table_num_insert_errors(void);
+    uint32_t table_num_deletes(void);
+    uint32_t table_num_delete_errors(void);
+
 
     hal_ret_t insert(void *key, void *key_mask, void *data, uint32_t *index, bool lowest=true);
     hal_ret_t insert_withid(void *key, void *key_mask, void *data, uint32_t index);

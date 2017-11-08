@@ -18,6 +18,9 @@ Met::Met(std::string table_name, uint32_t table_id,
     repl_entry_data_len_        = repl_entry_data_len;
 
     repl_table_indexer_         = new indexer(repl_table_capacity_);
+    
+    // Initialize for Stats
+    stats_ = new uint64_t[STATS_MAX]();
 }
 
 // ----------------------------------------------------------------------------
@@ -79,6 +82,7 @@ Met::create_repl_list(uint32_t *repl_list_idx)
     // TODO: Only for debugging
     trace_met();
 end:
+    stats_update(INSERT, rs);
     return rs;
 }
 
@@ -105,6 +109,7 @@ Met::delete_repl_list(uint32_t repl_list_idx)
     // TODO: Only for debugging
     trace_met();
 end:
+    stats_update(REMOVE, rs);
     return rs;
 
 }
@@ -203,6 +208,105 @@ Met::free_repl_table_index(uint32_t idx)
 
     return rs;
 }
+
+// ----------------------------------------------------------------------------
+// Increment Stats
+// ----------------------------------------------------------------------------
+void
+Met::stats_incr(stats stat)
+{
+    HAL_ASSERT_RETURN_VOID((stat < STATS_MAX));
+    stats_[stat]++;
+}
+
+// ----------------------------------------------------------------------------
+// Decrement Stats
+// ----------------------------------------------------------------------------
+void
+Met::stats_decr(stats stat)
+{
+    HAL_ASSERT_RETURN_VOID((stat < STATS_MAX));
+    stats_[stat]--;
+}
+
+// ----------------------------------------------------------------------------
+// Update stats
+// ----------------------------------------------------------------------------
+void
+Met::stats_update(Met::api ap, hal_ret_t rs)
+{
+    switch (ap) {
+        case INSERT:
+            if(rs == HAL_RET_OK) stats_incr(STATS_INS_SUCCESS);
+            else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_INS_FAIL_HW);
+            else if(rs == HAL_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);
+            else HAL_ASSERT(0);
+            break;
+        case UPDATE:
+            if(rs == HAL_RET_OK) stats_incr(STATS_UPD_SUCCESS);
+            else if(rs == HAL_RET_ENTRY_NOT_FOUND) 
+                stats_incr(STATS_UPD_FAIL_ENTRY_NOT_FOUND);
+            else HAL_ASSERT(0);
+            break;
+        case REMOVE:
+            if (rs == HAL_RET_OK) stats_incr(STATS_REM_SUCCESS);
+            else if (rs == HAL_RET_ENTRY_NOT_FOUND) 
+                stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
+            else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_REM_FAIL_HW);
+            else HAL_ASSERT(0);
+            break;
+        default:
+            HAL_ASSERT(0);
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Number of entries in use.
+// ----------------------------------------------------------------------------
+uint32_t
+Met::table_num_entries_in_use(void)
+{
+    return repl_table_indexer_->usage();
+}
+
+// ----------------------------------------------------------------------------
+// Number of insert operations attempted
+// ----------------------------------------------------------------------------
+uint32_t 
+Met::table_num_inserts(void)
+{
+    return stats_[STATS_INS_SUCCESS] + 
+        stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of failed insert operations
+// ----------------------------------------------------------------------------
+uint32_t 
+Met::table_num_insert_errors(void)
+{
+    return stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of delete operations attempted
+// ----------------------------------------------------------------------------
+uint32_t 
+Met::table_num_deletes(void)
+{
+    return stats_[STATS_REM_SUCCESS] + 
+        stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of failed delete operations
+// ----------------------------------------------------------------------------
+uint32_t 
+Met::table_num_delete_errors(void)
+{
+    return stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW];
+}
+
 
 // ----------------------------------------------------------------------------
 // Trace Met

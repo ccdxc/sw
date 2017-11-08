@@ -530,6 +530,14 @@ TEST_F(tcam_test, test7) {
         rs = test_tcam.remove(idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
+
+    HAL_TRACE_DEBUG("tableid:{}, table_name:{}, capacity:{}, num_in_use:{}, "
+                    "num_inserts:{}, num_insert_errors:{}, "
+                    "num_deletes:{}, num_delete_errors:{}",
+                    test_tcam.table_id(), test_tcam.table_name(),
+                    test_tcam.table_capacity(), test_tcam.table_num_entries_in_use(),
+                    test_tcam.table_num_inserts(), test_tcam.table_num_insert_errors(),
+                    test_tcam.table_num_deletes(), test_tcam.table_num_delete_errors());
 }
 
 /* ---------------------------------------------------------------------------

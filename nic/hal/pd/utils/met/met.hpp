@@ -36,6 +36,18 @@ typedef std::map<uint32_t, ReplList*> ReplListMap;
   * ---------------------------------------------------------------------------
 */
 class Met {
+public:
+    enum stats {
+        STATS_INS_SUCCESS,
+        STATS_INS_FAIL_NO_RES,
+        STATS_INS_FAIL_HW,
+        STATS_UPD_SUCCESS,
+        STATS_UPD_FAIL_ENTRY_NOT_FOUND,
+        STATS_REM_SUCCESS,
+        STATS_REM_FAIL_ENTRY_NOT_FOUND,
+        STATS_REM_FAIL_HW,
+        STATS_MAX
+    };
 
 private:
 
@@ -48,12 +60,37 @@ private:
     
     ReplListMap     repl_list_map_;
 
+    uint64_t        *stats_;                // Statistics
+
+    void stats_incr(stats stat);
+    void stats_decr(stats stat);
+    enum api {
+        INSERT,
+        UPDATE,
+        REMOVE,
+        RETRIEVE,
+        RETRIEVE_FROM_HW,
+        ITERATE
+    };
+    void stats_update(api ap, hal_ret_t rs); 
 public:
 
     Met(std::string table_name, uint32_t table_id,
         uint32_t repl_table_capacity, uint32_t num_repl_entries,
         uint32_t repl_entry_data_len);
     ~Met();
+
+    // Debug Info
+    uint32_t table_id(void) { return table_id_; }
+    const char *table_name(void) { return table_name_.c_str(); }
+    uint32_t table_capacity(void) { return repl_table_capacity_; }
+    uint32_t table_num_entries_in_use(void);
+    uint32_t table_num_inserts(void);
+    uint32_t table_num_insert_errors(void);
+    uint32_t table_num_deletes(void);
+    uint32_t table_num_delete_errors(void);
+
+
 
     // Getters & Setters
     uint32_t get_repl_entry_data_len() { return repl_entry_data_len_; }

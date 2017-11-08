@@ -465,6 +465,16 @@ TEST_F(hash_test, test6) {
         rs = test_hash.remove(hash_idx[i]);
         ASSERT_TRUE(rs == HAL_RET_OK);
     }
+
+    HAL_TRACE_DEBUG("tableid:{}, table_name:{}, capacity:{}, oflow_capac:{}, "
+                    "num_in_use:{}, oflow_num_in_use:{}"
+                    "num_inserts:{}, num_insert_errors:{}, "
+                    "num_deletes:{}, num_delete_errors:{}",
+                    test_hash.table_id(), test_hash.table_name(),
+                    test_hash.table_capacity(), test_hash.oflow_table_capacity(),
+                    test_hash.table_num_entries_in_use(), test_hash.oflow_table_num_entries_in_use(),
+                    test_hash.table_num_inserts(), test_hash.table_num_insert_errors(),
+                    test_hash.table_num_deletes(), test_hash.table_num_delete_errors());
 }
 
 /* ---------------------------------------------------------------------------

@@ -356,6 +356,15 @@ TEST_F(met_test, test8) {
 
 	rs = test_met.delete_repl_list(repl_list_idx);
     ASSERT_TRUE(rs == HAL_RET_OK);
+
+    HAL_TRACE_DEBUG("tableid:{}, table_name:{}, capacity:{}, num_in_use:{}, "
+                    "num_inserts:{}, num_insert_errors:{}, "
+                    "num_deletes:{}, num_delete_errors:{}",
+                    test_met.table_id(), test_met.table_name(),
+                    test_met.table_capacity(), test_met.table_num_entries_in_use(),
+                    test_met.table_num_inserts(), test_met.table_num_insert_errors(),
+                    test_met.table_num_deletes(), test_met.table_num_delete_errors());
+
 }
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -85,6 +85,21 @@ public:
         HASH_POLY3
     };
 
+    enum stats {
+        STATS_INS_SUCCESS,
+        STATS_INS_FLOW_COLL, // STATS_INS_SUCCESS will not be incr.
+        STATS_INS_FAIL_DUP_INS,
+        STATS_INS_FAIL_NO_RES,
+        STATS_INS_FAIL_HW,
+        STATS_UPD_SUCCESS,
+        STATS_UPD_FAIL_ENTRY_NOT_FOUND,
+        STATS_REM_SUCCESS,
+        STATS_REM_FAIL_ENTRY_NOT_FOUND,
+        STATS_REM_FAIL_HW,
+        STATS_MAX
+    };
+
+
 private:
 
     // Private Data
@@ -122,11 +137,24 @@ private:
     std::queue<FlowEntry *> flow_entry_del_q_;
     std::queue<FlowHintGroup *> flow_hg_del_q_;
 
+    uint64_t        *stats_;                // Statistics
+
     // Private Methods
     uint32_t get_num_bits_from_size_(uint32_t size);
     void pre_process_sizes_(uint32_t num_flow_hash_entries,
                             uint32_t num_flow_hash_coll_entries);
     uint32_t generate_hash_(void *key, uint32_t key_len, bool log = true);
+    void stats_incr(stats stat);
+    void stats_decr(stats stat);
+    enum api {
+        INSERT,
+        UPDATE,
+        REMOVE,
+        RETRIEVE,
+        RETRIEVE_FROM_HW,
+        ITERATE
+    };
+    void stats_update(api ap, hal_ret_t rs); 
 public:
 
 
@@ -141,6 +169,18 @@ public:
             Flow::HashPoly hash_poly = HASH_POLY0);
     ~Flow();
 
+
+    // Debug Info
+    uint32_t table_id(void) { return table_id_; }
+    const char *table_name(void) { return table_name_.c_str(); }
+    uint32_t table_capacity(void) { return flow_hash_capacity_; }
+    uint32_t oflow_table_capacity(void) { return flow_coll_capacity_; }
+    uint32_t table_num_entries_in_use(void);
+    uint32_t oflow_table_num_entries_in_use(void);
+    uint32_t table_num_inserts(void);
+    uint32_t table_num_insert_errors(void);
+    uint32_t table_num_deletes(void);
+    uint32_t table_num_delete_errors(void);
 
     hal_ret_t insert(void *key, void *data, uint32_t *index);
     // calc_hash_ is a test only method used to generate hash collissions

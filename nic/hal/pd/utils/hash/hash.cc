@@ -283,7 +283,7 @@ Hash::remove(uint32_t hash_idx)
     }
 
 end:
-    stats_update(UPDATE, rs);
+    stats_update(REMOVE, rs);
     return rs;
 }
 
@@ -589,6 +589,7 @@ Hash::stats_update(Hash::api ap, hal_ret_t rs)
             else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_INS_FAIL_HW);
             else if(rs == HAL_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);
             else if(rs == HAL_RET_DUP_INS_FAIL) stats_incr(STATS_INS_FAIL_DUP_INS);
+            else HAL_ASSERT(0);
             break;
         case UPDATE:
             if(rs == HAL_RET_OK) stats_incr(STATS_UPD_SUCCESS);
@@ -597,6 +598,7 @@ Hash::stats_update(Hash::api ap, hal_ret_t rs)
             else if(rs == HAL_RET_INVALID_ARG) stats_incr(STATS_UPD_FAIL_INV_ARG);
             else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_UPD_FAIL_HW);
             else if(rs == HAL_RET_OOB) stats_incr(STATS_UPD_FAIL_OOB);
+            else HAL_ASSERT(0);
             break;
         case REMOVE:
             if(rs == HAL_RET_OK) stats_incr(STATS_REM_SUCCESS);
@@ -605,6 +607,7 @@ Hash::stats_update(Hash::api ap, hal_ret_t rs)
             else if(rs == HAL_RET_INVALID_ARG) stats_incr(STATS_REM_FAIL_INV_ARG);
             else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_REM_FAIL_HW);
             else if(rs == HAL_RET_OOB) stats_incr(STATS_REM_FAIL_OOB);
+            else HAL_ASSERT(0);
             break;
         case RETRIEVE:
             if(rs == HAL_RET_OK) stats_incr(STATS_REM_SUCCESS);
@@ -612,10 +615,80 @@ Hash::stats_update(Hash::api ap, hal_ret_t rs)
                 stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
             else if(rs == HAL_RET_INVALID_ARG) stats_incr(STATS_REM_FAIL_INV_ARG);
             else if(rs == HAL_RET_OOB) stats_incr(STATS_REM_FAIL_OOB);
+            else HAL_ASSERT(0);
             break;
         default:
             HAL_ASSERT(0);
     }
+}
+
+// ----------------------------------------------------------------------------
+// Oflow tcam capacity
+// ----------------------------------------------------------------------------
+uint32_t 
+Hash::oflow_table_capacity(void) 
+{ 
+    return otcam_ ? otcam_->table_capacity() : 0; 
+} 
+
+// ----------------------------------------------------------------------------
+// Number of entries in use.
+// ----------------------------------------------------------------------------
+uint32_t
+Hash::table_num_entries_in_use(void)
+{
+    return hash_entry_map_.size();
+}
+
+// ----------------------------------------------------------------------------
+// Number of oflow entries in use.
+// ----------------------------------------------------------------------------
+uint32_t
+Hash::oflow_table_num_entries_in_use(void)
+{
+    return otcam_ ? otcam_->table_num_entries_in_use() : 0;
+}
+
+// ----------------------------------------------------------------------------
+// Number of insert operations attempted
+// ----------------------------------------------------------------------------
+uint32_t 
+Hash::table_num_inserts(void)
+{
+    return stats_[STATS_INS_SUCCESS] + stats_[STATS_INS_FAIL_DUP_INS] +
+        stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of failed insert operations
+// ----------------------------------------------------------------------------
+uint32_t 
+Hash::table_num_insert_errors(void)
+{
+    return stats_[STATS_INS_FAIL_DUP_INS] +
+        stats_[STATS_INS_FAIL_NO_RES] + stats_[STATS_INS_FAIL_HW];
+}
+
+// ----------------------------------------------------------------------------
+// Number of delete operations attempted
+// ----------------------------------------------------------------------------
+uint32_t 
+Hash::table_num_deletes(void)
+{
+    return stats_[STATS_REM_SUCCESS] + stats_[STATS_REM_FAIL_OOB] +
+        stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW] +
+        stats_[STATS_REM_FAIL_INV_ARG];
+}
+
+// ----------------------------------------------------------------------------
+// Number of failed delete operations
+// ----------------------------------------------------------------------------
+uint32_t 
+Hash::table_num_delete_errors(void)
+{
+    return stats_[STATS_REM_FAIL_OOB] +
+        stats_[STATS_REM_FAIL_ENTRY_NOT_FOUND] + stats_[STATS_REM_FAIL_HW] +
+        stats_[STATS_REM_FAIL_INV_ARG];
 }
 
 // ----------------------------------------------------------------------------
