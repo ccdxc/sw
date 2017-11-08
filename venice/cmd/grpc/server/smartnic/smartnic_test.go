@@ -11,6 +11,8 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
+	"time"
+
 	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -30,6 +32,9 @@ const (
 	smartNICServerURL = "localhost:9199"
 	// TODO: This is a temporary way of testing invalid cert
 	invalidCertSignature = "unknown-cert"
+
+	healthInterval   = 1 * time.Second
+	deadtimeInterval = 3 * time.Second
 )
 
 type testInfo struct {
@@ -55,7 +60,15 @@ func createRPCServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 	tInfo.rpcServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer = NewRPCServer(tInfo.apiClient.CmdV1().Cluster(), tInfo.apiClient.CmdV1().Node(), tInfo.apiClient.CmdV1().SmartNIC())
+	tInfo.smartNICServer = NewRPCServer(tInfo.apiClient.CmdV1().Cluster(),
+		tInfo.apiClient.CmdV1().Node(), tInfo.apiClient.CmdV1().SmartNIC(),
+		healthInterval, deadtimeInterval)
+
+	// Launch go routine to monitor health updates of smartNIC objects and update status
+	go func() {
+		tInfo.smartNICServer.MonitorHealth()
+	}()
+
 	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, tInfo.smartNICServer)
 
 	return rpcServer, nil
@@ -102,8 +115,9 @@ func TestRegisterSmartNIC(t *testing.T) {
 			[]byte(ValidCertSignature),
 			cmd.SmartNICSpec_ADMITTED.String(),
 			cmd.SmartNICCondition{
-				Type:   cmd.SmartNICCondition_HEALTHY.String(),
-				Status: cmd.ConditionStatus_TRUE.String(),
+				Type:               cmd.SmartNICCondition_HEALTHY.String(),
+				Status:             cmd.ConditionStatus_TRUE.String(),
+				LastTransitionTime: time.Now().Format(time.RFC3339),
 			},
 			"",
 			"esx-001",
@@ -125,8 +139,9 @@ func TestRegisterSmartNIC(t *testing.T) {
 			[]byte(ValidCertSignature),
 			cmd.SmartNICSpec_PENDING.String(),
 			cmd.SmartNICCondition{
-				Type:   cmd.SmartNICCondition_HEALTHY.String(),
-				Status: cmd.ConditionStatus_FALSE.String(),
+				Type:               cmd.SmartNICCondition_HEALTHY.String(),
+				Status:             cmd.ConditionStatus_FALSE.String(),
+				LastTransitionTime: time.Now().Format(time.RFC3339),
 			},
 			"",
 			"esx-003",
@@ -138,8 +153,9 @@ func TestRegisterSmartNIC(t *testing.T) {
 			[]byte(ValidCertSignature),
 			cmd.SmartNICSpec_PENDING.String(),
 			cmd.SmartNICCondition{
-				Type:   cmd.SmartNICCondition_HEALTHY.String(),
-				Status: cmd.ConditionStatus_TRUE.String(),
+				Type:               cmd.SmartNICCondition_HEALTHY.String(),
+				Status:             cmd.ConditionStatus_TRUE.String(),
+				LastTransitionTime: time.Now().Format(time.RFC3339),
 			},
 			"4444.4444.0004",
 			"esx-004",
@@ -321,8 +337,31 @@ func TestRegisterSmartNIC(t *testing.T) {
 				}
 				AssertEventually(t, f4, fmt.Sprintf("Failed to verify update for smartNIC"))
 
-				// Verify Node object has its status updated with list of registered NICs
+				// Verify NIC health status goes to UNKNOWN after deadtimeInterval
 				f5 := func() (bool, []interface{}) {
+
+					nicObj, err := tInfo.smartNICServer.GetSmartNIC(ometa)
+					if err != nil {
+						t.Errorf("Error getting NIC object for mac:%s", tc.mac)
+						return false, nil
+					}
+					if nicObj.ObjectMeta.Name != tc.mac {
+						t.Errorf("Got incorrect smartNIC object, expected: %s obtained: %s",
+							nicObj.ObjectMeta.Name, tc.mac)
+						return false, nil
+					}
+
+					if nicObj.Status.Conditions[0].Type != tc.condition.Type || nicObj.Status.Conditions[0].Status != cmd.ConditionStatus_UNKNOWN.String() {
+						t.Logf("Testcase: %s,  Condition expected:\n%+v\nobtained:%+v", tc.name, cmd.ConditionStatus_UNKNOWN, nicObj.Status.Conditions[0])
+						return false, nil
+					}
+
+					return true, nil
+				}
+				AssertEventually(t, f5, fmt.Sprintf("Failed to verify NIC health status going to UNKNOWN"))
+
+				// Verify Node object has its status updated with list of registered NICs
+				f6 := func() (bool, []interface{}) {
 					ometa = api.ObjectMeta{Name: tc.nodeName}
 					nodeObj, err := tInfo.smartNICServer.GetNode(ometa)
 					if err != nil {
@@ -340,10 +379,10 @@ func TestRegisterSmartNIC(t *testing.T) {
 					}
 					return false, nil
 				}
-				AssertEventually(t, f5, fmt.Sprintf("Failed to verify that Node object is updated with registered nic"))
+				AssertEventually(t, f6, fmt.Sprintf("Failed to verify that Node object is updated with registered nic"))
 
 				// Verify Deletion of SmartNIC object
-				f6 := func() (bool, []interface{}) {
+				f7 := func() (bool, []interface{}) {
 					ometa = api.ObjectMeta{Name: tc.mac}
 					err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
 					if err != nil {
@@ -351,14 +390,14 @@ func TestRegisterSmartNIC(t *testing.T) {
 					}
 					return true, nil
 				}
-				AssertEventually(t, f6, fmt.Sprintf("Failed to verify deletion of smartNIC object"))
+				AssertEventually(t, f7, fmt.Sprintf("Failed to verify deletion of smartNIC object"))
 
 				if err != nil {
 					t.Fatalf("Error deleteing SmartNIC object mac:%s err: %v", tc.mac, err)
 				}
 
 				// Verify Deletion of Node object
-				f7 := func() (bool, []interface{}) {
+				f8 := func() (bool, []interface{}) {
 					ometa = api.ObjectMeta{Name: tc.nodeName}
 					err = tInfo.smartNICServer.DeleteNode(ometa)
 					if err != nil {
@@ -366,7 +405,7 @@ func TestRegisterSmartNIC(t *testing.T) {
 					}
 					return true, nil
 				}
-				AssertEventually(t, f7, fmt.Sprintf("Failed to verify deletion of Node object"))
+				AssertEventually(t, f8, fmt.Sprintf("Failed to verify deletion of Node object"))
 
 			} else {
 

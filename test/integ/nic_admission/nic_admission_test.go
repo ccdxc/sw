@@ -93,7 +93,11 @@ func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 	tInfo.rpcServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer = smartnic.NewRPCServer(tInfo.apiClient.CmdV1().Cluster(), tInfo.apiClient.CmdV1().Node(), tInfo.apiClient.CmdV1().SmartNIC())
+	tInfo.smartNICServer = smartnic.NewRPCServer(tInfo.apiClient.CmdV1().Cluster(),
+		tInfo.apiClient.CmdV1().Node(),
+		tInfo.apiClient.CmdV1().SmartNIC(),
+		smartnic.HealthWatchInterval,
+		smartnic.DeadInterval)
 	grpc.RegisterSmartNICServer(rpcServer.GrpcServer, tInfo.smartNICServer)
 
 	return rpcServer, nil
@@ -349,6 +353,7 @@ func Setup(m *testing.M) {
 		Logger:         pl,
 		Version:        "v1",
 		Scheme:         scheme,
+		KVPoolSize:     8,
 		Kvstore: store.Config{
 			Type:    store.KVStoreTypeEtcd,
 			Servers: strings.Split(cluster.ClientURL(), ","),

@@ -356,7 +356,9 @@ func (m *masterService) handleClusterEvent(et kvstore.WatchEventType, cluster *c
 }
 
 // handleSmartNIC handles SmartNIC updates
-func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, node *cmd.SmartNIC) {
+func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.SmartNIC) {
+
+	log.Infof("SmartNIC update nic: %+v, type: %v", nic, et)
 	switch et {
 	case kvstore.Created:
 		return

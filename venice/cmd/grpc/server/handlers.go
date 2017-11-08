@@ -219,10 +219,25 @@ func (c *clusterRPCHandler) Disjoin(ctx context.Context, req *grpc.ClusterDisjoi
 
 // RegisterSmartNICServer creates and register smartNIC server with retries
 func RegisterSmartNICServer() {
+
+	// Start smartNIC gRPC server
 	for i := 0; i < maxIters; i++ {
+
 		if env.CfgWatcherService.APIClient() != nil {
-			grpc.RegisterSmartNICServer(env.RPCServer.GrpcServer, smartnic.NewRPCServer(env.CfgWatcherService.APIClient().Cluster(),
-				env.CfgWatcherService.APIClient().Node(), env.CfgWatcherService.APIClient().SmartNIC()))
+
+			// create new smartNIC server
+			nicServer := smartnic.NewRPCServer(env.CfgWatcherService.APIClient().Cluster(),
+				env.CfgWatcherService.APIClient().Node(),
+				env.CfgWatcherService.APIClient().SmartNIC(),
+				smartnic.HealthWatchInterval,
+				smartnic.DeadInterval)
+
+			// Launch go routine to monitor health updates of smartNIC objects and update status
+			go func() {
+				nicServer.MonitorHealth()
+			}()
+
+			grpc.RegisterSmartNICServer(env.RPCServer.GrpcServer, nicServer)
 			return
 		}
 		time.Sleep(apiClientWaitTimeMsec * time.Millisecond)

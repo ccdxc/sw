@@ -4,7 +4,9 @@ package smartnic
 
 import (
 	"errors"
+	"fmt"
 	"strings"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -14,6 +16,16 @@ import (
 	perror "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+)
+
+const (
+
+	// HealthWatchInterval is default health watch interval
+	HealthWatchInterval = 60 * time.Second
+
+	// DeadInterval is default dead time interval, after
+	// which NIC health status is declared UNKNOWN by CMD
+	DeadInterval = 120 * time.Second
 )
 
 // RPCServer implements SmartNIC gRPC service.
@@ -27,14 +39,22 @@ type RPCServer struct {
 
 	// SmartNICAPI is CRUD interface for SmartNIC object
 	SmartNICAPI cmd.SmartNICInterface
+
+	// HealthWatchIntvl is the health watch interval
+	HealthWatchIntvl time.Duration
+
+	// DeadIntvl is the dead time interval
+	DeadIntvl time.Duration
 }
 
 // NewRPCServer returns a SmartNIC RPC server object
-func NewRPCServer(cIf cmd.ClusterInterface, nIf cmd.NodeInterface, sIf cmd.SmartNICInterface) *RPCServer {
+func NewRPCServer(cIf cmd.ClusterInterface, nIf cmd.NodeInterface, sIf cmd.SmartNICInterface, healthInvl, deadInvl time.Duration) *RPCServer {
 	return &RPCServer{
-		ClusterAPI:  cIf,
-		NodeAPI:     nIf,
-		SmartNICAPI: sIf,
+		ClusterAPI:       cIf,
+		NodeAPI:          nIf,
+		SmartNICAPI:      sIf,
+		HealthWatchIntvl: healthInvl,
+		DeadIntvl:        deadInvl,
 	}
 }
 
@@ -366,6 +386,69 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNIC_WatchNIC
 		case <-stream.Context().Done():
 			log.Errorf("Context cancelled for SmartNIC Watcher")
 			return stream.Context().Err()
+		}
+	}
+}
+
+// MonitorHealth periodically inspects that health status of
+// smartNIC objects every 30sec. For NICs that haven't received
+// health updates in over 120secs, CMD would mark the status as unknown.
+func (s *RPCServer) MonitorHealth() {
+
+	for {
+		select {
+
+		// NIC health watch timer callback
+		case <-time.After(s.HealthWatchIntvl):
+
+			// Get a list of all existing smartNICs
+			opts := api.ListWatchOptions{}
+			nics, err := s.SmartNICAPI.List(context.Background(), &opts)
+			if err != nil {
+				log.Errorf("Failed to getting a list of nics, err: %v", err)
+				continue
+			}
+
+			log.Debugf("Health watch timer callback, #nics: %d", len(nics))
+
+			// Iterate on smartNIC objects
+			for _, nic := range nics {
+
+				for i := 0; i < len(nic.Status.Conditions); i++ {
+
+					condition := nic.Status.Conditions[i]
+
+					// Inspect Health condition with status that is marked healthy or unhealthy (i.e not unknown)
+					if condition.Type == cmd.SmartNICCondition_HEALTHY.String() && condition.Status != cmd.ConditionStatus_UNKNOWN.String() {
+
+						// parse the last reported time
+						t, err := time.Parse(time.RFC3339, condition.LastTransitionTime)
+						if err != nil {
+							log.Errorf("Failed parsing last transition time for NIC health, nic: %+v, err: %v", nic, err)
+							break
+						}
+
+						// if the time elapsed since last health update is over
+						// the deadInterval, update the Health status to unknown
+						if err == nil && time.Since(t) > s.DeadIntvl {
+
+							// update the nic health status to unknown
+							log.Infof("Updating NIC health to unknown, nic: %s", nic.Name)
+							lastUpdateTime := nic.Status.Conditions[i].LastTransitionTime
+							nic.Status.Conditions[i].Status = cmd.ConditionStatus_UNKNOWN.String()
+							nic.Status.Conditions[i].LastTransitionTime = time.Now().Format(time.RFC3339)
+							nic.Status.Conditions[i].Reason = fmt.Sprintf("NIC health update not received since %s", lastUpdateTime)
+							_, err := s.SmartNICAPI.Update(context.Background(), nic)
+							if err != nil {
+								log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
+							}
+						}
+
+						break
+					}
+
+				}
+			}
 		}
 	}
 }

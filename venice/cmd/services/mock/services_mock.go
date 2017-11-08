@@ -604,7 +604,7 @@ func (c *CfgWatcherService) SetClusterEventHandler(hdlr types.ClusterEventHandle
 }
 
 // SetSmartNICEventHandler sets the handler to handle events related to SmartNIC object
-func (c *CfgWatcherService) SetSmartNICEventHandler(types.SmartNICventHandler) {}
+func (c *CfgWatcherService) SetSmartNICEventHandler(types.SmartNICEventHandler) {}
 
 // APIClient returns a valid interface once the APIServer is good and
 // accepting requests

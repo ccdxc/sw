@@ -249,8 +249,8 @@ type NodeEventHandler func(et kvstore.WatchEventType, node *cmd.Node)
 // ClusterEventHandler handles watch events for Cluster object
 type ClusterEventHandler func(et kvstore.WatchEventType, cluster *cmd.Cluster)
 
-// SmartNICventHandler handles watch events for SmartNIC object
-type SmartNICventHandler func(et kvstore.WatchEventType, nic *cmd.SmartNIC)
+// SmartNICEventHandler handles watch events for SmartNIC object
+type SmartNICEventHandler func(et kvstore.WatchEventType, nic *cmd.SmartNIC)
 
 // CfgWatcherService watches for changes to config from API Server
 type CfgWatcherService interface {
@@ -266,7 +266,7 @@ type CfgWatcherService interface {
 	SetClusterEventHandler(ClusterEventHandler)
 
 	// SetSmartNICEventHandler sets the handler to handle events related to SmartNIC object
-	SetSmartNICEventHandler(SmartNICventHandler)
+	SetSmartNICEventHandler(SmartNICEventHandler)
 
 	// APIClient returns a valid interface once the APIServer is good and
 	// accepting requests

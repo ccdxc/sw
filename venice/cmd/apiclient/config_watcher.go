@@ -39,9 +39,9 @@ type CfgWatcherService struct {
 	nodeWatcher     kvstore.Watcher // Node endpoint watcher
 	smartNICWatcher kvstore.Watcher // SmartNIC object watcher
 
-	nodeEventHandler    types.NodeEventHandler
-	clusterEventHandler types.ClusterEventHandler
-	smartNICventHandler types.SmartNICventHandler
+	nodeEventHandler     types.NodeEventHandler
+	clusterEventHandler  types.ClusterEventHandler
+	smartNICEventHandler types.SmartNICEventHandler
 }
 
 // SetNodeEventHandler sets handler for Node events
@@ -55,8 +55,8 @@ func (k *CfgWatcherService) SetClusterEventHandler(ch types.ClusterEventHandler)
 }
 
 // SetSmartNICEventHandler sets handler for SmartNIC events
-func (k *CfgWatcherService) SetSmartNICEventHandler(snicHandler types.SmartNICventHandler) {
-	k.smartNICventHandler = snicHandler
+func (k *CfgWatcherService) SetSmartNICEventHandler(snicHandler types.SmartNICEventHandler) {
+	k.smartNICEventHandler = snicHandler
 }
 
 // apiClientConn creates a gRPC client Connection to API server
@@ -264,8 +264,8 @@ func (k *CfgWatcherService) runUntilCancel() {
 				k.logger.Infof("SmartNIC Watcher failed to get SmartNIC Object")
 				break
 			}
-			if k.smartNICventHandler != nil {
-				go k.smartNICventHandler(event.Type, snic)
+			if k.smartNICEventHandler != nil {
+				go k.smartNICEventHandler(event.Type, snic)
 			}
 		case <-k.ctx.Done():
 			k.stopWatchers()
