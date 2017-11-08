@@ -16,7 +16,6 @@ esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc:
     phvwri p.app_header_table1_valid, 0
     phvwri p.app_header_table2_valid, 0
     phvwri p.app_header_table3_valid, 0
-    
     phvwri p.p4_rxdma_intr_dma_cmd_ptr, N2H_RXDMA_IPSEC_DMA_COMMANDS_OFFSET
  
 dma_cmd_to_write_ipsec_int_from_rxdma_to_txdma:

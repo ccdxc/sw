@@ -18,7 +18,6 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_int_header_payload_start, k.p42p4plus_hdr_ipsec_payload_start
     seq c1, d.is_v6, 1
     cmov r1, c1, IPV6_HDR_SIZE, IPV4_HDR_SIZE
-    //addi r1, r0, IPV4_HDR_SIZE
     addi r1, r1, ESP_FIXED_HDR_SIZE
     add r2, r1, d.iv_size
     add r2, r2, k.p42p4plus_hdr_ipsec_payload_end
@@ -52,9 +51,7 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     phvwr p.ipsec_to_stage3_packet_len, r1 
     phvwr p.ipsec_to_stage3_iv_size, d.iv_size
     phvwr p.ipsec_to_stage3_iv_salt, d.iv_salt
-
     phvwr p.ipsec_global_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
-
     phvwr p.esp_header_spi, d.spi
     phvwr p.esp_header_seqno, d.esn_lo
     phvwr p.esp_header_iv, d.iv

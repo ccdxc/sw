@@ -39,13 +39,11 @@ esp_ipv4_tunnel_h2n_dma_cmd_incr_barco_pindex:
     add r2, r0, d.barco_pindex
     addi r2, r2, 1
     andi r2, r2, 0x3F
-    tblwr d.barco_pindex, r2
-    nop
-    
     phvwri p.p4_txdma_intr_dma_cmd_ptr, H2N_TXDMA1_DMA_COMMANDS_OFFSET 
     phvwri p.app_header_table0_valid, 0
     phvwri p.app_header_table1_valid, 0
     phvwri p.app_header_table2_valid, 0
     phvwri p.app_header_table3_valid, 0
+    tblwr d.barco_pindex, r2
     nop.e
     nop

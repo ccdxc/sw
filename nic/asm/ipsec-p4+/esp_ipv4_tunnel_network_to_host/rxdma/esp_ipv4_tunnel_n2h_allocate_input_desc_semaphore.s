@@ -18,7 +18,8 @@ esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore:
     phvwri p.common_te0_phv_table_lock_en, 0
     sll r1, d.{in_desc_ring_index}.dx, 3 
     addi r1, r1, RNMDR_TABLE_BASE 
-    phvwr.e p.common_te0_phv_table_addr, r1
+    phvwr p.common_te0_phv_table_addr, r1
+    nop.e
     nop
      
 

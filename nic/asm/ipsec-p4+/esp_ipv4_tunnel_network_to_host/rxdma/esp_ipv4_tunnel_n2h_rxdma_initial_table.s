@@ -17,14 +17,11 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     seq c1, d.is_v6, 1
     phvwri p.p4_intr_global_tm_oport, TM_OPORT_P4INGRESS
     phvwri p.p4_intr_global_tm_iport, TM_OPORT_DMA
-    phvwri p.p4_intr_global_lif, 1003
+    phvwri p.p4_intr_global_lif, ARM_CPU_LIF 
 
-   //payload_start sent by p4 as outer-IP+base-esp(8 bytes)
-    //add r1, r0, d.iv_size
+    //payload_start sent by p4 as outer-IP+base-esp(8 bytes)
     phvwr p.ipsec_int_header_payload_start, k.p42p4plus_hdr_ipsec_payload_start 
-
     // p4 sends payload_end as end of the packet including 2+icv
-    
     add r2, r0, k.p42p4plus_hdr_ipsec_payload_end
     addi.c1 r2, r2, IPV6_HDR_SIZE
     sub r2, r2, d.icv_size
@@ -32,10 +29,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_int_header_tailroom_offset, r2
     phvwr p.ipsec_global_icv_size, d.icv_size
 
-   //Ethernet header excluding IP, ESP, IV
-    //add r3, r0, k.p42p4plus_hdr_ip_hdr_size
-    //addi r3, r3, ESP_FIXED_HDR_SIZE 
-    //sub r4, k.p42p4plus_hdr_ipsec_payload_start, r3 
+    //Ethernet header excluding IP, ESP, IV
     phvwr p.ipsec_int_header_headroom, k.p42p4plus_hdr_ipsec_payload_start 
     add r3, r0, k.p42p4plus_hdr_ipsec_payload_start
     add r3, r3, k.p42p4plus_hdr_ip_hdr_size
@@ -76,7 +70,6 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     addi r7, r0, 1
     sllv r3, r7, r1
     or r3, r3, d.replay_seq_no_bmp 
-    // should I do a flush here for this tablewrite as I want next packet to see this updated seqno ??
     tblwr  d.replay_seq_no_bmp, r3
     nop
 
@@ -117,13 +110,10 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
     nop
 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
-    // diff = phv_rx->p42p4plus_hdr.seq_no - phv_rx->ipsec_int.expected_seq_no;
     sub r1, k.p42p4plus_hdr_seq_no, d.expected_seq_no
     slt c1, r1, IPSEC_WIN_REPLAY_MAX_DIFF 
-    //if (diff >= ipsec_cb->replay_win_sz) { //can't handle
     bcf [c1], ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz
     nop
-    // ipsec_cb->replay_win_bmp = (ipsec_cb->replay_win_bmp << diff) | 1;
     sllv r3, d.replay_seq_no_bmp, r1
     ori r3, r3, 1
     tblwr d.replay_seq_no_bmp, r3
@@ -135,12 +125,8 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
     nop
 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
-    // ipsec_cb->replay_win_bmp = 1;
-    //  phv_rx->ipsec_int.drop_mask |= IPSEC_BAD_SEQ_NO;
     addi r7, r0, 1
     tblwr d.replay_seq_no_bmp, r7 
-    //ori r4, k.ipsec_int_drop_mask, IPSEC_BAD_SEQ_NO
-    //phvwr p.ipsec_int_drop_mask, r4
     nop
     add r1, r0, k.p42p4plus_hdr_seq_no
     addi r1, r1, 1

@@ -105,6 +105,7 @@
 
 #define IPSEC_WIN_REPLAY_MAX_DIFF 63
 
+#define ARM_CPU_LIF    1003
 #define LIF_IPSEC_ESP  1004
 #define LIF_IPSEC_AH   1005
 

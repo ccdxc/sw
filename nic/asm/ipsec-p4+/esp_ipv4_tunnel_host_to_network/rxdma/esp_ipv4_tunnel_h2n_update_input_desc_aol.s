@@ -21,21 +21,16 @@ esp_ipv4_tunnel_h2n_update_input_desc_aol:
     phvwri p.common_te0_phv_table_lock_en, 0
     add r3, r0, k.{ipsec_global_ipsec_cb_addr_sbit0_ebit31...ipsec_global_ipsec_cb_addr_sbit32_ebit33}
     phvwr p.common_te0_phv_table_addr, r3 
-
     addi r1, r0, IPSEC_SALT_HEADROOM
     add r1, r1, k.ipsec_to_stage3_iv_size
     addi r2, r0, ESP_FIXED_HDR_SIZE 
     add r2, r2, k.ipsec_to_stage3_iv_size
-
     add r4, r1, k.t0_s2s_in_page_addr 
- 
     phvwr p.barco_desc_in_A0_addr, r4.dx
     addi r3, r0, ESP_FIXED_HDR_SIZE
     phvwr p.barco_desc_in_L0, r3.wx 
     phvwri p.barco_desc_in_O0, 0 
-
     add r5, r4, r2
-    //add r5, r5, r1
     add r5, r5, k.t0_s2s_payload_start 
     phvwr p.barco_desc_in_A1_addr, r5.dx
     add r6, r0, k.t0_s2s_payload_size
@@ -50,14 +45,12 @@ dma_cmd_to_move_input_pkt_to_mem:
     addi r1, r1, IPSEC_SALT_HEADROOM
     addi r1, r1, ESP_FIXED_HDR_SIZE
     add r1, r1, k.ipsec_to_stage3_iv_size
-    
     add r1, r1, k.t0_s2s_in_page_addr 
     phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, r1 
     phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_to_stage3_packet_len[13:0]
 
 dma_cmd_to_write_pad_bytes:
     add r2, r1, k.ipsec_to_stage3_packet_len
-
     //source - from fixed hbm pad table data structure.
     phvwri p.dma_cmd_pad_byte_src_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_MEM
     phvwri p.dma_cmd_pad_byte_src_dma_cmd_mem2mem_type, DMA_CMD_TYPE_MEM2MEM_TYPE_SRC
@@ -84,7 +77,6 @@ dma_cmd_write_salt_to_in_desc:
     phvwri p.dma_cmd_iv_salt_dma_cmd_phv_start_addr, IPSEC_IN_DESC_IV_SALT_START
     phvwri p.dma_cmd_iv_salt_dma_cmd_phv_end_addr, IPSEC_IN_DESC_IV_SALT_END 
 
-// Need to change the below to phv2mem
 dma_cmd_write_iv_to_in_desc:
     add r3, r0,  k.t0_s2s_in_page_addr
     addi r3, r3, IPSEC_SALT_HEADROOM

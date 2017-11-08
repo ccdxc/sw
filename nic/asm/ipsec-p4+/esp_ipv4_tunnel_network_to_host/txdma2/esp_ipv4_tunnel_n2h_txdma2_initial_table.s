@@ -18,15 +18,13 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
 
     phvwri p.p4_intr_global_tm_oport, TM_OPORT_P4INGRESS
     phvwri p.p4_intr_global_tm_iport, TM_OPORT_DMA
-    phvwri p.p4_intr_global_lif, 1003
+    phvwri p.p4_intr_global_lif, ARM_CPU_LIF 
 
     phvwri p.app_header_table0_valid, 1
     phvwri p.common_te0_phv_table_lock_en, 1
     phvwri p.common_te0_phv_table_raw_table_size, 6
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_n2h_load_barco_req[33:6] 
-
     add r5, r0, d.barco_ring_pindex
-
     add r1, r0, d.barco_cindex
     sll r1, r1, BRQ_RING_ENTRY_SIZE_SHIFT 
     add r1, r1, d.barco_ring_base_addr 
@@ -44,7 +42,6 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     phvwr p.ipsec_to_stage4_vrf_vlan, d.vrf_vlan
     cmov r6, c1, IPV6_ETYPE, IPV4_ETYPE
     phvwr p.ipsec_to_stage4_ip_etype, r6
-
     add r3, r0, d.barco_cindex
     addi r3, r3, 1
     tblwr d.barco_cindex, r3

@@ -20,6 +20,6 @@ esp_ipv4_tunnel_h2n_update_output_desc_aol:
     add r6, r6, k.ipsec_to_stage3_iv_size
     addi r6, r6, 2
     phvwr p.barco_desc_out_L0, r6.wx 
-    phvwri p.barco_desc_out_O0, 0
+    //phvwri p.barco_desc_out_O0, 0
     nop.e
     nop
