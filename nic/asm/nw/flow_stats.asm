@@ -18,11 +18,15 @@ flow_stats:
   seq         c1, d.flow_stats_d.permit_packets, 0xF
   bcf         [c1], flow_stats_permitted_overflow
   tbladd      d.flow_stats_d.permit_packets, 1
-  tbladd.e    d.flow_stats_d.permit_bytes, k.control_metadata_packet_len
+  tbladd.e    d.flow_stats_d.permit_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   nop
 
 flow_stats_permitted_overflow:
-  add         r7, d.flow_stats_d.permit_bytes, k.control_metadata_packet_len
+  add         r7, d.flow_stats_d.permit_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   or          r7, r7, 0xF, 32
   or          r7, r7, 1, 56
   or          r7, r7, r5[31:27], 58
@@ -40,11 +44,15 @@ flow_stats_dropped:
   seq         c1, d.flow_stats_d.drop_packets, 0xF
   bcf         [c1], flow_stats_dropped_overflow
   tbladd      d.flow_stats_d.drop_packets, 1
-  tbladd.e    d.flow_stats_d.drop_bytes, k.control_metadata_packet_len
+  tbladd.e    d.flow_stats_d.drop_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   nop
 
 flow_stats_dropped_overflow:
-  add         r7, d.flow_stats_d.drop_bytes, k.control_metadata_packet_len
+  add         r7, d.flow_stats_d.drop_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   or          r7, r7, 0xF, 32
   or          r7, r7, 1, 56
   or          r7, r7, r5[31:27], 58

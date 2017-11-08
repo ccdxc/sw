@@ -22,11 +22,15 @@ ingress_policer_action:
   phvwr.c1    p.qos_metadata_dscp, d.ingress_policer_action_d.dscp
   bgti        r7, 0xF, ingress_policer_permitted_stats_overflow
   tblwr       d.ingress_policer_action_d.permitted_packets, r6[3:0]
-  tbladd.e    d.ingress_policer_action_d.permitted_bytes, k.control_metadata_packet_len
+  tbladd.e    d.ingress_policer_action_d.permitted_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   nop
 
 ingress_policer_permitted_stats_overflow:
-  add         r7, d.ingress_policer_action_d.permitted_bytes, k.control_metadata_packet_len
+  add         r7, d.ingress_policer_action_d.permitted_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   addi        r6, r0, 0x100000F
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
@@ -42,11 +46,15 @@ ingress_policer_deny:
   add         r7, d.ingress_policer_action_d.denied_packets, 1
   bgti        r7, 0xF, ingress_policer_denied_stats_overflow
   tblwr       d.ingress_policer_action_d.denied_packets, r6[3:0]
-  tbladd.e    d.ingress_policer_action_d.denied_bytes, k.control_metadata_packet_len
+  tbladd.e    d.ingress_policer_action_d.denied_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   nop
 
 ingress_policer_denied_stats_overflow:
-  add         r7, d.ingress_policer_action_d.denied_bytes, k.control_metadata_packet_len
+  add         r7, d.ingress_policer_action_d.denied_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   addi        r6, r0, 0x100000F
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58

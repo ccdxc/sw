@@ -151,9 +151,10 @@ action p4plus_app_classic_nic() {
         modify_field(p4_to_p4plus_classic_nic.flags,
                      CLASSIC_NIC_FLAGS_VLAN_VALID);
         remove_header(vlan_tag);
-        subtract(control_metadata.packet_len, control_metadata.packet_len, 4);
+        subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 4);
     }
-    modify_field(p4_to_p4plus_classic_nic.packet_len, control_metadata.packet_len);
+    modify_field(p4_to_p4plus_classic_nic.packet_len,
+                 capri_p4_intrinsic.packet_len);
     add_header(p4_to_p4plus_classic_nic);
     add_header(capri_rxdma_intrinsic);
     modify_field(p4_to_p4plus_classic_nic.p4plus_app_id,
@@ -346,7 +347,7 @@ action p4plus_app_cpu() {
 
     f_p4plus_cpu_pkt(0);
 
-    add(p4_to_p4plus_cpu.packet_len, control_metadata.packet_len,
+    add(p4_to_p4plus_cpu.packet_len, capri_p4_intrinsic.packet_len,
         P4PLUS_CPU_PKT_SZ);
 
     add_header(capri_rxdma_intrinsic);
@@ -388,7 +389,7 @@ action p4plus_app_raw_redir() {
 
     f_p4plus_cpu_pkt(P4PLUS_RAW_REDIR_HDR_SZ);
 
-    add(p4_to_p4plus_cpu.packet_len, control_metadata.packet_len,
+    add(p4_to_p4plus_cpu.packet_len, capri_p4_intrinsic.packet_len,
         P4PLUS_CPU_PKT_SZ);
 
     add_header(capri_rxdma_intrinsic);
@@ -453,9 +454,7 @@ action f_p4plus_to_p4_1() {
         modify_field(vlan_tag.vid, p4plus_to_p4.vlan_tag);
         modify_field(vlan_tag.etherType, ethernet.etherType);
         modify_field(ethernet.etherType, ETHERTYPE_VLAN);
-        add_to_field(control_metadata.packet_len, 4);
-        modify_field(capri_p4_intrinsic.packet_len,
-                     control_metadata.packet_len);
+        add(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 4);
     }
 
     // update from cpu flag
@@ -467,9 +466,9 @@ action f_p4plus_to_p4_1() {
 action f_p4plus_to_p4_2() {
     // update IP length
     if (vlan_tag.valid == TRUE) {
-        subtract(scratch_metadata.packet_len, control_metadata.packet_len, 18);
+        subtract(scratch_metadata.packet_len, capri_p4_intrinsic.packet_len, 18);
     } else {
-        subtract(scratch_metadata.packet_len, control_metadata.packet_len, 14);
+        subtract(scratch_metadata.packet_len, capri_p4_intrinsic.packet_len, 14);
     }
     if ((p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN) != 0) {
         if (ipv4.valid == TRUE) {

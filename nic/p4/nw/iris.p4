@@ -47,7 +47,6 @@ header_type control_metadata_t {
         drop_reason                    : 32;
         qid                            : 24;
         qtype                          : 8;
-        packet_len                     : 16;
         flow_miss_idx                  : 16;
         egress_mirror_session_id       : 8;
         egress_tm_oqueue               : 5;

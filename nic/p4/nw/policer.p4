@@ -49,11 +49,11 @@ action ingress_policer_action(marking_overwrite, cos_en, cos, dscp_en, dscp,
     if (control_metadata.drop_reason == DROP_INGRESS_POLICER) {
         add(scratch_metadata.policer_packets, denied_packets, 1);
         add(scratch_metadata.policer_bytes, denied_bytes,
-            control_metadata.packet_len);
+            capri_p4_intrinsic.packet_len);
     } else {
         add(scratch_metadata.policer_packets, permitted_packets, 1);
         add(scratch_metadata.policer_bytes, permitted_bytes,
-            control_metadata.packet_len);
+            capri_p4_intrinsic.packet_len);
         modify_field(scratch_metadata.marking_overwrite, marking_overwrite);
         if (marking_overwrite == TRUE) {
             modify_field(qos_metadata.cos_en, cos_en);
@@ -123,11 +123,11 @@ action egress_policer_action(permitted_packets, permitted_bytes,
     if (policer_metadata.egress_policer_color == POLICER_COLOR_RED) {
         add(scratch_metadata.policer_packets, denied_packets, 1);
         add(scratch_metadata.policer_bytes, denied_bytes,
-            control_metadata.packet_len);
+            capri_p4_intrinsic.packet_len);
     } else {
         add(scratch_metadata.policer_packets, permitted_packets, 1);
         add(scratch_metadata.policer_bytes, permitted_bytes,
-            control_metadata.packet_len);
+            capri_p4_intrinsic.packet_len);
     }
 }
 

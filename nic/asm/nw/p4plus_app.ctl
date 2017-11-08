@@ -16,7 +16,8 @@ k = {
   tcp_valid = 1;
   tcp_srcPort = 0x64;
   tcp_dstPort = 0x8080;
-  control_metadata_packet_len = 0x100;
+  capri_p4_intrinsic_packet_len_sbit0_ebit5 = 1;
+  capri_p4_intrinsic_packet_len_sbit6_ebit13 = 0x00;
   ipv4_ihl = 5;
   tcp_dataOffset = 5;
 };

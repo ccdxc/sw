@@ -4411,11 +4411,11 @@ class capri_gress_tm:
             stg += 1
             if stg not in self.stages:
                 self.stages[stg] = capri_stage(self, stg_id)
-                self.stages[stg].p4_table_list = table_list
+                self.stages[stg].p4_table_list = sorted(table_list, key=lambda k:k.name)
             else:
-                self.stages[stg].p4_table_list += table_list
+                self.stages[stg].p4_table_list += sorted(table_list, key=lambda k:k.name)
 
-            for i,t in enumerate(sorted(table_list, key=lambda k:k.name)):
+            for i,t in enumerate(self.stages[stg].p4_table_list):
                 if isinstance(t, p4.p4_conditional_node):
                     self.table_predicates[t.name] = capri_predicate(self, t)
                 elif isinstance(t, p4.p4_table):

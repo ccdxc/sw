@@ -55,11 +55,11 @@ action copp_action(permitted_packets, permitted_bytes,
     if (copp_metadata.policer_color == POLICER_COLOR_RED) {
         add(scratch_metadata.policer_packets, denied_packets, 1);
         add(scratch_metadata.policer_bytes, denied_bytes,
-            control_metadata.packet_len);
+            capri_p4_intrinsic.packet_len);
     } else {
         add(scratch_metadata.policer_packets, permitted_packets, 1);
         add(scratch_metadata.policer_bytes, permitted_bytes,
-            control_metadata.packet_len);
+            capri_p4_intrinsic.packet_len);
     }
 }
 

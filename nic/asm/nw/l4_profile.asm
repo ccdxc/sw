@@ -129,8 +129,9 @@ lb_ip_norm_options:
   sub         r1, r1, 20 // Option length
   sub         r2, k.ipv4_totalLen, r1
   phvwr       p.ipv4_totalLen, r2
-  sub         r2, k.control_metadata_packet_len, r1
-  phvwr       p.control_metadata_packet_len, r2
+  sub         r2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                     capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
+  phvwr       p.capri_p4_intrinsic_packet_len, r2
 
 
 lb_ip_norm_df_bit_tunnel_terminate:

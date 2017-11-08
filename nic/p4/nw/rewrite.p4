@@ -26,7 +26,8 @@ metadata qos_metadata_t qos_metadata;
 action rewrite(mac_sa, mac_da) {
     if (vlan_tag.valid == TRUE) {
         modify_field(ethernet.etherType, vlan_tag.etherType);
-        subtract(control_metadata.packet_len, control_metadata.packet_len, 4);
+        subtract(capri_p4_intrinsic.packet_len,
+                 capri_p4_intrinsic.packet_len, 4);
         remove_header(vlan_tag);
     }
 
@@ -94,7 +95,8 @@ table rewrite {
 /* Mirror                                                                    */
 /*****************************************************************************/
 action mirror_truncate(truncate_len) {
-    if (truncate_len != 0) {
+    if ((truncate_len != 0) and
+        (truncate_len < capri_p4_intrinsic.packet_len)) {
         modify_field(capri_deparser_len.trunc_pkt_len, truncate_len);
     }
 }

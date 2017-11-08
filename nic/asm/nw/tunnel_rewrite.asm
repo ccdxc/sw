@@ -14,6 +14,9 @@ nop:
 
 .align
 encap_vxlan:
+  // r5 : k.capri_p4_intrinsic_packet_len
+  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
   phvwr       p.{inner_ethernet_dstAddr...inner_ethernet_etherType}, \
                   k.{ethernet_dstAddr...ethernet_etherType}
   phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
@@ -22,7 +25,7 @@ encap_vxlan:
   phvwr       p.udp_srcPort, k.rewrite_metadata_entropy_hash
   phvwr       p.udp_dstPort, UDP_PORT_VXLAN
   phvwr       p.udp_checksum, 0
-  add         r7, k.control_metadata_packet_len, 16
+  add         r7, r5, 16
   phvwr       p.udp_len, r7
 
   phvwri      p.{vxlan_flags,vxlan_reserved}, 0x08000000
@@ -39,6 +42,12 @@ encap_vxlan:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
+  // update packet length
+  cmov        r1, c1, 50, 70
+  add.c2      r1, r1, 4
+  add         r1, r1, r5
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
+
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x4011
 #ifdef PHASE2
@@ -51,8 +60,10 @@ encap_vxlan:
 
 .align
 encap_vlan:
-  add         r7, k.control_metadata_packet_len, 4
-  phvwr       p.control_metadata_packet_len, r7
+  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  add         r7, r5, 4
+  phvwr       p.capri_p4_intrinsic_packet_len, r7
   phvwr       p.vlan_tag_etherType, k.ethernet_etherType
   phvwr       p.{vlan_tag_dei, vlan_tag_vid}, k.rewrite_metadata_tunnel_vnid[11:0]
   seq         c7, k.qos_metadata_cos_en, 1
@@ -85,7 +96,9 @@ encap_erspan:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  add         r7, k.control_metadata_packet_len, 16
+  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  add         r7, r5, 16
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x402f
 #ifdef PHASE2
@@ -134,7 +147,9 @@ encap_vxlan_gpe:
   phvwr       p.udp_srcPort, k.rewrite_metadata_entropy_hash
   phvwr       p.udp_dstPort, UDP_PORT_VXLAN_GPE
   phvwr       p.udp_checksum, 0
-  add         r7, k.control_metadata_packet_len, 16
+  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  add         r7, r5, 16
   phvwr       p.udp_len, r7
 
   phvwri      p.{vxlan_gpe_flags,vxlan_gpe_reserved}, 0x90000000
@@ -166,7 +181,9 @@ encap_genv:
   phvwr       p.udp_srcPort, k.rewrite_metadata_entropy_hash
   phvwr       p.udp_dstPort, UDP_PORT_GENV
   phvwr       p.udp_checksum, 0
-  add         r7, k.control_metadata_packet_len, 16
+  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  add         r7, r5, 16
   phvwr       p.udp_len, r7
 
   phvwri      p.{genv_ver...genv_protoType}, ETHERTYPE_ETHERNET
@@ -209,7 +226,9 @@ encap_nvgre:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  add         r7, k.control_metadata_packet_len, 8
+  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  add         r7, r5, 8
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x402f
   b.!c1       f_insert_ipv6_header
@@ -230,7 +249,9 @@ encap_gre:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  add         r7, k.control_metadata_packet_len, 4
+  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  add         r7, r5, 4
   bcf         [c1],  f_insert_ipv4_header
   add         r6, r0, 0x402f
     b.!c1       f_insert_ipv6_header
@@ -244,7 +265,9 @@ encap_ip:
   bal.c2      r1, f_encap_vlan
   phvwr.!c2   p.ethernet_etherType, r6
 
-  sub         r7, k.control_metadata_packet_len, 14
+  or          r5, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
+                  k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+  sub         r7, r5, 14
   bcf         [c1],  f_insert_ipv4_header
   add         r6, 0x4000, k.tunnel_metadata_inner_ip_proto, 8
   b.!c1       f_insert_ipv6_header

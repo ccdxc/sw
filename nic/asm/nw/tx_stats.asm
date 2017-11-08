@@ -24,19 +24,25 @@ tx_stats:
   add         r7, d.tx_stats_d.tx_ucast_pkts, 1
   bgti        r7, 0xF, tx_ucast_overflow
   tblwr       d.tx_stats_d.tx_ucast_pkts, r7[3:0]
-  tbladd.e    d.tx_stats_d.tx_ucast_bytes, k.control_metadata_packet_len
+  tbladd.e    d.tx_stats_d.tx_ucast_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   nop
   .brcase 1
   add         r7, d.tx_stats_d.tx_mcast_pkts, 1
   bgti        r7, 0xF, tx_mcast_overflow
   tblwr       d.tx_stats_d.tx_mcast_pkts, r7[3:0]
-  tbladd.e    d.tx_stats_d.tx_mcast_bytes, k.control_metadata_packet_len
+  tbladd.e    d.tx_stats_d.tx_mcast_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   nop
   .brcase 2
   add         r7, d.tx_stats_d.tx_bcast_pkts, 1
   bgti        r7, 0xF, tx_bcast_overflow
   tblwr       d.tx_stats_d.tx_bcast_pkts, r7[3:0]
-  tbladd.e    d.tx_stats_d.tx_bcast_bytes, k.control_metadata_packet_len
+  tbladd.e    d.tx_stats_d.tx_bcast_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   nop
   .brcase 3
   nop.e
@@ -51,7 +57,9 @@ tx_egress_drops:
   nop
 
 tx_ucast_overflow:
-  add         r7, d.tx_stats_d.tx_ucast_bytes, k.control_metadata_packet_len
+  add         r7, d.tx_stats_d.tx_ucast_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   addi        r6, r0, 0x100000F
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
@@ -64,7 +72,9 @@ tx_ucast_overflow:
   tblwr       d.tx_stats_d.tx_ucast_bytes, r0
 
 tx_mcast_overflow:
-  add         r7, d.tx_stats_d.tx_mcast_bytes, k.control_metadata_packet_len
+  add         r7, d.tx_stats_d.tx_mcast_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   addi        r6, r0, 0x100000F
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
@@ -78,7 +88,9 @@ tx_mcast_overflow:
   tblwr       d.tx_stats_d.tx_mcast_bytes, r0
 
 tx_bcast_overflow:
-  add         r7, d.tx_stats_d.tx_bcast_bytes, k.control_metadata_packet_len
+  add         r7, d.tx_stats_d.tx_bcast_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   addi        r6, r0, 0x100000F
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58

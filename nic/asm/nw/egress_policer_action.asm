@@ -15,11 +15,15 @@ egress_policer_action:
   add         r7, d.egress_policer_action_d.permitted_packets, 1
   bgti        r7, 0xF, egress_policer_permitted_stats_overflow
   tblwr       d.egress_policer_action_d.permitted_packets, r6[3:0]
-  tbladd.e    d.egress_policer_action_d.permitted_bytes, k.control_metadata_packet_len
+  tbladd.e    d.egress_policer_action_d.permitted_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   nop
 
 egress_policer_permitted_stats_overflow:
-  add         r7, d.egress_policer_action_d.permitted_bytes, k.control_metadata_packet_len
+  add         r7, d.egress_policer_action_d.permitted_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   addi        r6, r0, 0x100000F
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58
@@ -35,11 +39,15 @@ egress_policer_deny:
   add         r7, d.egress_policer_action_d.denied_packets, 1
   bgti        r7, 0xF, egress_policer_denied_stats_overflow
   tblwr       d.egress_policer_action_d.denied_packets, r6[3:0]
-  tbladd.e    d.egress_policer_action_d.denied_bytes, k.control_metadata_packet_len
+  tbladd.e    d.egress_policer_action_d.denied_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   nop
 
 egress_policer_denied_stats_overflow:
-  add         r7, d.egress_policer_action_d.denied_bytes, k.control_metadata_packet_len
+  add         r7, d.egress_policer_action_d.denied_bytes, \
+                k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                   capri_p4_intrinsic_packet_len_sbit6_ebit13}
   addi        r6, r0, 0x100000F
   or          r7, r7, r6, 32
   or          r7, r7, r5[31:27], 58

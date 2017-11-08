@@ -23,6 +23,6 @@ remove_tunnel_hdrs:
   seq         c1, k.nvgre_valid, TRUE
   sub.c1      r1, r1, 4
 
-  phvwr       p.control_metadata_packet_len, r1
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
   phvwr.e     p.{vxlan_valid...gre_valid}, 0
   phvwr       p.{mpls_2_valid...mpls_0_valid}, 0

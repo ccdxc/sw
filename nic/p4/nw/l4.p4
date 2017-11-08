@@ -1104,11 +1104,11 @@ action ip_normalization_checks() {
         // 2. IPv4 Total Len in packet
         // 3. IP header checksum update, meaning change the header valid bit
         //    to the one which will trigger checksum update
-        // 4. control_metadata.packet_len needs to be reduced.
+        // 4. capri_p4_intrinsic.packet_len needs to be reduced.
         modify_field(ipv4.ihl, 5);
         subtract_from_field(ipv4.totalLen, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
         // IP header checksum update.
-        subtract_from_field(control_metadata.packet_len, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
+        subtract_from_field(capri_p4_intrinsic.packet_len, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
 
 
     }
@@ -1127,30 +1127,30 @@ action ip_normalization_checks() {
     // trim - truncate packets with excess payload to the datagram length specified in the IP
     // header + the layer 2 header (e.g. ethernet), but don’t truncate below minimum frame length.
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
-        (((vlan_tag.valid == TRUE) and (control_metadata.packet_len > (ipv4.totalLen + 18))) or
-         ((vlan_tag.valid == FALSE) and (control_metadata.packet_len > (ipv4.totalLen + 14))))) {
+        (((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18))) or
+         ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 14))))) {
         modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
     }
     // Vlan tagged packet
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
-        ((vlan_tag.valid == TRUE) and (control_metadata.packet_len > (ipv4.totalLen + 18)) and 
-        (((ipv4.totalLen + 18) >= MIN_ETHER_FRAME_LEN) or (control_metadata.packet_len > MIN_ETHER_FRAME_LEN)))) {
+        ((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18)) and 
+        (((ipv4.totalLen + 18) >= MIN_ETHER_FRAME_LEN) or (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
         if ((ipv4.totalLen + 18) > MIN_ETHER_FRAME_LEN) {
-            modify_field(control_metadata.packet_len, (ipv4.totalLen + 18));
+            modify_field(capri_p4_intrinsic.packet_len, (ipv4.totalLen + 18));
         }
         if ((ipv4.totalLen + 18) < MIN_ETHER_FRAME_LEN) {
-            modify_field(control_metadata.packet_len, MIN_ETHER_FRAME_LEN);
+            modify_field(capri_p4_intrinsic.packet_len, MIN_ETHER_FRAME_LEN);
         }
     }
     // Vlan untagged packet
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
-        ((vlan_tag.valid == FALSE) and (control_metadata.packet_len > (ipv4.totalLen + 14)) and 
-        (((ipv4.totalLen + 14) >= MIN_ETHER_FRAME_LEN) or (control_metadata.packet_len > MIN_ETHER_FRAME_LEN)))) {
+        ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 14)) and 
+        (((ipv4.totalLen + 14) >= MIN_ETHER_FRAME_LEN) or (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
         if ((ipv4.totalLen + 14) > MIN_ETHER_FRAME_LEN) {
-            modify_field(control_metadata.packet_len, (ipv4.totalLen + 14));
+            modify_field(capri_p4_intrinsic.packet_len, (ipv4.totalLen + 14));
         }
         if ((ipv4.totalLen + 14) < MIN_ETHER_FRAME_LEN) {
-            modify_field(control_metadata.packet_len, MIN_ETHER_FRAME_LEN);
+            modify_field(capri_p4_intrinsic.packet_len, MIN_ETHER_FRAME_LEN);
         }
     }
     // IP Normalize TTL: If the configured value is non-zero then every
@@ -1332,8 +1332,8 @@ action tcp_session_normalization() {
         // Update the tcp_data_len and reduce the frame size
         modify_field(l4_metadata.tcp_data_len, l4_metadata.tcp_mss);
         // dummy ops to keep compiler happy
-        //modify_field(control_metadata.packet_len, control_metadata.packet_len);
-        subtract_from_field(control_metadata.packet_len,
+        //modify_field(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len);
+        subtract_from_field(capri_p4_intrinsic.packet_len,
                            (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
         // dummy ops to keep compiler happy
         // modify_field(ipv4.totalLen, ipv4.totalLen);
@@ -1358,7 +1358,7 @@ action tcp_session_normalization() {
         (l4_metadata.tcp_data_len_gt_win_size_action == NORMALIZATION_ACTION_EDIT)) {
         // Update the tcp_data_len and reduce the frame size.
         modify_field(l4_metadata.tcp_data_len, l4_metadata.tcp_rcvr_win_sz);
-        subtract_from_field(control_metadata.packet_len,
+        subtract_from_field(capri_p4_intrinsic.packet_len,
                            (l4_metadata.tcp_data_len - l4_metadata.tcp_rcvr_win_sz));
         subtract_from_field(ipv4.totalLen,
                            (l4_metadata.tcp_data_len - l4_metadata.tcp_rcvr_win_sz));
@@ -1438,15 +1438,14 @@ action tcp_options_fixup() {
         remove_header(tcp_option_three_sack);
         remove_header(tcp_option_four_sack);
     }
-    modify_field(control_metadata.packet_len, control_metadata.packet_len);
+    modify_field(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len);
     modify_field(ipv4.totalLen, ipv4.totalLen);
     modify_field(udp.len, udp.len);
     modify_field(inner_ipv4.totalLen, inner_ipv4.totalLen);
     modify_field(tcp.dataOffset, tcp.dataOffset);
     modify_field(tcp.dataOffset, tcp.dataOffset);
     modify_field(tunnel_metadata.tunnel_terminate, tunnel_metadata.tunnel_terminate);
-    
-    
+
     if (tcp.valid == TRUE and
         tcp.dataOffset > 5 and
         tcp_options_blob.valid == FALSE) {
@@ -1454,7 +1453,7 @@ action tcp_options_fixup() {
             // dummy ops to keep compiler happy
             //modify_field(tcp_option_unknown.optLength, tcp_option_unknown.optLength);
             // tcp_option_length += tcp_option_unknown.optLength
-        }  
+        }
         if (tcp_option_four_sack.valid == TRUE) {
             // tcp_option_length += 34
         }
@@ -1485,30 +1484,30 @@ action tcp_options_fixup() {
         // mod = tcp_option_length % 4)
         // if (mod == 0) : No extra options
         // if (mod == 1) {
-        //   add_header (tcp_option_nop);   
-        //   add_header (tcp_option_nop_1);   
-        //   add_header (tcp_option_eol);   
+        //   add_header (tcp_option_nop);
+        //   add_header (tcp_option_nop_1);
+        //   add_header (tcp_option_eol);
         //   tcp_option_length += 3
         // }
         // if (mod == 2) {
-        //   add_header (tcp_option_nop);   
-        //   add_header (tcp_option_eol);   
+        //   add_header (tcp_option_nop);
+        //   add_header (tcp_option_eol);
         //   tcp_option_length += 2
         // }
         //
         // if (mod == 3) {
-        //   add_header (tcp_option_eol);   
+        //   add_header (tcp_option_eol);
         //   tcp_option_length += 1
         // }
 
-        // if (tcp_option_length > 40) 
+        // if (tcp_option_length > 40)
         //        drop_packet ();
-        
+
         // if (tcp_option_length = ((tcp_dataOffset << 2) - 20) {
         //     No change to packet lenghts, only checksums need to be updated
         //  }
         // if (tcp_option_length > ((tcp_dataOffset << 2) - 20) {
-        //       Add delta to all headers 
+        //       Add delta to all headers
         //       1. Update TCP Data offset
         //       If Tunneled packet and Tunnel Terminute == TRUE
         //          2. Update Inner IP Packet total length
@@ -1517,7 +1516,7 @@ action tcp_options_fixup() {
         //       5. Update Control_metadata.packet_len
         //  }
         // if (tcp_option_length < ((tcp_dataOffset << 2) - 20) {
-        //       Subtract delta to all headers 
+        //       Subtract delta to all headers
         //       1. Update TCP Data offset
         //       If Tunneled packet and Tunnel Terminute == TRUE
         //          2. Update Inner IP Packet total length

@@ -11,7 +11,8 @@ f_p4plus_to_p4_2:
   // update IP length
   seq         c2, k.vlan_tag_valid, TRUE
   cmov        r1, c2, 18, 14
-  sub         r1, k.control_metadata_packet_len, r1
+  sub         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                     capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
   seq         c3, k.ipv4_valid, TRUE
   sub.c3      r2, r1, k.ipv4_ihl, 2
   seq         c4, k.ipv6_valid, TRUE

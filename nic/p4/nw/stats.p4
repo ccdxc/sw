@@ -41,7 +41,8 @@ action drop_stats(stats_idx, drop_pkts, mirror_en, mirror_session_id) {
         if ((tcp_option_timestamp.valid == FALSE) and
             (tcp_option_timestamp.optLength > 0)) {
             // dummy ops to keep compiler happy
-            modify_field(control_metadata.packet_len, control_metadata.packet_len);
+            modify_field(capri_p4_intrinsic.packet_len,
+                         capri_p4_intrinsic.packet_len);
             //curr_opt_len = ((tcp.dataOffset * 4) - tcp_option_timestamp.optLength)
             //num_bytes_to_pad = (4 - (curr_opt_len % 4))
             //PAD with EOLs
@@ -81,13 +82,13 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
                control_metadata.drop_reason);
         add(scratch_metadata.flow_packets, drop_packets, 1);
         add(scratch_metadata.flow_bytes, drop_bytes,
-            control_metadata.packet_len);
+            capri_p4_intrinsic.packet_len);
         // 1. on overflow, update to atomic add region indexed by flow_index
         // 2. based on drop_count_map, update drop_count[1-8]
     } else {
         add(scratch_metadata.flow_packets, permit_packets, 1);
         add(scratch_metadata.flow_bytes, permit_bytes,
-            control_metadata.packet_len);
+            capri_p4_intrinsic.packet_len);
         // 1. on overflow, update to atomic add region indexed by flow index
         // 2. if flow_agg_index1/flow_agg_index2 are non-zero, then update
         // to those indicies as well
@@ -117,14 +118,14 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
     // take care of wrap around case.
     if ((burst_start_timestamp <= capri_intrinsic.timestamp) &&
         (capri_intrinsic.timestamp <= burst_max_timestamp)) {
-        if (allowed_bytes + control_metadata.packet_len <= max_allowed_bytes) {
-            allowed_bytes += control_metadata.packet_len;
+        if (allowed_bytes + capri_p4_intrinsic.packet_len <= max_allowed_bytes) {
+            allowed_bytes += capri_p4_intrinsic.packet_len;
         } else {
-            burst_exceed_bytes += control_metadata.packet_len;
+            burst_exceed_bytes += capri_p4_intrinsic.packet_len;
             burst_exceed_count++;
         }
     } else if (capri_intrinsic.timestamp > burst_max_timestamp) {
-        allowed_bytes = control_metadata.packet_len;
+        allowed_bytes = capri_p4_intrinsic.packet_len;
         burst_max_timestamp = capri_intrinsic.timestamp+micro_burst_cycles;
         burst_start_timestamp = capri_intrinsic.timestamp;
         burst_exceed_count = 0;
@@ -163,7 +164,7 @@ action tx_stats(tx_ucast_pkts, tx_mcast_pkts, tx_bcast_pkts,
     if (capri_intrinsic.drop == TRUE) {
         modify_field(scratch_metadata.tx_drop_count, tx_egress_drops);
     }
-    modify_field(scratch_metadata.stats_bytes, control_metadata.packet_len);
+    modify_field(scratch_metadata.stats_bytes, capri_p4_intrinsic.packet_len);
     if ((capri_intrinsic.drop == FALSE) and
         (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST)) {
         modify_field(scratch_metadata.stats_packets, tx_ucast_pkts);

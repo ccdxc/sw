@@ -8,7 +8,8 @@ struct phv_                    p;
 
 k = {
   policer_metadata_egress_policer_color = 1;
-  control_metadata_packet_len = 0x80;
+  capri_p4_intrinsic_packet_len_sbit0_ebit5 = 0;
+  capri_p4_intrinsic_packet_len_sbit6_ebit13 = 0x80;
 };
 
 d = {

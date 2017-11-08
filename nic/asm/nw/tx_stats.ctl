@@ -17,7 +17,8 @@ d = {
 
 k = {
   capri_intrinsic_drop = 0;
-  control_metadata_packet_len = 1500;
+  capri_p4_intrinsic_packet_len_sbit0_ebit5 = 0;
+  capri_p4_intrinsic_packet_len_sbit6_ebit13 = 0x80;
   control_metadata_src_lif = 0xaa;
   flow_lkp_metadata_pkt_type = 0;
 };

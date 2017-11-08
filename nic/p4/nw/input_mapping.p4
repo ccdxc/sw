@@ -275,7 +275,6 @@ action adjust_lkp_fields() {
                  P4_RECIRC_HDR_SZ);
     }
 
-    modify_field(control_metadata.packet_len, scratch_metadata.packet_len);
     modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
 }
 
