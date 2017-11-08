@@ -3,9 +3,9 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/cpucb.hpp"
-// #include <cpucb_svc.hpp>
 #include "nic/hal/src/tenant.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
 namespace hal {
 void *
@@ -89,10 +89,19 @@ add_cpucb_to_db (cpucb_t *cpucb)
 }
 
 static inline void
+cpucb_set_default_params(cpucb_t& cpucb)
+{
+    switch(cpucb.cb_id) {
+    case types::CPUCB_ID_QUIESCE:
+        cpucb.cfg_flags |= CPUCB_FLAG_ADD_QS_PKT_TRLR;
+    }
+}
+static inline void
 cpucb_spec_to_cb(CpuCbSpec& spec, cpucb_t& cpucb)
 {
     cpucb.cb_id = spec.key_or_handle().cpucb_id();
     cpucb.debug_dol = spec.debug_dol();
+    cpucb_set_default_params(cpucb);
 }
 //------------------------------------------------------------------------------
 // process a CPU CB create request

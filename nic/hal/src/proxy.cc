@@ -45,7 +45,7 @@ proxy_meta_init() {
         (proxy_meta_t) {true, 1, {SERVICE_LIF_GC, 1, {0, 1, 1}}};
 
     g_meta[types::PROXY_TYPE_CPU] = 
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 2, (uint8_t)round(log2(CPUCB_ID_MAX))}}};
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 2, (uint8_t)round(log2(types::CpucbId_ARRAYSIZE))}}};
 
     g_meta[types::PROXY_TYPE_IPFIX] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 1}}};
@@ -250,7 +250,7 @@ hal_ret_t
 proxy_create_cpucb(void) 
 {
     hal_ret_t   ret = HAL_RET_OK;
-    for(int i = 0; i < CPUCB_ID_MAX; i++) {
+    for(int i = 0; i < types::CpucbId_ARRAYSIZE; i++) {
         ret = proxy_create_cpucb(i);
         if(ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to create cpucb for id: {}, ret: {}", i, ret);

@@ -13,6 +13,7 @@
 #include "nic/gen/cpu_rxdma/include/cpu_rxdma_p4plus_ingress.h"
 #include "nic/gen/cpu_txdma/include/cpu_txdma_p4plus_ingress.h"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
+#include "nic/include/fte_common.hpp"
 
 namespace hal {
 namespace pd {
@@ -81,8 +82,12 @@ p4pd_add_or_del_cpu_rx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
         pc_offset = (pc_offset >> 6);
         HAL_TRACE_DEBUG("programming action-id: {:#x}", pc_offset);
         data.action_id = pc_offset;
+
         data.u.cpu_rxdma_initial_action_d.debug_dol = (uint8_t)cpucb_pd->cpucb->debug_dol;
         HAL_TRACE_DEBUG("CPUCB: debug_dol: {:#x}", data.u.cpu_rxdma_initial_action_d.debug_dol);
+
+        data.u.cpu_rxdma_initial_action_d.flags = cpucb_pd->cpucb->cfg_flags;
+        HAL_TRACE_DEBUG("CPUCB: flags: {:#x}", data.u.cpu_rxdma_initial_action_d.flags);
     }
     HAL_TRACE_DEBUG("Programming stage0 at hw-id: 0x{0:x}", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data))){

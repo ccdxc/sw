@@ -12,7 +12,8 @@ struct cpu_rx_write_arqrx_d d;
 cpu_rx_write_arq_start:
 
     CAPRI_CLEAR_TABLE0_VALID
-	tblwr		d.u.write_arqrx_d.curr_ts, r4
+	tblwr	d.u.write_arqrx_d.curr_ts, r4
+    smeqb   c5, k.common_phv_flags, CPUCB_FLAG_ADD_QS_PKT_TRLR, CPUCB_FLAG_ADD_QS_PKT_TRLR
 
 dma_cmd_data:
     addi    r5, r0, CAPRI_PHV_START_OFFSET(dma_cmd0_dma_cmd_type) / 16
@@ -25,21 +26,35 @@ dma_cmd_data:
     phvwri  p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
     phvwri  p.dma_cmd0_dma_cmd_eop, 0
 
+    bcf     [!c5], dma_cmd_descr
+    nop
+
+dma_cmd_qs_trailer:
+    # get trailer address in HBM after pkt
+    add     r3, k.to_s3_page, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
+    add     r3, r3, k.to_s3_payload_len
+
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd1_dma_cmd,
+                                r3,
+                                quiesce_pkt_trlr_timestamp,
+                                quiesce_pkt_trlr_timestamp)
 dma_cmd_descr:
     /* Set teh DMA_WRITE CMD for descr */
     add     r5, k.to_s3_descr, r0
     addi    r1, r5, NIC_DESC_ENTRY_0_OFFSET
-    phvwr   p.dma_cmd1_dma_cmd_addr, r1
+    phvwr   p.dma_cmd2_dma_cmd_addr, r1
 
     phvwr   p.aol_A0, k.{to_s3_page}.dx
     addi    r3, r0, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
     phvwr   p.aol_O0, r3.wx
-    phvwr   p.aol_L0, k.{to_s3_payload_len}.wx
+    add     r3, r0, k.to_s3_payload_len
+    addi.c5 r3, r3, sizeof(p.quiesce_pkt_trlr_timestamp)
+    phvwr   p.aol_L0, r3.wx
 
-    phvwri  p.dma_cmd1_dma_cmd_phv_start_addr, CPU_PHV_AOL_DESC_START
-    phvwri  p.dma_cmd1_dma_cmd_phv_end_addr, CPU_PHV_AOL_DESC_END
-    phvwri  p.dma_cmd1_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
-    phvwri  p.dma_cmd1_dma_cmd_eop, 0
+    phvwri  p.dma_cmd2_dma_cmd_phv_start_addr, CPU_PHV_AOL_DESC_START
+    phvwri  p.dma_cmd2_dma_cmd_phv_end_addr, CPU_PHV_AOL_DESC_END
+    phvwri  p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwri  p.dma_cmd2_dma_cmd_eop, 0
 
 dma_cmd_arqrx_slot:
     smeqb   c1, k.common_phv_debug_dol, CPU_DDOL_PKT_TO_ARQ, CPU_DDOL_PKT_TO_ARQ
@@ -48,7 +63,7 @@ dma_cmd_arqrx_slot:
                    k.to_s3_arqrx_pindex,
                    k.to_s3_arqrx_base,
                    ring_entry_descr_addr,
-                   dma_cmd2_dma_cmd, 
+                   dma_cmd3_dma_cmd, 
                    1, 
                    1,
                    c1)  

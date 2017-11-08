@@ -2,3 +2,5 @@
 
 #define L2HDR_DOT1Q_OFFSET              12
 
+#define CPUCB_FLAG_ADD_QS_PKT_TRLR      0x1
+

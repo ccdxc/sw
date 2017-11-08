@@ -31,8 +31,8 @@
 
 #define GENERATE_GLOBAL_K \
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
+    modify_field(common_global_scratch.flags, common_phv.flags); \
     modify_field(common_global_scratch.debug_dol, common_phv.debug_dol); \
-
 
 /******************************************************************************
  * D-vectors
@@ -43,8 +43,9 @@ header_type cpu_rxdma_initial_action_t {
     fields {
         // 8 Bytes intrinsic header
         CAPRI_QSTATE_HEADER_COMMON
+        flags                       : 8;
         debug_dol                   : 8;
-        pad                         : 432;
+        pad                         : 424;
     }
 }
 
@@ -86,7 +87,7 @@ header_type write_arqrx_d_t {
         nde_addr                : 64;
         nde_offset              : 16;
         nde_len                 : 16;
-        curr_ts                 : 32;
+        curr_ts                 : 64;
     }
 }
 
@@ -97,8 +98,15 @@ header_type common_global_phv_t {
     fields {
         // global k (max 128)
         qstate_addr             : 32;
+        flags                   : 8;
         debug_dol               : 8;
     }
+}
+
+header_type quiesce_pkt_trlr_t {
+    fields {
+        timestamp               : 64; 
+    }    
 }
 
 header_type dma_phv_pad_t {
@@ -181,10 +189,10 @@ metadata cpu_common_to_stage_phv_t to_s3_scratch;
 metadata ring_entry_t ring_entry; 
 
 @pragma dont_trim
-metadata dma_phv_pad_t  dma_pad;
+metadata quiesce_pkt_trlr_t quiesce_pkt_trlr;
 
 @pragma dont_trim
-metadata pkt_descr_t aol; 
+metadata pkt_descr_aol_t aol; 
 
 @pragma dont_trim
 metadata dma_cmd_pkt2mem_t dma_cmd0;
@@ -195,6 +203,9 @@ metadata dma_cmd_phv2mem_t dma_cmd1;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t dma_cmd2;
 
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_cmd3;
+
 /******************************************************************************
  * Action functions to generate k_struct and d_struct
  *
@@ -204,7 +215,7 @@ metadata dma_cmd_phv2mem_t dma_cmd2;
 /*
  * Stage 0 table 0 action
  */
-action cpu_rxdma_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, debug_dol, pad) {
+action cpu_rxdma_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, flags, debug_dol, pad) {
     // k + i for stage 0
 
     // from intrinsic
@@ -232,6 +243,7 @@ action cpu_rxdma_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, tota
     modify_field(cpu_rxdma_initial_d.host, host);
     modify_field(cpu_rxdma_initial_d.total, total);
     modify_field(cpu_rxdma_initial_d.pid, pid);
+    modify_field(cpu_rxdma_initial_d.flags, flags);
     modify_field(cpu_rxdma_initial_d.debug_dol, debug_dol);
     modify_field(cpu_rxdma_initial_d.pad, pad);
 }

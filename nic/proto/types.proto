@@ -250,3 +250,12 @@ enum AppRedirType {
     APP_REDIR_TYPE_REDIRECT     = 1;
     APP_REDIR_TYPE_SPAN         = 2;
 }
+
+// Types of CPU CB/QIDs
+enum CpucbId {
+    CPUCB_ID_FLOWMISS      = 0;
+    CPUCB_ID_FIN           = 1;
+    CPUCB_ID_RST           = 2;
+    CPUCB_ID_ALG           = 3;
+    CPUCB_ID_QUIESCE       = 4;
+}

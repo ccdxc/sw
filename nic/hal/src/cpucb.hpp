@@ -32,6 +32,7 @@ typedef uint32_t cpucb_id_t;
 typedef struct cpucb_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
     cpucb_id_t            cb_id;                   // CB id
+    uint8_t               cfg_flags;               // Configuration flags
     hal_handle_t          hal_handle;              // HAL allocated handle
     uint32_t              debug_dol;               // Debug via dol
     // PD state
