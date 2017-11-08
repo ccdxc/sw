@@ -18,6 +18,14 @@ namespace hal {
 #define ECC_MAX_KEY_SIZE 32
 #define RSA_MAX_KEY_SIZE 256
 
+#define CRYPTO_MAX_HASH_DIGEST_LEN 64
+
+#define CRYPTO_SHA1_DIGEST_LEN   20
+#define CRYPTO_SHA224_DIGEST_LEN 28
+#define CRYPTO_SHA256_DIGEST_LEN 32
+#define CRYPTO_SHA384_DIGEST_LEN 48
+#define CRYPTO_SHA512_DIGEST_LEN 64
+
 hal_ret_t crypto_api_invoke(cryptoapis::CryptoApiRequest &req, 
         cryptoapis::CryptoApiResponse *resp);
 

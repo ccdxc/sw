@@ -4,7 +4,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/crypto_apis.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
-
+#include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
 
 namespace hal {
 
@@ -250,6 +250,91 @@ hal_ret_t crypto_asym_api_rsa_crt_decrypt(cryptoapis::CryptoApiRequest &req,
     return ret;
 }
 
+hal_ret_t crypto_symm_api_hash_request(cryptoapis::CryptoApiRequest &req,
+				       cryptoapis::CryptoApiResponse *resp,
+				       bool generate)
+{
+    hal_ret_t                     ret = HAL_RET_OK;
+    int32_t                       digest_len, exp_digest_len;
+    uint8_t                       digest[CRYPTO_MAX_HASH_DIGEST_LEN];
+    cryptoapis::CryptoApiHashType hashtype;
+
+    if (generate) {
+        hashtype = req.hash_generate().hashtype();
+	digest_len = req.hash_generate().digest_len();
+    } else {
+        hashtype = req.hash_verify().hashtype();
+	digest_len = req.hash_verify().digest_len();
+    }
+
+    switch(hashtype) {
+    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA1:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA1:
+        exp_digest_len = CRYPTO_SHA1_DIGEST_LEN;
+        break;
+    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA224:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA224:
+        exp_digest_len = CRYPTO_SHA224_DIGEST_LEN;
+        break;
+    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA256:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA256:
+        exp_digest_len = CRYPTO_SHA256_DIGEST_LEN;
+        break;
+    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA384:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA384:
+        exp_digest_len = CRYPTO_SHA384_DIGEST_LEN;
+        break;
+    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA512:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA512:
+        exp_digest_len = CRYPTO_SHA512_DIGEST_LEN;
+        break;
+    default:
+        HAL_TRACE_ERR("Unsupported Hash type: {}",
+		      CryptoApiHashType_Name(hashtype));
+        resp->set_api_status(types::API_STATUS_ERR);
+	return HAL_RET_INVALID_ARG;
+    }
+
+    if (exp_digest_len > digest_len) {
+        HAL_TRACE_ERR("Digest length invalid: {}",
+		      CryptoApiHashType_Name(hashtype));
+        resp->set_api_status(types::API_STATUS_ERR);
+	return HAL_RET_INVALID_ARG;
+    }
+
+    ret = pd::capri_barco_sym_hash_process_request(hashtype,
+						   generate,
+						   generate ?
+						   (uint8_t *)req.hash_generate().key().data() :
+						   (uint8_t *)req.hash_verify().key().data(),
+						   generate ?
+						   (uint32_t)req.hash_generate().key_len() :
+						   (uint32_t)req.hash_verify().key_len(),
+						   generate ?
+						   (uint8_t *)req.hash_generate().data().data() :
+						   (uint8_t *)req.hash_verify().data().data(),
+						   generate ?
+						   (uint32_t)req.hash_generate().data_len() :
+						   (uint32_t)req.hash_verify().data_len(),
+						   generate ?
+						   digest :
+						   (uint8_t *)req.hash_verify().digest().data(),
+						   digest_len);
+
+    if (ret == HAL_RET_OK) {
+        if (generate) {
+	    resp->mutable_hash_generate()->mutable_digest()->assign(
+		    (const char*)digest, (size_t) exp_digest_len);
+	}
+        resp->set_api_status(types::API_STATUS_OK);
+    }
+    else {
+        resp->set_api_status(types::API_STATUS_ERR);
+    }
+
+    return ret;
+}
+
 hal_ret_t crypto_api_invoke(cryptoapis::CryptoApiRequest &req, 
         cryptoapis::CryptoApiResponse *resp)
 {
@@ -274,6 +359,12 @@ hal_ret_t crypto_api_invoke(cryptoapis::CryptoApiRequest &req,
             break;
         case cryptoapis::ASYMAPI_RSA_CRT_DECRYPT:
             ret = crypto_asym_api_rsa_crt_decrypt(req, resp);
+            break;
+        case cryptoapis::SYMMAPI_HASH_GENERATE:
+	  ret = crypto_symm_api_hash_request(req, resp, true);
+            break;
+        case cryptoapis::SYMMAPI_HASH_VERIFY:
+	  ret = crypto_symm_api_hash_request(req, resp, false);
             break;
         default:
             HAL_TRACE_ERR("Invalid API: {}", req.api_type());

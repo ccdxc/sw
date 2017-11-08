@@ -11,6 +11,8 @@ cc_library(
         "capri_barco_rings.hpp",
         "capri_tbl_rw.hpp",
         "capri_barco_asym_apis.hpp",
+        "capri_barco_sym_apis.hpp",
+        "capri_barco_crypto.hpp",
     ],
 )
 

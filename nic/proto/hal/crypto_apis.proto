@@ -5,12 +5,37 @@
 syntax = "proto3";
 
 import "types.proto";
+import public "gogo.proto";
+//import "google/protobuf/descriptor.proto";
 
 package cryptoapis;
 option go_package="halproto";
 
+//extend google.protobuf.EnumValueOptions {
+//  string name = 61234;
+//}
+
 service CryptoApis {
     rpc CryptoApiInvoke (CryptoApiRequestMsg) returns (CryptoApiResponseMsg) {}
+}
+
+// Types of Crypto Hash algos
+enum CryptoApiHashType {
+    CRYPTOAPI_HASHTYPE_NONE = 0 [(gogoproto.enumvalue_customname) = "none"];
+    CRYPTOAPI_HASHTYPE_MD5 = 1 [(gogoproto.enumvalue_customname) = "MD5"];
+    CRYPTOAPI_HASHTYPE_SHA1 = 2 [(gogoproto.enumvalue_customname) = "SHA1"];
+    CRYPTOAPI_HASHTYPE_SHA224 = 3 [(gogoproto.enumvalue_customname) = "SHA224"];
+    CRYPTOAPI_HASHTYPE_SHA256 = 4 [(gogoproto.enumvalue_customname) = "SHA256"];
+    CRYPTOAPI_HASHTYPE_SHA384 = 5 [(gogoproto.enumvalue_customname) = "SHA384"];
+    CRYPTOAPI_HASHTYPE_SHA512 = 6 [(gogoproto.enumvalue_customname) = "SHA512"];
+    CRYPTOAPI_HASHTYPE_SHA512_224 = 7 [(gogoproto.enumvalue_customname) = "SHA512-224"];
+    CRYPTOAPI_HASHTYPE_SHA512_256 = 8 [(gogoproto.enumvalue_customname) = "SHA512-256"];
+    CRYPTOAPI_HASHTYPE_HMAC_MD5 = 9 [(gogoproto.enumvalue_customname) = "HMAC-MD5"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA1 = 10 [(gogoproto.enumvalue_customname) = "HMAC-SHA1"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA224 = 11 [(gogoproto.enumvalue_customname) = "HMAC-SHA224"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA256 = 12 [(gogoproto.enumvalue_customname) = "HMAC-SHA256"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA384 = 13 [(gogoproto.enumvalue_customname) = "HMAC-SHA384"];
+    CRYPTOAPI_HASHTYPE_HMAC_SHA512 = 14 [(gogoproto.enumvalue_customname) = "HMAC-SHA512"];
 }
 
 enum CryptoApiType {
@@ -20,6 +45,8 @@ enum CryptoApiType {
   ASYMAPI_RSA_ENCRYPT                   = 3;
   ASYMAPI_RSA_DECRYPT                   = 4;
   ASYMAPI_RSA_CRT_DECRYPT               = 5;
+  SYMMAPI_HASH_GENERATE                 = 6;
+  SYMMAPI_HASH_VERIFY                   = 7;
 }
 
 message ECCPoint {
@@ -109,6 +136,34 @@ message CryptoAsymApiRespRSACRTDecrypt {
   bytes                             plain_text         = 1;
 }
 
+// Crypto Hash digest generate request
+message CryptoSymmApiReqHashGenerate {
+  CryptoApiHashType                hashtype            = 1;
+  bytes                            key                 = 2;
+  int32                            key_len             = 3;
+  bytes                            data                = 4;
+  int32                            data_len            = 5;
+  int32                            digest_len          = 6;
+}
+
+message CryptoSymmApiRespHashGenerate {
+  bytes                            digest              = 1;
+}
+
+// Crypto Hash digest verify request
+message CryptoSymmApiReqHashVerify {
+  CryptoApiHashType                hashtype            = 1;
+  bytes                            key                 = 2;
+  int32                            key_len             = 3;
+  bytes                            data                = 4;
+  int32                            data_len            = 5;
+  bytes                            digest              = 6;
+  int32                            digest_len          = 7;
+}
+
+//message CryptoSymmApiRespHashVerify {
+//  bytes                            digest              = 1;
+//}
 
 // Top Level Request and Response message definition
 
@@ -121,6 +176,8 @@ message CryptoApiRequest {
     CryptoAsymApiReqRSAEncrypt      rsa_encrypt         = 5;
     CryptoAsymApiReqRSADecrypt      rsa_decrypt         = 6;
     CryptoAsymApiReqRSACRTDecrypt   rsa_crt_decrypt     = 7;
+    CryptoSymmApiReqHashGenerate    hash_generate       = 8;
+    CryptoSymmApiReqHashVerify      hash_verify         = 9;
   }
 }
 
@@ -132,6 +189,7 @@ message CryptoApiResponse {
     CryptoAsymApiRespRSAEncrypt     rsa_encrypt         = 4;
     CryptoAsymApiRespRSADecrypt     rsa_decrypt         = 5;
     CryptoAsymApiRespRSACRTDecrypt  rsa_crt_decrypt     = 6;
+    CryptoSymmApiRespHashGenerate   hash_generate       = 7;
   }
 }
 

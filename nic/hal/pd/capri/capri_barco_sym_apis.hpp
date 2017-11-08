@@ -2,66 +2,10 @@
 #define __CAPRI_BARCO_SYM_APIS_H__
 
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/gen/proto/hal/crypto_apis.pb.h"
 
 namespace hal {
 namespace pd {
-
-typedef enum {
-    CRYPTO_HASH_TYPE_NONE = 0,
-    CRYPTO_HASH_TYPE_MD5 = 1,
-    CRYPTO_HASH_TYPE_SHA1 = 2,
-    CRYPTO_HASH_TYPE_SHA224 = 3,
-    CRYPTO_HASH_TYPE_SHA256 = 4,
-    CRYPTO_HASH_TYPE_SHA384 = 5,
-    CRYPTO_HASH_TYPE_SHA512 = 6,
-    CRYPTO_HASH_TYPE_SHA512_224 = 7,
-    CRYPTO_HASH_TYPE_SHA512_256 = 8,
-    CRYPTO_HASH_TYPE_HMAC_MD5 = 9,
-    CRYPTO_HASH_TYPE_HMAC_SHA1 = 10,
-    CRYPTO_HASH_TYPE_HMAC_SHA224 = 11,
-    CRYPTO_HASH_TYPE_HMAC_SHA256 = 12,
-    CRYPTO_HASH_TYPE_HMAC_SHA384 = 13,
-    CRYPTO_HASH_TYPE_HMAC_SHA512 = 14
-} crypto_hash_type_e;
-
-static inline const char *
-crypto_hash_type_str (crypto_hash_type_e hash_type)
-{
-  switch (hash_type) {
-  case CRYPTO_HASH_TYPE_NONE:
-    return("None");
-  case CRYPTO_HASH_TYPE_MD5:
-    return("MD5");
-  case CRYPTO_HASH_TYPE_SHA1:
-    return("SHA1");
-  case CRYPTO_HASH_TYPE_SHA224:
-    return("SHA224");
-  case CRYPTO_HASH_TYPE_SHA256:
-    return("SHA256");
-  case CRYPTO_HASH_TYPE_SHA384:
-    return("SHA384");
-  case CRYPTO_HASH_TYPE_SHA512:
-    return("SHA512");
-  case CRYPTO_HASH_TYPE_SHA512_224:
-    return("SHA512-224");
-  case CRYPTO_HASH_TYPE_SHA512_256:
-    return("SHA512-256");
-  case CRYPTO_HASH_TYPE_HMAC_MD5:
-    return("HMAC-MD5");
-  case CRYPTO_HASH_TYPE_HMAC_SHA1:
-    return("HMAC-SHA1");
-  case CRYPTO_HASH_TYPE_HMAC_SHA224:
-    return("HMAC-SHA224");
-  case CRYPTO_HASH_TYPE_HMAC_SHA256:
-    return("HMAC-SHA256");
-  case CRYPTO_HASH_TYPE_HMAC_SHA384:
-    return("HMAC-SHA384");
-  case CRYPTO_HASH_TYPE_HMAC_SHA512:
-    return("HMAC-SHA512");
-  default:
-    return("Unknown");
-  }
-}
 
 static inline const char *
 barco_symm_err_status_str (uint64_t status)
@@ -104,9 +48,9 @@ barco_symm_err_status_str (uint64_t status)
   }
 }
 
-hal_ret_t capri_barco_sym_hash_process_request(crypto_hash_type_e hash_type, bool verify,
-					       char *key, int key_len,
-					       char *data, int data_len,
+hal_ret_t capri_barco_sym_hash_process_request(cryptoapis::CryptoApiHashType hash_type, bool generate,
+					       unsigned char *key, int key_len,
+					       unsigned char *data, int data_len,
 					       uint8_t *output_digest, int digest_len);
 
 

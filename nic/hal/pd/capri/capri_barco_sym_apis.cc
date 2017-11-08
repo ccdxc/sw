@@ -6,14 +6,15 @@
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
+#include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
 
 namespace hal {
 namespace pd {
 
-hal_ret_t capri_barco_sym_hash_process_request (crypto_hash_type_e hash_type, bool generate,
-					        char *key, int key_len,
-					        char *data, int data_len,
-					        uint8_t *digest,
+hal_ret_t capri_barco_sym_hash_process_request (cryptoapis::CryptoApiHashType hash_type, bool generate,
+						unsigned char *key, int key_len,
+						unsigned char *data, int data_len,
+						uint8_t *digest,
 						int digest_len)
 {
     hal_ret_t                   ret = HAL_RET_OK;
@@ -25,71 +26,82 @@ hal_ret_t capri_barco_sym_hash_process_request (crypto_hash_type_e hash_type, bo
     uint32_t                    req_tag = 0;
     int32_t                     hmac_key_descr_idx = -1;
 
+
+    HAL_TRACE_DEBUG("Running {}-{} test:\n",
+                    CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
+
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Input Data bytes:", (char *)data, data_len);
+
+    if (key_len) {
+	CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Input HMAC Key:", (char *)key, key_len);
+    }
+
+
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_SYM_MSG_DESCR,
 				NULL, &ilist_msg_descr_addr);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to allocate memory for ilist MSG Descr",
-		      crypto_hash_type_str(hash_type), generate ? "generate" : "verify");
+		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         goto cleanup;
     }
     HAL_TRACE_DEBUG("SYM Hash {}-{}: Allocated memory for ilist DMA Descr @ {:x}",
-		    crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+		    CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 		    ilist_msg_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
 				NULL, &ilist_mem_addr);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to allocate memory for ilist content",
-		      crypto_hash_type_str(hash_type), generate ? "generate" : "verify");
+		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         goto cleanup;
     }
     HAL_TRACE_DEBUG("SYM Hash {}-{}: Allocated memory for input mem @ {:x}",
-		    crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+		    CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 		    ilist_mem_addr); 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
 				NULL, &auth_tag_mem_addr);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to allocate memory for auth-tag content",
-		      crypto_hash_type_str(hash_type), generate ? "generate" : "verify");
+		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         goto cleanup;
     }
     HAL_TRACE_DEBUG("SYM Hash {}-{}: Allocated memory for auth-tag mem @ {:x}",
-		    crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+		    CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 		    auth_tag_mem_addr); 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
 				NULL, &status_addr);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to allocate memory for storing status",
-		      crypto_hash_type_str(hash_type), generate ? "generate" : "verify");
+		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         goto cleanup;
     }
     HAL_TRACE_DEBUG("SYM Hash {}-{}: Allocated memory for status mem @ {:x}",
-		    crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+		    CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 		    status_addr);
 
     if (key_len) {
         ret = pd_crypto_alloc_key(&hmac_key_descr_idx);
 	if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYM Hash {}-{}: Failed to allocate key descriptor",
-			  crypto_hash_type_str(hash_type), generate ? "generate" : "verify");
+			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
 	    goto cleanup;
 	}
 	HAL_TRACE_DEBUG("SYM Hash {}-{}: Allocated HMAC Key Descr @ {:x}",
-			crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+			CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			hmac_key_descr_idx);
 
 	ret = capri_barco_setup_key(hmac_key_descr_idx, types::CRYPTO_KEY_TYPE_HMAC,
 				    (uint8_t *)key, (uint32_t) key_len);
 	if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write HMAC Key @ {:x}",
-			  crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			  hmac_key_descr_idx);
 	    goto cleanup;
 	}
 	HAL_TRACE_DEBUG("SYM Hash {}-{}: Setup HMAC Key @ {:x}",
-			crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+			CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			hmac_key_descr_idx);
     }
 
@@ -98,7 +110,7 @@ hal_ret_t capri_barco_sym_hash_process_request (crypto_hash_type_e hash_type, bo
     
     if (capri_hbm_write_mem(curr_ptr, (uint8_t*)data, data_len)) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write data bytes into ilist memory @ {:x}",
-		      crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 		      (uint64_t) curr_ptr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -121,7 +133,7 @@ hal_ret_t capri_barco_sym_hash_process_request (crypto_hash_type_e hash_type, bo
     if (capri_hbm_write_mem(ilist_msg_descr_addr, (uint8_t*)&ilist_msg_descr,
 			    sizeof(ilist_msg_descr))) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write ilist MSG Descr @ {:x}",
-		      crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 		      (uint64_t) ilist_msg_descr_addr);
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
@@ -135,7 +147,7 @@ hal_ret_t capri_barco_sym_hash_process_request (crypto_hash_type_e hash_type, bo
         if (capri_hbm_write_mem(auth_tag_mem_addr, (uint8_t*)digest,
 				digest_len)) {
 	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write ilist MSG Descr @ {:x}",
-			  crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			  (uint64_t) ilist_msg_descr_addr);
 	    ret = HAL_RET_INVALID_ARG;
 	    goto cleanup;
@@ -147,7 +159,7 @@ hal_ret_t capri_barco_sym_hash_process_request (crypto_hash_type_e hash_type, bo
         if (capri_hbm_write_mem(status_addr, (uint8_t*)&status,
 				sizeof(status))) {
 	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to write ilist MSG Descr @ {:x}",
-			  crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			  (uint64_t) ilist_msg_descr_addr);
 	    ret = HAL_RET_INVALID_ARG;
 	    goto cleanup;
@@ -161,52 +173,52 @@ hal_ret_t capri_barco_sym_hash_process_request (crypto_hash_type_e hash_type, bo
     sym_req_descr.output_list_addr = olist_msg_descr_addr;
 
     switch (hash_type) {
-    case CRYPTO_HASH_TYPE_SHA1:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA1:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA1_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA1_Verify_Hash;
       break;
-    case CRYPTO_HASH_TYPE_SHA224:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA224:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA224_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA224_Verify_Hash;
       break;
-    case CRYPTO_HASH_TYPE_SHA256:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA256:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA256_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA256_Verify_Hash;
       break;
-    case CRYPTO_HASH_TYPE_SHA384:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA384:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA384_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA384_Verify_Hash;
       break;
-    case CRYPTO_HASH_TYPE_SHA512:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA512:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA512_Generate_Hash : CAPRI_BARCO_SYM_COMMAND_SHA512_Verify_Hash;
       break;
-    case CRYPTO_HASH_TYPE_HMAC_SHA1:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA1:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA1_Generate_HMAC : CAPRI_BARCO_SYM_COMMAND_SHA1_Verify_HMAC;
       break;
-    case CRYPTO_HASH_TYPE_HMAC_SHA224:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA224:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA224_Generate_HMAC : CAPRI_BARCO_SYM_COMMAND_SHA224_Verify_HMAC;
       break;
-    case CRYPTO_HASH_TYPE_HMAC_SHA256:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA256:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA256_Generate_HMAC : CAPRI_BARCO_SYM_COMMAND_SHA256_Verify_HMAC;
       break;
-    case CRYPTO_HASH_TYPE_HMAC_SHA384:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA384:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA384_Generate_HMAC : CAPRI_BARCO_SYM_COMMAND_SHA384_Verify_HMAC;
       break;
-    case CRYPTO_HASH_TYPE_HMAC_SHA512:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_SHA512:
       sym_req_descr.command = generate ?
 	CAPRI_BARCO_SYM_COMMAND_SHA512_Generate_HMAC : CAPRI_BARCO_SYM_COMMAND_SHA512_Verify_HMAC;
       break;
-    case CRYPTO_HASH_TYPE_HMAC_MD5:
-    case CRYPTO_HASH_TYPE_SHA512_224:
-    case CRYPTO_HASH_TYPE_SHA512_256:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_HMAC_MD5:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA512_224:
+    case cryptoapis::CRYPTOAPI_HASHTYPE_SHA512_256:
     default:
         HAL_TRACE_ERR("SYM Hash {}-{}: Invalid Hash request",
-		      crypto_hash_type_str(hash_type), generate ? "generate" : "verify");
+		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;      
     }
@@ -229,7 +241,7 @@ hal_ret_t capri_barco_sym_hash_process_request (crypto_hash_type_e hash_type, bo
 					 &req_tag);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("SYM Hash {}-{}: Failed to enqueue request",
-		      crypto_hash_type_str(hash_type), generate ? "generate" : "verify");
+		      CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         ret = HAL_RET_ERR;
         goto cleanup;
     }
@@ -237,7 +249,7 @@ hal_ret_t capri_barco_sym_hash_process_request (crypto_hash_type_e hash_type, bo
     /* Poll for completion */
     while (capri_barco_ring_poll(types::BARCO_RING_MPP0, req_tag) != TRUE) {
         //HAL_TRACE_DEBUG("SYM Hash {}-{}: Waiting for Barco completion...",
-        //                crypto_hash_type_str(hash_type), generate ? "generate" : "verify");
+        //                CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
     }
     //sleep(5);
     //abort();
@@ -246,7 +258,7 @@ hal_ret_t capri_barco_sym_hash_process_request (crypto_hash_type_e hash_type, bo
     if (generate) {
         if (capri_hbm_read_mem(auth_tag_mem_addr, (uint8_t*)digest, digest_len)) {
 	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to read output digest at Auth-tag addr @ {:x}",
-			  crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			  (uint64_t) auth_tag_mem_addr);
 	    ret = HAL_RET_INVALID_ARG;
 	    goto cleanup;
@@ -254,13 +266,13 @@ hal_ret_t capri_barco_sym_hash_process_request (crypto_hash_type_e hash_type, bo
     } else {
         if (capri_hbm_read_mem(status_addr, (uint8_t*)&status, sizeof(uint64_t))){
 	    HAL_TRACE_ERR("SYM Hash {}-{}: Failed to read output digest at Auth-tag addr @ {:x}",
-			  crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			  (uint64_t) auth_tag_mem_addr);
 	    ret = HAL_RET_INVALID_ARG;
 	    goto cleanup;
 	}
 	HAL_TRACE_DEBUG("SYM Hash {}-{}:  Verify - got STATUS {:x}-{} from barco",
-			crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+			CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			status, barco_symm_err_status_str(status));
     }
 
@@ -270,7 +282,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, status_addr);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYM Hash {}-{}: Failed to free memory for status addr content:{:x}",
-			  crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			  status_addr);
         }
     }
@@ -279,7 +291,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, auth_tag_mem_addr);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYM Hash {}-{}: Failed to free memory for auth-tag addr content:{:x}",
-			  crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			  auth_tag_mem_addr);
         }
     }
@@ -288,7 +300,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, ilist_mem_addr);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYM Hash {}-{}: Failed to free memory for ilist content:{:x}",
-			  crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			  ilist_mem_addr);
         }
     }
@@ -297,7 +309,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_SYM_MSG_DESCR, ilist_msg_descr_addr);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("SYM Hash {}-{}: Failed to free memory for ilist MSG Descr:{:x}",
-			  crypto_hash_type_str(hash_type), generate ? "generate" : "verify",
+			  CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
 			  ilist_msg_descr_addr);
         }
     }
