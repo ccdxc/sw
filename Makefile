@@ -12,7 +12,6 @@ TO_BUILD := ./venice/utils/... ./nic/agent/... ./venice/cmd/... ./venice/apigw/.
 TO_DOCKERIZE := apigw apiserver vchub npm vcsim cmd n4sagent collector
 TO_STRIP := $(addprefix /import/bin/, ${TO_DOCKERIZE})
 
-GOFMT_CMD := gofmt -s -l
 GOVET_CMD := go vet
 GOIMPORTS_CMD := goimports -local "github.com/pensando/sw" -l
 SHELL := /bin/bash
@@ -32,16 +31,16 @@ deps:
 	@( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/golang/lint/golint/ && go install ) && \
 	( cd $(GOPATH)/src/github.com/pensando/sw/vendor/github.com/kardianos/govendor/ && go install )
 
-gofmt-src:
-	$(info +++ gofmt $(PKG_DIRS))
+goimports-src:
+	$(info +++ goimports $(PKG_DIRS))
 ifdef JOB_ID
-	@echo "Running in CI; checking go fmt"
-	@$(eval FMT=`find . -name '*.go' -print | egrep -v ${EXCLUDE_DIRS} | xargs ${GOFMT_CMD}`)
-	@echo "go fmt found errors in the following files(if any):"
-	@echo $(FMT)
-	@test -z "$(FMT)"
+	@echo "Running in CI; checking goimports and fmt"
+	@$(eval IMPRT=`find . -name '*.go' -print | egrep -v ${EXCLUDE_DIRS} | xargs ${GOIMPORTS_CMD} -l`)
+	@echo "goimports found errors in the following files(if any):"
+	@echo $(IMPRT)
+	@test -z "$(IMPRT)"
 endif
-	@find . -name '*.go' -print | egrep -v ${EXCLUDE_DIRS} | xargs ${GOFMT_CMD} -w
+	@find . -name '*.go' -print | egrep -v ${EXCLUDE_DIRS} | xargs ${GOIMPORTS_CMD} -w
 
 golint-src:
 	$(info +++ golint $(TO_BUILD))
@@ -51,11 +50,7 @@ govet-src:
 	$(info +++ govet $(PKG_DIRS))
 	@${GOVET_CMD} $(shell go list -e ./... | egrep -v ${EXCLUDE_DIRS})
 
-goimports-src:
-	$(info +++ goimports $(PKG_DIRS))
-	@find . -name '*.go' -print | egrep -v ${EXCLUDE_DIRS} | xargs ${GOIMPORTS_CMD} -w
-
-checks: gofmt-src golint-src govet-src goimports-src
+checks: goimports-src golint-src govet-src
 
 # pregen target generates code that is needed by other binaries
 pregen:
