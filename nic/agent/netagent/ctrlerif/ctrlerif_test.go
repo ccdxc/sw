@@ -133,6 +133,26 @@ func (ag *fakeAgent) ListSecurityGroup() []*netproto.SecurityGroup {
 	return sglist
 }
 
+// CreateTenant creates a tenant. Stubbed out to satisfy the interface
+func (ag *fakeAgent) CreateTenant(tn *netproto.Tenant) error {
+	return nil
+}
+
+// DeleteTenant deletes a tenant. Stubbed out to satisfy the interface
+func (ag *fakeAgent) DeleteTenant(tn *netproto.Tenant) error {
+	return nil
+}
+
+// ListTenant lists tenants. Stubbed out to satisfy the interface
+func (ag *fakeAgent) ListTenant() []*netproto.Tenant {
+	return nil
+}
+
+// UpdateTenant updates a tenant. Stubbed out to satisfy the interface
+func (ag *fakeAgent) UpdateTenant(tn *netproto.Tenant) error {
+	return nil
+}
+
 type fakeRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	netdp      map[string]*netproto.Network

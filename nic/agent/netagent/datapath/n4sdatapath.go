@@ -131,3 +131,23 @@ func (ndp *NaplesDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error
 func (ndp *NaplesDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	return nil
 }
+
+// CreateTenant creates a tenant. Stubbed out to satisfy the interface
+func (ndp *NaplesDatapath) CreateTenant(tn *netproto.Tenant) error {
+	return nil
+}
+
+// DeleteTenant deletes a tenant. Stubbed out to satisfy the interface
+func (ndp *NaplesDatapath) DeleteTenant(tn *netproto.Tenant) error {
+	return nil
+}
+
+// ListTenant lists all tenant. Stubbed out to satisfy the interface
+func (ndp *NaplesDatapath) ListTenant() []*netproto.Tenant {
+	return nil
+}
+
+// UpdateTenant updates a tenant. Stubbed out to satisfy the interface
+func (ndp *NaplesDatapath) UpdateTenant(tn *netproto.Tenant) error {
+	return nil
+}

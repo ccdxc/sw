@@ -57,6 +57,10 @@ func setup() (*RestServer, error) {
 		dp.Hal.MockClients.MockEpclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
 		dp.Hal.MockClients.MockEpclient.EXPECT().EndpointUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
 		dp.Hal.MockClients.MockEpclient.EXPECT().EndpointDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
+
+		dp.Hal.MockClients.MockTnclient.EXPECT().TenantCreate(gomock.Any(), gomock.Any()).MaxTimes(3).Return(nil, nil)
+		dp.Hal.MockClients.MockTnclient.EXPECT().TenantUpdate(gomock.Any(), gomock.Any()).Return(nil, nil)
+		dp.Hal.MockClients.MockTnclient.EXPECT().TenantDelete(gomock.Any(), gomock.Any()).Return(nil, nil)
 	}
 
 	err = populatePreTestData(nagent)
@@ -86,6 +90,7 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 	if err != nil {
 		return
 	}
+
 	ep := netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
@@ -125,6 +130,19 @@ func populatePreTestData(nagent *state.NetAgent) (err error) {
 		},
 	}
 	err = nagent.CreateSecurityGroup(&sg)
+	if err != nil {
+		return
+	}
+
+	tn := netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "preCreatedTenant",
+			Name:   "preCreatedTenant",
+		},
+	}
+
+	err = nagent.CreateTenant(&tn)
 	if err != nil {
 		return
 	}

@@ -9,6 +9,7 @@
 		endpoint.proto
 		security.proto
 		service.proto
+		tenant.proto
 
 	It has these top-level messages:
 		NetworkSpec
@@ -34,6 +35,11 @@
 		ServiceBackendSpec
 		ServiceBackendStatus
 		ServiceBackend
+		TenantStatus
+		TenantSpec
+		Tenant
+		TenantList
+		TenantEvent
 */
 package netproto
 

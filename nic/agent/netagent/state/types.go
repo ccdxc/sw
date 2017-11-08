@@ -26,8 +26,10 @@ type NetAgent struct {
 	networkDB        map[string]*netproto.Network       // Network object db
 	endpointDB       map[string]*netproto.Endpoint      // Endpoint object db
 	secgroupDB       map[string]*netproto.SecurityGroup // security group object db
+	tenantDB         map[string]*netproto.Tenant        // tenant object db
 	currentNetworkID uint32                             // poor man's id allocation FIXME:
 	currentSgID      uint32                             // poor man's id allocation FIXME:
+	currentTenantID  uint32                             // poor man's id allocation FIXME: Replace these with a single uuid allocator in emstore
 }
 
 // CtrlerAPI is the API provided by controller modules to netagent
@@ -54,6 +56,10 @@ type CtrlerIntf interface {
 	UpdateSecurityGroup(nt *netproto.SecurityGroup) error       // update a sg
 	DeleteSecurityGroup(nt *netproto.SecurityGroup) error       // delete a sg
 	ListSecurityGroup() []*netproto.SecurityGroup               // list all sgs
+	CreateTenant(tn *netproto.Tenant) error                     // create a tenant
+	DeleteTenant(tn *netproto.Tenant) error                     // delete a tenant
+	ListTenant() []*netproto.Tenant                             // lists all tenants
+	UpdateTenant(tn *netproto.Tenant) error                     //updates a tenant
 }
 
 // PluginIntf is the API provided by the netagent to plugins
@@ -65,11 +71,11 @@ type PluginIntf interface {
 // NetDatapathAPI is the API provided by datapath modules
 type NetDatapathAPI interface {
 	SetAgent(ag DatapathIntf) error
-	CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) (*IntfInfo, error) // Creates a local endpoint in datapath
-	UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error              // Updates a local endpoint in datapath
+	CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) (*IntfInfo, error) // creates a local endpoint in datapath
+	UpdateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error              // updates a local endpoint in datapath
 	DeleteLocalEndpoint(ep *netproto.Endpoint) error                                                                   // deletes a local endpoint in datapath
-	CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error             // Creates a remote endpoint in datapath
-	UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error             // Updates a remote endpoint in datapath
+	CreateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error             // creates a remote endpoint in datapath
+	UpdateRemoteEndpoint(ep *netproto.Endpoint, nt *netproto.Network, sgs []*netproto.SecurityGroup) error             // updates a remote endpoint in datapath
 	DeleteRemoteEndpoint(ep *netproto.Endpoint) error                                                                  // deletes a remote endpoint in datapath
 	CreateNetwork(nw *netproto.Network) error                                                                          // creates a network
 	UpdateNetwork(nw *netproto.Network) error                                                                          // updates a network in datapath
@@ -77,6 +83,9 @@ type NetDatapathAPI interface {
 	CreateSecurityGroup(sg *netproto.SecurityGroup) error                                                              // creates a security group
 	UpdateSecurityGroup(sg *netproto.SecurityGroup) error                                                              // updates a security group
 	DeleteSecurityGroup(sg *netproto.SecurityGroup) error                                                              // deletes a security group
+	CreateTenant(tn *netproto.Tenant) error                                                                            // creates a tenant
+	DeleteTenant(tn *netproto.Tenant) error                                                                            // deletes a tenant
+	UpdateTenant(tn *netproto.Tenant) error                                                                            //updates a tenant
 }
 
 // DatapathIntf is the API provided by the netagent to datapaths

@@ -62,6 +62,8 @@ type DB struct {
 	EndpointUpdateDB map[string]*halproto.EndpointUpdateRequestMsg
 	EndpointDelDB    map[string]*halproto.EndpointDeleteRequestMsg
 	SgDB             map[string]*halproto.SecurityGroupRequestMsg
+	TenantDB         map[string]*halproto.TenantRequestMsg
+	TenantDelDB      map[string]*halproto.TenantDeleteRequestMsg
 }
 
 // HalDatapath contains mock and hal clients.
@@ -98,6 +100,8 @@ func NewHalDatapath(kind Kind) (*HalDatapath, error) {
 		EndpointUpdateDB: make(map[string]*halproto.EndpointUpdateRequestMsg),
 		EndpointDelDB:    make(map[string]*halproto.EndpointDeleteRequestMsg),
 		SgDB:             make(map[string]*halproto.SecurityGroupRequestMsg),
+		TenantDB:         make(map[string]*halproto.TenantRequestMsg),
+		TenantDelDB:      make(map[string]*halproto.TenantDeleteRequestMsg),
 	}
 	haldp.DB = db
 	if haldp.Kind.String() == "hal" {
@@ -776,6 +780,87 @@ func (hd *HalDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	// delete the sg message
 	hd.Lock()
 	delete(hd.DB.SgDB, objectKey(&sg.ObjectMeta))
+	hd.Unlock()
+
+	return nil
+}
+
+// CreateTenant creates a tenant
+func (hd *HalDatapath) CreateTenant(tn *netproto.Tenant) error {
+	tnSpec := halproto.TenantSpec{
+		Meta: &halproto.ObjectMeta{
+			TenantId: tn.Status.TenantID,
+		},
+	}
+	tnReqMsg := halproto.TenantRequestMsg{
+		Request: []*halproto.TenantSpec{&tnSpec},
+	}
+
+	// create the tenant
+	_, err := hd.Hal.Tnclient.TenantCreate(context.Background(), &tnReqMsg)
+	if err != nil {
+		log.Errorf("Error creating tenant. Err: %v", err)
+		return err
+	}
+
+	// save tenant create request message.
+	hd.Lock()
+	hd.DB.TenantDB[objectKey(&tn.ObjectMeta)] = &tnReqMsg
+	hd.Unlock()
+	return nil
+}
+
+// DeleteTenant deletes a tenant
+func (hd *HalDatapath) DeleteTenant(tn *netproto.Tenant) error {
+
+	tnDelReq := halproto.TenantDeleteRequest{
+		Meta: &halproto.ObjectMeta{
+			TenantId: tn.Status.TenantID,
+		},
+	}
+
+	tnDelReqMsg := halproto.TenantDeleteRequestMsg{
+		Request: []*halproto.TenantDeleteRequest{&tnDelReq},
+	}
+
+	// delete security group
+	_, err := hd.Hal.Tnclient.TenantDelete(context.Background(), &tnDelReqMsg)
+	if err != nil {
+		log.Errorf("Error deleting tenant. Err: %v", err)
+		return err
+	}
+
+	// save the tenant delete message
+	hd.Lock()
+	hd.DB.TenantDelDB[objectKey(&tn.ObjectMeta)] = &tnDelReqMsg
+	delete(hd.DB.TenantDB, objectKey(&tn.ObjectMeta))
+	hd.Unlock()
+
+	return nil
+}
+
+// UpdateTenant deletes a tenant
+func (hd *HalDatapath) UpdateTenant(tn *netproto.Tenant) error {
+	tnSpec := halproto.TenantSpec{
+		Meta: &halproto.ObjectMeta{
+			TenantId: tn.Status.TenantID,
+		},
+	}
+	tnReqMsg := halproto.TenantRequestMsg{
+		Request: []*halproto.TenantSpec{&tnSpec},
+	}
+
+	// delete security group
+	_, err := hd.Hal.Tnclient.TenantUpdate(context.Background(), &tnReqMsg)
+	if err != nil {
+		log.Errorf("Error deleting tenant. Err: %v", err)
+		return err
+	}
+
+	// save the tenant delete message
+	hd.Lock()
+	hd.DB.TenantDB[objectKey(&tn.ObjectMeta)] = &tnReqMsg
+	delete(hd.DB.TenantDB, objectKey(&tn.ObjectMeta))
 	hd.Unlock()
 
 	return nil

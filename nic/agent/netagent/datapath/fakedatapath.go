@@ -160,3 +160,23 @@ func (fdp *FakeDatapath) UpdateSecurityGroup(sg *netproto.SecurityGroup) error {
 func (fdp *FakeDatapath) DeleteSecurityGroup(sg *netproto.SecurityGroup) error {
 	return nil
 }
+
+// CreateTenant creates a tenant
+func (fdp *FakeDatapath) CreateTenant(tn *netproto.Tenant) error {
+	return nil
+}
+
+// DeleteTenant deletes a tenant
+func (fdp *FakeDatapath) DeleteTenant(tn *netproto.Tenant) error {
+	return nil
+}
+
+// UpdateTenant updates a tenant
+func (fdp *FakeDatapath) UpdateTenant(tn *netproto.Tenant) error {
+	return nil
+}
+
+// ListTenant lists all tenant
+func (fdp *FakeDatapath) ListTenant() []*netproto.Tenant {
+	return nil
+}

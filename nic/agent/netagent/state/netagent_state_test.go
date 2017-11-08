@@ -19,6 +19,7 @@ type mockDatapath struct {
 	netdb map[string]*netproto.Network
 	epdb  map[string]*netproto.Endpoint
 	sgdb  map[string]*netproto.SecurityGroup
+	tndb  map[string]*netproto.Tenant
 }
 
 // SetAgent registers agent with datapath
@@ -130,6 +131,21 @@ func (dp *mockDatapath) DeleteSecurityRule(sg *netproto.SecurityGroup, rule *net
 	return nil
 }
 
+// CreateTenant creates a tenant. Stubbed out to satisfy the interface
+func (dp *mockDatapath) CreateTenant(tn *netproto.Tenant) error {
+	return nil
+}
+
+// DeleteTenant deletes a tenant. Stubbed out to satisfy the interface
+func (dp *mockDatapath) DeleteTenant(tn *netproto.Tenant) error {
+	return nil
+}
+
+// UpdateTenant updates a tenant. Stubbed out to satisfy the interface
+func (dp *mockDatapath) UpdateTenant(tn *netproto.Tenant) error {
+	return nil
+}
+
 type mockCtrler struct {
 	epdb map[string]*netproto.Endpoint
 }
@@ -156,6 +172,7 @@ func createNetAgent(t *testing.T) (*NetAgent, *mockDatapath, *mockCtrler) {
 		epdb:  make(map[string]*netproto.Endpoint),
 		netdb: make(map[string]*netproto.Network),
 		sgdb:  make(map[string]*netproto.SecurityGroup),
+		tndb:  make(map[string]*netproto.Tenant),
 	}
 	ct := &mockCtrler{
 		epdb: make(map[string]*netproto.Endpoint),
@@ -233,6 +250,39 @@ func TestNetworkCreateDelete(t *testing.T) {
 	// verify you can not delete non-existing network
 	err = ag.DeleteNetwork(&nt)
 	Assert(t, (err != nil), "deleting non-existing network suceeded", ag)
+}
+
+func TestNetworkUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "updateTenant",
+			Name:   "updateNetwork",
+		},
+	}
+
+	// create tenant
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating tenant")
+	tnt, err := ag.FindNetwork(nt.ObjectMeta)
+	AssertOk(t, err, "Tenant was not found in DB")
+	Assert(t, tnt.Name == "updateNetwork", "Tenant names did not match", tnt)
+
+	ntSpec := netproto.NetworkSpec{
+		IPv4Subnet:  "192.168.1.1/24",
+		IPv4Gateway: "192.168.1.254",
+	}
+
+	nt.Spec = ntSpec
+
+	err = ag.UpdateNetwork(&nt)
+	AssertOk(t, err, "Error updating network")
 }
 
 func TestEndpointCreateDelete(t *testing.T) {
@@ -777,4 +827,79 @@ func TestEndpointConcurrency(t *testing.T) {
 		AssertOk(t, <-waitCh, "Error deleting endpoint")
 	}
 
+}
+
+func TestTenantCreateDelete(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// tenant
+	tn := netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "default",
+		},
+	}
+
+	// create tenant
+	err := ag.CreateTenant(&tn)
+	AssertOk(t, err, "Error creating tenant")
+	tnt, err := ag.FindTenant(tn.ObjectMeta)
+	AssertOk(t, err, "Tenant was not found in DB")
+	Assert(t, tnt.Name == "default", "Tenant names did not match", tnt)
+
+	// verify duplicate tenant creations succeed
+	err = ag.CreateTenant(&tn)
+	AssertOk(t, err, "Error creating duplicate tenant")
+
+	// verify list api works
+	tenantList := ag.ListTenant()
+	Assert(t, len(tenantList) == 1, "Incorrect number of tenants")
+
+	// delete the network and verify its gone from db
+	err = ag.DeleteTenant(&tn)
+	AssertOk(t, err, "Error deleting network")
+	_, err = ag.FindTenant(tn.ObjectMeta)
+	Assert(t, err != nil, "Tenant was still found in database after deleting", ag)
+
+	// verify you can not delete non-existing tenant
+	err = ag.DeleteTenant(&tn)
+	Assert(t, err != nil, "deleting non-existing network suceeded", ag)
+}
+
+func TestTenantUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// tenant
+	tn := netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "updateTenant",
+			Name:   "updateTenant",
+		},
+	}
+
+	// create tenant
+	err := ag.CreateTenant(&tn)
+	AssertOk(t, err, "Error creating tenant")
+	tnt, err := ag.FindTenant(tn.ObjectMeta)
+	AssertOk(t, err, "Tenant was not found in DB")
+	Assert(t, tnt.Name == "updateTenant", "Tenant names did not match", tnt)
+
+	tnSpec := netproto.TenantSpec{
+		Meta: &api.ObjectMeta{
+			Namespace: "testNamespace",
+		},
+	}
+
+	tn.Spec = tnSpec
+
+	err = ag.UpdateTenant(&tn)
+	AssertOk(t, err, "Error updating tenant")
 }
