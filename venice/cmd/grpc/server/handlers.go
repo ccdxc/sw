@@ -84,11 +84,7 @@ func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) 
 				found = true
 			}
 			if !found && net.ParseIP(member.Name) != nil {
-				var err error
-				found, err = netutils.IsAConfiguredIP(member.Name)
-				if err != nil {
-					found = false
-				}
+				found, _ = netutils.IsAConfiguredIP(member.Name)
 				if found {
 					hostname = member.Name
 				}

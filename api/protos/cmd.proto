@@ -77,6 +77,9 @@ message ClusterStatus {
 
     // Leader contains the node name of the cluster leader.
     string Leader   = 1 [(gogoproto.jsontag) = "leader,omitempty"];
+    // LastLeaderTransitionTime is when the leadership changed last time
+    api.Timestamp LastLeaderTransitionTime = 2 [(gogoproto.nullable) = true,
+                                            (gogoproto.jsontag) = "last-leader-transition-time,omitempty"];
 }
 
 //---------------------------------- NODE -------------------------------------------

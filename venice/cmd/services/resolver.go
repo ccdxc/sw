@@ -84,11 +84,26 @@ func (r *resolverService) OnNotifyK8sPodEvent(e types.K8sPodEvent) error {
 			})
 		}
 	}
+
+	var instanceRunning bool
+	if e.Pod.Status.Phase == v1.PodRunning {
+		instanceRunning = true
+
+		// If any condition exists in not ConditionTrue then service is guaranteed to be good.
+		for _, condition := range e.Pod.Status.Conditions {
+			if condition.Status != v1.ConditionTrue {
+				instanceRunning = false
+			}
+		}
+	} else {
+		instanceRunning = false
+	}
+
 	switch e.Type {
 	case types.K8sPodAdded:
 		fallthrough
 	case types.K8sPodModified:
-		if e.Pod.Status.Phase == v1.PodRunning {
+		if instanceRunning {
 			for ii := range sInsts {
 				r.addSvcInstance(&sInsts[ii])
 			}

@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	k8sclient "k8s.io/client-go/kubernetes"
 	k8srest "k8s.io/client-go/rest"
+
+	gogotypes "github.com/gogo/protobuf/types"
 
 	api "github.com/pensando/sw/api"
 	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
@@ -29,6 +32,7 @@ var (
 		"pen-kube-controller-manager",
 		"pen-elasticsearch",
 	}
+	clusterStatusUpdateTime = 30 * time.Second
 )
 
 type masterService struct {
@@ -42,6 +46,9 @@ type masterService struct {
 	enabled       bool
 	virtualIP     string // virtualIP for services which can listed on only one VIP
 	configs       configs.Interface
+
+	updateCh chan bool
+	closeCh  chan bool
 }
 
 // MasterOption fills the optional params
@@ -97,6 +104,8 @@ func NewMasterService(virtualIP string, options ...MasterOption) types.MasterSer
 		cfgWatcherSvc: env.CfgWatcherService,
 		virtualIP:     virtualIP,
 		configs:       configs.New(),
+		updateCh:      make(chan bool),
+		closeCh:       make(chan bool),
 	}
 	for _, o := range options {
 		if o != nil {
@@ -138,8 +147,9 @@ func (m *masterService) Start() error {
 		m.isLeader = true
 	}
 	m.enabled = true
+	go m.updateClusterStatus()
 	if m.isLeader {
-		m.updateLeaderInClusterStatus()
+		m.updateCh <- true
 		return m.startLeaderServices(m.virtualIP)
 	}
 	m.resolverSvc.Start()
@@ -171,6 +181,8 @@ func (m *masterService) Stop() {
 	m.stopLeaderServices()
 	m.k8sSvc.Stop()
 	m.resolverSvc.Stop()
+	close(m.updateCh)
+	<-m.closeCh
 }
 
 // caller holds the lock
@@ -191,33 +203,69 @@ func (m *masterService) AreLeaderServicesRunning() bool {
 	// TODO: Need systemd API for this
 	return true
 }
-func (m *masterService) updateLeaderInClusterStatus() {
-	if !m.isLeader {
-		// Only leader should write the status
-		return
-	}
-	ac := m.cfgWatcherSvc.APIClient()
-	if ac == nil {
-		log.Debugf("APIClient not ready yet")
-		return
-	}
-	cl := ac.Cluster()
-	if cl == nil {
-		log.Debugf("APIClient retured nil while creating Cluster client")
-		return
-	}
-	var options api.ListWatchOptions
-	hostname := m.leaderSvc.ID()
-	clList, err := cl.List(context.Background(), &options)
-	if err != nil {
-		log.Debugf("error %s getting Cluster from APIServer", err)
-		return
-	}
-	if len(clList) > 0 && clList[0].Status.Leader != hostname {
+func (m *masterService) updateClusterStatus() {
+
+	updateStatus := func() {
+		if !m.isLeader {
+			// Only leader should write the status
+			return
+		}
+		ac := m.cfgWatcherSvc.APIClient()
+		if ac == nil {
+			log.Infof("APIClient not ready yet")
+			return
+		}
+		cl := ac.Cluster()
+		if cl == nil {
+			log.Infof("APIClient retured nil Cluster client")
+			return
+		}
+		var options api.ListWatchOptions
+		hostname := m.leaderSvc.ID()
+		nctx, cancel := context.WithTimeout(context.Background(), clusterStatusUpdateTime)
+		defer cancel()
+		clList, err := cl.List(nctx, &options)
+		if err != nil {
+			log.Infof("error %s getting Cluster from APIServer", err)
+			return
+		}
+
+		if !m.isLeader {
+			return
+		}
+		if len(clList) == 0 {
+			log.Errorf("cluster object is nil from APIServer even though this node is leader")
+			return
+		}
+		if clList[0].Status.Leader == hostname {
+			return
+		}
+
 		clList[0].Status.Leader = hostname
-		_, err = cl.Update(context.Background(), clList[0])
+		ts, err := gogotypes.TimestampProto(time.Now())
+		if err != nil {
+			log.Errorf("Cluster %#v status update with new leader errored %s while getting time", clList[0], err)
+			return
+		}
+		clList[0].Status.LastLeaderTransitionTime = &api.Timestamp{Timestamp: *ts}
+		_, err = cl.Update(nctx, clList[0])
 		if err != nil {
 			log.Errorf("Cluster %#v update on Leadership win returned %#v", clList[0], err)
+		}
+	}
+
+	ticker := time.NewTicker(clusterStatusUpdateTime)
+	for {
+		select {
+		case <-ticker.C:
+			updateStatus()
+		case _, ok := <-m.updateCh:
+			if ok {
+				updateStatus()
+			} else {
+				close(m.closeCh)
+				return
+			}
 		}
 	}
 }
@@ -231,7 +279,7 @@ func (m *masterService) OnNotifyLeaderEvent(e types.LeaderEvent) error {
 		defer m.Unlock()
 		m.isLeader = true
 		if m.enabled {
-			m.updateLeaderInClusterStatus()
+			m.updateCh <- true
 			m.startLeaderServices(m.virtualIP)
 		}
 	case types.LeaderEventLost:
@@ -292,16 +340,14 @@ func (m *masterService) handleNodeEvent(et kvstore.WatchEventType, node *cmd.Nod
 func (m *masterService) handleClusterEvent(et kvstore.WatchEventType, cluster *cmd.Cluster) {
 	switch et {
 	case kvstore.Created:
-		if cluster.Status.Leader == "" {
-			m.updateLeaderInClusterStatus()
-		}
+		m.updateCh <- true
 		return
 	case kvstore.Updated:
 		// TODO: process updates to ApprovedNIC list
 		// Walk the ApprovedList to admit the NICs and remove them from
-		// pendingNIC statusupdateLeaderInClusterStatus
-		if cluster.Status.Leader == "" {
-			m.updateLeaderInClusterStatus()
+		// pendingNIC statusupdateClusterStatus
+		if m.isLeader && cluster.Status.Leader != m.leaderSvc.ID() {
+			m.updateCh <- true
 		}
 		return
 	case kvstore.Deleted:

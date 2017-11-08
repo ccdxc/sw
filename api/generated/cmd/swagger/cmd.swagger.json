@@ -221,6 +221,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "Status.LastLeaderTransitionTime.time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
           }
         ],
         "tags": [
@@ -919,7 +926,8 @@
           "description": "Leader contains the node name of the cluster leader."
         },
         "Object": {
-          "$ref": "#/definitions/cmdSmartNIC"
+          "$ref": "#/definitions/cmdSmartNIC",
+          "title": "LastLeaderTransitionTime is when the leadership changed last time"
         }
       },
       "description": "ClusterStatus contains the current state of the Cluster."
@@ -1001,6 +1009,10 @@
         "Leader": {
           "type": "string",
           "title": "Type indicates a certain node condition"
+        },
+        "LastLeaderTransitionTime": {
+          "$ref": "#/definitions/apiTimestamp",
+          "title": "Condition Status"
         }
       },
       "description": "NodeCondition describes the state of a Node at a certain point."

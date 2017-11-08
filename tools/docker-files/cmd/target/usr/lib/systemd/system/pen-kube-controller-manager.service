@@ -10,6 +10,9 @@ ExecStart=/usr/pensando/bin/systemd-docker \
 	--cgroups name=systemd --cgroups=cpu run --rm --privileged --net=host --name pen-kube-controller-manager \
 	${REGISTRY_URL}/google_containers/kube-controller-manager-amd64:v1.6.6 \
 	kube-controller-manager \
+	--pod-eviction-timeout 2s \
+    --node-monitor-grace-period 16s \
+    --node-monitor-period 2s\
 	$KUBE_MASTER
 ExecStop=/usr/bin/docker stop -t 2 pen-kube-controller-manager
 ExecStopPost=/usr/bin/docker rm -f pen-kube-controller-manager

@@ -334,19 +334,20 @@ func (k *k8sService) Start(client k8sclient.Interface, isLeader bool) {
 // business logic for this service.
 func (k *k8sService) waitForAPIServerOrCancel() {
 	ii := 0
+	var err error
 	for {
 		select {
 		case <-k.ctx.Done():
 			k.Done()
 			return
 		case <-time.After(waitTime):
-			if _, err := k.client.Extensions().DaemonSets(defaultNS).List(metav1.ListOptions{}); err == nil {
+			if _, err = k.client.Extensions().DaemonSets(defaultNS).List(metav1.ListOptions{}); err == nil {
 				go k.runUntilCancel()
 				return
 			}
 			ii++
 			if ii%10 == 0 {
-				log.Errorf("Waiting for K8s apiserver to come up for %v seconds", ii)
+				log.Errorf("Waiting for K8s apiserver to come up for %v seconds. been observing(%s)", ii, err)
 			}
 		}
 	}

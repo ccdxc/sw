@@ -109,6 +109,7 @@ func (l *leaderService) waitForEventsOrCancel(ctx context.Context) {
 				l.processEvent(e.Leader)
 				l.Unlock()
 			} else {
+				log.Infof("Election event channel closed. restarting election")
 				// Cant trust being a leader anymore.
 				l.Stop()
 				go l.Start()

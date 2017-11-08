@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api/generated/cmd"
 	"github.com/pensando/sw/venice/cmd/services/mock"
@@ -18,7 +19,7 @@ func setupMaster(t *testing.T) (*mock.LeaderService, types.SystemdService, *mock
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	cw := mock.CfgWatcherService{}
 	m := NewMasterService(testIP, WithLeaderSvcMasterOption(l), WithSystemdSvcMasterOption(s), WithConfigsMasterOption(&mock.Configs{}),
-		WithCfgWatcherMasterOption(&cw))
+		WithCfgWatcherMasterOption(&cw), WithK8sSvcMasterOption(&mock.K8sService{}))
 
 	return l, s, &cw, m
 }
@@ -98,7 +99,10 @@ func TestMasterServiceSetStatus(t *testing.T) {
 	l.Start()
 	m.Start()
 
-	testutils.Assert(t, cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), "Leader is not this node at the end of test")
+	testutils.AssertEventually(t,
+		func() (bool, []interface{}) {
+			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), nil
+		}, "Leader is not this node at the end of test")
 }
 
 func TestMasterServiceSetStatusOnLeadershipWin(t *testing.T) {
@@ -114,12 +118,17 @@ func TestMasterServiceSetStatusOnLeadershipWin(t *testing.T) {
 	testutils.Assert(t, cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == "", "Leader is non-nil at start of test")
 
 	l.BecomeLeader()
-	testutils.Assert(t, cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), "Leader is not this node at the end of test")
+	testutils.AssertEventually(t,
+		func() (bool, []interface{}) {
+			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), nil
+		},
+		"Leader is not this node at the end of test")
 }
 
 func TestMasterServiceSetStatusOnConfigWatch(t *testing.T) {
 	t.Parallel()
 	l, s, cw, m := setupMaster(t)
+	clusterStatusUpdateTime = time.Second
 
 	s.Start()
 	l.Start()
@@ -128,14 +137,32 @@ func TestMasterServiceSetStatusOnConfigWatch(t *testing.T) {
 	// master should update the Leader to himself if he sees a kvstore Created/Updated event on Cluster
 	cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader = "dummy"
 	cw.ClusterHandler(kvstore.Created, &cmd.Cluster{})
-	testutils.Assert(t, cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), "Leader is not this node at the end of test")
+	testutils.AssertEventually(t,
+		func() (bool, []interface{}) {
+			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), nil
+		}, "Leader is not this node at the end of test")
 
 	cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader = "dummy"
 	cw.ClusterHandler(kvstore.Updated, &cmd.Cluster{})
-	testutils.Assert(t, cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), "Leader is not this node at the end of test")
+	testutils.AssertEventually(t,
+		func() (bool, []interface{}) {
+			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), nil
+		}, "Leader is not this node at the end of test")
+
+	cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader = "dummy"
+	cw.ClusterHandler(kvstore.Updated, &cmd.Cluster{})
+	testutils.AssertEventually(t,
+		func() (bool, []interface{}) {
+			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == t.Name(), nil
+		}, "Leadership not corrected in timer at the end of the test")
 
 	l.GiveupLeadership()
 	cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader = "dummy"
 	cw.ClusterHandler(kvstore.Updated, &cmd.Cluster{})
 	testutils.Assert(t, cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == "dummy", "Non-Leader reacting to cluster object creation")
+
+	testutils.AssertEventually(t,
+		func() (bool, []interface{}) {
+			return cw.DummyAPIClient.DummyCluster.DummyCluster.Status.Leader == "dummy", nil
+		}, "Non-Leader reacting to cluster object creation")
 }

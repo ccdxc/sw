@@ -8,6 +8,7 @@ import (
 	"time"
 
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
+	"github.com/pensando/sw/venice/utils/netutils"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/apiclient"
@@ -69,6 +70,12 @@ func waitForAPIAndStartServices() {
 					found = true
 					break
 				}
+				if net.ParseIP(qn) != nil {
+					found, _ = netutils.IsAConfiguredIP(qn)
+					if found {
+						break
+					}
+				}
 			}
 			if found == false {
 				log.Debugf("Not starting NTP service since this node is no longer part of Quorum Nodes")
@@ -85,10 +92,29 @@ func waitForAPIAndStartServices() {
 // StartQuorumServices starts services on quorum node
 func StartQuorumServices(c utils.Cluster) {
 	log.Debugf("Starting Quorum services on startup")
-	hostname, _ := os.Hostname()
-	addrs, err := net.LookupHost(hostname)
+	hostname, err := os.Hostname()
 	if err != nil {
-		log.Errorf("Failed to lookup host %v, error: %v", hostname, err)
+		log.Errorf("Failed to determine hostname. error: %v", err)
+		return
+	}
+
+	found := false
+	for _, member := range c.QuorumNodes {
+		if hostname == member {
+			found = true
+			break
+		}
+		if net.ParseIP(member) != nil {
+			found, _ = netutils.IsAConfiguredIP(member)
+			if found {
+				hostname = member
+				break
+			}
+		}
+	}
+
+	if !found {
+		log.Infof("skipping starting Quorum services as this node (%s) is not part of quorum (%s)", hostname, c.QuorumNodes)
 		return
 	}
 
@@ -102,7 +128,7 @@ func StartQuorumServices(c utils.Cluster) {
 	}
 	qConfig.Members = append(qConfig.Members, quorum.Member{
 		Name:       hostname,
-		ClientURLs: []string{fmt.Sprintf("http://%s:%s", addrs[0], env.Options.KVStore.ClientPort)},
+		ClientURLs: []string{fmt.Sprintf("http://%s:%s", hostname, env.Options.KVStore.ClientPort)},
 	})
 
 	var quorumIntf quorum.Interface
