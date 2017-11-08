@@ -2480,11 +2480,11 @@ def capri_te_cfg_output(stage):
             json_tbl_prof_key['sel%d' % k]['value'] = str(0)
 
     prof_idx = 0
-    profile_vals = sorted(stage.table_profiles.keys(), reverse=True)
+    # don't sort the prof_vals, already done while creating profiles
+    # sorting must be done based on masks
     tcam_entries = OrderedDict()
     sidx = 0
-    for prof_val in profile_vals:
-        ctg = stage.table_profiles[prof_val]
+    for prof_val,ctg in stage.table_profiles.items():
         if not run_all_tables:
             # program tcam entries for predicate values
             tcam_vms = stage.stg_create_tbl_profile_tcam_val_mask(prof_val)
@@ -2497,8 +2497,7 @@ def capri_te_cfg_output(stage):
             assert len(tcam_vms) == 1, pdb.set_trace()
             (val, mask) = tcam_vms[0]
             if (val, mask) in tcam_entries:
-                if ctg != tcam_entries[(val,mask)]:
-                    stage.gtm.tm.logger.warning( \
+                stage.gtm.tm.logger.warning( \
                         "%s:Stage %d:Table profile TCAM: Skip entry (0x%x, 0x%x) : %d, %s" % \
                         (stage.gtm.d.name, stage.id, val, mask, prof_val, ctg))
                 continue

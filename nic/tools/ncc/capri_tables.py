@@ -1832,6 +1832,8 @@ class capri_table:
                     (self.gtm.d.name, self.p4_table.name, km0_profile, km1_profile))
 
     def ct_update_wide_key_size(self):
+        if self.is_toeplitz_hash():
+            return
         max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
         wide_key_km_width = 2 * max_km_width
         # for wide key table, key start/end offsets are valid only for the last flit
@@ -2673,7 +2675,7 @@ class capri_predicate:
         # store each field and expected value for condition to be True
         # Hw implements it using TCAM, all AND conditions are concatenated
         # Total # of bit across all conditions must be < 8
-        self.cfield_vals = []   # list of (cf, value) used in p4 condition
+        self.cfield_vals = []   # list of (cf, value) used in p4 condition, when cond == True
         self.cwidth = 0
 
         def _expand(p4_expr):
@@ -3306,6 +3308,7 @@ class capri_stage:
         self.p4_table_list = None  # table list from hlir
         self.ct_list = None
         self.table_profiles = OrderedDict() # {pred_val : [tables to apply]}
+        self.table_profile_masks = OrderedDict() # {pred_val : active_conditions}
         self.table_sequencer = OrderedDict() # {pred_val : [capri_te_cycle]}
         self.active_predicates = [] # [active table_predicate_keys]
         self.km_allocator = [[None for _ in range(max_km)] for _ in range(num_flits)]
@@ -4153,37 +4156,37 @@ class capri_stage:
         # create a map
         total_w, cf_list = self.stg_get_tbl_profile_key()
         cf_val_mask = OrderedDict() # {cf: (val, mask, flag[False = cannot be X]}
-
         #pdb.set_trace()
-        invalid_condition = False
-        for c in self.active_predicates:
-            #cond_tcam_entry = []
-            cp = self.gtm.table_predicates[c]
+        for ki,c_name in enumerate(self.active_predicates):
             test_val >>= 1
-            assert test_val, pdb.set_trace()
-            if val & test_val:
-                # condition is true
-                for cf, v in cp.cfield_vals:
-                    if cf in cf_val_mask:
-                        # check for conflicting conditions... XXX
-                        if cf_val_mask[cf][1] != 0 and v != cf_val_mask[cf][0]:
-                            invalid_condition = True
-                            break
-                    cf_val_mask[cf] = (v, ((1<<cf.width) - 1))
-            else:
-                for cf, v in cp.cfield_vals:
-                    if cf.width == 1:
-                        # For a single bit field, false value is opposite (1-v) or True value
-                        # Programming this may result in redundant entries in TCAM - XXX optimize
-                        if cf not in cf_val_mask:
-                            cf_val_mask[cf] = ((1-v), ((1<<cf.width) - 1))
+            mask = self.table_profile_masks[val]
+            cp = self.gtm.table_predicates[c_name]
+            for cf, v in cp.cfield_vals:
+                if mask & test_val:
+                    # this condition is used (not X)
+                    if val & test_val:
+                        # condition is true
+                        if cf in cf_val_mask and cf_val_mask[cf][1] != 0:
+                            assert cf_val_mask[cf][0] == v, pdb.set_trace()
+                        cf_val_mask[cf] = (v, ((1<<cf.width) - 1))
                     else:
-                        if cf not in cf_val_mask:
-                            cf_val_mask[cf] = (0, 0)
+                        # condition is false
+                        if cf.width == 1:
+                            # For a single bit field, false value is opposite (1-v) or True value
+                            # Programming this may result in redundant entries in TCAM - XXX optimize
+                            if cf in cf_val_mask and cf_val_mask[cf][1] != 0:
+                                assert cf_val_mask[cf][0] == (1-v), pdb.set_trace()
+                            cf_val_mask[cf] = ((1-v), ((1<<cf.width) - 1))
+                        else:
+                            # multibit false condition is masked out, must have more specific
+                            # entry already programmed - XXX
+                            if cf not in cf_val_mask:
+                                cf_val_mask[cf] = (0, 0)
+                else:
+                    # this condition is ignored.. mask all fields of this condition
+                    if cf not in cf_val_mask:
+                        cf_val_mask[cf] = (0,0) # ignored
 
-        # build the tcam val, mask
-        if invalid_condition:
-            return []
         tcam_val = 0
         tcam_mask = 0
         for cf in cf_list:
@@ -4193,6 +4196,69 @@ class capri_stage:
 
         #pdb.set_trace()
         return [(tcam_val, tcam_mask)]
+
+    def prune_impossible_table_profiles(self):
+        stage_prof_vals = OrderedDict()
+        chk_bit = 1 << (len(self.active_predicates) - 1)
+        covered_conditions = OrderedDict()
+        for prof_val, ctg in reversed(self.table_profiles.items()):
+            mask = self.table_profile_masks[prof_val]
+            cf_vals = OrderedDict()
+            conflict = False
+            for ki,c_name in enumerate(self.active_predicates):
+                if mask & (chk_bit >> ki):
+                    # this condition is used (not X)
+                    cp = self.gtm.table_predicates[c_name]
+                    for cf,v in cp.cfield_vals:
+                        chk_val = v
+                        if prof_val & (chk_bit >> ki) == 0:
+                            # checking for condition to be false
+                            # invert the 1bit variables, X multibit (XXX)
+                            if cf.width > 1:
+                                chk_val = None
+                            else:
+                                chk_val = 1-v
+
+                        if chk_val != None:
+                            if cf in cf_vals:
+                                if cf_vals[cf] != chk_val:
+                                    conflict = True
+                                    break
+                            else:
+                                cf_vals[cf] = chk_val
+                    if conflict:
+                        break
+
+            if not conflict:
+                # The mask indicates the condition that is used. If the condition is checked for
+                # 'false' value, the corresponding bit in prof_val is 0.. but it is not same as
+                # ignoring it. Use both prof_val and ~prof_val when checking for covered cases
+                t = (prof_val & mask, ~prof_val & mask)
+                if t in covered_conditions:
+                    self.gtm.tm.logger.debug("Ignore prof_val 0x%x covered by 0x%x:" % \
+                        (prof_val, covered_conditions[t]))
+                    continue
+                else:
+                    stage_prof_vals[prof_val] = ctg
+                    covered_conditions[t] = prof_val
+            else:
+                self.gtm.tm.logger.debug("Ignore conflicting prof_val 0x%x:" % (prof_val))
+
+        # sort the profiles based on mask to get more specific entries up-top
+        # also make sure that for same mask, higher prof value is at the top so that true
+        # condition is handled before false (useful for multi-bit false conditions)
+        sorted_prof_vals = OrderedDict()
+        for prof_val,mask in sorted(self.table_profile_masks.items(), 
+                                    key=lambda k:(k[1],k[0]), reverse=True):
+            if prof_val in stage_prof_vals:
+                sorted_prof_vals[prof_val] = stage_prof_vals[prof_val]
+
+        self.table_profiles = copy.copy(sorted_prof_vals)
+        self.gtm.tm.logger.debug("%s:%d:Final Table Profiles" % (self.gtm.d.name, self.id))
+        for i in self.table_profiles.keys():
+            self.gtm.tm.logger.debug("0x%x & 0x%x: %s" % \
+                (i, self.table_profile_masks[i],
+                [ct.p4_table.name for ct in self.table_profiles[i]]))
 
     def stg_generate_output(self):
         capri_te_cfg_output(self)
@@ -4738,7 +4804,7 @@ class capri_gress_tm:
         self.tm.logger.debug("Table predication values (False =0, True=1 X=don't care)")
         for t,pred_vals in table_preds.items():
             for v in pred_vals:
-                self.tm.logger.debug("%s: %s\n" % (t, [pv if pv != 2 else 'x' for pv in v.values()]))
+                self.tm.logger.debug("%s: %s" % (t, [pv if pv != 2 else 'x' for pv in v.values()]))
         # create a list of active conditions per stage. Look at condition variable (predicates)
         # that affect tables in a given stage
         for stg, cstage in self.stages.items():
@@ -4747,7 +4813,8 @@ class capri_gress_tm:
                 # no table in this stage
                 continue
             # create profiles per stage
-            stage_table_profiles = OrderedDict() # {{predicate_val} : [table_name list]}
+            stage_table_profiles = OrderedDict() # {predicate_val : [table_name list]}
+            stage_profile_masks = OrderedDict() # {predicate_val : mask(1=use, 0=X)}
             active_preds = []
             for k in self.table_predicates.keys():
                 # XXX prune the condtions that are always X for all tables in a stage
@@ -4788,6 +4855,7 @@ class capri_gress_tm:
                     if isinstance(t, p4.p4_conditional_node):
                         continue
                     match = True
+                    match_mask = 0  # bit=0 => don't care
                     for ki, pk in enumerate(active_preds):
                         if not(i & (chk_bit >> ki)):
                             for tp in table_preds[t.name]:
@@ -4799,20 +4867,28 @@ class capri_gress_tm:
                                 if tp[pk] == 0:
                                     match = False
                                     break
+                        if tp[pk] != 2:
+                            match_mask |= (chk_bit >> ki)
                         if not match:
                             break
 
                     if match:
                         if i in stage_table_profiles:
+                            stage_profile_masks[i] |= match_mask
                             stage_table_profiles[i].append(self.tables[t.name])
                         else:
                             stage_table_profiles[i] = [self.tables[t.name]]
+                            stage_profile_masks[i] = match_mask
+
                 if i in stage_table_profiles:
-                    self.tm.logger.debug("0x%x : %s\n" % \
-                        (i, [ct.p4_table.name for ct in stage_table_profiles[i]]))
+                    self.tm.logger.debug("0x%x & 0x%x: %s" % \
+                        (i, stage_profile_masks[i],
+                        [ct.p4_table.name for ct in stage_table_profiles[i]]))
 
             self.stages[stg].active_predicates = copy.copy(active_preds)
             self.stages[stg].table_profiles = copy.copy(stage_table_profiles)
+            self.stages[stg].table_profile_masks = copy.copy(stage_profile_masks)
+            self.stages[stg].prune_impossible_table_profiles()
 
     def find_table_paths(self, table_list):
         def _find_paths(node, paths, current_path, table_list):
