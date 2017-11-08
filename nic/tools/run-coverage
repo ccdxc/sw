@@ -11,8 +11,8 @@ if [[ $? -ne 4 ]]; then
     exit 1
 fi
 
-OPTIONS="kilc:"
-LONGOPTIONS="keep-data,configfile:,ignore-errors,modellogs"
+OPTIONS="kilc:s:"
+LONGOPTIONS="keep-data,configfile:,skip-target:;ignore-errors,modellogs"
 
 PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
 if [[ $? -ne 0 ]]; then
@@ -24,16 +24,20 @@ fi
 eval set -- "$PARSED"
 
 # now enjoy the options in order and nicely split until we see --
-
 config_file="coverage.json"
 keep_data=0
 ignore_errors=0
 enable_model_logs=0
+skip_targets=()
 while true; do
     case "$1" in
         -k |--keep-data)
             keep_data=1
             shift
+            ;;
+        -s|--skip-target)
+            skip_targets+=($2)
+            shift 2
             ;;
         -c|--config-file)
             config_file=$2
@@ -86,7 +90,12 @@ export CAPRI_LOADER_CONF=$NIC_DIR/../bazel-bin/nic/hal/capri_loader.conf
 export GCOVR=$NIC_DIR/third-party/gcovr-3.3/scripts/gcovr
 export GEN_DIR=$NIC_DIR/gen
 
-$NIC_DIR/tools/gen_dol_cov_run.py
+if [ ${#skip_targets[@]} -eq 0 ]; then
+    $NIC_DIR/tools/gen_dol_cov_run.py
+else
+    $NIC_DIR/tools/gen_dol_cov_run.py --skip-targets ${skip_targets[@]}
+fi
+
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Dol coverage run generation failed!"

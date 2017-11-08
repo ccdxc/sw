@@ -5,6 +5,13 @@ import os
 import json
 import sys
 import subprocess
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--skip-targets', dest='skip_targets',
+                        nargs='*', type=str,
+                        default=[], help='Skip targets')
+args = parser.parse_args()
 
 DOL_JOB_PREFIX = "./run.py"
 DOL_COVERAGE_OPTION = "--coveragerun"
@@ -45,6 +52,8 @@ except:
 
 job_cfg = {}
 for target in job["targets"]:
+    if target in args.skip_targets:
+        continue
     job_info = job["targets"][target]
     for cmd in job_info:
     	if DOL_JOB_PREFIX in cmd:
