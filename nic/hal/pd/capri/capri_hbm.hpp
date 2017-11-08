@@ -2,7 +2,7 @@
 #define __CAPRI_HBM_HPP__
 
 #define CAPRI_HBM_MEM_REG_NAME_MAX_LEN 80
-#define CARPI_HBM_MEM_NUM_MEM_REGS 55
+#define CARPI_HBM_MEM_NUM_MEM_REGS 60
 
 #define JP4_ATOMIC_STATS         "atomic_stats" 
 
@@ -72,6 +72,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define CAPRI_HBM_REG_IPSECCB            "ipsec-cb"
 #define CAPRI_HBM_REG_IPSECCB_BARCO      "ipsec_cb_barco"
 #define CAPRI_HBM_REG_ARQRX              "arq-rx"
+#define CAPRI_HBM_REG_ARQTX              "arq-tx"
 #define CAPRI_HBM_REG_ASQ                "asq"
 #define CAPRI_HBM_REG_CPU_DESCR          "cpu-descriptor"
 #define CAPRI_HBM_REG_CPU_PAGE           "cpu-page"
@@ -104,6 +105,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define IPSEC_IP_HDR_BASE "ipsec_ip_hdr_base"
 
 #define ARQRX_BASE              "hbm_arqrx_base"
+#define ARQTX_BASE              "hbm_arqtx_base"
 #define ARQRX_QIDXR_BASE        "hbm_arqrx_qidxr_base"
 
 #define P4_FLOW_HASH_BASE               "p4_flow_hash_base"

@@ -21,7 +21,7 @@ struct tx_table_s5_t0_d     d;
    	    .param      tls_dec_write_arq
 #	    .param		BRQ_QPCB_BASE
         .param      ARQRX_QIDXR_BASE
-        .param      ARQRX_BASE
+        .param      ARQTX_BASE
         
 tls_dec_bld_barco_req_process:
     seq         c1, k.tls_global_phv_write_arq, r0
@@ -82,11 +82,11 @@ tls_dec_bld_barco_req_process_done:
 
 tls_cpu_rx:
 
-    phvwri      p.s5_s6_t1_s2s_arq_base, ARQRX_BASE
+    phvwri      p.s5_s6_t1_s2s_arq_base, ARQTX_BASE
     phvwr       p.s5_s6_t1_s2s_debug_dol, k.to_s5_debug_dol
 
-    /* Use RxDMA pi (first arg = 0) */
-    CPU_ARQRX_QIDX_ADDR(0, r3, ARQRX_QIDXR_BASE)
+    /* Use RxDMA pi (first arg = 1 for TxDMA) */
+    CPU_ARQRX_QIDX_ADDR(1, r3, ARQRX_QIDXR_BASE)
 
     CAPRI_NEXT_TABLE_READ_OFFSET(1,
                                  TABLE_LOCK_EN,

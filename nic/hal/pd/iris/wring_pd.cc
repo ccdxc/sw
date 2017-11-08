@@ -81,7 +81,10 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_IPSECCB_BARCO, 64, 128,
                                   "", 0, 0, 0, NULL, NULL};
     g_meta[types::WRING_TYPE_ARQRX] =
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_ARQRX, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, arqrx_get_hw_meta};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ARQRX, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, arqrx_get_hw_meta};
+
+    g_meta[types::WRING_TYPE_ARQTX] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_ARQTX, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, arqrx_get_hw_meta};
 
     g_meta[types::WRING_TYPE_ASQ] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_ASQ, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0, 0, NULL, NULL};

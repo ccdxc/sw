@@ -28,7 +28,7 @@ cpupkt_ctxt_qinst_info_free(cpupkt_qinst_info_t* qinst_info) {
 
 bool is_cpu_rx_queue(types::WRingType type)
 {
-    return (type == types::WRING_TYPE_ARQRX);
+    return (type == types::WRING_TYPE_ARQRX || type == types::WRING_TYPE_ARQTX);
 }
 
 bool is_cpu_tx_queue(types::WRingType type)
@@ -157,6 +157,14 @@ cpupkt_register_qinst(cpupkt_queue_info_t* ctxt_qinfo, types::WRingType type, ui
         return HAL_RET_NO_RESOURCE;
     }
 
+    // Initialize Queue 
+    ret = wring_pd_table_init(type, queue_id);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize queue: {}, id: {}, ret: {}",
+                    type, queue_id, ret);
+        return ret;
+    }
+
     // Get queue base
     wring_hw_id_t base_addr = 0;
     ret = wring_pd_get_base_addr(type, queue_id, &base_addr);
@@ -235,12 +243,6 @@ cpupkt_register_rx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type, uint32_t qu
         return HAL_RET_WRING_NOT_FOUND;
     }
 
-    if(!meta->is_global) {
-        HAL_TRACE_ERR("cpupkt: Rx from non-global queues is not supported");
-        HAL_ASSERT(1);
-        return HAL_RET_INVALID_OP;
-    }
-
     int index = ctxt->rx.num_queues;
     ctxt->rx.queue[index].type = type;
     ctxt->rx.queue[index].wring_meta = meta;
@@ -280,7 +282,7 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
     if(!ctxt) {
         return HAL_RET_INVALID_ARG;    
     }
-    HAL_TRACE_DEBUG("Starting packet poll for queue: {}", ctxt->rx.num_queues);
+    HAL_TRACE_DEBUG("cpupkt:Starting packet poll for queue: {}", ctxt->rx.num_queues);
     uint64_t value, descr_addr;
     cpupkt_qinst_info_t* qinst_info = NULL;
     while(true) {

@@ -13,7 +13,7 @@
 #define NIC_ARQRX_ENTRY_SIZE_SHIFT          3          /* for 8B */
 
 #define CPU_ARQRX_QIDXR_OFFSET              64
-#define ARQRX_QIDXR_DIR_ENTRY_SIZE_SHIFT    3          
+#define ARQRX_QIDXR_DIR_ENTRY_SIZE_SHIFT    9          /* for 512B */
 
 #define CPU_VALID_BIT_SHIFT                 63
 

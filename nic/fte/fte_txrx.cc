@@ -40,7 +40,10 @@ pkt_loop(uint8_t fte_id)
 
     // init arm driver context
     arm_ctx = hal::pd::cpupkt_ctxt_alloc_init();
-    ret = cpupkt_register_rx_queue(arm_ctx, types::WRING_TYPE_ARQRX);
+    ret = cpupkt_register_rx_queue(arm_ctx, types::WRING_TYPE_ARQRX, fte_id);
+    HAL_ASSERT_RETURN_VOID(ret == HAL_RET_OK);
+
+    ret = cpupkt_register_rx_queue(arm_ctx, types::WRING_TYPE_ARQTX, fte_id);
     HAL_ASSERT_RETURN_VOID(ret == HAL_RET_OK);
 
     ret = cpupkt_register_tx_queue(arm_ctx, types::WRING_TYPE_ASQ);

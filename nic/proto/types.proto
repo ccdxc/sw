@@ -202,6 +202,7 @@ enum WRingType {
   WRING_TYPE_APP_REDIR_PROXYC = 19;
   WRING_TYPE_NMDR_RX_GC       = 20;
   WRING_TYPE_NMDR_TX_GC       = 21;
+  WRING_TYPE_ARQTX            = 22;
 }
 
 // Types of Proxy Service

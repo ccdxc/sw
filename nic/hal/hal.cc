@@ -60,7 +60,7 @@ fte_pkt_loop_start (void *ctxt)
     HAL_THREAD_INIT(ctxt);
 
     thread *curr_thread = hal::utils::thread::current_thread();
-    fte::pkt_loop(HAL_THREAD_ID_FTE_MIN - curr_thread->thread_id());
+    fte::pkt_loop(curr_thread->thread_id() - HAL_THREAD_ID_FTE_MIN);
     return NULL;
 }
 

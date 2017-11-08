@@ -36,6 +36,7 @@ class CpuCbObject(base.ConfigObjectBase):
         # assert(len(self.uplinks) > 0)
         cfglogger.info("  - %s" % self)
         self.arq = SwDscrRingHelper.main("ARQ", gid, self.id)
+        self.arq_tx = SwDscrRingHelper.main("ARQ-TX", gid, self.id)
 
         return
 

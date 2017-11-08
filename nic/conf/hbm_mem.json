@@ -113,6 +113,10 @@
             "size_kb": 64
         },
         {
+            "name": "arq-tx",
+            "size_kb": 64
+        },
+        {
             "name": "asq",
             "size_kb": 64
         },
