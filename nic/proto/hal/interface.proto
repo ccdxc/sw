@@ -127,6 +127,13 @@ message LifKeyHandle {
   }
 }
 
+// Packet filters to receive traffic
+message PktFilter {
+    bool    receive_broadcast     = 1;    // Receive Broadcast
+    bool    receive_all_multicast = 2;    // Receive all Multicast
+    bool    receive_promiscuous   = 3;    // Receive Unknown Unicast, Broadcast, Multicast. Not Known Unicast
+}
+
 // LIF object
 message LifSpec {
   types.ObjectMeta           meta                    = 1;    // object meta
@@ -137,9 +144,10 @@ message LifSpec {
   repeated LifQStateMapEntry lif_qstate_map          = 5;    // LIF -> Qstate map.
   bool                       vlan_strip_en           = 6;    // LIF vlan strip enable
   bool                       enable_rdma             = 7;    // RDMA: enable RDMA on LIF
-  uint32                     rdma_max_keys           = 8;    // RDMA: max key entries
-  uint32                     rdma_max_pt_entries     = 9;    // RDMA: max pt entries
-  repeated QStateSetReq      lif_qstate              = 10;   // Initialize Qstate
+  PktFilter                  packet_filter           = 8;    // Packet filters
+  uint32                     rdma_max_keys           = 9;    // RDMA: max key entries
+  uint32                     rdma_max_pt_entries     = 10;    // RDMA: max pt entries
+  repeated QStateSetReq      lif_qstate              = 11;   // Initialize Qstate
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
