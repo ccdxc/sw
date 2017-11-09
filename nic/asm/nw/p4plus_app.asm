@@ -27,10 +27,8 @@ p4plus_app_classic_nic:
   phvwr       p.ethernet_etherType, k.vlan_tag_etherType
   phvwr       p.{p4_to_p4plus_classic_nic_vlan_pcp...p4_to_p4plus_classic_nic_vlan_dei}, \
                  k.{vlan_tag_pcp...vlan_tag_dei}
-  add         r1, r0, k.vlan_tag_vid_sbit0_ebit3, 8
-  add         r2, r0, k.vlan_tag_vid_sbit4_ebit11
-  or          r3, r1, r2
-  phvwr       p.p4_to_p4plus_classic_nic_vlan_vid, r3
+  add         r1, k.vlan_tag_vid_sbit4_ebit11, k.vlan_tag_vid_sbit0_ebit3, 8
+  phvwr       p.p4_to_p4plus_classic_nic_vlan_vid, r1
   phvwr       p.vlan_tag_valid, FALSE
   sub         r7, r7, 4
 
