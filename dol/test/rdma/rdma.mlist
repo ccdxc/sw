@@ -311,6 +311,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_SEND_ONLY_OPTIONS
+        enable  : False
+        package : test.rdma
+        module  : resp_rx_send_only
+        spec    : resp_rx_send_only_options.testspec
+        ignore  : True
+
+    - module:
         name    : RDMA_RX_SEND_ONLY_DBELL
         enable  : True
         package : test.rdma

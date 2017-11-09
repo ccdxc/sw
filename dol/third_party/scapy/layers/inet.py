@@ -306,8 +306,21 @@ TCPOptions = (
      "EXP1": 252,
      })
 
+UDPOptions = (
+    {0: ("EOL", None),
+     1: ("NOP", None),
+     2: ("OPT1", "!H"),
+     3: ("OPT2", "!I"),
+     4: ("OPT3", "!II"),
+     },
+    {"EOL": 0,
+     "NOP": 1,
+     "OPT1": 2,
+     "OPT2": 3,
+     "OPT3": 4,
+     })
 
-class TCPOptionsField(StrField):
+class L4OptionsField(StrField):
     islist = 1
 
     def getfield(self, pkt, s):
@@ -334,8 +347,8 @@ class TCPOptionsField(StrField):
                 warning("Malformed TCP option (announced length is %i)" % olen)
                 olen = 2
             oval = x[2:olen]
-            if onum in TCPOptions[0]:
-                oname, ofmt = TCPOptions[0][onum]
+            if onum in self.myoptions[0]:
+                oname, ofmt = self.myoptions[0][onum]
                 if onum == 5:  # SAck
                     ofmt += "%iI" % (len(oval) // 4)
                 if ofmt and struct.calcsize(ofmt) == len(oval):
@@ -358,9 +371,9 @@ class TCPOptionsField(StrField):
                 elif oname == "EOL":
                     opt += b"\x00"
                     continue
-                elif oname in TCPOptions[1]:
-                    onum = TCPOptions[1][oname]
-                    ofmt = TCPOptions[0][onum][1]
+                elif oname in self.myoptions[1]:
+                    onum = self.myoptions[1][oname]
+                    ofmt = self.myoptions[0][onum][1]
                     if onum == 5:  # SAck
                         ofmt += "%iI" % len(oval)
                     if ofmt is not None and (type(oval) is not str or "s" in ofmt):
@@ -384,6 +397,11 @@ class TCPOptionsField(StrField):
     def randval(self):
         return []  # XXX
 
+class TCPOptionsField(L4OptionsField):
+    myoptions = TCPOptions
+
+class UDPOptionsField(L4OptionsField):
+    myoptions = UDPOptions 
 
 class ICMPTimeStampField(IntField):
     re_hmsm = re.compile("([0-2]?[0-9])[Hh:](([0-5]?[0-9])([Mm:]([0-5]?[0-9])([sS:.]([0-9]{0,3}))?)?)?$")

@@ -1,0 +1,18 @@
+meta:
+    id      : UDP_OPTIONS
+    scapy   : UDP_OPTIONS
+    size    : 0
+
+fields:
+    options :
+        - kind  : None
+          data  : None  
+
+# Supported UDP Options:
+# Name-Of-Kind  Length    Data-Format
+# ------------------------------
+# EOL(0)          0       None
+# NOP(1)          0       None
+# ROCE_param2(2)  2       Short Int
+# ROCE_param3(3)  4       Integer
+# ROCE_param4(4)  8       Long Integer

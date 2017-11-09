@@ -43,6 +43,32 @@ class ScapyHeaderBuilder_ICMPV6(ScapyHeaderBuilder_BASE):
         return super().build(hdr)
 ICMPV6_builder = ScapyHeaderBuilder_ICMPV6()
 
+def TranslateTcpUdpOptions(builder, hdr):
+    scapy_options = []
+    for opt in hdr.fields.options:
+        scapy_opt = None
+        if isinstance(opt, tuple):
+            scapy_options.append(opt)
+            continue
+        if opt.kind == None: continue
+        if opt.data == None:
+            scapy_opt = (opt.kind, None)
+        elif opt.kind == 'SAckOK':
+            scapy_opt = (opt.kind, '')
+        else:
+            opt.data = utils.ParseIntegerList(opt.data)
+            scapy_data_tup = None
+            for df in opt.data:
+                if scapy_data_tup:
+                    scapy_data_tup += (df,)
+                else:
+                    scapy_data_tup = (df,)
+            scapy_opt = (opt.kind, scapy_data_tup)
+        scapy_options.append(scapy_opt)
+    hdr.fields.options = scapy_options
+    return
+
+
 class ScapyHeaderBuilder_TCP(ScapyHeaderBuilder_BASE):
     flags_map = [
         ('fin', 'F'),
@@ -55,28 +81,7 @@ class ScapyHeaderBuilder_TCP(ScapyHeaderBuilder_BASE):
         ('cwr', 'C')
     ]
     def __translate_options(self, hdr):
-        scapy_options = []
-        for opt in hdr.fields.options:
-            scapy_opt = None
-            if isinstance(opt, tuple):
-                scapy_options.append(opt)
-                continue
-            if opt.kind == None: continue
-            if opt.data == None:
-                scapy_opt = (opt.kind, None)
-            elif opt.kind == 'SAckOK':
-                scapy_opt = (opt.kind, '')
-            else:
-                opt.data = utils.ParseIntegerList(opt.data)
-                scapy_data_tup = None
-                for df in opt.data:
-                    if scapy_data_tup:
-                        scapy_data_tup += (df,)
-                    else:
-                        scapy_data_tup = (df,)
-                scapy_opt = (opt.kind, scapy_data_tup)
-            scapy_options.append(scapy_opt)
-        hdr.fields.options = scapy_options
+        TranslateTcpUdpOptions(self, hdr) 
         return
 
     def __is_native_format(self, flags):
@@ -138,6 +143,15 @@ class ScapyHeaderBuilder_SUNRPC_4_PORTMAP_DUMP_REPLY(ScapyHeaderBuilder_BASE):
         return super().build(hdr)
 
 SUNRPC_4_PORTMAP_DUMP_REPLY_builder = ScapyHeaderBuilder_SUNRPC_4_PORTMAP_DUMP_REPLY()
+
+class ScapyHeaderBuilder_UDP_OPTIONS(ScapyHeaderBuilder_BASE):
+    def __translate_options(self, hdr):
+        TranslateTcpUdpOptions(self, hdr)
+        return
+    def build(self, hdr):
+        self.__translate_options(hdr)
+        return super().build(hdr)
+UDP_OPTIONS_builder = ScapyHeaderBuilder_UDP_OPTIONS()
 
 
 class ScapyHeaderBuilder_PENDOL(ScapyHeaderBuilder_BASE):

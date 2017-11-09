@@ -31,7 +31,15 @@ class PAYLOAD(Packet):
         print("", flush=True)
         return
 
+    def guess_payload_class(self, payload):
+        if (self.haslayer(IP) and self.haslayer(UDP)):
+            ip_payload_len = self.getlayer(IP).len - self.getlayer(IP).ihl << 2
+            udp_payload_len = self.getlayer(UDP).len
+            if (ip_payload_len > udp_payload_len):
+                return (UDP_OPTIONS)
+        return super().guess_payload_class()
 
+    
 class PADDING(Packet):
     name = "PADDING"
     fields_desc = [
@@ -288,6 +296,14 @@ class BTH(Packet):
         else:
             assert(0);
             return super().guess_payload_class()
+
+class UDP_OPTIONS(Packet):
+    name = "UDP_Options"                                                                                                                                                                                                              
+    fields_desc = [                                                                                                                                                                                                                   
+        UDPOptionsField("options", {})
+    ]                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                      
+UDP_OPTIONS_LENGTH = len(UDP_OPTIONS())                    
 
 bind_layers(UDP, BTH, dport=4791)
 
