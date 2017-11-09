@@ -37,6 +37,21 @@ void dump(uint8_t *buf) {
   }
 }
 
+void dump1K(uint8_t *buf) {
+  int i;
+
+  printf("Dumping 1K of %p \n", buf);
+  for (i = 0; i < 1024; i++) {
+    printf("%2.2x ", buf[i]);
+    if ((i & 7) == 7) {
+      printf(" ");
+    }
+    if ((i & 0xf) == 0xf) {
+      printf("\n");
+    }
+  }
+}
+
 uint64_t storage_hbm_addr;
 uint32_t storage_hbm_size;
 uint32_t storage_hbm_running_size;

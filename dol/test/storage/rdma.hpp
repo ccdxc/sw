@@ -25,6 +25,6 @@ int rdma_init();
 
 void rdma_uspace_test();
 
-void rdma_seq_test();
+int test_run_rdma_write_cmd();
 
 #endif  // _RDMA_HPP_

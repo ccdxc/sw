@@ -1958,5 +1958,33 @@ int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q,
   return 0;
 }
 
+int test_rdma_write_cmd(uint32_t seq_pdma_q, uint32_t seq_roce_q, 
+			uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
+			uint64_t pdma_dst_addr, uint32_t pdma_data_size,
+			uint64_t roce_wqe_addr, uint32_t roce_wqe_size,
+                        uint32_t ssd_q, uint8_t **ssd_cmd, uint16_t *ssd_index) {
+
+  int rc;
+
+  if (!ssd_cmd || !ssd_index) {
+    return -1;
+  }
+
+  // Consume entry in SSD queue
+  if (consume_ssd_entry(ssd_q, ssd_cmd, ssd_index) < 0) {
+    printf("can't init and consume r2n/ssd entries \n");
+    return -1;
+  }
+
+  // Kickstart the sequencer
+  rc = test_seq_write_roce(seq_pdma_q, seq_roce_q, pvm_roce_sq, 
+                           pdma_src_addr, pdma_dst_addr, pdma_data_size,
+			   roce_wqe_addr, roce_wqe_size);
+  if (rc < 0) {
+    printf("can't send RDMA command over Sequencer and ROCE \n");
+    return rc;
+  }
+  return 0;
+}
 
 }  // namespace tests

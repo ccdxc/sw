@@ -36,6 +36,7 @@ cc_library(
     deps = [
         ":hal_if",
         ":utils",
+        "//nic/model_sim:model_client",
     ]
 )
 
@@ -57,6 +58,7 @@ cc_library(
         "//nic:halproto",
         "//nic:gen_proto_includes",
         "//nic/utils/host_mem",
+        "//nic/model_sim:model_client",
     ]
 )
 
