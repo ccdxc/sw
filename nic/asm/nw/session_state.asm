@@ -59,13 +59,13 @@ lb_tcp_session_state_initiator:
   add          r7, k.tcp_ackNo, d.u.tcp_session_state_info_d.syn_cookie_delta // r7 = adjusted_ack_num
 lb_initator_normlizaiton_return:
   add          r5, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, r2  // tcp_seq_num_hi
-  sub          r5, r5, 1	
   add          r4, d.u.tcp_session_state_info_d.rflow_tcp_ack_num, r6 // rflow_tcp_ack_num + rcvr_win_sz
   seq          c1, k.tcp_flags, TCP_FLAG_ACK
   seq.!c1      c1, k.tcp_flags, (TCP_FLAG_ACK | TCP_FLAG_PSH)
   sne          c5, r2, r0 // tcp_data_len != 0
   sne          c6, r6, r0 // tcp_rcvr_win_sz != 0
-  scwlt        c7, r5, r4 // tcp_seq_num_hi < rflow_tcp_ack_num + rcvr_win_sz
+  scwle        c7, r5, r4 // tcp_seq_num_hi <= rflow_tcp_ack_num + rcvr_win_sz (optimized)
+
   setcf        c1, [c1 & c2 & c6]  // c1 = (ACK or ACK|PSH), c2 = Both Established,
   seq          c2, k.{tcp_seqNo_sbit0_ebit15,tcp_seqNo_sbit16_ebit31}, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
   setcf        c2, [c5 & c2 & c7]
@@ -80,20 +80,23 @@ lb_initator_normlizaiton_return:
   tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_win_sz, k.tcp_window
 #if 0 /* RTT_NOT_CONSIDERED */
   phvwr        p.tcp_ackNo, r7
-  add          r1, r5, 1 // tcp_seq_num_hi + 1
   scwlt.e      c1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
-  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r1
+  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
 #else /* RTT_NOT_CONSIDERED */
   seq          c2, d.u.tcp_session_state_info_d.flow_rtt_seq_check_enabled, 1
   bal.c2       r3, f_tcp_session_initiator_rtt_calculate
   phvwr        p.tcp_ackNo, r7
-  add          r1, r5, 1 // tcp_seq_num_hi + 1
   scwlt.e      c1, d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
-  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r1
+  tblwr.c1     d.u.tcp_session_state_info_d.iflow_tcp_seq_num, r5
 #endif /* RTT_NOT_CONSIDERED */
 
 lb_tcp_session_state_initiator_non_best:
   add          r2, r0, r0  // zeroing the r2 register to save exceptions seen
+  // Since we don't want o change rest of the code, doing what we are doing earlier in
+  // good packet case back here.
+  // R5 OPTIM
+  sub          r5, r5, 1	
+ 
   smeqb        c1, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_FIN, 0
   add.!c1      r5, r5, 1
   bcf          ![c5 & c6], lb_tss_i_1
@@ -326,14 +329,12 @@ lb_tcp_session_state_responder:
 
 lb_responder_normalization_return:
   add          r5, r7, r2  // tcp_seq_num_hi
-  sub          r5, r5, 1
   add          r4, d.u.tcp_session_state_info_d.iflow_tcp_ack_num, r6 // iflow_tcp_ack_num + rcvr_win_sz
   seq          c1, k.tcp_flags, TCP_FLAG_ACK
   seq.!c1      c1, k.tcp_flags, (TCP_FLAG_ACK | TCP_FLAG_PSH)
-  seq          c2, d.{u.tcp_session_state_info_d.iflow_tcp_state,u.tcp_session_state_info_d.rflow_tcp_state}, (FLOW_STATE_ESTABLISHED << 4 | FLOW_STATE_ESTABLISHED)
   sne          c5, r2, r0 // tcp_data_len != 0
   sne          c6, r6, r0 // tcp_rcvr_win_sz != 0
-  scwle        c7, r5, r4 // tcp_seq_num_hi < iflow_tcp_ack_num + rcvr_win_sz
+  scwle        c7, r5, r4 // tcp_seq_num_hi <= iflow_tcp_ack_num + rcvr_win_sz (optimized)
   setcf        c1, [c1 & c2 & c6]
   seq          c2, r7, d.u.tcp_session_state_info_d.rflow_tcp_seq_num
   setcf        c2, [c5 & c2 & c7]
@@ -348,20 +349,23 @@ lb_responder_normalization_return:
   tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_win_sz, k.tcp_window
 #if 0 /* RTT_NOT_CONSIDERED */
   phvwr        p.tcp_seqNo, r7
-  add          r1, r5, 1 // tcp_seq_num_hi + 1
   scwlt.e      c1, d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
-  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r1
+  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
 #else /* RTT_NOT_CONSIDERED */
   seq          c2, d.u.tcp_session_state_info_d.flow_rtt_seq_check_enabled, 1
   bal.c2       r3, f_tcp_session_initiator_rtt_calculate
   phvwr        p.tcp_seqNo, r7
-  add          r1, r5, 1 // tcp_seq_num_hi + 1
   scwlt.e      c1, d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
-  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r1
+  tblwr.c1     d.u.tcp_session_state_info_d.rflow_tcp_seq_num, r5
 #endif /* RTT_NOT_CONSIDERED */
 
 lb_tcp_session_state_responder_non_best:
   add          r2, r0, r0  // zeroing the r2 register to save exceptions seen
+  // Since we don't want o change rest of the code, doing what we are doing earlier in
+  // good packet case back here.
+  // R5 OPTIM
+  sub          r5, r5, 1	
+ 
   smeqb        c1, k.tcp_flags, TCP_FLAG_SYN|TCP_FLAG_FIN, 0
   add.!c1      r5, r5, 1
   bcf          ![c5 & c6], lb_tss_r_1
@@ -670,12 +674,29 @@ lb_tss_r_exit:
 
 #endif /* 0 */
 
+// We come here only in case we have hit a bad packet. We will normalize the 
+// initator and responder values and go into a common code.
+// R4 - Copy the tcp_mss values, was not copied in good packet path
+// R6 - tcp_rcvr_win_sz - already copied
+// R2 - tcp_data_len - already copied
 lb_tcp_session_initator_normalization: 
+  add          r4, d.u.tcp_session_state_info_d.rflow_tcp_mss, r0
+  b            lb_tcp_data_len_gt_mss_size 
   seq          c2, k.l4_metadata_tcp_data_len_gt_mss_action, \
                       NORMALIZATION_ACTION_ALLOW
+  
+
+lb_tcp_session_responder_normalization: 
+  add          r4, d.u.tcp_session_state_info_d.iflow_tcp_mss, r0
+  b            lb_tcp_data_len_gt_mss_size 
+  seq          c2, k.l4_metadata_tcp_data_len_gt_mss_action, \
+                      NORMALIZATION_ACTION_ALLOW
+
+
+lb_tcp_data_len_gt_mss_size:
   b.c2         lb_tcp_data_len_gt_win_size
   seq          c2, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_ALLOW
-  slt          c3, d.u.tcp_session_state_info_d.rflow_tcp_mss, r2
+  slt          c3, r4, r2
   b.!c3        lb_tcp_data_len_gt_win_size
   seq          c3, k.l4_metadata_tcp_data_len_gt_mss_action, \
                       NORMALIZATION_ACTION_DROP
@@ -733,87 +754,15 @@ lb_tcp_unexpected_ts_option:
   phvwr        p.tcp_option_timestamp_ts, r1
 
 lb_tcp_ts_not_present:
-  b.c2         lb_initator_normlizaiton_return
+  seq          c1, k.flow_info_metadata_flow_role, TCP_FLOW_INITIATOR
+  bcf          [c1 & c2], lb_initator_normlizaiton_return
+  bcf          [!c1 & c2], lb_responder_normalization_return
   seq          c3, d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, TRUE
   seq          c4, k.tcp_option_timestamp_valid, FALSE
-  // TBD - jrcf
   setcf        c3, [c3 & c4]
-  b.!c3        lb_initator_normlizaiton_return
+  bcf          [c1 & !c3], lb_initator_normlizaiton_return
+  bcf          [!c1 & !c3], lb_responder_normalization_return
   nop
-  phvwr.c3.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
-  phvwr.c3     p.capri_intrinsic_drop, 1
+  phvwr.e      p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
+  phvwr        p.capri_intrinsic_drop, 1
 
-
-
-lb_tcp_session_responder_normalization: 
-  seq          c2, k.l4_metadata_tcp_data_len_gt_mss_action, \
-                      NORMALIZATION_ACTION_ALLOW
-  b.c2         lb_tcp_responder_data_len_gt_win_size
-  seq          c2, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_ALLOW
-  slt          c3, d.u.tcp_session_state_info_d.iflow_tcp_mss, r2
-  b.!c3        lb_tcp_responder_data_len_gt_win_size
-  seq          c3, k.l4_metadata_tcp_data_len_gt_mss_action, \
-                      NORMALIZATION_ACTION_DROP
-  phvwr.c3.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
-  phvwr.c3     p.capri_intrinsic_drop, 1
-#if 0
-  add          r2, d.u.tcp_session_state_info_d.iflow_tcp_mss, r0 // Updating tcp_data_len to mss
-  sub          r1, r2, d.u.tcp_session_state_info_d.iflow_tcp_mss // r1 = tcp_data_len - mss
-  sub          r5, k.control_metadata_packet_len, r1 // r5 = k.control_metadata_packet_len - r1
-  phvwr        p.control_metadata_packet_len, r5
-  sub          r5, k.ipv4_totalLen, r1   // r5 = k.ipv4_totalLen - r1
-  phvwr        p.ipv4_totalLen, r5
-  seq          c1, k.tunnel_metadata_tunnel_terminate, TRUE
-  sub          r5, k.inner_ipv4_totalLen, r1   // r5 = k.inner_ipv4_totalLen - r1
-  phvwr        p.inner_ipv4_totalLen, r5
-#endif /* 0 */ 
- 
-  // Edit option
-  // 1. Change the l4_metadata.tcp_data_len to mss
-  // 2. Edit the IP Total len based on whether tunnel is terminated or not
-  // 3. Update the packet_len which is used by deparser to reconstruct
-  //    the packet.
-
-lb_tcp_responder_data_len_gt_win_size:
-  b.c2         lb_tcp_responder_unexpected_ts_option
-  seq          c2, k.l4_metadata_tcp_unexpected_ts_option_action, \
-                      NORMALIZATION_ACTION_ALLOW
-  slt          c3, r6, r2
-  b.!c3        lb_tcp_responder_unexpected_ts_option
-  seq          c3, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_DROP
-  phvwr.c3.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
-  phvwr.c3     p.capri_intrinsic_drop, 1
-  // Edit option
-  // 1. Change the l4_metadata.tcp_data_len to rcvr_win_sz
-  // 2. Edit the IP Total len based on whether tunnel is terminated or not
-  // 3. Update the packet_len which is used by deparser to reconstruct
-  //    the packet.
-
-
-lb_tcp_responder_unexpected_ts_option:
-  b.c2         lb_tcp_responder_ts_not_present
-  seq          c2, k.l4_metadata_tcp_ts_not_present_drop, ACT_ALLOW
-  seq          c3, d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, FALSE
-  seq          c4, k.tcp_option_timestamp_valid, TRUE
-  bcf          ![c3 & c4], lb_tcp_responder_ts_not_present
-  seq          c3, k.l4_metadata_tcp_unexpected_ts_option_action, \
-                      NORMALIZATION_ACTION_DROP
-  phvwr.c3.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
-  phvwr.c3     p.capri_intrinsic_drop, 1
-  // Edit option
-  phvwr        p.tcp_option_timestamp_optType, 0x1
-  phvwr        p.tcp_option_timestamp_optLength, 0x1
-  addi         r1, r0, 0x01010101
-  phvwr        p.tcp_option_timestamp_prev_echo_ts, r1
-  phvwr        p.tcp_option_timestamp_ts, r1
-
-lb_tcp_responder_ts_not_present:
-  b.c2         lb_responder_normalization_return
-  seq          c3, d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, TRUE
-  seq          c4, k.tcp_option_timestamp_valid, FALSE
-  // TBD - jrcf
-  setcf        c3, [c3 & c4]
-  b.!c3        lb_responder_normalization_return
-  nop
-  phvwr.c3.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
-  phvwr.c3     p.capri_intrinsic_drop, 1

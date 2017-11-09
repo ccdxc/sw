@@ -1,4 +1,4 @@
-# TCP Tracker Step Specifications
+#r4 TCP Tracker Step Specifications
 steps:
     - step:
         id          : IFLOW_BASE
@@ -251,21 +251,21 @@ steps:
     - step:
         id          : IFLOW_URG_DATA
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         fields      :
             flags   : ack, urg
 
     - step:
         id          : IFLOW_URG_NO_ACK_DATA
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         fields      :
             flags   : urg
 
     - step:
         id          : IFLOW_DATA_DROP
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         permit      : False
         fields      :
             flags   : ack
@@ -288,21 +288,21 @@ steps:
     - step:
         id          : RFLOW_URG_DATA
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         fields      :
             flags   : ack, urg
 
     - step:
         id          : RFLOW_URG_NO_ACK_DATA
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         fields      :
             flags   : urg
 
     - step:
         id          : RFLOW_DATA_DROP
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         permit      : False
         fields      :
             flags   : ack
@@ -336,7 +336,7 @@ steps:
     - step:
         id          : IFLOW_DATA_OVERLAP_LEFT
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         fields      :
             seq     : callback://firewall/alu/Sub/val=50
             flags   : ack
@@ -344,7 +344,7 @@ steps:
     - step:
         id          : RFLOW_DATA_OVERLAP_LEFT
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         fields      :
             seq     : callback://firewall/alu/Sub/val=50
             flags   : ack
@@ -392,7 +392,7 @@ steps:
     - step:
         id          : IFLOW_DATA_OOO_IN_WINDOW
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         advance     : False
         fields      :
             seq     : callback://firewall/alu/Add/val=1000
@@ -401,7 +401,7 @@ steps:
     - step:
         id          : RFLOW_DATA_OOO_IN_WINDOW
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         advance     : False
         fields      :
             seq     : callback://firewall/alu/Add/val=1000
@@ -412,7 +412,7 @@ steps:
     - step:
         id          : IFLOW_DATA_OVERLAP_RIGHT
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         advance     : False
         permit      : False
         fields      :
@@ -422,7 +422,7 @@ steps:
     - step:
         id          : RFLOW_DATA_OVERLAP_RIGHT
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         advance     : False
         permit      : False
         fields      :
@@ -432,7 +432,7 @@ steps:
     - step:
         id          : IFLOW_DATA_FULL_OUT_OF_WINDOW
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         advance     : False
         permit      : False
         fields      :
@@ -442,7 +442,7 @@ steps:
     - step:
         id          : RFLOW_DATA_FULL_OUT_OF_WINDOW
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         advance     : False
         permit      : False
         fields      :
@@ -560,7 +560,7 @@ steps:
     - step:
         id          : IFLOW_DATA_WIN_ZERO
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         fields      :
             window  : 0
             flags   : ack
@@ -568,7 +568,7 @@ steps:
     - step:
         id          : RFLOW_DATA_WIN_ZERO
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         fields      :
             window  : 0
             flags   : ack
@@ -576,7 +576,7 @@ steps:
     - step:
         id          : IFLOW_DATA_SHRINK_WINDOW
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         fields      :
             window  : 100
             flags   : ack
@@ -584,7 +584,7 @@ steps:
     - step:
         id          : RFLOW_DATA_SHRINK_WINDOW
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         fields      :
             window  : 100
             flags   : ack
@@ -592,7 +592,7 @@ steps:
     - step:
         id          : IFLOW_DATA_RCV_NEXT_MINUS_1_DROP
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         permit      : false
         fields      :
             flags   : ack
@@ -601,7 +601,7 @@ steps:
     - step:
         id          : RFLOW_DATA_RCV_NEXT_MINUS_1_DROP
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         permit      : false
         fields      :
             flags   : ack
@@ -662,7 +662,7 @@ steps:
     - step:
         id          : IFLOW_DATA_RCV_NEXT_PLUS_1_DROP
         base        : ref://trackerstore/steps/id=IFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         permit      : False
         fields      :
             flags   : ack
@@ -671,7 +671,7 @@ steps:
     - step:
         id          : RFLOW_DATA_RCV_NEXT_PLUS_1_DROP
         base        : ref://trackerstore/steps/id=RFLOW_BASE
-        payloadsize : 1000
+        payloadsize : 500
         permit      : False
         fields      :
             flags   : ack

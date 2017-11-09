@@ -63,7 +63,7 @@ l4_profile:
                  u.l4_profile_d.tcp_flags_nonsyn_noack_drop}
 
   phvwr       p.l4_metadata_tcp_invalid_flags_drop, d.u.l4_profile_d.tcp_invalid_flags_drop
-  bal         r7, f_ip_normalization
+  bal         r7, f_ip_normalization_optimal
   phvwr       p.l4_metadata_tcp_split_handshake_detect_en, d.u.l4_profile_d.tcp_split_handshake_detect_en
   phvwr       p.l4_metadata_tcp_non_syn_first_pkt_drop, d.u.l4_profile_d.tcp_non_syn_first_pkt_drop
   phvwr.e     p.l4_metadata_tcp_split_handshake_drop, d.u.l4_profile_d.tcp_split_handshake_drop
@@ -73,14 +73,41 @@ l4_profile:
 // c7 will retain the tunnel_terminate state throughout this function
 // c6 - IPv6
 // c5 - IPv4
-f_ip_normalization:
+f_ip_normalization_optimal:
   seq         c1, d.u.l4_profile_d.ip_normalization_en, 1
-  jr.!c1      r7
+  // First do all IP normalizaiton checks here optimally before we 
+  // proceed to checking each knob.
+  // Good Packet start
   seq         c5, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   seq         c6, k.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
-  b.c6        lb_ip_norm_header_length
-  setcf       c1, [c5 | c6]
-  jr.!c1      r7
+
+  bcf         [c1 & c5], lb_ipv4_normalizaiton_optimal
+  seq         c2, k.vlan_tag_valid, 1
+  bcf         [c2 & c6], lb_ipv6_normalization_optimal
+  nop         // Add ipv6 specific instruction here
+  jr          r7
+
+lb_ipv4_normalizaiton_optimal:
+  smneb       c1, k.flow_lkp_metadata_ipv4_flags, (IP_FLAGS_RSVD_MASK | IP_FLAGS_DF_MASK), 0
+  slt.!c1     c1, 5, k.flow_lkp_metadata_ipv4_hlen
+  sne.!c1     c1, d.u.l4_profile_d.ip_normalize_ttl, 0
+  add.c2      r1, k.ipv4_totalLen, 18 // c2 has vlan_tag_valid to TRUE
+  add.!c2     r1, k.ipv4_totalLen, 14
+  sle.!c1     c1, r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                     capri_p4_intrinsic_packet_len_sbit6_ebit13}
+  jr.!c1      r7  // IPv4 Good Packet
+  b.c1        lb_ip_normalizaiton // bad packet
+  nop
+
+lb_ipv6_normalization_optimal:
+  jr          r7
+  nop
+  // Good packet end
+
+lb_ip_normalizaiton:
+  // Will fall through non-optimal logic for bad packet cases
+  // c5 - v4 packet, c6 - v6 packet
+  b.c6        lb_ip_norm_invalid_length
   seq         c7, k.tunnel_metadata_tunnel_terminate, 1
   seq         c4, d.u.l4_profile_d.ip_rsvd_flags_action, NORMALIZATION_ACTION_ALLOW
   b.c4        lb_ip_norm_df_bit
@@ -107,11 +134,11 @@ lb_ip_norm_df_bit:
   phvwrmi.c7  p.inner_ipv4_flags, 0, IP_FLAGS_DF_MASK
 
 lb_ip_norm_options:
-  b.c4        lb_ip_norm_header_length
+  b.c4        lb_ip_norm_invalid_length
   nop         // since the branch to above label comes from multiple places we will
               // have to compute the check for option is allow or not after we branch.
   slt         c1, 5, k.flow_lkp_metadata_ipv4_hlen
-  b.!c1       lb_ip_norm_header_length
+  b.!c1       lb_ip_norm_invalid_length
   seq         c1, d.u.l4_profile_d.ip_options_action, NORMALIZATION_ACTION_DROP
   phvwr.c1.e  p.control_metadata_drop_reason[DROP_IP_NORMALIZATION], 1
   phvwr.c1    p.capri_intrinsic_drop, 1
@@ -139,7 +166,7 @@ lb_ip_norm_df_bit_tunnel_terminate:
   // phvwr.c7  p.inner_ipv4_option_blob_valid, 0
 
 
-lb_ip_norm_header_length:
+lb_ip_norm_invalid_length:
   jr r7
   nop
 
