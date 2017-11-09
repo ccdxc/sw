@@ -1,14 +1,14 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://type=TENANT,label=DOS
         segment     : filter://any
-        endpoint    : filter://remote=True,label=None
+        endpoint    : filter://remote=True
         interface   : filter://any
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://type=TENANT,label=DOS
         segment     : filter://any
-        endpoint    : filter://remote=False,label=None
+        endpoint    : filter://remote=False,label=DOS_TO_WL
         interface   : filter://any
     flow            : filter://fwtype=L2
     maxflows        : 1
@@ -29,7 +29,7 @@ packets:
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                hlim    : 64
+                lim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport
                 #dport   : ref://testcase/config/flow/dport
@@ -41,7 +41,7 @@ packets:
             icmp:
                 code    : ref://testcase/config/flow/icmpcode
                 #type    : ref://testcase/config/flow/icmptype
-                type    : 128
+                type    : 8
                 id      : ref://testcase/config/flow/icmpid
             icmpv6:
                 code    : ref://testcase/config/flow/icmpcode
@@ -77,12 +77,16 @@ packets:
                 flags: syn
 
     - packet:
-        id          : PKT3 # Input Packet
+        id          : PKT3 # Input Packet2
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             qtag:
                 vlan    : callback://networking/packets/GetVlanId
+            ipv4:
+                src : 2.2.2.2
+            ipv6:
+                src : 3000::1
             tcp:
                 flags: syn
                 sport: 1000
@@ -124,7 +128,8 @@ buffers:
         fields:
             bind  : False
             size  : ref://testcase/packets/id=PKT3/size
-            data  : ref://testcase/packets/id=PKT3/rawbytes
+            #data  : ref://testcase/packets/id=PKT3/rawbytes
+            data  : None
 
 descriptors:
     - descriptor:

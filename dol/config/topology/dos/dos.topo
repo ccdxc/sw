@@ -57,12 +57,22 @@ tenants:
     -   spec    : ref://store/specs/id=TENANT_INFRA_FTE
         count   : 1
         lifns   : range/101/101
-    -   spec    : ref://store/specs/id=TENANT_VXLAN_FTE
+    -   spec    : ref://store/specs/id=TENANT_VXLAN_DOS_SRC_DST_V6
+        count   : 1
+        lifns   : range/153/160
+    -   spec    : ref://store/specs/id=TENANT_VXLAN_DOS_SRC_DST
         count   : 1
         lifns   : range/111/120
     -   spec    : ref://store/specs/id=TENANT_FTE
         count   : 1
         lifns   : range/121/140
+    -   spec    : ref://store/specs/id=TENANT_DOS_SRC_DST
+        count   : 1
+        lifns   : range/151/151
+    -   spec    : ref://store/specs/id=TENANT_DOS_SRC_DST_V6
+        count   : 1
+        lifns   : range/152/152
+
 
 cpu:
     - entry:

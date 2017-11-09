@@ -5,14 +5,42 @@ feature:
     package : test.dos
     module  : dos
     enable  : True
-    ignore  : True
+    ignore  : False
     spec    : dos_rx.testspec
 
 modules:
     - module:
+        name    : TO_WORKLOAD_TCP_V4
+        iterate:
+            - flow      : filter://type=IPV4,proto=TCP,label=FTE
+              segment   : filter://native=False
+    - module:
+        name    : TO_WORKLOAD_ANY_V4
+        iterate:
+            - flow      : filter://type=IPV4,proto=PROTO255,label=FTE
+              segment   : filter://native=False
+    - module:
         name    : TO_WORKLOAD_UDP_V4
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=FTE
+              segment   : filter://native=False
+    - module:
+        name    : TO_WORKLOAD_ICMP_V4
+        ignore  : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=ICMP,label=FTE
+              segment   : filter://native=False
+              dnu       : True
+
+    - module:
+        name    : TO_WORKLOAD_TCP_V6
+        iterate:
+            - flow      : filter://type=IPV6,proto=TCP,label=FTE
+              segment   : filter://native=False
+    - module:
+        name    : TO_WORKLOAD_ANY_V6
+        iterate:
+            - flow      : filter://type=IPV6,proto=PROTO255,label=FTE
               segment   : filter://native=False
     - module:
         name    : TO_WORKLOAD_UDP_V6
@@ -20,23 +48,9 @@ modules:
             - flow      : filter://type=IPV6,proto=UDP,label=FTE
               segment   : filter://native=False
     - module:
-        name    : TO_WORKLOAD_TCP_V4
-        iterate:
-            - flow      : filter://type=IPV4,proto=TCP,label=FTE
-              segment   : filter://native=False
-    - module:
-        name    : TO_WORKLOAD_TCP_V6
-        iterate:
-            - flow      : filter://type=IPV6,proto=TCP,label=FTE
-              segment   : filter://native=False
-    - module:
-        name    : TO_WORKLOAD_ICMP_V4
-        iterate:
-            - flow      : filter://type=IPV4,proto=ICMP,label=FTE
-              segment   : filter://native=False
-    - module:
         name    : TO_WORKLOAD_ICMP_V6
+        ignore  : True
         iterate:
             - flow      : filter://type=IPV6,proto=ICMPV6,label=FTE
               segment   : filter://native=False
-
+              dnu       : True

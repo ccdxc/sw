@@ -17,9 +17,10 @@ class SecurityGroupObject(base.ConfigObjectBase):
         self.Clone(Store.templates.Get('NETWORK'))
         return
 
-    def Init(self, tenant, local, eps):
+    def Init(self, tenant, local, eps, label):
         self.id = resmgr.SecurityGroupAllocator.get()
         self.GID("SG%04d" % self.id)
+        self.label = label
         self.tenant = tenant
         self.local = local
         self.eps = eps
@@ -28,10 +29,14 @@ class SecurityGroupObject(base.ConfigObjectBase):
         self.__update_eps()
         return
 
+    def GetLabel(self):
+        return self.label
+
     def __update_eps(self):
         for ep in self.eps:
             cfglogger.info("- Adding SecurityGroup:%s to Ep:%s" % (self.GID(), ep.GID()))
             ep.AddSecurityGroup(self)
+            ep.SetLabel(self.label)
         return
 
     def IsRemote(self):
@@ -91,9 +96,9 @@ class SecurityGroupObjectHelper:
         halapi.ConfigureSecurityGroups(self.sgs)
         return
 
-    def __create(self, tenant, local, eps):
+    def __create(self, tenant, local, eps, label):
         sg = SecurityGroupObject()
-        sg.Init(tenant, local, eps)
+        sg.Init(tenant, local, eps, label)
         Store.objects.Set(sg.GID(), sg)
         self.sgs.append(sg)
         if local is True:
@@ -107,13 +112,13 @@ class SecurityGroupObjectHelper:
                        (tenant.GID()))
         leps = tenant.GetLocalEps()
         reps = tenant.GetRemoteEps()
-        split = int(len(leps) / 2)
-
+        split = 2
+        
+        self.__create(tenant, False, reps, 'DOS_SRC_DST')
         if len(leps) == 0:
             return
-        self.__create(tenant, True, leps[:split])
-        self.__create(tenant, True, leps[split:])
-        self.__create(tenant, False, reps)
+        self.__create(tenant, True, leps[:split], 'DOS_TO_WL')
+        self.__create(tenant, True, leps[split:], 'DOS_FROM_WL')
         return
 
     def AddToSegments(self, tenant):

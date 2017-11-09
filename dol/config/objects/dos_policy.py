@@ -22,6 +22,7 @@ class DosPolicyObject(base.ConfigObjectBase):
         self.GID("DP%04d" % self.id)
         self.tenant = tenant
         self.spec = spec
+        self.label = spec.id
         
         self.__init_from_spec()
         self.Show()
@@ -105,7 +106,23 @@ class DosPolicyObject(base.ConfigObjectBase):
         self.__init_common(self.egress, espec)
         return
 
+    def __init_sgs(self):
+        self.sglabels = []
+        self.sgs = []
+        sglist = getattr(self.spec, 'sgs', None)
+        if sglist is None:
+            return
+        for sgl in sglist:
+            self.sglabels.append(sgl.label)
+
+        sgs = self.tenant.GetSecurityGroups()
+        for s in sgs:
+            if s.GetLabel() in self.sglabels:
+                self.sgs.append(s)
+        return
+
     def __init_from_spec(self):
+        self.__init_sgs()
         self.__init_ingress()
         self.__init_egress()
         return
@@ -151,7 +168,11 @@ class DosPolicyObject(base.ConfigObjectBase):
 
     def Show(self, detail = False):
         cfglogger.info("DosPolicy = %s(%d)" % (self.GID(), self.id))
-        cfglogger.info("- Tenant     = %s" % self.tenant.GID())
+        cfglogger.info("- Tenant  = %s" % self.tenant.GID())
+        cfglogger.info("- Label   = %s" % self.label)
+        cfglogger.info("- Security Groups:")
+        for s in self.sgs:
+            cfglogger.info("  - %s %s" % (s.GID(), s.GetLabel()))
         self.__show_dir_common(self.ingress, 'Ingress')
         self.__show_dir_common(self.egress, 'Egress')
         return
@@ -172,9 +193,10 @@ class DosPolicyObject(base.ConfigObjectBase):
     def __get_hal_ipproto(self, proto):
         if proto is None:
             return
-        hal_ipproto_str = 'IPPROTO_' + proto
-        hal_ipproto = haldefs.common.IPProtocol.Value(hal_ipproto_str)
-        return hal_ipproto
+        #hal_ipproto_str = 'IPPROTO_' + proto
+        #hal_ipproto = haldefs.common.IPProtocol.Value(hal_ipproto_str)
+        #return hal_ipproto
+        return defs.ipprotos.id(proto)
 
     def __phrs_svc_common(self, req_spec, obj):
         if obj.proto is not None:
@@ -195,9 +217,11 @@ class DosPolicyObject(base.ConfigObjectBase):
                                         obj.icmp_flood_limits)
         self.__phrs_flood_limits_common(req_spec.other_flood_limits,
                                         obj.other_flood_limits)
-        sgs = self.tenant.GetRemoteSecurityGroups()
         if obj.peersg is not None:
-            req_spec.peer_sg_handle = sgs[0].hal_handle
+            #sgs = self.tenant.GetRemoteSecurityGroups()
+            sgs = self.tenant.GetSecurityGroups()
+            if sgs:
+                req_spec.peer_sg_handle = sgs[0].hal_handle
         return
 
     def PrepareHALRequestSpec(self, req_spec):
@@ -206,8 +230,7 @@ class DosPolicyObject(base.ConfigObjectBase):
                                self.ingress)
         self.__phrs_dir_common(req_spec.egress_policy.dos_protection,
                                self.egress)
-        sgs = self.tenant.GetLocalSecurityGroups()
-        for s in sgs:
+        for s in self.sgs:
             req_spec.sg_handle.append(s.hal_handle)
         return
 

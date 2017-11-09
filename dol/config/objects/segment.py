@@ -30,6 +30,9 @@ class SegmentObject(base.ConfigObjectBase):
         self.id = resmgr.SegIdAllocator.get()
         self.GID("Seg%04d" % self.id)
 
+        self.label      = getattr(spec, 'label', None)
+        if self.label is not None:
+            self.label      = self.label.upper()
         self.spec       = spec
         self.tenant     = tenant
         self.type       = spec.type.upper()
@@ -39,6 +42,13 @@ class SegmentObject(base.ConfigObjectBase):
         self.fabencap   = getattr(spec, 'fabencap', 'vlan')
         self.fabencap   = self.fabencap.upper()
         self.floodlist  = None
+
+        self.nw_sgenable = False
+        nwspec = getattr(spec, 'networks', None)
+        if nwspec is not None:
+            self.nw_sgenable = getattr(nwspec, 'sgenable', False)
+
+        self.ep_sgenable = getattr(spec.endpoints, 'sgenable', False)
 
         self.pinnedif = None
         self.__pin_interface()
@@ -97,12 +107,17 @@ class SegmentObject(base.ConfigObjectBase):
         self.Show(detail = True)
         return
 
-    def AllocIpv4Address(self, backend):
+    def IsNetworkSgEnabled(self):
+        return self.nw_sgenable
+    def IsEndpointSgEnabled(self):
+        return self.ep_sgenable
+
+    def AllocIpv4Address(self, backend = False):
         if backend:
             assert(self.l4lb)
             return self.bend_ipv4_pool.get()
         return self.ipv4_pool.get()
-    def AllocIpv6Address(self, backend):
+    def AllocIpv6Address(self, backend = False):
         if backend:
             assert(self.l4lb)
             return self.bend_ipv6_pool.get()
@@ -255,6 +270,8 @@ class SegmentObject(base.ConfigObjectBase):
         return
 
     def AddSecurityGroup(self, sg):
+        if self.IsNetworkSgEnabled() == False:
+            return
         cfglogger.info("- Adding SecurityGroup:%s to Segment:%s" %\
                        (sg.GID(), self.GID()))
         self.obj_helper_nw.AddSecurityGroup(sg)

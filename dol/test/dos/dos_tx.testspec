@@ -1,14 +1,14 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://type=TENANT,label=DOS
         segment     : filter://any
-        endpoint    : filter://remote=False,label=None
+        endpoint    : filter://remote=False,label=DOS_FROM_WL
         interface   : filter://any
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
+        tenant      : filter://type=TENANT,label=DOS
         segment     : filter://any
-        endpoint    : filter://remote=True,label=None
+        endpoint    : filter://remote=True
         interface   : filter://any
     flow            : filter://fwtype=L2
     maxflows        : 1
@@ -74,6 +74,10 @@ packets:
                 type    : 3
             icmpv6:
                 type    : 1
+            ipv4:
+                dst     : 4.4.4.4
+            ipv6:
+                dst     : 3000::1
 
     - packet:
         id          : EXP_PKT # Base packet

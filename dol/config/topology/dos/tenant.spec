@@ -4,10 +4,15 @@ meta:
 
 type    : tenant
 overlay : vlan
+label   : DOS
 
 segments:
     - spec  : ref://store/specs/id=SEGMENT_FTE
       count : 1
+    #- spec  : ref://store/specs/id=SEGMENT_REMOTE_FTE
+    #  count : 1
+    #- spec  : ref://store/specs/id=SEGMENT_REMOTEV6_FTE
+    #  count : 1
     #- spec  : ref://store/specs/id=SEGMENT_NATIVE_FTE
     #  count : 1
 
@@ -26,10 +31,12 @@ sessions:
             - ref://store/specs/id=SESSION_UDP_FTE
             - ref://store/specs/id=SESSION_TCP_FTE
             - ref://store/specs/id=SESSION_ICMP_FTE
+            - ref://store/specs/id=SESSION_PR255_DOS
         ipv6:
             - ref://store/specs/id=SESSION_UDP_FTE
             - ref://store/specs/id=SESSION_TCP_FTE
             - ref://store/specs/id=SESSION_ICMPV6_FTE
+            - ref://store/specs/id=SESSION_PR255_DOS
         mac:
             - ref://store/specs/id=SESSION_MAC_FTE
 

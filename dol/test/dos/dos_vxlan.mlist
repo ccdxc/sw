@@ -1,62 +1,62 @@
 # Feature Test Modules List
 feature:
     id      : dos
-    sub     : remote
+    sub     : remote_vxlan
     package : test.dos
     module  : dos
     enable  : True
     ignore  : False
-    spec    : dos.testspec
+    spec    : dos_vxlan.testspec
 
 modules:
     - module:
-        name    : REMOTE_SRC_DST_ANY_V4
-        iterate :
-            - flow    : filter://type=IPV4,proto=PROTO255,label=FTE,direction=RFLOW
-              segment : filter://native=False,fabencap=VLAN
-              tenant  : filter://type=TENANT,label=DOS_SRC_DST
-    - module:
-        name    : REMOTE_SRC_DST_ANY_V6
-        iterate :
-            - flow    : filter://type=IPV6,proto=PROTO255,label=FTE,direction=RFLOW
-              segment : filter://native=False,fabencap=VLAN
-              tenant  : filter://type=TENANT,label=DOS_SRC_DST_V6
-    - module:
-        name    : REMOTE_SRC_DST_TCP_V4
+        name    : REMOTE_VXLAN_SRC_DST_TCP_V4
         iterate :
             - flow    : filter://type=IPV4,proto=TCP,label=FTE,direction=RFLOW
-              segment : filter://native=False,fabencap=VLAN
+              segment : filter://native=False,fabencap=VXLAN
               tenant  : filter://type=TENANT,label=DOS_SRC_DST
     - module:
-        name    : REMOTE_SRC_DST_TCP_V6
+        name    : REMOTE_VXLAN_SRC_DST_TCP_V6
         iterate :
             - flow    : filter://type=IPV6,proto=TCP,label=FTE,direction=RFLOW
-              segment : filter://native=False,fabencap=VLAN
+              segment : filter://native=False,fabencap=VXLAN
               tenant  : filter://type=TENANT,label=DOS_SRC_DST_V6
     - module:
-        name    : REMOTE_SRC_DST_ICMPV4
+        name    : REMOTE_VXLAN_SRC_DST_ANY_V4
+        iterate :
+            - flow    : filter://type=IPV4,proto=PROTO255,label=FTE,direction=RFLOW
+              segment : filter://native=False,fabencap=VXLAN
+              tenant  : filter://type=TENANT,label=DOS_SRC_DST
+    - module:
+        name    : REMOTE_VXLAN_SRC_DST_ANY_V6
+        iterate :
+            - flow    : filter://type=IPV6,proto=PROTO255,label=FTE,direction=RFLOW
+              segment : filter://native=False,fabencap=VXLAN
+              tenant  : filter://type=TENANT,label=DOS_SRC_DST_V6
+    - module:
+        name    : REMOTE_VXLAN_SRC_DST_ICMPV4
         ignore  : True
         iterate :
             - flow    : filter://type=IPV4,proto=ICMP,label=FTE,direction=RFLOW
-              segment : filter://native=False,fabencap=VLAN
+              segment : filter://native=False,fabencap=VXLAN
               tenant  : filter://type=TENANT,label=DOS_SRC_DST
     - module:
-        name    : REMOTE_SRC_DST_ICMPV6
+        name    : REMOTE_VXLAN_SRC_DST_ICMPV6
         ignore  : True
         iterate :
             - flow    : filter://type=IPV6,proto=ICMPV6,label=FTE,direction=RFLOW
-              segment : filter://native=False,fabencap=VLAN
+              segment : filter://native=False,fabencap=VXLAN
               tenant  : filter://type=TENANT,label=DOS_SRC_DST_V6
     - module:
-        name    : REMOTE_SRC_DST_UDP_V4
+        name    : REMOTE_VXLAN_SRC_DST_UDP_V4
         iterate :
             - flow    : filter://type=IPV4,proto=UDP,label=FTE,direction=RFLOW
-              segment : filter://native=False,fabencap=VLAN
+              segment : filter://native=False,fabencap=VXLAN
               tenant  : filter://type=TENANT,label=DOS_SRC_DST
     - module:
-        name    : REMOTE_SRC_DST_UDP_V6
+        name    : REMOTE_VXLAN_SRC_DST_UDP_V6
         iterate :
             - flow    : filter://type=IPV6,proto=UDP,label=FTE,direction=RFLOW
-              segment : filter://native=False,fabencap=VLAN
+              segment : filter://native=False,fabencap=VXLAN
               tenant  : filter://type=TENANT,label=DOS_SRC_DST_V6
 

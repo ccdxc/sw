@@ -1,10 +1,10 @@
 # Configuration Template.
 meta:
-    id: TENANT_VXLAN_DOS_SRC_DST
+    id: TENANT_VXLAN_DOS_SRC_DST_V6
 
 type    : tenant
-overlay : vxlan
-label   : DOS_SRC_DST
+overlay : vlan
+label   : DOS_SRC_DST_V6
 
 segments:
     - spec  : ref://store/specs/id=SEGMENT_VXLAN_DOS_SRC_DST

@@ -2,12 +2,12 @@
 selectors:
     src:
         tenant      : filter://any
-        segment     : filter://any
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
         interface   : filter://any
     dst:
         tenant      : filter://any
-        segment     : filter://any
+        segment     : filter://fabencap=VXLAN
         endpoint    : filter://remote=True
         interface   : filter://any
     flow        : filter://fwtype=L2
@@ -15,7 +15,7 @@ selectors:
 
 packets:
     - packet:
-        id          : BASE_PKT # Base packet
+        id          : BASE_PKT     # Input packet 1
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
         headers     :
@@ -24,8 +24,6 @@ packets:
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
-            qtag:
-                vlan    : callback://networking/packets/GetVlanId
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -40,6 +38,7 @@ packets:
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : 47275 
+                flags   : syn
             icmp:
                 code    : ref://testcase/config/flow/icmpcode
                 type    : 5
@@ -52,18 +51,46 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : IN_PKT     # Input packet
+        id          : INPUT     # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            outereth    :
+                src     : ref://testcase/config/src/endpoint/intf/rmacaddr
+                dst     : ref://testcase/config/src/endpoint/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/src/endpoint/intf/rtep
+                dst     : ref://testcase/config/src/endpoint/intf/ltep
+                tos     : 0
+                id      : 0
+            vxlan       :
+                vni     : ref://testcase/config/src/segment/vxlan_id
+            qtag:
+                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
+                prio    : 0
             tcp:
                 flags: syn
-
+        
     - packet:
         id          : IN_PKT2     # Input packet2
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
+            outereth    :
+                src     : ref://testcase/config/src/endpoint/intf/rmacaddr
+                dst     : ref://testcase/config/src/endpoint/intf/macaddr
+            outeripv4   :
+                src     : ref://testcase/config/src/endpoint/intf/rtep
+                dst     : ref://testcase/config/src/endpoint/intf/ltep
+                tos     : 0
+                id      : 0
+            vxlan       :
+                vni     : ref://testcase/config/src/segment/vxlan_id
+            qtag:
+                vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
+                prio    : 0
             ipv4:
                 dst : callback://dos/callbacks/GetIpv4DstAddress
             ipv6:
@@ -79,12 +106,27 @@ packets:
                 type    : 1
 
     - packet:
-        id          : EXP_PKT     # Expected packet
+        id          : EXPECTED   # Expected packet
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            outereth    :
+                src     : ref://testcase/config/dst/endpoint/intf/macaddr
+                dst     : ref://testcase/config/dst/endpoint/intf/rmacaddr
+            outeripv4   :
+                src     : ref://testcase/config/dst/endpoint/intf/ltep
+                dst     : ref://testcase/config/dst/endpoint/intf/rtep
+                tos     : 0
+                id      : 0
             qtag:
-                prio    : ref://testcase/config/flow/txqos/cos
+                vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
+                prio    : 0
+            outerudp:
+                chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/dst/segment/vxlan_id
             ipv4:
                 tos     : ref://testcase/config/flow/txqos/dscp
             ipv6:
@@ -97,18 +139,17 @@ session:
         trigger:
             packets:
                 - packet:
-                    object  : ref://testcase/packets/id=IN_PKT
+                    object  : ref://testcase/packets/id=INPUT
                     port    : ref://testcase/config/src/endpoint/intf/ports
         
         expect:
             delay   : callback://networking/packets/GetExpectDelay
             packets:
                 - packet:
-                    object  : callback://networking/packets/GetL2UcExpectedPacket
+                    object  : callback://networking/packets/GetL2UcExpectedPacket/expktid=EXPECTED
                     port    : ref://testcase/config/dst/endpoint/intf/ports
-        
                 - packet:
-                    object  : callback://networking/packets/GetCpuPacket/expktid=IN_PKT
+                    object  : callback://networking/packets/GetCpuPacket/expktid=BASE_PKT
                     port    : 128
 
     - step:

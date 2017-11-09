@@ -85,7 +85,8 @@ class EndpointObject(base.ConfigObjectBase):
         return
 
     def AddSecurityGroup(self, sg):
-        self.sgs.append(sg)
+        if self.segment.IsEndpointSgEnabled():
+            self.sgs.append(sg)
         return
 
     def SetRemote(self):

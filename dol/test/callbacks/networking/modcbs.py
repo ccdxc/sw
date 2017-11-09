@@ -42,6 +42,11 @@ def Setup(infra, module):
         if 'priotag' in iterelem.__dict__:
             module.logger.info("- priotag: %s" % iterelem.priotag)
 
+        if 'tenant' in iterelem.__dict__:
+            module.logger.info("- tenant: %s" % iterelem.tenant)
+            module.testspec.selectors.src.tenant.Extend(iterelem.tenant)
+            module.testspec.selectors.dst.tenant.Extend(iterelem.tenant)
+
     if module.args == None:
         return
 

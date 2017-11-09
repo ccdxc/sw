@@ -40,6 +40,7 @@ class TenantObject(base.ConfigObjectBase):
         self.type = self.spec.type.upper()
         self.qos_enable = getattr(topospec, 'qos_enable', False)
 
+        self.label = getattr(spec, 'label', None)
         self.overlay = spec.overlay.upper()
         self.security_profile = None
         self.bhseg = None

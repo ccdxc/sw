@@ -14,11 +14,13 @@ def TestCaseSetup(tc):
     return
 
 def TestCaseTeardown(tc):
+    iterelem = tc.module.iterator.Get()
     modcbs.TestCaseTeardown(tc)
-    if tc.config.src.endpoint.remote == False:
-        tc.config.src.endpoint.SetLabel('DO_NOT_USE')
-    if tc.config.dst.endpoint.remote == False:
-        tc.config.dst.endpoint.SetLabel('DO_NOT_USE')
+    if getattr(iterelem, 'dnu', False) is True:
+        if tc.config.src.endpoint.remote == False:
+            tc.config.src.endpoint.SetLabel('DO_NOT_USE')
+        if tc.config.dst.endpoint.remote == False:
+            tc.config.dst.endpoint.SetLabel('DO_NOT_USE')
     return
 
 def TestCaseStepSetup(tc, step):

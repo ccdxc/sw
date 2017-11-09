@@ -28,6 +28,7 @@ function DryRunSanity()
     ErrorCheckNExit $? "$topo topo"
 }
 
+DryRunSanity dos dos
 DryRunSanity fte fte
 DryRunSanity norm norm
 DryRunSanity eth eth

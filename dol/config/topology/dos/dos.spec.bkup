@@ -5,13 +5,12 @@ meta:
 entries:
     - entry:
         id: SERVICE_TCP
-        sgs     :
-            - label: DOS_TO_WL
+        sgs     : local
         ingress :
             peersg  : None
             service :
                 proto   : tcp
-                port    : const/47274
+                port    : const/47273
                 icmp_msg_type: None
             tcp_syn_flood_limits:
                 restrict_limits:
@@ -25,13 +24,12 @@ entries:
 
     - entry:
         id: SERVICE_UDP
-        sgs     :
-            - label: DOS_TO_WL
+        sgs     : local
         ingress :
             peersg  : None
             service :
                 proto   : udp
-                port    : const/47274
+                port    : const/47273
                 icmp_msg_type: None
             udp_flood_limits:
                 restrict_limits:
@@ -45,8 +43,7 @@ entries:
 
     - entry:
         id: SERVICE_ICMP
-        sgs     :
-            - label: DOS_TO_WL
+        sgs     : local
         ingress :
             peersg  : None
             service :
@@ -65,14 +62,13 @@ entries:
 
     - entry:
         id: SERVICE_ICMPV6
-        sgs     :
-            - label: DOS_TO_WL
+        sgs     : local
         ingress :
             peersg  : None
             service :
-                proto   : icmpv6
+                proto   : icmp
                 port    : None
-                icmp_msg_type: const/129
+                icmp_msg_type: const/128
             icmp_flood_limits:
                 restrict_limits:
                     pps     : const/10000
@@ -85,14 +81,9 @@ entries:
 
     - entry:
         id: SERVICE_ANY
-        sgs     :
-            - label: DOS_TO_WL
+        sgs     : local
         ingress :
             peersg  : None
-            service :
-                proto   : proto255
-                port    : None
-                icmp_msg_type: None
             other_flood_limits:
                 restrict_limits:
                     pps     : const/10000
@@ -105,8 +96,7 @@ entries:
 
     - entry:
         id: FROM_WORKLOAD
-        sgs     :
-            - label: DOS_FROM_WL
+        sgs     : local
         egress  :
             peersg  : None
             tcp_syn_flood_limits:
@@ -146,3 +136,44 @@ entries:
                     burst   : const/128
                     duration: const/10
 
+    - entry:
+        id: SRC_DST
+        sgs     : remote
+        ingress  :
+            peersg  : remote
+            tcp_syn_flood_limits:
+                restrict_limits:
+                    pps     : const/10000
+                    burst   : const/128
+                    duration: const/10
+                protect_limits:
+                    pps     : const/10000
+                    burst   : const/128
+                    duration: const/10
+            udp_flood_limits:
+                restrict_limits:
+                    pps     : const/10000
+                    burst   : const/128
+                    duration: const/10
+                protect_limits:
+                    pps     : const/10000
+                    burst   : const/128
+                    duration: const/10
+            icmp_flood_limits:
+                restrict_limits:
+                    pps     : const/10000
+                    burst   : const/128
+                    duration: const/10
+                protect_limits:
+                    pps     : const/10000
+                    burst   : const/128
+                    duration: const/10
+            other_flood_limits:
+                restrict_limits:
+                    pps     : const/10000
+                    burst   : const/128
+                    duration: const/10
+                protect_limits:
+                    pps     : const/10000
+                    burst   : const/128
+                    duration: const/10
