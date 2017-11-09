@@ -97,8 +97,8 @@ descriptors:
         fields:
             wrid:  ref://testcase/pvtdata/wrid
             qp: ref://testcase/config/rdmasession/lqp/id
-            op_type: 0 #OP_TYPE_READ
-            status : 0  #CQ_STATUS_SUCCESS
+            op_type: 0  # OP_TYPE_SEND
+            status : 0  # CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetReqRxCQExpColor
             smac: callback://rdma/rdma/GetZeroMAC
 

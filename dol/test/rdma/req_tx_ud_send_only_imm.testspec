@@ -100,8 +100,8 @@ descriptors:
         fields:
             wrid:  ref://testcase/pvtdata/wrid
             qp: ref://testcase/config/rdmasession/lqp/id
-            op_type: 2 #OP_TYPE_SEND_ONLY_IMM
-            status : 0  #CQ_STATUS_SUCCESS
+            op_type: 2  # OP_TYPE_SEND_ONLY_IMM
+            status : 0  # CQ_STATUS_SUCCESS
             color  : callback://rdma/rdma/GetReqRxCQExpColor
             smac: callback://rdma/rdma/GetZeroMAC
 

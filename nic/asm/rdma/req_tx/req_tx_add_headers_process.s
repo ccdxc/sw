@@ -28,8 +28,9 @@ req_tx_add_headers_process:
     crestore        [c7-c1], r0, 0xfe
 
     // get DMA cmd entry based on dma_cmd_index
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, 5)
-
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_HEADERS)
+    // To start with, num_addr is 1 (bth)
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, bth, bth, 1)
     seq            c2, k.args.first, 1
     add            r2, k.args.op_type, r0
     .brbegin
@@ -56,13 +57,12 @@ req_tx_add_headers_process:
             add            r2, RDMA_PKT_OPC_SEND_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
 
         .brcase RDMA_PKT_ONLY
-            // dma_cmd[5] - deth only if it is UD service
-            //DMA_PHV2PKT_SETUP_C(r6, deth, deth, c3)
-            //DMA_NEXT_CMD_I_BASE_GET_C(r6, 1, c3)
-        
             // check_credits = TRUE
             setcf          c5, [c0]
 
+            // Update num addrs to 2 if UD service (bth, deth)
+            seq            c3, d.service, RDMA_SERV_TYPE_UD
+            DMA_PHV2PKT_SETUP_CMDSIZE_C(r6, 2, c3)
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
         .csend
@@ -75,9 +75,11 @@ req_tx_add_headers_process:
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT
         .brcase RDMA_PKT_LAST
-            // dma_cmd[5] - IMMETH hdr
+            // dma_cmd[2] - IETH hdr
             phvwr          IETH_R_KEY, d.inv_key
-            DMA_PHV2PKT_SETUP(r6, ieth, ieth)
+            // num addrs 2 (bth, ieth)
+            DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, ieth, ieth, 1)
 
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_LAST_WITH_INV, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
@@ -91,8 +93,9 @@ req_tx_add_headers_process:
             // check_credits = TRUE
             setcf          c5, [c0]
 
-            // dma_cmd[5] - IMMEth hdr
-            DMA_PHV2PKT_SETUP(r6, ieth, ieth)
+            // dma_cmd[2] - IETH hdr; num addrs 2 (bth, ieth)
+            DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, ieth, ieth, 1)
             phvwr          IETH_R_KEY, k.args.op.send_wr.inv_key
 
             b              op_type_end
@@ -109,8 +112,9 @@ req_tx_add_headers_process:
             add            r2, RDMA_PKT_OPC_SEND_MIDDLE, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
         .brcase RDMA_PKT_LAST
-            // dma_cmd[5] - IMMEth hdr
-            DMA_PHV2PKT_SETUP(r6, immeth, immeth)
+            // dma_cmd[2] - IMMETH hdr, num addrs 2 (bth, immeth)
+            DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, immeth, immeth, 1)
             phvwr          IMMDT_DATA, d.imm_data
             b              op_type_end
             add            r2, RDMA_PKT_OPC_SEND_LAST_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
@@ -126,14 +130,13 @@ req_tx_add_headers_process:
             // check_credits = TRUE
             setcf          c5, [c0]
         
-            // dma_cmd[5] - deth for UD service
-            //DMA_PHV2PKT_SETUP_C(r6, deth, deth, c3)
-            // leave room for deth hdr - dma_cmd[5]  if UD service 
+            // dma_cmd[2] - IMMETH hdr, num addrs 2 (bth, immeth) or 3 for UD (bth, deth, immeth)
             seq            c3, d.service, RDMA_SERV_TYPE_UD
-            DMA_NEXT_CMD_I_BASE_GET_C(r6, 1, c3)
-        
-            // dma_cmd[5] - IMMEth hdr / For UD  dma_cmd[6]
-            DMA_PHV2PKT_SETUP(r6, immeth, immeth)
+            DMA_PHV2PKT_SETUP_CMDSIZE_C(r6, 2, !c3)
+            DMA_PHV2PKT_SETUP_CMDSIZE_C(r6, 3, c3)
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N_C(r6, immeth, immeth, 1, !c3)
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N_C(r6, immeth, immeth, 2, c3)
+
             phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data
 
             b              op_type_end
@@ -144,18 +147,20 @@ req_tx_add_headers_process:
         // inc_rrq_pindex = TRUE; adjust_psn = TRUE; inc_lsn = TRUE
         crestore       [c7, c6, c4], 0xd0, 0xd0
         
-        // dma_cmd[5] - add READ Req reth hdr
-        DMA_PHV2PKT_SETUP(r6, reth, reth) 
+        // dma_cmd[2] - RETH hdr, num addrs 2 (bth, reth)
+        DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, reth, reth, 1)
         DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
         
         // rrqwqe_p = rrq_base_addr + rrq_p_index * sizeof(rrqwqe_t)
         add            r3, d.rrq_base_addr, k.args.rrq_p_index, LOG_RRQ_WQE_SIZE
         
         phvwr          RRQWQE_PSN, d.tx_psn           
-        add            r1, d.msn, 1
+        add            r1, d.msn, 0
+        mincr          r1, 24, 1
         phvwr          RRQWQE_MSN, r1 
         
-        // dma_cmd[6]
+        // dma_cmd[3]
         DMA_NEXT_CMD_I_BASE_GET(r6, 1)
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
         
@@ -178,8 +183,9 @@ req_tx_add_headers_process:
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
         .brcase RDMA_PKT_FIRST
-            // dma_cmd[5] = add reth hdr
-            DMA_PHV2PKT_SETUP(r6, reth, reth)
+            // dma_cmd[2] - RETH hdr, num addrs 2 (bth, reth)
+            DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, reth, reth, 1)
 
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT
@@ -188,8 +194,9 @@ req_tx_add_headers_process:
             // check_credits = TRUE; inc_lsn = TRUE
             crestore       [c5, c4], 0x30, 0x30
 
-            // dma_cmd[5] - add reth hdr
-            DMA_PHV2PKT_SETUP(r6, reth, reth) 
+            // dma_cmd[2] - RETH hdr, num addrs 2 (bth, reth)
+            DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, reth, reth, 1)
 
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_ONLY, d.service, RDMA_OPC_SERV_TYPE_SHIFT //branch delay slot
@@ -208,15 +215,18 @@ req_tx_add_headers_process:
             // check_credits = TRUE
             setcf          c5, [c0]
 
-            // dma_cmd[5] - add IMMETH hdr
-            DMA_PHV2PKT_SETUP(r6, immeth, immeth)
+            // dma_cmd[2] - IMMETH hdr, num addrs 2 (bth, immeth)
+            DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, immeth, immeth, 1)
             phvwr          IMMDT_DATA, d.imm_data
 
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_LAST_WITH_IMM, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
         .brcase RDMA_PKT_FIRST
-            DMA_PHV2PKT_SETUP(r6, reth, reth)
+            // dma_cmd[2] - RETH hdr, num addrs 2 (bth, reth)
+            DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, reth, reth, 1)
             b              op_type_end
             add            r2, RDMA_PKT_OPC_RDMA_WRITE_FIRST, d.service, RDMA_OPC_SERV_TYPE_SHIFT // Branch Delay Slot
         
@@ -224,12 +234,12 @@ req_tx_add_headers_process:
             // check_credits = TRUE
             setcf          c5, [c0]
 
-            // dma_cmd[5] = add reth hdr
-            DMA_PHV2PKT_SETUP(r6, reth, reth)
+            // dma_cmd[2] : addr1 - RETH hdr, num addrs 3 (bth, reth, immeth)
+            DMA_PHV2PKT_SETUP_CMDSIZE(r6, 3)
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, reth, reth, 1)
 
-            // dma_cmd[6] - IMMEth hdr
-            DMA_NEXT_CMD_I_BASE_GET(r6, 1)
-            DMA_PHV2PKT_SETUP(r6, immeth, immeth)
+            // dma_cmd[2] : addr2 - IMMETH hdr
+            DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, immeth, immeth, 2)
             phvwr          IMMDT_DATA, k.args.op.send_wr.imm_data
 
             b              op_type_end
@@ -240,8 +250,9 @@ req_tx_add_headers_process:
         // inc_rrq_pindex = TRUE; inc_lsn = TRUE;
         crestore       [c7, c4], 0x90, 0x90
         
-        // add atomiceth hdr
-        DMA_PHV2PKT_SETUP(r6, atomiceth, atomiceth)
+        // dma_cmd[2] - ATOMICETH hdr, num addrs 2 (bth, atomiceth)
+        DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, atomiceth, atomiceth, 1)
         DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
         
         // rrqwqe_p = rrq_base_addr + rrq_p_index & sizeof(rrqwqe_t)
@@ -252,7 +263,7 @@ req_tx_add_headers_process:
         add            r1, d.msn, 1
         phvwr          RRQWQE_MSN, r1 
         
-        // dma_cmd[6]
+        // dma_cmd[3] 
         DMA_NEXT_CMD_I_BASE_GET(r6, 1)
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
         
@@ -263,8 +274,9 @@ req_tx_add_headers_process:
         // inc_rrq_pindex = TRUE; inc_lsn = TRUE;
         crestore       [c7, c4], 0x90, 0x90
 
-        // add atomiceth hdr
-        DMA_PHV2PKT_SETUP(r6, atomiceth, atomiceth)
+        // dma_cmd[2] - ATOMICETH hdr, num addrs 2 (bth, atomiceth)
+        DMA_PHV2PKT_SETUP_CMDSIZE(r6, 2)
+        DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, atomiceth, atomiceth, 1)
         DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
         
         // rrqwqe_p = rrq_base_addr + rrq_p_index & sizeof(rrqwqe_t)
@@ -275,7 +287,7 @@ req_tx_add_headers_process:
         add            r1, d.msn, 1
         phvwr          RRQWQE_MSN, r1 
         
-        // dma_cmd[6]
+        // dma_cmd[3] - rrqwqe
         DMA_NEXT_CMD_I_BASE_GET(r6, 1)
         DMA_HBM_PHV2MEM_SETUP(r6, rrqwqe, rrqwqe, r3)
         
@@ -331,8 +343,8 @@ inc_psn:
     mincr           r7, d.log_rrq_size, 1
     phvwr           p.rrq_p_index, r7.hx
 
-    // dma_cmd[7] - incr rrq_p_index for read/atomic
-    DMA_NEXT_CMD_I_BASE_GET(r6, 1)
+    // dma_cmd[4] - incr rrq_p_index for read/atomic
+    addi           r6, r6, DMA_SWITCH_TO_NEXT_FLIT_BITS
     DMA_HBM_PHV2MEM_SETUP(r6, rrq_p_index, rrq_p_index, r3)
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 

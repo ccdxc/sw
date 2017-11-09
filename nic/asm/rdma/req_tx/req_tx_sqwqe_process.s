@@ -97,7 +97,7 @@ set_sge_arg:
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, first, 1)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, num_valid_sges, d.base.num_sges)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, remaining_payload_bytes, k.args.remaining_payload_bytes)
-    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, dma_cmd_start_index, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
+    CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, dma_cmd_start_index, REQ_TX_DMA_CMD_PAYLOAD_BASE)
     CAPRI_SET_FIELD(r7, WQE_TO_SGE_T, op_type, d.base.op_type)
     CAPRI_SET_FIELD_RANGE(r7, WQE_TO_SGE_T, imm_data, inv_key, d.{send.imm_data...send.inv_key})
     // if UD copy ah_handle
@@ -215,7 +215,7 @@ atomic:
 
 inline_data:
     phvwr          p.inline_data, d.inline_data
-    DMA_CMD_STATIC_BASE_GET(r4, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START)
+    DMA_CMD_STATIC_BASE_GET(r4, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_PAYLOAD_BASE)
     DMA_PHV2PKT_START_LEN_SETUP(r4, r5, inline_data, d.send.length)
     DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r4)
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r4)  //BD Slot

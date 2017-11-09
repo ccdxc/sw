@@ -6,7 +6,11 @@
 #include "INGRESS_p.h"
 #include "common_phv.h"
 
-#define REQ_TX_RDMA_PAYLOAD_DMA_CMDS_START 8
+#define REQ_TX_DMA_CMD_PHV_INTRINSIC 0
+#define REQ_TX_DMA_CMD_HEADER_TEMPLATE 1
+#define REQ_TX_DMA_CMD_RDMA_HEADERS 2
+#define REQ_TX_DMA_CMD_PAYLOAD_BASE 3
+#define REQ_TX_DMA_CMD_RDMA_FEEDBACK 15
 #define REQ_TX_DMA_CMD_START_FLIT_ID 8
 #define TOTAL_DMA_CMD_BITS 16 * 16 * 8 // (cmds * dma_cmd_size * bits_per_byte) 
 
@@ -97,6 +101,11 @@ struct req_tx_phv_t {
 
     struct rdma_bth_t bth;  // should be from a byte boundary
 
+    // Packet PHV has its own phv_intrinsic space. In order to generate
+    // additional RDMA feedback PHV, phv_intrinsic has to be composed. 
+    // Since statge2stage space in packet phv is not needed after last
+    // stage, this space can be used to compose phv intrinsic for 
+    // DMA of RDMA feedback PHV
     union {
         struct {
             struct phv_intr_global_t p4_intr_global;
