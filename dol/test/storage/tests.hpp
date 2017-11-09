@@ -2,6 +2,7 @@
 #define _TESTS_HPP_
 
 #include <stdint.h>
+#include <functional>
 
 namespace tests {
 
@@ -89,34 +90,18 @@ int test_run_seq_e2e3();
 
 int test_run_seq_e2e4();
 
-int test_run_seq_aes128();
-
-int test_run_seq_aes128_mult_aols();
-
-int test_run_seq_prot_info();
-
-int test_run_seq_prot_info_mult_aols();
-
-int test_run_seq_aes128_n_prot_info();
-
-int test_run_seq_aes256();
-
-int test_run_seq_aes256_mult_aols();
-
-int test_run_seq_aes256_n_prot_info();
-
-int test_run_seq_aes128_ed();
-
-int test_run_seq_aes128_ed_n_t10();
-
-int test_run_seq_aes256_ed();
-
-int test_run_seq_aes256_ed_n_t10();
-
 int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, 
 			uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
 			uint64_t pdma_dst_addr, uint32_t pdma_data_size,
 			uint64_t roce_wqe_addr, uint32_t roce_wqe_size);
+
+struct TestEntry {
+  std::function<int(void)> test_fn;
+  const std::string test_name;
+  bool test_succeded;
+};
+
+int add_xts_tests(std::vector<TestEntry>& test_suite);
 
 }  // namespace tests
 

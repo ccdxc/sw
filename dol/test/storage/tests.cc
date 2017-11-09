@@ -18,6 +18,7 @@
 #include "dol/test/storage/xts.hpp"
 #include "nic/utils/host_mem/c_if.h"
 #include "nic/model_sim/include/lib_model_client.h"
+#include "dol/test/storage/tests.hpp"
 
 const static uint32_t  kDefaultBufSize       = 4096;
 const static uint32_t  kDefaultNlb           = 0;
@@ -37,10 +38,15 @@ const static uint64_t  kSeqDbDataMagic       = 0xAAAAAAAAAAAAAAAAULL;
 const static uint32_t  kAolSize              = 64;
 const static uint32_t  kXtsDescSize          = 128;
 
+namespace xts {
+extern std::vector<TestCtx> xts_tests;
+}
+
 namespace tests {
 
 void *read_buf;
 void *write_buf;
+void *read_buf2;
 
 uint64_t read_hbm_buf;
 uint64_t write_hbm_buf;
@@ -109,8 +115,9 @@ int test_setup() {
   // Allocate the read and write buffer
   // TODO: Have a fancy allocator with various pages
   read_buf = alloc_page_aligned_host_mem(kDefaultBufSize);
+  read_buf2 = alloc_page_aligned_host_mem(kDefaultBufSize);
   write_buf = alloc_page_aligned_host_mem(kDefaultBufSize);
-  if (read_buf == nullptr || write_buf == nullptr) return -1;
+  if (!read_buf|| !write_buf || !read_buf2) return -1;
   printf("read_buf address %p write_buf address %p\n", read_buf, write_buf);
 
   // Allocate the read buffer in HBM for the sequencer
@@ -1446,7 +1453,7 @@ int verify_prot_info(char *out_buf, uint32_t num_aols, xts::xts_aol_t **out_aol,
   assert(data_size >= sector_size);
   char* buf = (char *)malloc(data_size);
   uint32_t offset = 0;
-  //Copy data to be a contiguous block
+  // Copy data to be a contiguous block
   for(uint32_t i = 0; i < num_aols; i++) {
     memcpy(buf+offset, out_buf + out_aol[i]->o0, out_aol[i]->l0);
     offset += out_aol[i]->l0;
@@ -1494,13 +1501,14 @@ bool key_desc_inited = false;
 
 class XtsCtx {
 public:
-  void init_buffers() {
+  void init_buffers(bool chain = false) {
     if(!is_src_hbm_buf) {
-      srand(time(NULL));
-      for(uint32_t i = 0; i < kDefaultBufSize/sizeof(int); i++) {
-        ((int*)src_buf)[i] = rand();
+      if(!chain) {
+        srand(time(NULL));
+        for(uint32_t i = 0; i < kDefaultBufSize/sizeof(int); i++) {
+          ((int*)src_buf)[i] = rand();
+        }
       }
-      memset(src_buf, 0x3, kDefaultBufSize);
       src_buf_phy = (void*)host_mem_v2p(src_buf);
     } else {
       src_buf_phy = src_buf;
@@ -1512,7 +1520,52 @@ public:
       dst_buf_phy = dst_buf;
     }
   }
-  XtsCtx() { init_buffers(); }
+
+  std::string get_name(bool chain = false) {
+    std::string name;
+    if(!chain) {
+      if(key_size == AES128_KEY_SIZE)
+        name += "_K128";
+      else
+        name += "_K256";
+      if(is_src_hbm_buf)
+        name += "_hbm";
+      else
+        name += "_h";
+      if(is_dst_hbm_buf)
+        name += "_hbm";
+      else
+        name += "_h";
+      name += "_Secs" + std::to_string(num_sectors);
+      name += "_MDs" + std::to_string(num_aols);
+      name += "_AoLs" + std::to_string(num_sub_aols);
+    }
+    switch(op) {
+    case xts::AES_ENCR_ONLY:
+      name += "_E";
+    break;
+    case xts::T10_ONLY:
+      name += "_T10";
+    break;
+    case xts::AES_ENCR_N_T10:
+      name += "_E_T10";
+    break;
+    case xts::AES_DECR_ONLY:
+      name += "_D";
+    break;
+    case xts::AES_DECR_N_T10:
+      name += "_D_T10";
+    break;
+    default:
+      assert(0);
+    break;
+    }
+
+    return name;
+  }
+
+  //XtsCtx() { init_buffers(); }
+  XtsCtx() { }
   XtsCtx(void* src_buf, bool is_src_hbm_buf, void* dst_buf,  bool is_dst_hbm_buf) :
       src_buf(src_buf), is_src_hbm_buf(is_src_hbm_buf),
       dst_buf(dst_buf), is_dst_hbm_buf(is_dst_hbm_buf) {
@@ -1536,6 +1589,8 @@ public:
   uint32_t num_sub_aols = 1;
   uint16_t app_tag = 0xbeef;
   uint32_t start_sec_num = 5;
+  xts::xts_aol_t* in_aol[MAX_AOLS];
+  xts::xts_aol_t* out_aol[MAX_AOLS];
 };
 
 int XtsCtx::test_seq_xts() {
@@ -1619,12 +1674,10 @@ int XtsCtx::test_seq_xts() {
   xts::xts_desc_t* xts_desc_addr = (xts::xts_desc_t*)alloc_host_mem(sizeof(xts::xts_desc_t));
 
   assert(sizeof(xts::xts_aol_t) == kAolSize);
-  xts::xts_aol_t* in_aol[MAX_AOLS];
   memset(in_aol, 0x0, sizeof(in_aol));
-  xts::xts_aol_t* out_aol[MAX_AOLS];
   memset(out_aol, 0x0, sizeof(out_aol));
   for(uint32_t i = 0; i < num_aols; i++) {
-  // AOLs need to be aligned at 512-bit boundary. For now page aligning them
+    // AOLs need to be aligned at 512-bit boundary. For now page aligning them
     in_aol[i] = (xts::xts_aol_t*)alloc_page_aligned_host_mem(sizeof(xts::xts_aol_t));
     memset(in_aol[i], 0x0, sizeof(xts::xts_aol_t));
     out_aol[i] = (xts::xts_aol_t*)alloc_page_aligned_host_mem(sizeof(xts::xts_aol_t));
@@ -1752,13 +1805,8 @@ int XtsCtx::test_seq_xts() {
     }
   }
 
-
   // TODO: Free resources in failure cases above
   free_host_mem(xts_desc_addr);
-  for(uint32_t i = 0; i < num_aols; i++) {
-    free_host_mem(in_aol[i]);
-    free_host_mem(out_aol[i]);
-  }
   free_host_mem(status);
   free_host_mem(xts_db);
   free_host_mem(iv);
@@ -1766,196 +1814,93 @@ int XtsCtx::test_seq_xts() {
   return rv;
 }
 
-int test_run_seq_aes128() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::AES_ENCR_ONLY;
-  return xts_ctx.test_seq_xts();
-}
-
-int test_run_seq_aes128_mult_aols() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::AES_ENCR_ONLY;
-  xts_ctx.num_sub_aols = 2;
-  return xts_ctx.test_seq_xts();
-}
-
-// TODO: Currently does not work for larger size like 4K (4 sectors). Can bump it up once model issue is fixed
-int test_run_seq_aes128_full_page() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::AES_ENCR_ONLY;
-  xts_ctx.sector_size = kDefaultBufSize/SECTOR_SIZE;
-  return xts_ctx.test_seq_xts();
-}
-
-int test_run_seq_prot_info() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::T10_ONLY;
-  return xts_ctx.test_seq_xts();
-}
-
-int test_run_seq_prot_info_mult_aols() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::T10_ONLY;
-  xts_ctx.num_sub_aols = 2;
-  return xts_ctx.test_seq_xts();
-}
-
-// TODO: Currently only works for 1 sector. Can bump it up once model issue is fixed
-int test_run_seq_prot_info_mult_sectors() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::T10_ONLY;
-  xts_ctx.num_sectors = 4;
-  return xts_ctx.test_seq_xts();
-}
-
-int test_run_seq_aes128_n_prot_info() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::AES_ENCR_N_T10;
-  return xts_ctx.test_seq_xts();
-}
-
-// TODO: Currently only works for 1 sector. Can bump it up once model issue is fixed
-int test_run_seq_aes128_n_prot_info_mult_sectors() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::AES_ENCR_N_T10;
-  xts_ctx.num_sectors = 4;
-  return xts_ctx.test_seq_xts();
-}
-
-int test_run_seq_aes256() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::AES_ENCR_ONLY;
-  xts_ctx.key_size = AES256_KEY_SIZE;
-  return xts_ctx.test_seq_xts();
-}
-
-int test_run_seq_aes256_mult_aols() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::AES_ENCR_ONLY;
-  xts_ctx.key_size = AES256_KEY_SIZE;
-  xts_ctx.num_sub_aols = 2;
-  return xts_ctx.test_seq_xts();
-}
-
-// TODO: Currently does not work for larger size like 4K (4 sectors). Can bump it up once model issue is fixed
-int test_run_seq_aes256_full_page() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::AES_ENCR_ONLY;
-  xts_ctx.key_size = AES256_KEY_SIZE;
-  xts_ctx.num_sectors = kDefaultBufSize/SECTOR_SIZE;
-  return xts_ctx.test_seq_xts();
-}
-
-int test_run_seq_aes256_n_prot_info() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::AES_ENCR_N_T10;
-  xts_ctx.key_size = AES256_KEY_SIZE;
-  return xts_ctx.test_seq_xts();
-}
-
-// TODO: Currently only works for 1 sector. Can bump it up once model issue is fixed
-int test_run_seq_aes256_n_prot_info_mult_sectors() {
-  XtsCtx xts_ctx;
-  xts_ctx.op = xts::AES_ENCR_N_T10;
-  xts_ctx.key_size = AES256_KEY_SIZE;
-  xts_ctx.num_sectors = 4;
-  return xts_ctx.test_seq_xts();
-}
-
-int test_run_seq_aes128_ed() {
-  int rv;
-  XtsCtx xts_ctx(write_buf, false, (void*)write_hbm_buf, true);
-  xts_ctx.op = xts::AES_ENCR_ONLY;
-  rv = xts_ctx.test_seq_xts();
-  if(0 == rv) {
-    printf(" Encryption to hbm buf passed \n");
-    memset(read_buf, 0x0, kDefaultBufSize);
-    XtsCtx xts_ctx2((void*)write_hbm_buf, true, (void*)read_buf, false);
-    xts_ctx2.op = xts::AES_DECR_ONLY;
-    rv = xts_ctx2.test_seq_xts();
-    if(0 == rv) {
-      printf(" Decryption to host buf passed \n");
-      rv = memcmp(write_buf, read_buf, SECTOR_SIZE);
-      if(rv != 0) {
-        rv = -1;
-        printf(" Memcmp failed \n");
+class XtsChainCtx {
+public:
+  int operator()(void) {
+    int rv = xts_ctx1.test_seq_xts();
+    if(0 == rv && num_ops == 2) {
+      printf(" Executing second part of chain\n");
+      rv = xts_ctx2.test_seq_xts();
+      if(0 == rv) {
+        for(uint32_t i = 0; i < xts_ctx1.num_aols; i++) {
+          for(uint32_t j = 0; j < xts_ctx1.num_sub_aols; j++) {
+            uint32_t off, len;
+            if(0 == j) {
+              off = xts_ctx1.in_aol[i]->o0;
+              len = xts_ctx1.in_aol[i]->l0;
+            }
+            else if(1 == j) {
+              off = xts_ctx1.in_aol[i]->o1;
+              len = xts_ctx1.in_aol[i]->l1;
+            }
+            else if(2 == j) {
+              off = xts_ctx1.in_aol[i]->o2;
+              len = xts_ctx1.in_aol[i]->l2;
+            }
+            rv = memcmp((char*)xts_ctx1.src_buf+off, (char*)xts_ctx2.dst_buf+off, len);
+            if(0 != rv)
+              break;
+          }
+        }
+        if(0 != rv) {
+          rv = -1;
+          printf(" Memcmp failed \n");
+        }
       }
     }
-  }
-  return rv;
-}
-
-int test_run_seq_aes128_ed_n_t10() {
-  int rv;
-  XtsCtx xts_ctx(write_buf, false, (void*)write_hbm_buf, true);
-  xts_ctx.op = xts::AES_ENCR_N_T10;
-  rv = xts_ctx.test_seq_xts();
-  if(0 == rv) {
-    printf(" Encryption to hbm buf passed \n");
-    memset(read_buf, 0x0, kDefaultBufSize);
-    XtsCtx xts_ctx2((void*)write_hbm_buf, true, (void*)read_buf, false);
-    xts_ctx2.op = xts::AES_DECR_N_T10;
-    rv = xts_ctx2.test_seq_xts();
-    if(0 == rv) {
-      printf(" Decryption to host buf passed \n");
-      rv = memcmp(write_buf, read_buf, SECTOR_SIZE);
-      if(rv != 0) {
-        rv = -1;
-        printf(" Memcmp failed \n");
+    for(uint32_t i = 0; i < xts_ctx1.num_aols; i++) {
+      free_host_mem(xts_ctx1.in_aol[i]);
+      free_host_mem(xts_ctx1.out_aol[i]);
+      if(num_ops == 2) {
+        free_host_mem(xts_ctx2.in_aol[i]);
+        free_host_mem(xts_ctx2.out_aol[i]);
       }
     }
+    return rv;
   }
-  return rv;
-}
+  std::string get_name() {
+    std::string name = "XTS";
+    name += xts_ctx1.get_name();
+    if(num_ops == 2)
+      name += xts_ctx2.get_name(true);
+    return name;
+  }
+  XtsCtx xts_ctx1, xts_ctx2;
+  int num_ops = 1;
+};
 
-int test_run_seq_aes256_ed() {
-  int rv;
-  XtsCtx xts_ctx(write_buf, false, (void*)write_hbm_buf, true);
-  xts_ctx.op = xts::AES_ENCR_ONLY;
-  xts_ctx.key_size = AES256_KEY_SIZE;
-  rv = xts_ctx.test_seq_xts();
-  if(0 == rv) {
-    printf(" Encryption to hbm buf passed \n");
-    memset(read_buf, 0x0, kDefaultBufSize);
-    XtsCtx xts_ctx2((void*)write_hbm_buf, true, (void*)read_buf, false);
-    xts_ctx2.op = xts::AES_DECR_ONLY;
-    xts_ctx2.key_size = AES256_KEY_SIZE;
-    rv = xts_ctx2.test_seq_xts();
-    if(0 == rv) {
-      printf(" Decryption to host buf passed \n");
-      rv = memcmp(write_buf, read_buf, SECTOR_SIZE);
-      if(rv != 0) {
-        rv = -1;
-        printf(" Memcmp failed \n");
-      }
+int add_xts_tests(std::vector<TestEntry>& test_suite) {
+  for(auto const &ent : xts::xts_tests) {
+    XtsChainCtx *ctx = new XtsChainCtx;
+    ctx->xts_ctx1.op = ent.op1;
+    ctx->xts_ctx2.op = ent.op2;
+    ctx->xts_ctx1.key_size = ent.key_size;
+    ctx->xts_ctx2.key_size = ent.key_size;
+    ctx->xts_ctx1.num_sectors = ent.num_sectors;
+    ctx->xts_ctx1.num_aols = ent.num_mds;
+    ctx->xts_ctx1.num_sub_aols = ent.num_aols;
+    ctx->xts_ctx2.num_sectors = ent.num_sectors;
+    ctx->xts_ctx2.num_aols = ent.num_mds;
+    ctx->xts_ctx2.num_sub_aols = ent.num_aols;
+    if(ent.stage_in_hbm == true) {
+      ctx->xts_ctx1.dst_buf = (void*)write_hbm_buf;
+      ctx->xts_ctx1.is_dst_hbm_buf = true;
+      ctx->xts_ctx2.src_buf = (void*)write_hbm_buf;
+      ctx->xts_ctx2.is_src_hbm_buf = true;
+    } else {
+      ctx->xts_ctx2.src_buf = (void*)read_buf;
+      ctx->xts_ctx2.is_src_hbm_buf = false;
+      ctx->xts_ctx2.dst_buf = (void*)read_buf2;
+      ctx->xts_ctx2.is_dst_hbm_buf = false;
     }
+    if(xts::INVALID != ent.op2)
+      ctx->num_ops = 2;
+    ctx->xts_ctx1.init_buffers();
+    ctx->xts_ctx2.init_buffers(true);
+    test_suite.push_back({*ctx, ctx->get_name(), false});
   }
-  return rv;
-}
 
-int test_run_seq_aes256_ed_n_t10() {
-  int rv;
-  XtsCtx xts_ctx(write_buf, false, (void*)write_hbm_buf, true);
-  xts_ctx.op = xts::AES_ENCR_N_T10;
-  xts_ctx.key_size = AES256_KEY_SIZE;
-  rv = xts_ctx.test_seq_xts();
-  if(0 == rv) {
-    printf(" Encryption to hbm buf passed \n");
-    memset(read_buf, 0x0, kDefaultBufSize);
-    XtsCtx xts_ctx2((void*)write_hbm_buf, true, (void*)read_buf, false);
-    xts_ctx2.op = xts::AES_DECR_N_T10;
-    xts_ctx.key_size = AES256_KEY_SIZE;
-    rv = xts_ctx2.test_seq_xts();
-    if(0 == rv) {
-      printf(" Decryption to host buf passed \n");
-      rv = memcmp(write_buf, read_buf, SECTOR_SIZE);
-      if(rv != 0) {
-        rv = -1;
-        printf(" Memcmp failed \n");
-      }
-    }
-  }
-  return rv;
+  return 0;
 }
 
 int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, 

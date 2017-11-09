@@ -17,7 +17,7 @@ namespace xts {
 #define IV_SIZE 64
 #define MSG_DESC_ALIGN 512
 #define MAX_AOLS 2
-#define MAX_SUB_AOLS 2
+#define MAX_SUB_AOLS 4
 #define SECTOR_SIZE 256
 #define INTER_SUB_AOL_GAP SECTOR_SIZE
 #define STATUS_DEF_VALUE 0
@@ -77,17 +77,28 @@ typedef struct xts_prot_info_ {
   uint32_t sector_num;
 } __attribute__((packed)) xts_prot_info_t;
 
-uint32_t get_output_size(uint32_t ip_size, uint32_t sector_size) {
+inline uint32_t get_output_size(uint32_t ip_size, uint32_t sector_size) {
 	return (ip_size + (ip_size/sector_size) * PROT_INFO_SIZE);
 }
 
 typedef enum {
+  INVALID,
   AES_ENCR_ONLY,
   T10_ONLY,
   AES_ENCR_N_T10,
   AES_DECR_ONLY,
   AES_DECR_N_T10,
 }Op;
+
+typedef struct TestCtx_{
+  uint32_t key_size;
+  Op op1;
+  bool stage_in_hbm = false;
+  Op op2;
+  uint32_t num_sectors;
+  uint32_t num_mds;
+  uint32_t num_aols;
+}TestCtx;
 
 
 }  // namespace xts

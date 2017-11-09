@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <vector>
 
 #include "dol/test/storage/tests.hpp"
 #include "dol/test/storage/rdma.hpp"
@@ -17,11 +18,7 @@ void queues_shutdown();
 
 uint64_t hal_port = 50052;
 
-struct {
-  int (*test_fn)();
-  const std::string test_name;
-  bool test_succeded;
-} test_suite[] = {
+std::vector<tests::TestEntry> test_suite = {
   {&tests::test_run_nvme_pvm_admin_cmd, "NVME->PVM Admin Cmd", false},
   {&tests::test_run_nvme_pvm_read_cmd, "NVME->PVM Read Cmd", false},
   {&tests::test_run_nvme_pvm_write_cmd, "NVME->PVM Write Cmd", false},
@@ -63,20 +60,6 @@ struct {
   {&tests::test_run_seq_e2e2, "Seq Local Tgt E2E 2", false},
   {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
   {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
-  {&tests::test_run_seq_aes128, "Seq XTS AES128   ", false},
-  {&tests::test_run_seq_aes128_mult_aols, "Seq XTS AES128 M-AoLs", false},
-  {&tests::test_run_seq_prot_info, "Seq XTS T10 DIF   ", false},
-  {&tests::test_run_seq_prot_info_mult_aols, "Seq XTS T10 M-AoLs", false},
-  {&tests::test_run_seq_aes128_n_prot_info, "Seq XTS AES128 & T10", false},
-  {&tests::test_run_seq_aes256, "Seq XTS AES256   ", false},
-  {&tests::test_run_seq_aes256_mult_aols, "Seq XTS AES256 M-AoLs", false},
-  {&tests::test_run_seq_aes256_n_prot_info, "Seq XTS AES256 & T10", false},
-  {&tests::test_run_seq_aes128_ed, "Seq XTS AES128 ED ", false},
-  {&tests::test_run_seq_aes128_ed_n_t10, "Seq XTS AES128 ED & T10", false},
-  {&tests::test_run_seq_aes256_ed, "Seq XTS AES256 ED ", false},
-  {&tests::test_run_seq_aes256_ed_n_t10, "Seq XTS AES256 ED & T10", false},
-  // Always last entry
-  {0}
 };
 
 void sig_handler(int sig) {
@@ -116,7 +99,11 @@ int main(int argc, char**argv) {
   exit(0);
 #endif
 
-  for (int i = 0; test_suite[i].test_fn != nullptr; i++) {
+  // Add xts tests
+  tests::add_xts_tests(test_suite);
+
+  for (size_t i = 0; i < test_suite.size(); i++) {
+    printf(" Starting test %s \n", test_suite[i].test_name.c_str());
     if (test_suite[i].test_fn() < 0)
       test_suite[i].test_succeded = false;
     else
@@ -130,8 +117,8 @@ int main(int argc, char**argv) {
   printf("--------------------------------------------------------------\n");
   
   int rc = 0;
-  for (int i = 0; test_suite[i].test_fn != nullptr; i++) {
-    printf("%d\t\t", i+1);
+  for (size_t i = 0; i < test_suite.size(); i++) {
+    printf("%lu\t\t", i+1);
     printf("%s\t", test_suite[i].test_name.c_str());
     printf("%s\n", test_suite[i].test_succeded ? "Success" : "Failure");
     if (!test_suite[i].test_succeded) rc = 1;

@@ -121,6 +121,7 @@ cc_library(
         "queues.hpp",
         "nvme.hpp",
         "xts.hpp",
+        "xts_tests.cc",
     ],
     deps = [
         ":hal_if",
@@ -130,6 +131,9 @@ cc_library(
         ":utils",
         "//nic/utils/host_mem",
         "//nic/model_sim:model_client",
+    ],
+    copts = [
+        "-std=c++14",
     ]
 )
 
