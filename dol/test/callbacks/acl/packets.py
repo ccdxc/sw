@@ -3,6 +3,7 @@ import pdb
 from infra.api.objects import PacketHeader
 import infra.api.api as infra_api
 import test.callbacks.networking.packets as networking
+import infra.penscapy.penscapy as penscapy
 
 def __get_acl_from_tc(tc):
     return tc.pvtdata.acl
@@ -136,3 +137,17 @@ def GetOuterDIP(tc,packet):
         return acl.MatchTEPMissDIP()
 
     return tc.config.src.endpoint.intf.ltep
+
+def GetIpv4Options(tc, packet):
+    acl = __get_acl_from_tc(tc)
+
+    if acl.MatchOnIpOptions():
+        return penscapy.IPOption_Traceroute()
+    return None
+
+def GetIpv6ExtHeaders(tc, packet):
+    acl = __get_acl_from_tc(tc)
+
+    if acl.MatchOnIpOptions():
+        return penscapy.IPv6ExtHdrHopByHop()
+    return None

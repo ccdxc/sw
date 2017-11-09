@@ -63,8 +63,8 @@ modules:
               flow      : filter://type=IPV4
             - id        : ACL_FROM_UPLINK_IPV4_DIP_ACTION_DROP 
               flow      : filter://type=IPV4
-#            - id       : ACL_IPV4_OPTIONS_ACTION_DROP
-#              flow     : filter://type=IPV4
+            - id       : ACL_IPV4_OPTIONS_ACTION_DROP
+              flow     : filter://type=IPV4
 #           # IPV6 specific cases
             - id        : ACL_IPV6_SIP_DIP_ACTION_DROP
               flow      : filter://type=IPV6
@@ -78,8 +78,8 @@ modules:
               flow      : filter://type=IPV6
             - id        : ACL_FROM_UPLINK_IPV6_DIP_ACTION_DROP 
               flow      : filter://type=IPV6
-#            - id       : ACL_IPV6_OPTIONS_ACTION_DROP
-#              flow     : filter://type=IPV6
+            - id       : ACL_IPV6_OPTIONS_ACTION_DROP
+              flow     : filter://type=IPV6
 #           # IPV4/V6 L4 based cases
             - id        : ACL_TCP_SPORT_ACTION_DROP
               flow      : filter://type=IPV4,proto=TCP
@@ -138,6 +138,8 @@ modules:
         name    : ACL_IP_VXLAN_DROP
         spec    : acl_ip_vxlan_drop.testspec
         iterate:
+            - id        : ACL_IPV4_OPTIONS_ACTION_DROP
+              flow      : filter://type=IPV4
 #           # IPV4 segment,tenant etc cases
             - id        : ACL_TENANT_ACTION_DROP
             - id        : ACL_VNID_ACTION_DROP

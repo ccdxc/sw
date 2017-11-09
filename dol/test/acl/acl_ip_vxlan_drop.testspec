@@ -28,6 +28,7 @@ packets:
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
+                options : callback://acl/packets/GetIpv4Options
                 ttl     : 64
             ipv6:
                 src     : ref://testcase/config/flow/sip

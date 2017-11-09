@@ -141,15 +141,15 @@ entries:
         action:
             action: deny
 
-#    - entry:
-#        id: ACL_IPV4_OPTIONS_ACTION_DROP
-#        match:
-#            type: ip
-#            ip:
-#                type    : v4
-#                options : True    
-#        action:
-#            action: deny 
+    - entry:
+        id: ACL_IPV4_OPTIONS_ACTION_DROP
+        match:
+            type: ip
+            ip:
+                type    : v4
+                options : True    
+        action:
+            action: deny 
 
     - entry:
         id: ACL_IPV6_SIP_DIP_FLOW_MISS_ACTION_DROP
@@ -246,15 +246,15 @@ entries:
         action:
             action: deny
 
-#    - entry:
-#        id: ACL_IPV6_OPTIONS_ACTION_DROP
-#        match:
-#            type : ip
-#            ip:
-#                type            : v6
-#                options         : True    
-#        action:
-#            action: deny 
+    - entry:
+        id: ACL_IPV6_OPTIONS_ACTION_DROP
+        match:
+            type : ip
+            ip:
+                type            : v6
+                options         : True    
+        action:
+            action: deny 
 
     - entry:
         id: ACL_TCP_SPORT_ACTION_DROP

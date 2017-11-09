@@ -98,6 +98,7 @@ class AclObject(base.ConfigObjectBase):
             cfglogger.info("  - Dst   : %s/%d" %\
                             (self.fields.match.ip.dst_ip.get(),
                              self.fields.match.ip.dst_prefix_len.get()))
+            cfglogger.info("  - Options : ", self.fields.match.ip.options)
         if self.MatchOnL4Proto():
             cfglogger.info("  - Proto : %d" % self.fields.match.l4.proto.get())
         if self.MatchOnTCP():
@@ -279,6 +280,10 @@ class AclObject(base.ConfigObjectBase):
                     self.fields.match.l4.icmp.type.get()
             reqspec.match.ip_selector.icmp_selector.icmp_type_mask = \
                     self.fields.match.l4.icmp.type_mask.get()
+
+        if self.MatchOnIpOptions():
+            reqspec.match.internal_key.ip_options = True
+            reqspec.match.internal_mask.ip_options = True
     
         if self.MatchOnFlowMiss():
             reqspec.match.internal_key.flow_miss = True
@@ -369,6 +374,9 @@ class AclObject(base.ConfigObjectBase):
 
     def MatchOnIPv6(self):
         return self.MatchOnIP() and self.fields.match.ip.type == 'v6'
+
+    def MatchOnIpOptions(self):
+        return self.MatchOnIP() and self.fields.match.ip.options
 
     def MatchOnL4Proto(self):
         return self.MatchOnIP() and self.fields.match.l4.type == 'proto'
