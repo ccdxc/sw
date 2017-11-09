@@ -376,6 +376,7 @@ p4pd_get_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd)
         HAL_TRACE_ERR("Failed to get rx: read_tx2rx entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
+    tcpcb_pd->tcpcb->rx_ts = ntohll(data.u.read_tx2rx_d.rx_ts);
     tcpcb_pd->tcpcb->debug_dol = data.u.read_tx2rx_d.debug_dol;
     tcpcb_pd->tcpcb->snd_nxt = ntohl(data.u.read_tx2rx_d.snd_nxt);
     tcpcb_pd->tcpcb->l7_proxy_type = types::AppRedirType(data.u.read_tx2rx_d.l7_proxy_type);

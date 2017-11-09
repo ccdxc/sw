@@ -76,6 +76,7 @@ class TcpCbObject(base.ConfigObjectBase):
                        (self.id, \
                         haldefs.common.ApiStatus.Name(resp_spec.api_status)))
         if resp_spec.__class__.__name__ != 'TcpCbResponse':
+            self.rx_ts = resp_spec.spec.rx_ts
             self.rcv_nxt = resp_spec.spec.rcv_nxt
             self.snd_nxt = resp_spec.spec.snd_nxt
             self.snd_una = resp_spec.spec.snd_una

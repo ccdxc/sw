@@ -22,6 +22,7 @@ tcp_rx_read_shared_stage0_start:
     CAPRI_CLEAR_TABLE0_VALID
     CAPRI_SET_DEBUG_STAGE0_3(p.s6_s2s_debug_stage0_3_thread, CAPRI_MPU_STAGE_0, CAPRI_MPU_TABLE_0)
     /* Debug instruction */
+    tblwr           d.rx_ts, r4
     phvwr           p.common_phv_debug_dol, d.debug_dol
 
     add             r1, r0, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}

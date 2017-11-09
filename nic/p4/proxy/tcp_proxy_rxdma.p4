@@ -114,6 +114,7 @@ header_type read_tx2rxd_t {
         host                    : 4;
         total                   : 4;
         pid                     : 16; // 8 bytes
+        rx_ts                   : 64;
 
         serq_ring_size          : 16;
         l7_proxy_type           : 8;
@@ -664,7 +665,7 @@ metadata dma_cmd_phv2mem_t dma_cmd9;
 /*
  * Stage 0 table 0 action
  */
-action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
+action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
                   serq_ring_size, l7_proxy_type, debug_dol, quick_acks_decr_old, pad2, serq_cidx,
                   pad1, prr_out, snd_nxt, rcv_wup, packets_out, ecn_flags_tx, quick_acks_decr,
                   pad1_tx2rx) {
@@ -709,6 +710,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
     modify_field(read_tx2rxd.host, host);
     modify_field(read_tx2rxd.total, total);
     modify_field(read_tx2rxd.pid, pid);
+    modify_field(read_tx2rxd.rx_ts, rx_ts);
     modify_field(read_tx2rxd.serq_ring_size, serq_ring_size);
     modify_field(read_tx2rxd.l7_proxy_type, l7_proxy_type);
     modify_field(read_tx2rxd.debug_dol, debug_dol);

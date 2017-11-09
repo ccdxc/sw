@@ -251,6 +251,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponse *rsp)
     // fill config spec of this TCP CB 
     rsp->mutable_spec()->mutable_key_or_handle()->set_tcpcb_id(rtcpcb.cb_id);
     rsp->mutable_spec()->set_rcv_nxt(rtcpcb.rcv_nxt);
+    rsp->mutable_spec()->set_rx_ts(rtcpcb.rx_ts);
     rsp->mutable_spec()->set_snd_nxt(rtcpcb.snd_nxt);
     rsp->mutable_spec()->set_snd_una(rtcpcb.snd_una);
     rsp->mutable_spec()->set_rcv_tsval(rtcpcb.rcv_tsval);

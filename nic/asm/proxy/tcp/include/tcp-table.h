@@ -12,7 +12,7 @@
                     (TCP_TCB_RX2TX_SHARED_OFFSET + 42)  // skip intrinsic part etc
 #define TCP_TCB_TX2RX_SHARED_OFFSET     64
 #define TCP_TCB_TX2RX_SHARED_WRITE_OFFSET \
-                    (TCP_TCB_TX2RX_SHARED_OFFSET + 24)  // skip intrinsic part etc
+                    (TCP_TCB_TX2RX_SHARED_OFFSET + 32)  // skip intrinsic part etc
 #define TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET     128
 #define TCP_TCB_RX_OFFSET               192
 #define TCP_TCB_RTT_OFFSET              256

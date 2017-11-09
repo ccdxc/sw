@@ -92,7 +92,7 @@ def TestCaseVerify(tc):
         print("rcv_nxt not as expected")
         return False
     print("rcv_nxt as expected")
-
+    print("rx_ts %d" % tcb_cur.rx_ts);
     tlscbid = "TlsCb%04d" % id
     # 2. Verify pi/ci got update got updated
     tlscb = tc.pvtdata.db[tlscbid]
