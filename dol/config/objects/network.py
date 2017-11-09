@@ -65,10 +65,10 @@ class NetworkObject(base.ConfigObjectBase):
             return False
         fields = ["id", "rmac", "prefix", "prefix_len", "af", "hal_handle",
                   "security_groups"]
-        
+
         if not self.CompareObjectFields(other, fields, lgh):
             return False
-        
+
         return True
 
 
@@ -80,8 +80,8 @@ class NetworkObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.meta.tenant_id = self.segment.tenant.id
-        req_spec.tenant_key_handle.tenant_id = self.segment.tenant.id
+        req_spec.meta.vrf_id = self.segment.tenant.id
+        req_spec.vrf_key_handle.vrf_id = self.segment.tenant.id
         req_spec.rmac = self.rmac.getnum()
         if self.IsIpv4():
             req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET
@@ -102,7 +102,7 @@ class NetworkObject(base.ConfigObjectBase):
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
-        get_req_spec.meta.tenant_id = self.tenant.id
+        get_req_spec.meta.vrf_id = self.tenant.id
         if self.IsIpv4():
             get_req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET
             get_req_spec.key_or_handle.ip_prefix.address.v4_addr = self.prefix.getnum()
@@ -111,7 +111,7 @@ class NetworkObject(base.ConfigObjectBase):
             get_req_spec.key_or_handle.ip_prefix.address.ip_af = haldefs.common.IP_AF_INET6
             get_req_spec.key_or_handle.ip_prefix.address.v6_addr = self.prefix.getnum().to_bytes(16, 'big')
             get_req_spec.key_or_handle.ip_prefix.prefix_len = self.prefix_len
-        return        
+        return
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp_spec):
         if get_resp_spec.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):
@@ -120,7 +120,7 @@ class NetworkObject(base.ConfigObjectBase):
             cfglogger.error("- Network  %s = %s is missing." %\
                        (self.GID(), haldefs.common.ApiStatus.Name(get_resp_spec.api_status)))
             self.hal_handle = None
-            
+
     def Get(self):
         halapi.GetNetworks([self])
 

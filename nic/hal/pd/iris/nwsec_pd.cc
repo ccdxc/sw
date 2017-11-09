@@ -277,7 +277,7 @@ nwsec_pd_dealloc_res(pd_nwsec_profile_t *pd_nw)
 // PD L2seg Cleanup
 //  - Release all resources
 //  - Delink PI <-> PD
-//  - Free PD Tenant
+//  - Free PD Vrf
 //  Note:
 //      - Just free up whatever PD has. 
 //      - Dont use this inplace of delete. Delete may result in giving callbacks

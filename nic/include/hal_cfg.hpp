@@ -78,7 +78,7 @@ enum {
 //------------------------------------------------------------------------------
 typedef enum hal_obj_id_e {
     HAL_OBJ_ID_NONE,
-    HAL_OBJ_ID_TENANT,
+    HAL_OBJ_ID_VRF,
     HAL_OBJ_ID_SECURITY_PROFILE,
     HAL_OBJ_ID_DOS_POLICY,
     HAL_OBJ_ID_L2SEG,

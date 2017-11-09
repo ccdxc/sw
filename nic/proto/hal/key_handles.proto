@@ -25,11 +25,11 @@ message SecurityProfileKeyHandle {
 }
 
 
-// TenantKeyHandle is used to operate on a tenant either by its key or handle
-message TenantKeyHandle {
+// VrfKeyHandle is used to operate on a vrf either by its key or handle
+message VrfKeyHandle {
   oneof key_or_handle {
-    uint32     tenant_id     = 1  [(gogoproto.jsontag) = "unique"];   // unique tenant id allocated by app
-    fixed64    tenant_handle = 2 [(gogoproto.jsontag) = "handle"];    // tenant handle returned by HAL
+    uint32     vrf_id     = 1  [(gogoproto.jsontag) = "unique"];   // unique vrf id allocated by app
+    fixed64    vrf_handle = 2 [(gogoproto.jsontag) = "handle"];    // vrf handle returned by HAL
   }
 }
 

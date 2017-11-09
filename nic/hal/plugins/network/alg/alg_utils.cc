@@ -82,7 +82,7 @@ insert_rpc_entry(fte::ctx_t& ctx, fte::RPCMap *map)
     }
 
     memset(&entry->key, 0, sizeof(hal::flow_key_t));
-    entry->key.tenant_id = ctx.key().tenant_id;
+    entry->key.vrf_id = ctx.key().vrf_id;
     entry->key.dip = ctx.key().dip;
     entry->key.dport = map->dport;
     entry->key.proto = (types::IPProtocol)map->prot;

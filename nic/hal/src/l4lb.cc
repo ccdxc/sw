@@ -2,7 +2,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/utils.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 // #include <l4lb_svc.hpp>
 #include "nic/hal/src/l4lb.hpp"
 #include "nic/include/eth.h"
@@ -64,8 +64,8 @@ static hal_ret_t
 validate_l4lbservice_create (l4lb::L4LbServiceSpec& spec, l4lb::L4LbServiceResponse *rsp)
 {
     if (!spec.has_meta() ||
-        spec.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -95,14 +95,14 @@ l4lbservice_create(l4lb::L4LbServiceSpec& spec,
                    l4lb::L4LbServiceResponse *rsp) 
 {
     hal_ret_t               ret;
-    tenant_id_t             tid;
-    tenant_t                *tenant = NULL;
+    vrf_id_t             tid;
+    vrf_t                *vrf = NULL;
     l4lb_service_entry_t    *l4lb = NULL;
     pd::pd_l4lb_args_t      pd_l4lb_args = {0};
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("PI-L4LBService:{}: L4LB Create for tenant: {}", __FUNCTION__, 
-                    spec.meta().tenant_id());
+    HAL_TRACE_DEBUG("PI-L4LBService:{}: L4LB Create for vrf: {}", __FUNCTION__, 
+                    spec.meta().vrf_id());
 
 
     ret = validate_l4lbservice_create(spec, rsp);
@@ -110,12 +110,12 @@ l4lbservice_create(l4lb::L4LbServiceSpec& spec,
         goto end;
     }
 
-    // fetch the tenant information
-    tid = spec.meta().tenant_id();
-    tenant = tenant_lookup_by_id(tid);
-    if (tenant == NULL) {
+    // fetch the vrf information
+    tid = spec.meta().vrf_id();
+    vrf = vrf_lookup_by_id(tid);
+    if (vrf == NULL) {
         ret = HAL_RET_INVALID_ARG;
-        rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
+        rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
         goto end;
     }
 
@@ -134,7 +134,7 @@ l4lbservice_create(l4lb::L4LbServiceSpec& spec,
     l4lb->l4lb_key.service_port = 
         spec.key_or_handle().service_key().service_port();
 
-    l4lb->l4lb_key.tenant_id = tid;
+    l4lb->l4lb_key.vrf_id = tid;
     MAC_UINT64_TO_ADDR(l4lb->serv_mac_addr, spec.service_mac());
     l4lb->proxy_arp_en = spec.proxy_arp_enable();
     l4lb->sess_aff = spec.session_affinity();
@@ -191,7 +191,7 @@ l4lb_to_str(l4lb_service_entry_t *l4lb)
     memset(buf, 0, 50);
     if (l4lb) {
         snprintf(buf, 100, "ten_id:%d, serv_ip:%s, proto:%d, serv_port:%d, serv_mac:%s",
-                l4lb->l4lb_key.tenant_id, ipaddr2str(&l4lb->l4lb_key.service_ip),
+                l4lb->l4lb_key.vrf_id, ipaddr2str(&l4lb->l4lb_key.service_ip),
                 l4lb->l4lb_key.proto, l4lb->l4lb_key.service_port, 
                 ether_ntoa((struct ether_addr*)(l4lb->serv_mac_addr)));
     }

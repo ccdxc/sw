@@ -1,7 +1,7 @@
 #ifndef __IF_UTILS_HPP__
 #define __IF_UTILS_HPP__
 
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/session.hpp"
 #include "nic/hal/src/interface.hpp"
@@ -17,15 +17,15 @@ hal_ret_t pltfm_get_port_from_front_port_num(uint32_t fp_num,
                                              uint32_t *port_num);
 
 // APIs
-hal_ret_t tenant_add_l2seg (tenant_t *tenant, l2seg_t *l2seg);
-hal_ret_t tenant_del_l2seg (tenant_t *tenant, l2seg_t *l2seg);
+hal_ret_t vrf_add_l2seg (vrf_t *vrf, l2seg_t *l2seg);
+hal_ret_t vrf_del_l2seg (vrf_t *vrf, l2seg_t *l2seg);
 
 hal_ret_t l2seg_handle_nwsec_update (l2seg_t *l2seg, 
                                      nwsec_profile_t *nwsec_prof);
 
 hal_ret_t if_handle_nwsec_update (l2seg_t *l2seg, if_t *hal_if, 
                                   nwsec_profile_t *nwsec_prof);
-hal_ret_t tenant_handle_nwsec_update (tenant_t *tenant, 
+hal_ret_t vrf_handle_nwsec_update (vrf_t *vrf, 
                                       nwsec_profile_t *nwsec_prof);
 
 // Adding IFs to lif 
@@ -40,11 +40,11 @@ hal_ret_t l2seg_del_if (l2seg_t *l2seg, if_t *hal_if);
 hal_ret_t if_add_l2seg (if_t *hal_if, l2seg_t *l2seg);
 hal_ret_t if_del_l2seg (if_t *hal_if, l2seg_t *l2seg);
 
-// Adding tenants to nwsec profile
-hal_ret_t nwsec_prof_add_tenant (nwsec_profile_t *nwsec, 
-                                 tenant_t *tenant);
-hal_ret_t nwsec_prof_del_tenant (nwsec_profile_t *nwsec, 
-                                 tenant_t *tenant);
+// Adding vrfs to nwsec profile
+hal_ret_t nwsec_prof_add_vrf (nwsec_profile_t *nwsec, 
+                                 vrf_t *vrf);
+hal_ret_t nwsec_prof_del_vrf (nwsec_profile_t *nwsec, 
+                                 vrf_t *vrf);
 
 // Adding sessions & l2segs to network
 hal_ret_t network_add_l2seg (network_t *nw, l2seg_t *l2seg);

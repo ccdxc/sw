@@ -1,5 +1,5 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "nic/hal/pd/iris/tenant_pd.hpp"
+#include "nic/hal/pd/iris/vrf_pd.hpp"
 #include "nic/hal/pd/iris/nwsec_pd.hpp"
 #include "nic/hal/pd/iris/l2seg_pd.hpp"
 #include "nic/hal/pd/iris/lif_pd.hpp"
@@ -52,17 +52,17 @@ hal_state_pd::init(void)
 {
     uint32_t p, n;
 
-    // initialize tenant related data structures
-    tenant_slab_ = slab::factory("Tenant PD", HAL_SLAB_TENANT_PD,
-                                 sizeof(hal::pd::pd_tenant_t), 8,
+    // initialize vrf related data structures
+    vrf_slab_ = slab::factory("Vrf PD", HAL_SLAB_VRF_PD,
+                                 sizeof(hal::pd::pd_vrf_t), 8,
                                  false, true, true, true);
-    HAL_ASSERT_RETURN((tenant_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((vrf_slab_ != NULL), false);
 
-    tenant_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_VRFS,
+    vrf_hwid_idxr_ = new hal::utils::indexer(HAL_MAX_HW_VRFS,
                                                 true, /* thread safe */ 
                                                 true); /*skip zero */
-    HAL_ASSERT_RETURN((tenant_hwid_idxr_ != NULL), false);
-    // tenant_hwid_idxr_->alloc_withid(0);
+    HAL_ASSERT_RETURN((vrf_hwid_idxr_ != NULL), false);
+    // vrf_hwid_idxr_->alloc_withid(0);
 
     // initialize security related data structures
     nwsec_profile_hwid_idxr_ =
@@ -412,8 +412,8 @@ hal_state_pd::hal_state_pd()
 {
     uint32_t p, n;
 
-    tenant_slab_ = NULL;
-    tenant_hwid_idxr_ = NULL;
+    vrf_slab_ = NULL;
+    vrf_hwid_idxr_ = NULL;
 
     nwsec_profile_hwid_idxr_ = NULL;
 
@@ -508,8 +508,8 @@ hal_state_pd::~hal_state_pd()
     uint32_t    tid;
     uint32_t    p, n;
 
-    tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
-    tenant_hwid_idxr_ ? delete tenant_hwid_idxr_ : HAL_NOP;
+    vrf_slab_ ? delete vrf_slab_ : HAL_NOP;
+    vrf_hwid_idxr_ ? delete vrf_hwid_idxr_ : HAL_NOP;
 
     nwsec_profile_hwid_idxr_ ? delete nwsec_profile_hwid_idxr_ : HAL_NOP;
 
@@ -675,7 +675,7 @@ hal_state_pd::factory(void)
 slab *
 hal_state_pd::get_slab(hal_slab_t slab_id) 
 {
-    GET_SLAB(tenant_slab_);
+    GET_SLAB(vrf_slab_);
     GET_SLAB(l2seg_slab_);
     GET_SLAB(lif_pd_slab_);
     GET_SLAB(uplinkif_pd_slab_);
@@ -1200,8 +1200,8 @@ hal_ret_t
 free_to_slab (hal_slab_t slab_id, void *elem)
 {
     switch (slab_id) {
-    case HAL_SLAB_TENANT_PD:
-        g_hal_state_pd->tenant_slab()->free_(elem);
+    case HAL_SLAB_VRF_PD:
+        g_hal_state_pd->vrf_slab()->free_(elem);
         break;
 
     case HAL_SLAB_L2SEG_PD:

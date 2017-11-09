@@ -24,7 +24,7 @@ message NetworkSpec {
   types.ObjectMeta                meta              = 1;    // common object meta
   // key_or_handle is the network being create or updated
   key_handles.NetworkKeyHandle    key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  key_handles.TenantKeyHandle     tenant_key_handle = 3 [(gogoproto.jsontag) = "ref"];
+  key_handles.VrfKeyHandle        vrf_key_handle    = 3 [(gogoproto.jsontag) = "ref"];
   uint64                          rmac              = 4;    // router mac for this network
   fixed64                         gateway_ep_handle = 5 [(gogoproto.jsontag) = "handle"];    // gateway ep handle
   repeated uint64                 sg_handle         = 6;    // list of security group handles
@@ -57,7 +57,7 @@ message NetworkDeleteRequest {
   types.ObjectMeta              meta               = 1;    // object meta
   // key_or_handle is the network being deleted
   key_handles.NetworkKeyHandle  key_or_handle      = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  key_handles.TenantKeyHandle   tenant_key_handle  = 3 [(gogoproto.jsontag) = "ref"];
+  key_handles.VrfKeyHandle      vrf_key_handle     = 3 [(gogoproto.jsontag) = "ref"];
 }
 
 // NetworkDeleteResponse is response to NetworkDeleteRequest
@@ -85,7 +85,7 @@ message NetworkGetRequest {
   types.ObjectMeta                meta              = 1;    // object meta
   // key_or_handle is the key or handle of the network object being retrieved
   key_handles.NetworkKeyHandle    key_or_handle     = 2 [(gogoproto.moretags) = "venice:\"key\""];
-  key_handles.TenantKeyHandle     tenant_key_handle = 3 [(gogoproto.jsontag) = "ref"];
+  key_handles.VrfKeyHandle        vrf_key_handle    = 3 [(gogoproto.jsontag) = "ref"];
 }
 
 // NetworkGetRequestMsg is batched GET request for networks

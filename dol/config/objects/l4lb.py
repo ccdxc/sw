@@ -50,7 +50,7 @@ class L4LbBackendObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.meta.tenant_id = self.service.tenant.id
+        req_spec.meta.vrf_id = self.service.tenant.id
         req_spec.backend_key_or_handle.backend_key.backend_ip_address.ip_af = haldefs.common.IP_AF_INET
         req_spec.backend_key_or_handle.backend_key.backend_ip_address.v4_addr = self.GetIpAddress.getnum()
         req_spec.backend_key_or_handle.backend_key.backend_port = self.port.get()
@@ -206,7 +206,7 @@ class L4LbServiceObject(base.ConfigObjectBase):
         else:
             cfglogger.info("Configuring IPv4 L4LbService: %s" % self.GID())
 
-        req_spec.meta.tenant_id = self.tenant.id
+        req_spec.meta.vrf_id = self.tenant.id
 
         hal_ipproto_str = 'IPPROTO_' + self.proto
         hal_ipproto = haldefs.common.IPProtocol.Value(hal_ipproto_str)

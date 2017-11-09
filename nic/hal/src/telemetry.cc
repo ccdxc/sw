@@ -124,10 +124,10 @@ mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp)
             ep_t *ep;
             switch (dst_addr.af) {
                 case IP_AF_IPV4:
-                    ep = find_ep_by_v4_key(spec->meta().tenant_id(), dst_addr.addr.v4_addr);
+                    ep = find_ep_by_v4_key(spec->meta().vrf_id(), dst_addr.addr.v4_addr);
                     break;
                 case IP_AF_IPV6:
-                    ep = find_ep_by_v6_key(spec->meta().tenant_id(), &dst_addr);
+                    ep = find_ep_by_v6_key(spec->meta().vrf_id(), &dst_addr);
                     break;
                 default:
                     HAL_TRACE_ERR("PI-MirrorSession:{}: unknown ERSPAN dest AF{}",
@@ -135,8 +135,8 @@ mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp)
                     return HAL_RET_INVALID_ARG;
             }
             if (ep == NULL) {
-                HAL_TRACE_ERR("PI-MirrorSession:{}: unknown ERSPAN dest {}, tenantId {}",
-                        __FUNCTION__, ipaddr2str(&dst_addr), spec->meta().tenant_id());
+                HAL_TRACE_ERR("PI-MirrorSession:{}: unknown ERSPAN dest {}, vrfId {}",
+                        __FUNCTION__, ipaddr2str(&dst_addr), spec->meta().vrf_id());
                 return HAL_RET_INVALID_ARG;
             }
             auto dest_if = find_if_by_handle(ep->if_handle);

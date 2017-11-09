@@ -197,7 +197,7 @@ pd_if_make_clone (if_t *hal_if, if_t *clone)
 }
 //-----------------------------------------------------------------------------
 // Nwsec profile update 
-//      - Triggered from tenant update
+//      - Triggered from vrf update
 //-----------------------------------------------------------------------------
 hal_ret_t
 pd_if_nwsec_update(pd_if_nwsec_upd_args_t *args)

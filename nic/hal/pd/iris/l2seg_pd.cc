@@ -1,7 +1,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/l2seg_pd.hpp"
-#include "nic/hal/pd/iris/tenant_pd.hpp"
+#include "nic/hal/pd/iris/vrf_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
@@ -72,7 +72,7 @@ l2seg_pd_add_to_db (pd_l2seg_t *pd_l2seg, hal_handle_t handle)
         return HAL_RET_OOM;
     }
 
-    // add mapping from tenant id to its handle
+    // add mapping from vrf id to its handle
     entry->handle_id = handle;
     ret = g_hal_state_pd->l2seg_hwid_ht()->insert_with_key(&pd_l2seg->l2seg_ten_hw_id,
                                                        entry, &entry->ht_ctxt);
@@ -393,7 +393,7 @@ l2seg_pd_l2seguplink_count(pd_l2seg_t *l2seg_pd)
 // PD L2seg Cleanup
 //  - Release all resources
 //  - Delink PI <-> PD
-//  - Free PD Tenant
+//  - Free PD Vrf
 //  Note:
 //      - Just free up whatever PD has. 
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
@@ -444,13 +444,13 @@ end:
 hal_ret_t
 l2seg_pd_alloc_hwid(pd_l2seg_t *pd_l2seg)
 {
-    pd_tenant_t             *ten_pd = NULL;
+    pd_vrf_t             *ten_pd = NULL;
     hal_ret_t               ret = HAL_RET_OK;
 
-    ten_pd = pd_l2seg_get_pd_tenant(pd_l2seg);
-    HAL_ASSERT_RETURN(ten_pd != NULL, HAL_RET_TENANT_NOT_FOUND);
+    ten_pd = pd_l2seg_get_pd_vrf(pd_l2seg);
+    HAL_ASSERT_RETURN(ten_pd != NULL, HAL_RET_VRF_NOT_FOUND);
 
-    ret = tenant_pd_alloc_l2seg_hw_id(ten_pd, (uint32_t *)&pd_l2seg->l2seg_hw_id);
+    ret = vrf_pd_alloc_l2seg_hw_id(ten_pd, (uint32_t *)&pd_l2seg->l2seg_hw_id);
     if (ret != HAL_RET_OK) {
         goto end;
     }
@@ -471,13 +471,13 @@ hal_ret_t
 l2seg_pd_dealloc_hwid(pd_l2seg_t *l2seg_pd)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    pd_tenant_t         *ten_pd = NULL;
+    pd_vrf_t         *ten_pd = NULL;
 
     if (l2seg_pd->l2seg_hw_id != INVALID_INDEXER_INDEX) {
-        ten_pd = pd_l2seg_get_pd_tenant(l2seg_pd);
-        HAL_ASSERT_RETURN(ten_pd != NULL, HAL_RET_TENANT_NOT_FOUND);
+        ten_pd = pd_l2seg_get_pd_vrf(l2seg_pd);
+        HAL_ASSERT_RETURN(ten_pd != NULL, HAL_RET_VRF_NOT_FOUND);
 
-        ret = tenant_pd_free_l2seg_hw_id(ten_pd, l2seg_pd->l2seg_hw_id);
+        ret = vrf_pd_free_l2seg_hw_id(ten_pd, l2seg_pd->l2seg_hw_id);
         if (ret != HAL_RET_OK) {
             goto end;
         }
@@ -547,30 +547,30 @@ uint32_t
 pd_l2seg_get_l4_prof_idx(pd_l2seg_t *pd_l2seg)
 {
     l2seg_t         *pi_l2seg = NULL;
-    tenant_t        *pi_tenant = NULL;
+    vrf_t        *pi_vrf = NULL;
 
     pi_l2seg = (l2seg_t *)pd_l2seg->l2seg;
     HAL_ASSERT_RETURN(pi_l2seg != NULL, 0);
 
-    pi_tenant = l2seg_get_pi_tenant(pi_l2seg);
-    HAL_ASSERT_RETURN(pi_tenant != NULL, 0);
+    pi_vrf = l2seg_get_pi_vrf(pi_l2seg);
+    HAL_ASSERT_RETURN(pi_vrf != NULL, 0);
 
-    return ten_get_nwsec_prof_hw_id(pi_tenant);
+    return ten_get_nwsec_prof_hw_id(pi_vrf);
 }
 
-pd_tenant_t *
-pd_l2seg_get_pd_tenant(pd_l2seg_t *pd_l2seg)
+pd_vrf_t *
+pd_l2seg_get_pd_vrf(pd_l2seg_t *pd_l2seg)
 {
     l2seg_t         *pi_l2seg = NULL;
-    tenant_t        *pi_tenant = NULL;
+    vrf_t        *pi_vrf = NULL;
 
     pi_l2seg = (l2seg_t *)pd_l2seg->l2seg;
     HAL_ASSERT_RETURN(pi_l2seg != NULL, 0);
 
-    pi_tenant = l2seg_get_pi_tenant(pi_l2seg);
-    HAL_ASSERT_RETURN(pi_tenant != NULL, 0);
+    pi_vrf = l2seg_get_pi_vrf(pi_l2seg);
+    HAL_ASSERT_RETURN(pi_vrf != NULL, 0);
 
-    return (pd_tenant_t *)pi_tenant->pd;
+    return (pd_vrf_t *)pi_vrf->pd;
 }
 
 // ----------------------------------------------------------------------------
@@ -621,7 +621,7 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// Returns the tenant hwid of the l2seg (used as lkp_vrf in flow key)
+// Returns the vrf hwid of the l2seg (used as lkp_vrf in flow key)
 //-----------------------------------------------------------------------------
 l2seg_hw_id_t
 pd_l2seg_get_ten_hwid(l2seg_t *l2seg)

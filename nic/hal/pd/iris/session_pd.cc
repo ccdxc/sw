@@ -569,7 +569,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
 
     if (!session_pd->iflow.flow_hash_hw_id && args->update_iflow) {
         ret = p4pd_add_flow_hash_table_entry(&session->iflow->config.key,
-                                             session->iflow->pgm_attrs.tenant_hwid,
+                                             session->iflow->pgm_attrs.vrf_hwid,
                                              session->iflow->pgm_attrs.lkp_inst,
                                              &session_pd->iflow,
                                              &flow_hash);
@@ -593,7 +593,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
         session_pd->iflow_aug_valid && \
         !session_pd->iflow_aug.flow_hash_hw_id) {
         ret = p4pd_add_flow_hash_table_entry(&session->iflow->assoc_flow->config.key,
-                                             session->iflow->assoc_flow->pgm_attrs.tenant_hwid,
+                                             session->iflow->assoc_flow->pgm_attrs.vrf_hwid,
                                              session->iflow->assoc_flow->pgm_attrs.lkp_inst,
                                              &session_pd->iflow_aug,
                                              &flow_hash);
@@ -614,7 +614,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
     if (session_pd->rflow_valid && \
         !session_pd->rflow.flow_hash_hw_id) {
         ret = p4pd_add_flow_hash_table_entry(&session->rflow->config.key,
-                                             session->rflow->pgm_attrs.tenant_hwid,
+                                             session->rflow->pgm_attrs.vrf_hwid,
                                              session->rflow->pgm_attrs.lkp_inst,
                                              &session_pd->rflow,
                                              &flow_hash);
@@ -636,7 +636,7 @@ p4pd_add_flow_hash_table_entries (pd_session_t *session_pd,
             !session_pd->rflow_aug.flow_hash_hw_id) {
             // TODO: key has to involve service done? populate in flow_attrs
             ret = p4pd_add_flow_hash_table_entry(&session->rflow->assoc_flow->config.key,
-                                                 session->rflow->assoc_flow->pgm_attrs.tenant_hwid,
+                                                 session->rflow->assoc_flow->pgm_attrs.vrf_hwid,
                                                  session->rflow->assoc_flow->pgm_attrs.lkp_inst,
                                                  &session_pd->rflow_aug,
                                                  &flow_hash);

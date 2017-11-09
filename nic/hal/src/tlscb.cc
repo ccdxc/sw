@@ -3,7 +3,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/tlscb.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 
 namespace hal {
@@ -89,7 +89,7 @@ add_tlscb_to_db (tlscb_t *tlscb)
 
 //------------------------------------------------------------------------------
 // process a TLS CB create request
-// TODO: if TLS CB exists, treat this as modify (tenant id in the meta must
+// TODO: if TLS CB exists, treat this as modify (vrf id in the meta must
 // match though)
 //------------------------------------------------------------------------------
 hal_ret_t

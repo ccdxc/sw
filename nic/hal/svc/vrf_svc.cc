@@ -1,24 +1,24 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //
-// tenant service implementation
+// vrf service implementation
 //------------------------------------------------------------------------------
 
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/base.h"
 #include "nic/include/trace.hpp"
-#include "nic/hal/svc/tenant_svc.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/svc/vrf_svc.hpp"
+#include "nic/hal/src/vrf.hpp"
 
 Status
-TenantServiceImpl::TenantCreate(ServerContext *context,
-                                const TenantRequestMsg *req,
-                                TenantResponseMsg *rsp)
+VrfServiceImpl::VrfCreate(ServerContext *context,
+                                const VrfRequestMsg *req,
+                                VrfResponseMsg *rsp)
 {
     uint32_t          i, nreqs = req->request_size();
-    TenantResponse    *response;
+    VrfResponse    *response;
 
-    HAL_TRACE_DEBUG("Rcvd Tenant Create Request");
+    HAL_TRACE_DEBUG("Rcvd Vrf Create Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -27,21 +27,21 @@ TenantServiceImpl::TenantCreate(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::tenant_create(spec, response);
+        hal::vrf_create(spec, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;
 }
 
 Status
-TenantServiceImpl::TenantUpdate(ServerContext *context,
-                                const TenantRequestMsg *req,
-                                TenantResponseMsg *rsp)
+VrfServiceImpl::VrfUpdate(ServerContext *context,
+                                const VrfRequestMsg *req,
+                                VrfResponseMsg *rsp)
 {
     uint32_t          i, nreqs = req->request_size();
-    TenantResponse    *response;
+    VrfResponse    *response;
 
-    HAL_TRACE_DEBUG("Rcvd Tenant Update Request");
+    HAL_TRACE_DEBUG("Rcvd Vrf Update Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -50,7 +50,7 @@ TenantServiceImpl::TenantUpdate(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::tenant_update(spec, response);
+        hal::vrf_update(spec, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;
@@ -58,14 +58,14 @@ TenantServiceImpl::TenantUpdate(ServerContext *context,
 
 
 Status
-TenantServiceImpl::TenantDelete(ServerContext *context,
-                                const TenantDeleteRequestMsg *req,
-                                TenantDeleteResponseMsg *rsp)
+VrfServiceImpl::VrfDelete(ServerContext *context,
+                                const VrfDeleteRequestMsg *req,
+                                VrfDeleteResponseMsg *rsp)
 {
     uint32_t     i, nreqs = req->request_size();
-    TenantDeleteResponse    *response;
+    VrfDeleteResponse    *response;
 
-    HAL_TRACE_DEBUG("Rcvd Tenant Delete Request");
+    HAL_TRACE_DEBUG("Rcvd Vrf Delete Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -74,21 +74,21 @@ TenantServiceImpl::TenantDelete(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto spec = req->request(i);
-        hal::tenant_delete(spec, response);
+        hal::vrf_delete(spec, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;
 }
 
 Status
-TenantServiceImpl::TenantGet(ServerContext *context,
-                             const TenantGetRequestMsg *req,
-                             TenantGetResponseMsg *rsp)
+VrfServiceImpl::VrfGet(ServerContext *context,
+                             const VrfGetRequestMsg *req,
+                             VrfGetResponseMsg *rsp)
 {
     uint32_t             i, nreqs = req->request_size();
-    TenantGetResponse    *response;
+    VrfGetResponse    *response;
 
-    HAL_TRACE_DEBUG("Rcvd Tenant Get Request");
+    HAL_TRACE_DEBUG("Rcvd Vrf Get Request");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }
@@ -97,7 +97,7 @@ TenantServiceImpl::TenantGet(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         response = rsp->add_response();
         auto request = req->request(i);
-        hal::tenant_get(request, response);
+        hal::vrf_get(request, response);
     }
     hal::hal_cfg_db_close();
     return Status::OK;

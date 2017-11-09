@@ -14,7 +14,7 @@ SRC_FILES :=	hal.cc \
 				hal_mem.cc \
 				periodic/periodic.cc \
 				pd/hal_pd.cc \
-				svc/tenant_svc.cc \
+				svc/vrf_svc.cc \
 				svc/interface_svc.cc \
 				svc/l2segment_svc.cc \
 				svc/endpoint_svc.cc \
@@ -22,7 +22,7 @@ SRC_FILES :=	hal.cc \
 				svc/nwsec_svc.cc \
 				svc/l4lb_svc.cc \
 				src/utils.cc \
-				src/tenant.cc \
+				src/vrf.cc \
 				src/interface.cc \
 				src/l2segment.cc \
 				src/endpoint.cc \
@@ -41,9 +41,9 @@ $(OBJ_FILES): %.o: %.cc | $(OBJ_DIR)
 all: $(OBJ_FILES)
 	@echo $(OBJ_FILES)
 	$(CXX) $(CPPFLAGS) $(INC_DIRS) -o $(OBJ_DIR)/main.o main.cc
-	$(CXX) -g -shared -o $(OBJ_DIR)/libhal.so $(OBJ_DIR)/hal.o $(OBJ_DIR)/hal_mem.o $(OBJ_DIR)/periodic.o $(OBJ_DIR)/hal_pd.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/types.pb.o $(OBJ_DIR)/tenant.pb.o $(OBJ_DIR)/tenant.o $(OBJ_DIR)/interface.pb.o $(OBJ_DIR)/interface.o $(OBJ_DIR)/l2segment.pb.o $(OBJ_DIR)/l2segment.o $(OBJ_DIR)/session.pb.o $(OBJ_DIR)/session.o $(OBJ_DIR)/nwsec.pb.o $(OBJ_DIR)/nwsec.o $(OBJ_DIR)/interface_api.o $(OBJ_DIR)/l2segment_api.o $(OBJ_DIR)/endpoint_api.o $(OBJ_DIR)/endpoint.pb.o $(OBJ_DIR)/endpoint.o $(OBJ_DIR)/l4lb.pb.o
-	$(CXX) $(OBJ_DIR)/tenant.grpc.pb.o $(OBJ_DIR)/interface.grpc.pb.o $(OBJ_DIR)/l2segment.grpc.pb.o $(OBJ_DIR)/session.grpc.pb.o $(OBJ_DIR)/nwsec.grpc.pb.o $(OBJ_DIR)/endpoint.grpc.pb.o $(OBJ_DIR)/l4lb.grpc.pb.o $(OBJ_DIR)/tenant_svc.o $(OBJ_DIR)/interface_svc.o $(OBJ_DIR)/l2segment_svc.o $(OBJ_DIR)/session_svc.o $(OBJ_DIR)/endpoint_svc.o $(OBJ_DIR)/l4lb_svc.o $(OBJ_DIR)/nwsec_svc.o $(OBJ_DIR)/main.o $(LDFLAGS) -lhal -liris -lcaprimrl -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -ltrace -lprint -lthread -lzmq -lpdutils -o $(OBJ_DIR)/hal
-	$(CXX) $(OBJ_DIR)/tenant.grpc.pb.o $(OBJ_DIR)/interface.grpc.pb.o $(OBJ_DIR)/l2segment.grpc.pb.o $(OBJ_DIR)/session.grpc.pb.o $(OBJ_DIR)/nwsec.grpc.pb.o $(OBJ_DIR)/endpoint.grpc.pb.o $(OBJ_DIR)/l4lb.grpc.pb.o $(OBJ_DIR)/tenant_svc.o $(OBJ_DIR)/interface_svc.o $(OBJ_DIR)/l2segment_svc.o $(OBJ_DIR)/session_svc.o $(OBJ_DIR)/endpoint_svc.o $(OBJ_DIR)/l4lb_svc.o $(OBJ_DIR)/nwsec_svc.o $(OBJ_DIR)/main.o $(LDFLAGS) -lhal -liris -lcaprimrl -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -ltrace -lprint -lthread -lzmq -lpdutils_stub -o $(OBJ_DIR)/hal_stub
+	$(CXX) -g -shared -o $(OBJ_DIR)/libhal.so $(OBJ_DIR)/hal.o $(OBJ_DIR)/hal_mem.o $(OBJ_DIR)/periodic.o $(OBJ_DIR)/hal_pd.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/types.pb.o $(OBJ_DIR)/vrf.pb.o $(OBJ_DIR)/vrf.o $(OBJ_DIR)/interface.pb.o $(OBJ_DIR)/interface.o $(OBJ_DIR)/l2segment.pb.o $(OBJ_DIR)/l2segment.o $(OBJ_DIR)/session.pb.o $(OBJ_DIR)/session.o $(OBJ_DIR)/nwsec.pb.o $(OBJ_DIR)/nwsec.o $(OBJ_DIR)/interface_api.o $(OBJ_DIR)/l2segment_api.o $(OBJ_DIR)/endpoint_api.o $(OBJ_DIR)/endpoint.pb.o $(OBJ_DIR)/endpoint.o $(OBJ_DIR)/l4lb.pb.o
+	$(CXX) $(OBJ_DIR)/vrf.grpc.pb.o $(OBJ_DIR)/interface.grpc.pb.o $(OBJ_DIR)/l2segment.grpc.pb.o $(OBJ_DIR)/session.grpc.pb.o $(OBJ_DIR)/nwsec.grpc.pb.o $(OBJ_DIR)/endpoint.grpc.pb.o $(OBJ_DIR)/l4lb.grpc.pb.o $(OBJ_DIR)/vrf_svc.o $(OBJ_DIR)/interface_svc.o $(OBJ_DIR)/l2segment_svc.o $(OBJ_DIR)/session_svc.o $(OBJ_DIR)/endpoint_svc.o $(OBJ_DIR)/l4lb_svc.o $(OBJ_DIR)/nwsec_svc.o $(OBJ_DIR)/main.o $(LDFLAGS) -lhal -liris -lcaprimrl -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -ltrace -lprint -lthread -lzmq -lpdutils -o $(OBJ_DIR)/hal
+	$(CXX) $(OBJ_DIR)/vrf.grpc.pb.o $(OBJ_DIR)/interface.grpc.pb.o $(OBJ_DIR)/l2segment.grpc.pb.o $(OBJ_DIR)/session.grpc.pb.o $(OBJ_DIR)/nwsec.grpc.pb.o $(OBJ_DIR)/endpoint.grpc.pb.o $(OBJ_DIR)/l4lb.grpc.pb.o $(OBJ_DIR)/vrf_svc.o $(OBJ_DIR)/interface_svc.o $(OBJ_DIR)/l2segment_svc.o $(OBJ_DIR)/session_svc.o $(OBJ_DIR)/endpoint_svc.o $(OBJ_DIR)/l4lb_svc.o $(OBJ_DIR)/nwsec_svc.o $(OBJ_DIR)/main.o $(LDFLAGS) -lhal -liris -lcaprimrl -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -ltrace -lprint -lthread -lzmq -lpdutils_stub -o $(OBJ_DIR)/hal_stub
 	$(CXX) -std=c++11 $(INC_DIRS) -Wno-sign-compare -g $(GTEST_DIR)/lif_test.cc $(GTEST_ROOT)/make/gtest.a $(LDFLAGS) -lpthread -lhal -liris -lcaprimrl -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -lprint -lthread -ltrace -lzmq -lpdutils -o $(OBJ_DIR)/lif_test
 	$(CXX) -std=c++11 $(INC_DIRS) -Wno-sign-compare -g $(GTEST_DIR)/uplinkif_test.cc $(GTEST_ROOT)/make/gtest.a $(LDFLAGS) -lpthread -lhal -liris -lcaprimrl -lcapri -lslab -lindexer -lht -ltwheel -lbitmap -lprint -lthread -ltrace -lzmq -lpdutils -o $(OBJ_DIR)/uplinkif_test
 clean:

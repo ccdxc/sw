@@ -197,7 +197,7 @@ class TenantObject(base.ConfigObjectBase):
             id = id + 1
             self.obj_helper_tunnel.Generate(self, spec, eps)
         self.obj_helper_tunnel.AddToStore()
-            
+
 
     def __create_span_sessions(self):
         self.obj_helper_span.main(self, self.spec)
@@ -260,20 +260,20 @@ class TenantObject(base.ConfigObjectBase):
         return self.obj_helper_sg.GetRemote()
 
     def PrepareHALRequestSpec(self, reqspec):
-        reqspec.meta.tenant_id          = self.id
-        reqspec.key_or_handle.tenant_id = self.id
+        reqspec.meta.vrf_id          = self.id
+        reqspec.key_or_handle.vrf_id = self.id
         if self.security_profile:
             reqspec.security_key_handle.profile_handle = self.security_profile.hal_handle
             self.security_profile_handle = self.security_profile.hal_handle
         if self.IsInfra():
-            reqspec.tenant_type = haldefs.common.TENANT_TYPE_INFRA
+            reqspec.vrf_type = haldefs.common.VRF_TYPE_INFRA
             reqspec.mytep_ip.ip_af = haldefs.common.IP_AF_INET
             reqspec.mytep_ip.v4_addr = self.local_tep.getnum()
             reqspec.gipo_prefix.address.ip_af = haldefs.common.IP_AF_INET
             reqspec.gipo_prefix.address.v4_addr = self.gipo_prefix.getnum()
             reqspec.gipo_prefix.prefix_len = self.gipo_len
         else:
-            reqspec.tenant_type = haldefs.common.TENANT_TYPE_CUSTOMER
+            reqspec.vrf_type = haldefs.common.VRF_TYPE_CUSTOMER
 
         return
 
@@ -284,13 +284,13 @@ class TenantObject(base.ConfigObjectBase):
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
-        get_req_spec.meta.tenant_id = self.id
-        get_req_spec.key_or_handle.tenant_id = self.id
+        get_req_spec.meta.vrf_id = self.id
+        get_req_spec.key_or_handle.vrf_id = self.id
         return
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp_spec):
         if get_resp_spec.api_status == haldefs.common.ApiStatus.Value('API_STATUS_OK'):
-            self.id = get_resp_spec.spec.meta.tenant_id
+            self.id = get_resp_spec.spec.meta.vrf_id
             self.security_profile_handle = get_resp_spec.spec.security_profile_handle
         else:
             self.security_profile_handle = None

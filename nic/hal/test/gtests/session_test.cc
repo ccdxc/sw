@@ -7,7 +7,7 @@
 #include "nic/hal/src/l4lb.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
-#include "nic/gen/proto/hal/tenant.pb.h"
+#include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/gen/proto/hal/endpoint.pb.h"
 #include "nic/gen/proto/hal/session.pb.h"
@@ -26,8 +26,8 @@ using intf::InterfaceResponse;
 using intf::InterfaceKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentResponse;
-using tenant::TenantSpec;
-using tenant::TenantResponse;
+using vrf::VrfSpec;
+using vrf::VrfResponse;
 using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponse;
 using intf::LifSpec;
@@ -75,8 +75,8 @@ protected:
 TEST_F(session_test, test1) 
 {
     hal_ret_t                   ret;
-    TenantSpec                  ten_spec;
-    TenantResponse              ten_rsp;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
     L2SegmentSpec               l2seg_spec;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec;
@@ -91,32 +91,32 @@ TEST_F(session_test, test1)
     ::google::protobuf::uint32  ip2 = 0x0a000004;
 
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(1);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(1);
+    nw_spec.mutable_meta()->set_vrf_id(1);
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(1);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_tenant_id(1);
+    nw_spec1.mutable_meta()->set_vrf_id(1);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
-    nw_spec1.mutable_tenant_key_handle()->set_tenant_id(1);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
@@ -124,7 +124,7 @@ TEST_F(session_test, test1)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(1);
+    l2seg_spec.mutable_meta()->set_vrf_id(1);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -135,7 +135,7 @@ TEST_F(session_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_tenant_id(1);
+    l2seg_spec.mutable_meta()->set_vrf_id(1);
     l2seg_spec.add_network_handle(nw_hdl1);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(2);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -147,7 +147,7 @@ TEST_F(session_test, test1)
     // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_tenant_id(1);
+    up_spec.mutable_meta()->set_vrf_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(1);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -157,7 +157,7 @@ TEST_F(session_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_tenant_id(1);
+    up_spec.mutable_meta()->set_vrf_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(2);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -168,7 +168,7 @@ TEST_F(session_test, test1)
     ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_tenant_id(1);
+    ep_spec.mutable_meta()->set_vrf_id(1);
     ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
@@ -180,7 +180,7 @@ TEST_F(session_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_tenant_id(1);
+    ep_spec1.mutable_meta()->set_vrf_id(1);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
@@ -194,7 +194,7 @@ TEST_F(session_test, test1)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_tenant_id(1);
+    sess_spec.mutable_meta()->set_vrf_id(1);
     sess_spec.set_session_id(1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -233,8 +233,8 @@ TEST_F(session_test, test1)
 TEST_F(session_test, test2) 
 {
     hal_ret_t                   ret;
-    TenantSpec                  ten_spec;
-    TenantResponse              ten_rsp;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
     L2SegmentSpec               l2seg_spec;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec;
@@ -265,31 +265,31 @@ TEST_F(session_test, test2)
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(2);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(2);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(2);
+    nw_spec.mutable_meta()->set_vrf_id(2);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(2);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_tenant_id(2);
+    nw_spec1.mutable_meta()->set_vrf_id(2);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xb0000000);
-    nw_spec1.mutable_tenant_key_handle()->set_tenant_id(2);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
@@ -297,7 +297,7 @@ TEST_F(session_test, test2)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(2);
+    l2seg_spec.mutable_meta()->set_vrf_id(2);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(21);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -308,7 +308,7 @@ TEST_F(session_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_tenant_id(2);
+    l2seg_spec.mutable_meta()->set_vrf_id(2);
     l2seg_spec.add_network_handle(nw_hdl1);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(22);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -331,7 +331,7 @@ TEST_F(session_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
-    enicif_spec1.mutable_meta()->set_tenant_id(2);
+    enicif_spec1.mutable_meta()->set_vrf_id(2);
     enicif_spec1.set_type(intf::IF_TYPE_ENIC);
     enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(21);
@@ -345,7 +345,7 @@ TEST_F(session_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
     ::google::protobuf::uint64 if_hdl1 = enicif_rsp1.mutable_status()->if_handle();
 
-    enicif_spec2.mutable_meta()->set_tenant_id(2);
+    enicif_spec2.mutable_meta()->set_vrf_id(2);
     enicif_spec2.set_type(intf::IF_TYPE_ENIC);
     enicif_spec2.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(1);
     enicif_spec2.mutable_key_or_handle()->set_interface_id(22);
@@ -361,7 +361,7 @@ TEST_F(session_test, test2)
 
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_tenant_id(2);
+    ep_spec.mutable_meta()->set_vrf_id(2);
     ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
     ep_spec.mutable_endpoint_attrs()->set_interface_handle(if_hdl1);
     ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
@@ -373,7 +373,7 @@ TEST_F(session_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_tenant_id(2);
+    ep_spec1.mutable_meta()->set_vrf_id(2);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(if_hdl2);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
@@ -385,7 +385,7 @@ TEST_F(session_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    ep_spec2.mutable_meta()->set_tenant_id(2);
+    ep_spec2.mutable_meta()->set_vrf_id(2);
     ep_spec2.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
     ep_spec2.mutable_endpoint_attrs()->set_interface_handle(if_hdl1);
     ep_spec2.mutable_l2_key()->set_mac_address(0x00000001ABCD);
@@ -397,7 +397,7 @@ TEST_F(session_test, test2)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec3.mutable_meta()->set_tenant_id(2);
+    ep_spec3.mutable_meta()->set_vrf_id(2);
     ep_spec3.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
     ep_spec3.mutable_endpoint_attrs()->set_interface_handle(if_hdl2);
     ep_spec3.mutable_l2_key()->set_mac_address(0x000000011234);
@@ -411,7 +411,7 @@ TEST_F(session_test, test2)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_tenant_id(2);
+    sess_spec.mutable_meta()->set_vrf_id(2);
     sess_spec.set_session_id(2);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -440,7 +440,7 @@ TEST_F(session_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create Session for coll
-    sess_spec2.mutable_meta()->set_tenant_id(2);
+    sess_spec2.mutable_meta()->set_vrf_id(2);
     sess_spec2.set_session_id(3);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip3);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip4);
@@ -475,8 +475,8 @@ TEST_F(session_test, test2)
 TEST_F(session_test, test3) 
 {
     hal_ret_t                   ret;
-    TenantSpec                  ten_spec;
-    TenantResponse              ten_rsp;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
     L2SegmentSpec               l2seg_spec;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec;
@@ -504,33 +504,33 @@ TEST_F(session_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(3);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(3);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(3);
+    nw_spec.mutable_meta()->set_vrf_id(3);
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr("00010001000000000000000000000000");
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(3);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(3);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_tenant_id(3);
+    nw_spec1.mutable_meta()->set_vrf_id(3);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr("00010002000000000000000000000000");
-    nw_spec1.mutable_tenant_key_handle()->set_tenant_id(3);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(3);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
@@ -538,7 +538,7 @@ TEST_F(session_test, test3)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(3);
+    l2seg_spec.mutable_meta()->set_vrf_id(3);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(31);
     l2seg_spec.add_network_handle(nw_hdl1);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -549,7 +549,7 @@ TEST_F(session_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_tenant_id(3);
+    l2seg_spec.mutable_meta()->set_vrf_id(3);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(32);
     l2seg_spec.add_network_handle(nw_hdl1);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -568,7 +568,7 @@ TEST_F(session_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
-    enicif_spec1.mutable_meta()->set_tenant_id(3);
+    enicif_spec1.mutable_meta()->set_vrf_id(3);
     enicif_spec1.set_type(intf::IF_TYPE_ENIC);
     enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(2);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(5);
@@ -582,7 +582,7 @@ TEST_F(session_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
     ::google::protobuf::uint64 if_hdl1 = enicif_rsp1.mutable_status()->if_handle();
 
-    enicif_spec2.mutable_meta()->set_tenant_id(3);
+    enicif_spec2.mutable_meta()->set_vrf_id(3);
     enicif_spec2.set_type(intf::IF_TYPE_ENIC);
     enicif_spec2.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(2);
     enicif_spec2.mutable_key_or_handle()->set_interface_id(6);
@@ -598,7 +598,7 @@ TEST_F(session_test, test3)
 
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_tenant_id(3);
+    ep_spec.mutable_meta()->set_vrf_id(3);
     ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec.mutable_endpoint_attrs()->set_interface_handle(if_hdl1);
     ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
@@ -610,7 +610,7 @@ TEST_F(session_test, test3)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_tenant_id(3);
+    ep_spec1.mutable_meta()->set_vrf_id(3);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(if_hdl2);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
@@ -624,7 +624,7 @@ TEST_F(session_test, test3)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_tenant_id(3);
+    sess_spec.mutable_meta()->set_vrf_id(3);
     sess_spec.set_session_id(3);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_ip_af(types::IP_AF_INET6);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_v6_addr(ipv6_ip1);
@@ -664,8 +664,8 @@ TEST_F(session_test, test3)
 TEST_F(session_test, test4) 
 {
     hal_ret_t                   ret;
-    TenantSpec                  ten_spec;
-    TenantResponse              ten_rsp;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
     L2SegmentSpec               l2seg_spec, l2seg_spec1;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec;
@@ -680,32 +680,32 @@ TEST_F(session_test, test4)
     ::google::protobuf::uint32  ip2 = 0x40020002;
 
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(4);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(4);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(4);
+    nw_spec.mutable_meta()->set_vrf_id(4);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x40020000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(4);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(4);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_tenant_id(4);
+    nw_spec1.mutable_meta()->set_vrf_id(4);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x40020001);
-    nw_spec1.mutable_tenant_key_handle()->set_tenant_id(4);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(4);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
@@ -713,7 +713,7 @@ TEST_F(session_test, test4)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(4);
+    l2seg_spec.mutable_meta()->set_vrf_id(4);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(41);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -724,7 +724,7 @@ TEST_F(session_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec1.mutable_meta()->set_tenant_id(4);
+    l2seg_spec1.mutable_meta()->set_vrf_id(4);
     l2seg_spec1.add_network_handle(nw_hdl1);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(42);
     l2seg_spec1.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -736,7 +736,7 @@ TEST_F(session_test, test4)
     uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_tenant_id(4);
+    up_spec.mutable_meta()->set_vrf_id(4);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(41);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -746,7 +746,7 @@ TEST_F(session_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_tenant_id(4);
+    up_spec.mutable_meta()->set_vrf_id(4);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(42);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -757,7 +757,7 @@ TEST_F(session_test, test4)
     ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_tenant_id(4);
+    ep_spec.mutable_meta()->set_vrf_id(4);
     ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
@@ -769,7 +769,7 @@ TEST_F(session_test, test4)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_tenant_id(4);
+    ep_spec1.mutable_meta()->set_vrf_id(4);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
@@ -783,7 +783,7 @@ TEST_F(session_test, test4)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_tenant_id(4);
+    sess_spec.mutable_meta()->set_vrf_id(4);
     sess_spec.set_session_id(1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -811,7 +811,7 @@ TEST_F(session_test, test4)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    sess_spec2.mutable_meta()->set_tenant_id(4);
+    sess_spec2.mutable_meta()->set_vrf_id(4);
     sess_spec2.set_session_id(2);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec2.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -845,8 +845,8 @@ TEST_F(session_test, test4)
 TEST_F(session_test, test5) 
 {
     hal_ret_t                   ret;
-    TenantSpec                  ten_spec;
-    TenantResponse              ten_rsp;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
     L2SegmentSpec               l2seg_spec, l2seg_spec1;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec;
@@ -861,32 +861,32 @@ TEST_F(session_test, test5)
     ::google::protobuf::uint32  ip2 = 0x0a000004;
 
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(5);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(5);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(5);
+    nw_spec.mutable_meta()->set_vrf_id(5);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(5);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_tenant_id(5);
+    nw_spec1.mutable_meta()->set_vrf_id(5);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xb0000000);
-    nw_spec1.mutable_tenant_key_handle()->set_tenant_id(5);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(5);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
@@ -894,7 +894,7 @@ TEST_F(session_test, test5)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(5);
+    l2seg_spec.mutable_meta()->set_vrf_id(5);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -905,7 +905,7 @@ TEST_F(session_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec1.mutable_meta()->set_tenant_id(5);
+    l2seg_spec1.mutable_meta()->set_vrf_id(5);
     l2seg_spec1.add_network_handle(nw_hdl1);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(52);
     l2seg_spec1.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -917,7 +917,7 @@ TEST_F(session_test, test5)
     uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_tenant_id(5);
+    up_spec.mutable_meta()->set_vrf_id(5);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(51);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -927,7 +927,7 @@ TEST_F(session_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_tenant_id(1);
+    up_spec.mutable_meta()->set_vrf_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(52);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -938,7 +938,7 @@ TEST_F(session_test, test5)
     ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_tenant_id(5);
+    ep_spec.mutable_meta()->set_vrf_id(5);
     ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
@@ -950,7 +950,7 @@ TEST_F(session_test, test5)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_tenant_id(5);
+    ep_spec1.mutable_meta()->set_vrf_id(5);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
@@ -964,7 +964,7 @@ TEST_F(session_test, test5)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_tenant_id(5);
+    sess_spec.mutable_meta()->set_vrf_id(5);
     sess_spec.set_session_id(1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -1000,8 +1000,8 @@ TEST_F(session_test, test5)
 TEST_F(session_test, test6) 
 {
     hal_ret_t                   ret;
-    TenantSpec                  ten_spec;
-    TenantResponse              ten_rsp;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
     L2SegmentSpec               l2seg_spec, l2seg_spec1;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec;
@@ -1017,32 +1017,32 @@ TEST_F(session_test, test6)
     ::google::protobuf::uint32  ip3 = 0x0a000005;
 
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(6);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(6);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(6);
+    nw_spec.mutable_meta()->set_vrf_id(6);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(6);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(6);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_tenant_id(6);
+    nw_spec1.mutable_meta()->set_vrf_id(6);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xb0000000);
-    nw_spec1.mutable_tenant_key_handle()->set_tenant_id(6);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(6);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
@@ -1050,7 +1050,7 @@ TEST_F(session_test, test6)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(6);
+    l2seg_spec.mutable_meta()->set_vrf_id(6);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(61);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -1061,7 +1061,7 @@ TEST_F(session_test, test6)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec1.mutable_meta()->set_tenant_id(6);
+    l2seg_spec1.mutable_meta()->set_vrf_id(6);
     l2seg_spec1.add_network_handle(nw_hdl1);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(62);
     l2seg_spec1.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -1073,7 +1073,7 @@ TEST_F(session_test, test6)
     uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_tenant_id(6);
+    up_spec.mutable_meta()->set_vrf_id(6);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(61);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -1083,7 +1083,7 @@ TEST_F(session_test, test6)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_tenant_id(6);
+    up_spec.mutable_meta()->set_vrf_id(6);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(62);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -1095,7 +1095,7 @@ TEST_F(session_test, test6)
 
     // Create 2 Endpoints
     // CIP
-    ep_spec.mutable_meta()->set_tenant_id(6);
+    ep_spec.mutable_meta()->set_vrf_id(6);
     ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
@@ -1109,7 +1109,7 @@ TEST_F(session_test, test6)
     
 #if 0
     // VIP
-    ep_spec1.mutable_meta()->set_tenant_id(6);
+    ep_spec1.mutable_meta()->set_vrf_id(6);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
@@ -1123,7 +1123,7 @@ TEST_F(session_test, test6)
 #endif
 
     // PIP
-    ep_spec1.mutable_meta()->set_tenant_id(6);
+    ep_spec1.mutable_meta()->set_vrf_id(6);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001235);
@@ -1137,7 +1137,7 @@ TEST_F(session_test, test6)
 
     // Create Session
     // CIP -> VIP ==> CIP -> PIP :: DNAT
-    sess_spec.mutable_meta()->set_tenant_id(6);
+    sess_spec.mutable_meta()->set_vrf_id(6);
     sess_spec.set_session_id(61);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -1186,8 +1186,8 @@ TEST_F(session_test, test6)
 TEST_F(session_test, test7) 
 {
     hal_ret_t                   ret;
-    TenantSpec                  ten_spec;
-    TenantResponse              ten_rsp;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
     L2SegmentSpec               l2seg_spec;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec;
@@ -1202,32 +1202,32 @@ TEST_F(session_test, test7)
     ::google::protobuf::uint32  ip2 = 0x0a000004;
 
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(7);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(7);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(7);
+    nw_spec.mutable_meta()->set_vrf_id(7);
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(7);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(7);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_tenant_id(7);
+    nw_spec1.mutable_meta()->set_vrf_id(7);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
-    nw_spec1.mutable_tenant_key_handle()->set_tenant_id(7);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(7);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
@@ -1235,7 +1235,7 @@ TEST_F(session_test, test7)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(7);
+    l2seg_spec.mutable_meta()->set_vrf_id(7);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(71);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -1246,7 +1246,7 @@ TEST_F(session_test, test7)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_tenant_id(7);
+    l2seg_spec.mutable_meta()->set_vrf_id(7);
     l2seg_spec.add_network_handle(nw_hdl1);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(72);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -1258,7 +1258,7 @@ TEST_F(session_test, test7)
     // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_tenant_id(7);
+    up_spec.mutable_meta()->set_vrf_id(7);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(71);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -1268,7 +1268,7 @@ TEST_F(session_test, test7)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_tenant_id(7);
+    up_spec.mutable_meta()->set_vrf_id(7);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(72);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -1279,7 +1279,7 @@ TEST_F(session_test, test7)
     ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_tenant_id(7);
+    ep_spec.mutable_meta()->set_vrf_id(7);
     ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
@@ -1291,7 +1291,7 @@ TEST_F(session_test, test7)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_tenant_id(7);
+    ep_spec1.mutable_meta()->set_vrf_id(7);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
@@ -1305,7 +1305,7 @@ TEST_F(session_test, test7)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_tenant_id(7);
+    sess_spec.mutable_meta()->set_vrf_id(7);
     sess_spec.set_session_id(71);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -1343,8 +1343,8 @@ TEST_F(session_test, test7)
 TEST_F(session_test, test8) 
 {
     hal_ret_t                   ret;
-    TenantSpec                  ten_spec;
-    TenantResponse              ten_rsp;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
     L2SegmentSpec               l2seg_spec, l2seg_spec1;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec;
@@ -1362,32 +1362,32 @@ TEST_F(session_test, test8)
     ::google::protobuf::uint32  ip3 = 0x0a000005;
 
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(8);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(8);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(8);
+    nw_spec.mutable_meta()->set_vrf_id(8);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(8);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(8);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_tenant_id(8);
+    nw_spec1.mutable_meta()->set_vrf_id(8);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xb0000000);
-    nw_spec1.mutable_tenant_key_handle()->set_tenant_id(8);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(8);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
@@ -1395,7 +1395,7 @@ TEST_F(session_test, test8)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(8);
+    l2seg_spec.mutable_meta()->set_vrf_id(8);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(81);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -1406,7 +1406,7 @@ TEST_F(session_test, test8)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec1.mutable_meta()->set_tenant_id(8);
+    l2seg_spec1.mutable_meta()->set_vrf_id(8);
     l2seg_spec1.add_network_handle(nw_hdl1);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(82);
     l2seg_spec1.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -1418,7 +1418,7 @@ TEST_F(session_test, test8)
     // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_tenant_id(8);
+    up_spec.mutable_meta()->set_vrf_id(8);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(81);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -1428,7 +1428,7 @@ TEST_F(session_test, test8)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_tenant_id(8);
+    up_spec.mutable_meta()->set_vrf_id(8);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(82);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -1440,7 +1440,7 @@ TEST_F(session_test, test8)
 
     // Create 2 Endpoints
     // CIP
-    ep_spec.mutable_meta()->set_tenant_id(8);
+    ep_spec.mutable_meta()->set_vrf_id(8);
     ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
@@ -1454,7 +1454,7 @@ TEST_F(session_test, test8)
     
 #if 0
     // VIP
-    ep_spec1.mutable_meta()->set_tenant_id(6);
+    ep_spec1.mutable_meta()->set_vrf_id(6);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl2);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
@@ -1468,7 +1468,7 @@ TEST_F(session_test, test8)
 #endif
 
     // PIP
-    ep_spec1.mutable_meta()->set_tenant_id(8);
+    ep_spec1.mutable_meta()->set_vrf_id(8);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001235);
@@ -1481,7 +1481,7 @@ TEST_F(session_test, test8)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create l4lb
-    l4lb_spec.mutable_meta()->set_tenant_id(8);
+    l4lb_spec.mutable_meta()->set_vrf_id(8);
     l4lb_spec.mutable_key_or_handle()->mutable_service_key()->mutable_service_ip_address()->
         set_ip_af(types::IP_AF_INET);
     l4lb_spec.mutable_key_or_handle()->mutable_service_key()->mutable_service_ip_address()->
@@ -1497,7 +1497,7 @@ TEST_F(session_test, test8)
 
     // Create Session
     // CIP -> VIP ==> CIP -> PIP :: DNAT
-    sess_spec.mutable_meta()->set_tenant_id(8);
+    sess_spec.mutable_meta()->set_vrf_id(8);
     sess_spec.set_session_id(81);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -1548,8 +1548,8 @@ TEST_F(session_test, test8)
 TEST_F(session_test, test9) 
 {
     hal_ret_t                   ret;
-    TenantSpec                  ten_spec;
-    TenantResponse              ten_rsp;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
     L2SegmentSpec               l2seg_spec;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec;
@@ -1564,32 +1564,32 @@ TEST_F(session_test, test9)
     ::google::protobuf::uint32  ip2 = 0x0a000004;
 
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(9);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(9);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(9);
+    nw_spec.mutable_meta()->set_vrf_id(9);
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(9);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(9);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_tenant_id(9);
+    nw_spec1.mutable_meta()->set_vrf_id(9);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
-    nw_spec1.mutable_tenant_key_handle()->set_tenant_id(9);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(9);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
@@ -1597,7 +1597,7 @@ TEST_F(session_test, test9)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(9);
+    l2seg_spec.mutable_meta()->set_vrf_id(9);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(91);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -1608,7 +1608,7 @@ TEST_F(session_test, test9)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_tenant_id(9);
+    l2seg_spec.mutable_meta()->set_vrf_id(9);
     l2seg_spec.add_network_handle(nw_hdl1);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(92);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -1620,7 +1620,7 @@ TEST_F(session_test, test9)
     // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_tenant_id(9);
+    up_spec.mutable_meta()->set_vrf_id(9);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(91);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -1630,7 +1630,7 @@ TEST_F(session_test, test9)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-    up_spec.mutable_meta()->set_tenant_id(9);
+    up_spec.mutable_meta()->set_vrf_id(9);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(92);
     up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -1641,7 +1641,7 @@ TEST_F(session_test, test9)
     ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_tenant_id(9);
+    ep_spec.mutable_meta()->set_vrf_id(9);
     ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
@@ -1653,7 +1653,7 @@ TEST_F(session_test, test9)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_tenant_id(9);
+    ep_spec1.mutable_meta()->set_vrf_id(9);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
@@ -1667,7 +1667,7 @@ TEST_F(session_test, test9)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_tenant_id(9);
+    sess_spec.mutable_meta()->set_vrf_id(9);
     sess_spec.set_session_id(1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
@@ -1698,8 +1698,8 @@ TEST_F(session_test, test9)
 TEST_F(session_test, test10) 
 {
     hal_ret_t                   ret;
-    TenantSpec                  ten_spec;
-    TenantResponse              ten_rsp;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
     L2SegmentSpec               l2seg_spec;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec;
@@ -1727,33 +1727,33 @@ TEST_F(session_test, test10)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(10);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(10);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(10);
+    nw_spec.mutable_meta()->set_vrf_id(10);
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr("00010001000000000000000000000010");
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(10);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-    nw_spec1.mutable_meta()->set_tenant_id(10);
+    nw_spec1.mutable_meta()->set_vrf_id(10);
     nw_spec1.set_rmac(0x0000DEADBEEF);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
     nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr("00010002000000000000000000000010");
-    nw_spec1.mutable_tenant_key_handle()->set_tenant_id(10);
+    nw_spec1.mutable_vrf_key_handle()->set_vrf_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec1, &nw_rsp1);
     hal::hal_cfg_db_close();
@@ -1761,7 +1761,7 @@ TEST_F(session_test, test10)
     uint64_t nw_hdl1 = nw_rsp1.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(10);
+    l2seg_spec.mutable_meta()->set_vrf_id(10);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(101);
     l2seg_spec.add_network_handle(nw_hdl1);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -1772,7 +1772,7 @@ TEST_F(session_test, test10)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-    l2seg_spec.mutable_meta()->set_tenant_id(10);
+    l2seg_spec.mutable_meta()->set_vrf_id(10);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(102);
     l2seg_spec.add_network_handle(nw_hdl1);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -1791,7 +1791,7 @@ TEST_F(session_test, test10)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create enicif
-    enicif_spec1.mutable_meta()->set_tenant_id(10);
+    enicif_spec1.mutable_meta()->set_vrf_id(10);
     enicif_spec1.set_type(intf::IF_TYPE_ENIC);
     enicif_spec1.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(102);
     enicif_spec1.mutable_key_or_handle()->set_interface_id(101);
@@ -1805,7 +1805,7 @@ TEST_F(session_test, test10)
     ASSERT_TRUE(ret == HAL_RET_OK);
     ::google::protobuf::uint64 if_hdl1 = enicif_rsp1.mutable_status()->if_handle();
 
-    enicif_spec2.mutable_meta()->set_tenant_id(10);
+    enicif_spec2.mutable_meta()->set_vrf_id(10);
     enicif_spec2.set_type(intf::IF_TYPE_ENIC);
     enicif_spec2.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(102);
     enicif_spec2.mutable_key_or_handle()->set_interface_id(102);
@@ -1821,7 +1821,7 @@ TEST_F(session_test, test10)
 
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_tenant_id(10);
+    ep_spec.mutable_meta()->set_vrf_id(10);
     ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec.mutable_endpoint_attrs()->set_interface_handle(if_hdl1);
     ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
@@ -1833,7 +1833,7 @@ TEST_F(session_test, test10)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     
-    ep_spec1.mutable_meta()->set_tenant_id(10);
+    ep_spec1.mutable_meta()->set_vrf_id(10);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(if_hdl2);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
@@ -1847,7 +1847,7 @@ TEST_F(session_test, test10)
 
 
     // Create Session
-    sess_spec.mutable_meta()->set_tenant_id(10);
+    sess_spec.mutable_meta()->set_vrf_id(10);
     sess_spec.set_session_id(10);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_ip_af(types::IP_AF_INET6);
     sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v6_key()->mutable_sip()->set_v6_addr(ipv6_ip1);

@@ -45,7 +45,7 @@ typedef struct dhcp_trans_key_s {
 } __PACK__ dhcp_trans_key_t;
 
 typedef struct dhcp_ip_entry_key_s {
-    tenant_id_t tenant_id;  // VRF id
+    vrf_id_t vrf_id;  // VRF id
     ip_addr_t ip_addr;      // IP address of the endpoint
 } __PACK__ dhcp_ip_entry_key_t;
 
@@ -169,7 +169,7 @@ private:
     static void init_dhcp_trans_key(const uint8_t* chaddr, uint32_t xid,
                                     dhcp_trans_key_t* trans_key_);
     static void init_dhcp_ip_entry_key(const uint8_t* protocol_address,
-                                       tenant_id_t tenant_id,
+                                       vrf_id_t vrf_id,
                                        dhcp_ip_entry_key_t* ip_entry_key_);
     //static void process_transaction(dhcp_trans_t* trans, dhcp_fsm_event_t event,
       //                              fsm_event_data data);

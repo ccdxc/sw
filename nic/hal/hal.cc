@@ -720,13 +720,13 @@ hal_uplink_create(uint32_t uplink_port,
     PortResponse    response;
 
     // TODO
-    int tenant_id = catalog_p->tenant_id();
+    int vrf_id = catalog_p->vrf_id();
 
     hal::utils::catalog_uplink_port_t *catalog_uplink_port_p =
                                       catalog_p->uplink_port(uplink_port);
 
     spec.mutable_key_or_handle()->set_port_id(uplink_port);
-    spec.mutable_meta()->set_tenant_id(tenant_id);
+    spec.mutable_meta()->set_vrf_id(vrf_id);
     spec.set_port_speed(catalog_uplink_port_p->speed);
     spec.set_num_lanes(catalog_uplink_port_p->num_lanes);
     spec.set_port_type(catalog_uplink_port_p->type);

@@ -1,7 +1,7 @@
 #ifndef __HAL_PD_API_HPP__
 #define __HAL_PD_API_HPP__
 
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/nwsec.hpp"
 #include "nic/hal/src/nwsec_group.hpp"
@@ -30,7 +30,7 @@
 namespace hal {
 namespace pd {
 
-using hal::tenant_t;
+using hal::vrf_t;
 using hal::l2seg_t;
 using hal::network_t;
 using hal::nwsec_profile_t;
@@ -57,13 +57,13 @@ using hal::rawccb_t;
 
 typedef uint32_t    l2seg_hw_id_t;
 
-typedef struct pd_tenant_args_s {
-    tenant_t           *tenant;
+typedef struct pd_vrf_args_s {
+    vrf_t           *vrf;
     nwsec_profile_t    *nwsec_profile;
-} __PACK__ pd_tenant_args_t;
+} __PACK__ pd_vrf_args_t;
 
 typedef struct pd_l2seg_args_s {
-    tenant_t           *tenant;
+    vrf_t           *vrf;
     l2seg_t            *l2seg;
 } __PACK__ pd_l2seg_args_t;
 
@@ -152,7 +152,7 @@ typedef struct pd_if_lif_upd_args_s {
 } __PACK__ pd_if_lif_upd_args_t;
 
 typedef struct pd_ep_args_s {
-    tenant_t        *tenant;
+    vrf_t        *vrf;
     l2seg_t         *l2seg;
     if_t            *intf;
     ep_t            *ep;
@@ -170,7 +170,7 @@ typedef struct pd_ep_upd_args_s {
 } pd_ep_upd_args_t;
 
 typedef struct pd_sessoin_args_s {
-    tenant_t           *tenant;
+    vrf_t           *vrf;
     nwsec_profile_t    *nwsec_prof;
     bool               update_iflow;
 
@@ -253,16 +253,16 @@ pd_system_args_init(pd_system_args_t *args)
 }
 
 static inline void
-pd_tenant_args_init (pd_tenant_args_t *args)
+pd_vrf_args_init (pd_vrf_args_t *args)
 {
-    args->tenant = NULL;
+    args->vrf = NULL;
     return;
 }
 
 static inline void
 pd_l2seg_args_init (pd_l2seg_args_t *args)
 {
-    args->tenant = NULL;
+    args->vrf = NULL;
     args->l2seg = NULL;
     return;
 }
@@ -329,7 +329,7 @@ pd_if_lif_upd_args_init (pd_if_lif_upd_args_t *args)
 static inline void
 pd_ep_args_init (pd_ep_args_t *args)
 {
-    args->tenant = NULL;
+    args->vrf = NULL;
     args->l2seg = NULL;
     args->intf = NULL;
     args->ep = NULL;
@@ -345,7 +345,7 @@ pd_ep_upd_args_init (pd_ep_upd_args_t *args)
 static inline void
 pd_session_args_init (pd_session_args_t *args)
 {
-    args->tenant = NULL;
+    args->vrf = NULL;
     args->session = NULL;
     args->session_state = NULL;
     args->rsp = NULL;
@@ -425,11 +425,11 @@ pd_rawccb_args_init (pd_rawccb_args_t *args)
     return;
 }
 
-hal_ret_t pd_tenant_create(pd_tenant_args_t *tenant);
-hal_ret_t pd_tenant_update(pd_tenant_args_t *tenant);
-hal_ret_t pd_tenant_delete(pd_tenant_args_t *tenant);
-hal_ret_t pd_tenant_mem_free(pd_tenant_args_t *tenant);
-hal_ret_t pd_tenant_make_clone(tenant_t *ten, tenant_t *clone);
+hal_ret_t pd_vrf_create(pd_vrf_args_t *vrf);
+hal_ret_t pd_vrf_update(pd_vrf_args_t *vrf);
+hal_ret_t pd_vrf_delete(pd_vrf_args_t *vrf);
+hal_ret_t pd_vrf_mem_free(pd_vrf_args_t *vrf);
+hal_ret_t pd_vrf_make_clone(vrf_t *ten, vrf_t *clone);
 
 hal_ret_t pd_l2seg_create(pd_l2seg_args_t *l2seg);
 hal_ret_t pd_l2seg_update(pd_l2seg_args_t *l2seg);

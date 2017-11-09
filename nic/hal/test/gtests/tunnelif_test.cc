@@ -4,7 +4,7 @@
 #include "nic/hal/src/nwsec.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
-#include "nic/gen/proto/hal/tenant.pb.h"
+#include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/endpoint.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/gen/proto/hal/nw.pb.h"
@@ -20,8 +20,8 @@ using intf::InterfaceResponse;
 using intf::InterfaceKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentResponse;
-using tenant::TenantSpec;
-using tenant::TenantResponse;
+using vrf::VrfSpec;
+using vrf::VrfResponse;
 using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponse;
 using intf::LifSpec;
@@ -64,8 +64,8 @@ protected:
 TEST_F(tunnelif_test, test1) 
 {
     hal_ret_t                   ret;
-    TenantSpec                  ten_spec;
-    TenantResponse              ten_rsp;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
     L2SegmentSpec               l2seg_spec;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec, tnnl_spec, tnnl_spec1;
@@ -77,20 +77,20 @@ TEST_F(tunnelif_test, test1)
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(1);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(1);
+    nw_spec.mutable_meta()->set_vrf_id(1);
     nw_spec.set_rmac(0x0000DEADBEEE);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(1);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
@@ -98,7 +98,7 @@ TEST_F(tunnelif_test, test1)
     uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(1);
+    l2seg_spec.mutable_meta()->set_vrf_id(1);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -110,7 +110,7 @@ TEST_F(tunnelif_test, test1)
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
     // Create an uplink
-    up_spec.mutable_meta()->set_tenant_id(1);
+    up_spec.mutable_meta()->set_vrf_id(1);
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(1);
     up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -121,7 +121,7 @@ TEST_F(tunnelif_test, test1)
     ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
     // Create 2 Endpoints
-    ep_spec.mutable_meta()->set_tenant_id(1);
+    ep_spec.mutable_meta()->set_vrf_id(1);
     ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl);
     ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);
@@ -133,7 +133,7 @@ TEST_F(tunnelif_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    ep_spec1.mutable_meta()->set_tenant_id(1);
+    ep_spec1.mutable_meta()->set_vrf_id(1);
     ep_spec1.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
     ep_spec1.mutable_endpoint_attrs()->set_interface_handle(up_hdl);
     ep_spec1.mutable_l2_key()->set_mac_address(0x000000001234);
@@ -147,7 +147,7 @@ TEST_F(tunnelif_test, test1)
 
     
     // tunnel create
-    tnnl_spec.mutable_meta()->set_tenant_id(1);
+    tnnl_spec.mutable_meta()->set_vrf_id(1);
     tnnl_spec.mutable_key_or_handle()->set_interface_id(2);
     tnnl_spec.set_type(intf::IF_TYPE_TUNNEL);
     tnnl_spec.mutable_if_tunnel_info()->set_encap_type(intf::IF_TUNNEL_ENCAP_TYPE_VXLAN);
@@ -162,7 +162,7 @@ TEST_F(tunnelif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // tunnel create
-    tnnl_spec1.mutable_meta()->set_tenant_id(1);
+    tnnl_spec1.mutable_meta()->set_vrf_id(1);
     tnnl_spec1.mutable_key_or_handle()->set_interface_id(12);
     tnnl_spec1.set_type(intf::IF_TYPE_TUNNEL);
     tnnl_spec1.mutable_if_tunnel_info()->set_encap_type(intf::IF_TUNNEL_ENCAP_TYPE_VXLAN);

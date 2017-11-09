@@ -2,7 +2,7 @@
 
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/hal/src/network.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/interface.hpp"
@@ -47,12 +47,12 @@ struct cfg_db_dirty_objs_s {
 bool
 hal_cfg_db::init(void)
 {
-    // initialize tenant related data structures
-    tenant_id_ht_ = ht::factory(HAL_MAX_VRFS,
-                                hal::tenant_id_get_key_func,
-                                hal::tenant_id_compute_hash_func,
-                                hal::tenant_id_compare_key_func);
-    HAL_ASSERT_RETURN((tenant_id_ht_ != NULL), false);
+    // initialize vrf related data structures
+    vrf_id_ht_ = ht::factory(HAL_MAX_VRFS,
+                                hal::vrf_id_get_key_func,
+                                hal::vrf_id_compute_hash_func,
+                                hal::vrf_id_compare_key_func);
+    HAL_ASSERT_RETURN((vrf_id_ht_ != NULL), false);
 
     // initialize network related data structures
     network_key_ht_ = ht::factory(HAL_MAX_VRFS,
@@ -360,7 +360,7 @@ hal_cfg_db::init(void)
 //------------------------------------------------------------------------------
 hal_cfg_db::hal_cfg_db()
 {
-    tenant_id_ht_ = NULL;
+    vrf_id_ht_ = NULL;
 
     network_key_ht_ = NULL;
 
@@ -458,7 +458,7 @@ hal_cfg_db::factory(void)
 //------------------------------------------------------------------------------
 hal_cfg_db::~hal_cfg_db()
 {
-    tenant_id_ht_ ? delete tenant_id_ht_ : HAL_NOP;
+    vrf_id_ht_ ? delete vrf_id_ht_ : HAL_NOP;
 
     network_key_ht_ ? delete network_key_ht_ : HAL_NOP;
 
@@ -758,11 +758,11 @@ hal_mem_db::init(void)
                                                    64, true, true, true, true);
     HAL_ASSERT_RETURN((hal_handle_id_list_entry_slab_ != NULL), false);
 
-	// initialize tenant related data structures
-	tenant_slab_ = slab::factory("tenant", HAL_SLAB_TENANT,
-                                 sizeof(hal::tenant_t), 16,
+	// initialize vrf related data structures
+	vrf_slab_ = slab::factory("vrf", HAL_SLAB_VRF,
+                                 sizeof(hal::vrf_t), 16,
                                  false, true, true, true);
-    HAL_ASSERT_RETURN((tenant_slab_ != NULL), false);
+    HAL_ASSERT_RETURN((vrf_slab_ != NULL), false);
 
     // initialize network related data structures
     network_slab_ = slab::factory("network", HAL_SLAB_NETWORK,
@@ -962,7 +962,7 @@ hal_mem_db::hal_mem_db()
     hal_handle_id_ht_entry_slab_ = NULL;
     hal_handle_id_list_entry_slab_ = NULL;
     //hal_del_cache_entry_slab_ = NULL;
-    tenant_slab_ = NULL;
+    vrf_slab_ = NULL;
     network_slab_ = NULL;
     nwsec_profile_slab_ = NULL;
     dos_policy_slab_ = NULL;
@@ -1027,7 +1027,7 @@ hal_mem_db::~hal_mem_db()
     hal_handle_list_entry_slab_ ? delete hal_handle_list_entry_slab_ : HAL_NOP;
     hal_handle_id_ht_entry_slab_ ? delete hal_handle_id_ht_entry_slab_ : HAL_NOP;
     hal_handle_id_list_entry_slab_ ? delete hal_handle_id_list_entry_slab_ : HAL_NOP;
-    tenant_slab_ ? delete tenant_slab_ : HAL_NOP;
+    vrf_slab_ ? delete vrf_slab_ : HAL_NOP;
     network_slab_ ? delete network_slab_ : HAL_NOP;
     nwsec_profile_slab_ ? delete nwsec_profile_slab_ : HAL_NOP;
     dos_policy_slab_ ? delete dos_policy_slab_ : HAL_NOP;
@@ -1078,7 +1078,7 @@ hal_mem_db::get_slab(hal_slab_t slab_id)
     GET_SLAB(hal_handle_list_entry_slab_);
     GET_SLAB(hal_handle_id_ht_entry_slab_);
     GET_SLAB(hal_handle_id_list_entry_slab_);
-    GET_SLAB(tenant_slab_);
+    GET_SLAB(vrf_slab_);
     GET_SLAB(network_slab_);
     GET_SLAB(dos_policy_slab_);
     GET_SLAB(dos_policy_sg_list_entry_slab_);
@@ -1245,8 +1245,8 @@ free_to_slab (hal_slab_t slab_id, void *elem)
         g_hal_state->hal_handle_id_list_entry_slab()->free_(elem);
         break;
 
-    case HAL_SLAB_TENANT:
-        g_hal_state->tenant_slab()->free_(elem);
+    case HAL_SLAB_VRF:
+        g_hal_state->vrf_slab()->free_(elem);
         break;
 
     case HAL_SLAB_NETWORK:

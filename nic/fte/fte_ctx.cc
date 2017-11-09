@@ -2,7 +2,7 @@
 #include "fte_ctx.hpp"
 #include "fte_flow.hpp"
 #include "nic/hal/src/session.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/p4/nw/include/defines.h"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
@@ -66,7 +66,7 @@ ctx_t::extract_flow_key()
     case FLOW_KEY_LOOKUP_TYPE_IPV4: 
         iphdr = (ipv4_header_t*)(pkt_ + cpu_rxhdr_->l3_offset);
         key_.flow_type = hal::FLOW_TYPE_V4;
-        key_.tenant_id = hal::tenant_lookup_by_handle(l2seg->tenant_handle)->tenant_id; 
+        key_.vrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id; 
         key_.sip.v4_addr = ntohl(iphdr->saddr);
         key_.dip.v4_addr = ntohl(iphdr->daddr);
         key_.proto = (types::IPProtocol) iphdr->protocol;
@@ -75,7 +75,7 @@ ctx_t::extract_flow_key()
     case FLOW_KEY_LOOKUP_TYPE_IPV6: 
         iphdr6 = (ipv6_header_t *)(pkt_ + cpu_rxhdr_->l3_offset);
         key_.flow_type = hal::FLOW_TYPE_V6;
-        key_.tenant_id = hal::tenant_lookup_by_handle(l2seg->tenant_handle)->tenant_id;
+        key_.vrf_id = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id;
         memcpy(key_.sip.v6_addr.addr8, iphdr6->saddr, sizeof(key_.sip.v6_addr.addr8));
         memcpy(key_.dip.v6_addr.addr8, iphdr6->daddr, sizeof(key_.dip.v6_addr.addr8));
         key_.proto = (types::IPProtocol) iphdr6->nexthdr;
@@ -125,7 +125,7 @@ ctx_t::extract_flow_key()
 hal_ret_t
 ctx_t::lookup_flow_objs()
 {
-    hal::tenant_id_t tid;
+    hal::vrf_id_t tid;
 
     if (key_.flow_type == hal::FLOW_TYPE_L2) {
         hal::l2seg_t *l2seg = hal::find_l2seg_by_id(key_.l2seg_id);
@@ -133,15 +133,15 @@ ctx_t::lookup_flow_objs()
             HAL_TRACE_ERR("fte: l2seg not found, key={}", key_);
             return HAL_RET_L2SEG_NOT_FOUND;
         }
-        tid = hal::tenant_lookup_by_handle(l2seg->tenant_handle)->tenant_id;
+        tid = hal::vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id;
     } else {
-        tid = key_.tenant_id;
+        tid = key_.vrf_id;
     }
 
-    tenant_ = hal::tenant_lookup_by_id(tid);
-    if (tenant_ == NULL) {
-        HAL_TRACE_ERR("fte: tenant {} not found, key={}", tid, key_);
-        return HAL_RET_TENANT_NOT_FOUND;
+    vrf_ = hal::vrf_lookup_by_id(tid);
+    if (vrf_ == NULL) {
+        HAL_TRACE_ERR("fte: vrf {} not found, key={}", tid, key_);
+        return HAL_RET_VRF_NOT_FOUND;
     }
 
     //Lookup src and dest EPs
@@ -282,7 +282,7 @@ ctx_t::create_session()
     // read rkey from spec
     if (protobuf_request()) {
         if (sess_spec_->has_responder_flow()) {
-            ret = extract_flow_key_from_spec(sess_spec_->meta().tenant_id(),
+            ret = extract_flow_key_from_spec(sess_spec_->meta().vrf_id(),
                                              &rkey,
                                              sess_spec_->responder_flow().flow_key());
             
@@ -294,7 +294,7 @@ ctx_t::create_session()
     } else {
         valid_rflow_ = true;
         rkey.flow_type = key_.flow_type;
-        rkey.tenant_id = key_.tenant_id;
+        rkey.vrf_id = key_.vrf_id;
 
         // TODO(goli) check valid ether types for rflow
         if (key_.flow_type == hal::FLOW_TYPE_L2) {
@@ -385,7 +385,7 @@ ctx_t::update_flow_table()
             iflow_attrs.lkp_inst = 1;
         }
 
-        iflow_attrs.tenant_hwid = hal::pd::pd_l2seg_get_ten_hwid(sl2seg_);
+        iflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_ten_hwid(sl2seg_);
 
         // TODO(goli) fix tnnl_rw_idx lookup
         if (iflow_attrs.tnnl_rw_act == TUNNEL_REWRITE_NOP_ID) {
@@ -437,7 +437,7 @@ ctx_t::update_flow_table()
             return HAL_RET_L2SEG_NOT_FOUND;
         }
 
-        rflow_attrs.tenant_hwid = hal::pd::pd_l2seg_get_ten_hwid(dl2seg_);
+        rflow_attrs.vrf_hwid = hal::pd::pd_l2seg_get_ten_hwid(dl2seg_);
 
         // TODO(goli) fix tnnl w_idx lookup
         if (rflow_attrs.tnnl_rw_act == TUNNEL_REWRITE_NOP_ID) {
@@ -469,7 +469,7 @@ ctx_t::update_flow_table()
                         rflow_cfg.nat_type, rflow_attrs.expected_src_lif_en, rflow_attrs.expected_src_lif);
     }
 
-    session_args.tenant = tenant_;
+    session_args.vrf = vrf_;
     session_args.sep = sep_;
     session_args.dep = dep_;
     session_args.sif = sif_;
@@ -513,13 +513,13 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
 
     if (header.valid_flds.dip) {
         if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
-            dep_ = hal::find_ep_by_v4_key(tenant_->tenant_id, header.ipv4.dip);
+            dep_ = hal::find_ep_by_v4_key(vrf_->vrf_id, header.ipv4.dip);
             dip.v4_addr = header.ipv4.dip;
         } else {
             ip_addr_t addr;
             addr.af = IP_AF_IPV6;
             addr.addr.v6_addr = header.ipv6.dip;
-            dep_ = hal::find_ep_by_v6_key(tenant_->tenant_id, &addr);
+            dep_ = hal::find_ep_by_v6_key(vrf_->vrf_id, &addr);
             dip.v6_addr = header.ipv6.dip;
         }
     } else if (dep_ == NULL && header.valid_flds.dmac && sl2seg_ != NULL) {
@@ -569,7 +569,7 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
 
     // Build the key and lookup flow
     if (sess_spec_) {
-        ret = extract_flow_key_from_spec(sess_spec_->meta().tenant_id(),
+        ret = extract_flow_key_from_spec(sess_spec_->meta().vrf_id(),
                                          &key_,
                                          sess_spec_->initiator_flow().flow_key());
     } else {
@@ -583,7 +583,7 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
     HAL_TRACE_DEBUG("fte: extracted flow key {}", key_);
 
 
-    // Lookup ep, intf, l2seg, tenant
+    // Lookup ep, intf, l2seg, vrf
     ret = lookup_flow_objs();
     if (ret != HAL_RET_OK) {
         return ret;
@@ -987,16 +987,16 @@ std::ostream& operator<<(std::ostream& os, const header_push_info_t& val)
     }
     switch(val.valid_hdrs&FTE_ENCAP_HEADERS){
     case FTE_HEADER_vxlan:
-        HEADER_FORMAT_FLD(out, val, vxlan, tenant_id);
+        HEADER_FORMAT_FLD(out, val, vxlan, vrf_id);
         break;
     case FTE_HEADER_vxlan_gpe:
-        HEADER_FORMAT_FLD(out, val, vxlan_gpe, tenant_id);
+        HEADER_FORMAT_FLD(out, val, vxlan_gpe, vrf_id);
         break;
     case FTE_HEADER_nvgre:
-        HEADER_FORMAT_FLD(out, val, nvgre, tenant_id);
+        HEADER_FORMAT_FLD(out, val, nvgre, vrf_id);
         break;
     case FTE_HEADER_geneve:
-        HEADER_FORMAT_FLD(out, val, geneve, tenant_id);
+        HEADER_FORMAT_FLD(out, val, geneve, vrf_id);
         break;
     case FTE_HEADER_gre:
         HEADER_FORMAT_FLD(out, val, gre, dummy);

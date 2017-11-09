@@ -143,7 +143,7 @@ void l2seg_delink_pi_pd(pd_l2seg_t *pd_l2seg, l2seg_t *pi_l2seg);
 hal_ret_t l2seg_pd_cleanup(pd_l2seg_t *l2seg_pd);
 uint32_t l2seg_pd_l2seguplink_count(pd_l2seg_t *l2seg_pd);
 uint32_t pd_l2seg_get_l4_prof_idx(pd_l2seg_t *pd_l2seg);
-pd_tenant_t *pd_l2seg_get_pd_tenant(pd_l2seg_t *pd_l2seg);
+pd_vrf_t *pd_l2seg_get_pd_vrf(pd_l2seg_t *pd_l2seg);
 hal_ret_t l2seg_pd_program_hw(pd_l2seg_t *l2seg_pd);
 hal_ret_t l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd);
 hal_ret_t l2seg_pd_deprogram_hw (pd_l2seg_t *l2seg_pd);

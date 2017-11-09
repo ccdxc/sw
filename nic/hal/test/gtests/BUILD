@@ -31,8 +31,8 @@ cc_test(
     linkopts = [] + gl_linkopts_list,
 )
 cc_test(
-    name = "tenant_test",
-    srcs = ["tenant_test.cc"],
+    name = "vrf_test",
+    srcs = ["vrf_test.cc"],
     deps = gl_deps_list,
     linkopts = [] + gl_linkopts_list,
 )

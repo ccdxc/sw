@@ -1,7 +1,7 @@
 #ifndef __NETWORK_HPP__
 #define __NETWORK_HPP__
 
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/gen/proto/hal/nw.pb.h"
 #include "nic/include/ip.h"
 
@@ -24,7 +24,7 @@ namespace hal {
 
 // key to network prefix object
 typedef struct network_key_s {
-    tenant_id_t    tenant_id;
+    vrf_id_t    vrf_id;
     ip_prefix_t    ip_pfx;
 } __PACK__ network_key_t;
 
@@ -151,13 +151,13 @@ network_free (network_t *network)
 
 // find a network instance by its id
 static inline network_t *
-find_network_by_key (tenant_id_t tid, const ip_prefix_t *ip_pfx)
+find_network_by_key (vrf_id_t tid, const ip_prefix_t *ip_pfx)
 {
     network_key_t               nw_key = { 0 };
     hal_handle_id_ht_entry_t    *entry;
     network_t                   *nw = NULL;
 
-    nw_key.tenant_id = tid;
+    nw_key.vrf_id = tid;
     memcpy(&nw_key.ip_pfx, ip_pfx, sizeof(ip_prefix_t));
 
 

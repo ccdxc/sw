@@ -104,7 +104,7 @@ typedef struct header_fld_s {
     uint32_t sport:1;
     uint32_t dport:1;
     uint32_t entropy:1;
-    uint32_t tenant_id:1;
+    uint32_t vrf_id:1;
     uint32_t eompls:1;
     uint32_t label0:1;
     uint32_t label1:1;
@@ -208,7 +208,7 @@ typedef struct header_push_info_s {
 
     union {
         struct {
-            uint32_t tenant_id;
+            uint32_t vrf_id;
         } vxlan, vxlan_gpe, nvgre, geneve;
         struct {
             uint8_t dummy; // placeholder to make the HEADER_FLD_SET macro happy
@@ -472,7 +472,7 @@ public:
     bool valid_rflow() const { return valid_rflow_; }
     void set_valid_rflow(bool val) { valid_rflow_ = val; }
 
-    hal::tenant_t *tenant() const { return tenant_; }
+    hal::vrf_t *vrf() const { return vrf_; }
     hal::l2seg_t *sl2seg() const { return sl2seg_; }
     hal::l2seg_t *dl2seg() const { return dl2seg_; }
     hal::if_t *sif() const { return sif_; }
@@ -533,7 +533,7 @@ private:
     flow_t                *iflow_[MAX_STAGES];       // iflow 
     flow_t                *rflow_[MAX_STAGES];       // rflow 
 
-    hal::tenant_t         *tenant_;
+    hal::vrf_t         *vrf_;
     hal::l2seg_t          *sl2seg_;
     hal::l2seg_t          *dl2seg_;
     hal::if_t             *sif_;

@@ -229,7 +229,7 @@ dos_policy_create_commit_cb (cfg_op_ctxt_t *cfg_ctx)
                     __FUNCTION__);
 
     // TODO: Increment the ref counts of dependent objects
-    //  - Have to increment ref count for tenant
+    //  - Have to increment ref count for vrf
 
 end:
     return ret;
@@ -242,7 +242,7 @@ end:
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI tenant 
+// 3. Free PI vrf 
 //------------------------------------------------------------------------------
 hal_ret_t
 dos_policy_create_abort_cb (cfg_op_ctxt_t *cfg_ctx)
@@ -285,7 +285,7 @@ dos_policy_create_abort_cb (cfg_op_ctxt_t *cfg_ctx)
     // 2. remove object from hal_handle id based hash table in infra
     hal_handle_free(hal_handle);
 
-    // 3. Free PI tenant
+    // 3. Free PI vrf
     dos_policy_free(dosp);
 end:
     return ret;
@@ -328,12 +328,12 @@ dos_policy_create (nwsec::DoSPolicySpec& spec,
     //dos_policy_create_app_ctx_t app_ctx;
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctx = { 0 };
-    tenant_id_t                 tid;
-    tenant_t                    *tenant = NULL;
+    vrf_id_t                 tid;
+    vrf_t                    *vrf = NULL;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("pi-dos-policy:{}: creating dos policy for ten id {}", __FUNCTION__,
-                    spec.meta().tenant_id());
+                    spec.meta().vrf_id());
 
     // check if dos policy exists already, and reject if one is found
     if (find_dos_policy_by_handle(spec.dos_handle())) {
@@ -364,14 +364,14 @@ dos_policy_create (nwsec::DoSPolicySpec& spec,
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
-    // fetch the tenant information
-    tid = spec.meta().tenant_id();
-    tenant = tenant_lookup_by_id(tid);
-    if (tenant == NULL) {
-        ret = HAL_RET_TENANT_NOT_FOUND;
+    // fetch the vrf information
+    tid = spec.meta().vrf_id();
+    vrf = vrf_lookup_by_id(tid);
+    if (vrf == NULL) {
+        ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
-    dosp->tenant_handle = tenant->hal_handle;
+    dosp->vrf_handle = vrf->hal_handle;
 
     // form ctxt and call infra add. nothing to populate in app ctxt
     dhl_entry.handle = dosp->hal_handle;
@@ -408,10 +408,10 @@ validate_dos_policy_update (DoSPolicySpec & spec, DoSPolicyResponse *rsp)
     hal_ret_t   ret = HAL_RET_OK;
 
     if (!spec.has_meta() ||
-        spec.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        HAL_TRACE_ERR("pi-ep:{}:tenant id not valid",
+        spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        HAL_TRACE_ERR("pi-ep:{}:vrf id not valid",
                       __FUNCTION__);
-        return HAL_RET_TENANT_ID_INVALID;
+        return HAL_RET_VRF_ID_INVALID;
     }
 
     // key-handle field must be set
@@ -467,7 +467,7 @@ dos_policy_update_upd_cb (cfg_op_ctxt_t *cfg_ctx)
     }
 #endif
 
-    // TODO: If IPSG changes, it has to trigger to tenants.
+    // TODO: If IPSG changes, it has to trigger to vrfs.
 end:
     return ret;
 }
@@ -744,10 +744,10 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// Update PI DBs as tenant_delete_del_cb() was a succcess
-//      a. Delete from tenant id hash table
+// Update PI DBs as vrf_delete_del_cb() was a succcess
+//      a. Delete from vrf id hash table
 //      b. Remove object from handle id based hash table
-//      c. Free PI tenant
+//      c. Free PI vrf
 //------------------------------------------------------------------------------
 hal_ret_t
 dos_policy_delete_commit_cb (cfg_op_ctxt_t *cfg_ctx)

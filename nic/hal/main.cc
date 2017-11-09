@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include "nic/hal/hal.hpp"
-#include "nic/hal/svc/tenant_svc.hpp"
+#include "nic/hal/svc/vrf_svc.hpp"
 #include "nic/hal/svc/network_svc.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
 #include "nic/hal/svc/l2segment_svc.hpp"
@@ -66,7 +66,7 @@ const std::string&    hal_svc_endpoint_("localhost:50052");
 void
 svc_reg (const std::string& server_addr)
 {
-    TenantServiceImpl        tenant_svc;
+    VrfServiceImpl        vrf_svc;
     NetworkServiceImpl       network_svc;
     InterfaceServiceImpl     if_svc;
     InternalServiceImpl      internal_svc;
@@ -103,7 +103,7 @@ svc_reg (const std::string& server_addr)
                                     grpc::InsecureServerCredentials());
 
     // register all services
-    server_builder.RegisterService(&tenant_svc);
+    server_builder.RegisterService(&vrf_svc);
     server_builder.RegisterService(&network_svc);
     server_builder.RegisterService(&if_svc);
     server_builder.RegisterService(&internal_svc);

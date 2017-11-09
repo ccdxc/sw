@@ -1,5 +1,5 @@
-#include "nic/hal/src/tenant.hpp"
-#include "nic/hal/pd/iris/tenant_pd.hpp"
+#include "nic/hal/src/vrf.hpp"
+#include "nic/hal/pd/iris/vrf_pd.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/acl_pd.hpp"
@@ -196,7 +196,7 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     acl_ip_match_spec_t  *ip_key;
     acl_ip_match_spec_t  *ip_mask;
     acl_t                *pi_acl = (acl_t *)pd_acl->pi_acl;
-    tenant_t             *tenant = NULL;
+    vrf_t             *vrf = NULL;
     l2seg_t              *l2seg = NULL;
     if_t                 *redirect_if = NULL;
     uint16_t             l2seg_mask = 0;
@@ -300,10 +300,10 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl)
     mask.control_metadata_from_cpu_mask = 1;
 
     pd_get_l2seg_ten_masks(&l2seg_mask, &ten_mask, &ten_shift);
-    if (ms->tenant_match) {
-        tenant = tenant_lookup_by_handle(ms->tenant_handle);
+    if (ms->vrf_match) {
+        vrf = vrf_lookup_by_handle(ms->vrf_handle);
         key.flow_lkp_metadata_lkp_vrf = 
-            ((pd_tenant_t *)(tenant->pd))->ten_hw_id << ten_shift;
+            ((pd_vrf_t *)(vrf->pd))->ten_hw_id << ten_shift;
         mask.flow_lkp_metadata_lkp_vrf_mask = ten_mask;
     } else if (ms->l2seg_match) {
         l2seg = find_l2seg_by_handle(ms->l2seg_handle);

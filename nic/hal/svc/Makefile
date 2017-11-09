@@ -14,7 +14,7 @@ LCXXFLAGS = \
 
 
 SOURCES = \
-		tenant_svc.cc \
+		vrf_svc.cc \
 		network_svc.cc \
 		interface_svc.cc \
 		internal_svc.cc \

@@ -168,7 +168,7 @@ class EnicObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, req_spec):
         assert(self.ep != None)
-        req_spec.meta.tenant_id = self.tenant.id
+        req_spec.meta.vrf_id = self.tenant.id
         req_spec.type           = haldefs.interface.IF_TYPE_ENIC
         req_spec.admin_status   = haldefs.interface.IF_STATUS_UP
         req_spec.key_or_handle.interface_id = self.id
@@ -212,12 +212,12 @@ class EnicObject(base.ConfigObjectBase):
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
-        get_req_spec.meta.tenant_id = self.tenant.id
+        get_req_spec.meta.vrf_id = self.tenant.id
         get_req_spec.key_or_handle.if_handle = self.hal_handle
         return
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp):
-        self.tenant_id = get_resp.spec.meta.tenant_id
+        self.tenant_id = get_resp.spec.meta.vrf_id
         if get_resp.spec.key_or_handle.HasField("interface_id"):
             self.id = get_resp.spec.key_or_handle.interface_id
         else:

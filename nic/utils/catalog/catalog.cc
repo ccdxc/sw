@@ -139,7 +139,7 @@ catalog::populate_catalog(ptree &prop_tree)
     catalog_db_.num_uplink_ports =
                             prop_tree.get<uint32_t>("num_uplink_ports", 0);
 
-    catalog_db_.tenant_id = prop_tree.get<uint32_t>("tenant_id", 0);
+    catalog_db_.vrf_id = prop_tree.get<uint32_t>("vrf_id", 0);
 
     catalog_db_.access_mock_mode = prop_tree.get<bool>("access_mock_mode", false);
 
@@ -230,9 +230,9 @@ catalog::num_uplink_ports()
 }
 
 uint32_t
-catalog::tenant_id()
+catalog::vrf_id()
 {
-    return catalog_db_.tenant_id;
+    return catalog_db_.vrf_id;
 }
 
 }    // namespace utils

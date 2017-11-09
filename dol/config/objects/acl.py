@@ -189,7 +189,7 @@ class AclObject(base.ConfigObjectBase):
                     self.fields.match.segment.hal_handle
 
         if self.MatchOnTenant():
-            reqspec.match.tenant_key_handle.tenant_id =\
+            reqspec.match.vrf_key_handle.vrf_id =\
                     self.fields.match.tenant.id
 
         for dm in self.fields.match.dropmask:

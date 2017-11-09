@@ -151,8 +151,8 @@ hal_prepare_rsp (hal_ret_t ret)
         case HAL_RET_INVALID_ARG:
             return types::API_STATUS_INVALID_ARG;
             break;
-        case HAL_RET_TENANT_NOT_FOUND:
-            return types::API_STATUS_TENANT_NOT_FOUND;
+        case HAL_RET_VRF_NOT_FOUND:
+            return types::API_STATUS_VRF_NOT_FOUND;
             break;
         case HAL_RET_L2SEG_NOT_FOUND:
             return types::API_STATUS_L2_SEGMENT_NOT_FOUND;
@@ -178,8 +178,8 @@ hal_prepare_rsp (hal_ret_t ret)
         case HAL_RET_IF_INFO_INVALID:
             return types::API_STATUS_IF_INFO_INVALID;
             break;
-        case HAL_RET_TENANT_ID_INVALID:
-            return types::API_STATUS_TENANT_ID_INVALID;
+        case HAL_RET_VRF_ID_INVALID:
+            return types::API_STATUS_VRF_ID_INVALID;
             break;
         case HAL_RET_L2SEG_ID_INVALID:
             return types::API_STATUS_L2_SEGMENT_ID_INVALID;

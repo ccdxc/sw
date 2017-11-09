@@ -160,7 +160,7 @@ flowkey2str (const flow_key_t& key)
         break;
     case FLOW_TYPE_V4:
     case FLOW_TYPE_V6:
-        out.write("tid={}, ", key.tenant_id);
+        out.write("tid={}, ", key.vrf_id);
         if (key.flow_type == FLOW_TYPE_V4) {
             out.write("sip={}, dip={}, ", ipv4addr2str(key.sip.v4_addr), ipv4addr2str(key.dip.v4_addr));
         } else {
@@ -246,7 +246,7 @@ session_cleanup (session_t *session)
 }
 
 hal_ret_t
-extract_flow_key_from_spec(tenant_id_t tid,
+extract_flow_key_from_spec(vrf_id_t tid,
                            flow_key_t *key,
                            const FlowKey& flow_spec_key)
 {
@@ -258,7 +258,7 @@ extract_flow_key_from_spec(tenant_id_t tid,
         MAC_UINT64_TO_ADDR(key->dmac, flow_spec_key.l2_key().dmac());
     } else if (flow_spec_key.has_v4_key()) {
         key->flow_type = hal::FLOW_TYPE_V4;
-        key->tenant_id = tid;
+        key->vrf_id = tid;
         key->sip.v4_addr = flow_spec_key.v4_key().sip();
         key->dip.v4_addr = flow_spec_key.v4_key().dip();
         key->proto = flow_spec_key.v4_key().ip_proto();
@@ -282,7 +282,7 @@ extract_flow_key_from_spec(tenant_id_t tid,
         }
     } else if (flow_spec_key.has_v6_key()) {
         key->flow_type = hal::FLOW_TYPE_V6;
-        key->tenant_id = tid;
+        key->vrf_id = tid;
         memcpy(key->sip.v6_addr.addr8,
                flow_spec_key.v6_key().sip().v6_addr().c_str(),
                IP6_ADDR8_LEN);
@@ -330,7 +330,7 @@ ep_get_from_flow_key (const flow_key_t* key, ep_t **sep, ep_t **dep)
     case FLOW_TYPE_V4:
     case FLOW_TYPE_V6:
         ep_l3_key_t l3key;
-        l3key.tenant_id = key->tenant_id;
+        l3key.vrf_id = key->vrf_id;
         l3key.ip_addr.af = key->flow_type == FLOW_TYPE_V4 ? IP_AF_IPV4 : IP_AF_IPV6;
 
         l3key.ip_addr.addr = key->sip;
@@ -353,7 +353,7 @@ ep_get_from_flow_key (const flow_key_t* key, ep_t **sep, ep_t **dep)
 // insert this session in all meta data structures
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-add_session_to_db (tenant_t *tenant, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
+add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
                    ep_t *sep, ep_t *dep, if_t *sif, if_t *dif,
                    session_t *session)
 {
@@ -410,12 +410,12 @@ add_session_to_db (tenant_t *tenant, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
         HAL_SPINLOCK_UNLOCK(&dif->slock);
     }
 
-    utils::dllist_reset(&session->tenant_session_lentry);
-    if (tenant) {
-        HAL_SPINLOCK_LOCK(&tenant->slock);
-        utils::dllist_add(&tenant->session_list_head,
-                          &session->tenant_session_lentry);
-        HAL_SPINLOCK_UNLOCK(&tenant->slock);
+    utils::dllist_reset(&session->vrf_session_lentry);
+    if (vrf) {
+        HAL_SPINLOCK_LOCK(&vrf->slock);
+        utils::dllist_add(&vrf->session_list_head,
+                          &session->vrf_session_lentry);
+        HAL_SPINLOCK_UNLOCK(&vrf->slock);
     }
 
     return HAL_RET_OK;
@@ -501,7 +501,7 @@ flow_to_flow_spec(flow_t *flow, FlowSpec *spec)
 static void
 session_to_session_get_response (session_t *session, SessionGetResponse *response)
 {
-    response->mutable_spec()->mutable_meta()->set_tenant_id(session->tenant->tenant_id);
+    response->mutable_spec()->mutable_meta()->set_vrf_id(session->vrf->vrf_id);
     response->mutable_spec()->set_session_id(session->config.session_id);
     response->mutable_spec()->set_conn_track_en(session->config.conn_track_en);
     response->mutable_spec()->set_tcp_ts_option(session->config.tcp_ts_option);
@@ -517,8 +517,8 @@ session_get (SessionGetRequest& req, SessionGetResponse *response)
     session_t              *session;
 
     if (!req.has_meta() ||
-        req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        response->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        response->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -601,7 +601,7 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
     pd::pd_session_args_t    pd_session_args;
     session_t               *session;
 
-    HAL_ASSERT(args->tenant && args->iflow && args->iflow_attrs);
+    HAL_ASSERT(args->vrf && args->iflow && args->iflow_attrs);
 
     // allocate a session
     session = (session_t *)g_hal_state->session_slab()->alloc();
@@ -611,12 +611,12 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
     }
     *session = {};
     session->config = *args->session;
-    session->tenant = args->tenant;
+    session->vrf = args->vrf;
 
     // fetch the security profile, if any
-    if (args->tenant->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+    if (args->vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
         nwsec_prof =
-            find_nwsec_profile_by_handle(args->tenant->nwsec_profile_handle);
+            find_nwsec_profile_by_handle(args->vrf->nwsec_profile_handle);
     } else {
         nwsec_prof = NULL;
     }
@@ -671,7 +671,7 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_args_init(&pd_session_args);
-    pd_session_args.tenant = args->tenant;
+    pd_session_args.vrf = args->vrf;
     pd_session_args.nwsec_prof = nwsec_prof;
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
@@ -685,7 +685,7 @@ session_create(const session_args_t *args, hal_handle_t *session_handle,
     }
 
     // add this session to our db
-    add_session_to_db(session->tenant, args->sl2seg, args->dl2seg,
+    add_session_to_db(session->vrf, args->sl2seg, args->dl2seg,
                       args->sep, args->dep, args->sif, args->dif, session);
     HAL_ASSERT(ret == HAL_RET_OK);
 
@@ -743,7 +743,7 @@ session_update(const session_args_t *args, session_t *session)
  
     // allocate all PD resources and finish programming, if any
     pd::pd_session_args_init(&pd_session_args);
-    pd_session_args.tenant = args->tenant;
+    pd_session_args.vrf = args->vrf;
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
     pd_session_args.rsp = args->rsp;
@@ -764,7 +764,7 @@ session_delete(const session_args_t *args, session_t *session)
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_args_init(&pd_session_args);
-    pd_session_args.tenant = args->tenant;
+    pd_session_args.vrf = args->vrf;
     pd_session_args.session = session;
     pd_session_args.session_state = args->session_state;
     pd_session_args.rsp = args->rsp;

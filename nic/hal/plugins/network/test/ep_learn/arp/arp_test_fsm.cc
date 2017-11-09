@@ -13,7 +13,7 @@
 #include "nic/hal/src/network.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
-#include "nic/gen/proto/hal/tenant.pb.h"
+#include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/endpoint.pb.h"
 #include "nic/gen/proto/hal/nw.pb.h"
 
@@ -37,19 +37,19 @@ extern twheel *g_twheel;
 }
 }  // namespace hal
 
-tenant_t *dummy_ten;
+vrf_t *dummy_ten;
 ep_t *dummy_ep;
 
 
-void fte_ctx_init(fte::ctx_t &ctx, hal::tenant_t *ten, hal::ep_t *ep,
+void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
         fte::cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
         fte::flow_t iflow[], fte::flow_t rflow[]);
 
 void arp_topo_setup()
 {
    hal_ret_t                   ret;
-   TenantSpec                  ten_spec;
-   TenantResponse              ten_rsp;
+   VrfSpec                  ten_spec;
+   VrfResponse              ten_rsp;
    L2SegmentSpec               l2seg_spec;
    L2SegmentResponse           l2seg_rsp;
    InterfaceSpec               up_spec;
@@ -61,32 +61,32 @@ void arp_topo_setup()
    NetworkResponse             nw_rsp, nw_rsp1;
 
 
-   // Create tenant
-   ten_spec.mutable_key_or_handle()->set_tenant_id(1);
+   // Create vrf
+   ten_spec.mutable_key_or_handle()->set_vrf_id(1);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-   ret = hal::tenant_create(ten_spec, &ten_rsp);
+   ret = hal::vrf_create(ten_spec, &ten_rsp);
    hal::hal_cfg_db_close();
    ASSERT_TRUE(ret == HAL_RET_OK);
 
    // Create network
-   nw_spec.mutable_meta()->set_tenant_id(1);
+   nw_spec.mutable_meta()->set_vrf_id(1);
    nw_spec.set_rmac(0x0000DEADBEEE);
    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
    nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
-   nw_spec.mutable_tenant_key_handle()->set_tenant_id(1);
+   nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
    ret = hal::network_create(nw_spec, &nw_rsp);
    hal::hal_cfg_db_close();
    ASSERT_TRUE(ret == HAL_RET_OK);
    uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
 
-   nw_spec1.mutable_meta()->set_tenant_id(1);
+   nw_spec1.mutable_meta()->set_vrf_id(1);
    nw_spec1.set_rmac(0x0000DEADBEEF);
    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(24);
    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
    nw_spec1.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
-   nw_spec1.mutable_tenant_key_handle()->set_tenant_id(1);
+   nw_spec1.mutable_vrf_key_handle()->set_vrf_id(1);
    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
    ret = hal::network_create(nw_spec1, &nw_rsp);
    hal::hal_cfg_db_close();
@@ -94,7 +94,7 @@ void arp_topo_setup()
    uint64_t nw_hdl1 = nw_rsp.mutable_status()->nw_handle();
 
    // Create L2 Segment
-   l2seg_spec.mutable_meta()->set_tenant_id(1);
+   l2seg_spec.mutable_meta()->set_vrf_id(1);
    l2seg_spec.add_network_handle(nw_hdl);
    l2seg_spec.mutable_key_or_handle()->set_segment_id(1);
    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -105,7 +105,7 @@ void arp_topo_setup()
    ASSERT_TRUE(ret == HAL_RET_OK);
    uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
-   l2seg_spec.mutable_meta()->set_tenant_id(1);
+   l2seg_spec.mutable_meta()->set_vrf_id(1);
    l2seg_spec.add_network_handle(nw_hdl1);
    l2seg_spec.mutable_key_or_handle()->set_segment_id(2);
    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -117,7 +117,7 @@ void arp_topo_setup()
    // uint64_t l2seg_hdl2 = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
 
    // Create an uplink
-   up_spec.mutable_meta()->set_tenant_id(1);
+   up_spec.mutable_meta()->set_vrf_id(1);
    up_spec.set_type(intf::IF_TYPE_UPLINK);
    up_spec.mutable_key_or_handle()->set_interface_id(1);
    up_spec.mutable_if_uplink_info()->set_port_num(1);
@@ -127,7 +127,7 @@ void arp_topo_setup()
    ASSERT_TRUE(ret == HAL_RET_OK);
    // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
-   up_spec.mutable_meta()->set_tenant_id(1);
+   up_spec.mutable_meta()->set_vrf_id(1);
    up_spec.set_type(intf::IF_TYPE_UPLINK);
    up_spec.mutable_key_or_handle()->set_interface_id(2);
    up_spec.mutable_if_uplink_info()->set_port_num(2);
@@ -136,11 +136,11 @@ void arp_topo_setup()
    hal::hal_cfg_db_close();
    ASSERT_TRUE(ret == HAL_RET_OK);
    ::google::protobuf::uint64 up_hdl2 = up_rsp.mutable_status()->if_handle();
-   dummy_ten = tenant_lookup_by_id(1);
+   dummy_ten = vrf_lookup_by_id(1);
    ASSERT_TRUE(dummy_ten != NULL);
 
    // Create 2 Endpoints
-   ep_spec.mutable_meta()->set_tenant_id(1);
+   ep_spec.mutable_meta()->set_vrf_id(1);
    ep_spec.mutable_l2_key()->set_l2_segment_handle(l2seg_hdl);
    ep_spec.mutable_endpoint_attrs()->set_interface_handle(up_hdl2);
    ep_spec.mutable_l2_key()->set_mac_address(0x00000000ABCD);

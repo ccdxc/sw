@@ -6,7 +6,7 @@
 #include "nic/hal/src/nwsec_group.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
-#include "nic/gen/proto/hal/tenant.pb.h"
+#include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/hal/hal.hpp"
 #include "nic/gen/proto/hal/types.pb.h"
@@ -21,8 +21,8 @@ using intf::InterfaceResponse;
 using intf::InterfaceKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentResponse;
-using tenant::TenantSpec;
-using tenant::TenantResponse;
+using vrf::VrfSpec;
+using vrf::VrfResponse;
 using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponse;
 using intf::LifSpec;

@@ -278,7 +278,7 @@ class SegmentObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.meta.tenant_id = self.tenant.id
+        req_spec.meta.vrf_id = self.tenant.id
         req_spec.key_or_handle.segment_id = self.id
         if self.IsTenantSegment() or self.IsSpanSegment():
             req_spec.segment_type = haldefs.common.L2_SEGMENT_TYPE_TENANT
@@ -314,7 +314,7 @@ class SegmentObject(base.ConfigObjectBase):
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
-        get_req_spec.meta.tenant_id = self.tenant.id
+        get_req_spec.meta.vrf_id = self.tenant.id
         get_req_spec.key_or_handle.l2segment_handle = self.hal_handle
         return
 

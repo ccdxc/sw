@@ -73,7 +73,7 @@ network_add_to_db (network_t *nw, hal_handle_t handle)
         return HAL_RET_OOM;
     }
 
-    // add mapping from tenant id to its handle
+    // add mapping from vrf id to its handle
     entry->handle_id = handle;
     ret = g_hal_state->network_key_ht()->insert_with_key(&nw->nw_key,
                                                          entry, 
@@ -124,7 +124,7 @@ end:
 //------------------------------------------------------------------------------
 // validate an incoming network create request
 // TODO:
-// 1. check if tenant exists
+// 1. check if vrf exists
 // 2. validate L4 profile existence if that handle is valid
 //------------------------------------------------------------------------------
 static hal_ret_t
@@ -137,10 +137,10 @@ validate_network_create (NetworkSpec& spec, NetworkResponse *rsp)
         return HAL_RET_INVALID_ARG;
     }
 
-    if (!spec.has_tenant_key_handle() ||
-        spec.tenant_key_handle().tenant_id() == HAL_TENANT_ID_INVALID) {
-        HAL_TRACE_ERR("pi-network:{}:tenant not found", __FUNCTION__);
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+    if (!spec.has_vrf_key_handle() ||
+        spec.vrf_key_handle().vrf_id() == HAL_VRF_ID_INVALID) {
+        HAL_TRACE_ERR("pi-network:{}:vrf not found", __FUNCTION__);
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -304,17 +304,17 @@ network_read_security_groups (network_t *nw, NetworkSpec& spec)
 }
 
 //------------------------------------------------------------------------------
-// process a tenant create request
-// TODO: if tenant exists, treat this as modify
+// process a vrf create request
+// TODO: if vrf exists, treat this as modify
 //------------------------------------------------------------------------------
 hal_ret_t
 network_create (NetworkSpec& spec, NetworkResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     network_t                       *nw = NULL;
-    tenant_id_t                     tid;
+    vrf_id_t                     tid;
     ep_t                            *gw_ep = NULL;
-    tenant_t                        *tenant = NULL;
+    vrf_t                        *vrf = NULL;
     network_create_app_ctxt_t       app_ctxt;
     dhl_entry_t                     dhl_entry = { 0 };
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
@@ -331,13 +331,13 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
         goto end;
     }
 
-    // fetch the tenant information
-    tid = spec.tenant_key_handle().tenant_id();
-    tenant = tenant_lookup_by_id(tid);
-    if (tenant == NULL) {
-        HAL_TRACE_ERR("pi-network:{}: unable to retrieve tenant_id:{}",
+    // fetch the vrf information
+    tid = spec.vrf_key_handle().vrf_id();
+    vrf = vrf_lookup_by_id(tid);
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("pi-network:{}: unable to retrieve vrf_id:{}",
                 __FUNCTION__, tid);
-        ret = HAL_RET_TENANT_NOT_FOUND;
+        ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
 
@@ -382,7 +382,7 @@ network_create (NetworkSpec& spec, NetworkResponse *rsp)
         goto end;
     }
 
-    nw->nw_key.tenant_id = tid;
+    nw->nw_key.vrf_id = tid;
     nw->gw_ep_handle = spec.gateway_ep_handle();
     MAC_UINT64_TO_ADDR(nw->rmac_addr, spec.rmac());
     ip_pfx_spec_to_pfx_spec(&nw->nw_key.ip_pfx, nw_pfx);
@@ -438,15 +438,15 @@ validate_network_update (NetworkSpec& spec, NetworkResponse *rsp)
 // Lookup network from key or handle
 //------------------------------------------------------------------------------
 network_t *
-network_lookup_key_or_handle (NetworkKeyHandle& kh, tenant_id_t tid)
+network_lookup_key_or_handle (NetworkKeyHandle& kh, vrf_id_t tid)
 {
-    // tenant_id_t                     tid;
+    // vrf_id_t                     tid;
     network_t                       *nw = NULL;
     ip_prefix_t                     ip_pfx;
 
     auto nw_pfx = kh.ip_prefix();
 
-    // tid = req.meta().tenant_id();
+    // tid = req.meta().vrf_id();
     ip_pfx_spec_to_pfx_spec(&ip_pfx, nw_pfx);
 
     if (kh.key_or_handle_case() == NetworkKeyHandle::kIpPrefix) {
@@ -936,7 +936,7 @@ network_update (NetworkSpec& spec, NetworkResponse *rsp)
     }
 
     // retrieve network object
-    nw = network_lookup_key_or_handle(kh, spec.meta().tenant_id());
+    nw = network_lookup_key_or_handle(kh, spec.meta().vrf_id());
     if (nw == NULL) {
         HAL_TRACE_ERR("pi-network:{}:failed to find nw handle {}",
                       __FUNCTION__, kh.nw_handle());
@@ -986,7 +986,7 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// process a tenant get request
+// process a vrf get request
 //------------------------------------------------------------------------------
 hal_ret_t
 network_get (NetworkGetRequest& req, NetworkGetResponse *rsp)
@@ -996,8 +996,8 @@ network_get (NetworkGetRequest& req, NetworkGetResponse *rsp)
     network_t             *nw;
 
     if (!req.has_meta() ||
-        req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -1006,10 +1006,10 @@ network_get (NetworkGetRequest& req, NetworkGetResponse *rsp)
         if (kh.key_or_handle_case() == NetworkKeyHandle::kIpPrefix) {
             auto nw_pfx = kh.ip_prefix();
 
-            nw_key.tenant_id = req.tenant_key_handle().tenant_id();
+            nw_key.vrf_id = req.vrf_key_handle().vrf_id();
             ip_pfx_spec_to_pfx_spec(&ip_pfx, nw_pfx);
 
-            nw = find_network_by_key(nw_key.tenant_id, &ip_pfx);
+            nw = find_network_by_key(nw_key.vrf_id, &ip_pfx);
 
         } else if (kh.key_or_handle_case() ==
                        NetworkKeyHandle::kNwHandle) {
@@ -1028,8 +1028,8 @@ network_get (NetworkGetRequest& req, NetworkGetResponse *rsp)
         return HAL_RET_EP_NOT_FOUND;
     }
 
-    // fill config spec of this tenant
-    rsp->mutable_spec()->mutable_meta()->set_tenant_id(nw->nw_key.tenant_id);
+    // fill config spec of this vrf
+    rsp->mutable_spec()->mutable_meta()->set_vrf_id(nw->nw_key.vrf_id);
     rsp->mutable_spec()->set_rmac(MAC_TO_UINT64(nw->rmac_addr));
 
     rsp->set_api_status(types::API_STATUS_OK);
@@ -1189,7 +1189,7 @@ network_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 }
 
 //------------------------------------------------------------------------------
-// process a tenant delete request
+// process a vrf delete request
 //------------------------------------------------------------------------------
 hal_ret_t
 network_delete (NetworkDeleteRequest& req, NetworkDeleteResponse *rsp)
@@ -1212,7 +1212,7 @@ network_delete (NetworkDeleteRequest& req, NetworkDeleteResponse *rsp)
         goto end;
     }
 
-    nw = network_lookup_key_or_handle(kh, req.tenant_key_handle().tenant_id());
+    nw = network_lookup_key_or_handle(kh, req.vrf_key_handle().vrf_id());
     if (nw == NULL) {
         HAL_TRACE_ERR("pi-network:{}:failed to find nw handle {}",
                       __FUNCTION__, kh.nw_handle());
@@ -1396,7 +1396,7 @@ network_to_str (network_t *nw)
     buf = nw_str[nw_str_next++ & 0x3];
     memset(buf, 0, 50);
     if (nw) {
-        snprintf(buf, 50, "(tid:ippfx) : (%d:%s)", nw->nw_key.tenant_id,
+        snprintf(buf, 50, "(tid:ippfx) : (%d:%s)", nw->nw_key.vrf_id,
                  ippfx2str(&nw->nw_key.ip_pfx));
     }
     return buf;

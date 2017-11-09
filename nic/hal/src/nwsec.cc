@@ -354,7 +354,7 @@ end:
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI tenant 
+// 3. Free PI vrf 
 //------------------------------------------------------------------------------
 hal_ret_t
 nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -395,7 +395,7 @@ nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 2. remove object from hal_handle id based hash table in infra
     hal_handle_free(hal_handle);
 
-    // 3. Free PI tenant
+    // 3. Free PI vrf
     nwsec_profile_free(nwsec);
 end:
     return ret;
@@ -527,7 +527,7 @@ validate_nwsec_update (SecurityProfileSpec & spec, SecurityProfileResponse *rsp)
 }
 
 //------------------------------------------------------------------------------
-// Handle ipsg change. Triggers tenants to update ipsg
+// Handle ipsg change. Triggers vrfs to update ipsg
 //------------------------------------------------------------------------------
 hal_ret_t
 nwsec_handle_ipsg_change (nwsec_profile_t *nwsec, nwsec_profile_t *nwsec_clone)
@@ -543,19 +543,19 @@ nwsec_handle_ipsg_change (nwsec_profile_t *nwsec, nwsec_profile_t *nwsec_clone)
     HAL_TRACE_DEBUG("pi-sec-prof:{}:sec_prof_id:{}", 
                     __FUNCTION__, nwsec_clone->profile_id);
     // clone didnt have the lists moved yet. They happen in commit CB.
-    // So walking tenant list in the original.
-    dllist_for_each_safe(curr, next, &nwsec->tenant_list_head) {
+    // So walking vrf list in the original.
+    dllist_for_each_safe(curr, next, &nwsec->vrf_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        auto ten = tenant_lookup_by_handle(entry->handle_id);
+        auto ten = vrf_lookup_by_handle(entry->handle_id);
         if (!ten) {
-            HAL_TRACE_ERR("pi-sec-prof:{}:unable to find tenant with handle:{}",
+            HAL_TRACE_ERR("pi-sec-prof:{}:unable to find vrf with handle:{}",
                           __FUNCTION__, entry->handle_id);
             continue;
         }
-        ret = tenant_handle_nwsec_update(ten, nwsec_clone);
+        ret = vrf_handle_nwsec_update(ten, nwsec_clone);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("pi-sec-prof:{}:unable to process nwsec_clone "
-                          "update by tenant{}", __FUNCTION__, ten->tenant_id);
+                          "update by vrf{}", __FUNCTION__, ten->vrf_id);
         }
     }
 
@@ -604,7 +604,7 @@ nwsec_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    // IPSG changes, trigger tenants.
+    // IPSG changes, trigger vrfs.
     if (app_ctxt->ipsg_changed) {
         nwsec_clone->ipsg_en = app_ctxt->ipsg_en;
         ret = nwsec_handle_ipsg_change(nwsec, nwsec_clone);
@@ -631,7 +631,7 @@ nwsec_make_clone (nwsec_profile_t *nwsec, nwsec_profile_t **nwsec_clone,
     memcpy(*nwsec_clone, nwsec, sizeof(nwsec_profile_t));
 
     // After clone always reset lists
-    dllist_reset(&(*nwsec_clone)->tenant_list_head);
+    dllist_reset(&(*nwsec_clone)->vrf_list_head);
 
     pd::pd_nwsec_profile_make_clone(nwsec, *nwsec_clone);
 
@@ -675,7 +675,7 @@ nwsec_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, nwsec->profile_id);
 
     // move lists
-    dllist_move(&nwsec_clone->tenant_list_head, &nwsec->tenant_list_head);
+    dllist_move(&nwsec_clone->vrf_list_head, &nwsec->vrf_list_head);
 
     // update clone with new values
     if (app_ctxt->nwsec_changed) {
@@ -877,10 +877,10 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// Update PI DBs as tenant_delete_del_cb() was a succcess
-//      a. Delete from tenant id hash table
+// Update PI DBs as vrf_delete_del_cb() was a succcess
+//      a. Delete from vrf id hash table
 //      b. Remove object from handle id based hash table
-//      c. Free PI tenant
+//      c. Free PI vrf
 //------------------------------------------------------------------------------
 hal_ret_t
 nwsec_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -951,10 +951,10 @@ validate_nwsec_delete (nwsec_profile_t *nwsec)
     hal_ret_t   ret = HAL_RET_OK;
 
     // check for no presence of l2segs
-    if (dllist_count(&nwsec->tenant_list_head)) {
+    if (dllist_count(&nwsec->vrf_list_head)) {
         ret = HAL_RET_OBJECT_IN_USE;
-        HAL_TRACE_ERR("{}:tenants still referring:", __FUNCTION__);
-        hal_print_handles_list(&nwsec->tenant_list_head);
+        HAL_TRACE_ERR("{}:vrfs still referring:", __FUNCTION__);
+        hal_print_handles_list(&nwsec->vrf_list_head);
     }
 
     return ret;
@@ -1109,15 +1109,15 @@ security_profile_get (nwsec::SecurityProfileGetRequest& req,
 }
 
 //-----------------------------------------------------------------------------
-// Adds tenant into nwsec profile list
+// Adds vrf into nwsec profile list
 //-----------------------------------------------------------------------------
 hal_ret_t
-nwsec_prof_add_tenant (nwsec_profile_t *nwsec, tenant_t *tenant)
+nwsec_prof_add_vrf (nwsec_profile_t *nwsec, vrf_t *vrf)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     hal_handle_id_list_entry_t  *entry = NULL;
 
-    if (nwsec == NULL || tenant == NULL) {
+    if (nwsec == NULL || vrf == NULL) {
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1129,25 +1129,25 @@ nwsec_prof_add_tenant (nwsec_profile_t *nwsec, tenant_t *tenant)
         ret = HAL_RET_OOM;
         goto end;
     }
-    entry->handle_id = tenant->hal_handle;
+    entry->handle_id = vrf->hal_handle;
 
     nwsec_profile_lock(nwsec, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
-    utils::dllist_add(&nwsec->tenant_list_head, &entry->dllist_ctxt);
+    utils::dllist_add(&nwsec->vrf_list_head, &entry->dllist_ctxt);
     nwsec_profile_unlock(nwsec, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-sec-prof:{}: add nwsec => tenant, {} => {}, ten_hdl:{} ret:{}",
-                    __FUNCTION__, nwsec->profile_id, tenant->tenant_id,
-                    tenant->hal_handle, ret);
+    HAL_TRACE_DEBUG("pi-sec-prof:{}: add nwsec => vrf, {} => {}, ten_hdl:{} ret:{}",
+                    __FUNCTION__, nwsec->profile_id, vrf->vrf_id,
+                    vrf->hal_handle, ret);
     return ret;
 }
 
 //-----------------------------------------------------------------------------
-// Remove tenant from nwsec profile list
+// Remove vrf from nwsec profile list
 //-----------------------------------------------------------------------------
 hal_ret_t
-nwsec_prof_del_tenant (nwsec_profile_t *nwsec, tenant_t *tenant)
+nwsec_prof_del_vrf (nwsec_profile_t *nwsec, vrf_t *vrf)
 {
     hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
     hal_handle_id_list_entry_t  *entry = NULL;
@@ -1155,9 +1155,9 @@ nwsec_prof_del_tenant (nwsec_profile_t *nwsec, tenant_t *tenant)
 
 
     nwsec_profile_lock(nwsec, __FILENAME__, __LINE__, __func__);      // lock
-    dllist_for_each_safe(curr, next, &nwsec->tenant_list_head) {
+    dllist_for_each_safe(curr, next, &nwsec->vrf_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        if (entry->handle_id == tenant->hal_handle) {
+        if (entry->handle_id == vrf->hal_handle) {
             // Remove from list
             utils::dllist_del(&entry->dllist_ctxt);
             // Free the entry
@@ -1168,8 +1168,8 @@ nwsec_prof_del_tenant (nwsec_profile_t *nwsec, tenant_t *tenant)
     }
     nwsec_profile_unlock(nwsec, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-sec-prof:{}: del nwsec =/=> tenant, {} =/=> {}, ret:{}",
-                    __FUNCTION__, nwsec->profile_id, tenant->tenant_id, ret);
+    HAL_TRACE_DEBUG("pi-sec-prof:{}: del nwsec =/=> vrf, {} =/=> {}, ret:{}",
+                    __FUNCTION__, nwsec->profile_id, vrf->vrf_id, ret);
     return ret;
 }
 

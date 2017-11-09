@@ -73,8 +73,8 @@ SHARED_OBJS :=	$(OBJ_DIR)/libhal.so \
 				$(OBJ_DIR)/utils.o \
 				$(OBJ_DIR)/if_utils.o \
 				$(OBJ_DIR)/types.pb.o \
-				$(OBJ_DIR)/tenant.pb.o \
-				$(OBJ_DIR)/tenant.o \
+				$(OBJ_DIR)/vrf.pb.o \
+				$(OBJ_DIR)/vrf.o \
 				$(OBJ_DIR)/interface.pb.o \
 				$(OBJ_DIR)/internal.pb.o \
 				$(OBJ_DIR)/rdma.pb.o \

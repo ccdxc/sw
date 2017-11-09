@@ -184,7 +184,7 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
     dhcp_ctx *dhcp_ctx = &dhcp_trans->ctx_;
     struct option_data option_data;
     hal_ret_t ret;
-    tenant_t *tenant;
+    vrf_t *vrf;
 
     ep_t *ep_entry = fte_ctx->sep();
 
@@ -222,14 +222,14 @@ bool dhcp_trans_t::dhcp_fsm_t::process_dhcp_ack(fsm_state_ctx ctx,
     /*
      * TODO: Add HAL EP update API Here.
      */
-    tenant = tenant_lookup_by_handle(ep_entry->tenant_handle);
-    if (tenant == NULL) {
-       HAL_TRACE_ERR("pi-ep:{}:unable to find tenant", __FUNCTION__);
+    vrf = vrf_lookup_by_handle(ep_entry->vrf_handle);
+    if (vrf == NULL) {
+       HAL_TRACE_ERR("pi-ep:{}:unable to find vrf", __FUNCTION__);
        dhcp_trans->sm_->throw_event(DHCP_ERROR, NULL);
        return false;
     }
 
-    init_dhcp_ip_entry_key((uint8_t *)(&raw->yiaddr.s_addr), tenant->tenant_id,
+    init_dhcp_ip_entry_key((uint8_t *)(&raw->yiaddr.s_addr), vrf->vrf_id,
                            &dhcp_trans->ip_entry_key_);
     g_hal_state->dhcplearn_ip_entry_ht()->insert(
         (void *)dhcp_trans, &dhcp_trans->ip_entry_ht_ctxt_);
@@ -271,12 +271,12 @@ void dhcp_trans_t::init_dhcp_trans_key(const uint8_t *chaddr, uint32_t xid,
 }
 
 void dhcp_trans_t::init_dhcp_ip_entry_key(const uint8_t *protocol_address,
-                                          tenant_id_t tenant_id,
+                                          vrf_id_t vrf_id,
                                           dhcp_ip_entry_key_t *ip_entry_key_) {
     *ip_entry_key_ = {0};
     memcpy(&ip_entry_key_->ip_addr.addr.v4_addr, protocol_address,
            sizeof(ip_entry_key_->ip_addr.addr.v4_addr));
-    ip_entry_key_->tenant_id = tenant_id;
+    ip_entry_key_->vrf_id = vrf_id;
 }
 
 void dhcp_trans_t::process_event(dhcp_fsm_event_t event, fsm_event_data data) {

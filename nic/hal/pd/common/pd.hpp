@@ -4,7 +4,7 @@
 namespace hal {
 namespace pd {
 
-typedef struct pd_tenant_s pd_tenant_t;
+typedef struct pd_vrf_s pd_vrf_t;
 typedef struct pd_nwsec_profile_s pd_nwsec_profile_t;
 typedef struct pd_dos_policy_s pd_dos_policy_t;
 typedef struct pd_l2seg_s pd_l2seg_t;

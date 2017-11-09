@@ -3,7 +3,7 @@
 #include "nic/gen/iris/include/p4pd.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/dos_pd.hpp"
-#include "nic/hal/pd/iris/tenant_pd.hpp"
+#include "nic/hal/pd/iris/vrf_pd.hpp"
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
@@ -543,7 +543,7 @@ dos_pd_program_ddos_src_vf_table (pd_dos_policy_t *pd_dosp, ep_t *ep, if_t *intf
 hal_ret_t
 dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
                                    dos_policy_t *pi_dosp,
-                                   pd_tenant_t *ten_pd)
+                                   pd_vrf_t *ten_pd)
 {
     int             tcam_idx;
     uint32_t        base_pol_idx;
@@ -676,7 +676,7 @@ dos_pd_program_ddos_src_dst_table (pd_dos_policy_t *pd_dosp,
 
 hal_ret_t
 dos_pd_program_ddos_service_table (pd_dos_policy_t *pd_dosp,
-                                   ep_t *ep, pd_tenant_t *ten_pd)
+                                   ep_t *ep, pd_vrf_t *ten_pd)
 {
     int                         tcam_idx;
     uint32_t                    base_pol_idx;
@@ -741,18 +741,18 @@ dos_pd_program_hw (pd_dos_policy_t *pd_dosp, bool create)
     ep_t                        *ep = NULL;
     hal_handle_id_list_entry_t  *ep_ent = NULL;
     if_t                        *intf = NULL;
-    tenant_t                    *ten;
-    pd_tenant_t                 *ten_pd;
+    vrf_t                    *ten;
+    pd_vrf_t                 *ten_pd;
 
     dp = (dos_policy_t *) pd_dosp->pi_dos_policy;
-    ten = tenant_lookup_by_handle(dp->tenant_handle);
+    ten = vrf_lookup_by_handle(dp->vrf_handle);
     if (ten == NULL) {
-        HAL_TRACE_ERR("pd-dos:{}:unable to find tenant", __FUNCTION__);
-        ret = HAL_RET_TENANT_NOT_FOUND;
+        HAL_TRACE_ERR("pd-dos:{}:unable to find vrf", __FUNCTION__);
+        ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
     HAL_ASSERT(ten->pd != NULL);
-    ten_pd = (pd_tenant_t *) ten->pd;
+    ten_pd = (pd_vrf_t *) ten->pd;
 
     sg_list = &dp->sg_list_head;
     HAL_TRACE_DEBUG("pd-dos:{}: Going through the linked security groups",
@@ -838,7 +838,7 @@ dos_pd_dealloc_res(pd_dos_policy_t *pd_dosp)
 // PD Cleanup
 //  - Release all resources
 //  - Delink PI <-> PD
-//  - Free PD Tenant
+//  - Free PD Vrf
 //  Note:
 //      - Just free up whatever PD has. 
 //      - Dont use this inplace of delete. Delete may result in giving callbacks

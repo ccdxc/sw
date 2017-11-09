@@ -51,7 +51,7 @@ typedef struct arp_trans_key_s {
 } __PACK__ arp_trans_key_t;
 
 typedef struct arp_ip_entry_key_s {
-    tenant_id_t tenant_id;  // VRF id
+    vrf_id_t vrf_id;  // VRF id
     ip_addr_t ip_addr;      // IP address of the endpoint
 } __PACK__ arp_ip_entry_key_t;
 
@@ -133,7 +133,7 @@ private:
     static void init_arp_trans_key(const uint8_t *hw_addr, const ep_t *ep,
                                    arp_trans_key_t *trans_key);
     static void init_arp_ip_entry_key(const uint8_t *protocol_address,
-                                            tenant_id_t tenant_id,
+                                            vrf_id_t vrf_id,
                                              arp_ip_entry_key_t *ip_entry_key);
 
     static inline arp_trans_t *find_arptrans_by_id(arp_trans_key_t id) {

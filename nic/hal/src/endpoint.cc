@@ -83,8 +83,8 @@ ep_compare_l3_key_func (void *key1, void *key2)
 
 #if 0
     HAL_TRACE_DEBUG("key1.tid {}, key2.tid {}",
-                    ((ep_l3_key_t *)key1)->tenant_id,
-                    ((ep_l3_key_t *)key2)->tenant_id);
+                    ((ep_l3_key_t *)key1)->vrf_id,
+                    ((ep_l3_key_t *)key2)->vrf_id);
     HAL_TRACE_DEBUG("key1.ip {}, key2.ip {}",
                     ipaddr2str(&((ep_l3_key_t *)key1)->ip_addr),
                     ipaddr2str(&((ep_l3_key_t *)key2)->ip_addr));
@@ -115,7 +115,7 @@ ep_add_to_l2_db (ep_t *ep, hal_handle_t handle)
         return HAL_RET_OOM;
     }
 
-    // add mapping from tenant id to its handle
+    // add mapping from vrf id to its handle
     entry->handle_id = handle;
     ret = g_hal_state->ep_l2_ht()->insert_with_key(&ep->l2_key,
                                                    entry, &entry->ht_ctxt);
@@ -170,7 +170,7 @@ ep_add_to_l3_db (ep_l3_key_t *l3_key, ep_ip_entry_t *ep_ip,
         return HAL_RET_OOM;
     }
 
-    // add mapping from tenant id to its handle
+    // add mapping from vrf id to its handle
     entry->ep_hal_handle = handle;
     entry->l3_key = *l3_key;
     entry->ep_ip = ep_ip;
@@ -213,10 +213,10 @@ static hal_ret_t
 validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 {
     if (!spec.has_meta() ||
-        spec.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        HAL_TRACE_ERR("pi-ep:{}:tenant id not valid",
+        spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        HAL_TRACE_ERR("pi-ep:{}:vrf id not valid",
                       __FUNCTION__);
-        return HAL_RET_TENANT_ID_INVALID;
+        return HAL_RET_VRF_ID_INVALID;
     }
 
     if (!spec.has_l2_key()) {
@@ -277,7 +277,7 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     pd::pd_ep_args_init(&pd_ep_args);
     pd_ep_args.ep = ep;
-    pd_ep_args.tenant = app_ctxt->tenant;
+    pd_ep_args.vrf = app_ctxt->vrf;
     pd_ep_args.l2seg = app_ctxt->l2seg;
     pd_ep_args.intf = app_ctxt->hal_if;
     ret = pd::pd_ep_create(&pd_ep_args);
@@ -303,7 +303,7 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     ep_t                        *ep = NULL;
-    tenant_t                    *tenant = NULL;
+    vrf_t                    *vrf = NULL;
     hal_handle_t                hal_handle = 0;
     dllist_ctxt_t               *ip_lnode = NULL;
     ep_ip_entry_t               *pi_ip_entry = NULL;
@@ -323,7 +323,7 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ep = (ep_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
-    tenant = app_ctxt->tenant;
+    vrf = app_ctxt->vrf;
 
     HAL_TRACE_DEBUG("pi-ep:{}:create commit CB {}",
                     __FUNCTION__, ep_l2_key_to_str(ep));
@@ -342,7 +342,7 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Add EP to L3 DB
     dllist_for_each(ip_lnode, &ep->ip_list_head) {
         pi_ip_entry = dllist_entry(ip_lnode, ep_ip_entry_t, ep_ip_lentry);
-        l3_key.tenant_id = tenant->tenant_id;
+        l3_key.vrf_id = vrf->vrf_id;
         l3_key.ip_addr = pi_ip_entry->ip_addr;
         ret = ep_add_to_l3_db(&l3_key, pi_ip_entry, hal_handle);
         if (ret != HAL_RET_OK) {
@@ -352,16 +352,16 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
         HAL_TRACE_DEBUG("pi-ep:{}:added EP ({}, {}) to L3 DB",
                         __FUNCTION__,
-                        l3_key.tenant_id,
+                        l3_key.vrf_id,
                         ipaddr2str(&l3_key.ip_addr));
         HAL_TRACE_DEBUG("pi-ep:{}:added EP ({}, {}) to L3 DB",
                         __FUNCTION__,
-                        l3_key.tenant_id,
+                        l3_key.vrf_id,
                         ipaddr2str(&pi_ip_entry->ip_addr));
     }
 
     // TODO: Increment the ref counts of dependent objects
-    //  - Have to increment ref count for tenant
+    //  - Have to increment ref count for vrf
 
 end:
     if (ret != HAL_RET_OK) {
@@ -380,10 +380,10 @@ endpoint_cleanup(ep_t *ep)
     hal_ret_t       ret = HAL_RET_OK;
     dllist_ctxt_t   *curr, *next;
     ep_ip_entry_t   *pi_ip_entry = NULL;
-    tenant_t        *tenant = NULL;
+    vrf_t        *vrf = NULL;
     ep_l3_key_t     l3_key = { 0 };
 
-    tenant = tenant_lookup_by_handle(ep->tenant_handle);
+    vrf = vrf_lookup_by_handle(ep->vrf_handle);
 
     // Remove EP from L2 DB
     ret = ep_del_from_l2_db(ep);
@@ -397,7 +397,7 @@ endpoint_cleanup(ep_t *ep)
     // Remove EP from L3 DB
     dllist_for_each_safe(curr, next, &ep->ip_list_head) {
         pi_ip_entry = dllist_entry(curr, ep_ip_entry_t, ep_ip_lentry);
-        l3_key.tenant_id = tenant->tenant_id;
+        l3_key.vrf_id = vrf->vrf_id;
         l3_key.ip_addr = pi_ip_entry->ip_addr;
         ret = ep_del_from_l3_db(&l3_key);
         if (ret != HAL_RET_OK) {
@@ -407,7 +407,7 @@ endpoint_cleanup(ep_t *ep)
         }
         HAL_TRACE_DEBUG("pi-ep:{}:deleted EP ({}, {}) from L3 DB",
                         __FUNCTION__,
-                        l3_key.tenant_id,
+                        l3_key.vrf_id,
                         ipaddr2str(&l3_key.ip_addr));
     }
 
@@ -430,7 +430,7 @@ end:
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI tenant 
+// 3. Free PI vrf 
 //------------------------------------------------------------------------------
 hal_ret_t
 endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -559,10 +559,10 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     int                             i, num_ips = 0, num_sgs = 0;
-    tenant_id_t                     tid;
+    vrf_id_t                     tid;
     hal_handle_t                    if_handle, l2seg_handle;
     ep_t                            *ep = NULL;
-    tenant_t                        *tenant = NULL;
+    vrf_t                        *vrf = NULL;
     l2seg_t                         *l2seg = NULL;
     if_t                            *hal_if = NULL;
     ep_l3_entry_t                   **l3_entry = NULL;
@@ -575,18 +575,18 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("pi-ep:{}: ep create for id {}", __FUNCTION__, 
-                    spec.meta().tenant_id());
+                    spec.meta().vrf_id());
 
     ret = validate_endpoint_create(spec, rsp);
     if (ret != HAL_RET_OK) {
         goto end;
     }
 
-    // fetch the tenant information
-    tid = spec.meta().tenant_id();
-    tenant = tenant_lookup_by_id(tid);
-    if (tenant == NULL) {
-        ret = HAL_RET_TENANT_NOT_FOUND;
+    // fetch the vrf information
+    tid = spec.meta().vrf_id();
+    vrf = vrf_lookup_by_id(tid);
+    if (vrf == NULL) {
+        ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
 
@@ -627,7 +627,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
                     hal_if->if_id);
     ep->l2seg_handle = l2seg_handle;
     ep->if_handle = if_handle;
-    ep->tenant_handle = tenant->hal_handle;
+    ep->vrf_handle = vrf->hal_handle;
     ep->useg_vlan = spec.endpoint_attrs().useg_vlan();
     ep->ep_flags = EP_FLAGS_LEARN_SRC_CFG;
     if (hal_if->if_type == intf::IF_TYPE_ENIC) {
@@ -707,7 +707,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     }
 
     // form ctxt and call infra add
-    app_ctxt.tenant = tenant;
+    app_ctxt.vrf = vrf;
     app_ctxt.l2seg = l2seg;
     app_ctxt.hal_if = hal_if;
 
@@ -746,11 +746,11 @@ validate_endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
-    // Check if tenant id is valid
+    // Check if vrf id is valid
     if (!req.has_meta() ||
-        req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        HAL_TRACE_ERR("pi-ep:{}:tenant id invalid", __FUNCTION__);
-        ret = HAL_RET_TENANT_ID_INVALID;
+        req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        HAL_TRACE_ERR("pi-ep:{}:vrf id invalid", __FUNCTION__);
+        ret = HAL_RET_VRF_ID_INVALID;
         goto end;
     }
 
@@ -1004,7 +1004,7 @@ endpoint_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // Generic function to fetch endpoint from key or handle
 //------------------------------------------------------------------------------
 hal_ret_t
-fetch_endpoint(tenant_id_t tid, EndpointKeyHandle kh, ep_t **ep, 
+fetch_endpoint(vrf_id_t tid, EndpointKeyHandle kh, ep_t **ep, 
                ::types::ApiStatus *api_status)
 {
     ep_l3_key_t            l3_key    = { 0 };
@@ -1028,7 +1028,7 @@ fetch_endpoint(tenant_id_t tid, EndpointKeyHandle kh, ep_t **ep,
             *ep = find_ep_by_l2_key(l2seg->seg_id, mac_addr);
         } else if (ep_key.has_l3_key()) {
             auto ep_l3_key = ep_key.l3_key();
-            l3_key.tenant_id = tid;
+            l3_key.vrf_id = tid;
             ip_addr_spec_to_ip_addr(&l3_key.ip_addr,
                     ep_l3_key.ip_address());
             *ep = find_ep_by_l3_key(&l3_key);
@@ -1234,12 +1234,12 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
     ep_ip_entry_t   *pi_ip_entry = NULL, *del_ip_entry = NULL;
     // ep_l3_entry_t   *l3_entry = NULL;
     ep_l3_key_t     l3_key = { 0 };
-    tenant_t        *tenant = NULL;
+    vrf_t        *vrf = NULL;
 
-    tenant = tenant_lookup_by_handle(ep->tenant_handle);
-    if (tenant == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:unable to find tenant", __FUNCTION__);
-        ret = HAL_RET_TENANT_NOT_FOUND;
+    vrf = vrf_lookup_by_handle(ep->vrf_handle);
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("pi-ep:{}:unable to find vrf", __FUNCTION__);
+        ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
 
@@ -1255,7 +1255,7 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
         utils::dllist_add(&ep->ip_list_head, &pi_ip_entry->ep_ip_lentry);
 
         // Insert to L3 hash table with (VRF, IP) key
-        l3_key.tenant_id = tenant->tenant_id;
+        l3_key.vrf_id = vrf->vrf_id;
         l3_key.ip_addr = pi_ip_entry->ip_addr;
         ret = ep_add_to_l3_db(&l3_key, pi_ip_entry, ep->hal_handle);
         if (ret != HAL_RET_OK) {
@@ -1265,14 +1265,14 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
         }
         HAL_TRACE_DEBUG("pi-ep:{}:added EP ({}, {}) to L3 DB",
                         __FUNCTION__,
-                        l3_key.tenant_id,
+                        l3_key.vrf_id,
                         ipaddr2str(&l3_key.ip_addr));
     
 
 #if 0
         l3_entry = (ep_l3_entry_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP,
                 sizeof(ep_l3_entry_t));
-        l3_entry->l3_key.tenant_id = tenant->tenant_id;
+        l3_entry->l3_key.vrf_id = vrf->vrf_id;
         memcpy(&l3_entry->l3_key.ip_addr, &pi_ip_entry->ip_addr, sizeof(ip_addr_t));
         l3_entry->ep = ep;
         l3_entry->ep_ip = pi_ip_entry;
@@ -1280,7 +1280,7 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
         g_hal_state->ep_l3_entry_ht()->insert(l3_entry,
                                               &l3_entry->ep_l3_ht_ctxt);
         HAL_TRACE_DEBUG("Added ({}, {}) to DB",
-                        l3_entry->l3_key.tenant_id,
+                        l3_entry->l3_key.vrf_id,
                         ipaddr2str(&l3_entry->l3_key.ip_addr));
 #endif
     }
@@ -1301,7 +1301,7 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
             utils::dllist_del(&del_ip_entry->ep_ip_lentry);
 
             // Remove from hash table
-            l3_key.tenant_id = tenant->tenant_id;
+            l3_key.vrf_id = vrf->vrf_id;
             l3_key.ip_addr = pi_ip_entry->ip_addr;
             ret = ep_del_from_l3_db(&l3_key);
             if (ret != HAL_RET_OK) {
@@ -1311,7 +1311,7 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
             }
             HAL_TRACE_DEBUG("pi-ep:{}:deleted EP ({}, {}) from L3 DB",
                             __FUNCTION__,
-                            l3_key.tenant_id,
+                            l3_key.vrf_id,
                             ipaddr2str(&l3_key.ip_addr));
 
             // Free IP entry
@@ -1320,11 +1320,11 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
             // Free IP entry created for delete
             g_hal_state->ep_ip_entry_slab()->free(pi_ip_entry);
 #if 0
-            l3_key.tenant_id = ep->tenant_id;
+            l3_key.vrf_id = ep->vrf_id;
             memcpy(&l3_key.ip_addr, &del_ip_entry->ip_addr, sizeof(ip_addr_t));
             l3_entry = (ep_l3_entry_t *)g_hal_state->ep_l3_entry_ht()->remove(&l3_key);
             HAL_TRACE_DEBUG("Removed ({}, {}) from DB",
-                            l3_key.tenant_id,
+                            l3_key.vrf_id,
                             ipaddr2str(&l3_key.ip_addr));
             // Free L3 entry
             HAL_FREE(HAL_MEM_ALLOC_EP, l3_entry);
@@ -1351,9 +1351,9 @@ hal_ret_t
 endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    tenant_id_t             tid;
+    vrf_id_t             tid;
     ep_t                    *ep = NULL;
-    tenant_t                *tenant = NULL;
+    vrf_t                *vrf = NULL;
     ApiStatus               api_status;
     bool                    if_change = false, l2seg_change = false, 
                             iplist_change = false;
@@ -1370,13 +1370,13 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
         goto end;
     }
 
-    // fetch the tenant information
-    tid = req.meta().tenant_id();
-    tenant = tenant_lookup_by_id(tid);
-    if (tenant == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to find tenant for tid:{}", 
+    // fetch the vrf information
+    tid = req.meta().vrf_id();
+    vrf = vrf_lookup_by_id(tid);
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("pi-ep:{}:failed to find vrf for tid:{}", 
                       __FUNCTION__, tid);
-        ret = HAL_RET_TENANT_NOT_FOUND;
+        ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
 
@@ -1533,10 +1533,10 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// Update PI DBs as tenant_delete_del_cb() was a succcess
-//      a. Delete from tenant id hash table
+// Update PI DBs as vrf_delete_del_cb() was a succcess
+//      a. Delete from vrf id hash table
 //      b. Remove object from handle id based hash table
-//      c. Free PI tenant
+//      c. Free PI vrf
 //------------------------------------------------------------------------------
 hal_ret_t
 endpoint_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -1604,9 +1604,9 @@ endpoint_delete (EndpointDeleteRequest& req,
                  EndpointDeleteResponseMsg *rsp)
 {
     hal_ret_t                       ret = HAL_RET_OK;
-    tenant_id_t                     tid;
+    vrf_id_t                     tid;
     ep_t                            *ep = NULL;
-    tenant_t                        *tenant = NULL;
+    vrf_t                        *vrf = NULL;
     cfg_op_ctxt_t                   cfg_ctxt = { 0 };
     dhl_entry_t                     dhl_entry = { 0 };
     ApiStatus                       api_status;
@@ -1621,14 +1621,14 @@ endpoint_delete (EndpointDeleteRequest& req,
         goto end;
     }
 
-    // fetch the tenant information
-    tid = req.meta().tenant_id();
-    tenant = tenant_lookup_by_id(tid);
-    if (tenant == NULL) {
-        HAL_TRACE_ERR("pi-ep:{}:failed to find tenant for tid:{}", 
+    // fetch the vrf information
+    tid = req.meta().vrf_id();
+    vrf = vrf_lookup_by_id(tid);
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("pi-ep:{}:failed to find vrf for tid:{}", 
                       __FUNCTION__, tid);
-        ret = HAL_RET_TENANT_NOT_FOUND;
-        // rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
+        ret = HAL_RET_VRF_NOT_FOUND;
+        // rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
         goto end;
     }
 
@@ -1669,7 +1669,7 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
     dllist_ctxt_t       *lnode = NULL;
     ep_ip_entry_t       *pi_ip_entry = NULL;
 
-    response->mutable_spec()->mutable_meta()->set_tenant_id(tenant_lookup_by_handle(ep->tenant_handle)->tenant_id);
+    response->mutable_spec()->mutable_meta()->set_vrf_id(vrf_lookup_by_handle(ep->vrf_handle)->vrf_id);
     response->mutable_spec()->mutable_l2_key()->set_l2_segment_handle(ep->l2seg_handle);
     response->mutable_spec()->mutable_l2_key()->set_mac_address(MAC_TO_UINT64(ep->l2_key.mac_addr));
     response->mutable_spec()->mutable_endpoint_attrs()->set_interface_handle(ep->if_handle);
@@ -1704,8 +1704,8 @@ endpoint_get (EndpointGetRequest& req, EndpointGetResponseMsg *rsp)
 
     response = rsp->add_response();
     if (!req.has_meta() ||
-        req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -1719,7 +1719,7 @@ endpoint_get (EndpointGetRequest& req, EndpointGetResponseMsg *rsp)
                 ep = find_ep_by_l2_key(ep_l2_key.l2_segment_handle(), mac_addr);
             } else if (ep_key.has_l3_key()) {
                 auto ep_l3_key = ep_key.l3_key();
-                l3_key.tenant_id = req.meta().tenant_id();
+                l3_key.vrf_id = req.meta().vrf_id();
                 ip_addr_spec_to_ip_addr(&l3_key.ip_addr,
                                         ep_l3_key.ip_address());
                 ep = find_ep_by_l3_key(&l3_key);

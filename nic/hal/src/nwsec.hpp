@@ -78,7 +78,7 @@ typedef struct nwsec_profile_s {
     hal_handle_t          hal_handle;             // HAL allocated handle
 
     // operational state of nwsec profile
-    dllist_ctxt_t         tenant_list_head;
+    dllist_ctxt_t         vrf_list_head;
 
     // PD state
     void                  *pd;                    // all PD specific state
@@ -147,7 +147,7 @@ nwsec_profile_init (nwsec_profile_t *sec_prof)
     HAL_SPINLOCK_INIT(&sec_prof->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
-    utils::dllist_reset(&sec_prof->tenant_list_head);
+    utils::dllist_reset(&sec_prof->vrf_list_head);
 
     return sec_prof;
 }

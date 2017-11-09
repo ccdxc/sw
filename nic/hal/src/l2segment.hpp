@@ -5,7 +5,7 @@
 #include "nic/include/encap.hpp"
 #include "nic/include/list.hpp"
 #include "nic/utils/ht/ht.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/gen/proto/hal/l2segment.pb.h"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/utils.hpp"
@@ -36,8 +36,8 @@ namespace hal {
 
 typedef struct l2seg_s {
     hal_spinlock_t        slock;                   // lock to protect this structure
-    hal_handle_t          tenant_handle;           // tenant's handle
-    // tenant_id_t           tenant_id;               // tenant this L2 segment belongs to
+    hal_handle_t          vrf_handle;           // vrf's handle
+    // vrf_id_t           vrf_id;               // vrf this L2 segment belongs to
     l2seg_id_t            seg_id;                  // L2 segment id
     L2SegmentType         segment_type;            // type of L2 segment
     encap_t               access_encap;            // encap within the host
@@ -58,7 +58,7 @@ typedef struct l2seg_s {
 
     // Looks like sessions need only if, ep, network
     // dllist_ctxt_t         ep_list_head;            // endpoint list
-    // dllist_ctxt_t         session_list_head;       // tenant's L2 segment list link
+    // dllist_ctxt_t         session_list_head;       // vrf's L2 segment list link
 
     // PD state
     void                  *pd;                     // all PD specific state
@@ -67,7 +67,7 @@ typedef struct l2seg_s {
 
 // CB data structures
 typedef struct l2seg_create_app_ctxt_s {
-    tenant_t    *tenant;
+    vrf_t    *vrf;
 } __PACK__ l2seg_create_app_ctxt_t;
 
 typedef struct l2seg_update_app_ctxt_s {
@@ -126,7 +126,7 @@ l2seg_init (l2seg_t *l2seg)
         return NULL;
     }
     HAL_SPINLOCK_INIT(&l2seg->slock, PTHREAD_PROCESS_PRIVATE);
-    l2seg->tenant_handle = 0;
+    l2seg->vrf_handle = 0;
     l2seg->seg_id = 0;
     l2seg->segment_type = types::L2_SEGMENT_TYPE_NONE;
     l2seg->mcast_fwd_policy = l2segment::MULTICAST_FWD_POLICY_NONE;
@@ -192,8 +192,6 @@ find_l2seg_by_handle (hal_handle_t handle)
                         __FUNCTION__, handle);
         return NULL;
     }
-    // HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() == 
-    //           HAL_OBJ_ID_TENANT);
    return (l2seg_t *)hal_handle_get_obj(handle); 
 #if 0
     // check for object type

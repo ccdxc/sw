@@ -178,7 +178,7 @@ class EndpointObject(base.ConfigObjectBase):
         return summary
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.meta.tenant_id     = self.tenant.id
+        req_spec.meta.vrf_id     = self.tenant.id
         req_spec.l2_key.l2_segment_handle  = self.segment.hal_handle
         req_spec.endpoint_attrs.interface_handle   = self.intf.hal_handle
         req_spec.l2_key.mac_address        = self.macaddr.getnum()
@@ -210,12 +210,12 @@ class EndpointObject(base.ConfigObjectBase):
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
-        get_req_spec.meta.tenant_id = self.tenant.id
+        get_req_spec.meta.vrf_id = self.tenant.id
         get_req_spec.key_or_handle.endpoint_handle = self.hal_handle
         return
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp):
-        self.tenant_id = get_resp.spec.meta.tenant_id
+        self.tenant_id = get_resp.spec.meta.vrf_id
         self.segment_hal_handle = get_resp.spec.l2_key.l2_segment_handle
         self.intf_hal_handle = get_resp.spec.endpoint_attrs.interface_handle
         self.macaddr = objects.MacAddressBase(integer=get_resp.spec.l2_key.mac_address)

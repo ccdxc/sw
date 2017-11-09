@@ -497,9 +497,9 @@ extract_match_spec (acl_match_spec_t *ms,
                     AclResponse *rsp)
 {
     hal_ret_t            ret = HAL_RET_OK;
-    tenant_t             *tenant = NULL;
-    tenant_id_t          tenant_id;
-    hal_handle_t         tenant_handle = 0;
+    vrf_t             *vrf = NULL;
+    vrf_id_t          vrf_id;
+    hal_handle_t         vrf_handle = 0;
     if_t                 *src_if = NULL;
     if_id_t              src_if_id;
     hal_handle_t         src_if_handle = 0;
@@ -568,26 +568,26 @@ extract_match_spec (acl_match_spec_t *ms,
         }
     }
 
-    if (sel.seg_selector_case() == acl::AclSelector::kTenantKeyHandle) {
-        ms->tenant_match = true;
+    if (sel.seg_selector_case() == acl::AclSelector::kVrfKeyHandle) {
+        ms->vrf_match = true;
 
-        auto tenant_kh = sel.tenant_key_handle();
-        if (tenant_kh.key_or_handle_case() == key_handles::TenantKeyHandle::kTenantId) {
-            tenant_id = tenant_kh.tenant_id();
-            tenant = tenant_lookup_by_id(tenant_id);
+        auto vrf_kh = sel.vrf_key_handle();
+        if (vrf_kh.key_or_handle_case() == key_handles::VrfKeyHandle::kVrfId) {
+            vrf_id = vrf_kh.vrf_id();
+            vrf = vrf_lookup_by_id(vrf_id);
         } else {
-            tenant_handle = tenant_kh.tenant_handle();
-            tenant = tenant_lookup_by_handle(tenant_handle);
+            vrf_handle = vrf_kh.vrf_handle();
+            vrf = vrf_lookup_by_handle(vrf_handle);
         }
 
-        if(tenant == NULL) {
-            HAL_TRACE_ERR("PI-ACL:{}: Tenant not found",
+        if(vrf == NULL) {
+            HAL_TRACE_ERR("PI-ACL:{}: Vrf not found",
                           __func__);
-            rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
-            ret = HAL_RET_TENANT_NOT_FOUND;
+            rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
+            ret = HAL_RET_VRF_NOT_FOUND;
             goto end;
         } else {
-            ms->tenant_handle = tenant->hal_handle;
+            ms->vrf_handle = vrf->hal_handle;
         }
     } else if (sel.seg_selector_case() == acl::AclSelector::kL2SegmentKeyHandle) {
         ms->l2seg_match = true;

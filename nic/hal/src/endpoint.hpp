@@ -54,7 +54,7 @@ typedef struct ep_l2_key_s {
 
 // L3 key of the endpoint
 typedef struct ep_l3_key_s {
-    tenant_id_t    tenant_id;    // VRF id
+    vrf_id_t    vrf_id;    // VRF id
     ip_addr_t      ip_addr;      // IP address of the endpoint
 } __PACK__ ep_l3_key_t;
 
@@ -88,8 +88,8 @@ typedef struct ep_s {
     hal_handle_t         if_handle;            // interface endpoint is attached to
     hal_handle_t         gre_if_handle;        // Set if there is a GRE tunnel destined to this EP.
     hal_handle_t         pinned_if_handle;     // interface endpoint is attached to
-    hal_handle_t         tenant_handle;        // tenant handle 
-    // tenant_id_t          tenant_id;            // VRF this endpoint belongs to
+    hal_handle_t         vrf_handle;        // vrf handle 
+    // vrf_id_t          vrf_id;            // VRF this endpoint belongs to
     vlan_id_t            useg_vlan;            // micro-seg vlan allocated for this endpoint
     uint64_t             ep_flags;             // endpoint flags
     ep_sginfo_t          sgs;                  // Holds the security group ids
@@ -104,7 +104,7 @@ typedef struct ep_s {
     // meta data maintained for endpoint
     // ht_ctxt_t            l2key_ht_ctxt;        // hal handle based hash table ctxt
     // ht_ctxt_t            hal_handle_ht_ctxt;   // hal handle based hash table ctxt
-    // llist_ctxt_t        tenant_ep_lentry;     // links in L2 segment endpoint list
+    // llist_ctxt_t        vrf_ep_lentry;     // links in L2 segment endpoint list
     // dllist_ctxt_t        l2seg_ep_lentry;      // links in L2 segment endpoint list
     // dllist_ctxt_t        if_ep_lentry;         // links in inteface endpoint list
     dllist_ctxt_t        session_list_head;    // session from/to this EP
@@ -125,7 +125,7 @@ typedef struct ep_l3_entry_s {
 
 // CB data structures
 typedef struct ep_create_app_ctxt_s {
-    tenant_t        *tenant;
+    vrf_t        *vrf;
     l2seg_t         *l2seg;
     if_t            *hal_if;
 } __PACK__ ep_create_app_ctxt_t;
@@ -258,11 +258,11 @@ find_ep_by_l3_key (ep_l3_key_t *ep_l3_key)
 
 // find EP from v4 key
 static inline ep_t *
-find_ep_by_v4_key (tenant_id_t tid, uint32_t v4_addr)
+find_ep_by_v4_key (vrf_id_t tid, uint32_t v4_addr)
 {
     ep_l3_key_t    l3_key = { 0 };
 
-    l3_key.tenant_id = tid;
+    l3_key.vrf_id = tid;
     l3_key.ip_addr.af = IP_AF_IPV4;
     l3_key.ip_addr.addr.v4_addr = v4_addr;
     return find_ep_by_l3_key(&l3_key);
@@ -270,11 +270,11 @@ find_ep_by_v4_key (tenant_id_t tid, uint32_t v4_addr)
 
 // find EP from v6 key
 static inline ep_t *
-find_ep_by_v6_key (tenant_id_t tid, const ip_addr_t *ip_addr)
+find_ep_by_v6_key (vrf_id_t tid, const ip_addr_t *ip_addr)
 {
     ep_l3_key_t    l3_key = { 0 };
 
-    l3_key.tenant_id = tid;
+    l3_key.vrf_id = tid;
     memcpy(&l3_key.ip_addr, ip_addr, sizeof(ip_addr_t));
     return find_ep_by_l3_key(&l3_key);
 }
@@ -324,22 +324,22 @@ find_ep_by_l3_key (ep_l3_key_t *ep_l3_key)
 }
 
 static inline ep_t *
-find_ep_by_v4_key (tenant_id_t tid, uint32_t v4_addr)
+find_ep_by_v4_key (vrf_id_t tid, uint32_t v4_addr)
 {
     ep_l3_key_t    l3_key = { 0 };
 
-    l3_key.tenant_id = tid;
+    l3_key.vrf_id = tid;
     l3_key.ip_addr.af = IP_AF_IPV4;
     l3_key.ip_addr.addr.v4_addr = v4_addr;
     return find_ep_by_l3_key(&l3_key);
 }
 
 static inline ep_t *
-find_ep_by_v6_key (tenant_id_t tid, const ip_addr_t *ip_addr)
+find_ep_by_v6_key (vrf_id_t tid, const ip_addr_t *ip_addr)
 {
     ep_l3_key_t    l3_key = { 0 };
 
-    l3_key.tenant_id = tid;
+    l3_key.vrf_id = tid;
     memcpy(&l3_key.ip_addr, ip_addr, sizeof(ip_addr_t));
     return find_ep_by_l3_key(&l3_key);
 }

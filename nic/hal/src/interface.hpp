@@ -8,7 +8,7 @@
 #include "nic/utils/ht/ht.hpp"
 #include "nic/include/bitmap.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/hal/src/lif.hpp"
 #include "nic/hal/src/utils.hpp"
@@ -74,7 +74,7 @@ typedef struct if_s {
     if_id_t             if_id;                       // interface id
     intf::IfType        if_type;                     // interface type
     intf::IfStatus      if_admin_status;             // admin status
-    tenant_id_t         tid;                         // tenant id (TODO: what is this for ?)
+    vrf_id_t            tid;                         // vrf id (TODO: what is this for ?)
     // tx/rx is wrt to the workload behind this if
     qos_actions_t       tx_qos_actions;              // qos actions for packets from this if
     qos_actions_t       rx_qos_actions;              // qos actions for packets to this if

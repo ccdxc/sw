@@ -22,7 +22,7 @@ class CollectorObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
         return
-        
+
     def Init(self, tenant, spec):
         self.tenant = tenant
         self.id = resmgr.ColelctorIdAllocator.get()
@@ -65,7 +65,7 @@ class CollectorObject(base.ConfigObjectBase):
 
     def PrepareHALRequestSpec(self, reqspec):
         #pdb.set_trace()
-        reqspec.meta.tenant_id = self.tenant.id
+        reqspec.meta.vrf_id = self.tenant.id
         reqspec.export_controlId.Id = self.id
         reqspec.encap.encap_type = haldefs.common.ENCAP_TYPE_DOT1Q
         reqspec.encap.encap_value = self.vlan
@@ -96,7 +96,7 @@ class CollectorObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Collector." % len(self.collectors)) 
+        cfglogger.info("Configuring %d Collector." % len(self.collectors))
         halapi.ConfigureCollectors(self.collectors)
         return
 

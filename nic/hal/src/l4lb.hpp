@@ -8,7 +8,7 @@
 #include "nic/utils/ht/ht.hpp"
 #include "nic/gen/proto/hal/l4lb.pb.h"
 #include <netinet/ether.h>
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 
 using l4lb::L4LbServiceKeyHandle;
 using l4lb::L4LbServiceGetResponse;
@@ -19,7 +19,7 @@ namespace hal {
 
 // l4lb service key
 typedef struct l4lb_key_s {
-    tenant_id_t             tenant_id;      // tenant id
+    vrf_id_t             vrf_id;      // vrf id
     ip_addr_t               service_ip;     // l4lb service ip address
     uint8_t                 proto;          // l4lb service proto
     uint32_t                service_port;   // l4lb service port

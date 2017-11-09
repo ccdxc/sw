@@ -6,7 +6,7 @@
 #include "uplinkif_pd.hpp"
 #include "cpuif_pd.hpp"
 #include "tunnelif_pd.hpp"
-#include "tenant_pd.hpp"
+#include "vrf_pd.hpp"
 #include "uplinkpc_pd.hpp"
 #include "nwsec_pd.hpp"
 #include "nic/include/interface_api.hpp"
@@ -304,20 +304,20 @@ if_get_uplink_lport_id(if_t *pi_if)
 }
 
 // ----------------------------------------------------------------------------
-// Get a PI Tenant from if - Applicable only for Enic. Dont call this for Upl.
+// Get a PI Vrf from if - Applicable only for Enic. Dont call this for Upl.
 // ----------------------------------------------------------------------------
-tenant_t *
-if_get_pi_tenant(if_t *pi_if)
+vrf_t *
+if_get_pi_vrf(if_t *pi_if)
 {
-    tenant_t        *pi_tenant = NULL;
+    vrf_t        *pi_vrf = NULL;
     intf::IfType    if_type;
 
 
     if_type = intf_get_if_type(pi_if);
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
-            pi_tenant = tenant_lookup_by_id(pi_if->tid);
-            HAL_ASSERT_RETURN(pi_tenant != NULL, NULL);
+            pi_vrf = vrf_lookup_by_id(pi_if->tid);
+            HAL_ASSERT_RETURN(pi_vrf != NULL, NULL);
             break;
         case intf::IF_TYPE_UPLINK:
         case intf::IF_TYPE_UPLINK_PC:
@@ -328,21 +328,21 @@ if_get_pi_tenant(if_t *pi_if)
         default:
             HAL_ASSERT(0);
     }
-    return pi_tenant;
+    return pi_vrf;
 }
 
 // ----------------------------------------------------------------------------
-// Get a PI Tenant from L2 Seg
+// Get a PI Vrf from L2 Seg
 // ----------------------------------------------------------------------------
-tenant_t *
-l2seg_get_pi_tenant(l2seg_t *pi_l2seg)
+vrf_t *
+l2seg_get_pi_vrf(l2seg_t *pi_l2seg)
 {
-    tenant_t    *pi_tenant = NULL;
+    vrf_t    *pi_vrf = NULL;
 
-    pi_tenant = tenant_lookup_by_handle(pi_l2seg->tenant_handle);
-    HAL_ASSERT_RETURN(pi_tenant != NULL, NULL);
+    pi_vrf = vrf_lookup_by_handle(pi_l2seg->vrf_handle);
+    HAL_ASSERT_RETURN(pi_vrf != NULL, NULL);
 
-    return pi_tenant;
+    return pi_vrf;
 }
 
 // ----------------------------------------------------------------------------
@@ -357,10 +357,10 @@ pd_tunnelif_get_rw_idx(pd_tunnelif_t *pd_tif)
 }
 
 // ----------------------------------------------------------------------------
-// Given a PI Tenant, get the nwsec profile hw id
+// Given a PI Vrf, get the nwsec profile hw id
 // ----------------------------------------------------------------------------
 uint32_t 
-ten_get_nwsec_prof_hw_id(tenant_t *pi_ten)
+ten_get_nwsec_prof_hw_id(vrf_t *pi_ten)
 {
     nwsec_profile_t     *pi_nwsec = NULL;
     pd_nwsec_profile_t  *pd_nwsec = NULL;
@@ -397,8 +397,8 @@ pd_get_l2seg_ten_masks(uint16_t *l2seg_mask, uint16_t *ten_mask,
     }
 
     *l2seg_mask = HAL_PD_L2SEG_MASK;
-    *ten_mask = HAL_PD_TENANT_MASK;
-    *ten_shift = HAL_PD_TENANT_SHIFT;
+    *ten_mask   = HAL_PD_VRF_MASK;
+    *ten_shift  = HAL_PD_VRF_SHIFT;
 
     return HAL_RET_OK;
 }

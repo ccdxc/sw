@@ -1,6 +1,6 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/pd/iris/tenant_pd.hpp"
+#include "nic/hal/pd/iris/vrf_pd.hpp"
 #include "nic/p4/nw/include/defines.h"
 #include "if_pd_utils.hpp"
 
@@ -8,68 +8,68 @@ namespace hal {
 namespace pd {
 
 //-----------------------------------------------------------------------------
-// PD Tenant Create
+// PD vrf Create
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_tenant_create (pd_tenant_args_t *args)
+pd_vrf_create (pd_vrf_args_t *args)
 {
     hal_ret_t               ret;
-    pd_tenant_t             *tenant_pd;
+    pd_vrf_t             *vrf_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-tenant:{}:creating pd state for tenant {}",
-                    __FUNCTION__, args->tenant->tenant_id);
+    HAL_TRACE_DEBUG("pd-vrf:{}:creating pd state for vrf {}",
+                    __FUNCTION__, args->vrf->vrf_id);
 
-    // allocate PD tenant state
-    tenant_pd = tenant_pd_alloc_init();
-    if (tenant_pd == NULL) {
+    // allocate PD vrf state
+    vrf_pd = vrf_pd_alloc_init();
+    if (vrf_pd == NULL) {
         ret = HAL_RET_OOM;
         goto end;
     }
 
     // Link PI & PD
-    link_pi_pd(tenant_pd, args->tenant);
+    link_pi_pd(vrf_pd, args->vrf);
 
     // allocate resources
-    ret = tenant_pd_alloc_res(tenant_pd);
+    ret = vrf_pd_alloc_res(vrf_pd);
 
 end:
     if (ret != HAL_RET_OK) {
-        tenant_pd_cleanup(tenant_pd);
+        vrf_pd_cleanup(vrf_pd);
     }
 
     return ret;
 }
 
 //-----------------------------------------------------------------------------
-// PD Tenant Update
+// PD vrf Update
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_tenant_update (pd_tenant_args_t *args)
+pd_vrf_update (pd_vrf_args_t *args)
 {
     // Nothing to do for now
     return HAL_RET_OK;
 }
 
 //-----------------------------------------------------------------------------
-// PD Tenant Delete
+// PD vrf Delete
 //-----------------------------------------------------------------------------
 hal_ret_t
-pd_tenant_delete (pd_tenant_args_t *args)
+pd_vrf_delete (pd_vrf_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
-    pd_tenant_t    *tenant_pd;
+    pd_vrf_t    *vrf_pd;
 
     HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->tenant != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->tenant->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("pd-tenant:{}:Deleting pd state for tenant {}",
-                    __FUNCTION__, args->tenant->tenant_id);
-    tenant_pd = (pd_tenant_t *)args->tenant->pd;
+    HAL_ASSERT_RETURN((args->vrf != NULL), HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN((args->vrf->pd != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("pd-vrf:{}:Deleting pd state for vrf {}",
+                    __FUNCTION__, args->vrf->vrf_id);
+    vrf_pd = (pd_vrf_t *)args->vrf->pd;
 
-    ret = tenant_pd_cleanup(tenant_pd);
+    ret = vrf_pd_cleanup(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-tenant:{}:failed pd tenant delete",
+        HAL_TRACE_ERR("pd-vrf:{}:failed pd vrf delete",
                       __FUNCTION__);
     }
 
@@ -77,7 +77,7 @@ pd_tenant_delete (pd_tenant_args_t *args)
 }
 
 hal_ret_t
-pd_tenant_program_input_mapping_table(ip_prefix_t *ip_prefix,
+pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
                                       uint8_t tunnel_type,
                                       bool inner_v4_vld,
                                       bool inner_v6_vld,
@@ -143,7 +143,7 @@ pd_tenant_program_input_mapping_table(ip_prefix_t *ip_prefix,
 // Program input mapping table to terminate GIPo tunnels
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_tenant_del_gipo_termination_prefix(pd_tenant_t *tenant_pd,
+pd_vrf_del_gipo_termination_prefix(pd_vrf_t *vrf_pd,
                                       p4pd_table_id tbl_id)
 {
     Tcam         *tcam;
@@ -154,9 +154,9 @@ pd_tenant_del_gipo_termination_prefix(pd_tenant_t *tenant_pd,
     HAL_ASSERT(tcam != NULL);
 
     if (tbl_id == P4TBL_ID_INPUT_MAPPING_NATIVE) {
-        arr = tenant_pd->gipo_imn_idx;
+        arr = vrf_pd->gipo_imn_idx;
     } else {
-        arr = tenant_pd->gipo_imt_idx;
+        arr = vrf_pd->gipo_imt_idx;
     }
 
     for (int i = 0; i < 3; i++) {
@@ -176,14 +176,14 @@ pd_tenant_del_gipo_termination_prefix(pd_tenant_t *tenant_pd,
 // De-Program HW
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_tenant_deprogram_gipo_termination_prefix(pd_tenant_t *tenant_pd)
+pd_vrf_deprogram_gipo_termination_prefix(pd_vrf_t *vrf_pd)
 {
     hal_ret_t ret;
     /* Deprogram input mapping native */
-    ret = pd_tenant_del_gipo_termination_prefix(tenant_pd,
+    ret = pd_vrf_del_gipo_termination_prefix(vrf_pd,
                                                 P4TBL_ID_INPUT_MAPPING_NATIVE);
     /* Deprogram input mapping tunneled */
-    ret = pd_tenant_del_gipo_termination_prefix(tenant_pd,
+    ret = pd_vrf_del_gipo_termination_prefix(vrf_pd,
                                                 P4TBL_ID_INPUT_MAPPING_TUNNELED);
     return ret;
 }
@@ -192,11 +192,11 @@ pd_tenant_deprogram_gipo_termination_prefix(pd_tenant_t *tenant_pd)
 // Program input mapping table to terminate GIPo tunnels
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_tenant_program_gipo_termination_prefix(pd_tenant_t *tenant_pd)
+pd_vrf_program_gipo_termination_prefix(pd_vrf_t *vrf_pd)
 {
     uint32_t     idx;
     hal_ret_t    ret = HAL_RET_OK;
-    ip_prefix_t  *gipo_prefix = &((tenant_t*)(tenant_pd->tenant))->gipo_prefix;
+    ip_prefix_t  *gipo_prefix = &((vrf_t*)(vrf_pd->vrf))->gipo_prefix;
 
     if (gipo_prefix->len == 0) {
         return ret; // GIPo not specified. Nothing to program.
@@ -204,7 +204,7 @@ pd_tenant_program_gipo_termination_prefix(pd_tenant_t *tenant_pd)
 
     /* We program 3 entries in the INPUT_MAPPING_NATIVE Table for the GIPo Entry */
     /* Entry 1 */
-    ret = pd_tenant_program_input_mapping_table(gipo_prefix,
+    ret = pd_vrf_program_input_mapping_table(gipo_prefix,
                                                 INGRESS_TUNNEL_TYPE_VXLAN,
                                                 true, false,
                                                 INPUT_MAPPING_NATIVE_NOP_ID,
@@ -212,9 +212,9 @@ pd_tenant_program_gipo_termination_prefix(pd_tenant_t *tenant_pd)
                                                 &idx);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    tenant_pd->gipo_imn_idx[0] = idx;
+    vrf_pd->gipo_imn_idx[0] = idx;
     /* Entry 2 */
-    ret = pd_tenant_program_input_mapping_table(gipo_prefix,
+    ret = pd_vrf_program_input_mapping_table(gipo_prefix,
                                                 INGRESS_TUNNEL_TYPE_VXLAN,
                                                 false, true,
                                                 INPUT_MAPPING_NATIVE_NOP_ID,
@@ -222,9 +222,9 @@ pd_tenant_program_gipo_termination_prefix(pd_tenant_t *tenant_pd)
                                                 &idx);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    tenant_pd->gipo_imn_idx[1] = idx;
+    vrf_pd->gipo_imn_idx[1] = idx;
     /* Entry 3 */
-    ret = pd_tenant_program_input_mapping_table(gipo_prefix,
+    ret = pd_vrf_program_input_mapping_table(gipo_prefix,
                                                 INGRESS_TUNNEL_TYPE_VXLAN,
                                                 false, false,
                                                 INPUT_MAPPING_NATIVE_NOP_ID,
@@ -232,11 +232,11 @@ pd_tenant_program_gipo_termination_prefix(pd_tenant_t *tenant_pd)
                                                 &idx);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    tenant_pd->gipo_imn_idx[2] = idx;
+    vrf_pd->gipo_imn_idx[2] = idx;
 
     /* We program 3 entries in the INPUT_MAPPING_TUNNELED Table for the GIPo Entry */
     /* Entry 1 */
-    ret = pd_tenant_program_input_mapping_table(gipo_prefix,
+    ret = pd_vrf_program_input_mapping_table(gipo_prefix,
                                     INGRESS_TUNNEL_TYPE_VXLAN,
                                     true, false,
                                     INPUT_MAPPING_TUNNELED_TUNNELED_IPV4_PACKET_ID,
@@ -244,9 +244,9 @@ pd_tenant_program_gipo_termination_prefix(pd_tenant_t *tenant_pd)
                                     &idx);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    tenant_pd->gipo_imt_idx[0] = idx;
+    vrf_pd->gipo_imt_idx[0] = idx;
     /* Entry 2 */
-    ret = pd_tenant_program_input_mapping_table(gipo_prefix,
+    ret = pd_vrf_program_input_mapping_table(gipo_prefix,
                                     INGRESS_TUNNEL_TYPE_VXLAN,
                                     false, true,
                                     INPUT_MAPPING_TUNNELED_TUNNELED_IPV6_PACKET_ID,
@@ -254,9 +254,9 @@ pd_tenant_program_gipo_termination_prefix(pd_tenant_t *tenant_pd)
                                     &idx);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    tenant_pd->gipo_imt_idx[1] = idx;
+    vrf_pd->gipo_imt_idx[1] = idx;
     /* Entry 3 */
-    ret = pd_tenant_program_input_mapping_table(gipo_prefix,
+    ret = pd_vrf_program_input_mapping_table(gipo_prefix,
                                     INGRESS_TUNNEL_TYPE_VXLAN,
                                     false, false,
                                     INPUT_MAPPING_TUNNELED_TUNNELED_NON_IP_PACKET_ID,
@@ -264,12 +264,12 @@ pd_tenant_program_gipo_termination_prefix(pd_tenant_t *tenant_pd)
                                     &idx);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_DUP_INS_FAIL))
         goto fail_flag;
-    tenant_pd->gipo_imt_idx[2] = idx;
+    vrf_pd->gipo_imt_idx[2] = idx;
 
     return HAL_RET_OK;
 
 fail_flag:
-    pd_tenant_deprogram_gipo_termination_prefix(tenant_pd);
+    pd_vrf_deprogram_gipo_termination_prefix(vrf_pd);
     return ret;
 }
 
@@ -277,27 +277,27 @@ fail_flag:
 // Allocate resources. 
 //-----------------------------------------------------------------------------
 hal_ret_t
-tenant_pd_alloc_res(pd_tenant_t *tenant_pd)
+vrf_pd_alloc_res(pd_vrf_t *vrf_pd)
 {
     hal_ret_t           ret = HAL_RET_OK;
     indexer::status     rs;
 
-    // allocate h/w id for this tenant
-    rs = g_hal_state_pd->tenant_hwid_idxr()->
-                         alloc((uint32_t *)&tenant_pd->ten_hw_id);
+    // allocate h/w id for this vrf
+    rs = g_hal_state_pd->vrf_hwid_idxr()->
+                         alloc((uint32_t *)&vrf_pd->ten_hw_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("pd-tenant:{}:failed to alloc ten_hw_id err: {}", 
+        HAL_TRACE_ERR("pd-vrf:{}:failed to alloc ten_hw_id err: {}", 
                       __FUNCTION__, rs);
-        tenant_pd->ten_hw_id = INVALID_INDEXER_INDEX;
+        vrf_pd->ten_hw_id = INVALID_INDEXER_INDEX;
         ret = HAL_RET_NO_RESOURCE;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pd-tenant:{}:allocated ten_hw_id: {}", 
-                    __FUNCTION__, tenant_pd->ten_hw_id);
+    HAL_TRACE_DEBUG("pd-vrf:{}:allocated ten_hw_id: {}", 
+                    __FUNCTION__, vrf_pd->ten_hw_id);
 
-    if (((tenant_t *)(tenant_pd->tenant))->tenant_type == types::TENANT_TYPE_INFRA) {
-        ret = pd_tenant_program_gipo_termination_prefix(tenant_pd);
+    if (((vrf_t *)(vrf_pd->vrf))->vrf_type == types::VRF_TYPE_INFRA) {
+        ret = pd_vrf_program_gipo_termination_prefix(vrf_pd);
     }
 
 end:
@@ -308,26 +308,26 @@ end:
 // De-Allocate resources. 
 //-----------------------------------------------------------------------------
 hal_ret_t
-tenant_pd_dealloc_res(pd_tenant_t *tenant_pd)
+vrf_pd_dealloc_res(pd_vrf_t *vrf_pd)
 {
     hal_ret_t           ret = HAL_RET_OK;
     indexer::status     rs;
 
-    if (tenant_pd->ten_hw_id != INVALID_INDEXER_INDEX) {
-        rs = g_hal_state_pd->tenant_hwid_idxr()->free(tenant_pd->ten_hw_id);
+    if (vrf_pd->ten_hw_id != INVALID_INDEXER_INDEX) {
+        rs = g_hal_state_pd->vrf_hwid_idxr()->free(vrf_pd->ten_hw_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("pd-tenant:{}:failed to free ten_hw_id err: {}", 
-                          __FUNCTION__, tenant_pd->ten_hw_id);
+            HAL_TRACE_ERR("pd-vrf:{}:failed to free ten_hw_id err: {}", 
+                          __FUNCTION__, vrf_pd->ten_hw_id);
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
 
-        HAL_TRACE_DEBUG("pd-tenant:{}:freed ten_hw_id: {}", 
-                        __FUNCTION__, tenant_pd->ten_hw_id);
+        HAL_TRACE_DEBUG("pd-vrf:{}:freed ten_hw_id: {}", 
+                        __FUNCTION__, vrf_pd->ten_hw_id);
     }
 
-    if (((tenant_t *)(tenant_pd->tenant))->tenant_type == types::TENANT_TYPE_INFRA) {
-        ret = pd_tenant_deprogram_gipo_termination_prefix(tenant_pd);
+    if (((vrf_t *)(vrf_pd->vrf))->vrf_type == types::VRF_TYPE_INFRA) {
+        ret = pd_vrf_deprogram_gipo_termination_prefix(vrf_pd);
     }
 
 end:
@@ -335,109 +335,109 @@ end:
 }
 
 //-----------------------------------------------------------------------------
-// PD Tenant Cleanup
+// PD vrf Cleanup
 //  - Release all resources
 //  - Delink PI <-> PD
-//  - Free PD Tenant
+//  - Free PD vrf
 //  Note:
 //      - Just free up whatever PD has. 
 //      - Dont use this inplace of delete. Delete may result in giving callbacks
 //        to others.
 //-----------------------------------------------------------------------------
 hal_ret_t
-tenant_pd_cleanup(pd_tenant_t *tenant_pd)
+vrf_pd_cleanup(pd_vrf_t *vrf_pd)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
-    if (!tenant_pd) {
+    if (!vrf_pd) {
         // Nothing to do
         goto end;
     }
 
-    // Check if l2segs have been removed before tenant cleanup
+    // Check if l2segs have been removed before vrf cleanup
     // index 0 is reserved.
-    if (tenant_pd->l2seg_hw_id_idxr_->usage() > 1) {
-        HAL_TRACE_ERR("pd-tenant:{}:l2seg idxr still in use. usage:{}", 
-                      __FUNCTION__, tenant_pd->l2seg_hw_id_idxr_->usage());
+    if (vrf_pd->l2seg_hw_id_idxr_->usage() > 1) {
+        HAL_TRACE_ERR("pd-vrf:{}:l2seg idxr still in use. usage:{}", 
+                      __FUNCTION__, vrf_pd->l2seg_hw_id_idxr_->usage());
         ret = HAL_RET_INVALID_OP;
         goto end;
     }
 
     // Releasing resources
-    ret = tenant_pd_dealloc_res(tenant_pd);
+    ret = vrf_pd_dealloc_res(vrf_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pd-tenant:{}: unable to dealloc res for tenant: {}", 
+        HAL_TRACE_ERR("pd-vrf:{}: unable to dealloc res for vrf: {}", 
                       __FUNCTION__, 
-                      ((tenant_t *)(tenant_pd->tenant))->tenant_id);
+                      ((vrf_t *)(vrf_pd->vrf))->vrf_id);
         goto end;
     }
 
     // Delinking PI<->PD
-    delink_pi_pd(tenant_pd, (tenant_t *)tenant_pd->tenant);
+    delink_pi_pd(vrf_pd, (vrf_t *)vrf_pd->vrf);
 
     // Freeing PD
-    tenant_pd_free(tenant_pd);
+    vrf_pd_free(vrf_pd);
 end:
     return ret;
 }
 
 //-----------------------------------------------------------------------------
-// Allocate l2seg hwid per tenant
+// Allocate l2seg hwid per vrf
 //-----------------------------------------------------------------------------
 hal_ret_t
-tenant_pd_alloc_l2seg_hw_id(pd_tenant_t *tenant_pd, uint32_t *l2seg_hw_id)
+vrf_pd_alloc_l2seg_hw_id(pd_vrf_t *vrf_pd, uint32_t *l2seg_hw_id)
 {
     hal_ret_t           ret = HAL_RET_OK;
     indexer::status     rs = indexer::SUCCESS;
 
-    if (!tenant_pd || !l2seg_hw_id) {
+    if (!vrf_pd || !l2seg_hw_id) {
         ret =  HAL_RET_INVALID_ARG;
         goto end;
     }
 
-    rs = tenant_pd->l2seg_hw_id_idxr_->alloc(l2seg_hw_id);
+    rs = vrf_pd->l2seg_hw_id_idxr_->alloc(l2seg_hw_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("pd-tenant:{}:failed to alloc l2seg_hw_id err: {}", 
+        HAL_TRACE_ERR("pd-vrf:{}:failed to alloc l2seg_hw_id err: {}", 
                       __FUNCTION__, rs);
         *l2seg_hw_id = INVALID_INDEXER_INDEX;
         ret = HAL_RET_NO_RESOURCE;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pd-tenant:{}:allocated l2seg_hw_id: {} for tenant: {}", 
+    HAL_TRACE_DEBUG("pd-vrf:{}:allocated l2seg_hw_id: {} for vrf: {}", 
                     __FUNCTION__, *l2seg_hw_id, 
-                    ((tenant_t *)(tenant_pd->tenant))->tenant_id);
+                    ((vrf_t *)(vrf_pd->vrf))->vrf_id);
 
 end:
     return ret;
 }
 
 //-----------------------------------------------------------------------------
-// Free l2seg hwid per tenant
+// Free l2seg hwid per vrf
 //-----------------------------------------------------------------------------
 hal_ret_t
-tenant_pd_free_l2seg_hw_id(pd_tenant_t *tenant_pd, uint32_t l2seg_hw_id)
+vrf_pd_free_l2seg_hw_id(pd_vrf_t *vrf_pd, uint32_t l2seg_hw_id)
 {
     hal_ret_t           ret = HAL_RET_OK;
     indexer::status     rs = indexer::SUCCESS;
 
-    if (!tenant_pd) {
+    if (!vrf_pd) {
         ret =  HAL_RET_INVALID_ARG;
         goto end;
     }
 
     if (l2seg_hw_id != INVALID_INDEXER_INDEX) { 
-        rs = tenant_pd->l2seg_hw_id_idxr_->free(l2seg_hw_id);
+        rs = vrf_pd->l2seg_hw_id_idxr_->free(l2seg_hw_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("pd-tenant:{}:Failed to free l2seg_hw_id:{} "
+            HAL_TRACE_ERR("pd-vrf:{}:Failed to free l2seg_hw_id:{} "
                     "err: {}", __FUNCTION__,
                     l2seg_hw_id, rs);
             ret = HAL_RET_NO_RESOURCE;
             goto end;
         }
-        HAL_TRACE_DEBUG("pd-tenant:{}:freed l2seg_hw_id: {} for tenant: {}", 
+        HAL_TRACE_DEBUG("pd-vrf:{}:freed l2seg_hw_id: {} for vrf: {}", 
                         __FUNCTION__, l2seg_hw_id, 
-                        ((tenant_t *)(tenant_pd->tenant))->tenant_id);
+                        ((vrf_t *)(vrf_pd->vrf))->vrf_id);
     }
 
 end:
@@ -448,9 +448,9 @@ end:
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------
 void 
-link_pi_pd(pd_tenant_t *pd_ten, tenant_t *pi_ten)
+link_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten)
 {
-    pd_ten->tenant = pi_ten;
+    pd_ten->vrf = pi_ten;
     pi_ten->pd = pd_ten;
 }
 
@@ -458,10 +458,10 @@ link_pi_pd(pd_tenant_t *pd_ten, tenant_t *pi_ten)
 // Un-Linking PI <-> PD
 // ----------------------------------------------------------------------------
 void 
-delink_pi_pd(pd_tenant_t *pd_ten, tenant_t *pi_ten)
+delink_pi_pd(pd_vrf_t *pd_ten, vrf_t *pi_ten)
 {
     if (pd_ten) {
-        pd_ten->tenant = NULL;
+        pd_ten->vrf = NULL;
     }
     if (pi_ten) {
         pi_ten->pd = NULL;
@@ -472,18 +472,18 @@ delink_pi_pd(pd_tenant_t *pd_ten, tenant_t *pi_ten)
 // Makes a clone
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_tenant_make_clone(tenant_t *ten, tenant_t *clone)
+pd_vrf_make_clone(vrf_t *ten, vrf_t *clone)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    pd_tenant_t         *pd_ten_clone = NULL;
+    pd_vrf_t         *pd_ten_clone = NULL;
 
-    pd_ten_clone = tenant_pd_alloc_init();
+    pd_ten_clone = vrf_pd_alloc_init();
     if (pd_ten_clone == NULL) {
         ret = HAL_RET_OOM;
         goto end;
     }
 
-    memcpy(pd_ten_clone, ten->pd, sizeof(pd_tenant_t));
+    memcpy(pd_ten_clone, ten->pd, sizeof(pd_vrf_t));
 
     link_pi_pd(pd_ten_clone, clone);
 
@@ -495,13 +495,13 @@ end:
 // Frees PD memory without indexer free.
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_tenant_mem_free(pd_tenant_args_t *args)
+pd_vrf_mem_free(pd_vrf_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
-    pd_tenant_t    *tenant_pd;
+    pd_vrf_t    *vrf_pd;
 
-    tenant_pd = (pd_tenant_t *)args->tenant->pd;
-    tenant_pd_mem_free(tenant_pd);
+    vrf_pd = (pd_vrf_t *)args->vrf->pd;
+    vrf_pd_mem_free(vrf_pd);
 
     return ret;
 }

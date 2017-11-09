@@ -3,7 +3,7 @@
 #include "nic/hal/src/nwsec.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
-#include "nic/gen/proto/hal/tenant.pb.h"
+#include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/hal/hal.hpp"
 #include <gtest/gtest.h>
@@ -17,8 +17,8 @@ using intf::InterfaceResponse;
 using intf::InterfaceKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentResponse;
-using tenant::TenantSpec;
-using tenant::TenantResponse;
+using vrf::VrfSpec;
+using vrf::VrfResponse;
 using intf::InterfaceL2SegmentSpec;
 using intf::InterfaceL2SegmentResponse;
 using intf::LifSpec;
@@ -60,8 +60,8 @@ protected:
 TEST_F(cpuif_test, test1) 
 {
     hal_ret_t                   ret;
-    TenantSpec                  ten_spec;
-    TenantResponse              ten_rsp;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
     LifSpec                     lif_spec;
     LifResponse                 lif_rsp;
     L2SegmentSpec               l2seg_spec;
@@ -86,21 +86,21 @@ TEST_F(cpuif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(1);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(1);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(1);
+    nw_spec.mutable_meta()->set_vrf_id(1);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(1);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
@@ -122,7 +122,7 @@ TEST_F(cpuif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create cpuif
-    cpuif_spec.mutable_meta()->set_tenant_id(1);
+    cpuif_spec.mutable_meta()->set_vrf_id(1);
     cpuif_spec.set_type(intf::IF_TYPE_CPU);
     cpuif_spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(2);
     cpuif_spec.mutable_key_or_handle()->set_interface_id(1);

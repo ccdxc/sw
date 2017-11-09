@@ -46,7 +46,7 @@ typedef struct catalog_s {
     uint32_t card_index;         // card index for the board
     uint32_t num_asics;          // number of asics on the board
     uint32_t num_uplink_ports;   // number of uplinks in the board
-    uint32_t tenant_id;          // tenant ID
+    uint32_t vrf_id;          // vrf ID
 
     // temporary platform type until HW access is abstracted
     platform_type_t  platform_type;
@@ -74,7 +74,7 @@ public:
 
     uint32_t num_uplink_ports();
 
-    uint32_t tenant_id();
+    uint32_t vrf_id();
 
     platform_type_t platform_type() { return catalog_db_.platform_type; }
 

@@ -5,7 +5,7 @@ INC_DIRS = -I. -I.. -I../.. -I../../src -I../common -I../../../include -I../../.
 
 all:
 	$(CXX) $(CPPFLAGS) $(INC_DIRS) -c -Wall -Werror -fpic -o $(OBJ_DIR)/hal_mem_pd.o hal_mem_pd.cc
-	$(CXX) $(CPPFLAGS) $(INC_DIRS) -c -Wall -Werror -fpic -o $(OBJ_DIR)/tenant_pd.o tenant_pd.cc
+	$(CXX) $(CPPFLAGS) $(INC_DIRS) -c -Wall -Werror -fpic -o $(OBJ_DIR)/vrf_pd.o vrf_pd.cc
 	$(CXX) $(CPPFLAGS) $(INC_DIRS) -c -Wall -Werror -fpic -o $(OBJ_DIR)/nwsec_pd.o nwsec_pd.cc
 	$(CXX) $(CPPFLAGS) $(INC_DIRS) -c -Wall -Werror -fpic -o $(OBJ_DIR)/l2seg_pd.o l2seg_pd.cc
 	$(CXX) $(CPPFLAGS) $(INC_DIRS) -c -Wall -Werror -fpic -o $(OBJ_DIR)/session_pd.o session_pd.cc
@@ -17,7 +17,7 @@ all:
 	$(CXX) $(CPPFLAGS) $(INC_DIRS) -c -Wall -Werror -fpic -o $(OBJ_DIR)/p4pd_init.o p4pd/p4pd_init.cc
 	$(CXX) $(CPPFLAGS) $(INC_DIRS) -c -Wall -Werror -fpic -o $(OBJ_DIR)/p4pd_api.o p4pd/p4pd_api.cc
 	$(CXX) $(CPPFLAGS) $(INC_DIRS) -c -Wall -Werror -fpic -o $(OBJ_DIR)/p4pd.o ../../../gen/iris/src/p4pd.c
-	$(CXX) -shared -g -o $(OBJ_DIR)/libiris.so $(OBJ_DIR)/hal_mem_pd.o $(OBJ_DIR)/tenant_pd.o $(OBJ_DIR)/nwsec_pd.o $(OBJ_DIR)/l2seg_pd.o $(OBJ_DIR)/lif_pd.o $(OBJ_DIR)/uplinkif_pd.o $(OBJ_DIR)/l2seg_uplink_pd.o $(OBJ_DIR)/if_pd.o $(OBJ_DIR)/endpoint_pd.o $(OBJ_DIR)/session_pd.o $(OBJ_DIR)/p4pd_api.o $(OBJ_DIR)/p4pd_init.o $(OBJ_DIR)/p4pd.o
+	$(CXX) -shared -g -o $(OBJ_DIR)/libiris.so $(OBJ_DIR)/hal_mem_pd.o $(OBJ_DIR)/vrf_pd.o $(OBJ_DIR)/nwsec_pd.o $(OBJ_DIR)/l2seg_pd.o $(OBJ_DIR)/lif_pd.o $(OBJ_DIR)/uplinkif_pd.o $(OBJ_DIR)/l2seg_uplink_pd.o $(OBJ_DIR)/if_pd.o $(OBJ_DIR)/endpoint_pd.o $(OBJ_DIR)/session_pd.o $(OBJ_DIR)/p4pd_api.o $(OBJ_DIR)/p4pd_init.o $(OBJ_DIR)/p4pd.o
 
 clean:
 	rm -rf $(OBJ_DIR)/*_pd*.o $(OBJ_DIR)/libiris.so

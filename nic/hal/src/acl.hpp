@@ -81,8 +81,8 @@ typedef struct acl_internal_match_spec_s {
 
 // Specifications for the Acl
 typedef struct acl_match_spec_s {
-    bool            tenant_match;
-    hal_handle_t    tenant_handle;     // tenant handle
+    bool            vrf_match;
+    hal_handle_t    vrf_handle;     // vrf handle
     bool            src_if_match;
     hal_handle_t    src_if_handle;     // source if handle
     bool            dest_if_match;

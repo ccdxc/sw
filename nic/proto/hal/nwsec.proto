@@ -44,7 +44,7 @@ enum NormalizationAction {
 
 //------------------------------------------------------------------------------
 // SecurityProfileSpec object captures feature knobs that are most likely
-// shareable across L2 segments, tenants, or even interfaces and most of the
+// shareable across L2 segments, vrfs, or even interfaces and most of the
 // time operates on defaults. It is possible that there is only object of this
 // kind in the system.
 // NOTE: user is not expected to fill in all the fields explicitly, that job is

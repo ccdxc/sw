@@ -227,7 +227,7 @@ proxy_program_lif(proxy_t* proxy)
 
 //------------------------------------------------------------------------------
 // process a Proxy enable request
-// TODO: if Proxy exists, treat this as modify (tenant id in the meta must
+// TODO: if Proxy exists, treat this as modify (vrf id in the meta must
 // match though)
 //------------------------------------------------------------------------------
 hal_ret_t
@@ -443,7 +443,7 @@ proxy_get (ProxyGetRequest& req, ProxyGetResponse *rsp)
     pd::pd_proxy_args_t    pd_proxy_args;
 
     if (!req.has_meta()) {
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -496,26 +496,26 @@ hal_ret_t
 validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
                                    proxy::ProxyResponse *rsp)
 {
-    tenant_t*       tenant = NULL;
-    tenant_id_t     tid = 0;
+    vrf_t*       vrf = NULL;
+    vrf_id_t     tid = 0;
     
     if(!req.has_meta()){
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         HAL_TRACE_ERR("no meta found");
         return HAL_RET_INVALID_ARG;
     }
  
-    if (req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
-        HAL_TRACE_ERR("tenant {}", req.meta().tenant_id());
+    if (req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+        HAL_TRACE_ERR("vrf {}", req.meta().vrf_id());
         return HAL_RET_INVALID_ARG;
     }
 
-    tid = req.meta().tenant_id();
-    tenant = tenant_lookup_by_id(tid); 
-    if(tenant == NULL) {
-        rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
-        HAL_TRACE_ERR("{}: tenant {} not found", __func__, tid);
+    tid = req.meta().vrf_id();
+    vrf = vrf_lookup_by_id(tid); 
+    if(vrf == NULL) {
+        rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
+        HAL_TRACE_ERR("{}: vrf {} not found", __func__, tid);
         return HAL_RET_INVALID_ARG;    
     }
     
@@ -593,7 +593,7 @@ proxy_flow_enable(types::ProxyType proxy_type,
         HAL_TRACE_DEBUG("ipsec proxy flow configured");
         if(ipsec_flow_config->encrypt()) {
             HAL_TRACE_DEBUG("ipsec proxy host flow configured");
-            extract_flow_key_from_spec(flow_key.tenant_id,
+            extract_flow_key_from_spec(flow_key.vrf_id,
                                        &pfi->u.ipsec.u.host_flow.esp_flow_key,
                                        ipsec_flow_config->esp_flow_key());
         }
@@ -607,7 +607,7 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
                   proxy::ProxyResponse *rsp)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    tenant_id_t         tid = 0;
+    vrf_id_t         tid = 0;
     flow_key_t          flow_key = {0};
     proxy_flow_info_t*  pfi = NULL;
     proxy_t*            proxy = NULL;
@@ -619,7 +619,7 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
         return ret;
     }
   
-    tid = req.meta().tenant_id();
+    tid = req.meta().vrf_id();
     extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
    
     // ignore direction for the flow.
@@ -655,20 +655,20 @@ hal_ret_t
 validate_proxy_get_flow_info_request(proxy::ProxyGetFlowInfoRequest& req,
                                      proxy::ProxyGetFlowInfoResponse *rsp)
 {
-    tenant_t*       tenant = NULL;
-    tenant_id_t     tid = 0;
+    vrf_t*       vrf = NULL;
+    vrf_id_t     tid = 0;
     
     if(!req.has_meta() ||
-        req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
  
-    tid = req.meta().tenant_id();
-    tenant = tenant_lookup_by_id(tid); 
-    if(tenant == NULL) {
-        rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
-        HAL_TRACE_ERR("{}: tenant {} not found", __func__, tid);
+    tid = req.meta().vrf_id();
+    vrf = vrf_lookup_by_id(tid); 
+    if(vrf == NULL) {
+        rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
+        HAL_TRACE_ERR("{}: vrf {} not found", __func__, tid);
         return HAL_RET_INVALID_ARG;    
     }
     
@@ -705,7 +705,7 @@ proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
                     proxy::ProxyGetFlowInfoResponse* rsp)
 {
     hal_ret_t           ret = HAL_RET_OK;
-    tenant_id_t         tid = 0;
+    vrf_id_t         tid = 0;
     flow_key_t          flow_key = {0};
     proxy_t*            proxy = NULL;
     proxy_flow_info_t*  pfi = NULL;
@@ -716,7 +716,7 @@ proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
         return ret;
     }
     
-    tid = req.meta().tenant_id();
+    tid = req.meta().vrf_id();
     extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
     
     pfi = proxy_get_flow_info(req.spec().proxy_type(), &flow_key);

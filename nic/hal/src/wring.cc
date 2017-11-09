@@ -4,7 +4,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/wring.hpp"
 // #include "nic/hal/svc/wring_svc.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 
 using std::string;

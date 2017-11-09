@@ -85,7 +85,7 @@ bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
                                                fsm_event_data fsm_data) {
     arp_trans_t *trans = reinterpret_cast<arp_trans_t *>(ctx);
     ep_l3_key_t l3_key;
-    tenant_t    *tenant;
+    vrf_t    *vrf;
     arp_event_data_t *data = reinterpret_cast<arp_event_data_t*>(fsm_data);
     const fte::ctx_t *fte_ctx = data->fte_ctx;
 
@@ -97,14 +97,14 @@ bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
         return false;
     }
 
-    tenant = tenant_lookup_by_handle(ep_entry->tenant_handle);
-    if (tenant == NULL) {
-       HAL_TRACE_ERR("pi-ep:{}:unable to find tenant", __FUNCTION__);
+    vrf = vrf_lookup_by_handle(ep_entry->vrf_handle);
+    if (vrf == NULL) {
+       HAL_TRACE_ERR("pi-ep:{}:unable to find vrf", __FUNCTION__);
        trans->sm_->throw_event(ARP_ERROR, NULL);
        return false;
     }
 
-    l3_key.tenant_id = tenant->tenant_id;
+    l3_key.vrf_id = vrf->vrf_id;
     memcpy(&l3_key.ip_addr.addr.v4_addr, trans->protocol_addr_,
            sizeof(ipv4_addr_t));
 
@@ -118,16 +118,16 @@ bool arp_trans_t::arp_fsm_t::process_arp_request(fsm_state_ctx ctx,
         return false;
     }
 
-    tenant = tenant_lookup_by_handle(ep_entry->tenant_handle);
-    if (tenant == NULL) {
-       HAL_TRACE_ERR("pi-ep:{}:unable to find tenant", __FUNCTION__);
+    vrf = vrf_lookup_by_handle(ep_entry->vrf_handle);
+    if (vrf == NULL) {
+       HAL_TRACE_ERR("pi-ep:{}:unable to find vrf", __FUNCTION__);
        trans->sm_->throw_event(ARP_ERROR, NULL);
        return false;
     }
 
     /* Check if there is an existing entry already */
     arp_ip_entry_key_t ip_key = {0};
-    init_arp_ip_entry_key(trans->protocol_addr_, tenant->tenant_id, &ip_key);
+    init_arp_ip_entry_key(trans->protocol_addr_, vrf->vrf_id, &ip_key);
 
     arp_trans_t *other_trans = reinterpret_cast<arp_trans_t *>(
         g_hal_state->arplearn_ip_entry_ht()->lookup(&ip_key));
@@ -163,7 +163,7 @@ arp_trans_t::arp_trans_t(uint8_t *hw_address, uint8_t *protocol_address,
     memcpy(this->hw_addr_, hw_address, sizeof(this->hw_addr_));
     memcpy(this->protocol_addr_, protocol_address, sizeof(this->protocol_addr_));
     init_arp_trans_key(hw_address, ctx.sep(), &this->trans_key_);
-    init_arp_ip_entry_key(protocol_address, ctx.tenant()->tenant_id, &this->ip_entry_key_);
+    init_arp_ip_entry_key(protocol_address, ctx.vrf()->vrf_id, &this->ip_entry_key_);
     this->sm_ = new fsm_state_machine_t(get_sm_def_func, ARP_INIT, ARP_DONE,
                                         ARP_TIMEOUT, (fsm_state_ctx)this,
                                         get_timer_func);
@@ -194,12 +194,12 @@ void arp_trans_t::init_arp_trans_key(const uint8_t *hw_addr, const ep_t *ep,
 }
 
 void arp_trans_t::init_arp_ip_entry_key(const uint8_t *protocol_address,
-                                        tenant_id_t tenant_id,
+                                        vrf_id_t vrf_id,
                                         arp_ip_entry_key_t *ip_entry_key) {
     *ip_entry_key = {0};
     memcpy(&ip_entry_key->ip_addr.addr.v4_addr, protocol_address,
            sizeof(ip_entry_key->ip_addr.addr.v4_addr));
-    ip_entry_key->tenant_id = tenant_id;
+    ip_entry_key->vrf_id = vrf_id;
 }
 
 arp_fsm_state_t arp_trans_t::get_state() {

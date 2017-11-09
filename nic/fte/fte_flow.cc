@@ -363,7 +363,7 @@ hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
     switch (header.valid_hdrs&FTE_ENCAP_HEADERS) {
     case FTE_HEADER_vxlan:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_ID;
-        attrs.tnnl_vnid = header.vxlan.tenant_id;
+        attrs.tnnl_vnid = header.vxlan.vrf_id;
         break;
     case FTE_HEADER_erspan:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_ERSPAN_ID;
@@ -374,15 +374,15 @@ hal_ret_t flow_t::build_push_header_config(hal::flow_pgm_attrs_t &attrs,
         break;
     case FTE_HEADER_vxlan_gpe:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_VXLAN_GPE_ID;
-        attrs.tnnl_vnid = header.vxlan_gpe.tenant_id;
+        attrs.tnnl_vnid = header.vxlan_gpe.vrf_id;
         break;
     case FTE_HEADER_geneve:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_GENV_ID;
-        attrs.tnnl_vnid = header.geneve.tenant_id;
+        attrs.tnnl_vnid = header.geneve.vrf_id;
       break;
     case FTE_HEADER_nvgre:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_NVGRE_ID;
-        attrs.tnnl_vnid = header.geneve.tenant_id;
+        attrs.tnnl_vnid = header.geneve.vrf_id;
         break;
     case FTE_HEADER_gre:
         attrs.tnnl_rw_act = TUNNEL_REWRITE_ENCAP_GRE_ID;

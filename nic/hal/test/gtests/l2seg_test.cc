@@ -1,10 +1,10 @@
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/hal/src/network.hpp"
 #include "nic/hal/src/interface.hpp"
 #include "nic/hal/src/l2segment.hpp"
 #include "nic/gen/proto/hal/interface.pb.h"
 #include "nic/gen/proto/hal/l2segment.pb.h"
-#include "nic/gen/proto/hal/tenant.pb.h"
+#include "nic/gen/proto/hal/vrf.pb.h"
 #include "nic/gen/proto/hal/nwsec.pb.h"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/nwsec.hpp"
@@ -25,10 +25,10 @@ using intf::LifKeyHandle;
 using l2segment::L2SegmentSpec;
 using l2segment::L2SegmentResponse;
 using l2segment::L2SegmentDeleteRequest;
-using tenant::TenantSpec;
-using tenant::TenantResponse;
-using tenant::TenantDeleteRequest;
-using tenant::TenantDeleteResponseMsg;
+using vrf::VrfSpec;
+using vrf::VrfResponse;
+using vrf::VrfDeleteRequest;
+using vrf::VrfDeleteResponseMsg;
 using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileResponse;
 using nw::NetworkSpec;
@@ -61,12 +61,12 @@ protected:
 TEST_F(l2seg_test, test1) 
 {
     hal_ret_t                       ret;
-    TenantSpec                      ten_spec, ten_spec1;
-    TenantResponse                  ten_rsp, ten_rsp1;
+    VrfSpec                      ten_spec, ten_spec1;
+    VrfResponse                  ten_rsp, ten_rsp1;
     SecurityProfileSpec             sp_spec, sp_spec1;
     SecurityProfileResponse         sp_rsp, sp_rsp1;
-    // TenantDeleteRequest             del_req;
-    // TenantDeleteResponseMsg         del_rsp;
+    // VrfDeleteRequest             del_req;
+    // VrfDeleteResponseMsg         del_rsp;
     LifSpec                         lif_spec;
     LifResponse                     lif_rsp;
     L2SegmentSpec                   l2seg_spec, l2seg_spec1;
@@ -98,31 +98,31 @@ TEST_F(l2seg_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(2);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(2);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
 #if 0
-    // Delete tenant
-    del_req.mutable_meta()->set_tenant_id(1);
-    del_req.mutable_key_or_handle()->set_tenant_id(1);
+    // Delete vrf
+    del_req.mutable_meta()->set_vrf_id(1);
+    del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_delete(del_req, &del_rsp);
+    ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 #endif
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(2);
+    nw_spec.mutable_meta()->set_vrf_id(2);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(2);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
@@ -139,7 +139,7 @@ TEST_F(l2seg_test, test1)
     pre = hal_test_utils_collect_slab_stats();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(2);
+    l2seg_spec.mutable_meta()->set_vrf_id(2);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(21);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -150,7 +150,7 @@ TEST_F(l2seg_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete l2 segment failure
-    del_req.mutable_meta()->set_tenant_id(1);
+    del_req.mutable_meta()->set_vrf_id(1);
     del_req.mutable_key_or_handle()->set_segment_id(20);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_delete(del_req, &del_rsp);
@@ -159,7 +159,7 @@ TEST_F(l2seg_test, test1)
     ASSERT_TRUE(ret == HAL_RET_L2SEG_NOT_FOUND);
 
     // Delete L2 segment
-    del_req.mutable_meta()->set_tenant_id(1);
+    del_req.mutable_meta()->set_vrf_id(1);
     del_req.mutable_key_or_handle()->set_segment_id(21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_delete(del_req, &del_rsp);
@@ -168,7 +168,7 @@ TEST_F(l2seg_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create L2 Segment
-    l2seg_spec1.mutable_meta()->set_tenant_id(2);
+    l2seg_spec1.mutable_meta()->set_vrf_id(2);
     l2seg_spec1.add_network_handle(nw_hdl);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(21);
     l2seg_spec1.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -179,7 +179,7 @@ TEST_F(l2seg_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Delete L2 segment
-    del_req.mutable_meta()->set_tenant_id(2);
+    del_req.mutable_meta()->set_vrf_id(2);
     del_req.mutable_key_or_handle()->set_segment_id(21);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_delete(del_req, &del_rsp);
@@ -194,7 +194,7 @@ TEST_F(l2seg_test, test1)
 
 #if 0
     // Create enicif
-    enicif_spec.mutable_meta()->set_tenant_id(2);
+    enicif_spec.mutable_meta()->set_vrf_id(2);
     enicif_spec.set_type(intf::IF_TYPE_ENIC);
     enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(21);
     enicif_spec.mutable_key_or_handle()->set_interface_id(21);
@@ -209,11 +209,11 @@ TEST_F(l2seg_test, test1)
 #endif
 
 #if 0
-    // Update tenant
-    ten_spec1.mutable_key_or_handle()->set_tenant_id(2);
+    // Update vrf
+    ten_spec1.mutable_key_or_handle()->set_vrf_id(2);
     ten_spec1.mutable_security_key_handle()->set_profile_handle(nwsec_hdl1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_update(ten_spec1, &ten_rsp1);
+    ret = hal::vrf_update(ten_spec1, &ten_rsp1);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 #endif
@@ -223,12 +223,12 @@ TEST_F(l2seg_test, test1)
 TEST_F(l2seg_test, test2) 
 {
     hal_ret_t                       ret;
-    TenantSpec                      ten_spec, ten_spec1;
-    TenantResponse                  ten_rsp, ten_rsp1;
+    VrfSpec                      ten_spec, ten_spec1;
+    VrfResponse                  ten_rsp, ten_rsp1;
     SecurityProfileSpec             sp_spec, sp_spec1;
     SecurityProfileResponse         sp_rsp, sp_rsp1;
-    // TenantDeleteRequest             del_req;
-    // TenantDeleteResponseMsg         del_rsp;
+    // VrfDeleteRequest             del_req;
+    // VrfDeleteResponseMsg         del_rsp;
     LifSpec                         lif_spec;
     LifResponse                     lif_rsp;
     L2SegmentSpec                   l2seg_spec, l2seg_spec1;
@@ -260,31 +260,31 @@ TEST_F(l2seg_test, test2)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(1);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(1);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
 #if 0
-    // Delete tenant
-    del_req.mutable_meta()->set_tenant_id(1);
-    del_req.mutable_key_or_handle()->set_tenant_id(1);
+    // Delete vrf
+    del_req.mutable_meta()->set_vrf_id(1);
+    del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_delete(del_req, &del_rsp);
+    ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 #endif
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(1);
+    nw_spec.mutable_meta()->set_vrf_id(1);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(1);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
@@ -294,7 +294,7 @@ TEST_F(l2seg_test, test2)
     pre = hal_test_utils_collect_slab_stats();
 
     // Create 100 l2segs
-    l2seg_spec.mutable_meta()->set_tenant_id(1);
+    l2seg_spec.mutable_meta()->set_vrf_id(1);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
@@ -307,7 +307,7 @@ TEST_F(l2seg_test, test2)
     }
 
     // Delete 100 l2segs
-    del_req.mutable_meta()->set_tenant_id(1);
+    del_req.mutable_meta()->set_vrf_id(1);
     for (int i = 0; i < 100; i++) {
         del_req.mutable_key_or_handle()->set_segment_id(100+i);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -328,12 +328,12 @@ TEST_F(l2seg_test, test2)
 TEST_F(l2seg_test, test3) 
 {
     hal_ret_t                       ret;
-    TenantSpec                      ten_spec, ten_spec1;
-    TenantResponse                  ten_rsp, ten_rsp1;
+    VrfSpec                      ten_spec, ten_spec1;
+    VrfResponse                  ten_rsp, ten_rsp1;
     SecurityProfileSpec             sp_spec, sp_spec1;
     SecurityProfileResponse         sp_rsp, sp_rsp1;
-    // TenantDeleteRequest             del_req;
-    // TenantDeleteResponseMsg         del_rsp;
+    // VrfDeleteRequest             del_req;
+    // VrfDeleteResponseMsg         del_rsp;
     LifSpec                         lif_spec;
     LifResponse                     lif_rsp;
     L2SegmentSpec                   l2seg_spec, l2seg_spec1;
@@ -365,31 +365,31 @@ TEST_F(l2seg_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(3);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(3);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
 #if 0
-    // Delete tenant
-    del_req.mutable_meta()->set_tenant_id(1);
-    del_req.mutable_key_or_handle()->set_tenant_id(1);
+    // Delete vrf
+    del_req.mutable_meta()->set_vrf_id(1);
+    del_req.mutable_key_or_handle()->set_vrf_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_delete(del_req, &del_rsp);
+    ret = hal::vrf_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 #endif
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(3);
+    nw_spec.mutable_meta()->set_vrf_id(3);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(3);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(3);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
@@ -406,7 +406,7 @@ TEST_F(l2seg_test, test3)
     // pre = hal_test_utils_collect_slab_stats();
 
     // Create L2 Segment
-    l2seg_spec.mutable_meta()->set_tenant_id(3);
+    l2seg_spec.mutable_meta()->set_vrf_id(3);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(31);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -417,7 +417,7 @@ TEST_F(l2seg_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Update to l2segment with no change
-    l2seg_spec1.mutable_meta()->set_tenant_id(3);
+    l2seg_spec1.mutable_meta()->set_vrf_id(3);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(31);
     l2seg_spec1.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec1.mutable_fabric_encap()->set_encap_value(10);
@@ -427,7 +427,7 @@ TEST_F(l2seg_test, test3)
     ASSERT_TRUE(ret == HAL_RET_ENTRY_EXISTS);
 
     // Update to l2segment with no change
-    l2seg_spec1.mutable_meta()->set_tenant_id(3);
+    l2seg_spec1.mutable_meta()->set_vrf_id(3);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(31);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
@@ -442,12 +442,12 @@ TEST_F(l2seg_test, test3)
 TEST_F(l2seg_test, test4) 
 {
     hal_ret_t                       ret;
-    TenantSpec                      ten_spec;
-    TenantResponse                  ten_rsp;
+    VrfSpec                      ten_spec;
+    VrfResponse                  ten_rsp;
     SecurityProfileSpec             sp_spec;
     SecurityProfileResponse         sp_rsp;
-    TenantDeleteRequest             ten_del_req;
-    TenantDeleteResponseMsg         ten_del_rsp;
+    VrfDeleteRequest             ten_del_req;
+    VrfDeleteResponseMsg         ten_del_rsp;
     L2SegmentSpec                   l2seg_spec, l2seg_spec1;
     L2SegmentResponse               l2seg_rsp, l2seg_rsp1;
     L2SegmentDeleteRequest          l2seg_del_req;
@@ -472,11 +472,11 @@ TEST_F(l2seg_test, test4)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(4);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(4);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
@@ -485,12 +485,12 @@ TEST_F(l2seg_test, test4)
     // Create network
     for (int i = 0; i < 10; i++) {
         // Create network
-        nw_spec.mutable_meta()->set_tenant_id(4);
+        nw_spec.mutable_meta()->set_vrf_id(4);
         nw_spec.set_rmac(0x0000DEADBEEF);
         nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
         nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
         nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000 + i);
-        nw_spec.mutable_tenant_key_handle()->set_tenant_id(4);
+        nw_spec.mutable_vrf_key_handle()->set_vrf_id(4);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_create(nw_spec, &nw_rsp);
         hal::hal_cfg_db_close();
@@ -498,12 +498,12 @@ TEST_F(l2seg_test, test4)
         nw_v4handles[i] = nw_rsp.mutable_status()->nw_handle();
 
         // Create v6 network
-        nw_spec_v6.mutable_meta()->set_tenant_id(4);
+        nw_spec_v6.mutable_meta()->set_vrf_id(4);
         nw_spec_v6.set_rmac(0x0000DEADBEEF);
         nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
         nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET6);
         nw_spec_v6.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v6_addr(ipv6_ip1);
-        nw_spec_v6.mutable_tenant_key_handle()->set_tenant_id(4);
+        nw_spec_v6.mutable_vrf_key_handle()->set_vrf_id(4);
         ipv6_ip1.replace(i, 5, v6_pattern);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_create(nw_spec_v6, &nw_rsp_v6);
@@ -513,7 +513,7 @@ TEST_F(l2seg_test, test4)
     }
 
     // Create 10 l2segs
-    l2seg_spec.mutable_meta()->set_tenant_id(4);
+    l2seg_spec.mutable_meta()->set_vrf_id(4);
     for (int i = 0; i < 10; i++) {
         // Add nw handles
         l2seg_spec.add_network_handle(nw_v4handles[i]);
@@ -529,7 +529,7 @@ TEST_F(l2seg_test, test4)
     }
 
     // Update l2segs with more network
-    l2seg_spec1.mutable_meta()->set_tenant_id(4);
+    l2seg_spec1.mutable_meta()->set_vrf_id(4);
     for (int i = 0; i < 10; i++) {
         // Add nw handles
         l2seg_spec1.add_network_handle(nw_v6handles[i]);
@@ -549,7 +549,7 @@ TEST_F(l2seg_test, test4)
     for (int i = 0; i < 10; i++) {
 #if 0
         // Remove network
-        nw_del_req.mutable_meta()->set_tenant_id(4);
+        nw_del_req.mutable_meta()->set_vrf_id(4);
         nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_v4handles[i]);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_delete(nw_del_req, &nw_del_rsp);
@@ -558,7 +558,7 @@ TEST_F(l2seg_test, test4)
 #endif
 
         // Remove v6 network
-        nw_del_req.mutable_meta()->set_tenant_id(4);
+        nw_del_req.mutable_meta()->set_vrf_id(4);
         nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_v6handles[i]);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_delete(nw_del_req, &nw_del_rsp);
@@ -567,7 +567,7 @@ TEST_F(l2seg_test, test4)
     }
 
     // Delete 10 l2segs
-    l2seg_del_req.mutable_meta()->set_tenant_id(4);
+    l2seg_del_req.mutable_meta()->set_vrf_id(4);
     for (int i = 0; i < 10; i++) {
         l2seg_del_req.mutable_key_or_handle()->set_segment_id(400+i);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -579,7 +579,7 @@ TEST_F(l2seg_test, test4)
 
     for (int i = 0; i < 10; i++) {
         // Remove network
-        nw_del_req.mutable_meta()->set_tenant_id(4);
+        nw_del_req.mutable_meta()->set_vrf_id(4);
         nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_v4handles[i]);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_delete(nw_del_req, &nw_del_rsp);
@@ -587,7 +587,7 @@ TEST_F(l2seg_test, test4)
         ASSERT_TRUE(ret == HAL_RET_OK);
 
         // Remove v6 network
-        nw_del_req.mutable_meta()->set_tenant_id(4);
+        nw_del_req.mutable_meta()->set_vrf_id(4);
         nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_v6handles[i]);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::network_delete(nw_del_req, &nw_del_rsp);
@@ -613,10 +613,10 @@ TEST_F(l2seg_test, test5)
     SecurityProfileResponse             sp_rsp;
     SecurityProfileDeleteRequest        sp_del_req;
     SecurityProfileDeleteResponse       sp_del_rsp;
-    TenantSpec                          ten_spec;
-    TenantResponse                      ten_rsp;
-    TenantDeleteRequest                 ten_del_req;
-    TenantDeleteResponse                ten_del_rsp;
+    VrfSpec                          ten_spec;
+    VrfResponse                      ten_rsp;
+    VrfDeleteRequest                 ten_del_req;
+    VrfDeleteResponse                ten_del_rsp;
     NetworkSpec                         nw_spec;
     NetworkResponse                     nw_rsp;
     NetworkDeleteRequest                nw_del_req;
@@ -631,8 +631,8 @@ TEST_F(l2seg_test, test5)
 
     pre = hal_test_utils_collect_slab_stats();
 
-    // Create l2seg with tenant id doesnt exist
-    l2seg_spec.mutable_meta()->set_tenant_id(5);
+    // Create l2seg with vrf id doesnt exist
+    l2seg_spec.mutable_meta()->set_vrf_id(5);
     // l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -644,7 +644,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Create l2seg with no meta
-    // l2seg_spec.mutable_meta()->set_tenant_id(5);
+    // l2seg_spec.mutable_meta()->set_vrf_id(5);
     // l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec2.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec2.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -664,29 +664,29 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(5);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(5);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    // Create tenant
-    ten_spec.mutable_key_or_handle()->set_tenant_id(51);
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(51);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_create(ten_spec, &ten_rsp);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create network
-    nw_spec.mutable_meta()->set_tenant_id(5);
+    nw_spec.mutable_meta()->set_vrf_id(5);
     nw_spec.set_rmac(0x0000DEADBEEF);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->set_prefix_len(32);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
     nw_spec.mutable_key_or_handle()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0xa0000000);
-    nw_spec.mutable_tenant_key_handle()->set_tenant_id(5);
+    nw_spec.mutable_vrf_key_handle()->set_vrf_id(5);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_create(nw_spec, &nw_rsp);
     hal::hal_cfg_db_close();
@@ -695,7 +695,7 @@ TEST_F(l2seg_test, test5)
 
 
     // Create l2seg with network that doesnt exist
-    l2seg_spec.mutable_meta()->set_tenant_id(5);
+    l2seg_spec.mutable_meta()->set_vrf_id(5);
     l2seg_spec.add_network_handle(nw_hdl + 1);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -707,7 +707,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Create l2seg with no access or fabric encap set
-    l2seg_spec.mutable_meta()->set_tenant_id(5);
+    l2seg_spec.mutable_meta()->set_vrf_id(5);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -717,7 +717,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Create l2seg
-    l2seg_spec.mutable_meta()->set_tenant_id(5);
+    l2seg_spec.mutable_meta()->set_vrf_id(5);
     l2seg_spec.clear_network_handle();
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
@@ -731,7 +731,7 @@ TEST_F(l2seg_test, test5)
     uint64_t l2seg_hdl = l2seg_rsp.mutable_l2segment_status()->l2segment_handle();
     
     // Create l2seg which already exists
-    l2seg_spec.mutable_meta()->set_tenant_id(5);
+    l2seg_spec.mutable_meta()->set_vrf_id(5);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
@@ -744,7 +744,7 @@ TEST_F(l2seg_test, test5)
 
     // Create the max number of HAL_MAX_HW_L2SEGMENTS
     // Create l2seg resulting in no resource
-    l2seg_spec.mutable_meta()->set_tenant_id(5);
+    l2seg_spec.mutable_meta()->set_vrf_id(5);
     l2seg_spec.clear_network_handle();
     l2seg_spec.add_network_handle(nw_hdl);
     for (int i = 0; i < num_l2segs; i++) {
@@ -759,7 +759,7 @@ TEST_F(l2seg_test, test5)
     }
     
     // Update l2seg with no key or handle
-    l2seg_spec1.mutable_meta()->set_tenant_id(5);
+    l2seg_spec1.mutable_meta()->set_vrf_id(5);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -769,7 +769,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Update l2seg with handle that doesn't exist
-    l2seg_spec1.mutable_meta()->set_tenant_id(5);
+    l2seg_spec1.mutable_meta()->set_vrf_id(5);
     l2seg_spec1.mutable_key_or_handle()->set_l2segment_handle(0xFFFFFFF);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
@@ -779,8 +779,8 @@ TEST_F(l2seg_test, test5)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_L2SEG_NOT_FOUND);
 
-    // Update l2seg with invalid tenant id
-    l2seg_spec1.mutable_meta()->set_tenant_id(HAL_TENANT_ID_INVALID);
+    // Update l2seg with invalid vrf id
+    l2seg_spec1.mutable_meta()->set_vrf_id(HAL_VRF_ID_INVALID);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
@@ -790,8 +790,8 @@ TEST_F(l2seg_test, test5)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
-    // Update l2seg with different tenant not allowed
-    l2seg_spec1.mutable_meta()->set_tenant_id(6);
+    // Update l2seg with different vrf not allowed
+    l2seg_spec1.mutable_meta()->set_vrf_id(6);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
@@ -799,10 +799,10 @@ TEST_F(l2seg_test, test5)
     ret = hal::l2segment_update(l2seg_spec1, &l2seg_rsp1);
     HAL_TRACE_DEBUG("ret: {}", ret);
     hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_TENANT_NOT_FOUND);
+    ASSERT_TRUE(ret == HAL_RET_VRF_NOT_FOUND);
 
-    // Update l2seg with different tenant not allowed
-    l2seg_spec1.mutable_meta()->set_tenant_id(51);
+    // Update l2seg with different vrf not allowed
+    l2seg_spec1.mutable_meta()->set_vrf_id(51);
     l2seg_spec1.mutable_key_or_handle()->set_segment_id(51);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
@@ -815,7 +815,7 @@ TEST_F(l2seg_test, test5)
     // Update l2seg with the same networks as when its created
 
     // Update l2seg with a handle
-    l2seg_spec1.mutable_meta()->set_tenant_id(5);
+    l2seg_spec1.mutable_meta()->set_vrf_id(5);
     l2seg_spec1.mutable_key_or_handle()->set_l2segment_handle(l2seg_hdl);
     l2seg_spec1.set_mcast_fwd_policy(l2segment::MULTICAST_FWD_POLICY_DROP);
     l2seg_spec1.set_bcast_fwd_policy(l2segment::BROADCAST_FWD_POLICY_DROP);
@@ -842,7 +842,7 @@ TEST_F(l2seg_test, test5)
 
 
     // Get of l2seg with no key or handle
-    l2seg_get_req.mutable_meta()->set_tenant_id(5);
+    l2seg_get_req.mutable_meta()->set_vrf_id(5);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_get(l2seg_get_req, &l2seg_get_rsp);
     hal::hal_cfg_db_close();
@@ -851,7 +851,7 @@ TEST_F(l2seg_test, test5)
 
 
     // Get of l2seg without key or handle
-    l2seg_get_req.mutable_meta()->set_tenant_id(5);
+    l2seg_get_req.mutable_meta()->set_vrf_id(5);
     // l2seg_get_req.mutable_key_or_handle()->set_segment_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_get(l2seg_get_req, &l2seg_get_rsp);
@@ -860,7 +860,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Get of l2seg id for which l2seg is not present
-    l2seg_get_req.mutable_meta()->set_tenant_id(5);
+    l2seg_get_req.mutable_meta()->set_vrf_id(5);
     l2seg_get_req.mutable_key_or_handle()->set_segment_id(50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_get(l2seg_get_req, &l2seg_get_rsp);
@@ -869,7 +869,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_L2SEG_NOT_FOUND);
 
     // Get of l2seg handle for which l2seg is not present
-    l2seg_get_req.mutable_meta()->set_tenant_id(5);
+    l2seg_get_req.mutable_meta()->set_vrf_id(5);
     l2seg_get_req.mutable_key_or_handle()->set_l2segment_handle(0xFFFFFF);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_get(l2seg_get_req, &l2seg_get_rsp);
@@ -878,7 +878,7 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(ret == HAL_RET_L2SEG_NOT_FOUND);
 
     // Delete all l2segs
-    l2seg_del_req.mutable_meta()->set_tenant_id(5);
+    l2seg_del_req.mutable_meta()->set_vrf_id(5);
     l2seg_del_req.mutable_key_or_handle()->set_segment_id(51);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_delete(l2seg_del_req, &l2seg_del_rsp);
@@ -897,25 +897,25 @@ TEST_F(l2seg_test, test5)
     }
 
     // Delete network
-    nw_del_req.mutable_meta()->set_tenant_id(5);
+    nw_del_req.mutable_meta()->set_vrf_id(5);
     nw_del_req.mutable_key_or_handle()->set_nw_handle(nw_hdl);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::network_delete(nw_del_req, &nw_del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    // Delete tenants
-    ten_del_req.mutable_meta()->set_tenant_id(5);
-    ten_del_req.mutable_key_or_handle()->set_tenant_id(5);
+    // Delete vrfs
+    ten_del_req.mutable_meta()->set_vrf_id(5);
+    ten_del_req.mutable_key_or_handle()->set_vrf_id(5);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_delete(ten_del_req, &ten_del_rsp);
+    ret = hal::vrf_delete(ten_del_req, &ten_del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    ten_del_req.mutable_meta()->set_tenant_id(51);
-    ten_del_req.mutable_key_or_handle()->set_tenant_id(51);
+    ten_del_req.mutable_meta()->set_vrf_id(51);
+    ten_del_req.mutable_key_or_handle()->set_vrf_id(51);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::tenant_delete(ten_del_req, &ten_del_rsp);
+    ret = hal::vrf_delete(ten_del_req, &ten_del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 

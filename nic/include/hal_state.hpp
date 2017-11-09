@@ -60,7 +60,7 @@ public:
     hal_ret_t register_cfg_object(hal_obj_id_t obj_id, uint32_t obj_sz);
     uint32_t object_size(hal_obj_id_t obj_id) const;
 
-    ht *tenant_id_ht(void) const { return tenant_id_ht_; }
+    ht *vrf_id_ht(void) const { return vrf_id_ht_; }
 
     ht *network_key_ht(void) const { return network_key_ht_; }
     ht *network_hal_handle_ht(void) const { return network_hal_handle_ht_; }
@@ -152,10 +152,10 @@ private:
     hal_cfg_db();
 
 private:
-    // tenant/vrf related config
+    // vrf/vrf related config
     struct {
-        ht         *tenant_id_ht_;
-        // ht         *tenant_hal_handle_ht_;
+        ht         *vrf_id_ht_;
+        // ht         *vrf_hal_handle_ht_;
     } __PACK__;
 
     // network related config
@@ -375,7 +375,7 @@ public:
     slab *hal_handle_id_ht_entry_slab(void) const { return hal_handle_id_ht_entry_slab_; }
     slab *hal_handle_id_list_entry_slab(void) const { return hal_handle_id_list_entry_slab_; }
     slab *dos_policy_sg_list_entry_slab(void) const { return dos_policy_sg_list_entry_slab_; }
-    slab *tenant_slab(void) const { return tenant_slab_; }
+    slab *vrf_slab(void) const { return vrf_slab_; }
     slab *network_slab(void) const { return network_slab_; }
     slab *nwsec_profile_slab(void) const { return nwsec_profile_slab_; }
     slab *nwsec_group_slab(void) const { return nwsec_group_slab_; }
@@ -419,7 +419,7 @@ private:
     slab    *hal_handle_id_ht_entry_slab_;
     slab    *hal_handle_id_list_entry_slab_;
     slab    *dos_policy_sg_list_entry_slab_;
-    slab    *tenant_slab_;
+    slab    *vrf_slab_;
     slab    *network_slab_;
     slab    *nwsec_profile_slab_;
     slab    *nwsec_group_slab_;
@@ -485,9 +485,9 @@ public:
      }
      uint32_t object_size(hal_obj_id_t obj_id) { return cfg_db_->object_size(obj_id); }
 
-    // get APIs for tenant related state
-    slab *tenant_slab(void) const { return mem_db_->tenant_slab(); }
-    ht *tenant_id_ht(void) const { return cfg_db_->tenant_id_ht(); }
+    // get APIs for vrf related state
+    slab *vrf_slab(void) const { return mem_db_->vrf_slab(); }
+    ht *vrf_id_ht(void) const { return cfg_db_->vrf_id_ht(); }
 
     // get APIs for network related state
     slab *network_slab(void) const { return mem_db_->network_slab(); }

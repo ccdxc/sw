@@ -112,7 +112,7 @@ typedef struct flow_key_s {
 
         // IPv4/IPv6 flow key information
         struct {
-            tenant_id_t            tenant_id;    // tenant id
+            vrf_id_t            vrf_id;    // vrf id
             ipvx_addr_t            sip;          // source IP address
             ipvx_addr_t            dip;          // destination IP address
             IPProtocol             proto;        // IP protocol
@@ -175,7 +175,7 @@ typedef struct flow_pgm_attrs_s {
     uint64_t                  dscp_en:1;           //enable dscp rewrite
     uint64_t                  expected_src_lif_en:1;  // src lif check for host pinning
 
-    uint32_t                  tenant_hwid;         // source l2seg tenant hwid (lkp_vrf)
+    uint32_t                  vrf_hwid;         // source l2seg vrf hwid (lkp_vrf)
     rewrite_actions_en        rw_act;              // rewrite action
     uint32_t                  rw_idx;              // rewrite index
     tunnel_rewrite_actions_en tnnl_rw_act;         // tunnel rewrite action
@@ -264,7 +264,7 @@ typedef struct session_args_s {
     session_state_t    *session_state;            // connection tracking state
     bool               valid_rflow;               // Rflow valid ?
 
-    tenant_t           *tenant;                   // tenant
+    vrf_t           *vrf;                   // vrf
     ep_t               *sep;                      // spurce ep
     ep_t               *dep;                      // dest ep
     if_t               *sif;                      // source interface
@@ -288,7 +288,7 @@ struct session_s {
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
     app_session_t       *app_session;             // app session this L4 session is part of, if any
-    tenant_t            *tenant;                  // tenant
+    vrf_t            *vrf;                  // vrf
 
     // PD state
     pd::pd_session_t    *pd;                      // all PD specific state
@@ -305,7 +305,7 @@ struct session_s {
     dllist_ctxt_t       dif_session_lentry;       // destination interface's session list context
     dllist_ctxt_t       sl2seg_session_lentry;    // source L2 segment's session list context
     dllist_ctxt_t       dl2seg_session_lentry;    // destination L2 segment's session list context
-    dllist_ctxt_t       tenant_session_lentry;    // tenant's session list context
+    dllist_ctxt_t       vrf_session_lentry;    // vrf's session list context
 } __PACK__;
 
 //------------------------------------------------------------------------------
@@ -365,7 +365,7 @@ bool flow_needs_associate_flow(const flow_key_t *flow_key);
 
 extern hal_ret_t session_release(session_t *session);
 
-hal_ret_t extract_flow_key_from_spec (tenant_id_t tid,
+hal_ret_t extract_flow_key_from_spec (vrf_id_t tid,
                                       flow_key_t *flow_key, 
                                       const FlowKey& flow_spec_key);
 

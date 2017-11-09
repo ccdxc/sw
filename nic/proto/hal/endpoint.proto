@@ -35,7 +35,7 @@ message EndpointL2Key {
 // NOTE: An endpoint can have many L3 keys
 message EndpointL3Key {
   types.IPAddress    ip_address = 1;    // IP address of the endpoint
-                                        // NOTE: tenant information is taken from meta
+                                        // NOTE: vrf information is taken from meta
 }
 
 // Endpoint can be uniquely identified by its L2 or one of its L3 keys

@@ -225,7 +225,7 @@ class DosPolicyObject(base.ConfigObjectBase):
         return
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.meta.tenant_id = self.tenant.id
+        req_spec.meta.vrf_id = self.tenant.id
         self.__phrs_dir_common(req_spec.ingress_policy.dos_protection,
                                self.ingress)
         self.__phrs_dir_common(req_spec.egress_policy.dos_protection,

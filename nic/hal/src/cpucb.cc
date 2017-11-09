@@ -3,7 +3,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/cpucb.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 
@@ -105,7 +105,7 @@ cpucb_spec_to_cb(CpuCbSpec& spec, cpucb_t& cpucb)
 }
 //------------------------------------------------------------------------------
 // process a CPU CB create request
-// TODO: if CPU CB exists, treat this as modify (tenant id in the meta must
+// TODO: if CPU CB exists, treat this as modify (vrf id in the meta must
 // match though)
 //------------------------------------------------------------------------------
 hal_ret_t

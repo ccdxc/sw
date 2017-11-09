@@ -5,17 +5,17 @@ class flow_t;
 class phv_t;
 
 hal::ep_t *temp_ep;
-hal::tenant_t *temp_ten;
+hal::vrf_t *temp_ten;
 hal_ret_t fte::ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
                            flow_t iflow[], flow_t rflow[]) {
     this->pkt_ = pkt;
     this->pkt_len_ = pkt_len;
     this->sep_ = temp_ep;
-    this->tenant_ = temp_ten;
+    this->vrf_ = temp_ten;
     return HAL_RET_OK;
 }
 
-void fte_ctx_init(fte::ctx_t &ctx, hal::tenant_t *ten, hal::ep_t *ep,
+void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
         fte::cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
         fte::flow_t iflow[], fte::flow_t rflow[])
 {

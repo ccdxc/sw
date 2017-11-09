@@ -59,7 +59,7 @@ lif_add_to_db (lif_t *lif, hal_handle_t handle)
 
     HAL_TRACE_DEBUG("pi-lif:{}:adding to lif id hash table", 
                     __FUNCTION__);
-    // allocate an entry to establish mapping from tenant id to its handle
+    // allocate an entry to establish mapping from vrf id to its handle
     entry =
         (hal_handle_id_ht_entry_t *)g_hal_state->
         hal_handle_id_ht_entry_slab()->alloc();
@@ -67,7 +67,7 @@ lif_add_to_db (lif_t *lif, hal_handle_t handle)
         return HAL_RET_OOM;
     }
 
-    // add mapping from tenant id to its handle
+    // add mapping from vrf id to its handle
     entry->handle_id = handle;
     ret = g_hal_state->lif_id_ht()->insert_with_key(&lif->lif_id,
                                                     entry, &entry->ht_ctxt);

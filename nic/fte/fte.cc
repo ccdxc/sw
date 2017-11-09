@@ -21,7 +21,7 @@ fte_db  *g_fte_db;
 hal_ret_t
 fte_db::init(void)
 {
-    // initialize tenant related data structures
+    // initialize vrf related data structures
     alg_flow_key_ht_ = hal::utils::ht::factory(FTE_MAX_ALG_KEYS,
                                                alg_flow_get_key_func,
                                                alg_flow_compute_hash_func,

@@ -71,9 +71,9 @@ public:
     void set_tnnl_rwr_tbl_encap_vlan_idx(uint32_t idx) { 
         tnnl_rewr_tbl_enc_vlan_idx_ = idx; }
 
-    // get APIs for tenant related state
-    slab *tenant_slab(void) const { return tenant_slab_; }
-    indexer *tenant_hwid_idxr(void) const { return tenant_hwid_idxr_; }
+    // get APIs for vrf related state
+    slab *vrf_slab(void) const { return vrf_slab_; }
+    indexer *vrf_hwid_idxr(void) const { return vrf_hwid_idxr_; }
 
     // get APIs for security related state
     indexer *nwsec_profile_hwid_idxr(void) const { return nwsec_profile_hwid_idxr_; }
@@ -263,10 +263,10 @@ private:
         uint32_t  tnnl_rewr_tbl_enc_vlan_idx_;
     } __PACK__;
 
-    // tenant related state
+    // vrf related state
     struct {
-        slab       *tenant_slab_;
-        indexer    *tenant_hwid_idxr_;
+        slab       *vrf_slab_;
+        indexer    *vrf_hwid_idxr_;
     } __PACK__;
 
     struct {

@@ -3,7 +3,7 @@
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/l2segment.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/oif_list_api.hpp"
 #include "nic/hal/src/if_utils.hpp"
@@ -116,10 +116,10 @@ static hal_ret_t
 validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
     if (!spec.has_meta() ||
-        spec.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        HAL_TRACE_ERR("pi-l2seg:{}:no meta or invalid tenant id",
+        spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        HAL_TRACE_ERR("pi-l2seg:{}:no meta or invalid vrf id",
                       __FUNCTION__);
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -191,7 +191,7 @@ l2seg_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     // PD Call to allocate PD resources and HW programming
     pd::pd_l2seg_args_init(&pd_l2seg_args);
     pd_l2seg_args.l2seg = l2seg;
-    pd_l2seg_args.tenant = app_ctxt->tenant;
+    pd_l2seg_args.vrf = app_ctxt->vrf;
     ret = pd::pd_l2seg_create(&pd_l2seg_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-l2seg:{}:failed to create l2seg pd, err : {}", 
@@ -245,7 +245,7 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     l2seg_t                     *l2seg = NULL;
-    tenant_t                    *tenant = NULL;
+    vrf_t                    *vrf = NULL;
     hal_handle_t                hal_handle = 0;
     l2seg_create_app_ctxt_t     *app_ctxt = NULL; 
 
@@ -279,11 +279,11 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    // Add l2seg to tenant's l2seg list
-    tenant = app_ctxt->tenant;
-    ret = tenant_add_l2seg(tenant, l2seg);
+    // Add l2seg to vrf's l2seg list
+    vrf = app_ctxt->vrf;
+    ret = vrf_add_l2seg(vrf, l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to add rel. from tenant",
+        HAL_TRACE_ERR("pi-l2seg:{}:failed to add rel. from vrf",
                 __FUNCTION__);
         goto end;
     }
@@ -308,7 +308,7 @@ end:
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI tenant 
+// 3. Free PI vrf 
 //------------------------------------------------------------------------------
 hal_ret_t
 l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -353,7 +353,7 @@ l2seg_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // remove object from hal_handle id based hash table in infra
     hal_handle_free(hal_handle);
 
-    // Free PI tenant
+    // Free PI vrf
     l2seg_free(l2seg);
 end:
     return ret;
@@ -427,16 +427,16 @@ end:
 
 //------------------------------------------------------------------------------
 // process a L2 segment create request
-// TODO: if L2 segment exists, treat this as modify (tenant id in the meta must
+// TODO: if L2 segment exists, treat this as modify (vrf id in the meta must
 // match though)
 //------------------------------------------------------------------------------
 hal_ret_t
 l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
     hal_ret_t                   ret;
-    tenant_t                    *tenant;
+    vrf_t                    *vrf;
     l2seg_t                     *l2seg    = NULL;
-    tenant_id_t                 tid;
+    vrf_id_t                 tid;
     // network_t                   *nw    = NULL;
     l2seg_create_app_ctxt_t     app_ctxt  = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
@@ -466,13 +466,13 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
 
-    // fetch the tenant
-    tid = spec.meta().tenant_id();
-    tenant = tenant_lookup_by_id(tid);
-    if (tenant == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}: Fetch Tenant Id:{} Failed. ret: {}",
+    // fetch the vrf
+    tid = spec.meta().vrf_id();
+    vrf = vrf_lookup_by_id(tid);
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("pi-l2seg:{}: Fetch Vrf Id:{} Failed. ret: {}",
                       __FUNCTION__, tid, ret);
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -487,7 +487,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         goto end;
     }
 
-    l2seg->tenant_handle = tenant->hal_handle;
+    l2seg->vrf_handle = vrf->hal_handle;
     l2seg->seg_id = spec.key_or_handle().segment_id();
     l2seg->segment_type = spec.segment_type();
     l2seg->mcast_fwd_policy = spec.mcast_fwd_policy();
@@ -535,7 +535,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     }
 
     // form ctxt and call infra add
-    app_ctxt.tenant = tenant;
+    app_ctxt.vrf = vrf;
     dhl_entry.handle = l2seg->hal_handle;
     dhl_entry.obj = l2seg;
     cfg_ctxt.app_ctxt = &app_ctxt;
@@ -572,12 +572,12 @@ validate_l2seg_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
-    // if tenant is set, it has to be right
+    // if vrf is set, it has to be right
     if (spec.has_meta() &&
-        spec.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        HAL_TRACE_ERR("pi-l2seg:{}:no meta or invalid tenant id",
+        spec.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        HAL_TRACE_ERR("pi-l2seg:{}:no meta or invalid vrf id",
                       __FUNCTION__);
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -1001,33 +1001,33 @@ end:
 
 
 //------------------------------------------------------------------------------
-// Match the tenant during create and update/delete
+// Match the vrf during create and update/delete
 //------------------------------------------------------------------------------
 hal_ret_t
-l2seg_validate_tenant (tenant_id_t tenant_id, l2seg_t *l2seg)
+l2seg_validate_vrf (vrf_id_t vrf_id, l2seg_t *l2seg)
 {
     hal_ret_t   ret  = HAL_RET_OK;
-    tenant_t    *ten = NULL;
+    vrf_t    *ten = NULL;
 
-    if (tenant_id == HAL_TENANT_ID_INVALID) {
-        HAL_TRACE_ERR("pi-l2seg:{}:invalid tenant_id:{}",
-                      __FUNCTION__, tenant_id);
+    if (vrf_id == HAL_VRF_ID_INVALID) {
+        HAL_TRACE_ERR("pi-l2seg:{}:invalid vrf_id:{}",
+                      __FUNCTION__, vrf_id);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
-    ten = tenant_lookup_by_id(tenant_id);
+    ten = vrf_lookup_by_id(vrf_id);
     if (ten == NULL) {
-        HAL_TRACE_ERR("pi-l2seg:{}:unable to find tenant_id:{}",
-                      __FUNCTION__, tenant_id);
-        ret = HAL_RET_TENANT_NOT_FOUND;
+        HAL_TRACE_ERR("pi-l2seg:{}:unable to find vrf_id:{}",
+                      __FUNCTION__, vrf_id);
+        ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
 
-    if (ten->hal_handle != l2seg->tenant_handle) {
+    if (ten->hal_handle != l2seg->vrf_handle) {
         HAL_TRACE_ERR("pi-l2seg:{}:unable to match cr_ten_hdl:{}, "
                       "up_ten_hdl:{}",
-                      __FUNCTION__, l2seg->tenant_handle, ten->hal_handle);
+                      __FUNCTION__, l2seg->vrf_handle, ten->hal_handle);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1069,9 +1069,9 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     }
 
     if (spec.has_meta()) {
-        ret = l2seg_validate_tenant(spec.meta().tenant_id(), l2seg);
+        ret = l2seg_validate_vrf(spec.meta().vrf_id(), l2seg);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-l2seg:{}:mismatch of tenants for l2seg, "
+            HAL_TRACE_ERR("pi-l2seg:{}:mismatch of vrfs for l2seg, "
                           "id:{}, handle:{}",
                           __FUNCTION__, kh.segment_id(), kh.l2segment_handle());
             goto end;
@@ -1252,7 +1252,7 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     l2seg_t                     *l2seg = NULL;
-    tenant_t                    *tenant = NULL;
+    vrf_t                    *vrf = NULL;
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
@@ -1271,10 +1271,10 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                     __FUNCTION__, l2seg->seg_id);
 
     // Remove l2seg references from other objects
-    tenant = tenant_lookup_by_handle(l2seg->tenant_handle);
-    ret = tenant_del_l2seg(tenant, l2seg);
+    vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+    ret = vrf_del_l2seg(vrf, l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2seg:{}:failed to del rel. from tenant",
+        HAL_TRACE_ERR("pi-l2seg:{}:failed to del rel. from vrf",
                 __FUNCTION__);
         goto end;
     }
@@ -1302,7 +1302,7 @@ l2seg_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     l2seg_free(l2seg);
 
     // TODO: Decrement the ref counts of dependent objects
-    //  - tenant
+    //  - vrf
 
 end:
     if (ret != HAL_RET_OK) {
@@ -1401,8 +1401,8 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
     dllist_ctxt_t                   *lnode = NULL;
     hal_handle_id_list_entry_t      *entry = NULL;
 
-    if (!req.has_meta() || req.meta().tenant_id() == HAL_TENANT_ID_INVALID) {
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+    if (!req.has_meta() || req.meta().vrf_id() == HAL_VRF_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -1427,7 +1427,7 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
     }
 
     // fill config spec of this L2 segment
-    rsp->mutable_spec()->mutable_meta()->set_tenant_id(tenant_lookup_by_handle(l2seg->tenant_handle)->tenant_id);
+    rsp->mutable_spec()->mutable_meta()->set_vrf_id(vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id);
     rsp->mutable_spec()->mutable_key_or_handle()->set_segment_id(l2seg->seg_id);
     rsp->mutable_spec()->set_segment_type(l2seg->segment_type);
     rsp->mutable_spec()->set_mcast_fwd_policy(l2seg->mcast_fwd_policy);
@@ -1517,7 +1517,7 @@ l2seg_del_if (l2seg_t *l2seg, if_t *hal_if)
 }
 
 //-----------------------------------------------------------------------------
-// Hanlde nwsec update coming from tenant
+// Hanlde nwsec update coming from vrf
 //-----------------------------------------------------------------------------
 hal_ret_t
 l2seg_handle_nwsec_update (l2seg_t *l2seg, nwsec_profile_t *nwsec_prof)

@@ -36,10 +36,10 @@ ep_get_if(ep_t *pi_ep)
     return (find_if_by_handle(pi_ep->if_handle));
 }
 
-tenant_t *
-ep_get_tenant(ep_t *pi_ep) 
+vrf_t *
+ep_get_vrf(ep_t *pi_ep) 
 {
-    return (tenant_lookup_by_handle(pi_ep->tenant_handle));
+    return (vrf_lookup_by_handle(pi_ep->vrf_handle));
 }
 
 network_t *

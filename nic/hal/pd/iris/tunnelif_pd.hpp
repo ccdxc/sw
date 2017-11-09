@@ -15,7 +15,7 @@ struct pd_tunnelif_s {
     int imn_idx[3];                 // Input mapping native table idx
     int imt_idx[3];                 // Input mapping tunneled table idx
     int tunnel_rw_idx;              // Tunnel rewrite table idx
-    tenant_id_t tid;
+    vrf_id_t tid;
 
     void        *pi_if;             // PI ptr
 } __PACK__;

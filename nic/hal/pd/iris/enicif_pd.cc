@@ -1155,15 +1155,15 @@ uint32_t
 pd_enicif_get_l4_prof_idx(pd_enicif_t *pd_enicif)
 {
     if_t        *pi_if = NULL;
-    tenant_t    *pi_tenant = NULL;
+    vrf_t    *pi_vrf = NULL;
 
     pi_if = (if_t *)pd_enicif->pi_if;
     HAL_ASSERT_RETURN(pi_if != NULL, 0);
 
-    pi_tenant = if_get_pi_tenant(pi_if);
-    HAL_ASSERT_RETURN(pi_tenant != NULL, 0);
+    pi_vrf = if_get_pi_vrf(pi_if);
+    HAL_ASSERT_RETURN(pi_vrf != NULL, 0);
 
-    return ten_get_nwsec_prof_hw_id(pi_tenant);
+    return ten_get_nwsec_prof_hw_id(pi_vrf);
 }
 
 pd_lif_t *

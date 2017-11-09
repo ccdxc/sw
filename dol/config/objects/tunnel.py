@@ -101,7 +101,7 @@ class TunnelObject(base.ConfigObjectBase):
         return self.encap_type == 'GRE'
 
     def PrepareHALRequestSpec(self, req_spec):
-        req_spec.meta.tenant_id = self.tenant.id
+        req_spec.meta.vrf_id = self.tenant.id
         req_spec.key_or_handle.interface_id = self.id
         req_spec.type = self.type
         req_spec.admin_status = self.status

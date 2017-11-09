@@ -24,7 +24,7 @@ update_tunnel_info(fte::ctx_t&ctx)
     
     switch (ctx.dl2seg()->fabric_encap.type) {
     case types::encapType::ENCAP_TYPE_VXLAN:
-        HEADER_SET_FLD(flowupd.header_push, vxlan, tenant_id, ctx.dl2seg()->fabric_encap.val);
+        HEADER_SET_FLD(flowupd.header_push, vxlan, vrf_id, ctx.dl2seg()->fabric_encap.val);
         break;
     default:
         return HAL_RET_INVALID_ARG;

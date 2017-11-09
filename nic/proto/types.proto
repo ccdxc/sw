@@ -41,8 +41,8 @@ enum ApiStatus {
   API_STATUS_NOT_FOUND                    = 5;     // object not found
   API_STATUS_OUT_OF_RESOURCE              = 6;     // out of resource
   API_STATUS_ENCAP_INVALID                = 7;     // encap invalid
-  API_STATUS_TENANT_ID_INVALID            = 8;     // invalid tenant id
-  API_STATUS_TENANT_NOT_FOUND             = 9;     // tenant not found
+  API_STATUS_VRF_ID_INVALID            = 8;     // invalid tenant id
+  API_STATUS_VRF_NOT_FOUND             = 9;     // tenant not found
   API_STATUS_L2_SEGMENT_ID_INVALID        = 10;    // invalid L2 segment id
   API_STATUS_L2_SEGMENT_NOT_FOUND         = 11;    // invalid L2 segment id
   API_STATUS_INTERFACE_ID_INVALID         = 12;    // invalid interface id
@@ -112,14 +112,14 @@ enum ApiStatus {
 // common meta object that is part of all other top level objects
 // TODO: should we add last updated timestamp, revision etc. here ?
 message ObjectMeta {
-  fixed32        tenant_id = 1;     // tenant identifier
+  fixed32        vrf_id = 1;     // vrf identifier
 }
 
-// Types of Tenants
-enum TenantType {
-  TENANT_TYPE_NONE          = 0;
-  TENANT_TYPE_INFRA         = 1;    // infra Tenant
-  TENANT_TYPE_CUSTOMER      = 2;    // customer Tenant
+// Types of Vrfs
+enum VrfType {
+  VRF_TYPE_NONE          = 0;
+  VRF_TYPE_INFRA         = 1;    // infra Vrf
+  VRF_TYPE_CUSTOMER      = 2;    // customer Vrf
 }
 
 // Types of L2 segments

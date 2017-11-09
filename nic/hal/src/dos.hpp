@@ -80,7 +80,7 @@ typedef struct dos_policy_prop_s {
 typedef struct dos_policy_s {
     hal_spinlock_t        slock;                  // lock to protect this structure
     hal_handle_t          hal_handle;             // HAL allocated handle
-    hal_handle_t          tenant_handle;          // tenant handle 
+    hal_handle_t          vrf_handle;          // vrf handle 
     
     bool                  ingr_pol_valid;
     bool                  egr_pol_valid;

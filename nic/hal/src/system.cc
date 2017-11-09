@@ -10,7 +10,7 @@
 namespace hal {
 
 //------------------------------------------------------------------------------
-// process a tenant get request
+// process a vrf get request
 //------------------------------------------------------------------------------
 hal_ret_t
 system_get(SystemResponse *rsp)

@@ -84,7 +84,7 @@ if_add_to_db (if_t *hal_if, hal_handle_t handle)
         return HAL_RET_OOM;
     }
 
-    // add mapping from tenant id to its handle
+    // add mapping from vrf id to its handle
     entry->handle_id = handle;
     ret = g_hal_state->if_id_ht()->insert_with_key(&hal_if->if_id,
                                                    entry, &entry->ht_ctxt);
@@ -146,8 +146,8 @@ static hal_ret_t
 validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 {
     intf::IfType    if_type;
-    tenant_id_t     tid;
-    tenant_t        *tenant = NULL;
+    vrf_id_t     tid;
+    vrf_t        *vrf = NULL;
     hal_ret_t       ret = HAL_RET_OK;
 
     // key-handle field must be set
@@ -177,13 +177,13 @@ validate_interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     }
 
     if (if_type == intf::IF_TYPE_ENIC) {
-        // fetch the tenant information
-        tid = spec.meta().tenant_id();
-        tenant = tenant_lookup_by_id(tid);
-        if (tenant == NULL) {
+        // fetch the vrf information
+        tid = spec.meta().vrf_id();
+        vrf = vrf_lookup_by_id(tid);
+        if (vrf == NULL) {
             HAL_TRACE_ERR("pi-enicif:{}: invalid tenanit id. tenid:{}, err:{} ",
                           __FUNCTION__, tid, HAL_RET_INVALID_ARG);
-            rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
+            rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
             return HAL_RET_INVALID_ARG;
         }
 
@@ -452,7 +452,7 @@ end:
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI tenant 
+// 3. Free PI vrf 
 //------------------------------------------------------------------------------
 hal_ret_t
 if_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
@@ -763,7 +763,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
             goto end;
         }
         ep->gre_if_handle = hal_if->hal_handle;
-        HAL_TRACE_DEBUG("pi-tunnelif:{}:GRE tunnelif {} added to EP tenantId {}", __FUNCTION__,
+        HAL_TRACE_DEBUG("pi-tunnelif:{}:GRE tunnelif {} added to EP vrfId {}", __FUNCTION__,
                 spec.key_or_handle().interface_id(), hal_if->tid);
     }
     // form ctxt and call infra add
@@ -1607,7 +1607,7 @@ interface_get (InterfaceGetRequest& req, InterfaceGetResponse *rsp)
     spec->mutable_key_or_handle()->set_interface_id(hal_if->if_id);
     spec->set_type(hal_if->if_type);
     spec->set_admin_status(hal_if->if_admin_status);
-    spec->mutable_meta()->set_tenant_id(hal_if->tid);
+    spec->mutable_meta()->set_vrf_id(hal_if->tid);
     spec->mutable_tx_qos_actions()->mutable_queue_key_or_handle()->
         mutable_queue_handle()->set_handle(hal_if->tx_qos_actions.queue_handle);
     spec->mutable_tx_qos_actions()->mutable_policer_key_or_handle()->
@@ -2148,7 +2148,7 @@ enic_if_create (InterfaceSpec& spec, InterfaceResponse *rsp, if_t *hal_if)
 
     auto if_enic_info = spec.if_enic_info();
     hal_if->enic_type = if_enic_info.enic_type();
-    hal_if->tid = spec.meta().tenant_id();
+    hal_if->tid = spec.meta().vrf_id();
     hal_if->pinned_uplink = if_enic_info.pinned_uplink_if_handle();
     lif = find_lif_by_handle(hal_if->lif_handle);
 
@@ -2353,7 +2353,7 @@ tunnel_if_create (InterfaceSpec& spec, InterfaceResponse *rsp,
 
     HAL_TRACE_DEBUG("pi-tunnelif:{}:tunnelif create for id {}", __FUNCTION__, 
                     spec.key_or_handle().interface_id());
-    hal_if->tid = spec.meta().tenant_id();
+    hal_if->tid = spec.meta().vrf_id();
     auto if_tunnel_info = spec.if_tunnel_info();
     hal_if->encap_type = if_tunnel_info.encap_type();
     /* Both source addr and dest addr have to v4 or v6 */

@@ -91,7 +91,7 @@ validate_port_create (PortSpec& spec, PortResponse *rsp)
     if (!spec.has_meta()) {
         HAL_TRACE_ERR("{}:no meta",
                       __FUNCTION__);
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -232,7 +232,7 @@ end:
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI tenant
+// 3. Free PI vrf
 //------------------------------------------------------------------------------
 hal_ret_t
 port_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)

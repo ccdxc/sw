@@ -165,7 +165,7 @@ message AclSelector {
   intf.InterfaceKeyHandle          src_if_key_handle      = 1;    // source interface
   intf.InterfaceKeyHandle          dst_if_key_handle      = 2;    // destination interface
   oneof seg_selector {
-      key_handles.TenantKeyHandle  tenant_key_handle      = 3;    // Tenant match
+      key_handles.VrfKeyHandle  vrf_key_handle            = 3;    // Vrf match
       key_handles.L2SegmentKeyHandle l2segment_key_handle = 4;    // L2 segment
   }
   oneof pkt_selector {
@@ -203,7 +203,7 @@ message AclSpec {
   // key_or_handle is ACL's key or handle
   AclKeyHandle     key_or_handle = 2 [(gogoproto.moretags) = "venice:\"key\""];
   uint32           priority      = 3;    // priority of the rule (0 being lowest)
-                                         // TBD: is this per-tenant priority ? or global ?
+                                         // TBD: is this per-vrf priority ? or global ?
   AclSelector      match         = 4;    // match conditions
   AclActionInfo    action        = 5;    // action(s)
 }

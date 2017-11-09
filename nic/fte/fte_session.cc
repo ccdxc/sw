@@ -13,8 +13,8 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     flow_t iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
-    HAL_TRACE_DEBUG("fte::{}: Session id {} Create in Tenant id {}", __FUNCTION__, 
-                    spec.session_id(), spec.meta().tenant_id());
+    HAL_TRACE_DEBUG("fte::{}: Session id {} Create in Vrf id {}", __FUNCTION__, 
+                    spec.session_id(), spec.meta().vrf_id());
 
     //Init context
     ret = ctx.init(&spec, rsp,  iflow, rflow);
@@ -44,8 +44,8 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     case HAL_RET_INVALID_ARG:
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         break;
-    case HAL_RET_TENANT_NOT_FOUND:
-        rsp->set_api_status(types::API_STATUS_TENANT_NOT_FOUND);
+    case HAL_RET_VRF_NOT_FOUND:
+        rsp->set_api_status(types::API_STATUS_VRF_NOT_FOUND);
         break;
     case HAL_RET_L2SEG_NOT_FOUND:
         rsp->set_api_status(types::API_STATUS_L2_SEGMENT_NOT_FOUND);

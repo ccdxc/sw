@@ -4,7 +4,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/rawccb.hpp"
 // #include "nic/hal/svc/rawccb_svc.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 
 namespace hal {
@@ -90,7 +90,7 @@ add_rawccb_to_db (rawccb_t *rawccb)
 
 //------------------------------------------------------------------------------
 // process a RAWC CB create request
-// TODO: if RAWC CB exists, treat this as modify (tenant id in the meta must
+// TODO: if RAWC CB exists, treat this as modify (vrf id in the meta must
 // match though)
 //------------------------------------------------------------------------------
 hal_ret_t

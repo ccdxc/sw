@@ -4,7 +4,7 @@
 #include "nic/include/hal_state.hpp"
 #include "nic/hal/src/tcpcb.hpp"
 // #include "nic/hal/svc/tcpcb_svc.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 
 namespace hal {
@@ -90,7 +90,7 @@ add_tcpcb_to_db (tcpcb_t *tcpcb)
 
 //------------------------------------------------------------------------------
 // process a TCP CB create request
-// TODO: if TCP CB exists, treat this as modify (tenant id in the meta must
+// TODO: if TCP CB exists, treat this as modify (vrf id in the meta must
 // match though)
 //------------------------------------------------------------------------------
 hal_ret_t

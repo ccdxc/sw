@@ -4,7 +4,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_lock.hpp"
 #include "nic/include/hal_state.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/utils.hpp"
 #include "nic/hal/src/if_utils.hpp"
@@ -12,59 +12,59 @@
 namespace hal {
 
 // ----------------------------------------------------------------------------
-// hash table tenant_id => entry
+// hash table vrf_id => entry
 //  - Get key from entry
 // ----------------------------------------------------------------------------
 void *
-tenant_id_get_key_func (void *entry)
+vrf_id_get_key_func (void *entry)
 {
     hal_handle_id_ht_entry_t    *ht_entry;
-    tenant_t                    *tenant = NULL;
+    vrf_t                    *vrf = NULL;
 
     HAL_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
     }
-    tenant = (tenant_t *)hal_handle_get_obj(ht_entry->handle_id);
-    return (void *)&(tenant->tenant_id);
+    vrf = (vrf_t *)hal_handle_get_obj(ht_entry->handle_id);
+    return (void *)&(vrf->vrf_id);
 }
 
 // ----------------------------------------------------------------------------
-// hash table tenant_id => entry - compute hash
+// hash table vrf_id => entry - compute hash
 // ----------------------------------------------------------------------------
 uint32_t
-tenant_id_compute_hash_func (void *key, uint32_t ht_size)
+vrf_id_compute_hash_func (void *key, uint32_t ht_size)
 {
     HAL_ASSERT(key != NULL);
-    return utils::hash_algo::fnv_hash(key, sizeof(tenant_id_t)) % ht_size;
+    return utils::hash_algo::fnv_hash(key, sizeof(vrf_id_t)) % ht_size;
 }
 
 // ----------------------------------------------------------------------------
-// hash table tenant_id => entry - compare function
+// hash table vrf_id => entry - compare function
 // ----------------------------------------------------------------------------
 bool
-tenant_id_compare_key_func (void *key1, void *key2)
+vrf_id_compare_key_func (void *key1, void *key2)
 {
     HAL_ASSERT((key1 != NULL) && (key2 != NULL));
-    if (*(tenant_id_t *)key1 == *(tenant_id_t *)key2) {
+    if (*(vrf_id_t *)key1 == *(vrf_id_t *)key2) {
         return true;
     }
     return false;
 }
 
 //------------------------------------------------------------------------------
-// insert a tenant to HAL config db
+// insert a vrf to HAL config db
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-tenant_add_to_db (tenant_t *tenant, hal_handle_t handle)
+vrf_add_to_db (vrf_t *vrf, hal_handle_t handle)
 {
     hal_ret_t                   ret;
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:adding to tenant id hash table", 
+    HAL_TRACE_DEBUG("pi-vrf:{}:adding to vrf id hash table", 
                     __FUNCTION__);
-    // allocate an entry to establish mapping from tenant id to its handle
+    // allocate an entry to establish mapping from vrf id to its handle
     entry =
         (hal_handle_id_ht_entry_t *)g_hal_state->
         hal_handle_id_ht_entry_slab()->alloc();
@@ -72,34 +72,34 @@ tenant_add_to_db (tenant_t *tenant, hal_handle_t handle)
         return HAL_RET_OOM;
     }
 
-    // add mapping from tenant id to its handle
+    // add mapping from vrf id to its handle
     entry->handle_id = handle;
-    ret = g_hal_state->tenant_id_ht()->insert_with_key(&tenant->tenant_id,
+    ret = g_hal_state->vrf_id_ht()->insert_with_key(&vrf->vrf_id,
                                                        entry, &entry->ht_ctxt);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to add tenant id to handle mapping, "
+        HAL_TRACE_ERR("pi-vrf:{}:failed to add vrf id to handle mapping, "
                       "err : {}", __FUNCTION__, ret);
         g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
     }
 
     // TODO: Check if this is the right place
-    tenant->hal_handle = handle;
+    vrf->hal_handle = handle;
 
     return ret;
 }
 
 //------------------------------------------------------------------------------
-// delete a tenant from the config database
+// delete a vrf from the config database
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-tenant_del_from_db (tenant_t *tenant)
+vrf_del_from_db (vrf_t *vrf)
 {
     hal_handle_id_ht_entry_t    *entry;
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:removing from tenant id hash table", __FUNCTION__);
+    HAL_TRACE_DEBUG("pi-vrf:{}:removing from vrf id hash table", __FUNCTION__);
     // remove from hash table
-    entry = (hal_handle_id_ht_entry_t *)g_hal_state->tenant_id_ht()->
-        remove(&tenant->tenant_id);
+    entry = (hal_handle_id_ht_entry_t *)g_hal_state->vrf_id_ht()->
+        remove(&vrf->vrf_id);
 
     // free up
     g_hal_state->hal_handle_id_ht_entry_slab()->free(entry);
@@ -108,35 +108,35 @@ tenant_del_from_db (tenant_t *tenant)
 }
 
 //------------------------------------------------------------------------------
-// validate an incoming tenant create request
+// validate an incoming vrf create request
 // TODO:
-// 1. check if tenant exists
+// 1. check if vrf exists
 // 2. validate L4 profile existence if that handle is valid
 //------------------------------------------------------------------------------
 static hal_ret_t
-validate_tenant_create (TenantSpec& spec, TenantResponse *rsp)
+validate_vrf_create (VrfSpec& spec, VrfResponse *rsp)
 {
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-tenant:{}:tenant id and handle not set in request",
+        HAL_TRACE_ERR("pi-vrf:{}:vrf id and handle not set in request",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
 
     auto kh = spec.key_or_handle();
-    if (kh.key_or_handle_case() != TenantKeyHandle::kTenantId) {
-        // key-handle field set, but tenant id not provided
-        HAL_TRACE_ERR("pi-tenant:{}:tenant id not set in request", __FUNCTION__);
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+    if (kh.key_or_handle_case() != VrfKeyHandle::kVrfId) {
+        // key-handle field set, but vrf id not provided
+        HAL_TRACE_ERR("pi-vrf:{}:vrf id not set in request", __FUNCTION__);
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
-    // check if tenant id is in the valid range
-    if (kh.tenant_id() == HAL_TENANT_ID_INVALID) {
-        HAL_TRACE_ERR("pi-tenant:{}:tenant id {} invalid in the request", __FUNCTION__,
-                      HAL_TENANT_ID_INVALID);
-        rsp->set_api_status(types::API_STATUS_TENANT_ID_INVALID);
+    // check if vrf id is in the valid range
+    if (kh.vrf_id() == HAL_VRF_ID_INVALID) {
+        HAL_TRACE_ERR("pi-vrf:{}:vrf id {} invalid in the request", __FUNCTION__,
+                      HAL_VRF_ID_INVALID);
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -148,37 +148,37 @@ validate_tenant_create (TenantSpec& spec, TenantResponse *rsp)
 // PD Call to allocate PD resources and HW programming
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
+vrf_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_tenant_args_t        pd_tenant_args = { 0 };
+    pd::pd_vrf_args_t        pd_vrf_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    tenant_t                    *tenant = NULL;
-    tenant_create_app_ctxt_t    *app_ctxt = NULL; 
+    vrf_t                    *vrf = NULL;
+    vrf_create_app_ctxt_t    *app_ctxt = NULL; 
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-tenant:{}: invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("pi-vrf:{}: invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (tenant_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt = (vrf_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    tenant = (tenant_t *)dhl_entry->obj;
+    vrf = (vrf_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:create add CB {}",
-                    __FUNCTION__, tenant->tenant_id);
+    HAL_TRACE_DEBUG("pi-vrf:{}:create add CB {}",
+                    __FUNCTION__, vrf->vrf_id);
 
     // PD Call to allocate PD resources and HW programming
-    pd::pd_tenant_args_init(&pd_tenant_args);
-    pd_tenant_args.tenant = tenant;
-    pd_tenant_args.nwsec_profile = app_ctxt->sec_prof;
-    ret = pd::pd_tenant_create(&pd_tenant_args);
+    pd::pd_vrf_args_init(&pd_vrf_args);
+    pd_vrf_args.vrf = vrf;
+    pd_vrf_args.nwsec_profile = app_ctxt->sec_prof;
+    ret = pd::pd_vrf_create(&pd_vrf_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to create tenant pd, err : {}", 
+        HAL_TRACE_ERR("pi-vrf:{}:failed to create vrf pd, err : {}", 
                 __FUNCTION__, ret);
     }
 
@@ -187,21 +187,21 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// 1. Update PI DBs as tenant_create_add_cb() was a success
-//      a. Add to tenant id hash table
+// 1. Update PI DBs as vrf_create_add_cb() was a success
+//      a. Add to vrf id hash table
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    tenant_t                    *tenant = NULL;
+    vrf_t                    *vrf = NULL;
     hal_handle_t                hal_handle = 0;
-    tenant_create_app_ctxt_t    *app_ctxt = NULL; 
+    vrf_create_app_ctxt_t    *app_ctxt = NULL; 
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-tenant:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("pi-vrf:{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -209,27 +209,27 @@ tenant_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (tenant_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt = (vrf_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    tenant = (tenant_t *)dhl_entry->obj;
+    vrf = (vrf_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:create commit CB {}",
-                    __FUNCTION__, tenant->tenant_id);
+    HAL_TRACE_DEBUG("pi-vrf:{}:create commit CB {}",
+                    __FUNCTION__, vrf->vrf_id);
 
-    // 1. a. Add to tenant id hash table
-    ret = tenant_add_to_db(tenant, hal_handle);
+    // 1. a. Add to vrf id hash table
+    ret = vrf_add_to_db(vrf, hal_handle);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to add tenant {} to db, err : {}", 
-                __FUNCTION__, tenant->tenant_id, ret);
+        HAL_TRACE_ERR("pi-vrf:{}:failed to add vrf {} to db, err : {}", 
+                __FUNCTION__, vrf->vrf_id, ret);
         goto end;
     }
 
-    // Add tenant to nwsec profile
-    if (tenant->nwsec_profile_handle != HAL_HANDLE_INVALID) {
-        ret = nwsec_prof_add_tenant(app_ctxt->sec_prof, tenant);
+    // Add vrf to nwsec profile
+    if (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+        ret = nwsec_prof_add_vrf(app_ctxt->sec_prof, vrf);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-tenant:{}:failed to add rel. from nwsec. prof",
+            HAL_TRACE_ERR("pi-vrf:{}:failed to add rel. from nwsec. prof",
                           __FUNCTION__);
             goto end;
         }
@@ -240,26 +240,26 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// tenant_create_add_cb was a failure
+// vrf_create_add_cb was a failure
 // 1. call delete to PD
 //      a. Deprogram HW
 //      b. Clean up resources
 //      c. Free PD object
 // 2. Remove object from hal_handle id based hash table in infra
-// 3. Free PI tenant 
+// 3. Free PI vrf 
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+vrf_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_tenant_args_t        pd_tenant_args = { 0 };
+    pd::pd_vrf_args_t        pd_vrf_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    tenant_t                    *tenant = NULL;
+    vrf_t                    *vrf = NULL;
     hal_handle_t                hal_handle = 0;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-tenant:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("pi-vrf:{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -267,19 +267,19 @@ tenant_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-    tenant = (tenant_t *)dhl_entry->obj;
+    vrf = (vrf_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:create abort CB {}",
-                    __FUNCTION__, tenant->tenant_id);
+    HAL_TRACE_DEBUG("pi-vrf:{}:create abort CB {}",
+                    __FUNCTION__, vrf->vrf_id);
 
     // 1. delete call to PD
-    if (tenant->pd) {
-        pd::pd_tenant_args_init(&pd_tenant_args);
-        pd_tenant_args.tenant = tenant;
-        ret = pd::pd_tenant_delete(&pd_tenant_args);
+    if (vrf->pd) {
+        pd::pd_vrf_args_init(&pd_vrf_args);
+        pd_vrf_args.vrf = vrf;
+        ret = pd::pd_vrf_delete(&pd_vrf_args);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-tenant:{}:failed to delete tenant pd, err : {}", 
+            HAL_TRACE_ERR("pi-vrf:{}:failed to delete vrf pd, err : {}", 
                           __FUNCTION__, ret);
         }
     }
@@ -287,8 +287,8 @@ tenant_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // 2. remove object from hal_handle id based hash table in infra
     hal_handle_free(hal_handle);
 
-    // 3. Free PI tenant
-    tenant_free(tenant);
+    // 3. Free PI vrf
+    vrf_free(vrf);
 end:
     return ret;
 }
@@ -297,7 +297,7 @@ end:
 // Dummy create cleanup callback
 // ----------------------------------------------------------------------------
 hal_ret_t
-tenant_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+vrf_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -308,10 +308,10 @@ tenant_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // Converts hal_ret_t to API status
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_prepare_rsp (TenantResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
+vrf_prepare_rsp (VrfResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
 {
     if (ret == HAL_RET_OK) {
-        rsp->mutable_tenant_status()->set_tenant_handle(hal_handle);
+        rsp->mutable_vrf_status()->set_vrf_handle(hal_handle);
     }
 
     rsp->set_api_status(hal_prepare_rsp(ret));
@@ -320,88 +320,88 @@ tenant_prepare_rsp (TenantResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
 }
 
 //------------------------------------------------------------------------------
-// process a tenant create request
-// TODO: if tenant exists, treat this as modify
+// process a vrf create request
+// TODO: if vrf exists, treat this as modify
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_create (TenantSpec& spec, TenantResponse *rsp)
+vrf_create (VrfSpec& spec, VrfResponse *rsp)
 {
     hal_ret_t                   ret;
-    tenant_t                    *tenant = NULL;
+    vrf_t                    *vrf = NULL;
     nwsec_profile_t             *sec_prof;
     hal_handle_t                hal_handle = HAL_HANDLE_INVALID;
-    tenant_create_app_ctxt_t    app_ctxt = { 0 };
+    vrf_create_app_ctxt_t    app_ctxt = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
 
-    hal_api_trace(" API Begin: tenant create ");
-    HAL_TRACE_DEBUG("pi-tenant:{}:creating tenant with id {}",
-                    __FUNCTION__, spec.key_or_handle().tenant_id());
+    hal_api_trace(" API Begin: vrf create ");
+    HAL_TRACE_DEBUG("pi-vrf:{}:creating vrf with id {}",
+                    __FUNCTION__, spec.key_or_handle().vrf_id());
 
     // validate the request message
-    ret = validate_tenant_create(spec, rsp);
+    ret = validate_vrf_create(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:validation failed, ret : {}", 
+        HAL_TRACE_ERR("pi-vrf:{}:validation failed, ret : {}", 
                 __FUNCTION__, ret);
         goto end;
     }
 
-    // check if tenant exists already, and reject if one is found
-    if (tenant_lookup_by_id(spec.key_or_handle().tenant_id())) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to create a tenant, "
-                      "tenant {} exists already", __FUNCTION__, 
-                      spec.key_or_handle().tenant_id());
+    // check if vrf exists already, and reject if one is found
+    if (vrf_lookup_by_id(spec.key_or_handle().vrf_id())) {
+        HAL_TRACE_ERR("pi-vrf:{}:failed to create a vrf, "
+                      "vrf {} exists already", __FUNCTION__, 
+                      spec.key_or_handle().vrf_id());
         ret = HAL_RET_ENTRY_EXISTS;
         goto end;
     }
 
-    // instantiate a PI tenant object
-    tenant = tenant_alloc_init();
-    if (tenant == NULL) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to create teanant, err : {}", ret);
+    // instantiate a PI vrf object
+    vrf = vrf_alloc_init();
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("pi-vrf:{}:failed to create teanant, err : {}", ret);
         ret = HAL_RET_OOM;
         goto end;
     }
-    tenant->tenant_type = spec.tenant_type();
-    tenant->tenant_id = spec.key_or_handle().tenant_id();
-    tenant->nwsec_profile_handle = spec.security_key_handle().profile_handle();
-    if (tenant->nwsec_profile_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_DEBUG("pi-tenant:{}: No nwsec prof passed, "
+    vrf->vrf_type = spec.vrf_type();
+    vrf->vrf_id = spec.key_or_handle().vrf_id();
+    vrf->nwsec_profile_handle = spec.security_key_handle().profile_handle();
+    if (vrf->nwsec_profile_handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_DEBUG("pi-vrf:{}: No nwsec prof passed, "
                         "using default security profile", __FUNCTION__);
         sec_prof = NULL;
     } else {
-        sec_prof = find_nwsec_profile_by_handle(tenant->nwsec_profile_handle);
+        sec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
         if (sec_prof == NULL) {
-            HAL_TRACE_ERR("pi-tenant:{}:Failed to create tenant, "
+            HAL_TRACE_ERR("pi-vrf:{}:Failed to create vrf, "
                           "security profile with handle {} not found", 
-                          __FUNCTION__, tenant->nwsec_profile_handle);
+                          __FUNCTION__, vrf->nwsec_profile_handle);
             rsp->set_api_status(types::API_STATUS_NWSEC_PROFILE_NOT_FOUND);
-            tenant_free(tenant);
+            vrf_free(vrf);
             ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
             goto end;
         }
     }
 
-    if ( tenant->tenant_type == types::TENANT_TYPE_INFRA) {
+    if ( vrf->vrf_type == types::VRF_TYPE_INFRA) {
         // Update global mytep ip.
         // Assumption: There is only one mytep ip. So for all tunnel ifs,
         //             my tep ip have to be same.
         ip_addr_spec_to_ip_addr(g_hal_state->oper_db()->mytep(), spec.mytep_ip());
-        ip_pfx_spec_to_pfx_spec(&tenant->gipo_prefix, spec.gipo_prefix());
-        HAL_TRACE_DEBUG("pi-tenant: {} Local VTEP: {}; GIPo Prefix: {}/{}",
+        ip_pfx_spec_to_pfx_spec(&vrf->gipo_prefix, spec.gipo_prefix());
+        HAL_TRACE_DEBUG("pi-vrf: {} Local VTEP: {}; GIPo Prefix: {}/{}",
                         __FUNCTION__,
                         ipaddr2str(g_hal_state->oper_db()->mytep()),
-                        ipaddr2str(&tenant->gipo_prefix.addr),
-                        tenant->gipo_prefix.len);
+                        ipaddr2str(&vrf->gipo_prefix.addr),
+                        vrf->gipo_prefix.len);
     }
 
     // allocate hal handle id
-    hal_handle = hal_handle_alloc(HAL_OBJ_ID_TENANT);
+    hal_handle = hal_handle_alloc(HAL_OBJ_ID_VRF);
     if (hal_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_ERR("pi-tenant:{}: failed to alloc handle {}", 
-                      __FUNCTION__, tenant->tenant_id);
+        HAL_TRACE_ERR("pi-vrf:{}: failed to alloc handle {}", 
+                      __FUNCTION__, vrf->vrf_id);
         rsp->set_api_status(types::API_STATUS_HANDLE_INVALID);
-        tenant_free(tenant);
+        vrf_free(vrf);
         ret = HAL_RET_HANDLE_INVALID;
         goto end;
     }
@@ -409,29 +409,29 @@ tenant_create (TenantSpec& spec, TenantResponse *rsp)
     // form ctxt and call infra add
     app_ctxt.sec_prof = sec_prof;
     dhl_entry.handle = hal_handle;
-    dhl_entry.obj = tenant;
+    dhl_entry.obj = vrf;
     cfg_ctxt.app_ctxt = &app_ctxt;
     utils::dllist_reset(&cfg_ctxt.dhl);
     utils::dllist_reset(&dhl_entry.dllist_ctxt);
     utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
     ret = hal_handle_add_obj(hal_handle, &cfg_ctxt, 
-                             tenant_create_add_cb,
-                             tenant_create_commit_cb,
-                             tenant_create_abort_cb, 
-                             tenant_create_cleanup_cb);
+                             vrf_create_add_cb,
+                             vrf_create_commit_cb,
+                             vrf_create_abort_cb, 
+                             vrf_create_cleanup_cb);
 
 
 end:
     if (ret != HAL_RET_OK) {
-        if (tenant) {
+        if (vrf) {
             // if there is an error, if will be freed in abort CB
-            tenant = NULL;
+            vrf = NULL;
         }
     }
 
-    tenant_prepare_rsp(rsp, ret, 
-                      tenant ? tenant->hal_handle : HAL_HANDLE_INVALID);
-    hal_api_trace(" API End: tenant create ");
+    vrf_prepare_rsp(rsp, ret, 
+                      vrf ? vrf->hal_handle : HAL_HANDLE_INVALID);
+    hal_api_trace(" API End: vrf create ");
     return ret;
 }
 
@@ -440,25 +440,25 @@ end:
 // handling nwsec update
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_handle_nwsec_update (tenant_t *tenant, nwsec_profile_t *nwsec_prof)
+vrf_handle_nwsec_update (vrf_t *vrf, nwsec_profile_t *nwsec_prof)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     dllist_ctxt_t               *lnode = NULL;
     hal_handle_id_list_entry_t  *entry = NULL;
     l2seg_t                     *l2seg = NULL;
 
-    if (tenant == NULL) {
+    if (vrf == NULL) {
         return ret;
     }
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:tenant_id: {}", 
-                    __FUNCTION__, tenant->tenant_id);
+    HAL_TRACE_DEBUG("pi-vrf:{}:vrf_id: {}", 
+                    __FUNCTION__, vrf->vrf_id);
     // Walk L2 segs
-    dllist_for_each(lnode, &tenant->l2seg_list_head) {
+    dllist_for_each(lnode, &vrf->l2seg_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         l2seg = find_l2seg_by_handle(entry->handle_id);
         if (!l2seg) {
-            HAL_TRACE_ERR("pi-tenant:{}:unable to find l2seg with handle:{}",
+            HAL_TRACE_ERR("pi-vrf:{}:unable to find l2seg with handle:{}",
                           __FUNCTION__, entry->handle_id);
             continue;
         }
@@ -470,16 +470,16 @@ tenant_handle_nwsec_update (tenant_t *tenant, nwsec_profile_t *nwsec_prof)
 
 
 //------------------------------------------------------------------------------
-// validate tenant update request
+// validate vrf update request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_tenant_update (TenantSpec& spec, TenantResponse *rsp)
+validate_vrf_update (VrfSpec& spec, VrfResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-tenant:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("pi-vrf:{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -487,15 +487,15 @@ validate_tenant_update (TenantSpec& spec, TenantResponse *rsp)
 }
 
 //------------------------------------------------------------------------------
-// check if nwsec profile changed for tenant
+// check if nwsec profile changed for vrf
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_nwsec_update (TenantSpec& spec, tenant_t *tenant, bool *nwsec_change,
+vrf_nwsec_update (VrfSpec& spec, vrf_t *vrf, bool *nwsec_change,
                      hal_handle_t *new_nwsec_handle)
 {
     *nwsec_change = false;
-    if (tenant->nwsec_profile_handle != spec.security_key_handle().profile_handle()) {
-        HAL_TRACE_DEBUG("pi-tenant:{}:nwSec profile updated", __FUNCTION__);
+    if (vrf->nwsec_profile_handle != spec.security_key_handle().profile_handle()) {
+        HAL_TRACE_DEBUG("pi-vrf:{}:nwSec profile updated", __FUNCTION__);
         *nwsec_change = true;
         *new_nwsec_handle = spec.security_key_handle().profile_handle();
     }
@@ -509,44 +509,44 @@ tenant_nwsec_update (TenantSpec& spec, tenant_t *tenant, bool *nwsec_change,
 // 2. Update Other objects to update with new nwsec profile
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
+vrf_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_tenant_args_t        pd_tenant_args = { 0 };
+    pd::pd_vrf_args_t        pd_vrf_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    tenant_t                    *tenant = NULL;
-    tenant_update_app_ctxt_t    *app_ctxt = NULL;
+    vrf_t                    *vrf = NULL;
+    vrf_update_app_ctxt_t    *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-tenant{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("pi-vrf{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (tenant_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt = (vrf_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    tenant = (tenant_t *)dhl_entry->obj;
+    vrf = (vrf_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:update upd CB {}",
-                    __FUNCTION__, tenant->tenant_id);
+    HAL_TRACE_DEBUG("pi-vrf:{}:update upd CB {}",
+                    __FUNCTION__, vrf->vrf_id);
 
     // 1. PD Call to allocate PD resources and HW programming
-    pd::pd_tenant_args_init(&pd_tenant_args);
-    pd_tenant_args.tenant = tenant;
-    pd_tenant_args.nwsec_profile = app_ctxt->nwsec_prof;
-    ret = pd::pd_tenant_update(&pd_tenant_args);
+    pd::pd_vrf_args_init(&pd_vrf_args);
+    pd_vrf_args.vrf = vrf;
+    pd_vrf_args.nwsec_profile = app_ctxt->nwsec_prof;
+    ret = pd::pd_vrf_update(&pd_vrf_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to update tenant pd, err : {}",
+        HAL_TRACE_ERR("pi-vrf:{}:failed to update vrf pd, err : {}",
                       __FUNCTION__, ret);
     }
 
-    // Pass the tenant(old/new is fine) and new nwsec profile
+    // Pass the vrf(old/new is fine) and new nwsec profile
     if (app_ctxt->nwsec_prof_change) {
         // Triggers reprogramming of input properties table for enicifs and uplinks
-        tenant_handle_nwsec_update(tenant, app_ctxt->nwsec_prof);
+        vrf_handle_nwsec_update(vrf, app_ctxt->nwsec_prof);
     }
 
 end:
@@ -559,83 +559,83 @@ end:
 // - Both PI and PD objects cloned. 
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_make_clone (tenant_t *ten, tenant_t **ten_clone)
+vrf_make_clone (vrf_t *ten, vrf_t **ten_clone)
 {
-    *ten_clone = tenant_alloc_init();
-    memcpy(*ten_clone, ten, sizeof(tenant_t));
+    *ten_clone = vrf_alloc_init();
+    memcpy(*ten_clone, ten, sizeof(vrf_t));
 
     // After clone always reset lists
     dllist_reset(&(*ten_clone)->l2seg_list_head);
     dllist_reset(&(*ten_clone)->ep_list_head);
     dllist_reset(&(*ten_clone)->session_list_head);
 
-    pd::pd_tenant_make_clone(ten, *ten_clone);
+    pd::pd_vrf_make_clone(ten, *ten_clone);
 
     return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
 // After all hw programming is done
-//  1. Free original PI & PD tenant.
+//  1. Free original PI & PD vrf.
 // Note: Infra make clone as original by replacing original pointer by clone.
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
+vrf_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_tenant_args_t        pd_tenant_args = { 0 };
+    pd::pd_vrf_args_t        pd_vrf_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    tenant_t                    *tenant = NULL, *tenant_clone = NULL;
-    tenant_update_app_ctxt_t    *app_ctxt = NULL;
+    vrf_t                    *vrf = NULL, *vrf_clone = NULL;
+    vrf_update_app_ctxt_t    *app_ctxt = NULL;
     nwsec_profile_t             *nwsec_prof = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-tenant{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("pi-vrf{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    app_ctxt = (tenant_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt = (vrf_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    tenant = (tenant_t *)dhl_entry->obj;
-    tenant_clone = (tenant_t *)dhl_entry->cloned_obj;
+    vrf = (vrf_t *)dhl_entry->obj;
+    vrf_clone = (vrf_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:update commit CB {}",
-                    __FUNCTION__, tenant->tenant_id);
+    HAL_TRACE_DEBUG("pi-vrf:{}:update commit CB {}",
+                    __FUNCTION__, vrf->vrf_id);
 
     // move lists to clone
-    dllist_move(&tenant_clone->l2seg_list_head, &tenant->l2seg_list_head);
+    dllist_move(&vrf_clone->l2seg_list_head, &vrf->l2seg_list_head);
 
     // update clone with new attrs
     if (app_ctxt->nwsec_prof_change) {
-        tenant_clone->nwsec_profile_handle = app_ctxt->nwsec_profile_handle;
+        vrf_clone->nwsec_profile_handle = app_ctxt->nwsec_profile_handle;
 
-        if (tenant->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+        if (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
             // detach from old nwsec prof
             nwsec_prof = find_nwsec_profile_by_handle(
-                         tenant->nwsec_profile_handle);
+                         vrf->nwsec_profile_handle);
             if (nwsec_prof == NULL) {
-                HAL_TRACE_ERR("pi-tenant:{}:unable to find nwsec prof "
+                HAL_TRACE_ERR("pi-vrf:{}:unable to find nwsec prof "
                         "with hdl:{}",
-                        __FUNCTION__, tenant->nwsec_profile_handle);
+                        __FUNCTION__, vrf->nwsec_profile_handle);
                 goto end;
             }
-            ret = nwsec_prof_del_tenant(nwsec_prof, tenant);
+            ret = nwsec_prof_del_vrf(nwsec_prof, vrf);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("pi-tenant:{}:unable to detach old nwsec prof",
+                HAL_TRACE_ERR("pi-vrf:{}:unable to detach old nwsec prof",
                         __FUNCTION__);
                 goto end;
             }
         }
 
-        if (tenant_clone->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+        if (vrf_clone->nwsec_profile_handle != HAL_HANDLE_INVALID) {
             // attach to new nwsec prof
-            ret = nwsec_prof_add_tenant(app_ctxt->nwsec_prof, tenant_clone);
+            ret = nwsec_prof_add_vrf(app_ctxt->nwsec_prof, vrf_clone);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("pi-tenant:{}:unable to attach new nwsec prof",
+                HAL_TRACE_ERR("pi-vrf:{}:unable to attach new nwsec prof",
                         __FUNCTION__);
                 goto end;
             }
@@ -643,16 +643,16 @@ tenant_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // Free PD
-    pd::pd_tenant_args_init(&pd_tenant_args);
-    pd_tenant_args.tenant = tenant;
-    ret = pd::pd_tenant_mem_free(&pd_tenant_args);
+    pd::pd_vrf_args_init(&pd_vrf_args);
+    pd_vrf_args.vrf = vrf;
+    ret = pd::pd_vrf_mem_free(&pd_vrf_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to delete tenant pd, err : {}",
+        HAL_TRACE_ERR("pi-vrf:{}:failed to delete vrf pd, err : {}",
                       __FUNCTION__, ret);
     }
 
     // Free PI
-    tenant_free(tenant);
+    vrf_free(vrf);
 end:
     return ret;
 }
@@ -662,148 +662,148 @@ end:
 //  1. Kill the clones
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+vrf_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_tenant_args_t        pd_tenant_args = { 0 };
+    pd::pd_vrf_args_t        pd_vrf_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    tenant_t                    *tenant = NULL;
-    // tenant_update_app_ctxt_t    *app_ctxt = NULL;
+    vrf_t                    *vrf = NULL;
+    // vrf_update_app_ctxt_t    *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-tenant{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("pi-vrf{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    // app_ctxt = (tenant_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    // app_ctxt = (vrf_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
-    tenant = (tenant_t *)dhl_entry->cloned_obj;
+    vrf = (vrf_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:update commit CB {}",
-                    __FUNCTION__, tenant->tenant_id);
+    HAL_TRACE_DEBUG("pi-vrf:{}:update commit CB {}",
+                    __FUNCTION__, vrf->vrf_id);
 
     // Free PD
-    pd::pd_tenant_args_init(&pd_tenant_args);
-    pd_tenant_args.tenant = tenant;
-    ret = pd::pd_tenant_mem_free(&pd_tenant_args);
+    pd::pd_vrf_args_init(&pd_vrf_args);
+    pd_vrf_args.vrf = vrf;
+    ret = pd::pd_vrf_mem_free(&pd_vrf_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to delete tenant pd, err : {}",
+        HAL_TRACE_ERR("pi-vrf:{}:failed to delete vrf pd, err : {}",
                       __FUNCTION__, ret);
     }
 
     // Free PI
-    tenant_free(tenant);
+    vrf_free(vrf);
 end:
 
     return ret;
 }
 
 hal_ret_t
-tenant_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+vrf_update_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
-// process a tenant update request
+// process a vrf update request
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_update (TenantSpec& spec, TenantResponse *rsp)
+vrf_update (VrfSpec& spec, VrfResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    tenant_t                    *tenant = NULL;
+    vrf_t                    *vrf = NULL;
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
-    const TenantKeyHandle       &kh = spec.key_or_handle();
-    tenant_update_app_ctxt_t    app_ctxt = { 0 };
+    const VrfKeyHandle       &kh = spec.key_or_handle();
+    vrf_update_app_ctxt_t    app_ctxt = { 0 };
 
-    hal_api_trace(" API Begin: tenant update");
+    hal_api_trace(" API Begin: vrf update");
 
     // validate the request message
-    ret = validate_tenant_update(spec, rsp);
+    ret = validate_vrf_update(spec, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:tenant delete validation failed, ret : {}", 
+        HAL_TRACE_ERR("pi-vrf:{}:vrf delete validation failed, ret : {}", 
                       __FUNCTION__, ret);
         goto end;
     }
 
-    tenant = tenant_lookup_key_or_handle(kh);
-    if (tenant == NULL) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to find tenant, id {}, handle {}",
-                      __FUNCTION__, kh.tenant_id(), kh.tenant_handle());
-        ret = HAL_RET_TENANT_NOT_FOUND;
+    vrf = vrf_lookup_key_or_handle(kh);
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("pi-vrf:{}:failed to find vrf, id {}, handle {}",
+                      __FUNCTION__, kh.vrf_id(), kh.vrf_handle());
+        ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("pi-tenant:{}:update tenant {}", __FUNCTION__, 
-                    tenant->tenant_id);
+    HAL_TRACE_DEBUG("pi-vrf:{}:update vrf {}", __FUNCTION__, 
+                    vrf->vrf_id);
 
-    ret = tenant_nwsec_update(spec, tenant, &app_ctxt.nwsec_prof_change, 
+    ret = vrf_nwsec_update(spec, vrf, &app_ctxt.nwsec_prof_change, 
                               &app_ctxt.nwsec_profile_handle);
 
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to check if nwsec is updated.", 
+        HAL_TRACE_ERR("pi-vrf:{}:failed to check if nwsec is updated.", 
                       __FUNCTION__);
         goto end;
     }
 
     if (!app_ctxt.nwsec_prof_change) {
-        HAL_TRACE_ERR("pi-tenant:{}:no change in tenant update: noop", __FUNCTION__);
+        HAL_TRACE_ERR("pi-vrf:{}:no change in vrf update: noop", __FUNCTION__);
         // Its a no-op. We can just return HAL_RET_OK
         // ret = HAL_RET_INVALID_OP;
         goto end;
     }
 
     if (app_ctxt.nwsec_profile_handle == HAL_HANDLE_INVALID) {
-        HAL_TRACE_DEBUG("pi-tenant:{}: No nwsec prof passed, "
+        HAL_TRACE_DEBUG("pi-vrf:{}: No nwsec prof passed, "
                         "using default security profile", __FUNCTION__);
         app_ctxt.nwsec_prof = NULL;
     } else {
         app_ctxt.nwsec_prof = find_nwsec_profile_by_handle(app_ctxt.nwsec_profile_handle);
         if (app_ctxt.nwsec_prof == NULL) {
-            HAL_TRACE_ERR("pi-tenant:{}:security profile with handle {} not found", 
+            HAL_TRACE_ERR("pi-vrf:{}:security profile with handle {} not found", 
                     __FUNCTION__, 
                     app_ctxt.nwsec_profile_handle);
             ret = HAL_RET_SECURITY_PROFILE_NOT_FOUND;
             goto end;
         } else {
-            HAL_TRACE_DEBUG("pi-tenant:{}:new nwsec profile id: {}", __FUNCTION__, 
+            HAL_TRACE_DEBUG("pi-vrf:{}:new nwsec profile id: {}", __FUNCTION__, 
                     app_ctxt.nwsec_prof->profile_id);
         }
     }
 
-    tenant_make_clone(tenant, (tenant_t **)&dhl_entry.cloned_obj);
+    vrf_make_clone(vrf, (vrf_t **)&dhl_entry.cloned_obj);
 
     // form ctxt and call infra update object
-    dhl_entry.handle = tenant->hal_handle;
-    dhl_entry.obj = tenant;
+    dhl_entry.handle = vrf->hal_handle;
+    dhl_entry.obj = vrf;
     cfg_ctxt.app_ctxt = &app_ctxt;
     utils::dllist_reset(&cfg_ctxt.dhl);
     utils::dllist_reset(&dhl_entry.dllist_ctxt);
     utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_upd_obj(tenant->hal_handle, &cfg_ctxt, 
-                             tenant_update_upd_cb,
-                             tenant_update_commit_cb,
-                             tenant_update_abort_cb, 
-                             tenant_update_cleanup_cb);
+    ret = hal_handle_upd_obj(vrf->hal_handle, &cfg_ctxt, 
+                             vrf_update_upd_cb,
+                             vrf_update_commit_cb,
+                             vrf_update_abort_cb, 
+                             vrf_update_cleanup_cb);
 
 end:
-    tenant_prepare_rsp(rsp, ret, 
-                       tenant ? tenant->hal_handle : HAL_HANDLE_INVALID);
-    hal_api_trace(" API End: tenant update ");
+    vrf_prepare_rsp(rsp, ret, 
+                       vrf ? vrf->hal_handle : HAL_HANDLE_INVALID);
+    hal_api_trace(" API End: vrf update ");
     return ret;
 }
 
 //------------------------------------------------------------------------------
-// process a tenant get request
+// process a vrf get request
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_get (TenantGetRequest& req, TenantGetResponse *rsp)
+vrf_get (VrfGetRequest& req, VrfGetResponse *rsp)
 {
-    tenant_t        *tenant;
+    vrf_t        *vrf;
     nwsec_profile_t *sec_prof = NULL;
 
     // key-handle field must be set
@@ -813,53 +813,53 @@ tenant_get (TenantGetRequest& req, TenantGetResponse *rsp)
     }
 
     auto kh = req.key_or_handle();
-    if (kh.key_or_handle_case() == TenantKeyHandle::kTenantId) {
-        tenant = tenant_lookup_by_id(kh.tenant_id());
-    } else if (kh.key_or_handle_case() == TenantKeyHandle::kTenantHandle) {
-        tenant = tenant_lookup_by_handle(kh.tenant_handle());
+    if (kh.key_or_handle_case() == VrfKeyHandle::kVrfId) {
+        vrf = vrf_lookup_by_id(kh.vrf_id());
+    } else if (kh.key_or_handle_case() == VrfKeyHandle::kVrfHandle) {
+        vrf = vrf_lookup_by_handle(kh.vrf_handle());
     } else {
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
 
-    if (tenant == NULL) {
+    if (vrf == NULL) {
         rsp->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_TENANT_NOT_FOUND;
+        return HAL_RET_VRF_NOT_FOUND;
     }
 
-    // fill config spec of this tenant
-    rsp->mutable_spec()->mutable_meta()->set_tenant_id(tenant->tenant_id);
-    rsp->mutable_spec()->mutable_key_or_handle()->set_tenant_id(tenant->tenant_id);
-    sec_prof = find_nwsec_profile_by_handle(tenant->nwsec_profile_handle);
+    // fill config spec of this vrf
+    rsp->mutable_spec()->mutable_meta()->set_vrf_id(vrf->vrf_id);
+    rsp->mutable_spec()->mutable_key_or_handle()->set_vrf_id(vrf->vrf_id);
+    sec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
     if (sec_prof != NULL) {
         rsp->mutable_spec()->mutable_security_key_handle()->set_profile_id(sec_prof->profile_id);
     }
 
-    // fill operational state of this tenant
-    rsp->mutable_status()->set_tenant_handle(tenant->hal_handle);
+    // fill operational state of this vrf
+    rsp->mutable_status()->set_vrf_handle(vrf->hal_handle);
 
-    // fill stats of this tenant
-    rsp->mutable_stats()->set_num_l2_segments(tenant->num_l2seg);
-    rsp->mutable_stats()->set_num_security_groups(tenant->num_sg);
-    rsp->mutable_stats()->set_num_l4lb_services(tenant->num_l4lb_svc);
-    rsp->mutable_stats()->set_num_endpoints(tenant->num_ep);
-    rsp->mutable_spec()->set_tenant_type(tenant->tenant_type);
+    // fill stats of this vrf
+    rsp->mutable_stats()->set_num_l2_segments(vrf->num_l2seg);
+    rsp->mutable_stats()->set_num_security_groups(vrf->num_sg);
+    rsp->mutable_stats()->set_num_l4lb_services(vrf->num_l4lb_svc);
+    rsp->mutable_stats()->set_num_endpoints(vrf->num_ep);
+    rsp->mutable_spec()->set_vrf_type(vrf->vrf_type);
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
-// validate tenant delete request
+// validate vrf delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_tenant_delete_req (TenantDeleteRequest& req, TenantDeleteResponse *rsp)
+validate_vrf_delete_req (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
     // key-handle field must be set
     if (!req.has_key_or_handle()) {
-        HAL_TRACE_ERR("pi-tenant:{}:spec has no key or handle", __FUNCTION__);
+        HAL_TRACE_ERR("pi-vrf:{}:spec has no key or handle", __FUNCTION__);
         ret =  HAL_RET_INVALID_ARG;
     }
 
@@ -867,58 +867,58 @@ validate_tenant_delete_req (TenantDeleteRequest& req, TenantDeleteResponse *rsp)
 }
 
 //------------------------------------------------------------------------------
-// Lookup tenant from key or handle
+// Lookup vrf from key or handle
 //------------------------------------------------------------------------------
-tenant_t *
-tenant_lookup_key_or_handle (const TenantKeyHandle& kh)
+vrf_t *
+vrf_lookup_key_or_handle (const VrfKeyHandle& kh)
 {
-    tenant_t     *tenant = NULL;
+    vrf_t     *vrf = NULL;
 
-    if (kh.key_or_handle_case() == TenantKeyHandle::kTenantId) {
-        tenant = tenant_lookup_by_id(kh.tenant_id());
-    } else if (kh.key_or_handle_case() == TenantKeyHandle::kTenantHandle) {
-        tenant = tenant_lookup_by_handle(kh.tenant_handle());
+    if (kh.key_or_handle_case() == VrfKeyHandle::kVrfId) {
+        vrf = vrf_lookup_by_id(kh.vrf_id());
+    } else if (kh.key_or_handle_case() == VrfKeyHandle::kVrfHandle) {
+        vrf = vrf_lookup_by_handle(kh.vrf_handle());
     }
 
-    return tenant;
+    return vrf;
 }
 
 //------------------------------------------------------------------------------
 // 1. PD Call to delete PD and free up resources and deprogram HW
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
+vrf_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd::pd_tenant_args_t        pd_tenant_args = { 0 };
+    pd::pd_vrf_args_t        pd_vrf_args = { 0 };
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    tenant_t                    *tenant = NULL;
+    vrf_t                    *vrf = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-tenant:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("pi-vrf:{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
 
-    // TODO: Check the dependency ref count for the tenant. 
+    // TODO: Check the dependency ref count for the vrf. 
     //       If its non zero, fail the delete.
 
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-    tenant = (tenant_t *)dhl_entry->obj;
+    vrf = (vrf_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:delete del CB {}",
-                    __FUNCTION__, tenant->tenant_id);
+    HAL_TRACE_DEBUG("pi-vrf:{}:delete del CB {}",
+                    __FUNCTION__, vrf->vrf_id);
 
     // 1. PD Call to allocate PD resources and HW programming
-    pd::pd_tenant_args_init(&pd_tenant_args);
-    pd_tenant_args.tenant = tenant;
-    ret = pd::pd_tenant_delete(&pd_tenant_args);
+    pd::pd_vrf_args_init(&pd_vrf_args);
+    pd_vrf_args.vrf = vrf;
+    ret = pd::pd_vrf_delete(&pd_vrf_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to delete tenant pd, err : {}", 
+        HAL_TRACE_ERR("pi-vrf:{}:failed to delete vrf pd, err : {}", 
                       __FUNCTION__, ret);
     }
 
@@ -927,23 +927,23 @@ end:
 }
 
 //------------------------------------------------------------------------------
-// Update PI DBs as tenant_delete_del_cb() was a succcess
-//      a. Delete from tenant id hash table
+// Update PI DBs as vrf_delete_del_cb() was a succcess
+//      a. Delete from vrf id hash table
 //      b. Remove object from handle id based hash table
-//      c. Free PI tenant
+//      c. Free PI vrf
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
+vrf_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    tenant_t                    *tenant = NULL;
+    vrf_t                    *vrf = NULL;
     hal_handle_t                hal_handle = 0;
     nwsec_profile_t             *sec_prof = NULL;
 
     if (cfg_ctxt == NULL) {
-        HAL_TRACE_ERR("pi-tenant:{}:invalid cfg_ctxt", __FUNCTION__);
+        HAL_TRACE_ERR("pi-vrf:{}:invalid cfg_ctxt", __FUNCTION__);
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -951,37 +951,37 @@ tenant_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
-    tenant = (tenant_t *)dhl_entry->obj;
+    vrf = (vrf_t *)dhl_entry->obj;
     hal_handle = dhl_entry->handle;
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:delete commit CB {}",
-                    __FUNCTION__, tenant->tenant_id);
+    HAL_TRACE_DEBUG("pi-vrf:{}:delete commit CB {}",
+                    __FUNCTION__, vrf->vrf_id);
 
-    // Remove tenant references from other objects
-    if (tenant->nwsec_profile_handle != HAL_HANDLE_INVALID) {
-        sec_prof = find_nwsec_profile_by_handle(tenant->nwsec_profile_handle);
-        ret = nwsec_prof_del_tenant(sec_prof, tenant);
+    // Remove vrf references from other objects
+    if (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+        sec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
+        ret = nwsec_prof_del_vrf(sec_prof, vrf);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("pi-tenant:{}:failed to del rel. from nwsec. prof",
+            HAL_TRACE_ERR("pi-vrf:{}:failed to del rel. from nwsec. prof",
                           __FUNCTION__);
             goto end;
         }
 
     }
 
-    // a. Remove from tenant id hash table
-    ret = tenant_del_from_db(tenant);
+    // a. Remove from vrf id hash table
+    ret = vrf_del_from_db(vrf);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to del tenant {} from db, err : {}", 
-                      __FUNCTION__, tenant->tenant_id, ret);
+        HAL_TRACE_ERR("pi-vrf:{}:failed to del vrf {} from db, err : {}", 
+                      __FUNCTION__, vrf->vrf_id, ret);
         goto end;
     }
 
     // b. Remove object from handle id based hash table
     hal_handle_free(hal_handle);
 
-    // c. Free PI tenant
-    tenant_free(tenant);
+    // c. Free PI vrf
+    vrf_free(vrf);
 
 end:
     return ret;
@@ -991,7 +991,7 @@ end:
 // If delete fails, nothing to do
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
+vrf_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
 }
@@ -1000,101 +1000,101 @@ tenant_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 // If delete fails, nothing to do
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
+vrf_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
-// validate tenant delete request
+// validate vrf delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-validate_tenant_delete (tenant_t *tenant)
+validate_vrf_delete (vrf_t *vrf)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
     // check for no presence of l2segs
-    if (dllist_count(&tenant->l2seg_list_head)) {
+    if (dllist_count(&vrf->l2seg_list_head)) {
         ret = HAL_RET_OBJECT_IN_USE;
-        HAL_TRACE_ERR("pi-tenant:{}:l2segs still referring:", __FUNCTION__);
-        hal_print_handles_list(&tenant->l2seg_list_head);
+        HAL_TRACE_ERR("pi-vrf:{}:l2segs still referring:", __FUNCTION__);
+        hal_print_handles_list(&vrf->l2seg_list_head);
     }
 
     return ret;
 }
 
 //------------------------------------------------------------------------------
-// process a tenant delete request
+// process a vrf delete request
 //------------------------------------------------------------------------------
 hal_ret_t
-tenant_delete (TenantDeleteRequest& req, TenantDeleteResponse *rsp)
+vrf_delete (VrfDeleteRequest& req, VrfDeleteResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    tenant_t                    *tenant = NULL;
+    vrf_t                    *vrf = NULL;
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
-    const TenantKeyHandle       &kh = req.key_or_handle();
+    const VrfKeyHandle       &kh = req.key_or_handle();
 
-    hal_api_trace(" API Begin: tenant delete ");
+    hal_api_trace(" API Begin: vrf delete ");
 
     // validate the request message
-    ret = validate_tenant_delete_req(req, rsp);
+    ret = validate_vrf_delete_req(req, rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:tenant delete validation failed, ret : {}",
+        HAL_TRACE_ERR("pi-vrf:{}:vrf delete validation failed, ret : {}",
                       __FUNCTION__, ret);
         goto end;
     }
 
-    tenant = tenant_lookup_key_or_handle(kh);
-    if (tenant == NULL) {
-        HAL_TRACE_ERR("pi-tenant:{}:failed to find tenant, id {}, handle {}",
-                      __FUNCTION__, kh.tenant_id(), kh.tenant_handle());
-        ret = HAL_RET_TENANT_NOT_FOUND;
+    vrf = vrf_lookup_key_or_handle(kh);
+    if (vrf == NULL) {
+        HAL_TRACE_ERR("pi-vrf:{}:failed to find vrf, id {}, handle {}",
+                      __FUNCTION__, kh.vrf_id(), kh.vrf_handle());
+        ret = HAL_RET_VRF_NOT_FOUND;
         goto end;
     }
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:deleting tenant {}", 
-                    __FUNCTION__, tenant->tenant_id);
+    HAL_TRACE_DEBUG("pi-vrf:{}:deleting vrf {}", 
+                    __FUNCTION__, vrf->vrf_id);
 
     // validate if there no objects referring this sec. profile
-    ret = validate_tenant_delete(tenant);
+    ret = validate_vrf_delete(vrf);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-tenant:{}:tenant delete validation failed, "
+        HAL_TRACE_ERR("pi-vrf:{}:vrf delete validation failed, "
                       "ret : {}",
                       __FUNCTION__, ret);
         goto end;
     }
 
     // form ctxt and call infra add
-    dhl_entry.handle = tenant->hal_handle;
-    dhl_entry.obj = tenant;
+    dhl_entry.handle = vrf->hal_handle;
+    dhl_entry.obj = vrf;
     cfg_ctxt.app_ctxt = NULL;
     utils::dllist_reset(&cfg_ctxt.dhl);
     utils::dllist_reset(&dhl_entry.dllist_ctxt);
     utils::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    ret = hal_handle_del_obj(tenant->hal_handle, &cfg_ctxt, 
-                             tenant_delete_del_cb,
-                             tenant_delete_commit_cb,
-                             tenant_delete_abort_cb, 
-                             tenant_delete_cleanup_cb);
+    ret = hal_handle_del_obj(vrf->hal_handle, &cfg_ctxt, 
+                             vrf_delete_del_cb,
+                             vrf_delete_commit_cb,
+                             vrf_delete_abort_cb, 
+                             vrf_delete_cleanup_cb);
 
 end:
     rsp->set_api_status(hal_prepare_rsp(ret));
-    hal_api_trace(" API End: tenant delete ");
+    hal_api_trace(" API End: vrf delete ");
     return ret;
 }
 
 
 //-----------------------------------------------------------------------------
-// Adds l2seg into tenant list
+// Adds l2seg into vrf list
 //-----------------------------------------------------------------------------
 hal_ret_t
-tenant_add_l2seg (tenant_t *tenant, l2seg_t *l2seg)
+vrf_add_l2seg (vrf_t *vrf, l2seg_t *l2seg)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     hal_handle_id_list_entry_t  *entry = NULL;
 
-    if (tenant == NULL || l2seg == NULL) {
+    if (vrf == NULL || l2seg == NULL) {
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
@@ -1108,29 +1108,29 @@ tenant_add_l2seg (tenant_t *tenant, l2seg_t *l2seg)
     }
     entry->handle_id = l2seg->hal_handle;
 
-    tenant_lock(tenant, __FILENAME__, __LINE__, __func__);      // lock
+    vrf_lock(vrf, __FILENAME__, __LINE__, __func__);      // lock
     // Insert into the list
-    utils::dllist_add(&tenant->l2seg_list_head, &entry->dllist_ctxt);
-    tenant_unlock(tenant, __FILENAME__, __LINE__, __func__);    // unlock
+    utils::dllist_add(&vrf->l2seg_list_head, &entry->dllist_ctxt);
+    vrf_unlock(vrf, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
-    HAL_TRACE_DEBUG("pi-tenant:{}:add tenant => l2seg, {} => {}, ret:{}",
-                    __FUNCTION__, tenant->tenant_id, l2seg->seg_id, ret);
+    HAL_TRACE_DEBUG("pi-vrf:{}:add vrf => l2seg, {} => {}, ret:{}",
+                    __FUNCTION__, vrf->vrf_id, l2seg->seg_id, ret);
     return ret;
 }
 
 //-----------------------------------------------------------------------------
-// Remove l2seg from tenant list
+// Remove l2seg from vrf list
 //-----------------------------------------------------------------------------
 hal_ret_t
-tenant_del_l2seg (tenant_t *tenant, l2seg_t *l2seg)
+vrf_del_l2seg (vrf_t *vrf, l2seg_t *l2seg)
 {
     hal_ret_t                   ret = HAL_RET_IF_NOT_FOUND;
     hal_handle_id_list_entry_t  *entry = NULL;
     dllist_ctxt_t               *curr, *next;
 
-    tenant_lock(tenant, __FILENAME__, __LINE__, __func__);      // lock
-    dllist_for_each_safe(curr, next, &tenant->l2seg_list_head) {
+    vrf_lock(vrf, __FILENAME__, __LINE__, __func__);      // lock
+    dllist_for_each_safe(curr, next, &vrf->l2seg_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == l2seg->hal_handle) {
             // Remove from list
@@ -1140,10 +1140,10 @@ tenant_del_l2seg (tenant_t *tenant, l2seg_t *l2seg)
             ret = HAL_RET_OK;
         }
     }
-    tenant_unlock(tenant, __FILENAME__, __LINE__, __func__);    // unlock
+    vrf_unlock(vrf, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-tenant:{}:del tenant =/=> l2seg, {} =/=> {}, ret:{}",
-                    __FUNCTION__, tenant->tenant_id, l2seg->seg_id, ret);
+    HAL_TRACE_DEBUG("pi-vrf:{}:del vrf =/=> l2seg, {} =/=> {}, ret:{}",
+                    __FUNCTION__, vrf->vrf_id, l2seg->seg_id, ret);
     return ret;
 }
 

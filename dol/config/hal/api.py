@@ -11,7 +11,7 @@ from infra.common.glopts import GlobalOptions
 from infra.common.logging import cfglogger
 
 import types_pb2            as types_pb2
-import tenant_pb2           as tenant_pb2
+import vrf_pb2           as vrf_pb2
 import interface_pb2        as interface_pb2
 import l2segment_pb2        as l2segment_pb2
 import endpoint_pb2         as endpoint_pb2
@@ -35,7 +35,7 @@ import rawccb_pb2           as rawccb_pb2
 
 #import endpoint_pb2_grpc        as endpoint_pb2_grpc
 #import l2segment_pb2_grpc       as l2segment_pb2_grpc
-#import tenant_pb2_grpc          as tenant_pb2_grpc
+#import vrf_pb2_grpc          as vrf_pb2_grpc
 #import interface_pb2_grpc       as interface_pb2_grpc
 #import session_pb2_grpc         as session_pb2_grpc
 #import nwsec_pb2_grpc           as nwsec_pb2_grpc
@@ -193,17 +193,17 @@ def ConfigureInterfaceSegmentAssociations(intfs, segs):
 
 def ConfigureTenants(objlist):
     if IsHalDisabled(): return
-    stub = tenant_pb2.TenantStub(HalChannel)
-    __config(objlist, tenant_pb2.TenantRequestMsg,
-             stub.TenantCreate)
+    stub = vrf_pb2.VrfStub(HalChannel)
+    __config(objlist, vrf_pb2.VrfRequestMsg,
+             stub.VrfCreate)
     return
 
 def GetTenants(objlist):
     if IsHalDisabled():
         return
-    stub = tenant_pb2.TenantStub(HalChannel)
-    __get(objlist, tenant_pb2.TenantGetRequestMsg,
-          stub.TenantGet)
+    stub = vrf_pb2.VrfStub(HalChannel)
+    __get(objlist, vrf_pb2.VrfGetRequestMsg,
+          stub.VrfGet)
     return
 
 def ConfigureTcpCbs(objlist):

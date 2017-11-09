@@ -2,7 +2,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/include/hal_state.hpp"
 // #include "nic/hal/svc/descriptor_aol_svc.hpp"
-#include "nic/hal/src/tenant.hpp"
+#include "nic/hal/src/vrf.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/descriptor_aol.hpp"
 

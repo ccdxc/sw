@@ -4,7 +4,7 @@ licenses(["notice"])  # MIT license
 cc_library(
     name = "hal_src",
     srcs = ["utils.cc",
-            "tenant.cc",
+            "vrf.cc",
             "telemetry.cc",
             "tcpcb.cc",
             "qos.cc",
@@ -35,7 +35,7 @@ cc_library(
     hdrs = [
             "session.hpp",
             "utils.hpp",
-            "tenant.hpp",
+            "vrf.hpp",
             "telemetry.hpp",
             "tcpcb.hpp",
             "qos.hpp",

@@ -221,15 +221,15 @@ if_enicif_get_pd_nwsec(if_t *pi_if)
 void *
 if_enicif_get_pi_nwsec(if_t *pi_if)
 {
-    tenant_t            *pi_tenant = NULL;
+    vrf_t            *pi_vrf = NULL;
     nwsec_profile_t     *pi_nwsec = NULL;
 
     // Check if if is enicif
     if (pi_if->if_type == intf::IF_TYPE_ENIC) {
-        pi_tenant = tenant_lookup_by_id(pi_if->tid);
-        HAL_ASSERT_RETURN(pi_tenant != NULL, NULL);
+        pi_vrf = vrf_lookup_by_id(pi_if->tid);
+        HAL_ASSERT_RETURN(pi_vrf != NULL, NULL);
         pi_nwsec =
-            find_nwsec_profile_by_handle(pi_tenant->nwsec_profile_handle);
+            find_nwsec_profile_by_handle(pi_vrf->nwsec_profile_handle);
         if (!pi_nwsec) {
             return NULL;
         }

@@ -47,7 +47,7 @@ LCFLAGS = $(LCXXFLAGS)
 
 SOURCES = \
 		  hal_mem_pd.cc \
-		  tenant_pd.cc \
+		  vrf_pd.cc \
 		  nwsec_pd.cc \
 		  l2seg_pd.cc \
 		  rdma_pd.cc \

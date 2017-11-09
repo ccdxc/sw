@@ -16,7 +16,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_HANDLE_ID_HT_ENTRY,
     HAL_SLAB_HANDLE_ID_LIST_ENTRY,
     //HAL_SLAB_DEL_CACHE_ENTRY,
-    HAL_SLAB_TENANT,
+    HAL_SLAB_VRF,
     HAL_SLAB_NETWORK,
     HAL_SLAB_L2SEG,
     HAL_SLAB_LIF,
@@ -62,7 +62,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_PI_MAX,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
-    HAL_SLAB_TENANT_PD,
+    HAL_SLAB_VRF_PD,
     HAL_SLAB_L2SEG_PD,
     HAL_SLAB_LIF_PD,
     HAL_SLAB_UPLINKIF_PD,

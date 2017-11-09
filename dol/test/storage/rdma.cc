@@ -12,7 +12,7 @@
 #include "nic/gen/proto/hal/internal.grpc.pb.h"
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
 #include "nic/gen/proto/hal/l2segment.grpc.pb.h"
-#include "nic/gen/proto/hal/tenant.grpc.pb.h"
+#include "nic/gen/proto/hal/vrf.grpc.pb.h"
 #include "nic/gen/proto/hal/endpoint.grpc.pb.h"
 #include "nic/gen/proto/hal/session.grpc.pb.h"
 #include "nic/gen/proto/hal/rdma.grpc.pb.h"
@@ -27,7 +27,7 @@ using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 using intf::Interface;
-using tenant::Tenant;
+using vrf::Vrf;
 using l2segment::L2Segment;
 using endpoint::Endpoint;
 using session::Session;
@@ -38,7 +38,7 @@ extern std::shared_ptr<Channel> hal_channel;
 namespace {
 
 std::unique_ptr<Interface::Stub> interface_stub;
-std::unique_ptr<Tenant::Stub> tenant_stub;;
+std::unique_ptr<Vrf::Stub> vrf_stub;;
 std::unique_ptr<L2Segment::Stub> l2segment_stub;
 std::unique_ptr<Endpoint::Stub> endpoint_stub;
 std::unique_ptr<Session::Stub> session_stub;
@@ -54,7 +54,7 @@ const uint32_t kRQType = 1;
 const uint32_t kCQType = 5;
 const uint32_t kLifID = 109;
 const uint32_t kRdmaPD = 1;
-const uint32_t kTenantID = 11;
+const uint32_t kVrfID = 11;
 const uint32_t kL2SegmentID = 2;
 const uint32_t kInterfaceID1 = 4;
 const uint32_t kInterfaceID2 = 5;
@@ -75,7 +75,7 @@ uint32_t g_rdma_pvm_roce_q;
 
 void CreateStubs() {
   interface_stub = std::move(Interface::NewStub(hal_channel));
-  tenant_stub = std::move(Tenant::NewStub(hal_channel));
+  vrf_stub = std::move(Vrf::NewStub(hal_channel));
   l2segment_stub = std::move(L2Segment::NewStub(hal_channel));
   endpoint_stub = std::move(Endpoint::NewStub(hal_channel));
   session_stub = std::move(Session::NewStub(hal_channel));
@@ -120,15 +120,15 @@ int CreateRDMALIF(uint32_t sw_lif_id) {
   return hal_if::create_lif(&params, &g_rdma_hw_lif_id);
 }
 
-int CreateTenant(uint32_t ten_id) {
+int CreateVrf(uint32_t ten_id) {
   grpc::ClientContext context;
-  tenant::TenantRequestMsg req_msg;
-  tenant::TenantResponseMsg resp_msg;
+  vrf::VrfRequestMsg req_msg;
+  vrf::VrfResponseMsg resp_msg;
 
   auto req = req_msg.add_request();
-  req->mutable_key_or_handle()->set_tenant_id(ten_id);
+  req->mutable_key_or_handle()->set_vrf_id(ten_id);
 
-  auto status = tenant_stub->TenantCreate(&context, req_msg, &resp_msg);
+  auto status = vrf_stub->VrfCreate(&context, req_msg, &resp_msg);
   if (!status.ok()) return -1;
 
   return 0;
@@ -140,7 +140,7 @@ int CreateL2Segment(uint32_t ten_id, uint32_t l2_seg_id, uint64_t *handle) {
   l2segment::L2SegmentResponseMsg resp_msg;
 
   auto req = req_msg.add_request();
-  req->mutable_meta()->set_tenant_id(ten_id);
+  req->mutable_meta()->set_vrf_id(ten_id);
   req->mutable_key_or_handle()->set_segment_id(l2_seg_id);
   req->mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
   req->mutable_fabric_encap()->set_encap_value(kDot1QEncapVal);
@@ -161,7 +161,7 @@ int CreateEnicif(uint32_t ten_id, uint32_t lif_id, uint32_t if_id,
   intf::InterfaceResponseMsg resp_msg;
 
   auto req = req_msg.add_request();
-  req->mutable_meta()->set_tenant_id(ten_id);
+  req->mutable_meta()->set_vrf_id(ten_id);
   req->set_type(intf::IF_TYPE_ENIC);
   req->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
   req->mutable_key_or_handle()->set_interface_id(if_id);
@@ -185,7 +185,7 @@ int CreateEP(uint32_t ten_id, uint64_t l2seg_handle, uint64_t if_handle,
   endpoint::EndpointResponseMsg resp_msg;
 
   auto req = req_msg.add_request();
-  req->mutable_meta()->set_tenant_id(ten_id);
+  req->mutable_meta()->set_vrf_id(ten_id);
   req->mutable_l2_key()->set_l2_segment_handle(l2seg_handle);
   req->mutable_endpoint_attrs()->set_interface_handle(if_handle);
   req->mutable_l2_key()->set_mac_address(mac_addr);
@@ -205,7 +205,7 @@ int CreateSession(uint32_t ten_id, uint32_t session_id, uint32_t ip_addr1, uint3
   session::SessionResponseMsg resp_msg;
 
   auto req = req_msg.add_request();
-  req->mutable_meta()->set_tenant_id(ten_id);
+  req->mutable_meta()->set_vrf_id(ten_id);
   req->set_session_id(session_id);
   req->mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip_addr1);
   req->mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip_addr2);
@@ -238,19 +238,19 @@ int rdma_p4_init() {
   CreateStubs();
   if (CreateRDMALIF(kLifID) < 0) return -1;
   printf("RDMA LIF created\n");
-  if (CreateTenant(kTenantID) < 0) return -1;
-  printf("Tenant created\n");
-  if (CreateL2Segment(kTenantID, kL2SegmentID, &g_l2seg_handle) < 0) return -1;
+  if (CreateVrf(kVrfID) < 0) return -1;
+  printf("Vrf created\n");
+  if (CreateL2Segment(kVrfID, kL2SegmentID, &g_l2seg_handle) < 0) return -1;
   printf("L2 segment created\n");
-  if (CreateEnicif(kTenantID, kLifID, kInterfaceID1, kL2SegmentID, kVlanId, kMACAddr1, &g_enic1_handle) < 0) return -1;
+  if (CreateEnicif(kVrfID, kLifID, kInterfaceID1, kL2SegmentID, kVlanId, kMACAddr1, &g_enic1_handle) < 0) return -1;
   printf("ENIC IF1 created\n");
-  if (CreateEnicif(kTenantID, kLifID, kInterfaceID2, kL2SegmentID, kVlanId, kMACAddr2, &g_enic2_handle) < 0) return -1;
+  if (CreateEnicif(kVrfID, kLifID, kInterfaceID2, kL2SegmentID, kVlanId, kMACAddr2, &g_enic2_handle) < 0) return -1;
   printf("ENIC IF2 created\n");
-  if (CreateEP(kTenantID, g_l2seg_handle, g_enic1_handle, kMACAddr1, kIPAddr1) < 0) return -1;
+  if (CreateEP(kVrfID, g_l2seg_handle, g_enic1_handle, kMACAddr1, kIPAddr1) < 0) return -1;
   printf("EP1 created\n");
-  if (CreateEP(kTenantID, g_l2seg_handle, g_enic2_handle, kMACAddr2, kIPAddr2) < 0) return -1;
+  if (CreateEP(kVrfID, g_l2seg_handle, g_enic2_handle, kMACAddr2, kIPAddr2) < 0) return -1;
   printf("EP2 created\n");
-  if (CreateSession(kTenantID, kSessionID, kIPAddr1, kIPAddr2) < 0) return -1;
+  if (CreateSession(kVrfID, kSessionID, kIPAddr1, kIPAddr2) < 0) return -1;
   printf("session created\n");
 
   return 0;
