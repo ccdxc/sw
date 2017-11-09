@@ -1,0 +1,78 @@
+# Feature Test Modules List
+feature:
+    id          : eth
+    sub         : txrx
+    package     : test.eth
+    module      : eth
+    enable      : True
+    ignore      : False
+
+modules:
+
+    - module:
+        name    : L2UC_IP
+        spec    : tx_rx.testspec
+        iterate:
+            - flow    : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=TCP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=UDP,label=NETWORKING
+              segment : filter://native=False
+            - flow    : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              segment : filter://native=False
+
+    - module:
+        name    : L3UC
+        spec    : tx_rx_l3.testspec
+        iterate:
+            # Untagged Flows
+            - flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg: filter://native=False
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg: filter://native=False
+            # Tagged Flows
+            - flow  : filter://type=IPV4,proto=UDP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV4,proto=TCP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=UDP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=TCP,label=NETWORKING
+              srcseg: filter://native=True
+            - flow  : filter://type=IPV6,proto=ICMPV6,label=NETWORKING
+              srcseg: filter://native=True
+
+    - module:
+        name    : ARP_RARP
+        spec    : tx_rx_arp.testspec
+        iterate :
+            - type      : ARP_REQ_UC
+              segment   : filter://native=False
+            - type      : ARP_RESP
+              segment   : filter://native=False
+            - type      : RARP_REQ_UC
+              segment   : filter://native=False
+            - type      : RARP_RESP
+              segment   : filter://native=False
+
+    - module:
+        name    : L2UC_NONIP
+        spec    : tx_rx_nonip.testspec
+        iterate:
+            - segment: filter://native=False
+              flow   : filter://label=NETWORKING
