@@ -46,10 +46,8 @@ ingress_key3_ipv6:
     phvwr.c1    p.flow_lkp_metadata_ip_src_3, \
                     k.{ipv6_3_srcAddr_sbit0_ebit31,ipv6_3_srcAddr_sbit32_ebit127}
     seq         c1, d.ingress_key3_d.match_fields[MATCH_IP_DST_BIT_POS], 1
-    phvwr.c1    p.flow_lkp_metadata_ip_dst_3[127:8], \
-                    k.{ipv6_3_dstAddr_sbit0_ebit31,ipv6_3_dstAddr_sbit32_ebit119}
-    phvwr.c1    p.flow_lkp_metadata_ip_dst_3[7:0], \
-                    k.{ipv6_3_dstAddr_sbit120_ebit127}
+    phvwr.c1    p.flow_lkp_metadata_ip_dst_3, \
+                    k.{ipv6_3_dstAddr_sbit0_ebit31,ipv6_3_dstAddr_sbit32_ebit127}
     seq         c1, d.ingress_key3_d.match_fields[MATCH_IP_DSCP_BIT_POS], 1
     phvwr.c1    p.flow_lkp_metadata_ip_dscp_3, \
                     k.{ipv6_3_trafficClass_sbit0_ebit3,ipv6_3_trafficClass_sbit4_ebit7}

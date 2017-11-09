@@ -574,7 +574,7 @@ class capri_table:
                 if new_ki_size < max_ki:
                     # XXXX fix i1 and i2 designation due to added k-byte
                     # this can be complex if newly added kbyte falls in-between i1 or i2 bytes
-                    # which is avoided while selecting bit2byte chunk 
+                    # which is avoided while selecting bit2byte chunk
                     # accept changes
                     for b in k_bit2byte:
                         fid = (b*8)/flit_size
@@ -1282,7 +1282,7 @@ class capri_table:
 
         #}
 
-        # XXX we can allow some i-bytes in the last flit km1 (key) if there is space
+        # XXX we can allow some i2-bytes in the last flit km1 (key) if there is space
         last_fid = self.flits_used[-1]
         last_key_profile = self.key_makers[-1].combined_profile
         last_key_flit_profile = self.key_makers[-1].flit_km_profiles[last_fid]
@@ -1310,9 +1310,11 @@ class capri_table:
         last_key_profile.byte_sel += kf.km_profile.i2_byte_sel
 
         # setup the key_offsets and last_flit_key_offsets
+        # key is in km1 i.e. lower half so add km1 size to the offsets
+        # also hw does not want leading '32b0 included in the key_offset
         self.start_key_off = 0; self.end_key_off = self.key_size
-        self.last_flit_start_key_off = i1_bytes * 8
-        self.last_flit_end_key_off = (i1_bytes + len(last_key_profile.k_byte_sel)) * 8
+        self.last_flit_start_key_off = max_km_width + 32   # 32bits reserved for bits from last flit
+        self.last_flit_end_key_off = max_km_width + (len(last_key_profile.k_byte_sel) * 8)
 
     def create_key_makers(self):
         # Allocate key-maker(s) for the table
@@ -1715,32 +1717,213 @@ class capri_table:
 
                 km0_iB = km0_free-keep_free
                 km1_iB = km1_free-keep_free
+                # Try to avoid breaking up a field
+                # Copy i1 data to km1 (as i2). A threshold is used so that enough
+                # bytes are kept free for sharing key-makers in future.
+                # if a field crosses the threshold, but fits within available space, allow it
+                # Copy remaining i1 to km0 as i1 and do the same for i2 data bytes
+                # NOTE: For P4+ this can cause different compilation output for common program and
+                # P4 apps. As apps can define different headers and union them with generic headers
+                # differences in header fld widths can cause this logic to pick different bytes for
+                # different apps which cannot work
+                if self.gtm.tm.be.args.p4_plus:
+                    i = -1
+                    # copy i1 bytes to km1 (as much as allowed)
+                    # XXX check if we can avoid breaking up a field
+                    for i in range(min(km1_iB, total_i1B)):
+                        km1_profile.i2_byte_sel.append(self.combined_profile.i1_byte_sel[i])
+                        km1_free -= 1
+                        km1_iB -= 1
 
-                i = -1
-                # copy i1 bytes to km1 (as much as allowed)
-                # XXX check if we can avoid breaking up a field
-                for i in range(min(km1_iB, total_i1B)):
-                    km1_profile.i2_byte_sel.append(self.combined_profile.i1_byte_sel[i])
-                    km1_free -= 1
-                    km1_iB -= 1
+                    # rest of i1B to km0
+                    for b in range(i+1, total_i1B):
+                        km0_profile.i1_byte_sel.append(self.combined_profile.i1_byte_sel[b])
+                        km0_free -= 1
+                        km0_iB -= 1
 
-                # rest of i1B to km0
-                for b in range(i+1, total_i1B):
-                    km0_profile.i1_byte_sel.append(self.combined_profile.i1_byte_sel[b])
-                    km0_free -= 1
-                    km0_iB -= 1
+                    i = -1
+                    # copy i2B in remaining space in km1 and km0
+                    for i in range(min(km1_iB, total_i2B)):
+                        km1_profile.i2_byte_sel.append(self.combined_profile.i2_byte_sel[i])
+                        km1_free -= 1
+                        km1_iB -= 1
 
-                i = -1
-                # copy i2B in remaining space in km1 and km0
-                for i in range(min(km1_iB, total_i2B)):
-                    km1_profile.i2_byte_sel.append(self.combined_profile.i2_byte_sel[i])
-                    km1_free -= 1
-                    km1_iB -= 1
+                    for b in range(i+1, total_i2B):
+                        km0_profile.i2_byte_sel.append(self.combined_profile.i2_byte_sel[b])
+                        km0_free -= 1
+                        km0_iB -= 1
+                else:
+                    i1_fld_chunks = {} # {phc: sizeB}
+                    i2_fld_chunks = {}
+                    for cf in self.input_fields:
+                        if (cf.phv_bit % 8):
+                            continue
+                        if cf.phv_bit/8 in self.combined_profile.i1_byte_sel:
+                            if (cf.phv_bit/8) in i1_fld_chunks:
+                                # keep the larger one (damn unions)
+                                i1_fld_chunks[cf.phv_bit/8] = max(i1_fld_chunks[cf.phv_bit/8],
+                                                                    (cf.width+7)/8)
+                            else:
+                                i1_fld_chunks[cf.phv_bit/8] = (cf.width+7)/8
+                        elif cf.phv_bit/8 in self.combined_profile.i2_byte_sel:
+                            if (cf.phv_bit/8) in i2_fld_chunks:
+                                # keep the larger one (damn unions)
+                                i2_fld_chunks[cf.phv_bit/8] = max(i2_fld_chunks[cf.phv_bit/8],
+                                                                    (cf.width+7)/8)
+                            else:
+                                i2_fld_chunks[cf.phv_bit/8] = (cf.width+7)/8
+                        else:
+                            pass
+                    iB = 0
+                    i1B_remain = total_i1B
+                    while i1B_remain:
+                        if not km1_free:
+                            break
+                        b = self.combined_profile.i1_byte_sel[iB]
+                        if b in i1_fld_chunks:
+                            if not km1_iB:
+                                # already crossed the threshold
+                                break
+                            # make sure entire fld fits
+                            w = i1_fld_chunks[b]
+                            if w > km1_iB:
+                                if w > km1_free:
+                                    # need to break it
+                                    break
+                            for _ in range(w):
+                                b = self.combined_profile.i1_byte_sel[iB]
+                                km1_profile.i2_byte_sel.append(b)
+                                i1B_remain -= 1
+                                km1_free -= 1
+                                iB += 1
+                                if km1_iB > 0:
+                                    km1_iB -= 1
+                        else:
+                            # these are fields that are not byte aligned..
+                            # just place in in km if below threshold
+                            # pdb.set_trace()
+                            if not km1_iB:
+                                break
+                            b = self.combined_profile.i1_byte_sel[iB]
+                            km1_profile.i2_byte_sel.append(b)
+                            i1B_remain -= 1
+                            km1_free -= 1
+                            iB += 1
+                            if km1_iB > 0:
+                                km1_iB -= 1
 
-                for b in range(i+1, total_i2B):
-                    km0_profile.i2_byte_sel.append(self.combined_profile.i2_byte_sel[b])
-                    km0_free -= 1
-                    km0_iB -= 1
+                    # copy the rest in km0
+                    while i1B_remain:
+                        b = self.combined_profile.i1_byte_sel[iB]
+                        if b in i1_fld_chunks:
+                            if w > km0_free:
+                                if w < km1_free:
+                                    # does not fit in km0 but can in km1
+                                    for _ in range(w):
+                                        b = self.combined_profile.i1_byte_sel[iB]
+                                        km1_profile.i2_byte_sel.append(b)
+                                        i1B_remain -= 1
+                                        km1_free -= 1
+                                        iB += 1
+                                        if km1_iB > 0:
+                                            km1_iB -= 1
+                                    continue
+                        # partial fld or cannot fit in km1... just add to km0 as bytes
+                        if not km0_free:
+                            break
+                        km0_profile.i1_byte_sel.append(b)
+                        i1B_remain -= 1
+                        km0_free -= 1
+                        if km0_iB > 0:
+                            km0_iB -= 1
+                        iB += 1
+
+                    assert i1B_remain <= km1_free, pdb.set_trace()
+                    while i1B_remain:
+                        b = self.combined_profile.i1_byte_sel[iB]
+                        km1_profile.i2_byte_sel.append(b)
+                        i1B_remain -= 1
+                        km1_free -= 1
+                        if km1_iB > 0:
+                            km1_iB -= 1
+                        iB += 1
+
+                    assert i1B_remain == 0, pdb.set_trace()
+                    iB = 0
+                    i2B_remain = total_i2B
+                    while i2B_remain:
+                        if not km1_free:
+                            break
+                        b = self.combined_profile.i2_byte_sel[iB]
+                        if b in i2_fld_chunks:
+                            if not km1_iB:
+                                # already crossed the threshold
+                                break
+                            # make sure entire fld fits
+                            w = i2_fld_chunks[b]
+                            if w > km1_iB:
+                                if w > km1_free:
+                                    # need to break it
+                                    break
+                            for _ in range(w):
+                                b = self.combined_profile.i2_byte_sel[iB]
+                                km1_profile.i2_byte_sel.append(b)
+                                i2B_remain -= 1
+                                km1_free -= 1
+                                iB += 1
+                                if km1_iB > 0:
+                                    km1_iB -= 1
+                        else:
+                            # these are partial fields (can it happen??)
+                            # just place in in km if below threshold
+                            if not km1_iB:
+                                break
+                            b = self.combined_profile.i2_byte_sel[iB]
+                            km1_profile.i2_byte_sel.append(b)
+                            i2B_remain -= 1
+                            km1_free -= 1
+                            iB += 1
+                            if km1_iB > 0:
+                                km1_iB -= 1
+
+                    # copy the rest in km0
+                    while i2B_remain:
+                        b = self.combined_profile.i2_byte_sel[iB]
+                        if b in i2_fld_chunks:
+                            if w > km0_free:
+                                if w < km1_free:
+                                    # does not fit in km0 but can in km1
+                                    for _ in range(w):
+                                        b = self.combined_profile.i2_byte_sel[iB]
+                                        km1_profile.i2_byte_sel.append(b)
+                                        i2B_remain -= 1
+                                        km1_free -= 1
+                                        iB += 1
+                                        if km1_iB > 0:
+                                            km1_iB -= 1
+                                    continue
+                        # if cannot move the fld to km1.. default is km0 now
+                        if not km0_free:
+                            break
+                        km0_profile.i2_byte_sel.append(b)
+                        i2B_remain -= 1
+                        km0_free -= 1
+                        if km0_iB > 0:
+                            km0_iB -= 1
+                        iB += 1
+
+                    assert i2B_remain <= km1_free, pdb.set_trace()
+                    while i2B_remain:
+                        b = self.combined_profile.i2_byte_sel[iB]
+                        km1_profile.i2_byte_sel.append(b)
+                        i2B_remain -= 1
+                        km1_free -= 1
+                        if km1_iB > 0:
+                            km1_iB -= 1
+                        iB += 1
+
+                    assert i2B_remain == 0, pdb.set_trace()
+                    assert km1_free >=0 and km0_free >= 0, pdb.set_trace()
 
                 km0_profile.i1_byte_sel = sorted(km0_profile.i1_byte_sel)
                 km0_profile.i2_byte_sel = sorted(km0_profile.i2_byte_sel)
@@ -1946,10 +2129,14 @@ class capri_table:
             lk_bit = self.combined_profile.k_bit_sel[-1]
 
         assert self.num_km, pdb.set_trace()
+        km0 = None; km1 = None
+        _km0 = None; _km1 = None
         if self.is_wide_key:
             # take first and last key byte from last flit
             km0 = self.key_makers[-2]
+            _km0 = km0
             km1 = self.key_makers[-1]
+            _km1 = km1
             last_fid = self.flits_used[-1]
             if len(self.km_flits[last_fid].km_profile.k_byte_sel):
                 fk_byte = self.km_flits[last_fid].km_profile.k_byte_sel[0]
@@ -1960,24 +2147,29 @@ class capri_table:
             else:
                 lk_byte = -1
         else:
-            _km = self.key_makers[0]
-            km0 = _km.shared_km if _km.shared_km else _km
+            _km0 = self.key_makers[0]
+            km0 = _km0.shared_km if _km0.shared_km else _km0
             km1 = None
             if self.num_km > 1:
-                _km = self.key_makers[-1]
-                km1 = _km.shared_km if _km.shared_km else _km
+                _km1 = self.key_makers[-1]
+                km1 = _km1.shared_km if _km1.shared_km else _km1
 
         if self.is_tcam_table():
             fk_byte, lk_byte, fk_bit, lk_bit = self.ct_tcam_get_key_end_bytes()
 
         # compute start offset
         # since key makers are combined, bits may appear before/after/middle of a key
+        # when key-makers are shared same k-bytes may appear in multiple kms. In that case
+        # use this tables logical key-maker/profile to decide the km to use for key size
+        # calculations
         fk_idx = max_kmB
-        if fk_byte in km0.combined_profile.byte_sel:
+        if fk_byte in _km0.combined_profile.byte_sel and \
+                fk_byte in km0.combined_profile.byte_sel:
             fk_idx = km0.combined_profile.byte_sel.index(fk_byte)
             self.start_key_off = (fk_idx * 8) + self.start_key_off_delta
 
-        if fk_bit in km0.combined_profile.bit_sel:
+        if fk_bit in _km0.combined_profile.bit_sel and \
+                fk_bit in km0.combined_profile.bit_sel:
             if km0.combined_profile.bit_loc < fk_idx:
                 bit_idx = km0.combined_profile.bit_sel.index(fk_bit)
                 self.start_key_off = (km0.combined_profile.bit_loc*8) + \
@@ -1986,9 +2178,8 @@ class capri_table:
                         (self.p4_table.name, self.start_key_off))
                 #pdb.set_trace() # need to test
 
-        fk_idx = max_kmB
-
         if self.start_key_off == -1:
+            fk_idx = max_kmB
             assert km1
             if fk_byte in km1.combined_profile.byte_sel:
                 fk_idx = km1.combined_profile.byte_sel.index(fk_byte)
@@ -2008,7 +2199,8 @@ class capri_table:
         # check km1 first
         lk_end_byte = -1
         if km1:
-            if lk_bit in km1.combined_profile.bit_sel:
+            if lk_bit in _km1.combined_profile.bit_sel and \
+                    lk_bit in km1.combined_profile.bit_sel:
                 lk_bit_idx = km1.combined_profile.bit_sel.index(lk_bit)
                 if lk_bit_idx < 8:
                     self.end_key_off = (km1.combined_profile.bit_loc*8) + lk_bit_idx + 1 + max_km_width
@@ -2017,7 +2209,8 @@ class capri_table:
                     self.end_key_off = (km1.combined_profile.bit_loc1*8) + (lk_bit_idx%8) + max_km_width
                     lk_end_byte = km1.combined_profile.bit_loc1
 
-            if lk_byte in km1.combined_profile.byte_sel:
+            if lk_byte in _km1.combined_profile.byte_sel and \
+                    lk_byte in km1.combined_profile.byte_sel:
                 lk_idx = km1.combined_profile.byte_sel.index(lk_byte)
                 if lk_idx > lk_end_byte:
                     self.end_key_off = (lk_idx * 8) + 8 + max_km_width - self.end_key_off_delta
@@ -2077,7 +2270,7 @@ class capri_table:
             self.final_key_size = new_key_size
 
         if self.collision_ct:
-            # XXX this doe not work for wide key -- need to fix
+            # XXX this does not work for wide key -- need to fix
             # overflow hash table - use same key-maker/profiles of the parent hash table
             # collision table index key is added (earlier by caller) into the parent table's km
             # Only check that the overflow index are the very first bytes in the km of the parent
@@ -2554,7 +2747,7 @@ class capri_table:
                 # add k bytes of this table
                 shared_k_bytes += self.combined_profile.k_byte_sel
 
-                i_byte_chunks = [] #(byte, num_contiguous_bytes before it)
+                i_byte_chunks = [] #(last_byte, num_contiguous_bytes before it)
 
                 for i in range(k_byte_end_idx+1, max_kmB):
                     b = km_prof.byte_sel[i]
@@ -2576,7 +2769,11 @@ class capri_table:
 
                 # sort based on num contiguous bytes
                 i_byte_chunks = sorted(i_byte_chunks, key=lambda t: t[1])
-                byte_to_bit = i_byte_chunks[0][0]
+                if i_byte_chunks[0][1] > 1:
+                    # pick the last byte
+                    byte_to_bit = i_byte_chunks[-1][0]
+                else:
+                    byte_to_bit = i_byte_chunks[0][0]
 
                 if km_prof.bit_loc < 0:
                     km_prof.bit_loc = k_byte_start_idx
@@ -2917,7 +3114,7 @@ class capri_key_maker:
             assert len(hash_ctbls) == 1, pdb.set_trace()
             assert len(idx_ctbls) == 0, pdb.set_trace()
 
-        if len(idx_ctbls):
+        if len(idx_ctbls) > 1:
             # assert on un-supported km sharing
             # I think multiple idx tables can share km if both do not need k_bits XXX
             self.stage.gtm.tm.logger.debug("Merging multiple index tables %s" % \
@@ -4248,7 +4445,7 @@ class capri_stage:
         # also make sure that for same mask, higher prof value is at the top so that true
         # condition is handled before false (useful for multi-bit false conditions)
         sorted_prof_vals = OrderedDict()
-        for prof_val,mask in sorted(self.table_profile_masks.items(), 
+        for prof_val,mask in sorted(self.table_profile_masks.items(),
                                     key=lambda k:(k[1],k[0]), reverse=True):
             if prof_val in stage_prof_vals:
                 sorted_prof_vals[prof_val] = stage_prof_vals[prof_val]
@@ -4448,7 +4645,7 @@ class capri_gress_tm:
             ct.ct_print_km_profiles()
             km_str = '%s: [flit]:(km0,1):' % ct.p4_table.name
             # km_usage 0:not used, 1=in-use, 2=done(cannot use it again)
-            km_usage = [0 for _ in range(len(ct.key_makers))] 
+            km_usage = [0 for _ in range(len(ct.key_makers))]
             for f in range(num_flits):
                 km_str += "[%d]:(" % f
                 for k,km in enumerate(ct.key_makers):
@@ -4999,7 +5196,7 @@ class capri_gress_tm:
                                 if _f not in km.flits_used:
                                     km.flits_used.append(_f)
                             km.flits_used = sorted(km.flits_used, key=lambda k: k)
-                    
+
 
     def program_tables(self):
         for stg in self.stages.keys():

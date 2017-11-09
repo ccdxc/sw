@@ -45,7 +45,7 @@ native_ipv4_packet_common:
   phvwr       p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl
   phvwr       p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
 
-  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
+  add         r1, r0, k.ethernet_srcAddr
   phvwr.e     p.flow_lkp_metadata_lkp_srcMacAddr, r1
   phvwr       p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
 
@@ -75,7 +75,7 @@ native_ipv6_packet_common:
   phvwr       p.flow_lkp_metadata_lkp_proto, k.ipv6_nextHdr
   phvwr       p.flow_lkp_metadata_ip_ttl, k.ipv6_hopLimit
 
-  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
+  add         r1, r0, k.ethernet_srcAddr
   phvwr.e     p.flow_lkp_metadata_lkp_srcMacAddr, r1
   phvwr       p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
 
@@ -95,7 +95,7 @@ native_non_ip_packet_common:
   seq         c1, k.vlan_tag_valid, 1
   phvwr.c1    p.flow_lkp_metadata_lkp_sport, k.vlan_tag_etherType
   phvwr.!c1   p.flow_lkp_metadata_lkp_sport, k.ethernet_etherType
-  or          r1, k.ethernet_srcAddr_sbit40_ebit47, k.ethernet_srcAddr_sbit0_ebit39, 8
+  add         r1, r0, k.ethernet_srcAddr
   phvwr       p.flow_lkp_metadata_lkp_src, r1
   phvwr       p.flow_lkp_metadata_lkp_dst, k.ethernet_dstAddr
   phvwr.e     p.flow_lkp_metadata_lkp_srcMacAddr, r1

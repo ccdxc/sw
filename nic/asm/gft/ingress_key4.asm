@@ -26,9 +26,8 @@ ingress_key4:
     phvwr.c1    p.flow_lkp_metadata_gre_proto_1, k.gre_1_proto
 
     seq         c1, d.ingress_key4_d.match_fields[MATCH_TRANSPORT_SRC_PORT_2_BIT_POS], 1
-    or          r1, k.l4_metadata_l4_sport_2_sbit8_ebit15, \
-                    k.l4_metadata_l4_sport_2_sbit0_ebit7, 8
-    phvwr.c1    p.flow_lkp_metadata_l4_sport_2, r1
+    phvwr.c1    p.flow_lkp_metadata_l4_sport_2, k.l4_metadata_l4_sport_2
+
     seq         c1, d.ingress_key4_d.match_fields[MATCH_TRANSPORT_DST_PORT_2_BIT_POS], 1
     phvwr.c1    p.flow_lkp_metadata_l4_dport_2, k.l4_metadata_l4_dport_2
     seq         c1, d.ingress_key4_d.match_fields[MATCH_TCP_FLAGS_2_BIT_POS], 1

@@ -35,9 +35,8 @@ encap_inner_ipv4_unknown_rewrite:
 
 .align
 encap_inner_ipv6_udp_rewrite:
-  phvwr       p.{inner_ipv6_version...inner_ipv6_flowLabel[19:0]}, k.{ipv6_version...ipv6_flowLabel_sbit4_ebit19}
-  phvwr       p.{inner_ipv6_payloadLen...inner_ipv6_dstAddr[127:120]}, k.{ipv6_payloadLen...ipv6_dstAddr_sbit0_ebit7}
-  phvwr       p.inner_ipv6_dstAddr[119:0], k.ipv6_dstAddr_sbit8_ebit127
+  phvwr       p.{inner_ipv6_version...inner_ipv6_srcAddr}, k.{ipv6_version...ipv6_srcAddr_sbit96_ebit127}
+  phvwr       p.{inner_ipv6_dstAddr}, k.{ipv6_dstAddr}
   phvwr       p.{inner_udp_srcPort...inner_udp_checksum}, k.{udp_srcPort...udp_checksum}
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV6
   phvwr       p.udp_valid, FALSE
@@ -50,9 +49,8 @@ encap_inner_ipv6_udp_rewrite:
 encap_inner_ipv6_tcp_rewrite:
 encap_inner_ipv6_icmp_rewrite:
 encap_inner_ipv6_unknown_rewrite:
-  phvwr       p.{inner_ipv6_version...inner_ipv6_flowLabel[19:0]}, k.{ipv6_version...ipv6_flowLabel_sbit4_ebit19}
-  phvwr       p.{inner_ipv6_payloadLen...inner_ipv6_dstAddr[127:120]}, k.{ipv6_payloadLen...ipv6_dstAddr_sbit0_ebit7}
-  phvwr       p.inner_ipv6_dstAddr[119:0], k.ipv6_dstAddr_sbit8_ebit127
+  phvwr       p.{inner_ipv6_version...inner_ipv6_srcAddr}, k.{ipv6_version...ipv6_srcAddr_sbit96_ebit127}
+  phvwr       p.{inner_ipv6_dstAddr}, k.{ipv6_dstAddr}
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV6
   phvwr.e     p.ipv6_valid, FALSE
   phvwr       p.inner_ipv6_valid, TRUE
