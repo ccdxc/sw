@@ -11,7 +11,7 @@ modules:
     - module:
         name    : ENIC
         spec    : l2mc_enic_vxlan.testspec
-        ignore  : True
+        ignore  : False
         iterate :
             - id  : L2MC-UPLINK
               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -19,7 +19,7 @@ modules:
     - module:
         name    : UPLINK
         spec    : l2mc_uplink_vxlan.testspec
-        ignore  : True
+        ignore  : False
         iterate :
             - id  : L2MC-UPLINK
               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -27,7 +27,7 @@ modules:
     - module:
         name    : UPLINK_RPF_FAIL
         spec    : l2mc_uplink_vxlan.testspec
-        ignore  : True
+        ignore  : False
         iterate :
             - id        : L2MC-UPLINK
               scenario  : RPF_FAILURE

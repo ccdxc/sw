@@ -34,8 +34,18 @@ header_type flow_info_metadata_t {
     }
 }
 
+header_type flow_miss_metadata_t {
+    fields {
+        rewrite_index         : 12;
+        tunnel_rewrite_index  : 10;
+        tunnel_vnid           : 24;
+        tunnel_originate      : 1;
+    }
+}
+
 metadata flow_lkp_metadata_t flow_lkp_metadata;
 metadata flow_info_metadata_t flow_info_metadata;
+metadata flow_miss_metadata_t flow_miss_metadata;
 
 // entry 0 of flow_info table will be programmed as the miss entry
 action flow_miss() {
@@ -70,10 +80,24 @@ action flow_miss() {
     }
 
     if ((control_metadata.flow_miss_action == FLOW_MISS_ACTION_FLOOD) and
-        (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST)) {
-        modify_field(capri_intrinsic.tm_replicate_en, TRUE);
-        modify_field(capri_intrinsic.tm_replicate_ptr,
-                     control_metadata.flow_miss_idx);
+        ((flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) or
+         (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST))) {
+        if (control_metadata.allow_flood == TRUE) {
+            modify_field(capri_intrinsic.tm_replicate_en, TRUE);
+            modify_field(capri_intrinsic.tm_replicate_ptr,
+                         control_metadata.flow_miss_idx);
+	    modify_field(flow_miss_metadata.rewrite_index,
+                         flow_miss_metadata.rewrite_index);
+	    modify_field(flow_miss_metadata.tunnel_rewrite_index,
+                         flow_miss_metadata.tunnel_rewrite_index);
+	    modify_field(flow_miss_metadata.tunnel_vnid,
+                         flow_miss_metadata.tunnel_vnid);
+	    modify_field(flow_miss_metadata.tunnel_originate,
+                         flow_miss_metadata.tunnel_originate);
+        } else {
+            modify_field(control_metadata.drop_reason, DROP_FLOW_MISS);
+            drop_packet();
+        }
     }
 
     if (control_metadata.flow_miss_action == FLOW_MISS_ACTION_REDIRECT) {

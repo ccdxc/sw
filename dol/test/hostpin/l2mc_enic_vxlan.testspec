@@ -55,7 +55,7 @@ packets:
     - packet:
         id          : EXP_PKT     # Expected packet on Uplinks
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        encaps      : callback://networking/packets/GetUplinkPacketEncapsForMulticastCopy
         headers     :
             outereth    :
                 src     : callback://networking/packets/GetInfraRtrMac
@@ -80,10 +80,11 @@ packets:
     - packet:
         id          : EXP_PKT_ENIC     # Expected packet on Enics
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetPacketEncaps
+        encaps      : callback://networking/packets/GetEnicPacketEncapsForMulticastCopy
         headers     :
             qtag:
                 vlan: callback://classic/callbacks/GetEncapVlanIdForMulticastCopy/idx=0
+                prio: callback://networking/packets/GetExpectedPacketCos
 
 buffers:
     - buffer:
@@ -149,7 +150,7 @@ expect:
     packets:
         - packet:
             object  : ref://testcase/packets/id=EXP_PKT
-            port    : callback://classic/callbacks/GetPortsForMulticastCopy/idx=0
+            port    : callback://classic/callbacks/GetTxPortsForMulticastCopy/idx=0
 
     descriptors:
         - descriptor:

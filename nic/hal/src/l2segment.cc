@@ -271,6 +271,11 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = oif_list_create(&l2seg->bcast_oif_list);
     HAL_ASSERT(ret == HAL_RET_OK);
 
+    if (is_forwarding_mode_host_pinned()) {
+        ret = oif_list_set_honor_ingress(l2seg->bcast_oif_list);
+        HAL_ASSERT(ret == HAL_RET_OK);
+    }
+
     // 1. a. Add to l2seg id hash table
     ret = l2seg_add_to_db(l2seg, hal_handle);
     if (ret != HAL_RET_OK) {
@@ -490,6 +495,7 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     l2seg->vrf_handle = vrf->hal_handle;
     l2seg->seg_id = spec.key_or_handle().segment_id();
     l2seg->segment_type = spec.segment_type();
+    l2seg->pinned_uplink = spec.pinned_uplink();
     l2seg->mcast_fwd_policy = spec.mcast_fwd_policy();
     l2seg->bcast_fwd_policy = spec.bcast_fwd_policy();
     ip_addr_spec_to_ip_addr(&l2seg->gipo, spec.gipo());

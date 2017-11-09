@@ -47,6 +47,7 @@ typedef struct l2seg_s {
     ip_addr_t             gipo;                    // gipo for vxlan 
 
     oif_list_id_t         bcast_oif_list;          // outgoing interface list for broadcast/flood
+    hal_handle_t          pinned_uplink;           // pinned uplink
 
     // operational state of L2 segment
     hal_handle_t          hal_handle;              // HAL allocated handle

@@ -119,14 +119,28 @@ flow_miss_common:
   phvwr       p.capri_intrinsic_drop, 1
   .brcase FLOW_MISS_ACTION_FLOOD
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
-  phvwr.c1.e  p.capri_intrinsic_tm_replicate_en, 1
-  phvwr.c1    p.capri_intrinsic_tm_replicate_ptr, k.control_metadata_flow_miss_idx
-  phvwr.!c1.e p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
-  phvwr.!c1   p.control_metadata_dst_lport, CPU_LPORT
+  seq.!c1     c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_BROADCAST
+  bcf         [c1], flow_miss_multicast
+  phvwr.!c1.e p.control_metadata_dst_lport, CPU_LPORT
+  nop
   .brcase FLOW_MISS_ACTION_REDIRECT
   phvwr.e     p.rewrite_metadata_tunnel_rewrite_index, k.control_metadata_flow_miss_idx
   nop
   .brend
+
+flow_miss_multicast:
+  seq         c1, k.control_metadata_allow_flood, TRUE
+  bcf         [!c1], flow_miss_drop
+  phvwr.c1    p.capri_intrinsic_tm_replicate_en, 1
+  phvwr       p.capri_intrinsic_tm_replicate_ptr, k.control_metadata_flow_miss_idx
+  phvwr       p.rewrite_metadata_rewrite_index, k.flow_miss_metadata_rewrite_index
+  phvwr       p.rewrite_metadata_tunnel_rewrite_index, k.flow_miss_metadata_tunnel_rewrite_index
+  phvwr.e     p.rewrite_metadata_tunnel_vnid, k.flow_miss_metadata_tunnel_vnid
+  phvwr       p.tunnel_metadata_tunnel_originate, k.flow_miss_metadata_tunnel_originate
+
+flow_miss_drop:
+  phvwr.e     p.control_metadata_drop_reason[DROP_FLOW_MISS], 1
+  phvwr       p.capri_intrinsic_drop, 1
 
 flow_miss_input_properites_miss_drop:
   phvwr.e     p.control_metadata_drop_reason[DROP_INPUT_PROPERTIES_MISS], 1

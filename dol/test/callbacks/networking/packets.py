@@ -333,3 +333,19 @@ def GetExpectDelay(testcase):
 
 def PacketIsVlanTagged(testcase, args=None):
     return 0 if __get_packet_encap_vlan(testcase, testcase.config.dst) is None else 1
+
+def GetUplinkPacketEncapsForMulticastCopy(testcase, packet):
+    encaps = []
+
+    if testcase.config.src.segment.native == False:
+        encaps.append(__get_template('ENCAP_QTAG'))
+
+    if testcase.config.src.segment.IsFabEncapVxlan():
+        encaps.append(__get_template('ENCAP_VXLAN'))
+
+    return encaps
+
+def GetEnicPacketEncapsForMulticastCopy(testcase, packet):
+    encaps = []
+    encaps.append(__get_template('ENCAP_QTAG'))
+    return encaps

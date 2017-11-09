@@ -522,7 +522,7 @@ pin_endpoint (ep_t *ep)
     if_id_t     pin_ifid = 0;        
     
     ep->pinned_if_handle = HAL_HANDLE_INVALID;
-    if (g_hal_state->forwarding_mode() != HAL_FORWARDING_MODE_HOST_PINNED) {
+    if (is_forwarding_mode_host_pinned() == FALSE) {
         HAL_TRACE_DEBUG("{}: forwarding_mode is not host-pinned...NOP",
                         __FUNCTION__);
         return HAL_RET_OK;

@@ -516,7 +516,8 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
     }
 
     // Check if classic
-    if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
+    if ((hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) ||
+        (is_forwarding_mode_host_pinned())) {
         // Program Input Properties Mac Vlan
         ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, pi_nwsec);
     }
@@ -681,7 +682,8 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
     inp_prop.dst_lport = if_get_lport_id(uplink);
     inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(l2seg);
-    
+    inp_prop.allow_flood = 1;
+
     if (oper == TABLE_OPER_INSERT) {
         // Insert
         ret = inp_prop_tbl->insert(&key, &data, &hash_idx);
@@ -779,7 +781,8 @@ pd_enicif_pd_repgm_inp_prop_l2seg(pd_if_args_t *args,
     inp_prop.dst_lport = if_get_lport_id(uplink);
     inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(l2seg);
-    
+    inp_prop.allow_flood = 1;
+
     // Update
     ret = inp_prop_tbl->update(hash_idx, &data);
     if (ret != HAL_RET_OK) {
@@ -1052,7 +1055,27 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
 
     memset(&data, 0, sizeof(data));
 
+    inp_prop_mac_vlan_data.allow_flood = 1;
     if (host_entry) {
+
+        if (is_forwarding_mode_host_pinned()) {
+            p4_replication_data_t rdata = { 0 };
+            auto *l2seg = (l2seg_t *)if_enicif_get_pi_l2seg((if_t*)pd_enicif->pi_if);
+            if_id_t pin_id = if_enicif_get_host_pinned_uplink((if_t*)pd_enicif->pi_if);
+            if_t *pin_intf = find_if_by_id (pin_id);
+
+            HAL_ASSERT_RETURN((l2seg && pin_intf), HAL_RET_ERR);
+
+            ret = if_l2seg_get_multicast_rewrite_data(pin_intf, l2seg, &rdata);
+            HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
+
+            inp_prop_mac_vlan_data.tunnel_vnid = (uint32_t)rdata.qid_or_vnid;
+            inp_prop_mac_vlan_data.dst_lport = (uint16_t)rdata.lport;
+            inp_prop_mac_vlan_data.rewrite_index = (uint16_t)rdata.rewrite_index;
+            inp_prop_mac_vlan_data.tunnel_rewrite_index = (uint16_t)rdata.tunnel_rewrite_index;
+            inp_prop_mac_vlan_data.tunnel_originate = (uint16_t)rdata.is_tunnel;
+        }
+
         pd_l2seg = (pd_l2seg_t *)if_enicif_get_pd_l2seg((if_t*)pd_enicif->pi_if);
         HAL_ASSERT_RETURN((pd_l2seg != NULL), HAL_RET_ERR);
 

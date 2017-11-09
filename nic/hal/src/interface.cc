@@ -376,8 +376,9 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             if (l2seg) {
                 // TODO: Clean this as l2seg should not have list of oifs.
                 //       It should be handles.
-                // Add the new interface to the broadcast list of the associated l2seg. This applies to enicifs only.
-                // Its here because the multicast oif call requires the pi_if to have been created fully.
+                // Add the new interface to the broadcast list of the associated
+                // l2seg. This applies to enicifs only. Its here because the
+                // multicast oif call requires the pi_if to have been created fully.
                 oif_t  oif;
                 // oif.if_id = hal_if->if_id;
                 // oif.l2_seg_id = app_ctxt->l2seg->seg_id;
@@ -1873,16 +1874,16 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     }
 
     // Add the uplink to the broadcast list of the l2seg
-    // oif.if_id = hal_if->if_id;
-    // oif.l2_seg_id = l2seg->seg_id;
-    oif.intf = hal_if;
-    oif.l2seg = l2seg;
-    ret = oif_list_add_oif(l2seg->bcast_oif_list, &oif);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("pi-l2segup<->link:{}:bcast oiflist failed. ret:{}",
-                      __FUNCTION__, ret);
-        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-        goto end;
+    if (is_forwarding_mode_host_pinned() == FALSE) {
+        oif.intf = hal_if;
+        oif.l2seg = l2seg;
+        ret = oif_list_add_oif(l2seg->bcast_oif_list, &oif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("pi-l2segup<->link:{}:bcast oiflist failed. ret:{}",
+                          __FUNCTION__, ret);
+            rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+            goto end;
+        }
     }
 
 end:

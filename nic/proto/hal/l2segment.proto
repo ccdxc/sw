@@ -51,6 +51,7 @@ message L2SegmentSpec {
   types.EncapInfo        access_encap               = 7;    // wire encap for workload
   types.EncapInfo        fabric_encap               = 8;    // wire encap on uplink(s)
   types.IPAddress        gipo                       = 9;    // gipo for mcast vxlan traffic
+  fixed64                pinned_uplink              = 10;   // The pinned uplink
 }
 
 // L2SegmentRequestMsg is batched add or modify L2 segment request

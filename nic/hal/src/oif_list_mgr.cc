@@ -47,4 +47,9 @@ hal_ret_t oif_list_get_oif_array(oif_list_id_t list, uint32_t &num_oifs, oif_t *
     return pd::oif_list_get_oif_array(list, num_oifs, oifs);
 }
 
+hal_ret_t oif_list_set_honor_ingress(oif_list_id_t list)
+{
+    return pd::oif_list_set_honor_ingress(list);
+}
+
 }    // namespace hal

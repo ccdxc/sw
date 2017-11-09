@@ -33,13 +33,20 @@ input_properties_mac_vlan:
   bcf         [c1&!c2], dejavu_check_failed
   phvwr       p.control_metadata_src_lif, r1
 
+  phvwr       p.flow_miss_metadata_tunnel_originate, d.input_properties_mac_vlan_d.tunnel_originate
+  phvwr       p.flow_miss_metadata_tunnel_vnid, d.input_properties_mac_vlan_d.tunnel_vnid
+  phvwr       p.flow_miss_metadata_rewrite_index, d.input_properties_mac_vlan_d.rewrite_index
+  phvwr       p.flow_miss_metadata_tunnel_rewrite_index, d.input_properties_mac_vlan_d.tunnel_rewrite_index
+
   phvwr       p.control_metadata_src_lport, d.input_properties_mac_vlan_d.src_lport
+  phvwr       p.control_metadata_dst_lport, d.input_properties_mac_vlan_d.dst_lport
   phvwr       p.flow_lkp_metadata_lkp_vrf, d.input_properties_mac_vlan_d.vrf
   phvwr       p.flow_lkp_metadata_lkp_dir, d.input_properties_mac_vlan_d.dir
   phvwr       p.control_metadata_flow_miss_action, d.input_properties_mac_vlan_d.flow_miss_action
   phvwr       p.control_metadata_flow_miss_tm_oqueue, d.input_properties_mac_vlan_d.flow_miss_tm_oqueue
   phvwr       p.control_metadata_flow_miss_idx, d.input_properties_mac_vlan_d.flow_miss_idx
   phvwr       p.control_metadata_ipsg_enable, d.input_properties_mac_vlan_d.ipsg_enable
+  phvwr       p.control_metadata_allow_flood, d.input_properties_mac_vlan_d.allow_flood
   phvwr.e     p.qos_metadata_dscp, d.input_properties_mac_vlan_d.dscp
   phvwr       p.l4_metadata_profile_idx, d.input_properties_mac_vlan_d.l4_profile_idx
 

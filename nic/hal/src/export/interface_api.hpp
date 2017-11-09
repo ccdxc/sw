@@ -32,6 +32,7 @@ uint32_t lif_get_total_qcount (uint32_t hw_lif_id);
 // Interface APIs
 intf::IfType intf_get_if_type(if_t *pi_if);
 uint32_t if_get_if_id(if_t *pi_if);
+hal_handle_t if_get_hal_handle(if_t *pi_if);
 uint32_t uplinkif_get_port_num(if_t *pi_if);
 void if_set_pd_if(if_t *pi_if, void *pd_upif);
 void *if_get_pd_if(if_t *pi_if);
@@ -50,9 +51,12 @@ void *if_enicif_get_pi_l2seg(if_t *pi_if);
 void *if_enicif_get_pd_nwsec(if_t *pi_if);
 void *if_enicif_get_pi_nwsec(if_t *pi_if);
 uint32_t if_enicif_get_ipsg_en(if_t *pi_if);
-hal_ret_t if_enicif_get_pinned_if(if_t *pi_if, 
+hal_ret_t if_enicif_get_pinned_if(if_t *pi_if,
                                   if_t **uplink_if);
 
+//TODO Remove this when the above function works for all cases.
+uint8_t
+if_enicif_get_host_pinned_uplink(if_t *pi_if);
 
 } // namespace hal
 #endif // __INTERFACE_API_HPP__

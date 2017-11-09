@@ -41,6 +41,7 @@ ReplList::add_replication(void *data)
     hal_ret_t rs = HAL_RET_OK;
     ReplEntry *repl_entry = NULL;
     ReplTableEntry *repl_te = NULL;
+    ReplTableEntry  *last_entry = last_repl_tbl_entry_;
 
     HAL_TRACE_DEBUG("{}: Adding replication entry to repl_list: {}",
             __FUNCTION__, repl_tbl_index_);
@@ -55,6 +56,10 @@ ReplList::add_replication(void *data)
     }
 
     repl_te->add_replication(repl_entry);
+
+    if (last_entry && (last_entry != last_repl_tbl_entry_)) {
+        last_entry->program_table();
+    }
 
 end:
     return rs;

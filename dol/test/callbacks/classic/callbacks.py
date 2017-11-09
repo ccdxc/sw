@@ -57,14 +57,19 @@ def GetRxRingForMulticastCopy(tc, args = None):
 def GetPortsForMulticastCopy(tc, args = None):
     if args is None:
         return None
-
     oiflist = tc.config.src.segment.floodlist.uplink_list
     if len(oiflist) < args.idx:
         return None
-    
     upintf = oiflist[args.idx]
     tc.info("MulticastCopy: Returning Ports for %s" % upintf.GID())
     return oiflist[args.idx].ports
+
+def GetTxPortsForMulticastCopy(tc, args = None):
+    if args is None:
+        return None
+    upintf = tc.config.src.endpoint.pinintf
+    tc.info("MulticastCopy: Returning Ports for %s" % upintf.GID())
+    return upintf.ports
 
 def GetRxUplinkPorts(tc, args = None):
     assert(tc.config.src.endpoint.remote is True)
@@ -76,3 +81,16 @@ def GetRxUplinkPorts(tc, args = None):
     rpf_fail_ports = set([1, 2, 3, 4]) - set(pin_ports)
     return list(rpf_fail_ports)[:1]
 
+def GetExpectedBufferSizeForMulticastCopy(tc, pkt, args=None):
+    assert (tc.config.src.endpoint.remote is True)
+    if args != None and tc.pvtdata.scenario != 'RPF_FAILURE':
+        return tc.packets.Get(args.id).size
+    else:
+        return 0
+
+def GetExpectedBufferDataForMulticastCopy(tc, pkt, args=None):
+    assert (tc.config.src.endpoint.remote is True)
+    if args != None and tc.pvtdata.scenario != 'RPF_FAILURE':
+        return tc.packets.Get(args.id).rawbytes
+    else:
+        return None

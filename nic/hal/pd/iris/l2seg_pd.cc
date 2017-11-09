@@ -298,6 +298,7 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
     inp_prop.src_lport = 0;
     inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy((l2seg_t*)(l2seg_pd->l2seg));
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list((l2seg_t*)(l2seg_pd->l2seg));
+    inp_prop.allow_flood = 1;
 
     // Insert
     ret = inp_prop_tbl->insert(&key, &data, &l2seg_pd->inp_prop_tbl_cpu_idx);

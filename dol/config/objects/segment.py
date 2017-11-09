@@ -299,7 +299,8 @@ class SegmentObject(base.ConfigObjectBase):
         req_spec.mcast_fwd_policy = self.multicast_policy
         req_spec.bcast_fwd_policy = self.broadcast_policy
 
-        #req_spec.pinned_uplink = self.pinnedif.hal_handle
+        if (self.pinnedif != None):
+            req_spec.pinned_uplink = self.pinnedif.hal_handle
 
         for nw in self.obj_helper_nw.nws:
             if nw.hal_handle:

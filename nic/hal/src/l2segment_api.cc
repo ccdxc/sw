@@ -45,6 +45,15 @@ l2seg_get_acc_encap_val(l2seg_t *seg)
 }
 
 // ----------------------------------------------------------------------------
+// Returns Handle of the pinned uplink interface, if any
+// ----------------------------------------------------------------------------
+hal_handle_t
+l2seg_get_pinned_uplink(l2seg_t *seg)
+{
+    return seg->pinned_uplink;
+}
+
+// ----------------------------------------------------------------------------
 // Returns fabric encap type
 // ----------------------------------------------------------------------------
 types::encapType 

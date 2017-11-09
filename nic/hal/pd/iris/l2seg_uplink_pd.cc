@@ -122,6 +122,13 @@ l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profil
     inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(args->l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(args->l2seg);
 
+    if ((is_forwarding_mode_host_pinned()) &&
+        (hal::l2seg_get_pinned_uplink(args->l2seg) != hal::if_get_hal_handle(args->intf))) {
+        inp_prop.allow_flood = 0;
+    } else{
+        inp_prop.allow_flood = 1;
+    }
+
     key.entry_inactive_input_properties = 0;
     if (!is_native) {
         // Install one entry
@@ -302,6 +309,13 @@ l2seg_uplink_inp_prop_form_data (pd_l2seg_uplink_args_t *args,
     inp_prop.flow_miss_action = l2seg_get_bcast_fwd_policy(args->l2seg);
     inp_prop.flow_miss_idx = l2seg_get_bcast_oif_list(args->l2seg);
 
+    if ((is_forwarding_mode_host_pinned()) &&
+        (hal::l2seg_get_pinned_uplink(args->l2seg) != hal::if_get_hal_handle(args->intf))) {
+        inp_prop.allow_flood = 0;
+    } else {
+        inp_prop.allow_flood = 1;
+    }
+
     if (!is_native) {
         enc_type = l2seg_get_fab_encap_type(args->l2seg);
         if (enc_type == types::ENCAP_TYPE_VXLAN) {
@@ -387,13 +401,6 @@ l2seg_uplink_upd_input_properties_tbl (pd_l2seg_uplink_args_t *args,
 end:
         return ret;
 }
-
-
-
-
-
-
-
 
 }    // namespace pd
 }    // namespace hal

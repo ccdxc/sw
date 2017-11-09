@@ -177,7 +177,7 @@ table input_mapping_native {
 
 action input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
                         ipsg_enable, dscp, l4_profile_idx, src_lport,
-                        flow_miss_tm_oqueue, dst_lport) {
+                        flow_miss_tm_oqueue, dst_lport, allow_flood) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
     modify_field(control_metadata.flow_miss_action, flow_miss_action);
@@ -189,6 +189,7 @@ action input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
     modify_field(control_metadata.src_lif, capri_intrinsic.lif);
     modify_field(control_metadata.src_lport, src_lport);
     modify_field(control_metadata.dst_lport, dst_lport);
+    modify_field(control_metadata.allow_flood, allow_flood);
 
     // write nic mode (table constant)
     modify_field(control_metadata.nic_mode, scratch_metadata.flag);
@@ -238,7 +239,9 @@ table input_properties {
 action input_properties_mac_vlan(src_lif, src_lif_check_en,
                                  vrf, dir, flow_miss_action,flow_miss_idx,
                                  ipsg_enable, dscp, l4_profile_idx, src_lport,
-                                 flow_miss_tm_oqueue, dst_lport) {
+                                 flow_miss_tm_oqueue, dst_lport, allow_flood,
+                                 rewrite_index, tunnel_rewrite_index, tunnel_vnid,
+                                 tunnel_originate) {
     adjust_lkp_fields();
 
     // if table is a miss, return. do not perform rest of the actions.
@@ -249,10 +252,16 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
         drop_packet();
     }
 
+    modify_field(flow_miss_metadata.rewrite_index, rewrite_index);
+    modify_field(flow_miss_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
+    modify_field(flow_miss_metadata.tunnel_vnid, tunnel_vnid);
+    modify_field(flow_miss_metadata.tunnel_originate, tunnel_originate);
+
     modify_field(control_metadata.src_lif, src_lif);
+
     input_properties(vrf, dir, flow_miss_action, flow_miss_idx,
                      ipsg_enable, dscp, l4_profile_idx, src_lport,
-                     flow_miss_tm_oqueue, dst_lport);
+                     flow_miss_tm_oqueue, dst_lport, allow_flood);
 
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.src_lif_check_en, src_lif_check_en);
