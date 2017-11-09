@@ -9,7 +9,19 @@ TelemetryServiceImpl::CollectorCreate(ServerContext* context,
                             const CollectorConfigMsg* request,
                             CollectorResponseMsg* response)
 {
-     HAL_TRACE_DEBUG("Rcvd Collector Create Request");
+    HAL_TRACE_DEBUG("Rcvd Collector Create Request");
+    Collector *resp;
+    uint32_t                i, nreqs = request->request_size();
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+    for (i = 0; i < nreqs; ++i) {
+        resp = response->add_response();
+        auto spec = request->request(i);
+        hal::collector_create(&spec, resp);
+    }
+    HAL_TRACE_DEBUG("Rcvd Collector Create Request Succeeded");
     return Status::OK;
 }
 

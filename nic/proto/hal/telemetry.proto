@@ -20,19 +20,21 @@ message MacAddress {
 message CollectorSpec {
   types.ObjectMeta  meta              = 1; // Common object meta
   ExportControlId   export_controlId  = 2; // Controller ID that this Collector is attached to
-  types.IPAddress   dest_ip           = 3; // Destination IP of the Collector
-  types.IPProtocol  protocol          = 4; // L4 IP Protocol to use
-  L4Port            dest_port         = 5; // L4 Port for the collector
-  ExportFormat      format            = 6; // Format that the collector expects
-  uint32            template_id       = 7; // Data Template ID used to send to the collector 
+  types.EncapInfo   encap             = 3; // VLAN encap to be applied to traffic
+  types.IPAddress   dest_ip           = 4; // Destination IP of the Collector
+  types.IPAddress   src_ip            = 5; // Source IP to use
+  types.IPProtocol  protocol          = 6; // L4 IP Protocol to use
+  L4Port            dest_port         = 7; // L4 Port for the collector
+  ExportFormat      format            = 8; // Format that the collector expects
+  uint32            template_id       = 9; // Data Template ID used to send to the collector 
 }
 
 // CollectorSpec is the operational status of the collector
 message CollectorStatus {
   // CollectorStatus Codes
   enum CollectorStatusCode {
-    SUCCESS			= 0;
-    INVALID_CONFIG		= 1;
+    SUCCESS			    = 0;
+    INVALID_CONFIG	= 1;
     TEMP_FAILURE		= 2;
     PERM_FAILURE		= 3;
   }
@@ -43,19 +45,20 @@ message CollectorStatus {
 // Collector is a container that holds both the configuration and the operational 
 //  state of the collector
 message Collector {
-  CollectorSpec   spec      = 1; // Configuration Specification 
-  CollectorStatus  status    = 2; // Operational Status
+  types.ApiStatus     api_status    = 1;
+  CollectorSpec       spec          = 2; // Configuration Specification 
+  CollectorStatus     status        = 3; // Operational Status
 }
 
 // CollectorConfigsMsg is used in requests and is a batchable request message
 message CollectorConfigMsg {
-  repeated CollectorSpec specs = 1;
+  repeated CollectorSpec request = 1;
 }
 
 // CollectorConfigsMsg message is used as response for API requests.
 message CollectorResponseMsg {
   types.ApiStatus     status      = 1; // Status of the API request the resulted in this response
-  repeated Collector  collectors  = 2; // List of collectors
+  repeated Collector  response  = 2; // List of collectors
 }
 
 // ExportFormat is a enumeration of export formats supported

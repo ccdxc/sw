@@ -9,6 +9,9 @@ using telemetry::Telemetry;
 using telemetry::MirrorSessionSpec;
 using telemetry::MirrorSession;
 using telemetry::MirrorSessionId;
+using telemetry::CollectorSpec;
+using telemetry::Collector;
+using telemetry::ExportControlId;
 
 namespace hal {
 
@@ -27,6 +30,14 @@ typedef uint8_t mirror_session_id_t;
 DEFINE_ENUM(mirror_desttype_en, MIRROR_DESTTYPES)
 #undef MIRROR_DESTTYPES
 
+#define EXPORT_FORMATS(ENTRY)                                   \
+    ENTRY(EXPORT_FORMAT_NONE,       0,  "None")                 \
+    ENTRY(EXPORT_FORMAT_IPFIX,      1,  "IPFIx Format")         \
+    ENTRY(EXPORT_FORMAT_NETFLOW9,   2,  "Netflow v9 Format")
+
+DEFINE_ENUM(export_formats_en, EXPORT_FORMATS)
+#undef EXPORT_FORMATS
+
 typedef struct mirror_session_s {
     hal_spinlock_t slock;
     mirror_session_id_t id;
@@ -43,8 +54,24 @@ typedef struct mirror_session_s {
     } mirror_destination_u;
 } __PACK__ mirror_session_t;
 
+
+typedef struct collector_config_s {
+    uint64_t            exporter_id;
+    uint16_t            vlan;
+    ip_addr_t           src_ip;
+    ip_addr_t           dst_ip;
+    uint16_t            protocol;
+    uint16_t            dport;
+    uint32_t            template_id;
+    export_formats_en   format;
+} collector_config_t;
+
 hal_ret_t mirror_session_create(MirrorSessionSpec *spec, MirrorSession *rsp);
 hal_ret_t mirror_session_delete(MirrorSessionId *id, MirrorSession *rsp);
+hal_ret_t collector_create(CollectorSpec *spec, Collector *resp);
+hal_ret_t collector_update(CollectorSpec *spec, Collector *resp);
+hal_ret_t collector_get(ExportControlId *id, Collector *resp);
+hal_ret_t collector_delete(ExportControlId *id, Collector *resp);
 }
 
 #endif // __TELEMETRY_HPP__

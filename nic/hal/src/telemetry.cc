@@ -252,4 +252,65 @@ mirror_session_delete(MirrorSessionId *id, MirrorSession *rsp)
     return ret;
 }
 
+hal_ret_t
+collector_create(CollectorSpec *spec, Collector *resp) {
+    collector_config_t cfg;
+    hal_ret_t ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
+    HAL_TRACE_DEBUG("PI-ExportControl:{}: ExportID {}", __FUNCTION__,
+            spec->export_controlid().id());
+    
+    cfg.exporter_id = spec->export_controlid().id();
+    ip_addr_spec_to_ip_addr(&cfg.src_ip, spec->src_ip());
+    ip_addr_spec_to_ip_addr(&cfg.dst_ip, spec->dest_ip());
+    cfg.template_id = spec->template_id();
+    switch (spec->format()) {
+        case telemetry::ExportFormat::IPFIX:
+            cfg.format = EXPORT_FORMAT_IPFIX;
+            break;
+        case telemetry::ExportFormat::NETFLOWV9:
+            cfg.format = EXPORT_FORMAT_NETFLOW9;
+            break;
+        default:
+            HAL_TRACE_DEBUG("PI-Collector:{}: Unknown format type {}", spec->template_id());
+            return HAL_RET_INVALID_ARG;
+    }
+    cfg.protocol = spec->protocol();
+    cfg.dport = spec->dest_port().port();
+    auto encap = spec->encap();
+    if (encap.encap_type() == types::ENCAP_TYPE_DOT1Q) {
+        cfg.vlan = encap.encap_value();
+    } else {
+        HAL_TRACE_DEBUG("PI-Collector:{}: Unsupport Encap {}", encap.encap_type());
+        return HAL_RET_INVALID_ARG;
+    }
+    ret = hal::pd::pd_collector_create(&cfg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Collector:{}: PD API failed {}", __FUNCTION__, ret);
+    }
+    HAL_TRACE_DEBUG("PI-ExportControl:{}: SUCCESS: ExportID {}, dest {}, source {},  port {}", __FUNCTION__,
+    spec->export_controlid().id(), ipaddr2str(&cfg.dst_ip), ipaddr2str(&cfg.src_ip), cfg.dport);
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    return ret;
+}
+
+hal_ret_t
+collector_update(CollectorSpec *spec, Collector *resp) {
+    // implementation TBD
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+collector_get(ExportControlId *id, Collector *resp) {
+    
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+collector_delete(ExportControlId *id, Collector *resp) {
+    
+    return HAL_RET_OK;
+}
+
 } // namespace hal

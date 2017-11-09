@@ -14,6 +14,7 @@ import config.objects.flow            as flow
 import config.objects.flow_endpoint   as flowep
 import config.objects.endpoint        as endpoint
 import config.objects.tenant          as tenant
+import config.objects.collector       as collector
 import config.objects.l4lb            as l4lb
 
 from config.store                      import Store
@@ -440,6 +441,7 @@ class SessionObjectHelper:
                 if ep1 == ep2: continue
                 if ep1.tenant != ep2.tenant: continue
                 self.__process_ep_pair(ep1, ep2)
+        self.__add_collector_sessions()
         return
 
     def Configure(self):
@@ -498,6 +500,20 @@ class SessionObjectHelper:
             objs = []
             cfglogger.error("INVALID Config Filter in testspec.")
         return objs
+
+    def __add_collector_sessions(self):
+        #pdb.set_trace()
+        for ep1, ep2, spec in collector.CollectorHelper.GetCollectorSessions():
+            ten1 = ep1.tenant
+            ten2 = ep2.tenant
+
+            assert(ten1 == ten2)
+            tenant = ten1
+
+            flowep1 = flowep.FlowEndpointObject(ep = ep1)
+            flowep2 = flowep.FlowEndpointObject(ep = ep2)
+
+            self.__process_ipv4(flowep1, flowep2, spec)
 
 SessionHelper = SessionObjectHelper()
 

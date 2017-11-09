@@ -11,6 +11,7 @@ import config.objects.segment   as segment
 import config.objects.lif       as lif
 import config.objects.tunnel    as tunnel
 import config.objects.span      as span
+import config.objects.collector as collector
 import config.objects.l4lb      as l4lb
 
 import config.objects.security_group    as security_group
@@ -82,6 +83,8 @@ class TenantObject(base.ConfigObjectBase):
         if self.IsSpan():
             self.obj_helper_span = span.SpanSessionObjectHelper()
             self.__create_span_sessions()
+            self.obj_helper_collector = collector.CollectorHelper
+            self.__create_collectors()
 
         self.obj_helper_sg = security_group.SecurityGroupObjectHelper()
         self.obj_helper_sg.main(self)
@@ -198,6 +201,10 @@ class TenantObject(base.ConfigObjectBase):
     def __create_span_sessions(self):
         self.obj_helper_span.main(self, self.spec)
         return
+
+    def __create_collectors(self):
+        self.obj_helper_collector.main(self, self.spec)
+        return 
 
     def AllocLif(self):
         return self.obj_helper_lif.Alloc()

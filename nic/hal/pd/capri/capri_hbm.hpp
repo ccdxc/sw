@@ -38,6 +38,7 @@ int32_t capri_hbm_write_mem(uint64_t addr, uint8_t *buf, uint32_t size);
 #define JP4_PRGM            "p4_program"
 #define JP4_SEMAPHORE       "semaphore"
 #define JP4_REPL            "mcast_repl"
+#define JP4_IPFIX           "ipfix"
 
 #define CAPRI_HBM_REG_NMDR_RX            "nmdr-rx"
 #define CAPRI_HBM_REG_NMDR_TX            "nmdr-tx"

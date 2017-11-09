@@ -461,6 +461,14 @@ def DeleteSpanSessions(objlist):
              stub.MirrorSessionDelete)
     return
 
+def ConfigureCollectors(objlist):
+    if IsHalDisabled(): return
+    stub = telemetry_pb2.TelemetryStub(HalChannel)
+    __config(objlist, telemetry_pb2.CollectorConfigMsg,
+             stub.CollectorCreate)
+    return
+
+
 def ConfigureNetworks(objlist):
     if IsHalDisabled(): return
     stub = nw_pb2.NetworkStub(HalChannel)

@@ -55,4 +55,8 @@ modules:
             - L3_SPAN_RSPAN_ERSPAN_LOCAL_INGRESS_UPLINK
             - L3_SPAN_RSPAN_ERSPAN_LOCAL_INGRESS_PC
 
-
+    #- module:
+    #    name    : TELEMETRY_EXPORT
+    #    spec    : l2_notruncate.testspec
+    #    iterate:
+    #        - SPAN_LOCAL_INGRESS_UPLINK

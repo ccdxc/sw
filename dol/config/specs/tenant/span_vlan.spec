@@ -15,6 +15,9 @@ tunnels:
 
 security_profile: ref://store/objects/id=SEC_PROF_DEFAULT
 
+collectors:
+    - spec  : ref://store/specs/id=COLLECTOR_IPFIX
+
 span_sessions:
     - spec  : ref://store/specs/id=SPAN_TYPE_LOCAL
     - spec  : ref://store/specs/id=SPAN_TYPE_RSPAN

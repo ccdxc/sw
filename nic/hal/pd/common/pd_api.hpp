@@ -634,6 +634,7 @@ pd_descriptor_aol_get(pd_descr_aol_t *src, pd_descr_aol_t *dst);
 hal_ret_t pd_mirror_session_create(pd_mirror_session_args_t *args);
 hal_ret_t pd_mirror_session_get(pd_mirror_session_args_t *args);
 hal_ret_t pd_mirror_session_delete(pd_mirror_session_args_t *args);
+hal_ret_t pd_collector_create(collector_config_t *cfg);
 
 hal_ret_t pd_crypto_alloc_key(int32_t *key_idx);
 hal_ret_t pd_crypto_free_key(int32_t key_idx);
