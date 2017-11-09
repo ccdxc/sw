@@ -153,7 +153,7 @@ hal_control_start (void *ctxt)
     }
 
     // initialize the port mac and serdes functions
-    hal::pd::port::port_init(false /* is_sim */);
+    hal::pd::port::port_init();
 
     // keep polling the queue and serve requests
     hal_control_loop();

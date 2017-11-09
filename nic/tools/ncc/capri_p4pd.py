@@ -45,7 +45,10 @@ def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_
     for f in files:
         if ".py" in f:
             output_dir = output_py_dir
-            genf = cli_name + '_cli.py'
+            if "debug" in f:
+                genf = cli_name + '_debug_cli.py'
+            else:
+                genf = cli_name + '_cli.py'
         else:
             if ".h" in f:
                 output_dir = output_h_dir

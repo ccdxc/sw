@@ -70,7 +70,8 @@ int mac_temac_mdio_rd_haps(uint32_t chip, uint32_t port_num, uint32_t phy_addr,
 
     //TODO add MDIO timeouts
     reg_data = 0x0;
-    while (mdio_ready == 0 && !port_mock_mode) {
+    while (mdio_ready == 0 &&
+           g_hal_state->catalog()->access_mock_mode() == false) {
         mac_temac_regrd_haps (chip, port_num, MDIO_CTRL_OFFSET_HAPS, &reg_data);
         mdio_ready = (reg_data >> 7) & 0x1;
     }
@@ -98,7 +99,8 @@ int mac_temac_mdio_wr_haps(uint32_t chip, uint32_t port_num, uint32_t phy_addr,
 
     //TODO add MDIO timeouts
     reg_data = 0x0;
-    while (mdio_ready == 0 && !port_mock_mode) {
+    while (mdio_ready == 0 &&
+           g_hal_state->catalog()->access_mock_mode() == false) {
         mac_temac_regrd_haps (chip, port_num, MDIO_CTRL_OFFSET_HAPS, &reg_data);
         mdio_ready = (reg_data >> 7) & 0x1;
     }
@@ -477,9 +479,13 @@ bool mac_faults_get_default (uint32_t port_num)
 }
 
 hal_ret_t
-hal::pd::port::port_mac_init(bool is_sim)
+hal::pd::port::port_mac_fn_init()
 {
     hal::pd::mac_fn_t *mac_fn = &hal::pd::port::mac_fn;
+
+    hal::utils::platform_type_t platform_type =
+                        g_hal_state->catalog()->platform_type();
+
 
     mac_fn->mac_cfg         = &mac_cfg_default;
     mac_fn->mac_enable      = &mac_enable_default;
@@ -489,20 +495,24 @@ hal::pd::port::port_mac_init(bool is_sim)
     mac_fn->mac_intr_enable = &mac_intr_enable_default;
     mac_fn->mac_faults_get  = &mac_faults_get_default;
 
-    if (is_sim == true) {
-        mac_fn->mac_cfg         = &mac_cfg_sim;
-        mac_fn->mac_enable      = &mac_enable_sim;
-        mac_fn->mac_soft_reset  = &mac_soft_reset_sim;
-        mac_fn->mac_stats_reset = &mac_stats_reset_sim;
-        mac_fn->mac_intr_clear  = &mac_intr_clear_sim;
-        mac_fn->mac_intr_enable = &mac_intr_enable_sim;
-    } else {
-        mac_fn->mac_cfg         = &mac_cfg_haps;
-        mac_fn->mac_enable      = &mac_enable_haps;
-        mac_fn->mac_soft_reset  = &mac_soft_reset_haps;
-        mac_fn->mac_stats_reset = &mac_stats_reset_haps;
-        mac_fn->mac_intr_clear  = &mac_intr_clear_haps;
-        mac_fn->mac_intr_enable = &mac_intr_enable_haps;
+    switch (platform_type) {
+        case hal::utils::PLATFORM_TYPE_HAPS:
+            mac_fn->mac_cfg         = &mac_cfg_haps;
+            mac_fn->mac_enable      = &mac_enable_haps;
+            mac_fn->mac_soft_reset  = &mac_soft_reset_haps;
+            mac_fn->mac_stats_reset = &mac_stats_reset_haps;
+            mac_fn->mac_intr_clear  = &mac_intr_clear_haps;
+            mac_fn->mac_intr_enable = &mac_intr_enable_haps;
+            break;
+
+        default:
+            mac_fn->mac_cfg         = &mac_cfg_sim;
+            mac_fn->mac_enable      = &mac_enable_sim;
+            mac_fn->mac_soft_reset  = &mac_soft_reset_sim;
+            mac_fn->mac_stats_reset = &mac_stats_reset_sim;
+            mac_fn->mac_intr_clear  = &mac_intr_clear_sim;
+            mac_fn->mac_intr_enable = &mac_intr_enable_sim;
+            break;
     }
 
     return HAL_RET_OK;

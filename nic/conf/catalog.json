@@ -3,6 +3,10 @@
 
     "tenant_id"  : "1",
 
+    "platform_type" : "haps",
+
+    "access_mock_mode" : "true",
+
     "num_asics" : "1",
     "asics" :
     [

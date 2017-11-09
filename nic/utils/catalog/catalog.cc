@@ -119,6 +119,16 @@ catalog::populate_uplink_ports(ptree &prop_tree)
     return HAL_RET_OK;
 }
 
+platform_type_t
+catalog_platform_type_to_platform_type(std::string platform_type)
+{
+    if (platform_type == "haps") {
+        return PLATFORM_TYPE_HAPS;
+    }
+
+    return PLATFORM_TYPE_NONE;
+}
+
 hal_ret_t
 catalog::populate_catalog(ptree &prop_tree)
 {
@@ -126,9 +136,18 @@ catalog::populate_catalog(ptree &prop_tree)
 
     catalog_db_.num_asics = prop_tree.get<uint32_t>("num_asics", 0);
 
-    catalog_db_.num_uplink_ports = prop_tree.get<uint32_t>("num_uplink_ports", 0);
+    catalog_db_.num_uplink_ports =
+                            prop_tree.get<uint32_t>("num_uplink_ports", 0);
 
     catalog_db_.tenant_id = prop_tree.get<uint32_t>("tenant_id", 0);
+
+    catalog_db_.access_mock_mode = prop_tree.get<bool>("access_mock_mode", false);
+
+    std::string platform_type =
+                            prop_tree.get<std::string>("platform_type", "");
+
+    catalog_db_.platform_type =
+                        catalog_platform_type_to_platform_type(platform_type);
 
     populate_asics(prop_tree);
 

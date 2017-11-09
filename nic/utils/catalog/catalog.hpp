@@ -37,11 +37,22 @@ typedef struct catalog_asic_s {
     catalog_asic_port_t ports[MAX_ASIC_PORTS];
 } catalog_asic_t;
 
+typedef enum platform_type_e {
+    PLATFORM_TYPE_NONE = 0,
+    PLATFORM_TYPE_HAPS = 1,
+} platform_type_t;
+
 typedef struct catalog_s {
     uint32_t card_index;         // card index for the board
     uint32_t num_asics;          // number of asics on the board
     uint32_t num_uplink_ports;   // number of uplinks in the board
     uint32_t tenant_id;          // tenant ID
+
+    // temporary platform type until HW access is abstracted
+    platform_type_t  platform_type;
+
+    // do not access HW. Dump only reads/writes
+    bool     access_mock_mode;
 
     catalog_asic_t asics[MAX_ASICS];
     catalog_uplink_port_t uplink_ports[MAX_UPLINK_PORTS];
@@ -64,6 +75,10 @@ public:
     uint32_t num_uplink_ports();
 
     uint32_t tenant_id();
+
+    platform_type_t platform_type() { return catalog_db_.platform_type; }
+
+    bool access_mock_mode() { return catalog_db_.access_mock_mode; }
 
     ~catalog();
 

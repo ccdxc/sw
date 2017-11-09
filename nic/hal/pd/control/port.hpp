@@ -10,23 +10,20 @@
 extern uint32_t read_reg_base (uint32_t chip, uint64_t addr);
 extern void write_reg_base(uint32_t chip, uint64_t addr, uint32_t  data);
 
-// flag to control writing to HW
-extern int port_mock_mode;
-
-#define WRITE_REG_BASE(chip, addr, data) {                     \
-    HAL_TRACE_DEBUG("PORT: {0:s}: chip {1:d} addr 0x{2:x} data 0x{3:x}",   \
-                    __FUNCTION__, chip, addr, data);           \
-    if (!port_mock_mode) {                                     \
-        write_reg_base(chip, addr, data);                      \
-    }                                                          \
+#define WRITE_REG_BASE(chip, addr, data) {                                  \
+    HAL_TRACE_DEBUG("PORT: {0:s}: chip {1:d} addr 0x{2:x} data 0x{3:x}",    \
+                    __FUNCTION__, chip, addr, data);                        \
+    if (g_hal_state->catalog()->access_mock_mode() == false) {              \
+        write_reg_base(chip, addr, data);                                   \
+    }                                                                       \
 }
 
-#define READ_REG_BASE(chip, addr, data) {         \
-    HAL_TRACE_DEBUG("PORT: {0:s}: chip {1:d} addr 0x{2:x}",   \
-                    __FUNCTION__, chip, addr);    \
-    if (!port_mock_mode) {                        \
-        *data = read_reg_base(chip, addr);        \
-    }                                             \
+#define READ_REG_BASE(chip, addr, data) {                       \
+    HAL_TRACE_DEBUG("PORT: {0:s}: chip {1:d} addr 0x{2:x}",     \
+                    __FUNCTION__, chip, addr);                  \
+    if (g_hal_state->catalog()->access_mock_mode() == false) {  \
+        *data = read_reg_base(chip, addr);                      \
+    }                                                           \
 }
 
 namespace hal {
@@ -240,10 +237,10 @@ public:
 
     static hal_ret_t port_event_notify(uint8_t opn, void *ctxt);
 
-    static hal_ret_t port_init(bool is_sim);
+    static hal_ret_t port_init();
 
-    static hal_ret_t port_mac_init(bool is_sim);
-    static hal_ret_t port_serdes_init(bool is_sim);
+    static hal_ret_t port_mac_fn_init();
+    static hal_ret_t port_serdes_fn_init();
 
     static mac_fn_t mac_fn;
 
