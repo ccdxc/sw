@@ -49,7 +49,14 @@ quiesce_transmit_pkt(unsigned char* pkt,
         HAL_TRACE_DEBUG("quiesce: txpkt cpu_header src_lif={} hw_vlan_id={} flags={}",
                 cpu_header.src_lif, cpu_header.hw_vlan_id, cpu_header.flags);
 
-        my_gl_ctx->queue_txpkt(pkt, len, &cpu_header, &p4plus_header);
+        my_gl_ctx->queue_txpkt(pkt,
+                               len,
+                               &cpu_header,
+                               &p4plus_header,
+                               hal::SERVICE_LIF_CPU,
+                               CPU_ASQ_QTYPE,
+                               types::CPUCB_ID_QUIESCE,
+                               CPU_SCHED_RING_ASQ);
     }
 }
 
@@ -65,6 +72,7 @@ quiesce_exec_cpu_lif(fte::ctx_t& ctx)
 {
     my_gl_ctx = &ctx;
     static uint8_t          count = 1;
+    HAL_TRACE_DEBUG("quiesce_exec_cpu_lif: count: {}", count);
     if (count == 1) {
         if (!ctx.protobuf_request()) {
             quiesce_message_tx();
@@ -85,7 +93,7 @@ fte::pipeline_action_t
 quiesce_exec(fte::ctx_t& ctx)
 {
     const fte::cpu_rxhdr_t* cpu_rxhdr = ctx.cpu_rxhdr();
-
+    HAL_TRACE_DEBUG("quiesce_exec: lif: {}",  cpu_rxhdr->lif);
     if (cpu_rxhdr && (cpu_rxhdr->lif == hal::SERVICE_LIF_CPU)) {
         return quiesce_exec_cpu_rx_lif(ctx);
     } else {

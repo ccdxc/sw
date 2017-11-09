@@ -17,7 +17,8 @@ cpu_rx_read_shared_stage0_start:
     CAPRI_CLEAR_TABLE0_VALID
     // Store timestamp in the quisce pkt trailer
     CAPRI_OPERAND_DEBUG(r6)
-    phvwr   p.quiesce_pkt_trlr_timestamp, r6
+    phvwr   p.quiesce_pkt_trlr_timestamp, r6.wx
+    
     phvwr   p.common_phv_qstate_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
     phvwr   p.to_s3_payload_len, k.cpu_app_header_packet_len
     phvwr   p.common_phv_debug_dol, d.u.cpu_rxdma_initial_action_d.debug_dol

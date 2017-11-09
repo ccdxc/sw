@@ -192,3 +192,7 @@ struct ipsec_esp_header_t {
     uint32_t spi;
     uint32_t seqno;
 }__attribute__ ((__packed__));
+
+struct quiesce_trailer_t {
+    uint32_t timestamp;
+}__attribute__ ((__packed__));

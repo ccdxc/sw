@@ -3,6 +3,7 @@
  * This file implements p4+ program in RXDMA for handling CPU bound packets
  *********************************************************************************/
 #include "../common-p4+/common_rxdma_dummy.p4"
+#include "cpu_rxtx_common.p4"
 
 /*******************************************************
  * Table and actions
@@ -101,12 +102,6 @@ header_type common_global_phv_t {
         flags                   : 8;
         debug_dol               : 8;
     }
-}
-
-header_type quiesce_pkt_trlr_t {
-    fields {
-        timestamp               : 64; 
-    }    
 }
 
 header_type dma_phv_pad_t {

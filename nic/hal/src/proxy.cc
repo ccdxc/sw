@@ -45,7 +45,7 @@ proxy_meta_init() {
         (proxy_meta_t) {true, 1, {SERVICE_LIF_GC, 1, {0, 1, 1}}};
 
     g_meta[types::PROXY_TYPE_CPU] = 
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 2, (uint8_t)round(log2(types::CpucbId_ARRAYSIZE))}}};
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 2, (uint8_t)ceil(log2(types::CpucbId_ARRAYSIZE))}}};
 
     g_meta[types::PROXY_TYPE_IPFIX] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 1}}};
@@ -206,6 +206,10 @@ proxy_program_lif(proxy_t* proxy)
             qstate_params.dont_zero_memory = true;
             qstate_params.type[meta_qtype_info->qtype_val].entries = meta_qtype_info->qstate_entries;
             qstate_params.type[meta_qtype_info->qtype_val].size = meta_qtype_info->qstate_size;
+            HAL_TRACE_DEBUG("Programming LIF: {}, entries: {}, size: {}",
+                    meta_lif_info->lif_id,
+                    qstate_params.type[meta_qtype_info->qtype_val].entries,
+                    qstate_params.type[meta_qtype_info->qtype_val].size);
             int32_t rs = g_lif_manager->InitLIFQState(meta_lif_info->lif_id, &qstate_params);
             if(rs != 0) {
                 HAL_TRACE_ERR("Failed to program lif qstate for Lif {}, qtype {}: err: 0x{0:x}",

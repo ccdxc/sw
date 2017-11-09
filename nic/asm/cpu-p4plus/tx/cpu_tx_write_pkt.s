@@ -9,9 +9,9 @@ struct cpu_tx_write_pkt_k k;
     .align
 cpu_tx_write_pkt_start:
     CAPRI_CLEAR_TABLE_VALID(0)
-    CAPRI_OPERAND_DEBUG(k.to_s5_page_addr)
-    CAPRI_OPERAND_DEBUG(k.to_s5_len)
- 
+    smeqb   c5, k.{common_phv_flags_sbit0_ebit6...common_phv_flags_sbit7_ebit7}, CPUCB_FLAG_ADD_QS_PKT_TRLR, CPUCB_FLAG_ADD_QS_PKT_TRLR
+
+
 dma_cmd_global_intrinsic:
     phvwri  p.p4_intr_global_tm_iport, 9
     phvwri  p.p4_intr_global_tm_oport, 11
@@ -46,8 +46,8 @@ dma_cmd_data:
     
     phvwr   p.dma_cmd2_dma_cmd_addr, r4
     phvwr   p.dma_cmd2_dma_cmd_size, r5
-    phvwr   p.dma_cmd2_dma_cmd_eop, 1
-    b       cpu_tx_write_pkt_done
+    phvwr.!c5 p.dma_cmd2_dma_cmd_eop, 1
+    b       cpu_tx_write_quiesce_trailer 
     nop
 
 dma_cmd_vlan_rewrite_header:
@@ -78,8 +78,18 @@ dma_cmd_trailer:
     phvwri  p.dma_cmd4_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
     phvwr   p.dma_cmd4_dma_cmd_addr, r4
     phvwr   p.dma_cmd4_dma_cmd_size, r5
-    phvwri  p.dma_cmd4_dma_pkt_eop, 1
-    phvwr   p.dma_cmd4_dma_cmd_eop, 1
+    phvwri.!c5  p.dma_cmd4_dma_pkt_eop, 1
+    phvwri.!c5  p.dma_cmd4_dma_cmd_eop, 1
+
+cpu_tx_write_quiesce_trailer:
+    bcf     [!c5], cpu_tx_write_pkt_done
+    nop
+    
+    CAPRI_DMA_CMD_PHV2PKT_SETUP(dma_cmd5_dma_cmd,
+                                quiesce_pkt_trlr_timestamp,
+                                quiesce_pkt_trlr_timestamp)
+    CAPRI_DMA_CMD_PKT_STOP(dma_cmd5_dma)
+    CAPRI_DMA_CMD_STOP(dma_cmd5_dma_cmd)
 
 cpu_tx_write_pkt_done:
     nop.e

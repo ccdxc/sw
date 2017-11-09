@@ -195,6 +195,10 @@ p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
             HAL_TRACE_DEBUG("asq base: {:#x}", asq_base);
             data.u.cpu_tx_initial_action_d.asq_base = asq_base;
         }
+
+        // flags
+        data.u.cpu_tx_initial_action_d.flags = cpucb_pd->cpucb->cfg_flags;
+        HAL_TRACE_DEBUG("cpucb: tx: flags: {}", data.u.cpu_tx_initial_action_d.flags);
     }
 
     HAL_TRACE_DEBUG("Programming tx stage0 at hw-id: 0x{0:x}", hwid);

@@ -15,7 +15,7 @@ cpu_tx_asq_consume_start:
     
     /* data will be in r3 */
     add     r5, k.to_s2_asq_cidx, 1
-    CAPRI_RING_DOORBELL_DATA(0, 0, CPU_SCHED_RING_ASQ, r5)
+    CAPRI_RING_DOORBELL_DATA(0, k.common_phv_qid, CPU_SCHED_RING_ASQ, r5)
     memwr.dx        r4, r3
     nop.e
     nop

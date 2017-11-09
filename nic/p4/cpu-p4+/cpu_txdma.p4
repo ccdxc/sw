@@ -1,4 +1,5 @@
 #include "../common-p4+/common_txdma_dummy.p4"
+#include "cpu_rxtx_common.p4"
 
 /*******************************************************
  * Table and actions
@@ -26,8 +27,11 @@
 
 #define GENERATE_GLOBAL_K \
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
+    modify_field(common_global_scratch.qid, common_phv.qid); \
     modify_field(common_global_scratch.write_vlan_tag, common_phv.write_vlan_tag); \
-    
+    modify_field(common_global_scratch.flags, common_phv.flags); \
+   
+
 /********************
  * Packet Headers
  *******************/
@@ -79,6 +83,7 @@ header_type cpu_txdma_initial_action_t {
         CAPRI_QSTATE_HEADER_RING(5) // Total 32 bytes
         
         asq_base    : HBM_ADDRESS_WIDTH; 
+        flags                       : 8;
     }    
 }
 
@@ -100,7 +105,9 @@ header_type common_global_phv_t {
     fields {
         // global k (max 128)
         qstate_addr             : HBM_ADDRESS_WIDTH;
+        qid                     : 24;
         write_vlan_tag          : 1;
+        flags                   : 8;
     }
 }
 
@@ -180,9 +187,12 @@ metadata to_stage_5_phv_t to_s5_scratch;
 @pragma dont_trim
 metadata vlan_hdr_t vlan_hdr_entry;
 
+@pragma dont_trim
+metadata quiesce_pkt_trlr_t quiesce_pkt_trlr;
+
 header_type dma_phv_pad_t {
     fields {
-        dma_pad                 : 480;
+        dma_pad                 : 448;
     }    
 }
 
@@ -204,6 +214,9 @@ metadata dma_cmd_phv2pkt_t dma_cmd3;
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t dma_cmd4;
 
+@pragma dont_trim
+metadata dma_cmd_phv2pkt_t dma_cmd5;
+
 /******************************************************************************
  * Action functions to generate k_struct and d_struct
  *
@@ -215,7 +228,7 @@ metadata dma_cmd_mem2pkt_t dma_cmd4;
  * Stage 0 table 0 action
  */
 action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
-                             pi_0, ci_0, asq_base) {
+                             pi_0, ci_0, asq_base, flags) {
     // k + i for stage 0
 
     // from intrinsic
@@ -224,6 +237,7 @@ action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, 
     modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
     modify_field(p4_txdma_intr_scratch.qtype, p4_txdma_intr.qtype);
     modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
+    modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
 
     // from app header
     //modify_field(cpu_scratch_app.p4plus_app_id, cpu_app_header.p4plus_app_id);
@@ -247,6 +261,7 @@ action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, 
     modify_field(cpu_txdma_initial_d.ci_0, ci_0);
     
     modify_field(cpu_txdma_initial_d.asq_base, asq_base);
+    modify_field(cpu_txdma_initial_d.flags, flags);
 }
 
 // Stage 1 table 0
