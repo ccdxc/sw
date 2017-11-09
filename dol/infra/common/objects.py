@@ -96,7 +96,7 @@ class FrameworkTemplateObject(FrameworkObject):
     def __init__(self):
         super().__init__()
         return
-    
+
 class FrameworkFieldObject(FrameworkObject):
     def __init__(self):
         super().__init__()
@@ -186,10 +186,10 @@ class MacAddressBase(FrameworkFieldObject):
             #Assume its converted.
             self.num = integer
         return
-    
+
     def __str__(self):
         return self.get()
-        
+
 
     def get(self):
         by = [0] * 6
@@ -209,7 +209,7 @@ class MacAddressBase(FrameworkFieldObject):
     def update(self, macincr):
         self.num += macincr
         return
-    
+
     def __eq__(self, other):
         return other and self.getnum() == other.getnum()
 
@@ -228,7 +228,7 @@ class MacAddress(FrameworkFieldObject):
 
     def update(self, macincr):
         self.value.update(macincr)
-        
+
 
 
 class MacAddressStep(FrameworkFieldObject):
@@ -264,7 +264,7 @@ class IpAddress(FrameworkFieldObject):
 
     def __str__(self):
         return self.get()
-    
+
     def get(self):
         return str(self.value)
 
@@ -273,7 +273,7 @@ class IpAddress(FrameworkFieldObject):
 
     def __eq__(self, other):
         return other and self.value == other.value
-    
+
     def __hash__(self):
         return hash(self.value)
 
@@ -318,7 +318,7 @@ class Ipv6Address(FrameworkFieldObject):
 
     def __hash__(self):
         return hash(self.value)
-    
+
     def get(self):
         return str(self.value)
 
@@ -528,7 +528,7 @@ class CallbackField(FrameworkFieldObject):
     @staticmethod
     def SetPackagePath(path):
         CallbackField.__package_path = path
-        
+
     def __process_args(self):
         argstr = self.valobj.params[self.pidx]
         if '=' not in argstr:

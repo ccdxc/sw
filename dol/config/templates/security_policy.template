@@ -1,0 +1,18 @@
+#Security Policy Template
+meta:
+    id      : SECURITY_POLICY
+    package : config.objects
+    module  : security_policy
+default     : None
+in_rules    :
+    - rule       :
+        action   : None
+        log      : None
+        alg      : None
+        svcs     :
+            - svc:
+                proto         : none
+                dst_port      : none
+                icmp_msg_type : none
+                alg           : none
+

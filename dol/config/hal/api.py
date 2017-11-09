@@ -430,6 +430,21 @@ def GetSecurityGroups(objlist):
     stub = nwsec_pb2.NwSecurityStub(HalChannel)
     __get(objlist, nwsec_pb2.SecurityGroupGetRequestMsg,
           stub.SecurityGroupGet)
+
+def ConfigureSecurityGroupPolicies(objlist, update = False):
+    if IsHalDisabled(): return
+    stub = nwsec_pb2.NwSecurityStub(HalChannel)
+    api = stub.SecurityGroupPolicyCreate
+    if update: api = stub.SecurityGroupPolicyUpdate
+    __config(objlist, nwsec_pb2.SecurityGroupPolicyRequestMsg, api)
+    return
+
+def GetSecurityGroupPolicies(objlist):
+    if IsHalDisabled():
+        return
+    stub = nwsec_pb2.NwSecurityStub(HalChannel)
+    __get(objlist, nwsec_pb2.SecurityGroupPolicyGetRequestMsg,
+          stub.SecurityGroupPolicyGet)
     return
 
 def ConfigureSpanSessions(objlist):

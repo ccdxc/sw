@@ -18,21 +18,26 @@ from config.objects.proxy_service       import ProxyServiceHelper
 from config.objects.ipsec_proxy_cb      import IpsecCbHelper
 from config.objects.cpu                 import CpuHelper
 
-from infra.common.logging import cfglogger as cfglogger
 from config.objects.swdr                import SwDscrRingHelper
 from config.objects.brq                 import BRQHelper
 from config.objects.timer               import TimerHelper
+from config.objects.security_policy     import SecurityGroupPolicyHelper
+from infra.common.logging               import cfglogger as cfglogger
 
 def process(topospec):
     resmgr.InitQos(topospec)
     # Security Profiles
     SecurityProfileHelper.main(topospec)
+
     # Uplinks
     UplinkHelper.main(topospec)
     # UplinkPC
     UplinkPcHelper.main(topospec)
     # Generate and Configure Tenants
     TenantHelper.main(topospec)
+
+    # Security Groups
+    SecurityGroupPolicyHelper.main(topospec)
 
     # Enable all segments on Uplinks and UplinkPcs
     UplinkHelper.ConfigureAllSegments()
@@ -53,13 +58,13 @@ def process(topospec):
 
     # Generate all sessions
     SessionHelper.main()
-   
+
     # Generate all sessions
     RdmaSessionHelper.main()
 
     ipsec = getattr(topospec, 'ipsec', False)
     if ipsec:
-        IpsecCbHelper.main()    
+        IpsecCbHelper.main()
 
     CpuHelper.main(topospec)
     # Generate ACLs

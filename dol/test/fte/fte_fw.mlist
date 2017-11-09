@@ -1,0 +1,19 @@
+# Fte Firewall Test Modules List
+feature:
+    id              : fte
+    sub             : fw
+    package         : test.eth
+    module          : eth
+    enable          : True
+    ignore          : False
+    args            :
+        maxflows    : 4
+
+modules:
+    - module:
+        name        : FW
+        spec        : tx.testspec
+        iterate     :
+              - flow      : filter://type=IPV4,proto=UDP,label=FTE,direction=IFLOW,sgtype=INTER
+                srcseg    : filter://native=False
+

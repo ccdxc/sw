@@ -196,6 +196,9 @@ extract_rules_from_sg_spec(SecurityGroupPolicySpec& spec,
                 //ToDo:Cleanup the nwsec_plcy_rules allocated till now
                 return HAL_RET_OOM;
            }
+           nwsec_plcy_rules->action  = spec.policy_rules().in_fw_rules(i).action();
+           nwsec_plcy_rules->log     = spec.policy_rules().in_fw_rules(i).log();
+
            svcs_sz = spec.policy_rules().in_fw_rules(i).svc_size();
            HAL_TRACE_DEBUG("Policy_rules::Services Size {}", svcs_sz);
            for (uint32_t svcs_cnt = 0; svcs_cnt < svcs_sz; svcs_cnt++) {
@@ -218,13 +221,14 @@ extract_rules_from_sg_spec(SecurityGroupPolicySpec& spec,
                     nwsec_plcy_svc->icmp_msg_type =
                             spec.policy_rules().in_fw_rules(i).svc(svcs_cnt).icmp_msg_type();
                 }
-                HAL_TRACE_DEBUG("Policy_rules::Ipproto {}, port {}", nwsec_plcy_svc->ipproto, nwsec_plcy_svc->dst_port);
+                nwsec_plcy_svc->alg = spec.policy_rules().in_fw_rules(i).svc(svcs_cnt).alg();
+                HAL_TRACE_DEBUG("Policy_rules::Ipproto {}, port {} alg {}", nwsec_plcy_svc->ipproto, nwsec_plcy_svc->dst_port, nwsec_plcy_svc->alg);
                 //To Do: Check to Get lock on nwsec_plcy_rules ??
-                dllist_add(&nwsec_plcy_rules->fw_svc_list_head,
-                           &nwsec_plcy_svc->lentry);
+                dllist_add_tail(&nwsec_plcy_rules->fw_svc_list_head,
+                                &nwsec_plcy_svc->lentry);
             }
-            dllist_add(&nwsec_plcy_cfg->rules_head,
-                       &nwsec_plcy_rules->lentry);
+            dllist_add_tail(&nwsec_plcy_cfg->rules_head,
+                            &nwsec_plcy_rules->lentry);
         }
     }
     return ret;

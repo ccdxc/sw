@@ -24,7 +24,7 @@ class SecurityGroupObject(base.ConfigObjectBase):
         self.local = local
         self.eps = eps
         self.Show()
-        
+
         self.__update_eps()
         return
 
@@ -61,7 +61,7 @@ class SecurityGroupObject(base.ConfigObjectBase):
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):
-        return        
+        return
 
     def ProcessHALGetResponse(self, get_req_spec, get_resp_spec):
         return
@@ -108,7 +108,7 @@ class SecurityGroupObjectHelper:
         leps = tenant.GetLocalEps()
         reps = tenant.GetRemoteEps()
         split = int(len(leps) / 2)
-        
+
         if len(leps) == 0:
             return
         self.__create(tenant, True, leps[:split])

@@ -10,9 +10,9 @@ import config.resmgr            as resmgr
 import config.hashgen           as hashgen
 import infra.config.base        as base
 
-from config.store               import Store
-from infra.common.logging       import cfglogger
-
+from config.store                       import Store
+from infra.common.logging               import cfglogger
+from config.objects.security_policy     import SecurityGroupPolicyHelper
 import config.hal.api            as halapi
 import config.hal.defs           as haldefs
 
@@ -80,7 +80,13 @@ class FlowObject(base.ConfigObjectBase):
         self.__init_info()
         self.__init_nat()
         self.__init_qos()
+        self.__init_sp()
         return
+    def __init_sp(self):
+        action = SecurityGroupPolicyHelper.GetAction(self, self.__sep, self.__dep)
+        if action is not None:
+            self.action = action
+        self.sgtype = SecurityGroupPolicyHelper.GetSGType(self, self.__sep, self.__dep)
 
     def __init_hashgen(self):
         if self.__flowhash:

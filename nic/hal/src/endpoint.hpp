@@ -185,6 +185,8 @@ ep_init (ep_t *ep)
     
     utils::dllist_reset(&ep->ip_list_head);
     utils::dllist_reset(&ep->session_list_head);
+    ep->sgs.sg_id_cnt = 0;
+    memset(&ep->sgs.arr_sg_id, 0 , MAX_SG_PER_ARRAY);
 
     return ep;
 }
