@@ -714,6 +714,9 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     if (app_ctxt->vlan_strip_en_changed) {
         lif_clone->vlan_strip_en = app_ctxt->vlan_strip_en;
     }
+    if (app_ctxt->pinned_uplink_changed) {
+        lif_clone->pinned_uplink = app_ctxt->new_pinned_uplink;
+    }
     dllist_move(&lif_clone->if_list_head, &lif->if_list_head);
 
     HAL_TRACE_DEBUG("Printing IFs from clone:");
@@ -811,11 +814,21 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
     hal_ret_t           ret = HAL_RET_OK;
     LifSpec             *spec = app_ctxt->spec;
 
+    // Handle vlan_strip_en change
     if (lif->vlan_strip_en != spec->vlan_strip_en()) {
         HAL_TRACE_DEBUG("pi-lif:{}:vlan_strip_en changed {} => {}",
                         __FUNCTION__, lif->vlan_strip_en, spec->vlan_strip_en());
         app_ctxt->vlan_strip_en_changed = true;
         app_ctxt->vlan_strip_en = spec->vlan_strip_en();
+    }
+
+    // Handle pinned uplink change
+    if (lif->pinned_uplink != spec->pinned_uplink_if_handle()) {
+        HAL_TRACE_DEBUG("pi-lif:{}:pinned uplink hdl changed {} => {}",
+                        __FUNCTION__, lif->pinned_uplink, 
+                        spec->pinned_uplink_if_handle());
+        app_ctxt->pinned_uplink_changed = true;
+        app_ctxt->new_pinned_uplink     = spec->pinned_uplink_if_handle();
     }
 
     if (spec->lif_qstate_map_size() && !lif->qstate_init_done) {
@@ -1279,7 +1292,7 @@ lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en)
                     __FUNCTION__, lif->lif_id);
 
     pd::pd_if_lif_upd_args_init(&args);
-    // Walk L2 segs
+    // Walk enicifs
     dllist_for_each(lnode, &lif->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         hal_if = find_if_by_handle(entry->handle_id);
@@ -1294,6 +1307,8 @@ lif_handle_vlan_strip_en_update (lif_t *lif, bool vlan_strip_en)
         args.vlan_strip_en = vlan_strip_en;
         if_handle_lif_update(&args);
     }
+
+    // TODO: Handle pinned uplink change. Trigger updates to enic. 
 
     return ret;
 }

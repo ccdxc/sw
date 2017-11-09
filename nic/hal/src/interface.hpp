@@ -246,6 +246,7 @@ if_init (if_t *hal_if)
     hal_if->lif_handle = HAL_HANDLE_INVALID;
     hal_if->l2seg_handle = HAL_HANDLE_INVALID;
     hal_if->native_l2seg_clsc = HAL_HANDLE_INVALID;
+    hal_if->pinned_uplink = HAL_HANDLE_INVALID;
     hal_if->is_pc_mbr = false;
     hal_if->uplinkpc_handle = HAL_HANDLE_INVALID;
     utils::dllist_reset(&hal_if->l2seg_list_head);

@@ -258,6 +258,63 @@ if_enicif_get_ipsg_en(if_t *pi_if)
 //----------------------------------------------------------------------------
 // Returns hwlif id
 //----------------------------------------------------------------------------
+hal_ret_t
+if_enicif_get_pinned_if(if_t *pi_if, if_t **uplink_if)
+{
+    hal_ret_t           ret     = HAL_RET_OK;
+    intf::IfType        if_type = intf::IF_TYPE_NONE;
+    lif_t               *lif    = NULL;
+    hal_handle_t        uplink_hdl = HAL_HANDLE_INVALID;
+
+    HAL_ASSERT(pi_if != NULL);
+
+    *uplink_if = NULL;
+
+    if_type = intf_get_if_type(pi_if);
+    if (if_type != intf::IF_TYPE_ENIC) {
+        HAL_TRACE_ERR("{}:pinned if is only for ENIC. if_type:{}", 
+                      __FUNCTION__, if_type);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    // Enic has pinned uplink, return it 
+    if (pi_if->pinned_uplink != HAL_HANDLE_INVALID) {
+        uplink_hdl = pi_if->pinned_uplink;
+    } else {
+        // Take from lif
+        lif = find_lif_by_handle(pi_if->lif_handle);
+        if (!lif) {
+            HAL_TRACE_ERR("{}:unable to find lif for lif_hdl:{}",
+                          __FUNCTION__, pi_if->lif_handle);
+            ret = HAL_RET_LIF_NOT_FOUND;
+            goto end;
+        }
+        uplink_hdl = lif->pinned_uplink;
+    }
+
+    if (uplink_hdl != HAL_HANDLE_INVALID) {
+        *uplink_if = find_if_by_handle(uplink_hdl);
+        if (!*uplink_if) {
+            HAL_TRACE_ERR("{}:unable to find if for if_hdl:{}", 
+                          __FUNCTION__, uplink_hdl);
+            ret = HAL_RET_IF_NOT_FOUND;
+            goto end;
+        }
+    } else {
+        HAL_TRACE_ERR("{}:no pinned uplink for enic_if_id:{}",
+                      __FUNCTION__, pi_if->if_id);
+        ret = HAL_RET_INVALID_OP;
+    }
+
+end:
+    return ret;
+}
+
+
+//----------------------------------------------------------------------------
+// Returns hwlif id
+//----------------------------------------------------------------------------
 uint32_t
 if_allocate_hwlif_id()
 {

@@ -68,9 +68,11 @@ typedef struct lif_create_app_ctxt_s {
 typedef struct lif_update_app_ctxt_s {
     LifSpec             *spec;
     LifResponse         *rsp;
-    bool                vlan_strip_en_changed;
     bool                vlan_strip_en;
     bool                qstate_map_init_set;
+    uint64_t            vlan_strip_en_changed:1;
+    uint64_t            pinned_uplink_changed:1;
+    hal_handle_t        new_pinned_uplink;
 } __PACK__ lif_update_app_ctxt_t;
 
 #define HAL_MAX_LIFS                                 1024
@@ -118,7 +120,8 @@ lif_init (lif_t *lif)
     HAL_SPINLOCK_INIT(&lif->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
-    lif->hal_handle = HAL_HANDLE_INVALID;
+    lif->hal_handle    = HAL_HANDLE_INVALID;
+    lif->pinned_uplink = HAL_HANDLE_INVALID;
 
     // initialize meta information
     utils::dllist_reset(&lif->if_list_head);

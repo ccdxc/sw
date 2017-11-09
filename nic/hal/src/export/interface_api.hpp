@@ -50,6 +50,9 @@ void *if_enicif_get_pi_l2seg(if_t *pi_if);
 void *if_enicif_get_pd_nwsec(if_t *pi_if);
 void *if_enicif_get_pi_nwsec(if_t *pi_if);
 uint32_t if_enicif_get_ipsg_en(if_t *pi_if);
+hal_ret_t if_enicif_get_pinned_if(if_t *pi_if, 
+                                  if_t **uplink_if);
+
 
 } // namespace hal
 #endif // __INTERFACE_API_HPP__

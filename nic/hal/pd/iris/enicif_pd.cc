@@ -1047,7 +1047,8 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
                               bool host_entry)
 {
     pd_l2seg_t      *pd_l2seg = NULL;
-    hal_ret_t       ret = HAL_RET_OK;
+    hal_ret_t       ret       = HAL_RET_OK;
+    if_t            *pinned_if = NULL;
 
     memset(&data, 0, sizeof(data));
 
@@ -1067,6 +1068,12 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
         inp_prop_mac_vlan_data.src_lport = pd_enicif->enic_lport_id;
         inp_prop_mac_vlan_data.flow_miss_action = l2seg_get_bcast_fwd_policy((l2seg_t*)(pd_l2seg->l2seg));
         inp_prop_mac_vlan_data.flow_miss_idx = l2seg_get_bcast_oif_list((l2seg_t*)(pd_l2seg->l2seg));
+
+        // Program dst_lport if there is pinning
+        ret = if_enicif_get_pinned_if((if_t*)pd_enicif->pi_if, &pinned_if);
+        if (ret == HAL_RET_OK) {
+            inp_prop_mac_vlan_data.dst_lport = if_get_lport_id(pinned_if);
+        }
     } else {
         inp_prop_mac_vlan_data.src_lif_check_en = 1;
         inp_prop_mac_vlan_data.src_lif = if_get_hw_lif_id((if_t*)pd_enicif->pi_if);
