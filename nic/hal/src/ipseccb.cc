@@ -278,7 +278,6 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
         return HAL_RET_HW_FAIL;
     }
     
-    
     rsp->set_api_status(types::API_STATUS_OK);
  
     return HAL_RET_OK;
@@ -318,10 +317,6 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
     // fill config spec of this IPSEC CB 
     rsp->mutable_spec()->mutable_key_or_handle()->set_ipseccb_id(ripseccb.cb_id);
 
-    //rsp->mutable_spec()->set_pi(ripseccb.pi);
-    //rsp->mutable_spec()->set_ci(ripseccb.ci);
-
-
     rsp->mutable_spec()->set_iv_size(ripseccb.iv_size);
     rsp->mutable_spec()->set_icv_size(ripseccb.icv_size);
     rsp->mutable_spec()->set_block_size(ripseccb.block_size);
@@ -354,6 +349,8 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
     }
     rsp->mutable_spec()->set_expected_seq_no(ripseccb.expected_seq_no);
     rsp->mutable_spec()->set_seq_no_bmp(ripseccb.seq_no_bmp);
+    rsp->mutable_spec()->set_last_replay_seq_no(ripseccb.last_replay_seq_no);
+
     return HAL_RET_OK;
 }
 

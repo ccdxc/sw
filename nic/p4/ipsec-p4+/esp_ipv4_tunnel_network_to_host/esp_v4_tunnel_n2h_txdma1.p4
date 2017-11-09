@@ -5,7 +5,6 @@
 #define tx_table_s1_t0_action esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex
 #define tx_table_s1_t1_action esp_v4_tunnel_n2h_allocate_barco_req_pindex
 
-
 #define tx_table_s2_t0_action esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header
 
 #define tx_table_s3_t0_action esp_v4_tunnel_n2h_txdma1_write_barco_req
@@ -85,7 +84,7 @@ header_type doorbell_data_pad_t {
 }
 header_type barco_dbell_t {                                                                                                                                                                                                     
     fields {
-        pi                                  : 32;
+        pi : 32;
     }
 }
 
@@ -114,7 +113,6 @@ metadata ipsec_table1_s2s t1_s2s;
 metadata ipsec_table2_s2s t2_s2s;
 @pragma pa_header_union ingress common_t3_s2s
 metadata ipsec_table3_s2s t3_s2s;
-
 
 //TXDMA - IPsec feature specific scratch
 @pragma dont_trim
@@ -229,7 +227,6 @@ action esp_v4_tunnel_n2h_txdma1_update_cb(pc, rsvd, cosA, cosB,
 {
     modify_field(p4plus2p4_hdr.table0_valid, 0);
     IPSEC_CB_SCRATCH_WITH_PC
-    //tblwr cb_cindex , rxdma_ring_cindex 
 }
 
 //stage 3 table 0
@@ -251,13 +248,10 @@ action esp_v4_tunnel_n2h_txdma1_write_barco_req(pc, rsvd, cosA, cosB,
     DMA_COMMAND_PHV2MEM_FILL(brq_req_write, ipsec_to_stage3.barco_req_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END, 0, 0, 0, 0) 
     modify_field(p4_txdma_intr.dma_cmd_ptr, TXDMA1_DMA_COMMANDS_OFFSET);
    
-    //table writes for these 2 bytes here
-    // should this be made DMA by doing phv2mem ?? Anyway these are needed only by txdma2. 
     //modify_field(ipsec_int_header.l4_protocol, l4_protocol);
     //modify_field(ipsec_int_header.pad_size, pad_size);
 
     // RING Barco-doorbell
-    
     modify_field(p4plus2p4_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 6);
@@ -309,9 +303,7 @@ action esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex(in_desc_addr)
     modify_field(common_te1_phv.table_raw_table_size, 6);
     modify_field(common_te1_phv.table_lock_en, 0);
     modify_field(common_te1_phv.table_addr, in_desc_addr);
-
 }
-
 
 //stage 0
 action esp_v4_tunnel_n2h_txdma1_initial_table(pc, rsvd, cosA, cosB,
@@ -340,7 +332,6 @@ action esp_v4_tunnel_n2h_txdma1_initial_table(pc, rsvd, cosA, cosB,
     modify_field(barco_req.command, barco_enc_cmd);
     //modify_field(barco_req.iv_address, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index) + IPSEC_CB_IV_OFFSET);
     modify_field(barco_req.key_desc_index, key_index);
-
     modify_field(t0_s2s.icv_size, icv_size);
  
     modify_field(p4plus2p4_hdr.table0_valid, 1);

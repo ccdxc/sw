@@ -220,7 +220,6 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
     modify_field(ipsec_global_scratch.ipsec_cb_addr, ipsec_global.ipsec_cb_addr); \
 
 
-// Enqueue the input-descriptor at the tail of ipsec-cb
 //stage 4 - table 0
 action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
                                        eval_last, host, total, pid,
@@ -233,12 +232,6 @@ action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
                                        cb_ring_base_addr, barco_ring_base_addr, iv_salt, is_v6)
 {
     IPSEC_CB_SCRATCH_WITH_PC
-
-    // pass the in_desc value in s2s data or global data. 
-    //modify_field(t0_s2s.in_desc_addr, ipsec_global.in_desc_addr);
-
-   
-    // DMA Commands
 
     // 2. ipsec_int_header to input-descriptor scratch phv2mem
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_phv2mem_ipsec_int, t0_s2s.in_desc_addr, IPSEC_INT_START_OFFSET, IPSEC_INT_END_OFFSET, 0, 0, 0, 0)
@@ -264,17 +257,13 @@ action update_output_desc_aol(addr0, offset0, length0,
                               addr2, offset2, length2,
                               nextptr, rsvd)
 {
-    // pass output page in s2s data K+I - change it later
     modify_field(barco_desc_out.A0_addr, t1_s2s.out_page_addr);
     modify_field(barco_desc_out.O0, 0);
     modify_field(barco_desc_out.L0, 0); 
-
     modify_field(ipsec_to_stage3_scratch.pad_size, ipsec_to_stage3.pad_size);
-
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T1_S2S
     modify_field(ipsec_to_stage3_scratch.iv_size, ipsec_to_stage3.iv_size);
-
 }
 
 //stage 3
@@ -283,11 +272,9 @@ action update_input_desc_aol (addr0, offset0, length0,
                               addr2, offset2, length2,
                               nextptr, rsvd)
 {
-    // pass input page in s2s data K+I - change it later
     //modify_field(barco_desc_in.A0_addr, t0_s2s.in_page_addr);
     modify_field(barco_desc_in.O0, 0);
     //modify_field(barco_desc_in.L0, ipsec_global.frame_size - IPSEC_RXDMA_HW_SW_INTRINSIC_SIZE); 
-
 
     // Load ipsec-cb-again
     modify_field(p42p4plus_hdr.table0_valid, 1);
@@ -295,7 +282,6 @@ action update_input_desc_aol (addr0, offset0, length0,
     modify_field(common_te0_phv.table_raw_table_size, 6);
     modify_field(common_te0_phv.table_lock_en, 0);
     modify_field(common_te0_phv.table_addr, (ipsec_global.ipsec_cb_index * IPSEC_CB_SIZE) + IPSEC_CB_BASE);
-
 
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T0_S2S
@@ -308,7 +294,6 @@ action update_input_desc_aol (addr0, offset0, length0,
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_iv_salt, addr0, IPSEC_IN_DESC_IV_SALT_START, IPSEC_IN_DESC_IV_SALT_END, 0, 0, 0, 0) 
     // DMA IV to beginning of INPUT DESC 
     DMA_COMMAND_PHV2MEM_FILL(dma_cmd_iv, addr0+IPSEC_SALT_HEADROOM, IPSEC_IN_DESC_IV_START, IPSEC_IN_DESC_IV_END, 0, 0, 0, 0)
-  
 }
 
 //stage 2 
@@ -319,7 +304,6 @@ action allocate_output_page_index(out_page_index)
     modify_field(common_te3_phv.table_raw_table_size, 3);
     modify_field(common_te3_phv.table_lock_en, 0);
     modify_field(common_te3_phv.table_addr, OUT_PAGE_ADDR_BASE+(PAGE_ENTRY_SIZE * out_page_index));
-
     modify_field(ipsec_int_header.out_page, OUT_PAGE_ADDR_BASE+(PAGE_ENTRY_SIZE * out_page_index));
     modify_field(t1_s2s.out_page_addr, OUT_PAGE_ADDR_BASE+(PAGE_ENTRY_SIZE * out_page_index));
     IPSEC_SCRATCH_GLOBAL
@@ -334,7 +318,6 @@ action allocate_input_page_index(in_page_index)
     modify_field(common_te2_phv.table_raw_table_size, 3);
     modify_field(common_te2_phv.table_lock_en, 0);
     modify_field(common_te2_phv.table_addr, IN_PAGE_ADDR_BASE+(PAGE_ENTRY_SIZE * in_page_index));
- 
     modify_field(ipsec_int_header.in_page,  IN_PAGE_ADDR_BASE+(PAGE_ENTRY_SIZE * in_page_index)); 
     modify_field(t0_s2s.in_page_addr, IN_PAGE_ADDR_BASE+(PAGE_ENTRY_SIZE * in_page_index));
     IPSEC_SCRATCH_GLOBAL
@@ -349,7 +332,6 @@ action allocate_output_desc_index(out_desc_index)
     modify_field(common_te1_phv.table_raw_table_size, 3);
     modify_field(common_te1_phv.table_lock_en, 0);
     modify_field(common_te1_phv.table_addr, OUT_DESC_ADDR_BASE+(DESC_ENTRY_SIZE * out_desc_index));
-
     modify_field(ipsec_int_header.out_desc, OUT_DESC_ADDR_BASE+(DESC_ENTRY_SIZE * out_desc_index));
     modify_field(t1_s2s.out_desc_addr, OUT_DESC_ADDR_BASE+(DESC_ENTRY_SIZE * out_desc_index));
     IPSEC_SCRATCH_GLOBAL
@@ -364,7 +346,6 @@ action allocate_input_desc_index(in_desc_index)
     modify_field(common_te0_phv.table_raw_table_size, 3);
     modify_field(common_te0_phv.table_lock_en, 0);
     modify_field(common_te0_phv.table_addr, IN_DESC_ADDR_BASE+(DESC_ENTRY_SIZE * in_desc_index));
-    
     modify_field(ipsec_int_header.in_desc, IN_DESC_ADDR_BASE+(DESC_ENTRY_SIZE * in_desc_index));
     modify_field(t0_s2s.in_desc_addr, IN_DESC_ADDR_BASE++(DESC_ENTRY_SIZE* in_desc_index));
     IPSEC_SCRATCH_GLOBAL
@@ -395,7 +376,6 @@ action allocate_input_page_semaphore(in_page_ring_index)
     IPSEC_SCRATCH_T2_S2S
 }
 
-
 //stage 1
 action allocate_output_desc_semaphore(out_desc_ring_index)
 {
@@ -420,7 +400,6 @@ action allocate_input_desc_semaphore(in_desc_ring_index)
     IPSEC_SCRATCH_T0_S2S
 }
 
-
 //stage 0
 action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel, 
                                        eval_last, host, total, pid,
@@ -442,10 +421,8 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
 
     modify_field(ipsec_global.ipsec_cb_addr, p4_rxdma_intr.qstate_addr);
-
     // we do not need the other IPSec-CB content right now - we need it in txdma1
     modify_field(ipsec_int_header.ipsec_cb_index, ipsec_cb_index);
- 
 
     // based on ipsec_esp_v4_tun_h2n_encap_init
     modify_field(ipsec_int_header.headroom_offset, p42p4plus_hdr.ipsec_payload_start);
@@ -456,7 +433,6 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(ipsec_int_header.payload_size, (p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start));
     modify_field(ipsec_int_header.pad_size, block_size - ((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & block_size));
 
-
     // mem2mem HBM based ipsec pad-table
     //modify_field(ipsec_to_stage3.pad_addr, (block_size - (((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & block_size)) * 256) + IPSEC_PAD_BYTES_TABLE_BASE );
     //modify_field(ipsec_to_stage3.pad_size, block_size - ((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & block_size));
@@ -466,17 +442,15 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(ipsec_to_stage3.pad_size, 0);
     modify_field(ipsec_to_stage3.packet_len, p42p4plus_hdr.ipsec_payload_end);
 
-//    modify_field(ipsec_int_header.tailroom, ipsec_int_header.pad_size + 2 + icv_size);
- // modify_field(ipsec_int_header.buf_size, p4_intr.frame_size + ipsec_int_header.headroom+ipsec_int_header.tailroom);
+    //  modify_field(ipsec_int_header.tailroom, ipsec_int_header.pad_size + 2 + icv_size);
+    // modify_field(ipsec_int_header.buf_size, p4_intr.frame_size + ipsec_int_header.headroom+ipsec_int_header.tailroom);
     modify_field(ipsec_int_header.l4_protocol, p42p4plus_hdr.l4_protocol);
 
     // Lif, type, qid
     modify_field(ipsec_global.lif, p4_intr_global.lif);
     modify_field(ipsec_global.qtype, p4_rxdma_intr.qtype);
     modify_field(ipsec_global.qid, p4_rxdma_intr.qid);
-//    modify_field(ipsec_global.frame_size, p4_intr.frame_size);
 
-  
     modify_field(p42p4plus_scratch_hdr.p4plus_app_id, p42p4plus_hdr.p4plus_app_id);
     modify_field(p42p4plus_scratch_hdr.table0_valid, p42p4plus_hdr.table0_valid);
     modify_field(p42p4plus_scratch_hdr.table1_valid, p42p4plus_hdr.table1_valid);
@@ -485,10 +459,8 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
 
     modify_field(ipsec_to_stage3.iv_size, iv_size);
     modify_field(ipsec_to_stage3.iv_salt, iv_salt);
-    // prepare tables for next stages
 
     modify_field(p42p4plus_hdr.table0_valid, 1);
-    // need to fill pc address here
     modify_field(common_te0_phv.table_pc, 0); 
     modify_field(common_te0_phv.table_raw_table_size, 2);
     modify_field(common_te0_phv.table_lock_en, 0);
@@ -511,5 +483,4 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(common_te3_phv.table_raw_table_size, 2);
     modify_field(common_te3_phv.table_lock_en, 0);
     modify_field(common_te3_phv.table_addr, OUTPAGE_SEMAPHORE_ADDR);
-
 }

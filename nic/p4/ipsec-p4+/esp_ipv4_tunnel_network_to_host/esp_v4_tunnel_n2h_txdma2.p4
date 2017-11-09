@@ -128,7 +128,6 @@ metadata ipsec_table2_s2s t2_s2s;
 @pragma pa_header_union ingress common_t3_s2s
 metadata ipsec_table3_s2s t3_s2s;
 
-
 //TXDMA - IPsec feature specific scratch
 @pragma dont_trim
 metadata ipsec_int_header_t ipsec_int_header;
@@ -225,8 +224,6 @@ action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
     //DMA_COMMAND_MEM2PKT_FILL(dec_pay_load, t0_s2s.out_page_addr, (txdma2_global.payload_size - txdma2_global.pad_size), 0, 0, 0)
 
     modify_field(p4_txdma_intr.dma_cmd_ptr, TXDMA2_DECRYPT_DMA_COMMANDS_OFFSET);
-
-    //tblwr barco_ring_cindex
 }
 
 //stage 3
@@ -239,7 +236,6 @@ action esp_v4_tunnel_n2h_txdma2_load_pad_size_and_l4_proto(pad_size, l4_proto)
     modify_field(ipsec_to_stage3_scratch.block_size, ipsec_to_stage3.block_size);
 }
  
-
 //stage 2 table 2 
 action esp_v4_tunnel_n2h_txdma2_load_ipsec_int(in_desc, out_desc,
                                                in_page, out_page,
@@ -290,9 +286,6 @@ action esp_v4_tunnel_n2h_txdma2_load_in_desc(addr0, offset0, length0,
     //modify_field(common_te0_phv.table_addr, ipsec_to_stage3.ipsec_cb_addr);
 }
 
-
-
-
 //stage 2 table0
 action esp_v4_tunnel_n2h_txdma2_load_barco_req(input_list_address, output_list_address,
                                          command, key_desc_index,
@@ -323,9 +316,7 @@ action esp_v4_tunnel_n2h_txdma2_load_barco_req(input_list_address, output_list_a
     modify_field(common_te2_phv.table_raw_table_size, 7);
     modify_field(common_te2_phv.table_lock_en, 0);
     modify_field(common_te2_phv.table_addr, input_list_address);
- 
 }
-
 
 //stage 1
 action esp_v4_tunnel_n2h_txdma2_load_barco_req_ptr(barco_req_address)
@@ -336,7 +327,6 @@ action esp_v4_tunnel_n2h_txdma2_load_barco_req_ptr(barco_req_address)
     modify_field(common_te0_phv.table_lock_en, 0);
     modify_field(common_te0_phv.table_addr, barco_req_address);
 }
-
 
 //stage 0
 action esp_v4_tunnel_n2h_txdma2_initial_table(rsvd, cosA, cosB,
@@ -370,5 +360,4 @@ action esp_v4_tunnel_n2h_txdma2_initial_table(rsvd, cosA, cosB,
     modify_field(common_te0_phv.table_lock_en, 0);
     //modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR+(BRQ_REQ_RING_ENTRY_SIZE * barco_ring_cindex));
     modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr);
-   
 }

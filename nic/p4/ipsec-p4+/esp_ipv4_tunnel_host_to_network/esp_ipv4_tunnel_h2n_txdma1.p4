@@ -11,7 +11,6 @@
 
 #include "../../common-p4+/common_txdma.p4"
 #include "esp_ipv4_tunnel_h2n_headers.p4"
-#
 #include "../ipsec_defines.h"
 
 
@@ -84,7 +83,7 @@ header_type doorbell_data_pad_t {
 
 header_type barco_dbell_t {                                                                                                                                                     
     fields {
-        pi                                  : 32;
+        pi : 32;
     }
 }
 
@@ -127,8 +126,6 @@ metadata barco_request_t barco_req;
 
 @pragma dont_trim
 metadata doorbell_data_t db_data;
-//@pragma dont_trim
-//metadata doorbell_data_pad_t db_data_pad;
 
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t brq_in_desc_zero;
@@ -207,10 +204,6 @@ metadata ipsec_int_header_t ipsec_int_hdr_scratch;
     modify_field(scratch_to_s3.barco_req_addr, ipsec_to_stage2.barco_req_addr); \
     modify_field(scratch_to_s3.stage3_pad1, ipsec_to_stage2.stage3_pad1);
 
-
-
-
-
 //stage 3 table 0
 action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,
                              eval_last, host, total, pid,
@@ -224,7 +217,6 @@ action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,
                              iv_salt, is_v6)
 {
     IPSEC_CB_SCRATCH_WITH_PC
-    //table write cb_cindex++
     // memwr to increment hw-cindex (cb_base + offset)
     IPSEC_TXDMA1_S2S0_SCRATCH_INIT
 
@@ -245,7 +237,6 @@ action ipsec_get_barco_req_index_ptr(barco_req_index_address)
     modify_field(p4plus2p4_hdr.table2_valid, 0);
 }
 
-
 //stage 2 - table0
 action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc, in_page, out_page,
                                                    ipsec_cb_index, headroom, 
@@ -261,7 +252,6 @@ action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc, in_page, o
    // modify_field(barco_req.header_size, payload_start);
     modify_field(barco_req.iv_address, in_page);
 
-    //modify_field(txdma1_global.out_desc_addr, out_desc);
     modify_field(p4plus2p4_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 3);
@@ -271,7 +261,6 @@ action ipsec_encap_txdma_load_head_desc_int_header(in_desc, out_desc, in_page, o
     modify_field(scratch_to_s2.barco_req_addr, ipsec_to_stage2.barco_req_addr);
 }
 
-
 //stage 1 - table1
 action allocate_barco_req_pindex (pi)
 {
@@ -279,9 +268,7 @@ action allocate_barco_req_pindex (pi)
     modify_field(p4plus2p4_hdr.table2_valid, 0);
 
     modify_field(barco_dbell.pi, pi);
-    //modify_field(ipsec_to_stage2.barco_req_addr, (pi* BRQ_REQ_RING_ENTRY_SIZE) + BRQ_REQ_RING_BASE_ADDR);
 }
-
 
 //stage 1 - table0
 action ipsec_get_in_desc_from_cb_cindex(in_desc_addr)
@@ -307,21 +294,13 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
                                        cb_ring_base_addr, barco_ring_base_addr,
                                        iv_salt, is_v6)
 {
-
-    //IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT
-    //IPSEC_TXDMA1_S2S0_SCRATCH_INIT
-
     IPSEC_CB_SCRATCH
   
-
- 
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
     modify_field(p4_txdma_intr_scratch.qid, p4_txdma_intr.qid);
     modify_field(p4_txdma_intr_scratch.qtype, p4_txdma_intr.qtype);
     modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
- 
-
 
     modify_field(barco_req.command, barco_enc_cmd);
     //modify_field(barco_req.brq_iv_addr, IPSEC_CB_BASE + (IPSEC_CB_SIZE * ipsec_cb_index) + IPSEC_CB_IV_OFFSET);
@@ -329,7 +308,7 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(t0_s2s.iv_size, iv_size);
  
     modify_field(p4plus2p4_hdr.table1_valid, 1);
-    modify_field(common_te0_phv.table_pc, 0); //ipsec_get_in_desc_from_cb_cindex
+    modify_field(common_te0_phv.table_pc, 0); 
     modify_field(common_te0_phv.table_raw_table_size, 3);
     modify_field(common_te0_phv.table_lock_en, 0);
     //modify_field(common_te0_phv.table_addr, cb_ring_base_addr+cb_cindex*64);

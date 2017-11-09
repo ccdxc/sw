@@ -9,7 +9,6 @@
 #include "nic/hal/src/proxy.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/lif_manager.hpp"
-// #include "nic/gen/ipsec_rxdma_actions/include/ipsec_rxdma_actions_p4plus_ingress.h"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
 #include "nic/gen/esp_ipv4_tunnel_h2n_rxdma/include/esp_ipv4_tunnel_h2n_rxdma_p4plus_ingress.h"
 
@@ -373,11 +372,9 @@ pd_ipseccb_create (pd_ipseccb_args_t *args)
     if (ipseccb_pd == NULL) {
         return HAL_RET_OOM;
     }
-    HAL_TRACE_DEBUG("Alloc done");
     ipseccb_pd->ipseccb = args->ipseccb;
     // get hw-id for this IPSECCB
     ipseccb_pd->hw_id = pd_ipseccb_get_base_hw_index(ipseccb_pd);
-    printf("Received hw-id: 0x%lx ", ipseccb_pd->hw_id);
     
     // program ipseccb
     ret = p4pd_add_or_del_ipseccb_entry(ipseccb_pd, false);

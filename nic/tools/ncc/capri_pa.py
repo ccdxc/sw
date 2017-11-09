@@ -2150,7 +2150,8 @@ class capri_gress_pa:
                 if n_hf.is_key or n_hf.is_input or (self.d == xgress.INGRESS and n_hf.is_i2e_meta):
                     # XXX for fld unions - propagate the flags is_key... to union storage field
                     if n_hf.is_index_key:
-                        if n_hf.storage_size() > 8:
+                        if n_hf.storage_size() >= 4:
+                            # if more than 4 bits align and right justify to avoid bit extraction
                             # pdb.set_trace()
                             # rigth justify the key on a byte boundary
                             justify = JUSTIFY_RIGHT

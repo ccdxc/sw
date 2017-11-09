@@ -57,6 +57,7 @@ def TestCaseSetup(tc):
     ipseccb.expected_seq_no           = 0
     ipseccb.seq_no_bmp                = 0
     ipseccb.vrf_vlan                  = 0x0005
+    ipseccb.last_replay_seq_no        = 0
     ipseccb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
@@ -110,17 +111,21 @@ def TestCaseVerify(tc):
     # 1. Verify pi/ci got update got updated
     ipseccb_cur = tc.infra_data.ConfigStore.objects.db["IPSECCB0000"]
     print("pre-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
+    print("pre-sync: ipseccb.pi %d ipseccb.ci %d" % (ipseccb.pi, ipseccb.ci))
     ipseccb_cur.GetObjValPd()
     print("post-sync: ipseccb_cur.pi %d ipseccb_cur.ci %d" % (ipseccb_cur.pi, ipseccb_cur.ci))
-    if (ipseccb_cur.pi != ipseccb.pi or ipseccb_cur.ci != ipseccb.ci):
-        print("serq pi/ci not as expected")
+    if (ipseccb_cur.pi == ipseccb.pi and ipseccb_cur.ci == ipseccb.ci):
+        print("serq pi/ci as expected")
+    else:
         return False
 
     print("Expected seq no 0x%x seq_no_bmp 0x%x" % (ipseccb_cur.expected_seq_no, ipseccb_cur.seq_no_bmp))
     # 2. Verify seq no
-    if (ipseccb_cur.expected_seq_no != expected_seq_no+1):
+    if (ipseccb_cur.last_replay_seq_no != 35):
+        print("last_replay_seq_no: %d" % (ipseccb_cur.last_replay_seq_no))
+        #return False
+    if (ipseccb_cur.seq_no_bmp != 0x800000000):
         return False
-
     # 3. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
     rnmdr_cur.Configure()
@@ -138,43 +143,19 @@ def TestCaseVerify(tc):
     print("pre-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
     brq_cur.Configure()
     print("post-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
-    if (brq_cur.pi != (brq.pi+1)):
+    if (brq_cur.pi != (brq.pi)):
         print("brq pi/ci not as expected")
         #needs fix in HAL and support in model/p4+ for this check to work/pass
         return False
 
-    print("BRQ:")
-    print("ilist_addr 0x%x" % brq_cur.ring_entries[0].ilist_addr)
-    print("olist_addr 0x%x" % brq_cur.ring_entries[0].olist_addr)
-    print("command 0x%x" % brq_cur.ring_entries[0].command)
-    print("key_desc_index 0x%x" % brq_cur.ring_entries[0].key_desc_index)
-    print("iv_addr 0x%x" % brq_cur.ring_entries[0].iv_addr)
-    print("status_addr 0x%x" % brq_cur.ring_entries[0].status_addr)
-    # There is an offset of 64 to go past scratch when queuing to barco. Pls modify
-    # this when this offset is removed.
-    #maxflows check should be reverted when we remove the hardcoding for idx 0 with pi/ci for BRQ
-    # 5. Verify descriptor
-    print("RNMDR Entry: 0x%x, BRQ ILIST: 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
-    if rnmdr.ringentries[rnmdr.pi].handle != ipseccbqq_cur.ringentries[0].handle:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, ipseccbqq_cur.ringentries[0].handle))
-        return False
-
-    if rnmdr.swdre_list[rnmdr.pi].DescAddr != ipseccbqq_cur.swdre_list[0].DescAddr:
-        print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % (rnmdr.swdre_list[rnmdr.pi].DescAddr, ipseccbqq_cur.swdre_list[0].DescAddr))
-        return False
-    # 7. Verify brq input desc and rnmdr
-    if (rnmdr.ringentries[rnmdr.pi].handle != (brq_cur.ring_entries[brq.pi].ilist_addr - 0x40)):
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, brq_cur.ring_entries[brq.pi].ilist_addr))
-        return False
-
     # 8. Verify PI for TNMDR got incremented by 1
-    if (tnmdr_cur.pi != tnmdr.pi+1):
+    if (tnmdr_cur.pi != tnmdr.pi):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
         return False
     print("Old TNMDR PI: %d, New TNMDR PI: %d" % (tnmdr.pi, tnmdr_cur.pi))
 
     # 9. Verify PI for TNMPR got incremented by 1
-    if (tnmpr_cur.pi != tnmpr.pi+1):
+    if (tnmpr_cur.pi != tnmpr.pi):
         print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))

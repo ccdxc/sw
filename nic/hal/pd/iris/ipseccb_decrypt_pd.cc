@@ -164,9 +164,7 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
     }
     
     ipseccb_pd->ipseccb->iv_salt = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_salt;
-    HAL_TRACE_DEBUG("Got salt {}", ipseccb_pd->ipseccb->iv_salt);
     ipseccb_pd->ipseccb->iv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_size;
-    HAL_TRACE_DEBUG("Got iv_size {}", ipseccb_pd->ipseccb->iv_size);
     ipseccb_pd->ipseccb->block_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size;
     ipseccb_pd->ipseccb->icv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size;
     ipseccb_pd->ipseccb->barco_enc_cmd = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd;
@@ -185,12 +183,12 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
     expected_seq_no = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.expected_seq_no;
     last_replay_seq_no = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.last_replay_seq_no;
     replay_seq_no_bmp = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.replay_seq_no_bmp;
-    HAL_TRACE_DEBUG("expected_seq_no: 0x{0:x} last_replay_seq_no: 0x{0:x} replay_seq_no_bmp: 0x{0:x}", 
-                    expected_seq_no, last_replay_seq_no, replay_seq_no_bmp); 
+    //HAL_TRACE_DEBUG("expected_seq_no: 0x{0:x} last_replay_seq_no: 0x{0:x} replay_seq_no_bmp: 0x{0:x}", expected_seq_no, last_replay_seq_no, replay_seq_no_bmp); 
     ipseccb_pd->ipseccb->expected_seq_no = ntohl(expected_seq_no);
     ipseccb_pd->ipseccb->seq_no_bmp = ntohll(replay_seq_no_bmp);
     ipseccb_pd->ipseccb->vrf_vlan = ntohs(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.vrf_vlan);
     ipseccb_pd->ipseccb->is_v6 = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.is_v6;
+    ipseccb_pd->ipseccb->last_replay_seq_no = ntohl(last_replay_seq_no);
 
     return HAL_RET_OK;
 }
@@ -323,7 +321,6 @@ pd_ipseccb_decrypt_create (pd_ipseccb_args_t *args)
     ipseccb_pd->ipseccb = args->ipseccb;
     // get hw-id for this IPSECCB
     ipseccb_pd->hw_id = pd_ipseccb_decrypt_get_base_hw_index(ipseccb_pd);
-    printf("Received decrypt hw-id: 0x%lx ", ipseccb_pd->hw_id);
     
     // program ipseccb
     ret = p4pd_add_or_del_ipseccb_decrypt_entry(ipseccb_pd, false);

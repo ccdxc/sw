@@ -48,6 +48,7 @@ message IpsecCbSpec {
   types.IPAddress       dip6                  = 19;
   uint32                is_v6                 = 20;
   uint32                vrf_vlan              = 21;
+  uint32                last_replay_seq_no    = 22;
 }
 
 // IpsecCbRequestMsg is batched add or modify ipseccb request

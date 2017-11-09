@@ -105,7 +105,13 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     nop
  
 ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
+    and r3, k.p42p4plus_hdr_seq_no, 0x3F 
+    sllv r4, 1, r3 
+    or  r5, r4, d.replay_seq_no_bmp
+    tblwr d.replay_seq_no_bmp, r5
+    nop
     tblwr d.last_replay_seq_no, k.p42p4plus_hdr_seq_no
+    nop
     nop.e
     nop
 

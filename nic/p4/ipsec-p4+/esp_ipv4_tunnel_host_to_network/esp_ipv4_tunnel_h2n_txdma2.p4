@@ -14,8 +14,6 @@
 #include "esp_ipv4_tunnel_h2n_headers.p4"
 #include "../ipsec_defines.h"
 
-
-
 header_type ipsec_txdma2_global_t {
     fields {
         in_desc_addr   : ADDRESS_WIDTH;
@@ -88,7 +86,6 @@ header_type ipsec_to_stage4_t {
     }
 }
 
-
 @pragma pa_header_union ingress app_header
 metadata p4plus_to_p4_ipsec_header_t p4plus2p4_hdr;
 
@@ -116,7 +113,6 @@ metadata ipsec_table1_s2s t1_s2s;
 metadata ipsec_table2_s2s t2_s2s;
 @pragma pa_header_union ingress common_t3_s2s
 metadata ipsec_table3_s2s t3_s2s;
-
 
 //TXDMA - IPsec feature specific scratch
 @pragma dont_trim
@@ -236,7 +232,6 @@ action ipsec_encap_txdma2_load_ipsec_int(in_desc, out_desc, in_page, out_page,
     modify_field(t0_s2s.tailroom_offset, tailroom_offset); 
     modify_field(t0_s2s.headroom_offset, headroom_offset);
   
- 
     modify_field(p4plus2p4_hdr.table2_valid, 0);
 }
 
@@ -247,7 +242,6 @@ action ipsec_encap_txdma2_load_out_desc(addr0, offset0, length0,
                                         nextptr, rsvd)
 {
     modify_field(t0_s2s.out_page_addr, addr0);
-
     modify_field(p4plus2p4_hdr.table1_valid, 0);
 }
 
@@ -265,9 +259,6 @@ action ipsec_encap_txdma2_load_in_desc(addr0, offset0, length0,
     modify_field(common_te0_phv.table_lock_en, 0);
     modify_field(common_te0_phv.table_addr, txdma2_global.in_desc_addr);
 }
-
-
-
 
 //stage 1 table0
 action ipsec_encap_txdma2_load_barco_req(input_list_address, output_list_address,
@@ -297,20 +288,7 @@ action ipsec_encap_txdma2_load_barco_req(input_list_address, output_list_address
     modify_field(common_te2_phv.table_raw_table_size, 7);
     modify_field(common_te2_phv.table_lock_en, 0);
     modify_field(common_te2_phv.table_addr, input_list_address);
- 
 }
-
-#if 0
-//stage 1
-action ipsec_encap_txdma2_load_barco_req_ptr(barco_req_address)
-{
-    modify_field(p4plus2p4_hdr.table0_valid, 1);
-    modify_field(common_te0_phv.table_pc, 0);
-    modify_field(common_te0_phv.table_raw_table_size, 6);
-    modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, barco_req_address);
-}
-#endif
 
 //stage 0
 action ipsec_encap_txdma2_initial_table(rsvd, cosA, cosB, cos_sel,
@@ -327,7 +305,6 @@ action ipsec_encap_txdma2_initial_table(rsvd, cosA, cosB, cos_sel,
     IPSEC_CB_SCRATCH
 
     modify_field(p4_txdma_intr_scratch.qstate_addr, p4_txdma_intr.qstate_addr);
-    //Below line commented out because qstate_addr getting promoted to 64 bit
     //modify_field(ipsec_to_stage4.ipsec_cb_addr, p4_txdma_intr.qstate_addr);
 
     modify_field(txdma2_global.ipsec_cb_index, ipsec_cb_index);
@@ -338,7 +315,5 @@ action ipsec_encap_txdma2_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 7);
     modify_field(common_te0_phv.table_lock_en, 0);
-//    modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR+(BRQ_REQ_RING_ENTRY_SIZE * barco_ring_cindex));
-   
+    // modify_field(common_te0_phv.table_addr, BRQ_REQ_RING_BASE_ADDR+(BRQ_REQ_RING_ENTRY_SIZE * barco_ring_cindex));
 }
-

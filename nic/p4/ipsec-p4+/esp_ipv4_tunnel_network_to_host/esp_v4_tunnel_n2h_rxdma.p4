@@ -19,9 +19,7 @@
 #define rx_table_s4_t0_action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc 
 
 #include "../../common-p4+/common_rxdma.p4"
-
 #include "esp_v4_tunnel_n2h_headers.p4"
-
 #include "../ipsec_defines.h"
 
 header_type ipsec_to_stage3_t {
@@ -93,8 +91,6 @@ header_type doorbell_data_pad_t {
         db_data_pad : 64;
     }
 }
-
-
 
 //Unionize the below with p4_2_p4plus_app_header_t
 @pragma pa_header_union ingress app_header
@@ -217,9 +213,6 @@ metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
     modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr); \
     modify_field(ipsec_to_stage3_scratch.payload_size, ipsec_to_stage3.payload_size); \
 
-
-
-
 // Enqueue the input-descriptor at the tail of ipsec-cb
 // 1. Read the tail descriptor table from tail_desc_addr+64 bytes.
 // 2. rsvd field should be zero there. 
@@ -242,8 +235,6 @@ action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc (pc, rsvd, cosA, cosB,
     IPSEC_CB_SCRATCH_WITH_PC
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T0_S2S
-    //table write in_desc into rsvd value of tail_desc - write this part in assembly.
-    // pass the in_desc value in s2s data or global data. 
     //modify_field(t0_s2s.in_desc_addr, ipsec_global.in_desc_addr);
 
     // do not try to understand the below line - just for K+I generation to get ipsec_cb_index
@@ -271,7 +262,6 @@ action esp_v4_tunnel_n2h_update_output_desc_aol(addr0, offset0, length0,
                               addr2, offset2, length2,
                               nextptr, rsvd)
 {
-    // pass output page in s2s data K+I - change it later
     modify_field(barco_desc_out.A0_addr, t1_s2s.out_page_addr);
     modify_field(barco_desc_out.O0, 0);
     modify_field(barco_desc_out.L0, 0); 
@@ -279,7 +269,6 @@ action esp_v4_tunnel_n2h_update_output_desc_aol(addr0, offset0, length0,
     IPSEC_TO_STAGE3_SCRATCH
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T1_S2S
-
 }
 
 //stage 3
@@ -289,7 +278,6 @@ action esp_v4_tunnel_n2h_update_input_desc_aol (addr0, offset0, length0,
                               nextptr, rsvd)
 {
     IPSEC_TO_STAGE3_SCRATCH
-    // pass input page in s2s data K+I - change it later
     //modify_field(barco_desc_in.A0_addr, t0_s2s.in_page_addr);
     modify_field(barco_desc_in.O0, 0);
     modify_field(barco_desc_in.L0, ipsec_global.packet_length); 
@@ -389,7 +377,6 @@ action esp_v4_tunnel_n2h_allocate_input_page_semaphore(in_page_ring_index)
     IPSEC_SCRATCH_T2_S2S
 }
 
-
 //stage 1
 action esp_v4_tunnel_n2h_allocate_output_desc_semaphore(out_desc_ring_index)
 {
@@ -414,7 +401,6 @@ action esp_v4_tunnel_n2h_allocate_input_desc_semaphore(in_desc_ring_index)
     IPSEC_SCRATCH_T0_S2S
 }
 
-
 //stage 0
 action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
                                        cos_sel, eval_last, host, total, pid,
@@ -430,23 +416,18 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
                                        iv_salt, vrf_vlan, is_v6)
 {
 
-    //Set all variables to scratch so that they are not removed
     IPSEC_CB_SCRATCH
 
     modify_field(ipsec_cb_scratch.expected_seq_no, expected_seq_no);
     modify_field(ipsec_cb_scratch.replay_seq_no_bmp, replay_seq_no_bmp);
     modify_field(ipsec_cb_scratch.last_replay_seq_no, last_replay_seq_no);
 
-
     modify_field(p4_intr_global_scratch.lif, p4_intr_global.lif);
     modify_field(p4_intr_global_scratch.tm_iq, p4_intr_global.tm_iq);
     modify_field(p4_rxdma_intr_scratch.qid, p4_rxdma_intr.qid);
     modify_field(p4_rxdma_intr_scratch.qtype, p4_rxdma_intr.qtype);
     modify_field(p4_rxdma_intr_scratch.qstate_addr, p4_rxdma_intr.qstate_addr);
-    
-    
     modify_field(ipsec_int_header.ipsec_cb_index, ipsec_cb_index);
- 
 
     //Below code is only to generate the K correctly - there are some operations made on top of the assignements
     modify_field(ipsec_int_header.payload_start, p42p4plus_hdr.ipsec_payload_start);
@@ -471,13 +452,9 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
 
     modify_field(ipsec_to_stage3.iv_salt, iv_salt);
     modify_field(ipsec_to_stage3.iv_size, iv_size);
-    //overwrite the seqno in the packet with IV Salt - anyway seqNo in packet is coming in p42p4plus_hdr
-    // This is done to give a single DMA command to Barco for both salt and iv in packet.
     modify_field(ipsec_to_stage3.iv_salt_off,  p42p4plus_hdr.ipsec_payload_start - iv_size - IPSEC_SALT_HEADROOM);
-    // prepare tables for next stages
 
     modify_field(p42p4plus_hdr.table0_valid, 1);
-    // need to fill pc address here
     modify_field(common_te0_phv.table_pc, 0); 
     modify_field(common_te0_phv.table_raw_table_size, 2);
     modify_field(common_te0_phv.table_lock_en, 0);

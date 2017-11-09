@@ -571,6 +571,8 @@ parser parse_v6_generic_ext_hdr {
 
 // if AH or ESP are hit - done - no more parsing as these are supposed to
 // be last in v6 ext-header sequence.
+@pragma allow_set_meta ipsec_metadata.seq_no
+@pragma allow_set_meta ipsec_metadata.ipsec_type
 parser parse_v6_ipsec_esp_hdr {
     extract(esp);
     set_metadata(parser_metadata.ipv6_payloadLen, parser_metadata.ipv6_payloadLen - 8);
@@ -581,6 +583,8 @@ parser parse_v6_ipsec_esp_hdr {
     return ingress;
 }
 
+@pragma allow_set_meta ipsec_metadata.seq_no
+@pragma allow_set_meta ipsec_metadata.ipsec_type
 parser parse_v6_ipsec_ah_hdr {
     extract(v6_ah_esp);
     set_metadata(parser_metadata.ipv6_payloadLen, parser_metadata.ipv6_payloadLen - 12);
@@ -640,6 +644,8 @@ parser parse_ipv6 {
     }
 }
 
+@pragma allow_set_meta ipsec_metadata.seq_no
+@pragma allow_set_meta ipsec_metadata.ipsec_type
 parser parse_ipsec_ah {
     extract(ah);
     set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
@@ -649,6 +655,8 @@ parser parse_ipsec_ah {
     return ingress;
 }
 
+@pragma allow_set_meta ipsec_metadata.seq_no
+@pragma allow_set_meta ipsec_metadata.ipsec_type
 parser parse_ipsec_esp {
     extract(esp);
     set_metadata(flow_lkp_metadata.lkp_sport, latest.spi_hi);
