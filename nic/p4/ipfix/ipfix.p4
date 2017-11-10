@@ -29,8 +29,14 @@ metadata ipfix_qstate_metadata_t qstate_metadata;
 
 @pragma pa_header_union ingress common_global
 metadata ipfix_metadata_t ipfix_metadata;
+
+@pragma dont_trim
 @pragma pa_header_union ingress common_t0_s2s
 metadata ipfix_t0_metadata_t ipfix_t0_metadata;
+
+@pragma dont_trim
+@pragma pa_header_union ingress app_header
+metadata p4plus_to_p4_header_t ipfix_app_header;
 
 @pragma dont_trim
 metadata ipfix_record_header_t ipfix_record_header;
@@ -54,14 +60,15 @@ metadata dma_cmd_phv2mem_t phv2mem_cmd2;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t phv2mem_cmd3;
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t phv2pkt_cmd1;
+metadata dma_cmd_phv2mem_t phv2mem_cmd4;
 @pragma dont_trim
-metadata dma_cmd_phv2pkt_t phv2pkt_cmd2;
+metadata dma_cmd_phv2pkt_t phv2pkt_cmd1;
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t mem2pkt_cmd;
 
 action ipfix_start(rsvd, cos_a, cos_b, cos_sel, eval_last, host_rings,
-                   total_rings, pid, pindex, cindex, eindex, pktaddr, pktsize) {
+                   total_rings, pid, pindex, cindex, sindex, eindex,
+                   pktaddr, pktsize, rstart, rnext) {
     modify_field(qstate_metadata.rsvd, rsvd);
     modify_field(qstate_metadata.cos_a, cos_a);
     modify_field(qstate_metadata.cos_b, cos_b);
@@ -72,12 +79,14 @@ action ipfix_start(rsvd, cos_a, cos_b, cos_sel, eval_last, host_rings,
     modify_field(qstate_metadata.pid, pid);
     modify_field(qstate_metadata.pindex, pindex);
     modify_field(qstate_metadata.cindex, cindex);
+    modify_field(qstate_metadata.eindex, sindex);
     modify_field(qstate_metadata.eindex, eindex);
     modify_field(qstate_metadata.pktaddr, pktaddr);
     modify_field(qstate_metadata.pktsize, pktsize);
+    modify_field(qstate_metadata.rstart, rstart);
+    modify_field(qstate_metadata.rnext, rnext);
 
     modify_field(ipfix_metadata.qstate_addr, p4_txdma_intr.qstate_addr);
-    modify_field(ipfix_t0_metadata.eindex, eindex);
 }
 
 action ipfix_flow_hash() {
@@ -106,7 +115,7 @@ action ipfix_flow_atomic_stats(permit_bytes, permit_packets,
 
 action ipfix_create_record(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
                            host_rings, total_rings, pid, pindex, cindex,
-                           eindex, pktaddr, pktsize) {
+                           sindex, eindex, pktaddr, pktsize, rstart, rnext) {
     modify_field(qstate_metadata.pc, pc);
     modify_field(qstate_metadata.rsvd, rsvd);
     modify_field(qstate_metadata.cos_a, cos_a);
@@ -118,14 +127,19 @@ action ipfix_create_record(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
     modify_field(qstate_metadata.pid, pid);
     modify_field(qstate_metadata.pindex, pindex);
     modify_field(qstate_metadata.cindex, cindex);
+    modify_field(qstate_metadata.sindex, sindex);
     modify_field(qstate_metadata.eindex, eindex);
     modify_field(qstate_metadata.pktaddr, pktaddr);
     modify_field(qstate_metadata.pktsize, pktsize);
+    modify_field(qstate_metadata.rstart, rstart);
+    modify_field(qstate_metadata.rnext, rnext);
+    modify_field(scratch_metadata.flow_type, ipfix_metadata.flow_type);
+    modify_field(scratch_metadata.do_export, ipfix_metadata.do_export);
 }
 
 action ipfix_export_packet(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
                            host_rings, total_rings, pid, pindex, cindex,
-                           eindex, pktaddr, pktsize) {
+                           sindex, eindex, pktaddr, pktsize, rstart, rnext) {
     modify_field(qstate_metadata.pc, pc);
     modify_field(qstate_metadata.rsvd, rsvd);
     modify_field(qstate_metadata.cos_a, cos_a);
@@ -137,7 +151,10 @@ action ipfix_export_packet(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
     modify_field(qstate_metadata.pid, pid);
     modify_field(qstate_metadata.pindex, pindex);
     modify_field(qstate_metadata.cindex, cindex);
+    modify_field(qstate_metadata.sindex, sindex);
     modify_field(qstate_metadata.eindex, eindex);
     modify_field(qstate_metadata.pktaddr, pktaddr);
     modify_field(qstate_metadata.pktsize, pktsize);
+    modify_field(qstate_metadata.rstart, rstart);
+    modify_field(qstate_metadata.rnext, rnext);
 }

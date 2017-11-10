@@ -22,3 +22,9 @@
        CAPRI_PHV_START_OFFSET(ipfix_record_ipv6_set_id)) + 1) + \
      ((CAPRI_PHV_END_OFFSET(ipfix_record_ip_tcp_rtt) - \
       CAPRI_PHV_START_OFFSET(ipfix_record_ip_flow_state_index)) + 1))
+
+#define IPFIX_NON_IP_RECORD_SIZE \
+    (((CAPRI_PHV_END_OFFSET(ipfix_record_common_drop_vector) - \
+       CAPRI_PHV_START_OFFSET(ipfix_record_common_flow_id)) + 1) + \
+     ((CAPRI_PHV_END_OFFSET(ipfix_record_nonip_ether_type) - \
+       CAPRI_PHV_START_OFFSET(ipfix_record_nonip_set_id)) + 1))

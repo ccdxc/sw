@@ -521,7 +521,7 @@ p4pd_add_flow_hash_table_entry (flow_key_t *flow_key, uint32_t lkp_vrf,
     key.flow_lkp_metadata_lkp_dir = flow_key->dir;
 
     flow_data.flow_index = flow_pd->flow_stats_hw_id;
-    flow_data.export_en = FALSE;    // TODO: when analytics APIs are ready,
+    flow_data.export_en = TRUE;     // TODO: when analytics APIs are ready,
                                     // set this appropriately
     for (uint32_t i = 0; i < 16; i++) {
         src_buf.write("{:#x} ", key.flow_lkp_metadata_lkp_src[i]);

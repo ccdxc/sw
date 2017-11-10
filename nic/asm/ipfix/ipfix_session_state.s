@@ -30,6 +30,14 @@ ipfix_session_state:
     phvwr       p.ipfix_record_ip_tcp_rtt, d.u.tcp_session_state_info_d.rflow_rtt
 
 ipfix_session_state_initiator:
+    phvwr       p.ipfix_record_ip_tcp_seq_num, d.u.tcp_session_state_info_d.iflow_tcp_seq_num
+    phvwr       p.ipfix_record_ip_tcp_ack_num, d.u.tcp_session_state_info_d.iflow_tcp_ack_num
+    phvwr       p.ipfix_record_ip_tcp_win_sz, d.u.tcp_session_state_info_d.iflow_tcp_win_sz
+    phvwr       p.ipfix_record_ip_tcp_win_scale, d.u.tcp_session_state_info_d.iflow_tcp_win_scale
+    phvwr       p.ipfix_record_ip_tcp_win_mss, d.u.tcp_session_state_info_d.iflow_tcp_mss
+    phvwr       p.ipfix_record_ip_tcp_state, d.u.tcp_session_state_info_d.iflow_tcp_state
+    phvwr       p.ipfix_record_ip_tcp_exceptions, d.u.tcp_session_state_info_d.iflow_exceptions_seen
+    phvwr       p.ipfix_record_ip_tcp_rtt, d.u.tcp_session_state_info_d.iflow_rtt
 
 ipfix_session_state_common:
     // table 0 : lookup flow_stats

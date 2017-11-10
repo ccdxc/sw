@@ -10,6 +10,7 @@
 #include "nic/hal/pd/iris/telemetry_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/iris/p4plus_pd_api.h"
+#include "nic/hal/pd/iris/ipfix_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -206,7 +207,9 @@ telemetry_export_dest::init(uint16_t id)
     ipfix_hdr_.vlan.etype = htons(0x0800);
     ipfix_hdr_.iphdr.version = 4;
     ipfix_hdr_.iphdr.ihl = 5;
-    ipfix_hdr_.iphdr.protocol = htons(17);
+    ipfix_hdr_.iphdr.protocol = 17;
+    ipfix_init(id, base_addr_ + buf_hdr_.packet_start,
+               sizeof(telemetry_pd_ipfix_header_t), buf_hdr_.payload_length);
     HAL_TRACE_DEBUG("PD-ExportControl:{}: Export Destination Init Done {}", __FUNCTION__, id);
     return HAL_RET_OK;
 }

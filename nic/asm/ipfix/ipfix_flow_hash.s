@@ -12,9 +12,10 @@ struct phv_        p;
 
 ipfix_flow_hash:
     seq         c1, d.flow_hash_info_d.entry_valid, TRUE
-    seq         c2, d.flow_hash_info_d.export_en, FALSE
+    seq         c2, d.flow_hash_info_d.export_en, TRUE
     bcf         [!c1|!c2], ipfix_flow_hash_skip_entry
     phvwr       p.ipfix_metadata_flow_index, d.flow_hash_info_d.flow_index
+    phvwr       p.ipfix_metadata_flow_type, d.flow_hash_info_d.flow_lkp_metadata_lkp_type
 
     seq         c1, d.flow_hash_info_d.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
     bcf         [c1], ipfix_flow_hash_ipv4_entry

@@ -26,9 +26,8 @@ ipfix_flow_stats:
 
     // table 0 : lookup qstate address
     phvwr       p.common_te0_phv_table_addr, \
-                    k.{ipfix_metadata_qstate_addr_sbit0_ebit6, \
-                       ipfix_metadata_qstate_addr_sbit7_ebit30, \
-                       ipfix_metadata_qstate_addr_sbit31_ebit33}
+                    k.{ipfix_metadata_qstate_addr_sbit0_ebit31, \
+                       ipfix_metadata_qstate_addr_sbit32_ebit33}
     phvwri      p.common_te0_phv_table_pc, ipfix_create_record[33:6]
     phvwr       p.common_te0_phv_table_raw_table_size, 6
     phvwr       p.common_te0_phv_table_lock_en, 0

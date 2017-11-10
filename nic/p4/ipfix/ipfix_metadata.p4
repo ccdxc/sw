@@ -3,13 +3,16 @@ header_type ipfix_metadata_t {
         flow_index : 32;
         session_index : 32;
         flow_role : 1;
+        flow_type : 4;
+        do_export : 1;
+        pad : 2;
         qstate_addr : 34;
     }
 }
 
 header_type ipfix_t0_metadata_t {
     fields {
-        eindex : 32;
+        doorbell_data : 64;
     }
 }
 
@@ -107,7 +110,9 @@ header_type ipfix_pad_t {
 
 header_type ipfix_scratch_metadata_t {
     fields {
+        do_export : 1;
         flow_role : 1;
+        flow_type : 4;
         flow_index : 32;
         session_index : 32;
         qstate_addr : 32;
@@ -128,8 +133,11 @@ header_type ipfix_qstate_metadata_t {
         pid : 16;
         pindex : 16;
         cindex : 16;
+        sindex : 32;
         eindex : 32;
         pktaddr : 64;
         pktsize : 16;
+        rstart : 16;
+        rnext : 16;
     }
 }

@@ -15,43 +15,42 @@
 #include "nic/hal/pd/iris/if_pd_utils.hpp"
 #include "nic/hal/tls/tls_api.hpp"
 
-
 namespace hal {
 
 static proxy_meta_t g_meta[types::ProxyType_MAX];
 
-hal_ret_t  
+hal_ret_t
 proxy_meta_init() {
     /*
      * Add meta info for each service
-     * Fomat: is system, lif, qtype, qstate size, qstate entries 
+     * Fomat: is system, lif, qtype, qstate size, qstate entries
      */
 
     // CB size 1024, num_entries 4096
-    g_meta[types::PROXY_TYPE_TCP] = 
+    g_meta[types::PROXY_TYPE_TCP] =
         (proxy_meta_t) {false, 1, {SERVICE_LIF_TCP_PROXY, 1, {0, 5, 12}}};
- 
+
     // CB size 512, num_entries 4096
-    g_meta[types::PROXY_TYPE_TLS] = 
+    g_meta[types::PROXY_TYPE_TLS] =
         (proxy_meta_t) {false, 1, {SERVICE_LIF_TLS_PROXY, 1, {0, 4, 12}}};
 
-    g_meta[types::PROXY_TYPE_IPSEC] = 
+    g_meta[types::PROXY_TYPE_IPSEC] =
         (proxy_meta_t) {false, 1, {SERVICE_LIF_IPSEC_ESP, 2, {{0, 2, 4}, {1, 2, 4}}}};
- 
+
     // CB size 64 bytes, num_entries = 2
     //  QID 0 : RNMDR
     //  QID 1 : TNMDR
-    g_meta[types::PROXY_TYPE_GC] = 
+    g_meta[types::PROXY_TYPE_GC] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_GC, 1, {0, 1, 1}}};
 
-    g_meta[types::PROXY_TYPE_CPU] = 
+    g_meta[types::PROXY_TYPE_CPU] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 2, (uint8_t)ceil(log2(types::CpucbId_ARRAYSIZE))}}};
 
     g_meta[types::PROXY_TYPE_IPFIX] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 1}}};
 
-    g_meta[types::PROXY_TYPE_APP_REDIR] = 
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_APP_REDIR, APP_REDIR_NUM_QTYPES_MAX, 
+    g_meta[types::PROXY_TYPE_APP_REDIR] =
+        (proxy_meta_t) {true, 1, {SERVICE_LIF_APP_REDIR, APP_REDIR_NUM_QTYPES_MAX,
             {{APP_REDIR_RAWR_QTYPE, 2, 10}, {APP_REDIR_RAWC_QTYPE, 2, 10},
              {APP_REDIR_PROXYR_QTYPE, 2, 10}, {APP_REDIR_PROXYC_QTYPE, 2, 10}}}};
 
@@ -156,8 +155,8 @@ add_proxy_to_db (proxy_t *proxy)
     return HAL_RET_OK;
 }
 
-static inline hal_ret_t 
-add_proxy_flow_info_to_db(proxy_flow_info_t* pfi) 
+static inline hal_ret_t
+add_proxy_flow_info_to_db(proxy_flow_info_t* pfi)
 {
     pfi->proxy->flow_ht_->insert(pfi, &pfi->flow_ht_ctxt);
     return HAL_RET_OK;
@@ -166,7 +165,7 @@ add_proxy_flow_info_to_db(proxy_flow_info_t* pfi)
 // API to program LIF
 //-----------------------------------------------------------------------------
 
-hal_ret_t 
+hal_ret_t
 proxy_program_lif(proxy_t* proxy)
 {
     hal_ret_t           ret = HAL_RET_OK;
@@ -251,7 +250,7 @@ proxy_create_cpucb(uint8_t cpucb_id)
 }
 
 hal_ret_t
-proxy_create_cpucb(void) 
+proxy_create_cpucb(void)
 {
     hal_ret_t   ret = HAL_RET_OK;
     for(int i = 0; i < types::CpucbId_ARRAYSIZE; i++) {
@@ -266,14 +265,14 @@ proxy_create_cpucb(void)
 }
 
 
-hal_ret_t 
+hal_ret_t
 proxy_init_default_params(proxy_t* proxy)
 {
-    if(NULL == proxy) 
+    if(NULL == proxy)
     {
-        return HAL_RET_INVALID_ARG;    
+        return HAL_RET_INVALID_ARG;
     }
-    
+
     proxy->meta = &g_meta[proxy->type];
 
     return HAL_RET_OK;
@@ -303,8 +302,8 @@ proxy_post_lif_program_init(proxy_t* proxy)
     return ret;
 }
 
-proxy_t* 
-proxy_factory(types::ProxyType type) 
+proxy_t*
+proxy_factory(types::ProxyType type)
 {
     hal_ret_t       ret = HAL_RET_OK;
     proxy_t         * proxy = NULL;
@@ -318,24 +317,24 @@ proxy_factory(types::ProxyType type)
 
     proxy->type = type;
     proxy->hal_handle = hal_alloc_handle();
-   
-    // Initialize flow info structures 
+
+    // Initialize flow info structures
     proxy->flow_ht_ = ht::factory(HAL_MAX_PROXY_FLOWS,
                                   hal::proxy_flow_ht_get_key_func,
                                   hal::proxy_flow_ht_compute_hash_func,
                                  hal::proxy_flow_ht_compare_key_func);
     HAL_ASSERT(proxy->flow_ht_ != NULL);
 
-    // Instantiate QID indexer 
+    // Instantiate QID indexer
     proxy->qid_idxr_ = new hal::utils::indexer(HAL_MAX_QID);
     HAL_ASSERT(NULL != proxy->qid_idxr_);
-   
+
    // initialize default params
     proxy_init_default_params(proxy);
-    
+
     // program LIF for this proxy
     proxy_program_lif(proxy);
-    
+
     // post lif programming initialization
     proxy_post_lif_program_init(proxy);
 
@@ -376,7 +375,7 @@ proxy_enable(ProxySpec& spec, ProxyResponse *rsp)
 //------------------------------------------------------------------------------
 // Initialize default proxy services
 //------------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 hal_proxy_system_svc_init(void)
 {
     for(int i = 1; i < types::ProxyType_ARRAYSIZE; i++) {
@@ -384,30 +383,30 @@ hal_proxy_system_svc_init(void)
             continue;
         }
         if(NULL ==  proxy_factory(types::ProxyType(i))) {
-            HAL_TRACE_ERR("Failed to initialize service of type: {}", 
+            HAL_TRACE_ERR("Failed to initialize service of type: {}",
                             types::ProxyType(i));
             return HAL_RET_NO_RESOURCE;
         }
-        HAL_TRACE_DEBUG("Initialized service of type: {}", 
+        HAL_TRACE_DEBUG("Initialized service of type: {}",
                           types::ProxyType_Name(types::ProxyType(i)));
     }
 
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 hal_proxy_svc_init(void)
 {
     hal_ret_t       ret = HAL_RET_OK;
-    
+
     // Reserve Service LIFs
-    if(g_lif_manager->LIFRangeAlloc(SERVICE_LIF_START, (SERVICE_LIF_END - SERVICE_LIF_START)) 
-            <= 0) 
+    if(g_lif_manager->LIFRangeAlloc(SERVICE_LIF_START, (SERVICE_LIF_END - SERVICE_LIF_START))
+            <= 0)
     {
         HAL_TRACE_ERR("Failed to reserve service LIF");
         return HAL_RET_NO_RESOURCE;
     }
- 
+
     // Initialize meta
     ret = proxy_meta_init();
     if(ret != HAL_RET_OK) {
@@ -441,7 +440,7 @@ hal_ret_t
 proxy_get (ProxyGetRequest& req, ProxyGetResponse *rsp)
 {
 #if 0
-    hal_ret_t              ret = HAL_RET_OK; 
+    hal_ret_t              ret = HAL_RET_OK;
     proxy_t                rproxy;
     proxy_t*               proxy;
     pd::pd_proxy_args_t    pd_proxy_args;
@@ -470,12 +469,12 @@ proxy_get (ProxyGetRequest& req, ProxyGetResponse *rsp)
         rsp->set_api_status(types::API_STATUS_TCP_CB_NOT_FOUND);
         return HAL_RET_TCP_CB_NOT_FOUND;
     }
-    
+
     proxy_init(&rproxy);
     rproxy.cb_id = proxy->cb_id;
     pd::pd_proxy_args_init(&pd_proxy_args);
     pd_proxy_args.proxy = &rproxy;
-    
+
     ret = pd::pd_proxy_get(&pd_proxy_args);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD PROXY: Failed to get, err: ", ret);
@@ -483,7 +482,7 @@ proxy_get (ProxyGetRequest& req, ProxyGetResponse *rsp)
         return HAL_RET_HW_FAIL;
     }
 
-    // fill config spec of this TCP CB 
+    // fill config spec of this TCP CB
     rsp->mutable_spec()->mutable_key_or_handle()->set_proxy_id(rproxy.cb_id);
     rsp->mutable_spec()->set_rcv_nxt(rproxy.rcv_nxt);
 
@@ -522,18 +521,18 @@ validate_proxy_flow_config_request(proxy::ProxyFlowConfigRequest& req,
         HAL_TRACE_ERR("{}: vrf {} not found", __func__, tid);
         return HAL_RET_INVALID_ARG;    
     }
-    
+
     if(!req.has_spec() ||
        req.spec().proxy_type() == types::PROXY_TYPE_NONE) {
        rsp->set_api_status(types::API_STATUS_PROXY_TYPE_INVALID);
         HAL_TRACE_ERR("no proxy_type found");
-       return HAL_RET_INVALID_ARG;   
+       return HAL_RET_INVALID_ARG;
     }
-   
+
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 proxy_flow_enable(types::ProxyType proxy_type,
                   const flow_key_t &flow_key,
                   bool alloc_qid,
@@ -625,7 +624,7 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
   
     tid = req.meta().vrf_id();
     extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
-   
+
     // ignore direction for the flow.
     flow_key.dir = 0;
 
@@ -675,13 +674,13 @@ validate_proxy_get_flow_info_request(proxy::ProxyGetFlowInfoRequest& req,
         HAL_TRACE_ERR("{}: vrf {} not found", __func__, tid);
         return HAL_RET_INVALID_ARG;    
     }
-    
+
     if(!req.has_spec() ||
        req.spec().proxy_type() == types::PROXY_TYPE_NONE) {
        rsp->set_api_status(types::API_STATUS_PROXY_TYPE_INVALID);
-       return HAL_RET_INVALID_ARG;   
+       return HAL_RET_INVALID_ARG;
     }
-   
+
     return HAL_RET_OK;
 }
 
@@ -692,19 +691,19 @@ proxy_get_flow_info(types::ProxyType proxy_type,
     proxy_t*            proxy = NULL;
 
     if(proxy_type == types::PROXY_TYPE_NONE || !flow_key) {
-        return NULL;    
+        return NULL;
     }
 
-    proxy = find_proxy_by_type(proxy_type); 
+    proxy = find_proxy_by_type(proxy_type);
     if(proxy == NULL) {
         HAL_TRACE_ERR("{}: proxy {} not found", __func__, proxy_type);
-        return NULL;    
+        return NULL;
     }
-    
+
     return find_proxy_flow_info(proxy, flow_key);
 }
 
-hal_ret_t 
+hal_ret_t
 proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
                     proxy::ProxyGetFlowInfoResponse* rsp)
 {
@@ -722,14 +721,14 @@ proxy_get_flow_info(proxy::ProxyGetFlowInfoRequest& req,
     
     tid = req.meta().vrf_id();
     extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
-    
+
     pfi = proxy_get_flow_info(req.spec().proxy_type(), &flow_key);
     if(!pfi) {
         HAL_TRACE_ERR("proxy: flow info not found for the flow {}", flow_key);
         rsp->set_api_status(types::API_STATUS_PROXY_FLOW_NOT_FOUND);
         return HAL_RET_PROXY_NOT_FOUND;
     }
-    
+
     proxy = pfi->proxy;
 
     *(rsp->mutable_meta()) = req.meta();
