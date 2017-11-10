@@ -12,8 +12,8 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct tcp_rx_tcp_rx_k k;
-struct tcp_rx_tcp_rx_d d;
+struct s1_t0_tcp_rx_k k;
+struct s1_t0_tcp_rx_d d;
 
 #define To_s1_seq {to_s1_seq_sbit0_ebit7...to_s1_seq_sbit8_ebit31}
 #define To_s1_ack_seq {to_s1_ack_seq_sbit0_ebit7...to_s1_ack_seq_sbit24_ebit31}

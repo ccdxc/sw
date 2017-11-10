@@ -11,8 +11,8 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct tcp_rx_read_tx2rx_k k;
-struct tcp_rx_read_tx2rx_read_tx2rx_d d;
+struct common_p4plus_stage0_app_header_table_k k;
+struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
 
 %%
 

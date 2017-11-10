@@ -6,22 +6,26 @@
 
 /******************************************************************************
  * Table names
+ * 
+ * Table names have to alphabetically be in chronological order (to match with
+ * common program table names), so they need * to be prefixed by stage# and
+ * table#
  *****************************************************************************/
-#define tx_table_s0_t0 tcp_tx_read_rx2tx
+#define tx_table_s0_t0 s0_t0_read_rx2tx
 
-#define tx_table_s1_t0 tcp_tx_read_rx2tx_extra
-#define tx_table_s1_t1 tcp_tx_read_sesq_ci
+#define tx_table_s1_t0 s1_t0_read_rx2tx_extra
+#define tx_table_s1_t1 s1_t0_read_sesq_ci
 
-#define tx_table_s2_t0 tcp_tx_pending
-#define tx_table_s2_t1 tcp_tx_sesq_consume
+#define tx_table_s2_t0 s2_t0_pending
+#define tx_table_s2_t1 s2_t1_sesq_consume
 
-#define tx_table_s3_t0 tcp_tx_read_descr
+#define tx_table_s3_t0 s3_t0_read_descr
 
-#define tx_table_s4_t0 tcp_tx_tcp_tx
+#define tx_table_s4_t0 s4_t0_tcp_tx
 
-#define tx_table_s5_t0 tcp_tx_tso
+#define tx_table_s5_t0 s5_t0_tso
 
-#define tx_table_s6_t0 tcp_tx_stats
+#define tx_table_s6_t0 s6_t0_stats
 
 
 /******************************************************************************

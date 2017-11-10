@@ -6,33 +6,35 @@
 
 /******************************************************************************
  * Table names
+ * 
+ * Table names have to alphabetically be in chronological order (to match with
+ * common program table names), so they need * to be prefixed by stage# and
+ * table#
  *****************************************************************************/
-#define rx_table_s1_t0 tcp_rx_tcp_rx
+#define rx_table_s1_t0 s1_t0_tcp_rx
 
-#define rx_table_s2_t0 tcp_rx_tcp_rtt
+#define rx_table_s2_t0 s2_t0_tcp_rtt
 
-#define rx_table_s2_t1 tcp_rx_read_rnmdr
+#define rx_table_s2_t1 s2_t1_read_rnmdr
 
-#define rx_table_s2_t2 tcp_rx_read_rnmpr
+#define rx_table_s2_t2 s2_t2_read_rnmpr
 
-#define rx_table_s2_t3 tcp_rx_l7_read_rnmdr
+#define rx_table_s2_t3 s2_t3_l7_read_rnmdr
 
-#define rx_table_s3_t0 tcp_rx_tcp_fra
-#define rx_table_s3_t1 tcp_rx_rdesc_alloc
-#define rx_table_s3_t2 tcp_rx_rpage_alloc
-#define rx_table_s3_t3 tcp_rx_l7_rdesc_alloc
+#define rx_table_s3_t0 s3_t0_tcp_fra
+#define rx_table_s3_t1 s3_t1_rdesc_alloc
+#define rx_table_s3_t2 s3_t2_rpage_alloc
+#define rx_table_s3_t3 s3_t3_l7_rdesc_alloc
 
-#define rx_table_s4_t0 tcp_rx_tcp_cc
+#define rx_table_s4_t0 s4_t0_tcp_cc
 
-#define rx_table_s5_t0 tcp_rx_tcp_fc
+#define rx_table_s5_t0 s5_t0_tcp_fc
 
-#define rx_table_s6_t0 tcp_rx_write_serq
-#define rx_table_s6_t1 tcp_rx_write_arq
-#define rx_table_s6_t2 tcp_rx_write_l7q
+#define rx_table_s6_t0 s6_t0_write_serq
+#define rx_table_s6_t1 s6_t1_write_arq
+#define rx_table_s6_t2 s6_t2_write_l7q
 
-#define rx_table_s7_t0 tcp_rx_stats
-
-#define common_p4plus_stage0_app_header_table tcp_rx_read_tx2rx
+#define rx_table_s7_t0 s7_t0_stats
 
 
 /******************************************************************************

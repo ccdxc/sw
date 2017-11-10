@@ -9,8 +9,8 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct tcp_rx_rdesc_alloc_k k;
-struct tcp_rx_rdesc_alloc_rdesc_alloc_d d;
+struct s3_t1_rdesc_alloc_k k;
+struct s3_t1_rdesc_alloc_rdesc_alloc_d d;
 
 %%
     .align

@@ -11,8 +11,8 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct tcp_rx_write_serq_k k;
-struct tcp_rx_write_serq_write_serq_d d;
+struct s6_t0_write_serq_k k;
+struct s6_t0_write_serq_write_serq_d d;
 
 %%
     .param          tcp_rx_stats_stage7_start

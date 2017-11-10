@@ -97,8 +97,8 @@
 #include "INGRESS_p.h"
     
 struct phv_ p;
-struct tcp_rx_tcp_fra_k k;
-struct tcp_rx_tcp_fra_tcp_fra_d d;
+struct s3_t0_tcp_fra_k k;
+struct s3_t0_tcp_fra_tcp_fra_d d;
 
 %%
     .param          tcp_rx_cc_stage4_start

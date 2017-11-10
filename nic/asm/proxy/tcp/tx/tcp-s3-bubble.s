@@ -12,7 +12,7 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct tcp_tx_read_descr_k k;
+struct s3_t0_read_descr_k k;
 
 %%
     .align

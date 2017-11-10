@@ -11,8 +11,8 @@
 #include "INGRESS_p.h"
     
 struct phv_ p;
-struct tcp_rx_write_arq_k k;
-struct tcp_rx_write_arq_write_arq_d d;
+struct s6_t1_write_arq_k k;
+struct s6_t1_write_arq_write_arq_d d;
 
 %%
     .align    
@@ -95,7 +95,7 @@ dma_cmd_descr:
 
     smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_LEAVE_IN_ARQ, TCP_DDOL_LEAVE_IN_ARQ
 dma_cmd_arq_slot:
-    CPU_ARQ_PIDX_READ_INC(r6, 0, struct tcp_rx_write_arq_write_arq_d, pi_0)
+    CPU_ARQ_PIDX_READ_INC(r6, 0, struct s6_t1_write_arq_write_arq_d, pi_0)
     CPU_RX_ENQUEUE(r5,
                    k.to_s6_descr,
                    r6,

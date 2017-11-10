@@ -11,8 +11,8 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct tcp_rx_read_rnmdr_k k;
-struct tcp_rx_read_rnmdr_read_rnmdr_d d;
+struct s2_t1_read_rnmdr_k k;
+struct s2_t1_read_rnmdr_read_rnmdr_d d;
     
 %%
     .param          tcp_rx_rdesc_alloc_stage_3_start

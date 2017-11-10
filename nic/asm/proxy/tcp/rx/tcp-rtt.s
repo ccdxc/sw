@@ -10,8 +10,8 @@
 #include "INGRESS_p.h"
     
 struct phv_ p;
-struct tcp_rx_tcp_rtt_k k;
-struct tcp_rx_tcp_rtt_tcp_rtt_d d;
+struct s2_t0_tcp_rtt_k k;
+struct s2_t0_tcp_rtt_tcp_rtt_d d;
 
     
 %%

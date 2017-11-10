@@ -10,8 +10,8 @@
 #include "INGRESS_p.h"
 	
 struct phv_ p;
-struct tcp_tx_pending_k k;
-struct tcp_tx_pending_pending_d d;
+struct s2_t0_pending_k k;
+struct s2_t0_pending_pending_d d;
 	
 %%
     .align

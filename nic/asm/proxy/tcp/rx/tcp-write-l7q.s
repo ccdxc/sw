@@ -11,8 +11,8 @@
 #include "INGRESS_p.h"
 
 struct phv_ p;
-struct tcp_rx_write_l7q_k k;
-struct tcp_rx_write_l7q_write_l7q_d d;
+struct s6_t2_write_l7q_k k;
+struct s6_t2_write_l7q_write_l7q_d d;
 
 %%
     .align

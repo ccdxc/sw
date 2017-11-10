@@ -11,8 +11,8 @@
 #include "INGRESS_p.h"
     
 struct phv_ p;
-struct tcp_rx_tcp_cc_k k;
-struct tcp_rx_tcp_cc_tcp_cc_d d;
+struct s4_t0_tcp_cc_k k;
+struct s4_t0_tcp_cc_tcp_cc_d d;
     
 %%
     .param          tcp_rx_fc_stage5_start

@@ -11,7 +11,7 @@
 #include "INGRESS_p.h"
 	
 struct phv_ p;
-struct tcp_rx_stats_k k;
+struct s7_t0_stats_k k;
 	
 %%
 	.align	

@@ -11,8 +11,8 @@
 #include "INGRESS_p.h"
 	
 struct phv_ p;
-struct tcp_tx_read_rx2tx_extra_k k;
-struct tcp_tx_read_rx2tx_extra_read_rx2tx_extra_d d;
+struct s1_t0_read_rx2tx_extra_k k;
+struct s1_t0_read_rx2tx_extra_read_rx2tx_extra_d d;
 	
 %%
     .align

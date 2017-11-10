@@ -11,8 +11,8 @@
 #include "INGRESS_p.h"
     
 struct phv_ p;
-struct tcp_rx_tcp_fc_k k;              // TODO : define own k for s5
-struct tcp_rx_tcp_fc_tcp_fc_d d;       // TODO : define own k for s5
+struct s5_t0_tcp_fc_k k;              // TODO : define own k for s5
+struct s5_t0_tcp_fc_tcp_fc_d d;       // TODO : define own k for s5
     
 %%
     .param          tcp_rx_write_serq_stage6_start

@@ -12,8 +12,8 @@
 #include "defines.h"
 
 struct phv_ p    ;
-struct tcp_tx_tso_k k    ;
-struct tcp_tx_tso_tso_d d    ;
+struct s5_t0_tso_k k    ;
+struct s5_t0_tso_tso_d d    ;
 
 
 %%
