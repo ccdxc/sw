@@ -95,6 +95,7 @@ typedef enum hal_slab_e {
     HAL_SLAB_CPUPKT_QINST_INFO_PD,
     HAL_SLAB_DIRECTMAP_ENTRY,
     HAL_SLAB_DIRECTMAP_DATA,
+    HAL_SLAB_PORT_PD,
     HAL_SLAB_PD_MAX,                 // NOTE: MUST be last PD slab id
 
     HAL_SLAB_RSVD,  // all non-delay delete slabs can use this
@@ -121,6 +122,7 @@ typedef enum hal_mem_alloc_e {
     HAL_MEM_ALLOC_LIB_ACL_TCAM,
     HAL_MEM_ALLOC_DLLIST,
     HAL_MEM_ALLOC_EVENT_MGR,
+    HAL_MEM_ALLOC_CATALOG,
     HAL_MEM_ALLOC_OTHER,
 } hal_mem_alloc_t;
 

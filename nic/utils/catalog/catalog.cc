@@ -185,14 +185,14 @@ catalog::factory(std::string catalog_file) {
         return NULL;
     }
 
-    new_catalog = new catalog();
+    new_catalog = (catalog*)HAL_MALLOC(HAL_MEM_ALLOC_CATALOG, sizeof(catalog));
     if (new_catalog == NULL) {
         return NULL;
     }
 
     ret = new_catalog->init(catalog_file);
     if (ret != HAL_RET_OK) {
-        delete new_catalog;
+        HAL_FREE(HAL_MEM_ALLOC_CATALOG, new_catalog);
         return NULL;
     }
 

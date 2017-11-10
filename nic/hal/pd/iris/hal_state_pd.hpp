@@ -75,6 +75,9 @@ public:
     slab *vrf_slab(void) const { return vrf_slab_; }
     indexer *vrf_hwid_idxr(void) const { return vrf_hwid_idxr_; }
 
+    // get APIs for port related state
+    slab *port_slab(void) const { return port_slab_; }
+
     // get APIs for security related state
     indexer *nwsec_profile_hwid_idxr(void) const { return nwsec_profile_hwid_idxr_; }
 
@@ -267,6 +270,11 @@ private:
     struct {
         slab       *vrf_slab_;
         indexer    *vrf_hwid_idxr_;
+    } __PACK__;
+
+    // port related state
+    struct {
+        slab       *port_slab_;
     } __PACK__;
 
     struct {

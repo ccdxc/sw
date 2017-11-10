@@ -4,6 +4,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/include/interface_api.hpp"
 #include "nic/hal/pd/iris/port_pd.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/port.hpp"
 
 namespace hal {
@@ -17,7 +18,8 @@ pd_port_create (pd_port_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
     hal::port_t    *pi_p = args->pi_p;
-    hal::pd::port  *pd_p = new hal::pd::port();
+    hal::pd::port  *pd_p =
+                    (hal::pd::port*)g_hal_state_pd->port_slab()->alloc();
 
     pd_p->set_port_type(args->port_type);
     pd_p->set_port_speed(args->port_speed);
@@ -81,7 +83,7 @@ pd_port_delete (pd_port_args_t *args)
 
     ret = hal::pd::port::port_disable(pd_p);
 
-    delete pd_p;
+    g_hal_state_pd->port_slab()->free(pd_p);
 
     HAL_TRACE_DEBUG("{}: port delete", __FUNCTION__);
 
@@ -121,7 +123,8 @@ pd_port_make_clone (port_t *pi_p, port_t *pi_clone_p)
     hal::pd::port  *pd_p = (hal::pd::port*) pi_p->pd_p;
 
     // cloned pd instance
-    hal::pd::port  *pd_clone_p = new hal::pd::port();
+    hal::pd::port  *pd_clone_p =
+                    (hal::pd::port*)g_hal_state_pd->port_slab()->alloc();
 
     // populate cloned pd instance from existing pd instance
     pd_clone_p->set_oper_status(pd_p->oper_status());
@@ -154,7 +157,7 @@ pd_port_mem_free (pd_port_args_t *args)
 
     hal::pd::port  *pd_p = (hal::pd::port*) args->pi_p->pd_p;
 
-    delete pd_p;
+    g_hal_state_pd->port_slab()->free(pd_p);
 
     return ret;
 }
