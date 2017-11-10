@@ -285,47 +285,45 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
     HAL_TRACE_DEBUG("cpupkt:Starting packet poll for queue: {}", ctxt->rx.num_queues);
     uint64_t value, descr_addr;
     cpupkt_qinst_info_t* qinst_info = NULL;
-    while(true) {
-        usleep(1000000/3);
-        for(uint32_t i=0; i< ctxt->rx.num_queues; i++) {
-            value = 0;
-            qinst_info = ctxt->rx.queue[i].qinst_info[0];
-            //HAL_TRACE_DEBUG("cpupkt rx: checking queue at address: {:#x}", ctxt->rx.queue[i].pc_index_addr);
-            if(!p4plus_hbm_read(qinst_info->pc_index_addr,
-                                (uint8_t *)&value, 
-                                sizeof(uint64_t))) {
-                HAL_TRACE_ERR("Failed to read the data from the hw");
-                return HAL_RET_HW_FAIL;
-            }
-            value = ntohll(value);
-            if(!is_valid_slot_value(value, &descr_addr)) {
-                if(value > 0) {
-                    // With DEBUG DOL, P4+ writes the queue without setting VALID BIT.
-                    // Increase CI to keep it in sync with hw
-                    cpupkt_inc_queue_index(*qinst_info);
-                }
-                continue;
-            }
 
-            HAL_TRACE_DEBUG("cpupkt: Received valid data: queue: {}, pc_index: {}, addr: {:#x}, value: {:#x}, descr_addr: {:#x}",
-                             ctxt->rx.queue[i].type, qinst_info->pc_index, qinst_info->pc_index_addr, value, descr_addr);
-            // get the descriptor
-            pd_descr_aol_t  descr = {0};
-            if(!p4plus_hbm_read(descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
-                HAL_TRACE_ERR("Failed to read the descr from hw");
-                return HAL_RET_HW_FAIL;
-            }
-            
-            ret = cpupkt_descr_to_headers(descr, flow_miss_hdr, data, data_len);
-            if(ret != HAL_RET_OK) 
-            {
-                HAL_TRACE_ERR("Failed to create skbuff");
-            }
-            cpupkt_free_and_inc_queue_index(*qinst_info);
-            return ret;
+    for(uint32_t i=0; i< ctxt->rx.num_queues; i++) {
+        value = 0;
+        qinst_info = ctxt->rx.queue[i].qinst_info[0];
+        //HAL_TRACE_DEBUG("cpupkt rx: checking queue at address: {:#x}", ctxt->rx.queue[i].pc_index_addr);
+        if(!p4plus_hbm_read(qinst_info->pc_index_addr,
+                            (uint8_t *)&value, 
+                            sizeof(uint64_t))) {
+            HAL_TRACE_ERR("Failed to read the data from the hw");
+            return HAL_RET_HW_FAIL;
         }
+        value = ntohll(value);
+        if(!is_valid_slot_value(value, &descr_addr)) {
+            if(value > 0) {
+                // With DEBUG DOL, P4+ writes the queue without setting VALID BIT.
+                // Increase CI to keep it in sync with hw
+                cpupkt_inc_queue_index(*qinst_info);
+            }
+            continue;
+        }
+        
+        HAL_TRACE_DEBUG("cpupkt: Received valid data: queue: {}, pc_index: {}, addr: {:#x}, value: {:#x}, descr_addr: {:#x}",
+                        ctxt->rx.queue[i].type, qinst_info->pc_index, qinst_info->pc_index_addr, value, descr_addr);
+        // get the descriptor
+        pd_descr_aol_t  descr = {0};
+        if(!p4plus_hbm_read(descr_addr, (uint8_t*)&descr, sizeof(pd_descr_aol_t))) {
+            HAL_TRACE_ERR("Failed to read the descr from hw");
+            return HAL_RET_HW_FAIL;
+        }
+        
+        ret = cpupkt_descr_to_headers(descr, flow_miss_hdr, data, data_len);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to create skbuff");
+        }
+        cpupkt_free_and_inc_queue_index(*qinst_info);
+        return ret;
     }
-    return ret;    
+
+    return HAL_RET_RETRY;    
 }
 
 hal_ret_t

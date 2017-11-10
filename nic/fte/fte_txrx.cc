@@ -1,4 +1,5 @@
 #include "nic/fte/fte.hpp"
+#include "nic/fte/fte_softq.hpp"
 #include "nic/fte/fte_flow.hpp"
 #include <string>
 #include <sstream>
@@ -38,6 +39,10 @@ pkt_loop(uint8_t fte_id)
     ctx_t ctx;
     flow_t iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
 
+    // init soft_queue
+    mpscq_t *softq = mpscq_t::alloc(16);
+    softq_register(softq);
+
     // init arm driver context
     arm_ctx = hal::pd::cpupkt_ctxt_alloc_init();
     ret = cpupkt_register_rx_queue(arm_ctx, types::WRING_TYPE_ARQRX, fte_id);
@@ -51,13 +56,26 @@ pkt_loop(uint8_t fte_id)
 
     pkt = NULL;
     while(true) {
+        usleep(1000000/3);
+
         // free the last pkt
         if (pkt != NULL) {
             hal::pd::cpupkt_free(cpu_rxhdr, pkt);
+            pkt = NULL;
+        }
+
+        // Read soft q
+        void *sq_op, *sq_data;
+        if (softq->dequeue(&sq_op, &sq_data)) {
+            HAL_TRACE_DEBUG("fte: softq dequeue fn={:p} data={:p}", sq_op, sq_data);
+            (*(softq_fn_t)sq_op)(sq_data);
         }
 
         // read the packet
         ret = hal::pd::cpupkt_poll_receive(arm_ctx, &cpu_rxhdr, &pkt, &pkt_len);
+        if (ret == HAL_RET_RETRY) {
+            continue;
+        }
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: arm rx failed, ret={}", ret);
             continue;

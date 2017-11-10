@@ -27,9 +27,7 @@ cc_library(
 
 cc_test(
     name = "fte_test",
-    srcs = [
-        "test/fte_test.cc",
-    ],
+    srcs = glob(["test/*.cc"]),
     deps = [
         "//nic/hal:hal_src",
         # PI
