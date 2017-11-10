@@ -36,19 +36,21 @@ CHECK_INVALID_C_VARIABLE = re.compile(r'[^a-zA-Z0-9_]')
 def make_templates_outfiles(template_dir, output_h_dir, output_c_dir, output_py_dir, prog_name, cli_name):
 
     # file-names in template_dir will be used
-    # to generate corresponding .c or .h files and 
+    # to generate corresponding .c or .h files and
     # output to output_dir
     files = [f for f in os.listdir(template_dir) \
               if os.path.isfile(os.path.join(template_dir,f))]
 
     pdoutfiles = []
     for f in files:
-        if ".py" in f:
+        if f.endswith('.py'):
             output_dir = output_py_dir
             if "debug" in f:
                 genf = cli_name + '_debug_cli.py'
-            else:
+            elif "p4pd" in f:
                 genf = cli_name + '_cli.py'
+            else:
+                genf = f
         else:
             if ".h" in f:
                 output_dir = output_h_dir
@@ -115,10 +117,10 @@ class capri_p4pd:
         elif ctype == p4.p4_match_type.P4_MATCH_TERNARY or \
              ctype == match_type.EXACT_HASH_OTCAM:
             mask = 0    # Run time API when installing entry
-                        # into tcam table will specify mask for 
+                        # into tcam table will specify mask for
                         # ternary match. Hence set to 0
         else:
-            pass 
+            pass
         return p4fldname, p4fldwidth, mask
 
     def cfield_get_p4name_width(self, cf):
@@ -139,7 +141,7 @@ class capri_p4pd:
         for cfield, ctype in cf_table_keylist.items():
             if cfield.is_hdr_union:
                 # Get list of other headers that this table key-field's
-                # header is unionized with. 
+                # header is unionized with.
                 # Check if table key is header field from any unionizedheaders
                 hdrs = self.be.pa.gress_pa[ctable.d].hdr_unions.values()
                 cfieldhdr = cfield.get_p4_hdr()
@@ -247,7 +249,7 @@ class capri_p4pd:
 
     def build_table_key_hwformat(self, ctable, cf_table_keylist):
         '''
-            This function builds dictionary of 
+            This function builds dictionary of
             - KM byte --> (table match key p4 field, byte position in the field).
             - table match key p4 field --> List[KM byte, byte of P4field].
         '''
@@ -262,7 +264,7 @@ class capri_p4pd:
         km_byte_to_cf_map   = OrderedDict() # maintains mapping of KM byte# to
                                             # (table-key, byte within key,
                                             #  width=8)
-        km_bit_to_cf_map    = OrderedDict() # maintains mapping of KM bit# to 
+        km_bit_to_cf_map    = OrderedDict() # maintains mapping of KM bit# to
                                             # (table-key, bit within key,
                                             #  width=1)
         match_key_start_byte = 0 # Locates Byte position in KM where
@@ -296,7 +298,7 @@ class capri_p4pd:
                 km_cprofile = table_km_cprofile
 
             # Each km profile has atmost 32 bytes populated using k / k,i
-            # km_byte tracks KM byte which is final/correct position in 
+            # km_byte tracks KM byte which is final/correct position in
             # HW table
 
             # When TCAM table ahd hash/idx table share KM, its possible to
@@ -312,18 +314,18 @@ class capri_p4pd:
                            ctable.match_type == match_type.EXACT_HASH_OTCAM:
                             # In case of TCAM Key bytes that belong to another
                             # table but are in the same KM as this table,
-                            # (KM is shared by 2 Tcam tables) they will be 
-                            # part of this table's key that need to be 
+                            # (KM is shared by 2 Tcam tables) they will be
+                            # part of this table's key that need to be
                             # masked out.
                             if len(km_byte_to_cf_map) > 0 or len(km_bit_to_cf_map) > 0:
                                 not_my_key_bytes.append(km_start_byte + km_byte)
 
                     else: #if km_phv_byte in table_km_cprofile.k_byte_sel:
                         # Collect all 'k' phv bytes and map each of those
-                        # KM byte position to byte location within every key field 
+                        # KM byte position to byte location within every key field
                         # that table uses as match key.
                         for cf in cf_table_keylist:
-                            # cf bits could span more than a byte with 
+                            # cf bits could span more than a byte with
                             # less than 8 bits spilled to another byte.
                             # Example:  PhvB-0 = field-bits 0 - 2
                             #           PhvB-1 = field-bits 3 - 10
@@ -338,7 +340,7 @@ class capri_p4pd:
                                     self.be.pa.gress_pa[ctable.d].phcs[phvc].fields[cf.hfname]
                                 assert(width <= 8), pdb.set_trace()
                                 # When key comes from field union and more than
-                                # one field from the same union is used as keys 
+                                # one field from the same union is used as keys
                                 # to table, then we need to collect for all keys
                                 # that are field unionized.
                                 if km_start_byte + km_byte not in km_byte_to_cf_map.keys():
@@ -350,7 +352,7 @@ class capri_p4pd:
                                 break
 
                         # Traverse input list of the table and check for presence
-                        # of input fields in Key-bytes (KM can place input bits 
+                        # of input fields in Key-bytes (KM can place input bits
                         # along with Keybits)
                         for cf in cf_table_ilist:
                             for phvc in cf.phcs:
@@ -375,18 +377,18 @@ class capri_p4pd:
                            ctable.match_type == match_type.EXACT_HASH_OTCAM:
                             # In case of TCAM Key bytes that belong to another
                             # table but are in the same KM as this table,
-                            # (KM is shared by 2 Tcam tables) they will be 
-                            # part of this table's key that need to be 
+                            # (KM is shared by 2 Tcam tables) they will be
+                            # part of this table's key that need to be
                             # masked out.
                             if len(km_byte_to_cf_map) > 0 or len(km_bit_to_cf_map) > 0:
                                 not_my_key_bytes.append(km_start_byte + km_byte)
 
                     else: #if km_phv_byte in table_km_cprofile.k_byte_sel:
                         # Collect all 'k' phv bytes and map each of those
-                        # KM byte position to byte location within every key field 
+                        # KM byte position to byte location within every key field
                         # that table uses as match key.
                         for cf in cf_table_keylist:
-                            # cf bits could span more than a byte with 
+                            # cf bits could span more than a byte with
                             # less than 8 bits spilled to another byte.
                             # Example:  PhvB-0 = field-bits 0 - 2
                             #           PhvB-1 = field-bits 3 - 10
@@ -401,7 +403,7 @@ class capri_p4pd:
                                     self.be.pa.gress_pa[ctable.d].phcs[phvc].fields[cf.hfname]
                                 assert(width <= 8), pdb.set_trace()
                                 # When key comes from field union and more than
-                                # one field from the same union is used as keys 
+                                # one field from the same union is used as keys
                                 # to table, then we need to collect for all keys
                                 # that are field unionized.
                                 if km_start_byte + km_byte not in km_byte_to_cf_map.keys():
@@ -413,7 +415,7 @@ class capri_p4pd:
                                 break
 
                         # Traverse input list of the table and check for presence
-                        # of input fields in Key-bytes (KM can place input bits 
+                        # of input fields in Key-bytes (KM can place input bits
                         # along with Keybits)
                         for cf in cf_table_ilist:
                             for phvc in cf.phcs:
@@ -446,20 +448,20 @@ class capri_p4pd:
                                         km_bit_to_cf_map[start_kbit + km_bit] = [(cf, cf_bit, 1, "K")]
                                     else:
                                         # Incase of field union, 2 different k bytes can map
-                                        # same km byte position. 
+                                        # same km byte position.
                                         km_bit_to_cf_map[start_kbit + km_bit].append[(cf, cf_bit, 1, "K")]
                                     cf_bit_found = True
                                     break
                     if not cf_bit_found:
-                        # Phv bit that is not my table key bit. 
+                        # Phv bit that is not my table key bit.
                         # Belongs to key of another table and part
                         # of shared key maker.
                         if ctable.match_type == match_type.TERNARY or \
                            ctable.match_type == match_type.EXACT_HASH_OTCAM:
                             # In case of TCAM Key bits that belong to another
                             # table but are in the same KM as this table,
-                            # (KM is shared by 2 Tcam tables) they will be 
-                            # part of this table's key that need to be 
+                            # (KM is shared by 2 Tcam tables) they will be
+                            # part of this table's key that need to be
                             # masked out.
                             if len(km_byte_to_cf_map) > 0 or len(km_bit_to_cf_map) > 0:
                                 not_my_key_bits.append(start_kbit + km_bit)
@@ -512,7 +514,7 @@ class capri_p4pd:
             #All capri fields that are keys of the table.
             cf_keylist = {}
             for k in ctable.keys:
-                cfield = k[0] 
+                cfield = k[0]
                 ctype = k[1]
                 cf_keylist[cfield] = ctype
 
@@ -531,10 +533,10 @@ class capri_p4pd:
                                                      cf_keylist,
                                                      kdict['cf_to_km_byte'], \
                                                      kdict['cf_to_km_bit'])
-            # process all table keys that are not fld or header union 
+            # process all table keys that are not fld or header union
             tblkeys = []
             for k in ctable.keys:
-                cfield = k[0] 
+                cfield = k[0]
                 ctype = k[1]
 
                 if cfield.is_hv:
@@ -556,12 +558,12 @@ class capri_p4pd:
 
                     # Every table key field when installed in HW RAM/TCAM line
                     # need match key maker format. All bytes of key are extracted
-                    # by byte-extractor; hence the array 'byteformat[]' 
-                    # specifies location of table key bytes to location in 
+                    # by byte-extractor; hence the array 'byteformat[]'
+                    # specifies location of table key bytes to location in
                     # memory.
                     # When key length is not multiple of 8bits, remaining bits
                     # (after extracting all bytes) are extraced by bit-extractors.
-                    # The array 'bitformat[]' specifies location of table key 
+                    # The array 'bitformat[]' specifies location of table key
                     # bits to bit location in memory.
                     byteformat = [] # Entry formatting that goes into HW table
                                     # at byte extraction boundary
@@ -587,8 +589,8 @@ class capri_p4pd:
             kdict['match_key_len']          = 0
             kdict['km_byte_to_cf']          = []
             kdict['km_bit_to_cf']           = []
-            kdict['fld_u_keys']             = [] 
-            kdict['hdr_u_keys']             = [] 
+            kdict['fld_u_keys']             = []
+            kdict['hdr_u_keys']             = []
             kdict['keys']                   = []
             kdict['keysize']                = 0
             kdict['wide_key_len']           = 0
@@ -611,7 +613,7 @@ class capri_p4pd:
                         (cf, cf_startbit, width, ftype, hdr) = cfs
                     else:
                         (cf, cf_startbit, width, ftype) = cfs
-                    # check if cf 
+                    # check if cf
                     for k, v  in ki_or_kd_to_cf_map.items():
                         if k == kbit:
                             continue
@@ -633,9 +635,9 @@ class capri_p4pd:
                                         #is outside the key-range.
                                         if k < ctable.start_key_off or \
                                             k > ctable.end_key_off:
-                                            pad_list.append(kbit) 
+                                            pad_list.append(kbit)
                                     else:
-                                        pad_list.append(kbit) 
+                                        pad_list.append(kbit)
             if len(pad_list):
                 for kbit in pad_list:
                     ki_or_kd_to_cf_map[kbit] = [(None, kbit, 1, "P", "__NoHdr")]
@@ -794,7 +796,7 @@ class capri_p4pd:
                         continue
 
 
-                    # This KM byte holds bit. When there are more 
+                    # This KM byte holds bit. When there are more
                     # than a 8 bits extracted all bits in bit_sel is processed.
                     for km_bit_pos, phv_bit in enumerate(km_cprofile.bit_sel):
                         if km_byte_pos == km_cprofile.bit_loc1:
@@ -818,7 +820,7 @@ class capri_p4pd:
                                             bit_extractors.append(kbit)
                                         else:
                                             # Incase of field union, 2 different input bits can map
-                                            # same km byte position. 
+                                            # same km byte position.
                                             if (cf, cf_bit, 1, "I") not in ki_or_kd_to_cf_map[kbit]:
                                                 # When sharing KMs, there can be duplicate p4_fld
                                                 ki_or_kd_to_cf_map[kbit].append((cf, cf_bit, 1, "I"))
@@ -844,7 +846,7 @@ class capri_p4pd:
                                             bit_extractors.append(kbit)
                                         else:
                                             # Incase of field union, 2 different input bits can map
-                                            # same km byte position. 
+                                            # same km byte position.
                                             if (cf, cf_bit, 1, "K") not in ki_or_kd_to_cf_map[kbit]:
                                                 ki_or_kd_to_cf_map[kbit].append((cf, cf_bit, 1, "K"))
                                                 bit_extractors.append(kbit)
@@ -882,7 +884,7 @@ class capri_p4pd:
                                 ki_or_kd_to_cf_map[kbit] = [(cf, cf_startbit, min(8, cf.width), "I")]
                             else:
                                 # Incase of field union, 2 action inputs can map
-                                # same km byte position. 
+                                # same km byte position.
                                 if (cf, cf_startbit, min(8, cf.width), "I") not in ki_or_kd_to_cf_map[kbit]:
                                     ki_or_kd_to_cf_map[kbit].append((cf, cf_startbit, min(8, cf.width), "I"))
                     for _cf in ctable.keys:
@@ -906,10 +908,10 @@ class capri_p4pd:
                                     ki_or_kd_to_cf_map[kbit] = [(cf, cf_startbit, min(8, cf.width), "K")]
                             else:
                                 # Incase of field union, 2 key bytes can map
-                                # same km byte position. 
+                                # same km byte position.
                                 if (cf, cf_startbit, min(8, cf.width), "K") not in ki_or_kd_to_cf_map[kbit]:
                                     #Check if same key byte that is in second KM instance was also in first KM inst...
-                                    if km_inst: 
+                                    if km_inst:
                                         if (cf, cf_startbit, min(8, cf.width), "K") not in ki_or_kd_to_cf_map[kbit]:
                                             ki_or_kd_to_cf_map[kbit].append((cf, cf_startbit, min(8, cf.width), "K"))
                                         else:
@@ -994,7 +996,7 @@ class capri_p4pd:
                                     total_p4_fld_width += width
                                 else:
                                     # Incase of field union, 2 action input sub-bits can map
-                                    # same km sub-bit position. 
+                                    # same km sub-bit position.
                                     if (cf, cf_startbit, width, "I") not in ki_or_kd_to_cf_map[kbit+cs]:
                                         ki_or_kd_to_cf_map[kbit+cs].append((cf, cf_startbit, width, "I"))
                                         total_p4_fld_width += width
@@ -1025,7 +1027,7 @@ class capri_p4pd:
                                     total_p4_fld_width += width
                                 else:
                                     # Incase of field union, 2 key sub-bits can map
-                                    # same km sub-bit position. 
+                                    # same km sub-bit position.
                                     if (cf, cf_startbit, width, "K") not in ki_or_kd_to_cf_map[kbit+cs]:
                                         ki_or_kd_to_cf_map[kbit+cs].append((cf, cf_startbit, width, "K"))
                                         total_p4_fld_width += width
@@ -1051,7 +1053,7 @@ class capri_p4pd:
                                     ki_or_kd_to_cf_map[kbit+cs].append((None, kbit+containerstart, width, "P", cf_hname))
                                     total_p4_fld_width += width
 
-                    # Since a list of p4fields shared same phv byte, get max field width and 
+                    # Since a list of p4fields shared same phv byte, get max field width and
                     # if it is less than 8 bits, then pad remaining bits
                     if total_p4_fld_width < 8:
                         put_pad = False
@@ -1172,7 +1174,7 @@ class capri_p4pd:
                                  "K", cf_get_hname(cf)) in asm_field_info:
                 if key_position < ctable.start_key_off or \
                             	key_position > ctable.end_key_off or self.be.args.p4_plus:
-                    return 
+                    return
                 else:
                     pad = '__pad_'
             asm_field_info.append((pad + p4fldname, pad + _get_output_name(cf.hfname), \
@@ -1199,7 +1201,7 @@ class capri_p4pd:
                 num_fields_in_each_byte = len(cf_value_list)
                 k_p4f_size = {}
                 dict_lines = {}
-                for f in range(num_fields_in_each_byte): 
+                for f in range(num_fields_in_each_byte):
                     k_p4f_size[f], dict_lines[f] = \
                         self.asm_contiguous_field_chunk_get(kidict, i, field_elem=f, fields=len(cf_value_list))
 
@@ -1239,7 +1241,7 @@ class capri_p4pd:
         '''
         For each table in p4 build a dict of
         {table-name: [List of Table-Keys]}
-           Each Table-Key is (p4_field_name, length of field in bits) 
+           Each Table-Key is (p4_field_name, length of field in bits)
         '''
         tbl_mgr = self.be.tables
 
@@ -1254,7 +1256,7 @@ class capri_p4pd:
         for table_name, ctable in self.alltables.items():
             tdict = {}
             tdict['include_k_in_d'] = True if 'include_k_in_d' in ctable.p4_table._parsed_pragmas else False
-            # Build input field list needed to generate 
+            # Build input field list needed to generate
             # MPU ASM structures. For ASM KI / K , K will
             # be built using tdict[keys/not_my_key_bytes/bits]
             tdict['asm_ki_fields'] = self.build_table_ki_asm_fields(ctable)
@@ -1284,20 +1286,20 @@ class capri_p4pd:
             tdict['not_my_key_bytes'] = keydict['not_my_key_bytes']
             tdict['not_my_key_bits'] = keydict['not_my_key_bits']
 
-            # List of (action-name, list of action-data-fields) 
+            # List of (action-name, list of action-data-fields)
             # one per p4 action.
             tdict['actions'] = keydict['actions']
 
             # Indicates where table resides.
             tdict['location'] = 'HBM' if ctable.is_hbm else 'P4Pipe'
 
-            # Table match lookup type. 
+            # Table match lookup type.
             if ctable.match_type == match_type.TERNARY \
                or ctable.match_type == match_type.TERNARY_ONLY:
                 tdict['type'] = 'Ternary'
             elif ctable.match_type == match_type.EXACT_HASH_OTCAM:
                 tdict['type'] = 'Hash_OTcam'
-            elif ctable.match_type == match_type.EXACT_IDX: 
+            elif ctable.match_type == match_type.EXACT_IDX:
                 tdict['type'] = 'Index'
             elif ctable.match_type == match_type.MPU_ONLY:
                 tdict['type'] = 'Mpu'
