@@ -128,7 +128,7 @@ header_type tcp_tx_d_t {
 // d for stage 5
 header_type tso_d_t {
     fields {
-        TCB_TX_SHARED_STATE
+        TCB_TSO_STATE
     }
 }
 
@@ -606,7 +606,7 @@ action tcp_tx(TX_SHARED_PARAMS) {
 /*
  * Stage 5 table 0 action
  */
-action tso(TX_SHARED_PARAMS) {
+action tso(TSO_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -636,7 +636,7 @@ action tso(TX_SHARED_PARAMS) {
     modify_field(t0_s2s_scratch.retrans_out, t0_s2s.retrans_out);
 
     // d for stage 4 table 0
-    GENERATE_TX_SHARED_D
+    GENERATE_TSO_SHARED_D
 }
 
 /*

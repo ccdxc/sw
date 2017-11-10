@@ -88,11 +88,12 @@ flow_read_xmit_cursor_start:
     // TODO : right now code assumes we always send
     //        whatever is posted to sesq, so set cursor_addr back to 0
     tblwr           d.xmit_cursor_addr, r0
+    phvwr           p.tx2rx_snd_nxt, d.snd_nxt
 
 table_read_TSO:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_tso_process_start, k.common_phv_qstate_addr,
-                        TCP_TCB_TX_OFFSET, TABLE_SIZE_512_BITS)
+                        TCP_TCB_TSO_OFFSET, TABLE_SIZE_512_BITS)
     nop.e
     nop
 
@@ -284,7 +285,7 @@ nic_desc_entry_write:
 
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_tso_process_start, k.common_phv_qstate_addr,
-                        TCP_TCB_TX_OFFSET, TABLE_SIZE_512_BITS)
+                        TCP_TCB_TSO_OFFSET, TABLE_SIZE_512_BITS)
 
 
 table_read_TNMDR:

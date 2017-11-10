@@ -87,10 +87,6 @@
         dsack                           : 1                     ;\
 
 #define TCB_TX_SHARED_STATE \
-        source_lif                      : 16                    ;\
-        source_port                     : 16                    ;\
-        dest_port                       : 16                    ;\
-        sched_flag                      : 8                     ;\
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
         retx_head_desc                  : HBM_ADDRESS_WIDTH     ;\
@@ -104,33 +100,36 @@
         retx_head_len                   : 16                    ;\
         xmit_offset                     : 16                    ;\
         xmit_len                        : 16                    ;\
-        prr_out                         : 32                    ;\
-        header_len                      : 8                     ;\
         pending_ack_tx                  : 1                     ;\
         pending_delayed_ack_tx          : 1                     ;\
         pending_tso_data                : 1                     ;\
         pending_pad                     : 5                     ;\
+
+#define TCB_TSO_STATE \
+        source_lif                      : 16                    ;\
+        source_port                     : 16                    ;\
+        dest_port                       : 16                    ;\
+        prr_out                         : 32                    ;\
+        header_len                      : 8                     ;\
         bytes_sent                      : 16                    ;\
         pkts_sent                       : 8                     ;\
         debug_num_phv_to_pkt            : 8                     ;\
         debug_num_mem_to_pkt            : 8                     ;\
         quick_acks_decr                 : 4                     ;\
 
-#define TX_SHARED_PARAMS                                                        \
-source_lif, source_port, dest_port, sched_flag,\
+#define TX_SHARED_PARAMS \
 snd_nxt, retx_snd_una, retx_head_desc, xmit_desc, retx_tail_desc,\
 retx_xmit_cursor, xmit_cursor_addr, retx_next_desc, xmit_next_desc,\
-retx_head_offset, retx_head_len, xmit_offset, xmit_len, prr_out, header_len,\
-pending_ack_tx,pending_delayed_ack_tx, pending_tso_data, pending_pad,\
+retx_head_offset, retx_head_len, xmit_offset, xmit_len,\
+pending_ack_tx,pending_delayed_ack_tx, pending_tso_data, pending_pad
+
+#define TSO_PARAMS                                                        \
+source_lif, source_port, dest_port, prr_out, header_len,\
 bytes_sent,pkts_sent,debug_num_phv_to_pkt, debug_num_mem_to_pkt,\
 quick_acks_decr
 
 
-#define GENERATE_TX_SHARED_D                                                                               \
-    modify_field(tcp_tx_d.source_lif, source_lif); \
-    modify_field(tcp_tx_d.source_port, source_port); \
-    modify_field(tcp_tx_d.dest_port, dest_port); \
-    modify_field(tcp_tx_d.sched_flag, sched_flag); \
+#define GENERATE_TX_SHARED_D \
     modify_field(tcp_tx_d.snd_nxt, snd_nxt); \
     modify_field(tcp_tx_d.retx_snd_una, retx_snd_una); \
     modify_field(tcp_tx_d.retx_head_desc, retx_head_desc); \
@@ -144,17 +143,22 @@ quick_acks_decr
     modify_field(tcp_tx_d.retx_head_len, retx_head_len); \
     modify_field(tcp_tx_d.xmit_offset, xmit_offset); \
     modify_field(tcp_tx_d.xmit_len, xmit_len); \
-    modify_field(tcp_tx_d.prr_out, prr_out); \
-    modify_field(tcp_tx_d.header_len, header_len); \
     modify_field(tcp_tx_d.pending_ack_tx, pending_ack_tx); \
     modify_field(tcp_tx_d.pending_delayed_ack_tx, pending_delayed_ack_tx); \
     modify_field(tcp_tx_d.pending_tso_data, pending_tso_data);\
     modify_field(tcp_tx_d.pending_pad, pending_pad);\
-    modify_field(tcp_tx_d.bytes_sent, bytes_sent);\
-    modify_field(tcp_tx_d.pkts_sent, pkts_sent);\
-    modify_field(tcp_tx_d.debug_num_phv_to_pkt, debug_num_phv_to_pkt);\
-    modify_field(tcp_tx_d.debug_num_mem_to_pkt, debug_num_mem_to_pkt);\
-    modify_field(tcp_tx_d.quick_acks_decr, quick_acks_decr);
+
+#define GENERATE_TSO_SHARED_D                                                                               \
+    modify_field(tso_d.source_lif, source_lif); \
+    modify_field(tso_d.source_port, source_port); \
+    modify_field(tso_d.dest_port, dest_port); \
+    modify_field(tso_d.prr_out, prr_out); \
+    modify_field(tso_d.header_len, header_len); \
+    modify_field(tso_d.bytes_sent, bytes_sent);\
+    modify_field(tso_d.pkts_sent, pkts_sent);\
+    modify_field(tso_d.debug_num_phv_to_pkt, debug_num_phv_to_pkt);\
+    modify_field(tso_d.debug_num_mem_to_pkt, debug_num_mem_to_pkt);\
+    modify_field(tso_d.quick_acks_decr, quick_acks_decr);
 
 
 header_type rx2tx_t {

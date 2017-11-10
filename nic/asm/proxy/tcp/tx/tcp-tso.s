@@ -36,7 +36,7 @@ tcp_write_xmit:
     bcf             [c1], dma_cmd_intrinsic
 
     seq             c1, k.to_s5_xmit_cursor_addr, r0
-    bcf             [c1], tcp_write_xmit_done
+    bcf             [c1], flow_tso_process_done
     nop
 
 dma_cmd_intrinsic:
@@ -94,7 +94,7 @@ dma_cmd_data:
      */
     phvwri.c2       p.tcp_header_dma_dma_pkt_eop, 1
     phvwri.c2       p.tcp_header_dma_dma_cmd_eop, 1
-    bcf             [c2], tcp_write_xmit_done
+    bcf             [c2], flow_tso_process_done
     nop
 
     /* Write A = xmit_cursor_addr + xmit_cursor_offset */
@@ -105,7 +105,6 @@ dma_cmd_data:
     slt             c1, k.to_s5_rcv_mss, k.to_s5_xmit_cursor_len
     add.c1          r6, k.to_s5_rcv_mss, r0
     add.!c1         r6, k.to_s5_xmit_cursor_len, r0
-    phvwr           p.tx2rx_snd_nxt, d.snd_nxt
 
     bcf             [c6], bytes_sent_stats_update_start
     nop
@@ -154,10 +153,11 @@ dma_cmd_write_tx2rx_shared:
     CAPRI_DMA_CMD_PHV2MEM_SETUP(tx2rx_dma_dma_cmd, r5, tx2rx_prr_out, tx2rx_pad1_tx2rx)
     CAPRI_DMA_CMD_STOP(tx2rx_dma_dma_cmd)
      
+#if 0
     bcf             [c1], update_xmit_cursor
     nop
 move_xmit_cursor:
-    tbladd          d.retx_xmit_cursor, NIC_DESC_ENTRY_SIZE
+    //tbladd          d.retx_xmit_cursor, NIC_DESC_ENTRY_SIZE
     /* This clearing of xmit_cursor_addr will cause read of retx_xmit_cursor for
      * next pass after tcp-tx stage
      */
@@ -171,7 +171,7 @@ update_xmit_cursor:
     add             r4, k.to_s5_xmit_cursor_offset, r6
 
     addi            r2, r0, NIC_DESC_ENTRY_OFF_OFFSET
-    add             r1, d.retx_xmit_cursor, r2
+    //add             r1, d.retx_xmit_cursor, r2
     //memwr.h         r1, r4
 
     /* Decrement length of descriptor entry by xmit len */
@@ -190,6 +190,7 @@ tcp_write_xmit_done:
     sne             c4, r7, r0
     jr.c4           r7
     add             r7, r0, r0
+#endif
 
 
 tcp_retx:

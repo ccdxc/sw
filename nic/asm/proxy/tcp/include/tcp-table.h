@@ -22,7 +22,8 @@
 #define TCP_TCB_WRITE_SERQ_OFFSET       512
 
 #define TCP_TCB_TX_OFFSET               576
-#define TCP_TCB_HEADER_TEMPLATE_OFFSET  640
+#define TCP_TCB_TSO_OFFSET              640
+#define TCP_TCB_HEADER_TEMPLATE_OFFSET  704
 #define TCP_TCB_RX_STATS_OFFSET         768
 #define TCP_TCB_TX_STATS_OFFSET         896
 #define TCP_TCB_WRITE_L7Q_OFFSET        960
