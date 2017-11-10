@@ -282,7 +282,7 @@ cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
     if(!ctxt) {
         return HAL_RET_INVALID_ARG;    
     }
-    HAL_TRACE_DEBUG("cpupkt:Starting packet poll for queue: {}", ctxt->rx.num_queues);
+    //HAL_TRACE_DEBUG("cpupkt:Starting packet poll for queue: {}", ctxt->rx.num_queues);
     uint64_t value, descr_addr;
     cpupkt_qinst_info_t* qinst_info = NULL;
 
