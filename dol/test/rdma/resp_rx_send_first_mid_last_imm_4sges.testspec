@@ -277,7 +277,7 @@ descriptors:
             color  : callback://rdma/rdma/GetCQExpColor
             imm_data: ref://testcase/pvtdata/imm_data
             imm_data_vld: 1
-            smac: callback://rdma/rdma/GetUDSMAC
+            smac: callback://rdma/rdma/GetZeroMAC
 trigger:
     descriptors:
         - descriptor:

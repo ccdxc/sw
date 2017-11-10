@@ -198,7 +198,7 @@ descriptors:
             color  : callback://rdma/rdma/GetCQExpColor
             r_key       : ref://testcase/pvtdata/inv_r_key
             rkey_inv_vld: 1
-            smac: callback://rdma/rdma/GetUDSMAC
+            smac: callback://rdma/rdma/GetZeroMAC
             
 trigger:
     descriptors:
