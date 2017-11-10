@@ -1,14 +1,15 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_RECIRC
+    id  : SEGMENT_NATIVE_RECIRC
 
 type        : tenant
-native      : False
+fabencap    : vlan
+native      : True
 broadcast   : flood
-multicast   : flood
+multicast   : replicate
 l4lb        : False
 endpoints   :
     useg    : 0
-    pvlan   : 2 
+    pvlan   : 1
     direct  : 0
-    remote  : 3 # Remote TEPs
+    remote  : 2

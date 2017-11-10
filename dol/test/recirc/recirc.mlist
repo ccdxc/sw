@@ -1,0 +1,65 @@
+# Feature Test Modules List
+feature:
+    id          : recirc
+    sub         : networking
+    package     : test.networking
+    module      : networking 
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : L2UC_IPV4
+        spec    : l2uc.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV4,direction=IFLOW
+
+    - module:
+        name    : L2UC_IPV6
+        spec    : l2uc.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV6,direction=IFLOW
+
+    - module:
+        name    : L2UC_FLOW_MISS 
+        spec    : l2uc.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=True,direction=IFLOW
+
+    - module:
+        name    : L3UC_IPV4
+        spec    : l3uc.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV4,direction=IFLOW
+
+    - module:
+        name    : L3UC_IPV6
+        spec    : l3uc.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV6,direction=IFLOW
+
+    - module:
+        name    : L3UC_FLOW_MISS 
+        spec    : l3uc.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=True,direction=IFLOW
+
+    - module:
+        name    : MAX_RECIRC_DROP
+        spec    : l2uc.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=DROP,direction=IFLOW

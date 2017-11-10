@@ -3432,47 +3432,47 @@ capri_tm_init(void)
 
     // TM_PORT_UPLINK_0
     pbc_csr.cfg_oq_0.num_hdr_bytes(
-        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_0.write();
 
     // TM_PORT_UPLINK_1
     pbc_csr.cfg_oq_1.num_hdr_bytes(
-        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_1.write();
 
     // TM_PORT_UPLINK_2
     pbc_csr.cfg_oq_2.num_hdr_bytes(
-        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_2.write();
 
     // TM_PORT_UPLINK_3
     pbc_csr.cfg_oq_3.num_hdr_bytes(
-        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_3.write();
 
     // TM_PORT_UPLINK_4
     pbc_csr.cfg_oq_4.num_hdr_bytes(
-        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_4.write();
 
     // TM_PORT_UPLINK_5
     pbc_csr.cfg_oq_5.num_hdr_bytes(
-        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_5.write();
 
     // TM_PORT_UPLINK_6
     pbc_csr.cfg_oq_6.num_hdr_bytes(
-        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_6.write();
 
     // TM_PORT_UPLINK_7
     pbc_csr.cfg_oq_7.num_hdr_bytes(
-        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_7.write();
 
     // TM_PORT_NCSI
     pbc_csr.cfg_oq_8.num_hdr_bytes(
-        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_8.write();
 
 #endif

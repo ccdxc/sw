@@ -209,7 +209,9 @@ header p4_to_p4plus_cpu_header_t p4_to_p4plus_cpu;
 header p4plus_to_p4_header_t p4plus_to_p4;
 
 parser start {
-    return select(current(0, 4)) {
+    extract(capri_intrinsic);
+    set_metadata(control_metadata.tm_iport, capri_intrinsic.tm_iport + 0);
+    return select(capri_intrinsic.tm_iport) {
         TM_PORT_INGRESS : parse_recirc;
         TM_PORT_DMA : parse_txdma;
         default : parse_nic;
@@ -220,7 +222,7 @@ parser start {
 @pragma xgress egress
 parser egress_start {
     extract(capri_intrinsic);
-    return select(current(0, 4)) {
+    return select(capri_intrinsic.tm_iport) {
         TM_PORT_INGRESS : parse_ingress_to_egress;
         TM_PORT_EGRESS : parse_egress_to_egress;
         default : ingress;
@@ -295,10 +297,13 @@ parser deparse_rxdma {
 }
 
 parser parse_recirc {
-    extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
     extract(recirc_header);
-    return parse_ethernet;
+    set_metadata(control_metadata.tm_iport, recirc_header.src_tm_iport + 0);
+    return select(recirc_header.src_tm_iport) {
+        TM_PORT_DMA: parse_txdma;
+        default: parse_nic;
+    }
 }
 
 parser parse_vm_bounce {
@@ -307,15 +312,13 @@ parser parse_vm_bounce {
 
 @pragma xgress ingress
 parser parse_txdma {
-    extract(capri_intrinsic);
     extract(capri_txdma_intrinsic);
     extract(p4plus_to_p4);
     return parse_ethernet;
 }
 
 parser parse_nic {
-    extract(capri_intrinsic);
-    set_metadata(control_metadata.uplink, capri_intrinsic.tm_replicate_ptr >> 15);
+    set_metadata(control_metadata.uplink, 1);
     return parse_ethernet;
 }
 

@@ -6,16 +6,93 @@ import pdb
 import subprocess
 import os
 from infra.common.glopts import GlobalOptions
+import infra.common.objects as objects
 
 
 MODEL_DEBUG = 'nic/gen/iris/dbg_out/model_debug.json'
 CRCHACK = 'nic/third-party/crchack/bin/crchack -w32 -p04c11db7'
+RECIRC_LIMIT = 4
 
 def run_cmd(cmd, inp):
     p1 = subprocess.Popen(cmd.split(), stdin=subprocess.PIPE, \
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = p1.communicate(inp)
     return (out, err) 
+
+class HashValGenerator:
+    def __init__(self):
+        ''' Class which will give the next hash-value to use according to the 
+            policy
+        '''
+
+        self.hash_lsb = objects.TemplateFieldObject('range/0x0/0x1fffff')
+        self.hash_msb = objects.TemplateFieldObject('range/0x0/0x7ff')
+        # For 32 bit collision, hints should be 1
+        self.hash_policy = [
+                # 2 Flows - 1 recirc
+                {'name': '32BIT F1', 'hints': 0, 'hint_depth':1, 'skip':1},
+                # 3 Flows - 2 recirc
+                {'name': '32BIT F2', 'hints': 0, 'hint_depth':2, 'skip':1},
+                # 5 Flows - 4 recirc
+                {'name': '32BIT F3', 'hints': 0, 'hint_depth':4, 'skip':1},
+                # 2 Flows - 1 recirc
+                {'name': '21BIT F1', 'hints': 1, 'hint_depth':1, 'skip':1},
+                # 3 Flows - 1 recirc
+                {'name': '21BIT F2', 'hints': 2, 'hint_depth':1, 'skip':1},
+                # 15 Flows - 2/3 recircs
+                {'name': '21BIT F3', 'hints': 7, 'hint_depth':2, 'skip':1},
+                ] 
+        self.cur_hash_lsb = self.hash_lsb.get()
+        self.cur_hash_msb = self.hash_msb.get()
+        self.cur_iter = 0
+        self.cur_step = 0
+
+    def get(self):
+        ''' Get the next Hash value to use '''
+
+        hashval = (self.cur_hash_msb << 21) | self.cur_hash_lsb 
+
+
+        # Figure out the movement
+        it = self.hash_policy[self.cur_iter]
+        no_hints = it['hints']
+        if it['hints'] == 0:
+            # Special case for 32 bit collisions where MSB shouldn't change
+            no_hints = 1
+
+        total_flows = 1 + (no_hints * it['hint_depth'])
+
+        if self.cur_step == 0:
+            no_recircs = 0
+        else:
+            no_recircs = (self.cur_step - 1) % it['hint_depth']
+            no_recircs += 1
+
+        self.cur_step += 1
+        
+        drop = False
+        skip = False
+
+        if no_recircs >= RECIRC_LIMIT:
+            drop = True
+        elif self.cur_step > (total_flows - it['skip']):
+            skip = True
+
+        if self.cur_step == total_flows:
+            # Go to next iterator
+            self.cur_step = 0
+            self.cur_iter += 1
+            if self.cur_iter >= len(self.hash_policy):
+                self.cur_iter = 0
+            # Change MSB and LSB while going to next iterator
+            self.cur_hash_lsb = self.hash_lsb.get()
+            self.cur_hash_msb = self.hash_msb.get()
+        elif it['hints'] != 0 and (self.cur_step-1) % it['hint_depth'] == 0:
+            # Change MSB while going to next hint
+            self.cur_hash_msb = self.hash_msb.get()
+
+        return (hashval, skip, drop)
+
 
 class HashCollider:
     def __init__(self, model_json, crchack):
@@ -82,6 +159,7 @@ class HashCollider:
             else:
                 self.__extract_field(val, byte_, 0, 8, fields)
 
+        self.hashval_gen = HashValGenerator()
         self.fields = fields
         self.default_widths = {
             'lkp_src'   : 128,
@@ -151,9 +229,16 @@ class HashCollider:
 
         return outp
 
-    def search(self, inp, expected_hash):
+    def search(self, inp):
+        outp = None
+        hashval = None
+        skip = None
+        drop = None
+
         if self.fields is None:
-            return inp['data']
+            return (inp['data'], hashval, skip, drop)
+
+        hashval,skip,drop = self.hashval_gen.get()
 
         val = self.__encode(inp['data'])
 
@@ -172,61 +257,67 @@ class HashCollider:
                         bit_posn_args.append(bit_pos_arg)
         if len(bit_posn_args) < 32:
             print('Need atleast 32 bits as modifiers')
-            return {}
+            return (outp, hashval, skip, drop)
 
-        cmd = [self.crchack] + bit_posn_args + ['-', '0x%x' % expected_hash]
+        cmd = [self.crchack] + bit_posn_args + ['-', '0x%x' % hashval]
 
         out,err = run_cmd(' '.join(cmd), val)
         if err:
             print('ERROR ERROR')
             print(err.decode('ascii'))
-            return {}
+            return (outp, hashval, skip, drop)
 
         outp = self.__decode(out)
-        return outp
+        return (outp, hashval, skip, drop)
 
-hc = HashCollider(MODEL_DEBUG, CRCHACK)
 
-class TcpUdpHashGen:
-    def __init__(self, sip, dip, ipproto, iptype, instance = 0, vrf = 0x1001, dir = 1):
-        self.__sip = sip
-        self.__dip = dip
+class TcpUdpHashGenObject:
+    def __init__(self):
+        pass
+
+    def Process(self, sip, dip, ipproto, iptype, direction, vrf, instance = 0):
         if ipproto == 'TCP':
-            self.__proto = 6
+            proto = 6
         elif ipproto == 'UDP':
-            self.__proto = 17
+            proto = 17
         else:
             assert 0
             
-        self.__vrf = vrf
-        self.__dir = dir
-        self.__instance = instance
-
         if iptype == 'IPV4':
             # type is 2 for IPv4
-            self.__type = 2
+            lkp_type = 2
         elif iptype == 'IPV6':
             # type is 3 for IPv6
-            self.__type = 3
+            lkp_type = 3
         else:
             assert 0
 
-        self.__sport = 0
-        self.__dport = 0
-        return
+        if direction == 'FROM_ENIC':
+            lkp_dir = 0
+        elif direction == 'FROM_UPLINK':
+            lkp_dir = 1
+        else:
+            assert 0
 
-    def Process(self, hashval):
+        if vrf is None:
+            if GlobalOptions.dryrun:
+                vrf = 0
+            else:
+                assert 0
+
+        sport = 0
+        dport = 0
 
         data = {
-                'lkp_src'   : self.__sip,
-                'lkp_dst'   : self.__dip,
-                'lkp_proto' : self.__proto,
-                'lkp_sport' : self.__sport,
-                'lkp_dport' : self.__dport,
-                'lkp_dir'   : self.__dir,
-                'lkp_type'  : self.__type,
-                'lkp_inst'  : self.__instance,
-                'lkp_vrf'   : self.__vrf,
+                'lkp_src'   : sip,
+                'lkp_dst'   : dip,
+                'lkp_proto' : proto,
+                'lkp_sport' : sport,
+                'lkp_dport' : dport,
+                'lkp_dir'   : lkp_dir,
+                'lkp_type'  : lkp_type,
+                'lkp_inst'  : instance,
+                'lkp_vrf'   : vrf,
                 }
         inp = { 
                 'data':data,
@@ -236,14 +327,10 @@ class TcpUdpHashGen:
                              } 
                 }
 
-        outp = hc.search(inp, hashval)
+        outp,hashval,skip,drop = hc.search(inp)
 
-        self.__sport = outp['lkp_sport']
-        self.__dport = outp['lkp_dport']
-        return
+        return (hashval, skip, drop, outp['lkp_sport'], outp['lkp_dport'])
 
-    def GetSport(self):
-        return self.__sport
+hc = HashCollider(MODEL_DEBUG, CRCHACK)
+TcpUdpHashGen = TcpUdpHashGenObject()
 
-    def GetDport(self):
-        return self.__dport

@@ -89,6 +89,9 @@ class EndpointObject(base.ConfigObjectBase):
             self.sgs.append(sg)
         return
 
+    def IsRemote(self):
+        return self.remote
+
     def SetRemote(self):
         self.remote = True
         return

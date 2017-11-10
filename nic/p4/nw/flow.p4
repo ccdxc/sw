@@ -223,16 +223,23 @@ action flow_info(dst_lport, multicast_en, multicast_ptr, qtype,
     modify_field(scratch_metadata.size8, dscp_en);
 }
 
+action recirc_packet(recirc_reason) {
+    modify_field(control_metadata.ingress_bypass, 1);
+    add_header(capri_p4_intrinsic);
+    add_header(recirc_header);
+    modify_field(recirc_header.src_tm_iport, control_metadata.tm_iport);
+    modify_field(recirc_header.reason, recirc_reason);
+    modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
+    modify_field(capri_intrinsic.tm_oq, TM_P4_IG_RECIRC_QUEUE);
+}
+
 action flow_hit_from_vm_bounce(src_lif) {
     remove_header(ethernet);
     remove_header(ipv4);
     remove_header(udp);
     remove_header(vxlan_gpe);
-    add_header(recirc_header);
-    modify_field(recirc_header.reason, RECIRC_VM_BOUNCE);
+    recirc_packet(RECIRC_VM_BOUNCE);
     modify_field(capri_intrinsic.lif, src_lif);
-    modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
-    modify_field(capri_intrinsic.tm_oq, TM_P4_IG_RECIRC_QUEUE);
 }
 
 action flow_hit_to_vm_bounce(dst_lport, tm_oqueue) {
@@ -308,14 +315,9 @@ action flow_hash_info(entry_valid, export_en,
     // resolve hint and pick next hash for recirc path
     if ((control_metadata.flow_miss == TRUE) and
         (hash1 == scratch_metadata.flow_hash1)) {
-        modify_field(control_metadata.ingress_bypass, 1);
-        add_header(capri_p4_intrinsic);
-        add_header(recirc_header);
-        modify_field(recirc_header.reason, RECIRC_FLOW_HASH_OVERFLOW);
+        recirc_packet(RECIRC_FLOW_HASH_OVERFLOW);
         // do not assign it to larger variable.. can result in K+D violation
         //modify_field(recirc_header.overflow_entry_index, hint1);
-        modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
-        modify_field(capri_intrinsic.tm_oq, TM_P4_IG_RECIRC_QUEUE);
     }
 }
 
@@ -410,13 +412,8 @@ action flow_hash_overflow(lkp_inst, lkp_dir, lkp_type, lkp_vrf, lkp_src,
     // resolve hint and pick next hash for recirc path
     if ((control_metadata.flow_miss == TRUE) and
         (hash1 == scratch_metadata.flow_hash1)) {
-        modify_field(control_metadata.ingress_bypass, 1);
-        add_header(capri_p4_intrinsic);
-        add_header(recirc_header);
-        modify_field(recirc_header.reason, RECIRC_FLOW_HASH_OVERFLOW);
+        recirc_packet(RECIRC_FLOW_HASH_OVERFLOW);
         // modify_field(recirc_header.overflow_entry_index, hint1);
-        modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
-        modify_field(capri_intrinsic.tm_oq, TM_P4_IG_RECIRC_QUEUE);
     }
 }
 

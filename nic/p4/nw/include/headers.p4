@@ -497,7 +497,8 @@ header_type roce_deth_immdt_t {
 
 header_type recirc_header_t {
     fields {
-        reason : 8;
+        src_tm_iport : 4;
+        reason : 4;
         overflow_entry_index : 32;  // must be 32 bits, msbit=1 to perform recirc lookup
     }
 }

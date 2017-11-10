@@ -211,17 +211,21 @@ struct ${table}_${actionname}_d {
 //::                        for fields in pddict['tables'][table]['asm_ki_fields']:
 //::                            if fields[0] == 'unionized':
 //::                                ustr, uflds = fields
+//::                                increment_index = False
 //::                                for fields in uflds:
 //::                                     (multip4fldname, p4fldname, p4fldwidth, phvbit, \
 //::                                     flit, flitoffset, typestr, hdrname) = fields
 //::                                     if not keyencountered:
 //::                                         if typestr != 'K':
-//::                                             startindex += 1
+//::                                             increment_index = True
 //::                                         else:
 //::                                             keyencountered = True
 //::                                         #endif
 //::                                     #endif
 //::                                #endfor
+//::                                if increment_index:
+//::                                    startindex += 1
+//::                                #endif
 //::                            else:
 //::                                (multip4fldname, p4fldname, p4fldwidth, phvbit, \
 //::                                flit, flitoffset, typestr, hdrname) = fields
@@ -238,18 +242,22 @@ struct ${table}_${actionname}_d {
 //::                        for fields in reversed(pddict['tables'][table]['asm_ki_fields']):
 //::                            if fields[0] == 'unionized':
 //::                                ustr, uflds = fields
+//::                                decrement_index = False
 //::                                for fields in uflds:
 //::                                    (multip4fldname, p4fldname, p4fldwidth, phvbit, \
 //::                                    flit, flitoffset, typestr, hdrname) = fields
 //::                                    if not keyencountered:
 //::                                        if typestr != 'K':
-//::                                            endindex -= 1
+//::                                            decrement_index = True 
 //::                                        else:
 //::                                            keyencountered = True
 //::                                            break
 //::                                        #endif
 //::                                    #endif
 //::                                #endfor
+//::                                if decrement_index:
+//::                                    endindex -= 1
+//::                                #endif
 //::                            else:
 //::                                (multip4fldname, p4fldname, p4fldwidth, phvbit, \
 //::                                flit, flitoffset, typestr, hdrname) = fields

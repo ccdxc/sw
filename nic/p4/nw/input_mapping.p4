@@ -268,7 +268,7 @@ action input_properties_mac_vlan(src_lif, src_lif_check_en,
 }
 
 action adjust_lkp_fields() {
-    if (capri_intrinsic.tm_iport == TM_PORT_DMA) {
+    if (control_metadata.tm_iport == TM_PORT_DMA) {
         modify_field(flow_lkp_metadata.lkp_inst,
                      (p4plus_to_p4.flags & P4PLUS_TO_P4_FLAGS_LKP_INST));
         subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
@@ -281,7 +281,7 @@ action adjust_lkp_fields() {
     if (recirc_header.valid == TRUE) {
         modify_field(control_metadata.recirc_reason, recirc_header.reason);
         subtract(scratch_metadata.packet_len, scratch_metadata.packet_len,
-                 P4_RECIRC_HDR_SZ);
+                 P4_RECIRC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     }
 
     modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);

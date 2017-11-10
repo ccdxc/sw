@@ -43,6 +43,7 @@ icmpid  : None
 icmpcode: None
 icmptype: None
 espspi  : None
+fte     : False
 txqos   :
     cos : None
     dscp: None

@@ -55,6 +55,9 @@ security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 tenants:
     -   spec    : ref://store/specs/id=TENANT_RECIRC
         count   : 1
-        lifns   : range/101/101
+        lifns   : range/101/105
 
-cpu: None
+cpu:
+    - entry:
+        id      : Cpu1 
+        lif_id  : 1003

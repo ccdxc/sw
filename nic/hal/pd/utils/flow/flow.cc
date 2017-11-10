@@ -41,8 +41,8 @@ Flow::Flow(std::string table_name, uint32_t table_id,
                     hash_tbl_key_len_, hash_coll_tbl_key_len_, 
                     hint_len_, flow_hash_capacity_, flow_coll_capacity);
 
-    // Allocate indexer for Flow Collision Table
-    flow_coll_indexer_ = new indexer(flow_coll_capacity_);
+    // Allocate indexer for Flow Collision Table, skip zero
+    flow_coll_indexer_ = new indexer(flow_coll_capacity_, true, true);
 
     // Assumption: Max. number of flow entries will be hash table cap.
     flow_entry_indexer_ = new indexer(flow_hash_capacity_);

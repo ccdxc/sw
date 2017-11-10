@@ -13,7 +13,7 @@ d = {
 };
 
 k = {
-  capri_intrinsic_tm_iport = TM_PORT_UPLINK_0;
+  control_metadata_tm_iport = TM_PORT_UPLINK_0;
   capri_p4_intrinsic_frame_size_sbit0_ebit5 = 0;
   capri_p4_intrinsic_frame_size_sbit6_ebit13 = 250;
 };

@@ -316,8 +316,8 @@
 /* Policer color                                                           */
 /*****************************************************************************/
 #define POLICER_COLOR_GREEN            0
-#define POLICER_COLOR_YELLOW           1
-#define POLICER_COLOR_RED              2
+#define POLICER_COLOR_RED              1
+#define POLICER_COLOR_YELLOW           2
 
 /*****************************************************************************/
 /* Recirc reason codes                                                       */
@@ -389,6 +389,7 @@
 #define P4PLUS_APP_TYPE_MAX            P4PLUS_APPTYPE_RAW_REDIR
 
 #define CAPRI_GLOBAL_INTRINSIC_HDR_SZ  17
+#define CAPRI_P4_INTRINSIC_HDR_SZ      5
 #define P4_RECIRC_HDR_SZ               5
 
 /*****************************************************************************/

@@ -10,7 +10,7 @@ port        : None
 icmp_type   : None
 icmp_code   : None
 icmp_id     : None
-flowhash    : const/0
+hashgen     : False
 flow_info:
     action      : allow
     nat_type    : none

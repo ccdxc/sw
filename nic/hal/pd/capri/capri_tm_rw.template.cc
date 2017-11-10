@@ -333,7 +333,7 @@ capri_tm_init(void)
 //::    if pinfo["type"] == "uplink":
     // ${pinfo["enum"]}
     pbc_csr.cfg_oq_${p}.num_hdr_bytes(
-        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + P4_RECIRC_HDR_SZ);
+        CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     pbc_csr.cfg_oq_${p}.write();
 
 //::    #endif

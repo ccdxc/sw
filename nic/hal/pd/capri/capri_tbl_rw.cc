@@ -606,14 +606,23 @@ capri_timer_init(void)
 static void
 capri_deparser_init() {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap0.dpr.dpr[0].cfg_global_2.read();
-    cap0.dpr.dpr[0].cfg_global_2.increment_recirc_cnt_en(1);
-    cap0.dpr.dpr[0].cfg_global_2.drop_max_recirc_cnt(4);
-    cap0.dpr.dpr[0].cfg_global_2.recirc_oport(TM_PORT_INGRESS);
-    cap0.dpr.dpr[0].cfg_global_2.write();
+    cpp_int recirc_rw_bm = 0;
+    // Ingress deparser is indexed with 1
     cap0.dpr.dpr[1].cfg_global_2.read();
-    cap0.dpr.dpr[1].cfg_global_2.increment_recirc_cnt_en(0);
+    cap0.dpr.dpr[1].cfg_global_2.increment_recirc_cnt_en(1);
+    cap0.dpr.dpr[1].cfg_global_2.drop_max_recirc_cnt(1);
+    // Drop after 4 recircs
+    cap0.dpr.dpr[1].cfg_global_2.max_recirc_cnt(4);
+    cap0.dpr.dpr[1].cfg_global_2.recirc_oport(TM_PORT_INGRESS);
+    cap0.dpr.dpr[1].cfg_global_2.clear_recirc_bit_en(1);
+    recirc_rw_bm |= 1<<TM_PORT_INGRESS;
+    recirc_rw_bm |= 1<<TM_PORT_EGRESS;
+    cap0.dpr.dpr[1].cfg_global_2.recirc_rw_bm(recirc_rw_bm);
     cap0.dpr.dpr[1].cfg_global_2.write();
+    // Egress deparser is indexed with 0
+    cap0.dpr.dpr[0].cfg_global_2.read();
+    cap0.dpr.dpr[0].cfg_global_2.increment_recirc_cnt_en(0);
+    cap0.dpr.dpr[0].cfg_global_2.write();
 }
 
 int capri_table_rw_init()

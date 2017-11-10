@@ -1,0 +1,162 @@
+# Feature Test Modules List
+feature:
+    id          : recirc
+    sub         : eth
+    package     : test.eth
+    module      : eth 
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : TX_IPV4
+        spec    : tx.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV4,direction=IFLOW
+
+    - module:
+        name    : TX_IPV6
+        spec    : tx.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV6,direction=IFLOW
+
+    - module:
+        name    : TX_FLOW_MISS 
+        spec    : tx.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=True,direction=IFLOW
+
+    - module:
+        name    : RX_IPV4
+        spec    : rx.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV4,direction=IFLOW
+
+    - module:
+        name    : RX_IPV6
+        spec    : rx.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV6,direction=IFLOW
+
+    - module:
+        name    : RX_FLOW_MISS 
+        spec    : rx.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=True,direction=IFLOW
+
+    - module:
+        name    : TXRX_IPV4
+        spec    : tx_rx.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV4,direction=IFLOW
+
+    - module:
+        name    : TXRX_IPV6
+        spec    : tx_rx.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV6,direction=IFLOW
+
+    - module:
+        name    : TXRX_FLOW_MISS 
+        spec    : tx_rx.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=True,direction=IFLOW
+
+    # L3 flows
+    - module:
+        name    : TX_L3UC_IPV4
+        spec    : tx_l3.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV4,direction=IFLOW
+
+    - module:
+        name    : TX_L3UC_IPV6
+        spec    : tx_l3.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV6,direction=IFLOW
+
+    - module:
+        name    : TX_L3UC_FLOW_MISS 
+        spec    : tx_l3.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=True,direction=IFLOW
+
+    - module:
+        name    : RX_L3UC_IPV4
+        spec    : rx_l3.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV4,direction=IFLOW
+
+    - module:
+        name    : RX_L3UC_IPV6
+        spec    : rx_l3.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV6,direction=IFLOW
+
+    - module:
+        name    : RX_L3UC_FLOW_MISS 
+        spec    : rx_l3.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=True,direction=IFLOW
+
+    - module:
+        name    : TXRX_L3UC_IPV4
+        spec    : tx_rx_l3.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV4,direction=IFLOW
+
+    - module:
+        name    : TXRX_L3UC_IPV6
+        spec    : tx_rx_l3.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=False,type=IPV6,direction=IFLOW
+
+    - module:
+        name    : TXRX_L3UC_FLOW_MISS 
+        spec    : tx_rx_l3.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=True,direction=IFLOW
+
+    - module:
+        name    : MAX_RECIRC_DROP
+        spec    : tx.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=DROP,direction=IFLOW

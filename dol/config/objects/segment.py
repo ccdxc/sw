@@ -53,6 +53,7 @@ class SegmentObject(base.ConfigObjectBase):
         self.pinnedif = None
         self.__pin_interface()
 
+        self.vrf_id     = None
         self.nw_hal_handles = []
 
         if self.blackhole:
@@ -309,9 +310,11 @@ class SegmentObject(base.ConfigObjectBase):
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
-        cfglogger.info("- Segment %s = %s" %\
-                       (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status)))
+        cfglogger.info("- Segment %s = %s, vrf_id 0x%x" %\
+                       (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),
+                           resp_spec.l2segment_status.vrf_id))
         self.hal_handle = resp_spec.l2segment_status.l2segment_handle
+        self.vrf_id = resp_spec.l2segment_status.vrf_id
         return
 
     def PrepareHALGetRequestSpec(self, get_req_spec):

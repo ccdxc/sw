@@ -16,17 +16,23 @@ flow_hash_info:
   bcf         [c1&c2], flow_hash_hit
   or          r7,  d.flow_hash_info_d.hash1_sbit7_ebit10, d.flow_hash_info_d.hash1_sbit0_ebit6, 4
   seq         c1, r1[31:21], r7
-  bcf         [c1&c2], flow_hash_hint1
+  sne         c3, d.flow_hash_info_d.hint1, r0
+  bcf         [c1&c2&c3], flow_hash_hint1
   seq         c1, r1[31:21], d.flow_hash_info_d.hash2
-  bcf         [c1&c2], flow_hash_hint2
+  sne         c3, d.flow_hash_info_d.hint2, r0
+  bcf         [c1&c2&c3], flow_hash_hint2
   seq         c1, r1[31:21], d.flow_hash_info_d.hash3
-  bcf         [c1&c2], flow_hash_hint3
+  sne         c3, d.flow_hash_info_d.hint3, r0
+  bcf         [c1&c2&c3], flow_hash_hint3
   seq         c1, r1[31:21], d.flow_hash_info_d.hash4
-  bcf         [c1&c2], flow_hash_hint4
+  sne         c3, d.flow_hash_info_d.hint4, r0
+  bcf         [c1&c2&c3], flow_hash_hint4
   seq         c1, r1[31:21], d.flow_hash_info_d.hash5
-  bcf         [c1&c2], flow_hash_hint5
+  sne         c3, d.flow_hash_info_d.hint5, r0
+  bcf         [c1&c2&c3], flow_hash_hint5
   seq         c1, r1[31:21], d.flow_hash_info_d.hash6
-  bcf         [c1&c2], flow_hash_hint6
+  sne         c3, d.flow_hash_info_d.hint6, r0
+  bcf         [c1&c2&c3], flow_hash_hint6
   seq         c1, d.flow_hash_info_d.more_hashs, 1
   bcf         [c1&c2], flow_hash_more_hashs
   phvwr       p.recirc_header_valid, 0
@@ -72,6 +78,7 @@ flow_hash_recirc:
   phvwr       p.capri_i2e_metadata_valid, 0
   phvwr       p.capri_p4_intrinsic_valid, TRUE 
   phvwr       p.recirc_header_valid, 1
+  phvwr       p.recirc_header_src_tm_iport, k.control_metadata_tm_iport
   phvwr       p.recirc_header_reason, RECIRC_FLOW_HASH_OVERFLOW
   ori         r2, r2, 0x80000000
   phvwr       p.recirc_header_overflow_entry_index, r2

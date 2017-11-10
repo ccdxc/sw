@@ -379,10 +379,15 @@ l2seg_create_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 // Converts hal_ret_t to API status
 //------------------------------------------------------------------------------
 hal_ret_t
-l2seg_prepare_rsp (L2SegmentResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle)
+l2seg_prepare_rsp (L2SegmentResponse *rsp, hal_ret_t ret, l2seg_t *l2seg)
 {
     if (ret == HAL_RET_OK) {
-        rsp->mutable_l2segment_status()->set_l2segment_handle(hal_handle);
+        rsp->mutable_l2segment_status()->set_l2segment_handle(l2seg ? 
+                                                              l2seg->hal_handle : 
+                                                              HAL_HANDLE_INVALID);
+        // TODO: REMOVE DOL test only
+        rsp->mutable_l2segment_status()->set_vrf_id(
+            hal::pd::pd_l2seg_get_ten_hwid(l2seg));
     }
 
     rsp->set_api_status(hal_prepare_rsp(ret));
@@ -564,7 +569,7 @@ end:
             l2seg = NULL;
         }
     }
-    l2seg_prepare_rsp(rsp, ret, l2seg ? l2seg->hal_handle : HAL_HANDLE_INVALID);
+    l2seg_prepare_rsp(rsp, ret, l2seg);
     hal_api_trace(" API End: l2segment create ");
     return ret;
 
@@ -1119,7 +1124,7 @@ l2segment_update (L2SegmentSpec& spec, L2SegmentResponse *rsp)
                              l2seg_update_cleanup_cb);
 
 end:
-    l2seg_prepare_rsp(rsp, ret, l2seg ? l2seg->hal_handle : HAL_HANDLE_INVALID);
+    l2seg_prepare_rsp(rsp, ret, l2seg);
     hal_api_trace(" API End: l2segment update ");
     return ret;
 }

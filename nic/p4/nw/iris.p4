@@ -48,6 +48,7 @@ header_type control_metadata_t {
         qid                            : 24;
         qtype                          : 8;
         flow_miss_idx                  : 16;
+        tm_iport                       : 4;
         egress_mirror_session_id       : 8;
         egress_tm_oqueue               : 5;
         normalization_cpu_reason       : 8;

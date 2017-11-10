@@ -31,6 +31,5 @@ k = {
   ipv6_srcAddr_sbit32_ebit63 = 0xa5a6a7a8;
   ipv6_srcAddr_sbit64_ebit95 = 0xa9aaabac;
   ipv6_srcAddr_sbit96_ebit127 = 0xadaeaf10;
-  ipv6_dstAddr_sbit0_ebit7 = 0x01;
-  ipv6_dstAddr_sbit8_ebit127 = 0x02030405060708090a0b0c0d0e0f10;
+  ipv6_dstAddr = 0x0102030405060708090a0b0c0d0e0f10;
 };

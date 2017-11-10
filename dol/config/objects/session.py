@@ -64,6 +64,9 @@ class SessionObject(base.ConfigObjectBase):
         self.Show()
         return defs.status.SUCCESS
 
+    def SetFteEnabled(self):
+        self.fte = True
+
     def IsFteEnabled(self):
         return self.fte
 

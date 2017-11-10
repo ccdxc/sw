@@ -62,6 +62,7 @@ message L2SegmentRequestMsg {
 // L2SegmentStatus represents the current status of the L2 segment
 message L2SegmentStatus {
   fixed64       l2segment_handle    = 1;    // id of the L2 segment returned by HAL
+  uint32        vrf_id              = 2;    // TODO REMOVE DOL ONLY - hw vrf id
   // TODO - add vNICs/uplinks this vlan is up on
 }
 

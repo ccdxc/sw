@@ -86,6 +86,7 @@ $(GEN_DIR)/.nw_asm: $(OBJ_DIR)/.dir $(COMP_BIN_FILES)
 
 $(OBJ_DIR)/%.bin: %.asm $(DEPS) $(CAPAS_BIN)
 	$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $@
+	$(CAPSIM_BIN) -e ${$(basename ${<})_ARGS} $(INC_DIRS) $(patsubst %.asm,%.ctl,$<) $@
 	@#$(CAPAS_BIN) $(CAPAS_COV) $(INC_DIRS) $< -o $(OBJ_DIR)/$(shell basename $@)
 
 #$(BIN_FILES): %.bin: %.asm
