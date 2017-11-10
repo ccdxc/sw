@@ -95,6 +95,12 @@ capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, txs_sched_lif_params_t
     txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].sg_start(txs_hw_params->sched_table_offset);
     txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].sg_per_cos(txs_hw_params->num_entries_per_cos);
     txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].sg_act_cos(lif_cos_bmp);
+
+    if (lif_cos_bmp == 0x0 && !txs_hw_params->num_entries_per_cos) 
+        txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].sg_active(0); // lif delete case. Make the entry invalid.
+    else
+        txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].sg_active(1);
+        
     txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].write();
 
     //Program reverse mapping from scheduler table entry to (lif,queue,cos). 

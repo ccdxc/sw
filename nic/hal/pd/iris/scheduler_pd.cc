@@ -90,6 +90,8 @@ hal_ret_t scheduler_tx_pd_dealloc (pd_lif_t *lif_pd)
 
     //Free the scheduler table indices.
     g_hal_state_pd->txs_scheduler_map_idxr()->Free(alloc_offset, alloc_units);
+    lif_pd->tx_sched_table_offset      = INVALID_INDEXER_INDEX;
+    lif_pd->tx_sched_num_table_entries = 0;
 
 end:
     return ret;
@@ -124,6 +126,35 @@ hal_ret_t scheduler_tx_pd_program_hw (pd_lif_t *lif_pd)
 end:
     return ret;
 }
+
+hal_ret_t scheduler_tx_pd_deprogram_hw (pd_lif_t *lif_pd)
+{   
+    hal_ret_t              ret = HAL_RET_OK;
+    lif_t                  *pi_lif;
+    txs_sched_lif_params_t txs_hw_params = {0};
+    
+    if (!lif_pd) {
+        // Nothing to do
+        goto end;
+    }
+    
+    pi_lif = (lif_t *)lif_pd->pi_lif;
+
+    // Reset cos_bmp in PI lif.
+    pi_lif->cos_bmp = 0x0;
+    
+    // Pass txs params for delete case.               
+    txs_hw_params.num_entries_per_cos = 0;
+    txs_hw_params.cos_bmp             = 0x0;
+                
+    ret = capri_txs_scheduler_lif_params_update(lif_pd->hw_lif_id, &txs_hw_params);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:lif_id:{},failed to program tx sched lif params in hw",
+                              __FUNCTION__, lif_get_lif_id(pi_lif));
+    }
+end:
+    return ret;     
+}                    
 }    // namespace pd
 }    // namespace hal
 

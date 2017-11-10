@@ -341,8 +341,16 @@ lif_pd_deprogram_hw (pd_lif_t *pd_lif)
     ret = lif_pd_depgm_output_mapping_tbl(pd_lif);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pd-lif:{}:unable to deprogram hw", __FUNCTION__);
+        goto end;
     }
 
+    ret = scheduler_tx_pd_deprogram_hw(pd_lif);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pd-lif:{}:unable to deprogram hw for tx scheduler", __FUNCTION__);
+        goto end;
+    }
+
+end:
     return ret;
 }
 
