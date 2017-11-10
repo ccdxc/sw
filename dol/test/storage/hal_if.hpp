@@ -30,6 +30,8 @@ int get_pgm_label_offset(const char *prog_name,
                          const char *label, uint8_t *off);
 int set_lif_qstate(uint32_t lif, uint32_t qtype, uint32_t qid,
                    uint8_t *qstate);
+int set_lif_qstate_size(uint32_t lif, uint32_t qtype, uint32_t qid,
+                        uint8_t *qstate, uint32_t size);
 int create_lif(lif_params_t *params, uint64_t *lif_id);
 int get_lif_qstate_addr(uint32_t lif, uint32_t qtype, uint32_t qid,
                         uint64_t *qaddr);

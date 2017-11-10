@@ -15,6 +15,10 @@ int queues_setup();
 int pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, 
                      uint32_t roce_qid, uint64_t base_addr, 
                      uint32_t num_entries, uint32_t entry_size);
+int pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype,
+                     uint32_t roce_qid, uint64_t base_addr,
+                     uint32_t num_entries, uint32_t entry_size,
+                     uint32_t xlate_addr);
 
 void *nvme_sq_consume_entry(uint16_t qid, uint16_t *index);
 
@@ -27,6 +31,8 @@ void *pvm_cq_consume_entry(uint16_t qid, uint16_t *index);
 uint16_t get_nvme_lif();
 
 uint16_t get_pvm_lif();
+
+uint32_t get_pvm_r2n_sq();
 
 void ring_nvme_e2e_ssd();
 

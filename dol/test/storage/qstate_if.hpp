@@ -34,11 +34,19 @@ int update_pri_q_state(int src_lif, int src_qtype, int src_qid,
 
 int get_qstate_addr(int lif, int qtype, int qid, uint64_t *qaddr);
 
-int setup_roce_q_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
-                       uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
-                       uint64_t base_addr, uint64_t entry_size, bool rrq_valid, 
-                       uint16_t rrq_lif, uint8_t rrq_qtype, uint32_t rrq_qid, 
-                       uint16_t rsq_lif, uint8_t rsq_qtype, uint32_t rsq_qid);
+int setup_roce_sq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
+                        uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
+                        uint64_t base_addr, uint64_t entry_size, bool rrq_valid, 
+                        uint16_t rrq_lif, uint8_t rrq_qtype, uint32_t rrq_qid, 
+                        uint16_t rsq_lif, uint8_t rsq_qtype, uint32_t rsq_qid);
+
+int setup_roce_cq_state(int src_lif, int src_qtype, int src_qid, char *pgm_bin,
+                        uint8_t total_rings, uint8_t host_rings, uint16_t num_entries,
+                        uint64_t base_addr, uint64_t entry_size, uint64_t xlate_addr,
+                        uint16_t rcq_lif, uint8_t rcq_qtype, uint32_t rcq_qid);
+
+
+int update_xlate_entry(int lif, int qtype, int qid, uint64_t hbm_addr, char *pgm_bin);
 
 }  // namespace qstate_if
 

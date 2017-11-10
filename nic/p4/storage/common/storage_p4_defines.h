@@ -202,11 +202,14 @@ header_type roce_cq_cb_t {
     rsvd0	: 1;	// ROCE reserved
     cq_id	: 24;	// Completion queue id
     eq_id	: 24;	// Event queue id
-    rsvd1	: 192;	// ROCE specific values
+    rsvd1	: 64;	// ROCE specific values to end the CQ CB at 32 bytes
     w_ndx	: 16;	// Working consumer index
     next_pc	: 28;	// Next program's PC
     xlate_addr	: 34;	// Address of table to translate ROCE QP to PVM SQ
-    pad		: 50;	// Storage reserved
+    rcq_lif	: 11;	// ROCE's CQ LIF number
+    rcq_qtype	: 3;	// ROCE's CQ LIF type (within the LIF)
+    rcq_qid	: 24;	// ROCE's CQ queue number (within the LIF)
+    pad		: 140;	// Align to 64 bytes
   }
 }
 
@@ -371,6 +374,9 @@ header_type pvm_roce_sq_cb_t {
   modify_field(cq_cb.w_ndx, w_ndx);			\
   modify_field(cq_cb.next_pc, next_pc);			\
   modify_field(cq_cb.xlate_addr, xlate_addr);		\
+  modify_field(cq_cb.rcq_lif, rcq_lif);			\
+  modify_field(cq_cb.rcq_qtype, rcq_qtype);		\
+  modify_field(cq_cb.rcq_qid, rcq_qid);			\
 
 #define ROCE_CQ_CB_COPY(cq_cb)				\
   ROCE_CQ_CB_COPY_STAGE0(cq_cb)				\

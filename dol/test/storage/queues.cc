@@ -46,7 +46,8 @@ const static char	*kNvmeBeCqHandler	 = "storage_tx_nvme_be_cq_handler.bin";
 const static char	*kSeqPdmaSqHandler	 = "storage_tx_seq_pdma_entry_handler.bin";
 const static char	*kSeqR2nSqHandler	 = "storage_tx_seq_r2n_entry_handler.bin";
 const static char	*kSeqXtsSqHandler	 = "storage_tx_seq_barco_entry_handler.bin";
-const static char	*kSeqPvmRoceSqHandler	 = "storage_tx_pvm_roce_sq_wqe_process.bin";
+const static char	*kPvmRoceSqHandler	 = "storage_tx_pvm_roce_sq_wqe_process.bin";
+const static char	*kPvmRoceCqHandler	 = "storage_tx_roce_cq_handler.bin";
 
 const static uint32_t	kDefaultTotalRings	 = 1;
 const static uint32_t	kDefaultHostRings	 = 1;
@@ -87,6 +88,7 @@ std::unique_ptr<storage_test::NvmeSsd> nvme_e2e_ssd;
 uint64_t ssd_cndx_addr[NUM_TO_VAL(kPvmNumNvmeBeSQs)];
 
 uint64_t pvm_last_sq;
+uint64_t pvm_last_cq;
 
 uint64_t storage_hbm_ssd_bm_addr;
 
@@ -109,6 +111,7 @@ queues_t pvm_rqs[NUM_TO_VAL(kPvmNumHQs)];
 queues_t pvm_eqs[NUM_TO_VAL(kPvmNumEQs)];
 
 uint64_t nvme_lif, pvm_lif;
+uint32_t pvm_r2n_sq;
 
 
 void *pndx_data_va;
@@ -328,6 +331,8 @@ int queues_setup() {
   // Initialize PVM SQs for processing R2N commands 
   // Note: Not incrementing nvme_be_q in for loop as the SSD handle is added to this
   //       by R2N module in datapath.
+  // Save the R2N queue number
+  pvm_r2n_sq = i;
   uint32_t nvme_be_q = i + NUM_TO_VAL(kPvmNumR2nSQs);
   for (j = 0; j < (int) NUM_TO_VAL(kPvmNumR2nSQs); j++, i++) {
     // Initialize the queue in the DOL enviroment
@@ -590,6 +595,9 @@ int queues_setup() {
     }
   }
 
+  pvm_last_cq = i;
+  printf("PVM's last saved CQ %lu \n", pvm_last_cq);
+
   return 0;
 }
 
@@ -601,21 +609,47 @@ pvm_roce_sq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid,
     // Initialize the queue in the DOL enviroment
     if (queue_pre_init(&pvm_sqs[i], base_addr, NUM_TO_VAL(num_entries),
                        NUM_TO_VAL(entry_size)) < 0) {
-      printf("Unable to pre init PVM ROCE SQ for Seq %d\n", i);
+      printf("Unable to pre init PVM ROCE SQ %d\n", i);
       return -1;
     }
     printf("Initialized PVM ROCE SQ %d \n", i);
 
     // Setup the queue state in Capri:
-    if (qstate_if::setup_roce_q_state(pvm_lif, SQ_TYPE, i, (char *) kSeqPvmRoceSqHandler, 
-                                      kDefaultTotalRings, kDefaultHostRings, 
-                                      num_entries, pvm_sqs[i].paddr,
-                                      entry_size, false, 0, 0, 0, 
-                                      roce_lif, roce_qtype, roce_qid) < 0) {
+    if (qstate_if::setup_roce_sq_state(pvm_lif, SQ_TYPE, i, (char *) kPvmRoceSqHandler, 
+                                       kDefaultTotalRings, kDefaultHostRings, 
+                                       num_entries, pvm_sqs[i].paddr,
+                                       entry_size, false, 0, 0, 0, 
+                                       roce_lif, roce_qtype, roce_qid) < 0) {
       printf("Failed to setup PVM ROCE SQ %d state \n", i);
       return -1;
     }
     pvm_last_sq++;
+    return i;
+}
+
+int
+pvm_roce_cq_init(uint16_t roce_lif, uint16_t roce_qtype, uint32_t roce_qid, 
+                 uint64_t base_addr, uint32_t num_entries, uint32_t entry_size,
+                 uint32_t xlate_addr) {
+
+    uint32_t i = pvm_last_cq;
+    // Initialize the queue in the DOL enviroment
+    if (queue_pre_init(&pvm_cqs[i], base_addr, NUM_TO_VAL(num_entries),
+                       NUM_TO_VAL(entry_size)) < 0) {
+      printf("Unable to pre init PVM ROCE CQ %d\n", i);
+      return -1;
+    }
+    printf("Initialized PVM ROCE CQ %d \n", i);
+
+    // Setup the queue state in Capri:
+    if (qstate_if::setup_roce_cq_state(pvm_lif, CQ_TYPE, i, (char *) kPvmRoceCqHandler, 
+                                       kDefaultTotalRings, kDefaultHostRings, 
+                                       num_entries, pvm_cqs[i].paddr, entry_size, 
+                                       xlate_addr, roce_lif, roce_qtype, roce_qid) < 0) {
+      printf("Failed to setup PVM ROCE CQ %d state \n", i);
+      return -1;
+    }
+    pvm_last_cq++;
     return i;
 }
 
@@ -645,6 +679,10 @@ uint16_t get_nvme_lif() {
 
 uint16_t get_pvm_lif() {
   return (uint16_t) pvm_lif;
+}
+
+uint32_t get_pvm_r2n_sq() {
+  return (uint32_t) pvm_r2n_sq;
 }
 
 void ring_nvme_e2e_ssd() {

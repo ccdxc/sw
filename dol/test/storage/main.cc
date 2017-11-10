@@ -60,6 +60,7 @@ std::vector<tests::TestEntry> test_suite = {
   {&tests::test_run_seq_e2e2, "Seq Local Tgt E2E 2", false},
   {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
   {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
+  {&test_run_rdma_write_cmd, "NVME write cmd over RDMA", false},
 };
 
 void sig_handler(int sig) {
@@ -89,15 +90,11 @@ int main(int argc, char**argv) {
   }
   printf("Setup completed\n");
 
-#if 0
   if (rdma_init() < 0) {
     printf("RDMA Setup failed\n");
     return 1;
   }
 
-  rdma_seq_test();
-  exit(0);
-#endif
 
   // Add xts tests
   tests::add_xts_tests(test_suite);

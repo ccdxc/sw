@@ -499,7 +499,8 @@ action pvm_roce_sq_cb_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 action roce_cq_cb_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                       total_rings, host_rings, pid, p_ndx, c_ndx, base_addr, 
                       page_size, entry_size, num_entries, rsvd0, cq_id, eq_id,
-                      rsvd1, w_ndx, next_pc, xlate_addr, pad) {
+                      rsvd1, w_ndx, next_pc, xlate_addr, rcq_lif, rcq_qtype,
+                      rcq_qid, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   ROCE_CQ_CB_COPY_STAGE0(roce_cq_cb_scratch)
@@ -537,7 +538,8 @@ action roce_cq_cb_pop(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,
 action roce_cq_cb_push(pc_offset, rsvd, cosA, cosB, cos_sel, eval_last, 
                        total_rings, host_rings, pid, p_ndx, c_ndx, base_addr, 
                        page_size, entry_size, num_entries, rsvd0, cq_id, eq_id,
-                       rsvd1, w_ndx, next_pc, xlate_addr, pad) {
+                       rsvd1, w_ndx, next_pc, xlate_addr, rcq_lif, rcq_qtype,
+                       rcq_qid, pad) {
 
   // For D vector generation (type inference). No need to translate this to ASM.
   ROCE_CQ_CB_COPY(roce_cq_cb_scratch)

@@ -32,6 +32,7 @@ storage_tx_roce_cq_handler_start:
    // Write the relevant fields into the PHV for forming the R2N WQE
    phvwr	p.r2n_wqe_handle, d.wrid_msn
    phvwri	p.r2n_wqe_is_remote, 1
+   phvwri	p.r2n_wqe_opcode, R2N_OPCODE_PROCESS_WQE
    phvwri	p.storage_kivec1_roce_cq_new_cmd, 1
    
    b		tbl_load
