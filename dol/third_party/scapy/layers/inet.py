@@ -11,6 +11,7 @@ import time
 import struct
 import re
 import socket
+import pdb
 from select import select
 from collections import defaultdict
 from scapy.utils import checksum, is_private_addr
@@ -306,19 +307,49 @@ TCPOptions = (
      "EXP1": 252,
      })
 
+#Reference: 
+
 UDPOptions = (
     {0: ("EOL", None),
      1: ("NOP", None),
-     2: ("OPT1", "!H"),
-     3: ("OPT2", "!I"),
-     4: ("OPT3", "!II"),
+     2: ("OCS", "!H"),
+     3: ("ACS", "!I"),
+     4: ("LITE", "!I"),
+     5: ("MSS", "!I"),
+     6: ("TIME", "!II"),
+     7: ("FRAG", "!III"),
+     8: ("AE", "!p"),
+     #9-126 unassgined
+     9: ("PEN1", "!H"),
+     10: ("PEN2", "!I"),
+     11: ("PEN3", "!II"),
+     #127-253 reserved
+     254:("EXP", "!I"),
+     #255 reserved
      },
     {"EOL": 0,
      "NOP": 1,
-     "OPT1": 2,
-     "OPT2": 3,
-     "OPT3": 4,
+     "OCS": 2,
+     "ACS": 3,
+     "LITE": 4,
+     "MSS": 5,
+     "TIME": 6,
+     "FRAG": 7,
+     "AE": 8,
+     "PEN1": 9,
+     "PEN2": 10,
+     "PEN3": 11,
+     "EXP": 254,
      })
+
+def calc_ones8(s):
+    #8 bit one's complement checksum
+    sum = 0
+    for c in s:
+        sum += c;
+        sum = (sum & 0xFF) + (sum >> 8)
+    return (~sum & 0xFF)
+
 
 class L4OptionsField(StrField):
     islist = 1
@@ -374,7 +405,8 @@ class L4OptionsField(StrField):
                 elif oname in self.myoptions[1]:
                     onum = self.myoptions[1][oname]
                     ofmt = self.myoptions[0][onum][1]
-                    if onum == 5:  # SAck
+                    #if onum == 5:  # SAck
+                    if ofmt == "!": #SAck
                         ofmt += "%iI" % len(oval)
                     if ofmt is not None and (type(oval) is not str or "s" in ofmt):
                         if type(oval) is not tuple:
@@ -392,6 +424,13 @@ class L4OptionsField(StrField):
                     continue
                 oval = oval.encode('UTF=8')
             opt += bytes([(onum), (2 + len(oval))]) + oval
+        if opt != b"" and self.OCSsupported:
+            opt = b"\x00" + opt #place holder for OCS
+            opt = b"\x02" + opt #kind
+            csum = calc_ones8(opt) #8 bit one's complement checksum
+            opt_list = list(opt);
+            opt_list[1] = csum
+            opt = bytes(opt_list)
         return opt + b"\x00" * (3 - ((len(opt) + 3) % 4))
 
     def randval(self):
@@ -399,9 +438,11 @@ class L4OptionsField(StrField):
 
 class TCPOptionsField(L4OptionsField):
     myoptions = TCPOptions
+    OCSsupported = False
 
 class UDPOptionsField(L4OptionsField):
     myoptions = UDPOptions 
+    OCSsupported = True
 
 class ICMPTimeStampField(IntField):
     re_hmsm = re.compile("([0-2]?[0-9])[Hh:](([0-5]?[0-9])([Mm:]([0-5]?[0-9])([sS:.]([0-9]{0,3}))?)?)?$")

@@ -28,7 +28,7 @@ packets:
 
    - packet:
         id          : IN_PKT    # Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : 63
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH 
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -61,12 +61,20 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
             udp_options :
                 options :
-                    - kind   : OPT1
-                      data   : 0x0102
-                    - kind   : OPT2
+                    - kind   : NOP
+                      data   : 0x00
+                    - kind   : MSS
                       data   : 0x01020304
-                    - kind   : OPT3
+                    - kind   : TIME
                       data   : 0x01020304 0x05060708
+                    - kind   : PEN1
+                      data   : 0x0A0B
+                    - kind   : PEN2
+                      data   : 0x0A0B0C0D
+                    - kind   : PEN3
+                      data   : 0x0A0B0C0D 0x0C0D0E0F
+                    - kind   : EOP
+                      data   : 0x00
 
    - packet:
         id          : EXP_PKT    # Expected Ack packet
