@@ -94,7 +94,7 @@ modules:
         package : test.ipsec-proxy
         module  : decrypt_ipsec_to_eth_gt63 
         spec    : decrypt_ipsec_to_eth_seq_gt_63.testspec 
-        ignore  : True 
+        ignore  : False 
         iterate :
             - flow: filter://type=IPV4
     - module:
