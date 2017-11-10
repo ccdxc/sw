@@ -19,11 +19,9 @@ net_dfw_match_rules(fte::ctx_t                  &ctx,
     flow_key_t          flow_key;
     nwsec_policy_svc_t  *nwsec_plcy_svc = NULL;
     dllist_ctxt_t       *lnode = NULL;
-    flow_role_t          role;
 
-    role = ctx.role();
-    flow_key = ctx.get_key(role);
-    HAL_TRACE_DEBUG(" proto {} dport {}", flow_key.proto, ctx.get_key(role).dport);
+    flow_key = ctx.key();
+    HAL_TRACE_DEBUG(" proto {} dport {}", flow_key.proto, flow_key.dport);
     dllist_for_each(lnode, &nwsec_plcy_rules->fw_svc_list_head) {
         nwsec_plcy_svc = dllist_entry(lnode, nwsec_policy_svc_t, lentry);
         if (nwsec_plcy_svc != NULL) {
@@ -53,7 +51,7 @@ net_dfw_match_rules(fte::ctx_t                  &ctx,
                     }
                 } else {
                     //Check the port match
-                    if (nwsec_plcy_svc->dst_port == ctx.get_key(role).dport) {
+                    if (nwsec_plcy_svc->dst_port == flow_key.dport) {
                         //Fill the match actions
                         match_rslt->valid    = 1;
                         match_rslt->alg      = nwsec_plcy_svc->alg;
@@ -127,14 +125,6 @@ net_dfw_pol_check_sg_policy(fte::ctx_t                  &ctx,
     //ToDo (lseshan) - For now if a sep or dep is not found allow
     // Eventually use prefix to find the sg
     if (ctx.sep() == NULL ||  (ctx.dep() == NULL)) {
-        match_rslt->valid = 1;
-        match_rslt->action = session::FLOW_ACTION_ALLOW;
-        return HAL_RET_OK;
-    }
-
-    //HACK:Todo(lseshan) for sun rpc - until figure out to use ctx.get_key(role) or ctx.key()
-    if (ctx.key().dport == 111) {
-        match_rslt->alg   =   nwsec::APP_SVC_SUN_RPC;
         match_rslt->valid = 1;
         match_rslt->action = session::FLOW_ACTION_ALLOW;
         return HAL_RET_OK;

@@ -166,6 +166,7 @@ class SecurityGroupPolicyObjectHelper:
             else:
                 self.sps.append(policy)
         Store.objects.SetAll(self.sps)
+        Store.objects.SetAll(self.default_sps)
         #Update the SGPair Object
         SGPairHelper.Generate(self)
 

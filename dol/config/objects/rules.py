@@ -1,6 +1,7 @@
 import pdb
 import infra.config.base        as base
 import config.hal.defs          as haldefs
+import infra.common.defs        as defs
 
 from infra.common.logging import cfglogger
 
@@ -8,15 +9,19 @@ class SvcObject(base.ConfigObjectBase):
     def __init__(self, spec):
         super().__init__()
         self.proto = spec.proto
-        self.dst_port =  getattr(spec, 'dst_port',None)
+        self.dst_port =  getattr(spec, 'dst_port',0)
         self.icmp_msg_type = getattr(spec, 'icmp_type', 0)
         self.alg = getattr(spec, 'alg',"NONE")
         return
 
     def PrepareHALRequestSpec(self, req_spec):
         req_spec.ip_protocol = self.proto
-        req_spec.dst_port = self.dst_port
-        req_spec.icmp_msg_type = self.icmp_msg_type
+        proto_str = 'IPPROTO_' + defs.ipprotos.str(self.proto)
+        cfglogger.info("prot %s" %(proto_str))
+        if proto_str in ('IPPROTO_ICMP', 'IPPROTO_ICMPV6'):
+            req_spec.icmp_msg_type = self.icmp_msg_type
+        else:
+            req_spec.dst_port = self.dst_port
 
         alg_name = "APP_SVC_" + self.alg
         req_spec.alg = haldefs.nwsec.ALGName.Value(alg_name.upper())

@@ -14,14 +14,14 @@ policies:
                         proto    : 17
                         dst_port : 69
                         alg      : TFTP
-#                    - svc:
-#                        proto    : 17
-#                        dst_port : 111
-#                        alg      : SUN_RPC
-#                    - svc:
-#                        proto    : 6
-#                        dst_port : 111
-#                        alg      : SUN_RPC
+                    - svc:
+                        proto    : 17
+                        dst_port : 111
+                        alg      : SUN_RPC
+                    - svc:
+                        proto    : 6
+                        dst_port : 111
+                        alg      : SUN_RPC
             - rule:
                 action :  ALLOW
                 log    :  True
@@ -29,8 +29,6 @@ policies:
                     - svc:
                         proto    : 0
                         dst_port : 0
-
-
     - policy:
         id         : SEC_POLICY_ALLOW2
         default    : False
