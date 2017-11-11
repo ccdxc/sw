@@ -13,16 +13,33 @@ void *r2n_buf_alloc() {
   return alloc_host_mem(sizeof(r2n_buf_t));
 }
 
-void r2n_nvme_be_cmd_init(void *r2n_buf, uint32_t src_queue_id, uint16_t ssd_handle,
-                          uint8_t io_priority, uint8_t is_read, uint8_t is_local) {
-  if (!r2n_buf) return;
-  nvme_be_cmd_t *nvme_be_cmd = (nvme_be_cmd_t *) &(((r2n_buf_t *) r2n_buf)->cmd_buf);
+void r2n_nvme_be_cmd_buf_init(void *nvme_cmd_buf, void *r2n_buf,
+                              uint32_t src_queue_id, uint16_t ssd_handle, 
+                              uint8_t io_priority, uint8_t is_read, 
+                              uint8_t is_local, uint8_t **nvme_cmd_ptr) {
+  if (!nvme_cmd_buf) return;
+  nvme_be_cmd_t *nvme_be_cmd = (nvme_be_cmd_t *) nvme_cmd_buf;
+  if (r2n_buf) {
+    nvme_be_cmd->s.r2n_buf_handle = bswap_64(host_mem_v2p(r2n_buf));
+  } else {
+    nvme_be_cmd->s.r2n_buf_handle = 0;
+  }
   nvme_be_cmd->s.src_queue_id = bswap_32(src_queue_id);
   nvme_be_cmd->s.ssd_handle = bswap_16(ssd_handle);
-  nvme_be_cmd->s.r2n_buf_handle = bswap_64(host_mem_v2p(r2n_buf));
   nvme_be_cmd->s.io_priority = io_priority;
   nvme_be_cmd->s.is_read = is_read;
   nvme_be_cmd->s.is_local = is_local;
+  if (nvme_cmd_ptr) {
+    *nvme_cmd_ptr = (uint8_t *) (&(nvme_be_cmd->s.nvme_cmd));
+  }
+}
+
+void r2n_nvme_be_cmd_init(void *r2n_buf, uint32_t src_queue_id, uint16_t ssd_handle,
+                          uint8_t io_priority, uint8_t is_read, uint8_t is_local) {
+  if (!r2n_buf) return;
+  r2n_nvme_be_cmd_buf_init(&(((r2n_buf_t *) r2n_buf)->cmd_buf), r2n_buf,
+                           src_queue_id, ssd_handle, io_priority, is_read, is_local,
+                           NULL);
 }
 
 uint8_t *r2n_nvme_cmd_ptr(void *r2n_buf) {

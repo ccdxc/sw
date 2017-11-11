@@ -472,6 +472,30 @@ int form_write_cmd_with_hbm_buf(uint8_t *nvme_cmd, uint32_t size, uint16_t cid,
   return 0;
 }
 
+int form_read_cmd_no_buf(uint8_t *nvme_cmd)
+{
+  struct NvmeCmd *read_cmd = (struct NvmeCmd *) nvme_cmd;
+  read_cmd->dw0.opc = NVME_READ_CMD_OPCODE;
+  read_cmd->dw0.cid = get_next_cid(); 
+  read_cmd->nsid = kDefaultNsid; 
+  read_cmd->slba = get_next_slba();
+  read_cmd->dw12.nlb = kDefaultNlb;
+
+  return 0;
+}
+
+int form_write_cmd_no_buf(uint8_t *nvme_cmd)
+{
+  struct NvmeCmd *write_cmd = (struct NvmeCmd *) nvme_cmd;
+  write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
+  write_cmd->dw0.cid = get_next_cid(); 
+  write_cmd->nsid = kDefaultNsid; 
+  write_cmd->slba = get_next_slba();
+  write_cmd->dw12.nlb = kDefaultNlb;
+
+  return 0;
+}
+
 int test_run_nvme_pvm_admin_cmd() {
   int rc;
   uint16_t nvme_index, pvm_index;

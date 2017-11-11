@@ -277,7 +277,7 @@ const uint32_t kTargetRcvBuf1RKey = 8;
 const uint32_t kR2NBufLKey = 9;
 
 // TODO: Fix this to at least 8K
-const uint32_t kR2NBufSize = (1 * 4096);
+const uint32_t kR2NBufSize = (2 * 4096);
 
 const uint16_t kSQWQESize = 64;
 const uint16_t kRQWQESize = 64;
@@ -332,7 +332,12 @@ void RdmaMemRegister(void *va, uint64_t pa, uint32_t len, uint32_t lkey,
     mr->set_ac_remote_rd(true);
   }
   mr->set_hostmem_pg_size(4096);
-  mr->add_va_pages_phy_addr(pa);
+  uint32_t size_done = 0;
+  while (size_done < len) {
+    mr->add_va_pages_phy_addr(pa + size_done);
+    size_done += (4096 - (pa & 0xFFF));
+  }
+
 
   grpc::ClientContext context;
   auto status = rdma_stub->RdmaMemReg(&context, req, &resp);
@@ -384,7 +389,7 @@ void CreateInitiatorQP() {
   rq->set_num_sq_wqes(kNumSQWQEs);
   rq->set_num_rq_wqes(kNumRQWQEs);
   rq->set_pd(kRdmaPD);
-  rq->set_pmtu(9000);
+  rq->set_pmtu(4096);
   rq->set_hostmem_pg_size(4096);
   rq->set_svc(rdma::RDMA_SERV_TYPE_RC);
   rq->set_sq_lkey(kInitiatorSQLKey);
@@ -412,7 +417,7 @@ void CreateTargetQP() {
   rq->set_num_sq_wqes(kNumSQWQEs);
   rq->set_num_rq_wqes(kNumRQWQEs);
   rq->set_pd(kRdmaPD);
-  rq->set_pmtu(9000);
+  rq->set_pmtu(4096);
   rq->set_hostmem_pg_size(4096);
   rq->set_svc(rdma::RDMA_SERV_TYPE_RC);
   rq->set_sq_lkey(kTargetSQLKey);
@@ -506,8 +511,8 @@ void PostTargetRcvBuf1() {
 }
 
 void RegisterTargetRcvBufs() {
-  RdmaMemRegister(target_rcv_buf1_va, kTargetRcvBuf1LKey,
-                  kTargetRcvBuf1RKey, true);
+  RdmaMemRegister(target_rcv_buf1_va, host_mem_v2p(target_rcv_buf1_va), 
+                  kR2NBufSize, kTargetRcvBuf1LKey, kTargetRcvBuf1RKey, true);
   PostTargetRcvBuf1();
 }
 
@@ -604,22 +609,8 @@ int StartRoceSeq(uint16_t ssd_handle, uint32_t ssd_q, uint8_t **ssd_cmd,
   uint64_t r2n_buf_pa;
   uint32_t r2n_buf_size;
   GetR2NUspaceBuf(&r2n_buf_va, &r2n_buf_pa, &r2n_buf_size);
-  r2n::nvme_be_cmd_t *nvme_be_cmd = (r2n::nvme_be_cmd_t *) r2n_buf_va;
-  nvme_be_cmd->s.src_queue_id = 0;
-  nvme_be_cmd->s.ssd_handle = bswap_16(ssd_handle);
-  nvme_be_cmd->s.r2n_buf_handle = 0;
-  nvme_be_cmd->s.io_priority = 0;
-  nvme_be_cmd->s.is_read = 0;
-  nvme_be_cmd->s.is_local = 0;
-  // Tmp code. Move to APIs
-  struct NvmeCmd *write_cmd = &(nvme_be_cmd->s.nvme_cmd);
-  write_cmd->dw0.opc = NVME_WRITE_CMD_OPCODE;
-  write_cmd->prp.prp1 = 0;
-  write_cmd->dw0.cid = 0x37;
-  write_cmd->nsid = 0x23;
-  write_cmd->slba = 1;
-  write_cmd->dw12.nlb = 1;
-  *nvme_cmd = (uint8_t *) write_cmd;
+  r2n::r2n_nvme_be_cmd_buf_init(r2n_buf_va, NULL, 0, ssd_handle, 0, 0, 0, nvme_cmd);
+  tests::form_write_cmd_no_buf(*nvme_cmd);
 
   uint64_t r2n_hbm_buf_pa;
   uint32_t r2n_hbm_buf_size;
@@ -631,7 +622,7 @@ int StartRoceSeq(uint16_t ssd_handle, uint32_t ssd_q, uint8_t **ssd_cmd,
   uint32_t data_len = r2n_hbm_buf_size - offsetof(r2n::r2n_buf_t, cmd_buf);
   //uint32_t data_len = r2n_hbm_buf_size;
   // Register R2N buf memory. Only LKey, no remote access.
-  RdmaMemRegister((void *) r2n_hbm_buf_pa, r2n_hbm_buf_pa, data_len, kR2NBufLKey, 0, false);
+  RdmaMemRegister((void *) r2n_hbm_buf_pa, r2n_hbm_buf_pa, r2n_hbm_buf_size, kR2NBufLKey, 0, false);
   utils::write_bit_fields(sqwqe, 192, 32, (uint64_t)data_len);  // data len
   // write the SGE
   utils::write_bit_fields(sqwqe, 256, 64, (uint64_t)r2n_hbm_buf_pa);  // SGE-va, same as pa
