@@ -72,6 +72,21 @@ header_type p4_to_p4plus_ipsec_header_t {
     }
 }
 
+header_type p4_to_p4plus_p4pt_header_t {
+    fields {
+        p4plus_app_id       : 4;
+        table0_valid        : 1;
+        table1_valid        : 1;
+        table2_valid        : 1;
+        table3_valid        : 1;
+        flow_hash           : 32;
+        payload_len         : 16;
+        pad                 : 6;
+        flow_role           : 1;
+        flow_dir            : 1;
+    }
+}
+
 header_type p4_to_p4plus_roce_header_t {
     fields {
         p4plus_app_id       : 4;
@@ -81,7 +96,8 @@ header_type p4_to_p4plus_roce_header_t {
         table3_valid        : 1;
         rdma_hdr_len        : 8;  // copied directly from p4 rdma table
         raw_flags           : 16; // copied directly from p4 rdma table
-        payload_len         : 16;
+        ecn                 : 2;
+        payload_len         : 14;
     }
 }
 

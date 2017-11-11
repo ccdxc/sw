@@ -178,32 +178,32 @@ action p4plus_app_ipsec() {
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_IPSEC_HDR_SZ));
-    if (vlan_tag.valid == TRUE) {
-        modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 18);
-        modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv4.totalLen+18);
-    } else {
-        modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 14);
-        modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv4.totalLen+14);
-    }
 
     if (ipv4.valid == TRUE) {
         modify_field(p4_to_p4plus_ipsec.ip_hdr_size, ipv4.ihl << 2);
         modify_field(p4_to_p4plus_ipsec.l4_protocol, ipv4.protocol);
-    } 
+        if (vlan_tag.valid == TRUE) {
+            modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 18);
+            modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv4.totalLen+18);
+        } else {
+            modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 14);
+            modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv4.totalLen+14);
+        }
+    }
+
     if (ipv6.valid == TRUE) {
         // Remove all extension headers before sending it to p4+
         modify_field(p4_to_p4plus_ipsec.ip_hdr_size, 40);
         modify_field(p4_to_p4plus_ipsec.l4_protocol, ipv6.nextHdr);
         modify_field(v6_generic.valid, 0);
+        if (vlan_tag.valid == TRUE) {
+            modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 18);
+            modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv6.payloadLen+18);
+        } else {
+            modify_field(p4_to_p4plus_ipsec.ipsec_payload_start, 14);
+            modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv6.payloadLen+14);
+        }
     }
-
-    if ((vlan_tag.valid == TRUE) and (ipv6.valid == TRUE)) {
-        modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv6.payloadLen+18);
-    } 
-    if ((vlan_tag.valid ==  FALSE) and (ipv6.valid == TRUE)) {
-        modify_field(p4_to_p4plus_ipsec.ipsec_payload_end, ipv6.payloadLen+14);
-    }
-    
 
     modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
@@ -212,6 +212,14 @@ action p4plus_app_ipsec() {
 action p4plus_app_rdma() {
     modify_field(p4_to_p4plus_roce.p4plus_app_id,
                  control_metadata.p4plus_app_id);
+    if (ipv4.valid == TRUE) {
+        modify_field(p4_to_p4plus_roce.ecn, ipv4.diffserv, 0xC0);
+    } else {
+        if (ipv6.valid == TRUE) {
+            modify_field(p4_to_p4plus_roce.ecn, ipv6.trafficClass, 0xC0);
+        }
+    }
+
     remove_header(ethernet);
     remove_header(vlan_tag);
     remove_header(ipv4);
@@ -400,6 +408,57 @@ action p4plus_app_raw_redir() {
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
 }
 
+action p4plus_app_p4pt() {
+    add_header(p4_to_p4plus_p4pt);
+    modify_field(p4_to_p4plus_p4pt.p4plus_app_id,
+                 control_metadata.p4plus_app_id);
+    modify_field(p4_to_p4plus_p4pt.flow_hash, rewrite_metadata.entropy_hash);
+    modify_field(p4_to_p4plus_p4pt.flow_dir, control_metadata.lkp_flags_egress);
+
+    remove_header(ethernet);
+    remove_header(vlan_tag);
+    remove_header(ipv4);
+    remove_header(ipv6);
+    remove_header(udp);
+    remove_header(tcp);
+    remove_header(tcp_option_eol);
+    remove_header(tcp_option_nop);
+    remove_header(tcp_option_mss);
+    remove_header(tcp_option_ws);
+    remove_header(tcp_option_sack_perm);
+    remove_header(tcp_option_timestamp);
+    remove_header(tcp_option_one_sack);
+    remove_header(tcp_option_two_sack);
+    remove_header(tcp_option_three_sack);
+    remove_header(tcp_option_four_sack);
+
+    if (tcp.valid == TRUE) {
+        if (l4_metadata.tcp_data_len < 64) {
+            modify_field(scratch_metadata.packet_len, l4_metadata.tcp_data_len);
+        } else {
+            modify_field(scratch_metadata.packet_len, 64);
+        }
+    }
+
+    if (udp.valid == TRUE) {
+        if (udp.len < 64) {
+            modify_field(scratch_metadata.packet_len, udp.len);
+        } else {
+            modify_field(scratch_metadata.packet_len, 64);
+        }
+    }
+
+    modify_field(p4_to_p4plus_p4pt.payload_len, scratch_metadata.packet_len);
+    add_header(capri_rxdma_intrinsic);
+    modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
+                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                  P4PLUS_P4PT_HDR_SZ));
+    add_to_field(capri_rxdma_intrinsic.rx_splitter_offset,
+                 scratch_metadata.packet_len);
+    modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
+    modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
+}
+
 @pragma stage 5
 table p4plus_app {
     reads {
@@ -412,6 +471,7 @@ table p4plus_app {
         p4plus_app_rdma;
         p4plus_app_cpu;
         p4plus_app_raw_redir;
+        p4plus_app_p4pt;
         p4plus_app_default;
     }
     default_action : p4plus_app_default;

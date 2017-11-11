@@ -385,8 +385,9 @@
 #define P4PLUS_APPTYPE_TELEMETRY       7
 #define P4PLUS_APPTYPE_CPU             8
 #define P4PLUS_APPTYPE_RAW_REDIR       9
+#define P4PLUS_APPTYPE_P4PT            10
 #define P4PLUS_APP_TYPE_MIN            P4PLUS_APPTYPE_DEFAULT
-#define P4PLUS_APP_TYPE_MAX            P4PLUS_APPTYPE_RAW_REDIR
+#define P4PLUS_APP_TYPE_MAX            P4PLUS_APPTYPE_P4PT
 
 #define CAPRI_GLOBAL_INTRINSIC_HDR_SZ  17
 #define CAPRI_P4_INTRINSIC_HDR_SZ      5
@@ -403,7 +404,7 @@
 #define P4PLUS_CPU_PKT_SZ              36
 #define P4PLUS_IPSEC_HDR_SZ            14
 #define P4PLUS_RAW_REDIR_HDR_SZ        40
-#define IPV6_BASE_HDR_SIZE             40
+#define P4PLUS_P4PT_HDR_SZ             8
 
 /*****************************************************************************/
 /* P4+ to P4 header size constants (in bytes)                                */

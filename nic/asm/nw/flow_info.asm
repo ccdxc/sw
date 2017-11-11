@@ -33,7 +33,7 @@ flow_info:
   phvwr.c1    p.control_metadata_qtype, d.u.flow_info_d.qtype
 
   /* mirror session id */
-  phvwr.!c1   p.capri_intrinsic_tm_span_session, d.u.flow_info_d.ingress_mirror_session_id
+  phvwr       p.capri_intrinsic_tm_span_session, d.u.flow_info_d.ingress_mirror_session_id
   phvwr       p.control_metadata_egress_mirror_session_id, d.u.flow_info_d.egress_mirror_session_id
 
   /* logging */

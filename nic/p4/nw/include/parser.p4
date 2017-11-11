@@ -206,6 +206,7 @@ header p4_to_p4plus_ip_addr_t p4_to_p4plus_cpu_ip;
 header p4_to_p4plus_cpu_pkt_t p4_to_p4plus_cpu_pkt;
 header p4_to_p4plus_cpu_header_t p4_to_p4plus_cpu;
 
+header p4_to_p4plus_p4pt_header_t p4_to_p4plus_p4pt;
 header p4plus_to_p4_header_t p4plus_to_p4;
 
 parser start {
@@ -293,6 +294,7 @@ parser deparse_rxdma {
     extract(p4_to_p4plus_tcp_proxy);
     extract(p4_to_p4plus_tcp_proxy_sack);
     extract(p4_to_p4plus_cpu_pkt);
+    extract(p4_to_p4plus_p4pt);
     return parse_ethernet;
 }
 

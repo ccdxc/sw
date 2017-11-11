@@ -148,7 +148,7 @@ p4plus_app_ipsec:
 .align
 p4plus_app_ipsec_ipv6:
   phvwri      p.v6_generic_valid, 0
-  phvwri      p.p4_to_p4plus_ipsec_ip_hdr_size, IPV6_BASE_HDR_SIZE 
+  phvwri      p.p4_to_p4plus_ipsec_ip_hdr_size, 40
   phvwr       p.p4_to_p4plus_ipsec_l4_protocol, k.ipv6_nextHdr
   add.e       r5, r6, k.ipv6_payloadLen
   phvwr       p.p4_to_p4plus_ipsec_ipsec_payload_end, r5
@@ -161,12 +161,47 @@ p4plus_app_raw_redir:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 p4plus_app_rdma:
+  seq         c1, k.ipv4_valid, TRUE
+  phvwr.c1    p.p4_to_p4plus_roce_ecn, k.ipv4_diffserv[7:6]
+  seq         c1, k.ipv6_valid, TRUE
+  phvwr.c1    p.p4_to_p4plus_roce_ecn, k.ipv6_trafficClass_sbit0_ebit3[3:2]
   phvwr       p.p4_to_p4plus_roce_p4plus_app_id, k.control_metadata_p4plus_app_id
   phvwr       p.ethernet_valid, FALSE
   phvwr       p.vlan_tag_valid, FALSE
   phvwr       p.ipv4_valid, FALSE
   phvwr.e     p.ipv6_valid, FALSE
   phvwr       p.udp_valid, FALSE
+
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+p4plus_app_p4pt:
+  phvwr       p.p4_to_p4plus_p4pt_valid, TRUE
+  phvwr       p.p4_to_p4plus_p4pt_p4plus_app_id, k.control_metadata_p4plus_app_id
+  phvwr       p.p4_to_p4plus_p4pt_flow_hash, k.rewrite_metadata_entropy_hash
+
+  add         r1, r0, r0
+  seq         c1, k.tcp_valid, TRUE
+  slt         c2, k.l4_metadata_tcp_data_len, 64
+  cmov.c1     r1, c2, k.l4_metadata_tcp_data_len, 64
+  seq         c1, k.udp_valid, TRUE
+  slt         c2, k.udp_len, 64
+  cmov.c1     r1, c2, k.udp_len, 64
+
+  phvwr       p.ethernet_valid, FALSE
+  phvwr       p.vlan_tag_valid, FALSE
+  phvwr       p.ipv4_valid, FALSE
+  phvwr       p.ipv6_valid, FALSE
+  phvwr       p.udp_valid, FALSE
+  .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_valid) == 13)
+  phvwr       p.{tcp_option_eol_valid...tcp_valid}, r0
+
+  phvwr       p.p4_to_p4plus_p4pt_payload_len, r1
+  add         r1, r1, (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
+                       CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_P4PT_HDR_SZ)
+  phvwr       p.capri_rxdma_intrinsic_valid, TRUE
+  phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, r1
+  phvwr.e     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
+  phvwr       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype
 
 // input r6 : packet start offset
 f_p4plus_cpu_pkt:
