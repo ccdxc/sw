@@ -265,7 +265,7 @@ class CapcovCoverage(CoverageBase):
         subprocess.call(["mkdir", "-p", cov_output_dir])
 
         try:
-            reader = csv.reader(open(env.capri_loader_conf, 'rb'))
+            reader = csv.reader(open(env.capri_loader_conf, 'r'))
         except:
             print ("Error reading capri loader configuration file")
             sys.exit(1)

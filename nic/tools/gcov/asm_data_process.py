@@ -126,7 +126,7 @@ class TableDataMap:
                 self.by_pg_name[table["name"]+".bin"] = table
     
     def _init_table_loader_info(self):
-        reader = csv.reader(open(env.capri_loader_conf, 'rb'))
+        reader = csv.reader(open(env.capri_loader_conf, 'r'))
         for row in reader:
             try:
                 table = self.by_pg_name[row[0]]
