@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 import os
@@ -11,13 +11,18 @@ from collections import defaultdict
 import asm_data_process
 import env
 import utils
+import time
 
 parser = argparse.ArgumentParser(description='Coverage generator')
 parser.add_argument('--config', dest='conf_file',
                     default='coverage.json', help='Coverage config file')
 parser.add_argument('--ignore-errors', dest='ignore_errors', action='store_true', help='Ignore Dol errors and continue coverage.)')
+parser.add_argument('--max-job-run-time', dest='max_job_run_time',
+                    default=60, help='Maximum run time per job in minutes')
 args = parser.parse_args()
 
+def _get_max_job_run_time():
+    return int(args.max_job_run_time) * 60
 
 bazel_tmp_dir = env.coverage_output_path + ".bazel_tmp_out"
 subprocess.call(["mkdir", "-p", bazel_tmp_dir])
@@ -255,14 +260,14 @@ class CapcovCoverage(CoverageBase):
         entry_dir = os.getcwd()
         gcda_file = os.environ.get("MPU_COV_DUMP_FILE")
         if not gcda_file:
-            print "MPU_COV_DUMP_FILE not set "
+            print ("MPU_COV_DUMP_FILE not set")
             sys.exit(1)
         subprocess.call(["mkdir", "-p", cov_output_dir])
 
         try:
             reader = csv.reader(open(env.capri_loader_conf, 'rb'))
         except:
-            print "Error reading capri loader configuration file"
+            print ("Error reading capri loader configuration file")
             sys.exit(1)
 
         cap_loader_info = {}
@@ -364,8 +369,13 @@ class CapcovCoverage(CoverageBase):
     def remove_files(self, lcov_out_file, remove_files):
         pass
  
-def run(cmd):
-    ret = subprocess.call(cmd, shell=True)
+def run(cmd, timeout=None):
+    try:
+        ret = subprocess.call(cmd, shell=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        time.sleep(5)
+        print ("Job timed out : ", cmd)
+        sys.exit(1)
     if ret and not args.ignore_errors:
         print("Cmd failed.: ", cmd)
         sys.exit(1)
@@ -375,7 +385,7 @@ def build_modules(data):
     os.chdir(env.nic_dir)
     for module_name in data["modules"]:
         module_data = data["modules"][module_name]
-        print "Building module: ", module_name
+        print ("Building module: ", module_name)
         if "clean_cmd" in module_data:
             run(module_data["clean_cmd"])
         if "build_cmd" in module_data:
@@ -411,15 +421,14 @@ def run_and_generate_coverage(data):
     module_infos = defaultdict(lambda: [])
     for run_name in data["run"]:
         if "cmd" in data["run"][run_name]:
-            run(data["run"][run_name]["cmd"])
+            run(data["run"][run_name]["cmd"], _get_max_job_run_time())
             generate_run_coverage(run_name)
         elif "cmd_cfg" in data["run"][run_name]:
-            with open(data["run"][run_name]["cmd_cfg"]) as cmd_cfg_file:    
-    	        cmd_cfg_data = json.load(cmd_cfg_file)
+            with open(data["run"][run_name]["cmd_cfg"]) as cmd_cfg_file:
+                cmd_cfg_data = json.load(cmd_cfg_file)
                 for sub_run in cmd_cfg_data:
-                    run(cmd_cfg_data[sub_run])
+                    run(cmd_cfg_data[sub_run], _get_max_job_run_time())
                     generate_run_coverage(run_name, sub_run)
-                    pass
         else:
             #Run not specified, may be all the meta files already generated.
             generate_run_coverage(run_name)
@@ -484,7 +493,7 @@ def generate_coverage_summary_page(cov_output_dir, page_name="coverage_summary.h
 if __name__ == '__main__':
     config_file = env.coverage_path + args.conf_file
     if not os.path.isfile(config_file):
-        print "Config file %s found" % (config_file)
+        print ("Config file %s found" % (config_file))
         sys.exit(1)
 
     with open(config_file) as data_file:

@@ -239,7 +239,7 @@ def generate_pipeline_data(data, asm_out_dir, output_dir):
                                           instructions, cycles)
                             break
                     else:
-                        print "Failed to execute program:", " ".join(cmd)
+                        print ("Failed to execute program:", " ".join(cmd))
                         assert 0
                     os.chdir(cur_dir)
             if module_data.num_of_test_cases:

@@ -11,8 +11,8 @@ if [[ $? -ne 4 ]]; then
     exit 1
 fi
 
-OPTIONS="kilc:s:"
-LONGOPTIONS="keep-data,configfile:,skip-target:;ignore-errors,modellogs"
+OPTIONS="kilc:s:t:"
+LONGOPTIONS="keep-data,configfile:,run-time:,skip-target:;ignore-errors,modellogs"
 
 PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
 if [[ $? -ne 0 ]]; then
@@ -25,6 +25,7 @@ eval set -- "$PARSED"
 
 # now enjoy the options in order and nicely split until we see --
 config_file="coverage.json"
+max_job_run_time=60 #60 minutes to monitor a job.
 keep_data=0
 ignore_errors=0
 enable_model_logs=0
@@ -41,6 +42,10 @@ while true; do
             ;;
         -c|--config-file)
             config_file=$2
+            shift 2
+            ;;
+        -t|--run-time)
+            max_job_run_time=$2
             shift 2
             ;;
         -i|--ignore-errors)
@@ -102,7 +107,7 @@ if [ $OUT -ne 0 ];then
    exit 1
 fi
 set -o pipefail
-$NIC_DIR/tools/gcov/run.py $IGNORE_ERRORS --config $config_file 2>&1 | tee $NIC_DIR/coverage.log
+$NIC_DIR/tools/gcov/run.py $IGNORE_ERRORS --config $config_file --max-job-run-time $max_job_run_time 2>&1 | tee $NIC_DIR/coverage.log
 OUT=$?
 if [ $OUT -ne 0 ];then
    echo "Coverage run failed."
