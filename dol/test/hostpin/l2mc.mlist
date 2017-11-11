@@ -32,3 +32,4 @@ modules:
             - id        : L2MC-UPLINK
               scenario  : RPF_FAILURE
               flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              drop      : True

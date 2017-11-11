@@ -16,6 +16,7 @@ from infra.common.logging   import logger as logger
 from infra.asic.model       import ModelConnector
 
 MAX_RETRIES = 10
+MAX_DROP_RETRIES = 1
 
 class VerifEngineObject:
     def __init__(self):
@@ -25,22 +26,22 @@ class VerifEngineObject:
         self.ctcdb = objects.ObjectDatabase(logger)
         return
 
-    def __compare_pktbuffers(self, epktbuf, apktbuf, lgh):
+    def __compare_pktbuffers(self, epktbuf, apktbuf, tc):
         if GlobalOptions.dryrun:
             return True
 
         if epktbuf is None or apktbuf is None:
-            lgh.error("Packet Compare: ExpType:%s, ActType:%s" %\
+            tc.error("Packet Compare: ExpType:%s, ActType:%s" %\
                       (type(epktbuf), type(apktbuf)))
             return defs.status.ERROR
 
         # Make sure we are not accidentally comparing the same object
         if id(apktbuf) == id(epktbuf):
-            lgh.error("ExpBuf and ActBuf are same objects.")
+            tc.error("ExpBuf and ActBuf are same objects.")
             return defs.status.ERROR
 
-        lgh.verbose("Comparing Packets")
-        pcr = comparators.PacketComparator(lgh)
+        tc.verbose("Comparing Packets")
+        pcr = comparators.PacketComparator(tc)
         pcr.AddExpected(epktbuf, None, 1)
         pcr.AddReceived(apktbuf, None)
         pcr.Compare()
@@ -48,160 +49,166 @@ class VerifEngineObject:
         return pcr.IsMatch()
 
 
-    def __verify_pktbuffers(self, epktbuf, apktbuf, lgh):
-        match = self.__compare_pktbuffers(epktbuf, apktbuf, lgh)
+    def __verify_pktbuffers(self, epktbuf, apktbuf, tc):
+        match = self.__compare_pktbuffers(epktbuf, apktbuf, tc)
         if match is False:
-            lgh.error("PacketBuffer Compare Result = Mismatch")
+            tc.error("PacketBuffer Compare Result = Mismatch")
             return defs.status.ERROR
-        lgh.info("PacketBuffer Compare Result = Match")
+        tc.info("PacketBuffer Compare Result = Match")
         return defs.status.SUCCESS
 
-    def __compare_buffers(self, ebuf, abuf, lgh):
+    def __compare_buffers(self, ebuf, abuf, tc):
         if GlobalOptions.dryrun:
             return True
 
         if ebuf is None or abuf is None:
-            lgh.error("Buffer Compare: ExpType:%s, ActType:%s" %\
+            tc.error("Buffer Compare: ExpType:%s, ActType:%s" %\
                       (type(ebuf), type(abuf)))
             return defs.status.ERROR
 
-        lgh.info("Comparing Buffers: %s <--> %s " % (ebuf.GID(), abuf.GID()))
+        tc.info("Comparing Buffers: %s <--> %s " % (ebuf.GID(), abuf.GID()))
         # Make sure we are not accidentally comparing the same object
         if id(ebuf) == id(abuf):
-            lgh.error("ExpBuf and ActBuf are same objects.")
+            tc.error("ExpBuf and ActBuf are same objects.")
             return defs.status.ERROR
 
         return ebuf == abuf
 
-    def __get_pktbuffer(self, buf, lgh):
+    def __get_pktbuffer(self, buf, tc):
         if buf is not None:
             return buf.Read()
 
         if GlobalOptions.dryrun is False:
-            lgh.error("Trying to GetBuffer() on a None descriptor.")
+            tc.error("Trying to GetBuffer() on a None descriptor.")
             assert(0)
         return None
 
-    def __verify_buffers(self, ebuf, abuf, lgh):
-        match = self.__compare_buffers(ebuf, abuf, lgh)
+    def __verify_buffers(self, ebuf, abuf, tc):
+        match = self.__compare_buffers(ebuf, abuf, tc)
         if match is False:
-            lgh.error("Buffer compare result = Mismatch")
+            tc.error("Buffer compare result = Mismatch")
             return defs.status.ERROR
-        lgh.info("Buffer compare result = Match")
+        tc.info("Buffer compare result = Match")
 
         # If this buffer is not a packet, then stop.
         if ebuf.IsPacket() is False:
             return defs.status.SUCCESS
        
-        epktbuf = self.__get_pktbuffer(ebuf, lgh)
-        apktbuf = self.__get_pktbuffer(abuf, lgh)
-        return self.__verify_pktbuffers(epktbuf, apktbuf, lgh)
+        epktbuf = self.__get_pktbuffer(ebuf, tc)
+        apktbuf = self.__get_pktbuffer(abuf, tc)
+        return self.__verify_pktbuffers(epktbuf, apktbuf, tc)
 
-    def __get_buffer(self, descr, lgh):
+    def __get_buffer(self, descr, tc):
         if descr is not None:
-            return utils.SafeFnCall(None, lgh, descr.GetBuffer)
+            return utils.SafeFnCall(None, tc, descr.GetBuffer)
 
         if GlobalOptions.dryrun is False:
-            lgh.error("Trying to GetBuffer() on a None descriptor.")
+            tc.error("Trying to GetBuffer() on a None descriptor.")
             assert(0)
         return None
 
-    def __compare_descriptors(self, edescr, adescr, lgh):
+    def __compare_descriptors(self, edescr, adescr, tc):
         if GlobalOptions.dryrun:
             return True
 
-        lgh.info("Comparing Descriptors: %s <--> %s " % (edescr.GID(), adescr.GID()))
+        tc.info("Comparing Descriptors: %s <--> %s " % (edescr.GID(), adescr.GID()))
         return edescr == adescr
 
-    def __verify_one_descriptor(self, edescr, adescr, lgh):
-        match = self.__compare_descriptors(edescr, adescr, lgh)
+    def __verify_one_descriptor(self, edescr, adescr, tc):
+        match = self.__compare_descriptors(edescr, adescr, tc)
         if match is False:
-            lgh.error("Descriptor compare result = MisMatch")
+            tc.error("Descriptor compare result = MisMatch")
             return defs.status.ERROR
-        lgh.info("Descriptor compare result = Match")
-        ebuf = self.__get_buffer(edescr, lgh)
-        abuf = self.__get_buffer(adescr, lgh)
+        tc.info("Descriptor compare result = Match")
+        ebuf = self.__get_buffer(edescr, tc)
+        abuf = self.__get_buffer(adescr, tc)
         if ebuf is None:
-            lgh.info("Expected buffer is None = Buffer Verification skipped!")
+            tc.info("Expected buffer is None = Buffer Verification skipped!")
             return defs.status.SUCCESS
-        return self.__verify_buffers(ebuf, abuf, lgh)
+        return self.__verify_buffers(ebuf, abuf, tc)
 
-    def __retry_wait(self, lgh):
+    def __retry_wait(self, tc):
         if GlobalOptions.dryrun:
             return
-        lgh.info("Retry wait.........")
+        tc.info("Retry wait.........")
         time.sleep(1)
         return
 
-    def __consume_descriptor(self, edescr, ring, lgh):
+    def __get_num_retries(self, tc):
+        if tc.IsDrop():
+            return MAX_DROP_RETRIES
+        return MAX_RETRIES
+
+    def __consume_descriptor(self, edescr, ring, tc):
         if GlobalOptions.dryrun:
             return None
         
         adescr = copy.copy(edescr)
-        for r in range(MAX_RETRIES):
+        max_retries = self.__get_num_retries(tc)
+        for r in range(max_retries):
             status = ring.Consume(adescr)
             if status != defs.status.RETRY: break
-            self.__retry_wait(lgh)
+            self.__retry_wait(tc)
         return adescr
 
-    def __verify_descriptors(self, step, lgh):
+    def __verify_descriptors(self, step, tc):
         for dsp in step.expect.descriptors:
             edescr = dsp.descriptor.object
             adescr = self.__consume_descriptor(edescr,
                                                dsp.descriptor.ring,
-                                               lgh)
-            status = self.__verify_one_descriptor(edescr, adescr, lgh)
+                                               tc)
+            status = self.__verify_one_descriptor(edescr, adescr, tc)
             if status == defs.status.ERROR:
                 return status
         return defs.status.SUCCESS
 
-    def __verify_configs(self, step, lgh):
+    def __verify_configs(self, step, tc):
         for config in step.expect.configs:
             method = getattr(config.actual_object, config.method)
             if not method:
                 assert 0
                 
             method()
-            if not config.original_object.Equals(config.actual_object, lgh):
-                lgh.error("Config object compare result = MisMatch")
+            if not config.original_object.Equals(config.actual_object, tc):
+                tc.error("Config object compare result = MisMatch")
                 return defs.status.ERROR
         return defs.status.SUCCESS
 
-    def __receive_packets(self, pcr, step, lgh):
+    def __receive_packets(self, pcr, step, tc):
         for r in range(10):
             mpkts = ModelConnector.Receive()
             for mpkt in mpkts:
                 pcr.AddReceived(mpkt.rawpkt, [ mpkt.port ])
             if pcr.GetRxPacketCount() >= pcr.GetExPacketCount():
                 break
-            lgh.info("RETRY required: ExPktCount:%d RxPktCount:%d" %\
+            tc.info("RETRY required: ExPktCount:%d RxPktCount:%d" %\
                      (pcr.GetExPacketCount(), pcr.GetRxPacketCount()))
-            self.__retry_wait(lgh)
+            self.__retry_wait(tc)
         return
 
-    def __add_expected(self, pcr, step, lgh):
+    def __add_expected(self, pcr, step, tc):
         for psp in step.expect.packets:
             pkt = psp.packet
             ports = psp.ports
             pcr.AddExpected(pkt.rawbytes, ports, pkt.GID())
         return
 
-    def __add_dummy_rx(self, pcr, step, lgh):
+    def __add_dummy_rx(self, pcr, step, tc):
         for psp in step.expect.packets:
             pkt = psp.packet
             ports = psp.ports
             pcr.AddReceived(pkt.rawbytes, ports)
         return
 
-    def __verify_packets(self, step, lgh):
-        pcr = comparators.PacketComparator(lgh)
+    def __verify_packets(self, step, tc):
+        pcr = comparators.PacketComparator(tc)
         # Add Expected
-        self.__add_expected(pcr, step, lgh)
+        self.__add_expected(pcr, step, tc)
         # Add RX
         if GlobalOptions.dryrun:
-            self.__add_dummy_rx(pcr, step, lgh)
+            self.__add_dummy_rx(pcr, step, tc)
         else:
-            self.__receive_packets(pcr, step, lgh)
+            self.__receive_packets(pcr, step, tc)
         
         pcr.Compare()
         pcr.ShowResults()
@@ -209,20 +216,20 @@ class VerifEngineObject:
             return defs.status.ERROR
         return defs.status.SUCCESS
 
-    def __verify(self, step, lgh):
+    def __verify(self, step, tc):
         verify_pass = True
-        pstatus = self.__verify_packets(step, lgh)
+        pstatus = self.__verify_packets(step, tc)
         if pstatus == defs.status.ERROR:
             verify_pass = False
 
-        dstatus = self.__verify_descriptors(step, lgh)
+        dstatus = self.__verify_descriptors(step, tc)
         if dstatus == defs.status.ERROR:
             verify_pass = False
 
         if verify_pass == False:
             return defs.status.ERROR
 
-        cstatus = self.__verify_configs(step, lgh)
+        cstatus = self.__verify_configs(step, tc)
         if cstatus == defs.status.ERROR:
             verify_pass = False
 
@@ -231,19 +238,19 @@ class VerifEngineObject:
 
         return defs.status.SUCCESS
 
-    def __verify_delay(self, step, lgh):
+    def __verify_delay(self, step, tc):
         if GlobalOptions.dryrun:
             return
         if step.expect.delay:
-           lgh.info("Expectation Delay: %d" % step.expect.delay)
+           tc.info("Expectation Delay: %d" % step.expect.delay)
            time.sleep(step.expect.delay)
         return
 
-    def Verify(self, step, lgh):
+    def Verify(self, step, tc):
         if GlobalOptions.skipverify:
-            lgh.info("Run with skipverify=True: SKIPPING VERIFICATION")
+            tc.info("Run with skipverify=True: SKIPPING VERIFICATION")
             return defs.status.SUCCESS
-        self.__verify_delay(step, lgh)
-        return self.__verify(step, lgh)
+        self.__verify_delay(step, tc)
+        return self.__verify(step, tc)
 
 VerifEngine = VerifEngineObject()

@@ -69,6 +69,8 @@ def TestCaseSetup(tc):
     tc.pvtdata.priotag = getattr(iterelem, 'priotag', False)
     tc.pvtdata.scenario = getattr(iterelem, 'scenario', None)
     tc.pvtdata.ipopts = getattr(iterelem, 'ipopts', None)
+    if getattr(iterelem, 'drop', False):
+        tc.SetDrop()
     if tc.pvtdata.ipopts is not None:
         tc.pvtdata.ipopts = tc.pvtdata.ipopts.split(',')
     return

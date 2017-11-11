@@ -111,6 +111,7 @@ class TestCase(objects.FrameworkObject):
         self.template = FactoryStore.testobjects.Get('TESTCASE')
         self.Clone(self.template)
         self.__root = None
+        self.drop = False
         self.LockAttributes()
         
         self.GID(tcid)
@@ -134,6 +135,12 @@ class TestCase(objects.FrameworkObject):
         self.logpfx         = "TC%06d:" % self.ID()
         self.__generate()
         return
+
+    def SetDrop(self):
+        self.drop = True
+        return
+    def IsDrop(self):
+        return self.drop
 
     def IsIgnore(self):
         return self.module.IsIgnore()
