@@ -1,17 +1,15 @@
 # Test Spec
 selectors:
     src:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        tenant      : filter://type=TENANT
         endpoint    : filter://remote=False
         interface   : filter://any
     dst:
-        tenant      : filter://overlay=VLAN,type=TENANT
-        segment     : filter://any
+        tenant      : filter://type=TENANT
         endpoint    : filter://remote=True
         interface   : filter://any
     flow            : filter://label=L4LB,fwtype=L2
-    maxflows        : None
+    maxflows        : 4
 
 packets:
     - packet:
@@ -19,13 +17,9 @@ packets:
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
         headers     :
-            # Add all possible headers, the final headers will be selected
-            # based on the Flow.
             eth:
-                src     : callback://l4lb/callbacks/GetL2FlowL4LbPreNatSmac
-                dst     : callback://l4lb/callbacks/GetL2FlowL4LbPreNatDmac
-            #qtag:
-            #    vlan    : ref://testcase/config/src/segment/vlan_id
+                 src     : callback://l4lb/callbacks/GetL2FlowL4LbPreNatSmac
+                 dst     : callback://l4lb/callbacks/GetL2FlowL4LbPreNatDmac
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -50,34 +44,71 @@ packets:
         headers     :
             qtag    :
                 vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+                prio: 7
+            #outereth    :
+            #    src     : ref://testcase/config/src/endpoint/intf/rmacaddr
+            #    dst     : ref://testcase/config/src/endpoint/intf/macaddr
+            #qtag:
+            #    vlan    : callback://networking/packets/GetVlanId
+            #    #vlan    : ref://testcase/config/src/endpoint/intf/vlan_id
+            #    prio    : 0
+            #outeripv4   :
+            #    src     : ref://testcase/config/src/endpoint/intf/rtep
+            #    dst     : ref://testcase/config/src/endpoint/intf/ltep
+            #    tos     : 0
+            #    id      : 0
+            #vxlan       :
+            #    vni     : ref://testcase/config/src/segment/vxlan_id
 
     - packet:
         id          : EXP_PKT     # Expected packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
+            outereth    :
+                src     : ref://testcase/config/dst/endpoint/intf/macaddr
+                dst     : ref://testcase/config/dst/endpoint/intf/rmacaddr
+            qtag:
+                vlan    : callback://networking/packets/GetExpectedVlanId
+                #vlan    : ref://testcase/config/dst/endpoint/intf/vlan_id
+                prio    : ref://testcase/config/flow/txqos/cos
+            outeripv4   :
+                src     : ref://testcase/config/dst/endpoint/intf/ltep
+                dst     : ref://testcase/config/dst/endpoint/intf/rtep
+                tos     : 0
+                id      : 0
+            outerudp:
+                chksum  : 0
+            vxlan       :
+                vni     : ref://testcase/config/dst/segment/vxlan_id
             eth:
                 src     : callback://l4lb/callbacks/GetL2FlowL4LbPostNatSmac
                 dst     : callback://l4lb/callbacks/GetL2FlowL4LbPostNatDmac
-            qtag:
-                vlan    : ref://testcase/config/dst/segment/vlan_id
-                prio    : ref://testcase/config/flow/txqos/cos
+            #qtag:
+                #vlan    : ref://testcase/config/dst/segment/vlan_id
+                #prio    : ref://testcase/config/flow/txqos/cos
             ipv4:
                 src     : ref://testcase/config/flow/nat_sip
-                dst     : ref://testcase/config/flow/nat_dip
+                dst     : callback://l4lb/callbacks/GetPostNatDIP
                 ttl     : 64
                 tos     : ref://testcase/config/flow/txqos/dscp
             ipv6:
                 src     : ref://testcase/config/flow/nat_sip
-                dst     : ref://testcase/config/flow/nat_dip
+                dst     : callback://l4lb/callbacks/GetPostNatDIP
                 hlim    : 64
                 tc      : ref://testcase/config/flow/txqos/dscp
             udp:
-                sport   : ref://testcase/config/flow/nat_sport
-                dport   : ref://testcase/config/flow/nat_dport
+                sport   : callback://l4lb/callbacks/GetL4LbFlowPostNatL4SPort
+                dport   : callback://l4lb/callbacks/GetL4LbFlowPostNatL4DPort
             tcp:
-                sport   : ref://testcase/config/flow/nat_sport
-                dport   : ref://testcase/config/flow/nat_dport
+                sport   : callback://l4lb/callbacks/GetL4LbFlowPostNatL4SPort
+                dport   : callback://l4lb/callbacks/GetL4LbFlowPostNatL4DPort
+            #udp:
+            #    sport   : ref://testcase/config/flow/nat_sport
+            #    dport   : ref://testcase/config/flow/nat_dport
+            #tcp:
+            #    sport   : ref://testcase/config/flow/nat_sport
+            #    dport   : ref://testcase/config/flow/nat_dport
 
 buffers:
     - buffer:
