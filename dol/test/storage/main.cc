@@ -60,6 +60,7 @@ std::vector<tests::TestEntry> test_suite = {
   {&tests::test_run_seq_e2e2, "Seq Local Tgt E2E 2", false},
   {&tests::test_run_seq_e2e3, "Seq Local Tgt E2E 3", false},
   {&tests::test_run_seq_e2e4, "Seq Local Tgt E2E 4", false},
+  {&tests::test_seq_e2e_xts_r2n1, "PDMA->XTS->R2N", false},
   {&test_run_rdma_write_cmd, "NVME write cmd over RDMA", false},
 };
 
@@ -115,8 +116,8 @@ int main(int argc, char**argv) {
   
   int rc = 0;
   for (size_t i = 0; i < test_suite.size(); i++) {
-    printf("%lu\t\t", i+1);
-    printf("%s\t", test_suite[i].test_name.c_str());
+    printf("%lu\t", i+1);
+    printf("%s\t\t\t\t", test_suite[i].test_name.c_str());
     printf("%s\n", test_suite[i].test_succeded ? "Success" : "Failure");
     if (!test_suite[i].test_succeded) rc = 1;
   }

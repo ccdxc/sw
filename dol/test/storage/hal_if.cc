@@ -313,6 +313,7 @@ int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, u
     return -1;
   }
   if(upd_resp_msg.response(0).keyindex() != *key_index) {
+    printf(" Expected keyindex %u recvd %u \n", *key_index, upd_resp_msg.response(0).keyindex());
     printf("Update request failed \n");
     return -1;
   }

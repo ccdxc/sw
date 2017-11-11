@@ -92,6 +92,8 @@ int test_run_seq_e2e3();
 
 int test_run_seq_e2e4();
 
+int test_seq_e2e_xts_r2n1();
+
 int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, 
 			uint32_t pvm_roce_sq, uint64_t pdma_src_addr, 
 			uint64_t pdma_dst_addr, uint32_t pdma_data_size,

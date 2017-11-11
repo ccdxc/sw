@@ -28,7 +28,7 @@ const static uint32_t  kR2nStatusSize        = 64;
 const static uint32_t  kR2nStatusNvmeOffset  = 16;
 
 const static uint32_t  kHbmSsdBitmapSize     = (16 * 4096);
-const static uint32_t  kHbmRWBufSize         = (16 * 1024);
+const static uint32_t  kHbmRWBufSize         = (8 * 1024);
 
 const static uint32_t  kSeqDescSize          = 64;
 
@@ -50,6 +50,8 @@ void *read_buf2;
 
 uint64_t read_hbm_buf;
 uint64_t write_hbm_buf;
+uint64_t read_hbm_buf2;
+uint64_t write_hbm_buf2;
 
 void *seq_db_data;
 
@@ -138,6 +140,25 @@ int test_setup() {
 
   printf("HBM read_buf address %lx write_buf address %lx\n",
          read_hbm_buf, write_hbm_buf);
+
+  // Allocate the read buffer2 in HBM for the sequencer
+  if (utils::hbm_addr_alloc(kHbmRWBufSize, &read_hbm_buf2) < 0) {
+    printf("Can't allocate Read HBM buffer \n");
+    return -1;
+  }
+  // Align it to a 4K page for PRP usage
+  read_hbm_buf2 = (read_hbm_buf2 + 4095) & 0xFFFFFFFFFFFFF000L;
+
+  // Allocate the write buffer2 in HBM for the sequencer
+  if (utils::hbm_addr_alloc(kHbmRWBufSize, &write_hbm_buf2) < 0) {
+    printf("Can't allocate Write HBM buffer \n");
+    return -1;
+  }
+  // Align it to a 4K page for PRP usage
+  write_hbm_buf2 = (write_hbm_buf2 + 4095) & 0xFFFFFFFFFFFFF000L;
+
+  printf("HBM read_buf2 address %lx write_buf2 address %lx\n",
+         read_hbm_buf2, write_hbm_buf2);
 
   // Allocate sequencer doorbell data that will be updated by sequencer and read by PVM
   if ((seq_db_data = alloc_host_mem(kSeqDbDataSize)) == nullptr) return -1;
@@ -1495,13 +1516,15 @@ bool fill_aol(void* buf, uint64_t& a, uint32_t& o, uint32_t& l, uint32_t& offset
     return false;
 }
 
-// TODO: Using different keys causes some corruption - so making key initialization global for now
-uint32_t key_desc_idx = 0;
+uint32_t key128_desc_idx = 0;
+uint32_t key256_desc_idx = 0;
 bool key_desc_inited = false;
 
 class XtsCtx {
 public:
-  void init_buffers(bool chain = false) {
+  void init(bool chain = false) {
+    xts_db = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
+    *xts_db = 0;
     if(!is_src_hbm_buf) {
       if(!chain) {
         srand(time(NULL));
@@ -1564,14 +1587,29 @@ public:
     return name;
   }
 
-  //XtsCtx() { init_buffers(); }
-  XtsCtx() { }
-  XtsCtx(void* src_buf, bool is_src_hbm_buf, void* dst_buf,  bool is_dst_hbm_buf) :
-      src_buf(src_buf), is_src_hbm_buf(is_src_hbm_buf),
-      dst_buf(dst_buf), is_dst_hbm_buf(is_dst_hbm_buf) {
-    init_buffers();
+  XtsCtx() {
+    for(uint32_t i = 0; i < MAX_AOLS; i++) {
+      in_aol[i] = NULL;
+      out_aol[i] = NULL;
+    }
+  }
+  ~XtsCtx() {
+    if(op == xts::INVALID) {
+      //if(xts_db) free_host_mem(xts_db);
+      return;
+    }
+    if(xts_desc_addr) free_host_mem(xts_desc_addr);
+    if(status) free_host_mem(status);
+    // TODO: This seems to be crashing - needs investigation
+    // if(xts_db) free_host_mem(xts_db);
+    if(iv) free_host_mem(iv);
+    for(uint32_t i = 0; i < num_aols; i++) {
+      if(in_aol[i]) free_host_mem(in_aol[i]);
+      if(out_aol[i]) free_host_mem(out_aol[i]);
+    }
   }
   int test_seq_xts();
+  int ring_db_n_verify();
 
   void* src_buf = write_buf;
   bool is_src_hbm_buf = false;
@@ -1591,46 +1629,35 @@ public:
   uint32_t start_sec_num = 5;
   xts::xts_aol_t* in_aol[MAX_AOLS];
   xts::xts_aol_t* out_aol[MAX_AOLS];
+  bool ring_seq_db = true;
+  uint16_t seq_xts_index = 0;
+  xts::xts_desc_t* xts_desc_addr = NULL;
+  unsigned char* iv = NULL;
+
+  // ctx data needed for verification of op completion
+  uint64_t xts_db_addr = 0;
+  uint64_t* xts_db = NULL;
+  uint64_t exp_db_data = 0xdeadbeefdeadbeef;
+  uint64_t* status = NULL;
+  bool t10_en = false;
+  bool decr_en = false;
 };
 
 int XtsCtx::test_seq_xts() {
-  uint16_t seq_xts_index;
   uint8_t *seq_xts_desc;
-  uint16_t pvm_status_q = 2;
-  uint16_t pvm_status_index;
-  uint8_t *status_buf;
-
-  // Reset the SLBA and sequencer doorbell data for this test
-  reset_slba();
-  reset_seq_db_data();
-
-  // Consume status entry from PVM CQ
-  status_buf = (uint8_t *) queues::pvm_cq_consume_entry(pvm_status_q, &pvm_status_index);
-  if (status_buf == nullptr) {
-    printf("can't consume status entries \n");
-    return -1;
-  }
-  bzero(status_buf, kR2nStatusSize);
 
   // Sequencer #1: XTS descriptor
   seq_xts_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_xts_q, &seq_xts_index);
   memset(seq_xts_desc, 0, kSeqDescSize);
 
   unsigned char iv_src[IV_SIZE] = {0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e};
-  unsigned char* iv = (unsigned char*)alloc_host_mem(IV_SIZE);
+  iv = (unsigned char*)alloc_host_mem(IV_SIZE);
   memcpy(iv, iv_src, IV_SIZE);
-  uint64_t* xts_db = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
-  *xts_db = 0;
-  uint64_t exp_db_data = 0xdeadbeefdeadbeef;
-  uint64_t* status = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
-  *status = STATUS_DEF_VALUE;
   xts::xts_cmd_t cmd;
   memset(&cmd, 0, sizeof(cmd));
   cmd.token3 = 0x0;     // xts
   cmd.token4 = 0x4;     // xts
 
-  bool t10_en = false;
-  bool decr_en = false;
   switch(op) {
   case(xts::AES_ENCR_ONLY):
     cmd.enable_crc = 0x0; // Disable CRC
@@ -1726,11 +1753,16 @@ int XtsCtx::test_seq_xts() {
     }
   }
 
+  status = (uint64_t*)alloc_host_mem(sizeof(uint64_t));
+  *status = STATUS_DEF_VALUE;
+  if(!xts_db_addr)
+    xts_db_addr = host_mem_v2p(xts_db);
+
   // Fill the XTS ring descriptor
   xts_desc_addr->in_aol = host_mem_v2p(in_aol[0]);
   xts_desc_addr->out_aol = host_mem_v2p(out_aol[0]);
   xts_desc_addr->iv_addr = host_mem_v2p(iv);
-  xts_desc_addr->db_addr = host_mem_v2p(xts_db);
+  xts_desc_addr->db_addr = xts_db_addr;
   xts_desc_addr->db_data = exp_db_data;
   xts_desc_addr->opaque_tag_en = 0;
   xts_desc_addr->sector_num = start_sec_num;
@@ -1742,31 +1774,29 @@ int XtsCtx::test_seq_xts() {
   // Ideally below key initialization lines need to be commented out if operation is T10 only
   // but barco is not fixing this bug - https://github.com/pensando/asic/issues/669
   if(!key_desc_inited) {
-    types::CryptoKeyType key_type;
-    if(key_size == AES128_KEY_SIZE)
-      key_type = types::CRYPTO_KEY_TYPE_AES128;
-    else if(key_size == AES256_KEY_SIZE)
-      key_type = types::CRYPTO_KEY_TYPE_AES256;
-    else {
-      printf(" Unsupported key size \n");
-      return -1;
-    }
     unsigned char key[64] = {0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e,
       0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e,
       0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e,
       0x19, 0xe4, 0xa3, 0x26, 0xa5, 0x0a, 0xf1, 0x29, 0x06, 0x3c, 0x11, 0x0c, 0x7f, 0x03, 0xf9, 0x5e};
-    if(hal_if::get_key_index((char*)key, key_type, key_size*2, &key_desc_idx)) {
-      printf("can't create or update xts key index \n");
+    if(hal_if::get_key_index((char*)key, types::CRYPTO_KEY_TYPE_AES128, AES128_KEY_SIZE*2, &key128_desc_idx)) {
+      printf("can't create or update xts 128bit key index \n");
+      return -1;
+    }
+    if(hal_if::get_key_index((char*)key, types::CRYPTO_KEY_TYPE_AES256, AES256_KEY_SIZE*2, &key256_desc_idx)) {
+      printf("can't create or update xts 256 key index \n");
       return -1;
     }
     key_desc_inited = true;
   }
-  xts_desc_addr->key_desc_idx = key_desc_idx;
+  if(key_size == AES128_KEY_SIZE)
+    xts_desc_addr->key_desc_idx = key128_desc_idx;
+  else
+    xts_desc_addr->key_desc_idx = key256_desc_idx;
 
   // Fill the XTS Seq descriptor
   utils::write_bit_fields(seq_xts_desc, 0, 64, host_mem_v2p(xts_desc_addr));
-  utils::write_bit_fields(seq_xts_desc, 64, 32, 7);
-  utils::write_bit_fields(seq_xts_desc, 96, 16, 2);  //2^2 which will be 4
+  utils::write_bit_fields(seq_xts_desc, 64, 32, 7);  //2^7 which will be 128 - xts desc size
+  utils::write_bit_fields(seq_xts_desc, 96, 16, 2);  //2^2 which will be 4 - prod index size
 
   // Fill xts producer index addr
   utils::write_bit_fields(seq_xts_desc, 112, 34, CAPRI_BARCO_MD_HENS_REG_XTS_PRODUCER_IDX);
@@ -1780,11 +1810,19 @@ int XtsCtx::test_seq_xts() {
   // Fill xts ring base addr
   utils::write_bit_fields(seq_xts_desc, 146, 34, xts_ring_base_addr);
 
+  if(ring_seq_db) {
+    return ring_db_n_verify();
+  }
+
+  return 0;
+}
+
+int XtsCtx::ring_db_n_verify() {
   // Kickstart the sequencer
   test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_xts_q, 0, seq_xts_index);
 
   // Poll for doorbell data as XTS which runs in a different thread
-  auto func = [xts_db, exp_db_data] () {
+  auto func = [this] () {
     if(*xts_db != exp_db_data) {
       printf("Doorbell data not yet there - try again \n");
       return -1;
@@ -1804,13 +1842,6 @@ int XtsCtx::test_seq_xts() {
       rv = -1;
     }
   }
-
-  // TODO: Free resources in failure cases above
-  free_host_mem(xts_desc_addr);
-  free_host_mem(status);
-  free_host_mem(xts_db);
-  free_host_mem(iv);
-
   return rv;
 }
 
@@ -1846,14 +1877,6 @@ public:
           rv = -1;
           printf(" Memcmp failed \n");
         }
-      }
-    }
-    for(uint32_t i = 0; i < xts_ctx1.num_aols; i++) {
-      free_host_mem(xts_ctx1.in_aol[i]);
-      free_host_mem(xts_ctx1.out_aol[i]);
-      if(num_ops == 2) {
-        free_host_mem(xts_ctx2.in_aol[i]);
-        free_host_mem(xts_ctx2.out_aol[i]);
       }
     }
     return rv;
@@ -1895,12 +1918,256 @@ int add_xts_tests(std::vector<TestEntry>& test_suite) {
     }
     if(xts::INVALID != ent.op2)
       ctx->num_ops = 2;
-    ctx->xts_ctx1.init_buffers();
-    ctx->xts_ctx2.init_buffers(true);
+    ctx->xts_ctx1.init();
+    ctx->xts_ctx2.init(true);
     test_suite.push_back({*ctx, ctx->get_name(), false});
+    delete ctx;
   }
 
   return 0;
+}
+
+int check_nvme_status(struct NvmeStatus *nvme_status, struct NvmeCmd *nvme_cmd) {
+  // Process the status
+
+  if (nvme_status->dw3.cid != nvme_cmd->dw0.cid ||
+      NVME_STATUS_GET_STATUS(*nvme_status)) {
+    /*printf("nvme status: cid %x, status_phase %x nvme_cmd: cid %x\n",
+           nvme_status->dw3.cid, nvme_status->dw3.status_phase,
+           nvme_cmd->dw0.cid);*/
+    return -1;
+  }
+  printf("nvme status: cid %x, sq head %x, status_phase %x \n",
+         nvme_status->dw3.cid, nvme_status->dw2.sq_head,
+         nvme_status->dw3.status_phase);
+  return 0;
+}
+
+int test_seq_write_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
+                           uint16_t ssd_handle, uint16_t io_priority, XtsCtx& xts_ctx) {
+  uint16_t seq_pdma_index;
+  uint8_t *seq_pdma_desc;
+  uint16_t seq_r2n_index;
+  uint8_t *seq_r2n_desc;
+  uint64_t db_data;
+  uint64_t db_addr;
+  uint16_t r2n_q = 51;
+  uint8_t *r2n_wqe_buf;
+  uint8_t *cmd_buf;
+  uint16_t pvm_status_q = 2;
+  uint16_t pvm_status_index;
+  uint8_t *status_buf;
+
+  // Reset the SLBA and sequencer doorbell data for this test
+  reset_slba();
+  reset_seq_db_data();
+
+  // Consume status entry from PVM CQ
+  status_buf = (uint8_t *) queues::pvm_cq_consume_entry(pvm_status_q, &pvm_status_index);
+  if (status_buf == nullptr) {
+    printf("can't consume status entries \n");
+    return -1;
+  }
+  bzero(status_buf, kR2nStatusSize);
+
+  // Form the r2n wqe
+  if (form_seq_r2n_wqe_cmd(seq_r2n_q, ssd_handle, io_priority, 0, /* is_read */
+                           &cmd_buf, r2n_q, &r2n_wqe_buf) < 0) {
+    printf("Can't form sequencer R2N wqe + cmd \n");
+    return -1;
+  }
+  struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
+
+  // Sequencer #1: PDMA descriptor
+  seq_pdma_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  memset(seq_pdma_desc, 0, kSeqDescSize);
+
+  // Sequencer #3: R2N descriptor
+  seq_r2n_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_r2n_q, &seq_r2n_index);
+  memset(seq_r2n_desc, 0, kSeqDescSize);
+
+  // Fill the PDMA descriptor
+  utils::write_bit_fields(seq_pdma_desc, 128, 64, host_mem_v2p(write_buf));
+  utils::write_bit_fields(seq_pdma_desc, 192, 64, write_hbm_buf2);
+  utils::write_bit_fields(seq_pdma_desc, 256, 32, kDefaultBufSize);
+
+  xts_ctx.op = xts::AES_ENCR_ONLY;
+  xts_ctx.src_buf = (void*)write_hbm_buf2;
+  xts_ctx.is_src_hbm_buf = true;
+  xts_ctx.dst_buf = (void*)write_hbm_buf;
+  xts_ctx.is_dst_hbm_buf = true;
+  xts_ctx.ring_seq_db = false;
+  xts_ctx.init();
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_r2n_q, 0,
+                             seq_r2n_index, &xts_ctx.xts_db_addr, &xts_ctx.exp_db_data);
+  //xts_ctx.exp_db_data = bswap_64(xts_ctx.exp_db_data);
+  printf("r2n_db_addr %lx r2n_db_data %lu\n", xts_ctx.xts_db_addr, xts_ctx.exp_db_data);
+  xts_ctx.test_seq_xts();
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, xts_ctx.seq_xts_q, 0,
+                             xts_ctx.seq_xts_index, &db_addr, &db_data);
+  utils::write_bit_fields(seq_pdma_desc, 0, 64, db_addr);
+  utils::write_bit_fields(seq_pdma_desc, 64, 64, bswap_64(db_data));
+
+  // Fill the R2N descriptor
+  uint64_t qaddr;
+  if (qstate_if::get_qstate_addr(queues::get_pvm_lif(), SQ_TYPE, r2n_q, &qaddr) < 0) {
+    printf("Can't get R2N qaddr \n");
+    return -1;
+  }
+  utils::write_bit_fields(seq_r2n_desc, 0, 64, host_mem_v2p(r2n_wqe_buf));
+  utils::write_bit_fields(seq_r2n_desc, 64, 32, kR2nWqeSize);
+  utils::write_bit_fields(seq_r2n_desc, 96, 11, queues::get_pvm_lif());
+  utils::write_bit_fields(seq_r2n_desc, 107, 3, SQ_TYPE);
+  utils::write_bit_fields(seq_r2n_desc, 110, 24, r2n_q);
+  utils::write_bit_fields(seq_r2n_desc, 134, 34, qaddr);
+
+  // Kickstart the sequencer
+  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0, seq_pdma_index);
+
+  // Process the status
+  struct NvmeStatus *nvme_status =
+              (struct NvmeStatus *) (status_buf + kR2nStatusNvmeOffset);
+  auto func = [nvme_status, nvme_cmd] () {
+    return check_nvme_status(nvme_status, nvme_cmd);
+  };
+  Poller poll;
+  int rv = poll(func);
+  return rv;
+}
+
+int test_seq_read_xts_r2n(uint16_t seq_pdma_q, uint16_t ssd_handle,
+                      uint16_t io_priority, XtsCtx& xts_ctx) {
+  uint16_t seq_pdma_index;
+  uint8_t *seq_pdma_desc;
+  uint16_t r2n_q = 2;
+  uint16_t r2n_index;
+  uint8_t *r2n_wqe_buf;
+  void *r2n_buf;
+  uint8_t *cmd_buf;
+  uint16_t pvm_status_q = 2;
+  uint16_t pvm_status_index;
+  uint8_t *status_buf;
+
+  // Reset the SLBA and sequencer doorbell data for this test
+  reset_slba();
+  reset_seq_db_data();
+
+  // Consume status entry from PVM CQ
+  status_buf = (uint8_t *) queues::pvm_cq_consume_entry(pvm_status_q, &pvm_status_index);
+  if (status_buf == nullptr) {
+    printf("can't consume status entries \n");
+    return -1;
+  }
+  bzero(status_buf, kR2nStatusSize);
+
+  // Consume pdma entry
+  seq_pdma_desc = (uint8_t *) queues::pvm_sq_consume_entry(seq_pdma_q, &seq_pdma_index);
+  memset(seq_pdma_desc, 0, kSeqDescSize);
+
+  // Consume the r2n entry and wqe
+  if (consume_r2n_entry(r2n_q, ssd_handle, io_priority, 1, /* is_read */
+                        &r2n_buf, &r2n_wqe_buf, &cmd_buf, &r2n_index) < 0) {
+    printf("Can't form consume read sequencer R2N buf \n");
+    return -1;
+  }
+
+  // From the NVME read command in the R2N buffer
+  if (form_read_cmd_with_hbm_buf(cmd_buf, kDefaultBufSize, get_next_cid(),
+                                 get_next_slba(), kDefaultNlb) < 0) {
+      return -1;
+  }
+  struct NvmeCmd *nvme_cmd = (struct NvmeCmd *) cmd_buf;
+
+  // Sequencer #1: XTS
+  xts_ctx.op = xts::AES_DECR_ONLY;
+  xts_ctx.src_buf = (void*)read_hbm_buf;
+  xts_ctx.is_src_hbm_buf = true;
+  xts_ctx.dst_buf = (void*)read_hbm_buf2;
+  xts_ctx.is_dst_hbm_buf = true;
+  xts_ctx.ring_seq_db = false;
+  xts_ctx.init();
+  queues::get_capri_doorbell(queues::get_pvm_lif(), SQ_TYPE, seq_pdma_q, 0,
+      seq_pdma_index, &xts_ctx.xts_db_addr, &xts_ctx.exp_db_data);
+  //xts_ctx.exp_db_data = bswap_64(xts_ctx.exp_db_data);
+  xts_ctx.test_seq_xts();
+
+  // Sequencer #2: PDMA descriptor
+
+  // Fill the PDMA descriptor
+  utils::write_bit_fields(seq_pdma_desc, 0, 64, host_mem_v2p(seq_db_data));
+  utils::write_bit_fields(seq_pdma_desc, 64, 64, kSeqDbDataMagic);
+  utils::write_bit_fields(seq_pdma_desc, 128, 64, read_hbm_buf2);
+  utils::write_bit_fields(seq_pdma_desc, 192, 64, host_mem_v2p(read_buf));
+  utils::write_bit_fields(seq_pdma_desc, 256, 32, kDefaultBufSize);
+
+  // Update the R2N WQE with the doorbell to the PDMA descriptor
+  r2n::r2n_wqe_db_update(r2n_wqe_buf, queues::get_pvm_lif(), SQ_TYPE,
+                         xts_ctx.seq_xts_q, xts_ctx.seq_xts_index);
+
+  // Kickstart the R2N module with the read command (whose completion will
+  // trigger the sequencer)
+  test_ring_doorbell(queues::get_pvm_lif(), SQ_TYPE, r2n_q, 0, r2n_index);
+
+  // Process the status
+  struct NvmeStatus *nvme_status =
+              (struct NvmeStatus *) (status_buf + kR2nStatusNvmeOffset);
+
+  auto func1 = [nvme_status, nvme_cmd] () {
+    return check_nvme_status(nvme_status, nvme_cmd);
+  };
+  Poller poll;
+  int rv = poll(func1);
+
+  auto func2 = [] () {
+    if  (*((uint64_t *) seq_db_data) != kSeqDbDataMagic) {
+      //printf("Sequencer magic incorrect %lx \n", *((uint64_t *) seq_db_data));
+      return -1;
+    }
+    return 0;
+  };
+
+  if(0 == rv) return poll(func2);
+  return rv;
+}
+
+int test_seq_e2e_xts_r2n(uint16_t seq_pdma_q, uint16_t seq_r2n_q,
+                     uint16_t ssd_handle, uint16_t io_priority) {
+  int rc;
+  XtsCtx xts_ctx_write, xts_ctx_read;
+
+  uint8_t byte_val = get_next_byte() + 1;
+  memset(write_buf, byte_val, kDefaultBufSize);
+  memset(read_buf, byte_val, kDefaultBufSize);
+  write_mem(write_hbm_buf, (uint8_t *)read_buf, kDefaultBufSize);
+  write_mem(write_hbm_buf2, (uint8_t *)read_buf, kDefaultBufSize);
+  write_mem(read_hbm_buf, (uint8_t *)read_buf, kDefaultBufSize);
+  write_mem(read_hbm_buf2, (uint8_t *)read_buf, kDefaultBufSize);
+
+  memset(read_buf, 0x0, SECTOR_SIZE);
+
+  // Send the write command and check status
+  rc = test_seq_write_xts_r2n(seq_pdma_q, seq_r2n_q, ssd_handle,
+                          io_priority, xts_ctx_write);
+  if (rc < 0) return -1;
+
+  // Memcmp before reading
+  rc = memcmp(read_buf, write_buf, kDefaultBufSize);
+  printf("\nE2E: pre memcmp %d \n", rc);
+
+  // Send the read command and check status
+  rc = test_seq_read_xts_r2n(seq_pdma_q, ssd_handle, io_priority, xts_ctx_read);
+  if (rc < 0) return -1;
+
+  // Memcmp after reading and verify its the same
+  rc = memcmp(read_buf, write_buf, kDefaultBufSize);
+  printf("\nE2E: post memcmp %d \n", rc);
+
+  return rc;
+}
+
+int test_seq_e2e_xts_r2n1() {
+  return test_seq_e2e_xts_r2n(40, 48,  // seq_pdma_q, seq_r2n_q
+      2, 0);   // ssd_handle, io_priority
 }
 
 int test_seq_write_roce(uint32_t seq_pdma_q, uint32_t seq_roce_q, 

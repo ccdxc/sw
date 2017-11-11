@@ -75,6 +75,7 @@ hal_ret_t   crypto_key_update(cryptokey::CryptoKeyUpdateRequest &request,
         }
         else {
             response->set_api_status(types::API_STATUS_OK);
+            response->set_keyindex(key_idx);
         }
     }
     else {
