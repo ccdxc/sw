@@ -138,8 +138,9 @@ lb_tcp_unexpected_mss:
                      NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
-  // If not Allow/Drop then its EDIT
-  // TBD
+  // Edit option: Remove the mss option
+  phvwr       p.tcp_option_mss_valid, FALSE
+  phvwr       p.tcp_options_blob_valid, FALSE
 
 
 lb_tcp_unexpected_win_scale:
@@ -153,8 +154,9 @@ lb_tcp_unexpected_win_scale:
                      NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
-  // If not Allow/Drop then its EDIT
-  // TBD
+  // Edit option: Remove the mss option
+  phvwr       p.tcp_option_ws_valid, FALSE
+  phvwr       p.tcp_options_blob_valid, FALSE
 
 
 lb_tcp_urg_flag_not_set:
@@ -215,6 +217,23 @@ lb_tcp_rst_with_data:
                     NORMALIZATION_ACTION_DROP
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
+  // Edit option - We will strip the packet so that the tcp_data_len is zero 
+  add          r1, k.l4_metadata_tcp_data_len, r0 // we need to subtract tcp_data_len
+  sub          r5, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1 // r5 = k.capri_p4_intrinsic_packet_len - r1
+  phvwr        p.capri_p4_intrinsic_packet_len, r5
+  phvwr        p.capri_deparser_len_trunc_pkt_len, r0 // Zero out the tcp payload
+  sub          r5, k.ipv4_totalLen, r1   // r5 = k.ipv4_totalLen - r1
+  phvwr        p.ipv4_totalLen, r5
+  seq          c1, k.tunnel_metadata_tunnel_terminate, TRUE
+  sub.c1       r5, k.udp_len, r1   // r5 = k.udp.len - r1
+  phvwr.c1     p.udp_len, r5
+  sub.c1       r5, k.inner_ipv4_totalLen, r1   // r5 = k.inner_ipv4_totalLen - r1
+  phvwr.c1     p.inner_ipv4_totalLen, r5
+  // Finally update the tcp_data_len to zero value which will be used by
+  // connection tracking code
+  phvwr        p.l4_metadata_tcp_data_len, r0
+  phvwr        p.capri_intrinsic_payload, 0
+  phvwr        p.capri_deparser_len_trunc, 1 
   // Edit option: TBD
   // 1. Change the l4_metadata.tcp_data_len to zero
   // 2. Update IP header total len
@@ -261,5 +280,6 @@ lb_tcp_unexpected_echo_ts:
   phvwr.c3.e  p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
   phvwr.c3    p.capri_intrinsic_drop, 1
   // If not Allow/Drop then its EDIT
-  phvwr.e     p.tcp_option_timestamp_prev_echo_ts, 0
-  nop
+  // when we edit the option we will turn of the blob
+  phvwr.e     p.tcp_option_timestamp_prev_echo_ts, r0
+  phvwr       p.tcp_options_blob_valid, FALSE

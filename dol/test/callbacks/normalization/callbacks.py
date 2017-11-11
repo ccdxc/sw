@@ -229,11 +229,17 @@ def GetInputTcpFlags(testcase, packet):
     elif 'TCP_URG_FLAG_NOT_SET_ACTION_EDIT' in profile_name:
         return None
     elif 'TCP_URG_PTR_NOT_SET_ACTION_ALLOW' in profile_name:
-        return 'urg'
+        return 'urg,ack'
     elif 'TCP_URG_PTR_NOT_SET_ACTION_DROP' in profile_name:
-        return 'urg'
+        return 'urg,ack'
     elif 'TCP_URG_PTR_NOT_SET_ACTION_EDIT' in profile_name:
-        return 'urg'
+        return 'urg,ack'
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW' in profile_name:
+        return 'urg,ack'
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_DROP' in profile_name:
+        return 'urg,ack'
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_EDIT' in profile_name:
+        return 'urg,ack'
     elif 'TCP_RST_WITH_DATA_ACTION_ALLOW' in profile_name:
         return 'rst'
     elif 'TCP_RST_WITH_DATA_ACTION_DROP' in profile_name:
@@ -312,6 +318,12 @@ def GetInputTcpUrgPtr(testcase, packet):
         return 0x1
     elif 'TCP_URG_FLAG_NOT_SET_ACTION_EDIT' in profile_name:
         return 0x1
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW' in profile_name:
+        return 0x1
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_DROP' in profile_name:
+        return 0x1
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_EDIT' in profile_name:
+        return 0x1
     return 0x0
 
 def GetExpectedTcpReserved(testcase, packet):
@@ -333,13 +345,13 @@ def GetExpectedTcpFlags(testcase, packet):
     elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
         return None
     elif 'TCP_UNEXPECTED_MSS_ACTION_EDIT' in profile_name:
-        return 'syn'
+        return None
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW' in profile_name:
         return None
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP' in profile_name:
         return None
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT' in profile_name:
-        return 'syn'
+        return None
     elif 'TCP_URG_FLAG_NOT_SET_ACTION_ALLOW' in profile_name:
         return None
     elif 'TCP_URG_FLAG_NOT_SET_ACTION_DROP' in profile_name:
@@ -347,17 +359,23 @@ def GetExpectedTcpFlags(testcase, packet):
     elif 'TCP_URG_FLAG_NOT_SET_ACTION_EDIT' in profile_name:
         return None
     elif 'TCP_URG_PTR_NOT_SET_ACTION_ALLOW' in profile_name:
-        return 'urg'
+        return 'urg,ack'
     elif 'TCP_URG_PTR_NOT_SET_ACTION_DROP' in profile_name:
-        return 'urg'
+        return 'urg,ack'
     elif 'TCP_URG_PTR_NOT_SET_ACTION_EDIT' in profile_name:
-        return None
+        return 'ack'
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW' in profile_name:
+        return 'urg,ack'
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_DROP' in profile_name:
+        return 'urg,ack'
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_EDIT' in profile_name:
+        return 'ack'
     elif 'TCP_RST_WITH_DATA_ACTION_ALLOW' in profile_name:
         return 'rst'
     elif 'TCP_RST_WITH_DATA_ACTION_DROP' in profile_name:
         return 'rst'
     elif 'TCP_RST_WITH_DATA_ACTION_EDIT' in profile_name:
-        return None
+        return 'rst'
     # Need more invalid flags combinations
     elif 'TCP_INVALID_FLAGS_DROP_ENABLE' in profile_name:
         return None
@@ -403,13 +421,13 @@ def GetExpectedTcpOptions(testcase, packet):
     elif 'TCP_UNEXPECTED_MSS_ACTION_DROP' in profile_name:
         return [TcpOptions('MSS', '0x1')]
     elif 'TCP_UNEXPECTED_MSS_ACTION_EDIT' in profile_name:
-        return [TcpOptions('NOP', None)]
+        return []
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_ALLOW' in profile_name:
         return [TcpOptions('WScale', '0x2')]
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_DROP' in profile_name:
         return [TcpOptions('WScale', '0x2')]
     elif 'TCP_UNEXPECTED_WIN_SCALE_ACTION_EDIT' in profile_name:
-        return [TcpOptions('NOP', None)]
+        return []
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_ALLOW' in profile_name:
         return echo_ts
     elif 'TCP_UNEXPECTED_ECHO_TS_ACTION_DROP' in profile_name:
@@ -449,6 +467,12 @@ def GetExpectedTcpUrgPtr(testcase, packet):
         return 0x0
     elif 'TCP_URG_PTR_NOT_SET_ACTION_EDIT' in profile_name:
         return 0x0
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW' in profile_name:
+        return 0x1
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_DROP' in profile_name:
+        return 0x1
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_EDIT' in profile_name:
+        return 0x0
     return 0x0
 
 
@@ -467,6 +491,12 @@ def GetInputPayloadSize(testcase, packet):
         return 410
     elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_EDIT' in profile_name:
         return 410
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW' in profile_name:
+        return 0
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_DROP' in profile_name:
+        return 0
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_EDIT' in profile_name:
+        return 0
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE' in profile_name:
         return 0
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
@@ -494,6 +524,12 @@ def GetExpectedPayloadSize(testcase, packet):
         return 410
     elif 'TCP_DATA_LEN_GT_WIN_SIZE_ACTION_EDIT' in profile_name:
         return 400
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_ALLOW' in profile_name:
+        return 0
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_DROP' in profile_name:
+        return 0
+    elif 'TCP_URG_PAYLOAD_MISSING_ACTION_EDIT' in profile_name:
+        return 0
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_ENABLE' in profile_name:
         return 0
     elif 'SEC_PROF_TCP_SPLIT_HANDSHAKE_DROP_DISABLE' in profile_name:
@@ -504,6 +540,8 @@ def GetExpectedPayloadSize(testcase, packet):
         return 200
     elif 'IP_INVALID_LEN_ACTION_EDIT' in profile_name:
         return 92
+    elif 'TCP_RST_WITH_DATA_ACTION_EDIT' in profile_name:
+        return 0
     return 150
 
 def GetInputTcpAck(testcase, packet):

@@ -3788,12 +3788,12 @@ class capri_stage:
                     continue
                 if set(km.ctables) <= p_excl_tbls[ct]:
                     new_km.hw_id = km.hw_id
+                    km.ctables.append(ct)
                     # allocate km in all flits used
                     for f in new_km.flits_used:
-                        self.km_allocator[f][new_km.hw_id] = new_km
-                        self.gtm.tm.logger.debug("%s:[flit %d] reuse key_maker[%d] %d" % \
-                            (ct.p4_table.name, f, c_km.km_id, km.hw_id))
-                    km.ctables.append(ct)
+                        self.km_allocator[f][new_km.hw_id] = km
+                        self.gtm.tm.logger.debug("%s:[flit %d] reuse key_maker[%d] %d : %s" % \
+                            (ct.p4_table.name, f, c_km.km_id, km.hw_id, km.ctables))
                     km_allocated += 1
                     total_km_allocated += 1
                     km_used[c_km.km_id] = new_km.hw_id

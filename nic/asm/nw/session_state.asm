@@ -24,7 +24,7 @@ nop:
 // R1 - Temporary use
 // R2 - tcp_data_len before calling normalization, after that Exceptions seen for the packet
 // R3 - Used for bal instruction to save the return address. No bal in bal usage.
-// R4 - tcp_mss before calling normalization. After that rflow_tcp_ack_num + tcp_rcvr_win_sz
+// R4 - tcp_mss before calling normalization(not used now). After that rflow_tcp_ack_num + tcp_rcvr_win_sz
 // R5 - used in normalization for scratch after it returns its loaded with tcp_seq_num_hi
 // R6 - tcp_rcvr_win_sz
 // R7 - adjusted ack or seq num (taking into account the syn_cookie_delta)
@@ -695,24 +695,29 @@ lb_tcp_session_responder_normalization:
 
 lb_tcp_data_len_gt_mss_size:
   b.c2         lb_tcp_data_len_gt_win_size
-  seq          c2, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_ALLOW
+  seq          c2, k.{l4_metadata_tcp_data_len_gt_win_size_action_sbit0_ebit0, l4_metadata_tcp_data_len_gt_win_size_action_sbit1_ebit1}, NORMALIZATION_ACTION_ALLOW
   slt          c3, r4, r2
   b.!c3        lb_tcp_data_len_gt_win_size
-  seq          c3, k.l4_metadata_tcp_data_len_gt_mss_action, \
+  seq          c4, k.l4_metadata_tcp_data_len_gt_mss_action, \
                       NORMALIZATION_ACTION_DROP
-  phvwr.c3.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
-  phvwr.c3     p.capri_intrinsic_drop, 1
-#if 0
-  add          r2, d.u.tcp_session_state_info_d.rflow_tcp_mss, r0 // Updating tcp_data_len to mss
-  sub          r1, r2, d.u.tcp_session_state_info_d.rflow_tcp_mss // r1 = tcp_data_len - mss
-  sub          r5, k.control_metadata_packet_len, r1 // r5 = k.control_metadata_packet_len - r1
-  phvwr        p.control_metadata_packet_len, r5
+  phvwr.c4.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
+  phvwr.c4     p.capri_intrinsic_drop, 1
+  sub          r1, r2, r4 // r1 = tcp_data_len - mss
+  sub          r5, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1 // r5 = k.capri_p4_intrinsic_packet_len - r1
+  phvwr        p.capri_p4_intrinsic_packet_len, r5
+  phvwr        p.capri_deparser_len_trunc_pkt_len, r4 // This is the payload length after TCP options which is nothing but MSS.
   sub          r5, k.ipv4_totalLen, r1   // r5 = k.ipv4_totalLen - r1
   phvwr        p.ipv4_totalLen, r5
   seq          c1, k.tunnel_metadata_tunnel_terminate, TRUE
-  sub          r5, k.inner_ipv4_totalLen, r1   // r5 = k.inner_ipv4_totalLen - r1
-  phvwr        p.inner_ipv4_totalLen, r5
-#endif /* 0 */ 
+  sub.c1       r5, k.udp_len, r1   // r5 = k.udp.len - r1
+  phvwr.c1     p.udp_len, r5
+  sub.c1       r5, k.inner_ipv4_totalLen, r1   // r5 = k.inner_ipv4_totalLen - r1
+  phvwr.c1     p.inner_ipv4_totalLen, r5
+  // Finally update the tcp_data_len to MSS value which will be used by
+  // connection tracking code
+  add          r2, r4, r0 // Updating tcp_data_len to mss
+  phvwr        p.capri_intrinsic_payload, 0
+  phvwr        p.capri_deparser_len_trunc, 1
  
   // Edit option
   // 1. Change the l4_metadata.tcp_data_len to mss
@@ -726,9 +731,26 @@ lb_tcp_data_len_gt_win_size:
                       NORMALIZATION_ACTION_ALLOW
   slt          c3, r6, r2
   b.!c3        lb_tcp_unexpected_ts_option
-  seq          c3, k.l4_metadata_tcp_data_len_gt_win_size_action, NORMALIZATION_ACTION_DROP
-  phvwr.c3.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
-  phvwr.c3     p.capri_intrinsic_drop, 1
+  seq          c4, k.{l4_metadata_tcp_data_len_gt_win_size_action_sbit0_ebit0, l4_metadata_tcp_data_len_gt_win_size_action_sbit1_ebit1}, NORMALIZATION_ACTION_DROP
+  phvwr.c4.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
+  phvwr.c4     p.capri_intrinsic_drop, 1
+  // Edit
+  sub          r1, r2, r6 // r1 = tcp_data_len - rcvr_win_sz
+  sub          r5, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1 // r5 = k.capri_p4_intrinsic_packet_len - r1
+  phvwr        p.capri_p4_intrinsic_packet_len, r5
+  phvwr        p.capri_deparser_len_trunc_pkt_len, r6 // This is the payload length after TCP options which is nothing but MSS.
+  sub          r5, k.ipv4_totalLen, r1   // r5 = k.ipv4_totalLen - r1
+  phvwr        p.ipv4_totalLen, r5
+  seq          c1, k.tunnel_metadata_tunnel_terminate, TRUE
+  sub.c1       r5, k.udp_len, r1   // r5 = k.udp.len - r1
+  phvwr.c1     p.udp_len, r5
+  sub.c1       r5, k.inner_ipv4_totalLen, r1   // r5 = k.inner_ipv4_totalLen - r1
+  phvwr.c1     p.inner_ipv4_totalLen, r5
+  // Finally update the tcp_data_len to MSS value which will be used by
+  // connection tracking code
+  add          r2, r6, r0 // Updating tcp_data_len to rcvr_win_sz
+  phvwr        p.capri_intrinsic_payload, 0
+  phvwr        p.capri_deparser_len_trunc, 1
   // Edit option
   // 1. Change the l4_metadata.tcp_data_len to rcvr_win_sz
   // 2. Edit the IP Total len based on whether tunnel is terminated or not
@@ -742,16 +764,15 @@ lb_tcp_unexpected_ts_option:
   seq          c3, d.u.tcp_session_state_info_d.tcp_ts_option_negotiated, FALSE
   seq          c4, k.tcp_option_timestamp_valid, TRUE
   bcf          ![c3 & c4], lb_tcp_ts_not_present
-  seq          c3, k.l4_metadata_tcp_unexpected_ts_option_action, \
+  seq          c5, k.l4_metadata_tcp_unexpected_ts_option_action, \
                       NORMALIZATION_ACTION_DROP
-  phvwr.c3.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
-  phvwr.c3     p.capri_intrinsic_drop, 1
-  // Edit option
-  phvwr        p.tcp_option_timestamp_optType, 0x1
-  phvwr        p.tcp_option_timestamp_optLength, 0x1
-  addi         r1, r0, 0x01010101
-  phvwr        p.tcp_option_timestamp_prev_echo_ts, r1
-  phvwr        p.tcp_option_timestamp_ts, r1
+  phvwr.c5.e   p.control_metadata_drop_reason[DROP_TCP_NORMALIZATION], 1
+  phvwr.c5     p.capri_intrinsic_drop, 1
+  // Edit option - Remove the timestamp option and we have to also
+  // delete the blob so that the tcp_options_fixup code recomputes
+  // the new options and all the header lengths.
+  phvwr        p.tcp_option_timestamp_valid, 0
+  phvwr        p.tcp_options_blob_valid, 0
 
 lb_tcp_ts_not_present:
   seq          c1, k.flow_info_metadata_flow_role, TCP_FLOW_INITIATOR

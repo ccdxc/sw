@@ -343,7 +343,7 @@ action tcp_session_state_info(iflow_tcp_seq_num,
        // This case is also handled in best packet case but it assumed that no flags
        // other than ACK+PSH were set.
        if ((l4_metadata.tcp_data_len == 0) and (l4_metadata.tcp_rcvr_win_sz != 0)) {
-           // Initiator flow can also be installed in INIT state after the flow 
+           // Initiator flow can also be installed in INIT state after the flow
            // miss is sent to ARM CPU which will reinject the packet and this time
            // we will hit the flow that is installed. This is to avoid tcp session
            // tracking to see the ARM injected packet as a SYN REXMIT.
@@ -1133,7 +1133,7 @@ action ip_normalization_checks() {
     }
     // Vlan tagged packet
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
-        ((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18)) and 
+        ((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18)) and
         (((ipv4.totalLen + 18) >= MIN_ETHER_FRAME_LEN) or (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
         if ((ipv4.totalLen + 18) > MIN_ETHER_FRAME_LEN) {
             modify_field(capri_p4_intrinsic.packet_len, (ipv4.totalLen + 18));
@@ -1144,7 +1144,7 @@ action ip_normalization_checks() {
     }
     // Vlan untagged packet
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
-        ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 14)) and 
+        ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 14)) and
         (((ipv4.totalLen + 14) >= MIN_ETHER_FRAME_LEN) or (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
         if ((ipv4.totalLen + 14) > MIN_ETHER_FRAME_LEN) {
             modify_field(capri_p4_intrinsic.packet_len, (ipv4.totalLen + 14));
@@ -1211,8 +1211,14 @@ action tcp_stateless_normalization() {
         (l4_metadata.tcp_unexpected_mss_action == NORMALIZATION_ACTION_DROP)) {
         modify_field(control_metadata.drop_reason, DROP_TCP_NORMALIZATION);
     }
+    // EDIT option: We will delete the MSS option
+    if ((tcp.flags & TCP_FLAG_SYN == 0) and
+        (tcp_option_mss.valid == TRUE) and
+        (l4_metadata.tcp_unexpected_mss_action == NORMALIZATION_ACTION_EDIT)) {
+        remove_header(tcp_option_mss);
+        //remove_header(tcp_options_blob); NCC error so commented it
+    }
 
-    // NOPs will be added for EDIT option
 
     // WindowScale is present but SYN is not present
     if ((tcp.flags & TCP_FLAG_SYN == 0) and
@@ -1221,8 +1227,14 @@ action tcp_stateless_normalization() {
         modify_field(control_metadata.drop_reason, DROP_TCP_NORMALIZATION);
     }
     // NOPs will be added for EDIT option
+    if ((tcp.flags & TCP_FLAG_SYN == 0) and
+        (tcp_option_ws.valid == TRUE) and
+        (l4_metadata.tcp_unexpected_win_scale_action == NORMALIZATION_ACTION_EDIT)) {
+        remove_header(tcp_option_ws);
+        //remove_header(tcp_options_blob); NCC error so commented
+     }
 
-       // URG flag not set but UrgentPtr has non-zero value
+    // URG flag not set but UrgentPtr has non-zero value
     if ((tcp.flags & TCP_FLAG_URG  == 0) and
         (tcp.urgentPtr != 0) and
         (l4_metadata.tcp_urg_flag_not_set_action == NORMALIZATION_ACTION_DROP)) {
@@ -1271,8 +1283,26 @@ action tcp_stateless_normalization() {
     if ((tcp.flags & TCP_FLAG_RST == TCP_FLAG_RST) and
         (l4_metadata.tcp_data_len != 0) and
         (l4_metadata.tcp_rst_with_data_action == NORMALIZATION_ACTION_EDIT)) {
-        // Handle it in p4+
-        //modify_field(control_metadata.tcp_normalization_drop, TRUE);
+        // Truncate the packet to zero tcp data length and adjust all the
+        // header lengths correctly
+        // Update the tcp_data_len and reduce the frame size
+        // dummy ops to keep compiler happy
+        modify_field(l4_metadata.tcp_data_len, l4_metadata.tcp_data_len);
+        modify_field(l4_metadata.tcp_data_len, 0);
+        // dummy ops to keep compiler happy
+        modify_field(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len);
+        subtract_from_field(capri_p4_intrinsic.packet_len, l4_metadata.tcp_data_len);
+        // dummy ops to keep compiler happy
+        modify_field(ipv4.totalLen, ipv4.totalLen);
+        subtract_from_field(ipv4.totalLen, l4_metadata.tcp_data_len);
+        if (tunnel_metadata.tunnel_terminate == TRUE) {
+            // dummy ops to keep compiler happy
+            modify_field(udp.len, udp.len);
+            subtract_from_field(udp.len, l4_metadata.tcp_data_len);
+            // dummy ops to keep compiler happy
+            modify_field(inner_ipv4.totalLen, inner_ipv4.totalLen);
+            subtract_from_field(inner_ipv4.totalLen, l4_metadata.tcp_data_len);
+        }
     }
 
 
@@ -1332,16 +1362,20 @@ action tcp_session_normalization() {
         // Update the tcp_data_len and reduce the frame size
         modify_field(l4_metadata.tcp_data_len, l4_metadata.tcp_mss);
         // dummy ops to keep compiler happy
-        //modify_field(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len);
+        modify_field(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len);
         subtract_from_field(capri_p4_intrinsic.packet_len,
                            (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
         // dummy ops to keep compiler happy
-        // modify_field(ipv4.totalLen, ipv4.totalLen);
+        modify_field(ipv4.totalLen, ipv4.totalLen);
         subtract_from_field(ipv4.totalLen,
                            (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
         if (tunnel_metadata.tunnel_terminate == TRUE) {
             // dummy ops to keep compiler happy
-            //modify_field(inner_ipv4.totalLen, inner_ipv4.totalLen);
+            modify_field(udp.len, udp.len);
+            subtract_from_field(udp.len,
+                               (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
+            // dummy ops to keep compiler happy
+            modify_field(inner_ipv4.totalLen, inner_ipv4.totalLen);
             subtract_from_field(inner_ipv4.totalLen,
                                (l4_metadata.tcp_data_len - l4_metadata.tcp_mss));
         }
@@ -1394,7 +1428,7 @@ action tcp_session_normalization() {
         //    4. Updte the outer UDP Packet lenght.
         // 5. Update Outer IP Total length
         // 6. Update Control_metadata.packet_len
-        
+
     }
 
     // Timestamp option is negotiated but not present in non-syn packet.
@@ -1410,12 +1444,12 @@ action tcp_session_normalization() {
 }
 
 // In this action routine we will fixup the tcp options which includes
-// 1. Logic in this action routine should only be invoked if the 
+// 1. Logic in this action routine should only be invoked if the
 //    tcp data offset is > 5.
 // 2. If there were no modificaitons to options in the pipeline then
-//    reset all the tcp option header valid bits and only leave the 
-//    tcp_option_blob valid bit to be set. 
-// 3. If there are any modifcation done to tcp options then the 
+//    reset all the tcp option header valid bits and only leave the
+//    tcp_option_blob valid bit to be set.
+// 3. If there are any modifcation done to tcp options then the
 //    pipleline would have reset the tcp_options_blob header valid
 //    bit, In such case this routine will have to go through all
 //    the individual tcp option valid bits and compute the new
@@ -1446,12 +1480,11 @@ action tcp_options_fixup() {
     modify_field(tcp.dataOffset, tcp.dataOffset);
     modify_field(tunnel_metadata.tunnel_terminate, tunnel_metadata.tunnel_terminate);
 
-    if (tcp.valid == TRUE and
-        tcp.dataOffset > 5 and
+    if (tcp.dataOffset > 5 and
         tcp_options_blob.valid == FALSE) {
         if (tcp_option_unknown.valid == TRUE) {
             // dummy ops to keep compiler happy
-            //modify_field(tcp_option_unknown.optLength, tcp_option_unknown.optLength);
+	    //modify_field(tcp_option_unknown.optLength, tcp_option_unknown.optLength);
             // tcp_option_length += tcp_option_unknown.optLength
         }
         if (tcp_option_four_sack.valid == TRUE) {
@@ -1480,6 +1513,12 @@ action tcp_options_fixup() {
         }
         remove_header (tcp_option_nop);
         remove_header (tcp_option_eol);
+
+       // dummy ops to keep compiler happy
+        modify_field(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len);
+        modify_field(udp.len, udp.len);
+        modify_field(ipv4.totalLen, ipv4.totalLen);
+        modify_field(inner_ipv4.totalLen, inner_ipv4.totalLen);
 
         // mod = tcp_option_length % 4)
         // if (mod == 0) : No extra options
@@ -1530,7 +1569,9 @@ action tcp_options_fixup() {
 control process_session_state {
     if (capri_intrinsic.drop == FALSE) {
         if (l4_metadata.flow_conn_track == TRUE) {
-            apply(session_state);
+           if (control_metadata.flow_miss_ingress == FALSE) {
+                apply(session_state);
+           }
         }
     }
 }
@@ -1568,5 +1609,7 @@ control process_normalization {
     }
     apply(validate_packet);
 
-    apply(tcp_options_fixup);
+    if (tcp.valid == TRUE) {
+        apply(tcp_options_fixup);
+    }
 }
