@@ -22,7 +22,7 @@ cc_library(
 
 cc_library(
     name = "fte_includes",
-    hdrs = ["fte.hpp"],
+    hdrs = ["fte.hpp", "fte_ctx.hpp"],
 )
 
 cc_test(

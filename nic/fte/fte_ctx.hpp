@@ -289,10 +289,10 @@ struct lifqid_s {
 } __PACK__;
 
 const lifqid_t FLOW_MISS_LIFQ = {hal::SERVICE_LIF_CPU, 0, 0};
-const lifqid_t TCP_PROXY_LIFQ = {hal::SERVICE_LIF_TCP_PROXY, 0, 0};
-const lifqid_t QUIESCE_LIFQ   = {hal::SERVICE_LIF_CPU, 0, 4};
-const lifqid_t TLS_PROXY_LIFQ = {hal::SERVICE_LIF_TLS_PROXY, 0, 0};
 const lifqid_t ALG_CFLOW_LIFQ = {hal::SERVICE_LIF_CPU, 0, HAL_FTE_FLOW_REL_COPY_QID};
+const lifqid_t QUIESCE_LIFQ   = {hal::SERVICE_LIF_CPU, 0, 4};
+const lifqid_t TCP_PROXY_LIFQ = {hal::SERVICE_LIF_TCP_PROXY, 0, 0};
+const lifqid_t TLS_PROXY_LIFQ = {hal::SERVICE_LIF_TLS_PROXY, 0, 0};
 const lifqid_t APP_REDIR_LIFQ = {hal::SERVICE_LIF_APP_REDIR, 0, 0};
 
 inline std::ostream& operator<<(std::ostream& os, const lifqid_t& lifq)

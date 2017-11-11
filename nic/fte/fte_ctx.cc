@@ -222,6 +222,9 @@ ctx_t::lookup_session()
          
         // This is an RFlow if we found its key and role
         // set as responder. Initialize the rflow_ stage
+        // TODO(goli) - executing only rflow pipeline may cause issues,
+        //              some plugins might have a state from iflow processing.
+        //              we need to preserve all plugin's per pkt state
         if (entry->role == hal::FLOW_ROLE_RESPONDER) {
             valid_rflow_ = true;
             rflow_[stage]->set_key(key());
@@ -339,9 +342,7 @@ ctx_t::create_session()
     } 
 
     set_role(hal::FLOW_ROLE_INITIATOR);
-    if (arm_lifq_.lif == hal::SERVICE_LIF_CPU) { 
-        set_flow_miss(true);
-    }
+    set_flow_miss(true);
 
     return HAL_RET_OK;
 }
@@ -615,7 +616,8 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, flow_t iflow[]
     arm_lifq_ = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
 
-    if (cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) {
+    //TODO(goli) - remove the CPUCB_ID_QUIESCE hard coding here
+    if (cpu_rxhdr->lif == hal::SERVICE_LIF_CPU && cpu_rxhdr->qid != types::CPUCB_ID_QUIESCE) {
         ret = init_flows(iflow, rflow);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failed to init flows, err={}", ret);

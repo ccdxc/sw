@@ -1263,12 +1263,12 @@ capri_repl_pgm_def_entries (void)
     data.qid_or_vnid = HAL_FTE_RST_QID;
     hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_RST_COPY, &data);
 
-    /* Add 1st repication copy for list 2*/
+    /* Add 1st repication copy for list 3*/
     memset(&data, 0, sizeof(data));
     data.repl_type = TM_REPL_TYPE_HONOR_INGRESS;
     hal::pd::g_hal_state_pd->met_table()->add_replication(P4_NW_MCAST_INDEX_FLOW_REL_COPY, &data);
 
-    /* Add 2nd repication copy for list 2*/
+    /* Add 2nd repication copy for list 3*/
     memset(&data, 0, sizeof(data));
     data.repl_type = TM_REPL_TYPE_TO_CPU_REL_COPY;
     data.lport = CPU_LPORT;

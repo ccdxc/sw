@@ -4,16 +4,6 @@
 
 namespace fte {
 
-class mpscq_t;
-
-typedef void (*softq_fn_t)(void *data);
-
-// Should be called from non FTE thread 
-hal_ret_t softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data);
-
-// Should be called from FTE thread 
-hal_ret_t softq_register(mpscq_t *q);
-
 // ------------------------------------------------------------------------------
 // Multiple producer single consumer queue 
 // ------------------------------------------------------------------------------

@@ -71,7 +71,23 @@ void unregister_features_and_pipelines();
 hal_ret_t session_create(SessionSpec& spec, SessionResponse *rsp);
 
 // FTE pkt loop (infinite loop)
-void pkt_loop(uint8_t fte_id);
+void fte_start(uint8_t fte_id);
+
+// Send a packet on ASQ
+// ***Should be called from FTE thread***
+hal_ret_t fte_asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
+                       hal::pd::p4plus_to_p4_header_t* p4plus_header,
+                       uint8_t* pkt, size_t pkt_len,
+                       uint16_t dest_lif = hal::SERVICE_LIF_CPU,
+                       uint8_t  qtype = CPU_ASQ_QTYPE,
+                       uint32_t qid = CPU_ASQ_QID,
+                       uint8_t  ring_number = CPU_SCHED_RING_ASQ);
+
+// Asynchronouly executes the fn in the specified fte thread,
+// If the softq is full, it blocks until a slot is empty.
+// ***Should be called from non FTE thread***
+typedef void (*softq_fn_t)(void *data);
+hal_ret_t fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data);
 
 // FTE Init routine
 hal_ret_t init();
