@@ -22,6 +22,16 @@ modules:
             - step  : ref://trackerstore/steps/id=IFLOW_ACK
 
     - module:
+        name    : CONN_SETUP_DATA
+        tracker : True
+        args    :
+            tracker : ref://trackerstore/trackers/id=CONN_SETUP
+        iterate :
+            # Send some data in both directions
+            - step  : ref://trackerstore/steps/id=IFLOW_DATA
+            - step  : ref://trackerstore/steps/id=RFLOW_DATA
+
+    - module:
         name    : CONN_SETUP_SYN_RETRANSMIT
         tracker : True
         args    :

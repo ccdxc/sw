@@ -46,6 +46,14 @@ class TestSpecConfigSelectors(objects.FrameworkObject):
         self.Clone(newspec)
         return
 
+    def SwapSrcDst(self):
+        self.src,self.dst = self.dst,self.src
+        return
+
+    def SetFlow(self, flow):
+        self.flow = flow
+
+
 class TestSpecSessionStepEntry(objects.FrameworkObject):
     def __init__(self):
         super().__init__()

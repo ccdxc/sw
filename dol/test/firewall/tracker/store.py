@@ -9,6 +9,7 @@ class TrackerStoreObject:
         self.connections    = objects.ObjectDatabase(logger)
         self.steps          = objects.ObjectDatabase(logger)
         self.testcases      = objects.ObjectDatabase(logger)
+        self.trackers       = objects.ObjectDatabase(logger)
         return
 
 TrackerStore = TrackerStoreObject()

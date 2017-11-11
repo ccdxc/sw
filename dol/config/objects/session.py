@@ -211,16 +211,22 @@ class SessionObject(base.ConfigObjectBase):
 
     def IsFilterMatch(self, selectors):
         cfglogger.debug("Matching Session %s" % self.GID())
+        
         # Match on Initiator Flow
-        selectors.flow = selectors.session.iflow
+        selectors.SetFlow(selectors.session.iflow)
         match = self.iflow.IsFilterMatch(selectors)
         cfglogger.debug("- IFlow Filter Match =", match)
         if match == False: return match
+        
         # Match on Responder Flow
-        selectors.flow = selectors.session.rflow
+        # Swap Src/Dst selectors for Rflow match.
+        selectors.SwapSrcDst()
+        selectors.SetFlow(selectors.session.rflow)
         match = self.rflow.IsFilterMatch(selectors)
+        selectors.SwapSrcDst()
         cfglogger.debug("- RFlow Filter Match =", match)
         if match == False: return match
+        
         # Match on the Session
         match = super().IsFilterMatch(selectors.session.base.filters)
         cfglogger.debug("- Session Filter Match =", match)
