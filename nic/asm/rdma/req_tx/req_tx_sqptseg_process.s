@@ -31,8 +31,8 @@ ptseg_loop:
     add        r5, r0, k.args.log_page_size
     sllv       r5, 1, r5
     sub        r5, r5, r2
-    slt        c1, k.args.pt_bytes, r5
-    cmov       r5, c1, k.args.pt_bytes, r5
+    slt        c1, r4, r5
+    cmov       r5, c1, r4, r5
 
     // get DMA cmd entry based on dma_cmd_index
     DMA_CMD_I_BASE_GET(r7, r6, REQ_TX_DMA_CMD_START_FLIT_ID, r3)
