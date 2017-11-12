@@ -14,16 +14,16 @@ modules:
         iterate :
             - profile   : RRQ_DATA
               session  : filter://type=IPV4,proto=UDP,label=FTE
-              srcseg   : filter://native=True
+              segment  : filter://native=True
             - profile   : WRQ_ACK
               session  : filter://type=IPV6,proto=UDP,label=FTE
-              srcseg   : filter://native=True
+              segment  : filter://native=True
             - profile   : RRQ_OACK
               session  : filter://type=IPV4,proto=UDP,label=FTE
-              srcseg   : filter://native=True
+              segment  : filter://native=True
             - profile   : WRQ_OACK
               session  : filter://type=IPV4,proto=UDP,label=FTE
-              srcseg   : filter://native=True
+              segment  : filter://native=True
             - profile   : RRQ_ERROR
               session  : filter://type=IPV4,proto=UDP,label=FTE
-              srcseg   : filter://native=True
+              segment  : filter://native=True

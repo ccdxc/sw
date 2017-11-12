@@ -14,7 +14,7 @@ modules:
         iterate :
             - profile  : VERS2_GETPORT_SUCCESS_ACCEPT
               session  : filter://type=IPV4,proto=UDP,label=FTE
-              srcseg   : filter://native=True
+              segment  : filter://native=True
             - profile  : VERS4_DUMP_PORTMAP_STAT_SUCCESS_ACCEPT
               session  : filter://type=IPV4,proto=TCP,label=FTE
-              srcseg   : filter://native=True
+              segment  : filter://native=True
