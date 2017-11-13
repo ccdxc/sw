@@ -68,6 +68,7 @@ inline hal_ret_t register_pipelines() {
     // QUIESCE Pipeline
     //----------------------------------------------------------------------------------------------------------
     fte::feature_id_t quiesce_outbound[] = {
+        fte::FTE_FEATURE_DOL_TEST_ONLY,
         fte::FTE_FEATURE_QUIESCE,
     };
     

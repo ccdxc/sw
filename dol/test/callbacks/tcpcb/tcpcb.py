@@ -5,6 +5,7 @@ from infra.api.objects import PacketHeader
 import infra.api.api as infra_api
 from infra.common.logging       import logger
 import infra.common.defs as defs
+from infra.common.objects import MacAddressBase
 
 def GetSeqNum (tc, pkt):
     return tc.pvtdata.flow1_rcv_nxt
@@ -73,3 +74,8 @@ def GetDstIp (tc, pkt):
 def GetOOOSeqNum (tc, pkt):
     return tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.ooo_seq_delta
 
+def GetQuiesceSrcMac(tc, pkt):
+    return MacAddressBase(integer=(0x00eeff000004))
+
+def GetQuiesceDstMac(tc, pkt):
+    return MacAddressBase(integer=(0x00eeff000005))

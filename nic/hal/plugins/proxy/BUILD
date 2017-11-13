@@ -17,7 +17,7 @@ cc_library(
         "//nic/hal/pd/iris",
         "//nic/hal/lkl:lkl_api",
         "//nic:gen_proto_includes",
-        #"//nic/fte",
+        "//nic/fte:fte_includes",
         #"//nic/include:base_includes",
         #"//nic/proto:types_proto",
         #"//nic/proto/agents:agents_proto",

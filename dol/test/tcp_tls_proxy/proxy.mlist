@@ -741,12 +741,14 @@ modules:
 
     - module:
         name    : QUIESCE_FLOWS
-        ignore  : True
         package : test.tcp_tls_proxy
         module  : quiesce_flows
         spec    : quiesce_flows.testspec
-        args    :
-            maxflows: 2
+        args :
+              bypass_barco : 1
+              maxflows : 1
+              same_flow : 1
         iterate :
-            - flow: filter://type=IPV4
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False
 
