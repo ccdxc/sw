@@ -1,7 +1,12 @@
 /*****************************************************************************/
 /* Checksum verification and computation                                     */
 /*****************************************************************************/
-action compute_checksum1()  {}
+action compute_checksum1() {
+    modify_field(scratch_metadata.packet_len, l4_metadata.tcp_data_len);
+    modify_field(scratch_metadata.packet_len, udp.len);
+    modify_field(scratch_metadata.packet_len, inner_udp.len);
+}
+
 action compute_checksum2()  {}
 action compute_checksum3()  {}
 action compute_checksum4()  {}
@@ -31,6 +36,7 @@ action compute_checksum25() {}
 table compute_checksum {
     reads {
         entry_inactive.compute_checksum : ternary;
+        control_metadata.p4plus_app_id  : ternary;
         ipv4.valid                      : ternary;
         ipv6.valid                      : ternary;
         inner_ipv4.valid                : ternary;
@@ -65,6 +71,7 @@ table compute_checksum {
         compute_checksum23;
         compute_checksum24;
         compute_checksum25;
+        nop;
     }
     size : CHECKSUM_COMPUTE_TABLE_SIZE;
 }

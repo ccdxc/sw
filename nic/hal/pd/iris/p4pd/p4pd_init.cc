@@ -1154,6 +1154,9 @@ compute_checksum_table_t compute_checksum_table[] = {
     /*****************************************
      v4, v6, iv4, iv6, tcp, udp, iudp, action
      *****************************************/
+    { 0,  0,   0,   0,   0,   0,    0, COMPUTE_CHECKSUM_NOP_ID}, // app = rdma
+    { 0,  0,   0,   0,   0,   0,    0, COMPUTE_CHECKSUM_NOP_ID}, // app = tcptls
+    { 0,  0,   0,   0,   0,   0,    0, COMPUTE_CHECKSUM_NOP_ID}, // app = p4pt
     { 1,  0,   0,   0,   1,   0,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM1_ID},
     { 1,  0,   0,   0,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM2_ID},
     { 1,  0,   0,   1,   0,   1,    0, COMPUTE_CHECKSUM_COMPUTE_CHECKSUM2_ID},
@@ -1192,12 +1195,53 @@ p4pd_compute_checksum_init(void) {
     hal_ret_t                       ret;
     Tcam                            *tcam;
 
+    idx = 0;
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_COMPUTE_CHECKSUM);
     HAL_ASSERT(tcam != NULL);
 
+    // don't compute checksum for rdma apptype
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    memset(&mask, 0, sizeof(mask));
+    key.entry_inactive_compute_checksum = 0;
+    key.control_metadata_p4plus_app_id = P4PLUS_APPTYPE_RDMA;
+    mask.entry_inactive_compute_checksum_mask = 0xFF;
+    mask.control_metadata_p4plus_app_id_mask = 0xFF;
+    data.actionid = COMPUTE_CHECKSUM_NOP_ID;
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    HAL_ASSERT(ret == HAL_RET_OK);
+    idx++;
+
+    // don't compute checksum for tcptls apptype
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    memset(&mask, 0, sizeof(mask));
+    key.entry_inactive_compute_checksum = 0;
+    key.control_metadata_p4plus_app_id = P4PLUS_APPTYPE_TCPTLS;
+    mask.entry_inactive_compute_checksum_mask = 0xFF;
+    mask.control_metadata_p4plus_app_id_mask = 0xFF;
+    data.actionid = COMPUTE_CHECKSUM_NOP_ID;
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    HAL_ASSERT(ret == HAL_RET_OK);
+    idx++;
+
+    // don't compute checksum for p4pt apptype
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    memset(&mask, 0, sizeof(mask));
+    key.entry_inactive_compute_checksum = 0;
+    key.control_metadata_p4plus_app_id = P4PLUS_APPTYPE_P4PT;
+    mask.entry_inactive_compute_checksum_mask = 0xFF;
+    mask.control_metadata_p4plus_app_id_mask = 0xFF;
+    data.actionid = COMPUTE_CHECKSUM_NOP_ID;
+    ret = tcam->insert_withid(&key, &mask, &data, idx);
+    HAL_ASSERT(ret == HAL_RET_OK);
+    idx++;
+
+    // p4plus_app_id is don't care for all the entries below
     memset(&mask, 0xFF, sizeof(mask));
-    for (idx = 0;
-         idx < sizeof(compute_checksum_table)/sizeof(compute_checksum_table_t);
+    mask.control_metadata_p4plus_app_id_mask = 0x0;
+    for (;idx < sizeof(compute_checksum_table)/sizeof(compute_checksum_table_t);
          idx++) {
         memset(&key, 0, sizeof(key));
         memset(&data, 0, sizeof(data));
