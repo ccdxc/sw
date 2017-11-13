@@ -19,7 +19,9 @@ _log_modules = {
     'P4PD': 'p4pd.log',
     'TableMapper': 'tblmapper.log',
     'CSUM_V' : 'csum_parser.log',
-    'CSUM_C' : 'csum_deparser.log'
+    'CSUM_C' : 'csum_deparser.log',
+    'ICRC_V' : 'icrc_parser.log',
+    'ICRC_C' : 'icrc_deparser.log'
 }
 
 def logger_init(log_dir, prog_name='P4Prog', loglevel='DEBUG', floglevel='DEBUG'):

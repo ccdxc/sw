@@ -214,6 +214,9 @@ class Checksum:
         for cal_fld in self.be.h.calculated_fields:
             field_dst, fld_ops, _, _  = cal_fld
             for ops in fld_ops:
+                if self.be.h.p4_field_list_calculations[ops[1]].algorithm != 'csum16':
+                    #calcualted field objects are not csum constructs.
+                    continue
                 if ops[0] == 'verify':
                     self.verify_cal_fieldlist.append(ParserCalField(\
                                                      self.be, \
@@ -1199,7 +1202,7 @@ class Checksum:
 
         self.csum_compute_logger.debug('    Including Csum result of %s in '\
                                        'computation of following headers' % \
-                                       csum_hdr)
+                                       (csum_hdr))
         #pdb.set_trace()
         #Include csum_unit in all outer payload checksum computation.
         #This is provided in csum_profile as csum-engine bit mask
@@ -1253,7 +1256,7 @@ class Checksum:
             csum_hdr = calfldobj.CalculatedFieldHdrGet()
             if csum_hdr not in csum_hdrs:
                 csum_hdrs.add(csum_hdr)
-    
+
         for calfldobj in self.update_cal_fieldlist:
             csum_phdr = calfldobj.CsumPhdrNameGet()
             if csum_phdr != '' and csum_phdr not in csum_phdrs:
@@ -1438,7 +1441,7 @@ class Checksum:
                                     _phdr_csum_obj.CsumHvBitNumSet(eg_parser.csum_hdr_hv_bit[phdr_inst][-1][0])
                                 else:
                                     pdb.set_trace()
-                                
+
                                 phdr_profile = self.EgDeParserCsumEngineObj.\
                                           AllocatePhdrProfile(calfldhdr, phdr)
                                 _phdr_csum_obj.PhdrProfileNumSet(phdr_profile)
@@ -1465,7 +1468,7 @@ class Checksum:
                                               _csum_profile_obj.LogGenerate())
                             self.csum_compute_logger.debug('%s' % _phdr_csum_obj.\
                                               LogGenerate(pl_calfldobj.phdr_name))
-                                         
+
                             self.csum_compute_logger.debug('\n')
 
                             csum_objects.remove(pl_calfldobj)
@@ -1480,13 +1483,14 @@ class Checksum:
         '''
             Configure HdrFldStart,End and also generate JSON config output.
         '''
-        self.csum_compute_logger.debug('%s' % "HVB, StartFld, EndFld  HdrName:")
-        self.csum_compute_logger.debug('%s' % "-------------------------------")
+        self.csum_compute_logger.debug('%s' % ("HVB, StartFld, EndFld  HdrName:"))
+        self.csum_compute_logger.debug('%s' % ("-------------------------------"))
         for hvb, hv_info in hv_fld_slots.items():
             self.csum_compute_logger.debug('%d %d %d %s' % \
             (deparser.be.hw_model['parser']['max_hv_bits'] - 1 - hvb, \
              hv_info[0], hv_info[1], hv_info[2]))
-            
+        self.csum_compute_logger.debug('\n')
+
         csum_hdrs = []
         hw_csum_obj = [] # list of csumobj that need to be programmed in HW
                          # without repeatation and maintaining Banyan contrainst.

@@ -19,7 +19,7 @@ from p4_hlir.main import HLIR
 import p4_hlir.hlir.p4 as p4
 import p4_hlir.hlir.table_dependency as table_dependency
 import capri_logging, capri_tables, capri_parser, capri_pa, \
-       capri_deparser, capri_checksum
+       capri_deparser, capri_checksum, capri_icrc
 from capri_utils import *
 from capri_model import capri_model as capri_model
 from capri_output import capri_model_dbg_output as capri_model_dbg_output
@@ -93,12 +93,14 @@ class capri_backend:
         self.parsers = [capri_parser.capri_parser(self, d) for d in xgress]
         self.deparsers = [capri_deparser.capri_deparser(self, d) for d in xgress]
         self.checksum = capri_checksum.Checksum(self)
+        self.icrc= capri_icrc.Icrc(self)
         prog_name = os.path.split(args.sources[0])
         self.prog_name = prog_name[1].replace('.p4', '')
 
     def initialize(self):
         # collect information from hlir into various objects
         self.checksum.initialize()
+        self.icrc.initialize()
         self.pa.initialize()
         self.pa.initialize_unions()
         self.tables.initialize_tables()
@@ -193,17 +195,25 @@ def main():
         if d == xgress.INGRESS:
             capri_be.checksum.ProcessVerificationCalFldList(\
                                                 capri_be.parsers[d])
+            capri_be.icrc.ProcessIcrcVerificationCalFldList(\
+                                                capri_be.parsers[d])
         if d == xgress.EGRESS:
             capri_be.checksum.ProcessUpdateCalFldList(\
                                             capri_be.deparsers[d])
+            capri_be.icrc.ProcessIcrcUpdateCalFldList(\
+                                                capri_be.parsers[d])
         capri_be.parsers[d].assign_hv_bits()
         capri_be.parsers[d].program_capri_states()
         capri_be.deparsers[d].build_field_dictionary()
         if d == xgress.INGRESS:
             capri_be.checksum.AllocateParserCsumResources(\
                                                 capri_be.parsers[d])
+            capri_be.icrc.AllocateParserIcrcResources(\
+                                                capri_be.parsers[d])
         if d == xgress.EGRESS:
             capri_be.checksum.AllocateDeParserCsumResources(\
+                                                capri_be.parsers[d])
+            capri_be.icrc.AllocateDeParserIcrcResources(\
                                                 capri_be.parsers[d])
     capri_be.tables.update_table_config()
     capri_be.tables.create_key_makers()
@@ -228,10 +238,14 @@ def main():
     capri_be.tables.generate_output()
 
     #Create logical output of configuration pushed to parser and deparser
-    #for checksum verification.
+    #for checksum verification, computation.
     capri_be.checksum.CsumLogicalOutputCreate()
     capri_be.checksum.\
         ParserCsumUnitAllocationCodeGenerate(capri_be.parsers[xgress.INGRESS])
+
+    #Create logical output of configuration pushed to parser and deparser
+    #for icrc verification, computation.
+    capri_be.icrc.IcrcLogicalOutputCreate()
 
     # generate debug information for model
     # output into a JSON file for model debug logs

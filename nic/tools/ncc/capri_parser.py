@@ -444,6 +444,11 @@ class capri_parse_state:
                                         #v6.payloadLen - Sum(all v6_options)
         self.phdr_type = ''             # Used to indicate phdr is v4/v6
 
+        # RoCE icrc related reference objs stored in parse states
+        self.icrc_verify_cal_field_objs = [] #In roce_hdr state
+                                           #at most 2 calfldobjs
+                                           #can be present
+
 
     def lkp_reg_alloc(self):
         for i,lr in enumerate(self.lkp_regs):
@@ -733,6 +738,7 @@ class capri_parser:
         hv_per_flit = self.be.hw_model['parser']['flit_hv_bits']
         self.hdr_hv_bit = OrderedDict() # ordered so it is easy to debug when printed
         self.csum_hdr_hv_bit = OrderedDict()
+        self.icrc_hdr_hv_bit = OrderedDict()
         self.hv_bit_header = [ None for _ in range(self.be.hw_model['parser']['max_hv_bits']) ]     
 
         self.var_len_headers = OrderedDict() # {hdr_name : var_len_exp|str}
@@ -1660,6 +1666,21 @@ class capri_parser:
             self.hv_bit_header[max_hv_bits - hidx - 1] = h
             hv_bit -= 1
             hidx += 1
+
+        #Allocate HV bits for ICRC after allocating all other HV bits
+        for _hidx in range(len(hv_headers)):
+            h = hv_headers[_hidx]
+            if self.d == xgress.EGRESS and self.be.icrc.UpdateIcrcCalFieldObjGet(h.name):
+                icrc_hv_bit_and_hf = []
+                hf_name = h.name + '.icrc'
+                icrc_cf = self.be.pa.get_field(hf_name, self.d)
+                icrc_cf.phv_bit = hv_bit
+                self.be.pa.replace_hv_field(hv_bit, icrc_cf, self.d)
+                icrc_hv_bit_and_hf.append((max_hv_bits - hidx - 1, hv_bit, hf_name))
+                self.hv_bit_header[max_hv_bits - hidx - 1] = h
+                hv_bit -= 1
+                hidx += 1
+                self.icrc_hdr_hv_bit[h] = icrc_hv_bit_and_hf
 
         #Assign special HV bits (Headers not seen by Parser)
         for name, hdr in self.be.h.p4_header_instances.items():

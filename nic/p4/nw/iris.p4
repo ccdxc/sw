@@ -27,9 +27,10 @@
 
 header_type capri_deparser_len_t {
     fields {
+        trunc_pkt_len   : 16;
         l4_payload_len  : 16;
         inner_l4_payload_len  : 16;
-        trunc_pkt_len   : 16;
+        icrc_payload_len: 16;
     }
 }
 

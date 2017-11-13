@@ -1164,7 +1164,8 @@ def capri_deparser_logical_output(deparser):
 
 
 def capri_deparser_cfg_output(deparser):
-    hv_fld_slots = OrderedDict() # Key = HVbit, Value = (fld_start, fld_end)
+    csum_hv_fld_slots = OrderedDict() # Key = HVbit, Value = (fld_start, fld_end)
+    icrc_hv_fld_slots = OrderedDict() # Key = HVbit, Value = (fld_start, fld_end)
     # read the register spec json
     cur_path = os.path.abspath(__file__)
     cur_path = os.path.split(cur_path)[0]
@@ -1287,8 +1288,18 @@ def capri_deparser_cfg_output(deparser):
                 if csum_allocated_hv == hvb:
                     csum_hvb = True
                     break
+        icrc_hvb = False
+        if h in deparser.be.parsers[deparser.d].icrc_hdr_hv_bit.keys():
+            #HV bit used for icrc purposes. Do not use them to
+            #include hdrs into packet.
+            for icrc_h in \
+                deparser.be.parsers[deparser.d].icrc_hdr_hv_bit[h]:
+                icrc_allocated_hv, _, _ = icrc_h
+                if icrc_allocated_hv == hvb:
+                    icrc_hvb = True
+                    break
         end_fld_info_adjust = False
-        if not csum_hvb:
+        if not csum_hvb and not icrc_hvb:
             for i, chunks in enumerate(dp_hdr_fields):
                 assert used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble"
                 dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
@@ -1322,7 +1333,7 @@ def capri_deparser_cfg_output(deparser):
             #and adjust end_fld slot associated with csum hv bits.
             if h in deparser.be.parsers[deparser.d].csum_hdr_hv_bit.keys():
                 end_fld_info_adjust = True
-        else:
+        elif csum_hvb or icrc_hvb:
             assert used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble"
             dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
             dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
@@ -1343,9 +1354,15 @@ def capri_deparser_cfg_output(deparser):
                 #is different from hdrfld configuration to build pkt. (In case
                 #csum, provide fld_start and fld_end zero based. In case of pkt
                 #build, provide fld_start and 255-fld_end.
-                hv_fld_slots[hvb] = \
+                csum_hv_fld_slots[hvb] = \
+                    (start_fld, used_hdr_fld_info_slots, h.name)
+            elif icrc_hvb:
+                icrc_hv_fld_slots[hvb] = \
                     (start_fld, used_hdr_fld_info_slots, h.name)
         else:
+            if icrc_hvb:
+                #This should not happen. Assert
+                assert(0), pdb.set_trace()
             csum_bits_assigned_for_hdr = len(deparser.be.parsers[deparser.d].csum_hdr_hv_bit[h])
             assert csum_bits_assigned_for_hdr > 0, pdb.set_trace()
             #Adjust end slot for hdr.valid
@@ -1355,7 +1372,7 @@ def capri_deparser_cfg_output(deparser):
             for csum_h in \
                 deparser.be.parsers[deparser.d].csum_hdr_hv_bit[h]:
                 csum_allocated_hv, _, _ = csum_h
-                start_fld = hv_fld_slots[csum_allocated_hv][0]
+                start_fld = csum_hv_fld_slots[csum_allocated_hv][0]
                 end_fld = used_hdr_fld_info_slots
                 dpp_rstr_name = 'cap_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
                 dpr_rstr_name = 'cap_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
@@ -1366,13 +1383,14 @@ def capri_deparser_cfg_output(deparser):
                 dpp_json['cap_dpp']['registers'][rstr]['fld_end']['value'] = \
                     str(max_hdr_flds - end_fld)
                 used_hdr_fld_info_slots += 1 #Dummy slot after actual hdr slot
-                hv_fld_slots[csum_allocated_hv] = \
+                csum_hv_fld_slots[csum_allocated_hv] = \
                     (start_fld, end_fld - 1, h.name)
-
 
     if deparser.d == xgress.EGRESS:
         deparser.be.checksum.CsumDeParserConfigGenerate(deparser, \
-                                            hv_fld_slots, dpp_json)
+                                            csum_hv_fld_slots, dpp_json)
+        deparser.be.icrc.IcrcDeParserConfigGenerate(deparser, \
+                                            icrc_hv_fld_slots, dpp_json)
 
     json.dump(dpp_json['cap_dpp']['registers'],
                 dpp_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
@@ -1883,6 +1901,19 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
                                                         nxt_cs, sram, s, mux_inst_allocator,\
                                                         mux_idx_allocator)
 
+    #Generate ICRC related Configuration in parser.
+    if len(nxt_cs.icrc_verify_cal_field_objs):
+        # Genearate Checksum config since transition to parser state 'nxt_cs'
+        # will extract header which has checksum field (p4 cal fld for verification)
+        parser.be.icrc.IcrcParserConfigGenerate(parser, \
+                                                parse_states_in_path, nxt_cs, sram, s,\
+                                                lkp_instr_inst, mux_idx_allocator,\
+                                                mux_inst_allocator, \
+                                                reuse_mux_instr_id, reuse_mux_idx_id, \
+                                                reuse_option_len_ohi_id)
+        if nxt_cs.is_end:
+            assert(s < hw_max_ohi_per_state), pdb.set_trace()
+
     if nxt_cs.capture_payload_offset():
         # need to capture current_offset where parser stops parsing. This is needed for the
         # deparser, use offset instruction for computing ohi. When explicit END state
@@ -2137,6 +2168,10 @@ def capri_parser_output_decoders(parser):
                             'cap_ppa_csr_cfg_csum_profile[0]')
     csum_phdr_t, phdr_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
                             'cap_ppa_csr_cfg_csum_phdr_profile[0]')
+    icrc_t, icrc_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
+                            'cap_ppa_csr_cfg_crc_profile[0]')
+    icrc_mask_t, icrc_mask_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
+                            'cap_ppa_csr_cfg_crc_mask_profile[0]')
     tcam0 = []
     sram0 = []
 
@@ -2199,24 +2234,32 @@ def capri_parser_output_decoders(parser):
                                                          [bi.nxt_state], bi.nxt_state,\
                                                          csum_phdr_t)
                 if csum_prof != None:
-                    #csum_prof_list[cprof_inst] = csum_prof
-                    #ppa_json['cap_ppa']['registers']\
-                    #    ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
-                    #        ['cap_ppa_csr_cfg_csum'] = {}
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
                             = csum_prof
-                            #['cap_ppa_csr_cfg_csum']['entries'] = csum_prof
                 if csum_phdr_prof != None:
-                    #csum_phdr_prof_list[phdr_inst] = csum_phdr_prof
-                    #ppa_json['cap_ppa']['registers']\
-                    #    ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
-                    #        ['cap_ppa_csr_cfg_csum_phdr'] = {}
                     ppa_json['cap_ppa']['registers']\
                         ['cap_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
                                                           = csum_phdr_prof
-                            #['cap_ppa_csr_cfg_csum_phdr']['entries'] = \
-                                                         #csum_phdr_prof['fld']
+
+                #Generate icrc related profile config for parser block
+                icrc_prof, prof_inst = parser.be.icrc.\
+                                ParserIcrcProfileGenerate(parser, \
+                                                          parse_states_in_path+\
+                                                          [bi.nxt_state], bi.nxt_state,\
+                                                          icrc_t)
+                if icrc_prof != None:
+                    ppa_json['cap_ppa']['registers']\
+                      ['cap_ppa_csr_cfg_crc_profile[%d]' % prof_inst] = icrc_prof
+
+                icrc_mask_prof, prof_inst = parser.be.icrc.\
+                                ParserIcrcMaskProfileGenerate(parser, \
+                                                          parse_states_in_path+\
+                                                          [bi.nxt_state], bi.nxt_state,\
+                                                          icrc_mask_t)
+                if icrc_mask_prof != None:
+                    ppa_json['cap_ppa']['registers']\
+                      ['cap_ppa_csr_cfg_crc_mask_profile[%d]' % prof_inst] = icrc_mask_prof
 
 
     # XXX add a catch-all end state

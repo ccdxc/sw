@@ -26,6 +26,9 @@ header_type parser_metadata_t {
         inner_ipv6_payloadLen           : 16;
         ipv4hdr_len                     : 16;
         inner_ipv4hdr_len               : 16;
+        //Parser local field to specify destination field 
+        //to store icrc value. No PHV allocated.
+        icrc                            : 32; 
     }
 }
 @pragma pa_parser_local
@@ -432,6 +435,92 @@ calculated_field ipv4.hdrChecksum  {
     update ipv4_checksum;
 }
 
+
+//For icrc, specify invariant crc fields.
+field_list ipv4_icrc_list {
+    ipv4.ttl;
+    ipv4.diffserv;
+    ipv4.hdrChecksum;
+}
+@pragma icrc update_len capri_deparser_len.icrc_payload_len
+field_list_calculation ipv4_roce_icrc {
+    input {
+        ipv4_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+//For icrc, specify invariant crc fields.
+field_list ipv6_icrc_list {
+    ipv6.trafficClass;
+    ipv6.flowLabel;
+    ipv6.hopLimit;
+}
+
+@pragma icrc update_len capri_deparser_len.icrc_payload_len
+field_list_calculation ipv6_roce_icrc {
+    input {
+        ipv6_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+field_list inner_ipv4_icrc_list {
+    inner_ipv4.ttl;
+    inner_ipv4.diffserv;
+    inner_ipv4.hdrChecksum;
+}
+@pragma icrc update_len capri_deparser_len.icrc_payload_len
+field_list_calculation inner_ipv4_roce_icrc {
+    input {
+        inner_ipv4_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+//For icrc, specify invariant crc fields.
+field_list inner_ipv6_icrc_list {
+    inner_ipv6.trafficClass;
+    inner_ipv6.flowLabel;
+    inner_ipv6.hopLimit;
+}
+
+@pragma icrc update_len capri_deparser_len.icrc_payload_len
+field_list_calculation inner_ipv6_roce_icrc {
+    input {
+        inner_ipv6_icrc_list;
+    }
+    algorithm : icrc;
+    output_width : 32;
+}
+
+calculated_field parser_metadata.icrc {
+    // Header instance specified within if condition that checks validity
+    // of the header, will be used to trigger icrc calculation. In below 
+    // case "roce_bth" header instance will be used to enable icrc.
+    // In the parse state where roce_bth becomes valid, icrc computation
+    // is enabled.
+    verify ipv4_roce_icrc if (valid(roce_bth));
+    update ipv4_roce_icrc if (valid(roce_bth));
+    verify ipv6_roce_icrc if (valid(roce_bth));
+    update ipv6_roce_icrc if (valid(roce_bth));
+
+    // to n/w RDMA pkt can be encapped. Support icrc computation.
+    update inner_ipv4_roce_icrc if (valid(roce_bth));
+    update inner_ipv6_roce_icrc if (valid(roce_bth));
+
+    // currently RDMA pkt from host is not encaped . Hence its L3 hdr is only v4/v6
+    // not inner v4/v6. Adding code below in comment so that it can
+    // be enabled once p4 support for RDMA encap is supported.
+#if 0
+    verify inner_ipv4_roce_icrc if (valid(roce_bth));
+    verify inner_ipv6_roce_icrc if (valid(roce_bth));
+#endif
+}
+
 parser parse_base_ipv4 {
     // option-blob parsing - parse_ipv4 does not extract ipv4 header
     extract(ipv4);
@@ -717,7 +806,7 @@ field_list ipv4_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_len capri_deparser_len.inner_l4_payload_len
 field_list_calculation ipv4_tcp_checksum {
     input {
         ipv4_tcp_checksum_list;
@@ -744,7 +833,7 @@ field_list ipv6_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_len capri_deparser_len.inner_l4_payload_len
 @pragma checksum verify_len parser_metadata.ipv6_payloadLen
 field_list_calculation ipv6_tcp_checksum {
     input {

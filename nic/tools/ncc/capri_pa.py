@@ -1222,7 +1222,16 @@ class capri_gress_pa:
                 self.fields[hfname] = cf
             else:
                 cf = self.fields[hfname]
+            cf.is_hv = True
 
+    def allocate_icrc_hv_field(self, hdr_name):
+        hfname = hdr_name + '.icrc'
+        if hfname not in self.fields:
+            cf = capri_field(None, self.d, 1, hfname)
+            self.fields[hfname] = cf
+        else:
+            cf = self.fields[hfname]
+        cf.is_hv = True
 
     def header_has_ohi(self, hdr):
         for f in hdr.fields:
@@ -2499,6 +2508,11 @@ class capri_pa:
                                 self.be.checksum.IsHdrInCsumComputePhdr(name):
                                 self.allocate_csum_hv_field(name, d)
 
+                            if self.be.icrc.IsHdrInIcrcCompute(name):
+                                #Allocate HV so that icrc computation
+                                #can be triggered.
+                                self.allocate_icrc_hv_field(name, d)
+
             #capture metadata hdr inst that is used to store variable pkt len
             #and truncation length. Fields of this header have to be allocated in
             #first PHV flit.
@@ -2821,6 +2835,9 @@ class capri_pa:
 
     def allocate_csum_hv_field(self, hdr_name, d):
         return self.gress_pa[d].allocate_csum_hv_field(hdr_name)
+
+    def allocate_icrc_hv_field(self, hdr_name, d):
+        return self.gress_pa[d].allocate_icrc_hv_field(hdr_name)
 
     def create_flits(self):
         # create flits from the field_order and assign phv bits
