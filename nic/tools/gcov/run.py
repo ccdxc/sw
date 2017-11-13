@@ -323,7 +323,7 @@ class CapcovCoverage(CoverageBase):
             find_cmd = ["find", dir_name, "-name",  "*.cacov"]
             p = subprocess.Popen(find_cmd,  stdout=subprocess.PIPE)
             output, _ = p.communicate()
-            files = output.split("\n")
+            files = output.decode().split("\n")
             return { os.path.basename(file) : file for file in files if file} 
    
         def merge_cacov_files(src_file_name, dst_file_name):

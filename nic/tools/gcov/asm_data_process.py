@@ -113,7 +113,7 @@ class TableDataMap:
         cmd="find " + directory +  " -name \*.json | grep \"table_map\""
         p = subprocess.Popen(cmd,  stdout=subprocess.PIPE, shell=True)
         output, _ = p.communicate()
-        return output.split("\n")
+        return output.decode().split("\n")
         
     def _init_table_map(self):
         for table_data_file in TableDataMap.__get_table_map_files(env.gen_dir):
@@ -136,7 +136,7 @@ class TableDataMap:
                 continue
             table["start_addr"] = "0x" + row[1]
             table["end_addr"] = "0x" + row[2]
-            range_addr = xrange(int(row[1], 16), int(row[2], 16) + 1)
+            range_addr = range(int(row[1], 16), int(row[2], 16) + 1)
             self.by_addr_range[range_addr] = table 
     
 
@@ -213,7 +213,7 @@ def generate_pipeline_data(data, asm_out_dir, output_dir):
                     cmd = "find " + env.asm_src_dir + " -name " + source_file
                     p = subprocess.Popen(cmd,  stdout=subprocess.PIPE, shell=True)
                     output, _ = p.communicate()
-                    output = output.split("\n")[0]
+                    output = output.decode().split("\n")[0]
                     if output == '':
                         continue
                     dir_path = os.path.dirname(output)
@@ -228,7 +228,7 @@ def generate_pipeline_data(data, asm_out_dir, output_dir):
                     cmd.append(cano_file)
                     p = subprocess.Popen(cmd,  stdout=subprocess.PIPE)
                     output, _ = p.communicate()
-                    for line in output.split("\n"):
+                    for line in output.decode().split("\n"):
                         if "instructions" in line:
                             instructions = int(line.split(";")[0].strip().split(" ")[0])
                             cycles = int(line.split(";")[1].strip().split(" ")[0])

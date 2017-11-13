@@ -23,12 +23,12 @@ def convert_csv_to_html(csv_file, html_file, title):
     f_html.close()
     
 def combine_dicts(a, b, op=operator.add):
-    return dict(a.items() + b.items() +
+    return dict(list(a.items()) + list(b.items()) +
         [(k, op(a[k], b[k])) for k in set(b) & set(a)])
 
 class RangeDict(dict):
     def __getitem__(self, item):
-        if type(item) != xrange:
+        if type(item) != range:
             for key in self.keys():
                 if item in key:
                     return self.get(key)
