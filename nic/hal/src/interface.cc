@@ -372,8 +372,8 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             ret = lif_add_if(app_ctxt->lif, hal_if);
             HAL_ABORT(ret == HAL_RET_OK);
 
-            // Add to bcast list
-            if (l2seg) {
+            // Add classic nic/RxQ to bcast list only when RDMA is not enabled for this LIF
+            if (l2seg && !app_ctxt->lif->enable_rdma) {
                 // TODO: Clean this as l2seg should not have list of oifs.
                 //       It should be handles.
                 // Add the new interface to the broadcast list of the associated

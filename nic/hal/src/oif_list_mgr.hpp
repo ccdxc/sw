@@ -4,6 +4,7 @@
 #define __OIF_LIST_MGR_HPP__
 
 #include "nic/include/oif_list_api.hpp"
+#include "nic/gen/proto/hal/interface.pb.h"
 
 namespace hal {
 

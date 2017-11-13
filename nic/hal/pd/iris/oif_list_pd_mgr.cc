@@ -51,6 +51,51 @@ hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif)
     return g_hal_state_pd->met_table()->add_replication(list, (void*)&data);
 }
 
+// Adds an rdma qp based oif to list
+hal_ret_t oif_list_add_qp_oif(oif_list_id_t list, oif_t *oif)
+{
+    hal_ret_t ret;
+    uint8_t is_tagged;
+    uint16_t vlan_id;
+    p4_replication_data_t data = { 0 };
+    if_t *pi_if = oif->intf;
+    l2seg_t *pi_l2seg = oif->l2seg;
+
+    HAL_ASSERT_RETURN(pi_if && pi_l2seg, HAL_RET_INVALID_ARG);
+
+    data.lport = if_get_lport_id(pi_if);
+
+    HAL_ASSERT(hal::intf_get_if_type(pi_if) == intf::IF_TYPE_ENIC);
+    hal::lif_t *lif = if_get_lif(pi_if);
+    if (lif == NULL) {
+        return HAL_RET_LIF_NOT_FOUND;
+    }
+
+    ret = if_l2seg_get_encap(pi_if, pi_l2seg, &is_tagged, &vlan_id);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+
+    data.is_qid = 1;
+    data.qid_or_vnid = oif->qid; // TODO refer to update_fwding_info()
+    data.qtype = lif_get_qtype(lif, oif->purpose);
+    data.rewrite_index = g_hal_state_pd->rwr_tbl_decap_vlan_idx();
+    data.tunnel_rewrite_index = (is_tagged) ?
+                                (g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx())
+                                            :
+                                (0);
+    HAL_TRACE_DEBUG("Replication to Enic: lif_id: {}", lif->lif_id);
+
+    HAL_TRACE_DEBUG("Replication data: isTnl: {}; isQid: {}; rw_idx: {}; "
+                    "tnl_idx: {}; lport : {} qtype : {} qid/vni : {}",
+                    data.is_tunnel, data.is_qid, data.rewrite_index,
+                    data.tunnel_rewrite_index, data.lport, data.qtype,
+                    data.qid_or_vnid);
+
+    return g_hal_state_pd->met_table()->add_replication(list, (void*)&data);
+}
+
+// Removes an oif from list
 // Removes an oif from list
 hal_ret_t oif_list_remove_oif(oif_list_id_t list, oif_t *oif)
 {

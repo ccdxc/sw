@@ -4,7 +4,7 @@ meta:
 
 type        : tenant
 native      : False
-broadcast   : drop
+broadcast   : flood
 multicast   : drop
 l4lb        : True
 endpoints   :

@@ -335,6 +335,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_UD_MCAST_TX_CLASSIC
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_ud_mcast_tx_classic
+        spec    : resp_rx_ud_mcast_tx_classic.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_ONLY_INV_LKEY_ERR1
         enable  : True
         package : test.rdma

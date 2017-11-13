@@ -379,6 +379,7 @@ action rdma_stage0_bth_deth_action () {
     modify_field(rdma_bth_deth_scr.deth_rsvd, rdma_bth_deth.deth_rsvd);
     modify_field(rdma_bth_deth_scr.deth_src_qp, rdma_bth_deth.deth_src_qp);
     modify_field(rdma_bth_deth_scr.smac, rdma_bth_deth.smac);
+    modify_field(rdma_bth_deth_scr.dmac, rdma_bth_deth.dmac);
 }
 
 

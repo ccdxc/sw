@@ -73,6 +73,14 @@ class QpObject(base.ConfigObjectBase):
             
             if (self.sq is None or self.rq is None):
                 assert(0)
+        
+            #cfglogger.info('QP: %s PD: %s Remote: %s intf: %s lif: %s' %(self.GID(), self.pd.GID(), self.remote, pd.ep.intf.GID(), pd.ep.intf.lif.GID()))
+
+            self.tx = pd.ep.intf.lif.GetQ('TX', 'Q0')
+            self.rx = pd.ep.intf.lif.GetQ('RX', 'Q0')
+            
+            if (self.tx is None or self.rx is None):
+                assert(0)
 
             # for now map both sq/rq cq to be same
             #TODO: Until Yogesh's fix comes in for Unaligned write back, just allocate CQIDs as even number
@@ -145,8 +153,9 @@ class QpObject(base.ConfigObjectBase):
         halapi.ModifyQps([self])
 
     def PrepareHALRequestSpec(self, req_spec):
-        cfglogger.info("QP: %s PD: %s Remote: %s HW_LIF: %d\n" %\
-                        (self.GID(), self.pd.GID(), self.remote, self.pd.ep.intf.lif.hw_lif_id))
+        cfglogger.info("QP: %s PD: %s Remote: %s HW_LIF: %d EP->Intf: %s\n" %\
+                        (self.GID(), self.pd.GID(), self.remote, self.pd.ep.intf.lif.hw_lif_id,
+                         self.pd.ep.intf.GID()))
 
         if (GlobalOptions.dryrun): return
 
@@ -154,6 +163,7 @@ class QpObject(base.ConfigObjectBase):
     
             req_spec.qp_num = self.id
             req_spec.hw_lif_id = self.pd.ep.intf.lif.hw_lif_id
+            req_spec.if_handle = self.pd.ep.intf.hal_handle
             req_spec.sq_wqe_size = self.sqwqe_size
             req_spec.rq_wqe_size = self.rqwqe_size
             req_spec.num_sq_wqes = self.num_sq_wqes
@@ -278,21 +288,35 @@ class QpObject(base.ConfigObjectBase):
 class QpObjectHelper:
     def __init__(self):
         self.qps = []
+        self.udqps = []
 
     def Generate(self, pd, spec):
         self.pd = pd
-        rc_spec, ud_spec = spec.rc, spec.ud
         j = 0
 
-        for spec in rc_spec, ud_spec:
-            count = spec.count
-            cfglogger.info("Creating %d %s Qps. for PD:%s" %\
-                           (count, spec.svc_name, pd.GID()))
-            for i in range(count):
-                qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
-                qp = QpObject(pd, qp_id, spec)
-                self.qps.append(qp)
-                j += 1
+        #RC QPs
+        rc_spec = spec.rc
+        count = rc_spec.count
+        cfglogger.info("Creating %d %s Qps. for PD:%s" %\
+                       (count, rc_spec.svc_name, pd.GID()))
+        for i in range(count):
+            qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
+            qp = QpObject(pd, qp_id, rc_spec)
+            self.qps.append(qp)
+            j += 1
+
+        #UD QPs
+        ud_spec = spec.ud
+        count = ud_spec.count
+        cfglogger.info("Creating %d %s Qps. for PD:%s" %\
+                       (count, ud_spec.svc_name, pd.GID()))
+        for i in range(count):
+            qp_id = j if pd.remote else pd.ep.intf.lif.GetQpid()
+            qp = QpObject(pd, qp_id, ud_spec)
+            self.qps.append(qp)
+            self.udqps.append(qp)
+            j += 1
+
 
     def Configure(self):
         if self.pd.remote:

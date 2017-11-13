@@ -623,15 +623,17 @@ process_ud:
     blt         r1, REM_PYLD_BYTES, ud_drop
 
     // check if q_key matches
-    add         r1, r0, CAPRI_RXDMA_DETH_Q_KEY  //BD Slot
-    add         r2, r0, d.q_key
-    bne         r1, r2, ud_drop
-    IS_ANY_FLAG_SET(c6, r7, RESP_RX_FLAG_IMMDT)
+    sne    c1, CAPRI_RXDMA_DETH_Q_KEY, d.q_key //BD Slot
+    addi   r1, r0, 0x01234567
+    sne    c2, CAPRI_RXDMA_DETH_Q_KEY, r1
+    bcf    [c1 & c2] , ud_drop
+    IS_ANY_FLAG_SET(c6, r7, RESP_RX_FLAG_IMMDT) //BD Slot
 
     // populate completion entry
     phvwr       p.cqwqe.qp, CAPRI_RXDMA_INTRINSIC_QID
     phvwr       p.cqwqe.op_type, OP_TYPE_SEND_RCVD
-    phvwr       p.cqwqe.src_qp, CAPRI_RXDMA_DETH_SRC_QP
+    CAPRI_RXDMA_DETH_SRC_QP(r4)
+    phvwr       p.cqwqe.src_qp, r4
     phvwr       p.cqwqe.ipv4, 1
     cmov        r1, c6, CAPRI_RXDMA_DETH_IMMETH_SMAC, CAPRI_RXDMA_DETH_SMAC
     phvwr       p.cqwqe.smac, r1

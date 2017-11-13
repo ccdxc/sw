@@ -19,6 +19,7 @@ QueueIdAllocator        = objects.TemplateFieldObject("range/0/16384")
 TenIdAllocator          = objects.TemplateFieldObject("range/1/1000")
 SegIdAllocator          = objects.TemplateFieldObject("range/1/8192")
 OifListIdAllocator      = objects.TemplateFieldObject("range/1/65535")
+RdmaOifListIdAllocator  = objects.TemplateFieldObject("range/1/65535")
 
 SegVlanAllocator        = objects.TemplateFieldObject("range/2/1000")
 EncapVlanAllocator      = objects.TemplateFieldObject("range/3001/4000")

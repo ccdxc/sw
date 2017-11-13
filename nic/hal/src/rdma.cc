@@ -14,6 +14,7 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/capri/capri_loader.h"
 #include "nic/p4/include/common_defines.h"
+#include "nic/include/oif_list_api.hpp"
 
 namespace hal {
 
@@ -677,6 +678,10 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     uint32_t     header_template_addr, rrq_base_addr, rsq_base_addr;
     uint64_t     offset;
     uint64_t     offset_verify;
+    hal_ret_t    ret;
+    if_t         *hal_if = NULL;
+    l2seg_t      *l2seg = NULL;
+    oif_t        oif;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: RDMA QP Create for lif {}", __FUNCTION__, lif);
@@ -811,6 +816,29 @@ rdma_qp_create (RdmaQpSpec& spec, RdmaQpResponse *rsp)
     rsp->set_rsq_base_addr(rsq_base_addr);
     rsp->set_rrq_base_addr(rrq_base_addr);
     rsp->set_header_temp_addr(header_template_addr);
+
+    // For UD QPs, please add it to the Segment's Broadcast OIFs list
+    // For testing purpose, please add only Queuepairs with QID less than or equal to 5
+
+    HAL_TRACE_DEBUG("Check if this QP to be added to oif_list for LIF:{} PD:{} QP:{}, If_hdl: {}",
+                    lif, spec.pd(), spec.qp_num(), spec.if_handle());
+    if (((uint8_t)spec.svc() == RDMA_SERV_TYPE_UD) && (spec.qp_num() <= 5)) {
+        hal_if = find_if_by_handle(spec.if_handle());
+        HAL_ASSERT(hal_if != NULL);
+        l2seg = find_l2seg_by_handle(hal_if->l2seg_handle);
+        HAL_ASSERT(l2seg != NULL);
+        oif.intf = hal_if;
+        oif.l2seg = l2seg;
+        oif.qid = spec.qp_num();
+        oif.purpose = intf::LIF_QUEUE_PURPOSE_RDMA_RECV;
+        ret = oif_list_add_qp_oif(l2seg->bcast_oif_list, &oif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Add QP oif to oif_list failed for LIF:{} QP:{}, err : {}", lif, spec.qp_num(), ret);
+            HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
+        }
+        HAL_TRACE_DEBUG("Added QP oif to oif_list for LIF:{} PD: {} QP:{}, If_hdl: {}",
+                        lif, spec.pd(), spec.qp_num(), spec.if_handle());
+    }
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
 
     return (HAL_RET_OK);

@@ -503,6 +503,8 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
         Reads a Descriptor from "self.address"
         :return:
         """
+        cfglogger.info("Reading CQ Desciptor @0x%x = wrid: 0x%x " % 
+                       (self.address, self.wrid))
         self.phy_address = resmgr.HostMemoryAllocator.get_v2p(self.address)
         mem_handle = resmgr.MemHandle(self.address, self.phy_address)
         self.__set_desc(RdmaCqDescriptor(resmgr.HostMemoryAllocator.read(mem_handle, len(RdmaCqDescriptor()))))
@@ -513,9 +515,9 @@ class RdmaCqDescriptorObject(base.FactoryObjectBase):
     def __eq__(self, other):
         cfglogger.info("__eq__ operator invoked on cq descriptor..")
 
-        cfglogger.info('self(expected):\n')
+        cfglogger.info('\nself(expected):')
         self.Show()
-        cfglogger.info('other(actual):\n')
+        cfglogger.info('\nother(actual):')
         other.Show()
 
         if self.desc.status == 0: #CQ_STATUS_SUCCESS

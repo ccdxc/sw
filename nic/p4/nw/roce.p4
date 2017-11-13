@@ -23,6 +23,12 @@ action decode_roce_opcode(raw_flags, len, qtype) {
         if ((roce_bth.opCode & 0xE0) == 0x60) {
             add_header(p4_to_p4plus_roce_ip);
             add_header(p4_to_p4plus_roce_eth);
+            /* increment splitter offset to conditionally skip eth header for UD RDMA */
+            add_to_field(capri_rxdma_intrinsic.rx_splitter_offset, 14);
+            /* Add conditionally 40B for ip header length for UD RDMA
+               For IPv6, store 40B of IPv6 header
+               For IPv4, save 20B of hdr into first 20Bytes and rest 20Bytes are zero */
+            add_to_field(p4_to_p4plus_roce.payload_len, 40);
         }
     }
 }

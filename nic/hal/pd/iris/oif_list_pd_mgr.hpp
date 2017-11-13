@@ -14,6 +14,8 @@ hal_ret_t oif_list_create(oif_list_id_t *list);
 hal_ret_t oif_list_delete(oif_list_id_t list);
 // Adds an oif to list
 hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif);
+// Adds QP based oif to list
+hal_ret_t oif_list_add_qp_oif(oif_list_id_t list, oif_t *oif);
 // Removes an oif from list
 hal_ret_t oif_list_remove_oif(oif_list_id_t list, oif_t *oif);
 // Check if an oif is present in the list

@@ -55,10 +55,11 @@
 
 //DETH header fields
 #define CAPRI_RXDMA_DETH_Q_KEY                k.{rdma_bth_deth_deth_q_key_sbit0_ebit7...rdma_bth_deth_deth_q_key_sbit8_ebit31}
-#define CAPRI_RXDMA_DETH_SRC_QP               k.{rdma_bth_deth_deth_q_key_sbit0_ebit7...rdma_bth_deth_deth_q_key_sbit8_ebit31}
+#define CAPRI_RXDMA_DETH_SRC_QP(_r) \
+    add _r, k.{rdma_bth_deth_deth_src_qp_sbit16_ebit23}, k.rdma_bth_deth_deth_src_qp_sbit0_ebit15, 16
 #define CAPRI_RXDMA_DETH_IMMETH_DATA          k.rdma_bth_deth_immeth_immeth_data
-#define CAPRI_RXDMA_DETH_SMAC                 k.{rdma_bth_deth_smac_sbit0_ebit31...rdma_bth_deth_smac_sbit32_ebit47}
-#define CAPRI_RXDMA_DETH_IMMETH_SMAC                 k.{rdma_bth_deth_immeth_smac_sbit0_ebit15...rdma_bth_deth_immeth_smac_sbit16_ebit31}
+#define CAPRI_RXDMA_DETH_SMAC                 k.{rdma_bth_deth_smac_sbit0_ebit15...rdma_bth_deth_smac_sbit32_ebit47}
+#define CAPRI_RXDMA_DETH_IMMETH_SMAC          k.{rdma_bth_deth_immeth_smac_sbit0_ebit15...rdma_bth_deth_immeth_smac_sbit40_ebit47}
 
 #define CAPRI_RAW_TABLE_PC_SHIFT 6
 #define CAPRI_INTR_BASE 0x1234

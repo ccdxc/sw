@@ -1,0 +1,276 @@
+# Test Spec
+selectors:
+    src:
+        tenant      : filter://overlay=VLAN,type=TENANT
+        segment     : filter://broadcast_policy=2
+        endpoint    : filter://remote=False
+        interface   : filter://any
+    flow        : filter://fwtype=L2
+#   dst:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=False
+#       interface   : filter://any
+    rdmasession     :
+        lqp         : filter://svc=3
+        rqp         : filter://svc=3
+#    maxflows    : 1 
+#    maxrdmasessions     : 1
+
+packets:
+   - packet:
+        id          : BASE_PKT
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
+        template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_DETH
+        encaps      :   
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
+                dst     : 01:00:5E:01:01:01
+            #qtag:
+            #    vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            ipv4:
+                src     : ref://testcase/config/rdmasession/session/iflow/sip
+                dst     : 239.1.1.1
+                ttl     : 64
+            #ipv6:
+            #    src     : ref://testcase/config/flow/sip
+            #    dst     : ref://testcase/config/flow/dip
+            #    hlim    : 64
+            udp:
+                sport   : ref://testcase/config/rdmasession/session/iflow/sport
+                dport   : ref://testcase/config/rdmasession/session/iflow/dport
+            bth:
+                opcode  : 100
+                destqp  : 16777215    #0xFFFFFF
+                psn     : callback://rdma/rdma/GetRqPreEpsn
+            deth:
+                qkey    : 19088743   #For mcast, use global qkey 0x01234567
+                srcqp   : ref://testcase/config/rdmasession/rqp/id
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
+
+   - packet:
+       id          : TX_PKT_ENIC     # Input packet
+       clone       : ref://testcase/packets/id=BASE_PKT
+       headers     :
+           qtag    :
+               vlan: ref://testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=Enic8/encap_vlan_id
+               #vlan: ref://testcase/config/rdmasession/session/initiator/ep/segment/vlan_id
+               vlan: ref://testcase/config/rdmasession/session/initiator/ep/intf/encap_vlan_id
+   - packet:
+       id          : EXP_PKT_UPLINK     # Expected packet on Uplinks
+       clone       : ref://testcase/packets/id=BASE_PKT
+       headers     :
+           qtag:
+               vlan: ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+   - packet:
+        id          : EXP_PKT_QP # Base packet
+        payloadsize : 104 # 40B ip hdr (incase of v4, its 20B ipv4 hdr + 20B pad) + payload 64
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data : callback://rdma/rdma/GetUDPacketPayload/pktid=TX_PKT_ENIC,starthdr=ipv4,endhdr=ipv4,pl_size=64
+buffers:
+    - buffer:
+        id      : TX_BUF_ENIC # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=TX_PKT_ENIC/size
+           data : ref://testcase/packets/id=TX_PKT_ENIC/rawbytes
+    - buffer:
+        id      : RQ_BUF_1
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           #slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetEpSlab0ForMulticastCopy/idx=0
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=EXP_PKT_QP/size
+                 data    : None
+    - buffer:
+        id      : EXP_RQ_BUF_1
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : None
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=EXP_PKT_QP/size
+                 data    : ref://testcase/packets/id=EXP_PKT_QP/rawbytes
+    - buffer:
+        id      : RQ_BUF_2
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           #slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
+           slab    : callback://rdma/rdma/GetEpSlab1ForMulticastCopy/idx=1
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=EXP_PKT_QP/size
+                 data    : None
+    - buffer:
+        id      : EXP_RQ_BUF_2
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : None
+           offset  : 0
+           segments:
+               - size    : ref://testcase/packets/id=EXP_PKT_QP/size
+                 data    : ref://testcase/packets/id=EXP_PKT_QP/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : TX_DESC_ENIC # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=TX_BUF_ENIC
+            addr  : ref://testcase/buffers/id=TX_BUF_ENIC/addr
+            len   : ref://testcase/buffers/id=TX_BUF_ENIC/size
+
+    - descriptor:
+        id      : RQ_DESC_1
+        template: ref://factory/templates/id=DESC_RDMA_RQ
+        fields:
+            wrid: 5
+            num_sges: 1
+               
+            sges:
+                - va  : ref://testcase/buffers/id=RQ_BUF_1/address
+                  len : ref://testcase/buffers/id=RQ_BUF_1/size
+                  #l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlab0LkeyForMulticastCopy/idx=0
+
+    - descriptor:
+        id      : EXP_RQ_DESC_1
+        template: ref://factory/templates/id=DESC_RDMA_RQ
+        fields:
+            buff: ref://testcase/buffers/id=EXP_RQ_BUF_1
+            wrid: 5
+            num_sges: 1
+               
+            sges:
+                - va  : ref://testcase/buffers/id=RQ_BUF_1/address
+                  len : ref://testcase/buffers/id=RQ_BUF_1/size
+                  #l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
+                  l_key: callback://rdma/rdma/GetMrSlab0LkeyForMulticastCopy/idx=0
+
+    - descriptor:
+        id      : EXP_CQ_DESC_1
+        template: ref://factory/templates/id=DESC_RDMA_CQ
+        fields:
+            wrid: ref://testcase/descriptors/id=RQ_DESC_1/wrid
+            #qp: ref://testcase/config/rdmasession/lqp/id
+            qp: callback://rdma/rdma/GetQpIdForMulticastCopy/idx=0
+            src_qp: ref://testcase/config/rdmasession/rqp/id
+            op_type: 17 #OP_TYPE_SEND_RCVD
+            status : 0  #CQ_STATUS_SUCCESS
+            color  : callback://rdma/rdma/GetCQExpColor
+            ipv4: 1
+            smac: callback://rdma/rdma/GetUDInitiatorSMAC
+
+    - descriptor:
+        id      : RQ_DESC_2
+        template: ref://factory/templates/id=DESC_RDMA_RQ
+        fields:
+            wrid: 6
+            num_sges: 1
+               
+            sges:
+                - va  : ref://testcase/buffers/id=RQ_BUF_2/address
+                  len : ref://testcase/buffers/id=RQ_BUF_2/size
+                  l_key: callback://rdma/rdma/GetMrSlab1LkeyForMulticastCopy/idx=1
+
+    - descriptor:
+        id      : EXP_RQ_DESC_2
+        template: ref://factory/templates/id=DESC_RDMA_RQ
+        fields:
+            buff: ref://testcase/buffers/id=EXP_RQ_BUF_2
+            wrid: 6
+            num_sges: 1
+               
+            sges:
+                - va  : ref://testcase/buffers/id=RQ_BUF_2/address
+                  len : ref://testcase/buffers/id=RQ_BUF_2/size
+                  l_key: callback://rdma/rdma/GetMrSlab1LkeyForMulticastCopy/idx=1
+
+    - descriptor:
+        id      : EXP_CQ_DESC_2
+        template: ref://factory/templates/id=DESC_RDMA_CQ
+        fields:
+            wrid: ref://testcase/descriptors/id=RQ_DESC_2/wrid
+            qp: callback://rdma/rdma/GetQpIdForMulticastCopy/idx=1
+            src_qp: ref://testcase/config/rdmasession/rqp/id
+            op_type: 17 #OP_TYPE_SEND_RCVD
+            status : 0  #CQ_STATUS_SUCCESS
+            color  : callback://rdma/rdma/GetCQExpColor
+            ipv4: 1
+            smac: callback://rdma/rdma/GetUDInitiatorSMAC
+
+session:
+
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=RQ_DESC_1
+                    ring    : callback://rdma/rdma/GetRdmaRxRingForMulticastCopy/idx=0
+            doorbell:
+                #object: ref://testcase/config/rdmasession/lqp/rq/rings/id=RQ/doorbell
+                object  : callback://rdma/rdma/GetRdmaRxRingDoorBellForMulticastCopy/idx=0
+                fields:
+                    upd : 0x3 # DB_SCHED_WR(1)
+        expect:
+
+
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=RQ_DESC_2
+                    ring    : callback://rdma/rdma/GetRdmaRxRingForMulticastCopy/idx=1
+
+            doorbell:
+                object  : callback://rdma/rdma/GetRdmaRxRingDoorBellForMulticastCopy/idx=1
+                fields:
+                upd : 0x3 # DB_SCHED_WR(1)
+        expect:
+
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=TX_DESC_ENIC
+                    #ring    : ref://testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=Enic8/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0
+                    ring    : ref://testcase/config/rdmasession/lqp/tx/rings/id=R0
+
+            doorbell:
+                #object: ref://testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=Enic8/lif/queue_types/id=TX/queues/id=Q0/rings/id=R0/doorbell
+                object: ref://testcase/config/rdmasession/lqp/tx/rings/id=R0/doorbell
+
+
+        expect:
+            packets:
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT_UPLINK
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=Uplink1/ports
+
+                - packet:
+                    object  : ref://testcase/packets/id=EXP_PKT_UPLINK
+                    port    : ref://testcase/config/rdmasession/session/responder/ep/segment/floodlist/oifs/id=Uplink2/ports
+
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_RQ_DESC_1
+                    ring    : callback://rdma/rdma/GetRdmaRxRingForMulticastCopy/idx=0
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC_1
+                    ring    : callback://rdma/rdma/GetCQRingForMulticastCopy/idx=0
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_RQ_DESC_2
+                    ring    : callback://rdma/rdma/GetRdmaRxRingForMulticastCopy/idx=1
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC_2
+                    ring    : callback://rdma/rdma/GetCQRingForMulticastCopy/idx=1

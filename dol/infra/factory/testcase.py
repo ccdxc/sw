@@ -299,7 +299,10 @@ class TestCase(objects.FrameworkObject):
     def __setup_doorbell(self, tcsn, spsn):
         if spsn.doorbell == None: return
         if spsn.doorbell.object == None: return
-        tcsn.doorbell.object = spsn.doorbell.object.Get(self)
+        if objects.IsCallback(spsn.doorbell.object):
+            tcsn.doorbell.object = spsn.doorbell.object.call(self)
+        else:
+            tcsn.doorbell.object = spsn.doorbell.object.Get(self)
         tcsn.doorbell.spec = spsn.doorbell.fields
         self.info("- Adding Doorbell: %s" % tcsn.doorbell.object.GID())
         return

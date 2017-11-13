@@ -16,6 +16,8 @@ namespace hal {
         // l2seg_id_t  l2_seg_id;
         if_t     *intf;
         l2seg_t  *l2seg;
+        uint32_t qid;  // RDMA QID - only set by RDMA when adding QPs to repl list
+        intf::LifQPurpose purpose; // Same as above, set by RDMA
     } oif_t;
 
     // Creates a new oif_list and returns handle
@@ -24,6 +26,8 @@ namespace hal {
     hal_ret_t oif_list_delete(oif_list_id_t list);
     // Adds an oif to list
     hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif);
+    // Adds an QP based oif to list
+    hal_ret_t oif_list_add_qp_oif(oif_list_id_t list, oif_t *oif);
     // Removes an oif from list
     hal_ret_t oif_list_remove_oif(oif_list_id_t list, oif_t *oif);
     // Check if an oif is present in the list
@@ -34,7 +38,6 @@ namespace hal {
     hal_ret_t oif_list_get_oif_array(oif_list_id_t list, uint32_t &num_oifs, oif_t *oifs);
     // Adds a special node for ingress driven copy
     hal_ret_t oif_list_set_honor_ingress(oif_list_id_t list);
-
 }    // namespace hal
 
 #endif /* __OIF_LIST_API_HPP__ */

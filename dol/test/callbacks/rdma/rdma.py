@@ -77,15 +77,86 @@ def GetUDPacketPayload(tc, packet, args):
     srcpacket = tc.packets.Get(args.pktid) 
     slicer = PacketSlicer(srcpacket, args)
     slc = slicer.GetSlice()
+    ipv4pad = bytes([0x00]*20)
     payload_size = getattr(args, 'pl_size', 64)
-    payload = bytes([0x0]*payload_size)
-    print('GetUDPacketPayload: %s ' % (binascii.hexlify(bytes(slc+payload))))
-    return list(slc+payload)
+    payload = bytes([0xFF]*payload_size)
+    print('GetUDPacketPayload: %s ' % (binascii.hexlify(bytes(slc+ipv4pad+payload))))
+    return list(slc+ipv4pad+payload)
     
-def GetUDSMAC(tc, desc):
-    return bytes(tc.config.rdmasession.session.initiator.ep.macaddr.getnum().to_bytes(6, 'big'))
-
 def GetZeroMAC(tc, desc):
     return bytes([0x0]*6)
 
+def GetUDSMAC(tc, desc):
+    return bytes(tc.config.rdmasession.session.responder.ep.macaddr.getnum().to_bytes(6, 'big'))
+
+def GetUDInitiatorSMAC(tc, desc):
+    return bytes(tc.config.rdmasession.session.initiator.ep.macaddr.getnum().to_bytes(6, 'big'))
+
+# Callbacks for RDMA Multicast
+def __get_ring_from_lif(lif, rtype, qid, rid):
+    queue = lif.GetQ(rtype, qid)
+    ring = queue.rings.Get(rid)
+    return ring
+
+def __get_lif_qp(tc, args):
+    if args is None:
+        return None
+
+    udqpslist = tc.pvtdata.udqps_pruned_list
+    if len(udqpslist) < args.idx:
+        return None
+    return udqpslist[args.idx]
+
+def __get_lif_qp_at_idx(tc, idx):
+    udqpslist = tc.pvtdata.udqps_pruned_list
+    if len(udqpslist) < idx:
+        return None
+    return udqpslist[idx]
+
+def GetCQRingForMulticastCopy(tc, args = None):
+    (lif, qp) = __get_lif_qp(tc, args)
+    ring = __get_ring_from_lif(lif, 'RDMA_CQ', qp.rq_cq.id, 'CQ')
+    tc.info("GetCQRingForLif: %s CQid: %d RxCqRing: %s" % (lif.GID(), qp.rq_cq.id, ring.GID()))
+    return ring
+
+def GetRdmaRxRingForMulticastCopy(tc, args = None):
+    (lif, qp) = __get_lif_qp(tc, args)
+    ring = __get_ring_from_lif(lif, 'RDMA_RQ', qp.id, 'RQ')
+    tc.info("GetRdmaRxRingForLif: %s Qid: %s RdmaRxRing: %s" % (lif.GID(), qp.GID(), ring.GID()))
+    return ring
+
+def GetRdmaRxRingDoorBellForMulticastCopy(tc, args = None):
+    (lif, qp) = __get_lif_qp(tc, args)
+    ring = __get_ring_from_lif(lif, 'RDMA_RQ', qp.id, 'RQ')
+    tc.info("GetRdmaRxRingDoorBellForLif: %s Qid: %s RdmaRxRing: %s" % (lif.GID(), qp.GID(), ring.GID()))
+    return ring.doorbell
+
+def GetQpIdForMulticastCopy(tc, desc, args = None):
+    (lif, qp) = __get_lif_qp(tc, args)
+    tc.info("GetCQRingForLif: %s Qid: %s" % (lif.GID(), qp.GID()))
+    return qp.id
+
+def GetEpSlab0ForMulticastCopy(tc, buf, args = None):
+    (lif, qp) = __get_lif_qp(tc, args)
+    slab = qp.pd.ep.slabs.Get('SLAB0000');
+    tc.info("GetEpSlab0ForMulticastCopy: %s Qid: %s Slab: %s" % (lif.GID(), qp.GID(), slab.GID()))
+    return slab
+
+def GetMrSlab0LkeyForMulticastCopy(tc, buf, args = None):
+    (lif, qp) = __get_lif_qp(tc, args)
+    mr = qp.pd.mrs.Get('MR-SLAB0000');
+    tc.info("GetEpSlab0LkeyForMulticastCopy: %s Qid: %s Mr: %s Lkey: %s" % (lif.GID(), qp.GID(), mr.GID(), mr.lkey))
+    return mr.lkey
+
+def GetEpSlab1ForMulticastCopy(tc, buf, args = None):
+    (lif, qp) = __get_lif_qp(tc, args)
+    slab = qp.pd.ep.slabs.Get('SLAB0001');
+    tc.info("GetEpSlab0ForMulticastCopy: %s Qid: %s Slab: %s" % (lif.GID(), qp.GID(), slab.GID()))
+    return slab
+
+def GetMrSlab1LkeyForMulticastCopy(tc, buf, args = None):
+    (lif, qp) = __get_lif_qp(tc, args)
+    mr = qp.pd.mrs.Get('MR-SLAB0001');
+    tc.info("GetEpSlab0LkeyForMulticastCopy: %s Qid: %s Mr: %s Lkey: %s" % (lif.GID(), qp.GID(), mr.GID(), mr.lkey))
+    return mr.lkey
 

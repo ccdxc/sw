@@ -43,11 +43,18 @@ class PdObject(base.ConfigObjectBase):
             self.cqs.SetAll(self.obj_helper_cq.cqs)
 
         self.qps = objects.ObjectDatabase(cfglogger)
+        self.udqps = objects.ObjectDatabase(cfglogger)
         self.obj_helper_qp = qp.QpObjectHelper()
         qp_spec = spec.qp.Get(Store)
         self.obj_helper_qp.Generate(self, qp_spec)
         if len(self.obj_helper_qp.qps):
             self.qps.SetAll(self.obj_helper_qp.qps)
+        if len(self.obj_helper_qp.udqps):
+            self.udqps.SetAll(self.obj_helper_qp.udqps)
+        cfglogger.info('PD: %s Total UdQps in the PD : %d ' % (self.GID(), len(self.udqps)))
+        #pdudqps = self.udqps.GetAll()
+        #for tmpqp in pdudqps:
+        #    cfglogger.info('   Qps: %s' % (tmpqp.GID()))
 
         self.Show()
         return
@@ -67,6 +74,7 @@ class PdObject(base.ConfigObjectBase):
     def Show(self):
         cfglogger.info('PD: %s EP: %s Remote: %s' %(self.GID(), self.ep.GID(), self.remote))
         cfglogger.info('Qps: %d Mrs: %d' %(len(self.obj_helper_qp.qps), len(self.obj_helper_mr.mrs)))
+        cfglogger.info('UDQps: %d ' % (len(self.obj_helper_qp.udqps)))
 
 class PdObjectHelper:
     def __init__(self):

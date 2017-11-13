@@ -654,6 +654,7 @@ hal_ret_t pd_drop_stats_get(pd_system_args_t *pd_sys_args);
 hal_ret_t oif_list_create(oif_list_id_t *list);
 hal_ret_t oif_list_delete(oif_list_id_t list);
 hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif);
+hal_ret_t oif_list_add_qp_oif(oif_list_id_t list, oif_t *oif);
 hal_ret_t oif_list_remove_oif(oif_list_id_t list, oif_t *oif);
 hal_ret_t oif_list_is_member(oif_list_id_t list, oif_t *oif);
 hal_ret_t oif_list_get_num_oifs(oif_list_id_t list, uint32_t &num_oifs);

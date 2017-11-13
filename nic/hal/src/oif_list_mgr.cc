@@ -2,6 +2,7 @@
 
 #include "nic/hal/src/oif_list_mgr.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/include/base.h"
 
 namespace hal {
 
@@ -21,6 +22,12 @@ hal_ret_t oif_list_delete(oif_list_id_t list)
 hal_ret_t oif_list_add_oif(oif_list_id_t list, oif_t *oif)
 {
     return pd::oif_list_add_oif(list, oif);
+}
+
+// Adds an RDMA QP oif to list
+hal_ret_t oif_list_add_qp_oif(oif_list_id_t list, oif_t *oif)
+{
+    return pd::oif_list_add_qp_oif(list, oif);
 }
 
 // Removes an oif from list

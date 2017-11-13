@@ -28,6 +28,7 @@ class EndpointObject(base.ConfigObjectBase):
         self.ipaddrs = []
         self.ipv6addrs = []
         self.security_groups = []
+        self.udqps = []
         return
 
     def Init(self, segment, backend):
@@ -115,6 +116,9 @@ class EndpointObject(base.ConfigObjectBase):
     def GetInterface(self):
         return self.intf
 
+    def GetUdQps(self):
+        return self.udqps
+
     def AttachInterface(self, intf):
         self.intf = intf
         if self.remote:
@@ -147,6 +151,7 @@ class EndpointObject(base.ConfigObjectBase):
         endpoint.macaddr = self.macaddr
         endpoint.ipaddrs = self.ipaddrs[:]
         endpoint.ipv6addrs = self.ipv6addrs[:]
+        endpoint.udqps = self.udqps[:]
         return endpoint
 
     def Equals(self, other, lgh):
@@ -170,6 +175,8 @@ class EndpointObject(base.ConfigObjectBase):
             cfglogger.info("- Ipaddr    = %s" % ipaddr.get())
         for ipv6addr in self.ipv6addrs:
             cfglogger.info("- Ipv6addr  = %s" % ipv6addr.get())
+        for qp in self.udqps:
+            cfglogger.info("- UdQp: QP: %s PD: %s " % (qp.GID(), qp.pd.GID()))
         return
 
     def Summary(self):
@@ -242,6 +249,15 @@ class EndpointObject(base.ConfigObjectBase):
         self.obj_helper_pd = pd.PdObjectHelper()
         self.obj_helper_pd.Generate(self, spec)
         self.pds.SetAll(self.obj_helper_pd.pds)
+        cfglogger.debug("In CreatePds, Endpoint %s" % (self.GID()))
+        for eppd in self.obj_helper_pd.pds:
+            cfglogger.debug("   Adding QPs for PD %s, Num of Qps %d" % (eppd.GID(), len(eppd.udqps)))
+            pdudqps = eppd.udqps.GetAll()
+            for qp in pdudqps:
+                cfglogger.debug("      Adding QP: PD %s, QP %s" % (eppd.GID(), qp.GID()))
+                self.udqps.append(qp)
+        cfglogger.debug("   Total UDPQs in this endpoint: Qps %d" % (len(self.udqps)))
+
 
     def ConfigurePds(self):
         self.obj_helper_pd.Configure()

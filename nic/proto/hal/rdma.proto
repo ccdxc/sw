@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "types.proto";
+import "interface.proto";
 option go_package="halproto";
 
 package rdma;
@@ -58,6 +59,7 @@ message RdmaQpSpec {
   uint32                   rq_cq_num       = 17;   // RQ's CQ Number
   uint32                   sq_cq_num       = 18;   // SQ's CQ Number
   bool                     immdt_as_dbell  = 19;   // Use immdt data to ring dbell
+  fixed64                  if_handle       = 20;   // EP's/ENIC's interface handle
 }
 
 // RdmaQpRequestMsg is batched request used to create/update of Rdma QPs

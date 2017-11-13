@@ -43,7 +43,9 @@ decode_roce_opcode:
 
   // subtract udp header length 8
   sub         r1, k.udp_len, 8
-  // add conditionally the ip header length for UD RDMA
-  add.c1      r1, r1, 20
+  // add conditionally 40B for ip header length for UD RDMA
+  // For IPv6, store 40B of IPv6 header
+  // For IPv4, save 20B of hdr into first 20Bytes and rest 20Bytes are zero
+  add.c1      r1, r1, 40
   sub.e       r1, r1, d.u.decode_roce_opcode_d.len
   phvwr       p.p4_to_p4plus_roce_payload_len, r1

@@ -15,12 +15,12 @@ selectors:
         lqp         : filter://svc=3
         rqp         : filter://svc=3
 #    maxflows    : 1 
-#    maxrdmasessions     : 4 
+#    maxrdmasessions     : 1 
 
 packets:
    - packet:
         id          : IN_PKT    # Input packet 
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        payloadsize : ref://factory/payloads/id=PAYLOAD_FF64/size
         template    : ref://factory/packets/id=ETH_IPV4_UDP_BTH_DETH
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -51,11 +51,11 @@ packets:
                 qkey    : ref://testcase/config/rdmasession/lqp/id
                 srcqp   : ref://testcase/config/rdmasession/rqp/id
             payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                data    : ref://factory/payloads/id=PAYLOAD_FF64/data
                 
    - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : 84
+        payloadsize : 104  # 40B ip hdr (incase of v4, its 20B ipv4 hdr + 20B pad) + payload 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
