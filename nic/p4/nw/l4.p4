@@ -1117,6 +1117,11 @@ action ip_normalization_checks() {
         (flow_lkp_metadata.ipv4_hlen > 5)) {
         // mark the IP option header valid to zero
         modify_field(inner_ipv4_options_blob.valid, 0);
+        modify_field(inner_ipv4.ihl, 5);
+        subtract(inner_ipv4.totalLen, inner_ipv4.totalLen, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
+        subtract(udp.len, udp.len, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
+        subtract(ipv4.totalLen, ipv4.totalLen, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
+        subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, ((flow_lkp_metadata.ipv4_hlen << 2) - 20));
     }
 
     }
@@ -1126,13 +1131,16 @@ action ip_normalization_checks() {
     // According to the SNORT IP4 specification:
     // trim - truncate packets with excess payload to the datagram length specified in the IP
     // header + the layer 2 header (e.g. ethernet), but don’t truncate below minimum frame length.
+    // Non-tunneled packet or tunnel is not terminated
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
+        (tunnel_metadata.tunnel_terminate == FALSE) and
         (((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18))) or
          ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 14))))) {
         modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
     }
     // Vlan tagged packet
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
+        (tunnel_metadata.tunnel_terminate == FALSE) and
         ((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18)) and
         (((ipv4.totalLen + 18) >= MIN_ETHER_FRAME_LEN) or (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
         if ((ipv4.totalLen + 18) > MIN_ETHER_FRAME_LEN) {
@@ -1144,6 +1152,7 @@ action ip_normalization_checks() {
     }
     // Vlan untagged packet
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
+        (tunnel_metadata.tunnel_terminate == FALSE) and
         ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 14)) and
         (((ipv4.totalLen + 14) >= MIN_ETHER_FRAME_LEN) or (capri_p4_intrinsic.packet_len > MIN_ETHER_FRAME_LEN)))) {
         if ((ipv4.totalLen + 14) > MIN_ETHER_FRAME_LEN) {
@@ -1152,6 +1161,39 @@ action ip_normalization_checks() {
         if ((ipv4.totalLen + 14) < MIN_ETHER_FRAME_LEN) {
             modify_field(capri_p4_intrinsic.packet_len, MIN_ETHER_FRAME_LEN);
         }
+    }
+
+    // tunneled packet and terminated
+    // 8 Bytes for UDP Header
+    // 8 bytes for vxlan Header
+    if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
+        (tunnel_metadata.tunnel_terminate == TRUE) and
+        (((vlan_tag.valid == TRUE) and 
+          (capri_p4_intrinsic.packet_len > (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen))) or
+         ((vlan_tag.valid == FALSE) and
+          (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
+        modify_field(control_metadata.drop_reason, DROP_IP_NORMALIZATION);
+    }
+    // Vlan tagged packet
+    // Ignoring the minimum size packet checks for Tunneled packets as the deparser
+    // may already take care of this.
+    // TBD - Check
+    if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
+        (tunnel_metadata.tunnel_terminate == TRUE) and
+        (((vlan_tag.valid == TRUE) and 
+          (capri_p4_intrinsic.packet_len > (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen))) or
+         ((vlan_tag.valid == FALSE) and
+          (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
+        modify_field(capri_p4_intrinsic.packet_len, (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen));
+    }
+    // Vlan untagged packet
+    if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
+        (tunnel_metadata.tunnel_terminate == TRUE) and
+        (((vlan_tag.valid == TRUE) and 
+          (capri_p4_intrinsic.packet_len > (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen))) or
+         ((vlan_tag.valid == FALSE) and
+          (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
+        modify_field(capri_p4_intrinsic.packet_len, (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen));
     }
     // IP Normalize TTL: If the configured value is non-zero then every
     // IPv4 packet hitting this L4 Profile will be updated with a ttl which is

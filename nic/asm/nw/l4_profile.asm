@@ -107,13 +107,13 @@ lb_ipv6_normalization_optimal:
 lb_ip_normalizaiton:
   // Will fall through non-optimal logic for bad packet cases
   // c5 - v4 packet, c6 - v6 packet
-  b.c6        lb_ip_norm_invalid_length
+  b.c6        lb_ipv6_normalization
   seq         c7, k.tunnel_metadata_tunnel_terminate, 1
   seq         c4, d.u.l4_profile_d.ip_rsvd_flags_action, NORMALIZATION_ACTION_ALLOW
-  b.c4        lb_ip_norm_df_bit
+  b.c4        lb_ipv4_norm_df_bit
   seq         c4, d.u.l4_profile_d.ip_df_action, NORMALIZATION_ACTION_ALLOW
   smeqb       c1, k.flow_lkp_metadata_ipv4_flags, IP_FLAGS_RSVD_MASK, IP_FLAGS_RSVD_MASK
-  b.!c1       lb_ip_norm_df_bit
+  b.!c1       lb_ipv4_norm_df_bit
   seq         c1, d.u.l4_profile_d.ip_rsvd_flags_action, NORMALIZATION_ACTION_DROP
   phvwr.c1.e  p.control_metadata_drop_reason[DROP_IP_NORMALIZATION], 1
   phvwr.c1    p.capri_intrinsic_drop, 1
@@ -121,11 +121,11 @@ lb_ip_normalizaiton:
   phvwrmi.c7  p.inner_ipv4_flags, 0, IP_FLAGS_RSVD_MASK
   phvwrmi.!c7 p.ipv4_flags, 0, IP_FLAGS_RSVD_MASK
 
-lb_ip_norm_df_bit:
-  b.c4        lb_ip_norm_options
+lb_ipv4_norm_df_bit:
+  b.c4        lb_ipv4_norm_options
   seq         c4, d.u.l4_profile_d.ip_options_action, NORMALIZATION_ACTION_ALLOW
   smeqb       c1, k.flow_lkp_metadata_ipv4_flags, IP_FLAGS_DF_MASK, IP_FLAGS_DF_MASK
-  b.!c1       lb_ip_norm_options
+  b.!c1       lb_ipv4_norm_options
   seq         c1, d.u.l4_profile_d.ip_df_action, NORMALIZATION_ACTION_DROP
   phvwr.c1.e  p.control_metadata_drop_reason[DROP_IP_NORMALIZATION], 1
   phvwr.c1    p.capri_intrinsic_drop, 1
@@ -133,12 +133,11 @@ lb_ip_norm_df_bit:
   phvwrmi.!c7 p.ipv4_flags, 0, IP_FLAGS_DF_MASK
   phvwrmi.c7  p.inner_ipv4_flags, 0, IP_FLAGS_DF_MASK
 
-lb_ip_norm_options:
-  b.c4        lb_ip_norm_invalid_length
-  nop         // since the branch to above label comes from multiple places we will
-              // have to compute the check for option is allow or not after we branch.
+lb_ipv4_norm_options:
+  b.c4        lb_ipv4_norm_invalid_length
+  seq         c4, d.u.l4_profile_d.ip_invalid_len_action, NORMALIZATION_ACTION_ALLOW
   slt         c1, 5, k.flow_lkp_metadata_ipv4_hlen
-  b.!c1       lb_ip_norm_invalid_length
+  b.!c1       lb_ipv4_norm_invalid_length
   seq         c1, d.u.l4_profile_d.ip_options_action, NORMALIZATION_ACTION_DROP
   phvwr.c1.e  p.control_metadata_drop_reason[DROP_IP_NORMALIZATION], 1
   phvwr.c1    p.capri_intrinsic_drop, 1
@@ -149,7 +148,7 @@ lb_ip_norm_options:
   // 3. IP header checksum update, meaning change the header valid bit
   //    to the one which will trigger checksum update
   // 4. control_metadata.packet_len needs to be reduced.
-  b.c7        lb_ip_norm_df_bit_tunnel_terminate
+  b.c7        lb_ipv4_norm_options_tunnel_terminate
   phvwr.!c7   p.ipv4_options_blob_valid, 0
   phvwr       p.ipv4_ihl, 5
   add         r1, r0, k.flow_lkp_metadata_ipv4_hlen, 2
@@ -158,22 +157,83 @@ lb_ip_norm_options:
   phvwr       p.ipv4_totalLen, r2
   sub         r2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                      capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
+  b           lb_ipv4_norm_invalid_length
   phvwr       p.capri_p4_intrinsic_packet_len, r2
 
 
-lb_ip_norm_df_bit_tunnel_terminate:
-  // We can enable it once Parag makes changes for inner_ipv4_options
-  // phvwr.c7  p.inner_ipv4_option_blob_valid, 0
+lb_ipv4_norm_options_tunnel_terminate:
+  phvwr       p.inner_ipv4_options_blob_valid, 0
+  phvwr       p.inner_ipv4_ihl, 5
+  add         r1, r0, k.flow_lkp_metadata_ipv4_hlen, 2
+  sub         r1, r1, 20 // Option length
+  sub         r2, k.inner_ipv4_totalLen, r1
+  phvwr       p.inner_ipv4_totalLen, r2
+  sub         r2, k.udp_len, r1
+  phvwr       p.udp_len, r2
+  sub         r2, k.ipv4_totalLen, r1
+  phvwr       p.ipv4_totalLen, r2
+  sub         r2, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                     capri_p4_intrinsic_packet_len_sbit6_ebit13}, r1
+  phvwr       p.capri_p4_intrinsic_packet_len, r2
 
 
-lb_ip_norm_invalid_length:
+// Here we normalize the invalid length based on outer IP total len
+// or inner IP total len depending on tunnel termination
+lb_ipv4_norm_invalid_length:
+  b.c4        lb_ipv4_norm_ttl
+  seq         c4, d.u.l4_profile_d.ip_normalize_ttl, 0
+  b.c7        lb_ipv4_norm_invalid_length_tunnel_terminate
+  seq         c1, k.vlan_tag_valid, 1
+  add.c1      r1, k.ipv4_totalLen, 18
+  add.!c1     r1, k.ipv4_totalLen, 14
+  slt         c1, r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                     capri_p4_intrinsic_packet_len_sbit6_ebit13}
+  b.!c1       lb_ipv4_norm_ttl
+  seq         c1, d.u.l4_profile_d.ip_invalid_len_action, NORMALIZATION_ACTION_DROP
+  phvwr.c1.e  p.control_metadata_drop_reason[DROP_IP_NORMALIZATION], 1
+  phvwr.c1    p.capri_intrinsic_drop, 1
+  // Edit action
+  // To edit the packet, we need to know what is the current payload length after
+  // the parsed headers so that we can truncate the packet by the difference of
+  // (capri_p4_intrinsic_packet_len - (ipv4.totalLen + Ether header + VLAN (if exists)))
+  // Without this we need to have a knowledge of all headers that the parser
+  // is parsing and then do the calculation so that we update the 
+  // capri_deparser_len_trunc_pkt_len.
+  // When editing we need to make sure we don't truncate lower than 64 byte packet
+  b           lb_ipv4_norm_ttl
+  nop
+
+
+// c1 - Has vlan_valid flag
+lb_ipv4_norm_invalid_length_tunnel_terminate:
+  add.c1      r1, k.ipv4_ihl, 34    // 18 (eth+vlan) + 8 (udp) + 8 (vxlan)
+  add.!c1     r1, k.ipv4_ihl, 30    // 14 (eth) + 8 (udp) + 8 (vxlan)
+  add         r1, r1, k.inner_ipv4_totalLen 
+  slt         c1, r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
+                     capri_p4_intrinsic_packet_len_sbit6_ebit13}
+  b.!c1       lb_ipv4_norm_ttl
+  seq         c1, d.u.l4_profile_d.ip_invalid_len_action, NORMALIZATION_ACTION_DROP
+  phvwr.c1.e  p.control_metadata_drop_reason[DROP_IP_NORMALIZATION], 1
+  phvwr.c1    p.capri_intrinsic_drop, 1
+  // Edit action
+  // To edit the packet, we need to know what is the current payload length after
+  // the parsed headers so that we can truncate the packet by the difference of
+  // (capri_p4_intrinsic_packet_len - (ipv4.totalLen + Ether header + VLAN (if exists)))
+  // Without this we need to have a knowledge of all headers that the parser
+  // is parsing and then do the calculation so that we update the 
+  // capri_deparser_len_trunc_pkt_len.
+  // When editing we need to make sure we don't truncate lower than 64 byte packet
+  b           lb_ipv4_norm_ttl
+  nop
+
+lb_ipv4_norm_ttl:
   jr r7
   nop
 
-lb_ip_norm_ttl:
+
+lb_ipv6_normalization:
   jr r7
   nop
-
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nop:

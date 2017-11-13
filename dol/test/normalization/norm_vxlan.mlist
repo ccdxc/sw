@@ -80,17 +80,17 @@ modules:
               flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_OPTIONS_ACTION_DROP
               flow: filter://type=IPV4
-
-    - module:
-        name    : IP_IGNORE
-        ignore  : True
-        iterate :
             - profile    : SEC_PROF_IP_OPTIONS_ACTION_EDIT
               flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_INVALID_LEN_ACTION_ALLOW
               flow: filter://type=IPV4
             - profile    : SEC_PROF_IP_INVALID_LEN_ACTION_DROP
               flow: filter://type=IPV4
+
+    - module:
+        name    : IP_IGNORE
+        ignore  : True
+        iterate :
             - profile    : SEC_PROF_IP_INVALID_LEN_ACTION_EDIT
               flow: filter://type=IPV4
 
