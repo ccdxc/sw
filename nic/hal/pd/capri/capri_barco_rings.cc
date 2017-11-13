@@ -6,6 +6,7 @@
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/hal/pd/capri/capri_barco_res.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/hal/src/barco_rings.hpp"
 
 namespace hal {
 
@@ -300,6 +301,11 @@ hal_ret_t capri_barco_xts_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.xts_ring_size.fld(barco_ring->ring_size);
     hens.dhs_crypto_ctl.xts_ring_size.write();
 
+    hens.dhs_crypto_ctl.xts_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    hens.dhs_crypto_ctl.xts_opa_tag_addr_w0.write();
+    hens.dhs_crypto_ctl.xts_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    hens.dhs_crypto_ctl.xts_opa_tag_addr_w1.write();
+
     hens.dhs_crypto_ctl.xts_producer_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.xts_producer_idx.write();
 
@@ -540,6 +546,31 @@ hal_ret_t capri_barco_rings_init(void)
     return ret;
 }
 
+hal_ret_t get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    std::string ring_type_str;
+    switch(ring_type) {
+    case(types::BARCO_RING_ASYM): {
+        ring_type_str = BARCO_RING_ASYM_STR;
+    } break;
+    case(types::BARCO_RING_XTS1):
+        ring_type_str = BARCO_RING_XTS_STR;
+    break;
+    default:
+        return HAL_RET_ERR;
+    break;
+    }
+
+    for (uint32_t idx = 0; idx < types::BarcoRings_MAX; idx++) {
+      if(ring_type_str == std::string(barco_rings[idx].ring_name)) {
+        *addr = barco_rings[idx].opaque_tag_addr;
+        return ret;
+      }
+    }
+
+  return HAL_RET_ERR;
+}
 
 
 

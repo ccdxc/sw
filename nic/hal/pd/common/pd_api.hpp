@@ -26,6 +26,7 @@
 #include "nic/hal/src/rawrcb.hpp"
 #include "nic/hal/src/rawccb.hpp"
 #include "nic/hal/src/port.hpp"
+#include "nic/hal/src/barco_rings.hpp"
 
 namespace hal {
 namespace pd {
@@ -645,6 +646,7 @@ hal_ret_t pd_crypto_asym_alloc_key(int32_t *key_idx);
 hal_ret_t pd_crypto_asym_free_key(int32_t key_idx);
 hal_ret_t pd_crypto_asym_write_key(int32_t key_idx, crypto_asym_key_t *key);
 hal_ret_t pd_crypto_asym_read_key(int32_t key_idx, crypto_asym_key_t *key);
+hal_ret_t get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr);
 
 hal_ret_t pd_drop_stats_get(pd_system_args_t *pd_sys_args);
 
