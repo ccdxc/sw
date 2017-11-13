@@ -119,6 +119,9 @@ metadata storage_pci_data_t pci_push_data;
 @pragma dont_trim
 metadata storage_pci_data_t pci_intr_data;
 
+@pragma dont_trim
+metadata barco_xts_ring_t xts_doorbell_data;
+
 // TODO: Remove this when NCC supports pragma for aligning this at 16 byte boundary
 @pragma dont_trim
 metadata storage_pad1_t storage_pad1;

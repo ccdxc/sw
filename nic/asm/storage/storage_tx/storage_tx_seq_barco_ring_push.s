@@ -24,7 +24,7 @@ storage_tx_seq_barco_ring_push_start:
    QUEUE_PUSH_ADDR(STORAGE_KIVEC1_SSD_CI_ADDR,  d.{p_ndx}.wx, STORAGE_KIVEC1_XTS_DESC_SIZE)
    add      r6, r0, d.{p_ndx}.wx
    addi     r6, r6, 1
-   phvwr	p.qpush_doorbell_data_data, r6.dx
+   phvwr	p.xts_doorbell_data_p_ndx, r6.wx
 
    // DMA command address update
    DMA_ADDR_UPDATE(r7, dma_m2m_2)

@@ -45,7 +45,7 @@ storage_tx_seq_barco_entry_handler_start:
    // to ring it. Form the doorbell DMA command in this stage as opposed 
    // the push stage (as is the norm) to avoid carrying the doorbell address 
    // in K+I vector.
-   DMA_PHV2MEM_SETUP(qpush_doorbell_data_data, qpush_doorbell_data_data,
+   DMA_PHV2MEM_SETUP(xts_doorbell_data_p_ndx, xts_doorbell_data_p_ndx,
                      d.xts_pndx_addr, dma_p2m_3)
 
    // Set the fence bit for the doorbell 

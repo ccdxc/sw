@@ -1519,6 +1519,7 @@ bool fill_aol(void* buf, uint64_t& a, uint32_t& o, uint32_t& l, uint32_t& offset
 uint32_t key128_desc_idx = 0;
 uint32_t key256_desc_idx = 0;
 bool key_desc_inited = false;
+uint32_t exp_opaque_tag = 99; //some random number that keeps gettign incremented
 
 class XtsCtx {
 public:
@@ -1764,7 +1765,8 @@ int XtsCtx::test_seq_xts() {
   xts_desc_addr->iv_addr = host_mem_v2p(iv);
   xts_desc_addr->db_addr = xts_db_addr;
   xts_desc_addr->db_data = exp_db_data;
-  xts_desc_addr->opaque_tag_en = 0;
+  xts_desc_addr->opaque_tag_en = 1;
+  xts_desc_addr->opaque_tag = exp_opaque_tag;
   xts_desc_addr->sector_num = start_sec_num;
   xts_desc_addr->sector_size = sector_size;
   xts_desc_addr->app_tag = app_tag;
@@ -1842,6 +1844,25 @@ int XtsCtx::ring_db_n_verify() {
       rv = -1;
     }
   }
+
+  uint64_t opaque_tag_addr = 0;
+  if(hal_if::get_xts_opaque_tag_addr(&opaque_tag_addr)) {
+    printf("get_xts_opaque_tag_addr failed \n");
+    return -1;
+  }
+
+  uint32_t opaque_tag = 0;
+  if(!read_mem(opaque_tag_addr, (uint8_t*)&opaque_tag, sizeof(opaque_tag))) {
+    printf("Reading opaque tag hbm mem failed \n");
+    return -1;
+  }
+
+  if(exp_opaque_tag != opaque_tag) {
+    printf("Opaque tag expected value %u rcvd %u", exp_opaque_tag, opaque_tag);
+    return -1;
+  }
+  exp_opaque_tag++;
+
   return rv;
 }
 

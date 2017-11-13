@@ -7,7 +7,10 @@
 #include "nic/gen/proto/hal/interface.grpc.pb.h"
 #include "nic/gen/proto/hal/crypto_keys.pb.h"
 #include "nic/gen/proto/hal/crypto_keys.grpc.pb.h"
+#include "nic/gen/proto/hal/barco_rings.pb.h"
+#include "nic/gen/proto/hal/barco_rings.grpc.pb.h"
 #include "dol/test/storage/hal_if.hpp"
+
 
 extern uint64_t hal_port;
 
@@ -19,6 +22,7 @@ using grpc::Status;
 using internal::Internal;
 using intf::Interface;
 using cryptokey::CryptoKey;
+using barcoRings::BarcoRings;
 
 std::shared_ptr<Channel> hal_channel;
 
@@ -27,6 +31,7 @@ namespace {
 std::unique_ptr<Internal::Stub> internal_stub;
 std::unique_ptr<Interface::Stub> interface_stub;
 std::unique_ptr<CryptoKey::Stub> crypto_stub;
+std::unique_ptr<BarcoRings::Stub> brings_stub;
 
 }  // anonymous namespace
 
@@ -53,6 +58,11 @@ void init_hal_if() {
     CryptoKey::NewStub(grpc::CreateChannel(
       host_addr, grpc::InsecureChannelCredentials())));
   crypto_stub = std::move(crypt_stub);
+
+  std::unique_ptr<BarcoRings::Stub> bring_stub(
+    BarcoRings::NewStub(grpc::CreateChannel(
+      host_addr, grpc::InsecureChannelCredentials())));
+  brings_stub = std::move(bring_stub);
 }
 
 // Start with a base lif id and count up
@@ -336,6 +346,24 @@ int delete_key(uint32_t key_index) {
     printf("Delete request failed with bad keyindex \n");
     return -1;
   }
+  return 0;
+}
+
+using barcoRings::GetOpaqueTagAddrRequestMsg;
+using barcoRings::GetOpaqueTagAddrResponseMsg;
+int get_xts_opaque_tag_addr(uint64_t* addr) {
+  grpc::ClientContext context;
+  GetOpaqueTagAddrRequestMsg req_msg;
+  GetOpaqueTagAddrResponseMsg resp_msg;
+  auto req = req_msg.add_request();
+  req->set_ring_type(types::BARCO_RING_XTS1);
+  auto status = brings_stub->GetOpaqueTagAddr(&context, req_msg, &resp_msg);
+  if (!status.ok()) {
+    printf("get_xts_opaque_tag_addr request failed \n");
+    return -1;
+  }
+  *addr = resp_msg.response(0).opaque_tag_addr();
+
   return 0;
 }
 

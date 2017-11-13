@@ -40,6 +40,7 @@ int alloc_hbm_address(uint64_t *addr, uint32_t *size);
 int get_xts_ring_base_address(uint64_t *addr);
 int get_key_index(char* key, types::CryptoKeyType key_type, uint32_t key_size, uint32_t* key_index);
 int delete_key(uint32_t key_index);
+int get_xts_opaque_tag_addr(uint64_t* addr);
 
 }  // namespace hal_if
 

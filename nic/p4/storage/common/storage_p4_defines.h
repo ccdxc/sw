@@ -863,7 +863,7 @@ header_type storage_pad0_t {
 }
 header_type storage_pad1_t {
   fields {
-    pad		: 64;	
+    pad		: 32;
   }
 }
 

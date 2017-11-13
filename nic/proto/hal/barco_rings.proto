@@ -1,0 +1,32 @@
+//------------------------------------------------------------------------------
+// protobuf specification for Barco Ring related APIs
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+//import public "gogo.proto";
+
+package barcoRings;
+option go_package="halproto";
+
+service BarcoRings {
+    rpc GetOpaqueTagAddr (GetOpaqueTagAddrRequestMsg) returns (GetOpaqueTagAddrResponseMsg) {}
+}
+
+message GetOpaqueTagAddrRequest {
+    types.BarcoRings ring_type = 1;
+}
+
+message GetOpaqueTagAddrRequestMsg {
+    repeated  GetOpaqueTagAddrRequest request = 1;
+}
+
+message GetOpaqueTagAddrResponse {
+    uint64 opaque_tag_addr = 1;
+    types.ApiStatus api_status = 2;    // API status code
+}
+
+message GetOpaqueTagAddrResponseMsg {
+    repeated  GetOpaqueTagAddrResponse response = 1;
+}
