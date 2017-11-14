@@ -29,6 +29,7 @@ class CollectorObject(base.ConfigObjectBase):
         self.GID("Collector%04d" % self.id)
         self.spec = spec
         self.vlan = 0
+        self.l2seg_handle = None
         self.dest_ip = None
         self.source_ip = None
         self.protocol = None
@@ -69,6 +70,7 @@ class CollectorObject(base.ConfigObjectBase):
         reqspec.export_controlId.Id = self.id
         reqspec.encap.encap_type = haldefs.common.ENCAP_TYPE_DOT1Q
         reqspec.encap.encap_value = self.vlan
+        reqspec.l2seg_handle = self.l2seg_handle
         reqspec.dest_ip.ip_af = haldefs.common.IP_AF_INET
         reqspec.dest_ip.v4_addr = self.dest_ip.getnum()
         reqspec.src_ip.ip_af = haldefs.common.IP_AF_INET
@@ -113,6 +115,7 @@ class CollectorObjectHelper:
             collector = CollectorObject()
             collector.Init(tenant, spec)
             collector.vlan = ep.segment.vlan_id
+            collector.l2seg_handle = ep.segment.hal_handle
             collector.dest_ip = ep.ipaddrs[0]
             collector.source_ip = leps[0].ipaddrs[0]
             collector.protocol = defs.ipprotos.id("UDP")

@@ -21,12 +21,13 @@ message CollectorSpec {
   types.ObjectMeta  meta              = 1; // Common object meta
   ExportControlId   export_controlId  = 2; // Controller ID that this Collector is attached to
   types.EncapInfo   encap             = 3; // VLAN encap to be applied to traffic
-  types.IPAddress   dest_ip           = 4; // Destination IP of the Collector
-  types.IPAddress   src_ip            = 5; // Source IP to use
-  types.IPProtocol  protocol          = 6; // L4 IP Protocol to use
-  L4Port            dest_port         = 7; // L4 Port for the collector
-  ExportFormat      format            = 8; // Format that the collector expects
-  uint32            template_id       = 9; // Data Template ID used to send to the collector 
+  fixed64           l2seg_handle  = 4; // Hal Handle for the L2 segment (ideally remove encap)
+  types.IPAddress   dest_ip           = 5; // Destination IP of the Collector
+  types.IPAddress   src_ip            = 6; // Source IP to use
+  types.IPProtocol  protocol          = 7; // L4 IP Protocol to use
+  L4Port            dest_port         = 8; // L4 Port for the collector
+  ExportFormat      format            = 9; // Format that the collector expects
+  uint32            template_id       = 10; // Data Template ID used to send to the collector 
 }
 
 // CollectorSpec is the operational status of the collector

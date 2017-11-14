@@ -85,7 +85,6 @@ class TenantObject(base.ConfigObjectBase):
             self.obj_helper_span = span.SpanSessionObjectHelper()
             self.__create_span_sessions()
             self.obj_helper_collector = collector.CollectorHelper
-            self.__create_collectors()
 
         self.obj_helper_sg = security_group.SecurityGroupObjectHelper()
         self.obj_helper_sg.main(self)
@@ -203,8 +202,9 @@ class TenantObject(base.ConfigObjectBase):
         self.obj_helper_span.main(self, self.spec)
         return
 
-    def __create_collectors(self):
-        self.obj_helper_collector.main(self, self.spec)
+    def ConfigureCollectors(self):
+        if self.IsSpan():
+            self.obj_helper_collector.main(self, self.spec)
         return 
 
     def AllocLif(self):
@@ -321,6 +321,7 @@ class TenantObjectHelper:
             ten.ConfigureSegmentsPhase2()
             ten.ConfigureTunnels()
             ten.ConfigureDosPolicies()
+            ten.ConfigureCollectors()
         return
 
     def Generate(self, topospec):

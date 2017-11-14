@@ -58,6 +58,9 @@ typedef struct mirror_session_s {
 typedef struct collector_config_s {
     uint64_t            exporter_id;
     uint16_t            vlan;
+    l2seg_t             *l2seg;
+    mac_addr_t          dest_mac;
+    mac_addr_t          src_mac;
     ip_addr_t           src_ip;
     ip_addr_t           dst_ip;
     uint16_t            protocol;

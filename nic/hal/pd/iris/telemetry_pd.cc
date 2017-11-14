@@ -188,6 +188,8 @@ pd_collector_create(collector_config_t *cfg)
     d->set_dst_ip(cfg->dst_ip);
     d->set_sport(32007);
     d->set_dport(cfg->dport);
+    d->set_dst_mac(cfg->dest_mac);
+    d->set_src_mac(cfg->src_mac);
     d->commit();
     return HAL_RET_OK;
 }

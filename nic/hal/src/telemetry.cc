@@ -264,6 +264,13 @@ collector_create(CollectorSpec *spec, Collector *resp) {
     cfg.exporter_id = spec->export_controlid().id();
     ip_addr_spec_to_ip_addr(&cfg.src_ip, spec->src_ip());
     ip_addr_spec_to_ip_addr(&cfg.dst_ip, spec->dest_ip());
+    auto ep = find_ep_by_v4_key(spec->meta().vrf_id(), cfg.dst_ip.addr.v4_addr);
+    if (ep == NULL) {
+        HAL_TRACE_ERR("PI-Collector:{}: Unknown endpoint {} : {}", __FUNCTION__,
+            spec->meta().vrf_id(), ipaddr2str(&cfg.dst_ip));
+        return HAL_RET_INVALID_ARG;
+    }
+    memcpy(cfg.dest_mac, ep->l2_key.mac_addr, sizeof(cfg.dest_mac));
     cfg.template_id = spec->template_id();
     switch (spec->format()) {
         case telemetry::ExportFormat::IPFIX:
@@ -273,7 +280,7 @@ collector_create(CollectorSpec *spec, Collector *resp) {
             cfg.format = EXPORT_FORMAT_NETFLOW9;
             break;
         default:
-            HAL_TRACE_DEBUG("PI-Collector:{}: Unknown format type {}", spec->template_id());
+            HAL_TRACE_DEBUG("PI-Collector:{}: Unknown format type {}", __FUNCTION__, spec->template_id());
             return HAL_RET_INVALID_ARG;
     }
     cfg.protocol = spec->protocol();
@@ -282,9 +289,20 @@ collector_create(CollectorSpec *spec, Collector *resp) {
     if (encap.encap_type() == types::ENCAP_TYPE_DOT1Q) {
         cfg.vlan = encap.encap_value();
     } else {
-        HAL_TRACE_DEBUG("PI-Collector:{}: Unsupport Encap {}", encap.encap_type());
+        HAL_TRACE_DEBUG("PI-Collector:{}: Unsupport Encap {}", __FUNCTION__, encap.encap_type());
         return HAL_RET_INVALID_ARG;
     }
+    cfg.l2seg = find_l2seg_by_handle(spec->l2seg_handle());
+    if (cfg.l2seg == NULL) {
+        HAL_TRACE_DEBUG("PI-Collector:{}: Could not retrieve L2 segment", __FUNCTION__);
+        return HAL_RET_INVALID_ARG;
+    }
+    auto dmac = l2seg_get_rtr_mac(cfg.l2seg);
+    if (dmac == NULL) {
+        HAL_TRACE_DEBUG("PI-Collector:{}: Could not retrieve L2 segment source mac", __FUNCTION__);
+        return HAL_RET_INVALID_ARG;
+    }
+    memcpy(cfg.src_mac, *dmac, sizeof(cfg.src_mac));
     ret = hal::pd::pd_collector_create(&cfg);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PI-Collector:{}: PD API failed {}", __FUNCTION__, ret);
