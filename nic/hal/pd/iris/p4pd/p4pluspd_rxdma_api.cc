@@ -95,7 +95,7 @@ static p4pd_table_type_en p4pluspd_rxdma_get_table_type(const char *match_type)
 #ifdef P4PD_CLI
 #define P4PLUSPD_RXDMA_TBL_PACKING_JSON  "../../../gen/common_rxdma_actions/p4pd/capri_p4_table_map.json"
 #else
-#define P4PLUSPD_RXDMA_TBL_PACKING_JSON  "../gen/common_rxdma_actions/p4pd/capri_p4_table_map.json"
+#define P4PLUSPD_RXDMA_TBL_PACKING_JSON  "table_maps/capri_p4_rxdma_table_map.json"
 #endif
 
 static p4pd_error_t p4pluspd_rxdma_tbl_packing_json_parse()

@@ -106,7 +106,7 @@ static p4pd_table_type_en p4pd_get_table_type(const char *match_type)
 #define P4PD_TBL_PACKING_JSON  "../../../gen/iris/p4pd/capri_p4_table_map.json"
 #else
 #ifndef GFT
-#define P4PD_TBL_PACKING_JSON  "../gen/iris/p4pd/capri_p4_table_map.json"
+#define P4PD_TBL_PACKING_JSON  "table_maps/capri_p4_table_map.json"
 #else
 #define P4PD_TBL_PACKING_JSON  "../gen/gft/p4pd/capri_p4_table_map.json"
 #endif
