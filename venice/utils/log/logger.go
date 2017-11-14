@@ -216,6 +216,7 @@ func stackTrace() kitlog.Valuer {
 
 // GetDefaultConfig returns default log config object
 func GetDefaultConfig(module string) *Config {
+
 	return &Config{
 		Module:      module,
 		Format:      LogFmt,
@@ -305,6 +306,19 @@ func newLogger(config *Config) *kitLogger {
 
 	// Configure log filter
 	l = kitlevel.NewFilter(l, getFilterOption(config.Filter))
+
+	// Redirect stderr to file (preferred) or stdout based on config
+	// TODO: Need to investigate a way to redirect stderr to both file & stdout
+	//       Syscall Dup2 only allows redirecting to one Fd.
+	if config.LogToFile == true {
+		logFile, err := os.OpenFile(config.FileCfg.Filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to open logfile: %s err: %v", config.FileCfg.Filename, err))
+		}
+		syscall.Dup2(int(logFile.Fd()), int(os.Stderr.Fd()))
+	} else if config.LogToStdout == true {
+		syscall.Dup2(int(os.Stdout.Fd()), int(os.Stderr.Fd()))
+	}
 
 	return &kitLogger{logger: l, config: *config}
 }
@@ -510,6 +524,20 @@ func SetConfig(config *Config) Logger {
 		createSingleton()
 	})
 	singleton = newLogger(config)
+
+	// Redirect stderr to file (preferred) or stdout based on config
+	// TODO: Need to investigate a way to redirect stderr to both file & stdout
+	//       Syscall Dup2 only allows redirecting to one Fd.
+	if config.LogToFile == true {
+		logFile, err := os.OpenFile(config.FileCfg.Filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to open logfile: %s err: %v", config.FileCfg.Filename, err))
+		}
+		syscall.Dup2(int(logFile.Fd()), int(os.Stderr.Fd()))
+	} else if config.LogToStdout == true {
+		syscall.Dup2(int(os.Stdout.Fd()), int(os.Stderr.Fd()))
+	}
+
 	return singleton
 }
 
