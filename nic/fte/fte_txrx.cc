@@ -247,7 +247,7 @@ void inst_t::process_arq()
         }
             
         // process the packet and update flow table
-        ctx.set_arm_ctx(arm_ctx);
+        ctx_.app_redir().set_arm_ctx(arm_ctx_);
         ret = ctx_.process();
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failied to process, ret={}", ret);

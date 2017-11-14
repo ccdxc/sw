@@ -17,6 +17,7 @@ def Setup(infra, module):
 
 def Teardown(infra, module):
     print("Teardown(): Sample Implementation.")
+    modcbs.Teardown(infra, module)
     return
 
 def TestCaseSetup(tc):
@@ -139,6 +140,7 @@ def TestCaseVerify(tc):
 
 def TestCaseTeardown(tc):
     print("TestCaseTeardown(): Sample Implementation.")
+    modcbs.TestCaseTeardown(tc)
     return
 
 def TestCaseStepSetup(tc, step):

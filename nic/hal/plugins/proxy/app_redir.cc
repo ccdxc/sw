@@ -87,7 +87,7 @@ app_redir_rawrcb_rawccb_create(fte::ctx_t& ctx)
         /*
          * For rawrcb, we need to set up chain_rxq_base and its related attributes.
          * However, when both chain_rxq_base and chain_txq_base are set to zero,
-         * PD automatically supply the correct ARQ defaults for chain_rxq_base.
+         * PD will automatically supply the correct ARQ defaults for chain_rxq_base.
          * When multi cores are supported, only the chain_rxq_ring_index_select
          * would need to be specified here.
          *
@@ -145,7 +145,7 @@ app_redir_pkt_tx_enqueue(fte::ctx_t& ctx)
 
     HAL_TRACE_DEBUG("{} pkt_len {} src_lif {}", __FUNCTION__,
                     pkt_len, cpu_header.src_lif);
-    ret = hal::pd::cpupkt_register_tx_queue(ctx.arm_ctx(),
+    ret = hal::pd::cpupkt_register_tx_queue(redir_ctx.arm_ctx(),
                                             redir_ctx.chain_wring_type(),
                                             redir_ctx.chain_flow_id());
     if (ret == HAL_RET_OK) {

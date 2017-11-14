@@ -33,6 +33,15 @@ entries:
             port : const/23768
 
     - entry:
+        label: raw-redir-multi
+        tracking: False
+        timestamp: False
+        responder: 
+            port : const/19694
+        initiator: 
+            port : const/19695
+
+    - entry:
         label: tcp-proxy-e2e
         tracking: False
         timestamp: False

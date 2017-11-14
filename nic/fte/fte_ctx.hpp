@@ -334,6 +334,7 @@ public:
         redir_policy_applic_    = false;
         redir_miss_pkt_p_       = nullptr;
         proxy_flow_info_        = nullptr;
+        arm_ctx_                = nullptr;
     };
 
     uint16_t redir_flags() const { return redir_flags_; }
@@ -385,6 +386,9 @@ public:
     types::WRingType chain_wring_type() const { return chain_wring_type_; }
     void set_chain_wring_type(types::WRingType chain_wring_type) { chain_wring_type_ = chain_wring_type; }
 
+    hal::pd::cpupkt_ctxt_t* arm_ctx() const { return arm_ctx_; }
+    void set_arm_ctx(hal::pd::cpupkt_ctxt_t* arm_ctx) {arm_ctx_= arm_ctx;}
+
     pen_app_redir_header_v1_full_t& redir_miss_hdr() { return redir_miss_hdr_; }
     size_t redir_miss_hdr_size() { return sizeof(redir_miss_hdr_); }
 
@@ -399,6 +403,7 @@ private:
     pen_app_redir_header_v1_full_t  redir_miss_hdr_;
     uint8_t                         *redir_miss_pkt_p_;
     hal::proxy_flow_info_t          *proxy_flow_info_;
+    hal::pd::cpupkt_ctxt_t          *arm_ctx_;
     uint32_t                        chain_flow_id_;
     hal::flow_role_t                chain_rev_role_;    // rflow role
     uint8_t                         chain_qtype_;
@@ -492,9 +497,6 @@ public:
     const lifqid_t& arm_lifq() const { return arm_lifq_; }
     void set_arm_lifq(const lifqid_t& arm_lifq) {arm_lifq_= arm_lifq;}
 
-    hal::pd::cpupkt_ctxt_t* arm_ctx() const { return arm_ctx_; }
-    void set_arm_ctx(hal::pd::cpupkt_ctxt_t* arm_ctx) {arm_ctx_= arm_ctx;}
-
     uint8_t stage() const { return role_ == hal::FLOW_ROLE_INITIATOR ? istage_ : rstage_; }
     hal_ret_t advance_to_next_stage();
 
@@ -555,7 +557,6 @@ private:
     lifqid_t              arm_lifq_;
     hal::flow_key_t       key_;
 
-    hal::pd::cpupkt_ctxt_t* arm_ctx_;
     cpu_rxhdr_t           *cpu_rxhdr_; // metadata from p4 to cpu
     uint8_t               *pkt_;
     size_t                pkt_len_;

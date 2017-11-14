@@ -34,7 +34,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
                 req_spec.proxy_en = True
                 req_spec.alloc_qid = True
             self.session.iflow.PrepareHALRequestSpec(req_spec)
-        elif self.session.iflow.label == 'RAW-REDIR':
+        elif self.session.iflow.label == 'RAW-REDIR' or self.session.iflow.label == 'RAW-REDIR-MULTI':
             req_spec.meta.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 4
             req_spec.spec.proxy_type = 7
@@ -81,7 +81,7 @@ class ProxyCbServiceObjectHelper:
 
     def Configure(self):
         for proxycb in self.proxy_service_list:
-            if proxycb.session.iflow.label == 'TCP-PROXY' or proxycb.session.iflow.label == 'ESP-PROXY' or proxycb.session.iflow.label == 'IPSEC-PROXY' or proxycb.session.iflow.label == 'RAW-REDIR' or proxycb.session.iflow.label == 'TCP-PROXY-E2E':
+            if proxycb.session.iflow.label == 'TCP-PROXY' or proxycb.session.iflow.label == 'ESP-PROXY' or proxycb.session.iflow.label == 'IPSEC-PROXY' or proxycb.session.iflow.label == 'RAW-REDIR' or proxycb.session.iflow.label == 'RAW-REDIR-MULTI' or proxycb.session.iflow.label == 'TCP-PROXY-E2E':
                 lst = []
                 lst.append(proxycb)
                 halapi.ConfigureProxyCbService(lst)
