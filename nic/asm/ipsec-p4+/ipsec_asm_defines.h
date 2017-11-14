@@ -41,6 +41,9 @@
 #define IPSEC_INT_START_OFFSET  CAPRI_PHV_START_OFFSET(ipsec_int_header_in_desc) 
 #define IPSEC_INT_END_OFFSET    CAPRI_PHV_END_OFFSET(ipsec_int_header_l4_protocol)
  
+#define IPSEC_N2H_INT_START_OFFSET  CAPRI_PHV_START_OFFSET(ipsec_int_header_in_desc) 
+#define IPSEC_N2H_INT_END_OFFSET    CAPRI_PHV_END_OFFSET(ipsec_int_header_spi)
+ 
 #define IPSEC_IN_DESC_AOL_START CAPRI_PHV_START_OFFSET(barco_desc_in_A0_addr) 
 #define IPSEC_IN_DESC_AOL_END   CAPRI_PHV_END_OFFSET(barco_desc_in_L1) 
 

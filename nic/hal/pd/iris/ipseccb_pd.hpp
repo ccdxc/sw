@@ -23,6 +23,10 @@ typedef enum ipseccb_hwid_order_ {
     P4PD_HWID_IPSEC_IP_HDR = 1,
 } ipseccb_hwid_order_t;
 
+typedef enum ipsec_decrypt_hwid_order_ {
+    P4PD_HWID_IPSEC_PART2 = 1,
+} ipsec_decrypt_hwid_order_t;
+
 typedef uint64_t    ipseccb_hw_id_t;
 
 // ipseccb pd state

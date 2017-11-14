@@ -54,12 +54,15 @@ header_type ipsec_int_header_t {
         payload_size      : 16;
         pad_size          : 8;
         l4_protocol       : 8;
+        spi               : 32;
+        ipsec_int_pad     : 32;
+        status_addr       : 64;
     }
 }
 
 header_type ipsec_int_pad_t {
     fields {
-        ipsec_int_pad : 128;
+        ipsec_int_pad : 96;
     }
 }
 
@@ -104,6 +107,9 @@ header_type ipsec_cb_encap_header_t {
     modify_field(ipsec_int_hdr_scratch.payload_size, payload_size); \
     modify_field(ipsec_int_hdr_scratch.pad_size, pad_size); \
     modify_field(ipsec_int_hdr_scratch.l4_protocol, l4_protocol); \
+    modify_field(ipsec_int_hdr_scratch.spi, spi); \
+    modify_field(ipsec_int_hdr_scratch.ipsec_int_pad, ipsec_int_pad); \
+    modify_field(ipsec_int_hdr_scratch.status_addr, status_addr); \
 
 header_type esp_header_t {
     fields {

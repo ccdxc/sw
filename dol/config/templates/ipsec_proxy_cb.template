@@ -27,3 +27,4 @@ seq_no_bmp       : 0
 is_v6            : 0
 vrf_vlan         : 0
 last_replay_seq_no : 0
+new_spi          : 0

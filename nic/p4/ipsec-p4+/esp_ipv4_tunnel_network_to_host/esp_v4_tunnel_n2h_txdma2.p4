@@ -243,7 +243,8 @@ action esp_v4_tunnel_n2h_txdma2_load_ipsec_int(in_desc, out_desc,
                                                tailroom, headroom_offset,
                                                tailroom_offset,
                                                payload_start, buf_size,
-                                               payload_size, l4_protocol, pad_size)
+                                               payload_size, l4_protocol, pad_size, 
+                                               spi, ipsec_int_pad, status_addr)
 {
     IPSEC_INT_HDR_SCRATCH
     IPSEC_DECRYPT_GLOBAL_SCRATCH

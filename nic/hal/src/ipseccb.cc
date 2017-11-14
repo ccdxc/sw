@@ -123,7 +123,9 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     ipseccb->esn_hi = spec.esn_hi();
     ipseccb->esn_lo = spec.esn_lo();
     ipseccb->spi = spec.spi();
+    ipseccb->new_spi = spec.new_spi();
     ipseccb->key_index = spec.key_index();
+    ipseccb->new_key_index = spec.new_key_index();
     ipseccb->barco_enc_cmd = spec.barco_enc_cmd();
 
     ipseccb->tunnel_sip4 = spec.tunnel_sip4();
@@ -228,7 +230,9 @@ ipseccb_update (IpsecCbSpec& spec, IpsecCbResponse *rsp)
     ipseccb->esn_hi = spec.esn_hi();
     ipseccb->esn_lo = spec.esn_lo();
     ipseccb->spi = spec.spi();
+    ipseccb->new_spi = spec.new_spi();
     ipseccb->key_index = spec.key_index();
+    ipseccb->new_key_index = spec.new_key_index();
     ipseccb->barco_enc_cmd = spec.barco_enc_cmd();
 
     ipseccb->tunnel_sip4 = spec.tunnel_sip4();
@@ -323,9 +327,11 @@ ipseccb_get (IpsecCbGetRequest& req, IpsecCbGetResponse *rsp)
     rsp->mutable_spec()->set_iv_salt(ripseccb.iv_salt);
     rsp->mutable_spec()->set_iv(ripseccb.iv);
     rsp->mutable_spec()->set_key_index(ripseccb.key_index);
+    rsp->mutable_spec()->set_new_key_index(ripseccb.new_key_index);
     rsp->mutable_spec()->set_esn_hi(ripseccb.esn_hi);
     rsp->mutable_spec()->set_esn_lo(ripseccb.esn_lo);
     rsp->mutable_spec()->set_spi(ripseccb.spi);
+    rsp->mutable_spec()->set_new_spi(ripseccb.new_spi);
     rsp->mutable_spec()->set_barco_enc_cmd(ripseccb.barco_enc_cmd);
     
     rsp->mutable_spec()->set_tunnel_sip4(ripseccb.tunnel_sip4);

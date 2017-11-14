@@ -50,7 +50,9 @@ class IpsecCbObject(base.ConfigObjectBase):
             req_spec.esn_hi                    = self.esn_hi
             req_spec.esn_lo                    = self.esn_lo
             req_spec.spi                       = self.spi
+            req_spec.new_spi                   = self.new_spi
             req_spec.key_index                 = self.crypto_key_idx
+            req_spec.new_key_index             = self.crypto_key_idx
             req_spec.expected_seq_no           = self.expected_seq_no
             req_spec.seq_no_bmp                = self.seq_no_bmp
             req_spec.sip6.ip_af                = haldefs.common.IP_AF_INET6
@@ -77,6 +79,7 @@ class IpsecCbObject(base.ConfigObjectBase):
             self.esn_hi            = resp_spec.spec.esn_hi 
             self.esn_lo            = resp_spec.spec.esn_lo 
             self.spi               = resp_spec.spec.spi 
+            self.new_spi           = resp_spec.spec.new_spi 
             self.pi                = resp_spec.spec.pi
             self.ci                = resp_spec.spec.ci
             self.expected_seq_no   = resp_spec.spec.expected_seq_no

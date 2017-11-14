@@ -127,12 +127,29 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
     return ret;
 }
 
+static hal_ret_t 
+p4pd_add_or_del_ipsec_decrypt_part2(pd_ipseccb_decrypt_t* ipseccb_pd, bool del)
+{
+
+    // hardware index for this entry
+    ipseccb_hw_id_t hwid = ipseccb_pd->hw_id + 
+        (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_PART2);
+
+    HAL_TRACE_DEBUG("Programming Decrypt part2 at hw-id: 0x{0:x}", hwid); 
+    return HAL_RET_OK;
+}
+
 hal_ret_t 
 p4pd_add_or_del_ipseccb_decrypt_rxdma_entry(pd_ipseccb_decrypt_t* ipseccb_pd, bool del)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
     ret = p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(ipseccb_pd, del);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+
+    ret = p4pd_add_or_del_ipsec_decrypt_part2(ipseccb_pd, del);
     if(ret != HAL_RET_OK) {
         goto cleanup;
     }

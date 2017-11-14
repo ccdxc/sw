@@ -49,6 +49,8 @@ message IpsecCbSpec {
   uint32                is_v6                 = 20;
   uint32                vrf_vlan              = 21;
   uint32                last_replay_seq_no    = 22;
+  uint32                new_spi               = 23;
+  uint32                new_key_index         = 24;
 }
 
 // IpsecCbRequestMsg is batched add or modify ipseccb request

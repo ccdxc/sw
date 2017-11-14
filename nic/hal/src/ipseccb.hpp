@@ -40,12 +40,14 @@ typedef struct ipseccb_s {
     uint8_t               icv_size;
     uint8_t               block_size;
     uint32_t              key_index;
+    uint32_t              new_key_index;
     uint32_t              barco_enc_cmd;
     uint64_t              iv;
     uint32_t              iv_salt;
     uint32_t              esn_hi;
     uint32_t              esn_lo;
     uint32_t              spi;
+    uint32_t              new_spi;
     uint32_t              expected_seq_no;
     uint64_t              seq_no_bmp;
     hal_handle_t          hal_handle;              // HAL allocated handle

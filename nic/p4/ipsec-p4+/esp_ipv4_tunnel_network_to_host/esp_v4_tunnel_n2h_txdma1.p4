@@ -248,8 +248,6 @@ action esp_v4_tunnel_n2h_txdma1_write_barco_req(pc, rsvd, cosA, cosB,
     DMA_COMMAND_PHV2MEM_FILL(brq_req_write, ipsec_to_stage3.barco_req_addr, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_START, IPSEC_TXDMA1_BARCO_REQ_PHV_OFFSET_END, 0, 0, 0, 0) 
     modify_field(p4_txdma_intr.dma_cmd_ptr, TXDMA1_DMA_COMMANDS_OFFSET);
    
-    //modify_field(ipsec_int_header.l4_protocol, l4_protocol);
-    //modify_field(ipsec_int_header.pad_size, pad_size);
 
     // RING Barco-doorbell
     modify_field(p4plus2p4_hdr.table0_valid, 1);
@@ -266,7 +264,8 @@ action esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header(in_desc, out_desc,
                                                    tailroom, headroom_offset,
                                                    tailroom_offset,
                                                    payload_start, buf_size,
-                                                   payload_size, l4_protocol, pad_size)
+                                                   payload_size, l4_protocol, pad_size, 
+                                                   spi, ipsec_int_pad, status_addr)
 {
     IPSEC_INT_HDR_SCRATCH
     IPSEC_TXDMA1_TO_STAGE2_INIT
