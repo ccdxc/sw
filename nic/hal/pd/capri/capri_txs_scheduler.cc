@@ -39,9 +39,11 @@ capri_txs_scheduler_init ()
     txs_sched_hbm_base_addr = (uint64_t) get_start_offset(CAPRI_HBM_REG_TXS_SCHEDULER);
 
     // Update HBM base addr.  
+    txs_csr.cfw_scheduler_static.read();
     txs_csr.cfw_scheduler_static.hbm_base(txs_sched_hbm_base_addr);
 
     // Init txs hbm/sram.
+    txs_csr.cfw_scheduler_glb.read();
     txs_csr.cfw_scheduler_glb.hbm_hw_init(1);
     txs_csr.cfw_scheduler_glb.sram_hw_init(1);
 
@@ -50,6 +52,7 @@ capri_txs_scheduler_init ()
 
     // Init scheduler calendar with equal weights for all cos.
     for (int i = 0; i < DTDM_CALENDAR_SIZE ; i++) {
+        txs_csr.dhs_dtdmlo_calendar.entry[i].read();
         txs_csr.dhs_dtdmlo_calendar.entry[i].dtdm_calendar(i % 16);
         txs_csr.dhs_dtdmhi_calendar.entry[i].dtdm_calendar(i % 16);
         txs_csr.dhs_dtdmlo_calendar.entry[i].write();
@@ -59,6 +62,7 @@ capri_txs_scheduler_init ()
     // Init all cos to be part of lo-calendar (DWRR with equal weights).
     dtdm_lo_map = 0xffff;
     dtdm_hi_map = 0;
+    txs_csr.cfg_sch.read();
     txs_csr.cfg_sch.dtdm_lo_map(dtdm_lo_map);
     txs_csr.cfg_sch.dtdm_hi_map(dtdm_hi_map);
     txs_csr.cfg_sch.timeout(0);
@@ -92,6 +96,7 @@ capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, txs_sched_lif_params_t
     }
 
     //Program mapping from (lif,queue,cos) to scheduler table entries.
+    txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].read();
     txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].sg_start(txs_hw_params->sched_table_offset);
     txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].sg_per_cos(txs_hw_params->num_entries_per_cos);
     txs_csr.dhs_sch_lif_map_sram.entry[hw_lif_id].sg_act_cos(lif_cos_bmp);
@@ -110,6 +115,7 @@ capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, txs_sched_lif_params_t
             //Program all entries for this cos.
             for (j = 0; j < txs_hw_params->num_entries_per_cos; j++) {
                 table_offset = txs_hw_params->sched_table_offset + lif_cos_index + j;
+                txs_csr.dhs_sch_grp_entry.entry[table_offset].read();
                 txs_csr.dhs_sch_grp_entry.entry[table_offset].lif(hw_lif_id);
                 txs_csr.dhs_sch_grp_entry.entry[table_offset].qid_offset(j);
                 txs_csr.dhs_sch_grp_entry.entry[table_offset].rr_sel(i);
