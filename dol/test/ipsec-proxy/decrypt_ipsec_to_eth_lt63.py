@@ -125,6 +125,7 @@ def TestCaseVerify(tc):
         print("last_replay_seq_no: %d" % (ipseccb_cur.last_replay_seq_no))
         #return False
     if (ipseccb_cur.seq_no_bmp != 0x800000000):
+        print("seq_no_bmp failure")
         return False
     # 3. Fetch current values from Platform
     rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
@@ -143,19 +144,19 @@ def TestCaseVerify(tc):
     print("pre-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
     brq_cur.Configure()
     print("post-sync: brq_cur.pi %d brq_cur.ci %d" % (brq_cur.pi, brq_cur.ci))
-    if (brq_cur.pi != (brq.pi)):
+    if (brq_cur.pi != (brq.pi+1)):
         print("brq pi/ci not as expected")
         #needs fix in HAL and support in model/p4+ for this check to work/pass
         return False
 
     # 8. Verify PI for TNMDR got incremented by 1
-    if (tnmdr_cur.pi != tnmdr.pi):
+    if (tnmdr_cur.pi != tnmdr.pi+1):
         print("TNMDR pi check failed old %d new %d" % (tnmdr.pi, tnmdr_cur.pi))
         return False
     print("Old TNMDR PI: %d, New TNMDR PI: %d" % (tnmdr.pi, tnmdr_cur.pi))
 
     # 9. Verify PI for TNMPR got incremented by 1
-    if (tnmpr_cur.pi != tnmpr.pi):
+    if (tnmpr_cur.pi != tnmpr.pi+1):
         print("TNMPR pi check failed old %d new %d" % (tnmpr.pi, tnmpr_cur.pi))
         return False
     print("Old TNMPR PI: %d, New TNMPR PI: %d" % (tnmpr.pi, tnmpr_cur.pi))

@@ -7,11 +7,8 @@ struct common_p4plus_stage0_app_header_table_k k;
 struct phv_ p;
 
 %%
-        .param          esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore
-        .param          esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore
-        .param          esp_ipv4_tunnel_n2h_allocate_input_page_semaphore
-        .param          esp_ipv4_tunnel_n2h_allocate_output_page_semaphore
-        .align 
+.param ipsec_esp_v4_tunnel_n2h_good_pkt 
+.align
 esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
     seq c1, d.is_v6, 1
@@ -60,9 +57,11 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
 
     // seq-no logic
+    seq c4, k.p42p4plus_hdr_seq_no, d.expected_seq_no
+    bcf [c4], ipsec_esp_v4_tunnel_n2h_exp_seqno_eq_pak_seq_no
     slt c1, k.p42p4plus_hdr_seq_no, d.expected_seq_no
     bcf [c1], ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno
-    sub r1, d.expected_seq_no, k.p42p4plus_hdr_seq_no
+    sub r1, k.p42p4plus_hdr_seq_no, d.expected_seq_no
     addi r2, r0, IPSEC_WIN_REPLAY_MAX_DIFF
     slt c2, r2, r1 
     bcf [c2], ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed
@@ -72,51 +71,44 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     or r3, r3, d.replay_seq_no_bmp 
     tblwr  d.replay_seq_no_bmp, r3
     nop
+    j ipsec_esp_v4_tunnel_n2h_good_pkt
+    nop
 
+.align 
+ipsec_esp_v4_tunnel_n2h_exp_seqno_eq_pak_seq_no:
     add r1, r0, k.p42p4plus_hdr_seq_no
+    tblwr d.last_replay_seq_no, r1
+    nop
     addi r1, r1, 1
     tblwr d.expected_seq_no, r1 
     nop
-
-    phvwri p.app_header_table0_valid, 1
-    phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore[33:6] 
-    phvwri p.common_te0_phv_table_raw_table_size, 3
-    phvwri p.common_te0_phv_table_lock_en, 0
-    phvwri p.common_te0_phv_table_addr, INDESC_SEMAPHORE_ADDR
-
-    phvwri p.app_header_table1_valid, 1
-    phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore[33:6] 
-    phvwri p.common_te1_phv_table_raw_table_size, 3
-    phvwri p.common_te1_phv_table_lock_en, 0
-    phvwri p.common_te1_phv_table_addr, OUTDESC_SEMAPHORE_ADDR
-  
-    phvwri p.app_header_table2_valid, 1
-    phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_input_page_semaphore[33:6] 
-    phvwri p.common_te2_phv_table_raw_table_size, 3
-    phvwri p.common_te2_phv_table_lock_en, 0
-    phvwri p.common_te2_phv_table_addr, INPAGE_SEMAPHORE_ADDR
-
-    phvwri p.app_header_table3_valid, 1
-    phvwri p.common_te3_phv_table_pc, esp_ipv4_tunnel_n2h_allocate_output_page_semaphore[33:6] 
-    phvwri p.common_te3_phv_table_raw_table_size, 3
-    phvwri p.common_te3_phv_table_lock_en, 0
-    phvwri p.common_te3_phv_table_addr, OUTPAGE_SEMAPHORE_ADDR
-    nop.e
+    sllv r3, d.replay_seq_no_bmp, 1
+    tblwr d.replay_seq_no_bmp, r3
     nop
- 
+    j ipsec_esp_v4_tunnel_n2h_good_pkt
+    nop
+
+.align 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_lt_pak_seqno_diff_more_than_max_allowed:
-    and r3, k.p42p4plus_hdr_seq_no, 0x3F 
-    sllv r4, 1, r3 
-    or  r5, r4, d.replay_seq_no_bmp
-    tblwr d.replay_seq_no_bmp, r5
+    sub r3, r2, r1
+    add r4, r0, d.expected_seq_no
+    add r4, r4, r3
+    tblwr d.expected_seq_no, r4
     nop
     tblwr d.last_replay_seq_no, k.p42p4plus_hdr_seq_no
     nop
+    add r5, r0, d.replay_seq_no_bmp
+    sllv r6, r5, r3
+    sllv r7, 1, r3
+    or r6, r6, r7
+    tblwr d.replay_seq_no_bmp, r6
     nop.e
     nop
+ 
 
+.align 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
-    sub r1, k.p42p4plus_hdr_seq_no, d.expected_seq_no
+    sub r1, d.expected_seq_no, k.p42p4plus_hdr_seq_no
     slt c1, r1, IPSEC_WIN_REPLAY_MAX_DIFF 
     bcf [c1], ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz
     nop
@@ -130,6 +122,7 @@ ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno:
     nop.e
     nop
 
+.align 
 ipsec_esp_v4_tunnel_n2h_exp_seqno_gt_pak_seqno_diff_gt_win_sz:
     addi r7, r0, 1
     tblwr d.replay_seq_no_bmp, r7 

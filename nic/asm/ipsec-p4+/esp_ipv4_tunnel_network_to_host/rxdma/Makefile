@@ -19,6 +19,7 @@ CAPSIM_BIN = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
 
 SRC_FILES := \
     esp_ipv4_tunnel_n2h_rxdma_initial_table.s \
+    esp_ipv4_tunnel_n2h_good_pkt.s \
     esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore.s \
     esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore.s \
     esp_ipv4_tunnel_n2h_allocate_input_page_semaphore.s \
