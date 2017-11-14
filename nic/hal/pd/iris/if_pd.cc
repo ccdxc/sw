@@ -335,7 +335,7 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
         case intf::IF_TYPE_UPLINK:
         case intf::IF_TYPE_UPLINK_PC: {
             HAL_TRACE_DEBUG("Replication to Uplink: lport: {}", data->lport);
-            switch (pi_l2seg->fabric_encap.type) {
+            switch (pi_l2seg->wire_encap.type) {
                 case types::encapType ::ENCAP_TYPE_NONE:
                 case types::encapType ::ENCAP_TYPE_DOT1Q: {
 
@@ -380,7 +380,7 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
                         return ret;
                     }
 
-                    data->qid_or_vnid = l2seg_get_fab_encap_val(pi_l2seg);
+                    data->qid_or_vnid = l2seg_get_wire_encap_val(pi_l2seg);
                     data->rewrite_index = g_hal_state_pd->rwr_tbl_decap_vlan_idx();
                     data->tunnel_rewrite_index = tnnl_rw_idx;
                     data->is_tunnel = 1;

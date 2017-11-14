@@ -13,7 +13,7 @@ LCXXFLAGS = \
 include $(TOPDIR)/make/Makefile.inc
 
 # Adding more clean files
-LCLEANFILES = $(OBJ_DIR)/*.pb.o $(OBJ_DIR)/*.pb.d $(GEN_DIR)/*.pb.* $(GEN_DIR)/*.pb-c.* $(GEN_DIR)/*.py $(GEN_DIR)/*_proto $(GEN_DIR) 
+LCLEANFILES = $(OBJ_DIR)/*.pb.o $(OBJ_DIR)/*.pb.d $(OBJ_DIR)/libhalproto.so $(GEN_DIR)/*.pb.* $(GEN_DIR)/*.pb-c.* $(GEN_DIR)/*.py $(GEN_DIR)/*_proto $(GEN_DIR) 
 
 PROTOC = protoc
 C_PROTOC = protoc-c

@@ -27,21 +27,21 @@ l2seg_get_l2seg_id(l2seg_t *seg)
 }
 
 // ----------------------------------------------------------------------------
-// Returns access encap type
+// Returns tunnel encap type
 // ----------------------------------------------------------------------------
 types::encapType 
-l2seg_get_acc_encap_type(l2seg_t *seg)
+l2seg_get_tunnel_encap_type(l2seg_t *seg)
 {
-    return seg->access_encap.type;
+    return seg->tunnel_encap.type;
 }
 
 // ----------------------------------------------------------------------------
-// Returns access encap value
+// Returns tunnel encap value
 // ----------------------------------------------------------------------------
 uint32_t 
-l2seg_get_acc_encap_val(l2seg_t *seg)
+l2seg_get_tunnel_encap_val(l2seg_t *seg)
 {
-    return seg->access_encap.val;
+    return seg->tunnel_encap.val;
 }
 
 // ----------------------------------------------------------------------------
@@ -54,21 +54,21 @@ l2seg_get_pinned_uplink(l2seg_t *seg)
 }
 
 // ----------------------------------------------------------------------------
-// Returns fabric encap type
+// Returns wire encap type
 // ----------------------------------------------------------------------------
 types::encapType 
-l2seg_get_fab_encap_type(l2seg_t *seg)
+l2seg_get_wire_encap_type(l2seg_t *seg)
 {
-    return seg->fabric_encap.type;
+    return seg->wire_encap.type;
 }
 
 // ----------------------------------------------------------------------------
-// Returns fabric encap value
+// Returns wire encap value
 // ----------------------------------------------------------------------------
 uint32_t 
-l2seg_get_fab_encap_val(l2seg_t *seg)
+l2seg_get_wire_encap_val(l2seg_t *seg)
 {
-    return seg->fabric_encap.val;
+    return seg->wire_encap.val;
 }
 
 // ----------------------------------------------------------------------------

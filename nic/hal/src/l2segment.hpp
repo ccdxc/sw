@@ -40,8 +40,8 @@ typedef struct l2seg_s {
     // vrf_id_t           vrf_id;               // vrf this L2 segment belongs to
     l2seg_id_t            seg_id;                  // L2 segment id
     L2SegmentType         segment_type;            // type of L2 segment
-    encap_t               access_encap;            // encap within the host
-    encap_t               fabric_encap;            // encap on the wire
+    encap_t               wire_encap;              // wire encap
+    encap_t               tunnel_encap;            // tunnel encap
     MulticastFwdPolicy    mcast_fwd_policy;        // multicast policy
     BroadcastFwdPolicy    bcast_fwd_policy;        // broadcast policy
     ip_addr_t             gipo;                    // gipo for vxlan 
@@ -203,9 +203,9 @@ find_l2seg_by_handle (hal_handle_t handle)
 }
 
 static inline bool
-is_l2seg_fabric_encap_vxlan (l2seg_t *l2seg)
+is_l2seg_wire_encap_vxlan (l2seg_t *l2seg)
 {
-    return (l2seg->fabric_encap.type == types::ENCAP_TYPE_VXLAN);
+    return (l2seg->wire_encap.type == types::ENCAP_TYPE_VXLAN);
 }
 
 extern void *l2seg_id_get_key_func(void *entry);

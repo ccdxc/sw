@@ -188,8 +188,8 @@ TEST_F(vrf_test, test2)
     l2seg_spec.mutable_meta()->set_vrf_id(2);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(21);
-    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
-    l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close();
@@ -302,8 +302,8 @@ TEST_F(vrf_test, test3)
     l2seg_spec.mutable_meta()->set_vrf_id(3);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(31);
-    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
-    l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close();
@@ -408,8 +408,8 @@ TEST_F(vrf_test, test4)
     l2seg_spec.mutable_meta()->set_vrf_id(4);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(41);
-    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
-    l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close();
@@ -519,8 +519,8 @@ TEST_F(vrf_test, test5)
     l2seg_spec.mutable_meta()->set_vrf_id(5);
     l2seg_spec.add_network_handle(nw_hdl);
     l2seg_spec.mutable_key_or_handle()->set_segment_id(51);
-    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
-    l2seg_spec.mutable_fabric_encap()->set_encap_value(10);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close();
@@ -730,12 +730,12 @@ TEST_F(vrf_test, test8)
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_vrf_id(8);
     l2seg_spec.add_network_handle(nw_hdl);
-    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
 
     for (int i = 0; i < 10; i++) {
         // Creating 10 l2segs
         l2seg_spec.mutable_key_or_handle()->set_segment_id(80 + i);
-        l2seg_spec.mutable_fabric_encap()->set_encap_value(10 + i);
+        l2seg_spec.mutable_wire_encap()->set_encap_value(10 + i);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
         hal::hal_cfg_db_close();
@@ -881,11 +881,11 @@ TEST_F(vrf_test, test9)
     // Create L2 Segment
     l2seg_spec.mutable_meta()->set_vrf_id(9);
     l2seg_spec.add_network_handle(nw_hdl);
-    l2seg_spec.mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     for (int i = 0; i < 10; i++) {
         // Creating 10 l2segs
         l2seg_spec.mutable_key_or_handle()->set_segment_id(90 + i);
-        l2seg_spec.mutable_fabric_encap()->set_encap_value(10 + i);
+        l2seg_spec.mutable_wire_encap()->set_encap_value(10 + i);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
         hal::hal_cfg_db_close();

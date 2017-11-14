@@ -54,11 +54,20 @@ message EndpointKeyHandle {
   }
 }
 
+enum EndpointVMotionState {
+    VMOTION_STATE_NONE     = 0; // No VMotion State
+    VMOTION_STATE_START    = 1; // VMotion Start
+    VMOTION_STATE_SETUP    = 2; // VMotion Setup
+    VMOTION_STATE_ACTIVATE = 3; // VMotion Activate
+    VMOTION_END            = 4; // VMotion End
+}
+
 message EndpointAttributes {
     fixed64                     interface_handle     = 1;    // interface endpoint is reachable on
     uint32                      useg_vlan            = 2;    // microseg vlan assigned to this EP
     repeated types.IPAddress    ip_address           = 3;    // IP address(es) of endpoint
     repeated uint64             sg_handle            = 4;    // list of security group handles
+    EndpointVMotionState        vmotion_state        = 5;    // Vmotion state
 }
 
 

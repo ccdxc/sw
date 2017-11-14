@@ -34,6 +34,8 @@ using endpoint::EndpointDeleteRequest;
 using endpoint::EndpointDeleteResponseMsg;
 
 using hal::utils::ht_ctxt_t;
+using endpoint::EndpointVMotionState;
+using namespace endpoint;
 
 namespace hal {
 
@@ -88,11 +90,11 @@ typedef struct ep_s {
     hal_handle_t         if_handle;            // interface endpoint is attached to
     hal_handle_t         gre_if_handle;        // Set if there is a GRE tunnel destined to this EP.
     hal_handle_t         pinned_if_handle;     // interface endpoint is attached to
-    hal_handle_t         vrf_handle;        // vrf handle 
-    // vrf_id_t          vrf_id;            // VRF this endpoint belongs to
+    hal_handle_t         vrf_handle;            // vrf handle 
     vlan_id_t            useg_vlan;            // micro-seg vlan allocated for this endpoint
     uint64_t             ep_flags;             // endpoint flags
     ep_sginfo_t          sgs;                  // Holds the security group ids
+    EndpointVMotionState vmotion_state;        // Vmotion state
     dllist_ctxt_t        ip_list_head;         // list of IP addresses for this endpoint
 
     // operational state of endpoint
@@ -125,18 +127,20 @@ typedef struct ep_l3_entry_s {
 
 // CB data structures
 typedef struct ep_create_app_ctxt_s {
-    vrf_t        *vrf;
+    vrf_t           *vrf;
     l2seg_t         *l2seg;
     if_t            *hal_if;
 } __PACK__ ep_create_app_ctxt_t;
 
 typedef struct ep_update_app_ctxt_s {
-    bool            iplist_change;
-    bool            if_change;
+    uint64_t                iplist_change:1;
+    uint64_t                if_change:1;
+    uint64_t                vmotion_state_change:1;
 
-    dllist_ctxt_t   *add_iplist;
-    dllist_ctxt_t   *del_iplist;
-    hal_handle_t    new_if_handle;    
+    dllist_ctxt_t           *add_iplist;
+    dllist_ctxt_t           *del_iplist;
+    hal_handle_t            new_if_handle;    
+    EndpointVMotionState    new_vmotion_state;
 } __PACK__ ep_update_app_ctxt_t;
 
 const char *ep_l2_key_to_str(ep_t *ep);

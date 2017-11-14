@@ -160,12 +160,14 @@ typedef struct pd_ep_args_s {
 } __PACK__ pd_ep_args_t;
 
 typedef struct pd_ep_upd_args_s {
-    ep_t            *ep;
+    ep_t                    *ep;
 
-    // IP list change attrs
-    bool            iplist_change;
-    dllist_ctxt_t   *add_iplist;
-    dllist_ctxt_t   *del_iplist;
+    // IP list change attrs, deprecate and take from app_ctxt
+    bool                    iplist_change;
+    dllist_ctxt_t           *add_iplist;
+    dllist_ctxt_t           *del_iplist;
+
+    ep_update_app_ctxt_t    *app_ctxt;
 
     // X change attrs
 } pd_ep_upd_args_t;

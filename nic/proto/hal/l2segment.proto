@@ -48,8 +48,10 @@ message L2SegmentSpec {
   types.L2SegmentType    segment_type               = 4;    // L2 segment type
   MulticastFwdPolicy     mcast_fwd_policy           = 5;    // multicast forwarding policy
   BroadcastFwdPolicy     bcast_fwd_policy           = 6;    // broadcast forwarding policy
-  types.EncapInfo        access_encap               = 7;    // wire encap for workload
-  types.EncapInfo        fabric_encap               = 8;    // wire encap on uplink(s)
+  // types.EncapInfo        access_encap               = 7;    // deprecate: wire encap for workload
+  // types.EncapInfo        fabric_encap               = 8;    // deprecate: wire encap on uplink(s)
+  types.EncapInfo        wire_encap                 = 7;    // wire encap
+  types.EncapInfo        tunnel_encap               = 8;    // tunnel encap
   types.IPAddress        gipo                       = 9;    // gipo for mcast vxlan traffic
   fixed64                pinned_uplink              = 10;   // The pinned uplink
 }

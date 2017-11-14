@@ -149,9 +149,9 @@ validate_l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
         return HAL_RET_INVALID_ARG;
     }
 
-    // must have either access and/or fabric encap set
-    if (!spec.has_access_encap() && !spec.has_fabric_encap()) {
-        HAL_TRACE_ERR("pi-l2seg:{}:no access or fabric encap",
+    // must have wire encap
+    if (!spec.has_wire_encap()) {
+        HAL_TRACE_ERR("pi-l2seg:{}:should have a wire encap",
                       __FUNCTION__);
         rsp->set_api_status(types::API_STATUS_ENCAP_INVALID);
         return HAL_RET_INVALID_ARG;
@@ -504,19 +504,19 @@ l2segment_create (L2SegmentSpec& spec, L2SegmentResponse *rsp)
     l2seg->mcast_fwd_policy = spec.mcast_fwd_policy();
     l2seg->bcast_fwd_policy = spec.bcast_fwd_policy();
     ip_addr_spec_to_ip_addr(&l2seg->gipo, spec.gipo());
-    if (spec.has_access_encap()) {
-        l2seg->access_encap.type = spec.access_encap().encap_type();
-        l2seg->access_encap.val = spec.access_encap().encap_value();
-        HAL_TRACE_ERR("pi-l2seg:{}:access enc_type:{} enc_val:{}",
-                __FUNCTION__, l2seg->access_encap.type, 
-                l2seg->access_encap.val);
+    if (spec.has_wire_encap()) {
+        l2seg->wire_encap.type = spec.wire_encap().encap_type();
+        l2seg->wire_encap.val = spec.wire_encap().encap_value();
+        HAL_TRACE_ERR("pi-l2seg:{}:wire enc_type:{} enc_val:{}",
+                __FUNCTION__, l2seg->wire_encap.type, 
+                l2seg->wire_encap.val);
     }
-    if (spec.has_fabric_encap()) {
-        l2seg->fabric_encap.type = spec.fabric_encap().encap_type();
-        l2seg->fabric_encap.val = spec.fabric_encap().encap_value();
-        HAL_TRACE_ERR("pi-l2seg:{}:fabric enc_type:{} enc_val:{}",
-                __FUNCTION__, l2seg->fabric_encap.type, 
-                l2seg->fabric_encap.val);
+    if (spec.has_tunnel_encap()) {
+        l2seg->tunnel_encap.type = spec.tunnel_encap().encap_type();
+        l2seg->tunnel_encap.val = spec.tunnel_encap().encap_value();
+        HAL_TRACE_ERR("pi-l2seg:{}:tunnel enc_type:{} enc_val:{}",
+                __FUNCTION__, l2seg->tunnel_encap.type, 
+                l2seg->tunnel_encap.val);
     }
 
     ret = l2seg_read_networks(l2seg, spec);
@@ -1443,10 +1443,10 @@ l2segment_get (L2SegmentGetRequest& req, L2SegmentGetResponse *rsp)
     rsp->mutable_spec()->set_segment_type(l2seg->segment_type);
     rsp->mutable_spec()->set_mcast_fwd_policy(l2seg->mcast_fwd_policy);
     rsp->mutable_spec()->set_bcast_fwd_policy(l2seg->bcast_fwd_policy);
-    rsp->mutable_spec()->mutable_access_encap()->set_encap_type(l2seg->access_encap.type);
-    rsp->mutable_spec()->mutable_access_encap()->set_encap_value(l2seg->access_encap.val);
-    rsp->mutable_spec()->mutable_fabric_encap()->set_encap_type(l2seg->fabric_encap.type);
-    rsp->mutable_spec()->mutable_fabric_encap()->set_encap_value(l2seg->fabric_encap.val);
+    rsp->mutable_spec()->mutable_wire_encap()->set_encap_type(l2seg->wire_encap.type);
+    rsp->mutable_spec()->mutable_wire_encap()->set_encap_value(l2seg->wire_encap.val);
+    rsp->mutable_spec()->mutable_tunnel_encap()->set_encap_type(l2seg->tunnel_encap.type);
+    rsp->mutable_spec()->mutable_tunnel_encap()->set_encap_value(l2seg->tunnel_encap.val);
 
     lnode = l2seg->nw_list_head.next;
     dllist_for_each(lnode, &(l2seg->nw_list_head)) {

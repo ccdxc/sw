@@ -206,6 +206,7 @@ gft-build:
 	bazel build --copt=-DGFT hal/test/gtests:gft_test
 
 clean:
+	bazel clean
 	$(MAKE) -C p4 clean
 	$(MAKE) -C asm clean
 	$(MAKE) -C proto clean

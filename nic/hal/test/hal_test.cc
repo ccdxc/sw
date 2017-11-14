@@ -345,8 +345,8 @@ public:
         spec = req_msg.add_request();
         spec->mutable_meta()->set_vrf_id(vrf_id);
         spec->mutable_key_or_handle()->set_segment_id(l2segment_id);
-        spec->mutable_access_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
-        spec->mutable_access_encap()->set_encap_value(100);
+        spec->mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+        spec->mutable_wire_encap()->set_encap_value(100);
 
         status = l2seg_stub_->L2SegmentCreate(&context, req_msg, &rsp_msg);
         if (status.ok()) {

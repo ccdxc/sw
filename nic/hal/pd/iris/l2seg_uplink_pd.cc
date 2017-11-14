@@ -132,16 +132,16 @@ l2seg_uplink_pgm_input_properties_tbl(pd_l2seg_uplink_args_t *args, nwsec_profil
     key.entry_inactive_input_properties = 0;
     if (!is_native) {
         // Install one entry
-        enc_type = l2seg_get_fab_encap_type(args->l2seg);
+        enc_type = l2seg_get_wire_encap_type(args->l2seg);
         if (enc_type == types::ENCAP_TYPE_DOT1Q) {
             key.vlan_tag_valid = 1;
-            key.vlan_tag_vid = l2seg_get_fab_encap_val(args->l2seg);
+            key.vlan_tag_vid = l2seg_get_wire_encap_val(args->l2seg);
         } else if (enc_type == types::ENCAP_TYPE_VXLAN) {
             infra_pi_l2seg = hal::l2seg_get_infra_l2seg();
             if_l2seg_get_encap(args->intf, infra_pi_l2seg, &key.vlan_tag_valid, &key.vlan_tag_vid);
             // TODO: If infra is native on this uplink, do we have to install two entries ? 
             key.tunnel_metadata_tunnel_type = INGRESS_TUNNEL_TYPE_VXLAN;
-            key.tunnel_metadata_tunnel_vni = l2seg_get_fab_encap_val(args->l2seg);
+            key.tunnel_metadata_tunnel_vni = l2seg_get_wire_encap_val(args->l2seg);
             HAL_TRACE_DEBUG("pd-add-l2seg-upif/pc::{}: encap_type vxlan tunnel_vni: {}",
                             __FUNCTION__, key.tunnel_metadata_tunnel_vni);
             /* No IPSG check for packets coming in on tunnel interfaces */
@@ -317,7 +317,7 @@ l2seg_uplink_inp_prop_form_data (pd_l2seg_uplink_args_t *args,
     }
 
     if (!is_native) {
-        enc_type = l2seg_get_fab_encap_type(args->l2seg);
+        enc_type = l2seg_get_wire_encap_type(args->l2seg);
         if (enc_type == types::ENCAP_TYPE_VXLAN) {
             /* No IPSG check for packets coming in on tunnel interfaces */
             inp_prop.ipsg_enable = FALSE;

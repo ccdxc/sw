@@ -364,9 +364,9 @@ if_l2seg_get_encap_vlan(if_t *pi_if, l2seg_t *pi_l2seg)
             break;
         case intf::IF_TYPE_UPLINK:
         case intf::IF_TYPE_UPLINK_PC:
-            // Get fabric encap from l2seg
-            if (pi_l2seg->fabric_encap.type == types::ENCAP_TYPE_DOT1Q) {
-                return pi_l2seg->fabric_encap.val;
+            // Get wire encap from l2seg
+            if (pi_l2seg->wire_encap.type == types::ENCAP_TYPE_DOT1Q) {
+                return pi_l2seg->wire_encap.val;
             } else {
                 // TODO: Handle if its VXLAN
             }

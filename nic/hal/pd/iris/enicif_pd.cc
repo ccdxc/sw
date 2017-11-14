@@ -670,7 +670,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif, l2seg_t *l2seg,
     key.capri_intrinsic_lif = if_get_hw_lif_id(hal_if);
     if (!is_l2seg_native_on_enicif_classic(hal_if, l2seg)) {
         key.vlan_tag_valid = 1;
-        key.vlan_tag_vid = l2seg_get_fab_encap_val(l2seg);
+        key.vlan_tag_vid = l2seg_get_wire_encap_val(l2seg);
     }
 
     // Data
@@ -1006,16 +1006,16 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif, nwsec_profile_t *nws
     
 
     pi_l2seg = if_enicif_get_pi_l2seg((if_t*)pd_enicif->pi_if);
-    enc_type = l2seg_get_fab_encap_type((l2seg_t*)pi_l2seg);
+    enc_type = l2seg_get_wire_encap_type((l2seg_t*)pi_l2seg);
     // Direction bit: Handles Encap Vlan vs User Vlan conflicts
     key.control_metadata_uplink = 1;
     mask.control_metadata_uplink_mask = ~(mask.control_metadata_uplink_mask & 0);
     if (enc_type == types::ENCAP_TYPE_DOT1Q) {
         key.vlan_tag_valid = 1;
-        key.vlan_tag_vid = l2seg_get_fab_encap_val((l2seg_t *)pi_l2seg);
+        key.vlan_tag_vid = l2seg_get_wire_encap_val((l2seg_t *)pi_l2seg);
     } else {
-        // TODO: What if fab encap is Tunnel ...
-        HAL_TRACE_ERR("pd-enicif:{}: FabEncap = VXLAN - NOT IMPLEMENTED",
+        // TODO: What if wire encap is Tunnel ...
+        HAL_TRACE_ERR("pd-enicif:{}: WireEncap = VXLAN - NOT IMPLEMENTED",
                       __FUNCTION__);
         return HAL_RET_OK;
     }

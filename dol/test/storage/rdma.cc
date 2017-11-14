@@ -147,8 +147,8 @@ int CreateL2Segment(uint32_t ten_id, uint32_t l2_seg_id, uint64_t *handle) {
   auto req = req_msg.add_request();
   req->mutable_meta()->set_vrf_id(ten_id);
   req->mutable_key_or_handle()->set_segment_id(l2_seg_id);
-  req->mutable_fabric_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
-  req->mutable_fabric_encap()->set_encap_value(kDot1QEncapVal);
+  req->mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+  req->mutable_wire_encap()->set_encap_value(kDot1QEncapVal);
 
   auto status = l2segment_stub->L2SegmentCreate(&context, req_msg, &resp_msg);
   if (!status.ok()) return -1;

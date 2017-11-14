@@ -22,9 +22,9 @@ update_tunnel_info(fte::ctx_t&ctx)
     HEADER_SET_FLD(flowupd.header_push, ipv4, sip, ipv4_addr_t{});
     HEADER_SET_FLD(flowupd.header_push, ipv4, dip, ipv4_addr_t{});
     
-    switch (ctx.dl2seg()->fabric_encap.type) {
+    switch (ctx.dl2seg()->wire_encap.type) {
     case types::encapType::ENCAP_TYPE_VXLAN:
-        HEADER_SET_FLD(flowupd.header_push, vxlan, vrf_id, ctx.dl2seg()->fabric_encap.val);
+        HEADER_SET_FLD(flowupd.header_push, vxlan, vrf_id, ctx.dl2seg()->wire_encap.val);
         break;
     default:
         return HAL_RET_INVALID_ARG;

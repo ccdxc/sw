@@ -742,7 +742,7 @@ end:
 // validate an incoming endpoint update request
 //------------------------------------------------------------------------------
 static hal_ret_t
-validate_endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
+validate_endpoint_update_spec (EndpointUpdateRequest& req, EndpointResponse *rsp)
 {
     hal_ret_t       ret = HAL_RET_OK;
 
@@ -830,6 +830,7 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_ep_args.iplist_change = app_ctxt->iplist_change;
     pd_ep_args.add_iplist = app_ctxt->add_iplist;
     pd_ep_args.del_iplist = app_ctxt->del_iplist;
+    pd_ep_args.app_ctxt = app_ctxt;
     ret = pd::pd_ep_update(&pd_ep_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("pi-ep:{}:failed to update ep pd, err : {}",
@@ -1047,19 +1048,126 @@ fetch_endpoint(vrf_id_t tid, EndpointKeyHandle kh, ep_t **ep,
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// Validating ep update changes
+//------------------------------------------------------------------------------
+#define EP_VMOTION_STATE_CHECK(old_state, new_state) \
+    (ep->vmotion_state == old_state && app_ctxt->new_vmotion_state == new_state)
 hal_ret_t
-endpoint_if_update(EndpointUpdateRequest& req, ep_t *ep, 
-                   bool *if_change, hal_handle_t *new_if_hdl) 
+endpoint_validate_update_change(ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
 {
-    *if_change = false;
+    hal_ret_t               ret     = HAL_RET_OK;
+    if_t                    *hal_if = NULL;
 
-    if (req.has_endpoint_attrs() && 
-        ep->if_handle != req.endpoint_attrs().interface_handle()) {
-        *if_change = true;
-        *new_if_hdl = req.endpoint_attrs().interface_handle();
+    HAL_ASSERT_RETURN(ep != NULL, HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
+
+
+    if (app_ctxt->vmotion_state_change) {
+        if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_NONE, VMOTION_STATE_START) ||
+            EP_VMOTION_STATE_CHECK(VMOTION_STATE_START, VMOTION_STATE_SETUP) ||
+            EP_VMOTION_STATE_CHECK(VMOTION_STATE_SETUP, VMOTION_STATE_ACTIVATE) ||
+            EP_VMOTION_STATE_CHECK(VMOTION_STATE_ACTIVATE, VMOTION_END)) {
+            HAL_TRACE_DEBUG("pi-ep:{}:Vmotion state change: {} => {}",
+                            __FUNCTION__, ep->vmotion_state, 
+                            app_ctxt->new_vmotion_state);
+        } else {
+            HAL_TRACE_ERR("pi-ep:{}:invalid vmotion state change: {} => {}",
+                          __FUNCTION__, ep->vmotion_state, 
+                          app_ctxt->new_vmotion_state);
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        }
+
+        // Vmotion None => Start
+        if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_NONE, VMOTION_STATE_START)) {
+            // Check if "if" changed to tunnel
+            if (!app_ctxt->if_change) {
+                HAL_TRACE_ERR("pi-ep:{}:invalid update. if has to change", 
+                              __FUNCTION__);
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
+
+            hal_if = find_if_by_handle(app_ctxt->new_if_handle);
+            if (!hal_if) {
+                HAL_TRACE_ERR("pi-ep:{}:invalid update. new if not present new_if_hdl:{}", 
+                              __FUNCTION__, app_ctxt->new_if_handle);
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
+
+            if (hal_if->if_type != intf::IF_TYPE_TUNNEL) {
+                HAL_TRACE_ERR("pi-ep:{}:invalid update. if has to be tunnel "
+                              "if if_hdl:{}, if_type:{}", 
+                              __FUNCTION__, app_ctxt->new_if_handle,
+                              hal_if->if_type);
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
+        }
+
+        // Vmotion Start => Setup, Setup => Activate, Activate => End
+        if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_START, 
+                                   VMOTION_STATE_SETUP) ||
+            EP_VMOTION_STATE_CHECK(VMOTION_STATE_SETUP, 
+                                   VMOTION_STATE_ACTIVATE) ||
+            EP_VMOTION_STATE_CHECK(VMOTION_STATE_ACTIVATE, 
+                                   VMOTION_END)) {
+            // For now, assumption is nothing else changes
+            if (app_ctxt->iplist_change || app_ctxt->if_change) {
+                HAL_TRACE_ERR("pi-ep:{}:invalid update. vmotion update "
+                              "requires nothing else should change"
+                              "iplist_chg:{}, if_change:{}", 
+                              __FUNCTION__, app_ctxt->iplist_change,
+                              app_ctxt->if_change);
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
+        }
     }
 
-    return HAL_RET_OK;
+end:
+    return ret;
+}
+
+
+hal_ret_t
+endpoint_check_update(EndpointUpdateRequest& req, ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+
+    HAL_ASSERT_RETURN(ep != NULL, HAL_RET_INVALID_ARG);
+    HAL_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
+
+    app_ctxt->if_change = false;
+    app_ctxt->vmotion_state_change = false;
+    app_ctxt->new_if_handle = HAL_HANDLE_INVALID;
+
+    if (req.has_endpoint_attrs()) {
+        // Check if if changed
+        if (ep->if_handle != req.endpoint_attrs().interface_handle()) {
+            app_ctxt->if_change = true;
+            app_ctxt->new_if_handle = req.endpoint_attrs().interface_handle();
+        }
+        
+        // Check if vmotion state changed
+        if (ep->vmotion_state != req.endpoint_attrs().vmotion_state()) {
+            app_ctxt->vmotion_state_change = true;
+            app_ctxt->new_vmotion_state = req.endpoint_attrs().vmotion_state();
+        }
+    }
+
+
+    // Validate changes
+    ret = endpoint_validate_update_change(ep, app_ctxt);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("pi-ep:{}:ep update change validation failed", __FUNCTION__);
+        goto end;
+    }
+
+end:
+    return ret;
 }
 
 hal_ret_t
@@ -1350,22 +1458,21 @@ end:
 hal_ret_t
 endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
 {
-    hal_ret_t               ret = HAL_RET_OK;
-    vrf_id_t             tid;
-    ep_t                    *ep = NULL;
-    vrf_t                *vrf = NULL;
+    hal_ret_t               ret           = HAL_RET_OK;
+    vrf_id_t                tid;
+    ep_t                    *ep           = NULL;
+    vrf_t                   *vrf          = NULL;
     ApiStatus               api_status;
-    bool                    if_change = false, l2seg_change = false, 
+    bool                    if_change     = false, l2seg_change = false,
                             iplist_change = false;
-    hal_handle_t            new_if_hdl = 0, new_l2seg_hdl = 0;
-    dllist_ctxt_t           *add_iplist = NULL, *del_iplist = NULL;
-    // pd::pd_ep_upd_args_t    pd_ep_upd_args;
-    cfg_op_ctxt_t           cfg_ctxt = { 0 };
-    dhl_entry_t             dhl_entry = { 0 };
-    ep_update_app_ctxt_t    app_ctxt = { 0 };
+    hal_handle_t            new_if_hdl    = 0, new_l2seg_hdl    = 0;
+    dllist_ctxt_t           *add_iplist   = NULL, *del_iplist   = NULL;
+    cfg_op_ctxt_t           cfg_ctxt      = { 0 };
+    dhl_entry_t             dhl_entry     = { 0 };
+    ep_update_app_ctxt_t    app_ctxt      = { 0 };
 
-    HAL_TRACE_DEBUG("--------------   EP Update API Start  ------------------");
-    ret = validate_endpoint_update(req, rsp);
+    hal_api_trace(" API Begin: EP update");
+    ret = validate_endpoint_update_spec(req, rsp);
     if (ret != HAL_RET_OK) {
         goto end;
     }
@@ -1389,9 +1496,13 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
         goto end;
     }
 
-    // check for if change
-    ret = endpoint_if_update(req, ep, &if_change, &new_if_hdl);
-    HAL_ABORT(ret == HAL_RET_OK);
+    // check for change
+    ret = endpoint_check_update(req, ep, &app_ctxt);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("pi-ep:{}:update change check failed: ret:{}",
+                      __FUNCTION__, ret);
+        goto end;
+    }
 
     // check for l2seg change
     ret = endpoint_l2seg_update(req, ep, &l2seg_change, &new_l2seg_hdl);
@@ -1402,7 +1513,7 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
     HAL_ABORT(ret == HAL_RET_OK);
 
 
-    if (!if_change && !l2seg_change && !iplist_change) {
+    if (!app_ctxt.if_change && !l2seg_change && !iplist_change) {
         HAL_TRACE_ERR("pi-ep:{}:no change in ep update: noop", __FUNCTION__);
         goto end;
     }
@@ -1467,7 +1578,7 @@ end:
     }
 
     ep_prepare_rsp(rsp, ret, ep ? ep->hal_handle : HAL_HANDLE_INVALID);
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    hal_api_trace(" API End: EP update ");
     return ret;
 }
 
