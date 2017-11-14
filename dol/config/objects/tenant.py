@@ -59,6 +59,7 @@ class TenantObject(base.ConfigObjectBase):
             # Process Pinned Uplinks
             self.pinif = getattr(entryspec, 'uplink', None)
             self.pinif = self.pinif.Get(Store)
+            self.classic_enics = None
         self.Show()
 
         # Process LIFs
@@ -93,6 +94,19 @@ class TenantObject(base.ConfigObjectBase):
         self.obj_helper_dosp.Generate(self)
         return
 
+    def SetClassicEnics(self, enics):
+        self.enic_config_done = False
+        self.classic_enics = enics
+        return
+
+    def GetClassicEnics(self):
+        return self.classic_enics
+
+    def GetClassicEnicsForConfig(self):
+        if self.enic_config_done is False:
+            self.enic_config_done = True
+            return self.classic_enics
+        return None
 
     def __copy__(self):
         ten = TenantObject()

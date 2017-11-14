@@ -6,6 +6,7 @@ from infra.common.objects import Ipv6Address
 from infra.common.objects import MacAddressBase
 import infra.api.api as infra_api
 from config.store import Store
+from infra.common.glopts import GlobalOptions as GlobalOptions
 import config.objects.tenant as Tenant
 import config.objects.segment as Segment
 
@@ -88,6 +89,12 @@ def __get_packet_encap_vlan(testcase, cfg):
         if cfg.endpoint.intf.IsUseg() or\
             cfg.endpoint.intf.IsPvlan():
             return __get_template('ENCAP_QTAG')
+
+        if GlobalOptions.classic:
+            if cfg.endpoint.IsNative():
+                return None
+            else:
+                return __get_template('ENCAP_QTAG')
     return None
 
 def __get_packet_encap_vxlan(testcase, cfg):

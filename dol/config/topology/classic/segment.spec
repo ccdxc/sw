@@ -9,5 +9,6 @@ multicast   : flood
 l4lb        : False
 groups      : ref://store/specs/id=MULTICAST_GROUPS_CLASSIC
 endpoints   :
+    enics   : False
     classic : 2
     remote  : 8

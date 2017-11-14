@@ -36,6 +36,10 @@ class EnicObject(base.ConfigObjectBase):
         self.type           = type
         self.l4lb_backend   = l4lb_backend
 
+        self.ep             = None
+        self.lif            = None
+        self.native_segment = None
+        self.segments       = []
         self.pinnedif       = None
         self.macaddr = resmgr.EnicMacAllocator.get()
         self.__pin_interface()
@@ -74,18 +78,26 @@ class EnicObject(base.ConfigObjectBase):
         return
 
     def AttachEndpoint(self, ep):
-        assert(self.ep == None)
-        self.lif = self.tenant.AllocLif()
-        self.lif_id = self.lif.id
-        self.ep = ep
-        self.ep_segment_id = self.ep.segment.id
+        if self.lif is None:
+            self.lif = self.tenant.AllocLif()
+            self.lif_id = self.lif.id
+        
+        if GlobalOptions.classic is False:
+            assert(self.ep == None)
+            self.ep = ep
+        else:
+            if ep.IsNative():
+                self.native_segment = ep.segment
+            else:
+                self.segments.append(ep.segment)
         self.Show()
         return
 
     def Show(self):
         cfglogger.info("Enic = %s(%d)" % (self.GID(), self.id))
         cfglogger.info("- Tenant     = %s" % self.tenant.GID())
-        cfglogger.info("- Ep         = %s" % self.ep.GID())
+        if self.ep is not None:
+            cfglogger.info("- Ep         = %s" % self.ep.GID())
         cfglogger.info("- EnicType   = %s" % self.type)
         cfglogger.info("- EncapVlan  = %d" % self.encap_vlan_id)
         cfglogger.info("- Lif        = %s" % self.lif.GID())
@@ -101,7 +113,8 @@ class EnicObject(base.ConfigObjectBase):
         summary = ''
         summary += '%s' % self.GID()
         summary += '/%s' % self.tenant.GID()
-        summary += '/%s' % self.ep.GID()
+        if self.ep is not None:
+            summary += '/%s' % self.ep.GID()
         summary += '/%s' % self.type
         summary += '/EncVlan:%s' % self.encap_vlan_id
         summary += '/%s' % self.lif.GID()
@@ -126,31 +139,6 @@ class EnicObject(base.ConfigObjectBase):
     def GetRxQosDscp(self):
         return self.rxqos.cos
 
-    def __copy__(self):
-        enic = EnicObject()
-        enic.id = self.id
-        enic.hal_handle = self.hal_handle
-        enic.tenant_id = self.tenant_id
-        enic.lif_id = self.lif_id
-        enic.ep_segment_id = self.ep_segment_id
-        enic.encap_vlan_id = self.encap_vlan_id
-        enic.macaddr = self.macaddr
-        enic.type = self.type
-        return enic
-
-    def Equals(self, other, lgh):
-        if not isinstance(other, self.__class__):
-            return False
-        fields = ["tenant_id", "hal_handle", "lif_id", "ep_segment_id", "encap_vlan_id", "type"]
-        if not self.CompareObjectFields(other, fields, lgh):
-            return False
-
-        if  self.macaddr.getnum() != other.macaddr.getnum():
-            lgh.error("Field mismatch, Field : %s, Expected : %s, Actual : %s"
-                 %("macaddr", self.macaddr.string, other.macaddr.string))
-            return False
-        return True
-
     def IsSegmentMatch(self, segid):
         return self.segment.GID() == segid
 
@@ -167,7 +155,6 @@ class EnicObject(base.ConfigObjectBase):
         return self.type == ENIC_TYPE_CLASSIC
 
     def PrepareHALRequestSpec(self, req_spec):
-        assert(self.ep != None)
         req_spec.meta.vrf_id = self.tenant.id
         req_spec.type           = haldefs.interface.IF_TYPE_ENIC
         req_spec.admin_status   = haldefs.interface.IF_STATUS_UP
@@ -176,12 +163,13 @@ class EnicObject(base.ConfigObjectBase):
         req_spec.if_enic_info.lif_key_or_handle.lif_id = self.lif.id
         if self.IsClassic():
             req_spec.if_enic_info.enic_type = haldefs.interface.IF_ENIC_TYPE_CLASSIC
-            if self.segment.native:
-                req_spec.if_enic_info.classic_enic_info.native_l2segment_handle = self.segment.hal_handle
-            else:
-                req_spec.if_enic_info.classic_enic_info.l2segment_handle.append(self.segment.hal_handle)
+            if self.native_segment is not None:
+                req_spec.if_enic_info.classic_enic_info.native_l2segment_handle = self.native_segment.hal_handle
+            for s in self.segments:
+                req_spec.if_enic_info.classic_enic_info.l2segment_handle.append(s.hal_handle)
             req_spec.if_enic_info.pinned_uplink_if_handle = self.pinnedif.hal_handle
         else:
+            assert(self.ep != None)
             req_spec.if_enic_info.enic_info.mac_address = self.macaddr.getnum()
             req_spec.if_enic_info.enic_info.encap_vlan_id = self.encap_vlan_id
             req_spec.if_enic_info.enic_info.l2segment_id = self.ep.segment.id
@@ -210,32 +198,6 @@ class EnicObject(base.ConfigObjectBase):
                        (self.GID(), haldefs.common.ApiStatus.Name(resp_spec.api_status),\
                         self.hal_handle))
         return
-
-    def PrepareHALGetRequestSpec(self, get_req_spec):
-        get_req_spec.meta.vrf_id = self.tenant.id
-        get_req_spec.key_or_handle.if_handle = self.hal_handle
-        return
-
-    def ProcessHALGetResponse(self, get_req_spec, get_resp):
-        self.tenant_id = get_resp.spec.meta.vrf_id
-        if get_resp.spec.key_or_handle.HasField("interface_id"):
-            self.id = get_resp.spec.key_or_handle.interface_id
-        else:
-            self.hal_handle = get_resp.spec.key_or_handle.if_handle
-
-        if get_resp.spec.type == haldefs.interface.IF_TYPE_ENIC:
-            if get_resp.spec.if_enic_info.enic_type == haldefs.interface.IF_ENIC_TYPE_DIRECT:
-                self.type = ENIC_TYPE_DIRECT
-            elif get_resp.spec.if_enic_info.enic_type == haldefs.interface.IF_ENIC_TYPE_USEG:
-                self.type  = ENIC_TYPE_USEG
-            elif get_resp.spec.if_enic_info.enic_type  == haldefs.interface.IF_ENIC_TYPE_PVLAN:
-                self.type  = ENIC_TYPE_PVLAN
-            else:
-                self.type = None
-        self.lif.id = get_resp.spec.if_enic_info.lif_key_or_handle.lif_id
-        self.macaddr = objects.MacAddressBase(integer=get_resp.spec.if_enic_info.mac_address)
-        self.encap_vlan_id = get_resp.spec.if_enic_info.encap_vlan_id
-        self.ep_segment_id = get_resp.spec.if_enic_info.l2segment_id
 
     def Get(self):
         halapi.GetInterfaces([self])
@@ -306,16 +268,24 @@ class EnicObjectHelper:
     def __gen_classic(self, segment, spec, l4lb_backend = False):
         enics = []
         if GlobalOptions.classic is False: return enics
+
+        enics_per_seg = getattr(spec, 'enics', True)
+        if enics_per_seg is False:
+            if segment.tenant.GetClassicEnics() is not None:
+                return []
+
         num_classic = getattr(spec, 'classic', 0)
         if num_classic == 0: return enics
         cfglogger.info("Creating %d CLASSIC Enics in Segment = %s" %\
                        (spec.classic, segment.GID()))
         enics = self.__create(segment, spec.classic, ENIC_TYPE_CLASSIC)
         Store.objects.SetAll(enics)
-        return enics
-
+        segment.tenant.SetClassicEnics(enics)
+        # For classic NIC, enics are always stored in tenant.
+        return []
 
     def Generate(self, segment, spec):
+        self.segment = segment
         self.direct = self.__gen_direct(segment, spec)
         self.enics += self.direct
         self.useg = self.__gen_useg(segment, spec)
@@ -340,12 +310,18 @@ class EnicObjectHelper:
         return
 
     def Configure(self):
-        cfglogger.info("Configuring %d Enics." % len(self.enics))
-        halapi.ConfigureInterfaces(self.enics)
-        if len(self.backend_enics):
-            cfglogger.info("Configuring %d L4LbBackend Enics." %\
-                           len(self.backend_enics))
-            halapi.ConfigureInterfaces(self.backend_enics)
+        if GlobalOptions.classic:
+            enics = self.segment.tenant.GetClassicEnicsForConfig()
+            if enics is None: return
+            cfglogger.info("Configuring %d Classic Enics." % len(enics))
+            halapi.ConfigureInterfaces(enics)
+        else:
+            cfglogger.info("Configuring %d Enics." % len(self.enics))
+            halapi.ConfigureInterfaces(self.enics)
+            if len(self.backend_enics):
+                cfglogger.info("Configuring %d L4LbBackend Enics." %\
+                               len(self.backend_enics))
+                halapi.ConfigureInterfaces(self.backend_enics)
         return
 
 def GetMatchingObjects(selectors):

@@ -67,6 +67,9 @@ class EndpointObject(base.ConfigObjectBase):
         # EP is remote & segment's fabencap is vxlan
         return self.remote and self.segment.IsFabEncapVxlan()
 
+    def IsNative(self):
+        return self.segment.native
+
     def SetLabel(self, label):
         self.label = label
         return
@@ -424,7 +427,7 @@ class EndpointObjectHelper:
         if GlobalOptions.classic:
             cfglogger.info("Creating %d CLASSIC EPs in Segment = %s" %\
                            (spec.classic, segment.GID()))
-            classic_enics = segment.GetClassicEnics()
+            classic_enics = segment.tenant.GetClassicEnics()
             self.classic = self.__create(segment, classic_enics, spec.classic)
             self.local += self.classic
         return
