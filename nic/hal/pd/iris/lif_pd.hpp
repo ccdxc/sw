@@ -10,9 +10,8 @@ namespace hal {
 namespace pd {
 
 struct pd_lif_s {
-    uint32_t    hw_lif_id;
-    uint32_t    dummy;
-    uint32_t    lif_lport_id;
+    uint32_t    hw_lif_id;                  // Id used to carve out buffers
+    uint32_t    lif_lport_id;               // Index into O/PMapping table
     uint32_t    tx_sched_table_offset;
     uint32_t    tx_sched_num_table_entries; 
 

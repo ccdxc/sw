@@ -375,39 +375,32 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_upd_args_t *args,
                               table_oper_t oper)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    uint8_t                     tm_oport = 0;
     uint8_t                     p4plus_app_id = 0;
     output_mapping_actiondata   data;
     DirectMap                   *dm_omap = NULL;
 
     memset(&data, 0, sizeof(data));
 
+    /*
+     * For Service lifs, 
+     *      hw_lif_id:      passed to PI with hw_lif_if filled.
+     *      lif_lport_id:   internal to P4 and allocated in PD
+     * For Regular lifs,
+     *      hw_lif_id:      allocated in PI
+     *      lif_lport_id:   internal to P4 and allocated in PD
+     */
     if (((lif_t *)pd_lif->pi_lif)->lif_id == SERVICE_LIF_APP_REDIR) {
-        tm_oport = TM_PORT_DMA;
         p4plus_app_id = P4PLUS_APPTYPE_RAW_REDIR;
-        HAL_TRACE_ERR("pd-lif:{}:setting P4PLUS_APPTYPE_RAW_REDIR",
-                      __FUNCTION__);
-    } else if ((((lif_t *)pd_lif->pi_lif)->lif_id != 1001) && 
-        (((lif_t *)pd_lif->pi_lif)->lif_id != 1004)) {
-        tm_oport = TM_PORT_DMA;
-    } else if (((lif_t *)pd_lif->pi_lif)->lif_id == 1001) {
-        tm_oport = 9;
-        p4plus_app_id = 3;
-        HAL_TRACE_ERR("pd-lif:{}:setting tm_port = 9",
-                      __FUNCTION__);
-    } else if (((lif_t *)pd_lif->pi_lif)->lif_id == 1004) {
-        pd_lif->lif_lport_id = 1004;
-        pd_lif->hw_lif_id = 1004;
-        tm_oport = 9;
-        p4plus_app_id = 4;
-        HAL_TRACE_ERR("pd-lif:{}:setting tm_port = 9",
-                      __FUNCTION__);
+    } else if (((lif_t *)pd_lif->pi_lif)->lif_id == SERVICE_LIF_TCP_PROXY) {
+        p4plus_app_id = P4PLUS_APPTYPE_TCPTLS;
+    } else if (((lif_t *)pd_lif->pi_lif)->lif_id == SERVICE_LIF_IPSEC_ESP) {
+        p4plus_app_id = P4PLUS_APPTYPE_IPSEC;
     }
 
     data.actionid = OUTPUT_MAPPING_SET_TM_OPORT_ID;
     om_tmoport.nports = 1;
     om_tmoport.egress_mirror_en = 1;
-    om_tmoport.egress_port1 = tm_oport;
+    om_tmoport.egress_port1 = TM_PORT_DMA;
     om_tmoport.p4plus_app_id = p4plus_app_id;
     om_tmoport.rdma_enabled = lif_get_enable_rdma((lif_t *)pd_lif->pi_lif);
     om_tmoport.dst_lif = pd_lif->hw_lif_id;
